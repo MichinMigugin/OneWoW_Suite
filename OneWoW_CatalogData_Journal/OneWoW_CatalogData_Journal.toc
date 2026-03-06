@@ -1,0 +1,86 @@
+## Interface: 120001, 120002
+## Title: OneWoW - Data: |cFFFFFFFFJournal|r
+## Version: R6.2603.0623
+## Notes: OneWoW Data Addon that: provides instance and encounter journal data for the Catalog.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_CatalogData_Journal_DB
+## RequiredDeps: OneWoW_Catalog
+
+# Locales
+Locales\enUS.lua
+Locales\koKR.lua
+
+# Data - Classic
+Data\Classic-instances.lua
+Data\Classic-encounters.lua
+Data\Classic-tables.lua
+
+# Data - The Burning Crusade
+Data\BurningCrusade-instances.lua
+Data\BurningCrusade-encounters.lua
+Data\BurningCrusade-tables.lua
+
+# Data - Wrath of the Lich King
+Data\WrathoftheLichKing-instances.lua
+Data\WrathoftheLichKing-encounters.lua
+Data\WrathoftheLichKing-tables.lua
+
+# Data - Cataclysm
+Data\Cataclysm-instances.lua
+Data\Cataclysm-encounters.lua
+Data\Cataclysm-tables.lua
+
+# Data - Mists of Pandaria
+Data\MistsofPandaria-instances.lua
+Data\MistsofPandaria-encounters.lua
+Data\MistsofPandaria-tables.lua
+
+# Data - Warlords of Draenor
+Data\WarlordsofDraenor-instances.lua
+Data\WarlordsofDraenor-encounters.lua
+Data\WarlordsofDraenor-tables.lua
+
+# Data - Legion
+Data\Legion-instances.lua
+Data\Legion-encounters.lua
+Data\Legion-tables.lua
+
+# Data - Battle for Azeroth
+Data\BattleforAzeroth-instances.lua
+Data\BattleforAzeroth-encounters.lua
+Data\BattleforAzeroth-tables.lua
+
+# Data - Shadowlands
+Data\Shadowlands-instances.lua
+Data\Shadowlands-encounters.lua
+Data\Shadowlands-tables.lua
+
+# Data - Dragonflight
+Data\Dragonflight-instances.lua
+Data\Dragonflight-encounters.lua
+Data\Dragonflight-tables.lua
+
+# Data - The War Within
+Data\TheWarWithin-instances.lua
+Data\TheWarWithin-encounters.lua
+Data\TheWarWithin-tables.lua
+
+# Data - Midnight
+Data\Midnight-instances.lua
+Data\Midnight-encounters.lua
+Data\Midnight-tables.lua
+
+# Core
+Core\Database.lua
+Core\Core.lua
+
+# Modules
+Modules\DataLoader.lua
+Modules\JournalData.lua
+Modules\JournalScanner.lua
+
+# Main
+OneWoW_CatalogData_Journal.lua

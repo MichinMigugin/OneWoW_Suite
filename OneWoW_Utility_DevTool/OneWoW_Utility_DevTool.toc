@@ -1,0 +1,54 @@
+## Interface: 120001, 120002
+## Title: |cFFFFD100OneWoW|r - Utility: |cFFFF0000DevTool|r
+## Version: R6.2603.0623
+## Notes: OneWoW Utility Addon that: provides frame inspection and addon development utilities.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_UtilityDevTool_DB
+## AddonCompartmentFunc: 1WoW_UtilityDevTool_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: 1WoW_UtilityDevTool_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: 1WoW_UtilityDevTool_OnAddonCompartmentLeave
+## IconTexture: Interface\AddOns\OneWoW_Utility_DevTool\Media\neutral-mini.png
+
+# Libraries
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+
+# Locales
+Locales\enUS.lua
+Locales\esES.lua
+Locales\koKR.lua
+Locales\frFR.lua
+Locales\ruRU.lua
+Locales\deDE.lua
+
+# Core
+Core\Constants.lua
+Core\Database.lua
+
+# Main Addon File
+OneWoW_Utility_DevTool.lua
+
+# Data (disabled - texture viewer not active)
+#Data\Data_Mainline.lua
+
+# Modules
+Modules\FrameInspector.lua
+Modules\FrameTree.lua
+Modules\FramePicker.lua
+Modules\ErrorLogger.lua
+Modules\EventMonitor.lua
+Modules\ColorToolsTab.lua
+#Modules\TextureAtlasData.lua
+Modules\FontBrowserTab.lua
+Modules\MonitorTab.lua
+
+# GUI Framework
+GUI\Framework.lua
+
+# Main UI
+GUI\MainWindow.lua
+GUI\Minimap.lua

@@ -1,0 +1,217 @@
+local addonName, ns = ...
+
+OneWoW_AltTracker = LibStub("AceAddon-3.0"):NewAddon("OneWoW_AltTracker", "AceEvent-3.0", "AceConsole-3.0")
+local OneWoWAltTracker = OneWoW_AltTracker
+
+ns.OneWoWAltTracker = OneWoWAltTracker
+ns.oneWoWHubActive = false
+
+local function RegisterWithOneWoW()
+    if not _G.OneWoW then return false end
+    if not _G.OneWoW.RegisterModule then return false end
+
+    _G.OneWoW:RegisterModule({
+        name = "alttracker",
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "AltTracker" end,
+        addonName = "OneWoW_AltTracker",
+        order = 2,
+        tabs = {
+            { name = "summary",     displayName = function() return ns.L["SUBTAB_SUMMARY"]     or "Summary"     end, create = function(p) ns.UI.CreateSummaryTab(p) end },
+            { name = "progress",    displayName = function() return ns.L["SUBTAB_PROGRESS"]    or "Progress"    end, create = function(p) ns.UI.CreateProgressTab(p) end },
+            { name = "bank",        displayName = function() return ns.L["SUBTAB_BANK"]        or "Bank"        end, create = function(p) ns.UI.CreateBankTab(p) end },
+            { name = "equipment",   displayName = function() return ns.L["SUBTAB_EQUIPMENT"]   or "Equipment"   end, create = function(p) ns.UI.CreateEquipmentTab(p) end },
+            { name = "professions", displayName = function() return ns.L["SUBTAB_PROFESSIONS"] or "Professions" end, create = function(p) ns.UI.CreateProfessionsTab(p) end },
+            { name = "auctions",    displayName = function() return ns.L["SUBTAB_AUCTIONS"]    or "Auctions"    end, create = function(p) ns.UI.CreateAuctionsTab(p) end },
+            { name = "financials",  displayName = function() return ns.L["SUBTAB_FINANCIALS"]  or "Financials"  end, create = function(p) ns.UI.CreateFinancialsTab(p) end },
+            { name = "items",       displayName = function() return ns.L["SUBTAB_ITEMS"]       or "Items"       end, create = function(p) ns.UI.CreateItemsTab(p) end },
+            { name = "actionbars",  displayName = function() return "Action Bars" end, create = function(p) ns.UI.CreateActionBarsTab(p) end },
+            { name = "lockouts",    displayName = function() return ns.L["SUBTAB_LOCKOUTS"]    or "Lockouts"    end, create = function(p) ns.UI.CreateLockoutsTab(p) end },
+        },
+    })
+    _G.OneWoW:RegisterSettingsPanel({
+        name        = "alttracker",
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "AltTracker" end,
+        order       = 2,
+        create      = function(p) ns.UI.CreateSettingsTab(p) end,
+    })
+    ns.oneWoWHubActive = true
+    return true
+end
+
+function OneWoWAltTracker:OnInitialize()
+    self:InitializeDatabase()
+
+    if ns.ApplyTheme then
+        ns.ApplyTheme()
+    end
+
+    if ns.ApplyLanguage then
+        ns.ApplyLanguage()
+    end
+
+    self:RegisterChatCommand("onewowat", "SlashCommandHandler")
+    self:RegisterChatCommand("owat", "SlashCommandHandler")
+    self:RegisterChatCommand("1wat", "SlashCommandHandler")
+    local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION
+    if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
+        _G.OneWoW:RegisterLoadComponent("AltTracker", _ver, "/1wat")
+    else
+        print("|cFF00FF00OneWoW|r: |cFFFFFFFFAlt Tracker|r |cFF888888\226\128\147 v." .. _ver .. " \226\128\147|r |cFF00FF00Loaded|r - /1wat")
+    end
+end
+
+function OneWoWAltTracker:ApplyTheme()
+    if ns.ApplyTheme then
+        ns.ApplyTheme()
+    end
+end
+
+function OneWoWAltTracker:ApplyLanguage()
+    if ns.ApplyLanguage then
+        ns.ApplyLanguage()
+    end
+end
+
+function OneWoWAltTracker:OnEnable()
+    if ns.Core and ns.Core.Initialize then
+        ns.Core:Initialize()
+    end
+
+    RegisterWithOneWoW()
+
+    if not ns.oneWoWHubActive then
+        if ns.MinimapButton and ns.MinimapButton.Initialize then
+            ns.MinimapButton:Initialize()
+        end
+    end
+
+    if ns.PatchDialog and ns.PatchDialog.CheckAndShow then
+        ns.PatchDialog:CheckAndShow()
+    end
+end
+
+function OneWoWAltTracker:SlashCommandHandler(input)
+    if ns.oneWoWHubActive and _G.OneWoW and _G.OneWoW.GUI then
+        _G.OneWoW.GUI:Show("alttracker")
+        return
+    end
+    if ns.UI and ns.UI.Toggle then
+        ns.UI:Toggle()
+    end
+end
+
+function OneWoWAltTracker:InitializeDatabase()
+    local defaults = ns.DatabaseDefaults or {}
+
+    self.db = LibStub("AceDB-3.0"):New("OneWoW_AltTracker_DB", defaults, true)
+
+    if not self.db.global.language then
+        self.db.global.language = GetLocale()
+    end
+
+    if not self.db.global.theme then
+        self.db.global.theme = "green"
+    end
+
+    if not self.db.global.altTracker then
+        self.db.global.altTracker = {
+            characters = {},
+            lastUpdate = time(),
+            expansionVersion = 11
+        }
+    end
+
+    if not self.db.global.warbandBankData then
+        self.db.global.warbandBankData = {}
+    end
+
+    if not self.db.global.guildBanks then
+        self.db.global.guildBanks = {}
+    end
+
+    if not self.db.global.actionBars then
+        self.db.global.actionBars = {}
+    end
+
+    if not self.db.global.altTrackerSettings then
+        self.db.global.altTrackerSettings = {
+            enablePlaytimeTracking = true,
+            enableDataCollection = true,
+        }
+    end
+
+    if self.db.global.altTrackerSettings.minimapButton and not self.db.global.minimap then
+        self.db.global.minimap = {
+            hide = self.db.global.altTrackerSettings.minimapButton.hide or false,
+            minimapPos = 220,
+            theme = "horde",
+        }
+        self.db.global.altTrackerSettings.minimapButton = nil
+    end
+    if not self.db.global.minimap then self.db.global.minimap = {} end
+    if self.db.global.minimap.hide == nil then self.db.global.minimap.hide = false end
+    if self.db.global.minimap.minimapPos == nil then self.db.global.minimap.minimapPos = 220 end
+    if not self.db.global.minimap.theme then self.db.global.minimap.theme = "horde" end
+
+    if self.db.global.migrationStatus == nil then
+        self.db.global.migrationStatus = {
+            checkedForWoWNotesData = false,
+            lastMigrationCheck = 0,
+            migratedCharacterCount = 0,
+            migrationComplete = false
+        }
+    end
+
+    if not self.db.global.overrides then
+        self.db.global.overrides = { progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316}, worldBossQuestID = 0 } }
+    end
+    if not self.db.global.overrides.progress then
+        self.db.global.overrides.progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316}, worldBossQuestID = 0 }
+    end
+    if not self.db.global.overrides.progress.trackedCurrencyIDs then
+        self.db.global.overrides.progress.trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316}
+        self.db.global.overrides.progress.currency1ID = nil
+        self.db.global.overrides.progress.currency2ID = nil
+    end
+    if not self.db.global.overrides.progress.worldBossQuestIDs then
+        self.db.global.overrides.progress.worldBossQuestIDs = {}
+        self.db.global.overrides.progress.worldBossQuestID = nil
+    end
+    self.db.global.overrides.progress.primaryRaidName = nil
+    self.db.global.overrides.progress.worldBossName = nil
+    if not self.db.global.favorites then
+        self.db.global.favorites = {}
+    end
+    if not self.db.global.seasonChecklist then
+        self.db.global.seasonChecklist = {}
+    end
+end
+
+_G["1WoW_AltTracker_OnAddonCompartmentClick"] = function(addonName, buttonName)
+    if ns.oneWoWHubActive and _G.OneWoW and _G.OneWoW.GUI then
+        _G.OneWoW.GUI:Show("alttracker")
+        return
+    end
+    if buttonName == "LeftButton" then
+        if ns.UI and ns.UI.Toggle then
+            ns.UI:Toggle()
+        end
+    elseif buttonName == "RightButton" then
+        if ns.UI and ns.UI.Show then
+            ns.UI:Show("settings")
+        end
+    end
+end
+
+_G["1WoW_AltTracker_OnAddonCompartmentEnter"] = function(addonName, menuButtonFrame)
+    GameTooltip:SetOwner(menuButtonFrame, "ANCHOR_LEFT")
+    GameTooltip:SetText("|cFFFFD100OneWoW - AltTracker|r")
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddLine("|cFFFFFFFFLeft Click:|r Toggle window", 1, 1, 1)
+    GameTooltip:AddLine("|cFFFFFFFFRight Click:|r Open settings", 1, 1, 1)
+    GameTooltip:Show()
+end
+
+_G["1WoW_AltTracker_OnAddonCompartmentLeave"] = function(addonName, menuButtonFrame)
+    GameTooltip:Hide()
+end

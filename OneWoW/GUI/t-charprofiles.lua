@@ -1,0 +1,1105 @@
+local ADDON_NAME, OneWoW = ...
+
+local GUI = OneWoW.GUI
+
+local function T(key)
+    if OneWoW.Constants and OneWoW.Constants.THEME and OneWoW.Constants.THEME[key] then
+        return unpack(OneWoW.Constants.THEME[key])
+    end
+    return 0.5, 0.5, 0.5, 1.0
+end
+
+local function GetCharacterKey()
+    local name = UnitName("player") or "Unknown"
+    local realm = GetRealmName() or "Unknown"
+    realm = realm:gsub("%s", "")
+    return name .. "-" .. realm
+end
+
+local function GetCharProfiles()
+    if not OneWoW.db.global.charProfiles then
+        OneWoW.db.global.charProfiles = {}
+    end
+    return OneWoW.db.global.charProfiles
+end
+
+-- ============================================================
+-- Backend
+-- ============================================================
+
+OneWoW.CharProfiles = {}
+local Module = OneWoW.CharProfiles
+
+function Module:CaptureKeybinds()
+    local bindings = {}
+    for i = 1, GetNumBindings() do
+        local command, _, key1, key2 = GetBinding(i)
+        if command and (key1 or key2) then
+            table.insert(bindings, { command = command, key1 = key1, key2 = key2 })
+        end
+    end
+    return { bindings = bindings, count = #bindings, capturedAt = time() }
+end
+
+function Module:CaptureMacros()
+    local account = {}
+    local accountCount = 0
+    for i = 1, MAX_ACCOUNT_MACROS do
+        local name, iconTexture, body = GetMacroInfo(i)
+        if name then
+            local macroIcon
+            if type(iconTexture) == "number" then
+                macroIcon = iconTexture
+            elseif type(iconTexture) == "string" then
+                macroIcon = iconTexture:gsub("^Interface\\Icons\\", "")
+            else
+                macroIcon = "INV_Misc_QuestionMark"
+            end
+            account[i] = { id = i, name = name, icon = macroIcon, body = body }
+            accountCount = accountCount + 1
+        end
+    end
+
+    local character = {}
+    local charCount = 0
+    for i = MAX_ACCOUNT_MACROS + 1, MAX_ACCOUNT_MACROS + MAX_CHARACTER_MACROS do
+        local name, iconTexture, body = GetMacroInfo(i)
+        if name then
+            local macroIcon
+            if type(iconTexture) == "number" then
+                macroIcon = iconTexture
+            elseif type(iconTexture) == "string" then
+                macroIcon = iconTexture:gsub("^Interface\\Icons\\", "")
+            else
+                macroIcon = "INV_Misc_QuestionMark"
+            end
+            character[i] = { id = i, name = name, icon = macroIcon, body = body }
+            charCount = charCount + 1
+        end
+    end
+
+    return {
+        account = account,
+        character = character,
+        accountCount = accountCount,
+        charCount = charCount,
+        capturedAt = time(),
+    }
+end
+
+function Module:CaptureGameSettings()
+    if not ConsoleGetAllCommands or not GetCVar then return nil end
+    local commands = ConsoleGetAllCommands()
+    if not commands then return nil end
+    local cvars = {}
+    local count = 0
+    for _, cmdInfo in ipairs(commands) do
+        if cmdInfo.commandType == 0 and cmdInfo.command then
+            local value = GetCVar(cmdInfo.command)
+            if value ~= nil then
+                cvars[cmdInfo.command] = value
+                count = count + 1
+            end
+        end
+    end
+    if count == 0 then return nil end
+    return { cvars = cvars, count = count, capturedAt = time() }
+end
+
+function Module:CaptureAddonSet()
+    if not C_AddOns then return nil end
+    local addons = {}
+    local total = C_AddOns.GetNumAddOns()
+    local charName = UnitName("player")
+    for i = 1, total do
+        local name, title = C_AddOns.GetAddOnInfo(i)
+        if name then
+            local state = C_AddOns.GetAddOnEnableState(name, charName)
+            table.insert(addons, { name = name, title = title or name, enabled = (state == 2) })
+        end
+    end
+    return { addons = addons, count = #addons, capturedAt = time() }
+end
+
+local ADDON_SETTINGS_MAP = {
+    {
+        dbName = "OneWoW_DB",
+        displayName = "OneWoW",
+        keys = {"language", "theme", "minimap", "mainFrameSize", "mainFramePosition", "portalHub", "settings", "toasts"},
+    },
+    {
+        dbName = "OneWoW_AltTracker_DB",
+        displayName = "AltTracker",
+        acedb = true,
+        keys = {"language", "theme", "minimap", "mainFrameSize", "mainFramePosition", "altTrackerSettings", "overrides", "favorites", "seasonChecklist"},
+    },
+    {
+        dbName = "OneWoW_QoL_DB",
+        displayName = "QoL",
+        acedb = true,
+        keys = {"language", "theme", "lastTab", "minimap", "modules"},
+    },
+    {
+        dbName = "OneWoW_Notes_DB",
+        displayName = "Notes",
+        acedb = true,
+        keys = {"language", "theme", "minimap", "lastTab", "mainFrameSize", "mainFramePosition", "sortCompletedTasks", "zoneAlertsEnabled", "npcScanEnabled", "playerScanEnabled"},
+    },
+    {
+        dbName = "OneWoW_Catalog_DB",
+        displayName = "Catalog",
+        acedb = true,
+        keys = {"language", "theme", "lastTab", "minimap", "mainFrameSize", "mainFramePosition"},
+    },
+    {
+        dbName = "OneWoW_Bags_DB",
+        displayName = "Bags",
+        keys = {"language", "theme", "minimap", "viewMode", "columns", "scale", "iconSize", "autoOpen", "autoClose", "locked", "showBagsBar", "rarityColor", "rarityIntensity", "showNewItems", "recentItemDuration", "categorySort", "showEmptySlots"},
+    },
+    {
+        dbName = "OneWoW_DirectDeposit_DB",
+        displayName = "DirectDeposit",
+        keys = {"language", "theme", "minimap", "directDeposit"},
+    },
+    {
+        dbName = "OneWoW_ShoppingList_DB",
+        displayName = "ShoppingList",
+        globalWrap = true,
+        keys = {"settings", "minimap"},
+    },
+    {
+        dbName = "OneWoW_AltTracker_Character_DB",
+        displayName = "AltTracker Character",
+        keys = {"settings"},
+    },
+    {
+        dbName = "OneWoW_AltTracker_Accounting_DB",
+        displayName = "AltTracker Accounting",
+        keys = {"settings"},
+    },
+    {
+        dbName = "OneWoW_AltTracker_Auctions_DB",
+        displayName = "AltTracker Auctions",
+        keys = {"settings"},
+    },
+    {
+        dbName = "OneWoW_AltTracker_Professions_DB",
+        displayName = "AltTracker Professions",
+        keys = {"settings"},
+    },
+    {
+        dbName = "OneWoW_AltTracker_Collections_DB",
+        displayName = "AltTracker Collections",
+        keys = {"settings"},
+    },
+    {
+        dbName = "OneWoW_AltTracker_Endgame_DB",
+        displayName = "AltTracker Endgame",
+        keys = {"settings"},
+    },
+    {
+        dbName = "OneWoW_AltTracker_Storage_DB",
+        displayName = "AltTracker Storage",
+        keys = {"settings"},
+    },
+    {
+        dbName = "OneWoW_CatalogData_Journal_DB",
+        displayName = "CatalogData Journal",
+        keys = {"settings"},
+    },
+    {
+        dbName = "OneWoW_CatalogData_Tradeskills_DB",
+        displayName = "CatalogData Tradeskills",
+        keys = {"settings"},
+    },
+    {
+        dbName = "OneWoW_CatalogData_Vendors_DB",
+        displayName = "CatalogData Vendors",
+        keys = {"settings"},
+    },
+}
+
+function Module:CaptureAddonSettings()
+    local captured = {}
+    local count = 0
+    for _, entry in ipairs(ADDON_SETTINGS_MAP) do
+        local db = _G[entry.dbName]
+        if db then
+            local source = db
+            if (entry.acedb or entry.globalWrap) and type(db.global) == "table" then
+                source = db.global
+            end
+            local settings = {}
+            local hasData = false
+            for _, key in ipairs(entry.keys) do
+                if source[key] ~= nil then
+                    if type(source[key]) == "table" then
+                        settings[key] = CopyTable(source[key])
+                    else
+                        settings[key] = source[key]
+                    end
+                    hasData = true
+                end
+            end
+            if hasData then
+                captured[entry.dbName] = {
+                    displayName = entry.displayName,
+                    acedb = entry.acedb or false,
+                    globalWrap = entry.globalWrap or false,
+                    settings = settings,
+                }
+                count = count + 1
+            end
+        end
+    end
+    return { addons = captured, count = count, capturedAt = time() }
+end
+
+function Module:RestoreKeybinds(keybindData)
+    if not keybindData or not keybindData.bindings then return 0 end
+    LoadBindings(2)
+    local count = 0
+    for _, bindData in ipairs(keybindData.bindings) do
+        if bindData.key1 then
+            local ctx = 1
+            if C_KeyBindings and C_KeyBindings.GetBindingContextForAction then
+                ctx = C_KeyBindings.GetBindingContextForAction(bindData.command)
+            end
+            SetBinding(bindData.key1, bindData.command, ctx)
+        end
+        if bindData.key2 then
+            local ctx = 1
+            if C_KeyBindings and C_KeyBindings.GetBindingContextForAction then
+                ctx = C_KeyBindings.GetBindingContextForAction(bindData.command)
+            end
+            SetBinding(bindData.key2, bindData.command, ctx)
+        end
+        count = count + 1
+    end
+    SaveBindings(2)
+    return count
+end
+
+function Module:RestoreMacros(macroData, doAccount, doCharacter)
+    if not macroData then return 0 end
+    local count = 0
+
+    local function FindOrCreate(macroInfo, isChar)
+        if not macroInfo or not macroInfo.name then return end
+        local existing = GetMacroIndexByName(macroInfo.name)
+        if existing and existing > 0 then
+            count = count + 1
+            return
+        end
+        local numGlobal, numPerChar = GetNumMacros()
+        local canCreate = isChar and (numPerChar < MAX_CHARACTER_MACROS) or (numGlobal < MAX_ACCOUNT_MACROS)
+        if canCreate then
+            local icon = macroInfo.icon or "INV_Misc_QuestionMark"
+            local newId = CreateMacro(macroInfo.name, icon, macroInfo.body or "", isChar)
+            if newId then count = count + 1 end
+        else
+            print(string.format("|cFFFFD100OneWoW:|r Macro limit reached, skipped: %s", macroInfo.name))
+        end
+    end
+
+    if doAccount and macroData.account then
+        for _, macroInfo in pairs(macroData.account) do
+            FindOrCreate(macroInfo, false)
+        end
+    end
+    if doCharacter and macroData.character then
+        for _, macroInfo in pairs(macroData.character) do
+            FindOrCreate(macroInfo, true)
+        end
+    end
+    return count
+end
+
+function Module:RestoreGameSettings(gameData)
+    if not gameData or not gameData.cvars or not SetCVar then return 0 end
+    local count = 0
+    for cvarName, value in pairs(gameData.cvars) do
+        SetCVar(cvarName, value)
+        count = count + 1
+    end
+    return count
+end
+
+function Module:RestoreAddonSet(addonData)
+    if not addonData or not addonData.addons or not C_AddOns then return 0 end
+    local charName = UnitName("player")
+    local count = 0
+    for _, addonInfo in ipairs(addonData.addons) do
+        if C_AddOns.GetAddOnInfo(addonInfo.name) then
+            local currentState = C_AddOns.GetAddOnEnableState(addonInfo.name, charName)
+            local isEnabled = (currentState == 2)
+            if addonInfo.enabled ~= isEnabled then
+                if addonInfo.enabled then
+                    C_AddOns.EnableAddOn(addonInfo.name, charName)
+                else
+                    C_AddOns.DisableAddOn(addonInfo.name, charName)
+                end
+                count = count + 1
+            end
+        end
+    end
+    return count
+end
+
+function Module:RestoreAddonSettings(addonData)
+    if not addonData or not addonData.addons then return 0 end
+    local count = 0
+    for dbName, entry in pairs(addonData.addons) do
+        local db = _G[dbName]
+        if db then
+            local target = db
+            if (entry.acedb or entry.globalWrap) and type(db.global) == "table" then
+                target = db.global
+            end
+            for key, value in pairs(entry.settings) do
+                if type(value) == "table" then
+                    target[key] = CopyTable(value)
+                else
+                    target[key] = value
+                end
+            end
+            count = count + 1
+        end
+    end
+    return count
+end
+
+function Module:SaveProfile(name, options)
+    if not name or name == "" then
+        print("|cFFFFD100OneWoW:|r Profile name cannot be empty.")
+        return false
+    end
+
+    local profile = { name = name, timestamp = time(), savedBy = GetCharacterKey() }
+
+    if options.keybinds then
+        profile.keybinds = self:CaptureKeybinds()
+    end
+    if options.accountMacros or options.characterMacros then
+        local macros = self:CaptureMacros()
+        if options.accountMacros then
+            profile.accountMacros = { data = macros.account, count = macros.accountCount, capturedAt = macros.capturedAt }
+        end
+        if options.characterMacros then
+            profile.characterMacros = { data = macros.character, count = macros.charCount, capturedAt = macros.capturedAt }
+        end
+    end
+    if options.gameSettings then
+        profile.gameSettings = self:CaptureGameSettings()
+    end
+    if options.addonSet then
+        profile.addonSet = self:CaptureAddonSet()
+    end
+    if options.addonSettings then
+        profile.addonSettings = self:CaptureAddonSettings()
+    end
+
+    GetCharProfiles()[name] = profile
+    print("|cFFFFD100OneWoW:|r Character profile saved: " .. name)
+    return true
+end
+
+function Module:DeleteProfile(name)
+    local profiles = GetCharProfiles()
+    if not profiles[name] then return false end
+    profiles[name] = nil
+    print("|cFFFFD100OneWoW:|r Character profile deleted: " .. name)
+    return true
+end
+
+function Module:GetProfilesList()
+    local profiles = GetCharProfiles()
+    local list = {}
+    for name, data in pairs(profiles) do
+        if type(data) == "table" and data.name and data.timestamp then
+            table.insert(list, { name = name, data = data })
+        end
+    end
+    table.sort(list, function(a, b)
+        return (a.data.timestamp or 0) > (b.data.timestamp or 0)
+    end)
+    return list
+end
+
+function Module:GetCurrentCounts()
+    local counts = {}
+    local bindCount = 0
+    for i = 1, GetNumBindings() do
+        local cmd, _, k1, k2 = GetBinding(i)
+        if cmd and (k1 or k2) then bindCount = bindCount + 1 end
+    end
+    counts.keybinds = bindCount
+    local numGlobal, numPerChar = GetNumMacros()
+    counts.accountMacros = numGlobal or 0
+    counts.characterMacros = numPerChar or 0
+    counts.addonSet = C_AddOns and C_AddOns.GetNumAddOns() or 0
+    return counts
+end
+
+local function SerializeVal(val, depth)
+    local t = type(val)
+    if t == "string" then
+        return string.format("%q", val)
+    elseif t == "number" or t == "boolean" then
+        return tostring(val)
+    elseif t == "table" then
+        local parts = {}
+        local inner = string.rep("  ", depth + 1)
+        local outer = string.rep("  ", depth)
+        for k, v in pairs(val) do
+            local vStr = SerializeVal(v, depth + 1)
+            if vStr ~= nil then
+                local keyStr
+                if type(k) == "string" and k:match("^[%a_][%a%d_]*$") then
+                    keyStr = k
+                elseif type(k) == "number" then
+                    keyStr = "[" .. tostring(k) .. "]"
+                else
+                    keyStr = "[" .. string.format("%q", tostring(k)) .. "]"
+                end
+                table.insert(parts, inner .. keyStr .. " = " .. vStr)
+            end
+        end
+        if #parts == 0 then return "{}" end
+        return "{\n" .. table.concat(parts, ",\n") .. "\n" .. outer .. "}"
+    end
+    return nil
+end
+
+function Module:SerializeProfile(profile)
+    local body = SerializeVal(profile, 0)
+    if not body then return nil end
+    return "-- OneWoW Character Profile\n-- Version: 1\n" .. body
+end
+
+function Module:DeserializeProfile(str)
+    if not str or str == "" then return nil, "Empty input" end
+    local cleaned = str:gsub("%-%-[^\n]*\n?", "")
+    local func, err = loadstring("return " .. cleaned)
+    if not func then return nil, "Parse error" end
+    local ok, data = pcall(func)
+    if not ok then return nil, "Execution error" end
+    if type(data) ~= "table" then return nil, "Invalid format" end
+    if type(data.name) ~= "string" or data.name == "" then return nil, "Missing profile name" end
+    return data, nil
+end
+
+function Module:ImportProfile(str)
+    local data, err = self:DeserializeProfile(str)
+    if not data then return false, err end
+    local profiles = GetCharProfiles()
+    local name = data.name
+    if profiles[name] then
+        local base = name
+        local i = 2
+        while profiles[name] do
+            name = base .. " (" .. i .. ")"
+            i = i + 1
+        end
+        data.name = name
+    end
+    data.timestamp = data.timestamp or time()
+    profiles[name] = data
+    return true, name
+end
+
+-- ============================================================
+-- Dialogs
+-- ============================================================
+
+function GUI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
+    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    dialog:SetSize(480, 360)
+    dialog:SetPoint("CENTER")
+    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
+    dialog:SetToplevel(true)
+    dialog:EnableMouse(true)
+    dialog:SetMovable(true)
+    dialog:RegisterForDrag("LeftButton")
+    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    dialog:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 2,
+    })
+    dialog:SetBackdropColor(T("BG_PRIMARY"))
+    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+
+    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
+    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
+    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
+    titleBar:SetHeight(28)
+    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
+    titleText:SetText("Restore Profile: |cFFFFD100" .. profileName .. "|r")
+    titleText:SetTextColor(T("TEXT_PRIMARY"))
+
+    local savedDate = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    savedDate:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 10, -10)
+    savedDate:SetText("Saved: " .. date("%Y-%m-%d %H:%M", profile.timestamp or 0))
+    savedDate:SetTextColor(T("TEXT_SECONDARY"))
+
+    local lastAnchor = savedDate
+    if profile.savedBy then
+        local savedByFS = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        savedByFS:SetPoint("TOPLEFT", savedDate, "BOTTOMLEFT", 0, -4)
+        savedByFS:SetText("Saved by: |cFFFFD100" .. profile.savedBy .. "|r")
+        savedByFS:SetTextColor(T("TEXT_SECONDARY"))
+        lastAnchor = savedByFS
+    end
+
+    local selectLabel = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    selectLabel:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -10)
+    selectLabel:SetText("Select what to restore:")
+    selectLabel:SetTextColor(T("TEXT_PRIMARY"))
+
+    local yOff = profile.savedBy and -93 or -75
+    local restoreChecks = {}
+
+    local function AddRestoreRow(key, labelText, count, available)
+        if not available then return end
+        local cb = GUI:CreateCheckbox(nil, dialog, "")
+        cb:SetPoint("TOPLEFT", dialog, "TOPLEFT", 20, yOff)
+        cb:SetChecked(true)
+        local display = count and count > 0
+            and (labelText .. " |cFF888888(" .. count .. ")|r")
+            or labelText
+        if cb.label then cb.label:SetText(display) end
+        restoreChecks[key] = cb
+        yOff = yOff - 30
+    end
+
+    AddRestoreRow("keybinds",
+        "Keybinds",
+        type(profile.keybinds) == "table" and profile.keybinds.count or 0,
+        type(profile.keybinds) == "table")
+
+    AddRestoreRow("accountMacros",
+        "Account Macros",
+        type(profile.accountMacros) == "table" and profile.accountMacros.count or 0,
+        type(profile.accountMacros) == "table")
+
+    AddRestoreRow("characterMacros",
+        "Character Macros",
+        type(profile.characterMacros) == "table" and profile.characterMacros.count or 0,
+        type(profile.characterMacros) == "table")
+
+    AddRestoreRow("gameSettings",
+        "WoW Game Settings",
+        type(profile.gameSettings) == "table" and profile.gameSettings.count or 0,
+        type(profile.gameSettings) == "table")
+
+    AddRestoreRow("addonSet",
+        "Addon Set",
+        type(profile.addonSet) == "table" and profile.addonSet.count or 0,
+        type(profile.addonSet) == "table")
+
+    AddRestoreRow("addonSettings",
+        "Addon Settings",
+        type(profile.addonSettings) == "table" and profile.addonSettings.count or 0,
+        type(profile.addonSettings) == "table")
+
+    local restoreBtn = GUI:CreateButton(nil, dialog, "Restore Profile", 140, 30)
+    restoreBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 10)
+    restoreBtn:SetScript("OnClick", function()
+        local M = OneWoW.CharProfiles
+        local results = {}
+        local reloadNeeded = false
+
+        if restoreChecks.keybinds and restoreChecks.keybinds:GetChecked() then
+            local n = M:RestoreKeybinds(profile.keybinds)
+            table.insert(results, string.format("%d Keybinds", n))
+        end
+
+        if restoreChecks.accountMacros and restoreChecks.accountMacros:GetChecked() then
+            local n = M:RestoreMacros(
+                { account = type(profile.accountMacros) == "table" and profile.accountMacros.data or {} },
+                true, false)
+            table.insert(results, string.format("%d Account Macros", n))
+        end
+
+        if restoreChecks.characterMacros and restoreChecks.characterMacros:GetChecked() then
+            local n = M:RestoreMacros(
+                { character = type(profile.characterMacros) == "table" and profile.characterMacros.data or {} },
+                false, true)
+            table.insert(results, string.format("%d Character Macros", n))
+        end
+
+        if restoreChecks.gameSettings and restoreChecks.gameSettings:GetChecked() then
+            local n = M:RestoreGameSettings(profile.gameSettings)
+            table.insert(results, string.format("%d Game Settings", n))
+            reloadNeeded = true
+        end
+
+        if restoreChecks.addonSet and restoreChecks.addonSet:GetChecked() then
+            local n = M:RestoreAddonSet(profile.addonSet)
+            table.insert(results, string.format("%d changes to Addon Set", n))
+            reloadNeeded = true
+        end
+
+        if restoreChecks.addonSettings and restoreChecks.addonSettings:GetChecked() then
+            local n = M:RestoreAddonSettings(profile.addonSettings)
+            table.insert(results, string.format("%d Addon Settings", n))
+            reloadNeeded = true
+        end
+
+        dialog:Hide()
+
+        print(string.format("|cFFFFD100OneWoW:|r Character profile restored: %s", profileName))
+        for _, line in ipairs(results) do
+            print("  |cFFFFD100-|r " .. line)
+        end
+
+        if reloadNeeded then
+            print("|cFFFFD100OneWoW:|r A UI reload is required to apply changes.")
+            C_Timer.After(1.5, function()
+                StaticPopupDialogs["OW_CP_RELOAD"] = {
+                    text = "A UI reload is required to apply restored settings. Reload now?",
+                    button1 = "Reload",
+                    button2 = "Later",
+                    OnAccept = function() ReloadUI() end,
+                    timeout = 0,
+                    whileDead = true,
+                    hideOnEscape = true,
+                    preferredIndex = 3,
+                }
+                StaticPopup_Show("OW_CP_RELOAD")
+            end)
+        end
+
+        if onRestored then onRestored() end
+    end)
+
+    local cancelBtn = GUI:CreateButton(nil, dialog, "Cancel", 100, 30)
+    cancelBtn:SetPoint("BOTTOMRIGHT", restoreBtn, "BOTTOMLEFT", -8, 0)
+    cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
+
+    dialog:SetHeight(math.abs(yOff) + 60)
+    dialog:Show()
+end
+
+function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
+    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    dialog:SetSize(620, 500)
+    dialog:SetPoint("CENTER")
+    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
+    dialog:SetToplevel(true)
+    dialog:EnableMouse(true)
+    dialog:SetMovable(true)
+    dialog:RegisterForDrag("LeftButton")
+    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    dialog:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 2,
+    })
+    dialog:SetBackdropColor(T("BG_PRIMARY"))
+    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+
+    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
+    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
+    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
+    titleBar:SetHeight(28)
+    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
+    titleText:SetText("Export Profile: |cFFFFD100" .. profileName .. "|r")
+    titleText:SetTextColor(T("TEXT_PRIMARY"))
+
+    local hint = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -38)
+    hint:SetText("Select all text and copy (Ctrl+A, Ctrl+C) to share this profile:")
+    hint:SetTextColor(T("TEXT_SECONDARY"))
+
+    local textBG = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
+    textBG:SetPoint("TOPLEFT", dialog, "TOPLEFT", 10, -58)
+    textBG:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 46)
+    textBG:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    textBG:SetBackdropColor(0.06, 0.06, 0.06)
+    textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local eb = CreateFrame("EditBox", nil, textBG)
+    eb:SetPoint("TOPLEFT", textBG, "TOPLEFT", 4, -4)
+    eb:SetPoint("BOTTOMRIGHT", textBG, "BOTTOMRIGHT", -4, 4)
+    eb:SetMultiLine(true)
+    eb:SetAutoFocus(true)
+    eb:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    eb:SetTextColor(1, 1, 1)
+    eb:SetMaxLetters(0)
+    eb:SetScript("OnEscapePressed", function() dialog:Hide() end)
+
+    local closeBtn = GUI:CreateButton(nil, dialog, "Close", 100, 28)
+    closeBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 10)
+    closeBtn:SetScript("OnClick", function() dialog:Hide() end)
+
+    local selectAllBtn = GUI:CreateButton(nil, dialog, "Select All", 110, 28)
+    selectAllBtn:SetPoint("BOTTOMRIGHT", closeBtn, "BOTTOMLEFT", -8, 0)
+    selectAllBtn:SetScript("OnClick", function()
+        eb:SetFocus()
+        eb:HighlightText()
+    end)
+
+    dialog:Show()
+    C_Timer.After(0, function()
+        eb:SetText(serializedStr or "")
+        eb:SetCursorPosition(0)
+    end)
+end
+
+function GUI:ShowCharProfileImportDialog(onImported)
+    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    dialog:SetSize(620, 460)
+    dialog:SetPoint("CENTER")
+    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
+    dialog:SetToplevel(true)
+    dialog:EnableMouse(true)
+    dialog:SetMovable(true)
+    dialog:RegisterForDrag("LeftButton")
+    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    dialog:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 2,
+    })
+    dialog:SetBackdropColor(T("BG_PRIMARY"))
+    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+
+    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
+    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
+    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
+    titleBar:SetHeight(28)
+    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
+    titleText:SetText("Import Character Profile")
+    titleText:SetTextColor(T("TEXT_PRIMARY"))
+
+    local hint = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -38)
+    hint:SetText("Paste exported profile data below, then click Import:")
+    hint:SetTextColor(T("TEXT_SECONDARY"))
+
+    local textBG = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
+    textBG:SetPoint("TOPLEFT", dialog, "TOPLEFT", 10, -58)
+    textBG:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 46)
+    textBG:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    textBG:SetBackdropColor(0.06, 0.06, 0.06)
+    textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local eb = CreateFrame("EditBox", nil, dialog)
+    eb:SetMultiLine(true)
+    eb:SetAutoFocus(true)
+    eb:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    eb:SetTextColor(1, 1, 1)
+    eb:SetMaxLetters(0)
+    eb:SetSize(588, 340)
+    eb:SetPoint("TOPLEFT", dialog, "TOPLEFT", 16, -64)
+    eb:SetScript("OnEscapePressed", function() dialog:Hide() end)
+
+    local importBtn = GUI:CreateButton(nil, dialog, "Import", 120, 28)
+    importBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 10)
+    importBtn:SetScript("OnClick", function()
+        local text = eb:GetText()
+        local ok, result = OneWoW.CharProfiles:ImportProfile(text)
+        if ok then
+            print(string.format("|cFFFFD100OneWoW:|r Character profile imported: %s", result))
+            dialog:Hide()
+            if onImported then onImported() end
+        else
+            print(string.format("|cFFFFD100OneWoW:|r Import failed: %s", result or "unknown error"))
+        end
+    end)
+
+    local cancelBtn = GUI:CreateButton(nil, dialog, "Cancel", 100, 28)
+    cancelBtn:SetPoint("BOTTOMRIGHT", importBtn, "BOTTOMLEFT", -8, 0)
+    cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
+
+    dialog:Show()
+end
+
+-- ============================================================
+-- Section UI Builder
+-- ============================================================
+
+function GUI:CreateCharProfilesPanel(parent)
+    local M = OneWoW.CharProfiles
+
+    local scrollFrame, content = GUI:CreateScrollFrame("OneWoW_CharProfilesScroll", parent)
+    local yOffset = -10
+
+    local descText = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    descText:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    descText:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    descText:SetJustifyH("LEFT")
+    descText:SetWordWrap(true)
+    descText:SetSpacing(2)
+    descText:SetText("Save and restore character-specific settings: keybinds, macros, WoW game settings, which addons are enabled, and addon settings.")
+    descText:SetTextColor(T("TEXT_SECONDARY"))
+
+    yOffset = yOffset - 40
+
+    local newProfileContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    newProfileContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    newProfileContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    newProfileContainer:SetHeight(165)
+    newProfileContainer:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    newProfileContainer:SetBackdropColor(T("BG_SECONDARY"))
+    newProfileContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local newTitle = newProfileContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    newTitle:SetPoint("TOPLEFT", newProfileContainer, "TOPLEFT", 15, -12)
+    newTitle:SetText("New Character Profile")
+    newTitle:SetTextColor(T("ACCENT_PRIMARY"))
+
+    local nameLabel = newProfileContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    nameLabel:SetPoint("TOPLEFT", newProfileContainer, "TOPLEFT", 15, -40)
+    nameLabel:SetText("Profile Name:")
+    nameLabel:SetTextColor(T("TEXT_SECONDARY"))
+
+    local nameEdit = GUI:CreateEditBox(nil, newProfileContainer, 300, 26)
+    nameEdit:SetPoint("TOPLEFT", newProfileContainer, "TOPLEFT", 15, -58)
+    nameEdit:SetMaxLetters(64)
+    nameEdit:SetAutoFocus(false)
+
+    local counts = M:GetCurrentCounts()
+
+    local COL1_X = 15
+    local COL2_X = 230
+    local COL3_X = 445
+
+    local function MakeCheckbox(labelText, count, xPos, yPos)
+        local cb = GUI:CreateCheckbox(nil, newProfileContainer, "")
+        cb:SetPoint("TOPLEFT", newProfileContainer, "TOPLEFT", xPos, yPos)
+        cb:SetChecked(false)
+        local display = (count and count > 0) and (labelText .. " (" .. count .. ")") or labelText
+        if cb.label then cb.label:SetText(display) end
+        return cb
+    end
+
+    local cbKeybinds   = MakeCheckbox("Keybinds",         counts.keybinds,        COL1_X, -98)
+    local cbAccMacros  = MakeCheckbox("Account Macros",   counts.accountMacros,   COL2_X, -98)
+    local cbAddonSet   = MakeCheckbox("Addon Set",         counts.addonSet,        COL3_X, -98)
+    local cbGameSet    = MakeCheckbox("Game Settings",     nil,                    COL1_X, -124)
+    local cbCharMacro  = MakeCheckbox("Character Macros", counts.characterMacros, COL2_X, -124)
+    local cbAddonSett  = MakeCheckbox("Addon Settings",   nil,                    COL3_X, -124)
+
+    local saveBtn = GUI:CreateButton(nil, newProfileContainer, "Save Profile", 130, 28)
+    saveBtn:SetPoint("TOPRIGHT", newProfileContainer, "TOPRIGHT", -15, -55)
+
+    local listContainer = CreateFrame("Frame", nil, content)
+    listContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset - 185)
+    listContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset - 185)
+    listContainer:SetHeight(20)
+
+    local function RefreshListing()
+        for _, child in ipairs({ listContainer:GetChildren() }) do
+            child:Hide()
+            child:SetParent(nil)
+        end
+        for _, r in ipairs({ listContainer:GetRegions() }) do r:Hide() end
+
+        local profilesList = M:GetProfilesList()
+
+        if #profilesList == 0 then
+            local empty = listContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            empty:SetPoint("TOPLEFT", 15, -14)
+            empty:SetText("No character profiles saved yet")
+            empty:SetTextColor(T("TEXT_SECONDARY"))
+            listContainer:SetHeight(40)
+            return
+        end
+
+        local CARD_H = 68
+        local CARD_GAP = 6
+        local yOff = 0
+
+        for _, entry in ipairs(profilesList) do
+            local name = entry.name
+            local data = entry.data
+
+            local card = CreateFrame("Frame", nil, listContainer, "BackdropTemplate")
+            card:SetPoint("TOPLEFT", listContainer, "TOPLEFT", 0, yOff)
+            card:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", 0, yOff)
+            card:SetHeight(CARD_H)
+            card:SetBackdrop({
+                bgFile = "Interface\\Buttons\\WHITE8x8",
+                edgeFile = "Interface\\Buttons\\WHITE8x8",
+                edgeSize = 1,
+            })
+            card:SetBackdropColor(T("BG_TERTIARY"))
+            card:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+            local nameText = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -8)
+            nameText:SetText(name)
+            nameText:SetTextColor(T("TEXT_PRIMARY"))
+
+            local dateText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            dateText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -26)
+            local dateStr = "Saved: " .. date("%Y-%m-%d %H:%M", data.timestamp or 0)
+            if data.savedBy then
+                dateStr = dateStr .. "  |cFF888888by " .. data.savedBy .. "|r"
+            end
+            dateText:SetText(dateStr)
+            dateText:SetTextColor(T("TEXT_SECONDARY"))
+
+            local tags = {}
+            if type(data.keybinds) == "table" then
+                table.insert(tags, string.format("Keybinds (%d)", data.keybinds.count or 0))
+            end
+            if type(data.accountMacros) == "table" then
+                table.insert(tags, string.format("Acct Macros (%d)", data.accountMacros.count or 0))
+            end
+            if type(data.characterMacros) == "table" then
+                table.insert(tags, string.format("Char Macros (%d)", data.characterMacros.count or 0))
+            end
+            if type(data.gameSettings) == "table" then
+                table.insert(tags, string.format("CVars (%d)", data.gameSettings.count or 0))
+            end
+            if type(data.addonSet) == "table" then
+                table.insert(tags, string.format("Addons (%d)", data.addonSet.count or 0))
+            end
+            if type(data.addonSettings) == "table" then
+                table.insert(tags, string.format("Addon Settings (%d)", data.addonSettings.count or 0))
+            end
+
+            local tagsText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            tagsText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -44)
+            tagsText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -278, -44)
+            tagsText:SetText(#tags > 0 and table.concat(tags, "  |cFF444444/|r  ") or "")
+            tagsText:SetTextColor(T("TEXT_SECONDARY"))
+            tagsText:SetJustifyH("LEFT")
+
+            local exportBtn = GUI:CreateButton(nil, card, "Export", 80, 26)
+            exportBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -192, 6)
+            exportBtn:SetScript("OnClick", function()
+                local exportData = {}
+                for k, v in pairs(data) do
+                    if k ~= "gameSettings" and k ~= "addonSettings" then
+                        exportData[k] = v
+                    end
+                end
+                local serialized = OneWoW.CharProfiles:SerializeProfile(exportData)
+                if serialized then
+                    GUI:ShowCharProfileExportDialog(name, serialized)
+                end
+            end)
+
+            local restoreBtn = GUI:CreateButton(nil, card, "Restore", 90, 26)
+            restoreBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -96, 6)
+            restoreBtn:SetScript("OnClick", function()
+                GUI:ShowCharProfileRestoreDialog(name, data, RefreshListing)
+            end)
+
+            local deleteBtn = CreateFrame("Button", nil, card, "BackdropTemplate")
+            deleteBtn:SetSize(82, 26)
+            deleteBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 6)
+            deleteBtn:SetBackdrop({
+                bgFile = "Interface\\Buttons\\WHITE8x8",
+                edgeFile = "Interface\\Buttons\\WHITE8x8",
+                edgeSize = 1,
+            })
+            deleteBtn:SetBackdropColor(0.45, 0.12, 0.12)
+            deleteBtn:SetBackdropBorderColor(0.65, 0.25, 0.25)
+
+            local delText = deleteBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            delText:SetPoint("CENTER")
+            delText:SetText("Delete")
+            delText:SetTextColor(1, 1, 1)
+
+            deleteBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.65, 0.18, 0.18) end)
+            deleteBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.45, 0.12, 0.12) end)
+            local capturedName = name
+            deleteBtn:SetScript("OnClick", function()
+                StaticPopupDialogs["OW_CP_DELETE"] = {
+                    text = "Delete character profile: |cFFFFD100" .. capturedName .. "|r?",
+                    button1 = "Delete",
+                    button2 = "Cancel",
+                    OnAccept = function()
+                        M:DeleteProfile(capturedName)
+                        RefreshListing()
+                    end,
+                    timeout = 0,
+                    whileDead = true,
+                    hideOnEscape = true,
+                    preferredIndex = 3,
+                }
+                StaticPopup_Show("OW_CP_DELETE")
+            end)
+
+            yOff = yOff - (CARD_H + CARD_GAP)
+        end
+
+        listContainer:SetHeight(math.abs(yOff) + CARD_GAP)
+    end
+
+    saveBtn:SetScript("OnClick", function()
+        local name = nameEdit:GetText():trim()
+        local opts = {
+            keybinds        = cbKeybinds:GetChecked()  and true or false,
+            accountMacros   = cbAccMacros:GetChecked() and true or false,
+            characterMacros = cbCharMacro:GetChecked() and true or false,
+            gameSettings    = cbGameSet:GetChecked()   and true or false,
+            addonSet        = cbAddonSet:GetChecked()  and true or false,
+            addonSettings   = cbAddonSett:GetChecked() and true or false,
+        }
+        if M:SaveProfile(name, opts) then
+            nameEdit:SetText("")
+            cbKeybinds:SetChecked(false)
+            cbAccMacros:SetChecked(false)
+            cbCharMacro:SetChecked(false)
+            cbGameSet:SetChecked(false)
+            cbAddonSet:SetChecked(false)
+            cbAddonSett:SetChecked(false)
+            RefreshListing()
+        end
+    end)
+
+    local savedProfilesHeader = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    savedProfilesHeader:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset - 190)
+    savedProfilesHeader:SetText("Saved Character Profiles")
+    savedProfilesHeader:SetTextColor(T("ACCENT_PRIMARY"))
+
+    local importBtn = GUI:CreateButton(nil, content, "Import Profile", 130, 24)
+    importBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset - 187)
+    importBtn:SetScript("OnClick", function()
+        GUI:ShowCharProfileImportDialog(RefreshListing)
+    end)
+
+    yOffset = yOffset - 230
+
+    listContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    listContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+
+    C_Timer.After(0.05, function()
+        RefreshListing()
+        content:SetHeight(math.abs(yOffset) + listContainer:GetHeight() + 40)
+    end)
+end

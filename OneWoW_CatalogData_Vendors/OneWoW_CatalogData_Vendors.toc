@@ -1,0 +1,26 @@
+## Interface: 120001, 120002
+## Title: OneWoW - Data: |cFFFFFFFFVendors|r
+## Version: R6.2603.0623
+## Notes: OneWoW Data Addon that: provides vendor and item data for the Catalog.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_CatalogData_Vendors_DB
+## RequiredDeps: OneWoW_Catalog
+
+# Locales
+Locales\enUS.lua
+Locales\koKR.lua
+
+# Core
+Core\Database.lua
+Core\Core.lua
+
+# Modules
+Modules\DataLoader.lua
+Modules\VendorData.lua
+Modules\VendorScanner.lua
+
+# Main
+OneWoW_CatalogData_Vendors.lua

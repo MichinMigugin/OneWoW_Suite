@@ -1,0 +1,49 @@
+## Interface: 120001, 120002
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00Direct Deposit|r
+## Version: R6.2603.0623
+## Notes: OneWoW Addon that: automatically manages gold deposits between your character and Warband Bank.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_DirectDeposit_DB, OneWoW_DirectDeposit_MinimapLDBIconDB
+## SavedVariablesPerCharacter: OneWoW_DirectDeposit_CharDB
+## AddonCompartmentFunc: 1WoW_DirectDeposit_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: 1WoW_DirectDeposit_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: 1WoW_DirectDeposit_OnAddonCompartmentLeave
+## IconTexture: Interface\AddOns\OneWoW_DirectDeposit\Media\neutral-mini.png
+## OptionalDeps: OneWoW
+
+# Bindings
+# Bindings.xml
+
+# Libraries
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+
+# Locales
+Locales\enUS.lua
+Locales\esES.lua
+Locales\koKR.lua
+Locales\ruRU.lua
+Locales\frFR.lua
+Locales\deDE.lua
+
+# Core
+Core\Constants.lua
+Core\Database.lua
+
+# GUI Framework
+GUI\Framework.lua
+
+# Modules
+Modules\DirectDeposit.lua
+
+# GUI
+GUI\MainWindow.lua
+GUI\Minimap.lua
+
+# Main
+OneWoW_DirectDeposit.lua

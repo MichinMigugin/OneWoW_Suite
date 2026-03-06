@@ -1,0 +1,12 @@
+<Bindings>
+    <Binding name="ONEWOW_DIRECTDEPOSIT_TOGGLE" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
+        if OneWoW_DirectDeposit and OneWoW_DirectDeposit.GUI then
+            OneWoW_DirectDeposit.GUI:Toggle()
+        end
+    </Binding>
+    <Binding name="ONEWOW_DIRECTDEPOSIT_DEPOSIT" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
+        if OneWoW_DirectDeposit and OneWoW_DirectDeposit.DirectDeposit then
+            OneWoW_DirectDeposit.DirectDeposit:ManualDeposit()
+        end
+    </Binding>
+</Bindings>

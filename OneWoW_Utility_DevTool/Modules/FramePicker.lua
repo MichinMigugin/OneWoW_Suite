@@ -1,0 +1,361 @@
+local AddonName, Addon = ...
+
+local FramePicker = {}
+Addon.FramePicker = FramePicker
+
+function FramePicker:Initialize()
+    if self.overlay then return end
+
+    self.overlay = CreateFrame("Frame", "WoWNotesDevToolsPickerOverlay", UIParent)
+    self.overlay:SetFrameStrata("TOOLTIP")
+    self.overlay:SetAllPoints(UIParent)
+    self.overlay:EnableMouse(false)
+    self.overlay:EnableKeyboard(true)
+    self.overlay:Hide()
+
+    self.currentFrame = nil
+    self.lastMouseState = false
+
+    self.overlay:SetScript("OnUpdate", function(self, elapsed)
+        FramePicker:OnUpdate(elapsed)
+    end)
+
+    self.frameIndex = 1
+    self.allFrames = {}
+
+    self.overlay:SetScript("OnKeyDown", function(self, key)
+        if key == "ESCAPE" then
+            FramePicker:Cancel()
+        elseif key == "TAB" then
+            FramePicker:CycleFrame()
+        end
+    end)
+
+    self.overlay:SetPropagateKeyboardInput(false)
+
+    local infoWindow = CreateFrame("Frame", "WoWNotesDevToolsPickerInfo", UIParent, "BasicFrameTemplateWithInset")
+    infoWindow:SetSize(450, 350)
+    infoWindow:SetPoint("TOP", UIParent, "TOP", 0, -100)
+    infoWindow:SetFrameStrata("TOOLTIP")
+    infoWindow:SetMovable(true)
+    infoWindow:EnableMouse(true)
+    infoWindow:RegisterForDrag("LeftButton")
+    infoWindow:SetScript("OnDragStart", infoWindow.StartMoving)
+    infoWindow:SetScript("OnDragStop", infoWindow.StopMovingOrSizing)
+    infoWindow:Hide()
+
+    if infoWindow.TitleBg then
+        infoWindow.TitleBg:SetHeight(30)
+        infoWindow.TitleBg:SetColorTexture(0.1, 0.5, 0.1, 1)
+    end
+
+    if infoWindow.TitleText then
+        infoWindow.TitleText:SetText("Click: Select | TAB: Cycle | ESC: Cancel | SHIFT: Move This")
+    end
+
+    infoWindow.details = infoWindow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    infoWindow.details:SetPoint("TOPLEFT", infoWindow.Inset or infoWindow, "TOPLEFT", 10, -30)
+    infoWindow.details:SetPoint("TOPRIGHT", infoWindow.Inset or infoWindow, "TOPRIGHT", -10, -30)
+    infoWindow.details:SetJustifyH("LEFT")
+    infoWindow.details:SetJustifyV("TOP")
+    infoWindow.details:SetTextColor(0, 1, 0)
+    infoWindow.details:SetText("Hover over a frame to see details...")
+
+    self.infoWindow = infoWindow
+end
+
+function FramePicker:Start()
+    self:Initialize()
+
+    Addon.pickerActive = true
+    self.wasMainFrameShown = false
+
+    if Addon.UI and Addon.UI.mainFrame and Addon.UI.mainFrame:IsShown() then
+        self.wasMainFrameShown = true
+        Addon.UI.mainFrame:Hide()
+    end
+
+    self.overlay:Show()
+    self.overlay:SetFrameStrata("FULLSCREEN_DIALOG")
+    self.infoWindow:Show()
+
+    Addon:Print("Frame picker active - Click on a frame to inspect it")
+end
+
+function FramePicker:CycleFrame()
+    if #self.allFrames <= 1 then
+        Addon:Print("Only one frame at cursor")
+        return
+    end
+
+    self.frameIndex = (self.frameIndex % #self.allFrames) + 1
+    Addon:Print(string.format("Cycling to frame %d of %d", self.frameIndex, #self.allFrames))
+end
+
+function FramePicker:Cancel()
+    if not self.overlay then return end
+
+    Addon.pickerActive = false
+    self.overlay:Hide()
+    self.infoWindow:Hide()
+    Addon.FrameInspector:ClearHighlight()
+
+    if self.wasMainFrameShown and Addon.UI and Addon.UI.mainFrame then
+        Addon.UI.mainFrame:Show()
+    end
+
+    Addon:Print("Frame picker cancelled")
+end
+
+function FramePicker:GetGeometricFramesAtCursor()
+    local scale = UIParent:GetEffectiveScale()
+    local x, y = GetCursorPosition()
+    x, y = x / scale, y / scale
+
+    local framesAtCursor = {}
+    local frame = EnumerateFrames()
+    local checkedCount = 0
+    local visibleCount = 0
+    local hasRectCount = 0
+
+    while frame do
+        checkedCount = checkedCount + 1
+
+        if frame:IsVisible() and frame:IsShown() then
+            visibleCount = visibleCount + 1
+
+            local success, left, bottom, width, height = pcall(function()
+                return frame:GetRect()
+            end)
+
+            if success and left and width and height and width > 0 and height > 0 then
+                hasRectCount = hasRectCount + 1
+
+                local right = left + width
+                local top = bottom + height
+
+                if x >= left and x <= right and y >= bottom and y <= top then
+                    table.insert(framesAtCursor, frame)
+                end
+            end
+        end
+        frame = EnumerateFrames(frame)
+    end
+
+    if not self.lastDebugTime or (GetTime() - self.lastDebugTime) > 2 then
+        self.lastDebugTime = GetTime()
+        self.debugStats = string.format("Scanned: %d | Visible: %d | HasRect: %d | AtCursor: %d",
+            checkedCount, visibleCount, hasRectCount, #framesAtCursor)
+    end
+
+    local strataOrder = {
+        BACKGROUND = 1,
+        LOW = 2,
+        MEDIUM = 3,
+        HIGH = 4,
+        DIALOG = 5,
+        FULLSCREEN = 6,
+        FULLSCREEN_DIALOG = 7,
+        TOOLTIP = 8
+    }
+
+    table.sort(framesAtCursor, function(a, b)
+        local strataA = a:GetFrameStrata()
+        local strataB = b:GetFrameStrata()
+        local orderA = strataOrder[strataA] or 0
+        local orderB = strataOrder[strataB] or 0
+
+        if orderA ~= orderB then
+            return orderA > orderB
+        end
+
+        return a:GetFrameLevel() > b:GetFrameLevel()
+    end)
+
+    return framesAtCursor
+end
+
+function FramePicker:OnUpdate(elapsed)
+    if not self.checkedAPI then
+        Addon:Print("Using geometric frame detection (like fstack)")
+        self.checkedAPI = true
+    end
+
+    local shiftHeld = IsShiftKeyDown()
+
+    if shiftHeld then
+        self.lastMouseState = IsMouseButtonDown("LeftButton")
+        return
+    end
+
+    local frames = {}
+
+    if GetMouseFoci then
+        frames = GetMouseFoci() or {}
+    elseif GetMouseFocus then
+        local frame = GetMouseFocus()
+        frames = frame and {frame} or {}
+    end
+
+    local geometricFrames = self:GetGeometricFramesAtCursor()
+
+    local frameSet = {}
+    for _, frame in ipairs(frames) do
+        frameSet[frame] = true
+    end
+
+    for _, frame in ipairs(geometricFrames) do
+        if not frameSet[frame] then
+            table.insert(frames, frame)
+            frameSet[frame] = true
+        end
+    end
+
+    if #frames == 0 then
+        self.currentFrame = nil
+        self.allFrames = {}
+        self.frameIndex = 1
+        local msg = "No frames detected under cursor"
+        if self.debugStats then
+            msg = msg .. "\n\n" .. self.debugStats
+        end
+        self.infoWindow.details:SetText(msg)
+        Addon.FrameInspector:ClearHighlight()
+        return
+    end
+
+    local validFrames = {}
+    for _, frame in ipairs(frames) do
+        local isPickerUI = false
+
+        if frame == self.overlay or frame == self.infoWindow then
+            isPickerUI = true
+        end
+
+        local parent = frame.GetParent and frame:GetParent()
+        if parent == self.infoWindow then
+            isPickerUI = true
+        end
+
+        if not isPickerUI then
+            local isForbidden = false
+            pcall(function()
+                isForbidden = frame:IsForbidden()
+            end)
+
+            if not isForbidden then
+                table.insert(validFrames, frame)
+            end
+        end
+    end
+
+    self.allFrames = validFrames
+
+    if self.frameIndex > #validFrames then
+        self.frameIndex = 1
+    end
+
+    local targetFrame = validFrames[self.frameIndex]
+
+    if targetFrame then
+        self.currentFrame = targetFrame
+
+        local name = targetFrame.GetName and targetFrame:GetName() or "Anonymous"
+        local ftype = targetFrame.GetObjectType and targetFrame:GetObjectType() or "Unknown"
+
+        local details = {}
+        if #validFrames > 1 then
+            table.insert(details, string.format("FRAME %d of %d (TAB to cycle)", self.frameIndex, #validFrames))
+            table.insert(details, "")
+        end
+        table.insert(details, "NAME: " .. name)
+        table.insert(details, "TYPE: " .. ftype)
+
+        if targetFrame.IsShown then
+            table.insert(details, "SHOWN: " .. (targetFrame:IsShown() and "Yes" or "No"))
+        end
+
+        if targetFrame.IsMouseEnabled then
+            table.insert(details, "MOUSE: " .. (targetFrame:IsMouseEnabled() and "Yes" or "No"))
+        end
+
+        if targetFrame.GetParent then
+            local parent = targetFrame:GetParent()
+            if parent then
+                local pname = parent.GetName and parent:GetName() or "Anonymous"
+                table.insert(details, "PARENT: " .. pname)
+            end
+        end
+
+        if targetFrame.GetWidth and targetFrame.GetHeight then
+            local width = targetFrame:GetWidth()
+            local height = targetFrame:GetHeight()
+            table.insert(details, string.format("SIZE: %.0f x %.0f", width, height))
+        end
+
+        if targetFrame.GetFrameStrata then
+            table.insert(details, "STRATA: " .. targetFrame:GetFrameStrata())
+        end
+
+        if targetFrame.GetFrameLevel then
+            table.insert(details, "LEVEL: " .. targetFrame:GetFrameLevel())
+        end
+
+        if self.debugStats then
+            table.insert(details, "")
+            table.insert(details, "DEBUG: " .. self.debugStats)
+            table.insert(details, "TOTAL FRAMES FOUND: " .. #frames)
+
+            if #validFrames > 1 then
+                table.insert(details, "")
+                table.insert(details, "ALL FRAMES AT CURSOR:")
+                for i = 1, math.min(8, #validFrames) do
+                    local f = validFrames[i]
+                    local fname = f.GetName and f:GetName() or "Anonymous"
+                    local ftype = f.GetObjectType and f:GetObjectType() or "Unknown"
+                    local mouse = f.IsMouseEnabled and (f:IsMouseEnabled() and "M" or "-") or "?"
+                    local hasRect = (f.GetRect and select(1, f:GetRect()) ~= nil) and "R" or "-"
+                    local marker = (i == self.frameIndex) and ">>>" or "   "
+                    table.insert(details, string.format("%s[%d] %s (%s) %s%s", marker, i, fname, ftype, mouse, hasRect))
+                end
+                if #validFrames > 8 then
+                    table.insert(details, string.format("  ... and %d more", #validFrames - 8))
+                end
+            end
+        end
+
+        self.infoWindow.details:SetText(table.concat(details, "\n"))
+        Addon.FrameInspector:HighlightFrame(targetFrame)
+    else
+        self.currentFrame = nil
+        self.infoWindow.details:SetText("All frames filtered out\n(Forbidden or picker UI)")
+        Addon.FrameInspector:ClearHighlight()
+    end
+
+    local mouseDown = IsMouseButtonDown("LeftButton")
+    if mouseDown and not self.lastMouseState then
+        self:OnClick()
+    end
+    self.lastMouseState = mouseDown
+
+    if IsMouseButtonDown("RightButton") then
+        self:Cancel()
+    end
+end
+
+function FramePicker:OnClick()
+    if not self.currentFrame then
+        Addon:Print("No frame under cursor")
+        return
+    end
+
+    local frame = self.currentFrame
+    self:Cancel()
+
+    Addon.FrameInspector:InspectFrame(frame)
+    Addon:Print("Selected: " .. (frame.GetName and frame:GetName() or "Anonymous"))
+
+    if Addon.UI then
+        Addon.UI:Show()
+    end
+end

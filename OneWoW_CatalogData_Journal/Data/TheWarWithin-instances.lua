@@ -1,0 +1,103 @@
+-- TheWarWithin-instances.lua
+-- Instance data for The War Within
+
+OneWoWInstances_TheWarWithin = {
+	[1302] = {
+		instanceID = 1302,
+		name = "Manaforge Omega",
+		mapID = 2810,
+		instanceType = "raid",
+		expansionID = 11,
+	},
+	[1269] = {
+		instanceID = 1269,
+		name = "The Stonevault",
+		mapID = 2652,
+		instanceType = "party",
+		expansionID = 11,
+	},
+	[1273] = {
+		instanceID = 1273,
+		name = "Nerub-ar Palace",
+		mapID = 2657,
+		instanceType = "raid",
+		expansionID = 11,
+	},
+	[1272] = {
+		instanceID = 1272,
+		name = "Cinderbrew Meadery",
+		mapID = 2661,
+		instanceType = "party",
+		expansionID = 11,
+	},
+	[1296] = {
+		instanceID = 1296,
+		name = "Liberation of Undermine",
+		mapID = 2769,
+		instanceType = "raid",
+		expansionID = 11,
+	},
+	[1210] = {
+		instanceID = 1210,
+		name = "Darkflame Cleft",
+		mapID = 2651,
+		instanceType = "party",
+		expansionID = 11,
+	},
+	[1274] = {
+		instanceID = 1274,
+		name = "City of Threads",
+		mapID = 2669,
+		instanceType = "party",
+		expansionID = 11,
+	},
+	[1278] = {
+		instanceID = 1278,
+		name = "Khaz Algar",
+		mapID = 2774,
+		instanceType = "raid",
+		expansionID = 11,
+	},
+	[1267] = {
+		instanceID = 1267,
+		name = "Priory of the Sacred Flame",
+		mapID = 2649,
+		instanceType = "party",
+		expansionID = 11,
+	},
+	[1271] = {
+		instanceID = 1271,
+		name = "Ara-Kara, City of Echoes",
+		mapID = 2660,
+		instanceType = "party",
+		expansionID = 11,
+	},
+	[1268] = {
+		instanceID = 1268,
+		name = "The Rookery",
+		mapID = 2648,
+		instanceType = "party",
+		expansionID = 11,
+	},
+	[1270] = {
+		instanceID = 1270,
+		name = "The Dawnbreaker",
+		mapID = 2662,
+		instanceType = "party",
+		expansionID = 11,
+	},
+	[1298] = {
+		instanceID = 1298,
+		name = "Operation: Floodgate",
+		mapID = 2773,
+		instanceType = "party",
+		expansionID = 11,
+	},
+	[1303] = {
+		instanceID = 1303,
+		name = "Eco-Dome Al'dani",
+		mapID = 2830,
+		instanceType = "party",
+		expansionID = 11,
+	},
+}

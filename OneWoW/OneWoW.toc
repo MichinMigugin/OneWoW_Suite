@@ -1,0 +1,103 @@
+## Interface: 120001, 120002
+## Title: |cFF00FF00OneWoW|r
+## Version: R6.2603.0623
+## Notes: OneWoW - Central Hub for all OneWoW addons
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_DB
+## AddonCompartmentFunc: 1WoW_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: 1WoW_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: 1WoW_OnAddonCompartmentLeave
+## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
+## OptionalDeps: OneWoW_AltTracker, OneWoW_Catalog, OneWoW_NOtes, OneWoW_QoL, OneWoW_DirectDeposit, OneWOW_ShoppingList, OneWoW_Bags, OneWoW_Utility_Extractor, OneWoW_Utility_DevTool
+
+# Bindings
+# Bindings.xml
+
+# Libraries
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+
+# Media
+Media\fonts.lua
+
+# Locales
+Locales\enUS.lua
+Locales\koKR.lua
+
+# Core
+Core\Constants.lua
+Core\Database.lua
+Core\ModuleRegistry.lua
+Core\SettingsFeatureRegistry.lua
+
+# Features
+Features\overlays.lua
+Features\overlay-icons.lua
+Features\overlay-engine.lua
+Features\itemstatus.lua
+Features\toastalerts.lua
+Features\toast-engine.lua
+Features\toast-loot.lua
+Features\toast-notes.lua
+Features\toast-instance.lua
+Features\ContextMenus.lua
+
+# Integrations
+Integrations\ArkInventory.lua
+Integrations\Baganator.lua
+Integrations\BetterBags.lua
+Integrations\OneWoW_Bags.lua
+
+# Tooltips
+Tooltips\tooltips.lua
+Tooltips\tooltip-engine.lua
+Tooltips\tp-collections.lua
+Tooltips\tp-itemtypes.lua
+Tooltips\tp-itemtracker.lua
+Tooltips\tp-recipeknowledge.lua
+Tooltips\tp-customnotes.lua
+Tooltips\tp-technicalids.lua
+Tooltips\tp-notewarning.lua
+Tooltips\tp-itemstatus.lua
+
+# Portal Hub - Data
+Portals\Data\Hearthstones.lua
+Portals\Data\ShortNames.lua
+Portals\Data\Portals.lua
+
+# Portal Hub - Modules
+Portals\portalhub-detection.lua
+Portals\portalhub-items.lua
+Portals\portalhub-equip.lua
+Portals\portalhub-flyouts.lua
+Portals\portalhub-flyouts-nested.lua
+Portals\portalhub.lua
+Portals\portalhub-esc.lua
+Portals\portalhub-esc-panels.lua
+
+# GUI Framework
+GUI\Framework.lua
+
+# Search
+Search\SearchData.lua
+Search\SearchFrame.lua
+
+# GUI
+GUI\MainWindow.lua
+GUI\Minimap.lua
+GUI\t-home.lua
+GUI\t-settings.lua
+GUI\t-overlays.lua
+GUI\t-toastalerts.lua
+GUI\t-tooltips.lua
+GUI\t-portals.lua
+GUI\t-profiles.lua
+GUI\t-charprofiles.lua
+
+# Main
+OneWoW.lua

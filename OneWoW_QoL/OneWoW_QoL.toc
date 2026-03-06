@@ -1,0 +1,171 @@
+## Interface: 120001, 120002
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00Quality of Life|r
+## Version: R6.2603.0623
+## Notes: OneWoW Addon that: provides a Quality of Life hub with a developer-extensible module system.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_QoL_DB
+## IconTexture: Interface\AddOns\OneWoW_QoL\Media\neutral-mini.png
+## RequiredDeps: OneWoW
+
+# Libraries
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\AceAddon-3.0\AceAddon-3.0.lua
+Libs\AceEvent-3.0\AceEvent-3.0.lua
+Libs\AceConsole-3.0\AceConsole-3.0.lua
+Libs\AceDB-3.0\AceDB-3.0.lua
+Libs\LibCopyPaste-1.0\LibCopyPaste-1.0.lua
+
+# Bindings
+# Bindings.xml
+
+# Localization (MUST load immediately after libs)
+Locales\LocaleManager.lua
+Locales\enUS.lua
+Locales\koKR.lua
+
+# Core (load before everything else)
+Core\Constants.lua
+Core\Database.lua
+Core\Core.lua
+
+# Main Addon File
+OneWoW_QoL.lua
+
+# Module Registry (MUST load before UI and external modules)
+Modules\ModuleRegistry.lua
+
+# UI Framework and Main Frame
+UI\Framework.lua
+UI\MainFrame.lua
+UI\MinimapButton.lua
+
+# Tab UI Files
+UI\t-features.lua
+UI\t-toggles.lua
+UI\t-settings.lua
+
+# ==============================================================
+# EXTERNAL MODULES
+# To add a module:
+#   1. Create your folder: Modules\external\yourmodule\
+#   2. Add your files below in this section (locales FIRST)
+#   3. yourmodule.lua defines your module table and exports it to ns
+#   4. Add as many additional .lua files as your module needs
+#   5. data.lua calls ns.ModuleRegistry:Register(ns.YourModule) and must be LAST
+#   6. Each module is fully self-contained in its folder
+#
+# Load order: Locales first -> yourmodule.lua -> any extra files -> data.lua last
+#
+# Minimum pattern:
+#   Modules\external\yourmodule\Locales\enUS.lua
+#   Modules\external\yourmodule\yourmodule.lua
+#   Modules\external\yourmodule\data.lua
+#
+# Multi-file example (any number of files is fine):
+#   Modules\external\yourmodule\Locales\enUS.lua
+#   Modules\external\yourmodule\yourmodule.lua
+#   Modules\external\yourmodule\logic.lua
+#   Modules\external\yourmodule\ui.lua
+#   Modules\external\yourmodule\data.lua
+# ==============================================================
+
+Modules\external\autodelete\Locales\enUS.lua
+Modules\external\autodelete\Locales\koKR.lua
+Modules\external\autodelete\autodelete.lua
+Modules\external\autodelete\logic.lua
+Modules\external\autodelete\data.lua
+
+Modules\external\fastloot\Locales\enUS.lua
+Modules\external\fastloot\Locales\koKR.lua
+Modules\external\fastloot\fastloot.lua
+Modules\external\fastloot\data.lua
+
+Modules\external\autorepair\Locales\enUS.lua
+Modules\external\autorepair\Locales\koKR.lua
+Modules\external\autorepair\autorepair.lua
+Modules\external\autorepair\data.lua
+
+Modules\external\fastforward\Locales\enUS.lua
+Modules\external\fastforward\Locales\koKR.lua
+Modules\external\fastforward\fastforward.lua
+Modules\external\fastforward\data.lua
+
+Modules\external\autoopen\Locales\enUS.lua
+Modules\external\autoopen\Locales\koKR.lua
+Modules\external\autoopen\autoopen-data.lua
+Modules\external\autoopen\autoopen.lua
+Modules\external\autoopen\data.lua
+
+Modules\external\questtools\Locales\enUS.lua
+Modules\external\questtools\Locales\koKR.lua
+Modules\external\questtools\questtools.lua
+Modules\external\questtools\data.lua
+
+Modules\external\playmounts\Locales\enUS.lua
+Modules\external\playmounts\Locales\koKR.lua
+Modules\external\playmounts\playmounts.lua
+Modules\external\playmounts\data.lua
+
+Modules\external\copytext\Locales\enUS.lua
+Modules\external\copytext\Locales\koKR.lua
+Modules\external\copytext\copytext.lua
+Modules\external\copytext\data.lua
+
+Modules\external\coords\Locales\enUS.lua
+Modules\external\coords\Locales\koKR.lua
+Modules\external\coords\coords.lua
+Modules\external\coords\data.lua
+
+Modules\external\automount\Locales\enUS.lua
+Modules\external\automount\Locales\koKR.lua
+Modules\external\automount\automount.lua
+Modules\external\automount\data.lua
+
+Modules\external\cursorenhancer\Locales\enUS.lua
+Modules\external\cursorenhancer\Locales\koKR.lua
+Modules\external\cursorenhancer\cursorenhancer.lua
+Modules\external\cursorenhancer\data.lua
+
+Modules\external\professionspanel\Locales\enUS.lua
+Modules\external\professionspanel\Locales\koKR.lua
+Modules\external\professionspanel\professionspanel.lua
+Modules\external\professionspanel\data.lua
+
+Modules\external\afkpanel\Locales\enUS.lua
+Modules\external\afkpanel\Locales\koKR.lua
+Modules\external\afkpanel\afkpanel.lua
+Modules\external\afkpanel\data.lua
+
+Modules\external\escpanel\Locales\enUS.lua
+Modules\external\escpanel\Locales\koKR.lua
+Modules\external\escpanel\escpanel.lua
+Modules\external\escpanel\data.lua
+
+Modules\external\vendorpanel\Locales\enUS.lua
+Modules\external\vendorpanel\Locales\koKR.lua
+Modules\external\vendorpanel\vendorpanel.lua
+Modules\external\vendorpanel\vendorpanel-ui.lua
+Modules\external\vendorpanel\data.lua
+
+Modules\external\charinfo\Locales\enUS.lua
+Modules\external\charinfo\Locales\koKR.lua
+Modules\external\charinfo\charinfo.lua
+Modules\external\charinfo\data.lua
+
+Modules\external\bagbar\Locales\enUS.lua
+Modules\external\bagbar\Locales\koKR.lua
+Modules\external\bagbar\bagbar.lua
+Modules\external\bagbar\bagbar-ui.lua
+Modules\external\bagbar\data.lua
+
+Modules\external\questitembar\Locales\enUS.lua
+Modules\external\questitembar\Locales\koKR.lua
+Modules\external\questitembar\questitembar.lua
+Modules\external\questitembar\questitembar-ui.lua
+Modules\external\questitembar\data.lua
+

@@ -1,0 +1,21 @@
+local addonName, ns = ...
+if not ns.Locales then ns.Locales = {} end
+if not ns.Locales["koKR"] then ns.Locales["koKR"] = {} end
+local L = ns.Locales["koKR"]
+
+L["QUESTITEMBAR_TITLE"]              = "TEST"
+L["QUESTITEMBAR_DESC"]               = "TEST"
+L["QUESTITEMBAR_DRAG_TOOLTIP"]       = "TEST"
+L["QUESTITEMBAR_SETTINGS_HEADER"]    = "TEST"
+L["QUESTITEMBAR_LOCK_POSITION"]      = "TEST"
+L["QUESTITEMBAR_HIDE_WHEN_EMPTY"]    = "TEST"
+L["QUESTITEMBAR_BUTTON_SIZE"]        = "TEST"
+L["QUESTITEMBAR_COLUMNS"]            = "TEST"
+L["QUESTITEMBAR_SORT_MODE"]          = "TEST"
+L["QUESTITEMBAR_SORT_NONE"]          = "TEST"
+L["QUESTITEMBAR_SORT_QUEST"]         = "TEST"
+L["QUESTITEMBAR_SORT_ITEM"]          = "TEST"
+L["QUESTITEMBAR_LEFT_CLICK_USE"]     = "TEST"
+L["QUESTITEMBAR_QUEST_LABEL"]        = "TEST"
+L["QUESTITEMBAR_SHOW_BAR"]          = "TEST"
+L["QUESTITEMBAR_HIDE_BAR"]          = "TEST"

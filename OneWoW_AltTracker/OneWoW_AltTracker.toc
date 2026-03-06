@@ -1,0 +1,71 @@
+## Interface: 120001, 120002
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00AltTracker|r
+## Version: R6.2603.0623
+## Notes: OneWoW Addon that: tracks all your characters' progress, gold, professions, bank, auctions, and more.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_AltTracker_DB
+## IconTexture: Interface\AddOns\OneWoW_AltTracker\Media\neutral-mini.png
+## RequiredDeps: OneWoW
+
+# Libraries
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\AceAddon-3.0\AceAddon-3.0.lua
+Libs\AceEvent-3.0\AceEvent-3.0.lua
+Libs\AceConsole-3.0\AceConsole-3.0.lua
+Libs\AceDB-3.0\AceDB-3.0.lua
+
+# Localization (MUST load immediately after libs)
+Locales\LocaleManager.lua
+Locales\enUS.lua
+Locales\koKR.lua
+
+# Core (load before everything else)
+Core\Constants.lua
+Core\Database.lua
+Core\Config.lua
+Core\MigrationFix.lua
+Core\Core.lua
+
+# Data Files
+Data\d-expansions.lua
+Data\d-professions.lua
+Data\ShortNames.lua
+
+# Main Addon File
+OneWoW_AltTracker.lua
+
+# Modules (MUST load before UI)
+Modules\t-alttracker.lua
+Modules\alttracker\m-cache.lua
+Modules\alttracker\m-formatters.lua
+Modules\m-patch-dialog.lua
+
+# Alt Tracker UI Section Handlers
+Modules\alttracker\st-professions.lua
+Modules\alttracker\actionbars-compat.lua
+
+# UI Framework and Main Frame
+UI\Framework.lua
+UI\MainFrame.lua
+UI\MinimapButton.lua
+
+# Tab UI Files
+UI\t-summary.lua
+UI\t-progress.lua
+UI\t-bank-new.lua
+UI\t-equipment.lua
+UI\t-professions.lua
+UI\t-auctions.lua
+UI\t-financials.lua
+UI\t-items.lua
+UI\t-actionbars-new.lua
+UI\t-lockouts.lua
+UI\t-settings.lua
+
+# Keybindings
+# Bindings.xml

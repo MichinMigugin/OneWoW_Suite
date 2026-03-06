@@ -1,0 +1,42 @@
+## Interface: 120001, 120002
+## Title: OneWoW - Data: |cFFFFFFFFTradeskills|r
+## Version: R6.2603.0623
+## Notes: OneWoW Data Addon that: provides profession and recipe data for the Catalog.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_CatalogData_Tradeskills_DB
+## RequiredDeps: OneWoW_Catalog
+
+# Locales
+Locales\enUS.lua
+Locales\koKR.lua
+
+# Data (loaded before Core so globals are available)
+Data\Tradeskills_Alchemy.lua
+Data\Tradeskills_Blacksmithing.lua
+Data\Tradeskills_Cooking.lua
+Data\Tradeskills_Enchanting.lua
+Data\Tradeskills_Engineering.lua
+Data\Tradeskills_Fishing.lua
+Data\Tradeskills_Herbalism.lua
+Data\Tradeskills_HousingDyes.lua
+Data\Tradeskills_Inscription.lua
+Data\Tradeskills_Jewelcrafting.lua
+Data\Tradeskills_Leatherworking.lua
+Data\Tradeskills_Mining.lua
+Data\Tradeskills_Skinning.lua
+Data\Tradeskills_Tailoring.lua
+
+# Core
+Core\Database.lua
+Core\Core.lua
+
+# Modules
+Modules\DataLoader.lua
+Modules\TradeskillData.lua
+Modules\TradeskillScanner.lua
+
+# Main
+OneWoW_CatalogData_Tradeskills.lua

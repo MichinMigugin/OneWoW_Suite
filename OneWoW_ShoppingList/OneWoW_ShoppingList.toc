@@ -1,0 +1,58 @@
+## Interface: 120001, 120002
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00Shopping List|r
+## Version: R6.2603.0623
+## Notes: OneWoW Addon that: manages your shopping lists and crafting materials.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_ShoppingList_DB, OneWoW_ShoppingList_MinimapLDBIconDB
+## AddonCompartmentFunc: 1WoW_ShoppingList_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: 1WoW_ShoppingList_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: 1WoW_ShoppingList_OnAddonCompartmentLeave
+## IconTexture: Interface\AddOns\OneWoW_DirectDeposit\Media\neutral-mini.png
+## OptionalDeps: OneWoW
+
+# Bindings
+# Bindings.xml
+
+# Libraries
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+
+# Core (must load before locales)
+Core\Constants.lua
+
+# Locales
+Locales\enUS.lua
+Locales\esES.lua
+Locales\koKR.lua
+Locales\ruRU.lua
+Locales\frFR.lua
+Locales\deDE.lua
+
+# Core (continued)
+Core\Database.lua
+
+# GUI Framework
+GUI\Framework.lua
+
+# Modules
+Modules\ShoppingList.lua
+Modules\DataAccess.lua
+Modules\Alerts.lua
+Modules\Tooltips.lua
+Modules\BagOverlays.lua
+Modules\BagButton.lua
+Modules\ProfessionUI.lua
+Modules\CatalogIntegration.lua
+
+# GUI
+GUI\MainWindow.lua
+GUI\Dialogs.lua
+GUI\Minimap.lua
+
+# Main
+OneWoW_ShoppingList.lua

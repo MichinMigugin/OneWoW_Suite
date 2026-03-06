@@ -1,0 +1,63 @@
+local ADDON_NAME, OneWoW_Bags = ...
+
+OneWoW_Bags.Events = {}
+OneWoW_Bags.Events.dirtyBags = {}
+
+local eventFrame = CreateFrame("Frame")
+
+eventFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "BAG_UPDATE" then
+        local bagID = ...
+        OneWoW_Bags.Events.dirtyBags[bagID] = true
+
+    elseif event == "BAG_UPDATE_DELAYED" then
+        local dirty = OneWoW_Bags.Events.dirtyBags
+        OneWoW_Bags.Events.dirtyBags = {}
+        OneWoW_Bags:ProcessBagUpdate(dirty)
+
+    elseif event == "ITEM_LOCK_CHANGED" then
+        local bagID, slotID = ...
+        OneWoW_Bags:OnItemLockChanged(bagID, slotID)
+
+    elseif event == "BAG_UPDATE_COOLDOWN" then
+        OneWoW_Bags:OnCooldownUpdate()
+
+    elseif event == "PLAYER_LOGIN" then
+        OneWoW_Bags:OnPlayerLogin()
+
+    elseif event == "QUEST_ACCEPTED" then
+        local dirty = {}
+        for i = 0, 5 do
+            dirty[i] = true
+        end
+        OneWoW_Bags:ProcessBagUpdate(dirty)
+
+    elseif event == "QUEST_REMOVED" then
+        local dirty = {}
+        for i = 0, 5 do
+            dirty[i] = true
+        end
+        OneWoW_Bags:ProcessBagUpdate(dirty)
+    end
+end)
+
+function OneWoW_Bags.Events:RegisterBagEvents()
+    eventFrame:RegisterEvent("BAG_UPDATE")
+    eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+    eventFrame:RegisterEvent("ITEM_LOCK_CHANGED")
+    eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
+    eventFrame:RegisterEvent("PLAYER_LOGIN")
+    eventFrame:RegisterEvent("QUEST_ACCEPTED")
+    eventFrame:RegisterEvent("QUEST_REMOVED")
+end
+
+function OneWoW_Bags.Events:UnregisterBagEvents()
+    eventFrame:UnregisterEvent("BAG_UPDATE")
+    eventFrame:UnregisterEvent("BAG_UPDATE_DELAYED")
+    eventFrame:UnregisterEvent("ITEM_LOCK_CHANGED")
+    eventFrame:UnregisterEvent("BAG_UPDATE_COOLDOWN")
+    eventFrame:UnregisterEvent("QUEST_ACCEPTED")
+    eventFrame:UnregisterEvent("QUEST_REMOVED")
+end
+
+OneWoW_Bags.Events:RegisterBagEvents()

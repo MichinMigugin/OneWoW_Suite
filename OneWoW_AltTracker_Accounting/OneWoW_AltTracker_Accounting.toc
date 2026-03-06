@@ -1,0 +1,35 @@
+## Interface: 120001, 120002
+## Title: OneWoW - Data: |cFFFFFFFFAccounting|r
+## Version: R6.2603.0623
+## Notes: OneWoW Data Addon that: tracks all gold income and expenses for all your characters.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_AltTracker_Accounting_DB
+## RequiredDeps: OneWoW_AltTracker
+
+# Localization
+Locales\enUS.lua
+
+# Core
+Core\Database.lua
+Core\Core.lua
+
+# Data Collection Modules
+Modules\Transactions.lua
+Modules\AuctionTracker.lua
+Modules\TransmogTracker.lua
+Modules\MiscTracker.lua
+Modules\VendorTracker.lua
+Modules\TradeTracker.lua
+Modules\BankTracker.lua
+Modules\MailSendTracker.lua
+Modules\NpcOrderTracker.lua
+Modules\TrainerTracker.lua
+
+# Data Manager (orchestrates all modules)
+Modules\DataManager.lua
+
+# Main Addon File
+OneWoW_AltTracker_Accounting.lua

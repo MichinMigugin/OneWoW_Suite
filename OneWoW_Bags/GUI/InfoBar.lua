@@ -1,0 +1,267 @@
+local ADDON_NAME, OneWoW_Bags = ...
+
+OneWoW_Bags.InfoBar = {}
+local InfoBar = OneWoW_Bags.InfoBar
+
+local infoBarFrame = nil
+
+function InfoBar:Create(parent)
+    if infoBarFrame then return infoBarFrame end
+
+    local Constants = OneWoW_Bags.Constants
+    local GUI = OneWoW_Bags.GUI
+    local L = OneWoW_Bags.L
+    local C = Constants.GUI
+    local T = GUI.GetThemeColor
+    local S = GUI.GetSpacing
+
+    infoBarFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    infoBarFrame:SetHeight(C.INFOBAR_HEIGHT)
+    infoBarFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+    infoBarFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
+    infoBarFrame:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    infoBarFrame:SetBackdropColor(T("BG_TERTIARY"))
+    infoBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local searchBox = GUI:CreateEditBox("OneWoW_BagsSearch", infoBarFrame, 160, 22)
+    searchBox:SetPoint("LEFT", infoBarFrame, "LEFT", S("SM"), 0)
+    searchBox:SetScript("OnTextChanged", function(self)
+        local text = self:GetText()
+        if OneWoW_Bags.GUI.OnSearchChanged then
+            OneWoW_Bags.GUI:OnSearchChanged(text)
+        end
+    end)
+
+    searchBox.placeholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    searchBox.placeholder:SetPoint("LEFT", 8, 0)
+    searchBox.placeholder:SetText(L["SEARCH_PLACEHOLDER"] or "Search...")
+    searchBox.placeholder:SetTextColor(T("TEXT_MUTED"))
+
+    searchBox:SetScript("OnEditFocusGained", function(self)
+        self.placeholder:Hide()
+        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
+    end)
+    searchBox:SetScript("OnEditFocusLost", function(self)
+        if self:GetText() == "" then
+            self.placeholder:Show()
+        end
+        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    end)
+    searchBox:SetScript("OnEscapePressed", function(self)
+        self:SetText("")
+        self:ClearFocus()
+    end)
+
+    infoBarFrame.searchBox = searchBox
+
+    local catMgrBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CATEGORY_MANAGER_BTN"] or "Categories")
+    catMgrBtn:SetPoint("RIGHT", infoBarFrame, "RIGHT", -S("SM"), 0)
+    catMgrBtn:SetScript("OnClick", function()
+        if OneWoW_Bags.CategoryManagerUI then
+            OneWoW_Bags.CategoryManagerUI:Toggle()
+        end
+    end)
+    infoBarFrame.catMgrBtn = catMgrBtn
+
+    local viewBag = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"] or "Bag")
+    viewBag:SetPoint("RIGHT", catMgrBtn, "LEFT", -3, 0)
+    viewBag:SetScript("OnClick", function()
+        OneWoW_Bags.db.global.viewMode = "bag"
+        InfoBar:UpdateViewButtons()
+        if OneWoW_Bags.GUI.RefreshLayout then
+            OneWoW_Bags.GUI:RefreshLayout()
+        end
+    end)
+    infoBarFrame.viewBag = viewBag
+
+    local viewCat = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_CATEGORY"] or "Category")
+    viewCat:SetPoint("RIGHT", viewBag, "LEFT", -3, 0)
+    viewCat:SetScript("OnClick", function()
+        OneWoW_Bags.db.global.viewMode = "category"
+        InfoBar:UpdateViewButtons()
+        if OneWoW_Bags.GUI.RefreshLayout then
+            OneWoW_Bags.GUI:RefreshLayout()
+        end
+    end)
+    infoBarFrame.viewCat = viewCat
+
+    local viewList = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_LIST"] or "List")
+    viewList:SetPoint("RIGHT", viewCat, "LEFT", -3, 0)
+    viewList:SetScript("OnClick", function()
+        OneWoW_Bags.db.global.viewMode = "list"
+        InfoBar:UpdateViewButtons()
+        if OneWoW_Bags.GUI.RefreshLayout then
+            OneWoW_Bags.GUI:RefreshLayout()
+        end
+    end)
+    infoBarFrame.viewList = viewList
+
+    local emptyToggleBtn = CreateFrame("Button", nil, infoBarFrame)
+    emptyToggleBtn:SetSize(22, 22)
+    emptyToggleBtn:SetPoint("RIGHT", viewList, "LEFT", -3, 0)
+    local emptyIcon = emptyToggleBtn:CreateTexture(nil, "ARTWORK")
+    emptyIcon:SetAllPoints()
+    emptyIcon:SetTexture("Interface\\COMMON\\FavoritesIcon")
+    emptyToggleBtn:SetScript("OnClick", function()
+        local db = OneWoW_Bags.db.global
+        db.showEmptySlots = not db.showEmptySlots
+        InfoBar:UpdateViewButtons()
+        if OneWoW_Bags.GUI.RefreshLayout then
+            OneWoW_Bags.GUI:RefreshLayout()
+        end
+    end)
+    emptyToggleBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        local showing = OneWoW_Bags.db.global.showEmptySlots
+        if showing == nil then showing = true end
+        if showing then
+            GameTooltip:SetText(L["EMPTY_SLOTS_HIDE"] or "Hide Empty Slots", 1, 1, 1)
+        else
+            GameTooltip:SetText(L["EMPTY_SLOTS_SHOW"] or "Show Empty Slots", 1, 1, 1)
+        end
+        GameTooltip:Show()
+    end)
+    emptyToggleBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    infoBarFrame.emptyToggleBtn = emptyToggleBtn
+
+    InfoBar:UpdateViewButtons()
+
+    local function CreateShoppingCartButton()
+        if infoBarFrame.shoppingCartBtn then return end
+        local cartBtn = CreateFrame("Button", nil, infoBarFrame)
+        cartBtn:SetSize(22, 22)
+        cartBtn:SetPoint("LEFT", searchBox, "RIGHT", S("SM"), 0)
+        cartBtn:SetNormalAtlas("Perks-ShoppingCart")
+        cartBtn:SetPushedAtlas("Perks-ShoppingCart")
+        cartBtn:SetHighlightAtlas("Perks-ShoppingCart")
+        cartBtn:GetHighlightTexture():SetAlpha(0.5)
+        cartBtn:SetScript("OnClick", function()
+            if _G.OneWoW_ShoppingList and _G.OneWoW_ShoppingList.MainWindow then
+                _G.OneWoW_ShoppingList.MainWindow:Toggle()
+            end
+        end)
+        cartBtn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(OneWoW_Bags.L["SHOPPING_LIST"], 1, 1, 1)
+            GameTooltip:AddLine(OneWoW_Bags.L["SHOPPING_LIST_DESC"], 0.8, 0.8, 0.8, true)
+            GameTooltip:Show()
+        end)
+        cartBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        infoBarFrame.shoppingCartBtn = cartBtn
+    end
+
+    if _G.OneWoW_ShoppingList then
+        CreateShoppingCartButton()
+    else
+        local slEventFrame = CreateFrame("Frame")
+        slEventFrame:RegisterEvent("ADDON_LOADED")
+        slEventFrame:SetScript("OnEvent", function(_, event, addonName)
+            if addonName == "OneWoW_ShoppingList" then
+                CreateShoppingCartButton()
+                slEventFrame:UnregisterEvent("ADDON_LOADED")
+            end
+        end)
+    end
+
+    return infoBarFrame
+end
+
+function InfoBar:CreateViewBtn(parent, label)
+    local T = OneWoW_Bags.GUI.GetThemeColor
+
+    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    btn:SetHeight(22)
+    btn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    btn:SetBackdropColor(T("BTN_NORMAL"))
+    btn:SetBackdropBorderColor(T("BTN_BORDER"))
+
+    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    btn.text:SetPoint("CENTER", 0, 0)
+    btn.text:SetText(label)
+    btn.text:SetTextColor(T("TEXT_PRIMARY"))
+
+    local textWidth = btn.text:GetStringWidth()
+    btn:SetWidth(math.max(textWidth + 16, 36))
+
+    btn.isActive = false
+
+    btn:SetScript("OnEnter", function(self)
+        if not self.isActive then
+            self:SetBackdropColor(T("BTN_HOVER"))
+        end
+    end)
+
+    btn:SetScript("OnLeave", function(self)
+        if not self.isActive then
+            self:SetBackdropColor(T("BTN_NORMAL"))
+        end
+    end)
+
+    return btn
+end
+
+function InfoBar:UpdateViewButtons()
+    if not infoBarFrame then return end
+    local T = OneWoW_Bags.GUI.GetThemeColor
+    local mode = OneWoW_Bags.db and OneWoW_Bags.db.global.viewMode or "list"
+
+    local buttons = {
+        { btn = infoBarFrame.viewList, mode = "list" },
+        { btn = infoBarFrame.viewCat, mode = "category" },
+        { btn = infoBarFrame.viewBag, mode = "bag" },
+    }
+
+    for _, entry in ipairs(buttons) do
+        local btn = entry.btn
+        if entry.mode == mode then
+            btn.isActive = true
+            btn:SetBackdropColor(T("BG_ACTIVE"))
+            btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+            btn.text:SetTextColor(T("TEXT_ACCENT"))
+        else
+            btn.isActive = false
+            btn:SetBackdropColor(T("BTN_NORMAL"))
+            btn:SetBackdropBorderColor(T("BTN_BORDER"))
+            btn.text:SetTextColor(T("TEXT_PRIMARY"))
+        end
+    end
+
+    if infoBarFrame.emptyToggleBtn then
+        local showing = OneWoW_Bags.db and OneWoW_Bags.db.global.showEmptySlots
+        if showing == nil then showing = true end
+        if showing then
+            infoBarFrame.emptyToggleBtn:SetAlpha(1.0)
+        else
+            infoBarFrame.emptyToggleBtn:SetAlpha(0.35)
+        end
+        infoBarFrame.emptyToggleBtn:SetShown(mode == "list")
+    end
+end
+
+function InfoBar:GetSearchText()
+    if infoBarFrame and infoBarFrame.searchBox then
+        return infoBarFrame.searchBox:GetText() or ""
+    end
+    return ""
+end
+
+function InfoBar:GetFrame()
+    return infoBarFrame
+end
+
+function InfoBar:Reset()
+    if infoBarFrame then
+        infoBarFrame:Hide()
+        infoBarFrame:SetParent(UIParent)
+    end
+    infoBarFrame = nil
+end
