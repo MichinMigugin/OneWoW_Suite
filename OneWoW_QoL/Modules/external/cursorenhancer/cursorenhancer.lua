@@ -29,6 +29,12 @@ local trailTexPool = {}
 local trailPointPool = {}
 local MAX_TRAIL_POINTS = 20
 
+local TICKER_INTERVAL = 0.033
+local lastAlphaCheck = 0
+local lastCX, lastCY = -1, -1
+local lastTrailX, lastTrailY = -1, -1
+local positionTicker = nil
+
 local function Clamp(val, min, max)
     if val < min then return min elseif val > max then return max end
     return val
@@ -182,28 +188,37 @@ function CE:CreateCursorRing()
         trailTexPool[i] = tex
     end
 
-    local lastAlphaCheck = 0
-    local lastCX, lastCY = -1, -1
-    mainFrame:SetScript("OnUpdate", function(self, elapsed)
-        local x, y = GetCursorPosition()
-        local scale = UIParent:GetEffectiveScale()
-        local cx, cy = x / scale, y / scale
-        if cx ~= lastCX or cy ~= lastCY then
-            lastCX, lastCY = cx, cy
-            self:ClearAllPoints()
-            self:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cx, cy)
-        end
-
-        lastAlphaCheck = lastAlphaCheck + elapsed
-        if lastAlphaCheck >= 0.5 then
-            lastAlphaCheck = 0
-            CE:UpdateAlpha()
-        end
-
-        CE:UpdateMouseTrail()
-    end)
-
     CE:UpdateAll()
+end
+
+local function StopPositionTicker()
+    if positionTicker then
+        positionTicker:Cancel()
+        positionTicker = nil
+    end
+end
+
+local function RunPositionUpdate()
+    if not mainFrame or not mainFrame:IsShown() then return end
+    local x, y = GetCursorPosition()
+    local scale = UIParent:GetEffectiveScale()
+    local cx, cy = x / scale, y / scale
+    if cx ~= lastCX or cy ~= lastCY then
+        lastCX, lastCY = cx, cy
+        mainFrame:ClearAllPoints()
+        mainFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cx, cy)
+    end
+    lastAlphaCheck = lastAlphaCheck + TICKER_INTERVAL
+    if lastAlphaCheck >= 0.5 then
+        lastAlphaCheck = 0
+        CE:UpdateAlpha()
+    end
+    CE:UpdateMouseTrail()
+end
+
+local function StartPositionTicker()
+    StopPositionTicker()
+    positionTicker = C_Timer.NewTicker(TICKER_INTERVAL, RunPositionUpdate)
 end
 
 function CE:UpdateAll()
@@ -264,6 +279,9 @@ function CE:UpdateVisibility()
     mainFrame:SetShown(shouldShow)
     if shouldShow then
         self:UpdateAlpha()
+        StartPositionTicker()
+    else
+        StopPositionTicker()
     end
 end
 
@@ -297,9 +315,23 @@ end
 
 function CE:UpdateMouseTrail()
     local settings = self:GetSettings()
-    local mouseTrailActive = settings.mouseTrail and self:ShouldShowAllowedByCombatRules()
-
-    if not mouseTrailActive then
+    if not settings.mouseTrail then
+        lastTrailX, lastTrailY = -1, -1
+        for i = 1, #trailGroup do
+            local point = trailGroup[i]
+            if point.tex then
+                point.tex:Hide()
+                trailTexPool[#trailTexPool + 1] = point.tex
+                point.tex = nil
+            end
+            wipe(point)
+            trailPointPool[#trailPointPool + 1] = point
+        end
+        wipe(trailGroup)
+        return
+    end
+    if not self:ShouldShowAllowedByCombatRules() then
+        lastTrailX, lastTrailY = -1, -1
         for i = 1, #trailGroup do
             local point = trailGroup[i]
             if point.tex then
@@ -318,18 +350,26 @@ function CE:UpdateMouseTrail()
     local scale = UIParent:GetEffectiveScale()
     x, y = x / scale, y / scale
 
-    local now = GetTime()
-    local newPoint = trailPointPool[#trailPointPool]
-    if newPoint then
-        trailPointPool[#trailPointPool] = nil
-    else
-        newPoint = {}
+    local cursorMoved = (x ~= lastTrailX or y ~= lastTrailY)
+    if not cursorMoved and #trailGroup == 0 then
+        return
     end
-    newPoint.x       = x
-    newPoint.y       = y
-    newPoint.created = now
-    newPoint.tex     = nil
-    table.insert(trailGroup, newPoint)
+
+    local now = GetTime()
+    if cursorMoved then
+        lastTrailX, lastTrailY = x, y
+        local newPoint = trailPointPool[#trailPointPool]
+        if newPoint then
+            trailPointPool[#trailPointPool] = nil
+        else
+            newPoint = {}
+        end
+        newPoint.x       = x
+        newPoint.y       = y
+        newPoint.created = now
+        newPoint.tex     = nil
+        table.insert(trailGroup, newPoint)
+    end
 
     while #trailGroup > MAX_TRAIL_POINTS do
         local old = table.remove(trailGroup, 1)
@@ -403,9 +443,8 @@ function CursorEnhancerModule:OnEnable()
         self._eventFrame:SetScript("OnEvent", function(frame, event)
             if event == "PLAYER_ENTERING_WORLD" then
                 CE:CreateCursorRing()
-            else
-                CE:UpdateVisibility()
             end
+            CE:UpdateVisibility()
         end)
     end
 
