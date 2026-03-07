@@ -618,17 +618,6 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
             end
         end
 
-        onBtn:SetScript("OnClick", function()
-            SavePreference(catEnabledKey, true)
-            UpdateRow()
-            AM:UpdatePollingState()
-        end)
-        offBtn:SetScript("OnClick", function()
-            SavePreference(catEnabledKey, false)
-            UpdateRow()
-            AM:UpdatePollingState()
-        end)
-
         if registerRefresh then registerRefresh(UpdateRow) end
         UpdateRow()
         yOffset = yOffset - 34 - 10
