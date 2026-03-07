@@ -384,6 +384,12 @@ end
 function OneWoW_GUI:CreateSplitPanel(parent, options)
     local panelGap = Constants.GUI.PANEL_GAP or 10
 
+    local backdrop = {
+        bgFile = Constants.BACKDROP_INNER.bgFile,
+        edgeFile = Constants.BACKDROP_INNER.edgeFile,
+        edgeSize = Constants.BACKDROP_INNER.edgeSize
+    }
+
     options = options or {}
     local showSearch = options.showSearch
 
@@ -394,7 +400,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     listPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     listPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 35)
     listPanel:SetWidth(Constants.GUI.LEFT_PANEL_WIDTH)
-    listPanel:SetBackdrop({ Constants.BACKDROP_INNER.bgFile, Constants.BACKDROP_INNER.edgeFile, Constants.BACKDROP_INNER.edgeSize })
+    listPanel:SetBackdrop(backdrop)
     listPanel:SetBackdropColor(GetThemeColor("BG_PRIMARY"))
     listPanel:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
 
@@ -448,7 +454,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     local detailPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     detailPanel:SetPoint("TOPLEFT", listPanel, "TOPRIGHT", panelGap, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 35)
-    detailPanel:SetBackdrop({ Constants.BACKDROP_INNER.bgFile, Constants.BACKDROP_INNER.edgeFile, Constants.BACKDROP_INNER.edgeSize })
+    detailPanel:SetBackdrop(backdrop)
     detailPanel:SetBackdropColor(GetThemeColor("BG_PRIMARY"))
     detailPanel:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
 
@@ -480,7 +486,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     leftStatusBar:SetPoint("TOPLEFT", listPanel, "BOTTOMLEFT", 0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
-    leftStatusBar:SetBackdrop({ Constants.BACKDROP_INNER.bgFile, Constants.BACKDROP_INNER.edgeFile, Constants.BACKDROP_INNER.edgeSize })
+    leftStatusBar:SetBackdrop(backdrop)
     leftStatusBar:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
     leftStatusBar:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
 
@@ -493,7 +499,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     rightStatusBar:SetPoint("TOPLEFT", detailPanel, "BOTTOMLEFT", 0, -5)
     rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
-    rightStatusBar:SetBackdrop({ Constants.BACKDROP_INNER.bgFile, Constants.BACKDROP_INNER.edgeFile, Constants.BACKDROP_INNER.edgeSize })
+    rightStatusBar:SetBackdrop(backdrop)
     rightStatusBar:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
     rightStatusBar:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
 
