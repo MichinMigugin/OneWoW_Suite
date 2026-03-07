@@ -310,6 +310,7 @@ function ns.BagBarModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
 
     local container = detailScrollChild._bagbarContainer or CreateFrame("Frame", nil, detailScrollChild)
     detailScrollChild._bagbarContainer = container
+    container:SetParent(detailScrollChild)
     container:ClearAllPoints()
     container:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
     container:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)

@@ -407,6 +407,7 @@ OneWoW.Locales["enUS"] = {
     ["Wormhole Generators"] = "Wormhole Generators",
     ["Dimensional Rippers"] = "Dimensional Rippers",
     ["Ultrasafe Transporters"] = "Ultrasafe Transporters",
+    ["Engineering Devices"] = "Engineering Devices",
     ["Open Portal Hub"] = "Open Portal Hub",
     ["SETTINGS_PORTALHUB_TELEPORT_HOME"] = "Teleport Home",
     ["SETTINGS_PORTALHUB_UPDATE_DATA"] = "Update Data",

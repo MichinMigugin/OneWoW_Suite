@@ -85,6 +85,15 @@ local function CategorizePortal(portalData)
 		end
 	end
 
+	if portalData.type == "item" then
+		local professionItems = {132523, 144341, 167075}
+		for _, itemID in ipairs(professionItems) do
+			if portalData.id == itemID then
+				return "professions"
+			end
+		end
+	end
+
 	return "other"
 end
 
@@ -247,6 +256,7 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		local wormholes = OneWoW.PortalHubDetection:GetWormholes(showAll)
 		local rippers = OneWoW.PortalHubDetection:GetDimensionalRippers(showAll)
 		local transporters = OneWoW.PortalHubDetection:GetUltrasafeTransporters(showAll)
+		local engOther = OneWoW.PortalHubDetection:GetEngineeringOtherItems(showAll)
 
 		table.insert(portals, {type = "header", name = L["Wormhole Generators"]})
 		for _, w in ipairs(wormholes) do
@@ -259,6 +269,12 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		table.insert(portals, {type = "header", name = L["Ultrasafe Transporters"]})
 		for _, t in ipairs(transporters) do
 			table.insert(portals, t)
+		end
+		if #engOther > 0 or showAll then
+			table.insert(portals, {type = "header", name = L["Engineering Devices"]})
+			for _, o in ipairs(engOther) do
+				table.insert(portals, o)
+			end
 		end
 		return portals
 	elseif categoryID == "abilities" then
