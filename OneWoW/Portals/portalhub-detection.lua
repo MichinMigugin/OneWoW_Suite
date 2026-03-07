@@ -342,6 +342,24 @@ function Detection:GetUltrasafeTransporters(showAll)
 	return portals
 end
 
+function Detection:GetEngineeringOtherItems(showAll)
+	local portals = {}
+
+	if not self:HasProfession("Engineering") and not showAll then
+		return portals
+	end
+
+	if OneWoW.PortalData and OneWoW.PortalData.Items.engineering.other then
+		for _, item in ipairs(OneWoW.PortalData.Items.engineering.other) do
+			if showAll or C_Item.GetItemCount(item.id) > 0 then
+				table.insert(portals, {type = "item", id = item.id, name = item.name})
+			end
+		end
+	end
+
+	return portals
+end
+
 function Detection:GetSpecialPortals(showAll)
 	local portals = {}
 
