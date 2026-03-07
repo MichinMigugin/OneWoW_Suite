@@ -192,6 +192,14 @@ function Engine:EvaluateTask(task)
     elseif trackType == "spell" then
         return nil
 
+    elseif trackType == "rare_quest" then
+        if params.questId then
+            if C_QuestLog.IsQuestFlaggedCompleted(params.questId) then
+                return 1
+            end
+        end
+        return 0
+
     elseif trackType == "manual" then
         return nil
     end

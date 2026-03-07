@@ -752,6 +752,9 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
                             table.insert(ids, tonumber(id))
                         end
                         taskData.trackParams.questIds = ids
+                    elseif taskData.trackType == "rare_quest" and frame._questIds and frame._questIds ~= "" then
+                        taskData.trackParams.questId = tonumber(frame._questIds) or 0
+                        taskData.max = 1
                     elseif taskData.trackType == "currency" and frame._currencyId then
                         taskData.trackParams.currencyId = tonumber(frame._currencyId) or 0
                         if frame._noMax then
@@ -838,6 +841,7 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     trackDD:SetOptions({
         { text = L["ROUTINES_TRACK_MANUAL"],     value = "manual" },
         { text = L["ROUTINES_TRACK_QUEST"],      value = "quest" },
+        { text = "Track Rare Quest",             value = "rare_quest" },
         { text = L["ROUTINES_TRACK_CURRENCY"],   value = "currency" },
         { text = L["ROUTINES_TRACK_REPUTATION"], value = "reputation" },
     })
@@ -939,6 +943,16 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
             justTrackLabel:Show()
             questLabel:SetText(L["ROUTINES_CURRENCY_ID"])
             currencyNameLabel:Show()
+        elseif value == "rare_quest" then
+            justTrackCheckbox:Hide()
+            justTrackCheckbox:SetChecked(false)
+            dialog._noMax = false
+            maxLabel:Hide()
+            maxBox:Hide()
+            justTrackLabel:Hide()
+            questLabel:SetText("Rare Quest ID")
+            currencyNameLabel:SetText("")
+            currencyNameLabel:Hide()
         else
             justTrackCheckbox:Hide()
             justTrackCheckbox:SetChecked(false)
