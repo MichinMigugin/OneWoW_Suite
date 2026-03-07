@@ -328,6 +328,7 @@ function ns.UI.CreateRoutinesTab(parent)
                 taskRow:SetPoint("TOPLEFT", secFrame, "TOPLEFT", 8, taskYOff)
                 taskRow:SetPoint("TOPRIGHT", secFrame, "TOPRIGHT", -8, taskYOff)
                 taskRow:SetHeight(22)
+                taskRow:EnableMouse(true)
 
                 local prog = ns.RoutinesData:GetProgress(routineID, section.key, task.key)
                 local isComplete = not task.noMax and prog >= task.max
@@ -357,7 +358,14 @@ function ns.UI.CreateRoutinesTab(parent)
                 local countFS = taskRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 countFS:SetPoint("RIGHT", taskRow, "RIGHT", -30, 0)
                 countFS:SetJustifyH("RIGHT")
-                if task.noMax then
+                if task.trackType == "prof_knowledge" then
+                    local unspent = ns.RoutinesData:GetProgress(routineID, section.key, task.key .. "_u")
+                    if task.max and task.max > 0 then
+                        countFS:SetText(string.format("%d (%d)/%d", prog, unspent, task.max))
+                    else
+                        countFS:SetText(string.format("%d (%d)", prog, unspent))
+                    end
+                elseif task.noMax then
                     countFS:SetText(tostring(prog))
                 else
                     countFS:SetText(string.format("%d/%d", prog, task.max))
@@ -375,6 +383,13 @@ function ns.UI.CreateRoutinesTab(parent)
                     ShowRoutineDetail(routineID)
                     parent.RefreshRoutinesList()
                     ns.RoutinesEngine:RefreshPinnedWindow(routineID)
+                end)
+
+                taskRow:SetScript("OnEnter", function(self)
+                    ns.RoutinesEngine:BuildTaskTooltip(task, section, self)
+                end)
+                taskRow:SetScript("OnLeave", function()
+                    GameTooltip:Hide()
                 end)
 
                 taskYOff = taskYOff - 24
@@ -752,6 +767,9 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
                             table.insert(ids, tonumber(id))
                         end
                         taskData.trackParams.questIds = ids
+                    elseif taskData.trackType == "rare_quest" and frame._questIds and frame._questIds ~= "" then
+                        taskData.trackParams.questId = tonumber(frame._questIds) or 0
+                        taskData.max = 1
                     elseif taskData.trackType == "currency" and frame._currencyId then
                         taskData.trackParams.currencyId = tonumber(frame._currencyId) or 0
                         if frame._noMax then
@@ -838,6 +856,7 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     trackDD:SetOptions({
         { text = L["ROUTINES_TRACK_MANUAL"],     value = "manual" },
         { text = L["ROUTINES_TRACK_QUEST"],      value = "quest" },
+        { text = "Track Rare Quest",             value = "rare_quest" },
         { text = L["ROUTINES_TRACK_CURRENCY"],   value = "currency" },
         { text = L["ROUTINES_TRACK_REPUTATION"], value = "reputation" },
     })
@@ -939,6 +958,16 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
             justTrackLabel:Show()
             questLabel:SetText(L["ROUTINES_CURRENCY_ID"])
             currencyNameLabel:Show()
+        elseif value == "rare_quest" then
+            justTrackCheckbox:Hide()
+            justTrackCheckbox:SetChecked(false)
+            dialog._noMax = false
+            maxLabel:Hide()
+            maxBox:Hide()
+            justTrackLabel:Hide()
+            questLabel:SetText("Rare Quest ID")
+            currencyNameLabel:SetText("")
+            currencyNameLabel:Hide()
         else
             justTrackCheckbox:Hide()
             justTrackCheckbox:SetChecked(false)

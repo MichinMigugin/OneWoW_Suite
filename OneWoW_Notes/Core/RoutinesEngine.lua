@@ -51,6 +51,11 @@ function Engine:Initialize()
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+    frame:RegisterEvent("TRADE_SKILL_SHOW")
+    frame:RegisterEvent("TRADE_SKILL_DETAILS_UPDATE")
+    frame:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
+    frame:RegisterEvent("SKILL_LINES_CHANGED")
+    frame:RegisterEvent("TRAIT_TREE_CURRENCY_INFO_UPDATED")
 
     local lastScan = 0
     frame:SetScript("OnEvent", function(_, event, ...)
@@ -105,6 +110,117 @@ function Engine:GetTaskDisplayLabel(task)
     return task.label or ""
 end
 
+function Engine:BuildTaskTooltip(task, section, anchorFrame)
+    local displayLabel = self:GetTaskDisplayLabel(task)
+    GameTooltip:SetOwner(anchorFrame, "ANCHOR_RIGHT")
+    GameTooltip:SetText(displayLabel, 1, 1, 1, 1, true)
+
+    local trackType = task.trackType or "manual"
+    local effectiveReset = task.resetType or (section and section.resetType) or "weekly"
+
+    if trackType == "manual" then
+        GameTooltip:AddLine("Manual tracking", 0.8, 0.8, 0.5)
+        GameTooltip:AddLine("Left click to advance, right click to undo", 0.55, 0.55, 0.55)
+    elseif trackType == "quest" then
+        GameTooltip:AddLine("Auto-tracked from game data", 0.4, 0.85, 0.4)
+        if effectiveReset == "never" then
+            GameTooltip:AddLine("Reflects any progress made before installing the addon", 0.65, 0.65, 0.45)
+        end
+    elseif trackType == "currency" then
+        GameTooltip:AddLine("Auto-tracked - currency", 0.4, 0.85, 0.4)
+        if task.trackParams and task.trackParams.currencyId then
+            local info = C_CurrencyInfo.GetCurrencyInfo(task.trackParams.currencyId)
+            if info and info.name then
+                GameTooltip:AddLine(info.name, 0.7, 0.7, 0.7)
+            end
+        end
+    elseif trackType == "vault_raid" or trackType == "vault_dungeon" or trackType == "vault_world" then
+        GameTooltip:AddLine("Auto-tracked - Great Vault", 0.4, 0.85, 0.4)
+        local actType = trackType == "vault_raid" and 3 or (trackType == "vault_dungeon" and 1 or 4)
+        local tierName, tierColor = self:GetVaultTierInfo(actType)
+        if tierName then
+            GameTooltip:AddLine("Current tier: |cff" .. tierColor .. tierName .. "|r", 0.7, 0.7, 0.7)
+        end
+    elseif trackType == "renown" then
+        GameTooltip:AddLine("Auto-tracked - faction renown", 0.4, 0.85, 0.4)
+        if task.trackParams and task.trackParams.factionId then
+            local data = C_MajorFactions.GetMajorFactionData(task.trackParams.factionId)
+            if data then
+                local rep = data.renownReputationEarned or 0
+                local needed = data.renownLevelThreshold or 2500
+                GameTooltip:AddLine(string.format("Progress to next level: %d / %d", rep, needed), 0.65, 0.65, 0.65)
+            end
+        end
+    elseif trackType == "reputation" then
+        GameTooltip:AddLine("Auto-tracked - reputation", 0.4, 0.85, 0.4)
+        if task.trackParams and task.trackParams.factionId then
+            local factionData = C_Reputation.GetFactionDataByID(task.trackParams.factionId)
+            if factionData then
+                local cur = factionData.currentStanding or 0
+                local low = factionData.currentReactionThreshold or 0
+                local high = factionData.nextReactionThreshold or 0
+                if high > low then
+                    GameTooltip:AddLine(string.format("Standing: %d / %d", cur - low, high - low), 0.65, 0.65, 0.65)
+                end
+            end
+        end
+    elseif trackType == "prof_skill" then
+        GameTooltip:AddLine("Auto-tracked - profession skill level", 0.4, 0.85, 0.4)
+    elseif trackType == "prof_concentration" then
+        GameTooltip:AddLine("Auto-tracked - concentration", 0.4, 0.85, 0.4)
+        GameTooltip:AddLine("Recharges over time", 0.65, 0.65, 0.65)
+    elseif trackType == "prof_knowledge" then
+        GameTooltip:AddLine("Auto-tracked - knowledge tree", 0.4, 0.85, 0.4)
+        GameTooltip:AddLine("Shows spent (unspent) / max", 0.65, 0.65, 0.65)
+        GameTooltip:AddLine("Reflects any points spent before installing the addon", 0.65, 0.65, 0.45)
+    elseif trackType == "prof_firstcraft" then
+        GameTooltip:AddLine("Auto-tracked - first crafts done", 0.4, 0.85, 0.4)
+        GameTooltip:AddLine("Requires profession window opened at least once", 0.55, 0.55, 0.55)
+    elseif trackType == "prof_catchup" then
+        GameTooltip:AddLine("Auto-tracked - catch-up currency", 0.4, 0.85, 0.4)
+        GameTooltip:AddLine("Drops from patron orders once weekly sources are done", 0.65, 0.65, 0.65)
+    end
+
+    if effectiveReset == "never" then
+        GameTooltip:AddLine("Permanent - never resets", 0.55, 0.55, 0.35)
+    elseif effectiveReset == "weekly" then
+        GameTooltip:AddLine("Resets every Tuesday", 0.5, 0.5, 0.5)
+    elseif effectiveReset == "daily" then
+        GameTooltip:AddLine("Resets every day", 0.5, 0.5, 0.5)
+    end
+
+    GameTooltip:Show()
+end
+
+function Engine:EvaluateProfessionKnowledge(skillLineVariantID)
+    if not skillLineVariantID then return nil, nil, nil end
+    local configID = C_ProfSpecs.GetConfigIDForSkillLine(skillLineVariantID)
+    if not configID or configID <= 0 then return nil, nil, nil end
+    local configInfo = C_Traits.GetConfigInfo(configID)
+    if not configInfo or not configInfo.treeIDs then return nil, nil, nil end
+    local spent, maxKnow = 0, 0
+    for _, treeID in ipairs(configInfo.treeIDs) do
+        local treeNodes = C_Traits.GetTreeNodes(treeID)
+        if treeNodes then
+            for _, nodeID in ipairs(treeNodes) do
+                local nodeInfo = C_Traits.GetNodeInfo(configID, nodeID)
+                if nodeInfo then
+                    if nodeInfo.ranksPurchased and nodeInfo.ranksPurchased > 1 then
+                        spent = spent + (nodeInfo.currentRank - 1)
+                    end
+                    if nodeInfo.maxRanks and nodeInfo.maxRanks > 1 then
+                        maxKnow = maxKnow + (nodeInfo.maxRanks - 1)
+                    end
+                end
+            end
+        end
+    end
+    local unspent = 0
+    local concInfo = C_ProfSpecs.GetCurrencyInfoForSkillLine(skillLineVariantID)
+    if concInfo then unspent = concInfo.numAvailable or 0 end
+    return spent, unspent, maxKnow
+end
+
 function Engine:Scan()
     local routines = ns.RoutinesData:GetAllRoutines()
     local dirty = false
@@ -113,11 +229,23 @@ function Engine:Scan()
         if type(routine) == "table" and routine.sections then
             for _, section in ipairs(routine.sections) do
                 for _, task in ipairs(section.tasks or {}) do
-                    local oldVal = ns.RoutinesData:GetProgress(routineID, section.key, task.key)
-                    local newVal = self:EvaluateTask(task)
-                    if newVal ~= nil and newVal ~= oldVal then
-                        ns.RoutinesData:SetProgress(routineID, section.key, task.key, newVal, task.noMax and 999999 or task.max)
-                        dirty = true
+                    if task.trackType == "prof_knowledge" then
+                        local params = task.trackParams or {}
+                        local spent, unspent, maxKnow = self:EvaluateProfessionKnowledge(params.skillLineVariantID)
+                        if spent ~= nil then
+                            if maxKnow and maxKnow > 0 then task.max = maxKnow end
+                            local effMax = (task.max and task.max > 0) and task.max or 9999
+                            ns.RoutinesData:SetProgress(routineID, section.key, task.key, spent, effMax)
+                            ns.RoutinesData:SetProgress(routineID, section.key, task.key .. "_u", unspent or 0, 9999)
+                            dirty = true
+                        end
+                    else
+                        local oldVal = ns.RoutinesData:GetProgress(routineID, section.key, task.key)
+                        local newVal = self:EvaluateTask(task)
+                        if newVal ~= nil and newVal ~= oldVal then
+                            ns.RoutinesData:SetProgress(routineID, section.key, task.key, newVal, task.noMax and 999999 or task.max)
+                            dirty = true
+                        end
                     end
                 end
             end
@@ -192,7 +320,77 @@ function Engine:EvaluateTask(task)
     elseif trackType == "spell" then
         return nil
 
+    elseif trackType == "rare_quest" then
+        if params.questId then
+            if C_QuestLog.IsQuestFlaggedCompleted(params.questId) then
+                return 1
+            end
+        end
+        return 0
+
     elseif trackType == "manual" then
+        return nil
+
+    elseif trackType == "prof_skill" then
+        if params.baseSkillLineID then
+            local p1, p2 = GetProfessions()
+            for _, idx in ipairs({p1, p2}) do
+                if idx then
+                    local _, _, rank, maxRank, _, _, skillLine = GetProfessionInfo(idx)
+                    if skillLine == params.baseSkillLineID and rank then
+                        if maxRank and maxRank > 0 then task.max = maxRank end
+                        return rank
+                    end
+                end
+            end
+        end
+        return nil
+
+    elseif trackType == "prof_concentration" then
+        if params.currencyId and params.currencyId > 0 then
+            local info = C_CurrencyInfo.GetCurrencyInfo(params.currencyId)
+            if info then
+                if info.maxQuantity and info.maxQuantity > 0 then
+                    task.max = info.maxQuantity
+                end
+                return info.quantity or 0
+            end
+        end
+        return nil
+
+    elseif trackType == "prof_firstcraft" then
+        if params.spellIds and #params.spellIds > 0 and C_TradeSkillUI.IsRecipeFirstCraft then
+            local hasData = false
+            local done = 0
+            for _, spellID in ipairs(params.spellIds) do
+                local result = C_TradeSkillUI.IsRecipeFirstCraft(spellID)
+                if result ~= nil then
+                    hasData = true
+                    if result == false then
+                        done = done + 1
+                    end
+                end
+            end
+            if hasData then return done end
+        end
+        return nil
+
+    elseif trackType == "prof_catchup" then
+        if params.currencyId and params.currencyId > 0 then
+            local info = C_CurrencyInfo.GetCurrencyInfo(params.currencyId)
+            if info then
+                if info.maxQuantity and info.maxQuantity > 0 then
+                    task.max = info.maxQuantity
+                    task.noMax = false
+                else
+                    task.noMax = true
+                end
+                return info.quantity or 0
+            end
+        end
+        return nil
+
+    elseif trackType == "prof_knowledge" then
         return nil
     end
 

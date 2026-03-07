@@ -169,3 +169,8 @@ Modules\external\questitembar\questitembar.lua
 Modules\external\questitembar\questitembar-ui.lua
 Modules\external\questitembar\data.lua
 
+Modules\external\auctionhouse\Locales\enUS.lua
+Modules\external\auctionhouse\Locales\koKR.lua
+Modules\external\auctionhouse\auctionhouse.lua
+Modules\external\auctionhouse\data.lua
+
