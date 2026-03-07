@@ -135,10 +135,10 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, yOffset, onLabel, offLabel,
     end
 
     for _, btn in ipairs({ onBtn, offBtn }) do
-        btn:SetScript("OnEnter", function() applyHover(btn) end)
-        btn:SetScript("OnLeave", function() applyNormal(btn) end)
-        btn:SetScript("OnMouseDown", function() btn:SetBackdropColor(GetThemeColor("BTN_PRESSED")) end)
-        btn:SetScript("OnMouseUp", function() applyNormal(btn) end)
+        btn:SetScript("OnEnter", function(self) applyHover(self) end)
+        btn:SetScript("OnLeave", function(self) applyNormal(self) end)
+        btn:SetScript("OnMouseDown", function(self) self:SetBackdropColor(GetThemeColor("BTN_PRESSED")) end)
+        btn:SetScript("OnMouseUp", function(self) applyNormal(self) end)
     end
 
     local function refresh(enabled, val)
