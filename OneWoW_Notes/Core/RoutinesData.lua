@@ -491,6 +491,50 @@ local UNIQUE_ITEMS_TEMPLATES = {
     }},
 }
 
+local EVERSONG_WOODS_TEMPLATE = {
+    title = "Eversong Woods - Rares & Treasures",
+    sections = {
+        {
+            label = "Rares",
+            type = "custom",
+            resetType = "weekly",
+            tasks = {
+                { label = "Warden of Weeds", max = 1, trackType = "manual" },
+                { label = "Overfester Hydra", max = 1, trackType = "manual" },
+                { label = "Cre'van", max = 1, trackType = "manual" },
+                { label = "Lady Liminus", max = 1, trackType = "manual" },
+                { label = "Bad Zed", max = 1, trackType = "manual" },
+                { label = "Banuran", max = 1, trackType = "manual" },
+                { label = "Duskburn", max = 1, trackType = "manual" },
+                { label = "Dame Bloodshed", max = 1, trackType = "manual" },
+                { label = "Harried Hawkstrider", max = 1, trackType = "manual" },
+                { label = "Bloated Snapdragon", max = 1, trackType = "manual" },
+                { label = "Coralfang", max = 1, trackType = "manual" },
+                { label = "Terrinor", max = 1, trackType = "manual" },
+                { label = "Waverly", max = 1, trackType = "manual" },
+                { label = "Lost Guardian", max = 1, trackType = "manual" },
+                { label = "Malfunctioning Construct", max = 1, trackType = "manual" },
+            },
+        },
+        {
+            label = "Treasures",
+            type = "custom",
+            resetType = "never",
+            tasks = {
+                { label = "Rookery Cache", max = 1, trackType = "manual" },
+                { label = "Gift of the Phoenix", max = 1, trackType = "manual" },
+                { label = "Gilded Armillary Sphere", max = 1, trackType = "manual" },
+                { label = "Farstrider's Lost Quiver", max = 1, trackType = "manual" },
+                { label = "Burbling Paint Pot", max = 1, trackType = "manual" },
+                { label = "Triple-Locked Safebox", max = 1, trackType = "manual" },
+                { label = "Forgotten Ink and Quill", max = 1, trackType = "manual" },
+                { label = "Antique Nobleman's Signet Ring", max = 1, trackType = "manual" },
+                { label = "Stone Vat of Wine", max = 1, trackType = "manual" },
+            },
+        },
+    },
+}
+
 local RENOWN_FACTIONS = {
     { key = "silvermoon", label = "Silvermoon Court",  factionId = 2710, maxRenown = 20 },
     { key = "amani",      label = "Amani Tribe",       factionId = 2696, maxRenown = 20 },
@@ -719,4 +763,47 @@ function RoutinesData:ImportRoutine(importString)
 
     local routineID = self:AddRoutine(routineData)
     return routineID
+end
+
+function RoutinesData:CreateZoneRoutineFromTemplate(templateData)
+    if not templateData or not templateData.title then return nil end
+
+    local routineData = {
+        title = templateData.title,
+        sections = {},
+    }
+
+    for _, sectionTemplate in ipairs(templateData.sections or {}) do
+        local section = {
+            key = "s-" .. string.format("%04x", math.random(0, 65535)),
+            label = sectionTemplate.label or "",
+            type = sectionTemplate.type or "custom",
+            resetType = sectionTemplate.resetType or "weekly",
+            tasks = {},
+        }
+
+        for _, taskTemplate in ipairs(sectionTemplate.tasks or {}) do
+            local task = {
+                key = "t-" .. string.format("%04x", math.random(0, 65535)),
+                label = taskTemplate.label or "",
+                max = taskTemplate.max or 1,
+                trackType = taskTemplate.trackType or "manual",
+                trackParams = taskTemplate.trackParams or {},
+                noMax = taskTemplate.noMax,
+            }
+            table.insert(section.tasks, task)
+        end
+
+        table.insert(routineData.sections, section)
+    end
+
+    return self:AddRoutine(routineData)
+end
+
+function RoutinesData:GetEversongWoodsRoutine()
+    return EVERSONG_WOODS_TEMPLATE
+end
+
+function RoutinesData:CreateEversongWoodsRoutine()
+    return self:CreateZoneRoutineFromTemplate(EVERSONG_WOODS_TEMPLATE)
 end
