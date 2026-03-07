@@ -239,9 +239,11 @@ function CoordsModule:CopyCoordinates()
     end
 end
 
+local COORDS_UPDATE_INTERVAL = 0.2
+
 function CoordsModule:StartUpdates()
     self:StopUpdates()
-    self._ticker = C_Timer.NewTicker(1.0, function()
+    self._ticker = C_Timer.NewTicker(COORDS_UPDATE_INTERVAL, function()
         if not InCombatLockdown() then
             self:UpdateDisplay()
         end
