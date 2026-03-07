@@ -277,7 +277,7 @@ local function ShowModuleDetail(split, module)
                 tbs.statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 tbs.statusVal:SetText(val and L["FEATURES_ENABLED"] or L["FEATURES_DISABLED"])
 
-                -- Need to use a variable here since GetThemeColor() returns an unpacked table, which causes problems with SetTextColor() when a ternary is used
+                -- Use variable since multiple values can cause problems with SetTextColor() when a ternary is used
                 local colorKey = val and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
                 tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey))
             else

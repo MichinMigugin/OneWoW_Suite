@@ -328,10 +328,13 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
             blDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             addLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            idBox:EnableKeyboard(true)
         else
             blDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             addLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            idBox:ClearFocus()
+            idBox:EnableKeyboard(false)
         end
         idBox:EnableMouse(isEnabledNow)
         addBtn:EnableMouse(isEnabledNow)
