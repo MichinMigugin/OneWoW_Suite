@@ -319,7 +319,14 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                     local countFS = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     countFS:SetPoint("RIGHT", rowFrame, "RIGHT", -4, 0)
                     countFS:SetJustifyH("RIGHT")
-                    if task.noMax then
+                    if task.trackType == "prof_knowledge" then
+                        local unspent = ns.RoutinesData:GetProgress(routineID, section.key, task.key .. "_u")
+                        if task.max and task.max > 0 then
+                            countFS:SetText(string.format("%d (%d)/%d", prog, unspent, task.max))
+                        else
+                            countFS:SetText(string.format("%d (%d)", prog, unspent))
+                        end
+                    elseif task.noMax then
                         countFS:SetText(tostring(prog))
                     else
                         countFS:SetText(string.format("%d/%d", prog, task.max))
@@ -348,39 +355,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
 
                     rowFrame:SetScript("OnEnter", function()
                         hover:SetColorTexture(1, 1, 1, 0.04)
-                        GameTooltip:SetOwner(rowFrame, "ANCHOR_RIGHT")
-                        GameTooltip:SetText(task.label or "", 1, 1, 1, 1, true)
-                        if isManual then
-                            GameTooltip:AddLine(L["ROUTINES_TRACK_MANUAL"] .. " - Left/Right click", 0.5, 0.5, 0.5)
-                        end
-                        if task.trackType == "vault_raid" or task.trackType == "vault_dungeon" or task.trackType == "vault_world" then
-                            local actType = task.trackType == "vault_raid" and 3 or (task.trackType == "vault_dungeon" and 1 or 4)
-                            local tierName, tierColor = ns.RoutinesEngine:GetVaultTierInfo(actType)
-                            if tierName then
-                                GameTooltip:AddLine("|cff" .. tierColor .. tierName .. "|r", 1, 1, 1)
-                            end
-                        end
-                        if task.trackType == "renown" and task.trackParams and task.trackParams.factionId then
-                            local data = C_MajorFactions.GetMajorFactionData(task.trackParams.factionId)
-                            if data then
-                                local rep = data.renownReputationEarned or 0
-                                local needed = data.renownLevelThreshold or 2500
-                                GameTooltip:AddLine(string.format("%d / %d rep", rep, needed), 0.7, 0.7, 0.7)
-                            end
-                        end
-                        if task.trackType == "reputation" and task.trackParams and task.trackParams.factionId then
-                            local factionData = C_Reputation.GetFactionDataByID(task.trackParams.factionId)
-                            if factionData then
-                                GameTooltip:AddLine(factionData.name or "", T("ACCENT_PRIMARY"))
-                                local cur = factionData.currentStanding or 0
-                                local low = factionData.currentReactionThreshold or 0
-                                local high = factionData.nextReactionThreshold or 0
-                                if high > low then
-                                    GameTooltip:AddLine(string.format("%d / %d", cur - low, high - low), 0.7, 0.7, 0.7)
-                                end
-                            end
-                        end
-                        GameTooltip:Show()
+                        ns.RoutinesEngine:BuildTaskTooltip(task, section, rowFrame)
                     end)
                     rowFrame:SetScript("OnLeave", function()
                         hover:SetColorTexture(1, 1, 1, 0)

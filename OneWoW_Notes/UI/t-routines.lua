@@ -328,6 +328,7 @@ function ns.UI.CreateRoutinesTab(parent)
                 taskRow:SetPoint("TOPLEFT", secFrame, "TOPLEFT", 8, taskYOff)
                 taskRow:SetPoint("TOPRIGHT", secFrame, "TOPRIGHT", -8, taskYOff)
                 taskRow:SetHeight(22)
+                taskRow:EnableMouse(true)
 
                 local prog = ns.RoutinesData:GetProgress(routineID, section.key, task.key)
                 local isComplete = not task.noMax and prog >= task.max
@@ -357,7 +358,14 @@ function ns.UI.CreateRoutinesTab(parent)
                 local countFS = taskRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 countFS:SetPoint("RIGHT", taskRow, "RIGHT", -30, 0)
                 countFS:SetJustifyH("RIGHT")
-                if task.noMax then
+                if task.trackType == "prof_knowledge" then
+                    local unspent = ns.RoutinesData:GetProgress(routineID, section.key, task.key .. "_u")
+                    if task.max and task.max > 0 then
+                        countFS:SetText(string.format("%d (%d)/%d", prog, unspent, task.max))
+                    else
+                        countFS:SetText(string.format("%d (%d)", prog, unspent))
+                    end
+                elseif task.noMax then
                     countFS:SetText(tostring(prog))
                 else
                     countFS:SetText(string.format("%d/%d", prog, task.max))
@@ -375,6 +383,13 @@ function ns.UI.CreateRoutinesTab(parent)
                     ShowRoutineDetail(routineID)
                     parent.RefreshRoutinesList()
                     ns.RoutinesEngine:RefreshPinnedWindow(routineID)
+                end)
+
+                taskRow:SetScript("OnEnter", function(self)
+                    ns.RoutinesEngine:BuildTaskTooltip(task, section, self)
+                end)
+                taskRow:SetScript("OnLeave", function()
+                    GameTooltip:Hide()
                 end)
 
                 taskYOff = taskYOff - 24
