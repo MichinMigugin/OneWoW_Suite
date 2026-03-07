@@ -35,6 +35,15 @@ local L = ns.L
 
 local CAMERA_SPEED = 0.035
 
+local backdrop = {
+    bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile     = true,
+    tileSize = 16,
+    edgeSize = 16,
+    insets   = {left = 4, right = 4, top = 4, bottom = 4},
+}
+
 local ignoreKeys = {
     LALT   = true,
     LSHIFT = true,
@@ -133,14 +142,7 @@ local function CreateTopBar(parent)
     topBar:SetWidth(screenWidth)
     topBar:SetHeight(60)
     topBar:SetFrameLevel(2)
-    topBar:SetBackdrop({
-        bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile     = true,
-        tileSize = 16,
-        edgeSize = 16,
-        insets   = {left = 4, right = 4, top = 4, bottom = 4},
-    })
+    topBar:SetBackdrop(backdrop)
     topBar:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
     topBar:SetBackdropBorderColor(0.8, 0.6, 0.2, 1)
 
@@ -159,14 +161,7 @@ local function CreateCharacterInfoPanel(parent)
     local infoPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     infoPanel:SetSize(panelWidth, 180)
     infoPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 20, -20)
-    infoPanel:SetBackdrop({
-        bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile     = true,
-        tileSize = 16,
-        edgeSize = 16,
-        insets   = {left = 4, right = 4, top = 4, bottom = 4},
-    })
+    infoPanel:SetBackdrop(backdrop)
     infoPanel:SetBackdropColor(0.1, 0.1, 0.12, 0.95)
     infoPanel:SetBackdropBorderColor(0.5, 0.5, 0.55, 1)
 
@@ -220,14 +215,7 @@ local function CreateAlertsPanel(parent, infoPanel)
     local alertsPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     alertsPanel:SetSize(panelWidth, 140)
     alertsPanel:SetPoint("TOPLEFT", infoPanel, "BOTTOMLEFT", 0, -10)
-    alertsPanel:SetBackdrop({
-        bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile     = true,
-        tileSize = 16,
-        edgeSize = 16,
-        insets   = {left = 4, right = 4, top = 4, bottom = 4},
-    })
+    alertsPanel:SetBackdrop(backdrop)
     alertsPanel:SetBackdropColor(0.1, 0.1, 0.12, 0.95)
     alertsPanel:SetBackdropBorderColor(0.5, 0.5, 0.55, 1)
 
@@ -268,14 +256,7 @@ local function CreateNotesPanel(parent, headerKey, anchorPoint, anchorRelative, 
     local panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     panel:SetSize(panelWidth, 180)
     panel:SetPoint(anchorPoint, anchorRelative, anchorRelativePoint, anchorX, anchorY)
-    panel:SetBackdrop({
-        bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile     = true,
-        tileSize = 16,
-        edgeSize = 16,
-        insets   = {left = 4, right = 4, top = 4, bottom = 4},
-    })
+    panel:SetBackdrop(backdrop)
     panel:SetBackdropColor(0.1, 0.1, 0.12, 0.95)
     panel:SetBackdropBorderColor(0.5, 0.5, 0.55, 1)
 
@@ -469,14 +450,7 @@ function AFKPanelModule:SetupFrames()
     bottomPanel:SetPoint("BOTTOM", afkFrame, "BOTTOM", 0, 0)
     bottomPanel:SetWidth(screenWidth)
     bottomPanel:SetHeight(370)
-    bottomPanel:SetBackdrop({
-        bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile     = true,
-        tileSize = 16,
-        edgeSize = 16,
-        insets   = {left = 4, right = 4, top = 4, bottom = 4},
-    })
+    bottomPanel:SetBackdrop(backdrop)
     bottomPanel:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
     bottomPanel:SetBackdropBorderColor(0.8, 0.6, 0.2, 1)
     self._bottomPanel = bottomPanel
