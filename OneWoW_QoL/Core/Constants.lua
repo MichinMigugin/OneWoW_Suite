@@ -3,7 +3,7 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 
-OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.Constants = {
     VERSION = "R5.2602.2000",

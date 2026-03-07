@@ -817,6 +817,7 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
 
         local headerDiv = OneWoW_GUI:CreateDivider(popup, -29)
         -- Override default divider creation
+        headerDiv:ClearAllPoints()
         headerDiv:SetPoint("TOPLEFT",  popup, "TOPLEFT",  1, -29)
         headerDiv:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -29)
 
