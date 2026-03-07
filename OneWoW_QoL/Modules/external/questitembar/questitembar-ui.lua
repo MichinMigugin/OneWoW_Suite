@@ -161,6 +161,7 @@ function ns.QuestItemBarModule:CreateCustomDetail(detailScrollChild, yOffset, is
 
     local container = detailScrollChild._qibContainer or CreateFrame("Frame", nil, detailScrollChild)
     detailScrollChild._qibContainer = container
+    container:SetParent(detailScrollChild)
     container:ClearAllPoints()
     container:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
     container:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)

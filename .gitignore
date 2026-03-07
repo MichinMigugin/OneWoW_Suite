@@ -1,1 +1,4 @@
 OneWoW_Utility_Extractor/
+.releases/
+.gitignore
+.git/

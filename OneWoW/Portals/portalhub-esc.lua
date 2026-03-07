@@ -220,10 +220,12 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 	local wormholes = OneWoW.PortalHubDetection:GetWormholes(showAll)
 	local rippers = OneWoW.PortalHubDetection:GetDimensionalRippers(showAll)
 	local transporters = OneWoW.PortalHubDetection:GetUltrasafeTransporters(showAll)
+	local engOther = OneWoW.PortalHubDetection:GetEngineeringOtherItems(showAll)
 	local allEng = {}
 	for _, w in ipairs(wormholes) do table.insert(allEng, w) end
 	for _, r in ipairs(rippers) do table.insert(allEng, r) end
 	for _, t in ipairs(transporters) do table.insert(allEng, t) end
+	for _, o in ipairs(engOther) do table.insert(allEng, o) end
 	if #allEng > 0 or showAll then
 		local displayEng = #allEng > 0 and allEng or {{type = "toy", id = 48933}}
 		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
