@@ -19,6 +19,7 @@ Libs\AceEvent-3.0\AceEvent-3.0.lua
 Libs\AceConsole-3.0\AceConsole-3.0.lua
 Libs\AceDB-3.0\AceDB-3.0.lua
 Libs\LibCopyPaste-1.0\LibCopyPaste-1.0.lua
+Libs\OneWoW_GUI-1.0\OneWoW_GUI.xml
 
 # Bindings
 # Bindings.xml
@@ -39,8 +40,7 @@ OneWoW_QoL.lua
 # Module Registry (MUST load before UI and external modules)
 Modules\ModuleRegistry.lua
 
-# UI Framework and Main Frame
-UI\Framework.lua
+# UI Main Frame
 UI\MainFrame.lua
 UI\MinimapButton.lua
 

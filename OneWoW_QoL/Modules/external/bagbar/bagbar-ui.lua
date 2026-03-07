@@ -2,68 +2,41 @@
 -- OneWoW_QoL/Modules/external/bagbar/bagbar-ui.lua
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
 local function GetSettings()
     return ns.BagBarModule.GetSettings()
 end
 
-local function ClearContainer(container)
-    for _, child in ipairs({ container:GetChildren() }) do
-        child:Hide()
-        child:SetParent(nil)
-    end
-    for _, region in ipairs({ container:GetRegions() }) do
-        region:Hide()
-    end
-end
-
-local function MakeSection(parent, title, yOffset, T)
-    local header = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    header:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    header:SetText(title)
-    header:SetTextColor(T("ACCENT_SECONDARY"))
-    yOffset = yOffset - header:GetStringHeight() - 6
-
-    local divider = parent:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    divider:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    divider:SetColorTexture(T("BORDER_SUBTLE"))
-    yOffset = yOffset - 10
-
-    return yOffset
-end
-
-local function MakeItemDropZone(parent, label, yOffset, onReceive, T)
+local function MakeItemDropZone(parent, label, yOffset, onReceive)
     local itemIDLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     itemIDLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
     itemIDLabel:SetText(label)
-    itemIDLabel:SetTextColor(T("TEXT_SECONDARY"))
+    itemIDLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local itemIDBox = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
     itemIDBox:SetPoint("LEFT", itemIDLabel, "RIGHT", 8, 0)
     itemIDBox:SetSize(90, 22)
-    itemIDBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    itemIDBox:SetBackdropColor(T("BG_SECONDARY"))
-    itemIDBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    itemIDBox:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    itemIDBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    itemIDBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     itemIDBox:SetFontObject(GameFontHighlight)
     itemIDBox:SetTextInsets(4, 4, 0, 0)
     itemIDBox:SetAutoFocus(false)
     itemIDBox:SetMaxLetters(10)
     itemIDBox:SetNumeric(true)
-    itemIDBox:SetTextColor(T("TEXT_PRIMARY"))
+    itemIDBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     itemIDBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     itemIDBox:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(T("BORDER_ACCENT"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
     end)
     itemIDBox:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
-    local addBtn = ns.UI.CreateButton(nil, parent, ns.L["BAGBAR_ADD_BUTTON"], 60, 24)
+    local addBtn = OneWoW_GUI:CreateButton(nil, parent, ns.L["BAGBAR_ADD_BUTTON"], 60, 24)
     addBtn:SetPoint("LEFT", itemIDBox, "RIGHT", 6, 0)
     addBtn:SetScript("OnClick", function()
         local id = tonumber(itemIDBox:GetText())
@@ -76,19 +49,15 @@ local function MakeItemDropZone(parent, label, yOffset, onReceive, T)
     local dropZone = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     dropZone:SetPoint("LEFT", addBtn, "RIGHT", 8, 0)
     dropZone:SetSize(110, 24)
-    dropZone:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    dropZone:SetBackdropColor(T("BG_SECONDARY"))
-    dropZone:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    dropZone:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    dropZone:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    dropZone:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     dropZone:EnableMouse(true)
 
     local dropText = dropZone:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     dropText:SetPoint("CENTER")
     dropText:SetText(ns.L["BAGBAR_DRAG_ITEM_HERE"])
-    dropText:SetTextColor(T("TEXT_MUTED"))
+    dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local function handleDrop(self)
         local infoType, itemID = GetCursorInfo()
@@ -101,26 +70,22 @@ local function MakeItemDropZone(parent, label, yOffset, onReceive, T)
     dropZone:SetScript("OnReceiveDrag", handleDrop)
     dropZone:SetScript("OnMouseUp",     handleDrop)
     dropZone:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(T("BORDER_ACCENT"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
     end)
     dropZone:SetScript("OnLeave", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
     return yOffset - 30
 end
 
-local function MakeItemList(parent, itemTable, yOffset, onRemove, T)
+local function MakeItemList(parent, itemTable, yOffset, onRemove)
     local listFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     listFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
     listFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    listFrame:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    listFrame:SetBackdropColor(T("BG_TERTIARY"))
-    listFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    listFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    listFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    listFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local rowOffset = -5
     local hasItems  = false
@@ -149,7 +114,7 @@ local function MakeItemList(parent, itemTable, yOffset, onRemove, T)
         nameText:SetPoint("RIGHT", row, "RIGHT", -20, 0)
         nameText:SetJustifyH("LEFT")
         nameText:SetText(itemName)
-        nameText:SetTextColor(T("TEXT_PRIMARY"))
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local removeBtn = CreateFrame("Button", nil, row)
         removeBtn:SetSize(16, 16)
@@ -171,7 +136,7 @@ local function MakeItemList(parent, itemTable, yOffset, onRemove, T)
         local emptyText = listFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         emptyText:SetPoint("CENTER")
         emptyText:SetText("---")
-        emptyText:SetTextColor(T("TEXT_MUTED"))
+        emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
     return yOffset - frameHeight - 8
@@ -179,14 +144,13 @@ end
 
 local function BuildContent(container, isEnabled)
     local L = ns.L
-    local T = ns.T
     local s = GetSettings()
     local cy = 0
 
-    cy = MakeSection(container, L["BAGBAR_SETTINGS_HEADER"], cy, T)
+    cy = OneWoW_GUI:CreateSection(container, L["BAGBAR_SETTINGS_HEADER"], cy)
 
     local previewing = ns.BagBarModule:IsPreviewActive()
-    local previewBtn = ns.UI.CreateButton(nil, container,
+    local previewBtn = OneWoW_GUI:CreateButton(nil, container,
         previewing and L["BAGBAR_HIDE_BAR"] or L["BAGBAR_SHOW_BAR"],
         120, 26)
     previewBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -200,7 +164,7 @@ local function BuildContent(container, isEnabled)
     end)
     cy = cy - 32
 
-    local lockBtn = ns.UI.CreateButton(nil, container,
+    local lockBtn = OneWoW_GUI:CreateButton(nil, container,
         s.locked and (L["BAGBAR_LOCK_POSITION"] .. " (ON)") or (L["BAGBAR_LOCK_POSITION"] .. " (OFF)"),
         180, 26)
     lockBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -213,7 +177,7 @@ local function BuildContent(container, isEnabled)
     local usableCheck = CreateFrame("CheckButton", nil, container, "InterfaceOptionsCheckButtonTemplate")
     usableCheck:SetPoint("TOPLEFT", container, "TOPLEFT", 8, cy)
     usableCheck.Text:SetText(L["BAGBAR_SHOW_USABLE_ITEMS"])
-    usableCheck.Text:SetTextColor(T("TEXT_PRIMARY"))
+    usableCheck.Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     usableCheck:SetChecked(s.showUsableItems)
     usableCheck:SetScript("OnClick", function(self)
         GetSettings().showUsableItems = self:GetChecked()
@@ -224,7 +188,7 @@ local function BuildContent(container, isEnabled)
     local maxLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     maxLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     maxLabel:SetText(string.format("%s: %d", L["BAGBAR_MAX_BUTTONS"], s.maxButtons or 12))
-    maxLabel:SetTextColor(T("TEXT_SECONDARY"))
+    maxLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     cy = cy - maxLabel:GetStringHeight() - 4
 
     local maxSlider = CreateFrame("Slider", "OneWoW_QoL_BagBarMaxSlider", container, "OptionsSliderTemplate")
@@ -247,7 +211,7 @@ local function BuildContent(container, isEnabled)
     local sizeLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sizeLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     sizeLabel:SetText(string.format("%s: %d", L["BAGBAR_BUTTON_SIZE"], s.buttonSize or 36))
-    sizeLabel:SetTextColor(T("TEXT_SECONDARY"))
+    sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     cy = cy - sizeLabel:GetStringHeight() - 4
 
     local sizeSlider = CreateFrame("Slider", "OneWoW_QoL_BagBarSizeSlider", container, "OptionsSliderTemplate")
@@ -274,10 +238,10 @@ local function BuildContent(container, isEnabled)
     descText:SetWordWrap(true)
     descText:SetSpacing(2)
     descText:SetText(L["BAGBAR_MANUAL_DESC"])
-    descText:SetTextColor(T("TEXT_MUTED"))
+    descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     cy = cy - 14
 
-    cy = MakeSection(container, L["BAGBAR_MANUAL_ITEMS_HEADER"], cy, T)
+    cy = OneWoW_GUI:CreateSection(container, L["BAGBAR_MANUAL_ITEMS_HEADER"], cy)
 
     cy = MakeItemDropZone(container, L["BAGBAR_ITEM_ID_LABEL"], cy,
         function(itemID)
@@ -286,16 +250,16 @@ local function BuildContent(container, isEnabled)
             C_Item.RequestLoadItemDataByID(itemID)
             ns.BagBarModule:ScheduleUpdate()
             C_Timer.After(0.5, function() ns.BagBarModule._refreshCustomDetail() end)
-        end, T)
+        end)
 
     cy = MakeItemList(container, s.manualItems, cy,
         function(itemID)
             GetSettings().manualItems[itemID] = nil
             ns.BagBarModule:ScheduleUpdate()
             ns.BagBarModule._refreshCustomDetail()
-        end, T)
+        end)
 
-    cy = MakeSection(container, L["BAGBAR_BLACKLIST_HEADER"], cy, T)
+    cy = OneWoW_GUI:CreateSection(container, L["BAGBAR_BLACKLIST_HEADER"], cy)
 
     local blDesc = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     blDesc:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -304,7 +268,7 @@ local function BuildContent(container, isEnabled)
     blDesc:SetWordWrap(true)
     blDesc:SetSpacing(2)
     blDesc:SetText(L["BAGBAR_BLACKLIST_DESC"])
-    blDesc:SetTextColor(T("TEXT_MUTED"))
+    blDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     cy = cy - blDesc:GetStringHeight() - 10
 
     cy = MakeItemDropZone(container, L["BAGBAR_ADD_ITEM_ID_LABEL"], cy,
@@ -314,16 +278,16 @@ local function BuildContent(container, isEnabled)
             C_Item.RequestLoadItemDataByID(itemID)
             ns.BagBarModule:ScheduleUpdate()
             C_Timer.After(0.5, function() ns.BagBarModule._refreshCustomDetail() end)
-        end, T)
+        end)
 
     cy = MakeItemList(container, s.blacklist, cy,
         function(itemID)
             GetSettings().blacklist[itemID] = nil
             ns.BagBarModule:ScheduleUpdate()
             ns.BagBarModule._refreshCustomDetail()
-        end, T)
+        end)
 
-    local clearBtn = ns.UI.CreateButton(nil, container, L["BAGBAR_CLEAR_BLACKLIST"], 160, 26)
+    local clearBtn = OneWoW_GUI:CreateButton(nil, container, L["BAGBAR_CLEAR_BLACKLIST"], 160, 26)
     clearBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     clearBtn:SetScript("OnClick", function()
         local cur = GetSettings()
@@ -341,7 +305,7 @@ end
 
 function ns.BagBarModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
     if detailScrollChild._bagbarContainer then
-        ClearContainer(detailScrollChild._bagbarContainer)
+        OneWoW_GUI:ClearFrame(detailScrollChild._bagbarContainer)
     end
 
     local container = detailScrollChild._bagbarContainer or CreateFrame("Frame", nil, detailScrollChild)
@@ -355,7 +319,7 @@ function ns.BagBarModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     local capturedYOffset = yOffset
 
     self._refreshCustomDetail = function()
-        ClearContainer(container)
+        OneWoW_GUI:ClearFrame(container)
         local cy = BuildContent(container, isEnabled)
         detailScrollChild:SetHeight(math.abs(capturedYOffset) + math.abs(cy) + 20)
         if detailScrollChild.updateThumb then

@@ -1,46 +1,20 @@
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
 local function GetSettings()
     return ns.QuestItemBarModule.GetSettings()
 end
 
-local function MakeSection(parent, title, yOffset, T)
-    local header = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    header:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    header:SetText(title)
-    header:SetTextColor(T("ACCENT_SECONDARY"))
-    yOffset = yOffset - header:GetStringHeight() - 6
-
-    local divider = parent:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    divider:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    divider:SetColorTexture(T("BORDER_SUBTLE"))
-    yOffset = yOffset - 10
-
-    return yOffset
-end
-
-local function ClearContainer(container)
-    for _, child in ipairs({ container:GetChildren() }) do
-        child:Hide()
-        child:SetParent(nil)
-    end
-    for _, region in ipairs({ container:GetRegions() }) do
-        region:Hide()
-    end
-end
-
 local function BuildContent(container, startYOffset, isEnabled)
     local L = ns.L
-    local T = ns.T
     local s = GetSettings()
     local cy = 0
 
-    cy = MakeSection(container, L["QUESTITEMBAR_SETTINGS_HEADER"], cy, T)
+    cy = OneWoW_GUI:CreateSection(container, L["QUESTITEMBAR_SETTINGS_HEADER"], cy)
 
     local previewing = ns.QuestItemBarModule:IsPreviewActive()
-    local previewBtn = ns.UI.CreateButton(nil, container,
+    local previewBtn = OneWoW_GUI:CreateButton(nil, container,
         previewing and L["QUESTITEMBAR_HIDE_BAR"] or L["QUESTITEMBAR_SHOW_BAR"],
         120, 26)
     previewBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -54,7 +28,7 @@ local function BuildContent(container, startYOffset, isEnabled)
     end)
     cy = cy - 32
 
-    local lockBtn = ns.UI.CreateButton(nil, container,
+    local lockBtn = OneWoW_GUI:CreateButton(nil, container,
         s.locked and (L["QUESTITEMBAR_LOCK_POSITION"] .. " (ON)") or (L["QUESTITEMBAR_LOCK_POSITION"] .. " (OFF)"),
         180, 26)
     lockBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -67,7 +41,7 @@ local function BuildContent(container, startYOffset, isEnabled)
     local hideCheck = CreateFrame("CheckButton", nil, container, "InterfaceOptionsCheckButtonTemplate")
     hideCheck:SetPoint("TOPLEFT", container, "TOPLEFT", 8, cy)
     hideCheck.Text:SetText(L["QUESTITEMBAR_HIDE_WHEN_EMPTY"])
-    hideCheck.Text:SetTextColor(T("TEXT_PRIMARY"))
+    hideCheck.Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     hideCheck:SetChecked(s.hideWhenEmpty)
     hideCheck:SetScript("OnClick", function(self)
         GetSettings().hideWhenEmpty = self:GetChecked()
@@ -78,7 +52,7 @@ local function BuildContent(container, startYOffset, isEnabled)
     local sizeLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sizeLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     sizeLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_BUTTON_SIZE"], s.buttonSize or 36))
-    sizeLabel:SetTextColor(T("TEXT_SECONDARY"))
+    sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     cy = cy - sizeLabel:GetStringHeight() - 4
 
     local sizeSlider = CreateFrame("Slider", "OneWoW_QoL_QIBarSizeSlider", container, "OptionsSliderTemplate")
@@ -101,7 +75,7 @@ local function BuildContent(container, startYOffset, isEnabled)
     local colsLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     colsLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     colsLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_COLUMNS"], s.columns or 12))
-    colsLabel:SetTextColor(T("TEXT_SECONDARY"))
+    colsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     cy = cy - colsLabel:GetStringHeight() - 4
 
     local colsSlider = CreateFrame("Slider", "OneWoW_QoL_QIBarColsSlider", container, "OptionsSliderTemplate")
@@ -138,9 +112,9 @@ local function BuildContent(container, startYOffset, isEnabled)
     local sortLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sortLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     sortLabel:SetText(L["QUESTITEMBAR_SORT_MODE"])
-    sortLabel:SetTextColor(T("TEXT_SECONDARY"))
+    sortLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local sortBtn = ns.UI.CreateButton(nil, container, GetSortLabel(), 160, 26)
+    local sortBtn = OneWoW_GUI:CreateButton(nil, container, GetSortLabel(), 160, 26)
     sortBtn:SetPoint("LEFT", sortLabel, "RIGHT", 8, 0)
     sortBtn:SetScript("OnClick", function()
         local cur = GetSettings()
@@ -156,7 +130,7 @@ end
 
 function ns.QuestItemBarModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
     if detailScrollChild._qibContainer then
-        ClearContainer(detailScrollChild._qibContainer)
+        OneWoW_GUI:ClearFrame(detailScrollChild._qibContainer)
     end
 
     local container = detailScrollChild._qibContainer or CreateFrame("Frame", nil, detailScrollChild)
@@ -170,7 +144,7 @@ function ns.QuestItemBarModule:CreateCustomDetail(detailScrollChild, yOffset, is
     local capturedYOffset = yOffset
 
     self._refreshCustomDetail = function()
-        ClearContainer(container)
+        OneWoW_GUI:ClearFrame(container)
         local cy = BuildContent(container, capturedYOffset, isEnabled)
         detailScrollChild:SetHeight(math.abs(capturedYOffset) + math.abs(cy) + 20)
     end

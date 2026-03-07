@@ -3,6 +3,8 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
 local PlayMountsModule = {
     id          = "playmounts",
     title       = "PLAYMOUNTS_TITLE",
@@ -172,21 +174,20 @@ function PlayMountsModule:OnTargetChanged()
     end
 end
 
-function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled)
+function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled, registerRefresh)
     local L = ns.L
-    local T = ns.T
 
     local divider = parent:CreateTexture(nil, "ARTWORK")
     divider:SetHeight(1)
     divider:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
     divider:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    divider:SetColorTexture(T("BORDER_SUBTLE"))
+    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOffset = yOffset - 12
 
     local modeHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     modeHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
     modeHeader:SetText(L["PLAYMOUNTS_DISPLAYMODE_HEADER"])
-    modeHeader:SetTextColor(T("ACCENT_SECONDARY"))
+    modeHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - modeHeader:GetStringHeight() - 8
 
     local modeDesc = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -195,7 +196,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled)
     modeDesc:SetJustifyH("LEFT")
     modeDesc:SetWordWrap(true)
     modeDesc:SetText(L["PLAYMOUNTS_DISPLAYMODE_DESC"])
-    modeDesc:SetTextColor(T("TEXT_MUTED"))
+    modeDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     yOffset = yOffset - modeDesc:GetStringHeight() - 8
 
     local modes = {
@@ -207,46 +208,53 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled)
     local currentMode = GetDisplayMode()
     local modeBtns = {}
 
+    local function UpdateModeButtons()
+        local isEnabledNow = ns.ModuleRegistry:IsEnabled("playmounts")
+        for _, btn in ipairs(modeBtns) do
+            if not isEnabledNow then
+                btn:EnableMouse(false)
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            else
+                btn:EnableMouse(true)
+                if btn.isActive then
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                else
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                end
+            end
+        end
+    end
+
     for _, mode in ipairs(modes) do
         local capturedMode = mode
         local isActive = (currentMode == mode.id)
-        local btn = ns.UI.CreateButton(nil, parent, L[mode.labelKey] or mode.id, 90, 22)
+        local btn = OneWoW_GUI:CreateButton(nil, parent, L[mode.labelKey] or mode.id, 90, 22)
         btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 12 + (#modeBtns * 96), yOffset)
         btn.isActive = isActive
 
-        if not isEnabled then
-            btn:SetBackdropColor(T("BG_SECONDARY"))
-            btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-            btn.text:SetTextColor(T("TEXT_MUTED"))
-            btn:EnableMouse(false)
-        elseif isActive then
-            btn:SetBackdropColor(T("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(T("BORDER_ACCENT"))
-            btn.text:SetTextColor(T("TEXT_ACCENT"))
-        else
-            btn:SetBackdropColor(T("BTN_NORMAL"))
-            btn:SetBackdropBorderColor(T("BTN_BORDER"))
-            btn.text:SetTextColor(T("TEXT_MUTED"))
-        end
-
-        table.insert(modeBtns, btn)
+        btn:HookScript("OnLeave", function(self)
+            UpdateModeButtons()
+        end)
 
         btn:SetScript("OnClick", function(self)
             SetDisplayMode(capturedMode.id)
             for _, b in ipairs(modeBtns) do
                 b.isActive = (b == self)
-                if b.isActive then
-                    b:SetBackdropColor(T("BG_ACTIVE"))
-                    b:SetBackdropBorderColor(T("BORDER_ACCENT"))
-                    b.text:SetTextColor(T("TEXT_ACCENT"))
-                else
-                    b:SetBackdropColor(T("BTN_NORMAL"))
-                    b:SetBackdropBorderColor(T("BTN_BORDER"))
-                    b.text:SetTextColor(T("TEXT_MUTED"))
-                end
             end
+            UpdateModeButtons()
         end)
+
+        table.insert(modeBtns, btn)
     end
+
+    if registerRefresh then registerRefresh(UpdateModeButtons) end
+    UpdateModeButtons()
 
     yOffset = yOffset - 22 - 6
 
@@ -254,19 +262,19 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled)
     modeDivider:SetHeight(1)
     modeDivider:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
     modeDivider:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    modeDivider:SetColorTexture(T("BORDER_SUBTLE"))
+    modeDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOffset = yOffset - 12
 
     local coreHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     coreHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
     coreHeader:SetText(L["PLAYMOUNTS_TOOLTIP_HEADER"])
-    coreHeader:SetTextColor(T("ACCENT_SECONDARY"))
+    coreHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - coreHeader:GetStringHeight() - 8
 
     local reqLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     reqLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
     reqLabel:SetText(L["PLAYMOUNTS_TOOLTIP_REQUIRES"])
-    reqLabel:SetTextColor(T("TEXT_PRIMARY"))
+    reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local coreLoaded = (_G.OneWoW ~= nil)
     local detectedLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -280,7 +288,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled)
     end
     yOffset = yOffset - 24
 
-    local viewBtn = ns.UI.CreateButton(nil, parent, L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"], 100, 22)
+    local viewBtn = OneWoW_GUI:CreateButton(nil, parent, L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"], 100, 22)
     viewBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
     if coreLoaded then
         viewBtn:SetScript("OnClick", function()
@@ -289,9 +297,9 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled)
         end)
     else
         viewBtn:EnableMouse(false)
-        viewBtn:SetBackdropColor(T("BG_SECONDARY"))
-        viewBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-        viewBtn.text:SetTextColor(T("TEXT_MUTED"))
+        viewBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        viewBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        viewBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
     local coreNote = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -300,7 +308,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled)
     coreNote:SetJustifyH("LEFT")
     coreNote:SetWordWrap(true)
     coreNote:SetText(L["PLAYMOUNTS_TOOLTIP_NOTE"])
-    coreNote:SetTextColor(T("TEXT_MUTED"))
+    coreNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     yOffset = yOffset - math.max(coreNote:GetStringHeight(), 22) - 10
 
     return yOffset
