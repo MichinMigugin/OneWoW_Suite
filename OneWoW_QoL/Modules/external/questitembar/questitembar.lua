@@ -343,8 +343,10 @@ function QuestItemBarModule:SavePosition()
         yOffset     = centerY - (screenHeight / 2)
     end
 
-    barFrame:ClearAllPoints()
-    barFrame:SetPoint(anchorPoint, UIParent, anchorPoint, left, yOffset)
+    barFrame:Execute(string.format([[
+        self:ClearAllPoints()
+        self:SetPoint("%s", self:GetParent(), "%s", %.2f, %.2f)
+    ]], anchorPoint, anchorPoint, left, yOffset))
 
     local s = GetSettings()
     s.position = { point = anchorPoint, relativePoint = anchorPoint, x = left, y = yOffset }
@@ -353,7 +355,7 @@ end
 function QuestItemBarModule:CreateBar()
     if barFrame then return end
 
-    barFrame = CreateFrame("Frame", "OneWoW_QoL_QuestItemBar", UIParent)
+    barFrame = CreateFrame("Frame", "OneWoW_QoL_QuestItemBar", UIParent, "SecureHandlerBaseTemplate")
     barFrame:SetSize(40, 40)
     barFrame:SetFrameStrata("MEDIUM")
     barFrame:SetClampedToScreen(true)
@@ -366,8 +368,9 @@ function QuestItemBarModule:CreateBar()
         barFrame:SetPoint("CENTER", UIParent, "CENTER", 0, -200)
     end
 
-    barFrame:SetMovable(true)
     barFrame:EnableMouse(false)
+
+    local dragOffsetX, dragOffsetY = 0, 0
 
     local dragHandle = CreateFrame("Frame", "OneWoW_QoL_QuestItemBarDrag", barFrame, "BackdropTemplate")
     dragHandle:SetSize(20, 36)
@@ -382,7 +385,6 @@ function QuestItemBarModule:CreateBar()
     dragHandle:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
     dragHandle:EnableMouse(true)
     dragHandle:RegisterForDrag("LeftButton")
-    dragHandle:SetMovable(true)
 
     local dragLine = dragHandle:CreateTexture(nil, "ARTWORK")
     dragLine:SetSize(3, 20)
@@ -401,12 +403,26 @@ function QuestItemBarModule:CreateBar()
         GameTooltip:Hide()
     end)
     dragHandle:SetScript("OnDragStart", function()
+        if InCombatLockdown() then return end
         if previewMode or not GetSettings().locked then
-            barFrame:StartMoving()
+            local scale = barFrame:GetEffectiveScale()
+            local cx, cy = GetCursorPosition()
+            dragOffsetX = barFrame:GetLeft() - (cx / scale)
+            dragOffsetY = barFrame:GetTop() - (cy / scale)
+            dragHandle:SetScript("OnUpdate", function()
+                local cx2, cy2 = GetCursorPosition()
+                local s2 = barFrame:GetEffectiveScale()
+                local newX = (cx2 / s2) + dragOffsetX
+                local newY = (cy2 / s2) + dragOffsetY
+                barFrame:Execute(string.format([[
+                    self:ClearAllPoints()
+                    self:SetPoint("TOPLEFT", self:GetParent(), "BOTTOMLEFT", %.2f, %.2f)
+                ]], newX, newY))
+            end)
         end
     end)
     dragHandle:SetScript("OnDragStop", function()
-        barFrame:StopMovingOrSizing()
+        dragHandle:SetScript("OnUpdate", nil)
         QuestItemBarModule:SavePosition()
     end)
 
