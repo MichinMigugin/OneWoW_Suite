@@ -62,6 +62,8 @@ local EXPANSION_DISPLAY = {
     Midnight = "Midnight",
 }
 
+local expandedExpansions = {}
+
 local RefreshRecipeList
 local ShowRecipeDetail
 
@@ -176,6 +178,7 @@ local function CreateProfTextButton(parent, displayText, profData, isAllButton)
             selectedProfession = self.profData
         end
         selectedRecipe = nil
+        wipe(expandedExpansions)
         UpdateProfButtonStates()
         RefreshRecipeList()
         ClearDetailElements()
@@ -644,6 +647,147 @@ ShowRecipeDetail = function(recipe)
     end
 end
 
+local function RecipeClickHandler(recipeData)
+    selectedRecipe = recipeData
+    for _, el in ipairs(listElements) do
+        if el.recipe and el.recipe.id == recipeData.id then
+            el:SetBackdropColor(T("BG_ACTIVE"))
+        else
+            if el.rowIdx and el.rowIdx % 2 == 0 then
+                el:SetBackdropColor(T("BG_PRIMARY"))
+            else
+                el:SetBackdropColor(T("BG_SECONDARY"))
+            end
+        end
+    end
+    ShowRecipeDetail(recipeData)
+end
+
+local function RefreshRecipeListFlat(recipes)
+    local MAX_DISPLAY = 50
+    local totalCount = #recipes
+    local displayCount = math.min(totalCount, MAX_DISPLAY)
+
+    local yOffset = -4
+    local rowIdx = 0
+    for i = 1, displayCount do
+        local recipe = recipes[i]
+        local row = CreateRecipeRow(panels.listScrollChild, recipe, yOffset, rowIdx, RecipeClickHandler)
+        table.insert(listElements, row)
+        yOffset = yOffset - RECIPE_ROW_HEIGHT
+        rowIdx = rowIdx + 1
+    end
+
+    panels.listScrollChild:SetHeight(math.abs(yOffset) + 10)
+
+    if panels.leftStatusText then
+        if displayCount < totalCount then
+            panels.leftStatusText:SetText(string.format(L["TRADESKILLS_RECIPES_FILTERED"], displayCount, totalCount))
+        else
+            panels.leftStatusText:SetText(string.format(L["TRADESKILLS_RECIPES"], totalCount))
+        end
+    end
+end
+
+local EXP_HEADER_HEIGHT = 28
+
+local function RefreshRecipeListGrouped(recipes, addon)
+    local expansions = addon.TradeskillData:GetExpansions()
+
+    local grouped = {}
+    for _, recipe in ipairs(recipes) do
+        local key = recipe.exp or "Unknown"
+        if not grouped[key] then grouped[key] = {} end
+        table.insert(grouped[key], recipe)
+    end
+
+    local orderedGroups = {}
+    for _, exp in ipairs(expansions) do
+        if grouped[exp.key] and #grouped[exp.key] > 0 then
+            table.insert(orderedGroups, { key = exp.key, order = exp.order, recipes = grouped[exp.key] })
+        end
+    end
+    if grouped["Unknown"] and #grouped["Unknown"] > 0 then
+        table.insert(orderedGroups, { key = "Unknown", order = 99, recipes = grouped["Unknown"] })
+    end
+
+    table.sort(orderedGroups, function(a, b) return a.order > b.order end)
+
+    if next(expandedExpansions) == nil then
+        if #orderedGroups > 0 then
+            expandedExpansions[orderedGroups[1].key] = true
+        end
+    end
+
+    local yOffset = -4
+    local totalRecipes = 0
+
+    for _, group in ipairs(orderedGroups) do
+        local expKey = group.key
+        local expRecipes = group.recipes
+        local count = #expRecipes
+        totalRecipes = totalRecipes + count
+        local isExpanded = expandedExpansions[expKey]
+        local displayName = EXPANSION_DISPLAY[expKey] or expKey
+
+        local hdrBtn = CreateFrame("Button", nil, panels.listScrollChild, "BackdropTemplate")
+        hdrBtn:SetPoint("TOPLEFT", panels.listScrollChild, "TOPLEFT", 0, yOffset)
+        hdrBtn:SetPoint("TOPRIGHT", panels.listScrollChild, "TOPRIGHT", 0, yOffset)
+        hdrBtn:SetHeight(EXP_HEADER_HEIGHT)
+        hdrBtn:SetBackdrop({ bgFile = "Interface\\BUTTONS\\WHITE8x8" })
+        hdrBtn:SetBackdropColor(T("BG_TERTIARY"))
+        table.insert(listElements, hdrBtn)
+
+        local arrowText = hdrBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        arrowText:SetPoint("LEFT", hdrBtn, "LEFT", 8, 0)
+        arrowText:SetText(isExpanded and "v" or ">")
+        arrowText:SetTextColor(T("TEXT_MUTED"))
+
+        local expName = hdrBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        expName:SetPoint("LEFT", arrowText, "RIGHT", 6, 0)
+        expName:SetText(displayName)
+        expName:SetTextColor(T("ACCENT_PRIMARY"))
+
+        local countText = hdrBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        countText:SetPoint("RIGHT", hdrBtn, "RIGHT", -8, 0)
+        countText:SetText(string.format(L["TRADESKILLS_RECIPES"], count))
+        countText:SetTextColor(T("TEXT_MUTED"))
+
+        local capturedKey = expKey
+        hdrBtn:SetScript("OnClick", function()
+            expandedExpansions[capturedKey] = not expandedExpansions[capturedKey]
+            RefreshRecipeList()
+        end)
+        hdrBtn:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(T("BG_HOVER"))
+        end)
+        hdrBtn:SetScript("OnLeave", function(self)
+            self:SetBackdropColor(T("BG_TERTIARY"))
+        end)
+
+        yOffset = yOffset - EXP_HEADER_HEIGHT - 2
+
+        if isExpanded then
+            local rowIdx = 0
+            for _, recipe in ipairs(expRecipes) do
+                local row = CreateRecipeRow(panels.listScrollChild, recipe, yOffset, rowIdx, RecipeClickHandler)
+                table.insert(listElements, row)
+                yOffset = yOffset - RECIPE_ROW_HEIGHT
+                rowIdx = rowIdx + 1
+            end
+        end
+
+        yOffset = yOffset - 4
+    end
+
+    panels.listScrollChild:SetHeight(math.abs(yOffset) + 10)
+
+    if panels.leftStatusText then
+        local profLabel = selectedProfession and selectedProfession.name or L["TRADESKILLS_ALL"]
+        panels.leftStatusText:SetText(profLabel .. " - " .. string.format(L["TRADESKILLS_RECIPES"], totalRecipes))
+    end
+end
+
 RefreshRecipeList = function()
     if not panels then return end
     ClearListElements()
@@ -658,12 +802,14 @@ RefreshRecipeList = function()
         return
     end
 
+    local isSearching = currentSearch ~= "" and currentSearch ~= nil
     local recipes
+
     if selectedProfession then
         recipes = addon.TradeskillData:GetRecipesByProfession(
             selectedProfession.name,
             nil,
-            currentSearch ~= "" and currentSearch or nil
+            isSearching and currentSearch or nil
         )
     else
         recipes = {}
@@ -673,7 +819,7 @@ RefreshRecipeList = function()
                 local profRecipes = addon.TradeskillData:GetRecipesByProfession(
                     prof.name,
                     nil,
-                    currentSearch ~= "" and currentSearch or nil
+                    isSearching and currentSearch or nil
                 )
                 if profRecipes then
                     for _, r in ipairs(profRecipes) do
@@ -695,43 +841,10 @@ RefreshRecipeList = function()
 
     if emptyList then emptyList:Hide() end
 
-    local MAX_DISPLAY = 50
-    local totalCount = #recipes
-    local displayCount = math.min(totalCount, MAX_DISPLAY)
-
-    local yOffset = -4
-    local rowIdx = 0
-    for i = 1, displayCount do
-        local recipe = recipes[i]
-        local row = CreateRecipeRow(panels.listScrollChild, recipe, yOffset, rowIdx, function(recipeData)
-            selectedRecipe = recipeData
-            for _, el in ipairs(listElements) do
-                if el.recipe and el.recipe.id == recipeData.id then
-                    el:SetBackdropColor(T("BG_ACTIVE"))
-                else
-                    if el.rowIdx and el.rowIdx % 2 == 0 then
-                        el:SetBackdropColor(T("BG_PRIMARY"))
-                    else
-                        el:SetBackdropColor(T("BG_SECONDARY"))
-                    end
-                end
-            end
-            ShowRecipeDetail(recipeData)
-        end)
-        table.insert(listElements, row)
-        yOffset = yOffset - RECIPE_ROW_HEIGHT
-        rowIdx = rowIdx + 1
-    end
-
-    panels.listScrollChild:SetHeight(math.abs(yOffset) + 10)
-
-    if panels.leftStatusText then
-        local profLabel = selectedProfession and selectedProfession.name or L["TRADESKILLS_ALL"]
-        if displayCount < totalCount then
-            panels.leftStatusText:SetText(string.format(L["TRADESKILLS_RECIPES_FILTERED"], displayCount, totalCount) .. " - search to filter")
-        else
-            panels.leftStatusText:SetText(profLabel .. " - " .. string.format(L["TRADESKILLS_RECIPES"], totalCount))
-        end
+    if isSearching or not selectedProfession then
+        RefreshRecipeListFlat(recipes)
+    else
+        RefreshRecipeListGrouped(recipes, addon)
     end
 end
 
