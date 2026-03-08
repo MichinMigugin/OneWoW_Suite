@@ -8,7 +8,7 @@
 ## X-BugGrabber-Display: OneWow
 ## SavedVariables: OneWoW_QoL_DB
 ## IconTexture: Interface\AddOns\OneWoW_QoL\Media\neutral-mini.png
-## RequiredDeps: OneWoW
+## RequiredDeps: OneWoW, OneWoW_GUI
 
 # Libraries
 Libs\LibStub\LibStub.lua
@@ -19,7 +19,6 @@ Libs\AceEvent-3.0\AceEvent-3.0.lua
 Libs\AceConsole-3.0\AceConsole-3.0.lua
 Libs\AceDB-3.0\AceDB-3.0.lua
 Libs\LibCopyPaste-1.0\LibCopyPaste-1.0.lua
-Libs\OneWoW_GUI-1.0\OneWoW_GUI.xml
 
 # Bindings
 # Bindings.xml

@@ -1,0 +1,14 @@
+## Interface: 120001, 120002
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00GUI|r
+## Version: R6.2603.0820
+## Notes: Shared UI library for all OneWoW addons. Provides themed frames, buttons, scroll bars, and layout helpers.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+## LoadOnDemand: 0
+
+Libs\LibStub\LibStub.lua
+Core.lua
+Constants.lua
+OneWoW_GUI.lua
