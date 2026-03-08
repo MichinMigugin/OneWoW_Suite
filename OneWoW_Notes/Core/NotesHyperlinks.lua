@@ -164,7 +164,7 @@ function NotesHyperlinks:ConvertManualLinks(text)
     text = text:gsub("%(battlepet=(%d+)%)", convertBattlePetID)
     text = text:gsub("%(mount=(%d+)%)", convertMountID)
 
-    text = text:gsub("%(/?way ([%d%.]+) ([%d%.]+)([^%)]*)", function(x, y, label)
+    text = text:gsub("%(/?way ([%d%.]+) ([%d%.]+)([^%)\n]*)", function(x, y, label)
         local currentMapID = C_Map.GetBestMapForUnit("player")
         if currentMapID then
             local link = createWaypointLink(currentMapID, x, y, label)
@@ -173,13 +173,13 @@ function NotesHyperlinks:ConvertManualLinks(text)
         return "(/way " .. x .. " " .. y .. (label or "") .. ")"
     end)
 
-    text = text:gsub("%(map=(%d+) ([%d%.]+) ([%d%.]+)([^%)]*)", function(mapID, x, y, label)
+    text = text:gsub("%(map=(%d+) ([%d%.]+) ([%d%.]+)([^%)\n]*)", function(mapID, x, y, label)
         local link = createWaypointLink(mapID, x, y, label)
         if link then return link end
         return "(map=" .. mapID .. " " .. x .. " " .. y .. (label or "") .. ")"
     end)
 
-    text = text:gsub("%(worldmap=(%d+):([%d%.]+):([%d%.]+):([^%)]+)%)", function(mapID, x, y, label)
+    text = text:gsub("%(worldmap=(%d+):([%d%.]+):([%d%.]+):([^%)\n]+)%)", function(mapID, x, y, label)
         local link = createWaypointLink(mapID, x, y, label)
         if link then return link end
         return "(worldmap=" .. mapID .. ":" .. x .. ":" .. y .. ":" .. label .. ")"
@@ -193,13 +193,39 @@ function NotesHyperlinks:EnhanceEditBox(editBox)
 
     editBox:SetScript("OnChar", function(self, char)
         if char == ")" then
-            local currentText = self:GetText()
+            local fullText = self:GetText()
             local cursorPos = self:GetCursorPosition()
-            local convertedText = NotesHyperlinks:ConvertManualLinks(currentText)
-            if convertedText ~= currentText then
-                self:SetText(convertedText)
-                local lengthDiff = string.len(convertedText) - string.len(currentText)
-                self:SetCursorPosition(cursorPos + lengthDiff)
+
+            local lineStart = 1
+            local searchPos = cursorPos
+            while searchPos > 1 do
+                local byte = string.byte(fullText, searchPos - 1)
+                if byte == 10 then break end
+                searchPos = searchPos - 1
+            end
+            lineStart = searchPos
+
+            local lineEnd = cursorPos
+            local textLen = string.len(fullText)
+            while lineEnd < textLen do
+                lineEnd = lineEnd + 1
+                local byte = string.byte(fullText, lineEnd)
+                if byte == 10 then
+                    lineEnd = lineEnd - 1
+                    break
+                end
+            end
+
+            local beforeLine = string.sub(fullText, 1, lineStart - 1)
+            local currentLine = string.sub(fullText, lineStart, lineEnd)
+            local afterLine = string.sub(fullText, lineEnd + 1)
+
+            local convertedLine = NotesHyperlinks:ConvertManualLinks(currentLine)
+            if convertedLine ~= currentLine then
+                local newText = beforeLine .. convertedLine .. afterLine
+                self:SetText(newText)
+                local lineDiff = string.len(convertedLine) - string.len(currentLine)
+                self:SetCursorPosition(cursorPos + lineDiff)
             end
         end
     end)
