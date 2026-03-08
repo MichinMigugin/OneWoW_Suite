@@ -9,6 +9,8 @@ local selectedVendor = nil
 local vendorListButtons = {}
 local detailElements = {}
 local searchText = ""
+local zoneFilter = nil
+local currentZoneOnly = false
 local dataAddon = nil
 
 local QUALITY_COLORS = {
@@ -84,6 +86,61 @@ local function GetDataAddon()
         dataAddon = ns.Catalog:GetDataAddon("vendors")
     end
     return dataAddon
+end
+
+local function GetCurrentPlayerZone()
+    local mapID = C_Map.GetBestMapForUnit("player")
+    if not mapID then return nil, nil end
+    local info = C_Map.GetMapInfo(mapID)
+    if not info then return nil, nil end
+    return info.name, mapID
+end
+
+local function BuildZoneList()
+    local addon = GetDataAddon()
+    if not addon or not addon.VendorData then return {} end
+
+    local allVendors = addon.VendorData:GetAllVendors()
+    local zoneSet = {}
+    for _, vendor in pairs(allVendors) do
+        if vendor.locations then
+            for _, loc in pairs(vendor.locations) do
+                if loc.zone and loc.zone ~= "" then
+                    zoneSet[loc.zone] = true
+                end
+            end
+        end
+    end
+
+    local zones = {}
+    for zone in pairs(zoneSet) do
+        table.insert(zones, zone)
+    end
+    table.sort(zones)
+    return zones
+end
+
+local function VendorMatchesZoneFilter(vendor, filterZone)
+    if not filterZone then return true end
+    if not vendor or not vendor.locations then return false end
+    for _, loc in pairs(vendor.locations) do
+        if loc.zone == filterZone then
+            return true
+        end
+    end
+    return false
+end
+
+local function VendorMatchesItemSearch(vendor, term, addon)
+    if not vendor or not vendor.items or not term or term == "" then return false end
+    if not addon or not addon.DataLoader then return false end
+    for itemID in pairs(vendor.items) do
+        local cached = addon.DataLoader:GetCachedItem(itemID)
+        if cached and cached.name and cached.name:lower():find(term, 1, true) then
+            return true
+        end
+    end
+    return false
 end
 
 local function ClearDetailElements()
@@ -407,17 +464,67 @@ local function RefreshVendorList(panels)
         return
     end
 
-    local sorted = addon.VendorData:GetSortedVendors(searchText ~= "" and searchText or nil)
+    local sorted = addon.VendorData:GetSortedVendors(nil)
+
+    local activeZoneFilter = nil
+    if currentZoneOnly then
+        local playerZone = GetCurrentPlayerZone()
+        activeZoneFilter = playerZone
+    elseif zoneFilter then
+        activeZoneFilter = zoneFilter
+    end
+
+    local filtered = {}
+    local term = searchText ~= "" and searchText:lower() or nil
+    for _, vendor in ipairs(sorted) do
+        local passesZone = true
+        if activeZoneFilter then
+            passesZone = VendorMatchesZoneFilter(vendor, activeZoneFilter)
+        end
+
+        local passesSearch = true
+        if term then
+            local nameMatch = vendor.name and vendor.name:lower():find(term, 1, true)
+            local zoneMatch = false
+            if vendor.locations then
+                for _, loc in pairs(vendor.locations) do
+                    if loc.zone and loc.zone:lower():find(term, 1, true) then
+                        zoneMatch = true
+                        break
+                    end
+                end
+            end
+            local itemMatch = VendorMatchesItemSearch(vendor, term, addon)
+            passesSearch = nameMatch or zoneMatch or itemMatch
+        end
+
+        if passesZone and passesSearch then
+            table.insert(filtered, vendor)
+        end
+    end
 
     local stats = addon.VendorData:GetStats()
     if panels.statsText then
         panels.statsText:SetText(string.format(L["VENDORS_STATS"], stats.vendorCount, stats.uniqueItems))
     end
+
+    local totalFiltered = #filtered
+    local hasActiveFilter = activeZoneFilter or (searchText ~= "")
+    local displayLimit = nil
+    if not hasActiveFilter then
+        displayLimit = 50
+    end
+    local displayCount = displayLimit and math.min(totalFiltered, displayLimit) or totalFiltered
+
     if panels.leftStatusText then
-        panels.leftStatusText:SetText(string.format(L["VENDORS_STATS"], stats.vendorCount, stats.uniqueItems))
+        if displayLimit and totalFiltered > displayLimit then
+            panels.leftStatusText:SetText(string.format(L["VENDORS_STATS_SHOWING"], displayCount, totalFiltered))
+        else
+            panels.leftStatusText:SetText(string.format(L["VENDORS_STATS"], stats.vendorCount, stats.uniqueItems))
+        end
     end
 
-    if #sorted == 0 then
+    if totalFiltered == 0 then
         panels.emptyList:Show()
         panels.listScrollChild:SetHeight(100)
         panels.UpdateListThumb()
@@ -427,7 +534,8 @@ local function RefreshVendorList(panels)
     panels.emptyList:Hide()
 
     local yOffset = -4
-    for _, vendor in ipairs(sorted) do
+    for i = 1, displayCount do
+        local vendor = filtered[i]
         local btn = CreateVendorListEntry(panels.listScrollChild, vendor, yOffset, function(v)
             for _, b in ipairs(vendorListButtons) do
                 if b.vendor and b.vendor.npcID == v.npcID then
@@ -446,22 +554,260 @@ local function RefreshVendorList(panels)
     panels.UpdateListThumb()
 end
 
+local function CreateSearchableZoneDropdown(parent, dropdown, dropdownText, onSelect)
+    dropdown:SetScript("OnClick", function(self)
+        if self._menu and self._menu:IsShown() then
+            self._menu:Hide()
+            return
+        end
+
+        local zones = BuildZoneList()
+
+        local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
+        self._menu = menu
+        menu:SetFrameStrata("FULLSCREEN_DIALOG")
+        menu:SetSize(self:GetWidth() + 20, 314)
+        menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
+        menu:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+        })
+        menu:SetBackdropColor(T("BG_SECONDARY"))
+        menu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        menu:EnableMouse(true)
+
+        local searchBox = CreateFrame("EditBox", nil, menu, "BackdropTemplate")
+        searchBox:SetSize(menu:GetWidth() - 15, 28)
+        searchBox:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
+        searchBox:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+            insets = { left = 1, right = 1, top = 1, bottom = 1 },
+        })
+        searchBox:SetBackdropColor(T("BG_TERTIARY"))
+        searchBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        searchBox:SetFontObject(GameFontHighlight)
+        searchBox:SetTextInsets(8, 8, 0, 0)
+        searchBox:SetAutoFocus(false)
+        searchBox:SetMaxLetters(50)
+        searchBox:SetTextColor(T("TEXT_PRIMARY"))
+        searchBox:SetScript("OnEditFocusGained", function(s)
+            s:SetBackdropBorderColor(T("BORDER_FOCUS"))
+        end)
+        searchBox:SetScript("OnEditFocusLost", function(s)
+            s:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        end)
+
+        local separator = menu:CreateTexture(nil, "ARTWORK")
+        separator:SetSize(menu:GetWidth() - 4, 1)
+        separator:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -32)
+        separator:SetColorTexture(T("BORDER_DEFAULT"))
+
+        local scrollFrame = CreateFrame("ScrollFrame", nil, menu)
+        scrollFrame:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -36)
+        scrollFrame:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -13, 2)
+
+        local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+        scrollChild:SetWidth(scrollFrame:GetWidth())
+        scrollFrame:SetScrollChild(scrollChild)
+
+        local scrollBar = CreateFrame("Slider", nil, menu, "BackdropTemplate")
+        scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 1, 0)
+        scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 1, 0)
+        scrollBar:SetWidth(10)
+        scrollBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        scrollBar:SetBackdropColor(T("BG_TERTIARY"))
+        scrollBar:SetMinMaxValues(0, 1)
+        scrollBar:SetValue(0)
+        scrollBar:SetScript("OnValueChanged", function(s, value)
+            scrollFrame:SetVerticalScroll(value)
+        end)
+
+        local thumb = scrollBar:CreateTexture(nil, "OVERLAY")
+        thumb:SetSize(8, 30)
+        thumb:SetColorTexture(T("ACCENT_PRIMARY"))
+        scrollBar:SetThumbTexture(thumb)
+
+        scrollFrame:EnableMouseWheel(true)
+        scrollFrame:SetScript("OnMouseWheel", function(sf, direction)
+            local current = scrollFrame:GetVerticalScroll()
+            local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
+            local new = math.max(0, math.min(maxScroll, current - (direction * 28)))
+            scrollFrame:SetVerticalScroll(new)
+            scrollBar:SetValue(new)
+        end)
+
+        local buttons = {}
+
+        local allBtn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+        allBtn:SetSize(scrollFrame:GetWidth() - 4, 26)
+        allBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        if not zoneFilter then
+            allBtn:SetBackdropColor(T("ACCENT_PRIMARY"))
+        else
+            allBtn:SetBackdropColor(T("BG_TERTIARY"))
+        end
+        local allTxt = allBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        allTxt:SetPoint("LEFT", allBtn, "LEFT", 8, 0)
+        allTxt:SetPoint("RIGHT", allBtn, "RIGHT", -4, 0)
+        allTxt:SetJustifyH("LEFT")
+        allTxt:SetText(L["VENDORS_ZONE_ALL"])
+        allTxt:SetTextColor(T("TEXT_PRIMARY"))
+        allBtn.filterKey = L["VENDORS_ZONE_ALL"]:lower()
+        allBtn:SetScript("OnEnter", function(b)
+            if zoneFilter then
+                b:SetBackdropColor(T("BG_HOVER"))
+                allTxt:SetTextColor(T("TEXT_ACCENT"))
+            end
+        end)
+        allBtn:SetScript("OnLeave", function(b)
+            if zoneFilter then
+                b:SetBackdropColor(T("BG_TERTIARY"))
+                allTxt:SetTextColor(T("TEXT_PRIMARY"))
+            end
+        end)
+        allBtn:SetScript("OnClick", function()
+            menu:Hide()
+            onSelect(nil, L["VENDORS_ZONE_ALL"])
+        end)
+        allBtn:Hide()
+        table.insert(buttons, allBtn)
+
+        for _, zone in ipairs(zones) do
+            local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+            btn:SetSize(scrollFrame:GetWidth() - 4, 26)
+            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+            if zoneFilter == zone then
+                btn:SetBackdropColor(T("ACCENT_PRIMARY"))
+            else
+                btn:SetBackdropColor(T("BG_TERTIARY"))
+            end
+
+            local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            txt:SetPoint("LEFT", btn, "LEFT", 8, 0)
+            txt:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
+            txt:SetJustifyH("LEFT")
+            txt:SetText(zone)
+            txt:SetTextColor(T("TEXT_PRIMARY"))
+
+            btn:SetScript("OnEnter", function(b)
+                if zoneFilter ~= zone then
+                    b:SetBackdropColor(T("BG_HOVER"))
+                    txt:SetTextColor(T("TEXT_ACCENT"))
+                end
+            end)
+            btn:SetScript("OnLeave", function(b)
+                if zoneFilter ~= zone then
+                    b:SetBackdropColor(T("BG_TERTIARY"))
+                    txt:SetTextColor(T("TEXT_PRIMARY"))
+                end
+            end)
+            btn:SetScript("OnClick", function()
+                menu:Hide()
+                onSelect(zone, zone)
+            end)
+
+            btn.filterKey = zone:lower()
+            btn:Hide()
+            table.insert(buttons, btn)
+        end
+
+        local function renderList(filter)
+            local yPos = -2
+            local shown = 0
+            for _, btn in ipairs(buttons) do
+                if filter == "" or string.find(btn.filterKey, filter, 1, true) then
+                    if shown < 20 or filter ~= "" then
+                        btn:ClearAllPoints()
+                        btn:SetPoint("TOP", scrollChild, "TOP", 0, yPos)
+                        btn:Show()
+                        yPos = yPos - 28
+                        shown = shown + 1
+                    else
+                        btn:Hide()
+                    end
+                else
+                    btn:Hide()
+                end
+            end
+            local totalH = math.max(28, math.abs(yPos) + 2)
+            scrollChild:SetHeight(totalH)
+            local maxScroll = math.max(0, totalH - scrollFrame:GetHeight())
+            scrollBar:SetMinMaxValues(0, maxScroll)
+            scrollFrame:SetVerticalScroll(0)
+            scrollBar:SetValue(0)
+        end
+
+        renderList("")
+
+        searchBox:SetScript("OnTextChanged", function(s)
+            renderList(s:GetText():lower())
+        end)
+        searchBox:SetScript("OnEscapePressed", function(s)
+            if s:GetText() ~= "" then
+                s:SetText("")
+                renderList("")
+            else
+                menu:Hide()
+            end
+        end)
+
+        menu:SetScript("OnShow", function(m)
+            local timeOutside = 0
+            m:SetScript("OnUpdate", function(m2, elapsed)
+                if not MouseIsOver(menu) and not MouseIsOver(self) and not searchBox:HasFocus() then
+                    timeOutside = timeOutside + elapsed
+                    if timeOutside > 0.5 then
+                        m2:Hide()
+                        m2:SetScript("OnUpdate", nil)
+                    end
+                else
+                    timeOutside = 0
+                end
+            end)
+        end)
+
+        menu:Show()
+        searchBox:SetFocus()
+    end)
+end
+
 function ns.UI.CreateVendorsTab(parent)
-    local panels = ns.UI.CreateSplitPanel(parent)
+    local GAP    = ns.Constants.GUI.PANEL_GAP
+    local HDR_H  = 42
 
-    panels.listTitle:SetText(L["VENDORS_LIST_TITLE"])
-    panels.detailTitle:SetText(L["VENDORS_DETAIL_TITLE"])
-
-    local searchBox = CreateFrame("EditBox", nil, panels.listPanel, "BackdropTemplate")
-    searchBox:SetPoint("TOPLEFT", panels.listPanel, "TOPLEFT", 8, -28)
-    searchBox:SetPoint("TOPRIGHT", panels.listPanel, "TOPRIGHT", -8, -28)
-    searchBox:SetHeight(24)
-    searchBox:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
+    local headerBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    headerBar:SetHeight(HDR_H)
+    headerBar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+    headerBar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
+    headerBar:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    searchBox:SetBackdropColor(T("BG_TERTIARY"))
+    headerBar:SetBackdropColor(T("BG_TERTIARY"))
+    headerBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local contentArea = CreateFrame("Frame", nil, parent)
+    contentArea:SetPoint("TOPLEFT", headerBar, "BOTTOMLEFT", 0, -GAP)
+    contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+
+    local panels = ns.UI.CreateSplitPanel(contentArea)
+    panels.listTitle:SetText(L["VENDORS_LIST_TITLE"])
+    panels.detailTitle:SetText(L["VENDORS_DETAIL_TITLE"])
+
+    local searchBox = CreateFrame("EditBox", nil, headerBar, "BackdropTemplate")
+    searchBox:SetHeight(26)
+    searchBox:SetPoint("TOPLEFT", headerBar, "TOPLEFT", 8, -8)
+    searchBox:SetWidth(280)
+    searchBox:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    searchBox:SetBackdropColor(T("BG_SECONDARY"))
     searchBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
     searchBox:SetFontObject(GameFontNormal)
     searchBox:SetTextColor(T("TEXT_PRIMARY"))
@@ -472,6 +818,122 @@ function ns.UI.CreateVendorsTab(parent)
     placeholder:SetPoint("LEFT", searchBox, "LEFT", 8, 0)
     placeholder:SetText(L["VENDORS_SEARCH"])
     placeholder:SetTextColor(T("TEXT_MUTED"))
+
+    local clearBtn = CreateFrame("Button", nil, headerBar, "BackdropTemplate")
+    clearBtn:SetSize(34, 26)
+    clearBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, 0)
+    clearBtn:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    clearBtn:SetBackdropColor(T("BG_SECONDARY"))
+    clearBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    local clearBtnText = clearBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    clearBtnText:SetPoint("CENTER")
+    clearBtnText:SetText(L["VENDORS_FILTER_CLEAR"])
+    clearBtnText:SetTextColor(T("TEXT_PRIMARY"))
+    clearBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
+        clearBtnText:SetTextColor(T("TEXT_ACCENT"))
+    end)
+    clearBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        clearBtnText:SetTextColor(T("TEXT_PRIMARY"))
+    end)
+
+    local chkBox = CreateFrame("Button", nil, headerBar, "BackdropTemplate")
+    chkBox:SetSize(16, 16)
+    chkBox:SetPoint("TOPRIGHT", headerBar, "TOPRIGHT", -8, -13)
+    chkBox:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    chkBox:SetBackdropColor(T("BG_SECONDARY"))
+    chkBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local chkMark = chkBox:CreateTexture(nil, "OVERLAY")
+    chkMark:SetPoint("TOPLEFT", chkBox, "TOPLEFT", 2, -2)
+    chkMark:SetPoint("BOTTOMRIGHT", chkBox, "BOTTOMRIGHT", -2, 2)
+    chkMark:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+    chkMark:Hide()
+    panels.chkMark = chkMark
+    panels.chkBox = chkBox
+
+    local chkLabel = headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    chkLabel:SetPoint("RIGHT", chkBox, "LEFT", -6, 0)
+    chkLabel:SetText(L["VENDORS_ZONE_CURRENT"])
+    chkLabel:SetTextColor(T("TEXT_PRIMARY"))
+
+    local zoneDropdown = CreateFrame("Button", nil, headerBar, "BackdropTemplate")
+    zoneDropdown:SetHeight(26)
+    zoneDropdown:SetWidth(200)
+    zoneDropdown:SetPoint("RIGHT", chkLabel, "LEFT", -10, 0)
+    zoneDropdown:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    zoneDropdown:SetBackdropColor(T("BG_SECONDARY"))
+    zoneDropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local zoneDropdownText = zoneDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    zoneDropdownText:SetPoint("LEFT", zoneDropdown, "LEFT", 8, 0)
+    zoneDropdownText:SetPoint("RIGHT", zoneDropdown, "RIGHT", -20, 0)
+    zoneDropdownText:SetJustifyH("LEFT")
+    zoneDropdownText:SetWordWrap(false)
+    zoneDropdownText:SetText(L["VENDORS_ZONE_ALL"])
+    zoneDropdownText:SetTextColor(T("TEXT_PRIMARY"))
+
+    local zoneArrow = zoneDropdown:CreateTexture(nil, "OVERLAY")
+    zoneArrow:SetSize(12, 12)
+    zoneArrow:SetPoint("RIGHT", zoneDropdown, "RIGHT", -4, 0)
+    zoneArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
+
+    zoneDropdown:SetScript("OnEnter", function(self)
+        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
+    end)
+    zoneDropdown:SetScript("OnLeave", function(self)
+        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    end)
+
+    CreateSearchableZoneDropdown(headerBar, zoneDropdown, zoneDropdownText, function(zone, text)
+        zoneFilter = zone
+        zoneDropdownText:SetText(text)
+        if zone then
+            currentZoneOnly = false
+            chkMark:Hide()
+            chkBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        end
+        RefreshVendorList(panels)
+    end)
+
+    chkBox:SetScript("OnClick", function(self)
+        currentZoneOnly = not currentZoneOnly
+        if currentZoneOnly then
+            chkMark:Show()
+            self:SetBackdropBorderColor(T("BORDER_FOCUS"))
+            zoneFilter = nil
+            zoneDropdownText:SetText(L["VENDORS_ZONE_ALL"])
+        else
+            chkMark:Hide()
+            self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        end
+        RefreshVendorList(panels)
+    end)
+
+    clearBtn:SetScript("OnClick", function()
+        searchText = ""
+        zoneFilter = nil
+        currentZoneOnly = false
+        searchBox:SetText("")
+        placeholder:Show()
+        zoneDropdownText:SetText(L["VENDORS_ZONE_ALL"])
+        chkMark:Hide()
+        chkBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        RefreshVendorList(panels)
+    end)
 
     searchBox:SetScript("OnTextChanged", function(self)
         local text = self:GetText()
@@ -495,19 +957,6 @@ function ns.UI.CreateVendorsTab(parent)
     searchBox:SetScript("OnEnterPressed", function(self)
         self:ClearFocus()
     end)
-
-    local statsText = panels.listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    statsText:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -4)
-    statsText:SetPoint("TOPRIGHT", searchBox, "BOTTOMRIGHT", 0, -4)
-    statsText:SetJustifyH("LEFT")
-    statsText:SetText("")
-    statsText:SetTextColor(T("TEXT_MUTED"))
-    panels.statsText = statsText
-
-    local listScrollFrame = panels.listScrollFrame
-    listScrollFrame:ClearAllPoints()
-    listScrollFrame:SetPoint("TOPLEFT", statsText, "BOTTOMLEFT", 0, -4)
-    listScrollFrame:SetPoint("BOTTOMRIGHT", panels.listPanel, "BOTTOMRIGHT", -18, 8)
 
     local emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)

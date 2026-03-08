@@ -402,9 +402,19 @@ function GUI:InitMainWindow()
     L = OneWoW.L
     local C = OneWoW.Constants.GUI
 
+    local screenW, screenH = GetScreenWidth(), GetScreenHeight()
+
     local savedSize = OneWoW.db and OneWoW.db.global and OneWoW.db.global.mainFrameSize
     local frameW = savedSize and savedSize.width or C.WINDOW_WIDTH
     local frameH = savedSize and savedSize.height or C.WINDOW_HEIGHT
+
+    frameW = math.min(frameW, screenW)
+    frameH = math.min(frameH, screenH)
+
+    if savedSize then
+        savedSize.width = frameW
+        savedSize.height = frameH
+    end
 
     MainWindow = GUI:CreateFrame("OneWoWMainWindow", UIParent, frameW, frameH, true)
 
@@ -422,7 +432,9 @@ function GUI:InitMainWindow()
     MainWindow:SetFrameStrata("MEDIUM")
     MainWindow:SetToplevel(true)
     MainWindow:SetResizable(true)
-    MainWindow:SetResizeBounds(C.MIN_WIDTH, C.MIN_HEIGHT, C.MAX_WIDTH, C.MAX_HEIGHT)
+    local maxW = math.min(C.MAX_WIDTH, screenW)
+    local maxH = math.min(C.MAX_HEIGHT, screenH)
+    MainWindow:SetResizeBounds(C.MIN_WIDTH, C.MIN_HEIGHT, maxW, maxH)
     MainWindow:Hide()
 
     MainWindow:SetScript("OnDragStart", function(self) self:StartMoving() end)
@@ -539,6 +551,10 @@ function GUI:InitMainWindow()
     end)
     resizeBtn:SetScript("OnMouseUp", function()
         MainWindow:StopMovingOrSizing()
+        local sw, sh = GetScreenWidth(), GetScreenHeight()
+        local w, h = MainWindow:GetWidth(), MainWindow:GetHeight()
+        if w > sw then MainWindow:SetWidth(sw) end
+        if h > sh then MainWindow:SetHeight(sh) end
         if OneWoW.db and OneWoW.db.global and OneWoW.db.global.mainFrameSize then
             OneWoW.db.global.mainFrameSize.width = MainWindow:GetWidth()
             OneWoW.db.global.mainFrameSize.height = MainWindow:GetHeight()
@@ -618,6 +634,19 @@ function GUI:CreateAddonPlaceholderFrame(parent, info)
         self:HighlightText(0, 0)
         self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
     end)
+end
+
+function GUI:ResetUIToDefaults()
+    if OneWoW.db and OneWoW.db.global then
+        local C = OneWoW.Constants.GUI
+        local screenW, screenH = GetScreenWidth(), GetScreenHeight()
+        local defW = math.min(C.WINDOW_WIDTH, screenW)
+        local defH = math.min(C.WINDOW_HEIGHT, screenH)
+        OneWoW.db.global.mainFrameSize = { width = defW, height = defH }
+        OneWoW.db.global.mainFramePosition = nil
+    end
+    GUI:FullReset()
+    C_Timer.After(0.1, function() GUI:Show() end)
 end
 
 function GUI:FullReset()

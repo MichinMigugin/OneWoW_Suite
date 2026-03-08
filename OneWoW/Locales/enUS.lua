@@ -114,6 +114,9 @@ OneWoW.Locales["enUS"] = {
     ["WEBSITE_LABEL"] = "Visit our Website for Support",
     ["WEBSITE_URL"] = "https://wow2.xyz/",
     ["COPY_HINT"] = "Click to select, then Ctrl+C to copy",
+    ["RESET_UI_SECTION"] = "Window Layout",
+    ["RESET_UI_DESC"] = "Reset the OneWoW window to its default size and position.",
+    ["RESET_UI_BTN"] = "Reset Window",
 
     ["FEATURE_STATUS_LABEL"] = "Status:",
     ["FEATURE_ENABLED"] = "Enabled",

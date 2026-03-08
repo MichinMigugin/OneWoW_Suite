@@ -561,7 +561,40 @@ function GUI:CreateSettingsMainTab(parent)
         self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
     end)
 
-    content:SetHeight(math.abs(yOffset) + 140)
+    yOffset = yOffset - 140
+
+    local resetContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    resetContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    resetContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    resetContainer:SetHeight(90)
+    resetContainer:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    resetContainer:SetBackdropColor(T("BG_SECONDARY"))
+    resetContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local resetTitle = resetContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    resetTitle:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -12)
+    resetTitle:SetText(L["RESET_UI_SECTION"] or "Window Layout")
+    resetTitle:SetTextColor(T("ACCENT_PRIMARY"))
+
+    local resetDesc = resetContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    resetDesc:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -38)
+    resetDesc:SetPoint("TOPRIGHT", resetContainer, "TOPRIGHT", -15, -38)
+    resetDesc:SetText(L["RESET_UI_DESC"] or "Reset the OneWoW window to its default size and position.")
+    resetDesc:SetTextColor(T("TEXT_SECONDARY"))
+    resetDesc:SetJustifyH("LEFT")
+    resetDesc:SetWordWrap(true)
+
+    local resetBtn = GUI:CreateButton("OneWoW_ResetUIBtn", resetContainer, L["RESET_UI_BTN"] or "Reset Window", 160, 28)
+    resetBtn:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -58)
+    resetBtn:SetScript("OnClick", function()
+        GUI:ResetUIToDefaults()
+    end)
+
+    content:SetHeight(math.abs(yOffset) + 110)
 end
 
 local coreSettingsTabs = {
