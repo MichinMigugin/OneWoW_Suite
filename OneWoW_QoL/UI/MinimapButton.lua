@@ -3,18 +3,13 @@ local addonName, ns = ...
 ns.MinimapButton = {}
 local MinimapButton = ns.MinimapButton
 
-local ICON_HORDE    = "Interface\\AddOns\\OneWoW_QoL\\Media\\horde-mini.png"
-local ICON_ALLIANCE = "Interface\\AddOns\\OneWoW_QoL\\Media\\alliance-mini.png"
-local ICON_NEUTRAL  = "Interface\\AddOns\\OneWoW_QoL\\Media\\neutral-mini.png"
-
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 local libDBIcon
 
 local function GetCurrentIcon()
     local addon = _G.OneWoW_QoL
     local theme = addon and addon.db and addon.db.global and addon.db.global.minimap and addon.db.global.minimap.theme or "horde"
-    if theme == "alliance" then return ICON_ALLIANCE end
-    if theme == "neutral"  then return ICON_NEUTRAL  end
-    return ICON_HORDE
+    return OneWoW_GUI:GetBrandIcon(theme)
 end
 
 function MinimapButton:UpdateIcon()

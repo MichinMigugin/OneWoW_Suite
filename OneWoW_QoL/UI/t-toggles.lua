@@ -3,8 +3,9 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local CATEGORY_ORDER = {
     "GAMEPLAY", "INTERFACE", "NAMEPLATES", "COMBAT_TEXT",
@@ -225,23 +226,23 @@ end
 
 local function ApplyBtnHover(btn)
     if btn.isActive then
-        btn:SetBackdropBorderColor(T("BORDER_FOCUS"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
     else
-        btn:SetBackdropColor(T("BTN_HOVER"))
-        btn:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
-        btn.text:SetTextColor(T("TEXT_SECONDARY"))
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     end
 end
 
 local function ApplyBtnNormal(btn)
     if btn.isActive then
-        btn:SetBackdropColor(T("BG_ACTIVE"))
-        btn:SetBackdropBorderColor(T("BORDER_ACCENT"))
-        btn.text:SetTextColor(T("TEXT_ACCENT"))
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     else
-        btn:SetBackdropColor(T("BTN_NORMAL"))
-        btn:SetBackdropBorderColor(T("BTN_BORDER"))
-        btn.text:SetTextColor(T("TEXT_MUTED"))
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 end
 
@@ -259,20 +260,20 @@ local function ShowToggleDetail(split, entry)
     nameLabel:SetPoint("TOPRIGHT", child, "TOPRIGHT", -12, yOfs)
     nameLabel:SetJustifyH("LEFT")
     nameLabel:SetText(L[entry.name] or entry.name)
-    nameLabel:SetTextColor(T("ACCENT_PRIMARY"))
+    nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOfs = yOfs - nameLabel:GetStringHeight() - 6
 
     local cvarLabel = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     cvarLabel:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
     cvarLabel:SetText(L["TOGGLES_CVAR_LABEL"] .. " " .. entry.cvar)
-    cvarLabel:SetTextColor(T("TEXT_MUTED"))
+    cvarLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     yOfs = yOfs - cvarLabel:GetStringHeight() - 10
 
     local div1 = child:CreateTexture(nil, "ARTWORK")
     div1:SetHeight(1)
     div1:SetPoint("TOPLEFT",  child, "TOPLEFT",  12, yOfs)
     div1:SetPoint("TOPRIGHT", child, "TOPRIGHT", -12, yOfs)
-    div1:SetColorTexture(T("BORDER_SUBTLE"))
+    div1:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOfs = yOfs - 10
 
     local descText = child:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -282,14 +283,14 @@ local function ShowToggleDetail(split, entry)
     descText:SetWordWrap(true)
     descText:SetSpacing(3)
     descText:SetText(L[entry.desc] or entry.desc)
-    descText:SetTextColor(T("TEXT_PRIMARY"))
+    descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOfs = yOfs - descText:GetStringHeight() - 12
 
     local div2 = child:CreateTexture(nil, "ARTWORK")
     div2:SetHeight(1)
     div2:SetPoint("TOPLEFT",  child, "TOPLEFT",  12, yOfs)
     div2:SetPoint("TOPRIGHT", child, "TOPRIGHT", -12, yOfs)
-    div2:SetColorTexture(T("BORDER_SUBTLE"))
+    div2:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOfs = yOfs - 14
 
     local curVal = C_CVar.GetCVar(entry.cvar)
@@ -297,8 +298,8 @@ local function ShowToggleDetail(split, entry)
     if entry.widget == "checkbox" then
         local isOn = (curVal == "1")
 
-        local onBtn  = ns.UI.CreateButton(nil, child, L["TOGGLES_ON"],  64, 28)
-        local offBtn = ns.UI.CreateButton(nil, child, L["TOGGLES_OFF"], 64, 28)
+        local onBtn  = OneWoW_GUI:CreateButton(nil, child, L["TOGGLES_ON"],  64, 28)
+        local offBtn = OneWoW_GUI:CreateButton(nil, child, L["TOGGLES_OFF"], 64, 28)
         onBtn:SetPoint( "TOPLEFT", child, "TOPLEFT", 12, yOfs)
         offBtn:SetPoint("LEFT",    onBtn, "RIGHT",   6, 0)
 
@@ -311,25 +312,25 @@ local function ShowToggleDetail(split, entry)
             if val == "1" then
                 onBtn.isActive  = true
                 offBtn.isActive = false
-                onBtn:SetBackdropColor(T("BG_ACTIVE"))
-                onBtn:SetBackdropBorderColor(T("BORDER_ACCENT"))
-                onBtn.text:SetTextColor(T("TEXT_ACCENT"))
-                offBtn:SetBackdropColor(T("BTN_NORMAL"))
-                offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
-                offBtn.text:SetTextColor(T("TEXT_MUTED"))
+                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 statusLabel:SetText(L["TOGGLES_ON"])
-                statusLabel:SetTextColor(0.2, 1.0, 0.2)
+                statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
                 offBtn.isActive = true
                 onBtn.isActive  = false
-                offBtn:SetBackdropColor(T("BG_ACTIVE"))
-                offBtn:SetBackdropBorderColor(T("BORDER_ACCENT"))
-                offBtn.text:SetTextColor(T("TEXT_ACCENT"))
-                onBtn:SetBackdropColor(T("BTN_NORMAL"))
-                onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
-                onBtn.text:SetTextColor(T("TEXT_MUTED"))
+                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 statusLabel:SetText(L["TOGGLES_OFF"])
-                statusLabel:SetTextColor(1.0, 0.4, 0.4)
+                statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             end
         end
 
@@ -362,7 +363,7 @@ local function ShowToggleDetail(split, entry)
         local valLabel = child:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         valLabel:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
         valLabel:SetText(L["TOGGLES_VALUE_LABEL"] .. " " .. FormatSliderVal(numVal, entry.step))
-        valLabel:SetTextColor(T("TEXT_PRIMARY"))
+        valLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         yOfs = yOfs - valLabel:GetStringHeight() - 8
 
         local slider = CreateFrame("Slider", nil, child)
@@ -378,7 +379,7 @@ local function ShowToggleDetail(split, entry)
 
         local trackBg = slider:CreateTexture(nil, "BACKGROUND")
         trackBg:SetTexture("Interface\\Buttons\\WHITE8x8")
-        trackBg:SetVertexColor(T("BG_TERTIARY"))
+        trackBg:SetVertexColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         trackBg:SetPoint("TOPLEFT",     slider, "TOPLEFT",     8, -6)
         trackBg:SetPoint("BOTTOMRIGHT", slider, "BOTTOMRIGHT", -8, 6)
 
@@ -395,12 +396,12 @@ local function ShowToggleDetail(split, entry)
         local minLabel = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         minLabel:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
         minLabel:SetText(FormatSliderVal(entry.min, entry.step))
-        minLabel:SetTextColor(T("TEXT_MUTED"))
+        minLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         local maxLabel = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         maxLabel:SetPoint("TOPRIGHT", child, "TOPRIGHT", -12, yOfs)
         maxLabel:SetText(FormatSliderVal(entry.max, entry.step))
-        maxLabel:SetTextColor(T("TEXT_MUTED"))
+        maxLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         yOfs = yOfs - minLabel:GetStringHeight() - 8
 
@@ -415,14 +416,14 @@ local function ShowToggleDetail(split, entry)
 
         for i, opt in ipairs(entry.options) do
             local lbl = L[entry.optLabels[i]] or entry.optLabels[i]
-            local btn = ns.UI.CreateButton(nil, child, lbl, bw, 26)
+            local btn = OneWoW_GUI:CreateButton(nil, child, lbl, bw, 26)
             btn:SetPoint("TOPLEFT", child, "TOPLEFT", xPos, rowY)
             btn.optValue = tostring(opt)
             btn.isActive = (tostring(opt) == tostring(curVal))
             if btn.isActive then
-                btn:SetBackdropColor(T("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(T("BORDER_ACCENT"))
-                btn.text:SetTextColor(T("TEXT_ACCENT"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
             table.insert(optBtns, btn)
 
@@ -484,7 +485,7 @@ local function BuildTogglesList(split, filterText)
             catLabel:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOfs)
             catLabel:SetJustifyH("LEFT")
             catLabel:SetText(L["TOGGLE_CAT_" .. cat] or cat)
-            catLabel:SetTextColor(T("ACCENT_SECONDARY"))
+            catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
             yOfs = yOfs - catLabel:GetStringHeight() - 4
 
             for _, entry in ipairs(catEntries) do
@@ -493,13 +494,9 @@ local function BuildTogglesList(split, filterText)
                 row:SetPoint("TOPLEFT",  child, "TOPLEFT",  4, yOfs)
                 row:SetPoint("TOPRIGHT", child, "TOPRIGHT", -4, yOfs)
                 row:SetHeight(rowH)
-                row:SetBackdrop({
-                    bgFile   = "Interface\\Buttons\\WHITE8x8",
-                    edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1,
-                })
-                row:SetBackdropColor(T("BG_SECONDARY"))
-                row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
                 if entry.widget == "checkbox" then
                     local dot = row:CreateTexture(nil, "OVERLAY")
@@ -513,12 +510,12 @@ local function BuildTogglesList(split, filterText)
                     rowLabel:SetPoint("RIGHT", row, "RIGHT", -24, 0)
                     rowLabel:SetJustifyH("LEFT")
                     rowLabel:SetText(L[entry.name] or entry.name)
-                    rowLabel:SetTextColor(T("TEXT_PRIMARY"))
+                    rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                     row.rowLabel = rowLabel
                 else
                     local valText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     valText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-                    valText:SetTextColor(T("TEXT_MUTED"))
+                    valText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                     valText:SetJustifyH("RIGHT")
                     row.indicatorText = valText
 
@@ -527,7 +524,7 @@ local function BuildTogglesList(split, filterText)
                     rowLabel:SetPoint("RIGHT", valText, "LEFT", -4, 0)
                     rowLabel:SetJustifyH("LEFT")
                     rowLabel:SetText(L[entry.name] or entry.name)
-                    rowLabel:SetTextColor(T("TEXT_PRIMARY"))
+                    rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                     row.rowLabel = rowLabel
                 end
 
@@ -537,19 +534,19 @@ local function BuildTogglesList(split, filterText)
 
                 row:SetScript("OnClick", function(self)
                     if selectedRow and selectedRow ~= self then
-                        selectedRow:SetBackdropColor(T("BG_SECONDARY"))
-                        selectedRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                        selectedRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                        selectedRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
                         if selectedRow.rowLabel then
-                            selectedRow.rowLabel:SetTextColor(T("TEXT_PRIMARY"))
+                            selectedRow.rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                         end
                     end
                     selectedRow   = self
                     selectedEntry = capturedEntry
                     ShowToggleDetail(split, capturedEntry)
-                    self:SetBackdropColor(T("BG_ACTIVE"))
-                    self:SetBackdropBorderColor(T("BORDER_ACCENT"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
                     if self.rowLabel then
-                        self.rowLabel:SetTextColor(T("TEXT_ACCENT"))
+                        self.rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                     end
                     if split.rightStatusText then
                         local curVal = C_CVar.GetCVar(capturedEntry.cvar)
@@ -567,14 +564,14 @@ local function BuildTogglesList(split, filterText)
                 end)
                 row:SetScript("OnEnter", function(self)
                     if selectedEntry ~= capturedEntry then
-                        self:SetBackdropColor(T("BG_HOVER"))
-                        if self.rowLabel then self.rowLabel:SetTextColor(T("TEXT_ACCENT")) end
+                        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                        if self.rowLabel then self.rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
                     end
                 end)
                 row:SetScript("OnLeave", function(self)
                     if selectedEntry ~= capturedEntry then
-                        self:SetBackdropColor(T("BG_SECONDARY"))
-                        if self.rowLabel then self.rowLabel:SetTextColor(T("TEXT_PRIMARY")) end
+                        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                        if self.rowLabel then self.rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
                     end
                 end)
 
@@ -598,7 +595,7 @@ local function BuildTogglesList(split, filterText)
 end
 
 function ns.UI.CreateTogglesTab(parent)
-    local split = ns.UI.CreateSplitPanel(parent, true)
+    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true })
     split_ref = split
 
     split.listTitle:SetText(L["TOGGLES_LIST_TITLE"])
@@ -606,17 +603,17 @@ function ns.UI.CreateTogglesTab(parent)
 
     if split.searchBox then
         split.searchBox:SetText(L["SEARCH_HINT"])
-        split.searchBox:SetTextColor(T("TEXT_MUTED"))
+        split.searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         split.searchBox:HookScript("OnEditFocusGained", function(self)
             if self:GetText() == L["SEARCH_HINT"] then
                 self:SetText("")
-                self:SetTextColor(T("TEXT_PRIMARY"))
+                self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end)
         split.searchBox:HookScript("OnEditFocusLost", function(self)
             if self:GetText() == "" then
                 self:SetText(L["SEARCH_HINT"])
-                self:SetTextColor(T("TEXT_MUTED"))
+                self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
         end)
         split.searchBox:SetScript("OnTextChanged", function(self)
@@ -637,7 +634,7 @@ function ns.UI.CreateTogglesTab(parent)
         placeholder:SetPoint("TOP", detailChild, "TOP", 0, -40)
         placeholder:SetWidth(detailChild:GetWidth() - 20)
         placeholder:SetText(L["TOGGLES_NO_SELECTION"])
-        placeholder:SetTextColor(T("TEXT_MUTED"))
+        placeholder:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         placeholder:SetJustifyH("CENTER")
         detailChild:SetHeight(100)
         split.UpdateDetailThumb()

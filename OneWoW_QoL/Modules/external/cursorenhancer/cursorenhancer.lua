@@ -2,6 +2,8 @@
 -- OneWoW_QoL/Modules/external/cursorenhancer/cursorenhancer.lua
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
 local CursorEnhancerModule = {
     id          = "cursorenhancer",
     title       = "CURSORENHANCER_TITLE",
@@ -536,21 +538,20 @@ function CE:UpdateColorSwatches()
 end
 
 function CursorEnhancerModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
-    local T = ns.T
     local L = ns.L
 
     local headerHeight = 20
     local colorHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     colorHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
     colorHeader:SetText(L["CURSORENHANCER_COLORS_HEADER"] or "Colors")
-    colorHeader:SetTextColor(T("ACCENT_SECONDARY"))
+    colorHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - headerHeight - 8
 
     local colorDivider = detailScrollChild:CreateTexture(nil, "ARTWORK")
     colorDivider:SetHeight(1)
     colorDivider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
     colorDivider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    colorDivider:SetColorTexture(T("BORDER_SUBTLE"))
+    colorDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOffset = yOffset - 10
 
     for _, colorSetting in ipairs(CE.COLOR_SETTINGS or {}) do
@@ -558,9 +559,9 @@ function CursorEnhancerModule:CreateCustomDetail(detailScrollChild, yOffset, isE
         label:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
         label:SetText(L[colorSetting.colorLabel] or colorSetting.colorLabel)
         if isEnabled then
-            label:SetTextColor(T("TEXT_PRIMARY"))
+            label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         else
-            label:SetTextColor(T("TEXT_MUTED"))
+            label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
         local swatch = CE:CreateColorSwatch(detailScrollChild, colorSetting.dbKey, colorSetting.colorLabel)
