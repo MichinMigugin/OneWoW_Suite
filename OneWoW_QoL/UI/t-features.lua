@@ -358,20 +358,46 @@ local function ShowModuleDetail(split, module)
     yOffset = yOffset - 30 - 14
 
     if module.toggles and #module.toggles > 0 then
-        local toggleHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        toggleHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-        toggleHeader:SetText(L["FEATURES_TOGGLES_HEADER"])
-        toggleHeader:SetTextColor(T("ACCENT_SECONDARY"))
-        yOffset = yOffset - toggleHeader:GetStringHeight() - 8
+        local lastGroup = nil
+        local hasGroups = false
+        for _, t in ipairs(module.toggles) do
+            if t.group then hasGroups = true; break end
+        end
 
-        local toggleDivider = detailScrollChild:CreateTexture(nil, "ARTWORK")
-        toggleDivider:SetHeight(1)
-        toggleDivider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-        toggleDivider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-        toggleDivider:SetColorTexture(T("BORDER_SUBTLE"))
-        yOffset = yOffset - 10
+        if not hasGroups then
+            local toggleHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            toggleHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+            toggleHeader:SetText(L["FEATURES_TOGGLES_HEADER"])
+            toggleHeader:SetTextColor(T("ACCENT_SECONDARY"))
+            yOffset = yOffset - toggleHeader:GetStringHeight() - 8
+
+            local toggleDivider = detailScrollChild:CreateTexture(nil, "ARTWORK")
+            toggleDivider:SetHeight(1)
+            toggleDivider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+            toggleDivider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+            toggleDivider:SetColorTexture(T("BORDER_SUBTLE"))
+            yOffset = yOffset - 10
+        end
 
         for _, toggle in ipairs(module.toggles) do
+            if hasGroups and toggle.group and toggle.group ~= lastGroup then
+                lastGroup = toggle.group
+                if lastGroup ~= module.toggles[1].group then
+                    yOffset = yOffset - 6
+                end
+                local groupHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                groupHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+                groupHeader:SetText(ns.L[toggle.group] or toggle.group)
+                groupHeader:SetTextColor(T("ACCENT_SECONDARY"))
+                yOffset = yOffset - groupHeader:GetStringHeight() - 8
+
+                local groupDivider = detailScrollChild:CreateTexture(nil, "ARTWORK")
+                groupDivider:SetHeight(1)
+                groupDivider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+                groupDivider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+                groupDivider:SetColorTexture(T("BORDER_SUBTLE"))
+                yOffset = yOffset - 10
+            end
             local capturedToggle = toggle
             local capturedModule = module
             local currentVal = ns.ModuleRegistry:GetToggleValue(module.id, toggle.id)

@@ -12,11 +12,12 @@ local CursorEnhancerModule = {
     contact     = "ricky@wow2.xyz",
     link        = "https://www.wow2.xyz",
     toggles     = {
-        { id = "outer_ring",         label = "CURSORENHANCER_OUTER_RING",  default = true  },
-        { id = "middle_ring",        label = "CURSORENHANCER_MIDDLE_RING", default = false },
-        { id = "center_marker",      label = "CURSORENHANCER_CENTER_MARKER", default = true },
-        { id = "show_out_of_combat", label = "CURSORENHANCER_SHOW_OOC",   default = true  },
-        { id = "mouse_trail",        label = "CURSORENHANCER_MOUSE_TRAIL", default = false },
+        { id = "show_out_of_combat", label = "CURSORENHANCER_SHOW_OOC",      default = true,  group = "CURSORENHANCER_MODULE_TOGGLES" },
+        { id = "show_in_instance",   label = "CURSORENHANCER_SHOW_INSTANCE", default = true,  group = "CURSORENHANCER_MODULE_TOGGLES" },
+        { id = "outer_ring",         label = "CURSORENHANCER_OUTER_RING",    default = true,  group = "CURSORENHANCER_MARKER_TOGGLES" },
+        { id = "middle_ring",        label = "CURSORENHANCER_MIDDLE_RING",   default = false, group = "CURSORENHANCER_MARKER_TOGGLES" },
+        { id = "center_marker",      label = "CURSORENHANCER_CENTER_MARKER", default = true,  group = "CURSORENHANCER_MARKER_TOGGLES" },
+        { id = "mouse_trail",        label = "CURSORENHANCER_MOUSE_TRAIL",   default = false, group = "CURSORENHANCER_MARKER_TOGGLES" },
     },
     _moduleEnabled = false,
     _eventFrame    = nil,
@@ -67,6 +68,7 @@ local function GetDefaults()
         combatAlpha       = 1.0,
         outOfCombatAlpha  = 1.0,
         showOutOfCombat   = true,
+        showInInstance    = true,
         outerRingEnabled  = true,
         outerRingColor    = {classColor.r, classColor.g, classColor.b},
         middleRingEnabled = false,
@@ -238,7 +240,7 @@ function CE:StartUpdateTicker()
         lastAlphaCheck = lastAlphaCheck + deltaTime
         if lastAlphaCheck >= 0.5 then
             lastAlphaCheck = 0
-            CE:UpdateAlpha()
+            CE:UpdateVisibility()
         end
 
         CE:UpdateMouseTrail()
@@ -324,12 +326,13 @@ function CE:UpdateVisibility()
 end
 
 function CE:ShouldShowAllowedByCombatRules()
-    if InCombatLockdown() or UnitAffectingCombat("player") then return true end
-    local inInst, t = IsInInstance()
-    if inInst and (t == "party" or t == "raid" or t == "pvp" or t == "arena" or t == "scenario") then
-        return true
-    end
     local settings = self:GetSettings()
+    local inCombat = InCombatLockdown() or UnitAffectingCombat("player")
+    local inInst, t = IsInInstance()
+    local inInstance = inInst and (t == "party" or t == "raid" or t == "pvp" or t == "arena" or t == "scenario")
+
+    if inCombat then return true end
+    if inInstance and settings.showInInstance then return true end
     return settings.showOutOfCombat
 end
 
@@ -441,6 +444,7 @@ function CursorEnhancerModule:OnEnable()
     settings.middleRingEnabled = ns.ModuleRegistry:GetToggleValue("cursorenhancer", "middle_ring")
     settings.centerMarkerHidden = not ns.ModuleRegistry:GetToggleValue("cursorenhancer", "center_marker")
     settings.showOutOfCombat   = ns.ModuleRegistry:GetToggleValue("cursorenhancer", "show_out_of_combat")
+    settings.showInInstance    = ns.ModuleRegistry:GetToggleValue("cursorenhancer", "show_in_instance")
     settings.mouseTrail        = ns.ModuleRegistry:GetToggleValue("cursorenhancer", "mouse_trail")
 
     if not self._eventFrame then
@@ -477,6 +481,8 @@ function CursorEnhancerModule:OnToggle(toggleId, value)
         settings.centerMarkerHidden = not value
     elseif toggleId == "show_out_of_combat" then
         settings.showOutOfCombat = value
+    elseif toggleId == "show_in_instance" then
+        settings.showInInstance = value
     elseif toggleId == "mouse_trail" then
         settings.mouseTrail = value
     end
