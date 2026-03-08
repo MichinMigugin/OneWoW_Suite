@@ -877,3 +877,66 @@ end
 function RoutinesData:CreateEversongWoodsRoutine()
     return self:CreateZoneRoutineFromTemplate(EVERSONG_WOODS_TEMPLATE)
 end
+
+local GETTING_STARTED_ROUTINE = {
+    title = "Getting Started with Routines",
+    sections = {
+        {
+            label = "Learn the Basics",
+            type = "custom",
+            resetType = "never",
+            tasks = {
+                { label = "Create your first routine using the New Routine button", max = 1, trackType = "manual" },
+                { label = "Edit the routine title by clicking on it in the detail panel", max = 1, trackType = "manual" },
+                { label = "Add a Custom Section and give it a label", max = 1, trackType = "manual" },
+                { label = "Add a task to your custom section", max = 1, trackType = "manual" },
+                { label = "Click a task to mark it complete", max = 1, trackType = "manual" },
+            },
+        },
+        {
+            label = "Try the Presets",
+            type = "custom",
+            resetType = "never",
+            tasks = {
+                { label = "Add a Great Vault section to see raid, dungeon, and world tracking", max = 1, trackType = "manual" },
+                { label = "Add a Professions section and pick your profession", max = 1, trackType = "manual" },
+                { label = "Add a Season Weeklies section to track weekly quests", max = 1, trackType = "manual" },
+                { label = "Add a Renown Tracking section for Midnight factions", max = 1, trackType = "manual" },
+                { label = "Add a Prey System section for hunt tracking", max = 1, trackType = "manual" },
+            },
+        },
+        {
+            label = "Pin and Share",
+            type = "custom",
+            resetType = "never",
+            tasks = {
+                { label = "Pin a routine to your screen using the Pin button", max = 1, trackType = "manual" },
+                { label = "Drag the pinned window to reposition it", max = 1, trackType = "manual" },
+                { label = "Export a routine using the Export button", max = 1, trackType = "manual" },
+                { label = "Try importing a routine from the Import button", max = 1, trackType = "manual" },
+                { label = "Visit the OneWoW Discord to share or find routines", max = 1, trackType = "manual" },
+            },
+        },
+        {
+            label = "Advanced Features",
+            type = "custom",
+            resetType = "never",
+            tasks = {
+                { label = "Set a section to Weekly reset so it clears on server reset", max = 1, trackType = "manual" },
+                { label = "Create a task with a max higher than 1 for counter-style tracking", max = 1, trackType = "manual" },
+                { label = "Use Reset Progress to clear all progress on a routine", max = 1, trackType = "manual" },
+                { label = "Delete a routine you no longer need", max = 1, trackType = "manual" },
+            },
+        },
+    },
+}
+
+function RoutinesData:LoadBundledRoutines(force)
+    local addon = _G.OneWoW_Notes
+    if not force and addon.db.global.bundledRoutinesLoaded then return end
+
+    self:CreateZoneRoutineFromTemplate(GETTING_STARTED_ROUTINE)
+
+    addon.db.global.bundledRoutinesLoaded = true
+    return true
+end

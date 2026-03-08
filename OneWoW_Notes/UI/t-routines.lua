@@ -95,6 +95,23 @@ function ns.UI.CreateRoutinesTab(parent)
     ns.UI.AutoResizeButton(importBtn, 80, 200)
     importBtn:SetPoint("LEFT", newBtn, "RIGHT", 5, 0)
 
+    local restoreBtn = ns.UI.CreateButton(nil, controlPanel, L["ROUTINES_RESTORE_BUNDLED"], 120, 25)
+    ns.UI.AutoResizeButton(restoreBtn, 80, 200)
+    restoreBtn:SetPoint("LEFT", importBtn, "RIGHT", 5, 0)
+    restoreBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(L["ROUTINES_RESTORE_BUNDLED"], 1, 1, 1)
+        GameTooltip:AddLine(L["ROUTINES_RESTORE_BUNDLED_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    restoreBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    restoreBtn:SetScript("OnClick", function()
+        if ns.RoutinesData:LoadBundledRoutines(true) then
+            print("|cFFFFD100OneWoW Notes:|r " .. L["ROUTINES_RESTORE_SUCCESS"])
+            parent.RefreshRoutinesList()
+        end
+    end)
+
     local contentArea = CreateFrame("Frame", nil, parent)
     contentArea:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -1)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
