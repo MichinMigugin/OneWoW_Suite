@@ -22,6 +22,9 @@ local emptyDetail = nil
 local searchTimer = nil
 local controlPanel = nil
 local recipeDetailCallbacks = {}
+local filterKnownByMe = false
+local filterKnownByAlts = false
+local filterExpansion = nil
 
 _G.OneWoW_Catalog_TradeskillAPI = {
     RegisterRecipeCallback = function(callback)
@@ -73,6 +76,39 @@ local function GetDataAddon()
         dataAddon = ns.Catalog:GetDataAddon("tradeskills")
     end
     return dataAddon
+end
+
+local function GetCurrentCharKey()
+    local name = UnitName("player")
+    local realm = GetRealmName()
+    if name and realm then
+        return realm .. "-" .. name
+    end
+    return nil
+end
+
+local function FilterByKnown(recipes, addon)
+    if not filterKnownByMe and not filterKnownByAlts then return recipes end
+    local charKey = GetCurrentCharKey()
+    local filtered = {}
+    for _, recipe in ipairs(recipes) do
+        local knownBy = addon.TradeskillScanner:GetRecipeKnownBy(recipe.id)
+        if knownBy and #knownBy > 0 then
+            local knownByMe = false
+            local knownByAlt = false
+            for _, key in ipairs(knownBy) do
+                if key == charKey then
+                    knownByMe = true
+                else
+                    knownByAlt = true
+                end
+            end
+            if (filterKnownByMe and knownByMe) or (filterKnownByAlts and knownByAlt) then
+                table.insert(filtered, recipe)
+            end
+        end
+    end
+    return filtered
 end
 
 local function ClearListElements()
@@ -808,7 +844,7 @@ RefreshRecipeList = function()
     if selectedProfession then
         recipes = addon.TradeskillData:GetRecipesByProfession(
             selectedProfession.name,
-            nil,
+            filterExpansion,
             isSearching and currentSearch or nil
         )
     else
@@ -818,7 +854,7 @@ RefreshRecipeList = function()
             if prof.hasData then
                 local profRecipes = addon.TradeskillData:GetRecipesByProfession(
                     prof.name,
-                    nil,
+                    filterExpansion,
                     isSearching and currentSearch or nil
                 )
                 if profRecipes then
@@ -828,6 +864,10 @@ RefreshRecipeList = function()
                 end
             end
         end
+    end
+
+    if (filterKnownByMe or filterKnownByAlts) and recipes then
+        recipes = FilterByKnown(recipes, addon)
     end
 
     if not recipes or #recipes == 0 then
@@ -852,8 +892,10 @@ function ns.UI.CreateTradeskillsTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP = ns.Constants.GUI.PANEL_GAP
 
+    local SEARCH_HEADER_H = PROF_HEADER_H + 46
+
     local searchHeader = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    searchHeader:SetHeight(PROF_HEADER_H)
+    searchHeader:SetHeight(SEARCH_HEADER_H)
     searchHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     searchHeader:SetWidth(LEFT_W)
     searchHeader:SetBackdrop({
@@ -865,7 +907,7 @@ function ns.UI.CreateTradeskillsTab(parent)
     searchHeader:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
     local profHeader = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    profHeader:SetHeight(PROF_HEADER_H)
+    profHeader:SetHeight(SEARCH_HEADER_H)
     profHeader:SetPoint("TOPLEFT", searchHeader, "TOPRIGHT", GAP, 0)
     profHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     profHeader:SetBackdrop({
@@ -919,7 +961,7 @@ function ns.UI.CreateTradeskillsTab(parent)
 
     searchBox = CreateFrame("EditBox", nil, searchHeader, "BackdropTemplate")
     searchBox:SetHeight(26)
-    searchBox:SetPoint("LEFT", searchHeader, "LEFT", 8, 0)
+    searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -16)
     searchBox:SetPoint("RIGHT", searchHeader, "RIGHT", -8, 0)
     searchBox:SetBackdrop({
         bgFile = "Interface\\BUTTONS\\WHITE8x8",
@@ -961,6 +1003,160 @@ function ns.UI.CreateTradeskillsTab(parent)
     end)
     searchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     searchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+
+    local knownMeCheck = CreateFrame("CheckButton", nil, searchHeader, "UICheckButtonTemplate")
+    knownMeCheck:SetSize(20, 20)
+    knownMeCheck:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -4)
+    knownMeCheck:SetChecked(false)
+    local knownMeLabel = knownMeCheck:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    knownMeLabel:SetPoint("LEFT", knownMeCheck, "RIGHT", 2, 0)
+    knownMeLabel:SetText(L["TRADESKILLS_SHOW_KNOWN_ME"])
+    knownMeLabel:SetTextColor(T("TEXT_PRIMARY"))
+    knownMeCheck:SetScript("OnClick", function(self)
+        filterKnownByMe = self:GetChecked()
+        RefreshRecipeList()
+    end)
+
+    local knownAltsCheck = CreateFrame("CheckButton", nil, searchHeader, "UICheckButtonTemplate")
+    knownAltsCheck:SetSize(20, 20)
+    knownAltsCheck:SetPoint("LEFT", knownMeLabel, "RIGHT", 10, 0)
+    knownAltsCheck:SetChecked(false)
+    local knownAltsLabel = knownAltsCheck:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    knownAltsLabel:SetPoint("LEFT", knownAltsCheck, "RIGHT", 2, 0)
+    knownAltsLabel:SetText(L["TRADESKILLS_SHOW_KNOWN_ALTS"])
+    knownAltsLabel:SetTextColor(T("TEXT_PRIMARY"))
+    knownAltsCheck:SetScript("OnClick", function(self)
+        filterKnownByAlts = self:GetChecked()
+        RefreshRecipeList()
+    end)
+
+    local EXPANSION_OPTIONS = {
+        {key = nil,                 label = L["TRADESKILLS_ALL_EXPANSIONS"]},
+        {key = "Midnight",          label = EXPANSION_DISPLAY["Midnight"]},
+        {key = "TheWarWithin",      label = EXPANSION_DISPLAY["TheWarWithin"]},
+        {key = "Dragonflight",      label = EXPANSION_DISPLAY["Dragonflight"]},
+        {key = "Shadowlands",       label = EXPANSION_DISPLAY["Shadowlands"]},
+        {key = "BattleForAzeroth",  label = EXPANSION_DISPLAY["BattleForAzeroth"]},
+        {key = "Legion",            label = EXPANSION_DISPLAY["Legion"]},
+        {key = "WarlordsOfDraenor", label = EXPANSION_DISPLAY["WarlordsOfDraenor"]},
+        {key = "MistsOfPandaria",   label = EXPANSION_DISPLAY["MistsOfPandaria"]},
+        {key = "Cataclysm",         label = EXPANSION_DISPLAY["Cataclysm"]},
+        {key = "WrathOfTheLichKing",label = EXPANSION_DISPLAY["WrathOfTheLichKing"]},
+        {key = "BurningCrusade",    label = EXPANSION_DISPLAY["BurningCrusade"]},
+        {key = "Classic",           label = EXPANSION_DISPLAY["Classic"]},
+    }
+
+    local expDropBtn = CreateFrame("Button", nil, searchHeader, "BackdropTemplate")
+    expDropBtn:SetHeight(22)
+    expDropBtn:SetPoint("TOPLEFT", knownMeCheck, "BOTTOMLEFT", 0, -4)
+    expDropBtn:SetPoint("RIGHT", searchHeader, "RIGHT", -8, 0)
+    expDropBtn:SetBackdrop({
+        bgFile = "Interface\\BUTTONS\\WHITE8x8",
+        edgeFile = "Interface\\BUTTONS\\WHITE8x8",
+        edgeSize = 1,
+    })
+    expDropBtn:SetBackdropColor(T("BG_SECONDARY"))
+    expDropBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local expDropLabel = expDropBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    expDropLabel:SetPoint("LEFT", 6, 0)
+    expDropLabel:SetText(L["TRADESKILLS_ALL_EXPANSIONS"])
+    expDropLabel:SetTextColor(T("TEXT_PRIMARY"))
+
+    local expDropArrow = expDropBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    expDropArrow:SetPoint("RIGHT", -6, 0)
+    expDropArrow:SetText("v")
+    expDropArrow:SetTextColor(T("TEXT_MUTED"))
+
+    local expMenu = CreateFrame("Frame", nil, expDropBtn, "BackdropTemplate")
+    expMenu:SetBackdrop({
+        bgFile = "Interface\\BUTTONS\\WHITE8x8",
+        edgeFile = "Interface\\BUTTONS\\WHITE8x8",
+        edgeSize = 1,
+    })
+    expMenu:SetBackdropColor(T("BG_PRIMARY"))
+    expMenu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    expMenu:SetFrameStrata("TOOLTIP")
+    expMenu:Hide()
+
+    local menuHeight = 0
+    for i, opt in ipairs(EXPANSION_OPTIONS) do
+        local optBtn = CreateFrame("Button", nil, expMenu, "BackdropTemplate")
+        optBtn:SetHeight(20)
+        optBtn:SetPoint("TOPLEFT", expMenu, "TOPLEFT", 1, -((i - 1) * 20) - 1)
+        optBtn:SetPoint("TOPRIGHT", expMenu, "TOPRIGHT", -1, -((i - 1) * 20) - 1)
+        optBtn:SetBackdrop({bgFile = "Interface\\BUTTONS\\WHITE8x8"})
+        optBtn:SetBackdropColor(0, 0, 0, 0)
+
+        local optLabel = optBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        optLabel:SetPoint("LEFT", 6, 0)
+        optLabel:SetText(opt.label)
+        optLabel:SetTextColor(T("TEXT_PRIMARY"))
+
+        optBtn:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(T("BG_HOVER"))
+        end)
+        optBtn:SetScript("OnLeave", function(self)
+            self:SetBackdropColor(0, 0, 0, 0)
+        end)
+        optBtn:SetScript("OnClick", function()
+            filterExpansion = opt.key
+            expDropLabel:SetText(opt.label)
+            if opt.key then
+                expDropBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+            else
+                expDropBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            end
+            expMenu:Hide()
+            wipe(expandedExpansions)
+            RefreshRecipeList()
+        end)
+
+        menuHeight = menuHeight + 20
+    end
+    expMenu:SetHeight(menuHeight + 2)
+    expMenu:SetWidth(expDropBtn:GetWidth())
+    expMenu:SetPoint("TOPLEFT", expDropBtn, "BOTTOMLEFT", 0, -1)
+    expMenu:SetPoint("TOPRIGHT", expDropBtn, "BOTTOMRIGHT", 0, -1)
+
+    expDropBtn:SetScript("OnClick", function()
+        if expMenu:IsShown() then
+            expMenu:Hide()
+        else
+            expMenu:SetPoint("TOPLEFT", expDropBtn, "BOTTOMLEFT", 0, -1)
+            expMenu:SetPoint("TOPRIGHT", expDropBtn, "BOTTOMRIGHT", 0, -1)
+            expMenu:Show()
+        end
+    end)
+    expDropBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(T("BG_HOVER"))
+    end)
+    expDropBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(T("BG_SECONDARY"))
+    end)
+
+    local expMenuCloseTimer = nil
+    local function StartMenuClose()
+        if expMenuCloseTimer then expMenuCloseTimer:Cancel() end
+        expMenuCloseTimer = C_Timer.NewTimer(0.4, function()
+            if not expMenu:IsMouseOver() and not expDropBtn:IsMouseOver() then
+                expMenu:Hide()
+            end
+            expMenuCloseTimer = nil
+        end)
+    end
+    local function CancelMenuClose()
+        if expMenuCloseTimer then
+            expMenuCloseTimer:Cancel()
+            expMenuCloseTimer = nil
+        end
+    end
+    expMenu:SetScript("OnLeave", function() StartMenuClose() end)
+    expMenu:SetScript("OnEnter", function() CancelMenuClose() end)
+    expDropBtn:HookScript("OnLeave", function()
+        if expMenu:IsShown() then StartMenuClose() end
+    end)
+    expDropBtn:HookScript("OnEnter", function() CancelMenuClose() end)
 
     emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)

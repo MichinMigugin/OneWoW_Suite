@@ -1,7 +1,7 @@
 local ADDON_NAME, OneWoW = ...
 
 OneWoW.Constants = {
-    VERSION = "R6.2602.2117",
+    VERSION = C_AddOns.GetAddOnMetadata("OneWoW", "Version") or "Unknown",
     ADDON_NAME = "OneWoW",
 
     THEME = {
