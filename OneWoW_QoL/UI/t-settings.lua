@@ -1,13 +1,14 @@
 -- OneWoW_QoL Addon File
 -- OneWoW_QoL/UI/t-settings.lua
 -- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-local THEMES = OneWoW_GUI.Constants.THEMES
+local addon = _G.OneWoW_QoL
 
-local THEMES_ORDER = { "green", "blue", "purple", "red", "orange", "teal", "gold", "pink", "dark", "amber", "cyan", "slate", "voidblack", "charcoal", "forestnight", "obsidian", "monochrome", "twilight", "neon", "glassmorphic", "lightmode", "retro", "fantasy", "nightfae" }
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 local THEME_LOCALE_KEYS = {
     green  = "THEME_NAME_GREEN",
     blue   = "THEME_NAME_BLUE",
@@ -40,6 +41,8 @@ local LANGUAGES = {
     { key = "koKR", labelKey = "LANG_KOREAN" },
 }
 
+local THEMES = OneWoW_GUI.Constants.THEMES
+local THEMES_ORDER = OneWoW_GUI.Constants.THEMES_ORDER
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
@@ -281,7 +284,6 @@ function ns.UI.CreateSettingsTab(parent)
         UpdateThumb()
     end)
 
-    local addon = _G.OneWoW_QoL
     local yOffset = -20
 
     if not _G.OneWoW then
@@ -507,7 +509,7 @@ function ns.UI.CreateSettingsTab(parent)
                     addon.db.global.theme = capturedKey
                     themeDropText:SetText(L[THEME_LOCALE_KEYS[capturedKey]] or themeData.name)
                     themeColorPreview:SetColorTexture(unpack(themeData.ACCENT_PRIMARY))
-                    ns.ApplyTheme()
+                    OneWoW_GUI:ApplyTheme(addon)
                     menu:Hide()
                     if ns.UI.Reset then ns.UI:Reset() end
                     C_Timer.After(0.05, function()

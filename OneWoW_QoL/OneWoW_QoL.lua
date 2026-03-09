@@ -6,8 +6,10 @@ local addonName, ns = ...
 OneWoW_QoL = LibStub("AceAddon-3.0"):NewAddon("OneWoW_QoL", "AceEvent-3.0", "AceConsole-3.0")
 local addon = OneWoW_QoL
 
-ns.addon = addon
 ns.oneWoWHubActive = false
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 local function RegisterWithOneWoW()
     if not _G.OneWoW then return false end
@@ -41,12 +43,12 @@ end
 
 function addon:OnInitialize()
     self:InitializeDatabase()
-    if ns.ApplyTheme then ns.ApplyTheme() end
+    OneWoW_GUI:ApplyTheme(self)
     if ns.ApplyLanguage then ns.ApplyLanguage() end
     self:RegisterChatCommand("owqol", "SlashCommandHandler")
     self:RegisterChatCommand("onewowqol", "SlashCommandHandler")
     self:RegisterChatCommand("1wqol", "SlashCommandHandler")
-    local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION
+    local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ""
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("QoL", _ver, "/1wqol")
     else
@@ -55,9 +57,7 @@ function addon:OnInitialize()
 end
 
 function addon:ApplyTheme()
-    if ns.ApplyTheme then
-        ns.ApplyTheme()
-    end
+    OneWoW_GUI:ApplyTheme(self)
 end
 
 function addon:ApplyLanguage()

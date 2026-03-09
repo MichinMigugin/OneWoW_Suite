@@ -7,6 +7,7 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
 ## LoadOnDemand: 0
+## Group: OneWoW
 
 Libs\LibStub\LibStub.lua
 Core.lua

@@ -5,6 +5,8 @@ _G.OneWoW = OneWoW
 local L = OneWoW.L
 local Constants = OneWoW.Constants
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
 OneWoW._loadedComponents = {}
 
 function OneWoW:RegisterLoadComponent(displayName, version, command)
@@ -20,6 +22,10 @@ local function ApplyTheme()
                 Constants.THEME[key] = value
             end
         end
+    end
+
+    if OneWoW_GUI then
+        OneWoW_GUI:ApplyTheme(OneWoW)
     end
 end
 
