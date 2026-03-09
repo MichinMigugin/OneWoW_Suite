@@ -128,6 +128,10 @@ function addon:OnEnable()
         ns.GuidesData:LoadBundledGuides()
     end
 
+    if ns.RoutinesData and ns.RoutinesData.LoadBundledRoutines then
+        ns.RoutinesData:LoadBundledRoutines()
+    end
+
     if ns.RoutinesEngine and ns.RoutinesEngine.Initialize then
         ns.RoutinesEngine:Initialize()
     end

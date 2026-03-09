@@ -195,7 +195,7 @@ function GUI:CreateHomeTab(parent)
 
     local versionLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     versionLabel:SetPoint("TOP", content, "TOP", 0, yOffset)
-    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"] or "Version") .. " " .. (Constants.VERSION or ""))
+    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"] or "Version") .. " " .. (GetAddonVersion("OneWoW") or ""))
     versionLabel:SetTextColor(T("TEXT_PRIMARY"))
     yOffset = yOffset - 35
 
