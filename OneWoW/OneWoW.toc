@@ -1,6 +1,6 @@
 ## Interface: 120001, 120002
 ## Title: |cFF00FF00OneWoW|r
-## Version: R6.2603.0623
+## Version: R6.2603.1016
 ## Notes: OneWoW - Central Hub for all OneWoW addons
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
