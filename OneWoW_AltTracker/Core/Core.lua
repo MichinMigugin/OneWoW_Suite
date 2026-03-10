@@ -302,6 +302,7 @@ function Core:PerformDataMigration()
                         restState = charData.restState or 0,
                         isXPDisabled = charData.isXPDisabled or false,
                         isResting = charData.isResting or false,
+                        lastUpdate = charData.lastLogin or 0,
                     }
                 end
 

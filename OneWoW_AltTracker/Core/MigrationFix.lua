@@ -52,6 +52,7 @@ function MigrationFix:FixImportedData()
                     restState = charData.restState or 0,
                     isXPDisabled = charData.isXPDisabled or false,
                     isResting = charData.isResting or false,
+                    lastUpdate = charData.lastLogin or time(),
                 }
                 charData.restedXP = nil
                 charData.currentXP = nil
@@ -61,6 +62,11 @@ function MigrationFix:FixImportedData()
                 charData.isResting = nil
                 dataFixed = true
             end
+        end
+
+        if charData.xp and not charData.xp.lastUpdate then
+            charData.xp.lastUpdate = charData.lastLogin or time()
+            dataFixed = true
         end
 
         if charData.hearthLocation and not charData.location then

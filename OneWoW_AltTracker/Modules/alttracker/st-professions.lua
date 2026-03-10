@@ -26,6 +26,7 @@ function ProfessionsModule:GetCharacterProfessions(characterKey)
     local professionData = {
         professions = charData.professions or {},
         professionEquipment = charData.professionEquipment or {},
+        concentration = charData.concentration or {},
         recipeCount = 0,
         recipesByExpansion = {},
         weeklyQuestStatus = {}

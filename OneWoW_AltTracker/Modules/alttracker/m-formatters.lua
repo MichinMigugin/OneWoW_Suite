@@ -118,26 +118,58 @@ function Formatters:FormatPlayTime(seconds)
     return table.concat(parts, ", ")
 end
 
+local SECONDS_PER_BUBBLE_RESTING = 28800
+local MAX_RESTED_MULTIPLIER = 1.5
+local MAX_RESTED_MULTIPLIER_PANDAREN = 3
+
+function Formatters:EstimateRestedXP(charData, charKey)
+    if not charData or not charData.xp then return 0 end
+    if not charData.xp.maxXP or charData.xp.maxXP == 0 then return charData.xp.restedXP or 0 end
+
+    local savedRestedXP = charData.xp.restedXP or 0
+    local maxXP = charData.xp.maxXP
+    local isResting = charData.xp.isResting
+    local race = charData.race or charData.raceName or ""
+    local multiplier = (race == "Pandaren") and MAX_RESTED_MULTIPLIER_PANDAREN or MAX_RESTED_MULTIPLIER
+    local maxRestedXP = maxXP * multiplier
+
+    local currentCharKey = UnitName("player") .. "-" .. GetRealmName()
+    if charKey and charKey == currentCharKey then
+        return math.min(savedRestedXP, maxRestedXP)
+    end
+
+    local lastUpdate = charData.xp.lastUpdate or charData.lastLogin or 0
+    if lastUpdate == 0 then return math.min(savedRestedXP, maxRestedXP) end
+
+    local elapsed = time() - lastUpdate
+    if elapsed <= 0 then return math.min(savedRestedXP, maxRestedXP) end
+
+    local oneXPBubble = maxXP / 20
+    local numBubbles = elapsed / SECONDS_PER_BUBBLE_RESTING
+    local xpEarned = numBubbles * oneXPBubble
+
+    if not isResting then
+        xpEarned = xpEarned / 4
+    end
+
+    local estimatedTotal = savedRestedXP + xpEarned
+    return math.min(estimatedTotal, maxRestedXP)
+end
+
 function Formatters:FormatRestedXP(restedXP, maxXP, race)
     if not restedXP or restedXP == 0 then
         return "0%"
     end
 
-    local multiplier = 1.5
-    if race and race == "Pandaren" then
-        multiplier = 3
-    end
-
     if not maxXP or maxXP == 0 then
-        local maxLevelRestedXP = 150000
-        local percentage = (restedXP / maxLevelRestedXP) * 100
-        return string.format("%.0f%%", math.min(percentage, 100))
+        return "0%"
     end
 
-    local maxRestedXP = maxXP * multiplier
-    local percentage = (restedXP / maxRestedXP) * 100
+    local percentage = (restedXP / maxXP) * 100
+    local multiplier = (race and race == "Pandaren") and MAX_RESTED_MULTIPLIER_PANDAREN or MAX_RESTED_MULTIPLIER
+    local maxPercent = multiplier * 100
 
-    return string.format("%.0f%%", math.min(percentage, 100))
+    return string.format("%.0f%%", math.min(percentage, maxPercent))
 end
 
 function Formatters:FormatItemLevel(ilvl)

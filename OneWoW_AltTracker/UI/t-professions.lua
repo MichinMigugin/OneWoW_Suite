@@ -154,12 +154,13 @@ function ns.UI.CreateProfessionsTab(parent)
         {key = "name", label = L["COL_CHARACTER"], width = 135, fixed = false, ttTitle = L["TT_COL_CHARACTER"], ttDesc = L["PROF_TT_CHAR_NAME_DESC"]},
         {key = "level", label = L["COL_LEVEL"], width = 40, fixed = true, ttTitle = L["TT_COL_LEVEL"], ttDesc = L["PROF_TT_CHAR_LEVEL_DESC"]},
         {key = "primary1", label = L["PROF_COL_PRIMARY_1"], width = 90, fixed = false, ttTitle = L["PROF_COL_PRIMARY_1"], ttDesc = L["PROF_TT_PRIMARY_1_DESC"]},
+        {key = "conc1", label = L["PROF_COL_CONC"], width = 40, fixed = true, ttTitle = L["PROF_COL_CONC"], ttDesc = L["PROF_TT_CONC_DESC"]},
         {key = "primary2", label = L["PROF_COL_PRIMARY_2"], width = 90, fixed = false, ttTitle = L["PROF_COL_PRIMARY_2"], ttDesc = L["PROF_TT_PRIMARY_2_DESC"]},
+        {key = "conc2", label = L["PROF_COL_CONC"], width = 40, fixed = true, ttTitle = L["PROF_COL_CONC"], ttDesc = L["PROF_TT_CONC_DESC"]},
         {key = "cooking", label = L["PROF_COL_COOKING"], width = 60, fixed = false, ttTitle = L["PROF_COL_COOKING"], ttDesc = L["PROF_TT_COOKING_DESC"]},
         {key = "fishing", label = L["PROF_COL_FISHING"], width = 60, fixed = false, ttTitle = L["PROF_COL_FISHING"], ttDesc = L["PROF_TT_FISHING_DESC"]},
         {key = "archeology", label = L["PROF_COL_ARCHEOLOGY"], width = 80, fixed = false, ttTitle = L["PROF_COL_ARCHEOLOGY"], ttDesc = L["PROF_TT_ARCHAEOLOGY_DESC"]},
-        {key = "tools", label = L["PROF_COL_TOOLS"], width = 50, fixed = false, ttTitle = L["PROF_COL_TOOLS"], ttDesc = L["PROF_TT_TOOLS_DESC"]},
-        {key = "accessories", label = L["PROF_COL_ACCESSORIES"], width = 80, fixed = false, ttTitle = L["PROF_COL_ACCESSORIES"], ttDesc = L["PROF_TT_ACCESSORIES_DESC"]}
+        {key = "gear", label = L["PROF_COL_GEAR"], width = 50, fixed = false, ttTitle = L["PROF_COL_GEAR"], ttDesc = L["PROF_TT_GEAR_DESC"]}
     }
 
     local colGap = 4
@@ -499,6 +500,40 @@ local function GetSkillColor(current, max)
     end
 end
 
+local CONCENTRATION_RATE = 1 / 360
+
+local function GetEstimatedConcentration(concData)
+    if not concData or not concData.value then return nil end
+    local timeSince = time() - (concData.ts or time())
+    local estimated = math.min(concData.max or 0, math.floor(concData.value + (timeSince * CONCENTRATION_RATE)))
+    return estimated, concData.max or 0, concData.value, concData.ts or time()
+end
+
+local function AddConcentrationTooltip(frame, concData, profName, L)
+    frame:EnableMouse(true)
+    frame:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(profName or L["PROF_COL_CONC"], 1, 1, 1)
+        if concData and concData.value then
+            local current, max, stored, ts = GetEstimatedConcentration(concData)
+            local r, g, b = GetSkillColor(current, max)
+            GameTooltip:AddDoubleLine(L["PROF_TT_CONC_CURRENT"], string.format("%d / %d", current, max), 1, 1, 1, r, g, b)
+            if current < max then
+                local remaining = (max - current) / CONCENTRATION_RATE
+                GameTooltip:AddDoubleLine(L["PROF_TT_CONC_TIME_TO_FULL"], SecondsToTime(remaining), 1, 1, 1, 0.8, 0.8, 0.8)
+            else
+                GameTooltip:AddDoubleLine(L["PROF_TT_CONC_TIME_TO_FULL"], L["PROF_TT_CONC_FULL"], 1, 1, 1, 0.30, 0.69, 0.31)
+            end
+        else
+            GameTooltip:AddLine(L["PROF_TT_CONC_NO_DATA"], 0.7, 0.7, 0.7, true)
+        end
+        GameTooltip:Show()
+    end)
+    frame:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
+    end)
+end
+
 local function AddProfessionTooltip(frame, profData, profRecipes)
     if not profData or not profData.name then return end
 
@@ -641,10 +676,21 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
                 local bProf = bProfData.professions and bProfData.professions.Archaeology
                 aVal = (aProf and aProf.currentSkill) or 0
                 bVal = (bProf and bProf.currentSkill) or 0
-            elseif currentSortColumn == "tools" then
-                aVal = 0
-                bVal = 0
-            elseif currentSortColumn == "accessories" then
+            elseif currentSortColumn == "conc1" then
+                local aProfData = ProfModule:GetCharacterProfessions(a.key)
+                local bProfData = ProfModule:GetCharacterProfessions(b.key)
+                local aConc = aProfData.concentration and aProfData.concentration.Primary1
+                local bConc = bProfData.concentration and bProfData.concentration.Primary1
+                aVal = (aConc and aConc.value) or 0
+                bVal = (bConc and bConc.value) or 0
+            elseif currentSortColumn == "conc2" then
+                local aProfData = ProfModule:GetCharacterProfessions(a.key)
+                local bProfData = ProfModule:GetCharacterProfessions(b.key)
+                local aConc = aProfData.concentration and aProfData.concentration.Primary2
+                local bConc = bProfData.concentration and bProfData.concentration.Primary2
+                aVal = (aConc and aConc.value) or 0
+                bVal = (bConc and bConc.value) or 0
+            elseif currentSortColumn == "gear" then
                 aVal = 0
                 bVal = 0
             else
@@ -696,6 +742,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         local professions = professionData.professions or {}
         local professionEquipment = professionData.professionEquipment or {}
         local recipesByExpansion = professionData.recipesByExpansion or {}
+        local concentration = professionData.concentration or {}
 
         local charRow = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
         charRow:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
@@ -1128,6 +1175,24 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         primary1Text:SetTextColor(T("TEXT_PRIMARY"))
         table.insert(charRow.cells, primary1Frame)
 
+        local conc1Frame = CreateFrame("Frame", nil, charRow)
+        conc1Frame:SetSize(40, rowHeight)
+        local conc1Text = conc1Frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        conc1Text:SetPoint("CENTER", conc1Frame, "CENTER", 0, 0)
+        conc1Text:SetJustifyH("CENTER")
+        local conc1Data = concentration.Primary1
+        if prof1 and prof1.name and conc1Data and conc1Data.value then
+            local current = GetEstimatedConcentration(conc1Data)
+            conc1Text:SetText(tostring(current))
+            local r, g, b = GetSkillColor(current, conc1Data.max or 0)
+            conc1Text:SetTextColor(r, g, b)
+            AddConcentrationTooltip(conc1Frame, conc1Data, prof1.name, L)
+        else
+            conc1Text:SetText("--")
+            conc1Text:SetTextColor(T("TEXT_SECONDARY"))
+        end
+        table.insert(charRow.cells, conc1Frame)
+
         local primary2Frame = CreateFrame("Frame", nil, charRow)
         primary2Frame:SetSize(90, rowHeight)
         local primary2Text = primary2Frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -1154,6 +1219,24 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         end
         primary2Text:SetTextColor(T("TEXT_PRIMARY"))
         table.insert(charRow.cells, primary2Frame)
+
+        local conc2Frame = CreateFrame("Frame", nil, charRow)
+        conc2Frame:SetSize(40, rowHeight)
+        local conc2Text = conc2Frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        conc2Text:SetPoint("CENTER", conc2Frame, "CENTER", 0, 0)
+        conc2Text:SetJustifyH("CENTER")
+        local conc2Data = concentration.Primary2
+        if prof2 and prof2.name and conc2Data and conc2Data.value then
+            local current = GetEstimatedConcentration(conc2Data)
+            conc2Text:SetText(tostring(current))
+            local r, g, b = GetSkillColor(current, conc2Data.max or 0)
+            conc2Text:SetTextColor(r, g, b)
+            AddConcentrationTooltip(conc2Frame, conc2Data, prof2.name, L)
+        else
+            conc2Text:SetText("--")
+            conc2Text:SetTextColor(T("TEXT_SECONDARY"))
+        end
+        table.insert(charRow.cells, conc2Frame)
 
         local cookingFrame = CreateFrame("Frame", nil, charRow)
         cookingFrame:SetSize(60, rowHeight)
@@ -1236,75 +1319,46 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         archeologyText:SetTextColor(T("TEXT_PRIMARY"))
         table.insert(charRow.cells, archeologyFrame)
 
-        local toolsText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        local toolCount = 0
-        local maxTools = 0
+        local gearText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local gearEquipped = 0
+        local gearTotal = 0
 
-        local toolProfessions = {"Primary1", "Primary2", "Cooking", "Fishing"}
-        for _, slotName in ipairs(toolProfessions) do
+        local gearProfessions = {"Primary1", "Primary2", "Cooking", "Fishing"}
+        for _, slotName in ipairs(gearProfessions) do
             if professions[slotName] and professions[slotName].name then
-                maxTools = maxTools + 1
-                if professionEquipment[professions[slotName].name] and professionEquipment[professions[slotName].name].tool then
-                    toolCount = toolCount + 1
+                local profName = professions[slotName].name
+                gearTotal = gearTotal + 1
+                if professionEquipment[profName] and professionEquipment[profName].tool then
+                    gearEquipped = gearEquipped + 1
                 end
-            end
-        end
-
-        if maxTools > 0 then
-            toolsText:SetText(string.format("%d/%d", toolCount, maxTools))
-            if toolCount == maxTools then
-                toolsText:SetTextColor(0.30, 0.69, 0.31)
-            else
-                toolsText:SetTextColor(1, 0.84, 0)
-            end
-        else
-            toolsText:SetText("--")
-            toolsText:SetTextColor(T("TEXT_SECONDARY"))
-        end
-        toolsText:SetJustifyH("LEFT")
-        table.insert(charRow.cells, toolsText)
-
-        local accessoriesText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        local equipCount = 0
-        local totalEquipSlots = 0
-
-        if professionEquipment and professions then
-            local profSlotMap = {
-                Primary1 = professions.Primary1 and professions.Primary1.name,
-                Primary2 = professions.Primary2 and professions.Primary2.name,
-                Cooking = "Cooking",
-                Fishing = "Fishing"
-            }
-
-            for slotName, profName in pairs(profSlotMap) do
-                if profName and professionEquipment[profName] then
-                    local profEquip = professionEquipment[profName]
-
-                    if slotName == "Primary1" or slotName == "Primary2" then
-                        totalEquipSlots = totalEquipSlots + 2
-                        if profEquip.accessory1 then equipCount = equipCount + 1 end
-                        if profEquip.accessory2 then equipCount = equipCount + 1 end
-                    elseif slotName == "Cooking" then
-                        totalEquipSlots = totalEquipSlots + 1
-                        if profEquip.accessory1 then equipCount = equipCount + 1 end
+                if slotName == "Primary1" or slotName == "Primary2" then
+                    gearTotal = gearTotal + 2
+                    if professionEquipment[profName] then
+                        if professionEquipment[profName].accessory1 then gearEquipped = gearEquipped + 1 end
+                        if professionEquipment[profName].accessory2 then gearEquipped = gearEquipped + 1 end
+                    end
+                elseif slotName == "Cooking" then
+                    gearTotal = gearTotal + 1
+                    if professionEquipment[profName] and professionEquipment[profName].accessory1 then
+                        gearEquipped = gearEquipped + 1
                     end
                 end
             end
         end
 
-        if equipCount > 0 or totalEquipSlots > 0 then
-            accessoriesText:SetText(string.format("%d/%d", equipCount, totalEquipSlots))
-            if equipCount == totalEquipSlots then
-                accessoriesText:SetTextColor(0.30, 0.69, 0.31)
+        if gearTotal > 0 then
+            gearText:SetText(string.format("%d/%d", gearEquipped, gearTotal))
+            if gearEquipped == gearTotal then
+                gearText:SetTextColor(0.30, 0.69, 0.31)
             else
-                accessoriesText:SetTextColor(1, 0.84, 0)
+                gearText:SetTextColor(1, 0.84, 0)
             end
         else
-            accessoriesText:SetText("--")
-            accessoriesText:SetTextColor(T("TEXT_SECONDARY"))
+            gearText:SetText("--")
+            gearText:SetTextColor(T("TEXT_SECONDARY"))
         end
-        accessoriesText:SetJustifyH("LEFT")
-        table.insert(charRow.cells, accessoriesText)
+        gearText:SetJustifyH("LEFT")
+        table.insert(charRow.cells, gearText)
 
         charRow:EnableMouse(true)
         charRow:SetScript("OnEnter", function(self)
@@ -1338,10 +1392,10 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
                         cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
                     else
                         cell:SetWidth(width - 6)
-                        if i == 4 or i == 6 or i == 7 or i == 8 or i == 9 or i == 10 or i == 11 or i == 12 then
-                            cell:SetPoint("LEFT", charRow, "LEFT", x + 3, 0)
-                        else
+                        if i == 5 or i == 7 or i == 9 then
                             cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
+                        else
+                            cell:SetPoint("LEFT", charRow, "LEFT", x + 3, 0)
                         end
                     end
                 end

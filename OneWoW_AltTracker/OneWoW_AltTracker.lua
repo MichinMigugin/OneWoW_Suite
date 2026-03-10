@@ -41,6 +41,12 @@ end
 function OneWoWAltTracker:OnInitialize()
     self:InitializeDatabase()
 
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+    if OneWoW_GUI and OneWoW_GUI.MigrateSettings then
+        OneWoW_GUI:MigrateSettings(self.db.global)
+    end
+
     if ns.ApplyTheme then
         ns.ApplyTheme()
     end
@@ -52,11 +58,19 @@ function OneWoWAltTracker:OnInitialize()
     self:RegisterChatCommand("onewowat", "SlashCommandHandler")
     self:RegisterChatCommand("owat", "SlashCommandHandler")
     self:RegisterChatCommand("1wat", "SlashCommandHandler")
+
+    if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
+        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+            if ns.ApplyTheme then ns.ApplyTheme() end
+        end)
+        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+            if ns.ApplyLanguage then ns.ApplyLanguage() end
+        end)
+    end
+
     local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("AltTracker", _ver, "/1wat")
-    else
-        print("|cFF00FF00OneWoW|r: |cFFFFFFFFAlt Tracker|r |cFF888888\226\128\147 v." .. _ver .. " \226\128\147|r |cFF00FF00Loaded|r - /1wat")
     end
 end
 
@@ -79,12 +93,6 @@ function OneWoWAltTracker:OnEnable()
 
     RegisterWithOneWoW()
 
-    if not ns.oneWoWHubActive then
-        if ns.MinimapButton and ns.MinimapButton.Initialize then
-            ns.MinimapButton:Initialize()
-        end
-    end
-
     if ns.PatchDialog and ns.PatchDialog.CheckAndShow then
         ns.PatchDialog:CheckAndShow()
     end
@@ -104,14 +112,6 @@ function OneWoWAltTracker:InitializeDatabase()
     local defaults = ns.DatabaseDefaults or {}
 
     self.db = LibStub("AceDB-3.0"):New("OneWoW_AltTracker_DB", defaults, true)
-
-    if not self.db.global.language then
-        self.db.global.language = GetLocale()
-    end
-
-    if not self.db.global.theme then
-        self.db.global.theme = "green"
-    end
 
     if not self.db.global.altTracker then
         self.db.global.altTracker = {
@@ -139,19 +139,6 @@ function OneWoWAltTracker:InitializeDatabase()
             enableDataCollection = true,
         }
     end
-
-    if self.db.global.altTrackerSettings.minimapButton and not self.db.global.minimap then
-        self.db.global.minimap = {
-            hide = self.db.global.altTrackerSettings.minimapButton.hide or false,
-            minimapPos = 220,
-            theme = "horde",
-        }
-        self.db.global.altTrackerSettings.minimapButton = nil
-    end
-    if not self.db.global.minimap then self.db.global.minimap = {} end
-    if self.db.global.minimap.hide == nil then self.db.global.minimap.hide = false end
-    if self.db.global.minimap.minimapPos == nil then self.db.global.minimap.minimapPos = 220 end
-    if not self.db.global.minimap.theme then self.db.global.minimap.theme = "horde" end
 
     if self.db.global.migrationStatus == nil then
         self.db.global.migrationStatus = {

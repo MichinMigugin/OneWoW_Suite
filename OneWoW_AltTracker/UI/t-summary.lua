@@ -525,6 +525,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         liveChar.xp.restState = GetRestState()
         liveChar.xp.isResting = IsResting()
         liveChar.xp.isXPDisabled = IsXPUserDisabled()
+        liveChar.xp.lastUpdate = time()
     end
 
     table.sort(allChars, function(a, b)
@@ -554,13 +555,14 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 aVal = type(aSpec) == "string" and aSpec or (type(aSpec) == "table" and (aSpec.name or "") or "")
                 bVal = type(bSpec) == "string" and bSpec or (type(bSpec) == "table" and (bSpec.name or "") or "")
             elseif currentSortColumn == "rested" then
+                local Fmt = ns.AltTrackerFormatters
                 local aRested = 0
-                if a.data.xp and a.data.xp.restedXP and a.data.xp.maxXP and a.data.xp.maxXP > 0 then
-                    aRested = (a.data.xp.restedXP / a.data.xp.maxXP) * 100
+                if Fmt and a.data.xp and a.data.xp.maxXP and a.data.xp.maxXP > 0 then
+                    aRested = (Fmt:EstimateRestedXP(a.data, a.key) / a.data.xp.maxXP) * 100
                 end
                 local bRested = 0
-                if b.data.xp and b.data.xp.restedXP and b.data.xp.maxXP and b.data.xp.maxXP > 0 then
-                    bRested = (b.data.xp.restedXP / b.data.xp.maxXP) * 100
+                if Fmt and b.data.xp and b.data.xp.maxXP and b.data.xp.maxXP > 0 then
+                    bRested = (Fmt:EstimateRestedXP(b.data, b.key) / b.data.xp.maxXP) * 100
                 end
                 aVal = aRested
                 bVal = bRested
@@ -692,8 +694,13 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                     local playtimeText = string.format("%d days, %d hours", days, hours)
 
                     local restedPercent = 0
-                    if charData.xp and charData.xp.restedXP and charData.xp.maxXP and charData.xp.maxXP > 0 then
-                        restedPercent = math.min(200, math.floor((charData.xp.restedXP / (charData.xp.maxXP * 1.5)) * 200))
+                    local eFmt = ns.AltTrackerFormatters
+                    if eFmt and charData.xp and charData.xp.maxXP and charData.xp.maxXP > 0 then
+                        local estimatedRested = eFmt:EstimateRestedXP(charData, charKey)
+                        restedPercent = math.floor((estimatedRested / charData.xp.maxXP) * 100)
+                        local race = charData.race or charData.raceName or ""
+                        local maxPercent = (race == "Pandaren") and 300 or 150
+                        restedPercent = math.min(restedPercent, maxPercent)
                     end
 
                     local guildName = L["EXPANDED_NO_GUILD"]
@@ -903,11 +910,24 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
         local restedText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         local restedPercent = 0
-        if charData.xp and charData.xp.restedXP and charData.xp.maxXP and charData.xp.maxXP > 0 then
-            restedPercent = math.min(200, math.floor((charData.xp.restedXP / (charData.xp.maxXP * 1.5)) * 200))
+        local Fmt = ns.AltTrackerFormatters
+        if Fmt and charData.xp and charData.xp.maxXP and charData.xp.maxXP > 0 then
+            local estimatedRested = Fmt:EstimateRestedXP(charData, charKey)
+            restedPercent = math.floor((estimatedRested / charData.xp.maxXP) * 100)
+            local race = charData.race or charData.raceName or ""
+            local maxPercent = (race == "Pandaren") and 300 or 150
+            restedPercent = math.min(restedPercent, maxPercent)
         end
         restedText:SetText(restedPercent .. "%")
-        restedText:SetTextColor(0, 0.74, 0.83)
+        if restedPercent >= 150 then
+            restedText:SetTextColor(0.3, 1, 0.3)
+        elseif restedPercent >= 60 then
+            restedText:SetTextColor(0, 0.74, 0.83)
+        elseif restedPercent >= 30 then
+            restedText:SetTextColor(1, 1, 0)
+        else
+            restedText:SetTextColor(1, 0.3, 0.3)
+        end
 
         local restedFrame = CreateFrame("Frame", nil, charRow)
         restedFrame:SetAllPoints(restedText)
@@ -915,6 +935,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         restedFrame:SetScript("OnEnter", function(self)
             local level = charData.level or 0
             local isMaxLevel = (level >= 90)
+            local ttFmt = ns.AltTrackerFormatters
 
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetText(L["COL_RESTED_XP"], 1, 1, 1)
@@ -926,9 +947,37 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 GameTooltip:AddLine(L["TT_RESTED_XP_TO_LEVEL"] .. " " .. string.format("%.1f%%  (%s XP needed)", xpPercent, BreakUpLargeNumbers(xpNeeded)), 1, 1, 1)
             end
 
-            if charData.xp and charData.xp.restedXP then
-                local restedAmount = charData.xp.restedXP
-                GameTooltip:AddLine(L["TT_RESTED_AMOUNT"] .. " " .. tostring(restedAmount), 0, 0.74, 0.83)
+            if ttFmt and charData.xp and charData.xp.maxXP and charData.xp.maxXP > 0 then
+                local estimatedRested = ttFmt:EstimateRestedXP(charData, charKey)
+                local savedRested = charData.xp.restedXP or 0
+                local race = charData.race or charData.raceName or ""
+                local maxRestedXP = charData.xp.maxXP * ((race == "Pandaren") and 3 or 1.5)
+
+                GameTooltip:AddLine(L["TT_RESTED_AMOUNT"] .. " " .. BreakUpLargeNumbers(math.floor(estimatedRested)) .. " / " .. BreakUpLargeNumbers(math.floor(maxRestedXP)), 0, 0.74, 0.83)
+
+                if math.floor(estimatedRested) > math.floor(savedRested) then
+                    local gained = math.floor(estimatedRested - savedRested)
+                    GameTooltip:AddLine("+" .. BreakUpLargeNumbers(gained) .. " XP earned while offline", 0.5, 0.8, 1)
+                end
+
+                if estimatedRested >= maxRestedXP then
+                    GameTooltip:AddLine("Fully Rested", 0.3, 1, 0.3)
+                else
+                    local xpRemaining = maxRestedXP - estimatedRested
+                    local oneXPBubble = charData.xp.maxXP / 20
+                    local bubblesNeeded = xpRemaining / oneXPBubble
+                    local secondsRemaining
+                    if charData.xp.isResting then
+                        secondsRemaining = bubblesNeeded * 28800
+                    else
+                        secondsRemaining = bubblesNeeded * 28800 * 4
+                    end
+                    local daysLeft = math.floor(secondsRemaining / 86400)
+                    local hoursLeft = math.floor((secondsRemaining % 86400) / 3600)
+                    GameTooltip:AddLine("Fully rested in: " .. daysLeft .. "d " .. hoursLeft .. "h", 0.8, 0.8, 0.8)
+                end
+            elseif charData.xp and charData.xp.restedXP then
+                GameTooltip:AddLine(L["TT_RESTED_AMOUNT"] .. " " .. tostring(charData.xp.restedXP), 0, 0.74, 0.83)
             end
 
             if charData.xp and charData.xp.restState then
@@ -1358,7 +1407,13 @@ function ns.UI.RefreshSummaryStats(summaryTab)
             end
         end
 
-        if charData.xp and charData.xp.restedXP and charData.xp.restedXP > 0 then
+        local sFmt = ns.AltTrackerFormatters
+        if sFmt and charData.xp and charData.xp.maxXP and charData.xp.maxXP > 0 then
+            local estRested = sFmt:EstimateRestedXP(charData, charKey)
+            if estRested > 0 then
+                stats.rested = stats.rested + 1
+            end
+        elseif charData.xp and charData.xp.restedXP and charData.xp.restedXP > 0 then
             stats.rested = stats.rested + 1
         end
 

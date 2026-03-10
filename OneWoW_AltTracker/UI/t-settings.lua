@@ -6,6 +6,462 @@ local S = ns.S
 
 ns.UI = ns.UI or {}
 
+local function CollectAllCharacterKeys()
+    local charMap = {}
+
+    if _G.OneWoW_AltTracker_Character_DB and _G.OneWoW_AltTracker_Character_DB.characters then
+        for charKey, data in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+            if not charMap[charKey] then
+                charMap[charKey] = {
+                    key = charKey,
+                    name = data.name or charKey:match("^(.+)-"),
+                    realm = data.realm or charKey:match("-(.+)$"),
+                    class = data.class,
+                    className = data.className,
+                    level = data.level,
+                    lastLogin = data.lastLogin,
+                    sources = {},
+                }
+            end
+            charMap[charKey].sources["Character"] = true
+        end
+    end
+
+    local simpleDBs = {
+        { global = "OneWoW_AltTracker_Professions_DB", label = "Professions" },
+        { global = "OneWoW_AltTracker_Endgame_DB",     label = "Endgame" },
+        { global = "OneWoW_AltTracker_Storage_DB",      label = "Storage" },
+        { global = "OneWoW_AltTracker_Auctions_DB",     label = "Auctions" },
+        { global = "OneWoW_AltTracker_Collections_DB",  label = "Collections" },
+    }
+
+    for _, dbInfo in ipairs(simpleDBs) do
+        local db = _G[dbInfo.global]
+        if db and db.characters then
+            for charKey, _ in pairs(db.characters) do
+                if not charMap[charKey] then
+                    charMap[charKey] = {
+                        key = charKey,
+                        name = charKey:match("^(.+)-"),
+                        realm = charKey:match("-(.+)$"),
+                        sources = {},
+                    }
+                end
+                charMap[charKey].sources[dbInfo.label] = true
+            end
+        end
+    end
+
+    if _G.OneWoW_AltTracker_Accounting_DB and _G.OneWoW_AltTracker_Accounting_DB.transactions then
+        local seen = {}
+        for _, tx in ipairs(_G.OneWoW_AltTracker_Accounting_DB.transactions) do
+            if tx.character and not seen[tx.character] then
+                seen[tx.character] = true
+                if not charMap[tx.character] then
+                    charMap[tx.character] = {
+                        key = tx.character,
+                        name = tx.character:match("^(.+)-"),
+                        realm = tx.character:match("-(.+)$"),
+                        sources = {},
+                    }
+                end
+                charMap[tx.character].sources["Accounting"] = true
+            end
+        end
+    end
+
+    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global then
+        local favorites = _G.OneWoW_AltTracker.db.global.favorites
+        if favorites then
+            for charKey, _ in pairs(favorites) do
+                if not charMap[charKey] then
+                    charMap[charKey] = {
+                        key = charKey,
+                        name = charKey:match("^(.+)-"),
+                        realm = charKey:match("-(.+)$"),
+                        sources = {},
+                    }
+                end
+                charMap[charKey].sources["Favorites"] = true
+            end
+        end
+    end
+
+    if _G.OneWoW_CatalogData_Quests_DB and _G.OneWoW_CatalogData_Quests_DB.completion then
+        for charKey, _ in pairs(_G.OneWoW_CatalogData_Quests_DB.completion) do
+            if not charMap[charKey] then
+                charMap[charKey] = {
+                    key = charKey,
+                    name = charKey:match("^(.+)-"),
+                    realm = charKey:match("-(.+)$"),
+                    sources = {},
+                }
+            end
+            charMap[charKey].sources["Quest Completion"] = true
+        end
+    end
+
+    if _G.OneWoW_CatalogData_Tradeskills_DB and _G.OneWoW_CatalogData_Tradeskills_DB.scanCache then
+        for realmDashName, _ in pairs(_G.OneWoW_CatalogData_Tradeskills_DB.scanCache) do
+            local realm, name = realmDashName:match("^(.+)-(.+)$")
+            if realm and name then
+                local normalKey = name .. "-" .. realm
+                if not charMap[normalKey] then
+                    charMap[normalKey] = {
+                        key = normalKey,
+                        name = name,
+                        realm = realm,
+                        sources = {},
+                    }
+                end
+                charMap[normalKey].sources["Tradeskill Scans"] = true
+                charMap[normalKey]._tradeskillKey = realmDashName
+            end
+        end
+    end
+
+    local sorted = {}
+    for _, info in pairs(charMap) do
+        table.insert(sorted, info)
+    end
+    table.sort(sorted, function(a, b)
+        if (a.lastLogin or 0) ~= (b.lastLogin or 0) then
+            return (a.lastLogin or 0) > (b.lastLogin or 0)
+        end
+        return (a.name or "") < (b.name or "")
+    end)
+
+    return sorted
+end
+
+local function PurgeCharacter(charKey, tradeskillKey)
+    local purgedFrom = {}
+
+    local simpleDBs = {
+        { global = "OneWoW_AltTracker_Character_DB",    label = "Character" },
+        { global = "OneWoW_AltTracker_Professions_DB",  label = "Professions" },
+        { global = "OneWoW_AltTracker_Endgame_DB",      label = "Endgame" },
+        { global = "OneWoW_AltTracker_Storage_DB",       label = "Storage" },
+        { global = "OneWoW_AltTracker_Auctions_DB",      label = "Auctions" },
+        { global = "OneWoW_AltTracker_Collections_DB",   label = "Collections" },
+    }
+
+    for _, dbInfo in ipairs(simpleDBs) do
+        local db = _G[dbInfo.global]
+        if db and db.characters and db.characters[charKey] then
+            db.characters[charKey] = nil
+            table.insert(purgedFrom, dbInfo.label)
+        end
+    end
+
+    if _G.OneWoW_AltTracker_Accounting_DB and _G.OneWoW_AltTracker_Accounting_DB.transactions then
+        local txs = _G.OneWoW_AltTracker_Accounting_DB.transactions
+        local removed = 0
+        for i = #txs, 1, -1 do
+            if txs[i].character == charKey then
+                table.remove(txs, i)
+                removed = removed + 1
+            end
+        end
+        if removed > 0 then
+            table.insert(purgedFrom, "Accounting (" .. removed .. " transactions)")
+        end
+    end
+
+    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global then
+        local favorites = _G.OneWoW_AltTracker.db.global.favorites
+        if favorites and favorites[charKey] then
+            favorites[charKey] = nil
+            table.insert(purgedFrom, "Favorites")
+        end
+    end
+
+    if _G.OneWoW_CatalogData_Quests_DB and _G.OneWoW_CatalogData_Quests_DB.completion then
+        if _G.OneWoW_CatalogData_Quests_DB.completion[charKey] then
+            _G.OneWoW_CatalogData_Quests_DB.completion[charKey] = nil
+            table.insert(purgedFrom, "Quest Completion")
+        end
+    end
+
+    local tsKey = tradeskillKey
+    if not tsKey then
+        local name, realm = charKey:match("^(.+)-(.+)$")
+        if name and realm then
+            tsKey = realm .. "-" .. name
+        end
+    end
+    if tsKey and _G.OneWoW_CatalogData_Tradeskills_DB and _G.OneWoW_CatalogData_Tradeskills_DB.scanCache then
+        if _G.OneWoW_CatalogData_Tradeskills_DB.scanCache[tsKey] then
+            _G.OneWoW_CatalogData_Tradeskills_DB.scanCache[tsKey] = nil
+            table.insert(purgedFrom, "Tradeskill Scans")
+        end
+    end
+
+    return purgedFrom
+end
+
+local function ShowManageAltsDialog()
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    if not OneWoW_GUI then return end
+
+    if _G.OneWoW_AT_ManageAltsDialog then
+        _G.OneWoW_AT_ManageAltsDialog:Show()
+        _G.OneWoW_AT_ManageAltsDialog:Raise()
+        return
+    end
+
+    local characters = CollectAllCharacterKeys()
+
+    local dialog = OneWoW_GUI:CreateMovableDialog("OneWoW_AT_ManageAltsDialog", UIParent, 620, 560)
+    dialog:SetBackdropColor(T("BG_PRIMARY"))
+    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    _G.OneWoW_AT_ManageAltsDialog = dialog
+
+    local titleBar = OneWoW_GUI:CreateTitleBar(dialog, "Manage Characters", {
+        height = 28,
+        onClose = function() dialog:Hide() end,
+    })
+
+    local divider = dialog:CreateTexture(nil, "ARTWORK")
+    divider:SetHeight(1)
+    divider:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -29)
+    divider:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -29)
+    divider:SetColorTexture(T("BORDER_SUBTLE"))
+
+    local descText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    descText:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -38)
+    descText:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -14, -38)
+    descText:SetJustifyH("LEFT")
+    descText:SetWordWrap(true)
+    descText:SetSpacing(3)
+    descText:SetText("Select characters to permanently remove from all OneWoW databases. This is for characters you have deleted or renamed in-game. A UI reload is required after removal.")
+    descText:SetTextColor(T("TEXT_SECONDARY"))
+
+    local selectAllBtn = OneWoW_GUI:CreateButton(nil, dialog, "Select All", 90, 25)
+    selectAllBtn:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -80)
+
+    local deselectAllBtn = OneWoW_GUI:CreateButton(nil, dialog, "Deselect All", 90, 25)
+    deselectAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 6, 0)
+
+    local countText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    countText:SetPoint("RIGHT", dialog, "TOPRIGHT", -14, -92)
+    countText:SetText(#characters .. " characters found across all databases")
+    countText:SetTextColor(T("TEXT_SECONDARY"))
+
+    local listBg = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
+    listBg:SetPoint("TOPLEFT", dialog, "TOPLEFT", 10, -108)
+    listBg:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 56)
+    listBg:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    listBg:SetBackdropColor(T("BG_SECONDARY"))
+    listBg:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local scrollFrame = CreateFrame("ScrollFrame", "OneWoW_AT_ManageAltsScroll", listBg, "UIPanelScrollFrameTemplate")
+    scrollFrame:SetPoint("TOPLEFT", listBg, "TOPLEFT", 4, -4)
+    scrollFrame:SetPoint("BOTTOMRIGHT", listBg, "BOTTOMRIGHT", -4, 4)
+
+    OneWoW_GUI:StyleScrollBar(scrollFrame, { container = listBg })
+
+    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+    scrollChild:SetWidth(scrollFrame:GetWidth() - 16)
+    scrollFrame:SetScrollChild(scrollChild)
+
+    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+        scrollChild:SetWidth(w - 16)
+    end)
+
+    local ROW_H = 30
+    local allCheckboxes = {}
+    local yPos = 0
+
+    if #characters == 0 then
+        local emptyText = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        emptyText:SetPoint("TOP", scrollChild, "TOP", 0, -40)
+        emptyText:SetText("No characters found in any database.")
+        emptyText:SetTextColor(T("TEXT_MUTED"))
+    end
+
+    for i, charInfo in ipairs(characters) do
+        charInfo.checked = false
+
+        local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
+        row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -yPos)
+        row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, -yPos)
+        row:SetHeight(ROW_H)
+        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        if i % 2 == 0 then
+            row:SetBackdropColor(T("BG_TERTIARY"))
+        else
+            row:SetBackdropColor(T("BG_PRIMARY"))
+        end
+
+        local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
+        cb:SetSize(20, 20)
+        cb:SetPoint("LEFT", row, "LEFT", 4, 0)
+        cb:SetScript("OnClick", function(self) charInfo.checked = self:GetChecked() end)
+        allCheckboxes[#allCheckboxes + 1] = { cb = cb, info = charInfo }
+
+        local nameFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        nameFS:SetPoint("LEFT", cb, "RIGHT", 4, 0)
+        local displayName = charInfo.name or charInfo.key
+        nameFS:SetText(displayName)
+        local classColor = charInfo.class and RAID_CLASS_COLORS[charInfo.class]
+        if classColor then
+            nameFS:SetTextColor(classColor.r, classColor.g, classColor.b)
+        else
+            nameFS:SetTextColor(T("TEXT_PRIMARY"))
+        end
+
+        local realmFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        realmFS:SetPoint("LEFT", nameFS, "RIGHT", 6, 0)
+        realmFS:SetText(charInfo.realm or "")
+        realmFS:SetTextColor(T("TEXT_MUTED"))
+
+        local infoStr = ""
+        if charInfo.level and charInfo.level > 0 then
+            infoStr = "Lv" .. charInfo.level
+        end
+        if charInfo.className then
+            if infoStr ~= "" then infoStr = infoStr .. " " end
+            infoStr = infoStr .. charInfo.className
+        end
+
+        local sourceCount = 0
+        for _ in pairs(charInfo.sources) do sourceCount = sourceCount + 1 end
+        if infoStr ~= "" then infoStr = infoStr .. "  " end
+        infoStr = infoStr .. "(" .. sourceCount .. " db" .. (sourceCount > 1 and "s" or "") .. ")"
+
+        local infoFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        infoFS:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+        infoFS:SetText(infoStr)
+        infoFS:SetTextColor(T("TEXT_SECONDARY"))
+
+        row:EnableMouse(true)
+        row:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(T("BG_HOVER"))
+            local sources = {}
+            for src, _ in pairs(charInfo.sources) do table.insert(sources, src) end
+            table.sort(sources)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:AddLine(charInfo.key, 1, 0.82, 0)
+            GameTooltip:AddLine("Found in:", T("TEXT_SECONDARY"))
+            for _, src in ipairs(sources) do
+                GameTooltip:AddLine("  " .. src, T("TEXT_PRIMARY"))
+            end
+            GameTooltip:Show()
+        end)
+        row:SetScript("OnLeave", function(self)
+            if i % 2 == 0 then
+                self:SetBackdropColor(T("BG_TERTIARY"))
+            else
+                self:SetBackdropColor(T("BG_PRIMARY"))
+            end
+            GameTooltip:Hide()
+        end)
+        row:SetScript("OnMouseDown", function()
+            charInfo.checked = not charInfo.checked
+            cb:SetChecked(charInfo.checked)
+        end)
+
+        yPos = yPos + ROW_H + 1
+    end
+
+    scrollChild:SetHeight(math.max(1, yPos))
+
+    selectAllBtn:SetScript("OnClick", function()
+        for _, entry in ipairs(allCheckboxes) do
+            entry.info.checked = true
+            entry.cb:SetChecked(true)
+        end
+    end)
+
+    deselectAllBtn:SetScript("OnClick", function()
+        for _, entry in ipairs(allCheckboxes) do
+            entry.info.checked = false
+            entry.cb:SetChecked(false)
+        end
+    end)
+
+    local btnDivider = dialog:CreateTexture(nil, "ARTWORK")
+    btnDivider:SetHeight(1)
+    btnDivider:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 1, 50)
+    btnDivider:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -1, 50)
+    btnDivider:SetColorTexture(T("BORDER_SUBTLE"))
+
+    local deleteBtn = OneWoW_GUI:CreateButton(nil, dialog, "Delete Selected", 160, 32)
+    deleteBtn:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 14, 10)
+    deleteBtn:SetBackdropColor(0.5, 0.15, 0.15, 1)
+    deleteBtn:SetBackdropBorderColor(0.7, 0.2, 0.2, 0.6)
+    deleteBtn.text:SetTextColor(1, 0.4, 0.4)
+
+    deleteBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.65, 0.2, 0.2, 1)
+        self:SetBackdropBorderColor(0.85, 0.3, 0.3, 0.8)
+        self.text:SetTextColor(1, 0.6, 0.6)
+    end)
+    deleteBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.5, 0.15, 0.15, 1)
+        self:SetBackdropBorderColor(0.7, 0.2, 0.2, 0.6)
+        self.text:SetTextColor(1, 0.4, 0.4)
+    end)
+
+    local cancelBtn = OneWoW_GUI:CreateButton(nil, dialog, "Cancel", 120, 32)
+    cancelBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -14, 10)
+    cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
+
+    deleteBtn:SetScript("OnClick", function()
+        local selected = {}
+        for _, charInfo in ipairs(characters) do
+            if charInfo.checked then
+                table.insert(selected, charInfo)
+            end
+        end
+
+        if #selected == 0 then
+            print("|cFFFFD100OneWoW - AltTracker:|r No characters selected.")
+            return
+        end
+
+        local nameList = {}
+        for idx, info in ipairs(selected) do
+            if idx <= 5 then
+                table.insert(nameList, info.key)
+            end
+        end
+        local displayNames = table.concat(nameList, ", ")
+        if #selected > 5 then
+            displayNames = displayNames .. " (+" .. (#selected - 5) .. " more)"
+        end
+
+        StaticPopupDialogs["ONEWOW_AT_DELETE_CHARACTERS"] = {
+            text = "Permanently delete " .. #selected .. " character(s) from ALL OneWoW databases?\n\n|cFFFF6666" .. displayNames .. "|r\n\nThis cannot be undone. A UI reload will follow.",
+            button1 = "Delete",
+            button2 = "Cancel",
+            OnAccept = function()
+                local totalPurged = 0
+                for _, charInfo in ipairs(selected) do
+                    local purgedFrom = PurgeCharacter(charInfo.key, charInfo._tradeskillKey)
+                    if #purgedFrom > 0 then
+                        totalPurged = totalPurged + 1
+                    end
+                end
+                print("|cFFFFD100OneWoW - AltTracker:|r Removed " .. totalPurged .. " character(s). Reloading...")
+                ReloadUI()
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            preferredIndex = 3,
+        }
+        StaticPopup_Show("ONEWOW_AT_DELETE_CHARACTERS")
+    end)
+
+    dialog:Show()
+end
+
 function ns.UI.CreateSettingsTab(parent)
     local scrollFrame, scrollContent = ns.UI.CreateScrollFrame(nil, parent, parent:GetWidth(), parent:GetHeight())
     scrollFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
@@ -13,513 +469,37 @@ function ns.UI.CreateSettingsTab(parent)
 
     local yOffset = -10
 
-    if not _G.OneWoW then
+    local manageSection = ns.UI.CreateSectionHeader(scrollContent, "Manage Characters", yOffset)
+    yOffset = manageSection.bottomY - 8
 
-    local splitContainer = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-    splitContainer:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 15, yOffset)
-    splitContainer:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -15, yOffset)
-    splitContainer:SetHeight(165)
-    splitContainer:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    splitContainer:SetBackdropColor(T("BG_SECONDARY"))
-    splitContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    local manageDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    manageDesc:SetPoint("TOPLEFT", 15, yOffset)
+    manageDesc:SetPoint("TOPRIGHT", -15, yOffset)
+    manageDesc:SetJustifyH("LEFT")
+    manageDesc:SetWordWrap(true)
+    manageDesc:SetText("Remove deleted or renamed characters from all OneWoW databases. Opens a dialog to select which characters to purge.")
+    manageDesc:SetTextColor(T("TEXT_SECONDARY"))
+    manageDesc:SetSpacing(3)
 
-    local leftPanel = CreateFrame("Frame", nil, splitContainer)
-    leftPanel:SetPoint("TOPLEFT", splitContainer, "TOPLEFT", 0, 0)
-    leftPanel:SetPoint("BOTTOMRIGHT", splitContainer, "BOTTOM", 0, 0)
-
-    local langTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    langTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -12)
-    langTitle:SetText(L["LANGUAGE_SELECTION"])
-    langTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local langDescText = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    langDescText:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -38)
-    langDescText:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -10, -38)
-    langDescText:SetJustifyH("LEFT")
-    langDescText:SetWordWrap(true)
-    langDescText:SetText(L["LANGUAGE_DESC"])
-    langDescText:SetTextColor(T("TEXT_SECONDARY"))
-
-    local currentLang = OneWoWAltTracker.db.global.language or "enUS"
-    local langNames = {
-        ["enUS"] = "English",
-        ["koKR"] = "한국어"
-    }
-
-    local langCurrentLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    langCurrentLabel:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -90)
-    langCurrentLabel:SetText(L["LANGUAGE_CURRENT"] .. " " .. (langNames[currentLang] or currentLang))
-    langCurrentLabel:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local languageDropdown = CreateFrame("Button", nil, leftPanel, "BackdropTemplate")
-    languageDropdown:SetSize(190, 30)
-    languageDropdown:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -115)
-    languageDropdown:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false, edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
-    })
-    languageDropdown:SetBackdropColor(T("BG_TERTIARY"))
-    languageDropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local langDropdownText = languageDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    langDropdownText:SetPoint("CENTER")
-    langDropdownText:SetText(langNames[currentLang] or currentLang)
-    langDropdownText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local langDropdownArrow = languageDropdown:CreateTexture(nil, "OVERLAY")
-    langDropdownArrow:SetSize(16, 16)
-    langDropdownArrow:SetPoint("RIGHT", languageDropdown, "RIGHT", -5, 0)
-    langDropdownArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-
-    languageDropdown:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")) self:SetBackdropBorderColor(T("BORDER_FOCUS")) end)
-    languageDropdown:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_TERTIARY")) self:SetBackdropBorderColor(T("BORDER_SUBTLE")) end)
-
-    languageDropdown:SetScript("OnClick", function(self)
-        local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
-        menu:SetFrameStrata("FULLSCREEN_DIALOG")
-        menu:SetSize(190, 64)
-        menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-        menu:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = false, edgeSize = 12,
-            insets = { left = 2, right = 2, top = 2, bottom = 2 }
-        })
-        menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
-        menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-        menu:EnableMouse(true)
-
-        local function createLangButton(parent, langName, langCode, yPos)
-            local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-            btn:SetSize(180, 25)
-            btn:SetPoint("TOP", parent, "TOP", 0, yPos)
-            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
-            btn:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            text:SetPoint("CENTER")
-            text:SetText(langName)
-            text:SetTextColor(0.9, 0.9, 0.9)
-            btn:SetScript("OnEnter", function(s) s:SetBackdropColor(0.2, 0.2, 0.2, 1) text:SetTextColor(1, 0.82, 0) end)
-            btn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.1, 0.1, 0.1, 0.8) text:SetTextColor(0.9, 0.9, 0.9) end)
-            btn:SetScript("OnClick", function()
-                OneWoWAltTracker.db.global.language = langCode
-                OneWoWAltTracker.db.global.lastTab = "settings"
-                if ns.ApplyLanguage then ns.ApplyLanguage() end
-                menu:Hide()
-                ns.UI:Reset()
-                C_Timer.After(0.1, function()
-                    local tabToShow = OneWoWAltTracker.db.global.lastTab or "summary"
-                    ns.UI:Show(tabToShow)
-                end)
-            end)
-            return btn
-        end
-
-        createLangButton(menu, langNames["enUS"], "enUS", -5)
-        createLangButton(menu, langNames["koKR"], "koKR", -32)
-
-        menu:SetScript("OnShow", function(self)
-            local timeOutside = 0
-            self:SetScript("OnUpdate", function(self, elapsed)
-                if not MouseIsOver(menu) and not MouseIsOver(languageDropdown) then
-                    timeOutside = timeOutside + elapsed
-                    if timeOutside > 0.5 then self:Hide() self:SetScript("OnUpdate", nil) end
-                else timeOutside = 0 end
-            end)
-        end)
+    C_Timer.After(0.01, function()
+        local textHeight = manageDesc:GetStringHeight()
+        yOffset = yOffset - textHeight - 12
     end)
+    yOffset = yOffset - 20
 
-    local vertDivider = splitContainer:CreateTexture(nil, "ARTWORK")
-    vertDivider:SetWidth(1)
-    vertDivider:SetPoint("TOP", splitContainer, "TOP", 0, -8)
-    vertDivider:SetPoint("BOTTOM", splitContainer, "BOTTOM", 0, 8)
-    vertDivider:SetColorTexture(T("BORDER_SUBTLE"))
-
-    local rightPanel = CreateFrame("Frame", nil, splitContainer)
-    rightPanel:SetPoint("TOPLEFT", splitContainer, "TOP", 0, 0)
-    rightPanel:SetPoint("BOTTOMRIGHT", splitContainer, "BOTTOMRIGHT", 0, 0)
-
-    local currentTheme = OneWoWAltTracker.db.global.theme or "green"
-    local themeNames = {
-        ["green"] = L["THEME_FOREST_GREEN"],
-        ["blue"] = L["THEME_OCEAN_BLUE"],
-        ["purple"] = L["THEME_ROYAL_PURPLE"],
-        ["red"] = L["THEME_CRIMSON_RED"],
-        ["orange"] = L["THEME_SUNSET_ORANGE"],
-        ["teal"] = L["THEME_DEEP_TEAL"],
-        ["gold"] = L["THEME_GOLDEN_AMBER"],
-        ["pink"] = L["THEME_ROSE_PINK"],
-        ["slate"] = L["THEME_SLATE_GRAY"],
-        ["dark"] = L["THEME_MIDNIGHT_BLACK"],
-        ["amber"] = L["THEME_AMBER_FIRE"],
-        ["cyan"] = L["THEME_ARCTIC_CYAN"],
-        ["voidblack"] = L["THEME_VOID_BLACK"],
-        ["charcoal"] = L["THEME_CHARCOAL_DEEP"],
-        ["forestnight"] = L["THEME_FOREST_NIGHT"],
-        ["obsidian"] = L["THEME_OBSIDIAN_MINIMAL"],
-        ["monochrome"] = L["THEME_MONOCHROME_PRO"],
-        ["twilight"] = L["THEME_TWILIGHT_COMPACT"],
-        ["neon"] = L["THEME_NEON_SYNTHWAVE"],
-        ["glassmorphic"] = L["THEME_GLASSMORPHIC"],
-        ["lightmode"] = L["THEME_MINIMAL_WHITE"],
-        ["retro"] = L["THEME_RETRO_CLASSIC"],
-        ["fantasy"] = L["THEME_RPG_FANTASY"],
-        ["nightfae"] = L["THEME_COVENANT_TWILIGHT"],
-    }
-
-    local themeTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    themeTitle:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -12)
-    themeTitle:SetText(L["THEME_SELECTION"])
-    themeTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local themeDescText = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    themeDescText:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -38)
-    themeDescText:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -10, -38)
-    themeDescText:SetJustifyH("LEFT")
-    themeDescText:SetWordWrap(true)
-    themeDescText:SetText(L["THEME_DESC"])
-    themeDescText:SetTextColor(T("TEXT_SECONDARY"))
-
-    local currentThemeLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    currentThemeLabel:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -90)
-    currentThemeLabel:SetText(L["THEME_CURRENT"] .. " " .. (themeNames[currentTheme] or currentTheme))
-    currentThemeLabel:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local themeDropdown = CreateFrame("Button", nil, rightPanel, "BackdropTemplate")
-    themeDropdown:SetSize(210, 30)
-    themeDropdown:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -115)
-    themeDropdown:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false, edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
-    })
-    themeDropdown:SetBackdropColor(T("BG_TERTIARY"))
-    themeDropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local dropdownText = themeDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    dropdownText:SetPoint("LEFT", themeDropdown, "LEFT", 30, 0)
-    dropdownText:SetText(themeNames[currentTheme] or currentTheme)
-    dropdownText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local currentColorPreview = themeDropdown:CreateTexture(nil, "OVERLAY")
-    currentColorPreview:SetSize(14, 14)
-    currentColorPreview:SetPoint("LEFT", themeDropdown, "LEFT", 8, 0)
-    local currentThemeData = ns.Constants.THEMES[currentTheme]
-    if currentThemeData then
-        currentColorPreview:SetColorTexture(unpack(currentThemeData.ACCENT_PRIMARY))
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local manageBtn
+    if OneWoW_GUI then
+        manageBtn = OneWoW_GUI:CreateButton(nil, scrollContent, "Manage Characters", 200, 35)
+    else
+        manageBtn = ns.UI.CreateButton(nil, scrollContent, "Manage Characters", 200, 35)
     end
-
-    local dropdownArrow = themeDropdown:CreateTexture(nil, "OVERLAY")
-    dropdownArrow:SetSize(16, 16)
-    dropdownArrow:SetPoint("RIGHT", themeDropdown, "RIGHT", -5, 0)
-    dropdownArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-
-    themeDropdown:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")) self:SetBackdropBorderColor(T("BORDER_FOCUS")) end)
-    themeDropdown:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_TERTIARY")) self:SetBackdropBorderColor(T("BORDER_SUBTLE")) end)
-
-    themeDropdown:SetScript("OnClick", function(self)
-        local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
-        menu:SetFrameStrata("FULLSCREEN_DIALOG")
-        menu:SetSize(240, 318)
-        menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-        menu:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = false, edgeSize = 12,
-            insets = { left = 2, right = 2, top = 2, bottom = 2 }
-        })
-        menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
-        menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-        menu:EnableMouse(true)
-
-        local scrollFrame = CreateFrame("ScrollFrame", nil, menu, "BackdropTemplate")
-        scrollFrame:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
-        scrollFrame:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -15, 2)
-        scrollFrame:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
-        scrollFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.5)
-
-        local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-        scrollChild:SetWidth(scrollFrame:GetWidth())
-        scrollFrame:SetScrollChild(scrollChild)
-
-        local scrollBar = scrollFrame.ScrollBar or CreateFrame("Slider", nil, scrollFrame, "BackdropTemplate")
-        scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 0, -2)
-        scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 0, 2)
-        scrollBar:SetWidth(12)
-        scrollBar:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
-        scrollBar:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-        scrollBar:EnableMouse(true)
-        scrollBar:SetScript("OnValueChanged", function(self, value)
-            scrollFrame:SetVerticalScroll(value)
-        end)
-
-        local thumb = scrollBar:CreateTexture(nil, "OVERLAY")
-        thumb:SetSize(8, 40)
-        thumb:SetPoint("TOP", scrollBar, "TOP", 0, -2)
-        thumb:SetColorTexture(0.5, 0.5, 0.5)
-        scrollBar.thumb = thumb
-        scrollBar:SetThumbTexture(thumb)
-
-        scrollFrame:EnableMouseWheel(true)
-        scrollFrame:SetScript("OnMouseWheel", function(self, direction)
-            local currentScroll = scrollFrame:GetVerticalScroll()
-            local maxScroll = scrollChild:GetHeight() - scrollFrame:GetHeight()
-            local newScroll = math.max(0, math.min(maxScroll, currentScroll - (direction * 30)))
-            scrollFrame:SetVerticalScroll(newScroll)
-            scrollBar:SetValue(newScroll)
-        end)
-
-        local themeOrder = {"green", "blue", "purple", "red", "orange", "teal", "gold", "pink", "slate", "dark", "amber", "cyan", "voidblack", "charcoal", "forestnight", "obsidian", "monochrome", "twilight", "neon", "glassmorphic", "lightmode", "retro", "fantasy", "nightfae"}
-
-        local function createThemeButton(parent, themeName, themeKey, yPos)
-            local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-            btn:SetSize(230, 26)
-            btn:SetPoint("TOP", parent, "TOP", 0, yPos)
-            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
-            btn:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-
-            local themeData = ns.Constants.THEMES[themeKey]
-            if themeData then
-                local colorPreview = btn:CreateTexture(nil, "OVERLAY")
-                colorPreview:SetSize(14, 14)
-                colorPreview:SetPoint("LEFT", btn, "LEFT", 8, 0)
-                colorPreview:SetColorTexture(unpack(themeData.ACCENT_PRIMARY))
-            end
-
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            text:SetPoint("LEFT", btn, "LEFT", 28, 0)
-            text:SetText(themeName)
-            text:SetTextColor(0.9, 0.9, 0.9)
-
-            btn:SetScript("OnEnter", function(s) s:SetBackdropColor(0.2, 0.2, 0.2, 1) text:SetTextColor(1, 0.82, 0) end)
-            btn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.1, 0.1, 0.1, 0.8) text:SetTextColor(0.9, 0.9, 0.9) end)
-
-            btn:SetScript("OnClick", function()
-                OneWoWAltTracker.db.global.theme = themeKey
-                OneWoWAltTracker.db.global.lastTab = "settings"
-                if ns.Constants.THEMES and ns.Constants.THEMES[themeKey] then
-                    local selectedTheme = ns.Constants.THEMES[themeKey]
-                    for key, value in pairs(selectedTheme) do
-                        if key ~= "name" then ns.Constants.THEME[key] = value end
-                    end
-                end
-                dropdownText:SetText(themeNames[themeKey] or themeKey)
-                currentColorPreview:SetColorTexture(unpack(ns.Constants.THEMES[themeKey].ACCENT_PRIMARY))
-                menu:Hide()
-                ns.UI:Reset()
-                C_Timer.After(0.1, function()
-                    local tabToShow = OneWoWAltTracker.db.global.lastTab or "summary"
-                    ns.UI:Show(tabToShow)
-                end)
-            end)
-
-            return btn
-        end
-
-        local yPos = -5
-        for _, themeKey in ipairs(themeOrder) do
-            createThemeButton(scrollChild, themeNames[themeKey], themeKey, yPos)
-            yPos = yPos - 28
-        end
-        scrollChild:SetHeight(math.abs(yPos) + 5)
-        local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
-        scrollBar:SetMinMaxValues(0, maxScroll)
-        scrollFrame:SetVerticalScroll(0)
-
-        menu:SetScript("OnShow", function(self)
-            local timeOutside = 0
-            self:SetScript("OnUpdate", function(self, elapsed)
-                if not MouseIsOver(menu) and not MouseIsOver(themeDropdown) then
-                    timeOutside = timeOutside + elapsed
-                    if timeOutside > 0.5 then self:Hide() self:SetScript("OnUpdate", nil) end
-                else timeOutside = 0 end
-            end)
-        end)
+    manageBtn:SetPoint("TOPLEFT", 25, yOffset)
+    manageBtn:SetScript("OnClick", function()
+        ShowManageAltsDialog()
     end)
 
-    yOffset = yOffset - 180
-
-    local minimapSplit = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-    minimapSplit:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 15, yOffset)
-    minimapSplit:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -15, yOffset)
-    minimapSplit:SetHeight(140)
-    minimapSplit:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    minimapSplit:SetBackdropColor(T("BG_SECONDARY"))
-    minimapSplit:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local mmLeftPanel = CreateFrame("Frame", nil, minimapSplit)
-    mmLeftPanel:SetPoint("TOPLEFT", minimapSplit, "TOPLEFT", 0, 0)
-    mmLeftPanel:SetPoint("BOTTOMRIGHT", minimapSplit, "BOTTOM", 0, 0)
-
-    local mmLeftTitle = mmLeftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    mmLeftTitle:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 15, -12)
-    mmLeftTitle:SetText(L["MINIMAP_SECTION"])
-    mmLeftTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local mmLeftDesc = mmLeftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    mmLeftDesc:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 15, -38)
-    mmLeftDesc:SetPoint("TOPRIGHT", mmLeftPanel, "TOPRIGHT", -10, -38)
-    mmLeftDesc:SetJustifyH("LEFT")
-    mmLeftDesc:SetWordWrap(true)
-    mmLeftDesc:SetText(L["MINIMAP_SECTION_DESC"])
-    mmLeftDesc:SetTextColor(T("TEXT_SECONDARY"))
-
-    local mmCheckbox = CreateFrame("CheckButton", nil, mmLeftPanel, "UICheckButtonTemplate")
-    mmCheckbox:SetSize(26, 26)
-    mmCheckbox:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 15, -70)
-
-    local isMinimapEnabled = not (OneWoWAltTracker.db.global.minimap and OneWoWAltTracker.db.global.minimap.hide)
-    mmCheckbox:SetChecked(isMinimapEnabled)
-
-    local mmCheckLabel = mmLeftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    mmCheckLabel:SetPoint("LEFT", mmCheckbox, "RIGHT", 4, 0)
-    mmCheckLabel:SetText(L["MINIMAP_SHOW_BTN"])
-    mmCheckLabel:SetTextColor(T("TEXT_PRIMARY"))
-
-    mmCheckbox:SetScript("OnClick", function(self)
-        local checked = self:GetChecked()
-        if checked then
-            OneWoWAltTracker.db.global.minimap.hide = false
-            if ns.MinimapButton then ns.MinimapButton:Show() end
-        else
-            OneWoWAltTracker.db.global.minimap.hide = true
-            if ns.MinimapButton then ns.MinimapButton:Hide() end
-        end
-    end)
-
-    local mmVertDiv = minimapSplit:CreateTexture(nil, "ARTWORK")
-    mmVertDiv:SetWidth(1)
-    mmVertDiv:SetPoint("TOP", minimapSplit, "TOP", 0, -8)
-    mmVertDiv:SetPoint("BOTTOM", minimapSplit, "BOTTOM", 0, 8)
-    mmVertDiv:SetColorTexture(T("BORDER_SUBTLE"))
-
-    local mmRightPanel = CreateFrame("Frame", nil, minimapSplit)
-    mmRightPanel:SetPoint("TOPLEFT", minimapSplit, "TOP", 0, 0)
-    mmRightPanel:SetPoint("BOTTOMRIGHT", minimapSplit, "BOTTOMRIGHT", 0, 0)
-
-    local mmRightTitle = mmRightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    mmRightTitle:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -12)
-    mmRightTitle:SetText(L["MINIMAP_ICON_SECTION"])
-    mmRightTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local mmRightDesc = mmRightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    mmRightDesc:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -38)
-    mmRightDesc:SetPoint("TOPRIGHT", mmRightPanel, "TOPRIGHT", -10, -38)
-    mmRightDesc:SetJustifyH("LEFT")
-    mmRightDesc:SetWordWrap(true)
-    mmRightDesc:SetText(L["MINIMAP_ICON_DESC"])
-    mmRightDesc:SetTextColor(T("TEXT_SECONDARY"))
-
-    local currentIconTheme = OneWoWAltTracker.db.global.minimap and OneWoWAltTracker.db.global.minimap.theme or "horde"
-    local iconThemeNames = {
-        ["horde"]    = L["MINIMAP_ICON_HORDE"],
-        ["alliance"] = L["MINIMAP_ICON_ALLIANCE"],
-        ["neutral"]  = L["MINIMAP_ICON_NEUTRAL"],
-    }
-    local iconThemePaths = {
-        ["horde"]    = "Interface\\AddOns\\OneWoW_AltTracker\\Media\\horde-mini.png",
-        ["alliance"] = "Interface\\AddOns\\OneWoW_AltTracker\\Media\\alliance-mini.png",
-        ["neutral"]  = "Interface\\AddOns\\OneWoW_AltTracker\\Media\\neutral-mini.png",
-    }
-
-    local mmIconDropdown = CreateFrame("Button", nil, mmRightPanel, "BackdropTemplate")
-    mmIconDropdown:SetSize(190, 30)
-    mmIconDropdown:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -70)
-    mmIconDropdown:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false, edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
-    })
-    mmIconDropdown:SetBackdropColor(T("BG_TERTIARY"))
-    mmIconDropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local mmIconPreview = mmIconDropdown:CreateTexture(nil, "OVERLAY")
-    mmIconPreview:SetSize(18, 18)
-    mmIconPreview:SetPoint("LEFT", mmIconDropdown, "LEFT", 8, 0)
-    mmIconPreview:SetTexture(iconThemePaths[currentIconTheme] or iconThemePaths["horde"])
-
-    local mmIconText = mmIconDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    mmIconText:SetPoint("LEFT", mmIconPreview, "RIGHT", 6, 0)
-    mmIconText:SetText(iconThemeNames[currentIconTheme] or currentIconTheme)
-    mmIconText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local mmIconArrow = mmIconDropdown:CreateTexture(nil, "OVERLAY")
-    mmIconArrow:SetSize(16, 16)
-    mmIconArrow:SetPoint("RIGHT", mmIconDropdown, "RIGHT", -5, 0)
-    mmIconArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-
-    mmIconDropdown:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")) self:SetBackdropBorderColor(T("BORDER_FOCUS")) end)
-    mmIconDropdown:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_TERTIARY")) self:SetBackdropBorderColor(T("BORDER_SUBTLE")) end)
-
-    mmIconDropdown:SetScript("OnClick", function(self)
-        local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
-        menu:SetFrameStrata("FULLSCREEN_DIALOG")
-        menu:SetSize(190, 88)
-        menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-        menu:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = false, edgeSize = 12,
-            insets = { left = 2, right = 2, top = 2, bottom = 2 }
-        })
-        menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
-        menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-        menu:EnableMouse(true)
-
-        local iconOrder = {"horde", "alliance", "neutral"}
-        local function createIconBtn(parent, themeKey, yPos)
-            local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-            btn:SetSize(180, 25)
-            btn:SetPoint("TOP", parent, "TOP", 0, yPos)
-            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
-            btn:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-            local ico = btn:CreateTexture(nil, "OVERLAY")
-            ico:SetSize(18, 18)
-            ico:SetPoint("LEFT", btn, "LEFT", 8, 0)
-            ico:SetTexture(iconThemePaths[themeKey])
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            text:SetPoint("LEFT", ico, "RIGHT", 6, 0)
-            text:SetText(iconThemeNames[themeKey])
-            text:SetTextColor(0.9, 0.9, 0.9)
-            btn:SetScript("OnEnter", function(s) s:SetBackdropColor(0.2, 0.2, 0.2, 1) text:SetTextColor(1, 0.82, 0) end)
-            btn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.1, 0.1, 0.1, 0.8) text:SetTextColor(0.9, 0.9, 0.9) end)
-            btn:SetScript("OnClick", function()
-                OneWoWAltTracker.db.global.minimap.theme = themeKey
-                OneWoWAltTracker.db.global.lastTab = "settings"
-                if ns.MinimapButton then ns.MinimapButton:UpdateIcon() end
-                menu:Hide()
-                ns.UI:Reset()
-                C_Timer.After(0.1, function()
-                    ns.UI:Show("settings")
-                end)
-            end)
-            return btn
-        end
-
-        local yPos = -5
-        for _, themeKey in ipairs(iconOrder) do
-            createIconBtn(menu, themeKey, yPos)
-            yPos = yPos - 27
-        end
-
-        menu:SetScript("OnShow", function(self)
-            local timeOutside = 0
-            self:SetScript("OnUpdate", function(self, elapsed)
-                if not MouseIsOver(menu) and not MouseIsOver(mmIconDropdown) then
-                    timeOutside = timeOutside + elapsed
-                    if timeOutside > 0.5 then self:Hide() self:SetScript("OnUpdate", nil) end
-                else timeOutside = 0 end
-            end)
-        end)
-    end)
-
-    yOffset = yOffset - 155
-
-    end -- if not _G.OneWoW
+    yOffset = yOffset - 50
 
     local importSection = ns.UI.CreateSectionHeader(scrollContent, L["IMPORT_FROM_WOWNOTES"] or "Import Data", yOffset)
     yOffset = importSection.bottomY - 8
