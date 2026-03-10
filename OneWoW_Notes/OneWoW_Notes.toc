@@ -8,12 +8,11 @@
 ## X-BugGrabber-Display: OneWow
 ## SavedVariables: OneWoW_Notes_DB
 ## IconTexture: Interface\AddOns\OneWoW_Notes\Media\neutral-mini.png
-## RequiredDeps: OneWoW
+## RequiredDeps: OneWoW, OneWoW_QoL, OneWoW_GUI
 
 # Libs
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\AceAddon-3.0\AceAddon-3.0.lua
 Libs\AceEvent-3.0\AceEvent-3.0.lua
 Libs\AceConsole-3.0\AceConsole-3.0.lua
@@ -53,7 +52,6 @@ OneWoW_Notes.lua
 # UI - Framework
 UI\Framework.lua
 UI\MainFrame.lua
-UI\MinimapButton.lua
 UI\ui-dialog.lua
 
 # UI - Tabs

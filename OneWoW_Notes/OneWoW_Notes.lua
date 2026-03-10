@@ -40,16 +40,40 @@ end
 
 function addon:OnInitialize()
     self:InitializeDatabase()
+
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+    if OneWoW_GUI and OneWoW_GUI.MigrateSettings then
+        OneWoW_GUI:MigrateSettings(self.db.global)
+    end
+
     if ns.ApplyTheme then ns.ApplyTheme() end
     if ns.ApplyLanguage then ns.ApplyLanguage() end
     self:RegisterChatCommand("own", "SlashCommandHandler")
     self:RegisterChatCommand("onewownotes", "SlashCommandHandler")
     self:RegisterChatCommand("1wn", "SlashCommandHandler")
+
+    if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
+        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+            if ns.ApplyTheme then ns.ApplyTheme() end
+            if ns.NotesPins and ns.NotesPins.RefreshSyncPins then
+                ns.NotesPins:RefreshSyncPins()
+            end
+            if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
+                ns.ZonePins:RefreshSyncPins()
+            end
+            if ns.RoutinesEngine and ns.RoutinesEngine.RefreshAllPinnedWindows then
+                ns.RoutinesEngine:RefreshAllPinnedWindows()
+            end
+        end)
+        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+            if ns.ApplyLanguage then ns.ApplyLanguage() end
+        end)
+    end
+
     local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("Notes", _ver, "/1wn")
-    else
-        print("|cFF00FF00OneWoW|r: |cFFFFFFFFNotes|r |cFF888888\226\128\147 v." .. _ver .. " \226\128\147|r |cFF00FF00Loaded|r - /1wn")
     end
 end
 
@@ -95,11 +119,6 @@ function addon:OnEnable()
 
     RegisterWithOneWoW()
 
-    if not ns.oneWoWHubActive then
-        if ns.MinimapButton and ns.MinimapButton.Initialize then
-            ns.MinimapButton:Initialize()
-        end
-    end
     if ns.ZonePins and ns.ZonePins.Initialize then
         ns.ZonePins:Initialize()
     end
@@ -243,24 +262,6 @@ end
 function addon:InitializeDatabase()
     local defaults = ns.DatabaseDefaults or {}
     self.db = LibStub("AceDB-3.0"):New("OneWoW_Notes_DB", defaults, true)
-    if not self.db.global.language then
-        self.db.global.language = GetLocale()
-    end
-    if not self.db.global.theme then
-        self.db.global.theme = "green"
-    end
-    if self.db.global.minimapButton and not self.db.global.minimap then
-        self.db.global.minimap = {
-            hide = self.db.global.minimapButton.hide or false,
-            minimapPos = 220,
-            theme = "horde",
-        }
-        self.db.global.minimapButton = nil
-    end
-    if not self.db.global.minimap then self.db.global.minimap = {} end
-    if self.db.global.minimap.hide == nil then self.db.global.minimap.hide = false end
-    if self.db.global.minimap.minimapPos == nil then self.db.global.minimap.minimapPos = 220 end
-    if not self.db.global.minimap.theme then self.db.global.minimap.theme = "horde" end
 end
 
 _G["1WoW_Notes_OnAddonCompartmentClick"] = function(addonName, mouseButton)

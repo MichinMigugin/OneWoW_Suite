@@ -100,8 +100,8 @@ function ns.UI:CreateMainFrame(defaultTab)
     titleBg:SetBackdropColor(T("TITLEBAR_BG"))
     titleBg:SetFrameLevel(frame:GetFrameLevel() + 1)
 
-    local _db = (_G.OneWoW and _G.OneWoW.db) or addon.db
-    local factionTheme = _db and _db.global and _db.global.minimap and _db.global.minimap.theme or "horde"
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local factionTheme = (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
     local brandIconTex
     if factionTheme == "alliance" then
         brandIconTex = "Interface\\AddOns\\OneWoW_Notes\\Media\\alliance-mini.png"
