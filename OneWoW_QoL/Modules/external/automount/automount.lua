@@ -52,8 +52,8 @@ for _, id in ipairs(GATHERING_SPELL_IDS) do
     gatheringSpellSet[id] = true
 end
 
-local ON_OFF_BUTTON_WIDTH = 36
-local ON_OFF_BUTTON_HEIGHT = 20
+local ON_OFF_BUTTON_WIDTH = nil
+local ON_OFF_BUTTON_HEIGHT = nil
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
@@ -518,12 +518,14 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
         label:SetText(mountInfo.label)
 
         local prefs = GetPreferences()
-        local onBtn, offBtn, refresh = OneWoW_GUI:CreateOnOffToggleButtons(
+        local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(
             detailScrollChild, yOffset,
             L["AUTOMOUNT_CAT_ON"], L["AUTOMOUNT_CAT_OFF"],
             ON_OFF_BUTTON_WIDTH, ON_OFF_BUTTON_HEIGHT, isEnabled, prefs[catEnabledKey],
             function(val) SavePreference(catEnabledKey, val); UpdateRow(); AM:UpdatePollingState() end
         )
+        statusPfx:ClearAllPoints()
+        statusPfx:SetPoint("LEFT", label, "RIGHT", 10, 0)
 
         yOffset = yOffset - 24
 
@@ -658,12 +660,14 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
 
     local druidPrefs = GetPreferences()
     local UpdateDruidRow
-    local druidOnBtn, druidOffBtn, refreshDruid = OneWoW_GUI:CreateOnOffToggleButtons(
+    local druidOnBtn, druidOffBtn, refreshDruid, druidStatusPfx, druidStatusVal = OneWoW_GUI:CreateOnOffToggleButtons(
         detailScrollChild, yOffset,
         L["AUTOMOUNT_CAT_ON"], L["AUTOMOUNT_CAT_OFF"],
         ON_OFF_BUTTON_WIDTH, ON_OFF_BUTTON_HEIGHT, isEnabled, druidPrefs.druidEnabled,
         function(val) SavePreference("druidEnabled", val); UpdateDruidRow(); AM:UpdatePollingState() end
     )
+    druidStatusPfx:ClearAllPoints()
+    druidStatusPfx:SetPoint("LEFT", druidLabel, "RIGHT", 10, 0)
 
     yOffset = yOffset - 24
 
@@ -702,7 +706,7 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
 
     local cancelPrefs = GetPreferences()
     local UpdateCancelRow
-    local cancelOnBtn, cancelOffBtn, refreshCancel = OneWoW_GUI:CreateOnOffToggleButtons(
+    local cancelOnBtn, cancelOffBtn, refreshCancel, cancelStatusPfx, cancelStatusVal = OneWoW_GUI:CreateOnOffToggleButtons(
         detailScrollChild, yOffset,
         L["AUTOMOUNT_CAT_ON"], L["AUTOMOUNT_CAT_OFF"],
         ON_OFF_BUTTON_WIDTH, ON_OFF_BUTTON_HEIGHT, isEnabled, cancelPrefs.druidCancelTravelForm,
@@ -712,6 +716,8 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
             AM:UpdateDruidFlightWatcher()
         end
     )
+    cancelStatusPfx:ClearAllPoints()
+    cancelStatusPfx:SetPoint("LEFT", cancelLabel, "RIGHT", 10, 0)
 
     yOffset = yOffset - 24
 
@@ -890,7 +896,7 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
         btnDiv:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -1, 42)
         btnDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        local closeBtn = OneWoW_GUI:CreateButton(nil, popup, L["AUTOMOUNT_CLOSE"], 120, 32)
+        local closeBtn = OneWoW_GUI:CreateFitTextButton(popup, L["AUTOMOUNT_CLOSE"], { height = 32 })
         closeBtn:SetPoint("BOTTOM", popup, "BOTTOM", 0, 6)
         closeBtn:SetScript("OnClick", function() popup:Hide() end)
 

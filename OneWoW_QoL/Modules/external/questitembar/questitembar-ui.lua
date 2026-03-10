@@ -14,9 +14,9 @@ local function BuildContent(container, startYOffset, isEnabled)
     cy = OneWoW_GUI:CreateSection(container, L["QUESTITEMBAR_SETTINGS_HEADER"], cy)
 
     local previewing = ns.QuestItemBarModule:IsPreviewActive()
-    local previewBtn = OneWoW_GUI:CreateButton(nil, container,
+    local previewBtn = OneWoW_GUI:CreateFitTextButton(container,
         previewing and L["QUESTITEMBAR_HIDE_BAR"] or L["QUESTITEMBAR_SHOW_BAR"],
-        120, 26)
+        { height = 26 })
     previewBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     previewBtn:SetScript("OnClick", function()
         if ns.QuestItemBarModule:IsPreviewActive() then
@@ -28,9 +28,9 @@ local function BuildContent(container, startYOffset, isEnabled)
     end)
     cy = cy - 32
 
-    local lockBtn = OneWoW_GUI:CreateButton(nil, container,
+    local lockBtn = OneWoW_GUI:CreateFitTextButton(container,
         s.locked and (L["QUESTITEMBAR_LOCK_POSITION"] .. " (ON)") or (L["QUESTITEMBAR_LOCK_POSITION"] .. " (OFF)"),
-        180, 26)
+        { height = 26 })
     lockBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     lockBtn:SetScript("OnClick", function()
         ns.QuestItemBarModule:SetLocked(not GetSettings().locked)
@@ -114,7 +114,7 @@ local function BuildContent(container, startYOffset, isEnabled)
     sortLabel:SetText(L["QUESTITEMBAR_SORT_MODE"])
     sortLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local sortBtn = OneWoW_GUI:CreateButton(nil, container, GetSortLabel(), 160, 26)
+    local sortBtn = OneWoW_GUI:CreateFitTextButton(container, GetSortLabel(), { height = 26 })
     sortBtn:SetPoint("LEFT", sortLabel, "RIGHT", 8, 0)
     sortBtn:SetScript("OnClick", function()
         local cur = GetSettings()

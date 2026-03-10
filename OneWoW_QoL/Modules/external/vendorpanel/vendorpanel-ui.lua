@@ -22,44 +22,24 @@ local backdropIconEdge = {
 }
 
 local function GetBrandIcon()
-    local db = (_G.OneWoW and _G.OneWoW.db) or (_G.OneWoW_QoL and _G.OneWoW_QoL.db)
-    local factionTheme = db and db.global and db.global.minimap and db.global.minimap.theme or "horde"
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local factionTheme = (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
     return OneWoW_GUI:GetBrandIcon(factionTheme)
 end
 
 local function GetFactionTheme()
-    local db = (_G.OneWoW and _G.OneWoW.db) or (_G.OneWoW_QoL and _G.OneWoW_QoL.db)
-    return db and db.global and db.global.minimap and db.global.minimap.theme or "horde"
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    return (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
 end
 
 function VendorPanel:CreateVendorButton()
     if state.vendorButton then return end
 
-    state.vendorButton = CreateFrame("Button", "OneWoW_QoL_VendorButton", MerchantFrame, "BackdropTemplate")
-    state.vendorButton:SetSize(100, 22)
+    state.vendorButton = OneWoW_GUI:CreateButton("OneWoW_QoL_VendorButton", MerchantFrame, "Sell (0/0)", 100, 22)
     state.vendorButton:SetPoint("TOPLEFT", MerchantFrame, "TOPLEFT", 60, -28)
     state.vendorButton:SetFrameLevel(MerchantFrame:GetFrameLevel() + 10)
-    state.vendorButton:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
-    state.vendorButton:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    state.vendorButton:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-
-    local fs = state.vendorButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fs:SetPoint("CENTER")
-    fs:SetText("Sell (0/0)")
-    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    state.vendorButton.fontString = fs
-
-    -- NOTE (kellewic): Not sure why this code sets OnEnter and OnLeave twice since the ones further down overwrite these.
-    state.vendorButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        fs:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
-    end)
-    state.vendorButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    end)
+    state.vendorButton.fontString = state.vendorButton.text
+    state.vendorButton.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
     state.vendorButton:SetScript("OnClick", function(self, button)
         if button == "LeftButton" then
@@ -75,7 +55,7 @@ function VendorPanel:CreateVendorButton()
     state.vendorButton:SetScript("OnEnter", function(self)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        fs:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
         local junkCount = VendorPanel:GetJunkItemCount()
         local destroyCount = VendorPanel:GetDestroyableItemCount()
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
@@ -89,7 +69,7 @@ function VendorPanel:CreateVendorButton()
     state.vendorButton:SetScript("OnLeave", function(self)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:Hide()
     end)
 
@@ -132,13 +112,10 @@ function VendorPanel:CreateReplacementSellButton()
     local blizzButton = _G["MerchantSellAllJunkButton"]
     if not blizzButton then return end
 
-    state.replacementSellButton = CreateFrame("Button", "OneWoW_QoL_ReplacementSellButton", MerchantFrame, "BackdropTemplate")
-    state.replacementSellButton:SetSize(blizzButton:GetWidth(), blizzButton:GetHeight())
+    state.replacementSellButton = OneWoW_GUI:CreateButton("OneWoW_QoL_ReplacementSellButton", MerchantFrame, "", blizzButton:GetWidth(), blizzButton:GetHeight())
     state.replacementSellButton:SetPoint("CENTER", blizzButton, "CENTER", 0, 0)
     state.replacementSellButton:SetFrameLevel(blizzButton:GetFrameLevel() + 5)
-    state.replacementSellButton:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
-    state.replacementSellButton:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    state.replacementSellButton:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+    state.replacementSellButton.text:Hide()
 
     local icon = state.replacementSellButton:CreateTexture(nil, "ARTWORK")
     icon:SetPoint("TOPLEFT", state.replacementSellButton, "TOPLEFT", 3, -3)
@@ -154,9 +131,7 @@ function VendorPanel:CreateReplacementSellButton()
         end
     end)
 
-    state.replacementSellButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+    state.replacementSellButton:HookScript("OnEnter", function(self)
         local junkCount = VendorPanel:GetJunkItemCount()
         local destroyCount = VendorPanel:GetDestroyableItemCount()
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -168,9 +143,7 @@ function VendorPanel:CreateReplacementSellButton()
         GameTooltip:Show()
     end)
 
-    state.replacementSellButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+    state.replacementSellButton:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
 
@@ -223,172 +196,42 @@ function VendorPanel:CreatePreviewPanel()
     filterLabel:SetText(ns.L["VENDOR_FILTER_LABEL"])
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local vendorDropdown = CreateFrame("Button", "OneWoW_QoL_VendorItemFilter", filterRow, "BackdropTemplate")
+    local vendorDropdown, dropText = OneWoW_GUI:CreateDropdown(filterRow, {
+        height = 22,
+        text = state.currentVendorFilter == "Cosmetic Items" and "Cosmetics" or state.currentVendorFilter,
+    })
     vendorDropdown:SetPoint("LEFT", filterLabel, "RIGHT", OneWoW_GUI:GetSpacing("XS"), 0)
     vendorDropdown:SetPoint("RIGHT", filterRow, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
-    vendorDropdown:SetHeight(22)
-    vendorDropdown:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
-    vendorDropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    vendorDropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local dropText = vendorDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    dropText:SetPoint("LEFT", vendorDropdown, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-    dropText:SetPoint("RIGHT", vendorDropdown, "RIGHT", -20, 0)
-    dropText:SetJustifyH("LEFT")
-    dropText:SetText(state.currentVendorFilter)
-    dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    vendorDropdown.text = dropText
+    local function buildVendorFilterItems()
+        local items = {}
 
-    local dropArrow = vendorDropdown:CreateTexture(nil, "OVERLAY")
-    dropArrow:SetSize(12, 12)
-    dropArrow:SetPoint("RIGHT", vendorDropdown, "RIGHT", -OneWoW_GUI:GetSpacing("XS"), 0)
-    dropArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-
-    vendorDropdown:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-    end)
-    vendorDropdown:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-
-    local dropdownMenu
-
-    local function SetFilter(filterName)
-        state.currentVendorFilter = filterName
-        dropText:SetText(filterName == "Cosmetic Items" and "Cosmetics" or filterName)
-        if dropdownMenu then dropdownMenu:Hide() end
-        if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
-    end
-
-    local function CreateDropdownMenu()
-        if dropdownMenu then dropdownMenu:Hide(); dropdownMenu = nil end
-
-        dropdownMenu = CreateFrame("Frame", nil, vendorDropdown, "BackdropTemplate")
-        dropdownMenu:SetFrameStrata("FULLSCREEN_DIALOG")
-        dropdownMenu:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
-        dropdownMenu:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        dropdownMenu:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-        dropdownMenu:SetClipsChildren(true)
-
-        local scrollFrame = CreateFrame("ScrollFrame", nil, dropdownMenu, "UIPanelScrollFrameTemplate")
-        scrollFrame:SetPoint("TOPLEFT", 2, -2)
-        scrollFrame:SetPoint("BOTTOMRIGHT", -2, 2)
-        OneWoW_GUI:StyleScrollBar(scrollFrame, { offset = -5 })
-
-        local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-        scrollChild:SetWidth(1)
-        scrollChild:SetHeight(1)
-        scrollFrame:SetScrollChild(scrollChild)
-
-        local yOff = 0
-        local itemHeight = 22
-        local menuWidth = vendorDropdown:GetWidth()
-
-        local function AddItem(text, onClick, isChecked)
-            local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-            btn:SetSize(menuWidth - 20, itemHeight)
-            btn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, -yOff)
-            btn:SetBackdrop(BACKDROP_SIMPLE)
-            btn:SetBackdropColor(0, 0, 0, 0)
-
-            local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            btnText:SetPoint("LEFT", btn, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-            btnText:SetText(text)
-            btnText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-            if isChecked then
-                local check = btn:CreateTexture(nil, "OVERLAY")
-                check:SetSize(10, 10)
-                check:SetPoint("RIGHT", btn, "RIGHT", -OneWoW_GUI:GetSpacing("XS"), 0)
-                check:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            end
-
-            btn:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                btnText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            end)
-            btn:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(0, 0, 0, 0)
-                btnText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end)
-            btn:SetScript("OnClick", onClick)
-            yOff = yOff + itemHeight
+        if state.availableFilters["Equipable"] then
+            table.insert(items, {
+                type = "checkbox",
+                text = "All Armor Types",
+                checked = state.showAllArmor,
+                onToggle = function(checked)
+                    state.showAllArmor = checked
+                    local settings = GetSettings()
+                    settings.showAllArmor = state.showAllArmor
+                    if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
+                end,
+            })
+            table.insert(items, { type = "divider" })
         end
 
-        local function AddHeader(text)
-            local header = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            header:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), -yOff - 4)
-            header:SetText(text)
-            header:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            yOff = yOff + itemHeight + 2
-        end
-
-        local function AddSpacer()
-            local divider = scrollChild:CreateTexture(nil, "ARTWORK")
-            divider:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), -yOff - 4)
-            divider:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), -yOff - 4)
-            divider:SetHeight(1)
-            divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            yOff = yOff + 10
-        end
-
-        local hasEquipable = state.availableFilters["Equipable"]
-        if hasEquipable then
-            local checkRow = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-            checkRow:SetSize(menuWidth - 20, itemHeight)
-            checkRow:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, -yOff)
-            checkRow:SetBackdrop(BACKDROP_SIMPLE)
-            checkRow:SetBackdropColor(0, 0, 0, 0)
-
-            local checkBox = CreateFrame("CheckButton", nil, checkRow, "UICheckButtonTemplate")
-            checkBox:SetSize(18, 18)
-            checkBox:SetPoint("LEFT", checkRow, "LEFT", OneWoW_GUI:GetSpacing("XS"), 0)
-            checkBox:SetChecked(state.showAllArmor)
-            checkBox:SetScript("OnClick", function(self)
-                state.showAllArmor = self:GetChecked()
-                local settings = GetSettings()
-                settings.showAllArmor = state.showAllArmor
-                if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
-            end)
-
-            local checkLabel = checkRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            checkLabel:SetPoint("LEFT", checkBox, "RIGHT", 2, 0)
-            checkLabel:SetText("All Armor Types")
-            checkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-            checkRow:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                checkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            end)
-            checkRow:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(0, 0, 0, 0)
-                checkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end)
-            checkRow:SetScript("OnClick", function()
-                checkBox:SetChecked(not checkBox:GetChecked())
-                state.showAllArmor = checkBox:GetChecked()
-                local settings = GetSettings()
-                settings.showAllArmor = state.showAllArmor
-                if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
-            end)
-            yOff = yOff + itemHeight
-            AddSpacer()
-        end
-
-        AddItem("Show All", function() SetFilter("Show All") end,
-            state.currentVendorFilter == "Show All")
+        table.insert(items, { text = "Show All", value = "Show All" })
 
         local collectibles = {"Mounts", "Pets", "Toys", "Cosmetic Items", "Decor", "Housing"}
         local numCollect = 0
         for _, label in ipairs(collectibles) do if state.availableFilters[label] then numCollect = numCollect + 1 end end
         if numCollect > 0 then
-            AddSpacer()
-            AddHeader("Collectibles")
+            table.insert(items, { type = "divider" })
+            table.insert(items, { type = "header", text = "Collectibles" })
             for _, label in ipairs(collectibles) do
                 if state.availableFilters[label] then
-                    AddItem(label, function() SetFilter(label) end, state.currentVendorFilter == label)
+                    table.insert(items, { text = label, value = label })
                 end
             end
         end
@@ -397,11 +240,11 @@ function VendorPanel:CreatePreviewPanel()
         local numMat = 0
         for _, label in ipairs(materials) do if state.availableFilters[label] then numMat = numMat + 1 end end
         if numMat > 0 then
-            AddSpacer()
-            AddHeader("Materials & Consumables")
+            table.insert(items, { type = "divider" })
+            table.insert(items, { type = "header", text = "Materials & Consumables" })
             for _, label in ipairs(materials) do
                 if state.availableFilters[label] then
-                    AddItem(label, function() SetFilter(label) end, state.currentVendorFilter == label)
+                    table.insert(items, { text = label, value = label })
                 end
             end
         end
@@ -410,11 +253,11 @@ function VendorPanel:CreatePreviewPanel()
         local numEquip = 0
         for _, label in ipairs(equipment) do if state.availableFilters[label] then numEquip = numEquip + 1 end end
         if numEquip > 0 then
-            AddSpacer()
-            AddHeader("Equipment")
+            table.insert(items, { type = "divider" })
+            table.insert(items, { type = "header", text = "Equipment" })
             for _, label in ipairs(equipment) do
                 if state.availableFilters[label] then
-                    AddItem(label, function() SetFilter(label) end, state.currentVendorFilter == label)
+                    table.insert(items, { text = label, value = label })
                 end
             end
         end
@@ -423,46 +266,33 @@ function VendorPanel:CreatePreviewPanel()
         local numProf = 0
         for _, label in ipairs(professions) do if state.availableFilters[label] then numProf = numProf + 1 end end
         if state.availableFilters["Patterns"] or numProf > 0 then
-            AddSpacer()
-            AddHeader("Patterns / Recipes")
+            table.insert(items, { type = "divider" })
+            table.insert(items, { type = "header", text = "Patterns / Recipes" })
             if state.availableFilters["Patterns"] then
-                AddItem("All Patterns", function() SetFilter("Patterns") end, state.currentVendorFilter == "Patterns")
+                table.insert(items, { text = "All Patterns", value = "Patterns" })
             end
             for _, label in ipairs(professions) do
                 if state.availableFilters[label] then
-                    AddItem(label, function() SetFilter(label) end, state.currentVendorFilter == label)
+                    table.insert(items, { text = label, value = label })
                 end
             end
         end
 
-        local totalHeight = yOff + 4
-        local maxHeight = 300
-        local menuHeight = math.min(totalHeight, maxHeight)
-        scrollChild:SetWidth(menuWidth - 20)
-        scrollChild:SetHeight(totalHeight)
-        dropdownMenu:SetSize(menuWidth, menuHeight)
-        dropdownMenu:SetPoint("TOPLEFT", vendorDropdown, "BOTTOMLEFT", 0, -2)
-
-        local elapsed = 0
-        dropdownMenu:SetScript("OnUpdate", function(self, dt)
-            if self:IsMouseOver() or vendorDropdown:IsMouseOver() then
-                elapsed = 0
-            else
-                elapsed = elapsed + dt
-                if elapsed > 0.5 then self:Hide() end
-            end
-        end)
-
-        dropdownMenu:Show()
+        return items
     end
 
-    vendorDropdown:SetScript("OnClick", function()
-        if dropdownMenu and dropdownMenu:IsShown() then
-            dropdownMenu:Hide()
-        else
-            CreateDropdownMenu()
-        end
-    end)
+    OneWoW_GUI:AttachFilterMenu(vendorDropdown, dropText, {
+        searchable = false,
+        menuHeight = 300,
+        maxVisible = 50,
+        getActiveValue = function() return state.currentVendorFilter end,
+        buildItems = buildVendorFilterItems,
+        onSelect = function(value, text)
+            state.currentVendorFilter = value
+            dropText:SetText(value == "Cosmetic Items" and "Cosmetics" or value)
+            if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
+        end,
+    })
 
     vendorDropdown.RefreshFilters = function()
         dropText:SetText(state.currentVendorFilter == "Cosmetic Items" and "Cosmetics" or state.currentVendorFilter)
@@ -474,18 +304,14 @@ function VendorPanel:CreatePreviewPanel()
     dimKnownRow:SetPoint("TOPLEFT", filterRow, "BOTTOMLEFT", 0, -1)
     dimKnownRow:SetPoint("TOPRIGHT", filterRow, "BOTTOMRIGHT", 0, -1)
     dimKnownRow:SetHeight(24)
-    dimKnownRow:SetBackdrop(BACKDROP_SIMPLE)
+    dimKnownRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
     dimKnownRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
-    local dimCheckBox = CreateFrame("CheckButton", nil, dimKnownRow, "UICheckButtonTemplate")
+    local dimCheckBox = OneWoW_GUI:CreateCheckbox(nil, dimKnownRow, ns.L["VENDOR_DIM_KNOWN"])
     dimCheckBox:SetSize(18, 18)
     dimCheckBox:SetPoint("LEFT", dimKnownRow, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
     dimCheckBox:SetChecked(state.dimKnownItems)
-
-    local dimLabel = dimKnownRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    dimLabel:SetPoint("LEFT", dimCheckBox, "RIGHT", 2, 0)
-    dimLabel:SetText(ns.L["VENDOR_DIM_KNOWN"])
-    dimLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    dimCheckBox.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local function ToggleDimKnown()
         state.dimKnownItems = dimCheckBox:GetChecked()
@@ -501,32 +327,26 @@ function VendorPanel:CreatePreviewPanel()
     end)
     dimKnownRow:SetScript("OnEnter", function(self)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        dimLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        dimCheckBox.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
     dimKnownRow:SetScript("OnLeave", function(self)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        dimLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        dimCheckBox.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     end)
 
     state.junkPreviewPanel.dimKnownCheckBox = dimCheckBox
 
-    local quickAddBtn = OneWoW_GUI:CreateButton(nil, state.junkPreviewPanel, ns.L["VENDOR_QUICK_ADD"], panelWidth - 16, 26)
+    local quickAddBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, ns.L["VENDOR_QUICK_ADD"], { height = 26, minWidth = panelWidth - 16 })
     quickAddBtn:SetPoint("TOPLEFT", dimKnownRow, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
     quickAddBtn:SetPoint("TOPRIGHT", dimKnownRow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
     quickAddBtn:SetScript("OnClick", function() VendorPanel:ToggleFiltersDialog() end)
-    quickAddBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    quickAddBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(ns.L["VENDOR_QUICK_ADD_FILTERS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(ns.L["UI_VENDOR_FILTER_HINT"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    quickAddBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    quickAddBtn:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
     state.junkPreviewPanel.quickAddSection = quickAddBtn
@@ -543,7 +363,7 @@ function VendorPanel:CreatePreviewPanel()
     scrollFrame:SetScrollChild(scrollChild)
     state.junkPreviewPanel.scrollChild = scrollChild
 
-    local bottomCloseBtn = OneWoW_GUI:CreateButton(nil, state.junkPreviewPanel, ns.L["VENDOR_CLOSE"], 85, 28)
+    local bottomCloseBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, ns.L["VENDOR_CLOSE"], { height = 28 })
     bottomCloseBtn:SetPoint("BOTTOMLEFT", state.junkPreviewPanel, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), 12)
     bottomCloseBtn:SetScript("OnClick", function()
         state.junkPreviewPanel.manuallyHidden = true
@@ -552,19 +372,14 @@ function VendorPanel:CreatePreviewPanel()
         VendorPanel:ManageBlizzardSellButton(false)
         VendorPanel:UpdatePanelToggleButton()
     end)
-    local origCloseEnter = bottomCloseBtn:GetScript("OnEnter")
-    bottomCloseBtn:SetScript("OnEnter", function(self)
-        if origCloseEnter then origCloseEnter(self) end
+    bottomCloseBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(ns.L["VENDOR_CLOSE_PANEL"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(ns.L["VENDOR_HIDES_PANEL"], 1, 1, 1, true)
         GameTooltip:AddLine(ns.L["VENDOR_USE_TOGGLE"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         GameTooltip:Show()
     end)
-    bottomCloseBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    bottomCloseBtn:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
 
@@ -579,46 +394,37 @@ function VendorPanel:CreatePreviewPanel()
     totalValueText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     state.junkPreviewPanel.totalValueText = totalValueText
 
-    local destroyButton = OneWoW_GUI:CreateButton(nil, state.junkPreviewPanel, string.format(ns.L["VENDOR_DESTROY_COUNT"], 0), 110, 28)
+    local destroyButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, string.format(ns.L["VENDOR_DESTROY_COUNT"], 0), { height = 28 })
     destroyButton:SetPoint("LEFT", bottomCloseBtn, "RIGHT", 3, 0)
     destroyButton.text:SetTextColor(1, 0.5, 0.5, 1)
     destroyButton.fontString = destroyButton.text
     destroyButton:SetScript("OnClick", function() VendorPanel:DestroyNextJunkItem() end)
-    destroyButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+    destroyButton:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(ns.L["VENDOR_DESTROY_NEXT"], 1, 0.3, 0.3)
         GameTooltip:AddLine(ns.L["VENDOR_DESTROY_NO_PRICE"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    destroyButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+    destroyButton:HookScript("OnLeave", function(self)
+        self.text:SetTextColor(1, 0.5, 0.5, 1)
         GameTooltip:Hide()
     end)
     state.junkPreviewPanel.destroyButton = destroyButton
 
-    local sellJunkButton = OneWoW_GUI:CreateButton(nil, state.junkPreviewPanel, string.format(ns.L["VENDOR_SELL_COUNT"], 0), 110, 28)
+    local sellJunkButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, string.format(ns.L["VENDOR_SELL_COUNT"], 0), { height = 28 })
     sellJunkButton:SetPoint("LEFT", destroyButton, "RIGHT", 3, 0)
     sellJunkButton.fontString = sellJunkButton.text
     sellJunkButton:SetScript("OnClick", function()
         VendorPanel:SellJunkItems()
         C_Timer.After(0.5, function() VendorPanel:UpdateButton(); VendorPanel:UpdatePreviewPanel() end)
     end)
-    sellJunkButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    sellJunkButton:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(ns.L["VENDOR_SELL_JUNK_ITEMS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(ns.L["VENDOR_SELL_WITH_PRICE"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    sellJunkButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    sellJunkButton:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
     state.junkPreviewPanel.sellJunkButton = sellJunkButton
@@ -651,132 +457,81 @@ end
 function VendorPanel:CreateFiltersDialog()
     if state.filtersDialog then return end
 
-    state.filtersDialog = CreateFrame("Frame", "OneWoW_QoL_FiltersDialog", UIParent, "BackdropTemplate")
-    state.filtersDialog:SetSize(200, 346)
+    state.filtersDialog = OneWoW_GUI:CreateMovableDialog("OneWoW_QoL_FiltersDialog", UIParent, 200, 346)
     state.filtersDialog:SetFrameStrata("MEDIUM")
-    state.filtersDialog:SetToplevel(true)
     if state.junkPreviewPanel then
         state.filtersDialog:SetFrameLevel(state.junkPreviewPanel:GetFrameLevel() + 1)
     end
     state.filtersDialog:SetClipsChildren(true)
-    state.filtersDialog:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
-    state.filtersDialog:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    state.filtersDialog:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    state.filtersDialog:EnableMouse(true)
-    state.filtersDialog:SetMovable(true)
-    state.filtersDialog:RegisterForDrag("LeftButton")
-    state.filtersDialog:SetScript("OnDragStart", state.filtersDialog.StartMoving)
-    state.filtersDialog:SetScript("OnDragStop", state.filtersDialog.StopMovingOrSizing)
 
-    local titleBar = CreateFrame("Frame", nil, state.filtersDialog, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", state.filtersDialog, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", state.filtersDialog, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(20)
-    titleBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
-    titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
-    titleBar:SetFrameLevel(state.filtersDialog:GetFrameLevel() + 1)
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleBar, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-    titleText:SetText(ns.L["VENDOR_QUICK_ADD_FILTERS"])
-    titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local closeBtn = OneWoW_GUI:CreateButton(nil, titleBar, "X", 20, 20)
-    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -OneWoW_GUI:GetSpacing("XS") / 2, 0)
-    closeBtn:SetScript("OnClick", function() state.filtersDialog:Hide() end)
+    local titleBar = OneWoW_GUI:CreateTitleBar(state.filtersDialog, ns.L["VENDOR_QUICK_ADD_FILTERS"], {
+        onClose = function() state.filtersDialog:Hide() end,
+    })
 
     local yOffset = -28
 
-    local reagentsBtn = OneWoW_GUI:CreateButton(nil, state.filtersDialog, ns.L["VENDOR_REAGENTS"], 176, 26)
+    local reagentsBtn = OneWoW_GUI:CreateFitTextButton(state.filtersDialog, ns.L["VENDOR_REAGENTS"], { height = 26 })
     reagentsBtn:SetPoint("TOP", state.filtersDialog, "TOP", 0, yOffset)
     reagentsBtn:SetScript("OnClick", function() VendorPanel:AddNonSoulboundReagents() end)
-    reagentsBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    reagentsBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(ns.L["UI_VENDOR_REAGENTS_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(ns.L["UI_VENDOR_REAGENTS"], 1, 1, 1, true)
         GameTooltip:AddLine(ns.L["UI_VENDOR_EXCLUDES"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         GameTooltip:Show()
     end)
-    reagentsBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    reagentsBtn:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
     yOffset = yOffset - 28
 
-    local consumablesBtn = OneWoW_GUI:CreateButton(nil, state.filtersDialog, ns.L["UI_VENDOR_CONSUMABLES_TITLE"], 176, 26)
+    local consumablesBtn = OneWoW_GUI:CreateFitTextButton(state.filtersDialog, ns.L["UI_VENDOR_CONSUMABLES_TITLE"], { height = 26 })
     consumablesBtn:SetPoint("TOP", state.filtersDialog, "TOP", 0, yOffset)
     consumablesBtn:SetScript("OnClick", function() VendorPanel:AddConsumables() end)
-    consumablesBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    consumablesBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(ns.L["UI_VENDOR_CONSUMABLES_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(ns.L["UI_VENDOR_CONSUMABLES"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    consumablesBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    consumablesBtn:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
     yOffset = yOffset - 28
 
-    local whiteBtn = OneWoW_GUI:CreateButton(nil, state.filtersDialog, ns.L["UI_VENDOR_WHITES_TITLE"], 176, 26)
+    local whiteBtn = OneWoW_GUI:CreateFitTextButton(state.filtersDialog, ns.L["UI_VENDOR_WHITES_TITLE"], { height = 26 })
     whiteBtn:SetPoint("TOP", state.filtersDialog, "TOP", 0, yOffset)
     whiteBtn:SetScript("OnClick", function() VendorPanel:AddWhiteQuality() end)
-    whiteBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    whiteBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(ns.L["UI_VENDOR_WHITES_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(ns.L["UI_VENDOR_COMMONS"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    whiteBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    whiteBtn:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
     yOffset = yOffset - 28
 
-    local clearAllBtn = OneWoW_GUI:CreateButton(nil, state.filtersDialog, ns.L["UI_VENDOR_CLEAR_TITLE"], 176, 26)
+    local clearAllBtn = OneWoW_GUI:CreateFitTextButton(state.filtersDialog, ns.L["UI_VENDOR_CLEAR_TITLE"], { height = 26 })
     clearAllBtn:SetPoint("TOP", state.filtersDialog, "TOP", 0, yOffset)
     clearAllBtn:SetScript("OnClick", function()
         state.oneTimeItems.ilvlGear = {}; state.oneTimeItems.reagents = {}
         VendorPanel:UpdatePreviewPanel(); VendorPanel:UpdateButton()
         print("OneWoW QoL: Cleared all one-time items from sell list.")
     end)
-    clearAllBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    clearAllBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(ns.L["UI_VENDOR_CLEAR_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(ns.L["UI_VENDOR_REMOVE_CATEGORIES"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    clearAllBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    clearAllBtn:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
     yOffset = yOffset - 30
 
-    local divider = state.filtersDialog:CreateTexture(nil, "ARTWORK")
-    divider:SetPoint("LEFT", state.filtersDialog, "LEFT", 12, yOffset)
-    divider:SetPoint("RIGHT", state.filtersDialog, "RIGHT", -12, yOffset)
-    divider:SetHeight(1)
-    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(state.filtersDialog, yOffset)
     yOffset = yOffset - 18
 
     local ilvlLabel = state.filtersDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -785,29 +540,18 @@ function VendorPanel:CreateFiltersDialog()
     ilvlLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 22
 
-    local ilvlEditBox = CreateFrame("EditBox", nil, state.filtersDialog, "BackdropTemplate")
-    ilvlEditBox:SetSize(60, 22)
+    local ilvlEditBox = OneWoW_GUI:CreateEditBox(nil, state.filtersDialog, {
+        width = 60,
+        height = 22,
+        maxLetters = 4,
+    })
     ilvlEditBox:SetPoint("TOP", state.filtersDialog, "TOP", -35, yOffset)
-    ilvlEditBox:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
-    ilvlEditBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    ilvlEditBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    ilvlEditBox:SetFontObject(GameFontHighlight)
-    ilvlEditBox:SetAutoFocus(false)
     ilvlEditBox:SetNumeric(true)
-    ilvlEditBox:SetMaxLetters(4)
-    ilvlEditBox:EnableMouse(true)
-    ilvlEditBox:SetTextInsets(OneWoW_GUI:GetSpacing("SM"), OneWoW_GUI:GetSpacing("SM"), 0, 0)
+    ilvlEditBox:SetText("")
     ilvlEditBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    ilvlEditBox:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-    end)
-    ilvlEditBox:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-    ilvlEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     state.filtersDialog.ilvlEditBox = ilvlEditBox
 
-    local ilvlBtn = OneWoW_GUI:CreateButton(nil, state.filtersDialog, "Add", 60, 26)
+    local ilvlBtn = OneWoW_GUI:CreateFitTextButton(state.filtersDialog, "Add", { height = 26 })
     ilvlBtn:SetPoint("LEFT", ilvlEditBox, "RIGHT", 10, 0)
     ilvlBtn:SetScript("OnClick", function()
         local ilvl = tonumber(state.filtersDialog.ilvlEditBox:GetText())
@@ -820,19 +564,14 @@ function VendorPanel:CreateFiltersDialog()
     end)
     yOffset = yOffset - 26
 
-    local excludeIlvl1 = CreateFrame("CheckButton", nil, state.filtersDialog, "UICheckButtonTemplate")
+    local excludeIlvl1 = OneWoW_GUI:CreateCheckbox(nil, state.filtersDialog, "Skip iLvl 1 items")
     excludeIlvl1:SetPoint("TOP", state.filtersDialog, "TOP", -45, yOffset)
     excludeIlvl1:SetSize(20, 20)
     excludeIlvl1:SetChecked(true)
     state.filtersDialog.excludeIlvl1 = excludeIlvl1
-
-    local excludeLabel = state.filtersDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    excludeLabel:SetPoint("LEFT", excludeIlvl1, "RIGHT", 2, 0)
-    excludeLabel:SetText("Skip iLvl 1 items")
-    excludeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 26
 
-    local showBlizzJunk = CreateFrame("CheckButton", nil, state.filtersDialog, "UICheckButtonTemplate")
+    local showBlizzJunk = OneWoW_GUI:CreateCheckbox(nil, state.filtersDialog, ns.L["VENDOR_SHOW_BLIZZ_JUNK"])
     showBlizzJunk:SetPoint("TOP", state.filtersDialog, "TOP", -45, yOffset)
     showBlizzJunk:SetSize(20, 20)
     showBlizzJunk:SetChecked(GetShowBlizzJunk())
@@ -844,11 +583,6 @@ function VendorPanel:CreateFiltersDialog()
     end)
     state.filtersDialog.showBlizzJunk = showBlizzJunk
 
-    local blizzLabel = state.filtersDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    blizzLabel:SetPoint("LEFT", showBlizzJunk, "RIGHT", 2, 0)
-    blizzLabel:SetText(ns.L["VENDOR_SHOW_BLIZZ_JUNK"])
-    blizzLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
     showBlizzJunk:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(ns.L["VENDOR_SHOW_BLIZZ_JUNK"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -858,31 +592,21 @@ function VendorPanel:CreateFiltersDialog()
     showBlizzJunk:SetScript("OnLeave", function() GameTooltip:Hide() end)
     yOffset = yOffset - 30
 
-    local divider2 = state.filtersDialog:CreateTexture(nil, "ARTWORK")
-    divider2:SetPoint("LEFT", state.filtersDialog, "LEFT", 12, yOffset)
-    divider2:SetPoint("RIGHT", state.filtersDialog, "RIGHT", -12, yOffset)
-    divider2:SetHeight(1)
-    divider2:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(state.filtersDialog, yOffset)
     yOffset = yOffset - 26
 
-    local neverSellBtn = OneWoW_GUI:CreateButton(nil, state.filtersDialog, "", 176, 26)
+    local neverSellBtn = OneWoW_GUI:CreateFitTextButton(state.filtersDialog, "", { height = 26, minWidth = 176 })
     neverSellBtn:SetPoint("TOP", state.filtersDialog, "TOP", 0, yOffset)
     neverSellBtn.text:SetText(string.format(ns.L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", 0))
     state.filtersDialog.neverSellBtnText = neverSellBtn.text
     neverSellBtn:SetScript("OnClick", function() VendorPanel:ToggleNeverSellDialog() end)
-    neverSellBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    neverSellBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(ns.L["VENDOR_PROTECTED_ITEMS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(ns.L["VENDOR_VIEW_PROTECTED"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    neverSellBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    neverSellBtn:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
 
@@ -892,18 +616,8 @@ end
 function VendorPanel:CreateNeverSellDialog()
     if state.neverSellDialog then return end
 
-    state.neverSellDialog = CreateFrame("Frame", "OneWoW_QoL_NeverSellDialog", UIParent, "BackdropTemplate")
-    state.neverSellDialog:SetSize(350, 400)
+    state.neverSellDialog = OneWoW_GUI:CreateMovableDialog("OneWoW_QoL_NeverSellDialog", UIParent, 350, 400)
     state.neverSellDialog:SetFrameStrata("MEDIUM")
-    state.neverSellDialog:SetToplevel(true)
-    state.neverSellDialog:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
-    state.neverSellDialog:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    state.neverSellDialog:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    state.neverSellDialog:EnableMouse(true)
-    state.neverSellDialog:SetMovable(true)
-    state.neverSellDialog:RegisterForDrag("LeftButton")
-    state.neverSellDialog:SetScript("OnDragStart", state.neverSellDialog.StartMoving)
-    state.neverSellDialog:SetScript("OnDragStop", state.neverSellDialog.StopMovingOrSizing)
 
     local titleBar = OneWoW_GUI:CreateTitleBar(state.neverSellDialog, ns.L["VENDOR_PROTECTED_ITEMS"], {
         showBrand = true,
@@ -931,7 +645,7 @@ function VendorPanel:CreateNeverSellDialog()
     helpText:SetText(ns.L["VENDOR_CLICK_UNPROTECT"])
     helpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local closeDialogButton = OneWoW_GUI:CreateButton(nil, state.neverSellDialog, ns.L["VENDOR_CLOSE"], 100, 28)
+    local closeDialogButton = OneWoW_GUI:CreateFitTextButton(state.neverSellDialog, ns.L["VENDOR_CLOSE"], { height = 28 })
     closeDialogButton:SetPoint("BOTTOM", state.neverSellDialog, "BOTTOM", 0, 12)
     closeDialogButton:SetScript("OnClick", function() state.neverSellDialog:Hide() end)
 
@@ -1162,7 +876,7 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
         oneTimeLabel:SetText(ns.L["VENDOR_ONETIME_LABEL"])
         oneTimeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
-        local clearBtn = OneWoW_GUI:CreateButton(nil, headerFrame, ns.L["VENDOR_CLEAR_ALL"], 60, 20)
+        local clearBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, ns.L["VENDOR_CLEAR_ALL"], { height = 20 })
         clearBtn:SetPoint("RIGHT", headerFrame, "RIGHT", -3, 0)
         clearBtn:SetScript("OnClick", function(self, button)
             if button == "LeftButton" then

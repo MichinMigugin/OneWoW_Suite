@@ -63,12 +63,22 @@ end
 function BagBarModule:OnEnable()
     if not barFrame then
         self:CreateBar()
-        self:RegisterEvents()
     end
+    self:RegisterEvents()
     self:UpdateBar()
 end
 
 function BagBarModule:OnDisable()
+    if self._eventFrame then
+        self._eventFrame:UnregisterAllEvents()
+    end
+    for i = 1, 12 do
+        if holders[i] then holders[i]:SetID(0) end
+        if buttons[i] then
+            buttons[i]:SetID(0)
+            buttons[i].owb_itemID = nil
+        end
+    end
     if barFrame then
         barFrame:Hide()
         if barFrame.dragHandle then
@@ -183,15 +193,17 @@ function BagBarModule:CreateButton(index)
         if GameTooltip:IsShown() then
             GameTooltip:AddLine(" ")
             GameTooltip:AddLine(ns.L["BAGBAR_LEFT_CLICK_TO_USE"], 1, 1, 1)
-            GameTooltip:AddLine(ns.L["BAGBAR_RIGHT_CLICK_TO_SKIP"], 0.7, 0.7, 0.7)
-            GameTooltip:AddLine(ns.L["BAGBAR_CTRL_RIGHT_CLICK_TO_BLACKLIST"], 0.7, 0.7, 0.7)
+            GameTooltip:AddLine(ns.L["BAGBAR_SHIFT_RIGHT_CLICK_TO_SKIP"], 0.7, 0.7, 0.7)
+            GameTooltip:AddLine(ns.L["BAGBAR_ALT_RIGHT_CLICK_TO_BLACKLIST"], 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end
     end)
 
     button:HookScript("OnClick", function(self, mouseButton)
-        if mouseButton == "RightButton" and self.owb_itemID then
-            BagBarModule:AddToBlacklist(self.owb_itemID, IsControlKeyDown())
+        if mouseButton == "LeftButton" and self.owb_itemID then
+            C_Container.UseContainerItem(self:GetParent():GetID(), self:GetID())
+        elseif mouseButton == "RightButton" and self.owb_itemID and (IsShiftKeyDown() or IsAltKeyDown()) then
+            BagBarModule:AddToBlacklist(self.owb_itemID, IsAltKeyDown())
             BagBarModule:ScheduleUpdate()
         end
     end)
@@ -230,17 +242,33 @@ function BagBarModule:SavePosition()
 end
 
 function BagBarModule:RegisterEvents()
-    local frame = CreateFrame("Frame", "OneWoW_QoL_BagBarEvents")
+    if not self._eventFrame then
+        self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_BagBarEvents")
+    end
+    self._eventFrame:UnregisterAllEvents()
+
     local itemInfoPending = false
 
-    frame:RegisterEvent("BAG_UPDATE_DELAYED")
-    frame:RegisterEvent("PLAYER_REGEN_ENABLED")
-    frame:RegisterEvent("PLAYER_REGEN_DISABLED")
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+    self._eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+    self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    self._eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self._eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self._eventFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+    self._eventFrame:RegisterEvent("TRADE_SKILL_SHOW")
+    self._eventFrame:RegisterEvent("TRADE_SKILL_CLOSE")
 
-    frame:SetScript("OnEvent", function(self, event)
-        if event == "BAG_UPDATE_DELAYED" then
+    self._eventFrame:SetScript("OnEvent", function(self, event)
+        if event == "TRADE_SKILL_SHOW" then
+            BagBarModule._suppressedForProfessions = true
+            if updateTimer then updateTimer:Cancel() end
+            if barFrame then
+                barFrame:Hide()
+                if barFrame.dragHandle then barFrame.dragHandle:Hide() end
+            end
+        elseif event == "TRADE_SKILL_CLOSE" then
+            BagBarModule._suppressedForProfessions = false
+            BagBarModule:ScheduleUpdate()
+        elseif event == "BAG_UPDATE_DELAYED" then
             BagBarModule:ScheduleUpdate()
         elseif event == "PLAYER_REGEN_ENABLED" then
             if BagBarModule.needsUpdate then
@@ -381,6 +409,12 @@ function BagBarModule:UpdateBar()
     end
     self.needsUpdate = false
 
+    if self._suppressedForProfessions then
+        barFrame:Hide()
+        if barFrame.dragHandle then barFrame.dragHandle:Hide() end
+        return
+    end
+
     if not ns.ModuleRegistry:IsEnabled("bagbar") then
         barFrame:Hide()
         if barFrame.dragHandle then barFrame.dragHandle:Hide() end
@@ -506,6 +540,8 @@ function BagBarModule:ShowPreview()
     previewMode = true
     if not barFrame then
         self:CreateBar()
+        self:RegisterEvents()
+    elseif not self._eventFrame then
         self:RegisterEvents()
     end
     self:UpdateBar()

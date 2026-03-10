@@ -610,6 +610,7 @@ end
 function AFKPanelModule:OnEnable()
     self:SetupFrames()
 
+    self._origAutoClearAFK = GetCVar("autoClearAFK")
     SetCVar("autoClearAFK", 1)
 
     if not self._eventFrame then
@@ -660,6 +661,9 @@ function AFKPanelModule:OnDisable()
     end
     if self._eventFrame then
         self._eventFrame:UnregisterAllEvents()
+    end
+    if self._origAutoClearAFK then
+        SetCVar("autoClearAFK", self._origAutoClearAFK)
     end
 end
 

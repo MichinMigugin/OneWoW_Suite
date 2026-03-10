@@ -5,7 +5,6 @@ local addonName, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local CATEGORY_ORDER = {
     "GAMEPLAY", "INTERFACE", "NAMEPLATES", "COMBAT_TEXT",
@@ -200,50 +199,18 @@ local function UpdateRowIndicator(row, entry)
     if not row then return end
     local displayText, isOn = GetRowDisplay(entry)
     if entry.widget == "checkbox" then
-        if row.indicator then
-            if isOn == true then
-                row.indicator:SetVertexColor(0.35, 0.70, 0.35, 1.0)
-            else
-                row.indicator:SetVertexColor(0.70, 0.30, 0.30, 1.0)
-            end
+        if row.dot then
+            row.dot:SetStatus(isOn == true)
         end
     else
-        if row.indicatorText then
-            row.indicatorText:SetText(displayText or "")
+        if row.valueText then
+            row.valueText:SetText(displayText or "")
         end
     end
 end
 
 local function ClearDetailPanel(child)
-    for _, c in ipairs({ child:GetChildren() }) do
-        c:Hide()
-        c:SetParent(nil)
-    end
-    for _, r in ipairs({ child:GetRegions() }) do
-        r:Hide()
-    end
-end
-
-local function ApplyBtnHover(btn)
-    if btn.isActive then
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-    else
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    end
-end
-
-local function ApplyBtnNormal(btn)
-    if btn.isActive then
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    else
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    end
+    OneWoW_GUI:ClearFrame(child)
 end
 
 local function ShowToggleDetail(split, entry)
@@ -297,64 +264,19 @@ local function ShowToggleDetail(split, entry)
 
     if entry.widget == "checkbox" then
         local isOn = (curVal == "1")
-
-        local onBtn  = OneWoW_GUI:CreateButton(nil, child, L["TOGGLES_ON"],  64, 28)
-        local offBtn = OneWoW_GUI:CreateButton(nil, child, L["TOGGLES_OFF"], 64, 28)
-        onBtn:SetPoint( "TOPLEFT", child, "TOPLEFT", 12, yOfs)
-        offBtn:SetPoint("LEFT",    onBtn, "RIGHT",   6, 0)
-
-        local statusLabel = child:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        statusLabel:SetPoint("LEFT", offBtn, "RIGHT", 12, 0)
-
         local capturedEntry = entry
 
-        local function RefreshCheckbox(val)
-            if val == "1" then
-                onBtn.isActive  = true
-                offBtn.isActive = false
-                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                statusLabel:SetText(L["TOGGLES_ON"])
-                statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            else
-                offBtn.isActive = true
-                onBtn.isActive  = false
-                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                statusLabel:SetText(L["TOGGLES_OFF"])
-                statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        local onBtn, offBtn, refresh = OneWoW_GUI:CreateOnOffToggleButtons(
+            child, yOfs,
+            L["TOGGLES_ON"], L["TOGGLES_OFF"],
+            nil, nil, true, isOn,
+            function(newVal)
+                C_CVar.SetCVar(capturedEntry.cvar, newVal and "1" or "0")
+                UpdateRowIndicator(selectedRow, capturedEntry)
             end
-        end
+        )
 
-        RefreshCheckbox(curVal)
-
-        onBtn:HookScript("OnEnter",   function(s) ApplyBtnHover(s)  end)
-        onBtn:HookScript("OnLeave",   function(s) ApplyBtnNormal(s) end)
-        onBtn:HookScript("OnMouseUp", function(s) ApplyBtnNormal(s) end)
-        offBtn:HookScript("OnEnter",   function(s) ApplyBtnHover(s)  end)
-        offBtn:HookScript("OnLeave",   function(s) ApplyBtnNormal(s) end)
-        offBtn:HookScript("OnMouseUp", function(s) ApplyBtnNormal(s) end)
-
-        onBtn:SetScript("OnClick", function()
-            C_CVar.SetCVar(capturedEntry.cvar, "1")
-            RefreshCheckbox("1")
-            UpdateRowIndicator(selectedRow, capturedEntry)
-        end)
-        offBtn:SetScript("OnClick", function()
-            C_CVar.SetCVar(capturedEntry.cvar, "0")
-            RefreshCheckbox("0")
-            UpdateRowIndicator(selectedRow, capturedEntry)
-        end)
-
-        yOfs = yOfs - 28 - 8
+        yOfs = yOfs - 22 - 8
 
     elseif entry.widget == "slider" then
         local numVal = tonumber(curVal) or entry.min
@@ -406,50 +328,27 @@ local function ShowToggleDetail(split, entry)
         yOfs = yOfs - minLabel:GetStringHeight() - 8
 
     elseif entry.widget == "dropdown" then
-        local n      = #entry.options
-        local gap    = 4
-        local avail  = cw
-        local bw     = math.max(30, math.floor((avail - gap * (n - 1)) / n))
-        local optBtns = {}
-        local xPos    = 12
-        local rowY    = yOfs
-
-        for i, opt in ipairs(entry.options) do
-            local lbl = L[entry.optLabels[i]] or entry.optLabels[i]
-            local btn = OneWoW_GUI:CreateButton(nil, child, lbl, bw, 26)
-            btn:SetPoint("TOPLEFT", child, "TOPLEFT", xPos, rowY)
-            btn.optValue = tostring(opt)
-            btn.isActive = (tostring(opt) == tostring(curVal))
-            if btn.isActive then
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            end
-            table.insert(optBtns, btn)
-
-            xPos = xPos + bw + gap
-            if i < n and (xPos + bw) > (child:GetWidth() - 12) then
-                xPos = 12
-                rowY = rowY - 30
-            end
-        end
-
-        yOfs = rowY - 26 - 10
-
         local capturedEntry = entry
-        for _, btn in ipairs(optBtns) do
-            btn:HookScript("OnEnter",   function(s) ApplyBtnHover(s)  end)
-            btn:HookScript("OnLeave",   function(s) ApplyBtnNormal(s) end)
-            btn:HookScript("OnMouseUp", function(s) ApplyBtnNormal(s) end)
-            btn:SetScript("OnClick", function(self)
-                C_CVar.SetCVar(capturedEntry.cvar, self.optValue)
-                for _, ob in ipairs(optBtns) do
-                    ob.isActive = (ob.optValue == self.optValue)
-                    ApplyBtnNormal(ob)
-                end
-                UpdateRowIndicator(selectedRow, capturedEntry)
-            end)
+        local items = {}
+        for i, opt in ipairs(entry.options) do
+            table.insert(items, {
+                text = L[entry.optLabels[i]] or entry.optLabels[i],
+                value = tostring(opt),
+                isActive = (tostring(opt) == tostring(curVal)),
+            })
         end
+
+        local optBtns, finalY = OneWoW_GUI:CreateFitFrameButtons(child, yOfs, items, {
+            height = 26,
+            gap = 4,
+            width = child:GetWidth(),
+            onSelect = function(value)
+                C_CVar.SetCVar(capturedEntry.cvar, value)
+                UpdateRowIndicator(selectedRow, capturedEntry)
+            end,
+        })
+
+        yOfs = finalY - 10
     end
 
     child:SetHeight(math.abs(yOfs) + 20)
@@ -458,8 +357,7 @@ end
 
 local function BuildTogglesList(split, filterText)
     local child = split.listScrollChild
-    for _, c in ipairs({ child:GetChildren() }) do c:Hide(); c:SetParent(nil) end
-    for _, r in ipairs({ child:GetRegions() }) do r:Hide() end
+    OneWoW_GUI:ClearFrame(child)
     selectedRow   = nil
     selectedEntry = nil
 
@@ -490,90 +388,48 @@ local function BuildTogglesList(split, filterText)
 
             for _, entry in ipairs(catEntries) do
                 local capturedEntry = entry
-                local row = CreateFrame("Button", nil, child, "BackdropTemplate")
-                row:SetPoint("TOPLEFT",  child, "TOPLEFT",  4, yOfs)
-                row:SetPoint("TOPRIGHT", child, "TOPRIGHT", -4, yOfs)
-                row:SetHeight(rowH)
-                row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                local displayText, isOn = GetRowDisplay(entry)
 
-                if entry.widget == "checkbox" then
-                    local dot = row:CreateTexture(nil, "OVERLAY")
-                    dot:SetSize(8, 8)
-                    dot:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-                    dot:SetTexture("Interface\\Buttons\\WHITE8x8")
-                    row.indicator = dot
-
-                    local rowLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                    rowLabel:SetPoint("LEFT",  row, "LEFT",  8,   0)
-                    rowLabel:SetPoint("RIGHT", row, "RIGHT", -24, 0)
-                    rowLabel:SetJustifyH("LEFT")
-                    rowLabel:SetText(L[entry.name] or entry.name)
-                    rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                    row.rowLabel = rowLabel
-                else
-                    local valText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    valText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-                    valText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                    valText:SetJustifyH("RIGHT")
-                    row.indicatorText = valText
-
-                    local rowLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                    rowLabel:SetPoint("LEFT",  row, "LEFT",    8, 0)
-                    rowLabel:SetPoint("RIGHT", valText, "LEFT", -4, 0)
-                    rowLabel:SetJustifyH("LEFT")
-                    rowLabel:SetText(L[entry.name] or entry.name)
-                    rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                    row.rowLabel = rowLabel
-                end
-
-                UpdateRowIndicator(row, entry)
-
-                shownCount = shownCount + 1
-
-                row:SetScript("OnClick", function(self)
-                    if selectedRow and selectedRow ~= self then
-                        selectedRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                        selectedRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                        if selectedRow.rowLabel then
-                            selectedRow.rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                local rowOptions = {
+                    height = rowH,
+                    label = L[entry.name] or entry.name,
+                    onClick = function(self)
+                        if selectedRow and selectedRow ~= self then
+                            selectedRow:SetActive(false)
                         end
-                    end
-                    selectedRow   = self
-                    selectedEntry = capturedEntry
-                    ShowToggleDetail(split, capturedEntry)
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                    if self.rowLabel then
-                        self.rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    end
-                    if split.rightStatusText then
-                        local curVal = C_CVar.GetCVar(capturedEntry.cvar)
-                        local display = curVal or "?"
-                        if capturedEntry.widget == "dropdown" and capturedEntry.options then
-                            for i, opt in ipairs(capturedEntry.options) do
-                                if curVal == tostring(opt) then
-                                    display = L[capturedEntry.optLabels[i]] or capturedEntry.optLabels[i]
-                                    break
+                        selectedRow   = self
+                        selectedEntry = capturedEntry
+                        ShowToggleDetail(split, capturedEntry)
+                        self:SetActive(true)
+                        if split.rightStatusText then
+                            local curVal = C_CVar.GetCVar(capturedEntry.cvar)
+                            local display = curVal or "?"
+                            if capturedEntry.widget == "dropdown" and capturedEntry.options then
+                                for i, opt in ipairs(capturedEntry.options) do
+                                    if curVal == tostring(opt) then
+                                        display = L[capturedEntry.optLabels[i]] or capturedEntry.optLabels[i]
+                                        break
+                                    end
                                 end
                             end
+                            split.rightStatusText:SetText((L[capturedEntry.name] or capturedEntry.name) .. ": " .. display)
                         end
-                        split.rightStatusText:SetText((L[capturedEntry.name] or capturedEntry.name) .. ": " .. display)
-                    end
-                end)
-                row:SetScript("OnEnter", function(self)
-                    if selectedEntry ~= capturedEntry then
-                        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                        if self.rowLabel then self.rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
-                    end
-                end)
-                row:SetScript("OnLeave", function(self)
-                    if selectedEntry ~= capturedEntry then
-                        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                        if self.rowLabel then self.rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
-                    end
-                end)
+                    end,
+                }
+
+                if entry.widget == "checkbox" then
+                    rowOptions.showDot = true
+                    rowOptions.dotEnabled = isOn
+                else
+                    rowOptions.showValueText = true
+                    rowOptions.valueText = displayText or ""
+                end
+
+                local row = OneWoW_GUI:CreateListRowBasic(child, rowOptions)
+                row:SetPoint("TOPLEFT",  child, "TOPLEFT",  4, yOfs)
+                row:SetPoint("TOPRIGHT", child, "TOPRIGHT", -4, yOfs)
+
+                shownCount = shownCount + 1
 
                 yOfs = yOfs - rowH - 3
             end
@@ -595,31 +451,18 @@ local function BuildTogglesList(split, filterText)
 end
 
 function ns.UI.CreateTogglesTab(parent)
-    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true })
+    local split = OneWoW_GUI:CreateSplitPanel(parent, {
+        showSearch = true,
+        searchPlaceholder = L["SEARCH_HINT"],
+    })
     split_ref = split
 
     split.listTitle:SetText(L["TOGGLES_LIST_TITLE"])
     split.detailTitle:SetText(L["TOGGLES_DETAIL_TITLE"])
 
     if split.searchBox then
-        split.searchBox:SetText(L["SEARCH_HINT"])
-        split.searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        split.searchBox:HookScript("OnEditFocusGained", function(self)
-            if self:GetText() == L["SEARCH_HINT"] then
-                self:SetText("")
-                self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-        end)
-        split.searchBox:HookScript("OnEditFocusLost", function(self)
-            if self:GetText() == "" then
-                self:SetText(L["SEARCH_HINT"])
-                self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            end
-        end)
         split.searchBox:SetScript("OnTextChanged", function(self)
-            local text = self:GetText()
-            if text == L["SEARCH_HINT"] then text = "" end
-            BuildTogglesList(split, text)
+            BuildTogglesList(split, self:GetSearchText())
             if split.rightStatusText and selectedEntry == nil then
                 split.rightStatusText:SetText("")
             end

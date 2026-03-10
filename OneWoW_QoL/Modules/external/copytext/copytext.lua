@@ -164,6 +164,8 @@ end
 
 function CopyTextModule:OnDisable()
     SlashCmdList["OWCOPYTEXT"] = nil
+    _G["SLASH_OWCOPYTEXT1"] = nil
+    _G["SLASH_OWCOPYTEXT2"] = nil
 end
 
 ns.CopyTextModule = CopyTextModule

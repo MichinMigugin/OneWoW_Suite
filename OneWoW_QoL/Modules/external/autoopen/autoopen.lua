@@ -186,7 +186,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
         eb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
-    local addBtn = OneWoW_GUI:CreateButton(nil, detailScrollChild, L["AUTOOPEN_ADD"], 50, 22)
+    local addBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, L["AUTOOPEN_ADD"], { height = 22 })
     addBtn:SetPoint("LEFT", idBox, "RIGHT", 6, 0)
 
     local dropZone = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
@@ -314,7 +314,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
 
     yOffset = yOffset - neededHeight - 8
 
-    local clearBtn = OneWoW_GUI:CreateButton(nil, detailScrollChild, L["AUTOOPEN_BLACKLIST_CLEAR"], 100, 22)
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, L["AUTOOPEN_BLACKLIST_CLEAR"], { height = 22 })
     clearBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
     clearBtn:SetScript("OnClick", function()
         AO:ClearBlacklist()

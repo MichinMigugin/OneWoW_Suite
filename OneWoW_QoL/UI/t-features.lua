@@ -26,13 +26,7 @@ end
 
 local function ClearModDetailsContent()
     if not modDetailsContent then return end
-    for _, child in ipairs({ modDetailsContent:GetChildren() }) do
-        child:Hide()
-        child:SetParent(nil)
-    end
-    for _, region in ipairs({ modDetailsContent:GetRegions() }) do
-        region:Hide()
-    end
+    OneWoW_GUI:ClearFrame(modDetailsContent)
 end
 
 local function CreateReadOnlyContactBox(parent, label, text, yOffset)
@@ -102,7 +96,7 @@ local function ShowModuleDetailsDialog(module)
         btnDiv:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -1, 46)
         btnDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        local closeBtn = OneWoW_GUI:CreateButton(nil, dialog, L["CLOSE"], 120, 32)
+        local closeBtn = OneWoW_GUI:CreateFitTextButton(dialog, L["CLOSE"], { height = 32 })
         closeBtn:SetPoint("BOTTOM", dialog, "BOTTOM", 0, 8)
         closeBtn:SetScript("OnClick", function() dialog:Hide() end)
 
@@ -178,7 +172,7 @@ local function ShowModuleDetail(split, module)
 
     if hasDetails then
         local capturedModule = module
-        local detailsBtn = OneWoW_GUI:CreateButton(nil, detailScrollChild, L["FEATURES_DETAILS_BTN"], 80, 24)
+        local detailsBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, L["FEATURES_DETAILS_BTN"], { height = 24 })
         detailsBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
         detailsBtn:SetScript("OnClick", function() ShowModuleDetailsDialog(capturedModule) end)
     end
@@ -215,80 +209,45 @@ local function ShowModuleDetail(split, module)
     local customRefreshCallbacks = {}
     local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 
-    local statusLabelPrefix = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusLabelPrefix:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    statusLabelPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    statusLabelPrefix:SetText("Status: ")
-
-    local statusLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusLabel:SetPoint("LEFT", statusLabelPrefix, "RIGHT", 0, 0)
-    if isEnabled then
-        statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        statusLabel:SetText(L["FEATURES_ENABLED"])
-    else
-        statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        statusLabel:SetText(L["FEATURES_DISABLED"])
-    end
-
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, detailScrollChild, isEnabled and L["DISABLE"] or L["ENABLE"], 90, 24)
-    toggleBtn:SetPoint("LEFT", statusLabel, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = ns.ModuleRegistry:IsEnabled(module.id)
-        ns.ModuleRegistry:SetEnabled(module.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-        if nowEnabled then
-            statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            statusLabel:SetText(L["FEATURES_ENABLED"])
-        else
-            statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-            statusLabel:SetText(L["FEATURES_DISABLED"])
-        end
-        self.text:SetText(nowEnabled and L["DISABLE"] or L["ENABLE"])
-        if selectedRow and selectedRow.enabledDot then
-            if nowEnabled then
-                selectedRow.enabledDot:SetVertexColor(OneWoW_GUI:GetThemeColor("DOT_FEATURES_ENABLED"))
-            else
-                selectedRow.enabledDot:SetVertexColor(OneWoW_GUI:GetThemeColor("DOT_FEATURES_DISABLED"))
+    local masterOnBtn, masterOffBtn, refreshMaster = OneWoW_GUI:CreateOnOffToggleButtons(
+        detailScrollChild, yOffset,
+        L["FEATURES_ON"], L["FEATURES_OFF"],
+        50, 22, true, isEnabled,
+        function(newVal)
+            ns.ModuleRegistry:SetEnabled(module.id, newVal)
+            isEnabled = newVal
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newVal)
             end
-        end
 
-        if split.rightStatusText then
-            local modName = ns.L[module.title] or module.title
-            split.rightStatusText:SetText(modName .. (nowEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
-        end
-        if split.leftStatusText then
-            local filterText = split.searchBox and split.searchBox:GetText() or ""
-            if filterText == L["SEARCH_HINT"] then filterText = "" end
-            if #filterText == 0 then
-                local allModules = ns.ModuleRegistry:GetAll()
-                local enabledCount = 0
-                for _, m in ipairs(allModules) do
-                    if ns.ModuleRegistry:IsEnabled(m.id) then enabledCount = enabledCount + 1 end
+            if split.rightStatusText then
+                local modName = ns.L[module.title] or module.title
+                split.rightStatusText:SetText(modName .. (newVal and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
+            end
+            if split.leftStatusText then
+                local filterText = split.searchBox and split.searchBox:GetSearchText() or ""
+                if #filterText == 0 then
+                    local allModules = ns.ModuleRegistry:GetAll()
+                    local enabledCount = 0
+                    for _, m in ipairs(allModules) do
+                        if ns.ModuleRegistry:IsEnabled(m.id) then enabledCount = enabledCount + 1 end
+                    end
+                    split.leftStatusText:SetText(string.format(L["FEATURES_STATUS_ENABLED"], enabledCount, #allModules))
                 end
-                split.leftStatusText:SetText(string.format(L["FEATURES_STATUS_ENABLED"], enabledCount, #allModules))
             end
-        end
 
-        for _, tbs in ipairs(toggleBtnSets) do
-            local val = ns.ModuleRegistry:GetToggleValue(module.id, tbs.toggle.id)
-            tbs.refresh(nowEnabled, val)
-            if nowEnabled then
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                tbs.statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                tbs.statusVal:SetText(val and L["FEATURES_ENABLED"] or L["FEATURES_DISABLED"])
-
-                -- Use variable since multiple values can cause problems with SetTextColor() when a ternary is used
-                local colorKey = val and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
-                tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey))
-            else
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.statusVal:SetText(L["FEATURES_DISABLED"])
-                tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            for _, tbs in ipairs(toggleBtnSets) do
+                local val = ns.ModuleRegistry:GetToggleValue(module.id, tbs.toggle.id)
+                tbs.refresh(newVal, val)
+                if newVal then
+                    tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                else
+                    tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                end
             end
+            for _, fn in ipairs(customRefreshCallbacks) do fn() end
         end
-        for _, fn in ipairs(customRefreshCallbacks) do fn() end
-    end)
+    )
 
     yOffset = yOffset - 30 - 14
 
@@ -338,50 +297,38 @@ local function ShowModuleDetail(split, module)
             local capturedModule = module
             local currentVal = ns.ModuleRegistry:GetToggleValue(module.id, toggle.id)
 
-            local rowStatusVal = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            rowStatusVal:SetText(currentVal and L["FEATURES_ENABLED"] or L["FEATURES_DISABLED"])
-            do
-                -- Need to use a variable here since GetThemeColor() returns an unpacked table, which causes problems with SetTextColor() when a ternary is used
-                local colorKey = currentVal and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
-                rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey))
-            end
+            local toggleBtnWidth = 50
 
-            local onBtn, offBtn, refresh = OneWoW_GUI:CreateOnOffToggleButtons(
+            local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(
                 detailScrollChild, yOffset,
                 L["FEATURES_ON"], L["FEATURES_OFF"],
-                50, 22, isEnabled, currentVal,
+                toggleBtnWidth, 22, isEnabled, currentVal,
                 function(newVal)
                     ns.ModuleRegistry:SetToggleValue(capturedModule.id, capturedToggle.id, newVal)
-                    rowStatusVal:SetText(newVal and L["FEATURES_ENABLED"] or L["FEATURES_DISABLED"])
-                    -- Need to use a variable here since GetThemeColor() returns an unpacked table, which causes problems with SetTextColor() when a ternary is used
-                    local colorKey = newVal and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
-                    rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey))
                 end
             )
-
-            rowStatusVal:SetPoint("RIGHT", offBtn, "LEFT", -6, 0)
-
-            local rowStatusPfx = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            rowStatusPfx:SetPoint("RIGHT", rowStatusVal, "LEFT", -2, 0)
-            rowStatusPfx:SetText("Status:")
+            offBtn:ClearAllPoints()
+            offBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+            onBtn:ClearAllPoints()
+            onBtn:SetPoint("RIGHT", offBtn, "LEFT", -4, 0)
+            statusVal:ClearAllPoints()
+            statusVal:SetPoint("RIGHT", onBtn, "LEFT", -10, 0)
+            statusPfx:ClearAllPoints()
+            statusPfx:SetPoint("RIGHT", statusVal, "LEFT", -4, 0)
 
             local toggleLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             toggleLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-            toggleLabel:SetPoint("RIGHT", rowStatusPfx, "LEFT", -8, 0)
+            toggleLabel:SetPoint("RIGHT", statusPfx, "LEFT", -8, 0)
             toggleLabel:SetJustifyH("LEFT")
             toggleLabel:SetText(ns.L[toggle.label] or toggle.label)
 
             if isEnabled then
                 toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                rowStatusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             else
                 toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                rowStatusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                rowStatusVal:SetText(L["FEATURES_DISABLED"])
-                rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
 
-            tinsert(toggleBtnSets, { onBtn = onBtn, offBtn = offBtn, refresh = refresh, label = toggleLabel, statusPrefix = rowStatusPfx, statusVal = rowStatusVal, toggle = capturedToggle })
+            tinsert(toggleBtnSets, { onBtn = onBtn, offBtn = offBtn, refresh = refresh, label = toggleLabel, toggle = capturedToggle })
 
             yOffset = yOffset - 22 - 4
 
@@ -410,13 +357,7 @@ end
 
 local function BuildFeaturesList(split, filterText)
     local listScrollChild = split.listScrollChild
-    for _, child in ipairs({ listScrollChild:GetChildren() }) do
-        child:Hide()
-        child:SetParent(nil)
-    end
-    for _, r in ipairs({ listScrollChild:GetRegions() }) do
-        r:Hide()
-    end
+    OneWoW_GUI:ClearFrame(listScrollChild)
     selectedRow = nil
 
     local allModules = ns.ModuleRegistry:GetAll()
@@ -462,65 +403,28 @@ local function BuildFeaturesList(split, filterText)
             for _, module in ipairs(filteredModules) do
                 local capturedModule = module
                 shownCount = shownCount + 1
-                local row = CreateFrame("Button", nil, listScrollChild, "BackdropTemplate")
+                local row = OneWoW_GUI:CreateListRowBasic(listScrollChild, {
+                    height = rowHeight,
+                    label = ns.L[module.title] or module.title,
+                    showDot = true,
+                    dotEnabled = ns.ModuleRegistry:IsEnabled(module.id),
+                    onClick = function(self)
+                        if selectedRow and selectedRow ~= self then
+                            selectedRow:SetActive(false)
+                        end
+                        selectedModuleId = capturedModule.id
+                        selectedRow = self
+                        ShowModuleDetail(split, capturedModule)
+                        self:SetActive(true)
+                        if split.rightStatusText then
+                            local isEnabled = ns.ModuleRegistry:IsEnabled(capturedModule.id)
+                            local modName = ns.L[capturedModule.title] or capturedModule.title
+                            split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
+                        end
+                    end,
+                })
                 row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
                 row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -4, yOffset)
-                row:SetHeight(rowHeight)
-                row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-                local rowLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                rowLabel:SetPoint("LEFT", row, "LEFT", 10, 0)
-                rowLabel:SetPoint("RIGHT", row, "RIGHT", -24, 0)
-                rowLabel:SetJustifyH("LEFT")
-                rowLabel:SetText(ns.L[module.title] or module.title)
-                rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                row.rowLabel = rowLabel
-
-                local enabledDot = row:CreateTexture(nil, "OVERLAY")
-                enabledDot:SetSize(8, 8)
-                enabledDot:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-                enabledDot:SetTexture("Interface\\Buttons\\WHITE8x8")
-                if ns.ModuleRegistry:IsEnabled(module.id) then
-                    enabledDot:SetVertexColor(OneWoW_GUI:GetThemeColor("DOT_FEATURES_ENABLED"))
-                else
-                    enabledDot:SetVertexColor(OneWoW_GUI:GetThemeColor("DOT_FEATURES_DISABLED"))
-                end
-                row.enabledDot = enabledDot
-
-                row:SetScript("OnClick", function(self)
-                    if selectedRow and selectedRow ~= self then
-                        selectedRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                        selectedRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                        if selectedRow.rowLabel then
-                            selectedRow.rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                        end
-                    end
-                    selectedModuleId = capturedModule.id
-                    selectedRow = self
-                    ShowModuleDetail(split, capturedModule)
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                    rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    if split.rightStatusText then
-                        local isEnabled = ns.ModuleRegistry:IsEnabled(capturedModule.id)
-                        local modName = ns.L[capturedModule.title] or capturedModule.title
-                        split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
-                    end
-                end)
-                row:SetScript("OnEnter", function(self)
-                    if selectedModuleId ~= capturedModule.id then
-                        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                        rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    end
-                end)
-                row:SetScript("OnLeave", function(self)
-                    if selectedModuleId ~= capturedModule.id then
-                        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                        rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                    end
-                end)
 
                 yOffset = yOffset - rowHeight - 4
             end
@@ -550,30 +454,17 @@ local function BuildFeaturesList(split, filterText)
 end
 
 function ns.UI.CreateFeaturesTab(parent)
-    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true })
+    local split = OneWoW_GUI:CreateSplitPanel(parent, {
+        showSearch = true,
+        searchPlaceholder = L["SEARCH_HINT"],
+    })
 
     split.listTitle:SetText(L["FEATURES_LIST_TITLE"])
     split.detailTitle:SetText(L["FEATURES_DETAIL_TITLE"])
 
     if split.searchBox then
-        split.searchBox:SetText(L["SEARCH_HINT"])
-        split.searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        split.searchBox:HookScript("OnEditFocusGained", function(self)
-            if self:GetText() == L["SEARCH_HINT"] then
-                self:SetText("")
-                self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-        end)
-        split.searchBox:HookScript("OnEditFocusLost", function(self)
-            if self:GetText() == "" then
-                self:SetText(L["SEARCH_HINT"])
-                self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            end
-        end)
         split.searchBox:SetScript("OnTextChanged", function(self)
-            local text = self:GetText()
-            if text == L["SEARCH_HINT"] then text = "" end
-            BuildFeaturesList(split, text)
+            BuildFeaturesList(split, self:GetSearchText())
         end)
     end
 

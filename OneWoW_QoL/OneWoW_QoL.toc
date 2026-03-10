@@ -13,7 +13,6 @@
 # Libraries
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\AceAddon-3.0\AceAddon-3.0.lua
 Libs\AceEvent-3.0\AceEvent-3.0.lua
 Libs\AceConsole-3.0\AceConsole-3.0.lua
@@ -41,7 +40,6 @@ Modules\ModuleRegistry.lua
 
 # UI Main Frame
 UI\MainFrame.lua
-UI\MinimapButton.lua
 
 # Tab UI Files
 UI\t-features.lua
@@ -133,6 +131,7 @@ Modules\external\cursorenhancer\data.lua
 Modules\external\professionspanel\Locales\enUS.lua
 Modules\external\professionspanel\Locales\koKR.lua
 Modules\external\professionspanel\professionspanel.lua
+Modules\external\professionspanel\professionspanel-ui.lua
 Modules\external\professionspanel\data.lua
 
 Modules\external\afkpanel\Locales\enUS.lua

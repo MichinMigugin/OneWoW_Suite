@@ -99,9 +99,8 @@ function ns.UI:CreateMainFrame(defaultTab)
     titleBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
     titleBg:SetFrameLevel(frame:GetFrameLevel() + 1)
 
-    local factionTheme = addon.db and addon.db.global and
-                         addon.db.global.minimap and
-                         addon.db.global.minimap.theme or "horde"
+    local OneWoW_GUI_ref = LibStub("OneWoW_GUI-1.0", true)
+    local factionTheme = (OneWoW_GUI_ref and OneWoW_GUI_ref.GetSetting and OneWoW_GUI_ref:GetSetting("minimap.theme")) or "horde"
     local brandIconTex = OneWoW_GUI:GetBrandIcon(factionTheme)
 
     local brandIcon = titleBg:CreateTexture(nil, "OVERLAY")
@@ -183,16 +182,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     tabButtonContainer:SetScript("OnSizeChanged", function() UpdateTabLayout() end)
 
     local function CreateTab(name, displayName)
-        local btn = CreateFrame("Button", nil, tabButtonContainer, "BackdropTemplate")
-        btn:SetHeight(ns.Constants.GUI.TAB_BUTTON_HEIGHT)
-        btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-        btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        btn.text:SetPoint("CENTER")
-        btn.text:SetText(displayName)
-        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        local btn = OneWoW_GUI:CreateButton(nil, tabButtonContainer, displayName, 100, ns.Constants.GUI.TAB_BUTTON_HEIGHT)
 
         btn:SetScript("OnClick", function() SelectTab(name) end)
         btn:SetScript("OnEnter", function(self)

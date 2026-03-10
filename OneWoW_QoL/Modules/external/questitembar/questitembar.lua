@@ -473,12 +473,27 @@ end
 function QuestItemBarModule:OnEnable()
     if not barFrame then
         self:CreateBar()
-        self:RegisterEvents()
+    end
+    self:RegisterEvents()
+    if eventFrame then
+        eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
+        eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+        eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        eventFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
+        eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
+        eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     end
     self:FullUpdate()
 end
 
 function QuestItemBarModule:OnDisable()
+    if eventFrame then
+        eventFrame:UnregisterAllEvents()
+    end
+    if updateTimer then
+        updateTimer:Cancel()
+        updateTimer = nil
+    end
     if barFrame then
         barFrame:Hide()
         if barFrame.dragHandle then

@@ -1177,6 +1177,23 @@ function VendorPanelModule:OnEnable()
     self._eventFrame:RegisterEvent("MERCHANT_CLOSED")
     self._eventFrame:RegisterEvent("BAG_UPDATE")
 
+    local GUI = LibStub("OneWoW_GUI-1.0", true)
+    if GUI and not self._guiCallbacksRegistered then
+        self._guiCallbacksRegistered = true
+        local function onSettingsChanged()
+            VendorPanel:OnMerchantClosed()
+            state.vendorButton = nil
+            state.panelToggleButton = nil
+            state.junkPreviewPanel = nil
+            state.replacementSellButton = nil
+            state.filtersDialog = nil
+            state.neverSellDialog = nil
+        end
+        GUI:RegisterSettingsCallback("OnThemeChanged", self, onSettingsChanged)
+        GUI:RegisterSettingsCallback("OnLanguageChanged", self, onSettingsChanged)
+        GUI:RegisterSettingsCallback("OnIconThemeChanged", self, onSettingsChanged)
+    end
+
     if not self._hookDone and _G.MerchantFrame_Update then
         self._hookDone = true
         hooksecurefunc("MerchantFrame_Update", function()

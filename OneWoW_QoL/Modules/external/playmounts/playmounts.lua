@@ -234,7 +234,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled, registe
     for _, mode in ipairs(modes) do
         local capturedMode = mode
         local isActive = (currentMode == mode.id)
-        local btn = OneWoW_GUI:CreateButton(nil, parent, L[mode.labelKey] or mode.id, 90, 22)
+        local btn = OneWoW_GUI:CreateFitTextButton(parent, L[mode.labelKey] or mode.id, { height = 22 })
         btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 12 + (#modeBtns * 96), yOffset)
         btn.isActive = isActive
 
@@ -288,7 +288,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled, registe
     end
     yOffset = yOffset - 24
 
-    local viewBtn = OneWoW_GUI:CreateButton(nil, parent, L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"], 100, 22)
+    local viewBtn = OneWoW_GUI:CreateFitTextButton(parent, L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"], { height = 22 })
     viewBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
     if coreLoaded then
         viewBtn:SetScript("OnClick", function()
@@ -336,6 +336,7 @@ ns.PlayMountsModule = PlayMountsModule
 
 if _G.OneWoW and _G.OneWoW.TooltipEngine then
     local function PlayerMountsTooltipProvider(tooltip, context)
+        if not ns.ModuleRegistry:IsEnabled("playmounts") then return nil end
         if not context.isPlayer or not context.unit then return nil end
 
         local mountInfo = PlayMountsModule:DetectMountOnUnit(context.unit)

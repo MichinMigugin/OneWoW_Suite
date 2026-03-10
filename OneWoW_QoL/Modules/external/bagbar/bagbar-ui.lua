@@ -36,7 +36,7 @@ local function MakeItemDropZone(parent, label, yOffset, onReceive)
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
-    local addBtn = OneWoW_GUI:CreateButton(nil, parent, ns.L["BAGBAR_ADD_BUTTON"], 60, 24)
+    local addBtn = OneWoW_GUI:CreateFitTextButton(parent, ns.L["BAGBAR_ADD_BUTTON"], { height = 24 })
     addBtn:SetPoint("LEFT", itemIDBox, "RIGHT", 6, 0)
     addBtn:SetScript("OnClick", function()
         local id = tonumber(itemIDBox:GetText())
@@ -150,9 +150,9 @@ local function BuildContent(container, isEnabled)
     cy = OneWoW_GUI:CreateSection(container, L["BAGBAR_SETTINGS_HEADER"], cy)
 
     local previewing = ns.BagBarModule:IsPreviewActive()
-    local previewBtn = OneWoW_GUI:CreateButton(nil, container,
+    local previewBtn = OneWoW_GUI:CreateFitTextButton(container,
         previewing and L["BAGBAR_HIDE_BAR"] or L["BAGBAR_SHOW_BAR"],
-        120, 26)
+        { height = 26 })
     previewBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     previewBtn:SetScript("OnClick", function()
         if ns.BagBarModule:IsPreviewActive() then
@@ -164,9 +164,9 @@ local function BuildContent(container, isEnabled)
     end)
     cy = cy - 32
 
-    local lockBtn = OneWoW_GUI:CreateButton(nil, container,
+    local lockBtn = OneWoW_GUI:CreateFitTextButton(container,
         s.locked and (L["BAGBAR_LOCK_POSITION"] .. " (ON)") or (L["BAGBAR_LOCK_POSITION"] .. " (OFF)"),
-        180, 26)
+        { height = 26 })
     lockBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     lockBtn:SetScript("OnClick", function()
         ns.BagBarModule:SetLocked(not GetSettings().locked)
@@ -287,7 +287,7 @@ local function BuildContent(container, isEnabled)
             ns.BagBarModule._refreshCustomDetail()
         end)
 
-    local clearBtn = OneWoW_GUI:CreateButton(nil, container, L["BAGBAR_CLEAR_BLACKLIST"], 160, 26)
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(container, L["BAGBAR_CLEAR_BLACKLIST"], { height = 26 })
     clearBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     clearBtn:SetScript("OnClick", function()
         local cur = GetSettings()

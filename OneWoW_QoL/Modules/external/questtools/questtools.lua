@@ -108,7 +108,7 @@ function QuestToolsModule:InitGossip()
 end
 
 function QuestToolsModule:EvaluateRewards()
-    if not GetToggle("reward_picker") then
+    if not ns.ModuleRegistry:IsEnabled("questtools") or not GetToggle("reward_picker") then
         if self._goldIcon then self._goldIcon:Hide() end
         return
     end
