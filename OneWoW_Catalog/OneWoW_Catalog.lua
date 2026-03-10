@@ -38,17 +38,32 @@ end
 
 function addon:OnInitialize()
     self:InitializeDatabase()
+
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+    if OneWoW_GUI and OneWoW_GUI.MigrateSettings then
+        OneWoW_GUI:MigrateSettings(self.db.global)
+    end
+
     if ns.ApplyTheme then ns.ApplyTheme() end
     if ns.ApplyLanguage then ns.ApplyLanguage() end
     addon.Catalog = ns.Catalog
     addon.UI = ns.UI
     self:RegisterChatCommand("owcat", "SlashCommandHandler")
     self:RegisterChatCommand("onewowcatalog", "SlashCommandHandler")
+
+    if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
+        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+            if ns.ApplyTheme then ns.ApplyTheme() end
+        end)
+        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+            if ns.ApplyLanguage then ns.ApplyLanguage() end
+        end)
+    end
+
     local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("Catalog", _ver, "/owcat")
-    else
-        print("|cFF00FF00OneWoW|r: |cFFFFFFFFCatalog|r v." .. _ver .. " |cFF00FF00Loaded|r - /owcat")
     end
 end
 
@@ -59,11 +74,6 @@ function addon:OnEnable()
 
     RegisterWithOneWoW()
 
-    if not ns.oneWoWHubActive then
-        if ns.MinimapButton and ns.MinimapButton.Initialize then
-            ns.MinimapButton:Initialize()
-        end
-    end
 end
 
 function addon:ApplyTheme()
@@ -87,14 +97,4 @@ end
 function addon:InitializeDatabase()
     local defaults = ns.DatabaseDefaults or {}
     self.db = LibStub("AceDB-3.0"):New("OneWoW_Catalog_DB", defaults, true)
-    if not self.db.global.language then
-        self.db.global.language = GetLocale()
-    end
-    if not self.db.global.theme then
-        self.db.global.theme = "green"
-    end
-    if not self.db.global.minimap then self.db.global.minimap = {} end
-    if self.db.global.minimap.hide == nil then self.db.global.minimap.hide = false end
-    if self.db.global.minimap.minimapPos == nil then self.db.global.minimap.minimapPos = 220 end
-    if not self.db.global.minimap.theme then self.db.global.minimap.theme = "horde" end
 end

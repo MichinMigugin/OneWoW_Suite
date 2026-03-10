@@ -702,14 +702,13 @@ ns.T = T
 ns.S = S
 
 function ns.ApplyTheme()
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
     local themeKey
-    local hub = _G.OneWoW
-    if hub and hub.db and hub.db.global then
-        themeKey = hub.db.global.theme or "green"
-    else
-        local addon = _G.OneWoW_Catalog
-        themeKey = (addon and addon.db and addon.db.global.theme) or "green"
+    if OneWoW_GUI and OneWoW_GUI.GetSetting then
+        themeKey = OneWoW_GUI:GetSetting("theme")
     end
+    themeKey = themeKey or "green"
+
     if ns.Constants.THEMES and ns.Constants.THEMES[themeKey] then
         local selected = ns.Constants.THEMES[themeKey]
         for key, value in pairs(selected) do
@@ -717,6 +716,10 @@ function ns.ApplyTheme()
                 ns.Constants.THEME[key] = value
             end
         end
+    end
+
+    if OneWoW_GUI then
+        OneWoW_GUI:ApplyTheme()
     end
 end
 
