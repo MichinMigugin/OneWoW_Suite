@@ -8,8 +8,10 @@
 ## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
 ## LoadOnDemand: 0
 ## Group: OneWoW
+## SavedVariables: OneWoW_GUI_DB
 
 Libs\LibStub\LibStub.lua
 Core.lua
 Constants.lua
 OneWoW_GUI.lua
+Settings.lua

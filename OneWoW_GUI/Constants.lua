@@ -31,6 +31,9 @@ OneWoW_GUI.Constants = {
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     },
 
+    TOGGLE_BUTTON_WIDTH  = 50,
+    TOGGLE_BUTTON_HEIGHT = 22,
+
     BACKDROP_INNER_NO_INSETS = {
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",

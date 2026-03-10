@@ -57,18 +57,15 @@ end
 
 function OneWoW_GUI:ApplyTheme(addon)
     local themeKey
-    local hub = _G.OneWoW
 
-    -- Use OneWoW Hub theme if available
-    if hub and hub.db and hub.db.global and hub.db.global.theme then
-        themeKey = hub.db.global.theme
-    else
-        -- Use OneWoW_QoL theme if available
-        if addon and addon.db and addon.db.global and addon.db.global.theme then
-            themeKey = addon.db.global.theme
-        end
+    if self._settingsDB and self._settingsDB.theme then
+        themeKey = self._settingsDB.theme
+    elseif _G.OneWoW and _G.OneWoW.db and _G.OneWoW.db.global and _G.OneWoW.db.global.theme then
+        themeKey = _G.OneWoW.db.global.theme
+    elseif addon and addon.db and addon.db.global and addon.db.global.theme then
+        themeKey = addon.db.global.theme
     end
-    -- Fallback to green theme if no theme is set
+
     local selectedTheme = Constants.THEMES[themeKey] or Constants.THEMES["green"]
     Constants.ACTIVE_THEME = setmetatable(selectedTheme, themeMetatable)
 end
@@ -134,15 +131,130 @@ function OneWoW_GUI:CreateButton(name, parent, text, width, height)
     return btn
 end
 
+function OneWoW_GUI:CreateFitTextButton(parent, text, options)
+    options = options or {}
+    local height = options.height or Constants.GUI.BUTTON_HEIGHT
+    local minWidth = options.minWidth or 40
+    local paddingX = options.paddingX or 24
+
+    local btn = self:CreateButton(nil, parent, text, minWidth, height)
+    local textWidth = btn.text:GetStringWidth()
+    local finalWidth = math.max(minWidth, textWidth + paddingX)
+    btn:SetWidth(finalWidth)
+
+    btn._minWidth = minWidth
+    btn._paddingX = paddingX
+
+    function btn:SetFitText(newText)
+        self.text:SetText(newText)
+        local w = self.text:GetStringWidth()
+        self:SetWidth(math.max(self._minWidth, w + self._paddingX))
+    end
+
+    return btn
+end
+
+function OneWoW_GUI:CreateFitFrameButtons(parent, yOffset, items, options)
+    options = options or {}
+    local height = options.height or 26
+    local gap = options.gap or 4
+    local marginX = options.marginX or 12
+    local onSelect = options.onSelect
+    local availWidth = (options.width or parent:GetWidth()) - (marginX * 2)
+    local n = #items
+    local bw = math.max(30, math.floor((availWidth - gap * (n - 1)) / n))
+
+    local buttons = {}
+
+    local function applyNormal(btn)
+        if btn.isActive then
+            btn:SetBackdropColor(GetThemeColor("BG_ACTIVE"))
+            btn:SetBackdropBorderColor(GetThemeColor("BORDER_ACCENT"))
+            btn.text:SetTextColor(GetThemeColor("TEXT_ACCENT"))
+        else
+            btn:SetBackdropColor(GetThemeColor("BTN_NORMAL"))
+            btn:SetBackdropBorderColor(GetThemeColor("BTN_BORDER"))
+            btn.text:SetTextColor(GetThemeColor("TEXT_MUTED"))
+        end
+    end
+
+    local function applyHover(btn)
+        if btn.isActive then
+            btn:SetBackdropBorderColor(GetThemeColor("BORDER_FOCUS"))
+        else
+            btn:SetBackdropColor(GetThemeColor("BTN_HOVER"))
+            btn:SetBackdropBorderColor(GetThemeColor("BTN_BORDER_HOVER"))
+            btn.text:SetTextColor(GetThemeColor("TEXT_SECONDARY"))
+        end
+    end
+
+    local xPos = marginX
+    local rowY = yOffset
+
+    for i, item in ipairs(items) do
+        local btn = self:CreateButton(nil, parent, item.text, bw, height)
+        btn:SetPoint("TOPLEFT", parent, "TOPLEFT", xPos, rowY)
+        btn.itemValue = item.value
+        btn.isActive = item.isActive or false
+
+        applyNormal(btn)
+
+        btn:SetScript("OnEnter", function(self) applyHover(self) end)
+        btn:SetScript("OnLeave", function(self) applyNormal(self) end)
+        btn:SetScript("OnMouseDown", function(self) self:SetBackdropColor(GetThemeColor("BTN_PRESSED")) end)
+        btn:SetScript("OnMouseUp", function(self) applyNormal(self) end)
+        btn:SetScript("OnClick", function(self)
+            for _, ob in ipairs(buttons) do
+                ob.isActive = (ob == self)
+                applyNormal(ob)
+            end
+            if onSelect then
+                onSelect(self.itemValue, item.text, self)
+            end
+        end)
+
+        table.insert(buttons, btn)
+        xPos = xPos + bw + gap
+
+        if i < n and (xPos + bw) > (availWidth + marginX) then
+            xPos = marginX
+            rowY = rowY - height - gap
+        end
+    end
+
+    local finalY = rowY - height
+
+    buttons.SetActiveByValue = function(value)
+        for _, btn in ipairs(buttons) do
+            btn.isActive = (btn.itemValue == value)
+            applyNormal(btn)
+        end
+    end
+
+    return buttons, finalY
+end
+
 function OneWoW_GUI:CreateOnOffToggleButtons(parent, yOffset, onLabel, offLabel, width, height, isEnabled, value, onValueChange)
-    width = width or 50
-    height = height or 22
+    width = width or Constants.TOGGLE_BUTTON_WIDTH
+    height = height or Constants.TOGGLE_BUTTON_HEIGHT
 
-    local onBtn = self:CreateButton(nil, parent, onLabel, width, height)
-    onBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
+    local onBtn = self:CreateFitTextButton(parent, onLabel, { height = height, minWidth = width })
+    local offBtn = self:CreateFitTextButton(parent, offLabel, { height = height, minWidth = width })
 
-    local offBtn = self:CreateButton(nil, parent, offLabel, width, height)
-    offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
+    local maxW = math.max(onBtn:GetWidth(), offBtn:GetWidth())
+    onBtn:SetWidth(maxW)
+    offBtn:SetWidth(maxW)
+
+    local statusPfx = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    statusPfx:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+    statusPfx:SetText("Status:")
+    statusPfx:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+
+    local statusVal = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    statusVal:SetPoint("LEFT", statusPfx, "RIGHT", 4, 0)
+
+    onBtn:SetPoint("LEFT", statusVal, "RIGHT", 10, 0)
+    offBtn:SetPoint("LEFT", onBtn, "RIGHT", 4, 0)
 
     local function applyHover(btn)
         if btn.isActive then
@@ -177,11 +289,9 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, yOffset, onLabel, offLabel,
 
     local function refresh(enabled, val)
         isEnabled = enabled
-        -- Guard: frames may be orphaned if detail panel was cleared (e.g. module switch)
         if not onBtn:GetParent() or not offBtn:GetParent() then
             return
         end
-        -- Coerce to boolean to prevent EnableMouse(nil) which disables interaction
         enabled = enabled == true
         val = val == true
         onBtn.isActive = enabled and val
@@ -195,17 +305,26 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, yOffset, onLabel, offLabel,
             offBtn:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
             onBtn.text:SetTextColor(GetThemeColor("TEXT_MUTED"))
             offBtn.text:SetTextColor(GetThemeColor("TEXT_MUTED"))
+            statusPfx:SetTextColor(GetThemeColor("TEXT_MUTED"))
+            statusVal:SetText(val and onLabel or offLabel)
+            statusVal:SetTextColor(GetThemeColor("TEXT_MUTED"))
         else
             applyNormal(onBtn)
             applyNormal(offBtn)
+            statusPfx:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+            if val then
+                statusVal:SetText(onLabel)
+                statusVal:SetTextColor(GetThemeColor("TEXT_FEATURES_ENABLED"))
+            else
+                statusVal:SetText(offLabel)
+                statusVal:SetTextColor(GetThemeColor("TEXT_FEATURES_DISABLED"))
+            end
         end
     end
 
     onBtn:SetScript("OnClick", function()
         onValueChange(true)
-        -- Run refresh immediately so visual state is correct before any deferred handlers
         refresh(isEnabled, true)
-        -- Defer only hover re-apply; OnLeave may have fired during click
         C_Timer.After(0, function()
             if onBtn:GetParent() and offBtn:GetParent() then
                 if onBtn:IsMouseOver() then
@@ -231,7 +350,7 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, yOffset, onLabel, offLabel,
     end)
 
     refresh(isEnabled, value)
-    return onBtn, offBtn, refresh
+    return onBtn, offBtn, refresh, statusPfx, statusVal
 end
 
 --[[
@@ -284,6 +403,161 @@ function OneWoW_GUI:CreateEditBox(name, parent, options)
     end)
 
     return box
+end
+
+function OneWoW_GUI:CreateSearchBox(parent, options)
+    options = options or {}
+    local height = options.height or Constants.GUI.SEARCH_HEIGHT
+    local placeholderText = options.placeholderText or ""
+    local onTextChanged = options.onTextChanged
+
+    local box = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
+    box.placeholderText = placeholderText
+    box:SetHeight(height)
+    box:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
+    box:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
+    box:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
+    box:SetFontObject(GameFontHighlight)
+    box:SetTextInsets(GetSpacing("SM"), GetSpacing("SM"), 0, 0)
+    box:SetAutoFocus(false)
+    box:EnableMouse(true)
+    box:SetTextColor(GetThemeColor("TEXT_MUTED"))
+    box:SetText(placeholderText)
+
+    box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
+    box:SetScript("OnEditFocusGained", function(self)
+        self:SetBackdropBorderColor(GetThemeColor("BORDER_ACCENT"))
+        if self:GetText() == self.placeholderText then
+            self:SetText("")
+            self:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+        end
+    end)
+
+    box:SetScript("OnEditFocusLost", function(self)
+        self:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
+        if self:GetText() == "" then
+            self:SetText(self.placeholderText)
+            self:SetTextColor(GetThemeColor("TEXT_MUTED"))
+        end
+    end)
+
+    if onTextChanged then
+        box:SetScript("OnTextChanged", function(self)
+            local text = self:GetText()
+            if text == self.placeholderText then text = "" end
+            onTextChanged(text)
+        end)
+    end
+
+    function box:GetSearchText()
+        local text = self:GetText()
+        if text == self.placeholderText then return "" end
+        return text
+    end
+
+    return box
+end
+
+function OneWoW_GUI:CreateStatusDot(parent, options)
+    options = options or {}
+    local size = options.size or 8
+
+    local dot = parent:CreateTexture(nil, "OVERLAY")
+    dot:SetSize(size, size)
+    dot:SetTexture("Interface\\Buttons\\WHITE8x8")
+
+    if options.enabled == true then
+        dot:SetVertexColor(GetThemeColor("DOT_FEATURES_ENABLED"))
+    elseif options.enabled == false then
+        dot:SetVertexColor(GetThemeColor("DOT_FEATURES_DISABLED"))
+    end
+
+    function dot:SetStatus(enabled)
+        if enabled then
+            self:SetVertexColor(GetThemeColor("DOT_FEATURES_ENABLED"))
+        else
+            self:SetVertexColor(GetThemeColor("DOT_FEATURES_DISABLED"))
+        end
+    end
+
+    return dot
+end
+
+function OneWoW_GUI:CreateListRowBasic(parent, options)
+    options = options or {}
+    local height = options.height or 30
+    local labelText = options.label or ""
+    local onClick = options.onClick
+    local showDot = options.showDot
+    local dotEnabled = options.dotEnabled
+    local showValueText = options.showValueText
+    local valueText = options.valueText or ""
+
+    local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    row:SetHeight(height)
+    row:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
+    row:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
+    row:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
+    row.isActive = false
+
+    if showDot then
+        row.dot = self:CreateStatusDot(row, { enabled = dotEnabled })
+        row.dot:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+    end
+
+    if showValueText then
+        row.valueText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.valueText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+        row.valueText:SetTextColor(GetThemeColor("TEXT_MUTED"))
+        row.valueText:SetJustifyH("RIGHT")
+        row.valueText:SetText(valueText)
+    end
+
+    row.label = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    row.label:SetPoint("LEFT", row, "LEFT", 10, 0)
+    if showDot then
+        row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
+    elseif showValueText and row.valueText then
+        row.label:SetPoint("RIGHT", row.valueText, "LEFT", -4, 0)
+    else
+        row.label:SetPoint("RIGHT", row, "RIGHT", -10, 0)
+    end
+    row.label:SetJustifyH("LEFT")
+    row.label:SetText(labelText)
+    row.label:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+
+    function row:SetActive(active)
+        self.isActive = active
+        if active then
+            self:SetBackdropColor(GetThemeColor("BG_ACTIVE"))
+            self:SetBackdropBorderColor(GetThemeColor("BORDER_ACCENT"))
+            self.label:SetTextColor(GetThemeColor("TEXT_ACCENT"))
+        else
+            self:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
+            self:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
+            self.label:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+
+    row:SetScript("OnEnter", function(self)
+        if not self.isActive then
+            self:SetBackdropColor(GetThemeColor("BG_HOVER"))
+            self.label:SetTextColor(GetThemeColor("TEXT_ACCENT"))
+        end
+    end)
+    row:SetScript("OnLeave", function(self)
+        if not self.isActive then
+            self:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
+            self.label:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+        end
+    end)
+
+    if onClick then
+        row:SetScript("OnClick", function(self) onClick(self) end)
+    end
+
+    return row
 end
 
 function OneWoW_GUI:CreateCheckbox(name, parent, label)
@@ -431,7 +705,7 @@ function OneWoW_GUI:CreateScrollFrame(name, parent)
     scrollFrame:SetPoint("TOPLEFT", 8, -8)
     scrollFrame:SetPoint("BOTTOMRIGHT", -8, 8)
 
-    applyScrollBarStyle(scrollFrame.ScrollBar, scrollFrame, -2)
+    applyScrollBarStyle(scrollFrame.ScrollBar, parent, -2)
 
     local content = CreateFrame("Frame", name .. "Content", scrollFrame)
     content:SetHeight(1)
@@ -475,24 +749,11 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
 
     local searchBox
     if showSearch then
-        searchBox = CreateFrame("EditBox", nil, listPanel, "BackdropTemplate")
+        searchBox = self:CreateSearchBox(listPanel, {
+            placeholderText = options.searchPlaceholder or "",
+        })
         searchBox:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 8, -30)
         searchBox:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -8, -30)
-        searchBox:SetHeight(22)
-        searchBox:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
-        searchBox:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
-        searchBox:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
-        searchBox:SetFontObject(GameFontHighlight)
-        searchBox:SetTextInsets(8, 8, 0, 0)
-        searchBox:SetAutoFocus(false)
-        searchBox:EnableMouse(true)
-        searchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-        searchBox:SetScript("OnEditFocusGained", function(self)
-            self:SetBackdropBorderColor(GetThemeColor("BORDER_ACCENT"))
-        end)
-        searchBox:SetScript("OnEditFocusLost", function(self)
-            self:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
-        end)
     end
 
     local containerTopY = showSearch and -58 or -32
@@ -588,6 +849,338 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
         rightStatusBar = rightStatusBar,
         rightStatusText = rightStatusText,
     }
+end
+
+function OneWoW_GUI:CreateDropdown(parent, options)
+    options = options or {}
+    local width = options.width or 200
+    local height = options.height or 26
+    local defaultText = options.text or ""
+
+    local dropdown = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    dropdown:SetSize(width, height)
+    dropdown:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
+    dropdown:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
+    dropdown:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
+
+    local text = dropdown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    text:SetPoint("LEFT", dropdown, "LEFT", 8, 0)
+    text:SetPoint("RIGHT", dropdown, "RIGHT", -20, 0)
+    text:SetJustifyH("LEFT")
+    text:SetWordWrap(false)
+    text:SetText(defaultText)
+    text:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+
+    local arrow = dropdown:CreateTexture(nil, "OVERLAY")
+    arrow:SetSize(12, 12)
+    arrow:SetPoint("RIGHT", dropdown, "RIGHT", -4, 0)
+    arrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
+
+    dropdown:SetScript("OnEnter", function(self)
+        self:SetBackdropBorderColor(GetThemeColor("BORDER_FOCUS"))
+    end)
+    dropdown:SetScript("OnLeave", function(self)
+        self:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
+    end)
+
+    dropdown._text = text
+    dropdown._activeValue = nil
+
+    return dropdown, text
+end
+
+local _dropdownMenuCount = 0
+
+function OneWoW_GUI:AttachFilterMenu(dropdown, dropdownText, options)
+    options = options or {}
+    local searchable = options.searchable ~= false
+    local buildItems = options.buildItems
+    local onSelect = options.onSelect
+    local maxVisible = options.maxVisible or 20
+    local menuHeight = options.menuHeight or 314
+    local getActiveValue = options.getActiveValue
+
+    dropdown:SetScript("OnClick", function(self)
+        if self._menu and self._menu:IsShown() then
+            self._menu:Hide()
+            return
+        end
+
+        local items = buildItems and buildItems() or {}
+
+        _dropdownMenuCount = _dropdownMenuCount + 1
+        local uid = _dropdownMenuCount
+
+        local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
+        self._menu = menu
+        menu:SetFrameStrata("FULLSCREEN_DIALOG")
+        menu:SetSize(self:GetWidth() + 20, menuHeight)
+        menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
+        menu:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
+        menu:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
+        menu:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
+        menu:EnableMouse(true)
+
+        local searchBox
+        local contentTopY = -2
+
+        if searchable then
+            searchBox = CreateFrame("EditBox", nil, menu, "BackdropTemplate")
+            searchBox:SetSize(menu:GetWidth() - 15, 28)
+            searchBox:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
+            searchBox:SetBackdrop(Constants.BACKDROP_INNER)
+            searchBox:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
+            searchBox:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
+            searchBox:SetFontObject(GameFontHighlight)
+            searchBox:SetTextInsets(8, 8, 0, 0)
+            searchBox:SetAutoFocus(false)
+            searchBox:SetMaxLetters(50)
+            searchBox:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+            searchBox:SetScript("OnEditFocusGained", function(s)
+                s:SetBackdropBorderColor(GetThemeColor("BORDER_FOCUS"))
+            end)
+            searchBox:SetScript("OnEditFocusLost", function(s)
+                s:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
+            end)
+
+            local separator = menu:CreateTexture(nil, "ARTWORK")
+            separator:SetSize(menu:GetWidth() - 4, 1)
+            separator:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -32)
+            separator:SetColorTexture(GetThemeColor("BORDER_DEFAULT"))
+
+            contentTopY = -36
+        end
+
+        local scrollContainer = CreateFrame("Frame", nil, menu)
+        scrollContainer:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, contentTopY)
+        scrollContainer:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -2, 2)
+
+        local scrollFrame = CreateFrame("ScrollFrame", "OneWoWGUI_DropMenu_" .. uid, scrollContainer, "UIPanelScrollFrameTemplate")
+        scrollFrame:SetPoint("TOPLEFT", scrollContainer, "TOPLEFT", 0, 0)
+        scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", 0, 0)
+        scrollFrame:EnableMouseWheel(true)
+
+        applyScrollBarStyle(scrollFrame.ScrollBar, scrollContainer, -2)
+
+        local scrollChild = CreateFrame("Frame", "OneWoWGUI_DropMenuContent_" .. uid, scrollFrame)
+        scrollChild:SetHeight(1)
+        scrollFrame:SetScrollChild(scrollChild)
+        scrollFrame:HookScript("OnSizeChanged", function(sf, w)
+            scrollChild:SetWidth(w)
+        end)
+
+        local elements = {}
+        local activeValue = getActiveValue and getActiveValue() or dropdown._activeValue
+
+        for _, item in ipairs(items) do
+            local itemType = item.type or "item"
+
+            if itemType == "header" then
+                local header = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                header:SetText(item.text)
+                header:SetTextColor(GetThemeColor("ACCENT_PRIMARY"))
+                table.insert(elements, { frame = header, type = "header", height = 24 })
+
+            elseif itemType == "divider" then
+                local divider = scrollChild:CreateTexture(nil, "ARTWORK")
+                divider:SetHeight(1)
+                divider:SetColorTexture(GetThemeColor("BORDER_SUBTLE"))
+                table.insert(elements, { frame = divider, type = "divider", height = 10 })
+
+            elseif itemType == "checkbox" then
+                local row = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+                row:SetHeight(26)
+                row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+                row:SetBackdropColor(0, 0, 0, 0)
+
+                local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
+                cb:SetSize(18, 18)
+                cb:SetPoint("LEFT", row, "LEFT", 4, 0)
+                cb:SetChecked(item.checked or false)
+
+                local label = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                label:SetPoint("LEFT", cb, "RIGHT", 2, 0)
+                label:SetText(item.text)
+                label:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+
+                row:SetScript("OnEnter", function(r)
+                    r:SetBackdropColor(GetThemeColor("BG_HOVER"))
+                    label:SetTextColor(GetThemeColor("TEXT_ACCENT"))
+                end)
+                row:SetScript("OnLeave", function(r)
+                    r:SetBackdropColor(0, 0, 0, 0)
+                    label:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+                end)
+
+                local onToggle = item.onToggle
+                cb:SetScript("OnClick", function(c)
+                    if onToggle then onToggle(c:GetChecked()) end
+                end)
+                row:SetScript("OnClick", function()
+                    cb:SetChecked(not cb:GetChecked())
+                    if onToggle then onToggle(cb:GetChecked()) end
+                end)
+
+                row.checkbox = cb
+                table.insert(elements, { frame = row, type = "checkbox", height = 26 })
+
+            else
+                local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+                btn:SetSize(scrollChild:GetWidth() or (menu:GetWidth() - 20), 26)
+                btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+
+                if activeValue == item.value then
+                    btn:SetBackdropColor(GetThemeColor("ACCENT_PRIMARY"))
+                else
+                    btn:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
+                end
+
+                local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                txt:SetPoint("LEFT", btn, "LEFT", 8, 0)
+                txt:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
+                txt:SetJustifyH("LEFT")
+                txt:SetText(item.text)
+                txt:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+
+                btn:SetScript("OnEnter", function(b)
+                    if activeValue ~= item.value then
+                        b:SetBackdropColor(GetThemeColor("BG_HOVER"))
+                        txt:SetTextColor(GetThemeColor("TEXT_ACCENT"))
+                    end
+                end)
+                btn:SetScript("OnLeave", function(b)
+                    if activeValue ~= item.value then
+                        b:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
+                        txt:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+                    end
+                end)
+                btn:SetScript("OnClick", function()
+                    menu:Hide()
+                    dropdown._activeValue = item.value
+                    if onSelect then
+                        onSelect(item.value, item.text)
+                    end
+                end)
+
+                btn.filterKey = item.text:lower()
+                btn:Hide()
+                table.insert(elements, { frame = btn, type = "item", height = 28, filterKey = btn.filterKey })
+            end
+        end
+
+        local function renderList(filter)
+            local yPos = -2
+            local shown = 0
+            local isFiltering = filter ~= ""
+            for _, elem in ipairs(elements) do
+                if isFiltering and elem.type ~= "item" then
+                    elem.frame:Hide()
+                elseif elem.type == "item" then
+                    if not isFiltering or string.find(elem.filterKey, filter, 1, true) then
+                        if shown < maxVisible or isFiltering then
+                            elem.frame:ClearAllPoints()
+                            elem.frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, yPos)
+                            elem.frame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, yPos)
+                            elem.frame:Show()
+                            yPos = yPos - elem.height
+                            shown = shown + 1
+                        else
+                            elem.frame:Hide()
+                        end
+                    else
+                        elem.frame:Hide()
+                    end
+                elseif elem.type == "header" then
+                    elem.frame:ClearAllPoints()
+                    elem.frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, yPos - 4)
+                    elem.frame:Show()
+                    yPos = yPos - elem.height
+                elseif elem.type == "divider" then
+                    elem.frame:ClearAllPoints()
+                    elem.frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, yPos - 4)
+                    elem.frame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -8, yPos - 4)
+                    elem.frame:Show()
+                    yPos = yPos - elem.height
+                elseif elem.type == "checkbox" then
+                    elem.frame:ClearAllPoints()
+                    elem.frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, yPos)
+                    elem.frame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, yPos)
+                    elem.frame:Show()
+                    yPos = yPos - elem.height
+                end
+            end
+            local totalH = math.max(28, math.abs(yPos) + 2)
+            scrollChild:SetHeight(totalH)
+        end
+
+        renderList("")
+
+        if searchBox then
+            searchBox:SetScript("OnTextChanged", function(s)
+                renderList(s:GetText():lower())
+            end)
+            searchBox:SetScript("OnEscapePressed", function(s)
+                if s:GetText() ~= "" then
+                    s:SetText("")
+                    renderList("")
+                else
+                    menu:Hide()
+                end
+            end)
+        end
+
+        menu:SetScript("OnShow", function(m)
+            local timeOutside = 0
+            m:SetScript("OnUpdate", function(m2, elapsed)
+                if not MouseIsOver(menu) and not MouseIsOver(self) and (not searchBox or not searchBox:HasFocus()) then
+                    timeOutside = timeOutside + elapsed
+                    if timeOutside > 0.5 then
+                        m2:Hide()
+                        m2:SetScript("OnUpdate", nil)
+                    end
+                else
+                    timeOutside = 0
+                end
+            end)
+        end)
+
+        menu:Show()
+        if searchBox then
+            searchBox:SetFocus()
+        end
+    end)
+end
+
+function OneWoW_GUI:CreateSlider(parent, minVal, maxVal, step, currentVal, onChange, width, fmt)
+    local container = CreateFrame("Frame", nil, parent)
+    container:SetSize(width or 200, 36)
+
+    local slider = CreateFrame("Slider", nil, container, "OptionsSliderTemplate")
+    slider:SetPoint("TOPLEFT",  container, "TOPLEFT",  0,   0)
+    slider:SetPoint("TOPRIGHT", container, "TOPRIGHT", -40, 0)
+    slider:SetHeight(16)
+    slider:SetMinMaxValues(minVal, maxVal)
+    slider:SetValueStep(step)
+    slider:SetValue(currentVal)
+    slider:SetObeyStepOnDrag(true)
+
+    local valLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    valLabel:SetPoint("LEFT", slider, "RIGHT", 6, 0)
+    valLabel:SetText(string.format(fmt or "%.1f", currentVal))
+    valLabel:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+
+    if slider.Low  then slider.Low:SetText(tostring(minVal)) end
+    if slider.High then slider.High:SetText(tostring(maxVal)) end
+    if slider.Text then slider.Text:SetText("") end
+
+    slider:SetScript("OnValueChanged", function(self, val)
+        local rounded = math.floor(val / step + 0.5) * step
+        rounded = math.max(minVal, math.min(maxVal, rounded))
+        valLabel:SetText(string.format(fmt or "%.1f", rounded))
+        onChange(rounded)
+    end)
+
+    return container
 end
 
 function OneWoW_GUI:ClearFrame(frame)
