@@ -52,7 +52,7 @@ local function CategorizePortal(portalData)
 	end
 
 	if portalData.type == "spell" then
-		local classSpells = {18960, 193753, 50977, 126892, 556, 120145, 3565, 32271, 32272, 49358, 49359, 176248, 176242, 224869, 193759, 312370, 312372}
+		local classSpells = {18960, 193753, 50977, 126892, 556, 120145, 3565, 32271, 32272, 49358, 49359, 176248, 176242, 224869, 193759, 312370, 312372, 265225, 1238686}
 		for _, spellID in ipairs(classSpells) do
 			if portalData.id == spellID then
 				return "class"

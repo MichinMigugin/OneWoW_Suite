@@ -416,7 +416,17 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 		button:SetAttribute("type", "toy")
 		button:SetAttribute("toy", portalData.id)
 		local _, name, icon = C_ToyBox.GetToyInfo(portalData.id)
-		if icon then button:SetNormalTexture(icon) end
+		if icon then
+			button:SetNormalTexture(icon)
+		else
+			local item = Item:CreateFromItemID(portalData.id)
+			item:ContinueOnItemLoad(function()
+				local itemIcon = item:GetItemIcon()
+				if itemIcon then
+					button:SetNormalTexture(itemIcon)
+				end
+			end)
+		end
 	elseif portalData.type == "item" then
 		if OneWoW.PortalHubEquip and OneWoW.PortalHubEquip:IsItemEquippable(portalData.id) then
 			button:SetAttribute("type", "macro")

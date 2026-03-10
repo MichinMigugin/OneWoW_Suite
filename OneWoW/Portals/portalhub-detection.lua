@@ -165,23 +165,23 @@ function Detection:GetRacePortals(showAll)
 	local _, race = UnitRace("player")
 
 	if race == "Dark Iron Dwarf" or showAll then
-		if IsSpellKnown(265225) or (showAll and race == "Dark Iron Dwarf") then
+		if IsSpellKnown(265225) or showAll then
 			table.insert(portals, {type = "spell", id = 265225})
 		end
 	end
 
 	if race == "Vulpera" or showAll then
-		if IsSpellKnown(312370) or (showAll and race == "Vulpera") then
+		if IsSpellKnown(312370) or showAll then
 			table.insert(portals, {type = "spell", id = 312370})
 		end
-		if IsSpellKnown(312372) or (showAll and race == "Vulpera") then
+		if IsSpellKnown(312372) or showAll then
 			table.insert(portals, {type = "spell", id = 312372})
 		end
 	end
 
-	if race == "Earthen" or showAll then
-		if IsSpellKnown(444991) or (showAll and race == "Earthen") then
-			table.insert(portals, {type = "spell", id = 444991})
+	if race == "Haranir" or showAll then
+		if IsSpellKnown(1238686) or showAll then
+			table.insert(portals, {type = "spell", id = 1238686})
 		end
 	end
 

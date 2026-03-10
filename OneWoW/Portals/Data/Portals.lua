@@ -198,6 +198,7 @@ Portals.Items = {
 		{id = 234394, name = "Gallagio Loyalty Rewards Card: Legendary", type = "item"},
 		{id = 243056, name = "Delver's Mana-Bound Ethergate", type = "item"},
 		{id = 249699, name = "Shadowguard Translocator", type = "item"},
+		{id = 253629, name = "Personal Key to the Arcantina", type = "toy"},
 		{id = 28585, name = "Ruby Slippers", type = "item"},
 		{id = 153226, name = "Observer's Locus Resonator", type = "item"},
 		{id = 165581, name = "Crest of Pa'ku", type = "item"},

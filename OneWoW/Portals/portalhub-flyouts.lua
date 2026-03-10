@@ -87,6 +87,14 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 		local _, name, icon = C_ToyBox.GetToyInfo(portalData.id)
 		if icon then
 			button.icon:SetTexture(icon)
+		else
+			local item = Item:CreateFromItemID(portalData.id)
+			item:ContinueOnItemLoad(function()
+				local itemIcon = item:GetItemIcon()
+				if itemIcon then
+					button.icon:SetTexture(itemIcon)
+				end
+			end)
 		end
 	elseif portalData.type == "item" then
 		button:SetAttribute("type", "item")
