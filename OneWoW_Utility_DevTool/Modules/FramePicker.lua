@@ -124,20 +124,17 @@ function FramePicker:GetGeometricFramesAtCursor()
         if frame:IsVisible() and frame:IsShown() then
             visibleCount = visibleCount + 1
 
-            local success, left, bottom, width, height = pcall(function()
-                return frame:GetRect()
-            end)
-
-            if success and left and width and height and width > 0 and height > 0 then
-                hasRectCount = hasRectCount + 1
-
-                local right = left + width
-                local top = bottom + height
-
-                if x >= left and x <= right and y >= bottom and y <= top then
-                    table.insert(framesAtCursor, frame)
+            local hitResult = pcall(function()
+                local l, b, w, h = frame:GetRect()
+                if l and w and h and w > 0 and h > 0 then
+                    hasRectCount = hasRectCount + 1
+                    local right = l + w
+                    local top = b + h
+                    if x >= l and x <= right and y >= b and y <= top then
+                        table.insert(framesAtCursor, frame)
+                    end
                 end
-            end
+            end)
         end
         frame = EnumerateFrames(frame)
     end
@@ -314,7 +311,8 @@ function FramePicker:OnUpdate(elapsed)
                     local fname = f.GetName and f:GetName() or "Anonymous"
                     local ftype = f.GetObjectType and f:GetObjectType() or "Unknown"
                     local mouse = f.IsMouseEnabled and (f:IsMouseEnabled() and "M" or "-") or "?"
-                    local hasRect = (f.GetRect and select(1, f:GetRect()) ~= nil) and "R" or "-"
+                    local hasRect = "-"
+                    pcall(function() if f.GetRect and select(1, f:GetRect()) ~= nil then hasRect = "R" end end)
                     local marker = (i == self.frameIndex) and ">>>" or "   "
                     table.insert(details, string.format("%s[%d] %s (%s) %s%s", marker, i, fname, ftype, mouse, hasRect))
                 end
