@@ -25,6 +25,5 @@ function ns:OnPlayerLogin()
     if ns.DataManager then
         ns.DataManager:Initialize()
         ns.DataManager:RegisterEvents()
-        ns.DataManager:CollectAllData()
     end
 end

@@ -17,7 +17,6 @@ function DataManager:RegisterEvents()
     end
 
     local events = {
-        "PLAYER_ALIVE",
         "PLAYER_ENTERING_WORLD",
         "PLAYER_LEVEL_UP",
         "PLAYER_SPECIALIZATION_CHANGED",
@@ -53,7 +52,7 @@ function DataManager:RegisterEvents()
 end
 
 function DataManager:HandleEvent(event, ...)
-    if event == "PLAYER_ALIVE" or event == "PLAYER_ENTERING_WORLD" then
+    if event == "PLAYER_ENTERING_WORLD" then
         C_Timer.After(1, function()
             self:CollectAllData()
         end)
