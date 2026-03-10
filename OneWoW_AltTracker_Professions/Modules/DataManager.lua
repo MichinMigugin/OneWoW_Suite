@@ -21,8 +21,6 @@ function DataManager:RegisterEvents()
         "TRADE_SKILL_SHOW",
         "TRADE_SKILL_LIST_UPDATE",
         "TRADE_SKILL_CLOSE",
-        "TRAINER_SHOW",
-        "TRAINER_CLOSED",
         "PLAYER_EQUIPMENT_CHANGED",
     }
 
@@ -50,13 +48,6 @@ function DataManager:HandleEvent(event, ...)
 
     elseif event == "TRADE_SKILL_CLOSE" then
         currentOpenProfession = nil
-
-    elseif event == "TRAINER_SHOW" then
-        C_Timer.After(0.5, function()
-            self:OnTrainerShow()
-        end)
-
-    elseif event == "TRAINER_CLOSED" then
 
     elseif event == "PLAYER_EQUIPMENT_CHANGED" then
         local slotID = ...
@@ -108,20 +99,6 @@ function DataManager:CollectAdvancedData(charKey, charData, professionName)
     if not charKey or not charData or not professionName then return false end
 
     ns.ProfessionAdvanced:CollectData(charKey, charData, professionName)
-
-    ns.ProfessionCooldowns:CollectData(charKey, charData, professionName)
-
-    return true
-end
-
-function DataManager:OnTrainerShow()
-    local charKey = ns:GetCharacterKey()
-    if not charKey then return false end
-
-    local charData = ns:GetCharacterData(charKey)
-    if not charData then return false end
-
-    ns.ProfessionTrainers:CollectData(charKey, charData)
 
     return true
 end

@@ -27,7 +27,7 @@ function ProfessionsModule:GetCharacterProfessions(characterKey)
         professions = charData.professions or {},
         professionEquipment = charData.professionEquipment or {},
         recipeCount = 0,
-        recipesByExpansion = charData.recipesByExpansion or {},
+        recipesByExpansion = {},
         weeklyQuestStatus = {}
     }
 

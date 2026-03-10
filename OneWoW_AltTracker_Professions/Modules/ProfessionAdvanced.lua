@@ -25,109 +25,53 @@ function Module:CollectData(charKey, charData, professionName)
         charData.recipes = {}
     end
 
-    if not charData.recipesByExpansion then
-        charData.recipesByExpansion = {}
-    end
-
     local allRecipeIDs = C_TradeSkillUI.GetAllRecipeIDs()
     if not allRecipeIDs or #allRecipeIDs == 0 then
         return false
     end
 
     local recipes = {}
-    local recipesByExpansion = {}
 
     for _, recipeID in ipairs(allRecipeIDs) do
         local recipeInfo = C_TradeSkillUI.GetRecipeInfo(recipeID)
-
-        if recipeInfo then
-            local recipeData = {
-                recipeID = recipeInfo.recipeID,
-                name = recipeInfo.name,
-                learned = recipeInfo.learned,
-                craftable = recipeInfo.craftable,
-                disabled = recipeInfo.disabled,
-                favorite = recipeInfo.favorite,
-                icon = recipeInfo.icon,
-                categoryID = recipeInfo.categoryID,
-                canSkillUp = recipeInfo.canSkillUp,
-                numSkillUps = recipeInfo.numSkillUps,
-                relativeDifficulty = recipeInfo.relativeDifficulty,
-                supportsQualities = recipeInfo.supportsQualities,
-                isRecraft = recipeInfo.isRecraft,
-            }
-
-            if recipeInfo.learned then
-                local schematic = C_TradeSkillUI.GetRecipeSchematic(recipeID, false)
-                if schematic then
-                    recipeData.outputItemID = schematic.outputItemID
-                    recipeData.quantityMin = schematic.quantityMin
-                    recipeData.quantityMax = schematic.quantityMax
-
-                    if schematic.reagentSlotSchematics then
-                        local reagents = {}
-                        for slotIndex, slotData in ipairs(schematic.reagentSlotSchematics) do
-                            if slotData.reagents then
-                                for _, reagent in ipairs(slotData.reagents) do
-                                    table.insert(reagents, {
-                                        itemID = reagent.itemID,
-                                        currencyID = reagent.currencyID,
-                                        quantity = slotData.quantityRequired,
-                                        required = slotData.required,
-                                    })
-                                end
-                            end
-                        end
-                        recipeData.reagents = reagents
-                    end
-                end
-
-                recipes[recipeID] = recipeData
-
-                local expansionID = self:GetRecipeExpansion(recipeInfo)
-                if not recipesByExpansion[expansionID] then
-                    recipesByExpansion[expansionID] = {
-                        expansionID = expansionID,
-                        expansionName = EXPANSION_NAMES[expansionID] or "Unknown",
-                        learnedRecipes = 0,
-                        totalRecipes = 0,
-                        recipes = {},
-                    }
-                end
-
-                recipesByExpansion[expansionID].learnedRecipes = recipesByExpansion[expansionID].learnedRecipes + 1
-                recipesByExpansion[expansionID].totalRecipes = recipesByExpansion[expansionID].totalRecipes + 1
-                table.insert(recipesByExpansion[expansionID].recipes, recipeID)
-            else
-                local expansionID = self:GetRecipeExpansion(recipeInfo)
-                if not recipesByExpansion[expansionID] then
-                    recipesByExpansion[expansionID] = {
-                        expansionID = expansionID,
-                        expansionName = EXPANSION_NAMES[expansionID] or "Unknown",
-                        learnedRecipes = 0,
-                        totalRecipes = 0,
-                        recipes = {},
-                    }
-                end
-
-                recipesByExpansion[expansionID].totalRecipes = recipesByExpansion[expansionID].totalRecipes + 1
-            end
+        if recipeInfo and recipeInfo.learned then
+            recipes[recipeID] = true
         end
     end
 
-    if not charData.recipes[professionName] then
-        charData.recipes[professionName] = {}
-    end
     charData.recipes[professionName] = recipes
-
-    if not charData.recipesByExpansion[professionName] then
-        charData.recipesByExpansion[professionName] = {}
-    end
-    charData.recipesByExpansion[professionName] = recipesByExpansion
-
     charData.lastUpdate = time()
 
     return true
+end
+
+function Module:BuildRecipesByExpansion(charData, professionName)
+    if not charData or not charData.recipes or not charData.recipes[professionName] then
+        return {}
+    end
+
+    local recipesByExpansion = {}
+
+    for recipeID in pairs(charData.recipes[professionName]) do
+        local recipeInfo = C_TradeSkillUI.GetRecipeInfo(recipeID)
+        if recipeInfo then
+            local expansionID = self:GetRecipeExpansion(recipeInfo)
+            if not recipesByExpansion[expansionID] then
+                recipesByExpansion[expansionID] = {
+                    expansionID = expansionID,
+                    expansionName = EXPANSION_NAMES[expansionID] or "Unknown",
+                    learnedRecipes = 0,
+                    totalRecipes = 0,
+                    recipes = {},
+                }
+            end
+            recipesByExpansion[expansionID].learnedRecipes = recipesByExpansion[expansionID].learnedRecipes + 1
+            recipesByExpansion[expansionID].totalRecipes = recipesByExpansion[expansionID].totalRecipes + 1
+            table.insert(recipesByExpansion[expansionID].recipes, recipeID)
+        end
+    end
+
+    return recipesByExpansion
 end
 
 function Module:GetRecipeExpansion(recipeInfo)
