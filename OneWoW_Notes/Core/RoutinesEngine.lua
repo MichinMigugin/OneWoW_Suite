@@ -56,6 +56,7 @@ function Engine:Initialize()
     frame:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
     frame:RegisterEvent("SKILL_LINES_CHANGED")
     frame:RegisterEvent("TRAIT_TREE_CURRENCY_INFO_UPDATED")
+    frame:RegisterEvent("BAG_UPDATE_DELAYED")
 
     local lastScan = 0
     frame:SetScript("OnEvent", function(_, event, ...)
@@ -164,6 +165,15 @@ function Engine:BuildTaskTooltip(task, section, anchorFrame)
                 end
             end
         end
+    elseif trackType == "item" then
+        GameTooltip:AddLine("Auto-tracked - item count", 0.4, 0.85, 0.4)
+        if task.trackParams and task.trackParams.itemId then
+            local name = C_Item.GetItemNameByID(task.trackParams.itemId)
+            if name then
+                GameTooltip:AddLine(name, 0.7, 0.7, 0.7)
+            end
+        end
+        GameTooltip:AddLine("Counts bags, bank, and account bank", 0.55, 0.55, 0.55)
     elseif trackType == "prof_skill" then
         GameTooltip:AddLine("Auto-tracked - profession skill level", 0.4, 0.85, 0.4)
     elseif trackType == "prof_concentration" then
@@ -387,6 +397,13 @@ function Engine:EvaluateTask(task)
                 end
                 return info.quantity or 0
             end
+        end
+        return nil
+
+    elseif trackType == "item" then
+        if params.itemId then
+            local count = C_Item.GetItemCount(params.itemId, true, false, false, true)
+            return task.noMax and count or math.min(count, task.max or count)
         end
         return nil
 

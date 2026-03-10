@@ -792,6 +792,11 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
                         if frame._noMax then
                             taskData.noMax = true
                         end
+                    elseif taskData.trackType == "item" and frame._itemId then
+                        taskData.trackParams.itemId = tonumber(frame._itemId) or 0
+                        if frame._noMax then
+                            taskData.noMax = true
+                        end
                     elseif taskData.trackType == "reputation" and frame._factionId then
                         taskData.trackParams.factionId = tonumber(frame._factionId) or 0
                         taskData.noMax = true
@@ -813,6 +818,7 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     dialog._trackType = "manual"
     dialog._questIds = ""
     dialog._currencyId = ""
+    dialog._itemId = ""
     dialog._factionId = ""
     dialog._noMax = false
 
@@ -875,6 +881,7 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
         { text = L["ROUTINES_TRACK_QUEST"],      value = "quest" },
         { text = "Track Rare Quest",             value = "rare_quest" },
         { text = L["ROUTINES_TRACK_CURRENCY"],   value = "currency" },
+        { text = L["ROUTINES_TRACK_ITEM"],       value = "item" },
         { text = L["ROUTINES_TRACK_REPUTATION"], value = "reputation" },
     })
     trackDD:SetSelected("manual")
@@ -939,6 +946,7 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
         local txt = self:GetText() or ""
         dialog._questIds = txt
         dialog._currencyId = txt
+        dialog._itemId = txt
         dialog._factionId = txt
 
         if dialog._trackType == "currency" then
@@ -959,6 +967,25 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
             else
                 currencyNameLabel:SetText("")
             end
+        elseif dialog._trackType == "item" then
+            local id = tonumber(txt)
+            if id and id > 0 then
+                local name = C_Item.GetItemNameByID(id)
+                if name then
+                    currencyNameLabel:SetText(name)
+                    currencyNameLabel:SetTextColor(0.4, 0.9, 0.4)
+                    if nameBox:GetText() == "" then
+                        nameBox:SetText(name)
+                        dialog._taskLabel = name
+                    end
+                else
+                    C_Item.RequestLoadItemDataByID(id)
+                    currencyNameLabel:SetText("Loading...")
+                    currencyNameLabel:SetTextColor(0.7, 0.7, 0.5)
+                end
+            else
+                currencyNameLabel:SetText("")
+            end
         end
     end)
     questBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
@@ -974,6 +1001,11 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
             justTrackCheckbox:Show()
             justTrackLabel:Show()
             questLabel:SetText(L["ROUTINES_CURRENCY_ID"])
+            currencyNameLabel:Show()
+        elseif value == "item" then
+            justTrackCheckbox:Show()
+            justTrackLabel:Show()
+            questLabel:SetText(L["ROUTINES_ITEM_ID"])
             currencyNameLabel:Show()
         elseif value == "rare_quest" then
             justTrackCheckbox:Hide()

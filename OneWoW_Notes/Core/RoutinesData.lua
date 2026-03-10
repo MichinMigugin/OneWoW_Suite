@@ -878,6 +878,7 @@ function RoutinesData:CreateEversongWoodsRoutine()
     return self:CreateZoneRoutineFromTemplate(EVERSONG_WOODS_TEMPLATE)
 end
 
+
 local GETTING_STARTED_ROUTINE = {
     title = "Getting Started with Routines",
     sections = {
