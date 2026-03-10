@@ -21,6 +21,13 @@ local themeMetatable = {
     __newindex = noop,
 }
 
+local guiConstantsMetatable = {
+    __index = function(self, key)
+        return Constants.GUI[key] or 0
+    end,
+    __newindex = noop,
+}
+
 local function GetThemeColor(key)
     if Constants.ACTIVE_THEME and Constants.ACTIVE_THEME[key] then
         return unpack(Constants.ACTIVE_THEME[key])
@@ -30,6 +37,10 @@ end
 
 local function GetSpacing(key)
     return Constants.SPACING[key] or DEFAULT_THEME_SPACING
+end
+
+function OneWoW_GUI:RegisterGUIConstants(guiConstants)
+    return setmetatable(guiConstants, guiConstantsMetatable)
 end
 
 function OneWoW_GUI:GetThemeColor(key)
@@ -44,24 +55,47 @@ function OneWoW_GUI:GetBrandIcon(factionTheme)
     return OneWoW_GUI.Constants.ICON_TEXTURES[factionTheme] or DEFAULT_ICON_TEXTURE
 end
 
-function OneWoW_GUI:ApplyTheme(themeKey)
+function OneWoW_GUI:ApplyTheme(addon)
+    local themeKey
+    local hub = _G.OneWoW
+
+    -- Use OneWoW Hub theme if available
+    if hub and hub.db and hub.db.global and hub.db.global.theme then
+        themeKey = hub.db.global.theme
+    else
+        -- Use OneWoW_QoL theme if available
+        if addon and addon.db and addon.db.global and addon.db.global.theme then
+            themeKey = addon.db.global.theme
+        end
+    end
+    -- Fallback to green theme if no theme is set
     local selectedTheme = Constants.THEMES[themeKey] or Constants.THEMES["green"]
     Constants.ACTIVE_THEME = setmetatable(selectedTheme, themeMetatable)
 end
 
-function OneWoW_GUI:CreateFrame(name, parent, width, height, useModernBackdrop)
+function OneWoW_GUI:CreateFrame(name, parent, width, height, backdrop)
     local frame = CreateFrame("Frame", name, parent or UIParent, "BackdropTemplate")
     frame:SetSize(width, height)
-
-    if useModernBackdrop then
-        frame:SetBackdrop(Constants.BACKDROP_SOFT)
-    else
-        frame:SetBackdrop(Constants.BACKDROP_INNER)
-    end
-
+    frame:SetBackdrop(backdrop or Constants.BACKDROP_SOFT)
     frame:SetBackdropColor(GetThemeColor("BG_PRIMARY"))
     frame:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
     return frame
+end
+
+function OneWoW_GUI:CreateMovableDialog(name, parent, width, height)
+    local dialog = OneWoW_GUI:CreateFrame(name, parent, width, height, Constants.BACKDROP_INNER_NO_INSETS)
+    dialog:SetPoint("CENTER")
+    dialog:SetFrameStrata("DIALOG")
+    dialog:SetToplevel(true)
+    dialog:SetMovable(true)
+    dialog:SetClampedToScreen(true)
+    dialog:EnableMouse(true)
+    dialog:RegisterForDrag("LeftButton")
+    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    dialog:SetScript("OnDragStop",  function(self) self:StopMovingOrSizing() end)
+    -- allow ESC to close the dialog
+    tinsert(UISpecialFrames, name)
+    return dialog
 end
 
 function OneWoW_GUI:CreateButton(name, parent, text, width, height)
@@ -200,24 +234,53 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, yOffset, onLabel, offLabel,
     return onBtn, offBtn, refresh
 end
 
-function OneWoW_GUI:CreateEditBox(name, parent, width, height)
+--[[
+    TODO: Pass in onTextChanged callback or a filter function to use in onTextChanged event
+]]
+function OneWoW_GUI:CreateEditBox(name, parent, options)
+    local options = options or {}
+    local width = options.width or Constants.GUI.SEARCH_WIDTH
+    local height = options.height or Constants.GUI.SEARCH_HEIGHT
+    local placeholderText = options.placeholderText or ""
+    local maxLetters = options.maxLetters or nil
+    local spacing = GetSpacing("SM")
+
     local box = CreateFrame("EditBox", name, parent, "BackdropTemplate")
-    box:SetSize(width or Constants.GUI.SEARCH_WIDTH, height or Constants.GUI.SEARCH_HEIGHT)
-    box:SetBackdrop(Constants.BACKDROP_INNER)
+    box.placeholderText = placeholderText
+
+    box:SetSize(width, height)
+    box:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     box:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
     box:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
     box:SetFontObject(GameFontHighlight)
-    box:SetTextInsets(GetSpacing("SM") + 2, GetSpacing("SM"), 0, 0)
+    box:SetTextInsets(spacing, spacing, 0, 0)
     box:SetAutoFocus(false)
     box:EnableMouse(true)
-    box:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+    box:SetTextColor(GetThemeColor("TEXT_MUTED"))
+    box:SetText(placeholderText)
+
+    if maxLetters then
+        box:SetMaxLetters(maxLetters)
+    end
 
     box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
     box:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(GetThemeColor("BORDER_FOCUS"))
+        self:SetBackdropBorderColor(GetThemeColor("BORDER_ACCENT"))
+
+        if self:GetText() == self.placeholderText then
+            self:SetText("")
+            self:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+        end
     end)
+
     box:SetScript("OnEditFocusLost", function(self)
         self:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
+
+        if self:GetText() == "" then
+            self:SetText(self.placeholderText)
+            self:SetTextColor(GetThemeColor("TEXT_MUTED"))
+        end
     end)
 
     return box
@@ -284,6 +347,8 @@ function OneWoW_GUI:CreateTitleBar(parent, title, options)
     titleBg:SetBackdropColor(GetThemeColor("TITLEBAR_BG"))
     titleBg:SetFrameLevel(parent:GetFrameLevel() + 1)
 
+    titleBg._titleText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    
     if showBrand then
         local factionTheme = options.factionTheme or "horde"
         local brandIcon = titleBg:CreateTexture(nil, "OVERLAY")
@@ -296,16 +361,14 @@ function OneWoW_GUI:CreateTitleBar(parent, title, options)
         brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
         brandText:SetText("OneWoW")
         brandText:SetTextColor(GetThemeColor("ACCENT_PRIMARY"))
-
-        local titleText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleText:SetPoint("CENTER", titleBg, "CENTER", 0, 0)
-        titleText:SetText(title)
-        titleText:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+        
+        titleBg._titleText:SetPoint("CENTER", titleBg, "CENTER", 0, 0)
+        titleBg._titleText:SetText(title)
+        titleBg._titleText:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
     else
-        local titleText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleText:SetPoint("LEFT", titleBg, "LEFT", GetSpacing("MD"), 0)
-        titleText:SetText(title)
-        titleText:SetTextColor(GetThemeColor("ACCENT_PRIMARY"))
+        titleBg._titleText:SetPoint("LEFT", titleBg, "LEFT", GetSpacing("MD"), 0)
+        titleBg._titleText:SetText(title)
+        titleBg._titleText:SetTextColor(GetThemeColor("ACCENT_PRIMARY"))
     end
 
     if onClose then

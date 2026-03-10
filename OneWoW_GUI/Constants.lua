@@ -1,13 +1,13 @@
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local BASE = "Interface\\AddOns\\OneWoW_GUI\\Media\\"
+local MEDIA_BASE = "Interface\\AddOns\\OneWoW_GUI\\Media\\"
 
 OneWoW_GUI.Constants = {
     ICON_TEXTURES = {
-        horde    = BASE .. "horde-mini.png",
-        alliance = BASE .. "alliance-mini.png",
-        neutral  = BASE .. "neutral-mini.png",
+        horde    = MEDIA_BASE .. "horde-mini.png",
+        alliance = MEDIA_BASE .. "alliance-mini.png",
+        neutral  = MEDIA_BASE .. "neutral-mini.png",
     },
 
     BACKDROP_SIMPLE = {
@@ -94,13 +94,14 @@ OneWoW_GUI.Constants = {
         PADDING = 12,
         BUTTON_HEIGHT = 28,
         BUTTON_WIDTH = 100,
-        SEARCH_HEIGHT = 32,
+        SEARCH_HEIGHT = 22,
         SEARCH_WIDTH = 200,
         CHECKBOX_SIZE = 24,
         ROW1_HEIGHT = 35,
         ROW2_HEIGHT = 30,
         LEFT_PANEL_WIDTH = 320,
         PANEL_GAP = 10,
+        TAB_BUTTON_HEIGHT = 30,
     },
 
     DEFAULT_THEME = {
@@ -757,5 +758,11 @@ OneWoW_GUI.Constants = {
             BTN_BORDER     = { 0.50, 0.72, 0.62, 0.5 },
             BTN_BORDER_HOVER = { 0.62, 0.82, 0.72, 0.7 },
         },
+    },
+
+    THEMES_ORDER = {
+        "green", "blue", "purple", "red", "orange", "teal", "gold", "pink", "dark", "amber", "cyan", "slate", 
+        "voidblack", "charcoal", "forestnight", "obsidian", "monochrome", "twilight", "neon", "glassmorphic", 
+        "lightmode", "retro", "fantasy", "nightfae"
     },
 }

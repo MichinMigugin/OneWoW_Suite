@@ -780,57 +780,26 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
     local isNew = not popup
 
     if isNew then
-        popup = OneWoW_GUI:CreateFrame("OneWoW_QoL_MountPickerPopup", UIParent, 350, 450, false)
-        popup:SetPoint("CENTER")
-        popup:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        popup:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        popup:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        popup:SetFrameStrata("DIALOG")
-        popup:SetToplevel(true)
-        popup:SetMovable(true)
-        popup:SetClampedToScreen(true)
-        popup:EnableMouse(true)
-        popup:RegisterForDrag("LeftButton")
-        popup:SetScript("OnDragStart", function(f) f:StartMoving() end)
-        popup:SetScript("OnDragStop",  function(f) f:StopMovingOrSizing() end)
-        tinsert(UISpecialFrames, "OneWoW_QoL_MountPickerPopup")
-
-        local titleBar = CreateFrame("Frame", nil, popup, "BackdropTemplate")
-        titleBar:SetPoint("TOPLEFT",  popup, "TOPLEFT",  1, -1)
-        titleBar:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -1)
-        titleBar:SetHeight(28)
-        titleBar:SetBackdrop(BACKDROP_SIMPLE)
-        titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
-
-        popup._titleFS = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        popup._titleFS:SetPoint("LEFT", titleBar, "LEFT", 12, 0)
-        popup._titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        popup = OneWoW_GUI:CreateMovableDialog("OneWoW_QoL_MountPickerPopup", UIParent, 350, 450)
+        -- Leave title empty, it's set further down
+        popup._titleBar = OneWoW_GUI:CreateTitleBar(popup, "", { height = 28 })
 
         local headerDiv = OneWoW_GUI:CreateDivider(popup, -29)
         headerDiv:ClearAllPoints()
         headerDiv:SetPoint("TOPLEFT",  popup, "TOPLEFT",  1, -29)
         headerDiv:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -29)
 
-        local searchLabel = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        searchLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 15, -38)
-        searchLabel:SetText(L["AUTOMOUNT_SEARCH"])
-        searchLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-        popup._searchBox = OneWoW_GUI:CreateEditBox(nil, popup, 220, 24)
-        popup._searchBox:SetPoint("TOPLEFT",  popup, "TOPLEFT",  15, -52)
-        popup._searchBox:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -15, -52)
-        popup._searchBox:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        popup._searchBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        popup._searchBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        popup._searchBox:SetTextInsets(6, 6, 0, 0)
-        popup._searchBox:SetMaxLetters(50)
+        -- NOTE: See OneWoW_GUI CreateEditBox for NOTE on onTextChanged callback
+        popup._searchBox = OneWoW_GUI:CreateEditBox(nil, popup, { width = 220, height = 24, placeholderText = L["AUTOMOUNT_SEARCH"], maxLetters = 50 })
+        popup._searchBox:SetPoint("TOPLEFT",  popup, "TOPLEFT",  15, -38)
+        popup._searchBox:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -15, -38)
 
         local scrollBarWidth = 10
         local contentWidth   = 350 - 24 - scrollBarWidth
         popup._contentWidth  = contentWidth
 
         local listContainer = CreateFrame("Frame", nil, popup)
-        listContainer:SetPoint("TOPLEFT",     popup, "TOPLEFT",     12, -82)
+        listContainer:SetPoint("TOPLEFT",     popup, "TOPLEFT",     12, -68)
         listContainer:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -12, 48)
 
         popup._scrollFrame = CreateFrame("ScrollFrame", nil, listContainer)
@@ -929,8 +898,7 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
         AM._mountPickerFrame = popup
     end
 
-    local displayType = mountType:gsub("^%l", string.upper)
-    popup._titleFS:SetText(string.format(L["AUTOMOUNT_SELECT_TITLE"], displayType))
+    popup._titleBar._titleText:SetText(string.format(L["AUTOMOUNT_SELECT_TITLE"], mountType:gsub("^%l", string.upper)))
     popup._scrollFrame:SetVerticalScroll(0)
 
     local mountButtons = popup._mountButtons
@@ -1015,10 +983,11 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
     end
 
     popup._searchBox:SetScript("OnTextChanged", function(eb)
-        UpdateMountList(eb:GetText())
+        local text = eb:GetText()
+        if text == popup._searchBox.placeholderText then text = "" end
+        UpdateMountList(text)
     end)
 
-    popup._searchBox:SetText("")
     UpdateMountList("")
     popup:Show()
     popup:Raise()
