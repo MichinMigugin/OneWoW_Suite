@@ -20,6 +20,7 @@ Core\Core.lua
 Modules\ProfessionBasics.lua
 Modules\ProfessionAdvanced.lua
 Modules\ProfessionEquipment.lua
+Modules\ProfessionConcentration.lua
 Modules\ProfessionCooldowns.lua
 Modules\ProfessionTrainers.lua
 

@@ -22,6 +22,7 @@ function DataManager:RegisterEvents()
         "TRADE_SKILL_LIST_UPDATE",
         "TRADE_SKILL_CLOSE",
         "PLAYER_EQUIPMENT_CHANGED",
+        "CURRENCY_DISPLAY_UPDATE",
     }
 
     for _, event in ipairs(events) do
@@ -56,6 +57,11 @@ function DataManager:HandleEvent(event, ...)
                 self:UpdateEquipment()
             end)
         end
+
+    elseif event == "CURRENCY_DISPLAY_UPDATE" then
+        C_Timer.After(0.5, function()
+            self:UpdateConcentration()
+        end)
     end
 end
 
@@ -68,6 +74,7 @@ function DataManager:OnTradeSkillShow()
 
     ns.ProfessionBasics:CollectData(charKey, charData)
     ns.ProfessionEquipment:CollectData(charKey, charData)
+    ns.ProfessionConcentration:CollectData(charKey, charData)
 
     local professionInfo = C_TradeSkillUI.GetBaseProfessionInfo()
     if professionInfo and professionInfo.professionName then
@@ -91,6 +98,7 @@ function DataManager:UpdateCurrentProfession()
     if not charData then return false end
 
     self:CollectAdvancedData(charKey, charData, currentOpenProfession)
+    ns.ProfessionConcentration:CollectFromTradeSkill(charKey, charData)
 
     return true
 end
@@ -111,8 +119,23 @@ function DataManager:UpdateEquipment()
     if not charData then return false end
 
     ns.ProfessionBasics:CollectData(charKey, charData)
-
     ns.ProfessionEquipment:CollectData(charKey, charData)
+
+    return true
+end
+
+function DataManager:UpdateConcentration()
+    local charKey = ns:GetCharacterKey()
+    if not charKey then return false end
+
+    local charData = ns:GetCharacterData(charKey)
+    if not charData then return false end
+
+    if not charData.professions then
+        ns.ProfessionBasics:CollectData(charKey, charData)
+    end
+
+    ns.ProfessionConcentration:CollectData(charKey, charData)
 
     return true
 end
@@ -126,6 +149,7 @@ function DataManager:CollectAllBasicData()
 
     ns.ProfessionBasics:CollectData(charKey, charData)
     ns.ProfessionEquipment:CollectData(charKey, charData)
+    ns.ProfessionConcentration:CollectData(charKey, charData)
 
     return true
 end
@@ -139,6 +163,7 @@ function DataManager:ForceFullScan()
 
     ns.ProfessionBasics:CollectData(charKey, charData)
     ns.ProfessionEquipment:CollectData(charKey, charData)
+    ns.ProfessionConcentration:CollectData(charKey, charData)
 
     if C_TradeSkillUI.IsTradeSkillReady() then
         local professionInfo = C_TradeSkillUI.GetBaseProfessionInfo()

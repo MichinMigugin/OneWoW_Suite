@@ -49,6 +49,12 @@ OneWoW_AltTracker_Professions_API = {
         return ns.ProfessionTrainers:GetRecentTrainers(charKey, charData, count)
     end,
 
+    GetConcentration = function(charKey, slotName)
+        local charData = ns.DataManager:GetCharacterData(charKey)
+        if not charData then return nil end
+        return ns.ProfessionConcentration:GetConcentration(charData, slotName)
+    end,
+
     GetRecipeCount = function(charKey, professionName)
         local charData = ns.DataManager:GetCharacterData(charKey)
         if not charData then return 0 end
