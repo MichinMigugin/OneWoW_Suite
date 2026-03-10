@@ -2,23 +2,9 @@ local ADDON_NAME, OneWoW = ...
 
 local GUI = OneWoW.GUI
 local L    = OneWoW.L
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-local function T(key)
-    if OneWoW.Constants and OneWoW.Constants.THEME and OneWoW.Constants.THEME[key] then
-        return unpack(OneWoW.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
-end
-
-local function ClearPanel(frame)
-    for _, child in ipairs({ frame:GetChildren() }) do
-        child:Hide()
-        child:SetParent(nil)
-    end
-    for _, region in ipairs({ frame:GetRegions() }) do
-        region:Hide()
-    end
-end
+local function T(key) return OneWoW_GUI:GetThemeColor(key) end
 
 local function ShowGeneralDetail(split, dsc, selectedRow)
     local yOffset = -10
@@ -59,13 +45,13 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(0.2, 1.0, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(1.0, 0.2, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general")
@@ -73,17 +59,17 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(0.2, 1.0, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(1.0, 0.2, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.enabledDot then
+        if selectedRow and selectedRow.dot then
             if nowEnabled then
-                selectedRow.enabledDot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
+                selectedRow.dot:SetStatus(true)
             else
-                selectedRow.enabledDot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
+                selectedRow.dot:SetStatus(false)
             end
         end
     end)
@@ -119,10 +105,10 @@ local function CreateNoteToggleRows(dsc, toggleList, toggleBtnSets, isEnabled, c
         local capturedKey = toggle.key
         local currentVal = cnSettings[capturedKey] ~= false
 
-        local onBtn = GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_ON"], 50, 22)
+        local onBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_ON"], 50, 22)
         onBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
 
-        local offBtn = GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_OFF"], 50, 22)
+        local offBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_OFF"], 50, 22)
         offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
 
         local rowStatusVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -151,7 +137,7 @@ local function CreateNoteToggleRows(dsc, toggleList, toggleBtnSets, isEnabled, c
                 offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                 offBtn.text:SetTextColor(T("TEXT_MUTED"))
                 rowStatusVal:SetText(L["FEATURE_ENABLED"])
-                rowStatusVal:SetTextColor(0.2, 1.0, 0.2)
+                rowStatusVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
             else
                 offBtn.isActive = true
                 onBtn.isActive = false
@@ -162,7 +148,7 @@ local function CreateNoteToggleRows(dsc, toggleList, toggleBtnSets, isEnabled, c
                 onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                 onBtn.text:SetTextColor(T("TEXT_MUTED"))
                 rowStatusVal:SetText(L["FEATURE_DISABLED"])
-                rowStatusVal:SetTextColor(1.0, 0.2, 0.2)
+                rowStatusVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
             end
         else
             onBtn.isActive = false
@@ -224,7 +210,7 @@ local function CreateNoteToggleRows(dsc, toggleList, toggleBtnSets, isEnabled, c
             offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
             offBtn.text:SetTextColor(T("TEXT_MUTED"))
             rowStatusVal:SetText(L["FEATURE_ENABLED"])
-            rowStatusVal:SetTextColor(0.2, 1.0, 0.2)
+            rowStatusVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         end)
         offBtn:SetScript("OnClick", function(self)
             if not OneWoW.db.global.settings.tooltips.customnotes then
@@ -240,7 +226,7 @@ local function CreateNoteToggleRows(dsc, toggleList, toggleBtnSets, isEnabled, c
             onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
             onBtn.text:SetTextColor(T("TEXT_MUTED"))
             rowStatusVal:SetText(L["FEATURE_DISABLED"])
-            rowStatusVal:SetTextColor(1.0, 0.2, 0.2)
+            rowStatusVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end)
 
         yOffset = yOffset - 22 - 10
@@ -289,13 +275,13 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(0.2, 1.0, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(1.0, 0.2, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
@@ -303,17 +289,17 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(0.2, 1.0, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(1.0, 0.2, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.enabledDot then
+        if selectedRow and selectedRow.dot then
             if nowEnabled then
-                selectedRow.enabledDot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
+                selectedRow.dot:SetStatus(true)
             else
-                selectedRow.enabledDot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
+                selectedRow.dot:SetStatus(false)
             end
         end
         for _, tbs in ipairs(toggleBtnSets) do
@@ -333,7 +319,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
                     tbs.offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                     tbs.offBtn.text:SetTextColor(T("TEXT_MUTED"))
                     tbs.statusVal:SetText(L["FEATURE_ENABLED"])
-                    tbs.statusVal:SetTextColor(0.2, 1.0, 0.2)
+                    tbs.statusVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
                 else
                     tbs.offBtn.isActive = true
                     tbs.onBtn.isActive = false
@@ -344,7 +330,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
                     tbs.onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                     tbs.onBtn.text:SetTextColor(T("TEXT_MUTED"))
                     tbs.statusVal:SetText(L["FEATURE_DISABLED"])
-                    tbs.statusVal:SetTextColor(1.0, 0.2, 0.2)
+                    tbs.statusVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
                 end
             else
                 tbs.onBtn.isActive = false
@@ -384,10 +370,10 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
     if notesLoaded then
         detectedValue:SetText(L["TIPS_CUSTOMNOTES_DETECTED"])
-        detectedValue:SetTextColor(0.2, 1.0, 0.2)
+        detectedValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         detectedValue:SetText(L["TIPS_CUSTOMNOTES_NOT_DETECTED"])
-        detectedValue:SetTextColor(1.0, 0.2, 0.2)
+        detectedValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
 
     yOffset = yOffset - 24
@@ -528,13 +514,13 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(0.2, 1.0, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(1.0, 0.2, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
@@ -542,17 +528,17 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(0.2, 1.0, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(1.0, 0.2, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.enabledDot then
+        if selectedRow and selectedRow.dot then
             if nowEnabled then
-                selectedRow.enabledDot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
+                selectedRow.dot:SetStatus(true)
             else
-                selectedRow.enabledDot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
+                selectedRow.dot:SetStatus(false)
             end
         end
         for _, tbs in ipairs(toggleBtnSets) do
@@ -572,7 +558,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
                     tbs.offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                     tbs.offBtn.text:SetTextColor(T("TEXT_MUTED"))
                     tbs.statusVal:SetText(L["FEATURE_ENABLED"])
-                    tbs.statusVal:SetTextColor(0.2, 1.0, 0.2)
+                    tbs.statusVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
                 else
                     tbs.offBtn.isActive = true
                     tbs.onBtn.isActive = false
@@ -583,7 +569,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
                     tbs.onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                     tbs.onBtn.text:SetTextColor(T("TEXT_MUTED"))
                     tbs.statusVal:SetText(L["FEATURE_DISABLED"])
-                    tbs.statusVal:SetTextColor(1.0, 0.2, 0.2)
+                    tbs.statusVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
                 end
             else
                 tbs.onBtn.isActive = false
@@ -626,10 +612,10 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
         local capturedKey = toggle.key
         local currentVal = tidSettings[capturedKey] ~= false
 
-        local onBtn = GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_ON"], 50, 22)
+        local onBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_ON"], 50, 22)
         onBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
 
-        local offBtn = GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_OFF"], 50, 22)
+        local offBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_OFF"], 50, 22)
         offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
 
         local rowStatusVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -658,7 +644,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
                 offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                 offBtn.text:SetTextColor(T("TEXT_MUTED"))
                 rowStatusVal:SetText(L["FEATURE_ENABLED"])
-                rowStatusVal:SetTextColor(0.2, 1.0, 0.2)
+                rowStatusVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
             else
                 offBtn.isActive = true
                 onBtn.isActive = false
@@ -669,7 +655,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
                 onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                 onBtn.text:SetTextColor(T("TEXT_MUTED"))
                 rowStatusVal:SetText(L["FEATURE_DISABLED"])
-                rowStatusVal:SetTextColor(1.0, 0.2, 0.2)
+                rowStatusVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
             end
         else
             onBtn.isActive = false
@@ -728,7 +714,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
             offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
             offBtn.text:SetTextColor(T("TEXT_MUTED"))
             rowStatusVal:SetText(L["FEATURE_ENABLED"])
-            rowStatusVal:SetTextColor(0.2, 1.0, 0.2)
+            rowStatusVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         end)
         offBtn:SetScript("OnClick", function(self)
             OneWoW.db.global.settings.tooltips.technicalids[capturedKey] = false
@@ -741,7 +727,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
             onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
             onBtn.text:SetTextColor(T("TEXT_MUTED"))
             rowStatusVal:SetText(L["FEATURE_DISABLED"])
-            rowStatusVal:SetTextColor(1.0, 0.2, 0.2)
+            rowStatusVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end)
 
         yOffset = yOffset - 22 - 10
@@ -803,13 +789,13 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(0.2, 1.0, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(1.0, 0.2, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
@@ -817,17 +803,17 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(0.2, 1.0, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(1.0, 0.2, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.enabledDot then
+        if selectedRow and selectedRow.dot then
             if nowEnabled then
-                selectedRow.enabledDot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
+                selectedRow.dot:SetStatus(true)
             else
-                selectedRow.enabledDot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
+                selectedRow.dot:SetStatus(false)
             end
         end
         for _, tbs in ipairs(toggleBtnSets) do
@@ -847,7 +833,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
                     tbs.offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                     tbs.offBtn.text:SetTextColor(T("TEXT_MUTED"))
                     tbs.statusVal:SetText(L["FEATURE_ENABLED"])
-                    tbs.statusVal:SetTextColor(0.2, 1.0, 0.2)
+                    tbs.statusVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
                 else
                     tbs.offBtn.isActive = true
                     tbs.onBtn.isActive = false
@@ -858,7 +844,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
                     tbs.onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                     tbs.onBtn.text:SetTextColor(T("TEXT_MUTED"))
                     tbs.statusVal:SetText(L["FEATURE_DISABLED"])
-                    tbs.statusVal:SetTextColor(1.0, 0.2, 0.2)
+                    tbs.statusVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
                 end
             else
                 tbs.onBtn.isActive = false
@@ -911,10 +897,10 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
         local capturedKey = toggle.key
         local currentVal = itSettings[capturedKey] ~= false
 
-        local onBtn = GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_ON"], 50, 22)
+        local onBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_ON"], 50, 22)
         onBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
 
-        local offBtn = GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_OFF"], 50, 22)
+        local offBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_OFF"], 50, 22)
         offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
 
         local rowStatusVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -943,7 +929,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
                 offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                 offBtn.text:SetTextColor(T("TEXT_MUTED"))
                 rowStatusVal:SetText(L["FEATURE_ENABLED"])
-                rowStatusVal:SetTextColor(0.2, 1.0, 0.2)
+                rowStatusVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
             else
                 offBtn.isActive = true
                 onBtn.isActive = false
@@ -954,7 +940,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
                 onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
                 onBtn.text:SetTextColor(T("TEXT_MUTED"))
                 rowStatusVal:SetText(L["FEATURE_DISABLED"])
-                rowStatusVal:SetTextColor(1.0, 0.2, 0.2)
+                rowStatusVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
             end
         else
             onBtn.isActive = false
@@ -1016,7 +1002,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
             offBtn:SetBackdropBorderColor(T("BTN_BORDER"))
             offBtn.text:SetTextColor(T("TEXT_MUTED"))
             rowStatusVal:SetText(L["FEATURE_ENABLED"])
-            rowStatusVal:SetTextColor(0.2, 1.0, 0.2)
+            rowStatusVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         end)
         offBtn:SetScript("OnClick", function(self)
             if not OneWoW.db.global.settings.tooltips.itemtracker then
@@ -1032,7 +1018,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
             onBtn:SetBackdropBorderColor(T("BTN_BORDER"))
             onBtn.text:SetTextColor(T("TEXT_MUTED"))
             rowStatusVal:SetText(L["FEATURE_DISABLED"])
-            rowStatusVal:SetTextColor(1.0, 0.2, 0.2)
+            rowStatusVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end)
 
         yOffset = yOffset - 22 - 10
@@ -1063,10 +1049,10 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     vendorDetVal:SetPoint("LEFT", vendorReqLabel, "RIGHT", 8, 0)
     if vendorDetected then
         vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_DETECTED"])
-        vendorDetVal:SetTextColor(0.2, 1.0, 0.2)
+        vendorDetVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_NOT_DETECTED"])
-        vendorDetVal:SetTextColor(1.0, 0.2, 0.2)
+        vendorDetVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
     yOffset = yOffset - 24
 
@@ -1080,10 +1066,10 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     instDetVal:SetPoint("LEFT", instReqLabel, "RIGHT", 8, 0)
     if instDetected then
         instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_DETECTED"])
-        instDetVal:SetTextColor(0.2, 1.0, 0.2)
+        instDetVal:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_NOT_DETECTED"])
-        instDetVal:SetTextColor(1.0, 0.2, 0.2)
+        instDetVal:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
     yOffset = yOffset - 24
 
@@ -1130,13 +1116,13 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(0.2, 1.0, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(1.0, 0.2, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
@@ -1144,17 +1130,17 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(0.2, 1.0, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(1.0, 0.2, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.enabledDot then
+        if selectedRow and selectedRow.dot then
             if nowEnabled then
-                selectedRow.enabledDot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
+                selectedRow.dot:SetStatus(true)
             else
-                selectedRow.enabledDot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
+                selectedRow.dot:SetStatus(false)
             end
         end
     end)
@@ -1178,10 +1164,10 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
     if qolLoaded then
         detectedValue:SetText(L["TIPS_PLAYERMOUNTS_DETECTED"])
-        detectedValue:SetTextColor(0.2, 1.0, 0.2)
+        detectedValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         detectedValue:SetText(L["TIPS_PLAYERMOUNTS_NOT_DETECTED"])
-        detectedValue:SetTextColor(1.0, 0.2, 0.2)
+        detectedValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
     yOffset = yOffset - 24
 
@@ -1201,7 +1187,7 @@ end
 
 local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     local dsc = split.detailScrollChild
-    ClearPanel(dsc)
+    OneWoW_GUI:ClearFrame(dsc)
 
     if feature.id == "general" then
         ShowGeneralDetail(split, dsc, selectedRow)
@@ -1266,13 +1252,13 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(0.2, 1.0, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(1.0, 0.2, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
@@ -1280,17 +1266,17 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(0.2, 1.0, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(1.0, 0.2, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.enabledDot then
+        if selectedRow and selectedRow.dot then
             if nowEnabled then
-                selectedRow.enabledDot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
+                selectedRow.dot:SetStatus(true)
             else
-                selectedRow.enabledDot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
+                selectedRow.dot:SetStatus(false)
             end
         end
     end)
@@ -1303,99 +1289,78 @@ end
 
 local function BuildFeatureList(split, tabName)
     local lsc = split.listScrollChild
-    ClearPanel(lsc)
-
     local features = OneWoW.SettingsFeatureRegistry:GetByTab(tabName)
     local selectedRow = nil
-    local yOffset = -5
+    local allRows = {}
 
-    for _, feature in ipairs(features) do
-        local capturedFeature = feature
-        local row = CreateFrame("Button", nil, lsc, "BackdropTemplate")
-        row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)
-        row:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
-        row:SetHeight(32)
-        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        row:SetBackdropColor(T("BG_SECONDARY"))
-        row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    local function RenderRows(filterText)
+        OneWoW_GUI:ClearFrame(lsc)
+        selectedRow = nil
+        allRows = {}
+        local yOffset = -5
+        local filter = (filterText or ""):lower()
 
-        local rowLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        rowLabel:SetPoint("LEFT", row, "LEFT", 10, 0)
-        rowLabel:SetPoint("RIGHT", row, "RIGHT", -22, 0)
-        rowLabel:SetJustifyH("LEFT")
-        rowLabel:SetText(L[feature.title] or feature.title)
-        rowLabel:SetTextColor(T("TEXT_PRIMARY"))
-        row.rowLabel = rowLabel
+        for _, feature in ipairs(features) do
+            local displayName = L[feature.title] or feature.title
+            if filter == "" or displayName:lower():find(filter, 1, true) then
+                local capturedFeature = feature
+                local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
 
-        local dot = row:CreateTexture(nil, "OVERLAY")
-        dot:SetSize(8, 8)
-        dot:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-        dot:SetTexture("Interface\\Buttons\\WHITE8x8")
-        if OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id) then
-            dot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
-        else
-            dot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
+                local row = OneWoW_GUI:CreateListRowBasic(lsc, {
+                    height = 30,
+                    label = displayName,
+                    showDot = true,
+                    dotEnabled = isEnabled,
+                    onClick = function(self)
+                        if selectedRow and selectedRow ~= self then
+                            selectedRow:SetActive(false)
+                        end
+                        selectedRow = self
+                        self:SetActive(true)
+                        ShowFeatureDetail(split, capturedFeature, tabName, self)
+                        if split.rightStatusText then
+                            local fe = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, capturedFeature.id)
+                            split.rightStatusText:SetText(displayName .. (fe and " (Enabled)" or " (Disabled)"))
+                        end
+                    end,
+                })
+                row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)
+                row:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
+                table.insert(allRows, row)
+                yOffset = yOffset - 34
+            end
         end
-        row.enabledDot = dot
 
-        row:SetScript("OnClick", function(self)
-            if selectedRow and selectedRow ~= self then
-                selectedRow:SetBackdropColor(T("BG_SECONDARY"))
-                selectedRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                if selectedRow.rowLabel then
-                    selectedRow.rowLabel:SetTextColor(T("TEXT_PRIMARY"))
-                end
-            end
-            selectedRow = self
-            self:SetBackdropColor(T("BG_ACTIVE"))
-            self:SetBackdropBorderColor(T("BORDER_ACCENT"))
-            rowLabel:SetTextColor(T("TEXT_ACCENT"))
-            ShowFeatureDetail(split, capturedFeature, tabName, self)
-            if split.rightStatusText then
-                local featureName = L[capturedFeature.title] or capturedFeature.title
-                local featureEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, capturedFeature.id)
-                split.rightStatusText:SetText(featureName .. (featureEnabled and " (Enabled)" or " (Disabled)"))
-            end
-        end)
-        row:SetScript("OnEnter", function(self)
-            if selectedRow ~= self then
-                self:SetBackdropColor(T("BG_HOVER"))
-                rowLabel:SetTextColor(T("TEXT_ACCENT"))
-            end
-        end)
-        row:SetScript("OnLeave", function(self)
-            if selectedRow ~= self then
-                self:SetBackdropColor(T("BG_SECONDARY"))
-                rowLabel:SetTextColor(T("TEXT_PRIMARY"))
-            end
-        end)
-
-        yOffset = yOffset - 36
+        lsc:SetHeight(math.abs(yOffset) + 10)
+        if #allRows > 0 and not selectedRow then
+            allRows[1]:Click()
+        end
     end
 
-    lsc:SetHeight(math.abs(yOffset) + 10)
-    split.UpdateListThumb()
+    RenderRows("")
 
-    if #features > 0 then
-        local firstRow = lsc:GetChildren()
-        if firstRow then firstRow:Click() end
+    if split.searchBox then
+        split.searchBox:SetScript("OnTextChanged", function(self)
+            local text = self:GetSearchText()
+            RenderRows(text)
+        end)
     end
+
+    local enabledCount = 0
+    for _, f in ipairs(features) do
+        if OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, f.id) then
+            enabledCount = enabledCount + 1
+        end
+    end
+    split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
 end
 
 function GUI:CreateTooltipsTab(parent)
-    local split = GUI:CreateSplitPanel(parent)
+    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search..." })
     split.listTitle:SetText(L["TOOLTIPS_LIST_TITLE"])
     split.detailTitle:SetText(L["TOOLTIPS_DETAIL_TITLE"])
 
     C_Timer.After(0.1, function()
         BuildFeatureList(split, "tooltips")
-        local features = OneWoW.SettingsFeatureRegistry:GetByTab("tooltips")
-        local enabledCount = 0
-        for _, f in ipairs(features) do
-            if OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", f.id) then
-                enabledCount = enabledCount + 1
-            end
-        end
-        split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
     end)
 end

@@ -2,23 +2,9 @@ local ADDON_NAME, OneWoW = ...
 
 local GUI = OneWoW.GUI
 local L    = OneWoW.L
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-local function T(key)
-    if OneWoW.Constants and OneWoW.Constants.THEME and OneWoW.Constants.THEME[key] then
-        return unpack(OneWoW.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
-end
-
-local function ClearPanel(frame)
-    for _, child in ipairs({ frame:GetChildren() }) do
-        child:Hide()
-        child:SetParent(nil)
-    end
-    for _, region in ipairs({ frame:GetRegions() }) do
-        region:Hide()
-    end
-end
+local function T(key) return OneWoW_GUI:GetThemeColor(key) end
 
 local OVERLAY_SETTINGS_IDS = {
     consumables  = true,
@@ -325,294 +311,6 @@ local function CreateIconPicker(parent, initialIcon, onChange)
     return container
 end
 
-local function CreateDropdown(parent, options, currentValue, onChange, width)
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetSize(width or 160, 26)
-    btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    btn:SetBackdropColor(T("BG_TERTIARY"))
-    btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    label:SetPoint("LEFT",  btn, "LEFT",  8,   0)
-    label:SetPoint("RIGHT", btn, "RIGHT", -22, 0)
-    label:SetJustifyH("LEFT")
-    label:SetText(currentValue or options[1] or "")
-    label:SetTextColor(T("TEXT_PRIMARY"))
-    btn.label = label
-
-    local arrow = btn:CreateTexture(nil, "OVERLAY")
-    arrow:SetSize(14, 14)
-    arrow:SetPoint("RIGHT", btn, "RIGHT", -5, 0)
-    arrow:SetAtlas("UI-HUD-ActionBar-PageDownArrow-Up", false)
-
-    local menu = nil
-    btn:SetScript("OnClick", function(self)
-        if menu and menu:IsShown() then menu:Hide() return end
-        if not menu then
-            menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
-            menu:SetFrameStrata("FULLSCREEN_DIALOG")
-            menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-            menu:SetBackdropColor(T("BG_PRIMARY"))
-            menu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-            local optH = 24
-            menu:SetWidth(self:GetWidth())
-            menu:SetHeight(#options * optH + 4)
-            menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-
-            for i, opt in ipairs(options) do
-                local row = CreateFrame("Button", nil, menu)
-                row:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2 - (i - 1) * optH)
-                row:SetSize(self:GetWidth() - 4, optH)
-                local rowTx = row:CreateTexture(nil, "BACKGROUND")
-                rowTx:SetAllPoints(row)
-                rowTx:SetColorTexture(T("BG_SECONDARY"))
-                rowTx:Hide()
-                local rowLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                rowLabel:SetPoint("LEFT", row, "LEFT", 6, 0)
-                rowLabel:SetText(opt)
-                rowLabel:SetTextColor(T("TEXT_PRIMARY"))
-                row:SetScript("OnEnter", function() rowTx:Show() end)
-                row:SetScript("OnLeave", function() rowTx:Hide() end)
-                row:SetScript("OnClick", function()
-                    label:SetText(opt)
-                    menu:Hide()
-                    onChange(opt)
-                end)
-            end
-
-            menu:SetScript("OnUpdate", function(self, elapsed)
-                if not MouseIsOver(self) and not MouseIsOver(btn) then
-                    self.elapsed = (self.elapsed or 0) + elapsed
-                    if self.elapsed > 0.5 then self:Hide() self.elapsed = 0 end
-                else
-                    self.elapsed = 0
-                end
-            end)
-        end
-        menu:Show()
-    end)
-
-    return btn
-end
-
-local function CreateFontDropdown(parent, fontList, currentValue, onChange, width)
-    width = width or 160
-
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetSize(width, 26)
-    btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    btn:SetBackdropColor(T("BG_TERTIARY"))
-    btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    label:SetPoint("LEFT",  btn, "LEFT",  8,   0)
-    label:SetPoint("RIGHT", btn, "RIGHT", -22, 0)
-    label:SetJustifyH("LEFT")
-    label:SetText(currentValue or "")
-    label:SetTextColor(T("TEXT_PRIMARY"))
-    btn.label = label
-
-    local arrow = btn:CreateTexture(nil, "OVERLAY")
-    arrow:SetSize(14, 14)
-    arrow:SetPoint("RIGHT", btn, "RIGHT", -5, 0)
-    arrow:SetAtlas("UI-HUD-ActionBar-PageDownArrow-Up", false)
-
-    local menu = nil
-    local currentSelection = currentValue
-
-    local function UpdateButtonFont()
-        if currentSelection then
-            local LSM = LibStub("LibSharedMedia-3.0", true)
-            if LSM then
-                local fontPath = LSM:Fetch("font", currentSelection)
-                if fontPath then
-                    label:SetFont(fontPath, 11, "")
-                    return
-                end
-            end
-        end
-        label:SetFontObject("GameFontNormal")
-    end
-
-    UpdateButtonFont()
-
-    btn:SetScript("OnClick", function(self)
-        if menu and menu:IsShown() then menu:Hide() return end
-        if not menu then
-            menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
-            menu:SetFrameStrata("FULLSCREEN_DIALOG")
-            menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-            menu:SetBackdropColor(T("BG_PRIMARY"))
-            menu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-            menu:SetWidth(self:GetWidth())
-
-            local sbw = 10
-            local MAX_HEIGHT = 300
-            local ROW_H = 24
-            local PAD = 2
-
-            local scrollFrame = CreateFrame("ScrollFrame", nil, menu)
-            scrollFrame:SetPoint("TOPLEFT",     menu, "TOPLEFT",     0,    0)
-            scrollFrame:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -sbw, 0)
-            scrollFrame:EnableMouseWheel(true)
-
-            local scrollBar = CreateFrame("Slider", nil, menu, "BackdropTemplate")
-            scrollBar:SetPoint("TOPLEFT",    scrollFrame, "TOPRIGHT",    0, 0)
-            scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 0, 0)
-            scrollBar:SetWidth(sbw)
-            scrollBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-            scrollBar:SetBackdropColor(T("BG_SECONDARY"))
-            scrollBar:SetMinMaxValues(0, 1)
-            scrollBar:SetValue(0)
-            scrollBar:SetScript("OnValueChanged", function(_, value)
-                scrollFrame:SetVerticalScroll(value)
-            end)
-
-            local thumb = scrollBar:CreateTexture(nil, "OVERLAY")
-            thumb:SetSize(8, 20)
-            thumb:SetColorTexture(T("ACCENT_PRIMARY"))
-            scrollBar:SetThumbTexture(thumb)
-
-            local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-            scrollChild:SetHeight(1)
-            scrollFrame:SetScrollChild(scrollChild)
-
-            scrollFrame:HookScript("OnSizeChanged", function(self, w)
-                scrollChild:SetWidth(w)
-            end)
-
-            scrollFrame:SetScript("OnMouseWheel", function(self, direction)
-                local cur = scrollFrame:GetVerticalScroll()
-                local max = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
-                local new = math.max(0, math.min(max, cur - direction * 28))
-                scrollFrame:SetVerticalScroll(new)
-                scrollBar:SetValue(new)
-            end)
-
-            for i, fontName in ipairs(fontList) do
-                local row = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-                row:SetHeight(ROW_H)
-                row:SetPoint("TOPLEFT",  scrollChild, "TOPLEFT",  PAD, -PAD - (i - 1) * ROW_H)
-                row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -PAD, -PAD - (i - 1) * ROW_H)
-                row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-
-                if fontName == currentSelection then
-                    row:SetBackdropColor(T("BG_ACTIVE"))
-                else
-                    row:SetBackdropColor(T("BG_SECONDARY"))
-                end
-
-                local rowFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                rowFS:SetPoint("LEFT", row, "LEFT", 8, 0)
-                rowFS:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-                rowFS:SetJustifyH("LEFT")
-                rowFS:SetText(fontName)
-
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local fontPath = LSM:Fetch("font", fontName)
-                    if fontPath then
-                        rowFS:SetFont(fontPath, 11, "")
-                    end
-                end
-
-                if fontName == currentSelection then
-                    rowFS:SetTextColor(T("ACCENT_PRIMARY"))
-                else
-                    rowFS:SetTextColor(T("TEXT_PRIMARY"))
-                end
-
-                row:SetScript("OnEnter", function(self)
-                    if fontName ~= currentSelection then
-                        self:SetBackdropColor(T("BG_HOVER"))
-                    end
-                    rowFS:SetTextColor(T("TEXT_ACCENT"))
-                end)
-                row:SetScript("OnLeave", function(self)
-                    if fontName == currentSelection then
-                        self:SetBackdropColor(T("BG_ACTIVE"))
-                        rowFS:SetTextColor(T("ACCENT_PRIMARY"))
-                    else
-                        self:SetBackdropColor(T("BG_SECONDARY"))
-                        rowFS:SetTextColor(T("TEXT_PRIMARY"))
-                    end
-                end)
-                row:SetScript("OnClick", function()
-                    currentSelection = fontName
-                    label:SetText(fontName)
-                    UpdateButtonFont()
-                    menu:Hide()
-                    onChange(fontName)
-                end)
-            end
-
-            local totalH = PAD * 2 + #fontList * ROW_H
-            scrollChild:SetHeight(totalH)
-            local frameH = math.min(MAX_HEIGHT, math.max(ROW_H + 4, totalH))
-            menu:SetHeight(frameH)
-
-            local maxScroll = math.max(0, totalH - frameH)
-            scrollBar:SetMinMaxValues(0, maxScroll)
-
-            menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-
-            menu:SetScript("OnUpdate", function(self, elapsed)
-                if not MouseIsOver(self) and not MouseIsOver(btn) then
-                    self.elapsed = (self.elapsed or 0) + elapsed
-                    if self.elapsed > 0.5 then self:Hide() self.elapsed = 0 end
-                else
-                    self.elapsed = 0
-                end
-            end)
-        end
-        menu:Show()
-    end)
-
-    btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BTN_HOVER"))
-        self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
-    end)
-    btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_TERTIARY"))
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end)
-
-    return btn
-end
-
-local function CreateSlider(parent, minVal, maxVal, step, currentVal, onChange, width, fmt)
-    local container = CreateFrame("Frame", nil, parent)
-    container:SetSize(width or 200, 36)
-
-    local slider = CreateFrame("Slider", nil, container, "OptionsSliderTemplate")
-    slider:SetPoint("TOPLEFT",  container, "TOPLEFT",  0,   0)
-    slider:SetPoint("TOPRIGHT", container, "TOPRIGHT", -40, 0)
-    slider:SetHeight(16)
-    slider:SetMinMaxValues(minVal, maxVal)
-    slider:SetValueStep(step)
-    slider:SetValue(currentVal)
-    slider:SetObeyStepOnDrag(true)
-
-    local valLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    valLabel:SetPoint("LEFT", slider, "RIGHT", 6, 0)
-    valLabel:SetText(string.format(fmt or "%.1f", currentVal))
-    valLabel:SetTextColor(T("TEXT_PRIMARY"))
-
-    if slider.Low  then slider.Low:SetText(tostring(minVal)) end
-    if slider.High then slider.High:SetText(tostring(maxVal)) end
-    if slider.Text then slider.Text:SetText("") end
-
-    slider:SetScript("OnValueChanged", function(self, val)
-        local rounded = math.floor(val / step + 0.5) * step
-        rounded = math.max(minVal, math.min(maxVal, rounded))
-        valLabel:SetText(string.format(fmt or "%.1f", rounded))
-        onChange(rounded)
-    end)
-
-    return container
-end
-
 local function CreateSlotPreview(parent, featureId, reg)
     local SLOT_SIZE = PREVIEW_SLOT_SIZE
 
@@ -710,13 +408,13 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(0.2, 1.0, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(1.0, 0.2, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general")
@@ -724,18 +422,14 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(0.2, 1.0, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(1.0, 0.2, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.enabledDot then
-            if nowEnabled then
-                selectedRow.enabledDot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
-            else
-                selectedRow.enabledDot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
-            end
+        if selectedRow and selectedRow.dot then
+            selectedRow.dot:SetStatus(nowEnabled)
         end
     end)
 
@@ -807,13 +501,13 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     else
         if arkEnabled then
             arkStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-            arkStatusValue:SetTextColor(0.2, 1.0, 0.2)
+            arkStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             arkStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-            arkStatusValue:SetTextColor(1.0, 0.4, 0.4)
+            arkStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
 
-        local arkToggleBtn = GUI:CreateButton(nil, arkRow, arkEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        local arkToggleBtn = OneWoW_GUI:CreateButton(nil, arkRow, arkEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
         arkToggleBtn:SetPoint("RIGHT", arkRow, "RIGHT", -6, 0)
         arkToggleBtn:SetScript("OnClick", function(self)
             local db = OneWoW.db.global.settings.overlays
@@ -824,10 +518,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             nowEnabled = not nowEnabled
             if nowEnabled then
                 arkStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-                arkStatusValue:SetTextColor(0.2, 1.0, 0.2)
+                arkStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
             else
                 arkStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-                arkStatusValue:SetTextColor(1.0, 0.4, 0.4)
+                arkStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
             end
             self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
             OneWoW.OverlayEngine:Refresh()
@@ -866,13 +560,13 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     else
         if bagEnabled then
             bagStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-            bagStatusValue:SetTextColor(0.2, 1.0, 0.2)
+            bagStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             bagStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-            bagStatusValue:SetTextColor(1.0, 0.4, 0.4)
+            bagStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
 
-        local bagToggleBtn = GUI:CreateButton(nil, bagRow, bagEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        local bagToggleBtn = OneWoW_GUI:CreateButton(nil, bagRow, bagEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
         bagToggleBtn:SetPoint("RIGHT", bagRow, "RIGHT", -6, 0)
         bagToggleBtn:SetScript("OnClick", function(self)
             local db = OneWoW.db.global.settings.overlays
@@ -883,10 +577,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             nowEnabled = not nowEnabled
             if nowEnabled then
                 bagStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-                bagStatusValue:SetTextColor(0.2, 1.0, 0.2)
+                bagStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
             else
                 bagStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-                bagStatusValue:SetTextColor(1.0, 0.4, 0.4)
+                bagStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
             end
             self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
             OneWoW.OverlayEngine:Refresh()
@@ -958,13 +652,13 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     else
         if bbEnabled then
             bbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-            bbStatusValue:SetTextColor(0.2, 1.0, 0.2)
+            bbStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             bbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-            bbStatusValue:SetTextColor(1.0, 0.4, 0.4)
+            bbStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
 
-        local bbToggleBtn = GUI:CreateButton(nil, bbRow, bbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        local bbToggleBtn = OneWoW_GUI:CreateButton(nil, bbRow, bbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
         bbToggleBtn:SetPoint("RIGHT", bbRow, "RIGHT", -6, 0)
         bbToggleBtn:SetScript("OnClick", function(self)
             local db = OneWoW.db.global.settings.overlays
@@ -975,10 +669,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             nowEnabled = not nowEnabled
             if nowEnabled then
                 bbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-                bbStatusValue:SetTextColor(0.2, 1.0, 0.2)
+                bbStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
             else
                 bbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-                bbStatusValue:SetTextColor(1.0, 0.4, 0.4)
+                bbStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
             end
             self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
             OneWoW.OverlayEngine:Refresh()
@@ -1017,13 +711,13 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     else
         if owbEnabled then
             owbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-            owbStatusValue:SetTextColor(0.2, 1.0, 0.2)
+            owbStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             owbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-            owbStatusValue:SetTextColor(1.0, 0.4, 0.4)
+            owbStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
 
-        local owbToggleBtn = GUI:CreateButton(nil, owbRow, owbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        local owbToggleBtn = OneWoW_GUI:CreateButton(nil, owbRow, owbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
         owbToggleBtn:SetPoint("RIGHT", owbRow, "RIGHT", -6, 0)
         owbToggleBtn:SetScript("OnClick", function(self)
             local db = OneWoW.db.global.settings.overlays
@@ -1034,10 +728,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             nowEnabled = not nowEnabled
             if nowEnabled then
                 owbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-                owbStatusValue:SetTextColor(0.2, 1.0, 0.2)
+                owbStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
             else
                 owbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-                owbStatusValue:SetTextColor(1.0, 0.4, 0.4)
+                owbStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
             end
             self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
             OneWoW.OverlayEngine:Refresh()
@@ -1052,7 +746,7 @@ end
 
 local function ShowOverlayDetail(split, feature, selectedRow)
     local dsc = split.detailScrollChild
-    ClearPanel(dsc)
+    OneWoW_GUI:ClearFrame(dsc)
 
     local featureId = feature.id
     local reg       = OneWoW.SettingsFeatureRegistry
@@ -1100,13 +794,13 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(0.2, 1.0, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(1.0, 0.2, 0.2)
+        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = reg:IsEnabled("overlays", featureId)
@@ -1114,18 +808,14 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(0.2, 1.0, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(1.0, 0.2, 0.2)
+            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.enabledDot then
-            if nowEnabled then
-                selectedRow.enabledDot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
-            else
-                selectedRow.enabledDot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
-            end
+        if selectedRow and selectedRow.dot then
+            selectedRow.dot:SetStatus(nowEnabled)
         end
     end)
 
@@ -1155,7 +845,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         questNote:SetTextColor(T("TEXT_SECONDARY"))
         yOffset = yOffset - questNote:GetStringHeight() - 16
 
-        local vendorCb = GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
+        local vendorCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
         vendorCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         vendorCb:SetChecked(reg:GetOverlaySetting(featureId, "applyToVendorItems") or false)
         vendorCb:SetScript("OnClick", function(self)
@@ -1163,7 +853,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end)
         yOffset = yOffset - 30
 
-        local ahCb = GUI:CreateCheckbox(nil, dsc, L["OVR_AH_LABEL"])
+        local ahCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_AH_LABEL"])
         ahCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         ahCb:SetChecked(reg:GetOverlaySetting(featureId, "applyToAuctionHouse") or false)
         ahCb:SetScript("OnClick", function(self)
@@ -1192,13 +882,26 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         yOffset = yOffset - posLabel:GetStringHeight() - 6
 
         local currentPos = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
-        local posDD = CreateDropdown(dsc, POSITIONS, currentPos, function(val)
-            reg:SetOverlaySetting(featureId, "position", val)
-        end, 160)
+        local posDD, posDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 160, text = currentPos })
+        OneWoW_GUI:AttachFilterMenu(posDD, posDDText, {
+            searchable = false,
+            buildItems = function()
+                local items = {}
+                for _, opt in ipairs(POSITIONS) do
+                    table.insert(items, { text = opt, value = opt })
+                end
+                return items
+            end,
+            onSelect = function(value, text)
+                posDDText:SetText(text)
+                reg:SetOverlaySetting(featureId, "position", value)
+            end,
+            getActiveValue = function() return reg:GetOverlaySetting(featureId, "position") end,
+        })
         posDD:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         yOffset = yOffset - 26 - 16
 
-        local qualCb = GUI:CreateCheckbox(nil, dsc, L["OVR_QUALITY_COLORS_LABEL"])
+        local qualCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_QUALITY_COLORS_LABEL"])
         qualCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         qualCb:SetChecked(reg:GetOverlaySetting(featureId, "useQualityColors") or false)
         qualCb:SetScript("OnClick", function(self)
@@ -1206,7 +909,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end)
         yOffset = yOffset - 30 - 16
 
-        local vendorCb2 = GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
+        local vendorCb2 = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
         vendorCb2:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         vendorCb2:SetChecked(reg:GetOverlaySetting(featureId, "applyToVendorItems") ~= false)
         vendorCb2:SetScript("OnClick", function(self)
@@ -1214,7 +917,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end)
         yOffset = yOffset - 30
 
-        local ahCb2 = GUI:CreateCheckbox(nil, dsc, L["OVR_AH_LABEL"])
+        local ahCb2 = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_AH_LABEL"])
         ahCb2:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         ahCb2:SetChecked(reg:GetOverlaySetting(featureId, "applyToAuctionHouse") or false)
         ahCb2:SetScript("OnClick", function(self)
@@ -1229,7 +932,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         yOffset = yOffset - fsLabel:GetStringHeight() - 6
 
         local currentFS = reg:GetOverlaySetting(featureId, "fontSize") or 10
-        local fsSlider = CreateSlider(dsc, 7, 20, 1, currentFS, function(val)
+        local fsSlider = OneWoW_GUI:CreateSlider(dsc, 7, 20, 1, currentFS, function(val)
             reg:SetOverlaySetting(featureId, "fontSize", val)
         end, 240, "%d")
         fsSlider:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -1249,10 +952,23 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         rightY = rightY - fontLabel:GetStringHeight() - 6
 
         local currentFont = reg:GetOverlaySetting(featureId, "fontFamily") or "Friz Quadrata TF"
-        local fontDD = CreateFontDropdown(dsc, fontList, currentFont, function(val)
-            reg:SetOverlaySetting(featureId, "fontFamily", val)
-            OneWoW.OverlayEngine:Refresh()
-        end, 240)
+        local fontDD, fontDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = currentFont })
+        OneWoW_GUI:AttachFilterMenu(fontDD, fontDDText, {
+            searchable = true,
+            buildItems = function()
+                local items = {}
+                for _, name in ipairs(fontList) do
+                    table.insert(items, { text = name, value = name })
+                end
+                return items
+            end,
+            onSelect = function(value, text)
+                fontDDText:SetText(text)
+                reg:SetOverlaySetting(featureId, "fontFamily", value)
+                OneWoW.OverlayEngine:Refresh()
+            end,
+            getActiveValue = function() return reg:GetOverlaySetting(featureId, "fontFamily") end,
+        })
         fontDD:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
         fontDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
         rightY = rightY - 26 - 16
@@ -1267,10 +983,26 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         local currentOutline = reg:GetOverlaySetting(featureId, "fontOutline") or "OUTLINE"
         local outlineDisplayMap = {[""] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline"}
         local outlineValueMap = {["None"] = "", ["Outline"] = "OUTLINE", ["Thick Outline"] = "THICKOUTLINE"}
-        local outlineDD = CreateDropdown(dsc, outlineOptions, outlineDisplayMap[currentOutline], function(val)
-            reg:SetOverlaySetting(featureId, "fontOutline", outlineValueMap[val])
-            OneWoW.OverlayEngine:Refresh()
-        end, 240)
+        local outlineDD, outlineDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = outlineDisplayMap[currentOutline] })
+        OneWoW_GUI:AttachFilterMenu(outlineDD, outlineDDText, {
+            searchable = false,
+            buildItems = function()
+                local items = {}
+                for _, opt in ipairs(outlineOptions) do
+                    table.insert(items, { text = opt, value = opt })
+                end
+                return items
+            end,
+            onSelect = function(value, text)
+                outlineDDText:SetText(text)
+                reg:SetOverlaySetting(featureId, "fontOutline", outlineValueMap[value])
+                OneWoW.OverlayEngine:Refresh()
+            end,
+            getActiveValue = function()
+                local cur = reg:GetOverlaySetting(featureId, "fontOutline") or "OUTLINE"
+                return outlineDisplayMap[cur]
+            end,
+        })
         outlineDD:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
         outlineDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
         rightY = rightY - 26 - 10
@@ -1309,10 +1041,23 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     rightY = rightY - posLabel:GetStringHeight() - 6
 
     local currentPos = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
-    local posDropdown = CreateDropdown(dsc, POSITIONS, currentPos, function(val)
-        reg:SetOverlaySetting(featureId, "position", val)
-        RefreshPreview()
-    end, 160)
+    local posDropdown, posDropdownText = OneWoW_GUI:CreateDropdown(dsc, { width = 160, text = currentPos })
+    OneWoW_GUI:AttachFilterMenu(posDropdown, posDropdownText, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for _, opt in ipairs(POSITIONS) do
+                table.insert(items, { text = opt, value = opt })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            posDropdownText:SetText(text)
+            reg:SetOverlaySetting(featureId, "position", value)
+            RefreshPreview()
+        end,
+        getActiveValue = function() return reg:GetOverlaySetting(featureId, "position") end,
+    })
     posDropdown:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
     posDropdown:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
     rightY = rightY - 26 - 10
@@ -1324,7 +1069,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     rightY = rightY - scaleLabel:GetStringHeight() - 6
 
     local currentScale = reg:GetOverlaySetting(featureId, "scale") or 1.0
-    local scaleSlider  = CreateSlider(dsc, 0.5, 2.0, 0.1, currentScale, function(val)
+    local scaleSlider  = OneWoW_GUI:CreateSlider(dsc, 0.5, 2.0, 0.1, currentScale, function(val)
         reg:SetOverlaySetting(featureId, "scale", val)
         RefreshPreview()
     end, 160)
@@ -1339,7 +1084,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     rightY = rightY - alphaLabel:GetStringHeight() - 6
 
     local currentAlpha = reg:GetOverlaySetting(featureId, "alpha") or 1.0
-    local alphaSlider  = CreateSlider(dsc, 0.1, 1.0, 0.1, currentAlpha, function(val)
+    local alphaSlider  = OneWoW_GUI:CreateSlider(dsc, 0.1, 1.0, 0.1, currentAlpha, function(val)
         reg:SetOverlaySetting(featureId, "alpha", val)
         RefreshPreview()
     end, 160)
@@ -1365,7 +1110,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
 
     yOffset = math.min(yOffset, rightY)
 
-    local vendorCb = GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
+    local vendorCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
     vendorCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     local vendorEnabled = reg:GetOverlaySetting(featureId, "applyToVendorItems") or false
     vendorCb:SetChecked(vendorEnabled)
@@ -1374,7 +1119,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     end)
     yOffset = yOffset - 30
 
-    local ahCb = GUI:CreateCheckbox(nil, dsc, L["OVR_AH_LABEL"])
+    local ahCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_AH_LABEL"])
     ahCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     local ahEnabled = reg:GetOverlaySetting(featureId, "applyToAuctionHouse") or false
     ahCb:SetChecked(ahEnabled)
@@ -1384,7 +1129,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     yOffset = yOffset - 30 - 10
 
     if featureId == "junk" or featureId == "protected" then
-        local tooltipCb = GUI:CreateCheckbox(nil, dsc, L["OVR_TOOLTIP_LABEL"])
+        local tooltipCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_TOOLTIP_LABEL"])
         tooltipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         tooltipCb:SetChecked(reg:GetOverlaySetting(featureId, "showInTooltip") ~= false)
         tooltipCb:SetScript("OnClick", function(self)
@@ -1399,99 +1144,78 @@ end
 
 local function BuildFeatureList(split, tabName)
     local lsc = split.listScrollChild
-    ClearPanel(lsc)
-
-    local features    = OneWoW.SettingsFeatureRegistry:GetByTab(tabName)
+    local features = OneWoW.SettingsFeatureRegistry:GetByTab(tabName)
     local selectedRow = nil
-    local yOffset     = -5
+    local allRows = {}
 
-    for _, feature in ipairs(features) do
-        local capturedFeature = feature
-        local row = CreateFrame("Button", nil, lsc, "BackdropTemplate")
-        row:SetPoint("TOPLEFT",  lsc, "TOPLEFT",  4, yOffset)
-        row:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
-        row:SetHeight(32)
-        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        row:SetBackdropColor(T("BG_SECONDARY"))
-        row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    local function RenderRows(filterText)
+        OneWoW_GUI:ClearFrame(lsc)
+        selectedRow = nil
+        allRows = {}
+        local yOffset = -5
+        local filter = (filterText or ""):lower()
 
-        local rowLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        rowLabel:SetPoint("LEFT",  row, "LEFT",  10, 0)
-        rowLabel:SetPoint("RIGHT", row, "RIGHT", -22, 0)
-        rowLabel:SetJustifyH("LEFT")
-        rowLabel:SetText(L[feature.title] or feature.title)
-        rowLabel:SetTextColor(T("TEXT_PRIMARY"))
-        row.rowLabel = rowLabel
+        for _, feature in ipairs(features) do
+            local displayName = L[feature.title] or feature.title
+            if filter == "" or displayName:lower():find(filter, 1, true) then
+                local capturedFeature = feature
+                local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
 
-        local dot = row:CreateTexture(nil, "OVERLAY")
-        dot:SetSize(8, 8)
-        dot:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-        dot:SetTexture("Interface\\Buttons\\WHITE8x8")
-        if OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id) then
-            dot:SetVertexColor(0.35, 0.70, 0.35, 1.0)
-        else
-            dot:SetVertexColor(0.70, 0.30, 0.30, 1.0)
+                local row = OneWoW_GUI:CreateListRowBasic(lsc, {
+                    height = 30,
+                    label = displayName,
+                    showDot = true,
+                    dotEnabled = isEnabled,
+                    onClick = function(self)
+                        if selectedRow and selectedRow ~= self then
+                            selectedRow:SetActive(false)
+                        end
+                        selectedRow = self
+                        self:SetActive(true)
+                        ShowOverlayDetail(split, capturedFeature, self)
+                        if split.rightStatusText then
+                            local fe = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", capturedFeature.id)
+                            split.rightStatusText:SetText(displayName .. (fe and " (Enabled)" or " (Disabled)"))
+                        end
+                    end,
+                })
+                row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)
+                row:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
+                table.insert(allRows, row)
+                yOffset = yOffset - 34
+            end
         end
-        row.enabledDot = dot
 
-        row:SetScript("OnClick", function(self)
-            if selectedRow and selectedRow ~= self then
-                selectedRow:SetBackdropColor(T("BG_SECONDARY"))
-                selectedRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                if selectedRow.rowLabel then
-                    selectedRow.rowLabel:SetTextColor(T("TEXT_PRIMARY"))
-                end
-            end
-            selectedRow = self
-            self:SetBackdropColor(T("BG_ACTIVE"))
-            self:SetBackdropBorderColor(T("BORDER_ACCENT"))
-            rowLabel:SetTextColor(T("TEXT_ACCENT"))
-            ShowOverlayDetail(split, capturedFeature, self)
-            if split.rightStatusText then
-                local featureName = L[capturedFeature.title] or capturedFeature.title
-                local featureEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", capturedFeature.id)
-                split.rightStatusText:SetText(featureName .. (featureEnabled and " (Enabled)" or " (Disabled)"))
-            end
-        end)
-        row:SetScript("OnEnter", function(self)
-            if selectedRow ~= self then
-                self:SetBackdropColor(T("BG_HOVER"))
-                rowLabel:SetTextColor(T("TEXT_ACCENT"))
-            end
-        end)
-        row:SetScript("OnLeave", function(self)
-            if selectedRow ~= self then
-                self:SetBackdropColor(T("BG_SECONDARY"))
-                rowLabel:SetTextColor(T("TEXT_PRIMARY"))
-            end
-        end)
-
-        yOffset = yOffset - 36
+        lsc:SetHeight(math.abs(yOffset) + 10)
+        if #allRows > 0 and not selectedRow then
+            allRows[1]:Click()
+        end
     end
 
-    lsc:SetHeight(math.abs(yOffset) + 10)
-    split.UpdateListThumb()
+    RenderRows("")
 
-    if #features > 0 then
-        local firstRow = lsc:GetChildren()
-        if firstRow then firstRow:Click() end
+    if split.searchBox then
+        split.searchBox:SetScript("OnTextChanged", function(self)
+            local text = self:GetSearchText()
+            RenderRows(text)
+        end)
     end
+
+    local enabledCount = 0
+    for _, f in ipairs(features) do
+        if OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", f.id) then
+            enabledCount = enabledCount + 1
+        end
+    end
+    split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
 end
 
 function GUI:CreateOverlaysTab(parent)
-    local split = GUI:CreateSplitPanel(parent)
+    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search..." })
     split.listTitle:SetText(L["OVERLAYS_LIST_TITLE"])
     split.detailTitle:SetText(L["OVERLAYS_DETAIL_TITLE"])
 
     C_Timer.After(0.1, function()
         BuildFeatureList(split, "overlays")
-        local features = OneWoW.SettingsFeatureRegistry:GetByTab("overlays")
-        local enabledCount = 0
-        for _, f in ipairs(features) do
-            if OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", f.id) then
-                enabledCount = enabledCount + 1
-            end
-        end
-        split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
     end)
 end
