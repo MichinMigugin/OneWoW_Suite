@@ -83,6 +83,9 @@ local function OnPlayerLogin()
         if ns.Minimap then
             ns.Minimap:Initialize()
         end
+        if ns._pendingLoadVer then
+            print("|cFF00FF00OneWoW|r: |cFFFFFFFFShopping List|r |cFF888888\226\128\147 v." .. ns._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wsl")
+        end
     end
 end
 
@@ -103,7 +106,7 @@ local function OnAddonLoaded(loadedAddon)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("ShoppingList", _ver, "/1wsl")
     else
-        print("|cFF00FF00OneWoW|r: |cFFFFFFFFShopping List|r |cFF888888\226\128\147 v." .. _ver .. " \226\128\147|r |cFF00FF00Loaded|r - /1wsl")
+        ns._pendingLoadVer = _ver
     end
 end
 

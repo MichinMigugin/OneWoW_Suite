@@ -219,12 +219,15 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
             _G.OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt")
         else
-            print("|cFF00FF00OneWoW|r: |cFFFFFFFFDev Tools|r |cFF888888\226\128\147 v." .. _ver .. " \226\128\147|r |cFF00FF00Loaded|r - /1wdt")
+            Addon._pendingLoadVer = _ver
         end
     elseif event == "PLAYER_LOGIN" then
         if _G.OneWoW == nil then
             if Addon.Minimap then
                 Addon.Minimap:Initialize()
+            end
+            if Addon._pendingLoadVer then
+                print("|cFF00FF00OneWoW|r: |cFFFFFFFFDev Tools|r |cFF888888\226\128\147 v." .. Addon._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wdt")
             end
         end
         if Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad then

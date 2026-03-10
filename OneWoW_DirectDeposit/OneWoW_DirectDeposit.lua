@@ -176,7 +176,7 @@ function OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
     else
-        print("|cFF00FF00OneWoW|r: |cFFFFFFFFDirect Deposit|r |cFF888888\226\128\147 v." .. _ver .. " \226\128\147|r |cFF00FF00Loaded|r - /1wdd")
+        OneWoW_DirectDeposit._pendingLoadVer = _ver
     end
 end
 
@@ -276,6 +276,9 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         if not OneWoW_DirectDeposit.oneWoWHubActive then
             if OneWoW_DirectDeposit.Minimap then
                 OneWoW_DirectDeposit.Minimap:Initialize()
+            end
+            if OneWoW_DirectDeposit._pendingLoadVer then
+                print("|cFF00FF00OneWoW|r: |cFFFFFFFFDirect Deposit|r |cFF888888\226\128\147 v." .. OneWoW_DirectDeposit._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wdd")
             end
         end
     end
