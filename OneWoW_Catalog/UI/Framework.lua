@@ -10,66 +10,67 @@ local addonName, ns = ...
 
 ns.UI = ns.UI or {}
 
-local lib = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 function ns.UI.CreateButton(name, parent, text, width, height)
-    if lib then return lib:CreateButton(name, parent, text, width, height) end
+    return OneWoW_GUI:CreateButton(name, parent, text, width, height)
 end
 
 function ns.UI.CreateFitTextButton(parent, text, options)
-    if lib then return lib:CreateFitTextButton(parent, text, options) end
+    return OneWoW_GUI:CreateFitTextButton(parent, text, options)
 end
 
 function ns.UI.CreateScrollFrame(name, parent, width, height)
-    if lib then return lib:CreateScrollFrame(name, parent, width, height) end
+    return OneWoW_GUI:CreateScrollFrame(name, parent, width, height)
 end
 
 function ns.UI.CreateSectionHeader(parent, title, yOffset)
-    if lib then return lib:CreateSectionHeader(parent, title, yOffset) end
+    return OneWoW_GUI:CreateSectionHeader(parent, title, yOffset)
 end
 
 function ns.UI.CreateSplitPanel(parent, options)
-    if lib then return lib:CreateSplitPanel(parent, options) end
+    return OneWoW_GUI:CreateSplitPanel(parent, options)
 end
 
 function ns.UI.CreateTitleBar(parent, title, options)
-    if lib then return lib:CreateTitleBar(parent, title, options) end
+    return OneWoW_GUI:CreateTitleBar(parent, title, options)
 end
 
 function ns.UI.CreateFilterBar(parent, options)
-    if lib then return lib:CreateFilterBar(parent, options) end
+    return OneWoW_GUI:CreateFilterBar(parent, options)
 end
 
 function ns.UI.CreateEditBox(name, parent, options)
-    if lib then return lib:CreateEditBox(name, parent, options) end
+    return OneWoW_GUI:CreateEditBox(name, parent, options)
 end
 
 function ns.UI.CreateDropdown(parent, options)
-    if lib then return lib:CreateDropdown(parent, options) end
+    return OneWoW_GUI:CreateDropdown(parent, options)
 end
 
 function ns.UI.AttachFilterMenu(dropdown, text, options)
-    if lib then return lib:AttachFilterMenu(dropdown, text, options) end
+    return OneWoW_GUI:AttachFilterMenu(dropdown, text, options)
 end
 
 function ns.UI.CreateCheckbox(name, parent, label)
-    if lib then return lib:CreateCheckbox(name, parent, label) end
+    return OneWoW_GUI:CreateCheckbox(name, parent, label)
 end
 
 function ns.UI.ClearFrame(frame)
-    if lib then return lib:ClearFrame(frame) end
+    return OneWoW_GUI:ClearFrame(frame)
 end
 
 function ns.UI.CreateItemIcon(parent, options)
-    if lib then return lib:CreateItemIcon(parent, options) end
+    return OneWoW_GUI:CreateItemIcon(parent, options)
 end
 
 function ns.UI.CreateDivider(parent, yOffset)
-    if lib then return lib:CreateDivider(parent, yOffset) end
+    return OneWoW_GUI:CreateDivider(parent, yOffset)
 end
 
 function ns.UI.ApplyFont(fs, size)
-    local fontPath = lib and lib.GetFont and lib:GetFont()
+    local fontPath = OneWoW_GUI:GetFont()
     if not fontPath or not fs then return end
     if not size and fs.GetFont then
         local _, currentSize = fs:GetFont()
@@ -82,7 +83,7 @@ end
 
 function ns.UI.ApplyFontToFrame(frame)
     if not frame then return end
-    local fontPath = lib and lib.GetFont and lib:GetFont()
+    local fontPath = OneWoW_GUI:GetFont()
     if not fontPath then return end
     for _, region in ipairs({frame:GetRegions()}) do
         if region.GetFont and region.SetFont then

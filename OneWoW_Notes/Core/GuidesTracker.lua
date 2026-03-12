@@ -356,7 +356,7 @@ end
 local function CreateFloatingTracker()
     local addon = _G.OneWoW_Notes
 
-    local frame = lib:CreateFrame("OneWoW_Notes_FloatingTracker", UIParent, 260, 180)
+    local frame = OneWoW_GUI:CreateFrame("OneWoW_Notes_FloatingTracker", UIParent, 260, 180)
     frame:SetFrameStrata("MEDIUM")
     frame:SetToplevel(true)
     frame:SetClampedToScreen(true)
@@ -384,7 +384,7 @@ local function CreateFloatingTracker()
         SavePosition()
     end)
 
-    local titleBar = lib:CreateTitleBar(frame, "", {
+    local titleBar = OneWoW_GUI:CreateTitleBar(frame, "", {
         height = 22,
         onClose = function()
             Tracker:Deactivate()
@@ -446,7 +446,7 @@ local function CreateFloatingTracker()
     frame.objectiveRows = {}
     frame.isExtended = false
 
-    local extendBtn = lib:CreateFitTextButton(frame, L["GUIDES_EXTEND"], { height = 18, minWidth = 60, paddingX = 16 })
+    local extendBtn = OneWoW_GUI:CreateFitTextButton(frame, L["GUIDES_EXTEND"], { height = 18, minWidth = 60, paddingX = 16 })
     extendBtn:Hide()
     frame.extendBtn = extendBtn
 

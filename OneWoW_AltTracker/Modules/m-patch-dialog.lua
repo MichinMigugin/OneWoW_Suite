@@ -44,7 +44,7 @@ function PatchDialog:ShouldShowWelcome()
         return true
     end
 
-    local currentVersion = ns.GetVersionString()
+    local currentVersion = OneWoW_GUI:GetAddonVersion(addonName)
     local lastShown = OneWoWAltTracker.db.global.patchDialog.lastShownVersion
 
     if not lastShown or lastShown ~= currentVersion then
@@ -72,17 +72,17 @@ function PatchDialog:Show()
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoWAltTrackerPatchDialog",
-        title = L["PATCH_DIALOG_TITLE"] .. " " .. L["PATCH_DIALOG_VERSION"] .. " " .. ns.GetVersionString(),
+        title = L["PATCH_DIALOG_TITLE"] .. " " .. L["PATCH_DIALOG_VERSION"] .. " " .. OneWoW_GUI:GetAddonVersion(addonName),
         width = 700,
         height = 600,
         titleHeight = 40,
         showBrand = true,
         onClose = function()
-            OneWoWAltTracker.db.global.patchDialog.lastShownVersion = ns.GetVersionString()
+            OneWoWAltTracker.db.global.patchDialog.lastShownVersion = OneWoW_GUI:GetAddonVersion(addonName)
         end,
         buttons = {
             { text = L["PATCH_DIALOG_CLOSE"], onClick = function(dialog)
-                OneWoWAltTracker.db.global.patchDialog.lastShownVersion = ns.GetVersionString()
+                OneWoWAltTracker.db.global.patchDialog.lastShownVersion = OneWoW_GUI:GetAddonVersion(addonName)
                 dialog:Hide()
             end },
         },

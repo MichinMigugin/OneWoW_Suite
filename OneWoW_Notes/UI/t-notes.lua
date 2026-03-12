@@ -1043,7 +1043,7 @@ function ns.UI.CreateNotesTab(parent)
         table.sort(regular, sortNotes)
 
         local function CreateSectionHeader(text, yPos)
-            local section = lib:CreateSectionHeader(scrollChild, text, yPos)
+            local section = OneWoW_GUI:CreateSectionHeader(scrollChild, text, yPos)
             section:ClearAllPoints()
             section:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
             section:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yPos)
