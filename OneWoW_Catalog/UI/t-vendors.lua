@@ -11,6 +11,7 @@ local detailElements = {}
 local searchText = ""
 local zoneFilter = nil
 local currentZoneOnly = false
+local currencyFilter = nil
 local dataAddon = nil
 
 local QUALITY_COLORS = ns.Constants.QUALITY_COLORS
@@ -109,6 +110,73 @@ local function BuildZoneList()
     end
     table.sort(zones)
     return zones
+end
+
+local function BuildCurrencyList()
+    local addon = GetDataAddon()
+    if not addon or not addon.VendorData then return {} end
+
+    local allVendors = addon.VendorData:GetAllVendors()
+    local seen = {}
+    local currencies = {}
+
+    for _, vendor in pairs(allVendors) do
+        if vendor.items then
+            for _, itemData in pairs(vendor.items) do
+                if itemData.currencies then
+                    for _, curr in ipairs(itemData.currencies) do
+                        local key
+                        if curr.currencyID then
+                            key = "currency:" .. curr.currencyID
+                        elseif curr.itemID then
+                            key = "item:" .. curr.itemID
+                        end
+                        if key and not seen[key] then
+                            seen[key] = true
+                            local name = curr.name
+                            if (not name or name == "") and curr.itemID then
+                                name = C_Item.GetItemNameByID(curr.itemID)
+                            end
+                            if (not name or name == "") and curr.currencyID then
+                                local info = C_CurrencyInfo.GetCurrencyInfo(curr.currencyID)
+                                name = info and info.name
+                            end
+                            if name and name ~= "" then
+                                table.insert(currencies, {
+                                    key = key,
+                                    name = name,
+                                    currencyID = curr.currencyID,
+                                    itemID = curr.itemID,
+                                })
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    table.sort(currencies, function(a, b) return a.name < b.name end)
+    return currencies
+end
+
+local function VendorMatchesCurrencyFilter(vendor, filter)
+    if not filter then return true end
+    if not vendor or not vendor.items then return false end
+    for _, itemData in pairs(vendor.items) do
+        if itemData.currencies then
+            for _, curr in ipairs(itemData.currencies) do
+                local key
+                if curr.currencyID then
+                    key = "currency:" .. curr.currencyID
+                elseif curr.itemID then
+                    key = "item:" .. curr.itemID
+                end
+                if key == filter then return true end
+            end
+        end
+    end
+    return false
 end
 
 local function VendorMatchesZoneFilter(vendor, filterZone)
@@ -489,7 +557,9 @@ local function RefreshVendorList(panels)
             passesSearch = nameMatch or zoneMatch or itemMatch
         end
 
-        if passesZone and passesSearch then
+        local passesCurrency = VendorMatchesCurrencyFilter(vendor, currencyFilter)
+
+        if passesZone and passesSearch and passesCurrency then
             table.insert(filtered, vendor)
         end
     end
@@ -500,7 +570,7 @@ local function RefreshVendorList(panels)
     end
 
     local totalFiltered = #filtered
-    local hasActiveFilter = activeZoneFilter or (searchText ~= "")
+    local hasActiveFilter = activeZoneFilter or (searchText ~= "") or currencyFilter
     local displayLimit = nil
     if not hasActiveFilter then
         displayLimit = 50
@@ -613,6 +683,48 @@ function ns.UI.CreateVendorsTab(parent)
         end,
     })
 
+    local currencyDropdown, currencyDropdownText = OneWoW_GUI:CreateDropdown(headerBar, {
+        width = 200,
+        height = 26,
+        text = L["VENDORS_CURRENCY_ALL"],
+    })
+    currencyDropdown:SetPoint("RIGHT", zoneDropdown, "LEFT", -10, 0)
+
+    OneWoW_GUI:AttachFilterMenu(currencyDropdown, currencyDropdownText, {
+        searchable = true,
+        maxVisible = 10,
+        getActiveValue = function() return currencyFilter end,
+        buildItems = function()
+            local items = {}
+            table.insert(items, { value = nil, text = L["VENDORS_CURRENCY_ALL"] })
+            for _, curr in ipairs(BuildCurrencyList()) do
+                local currCopy = curr
+                table.insert(items, {
+                    value = currCopy.key,
+                    text = currCopy.name,
+                    onEnter = function(btn)
+                        GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
+                        if currCopy.itemID then
+                            GameTooltip:SetItemByID(currCopy.itemID)
+                        elseif currCopy.currencyID then
+                            GameTooltip:SetHyperlink("currency:" .. currCopy.currencyID)
+                        end
+                        GameTooltip:Show()
+                    end,
+                    onLeave = function()
+                        GameTooltip:Hide()
+                    end,
+                })
+            end
+            return items
+        end,
+        onSelect = function(key, text)
+            currencyFilter = key
+            currencyDropdownText:SetText(text)
+            RefreshVendorList(panels)
+        end,
+    })
+
     chkBox:HookScript("OnClick", function(self)
         currentZoneOnly = self:GetChecked()
         if currentZoneOnly then
@@ -626,9 +738,11 @@ function ns.UI.CreateVendorsTab(parent)
         searchText = ""
         zoneFilter = nil
         currentZoneOnly = false
+        currencyFilter = nil
         searchBox:SetText(searchBox.placeholderText)
         searchBox:ClearFocus()
         zoneDropdownText:SetText(L["VENDORS_ZONE_ALL"])
+        currencyDropdownText:SetText(L["VENDORS_CURRENCY_ALL"])
         chkBox:SetChecked(false)
         RefreshVendorList(panels)
     end)
