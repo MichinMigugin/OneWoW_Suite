@@ -252,6 +252,9 @@ ns.RegisterLocale("enUS", {
     ["OWSL_PROF_BTN_OPEN"] = "Shopping List",
     ["OWSL_PROF_BTN_MAKE_LIST"] = "Make List",
     ["OWSL_PROF_BTN_ADD_TO_ACTIVE"] = "Add to * List",
+    ["OWSL_PROF_BTN_ADD_TO_LIST"] = "Add to List...",
+    ["OWSL_TT_ADD_TO_LIST_TITLE"] = "Add to Specific List",
+    ["OWSL_TT_ADD_TO_LIST_DESC"] = "Adds this recipe's reagents to a list you choose",
 
     ["OWSL_MM_CLICK_TO_OPEN"] = "Click to open",
     ["OWSL_MM_DRAG_TO_MOVE"] = "Drag to reposition",

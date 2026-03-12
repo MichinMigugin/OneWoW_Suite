@@ -15,6 +15,9 @@ local function ScheduleRefresh()
     refreshPending = true
     C_Timer.After(0.05, function()
         refreshPending = false
+        if ns.MainWindow and ns.MainWindow.RefreshSidebar then
+            ns.MainWindow:RefreshSidebar()
+        end
         if ns.MainWindow and ns.MainWindow.RefreshItemList then
             ns.MainWindow:RefreshItemList()
         end
