@@ -2,6 +2,7 @@ local ADDON_NAME, OneWoW = ...
 
 local GUI = OneWoW.GUI
 local L = OneWoW.L
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 local function T(key)
     if OneWoW.Constants and OneWoW.Constants.THEME and OneWoW.Constants.THEME[key] then
@@ -29,7 +30,6 @@ local row2Container = nil
 local contentArea = nil
 local homePanel = nil
 local settingsPanel = nil
-
 local ALWAYS_SHOW_MODULES = {
     { name = "notes",      addonName = "OneWoW_Notes",    order = 1, localeKey = "MODULE_NOTES",
       url = "https://www.curseforge.com/wow/addons/onewow-notes" },
@@ -54,12 +54,7 @@ end
 local function CreateRow1TabButton(parent, text, moduleName)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetHeight(30)
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
+    btn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
     btn:SetBackdropColor(T("BG_SECONDARY"))
     btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -89,12 +84,7 @@ end
 local function CreateRow2TabButton(parent, text, subTabName, disabled)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetHeight(26)
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
+    btn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
     btn.subTabName = subTabName
     btn.disabled = disabled or false
 
@@ -237,6 +227,7 @@ local function BuildRow2ForModule(moduleName)
     end
 
     LayoutRow2Buttons()
+    GUI:ApplyFontToFrame(row2Container)
 
     row2Container:Show()
     UpdateContentAreaAnchors()
@@ -264,6 +255,7 @@ function GUI:SelectModuleTab(moduleName)
             homePanel = CreateFrame("Frame", nil, contentArea)
             homePanel:SetAllPoints()
             GUI:CreateHomeTab(homePanel)
+            GUI:ApplyFontToFrame(homePanel)
         end
         homePanel:Show()
         return
@@ -283,6 +275,7 @@ function GUI:SelectModuleTab(moduleName)
             end
 
             LayoutRow2Buttons()
+            GUI:ApplyFontToFrame(row2Container)
             row2Container:Show()
             UpdateContentAreaAnchors()
 
@@ -322,6 +315,7 @@ function GUI:SelectModuleTab(moduleName)
             frame:SetAllPoints()
             GUI:CreateAddonPlaceholderFrame(frame, placeholderData[moduleName])
             moduleContentFrames[key] = frame
+            GUI:ApplyFontToFrame(frame)
         end
         moduleContentFrames[key]:Show()
         return
@@ -371,6 +365,7 @@ function GUI:SelectSubTab(moduleName, subTabName)
                     frame:SetAllPoints()
                     tabInfo.create(frame)
                     moduleContentFrames[key] = frame
+                    GUI:ApplyFontToFrame(frame)
                     break
                 end
             end
@@ -383,6 +378,7 @@ function GUI:SelectSubTab(moduleName, subTabName)
                         frame:SetAllPoints()
                         tabInfo.create(frame)
                         moduleContentFrames[key] = frame
+                        GUI:ApplyFontToFrame(frame)
                         break
                     end
                 end
@@ -447,36 +443,27 @@ function GUI:InitMainWindow()
     end)
     MainWindow:RegisterForDrag("LeftButton")
 
-    local titleBar = CreateFrame("Frame", nil, MainWindow, "BackdropTemplate")
-    titleBar:SetHeight(20)
-    titleBar:SetWidth(frameW - (S("XS") * 2))
+    local titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, L["ADDON_TITLE"] or "OneWoW", {
+        height = 20,
+        showBrand = true,
+        onClose = function() GUI:Hide() end,
+    })
+    titleBar:ClearAllPoints()
     titleBar:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", S("XS"), -S("XS"))
     titleBar:SetPoint("TOPRIGHT", MainWindow, "TOPRIGHT", -S("XS"), -S("XS"))
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
-    titleBar:SetFrameLevel(MainWindow:GetFrameLevel() + 1)
-
-    local brandIcon = titleBar:CreateTexture(nil, "OVERLAY")
-    brandIcon:SetSize(14, 14)
-    brandIcon:SetPoint("LEFT", titleBar, "LEFT", S("SM"), 0)
-    brandIcon:SetTexture(GetBrandIcon())
-
-    local brandText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
-    brandText:SetText("OneWoW")
-    brandText:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
-    titleText:SetText(L["ADDON_TITLE"] or "OneWoW")
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local closeBtn = GUI:CreateButton(nil, titleBar, "X", 20, 20)
-    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -S("XS") / 2, 0)
-    closeBtn:SetScript("OnClick", function() MainWindow:Hide() end)
+    titleBar:EnableMouse(true)
+    titleBar:RegisterForDrag("LeftButton")
+    titleBar:SetScript("OnDragStart", function() MainWindow:StartMoving() end)
+    titleBar:SetScript("OnDragStop", function()
+        MainWindow:StopMovingOrSizing()
+        local point, relativeTo, relativePoint, x, y = MainWindow:GetPoint()
+        if OneWoW.db and OneWoW.db.global then
+            OneWoW.db.global.mainFramePosition = { point = point, relativePoint = relativePoint, x = x, y = y }
+        end
+    end)
 
     if OneWoW.Search then
-        OneWoW.Search:Init(titleBar, closeBtn)
+        OneWoW.Search:Init(titleBar, titleBar._closeBtn)
     end
 
     row1Container = CreateFrame("Frame", nil, MainWindow)
@@ -563,6 +550,8 @@ function GUI:InitMainWindow()
 
     tinsert(UISpecialFrames, "OneWoWMainWindow")
     isInitialized = true
+
+    GUI:ApplyFontToFrame(MainWindow)
 
     local lastTab = OneWoW.db and OneWoW.db.global and OneWoW.db.global.lastModuleTab or "home"
     local validTab = false

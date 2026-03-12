@@ -1,6 +1,7 @@
 local ADDON_NAME, OneWoW = ...
 
 local GUI = OneWoW.GUI
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 local function T(key)
     if OneWoW.Constants and OneWoW.Constants.THEME and OneWoW.Constants.THEME[key] then
@@ -513,62 +514,114 @@ end
 -- ============================================================
 
 function GUI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
-    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dialog:SetSize(480, 360)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
-    dialog:SetToplevel(true)
-    dialog:EnableMouse(true)
-    dialog:SetMovable(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    local restoreChecks = {}
+    local yOff = -10
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_CharProfileRestoreDialog",
+        title = "Restore Profile: |cFFFFD100" .. profileName .. "|r",
+        width = 480,
+        height = 360,
+        strata = "FULLSCREEN_DIALOG",
+        buttons = {
+            { text = "Restore Profile", onClick = function(dialog)
+                local M = OneWoW.CharProfiles
+                local results = {}
+                local reloadNeeded = false
+
+                if restoreChecks.keybinds and restoreChecks.keybinds:GetChecked() then
+                    local n = M:RestoreKeybinds(profile.keybinds)
+                    table.insert(results, string.format("%d Keybinds", n))
+                end
+
+                if restoreChecks.accountMacros and restoreChecks.accountMacros:GetChecked() then
+                    local n = M:RestoreMacros(
+                        { account = type(profile.accountMacros) == "table" and profile.accountMacros.data or {} },
+                        true, false)
+                    table.insert(results, string.format("%d Account Macros", n))
+                end
+
+                if restoreChecks.characterMacros and restoreChecks.characterMacros:GetChecked() then
+                    local n = M:RestoreMacros(
+                        { character = type(profile.characterMacros) == "table" and profile.characterMacros.data or {} },
+                        false, true)
+                    table.insert(results, string.format("%d Character Macros", n))
+                end
+
+                if restoreChecks.gameSettings and restoreChecks.gameSettings:GetChecked() then
+                    local n = M:RestoreGameSettings(profile.gameSettings)
+                    table.insert(results, string.format("%d Game Settings", n))
+                    reloadNeeded = true
+                end
+
+                if restoreChecks.addonSet and restoreChecks.addonSet:GetChecked() then
+                    local n = M:RestoreAddonSet(profile.addonSet)
+                    table.insert(results, string.format("%d changes to Addon Set", n))
+                    reloadNeeded = true
+                end
+
+                if restoreChecks.addonSettings and restoreChecks.addonSettings:GetChecked() then
+                    local n = M:RestoreAddonSettings(profile.addonSettings)
+                    table.insert(results, string.format("%d Addon Settings", n))
+                    reloadNeeded = true
+                end
+
+                dialog:Hide()
+
+                print(string.format("|cFFFFD100OneWoW:|r Character profile restored: %s", profileName))
+                for _, line in ipairs(results) do
+                    print("  |cFFFFD100-|r " .. line)
+                end
+
+                if reloadNeeded then
+                    print("|cFFFFD100OneWoW:|r A UI reload is required to apply changes.")
+                    C_Timer.After(1.5, function()
+                        StaticPopupDialogs["OW_CP_RELOAD"] = {
+                            text = "A UI reload is required to apply restored settings. Reload now?",
+                            button1 = "Reload",
+                            button2 = "Later",
+                            OnAccept = function() ReloadUI() end,
+                            timeout = 0,
+                            whileDead = true,
+                            hideOnEscape = true,
+                            preferredIndex = 3,
+                        }
+                        StaticPopup_Show("OW_CP_RELOAD")
+                    end)
+                end
+
+                if onRestored then onRestored() end
+            end },
+            { text = "Cancel", onClick = function(dialog) dialog:Hide() end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(28)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+    local cf = result.contentFrame
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-    titleText:SetText("Restore Profile: |cFFFFD100" .. profileName .. "|r")
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local savedDate = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    savedDate:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 10, -10)
+    local savedDate = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    savedDate:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, yOff)
     savedDate:SetText("Saved: " .. date("%Y-%m-%d %H:%M", profile.timestamp or 0))
     savedDate:SetTextColor(T("TEXT_SECONDARY"))
+    yOff = yOff - 18
 
-    local lastAnchor = savedDate
     if profile.savedBy then
-        local savedByFS = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local savedByFS = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         savedByFS:SetPoint("TOPLEFT", savedDate, "BOTTOMLEFT", 0, -4)
         savedByFS:SetText("Saved by: |cFFFFD100" .. profile.savedBy .. "|r")
         savedByFS:SetTextColor(T("TEXT_SECONDARY"))
-        lastAnchor = savedByFS
+        yOff = yOff - 18
     end
 
-    local selectLabel = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    selectLabel:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -10)
+    local selectLabel = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    selectLabel:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, yOff - 10)
     selectLabel:SetText("Select what to restore:")
     selectLabel:SetTextColor(T("TEXT_PRIMARY"))
-
-    local yOff = profile.savedBy and -93 or -75
-    local restoreChecks = {}
+    yOff = yOff - 28
 
     local function AddRestoreRow(key, labelText, count, available)
         if not available then return end
-        local cb = GUI:CreateCheckbox(nil, dialog, "")
-        cb:SetPoint("TOPLEFT", dialog, "TOPLEFT", 20, yOff)
+        local cb = GUI:CreateCheckbox(nil, cf, "")
+        cb:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, yOff)
         cb:SetChecked(true)
         local display = count and count > 0
             and (labelText .. " |cFF888888(" .. count .. ")|r")
@@ -608,124 +661,38 @@ function GUI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
         type(profile.addonSettings) == "table" and profile.addonSettings.count or 0,
         type(profile.addonSettings) == "table")
 
-    local restoreBtn = GUI:CreateButton(nil, dialog, "Restore Profile", 140, 30)
-    restoreBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 10)
-    restoreBtn:SetScript("OnClick", function()
-        local M = OneWoW.CharProfiles
-        local results = {}
-        local reloadNeeded = false
-
-        if restoreChecks.keybinds and restoreChecks.keybinds:GetChecked() then
-            local n = M:RestoreKeybinds(profile.keybinds)
-            table.insert(results, string.format("%d Keybinds", n))
-        end
-
-        if restoreChecks.accountMacros and restoreChecks.accountMacros:GetChecked() then
-            local n = M:RestoreMacros(
-                { account = type(profile.accountMacros) == "table" and profile.accountMacros.data or {} },
-                true, false)
-            table.insert(results, string.format("%d Account Macros", n))
-        end
-
-        if restoreChecks.characterMacros and restoreChecks.characterMacros:GetChecked() then
-            local n = M:RestoreMacros(
-                { character = type(profile.characterMacros) == "table" and profile.characterMacros.data or {} },
-                false, true)
-            table.insert(results, string.format("%d Character Macros", n))
-        end
-
-        if restoreChecks.gameSettings and restoreChecks.gameSettings:GetChecked() then
-            local n = M:RestoreGameSettings(profile.gameSettings)
-            table.insert(results, string.format("%d Game Settings", n))
-            reloadNeeded = true
-        end
-
-        if restoreChecks.addonSet and restoreChecks.addonSet:GetChecked() then
-            local n = M:RestoreAddonSet(profile.addonSet)
-            table.insert(results, string.format("%d changes to Addon Set", n))
-            reloadNeeded = true
-        end
-
-        if restoreChecks.addonSettings and restoreChecks.addonSettings:GetChecked() then
-            local n = M:RestoreAddonSettings(profile.addonSettings)
-            table.insert(results, string.format("%d Addon Settings", n))
-            reloadNeeded = true
-        end
-
-        dialog:Hide()
-
-        print(string.format("|cFFFFD100OneWoW:|r Character profile restored: %s", profileName))
-        for _, line in ipairs(results) do
-            print("  |cFFFFD100-|r " .. line)
-        end
-
-        if reloadNeeded then
-            print("|cFFFFD100OneWoW:|r A UI reload is required to apply changes.")
-            C_Timer.After(1.5, function()
-                StaticPopupDialogs["OW_CP_RELOAD"] = {
-                    text = "A UI reload is required to apply restored settings. Reload now?",
-                    button1 = "Reload",
-                    button2 = "Later",
-                    OnAccept = function() ReloadUI() end,
-                    timeout = 0,
-                    whileDead = true,
-                    hideOnEscape = true,
-                    preferredIndex = 3,
-                }
-                StaticPopup_Show("OW_CP_RELOAD")
-            end)
-        end
-
-        if onRestored then onRestored() end
-    end)
-
-    local cancelBtn = GUI:CreateButton(nil, dialog, "Cancel", 100, 30)
-    cancelBtn:SetPoint("BOTTOMRIGHT", restoreBtn, "BOTTOMLEFT", -8, 0)
-    cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
-
-    dialog:SetHeight(math.abs(yOff) + 60)
-    dialog:Show()
+    result.frame:SetHeight(math.abs(yOff) + 28 + 10 + 10 + 28 + 10)
+    result.frame:Show()
 end
 
 function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
-    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dialog:SetSize(620, 500)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
-    dialog:SetToplevel(true)
-    dialog:EnableMouse(true)
-    dialog:SetMovable(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    local eb
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_CharProfileExportDialog",
+        title = "Export Profile: |cFFFFD100" .. profileName .. "|r",
+        width = 620,
+        height = 500,
+        strata = "FULLSCREEN_DIALOG",
+        buttons = {
+            { text = "Select All", onClick = function(dialog)
+                eb:SetFocus()
+                eb:HighlightText()
+            end },
+            { text = "Close", onClick = function(dialog) dialog:Hide() end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(28)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+    local cf = result.contentFrame
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-    titleText:SetText("Export Profile: |cFFFFD100" .. profileName .. "|r")
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local hint = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hint:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -38)
+    local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText("Select all text and copy (Ctrl+A, Ctrl+C) to share this profile:")
     hint:SetTextColor(T("TEXT_SECONDARY"))
 
-    local textBG = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    textBG:SetPoint("TOPLEFT", dialog, "TOPLEFT", 10, -58)
-    textBG:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 46)
+    local textBG = CreateFrame("Frame", nil, cf, "BackdropTemplate")
+    textBG:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -28)
+    textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
     textBG:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -734,7 +701,7 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
     textBG:SetBackdropColor(0.06, 0.06, 0.06)
     textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local eb = CreateFrame("EditBox", nil, textBG)
+    eb = CreateFrame("EditBox", nil, textBG)
     eb:SetPoint("TOPLEFT", textBG, "TOPLEFT", 4, -4)
     eb:SetPoint("BOTTOMRIGHT", textBG, "BOTTOMRIGHT", -4, 4)
     eb:SetMultiLine(true)
@@ -742,20 +709,9 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
     eb:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
     eb:SetTextColor(1, 1, 1)
     eb:SetMaxLetters(0)
-    eb:SetScript("OnEscapePressed", function() dialog:Hide() end)
+    eb:SetScript("OnEscapePressed", function() result.frame:Hide() end)
 
-    local closeBtn = GUI:CreateButton(nil, dialog, "Close", 100, 28)
-    closeBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 10)
-    closeBtn:SetScript("OnClick", function() dialog:Hide() end)
-
-    local selectAllBtn = GUI:CreateButton(nil, dialog, "Select All", 110, 28)
-    selectAllBtn:SetPoint("BOTTOMRIGHT", closeBtn, "BOTTOMLEFT", -8, 0)
-    selectAllBtn:SetScript("OnClick", function()
-        eb:SetFocus()
-        eb:HighlightText()
-    end)
-
-    dialog:Show()
+    result.frame:Show()
     C_Timer.After(0, function()
         eb:SetText(serializedStr or "")
         eb:SetCursorPosition(0)
@@ -763,44 +719,40 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
 end
 
 function GUI:ShowCharProfileImportDialog(onImported)
-    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dialog:SetSize(620, 460)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
-    dialog:SetToplevel(true)
-    dialog:EnableMouse(true)
-    dialog:SetMovable(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    local eb
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_CharProfileImportDialog",
+        title = "Import Character Profile",
+        width = 620,
+        height = 460,
+        strata = "FULLSCREEN_DIALOG",
+        buttons = {
+            { text = "Import", onClick = function(dialog)
+                local text = eb:GetText()
+                local ok, res = OneWoW.CharProfiles:ImportProfile(text)
+                if ok then
+                    print(string.format("|cFFFFD100OneWoW:|r Character profile imported: %s", res))
+                    dialog:Hide()
+                    if onImported then onImported() end
+                else
+                    print(string.format("|cFFFFD100OneWoW:|r Import failed: %s", res or "unknown error"))
+                end
+            end },
+            { text = "Cancel", onClick = function(dialog) dialog:Hide() end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(28)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+    local cf = result.contentFrame
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-    titleText:SetText("Import Character Profile")
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local hint = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hint:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -38)
+    local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText("Paste exported profile data below, then click Import:")
     hint:SetTextColor(T("TEXT_SECONDARY"))
 
-    local textBG = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    textBG:SetPoint("TOPLEFT", dialog, "TOPLEFT", 10, -58)
-    textBG:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 46)
+    local textBG = CreateFrame("Frame", nil, cf, "BackdropTemplate")
+    textBG:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -28)
+    textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
     textBG:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -809,35 +761,17 @@ function GUI:ShowCharProfileImportDialog(onImported)
     textBG:SetBackdropColor(0.06, 0.06, 0.06)
     textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local eb = CreateFrame("EditBox", nil, dialog)
+    eb = CreateFrame("EditBox", nil, textBG)
+    eb:SetPoint("TOPLEFT", textBG, "TOPLEFT", 4, -4)
+    eb:SetPoint("BOTTOMRIGHT", textBG, "BOTTOMRIGHT", -4, 4)
     eb:SetMultiLine(true)
     eb:SetAutoFocus(true)
     eb:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
     eb:SetTextColor(1, 1, 1)
     eb:SetMaxLetters(0)
-    eb:SetSize(588, 340)
-    eb:SetPoint("TOPLEFT", dialog, "TOPLEFT", 16, -64)
-    eb:SetScript("OnEscapePressed", function() dialog:Hide() end)
+    eb:SetScript("OnEscapePressed", function() result.frame:Hide() end)
 
-    local importBtn = GUI:CreateButton(nil, dialog, "Import", 120, 28)
-    importBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 10)
-    importBtn:SetScript("OnClick", function()
-        local text = eb:GetText()
-        local ok, result = OneWoW.CharProfiles:ImportProfile(text)
-        if ok then
-            print(string.format("|cFFFFD100OneWoW:|r Character profile imported: %s", result))
-            dialog:Hide()
-            if onImported then onImported() end
-        else
-            print(string.format("|cFFFFD100OneWoW:|r Import failed: %s", result or "unknown error"))
-        end
-    end)
-
-    local cancelBtn = GUI:CreateButton(nil, dialog, "Cancel", 100, 28)
-    cancelBtn:SetPoint("BOTTOMRIGHT", importBtn, "BOTTOMLEFT", -8, 0)
-    cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
-
-    dialog:Show()
+    result.frame:Show()
 end
 
 -- ============================================================
@@ -1100,6 +1034,7 @@ function GUI:CreateCharProfilesPanel(parent)
 
     C_Timer.After(0.05, function()
         RefreshListing()
+        GUI:ApplyFontToFrame(parent)
         content:SetHeight(math.abs(yOffset) + listContainer:GetHeight() + 40)
     end)
 end

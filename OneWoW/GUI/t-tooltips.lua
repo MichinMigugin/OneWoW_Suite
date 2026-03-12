@@ -87,6 +87,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     yOffset = yOffset - noteLabel:GetStringHeight() - 10
 
     dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -434,6 +435,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     yOffset = CreateNoteToggleRows(dsc, CUSTOMNOTES_WARNING_TOGGLES, toggleBtnSets, isEnabled, cnSettings, yOffset)
 
     dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -734,6 +736,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     end
 
     dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -1074,6 +1077,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     yOffset = yOffset - 24
 
     dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -1182,6 +1186,7 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     yOffset = yOffset - noteLabel:GetStringHeight() - 10
 
     dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -1284,6 +1289,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     yOffset = yOffset - 30 - 14
 
     dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -1362,5 +1368,6 @@ function GUI:CreateTooltipsTab(parent)
 
     C_Timer.After(0.1, function()
         BuildFeatureList(split, "tooltips")
+        GUI:ApplyFontToFrame(parent)
     end)
 end

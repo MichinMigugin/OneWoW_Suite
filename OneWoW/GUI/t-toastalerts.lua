@@ -281,6 +281,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     dsc:SetHeight(math.abs(yOffset) + 40)
     split.UpdateDetailThumb()
+    GUI:ApplyFontToFrame(dsc)
 end
 
 local function BuildFeatureList(split, tabName)
@@ -363,5 +364,6 @@ function GUI:CreateToastAlertsTab(parent)
 
     C_Timer.After(0.1, function()
         BuildFeatureList(split, "toastalerts")
+        GUI:ApplyFontToFrame(parent)
     end)
 end

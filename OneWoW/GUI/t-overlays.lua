@@ -741,6 +741,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     yOffset = yOffset - 34
 
     dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -1139,6 +1140,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     end
 
     dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -1217,5 +1219,6 @@ function GUI:CreateOverlaysTab(parent)
 
     C_Timer.After(0.1, function()
         BuildFeatureList(split, "overlays")
+        GUI:ApplyFontToFrame(parent)
     end)
 end

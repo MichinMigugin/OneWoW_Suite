@@ -169,6 +169,51 @@ function GUI:CreatePortalsTab(parent)
 	portalScrollFrame:SetScrollChild(portalScrollChild)
 	portalPanel.scrollChild = portalScrollChild
 
+	local secureOverlay = CreateFrame("ScrollFrame", nil, UIParent)
+	secureOverlay:SetPoint("TOPLEFT", portalScrollFrame, "TOPLEFT")
+	secureOverlay:SetPoint("BOTTOMRIGHT", portalScrollFrame, "BOTTOMRIGHT")
+	secureOverlay:SetFrameStrata("HIGH")
+	secureOverlay:EnableMouseWheel(true)
+
+	local secureScrollChild = CreateFrame("Frame", nil, secureOverlay)
+	secureScrollChild:SetSize(portalScrollFrame:GetWidth(), 1)
+	secureOverlay:SetScrollChild(secureScrollChild)
+
+	secureOverlay:SetScript("OnMouseWheel", function(self, delta)
+		local scrollBar = portalScrollFrame.ScrollBar
+		if scrollBar then
+			local current = scrollBar:GetValue()
+			local minVal, maxVal = scrollBar:GetMinMaxValues()
+			local step = scrollBar:GetValueStep() or 20
+			local newVal = math.max(minVal, math.min(maxVal, current - (delta * step * 3)))
+			scrollBar:SetValue(newVal)
+		end
+	end)
+
+	portalScrollFrame:HookScript("OnVerticalScroll", function(self, offset)
+		secureOverlay:SetVerticalScroll(offset)
+	end)
+
+	local function ShowSecureOverlay()
+		secureOverlay:SetAlpha(1)
+		secureOverlay:ClearAllPoints()
+		secureOverlay:SetPoint("TOPLEFT", portalScrollFrame, "TOPLEFT")
+		secureOverlay:SetPoint("BOTTOMRIGHT", portalScrollFrame, "BOTTOMRIGHT")
+		local w = portalScrollChild:GetWidth()
+		if w and w > 0 then
+			secureScrollChild:SetWidth(w)
+		end
+	end
+
+	local function HideSecureOverlay()
+		secureOverlay:SetAlpha(0)
+		secureOverlay:ClearAllPoints()
+		secureOverlay:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 0)
+		secureOverlay:SetSize(1, 1)
+	end
+
+	HideSecureOverlay()
+
 	local leftStatusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
 	leftStatusBar:SetPoint("TOPLEFT", categoryPanel, "BOTTOMLEFT", 0, -5)
 	leftStatusBar:SetPoint("TOPRIGHT", categoryPanel, "BOTTOMRIGHT", 0, -5)
@@ -257,7 +302,7 @@ function GUI:CreatePortalsTab(parent)
 			button.dimOverlay:Hide()
 		end
 
-		button:SetParent(parentFrame)
+		button:SetParent(secureScrollChild)
 		button:SetSize(size, size)
 		button:Show()
 
@@ -409,6 +454,7 @@ function GUI:CreatePortalsTab(parent)
 	end
 
 	local function ShowCategory(categoryID, categoryName)
+		if InCombatLockdown() then return end
 		selectedCategory = categoryID
 		portalPanel.title:SetText(categoryName)
 
@@ -496,8 +542,8 @@ function GUI:CreatePortalsTab(parent)
 				yOffset = -row * (iconSize + 5) - 5
 				col = 0
 			else
-				local button = CreatePortalButton(portalScrollChild, portal, iconSize)
-				button:SetPoint("TOPLEFT", portalScrollChild, "TOPLEFT", xOffset, yOffset)
+				local button = CreatePortalButton(secureScrollChild, portal, iconSize)
+				button:SetPoint("TOPLEFT", secureScrollChild, "TOPLEFT", xOffset, yOffset)
 				table.insert(portalButtons, button)
 
 				col = col + 1
@@ -513,7 +559,9 @@ function GUI:CreatePortalsTab(parent)
 		end
 
 		local totalRows = math.ceil(#displayPortals / columns)
-		portalScrollChild:SetHeight(math.max(totalRows * (iconSize + 5), portalScrollFrame:GetHeight()))
+		local contentHeight = math.max(totalRows * (iconSize + 5), portalScrollFrame:GetHeight())
+		portalScrollChild:SetHeight(contentHeight)
+		secureScrollChild:SetHeight(contentHeight)
 
 		local availableCount = 0
 		local unavailableCount = 0
@@ -748,15 +796,25 @@ function GUI:CreatePortalsTab(parent)
 		RefreshCategories()
 	end)
 
+	parent:HookScript("OnShow", function()
+		ShowSecureOverlay()
+	end)
+	parent:HookScript("OnHide", function()
+		HideSecureOverlay()
+	end)
+
 	RefreshCategories()
 	ShowCategory("favorites", L["Favorites"])
 
 	parent.Cleanup = function()
+		HideSecureOverlay()
 	end
 
 	parent.Activate = function()
+		ShowSecureOverlay()
 	end
 
 	parent.Deactivate = function()
+		HideSecureOverlay()
 	end
 end

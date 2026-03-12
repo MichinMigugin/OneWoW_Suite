@@ -140,6 +140,14 @@ function OneWoW:OnAddonLoaded(loadedAddon)
                 end)
             end
         end)
+        OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+            if self2.GUI then
+                self2.GUI:FullReset()
+                C_Timer.After(0.1, function()
+                    if self2.GUI then self2.GUI:Show() end
+                end)
+            end
+        end)
     end
 
     local _ver = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or Constants.VERSION
