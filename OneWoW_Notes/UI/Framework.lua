@@ -140,14 +140,12 @@ function ns.UI.CreateFontDropdown(parent, width, height)
 
     local function RefreshText()
         textFS:SetText(dropdown._displayText)
-        if dropdown._displayText and dropdown._displayText ~= "" then
-            local LSM = LibStub("LibSharedMedia-3.0", true)
-            if LSM then
-                local fontPath = LSM:Fetch("font", dropdown._displayText)
-                if fontPath then
-                    textFS:SetFont(fontPath, 11, "")
-                    return
-                end
+        local guiLib = LibStub("OneWoW_GUI-1.0", true)
+        if dropdown._value and dropdown._value ~= "default" and guiLib and guiLib.GetFontByKey then
+            local fontPath = guiLib:GetFontByKey(dropdown._value)
+            if fontPath then
+                textFS:SetFont(fontPath, 11, "")
+                return
             end
         end
         textFS:SetFontObject("GameFontNormalSmall")
@@ -204,6 +202,26 @@ function ns.UI.CreateFontDropdown(parent, width, height)
     return dropdown
 end
 
+function ns.UI.ApplyFontToFrame(frame)
+    if not frame then return end
+    local fontPath = lib and lib.GetFont and lib:GetFont()
+    if not fontPath then return end
+    for _, region in ipairs({frame:GetRegions()}) do
+        if region.GetFont and region.SetFont and not region._skipGlobalFont then
+            local _, sz = region:GetFont()
+            if sz and sz > 0 then region:SetFont(fontPath, sz) end
+        end
+    end
+    for _, child in ipairs({frame:GetChildren()}) do
+        if child._skipGlobalFont then
+        elseif child:GetObjectType() == "EditBox" and child.GetFont then
+            local _, sz, flags = child:GetFont()
+            if sz and sz > 0 then child:SetFont(fontPath, sz, flags or "") end
+        end
+        ns.UI.ApplyFontToFrame(child)
+    end
+end
+
 function ns.UI.CloseAllOpenDropdowns()
     for _, dd in ipairs(_openDropdowns) do
         if dd._menu and dd._menu:IsShown() then
@@ -255,6 +273,12 @@ function ns.UI.CreateThemedDialog(config)
 
     frame:SetScript("OnHide", function()
         ns.UI.CloseAllOpenDropdowns()
+    end)
+
+    frame:HookScript("OnShow", function(self)
+        C_Timer.After(0, function()
+            ns.UI.ApplyFontToFrame(self)
+        end)
     end)
 
     frame:Hide()

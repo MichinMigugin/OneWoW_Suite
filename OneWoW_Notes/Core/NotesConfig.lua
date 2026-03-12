@@ -204,5 +204,31 @@ function ns.NotesConfig:GetResolvedFontColor(fontColorKey, pinColorKey)
     end
 end
 
+function ns.NotesConfig:ResolveFontPath(fontKey)
+    local GUI = LibStub("OneWoW_GUI-1.0", true)
+    if fontKey and fontKey ~= "default" and GUI and GUI.GetFontByKey then
+        local path = GUI:GetFontByKey(fontKey)
+        if path then return path end
+    end
+    if GUI and GUI.GetFont then
+        local globalPath = GUI:GetFont()
+        if globalPath then return globalPath end
+    end
+    return "Fonts\\FRIZQT__.TTF"
+end
+
+function ns.NotesConfig:GetFontOptions()
+    local GUI = LibStub("OneWoW_GUI-1.0", true)
+    local opts = {}
+    if GUI and GUI.GetFontList then
+        for _, fontInfo in ipairs(GUI:GetFontList()) do
+            opts[#opts + 1] = { text = fontInfo.label, value = fontInfo.key }
+        end
+    else
+        opts[#opts + 1] = { text = "WoW Default", value = "default" }
+    end
+    return opts
+end
+
 -- Shared alias so all code can use ns.Config.PIN_COLORS
 ns.Config = ns.NotesConfig

@@ -287,17 +287,7 @@ function NotesPins:CreateNotePin(noteID, note)
     end)
 
     local fontSize = note.fontSize or 12
-    local fontPath = "Fonts\\FRIZQT__.TTF"
-    local fontName = note.fontFamily
-    if fontName then
-        local LSM = LibStub("LibSharedMedia-3.0", true)
-        if LSM then
-            local path = LSM:Fetch("font", fontName)
-            if path then
-                fontPath = path
-            end
-        end
-    end
+    local fontPath = ns.Config:ResolveFontPath(note.fontFamily)
     contentText:SetFont(fontPath, fontSize, note.fontOutline or "")
 
     local contentTextColor
@@ -505,17 +495,7 @@ function NotesPins:CreateNotePin(noteID, note)
 
             local todoText = todoFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             local fs = currentNote.fontSize or 12
-            local todoFontPath = "Fonts\\FRIZQT__.TTF"
-            local todoFontName = currentNote.fontFamily
-            if todoFontName then
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local path = LSM:Fetch("font", todoFontName)
-                    if path then
-                        todoFontPath = path
-                    end
-                end
-            end
+            local todoFontPath = ns.Config:ResolveFontPath(currentNote.fontFamily)
             todoText:SetFont(todoFontPath, fs, currentNote.fontOutline or "")
             local textWidth = math.max(50, containerWidth - 28)
             todoText:SetWidth(textWidth)
@@ -845,21 +825,21 @@ function NotesPins:RefreshNotePinColors(noteID)
     end
     if pinFrame.contentText then
         pinFrame.contentText:SetTextColor(textColor[1], textColor[2], textColor[3], 1)
-        local fontPath = "Fonts\\FRIZQT__.TTF"
-        local fontName = note.fontFamily
-        if fontName then
-            local LSM = LibStub("LibSharedMedia-3.0", true)
-            if LSM then
-                local path = LSM:Fetch("font", fontName)
-                if path then
-                    fontPath = path
-                end
-            end
-        end
+        local fontPath = ns.Config:ResolveFontPath(note.fontFamily)
         pinFrame.contentText:SetFont(fontPath, fontSize, note.fontOutline or "")
     end
     if pinFrame.RefreshTodos then
         pinFrame:RefreshTodos()
+    end
+end
+
+function NotesPins:RefreshAllPinFonts()
+    local addon = _G.OneWoW_Notes
+    if not addon.notePins then return end
+    for noteID, pinFrame in pairs(addon.notePins) do
+        if pinFrame and pinFrame:IsShown() then
+            self:RefreshNotePinColors(noteID)
+        end
     end
 end
 

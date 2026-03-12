@@ -69,6 +69,17 @@ function addon:OnInitialize()
         OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
             if ns.ApplyLanguage then ns.ApplyLanguage() end
         end)
+        OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+            if ns.NotesPins and ns.NotesPins.RefreshAllPinFonts then
+                ns.NotesPins:RefreshAllPinFonts()
+            end
+            if ns.ZonePins and ns.ZonePins.RefreshAllPinFonts then
+                ns.ZonePins:RefreshAllPinFonts()
+            end
+            if ns.RoutinesEngine and ns.RoutinesEngine.RefreshAllPinnedWindows then
+                ns.RoutinesEngine:RefreshAllPinnedWindows()
+            end
+        end)
     end
 
     local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION
@@ -115,6 +126,14 @@ function addon:OnEnable()
 
     if ns.Zones and ns.Zones.MigrateDefaultColors then
         ns.Zones:MigrateDefaultColors()
+    end
+
+    if ns.NotesData and ns.NotesData.MigrateFontFamily then
+        ns.NotesData:MigrateFontFamily()
+    end
+
+    if ns.Zones and ns.Zones.MigrateFontFamily then
+        ns.Zones:MigrateFontFamily()
     end
 
     RegisterWithOneWoW()

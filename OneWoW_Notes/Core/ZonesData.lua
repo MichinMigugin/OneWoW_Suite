@@ -305,3 +305,45 @@ function Zones:MigrateDefaultColors()
         print("|cFF00FF00OneWoW_Notes|r: Migrated " .. migratedCount .. " zone(s) to OneWoW Sync theme")
     end
 end
+
+function Zones:MigrateFontFamily()
+    local addon = _G.OneWoW_Notes
+    if not addon.db or not addon.db.global then return end
+    if addon.db.global.zoneFontFamilyMigrated then return end
+
+    local GUI = LibStub("OneWoW_GUI-1.0", true)
+    if not GUI or not GUI.MigrateLSMFontName then
+        addon.db.global.zoneFontFamilyMigrated = true
+        return
+    end
+
+    local migratedCount = 0
+    if addon.db.global.zones then
+        for _, zoneData in pairs(addon.db.global.zones) do
+            if zoneData and type(zoneData) == "table" and zoneData.fontFamily then
+                local newKey = GUI:MigrateLSMFontName(zoneData.fontFamily)
+                if newKey then
+                    zoneData.fontFamily = newKey
+                    migratedCount = migratedCount + 1
+                end
+            end
+        end
+    end
+
+    if addon.db.char and addon.db.char.zones then
+        for _, zoneData in pairs(addon.db.char.zones) do
+            if zoneData and type(zoneData) == "table" and zoneData.fontFamily then
+                local newKey = GUI:MigrateLSMFontName(zoneData.fontFamily)
+                if newKey then
+                    zoneData.fontFamily = newKey
+                    migratedCount = migratedCount + 1
+                end
+            end
+        end
+    end
+
+    addon.db.global.zoneFontFamilyMigrated = true
+    if migratedCount > 0 then
+        print("|cFF00FF00OneWoW_Notes|r: Migrated " .. migratedCount .. " zone font(s) to new font system")
+    end
+end

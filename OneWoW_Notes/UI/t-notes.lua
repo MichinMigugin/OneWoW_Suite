@@ -570,6 +570,7 @@ function ns.UI.CreateNotesTab(parent)
             if ns.NotesHyperlinks then
                 ns.NotesHyperlinks:EnhanceEditBox(contentEditBox)
             end
+            contentEditBox._skipGlobalFont = true
             contentScroll:SetScrollChild(contentEditBox)
             detailPanel.contentEditBox = contentEditBox
 
@@ -733,14 +734,7 @@ function ns.UI.CreateNotesTab(parent)
                 if detailPanel.contentEditBox then
                     local textColor = GetFontColorFromKey(fontColor, pinColor)
                     detailPanel.contentEditBox:SetTextColor(textColor[1], textColor[2], textColor[3], 1)
-                    local detailFontPath = "Fonts\\FRIZQT__.TTF"
-                    if note.fontFamily then
-                        local LSM = LibStub("LibSharedMedia-3.0", true)
-                        if LSM then
-                            local path = LSM:Fetch("font", note.fontFamily)
-                            if path then detailFontPath = path end
-                        end
-                    end
+                    local detailFontPath = ns.Config:ResolveFontPath(note.fontFamily)
                     detailPanel.contentEditBox:SetFont(detailFontPath, fontSize, note.fontOutline or "")
                 end
 
@@ -870,14 +864,7 @@ function ns.UI.CreateNotesTab(parent)
         if detailPanel.contentEditBox then
             local textColor = GetFontColorFromKey(fontColor, pinColor)
             detailPanel.contentEditBox:SetTextColor(textColor[1], textColor[2], textColor[3], 1)
-            local detailFontPath = "Fonts\\FRIZQT__.TTF"
-            if note.fontFamily then
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local path = LSM:Fetch("font", note.fontFamily)
-                    if path then detailFontPath = path end
-                end
-            end
+            local detailFontPath = ns.Config:ResolveFontPath(note.fontFamily)
             detailPanel.contentEditBox:SetFont(detailFontPath, fontSize, note.fontOutline or "")
         end
     end
