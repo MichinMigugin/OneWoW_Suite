@@ -172,3 +172,9 @@ Modules\external\auctionhouse\Locales\koKR.lua
 Modules\external\auctionhouse\auctionhouse.lua
 Modules\external\auctionhouse\data.lua
 
+Modules\external\lfgpanel\Locales\enUS.lua
+Modules\external\lfgpanel\Locales\koKR.lua
+Modules\external\lfgpanel\lfgpanel.lua
+Modules\external\lfgpanel\lfgpanel-ui.lua
+Modules\external\lfgpanel\data.lua
+
