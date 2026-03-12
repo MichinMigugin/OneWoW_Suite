@@ -1,6 +1,11 @@
--- OneWoW_Notes Addon File
+-- ============================================================================
 -- OneWoW_Notes/UI/Framework.lua
--- Created by MichinMuggin (Ricky)
+-- BRIDGE + ADDON-SPECIFIC UI - Common UI functions are thin wrappers to the
+-- OneWoW_GUI Library (OneWoW_GUI-1.0). Only addon-specific UI components
+-- (ThemedDropdown, FontDropdown, ThemedDialog, CustomScroll, SplitPanel)
+-- should live here. If you need a common UI function, check the GUI Library
+-- first and add a wrapper, do NOT reimplement it here.
+-- ============================================================================
 local addonName, ns = ...
 local L = ns.L
 local T = ns.T
@@ -8,45 +13,10 @@ local S = ns.S
 
 ns.UI = ns.UI or {}
 
+local lib = LibStub("OneWoW_GUI-1.0", true)
+
 function ns.UI.CreateButton(name, parent, text, width, height)
-    local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
-    btn:SetSize(width or 100, height or ns.Constants.GUI.BUTTON_HEIGHT)
-    btn:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets   = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    btn:SetBackdropColor(T("BTN_NORMAL"))
-    btn:SetBackdropBorderColor(T("BTN_BORDER"))
-
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    btn.text:SetPoint("CENTER")
-    btn.text:SetText(text or "")
-    btn.text:SetTextColor(T("TEXT_PRIMARY"))
-
-    btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BTN_HOVER"))
-        self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(T("TEXT_ACCENT"))
-    end)
-    btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BTN_NORMAL"))
-        self:SetBackdropBorderColor(T("BTN_BORDER"))
-        self.text:SetTextColor(T("TEXT_PRIMARY"))
-    end)
-    btn:SetScript("OnMouseDown", function(self)
-        self:SetBackdropColor(T("BTN_PRESSED"))
-    end)
-    btn:SetScript("OnMouseUp", function(self)
-        if self:IsMouseOver() then
-            self:SetBackdropColor(T("BTN_HOVER"))
-        else
-            self:SetBackdropColor(T("BTN_NORMAL"))
-        end
-    end)
-
-    return btn
+    if lib then return lib:CreateButton(name, parent, text, width, height) end
 end
 
 function ns.UI.AutoResizeButton(btn, minWidth, maxWidth)
