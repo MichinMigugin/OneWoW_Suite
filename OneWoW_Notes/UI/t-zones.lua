@@ -245,7 +245,7 @@ function ns.UI.CreateZonesTab(parent)
         yPos = yPos - 30
 
         local resolvedColor = ns.Config:GetResolvedColorConfig(zoneData.pinColor)
-        local pinR, pinG, pinB = resolvedColor.bg[1], resolvedColor.bg[2], resolvedColor.bg[3]
+        local pinR, pinG, pinB = resolvedColor.background[1], resolvedColor.background[2], resolvedColor.background[3]
 
         local colorBar = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
         colorBar:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yPos)
@@ -518,7 +518,7 @@ function ns.UI.CreateZonesTab(parent)
         local function BuildZoneRow(zone, yOfs)
             local listItemColor = {OneWoW_GUI:GetThemeColor("BG_SECONDARY")}
             local resolvedColor = ns.Config:GetResolvedColorConfig(zone.data.pinColor)
-            local cR, cG, cB = resolvedColor.bg[1], resolvedColor.bg[2], resolvedColor.bg[3]
+            local cR, cG, cB = resolvedColor.background[1], resolvedColor.background[2], resolvedColor.background[3]
 
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, yOfs)
