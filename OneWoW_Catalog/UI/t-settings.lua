@@ -84,22 +84,9 @@ function ns.UI.CreateSettingsTab(parent)
         end
         UpdateSize()
 
-        local resetBtn = CreateFrame("Button", nil, container, "BackdropTemplate")
-        resetBtn:SetSize(75, 28)
+        local resetBtn = ns.UI.CreateFitTextButton(container, "Reset", { height = 28, minWidth = 75 })
         resetBtn:SetPoint("TOPRIGHT", -12, -16)
-        resetBtn:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Buttons\\WHITE8X8",
-            edgeSize = 1,
-        })
         resetBtn:SetBackdropColor(1, 0.3, 0.3)
-        resetBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-        local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        resetText:SetPoint("CENTER")
-        resetText:SetText("Reset")
-        resetText:SetTextColor(1, 1, 1)
-
         resetBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(1, 0.1, 0.1) end)
         resetBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(1, 0.3, 0.3) end)
 

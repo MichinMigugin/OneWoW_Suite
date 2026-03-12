@@ -16,6 +16,10 @@ function ns.UI.CreateButton(name, parent, text, width, height)
     if lib then return lib:CreateButton(name, parent, text, width, height) end
 end
 
+function ns.UI.CreateFitTextButton(parent, text, options)
+    if lib then return lib:CreateFitTextButton(parent, text, options) end
+end
+
 function ns.UI.CreateScrollFrame(name, parent, width, height)
     if lib then return lib:CreateScrollFrame(name, parent, width, height) end
 end
@@ -26,4 +30,40 @@ end
 
 function ns.UI.CreateSplitPanel(parent, options)
     if lib then return lib:CreateSplitPanel(parent, options) end
+end
+
+function ns.UI.CreateTitleBar(parent, title, options)
+    if lib then return lib:CreateTitleBar(parent, title, options) end
+end
+
+function ns.UI.CreateFilterBar(parent, options)
+    if lib then return lib:CreateFilterBar(parent, options) end
+end
+
+function ns.UI.CreateEditBox(name, parent, options)
+    if lib then return lib:CreateEditBox(name, parent, options) end
+end
+
+function ns.UI.CreateDropdown(parent, options)
+    if lib then return lib:CreateDropdown(parent, options) end
+end
+
+function ns.UI.AttachFilterMenu(dropdown, text, options)
+    if lib then return lib:AttachFilterMenu(dropdown, text, options) end
+end
+
+function ns.UI.CreateCheckbox(name, parent, label)
+    if lib then return lib:CreateCheckbox(name, parent, label) end
+end
+
+function ns.UI.ClearFrame(frame)
+    if lib then return lib:ClearFrame(frame) end
+end
+
+function ns.UI.CreateItemIcon(parent, options)
+    if lib then return lib:CreateItemIcon(parent, options) end
+end
+
+function ns.UI.CreateDivider(parent, yOffset)
+    if lib then return lib:CreateDivider(parent, yOffset) end
 end

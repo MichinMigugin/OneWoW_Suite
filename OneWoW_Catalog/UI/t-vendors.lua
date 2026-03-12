@@ -13,16 +13,7 @@ local zoneFilter = nil
 local currentZoneOnly = false
 local dataAddon = nil
 
-local QUALITY_COLORS = {
-    [0] = { 0.62, 0.62, 0.62, 1.0 },
-    [1] = { 1.00, 1.00, 1.00, 1.0 },
-    [2] = { 0.12, 1.00, 0.00, 1.0 },
-    [3] = { 0.00, 0.44, 0.87, 1.0 },
-    [4] = { 0.64, 0.21, 0.93, 1.0 },
-    [5] = { 1.00, 0.50, 0.00, 1.0 },
-    [6] = { 0.90, 0.80, 0.50, 1.0 },
-    [7] = { 0.00, 0.80, 1.00, 1.0 },
-}
+local QUALITY_COLORS = ns.Constants.QUALITY_COLORS
 
 local function FormatGold(copper)
     if not copper or copper <= 0 then return "" end
@@ -560,17 +551,10 @@ function ns.UI.CreateVendorsTab(parent)
     local GAP    = ns.Constants.GUI.PANEL_GAP
     local HDR_H  = 42
 
-    local headerBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    headerBar:SetHeight(HDR_H)
+    local headerBar = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    headerBar:ClearAllPoints()
     headerBar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     headerBar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    headerBar:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    headerBar:SetBackdropColor(T("BG_TERTIARY"))
-    headerBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
     local contentArea = CreateFrame("Frame", nil, parent)
     contentArea:SetPoint("TOPLEFT", headerBar, "BOTTOMLEFT", 0, -GAP)
@@ -580,80 +564,32 @@ function ns.UI.CreateVendorsTab(parent)
     panels.listTitle:SetText(L["VENDORS_LIST_TITLE"])
     panels.detailTitle:SetText(L["VENDORS_DETAIL_TITLE"])
 
-    local searchBox = CreateFrame("EditBox", nil, headerBar, "BackdropTemplate")
-    searchBox:SetHeight(26)
+    local searchBox = ns.UI.CreateEditBox(nil, headerBar, {
+        width = 280,
+        height = 26,
+        placeholderText = L["VENDORS_SEARCH"],
+        onTextChanged = function(text)
+            searchText = text
+            if panels._searchTimer then panels._searchTimer:Cancel() end
+            panels._searchTimer = C_Timer.NewTimer(0.3, function()
+                RefreshVendorList(panels)
+            end)
+        end,
+    })
     searchBox:SetPoint("TOPLEFT", headerBar, "TOPLEFT", 8, -8)
-    searchBox:SetWidth(280)
-    searchBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    searchBox:SetBackdropColor(T("BG_SECONDARY"))
-    searchBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    searchBox:SetFontObject(GameFontNormal)
-    searchBox:SetTextColor(T("TEXT_PRIMARY"))
-    searchBox:SetTextInsets(8, 8, 0, 0)
-    searchBox:SetAutoFocus(false)
 
-    local placeholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    placeholder:SetPoint("LEFT", searchBox, "LEFT", 8, 0)
-    placeholder:SetText(L["VENDORS_SEARCH"])
-    placeholder:SetTextColor(T("TEXT_MUTED"))
-
-    local clearBtn = CreateFrame("Button", nil, headerBar, "BackdropTemplate")
-    clearBtn:SetSize(34, 26)
+    local clearBtn = ns.UI.CreateFitTextButton(headerBar, L["VENDORS_FILTER_CLEAR"], { height = 26, minWidth = 34 })
     clearBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, 0)
-    clearBtn:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    clearBtn:SetBackdropColor(T("BG_SECONDARY"))
-    clearBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    local clearBtnText = clearBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    clearBtnText:SetPoint("CENTER")
-    clearBtnText:SetText(L["VENDORS_FILTER_CLEAR"])
-    clearBtnText:SetTextColor(T("TEXT_PRIMARY"))
-    clearBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-        clearBtnText:SetTextColor(T("TEXT_ACCENT"))
-    end)
-    clearBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-        clearBtnText:SetTextColor(T("TEXT_PRIMARY"))
-    end)
 
-    local chkBox = CreateFrame("Button", nil, headerBar, "BackdropTemplate")
-    chkBox:SetSize(16, 16)
+    local chkBox = ns.UI.CreateCheckbox(nil, headerBar, L["VENDORS_ZONE_CURRENT"])
     chkBox:SetPoint("TOPRIGHT", headerBar, "TOPRIGHT", -8, -13)
-    chkBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    chkBox:SetBackdropColor(T("BG_SECONDARY"))
-    chkBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local chkMark = chkBox:CreateTexture(nil, "OVERLAY")
-    chkMark:SetPoint("TOPLEFT", chkBox, "TOPLEFT", 2, -2)
-    chkMark:SetPoint("BOTTOMRIGHT", chkBox, "BOTTOMRIGHT", -2, 2)
-    chkMark:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-    chkMark:Hide()
-    panels.chkMark = chkMark
-    panels.chkBox = chkBox
-
-    local chkLabel = headerBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    chkLabel:SetPoint("RIGHT", chkBox, "LEFT", -6, 0)
-    chkLabel:SetText(L["VENDORS_ZONE_CURRENT"])
-    chkLabel:SetTextColor(T("TEXT_PRIMARY"))
 
     local zoneDropdown, zoneDropdownText = OneWoW_GUI:CreateDropdown(headerBar, {
         width = 200,
         height = 26,
         text = L["VENDORS_ZONE_ALL"],
     })
-    zoneDropdown:SetPoint("RIGHT", chkLabel, "LEFT", -10, 0)
+    zoneDropdown:SetPoint("RIGHT", chkBox, "LEFT", -10, 0)
 
     OneWoW_GUI:AttachFilterMenu(zoneDropdown, zoneDropdownText, {
         searchable = true,
@@ -671,23 +607,17 @@ function ns.UI.CreateVendorsTab(parent)
             zoneDropdownText:SetText(text)
             if zone then
                 currentZoneOnly = false
-                chkMark:Hide()
-                chkBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                chkBox:SetChecked(false)
             end
             RefreshVendorList(panels)
         end,
     })
 
-    chkBox:SetScript("OnClick", function(self)
-        currentZoneOnly = not currentZoneOnly
+    chkBox:HookScript("OnClick", function(self)
+        currentZoneOnly = self:GetChecked()
         if currentZoneOnly then
-            chkMark:Show()
-            self:SetBackdropBorderColor(T("BORDER_FOCUS"))
             zoneFilter = nil
             zoneDropdownText:SetText(L["VENDORS_ZONE_ALL"])
-        else
-            chkMark:Hide()
-            self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
         end
         RefreshVendorList(panels)
     end)
@@ -696,35 +626,11 @@ function ns.UI.CreateVendorsTab(parent)
         searchText = ""
         zoneFilter = nil
         currentZoneOnly = false
-        searchBox:SetText("")
-        placeholder:Show()
+        searchBox:SetText(searchBox.placeholderText)
+        searchBox:ClearFocus()
         zoneDropdownText:SetText(L["VENDORS_ZONE_ALL"])
-        chkMark:Hide()
-        chkBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        chkBox:SetChecked(false)
         RefreshVendorList(panels)
-    end)
-
-    searchBox:SetScript("OnTextChanged", function(self)
-        local text = self:GetText()
-        if text and text ~= "" then
-            placeholder:Hide()
-        else
-            placeholder:Show()
-        end
-        searchText = text or ""
-        if panels._searchTimer then
-            panels._searchTimer:Cancel()
-        end
-        panels._searchTimer = C_Timer.NewTimer(0.3, function()
-            RefreshVendorList(panels)
-        end)
-    end)
-    searchBox:SetScript("OnEscapePressed", function(self)
-        self:SetText("")
-        self:ClearFocus()
-    end)
-    searchBox:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
     end)
 
     local emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")

@@ -25,16 +25,7 @@ local hideNonCollectable = false
 local CARD_HEIGHT = 85
 local ITEM_ROW_HEIGHT = 32
 
-local QUALITY_COLORS = {
-    [0] = { 0.62, 0.62, 0.62, 1.0 },
-    [1] = { 1.00, 1.00, 1.00, 1.0 },
-    [2] = { 0.12, 1.00, 0.00, 1.0 },
-    [3] = { 0.00, 0.44, 0.87, 1.0 },
-    [4] = { 0.64, 0.21, 0.93, 1.0 },
-    [5] = { 1.00, 0.50, 0.00, 1.0 },
-    [6] = { 0.90, 0.80, 0.50, 1.0 },
-    [7] = { 0.00, 0.80, 1.00, 1.0 },
-}
+local QUALITY_COLORS = ns.Constants.QUALITY_COLORS
 
 local SPECIAL_COLORS = {
     TMog    = { 0.8, 0.4, 1.0 },
@@ -162,137 +153,6 @@ local function ClearInstanceList()
     wipe(instanceListButtons)
 end
 
-local activeMenus = {}
-
-local function HideAllMenus()
-    for _, menu in ipairs(activeMenus) do
-        if menu and menu:IsShown() then menu:Hide() end
-    end
-    wipe(activeMenus)
-end
-
-local function CreateThemedDropdown(parent, width, defaultText)
-    local dropdown = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    dropdown:SetSize(width, 26)
-    dropdown:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    dropdown:SetBackdropColor(T("BG_TERTIARY"))
-    dropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    dropdown.label = dropdown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    dropdown.label:SetPoint("LEFT", dropdown, "LEFT", 8, 0)
-    dropdown.label:SetPoint("RIGHT", dropdown, "RIGHT", -20, 0)
-    dropdown.label:SetJustifyH("LEFT")
-    dropdown.label:SetWordWrap(false)
-    dropdown.label:SetText(defaultText)
-    dropdown.label:SetTextColor(T("TEXT_PRIMARY"))
-
-    local arrow = dropdown:CreateTexture(nil, "OVERLAY")
-    arrow:SetSize(12, 12)
-    arrow:SetPoint("RIGHT", dropdown, "RIGHT", -4, 0)
-    arrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-
-    dropdown:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-    end)
-    dropdown:SetScript("OnLeave", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end)
-
-    return dropdown
-end
-
-local function ShowDropdownMenu(dropdown, items, onSelect)
-    HideAllMenus()
-
-    local itemHeight = 24
-    local padding = 6
-    local menuHeight = (#items * itemHeight) + (padding * 2)
-    local menuWidth = dropdown:GetWidth()
-    if menuWidth < 160 then menuWidth = 160 end
-
-    local menu = CreateFrame("Frame", nil, dropdown, "BackdropTemplate")
-    menu:SetFrameStrata("FULLSCREEN_DIALOG")
-    menu:SetSize(menuWidth, menuHeight)
-    menu:SetPoint("TOPLEFT", dropdown, "BOTTOMLEFT", 0, -2)
-    menu:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    menu:SetBackdropColor(0.08, 0.08, 0.08, 0.97)
-    menu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    menu:EnableMouse(true)
-
-    table.insert(activeMenus, menu)
-
-    local yPos = -padding
-    for _, item in ipairs(items) do
-        if item.isSeparator then
-            local sep = menu:CreateTexture(nil, "ARTWORK")
-            sep:SetPoint("TOPLEFT", menu, "TOPLEFT", 4, yPos - (itemHeight / 2))
-            sep:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -4, yPos - (itemHeight / 2))
-            sep:SetHeight(1)
-            sep:SetColorTexture(T("BORDER_SUBTLE"))
-            yPos = yPos - itemHeight
-        else
-            local btn = CreateFrame("Button", nil, menu, "BackdropTemplate")
-            btn:SetSize(menuWidth - 4, itemHeight)
-            btn:SetPoint("TOP", menu, "TOP", 0, yPos)
-            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-            btn:SetBackdropColor(0, 0, 0, 0)
-
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            text:SetPoint("LEFT", btn, "LEFT", 8, 0)
-            text:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
-            text:SetJustifyH("LEFT")
-            text:SetText(item.text)
-
-            if item.checked then
-                text:SetTextColor(T("ACCENT_HIGHLIGHT"))
-            else
-                text:SetTextColor(T("TEXT_PRIMARY"))
-            end
-
-            btn:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(T("BG_HOVER"))
-                text:SetTextColor(T("TEXT_ACCENT"))
-            end)
-            btn:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(0, 0, 0, 0)
-                if item.checked then
-                    text:SetTextColor(T("ACCENT_HIGHLIGHT"))
-                else
-                    text:SetTextColor(T("TEXT_PRIMARY"))
-                end
-            end)
-            btn:SetScript("OnClick", function()
-                menu:Hide()
-                if onSelect then
-                    onSelect(item.value, item.text)
-                end
-            end)
-
-            yPos = yPos - itemHeight
-        end
-    end
-
-    local timeOutside = 0
-    menu:SetScript("OnUpdate", function(self, elapsed)
-        if not MouseIsOver(menu) and not MouseIsOver(dropdown) then
-            timeOutside = timeOutside + elapsed
-            if timeOutside > 0.5 then
-                self:Hide()
-                self:SetScript("OnUpdate", nil)
-            end
-        else
-            timeOutside = 0
-        end
-    end)
-end
 
 local function CreateInstanceCard(parent, instData, yOffset, onClick)
     local card = CreateFrame("Button", nil, parent, "BackdropTemplate")
@@ -751,25 +611,28 @@ local function ShowInstanceDetail(panels, instData)
         local diffs = GetUniqueDifficulties(instData)
         if #diffs > 0 then
             panels.diffDropdown:Show()
-            panels.diffDropdown.label:SetText(L["JOURNAL_DIFF_ALL"])
+            panels.diffText:SetText(L["JOURNAL_DIFF_ALL"])
 
-            panels.diffDropdown:SetScript("OnClick", function(self)
-                local menuItems = {
-                    { text = L["JOURNAL_DIFF_ALL"], value = "all", checked = (selectedDifficulty == "all") },
-                }
-                for _, diff in ipairs(diffs) do
-                    table.insert(menuItems, {
-                        text = diff.name or "?",
-                        value = diff.id,
-                        checked = (tostring(selectedDifficulty) == tostring(diff.id)),
-                    })
-                end
-                ShowDropdownMenu(self, menuItems, function(value, text)
+            ns.UI.AttachFilterMenu(panels.diffDropdown, panels.diffText, {
+                searchable = false,
+                getActiveValue = function() return selectedDifficulty end,
+                buildItems = function()
+                    local items = { { value = "all", text = L["JOURNAL_DIFF_ALL"] } }
+                    local curDiffs = GetUniqueDifficulties(selectedInstance)
+                    for _, diff in ipairs(curDiffs) do
+                        table.insert(items, {
+                            value = diff.id,
+                            text  = diff.name or "?",
+                        })
+                    end
+                    return items
+                end,
+                onSelect = function(value, text)
                     selectedDifficulty = value
-                    self.label:SetText(text)
+                    panels.diffText:SetText(value == "all" and L["JOURNAL_DIFF_ALL"] or text)
                     RefreshDetailView(false)
-                end)
-            end)
+                end,
+            })
         else
             panels.diffDropdown:Hide()
         end
@@ -844,67 +707,79 @@ local function InitializeDropdowns(panels)
     if not addon then return end
 
     if panels.expDropdown then
-        panels.expDropdown.label:SetText(L["JOURNAL_EXPANSION_ALL"])
-        panels.expDropdown:SetScript("OnClick", function(self)
-            local menuItems = {
-                { text = L["JOURNAL_EXPANSION_ALL"], value = 0, checked = (expansionFilter == 0) },
-            }
-            local expansions = addon.JournalData:GetAvailableExpansions()
-            for _, exp in ipairs(expansions) do
-                table.insert(menuItems, {
-                    text = exp.displayName,
-                    value = exp.expansionID,
-                    checked = (expansionFilter == exp.expansionID),
-                })
-            end
-            ShowDropdownMenu(self, menuItems, function(value, text)
+        panels.expText:SetText(L["JOURNAL_EXPANSION_ALL"])
+        ns.UI.AttachFilterMenu(panels.expDropdown, panels.expText, {
+            searchable = false,
+            getActiveValue = function() return expansionFilter end,
+            buildItems = function()
+                local items = { { value = 0, text = L["JOURNAL_EXPANSION_ALL"] } }
+                local da = GetDataAddon()
+                if da and da.JournalData then
+                    local expansions = da.JournalData:GetAvailableExpansions()
+                    for _, exp in ipairs(expansions) do
+                        table.insert(items, {
+                            value = exp.expansionID,
+                            text  = exp.displayName,
+                        })
+                    end
+                end
+                return items
+            end,
+            onSelect = function(value, text)
                 expansionFilter = value
-                self.label:SetText(text)
+                panels.expText:SetText(value == 0 and L["JOURNAL_EXPANSION_ALL"] or text)
                 RefreshJournalList(panels)
-            end)
-        end)
+            end,
+        })
     end
 
     if panels.itemFilterDropdown then
-        panels.itemFilterDropdown.label:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
-        panels.itemFilterDropdown:SetScript("OnClick", function(self)
-            local menuItems = {
-                { text = L["JOURNAL_FILTER_SHOW_ALL"], value = "all",     checked = (filterItemType == "all") },
-                { isSeparator = true },
-                { text = L["JOURNAL_FILTER_TMOG"],     value = "tmog",    checked = (filterItemType == "tmog") },
-                { text = L["JOURNAL_FILTER_MOUNTS"],   value = "mounts",  checked = (filterItemType == "mounts") },
-                { text = L["JOURNAL_FILTER_PETS"],     value = "pets",    checked = (filterItemType == "pets") },
-                { text = L["JOURNAL_FILTER_RECIPES"],  value = "recipes", checked = (filterItemType == "recipes") },
-                { text = L["JOURNAL_FILTER_TOYS"],     value = "toys",    checked = (filterItemType == "toys") },
-                { text = L["JOURNAL_FILTER_QUEST"],    value = "quest",   checked = (filterItemType == "quest") },
-                { text = L["JOURNAL_FILTER_HOUSING"],  value = "housing", checked = (filterItemType == "housing") },
-            }
-            ShowDropdownMenu(self, menuItems, function(value, text)
+        panels.itemFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
+        ns.UI.AttachFilterMenu(panels.itemFilterDropdown, panels.itemFilterText, {
+            searchable = false,
+            getActiveValue = function() return filterItemType end,
+            buildItems = function()
+                return {
+                    { value = "all",     text = L["JOURNAL_FILTER_SHOW_ALL"] },
+                    { value = "tmog",    text = L["JOURNAL_FILTER_TMOG"]     },
+                    { value = "mounts",  text = L["JOURNAL_FILTER_MOUNTS"]   },
+                    { value = "pets",    text = L["JOURNAL_FILTER_PETS"]     },
+                    { value = "recipes", text = L["JOURNAL_FILTER_RECIPES"]  },
+                    { value = "toys",    text = L["JOURNAL_FILTER_TOYS"]     },
+                    { value = "quest",   text = L["JOURNAL_FILTER_QUEST"]    },
+                    { value = "housing", text = L["JOURNAL_FILTER_HOUSING"]  },
+                }
+            end,
+            onSelect = function(value, text)
                 filterItemType = value
-                self.label:SetText(text)
+                panels.itemFilterText:SetText(value == "all" and L["JOURNAL_FILTER_SHOW_ALL"] or text)
                 if selectedInstance then
                     RefreshDetailView(false)
                 end
-            end)
-        end)
+            end,
+        })
     end
 
     if panels.collectionFilterDropdown then
-        panels.collectionFilterDropdown.label:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
-        panels.collectionFilterDropdown:SetScript("OnClick", function(self)
-            local menuItems = {
-                { text = L["JOURNAL_FILTER_SHOW_ALL"],        value = "all",          checked = (filterCollection == "all") },
-                { text = L["JOURNAL_FILTER_COLLECTED"],       value = "collected",    checked = (filterCollection == "collected") },
-                { text = L["JOURNAL_FILTER_NOT_COLLECTED"],   value = "notcollected", checked = (filterCollection == "notcollected") },
-            }
-            ShowDropdownMenu(self, menuItems, function(value, text)
+        panels.collectionFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
+        ns.UI.AttachFilterMenu(panels.collectionFilterDropdown, panels.collectionFilterText, {
+            searchable = false,
+            getActiveValue = function() return filterCollection end,
+            buildItems = function()
+                return {
+                    { value = "all",          text = L["JOURNAL_FILTER_SHOW_ALL"]      },
+                    { value = "collected",    text = L["JOURNAL_FILTER_COLLECTED"]     },
+                    { value = "notcollected", text = L["JOURNAL_FILTER_NOT_COLLECTED"] },
+                }
+            end,
+            onSelect = function(value, text)
                 filterCollection = value
-                self.label:SetText(text)
+                panels.collectionFilterText:SetText(value == "all" and L["JOURNAL_FILTER_SHOW_ALL"] or text)
                 if selectedInstance then
                     RefreshDetailView(false)
                 end
-            end)
-        end)
+            end,
+        })
     end
 end
 
@@ -913,29 +788,15 @@ function ns.UI.CreateJournalTab(parent)
     local GAP    = ns.Constants.GUI.PANEL_GAP
     local HDR_H  = 80
 
-    local leftHeader = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    leftHeader:SetHeight(HDR_H)
+    local leftHeader = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    leftHeader:ClearAllPoints()
     leftHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     leftHeader:SetWidth(LEFT_W)
-    leftHeader:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    leftHeader:SetBackdropColor(T("BG_TERTIARY"))
-    leftHeader:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local rightHeader = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    rightHeader:SetHeight(HDR_H)
+    local rightHeader = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    rightHeader:ClearAllPoints()
     rightHeader:SetPoint("TOPLEFT", leftHeader, "TOPRIGHT", GAP, 0)
     rightHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    rightHeader:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    rightHeader:SetBackdropColor(T("BG_TERTIARY"))
-    rightHeader:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
     local contentArea = CreateFrame("Frame", nil, parent)
     contentArea:SetPoint("TOPLEFT", leftHeader, "BOTTOMLEFT", 0, -GAP)
@@ -945,50 +806,22 @@ function ns.UI.CreateJournalTab(parent)
     panels.listTitle:SetText(L["JOURNAL_LIST_TITLE"])
     panels.detailTitle:SetText(L["JOURNAL_DETAIL_TITLE"])
 
-    -- LEFT HEADER: Row 1 - Search + Clear button
-    local searchBox = CreateFrame("EditBox", nil, leftHeader, "BackdropTemplate")
-    searchBox:SetHeight(26)
+    local searchBox = ns.UI.CreateEditBox(nil, leftHeader, {
+        height = 26,
+        placeholderText = L["JOURNAL_SEARCH"],
+        onTextChanged = function(text)
+            searchText = text
+            if panels._searchTimer then panels._searchTimer:Cancel() end
+            panels._searchTimer = C_Timer.NewTimer(0.3, function()
+                RefreshJournalList(panels)
+            end)
+        end,
+    })
     searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -42, -8)
-    searchBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    searchBox:SetBackdropColor(T("BG_SECONDARY"))
-    searchBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    searchBox:SetFontObject(GameFontNormal)
-    searchBox:SetTextColor(T("TEXT_PRIMARY"))
-    searchBox:SetTextInsets(8, 8, 0, 0)
-    searchBox:SetAutoFocus(false)
 
-    local placeholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    placeholder:SetPoint("LEFT", searchBox, "LEFT", 8, 0)
-    placeholder:SetText(L["JOURNAL_SEARCH"])
-    placeholder:SetTextColor(T("TEXT_MUTED"))
-
-    local clearBtn = CreateFrame("Button", nil, leftHeader, "BackdropTemplate")
-    clearBtn:SetSize(34, 26)
+    local clearBtn = ns.UI.CreateFitTextButton(leftHeader, L["JOURNAL_FILTER_CLEAR"], { height = 26, minWidth = 34 })
     clearBtn:SetPoint("TOPLEFT", searchBox, "TOPRIGHT", 4, 0)
-    clearBtn:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    clearBtn:SetBackdropColor(T("BG_SECONDARY"))
-    clearBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    local clearBtnText = clearBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    clearBtnText:SetPoint("CENTER")
-    clearBtnText:SetText(L["JOURNAL_FILTER_CLEAR"])
-    clearBtnText:SetTextColor(T("TEXT_PRIMARY"))
-    clearBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-        clearBtnText:SetTextColor(T("TEXT_ACCENT"))
-    end)
-    clearBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-        clearBtnText:SetTextColor(T("TEXT_PRIMARY"))
-    end)
 
     -- LEFT HEADER: Row 2 - Expansion label + dropdown
     local expLabel = leftHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -996,7 +829,7 @@ function ns.UI.CreateJournalTab(parent)
     expLabel:SetText(L["JOURNAL_LABEL_EXPANSION"])
     expLabel:SetTextColor(T("TEXT_MUTED"))
 
-    local expDropdown = CreateThemedDropdown(leftHeader, LEFT_W - 16, L["JOURNAL_EXPANSION_ALL"])
+    local expDropdown, expText = ns.UI.CreateDropdown(leftHeader, { width = LEFT_W - 16, text = L["JOURNAL_EXPANSION_ALL"] })
     expDropdown:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -54)
 
     -- RIGHT HEADER: Row 1 left - Instance Type label + [All][Raids][Dungeons] buttons
@@ -1082,7 +915,7 @@ function ns.UI.CreateJournalTab(parent)
     end
 
     -- RIGHT HEADER: Row 1 right - Collection + Item Type dropdowns with labels
-    local collectionFilterDropdown = CreateThemedDropdown(rightHeader, 130, L["JOURNAL_FILTER_SHOW_ALL"])
+    local collectionFilterDropdown, collectionFilterText = ns.UI.CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
     collectionFilterDropdown:SetPoint("TOPRIGHT", rightHeader, "TOPRIGHT", -8, -22)
 
     local collLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1090,7 +923,7 @@ function ns.UI.CreateJournalTab(parent)
     collLabel:SetText(L["JOURNAL_LABEL_COLLECTION"])
     collLabel:SetTextColor(T("TEXT_MUTED"))
 
-    local itemFilterDropdown = CreateThemedDropdown(rightHeader, 130, L["JOURNAL_FILTER_SHOW_ALL"])
+    local itemFilterDropdown, itemFilterText = ns.UI.CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
     itemFilterDropdown:SetPoint("TOPRIGHT", collectionFilterDropdown, "TOPLEFT", -6, 0)
 
     local itemTypeLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1144,10 +977,10 @@ function ns.UI.CreateJournalTab(parent)
         filterCollection   = "all"
         hideNonCollectable = false
         searchBox:SetText("")
-        placeholder:Show()
-        expDropdown.label:SetText(L["JOURNAL_EXPANSION_ALL"])
-        itemFilterDropdown.label:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
-        collectionFilterDropdown.label:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
+        searchBox:ClearFocus()
+        expText:SetText(L["JOURNAL_EXPANSION_ALL"])
+        itemFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
+        collectionFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
         chkMark:Hide()
         chkBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
         for _, b in ipairs(typeButtons) do
@@ -1167,30 +1000,6 @@ function ns.UI.CreateJournalTab(parent)
         end
     end)
 
-    -- Search box behavior
-    searchBox:SetScript("OnTextChanged", function(self)
-        local text = self:GetText()
-        if text and text ~= "" then
-            placeholder:Hide()
-        else
-            placeholder:Show()
-        end
-        searchText = text or ""
-        if panels._searchTimer then
-            panels._searchTimer:Cancel()
-        end
-        panels._searchTimer = C_Timer.NewTimer(0.3, function()
-            RefreshJournalList(panels)
-        end)
-    end)
-    searchBox:SetScript("OnEscapePressed", function(self)
-        self:SetText("")
-        self:ClearFocus()
-    end)
-    searchBox:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
-    end)
-
     -- Empty state labels
     local emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
@@ -1203,18 +1012,22 @@ function ns.UI.CreateJournalTab(parent)
     panels.emptyDetail = emptyDetail
 
     -- Difficulty dropdown stays in detail panel
-    local diffDropdown = CreateThemedDropdown(panels.detailPanel, 180, L["JOURNAL_DIFF_ALL"])
+    local diffDropdown, diffText = ns.UI.CreateDropdown(panels.detailPanel, { width = 180, text = L["JOURNAL_DIFF_ALL"] })
     diffDropdown:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 8, -28)
     diffDropdown:Hide()
     panels.diffDropdown = diffDropdown
+    panels.diffText = diffText
 
     panels.detailScrollFrame:ClearAllPoints()
     panels.detailScrollFrame:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 0, -58)
     panels.detailScrollFrame:SetPoint("BOTTOMRIGHT", panels.detailPanel, "BOTTOMRIGHT", -18, 8)
 
-    panels.expDropdown             = expDropdown
-    panels.itemFilterDropdown      = itemFilterDropdown
+    panels.expDropdown              = expDropdown
+    panels.expText                  = expText
+    panels.itemFilterDropdown       = itemFilterDropdown
+    panels.itemFilterText           = itemFilterText
     panels.collectionFilterDropdown = collectionFilterDropdown
+    panels.collectionFilterText     = collectionFilterText
 
     ns.UI.journalPanels = panels
     panels_ref = panels
@@ -1290,8 +1103,8 @@ function ns.UI.OpenToInstance(mapID)
         if panels_ref.searchBox then
             panels_ref.searchBox:SetText("")
         end
-        if panels_ref.expDropdown then
-            panels_ref.expDropdown.label:SetText(instData.expansionName)
+        if panels_ref.expText then
+            panels_ref.expText:SetText(instData.expansionName)
         end
         RefreshJournalList(panels_ref)
         ShowInstanceDetail(panels_ref, instData)

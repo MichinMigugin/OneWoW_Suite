@@ -44,127 +44,6 @@ local function ClearQuestList()
     wipe(questListButtons)
 end
 
-local activeMenus = {}
-
-local function HideAllMenus()
-    for _, menu in ipairs(activeMenus) do
-        if menu and menu:IsShown() then menu:Hide() end
-    end
-    wipe(activeMenus)
-end
-
-local function CreateThemedDropdown(parent, width, defaultText)
-    local dropdown = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    dropdown:SetSize(width, 26)
-    dropdown:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    dropdown:SetBackdropColor(T("BG_TERTIARY"))
-    dropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    dropdown.label = dropdown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    dropdown.label:SetPoint("LEFT", dropdown, "LEFT", 8, 0)
-    dropdown.label:SetPoint("RIGHT", dropdown, "RIGHT", -20, 0)
-    dropdown.label:SetJustifyH("LEFT")
-    dropdown.label:SetWordWrap(false)
-    dropdown.label:SetText(defaultText)
-    dropdown.label:SetTextColor(T("TEXT_PRIMARY"))
-
-    local arrow = dropdown:CreateTexture(nil, "OVERLAY")
-    arrow:SetSize(12, 12)
-    arrow:SetPoint("RIGHT", dropdown, "RIGHT", -4, 0)
-    arrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-
-    dropdown:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-    end)
-    dropdown:SetScript("OnLeave", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end)
-
-    return dropdown
-end
-
-local function ShowDropdownMenu(dropdown, items, onSelect)
-    HideAllMenus()
-
-    local itemHeight = 24
-    local padding    = 6
-    local menuHeight = (#items * itemHeight) + (padding * 2)
-    local menuWidth  = dropdown:GetWidth()
-    if menuWidth < 160 then menuWidth = 160 end
-
-    local menu = CreateFrame("Frame", nil, dropdown, "BackdropTemplate")
-    menu:SetFrameStrata("FULLSCREEN_DIALOG")
-    menu:SetSize(menuWidth, menuHeight)
-    menu:SetPoint("TOPLEFT", dropdown, "BOTTOMLEFT", 0, -2)
-    menu:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    menu:SetBackdropColor(0.08, 0.08, 0.08, 0.97)
-    menu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    menu:EnableMouse(true)
-
-    table.insert(activeMenus, menu)
-
-    local yPos = -padding
-    for _, item in ipairs(items) do
-        local btn = CreateFrame("Button", nil, menu, "BackdropTemplate")
-        btn:SetSize(menuWidth - 4, itemHeight)
-        btn:SetPoint("TOP", menu, "TOP", 0, yPos)
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        btn:SetBackdropColor(0, 0, 0, 0)
-
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        text:SetPoint("LEFT", btn, "LEFT", 8, 0)
-        text:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
-        text:SetJustifyH("LEFT")
-        text:SetText(item.text)
-
-        if item.checked then
-            text:SetTextColor(T("ACCENT_HIGHLIGHT"))
-        else
-            text:SetTextColor(T("TEXT_PRIMARY"))
-        end
-
-        btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-            text:SetTextColor(T("TEXT_ACCENT"))
-        end)
-        btn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0, 0, 0, 0)
-            if item.checked then
-                text:SetTextColor(T("ACCENT_HIGHLIGHT"))
-            else
-                text:SetTextColor(T("TEXT_PRIMARY"))
-            end
-        end)
-        btn:SetScript("OnClick", function()
-            menu:Hide()
-            if onSelect then onSelect(item.value, item.text) end
-        end)
-
-        yPos = yPos - itemHeight
-    end
-
-    local timeOutside = 0
-    menu:SetScript("OnUpdate", function(self, elapsed)
-        if not MouseIsOver(menu) and not MouseIsOver(dropdown) then
-            timeOutside = timeOutside + elapsed
-            if timeOutside > 0.5 then
-                self:Hide()
-                self:SetScript("OnUpdate", nil)
-            end
-        else
-            timeOutside = 0
-        end
-    end)
-end
-
 local function GetQuestTypeLabel(quest)
     if not quest then return L["QUESTS_TYPE_NORMAL"] end
     if quest.isDaily   then return L["QUESTS_TYPE_DAILY"]   end
@@ -228,7 +107,6 @@ local function ShowQuestDetail(panels, questData)
     local addon   = GetDataAddon()
     local tracker = addon and addon.CompletionTracker
 
-    -- Defer if parent not yet laid out
     local contentWidth = parent:GetWidth()
     if contentWidth < 50 then
         C_Timer.After(0.05, function()
@@ -239,7 +117,6 @@ local function ShowQuestDetail(panels, questData)
         return
     end
 
-    -- Enrich sparse quest data with live API calls
     if addon and addon.QuestData then
         if not questData.mapID then
             local liveMapID = GetQuestUiMapID(questData.id)
@@ -299,14 +176,12 @@ local function ShowQuestDetail(panels, questData)
         return fs
     end
 
-    -- Quest Name
     addWrappedText(
         questData.name or string.format(L["QUESTS_UNNAMED"], questData.id or 0),
         "GameFontNormalLarge",
         { T("ACCENT_HIGHLIGHT") }
     )
 
-    -- Meta row
     local expName  = (questData.expansion ~= nil) and addon.QuestData:GetExpansionName(questData.expansion) or L["QUESTS_UNKNOWN"]
     local zoneName = questData.zoneName or L["QUESTS_UNKNOWN"]
     local typeName = GetQuestTypeLabel(questData)
@@ -328,7 +203,6 @@ local function ShowQuestDetail(panels, questData)
 
     addSep()
 
-    -- Description
     if questData.description and questData.description ~= "" then
         addWrappedText(questData.description, "GameFontNormal")
 
@@ -361,7 +235,6 @@ local function ShowQuestDetail(panels, questData)
         yOffset = yOffset - noDescFs:GetStringHeight() - 8
     end
 
-    -- Rewards section
     local hasRewards = (questData.rewardGold and questData.rewardGold > 0)
         or (questData.rewardXP and questData.rewardXP > 0)
         or (questData.rewardItems and #questData.rewardItems > 0)
@@ -412,7 +285,6 @@ local function ShowQuestDetail(panels, questData)
         addVSpace(4)
     end
 
-    -- Completion section
     addSep()
 
     local compLabel = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall"))
@@ -591,85 +463,97 @@ local function PopulateExpansionDropdown(panels)
     local addon = GetDataAddon()
     if not addon or not addon.QuestData then return end
 
-    local items = { { value = -1, text = L["QUESTS_EXPANSION_ALL"], checked = (expansionFilter == -1) } }
-    local expansions = addon.QuestData:GetAvailableExpansions()
-    for _, exp in ipairs(expansions) do
-        table.insert(items, {
-            value   = exp.id,
-            text    = exp.name,
-            checked = (expansionFilter == exp.id),
-        })
-    end
-
-    panels.expDropdown:SetScript("OnClick", function(self)
-        ShowDropdownMenu(self, items, function(value, text)
+    ns.UI.AttachFilterMenu(panels.expDropdown, panels.expText, {
+        searchable = false,
+        getActiveValue = function() return expansionFilter end,
+        buildItems = function()
+            local items = { { value = -1, text = L["QUESTS_EXPANSION_ALL"] } }
+            local expansions = addon.QuestData:GetAvailableExpansions()
+            for _, exp in ipairs(expansions) do
+                table.insert(items, {
+                    value   = exp.id,
+                    text    = exp.name,
+                })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
             expansionFilter = value
-            self.label:SetText(value == -1 and L["QUESTS_EXPANSION_ALL"] or text)
+            panels.expText:SetText(value == -1 and L["QUESTS_EXPANSION_ALL"] or text)
             zoneFilter = ""
-            panels.zoneDropdown.label:SetText(L["QUESTS_ZONE_ALL"])
+            panels.zoneText:SetText(L["QUESTS_ZONE_ALL"])
             PopulateZoneDropdown(panels)
             RefreshQuestList(panels)
-        end)
-    end)
+        end,
+    })
 end
 
 PopulateZoneDropdown = function(panels)
     local addon = GetDataAddon()
     if not addon or not addon.QuestData then return end
 
-    local zones = addon.QuestData:GetAvailableZones(expansionFilter ~= -1 and expansionFilter or nil)
-    local items = { { value = "", text = L["QUESTS_ZONE_ALL"], checked = (zoneFilter == "") } }
-    for _, zoneName in ipairs(zones) do
-        table.insert(items, {
-            value   = zoneName,
-            text    = zoneName,
-            checked = (zoneFilter == zoneName),
-        })
-    end
-
-    panels.zoneDropdown:SetScript("OnClick", function(self)
-        ShowDropdownMenu(self, items, function(value, text)
+    ns.UI.AttachFilterMenu(panels.zoneDropdown, panels.zoneText, {
+        searchable = true,
+        getActiveValue = function() return zoneFilter end,
+        buildItems = function()
+            local zones = addon.QuestData:GetAvailableZones(expansionFilter ~= -1 and expansionFilter or nil)
+            local items = { { value = "", text = L["QUESTS_ZONE_ALL"] } }
+            for _, zoneName in ipairs(zones) do
+                table.insert(items, {
+                    value   = zoneName,
+                    text    = zoneName,
+                })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
             zoneFilter = value
-            self.label:SetText(value == "" and L["QUESTS_ZONE_ALL"] or text)
+            panels.zoneText:SetText(value == "" and L["QUESTS_ZONE_ALL"] or text)
             RefreshQuestList(panels)
-        end)
-    end)
+        end,
+    })
 end
 
 local function SetupTypeDropdown(panels)
-    local items = {
-        { value = "all",   text = L["QUESTS_TYPE_ALL"],  checked = (typeFilter == "all")   },
-        { value = "solo",  text = L["QUESTS_TYPE_SOLO"], checked = (typeFilter == "solo")  },
-        { value = "group", text = L["QUESTS_TYPE_GROUP"],checked = (typeFilter == "group") },
-        { value = "raid",  text = L["QUESTS_TYPE_RAID"], checked = (typeFilter == "raid")  },
-    }
-    panels.typeDropdown:SetScript("OnClick", function(self)
-        ShowDropdownMenu(self, items, function(value, text)
+    ns.UI.AttachFilterMenu(panels.typeDropdown, panels.typeText, {
+        searchable = false,
+        getActiveValue = function() return typeFilter end,
+        buildItems = function()
+            return {
+                { value = "all",   text = L["QUESTS_TYPE_ALL"]   },
+                { value = "solo",  text = L["QUESTS_TYPE_SOLO"]  },
+                { value = "group", text = L["QUESTS_TYPE_GROUP"] },
+                { value = "raid",  text = L["QUESTS_TYPE_RAID"]  },
+            }
+        end,
+        onSelect = function(value, text)
             typeFilter = value
-            self.label:SetText(value == "all" and L["QUESTS_TYPE_ALL"] or text)
-            for _, item in ipairs(items) do item.checked = (item.value == value) end
+            panels.typeText:SetText(value == "all" and L["QUESTS_TYPE_ALL"] or text)
             RefreshQuestList(panels)
-        end)
-    end)
+        end,
+    })
 end
 
 local function SetupQuestTypeDropdown(panels)
-    local items = {
-        { value = "all",        text = L["QUESTS_QTYPE_ALL"],           checked = (questTypeFilter == "all")        },
-        { value = "normal",     text = L["QUESTS_TYPE_NORMAL"],         checked = (questTypeFilter == "normal")     },
-        { value = "daily",      text = L["QUESTS_TYPE_DAILY"],          checked = (questTypeFilter == "daily")      },
-        { value = "weekly",     text = L["QUESTS_TYPE_WEEKLY"],         checked = (questTypeFilter == "weekly")     },
-        { value = "campaign",   text = L["QUESTS_TYPE_CAMPAIGN"],       checked = (questTypeFilter == "campaign")   },
-        { value = "worldquest", text = L["QUESTS_TYPE_WORLDQUEST"],     checked = (questTypeFilter == "worldquest") },
-    }
-    panels.qTypeDropdown:SetScript("OnClick", function(self)
-        ShowDropdownMenu(self, items, function(value, text)
+    ns.UI.AttachFilterMenu(panels.qTypeDropdown, panels.qTypeText, {
+        searchable = false,
+        getActiveValue = function() return questTypeFilter end,
+        buildItems = function()
+            return {
+                { value = "all",        text = L["QUESTS_QTYPE_ALL"]       },
+                { value = "normal",     text = L["QUESTS_TYPE_NORMAL"]     },
+                { value = "daily",      text = L["QUESTS_TYPE_DAILY"]      },
+                { value = "weekly",     text = L["QUESTS_TYPE_WEEKLY"]     },
+                { value = "campaign",   text = L["QUESTS_TYPE_CAMPAIGN"]   },
+                { value = "worldquest", text = L["QUESTS_TYPE_WORLDQUEST"] },
+            }
+        end,
+        onSelect = function(value, text)
             questTypeFilter = value
-            self.label:SetText(value == "all" and L["QUESTS_QTYPE_ALL"] or text)
-            for _, item in ipairs(items) do item.checked = (item.value == value) end
+            panels.qTypeText:SetText(value == "all" and L["QUESTS_QTYPE_ALL"] or text)
             RefreshQuestList(panels)
-        end)
-    end)
+        end,
+    })
 end
 
 local panels_ref = nil
@@ -679,29 +563,15 @@ function ns.UI.CreateQuestsTab(parent)
     local GAP    = ns.Constants.GUI.PANEL_GAP
     local HDR_H  = 42
 
-    local leftHeader = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    leftHeader:SetHeight(HDR_H)
+    local leftHeader = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    leftHeader:ClearAllPoints()
     leftHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     leftHeader:SetWidth(LEFT_W)
-    leftHeader:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    leftHeader:SetBackdropColor(T("BG_TERTIARY"))
-    leftHeader:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local rightHeader = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    rightHeader:SetHeight(HDR_H)
-    rightHeader:SetPoint("TOPLEFT",  leftHeader,  "TOPRIGHT",  GAP, 0)
-    rightHeader:SetPoint("TOPRIGHT", parent,      "TOPRIGHT",  0, 0)
-    rightHeader:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    rightHeader:SetBackdropColor(T("BG_TERTIARY"))
-    rightHeader:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    local rightHeader = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    rightHeader:ClearAllPoints()
+    rightHeader:SetPoint("TOPLEFT", leftHeader, "TOPRIGHT", GAP, 0)
+    rightHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 
     local contentArea = CreateFrame("Frame", nil, parent)
     contentArea:SetPoint("TOPLEFT",     leftHeader, "BOTTOMLEFT",  0, -GAP)
@@ -711,59 +581,30 @@ function ns.UI.CreateQuestsTab(parent)
     panels.listTitle:SetText(L["QUESTS_LIST_TITLE"])
     panels.detailTitle:SetText(L["QUESTS_DETAIL_TITLE"])
 
-    -- LEFT HEADER: Search + Clear
-    local searchBox = CreateFrame("EditBox", nil, leftHeader, "BackdropTemplate")
-    searchBox:SetHeight(26)
-    searchBox:SetPoint("TOPLEFT",  leftHeader, "TOPLEFT",  8, -8)
+    local searchBox = ns.UI.CreateEditBox(nil, leftHeader, {
+        height = 26,
+        placeholderText = L["QUESTS_SEARCH"],
+        onTextChanged = function(text)
+            searchText = text
+            if panels._searchTimer then panels._searchTimer:Cancel() end
+            panels._searchTimer = C_Timer.NewTimer(0.3, function()
+                RefreshQuestList(panels)
+            end)
+        end,
+    })
+    searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -42, -8)
-    searchBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    searchBox:SetBackdropColor(T("BG_SECONDARY"))
-    searchBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    searchBox:SetFontObject(GameFontNormal)
-    searchBox:SetTextColor(T("TEXT_PRIMARY"))
-    searchBox:SetTextInsets(8, 8, 0, 0)
-    searchBox:SetAutoFocus(false)
 
-    local placeholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    placeholder:SetPoint("LEFT", searchBox, "LEFT", 8, 0)
-    placeholder:SetText(L["QUESTS_SEARCH"])
-    placeholder:SetTextColor(T("TEXT_MUTED"))
-
-    local clearBtn = CreateFrame("Button", nil, leftHeader, "BackdropTemplate")
-    clearBtn:SetSize(34, 26)
+    local clearBtn = ns.UI.CreateFitTextButton(leftHeader, L["QUESTS_CLEAR"], { height = 26, minWidth = 34 })
     clearBtn:SetPoint("TOPLEFT", searchBox, "TOPRIGHT", 4, 0)
-    clearBtn:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    clearBtn:SetBackdropColor(T("BG_SECONDARY"))
-    clearBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    local clearBtnText = clearBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    clearBtnText:SetPoint("CENTER")
-    clearBtnText:SetText(L["QUESTS_CLEAR"])
-    clearBtnText:SetTextColor(T("TEXT_PRIMARY"))
-    clearBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-        clearBtnText:SetTextColor(T("TEXT_ACCENT"))
-    end)
-    clearBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-        clearBtnText:SetTextColor(T("TEXT_PRIMARY"))
-    end)
 
-    -- RIGHT HEADER: 4 dropdowns
     local DD_GAP = 4
     local DD_PAD = 8
 
-    local expDropdown   = CreateThemedDropdown(rightHeader, 10, L["QUESTS_EXPANSION_ALL"])
-    local zoneDropdown  = CreateThemedDropdown(rightHeader, 10, L["QUESTS_ZONE_ALL"])
-    local typeDropdown  = CreateThemedDropdown(rightHeader, 10, L["QUESTS_TYPE_ALL"])
-    local qTypeDropdown = CreateThemedDropdown(rightHeader, 10, L["QUESTS_QTYPE_ALL"])
+    local expDropdown, expText = ns.UI.CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_EXPANSION_ALL"] })
+    local zoneDropdown, zoneText = ns.UI.CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_ZONE_ALL"] })
+    local typeDropdown, typeText = ns.UI.CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_TYPE_ALL"] })
+    local qTypeDropdown, qTypeText = ns.UI.CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_QTYPE_ALL"] })
 
     local function LayoutFilterDropdowns(w)
         local ddW = math.floor((w - (DD_PAD * 2) - (DD_GAP * 3)) / 4)
@@ -793,7 +634,6 @@ function ns.UI.CreateQuestsTab(parent)
         if w and w > 0 then LayoutFilterDropdowns(w) end
     end)
 
-    -- Empty state labels
     local emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
     emptyList:SetTextColor(T("TEXT_MUTED"))
@@ -805,11 +645,14 @@ function ns.UI.CreateQuestsTab(parent)
     panels.emptyDetail = emptyDetail
 
     panels.expDropdown   = expDropdown
+    panels.expText       = expText
     panels.zoneDropdown  = zoneDropdown
+    panels.zoneText      = zoneText
     panels.typeDropdown  = typeDropdown
+    panels.typeText      = typeText
     panels.qTypeDropdown = qTypeDropdown
+    panels.qTypeText     = qTypeText
     panels.searchBox     = searchBox
-    panels.placeholder   = placeholder
 
     ns.UI.questsPanels = panels
     panels_ref = panels
@@ -826,35 +669,12 @@ function ns.UI.CreateQuestsTab(parent)
         typeFilter      = "all"
         questTypeFilter = "all"
         searchBox:SetText("")
-        placeholder:Show()
-        expDropdown.label:SetText(L["QUESTS_EXPANSION_ALL"])
-        zoneDropdown.label:SetText(L["QUESTS_ZONE_ALL"])
-        typeDropdown.label:SetText(L["QUESTS_TYPE_ALL"])
-        qTypeDropdown.label:SetText(L["QUESTS_QTYPE_ALL"])
+        searchBox:ClearFocus()
+        expText:SetText(L["QUESTS_EXPANSION_ALL"])
+        zoneText:SetText(L["QUESTS_ZONE_ALL"])
+        typeText:SetText(L["QUESTS_TYPE_ALL"])
+        qTypeText:SetText(L["QUESTS_QTYPE_ALL"])
         RefreshQuestList(panels)
-    end)
-
-    searchBox:SetScript("OnTextChanged", function(self)
-        local text = self:GetText()
-        if text and text ~= "" then
-            placeholder:Hide()
-        else
-            placeholder:Show()
-        end
-        searchText = text or ""
-        if panels._searchTimer then
-            panels._searchTimer:Cancel()
-        end
-        panels._searchTimer = C_Timer.NewTimer(0.3, function()
-            RefreshQuestList(panels)
-        end)
-    end)
-    searchBox:SetScript("OnEscapePressed", function(self)
-        self:SetText("")
-        self:ClearFocus()
-    end)
-    searchBox:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
     end)
 
     C_Timer.After(0.5, function()

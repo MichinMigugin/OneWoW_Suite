@@ -25,16 +25,7 @@ local SOURCE_BTN_PAD_X = 10
 local SOURCE_BTN_GAP   = 3
 local HEADER_H         = 58
 
-local QUALITY_COLORS = {
-    [0] = {0.62, 0.62, 0.62, 1.0},
-    [1] = {1.00, 1.00, 1.00, 1.0},
-    [2] = {0.12, 1.00, 0.00, 1.0},
-    [3] = {0.00, 0.44, 0.87, 1.0},
-    [4] = {0.64, 0.21, 0.93, 1.0},
-    [5] = {1.00, 0.50, 0.00, 1.0},
-    [6] = {0.90, 0.80, 0.50, 1.0},
-    [7] = {0.00, 0.80, 1.00, 1.0},
-}
+local QUALITY_COLORS = ns.Constants.QUALITY_COLORS
 
 local SOURCE_DEFS = {
     { key = "all",     labelKey = "TT_IS_FILTER_ALL",     descKey = "TT_IS_FILTER_ALL_DESC"     },
@@ -468,41 +459,20 @@ function ns.UI.CreateItemSearchTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP    = ns.Constants.GUI.PANEL_GAP
 
-    local searchHeader = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    searchHeader:SetHeight(HEADER_H)
+    local searchHeader = ns.UI.CreateFilterBar(parent, { height = HEADER_H, offset = 0 })
+    searchHeader:ClearAllPoints()
     searchHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     searchHeader:SetWidth(LEFT_W)
-    searchHeader:SetBackdrop({
-        bgFile   = "Interface\\BUTTONS\\WHITE8x8",
-        edgeFile = "Interface\\BUTTONS\\WHITE8x8",
-        edgeSize = 1,
-    })
-    searchHeader:SetBackdropColor(T("BG_TERTIARY"))
-    searchHeader:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local filterHeader = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    filterHeader:SetHeight(HEADER_H)
+    local filterHeader = ns.UI.CreateFilterBar(parent, { height = HEADER_H, offset = 0 })
+    filterHeader:ClearAllPoints()
     filterHeader:SetPoint("TOPLEFT", searchHeader, "TOPRIGHT", GAP, 0)
     filterHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    filterHeader:SetBackdrop({
-        bgFile   = "Interface\\BUTTONS\\WHITE8x8",
-        edgeFile = "Interface\\BUTTONS\\WHITE8x8",
-        edgeSize = 1,
-    })
-    filterHeader:SetBackdropColor(T("BG_TERTIARY"))
-    filterHeader:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local noticeBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    noticeBar:SetHeight(28)
+    local noticeBar = ns.UI.CreateFilterBar(parent, { height = 28, offset = 0 })
+    noticeBar:ClearAllPoints()
     noticeBar:SetPoint("TOPLEFT", searchHeader, "BOTTOMLEFT", 0, -2)
     noticeBar:SetPoint("TOPRIGHT", filterHeader, "BOTTOMRIGHT", 0, -2)
-    noticeBar:SetBackdrop({
-        bgFile   = "Interface\\BUTTONS\\WHITE8x8",
-        edgeFile = "Interface\\BUTTONS\\WHITE8x8",
-        edgeSize = 1,
-    })
-    noticeBar:SetBackdropColor(T("BG_SECONDARY"))
-    noticeBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
     local noticeText = noticeBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     noticeText:SetPoint("LEFT", noticeBar, "LEFT", 12, 0)
@@ -542,58 +512,26 @@ function ns.UI.CreateItemSearchTab(parent)
         xOff = xOff + btnWidth + SOURCE_BTN_GAP
     end
 
-    searchBox = CreateFrame("EditBox", nil, searchHeader, "BackdropTemplate")
-    searchBox:SetHeight(26)
+    searchBox = ns.UI.CreateEditBox(nil, searchHeader, {
+        height = 26,
+        maxLetters = 50,
+        placeholderText = L["ITEMSEARCH_PLACEHOLDER"],
+        onTextChanged = function(text)
+            if searchTimer then searchTimer:Cancel() end
+            searchTimer = C_Timer.NewTimer(0.3, function()
+                currentSearch = text
+                selectedItem = nil
+                ClearDetailElements()
+                if emptyDetail then
+                    emptyDetail:SetText(L["ITEMSEARCH_SELECT"])
+                    emptyDetail:Show()
+                end
+                RefreshItemList()
+            end)
+        end,
+    })
     searchBox:SetPoint("LEFT", searchHeader, "LEFT", 8, 0)
     searchBox:SetPoint("RIGHT", searchHeader, "RIGHT", -8, 0)
-    searchBox:SetBackdrop({
-        bgFile   = "Interface\\BUTTONS\\WHITE8x8",
-        edgeFile = "Interface\\BUTTONS\\WHITE8x8",
-        edgeSize = 1,
-    })
-    searchBox:SetBackdropColor(T("BG_SECONDARY"))
-    searchBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    searchBox:SetFontObject("GameFontNormalSmall")
-    searchBox:SetTextColor(T("TEXT_PRIMARY"))
-    searchBox:SetTextInsets(6, 6, 0, 0)
-    searchBox:SetAutoFocus(false)
-    searchBox:SetMaxLetters(50)
-
-    local searchPlaceholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    searchPlaceholder:SetPoint("LEFT", 6, 0)
-    searchPlaceholder:SetText(L["ITEMSEARCH_PLACEHOLDER"])
-    searchPlaceholder:SetTextColor(T("TEXT_MUTED"))
-
-    searchBox:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-        searchPlaceholder:Hide()
-    end)
-    searchBox:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-        if self:GetText() == "" then searchPlaceholder:Show() end
-    end)
-    searchBox:SetScript("OnTextChanged", function(self, userInput)
-        if not userInput then return end
-        if searchTimer then searchTimer:Cancel() end
-        searchTimer = C_Timer.NewTimer(0.3, function()
-            local text = self:GetText()
-            currentSearch = text
-            if text == "" then
-                searchPlaceholder:Show()
-            else
-                searchPlaceholder:Hide()
-            end
-            selectedItem = nil
-            ClearDetailElements()
-            if emptyDetail then
-                emptyDetail:SetText(L["ITEMSEARCH_SELECT"])
-                emptyDetail:Show()
-            end
-            RefreshItemList()
-        end)
-    end)
-    searchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    searchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 
     emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)

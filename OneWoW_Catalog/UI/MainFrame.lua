@@ -93,43 +93,14 @@ function ns.UI:CreateMainFrame(defaultTab)
         addon.db.global.mainFrameSize = { width = w, height = h }
     end)
 
-    local titleBg = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    local titleBg = ns.UI.CreateTitleBar(frame, L["ADDON_TITLE_FRAME"], {
+        height = 20,
+        showBrand = true,
+        onClose = function() frame:Hide() end,
+    })
+    titleBg:ClearAllPoints()
     titleBg:SetPoint("TOPLEFT", frame, "TOPLEFT", S("XS"), -S("XS"))
     titleBg:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -S("XS"), -S("XS"))
-    titleBg:SetHeight(20)
-    titleBg:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBg:SetBackdropColor(T("TITLEBAR_BG"))
-    titleBg:SetFrameLevel(frame:GetFrameLevel() + 1)
-
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-    local factionTheme = (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
-    local brandIconTex
-    if factionTheme == "alliance" then
-        brandIconTex = "Interface\\AddOns\\OneWoW_Catalog\\Media\\alliance-mini.png"
-    elseif factionTheme == "neutral" then
-        brandIconTex = "Interface\\AddOns\\OneWoW_Catalog\\Media\\neutral-mini.png"
-    else
-        brandIconTex = "Interface\\AddOns\\OneWoW_Catalog\\Media\\horde-mini.png"
-    end
-
-    local brandIcon = titleBg:CreateTexture(nil, "OVERLAY")
-    brandIcon:SetSize(14, 14)
-    brandIcon:SetPoint("LEFT", titleBg, "LEFT", S("SM"), 0)
-    brandIcon:SetTexture(brandIconTex)
-
-    local brandText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
-    brandText:SetText("OneWoW")
-    brandText:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local titleText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("CENTER", titleBg, "CENTER", 0, 0)
-    titleText:SetText(L["ADDON_TITLE_FRAME"])
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local closeBtn = ns.UI.CreateButton(nil, titleBg, "X", 20, 20)
-    closeBtn:SetPoint("RIGHT", titleBg, "RIGHT", -S("XS") / 2, 0)
-    closeBtn:SetScript("OnClick", function() frame:Hide() end)
 
     tinsert(UISpecialFrames, "OneWoW_CatalogMainFrame")
 
