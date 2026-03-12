@@ -3,12 +3,9 @@ local ADDON_NAME, OneWoW = ...
 OneWoW.Search = {}
 local Search = OneWoW.Search
 
-local function T(key)
-    if OneWoW.Constants and OneWoW.Constants.THEME and OneWoW.Constants.THEME[key] then
-        return unpack(OneWoW.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
-end
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+local function T(key) return OneWoW_GUI:GetThemeColor(key) end
 
 local searchBox = nil
 local resultsFrame = nil

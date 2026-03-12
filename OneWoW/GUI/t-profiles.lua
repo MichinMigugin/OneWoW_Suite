@@ -2,19 +2,10 @@ local ADDON_NAME, OneWoW = ...
 
 local GUI = OneWoW.GUI
 
-local function T(key)
-    if OneWoW.Constants and OneWoW.Constants.THEME and OneWoW.Constants.THEME[key] then
-        return unpack(OneWoW.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
-end
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-local function S(key)
-    if OneWoW.Constants and OneWoW.Constants.SPACING then
-        return OneWoW.Constants.SPACING[key] or 8
-    end
-    return 8
-end
+local function T(key) return OneWoW_GUI:GetThemeColor(key) end
+local function S(key) return OneWoW_GUI:GetSpacing(key) end
 
 local function DeepCopy(src)
     if type(src) ~= "table" then

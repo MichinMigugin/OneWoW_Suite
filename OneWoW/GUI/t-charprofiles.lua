@@ -3,12 +3,7 @@ local ADDON_NAME, OneWoW = ...
 local GUI = OneWoW.GUI
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-local function T(key)
-    if OneWoW.Constants and OneWoW.Constants.THEME and OneWoW.Constants.THEME[key] then
-        return unpack(OneWoW.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
-end
+local function T(key) return OneWoW_GUI:GetThemeColor(key) end
 
 local function GetCharacterKey()
     local name = UnitName("player") or "Unknown"
@@ -706,7 +701,8 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
     eb:SetPoint("BOTTOMRIGHT", textBG, "BOTTOMRIGHT", -4, 4)
     eb:SetMultiLine(true)
     eb:SetAutoFocus(true)
-    eb:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    local _cpFontPath = OneWoW_GUI and OneWoW_GUI.GetFont and OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
+    eb:SetFont(_cpFontPath, 12, "")
     eb:SetTextColor(1, 1, 1)
     eb:SetMaxLetters(0)
     eb:SetScript("OnEscapePressed", function() result.frame:Hide() end)
@@ -766,7 +762,8 @@ function GUI:ShowCharProfileImportDialog(onImported)
     eb:SetPoint("BOTTOMRIGHT", textBG, "BOTTOMRIGHT", -4, 4)
     eb:SetMultiLine(true)
     eb:SetAutoFocus(true)
-    eb:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    local _cpFontPath = OneWoW_GUI and OneWoW_GUI.GetFont and OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
+    eb:SetFont(_cpFontPath, 12, "")
     eb:SetTextColor(1, 1, 1)
     eb:SetMaxLetters(0)
     eb:SetScript("OnEscapePressed", function() result.frame:Hide() end)

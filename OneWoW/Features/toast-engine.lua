@@ -31,12 +31,9 @@ Toasts.largePool     = {}
 Toasts.anchorFrame   = nil
 Toasts.anchorVisible = false
 
-local function T(key)
-    if OneWoW.Constants and OneWoW.Constants.THEME and OneWoW.Constants.THEME[key] then
-        return unpack(OneWoW.Constants.THEME[key])
-    end
-    return 0.12, 0.12, 0.14, 1.0
-end
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+local function T(key) return OneWoW_GUI:GetThemeColor(key) end
 
 local function GetDB()
     return OneWoW.db and OneWoW.db.global and OneWoW.db.global.toasts

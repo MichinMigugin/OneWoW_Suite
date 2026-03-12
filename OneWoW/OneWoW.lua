@@ -27,20 +27,6 @@ function OneWoW:RegisterLoadComponent(displayName, version, command)
 end
 
 local function ApplyTheme()
-    local themeKey
-    if OneWoW_GUI and OneWoW_GUI.GetSetting then
-        themeKey = OneWoW_GUI:GetSetting("theme")
-    end
-    themeKey = themeKey or (OneWoW.db and OneWoW.db.global.theme) or "green"
-    if Constants.THEMES and Constants.THEMES[themeKey] then
-        local selectedTheme = Constants.THEMES[themeKey]
-        for key, value in pairs(selectedTheme) do
-            if key ~= "name" then
-                Constants.THEME[key] = value
-            end
-        end
-    end
-
     if OneWoW_GUI then
         OneWoW_GUI:ApplyTheme(OneWoW)
     end
