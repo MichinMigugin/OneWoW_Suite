@@ -365,6 +365,6 @@ function OneWoW:InitializeDatabase()
         self.db.global.charProfiles = {}
     end
     if self.db.global.defaultProfile == nil then
-        self.db.global.defaultProfile = nil
+        self.db.global.defaultProfile = "Default"
     end
 end

@@ -26,6 +26,18 @@ function OneWoW:RegisterLoadComponent(displayName, version, command)
     table.insert(self._loadedComponents, { name = displayName, ver = version, cmd = command })
 end
 
+local _defaultSaveTimer = nil
+local function ScheduleDefaultSave()
+    if _defaultSaveTimer then
+        _defaultSaveTimer:Cancel()
+    end
+    _defaultSaveTimer = C_Timer.NewTimer(2, function()
+        if OneWoW.Profiles and OneWoW.Profiles.AutoSaveDefault then
+            OneWoW.Profiles.AutoSaveDefault()
+        end
+    end)
+end
+
 local function ApplyTheme()
     if OneWoW_GUI then
         OneWoW_GUI:ApplyTheme(OneWoW)
@@ -90,6 +102,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
     if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
         OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
             ApplyTheme()
+            ScheduleDefaultSave()
             if self2.GUI then
                 self2.GUI:FullReset()
                 C_Timer.After(0.1, function()
@@ -99,6 +112,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
         end)
         OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
             ApplyLanguage()
+            ScheduleDefaultSave()
             if self2.GUI then
                 self2.GUI:FullReset()
                 C_Timer.After(0.1, function()
@@ -107,6 +121,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
             end
         end)
         OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(self2, hidden)
+            ScheduleDefaultSave()
             if self2.Minimap then
                 if hidden then
                     self2.Minimap:Hide()
@@ -116,6 +131,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
             end
         end)
         OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(self2)
+            ScheduleDefaultSave()
             if self2.Minimap then
                 self2.Minimap:UpdateIcon()
             end
@@ -127,6 +143,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
             end
         end)
         OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+            ScheduleDefaultSave()
             if self2.GUI then
                 self2.GUI:FullReset()
                 C_Timer.After(0.1, function()

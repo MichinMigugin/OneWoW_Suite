@@ -179,8 +179,7 @@ local function ShowContextMenu(anchorFrame)
 end
 
 local function GetCurrentIcon()
-    local db = OneWoW.db
-    local theme = db and db.global and db.global.minimap and db.global.minimap.theme or "horde"
+    local theme = (OneWoW_GUI and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
     if theme == "alliance" then return ICON_ALLIANCE end
     if theme == "neutral"  then return ICON_NEUTRAL  end
     return ICON_HORDE

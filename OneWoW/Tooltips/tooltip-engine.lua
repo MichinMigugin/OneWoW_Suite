@@ -238,7 +238,8 @@ function TooltipEngine:ProcessProviders(tooltip, context)
 
     tooltip:AddLine(" ")
 
-    local iconTheme = OneWoW.db and OneWoW.db.global and OneWoW.db.global.minimap and OneWoW.db.global.minimap.theme or "neutral"
+    local _gui = LibStub and LibStub("OneWoW_GUI-1.0", true)
+    local iconTheme = (_gui and _gui:GetSetting("minimap.theme")) or "neutral"
     local addonIcon = CreateTextureMarkup("Interface\\AddOns\\OneWoW\\Media\\OneWoWMini-" .. iconTheme, 64, 64, 16, 16, 0, 1, 0, 1)
     if headerRight then
         tooltip:AddDoubleLine(
@@ -361,7 +362,8 @@ function TooltipEngine:HookAchievementUI()
             if not tid or tid.showAchievementID == false then return end
             GameTooltip:SetOwner(achievementFrame, "ANCHOR_NONE")
             GameTooltip:SetPoint("TOPLEFT", achievementFrame, "TOPRIGHT", 0, 0)
-            local iconTheme = OneWoW.db.global.minimap and OneWoW.db.global.minimap.theme or "neutral"
+            local _gui = LibStub and LibStub("OneWoW_GUI-1.0", true)
+            local iconTheme = (_gui and _gui:GetSetting("minimap.theme")) or "neutral"
             local addonIcon = CreateTextureMarkup("Interface\\AddOns\\OneWoW\\Media\\OneWoWMini-" .. iconTheme, 64, 64, 16, 16, 0, 1, 0, 1)
             GameTooltip:AddLine(addonIcon .. " OneWoW", TOOLTIP_CONFIG.headerColor[1], TOOLTIP_CONFIG.headerColor[2], TOOLTIP_CONFIG.headerColor[3])
             GameTooltip:AddLine(string.format("  |cFFFFDD00AchievementID|r |cFFFFFFFF%d|r", achievementFrame.id), 1, 1, 1)

@@ -1,23 +1,21 @@
 local ADDON_NAME, OneWoW = ...
 
 local GUI = OneWoW.GUI
-
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 local function T(key) return OneWoW_GUI:GetThemeColor(key) end
-local function S(key) return OneWoW_GUI:GetSpacing(key) end
+
+local RESERVED_DEFAULT = "Default"
+
+-- ============================================================
+-- Utilities
+-- ============================================================
 
 local function DeepCopy(src)
-    if type(src) ~= "table" then
-        return src
-    end
+    if type(src) ~= "table" then return src end
     local dst = {}
     for k, v in pairs(src) do
-        if type(v) == "table" then
-            dst[k] = DeepCopy(v)
-        else
-            dst[k] = v
-        end
+        dst[k] = type(v) == "table" and DeepCopy(v) or v
     end
     return dst
 end
@@ -35,16 +33,10 @@ end
 
 local function SyncSettingToChildAddons(settingType, value)
     local integratedAddons = {
-        "OneWoW_AltTracker",
-        "OneWoW_Notes",
-        "OneWoW_QoL",
-        "OneWoW_Catalog",
-        "OneWoW_DirectDeposit",
-        "OneWoW_ShoppingList",
-        "OneWoW_UtilityDevTool",
-        "OneWoW_UtilityExtractor",
+        "OneWoW_AltTracker", "OneWoW_Notes", "OneWoW_QoL",
+        "OneWoW_Catalog", "OneWoW_DirectDeposit",
+        "OneWoW_ShoppingList", "OneWoW_UtilityDevTool",
     }
-
     for _, globalName in ipairs(integratedAddons) do
         local addon = _G[globalName]
         if addon then
@@ -60,71 +52,9 @@ local function SyncSettingToChildAddons(settingType, value)
     end
 end
 
-local function CreateDropdownMenu(parent, options, onSelect)
-    local menu = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    menu:SetFrameStrata("FULLSCREEN_DIALOG")
-    menu:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false,
-        edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 },
-    })
-    menu:SetBackdropColor(T("BG_PRIMARY"))
-    menu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local yOff = -4
-    local maxWidth = 180
-    for _, opt in ipairs(options) do
-        local btn = CreateFrame("Button", nil, menu, "BackdropTemplate")
-        btn:SetHeight(24)
-        btn:SetPoint("TOPLEFT", menu, "TOPLEFT", 4, yOff)
-        btn:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -4, yOff)
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        btn:SetBackdropColor(0, 0, 0, 0)
-
-        btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        btn.text:SetPoint("LEFT", 8, 0)
-        btn.text:SetText(opt.label)
-        btn.text:SetTextColor(T("TEXT_PRIMARY"))
-
-        local textW = btn.text:GetStringWidth() + 20
-        if textW > maxWidth then maxWidth = textW end
-
-        btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-        end)
-        btn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0, 0, 0, 0)
-        end)
-        btn:SetScript("OnClick", function()
-            menu:Hide()
-            onSelect(opt.value, opt.label)
-        end)
-
-        yOff = yOff - 24
-    end
-
-    menu:SetSize(maxWidth + 16, math.abs(yOff) + 8)
-    menu:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", 0, -2)
-
-    menu:SetScript("OnShow", function(self)
-        local timeOutside = 0
-        self:SetScript("OnUpdate", function(self, elapsed)
-            if not MouseIsOver(menu) and not MouseIsOver(parent) then
-                timeOutside = timeOutside + elapsed
-                if timeOutside > 0.5 then
-                    self:Hide()
-                    self:SetScript("OnUpdate", nil)
-                end
-            else
-                timeOutside = 0
-            end
-        end)
-    end)
-
-    return menu
-end
+-- ============================================================
+-- Backend
+-- ============================================================
 
 OneWoW.Profiles = {}
 
@@ -134,11 +64,11 @@ function OneWoW.Profiles.CaptureSettings()
     if OneWoW.db and OneWoW.db.global then
         local g = OneWoW.db.global
         snapshot.core = {
-            language = g.language,
-            theme = g.theme,
-            minimap = DeepCopy(g.minimap),
-            settings = DeepCopy(g.settings),
-            toasts = DeepCopy(g.toasts),
+            language  = g.language,
+            theme     = g.theme,
+            minimap   = DeepCopy(g.minimap),
+            settings  = DeepCopy(g.settings),
+            toasts    = DeepCopy(g.toasts),
             portalHub = DeepCopy(g.portalHub),
         }
     end
@@ -146,12 +76,7 @@ function OneWoW.Profiles.CaptureSettings()
     local qol = _G.OneWoW_QoL
     if qol and qol.db and qol.db.global then
         local q = qol.db.global
-        snapshot.qol = {
-            language = q.language,
-            theme = q.theme,
-            minimap = DeepCopy(q.minimap),
-            modules = {},
-        }
+        snapshot.qol = { language = q.language, theme = q.theme, minimap = DeepCopy(q.minimap), modules = {} }
         if q.modules then
             for id, modData in pairs(q.modules) do
                 snapshot.qol.modules[id] = DeepCopy(modData)
@@ -163,58 +88,38 @@ function OneWoW.Profiles.CaptureSettings()
     if qol and qol.GetCVarList then
         for _, entry in ipairs(qol.GetCVarList()) do
             local val = C_CVar.GetCVar(entry.cvar)
-            if val then
-                snapshot.cvars[entry.cvar] = val
-            end
+            if val then snapshot.cvars[entry.cvar] = val end
         end
     end
 
     return snapshot
 end
 
-function OneWoW.Profiles.ApplySettings(snapshot)
+function OneWoW.Profiles.ApplySettings(snapshot, profileName)
     if not snapshot then return end
 
     if snapshot.core and OneWoW.db and OneWoW.db.global then
         local g = OneWoW.db.global
-        if snapshot.core.language then
-            g.language = snapshot.core.language
-        end
-        if snapshot.core.theme then
-            g.theme = snapshot.core.theme
-        end
+        if snapshot.core.language then g.language = snapshot.core.language end
+        if snapshot.core.theme    then g.theme    = snapshot.core.theme    end
         if snapshot.core.minimap then
-            if snapshot.core.minimap.hide ~= nil then
-                g.minimap.hide = snapshot.core.minimap.hide
-            end
-            if snapshot.core.minimap.theme then
-                g.minimap.theme = snapshot.core.minimap.theme
-            end
+            if snapshot.core.minimap.hide  ~= nil then g.minimap.hide  = snapshot.core.minimap.hide  end
+            if snapshot.core.minimap.theme       then g.minimap.theme  = snapshot.core.minimap.theme end
         end
-        if snapshot.core.settings then
-            DeepMerge(g.settings, snapshot.core.settings)
-        end
-        if snapshot.core.toasts then
-            DeepMerge(g.toasts, snapshot.core.toasts)
-        end
-        if snapshot.core.portalHub then
-            DeepMerge(g.portalHub, snapshot.core.portalHub)
-        end
+        if snapshot.core.settings then DeepMerge(g.settings,  snapshot.core.settings)  end
+        if snapshot.core.toasts   then DeepMerge(g.toasts,    snapshot.core.toasts)    end
+        if snapshot.core.portalHub then DeepMerge(g.portalHub, snapshot.core.portalHub) end
     end
 
     local qol = _G.OneWoW_QoL
     if snapshot.qol and qol and qol.db and qol.db.global then
         local q = qol.db.global
         if snapshot.qol.language then q.language = snapshot.qol.language end
-        if snapshot.qol.theme then q.theme = snapshot.qol.theme end
-        if snapshot.qol.minimap then
-            DeepMerge(q.minimap, snapshot.qol.minimap)
-        end
+        if snapshot.qol.theme    then q.theme    = snapshot.qol.theme    end
+        if snapshot.qol.minimap  then DeepMerge(q.minimap, snapshot.qol.minimap) end
         if snapshot.qol.modules then
             for id, modData in pairs(snapshot.qol.modules) do
-                if q.modules and q.modules[id] then
-                    DeepMerge(q.modules[id], modData)
-                end
+                if q.modules and q.modules[id] then DeepMerge(q.modules[id], modData) end
             end
         end
     end
@@ -225,11 +130,11 @@ function OneWoW.Profiles.ApplySettings(snapshot)
         end
     end
 
-    if snapshot.core and snapshot.core.theme then
-        SyncSettingToChildAddons("theme", snapshot.core.theme)
-    end
-    if snapshot.core and snapshot.core.language then
-        SyncSettingToChildAddons("language", snapshot.core.language)
+    if snapshot.core and snapshot.core.theme    then SyncSettingToChildAddons("theme",    snapshot.core.theme)    end
+    if snapshot.core and snapshot.core.language then SyncSettingToChildAddons("language", snapshot.core.language) end
+
+    if profileName then
+        OneWoW.db.global.activeProfile = profileName
     end
 
     GUI:FullReset()
@@ -239,450 +144,501 @@ function OneWoW.Profiles.ApplySettings(snapshot)
     end)
 end
 
+function OneWoW.Profiles.AutoSaveDefault()
+    if not OneWoW.db or not OneWoW.db.global then return end
+    if not OneWoW.db.global.profiles then OneWoW.db.global.profiles = {} end
+    local snap = OneWoW.Profiles.CaptureSettings()
+    snap._isDefault = true
+    snap._updatedAt = time()
+    OneWoW.db.global.profiles[RESERVED_DEFAULT] = snap
+    OneWoW.db.global.defaultProfile = RESERVED_DEFAULT
+end
+
+-- ============================================================
+-- Serialization
+-- ============================================================
+
+local function SerializeVal(val, depth)
+    local t = type(val)
+    if t == "string" then
+        return string.format("%q", val)
+    elseif t == "number" or t == "boolean" then
+        return tostring(val)
+    elseif t == "table" then
+        local parts = {}
+        local inner = string.rep("  ", depth + 1)
+        local outer = string.rep("  ", depth)
+        for k, v in pairs(val) do
+            local vStr = SerializeVal(v, depth + 1)
+            if vStr ~= nil then
+                local keyStr
+                if type(k) == "string" and k:match("^[%a_][%a%d_]*$") then
+                    keyStr = k
+                elseif type(k) == "number" then
+                    keyStr = "[" .. tostring(k) .. "]"
+                else
+                    keyStr = "[" .. string.format("%q", tostring(k)) .. "]"
+                end
+                table.insert(parts, inner .. keyStr .. " = " .. vStr)
+            end
+        end
+        if #parts == 0 then return "{}" end
+        return "{\n" .. table.concat(parts, ",\n") .. "\n" .. outer .. "}"
+    end
+    return nil
+end
+
+function OneWoW.Profiles.SerializeProfile(profileName, profile)
+    local exportable = {}
+    for k, v in pairs(profile) do
+        if k ~= "_isDefault" and k ~= "_updatedAt" then
+            exportable[k] = v
+        end
+    end
+    exportable._exportName = profileName
+    local body = SerializeVal(exportable, 0)
+    if not body then return nil end
+    return "-- OneWoW Settings Profile\n-- Version: 1\n" .. body
+end
+
+function OneWoW.Profiles.DeserializeProfile(str)
+    if not str or str == "" then return nil, "Empty input" end
+    local cleaned = str:gsub("%-%-[^\n]*\n?", "")
+    local func, err = loadstring("return " .. cleaned)
+    if not func then return nil, "Parse error" end
+    local ok, data = pcall(func)
+    if not ok then return nil, "Execution error" end
+    if type(data) ~= "table" then return nil, "Invalid format" end
+    return data, nil
+end
+
+function OneWoW.Profiles.ImportProfile(str)
+    local data, err = OneWoW.Profiles.DeserializeProfile(str)
+    if not data then return false, err end
+    if not OneWoW.db.global.profiles then OneWoW.db.global.profiles = {} end
+    local profiles = OneWoW.db.global.profiles
+    local name = data._exportName or "Imported"
+    if name == RESERVED_DEFAULT then name = "Imported Default" end
+    data._exportName = nil
+    if profiles[name] then
+        local base, i = name, 2
+        while profiles[name] do name = base .. " (" .. i .. ")"; i = i + 1 end
+    end
+    profiles[name] = data
+    return true, name
+end
+
+-- ============================================================
+-- Auto-save hooks
+-- ============================================================
+
+local _autoSaveFrame = CreateFrame("Frame")
+_autoSaveFrame:RegisterEvent("PLAYER_LOGOUT")
+_autoSaveFrame:RegisterEvent("PLAYER_LOGIN")
+_autoSaveFrame:SetScript("OnEvent", function(_, event)
+    if OneWoW.Profiles and OneWoW.Profiles.AutoSaveDefault then
+        OneWoW.Profiles.AutoSaveDefault()
+    end
+end)
+
+-- ============================================================
+-- Scrollable EditBox helper
+-- ============================================================
+
+local function CreateScrollableEditBox(parent, onEscape)
+    local sf = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
+    sf:SetPoint("TOPLEFT",     parent, "TOPLEFT",     4,  -4)
+    sf:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -20, 4)
+    sf:EnableMouseWheel(true)
+    OneWoW_GUI:StyleScrollBar(sf, { container = parent, offset = -4 })
+
+    local eb = CreateFrame("EditBox", nil, sf)
+    eb:SetMultiLine(true)
+    eb:SetAutoFocus(false)
+    eb:SetMaxLetters(0)
+    local fontPath = OneWoW_GUI and OneWoW_GUI.GetFont and OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
+    eb:SetFont(fontPath, 12, "")
+    eb:SetTextColor(T("TEXT_PRIMARY"))
+    eb:SetScript("OnEscapePressed", onEscape or function() end)
+    eb:SetScript("OnTextChanged", function() sf:UpdateScrollChildRect() end)
+
+    sf:SetScrollChild(eb)
+    sf:HookScript("OnSizeChanged", function(self, w) eb:SetWidth(w) end)
+
+    return eb, sf
+end
+
+-- ============================================================
+-- Export / Import Dialogs
+-- ============================================================
+
+function GUI:ShowSettingsProfileExportDialog(profileName, serializedStr)
+    local eb
+    local result = OneWoW_GUI:CreateDialog({
+        name   = "OneWoW_SettingsProfileExportDialog",
+        title  = "Export Profile: |cFFFFD100" .. profileName .. "|r",
+        width  = 620,
+        height = 500,
+        strata = "FULLSCREEN_DIALOG",
+        buttons = {
+            { text = "Select All", onClick = function() eb:SetFocus(); eb:HighlightText() end },
+            { text = "Close",      onClick = function(d) d:Hide() end },
+        },
+    })
+
+    local cf = result.contentFrame
+
+    local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
+    hint:SetText("Select all and copy (Ctrl+A, Ctrl+C) to share this profile:")
+    hint:SetTextColor(T("TEXT_SECONDARY"))
+
+    local textBG = OneWoW_GUI:CreateFrame(nil, cf, 600, 420)
+    textBG:ClearAllPoints()
+    textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
+    textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
+
+    eb = CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
+    eb:SetAutoFocus(true)
+
+    result.frame:Show()
+    C_Timer.After(0, function()
+        eb:SetText(serializedStr or "")
+        eb:SetCursorPosition(0)
+    end)
+end
+
+function GUI:ShowSettingsProfileImportDialog(onImported)
+    local eb
+    local result = OneWoW_GUI:CreateDialog({
+        name   = "OneWoW_SettingsProfileImportDialog",
+        title  = "Import UI & Addon Settings Profile",
+        width  = 620,
+        height = 460,
+        strata = "FULLSCREEN_DIALOG",
+        buttons = {
+            { text = "Import", onClick = function(d)
+                local text = eb:GetText()
+                local ok, res = OneWoW.Profiles.ImportProfile(text)
+                if ok then
+                    print(string.format("|cFFFFD100OneWoW:|r Settings profile imported: %s", res))
+                    d:Hide()
+                    if onImported then onImported() end
+                else
+                    print(string.format("|cFFFFD100OneWoW:|r Import failed: %s", res or "unknown error"))
+                end
+            end },
+            { text = "Cancel", onClick = function(d) d:Hide() end },
+        },
+    })
+
+    local cf = result.contentFrame
+
+    local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
+    hint:SetText("Paste exported profile data below, then click Import:")
+    hint:SetTextColor(T("TEXT_SECONDARY"))
+
+    local textBG = OneWoW_GUI:CreateFrame(nil, cf, 600, 380)
+    textBG:ClearAllPoints()
+    textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
+    textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
+
+    eb = CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
+    eb:SetAutoFocus(true)
+
+    result.frame:Show()
+end
+
+-- ============================================================
+-- Delete Confirmation Dialog (reusable)
+-- ============================================================
+
+local _deleteConfirmDialog
+
+local function ShowDeleteConfirm(profileName, onConfirm)
+    if _deleteConfirmDialog then
+        _deleteConfirmDialog.frame:Hide()
+    end
+    _deleteConfirmDialog = OneWoW_GUI:CreateConfirmDialog({
+        name    = "OneWoW_SettingsProfileDeleteConfirm",
+        title   = "Delete Profile",
+        message = "Delete settings profile: |cFFFFD100" .. profileName .. "|r?\nThis cannot be undone.",
+        width   = 400,
+        buttons = {
+            { text = "Delete", color = { 0.7, 0.15, 0.15 }, onClick = function(d)
+                d:Hide()
+                if onConfirm then onConfirm() end
+            end },
+            { text = "Cancel", onClick = function(d) d:Hide() end },
+        },
+    })
+    _deleteConfirmDialog.frame:Show()
+end
+
+-- ============================================================
+-- Profiles Tab
+-- ============================================================
+
 function GUI:CreateProfilesTab(parent)
 
-    -- ── internal mini tab bar ─────────────────────────────────────
-    local tabBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    tabBar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
-    tabBar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    tabBar:SetHeight(38)
-    tabBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    tabBar:SetBackdropColor(T("BG_SECONDARY"))
-    tabBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
     local panelA = CreateFrame("Frame", nil, parent)
-    panelA:SetPoint("TOPLEFT",  tabBar,  "BOTTOMLEFT",  0,  0)
-    panelA:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-
     local panelB = CreateFrame("Frame", nil, parent)
-    panelB:SetPoint("TOPLEFT",  tabBar,  "BOTTOMLEFT",  0,  0)
-    panelB:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
     panelB:Hide()
 
-    local tabButtons = {}
-    local activeTab  = "settings"
+    local tabBtns, tabsBottomY = OneWoW_GUI:CreateFitFrameButtons(parent, -4, {
+        { text = "UI & Addon Settings", value = "settings",    isActive = true },
+        { text = "Character Backup",    value = "charprofiles"                 },
+    }, {
+        height = 30,
+        gap    = 6,
+        onSelect = function(value)
+            panelA:SetShown(value == "settings")
+            panelB:SetShown(value == "charprofiles")
+        end,
+    })
 
-    local function MakeTabBtn(label, key, xAnchor, prevBtn)
-        local btn = CreateFrame("Button", nil, tabBar, "BackdropTemplate")
-        btn:SetHeight(34)
-        btn:SetWidth(160)
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        if prevBtn then
-            btn:SetPoint("TOPLEFT", prevBtn, "TOPRIGHT", 2, 0)
-        else
-            btn:SetPoint("TOPLEFT", tabBar, "TOPLEFT", 4, -2)
-        end
+    local contentTop = tabsBottomY - 6
 
-        local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        lbl:SetPoint("CENTER")
-        lbl:SetText(label)
-        lbl:SetTextColor(T("TEXT_PRIMARY"))
-        btn.lbl = lbl
-        btn.key = key
+    panelA:SetPoint("TOPLEFT",     parent, "TOPLEFT",     0, contentTop)
+    panelA:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-        btn:SetScript("OnEnter", function(self)
-            if activeTab ~= key then
-                self:SetBackdropColor(T("BG_HOVER"))
-                lbl:SetTextColor(T("TEXT_ACCENT"))
-            end
-        end)
-        btn:SetScript("OnLeave", function(self)
-            if activeTab ~= key then
-                self:SetBackdropColor(T("BG_TERTIARY"))
-                lbl:SetTextColor(T("TEXT_PRIMARY"))
-            end
-        end)
-        btn:SetScript("OnClick", function(self)
-            activeTab = key
-            panelA:SetShown(key == "settings")
-            panelB:SetShown(key == "charprofiles")
-            for _, b in ipairs(tabButtons) do
-                if b.key == activeTab then
-                    b:SetBackdropColor(T("BG_ACTIVE"))
-                    b:SetBackdropBorderColor(T("BORDER_ACCENT"))
-                    b.lbl:SetTextColor(T("TEXT_ACCENT"))
-                else
-                    b:SetBackdropColor(T("BG_TERTIARY"))
-                    b:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                    b.lbl:SetTextColor(T("TEXT_PRIMARY"))
-                end
-            end
-        end)
+    panelB:SetPoint("TOPLEFT",     parent, "TOPLEFT",     0, contentTop)
+    panelB:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-        btn:SetBackdropColor(T("BG_TERTIARY"))
-        btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-        table.insert(tabButtons, btn)
-        return btn
-    end
-
-    local btnSettings    = MakeTabBtn("Settings Profiles",   "settings",     4,   nil)
-    local btnCharprofiles = MakeTabBtn("Character Profiles", "charprofiles", 166,  btnSettings)
-
-    -- activate Settings tab by default
-    btnSettings:SetBackdropColor(T("BG_ACTIVE"))
-    btnSettings:SetBackdropBorderColor(T("BORDER_ACCENT"))
-    btnSettings.lbl:SetTextColor(T("TEXT_ACCENT"))
-
-    -- ── Panel B: Character Profiles ───────────────────────────────
     if GUI.CreateCharProfilesPanel then
         GUI:CreateCharProfilesPanel(panelB)
     end
 
-    -- ── Panel A: Settings Profiles ────────────────────────────────
+    -- ── Panel A: UI & Addon Settings Profiles ─────────────────
     local scrollFrame, content = GUI:CreateScrollFrame("OneWoW_ProfilesScroll", panelA)
-    content:SetHeight(1000)
 
     local yOffset = -10
 
-    -- Default / Global Profile box
-    local defaultContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    defaultContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-    defaultContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    defaultContainer:SetHeight(90)
-    defaultContainer:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    defaultContainer:SetBackdropColor(T("BG_SECONDARY"))
-    defaultContainer:SetBackdropBorderColor(T("BORDER_ACCENT"))
+    local descText = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    descText:SetPoint("TOPLEFT",  content, "TOPLEFT",  10, yOffset)
+    descText:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    descText:SetJustifyH("LEFT")
+    descText:SetWordWrap(true)
+    descText:SetSpacing(2)
+    descText:SetText("Saves your OneWoW theme, language, overlays, portal settings, and all QoL feature toggles. Export to share your setup or import from another player.")
+    descText:SetTextColor(T("TEXT_SECONDARY"))
 
-    local defaultTitle = defaultContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    defaultTitle:SetPoint("TOPLEFT", defaultContainer, "TOPLEFT", 15, -12)
-    defaultTitle:SetText("Global / Default Profile")
-    defaultTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    yOffset = yOffset - 36
 
-    local defaultNameLabel = defaultContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    defaultNameLabel:SetPoint("TOPLEFT", defaultContainer, "TOPLEFT", 15, -42)
-    defaultNameLabel:SetText("Default: " .. (OneWoW.db.global.defaultProfile or "|cFF888888None set|r"))
-    defaultNameLabel:SetTextColor(T("TEXT_PRIMARY"))
+    local saveSection = OneWoW_GUI:CreateSectionHeader(content, "Save New Profile", yOffset)
+    yOffset = saveSection.bottomY - 8
 
-    local applyDefaultBtn = GUI:CreateButton(nil, defaultContainer, "Apply Default Profile", 180, 32)
-    applyDefaultBtn:SetPoint("TOPRIGHT", defaultContainer, "TOPRIGHT", -15, -45)
-    applyDefaultBtn:SetScript("OnClick", function()
-        local def = OneWoW.db.global.defaultProfile
-        if not def or not OneWoW.db.global.profiles[def] then
-            print("|cFFFFD100OneWoW:|r No default profile set. Select a profile and use 'Set as Default'.")
+    local nameInput = GUI:CreateEditBox("OneWoW_ProfileNameInput", content, 280, 26)
+    nameInput:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    nameInput:SetAutoFocus(false)
+
+    local saveBtn = GUI:CreateButton(nil, content, "Save Profile", 130, 26)
+    saveBtn:SetPoint("LEFT", nameInput, "RIGHT", 8, 0)
+
+    yOffset = yOffset - 40
+
+    local listHeaderSection = OneWoW_GUI:CreateSectionHeader(content, "Saved Profiles", yOffset)
+    yOffset = listHeaderSection.bottomY - 8
+
+    local importBtn = GUI:CreateButton(nil, content, "Import Profile", 130, 24)
+    importBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset + 32)
+
+    local listContainer = CreateFrame("Frame", nil, content)
+    listContainer:SetPoint("TOPLEFT",  content, "TOPLEFT",  10, yOffset)
+    listContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    listContainer:SetHeight(20)
+
+    local function RefreshListing()
+        GUI:ClearFrame(listContainer)
+
+        local profiles = OneWoW.db.global.profiles
+        if not profiles then profiles = {} end
+
+        local activeProfile = OneWoW.db.global.activeProfile
+
+        local sorted = {}
+        if profiles[RESERVED_DEFAULT] then
+            table.insert(sorted, { name = RESERVED_DEFAULT, data = profiles[RESERVED_DEFAULT] })
+        end
+        for name, data in pairs(profiles) do
+            if name ~= RESERVED_DEFAULT and type(data) == "table" then
+                table.insert(sorted, { name = name, data = data })
+            end
+        end
+        table.sort(sorted, function(a, b)
+            if a.name == RESERVED_DEFAULT then return true end
+            if b.name == RESERVED_DEFAULT then return false end
+            return a.name:lower() < b.name:lower()
+        end)
+
+        if #sorted == 0 then
+            local empty = listContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            empty:SetPoint("TOPLEFT", 10, -14)
+            empty:SetText("No profiles saved yet. Save one above.")
+            empty:SetTextColor(T("TEXT_SECONDARY"))
+            listContainer:SetHeight(40)
             return
         end
-        OneWoW.Profiles.ApplySettings(OneWoW.db.global.profiles[def])
-        OneWoW.db.global.activeProfile = def
-    end)
 
-    yOffset = yOffset - 110
+        local CARD_H = 76
+        local CARD_GAP = 6
+        local yOff = 0
 
-    local infoContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    infoContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-    infoContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    infoContainer:SetHeight(80)
-    infoContainer:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    infoContainer:SetBackdropColor(T("BG_SECONDARY"))
-    infoContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        for _, entry in ipairs(sorted) do
+            local name = entry.name
+            local data = entry.data
+            local isDefault = (name == RESERVED_DEFAULT)
+            local isActive  = (activeProfile == name)
 
-    local infoText = infoContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    infoText:SetPoint("TOPLEFT", infoContainer, "TOPLEFT", 15, -12)
-    infoText:SetPoint("TOPRIGHT", infoContainer, "TOPRIGHT", -15, -12)
-    infoText:SetJustifyH("LEFT")
-    infoText:SetWordWrap(true)
-    infoText:SetSpacing(2)
-    infoText:SetText("Saves: language, theme, minimap icon, all overlay / toast / tooltip settings, portal settings, and all QoL feature toggles.")
-    infoText:SetTextColor(T("TEXT_SECONDARY"))
+            local card = OneWoW_GUI:CreateFrame(nil, listContainer, 100, CARD_H)
+            card:ClearAllPoints()
+            card:SetPoint("TOPLEFT",  listContainer, "TOPLEFT",  0, yOff)
+            card:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", 0, yOff)
+            card:SetHeight(CARD_H)
 
-    local addonsText = infoContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    addonsText:SetPoint("TOPLEFT", infoContainer, "TOPLEFT", 15, -56)
-    addonsText:SetText("Covers: OneWoW (core), OneWoW_QoL (all modules + CVars)")
-    addonsText:SetTextColor(T("ACCENT_SECONDARY"))
+            local nameText = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -8)
+            nameText:SetText(isDefault and ("|cFFFFD100" .. name .. "|r") or name)
+            if isActive then
+                nameText:SetTextColor(T("TEXT_ACCENT"))
+            else
+                nameText:SetTextColor(T("TEXT_PRIMARY"))
+            end
 
-    yOffset = yOffset - 100
+            if isDefault then
+                local badge = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                badge:SetPoint("LEFT", nameText, "RIGHT", 8, 0)
+                badge:SetText("Account Default - Auto-Updates")
+                badge:SetTextColor(T("ACCENT_SECONDARY"))
+            end
 
-    local activeProfileContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    activeProfileContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-    activeProfileContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    activeProfileContainer:SetHeight(80)
-    activeProfileContainer:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    activeProfileContainer:SetBackdropColor(T("BG_SECONDARY"))
-    activeProfileContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            if isActive and not isDefault then
+                local activeBadge = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                activeBadge:SetPoint("LEFT", nameText, "RIGHT", 8, 0)
+                activeBadge:SetText("Active")
+                activeBadge:SetTextColor(T("TEXT_ACCENT"))
+            end
 
-    local activeTitle = activeProfileContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    activeTitle:SetPoint("TOPLEFT", activeProfileContainer, "TOPLEFT", 15, -12)
-    activeTitle:SetText("Active Profile")
-    activeTitle:SetTextColor(T("ACCENT_PRIMARY"))
+            local dateText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            dateText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -26)
+            local ts = data._updatedAt or 0
+            local dateLabel = isDefault and "Updated: " or "Saved: "
+            dateText:SetText(dateLabel .. (ts > 0 and date("%Y-%m-%d %H:%M", ts) or "Unknown"))
+            dateText:SetTextColor(T("TEXT_SECONDARY"))
 
-    local activeLabel = activeProfileContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    activeLabel:SetPoint("TOPLEFT", activeProfileContainer, "TOPLEFT", 15, -45)
-    activeLabel:SetText(OneWoW.db.global.activeProfile or "None")
-    activeLabel:SetTextColor(T("TEXT_PRIMARY"))
+            local tags = {}
+            if data.core then
+                local parts = {}
+                if data.core.theme    then table.insert(parts, data.core.theme)    end
+                if data.core.language then table.insert(parts, data.core.language) end
+                table.insert(tags, "Core" .. (#parts > 0 and (" (" .. table.concat(parts, ", ") .. ")") or ""))
+            end
+            if data.qol then
+                local mc = 0
+                if data.qol.modules then for _ in pairs(data.qol.modules) do mc = mc + 1 end end
+                table.insert(tags, string.format("QoL (%d modules)", mc))
+            end
+            if data.cvars then
+                local cc = 0
+                for _ in pairs(data.cvars) do cc = cc + 1 end
+                if cc > 0 then table.insert(tags, string.format("%d CVars", cc)) end
+            end
 
-    yOffset = yOffset - 100
+            local tagsText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            tagsText:SetPoint("TOPLEFT",  card, "TOPLEFT",  10, -44)
+            tagsText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -280, -44)
+            tagsText:SetJustifyH("LEFT")
+            tagsText:SetText(#tags > 0 and table.concat(tags, "  |cFF444444/|r  ") or "")
+            tagsText:SetTextColor(T("TEXT_SECONDARY"))
 
-    local saveContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    saveContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-    saveContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    saveContainer:SetHeight(140)
-    saveContainer:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    saveContainer:SetBackdropColor(T("BG_SECONDARY"))
-    saveContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            local btnY = 6
 
-    local saveTitle = saveContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    saveTitle:SetPoint("TOPLEFT", saveContainer, "TOPLEFT", 15, -12)
-    saveTitle:SetText("Save Profile")
-    saveTitle:SetTextColor(T("ACCENT_PRIMARY"))
+            if not isDefault then
+                local delBtn = GUI:CreateButton(nil, card, "Delete", 76, 26)
+                delBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
+                delBtn:SetBackdropColor(0.45, 0.12, 0.12)
+                delBtn:SetBackdropBorderColor(0.65, 0.25, 0.25)
+                delBtn:SetScript("OnEnter", function(self)
+                    self:SetBackdropColor(0.65, 0.18, 0.18)
+                    self:SetBackdropBorderColor(0.8, 0.3, 0.3)
+                end)
+                delBtn:SetScript("OnLeave", function(self)
+                    self:SetBackdropColor(0.45, 0.12, 0.12)
+                    self:SetBackdropBorderColor(0.65, 0.25, 0.25)
+                end)
+                local capturedName = name
+                delBtn:SetScript("OnClick", function()
+                    ShowDeleteConfirm(capturedName, function()
+                        OneWoW.db.global.profiles[capturedName] = nil
+                        if OneWoW.db.global.activeProfile == capturedName then
+                            OneWoW.db.global.activeProfile = nil
+                        end
+                        RefreshListing()
+                    end)
+                end)
 
-    local saveLabel = saveContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    saveLabel:SetPoint("TOPLEFT", saveContainer, "TOPLEFT", 15, -42)
-    saveLabel:SetText("Profile Name:")
-    saveLabel:SetTextColor(T("TEXT_SECONDARY"))
+                local exportBtn = GUI:CreateButton(nil, card, "Export", 76, 26)
+                exportBtn:SetPoint("RIGHT", delBtn, "LEFT", -6, 0)
+                exportBtn:SetScript("OnClick", function()
+                    local serialized = OneWoW.Profiles.SerializeProfile(capturedName, data)
+                    if serialized then GUI:ShowSettingsProfileExportDialog(capturedName, serialized) end
+                end)
 
-    local nameInput = GUI:CreateEditBox("OneWoW_ProfileNameInput", saveContainer, 250, 24)
-    nameInput:SetPoint("TOPLEFT", saveContainer, "TOPLEFT", 15, -65)
-    nameInput:SetAutoFocus(false)
-    nameInput:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
-    nameInput:SetScript("OnEditFocusLost", function(self)
-        self:HighlightText(0, 0)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end)
+                local loadBtn = GUI:CreateButton(nil, card, "Load", 76, 26)
+                loadBtn:SetPoint("RIGHT", exportBtn, "LEFT", -6, 0)
+                loadBtn:SetScript("OnClick", function()
+                    OneWoW.Profiles.ApplySettings(data, capturedName)
+                end)
+            else
+                local exportBtn = GUI:CreateButton(nil, card, "Export", 90, 26)
+                exportBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
+                exportBtn:SetScript("OnClick", function()
+                    local serialized = OneWoW.Profiles.SerializeProfile(RESERVED_DEFAULT, data)
+                    if serialized then GUI:ShowSettingsProfileExportDialog(RESERVED_DEFAULT, serialized) end
+                end)
 
-    local saveBtn = GUI:CreateButton(nil, saveContainer, "Save Profile", 130, 28)
-    saveBtn:SetPoint("TOPLEFT", saveContainer, "TOPLEFT", 275, -62)
+                local restoreBtn = GUI:CreateButton(nil, card, "Restore Now", 110, 26)
+                restoreBtn:SetPoint("RIGHT", exportBtn, "LEFT", -6, 0)
+                restoreBtn:SetScript("OnClick", function()
+                    OneWoW.Profiles.ApplySettings(data, RESERVED_DEFAULT)
+                end)
+            end
+
+            yOff = yOff - (CARD_H + CARD_GAP)
+        end
+
+        listContainer:SetHeight(math.abs(yOff) + CARD_GAP)
+        content:SetHeight(math.abs(yOffset) + listContainer:GetHeight() + 40)
+    end
+
     saveBtn:SetScript("OnClick", function()
         local name = nameInput:GetText():trim()
         if name == "" then
-            print("Profile name cannot be empty")
+            print("|cFFFFD100OneWoW:|r Profile name cannot be empty.")
+            return
+        end
+        if name == RESERVED_DEFAULT then
+            print("|cFFFFD100OneWoW:|r Cannot use the name 'Default' - it is reserved.")
             return
         end
         local snap = OneWoW.Profiles.CaptureSettings()
+        snap._updatedAt = time()
+        if not OneWoW.db.global.profiles then OneWoW.db.global.profiles = {} end
         OneWoW.db.global.profiles[name] = snap
-        OneWoW.db.global.activeProfile = name
-        activeLabel:SetText(name)
+        OneWoW.db.global.activeProfile  = name
         nameInput:SetText("")
-        print(string.format("Profile '%s' saved", name))
+        print(string.format("|cFFFFD100OneWoW:|r Settings profile saved: %s", name))
+        RefreshListing()
     end)
 
-    local noteText = saveContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    noteText:SetPoint("TOPLEFT", saveContainer, "TOPLEFT", 15, -100)
-    noteText:SetText("Note: Overwrites if name already exists")
-    noteText:SetTextColor(T("TEXT_SECONDARY"))
-
-    yOffset = yOffset - 160
-
-    local manageContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    manageContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-    manageContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    manageContainer:SetHeight(160)
-    manageContainer:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    manageContainer:SetBackdropColor(T("BG_SECONDARY"))
-    manageContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local manageTitle = manageContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    manageTitle:SetPoint("TOPLEFT", manageContainer, "TOPLEFT", 15, -12)
-    manageTitle:SetText("Load & Manage")
-    manageTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local selectLabel = manageContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    selectLabel:SetPoint("TOPLEFT", manageContainer, "TOPLEFT", 15, -42)
-    selectLabel:SetText("Select Profile:")
-    selectLabel:SetTextColor(T("TEXT_SECONDARY"))
-
-    local selectedProfileName = nil
-    local dropdownText = manageContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    dropdownText:SetPoint("LEFT", 270, 0)
-    dropdownText:SetText("")
-    dropdownText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local profileDropdown = CreateFrame("Button", nil, manageContainer, "BackdropTemplate")
-    profileDropdown:SetSize(250, 30)
-    profileDropdown:SetPoint("TOPLEFT", manageContainer, "TOPLEFT", 15, -65)
-    profileDropdown:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false,
-        edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 },
-    })
-    profileDropdown:SetBackdropColor(T("BG_TERTIARY"))
-    profileDropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local dropdownArrow = profileDropdown:CreateTexture(nil, "OVERLAY")
-    dropdownArrow:SetSize(16, 16)
-    dropdownArrow:SetPoint("RIGHT", profileDropdown, "RIGHT", -5, 0)
-    dropdownArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-
-    local loadBtn = GUI:CreateButton(nil, manageContainer, "Load Profile", 130, 28)
-    loadBtn:SetPoint("TOPLEFT", manageContainer, "TOPLEFT", 15, -110)
-    loadBtn:SetScript("OnClick", function()
-        if not selectedProfileName then
-            print("No profile selected")
-            return
-        end
-        local profile = OneWoW.db.global.profiles[selectedProfileName]
-        if profile then
-            OneWoW.Profiles.ApplySettings(profile)
-            OneWoW.db.global.activeProfile = selectedProfileName
-            activeLabel:SetText(selectedProfileName)
-            print(string.format("Profile '%s' loaded", selectedProfileName))
-        end
+    importBtn:SetScript("OnClick", function()
+        GUI:ShowSettingsProfileImportDialog(RefreshListing)
     end)
 
-    local updateBtn = GUI:CreateButton(nil, manageContainer, "Update Profile", 130, 28)
-    updateBtn:SetPoint("TOPLEFT", manageContainer, "TOPLEFT", 160, -110)
-    updateBtn:SetScript("OnClick", function()
-        if not OneWoW.db.global.activeProfile then
-            print("No active profile to update")
-            return
-        end
-        local snap = OneWoW.Profiles.CaptureSettings()
-        OneWoW.db.global.profiles[OneWoW.db.global.activeProfile] = snap
-        print(string.format("Profile '%s' updated", OneWoW.db.global.activeProfile))
+    C_Timer.After(0.05, function()
+        OneWoW.Profiles.AutoSaveDefault()
+        RefreshListing()
+        GUI:ApplyFontToFrame(panelA)
     end)
-
-    local setDefaultBtn = GUI:CreateButton(nil, manageContainer, "Set as Default", 130, 28)
-    setDefaultBtn:SetPoint("TOPLEFT", manageContainer, "TOPLEFT", 305, -110)
-    setDefaultBtn:SetScript("OnClick", function()
-        if not selectedProfileName then
-            print("No profile selected")
-            return
-        end
-        OneWoW.db.global.defaultProfile = selectedProfileName
-        defaultNameLabel:SetText("Default: " .. selectedProfileName)
-        print(string.format("Default profile set to '%s'", selectedProfileName))
-    end)
-
-    local deleteBtn = GUI:CreateButton(nil, manageContainer, "Delete Profile", 130, 28)
-    deleteBtn:SetPoint("TOPLEFT", manageContainer, "TOPLEFT", 450, -110)
-    deleteBtn:SetScript("OnClick", function()
-        if not selectedProfileName then
-            print("No profile selected")
-            return
-        end
-        OneWoW.db.global.profiles[selectedProfileName] = nil
-        if OneWoW.db.global.activeProfile == selectedProfileName then
-            OneWoW.db.global.activeProfile = nil
-            activeLabel:SetText("None")
-        end
-        if OneWoW.db.global.defaultProfile == selectedProfileName then
-            OneWoW.db.global.defaultProfile = nil
-            defaultNameLabel:SetText("Default: |cFF888888None set|r")
-        end
-        BuildProfileDropdown()
-        print(string.format("Profile '%s' deleted", selectedProfileName))
-        selectedProfileName = nil
-        dropdownText:SetText("")
-        contentsContainer:Hide()
-    end)
-
-    yOffset = yOffset - 190
-
-    local contentsContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    contentsContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-    contentsContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    contentsContainer:SetHeight(250)
-    contentsContainer:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    contentsContainer:SetBackdropColor(T("BG_SECONDARY"))
-    contentsContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    contentsContainer:Hide()
-
-    local contentsTitle = contentsContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    contentsTitle:SetPoint("TOPLEFT", contentsContainer, "TOPLEFT", 15, -12)
-    contentsTitle:SetText("Profile Contents")
-    contentsTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local contentsText = contentsContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    contentsText:SetPoint("TOPLEFT", contentsContainer, "TOPLEFT", 15, -40)
-    contentsText:SetPoint("TOPRIGHT", contentsContainer, "TOPRIGHT", -15, -40)
-    contentsText:SetJustifyH("LEFT")
-    contentsText:SetWordWrap(true)
-    contentsText:SetSpacing(2)
-    contentsText:SetText("")
-    contentsText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local function ShowProfileContents(profileName)
-        if not profileName or not OneWoW.db.global.profiles[profileName] then
-            contentsContainer:Hide()
-            return
-        end
-
-        local profile = OneWoW.db.global.profiles[profileName]
-        local lines = {}
-
-        table.insert(lines, "Data included in this profile:")
-        table.insert(lines, "")
-
-        if profile.core then
-            table.insert(lines, "OneWoW Core:")
-            if profile.core.language then table.insert(lines, "  - Language") end
-            if profile.core.theme then table.insert(lines, "  - Theme") end
-            if profile.core.minimap then table.insert(lines, "  - Minimap settings") end
-            if profile.core.settings then table.insert(lines, "  - All overlay/toast/tooltip settings") end
-            if profile.core.portalHub then table.insert(lines, "  - Portal Hub settings") end
-            table.insert(lines, "")
-        end
-
-        if profile.qol then
-            table.insert(lines, "OneWoW_QoL:")
-            if profile.qol.language then table.insert(lines, "  - Language") end
-            if profile.qol.theme then table.insert(lines, "  - Theme") end
-            if profile.qol.minimap then table.insert(lines, "  - Minimap settings") end
-            if profile.qol.modules then
-                local moduleCount = 0
-                for _ in pairs(profile.qol.modules) do moduleCount = moduleCount + 1 end
-                if moduleCount > 0 then
-                    table.insert(lines, string.format("  - ALL %d QoL modules (toggles, positions, configs)", moduleCount))
-                end
-            end
-            table.insert(lines, "")
-        end
-
-        if profile.cvars then
-            local cvarCount = 0
-            for _ in pairs(profile.cvars) do cvarCount = cvarCount + 1 end
-            if cvarCount > 0 then
-                table.insert(lines, string.format("Game CVars: %d settings", cvarCount))
-                table.insert(lines, "")
-            end
-        end
-
-        table.insert(lines, "Note: Only installed addons will be restored.")
-
-        contentsText:SetText(table.concat(lines, "\n"))
-        contentsContainer:Show()
-    end
-
-    function BuildProfileDropdown()
-        selectedProfileName = nil
-        dropdownText:SetText("")
-        contentsContainer:Hide()
-        profileDropdown:SetScript("OnClick", function(self)
-            local options = {}
-            for name in pairs(OneWoW.db.global.profiles) do
-                table.insert(options, { label = name, value = name })
-            end
-            if #options == 0 then
-                print("No profiles saved yet")
-                return
-            end
-            table.sort(options, function(a, b) return a.label < b.label end)
-            local menu = CreateDropdownMenu(self, options, function(value, label)
-                selectedProfileName = value
-                dropdownText:SetText(label)
-                ShowProfileContents(value)
-            end)
-            menu:Show()
-        end)
-    end
-
-    BuildProfileDropdown()
-
-    content:SetHeight(math.abs(yOffset) + 300)
 end

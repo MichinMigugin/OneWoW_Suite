@@ -740,6 +740,65 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
 
     yOffset = yOffset - 34
 
+    local elvDetected = C_AddOns.IsAddOnLoaded("ElvUI")
+    local elvEnabled  = not (ovDB and ovDB.integrations and ovDB.integrations.elvui and ovDB.integrations.elvui.enabled == false)
+
+    local elvRow = CreateFrame("Frame", nil, dsc, "BackdropTemplate")
+    elvRow:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
+    elvRow:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    elvRow:SetHeight(30)
+    elvRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    elvRow:SetBackdropColor(T("BG_TERTIARY"))
+    elvRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local elvName = elvRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    elvName:SetPoint("LEFT", elvRow, "LEFT", 10, 0)
+    elvName:SetText("ElvUI")
+    elvName:SetTextColor(T("TEXT_PRIMARY"))
+
+    local elvStatusLabel = elvRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    elvStatusLabel:SetPoint("LEFT", elvName, "RIGHT", 16, 0)
+    elvStatusLabel:SetText(L["FEATURE_STATUS_LABEL"])
+    elvStatusLabel:SetTextColor(T("TEXT_SECONDARY"))
+
+    local elvStatusValue = elvRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    elvStatusValue:SetPoint("LEFT", elvStatusLabel, "RIGHT", 4, 0)
+
+    if not elvDetected then
+        elvStatusValue:SetText(L["OVR_INT_NOT_DETECTED"])
+        elvStatusValue:SetTextColor(0.5, 0.5, 0.5)
+    else
+        if elvEnabled then
+            elvStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
+            elvStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+        else
+            elvStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
+            elvStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+        end
+
+        local elvToggleBtn = OneWoW_GUI:CreateButton(nil, elvRow, elvEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        elvToggleBtn:SetPoint("RIGHT", elvRow, "RIGHT", -6, 0)
+        elvToggleBtn:SetScript("OnClick", function(self)
+            local db = OneWoW.db.global.settings.overlays
+            db.integrations = db.integrations or {}
+            db.integrations.elvui = db.integrations.elvui or {}
+            local nowEnabled = db.integrations.elvui.enabled ~= false
+            db.integrations.elvui.enabled = not nowEnabled
+            nowEnabled = not nowEnabled
+            if nowEnabled then
+                elvStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
+                elvStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+            else
+                elvStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
+                elvStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+            end
+            self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
+            OneWoW.OverlayEngine:Refresh()
+        end)
+    end
+
+    yOffset = yOffset - 34
+
     dsc:SetHeight(math.abs(yOffset) + 20)
     GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
