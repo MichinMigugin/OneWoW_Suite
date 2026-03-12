@@ -28,6 +28,8 @@ function FramePicker:Initialize()
             FramePicker:Cancel()
         elseif key == "TAB" then
             FramePicker:CycleFrame()
+        elseif key == "ENTER" then
+            FramePicker:OnClick()
         end
     end)
 
@@ -50,7 +52,7 @@ function FramePicker:Initialize()
     end
 
     if infoWindow.TitleText then
-        infoWindow.TitleText:SetText("Click: Select | TAB: Cycle | ESC: Cancel | SHIFT: Move This")
+        infoWindow.TitleText:SetText("ENTER/Click: Select | TAB: Cycle | ESC: Cancel | SHIFT: Move This")
     end
 
     infoWindow.details = infoWindow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
