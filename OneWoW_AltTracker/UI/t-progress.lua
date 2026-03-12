@@ -409,7 +409,8 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
         end
     end
 
-    local dt = OneWoW_GUI:CreateDataTable(contentFrame, {
+    local dt
+    dt = OneWoW_GUI:CreateDataTable(contentFrame, {
         columns = columnsConfig,
         headerHeight = HEADER_HEIGHT,
         rowHeight = 32,

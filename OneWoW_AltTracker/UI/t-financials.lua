@@ -468,11 +468,11 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
 
             financialsTab.statBoxes[1].extraTooltipLines = {}
             if #topIncome > 0 then
-                table.insert(financialsTab.statBoxes[1].extraTooltipLines, {L["FIN_TOP_INCOME"], 1, 1, 1})
+                table.insert(financialsTab.statBoxes[1].extraTooltipLines, {text = L["FIN_TOP_INCOME"], r = 1, g = 1, b = 1})
                 for i = 1, math.min(5, #topIncome) do
                     local cat = topIncome[i]
                     if cat and cat.amount and type(cat.amount) == "number" then
-                        table.insert(financialsTab.statBoxes[1].extraTooltipLines, {ns.UI.GetCategoryDisplayName(cat.category) .. ": " .. ns.AltTrackerFormatters:FormatGoldSimple(cat.amount), 0, 1, 0})
+                        table.insert(financialsTab.statBoxes[1].extraTooltipLines, {text = ns.UI.GetCategoryDisplayName(cat.category) .. ": " .. ns.AltTrackerFormatters:FormatGoldSimple(cat.amount), r = 0, g = 1, b = 0})
                     end
                 end
             end
@@ -492,11 +492,11 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
 
             financialsTab.statBoxes[2].extraTooltipLines = {}
             if #topExpense > 0 then
-                table.insert(financialsTab.statBoxes[2].extraTooltipLines, {L["FIN_TOP_EXPENSES"], 1, 1, 1})
+                table.insert(financialsTab.statBoxes[2].extraTooltipLines, {text = L["FIN_TOP_EXPENSES"], r = 1, g = 1, b = 1})
                 for i = 1, math.min(5, #topExpense) do
                     local cat = topExpense[i]
                     if cat and cat.amount and type(cat.amount) == "number" then
-                        table.insert(financialsTab.statBoxes[2].extraTooltipLines, {ns.UI.GetCategoryDisplayName(cat.category) .. ": " .. ns.AltTrackerFormatters:FormatGoldSimple(cat.amount), 1, 0.5, 0.5})
+                        table.insert(financialsTab.statBoxes[2].extraTooltipLines, {text = ns.UI.GetCategoryDisplayName(cat.category) .. ": " .. ns.AltTrackerFormatters:FormatGoldSimple(cat.amount), r = 1, g = 0.5, b = 0.5})
                     end
                 end
             end
