@@ -1,11 +1,10 @@
--- OneWoW_Notes Addon File
--- OneWoW_Notes/UI/ui-notes-dialogs.lua
--- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
 local T = ns.T
 
 ns.UI = ns.UI or {}
+
+local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local function GetFontColorFromKey(fontColorKey, pinColorKey)
     return ns.Config:GetResolvedFontColor(fontColorKey, pinColorKey)
@@ -19,26 +18,6 @@ local function MakeLabel(parent, text, x, y)
     return lbl
 end
 
-local function MakeSlider(parent, name, x, y, w, minV, maxV, defV, fmt)
-    local slider = CreateFrame("Slider", name, parent, "OptionsSliderTemplate")
-    slider:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    slider:SetWidth(w)
-    slider:SetMinMaxValues(minV, maxV)
-    slider:SetValue(defV)
-    slider:SetValueStep(fmt == "pct" and 0.05 or 1)
-    slider:SetObeyStepOnDrag(true)
-    local lo  = _G[name .. "Low"]
-    local hi  = _G[name .. "High"]
-    local txt = _G[name .. "Text"]
-    if lo  then lo:SetText(fmt == "pct" and (math.floor(minV * 100) .. "%") or tostring(math.floor(minV))) end
-    if hi  then hi:SetText(fmt == "pct" and (math.floor(maxV * 100) .. "%") or tostring(math.floor(maxV))) end
-    if txt then txt:SetText(fmt == "pct" and (math.floor(defV * 100 + 0.5) .. "%") or tostring(math.floor(defV + 0.5))) end
-    return slider, txt
-end
-
--- =============================================
--- ADD NOTE DIALOG
--- =============================================
 function ns.UI.ShowAddNoteDialog()
     local dialog = ns.UI.CreateThemedDialog({
         name            = "OneWoW_NotesAddNoteDialog",
@@ -124,17 +103,11 @@ function ns.UI.ShowAddNoteDialog()
     local LBL_GAP = 18
 
     MakeLabel(content, L["LABEL_NOTE_TITLE"], COL1_X, yPos)
-    local titleInput = CreateFrame("EditBox", nil, content, "BackdropTemplate")
+    local titleInput = lib:CreateEditBox(nil, content, { height = 26 })
     titleInput:SetPoint("TOPLEFT",  content, "TOPLEFT",  COL1_X,  yPos - LBL_GAP)
     titleInput:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos - LBL_GAP)
-    titleInput:SetHeight(26)
-    titleInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    titleInput:SetBackdropColor(T("BG_SECONDARY"))
-    titleInput:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    titleInput:SetFontObject("GameFontNormal")
-    titleInput:SetTextColor(T("TEXT_PRIMARY"))
-    titleInput:SetTextInsets(6, 6, 4, 4)
     titleInput:SetAutoFocus(true)
+    titleInput:SetTextColor(T("TEXT_PRIMARY"))
     titleInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
     dialog.titleInput = titleInput
     yPos = yPos - ROW_H - 4
@@ -228,14 +201,12 @@ function ns.UI.ShowAddNoteDialog()
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
-    local fontSizeSlider, fontSizeTxt = MakeSlider(content, "OneWoW_NotesAddFontSize", COL1_X, yPos - LBL_GAP, COL_W, 10, 20, 12, "int")
     dialog.selectedFontSize = 12
-    fontSizeSlider:SetScript("OnValueChanged", function(self, value)
-        local val = math.floor(value + 0.5)
-        if fontSizeTxt then fontSizeTxt:SetText(tostring(val)) end
+    local fontSizeContainer = lib:CreateSlider(content, 10, 20, 1, 12, function(val)
         dialog.selectedFontSize = val
         UpdatePreview()
-    end)
+    end, COL_W, "%d")
+    fontSizeContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, L["LABEL_NOTE_FONT"], COL2_X, yPos)
     local LSM = LibStub("LibSharedMedia-3.0", true)
@@ -261,7 +232,12 @@ function ns.UI.ShowAddNoteDialog()
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
-    local opacitySlider, opacityTxt = MakeSlider(content, "OneWoW_NotesAddOpacity", COL1_X, yPos - LBL_GAP, COL_W, 0.5, 1.0, 0.9, "pct")
+    dialog.selectedOpacity = 0.9
+    local opacityContainer = lib:CreateSlider(content, 50, 100, 5, 90, function(val)
+        dialog.selectedOpacity = val / 100
+        UpdatePreview()
+    end, COL_W, "%d%%")
+    opacityContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, "Font Outline", COL2_X, yPos)
     local outlineDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
@@ -278,13 +254,6 @@ function ns.UI.ShowAddNoteDialog()
     end
     dialog.selectedFontOutline = ""
     dialog.outlineDD = outlineDD
-    dialog.selectedOpacity = 0.9
-    opacitySlider:SetScript("OnValueChanged", function(self, value)
-        local val = math.floor(value * 100 + 0.5)
-        if opacityTxt then opacityTxt:SetText(val .. "%") end
-        dialog.selectedOpacity = value
-        UpdatePreview()
-    end)
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_NOTE_TYPE"], COL1_X, yPos)
@@ -299,17 +268,13 @@ function ns.UI.ShowAddNoteDialog()
     noteTypeDD:SetSelected("standard")
     dialog.noteTypeDD = noteTypeDD
 
-    -- Auto-pin checkbox (shown only for daily/weekly)
     local autoPinSection = CreateFrame("Frame", nil, content)
     autoPinSection:SetPoint("TOPLEFT",  content, "TOPLEFT",  COL2_X, yPos - 4)
     autoPinSection:SetSize(COL_W, 35)
     autoPinSection:Hide()
 
-    local autoPinCheckbox = CreateFrame("CheckButton", nil, autoPinSection, "UICheckButtonTemplate")
-    autoPinCheckbox:SetSize(20, 20)
+    local autoPinCheckbox = lib:CreateCheckbox(nil, autoPinSection, L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
     autoPinCheckbox:SetPoint("LEFT", autoPinSection, "LEFT", 5, 0)
-    autoPinCheckbox.Text:SetText(L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
-    autoPinCheckbox.Text:SetFontObject("GameFontNormalSmall")
     dialog.autoPinCheckbox = autoPinCheckbox
     dialog.autoPinSection  = autoPinSection
 
@@ -323,22 +288,16 @@ function ns.UI.ShowAddNoteDialog()
     end
     yPos = yPos - ROW_H + 4
 
-    -- Content preview label
     local previewLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     previewLabel:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     previewLabel:SetText(L["LABEL_NOTE_CONTENT"])
     previewLabel:SetTextColor(T("TEXT_SECONDARY"))
     yPos = yPos - 18
 
-    -- Content editbox
-    contentBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    contentBg = lib:CreateFrame(nil, content, 100, 100)
+    contentBg:ClearAllPoints()
     contentBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X,  yPos)
     contentBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
-    contentBg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
     local initCC = ns.Config.PIN_COLORS["hunter"]
     contentBg:SetBackdropColor(initCC.background[1], initCC.background[2], initCC.background[3], 0.9)
     contentBg:SetBackdropBorderColor(initCC.border[1], initCC.border[2], initCC.border[3], 0.8)
@@ -372,9 +331,6 @@ function ns.UI.ShowAddNoteDialog()
     dialog:Show()
 end
 
--- =============================================
--- NOTE PROPERTIES DIALOG
--- =============================================
 function ns.UI.ShowNotePropertiesDialog(noteID)
     if not noteID or not ns.NotesData then return end
 
@@ -423,17 +379,11 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     local LBL_GAP = 18
 
     MakeLabel(content, L["LABEL_NOTE_TITLE"], COL1_X, yPos)
-    local titleInput = CreateFrame("EditBox", nil, content, "BackdropTemplate")
+    local titleInput = lib:CreateEditBox(nil, content, { height = 26 })
     titleInput:SetPoint("TOPLEFT",  content, "TOPLEFT",  COL1_X,  yPos - LBL_GAP)
     titleInput:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos - LBL_GAP)
-    titleInput:SetHeight(26)
-    titleInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    titleInput:SetBackdropColor(T("BG_SECONDARY"))
-    titleInput:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    titleInput:SetFontObject("GameFontNormal")
-    titleInput:SetTextColor(T("TEXT_PRIMARY"))
-    titleInput:SetTextInsets(6, 6, 4, 4)
     titleInput:SetAutoFocus(false)
+    titleInput:SetTextColor(T("TEXT_PRIMARY"))
     titleInput:SetText(noteData.title or "")
     titleInput:SetScript("OnEnterPressed", function(self)
         local newTitle = self:GetText()
@@ -575,10 +525,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
-    local fontSizeSlider, fontSizeTxt = MakeSlider(content, "OneWoW_NotesPropFontSize", COL1_X, yPos - LBL_GAP, COL_W, 10, 20, noteData.fontSize or 12, "int")
-    fontSizeSlider:SetScript("OnValueChanged", function(self, value)
-        local val = math.floor(value + 0.5)
-        if fontSizeTxt then fontSizeTxt:SetText(tostring(val)) end
+    local fontSizeContainer = lib:CreateSlider(content, 10, 20, 1, noteData.fontSize or 12, function(val)
         local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
         if notesDB and notesDB[noteID] then
             notesDB[noteID].fontSize = val
@@ -591,7 +538,8 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
         if ns.NotesPins and ns.NotesPins.RefreshNotePinColors then
             ns.NotesPins:RefreshNotePinColors(noteID)
         end
-    end)
+    end, COL_W, "%d")
+    fontSizeContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, L["LABEL_NOTE_FONT"], COL2_X, yPos)
     local LSM2 = LibStub("LibSharedMedia-3.0", true)
@@ -625,7 +573,16 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
-    local opacitySlider, opacityTxt = MakeSlider(content, "OneWoW_NotesPropOpacity", COL1_X, yPos - LBL_GAP, COL_W, 0.5, 1.0, noteData.opacity or 0.9, "pct")
+    local opacityContainer = lib:CreateSlider(content, 50, 100, 5, math.floor((noteData.opacity or 0.9) * 100 + 0.5), function(val)
+        local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
+        if notesDB and notesDB[noteID] then
+            notesDB[noteID].opacity = val / 100
+            notesDB[noteID].modified = GetServerTime()
+        end
+        noteData.opacity = val / 100
+        UpdatePreview()
+    end, COL_W, "%d%%")
+    opacityContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, "Font Outline", COL2_X, yPos)
     local outlinePropDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
@@ -648,16 +605,6 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
             ns.NotesPins:RefreshNotePinColors(noteID)
         end
     end
-    opacitySlider:SetScript("OnValueChanged", function(self, value)
-        local val = math.floor(value * 100 + 0.5)
-        if opacityTxt then opacityTxt:SetText(val .. "%") end
-        local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
-        if notesDB and notesDB[noteID] then
-            notesDB[noteID].opacity = value
-            notesDB[noteID].modified = GetServerTime()
-        end
-        UpdatePreview()
-    end)
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_NOTE_TYPE"], COL1_X, yPos)
@@ -675,11 +622,8 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     propAutoPinSection:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - 4)
     propAutoPinSection:SetSize(COL_W, 35)
 
-    local propAutoPinCheckbox = CreateFrame("CheckButton", nil, propAutoPinSection, "UICheckButtonTemplate")
-    propAutoPinCheckbox:SetSize(20, 20)
+    local propAutoPinCheckbox = lib:CreateCheckbox(nil, propAutoPinSection, L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
     propAutoPinCheckbox:SetPoint("LEFT", propAutoPinSection, "LEFT", 5, 0)
-    propAutoPinCheckbox.Text:SetText(L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
-    propAutoPinCheckbox.Text:SetFontObject("GameFontNormalSmall")
     propAutoPinCheckbox:SetChecked(noteData.autoPinEnabled == true)
     propAutoPinCheckbox:SetScript("OnClick", function(self)
         local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
@@ -717,22 +661,16 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     end
     yPos = yPos - ROW_H + 4
 
-    -- Preview label
     local previewLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     previewLabel:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     previewLabel:SetText(L["LABEL_NOTE_PREVIEW"])
     previewLabel:SetTextColor(T("TEXT_SECONDARY"))
     yPos = yPos - 18
 
-    -- Content editbox
-    contentBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    contentBg = lib:CreateFrame(nil, content, 100, 100)
+    contentBg:ClearAllPoints()
     contentBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X,  yPos)
     contentBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
-    contentBg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
 
     local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
     contentScroll:SetPoint("TOPLEFT",     contentBg, "TOPLEFT",     4, -4)

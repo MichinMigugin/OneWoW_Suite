@@ -8,6 +8,8 @@ local S = ns.S
 
 ns.UI = ns.UI or {}
 
+local lib = LibStub("OneWoW_GUI-1.0", true)
+
 local selectedNote = nil
 local noteListItems = {}
 local currentFilters = {
@@ -33,6 +35,28 @@ local scrollFrame = nil
 
 local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
 
+local BACKDROP_STANDARD = {
+    bgFile = "Interface\\Buttons\\WHITE8x8",
+    edgeFile = "Interface\\Buttons\\WHITE8x8",
+    tile = true, tileSize = 16, edgeSize = 1,
+}
+
+local function CreateThemedPanel(name, parentFrame)
+    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
+    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdropColor(T("BG_PRIMARY"))
+    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    return f
+end
+
+local function CreateThemedBar(name, parentFrame)
+    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
+    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdropColor(T("BG_SECONDARY"))
+    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    return f
+end
+
 local function GetFontColorFromKey(fontColorKey, pinColorKey)
     return ns.Config:GetResolvedFontColor(fontColorKey, pinColorKey)
 end
@@ -41,27 +65,16 @@ function ns.UI.CreateNotesTab(parent)
     notesFrame = parent
     ns.UI.notesFrame = parent
 
-    -- =============================================
-    -- CONTROL PANEL
-    -- =============================================
-    local controlPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local controlPanel = CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(75)
-    controlPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    controlPanel:SetBackdropColor(T("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["NOTES_CONTROLS"])
     controlTitle:SetTextColor(T("TEXT_SECONDARY"))
 
-    -- Add Note button
     local addNoteBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_NOTE"], 100, 25)
     ns.UI.AutoResizeButton(addNoteBtn, 80, 200)
     addNoteBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
@@ -78,7 +91,6 @@ function ns.UI.CreateNotesTab(parent)
     end)
     addNoteBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-    -- Category dropdown (themed)
     local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
     categoryDropdown:SetPoint("LEFT", addNoteBtn, "RIGHT", 8, 0)
     local function RefreshCatOpts()
@@ -97,7 +109,6 @@ function ns.UI.CreateNotesTab(parent)
         if parent.RefreshNotesList then parent.RefreshNotesList() end
     end
 
-    -- Manage categories button
     local manageCategoriesBtn = CreateFrame("Button", nil, controlPanel)
     manageCategoriesBtn:SetSize(20, 20)
     manageCategoriesBtn:SetPoint("LEFT", categoryDropdown, "RIGHT", 4, 0)
@@ -119,7 +130,6 @@ function ns.UI.CreateNotesTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-    -- Storage dropdown (themed)
     local storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storageDropdown:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storageDropdown:SetOptions({
@@ -133,7 +143,6 @@ function ns.UI.CreateNotesTab(parent)
         if parent.RefreshNotesList then parent.RefreshNotesList() end
     end
 
-    -- Sort dropdown (themed)
     local sortDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["NOTE_SORT_BY"] and "Sort" or "Sort", 120, 25)
     sortDropdown:SetPoint("LEFT", storageDropdown, "RIGHT", 6, 0)
     sortDropdown:SetOptions({
@@ -147,7 +156,6 @@ function ns.UI.CreateNotesTab(parent)
         if parent.RefreshNotesList then parent.RefreshNotesList() end
     end
 
-    -- Sort direction button
     local sortDirectionBtn = CreateFrame("Button", nil, controlPanel)
     sortDirectionBtn:SetSize(24, 24)
     sortDirectionBtn:SetPoint("LEFT", sortDropdown, "RIGHT", 4, 0)
@@ -164,7 +172,6 @@ function ns.UI.CreateNotesTab(parent)
         if parent.RefreshNotesList then parent.RefreshNotesList() end
     end)
 
-    -- Help button
     local helpButton = CreateFrame("Button", nil, controlPanel)
     helpButton:SetSize(28, 28)
     helpButton:SetPoint("TOPRIGHT", controlPanel, "TOPRIGHT", -10, -10)
@@ -192,20 +199,10 @@ function ns.UI.CreateNotesTab(parent)
     end)
     helpButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    -- =============================================
-    -- LISTING PANEL (left)
-    -- =============================================
-    local listingPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local listingPanel = CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 35)
     listingPanel:SetWidth(258)
-    listingPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    listingPanel:SetBackdropColor(T("BG_PRIMARY"))
-    listingPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
@@ -218,19 +215,9 @@ function ns.UI.CreateNotesTab(parent)
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -40)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
-    -- =============================================
-    -- DETAIL PANEL (right)
-    -- =============================================
-    local detailPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local detailPanel = CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 35)
-    detailPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    detailPanel:SetBackdropColor(T("BG_PRIMARY"))
-    detailPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     editorPanel = detailPanel
     ns.UI.notesDetailPanel = detailPanel
@@ -240,46 +227,26 @@ function ns.UI.CreateNotesTab(parent)
     emptyMessage:SetText(L["MESSAGE_SELECT_NOTE"])
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
 
-    -- =============================================
-    -- STATUS BARS
-    -- =============================================
-    local leftStatusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local leftStatusBar = CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT", listingPanel, "BOTTOMLEFT", 0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
-    leftStatusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    leftStatusBar:SetBackdropColor(T("BG_SECONDARY"))
-    leftStatusBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
     leftStatusText:SetTextColor(T("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NOTES"], 0))
 
-    local rightStatusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local rightStatusBar = CreateThemedBar(nil, parent)
     rightStatusBar:SetPoint("TOPLEFT", detailPanel, "BOTTOMLEFT", 0, -5)
     rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
-    rightStatusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    rightStatusBar:SetBackdropColor(T("BG_SECONDARY"))
-    rightStatusBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(T("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
 
-    -- =============================================
-    -- SHOW EDITOR (lazily created on first use)
-    -- =============================================
     local function ShowEditor()
         emptyMessage:Hide()
 
@@ -290,18 +257,10 @@ function ns.UI.CreateNotesTab(parent)
         end
 
         if not detailPanel.editorContent then
-            -- Header section
-            local editorHeader = CreateFrame("Frame", nil, detailPanel, "BackdropTemplate")
+            local editorHeader = CreateThemedBar(nil, detailPanel)
             editorHeader:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -10)
             editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
             editorHeader:SetHeight(85)
-            editorHeader:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
-            editorHeader:SetBackdropColor(T("BG_SECONDARY"))
-            editorHeader:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
             local titleEditBox = CreateFrame("EditBox", nil, editorHeader, "InputBoxTemplate")
             titleEditBox:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 12, -8)
@@ -324,7 +283,6 @@ function ns.UI.CreateNotesTab(parent)
             end)
             editorHeader.titleEditBox = titleEditBox
 
-            -- Delete button
             local deleteBtn = CreateFrame("Button", nil, editorHeader)
             deleteBtn:SetSize(22, 22)
             deleteBtn:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -12, -12)
@@ -365,7 +323,6 @@ function ns.UI.CreateNotesTab(parent)
             deleteBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
             editorHeader.deleteBtn = deleteBtn
 
-            -- Properties button
             local propertiesBtn = CreateFrame("Button", nil, editorHeader)
             propertiesBtn:SetSize(22, 22)
             propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
@@ -387,7 +344,6 @@ function ns.UI.CreateNotesTab(parent)
             propertiesBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
             editorHeader.propertiesBtn = propertiesBtn
 
-            -- Pin button
             local pinBtn = CreateFrame("CheckButton", nil, editorHeader)
             pinBtn:SetSize(22, 22)
             pinBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -2, 0)
@@ -437,7 +393,6 @@ function ns.UI.CreateNotesTab(parent)
             pinBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
             editorHeader.pinBtn = pinBtn
 
-            -- Favorite button
             local favoriteBtn = CreateFrame("CheckButton", nil, editorHeader)
             favoriteBtn:SetSize(22, 22)
             favoriteBtn:SetPoint("RIGHT", pinBtn, "LEFT", -2, 0)
@@ -484,7 +439,6 @@ function ns.UI.CreateNotesTab(parent)
             favoriteBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
             editorHeader.favoriteBtn = favoriteBtn
 
-            -- Type and category lines
             local noteTypeLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             noteTypeLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 24)
             noteTypeLine:SetText(string.format(L["UI_TYPE_FORMAT"], L["NOTE_TYPE_STANDARD"]))
@@ -520,18 +474,10 @@ function ns.UI.CreateNotesTab(parent)
             end)
             editorHeader.autoPinCheckbox = autoPinCheckbox
 
-            -- Content editbox area
-            local contentBg = CreateFrame("Frame", nil, detailPanel, "BackdropTemplate")
+            local contentBg = CreateThemedBar(nil, detailPanel)
             contentBg:SetPoint("TOPLEFT", editorHeader, "BOTTOMLEFT", 0, -10)
             contentBg:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -10)
             contentBg:SetHeight(190)
-            contentBg:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
-            contentBg:SetBackdropColor(T("BG_SECONDARY"))
-            contentBg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
             contentBg:EnableMouse(true)
 
             local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
@@ -654,7 +600,6 @@ function ns.UI.CreateNotesTab(parent)
                 end
             end)
 
-            -- Todo section
             local todoSection = CreateFrame("Frame", nil, detailPanel)
             todoSection:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -10)
             todoSection:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 10)
@@ -741,12 +686,10 @@ function ns.UI.CreateNotesTab(parent)
                 if todoContainer then todoContainer:SetWidth(width - 20) end
             end)
 
-            -- Separator line between content and todos
-            local separatorLine = detailPanel:CreateTexture(nil, "BORDER")
+            local separatorLine = lib:CreateDivider(detailPanel, 0)
+            separatorLine:ClearAllPoints()
             separatorLine:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -5)
             separatorLine:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -5)
-            separatorLine:SetHeight(1)
-            separatorLine:SetColorTexture(T("BORDER_DEFAULT"))
 
             detailPanel.editorContent = {
                 header = editorHeader,
@@ -854,9 +797,6 @@ function ns.UI.CreateNotesTab(parent)
         end
     end
 
-    -- =============================================
-    -- UpdateEditorButtons
-    -- =============================================
     function parent.UpdateEditorButtons()
         if not selectedNote or not ns.NotesData or not detailPanel or not detailPanel.editorContent then return end
         local allNotes = ns.NotesData:GetAllNotes()
@@ -895,9 +835,6 @@ function ns.UI.CreateNotesTab(parent)
         end
     end
 
-    -- =============================================
-    -- UpdateEditorColors
-    -- =============================================
     function parent.UpdateEditorColors(noteID)
         if not noteID or not ns.NotesData or not detailPanel then return end
         local allNotes = ns.NotesData:GetAllNotes()
@@ -945,9 +882,6 @@ function ns.UI.CreateNotesTab(parent)
         end
     end
 
-    -- =============================================
-    -- RefreshTodoList
-    -- =============================================
     function parent.RefreshTodoList()
         if not todoContainer or not selectedNote then return end
 
@@ -1043,9 +977,6 @@ function ns.UI.CreateNotesTab(parent)
         todoContainer:SetHeight(math.abs(yOffset) + 50)
     end
 
-    -- =============================================
-    -- RefreshNotesList
-    -- =============================================
     function parent.RefreshNotesList()
         for _, item in pairs(noteListItems) do
             item:Hide()
@@ -1126,29 +1057,12 @@ function ns.UI.CreateNotesTab(parent)
         table.sort(regular, sortNotes)
 
         local function CreateSectionHeader(text, yPos)
-            local header = CreateFrame("Frame", nil, scrollChild)
-            header:SetSize(scrollChild:GetWidth(), 25)
-            header:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
-
-            local bg = header:CreateTexture(nil, "BACKGROUND")
-            bg:SetAllPoints()
-            bg:SetAtlas("UI-CastingBar-Background")
-
-            local frame = header:CreateTexture(nil, "BORDER")
-            frame:SetAllPoints()
-            frame:SetAtlas("UI-CastingBar-Full-Glow-Standard")
-
-            local tint = header:CreateTexture(nil, "ARTWORK")
-            tint:SetAllPoints()
-            tint:SetColorTexture(0, 0, 0, 0.4)
-
-            local headerText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            headerText:SetPoint("CENTER", header, "CENTER")
-            headerText:SetText(text)
-            headerText:SetTextColor(1, 0.82, 0)
-
-            table.insert(noteListItems, header)
-            return header
+            local section = lib:CreateSectionHeader(scrollChild, text, yPos)
+            section:ClearAllPoints()
+            section:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
+            section:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yPos)
+            table.insert(noteListItems, section)
+            return section
         end
 
         local addon = _G.OneWoW_Notes
@@ -1157,11 +1071,7 @@ function ns.UI.CreateNotesTab(parent)
             noteFrame:SetSize(scrollChild:GetWidth(), 50)
             noteFrame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
 
-            noteFrame:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
+            noteFrame:SetBackdrop(BACKDROP_STANDARD)
 
             local pinColor = note.data.pinColor or "hunter"
             local fontColor = note.data.fontColor or "match"
@@ -1172,7 +1082,6 @@ function ns.UI.CreateNotesTab(parent)
             noteFrame:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
             noteFrame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
 
-            -- Delete button
             local deleteBtn = CreateFrame("Button", nil, noteFrame)
             deleteBtn:SetSize(22, 22)
             deleteBtn:SetPoint("BOTTOMRIGHT", noteFrame, "BOTTOMRIGHT", -5, 5)
@@ -1210,7 +1119,6 @@ function ns.UI.CreateNotesTab(parent)
             end)
             deleteBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-            -- Properties button
             local propertiesBtn = CreateFrame("Button", nil, noteFrame)
             propertiesBtn:SetSize(22, 22)
             propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -1, 0)
@@ -1231,7 +1139,6 @@ function ns.UI.CreateNotesTab(parent)
             end)
             propertiesBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-            -- Pin button
             local pinBtn = CreateFrame("CheckButton", nil, noteFrame)
             pinBtn:SetSize(22, 22)
             pinBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -1, 0)
@@ -1291,7 +1198,6 @@ function ns.UI.CreateNotesTab(parent)
             end)
             pinBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-            -- Favorite button
             local favoriteBtn = CreateFrame("CheckButton", nil, noteFrame)
             favoriteBtn:SetSize(22, 22)
             favoriteBtn:SetPoint("RIGHT", pinBtn, "LEFT", -1, 0)
@@ -1345,7 +1251,6 @@ function ns.UI.CreateNotesTab(parent)
             end)
             favoriteBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-            -- New flag (only on new notes)
             if note.data.isNew then
                 local newFlagBtn = CreateFrame("Button", nil, noteFrame)
                 newFlagBtn:SetSize(22, 22)
@@ -1410,7 +1315,7 @@ function ns.UI.CreateNotesTab(parent)
 
         if #newNotes > 0 then
             CreateSectionHeader(L["NOTES_SECTION_NEW"] or "New", yOffset)
-            yOffset = yOffset - 30
+            yOffset = yOffset - 35
         end
         for _, note in ipairs(newNotes) do
             BuildNoteRow(note, yOffset)
@@ -1419,7 +1324,7 @@ function ns.UI.CreateNotesTab(parent)
 
         if #favorites > 0 then
             CreateSectionHeader(L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset)
-            yOffset = yOffset - 30
+            yOffset = yOffset - 35
         end
         for _, note in ipairs(favorites) do
             BuildNoteRow(note, yOffset)
@@ -1428,7 +1333,7 @@ function ns.UI.CreateNotesTab(parent)
 
         if #regular > 0 then
             CreateSectionHeader(L["TAB_NOTES"], yOffset)
-            yOffset = yOffset - 30
+            yOffset = yOffset - 35
         end
         for _, note in ipairs(regular) do
             BuildNoteRow(note, yOffset)

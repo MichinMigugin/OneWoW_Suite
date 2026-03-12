@@ -5,6 +5,8 @@ local S = ns.S
 
 ns.UI = ns.UI or {}
 
+local lib = LibStub("OneWoW_GUI-1.0", true)
+
 function ns.UI.CreateRoutinePinnedWindow(routineID)
     local routine = ns.RoutinesData:GetRoutine(routineID)
     if not routine then return nil end
@@ -18,20 +20,12 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
     local SECTION_H = 20
     local ROW_H = 18
 
-    local f = CreateFrame("Frame", "OneWoW_Notes_RoutinePin_" .. routineID:gsub("-", ""), UIParent, "BackdropTemplate")
-    f:SetSize(W, H)
+    local f = lib:CreateFrame("OneWoW_Notes_RoutinePin_" .. routineID:gsub("-", ""), UIParent, W, H)
     f:SetFrameStrata("MEDIUM")
     f:SetToplevel(true)
     f:SetClampedToScreen(true)
     f:SetMovable(true)
     f:EnableMouse(true)
-    f:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    f:SetBackdropColor(T("BG_PRIMARY"))
-    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local savedPos = routine.pinnedPosition
     if savedPos and savedPos.point then
@@ -40,12 +34,12 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
         f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     end
 
-    local titleBar = CreateFrame("Frame", nil, f, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(TITLE_H)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+    local titleBar = lib:CreateTitleBar(f, routine.title or L["ROUTINES_UNTITLED"], {
+        height = TITLE_H,
+        onClose = function()
+            ns.RoutinesEngine:UnpinRoutine(routineID)
+        end,
+    })
     titleBar:EnableMouse(true)
     titleBar:RegisterForDrag("LeftButton")
     titleBar:SetScript("OnDragStart", function()
@@ -57,83 +51,35 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
         routine.pinnedPosition = { point = point, relativePoint = relativePoint, x = xOfs, y = yOfs }
     end)
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local titleText = titleBar._titleText
+    titleText:ClearAllPoints()
     titleText:SetPoint("LEFT", titleBar, "LEFT", 8, 0)
     titleText:SetPoint("RIGHT", titleBar, "RIGHT", -60, 0)
     titleText:SetJustifyH("LEFT")
-    titleText:SetTextColor(T("ACCENT_PRIMARY"))
-    titleText:SetText(routine.title or L["ROUTINES_UNTITLED"])
+    titleText:SetFontObject("GameFontNormalSmall")
     f.titleText = titleText
+
+    if titleBar._closeBtn then
+        titleBar._closeBtn:SetSize(16, 16)
+        titleBar._closeBtn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+            GameTooltip:SetText(L["ROUTINES_UNPIN"], 1, 1, 1)
+            GameTooltip:AddLine(L["ROUTINES_UNPIN_DESC"], 0.8, 0.8, 0.8, true)
+            GameTooltip:Show()
+        end)
+        titleBar._closeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
 
     local totalLabel = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     totalLabel:SetPoint("RIGHT", titleBar, "RIGHT", -30, 0)
     totalLabel:SetTextColor(T("TEXT_SECONDARY"))
     f.totalLabel = totalLabel
 
-    local closeBtn = CreateFrame("Button", nil, titleBar)
-    closeBtn:SetSize(16, 16)
-    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -6, 0)
-    closeBtn:SetNormalTexture("Interface\\Buttons\\UI-StopButton")
-    closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-StopButton")
-    closeBtn:GetHighlightTexture():SetAlpha(0.5)
-    closeBtn:SetScript("OnClick", function()
-        ns.RoutinesEngine:UnpinRoutine(routineID)
-    end)
-    closeBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText(L["ROUTINES_UNPIN"], 1, 1, 1)
-        GameTooltip:AddLine(L["ROUTINES_UNPIN_DESC"], 0.8, 0.8, 0.8, true)
-        GameTooltip:Show()
-    end)
-    closeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, f)
-    scrollFrame:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, -1)
-    scrollFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -8, 4)
-    scrollFrame:EnableMouseWheel(true)
-    f._scrollFrame = scrollFrame
-
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetWidth(W - 8)
-    scrollChild:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollChild)
-    f._scrollChild = scrollChild
-
-    local scrollTrack = CreateFrame("Frame", nil, f, "BackdropTemplate")
-    scrollTrack:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 1, 0)
-    scrollTrack:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 1, 0)
-    scrollTrack:SetWidth(5)
-    local trackBg = scrollTrack:CreateTexture(nil, "BACKGROUND")
-    trackBg:SetAllPoints()
-    trackBg:SetColorTexture(0, 0, 0, 0.3)
-
-    local scrollThumb = scrollTrack:CreateTexture(nil, "OVERLAY")
-    scrollThumb:SetWidth(5)
-    scrollThumb:SetColorTexture(T("ACCENT_PRIMARY"))
-    f._scrollThumb = scrollThumb
-    f._scrollTrack = scrollTrack
-
-    local function UpdateScrollBar()
-        local viewH = scrollFrame:GetHeight()
-        local contentH = scrollChild:GetHeight()
-        if contentH <= viewH or viewH <= 0 then scrollThumb:Hide() return end
-        scrollThumb:Show()
-        local trackH = math.max(scrollTrack:GetHeight(), 1)
-        local thumbH = math.max(trackH * (viewH / contentH), 14)
-        local pct = scrollFrame:GetVerticalScroll() / math.max(contentH - viewH, 1)
-        scrollThumb:SetHeight(thumbH)
-        scrollThumb:ClearAllPoints()
-        scrollThumb:SetPoint("TOPLEFT", scrollTrack, "TOPLEFT", 0, -((trackH - thumbH) * pct))
-    end
-
-    scrollFrame:SetScript("OnMouseWheel", function(_, d)
-        local cur = scrollFrame:GetVerticalScroll()
-        local max = math.max(scrollChild:GetHeight() - scrollFrame:GetHeight(), 0)
-        scrollFrame:SetVerticalScroll(math.max(0, math.min(cur - d * 30, max)))
-        UpdateScrollBar()
-    end)
-    scrollFrame:SetScript("OnScrollRangeChanged", function() UpdateScrollBar() end)
-    scrollFrame:SetScript("OnVerticalScroll", function() UpdateScrollBar() end)
+    local scroll = ns.UI.CreateCustomScroll(f)
+    scroll.container:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, -1)
+    scroll.container:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 0, 4)
+    f._scrollFrame = scroll.scrollFrame
+    f._scrollChild = scroll.scrollChild
 
     local dragger = CreateFrame("Frame", nil, f)
     dragger:SetSize(12, 12)
@@ -187,14 +133,12 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
 
     f._widgets = {}
     f._titleBar = titleBar
-    f._trackBg = trackBg
 
     function f:ApplyThemeColors()
         self:SetBackdropColor(T("BG_PRIMARY"))
         self:SetBackdropBorderColor(T("BORDER_DEFAULT"))
         self._titleBar:SetBackdropColor(T("TITLEBAR_BG"))
         self.titleText:SetTextColor(T("ACCENT_PRIMARY"))
-        self._scrollThumb:SetColorTexture(T("ACCENT_PRIMARY"))
     end
 
     function f:Refresh()
@@ -213,7 +157,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
         self:ApplyThemeColors()
 
         local curW = self:GetWidth()
-        self._scrollChild:SetWidth(math.max(1, curW - 8))
+        self._scrollChild:SetWidth(math.max(1, curW - 14))
 
         self.titleText:SetText(curRoutine.title or L["ROUTINES_UNTITLED"])
 
@@ -239,7 +183,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
             hdr:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
             local secComplete = secTotal > 0 and secDone == secTotal
             if secComplete then
-                hdr:SetBackdropColor(0.15, 0.35, 0.15, 0.8)
+                hdr:SetBackdropColor(T("BG_ACTIVE"))
             else
                 hdr:SetBackdropColor(T("BG_SECONDARY"))
             end
@@ -260,7 +204,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                 local hdrCount = hdr:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 hdrCount:SetPoint("RIGHT", hdr, "RIGHT", -6, 0)
                 if secComplete then
-                    hdrCount:SetTextColor(0.4, 0.9, 0.4)
+                    hdrCount:SetTextColor(T("TEXT_ACCENT"))
                 else
                     hdrCount:SetTextColor(T("TEXT_SECONDARY"))
                 end
@@ -286,15 +230,14 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                     hover:SetAllPoints()
                     hover:SetColorTexture(1, 1, 1, 0)
 
-                    local dot = rowFrame:CreateTexture(nil, "ARTWORK")
-                    dot:SetSize(6, 6)
+                    local dot = lib:CreateStatusDot(rowFrame, { size = 6 })
                     dot:SetPoint("LEFT", rowFrame, "LEFT", PAD, 0)
                     if isComplete then
-                        dot:SetColorTexture(0.2, 0.8, 0.3, 1)
+                        dot:SetStatus(true)
                     elseif prog > 0 then
-                        dot:SetColorTexture(0.9, 0.7, 0.2, 1)
+                        dot:SetVertexColor(T("ACCENT_HIGHLIGHT"))
                     else
-                        dot:SetColorTexture(0.35, 0.35, 0.35, 1)
+                        dot:SetStatus(false)
                     end
 
                     local lbl = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -303,7 +246,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                     lbl:SetJustifyH("LEFT")
                     lbl:SetText(ns.RoutinesEngine:GetTaskDisplayLabel(task))
                     if isComplete then
-                        lbl:SetTextColor(0.4, 0.4, 0.4)
+                        lbl:SetTextColor(T("TEXT_MUTED"))
                     else
                         lbl:SetTextColor(T("TEXT_PRIMARY"))
                     end
@@ -313,7 +256,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                         strike:SetHeight(1)
                         strike:SetPoint("LEFT", lbl, "LEFT", 0, 0)
                         strike:SetPoint("RIGHT", lbl, "RIGHT", 0, 0)
-                        strike:SetColorTexture(0.35, 0.35, 0.35, 0.7)
+                        strike:SetColorTexture(T("TEXT_MUTED"))
                     end
 
                     local countFS = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -333,9 +276,9 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                     end
 
                     if isComplete then
-                        countFS:SetTextColor(0.4, 0.9, 0.4)
+                        countFS:SetTextColor(T("TEXT_ACCENT"))
                     elseif prog > 0 then
-                        countFS:SetTextColor(0.9, 0.7, 0.2)
+                        countFS:SetTextColor(T("ACCENT_HIGHLIGHT"))
                     else
                         countFS:SetTextColor(T("TEXT_MUTED"))
                     end
@@ -371,7 +314,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
 
         if allTotal > 0 then
             if allDone >= allTotal then
-                self.totalLabel:SetTextColor(0.4, 0.9, 0.4)
+                self.totalLabel:SetTextColor(T("TEXT_ACCENT"))
             else
                 self.totalLabel:SetTextColor(T("TEXT_SECONDARY"))
             end
@@ -387,12 +330,6 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
         if curScroll > maxScroll then
             self._scrollFrame:SetVerticalScroll(maxScroll)
         end
-
-        C_Timer.After(0.05, function()
-            if self._scrollFrame and self._scrollFrame:IsShown() then
-                UpdateScrollBar()
-            end
-        end)
     end
 
     f:Hide()

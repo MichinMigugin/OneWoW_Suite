@@ -5,6 +5,8 @@ local S = ns.S
 
 ns.UI = ns.UI or {}
 
+local lib = LibStub("OneWoW_GUI-1.0", true)
+
 local selectedGuide = nil
 local guideListItems = {}
 local categoryFilter = "All"
@@ -23,72 +25,6 @@ local OBJECTIVE_TYPE_ICONS = {
     currency       = "Interface\\ICONS\\INV_Misc_Coin_01",
     manual         = "Interface\\ICONS\\Ability_Marksmanship",
 }
-
-local function CreateScrollPanel(parent, titleText)
-    local panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    panel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    panel:SetBackdropColor(T("BG_PRIMARY"))
-    panel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    title:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -10)
-    title:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, -10)
-    title:SetJustifyH("LEFT")
-    title:SetText(titleText or "")
-    title:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local scrollContainer = CreateFrame("Frame", nil, panel)
-    scrollContainer:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -32)
-    scrollContainer:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -8, 8)
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, scrollContainer, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", scrollContainer, "TOPLEFT", 0, 0)
-    scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", -14, 0)
-
-    local scrollBar = scrollFrame.ScrollBar
-    if scrollBar then
-        scrollBar:ClearAllPoints()
-        scrollBar:SetPoint("TOPRIGHT", scrollContainer, "TOPRIGHT", -2, 0)
-        scrollBar:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", -2, 0)
-        scrollBar:SetWidth(10)
-        if scrollBar.ScrollUpButton then
-            scrollBar.ScrollUpButton:Hide()
-            scrollBar.ScrollUpButton:SetAlpha(0)
-            scrollBar.ScrollUpButton:EnableMouse(false)
-        end
-        if scrollBar.ScrollDownButton then
-            scrollBar.ScrollDownButton:Hide()
-            scrollBar.ScrollDownButton:SetAlpha(0)
-            scrollBar.ScrollDownButton:EnableMouse(false)
-        end
-        if scrollBar.Background then
-            scrollBar.Background:SetColorTexture(T("BG_TERTIARY"))
-        end
-        if scrollBar.ThumbTexture then
-            scrollBar.ThumbTexture:SetWidth(8)
-            scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
-        end
-    end
-
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
-        scrollChild:SetWidth(w)
-    end)
-
-    return {
-        panel       = panel,
-        title       = title,
-        scrollFrame = scrollFrame,
-        scrollChild = scrollChild,
-    }
-end
 
 local function CreateSmallIconButton(parent, texture, size, tooltip, tooltipDesc)
     local btn = CreateFrame("Button", nil, parent)
@@ -199,21 +135,55 @@ function ns.UI.CreateGuidesTab(parent)
     contentArea:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -1)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    local listScroll = CreateScrollPanel(contentArea, L["GUIDES_LIST_TITLE"])
-    listScroll.panel:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
-    listScroll.panel:SetPoint("BOTTOMLEFT", contentArea, "BOTTOMLEFT", 0, 0)
-    listScroll.panel:SetWidth(ns.Constants.GUI.LEFT_PANEL_WIDTH)
+    local listPanel = CreateFrame("Frame", nil, contentArea, "BackdropTemplate")
+    listPanel:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
+    listPanel:SetPoint("BOTTOMLEFT", contentArea, "BOTTOMLEFT", 0, 0)
+    listPanel:SetWidth(ns.Constants.GUI.LEFT_PANEL_WIDTH)
+    listPanel:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    listPanel:SetBackdropColor(T("BG_PRIMARY"))
+    listPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local detailScroll = CreateScrollPanel(contentArea, L["GUIDES_DETAIL_TITLE"])
-    detailScroll.panel:SetPoint("TOPLEFT", listScroll.panel, "TOPRIGHT", ns.Constants.GUI.PANEL_GAP, 0)
-    detailScroll.panel:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", 0, 0)
+    local listTitle = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    listTitle:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 10, -10)
+    listTitle:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -10, -10)
+    listTitle:SetJustifyH("LEFT")
+    listTitle:SetText(L["GUIDES_LIST_TITLE"])
+    listTitle:SetTextColor(T("ACCENT_PRIMARY"))
 
+    local listScroll = ns.UI.CreateCustomScroll(listPanel)
     local listScrollChild = listScroll.scrollChild
-    local detailScrollChild = detailScroll.scrollChild
-    local detailTitle = detailScroll.title
+    listScroll.container:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 8, -32)
+    listScroll.container:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -8, 8)
 
-    local emptyMessage = CreateFrame("Frame", nil, detailScroll.panel)
-    emptyMessage:SetAllPoints(detailScroll.panel)
+    local detailPanel = CreateFrame("Frame", nil, contentArea, "BackdropTemplate")
+    detailPanel:SetPoint("TOPLEFT", listPanel, "TOPRIGHT", ns.Constants.GUI.PANEL_GAP, 0)
+    detailPanel:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", 0, 0)
+    detailPanel:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    detailPanel:SetBackdropColor(T("BG_PRIMARY"))
+    detailPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+
+    local detailTitle = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -10)
+    detailTitle:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
+    detailTitle:SetJustifyH("LEFT")
+    detailTitle:SetText(L["GUIDES_DETAIL_TITLE"])
+    detailTitle:SetTextColor(T("ACCENT_PRIMARY"))
+
+    local detailScroll = ns.UI.CreateCustomScroll(detailPanel)
+    local detailScrollChild = detailScroll.scrollChild
+    detailScroll.container:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, -32)
+    detailScroll.container:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 8)
+
+    local emptyMessage = CreateFrame("Frame", nil, detailPanel)
+    emptyMessage:SetAllPoints(detailPanel)
     local emptyText = emptyMessage:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyText:SetPoint("CENTER", emptyMessage, "CENTER", 0, 0)
     emptyText:SetText(L["GUIDES_SELECT"])
@@ -435,7 +405,7 @@ function ns.UI.CreateGuidesTab(parent)
             descText:SetText(guide.description)
             descText:SetTextColor(T("TEXT_SECONDARY"))
 
-            local panelW = detailScroll.panel:GetWidth()
+            local panelW = detailPanel:GetWidth()
             if panelW and panelW > 40 then
                 descText:SetWidth(panelW - 40)
             end
@@ -794,7 +764,7 @@ function ns.UI.CreateGuidesTab(parent)
             emptyFrame:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", 0, 0)
             emptyFrame:SetHeight(40)
             local emptyFS = emptyFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            emptyFS:SetPoint("CENTER", listScroll.panel, "CENTER", 0, 0)
+            emptyFS:SetPoint("CENTER", listPanel, "CENTER", 0, 0)
             emptyFS:SetText(L["GUIDES_EMPTY"])
             emptyFS:SetTextColor(T("TEXT_MUTED"))
             table.insert(guideListItems, emptyFrame)

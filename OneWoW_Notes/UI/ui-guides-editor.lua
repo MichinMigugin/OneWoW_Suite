@@ -5,6 +5,8 @@ local S = ns.S
 
 ns.UI = ns.UI or {}
 
+local lib = LibStub("OneWoW_GUI-1.0", true)
+
 local OBJECTIVE_TYPES = {
     { value = "manual",         text = L["GUIDES_OBJ_MANUAL"] },
     { value = "level",          text = L["GUIDES_OBJ_LEVEL"] },
@@ -41,32 +43,33 @@ local PARAM_FIELDS = {
                        { key = "amount",        label = "GUIDES_PARAM_AMOUNT" } },
 }
 
-local function MakeEditBox(parent, x, y, w, h, defaultText)
-    local box = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
-    box:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    box:SetSize(w, h)
-    box:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    box:SetBackdropColor(T("BG_TERTIARY"))
-    box:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    box:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-    box:SetTextColor(T("TEXT_PRIMARY"))
-    box:SetTextInsets(8, 8, 0, 0)
-    box:SetAutoFocus(false)
-    box:SetText(defaultText or "")
-    box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    return box
-end
-
 local function MakeLabel(parent, text, x, y)
     local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     lbl:SetText(text)
     lbl:SetTextColor(T("TEXT_SECONDARY"))
     return lbl
+end
+
+local function MakeMultiLineScrollBox(parent, font, fontSize)
+    local scrollFrame, scrollChild = lib:CreateScrollFrame(nil, parent)
+    scrollFrame:ClearAllPoints()
+    scrollFrame:SetAllPoints(parent)
+
+    local editBox = CreateFrame("EditBox", nil, scrollFrame)
+    editBox:SetWidth(scrollFrame:GetWidth() or 400)
+    editBox:SetFont(font or "Fonts\\FRIZQT__.TTF", fontSize or 11, "")
+    editBox:SetTextColor(T("TEXT_PRIMARY"))
+    editBox:SetMultiLine(true)
+    editBox:SetAutoFocus(false)
+    editBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    scrollFrame:SetScrollChild(editBox)
+
+    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+        editBox:SetWidth(w - 16)
+    end)
+
+    return scrollFrame, editBox
 end
 
 function ns.UI.ShowGuideEditorDialog(guideID, onSaveCallback)
@@ -149,18 +152,12 @@ function ns.UI.ShowGuideEditorDialog(guideID, onSaveCallback)
     hintLabel:SetWordWrap(true)
 
     yOff = yOff - 24
-    local markupScroll = CreateFrame("ScrollFrame", nil, content, "UIPanelScrollFrameTemplate")
-    markupScroll:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
-    markupScroll:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -30, 10)
+    local markupContainer = lib:CreateFrame(nil, content, 1, 1)
+    markupContainer:ClearAllPoints()
+    markupContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
+    markupContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
 
-    local markupBox = CreateFrame("EditBox", nil, markupScroll)
-    markupBox:SetWidth(markupScroll:GetWidth())
-    markupBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    markupBox:SetTextColor(T("TEXT_PRIMARY"))
-    markupBox:SetMultiLine(true)
-    markupBox:SetAutoFocus(false)
-    markupBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    markupScroll:SetScrollChild(markupBox)
+    local _, markupBox = MakeMultiLineScrollBox(markupContainer, "Fonts\\FRIZQT__.TTF", 11)
 
     if isEdit and guideID then
         markupBox:SetText(ns.GuidesData:GuideToMarkup(guideID))
@@ -189,7 +186,7 @@ function ns.UI.ShowStepEditorDialog(guideID, stepIndex, onSaveCallback)
             {
                 text = L["NOTES_SAVE"],
                 onClick = function(frame)
-                    local stepTitle = frame._titleBox:GetText() or ""
+                    local stepTitle = frame._titleBox:GetSearchText() or ""
                     local stepDesc = frame._descBox:GetText() or ""
                     local faction = frame._factionDD:GetValue() or "both"
                     local optional = frame._optionalCB:GetChecked() or false
@@ -229,27 +226,26 @@ function ns.UI.ShowStepEditorDialog(guideID, stepIndex, onSaveCallback)
 
     MakeLabel(content, L["GUIDES_STEP_TITLE"], 10, yOff)
     yOff = yOff - 16
-    local titleBox = MakeEditBox(content, 10, yOff, 460, 28, step and step.title or "")
+    local titleBox = lib:CreateEditBox(nil, content, { width = 460, height = 28 })
+    titleBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     titleBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
+    if step and step.title then
+        titleBox:SetText(step.title)
+        titleBox:SetTextColor(T("TEXT_PRIMARY"))
+    end
     dialog._titleBox = titleBox
 
     yOff = yOff - 36
     MakeLabel(content, L["GUIDES_STEP_DESC"], 10, yOff)
     yOff = yOff - 16
-    local descScroll = CreateFrame("ScrollFrame", nil, content, "UIPanelScrollFrameTemplate")
-    descScroll:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
-    descScroll:SetPoint("TOPRIGHT", content, "TOPRIGHT", -30, yOff)
-    descScroll:SetHeight(80)
+    local descContainer = lib:CreateFrame(nil, content, 1, 80)
+    descContainer:ClearAllPoints()
+    descContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
+    descContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
+    descContainer:SetHeight(80)
 
-    local descBox = CreateFrame("EditBox", nil, descScroll)
-    descBox:SetWidth(descScroll:GetWidth())
-    descBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    descBox:SetTextColor(T("TEXT_PRIMARY"))
-    descBox:SetMultiLine(true)
-    descBox:SetAutoFocus(false)
+    local _, descBox = MakeMultiLineScrollBox(descContainer, "Fonts\\FRIZQT__.TTF", 11)
     descBox:SetText(step and step.description or "")
-    descBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    descScroll:SetScrollChild(descBox)
     dialog._descBox = descBox
 
     yOff = yOff - 100
@@ -260,14 +256,9 @@ function ns.UI.ShowStepEditorDialog(guideID, stepIndex, onSaveCallback)
     factionDD:SetSelected(step and step.faction or "both")
     dialog._factionDD = factionDD
 
-    local optionalCB = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
+    local optionalCB = lib:CreateCheckbox(nil, content, L["GUIDES_OPTIONAL"])
     optionalCB:SetPoint("TOPLEFT", content, "TOPLEFT", 280, yOff + 4)
-    optionalCB:SetSize(24, 24)
     optionalCB:SetChecked(step and step.optional or false)
-    local optLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    optLabel:SetPoint("LEFT", optionalCB, "RIGHT", 4, 0)
-    optLabel:SetText(L["GUIDES_OPTIONAL"])
-    optLabel:SetTextColor(T("TEXT_SECONDARY"))
     dialog._optionalCB = optionalCB
 
     dialog:Show()
@@ -292,14 +283,14 @@ function ns.UI.ShowObjectiveEditorDialog(guideID, stepIndex, objIndex, onSaveCal
                 text = L["NOTES_SAVE"],
                 onClick = function(frame)
                     local objType = frame._typeDD:GetValue() or "manual"
-                    local desc = frame._descBox:GetText() or ""
+                    local desc = frame._descBox:GetSearchText() or ""
                     local params = {}
 
                     local fields = PARAM_FIELDS[objType]
                     if fields and frame._paramBoxes then
                         for i, field in ipairs(fields) do
                             if frame._paramBoxes[i] then
-                                params[field.key] = tonumber(frame._paramBoxes[i]:GetText()) or 0
+                                params[field.key] = tonumber(frame._paramBoxes[i]:GetSearchText()) or 0
                             end
                         end
                     end
@@ -348,8 +339,13 @@ function ns.UI.ShowObjectiveEditorDialog(guideID, stepIndex, objIndex, onSaveCal
     yOff = yOff - 36
     MakeLabel(content, L["GUIDES_OBJ_DESC"], 10, yOff)
     yOff = yOff - 16
-    local descBox = MakeEditBox(content, 10, yOff, 460, 28, obj and obj.description or "")
+    local descBox = lib:CreateEditBox(nil, content, { width = 460, height = 28 })
+    descBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     descBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
+    if obj and obj.description then
+        descBox:SetText(obj.description)
+        descBox:SetTextColor(T("TEXT_PRIMARY"))
+    end
     dialog._descBox = descBox
 
     yOff = yOff - 40
@@ -362,13 +358,7 @@ function ns.UI.ShowObjectiveEditorDialog(guideID, stepIndex, objIndex, onSaveCal
     dialog._paramBoxes = {}
 
     local function BuildParamFields(objType)
-        for _, child in ipairs({paramContainer:GetChildren()}) do
-            child:Hide()
-            child:ClearAllPoints()
-        end
-        for _, fs in ipairs({paramContainer:GetRegions()}) do
-            if fs.Hide then fs:Hide() end
-        end
+        if lib then lib:ClearFrame(paramContainer) end
         wipe(dialog._paramBoxes)
 
         local fields = PARAM_FIELDS[objType]
@@ -384,8 +374,14 @@ function ns.UI.ShowObjectiveEditorDialog(guideID, stepIndex, objIndex, onSaveCal
             lbl:SetTextColor(T("TEXT_SECONDARY"))
 
             pY = pY - 16
-            local box = MakeEditBox(paramContainer, 10, pY, 200, 28, tostring(existingParams[field.key] or ""))
+            local box = lib:CreateEditBox(nil, paramContainer, { width = 200, height = 28 })
+            box:SetPoint("TOPLEFT", paramContainer, "TOPLEFT", 10, pY)
             box:SetNumeric(true)
+            local val = tostring(existingParams[field.key] or "")
+            if val ~= "" then
+                box:SetText(val)
+                box:SetTextColor(T("TEXT_PRIMARY"))
+            end
             dialog._paramBoxes[i] = box
             pY = pY - 36
         end
@@ -418,7 +414,7 @@ function ns.UI.ShowGuideImportDialog(onImportCallback)
                     local parsed = ns.GuidesData:ParseMarkupGuide(text)
                     if parsed and parsed.steps and #parsed.steps > 0 then
                         local guideID = ns.GuidesData:AddGuide({
-                            title = parsed.title ~= "" and parsed.title or (frame._titleBox and frame._titleBox:GetText() or ""),
+                            title = parsed.title ~= "" and parsed.title or (frame._titleBox and frame._titleBox:GetSearchText() or ""),
                             description = parsed.description or "",
                             category = frame._catDD and frame._catDD:GetValue() or "General",
                             steps = parsed.steps,
@@ -458,7 +454,8 @@ function ns.UI.ShowGuideImportDialog(onImportCallback)
 
     MakeLabel(content, L["LABEL_NOTE_TITLE"], 10, yOff)
     yOff = yOff - 16
-    local titleBox = MakeEditBox(content, 10, yOff, 360, 28, "")
+    local titleBox = lib:CreateEditBox(nil, content, { width = 360, height = 28 })
+    titleBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     dialog._titleBox = titleBox
 
     local catDD = ns.UI.CreateThemedDropdown(content, "", 180, 28)
@@ -490,18 +487,12 @@ function ns.UI.ShowGuideImportDialog(onImportCallback)
     markupHint:SetWordWrap(true)
 
     yOff = yOff - 30
-    local importScroll = CreateFrame("ScrollFrame", nil, content, "UIPanelScrollFrameTemplate")
-    importScroll:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
-    importScroll:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -30, 10)
+    local importContainer = lib:CreateFrame(nil, content, 1, 1)
+    importContainer:ClearAllPoints()
+    importContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
+    importContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
 
-    local importBox = CreateFrame("EditBox", nil, importScroll)
-    importBox:SetWidth(importScroll:GetWidth())
-    importBox:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-    importBox:SetTextColor(T("TEXT_PRIMARY"))
-    importBox:SetMultiLine(true)
-    importBox:SetAutoFocus(false)
-    importBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    importScroll:SetScrollChild(importBox)
+    local _, importBox = MakeMultiLineScrollBox(importContainer, "Fonts\\FRIZQT__.TTF", 10)
     dialog._importBox = importBox
 
     dialog:Show()
@@ -539,20 +530,13 @@ function ns.UI.ShowGuideExportDialog(guideID)
     hintText:SetTextColor(T("TEXT_SECONDARY"))
     hintText:SetWordWrap(true)
 
-    local exportScroll = CreateFrame("ScrollFrame", nil, content, "UIPanelScrollFrameTemplate")
-    exportScroll:SetPoint("TOPLEFT", hintText, "BOTTOMLEFT", 0, -10)
-    exportScroll:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -30, 10)
+    local exportContainer = lib:CreateFrame(nil, content, 1, 1)
+    exportContainer:ClearAllPoints()
+    exportContainer:SetPoint("TOPLEFT", hintText, "BOTTOMLEFT", 0, -10)
+    exportContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
 
-    local exportBox = CreateFrame("EditBox", nil, exportScroll)
-    exportBox:SetWidth(exportScroll:GetWidth())
-    exportBox:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-    exportBox:SetTextColor(T("TEXT_PRIMARY"))
-    exportBox:SetMultiLine(true)
-    exportBox:SetAutoFocus(false)
+    local _, exportBox = MakeMultiLineScrollBox(exportContainer, "Fonts\\FRIZQT__.TTF", 10)
     exportBox:SetText(exportStr)
-    exportBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    exportScroll:SetScrollChild(exportBox)
-
     exportBox:HighlightText()
     exportBox:SetFocus()
 

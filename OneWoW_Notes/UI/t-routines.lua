@@ -5,6 +5,8 @@ local S = ns.S
 
 ns.UI = ns.UI or {}
 
+local lib = LibStub("OneWoW_GUI-1.0", true)
+
 local selectedRoutine = nil
 local routineListItems = {}
 
@@ -25,52 +27,15 @@ local function CreateScrollPanel(parent, titleText)
     title:SetText(titleText or "")
     title:SetTextColor(T("ACCENT_PRIMARY"))
 
-    local scrollContainer = CreateFrame("Frame", nil, panel)
-    scrollContainer:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -32)
-    scrollContainer:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -8, 8)
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, scrollContainer, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", scrollContainer, "TOPLEFT", 0, 0)
-    scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", -14, 0)
-
-    local scrollBar = scrollFrame.ScrollBar
-    if scrollBar then
-        scrollBar:ClearAllPoints()
-        scrollBar:SetPoint("TOPRIGHT", scrollContainer, "TOPRIGHT", -2, 0)
-        scrollBar:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", -2, 0)
-        scrollBar:SetWidth(10)
-        if scrollBar.ScrollUpButton then
-            scrollBar.ScrollUpButton:Hide()
-            scrollBar.ScrollUpButton:SetAlpha(0)
-            scrollBar.ScrollUpButton:EnableMouse(false)
-        end
-        if scrollBar.ScrollDownButton then
-            scrollBar.ScrollDownButton:Hide()
-            scrollBar.ScrollDownButton:SetAlpha(0)
-            scrollBar.ScrollDownButton:EnableMouse(false)
-        end
-        if scrollBar.Background then
-            scrollBar.Background:SetColorTexture(T("BG_TERTIARY"))
-        end
-        if scrollBar.ThumbTexture then
-            scrollBar.ThumbTexture:SetWidth(8)
-            scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
-        end
-    end
-
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
-        scrollChild:SetWidth(w)
-    end)
+    local scroll = ns.UI.CreateCustomScroll(panel)
+    scroll.container:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -32)
+    scroll.container:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -8, 8)
 
     return {
         panel       = panel,
         title       = title,
-        scrollFrame = scrollFrame,
-        scrollChild = scrollChild,
+        scrollFrame = scroll.scrollFrame,
+        scrollChild = scroll.scrollChild,
     }
 end
 
@@ -137,9 +102,13 @@ function ns.UI.CreateRoutinesTab(parent)
     emptyText:SetTextColor(T("TEXT_MUTED"))
 
     local function ClearDetailContent()
-        for _, child in ipairs({detailScrollChild:GetChildren()}) do
-            child:Hide()
-            child:ClearAllPoints()
+        if lib then
+            lib:ClearFrame(detailScrollChild)
+        else
+            for _, child in ipairs({detailScrollChild:GetChildren()}) do
+                child:Hide()
+                child:ClearAllPoints()
+            end
         end
     end
 
@@ -213,20 +182,10 @@ function ns.UI.CreateRoutinesTab(parent)
             end})
         end)
 
-        local titleEditBox = CreateFrame("EditBox", nil, headerFrame, "BackdropTemplate")
-        titleEditBox:SetSize(300, 25)
+        local titleEditBox = lib:CreateEditBox(nil, headerFrame, { height = 25, width = 300 })
         titleEditBox:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 10, -12)
-        titleEditBox:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        titleEditBox:SetBackdropColor(T("BG_TERTIARY"))
-        titleEditBox:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-        titleEditBox:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
-        titleEditBox:SetTextColor(T("TEXT_PRIMARY"))
-        titleEditBox:SetTextInsets(8, 8, 0, 0)
         titleEditBox:SetAutoFocus(false)
+        titleEditBox:SetTextColor(T("TEXT_PRIMARY"))
         titleEditBox:SetText(routine.title or "")
         titleEditBox:SetScript("OnEnterPressed", function(self)
             self:ClearFocus()
@@ -237,6 +196,12 @@ function ns.UI.CreateRoutinesTab(parent)
         end)
         titleEditBox:SetScript("OnEscapePressed", function(self)
             self:ClearFocus()
+        end)
+        titleEditBox:SetScript("OnEditFocusGained", function(self)
+            self:SetTextColor(T("TEXT_PRIMARY"))
+        end)
+        titleEditBox:SetScript("OnEditFocusLost", function(self)
+            self:SetTextColor(T("TEXT_PRIMARY"))
         end)
 
         yOffset = yOffset - 55
@@ -350,15 +315,14 @@ function ns.UI.CreateRoutinesTab(parent)
                 local prog = ns.RoutinesData:GetProgress(routineID, section.key, task.key)
                 local isComplete = not task.noMax and prog >= task.max
 
-                local dot = taskRow:CreateTexture(nil, "ARTWORK")
-                dot:SetSize(8, 8)
+                local dot = lib:CreateStatusDot(taskRow, { size = 8 })
                 dot:SetPoint("LEFT", taskRow, "LEFT", 4, 0)
                 if isComplete then
-                    dot:SetColorTexture(0.2, 0.8, 0.3, 1)
+                    dot:SetVertexColor(0.2, 0.8, 0.3, 1)
                 elseif prog > 0 then
-                    dot:SetColorTexture(0.9, 0.7, 0.2, 1)
+                    dot:SetVertexColor(0.9, 0.7, 0.2, 1)
                 else
-                    dot:SetColorTexture(0.35, 0.35, 0.35, 1)
+                    dot:SetVertexColor(0.35, 0.35, 0.35, 1)
                 end
 
                 local taskLabel = taskRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -505,10 +469,8 @@ function ns.UI.CreateRoutinesTab(parent)
             end
 
             if routine.pinned then
-                local pinDot = row:CreateTexture(nil, "OVERLAY")
-                pinDot:SetSize(8, 8)
+                local pinDot = lib:CreateStatusDot(row, { size = 8 })
                 pinDot:SetPoint("TOPLEFT", row, "TOPLEFT", 4, -4)
-                pinDot:SetTexture("Interface\\Buttons\\WHITE8x8")
                 pinDot:SetVertexColor(T("ACCENT_HIGHLIGHT"))
             end
 
@@ -737,25 +699,23 @@ function ns.UI.ShowRoutineSectionEditorDialog(routineID, callback)
     nameLabel:SetText(L["ROUTINES_SECTION_LABEL"])
     nameLabel:SetTextColor(T("TEXT_PRIMARY"))
 
-    local nameBox = CreateFrame("EditBox", nil, content, "BackdropTemplate")
-    nameBox:SetSize(200, 25)
+    local nameBox = lib:CreateEditBox(nil, content, { height = 25, width = 200 })
     nameBox:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -4)
-    nameBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    nameBox:SetBackdropColor(T("BG_TERTIARY"))
-    nameBox:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    nameBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    nameBox:SetTextColor(T("TEXT_PRIMARY"))
-    nameBox:SetTextInsets(8, 8, 0, 0)
     nameBox:SetAutoFocus(false)
+    nameBox:SetTextColor(T("TEXT_PRIMARY"))
     nameBox:SetScript("OnTextChanged", function(self)
         dialog._labelText = self:GetText() or ""
     end)
     nameBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     nameBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    nameBox:SetScript("OnEditFocusGained", function(self)
+        self:SetTextColor(T("TEXT_PRIMARY"))
+    end)
+    nameBox:SetScript("OnEditFocusLost", function(self)
+        if self:GetText() == "" then
+            self:SetTextColor(T("TEXT_PRIMARY"))
+        end
+    end)
 
     dialog:Show()
     dialog:Raise()
@@ -829,45 +789,41 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     nameLabel:SetText(L["ROUTINES_TASK_LABEL"])
     nameLabel:SetTextColor(T("TEXT_PRIMARY"))
 
-    local nameBox = CreateFrame("EditBox", nil, content, "BackdropTemplate")
-    nameBox:SetSize(260, 25)
+    local nameBox = lib:CreateEditBox(nil, content, { height = 25, width = 260 })
     nameBox:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -4)
-    nameBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    nameBox:SetBackdropColor(T("BG_TERTIARY"))
-    nameBox:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    nameBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    nameBox:SetTextColor(T("TEXT_PRIMARY"))
-    nameBox:SetTextInsets(8, 8, 0, 0)
     nameBox:SetAutoFocus(false)
+    nameBox:SetTextColor(T("TEXT_PRIMARY"))
     nameBox:SetScript("OnTextChanged", function(self) dialog._taskLabel = self:GetText() or "" end)
     nameBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    nameBox:SetScript("OnEditFocusGained", function(self)
+        self:SetTextColor(T("TEXT_PRIMARY"))
+    end)
+    nameBox:SetScript("OnEditFocusLost", function(self)
+        if self:GetText() == "" then
+            self:SetTextColor(T("TEXT_PRIMARY"))
+        end
+    end)
 
     local maxLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     maxLabel:SetPoint("TOPLEFT", nameBox, "BOTTOMLEFT", 0, -10)
     maxLabel:SetText(L["ROUTINES_TASK_MAX"])
     maxLabel:SetTextColor(T("TEXT_PRIMARY"))
 
-    local maxBox = CreateFrame("EditBox", nil, content, "BackdropTemplate")
-    maxBox:SetSize(80, 25)
+    local maxBox = lib:CreateEditBox(nil, content, { height = 25, width = 80 })
     maxBox:SetPoint("TOPLEFT", maxLabel, "BOTTOMLEFT", 0, -4)
-    maxBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    maxBox:SetBackdropColor(T("BG_TERTIARY"))
-    maxBox:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    maxBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    maxBox:SetTextColor(T("TEXT_PRIMARY"))
-    maxBox:SetTextInsets(8, 8, 0, 0)
     maxBox:SetAutoFocus(false)
+    maxBox:SetTextColor(T("TEXT_PRIMARY"))
     maxBox:SetText("1")
     maxBox:SetScript("OnTextChanged", function(self) dialog._taskMax = self:GetText() or "1" end)
     maxBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    maxBox:SetScript("OnEditFocusGained", function(self)
+        self:SetTextColor(T("TEXT_PRIMARY"))
+    end)
+    maxBox:SetScript("OnEditFocusLost", function(self)
+        if self:GetText() == "" then
+            self:SetTextColor(T("TEXT_PRIMARY"))
+        end
+    end)
 
     local trackLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     trackLabel:SetPoint("TOPLEFT", maxBox, "BOTTOMLEFT", 0, -10)
@@ -886,24 +842,12 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     })
     trackDD:SetSelected("manual")
 
-    local justTrackCheckbox = CreateFrame("CheckButton", nil, content, "BackdropTemplate")
-    justTrackCheckbox:SetSize(20, 20)
+    local justTrackCheckbox = lib:CreateCheckbox(nil, content, L["ROUTINES_JUST_TRACK"])
     justTrackCheckbox:SetPoint("TOPLEFT", trackDD, "BOTTOMLEFT", 0, -10)
-    justTrackCheckbox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    justTrackCheckbox:SetBackdropColor(T("BG_TERTIARY"))
-    justTrackCheckbox:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    justTrackCheckbox:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
     justTrackCheckbox:Hide()
-
-    local justTrackLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    justTrackLabel:SetPoint("LEFT", justTrackCheckbox, "RIGHT", 6, 0)
-    justTrackLabel:SetText(L["ROUTINES_JUST_TRACK"])
-    justTrackLabel:SetTextColor(T("TEXT_PRIMARY"))
-    justTrackLabel:Hide()
+    if justTrackCheckbox.label then
+        justTrackCheckbox.label:Hide()
+    end
 
     justTrackCheckbox:SetScript("OnClick", function(self)
         dialog._noMax = self:GetChecked()
@@ -921,20 +865,18 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     questLabel:SetText(L["ROUTINES_QUEST_IDS"] .. " / " .. L["ROUTINES_CURRENCY_ID"] .. " / " .. L["ROUTINES_FACTION_ID"])
     questLabel:SetTextColor(T("TEXT_SECONDARY"))
 
-    local questBox = CreateFrame("EditBox", nil, content, "BackdropTemplate")
-    questBox:SetSize(260, 25)
+    local questBox = lib:CreateEditBox(nil, content, { height = 25, width = 260 })
     questBox:SetPoint("TOPLEFT", questLabel, "BOTTOMLEFT", 0, -4)
-    questBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    questBox:SetBackdropColor(T("BG_TERTIARY"))
-    questBox:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    questBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
-    questBox:SetTextColor(T("TEXT_PRIMARY"))
-    questBox:SetTextInsets(8, 8, 0, 0)
     questBox:SetAutoFocus(false)
+    questBox:SetTextColor(T("TEXT_PRIMARY"))
+    questBox:SetScript("OnEditFocusGained", function(self)
+        self:SetTextColor(T("TEXT_PRIMARY"))
+    end)
+    questBox:SetScript("OnEditFocusLost", function(self)
+        if self:GetText() == "" then
+            self:SetTextColor(T("TEXT_PRIMARY"))
+        end
+    end)
 
     local currencyNameLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     currencyNameLabel:SetPoint("TOPLEFT", questBox, "BOTTOMLEFT", 0, -4)
@@ -999,31 +941,31 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
         dialog._trackType = value
         if value == "currency" then
             justTrackCheckbox:Show()
-            justTrackLabel:Show()
+            if justTrackCheckbox.label then justTrackCheckbox.label:Show() end
             questLabel:SetText(L["ROUTINES_CURRENCY_ID"])
             currencyNameLabel:Show()
         elseif value == "item" then
             justTrackCheckbox:Show()
-            justTrackLabel:Show()
+            if justTrackCheckbox.label then justTrackCheckbox.label:Show() end
             questLabel:SetText(L["ROUTINES_ITEM_ID"])
             currencyNameLabel:Show()
         elseif value == "rare_quest" then
             justTrackCheckbox:Hide()
+            if justTrackCheckbox.label then justTrackCheckbox.label:Hide() end
             justTrackCheckbox:SetChecked(false)
             dialog._noMax = false
             maxLabel:Hide()
             maxBox:Hide()
-            justTrackLabel:Hide()
             questLabel:SetText("Rare Quest ID")
             currencyNameLabel:SetText("")
             currencyNameLabel:Hide()
         else
             justTrackCheckbox:Hide()
+            if justTrackCheckbox.label then justTrackCheckbox.label:Hide() end
             justTrackCheckbox:SetChecked(false)
             dialog._noMax = false
             maxLabel:Show()
             maxBox:Show()
-            justTrackLabel:Hide()
             if value == "quest" then
                 questLabel:SetText(L["ROUTINES_QUEST_IDS"])
             elseif value == "reputation" then
@@ -1087,21 +1029,21 @@ function ns.UI.ShowRoutineImportDialog(callback)
     boxContainer:SetBackdropColor(T("BG_TERTIARY"))
     boxContainer:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local scrollFrame = CreateFrame("ScrollFrame", nil, boxContainer, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", boxContainer, "TOPLEFT", 4, -4)
-    scrollFrame:SetPoint("BOTTOMRIGHT", boxContainer, "BOTTOMRIGHT", -24, 4)
+    local importScroll = ns.UI.CreateCustomScroll(boxContainer)
+    importScroll.container:SetPoint("TOPLEFT", boxContainer, "TOPLEFT", 4, -4)
+    importScroll.container:SetPoint("BOTTOMRIGHT", boxContainer, "BOTTOMRIGHT", -4, 4)
 
-    local importBox = CreateFrame("EditBox", nil, scrollFrame)
-    importBox:SetSize(scrollFrame:GetWidth(), 1)
+    local importBox = CreateFrame("EditBox", nil, importScroll.scrollFrame)
+    importBox:SetSize(importScroll.scrollFrame:GetWidth(), 1)
     importBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
     importBox:SetTextColor(T("TEXT_PRIMARY"))
     importBox:SetTextInsets(4, 4, 4, 4)
     importBox:SetAutoFocus(false)
     importBox:SetMultiLine(true)
     importBox:SetScript("OnTextChanged", function(self)
-        self:SetWidth(scrollFrame:GetWidth())
+        self:SetWidth(importScroll.scrollFrame:GetWidth())
     end)
-    scrollFrame:SetScrollChild(importBox)
+    importScroll.scrollFrame:SetScrollChild(importBox)
     dialog._importBox = importBox
 
     dialog:Show()
@@ -1141,21 +1083,21 @@ function ns.UI.ShowRoutineExportDialog(exportStr)
     boxContainer:SetBackdropColor(T("BG_TERTIARY"))
     boxContainer:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local scrollFrame = CreateFrame("ScrollFrame", nil, boxContainer, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", boxContainer, "TOPLEFT", 4, -4)
-    scrollFrame:SetPoint("BOTTOMRIGHT", boxContainer, "BOTTOMRIGHT", -24, 4)
+    local exportScroll = ns.UI.CreateCustomScroll(boxContainer)
+    exportScroll.container:SetPoint("TOPLEFT", boxContainer, "TOPLEFT", 4, -4)
+    exportScroll.container:SetPoint("BOTTOMRIGHT", boxContainer, "BOTTOMRIGHT", -4, 4)
 
-    local exportBox = CreateFrame("EditBox", nil, scrollFrame)
-    exportBox:SetSize(scrollFrame:GetWidth(), 1)
+    local exportBox = CreateFrame("EditBox", nil, exportScroll.scrollFrame)
+    exportBox:SetSize(exportScroll.scrollFrame:GetWidth(), 1)
     exportBox:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
     exportBox:SetTextColor(T("TEXT_PRIMARY"))
     exportBox:SetTextInsets(4, 4, 4, 4)
     exportBox:SetAutoFocus(false)
     exportBox:SetMultiLine(true)
     exportBox:SetScript("OnTextChanged", function(self)
-        self:SetWidth(scrollFrame:GetWidth())
+        self:SetWidth(exportScroll.scrollFrame:GetWidth())
     end)
-    scrollFrame:SetScrollChild(exportBox)
+    exportScroll.scrollFrame:SetScrollChild(exportBox)
     exportBox:SetText(exportStr or "")
     exportBox:HighlightText()
 

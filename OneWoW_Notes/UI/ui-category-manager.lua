@@ -125,6 +125,8 @@ local function RemoveCustomCategory(sectionKey, categoryName)
 end
 
 function ns.UI.ShowCategoryManager(initialSection)
+    local lib = LibStub("OneWoW_GUI-1.0", true)
+
     local dialog = ns.UI.CreateThemedDialog({
         name           = "OneWoW_NotesCategoryManager",
         title          = L["CATMGR_TITLE"],
@@ -142,7 +144,6 @@ function ns.UI.ShowCategoryManager(initialSection)
     local content = dialog.content
     local currentSection = initialSection or "notes"
     local categoryRows = {}
-    local scrollChild = nil
 
     local sectionBtnContainer = CreateFrame("Frame", nil, content)
     sectionBtnContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 8, -8)
@@ -189,101 +190,11 @@ function ns.UI.ShowCategoryManager(initialSection)
     statusLabel:SetTextColor(T("TEXT_SECONDARY"))
     statusLabel:SetText("")
 
-    local scrollContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    scrollContainer:SetPoint("TOPLEFT", addContainer, "BOTTOMLEFT", 0, -22)
-    scrollContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -8, 4)
-    scrollContainer:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    scrollContainer:SetBackdropColor(T("BG_SECONDARY"))
-    scrollContainer:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    local scroll = ns.UI.CreateCustomScroll(content)
+    scroll.container:SetPoint("TOPLEFT", addContainer, "BOTTOMLEFT", 0, -22)
+    scroll.container:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -8, 4)
 
-    local TRACK_WIDTH = 10
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, scrollContainer)
-    scrollFrame:SetPoint("TOPLEFT", scrollContainer, "TOPLEFT", 2, -2)
-    scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", -TRACK_WIDTH - 2, 2)
-    scrollFrame:EnableMouseWheel(true)
-
-    local scrollTrack = CreateFrame("Frame", nil, scrollContainer, "BackdropTemplate")
-    scrollTrack:SetPoint("TOPRIGHT", scrollContainer, "TOPRIGHT", -2, -2)
-    scrollTrack:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", -2, 2)
-    scrollTrack:SetWidth(8)
-    scrollTrack:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    scrollTrack:SetBackdropColor(T("BG_TERTIARY"))
-
-    local scrollThumb = CreateFrame("Frame", nil, scrollTrack, "BackdropTemplate")
-    scrollThumb:SetWidth(6)
-    scrollThumb:SetHeight(30)
-    scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, 0)
-    scrollThumb:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    scrollThumb:SetBackdropColor(T("ACCENT_PRIMARY"))
-
-    scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetWidth(scrollFrame:GetWidth())
-    scrollChild:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    local function UpdateThumb()
-        local scrollRange = scrollFrame:GetVerticalScrollRange()
-        local scroll      = scrollFrame:GetVerticalScroll()
-        local frameH      = scrollFrame:GetHeight()
-        local contentH    = scrollChild:GetHeight()
-        if scrollRange <= 0 or contentH <= 0 then
-            scrollThumb:SetHeight(scrollTrack:GetHeight())
-            scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, 0)
-            return
-        end
-        local trackH  = scrollTrack:GetHeight()
-        local thumbH  = math.max(20, (frameH / contentH) * trackH)
-        scrollThumb:SetHeight(thumbH)
-        local maxOffset = trackH - thumbH
-        local pct       = scroll / scrollRange
-        scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, -(pct * maxOffset))
-    end
-
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local current   = self:GetVerticalScroll()
-        local maxScroll = self:GetVerticalScrollRange()
-        if delta > 0 then
-            self:SetVerticalScroll(math.max(0, current - 30))
-        else
-            self:SetVerticalScroll(math.min(maxScroll, current + 30))
-        end
-        UpdateThumb()
-    end)
-
-    scrollFrame:SetScript("OnVerticalScroll", function() UpdateThumb() end)
-
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
-        scrollChild:SetWidth(w)
-        UpdateThumb()
-    end)
-
-    scrollThumb:EnableMouse(true)
-    scrollThumb:RegisterForDrag("LeftButton")
-    scrollThumb:SetScript("OnMouseDown", function(self)
-        self.dragging = true
-        self.dragStartY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        self.dragStartScroll = scrollFrame:GetVerticalScroll()
-    end)
-    scrollThumb:SetScript("OnMouseUp",  function(self) self.dragging = false end)
-    scrollThumb:SetScript("OnDragStop", function(self) self.dragging = false end)
-    scrollThumb:SetScript("OnUpdate", function(self)
-        if not self.dragging then return end
-        local curY      = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        local delta     = self.dragStartY - curY
-        local trackH    = scrollTrack:GetHeight()
-        local thumbH    = self:GetHeight()
-        local maxOffset = trackH - thumbH
-        if maxOffset <= 0 then return end
-        local scrollRange = scrollFrame:GetVerticalScrollRange()
-        local newScroll   = self.dragStartScroll + (delta / maxOffset) * scrollRange
-        scrollFrame:SetVerticalScroll(math.max(0, math.min(scrollRange, newScroll)))
-        UpdateThumb()
-    end)
+    local scrollChild = scroll.scrollChild
 
     local function RefreshCategoryList()
         for _, row in ipairs(categoryRows) do
@@ -375,8 +286,8 @@ function ns.UI.ShowCategoryManager(initialSection)
         end
 
         scrollChild:SetHeight(math.max(1, yPos))
-        scrollFrame:SetVerticalScroll(0)
-        UpdateThumb()
+        scroll.scrollFrame:SetVerticalScroll(0)
+        scroll.UpdateThumb()
     end
 
     local function SetActiveSection(sectionKey)

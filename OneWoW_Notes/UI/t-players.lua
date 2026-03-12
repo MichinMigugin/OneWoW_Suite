@@ -7,6 +7,8 @@ local T = ns.T
 
 ns.UI = ns.UI or {}
 
+local lib = LibStub("OneWoW_GUI-1.0", true)
+
 local selectedPlayer  = nil
 local playerListItems = {}
 local categoryFilter  = "All"
@@ -20,28 +22,39 @@ local scrollChild    = nil
 
 local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
 
+local BACKDROP_STANDARD = {
+    bgFile = "Interface\\Buttons\\WHITE8x8",
+    edgeFile = "Interface\\Buttons\\WHITE8x8",
+    tile = true, tileSize = 16, edgeSize = 1,
+}
+
+local function CreateThemedPanel(name, parentFrame)
+    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
+    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdropColor(T("BG_PRIMARY"))
+    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    return f
+end
+
+local function CreateThemedBar(name, parentFrame)
+    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
+    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdropColor(T("BG_SECONDARY"))
+    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    return f
+end
+
 function ns.UI.CreatePlayersTab(parent)
-    -- =============================================
-    -- CONTROL PANEL
-    -- =============================================
-    local controlPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local controlPanel = CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(75)
-    controlPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    controlPanel:SetBackdropColor(T("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["PLAYERS_CONTROLS"] or "Players Controls")
     controlTitle:SetTextColor(T("TEXT_SECONDARY"))
 
-    -- Add Target (player)
     local addTargetBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_TARGET"] or "Add Target", 100, 25)
     ns.UI.AutoResizeButton(addTargetBtn, 80, 200)
     addTargetBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
@@ -70,7 +83,6 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addTargetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    -- Manual entry
     local addManualBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_MANUAL_ENTRY"] or "Manual", 90, 25)
     ns.UI.AutoResizeButton(addManualBtn, 70, 200)
     addManualBtn:SetPoint("LEFT", addTargetBtn, "RIGHT", 5, 0)
@@ -132,7 +144,6 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addGuildBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    -- Category dropdown
     local catDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
     catDD:SetPoint("LEFT", addGuildBtn, "RIGHT", 8, 0)
     local function RefreshCatOpts()
@@ -172,7 +183,6 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-    -- Storage dropdown
     local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storeDD:SetOptions({
@@ -186,7 +196,6 @@ function ns.UI.CreatePlayersTab(parent)
         parent.RefreshPlayersList()
     end
 
-    -- Help button
     local helpButton = CreateFrame("Button", nil, controlPanel)
     helpButton:SetSize(28, 28)
     helpButton:SetPoint("TOPRIGHT", controlPanel, "TOPRIGHT", -10, -10)
@@ -214,20 +223,10 @@ function ns.UI.CreatePlayersTab(parent)
         end
     end)
 
-    -- =============================================
-    -- LISTING PANEL
-    -- =============================================
-    local listingPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local listingPanel = CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT",  controlPanel, "BOTTOMLEFT",  0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent,     "BOTTOMLEFT",  0, 35)
     listingPanel:SetWidth(258)
-    listingPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    listingPanel:SetBackdropColor(T("BG_PRIMARY"))
-    listingPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
@@ -240,66 +239,36 @@ function ns.UI.CreatePlayersTab(parent)
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -40)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
-    -- =============================================
-    -- DETAIL PANEL
-    -- =============================================
-    detailPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    detailPanel = CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT",     listingPanel, "TOPRIGHT",    10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent,       "BOTTOMRIGHT",  0, 35)
     detailPanel:SetClipsChildren(true)
-    detailPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    detailPanel:SetBackdropColor(T("BG_PRIMARY"))
-    detailPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     emptyMessage = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["PLAYERS_SELECT"] or "Select a player to view their note.")
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
 
-    -- =============================================
-    -- STATUS BARS
-    -- =============================================
-    local leftStatusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local leftStatusBar = CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT",  listingPanel, "BOTTOMLEFT",  0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
-    leftStatusBar:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    leftStatusBar:SetBackdropColor(T("BG_SECONDARY"))
-    leftStatusBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
     leftStatusText:SetTextColor(T("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_PLAYERS"], 0))
 
-    local rightStatusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local rightStatusBar = CreateThemedBar(nil, parent)
     rightStatusBar:SetPoint("TOPLEFT",     detailPanel, "BOTTOMLEFT",  0, -5)
     rightStatusBar:SetPoint("TOPRIGHT",    detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
-    rightStatusBar:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    rightStatusBar:SetBackdropColor(T("BG_SECONDARY"))
-    rightStatusBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(T("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
 
-    -- =============================================
-    -- SHOW EDITOR
-    -- =============================================
     local function ShowEditor()
         emptyMessage:Hide()
         for _, child in ipairs({detailPanel:GetChildren()}) do
@@ -307,19 +276,11 @@ function ns.UI.CreatePlayersTab(parent)
         end
 
         if not detailPanel.editorContent then
-            local editorHeader = CreateFrame("Frame", nil, detailPanel, "BackdropTemplate")
+            local editorHeader = CreateThemedBar(nil, detailPanel)
             editorHeader:SetPoint("TOPLEFT",  detailPanel, "TOPLEFT",  10, -10)
             editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
             editorHeader:SetHeight(95)
-            editorHeader:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
-            editorHeader:SetBackdropColor(T("BG_SECONDARY"))
-            editorHeader:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-            -- Name-Realm line
             local nameServerLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
             nameServerLine:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 12, -12)
             nameServerLine:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -100, -12)
@@ -328,21 +289,18 @@ function ns.UI.CreatePlayersTab(parent)
             nameServerLine:SetTextColor(T("ACCENT_PRIMARY"))
             editorHeader.nameServerLine = nameServerLine
 
-            -- Level/class/race line
             local levelClassRaceLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             levelClassRaceLine:SetPoint("TOPLEFT", nameServerLine, "BOTTOMLEFT", 0, -4)
             levelClassRaceLine:SetText("")
             levelClassRaceLine:SetTextColor(T("TEXT_SECONDARY"))
             editorHeader.levelClassRaceLine = levelClassRaceLine
 
-            -- Guild line
             local guildLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             guildLine:SetPoint("TOPLEFT", levelClassRaceLine, "BOTTOMLEFT", 0, -2)
             guildLine:SetText("")
             guildLine:SetTextColor(T("TEXT_MUTED"))
             editorHeader.guildLine = guildLine
 
-            -- Category line (bottom-right)
             local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
             categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
@@ -350,7 +308,6 @@ function ns.UI.CreatePlayersTab(parent)
             categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
 
-            -- Delete button
             local deleteBtn = CreateFrame("Button", nil, editorHeader)
             deleteBtn:SetSize(22, 22)
             deleteBtn:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -12, -12)
@@ -390,7 +347,6 @@ function ns.UI.CreatePlayersTab(parent)
             deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.deleteBtn = deleteBtn
 
-            -- Properties button
             local propertiesBtn = CreateFrame("Button", nil, editorHeader)
             propertiesBtn:SetSize(22, 22)
             propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
@@ -412,7 +368,6 @@ function ns.UI.CreatePlayersTab(parent)
             propertiesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.propertiesBtn = propertiesBtn
 
-            -- Alert button
             local alertBtn = CreateFrame("CheckButton", nil, editorHeader)
             alertBtn:SetSize(22, 22)
             alertBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -2, 0)
@@ -449,7 +404,6 @@ function ns.UI.CreatePlayersTab(parent)
             alertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.alertBtn = alertBtn
 
-            -- Favorite button
             local favoriteBtn = CreateFrame("CheckButton", nil, editorHeader)
             favoriteBtn:SetSize(22, 22)
             favoriteBtn:SetPoint("RIGHT", alertBtn, "LEFT", -2, 0)
@@ -490,18 +444,10 @@ function ns.UI.CreatePlayersTab(parent)
             favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.favoriteBtn = favoriteBtn
 
-            -- Content editbox area
-            local contentBg = CreateFrame("Frame", nil, detailPanel, "BackdropTemplate")
+            local contentBg = CreateThemedBar(nil, detailPanel)
             contentBg:SetPoint("TOPLEFT",  editorHeader, "BOTTOMLEFT",  0, -10)
             contentBg:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -10)
             contentBg:SetHeight(160)
-            contentBg:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
-            contentBg:SetBackdropColor(T("BG_SECONDARY"))
-            contentBg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
             contentBg:EnableMouse(true)
 
             local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
@@ -548,17 +494,9 @@ function ns.UI.CreatePlayersTab(parent)
                 end
             end)
 
-            -- Tooltip lines section
-            local tooltipSection = CreateFrame("Frame", nil, detailPanel, "BackdropTemplate")
+            local tooltipSection = CreateThemedBar(nil, detailPanel)
             tooltipSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
             tooltipSection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -10)
-            tooltipSection:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
-            tooltipSection:SetBackdropColor(T("BG_SECONDARY"))
-            tooltipSection:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
             local ttLabel = tooltipSection:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
@@ -567,12 +505,14 @@ function ns.UI.CreatePlayersTab(parent)
 
             local tooltipEdits = {}
             for i = 1, 4 do
-                local edit = CreateFrame("EditBox", nil, tooltipSection, "InputBoxTemplate")
-                edit:SetHeight(22)
+                local edit = lib:CreateEditBox(nil, tooltipSection, {
+                    height = 22,
+                    maxLetters = 255,
+                })
+                edit:ClearAllPoints()
                 edit:SetPoint("TOPLEFT",  tooltipSection, "TOPLEFT",  10, -30 - (i - 1) * 28)
                 edit:SetPoint("TOPRIGHT", tooltipSection, "TOPRIGHT", -10, -30 - (i - 1) * 28)
                 edit:SetAutoFocus(false)
-                edit:SetMaxLetters(255)
                 edit:SetHyperlinksEnabled(true)
                 edit:SetScript("OnHyperlinkClick", function(self, link, text, button)
                     SetItemRef(link, text, button)
@@ -611,13 +551,11 @@ function ns.UI.CreatePlayersTab(parent)
             }
         end
 
-        -- Show all editor content
         for _, f in pairs(detailPanel.editorContent) do
             if f and f.Show then f:Show() end
         end
         if detailPanel.contentEditBox then detailPanel.contentEditBox:Show() end
 
-        -- Populate
         if selectedPlayer and ns.Players then
             local pd = ns.Players:GetPlayer(selectedPlayer)
             if pd then
@@ -678,7 +616,6 @@ function ns.UI.CreatePlayersTab(parent)
         end
     end
 
-    -- SelectPlayer function
     function parent.SelectPlayer(fullName)
         selectedPlayer = fullName
         ShowEditor()
@@ -694,25 +631,13 @@ function ns.UI.CreatePlayersTab(parent)
         end
     end)
 
-    -- =============================================
-    -- RefreshPlayersList
-    -- =============================================
     local function CreateSectionHeader(text, yPos)
-        local header = CreateFrame("Frame", nil, scrollChild)
-        header:SetSize(scrollChild:GetWidth(), 25)
-        header:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
-        local bg = header:CreateTexture(nil, "BACKGROUND")
-        bg:SetAllPoints() bg:SetAtlas("UI-CastingBar-Background")
-        local fr = header:CreateTexture(nil, "BORDER")
-        fr:SetAllPoints() fr:SetAtlas("UI-CastingBar-Full-Glow-Standard")
-        local tint = header:CreateTexture(nil, "ARTWORK")
-        tint:SetAllPoints() tint:SetColorTexture(0, 0, 0, 0.4)
-        local hText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        hText:SetPoint("CENTER", header, "CENTER")
-        hText:SetText(text)
-        hText:SetTextColor(1, 0.82, 0)
-        table.insert(playerListItems, header)
-        return header
+        local section = lib:CreateSectionHeader(scrollChild, text, yPos)
+        section:ClearAllPoints()
+        section:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
+        section:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yPos)
+        table.insert(playerListItems, section)
+        return section
     end
 
     function parent.RefreshPlayersList()
@@ -767,15 +692,10 @@ function ns.UI.CreatePlayersTab(parent)
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
             row:SetSize(scrollChild:GetWidth(), 50)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
-            row:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
+            row:SetBackdrop(BACKDROP_STANDARD)
             row:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
             row:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
 
-            -- Player name
             local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             nameText:SetPoint("TOPLEFT",  row, "TOPLEFT",  10, -10)
             nameText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -10)
@@ -783,7 +703,6 @@ function ns.UI.CreatePlayersTab(parent)
             nameText:SetText(player.data.name or player.fullName)
             nameText:SetTextColor(borderColor[1], borderColor[2], borderColor[3])
 
-            -- Realm/class sub-line
             local subText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             subText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 10, 8)
             local sub = ""
@@ -792,7 +711,6 @@ function ns.UI.CreatePlayersTab(parent)
             subText:SetText(sub)
             subText:SetTextColor(T("TEXT_MUTED"))
 
-            -- Delete
             local deleteBtn = CreateFrame("Button", nil, row)
             deleteBtn:SetSize(18, 18)
             deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -5, 5)
@@ -824,7 +742,6 @@ function ns.UI.CreatePlayersTab(parent)
                 StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_PLAYER")
             end)
 
-            -- Properties
             local propBtn = CreateFrame("Button", nil, row)
             propBtn:SetSize(18, 18)
             propBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
@@ -836,7 +753,6 @@ function ns.UI.CreatePlayersTab(parent)
                 if ns.UI.ShowPlayerPropertiesDialog then ns.UI.ShowPlayerPropertiesDialog(player.fullName, parent) end
             end)
 
-            -- Alert
             local alertBtn2 = CreateFrame("CheckButton", nil, row)
             alertBtn2:SetSize(18, 18)
             alertBtn2:SetPoint("RIGHT", propBtn, "LEFT", -2, 0)
@@ -865,7 +781,6 @@ function ns.UI.CreatePlayersTab(parent)
                 end
             end)
 
-            -- Favorite
             local favBtn2 = CreateFrame("CheckButton", nil, row)
             favBtn2:SetSize(18, 18)
             favBtn2:SetPoint("RIGHT", alertBtn2, "LEFT", -2, 0)
@@ -957,35 +872,32 @@ local CLASS_DISPLAY_NAMES = {
     EVOKER = "Evoker"
 }
 
-local function MakeDialogLabel(parent, text, x, y)
-    local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    lbl:SetText(text)
-    lbl:SetTextColor(T("TEXT_SECONDARY"))
-    return lbl
-end
-
-local function MakeDialogInput(parent, x, y, w)
-    local input = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
-    input:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    input:SetSize(w, 26)
-    input:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    input:SetBackdropColor(T("BG_SECONDARY"))
-    input:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    input:SetFontObject("GameFontNormal")
-    input:SetTextColor(T("TEXT_PRIMARY"))
-    input:SetTextInsets(6, 6, 4, 4)
-    input:SetAutoFocus(false)
-    input:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    input:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    return input
-end
-
 local PLAYER_PROFESSIONS = {
     "None", "Alchemy", "Blacksmithing", "Enchanting", "Engineering",
     "Herbalism", "Inscription", "Jewelcrafting", "Leatherworking",
     "Mining", "Skinning", "Tailoring",
 }
+
+local function MakeDialogLabel(parentFrame, text, x, y)
+    local lbl = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    lbl:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", x, y)
+    lbl:SetText(text)
+    lbl:SetTextColor(T("TEXT_SECONDARY"))
+    return lbl
+end
+
+local function MakeDialogInput(parentFrame, x, y, w)
+    local input = lib:CreateEditBox(nil, parentFrame, {
+        width = w,
+        height = 26,
+    })
+    input:ClearAllPoints()
+    input:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", x, y)
+    input:SetAutoFocus(false)
+    input:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    input:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    return input
+end
 
 function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     local COL1_X = 10
@@ -1146,16 +1058,9 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     MakeDialogLabel(content, L["LABEL_NOTE_CONTENT"] or "Note:", COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
-    local noteBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    local noteBg = CreateThemedBar(nil, content)
     noteBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X, yPos)
     noteBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
-    noteBg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    noteBg:SetBackdropColor(T("BG_SECONDARY"))
-    noteBg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
@@ -1331,11 +1236,8 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     end
     yPos = yPos - ROW_H
 
-    local alertCB = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
-    alertCB:SetSize(22, 22)
+    local alertCB = lib:CreateCheckbox(nil, content, L["TOOLTIP_PLAYER_SOUND"] or "Alert on Target")
     alertCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
-    alertCB.Text:SetText(L["TOOLTIP_PLAYER_SOUND"] or "Alert on Target")
-    alertCB.Text:SetFontObject("GameFontNormal")
     alertCB:SetChecked(pd.soundEnabled or false)
     alertCB:SetScript("OnClick", function(self)
         SaveField("soundEnabled", self:GetChecked())
@@ -1352,16 +1254,9 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     MakeDialogLabel(content, L["LABEL_NOTE_PREVIEW"] or "Note:", COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
-    local noteBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    local noteBg = CreateThemedBar(nil, content)
     noteBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X, yPos)
     noteBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
-    noteBg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    noteBg:SetBackdropColor(T("BG_SECONDARY"))
-    noteBg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)

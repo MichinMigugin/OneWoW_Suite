@@ -8,6 +8,8 @@ local S = ns.S
 
 ns.UI = ns.UI or {}
 
+local lib = LibStub("OneWoW_GUI-1.0", true)
+
 local selectedItem  = nil
 local itemListItems = {}
 local categoryFilter = "All"
@@ -22,23 +24,35 @@ local todoContainer  = nil
 
 local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
 
+local BACKDROP_STANDARD = {
+    bgFile = "Interface\\Buttons\\WHITE8x8",
+    edgeFile = "Interface\\Buttons\\WHITE8x8",
+    tile = true, tileSize = 16, edgeSize = 1,
+}
+
+local function CreateThemedPanel(name, parentFrame)
+    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
+    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdropColor(T("BG_PRIMARY"))
+    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    return f
+end
+
+local function CreateThemedBar(name, parentFrame)
+    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
+    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdropColor(T("BG_SECONDARY"))
+    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    return f
+end
+
 function ns.UI.CreateItemsTab(parent)
     local addon = _G.OneWoW_Notes
 
-    -- =============================================
-    -- CONTROL PANEL
-    -- =============================================
-    local controlPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local controlPanel = CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(75)
-    controlPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    controlPanel:SetBackdropColor(T("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
     controlPanel:EnableMouse(true)
 
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -46,7 +60,6 @@ function ns.UI.CreateItemsTab(parent)
     controlTitle:SetText(L["ITEMS_CONTROLS"])
     controlTitle:SetTextColor(T("TEXT_SECONDARY"))
 
-    -- Add Item button (drag-to-add)
     local addItemBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_ITEM"], 100, 25)
     ns.UI.AutoResizeButton(addItemBtn, 80, 200)
     addItemBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
@@ -86,7 +99,6 @@ function ns.UI.CreateItemsTab(parent)
     end)
     addItemBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    -- Drop zone highlight
     controlPanel:SetScript("OnReceiveDrag", function()
         local cursorType, itemID = GetCursorInfo()
         if cursorType == "item" and itemID and ns.Items then
@@ -105,7 +117,6 @@ function ns.UI.CreateItemsTab(parent)
         controlPanel:SetBackdropColor(T("BG_SECONDARY"))
     end)
 
-    -- Add by ID button
     local addByIDBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_BY_ID"] or "Add by ID", 90, 25)
     ns.UI.AutoResizeButton(addByIDBtn, 70, 200)
     addByIDBtn:SetPoint("LEFT", addItemBtn, "RIGHT", 5, 0)
@@ -122,7 +133,6 @@ function ns.UI.CreateItemsTab(parent)
     end)
     addByIDBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    -- Category dropdown
     local catDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
     catDD:SetPoint("LEFT", addByIDBtn, "RIGHT", 8, 0)
     local function RefreshCatOptions()
@@ -162,7 +172,6 @@ function ns.UI.CreateItemsTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-    -- Storage dropdown
     local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storeDD:SetOptions({
@@ -176,7 +185,6 @@ function ns.UI.CreateItemsTab(parent)
         parent.RefreshItemsList()
     end
 
-    -- Help button
     local helpButton = CreateFrame("Button", nil, controlPanel)
     helpButton:SetSize(28, 28)
     helpButton:SetPoint("TOPRIGHT", controlPanel, "TOPRIGHT", -10, -10)
@@ -204,20 +212,10 @@ function ns.UI.CreateItemsTab(parent)
         end
     end)
 
-    -- =============================================
-    -- LISTING PANEL (left)
-    -- =============================================
-    local listingPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local listingPanel = CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT",  controlPanel, "BOTTOMLEFT",  0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent,     "BOTTOMLEFT",  0, 35)
     listingPanel:SetWidth(258)
-    listingPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    listingPanel:SetBackdropColor(T("BG_PRIMARY"))
-    listingPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
@@ -230,66 +228,36 @@ function ns.UI.CreateItemsTab(parent)
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -40)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
-    -- =============================================
-    -- DETAIL PANEL (right)
-    -- =============================================
-    detailPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    detailPanel = CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT",     listingPanel, "TOPRIGHT",    10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent,       "BOTTOMRIGHT",  0, 35)
     detailPanel:SetClipsChildren(true)
-    detailPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    detailPanel:SetBackdropColor(T("BG_PRIMARY"))
-    detailPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     emptyMessage = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["ITEMS_SELECT"] or "Select an item to view its note.")
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
 
-    -- =============================================
-    -- STATUS BARS
-    -- =============================================
-    local leftStatusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local leftStatusBar = CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT",  listingPanel, "BOTTOMLEFT",  0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
-    leftStatusBar:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    leftStatusBar:SetBackdropColor(T("BG_SECONDARY"))
-    leftStatusBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
     leftStatusText:SetTextColor(T("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ITEMS"], 0))
 
-    local rightStatusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local rightStatusBar = CreateThemedBar(nil, parent)
     rightStatusBar:SetPoint("TOPLEFT",     detailPanel, "BOTTOMLEFT",  0, -5)
     rightStatusBar:SetPoint("TOPRIGHT",    detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
-    rightStatusBar:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    rightStatusBar:SetBackdropColor(T("BG_SECONDARY"))
-    rightStatusBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(T("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
 
-    -- =============================================
-    -- SHOW EDITOR (lazily created)
-    -- =============================================
     local function ShowEditor()
         emptyMessage:Hide()
 
@@ -298,20 +266,11 @@ function ns.UI.CreateItemsTab(parent)
         end
 
         if not detailPanel.editorContent then
-            -- Header
-            local editorHeader = CreateFrame("Frame", nil, detailPanel, "BackdropTemplate")
+            local editorHeader = CreateThemedBar(nil, detailPanel)
             editorHeader:SetPoint("TOPLEFT",  detailPanel, "TOPLEFT",  10, -10)
             editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
             editorHeader:SetHeight(85)
-            editorHeader:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
-            editorHeader:SetBackdropColor(T("BG_SECONDARY"))
-            editorHeader:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-            -- Item icon
             local itemIconFrame = CreateFrame("Frame", nil, editorHeader)
             itemIconFrame:SetSize(48, 48)
             itemIconFrame:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 10, -10)
@@ -323,7 +282,6 @@ function ns.UI.CreateItemsTab(parent)
             itemIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
             editorHeader.itemIcon = itemIcon
 
-            -- Item name
             local nameText = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
             nameText:SetPoint("LEFT",  itemIconFrame, "RIGHT", 10, 4)
             nameText:SetPoint("RIGHT", editorHeader,  "RIGHT", -100, 0)
@@ -332,7 +290,6 @@ function ns.UI.CreateItemsTab(parent)
             nameText:SetTextColor(T("ACCENT_PRIMARY"))
             editorHeader.nameText = nameText
 
-            -- Category line
             local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
             categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
@@ -340,7 +297,6 @@ function ns.UI.CreateItemsTab(parent)
             categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
 
-            -- Delete button
             local deleteBtn = CreateFrame("Button", nil, editorHeader)
             deleteBtn:SetSize(22, 22)
             deleteBtn:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -12, -12)
@@ -380,7 +336,6 @@ function ns.UI.CreateItemsTab(parent)
             deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.deleteBtn = deleteBtn
 
-            -- Properties button
             local propertiesBtn = CreateFrame("Button", nil, editorHeader)
             propertiesBtn:SetSize(22, 22)
             propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
@@ -402,7 +357,6 @@ function ns.UI.CreateItemsTab(parent)
             propertiesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.propertiesBtn = propertiesBtn
 
-            -- Alert button
             local alertBtn = CreateFrame("CheckButton", nil, editorHeader)
             alertBtn:SetSize(22, 22)
             alertBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -2, 0)
@@ -442,7 +396,6 @@ function ns.UI.CreateItemsTab(parent)
             alertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.alertBtn = alertBtn
 
-            -- Favorite button
             local favoriteBtn = CreateFrame("CheckButton", nil, editorHeader)
             favoriteBtn:SetSize(22, 22)
             favoriteBtn:SetPoint("RIGHT", alertBtn, "LEFT", -2, 0)
@@ -487,18 +440,10 @@ function ns.UI.CreateItemsTab(parent)
             favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.favoriteBtn = favoriteBtn
 
-            -- Content editbox
-            local contentBg = CreateFrame("Frame", nil, detailPanel, "BackdropTemplate")
+            local contentBg = CreateThemedBar(nil, detailPanel)
             contentBg:SetPoint("TOPLEFT",  editorHeader, "BOTTOMLEFT",  0, -10)
             contentBg:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -10)
             contentBg:SetHeight(160)
-            contentBg:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
-            contentBg:SetBackdropColor(T("BG_SECONDARY"))
-            contentBg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
             contentBg:EnableMouse(true)
 
             local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
@@ -551,17 +496,9 @@ function ns.UI.CreateItemsTab(parent)
                 end
             end)
 
-            -- Tooltip lines section
-            local tooltipSection = CreateFrame("Frame", nil, detailPanel, "BackdropTemplate")
+            local tooltipSection = CreateThemedBar(nil, detailPanel)
             tooltipSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
             tooltipSection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -10)
-            tooltipSection:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
-            tooltipSection:SetBackdropColor(T("BG_SECONDARY"))
-            tooltipSection:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
             local ttLabel = tooltipSection:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
@@ -614,13 +551,11 @@ function ns.UI.CreateItemsTab(parent)
             }
         end
 
-        -- Show all editor content
         for _, f in pairs(detailPanel.editorContent) do
             if f and f.Show then f:Show() end
         end
         if detailPanel.contentEditBox then detailPanel.contentEditBox:Show() end
 
-        -- Populate from selected item
         if selectedItem and ns.Items then
             local itemData = ns.Items:GetItem(selectedItem)
             if itemData then
@@ -672,9 +607,6 @@ function ns.UI.CreateItemsTab(parent)
         end
     end
 
-    -- =============================================
-    -- RefreshItemsList
-    -- =============================================
     local function CreateSectionHeader(text, yPos)
         local header = CreateFrame("Frame", nil, scrollChild)
         header:SetSize(scrollChild:GetWidth(), 25)
@@ -764,21 +696,15 @@ function ns.UI.CreateItemsTab(parent)
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
             row:SetSize(scrollChild:GetWidth(), 50)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
-            row:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                tile = true, tileSize = 16, edgeSize = 1,
-            })
+            row:SetBackdrop(BACKDROP_STANDARD)
             row:SetBackdropColor(r * 0.15, g * 0.15, b * 0.15, 0.5)
             row:SetBackdropBorderColor(r, g, b, 0.8)
 
-            -- Item icon in row
             local icon = row:CreateTexture(nil, "ARTWORK")
             icon:SetSize(32, 32)
             icon:SetPoint("LEFT", row, "LEFT", 8, 0)
             icon:SetTexture(item.data.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 
-            -- Title
             local titleText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             titleText:SetPoint("TOPLEFT", row, "TOPLEFT", 48, -10)
             titleText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -10)
@@ -786,7 +712,6 @@ function ns.UI.CreateItemsTab(parent)
             titleText:SetText(item.data.name or ("Item " .. item.id))
             titleText:SetTextColor(r, g, b)
 
-            -- Delete button
             local deleteBtn = CreateFrame("Button", nil, row)
             deleteBtn:SetSize(18, 18)
             deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -5, 5)
@@ -818,7 +743,6 @@ function ns.UI.CreateItemsTab(parent)
                 StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_ITEM")
             end)
 
-            -- Properties button
             local propertiesBtn = CreateFrame("Button", nil, row)
             propertiesBtn:SetSize(18, 18)
             propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
@@ -832,7 +756,6 @@ function ns.UI.CreateItemsTab(parent)
                 end
             end)
 
-            -- Alert button
             local alertBtn = CreateFrame("CheckButton", nil, row)
             alertBtn:SetSize(18, 18)
             alertBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -2, 0)
@@ -862,7 +785,6 @@ function ns.UI.CreateItemsTab(parent)
                 end
             end)
 
-            -- Favorite button
             local favBtn = CreateFrame("CheckButton", nil, row)
             favBtn:SetSize(18, 18)
             favBtn:SetPoint("RIGHT", alertBtn, "LEFT", -2, 0)
@@ -1012,17 +934,15 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
     dialog._validatedID = nil
 
     MakeItemLabel(content, L["LABEL_ITEM_ID"] or "Item ID:", COL1_X, yPos)
-    local idInput = CreateFrame("EditBox", nil, content, "BackdropTemplate")
+
+    local idInput = lib:CreateEditBox(nil, content, {
+        width = 160,
+        height = 26,
+    })
     idInput:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - 18)
-    idInput:SetSize(160, 26)
-    idInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    idInput:SetBackdropColor(T("BG_SECONDARY"))
-    idInput:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    idInput:SetFontObject("GameFontNormal")
-    idInput:SetTextColor(T("TEXT_PRIMARY"))
-    idInput:SetTextInsets(6, 6, 4, 4)
     idInput:SetAutoFocus(true)
     idInput:SetNumeric(true)
+    idInput:SetText("")
     idInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
     idInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     dialog._idInput = idInput
@@ -1030,17 +950,10 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
     local validateBtn = ns.UI.CreateButton(nil, content, L["ITEM_VALIDATE"] or "Validate", 80, 26)
     validateBtn:SetPoint("LEFT", idInput, "RIGHT", 6, 0)
 
-    local resultFrame = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    local resultFrame = CreateThemedBar(nil, content)
     resultFrame:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - 56)
     resultFrame:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos - 56)
     resultFrame:SetHeight(40)
-    resultFrame:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    resultFrame:SetBackdropColor(T("BG_SECONDARY"))
-    resultFrame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
     resultFrame:EnableMouse(true)
     resultFrame:Hide()
     resultFrame:SetScript("OnEnter", function(self)
@@ -1189,17 +1102,10 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
         if refreshParent and refreshParent.RefreshItemsList then refreshParent.RefreshItemsList() end
     end
 
-    local itemHeader = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    local itemHeader = CreateThemedBar(nil, content)
     itemHeader:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     itemHeader:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos)
     itemHeader:SetHeight(42)
-    itemHeader:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    itemHeader:SetBackdropColor(T("BG_SECONDARY"))
-    itemHeader:SetBackdropBorderColor(T("BORDER_DEFAULT"))
     itemHeader:EnableMouse(true)
     itemHeader:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -1264,11 +1170,8 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     end
     yPos = yPos - ROW_H - 8
 
-    local alertCB = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
-    alertCB:SetSize(22, 22)
+    local alertCB = lib:CreateCheckbox(nil, content, L["ITEM_ALERT_ON_LOOT"] or "Alert on Loot")
     alertCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
-    alertCB.Text:SetText(L["ITEM_ALERT_ON_LOOT"] or "Alert on Loot")
-    alertCB.Text:SetFontObject("GameFontNormal")
     alertCB:SetChecked(itemData.alertOnLoot or false)
     alertCB:SetScript("OnClick", function(self)
         SaveField("alertOnLoot", self:GetChecked())
@@ -1285,16 +1188,9 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     MakeItemLabel(content, L["LABEL_NOTE_PREVIEW"] or "Note:", COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
-    local noteBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    local noteBg = CreateThemedBar(nil, content)
     noteBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X, yPos)
     noteBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
-    noteBg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    noteBg:SetBackdropColor(T("BG_SECONDARY"))
-    noteBg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
