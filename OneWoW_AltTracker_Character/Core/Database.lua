@@ -76,7 +76,15 @@ function ns:InitializeDatabase()
         OneWoW_AltTracker_Character_DB.settingsProfiles = {}
     end
 
+    if not OneWoW_AltTracker_Character_DB.actionBarSets then
+        OneWoW_AltTracker_Character_DB.actionBarSets = {}
+    end
+
     MigrateProfilesFlat()
+
+    if ns.ActionBars and ns.ActionBars.MigrateToNamedSets then
+        ns.ActionBars:MigrateToNamedSets()
+    end
 end
 
 function ns:GetSettingsProfiles()

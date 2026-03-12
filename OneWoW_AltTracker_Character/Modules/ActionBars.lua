@@ -547,6 +547,440 @@ function Module:GetAllCharacters()
     return OneWoW_AltTracker_Character_DB.characters
 end
 
+function Module:GetActionBarSets()
+    if not OneWoW_AltTracker_Character_DB then
+        OneWoW_AltTracker_Character_DB = {}
+    end
+    if not OneWoW_AltTracker_Character_DB.actionBarSets then
+        OneWoW_AltTracker_Character_DB.actionBarSets = {}
+    end
+    return OneWoW_AltTracker_Character_DB.actionBarSets
+end
+
+function Module:GetActionBarSet(setName)
+    local sets = self:GetActionBarSets()
+    return sets[setName]
+end
+
+function Module:SaveActionBarSet(setName)
+    local playerName = UnitName("player")
+    local realmName = GetRealmName()
+    if not playerName or not realmName then return nil end
+
+    local charKey = playerName .. "-" .. realmName
+    local specIndex = GetSpecialization()
+    if not specIndex then
+        print("|cFFFFD100OneWoW|r AltTracker: Cannot backup: No active specialization")
+        return nil
+    end
+
+    local specID, specName = GetSpecializationInfo(specIndex)
+    if not specID or not specName then
+        print("|cFFFFD100OneWoW|r AltTracker: Cannot backup: No spec info")
+        return nil
+    end
+
+    if not OneWoW_AltTracker_Character_DB then
+        OneWoW_AltTracker_Character_DB = {}
+    end
+    if not OneWoW_AltTracker_Character_DB.characters then
+        OneWoW_AltTracker_Character_DB.characters = {}
+    end
+
+    local charData = OneWoW_AltTracker_Character_DB.characters[charKey]
+    if not charData then
+        charData = {}
+        OneWoW_AltTracker_Character_DB.characters[charKey] = charData
+    end
+
+    local success = self:CollectData(charKey, charData)
+    if not success then return nil end
+
+    local sets = self:GetActionBarSets()
+    local specData = charData.specs and charData.specs[specName]
+    if not specData then return nil end
+
+    sets[setName] = {
+        name = setName,
+        sourceChar = charKey,
+        sourceSpec = specName,
+        sourceClass = charData.class or select(2, UnitClass("player")),
+        createdAt = sets[setName] and sets[setName].createdAt or time(),
+        lastUpdate = time(),
+        specID = specData.specID,
+        bars = specData.bars,
+        petBar = specData.petBar,
+        macros = charData.macros and {
+            account = charData.macros.account,
+            character = charData.macros.character,
+            lastUpdate = charData.macros.lastUpdate,
+        } or nil,
+        keybinds = charData.keybinds and {
+            bindings = charData.keybinds.bindings,
+            lastUpdate = charData.keybinds.lastUpdate,
+        } or nil,
+    }
+
+    print(string.format("|cFFFFD100OneWoW|r AltTracker: Set \"%s\" saved (%s - %s)", setName, playerName, specName))
+    return sets[setName]
+end
+
+function Module:DeleteActionBarSet(setName)
+    local sets = self:GetActionBarSets()
+    if sets[setName] then
+        sets[setName] = nil
+        print(string.format("|cFFFFD100OneWoW|r AltTracker: Set \"%s\" deleted", setName))
+        return true
+    end
+    return false
+end
+
+function Module:RenameActionBarSet(oldName, newName)
+    if oldName == newName then return false end
+    local sets = self:GetActionBarSets()
+    if not sets[oldName] then return false end
+    if sets[newName] then return false end
+
+    sets[newName] = sets[oldName]
+    sets[newName].name = newName
+    sets[oldName] = nil
+    print(string.format("|cFFFFD100OneWoW|r AltTracker: Set renamed \"%s\" -> \"%s\"", oldName, newName))
+    return true
+end
+
+function Module:HasSetBarData(setName)
+    local setData = self:GetActionBarSet(setName)
+    if not setData or not setData.bars then return false end
+    for _, barData in pairs(setData.bars) do
+        if barData.slots then
+            for _, slot in pairs(barData.slots) do
+                if slot then return true end
+            end
+        end
+    end
+    return false
+end
+
+function Module:GetAllSetNames()
+    local sets = self:GetActionBarSets()
+    local names = {}
+    for setName, _ in pairs(sets) do
+        table.insert(names, setName)
+    end
+    table.sort(names)
+    return names
+end
+
+function Module:RestoreSingleBarFromSet(setName, sourceBarNumber, targetBarNumber)
+    if InCombatLockdown() then
+        print("|cFFFFD100OneWoW|r AltTracker: Cannot restore action bars while in combat")
+        return false
+    end
+
+    local setData = self:GetActionBarSet(setName)
+    if not setData or not setData.bars then
+        print("|cFFFFD100OneWoW|r AltTracker: No action bar data found")
+        return false
+    end
+
+    local sourceBarData = setData.bars[sourceBarNumber]
+    if not sourceBarData or not sourceBarData.slots then
+        print(string.format("|cFFFFD100OneWoW|r AltTracker: No data found for source bar %d", sourceBarNumber))
+        return false
+    end
+
+    local restoredCount = 0
+    local failedCount = 0
+    local failedItems = {}
+
+    local flyouts = self:CreateFlyoutSpellbookMap()
+    local mountCache = self:CreateMountCache()
+    local spellOverride = self:CreateSpellOverrideMap()
+
+    local targetSlots = ACTION_BAR_SLOTS[targetBarNumber]
+    if not targetSlots then
+        print(string.format("|cFFFFD100OneWoW|r AltTracker: Invalid target bar number: %d", targetBarNumber))
+        return false
+    end
+
+    for slotIndex = 1, 12 do
+        local slotData = sourceBarData.slots[slotIndex]
+        if slotData then
+            local targetSlotID = targetSlots[slotIndex]
+            local success, failReason = self:RestoreActionSlot(targetSlotID, slotData, flyouts, mountCache, spellOverride)
+            if success then
+                restoredCount = restoredCount + 1
+            else
+                failedCount = failedCount + 1
+                table.insert(failedItems, {
+                    slotData = slotData,
+                    sourceBarNumber = sourceBarNumber,
+                    targetBarNumber = targetBarNumber,
+                    slotIndex = slotIndex,
+                    reason = failReason or "Unknown error"
+                })
+            end
+        end
+    end
+
+    print(string.format("|cFFFFD100OneWoW|r AltTracker: Bar %d to %d restore: %d restored, %d failed", sourceBarNumber, targetBarNumber, restoredCount, failedCount))
+
+    if failedCount > 0 then
+        for _, failedItem in ipairs(failedItems) do
+            local slotData = failedItem.slotData
+            local slotIndex = failedItem.slotIndex
+            local reason = failedItem.reason or "Unknown error"
+            local displayName = self:GetDisplayText(slotData) or "Unknown"
+            local iconText = ""
+            if slotData.texture then
+                iconText = string.format("|T%s:16:16|t ", slotData.texture)
+            end
+            print(string.format("|cFFFFD100OneWoW|r AltTracker: Failed: %s%s slot %d (%s)", iconText, displayName, slotIndex, reason))
+        end
+    end
+
+    return true
+end
+
+function Module:RestoreAllBarsFromSet(setName)
+    if InCombatLockdown() then
+        print("|cFFFFD100OneWoW|r AltTracker: Cannot restore action bars while in combat")
+        return false
+    end
+
+    local setData = self:GetActionBarSet(setName)
+    if not setData or not setData.bars then
+        print("|cFFFFD100OneWoW|r AltTracker: No action bar data found")
+        return false
+    end
+
+    local restoredCount = 0
+    local failedCount = 0
+    local failedItems = {}
+
+    local flyouts = self:CreateFlyoutSpellbookMap()
+    local mountCache = self:CreateMountCache()
+    local spellOverride = self:CreateSpellOverrideMap()
+
+    for barNumber = 1, 15 do
+        local barData = setData.bars[barNumber]
+        if barData and barData.slots then
+            local slots = ACTION_BAR_SLOTS[barNumber]
+            if slots then
+                for slotIndex = 1, 12 do
+                    local slotData = barData.slots[slotIndex]
+                    if slotData then
+                        local slotID = slots[slotIndex]
+                        local success, failReason = self:RestoreActionSlot(slotID, slotData, flyouts, mountCache, spellOverride)
+                        if success then
+                            restoredCount = restoredCount + 1
+                        else
+                            failedCount = failedCount + 1
+                            table.insert(failedItems, {
+                                slotData = slotData,
+                                barNumber = barNumber,
+                                slotIndex = slotIndex,
+                                reason = failReason or "Unknown error"
+                            })
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if setData.petBar and IsPetActive() then
+        for i = 1, NUM_PET_ACTION_SLOTS do
+            local petActionData = setData.petBar[i]
+            if petActionData then
+                local success, failReason = self:RestorePetActionSlot(i, petActionData)
+                if success then
+                    restoredCount = restoredCount + 1
+                else
+                    failedCount = failedCount + 1
+                    table.insert(failedItems, {
+                        slotData = petActionData,
+                        barNumber = "Pet",
+                        slotIndex = i,
+                        reason = failReason or "Unknown error"
+                    })
+                end
+            end
+        end
+    end
+
+    print(string.format("|cFFFFD100OneWoW|r AltTracker: Restore complete: %d restored, %d failed", restoredCount, failedCount))
+
+    if failedCount > 0 then
+        for _, failedItem in ipairs(failedItems) do
+            local slotData = failedItem.slotData
+            local barNumber = failedItem.barNumber
+            local slotIndex = failedItem.slotIndex
+            local reason = failedItem.reason or "Unknown error"
+            local displayName = self:GetDisplayText(slotData) or "Unknown"
+            local iconText = ""
+            if slotData.texture then
+                iconText = string.format("|T%s:16:16|t ", slotData.texture)
+            end
+            if barNumber == "Pet" then
+                print(string.format("|cFFFFD100OneWoW|r AltTracker: Failed: %s%s pet bar, slot %d (%s)", iconText, displayName, slotIndex, reason))
+            else
+                print(string.format("|cFFFFD100OneWoW|r AltTracker: Failed: %s%s bar %d, slot %d (%s)", iconText, displayName, barNumber, slotIndex, reason))
+            end
+        end
+    end
+
+    return true
+end
+
+function Module:RestoreKeybindsFromSet(setName)
+    local setData = self:GetActionBarSet(setName)
+    if not setData or not setData.keybinds or not setData.keybinds.bindings then
+        print("|cFFFFD100OneWoW|r AltTracker: No keybind data found")
+        return false
+    end
+
+    LoadBindings(2)
+
+    for _, bindData in pairs(setData.keybinds.bindings) do
+        local command = bindData.command
+        local key1 = bindData.key1
+        local key2 = bindData.key2
+
+        if key1 then
+            local bindingContext = 1
+            if C_KeyBindings and C_KeyBindings.GetBindingContextForAction then
+                bindingContext = C_KeyBindings.GetBindingContextForAction(command)
+            end
+            SetBinding(key1, command, bindingContext)
+        end
+
+        if key2 then
+            local bindingContext = 1
+            if C_KeyBindings and C_KeyBindings.GetBindingContextForAction then
+                bindingContext = C_KeyBindings.GetBindingContextForAction(command)
+            end
+            SetBinding(key2, command, bindingContext)
+        end
+    end
+
+    SaveBindings(2)
+
+    local bindCount = 0
+    for _ in pairs(setData.keybinds.bindings) do
+        bindCount = bindCount + 1
+    end
+
+    print(string.format("|cFFFFD100OneWoW|r AltTracker: Restored %d keybinds", bindCount))
+    return true
+end
+
+function Module:RestoreMacrosFromSet(setName, restoreType)
+    local setData = self:GetActionBarSet(setName)
+    if not setData or not setData.macros then
+        print("|cFFFFD100OneWoW|r AltTracker: No macro data found")
+        return false
+    end
+
+    local restoredCount = 0
+    local macroMapping = {}
+
+    if (restoreType == "account" or restoreType == "both") and setData.macros.account then
+        for oldId, macroInfo in pairs(setData.macros.account) do
+            local newId = GetMacroByText(macroInfo.body)
+            if newId then
+                macroMapping[oldId] = newId
+                restoredCount = restoredCount + 1
+            end
+        end
+    end
+
+    if (restoreType == "character" or restoreType == "both") and setData.macros.character then
+        for oldId, macroInfo in pairs(setData.macros.character) do
+            local newId = GetMacroByText(macroInfo.body)
+            if newId then
+                macroMapping[oldId] = newId
+                restoredCount = restoredCount + 1
+            end
+        end
+    end
+
+    print(string.format("|cFFFFD100OneWoW|r AltTracker: Restored %d macros", restoredCount))
+    return macroMapping
+end
+
+function Module:MigrateToNamedSets()
+    if not OneWoW_AltTracker_Character_DB then return end
+    if OneWoW_AltTracker_Character_DB.actionBarSetsMigrated then return end
+
+    local characters = OneWoW_AltTracker_Character_DB.characters
+    if not characters then
+        OneWoW_AltTracker_Character_DB.actionBarSetsMigrated = true
+        return
+    end
+
+    if not OneWoW_AltTracker_Character_DB.actionBarSets then
+        OneWoW_AltTracker_Character_DB.actionBarSets = {}
+    end
+    local sets = OneWoW_AltTracker_Character_DB.actionBarSets
+
+    local migratedCount = 0
+
+    for charKey, charData in pairs(characters) do
+        if charData.specs then
+            local charName = charData.name or charKey:match("^([^%-]+)")
+            for specName, specData in pairs(charData.specs) do
+                local hasBars = false
+                if specData.bars then
+                    for _, barData in pairs(specData.bars) do
+                        if barData.slots then
+                            for _, slot in pairs(barData.slots) do
+                                if slot then hasBars = true; break end
+                            end
+                        end
+                        if hasBars then break end
+                    end
+                end
+
+                if hasBars then
+                    local setName = charName .. " " .. specName
+                    sets[setName] = {
+                        name = setName,
+                        sourceChar = charKey,
+                        sourceSpec = specName,
+                        sourceClass = charData.class,
+                        createdAt = specData.lastUpdate or time(),
+                        lastUpdate = specData.lastUpdate or time(),
+                        specID = specData.specID,
+                        bars = specData.bars,
+                        petBar = specData.petBar,
+                        macros = charData.macros and {
+                            account = charData.macros.account,
+                            character = charData.macros.character,
+                            lastUpdate = charData.macros.lastUpdate,
+                        } or nil,
+                        keybinds = charData.keybinds and {
+                            bindings = charData.keybinds.bindings,
+                            lastUpdate = charData.keybinds.lastUpdate,
+                        } or nil,
+                    }
+                    migratedCount = migratedCount + 1
+                end
+            end
+
+            charData.specs = nil
+            charData.macros = nil
+            charData.keybinds = nil
+        end
+    end
+
+    OneWoW_AltTracker_Character_DB.actionBarSetsMigrated = true
+
+    if migratedCount > 0 then
+        print(string.format("|cFFFFD100OneWoW|r AltTracker: Migrated %d action bar backups to named sets", migratedCount))
+    end
+end
+
 function Module:GetActionColor(actionData)
     if not actionData then
         return {0.5, 0.5, 0.5}
