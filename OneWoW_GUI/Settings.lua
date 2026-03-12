@@ -144,17 +144,9 @@ function OneWoW_GUI:GetFont()
     return nil
 end
 
-local ICON_TEXTURES = {
-    horde    = MEDIA_BASE .. "horde-mini.png",
-    alliance = MEDIA_BASE .. "alliance-mini.png",
-    neutral  = MEDIA_BASE .. "neutral-mini.png",
-}
+local ICON_TEXTURES = Constants.ICON_TEXTURES
 
-local panelBackdrop = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-}
+local panelBackdrop = Constants.BACKDROP_INNER_NO_INSETS
 
 local dropdownBackdrop = {
     bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -164,7 +156,7 @@ local dropdownBackdrop = {
     insets = { left = 2, right = 2, top = 2, bottom = 2 },
 }
 
-local simpleBackdrop = { bgFile = "Interface\\Buttons\\WHITE8x8" }
+local simpleBackdrop = Constants.BACKDROP_SIMPLE
 
 local function CreateDropdownMenu(parent, items, onSelect)
     local menu = CreateFrame("Frame", nil, parent, "BackdropTemplate")

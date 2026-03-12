@@ -56,43 +56,6 @@ OneWoW_GUI.Constants = {
 
     ACTIVE_THEME = nil,
 
-    FALLBACK_THEME = {
-        BG_PRIMARY     = { 0.09, 0.10, 0.09, 0.97 },
-        BG_SECONDARY   = { 0.06, 0.07, 0.06, 0.95 },
-        BG_TERTIARY    = { 0.12, 0.13, 0.12, 1.0 },
-        BG_HOVER       = { 0.14, 0.18, 0.14, 1.0 },
-        BG_ACTIVE      = { 0.12, 0.22, 0.12, 1.0 },
-
-        ACCENT_PRIMARY   = { 0.35, 0.65, 0.40, 1.0 },
-        ACCENT_SECONDARY = { 0.28, 0.52, 0.32, 1.0 },
-        ACCENT_HIGHLIGHT = { 0.45, 0.78, 0.50, 1.0 },
-        ACCENT_MUTED     = { 0.25, 0.42, 0.28, 0.8 },
-
-        TEXT_PRIMARY   = { 0.88, 0.90, 0.88, 1.0 },
-        TEXT_SECONDARY = { 0.62, 0.65, 0.62, 1.0 },
-        TEXT_MUTED     = { 0.65, 0.68, 0.65, 1.0 },
-        TEXT_ACCENT    = { 0.55, 0.85, 0.58, 1.0 },
-
-        BORDER_DEFAULT = { 0.25, 0.32, 0.25, 0.5 },
-        BORDER_SUBTLE  = { 0.20, 0.25, 0.20, 0.3 },
-        BORDER_FOCUS   = { 0.40, 0.65, 0.42, 0.7 },
-        BORDER_ACCENT  = { 0.35, 0.55, 0.38, 0.6 },
-
-        TITLEBAR_BG    = { 0.12, 0.16, 0.12, 0.98 },
-        TITLEBAR_BORDER = { 0.30, 0.45, 0.32, 0.6 },
-
-        BTN_NORMAL     = { 0.14, 0.16, 0.14, 1.0 },
-        BTN_HOVER      = { 0.18, 0.26, 0.18, 1.0 },
-        BTN_PRESSED    = { 0.12, 0.20, 0.12, 1.0 },
-        BTN_BORDER     = { 0.32, 0.48, 0.35, 0.5 },
-        BTN_BORDER_HOVER = { 0.40, 0.62, 0.42, 0.7 },
-
-        TEXT_FEATURES_ENABLED = { 0.2, 1, 0.2 },
-        TEXT_FEATURES_DISABLED = { 1, 0.2, 0.2 },
-        DOT_FEATURES_ENABLED = { 0.35, 0.70, 0.35, 1.0 },
-        DOT_FEATURES_DISABLED = { 0.70, 0.30, 0.30, 1.0 },
-    },
-
     SPACING = {
         XS = 4,
         SM = 8,
@@ -153,6 +116,10 @@ OneWoW_GUI.Constants = {
             BTN_PRESSED    = { 0.12, 0.20, 0.12, 1.0 },
             BTN_BORDER     = { 0.32, 0.48, 0.35, 0.5 },
             BTN_BORDER_HOVER = { 0.40, 0.62, 0.42, 0.7 },
+            TEXT_FEATURES_ENABLED = { 0.2, 1, 0.2 },
+            TEXT_FEATURES_DISABLED = { 1, 0.2, 0.2 },
+            DOT_FEATURES_ENABLED = { 0.35, 0.70, 0.35, 1.0 },
+            DOT_FEATURES_DISABLED = { 0.70, 0.30, 0.30, 1.0 },
         },
         blue = {
             name = "Ocean Blue",
@@ -778,8 +745,10 @@ OneWoW_GUI.Constants = {
     },
 
     THEMES_ORDER = {
-        "green", "blue", "purple", "red", "orange", "teal", "gold", "pink", "dark", "amber", "cyan", "slate", 
-        "voidblack", "charcoal", "forestnight", "obsidian", "monochrome", "twilight", "neon", "glassmorphic", 
+        "green", "blue", "purple", "red", "orange", "teal", "gold", "pink", "dark", "amber", "cyan", "slate",
+        "voidblack", "charcoal", "forestnight", "obsidian", "monochrome", "twilight", "neon", "glassmorphic",
         "lightmode", "retro", "fantasy", "nightfae"
     },
 }
+
+OneWoW_GUI.Constants.FALLBACK_THEME = OneWoW_GUI.Constants.THEMES.green

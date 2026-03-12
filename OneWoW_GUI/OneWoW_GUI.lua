@@ -121,16 +121,8 @@ function OneWoW_GUI:CreateDialog(config)
 
     local frame
     if movable then
-        frame = self:CreateFrame(name, UIParent, width, height, Constants.BACKDROP_INNER_NO_INSETS)
-        frame:SetPoint("CENTER")
+        frame = self:CreateMovableDialog(name, UIParent, width, height)
         frame:SetFrameStrata(strata)
-        frame:SetToplevel(true)
-        frame:SetMovable(true)
-        frame:SetClampedToScreen(true)
-        frame:EnableMouse(true)
-        frame:RegisterForDrag("LeftButton")
-        frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
-        frame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
     else
         frame = self:CreateFrame(name, UIParent, width, height, Constants.BACKDROP_INNER_NO_INSETS)
         frame:SetPoint("CENTER")
@@ -138,10 +130,9 @@ function OneWoW_GUI:CreateDialog(config)
         frame:SetToplevel(true)
         frame:EnableMouse(true)
         frame:SetClampedToScreen(true)
-    end
-
-    if escClose and name then
-        tinsert(UISpecialFrames, name)
+        if escClose and name then
+            tinsert(UISpecialFrames, name)
+        end
     end
 
     local result = { frame = frame, buttons = {} }
@@ -645,10 +636,6 @@ function OneWoW_GUI:CreateEditBox(name, parent, options)
     return box
 end
 
-function OneWoW_GUI:CreateSearchBox(parent, options)
-    return self:CreateEditBox(nil, parent, options)
-end
-
 function OneWoW_GUI:CreateStatusDot(parent, options)
     options = options or {}
     local size = options.size or 8
@@ -922,11 +909,7 @@ function OneWoW_GUI:CreateSectionHeader(parent, title, yOffset)
     section:SetPoint("TOPLEFT", 8, yOffset)
     section:SetPoint("TOPRIGHT", -8, yOffset)
     section:SetHeight(30)
-    section:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    section:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     section:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
     section:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
 
@@ -943,11 +926,7 @@ end
 function OneWoW_GUI:CreateSplitPanel(parent, options)
     local panelGap = Constants.GUI.PANEL_GAP or 10
 
-    local backdrop = {
-        bgFile = Constants.BACKDROP_INNER.bgFile,
-        edgeFile = Constants.BACKDROP_INNER.edgeFile,
-        edgeSize = Constants.BACKDROP_INNER.edgeSize
-    }
+    local backdrop = Constants.BACKDROP_INNER_NO_INSETS
 
     options = options or {}
     local showSearch = options.showSearch
@@ -971,7 +950,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
 
     local searchBox
     if showSearch then
-        searchBox = self:CreateSearchBox(listPanel, {
+        searchBox = self:CreateEditBox(nil, listPanel, {
             placeholderText = options.searchPlaceholder or "",
         })
         searchBox:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 8, -30)
@@ -1212,7 +1191,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, dropdownText, options)
             elseif itemType == "checkbox" then
                 local row = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
                 row:SetHeight(26)
-                row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+                row:SetBackdrop(Constants.BACKDROP_SIMPLE)
                 row:SetBackdropColor(0, 0, 0, 0)
 
                 local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
@@ -1249,7 +1228,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, dropdownText, options)
             else
                 local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
                 btn:SetSize(scrollChild:GetWidth() or (menu:GetWidth() - 20), 26)
-                btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+                btn:SetBackdrop(Constants.BACKDROP_SIMPLE)
 
                 if activeValue == item.value then
                     btn:SetBackdropColor(GetThemeColor("ACCENT_PRIMARY"))
@@ -1487,11 +1466,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     container:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     container:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    container:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    container:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     container:SetBackdropColor(GetThemeColor("BG_PRIMARY"))
     container:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
 
@@ -1504,11 +1479,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     headerRow:SetPoint("TOPLEFT", inner, "TOPLEFT", 0, 0)
     headerRow:SetPoint("TOPRIGHT", inner, "TOPRIGHT", -scrollBarWidth, 0)
     headerRow:SetHeight(headerHeight)
-    headerRow:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    headerRow:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     headerRow:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
     headerRow:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
 
@@ -1611,11 +1582,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
 
     for i, col in ipairs(columns) do
         local btn = CreateFrame("Button", nil, headerRow, "BackdropTemplate")
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
+        btn:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
         btn:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
         btn:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
         btn:SetHeight(headerHeight - 4)
@@ -1703,14 +1670,14 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     scrollTrack:SetPoint("TOPRIGHT", inner, "TOPRIGHT", -2, 0)
     scrollTrack:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT", -2, 0)
     scrollTrack:SetWidth(8)
-    scrollTrack:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    scrollTrack:SetBackdrop(Constants.BACKDROP_SIMPLE)
     scrollTrack:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
 
     local scrollThumb = CreateFrame("Frame", nil, scrollTrack, "BackdropTemplate")
     scrollThumb:SetWidth(6)
     scrollThumb:SetHeight(30)
     scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, 0)
-    scrollThumb:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    scrollThumb:SetBackdrop(Constants.BACKDROP_SIMPLE)
     scrollThumb:SetBackdropColor(GetThemeColor("ACCENT_PRIMARY"))
 
     local function UpdateScrollThumb()
@@ -1974,11 +1941,7 @@ function OneWoW_GUI:CreateOverviewPanel(parent, options)
     panel:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -5)
     panel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -5, -5)
     panel:SetHeight(height)
-    panel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    panel:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     panel:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
     panel:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
 
@@ -1997,11 +1960,7 @@ function OneWoW_GUI:CreateOverviewPanel(parent, options)
         local stat = stats[i]
 
         local statBox = CreateFrame("Frame", nil, statsContainer, "BackdropTemplate")
-        statBox:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
+        statBox:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
         statBox:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
         statBox:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
 
@@ -2079,11 +2038,7 @@ function OneWoW_GUI:CreateStatusBar(parent, anchorFrame, options)
         statusBar:SetPoint("TOPRIGHT", anchorFrame, "BOTTOMRIGHT", 0, -5)
     end
     statusBar:SetHeight(25)
-    statusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    statusBar:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     statusBar:SetBackdropColor(GetThemeColor("BG_SECONDARY"))
     statusBar:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
 
@@ -2102,11 +2057,7 @@ function OneWoW_GUI:CreateRosterPanel(parent, anchorFrame)
     local rosterPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     rosterPanel:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, -8)
     rosterPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
-    rosterPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    rosterPanel:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     rosterPanel:SetBackdropColor(GetThemeColor("BG_PRIMARY"))
     rosterPanel:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
 
@@ -2261,11 +2212,7 @@ function OneWoW_GUI:CreateExpandedPanelGrid(ef, themeFunc, options)
         p:SetPoint("TOPLEFT", ef, "TOPLEFT", inset, -inset)
         p:SetPoint("BOTTOMLEFT", ef, "BOTTOMLEFT", inset, inset)
         p:SetWidth(100)
-        p:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
+        p:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
         p:SetBackdropColor(themeFunc("BG_TERTIARY"))
         p:SetBackdropBorderColor(themeFunc("BORDER_SUBTLE"))
         local titleFS = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
