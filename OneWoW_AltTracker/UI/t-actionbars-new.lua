@@ -6,9 +6,10 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.UI = ns.UI or {}
 
-local selectedCharKey = nil
-local selectedSpecName = nil
+local selectedSetName = nil
+local selectedRow = nil
 local showAllBars = false
+local activeFilterClass = nil
 
 local BAR_NAMES = {
     [1]  = "AB_PAGE_1",
@@ -29,7 +30,15 @@ local BAR_NAMES = {
 }
 local BAR_DISPLAY_ORDER = {1, 2, 6, 5, 4, 3, 13, 14, 15, 7, 8, 9, 10, 11, 12}
 
-local function ShowRestoreBarDialog(charKey, sourceBarNumber, specName, parent)
+local CLASS_DISPLAY_NAMES = {
+    WARRIOR = "Warrior", PALADIN = "Paladin", HUNTER = "Hunter",
+    ROGUE = "Rogue", PRIEST = "Priest", DEATHKNIGHT = "Death Knight",
+    SHAMAN = "Shaman", MAGE = "Mage", WARLOCK = "Warlock",
+    MONK = "Monk", DRUID = "Druid", DEMONHUNTER = "Demon Hunter",
+    EVOKER = "Evoker",
+}
+
+local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
     local barName = L[BAR_NAMES[sourceBarNumber]] or string.format(L["AB_LABEL_BAR"], sourceBarNumber)
     local selectedTargetBar = sourceBarNumber
 
@@ -41,8 +50,8 @@ local function ShowRestoreBarDialog(charKey, sourceBarNumber, specName, parent)
         movable = false,
         buttons = {
             { text = L["AB_LABEL_RESTORE"], color = {0.2, 0.6, 0.2}, onClick = function(dialog)
-                if ns.ActionBarsModule and ns.ActionBarsModule.RestoreSingleActionBar then
-                    ns.ActionBarsModule:RestoreSingleActionBar(charKey, sourceBarNumber, selectedTargetBar, specName)
+                if ns.ActionBarsModule and ns.ActionBarsModule.RestoreSingleBarFromSet then
+                    ns.ActionBarsModule:RestoreSingleBarFromSet(setName, sourceBarNumber, selectedTargetBar)
                 end
                 dialog:Hide()
             end },
@@ -85,15 +94,15 @@ local function ShowRestoreBarDialog(charKey, sourceBarNumber, specName, parent)
     result.frame:Show()
 end
 
-local function ShowRestoreAllDialog(charKey, specName, charName)
+local function ShowRestoreAllDialog(setName)
     local result = OneWoW_GUI:CreateConfirmDialog({
         name = "OneWoW_AT_RestoreAllDialog",
         title = L["AB_DIALOG_RESTORE_ALL_TITLE"],
-        message = string.format(L["AB_DIALOG_RESTORE_ALL"], charName .. " - " .. specName),
+        message = string.format(L["AB_DIALOG_RESTORE_ALL"], setName),
         buttons = {
             { text = L["AB_BUTTON_RESTORE_ALL"], color = {0.6, 0.2, 0.2}, onClick = function(dialog)
-                if ns.ActionBarsModule and ns.ActionBarsModule.RestoreAllActionBars then
-                    ns.ActionBarsModule:RestoreAllActionBars(charKey, specName)
+                if ns.ActionBarsModule and ns.ActionBarsModule.RestoreAllBarsFromSet then
+                    ns.ActionBarsModule:RestoreAllBarsFromSet(setName)
                 end
                 dialog:Hide()
             end },
@@ -103,7 +112,18 @@ local function ShowRestoreAllDialog(charKey, specName, charName)
     result.frame:Show()
 end
 
-local function ShowRestoreMacrosDialog(charKey, charName, accountCount, charCount)
+local function ShowRestoreMacrosDialog(setName, setData)
+    local accountCount = 0
+    local charCount = 0
+    if setData.macros then
+        if setData.macros.account then
+            for _ in pairs(setData.macros.account) do accountCount = accountCount + 1 end
+        end
+        if setData.macros.character then
+            for _ in pairs(setData.macros.character) do charCount = charCount + 1 end
+        end
+    end
+
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_AT_RestoreMacrosDialog",
         title = L["AB_DIALOG_RESTORE_MACROS_TITLE"],
@@ -117,7 +137,7 @@ local function ShowRestoreMacrosDialog(charKey, charName, accountCount, charCoun
     local infoText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     infoText:SetPoint("TOP", cf, "TOP", 0, -10)
     infoText:SetWidth(380)
-    infoText:SetText(string.format(L["AB_DIALOG_RESTORE_MACROS"], charName))
+    infoText:SetText(string.format(L["AB_DIALOG_RESTORE_MACROS"], setName))
     infoText:SetTextColor(T("TEXT_PRIMARY"))
     infoText:SetJustifyH("CENTER")
 
@@ -129,7 +149,7 @@ local function ShowRestoreMacrosDialog(charKey, charName, accountCount, charCoun
     accountBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.3, 0.6, 1.0) end)
     accountBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.5, 1.0) end)
     accountBtn:SetScript("OnClick", function()
-        if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacros(charKey, "account") end
+        if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacrosFromSet(setName, "account") end
         result.frame:Hide()
     end)
 
@@ -141,7 +161,7 @@ local function ShowRestoreMacrosDialog(charKey, charName, accountCount, charCoun
     charBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.3, 0.6, 1.0) end)
     charBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.5, 1.0) end)
     charBtn:SetScript("OnClick", function()
-        if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacros(charKey, "character") end
+        if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacrosFromSet(setName, "character") end
         result.frame:Hide()
     end)
 
@@ -153,7 +173,7 @@ local function ShowRestoreMacrosDialog(charKey, charName, accountCount, charCoun
     bothBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.3, 0.7, 0.3, 1.0) end)
     bothBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.6, 0.2, 1.0) end)
     bothBtn:SetScript("OnClick", function()
-        if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacros(charKey, "both") end
+        if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacrosFromSet(setName, "both") end
         result.frame:Hide()
     end)
 
@@ -169,508 +189,250 @@ local function ShowRestoreMacrosDialog(charKey, charName, accountCount, charCoun
     result.frame:Show()
 end
 
-function ns.UI.CreateActionBarsTab(parent)
-    local contentPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    contentPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
-    contentPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    contentPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    contentPanel:SetBackdropColor(T("BG_PRIMARY"))
-    contentPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+local function ShowBackupDialog(split)
+    local playerName = UnitName("player")
+    local specIndex = GetSpecialization()
+    local specName = specIndex and select(2, GetSpecializationInfo(specIndex)) or ""
+    local defaultName = playerName .. " " .. specName
 
-    parent.contentPanel = contentPanel
-
-    -- ACTION BARS SUB-TAB CONTENT (existing code adapted)
-    local controlPanel = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
-    controlPanel:SetPoint("TOPLEFT", contentPanel, "TOPLEFT", 5, -5)
-    controlPanel:SetPoint("TOPRIGHT", contentPanel, "TOPRIGHT", -5, -5)
-    controlPanel:SetHeight(85)
-    controlPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    controlPanel:SetBackdropColor(T("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    controlTitle:SetPoint("TOP", controlPanel, "TOP", 0, -8)
-    local currentSpec = select(2, GetSpecializationInfo(GetSpecialization())) or L["Unknown"]
-    controlTitle:SetText(UnitName("player") .. " - " .. currentSpec)
-    controlTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local statusActionBars = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    statusActionBars:SetPoint("BOTTOM", controlPanel, "BOTTOM", -180, 30)
-    statusActionBars:SetTextColor(T("TEXT_SECONDARY"))
-
-    local statusKeybinds = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    statusKeybinds:SetPoint("BOTTOM", controlPanel, "BOTTOM", 0, 30)
-    statusKeybinds:SetTextColor(T("TEXT_SECONDARY"))
-
-    local statusMacros = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    statusMacros:SetPoint("BOTTOM", controlPanel, "BOTTOM", 180, 30)
-    statusMacros:SetTextColor(T("TEXT_SECONDARY"))
-
-    local function UpdateControlPanelStatus()
-        local playerName = UnitName("player")
-        local realmName = GetRealmName()
-        local charKey = playerName .. "-" .. realmName
-        local charData = ns.ActionBarsModule and ns.ActionBarsModule:GetCharacterData(charKey)
-        local currentSpec = select(2, GetSpecializationInfo(GetSpecialization())) or L["Unknown"]
-
-        local hasActionBars = ns.ActionBarsModule and ns.ActionBarsModule:HasActionBarData(charKey, currentSpec) or false
-
-        local hasKeybinds = charData and charData.keybinds and charData.keybinds.bindings and next(charData.keybinds.bindings) ~= nil
-
-        local hasMacros = false
-        if charData and charData.macros then
-            hasMacros = (charData.macros.account and next(charData.macros.account)) or (charData.macros.character and next(charData.macros.character))
-        end
-
-        statusActionBars:SetText(string.format(L["AB_LABEL_ACTION_BARS"], hasActionBars and L["AB_YES"] or L["AB_NO"]))
-        statusKeybinds:SetText(string.format(L["AB_LABEL_KEYBINDS"], hasKeybinds and L["AB_YES"] or L["AB_NO"]))
-        statusMacros:SetText(string.format(L["AB_LABEL_MACROS"], hasMacros and L["AB_YES"] or L["AB_NO"]))
-    end
-
-    local backupButton = OneWoW_GUI:CreateButton(nil, controlPanel, string.format(L["AB_LABEL_BACKUP"], currentSpec), 120, 28)
-    backupButton:SetPoint("BOTTOMLEFT", controlPanel, "BOTTOMLEFT", 10, 6)
-    backupButton:SetBackdropColor(T("BG_TERTIARY"))
-    backupButton:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    backupButton.text:SetFontObject("GameFontNormalSmall")
-    backupButton.text:SetTextColor(T("TEXT_PRIMARY"))
-
-    backupButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        self.text:SetTextColor(T("TEXT_ACCENT"))
-    end)
-    backupButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_TERTIARY"))
-        self.text:SetTextColor(T("TEXT_PRIMARY"))
-    end)
-    backupButton:SetScript("OnClick", function()
-        if ns.ActionBarsModule and ns.ActionBarsModule.CollectActionBarsData then
-            local charData, specName = ns.ActionBarsModule:CollectActionBarsData()
-            if charData and specName then
-                UpdateControlPanelStatus()
-                if ns.UI.RefreshActionBarsListing then
-                    ns.UI.RefreshActionBarsListing(parent)
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_AT_BackupDialog",
+        title = L["AB_BACKUP_SET_TITLE"],
+        width = 420,
+        height = 200,
+        movable = false,
+        buttons = {
+            { text = L["AB_BACKUP_SET_SAVE"], color = {0.2, 0.6, 0.2}, onClick = function(dialog)
+                local nameBox = dialog.nameEditBox
+                if nameBox then
+                    local setName = strtrim(nameBox:GetText())
+                    if setName == "" then
+                        print("|cFFFFD100OneWoW|r AltTracker: " .. L["AB_SET_NAME_EMPTY"])
+                        return
+                    end
+                    if ns.ActionBarsModule then
+                        local saved = ns.ActionBarsModule:SaveActionBarSet(setName)
+                        if saved then
+                            selectedSetName = setName
+                            if split then
+                                ns.UI.BuildActionBarSetsList(split, "")
+                                ns.UI.ShowSetDetails(split, setName)
+                            end
+                        end
+                    end
                 end
-            end
-        end
-    end)
+                dialog:Hide()
+            end },
+            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+        },
+    })
 
-    local showAllCheckbox = OneWoW_GUI:CreateCheckbox(nil, controlPanel, L["AB_SHOW_ALL_BARS"])
-    showAllCheckbox:SetPoint("BOTTOMRIGHT", controlPanel, "BOTTOMRIGHT", -10, 6)
-    showAllCheckbox:SetChecked(showAllBars)
-    showAllCheckbox.label:SetFontObject("GameFontNormalSmall")
-    showAllCheckbox.label:ClearAllPoints()
-    showAllCheckbox.label:SetPoint("RIGHT", showAllCheckbox, "LEFT", -5, 0)
+    local cf = result.contentFrame
+    local msgText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    msgText:SetPoint("TOP", cf, "TOP", 0, -10)
+    msgText:SetWidth(380)
+    msgText:SetText(L["AB_BACKUP_SET_MESSAGE"])
+    msgText:SetTextColor(T("TEXT_PRIMARY"))
+    msgText:SetJustifyH("CENTER")
 
-    showAllCheckbox:SetScript("OnClick", function(self)
-        showAllBars = self:GetChecked()
-        if selectedCharKey and selectedSpecName and ns.UI.ShowActionBarDetails then
-            ns.UI.ShowActionBarDetails(parent, selectedCharKey, selectedSpecName)
-        end
-    end)
+    local nameBox = OneWoW_GUI:CreateEditBox(nil, cf, {
+        width = 300,
+        height = 28,
+        placeholder = "",
+    })
+    nameBox:SetPoint("TOP", msgText, "BOTTOM", 0, -12)
+    nameBox:SetText(defaultName)
+    nameBox:HighlightText()
+    nameBox:SetFocus()
 
-    local listingPanel = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
-    listingPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -8)
-    listingPanel:SetPoint("BOTTOMLEFT", contentPanel, "BOTTOMLEFT", 5, 30)
-    listingPanel:SetWidth(280)
-    listingPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    listingPanel:SetBackdropColor(T("BG_PRIMARY"))
-    listingPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    result.frame.nameEditBox = nameBox
 
-    local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -8)
-    listingTitle:SetText(L["AB_CHARACTER_LIST"])
-    listingTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local listingScrollFrame = CreateFrame("ScrollFrame", nil, listingPanel, "UIPanelScrollFrameTemplate")
-    listingScrollFrame:SetPoint("TOPLEFT", listingPanel, "TOPLEFT", 8, -32)
-    listingScrollFrame:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -8, 8)
-
-    local scrollBar = listingScrollFrame.ScrollBar
-    if scrollBar then
-        scrollBar:ClearAllPoints()
-        scrollBar:SetPoint("TOPRIGHT", listingScrollFrame, "TOPRIGHT", -3, 0)
-        scrollBar:SetPoint("BOTTOMRIGHT", listingScrollFrame, "BOTTOMRIGHT", -3, 0)
-        scrollBar:SetWidth(8)
-        if scrollBar.ScrollUpButton then
-            scrollBar.ScrollUpButton:Hide()
-            scrollBar.ScrollUpButton:SetAlpha(0)
-            scrollBar.ScrollUpButton:EnableMouse(false)
-        end
-        if scrollBar.ScrollDownButton then
-            scrollBar.ScrollDownButton:Hide()
-            scrollBar.ScrollDownButton:SetAlpha(0)
-            scrollBar.ScrollDownButton:EnableMouse(false)
-        end
-        if scrollBar.Background then scrollBar.Background:SetColorTexture(T("BG_TERTIARY")) end
-        if scrollBar.ThumbTexture then
-            scrollBar.ThumbTexture:SetWidth(6)
-            scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
-        end
-    end
-
-    local listingScrollChild = CreateFrame("Frame", nil, listingScrollFrame)
-    listingScrollChild:SetWidth(listingScrollFrame:GetWidth() - 20)
-    listingScrollChild:SetHeight(400)
-    listingScrollFrame:SetScrollChild(listingScrollChild)
-
-    listingScrollFrame:HookScript("OnSizeChanged", function(self, width, height)
-        listingScrollChild:SetWidth(width - 20)
-    end)
-
-    local detailPanel = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
-    detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 8, 0)
-    detailPanel:SetPoint("BOTTOMRIGHT", contentPanel, "BOTTOMRIGHT", -5, 30)
-    detailPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    detailPanel:SetBackdropColor(T("BG_PRIMARY"))
-    detailPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local detailTitle = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    detailTitle:SetPoint("TOP", detailPanel, "TOP", 0, -8)
-    detailTitle:SetText(L["AB_ACTION_BAR_DETAILS"])
-    detailTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local detailScrollFrame = CreateFrame("ScrollFrame", nil, detailPanel, "UIPanelScrollFrameTemplate")
-    detailScrollFrame:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, -32)
-    detailScrollFrame:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 8)
-
-    local detailScrollBar = detailScrollFrame.ScrollBar
-    if detailScrollBar then
-        detailScrollBar:ClearAllPoints()
-        detailScrollBar:SetPoint("TOPRIGHT", detailScrollFrame, "TOPRIGHT", -3, 0)
-        detailScrollBar:SetPoint("BOTTOMRIGHT", detailScrollFrame, "BOTTOMRIGHT", -3, 0)
-        detailScrollBar:SetWidth(8)
-        if detailScrollBar.ScrollUpButton then
-            detailScrollBar.ScrollUpButton:Hide()
-            detailScrollBar.ScrollUpButton:SetAlpha(0)
-            detailScrollBar.ScrollUpButton:EnableMouse(false)
-        end
-        if detailScrollBar.ScrollDownButton then
-            detailScrollBar.ScrollDownButton:Hide()
-            detailScrollBar.ScrollDownButton:SetAlpha(0)
-            detailScrollBar.ScrollDownButton:EnableMouse(false)
-        end
-        if detailScrollBar.Background then detailScrollBar.Background:SetColorTexture(T("BG_TERTIARY")) end
-        if detailScrollBar.ThumbTexture then
-            detailScrollBar.ThumbTexture:SetWidth(6)
-            detailScrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
-        end
-    end
-
-    local detailScrollChild = CreateFrame("Frame", nil, detailScrollFrame)
-    detailScrollChild:SetWidth(detailScrollFrame:GetWidth() - 20)
-    detailScrollChild:SetHeight(400)
-    detailScrollFrame:SetScrollChild(detailScrollChild)
-
-    detailScrollFrame:HookScript("OnSizeChanged", function(self, width, height)
-        detailScrollChild:SetWidth(width - 20)
-    end)
-
-    local leftStatusBar = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
-    leftStatusBar:SetPoint("TOPLEFT", listingPanel, "BOTTOMLEFT", 0, -5)
-    leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
-    leftStatusBar:SetHeight(25)
-    leftStatusBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    leftStatusBar:SetBackdropColor(T("BG_SECONDARY"))
-    leftStatusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
-    leftStatusText:SetText(string.format(L["AB_CHARACTERS_COUNT"], 0))
-    leftStatusText:SetTextColor(T("TEXT_SECONDARY"))
-
-    local rightStatusBar = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
-    rightStatusBar:SetPoint("TOPLEFT", detailPanel, "BOTTOMLEFT", 0, -5)
-    rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
-    rightStatusBar:SetHeight(25)
-    rightStatusBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    rightStatusBar:SetBackdropColor(T("BG_SECONDARY"))
-    rightStatusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
-    rightStatusText:SetText("")
-    rightStatusText:SetTextColor(T("TEXT_SECONDARY"))
-
-    parent.controlPanel = controlPanel
-    parent.controlTitle = controlTitle
-    parent.backupButton = backupButton
-    parent.statusActionBars = statusActionBars
-    parent.statusKeybinds = statusKeybinds
-    parent.statusMacros = statusMacros
-    parent.showAllCheckbox = showAllCheckbox
-    parent.listingPanel = listingPanel
-    parent.listingScrollFrame = listingScrollFrame
-    parent.listingScrollChild = listingScrollChild
-    parent.detailPanel = detailPanel
-    parent.detailTitle = detailTitle
-    parent.detailScrollFrame = detailScrollFrame
-    parent.detailScrollChild = detailScrollChild
-    parent.leftStatusBar = leftStatusBar
-    parent.leftStatusText = leftStatusText
-    parent.rightStatusBar = rightStatusBar
-    parent.rightStatusText = rightStatusText
-    parent.UpdateControlPanelStatus = UpdateControlPanelStatus
-
-    C_Timer.After(0.3, function()
-        UpdateControlPanelStatus()
-    end)
-
-    ns.UI.ApplyFontToFrame(parent)
-
-    C_Timer.After(0.5, function()
-        if ns.UI.RefreshActionBarsListing then
-            ns.UI.RefreshActionBarsListing(parent)
-        end
-    end)
+    result.frame:Show()
 end
 
-function ns.UI.RefreshActionBarsListing(actionBarsTab)
-    if not actionBarsTab or not actionBarsTab.listingScrollChild then return end
-    if not ns.ActionBarsModule then return end
-
-    for _, child in ipairs({actionBarsTab.listingScrollChild:GetChildren()}) do
-        child:Hide()
-        child:SetParent(nil)
-    end
-
-    local allChars = ns.ActionBarsModule:GetAllCharacters()
-    local charList = {}
-
-    for charKey, charData in pairs(allChars) do
-        local hasData = ns.ActionBarsModule:HasActionBarData(charKey)
-        if hasData then
-            table.insert(charList, {key = charKey, data = charData})
-        end
-    end
-
-    local currentChar = UnitName("player")
-    local currentRealm = GetRealmName()
-    local currentCharKey = currentChar .. "-" .. currentRealm
-    table.sort(charList, function(a, b)
-        local aIsCurrent = (a.key == currentCharKey)
-        local bIsCurrent = (b.key == currentCharKey)
-        if aIsCurrent and not bIsCurrent then return true end
-        if bIsCurrent and not aIsCurrent then return false end
-        return (a.data.name or "") < (b.data.name or "")
-    end)
-
-    local yOffset = -5
-    local bubbleHeight = 34
-    local bubbleGap = 3
-
-    for _, charEntry in ipairs(charList) do
-        local charKey = charEntry.key
-        local charData = charEntry.data
-
-        local charBubble = CreateFrame("Frame", nil, actionBarsTab.listingScrollChild, "BackdropTemplate")
-        charBubble:SetPoint("TOPLEFT", actionBarsTab.listingScrollChild, "TOPLEFT", 8, yOffset)
-        charBubble:SetPoint("TOPRIGHT", actionBarsTab.listingScrollChild, "TOPRIGHT", -10, yOffset)
-        charBubble:SetHeight(bubbleHeight)
-        charBubble:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-        charBubble:SetBackdropColor(T("BG_TERTIARY"))
-        charBubble:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-        local indicator = charBubble:CreateTexture(nil, "ARTWORK")
-        indicator:SetSize(12, 12)
-        indicator:SetPoint("LEFT", charBubble, "LEFT", 4, 0)
-        indicator:SetTexture("Interface\\Common\\Indicator-Green")
-        if selectedCharKey == charKey then
-            indicator:SetAlpha(1.0)
-        else
-            indicator:SetAlpha(0.3)
-        end
-
-        local classIcon = charBubble:CreateTexture(nil, "ARTWORK")
-        classIcon:SetSize(20, 20)
-        classIcon:SetPoint("LEFT", indicator, "RIGHT", 4, 0)
-        local classIconPath = "Interface\\Icons\\ClassIcon_" .. (charData.class or "Warrior")
-        classIcon:SetTexture(classIconPath)
-
-        local charName = charBubble:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        charName:SetPoint("LEFT", classIcon, "RIGHT", 6, 0)
-        local classColor = RAID_CLASS_COLORS[charData.class]
-        if classColor then
-            charName:SetTextColor(classColor.r, classColor.g, classColor.b)
-        else
-            charName:SetTextColor(T("TEXT_PRIMARY"))
-        end
-        charName:SetText(charData.name or charKey)
-
-        local specs = ns.ActionBarsModule:GetCharacterSpecs(charKey)
-        local specXOffset = -4
-        for i = #specs, 1, -1 do
-            local specName = specs[i]
-            local specData = ns.ActionBarsModule:GetSpecData(charKey, specName)
-            local hasSpecData = ns.ActionBarsModule:HasActionBarData(charKey, specName)
-
-            local specBtn = OneWoW_GUI:CreateButton(nil, charBubble, "", 24, 24)
-            specBtn:SetPoint("RIGHT", charBubble, "RIGHT", specXOffset, 0)
-            specBtn:SetBackdropColor(T("BG_SECONDARY"))
-            specBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-            specBtn.text:Hide()
-
-            local specIcon = specBtn:CreateTexture(nil, "ARTWORK")
-            specIcon:SetSize(20, 20)
-            specIcon:SetPoint("CENTER")
-
-            if specData and specData.specID then
-                local id, name, description, iconPath = GetSpecializationInfoByID(specData.specID)
-                if iconPath then
-                    specIcon:SetTexture(iconPath)
-                else
-                    specIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-                end
-            else
-                specIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-            end
-
-            if hasSpecData then
-                specIcon:SetDesaturated(false)
-                specBtn:SetAlpha(1.0)
-            else
-                specIcon:SetDesaturated(true)
-                specBtn:SetAlpha(0.4)
-            end
-
-            if selectedCharKey == charKey and selectedSpecName == specName then
-                specBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-            end
-
-            specBtn:SetScript("OnEnter", function(self)
-                if hasSpecData then
-                    self:SetBackdropColor(T("BG_HOVER"))
-                end
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(specName, 1, 1, 1)
-                if hasSpecData then
-                    GameTooltip:AddLine(L["AB_CLICK_TO_VIEW"], 0.8, 0.8, 0.8)
-                else
-                    GameTooltip:AddLine(L["AB_NO_DATA_SAVED"], 1, 0, 0)
-                end
-                GameTooltip:Show()
-            end)
-
-            specBtn:SetScript("OnLeave", function(self)
-                if selectedCharKey == charKey and selectedSpecName == specName then
-                    self:SetBackdropColor(T("BG_SECONDARY"))
-                else
-                    self:SetBackdropColor(T("BG_SECONDARY"))
-                end
-                GameTooltip:Hide()
-            end)
-
-            if hasSpecData then
-                specBtn:SetScript("OnClick", function()
-                    selectedCharKey = charKey
-                    selectedSpecName = specName
-                    if ns.UI.ShowActionBarDetails then
-                        ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
+local function ShowRenameDialog(split, oldName)
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_AT_RenameDialog",
+        title = L["AB_RENAME_SET_TITLE"],
+        width = 420,
+        height = 200,
+        movable = false,
+        buttons = {
+            { text = L["AB_RENAME_SET_CONFIRM"], color = {0.2, 0.6, 0.2}, onClick = function(dialog)
+                local nameBox = dialog.nameEditBox
+                if nameBox then
+                    local newName = strtrim(nameBox:GetText())
+                    if newName == "" then
+                        print("|cFFFFD100OneWoW|r AltTracker: " .. L["AB_SET_NAME_EMPTY"])
+                        return
                     end
-                    if ns.UI.RefreshActionBarsListing then
-                        ns.UI.RefreshActionBarsListing(actionBarsTab)
+                    if newName == oldName then
+                        dialog:Hide()
+                        return
                     end
-                end)
-            end
-
-            specXOffset = specXOffset - 28
-        end
-
-        charBubble:EnableMouse(true)
-        charBubble:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-        end)
-        charBubble:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-        end)
-        charBubble:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                selectedCharKey = charKey
-                local firstSpec = specs[1]
-                if firstSpec and ns.ActionBarsModule:HasActionBarData(charKey, firstSpec) then
-                    selectedSpecName = firstSpec
-                    if ns.UI.ShowActionBarDetails then
-                        ns.UI.ShowActionBarDetails(actionBarsTab, charKey, firstSpec)
+                    local sets = ns.ActionBarsModule and ns.ActionBarsModule:GetActionBarSets()
+                    if sets and sets[newName] then
+                        print("|cFFFFD100OneWoW|r AltTracker: " .. L["AB_SET_NAME_EXISTS"])
+                        return
                     end
-                    if ns.UI.RefreshActionBarsListing then
-                        ns.UI.RefreshActionBarsListing(actionBarsTab)
+                    if ns.ActionBarsModule then
+                        local success = ns.ActionBarsModule:RenameActionBarSet(oldName, newName)
+                        if success then
+                            selectedSetName = newName
+                            if split then
+                                ns.UI.BuildActionBarSetsList(split, "")
+                                ns.UI.ShowSetDetails(split, newName)
+                            end
+                        end
                     end
                 end
-            end
-        end)
+                dialog:Hide()
+            end },
+            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+        },
+    })
 
-        yOffset = yOffset - (bubbleHeight + bubbleGap)
-    end
+    local cf = result.contentFrame
+    local msgText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    msgText:SetPoint("TOP", cf, "TOP", 0, -10)
+    msgText:SetWidth(380)
+    msgText:SetText(string.format(L["AB_RENAME_SET_MESSAGE"], oldName))
+    msgText:SetTextColor(T("TEXT_PRIMARY"))
+    msgText:SetJustifyH("CENTER")
 
-    local newHeight = math.max(400, #charList * (bubbleHeight + bubbleGap) + 10)
-    actionBarsTab.listingScrollChild:SetHeight(newHeight)
+    local nameBox = OneWoW_GUI:CreateEditBox(nil, cf, {
+        width = 300,
+        height = 28,
+        placeholder = "",
+    })
+    nameBox:SetPoint("TOP", msgText, "BOTTOM", 0, -12)
+    nameBox:SetText(oldName)
+    nameBox:HighlightText()
+    nameBox:SetFocus()
 
-    if actionBarsTab.leftStatusText then
-        actionBarsTab.leftStatusText:SetText(string.format(L["AB_CHARACTERS_COUNT"], #charList))
-    end
+    result.frame.nameEditBox = nameBox
 
-    ns.UI.ApplyFontToFrame(actionBarsTab)
+    result.frame:Show()
 end
 
-function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
-    if not actionBarsTab or not actionBarsTab.detailScrollChild then return end
-    if not ns.ActionBarsModule then return end
+local function ShowDeleteDialog(split, setName)
+    local result = OneWoW_GUI:CreateConfirmDialog({
+        name = "OneWoW_AT_DeleteSetDialog",
+        title = L["AB_DELETE_SET_TITLE"],
+        message = string.format(L["AB_DELETE_SET_MESSAGE"], setName),
+        buttons = {
+            { text = L["AB_DELETE_SET_CONFIRM"], color = {0.6, 0.2, 0.2}, onClick = function(dialog)
+                if ns.ActionBarsModule then
+                    ns.ActionBarsModule:DeleteActionBarSet(setName)
+                    selectedSetName = nil
+                    selectedRow = nil
+                    if split then
+                        ns.UI.BuildActionBarSetsList(split, "")
+                        OneWoW_GUI:ClearFrame(split.detailScrollChild)
+                        split.detailTitle:SetText(L["AB_SET_DETAILS"])
+                        split.detailTitle:Show()
+                        if split.rightStatusText then
+                            split.rightStatusText:SetText("")
+                        end
+                    end
+                end
+                dialog:Hide()
+            end },
+            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+        },
+    })
+    result.frame:Show()
+end
 
-    for _, child in ipairs({actionBarsTab.detailScrollChild:GetChildren()}) do
-        child:Hide()
-        child:SetParent(nil)
-        child:ClearAllPoints()
+local function ShowDetailPlaceholder(detailScrollChild, message)
+    OneWoW_GUI:ClearFrame(detailScrollChild)
+    local placeholder = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    placeholder:SetPoint("TOP", detailScrollChild, "TOP", 0, -40)
+    placeholder:SetWidth(detailScrollChild:GetWidth() - 20)
+    placeholder:SetText(message)
+    placeholder:SetTextColor(T("TEXT_MUTED"))
+    placeholder:SetJustifyH("CENTER")
+    detailScrollChild:SetHeight(math.max(100, placeholder:GetStringHeight() + 60))
+end
+
+function ns.UI.ShowSetDetails(split, setName)
+    local detailScrollChild = split.detailScrollChild
+    local fw = split.detailScrollFrame:GetWidth()
+    if fw > 0 then
+        detailScrollChild:SetWidth(fw)
     end
+    OneWoW_GUI:ClearFrame(detailScrollChild)
 
-    for _, child in ipairs({actionBarsTab.detailPanel:GetChildren()}) do
-        if child ~= actionBarsTab.detailTitle and child ~= actionBarsTab.detailScrollFrame then
-            child:Hide()
-            child:SetParent(nil)
-            child:ClearAllPoints()
-        end
-    end
-
-    if not charKey or not specName then
-        if actionBarsTab.detailTitle then
-            actionBarsTab.detailTitle:SetText(L["AB_ACTION_BAR_DETAILS"])
-            actionBarsTab.detailTitle:Show()
-        end
+    if not setName then
+        split.detailTitle:SetText(L["AB_SET_DETAILS"])
+        split.detailTitle:Show()
+        ShowDetailPlaceholder(detailScrollChild, L["AB_SET_NO_SELECTION"])
         return
     end
 
-    local charData = ns.ActionBarsModule:GetCharacterData(charKey)
-    if not charData then
-        if actionBarsTab.detailTitle then
-            actionBarsTab.detailTitle:SetText(L["AB_NO_DATA_AVAILABLE"])
-            actionBarsTab.detailTitle:Show()
-        end
+    if not ns.ActionBarsModule then
+        split.detailTitle:SetText(L["AB_NO_DATA_AVAILABLE"])
+        split.detailTitle:Show()
         return
     end
 
-    local specData = ns.ActionBarsModule:GetSpecData(charKey, specName)
-    if not specData or not specData.bars then
-        if actionBarsTab.detailTitle then
-            actionBarsTab.detailTitle:SetText(L["AB_NO_DATA_AVAILABLE"])
-            actionBarsTab.detailTitle:Show()
-        end
+    local setData = ns.ActionBarsModule:GetActionBarSet(setName)
+    if not setData or not setData.bars then
+        split.detailTitle:SetText(L["AB_NO_DATA_AVAILABLE"])
+        split.detailTitle:Show()
         return
     end
 
-    if actionBarsTab.detailTitle then
-        actionBarsTab.detailTitle:Hide()
-    end
+    split.detailTitle:Hide()
 
-    local headerBox = CreateFrame("Frame", nil, actionBarsTab.detailPanel, "BackdropTemplate")
-    headerBox:SetPoint("TOPLEFT", actionBarsTab.detailPanel, "TOPLEFT", 8, -8)
-    headerBox:SetPoint("TOPRIGHT", actionBarsTab.detailPanel, "TOPRIGHT", -8, -8)
-    headerBox:SetHeight(60)
+    local yOffset = -10
+
+    local headerBox = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
+    headerBox:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
+    headerBox:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
+    headerBox:SetHeight(80)
     headerBox:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     headerBox:SetBackdropColor(T("BG_SECONDARY"))
     headerBox:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local headerTitle = headerBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    headerTitle:SetPoint("LEFT", headerBox, "LEFT", 10, 14)
-    headerTitle:SetText((charData.name or charKey) .. " - " .. specName)
+    local headerTitle = headerBox:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    headerTitle:SetPoint("TOPLEFT", headerBox, "TOPLEFT", 10, -8)
+    headerTitle:SetText(setName)
     headerTitle:SetTextColor(T("ACCENT_PRIMARY"))
+
+    local sourceText = headerBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sourceText:SetPoint("TOPLEFT", headerTitle, "BOTTOMLEFT", 0, -4)
+    local charName = setData.sourceChar and setData.sourceChar:match("^([^%-]+)") or "?"
+    sourceText:SetText(string.format(L["AB_SET_SOURCE"], charName, setData.sourceSpec or "?"))
+    sourceText:SetTextColor(T("TEXT_SECONDARY"))
+
+    if setData.lastUpdate then
+        local updatedText = headerBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        updatedText:SetPoint("TOPLEFT", sourceText, "BOTTOMLEFT", 0, -2)
+        updatedText:SetText(string.format(L["AB_SET_UPDATED"], date("%Y-%m-%d %H:%M", setData.lastUpdate)))
+        updatedText:SetTextColor(T("TEXT_SECONDARY"))
+    end
+
+    local renameBtn = OneWoW_GUI:CreateFitTextButton(headerBox, L["AB_RENAME_SET"], { height = 24 })
+    renameBtn:SetPoint("TOPRIGHT", headerBox, "TOPRIGHT", -10, -8)
+    renameBtn:SetScript("OnClick", function()
+        ShowRenameDialog(split, setName)
+    end)
+
+    local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerBox, L["AB_DELETE_SET"], { height = 24 })
+    deleteBtn:SetPoint("RIGHT", renameBtn, "LEFT", -6, 0)
+    deleteBtn:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
+    deleteBtn:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
+    deleteBtn.text:SetTextColor(1, 1, 1)
+    deleteBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.7, 0.3, 0.3, 1.0)
+    end)
+    deleteBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
+    end)
+    deleteBtn:SetScript("OnClick", function()
+        ShowDeleteDialog(split, setName)
+    end)
 
     local restoreAllBtn = OneWoW_GUI:CreateButton(nil, headerBox, L["AB_RESTORE_ALL_BARS"], 110, 24)
     restoreAllBtn:SetPoint("BOTTOMLEFT", headerBox, "BOTTOMLEFT", 10, 6)
@@ -678,7 +440,6 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
     restoreAllBtn:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
     restoreAllBtn.text:SetFontObject("GameFontNormalSmall")
     restoreAllBtn.text:SetTextColor(1, 1, 1)
-
     restoreAllBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.7, 0.3, 0.3, 1.0)
         self:SetBackdropBorderColor(0.9, 0.4, 0.4, 1.0)
@@ -688,12 +449,12 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
         self:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
     end)
     restoreAllBtn:SetScript("OnClick", function()
-        ShowRestoreAllDialog(charKey, specName, charData.name or charKey)
+        ShowRestoreAllDialog(setName)
     end)
 
     local keybindCount = 0
-    if charData.keybinds and charData.keybinds.bindings then
-        for _ in pairs(charData.keybinds.bindings) do
+    if setData.keybinds and setData.keybinds.bindings then
+        for _ in pairs(setData.keybinds.bindings) do
             keybindCount = keybindCount + 1
         end
     end
@@ -715,8 +476,8 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
             self:SetBackdropBorderColor(0.4, 0.5, 0.7, 1.0)
         end)
         restoreKeybindsBtn:SetScript("OnClick", function()
-            if ns.ActionBarsModule and ns.ActionBarsModule.RestoreKeybinds then
-                ns.ActionBarsModule:RestoreKeybinds(charKey)
+            if ns.ActionBarsModule then
+                ns.ActionBarsModule:RestoreKeybindsFromSet(setName)
             end
         end)
     else
@@ -728,16 +489,12 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
 
     local accountMacros = 0
     local charMacros = 0
-    if charData.macros then
-        if charData.macros.account then
-            for _ in pairs(charData.macros.account) do
-                accountMacros = accountMacros + 1
-            end
+    if setData.macros then
+        if setData.macros.account then
+            for _ in pairs(setData.macros.account) do accountMacros = accountMacros + 1 end
         end
-        if charData.macros.character then
-            for _ in pairs(charData.macros.character) do
-                charMacros = charMacros + 1
-            end
+        if setData.macros.character then
+            for _ in pairs(setData.macros.character) do charMacros = charMacros + 1 end
         end
     end
     local macroCount = accountMacros + charMacros
@@ -759,7 +516,7 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
             self:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
         end)
         restoreMacrosBtn:SetScript("OnClick", function()
-            ShowRestoreMacrosDialog(charKey, charData.name or charKey, accountMacros, charMacros)
+            ShowRestoreMacrosDialog(setName, setData)
         end)
     else
         restoreMacrosBtn:SetBackdropColor(T("BG_SECONDARY"))
@@ -768,21 +525,27 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
         restoreMacrosBtn.text:SetTextColor(T("TEXT_SECONDARY"))
     end
 
-    if actionBarsTab.detailScrollFrame then
-        actionBarsTab.detailScrollFrame:ClearAllPoints()
-        actionBarsTab.detailScrollFrame:SetPoint("TOPLEFT", headerBox, "BOTTOMLEFT", 0, -5)
-        actionBarsTab.detailScrollFrame:SetPoint("BOTTOMRIGHT", actionBarsTab.detailPanel, "BOTTOMRIGHT", -8, 8)
-    end
+    yOffset = yOffset - 80 - 10
 
-    local yOffset = -10
+    local showAllCheckbox = OneWoW_GUI:CreateCheckbox(nil, detailScrollChild, L["AB_SHOW_ALL_BARS"])
+    showAllCheckbox:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yOffset)
+    showAllCheckbox:SetChecked(showAllBars)
+    showAllCheckbox:SetScript("OnClick", function(self)
+        showAllBars = self:GetChecked()
+        if selectedSetName then
+            ns.UI.ShowSetDetails(split, selectedSetName)
+        end
+    end)
+    yOffset = yOffset - 28
+
     local barOrder = BAR_DISPLAY_ORDER
 
     for _, barNumber in ipairs(barOrder) do
-        local barData = specData.bars and specData.bars[barNumber]
+        local barData = setData.bars and setData.bars[barNumber]
 
         if showAllBars or (barData and barData.slots) then
-            local barLabelFrame = CreateFrame("Frame", nil, actionBarsTab.detailScrollChild)
-            barLabelFrame:SetPoint("TOPLEFT", actionBarsTab.detailScrollChild, "TOPLEFT", 10, yOffset)
+            local barLabelFrame = CreateFrame("Frame", nil, detailScrollChild)
+            barLabelFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yOffset)
             barLabelFrame:SetSize(70, 20)
             local barLabel = barLabelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             barLabel:SetAllPoints()
@@ -796,9 +559,9 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
                 local slotData = barData and barData.slots and barData.slots[slotIndex]
                 local xPos = slotXStart + ((slotIndex - 1) * 36)
 
-                local slotFrame = CreateFrame("Button", nil, actionBarsTab.detailScrollChild, "BackdropTemplate")
+                local slotFrame = CreateFrame("Button", nil, detailScrollChild, "BackdropTemplate")
                 slotFrame:SetSize(32, 32)
-                slotFrame:SetPoint("TOPLEFT", actionBarsTab.detailScrollChild, "TOPLEFT", xPos, slotYOffset)
+                slotFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", xPos, slotYOffset)
                 slotFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
 
                 if slotData then
@@ -856,8 +619,8 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
             end
 
             if barData and barData.slots then
-                local restoreBarBtn = OneWoW_GUI:CreateButton(nil, actionBarsTab.detailScrollChild, L["AB_LABEL_RESTORE"], 70, 26)
-                restoreBarBtn:SetPoint("TOPLEFT", actionBarsTab.detailScrollChild, "TOPLEFT", slotXStart + (12 * 36) + 10, slotYOffset + 3)
+                local restoreBarBtn = OneWoW_GUI:CreateButton(nil, detailScrollChild, L["AB_LABEL_RESTORE"], 70, 26)
+                restoreBarBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", slotXStart + (12 * 36) + 10, slotYOffset + 3)
                 restoreBarBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
                 restoreBarBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
                 restoreBarBtn.text:SetFontObject("GameFontNormalSmall")
@@ -871,8 +634,9 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
                     self:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
                     self:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
                 end)
+                local capturedBarNumber = barNumber
                 restoreBarBtn:SetScript("OnClick", function()
-                    ShowRestoreBarDialog(charKey, barNumber, specName, actionBarsTab)
+                    ShowRestoreBarDialog(setName, capturedBarNumber, split)
                 end)
             end
 
@@ -881,5 +645,256 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
     end
 
     local newHeight = math.max(400, math.abs(yOffset) + 20)
-    actionBarsTab.detailScrollChild:SetHeight(newHeight)
+    detailScrollChild:SetHeight(newHeight)
+    split.UpdateDetailThumb()
+
+    if split.rightStatusText then
+        split.rightStatusText:SetText(setName)
+    end
+
+    ns.UI.ApplyFontToFrame(split.detailScrollChild)
+end
+
+function ns.UI.BuildActionBarSetsList(split, filterText)
+    local listScrollChild = split.listScrollChild
+    OneWoW_GUI:ClearFrame(listScrollChild)
+    selectedRow = nil
+
+    if not ns.ActionBarsModule then
+        ShowDetailPlaceholder(listScrollChild, L["AB_SET_EMPTY"])
+        if split.leftStatusText then split.leftStatusText:SetText("") end
+        return
+    end
+
+    local sets = ns.ActionBarsModule:GetActionBarSets()
+    local setNames = {}
+    for name, data in pairs(sets) do
+        table.insert(setNames, { name = name, data = data })
+    end
+
+    table.sort(setNames, function(a, b)
+        return (a.name or "") < (b.name or "")
+    end)
+
+    local filter = (filterText and #filterText > 0) and filterText:lower() or nil
+    local shownCount = 0
+    local totalCount = #setNames
+
+    local yOffset = -5
+    local rowHeight = 32
+
+    local classBuckets = {}
+    local classOrder = {}
+
+    for _, entry in ipairs(setNames) do
+        local className = entry.data.sourceClass or "UNKNOWN"
+        if not classBuckets[className] then
+            classBuckets[className] = {}
+            table.insert(classOrder, className)
+        end
+        table.insert(classBuckets[className], entry)
+    end
+
+    table.sort(classOrder, function(a, b)
+        return (CLASS_DISPLAY_NAMES[a] or a) < (CLASS_DISPLAY_NAMES[b] or b)
+    end)
+
+    for _, className in ipairs(classOrder) do
+        if not activeFilterClass or activeFilterClass == className then
+            local entries = classBuckets[className]
+            local filteredEntries = {}
+
+            for _, entry in ipairs(entries) do
+                if not filter or entry.name:lower():find(filter, 1, true) then
+                    table.insert(filteredEntries, entry)
+                end
+            end
+
+            if #filteredEntries > 0 then
+                local classColor = RAID_CLASS_COLORS[className]
+                local catLabel = listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                catLabel:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 8, yOffset)
+                catLabel:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -8, yOffset)
+                catLabel:SetJustifyH("LEFT")
+                catLabel:SetText(CLASS_DISPLAY_NAMES[className] or className)
+                if classColor then
+                    catLabel:SetTextColor(classColor.r, classColor.g, classColor.b)
+                else
+                    catLabel:SetTextColor(T("ACCENT_SECONDARY"))
+                end
+                yOffset = yOffset - catLabel:GetStringHeight() - 4
+
+                for _, entry in ipairs(filteredEntries) do
+                    local capturedName = entry.name
+                    shownCount = shownCount + 1
+
+                    local hasBarData = ns.ActionBarsModule:HasSetBarData(capturedName)
+
+                    local row = OneWoW_GUI:CreateListRowBasic(listScrollChild, {
+                        height = rowHeight,
+                        label = capturedName,
+                        showDot = true,
+                        dotEnabled = hasBarData,
+                        onClick = function(self)
+                            if selectedRow and selectedRow ~= self then
+                                selectedRow:SetActive(false)
+                            end
+                            selectedSetName = capturedName
+                            selectedRow = self
+                            self:SetActive(true)
+                            ns.UI.ShowSetDetails(split, capturedName)
+                        end,
+                    })
+                    row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
+                    row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -4, yOffset)
+
+                    if selectedSetName == capturedName then
+                        row:SetActive(true)
+                        selectedRow = row
+                    end
+
+                    yOffset = yOffset - rowHeight - 4
+                end
+
+                yOffset = yOffset - 8
+            end
+        end
+    end
+
+    if shownCount == 0 then
+        ShowDetailPlaceholder(listScrollChild, L["AB_SET_EMPTY"])
+    end
+
+    listScrollChild:SetHeight(math.max(400, math.abs(yOffset) + 10))
+    split.UpdateListThumb()
+
+    if split.leftStatusText then
+        if filter or activeFilterClass then
+            split.leftStatusText:SetText(string.format(L["AB_SETS_FILTERED"], shownCount, totalCount))
+        else
+            split.leftStatusText:SetText(string.format(L["AB_SETS_COUNT"], totalCount))
+        end
+    end
+
+    ns.UI.ApplyFontToFrame(listScrollChild)
+end
+
+function ns.UI.CreateActionBarsTab(parent)
+    local contentPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    contentPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+    contentPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+    contentPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    contentPanel:SetBackdropColor(T("BG_PRIMARY"))
+    contentPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+
+    parent.contentPanel = contentPanel
+
+    local controlPanel = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
+    controlPanel:SetPoint("TOPLEFT", contentPanel, "TOPLEFT", 5, -5)
+    controlPanel:SetPoint("TOPRIGHT", contentPanel, "TOPRIGHT", -5, -5)
+    controlPanel:SetHeight(50)
+    controlPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    controlPanel:SetBackdropColor(T("BG_SECONDARY"))
+    controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+
+    local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    controlTitle:SetPoint("LEFT", controlPanel, "LEFT", 10, 0)
+    local currentSpec = select(2, GetSpecializationInfo(GetSpecialization())) or L["AB_UNKNOWN_SPEC"]
+    controlTitle:SetText(UnitName("player") .. " - " .. currentSpec)
+    controlTitle:SetTextColor(T("ACCENT_PRIMARY"))
+
+    local splitContainer = CreateFrame("Frame", nil, contentPanel)
+    splitContainer:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -5)
+    splitContainer:SetPoint("BOTTOMRIGHT", contentPanel, "BOTTOMRIGHT", -5, 5)
+
+    local split = OneWoW_GUI:CreateSplitPanel(splitContainer, {
+        showSearch = true,
+        searchPlaceholder = L["AB_SEARCH_HINT"],
+    })
+
+    split.listTitle:SetText(L["AB_SETS_LIST"])
+    split.detailTitle:SetText(L["AB_SET_DETAILS"])
+
+    local backupBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, L["AB_BACKUP_SET"], { height = 28 })
+    backupBtn:SetPoint("RIGHT", controlPanel, "RIGHT", -10, 0)
+    backupBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
+    backupBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
+    backupBtn.text:SetTextColor(1, 1, 1)
+    backupBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.3, 0.7, 0.3, 1.0)
+    end)
+    backupBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
+    end)
+    backupBtn:SetScript("OnClick", function()
+        ShowBackupDialog(split)
+    end)
+
+    local filterDropdown, filterDropdownText = OneWoW_GUI:CreateDropdown(controlPanel, {
+        width = 160,
+        height = 28,
+        text = L["AB_FILTER_ALL"],
+    })
+    filterDropdown:SetPoint("RIGHT", backupBtn, "LEFT", -10, 0)
+
+    OneWoW_GUI:AttachFilterMenu(filterDropdown, filterDropdownText, {
+        searchable = false,
+        buildItems = function()
+            local items = {{ value = nil, text = L["AB_FILTER_ALL"] }}
+            local sets = ns.ActionBarsModule and ns.ActionBarsModule:GetActionBarSets() or {}
+            local classesFound = {}
+            for _, data in pairs(sets) do
+                local cls = data.sourceClass
+                if cls and not classesFound[cls] then
+                    classesFound[cls] = true
+                    table.insert(items, {
+                        value = cls,
+                        text = CLASS_DISPLAY_NAMES[cls] or cls,
+                    })
+                end
+            end
+            table.sort(items, function(a, b)
+                if a.value == nil then return true end
+                if b.value == nil then return false end
+                return (a.text or "") < (b.text or "")
+            end)
+            return items
+        end,
+        onSelect = function(value, displayText)
+            activeFilterClass = value
+            filterDropdownText:SetText(displayText)
+            local searchText = split.searchBox and split.searchBox:GetSearchText() or ""
+            ns.UI.BuildActionBarSetsList(split, searchText)
+        end,
+        getActiveValue = function() return activeFilterClass end,
+    })
+
+    if split.searchBox then
+        split.searchBox:SetScript("OnTextChanged", function(self)
+            ns.UI.BuildActionBarSetsList(split, self:GetSearchText())
+        end)
+    end
+
+    parent.split = split
+    parent.controlPanel = controlPanel
+    parent.controlTitle = controlTitle
+
+    ns.UI.ApplyFontToFrame(parent)
+
+    C_Timer.After(0.5, function()
+        ns.UI.BuildActionBarSetsList(split, "")
+    end)
+end
+
+function ns.UI.RefreshActionBarsListing(actionBarsTab)
+    if actionBarsTab and actionBarsTab.split then
+        local searchText = actionBarsTab.split.searchBox and actionBarsTab.split.searchBox:GetSearchText() or ""
+        ns.UI.BuildActionBarSetsList(actionBarsTab.split, searchText)
+    end
+end
+
+function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
+    if actionBarsTab and actionBarsTab.split then
+        ns.UI.ShowSetDetails(actionBarsTab.split, selectedSetName)
+    end
 end
