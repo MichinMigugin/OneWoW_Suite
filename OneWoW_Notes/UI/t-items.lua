@@ -3,12 +3,11 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local selectedItem  = nil
 local itemListItems = {}
@@ -33,16 +32,16 @@ local BACKDROP_STANDARD = {
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     f:SetBackdrop(BACKDROP_STANDARD)
-    f:SetBackdropColor(T("BG_PRIMARY"))
-    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
 end
 
 local function CreateThemedBar(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     f:SetBackdrop(BACKDROP_STANDARD)
-    f:SetBackdropColor(T("BG_SECONDARY"))
-    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
 end
 
@@ -58,7 +57,7 @@ function ns.UI.CreateItemsTab(parent)
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["ITEMS_CONTROLS"])
-    controlTitle:SetTextColor(T("TEXT_SECONDARY"))
+    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local addItemBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_ITEM"], 100, 25)
     ns.UI.AutoResizeButton(addItemBtn, 80, 200)
@@ -106,15 +105,15 @@ function ns.UI.CreateItemsTab(parent)
             parent.RefreshItemsList()
             ClearCursor()
         end
-        controlPanel:SetBackdropColor(T("BG_SECONDARY"))
+        controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     end)
     controlPanel:SetScript("OnEnter", function()
         if GetCursorInfo() == "item" then
-            controlPanel:SetBackdropColor(T("BG_HOVER"))
+            controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         end
     end)
     controlPanel:SetScript("OnLeave", function()
-        controlPanel:SetBackdropColor(T("BG_SECONDARY"))
+        controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     end)
 
     local addByIDBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_BY_ID"] or "Add by ID", 90, 25)
@@ -220,7 +219,7 @@ function ns.UI.CreateItemsTab(parent)
     local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
     listingTitle:SetText(L["ITEMS_LIST"] or "Items")
-    listingTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
     scrollFrame = listScroll.scrollFrame
@@ -245,7 +244,7 @@ function ns.UI.CreateItemsTab(parent)
 
     leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
-    leftStatusText:SetTextColor(T("TEXT_SECONDARY"))
+    leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ITEMS"], 0))
 
     local rightStatusBar = CreateThemedBar(nil, parent)
@@ -255,7 +254,7 @@ function ns.UI.CreateItemsTab(parent)
 
     local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
-    rightStatusText:SetTextColor(T("TEXT_SECONDARY"))
+    rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
 
     local function ShowEditor()
@@ -287,13 +286,13 @@ function ns.UI.CreateItemsTab(parent)
             nameText:SetPoint("RIGHT", editorHeader,  "RIGHT", -100, 0)
             nameText:SetJustifyH("LEFT")
             nameText:SetText("")
-            nameText:SetTextColor(T("ACCENT_PRIMARY"))
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             editorHeader.nameText = nameText
 
             local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
             categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
-            categoryLine:SetTextColor(T("ACCENT_PRIMARY"))
+            categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
 
@@ -503,7 +502,7 @@ function ns.UI.CreateItemsTab(parent)
             local ttLabel = tooltipSection:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
             ttLabel:SetText(L["UI_TOOLTIP_LINES"] or "Tooltip Lines:")
-            ttLabel:SetTextColor(T("ACCENT_PRIMARY"))
+            ttLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
             local tooltipEdits = {}
             for i = 1, 4 do
@@ -865,7 +864,7 @@ local function MakeItemLabel(parent, text, x, y)
     local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     lbl:SetText(text)
-    lbl:SetTextColor(T("TEXT_SECONDARY"))
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     return lbl
 end
 
@@ -935,7 +934,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
 
     MakeItemLabel(content, L["LABEL_ITEM_ID"] or "Item ID:", COL1_X, yPos)
 
-    local idInput = lib:CreateEditBox(nil, content, {
+    local idInput = OneWoW_GUI:CreateEditBox(nil, content, {
         width = 160,
         height = 26,
     })
@@ -1133,7 +1132,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     if itemData.type and itemData.type ~= "" then subText = subText .. "  |  " .. itemData.type end
     if itemData.subType and itemData.subType ~= "" then subText = subText .. " / " .. itemData.subType end
     subFS:SetText(subText)
-    subFS:SetTextColor(T("TEXT_MUTED"))
+    subFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     yPos = yPos - 54
 
@@ -1170,7 +1169,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     end
     yPos = yPos - ROW_H - 8
 
-    local alertCB = lib:CreateCheckbox(nil, content, L["ITEM_ALERT_ON_LOOT"] or "Alert on Loot")
+    local alertCB = OneWoW_GUI:CreateCheckbox(nil, content, L["ITEM_ALERT_ON_LOOT"] or "Alert on Loot")
     alertCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     alertCB:SetChecked(itemData.alertOnLoot or false)
     alertCB:SetScript("OnClick", function(self)

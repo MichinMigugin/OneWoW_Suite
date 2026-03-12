@@ -1,8 +1,11 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 
 ns.UI = ns.UI or {}
 
@@ -21,13 +24,13 @@ function ns.UI.CreateBankTab(parent)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -5, -5)
     controlPanel:SetHeight(85)
     controlPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    controlPanel:SetBackdropColor(T("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     controlTitle:SetPoint("TOP", controlPanel, "TOP", 0, -8)
     controlTitle:SetText(currentChar .. " - " .. L["BANK_PERSONAL"])
-    controlTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local charDropdown, charDropdownText = OneWoW_GUI:CreateDropdown(controlPanel, {
         width = 170, height = 28, text = ""
@@ -53,15 +56,15 @@ function ns.UI.CreateBankTab(parent)
 
         btn:SetScript("OnEnter", function(self)
             if currentBankType ~= self.bankType then
-                self:SetBackdropColor(T("BG_HOVER"))
-                self.label:SetTextColor(T("TEXT_ACCENT"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                self.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         end)
 
         btn:SetScript("OnLeave", function(self)
             if currentBankType ~= self.bankType then
-                self:SetBackdropColor(T("BG_TERTIARY"))
-                self.label:SetTextColor(T("TEXT_SECONDARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                self.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
         end)
 
@@ -71,13 +74,13 @@ function ns.UI.CreateBankTab(parent)
 
             for _, button in ipairs(parent.bankTypeButtons) do
                 if button.bankType == currentBankType then
-                    button:SetBackdropColor(T("ACCENT_PRIMARY"))
-                    button:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+                    button:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                    button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     button.label:SetTextColor(1, 1, 1)
                 else
-                    button:SetBackdropColor(T("BG_TERTIARY"))
-                    button:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-                    button.label:SetTextColor(T("TEXT_SECONDARY"))
+                    button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                    button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+                    button.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 end
             end
 
@@ -128,8 +131,8 @@ function ns.UI.CreateBankTab(parent)
     buttonContainer:SetScript("OnSizeChanged", LayoutBankButtons)
     C_Timer.After(0.1, LayoutBankButtons)
 
-    personalBtn:SetBackdropColor(T("ACCENT_PRIMARY"))
-    personalBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+    personalBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    personalBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     personalBtn.label:SetTextColor(1, 1, 1)
 
     local updateButton = OneWoW_GUI:CreateButton(nil, controlPanel, L["BANK_UPDATE_BANKS"], 120, 28)
@@ -142,8 +145,8 @@ function ns.UI.CreateBankTab(parent)
     bankViewPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -8)
     bankViewPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
     bankViewPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    bankViewPanel:SetBackdropColor(T("BG_PRIMARY"))
-    bankViewPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    bankViewPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    bankViewPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local gridContainer = CreateFrame("Frame", nil, bankViewPanel)
     gridContainer:SetPoint("TOPLEFT", bankViewPanel, "TOPLEFT", 10, -10)
@@ -169,7 +172,7 @@ function ns.UI.CreateBankTab(parent)
     bagScrollBar:SetPoint("BOTTOMLEFT", bagScrollFrame, "BOTTOMRIGHT", 2, 0)
     bagScrollBar:SetWidth(10)
     bagScrollBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
-    bagScrollBar:SetBackdropColor(T("BG_TERTIARY"))
+    bagScrollBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     bagScrollBar:SetMinMaxValues(0, 0)
     bagScrollBar:SetValue(0)
     bagScrollBar:Hide()
@@ -179,7 +182,7 @@ function ns.UI.CreateBankTab(parent)
 
     local bagScrollThumb = bagScrollBar:CreateTexture(nil, "OVERLAY")
     bagScrollThumb:SetSize(8, 30)
-    bagScrollThumb:SetColorTexture(T("ACCENT_PRIMARY"))
+    bagScrollThumb:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     bagScrollBar:SetThumbTexture(bagScrollThumb)
 
     bagScrollFrame:EnableMouseWheel(true)
@@ -196,12 +199,12 @@ function ns.UI.CreateBankTab(parent)
     statusBar:SetPoint("TOPRIGHT", bankViewPanel, "BOTTOMRIGHT", 0, -5)
     statusBar:SetHeight(25)
     statusBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    statusBar:SetBackdropColor(T("BG_SECONDARY"))
-    statusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    statusBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    statusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local statusText = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     statusText:SetPoint("LEFT", statusBar, "LEFT", 10, 0)
-    statusText:SetTextColor(T("TEXT_SECONDARY"))
+    statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     statusText:SetText(L["BANK_VIEWING"] .. ": " .. currentChar .. " - " .. L["BANK_PERSONAL"])
 
     parent.controlPanel = controlPanel
@@ -587,7 +590,7 @@ function ns.UI.CreateBankTabs(parent)
         tabBtn.text:ClearAllPoints()
         tabBtn.text:SetPoint("BOTTOM", tabBtn, "BOTTOM", 0, 4)
         tabBtn.text:SetFontObject("GameFontNormalSmall")
-        tabBtn.text:SetTextColor(T("TEXT_SECONDARY"))
+        tabBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local icon = tabBtn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(32, 32)
@@ -632,15 +635,15 @@ function ns.UI.CreateBankTabs(parent)
 
         tabBtn:SetScript("OnEnter", function(self)
             if currentTab ~= i then
-                self:SetBackdropColor(T("BG_HOVER"))
-                self.text:SetTextColor(T("TEXT_ACCENT"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         end)
 
         tabBtn:SetScript("OnLeave", function(self)
             if currentTab ~= i then
-                self:SetBackdropColor(T("BG_TERTIARY"))
-                self.text:SetTextColor(T("TEXT_SECONDARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
         end)
 
@@ -649,13 +652,13 @@ function ns.UI.CreateBankTabs(parent)
 
             for tabIndex, btn in ipairs(parent.tabButtons) do
                 if tabIndex == i then
-                    btn:SetBackdropColor(T("ACCENT_PRIMARY"))
-                    btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     btn.text:SetTextColor(1, 1, 1)
                 else
-                    btn:SetBackdropColor(T("BG_TERTIARY"))
-                    btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                    btn.text:SetTextColor(T("TEXT_SECONDARY"))
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 end
             end
 
@@ -665,8 +668,8 @@ function ns.UI.CreateBankTabs(parent)
         end)
 
         if i == currentTab then
-            tabBtn:SetBackdropColor(T("ACCENT_PRIMARY"))
-            tabBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+            tabBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            tabBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             tabBtn.text:SetTextColor(1, 1, 1)
         end
 
@@ -696,17 +699,14 @@ function ns.UI.DisplayBankGrid(parent, items)
             if not itemFrame.bg then
                 itemFrame.bg = itemFrame:CreateTexture(nil, "BACKGROUND")
                 itemFrame.bg:SetAllPoints()
-                itemFrame.bg:SetColorTexture(T("BG_SECONDARY"))
+                itemFrame.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             end
 
             if not itemFrame.border then
                 itemFrame.border = CreateFrame("Frame", nil, itemFrame, "BackdropTemplate")
                 itemFrame.border:SetAllPoints()
-                itemFrame.border:SetBackdrop({
-                    edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1,
-                })
-                itemFrame.border:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                itemFrame.border:SetBackdrop(BACKDROP_EDGE)
+                itemFrame.border:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
             end
 
             if not itemFrame.texture then
@@ -717,7 +717,7 @@ function ns.UI.DisplayBankGrid(parent, items)
 
             if not itemFrame.qualityBorder then
                 itemFrame.qualityBorder = itemFrame:CreateTexture(nil, "BORDER")
-                itemFrame.qualityBorder:SetTexture("Interface\\Buttons\\WHITE8X8")
+                itemFrame.qualityBorder:SetTexture(BACKDROP_SIMPLE.bgFile)
                 itemFrame.qualityBorder:SetSize(itemSize - 4, itemSize - 4)
                 itemFrame.qualityBorder:SetPoint("CENTER")
                 itemFrame.qualityBorder:Hide()
@@ -824,17 +824,14 @@ function ns.UI.DisplayOneBagGrid(parent, sortedItems)
         if not itemFrame.bg then
             itemFrame.bg = itemFrame:CreateTexture(nil, "BACKGROUND")
             itemFrame.bg:SetAllPoints()
-            itemFrame.bg:SetColorTexture(T("BG_SECONDARY"))
+            itemFrame.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         end
 
         if not itemFrame.border then
             itemFrame.border = CreateFrame("Frame", nil, itemFrame, "BackdropTemplate")
             itemFrame.border:SetAllPoints()
-            itemFrame.border:SetBackdrop({
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
-            itemFrame.border:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            itemFrame.border:SetBackdrop(BACKDROP_EDGE)
+            itemFrame.border:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         end
 
         if not itemFrame.texture then
@@ -845,7 +842,7 @@ function ns.UI.DisplayOneBagGrid(parent, sortedItems)
 
         if not itemFrame.qualityBorder then
             itemFrame.qualityBorder = itemFrame:CreateTexture(nil, "BORDER")
-            itemFrame.qualityBorder:SetTexture("Interface\\Buttons\\WHITE8X8")
+            itemFrame.qualityBorder:SetTexture(BACKDROP_SIMPLE.bgFile)
             itemFrame.qualityBorder:SetSize(itemSize - 4, itemSize - 4)
             itemFrame.qualityBorder:SetPoint("CENTER")
             itemFrame.qualityBorder:Hide()

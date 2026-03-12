@@ -2,6 +2,8 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local Constants = OneWoW_GUI.Constants
+local DEFAULT_THEME_KEY = Constants.DEFAULT_THEME_KEY
+local DEFAULT_THEME_NAME = Constants.DEFAULT_THEME_NAME
 local CreateFrame = CreateFrame
 local unpack = unpack
 
@@ -26,7 +28,7 @@ local function InitSettingsDB()
     end
     local db = OneWoW_GUI_DB
     if not db.language then db.language = GetLocale() end
-    if not db.theme then db.theme = "green" end
+    if not db.theme then db.theme = DEFAULT_THEME_KEY end
     if not db.font then db.font = "default" end
     if not db.minimap then db.minimap = {} end
     if db.minimap.hide == nil then db.minimap.hide = false end
@@ -74,7 +76,7 @@ function OneWoW_GUI:MigrateSettings(sourceGlobal)
     if not db or not sourceGlobal then return end
     if db._migrated then return end
     db._migrated = true
-    if sourceGlobal.theme and sourceGlobal.theme ~= "green" then
+    if sourceGlobal.theme and sourceGlobal.theme ~= DEFAULT_THEME_KEY then
         db.theme = sourceGlobal.theme
     end
     if sourceGlobal.language then
@@ -117,8 +119,8 @@ end
 local THEMES_ORDER = Constants.THEMES_ORDER
 local THEMES = Constants.THEMES
 
-local MEDIA_BASE = "Interface\\AddOns\\OneWoW_GUI\\Media\\"
-local FONT_BASE = MEDIA_BASE .. "Fonts\\"
+local MEDIA_BASE = Constants.MEDIA_BASE
+local FONT_BASE = Constants.FONT_BASE
 
 local FONTS = {
     { key = "default",              label = "WoW Default",          file = nil },
@@ -307,7 +309,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local yOffset = options.yOffset or -10
 
     local currentLang = self:GetSetting("language") or "enUS"
-    local currentThemeKey = self:GetSetting("theme") or "green"
+    local currentThemeKey = self:GetSetting("theme") or DEFAULT_THEME_KEY
     local currentIconTheme = self:GetSetting("minimap.theme") or "horde"
     local isMinimapHidden = self:GetSetting("minimap.hide")
 
@@ -398,7 +400,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     themeDesc:SetWordWrap(true)
 
     local currentThemeData = THEMES[currentThemeKey]
-    local currentThemeName = currentThemeData and currentThemeData.name or "Forest Green"
+    local currentThemeName = currentThemeData and currentThemeData.name or DEFAULT_THEME_NAME
 
     local currentThemeLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     currentThemeLabel:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -90)

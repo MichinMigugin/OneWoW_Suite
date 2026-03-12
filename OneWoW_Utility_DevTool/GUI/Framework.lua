@@ -1,61 +1,47 @@
 local ADDON_NAME, Addon = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER
+
 local GUI = {}
 Addon.GUI = GUI
-
-local function T(key)
-    if Addon.Constants and Addon.Constants.THEME and Addon.Constants.THEME[key] then
-        return unpack(Addon.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
-end
-
-local function S(key)
-    if Addon.Constants and Addon.Constants.SPACING then
-        return Addon.Constants.SPACING[key] or 8
-    end
-    return 8
-end
 
 function GUI:CreateButton(name, parent, text, width, height)
     local C = Addon.Constants and Addon.Constants.BUTTON_HEIGHT or 28
     local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
     btn:SetSize(width or 100, height or C)
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    btn:SetBackdropColor(T("BTN_NORMAL"))
-    btn:SetBackdropBorderColor(T("BTN_BORDER"))
+    btn:SetBackdrop(BACKDROP_INNER)
+    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
     btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     btn.text:SetPoint("CENTER")
     btn.text:SetText(text)
-    btn.text:SetTextColor(T("TEXT_PRIMARY"))
+    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BTN_HOVER"))
-        self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(T("TEXT_ACCENT"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     end)
 
     btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BTN_NORMAL"))
-        self:SetBackdropBorderColor(T("BTN_BORDER"))
-        self.text:SetTextColor(T("TEXT_PRIMARY"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
 
     btn:SetScript("OnMouseDown", function(self)
-        self:SetBackdropColor(T("BTN_PRESSED"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
     end)
 
     btn:SetScript("OnMouseUp", function(self)
         if self:IsMouseOver() then
-            self:SetBackdropColor(T("BTN_HOVER"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         else
-            self:SetBackdropColor(T("BTN_NORMAL"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
         end
     end)
 
@@ -66,26 +52,21 @@ function GUI:CreateEditBox(name, parent, width, height)
     local C = Addon.Constants and Addon.Constants.SEARCH_HEIGHT or 32
     local box = CreateFrame("EditBox", name, parent, "BackdropTemplate")
     box:SetSize(width or 200, height or C)
-    box:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    box:SetBackdropColor(T("BG_TERTIARY"))
-    box:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    box:SetBackdrop(BACKDROP_INNER)
+    box:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    box:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     box:SetFontObject(GameFontHighlight)
-    box:SetTextInsets(S("SM") + 2, S("SM"), 0, 0)
+    box:SetTextInsets(OneWoW_GUI:GetSpacing("SM") + 2, OneWoW_GUI:GetSpacing("SM"), 0, 0)
     box:SetAutoFocus(false)
     box:EnableMouse(true)
-    box:SetTextColor(T("TEXT_PRIMARY"))
+    box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     box:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
     end)
     box:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
     return box
@@ -115,12 +96,12 @@ function GUI:CreateScrollFrame(name, parent, width, height)
         end
 
         if scrollBar.Background then
-            scrollBar.Background:SetColorTexture(T("BG_TERTIARY"))
+            scrollBar.Background:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         end
 
         if scrollBar.ThumbTexture then
             scrollBar.ThumbTexture:SetWidth(8)
-            scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
+            scrollBar.ThumbTexture:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
     end
 

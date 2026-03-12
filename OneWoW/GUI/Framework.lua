@@ -11,53 +11,25 @@ local ADDON_NAME, OneWoW = ...
 OneWoW.GUI = OneWoW.GUI or {}
 local GUI = OneWoW.GUI
 
-local lib = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 function GUI:CreateFrame(name, parent, width, height, useModernBackdrop)
-    if not lib then return end
     local backdrop = nil
     if useModernBackdrop == true then
-        backdrop = lib.Constants.BACKDROP_SOFT
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT
     elseif type(useModernBackdrop) == "table" then
         backdrop = useModernBackdrop
     end
-    return lib:CreateFrame(name, parent, width, height, backdrop)
-end
-
-function GUI:CreateButton(name, parent, text, width, height)
-    if lib then return lib:CreateButton(name, parent, text, width, height) end
+    return OneWoW_GUI:CreateFrame(name, parent, width, height, backdrop)
 end
 
 function GUI:CreateEditBox(name, parent, width, height)
-    if lib then return lib:CreateEditBox(name, parent, { width = width, height = height }) end
-end
-
-function GUI:CreateCheckbox(name, parent, label)
-    if lib then return lib:CreateCheckbox(name, parent, label) end
-end
-
-function GUI:CreateHeader(parent, text, yOffset)
-    if lib then return lib:CreateHeader(parent, text, yOffset) end
-end
-
-function GUI:CreateDivider(parent, yOffset)
-    if lib then return lib:CreateDivider(parent, yOffset) end
-end
-
-function GUI:CreateScrollFrame(name, parent, width, height)
-    if lib then return lib:CreateScrollFrame(name, parent, width, height) end
-end
-
-function GUI:CreateSplitPanel(parent, options)
-    if lib then return lib:CreateSplitPanel(parent, options) end
-end
-
-function GUI:ClearFrame(frame)
-    if lib then return lib:ClearFrame(frame) end
+    return OneWoW_GUI:CreateEditBox(name, parent, { width = width, height = height })
 end
 
 function GUI:ApplyFont(fs, size)
-    local fontPath = lib and lib.GetFont and lib:GetFont()
+    local fontPath = OneWoW_GUI:GetFont()
     if not fontPath or not fs then return end
     if not size and fs.GetFont then
         local _, currentSize = fs:GetFont()
@@ -70,7 +42,7 @@ end
 
 function GUI:ApplyFontToFrame(frame)
     if not frame then return end
-    local fontPath = lib and lib.GetFont and lib:GetFont()
+    local fontPath = OneWoW_GUI:GetFont()
     if not fontPath then return end
     for _, region in ipairs({frame:GetRegions()}) do
         if region.GetFont and region.SetFont then
@@ -85,14 +57,4 @@ function GUI:ApplyFontToFrame(frame)
         end
         GUI:ApplyFontToFrame(child)
     end
-end
-
-function GUI.GetThemeColor(key)
-    if lib then return lib:GetThemeColor(key) end
-    return 0.5, 0.5, 0.5, 1.0
-end
-
-function GUI.GetSpacing(key)
-    if lib then return lib:GetSpacing(key) end
-    return 8
 end

@@ -3,8 +3,11 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 ns.NotesContextMenu = {}
 local NotesContextMenu = ns.NotesContextMenu
@@ -17,18 +20,14 @@ local function CreateDialogTitleBar(parent, titleText)
     titleBar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     titleBar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     titleBar:SetHeight(30)
-    titleBar:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
-    titleBar:SetBackdropBorderColor(T("TITLEBAR_BORDER"))
+    titleBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
+    titleBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BORDER"))
 
     local titleLabel = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     titleLabel:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
     titleLabel:SetText(titleText)
-    titleLabel:SetTextColor(T("ACCENT_PRIMARY"))
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local closeBtn = CreateFrame("Button", nil, parent)
     closeBtn:SetSize(18, 18)
@@ -71,13 +70,9 @@ local function GetHyperlinkDialog()
     dlg:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     dlg:SetFrameStrata("DIALOG")
     dlg:SetFrameLevel(100)
-    dlg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    dlg:SetBackdropColor(T("BG_PRIMARY"))
-    dlg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    dlg:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    dlg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    dlg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     dlg:Hide()
 
     CreateDialogTitleBar(dlg, L["CTX_INSERT_HYPERLINK"])
@@ -85,7 +80,7 @@ local function GetHyperlinkDialog()
     local typeLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     typeLbl:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12, -40)
     typeLbl:SetText(L["CTX_LINK_TYPE_LABEL"])
-    typeLbl:SetTextColor(T("TEXT_PRIMARY"))
+    typeLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local typeData = {
         { key = "item",        label = L["CTX_LINK_TYPE_ITEM"],        help = L["CTX_HELP_ITEM"] },
@@ -111,11 +106,7 @@ local function GetHyperlinkDialog()
         local btn = CreateFrame("Button", nil, dlg, "BackdropTemplate")
         btn:SetSize(btnW, btnH)
         btn:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12 + col * (btnW + btnGap), -58 - row * (btnH + btnGap))
-        btn:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
+        btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
         btn.typeKey = data.key
         btn.helpText = data.help
 
@@ -126,28 +117,28 @@ local function GetHyperlinkDialog()
 
         btn:SetScript("OnEnter", function(self)
             if dlg.selectedLinkType ~= self.typeKey then
-                self:SetBackdropColor(T("BG_HOVER"))
-                self:SetBackdropBorderColor(T("BORDER_FOCUS"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
             end
         end)
         btn:SetScript("OnLeave", function(self)
             if dlg.selectedLinkType ~= self.typeKey then
-                self:SetBackdropColor(T("BG_SECONDARY"))
-                self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                self.labelText:SetTextColor(T("TEXT_PRIMARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                self.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end)
         btn:SetScript("OnClick", function(self)
             dlg.selectedLinkType = self.typeKey
             for _, tb in ipairs(dlg.typeButtons) do
                 if tb.typeKey == dlg.selectedLinkType then
-                    tb:SetBackdropColor(T("BG_ACTIVE"))
-                    tb:SetBackdropBorderColor(T("BORDER_ACCENT"))
-                    tb.labelText:SetTextColor(T("TEXT_ACCENT"))
+                    tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                    tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                    tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                 else
-                    tb:SetBackdropColor(T("BG_SECONDARY"))
-                    tb:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                    tb.labelText:SetTextColor(T("TEXT_PRIMARY"))
+                    tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                    tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                    tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
             end
             if dlg.helpLabel then
@@ -160,20 +151,20 @@ local function GetHyperlinkDialog()
 
     for _, tb in ipairs(dlg.typeButtons) do
         if tb.typeKey == "item" then
-            tb:SetBackdropColor(T("BG_ACTIVE"))
-            tb:SetBackdropBorderColor(T("BORDER_ACCENT"))
-            tb.labelText:SetTextColor(T("TEXT_ACCENT"))
+            tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            tb:SetBackdropColor(T("BG_SECONDARY"))
-            tb:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-            tb.labelText:SetTextColor(T("TEXT_PRIMARY"))
+            tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end
 
     local valueLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     valueLbl:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12, -58 - 2 * (btnH + btnGap) - 14)
     valueLbl:SetText(L["CTX_ID_OR_VALUE"])
-    valueLbl:SetTextColor(T("TEXT_PRIMARY"))
+    valueLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local valueEditBox = CreateDialogEditBox(dlg, 300, 26)
     valueEditBox:SetPoint("TOPLEFT", valueLbl, "BOTTOMLEFT", 0, -6)
@@ -185,7 +176,7 @@ local function GetHyperlinkDialog()
     helpLabel:SetJustifyH("LEFT")
     helpLabel:SetWordWrap(true)
     helpLabel:SetText(L["CTX_HELP_ITEM"])
-    helpLabel:SetTextColor(T("TEXT_SECONDARY"))
+    helpLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     dlg.helpLabel = helpLabel
 
     local insertBtn = ns.UI.CreateButton(nil, dlg, L["CTX_BUTTON_INSERT"], 100, 28)
@@ -206,7 +197,7 @@ local function GetHyperlinkDialog()
     end)
 
     local cancelBtn = ns.UI.CreateButton(nil, dlg, L["CTX_BUTTON_CANCEL"], 100, 28)
-    cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", S("SM"), 0)
+    cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     cancelBtn:SetScript("OnClick", function()
         dlg:Hide()
     end)
@@ -223,13 +214,9 @@ local function GetWaypointDialog()
     dlg:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     dlg:SetFrameStrata("DIALOG")
     dlg:SetFrameLevel(100)
-    dlg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    dlg:SetBackdropColor(T("BG_PRIMARY"))
-    dlg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    dlg:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    dlg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    dlg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     dlg:Hide()
 
     CreateDialogTitleBar(dlg, L["CTX_INSERT_WAYPOINT"])
@@ -237,7 +224,7 @@ local function GetWaypointDialog()
     local mapLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     mapLbl:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12, -42)
     mapLbl:SetText(L["CTX_MAP_ID"])
-    mapLbl:SetTextColor(T("TEXT_PRIMARY"))
+    mapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local mapEditBox = CreateDialogEditBox(dlg, 150, 26, true)
     mapEditBox:SetPoint("TOPLEFT", mapLbl, "BOTTOMLEFT", 0, -6)
@@ -246,12 +233,12 @@ local function GetWaypointDialog()
     local mapHelp = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     mapHelp:SetPoint("TOPLEFT", mapEditBox, "BOTTOMLEFT", 0, -4)
     mapHelp:SetText(L["CTX_MAP_HELP"])
-    mapHelp:SetTextColor(T("TEXT_SECONDARY"))
+    mapHelp:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local xLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     xLbl:SetPoint("TOPLEFT", mapHelp, "BOTTOMLEFT", 0, -10)
     xLbl:SetText(L["CTX_X_COORDINATE"])
-    xLbl:SetTextColor(T("TEXT_PRIMARY"))
+    xLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local xEditBox = CreateDialogEditBox(dlg, 150, 26, true)
     xEditBox:SetPoint("TOPLEFT", xLbl, "BOTTOMLEFT", 0, -6)
@@ -260,7 +247,7 @@ local function GetWaypointDialog()
     local yLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     yLbl:SetPoint("TOPLEFT", xEditBox, "BOTTOMLEFT", 0, -10)
     yLbl:SetText(L["CTX_Y_COORDINATE"])
-    yLbl:SetTextColor(T("TEXT_PRIMARY"))
+    yLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local yEditBox = CreateDialogEditBox(dlg, 150, 26, true)
     yEditBox:SetPoint("TOPLEFT", yLbl, "BOTTOMLEFT", 0, -6)
@@ -269,7 +256,7 @@ local function GetWaypointDialog()
     local descLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     descLbl:SetPoint("TOPLEFT", yEditBox, "BOTTOMLEFT", 0, -10)
     descLbl:SetText(L["CTX_DESCRIPTION"])
-    descLbl:SetTextColor(T("TEXT_PRIMARY"))
+    descLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local descEditBox = CreateDialogEditBox(dlg, 300, 26)
     descEditBox:SetPoint("TOPLEFT", descLbl, "BOTTOMLEFT", 0, -6)
@@ -307,7 +294,7 @@ local function GetWaypointDialog()
     end)
 
     local cancelBtn = ns.UI.CreateButton(nil, dlg, L["CTX_BUTTON_CANCEL"], 100, 28)
-    cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", S("SM"), 0)
+    cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     cancelBtn:SetScript("OnClick", function()
         dlg:Hide()
     end)
@@ -419,13 +406,13 @@ function NotesContextMenu:ShowHyperlinkDialog(editBox)
     end
     for _, tb in ipairs(dlg.typeButtons) do
         if tb.typeKey == "item" then
-            tb:SetBackdropColor(T("BG_ACTIVE"))
-            tb:SetBackdropBorderColor(T("BORDER_ACCENT"))
-            tb.labelText:SetTextColor(T("TEXT_ACCENT"))
+            tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            tb:SetBackdropColor(T("BG_SECONDARY"))
-            tb:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-            tb.labelText:SetTextColor(T("TEXT_PRIMARY"))
+            tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end
     dlg:Show()

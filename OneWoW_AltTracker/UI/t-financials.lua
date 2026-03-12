@@ -1,7 +1,8 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -96,8 +97,6 @@ local onHeaderCreate = function(btn, col, index)
 end
 
 function ns.UI.CreateFinancialsTab(parent)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["FINANCIALS_OVERVIEW"],
         height = 70,
@@ -116,8 +115,8 @@ function ns.UI.CreateFinancialsTab(parent)
     filterPanel:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -8)
     filterPanel:SetHeight(32)
     filterPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    filterPanel:SetBackdropColor(T("BG_SECONDARY"))
-    filterPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    filterPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    filterPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     parent.timePeriod = "week"
     parent.typeFilter = "all"
@@ -188,11 +187,11 @@ function ns.UI.CreateFinancialsTab(parent)
             parent.typeFilter = self.filterKey
             for _, b in ipairs(typeButtons) do
                 if b.filterKey == parent.typeFilter then
-                    b:SetBackdropColor(T("ACCENT_PRIMARY"))
-                    b.text:SetTextColor(T("BG_PRIMARY"))
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
                 else
-                    b:SetBackdropColor(T("BG_TERTIARY"))
-                    b.text:SetTextColor(T("TEXT_PRIMARY"))
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
             end
             if ns.UI.RefreshFinancialsTab then
@@ -201,21 +200,21 @@ function ns.UI.CreateFinancialsTab(parent)
         end)
 
         if filter.key == "all" then
-            btn:SetBackdropColor(T("ACCENT_PRIMARY"))
-            btn.text:SetTextColor(T("BG_PRIMARY"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
         else
-            btn:SetBackdropColor(T("BG_TERTIARY"))
-            btn.text:SetTextColor(T("TEXT_PRIMARY"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
-        btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         table.insert(typeButtons, btn)
     end
 
     local charLabel = filterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     charLabel:SetPoint("LEFT", typeButtons[#typeButtons], "RIGHT", 25, 0)
     charLabel:SetText(L["FIN_CHAR_LABEL"])
-    charLabel:SetTextColor(T("TEXT_SECONDARY"))
+    charLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local charBtn = OneWoW_GUI:CreateButton(nil, filterPanel, L["FIN_CHAR_ALL"], 60, 24)
     charBtn:SetPoint("LEFT", charLabel, "RIGHT", 2, 0)
@@ -238,7 +237,7 @@ function ns.UI.CreateFinancialsTab(parent)
     local catLabel = filterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     catLabel:SetPoint("LEFT", charBtn, "RIGHT", 25, 0)
     catLabel:SetText(L["FIN_CAT_LABEL"])
-    catLabel:SetTextColor(T("TEXT_SECONDARY"))
+    catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local catBtn = OneWoW_GUI:CreateButton(nil, filterPanel, L["FIN_CAT_ALL"], 70, 24)
     catBtn:SetPoint("LEFT", catLabel, "RIGHT", 2, 0)
@@ -591,26 +590,26 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
 
         local dateText = txRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         dateText:SetText(date("%m/%d %H:%M", tx.timestamp or 0))
-        dateText:SetTextColor(T("TEXT_SECONDARY"))
+        dateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         dateText:SetJustifyH("LEFT")
         table.insert(txRow.cells, dateText)
 
         local charText = txRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         local charName = (tx.character or ""):match("^([^%-]+)")
         charText:SetText(charName or "?")
-        charText:SetTextColor(T("TEXT_PRIMARY"))
+        charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         charText:SetJustifyH("LEFT")
         table.insert(txRow.cells, charText)
 
         local categoryText = txRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         categoryText:SetText(ns.UI.GetCategoryDisplayName(tx.category))
-        categoryText:SetTextColor(T("TEXT_SECONDARY"))
+        categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         categoryText:SetJustifyH("LEFT")
         table.insert(txRow.cells, categoryText)
 
         local itemText = txRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         itemText:SetText(tx.itemName or tx.source or "")
-        itemText:SetTextColor(T("TEXT_PRIMARY"))
+        itemText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         itemText:SetJustifyH("LEFT")
         table.insert(txRow.cells, itemText)
 

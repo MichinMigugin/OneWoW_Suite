@@ -1,8 +1,8 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -105,7 +105,7 @@ function ns.UI.ShowSettingsRestoreDialog(parent, profileName, profile)
     local savedDate = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     savedDate:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, yOff)
     savedDate:SetText("Saved: " .. date("%Y-%m-%d %H:%M", profile.timestamp or 0))
-    savedDate:SetTextColor(T("TEXT_SECONDARY"))
+    savedDate:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOff = yOff - 18
 
     local lastAnchor = savedDate
@@ -113,7 +113,7 @@ function ns.UI.ShowSettingsRestoreDialog(parent, profileName, profile)
         local savedByFS = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         savedByFS:SetPoint("TOPLEFT", savedDate, "BOTTOMLEFT", 0, -4)
         savedByFS:SetText(L["SP_SAVED_BY"] .. ": |cFFFFD100" .. profile.savedBy .. "|r")
-        savedByFS:SetTextColor(T("TEXT_SECONDARY"))
+        savedByFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         lastAnchor = savedByFS
         yOff = yOff - 18
     end
@@ -121,7 +121,7 @@ function ns.UI.ShowSettingsRestoreDialog(parent, profileName, profile)
     local selectLabel = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     selectLabel:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -10)
     selectLabel:SetText("Select what to restore:")
-    selectLabel:SetTextColor(T("TEXT_PRIMARY"))
+    selectLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOff = yOff - 28
 
     local function AddRestoreRow(key, labelText, count, available)
@@ -198,14 +198,14 @@ function ns.UI.ShowExportDialog(profileName, serializedStr)
     local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText(L["SP_EXPORT_COPY_HINT"])
-    hint:SetTextColor(T("TEXT_SECONDARY"))
+    hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local textBG = CreateFrame("Frame", nil, cf, "BackdropTemplate")
     textBG:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
     textBG:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    textBG:SetBackdropColor(0.06, 0.06, 0.06)
-    textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    textBG:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    textBG:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     textBG:SetClipsChildren(true)
 
     eb = CreateFrame("EditBox", nil, textBG)
@@ -263,14 +263,14 @@ function ns.UI.ShowImportDialog(parent)
     local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText(L["SP_IMPORT_PASTE_HINT"])
-    hint:SetTextColor(T("TEXT_SECONDARY"))
+    hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local textBG = CreateFrame("Frame", nil, cf, "BackdropTemplate")
     textBG:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
     textBG:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    textBG:SetBackdropColor(0.06, 0.06, 0.06)
-    textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    textBG:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    textBG:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     eb = CreateFrame("EditBox", nil, textBG)
     eb:SetPoint("TOPLEFT", textBG, "TOPLEFT", 4, -4)
@@ -312,7 +312,7 @@ function ns.UI.CreateSettingsUI(parent)
     local nameLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     nameLabel:SetPoint("TOPLEFT", 15, yOffset)
     nameLabel:SetText(L["SP_PROFILE_NAME"] .. ":")
-    nameLabel:SetTextColor(T("TEXT_SECONDARY"))
+    nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - 18
 
     local nameEdit = ns.UI.CreateEditBox(nil, scrollContent, 380, 28)
@@ -327,7 +327,7 @@ function ns.UI.CreateSettingsUI(parent)
     local contentsLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     contentsLabel:SetPoint("TOPLEFT", 15, yOffset)
     contentsLabel:SetText("Profile Contents:")
-    contentsLabel:SetTextColor(T("TEXT_SECONDARY"))
+    contentsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - 22
 
     local COL1_X = 20
@@ -414,7 +414,7 @@ function ns.UI.RefreshSettingsListing(parent)
         local empty = listContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         empty:SetPoint("TOPLEFT", 15, -14)
         empty:SetText(L["SP_NO_PROFILES"] or "No profiles saved")
-        empty:SetTextColor(T("TEXT_SECONDARY"))
+        empty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         listContainer:SetHeight(40)
         parent.settingsScrollContent:SetHeight(math.abs(parent.settingsListStartY) + 40)
         return
@@ -433,13 +433,13 @@ function ns.UI.RefreshSettingsListing(parent)
         card:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", -8, yOff)
         card:SetHeight(CARD_H)
         card:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-        card:SetBackdropColor(T("BG_TERTIARY"))
-        card:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
         local nameText = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -8)
         nameText:SetText(name)
-        nameText:SetTextColor(T("TEXT_PRIMARY"))
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local dateText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         dateText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -26)
@@ -448,7 +448,7 @@ function ns.UI.RefreshSettingsListing(parent)
             dateStr = dateStr .. "  |cFF888888" .. L["SP_SAVED_BY"] .. ": " .. data.savedBy .. "|r"
         end
         dateText:SetText(dateStr)
-        dateText:SetTextColor(T("TEXT_SECONDARY"))
+        dateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local tags = {}
         if type(data.keybinds) == "table" then
@@ -474,7 +474,7 @@ function ns.UI.RefreshSettingsListing(parent)
         tagsText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -44)
         tagsText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -278, -44)
         tagsText:SetText(#tags > 0 and table.concat(tags, "  |cFF444444/|r  ") or "")
-        tagsText:SetTextColor(T("TEXT_SECONDARY"))
+        tagsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         tagsText:SetJustifyH("LEFT")
 
         local exportBtn = ns.UI.CreateButton(nil, card, L["SP_EXPORT_PROFILE"], 80, 26)
@@ -501,12 +501,12 @@ function ns.UI.RefreshSettingsListing(parent)
 
         local deleteBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, card, "Delete", 82, 26) or ns.UI.CreateButton(nil, card, "Delete", 82, 26)
         deleteBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 6)
-        deleteBtn:SetBackdropColor(0.45, 0.12, 0.12)
-        deleteBtn:SetBackdropBorderColor(0.65, 0.25, 0.25)
-        if deleteBtn.text then deleteBtn.text:SetTextColor(1, 1, 1) end
+        deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+        deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+        if deleteBtn.text then deleteBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
 
-        deleteBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.65, 0.18, 0.18) end)
-        deleteBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.45, 0.12, 0.12) end)
+        deleteBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER")) end)
+        deleteBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")) end)
         deleteBtn:SetScript("OnClick", function()
             StaticPopupDialogs["WNAT_DELETE_SP"] = {
                 text = "Delete profile: |cFFFFD100" .. name .. "|r?",

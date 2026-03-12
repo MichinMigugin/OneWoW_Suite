@@ -1,8 +1,10 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 ns.UI = ns.UI or {}
 
@@ -34,8 +36,6 @@ local onHeaderCreate = function(btn, col, index)
 end
 
 function ns.UI.CreateItemsTab(parent)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["ITEMS_OVERVIEW"],
         height = 70,
@@ -54,8 +54,8 @@ function ns.UI.CreateItemsTab(parent)
     filterBar:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -8)
     filterBar:SetHeight(32)
     filterBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    filterBar:SetBackdropColor(T("BG_SECONDARY"))
-    filterBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    filterBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    filterBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(nil, filterBar, {
         height = 20,
@@ -118,8 +118,8 @@ function ns.UI.CreateItemsTab(parent)
     noticeBar:SetPoint("TOPRIGHT", filterBar, "BOTTOMRIGHT", 0, -5)
     noticeBar:SetHeight(28)
     noticeBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    noticeBar:SetBackdropColor(T("BG_SECONDARY"))
-    noticeBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    noticeBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    noticeBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local noticeText = noticeBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     noticeText:SetPoint("LEFT", noticeBar, "LEFT", 12, 0)
@@ -718,7 +718,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         local qualityBorder = itemContainer:CreateTexture(nil, "BORDER")
         qualityBorder:SetSize(rowHeight - 4, rowHeight - 4)
         qualityBorder:SetPoint("CENTER", itemIcon, "CENTER", 0, 0)
-        qualityBorder:SetTexture("Interface\\Buttons\\WHITE8x8")
+        qualityBorder:SetTexture(BACKDROP_SIMPLE.bgFile)
         if itemData.quality and ITEM_QUALITY_COLORS[itemData.quality] then
             local color = ITEM_QUALITY_COLORS[itemData.quality]
             qualityBorder:SetVertexColor(color.r, color.g, color.b, 0.3)
@@ -742,7 +742,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
             local color = ITEM_QUALITY_COLORS[itemData.quality]
             itemNameText:SetTextColor(color.r, color.g, color.b)
         else
-            itemNameText:SetTextColor(T("TEXT_PRIMARY"))
+            itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         if itemData.itemLink then
@@ -758,7 +758,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
                     local color = ITEM_QUALITY_COLORS[itemData.quality]
                     itemNameText:SetTextColor(color.r, color.g, color.b)
                 else
-                    itemNameText:SetTextColor(T("TEXT_PRIMARY"))
+                    itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
                 GameTooltip:Hide()
             end)
@@ -773,32 +773,32 @@ function ns.UI.RefreshItemsTab(itemsTab)
 
         local totalText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         totalText:SetText(tostring(itemData.totalQty))
-        totalText:SetTextColor(T("TEXT_PRIMARY"))
+        totalText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(itemRow.cells, totalText)
 
         local vendorText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         if itemData.vendorPrice and itemData.vendorPrice > 0 then
             vendorText:SetText(ns.AltTrackerFormatters:FormatGold(itemData.vendorPrice))
-            vendorText:SetTextColor(T("TEXT_PRIMARY"))
+            vendorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         else
             vendorText:SetText(L["ITEMS_NO_VALUE"])
-            vendorText:SetTextColor(T("TEXT_SECONDARY"))
+            vendorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
         table.insert(itemRow.cells, vendorText)
 
         local ahText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         if itemData.ahPrice and itemData.ahPrice > 0 then
             ahText:SetText(ns.AltTrackerFormatters:FormatGold(itemData.ahPrice))
-            ahText:SetTextColor(T("TEXT_PRIMARY"))
+            ahText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         else
             ahText:SetText(L["ITEMS_NO_VALUE"])
-            ahText:SetTextColor(T("TEXT_SECONDARY"))
+            ahText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
         table.insert(itemRow.cells, ahText)
 
         local lastSeenText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         lastSeenText:SetText(FormatLastSeen(itemData.lastSeenTime))
-        lastSeenText:SetTextColor(T("TEXT_PRIMARY"))
+        lastSeenText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(itemRow.cells, lastSeenText)
 
         if dt and dt.headerRow and dt.headerRow.columnButtons and columnsConfig then

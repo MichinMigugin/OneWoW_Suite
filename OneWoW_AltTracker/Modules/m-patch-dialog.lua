@@ -1,9 +1,9 @@
 local addonName, ns = ...
 local OneWoWAltTracker = OneWoW_AltTracker
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.PatchDialog = ns.PatchDialog or {}
 local PatchDialog = ns.PatchDialog
@@ -120,7 +120,7 @@ function PatchDialog:Show()
     local discordLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     discordLabel:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     discordLabel:SetText(L["PATCH_DIALOG_DISCORD"])
-    discordLabel:SetTextColor(T("TEXT_ACCENT"))
+    discordLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     yOffset = yOffset - 22
 
     local discordBox = ns.UI.CreateEditBox(nil, scrollContent, 650, 24)
@@ -135,7 +135,7 @@ function PatchDialog:Show()
     local coffeeLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     coffeeLabel:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     coffeeLabel:SetText(L["PATCH_DIALOG_SUPPORT"])
-    coffeeLabel:SetTextColor(T("TEXT_ACCENT"))
+    coffeeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     yOffset = yOffset - 22
 
     local coffeeBox = ns.UI.CreateEditBox(nil, scrollContent, 650, 24)
@@ -150,13 +150,13 @@ function PatchDialog:Show()
     local thanksHeader = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     thanksHeader:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     thanksHeader:SetText(L["PATCH_DIALOG_SPECIAL_THANKS"])
-    thanksHeader:SetTextColor(T("TEXT_ACCENT"))
+    thanksHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     yOffset = yOffset - 22
 
     local thanksDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     thanksDesc:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     thanksDesc:SetText(L["PATCH_DIALOG_SPECIAL_THANKS_DESC"])
-    thanksDesc:SetTextColor(T("TEXT_PRIMARY"))
+    thanksDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 22
 
     yOffset = yOffset - 15
@@ -164,23 +164,23 @@ function PatchDialog:Show()
     local supporterHeader = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     supporterHeader:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     supporterHeader:SetText(L["PATCH_DIALOG_SPECIAL_THANKS"])
-    supporterHeader:SetTextColor(T("TEXT_ACCENT"))
+    supporterHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
     local betaHeader = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     betaHeader:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 330, yOffset)
     betaHeader:SetText(L["PATCH_DIALOG_BETA_TESTERS"])
-    betaHeader:SetTextColor(T("TEXT_ACCENT"))
+    betaHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     yOffset = yOffset - 22
 
     local supporterDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     supporterDesc:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     supporterDesc:SetText(L["PATCH_DIALOG_SPECIAL_THANKS_DESC"])
-    supporterDesc:SetTextColor(T("TEXT_PRIMARY"))
+    supporterDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local betaDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     betaDesc:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 330, yOffset)
     betaDesc:SetText(L["PATCH_DIALOG_BETA_TESTERS_DESC"])
-    betaDesc:SetTextColor(T("TEXT_PRIMARY"))
+    betaDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 22
 
     local supporterYOffset = yOffset
@@ -191,7 +191,7 @@ function PatchDialog:Show()
         local supporterText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         supporterText:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 20, supporterYOffset)
         supporterText:SetText("• " .. firstName)
-        supporterText:SetTextColor(T("TEXT_PRIMARY"))
+        supporterText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         supporterYOffset = supporterYOffset - 20
     end
 
@@ -200,7 +200,7 @@ function PatchDialog:Show()
         local betaTesterText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         betaTesterText:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 350, betaYOffset)
         betaTesterText:SetText("• " .. firstName)
-        betaTesterText:SetTextColor(T("TEXT_PRIMARY"))
+        betaTesterText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         betaYOffset = betaYOffset - 20
     end
 
@@ -211,14 +211,14 @@ function PatchDialog:Show()
     local addonsHeader = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     addonsHeader:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     addonsHeader:SetText(L["PATCH_DIALOG_ADDONS"])
-    addonsHeader:SetTextColor(T("TEXT_ACCENT"))
+    addonsHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     yOffset = yOffset - 22
 
     for _, addon in ipairs(RELATED_ADDONS) do
         local addonLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         addonLabel:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
         addonLabel:SetText(addon.name)
-        addonLabel:SetTextColor(T("TEXT_ACCENT"))
+        addonLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         yOffset = yOffset - 22
 
         local addonBox = ns.UI.CreateEditBox(nil, scrollContent, 650, 24)
@@ -236,7 +236,7 @@ function PatchDialog:Show()
     local copyTip = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     copyTip:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     copyTip:SetText(L["PATCH_DIALOG_COPY_TIP"])
-    copyTip:SetTextColor(T("TEXT_SECONDARY"))
+    copyTip:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - 25
 
     scrollContent:SetHeight(math.abs(yOffset) + 30)

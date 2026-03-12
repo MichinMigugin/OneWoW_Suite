@@ -1,8 +1,8 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -11,21 +11,21 @@ function ns.UI.CreateBankTab(parent)
     contentPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     contentPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
     contentPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    contentPanel:SetBackdropColor(T("BG_PRIMARY"))
-    contentPanel:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    contentPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    contentPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local statusBar = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
     statusBar:SetPoint("TOPLEFT", contentPanel, "TOPLEFT", 0, 0)
     statusBar:SetPoint("TOPRIGHT", contentPanel, "TOPRIGHT", 0, 0)
     statusBar:SetHeight(32)
     statusBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    statusBar:SetBackdropColor(T("BG_SECONDARY"))
-    statusBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    statusBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    statusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local statusText = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     statusText:SetPoint("LEFT", statusBar, "LEFT", 10, 0)
     statusText:SetText(L["CHARACTERS_TRACKED"]:format(0, ""))
-    statusText:SetTextColor(T("TEXT_PRIMARY"))
+    statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     parent.statusText = statusText
 
     local headerRow = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
@@ -33,7 +33,7 @@ function ns.UI.CreateBankTab(parent)
     headerRow:SetPoint("TOPRIGHT", statusBar, "BOTTOMRIGHT", 0, -2)
     headerRow:SetHeight(28)
     headerRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
-    headerRow:SetBackdropColor(T("BG_SECONDARY"))
+    headerRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
     local columnDefs = {
         {text = "", width = 30, sortKey = nil},
@@ -63,7 +63,7 @@ function ns.UI.CreateBankTab(parent)
         local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         btnText:SetPoint("CENTER", btn, "CENTER", 0, 0)
         btnText:SetText(colDef.text)
-        btnText:SetTextColor(T("TEXT_SECONDARY"))
+        btnText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         if i == 3 or i == 5 or i == 6 or i == 7 or i == 8 then
             btnText:SetPoint("LEFT", btn, "LEFT", 3, 0)

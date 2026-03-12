@@ -1,9 +1,9 @@
 local addonName, ns = ...
 local OneWoWAltTracker = OneWoW_AltTracker
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -202,9 +202,6 @@ local function PurgeCharacter(charKey, tradeskillKey)
 end
 
 local function ShowManageAltsDialog()
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-    if not OneWoW_GUI then return end
-
     if _G.OneWoW_AT_ManageAltsDialog then
         _G.OneWoW_AT_ManageAltsDialog:Show()
         _G.OneWoW_AT_ManageAltsDialog:Raise()
@@ -221,8 +218,8 @@ local function ShowManageAltsDialog()
         onClose = function(frame) frame:Hide() end,
     })
     local dialog = result.frame
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    dialog:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    dialog:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     _G.OneWoW_AT_ManageAltsDialog = dialog
 
     local content = result.contentFrame
@@ -234,7 +231,7 @@ local function ShowManageAltsDialog()
     descText:SetWordWrap(true)
     descText:SetSpacing(3)
     descText:SetText("Select characters to permanently remove from all OneWoW databases. This is for characters you have deleted or renamed in-game. A UI reload is required after removal.")
-    descText:SetTextColor(T("TEXT_SECONDARY"))
+    descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local selectAllBtn = OneWoW_GUI:CreateButton(nil, content, "Select All", 90, 25)
     selectAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -52)
@@ -245,14 +242,14 @@ local function ShowManageAltsDialog()
     local countText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     countText:SetPoint("RIGHT", content, "TOPRIGHT", -14, -64)
     countText:SetText(#characters .. " characters found across all databases")
-    countText:SetTextColor(T("TEXT_SECONDARY"))
+    countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local listBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
     listBg:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -80)
     listBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 56)
     listBg:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    listBg:SetBackdropColor(T("BG_SECONDARY"))
-    listBg:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    listBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    listBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local scrollFrame = CreateFrame("ScrollFrame", "OneWoW_AT_ManageAltsScroll", listBg, "UIPanelScrollFrameTemplate")
     scrollFrame:SetPoint("TOPLEFT", listBg, "TOPLEFT", 4, -4)
@@ -276,7 +273,7 @@ local function ShowManageAltsDialog()
         local emptyText = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         emptyText:SetPoint("TOP", scrollChild, "TOP", 0, -40)
         emptyText:SetText("No characters found in any database.")
-        emptyText:SetTextColor(T("TEXT_MUTED"))
+        emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
     for i, charInfo in ipairs(characters) do
@@ -288,9 +285,9 @@ local function ShowManageAltsDialog()
         row:SetHeight(ROW_H)
         row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
         if i % 2 == 0 then
-            row:SetBackdropColor(T("BG_TERTIARY"))
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         else
-            row:SetBackdropColor(T("BG_PRIMARY"))
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
         end
 
         local cb = OneWoW_GUI:CreateCheckbox(nil, row, "")
@@ -308,13 +305,13 @@ local function ShowManageAltsDialog()
         if classColor then
             nameFS:SetTextColor(classColor.r, classColor.g, classColor.b)
         else
-            nameFS:SetTextColor(T("TEXT_PRIMARY"))
+            nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         local realmFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         realmFS:SetPoint("LEFT", nameFS, "RIGHT", 6, 0)
         realmFS:SetText(charInfo.realm or "")
-        realmFS:SetTextColor(T("TEXT_MUTED"))
+        realmFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         local infoStr = ""
         if charInfo.level and charInfo.level > 0 then
@@ -333,27 +330,27 @@ local function ShowManageAltsDialog()
         local infoFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         infoFS:SetPoint("RIGHT", row, "RIGHT", -8, 0)
         infoFS:SetText(infoStr)
-        infoFS:SetTextColor(T("TEXT_SECONDARY"))
+        infoFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         row:EnableMouse(true)
         row:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
             local sources = {}
             for src, _ in pairs(charInfo.sources) do table.insert(sources, src) end
             table.sort(sources)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:AddLine(charInfo.key, 1, 0.82, 0)
-            GameTooltip:AddLine("Found in:", T("TEXT_SECONDARY"))
+            GameTooltip:AddLine("Found in:", OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             for _, src in ipairs(sources) do
-                GameTooltip:AddLine("  " .. src, T("TEXT_PRIMARY"))
+                GameTooltip:AddLine("  " .. src, OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
             GameTooltip:Show()
         end)
         row:SetScript("OnLeave", function(self)
             if i % 2 == 0 then
-                self:SetBackdropColor(T("BG_TERTIARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
             else
-                self:SetBackdropColor(T("BG_PRIMARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
             end
             GameTooltip:Hide()
         end)
@@ -385,23 +382,23 @@ local function ShowManageAltsDialog()
     btnDivider:SetHeight(1)
     btnDivider:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 1, 50)
     btnDivider:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -1, 50)
-    btnDivider:SetColorTexture(T("BORDER_SUBTLE"))
+    btnDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local deleteBtn = OneWoW_GUI:CreateButton(nil, content, "Delete Selected", 160, 32)
     deleteBtn:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 14, 10)
-    deleteBtn:SetBackdropColor(0.5, 0.15, 0.15, 1)
-    deleteBtn:SetBackdropBorderColor(0.7, 0.2, 0.2, 0.6)
-    deleteBtn.text:SetTextColor(1, 0.4, 0.4)
+    deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+    deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+    deleteBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     deleteBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.65, 0.2, 0.2, 1)
-        self:SetBackdropBorderColor(0.85, 0.3, 0.3, 0.8)
-        self.text:SetTextColor(1, 0.6, 0.6)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
     deleteBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.5, 0.15, 0.15, 1)
-        self:SetBackdropBorderColor(0.7, 0.2, 0.2, 0.6)
-        self.text:SetTextColor(1, 0.4, 0.4)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
 
     local cancelBtn = OneWoW_GUI:CreateButton(nil, content, "Cancel", 120, 32)
@@ -474,7 +471,7 @@ function ns.UI.CreateSettingsTab(parent)
     manageDesc:SetJustifyH("LEFT")
     manageDesc:SetWordWrap(true)
     manageDesc:SetText("Remove deleted or renamed characters from all OneWoW databases. Opens a dialog to select which characters to purge.")
-    manageDesc:SetTextColor(T("TEXT_SECONDARY"))
+    manageDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     manageDesc:SetSpacing(3)
 
     C_Timer.After(0.01, function()
@@ -483,7 +480,6 @@ function ns.UI.CreateSettingsTab(parent)
     end)
     yOffset = yOffset - 20
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
     local manageBtn
     if OneWoW_GUI then
         manageBtn = OneWoW_GUI:CreateButton(nil, scrollContent, "Manage Characters", 200, 35)
@@ -506,7 +502,7 @@ function ns.UI.CreateSettingsTab(parent)
     importDesc:SetJustifyH("LEFT")
     importDesc:SetWordWrap(true)
     importDesc:SetText("Import character data from WoWNotes. Imports character info, professions, endgame progression, and action bars. Bag and bank item data is not imported - log in on each character to collect that data.")
-    importDesc:SetTextColor(T("TEXT_SECONDARY"))
+    importDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     importDesc:SetSpacing(3)
 
     C_Timer.After(0.01, function()
@@ -550,7 +546,7 @@ function ns.UI.CreateSettingsTab(parent)
     dbDesc:SetJustifyH("LEFT")
     dbDesc:SetWordWrap(true)
     dbDesc:SetText("Manage addon databases. Click Reset to completely clear a database and force a UI reload.")
-    dbDesc:SetTextColor(T("TEXT_SECONDARY"))
+    dbDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     dbDesc:SetSpacing(3)
 
     C_Timer.After(0.01, function()
@@ -590,18 +586,18 @@ function ns.UI.CreateSettingsTab(parent)
         container:SetPoint("TOPLEFT", parent, "TOPLEFT", 15, yPos)
         container:SetSize(770, 60)
         container:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-        container:SetBackdropColor(T("BG_TERTIARY"))
-        container:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         local nameText = container:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameText:SetPoint("TOPLEFT", 12, -10)
         nameText:SetText(dbData.name)
-        nameText:SetTextColor(T("TEXT_PRIMARY"))
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local descText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         descText:SetPoint("TOPLEFT", 12, -28)
         descText:SetText(dbData.desc)
-        descText:SetTextColor(T("TEXT_SECONDARY"))
+        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         descText:SetWidth(400)
 
         local sizeText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -612,7 +608,7 @@ function ns.UI.CreateSettingsTab(parent)
             if db then
                 local size = GetTableSize(dbData.key)
                 sizeText:SetText("Entries: " .. size)
-                sizeText:SetTextColor(T("TEXT_SECONDARY"))
+                sizeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             else
                 sizeText:SetText("Not Loaded")
                 sizeText:SetTextColor(1, 0.5, 0.5)
@@ -623,7 +619,7 @@ function ns.UI.CreateSettingsTab(parent)
         local resetBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, container, "Reset", 75, 28) or ns.UI.CreateButton(nil, container, "Reset", 75, 28)
         resetBtn:SetPoint("TOPRIGHT", -12, -16)
         resetBtn:SetBackdropColor(1, 0.3, 0.3)
-        resetBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         if resetBtn.text then resetBtn.text:SetTextColor(1, 1, 1) end
 
         resetBtn:SetScript("OnEnter", function(self)
@@ -672,7 +668,7 @@ function ns.UI.CreateSettingsTab(parent)
     overrideDesc:SetJustifyH("LEFT")
     overrideDesc:SetWordWrap(true)
     overrideDesc:SetText(L["OVERRIDE_SYSTEM_DESC"])
-    overrideDesc:SetTextColor(T("TEXT_SECONDARY"))
+    overrideDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     overrideDesc:SetSpacing(3)
 
     C_Timer.After(0.01, function()
@@ -683,8 +679,8 @@ function ns.UI.CreateSettingsTab(parent)
 
     local overrideBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, scrollContent, L["OVERRIDE_BTN"], 280, 35) or ns.UI.CreateButton(nil, scrollContent, L["OVERRIDE_BTN"], 280, 35)
     overrideBtn:SetPoint("TOPLEFT", 25, yOffset)
-    overrideBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-    if overrideBtn.text then overrideBtn.text:SetTextColor(T("ACCENT_PRIMARY")) end
+    overrideBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    if overrideBtn.text then overrideBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")) end
 
     local overrideDialog = nil
 
@@ -740,7 +736,7 @@ function ns.UI.CreateSettingsTab(parent)
         descText:SetJustifyH("LEFT")
         descText:SetWordWrap(true)
         descText:SetText(L["OVERRIDE_SYSTEM_DESC"])
-        descText:SetTextColor(T("TEXT_SECONDARY"))
+        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         descText:SetSpacing(3)
         dy = dy - 55
 
@@ -750,21 +746,21 @@ function ns.UI.CreateSettingsTab(parent)
             row:SetPoint("TOPRIGHT", -8, yPos)
             row:SetHeight(28)
             row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-            row:SetBackdropColor(T("BG_TERTIARY"))
-            row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local t1 = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             t1:SetPoint("LEFT", row, "LEFT", 8, 0)
             t1:SetWidth(80)
             t1:SetText(col1)
-            t1:SetTextColor(T("TEXT_SECONDARY"))
+            t1:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
             local t2 = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             t2:SetPoint("LEFT", row, "LEFT", 92, 0)
             t2:SetPoint("RIGHT", row, "RIGHT", -90, 0)
             t2:SetJustifyH("LEFT")
             t2:SetText(col2)
-            t2:SetTextColor(r or T("TEXT_PRIMARY"))
+            t2:SetTextColor(r or OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             row.nameText = t2
 
             return row
@@ -774,7 +770,7 @@ function ns.UI.CreateSettingsTab(parent)
             local btn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, row, L["OVERRIDE_REMOVE"] .. " Remove", 60, 20) or ns.UI.CreateButton(nil, row, L["OVERRIDE_REMOVE"] .. " Remove", 60, 20)
             btn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
             btn:SetBackdropColor(0.5, 0.15, 0.15)
-            btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             if btn.text then btn.text:SetTextColor(1, 0.7, 0.7) end
             btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.7, 0.1, 0.1) end)
             btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.5, 0.15, 0.15) end)
@@ -862,7 +858,7 @@ function ns.UI.CreateSettingsTab(parent)
         local noneText = sc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         noneText:SetPoint("TOPLEFT", 15, dy)
         noneText:SetText(L["OVERRIDE_NO_SETTINGS"])
-        noneText:SetTextColor(T("TEXT_MUTED"))
+        noneText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         dy = dy - 26
 
         local sec2 = ns.UI.CreateSectionHeader(sc, L["OVERRIDE_TRACKED_CURRENCIES"], dy)
@@ -872,12 +868,12 @@ function ns.UI.CreateSettingsTab(parent)
         local addCurrRow = CreateFrame("Frame", nil, sc, "BackdropTemplate")
         addCurrRow:SetHeight(28)
         addCurrRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-        addCurrRow:SetBackdropColor(T("BG_SECONDARY"))
-        addCurrRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        addCurrRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        addCurrRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         local addCurrLabel = addCurrRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         addCurrLabel:SetPoint("LEFT", 8, 0)
         addCurrLabel:SetText("Add Currency ID:")
-        addCurrLabel:SetTextColor(T("TEXT_SECONDARY"))
+        addCurrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         local addCurrBox = ns.UI.CreateEditBox(nil, addCurrRow, 90, 22)
         addCurrBox:SetPoint("LEFT", addCurrLabel, "RIGHT", 8, 0)
         addCurrBox:SetNumeric(true)
@@ -911,12 +907,12 @@ function ns.UI.CreateSettingsTab(parent)
         local addBossRow = CreateFrame("Frame", nil, sc, "BackdropTemplate")
         addBossRow:SetHeight(28)
         addBossRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-        addBossRow:SetBackdropColor(T("BG_SECONDARY"))
-        addBossRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        addBossRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        addBossRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         local addBossLabel = addBossRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         addBossLabel:SetPoint("LEFT", 8, 0)
         addBossLabel:SetText("Add Quest ID:")
-        addBossLabel:SetTextColor(T("TEXT_SECONDARY"))
+        addBossLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         local addBossBox = ns.UI.CreateEditBox(nil, addBossRow, 90, 22)
         addBossBox:SetPoint("LEFT", addBossLabel, "RIGHT", 8, 0)
         addBossBox:SetNumeric(true)
@@ -944,7 +940,7 @@ function ns.UI.CreateSettingsTab(parent)
         noteText:SetJustifyH("LEFT")
         noteText:SetWordWrap(true)
         noteText:SetText(L["OVERRIDE_CURRENCY_LOGIN_NOTE"])
-        noteText:SetTextColor(T("TEXT_MUTED"))
+        noteText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         sc.noteText = noteText
 
         RebuildBossList()
@@ -981,14 +977,14 @@ function ns.UI.CreateSettingsTab(parent)
     checklistDescText:SetJustifyH("LEFT")
     checklistDescText:SetWordWrap(true)
     checklistDescText:SetText(L["SEASON_CHECKLIST_DESC"])
-    checklistDescText:SetTextColor(T("TEXT_SECONDARY"))
+    checklistDescText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     checklistDescText:SetSpacing(3)
     yOffset = yOffset - 50
 
     local checklistBtn = ns.UI.CreateButton(nil, scrollContent, L["SEASON_CHECKLIST_BTN"], 280, 35)
     checklistBtn:ClearAllPoints()
     checklistBtn:SetPoint("TOPLEFT", 25, yOffset)
-    checklistBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+    checklistBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local checklistDialog = nil
 
@@ -1110,14 +1106,14 @@ function ns.UI.CreateSettingsTab(parent)
                 local isAuto = item.auto == true
 
                 if isChecked then
-                    row:SetBackdropColor(T("BG_SECONDARY"))
+                    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                     row:SetBackdropBorderColor(0.2, 0.5, 0.2)
                 elseif isAuto then
-                    row:SetBackdropColor(T("BG_TERTIARY"))
+                    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                     row:SetBackdropBorderColor(0.2, 0.5, 0.2, 0.5)
                 else
-                    row:SetBackdropColor(T("BG_TERTIARY"))
-                    row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
                 end
 
                 local checkBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
@@ -1131,8 +1127,8 @@ function ns.UI.CreateSettingsTab(parent)
                     checkBtn:SetBackdropColor(0.15, 0.4, 0.15)
                     checkBtn:SetBackdropBorderColor(0.2, 0.5, 0.2, 0.5)
                 else
-                    checkBtn:SetBackdropColor(T("BG_SECONDARY"))
-                    checkBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+                    checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                    checkBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
                 end
                 local checkMark = checkBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 checkMark:SetPoint("CENTER")
@@ -1145,9 +1141,9 @@ function ns.UI.CreateSettingsTab(parent)
                 labelText:SetJustifyH("LEFT")
                 labelText:SetText(item.label)
                 if isChecked then
-                    labelText:SetTextColor(T("TEXT_MUTED"))
+                    labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 else
-                    labelText:SetTextColor(T("TEXT_PRIMARY"))
+                    labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
 
                 local valStr = item.value and item.value() or ""
@@ -1164,7 +1160,7 @@ function ns.UI.CreateSettingsTab(parent)
                 fileText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -6, -37)
                 fileText:SetJustifyH("LEFT")
                 fileText:SetText(L["SEASON_FILE"] .. " " .. item.file)
-                fileText:SetTextColor(T("TEXT_MUTED"))
+                fileText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
                 if not isAuto then
                     checkBtn:EnableMouse(true)
@@ -1177,19 +1173,19 @@ function ns.UI.CreateSettingsTab(parent)
                             checkMark:SetText("X")
                             checkMark:SetTextColor(0.2, 0.9, 0.2)
                             row:SetBackdropBorderColor(0.2, 0.5, 0.2)
-                            labelText:SetTextColor(T("TEXT_MUTED"))
+                            labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                         else
-                            checkBtn:SetBackdropColor(T("BG_SECONDARY"))
-                            checkBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+                            checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                            checkBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
                             checkMark:SetText(" ")
-                            row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                            labelText:SetTextColor(T("TEXT_PRIMARY"))
+                            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                            labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                         end
                     end)
-                    checkBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")) end)
+                    checkBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) end)
                     checkBtn:SetScript("OnLeave", function(self)
                         local c = OneWoWAltTracker.db.global.seasonChecklist[item.key]
-                        self:SetBackdropColor(c and {0.2, 0.7, 0.2} or {T("BG_SECONDARY")})
+                        self:SetBackdropColor(c and {0.2, 0.7, 0.2} or {OneWoW_GUI:GetThemeColor("BG_SECONDARY")})
                     end)
                 end
 
@@ -1207,11 +1203,11 @@ function ns.UI.CreateSettingsTab(parent)
             OneWoWAltTracker.db.global.seasonChecklist = {}
             for _, entry in ipairs(checkedBoxes) do
                 if not entry.isAuto then
-                    entry.btn:SetBackdropColor(T("BG_SECONDARY"))
-                    entry.btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+                    entry.btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                    entry.btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
                     entry.mark:SetText(" ")
-                    entry.rowFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                    entry.label:SetTextColor(T("TEXT_PRIMARY"))
+                    entry.rowFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                    entry.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
             end
         end)
@@ -1224,7 +1220,7 @@ function ns.UI.CreateSettingsTab(parent)
         local legendText = checklistDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         legendText:SetPoint("BOTTOM", checklistDialog, "BOTTOM", 0, 14)
         legendText:SetText("[X] = Verified this season    [A] = Auto-detected, no action needed    [ ] = Needs manual verification")
-        legendText:SetTextColor(T("TEXT_MUTED"))
+        legendText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         checklistDialog:Show()
         checklistDialog:Raise()

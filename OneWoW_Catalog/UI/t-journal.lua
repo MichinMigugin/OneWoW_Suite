@@ -3,8 +3,13 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 ns.UI = ns.UI or {}
 
@@ -160,8 +165,8 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     card:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
     card:SetHeight(CARD_HEIGHT)
     card:SetClipsChildren(true)
-    card:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    card:SetBackdropColor(T("BG_SECONDARY"))
+    card:SetBackdrop(BACKDROP_SIMPLE)
+    card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
     local bgImage = GetInstanceBackground(instData.instanceID)
     if bgImage and bgImage ~= false then
@@ -180,7 +185,7 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     nameText:SetText(instData.name)
-    nameText:SetTextColor(T("ACCENT_PRIMARY"))
+    nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local typeStr = instData.instanceType == "raid" and L["JOURNAL_CARD_RAID"]
                  or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
@@ -190,7 +195,7 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     infoText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, 0)
     infoText:SetJustifyH("LEFT")
     infoText:SetText(instData.expansionName .. "  |  " .. typeStr)
-    infoText:SetTextColor(T("TEXT_SECONDARY"))
+    infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local encCount = #instData.encounters
     local countText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -234,14 +239,14 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     end
 
     card:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         if self.bgTex then self.bgTex:SetAlpha(0.5) end
     end)
     card:SetScript("OnLeave", function(self)
         if selectedInstance and selectedInstance.instanceID == instData.instanceID then
-            self:SetBackdropColor(T("BG_ACTIVE"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
         else
-            self:SetBackdropColor(T("BG_SECONDARY"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         end
         if self.bgTex then self.bgTex:SetAlpha(0.3) end
     end)
@@ -281,7 +286,7 @@ local function BuildCollectionsSummary(parent, instData, yOffset, addon)
     local headerText = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     headerText:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     headerText:SetText(L["JOURNAL_COLLECTIONS"])
-    headerText:SetTextColor(T("ACCENT_PRIMARY"))
+    headerText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     table.insert(detailElements, headerText)
     yOffset = yOffset - 18
 
@@ -358,7 +363,7 @@ local function RefreshDetailView(isSecondRefresh)
     nameHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     nameHeader:SetJustifyH("LEFT")
     nameHeader:SetText(instData.name)
-    nameHeader:SetTextColor(T("ACCENT_PRIMARY"))
+    nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     table.insert(detailElements, nameHeader)
     yOffset = yOffset - 22
 
@@ -377,7 +382,7 @@ local function RefreshDetailView(isSecondRefresh)
         table.insert(infoParts, L["JOURNAL_DETAIL_MAP_ID"] .. ": " .. instData.mapID)
     end
     infoLine:SetText(table.concat(infoParts, "  |  "))
-    infoLine:SetTextColor(T("TEXT_SECONDARY"))
+    infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     table.insert(detailElements, infoLine)
     yOffset = yOffset - 20
 
@@ -385,7 +390,7 @@ local function RefreshDetailView(isSecondRefresh)
     divider1:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     divider1:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     divider1:SetHeight(1)
-    divider1:SetColorTexture(T("BORDER_SUBTLE"))
+    divider1:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     table.insert(detailElements, divider1)
     yOffset = yOffset - 8
 
@@ -395,7 +400,7 @@ local function RefreshDetailView(isSecondRefresh)
     divider2:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     divider2:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     divider2:SetHeight(1)
-    divider2:SetColorTexture(T("BORDER_SUBTLE"))
+    divider2:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     table.insert(detailElements, divider2)
     yOffset = yOffset - 10
 
@@ -403,8 +408,8 @@ local function RefreshDetailView(isSecondRefresh)
     colHdrFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
     colHdrFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
     colHdrFrame:SetHeight(20)
-    colHdrFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    colHdrFrame:SetBackdropColor(T("BG_TERTIARY"))
+    colHdrFrame:SetBackdrop(BACKDROP_SIMPLE)
+    colHdrFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     table.insert(detailElements, colHdrFrame)
 
     local COL_DIFF_RIGHT    = -220
@@ -414,24 +419,24 @@ local function RefreshDetailView(isSecondRefresh)
     local hdrItem = colHdrFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hdrItem:SetPoint("LEFT", colHdrFrame, "LEFT", 8, 0)
     hdrItem:SetText(L["JOURNAL_COL_HDR_ITEM"])
-    hdrItem:SetTextColor(T("TEXT_MUTED"))
+    hdrItem:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local hdrDiff = colHdrFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hdrDiff:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_DIFF_RIGHT, 0)
     hdrDiff:SetText(L["JOURNAL_COL_HDR_DIFFICULTY"])
-    hdrDiff:SetTextColor(T("TEXT_MUTED"))
+    hdrDiff:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hdrDiff:SetJustifyH("RIGHT")
 
     local hdrSpecial = colHdrFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hdrSpecial:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_SPECIAL_RIGHT, 0)
     hdrSpecial:SetText(L["JOURNAL_COL_HDR_SPECIAL"])
-    hdrSpecial:SetTextColor(T("TEXT_MUTED"))
+    hdrSpecial:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hdrSpecial:SetJustifyH("RIGHT")
 
     local hdrStatus = colHdrFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hdrStatus:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_STATUS_RIGHT, 0)
     hdrStatus:SetText(L["JOURNAL_COL_HDR_STATUS"])
-    hdrStatus:SetTextColor(T("TEXT_MUTED"))
+    hdrStatus:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hdrStatus:SetJustifyH("RIGHT")
 
     yOffset = yOffset - 24
@@ -454,19 +459,19 @@ local function RefreshDetailView(isSecondRefresh)
         encBtn:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
         encBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
         encBtn:SetHeight(28)
-        encBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        encBtn:SetBackdropColor(T("BG_SECONDARY"))
+        encBtn:SetBackdrop(BACKDROP_SIMPLE)
+        encBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         table.insert(detailElements, encBtn)
 
         local arrowText = encBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         arrowText:SetPoint("LEFT", encBtn, "LEFT", 8, 0)
         arrowText:SetText(isExpanded and "v" or ">")
-        arrowText:SetTextColor(T("TEXT_MUTED"))
+        arrowText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         local encName = encBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         encName:SetPoint("LEFT", arrowText, "RIGHT", 6, 0)
         encName:SetText(encounter.name)
-        encName:SetTextColor(T("ACCENT_PRIMARY"))
+        encName:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local itemCountStr = string.format(L["JOURNAL_ITEMS_COUNT"], #filteredItems)
         if #filteredItems ~= #encounter.items then
@@ -475,7 +480,7 @@ local function RefreshDetailView(isSecondRefresh)
         local encCount = encBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         encCount:SetPoint("RIGHT", encBtn, "RIGHT", -8, 0)
         encCount:SetText(itemCountStr)
-        encCount:SetTextColor(T("TEXT_MUTED"))
+        encCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         local capturedEncID = encounter.encounterID
         encBtn:SetScript("OnClick", function()
@@ -483,10 +488,10 @@ local function RefreshDetailView(isSecondRefresh)
             RefreshDetailView(false)
         end)
         encBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         end)
         encBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_SECONDARY"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         end)
 
         yOffset = yOffset - 30
@@ -497,17 +502,14 @@ local function RefreshDetailView(isSecondRefresh)
                 itemRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
                 itemRow:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
                 itemRow:SetHeight(ITEM_ROW_HEIGHT)
-                itemRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-                itemRow:SetBackdropColor(T("BG_PRIMARY"))
+                itemRow:SetBackdrop(BACKDROP_SIMPLE)
+                itemRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
                 table.insert(detailElements, itemRow)
 
                 local iconFrame = CreateFrame("Frame", nil, itemRow, "BackdropTemplate")
                 iconFrame:SetSize(26, 26)
                 iconFrame:SetPoint("LEFT", itemRow, "LEFT", 6, 0)
-                iconFrame:SetBackdrop({
-                    edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1,
-                })
+                iconFrame:SetBackdrop(BACKDROP_EDGE)
                 local qColor = QUALITY_COLORS[item.quality] or QUALITY_COLORS[1]
                 iconFrame:SetBackdropBorderColor(qColor[1], qColor[2], qColor[3], 0.6)
                 table.insert(detailElements, iconFrame)
@@ -530,7 +532,7 @@ local function RefreshDetailView(isSecondRefresh)
                 diffText:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT, 0)
                 diffText:SetJustifyH("RIGHT")
                 diffText:SetText(FormatDifficulties(item.difficulties))
-                diffText:SetTextColor(T("TEXT_MUTED"))
+                diffText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
                 local specialText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 specialText:SetPoint("RIGHT", itemRow, "RIGHT", COL_SPECIAL_RIGHT, 0)
@@ -568,13 +570,13 @@ local function RefreshDetailView(isSecondRefresh)
 
                 itemRow:EnableMouse(true)
                 itemRow:SetScript("OnEnter", function(self)
-                    self:SetBackdropColor(T("BG_HOVER"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     GameTooltip:SetItemByID(item.itemID)
                     GameTooltip:Show()
                 end)
                 itemRow:SetScript("OnLeave", function(self)
-                    self:SetBackdropColor(T("BG_PRIMARY"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
                     GameTooltip:Hide()
                 end)
 
@@ -679,9 +681,9 @@ local function RefreshJournalList(panels)
         local card = CreateInstanceCard(panels.listScrollChild, instData, yOffset, function(inst)
             for _, btn in ipairs(instanceListButtons) do
                 if btn.instData and btn.instData.instanceID == inst.instanceID then
-                    btn:SetBackdropColor(T("BG_ACTIVE"))
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 else
-                    btn:SetBackdropColor(T("BG_SECONDARY"))
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 end
             end
             ShowInstanceDetail(panels, inst)
@@ -827,7 +829,7 @@ function ns.UI.CreateJournalTab(parent)
     local expLabel = leftHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     expLabel:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -38)
     expLabel:SetText(L["JOURNAL_LABEL_EXPANSION"])
-    expLabel:SetTextColor(T("TEXT_MUTED"))
+    expLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local expDropdown, expText = ns.UI.CreateDropdown(leftHeader, { width = LEFT_W - 16, text = L["JOURNAL_EXPANSION_ALL"] })
     expDropdown:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -54)
@@ -836,7 +838,7 @@ function ns.UI.CreateJournalTab(parent)
     local typeLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     typeLabel:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", 8, -8)
     typeLabel:SetText(L["JOURNAL_LABEL_INST_TYPE"])
-    typeLabel:SetTextColor(T("TEXT_MUTED"))
+    typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local typeButtonDefs = {
         { text = L["JOURNAL_TYPE_ALL"],      value = "all"   },
@@ -851,23 +853,19 @@ function ns.UI.CreateJournalTab(parent)
     for _, def in ipairs(typeButtonDefs) do
         local btn = CreateFrame("Button", nil, rightHeader, "BackdropTemplate")
         btn:SetHeight(BTN_H)
-        btn:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        btn:SetBackdropColor(T("BG_SECONDARY"))
-        btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
         local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         lbl:SetPoint("CENTER", 0, 0)
         lbl:SetText(def.text)
-        lbl:SetTextColor(T("TEXT_PRIMARY"))
+        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         btn:SetWidth(math.max(30, lbl:GetStringWidth() + BTN_PAD_X * 2))
 
         btn.highlight = btn:CreateTexture(nil, "OVERLAY")
         btn.highlight:SetAllPoints()
-        btn.highlight:SetColorTexture(T("ACCENT_PRIMARY"))
+        btn.highlight:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         btn.highlight:SetAlpha(0.15)
         btn.highlight:Hide()
 
@@ -879,25 +877,25 @@ function ns.UI.CreateJournalTab(parent)
         table.insert(typeButtons, btn)
 
         btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         end)
         btn:SetScript("OnLeave", function(self)
             if instanceTypeFilter == self.value then
-                self:SetBackdropColor(T("BG_ACTIVE"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             else
-                self:SetBackdropColor(T("BG_SECONDARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             end
         end)
         btn:SetScript("OnClick", function(self)
             instanceTypeFilter = self.value
             for _, b in ipairs(typeButtons) do
                 if b.value == instanceTypeFilter then
-                    b:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-                    b:SetBackdropColor(T("BG_ACTIVE"))
+                    b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                     b.highlight:Show()
                 else
-                    b:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                    b:SetBackdropColor(T("BG_SECONDARY"))
+                    b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                     b.highlight:Hide()
                 end
             end
@@ -908,8 +906,8 @@ function ns.UI.CreateJournalTab(parent)
     -- Set initial active state on All button
     for _, b in ipairs(typeButtons) do
         if b.value == "all" then
-            b:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-            b:SetBackdropColor(T("BG_ACTIVE"))
+            b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             b.highlight:Show()
         end
     end
@@ -921,7 +919,7 @@ function ns.UI.CreateJournalTab(parent)
     local collLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     collLabel:SetPoint("BOTTOMLEFT", collectionFilterDropdown, "TOPLEFT", 0, 2)
     collLabel:SetText(L["JOURNAL_LABEL_COLLECTION"])
-    collLabel:SetTextColor(T("TEXT_MUTED"))
+    collLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local itemFilterDropdown, itemFilterText = ns.UI.CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
     itemFilterDropdown:SetPoint("TOPRIGHT", collectionFilterDropdown, "TOPLEFT", -6, 0)
@@ -929,19 +927,15 @@ function ns.UI.CreateJournalTab(parent)
     local itemTypeLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     itemTypeLabel:SetPoint("BOTTOMLEFT", itemFilterDropdown, "TOPLEFT", 0, 2)
     itemTypeLabel:SetText(L["JOURNAL_LABEL_ITEM_TYPE"])
-    itemTypeLabel:SetTextColor(T("TEXT_MUTED"))
+    itemTypeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     -- RIGHT HEADER: Row 2 - Hide Non-Collectable checkbox
     local chkBox = CreateFrame("Button", nil, rightHeader, "BackdropTemplate")
     chkBox:SetSize(16, 16)
     chkBox:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", 8, -54)
-    chkBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    chkBox:SetBackdropColor(T("BG_SECONDARY"))
-    chkBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    chkBox:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    chkBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    chkBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local chkMark = chkBox:CreateTexture(nil, "OVERLAY")
     chkMark:SetPoint("TOPLEFT", chkBox, "TOPLEFT", 2, -2)
@@ -952,16 +946,16 @@ function ns.UI.CreateJournalTab(parent)
     local chkLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     chkLabel:SetPoint("LEFT", chkBox, "RIGHT", 6, 0)
     chkLabel:SetText(L["JOURNAL_HIDE_NON_COLLECTABLE"])
-    chkLabel:SetTextColor(T("TEXT_PRIMARY"))
+    chkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     chkBox:SetScript("OnClick", function(self)
         hideNonCollectable = not hideNonCollectable
         if hideNonCollectable then
             chkMark:Show()
-            self:SetBackdropBorderColor(T("BORDER_FOCUS"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
         else
             chkMark:Hide()
-            self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         end
         if selectedInstance then
             RefreshDetailView(false)
@@ -982,15 +976,15 @@ function ns.UI.CreateJournalTab(parent)
         itemFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
         collectionFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
         chkMark:Hide()
-        chkBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        chkBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         for _, b in ipairs(typeButtons) do
             if b.value == "all" then
-                b:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-                b:SetBackdropColor(T("BG_ACTIVE"))
+                b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 b.highlight:Show()
             else
-                b:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                b:SetBackdropColor(T("BG_SECONDARY"))
+                b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 b.highlight:Hide()
             end
         end
@@ -1003,12 +997,12 @@ function ns.UI.CreateJournalTab(parent)
     -- Empty state labels
     local emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
-    emptyList:SetTextColor(T("TEXT_MUTED"))
+    emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyList = emptyList
 
     local emptyDetail = panels.detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyDetail:SetPoint("CENTER", panels.detailPanel, "CENTER", 0, 0)
-    emptyDetail:SetTextColor(T("TEXT_MUTED"))
+    emptyDetail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyDetail = emptyDetail
 
     -- Difficulty dropdown stays in detail panel
@@ -1110,9 +1104,9 @@ function ns.UI.OpenToInstance(mapID)
         ShowInstanceDetail(panels_ref, instData)
         for _, btn in ipairs(instanceListButtons) do
             if btn.instData and btn.instData.instanceID == instData.instanceID then
-                btn:SetBackdropColor(T("BG_ACTIVE"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             else
-                btn:SetBackdropColor(T("BG_SECONDARY"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             end
         end
     end)

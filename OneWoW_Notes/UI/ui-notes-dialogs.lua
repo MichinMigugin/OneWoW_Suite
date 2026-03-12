@@ -1,10 +1,10 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local function GetFontColorFromKey(fontColorKey, pinColorKey)
     return ns.Config:GetResolvedFontColor(fontColorKey, pinColorKey)
@@ -14,7 +14,7 @@ local function MakeLabel(parent, text, x, y)
     local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     lbl:SetText(text)
-    lbl:SetTextColor(T("TEXT_SECONDARY"))
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     return lbl
 end
 
@@ -103,11 +103,11 @@ function ns.UI.ShowAddNoteDialog()
     local LBL_GAP = 18
 
     MakeLabel(content, L["LABEL_NOTE_TITLE"], COL1_X, yPos)
-    local titleInput = lib:CreateEditBox(nil, content, { height = 26 })
+    local titleInput = OneWoW_GUI:CreateEditBox(nil, content, { height = 26 })
     titleInput:SetPoint("TOPLEFT",  content, "TOPLEFT",  COL1_X,  yPos - LBL_GAP)
     titleInput:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos - LBL_GAP)
     titleInput:SetAutoFocus(true)
-    titleInput:SetTextColor(T("TEXT_PRIMARY"))
+    titleInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     titleInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
     dialog.titleInput = titleInput
     yPos = yPos - ROW_H - 4
@@ -192,7 +192,7 @@ function ns.UI.ShowAddNoteDialog()
 
     MakeLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
     dialog.selectedFontSize = 12
-    local fontSizeContainer = lib:CreateSlider(content, 10, 20, 1, 12, function(val)
+    local fontSizeContainer = OneWoW_GUI:CreateSlider(content, 10, 20, 1, 12, function(val)
         dialog.selectedFontSize = val
         UpdatePreview()
     end, COL_W, "%d")
@@ -213,7 +213,7 @@ function ns.UI.ShowAddNoteDialog()
 
     MakeLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
     dialog.selectedOpacity = 0.9
-    local opacityContainer = lib:CreateSlider(content, 50, 100, 5, 90, function(val)
+    local opacityContainer = OneWoW_GUI:CreateSlider(content, 50, 100, 5, 90, function(val)
         dialog.selectedOpacity = val / 100
         UpdatePreview()
     end, COL_W, "%d%%")
@@ -253,7 +253,7 @@ function ns.UI.ShowAddNoteDialog()
     autoPinSection:SetSize(COL_W, 35)
     autoPinSection:Hide()
 
-    local autoPinCheckbox = lib:CreateCheckbox(nil, autoPinSection, L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
+    local autoPinCheckbox = OneWoW_GUI:CreateCheckbox(nil, autoPinSection, L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
     autoPinCheckbox:SetPoint("LEFT", autoPinSection, "LEFT", 5, 0)
     dialog.autoPinCheckbox = autoPinCheckbox
     dialog.autoPinSection  = autoPinSection
@@ -271,10 +271,10 @@ function ns.UI.ShowAddNoteDialog()
     local previewLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     previewLabel:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     previewLabel:SetText(L["LABEL_NOTE_CONTENT"])
-    previewLabel:SetTextColor(T("TEXT_SECONDARY"))
+    previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yPos = yPos - 18
 
-    contentBg = lib:CreateFrame(nil, content, 100, 100)
+    contentBg = OneWoW_GUI:CreateFrame(nil, content, 100, 100)
     contentBg:ClearAllPoints()
     contentBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X,  yPos)
     contentBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
@@ -360,11 +360,11 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     local LBL_GAP = 18
 
     MakeLabel(content, L["LABEL_NOTE_TITLE"], COL1_X, yPos)
-    local titleInput = lib:CreateEditBox(nil, content, { height = 26 })
+    local titleInput = OneWoW_GUI:CreateEditBox(nil, content, { height = 26 })
     titleInput:SetPoint("TOPLEFT",  content, "TOPLEFT",  COL1_X,  yPos - LBL_GAP)
     titleInput:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos - LBL_GAP)
     titleInput:SetAutoFocus(false)
-    titleInput:SetTextColor(T("TEXT_PRIMARY"))
+    titleInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     titleInput:SetText(noteData.title or "")
     titleInput:SetScript("OnEnterPressed", function(self)
         local newTitle = self:GetText()
@@ -497,7 +497,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
-    local fontSizeContainer = lib:CreateSlider(content, 10, 20, 1, noteData.fontSize or 12, function(val)
+    local fontSizeContainer = OneWoW_GUI:CreateSlider(content, 10, 20, 1, noteData.fontSize or 12, function(val)
         local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
         if notesDB and notesDB[noteID] then
             notesDB[noteID].fontSize = val
@@ -535,7 +535,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
-    local opacityContainer = lib:CreateSlider(content, 50, 100, 5, math.floor((noteData.opacity or 0.9) * 100 + 0.5), function(val)
+    local opacityContainer = OneWoW_GUI:CreateSlider(content, 50, 100, 5, math.floor((noteData.opacity or 0.9) * 100 + 0.5), function(val)
         local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
         if notesDB and notesDB[noteID] then
             notesDB[noteID].opacity = val / 100
@@ -584,7 +584,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     propAutoPinSection:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - 4)
     propAutoPinSection:SetSize(COL_W, 35)
 
-    local propAutoPinCheckbox = lib:CreateCheckbox(nil, propAutoPinSection, L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
+    local propAutoPinCheckbox = OneWoW_GUI:CreateCheckbox(nil, propAutoPinSection, L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
     propAutoPinCheckbox:SetPoint("LEFT", propAutoPinSection, "LEFT", 5, 0)
     propAutoPinCheckbox:SetChecked(noteData.autoPinEnabled == true)
     propAutoPinCheckbox:SetScript("OnClick", function(self)
@@ -626,10 +626,10 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     local previewLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     previewLabel:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     previewLabel:SetText(L["LABEL_NOTE_PREVIEW"])
-    previewLabel:SetTextColor(T("TEXT_SECONDARY"))
+    previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yPos = yPos - 18
 
-    contentBg = lib:CreateFrame(nil, content, 100, 100)
+    contentBg = OneWoW_GUI:CreateFrame(nil, content, 100, 100)
     contentBg:ClearAllPoints()
     contentBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X,  yPos)
     contentBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)

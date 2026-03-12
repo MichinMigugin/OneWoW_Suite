@@ -1,7 +1,8 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -43,8 +44,6 @@ local onHeaderCreate = function(btn, col, index)
 end
 
 function ns.UI.CreateLockoutsTab(parent)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["LOCKOUTS_OVERVIEW"],
         height = 70,
@@ -98,8 +97,6 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
     if not lockoutsTab then return end
     if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
     if not _G.OneWoW_AltTracker_Endgame_DB or not _G.OneWoW_AltTracker_Endgame_DB.characters then return end
-
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
     local allChars = {}
     for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
@@ -267,7 +264,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                         grid:AddLine(pRaids, "  " .. progressText .. " - " .. timeLeftText, {0.5, 0.9, 1})
                     end
                 else
-                    grid:AddLine(pRaids, L["LOCKOUTS_NO_RAID"], {T("TEXT_SECONDARY")})
+                    grid:AddLine(pRaids, L["LOCKOUTS_NO_RAID"], {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                 end
 
                 if #dungeonList > 0 then
@@ -280,7 +277,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                         grid:AddLine(pDungeons, "  " .. timeLeftText, {0.5, 0.9, 1})
                     end
                 else
-                    grid:AddLine(pDungeons, L["LOCKOUTS_NO_DUNGEON"], {T("TEXT_SECONDARY")})
+                    grid:AddLine(pDungeons, L["LOCKOUTS_NO_DUNGEON"], {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                 end
 
                 grid:Finish()
@@ -313,7 +310,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
 
         local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         levelText:SetText(tostring(charData.level or 0))
-        levelText:SetTextColor(T("TEXT_PRIMARY"))
+        levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, levelText)
 
         local lockoutTexts = {}
@@ -329,7 +326,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                 end
 
                 lockoutText:SetText(displayText)
-                lockoutText:SetTextColor(T("TEXT_PRIMARY"))
+                lockoutText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
                 lockoutText:EnableMouse(true)
                 lockoutText:SetScript("OnEnter", function(self)
@@ -361,7 +358,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                 end)
             else
                 lockoutText:SetText("-")
-                lockoutText:SetTextColor(T("TEXT_SECONDARY"))
+                lockoutText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
 
             table.insert(charRow.cells, lockoutText)
@@ -384,11 +381,11 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                 expiresText:SetTextColor(0.5, 0.9, 1)
             else
                 expiresText:SetText("-")
-                expiresText:SetTextColor(T("TEXT_SECONDARY"))
+                expiresText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
         else
             expiresText:SetText("-")
-            expiresText:SetTextColor(T("TEXT_SECONDARY"))
+            expiresText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
         table.insert(charRow.cells, expiresText)
 

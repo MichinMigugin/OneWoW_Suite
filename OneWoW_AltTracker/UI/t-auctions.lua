@@ -1,8 +1,8 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -63,8 +63,8 @@ function ns.UI.CreateAuctionsTab(parent)
     filterPanel:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -8)
     filterPanel:SetHeight(32)
     filterPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    filterPanel:SetBackdropColor(T("BG_SECONDARY"))
-    filterPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    filterPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    filterPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     parent.auctionFilter = "all"
 
@@ -98,8 +98,8 @@ function ns.UI.CreateAuctionsTab(parent)
     end
 
     mailIconButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        self:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         if not _G.OneWoW_AltTracker_Storage_DB then return end
 
@@ -150,8 +150,8 @@ function ns.UI.CreateAuctionsTab(parent)
     end)
 
     mailIconButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_TERTIARY"))
-        self:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         GameTooltip:Hide()
     end)
 
@@ -177,11 +177,11 @@ function ns.UI.CreateAuctionsTab(parent)
             parent.auctionFilter = self.filterKey
             for _, b in ipairs(filterButtons) do
                 if b.filterKey == parent.auctionFilter then
-                    b:SetBackdropColor(T("ACCENT_PRIMARY"))
-                    b.text:SetTextColor(T("BG_PRIMARY"))
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
                 else
-                    b:SetBackdropColor(T("BG_TERTIARY"))
-                    b.text:SetTextColor(T("TEXT_PRIMARY"))
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
             end
             if ns.UI.RefreshAuctionsTab then
@@ -191,7 +191,7 @@ function ns.UI.CreateAuctionsTab(parent)
 
         btn:SetScript("OnEnter", function(self)
             if self.filterKey ~= parent.auctionFilter then
-                self:SetBackdropColor(T("BG_HOVER"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
             end
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetText(option.label, 1, 1, 1)
@@ -201,21 +201,21 @@ function ns.UI.CreateAuctionsTab(parent)
 
         btn:SetScript("OnLeave", function(self)
             if self.filterKey ~= parent.auctionFilter then
-                self:SetBackdropColor(T("BG_TERTIARY"))
-                self.text:SetTextColor(T("TEXT_PRIMARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
             GameTooltip:Hide()
         end)
 
         if option.key == "all" then
-            btn:SetBackdropColor(T("ACCENT_PRIMARY"))
-            btn.text:SetTextColor(T("BG_PRIMARY"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
         else
-            btn:SetBackdropColor(T("BG_TERTIARY"))
-            btn.text:SetTextColor(T("TEXT_PRIMARY"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
-        btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         table.insert(filterButtons, btn)
     end
 
@@ -223,8 +223,8 @@ function ns.UI.CreateAuctionsTab(parent)
     rosterPanel:SetPoint("TOPLEFT", filterPanel, "BOTTOMLEFT", 0, -5)
     rosterPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
     rosterPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    rosterPanel:SetBackdropColor(T("BG_PRIMARY"))
-    rosterPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    rosterPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    rosterPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local dt
     dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
@@ -373,7 +373,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                 local text = ef:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 text:SetPoint("CENTER")
                 text:SetText(L["EXPANDED_DETAILS_SOON"])
-                text:SetTextColor(T("TEXT_SECONDARY"))
+                text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 ns.UI.ApplyFontToFrame(ef)
             end,
         })
@@ -391,14 +391,14 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         end
 
         auctionRow:SetScript("OnEnter", function(self)
-            local hR, hG, hB = T("BG_HOVER")
+            local hR, hG, hB = OneWoW_GUI:GetThemeColor("BG_HOVER")
             self.bg:SetColorTexture(hR, hG, hB, 0.8)
         end)
         auctionRow:SetScript("OnLeave", function(self)
             if self.normalBgColor then
                 self.bg:SetColorTexture(unpack(self.normalBgColor))
             else
-                local bgR, bgG, bgB = T("BG_TERTIARY")
+                local bgR, bgG, bgB = OneWoW_GUI:GetThemeColor("BG_TERTIARY")
                 self.bg:SetColorTexture(bgR, bgG, bgB, 0.6)
             end
         end)
@@ -451,7 +451,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
             local color = ITEM_QUALITY_COLORS[itemData.itemRarity]
             itemNameText:SetTextColor(color.r, color.g, color.b)
         else
-            itemNameText:SetTextColor(T("TEXT_PRIMARY"))
+            itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         if itemData.itemLink then
@@ -467,7 +467,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                     local color = ITEM_QUALITY_COLORS[itemData.itemRarity]
                     itemNameText:SetTextColor(color.r, color.g, color.b)
                 else
-                    itemNameText:SetTextColor(T("TEXT_PRIMARY"))
+                    itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
                 GameTooltip:Hide()
             end)
@@ -483,7 +483,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         local qtyText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         local quantity = itemData.quantity or 1
         qtyText:SetText(tostring(quantity))
-        qtyText:SetTextColor(T("TEXT_PRIMARY"))
+        qtyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(auctionRow.cells, qtyText)
 
         local eachText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -497,7 +497,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
             local each = bid.quantity > 0 and math.floor(bid.bidAmount / bid.quantity) or 0
             eachText:SetText(ns.AltTrackerFormatters:FormatGold(each))
         end
-        eachText:SetTextColor(T("TEXT_PRIMARY"))
+        eachText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         eachText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, eachText)
 
@@ -508,7 +508,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
             local totalAmount = auction and auction.buyoutAmount or (bid and bid.bidAmount or 0)
             totalText:SetText(ns.AltTrackerFormatters:FormatGold(totalAmount))
         end
-        totalText:SetTextColor(T("TEXT_PRIMARY"))
+        totalText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         totalText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, totalText)
 
@@ -519,7 +519,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                 bidText:SetTextColor(0, 1, 0)
             else
                 bidText:SetText("-")
-                bidText:SetTextColor(T("TEXT_SECONDARY"))
+                bidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
         elseif auction then
             if auction.bidAmount > 0 then
@@ -527,7 +527,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                 bidText:SetTextColor(1, 1, 0)
             else
                 bidText:SetText("-")
-                bidText:SetTextColor(T("TEXT_SECONDARY"))
+                bidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
         else
             bidText:SetText(ns.AltTrackerFormatters:FormatGold(bid.bidAmount))
@@ -551,7 +551,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
             else
                 timeText:SetText(math.floor(timeSince / 86400) .. "d ago")
             end
-            timeText:SetTextColor(T("TEXT_SECONDARY"))
+            timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         elseif auction then
             local timeLeft = auction.endsAt - GetServerTime()
             if timeLeft > 0 then
@@ -601,7 +601,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
             end)
         else
             timeText:SetText("-")
-            timeText:SetTextColor(T("TEXT_SECONDARY"))
+            timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
         table.insert(auctionRow.cells, timeContainer)
 
@@ -813,7 +813,7 @@ function ns.UI.RefreshAuctionsStats(auctionsTab)
             if stats.goldWaiting > 0 then
                 statBoxes[9].value:SetTextColor(1, 0.84, 0)
             else
-                statBoxes[9].value:SetTextColor(T("TEXT_PRIMARY"))
+                statBoxes[9].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end
         if statBoxes[10] then

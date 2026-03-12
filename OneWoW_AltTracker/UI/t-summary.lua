@@ -1,8 +1,8 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -11,8 +11,6 @@ local currentSortAscending = true
 local characterRows = {}
 
 function ns.UI.CreateSummaryTab(parent)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["ACCOUNT_OVERVIEW"],
         height = 110,
@@ -248,7 +246,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 local cData = d.charData
                 local cKey = d.charKey
 
-                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef, T)
+                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
 
                 local p1 = grid:AddPanel(L["EXPANDED_TOTAL_PLAYTIME"])
                 local totalTime = (cData.playTime and cData.playTime.total) or 0
@@ -277,7 +275,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 end
 
                 if cData.location and cData.location.zone then
-                    grid:AddLine(p1, L["COL_LAST_SEEN"], cData.location.zone, {T("TEXT_SECONDARY")})
+                    grid:AddLine(p1, L["COL_LAST_SEEN"], cData.location.zone, {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                 end
 
                 local p2 = grid:AddPanel(L["EXPANDED_GUILD"])
@@ -289,11 +287,11 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 end
                 grid:AddLine(p2, L["EXPANDED_GUILD"], guildName, {0.3, 1, 0.3})
                 if guildRank ~= "" then
-                    grid:AddLine(p2, L["EXPANDED_GUILD_RANK"], guildRank, {T("TEXT_SECONDARY")})
+                    grid:AddLine(p2, L["EXPANDED_GUILD_RANK"], guildRank, {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                 end
 
                 if cData.race or cData.raceName then
-                    grid:AddLine(p2, "", cData.race or cData.raceName, {T("TEXT_SECONDARY")})
+                    grid:AddLine(p2, "", cData.race or cData.raceName, {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                 end
 
                 grid:Finish()
@@ -358,7 +356,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
         local realmText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         realmText:SetText(charData.realm or "")
-        realmText:SetTextColor(T("TEXT_SECONDARY"))
+        realmText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         realmText:SetJustifyH("LEFT")
         table.insert(charRow.cells, realmText)
 
@@ -390,7 +388,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
             local levelText = levelContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             levelText:SetPoint("LEFT", iconTexture, "RIGHT", 2, 0)
             levelText:SetText(tostring(level))
-            levelText:SetTextColor(T("TEXT_PRIMARY"))
+            levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         levelContainer:EnableMouse(true)
@@ -416,14 +414,14 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
         local classText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         classText:SetText(charData.className or charData.class or "")
-        classText:SetTextColor(T("TEXT_PRIMARY"))
+        classText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         classText:SetJustifyH("LEFT")
         table.insert(charRow.cells, classText)
 
         local specText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         local specName = (charData.stats and charData.stats.specName) or ""
         specText:SetText(tostring(specName or ""))
-        specText:SetTextColor(T("TEXT_PRIMARY"))
+        specText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         specText:SetJustifyH("LEFT")
 
         local specFrame = CreateFrame("Frame", nil, charRow)
@@ -558,7 +556,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         if charData.itemLevelColor then
             ilvlText:SetTextColor(charData.itemLevelColor.r, charData.itemLevelColor.g, charData.itemLevelColor.b)
         else
-            ilvlText:SetTextColor(T("TEXT_PRIMARY"))
+            ilvlText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
         table.insert(charRow.cells, ilvlText)
 
@@ -600,7 +598,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         local hearthText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         local hearthLocation = (charData.location and charData.location.bindLocation) or ""
         hearthText:SetText(hearthLocation)
-        hearthText:SetTextColor(T("TEXT_PRIMARY"))
+        hearthText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         hearthText:SetJustifyH("LEFT")
         table.insert(charRow.cells, hearthText)
 
@@ -813,7 +811,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
         timeText:SetPoint("LEFT", bar, "RIGHT", 8, 0)
         timeText:SetWidth(150)
         timeText:SetText(string.format("%5.1f%% - %s", accountPercent * 100, ns.UI.FormatPlaytimeCompact(classInfo.time)))
-        timeText:SetTextColor(T("TEXT_PRIMARY"))
+        timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         timeText:SetJustifyH("LEFT")
 
         rowFrame:EnableMouse(true)
@@ -853,7 +851,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
     local totalText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     totalText:SetPoint("BOTTOMLEFT", cf, "BOTTOMLEFT", 10, 8)
     totalText:SetText(L["TOTAL"] .. ": " .. ns.UI.FormatPlaytimeCompact(accountTotal))
-    totalText:SetTextColor(T("ACCENT_PRIMARY"))
+    totalText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     result.frame:Show()
 end
@@ -977,7 +975,7 @@ function ns.UI.RefreshSummaryStats(summaryTab)
             statBoxes[3].value:SetText(goldFormatted)
 
             statBoxes[3]:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(T("BG_HOVER"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 local warbandGold = 0
                 if StorageAPI then
                     warbandGold = StorageAPI.GetWarbandBankGold() or 0
@@ -994,7 +992,7 @@ function ns.UI.RefreshSummaryStats(summaryTab)
                 GameTooltip:Show()
             end)
             statBoxes[3]:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(T("BG_TERTIARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                 GameTooltip:Hide()
             end)
         end
@@ -1009,7 +1007,7 @@ function ns.UI.RefreshSummaryStats(summaryTab)
             statBoxes[6].value:SetText(playtimeFormatted)
             statBoxes[6]:EnableMouse(true)
             statBoxes[6]:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(T("BG_HOVER"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 GameTooltip:SetText(L["TT_PLAYTIME"], 1, 1, 1)
                 GameTooltip:AddLine(L["TT_PLAYTIME_DESC"], nil, nil, nil, true)
@@ -1017,7 +1015,7 @@ function ns.UI.RefreshSummaryStats(summaryTab)
                 GameTooltip:Show()
             end)
             statBoxes[6]:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(T("BG_TERTIARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                 GameTooltip:Hide()
             end)
             statBoxes[6]:SetScript("OnMouseUp", function()

@@ -4,8 +4,11 @@
 local addonName, ns = ...
 local OneWoWCatalog = OneWoW_Catalog
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -25,7 +28,7 @@ function ns.UI.CreateSettingsTab(parent)
     dbDesc:SetJustifyH("LEFT")
     dbDesc:SetWordWrap(true)
     dbDesc:SetText(L["DATA_MANAGER_DESC"])
-    dbDesc:SetTextColor(T("TEXT_SECONDARY"))
+    dbDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     dbDesc:SetSpacing(3)
     yOffset = yOffset - 30
 
@@ -49,23 +52,19 @@ function ns.UI.CreateSettingsTab(parent)
         local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
         container:SetPoint("TOPLEFT", parent, "TOPLEFT", 15, yPos)
         container:SetSize(770, 60)
-        container:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Buttons\\WHITE8X8",
-            edgeSize = 1,
-        })
-        container:SetBackdropColor(T("BG_TERTIARY"))
-        container:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        container:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         local nameText = container:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameText:SetPoint("TOPLEFT", 12, -10)
         nameText:SetText(dbData.name)
-        nameText:SetTextColor(T("TEXT_PRIMARY"))
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local descText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         descText:SetPoint("TOPLEFT", 12, -28)
         descText:SetText(dbData.desc)
-        descText:SetTextColor(T("TEXT_SECONDARY"))
+        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         descText:SetWidth(400)
 
         local sizeText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -76,7 +75,7 @@ function ns.UI.CreateSettingsTab(parent)
             if db then
                 local size = GetTableSize(dbData.key)
                 sizeText:SetText("Entries: " .. size)
-                sizeText:SetTextColor(T("TEXT_SECONDARY"))
+                sizeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             else
                 sizeText:SetText("Not Loaded")
                 sizeText:SetTextColor(1, 0.5, 0.5)

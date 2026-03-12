@@ -1,7 +1,8 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -46,8 +47,6 @@ local onHeaderCreate = function(btn, col, index)
 end
 
 function ns.UI.CreateProfessionsTab(parent)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["PROFESSIONS_OVERVIEW"],
         height = 110,
@@ -245,7 +244,6 @@ local function GetTotalSkill(profData)
 end
 
 local function BuildExpandedPanels(ef, data)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
     local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef, T)
 
     local professions = data.professions
@@ -399,8 +397,6 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
 
     local ProfModule = GetProfessionsModule()
     if not ProfModule then return end
-
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
     local allChars = {}
     for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
@@ -559,7 +555,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
 
         local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         levelText:SetText(tostring(charData.level or 0))
-        levelText:SetTextColor(T("TEXT_PRIMARY"))
+        levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, levelText)
 
         local prof1 = professions.Primary1
@@ -577,7 +573,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         else
             primary1Text:SetText("--")
         end
-        primary1Text:SetTextColor(T("TEXT_PRIMARY"))
+        primary1Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, primary1Frame)
 
         local conc1Frame = CreateFrame("Frame", nil, charRow)
@@ -594,7 +590,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
             AddConcentrationTooltip(conc1Frame, conc1Data, prof1.name, L)
         else
             conc1Text:SetText("--")
-            conc1Text:SetTextColor(T("TEXT_SECONDARY"))
+            conc1Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
         table.insert(charRow.cells, conc1Frame)
 
@@ -613,7 +609,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         else
             primary2Text:SetText("--")
         end
-        primary2Text:SetTextColor(T("TEXT_PRIMARY"))
+        primary2Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, primary2Frame)
 
         local conc2Frame = CreateFrame("Frame", nil, charRow)
@@ -630,7 +626,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
             AddConcentrationTooltip(conc2Frame, conc2Data, prof2.name, L)
         else
             conc2Text:SetText("--")
-            conc2Text:SetTextColor(T("TEXT_SECONDARY"))
+            conc2Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
         table.insert(charRow.cells, conc2Frame)
 
@@ -649,7 +645,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         else
             cookingText:SetText("--")
         end
-        cookingText:SetTextColor(T("TEXT_PRIMARY"))
+        cookingText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, cookingFrame)
 
         local fishingFrame = CreateFrame("Frame", nil, charRow)
@@ -667,7 +663,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         else
             fishingText:SetText("--")
         end
-        fishingText:SetTextColor(T("TEXT_PRIMARY"))
+        fishingText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, fishingFrame)
 
         local archeologyFrame = CreateFrame("Frame", nil, charRow)
@@ -685,7 +681,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         else
             archeologyText:SetText("--")
         end
-        archeologyText:SetTextColor(T("TEXT_PRIMARY"))
+        archeologyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, archeologyFrame)
 
         local gearText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -724,7 +720,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
             end
         else
             gearText:SetText("--")
-            gearText:SetTextColor(T("TEXT_SECONDARY"))
+            gearText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
         gearText:SetJustifyH("LEFT")
         table.insert(charRow.cells, gearText)

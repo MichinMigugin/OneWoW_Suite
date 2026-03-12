@@ -16,6 +16,7 @@ local Constants = OneWoW_GUI.Constants
 local DEFAULT_THEME = Constants.DEFAULT_THEME
 local DEFAULT_THEME_COLOR = DEFAULT_THEME.COLOR
 local DEFAULT_THEME_SPACING = DEFAULT_THEME.SPACING
+local DEFAULT_THEME_KEY = Constants.DEFAULT_THEME_KEY
 local DEFAULT_ICON_TEXTURE = Constants.ICON_TEXTURES.horde
 
 local _splitPanelCount = 0
@@ -47,6 +48,11 @@ local function GetSpacing(key)
     return Constants.SPACING[key] or DEFAULT_THEME_SPACING
 end
 
+function OneWoW_GUI:GetAddonVersion(addonName)
+    if not C_AddOns.DoesAddOnExist(addonName) then return nil end
+    return C_AddOns.GetAddOnMetadata(addonName, "Version") or "Unknown"
+end
+
 function OneWoW_GUI:RegisterGUIConstants(guiConstants)
     return setmetatable(guiConstants, guiConstantsMetatable)
 end
@@ -74,7 +80,7 @@ function OneWoW_GUI:ApplyTheme(addon)
         themeKey = addon.db.global.theme
     end
 
-    local selectedTheme = Constants.THEMES[themeKey] or Constants.THEMES["green"]
+    local selectedTheme = Constants.THEMES[themeKey] or Constants.THEMES[DEFAULT_THEME_KEY]
     Constants.ACTIVE_THEME = setmetatable(selectedTheme, themeMetatable)
 end
 
@@ -2180,7 +2186,7 @@ function OneWoW_GUI:CreateMailIcon(parent, hasMail, size)
     return frame
 end
 
-function OneWoW_GUI:CreateExpandedPanelGrid(ef, themeFunc, options)
+function OneWoW_GUI:CreateExpandedPanelGrid(ef, options)
     options = options or {}
     local gap = options.gap or 8
     local inset = options.inset or 4
@@ -2201,12 +2207,12 @@ function OneWoW_GUI:CreateExpandedPanelGrid(ef, themeFunc, options)
         p:SetPoint("BOTTOMLEFT", ef, "BOTTOMLEFT", inset, inset)
         p:SetWidth(100)
         p:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
-        p:SetBackdropColor(themeFunc("BG_TERTIARY"))
-        p:SetBackdropBorderColor(themeFunc("BORDER_SUBTLE"))
+        p:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        p:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         local titleFS = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         titleFS:SetPoint("TOPLEFT", p, "TOPLEFT", 6, -5)
         titleFS:SetText(title)
-        titleFS:SetTextColor(themeFunc("ACCENT_PRIMARY"))
+        titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         p.titleFS = titleFS
         p.dy = -18
         table.insert(panels, p)
@@ -2235,7 +2241,7 @@ function OneWoW_GUI:CreateExpandedPanelGrid(ef, themeFunc, options)
                 fs:SetTextColor(color)
             end
         else
-            fs:SetTextColor(themeFunc("TEXT_PRIMARY"))
+            fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
         panel.dy = panel.dy - lineHeight
         return fs

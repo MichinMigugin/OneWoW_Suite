@@ -1,11 +1,18 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
 
 ns.UI = ns.UI or {}
 
-local lib = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local backdrop = {
+    bgFile   = "Interface\\Buttons\\WHITE8x8",
+    edgeFile = "Interface\\Buttons\\WHITE8x8",
+    tile = true, tileSize = 16, edgeSize = 1,
+}
 
 local selectedGuide = nil
 local guideListItems = {}
@@ -51,13 +58,9 @@ function ns.UI.CreateGuidesTab(parent)
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(40)
-    controlPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    controlPanel:SetBackdropColor(T("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    controlPanel:SetBackdrop(backdrop)
+    controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local newBtn = ns.UI.CreateButton(nil, controlPanel, L["GUIDES_NEW"], 110, 25)
     ns.UI.AutoResizeButton(newBtn, 80, 200)
@@ -103,15 +106,11 @@ function ns.UI.CreateGuidesTab(parent)
     local searchBox = CreateFrame("EditBox", nil, controlPanel, "BackdropTemplate")
     searchBox:SetSize(150, 25)
     searchBox:SetPoint("LEFT", catDD, "RIGHT", 8, 0)
-    searchBox:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    searchBox:SetBackdropColor(T("BG_TERTIARY"))
-    searchBox:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    searchBox:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    searchBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    searchBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     searchBox:SetFont(ns.Config:ResolveFontPath(nil), 11, "")
-    searchBox:SetTextColor(T("TEXT_PRIMARY"))
+    searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     searchBox:SetTextInsets(8, 8, 0, 0)
     searchBox:SetAutoFocus(false)
     searchBox:SetScript("OnTextChanged", function(self)
@@ -125,7 +124,7 @@ function ns.UI.CreateGuidesTab(parent)
     local searchPlaceholder = searchBox:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
     searchPlaceholder:SetPoint("LEFT", searchBox, "LEFT", 8, 0)
     searchPlaceholder:SetText(L["GUIDES_SEARCH"])
-    searchPlaceholder:SetTextColor(T("TEXT_MUTED"))
+    searchPlaceholder:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     searchBox:SetScript("OnEditFocusGained", function() searchPlaceholder:Hide() end)
     searchBox:SetScript("OnEditFocusLost", function()
         if searchBox:GetText() == "" then searchPlaceholder:Show() end
@@ -139,20 +138,16 @@ function ns.UI.CreateGuidesTab(parent)
     listPanel:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
     listPanel:SetPoint("BOTTOMLEFT", contentArea, "BOTTOMLEFT", 0, 0)
     listPanel:SetWidth(ns.Constants.GUI.LEFT_PANEL_WIDTH)
-    listPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    listPanel:SetBackdropColor(T("BG_PRIMARY"))
-    listPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    listPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    listPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    listPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local listTitle = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     listTitle:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 10, -10)
     listTitle:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -10, -10)
     listTitle:SetJustifyH("LEFT")
     listTitle:SetText(L["GUIDES_LIST_TITLE"])
-    listTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    listTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local listScroll = ns.UI.CreateCustomScroll(listPanel)
     local listScrollChild = listScroll.scrollChild
@@ -162,20 +157,16 @@ function ns.UI.CreateGuidesTab(parent)
     local detailPanel = CreateFrame("Frame", nil, contentArea, "BackdropTemplate")
     detailPanel:SetPoint("TOPLEFT", listPanel, "TOPRIGHT", ns.Constants.GUI.PANEL_GAP, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", 0, 0)
-    detailPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    detailPanel:SetBackdropColor(T("BG_PRIMARY"))
-    detailPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    detailPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    detailPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local detailTitle = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -10)
     detailTitle:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
     detailTitle:SetJustifyH("LEFT")
     detailTitle:SetText(L["GUIDES_DETAIL_TITLE"])
-    detailTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    detailTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local detailScroll = ns.UI.CreateCustomScroll(detailPanel)
     local detailScrollChild = detailScroll.scrollChild
@@ -187,7 +178,7 @@ function ns.UI.CreateGuidesTab(parent)
     local emptyText = emptyMessage:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyText:SetPoint("CENTER", emptyMessage, "CENTER", 0, 0)
     emptyText:SetText(L["GUIDES_SELECT"])
-    emptyText:SetTextColor(T("TEXT_MUTED"))
+    emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local function ClearDetailContent()
         for _, child in ipairs({detailScrollChild:GetChildren()}) do
@@ -246,7 +237,7 @@ function ns.UI.CreateGuidesTab(parent)
         if isComplete then
             text:SetTextColor(0.4, 0.8, 0.4, 1.0)
         else
-            text:SetTextColor(T("TEXT_PRIMARY"))
+            text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         local textH = math.max(14, text:GetStringHeight())
@@ -296,37 +287,37 @@ function ns.UI.CreateGuidesTab(parent)
         headerFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
         headerFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
         headerFrame:SetHeight(80)
-        headerFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        headerFrame:SetBackdropColor(T("BG_SECONDARY"))
+        headerFrame:SetBackdrop(BACKDROP_SIMPLE)
+        headerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
         local authorText = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         authorText:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 10, -8)
         authorText:SetText(L["GUIDES_AUTHOR"] .. ": " .. (guide.author or ""))
-        authorText:SetTextColor(T("TEXT_SECONDARY"))
+        authorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local catText = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         catText:SetPoint("LEFT", authorText, "RIGHT", 20, 0)
         catText:SetText(L["LABEL_CATEGORY"] .. ": " .. (guide.category or L["UI_GENERAL"]))
-        catText:SetTextColor(T("TEXT_SECONDARY"))
+        catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local progressText = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         progressText:SetPoint("TOPLEFT", authorText, "BOTTOMLEFT", 0, -4)
         progressText:SetText(string.format(L["GUIDES_PROGRESS_FORMAT"], done, total))
-        progressText:SetTextColor(T("ACCENT_PRIMARY"))
+        progressText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local progressBarBg = CreateFrame("Frame", nil, headerFrame, "BackdropTemplate")
         progressBarBg:SetPoint("TOPLEFT", progressText, "BOTTOMLEFT", 0, -4)
         progressBarBg:SetPoint("RIGHT", headerFrame, "RIGHT", -10, 0)
         progressBarBg:SetHeight(8)
-        progressBarBg:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        progressBarBg:SetBackdropColor(T("BG_TERTIARY"))
+        progressBarBg:SetBackdrop(BACKDROP_SIMPLE)
+        progressBarBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
         local progressBarFill = progressBarBg:CreateTexture(nil, "OVERLAY")
         progressBarFill:SetPoint("TOPLEFT", progressBarBg, "TOPLEFT", 0, 0)
         progressBarFill:SetPoint("BOTTOMLEFT", progressBarBg, "BOTTOMLEFT", 0, 0)
         local pct = total > 0 and (done / total) or 0
-        progressBarFill:SetTexture("Interface\\Buttons\\WHITE8x8")
-        progressBarFill:SetVertexColor(T("ACCENT_PRIMARY"))
+        progressBarFill:SetTexture(BACKDROP_SIMPLE.bgFile)
+        progressBarFill:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         C_Timer.After(0.05, function()
             if progressBarBg:GetWidth() > 0 then
@@ -403,7 +394,7 @@ function ns.UI.CreateGuidesTab(parent)
             descText:SetJustifyH("LEFT")
             descText:SetWordWrap(true)
             descText:SetText(guide.description)
-            descText:SetTextColor(T("TEXT_SECONDARY"))
+            descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
             local panelW = detailPanel:GetWidth()
             if panelW and panelW > 40 then
@@ -422,7 +413,7 @@ function ns.UI.CreateGuidesTab(parent)
             local noStepsText = noSteps:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             noStepsText:SetPoint("CENTER", noSteps, "CENTER", 0, 0)
             noStepsText:SetText(L["GUIDES_NO_STEPS"])
-            noStepsText:SetTextColor(T("TEXT_MUTED"))
+            noStepsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             yOffset = yOffset - 44
         end
 
@@ -465,21 +456,17 @@ function ns.UI.CreateGuidesTab(parent)
         local stepFrame = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
         stepFrame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
         stepFrame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yOffset)
-        stepFrame:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
+        stepFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
 
         if isCurrentStep then
-            stepFrame:SetBackdropColor(T("BG_ACTIVE"))
-            stepFrame:SetBackdropBorderColor(T("BORDER_ACCENT"))
+            stepFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            stepFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
         elseif isStepDone then
-            stepFrame:SetBackdropColor(T("BG_SECONDARY"))
-            stepFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            stepFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            stepFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         else
-            stepFrame:SetBackdropColor(T("BG_PRIMARY"))
-            stepFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            stepFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+            stepFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         end
 
         local stepHeader = CreateFrame("Frame", nil, stepFrame)
@@ -504,9 +491,9 @@ function ns.UI.CreateGuidesTab(parent)
         if isStepDone then
             stepNum:SetTextColor(0.4, 0.8, 0.4, 1.0)
         elseif isCurrentStep then
-            stepNum:SetTextColor(T("TEXT_ACCENT"))
+            stepNum:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            stepNum:SetTextColor(T("TEXT_SECONDARY"))
+            stepNum:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
 
         local stepTitle = stepHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -517,16 +504,16 @@ function ns.UI.CreateGuidesTab(parent)
         if isStepDone then
             stepTitle:SetTextColor(0.4, 0.8, 0.4, 1.0)
         elseif isCurrentStep then
-            stepTitle:SetTextColor(T("TEXT_ACCENT"))
+            stepTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            stepTitle:SetTextColor(T("TEXT_PRIMARY"))
+            stepTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         if step.optional then
             local optTag = stepHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             optTag:SetPoint("RIGHT", stepHeader, "RIGHT", -100, 0)
             optTag:SetText(L["GUIDES_OPTIONAL"])
-            optTag:SetTextColor(T("TEXT_MUTED"))
+            optTag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
         local btnX = -4
@@ -595,7 +582,7 @@ function ns.UI.CreateGuidesTab(parent)
                 descText:SetWidth(stepFrameW - 40)
             end
             descText:SetText(step.description)
-            descText:SetTextColor(T("TEXT_SECONDARY"))
+            descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             local dH = math.max(14, descText:GetStringHeight()) + 12
             objsYOffset = objsYOffset - dH
             innerHeight = innerHeight + dH
@@ -677,26 +664,22 @@ function ns.UI.CreateGuidesTab(parent)
             row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 0, -yOff)
             row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", 0, -yOff)
             row:SetHeight(50)
-            row:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
+            row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
 
             if guideID == selectedGuide then
-                row:SetBackdropColor(T("BG_ACTIVE"))
-                row:SetBackdropBorderColor(T("BORDER_ACCENT"))
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
             else
-                row:SetBackdropColor(T("BG_PRIMARY"))
-                row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
             end
 
             if isActive then
                 local activeDot = row:CreateTexture(nil, "OVERLAY")
                 activeDot:SetSize(8, 8)
                 activeDot:SetPoint("TOPLEFT", row, "TOPLEFT", 4, -4)
-                activeDot:SetTexture("Interface\\Buttons\\WHITE8x8")
-                activeDot:SetVertexColor(T("ACCENT_HIGHLIGHT"))
+                activeDot:SetTexture(BACKDROP_SIMPLE.bgFile)
+                activeDot:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
             end
 
             local titleFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -704,12 +687,12 @@ function ns.UI.CreateGuidesTab(parent)
             titleFS:SetPoint("TOPRIGHT", row, "TOPRIGHT", -40, -6)
             titleFS:SetJustifyH("LEFT")
             titleFS:SetText(guide.title or L["GUIDES_UNTITLED"])
-            titleFS:SetTextColor(T("TEXT_PRIMARY"))
+            titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local metaFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             metaFS:SetPoint("TOPLEFT", titleFS, "BOTTOMLEFT", 0, -2)
             metaFS:SetText((guide.category or "") .. " | " .. (guide.author or ""))
-            metaFS:SetTextColor(T("TEXT_MUTED"))
+            metaFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local progFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             progFS:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -6)
@@ -717,21 +700,21 @@ function ns.UI.CreateGuidesTab(parent)
             if done == total and total > 0 then
                 progFS:SetTextColor(0.4, 0.8, 0.4, 1.0)
             else
-                progFS:SetTextColor(T("TEXT_SECONDARY"))
+                progFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
 
             local progBarBg = CreateFrame("Frame", nil, row, "BackdropTemplate")
             progBarBg:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 10, 4)
             progBarBg:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -10, 4)
             progBarBg:SetHeight(4)
-            progBarBg:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-            progBarBg:SetBackdropColor(T("BG_TERTIARY"))
+                progBarBg:SetBackdrop(BACKDROP_SIMPLE)
+            progBarBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
             local progBarFill = progBarBg:CreateTexture(nil, "OVERLAY")
             progBarFill:SetPoint("TOPLEFT", progBarBg, "TOPLEFT", 0, 0)
             progBarFill:SetPoint("BOTTOMLEFT", progBarBg, "BOTTOMLEFT", 0, 0)
-            progBarFill:SetTexture("Interface\\Buttons\\WHITE8x8")
-            progBarFill:SetVertexColor(T("ACCENT_PRIMARY"))
+            progBarFill:SetTexture(BACKDROP_SIMPLE.bgFile)
+            progBarFill:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             local barPct = total > 0 and (done / total) or 0
             C_Timer.After(0.05, function()
                 if progBarBg:GetWidth() > 0 then
@@ -745,12 +728,12 @@ function ns.UI.CreateGuidesTab(parent)
             end)
             row:SetScript("OnEnter", function(self)
                 if guideID ~= selectedGuide then
-                    self:SetBackdropColor(T("BG_HOVER"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 end
             end)
             row:SetScript("OnLeave", function(self)
                 if guideID ~= selectedGuide then
-                    self:SetBackdropColor(T("BG_PRIMARY"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
                 end
             end)
 
@@ -766,7 +749,7 @@ function ns.UI.CreateGuidesTab(parent)
             local emptyFS = emptyFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             emptyFS:SetPoint("CENTER", listPanel, "CENTER", 0, 0)
             emptyFS:SetText(L["GUIDES_EMPTY"])
-            emptyFS:SetTextColor(T("TEXT_MUTED"))
+            emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             table.insert(guideListItems, emptyFrame)
         end
 

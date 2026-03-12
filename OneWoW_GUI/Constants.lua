@@ -18,6 +18,9 @@ OneWoW_GUI.Constants = {
         BG_COLOR = { 0.15, 0.15, 0.15, 0.8 },
     },
 
+    MEDIA_BASE = MEDIA_BASE,
+    FONT_BASE = MEDIA_BASE .. "Fonts\\",
+
     ICON_TEXTURES = {
         horde    = MEDIA_BASE .. "horde-mini.png",
         alliance = MEDIA_BASE .. "alliance-mini.png",
@@ -26,6 +29,11 @@ OneWoW_GUI.Constants = {
 
     BACKDROP_SIMPLE = {
         bgFile = "Interface\\Buttons\\WHITE8x8",
+    },
+
+    BACKDROP_EDGE = {
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
     },
 
     BACKDROP_SOFT = {
@@ -89,6 +97,9 @@ OneWoW_GUI.Constants = {
         SPACING = 8,
     },
 
+    DEFAULT_THEME_KEY = "green",
+    DEFAULT_THEME_NAME = "Forest Green",
+
     THEMES = {
         green = {
             name = "Forest Green",
@@ -116,10 +127,15 @@ OneWoW_GUI.Constants = {
             BTN_PRESSED    = { 0.12, 0.20, 0.12, 1.0 },
             BTN_BORDER     = { 0.32, 0.48, 0.35, 0.5 },
             BTN_BORDER_HOVER = { 0.40, 0.62, 0.42, 0.7 },
-            TEXT_FEATURES_ENABLED = { 0.2, 1, 0.2 },
-            TEXT_FEATURES_DISABLED = { 1, 0.2, 0.2 },
-            DOT_FEATURES_ENABLED = { 0.35, 0.70, 0.35, 1.0 },
-            DOT_FEATURES_DISABLED = { 0.70, 0.30, 0.30, 1.0 },
+            TEXT_FEATURES_ENABLED   = { 0.2, 1, 0.2 },
+            TEXT_FEATURES_DISABLED  = { 1, 0.2, 0.2 },
+            DOT_FEATURES_ENABLED    = { 0.35, 0.70, 0.35, 1.0 },
+            DOT_FEATURES_DISABLED   = { 0.70, 0.30, 0.30, 1.0 },
+            TEXT_WARNING            = { 1.0, 0.65, 0.0, 1.0 },
+            BTN_DANGER_NORMAL       = { 0.45, 0.12, 0.12, 1.0 },
+            BTN_DANGER_HOVER        = { 0.65, 0.18, 0.18, 1.0 },
+            BTN_DANGER_BORDER       = { 0.65, 0.25, 0.25, 1.0 },
+            BTN_DANGER_BORDER_HOVER = { 0.8, 0.3, 0.3, 1.0 },
         },
         blue = {
             name = "Ocean Blue",

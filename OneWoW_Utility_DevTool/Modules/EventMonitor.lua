@@ -1,11 +1,7 @@
 local AddonName, Addon = ...
 
-local function T(key)
-    if Addon.Constants and Addon.Constants.THEME and Addon.Constants.THEME[key] then
-        return unpack(Addon.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
-end
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 local EventMonitor = {}
 Addon.EventMonitor = EventMonitor
@@ -162,13 +158,13 @@ function EventMonitor:UpdateUI()
 
     if tab.firehoseBtn then
         if self.firehose then
-            tab.firehoseBtn:SetBackdropColor(T("BG_ACTIVE"))
-            tab.firehoseBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-            tab.firehoseBtn.text:SetTextColor(T("TEXT_ACCENT"))
+            tab.firehoseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            tab.firehoseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            tab.firehoseBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            tab.firehoseBtn:SetBackdropColor(T("BTN_NORMAL"))
-            tab.firehoseBtn:SetBackdropBorderColor(T("BTN_BORDER"))
-            tab.firehoseBtn.text:SetTextColor(T("TEXT_PRIMARY"))
+            tab.firehoseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            tab.firehoseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            tab.firehoseBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end
 

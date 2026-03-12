@@ -1,6 +1,11 @@
 local ADDON_NAME, ns = ...
 local L = ns.L
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
 ns.CatalogIntegration = {}
 local CatalogIntegration = ns.CatalogIntegration
 
@@ -13,13 +18,6 @@ local buttonsCreated = false
 
 local function GetDB()
     return _G.OneWoW_ShoppingList_DB
-end
-
-local function T(key)
-    if ns.Constants and ns.Constants.THEME and ns.Constants.THEME[key] then
-        return unpack(ns.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
 end
 
 local function HideButtons()
@@ -41,30 +39,26 @@ local function CreateButtons(statusBar)
     addToActiveBtn = CreateFrame("Button", nil, statusBar, "BackdropTemplate")
     addToActiveBtn:SetSize(100, 21)
     addToActiveBtn:SetPoint("RIGHT", statusBar, "RIGHT", -6, 0)
-    addToActiveBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    addToActiveBtn:SetBackdropColor(T("BTN_NORMAL"))
-    addToActiveBtn:SetBackdropBorderColor(T("BTN_BORDER"))
+    addToActiveBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    addToActiveBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    addToActiveBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
     addToActiveBtn.text = addToActiveBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     addToActiveBtn.text:SetPoint("CENTER")
     addToActiveBtn.text:SetText(L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
-    addToActiveBtn.text:SetTextColor(T("TEXT_PRIMARY"))
+    addToActiveBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     addToActiveBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BTN_HOVER"))
-        self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(L["OWSL_TT_ADD_TO_ACTIVE_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(L["OWSL_TT_ADD_TO_ACTIVE_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addToActiveBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BTN_NORMAL"))
-        self:SetBackdropBorderColor(T("BTN_BORDER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
         GameTooltip:Hide()
     end)
     addToActiveBtn:SetScript("OnClick", function()
@@ -74,30 +68,26 @@ local function CreateButtons(statusBar)
     makeListBtn = CreateFrame("Button", nil, statusBar, "BackdropTemplate")
     makeListBtn:SetSize(80, 21)
     makeListBtn:SetPoint("RIGHT", addToActiveBtn, "LEFT", -4, 0)
-    makeListBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    makeListBtn:SetBackdropColor(T("BTN_NORMAL"))
-    makeListBtn:SetBackdropBorderColor(T("BTN_BORDER"))
+    makeListBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    makeListBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    makeListBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
     makeListBtn.text = makeListBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     makeListBtn.text:SetPoint("CENTER")
     makeListBtn.text:SetText(L["OWSL_PROF_BTN_MAKE_LIST"])
-    makeListBtn.text:SetTextColor(T("TEXT_PRIMARY"))
+    makeListBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     makeListBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BTN_HOVER"))
-        self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(L["OWSL_TT_MAKE_LIST_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(L["OWSL_TT_MAKE_LIST_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     makeListBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BTN_NORMAL"))
-        self:SetBackdropBorderColor(T("BTN_BORDER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
         GameTooltip:Hide()
     end)
     makeListBtn:SetScript("OnClick", function()
@@ -107,13 +97,9 @@ local function CreateButtons(statusBar)
     openListBtn = CreateFrame("Button", nil, statusBar, "BackdropTemplate")
     openListBtn:SetSize(21, 21)
     openListBtn:SetPoint("RIGHT", makeListBtn, "LEFT", -4, 0)
-    openListBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    openListBtn:SetBackdropColor(T("BTN_NORMAL"))
-    openListBtn:SetBackdropBorderColor(T("BTN_BORDER"))
+    openListBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    openListBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    openListBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
     openListBtn.icon = openListBtn:CreateTexture(nil, "ARTWORK")
     openListBtn.icon:SetSize(14, 14)
@@ -121,16 +107,16 @@ local function CreateButtons(statusBar)
     openListBtn.icon:SetAtlas("Perks-ShoppingCart")
 
     openListBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BTN_HOVER"))
-        self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(L["OWSL_WINDOW_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(L["OWSL_MM_CLICK_TO_OPEN"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     openListBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BTN_NORMAL"))
-        self:SetBackdropBorderColor(T("BTN_BORDER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
         GameTooltip:Hide()
     end)
     openListBtn:SetScript("OnClick", function()

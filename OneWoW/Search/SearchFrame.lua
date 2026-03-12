@@ -4,8 +4,10 @@ OneWoW.Search = {}
 local Search = OneWoW.Search
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
-local function T(key) return OneWoW_GUI:GetThemeColor(key) end
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER
 
 local searchBox = nil
 local resultsFrame = nil
@@ -73,7 +75,7 @@ local function ShowResults(results)
         row:SetHeight(rowH)
         row:SetPoint("TOPLEFT", resultsFrame, "TOPLEFT", 1, -(pad + (i - 1) * rowH))
         row:SetPoint("TOPRIGHT", resultsFrame, "TOPRIGHT", -1, -(pad + (i - 1) * rowH))
-        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        row:SetBackdrop(BACKDROP_SIMPLE)
         row:SetBackdropColor(0, 0, 0, 0)
 
         local pathStr = type(entry.path) == "function" and entry.path() or entry.path
@@ -85,7 +87,7 @@ local function ShowResults(results)
         pathText:SetJustifyH("LEFT")
         pathText:SetText(pathStr)
         if installed then
-            pathText:SetTextColor(T("ACCENT_PRIMARY"))
+            pathText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
             pathText:SetTextColor(0.42, 0.42, 0.42, 1)
         end
@@ -103,7 +105,7 @@ local function ShowResults(results)
         descText:SetJustifyH("LEFT")
         descText:SetText(descStr)
         if installed then
-            descText:SetTextColor(T("TEXT_SECONDARY"))
+            descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         else
             descText:SetTextColor(0.32, 0.32, 0.32, 1)
         end
@@ -216,45 +218,40 @@ function Search:Init(titleBar, closeBtn)
     local box = CreateFrame("EditBox", "OneWoWSearchBox", titleBar, "BackdropTemplate")
     box:SetSize(200, 14)
     box:SetPoint("RIGHT", closeBtn, "LEFT", -6, 0)
-    box:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
+    box:SetBackdrop(BACKDROP_INNER)
     box:SetBackdropColor(0.04, 0.05, 0.04, 1)
-    box:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+    box:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     box:SetFontObject(GameFontHighlightSmall)
     box:SetTextInsets(6, 6, 0, 0)
     box:SetAutoFocus(false)
     box:EnableMouse(true)
     box:SetMaxLetters(50)
     box:SetText("Search...")
-    box:SetTextColor(T("TEXT_MUTED"))
+    box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local isPlaceholder = true
 
     box:SetScript("OnEditFocusGained", function(self)
         if isPlaceholder then
             self:SetText("")
-            self:SetTextColor(T("TEXT_PRIMARY"))
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             isPlaceholder = false
         end
-        self:SetBackdropBorderColor(T("ACCENT_HIGHLIGHT"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
     end)
 
     box:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         if self:GetText() == "" then
             self:SetText("Search...")
-            self:SetTextColor(T("TEXT_MUTED"))
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             isPlaceholder = true
         end
     end)
 
     box:SetScript("OnEscapePressed", function(self)
         self:SetText("")
-        self:SetTextColor(T("TEXT_MUTED"))
+        self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         isPlaceholder = true
         self:ClearFocus()
         if resultsFrame then
@@ -285,21 +282,16 @@ function Search:Init(titleBar, closeBtn)
     drop:SetHeight(50)
     drop:SetFrameStrata("FULLSCREEN_DIALOG")
     drop:SetFrameLevel(100)
-    drop:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
+    drop:SetBackdrop(BACKDROP_INNER)
     drop:SetBackdropColor(0.04, 0.05, 0.04, 0.98)
-    drop:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+    drop:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     drop:SetPoint("TOPRIGHT", box, "BOTTOMRIGHT", 0, -2)
 
     local accentBar = drop:CreateTexture(nil, "OVERLAY")
     accentBar:SetHeight(2)
     accentBar:SetPoint("TOPLEFT", drop, "TOPLEFT", 1, -1)
     accentBar:SetPoint("TOPRIGHT", drop, "TOPRIGHT", -1, -1)
-    accentBar:SetColorTexture(T("ACCENT_PRIMARY"))
+    accentBar:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     drop:Hide()
 

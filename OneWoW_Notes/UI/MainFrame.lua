@@ -3,18 +3,13 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
-
-local BACKDROP_MAIN = {
-    bgFile   = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-}
 
 local MainWindow = nil
 
@@ -71,9 +66,9 @@ function ns.UI:CreateMainFrame(defaultTab)
     frame:SetMovable(true)
     frame:SetResizable(true)
     frame:EnableMouse(true)
-    frame:SetBackdrop(BACKDROP_MAIN)
-    frame:SetBackdropColor(T("BG_PRIMARY"))
-    frame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    frame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     frame:SetResizeBounds(ns.Constants.GUI.MIN_WIDTH, ns.Constants.GUI.MIN_HEIGHT, ns.Constants.GUI.MAX_WIDTH, ns.Constants.GUI.MAX_HEIGHT)
     frame:RegisterForDrag("LeftButton")
     frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
@@ -84,7 +79,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     end)
     local resizeButton = CreateFrame("Button", nil, frame)
     resizeButton:SetSize(16, 16)
-    resizeButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -S("XS") / 2, S("XS") / 2)
+    resizeButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS") / 2, OneWoW_GUI:GetSpacing("XS") / 2)
     resizeButton:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
     resizeButton:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
     resizeButton:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
@@ -96,7 +91,7 @@ function ns.UI:CreateMainFrame(defaultTab)
         addon.db.global.mainFrameSize = { width = w, height = h }
     end)
 
-    local titleBg = lib:CreateTitleBar(frame, L["ADDON_TITLE_FRAME"], {
+    local titleBg = OneWoW_GUI:CreateTitleBar(frame, L["ADDON_TITLE_FRAME"], {
         showBrand = true,
         onClose = function() frame:Hide() end,
     })
@@ -104,13 +99,13 @@ function ns.UI:CreateMainFrame(defaultTab)
     tinsert(UISpecialFrames, "OneWoW_NotesMainFrame")
 
     local tabButtonContainer = CreateFrame("Frame", nil, frame)
-    tabButtonContainer:SetPoint("TOPLEFT", titleBg, "BOTTOMLEFT", S("SM"), -S("SM"))
-    tabButtonContainer:SetPoint("TOPRIGHT", titleBg, "BOTTOMRIGHT", -S("SM"), -S("SM"))
+    tabButtonContainer:SetPoint("TOPLEFT", titleBg, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("SM"))
+    tabButtonContainer:SetPoint("TOPRIGHT", titleBg, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("SM"))
     tabButtonContainer:SetHeight(ns.Constants.GUI.TAB_BUTTON_HEIGHT)
 
     local tabContainer = CreateFrame("Frame", nil, frame)
-    tabContainer:SetPoint("TOPLEFT", tabButtonContainer, "BOTTOMLEFT", 0, -S("SM"))
-    tabContainer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -S("SM"), S("SM"))
+    tabContainer:SetPoint("TOPLEFT", tabButtonContainer, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("SM"))
+    tabContainer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), OneWoW_GUI:GetSpacing("SM"))
 
     local tabs = {}
     local tabButtons = {}
@@ -128,13 +123,13 @@ function ns.UI:CreateMainFrame(defaultTab)
         end
         for name, btn in pairs(tabButtons) do
             if name == tabName then
-                btn:SetBackdropColor(T("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(T("BORDER_ACCENT"))
-                btn.text:SetTextColor(T("TEXT_ACCENT"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                btn:SetBackdropColor(T("BG_SECONDARY"))
-                btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                btn.text:SetTextColor(T("TEXT_PRIMARY"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end
     end
@@ -144,7 +139,7 @@ function ns.UI:CreateMainFrame(defaultTab)
         if not containerWidth or containerWidth <= 0 then return end
         local numButtons = #tabOrder
         if numButtons == 0 then return end
-        local spacing = S("SM")
+        local spacing = OneWoW_GUI:GetSpacing("SM")
         local totalSpacing = spacing * (numButtons - 1)
         local buttonWidth = math.floor((containerWidth - totalSpacing) / numButtons)
         for i, name in ipairs(tabOrder) do
@@ -166,26 +161,26 @@ function ns.UI:CreateMainFrame(defaultTab)
     local function CreateTab(name, displayName)
         local btn = CreateFrame("Button", nil, tabButtonContainer, "BackdropTemplate")
         btn:SetHeight(ns.Constants.GUI.TAB_BUTTON_HEIGHT)
-        btn:SetBackdrop(BACKDROP_MAIN)
-        btn:SetBackdropColor(T("BG_SECONDARY"))
-        btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
         btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         btn.text:SetPoint("CENTER")
         btn.text:SetText(displayName)
-        btn.text:SetTextColor(T("TEXT_PRIMARY"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         btn:SetScript("OnClick", function() SelectTab(name) end)
         btn:SetScript("OnEnter", function(self)
             if currentTabName ~= name then
-                self:SetBackdropColor(T("BG_HOVER"))
-                self.text:SetTextColor(T("TEXT_ACCENT"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         end)
         btn:SetScript("OnLeave", function(self)
             if currentTabName ~= name then
-                self:SetBackdropColor(T("BG_SECONDARY"))
-                self.text:SetTextColor(T("TEXT_PRIMARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end)
 

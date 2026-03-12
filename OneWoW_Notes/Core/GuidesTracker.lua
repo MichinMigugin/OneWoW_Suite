@@ -1,7 +1,10 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 ns.GuidesTracker = {}
 local Tracker = ns.GuidesTracker
@@ -425,13 +428,13 @@ local function CreateFloatingTracker()
 
     local stepLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     stepLabel:SetJustifyH("LEFT")
-    stepLabel:SetTextColor(T("TEXT_ACCENT"))
+    stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     stepLabel:SetWidth(230)
     frame.stepLabel = stepLabel
 
     local stepTitle = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     stepTitle:SetJustifyH("LEFT")
-    stepTitle:SetTextColor(T("TEXT_PRIMARY"))
+    stepTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     stepTitle:SetWordWrap(true)
     stepTitle:SetWidth(230)
     frame.stepTitle = stepTitle
@@ -541,7 +544,7 @@ function Tracker:RefreshFloatingTracker()
     floatingTracker.stepLabel:SetPoint("TOPLEFT", floatingTracker, "TOPLEFT", 8, curY)
     floatingTracker.stepLabel:SetWidth(contentW)
     floatingTracker.stepLabel:SetText(string.format(L["GUIDES_STEP_OF"], stepIndex, #guide.steps))
-    floatingTracker.stepLabel:SetTextColor(T("TEXT_ACCENT"))
+    floatingTracker.stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     local stepLabelH = math.max(12, floatingTracker.stepLabel:GetStringHeight())
     curY = curY - stepLabelH - 4
 
@@ -589,7 +592,7 @@ function Tracker:RefreshFloatingTracker()
         if isComplete then
             text:SetTextColor(0.4, 0.8, 0.4, 1.0)
         else
-            text:SetTextColor(T("TEXT_PRIMARY"))
+            text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         local textH = math.max(14, text:GetStringHeight())
@@ -665,7 +668,7 @@ function Tracker:RefreshFloatingTracker()
                     if isStepDone then
                         stepText:SetTextColor(0.4, 0.8, 0.4, 1.0)
                     else
-                        stepText:SetTextColor(T("TEXT_SECONDARY"))
+                        stepText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                     end
 
                     local titleH = math.max(14, stepText:GetStringHeight())
@@ -687,7 +690,7 @@ function Tracker:RefreshFloatingTracker()
                             desc = desc .. string.format(" (+%d)", objCount - 1)
                         end
                         subtitle:SetText(desc)
-                        subtitle:SetTextColor(T("TEXT_MUTED"))
+                        subtitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                         subtitleH = subtitle:GetStringHeight() + 2
                     end
 
@@ -695,7 +698,7 @@ function Tracker:RefreshFloatingTracker()
                     stepRow:SetHeight(rowH)
 
                     local capturedIdx = nextIdx
-                    stepRow:SetHighlightTexture("Interface\\Buttons\\WHITE8x8")
+                    stepRow:SetHighlightTexture(BACKDROP_SIMPLE)
                     stepRow:GetHighlightTexture():SetAlpha(0.1)
                     stepRow:SetScript("OnClick", function()
                         Tracker:GoToStep(capturedIdx)

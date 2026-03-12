@@ -1,7 +1,8 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -10,8 +11,6 @@ local currentSortAscending = true
 local characterRows = {}
 
 function ns.UI.CreateEquipmentTab(parent)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["EQUIPMENT_OVERVIEW"],
         height = 110,
@@ -373,12 +372,12 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
 
         local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         levelText:SetText(tostring(charData.level or 0))
-        levelText:SetTextColor(T("TEXT_PRIMARY"))
+        levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, levelText)
 
         local ilvlText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         ilvlText:SetText(tostring(ilvl))
-        ilvlText:SetTextColor(T("TEXT_PRIMARY"))
+        ilvlText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, ilvlText)
 
         local durabilityText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -493,57 +492,57 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
 
         local strText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         strText:SetText(tostring((charData.stats and charData.stats.strength) or 0))
-        strText:SetTextColor(T("TEXT_PRIMARY"))
+        strText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, strText)
 
         local agiText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         agiText:SetText(tostring((charData.stats and charData.stats.agility) or 0))
-        agiText:SetTextColor(T("TEXT_PRIMARY"))
+        agiText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, agiText)
 
         local staText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         staText:SetText(tostring((charData.stats and charData.stats.stamina) or 0))
-        staText:SetTextColor(T("TEXT_PRIMARY"))
+        staText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, staText)
 
         local intText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         intText:SetText(tostring((charData.stats and charData.stats.intellect) or 0))
-        intText:SetTextColor(T("TEXT_PRIMARY"))
+        intText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, intText)
 
         local armorText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         armorText:SetText(tostring((charData.stats and charData.stats.armor) or 0))
-        armorText:SetTextColor(T("TEXT_PRIMARY"))
+        armorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, armorText)
 
         local apText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         apText:SetText(tostring((charData.stats and charData.stats.attackPower) or 0))
-        apText:SetTextColor(T("TEXT_PRIMARY"))
+        apText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, apText)
 
         local critText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         local critValue = (charData.stats and charData.stats.critChance) or 0
         critText:SetText(string.format("%.1f%%", critValue))
-        critText:SetTextColor(T("TEXT_PRIMARY"))
+        critText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, critText)
 
         local hasteText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         local hasteValue = (charData.stats and charData.stats.haste) or 0
         hasteText:SetText(string.format("%.1f%%", hasteValue))
-        hasteText:SetTextColor(T("TEXT_PRIMARY"))
+        hasteText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, hasteText)
 
         local masteryText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         local masteryValue = (charData.stats and charData.stats.mastery) or 0
         masteryText:SetText(string.format("%.1f%%", masteryValue))
-        masteryText:SetTextColor(T("TEXT_PRIMARY"))
+        masteryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         masteryText:SetJustifyH("CENTER")
         table.insert(charRow.cells, masteryText)
 
         local versText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         local versValue = (charData.stats and charData.stats.versatility) or 0
         versText:SetText(string.format("%.1f%%", versValue))
-        versText:SetTextColor(T("TEXT_PRIMARY"))
+        versText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, versText)
 
         local statusCell = CreateFrame("Frame", nil, charRow)

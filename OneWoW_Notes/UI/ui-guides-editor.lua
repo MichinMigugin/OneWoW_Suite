@@ -1,11 +1,10 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local OBJECTIVE_TYPES = {
     { value = "manual",         text = L["GUIDES_OBJ_MANUAL"] },
@@ -47,19 +46,19 @@ local function MakeLabel(parent, text, x, y)
     local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     lbl:SetText(text)
-    lbl:SetTextColor(T("TEXT_SECONDARY"))
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     return lbl
 end
 
 local function MakeMultiLineScrollBox(parent, font, fontSize)
-    local scrollFrame, scrollChild = lib:CreateScrollFrame(nil, parent)
+    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(nil, parent)
     scrollFrame:ClearAllPoints()
     scrollFrame:SetAllPoints(parent)
 
     local editBox = CreateFrame("EditBox", nil, scrollFrame)
     editBox:SetWidth(scrollFrame:GetWidth() or 400)
     editBox:SetFont(font or ns.Config:ResolveFontPath(nil), fontSize or 11, "")
-    editBox:SetTextColor(T("TEXT_PRIMARY"))
+    editBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     editBox:SetMultiLine(true)
     editBox:SetAutoFocus(false)
     editBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
@@ -148,11 +147,11 @@ function ns.UI.ShowGuideEditorDialog(guideID, onSaveCallback)
     hintLabel:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
     hintLabel:SetJustifyH("LEFT")
     hintLabel:SetText(L["GUIDES_MARKUP_HINT"])
-    hintLabel:SetTextColor(T("TEXT_MUTED"))
+    hintLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hintLabel:SetWordWrap(true)
 
     yOff = yOff - 24
-    local markupContainer = lib:CreateFrame(nil, content, 1, 1)
+    local markupContainer = OneWoW_GUI:CreateFrame(nil, content, 1, 1)
     markupContainer:ClearAllPoints()
     markupContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     markupContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
@@ -226,19 +225,19 @@ function ns.UI.ShowStepEditorDialog(guideID, stepIndex, onSaveCallback)
 
     MakeLabel(content, L["GUIDES_STEP_TITLE"], 10, yOff)
     yOff = yOff - 16
-    local titleBox = lib:CreateEditBox(nil, content, { width = 460, height = 28 })
+    local titleBox = OneWoW_GUI:CreateEditBox(nil, content, { width = 460, height = 28 })
     titleBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     titleBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
     if step and step.title then
         titleBox:SetText(step.title)
-        titleBox:SetTextColor(T("TEXT_PRIMARY"))
+        titleBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
     dialog._titleBox = titleBox
 
     yOff = yOff - 36
     MakeLabel(content, L["GUIDES_STEP_DESC"], 10, yOff)
     yOff = yOff - 16
-    local descContainer = lib:CreateFrame(nil, content, 1, 80)
+    local descContainer = OneWoW_GUI:CreateFrame(nil, content, 1, 80)
     descContainer:ClearAllPoints()
     descContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     descContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
@@ -256,7 +255,7 @@ function ns.UI.ShowStepEditorDialog(guideID, stepIndex, onSaveCallback)
     factionDD:SetSelected(step and step.faction or "both")
     dialog._factionDD = factionDD
 
-    local optionalCB = lib:CreateCheckbox(nil, content, L["GUIDES_OPTIONAL"])
+    local optionalCB = OneWoW_GUI:CreateCheckbox(nil, content, L["GUIDES_OPTIONAL"])
     optionalCB:SetPoint("TOPLEFT", content, "TOPLEFT", 280, yOff + 4)
     optionalCB:SetChecked(step and step.optional or false)
     dialog._optionalCB = optionalCB
@@ -339,12 +338,12 @@ function ns.UI.ShowObjectiveEditorDialog(guideID, stepIndex, objIndex, onSaveCal
     yOff = yOff - 36
     MakeLabel(content, L["GUIDES_OBJ_DESC"], 10, yOff)
     yOff = yOff - 16
-    local descBox = lib:CreateEditBox(nil, content, { width = 460, height = 28 })
+    local descBox = OneWoW_GUI:CreateEditBox(nil, content, { width = 460, height = 28 })
     descBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     descBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
     if obj and obj.description then
         descBox:SetText(obj.description)
-        descBox:SetTextColor(T("TEXT_PRIMARY"))
+        descBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
     dialog._descBox = descBox
 
@@ -358,7 +357,7 @@ function ns.UI.ShowObjectiveEditorDialog(guideID, stepIndex, objIndex, onSaveCal
     dialog._paramBoxes = {}
 
     local function BuildParamFields(objType)
-        if lib then lib:ClearFrame(paramContainer) end
+        OneWoW_GUI:ClearFrame(paramContainer)
         wipe(dialog._paramBoxes)
 
         local fields = PARAM_FIELDS[objType]
@@ -371,16 +370,16 @@ function ns.UI.ShowObjectiveEditorDialog(guideID, stepIndex, objIndex, onSaveCal
             local lbl = paramContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             lbl:SetPoint("TOPLEFT", paramContainer, "TOPLEFT", 10, pY)
             lbl:SetText(L[field.label] or field.label)
-            lbl:SetTextColor(T("TEXT_SECONDARY"))
+            lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
             pY = pY - 16
-            local box = lib:CreateEditBox(nil, paramContainer, { width = 200, height = 28 })
+            local box = OneWoW_GUI:CreateEditBox(nil, paramContainer, { width = 200, height = 28 })
             box:SetPoint("TOPLEFT", paramContainer, "TOPLEFT", 10, pY)
             box:SetNumeric(true)
             local val = tostring(existingParams[field.key] or "")
             if val ~= "" then
                 box:SetText(val)
-                box:SetTextColor(T("TEXT_PRIMARY"))
+                box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
             dialog._paramBoxes[i] = box
             pY = pY - 36
@@ -454,7 +453,7 @@ function ns.UI.ShowGuideImportDialog(onImportCallback)
 
     MakeLabel(content, L["LABEL_NOTE_TITLE"], 10, yOff)
     yOff = yOff - 16
-    local titleBox = lib:CreateEditBox(nil, content, { width = 360, height = 28 })
+    local titleBox = OneWoW_GUI:CreateEditBox(nil, content, { width = 360, height = 28 })
     titleBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     dialog._titleBox = titleBox
 
@@ -474,7 +473,7 @@ function ns.UI.ShowGuideImportDialog(onImportCallback)
     hintText:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
     hintText:SetJustifyH("LEFT")
     hintText:SetText(L["GUIDES_IMPORT_HINT"])
-    hintText:SetTextColor(T("TEXT_SECONDARY"))
+    hintText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     hintText:SetWordWrap(true)
 
     yOff = yOff - 20
@@ -483,11 +482,11 @@ function ns.UI.ShowGuideImportDialog(onImportCallback)
     markupHint:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
     markupHint:SetJustifyH("LEFT")
     markupHint:SetText(L["GUIDES_MARKUP_HINT"])
-    markupHint:SetTextColor(T("TEXT_MUTED"))
+    markupHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     markupHint:SetWordWrap(true)
 
     yOff = yOff - 30
-    local importContainer = lib:CreateFrame(nil, content, 1, 1)
+    local importContainer = OneWoW_GUI:CreateFrame(nil, content, 1, 1)
     importContainer:ClearAllPoints()
     importContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     importContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
@@ -527,10 +526,10 @@ function ns.UI.ShowGuideExportDialog(guideID)
     hintText:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, -10)
     hintText:SetJustifyH("LEFT")
     hintText:SetText(L["GUIDES_EXPORT_HINT"])
-    hintText:SetTextColor(T("TEXT_SECONDARY"))
+    hintText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     hintText:SetWordWrap(true)
 
-    local exportContainer = lib:CreateFrame(nil, content, 1, 1)
+    local exportContainer = OneWoW_GUI:CreateFrame(nil, content, 1, 1)
     exportContainer:ClearAllPoints()
     exportContainer:SetPoint("TOPLEFT", hintText, "BOTTOMLEFT", 0, -10)
     exportContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)

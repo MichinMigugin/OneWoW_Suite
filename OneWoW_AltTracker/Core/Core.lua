@@ -1,6 +1,8 @@
 local addonName, ns = ...
 local OneWoWAltTracker = OneWoW_AltTracker
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.Core = {}
 local Core = ns.Core
@@ -102,7 +104,6 @@ end
 
 function Core:ShowMigrationDialog(charCount)
     local L = ns.L
-    local T = ns.T
     local available, missing = self:CheckSubAddons()
 
     if _G.OneWoWMigrationDialog then
@@ -141,7 +142,7 @@ function Core:ShowMigrationDialog(charCount)
     bodyText:SetWordWrap(true)
     bodyText:SetSpacing(4)
     bodyText:SetText(string.format(L["MIGRATION_DIALOG_TEXT"], charCount))
-    bodyText:SetTextColor(T("TEXT_PRIMARY"))
+    bodyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     dialog.bodyText = bodyText
 
     if #missing > 0 then
@@ -347,7 +348,6 @@ end
 
 function Core:ShowCleanupReminderDialog()
     local L = ns.L
-    local T = ns.T
 
     if _G.OneWoWCleanupDialog then
         _G.OneWoWCleanupDialog:Show()
@@ -377,7 +377,7 @@ function Core:ShowCleanupReminderDialog()
     bodyText:SetWordWrap(true)
     bodyText:SetSpacing(4)
     bodyText:SetText(L["MIGRATION_CLEANUP_REMINDER"])
-    bodyText:SetTextColor(T("TEXT_PRIMARY"))
+    bodyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     result.frame:Show()
 end

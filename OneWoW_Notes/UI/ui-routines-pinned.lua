@@ -1,11 +1,12 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
 
 function ns.UI.CreateRoutinePinnedWindow(routineID)
     local routine = ns.RoutinesData:GetRoutine(routineID)
@@ -20,7 +21,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
     local SECTION_H = 20
     local ROW_H = 18
 
-    local f = lib:CreateFrame("OneWoW_Notes_RoutinePin_" .. routineID:gsub("-", ""), UIParent, W, H)
+    local f = OneWoW_GUI:CreateFrame("OneWoW_Notes_RoutinePin_" .. routineID:gsub("-", ""), UIParent, W, H)
     f:SetFrameStrata("MEDIUM")
     f:SetToplevel(true)
     f:SetClampedToScreen(true)
@@ -34,7 +35,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
         f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     end
 
-    local titleBar = lib:CreateTitleBar(f, routine.title or L["ROUTINES_UNTITLED"], {
+    local titleBar = OneWoW_GUI:CreateTitleBar(f, routine.title or L["ROUTINES_UNTITLED"], {
         height = TITLE_H,
         onClose = function()
             ns.RoutinesEngine:UnpinRoutine(routineID)
@@ -72,7 +73,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
 
     local totalLabel = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     totalLabel:SetPoint("RIGHT", titleBar, "RIGHT", -30, 0)
-    totalLabel:SetTextColor(T("TEXT_SECONDARY"))
+    totalLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     f.totalLabel = totalLabel
 
     local scroll = ns.UI.CreateCustomScroll(f)
@@ -135,10 +136,10 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
     f._titleBar = titleBar
 
     function f:ApplyThemeColors()
-        self:SetBackdropColor(T("BG_PRIMARY"))
-        self:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-        self._titleBar:SetBackdropColor(T("TITLEBAR_BG"))
-        self.titleText:SetTextColor(T("ACCENT_PRIMARY"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+        self._titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
+        self.titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     end
 
     function f:Refresh()
@@ -180,12 +181,12 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
             hdr:SetPoint("TOPLEFT", self._scrollChild, "TOPLEFT", 0, -yOff)
             hdr:SetPoint("TOPRIGHT", self._scrollChild, "TOPRIGHT", 0, -yOff)
             hdr:SetHeight(SECTION_H)
-            hdr:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+            hdr:SetBackdrop(BACKDROP_SIMPLE)
             local secComplete = secTotal > 0 and secDone == secTotal
             if secComplete then
-                hdr:SetBackdropColor(T("BG_ACTIVE"))
+                hdr:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             else
-                hdr:SetBackdropColor(T("BG_SECONDARY"))
+                hdr:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             end
             table.insert(self._widgets, hdr)
 
@@ -193,20 +194,20 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
             accent:SetPoint("TOPLEFT", hdr, "TOPLEFT", 0, 0)
             accent:SetPoint("BOTTOMLEFT", hdr, "BOTTOMLEFT", 0, 0)
             accent:SetWidth(3)
-            accent:SetColorTexture(T("ACCENT_PRIMARY"))
+            accent:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
             local hdrLabel = hdr:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             hdrLabel:SetPoint("LEFT", hdr, "LEFT", 8, 0)
-            hdrLabel:SetTextColor(T("ACCENT_PRIMARY"))
+            hdrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             hdrLabel:SetText(section.label or "")
 
             if secTotal > 0 then
                 local hdrCount = hdr:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 hdrCount:SetPoint("RIGHT", hdr, "RIGHT", -6, 0)
                 if secComplete then
-                    hdrCount:SetTextColor(T("TEXT_ACCENT"))
+                    hdrCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                 else
-                    hdrCount:SetTextColor(T("TEXT_SECONDARY"))
+                    hdrCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 end
                 hdrCount:SetText(string.format("%d/%d", secDone, secTotal))
             end
@@ -230,12 +231,12 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                     hover:SetAllPoints()
                     hover:SetColorTexture(1, 1, 1, 0)
 
-                    local dot = lib:CreateStatusDot(rowFrame, { size = 6 })
+                    local dot = OneWoW_GUI:CreateStatusDot(rowFrame, { size = 6 })
                     dot:SetPoint("LEFT", rowFrame, "LEFT", PAD, 0)
                     if isComplete then
                         dot:SetStatus(true)
                     elseif prog > 0 then
-                        dot:SetVertexColor(T("ACCENT_HIGHLIGHT"))
+                        dot:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
                     else
                         dot:SetStatus(false)
                     end
@@ -246,9 +247,9 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                     lbl:SetJustifyH("LEFT")
                     lbl:SetText(ns.RoutinesEngine:GetTaskDisplayLabel(task))
                     if isComplete then
-                        lbl:SetTextColor(T("TEXT_MUTED"))
+                        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                     else
-                        lbl:SetTextColor(T("TEXT_PRIMARY"))
+                        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                     end
 
                     if isComplete then
@@ -256,7 +257,7 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                         strike:SetHeight(1)
                         strike:SetPoint("LEFT", lbl, "LEFT", 0, 0)
                         strike:SetPoint("RIGHT", lbl, "RIGHT", 0, 0)
-                        strike:SetColorTexture(T("TEXT_MUTED"))
+                        strike:SetColorTexture(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                     end
 
                     local countFS = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -276,11 +277,11 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
                     end
 
                     if isComplete then
-                        countFS:SetTextColor(T("TEXT_ACCENT"))
+                        countFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                     elseif prog > 0 then
-                        countFS:SetTextColor(T("ACCENT_HIGHLIGHT"))
+                        countFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
                     else
-                        countFS:SetTextColor(T("TEXT_MUTED"))
+                        countFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                     end
 
                     local isManual = (task.trackType == "manual")
@@ -314,9 +315,9 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
 
         if allTotal > 0 then
             if allDone >= allTotal then
-                self.totalLabel:SetTextColor(T("TEXT_ACCENT"))
+                self.totalLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                self.totalLabel:SetTextColor(T("TEXT_SECONDARY"))
+                self.totalLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
             self.totalLabel:SetText(string.format("%d/%d", allDone, allTotal))
         else

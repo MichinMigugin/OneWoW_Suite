@@ -1,31 +1,29 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local selectedRoutine = nil
 local routineListItems = {}
 
 local function CreateScrollPanel(parent, titleText)
     local panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    panel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    panel:SetBackdropColor(T("BG_PRIMARY"))
-    panel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    panel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    panel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -10)
     title:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, -10)
     title:SetJustifyH("LEFT")
     title:SetText(titleText or "")
-    title:SetTextColor(T("ACCENT_PRIMARY"))
+    title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local scroll = ns.UI.CreateCustomScroll(panel)
     scroll.container:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -32)
@@ -49,8 +47,8 @@ function ns.UI.CreateRoutinesTab(parent)
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         tile = true, tileSize = 16, edgeSize = 1,
     })
-    controlPanel:SetBackdropColor(T("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local newBtn = ns.UI.CreateButton(nil, controlPanel, L["ROUTINES_NEW"], 120, 25)
     ns.UI.AutoResizeButton(newBtn, 80, 200)
@@ -99,11 +97,11 @@ function ns.UI.CreateRoutinesTab(parent)
     local emptyText = emptyMessage:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyText:SetPoint("CENTER", emptyMessage, "CENTER", 0, 0)
     emptyText:SetText(L["ROUTINES_SELECT"])
-    emptyText:SetTextColor(T("TEXT_MUTED"))
+    emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local function ClearDetailContent()
-        if lib then
-            lib:ClearFrame(detailScrollChild)
+        if OneWoW_GUI then
+            OneWoW_GUI:ClearFrame(detailScrollChild)
         else
             for _, child in ipairs({detailScrollChild:GetChildren()}) do
                 child:Hide()
@@ -131,8 +129,8 @@ function ns.UI.CreateRoutinesTab(parent)
         headerFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
         headerFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
         headerFrame:SetHeight(50)
-        headerFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        headerFrame:SetBackdropColor(T("BG_SECONDARY"))
+        headerFrame:SetBackdrop(BACKDROP_SIMPLE)
+        headerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
         local isPinned = routine.pinned
 
@@ -182,10 +180,10 @@ function ns.UI.CreateRoutinesTab(parent)
             end})
         end)
 
-        local titleEditBox = lib:CreateEditBox(nil, headerFrame, { height = 25, width = 300 })
+        local titleEditBox = OneWoW_GUI:CreateEditBox(nil, headerFrame, { height = 25, width = 300 })
         titleEditBox:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 10, -12)
         titleEditBox:SetAutoFocus(false)
-        titleEditBox:SetTextColor(T("TEXT_PRIMARY"))
+        titleEditBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         titleEditBox:SetText(routine.title or "")
         titleEditBox:SetScript("OnEnterPressed", function(self)
             self:ClearFocus()
@@ -198,10 +196,10 @@ function ns.UI.CreateRoutinesTab(parent)
             self:ClearFocus()
         end)
         titleEditBox:SetScript("OnEditFocusGained", function(self)
-            self:SetTextColor(T("TEXT_PRIMARY"))
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end)
         titleEditBox:SetScript("OnEditFocusLost", function(self)
-            self:SetTextColor(T("TEXT_PRIMARY"))
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end)
 
         yOffset = yOffset - 55
@@ -214,7 +212,7 @@ function ns.UI.CreateRoutinesTab(parent)
             local noSecText = noSections:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             noSecText:SetPoint("CENTER", noSections, "CENTER", 0, 0)
             noSecText:SetText(L["ROUTINES_NO_SECTIONS"])
-            noSecText:SetTextColor(T("TEXT_MUTED"))
+            noSecText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             yOffset = yOffset - 44
         end
 
@@ -222,13 +220,9 @@ function ns.UI.CreateRoutinesTab(parent)
             local secFrame = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
             secFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
             secFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
-            secFrame:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
-            secFrame:SetBackdropColor(T("BG_SECONDARY"))
-            secFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            secFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+            secFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            secFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local secHeader = CreateFrame("Frame", nil, secFrame)
             secHeader:SetPoint("TOPLEFT", secFrame, "TOPLEFT", 0, 0)
@@ -245,7 +239,7 @@ function ns.UI.CreateRoutinesTab(parent)
             secTitle:SetPoint("RIGHT", secHeader, "RIGHT", -120, 0)
             secTitle:SetJustifyH("LEFT")
             secTitle:SetText((section.label or "") .. " |cff666666[" .. (section.type or "custom") .. "]|r")
-            secTitle:SetTextColor(T("ACCENT_PRIMARY"))
+            secTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
             local btnX = -4
             local delSecBtn = CreateFrame("Button", nil, secHeader)
@@ -315,7 +309,7 @@ function ns.UI.CreateRoutinesTab(parent)
                 local prog = ns.RoutinesData:GetProgress(routineID, section.key, task.key)
                 local isComplete = not task.noMax and prog >= task.max
 
-                local dot = lib:CreateStatusDot(taskRow, { size = 8 })
+                local dot = OneWoW_GUI:CreateStatusDot(taskRow, { size = 8 })
                 dot:SetPoint("LEFT", taskRow, "LEFT", 4, 0)
                 if isComplete then
                     dot:SetVertexColor(0.2, 0.8, 0.3, 1)
@@ -333,7 +327,7 @@ function ns.UI.CreateRoutinesTab(parent)
                 if isComplete then
                     taskLabel:SetTextColor(0.4, 0.8, 0.4)
                 else
-                    taskLabel:SetTextColor(T("TEXT_PRIMARY"))
+                    taskLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
 
                 local countFS = taskRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -351,7 +345,7 @@ function ns.UI.CreateRoutinesTab(parent)
                 else
                     countFS:SetText(string.format("%d/%d", prog, task.max))
                 end
-                countFS:SetTextColor(T("TEXT_SECONDARY"))
+                countFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
                 local delTaskBtn = CreateFrame("Button", nil, taskRow)
                 delTaskBtn:SetSize(14, 14)
@@ -454,24 +448,20 @@ function ns.UI.CreateRoutinesTab(parent)
             row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 0, -yOff)
             row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", 0, -yOff)
             row:SetHeight(50)
-            row:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
+            row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
 
             if routineID == selectedRoutine then
-                row:SetBackdropColor(T("BG_ACTIVE"))
-                row:SetBackdropBorderColor(T("BORDER_ACCENT"))
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
             else
-                row:SetBackdropColor(T("BG_PRIMARY"))
-                row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
             end
 
             if routine.pinned then
-                local pinDot = lib:CreateStatusDot(row, { size = 8 })
+                local pinDot = OneWoW_GUI:CreateStatusDot(row, { size = 8 })
                 pinDot:SetPoint("TOPLEFT", row, "TOPLEFT", 4, -4)
-                pinDot:SetVertexColor(T("ACCENT_HIGHLIGHT"))
+                pinDot:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
             end
 
             local titleFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -479,13 +469,13 @@ function ns.UI.CreateRoutinesTab(parent)
             titleFS:SetPoint("TOPRIGHT", row, "TOPRIGHT", -40, -6)
             titleFS:SetJustifyH("LEFT")
             titleFS:SetText(routine.title or L["ROUTINES_UNTITLED"])
-            titleFS:SetTextColor(T("TEXT_PRIMARY"))
+            titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local secCount = routine.sections and #routine.sections or 0
             local metaFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             metaFS:SetPoint("TOPLEFT", titleFS, "BOTTOMLEFT", 0, -2)
             metaFS:SetText(secCount .. " sections")
-            metaFS:SetTextColor(T("TEXT_MUTED"))
+            metaFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local progFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             progFS:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -6)
@@ -493,21 +483,21 @@ function ns.UI.CreateRoutinesTab(parent)
             if totalDone == totalAll and totalAll > 0 then
                 progFS:SetTextColor(0.4, 0.8, 0.4, 1.0)
             else
-                progFS:SetTextColor(T("TEXT_SECONDARY"))
+                progFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
 
             local progBarBg = CreateFrame("Frame", nil, row, "BackdropTemplate")
             progBarBg:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 10, 4)
             progBarBg:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -10, 4)
             progBarBg:SetHeight(4)
-            progBarBg:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-            progBarBg:SetBackdropColor(T("BG_TERTIARY"))
+            progBarBg:SetBackdrop(BACKDROP_SIMPLE)
+            progBarBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
             local progBarFill = progBarBg:CreateTexture(nil, "OVERLAY")
             progBarFill:SetPoint("TOPLEFT", progBarBg, "TOPLEFT", 0, 0)
             progBarFill:SetPoint("BOTTOMLEFT", progBarBg, "BOTTOMLEFT", 0, 0)
-            progBarFill:SetTexture("Interface\\Buttons\\WHITE8x8")
-            progBarFill:SetVertexColor(T("ACCENT_PRIMARY"))
+            progBarFill:SetTexture(BACKDROP_SIMPLE.bgFile)
+            progBarFill:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             local barPct = totalAll > 0 and (totalDone / totalAll) or 0
             C_Timer.After(0.05, function()
                 if progBarBg:GetWidth() > 0 then
@@ -521,12 +511,12 @@ function ns.UI.CreateRoutinesTab(parent)
             end)
             row:SetScript("OnEnter", function(self)
                 if routineID ~= selectedRoutine then
-                    self:SetBackdropColor(T("BG_HOVER"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 end
             end)
             row:SetScript("OnLeave", function(self)
                 if routineID ~= selectedRoutine then
-                    self:SetBackdropColor(T("BG_PRIMARY"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
                 end
             end)
 
@@ -542,7 +532,7 @@ function ns.UI.CreateRoutinesTab(parent)
             local emptyFS = emptyFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             emptyFS:SetPoint("CENTER", listScroll.panel, "CENTER", 0, 0)
             emptyFS:SetText(L["ROUTINES_EMPTY"])
-            emptyFS:SetTextColor(T("TEXT_MUTED"))
+            emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             table.insert(routineListItems, emptyFrame)
         end
 
@@ -649,7 +639,7 @@ function ns.UI.ShowRoutineSectionEditorDialog(routineID, callback)
     local typeLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     typeLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -10)
     typeLabel:SetText(L["ROUTINES_SECTION_TYPE"])
-    typeLabel:SetTextColor(T("TEXT_PRIMARY"))
+    typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local typeDD = ns.UI.CreateThemedDropdown(content, "", 200, 25)
     typeDD:SetPoint("TOPLEFT", typeLabel, "BOTTOMLEFT", 0, -4)
@@ -664,7 +654,7 @@ function ns.UI.ShowRoutineSectionEditorDialog(routineID, callback)
     local profLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     profLabel:SetPoint("TOPLEFT", typeDD, "TOPRIGHT", 10, 0)
     profLabel:SetText(L["ROUTINES_SECTION_PROFESSIONS"])
-    profLabel:SetTextColor(T("TEXT_PRIMARY"))
+    profLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     profLabel:Hide()
 
     local profDD = ns.UI.CreateThemedDropdown(content, "", 180, 25)
@@ -697,23 +687,23 @@ function ns.UI.ShowRoutineSectionEditorDialog(routineID, callback)
     local nameLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     nameLabel:SetPoint("TOPLEFT", typeDD, "BOTTOMLEFT", 0, -10)
     nameLabel:SetText(L["ROUTINES_SECTION_LABEL"])
-    nameLabel:SetTextColor(T("TEXT_PRIMARY"))
+    nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local nameBox = lib:CreateEditBox(nil, content, { height = 25, width = 200 })
+    local nameBox = OneWoW_GUI:CreateEditBox(nil, content, { height = 25, width = 200 })
     nameBox:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -4)
     nameBox:SetAutoFocus(false)
-    nameBox:SetTextColor(T("TEXT_PRIMARY"))
+    nameBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     nameBox:SetScript("OnTextChanged", function(self)
         dialog._labelText = self:GetText() or ""
     end)
     nameBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     nameBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
     nameBox:SetScript("OnEditFocusGained", function(self)
-        self:SetTextColor(T("TEXT_PRIMARY"))
+        self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
     nameBox:SetScript("OnEditFocusLost", function(self)
         if self:GetText() == "" then
-            self:SetTextColor(T("TEXT_PRIMARY"))
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end)
 
@@ -787,48 +777,48 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     local nameLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     nameLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -10)
     nameLabel:SetText(L["ROUTINES_TASK_LABEL"])
-    nameLabel:SetTextColor(T("TEXT_PRIMARY"))
+    nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local nameBox = lib:CreateEditBox(nil, content, { height = 25, width = 260 })
+    local nameBox = OneWoW_GUI:CreateEditBox(nil, content, { height = 25, width = 260 })
     nameBox:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -4)
     nameBox:SetAutoFocus(false)
-    nameBox:SetTextColor(T("TEXT_PRIMARY"))
+    nameBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     nameBox:SetScript("OnTextChanged", function(self) dialog._taskLabel = self:GetText() or "" end)
     nameBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     nameBox:SetScript("OnEditFocusGained", function(self)
-        self:SetTextColor(T("TEXT_PRIMARY"))
+        self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
     nameBox:SetScript("OnEditFocusLost", function(self)
         if self:GetText() == "" then
-            self:SetTextColor(T("TEXT_PRIMARY"))
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end)
 
     local maxLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     maxLabel:SetPoint("TOPLEFT", nameBox, "BOTTOMLEFT", 0, -10)
     maxLabel:SetText(L["ROUTINES_TASK_MAX"])
-    maxLabel:SetTextColor(T("TEXT_PRIMARY"))
+    maxLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local maxBox = lib:CreateEditBox(nil, content, { height = 25, width = 80 })
+    local maxBox = OneWoW_GUI:CreateEditBox(nil, content, { height = 25, width = 80 })
     maxBox:SetPoint("TOPLEFT", maxLabel, "BOTTOMLEFT", 0, -4)
     maxBox:SetAutoFocus(false)
-    maxBox:SetTextColor(T("TEXT_PRIMARY"))
+    maxBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     maxBox:SetText("1")
     maxBox:SetScript("OnTextChanged", function(self) dialog._taskMax = self:GetText() or "1" end)
     maxBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     maxBox:SetScript("OnEditFocusGained", function(self)
-        self:SetTextColor(T("TEXT_PRIMARY"))
+        self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
     maxBox:SetScript("OnEditFocusLost", function(self)
         if self:GetText() == "" then
-            self:SetTextColor(T("TEXT_PRIMARY"))
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end)
 
     local trackLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     trackLabel:SetPoint("TOPLEFT", maxBox, "BOTTOMLEFT", 0, -10)
     trackLabel:SetText(L["ROUTINES_TASK_TRACK_TYPE"])
-    trackLabel:SetTextColor(T("TEXT_PRIMARY"))
+    trackLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local trackDD = ns.UI.CreateThemedDropdown(content, "", 160, 25)
     trackDD:SetPoint("TOPLEFT", trackLabel, "BOTTOMLEFT", 0, -4)
@@ -842,7 +832,7 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     })
     trackDD:SetSelected("manual")
 
-    local justTrackCheckbox = lib:CreateCheckbox(nil, content, L["ROUTINES_JUST_TRACK"])
+    local justTrackCheckbox = OneWoW_GUI:CreateCheckbox(nil, content, L["ROUTINES_JUST_TRACK"])
     justTrackCheckbox:SetPoint("TOPLEFT", trackDD, "BOTTOMLEFT", 0, -10)
     justTrackCheckbox:Hide()
     if justTrackCheckbox.label then
@@ -863,18 +853,18 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     local questLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     questLabel:SetPoint("TOPLEFT", justTrackCheckbox, "BOTTOMLEFT", 0, -10)
     questLabel:SetText(L["ROUTINES_QUEST_IDS"] .. " / " .. L["ROUTINES_CURRENCY_ID"] .. " / " .. L["ROUTINES_FACTION_ID"])
-    questLabel:SetTextColor(T("TEXT_SECONDARY"))
+    questLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local questBox = lib:CreateEditBox(nil, content, { height = 25, width = 260 })
+    local questBox = OneWoW_GUI:CreateEditBox(nil, content, { height = 25, width = 260 })
     questBox:SetPoint("TOPLEFT", questLabel, "BOTTOMLEFT", 0, -4)
     questBox:SetAutoFocus(false)
-    questBox:SetTextColor(T("TEXT_PRIMARY"))
+    questBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     questBox:SetScript("OnEditFocusGained", function(self)
-        self:SetTextColor(T("TEXT_PRIMARY"))
+        self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
     questBox:SetScript("OnEditFocusLost", function(self)
         if self:GetText() == "" then
-            self:SetTextColor(T("TEXT_PRIMARY"))
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end)
 
@@ -935,7 +925,7 @@ function ns.UI.ShowRoutineTaskEditorDialog(routineID, sectionIndex, callback)
     local hintLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hintLabel:SetPoint("TOPLEFT", currencyNameLabel, "BOTTOMLEFT", 0, -4)
     hintLabel:SetText(L["ROUTINES_FACTION_ID_HINT"])
-    hintLabel:SetTextColor(T("TEXT_MUTED"))
+    hintLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     trackDD.onSelect = function(value)
         dialog._trackType = value
@@ -1016,18 +1006,14 @@ function ns.UI.ShowRoutineImportDialog(callback)
     local hint = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     hint:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -10)
     hint:SetText(L["ROUTINES_IMPORT_HINT"])
-    hint:SetTextColor(T("TEXT_SECONDARY"))
+    hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local boxContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
     boxContainer:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -8)
     boxContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
-    boxContainer:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    boxContainer:SetBackdropColor(T("BG_TERTIARY"))
-    boxContainer:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    boxContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    boxContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    boxContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local importScroll = ns.UI.CreateCustomScroll(boxContainer)
     importScroll.container:SetPoint("TOPLEFT", boxContainer, "TOPLEFT", 4, -4)
@@ -1036,7 +1022,7 @@ function ns.UI.ShowRoutineImportDialog(callback)
     local importBox = CreateFrame("EditBox", nil, importScroll.scrollFrame)
     importBox:SetSize(importScroll.scrollFrame:GetWidth(), 1)
     importBox:SetFont(ns.Config:ResolveFontPath(nil), 11, "")
-    importBox:SetTextColor(T("TEXT_PRIMARY"))
+    importBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     importBox:SetTextInsets(4, 4, 4, 4)
     importBox:SetAutoFocus(false)
     importBox:SetMultiLine(true)
@@ -1070,18 +1056,14 @@ function ns.UI.ShowRoutineExportDialog(exportStr)
     local hint = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     hint:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -10)
     hint:SetText(L["ROUTINES_EXPORT_HINT"])
-    hint:SetTextColor(T("TEXT_SECONDARY"))
+    hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local boxContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
     boxContainer:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -8)
     boxContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
-    boxContainer:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    boxContainer:SetBackdropColor(T("BG_TERTIARY"))
-    boxContainer:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    boxContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    boxContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    boxContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local exportScroll = ns.UI.CreateCustomScroll(boxContainer)
     exportScroll.container:SetPoint("TOPLEFT", boxContainer, "TOPLEFT", 4, -4)
@@ -1090,7 +1072,7 @@ function ns.UI.ShowRoutineExportDialog(exportStr)
     local exportBox = CreateFrame("EditBox", nil, exportScroll.scrollFrame)
     exportBox:SetSize(exportScroll.scrollFrame:GetWidth(), 1)
     exportBox:SetFont(ns.Config:ResolveFontPath(nil), 11, "")
-    exportBox:SetTextColor(T("TEXT_PRIMARY"))
+    exportBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     exportBox:SetTextInsets(4, 4, 4, 4)
     exportBox:SetAutoFocus(false)
     exportBox:SetMultiLine(true)

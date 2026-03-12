@@ -12,8 +12,7 @@ local minimapBtn
 local position
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
-local function T(key) return OneWoW_GUI:GetThemeColor(key) end
+if not OneWoW_GUI then return end
 
 local function ShowContextMenu(anchorFrame)
     if contextMenu then
@@ -89,8 +88,8 @@ local function ShowContextMenu(anchorFrame)
         edgeSize = 12,
         insets = { left = 2, right = 2, top = 2, bottom = 2 },
     })
-    contextMenu:SetBackdropColor(T("BG_PRIMARY"))
-    contextMenu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    contextMenu:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    contextMenu:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local yOff = -4
     local maxWidth = 140
@@ -115,7 +114,7 @@ local function ShowContextMenu(anchorFrame)
         btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         btn.text:SetPoint("LEFT", textLeftOffset, 0)
         btn.text:SetText(item.label)
-        btn.text:SetTextColor(T("TEXT_PRIMARY"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         if hasErrorAlert then
             local alertIcon = btn:CreateTexture(nil, "OVERLAY")
@@ -128,7 +127,7 @@ local function ShowContextMenu(anchorFrame)
         if textW > maxWidth then maxWidth = textW end
 
         btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         end)
         btn:SetScript("OnLeave", function(self)
             self:SetBackdropColor(0, 0, 0, 0)
@@ -179,10 +178,7 @@ local function ShowContextMenu(anchorFrame)
 end
 
 local function GetCurrentIcon()
-    local theme = (OneWoW_GUI and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
-    if theme == "alliance" then return ICON_ALLIANCE end
-    if theme == "neutral"  then return ICON_NEUTRAL  end
-    return ICON_HORDE
+    return OneWoW_GUI:GetBrandIcon(OneWoW_GUI:GetSetting("minimap.theme"))
 end
 
 local MinimapShapes = {

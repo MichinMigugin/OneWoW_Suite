@@ -3,6 +3,12 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+
 ns.NotesHyperlinks = {}
 local NotesHyperlinks = ns.NotesHyperlinks
 
@@ -237,11 +243,8 @@ ns.UI = ns.UI or {}
 
 function ns.UI.CreateNotesHelpPanel()
     local L      = ns.L
-    local T      = ns.T
-    local S      = ns.S
-    local guiLib = LibStub("OneWoW_GUI-1.0", true)
 
-    local EDGE     = S("XS")
+    local EDGE     = OneWoW_GUI:GetSpacing("XS")
     local TITLE_H  = 20
     local PANEL_W  = 320
     local PANEL_H  = 600
@@ -252,13 +255,9 @@ function ns.UI.CreateNotesHelpPanel()
     helpPanel:SetToplevel(true)
     helpPanel:SetClampedToScreen(true)
     helpPanel:EnableMouse(true)
-    helpPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    helpPanel:SetBackdropColor(T("BG_PRIMARY"))
-    helpPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    helpPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    helpPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    helpPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     helpPanel:Hide()
 
     helpPanel:SetScript("OnShow", function()
@@ -283,14 +282,14 @@ function ns.UI.CreateNotesHelpPanel()
     titleBar:SetPoint("TOPLEFT",  helpPanel, "TOPLEFT",  EDGE, -EDGE)
     titleBar:SetPoint("TOPRIGHT", helpPanel, "TOPRIGHT", -EDGE, -EDGE)
     titleBar:SetHeight(TITLE_H)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+    titleBar:SetBackdrop(BACKDROP_SIMPLE)
+    titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
     titleBar:SetFrameLevel(helpPanel:GetFrameLevel() + 1)
 
     local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleBar, "LEFT", S("SM"), 0)
+    titleText:SetPoint("LEFT", titleBar, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
     titleText:SetText(L["UI_HELP_PANEL_TITLE"])
-    titleText:SetTextColor(T("ACCENT_PRIMARY"))
+    titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local closeBtn = ns.UI.CreateButton(nil, titleBar, "X", 20, 20)
     closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -EDGE / 2, 0)
@@ -299,13 +298,13 @@ function ns.UI.CreateNotesHelpPanel()
     -- =============================================
     -- CONTENT AREA + TAB BUTTONS
     -- =============================================
-    local tabAreaTop = -(EDGE + TITLE_H + S("XS"))
+    local tabAreaTop = -(EDGE + TITLE_H + OneWoW_GUI:GetSpacing("XS"))
 
     local linksContent = CreateFrame("Frame", nil, helpPanel)
     local pinsContent  = CreateFrame("Frame", nil, helpPanel)
     pinsContent:Hide()
 
-    local tabBtns, tabsBottomY = guiLib:CreateFitFrameButtons(helpPanel, tabAreaTop, {
+    local tabBtns, tabsBottomY = OneWoW_GUI:CreateFitFrameButtons(helpPanel, tabAreaTop, {
         { text = L["UI_HELP_TAB_LINKS"], value = "links", isActive = true },
         { text = L["UI_HELP_TAB_PINS"],  value = "pins"                   },
     }, {
@@ -318,7 +317,7 @@ function ns.UI.CreateNotesHelpPanel()
         end,
     })
 
-    local contentTop = tabsBottomY - S("XS")
+    local contentTop = tabsBottomY - OneWoW_GUI:GetSpacing("XS")
 
     linksContent:SetPoint("TOPLEFT",     helpPanel, "TOPLEFT",     EDGE, contentTop)
     linksContent:SetPoint("BOTTOMRIGHT", helpPanel, "BOTTOMRIGHT", -EDGE, EDGE)
@@ -334,7 +333,7 @@ function ns.UI.CreateNotesHelpPanel()
     hintText:SetPoint("TOPRIGHT", linksContent, "TOPRIGHT", 0, -2)
     hintText:SetJustifyH("LEFT")
     hintText:SetText(L["UI_HELP_LINKS_HINT"])
-    hintText:SetTextColor(T("TEXT_SECONDARY"))
+    hintText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local linksScrollObj = ns.UI.CreateCustomScroll(linksContent)
     linksScrollObj.container:SetPoint("TOPLEFT",     linksContent, "TOPLEFT",     0, -20)
@@ -361,13 +360,13 @@ function ns.UI.CreateNotesHelpPanel()
     local fromGameLabel = linksScrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     fromGameLabel:SetJustifyH("LEFT")
     fromGameLabel:SetText(L["UI_HELP_FROM_GAME"])
-    fromGameLabel:SetTextColor(T("ACCENT_PRIMARY"))
+    fromGameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local fromGameDesc = linksScrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     fromGameDesc:SetJustifyH("LEFT")
     fromGameDesc:SetWordWrap(true)
     fromGameDesc:SetText(L["UI_HELP_FROM_GAME_DESC"])
-    fromGameDesc:SetTextColor(T("TEXT_SECONDARY"))
+    fromGameDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local function UpdateRowPositions()
         local yPos = 0
@@ -403,13 +402,9 @@ function ns.UI.CreateNotesHelpPanel()
         row:SetHeight(22)
         row:SetPoint("TOPLEFT",  linksScrollContent, "TOPLEFT",  0, 0)
         row:SetPoint("TOPRIGHT", linksScrollContent, "TOPRIGHT", 0, 0)
-        row:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        row:SetBackdropColor(T("BG_SECONDARY"))
-        row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
         local icon = row:CreateTexture(nil, "ARTWORK")
         icon:SetSize(14, 14)
@@ -419,7 +414,7 @@ function ns.UI.CreateNotesHelpPanel()
         local rowText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         rowText:SetPoint("LEFT", icon, "RIGHT", 5, 0)
         rowText:SetText(linkType.name .. "  " .. linkType.syntax)
-        rowText:SetTextColor(T("TEXT_PRIMARY"))
+        rowText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local expandIcon = row:CreateTexture(nil, "ARTWORK")
         expandIcon:SetSize(12, 12)
@@ -430,13 +425,9 @@ function ns.UI.CreateNotesHelpPanel()
         detailFrame:SetHeight(64)
         detailFrame:SetPoint("TOPLEFT",  row, "BOTTOMLEFT",  0, -2)
         detailFrame:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -2)
-        detailFrame:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        detailFrame:SetBackdropColor(T("BG_TERTIARY"))
-        detailFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        detailFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        detailFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        detailFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         detailFrame:Hide()
 
         local instrText = detailFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalTiny")
@@ -445,14 +436,14 @@ function ns.UI.CreateNotesHelpPanel()
         instrText:SetJustifyH("LEFT")
         instrText:SetWordWrap(true)
         instrText:SetText(L["UI_HELP_DETAIL_INSTRUCTION"])
-        instrText:SetTextColor(T("TEXT_SECONDARY"))
+        instrText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local exampleText = detailFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalTiny")
         exampleText:SetPoint("TOPLEFT",  instrText, "BOTTOMLEFT",  0, -3)
         exampleText:SetPoint("TOPRIGHT", instrText, "BOTTOMRIGHT", 0, -3)
         exampleText:SetJustifyH("LEFT")
         exampleText:SetText(string.format(L["UI_HELP_DETAIL_EXAMPLE"], linkType.example))
-        exampleText:SetTextColor(T("ACCENT_PRIMARY"))
+        exampleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local pasteBtn = ns.UI.CreateButton(nil, detailFrame, L["UI_HELP_PASTE_BUTTON"], 60, 20)
         pasteBtn:SetPoint("BOTTOMLEFT", detailFrame, "BOTTOMLEFT", 8, 6)
@@ -483,8 +474,8 @@ function ns.UI.CreateNotesHelpPanel()
             UpdateRowPositions()
         end)
 
-        row:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")) end)
-        row:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_SECONDARY")) end)
+        row:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) end)
+        row:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY")) end)
     end
 
     UpdateRowPositions()
@@ -502,20 +493,16 @@ function ns.UI.CreateNotesHelpPanel()
         local card = CreateFrame("Frame", nil, pinsScrollContent, "BackdropTemplate")
         card:SetPoint("TOPLEFT",  pinsScrollContent, "TOPLEFT",  0, yOffset)
         card:SetPoint("TOPRIGHT", pinsScrollContent, "TOPRIGHT", 0, yOffset)
-        card:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        card:SetBackdropColor(T("BG_SECONDARY"))
-        card:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        card:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         local cardTitle = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         cardTitle:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -8)
         cardTitle:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -8)
         cardTitle:SetJustifyH("LEFT")
         cardTitle:SetText(title)
-        cardTitle:SetTextColor(T("ACCENT_PRIMARY"))
+        cardTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local currentY = -26
         for _, line in ipairs(lines) do
@@ -525,7 +512,7 @@ function ns.UI.CreateNotesHelpPanel()
             lineText:SetJustifyH("LEFT")
             lineText:SetWordWrap(true)
             lineText:SetText(line)
-            lineText:SetTextColor(T("TEXT_PRIMARY"))
+            lineText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             currentY = currentY - lineText:GetStringHeight() - 6
         end
 

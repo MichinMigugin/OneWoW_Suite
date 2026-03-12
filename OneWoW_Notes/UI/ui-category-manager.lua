@@ -3,7 +3,12 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 ns.UI = ns.UI or {}
 
@@ -158,27 +163,19 @@ function ns.UI.ShowCategoryManager(initialSection)
     addContainer:SetPoint("TOPLEFT", sectionBtnContainer, "BOTTOMLEFT", 0, -8)
     addContainer:SetPoint("TOPRIGHT", sectionBtnContainer, "BOTTOMRIGHT", 0, -8)
     addContainer:SetHeight(30)
-    addContainer:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    addContainer:SetBackdropColor(T("BG_SECONDARY"))
-    addContainer:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    addContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    addContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    addContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local addInput = CreateFrame("EditBox", nil, addContainer, "BackdropTemplate")
     addInput:SetPoint("TOPLEFT", addContainer, "TOPLEFT", 4, -3)
     addInput:SetPoint("BOTTOMRIGHT", addContainer, "BOTTOMRIGHT", -84, 3)
     addInput:SetHeight(24)
-    addInput:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    addInput:SetBackdropColor(T("BG_PRIMARY"))
-    addInput:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    addInput:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    addInput:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    addInput:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     addInput:SetFontObject("GameFontNormalSmall")
-    addInput:SetTextColor(T("TEXT_PRIMARY"))
+    addInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     addInput:SetTextInsets(6, 6, 2, 2)
     addInput:SetAutoFocus(false)
 
@@ -187,7 +184,7 @@ function ns.UI.ShowCategoryManager(initialSection)
 
     local statusLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     statusLabel:SetPoint("TOPLEFT", addContainer, "BOTTOMLEFT", 2, -4)
-    statusLabel:SetTextColor(T("TEXT_SECONDARY"))
+    statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     statusLabel:SetText("")
 
     local scroll = ns.UI.CreateCustomScroll(content)
@@ -221,12 +218,12 @@ function ns.UI.ShowCategoryManager(initialSection)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, -yPos)
             row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, -yPos)
             row:SetHeight(ROW_H)
-            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+            row:SetBackdrop(BACKDROP_SIMPLE)
 
             if isBuiltin then
-                row:SetBackdropColor(T("BG_SECONDARY"))
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             else
-                row:SetBackdropColor(T("BG_PRIMARY"))
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
             end
 
             local nameFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -236,27 +233,23 @@ function ns.UI.ShowCategoryManager(initialSection)
             nameFS:SetText(catName)
 
             if isBuiltin then
-                nameFS:SetTextColor(T("TEXT_SECONDARY"))
+                nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             else
-                nameFS:SetTextColor(T("TEXT_PRIMARY"))
+                nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
 
             if not isBuiltin then
                 local delBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
                 delBtn:SetSize(20, 20)
                 delBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-                delBtn:SetBackdrop({
-                    bgFile   = "Interface\\Buttons\\WHITE8x8",
-                    edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1,
-                })
-                delBtn:SetBackdropColor(T("BTN_NORMAL"))
-                delBtn:SetBackdropBorderColor(T("BTN_BORDER"))
+                delBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+                delBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                delBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
                 local delX = delBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 delX:SetPoint("CENTER")
                 delX:SetText("X")
-                delX:SetTextColor(T("TEXT_PRIMARY"))
+                delX:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
                 delBtn:SetScript("OnEnter", function(self)
                     self:SetBackdropColor(0.6, 0.1, 0.1, 1)
@@ -264,15 +257,15 @@ function ns.UI.ShowCategoryManager(initialSection)
                     delX:SetTextColor(1, 1, 1, 1)
                 end)
                 delBtn:SetScript("OnLeave", function(self)
-                    self:SetBackdropColor(T("BTN_NORMAL"))
-                    self:SetBackdropBorderColor(T("BTN_BORDER"))
-                    delX:SetTextColor(T("TEXT_PRIMARY"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                    delX:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end)
                 delBtn:SetScript("OnClick", function()
                     local ok, err = RemoveCustomCategory(currentSection, catName)
                     if ok then
                         statusLabel:SetText(string.format(L["CATMGR_REMOVED"], catName))
-                        statusLabel:SetTextColor(T("ACCENT_PRIMARY"))
+                        statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     else
                         statusLabel:SetText(err or L["CATMGR_ERROR"])
                         statusLabel:SetTextColor(0.8, 0.2, 0.2, 1)
@@ -298,13 +291,13 @@ function ns.UI.ShowCategoryManager(initialSection)
 
         for _, btn in ipairs(sectionButtons) do
             if btn.sectionKey == sectionKey then
-                btn:SetBackdropColor(T("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-                btn.text:SetTextColor(T("ACCENT_PRIMARY"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                btn:SetBackdropColor(T("BTN_NORMAL"))
-                btn:SetBackdropBorderColor(T("BTN_BORDER"))
-                btn.text:SetTextColor(T("TEXT_PRIMARY"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end
 
@@ -321,16 +314,16 @@ function ns.UI.ShowCategoryManager(initialSection)
         end)
         btn:SetScript("OnEnter", function(self)
             if currentSection ~= self.sectionKey then
-                self:SetBackdropColor(T("BTN_HOVER"))
-                self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
-                self.text:SetTextColor(T("TEXT_ACCENT"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         end)
         btn:SetScript("OnLeave", function(self)
             if currentSection ~= self.sectionKey then
-                self:SetBackdropColor(T("BTN_NORMAL"))
-                self:SetBackdropBorderColor(T("BTN_BORDER"))
-                self.text:SetTextColor(T("TEXT_PRIMARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end)
 
@@ -346,7 +339,7 @@ function ns.UI.ShowCategoryManager(initialSection)
         local ok, err = AddCustomCategory(currentSection, name)
         if ok then
             statusLabel:SetText(string.format(L["CATMGR_ADDED"], name))
-            statusLabel:SetTextColor(T("ACCENT_PRIMARY"))
+            statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             addInput:SetText("")
             RefreshCategoryList()
         else

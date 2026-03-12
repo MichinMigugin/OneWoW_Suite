@@ -3,11 +3,13 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local selectedPlayer  = nil
 local playerListItems = {}
@@ -31,16 +33,16 @@ local BACKDROP_STANDARD = {
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     f:SetBackdrop(BACKDROP_STANDARD)
-    f:SetBackdropColor(T("BG_PRIMARY"))
-    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
 end
 
 local function CreateThemedBar(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     f:SetBackdrop(BACKDROP_STANDARD)
-    f:SetBackdropColor(T("BG_SECONDARY"))
-    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
 end
 
@@ -53,7 +55,7 @@ function ns.UI.CreatePlayersTab(parent)
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["PLAYERS_CONTROLS"] or "Players Controls")
-    controlTitle:SetTextColor(T("TEXT_SECONDARY"))
+    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local addTargetBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_TARGET"] or "Add Target", 100, 25)
     ns.UI.AutoResizeButton(addTargetBtn, 80, 200)
@@ -231,7 +233,7 @@ function ns.UI.CreatePlayersTab(parent)
     local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
     listingTitle:SetText(L["PLAYERS_LIST"] or "Players")
-    listingTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
     scrollFrame = listScroll.scrollFrame
@@ -256,7 +258,7 @@ function ns.UI.CreatePlayersTab(parent)
 
     leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
-    leftStatusText:SetTextColor(T("TEXT_SECONDARY"))
+    leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_PLAYERS"], 0))
 
     local rightStatusBar = CreateThemedBar(nil, parent)
@@ -266,7 +268,7 @@ function ns.UI.CreatePlayersTab(parent)
 
     local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
-    rightStatusText:SetTextColor(T("TEXT_SECONDARY"))
+    rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
 
     local function ShowEditor()
@@ -286,25 +288,25 @@ function ns.UI.CreatePlayersTab(parent)
             nameServerLine:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -100, -12)
             nameServerLine:SetJustifyH("LEFT")
             nameServerLine:SetText("")
-            nameServerLine:SetTextColor(T("ACCENT_PRIMARY"))
+            nameServerLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             editorHeader.nameServerLine = nameServerLine
 
             local levelClassRaceLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             levelClassRaceLine:SetPoint("TOPLEFT", nameServerLine, "BOTTOMLEFT", 0, -4)
             levelClassRaceLine:SetText("")
-            levelClassRaceLine:SetTextColor(T("TEXT_SECONDARY"))
+            levelClassRaceLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             editorHeader.levelClassRaceLine = levelClassRaceLine
 
             local guildLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             guildLine:SetPoint("TOPLEFT", levelClassRaceLine, "BOTTOMLEFT", 0, -2)
             guildLine:SetText("")
-            guildLine:SetTextColor(T("TEXT_MUTED"))
+            guildLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             editorHeader.guildLine = guildLine
 
             local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
             categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
-            categoryLine:SetTextColor(T("ACCENT_PRIMARY"))
+            categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
 
@@ -501,11 +503,11 @@ function ns.UI.CreatePlayersTab(parent)
             local ttLabel = tooltipSection:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
             ttLabel:SetText(L["UI_TOOLTIP_LINES"] or "Tooltip Lines:")
-            ttLabel:SetTextColor(T("ACCENT_PRIMARY"))
+            ttLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
             local tooltipEdits = {}
             for i = 1, 4 do
-                local edit = lib:CreateEditBox(nil, tooltipSection, {
+                local edit = OneWoW_GUI:CreateEditBox(nil, tooltipSection, {
                     height = 22,
                     maxLetters = 255,
                 })
@@ -582,10 +584,10 @@ function ns.UI.CreatePlayersTab(parent)
                 if header.guildLine then
                     if pd.guild and pd.guild ~= "" then
                         header.guildLine:SetText("<" .. pd.guild .. ">")
-                        header.guildLine:SetTextColor(T("ACCENT_SECONDARY"))
+                        header.guildLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
                     else
                         header.guildLine:SetText(L["UI_GUILD_NONE"] or "<No Guild>")
-                        header.guildLine:SetTextColor(T("TEXT_MUTED"))
+                        header.guildLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                     end
                 end
                 if header.categoryLine then
@@ -632,7 +634,7 @@ function ns.UI.CreatePlayersTab(parent)
     end)
 
     local function CreateSectionHeader(text, yPos)
-        local section = lib:CreateSectionHeader(scrollChild, text, yPos)
+        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, text, yPos)
         section:ClearAllPoints()
         section:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
         section:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yPos)
@@ -709,7 +711,7 @@ function ns.UI.CreatePlayersTab(parent)
             if player.data.realm and player.data.realm ~= "" then sub = player.data.realm .. " " end
             if player.data.class and player.data.class ~= "" then sub = sub .. player.data.class end
             subText:SetText(sub)
-            subText:SetTextColor(T("TEXT_MUTED"))
+            subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local deleteBtn = CreateFrame("Button", nil, row)
             deleteBtn:SetSize(18, 18)
@@ -882,12 +884,12 @@ local function MakeDialogLabel(parentFrame, text, x, y)
     local lbl = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     lbl:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", x, y)
     lbl:SetText(text)
-    lbl:SetTextColor(T("TEXT_SECONDARY"))
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     return lbl
 end
 
 local function MakeDialogInput(parentFrame, x, y, w)
-    local input = lib:CreateEditBox(nil, parentFrame, {
+    local input = OneWoW_GUI:CreateEditBox(nil, parentFrame, {
         width = w,
         height = 26,
     })
@@ -1236,7 +1238,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     end
     yPos = yPos - ROW_H
 
-    local alertCB = lib:CreateCheckbox(nil, content, L["TOOLTIP_PLAYER_SOUND"] or "Alert on Target")
+    local alertCB = OneWoW_GUI:CreateCheckbox(nil, content, L["TOOLTIP_PLAYER_SOUND"] or "Alert on Target")
     alertCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     alertCB:SetChecked(pd.soundEnabled or false)
     alertCB:SetScript("OnClick", function(self)
@@ -1394,8 +1396,8 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
         row:SetPoint("TOPLEFT", scroll.scrollChild, "TOPLEFT", 0, -yPos)
         row:SetPoint("TOPRIGHT", scroll.scrollChild, "TOPRIGHT", 0, -yPos)
         row:SetHeight(ROW_H)
-        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        row:SetBackdropColor(T("BG_PRIMARY"))
+        row:SetBackdrop(BACKDROP_SIMPLE)
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
 
         local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
         cb:SetSize(20, 20)
@@ -1406,7 +1408,7 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
         local nameFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameFS:SetPoint("LEFT", cb, "RIGHT", 4, 0)
         nameFS:SetText(alt.name)
-        nameFS:SetTextColor(T("TEXT_PRIMARY"))
+        nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local infoFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         infoFS:SetPoint("RIGHT", row, "RIGHT", -8, 0)
@@ -1419,7 +1421,7 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
         end
         if alt.realm and alt.realm ~= "" then infoText = infoText .. " - " .. alt.realm end
         infoFS:SetText(infoText)
-        infoFS:SetTextColor(T("TEXT_SECONDARY"))
+        infoFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         row:EnableMouse(true)
         row:SetScript("OnMouseDown", function()
@@ -1538,8 +1540,8 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
         row:SetPoint("TOPLEFT", scroll.scrollChild, "TOPLEFT", 0, -yPos)
         row:SetPoint("TOPRIGHT", scroll.scrollChild, "TOPRIGHT", 0, -yPos)
         row:SetHeight(ROW_H)
-        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        row:SetBackdropColor(T("BG_PRIMARY"))
+        row:SetBackdrop(BACKDROP_SIMPLE)
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
 
         local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
         cb:SetSize(20, 20)
@@ -1551,9 +1553,9 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
         nameFS:SetPoint("LEFT", cb, "RIGHT", 4, 0)
         nameFS:SetText(member.name)
         if member.isOnline then
-            nameFS:SetTextColor(T("ACCENT_PRIMARY"))
+            nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
-            nameFS:SetTextColor(T("TEXT_PRIMARY"))
+            nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         local rankFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1563,7 +1565,7 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
         if member.class and member.class ~= "" then infoText = infoText .. (CLASS_DISPLAY_NAMES[member.class] or member.class) .. " " end
         if member.rank and member.rank ~= "" then infoText = infoText .. "(" .. member.rank .. ")" end
         rankFS:SetText(infoText)
-        rankFS:SetTextColor(T("TEXT_SECONDARY"))
+        rankFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         row:EnableMouse(true)
         row:SetScript("OnMouseDown", function()

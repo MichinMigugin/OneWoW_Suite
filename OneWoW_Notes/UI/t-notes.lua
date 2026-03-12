@@ -3,12 +3,11 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local selectedNote = nil
 local noteListItems = {}
@@ -44,16 +43,16 @@ local BACKDROP_STANDARD = {
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     f:SetBackdrop(BACKDROP_STANDARD)
-    f:SetBackdropColor(T("BG_PRIMARY"))
-    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
 end
 
 local function CreateThemedBar(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     f:SetBackdrop(BACKDROP_STANDARD)
-    f:SetBackdropColor(T("BG_SECONDARY"))
-    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
 end
 
@@ -73,7 +72,7 @@ function ns.UI.CreateNotesTab(parent)
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["NOTES_CONTROLS"])
-    controlTitle:SetTextColor(T("TEXT_SECONDARY"))
+    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local addNoteBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_NOTE"], 100, 25)
     ns.UI.AutoResizeButton(addNoteBtn, 80, 200)
@@ -207,7 +206,7 @@ function ns.UI.CreateNotesTab(parent)
     local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
     listingTitle:SetText(L["NOTES_LIST"])
-    listingTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
     scrollFrame = listScroll.scrollFrame
@@ -234,7 +233,7 @@ function ns.UI.CreateNotesTab(parent)
 
     leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
-    leftStatusText:SetTextColor(T("TEXT_SECONDARY"))
+    leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NOTES"], 0))
 
     local rightStatusBar = CreateThemedBar(nil, parent)
@@ -244,7 +243,7 @@ function ns.UI.CreateNotesTab(parent)
 
     rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
-    rightStatusText:SetTextColor(T("TEXT_SECONDARY"))
+    rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
 
     local function ShowEditor()
@@ -442,14 +441,14 @@ function ns.UI.CreateNotesTab(parent)
             local noteTypeLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             noteTypeLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 24)
             noteTypeLine:SetText(string.format(L["UI_TYPE_FORMAT"], L["NOTE_TYPE_STANDARD"]))
-            noteTypeLine:SetTextColor(T("ACCENT_PRIMARY"))
+            noteTypeLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             noteTypeLine:SetJustifyH("RIGHT")
             editorHeader.noteTypeLine = noteTypeLine
 
             local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
             categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
-            categoryLine:SetTextColor(T("ACCENT_PRIMARY"))
+            categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
 
@@ -614,7 +613,7 @@ function ns.UI.CreateNotesTab(parent)
             local todoLabel = todoHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             todoLabel:SetPoint("LEFT", todoHeader, "LEFT", 5, 0)
             todoLabel:SetText(L["UI_TASKS"])
-            todoLabel:SetTextColor(T("TEXT_PRIMARY"))
+            todoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local resetTasksBtn = CreateFrame("Button", nil, todoHeader)
             resetTasksBtn:SetSize(20, 20)
@@ -687,7 +686,7 @@ function ns.UI.CreateNotesTab(parent)
                 if todoContainer then todoContainer:SetWidth(width - 20) end
             end)
 
-            local separatorLine = lib:CreateDivider(detailPanel, 0)
+            local separatorLine = OneWoW_GUI:CreateDivider(detailPanel, 0)
             separatorLine:ClearAllPoints()
             separatorLine:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -5)
             separatorLine:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -5)

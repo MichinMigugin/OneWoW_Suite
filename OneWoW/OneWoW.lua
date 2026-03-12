@@ -6,18 +6,19 @@ local L = OneWoW.L
 local Constants = OneWoW.Constants
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 OneWoW._loadedComponents = {}
 OneWoW._registeredAddons = {}
 
 local KNOWN_COMPANIONS = {
-    { addon = "OneWoW_GUI",              display = "GUI",          cmd = nil },
+    { addon = "OneWoW_GUI",             display = "GUI",          cmd = nil },
     { addon = "OneWoW_QoL",             display = "QoL",          cmd = "/1wqol" },
     { addon = "OneWoW_Notes",           display = "Notes",        cmd = "/1wn" },
     { addon = "OneWoW_AltTracker",      display = "AltTracker",   cmd = "/1wat" },
     { addon = "OneWoW_Catalog",         display = "Catalog",      cmd = "/owcat" },
     { addon = "OneWoW_DirectDeposit",   display = "DirectDeposit",cmd = "/1wdd" },
-    { addon = "OneWoW_ShoppingList",    display = "ShoppingList",  cmd = "/1wsl" },
+    { addon = "OneWoW_ShoppingList",    display = "ShoppingList", cmd = "/1wsl" },
     { addon = "OneWoW_Utility_DevTool", display = "DevTools",     cmd = "/1wdt" },
 }
 
@@ -38,17 +39,8 @@ local function ScheduleDefaultSave()
     end)
 end
 
-local function ApplyTheme()
-    if OneWoW_GUI then
-        OneWoW_GUI:ApplyTheme(OneWoW)
-    end
-end
-
 local function ApplyLanguage()
-    local lang
-    if OneWoW_GUI and OneWoW_GUI.GetSetting then
-        lang = OneWoW_GUI:GetSetting("language")
-    end
+    local lang = OneWoW_GUI:GetSetting("language")
     lang = lang or (OneWoW.db and OneWoW.db.global.language) or "enUS"
     if lang == "esMX" then lang = "esES" end
     local localeData = OneWoW.Locales[lang] or OneWoW.Locales["enUS"]
@@ -59,7 +51,7 @@ local function ApplyLanguage()
     L = OneWoW.L
 end
 
-function OneWoW:ReinitForLanguage(langCode)
+--[[ function OneWoW:ReinitForLanguage(langCode)
     if OneWoW_GUI and OneWoW_GUI.SetSetting then
         OneWoW_GUI:SetSetting("language", langCode)
     else
@@ -72,7 +64,7 @@ function OneWoW:ReinitForLanguage(langCode)
             self.GUI:Show()
         end)
     end
-end
+end ]]
 
 local function RegisterSlashCommands()
     SLASH_ONEWOW1 = "/ow"
@@ -91,17 +83,17 @@ function OneWoW:OnAddonLoaded(loadedAddon)
 
     self:InitializeDatabase()
 
-    if OneWoW_GUI and OneWoW_GUI.MigrateSettings then
+    --if OneWoW_GUI and OneWoW_GUI.MigrateSettings then
         OneWoW_GUI:MigrateSettings(self.db.global)
-    end
+    --end
 
-    ApplyTheme()
+    OneWoW_GUI:ApplyTheme(_G.OneWoW)
     ApplyLanguage()
     RegisterSlashCommands()
 
-    if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
+    --if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
         OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
-            ApplyTheme()
+            OneWoW_GUI:ApplyTheme(_G.OneWoW)
             ScheduleDefaultSave()
             if self2.GUI then
                 self2.GUI:FullReset()
@@ -151,9 +143,9 @@ function OneWoW:OnAddonLoaded(loadedAddon)
                 end)
             end
         end)
-    end
+    --end
 
-    local _ver = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or Constants.VERSION
+    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
     self:RegisterLoadComponent("Core", _ver, "/1w")
 end
 

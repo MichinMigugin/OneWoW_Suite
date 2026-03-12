@@ -1,7 +1,11 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 
 ns.UI = ns.UI or {}
 
@@ -223,10 +227,8 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
     btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
     btn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
     btn:SetHeight(52)
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-    })
-    btn:SetBackdropColor(T("BG_SECONDARY"))
+    btn:SetBackdrop(BACKDROP_SIMPLE)
+    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
     local nameText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", 8, -6)
@@ -234,10 +236,10 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
     nameText:SetJustifyH("LEFT")
     if vendor.name then
         nameText:SetText(vendor.name)
-        nameText:SetTextColor(T("ACCENT_PRIMARY"))
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     else
         nameText:SetText("NPC #" .. (vendor.npcID or "?"))
-        nameText:SetTextColor(T("TEXT_MUTED"))
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
     local mapID, location = nil, nil
@@ -260,7 +262,7 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
         for _ in pairs(vendor.items) do itemCount = itemCount + 1 end
     end
     infoText:SetText(zone .. "  |  " .. itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
-    infoText:SetTextColor(T("TEXT_SECONDARY"))
+    infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local scanText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     scanText:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 8, 5)
@@ -268,16 +270,16 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
     if vendor.lastScanned then
         scanText:SetText(FormatTimestamp(vendor.lastScanned))
     end
-    scanText:SetTextColor(T("TEXT_MUTED"))
+    scanText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
     end)
     btn:SetScript("OnLeave", function(self)
         if selectedVendor and selectedVendor.npcID == vendor.npcID then
-            self:SetBackdropColor(T("BG_ACTIVE"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
         else
-            self:SetBackdropColor(T("BG_SECONDARY"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         end
     end)
     btn:SetScript("OnClick", function()
@@ -308,10 +310,10 @@ local function ShowVendorDetail(panels, vendor)
     nameHeader:SetJustifyH("LEFT")
     if vendor.name then
         nameHeader:SetText(vendor.name)
-        nameHeader:SetTextColor(T("ACCENT_PRIMARY"))
+        nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     else
         nameHeader:SetText("NPC #" .. (vendor.npcID or "?"))
-        nameHeader:SetTextColor(T("TEXT_MUTED"))
+        nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
     table.insert(detailElements, nameHeader)
     yOffset = yOffset - 22
@@ -329,7 +331,7 @@ local function ShowVendorDetail(panels, vendor)
         table.insert(infoParts, vendor.creatureType)
     end
     infoLine:SetText(table.concat(infoParts, "  |  "))
-    infoLine:SetTextColor(T("TEXT_SECONDARY"))
+    infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     table.insert(detailElements, infoLine)
     yOffset = yOffset - 18
 
@@ -347,7 +349,7 @@ local function ShowVendorDetail(panels, vendor)
                 coordStr = string.format(" (%.1f, %.1f)", loc.x, loc.y)
             end
             locLine:SetText(L["VENDORS_LOCATION"] .. ": " .. (loc.zone or "") .. coordStr)
-            locLine:SetTextColor(T("TEXT_SECONDARY"))
+            locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             table.insert(detailElements, locLine)
 
             local wpBtn = ns.UI.CreateButton(nil, parent, L["VENDORS_WAYPOINT"], 50, 16)
@@ -370,7 +372,7 @@ local function ShowVendorDetail(panels, vendor)
     divider:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     divider:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     divider:SetHeight(1)
-    divider:SetColorTexture(T("BORDER_SUBTLE"))
+    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     table.insert(detailElements, divider)
     yOffset = yOffset - 8
 
@@ -389,7 +391,7 @@ local function ShowVendorDetail(panels, vendor)
         table.insert(scanParts, L["VENDORS_SCAN_COUNT"] .. ": " .. vendor.scanCount)
     end
     scanInfo:SetText(table.concat(scanParts, "  |  "))
-    scanInfo:SetTextColor(T("TEXT_MUTED"))
+    scanInfo:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     table.insert(detailElements, scanInfo)
     yOffset = yOffset - 20
 
@@ -401,7 +403,7 @@ local function ShowVendorDetail(panels, vendor)
         for _ in pairs(vendor.items) do itemCount = itemCount + 1 end
     end
     itemsHeader:SetText(L["VENDORS_ITEM_COUNT"] .. ": " .. itemCount)
-    itemsHeader:SetTextColor(T("ACCENT_PRIMARY"))
+    itemsHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     table.insert(detailElements, itemsHeader)
     yOffset = yOffset - 22
 
@@ -426,17 +428,14 @@ local function ShowVendorDetail(panels, vendor)
             itemRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
             itemRow:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
             itemRow:SetHeight(32)
-            itemRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-            itemRow:SetBackdropColor(T("BG_SECONDARY"))
+            itemRow:SetBackdrop(BACKDROP_SIMPLE)
+            itemRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             table.insert(detailElements, itemRow)
 
             local iconFrame = CreateFrame("Frame", nil, itemRow, "BackdropTemplate")
             iconFrame:SetSize(26, 26)
             iconFrame:SetPoint("LEFT", itemRow, "LEFT", 6, 0)
-            iconFrame:SetBackdrop({
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
+            iconFrame:SetBackdrop(BACKDROP_EDGE)
             iconFrame:SetBackdropBorderColor(1, 1, 1, 0.3)
             table.insert(detailElements, iconFrame)
 
@@ -457,7 +456,7 @@ local function ShowVendorDetail(panels, vendor)
             costText:SetPoint("RIGHT", itemRow, "RIGHT", -8, 0)
             costText:SetJustifyH("RIGHT")
             costText:SetText(FormatCost(itemData))
-            costText:SetTextColor(T("TEXT_SECONDARY"))
+            costText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             table.insert(detailElements, costText)
 
             if itemData.limited then
@@ -477,7 +476,7 @@ local function ShowVendorDetail(panels, vendor)
                 iconFrame:SetBackdropBorderColor(unpack(qColor))
             else
                 itemName:SetText(L["VENDORS_LOADING"] .. " (" .. itemID .. ")")
-                itemName:SetTextColor(T("TEXT_MUTED"))
+                itemName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 iconTex:SetTexture(134400)
 
                 if addon and addon.DataLoader then
@@ -495,13 +494,13 @@ local function ShowVendorDetail(panels, vendor)
 
             itemRow:EnableMouse(true)
             itemRow:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(T("BG_HOVER"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 GameTooltip:SetItemByID(itemID)
                 GameTooltip:Show()
             end)
             itemRow:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(T("BG_SECONDARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 GameTooltip:Hide()
             end)
 
@@ -600,9 +599,9 @@ local function RefreshVendorList(panels)
         local btn = CreateVendorListEntry(panels.listScrollChild, vendor, yOffset, function(v)
             for _, b in ipairs(vendorListButtons) do
                 if b.vendor and b.vendor.npcID == v.npcID then
-                    b:SetBackdropColor(T("BG_ACTIVE"))
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 else
-                    b:SetBackdropColor(T("BG_SECONDARY"))
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 end
             end
             ShowVendorDetail(panels, v)
@@ -749,12 +748,12 @@ function ns.UI.CreateVendorsTab(parent)
 
     local emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
-    emptyList:SetTextColor(T("TEXT_MUTED"))
+    emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyList = emptyList
 
     local emptyDetail = panels.detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyDetail:SetPoint("CENTER", panels.detailPanel, "CENTER", 0, 0)
-    emptyDetail:SetTextColor(T("TEXT_MUTED"))
+    emptyDetail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyDetail = emptyDetail
 
     local addon = GetDataAddon()

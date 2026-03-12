@@ -3,12 +3,20 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+
+local backdrop = {
+    bgFile   = "Interface\\Buttons\\WHITE8x8",
+    edgeFile = "Interface\\Buttons\\WHITE8x8",
+    tile = true, tileSize = 16, edgeSize = 1,
+}
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local selectedZone  = nil
 local zoneListItems = {}
@@ -33,18 +41,14 @@ function ns.UI.CreateZonesTab(parent)
     controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(75)
-    controlPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    controlPanel:SetBackdropColor(T("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    controlPanel:SetBackdrop(backdrop)
+    controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["ZONES_CONTROLS"] or "Zones Controls")
-    controlTitle:SetTextColor(T("TEXT_SECONDARY"))
+    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local addZoneBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_ZONE"] or "Add Zone", 100, 25)
     ns.UI.AutoResizeButton(addZoneBtn, 80, 200)
@@ -169,18 +173,14 @@ function ns.UI.CreateZonesTab(parent)
     listingPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 35)
     listingPanel:SetWidth(350)
-    listingPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    listingPanel:SetBackdropColor(T("BG_PRIMARY"))
-    listingPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    listingPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    listingPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    listingPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local listTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     listTitle:SetPoint("TOPLEFT", listingPanel, "TOPLEFT", 10, -10)
     listTitle:SetText(L["TAB_ZONES"] or "Zones")
-    listTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    listTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local scrollData = ns.UI.CreateCustomScroll(listingPanel)
     local listContainer = scrollData.container
@@ -192,34 +192,26 @@ function ns.UI.CreateZonesTab(parent)
     detailPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 35)
-    detailPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    detailPanel:SetBackdropColor(T("BG_PRIMARY"))
-    detailPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    detailPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    detailPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     emptyMessage = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER", 0, 0)
     emptyMessage:SetText(L["ZONES_SELECT_PROMPT"] or "Select a zone to view its content")
-    emptyMessage:SetTextColor(T("TEXT_MUTED"))
+    emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local leftStatusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     leftStatusBar:SetPoint("TOPLEFT", listingPanel, "BOTTOMLEFT", 0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
-    leftStatusBar:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    leftStatusBar:SetBackdropColor(T("BG_SECONDARY"))
-    leftStatusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    leftStatusBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    leftStatusBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    leftStatusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
-    leftStatusText:SetTextColor(T("TEXT_SECONDARY"))
+    leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText("")
 
     local function ShowEditor()
@@ -227,7 +219,7 @@ function ns.UI.CreateZonesTab(parent)
         local zoneData = ns.Zones:GetZone(selectedZone)
         if not zoneData then return end
 
-        if lib then lib:ClearFrame(detailPanel) end
+        if OneWoW_GUI then OneWoW_GUI:ClearFrame(detailPanel) end
         emptyMessage:Hide()
 
         local detailScroll = ns.UI.CreateCustomScroll(detailPanel)
@@ -241,7 +233,7 @@ function ns.UI.CreateZonesTab(parent)
         local zoneTitleFS = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
         zoneTitleFS:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yPos)
         zoneTitleFS:SetText(selectedZone)
-        zoneTitleFS:SetTextColor(T("ACCENT_PRIMARY"))
+        zoneTitleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local propertiesBtn = ns.UI.CreateButton(nil, detailScrollChild, L["ZONE_PROPERTIES"] or "Properties", 100, 22)
         ns.UI.AutoResizeButton(propertiesBtn, 80, 200)
@@ -259,7 +251,7 @@ function ns.UI.CreateZonesTab(parent)
         colorBar:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yPos)
         colorBar:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yPos)
         colorBar:SetHeight(4)
-        colorBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        colorBar:SetBackdrop(BACKDROP_SIMPLE)
         colorBar:SetBackdropColor(pinR, pinG, pinB, 1)
 
         yPos = yPos - 14
@@ -269,7 +261,7 @@ function ns.UI.CreateZonesTab(parent)
         local catText = zoneData.category or "General"
         local storeText = zoneData.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Character") or (L["STORAGE_ACCOUNT_WIDE"] or "Account")
         infoLine:SetText(catText .. "  |  " .. storeText)
-        infoLine:SetTextColor(T("TEXT_MUTED"))
+        infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         if zoneData.mapID then
             local mapInfo = C_Map.GetMapInfo(zoneData.mapID)
@@ -277,19 +269,19 @@ function ns.UI.CreateZonesTab(parent)
                 local mapLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 mapLabel:SetPoint("LEFT", infoLine, "RIGHT", 10, 0)
                 mapLabel:SetText("Map: " .. mapInfo.name .. " (" .. zoneData.mapID .. ")")
-                mapLabel:SetTextColor(T("TEXT_MUTED"))
+                mapLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
         end
 
         yPos = yPos - 20
 
-        lib:CreateDivider(detailScrollChild, yPos)
+        OneWoW_GUI:CreateDivider(detailScrollChild, yPos)
         yPos = yPos - 10
 
         local contentLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         contentLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yPos)
         contentLabel:SetText(L["LABEL_NOTE_CONTENT"] or "Note Content")
-        contentLabel:SetTextColor(T("TEXT_SECONDARY"))
+        contentLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local pinBtn = ns.UI.CreateButton(nil, detailScrollChild, L["ZONE_PIN_BUTTON"] or "Pin", 60, 22)
         ns.UI.AutoResizeButton(pinBtn, 50, 120)
@@ -307,30 +299,28 @@ function ns.UI.CreateZonesTab(parent)
             if not selectedZone then return end
             local zName = selectedZone
 
-            if lib then
-                local confirmResult = lib:CreateConfirmDialog({
-                    name = "OneWoW_NotesDeleteZoneConfirm",
-                    title = L["DIALOG_CONFIRM_DELETE"] or "Confirm Delete",
-                    message = string.format(L["ZONE_CONFIRM_DELETE"] or "Delete zone: %s?", zName),
-                    buttons = {
-                        {
-                            text = L["BUTTON_DELETE"] or "Delete",
-                            color = {0.8, 0.2, 0.2},
-                            onClick = function(dlg)
-                                if ns.ZonePins then ns.ZonePins:RemovePin(zName) end
-                                if ns.Zones then ns.Zones:RemoveZone(zName) end
-                                selectedZone = nil
-                                if lib then lib:ClearFrame(detailPanel) end
-                                emptyMessage:Show()
-                                parent.RefreshZonesList()
-                                dlg:Hide()
-                            end,
-                        },
-                        { text = L["BUTTON_CANCEL"] or "Cancel", onClick = function(dlg) dlg:Hide() end },
+            local confirmResult = OneWoW_GUI:CreateConfirmDialog({
+                name = "OneWoW_NotesDeleteZoneConfirm",
+                title = L["DIALOG_CONFIRM_DELETE"] or "Confirm Delete",
+                message = string.format(L["ZONE_CONFIRM_DELETE"] or "Delete zone: %s?", zName),
+                buttons = {
+                    {
+                        text = L["BUTTON_DELETE"] or "Delete",
+                        color = {0.8, 0.2, 0.2},
+                        onClick = function(dlg)
+                            if ns.ZonePins then ns.ZonePins:RemovePin(zName) end
+                            if ns.Zones then ns.Zones:RemoveZone(zName) end
+                            selectedZone = nil
+                            OneWoW_GUI:ClearFrame(detailPanel)
+                            emptyMessage:Show()
+                            parent.RefreshZonesList()
+                            dlg:Hide()
+                        end,
                     },
-                })
-                confirmResult.frame:Show()
-            end
+                    { text = L["BUTTON_CANCEL"] or "Cancel", onClick = function(dlg) dlg:Hide() end },
+                },
+            })
+            confirmResult.frame:Show()
         end)
 
         yPos = yPos - 24
@@ -339,13 +329,9 @@ function ns.UI.CreateZonesTab(parent)
         noteBg:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yPos)
         noteBg:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -10, yPos)
         noteBg:SetHeight(200)
-        noteBg:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        noteBg:SetBackdropColor(T("BG_SECONDARY"))
-        noteBg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        noteBg:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        noteBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        noteBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
         noteScroll:SetPoint("TOPLEFT", noteBg, "TOPLEFT", 4, -4)
@@ -385,7 +371,7 @@ function ns.UI.CreateZonesTab(parent)
 
         yPos = yPos - 210
 
-        lib:CreateDivider(detailScrollChild, yPos)
+        OneWoW_GUI:CreateDivider(detailScrollChild, yPos)
         yPos = yPos - 10
 
         todoContainer = CreateFrame("Frame", nil, detailScrollChild)
@@ -395,7 +381,7 @@ function ns.UI.CreateZonesTab(parent)
         local todoLabel = todoContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         todoLabel:SetPoint("TOPLEFT", todoContainer, "TOPLEFT", 0, 0)
         todoLabel:SetText(L["ZONE_TODO_HEADER"] or "Checklist")
-        todoLabel:SetTextColor(T("TEXT_SECONDARY"))
+        todoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local addTodoBtn = ns.UI.CreateButton(nil, todoContainer, "+", 22, 22)
         addTodoBtn:SetPoint("LEFT", todoLabel, "RIGHT", 6, 0)
@@ -415,13 +401,9 @@ function ns.UI.CreateZonesTab(parent)
             todoRow:SetPoint("TOPLEFT", todoContainer, "TOPLEFT", 0, todoY)
             todoRow:SetPoint("TOPRIGHT", todoContainer, "TOPRIGHT", 0, todoY)
             todoRow:SetHeight(26)
-            todoRow:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
-            todoRow:SetBackdropColor(T("BG_SECONDARY"))
-            todoRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            todoRow:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+            todoRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            todoRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local cb = CreateFrame("CheckButton", nil, todoRow, "UICheckButtonTemplate")
             cb:SetSize(20, 20)
@@ -440,7 +422,7 @@ function ns.UI.CreateZonesTab(parent)
             todoInput:SetPoint("RIGHT", todoRow, "RIGHT", -30, 0)
             todoInput:SetHeight(20)
             todoInput:SetFontObject("GameFontNormal")
-            todoInput:SetTextColor(T("TEXT_PRIMARY"))
+            todoInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             todoInput:SetAutoFocus(false)
             todoInput:SetText(todo.text or "")
             todoInput:SetScript("OnEnterPressed", function(self)
@@ -454,7 +436,7 @@ function ns.UI.CreateZonesTab(parent)
             todoInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 
             if todo.done then
-                todoInput:SetTextColor(T("TEXT_MUTED"))
+                todoInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
 
             local removeBtn = CreateFrame("Button", nil, todoRow)
@@ -528,7 +510,7 @@ function ns.UI.CreateZonesTab(parent)
         end
 
         local function CreateSectionHeader(title, yOfs)
-            local section = lib:CreateSectionHeader(scrollChild, title, yOfs)
+            local section = OneWoW_GUI:CreateSectionHeader(scrollChild, title, yOfs)
             table.insert(zoneListItems, section)
             return section
         end
@@ -542,13 +524,9 @@ function ns.UI.CreateZonesTab(parent)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, yOfs)
             row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -8, yOfs)
             row:SetHeight(50)
-            row:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
+            row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
             row:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
-            row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local colorStrip = row:CreateTexture(nil, "ARTWORK")
             colorStrip:SetSize(4, 46)
@@ -560,18 +538,18 @@ function ns.UI.CreateZonesTab(parent)
             titleFS:SetPoint("TOPRIGHT", row, "TOPRIGHT", -80, -6)
             titleFS:SetJustifyH("LEFT")
             titleFS:SetText(zone.name)
-            titleFS:SetTextColor(T("TEXT_PRIMARY"))
+            titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local catFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             catFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 12, 6)
             catFS:SetText(zone.data.category or "General")
-            catFS:SetTextColor(T("TEXT_MUTED"))
+            catFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local storageFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             storageFS:SetPoint("LEFT", catFS, "RIGHT", 8, 0)
             local stText = zone.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Char") or (L["STORAGE_ACCOUNT_WIDE"] or "Acct")
             storageFS:SetText(stText)
-            storageFS:SetTextColor(T("TEXT_MUTED"))
+            storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local alertBtn = CreateFrame("Button", nil, row)
             alertBtn:SetSize(18, 18)
@@ -675,70 +653,39 @@ local function MakeZoneLabel(parent, text, x, y)
     local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     lbl:SetText(text)
-    lbl:SetTextColor(T("TEXT_SECONDARY"))
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     return lbl
 end
 
 local function MakeZoneInput(parent, x, y, w)
-    if lib then
-        local box = lib:CreateEditBox(nil, parent, {
-            width = w,
-            height = 26,
-            placeholderText = "",
-        })
-        box:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-        box:SetText("")
-        box:SetTextColor(T("TEXT_PRIMARY"))
-        box:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-        box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-        box:SetScript("OnEditFocusGained", function(self)
-            self:SetTextColor(T("TEXT_PRIMARY"))
-        end)
-        box:SetScript("OnEditFocusLost", function(self)
-            if self:GetText() == "" then
-                self:SetTextColor(T("TEXT_MUTED"))
-            end
-        end)
-        return box
-    end
-    local input = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
-    input:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    input:SetSize(w, 26)
-    input:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    input:SetBackdropColor(T("BG_SECONDARY"))
-    input:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    input:SetFontObject("GameFontNormal")
-    input:SetTextColor(T("TEXT_PRIMARY"))
-    input:SetTextInsets(6, 6, 4, 4)
-    input:SetAutoFocus(false)
-    input:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    input:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    return input
+    local box = OneWoW_GUI:CreateEditBox(nil, parent, {
+        width = w,
+        height = 26,
+        placeholderText = "",
+    })
+    box:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
+    box:SetText("")
+    box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    box:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    box:SetScript("OnEditFocusGained", function(self)
+        self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end)
+    box:SetScript("OnEditFocusLost", function(self)
+        if self:GetText() == "" then
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    end)
+    return box
 end
 
 local function MakeZoneSlider(parent, name, x, y, w, minV, maxV, defV, fmt)
-    if lib then
-        local step = (fmt == "pct") and 0.05 or 1
-        local fmtStr = (fmt == "pct") and "%d%%" or "%d"
-        local currentDisplay = defV
-        local container = lib:CreateSlider(parent, minV, maxV, step, defV, function() end, w, fmtStr)
-        container:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-        return container, nil, container
-    end
-    local slider = CreateFrame("Slider", name, parent, "OptionsSliderTemplate")
-    slider:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    slider:SetWidth(w)
-    slider:SetMinMaxValues(minV, maxV)
-    slider:SetValue(defV)
-    slider:SetValueStep(fmt == "pct" and 0.05 or 1)
-    slider:SetObeyStepOnDrag(true)
-    local lo  = _G[name .. "Low"]
-    local hi  = _G[name .. "High"]
-    local txt = _G[name .. "Text"]
-    if lo  then lo:SetText(fmt == "pct" and (math.floor(minV * 100) .. "%") or tostring(math.floor(minV))) end
-    if hi  then hi:SetText(fmt == "pct" and (math.floor(maxV * 100) .. "%") or tostring(math.floor(maxV))) end
-    if txt then txt:SetText(fmt == "pct" and (math.floor(defV * 100 + 0.5) .. "%") or tostring(math.floor(defV + 0.5))) end
-    return slider, txt
+    local step = (fmt == "pct") and 0.05 or 1
+    local fmtStr = (fmt == "pct") and "%d%%" or "%d"
+    local currentDisplay = defV
+    local container = OneWoW_GUI:CreateSlider(parent, minV, maxV, step, defV, function() end, w, fmtStr)
+    container:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
+    return container, nil, container
 end
 
 function ns.UI.ShowManualZoneEntryDialog(refreshParent)
@@ -822,7 +769,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     local validationFS = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     validationFS:SetPoint("LEFT", validateBtn, "RIGHT", 8, 0)
     validationFS:SetText(L["ZONE_VALIDATE_HINT"] or "Enter ID & click Validate")
-    validationFS:SetTextColor(T("TEXT_MUTED"))
+    validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     validateBtn:SetScript("OnClick", function()
         local mapID = tonumber(mapIDInput:GetText())
@@ -978,13 +925,9 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     local noteBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
     noteBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X, yPos)
     noteBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
-    noteBg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    noteBg:SetBackdropColor(T("BG_SECONDARY"))
-    noteBg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    noteBg:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    noteBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    noteBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
@@ -1093,7 +1036,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         end
     else
         validationFS:SetText(L["ZONE_VALIDATE_HINT"] or "Enter ID & click Validate")
-        validationFS:SetTextColor(T("TEXT_MUTED"))
+        validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
     validateBtn:SetScript("OnClick", function()
@@ -1267,13 +1210,9 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     local noteBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
     noteBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X, yPos)
     noteBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
-    noteBg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    noteBg:SetBackdropColor(T("BG_SECONDARY"))
-    noteBg:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    noteBg:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    noteBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    noteBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)

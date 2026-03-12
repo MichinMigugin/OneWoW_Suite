@@ -3,14 +3,14 @@ local ADDON_NAME, OneWoW = ...
 local GUI = OneWoW.GUI
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
-local function T(key) return OneWoW_GUI:GetThemeColor(key) end
-local function S(key) return OneWoW_GUI:GetSpacing(key) end
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 function GUI:CreateSettingsMainTab(parent)
     local L = OneWoW.L or {}
 
-    local scrollFrame, content = GUI:CreateScrollFrame("OneWoW_SettingsScroll", parent)
+    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame("OneWoW_SettingsScroll", parent)
     content:SetHeight(800)
 
     local yOffset = -10
@@ -23,47 +23,43 @@ function GUI:CreateSettingsMainTab(parent)
     linksContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
     linksContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
     linksContainer:SetHeight(120)
-    linksContainer:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    linksContainer:SetBackdropColor(T("BG_SECONDARY"))
-    linksContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    linksContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    linksContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    linksContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local linksTitle = linksContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     linksTitle:SetPoint("TOPLEFT", linksContainer, "TOPLEFT", 15, -12)
     linksTitle:SetText(L["LINKS_SECTION"] or "Support & Community")
-    linksTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    linksTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local discordLinkLabel = linksContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     discordLinkLabel:SetPoint("TOPLEFT", linksContainer, "TOPLEFT", 15, -40)
     discordLinkLabel:SetText(L["DISCORD_LABEL"] or "Discord")
-    discordLinkLabel:SetTextColor(T("TEXT_SECONDARY"))
+    discordLinkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local discordLinkBox = GUI:CreateEditBox("OneWoW_SettingsDiscord", linksContainer, 300, 24)
-    discordLinkBox:SetPoint("LEFT", discordLinkLabel, "RIGHT", S("SM"), 0)
+    discordLinkBox:SetPoint("LEFT", discordLinkLabel, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     discordLinkBox:SetText(L["DISCORD_URL"] or "https://discord.gg/6vnabDVnDu")
     discordLinkBox:SetAutoFocus(false)
     discordLinkBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
     discordLinkBox:SetScript("OnEditFocusLost", function(self)
         self:HighlightText(0, 0)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
     local websiteLinkLabel = linksContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     websiteLinkLabel:SetPoint("TOPLEFT", linksContainer, "TOPLEFT", 15, -72)
     websiteLinkLabel:SetText(L["WEBSITE_LABEL"] or "Website")
-    websiteLinkLabel:SetTextColor(T("TEXT_SECONDARY"))
+    websiteLinkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local websiteLinkBox = GUI:CreateEditBox("OneWoW_SettingsWebsite", linksContainer, 300, 24)
-    websiteLinkBox:SetPoint("LEFT", websiteLinkLabel, "RIGHT", S("SM"), 0)
+    websiteLinkBox:SetPoint("LEFT", websiteLinkLabel, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     websiteLinkBox:SetText(L["WEBSITE_URL"] or "https://wow2.xyz/")
     websiteLinkBox:SetAutoFocus(false)
     websiteLinkBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
     websiteLinkBox:SetScript("OnEditFocusLost", function(self)
         self:HighlightText(0, 0)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
     yOffset = yOffset - 140
@@ -72,28 +68,24 @@ function GUI:CreateSettingsMainTab(parent)
     resetContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
     resetContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
     resetContainer:SetHeight(90)
-    resetContainer:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    resetContainer:SetBackdropColor(T("BG_SECONDARY"))
-    resetContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    resetContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    resetContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    resetContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local resetTitle = resetContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     resetTitle:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -12)
     resetTitle:SetText(L["RESET_UI_SECTION"] or "Window Layout")
-    resetTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    resetTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local resetDesc = resetContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     resetDesc:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -38)
     resetDesc:SetPoint("TOPRIGHT", resetContainer, "TOPRIGHT", -15, -38)
     resetDesc:SetText(L["RESET_UI_DESC"] or "Reset the OneWoW window to its default size and position.")
-    resetDesc:SetTextColor(T("TEXT_SECONDARY"))
+    resetDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     resetDesc:SetJustifyH("LEFT")
     resetDesc:SetWordWrap(true)
 
-    local resetBtn = GUI:CreateButton("OneWoW_ResetUIBtn", resetContainer, L["RESET_UI_BTN"] or "Reset Window", 160, 28)
+    local resetBtn = OneWoW_GUI:CreateButton("OneWoW_ResetUIBtn", resetContainer, L["RESET_UI_BTN"] or "Reset Window", 160, 28)
     resetBtn:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -58)
     resetBtn:SetScript("OnClick", function()
         GUI:ResetUIToDefaults()

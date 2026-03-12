@@ -1,10 +1,10 @@
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 -- APIs removed, using direct DB access
-
 
 ns.UI = ns.UI or {}
 
@@ -55,7 +55,7 @@ function ns.UI.RefreshBankTab(bankTab)
         charRow:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -10, yOffset)
         charRow:SetHeight(rowHeight)
         charRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
-        charRow:SetBackdropColor(T("BG_TERTIARY"))
+        charRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         charRow.charKey = charKey
         charRow.cells = {}
 
@@ -80,17 +80,17 @@ function ns.UI.RefreshBankTab(bankTab)
                     charRow.expandedFrame:SetPoint("TOPRIGHT", charRow, "BOTTOMRIGHT", 0, -2)
                     charRow.expandedFrame:SetHeight(80)
                     charRow.expandedFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
-                    charRow.expandedFrame:SetBackdropColor(T("BG_SECONDARY"))
+                    charRow.expandedFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
                     local leftCol = charRow.expandedFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                     leftCol:SetPoint("LEFT", charRow.expandedFrame, "LEFT", 15, 0)
                     leftCol:SetJustifyH("LEFT")
-                    leftCol:SetTextColor(T("TEXT_PRIMARY"))
+                    leftCol:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
                     local rightCol = charRow.expandedFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                     rightCol:SetPoint("LEFT", charRow.expandedFrame, "CENTER", 15, 0)
                     rightCol:SetJustifyH("LEFT")
-                    rightCol:SetTextColor(T("TEXT_PRIMARY"))
+                    rightCol:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
                     local bagsData = StorageAPI.GetBags(charKey)
                     local bankData = StorageAPI.GetPersonalBank(charKey)
@@ -196,7 +196,7 @@ function ns.UI.RefreshBankTab(bankTab)
 
         local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         levelText:SetText(tostring(charData.level or 0))
-        levelText:SetTextColor(T("TEXT_PRIMARY"))
+        levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, levelText)
 
         local bagsText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -329,11 +329,11 @@ function ns.UI.RefreshBankTab(bankTab)
 
         charRow:EnableMouse(true)
         charRow:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         end)
 
         charRow:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         end)
 
         charRow:SetScript("OnMouseDown", function(self, button)

@@ -3,9 +3,9 @@ local ADDON_NAME, OneWoW = ...
 local GUI = OneWoW.GUI
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
-local function T(key) return OneWoW_GUI:GetThemeColor(key) end
-local function S(key) return OneWoW_GUI:GetSpacing(key) end
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local STATUS_TEX_OK   = "Interface\\RaidFrame\\ReadyCheck-Ready"
 local STATUS_TEX_WARN = "Interface\\RaidFrame\\ReadyCheck-Waiting"
@@ -24,11 +24,6 @@ local function GetAddonStatus(addonName)
         return "warning", reason
     end
     return "enabled", nil
-end
-
-local function GetAddonVersion(addonName)
-    if not C_AddOns.DoesAddOnExist(addonName) then return nil end
-    return C_AddOns.GetAddOnMetadata(addonName, "Version")
 end
 
 local function GetReasonText(reason)
@@ -98,7 +93,7 @@ function GUI:CreateHomeTab(parent)
     local function CreateModuleRow(panel, localeKey, displayName, addonName, rowY, cascadeAddons, noButton)
         local status, reason = GetAddonStatus(addonName)
         local localizedName  = L[localeKey] or displayName
-        local version        = GetAddonVersion(addonName)
+        local version        = OneWoW_GUI:GetAddonVersion(addonName)
 
         local light = panel:CreateTexture(nil, "ARTWORK")
         light:SetSize(14, 14)
@@ -141,16 +136,16 @@ function GUI:CreateHomeTab(parent)
         nameText:SetText(localizedName)
         nameText:SetJustifyH("LEFT")
         if status == "not_found" then
-            nameText:SetTextColor(T("TEXT_MUTED"))
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         else
-            nameText:SetTextColor(T("TEXT_PRIMARY"))
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         if version then
             local verText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             verText:SetPoint("LEFT", nameText, "RIGHT", 4, 0)
             verText:SetText(version)
-            verText:SetTextColor(T("TEXT_MUTED"))
+            verText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
         if not noButton then
@@ -159,7 +154,7 @@ function GUI:CreateHomeTab(parent)
             local dialogKey  = isActive and "ONEWOW_CONFIRM_DISABLE_ADDON" or "ONEWOW_CONFIRM_ENABLE_ADDON"
             local confirmKey = isActive and "HOME_ADDON_DISABLE_CONFIRM" or "HOME_ADDON_ENABLE_CONFIRM"
 
-            local toggleBtn = GUI:CreateButton(nil, panel, btnLabel, 90, 20)
+            local toggleBtn = OneWoW_GUI:CreateButton(nil, panel, btnLabel, 90, 20)
             toggleBtn:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, rowY - 2)
 
             if status == "not_found" then
@@ -173,7 +168,7 @@ function GUI:CreateHomeTab(parent)
         end
     end
 
-    local scrollFrame, content = GUI:CreateScrollFrame("OneWoW_HomeScroll", parent)
+    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame("OneWoW_HomeScroll", parent)
     content:SetHeight(1200)
 
     local yOffset = -30
@@ -186,15 +181,15 @@ function GUI:CreateHomeTab(parent)
 
     local versionLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     versionLabel:SetPoint("TOP", content, "TOP", 0, yOffset)
-    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"] or "Version") .. " " .. (GetAddonVersion("OneWoW") or ""))
-    versionLabel:SetTextColor(T("TEXT_PRIMARY"))
+    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"] or "Version") .. " " .. (OneWoW_GUI:GetAddonVersion("OneWoW") or ""))
+    versionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 35
 
     local divider1 = content:CreateTexture(nil, "ARTWORK")
     divider1:SetHeight(1)
     divider1:SetPoint("TOPLEFT", content, "TOPLEFT", 40, yOffset)
     divider1:SetPoint("TOPRIGHT", content, "TOPRIGHT", -40, yOffset)
-    divider1:SetColorTexture(T("BORDER_SUBTLE"))
+    divider1:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOffset = yOffset - 20
 
     local discordRow = CreateFrame("Frame", nil, content)
@@ -205,10 +200,10 @@ function GUI:CreateHomeTab(parent)
     local discordLabel = discordRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     discordLabel:SetPoint("LEFT", discordRow, "LEFT", 0, 0)
     discordLabel:SetText((L["HOME_DISCORD"] or "Discord") .. ":")
-    discordLabel:SetTextColor(T("TEXT_SECONDARY"))
+    discordLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local discordBox = GUI:CreateEditBox("OneWoW_DiscordLink", discordRow, 350, 24)
-    discordBox:SetPoint("LEFT", discordLabel, "RIGHT", S("SM"), 0)
+    discordBox:SetPoint("LEFT", discordLabel, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     discordBox:SetText(L["HOME_DISCORD_LINK"] or "https://discord.gg/6vnabDVnDu")
     discordBox:SetAutoFocus(false)
     discordBox:SetScript("OnEditFocusGained", function(self)
@@ -216,16 +211,16 @@ function GUI:CreateHomeTab(parent)
     end)
     discordBox:SetScript("OnEditFocusLost", function(self)
         self:HighlightText(0, 0)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
     local supportLabel = discordRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     supportLabel:SetPoint("RIGHT", discordRow, "RIGHT", -358, 0)
     supportLabel:SetText((L["HOME_SUPPORT"] or "Support OneWoW") .. ":")
-    supportLabel:SetTextColor(T("TEXT_SECONDARY"))
+    supportLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local supportBox = GUI:CreateEditBox("OneWoW_SupportLink", discordRow, 350, 24)
-    supportBox:SetPoint("LEFT", supportLabel, "RIGHT", S("SM"), 0)
+    supportBox:SetPoint("LEFT", supportLabel, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     supportBox:SetText(L["HOME_SUPPORT_LINK"] or "https://buymeacoffee.com/migugin")
     supportBox:SetAutoFocus(false)
     supportBox:SetScript("OnEditFocusGained", function(self)
@@ -233,7 +228,7 @@ function GUI:CreateHomeTab(parent)
     end)
     supportBox:SetScript("OnEditFocusLost", function(self)
         self:HighlightText(0, 0)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
     yOffset = yOffset - 38
@@ -242,46 +237,38 @@ function GUI:CreateHomeTab(parent)
     thanksBar:SetPoint("TOPLEFT",  content, "TOPLEFT",  10, yOffset)
     thanksBar:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
     thanksBar:SetHeight(30)
-    thanksBar:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    thanksBar:SetBackdropColor(T("BG_SECONDARY"))
-    thanksBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    thanksBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    thanksBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    thanksBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local thanksTitle = thanksBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     thanksTitle:SetPoint("LEFT", thanksBar, "LEFT", 15, 0)
     thanksTitle:SetText(L["HOME_SPECIAL_THANKS"] or "Special Thanks")
-    thanksTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    thanksTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local thanksNames = thanksBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     thanksNames:SetPoint("LEFT", thanksTitle, "RIGHT", 12, 0)
     thanksNames:SetText(L["HOME_THANKS_NAMES"] or "Name 1, Name 2, Name 3")
-    thanksNames:SetTextColor(T("TEXT_SECONDARY"))
+    thanksNames:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     yOffset = yOffset - 42
 
     local splitContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
     splitContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
     splitContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    splitContainer:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    splitContainer:SetBackdropColor(T("BG_SECONDARY"))
-    splitContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    splitContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    splitContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    splitContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local modHDiv = splitContainer:CreateTexture(nil, "ARTWORK")
     modHDiv:SetHeight(1)
     modHDiv:SetPoint("TOPLEFT",  splitContainer, "TOPLEFT",  8, -36)
     modHDiv:SetPoint("TOPRIGHT", splitContainer, "TOPRIGHT", -8, -36)
-    modHDiv:SetColorTexture(T("BORDER_SUBTLE"))
+    modHDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local modVDiv = splitContainer:CreateTexture(nil, "ARTWORK")
     modVDiv:SetWidth(1)
-    modVDiv:SetColorTexture(T("BORDER_SUBTLE"))
+    modVDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local leftPanel  = CreateFrame("Frame", nil, splitContainer)
     local rightPanel = CreateFrame("Frame", nil, splitContainer)
@@ -312,7 +299,7 @@ function GUI:CreateHomeTab(parent)
     local detectedTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     detectedTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -12)
     detectedTitle:SetText(L["HOME_DETECTED_MODULES"])
-    detectedTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    detectedTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local modY = -38
     CreateModuleRow(leftPanel, "MODULE_ONEWOW", "OneWoW", "OneWoW", modY, nil, true)
@@ -337,13 +324,13 @@ function GUI:CreateHomeTab(parent)
     leftSectDiv:SetHeight(1)
     leftSectDiv:SetPoint("TOPLEFT",  leftPanel, "TOPLEFT",  8, leftSectDivY)
     leftSectDiv:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -8, leftSectDivY)
-    leftSectDiv:SetColorTexture(T("BORDER_SUBTLE"))
+    leftSectDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local utilTitleY = leftSectDivY - 18
     local utilTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     utilTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, utilTitleY)
     utilTitle:SetText(L["HOME_UTILITIES"])
-    utilTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    utilTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local utilitiesChecks = {
         { key = "MODULE_DEVTOOLS",  displayName = "DevTools",  addonName = "OneWoW_Utility_DevTool" },
@@ -361,14 +348,14 @@ function GUI:CreateHomeTab(parent)
     local dataTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     dataTitle:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -12)
     dataTitle:SetText(L["HOME_DETECTED_DATA_MODULES"])
-    dataTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    dataTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local rightY = -38
 
     local atSubHeader = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     atSubHeader:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, rightY)
     atSubHeader:SetText(L["HOME_ALTTRACKER_MODULES"])
-    atSubHeader:SetTextColor(T("TEXT_SECONDARY"))
+    atSubHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightY = rightY - 22
 
     local dataModuleChecks = {
@@ -391,13 +378,13 @@ function GUI:CreateHomeTab(parent)
     rightSectDiv:SetHeight(1)
     rightSectDiv:SetPoint("TOPLEFT",  rightPanel, "TOPLEFT",  8, rightSectDivY)
     rightSectDiv:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -8, rightSectDivY)
-    rightSectDiv:SetColorTexture(T("BORDER_SUBTLE"))
+    rightSectDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local catSubHeaderY = rightSectDivY - 18
     local catSubHeader = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     catSubHeader:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, catSubHeaderY)
     catSubHeader:SetText(L["HOME_CATALOG_DATA_MODULES"])
-    catSubHeader:SetTextColor(T("TEXT_SECONDARY"))
+    catSubHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightY = catSubHeaderY - 22
 
     local catalogDataChecks = {
@@ -421,30 +408,26 @@ function GUI:CreateHomeTab(parent)
     local cmdContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
     cmdContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
     cmdContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    cmdContainer:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    cmdContainer:SetBackdropColor(T("BG_SECONDARY"))
-    cmdContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    cmdContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    cmdContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    cmdContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local cmdTitle = cmdContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     cmdTitle:SetPoint("TOPLEFT", cmdContainer, "TOPLEFT", 15, -12)
     cmdTitle:SetText(L["HOME_COMMANDS"] or "Available Commands")
-    cmdTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    cmdTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local cmdHDiv = cmdContainer:CreateTexture(nil, "ARTWORK")
     cmdHDiv:SetHeight(1)
     cmdHDiv:SetPoint("TOPLEFT",  cmdContainer, "TOPLEFT",  8, -36)
     cmdHDiv:SetPoint("TOPRIGHT", cmdContainer, "TOPRIGHT", -8, -36)
-    cmdHDiv:SetColorTexture(T("BORDER_SUBTLE"))
+    cmdHDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local cmdVDiv = cmdContainer:CreateTexture(nil, "ARTWORK")
     cmdVDiv:SetWidth(1)
     cmdVDiv:SetPoint("TOP",    cmdContainer, "TOP",    0, -40)
     cmdVDiv:SetPoint("BOTTOM", cmdContainer, "BOTTOM", 0, 8)
-    cmdVDiv:SetColorTexture(T("BORDER_SUBTLE"))
+    cmdVDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local cmdLeft = CreateFrame("Frame", nil, cmdContainer)
     cmdLeft:SetPoint("TOPLEFT",    cmdContainer, "TOPLEFT", 0, -40)
@@ -461,11 +444,11 @@ function GUI:CreateHomeTab(parent)
                 local hdr = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 hdr:SetPoint("TOPLEFT", panel, "TOPLEFT", 15, pY)
                 hdr:SetText(set.header)
-                hdr:SetTextColor(T("TEXT_MUTED"))
+                hdr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 local soon = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 soon:SetPoint("LEFT", hdr, "RIGHT", 6, 0)
                 soon:SetText("(" .. (L["HOME_MINIMAP_PLACEHOLDER"] or "Coming Soon") .. ")")
-                soon:SetTextColor(T("TEXT_MUTED"))
+                soon:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 pY = pY - 26
             else
                 local show = set.always or (_G[set.global] ~= nil)
@@ -473,17 +456,17 @@ function GUI:CreateHomeTab(parent)
                     local hdr = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     hdr:SetPoint("TOPLEFT", panel, "TOPLEFT", 15, pY)
                     hdr:SetText(set.header)
-                    hdr:SetTextColor(T("ACCENT_PRIMARY"))
+                    hdr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     pY = pY - 18
                     for _, cmdInfo in ipairs(set.commands) do
                         local cmdText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                         cmdText:SetPoint("TOPLEFT", panel, "TOPLEFT", 30, pY)
                         cmdText:SetText("|cFFFFFFFF" .. cmdInfo.cmd .. "|r")
-                        cmdText:SetTextColor(T("TEXT_PRIMARY"))
+                        cmdText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                         local descText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                         descText:SetPoint("TOPLEFT", panel, "TOPLEFT", 210, pY)
                         descText:SetText("- " .. cmdInfo.desc)
-                        descText:SetTextColor(T("TEXT_SECONDARY"))
+                        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                         pY = pY - 20
                     end
                     pY = pY - 8

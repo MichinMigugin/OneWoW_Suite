@@ -2,9 +2,8 @@ local addonName, ns = ...
 ns.UI = ns.UI or {}
 ns.UI.Dialog = {}
 
-local T = ns.T
-local S = ns.S
-local lib = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI.Dialog.openDialogs = ns.UI.Dialog.openDialogs or {}
 ns.UI.Dialog.currentFrameLevel = ns.UI.Dialog.currentFrameLevel or 100
@@ -146,16 +145,16 @@ function ns.UI.Dialog.Create(config)
         local contentBottom = 0
         local content1Height = config.content1Height or math.floor(contentParent:GetHeight() / 2) - 5
 
-        local content1 = lib:CreateFrame(nil, contentParent, contentParent:GetWidth() - 8, content1Height)
+        local content1 = OneWoW_GUI:CreateFrame(nil, contentParent, contentParent:GetWidth() - 8, content1Height)
         content1:ClearAllPoints()
         content1:SetPoint("TOPLEFT", contentParent, "TOPLEFT", 4, -4)
         content1:SetPoint("TOPRIGHT", contentParent, "TOPRIGHT", -4, -4)
         content1:SetHeight(content1Height)
         content1:SetClipsChildren(true)
 
-        local content2 = lib:CreateFrame(nil, contentParent, contentParent:GetWidth() - 8, 100)
+        local content2 = OneWoW_GUI:CreateFrame(nil, contentParent, contentParent:GetWidth() - 8, 100)
         content2:ClearAllPoints()
-        content2:SetPoint("TOPLEFT", content1, "BOTTOMLEFT", 0, -S("SM"))
+        content2:SetPoint("TOPLEFT", content1, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("SM"))
         content2:SetPoint("BOTTOMRIGHT", contentParent, "BOTTOMRIGHT", -4, 4)
         content2:SetClipsChildren(true)
 

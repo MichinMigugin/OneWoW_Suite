@@ -3,12 +3,13 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 
 ns.UI = ns.UI or {}
-
-local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local selectedNPC   = nil
 local npcListItems  = {}
@@ -32,16 +33,16 @@ local BACKDROP_STANDARD = {
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     f:SetBackdrop(BACKDROP_STANDARD)
-    f:SetBackdropColor(T("BG_PRIMARY"))
-    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
 end
 
 local function CreateThemedBar(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     f:SetBackdrop(BACKDROP_STANDARD)
-    f:SetBackdropColor(T("BG_SECONDARY"))
-    f:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
 end
 
@@ -54,7 +55,7 @@ function ns.UI.CreateNPCsTab(parent)
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["NPCS_CONTROLS"] or "NPCs Controls")
-    controlTitle:SetTextColor(T("TEXT_SECONDARY"))
+    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local addTargetBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_TARGET"] or "Add Target", 100, 25)
     ns.UI.AutoResizeButton(addTargetBtn, 80, 200)
@@ -185,7 +186,7 @@ function ns.UI.CreateNPCsTab(parent)
     local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
     listingTitle:SetText(L["NPCS_LIST"] or "NPCs")
-    listingTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
     scrollFrame = listScroll.scrollFrame
@@ -210,7 +211,7 @@ function ns.UI.CreateNPCsTab(parent)
 
     leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
-    leftStatusText:SetTextColor(T("TEXT_SECONDARY"))
+    leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NPCS"], 0))
 
     local rightStatusBar = CreateThemedBar(nil, parent)
@@ -220,7 +221,7 @@ function ns.UI.CreateNPCsTab(parent)
 
     local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
-    rightStatusText:SetTextColor(T("TEXT_SECONDARY"))
+    rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
 
     local function ShowEditor()
@@ -238,11 +239,8 @@ function ns.UI.CreateNPCsTab(parent)
             local portraitFrame = CreateFrame("Frame", nil, editorHeader, "BackdropTemplate")
             portraitFrame:SetSize(60, 60)
             portraitFrame:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 10, -10)
-            portraitFrame:SetBackdrop({
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
-            portraitFrame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+            portraitFrame:SetBackdrop(BACKDROP_EDGE)
+            portraitFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
             local portrait = CreateFrame("PlayerModel", nil, portraitFrame)
             portrait:SetAllPoints(portraitFrame)
@@ -256,25 +254,25 @@ function ns.UI.CreateNPCsTab(parent)
             nameText:SetPoint("TOPRIGHT", editorHeader,  "TOPRIGHT",   -100, 0)
             nameText:SetJustifyH("LEFT")
             nameText:SetText("")
-            nameText:SetTextColor(T("ACCENT_PRIMARY"))
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             editorHeader.nameText = nameText
 
             local idText = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             idText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -4)
             idText:SetText("")
-            idText:SetTextColor(T("TEXT_SECONDARY"))
+            idText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             editorHeader.idText = idText
 
             local locationText = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             locationText:SetPoint("TOPLEFT", idText, "BOTTOMLEFT", 0, -2)
             locationText:SetText("")
-            locationText:SetTextColor(T("TEXT_MUTED"))
+            locationText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             editorHeader.locationText = locationText
 
             local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
             categoryLine:SetText("")
-            categoryLine:SetTextColor(T("ACCENT_PRIMARY"))
+            categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
 
@@ -284,7 +282,7 @@ function ns.UI.CreateNPCsTab(parent)
                 ignoreIfDeadCheck.Text:ClearAllPoints()
                 ignoreIfDeadCheck.Text:SetPoint("RIGHT", ignoreIfDeadCheck, "LEFT", -2, 0)
                 ignoreIfDeadCheck.Text:SetText(L["NPC_IGNORE_IF_DEAD"] or "Ignore if dead")
-                ignoreIfDeadCheck.Text:SetTextColor(T("TEXT_SECONDARY"))
+                ignoreIfDeadCheck.Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 ignoreIfDeadCheck.Text:SetJustifyH("RIGHT")
             end
             ignoreIfDeadCheck:SetScript("OnClick", function(self)
@@ -510,7 +508,7 @@ function ns.UI.CreateNPCsTab(parent)
             local ttLabel = tooltipSection:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
             ttLabel:SetText(L["UI_TOOLTIP_LINES"] or "Tooltip Lines:")
-            ttLabel:SetTextColor(T("ACCENT_PRIMARY"))
+            ttLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
             local tooltipEdits = {}
             for i = 1, 4 do
@@ -579,10 +577,10 @@ function ns.UI.CreateNPCsTab(parent)
                 if header.locationText then
                     if nd.mapID and nd.coords then
                         header.locationText:SetText(string.format("Map %d  %.1f, %.1f", nd.mapID, nd.coords.x, nd.coords.y))
-                        header.locationText:SetTextColor(T("ACCENT_SECONDARY"))
+                        header.locationText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
                     else
                         header.locationText:SetText(L["MSG_NPC_NO_LOCATION"] or "Location not recorded")
-                        header.locationText:SetTextColor(T("TEXT_MUTED"))
+                        header.locationText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                     end
                 end
                 if header.categoryLine then
@@ -690,20 +688,20 @@ function ns.UI.CreateNPCsTab(parent)
             row:SetSize(scrollChild:GetWidth(), 50)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
             row:SetBackdrop(BACKDROP_STANDARD)
-            row:SetBackdropColor(T("BG_SECONDARY"))
-            row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             nameText:SetPoint("TOPLEFT",  row, "TOPLEFT",  10, -10)
             nameText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -10)
             nameText:SetJustifyH("LEFT")
             nameText:SetText(npc.data.name or ("NPC " .. tostring(npc.id)))
-            nameText:SetTextColor(T("TEXT_PRIMARY"))
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local subText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             subText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 10, 8)
             subText:SetText(npc.data.zone or "")
-            subText:SetTextColor(T("TEXT_MUTED"))
+            subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local deleteBtn = CreateFrame("Button", nil, row)
             deleteBtn:SetSize(18, 18)
@@ -824,13 +822,13 @@ function ns.UI.CreateNPCsTab(parent)
                 parent.RefreshNPCsList()
             end)
             row:SetScript("OnEnter", function(self)
-                if selectedNPC ~= npc.id then self:SetBackdropColor(T("BG_HOVER")) end
+                if selectedNPC ~= npc.id then self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) end
             end)
             row:SetScript("OnLeave", function(self)
-                if selectedNPC ~= npc.id then self:SetBackdropColor(T("BG_SECONDARY")) end
+                if selectedNPC ~= npc.id then self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY")) end
             end)
             if selectedNPC == npc.id then
-                row:SetBackdropColor(T("BG_ACTIVE"))
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 row:SetBackdropBorderColor(1, 0.82, 0, 1)
             end
 
@@ -840,21 +838,21 @@ function ns.UI.CreateNPCsTab(parent)
         local yOffset = 0
 
         if #newNPCs > 0 then
-            local sh = lib:CreateSectionHeader(scrollChild, L["NOTES_SECTION_NEW"] or "New", yOffset)
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, L["NOTES_SECTION_NEW"] or "New", yOffset)
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
         for _, n in ipairs(newNPCs) do BuildNPCRow(n, yOffset) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
-            local sh = lib:CreateSectionHeader(scrollChild, L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset)
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset)
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
         for _, n in ipairs(favorites) do BuildNPCRow(n, yOffset) yOffset = yOffset - 55 end
 
         if #regular > 0 then
-            local sh = lib:CreateSectionHeader(scrollChild, L["TAB_NPCS"], yOffset)
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, L["TAB_NPCS"], yOffset)
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
@@ -873,26 +871,26 @@ local function MakeNPCLabel(parent, text, x, y)
     local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     lbl:SetText(text)
-    lbl:SetTextColor(T("TEXT_SECONDARY"))
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     return lbl
 end
 
 local function MakeNPCInput(parent, x, y, w)
-    local input = lib:CreateEditBox(nil, parent, {
+    local input = OneWoW_GUI:CreateEditBox(nil, parent, {
         width = w,
         height = 26,
     })
     input:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     input:SetFontObject("GameFontNormal")
-    input:SetTextColor(T("TEXT_PRIMARY"))
+    input:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     input:SetTextInsets(6, 6, 4, 4)
     input.placeholderText = ""
     input:SetText("")
     input:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(T("BORDER_ACCENT"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
     end)
     input:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
     input:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
     input:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
@@ -1115,7 +1113,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     zoneDisplay = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     zoneDisplay:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - 20)
     zoneDisplay:SetText(nd.zone or "?")
-    zoneDisplay:SetTextColor(T("TEXT_PRIMARY"))
+    zoneDisplay:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     MakeNPCLabel(content, L["NPC_LABEL_MAP_ID"] or "Map ID:", COL2_X, yPos)
     local mapIDInput = MakeNPCInput(content, COL2_X, yPos - LBL_GAP, 100)
@@ -1175,18 +1173,18 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     setLocBtn:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X + 110, yPos - LBL_GAP)
     ns.UI.AutoResizeButton(setLocBtn, 80, 200)
     setLocBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BTN_HOVER"))
-        self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(T("TEXT_ACCENT"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(L["NPC_SET_CURRENT"] or "Set Current", 1, 1, 1)
         GameTooltip:AddLine(L["NPC_SET_CURRENT_DESC"] or "Set location to your current position.", 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     setLocBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BTN_NORMAL"))
-        self:SetBackdropBorderColor(T("BTN_BORDER"))
-        self.text:SetTextColor(T("TEXT_PRIMARY"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         GameTooltip:Hide()
     end)
     setLocBtn:SetScript("OnClick", function()

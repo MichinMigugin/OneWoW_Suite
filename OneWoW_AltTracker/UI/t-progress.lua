@@ -3,9 +3,9 @@
 -- Created by MichinMigugin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 ns.UI = ns.UI or {}
 
@@ -356,8 +356,6 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
     local state = subTabState[subTabKey]
     state.columns = columnsConfig
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
     local function onHeaderCreate(btn, col, i)
         if col.key == "expand" then
             local icon = btn:CreateTexture(nil, "ARTWORK")
@@ -437,7 +435,6 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
 end
 
 local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHeight)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
     local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, charData.faction)
     table.insert(charRow.cells, factionCell)
 
@@ -464,19 +461,19 @@ local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHei
 
     local realmText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     realmText:SetText(charData.realm or "")
-    realmText:SetTextColor(T("TEXT_SECONDARY"))
+    realmText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     realmText:SetJustifyH("LEFT")
     table.insert(charRow.cells, realmText)
 
     local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     levelText:SetText(tostring(charData.level or 0))
-    levelText:SetTextColor(T("TEXT_PRIMARY"))
+    levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     table.insert(charRow.cells, levelText)
 
     local ilvlText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     local ilvl = charData.itemLevel or 0
     ilvlText:SetText(ilvl > 0 and tostring(ilvl) or "--")
-    ilvlText:SetTextColor(T("TEXT_PRIMARY"))
+    ilvlText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     if charData.itemLevelColor then
         ilvlText:SetTextColor(charData.itemLevelColor.r, charData.itemLevelColor.g, charData.itemLevelColor.b)
     end
@@ -485,13 +482,12 @@ local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHei
     local ratingText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     local rating = (endgameData and endgameData.mythicPlus and endgameData.mythicPlus.overallScore) or 0
     ratingText:SetText(tostring(rating))
-    ratingText:SetTextColor(T("TEXT_PRIMARY"))
+    ratingText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     table.insert(charRow.cells, ratingText)
 end
 
 local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-    local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef, T)
+    local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
 
     if subTabKey == "mythicplus" then
         local p1 = grid:AddPanel(L["PROGRESS_GREAT_VAULT_DETAIL"])
@@ -499,7 +495,7 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             local acts = endgameData.greatVault.activities
             local function VaultTypeStr(list, label)
                 if not list or #list == 0 then
-                    grid:AddLine(p1, label .. ": --", {T("TEXT_SECONDARY")})
+                    grid:AddLine(p1, label .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                     return
                 end
                 local parts = {}
@@ -518,9 +514,9 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             VaultTypeStr(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
             VaultTypeStr(acts.world, L["PROGRESS_VAULT_WORLD"])
         else
-            grid:AddLine(p1, L["PROGRESS_VAULT_RAID"] .. ": --", {T("TEXT_SECONDARY")})
-            grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {T("TEXT_SECONDARY")})
-            grid:AddLine(p1, L["PROGRESS_VAULT_WORLD"] .. ": --", {T("TEXT_SECONDARY")})
+            grid:AddLine(p1, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p1, L["PROGRESS_VAULT_WORLD"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
         end
 
         local p2 = grid:AddPanel(L["PROGRESS_MPLUS_SEASON_BEST"])
@@ -639,7 +635,7 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             local acts = endgameData.greatVault.activities
             local function VaultTypeStr(list, label)
                 if not list or #list == 0 then
-                    grid:AddLine(p2, label .. ": --", {T("TEXT_SECONDARY")})
+                    grid:AddLine(p2, label .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                     return
                 end
                 local parts = {}
@@ -658,9 +654,9 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             VaultTypeStr(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
             VaultTypeStr(acts.world, L["PROGRESS_VAULT_WORLD"])
         else
-            grid:AddLine(p2, L["PROGRESS_VAULT_RAID"] .. ": --", {T("TEXT_SECONDARY")})
-            grid:AddLine(p2, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {T("TEXT_SECONDARY")})
-            grid:AddLine(p2, L["PROGRESS_VAULT_WORLD"] .. ": --", {T("TEXT_SECONDARY")})
+            grid:AddLine(p2, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p2, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p2, L["PROGRESS_VAULT_WORLD"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
         end
     end
 
@@ -672,7 +668,6 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
     local scrollContent = contentFrame.scrollContent
     if not scrollContent then return end
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
     OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(state.rows)
 
@@ -837,7 +832,7 @@ end
 local function BuildMythicPlusCells(charRow, charData, charKey, endgameData, progressTab)
     local bestTimeText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bestTimeText:SetText(GetBestRunString(endgameData))
-    bestTimeText:SetTextColor(T("TEXT_PRIMARY"))
+    bestTimeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     bestTimeText:SetJustifyH("LEFT")
     table.insert(charRow.cells, bestTimeText)
 
@@ -879,7 +874,7 @@ local function BuildMythicPlusCells(charRow, charData, charKey, endgameData, pro
     else
         keystoneText:SetText("--")
     end
-    keystoneText:SetTextColor(T("TEXT_PRIMARY"))
+    keystoneText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     keystoneText:SetJustifyH("LEFT")
     table.insert(charRow.cells, keystoneText)
 
@@ -891,7 +886,7 @@ local function BuildMythicPlusCells(charRow, charData, charKey, endgameData, pro
             if best and best.intime then dungLevel = best.intime.level end
         end
         dungText:SetText(dungLevel and ("+" .. dungLevel) or "--")
-        dungText:SetTextColor(T("TEXT_PRIMARY"))
+        dungText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         dungText:SetJustifyH("CENTER")
         table.insert(charRow.cells, dungText)
     end
@@ -964,7 +959,7 @@ local function BuildMythicPlusTooltip(self, edg, chd, chk, contentFrame)
         local mapTable = C_ChallengeMode.GetMapTable()
         if mapTable and edg then
             GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(L["PROGRESS_MPLUS_SEASON_BEST"], T("ACCENT_PRIMARY"))
+            GameTooltip:AddLine(L["PROGRESS_MPLUS_SEASON_BEST"], OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             local seasonBest = (edg.mythicPlus and edg.mythicPlus.seasonBest) or {}
             for _, mapID in ipairs(mapTable) do
                 local mapName = C_ChallengeMode.GetMapUIInfo(mapID)
@@ -1023,7 +1018,7 @@ local function BuildRaidsCells(charRow, charData, charKey, endgameData, progress
         elseif progress > 0 then
             raidText:SetTextColor(1, 0.8, 0.2)
         else
-            raidText:SetTextColor(T("TEXT_PRIMARY"))
+            raidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
         raidText:SetJustifyH("CENTER")
         table.insert(charRow.cells, raidText)
@@ -1043,19 +1038,19 @@ local function BuildRaidsCells(charRow, charData, charKey, endgameData, progress
 
     local vaultRaidText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     vaultRaidText:SetText(GetVaultTypeString(endgameData, "raid"))
-    vaultRaidText:SetTextColor(T("TEXT_PRIMARY"))
+    vaultRaidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     vaultRaidText:SetJustifyH("CENTER")
     table.insert(charRow.cells, vaultRaidText)
 
     local vaultDungeonText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     vaultDungeonText:SetText(GetVaultTypeString(endgameData, "dungeon"))
-    vaultDungeonText:SetTextColor(T("TEXT_PRIMARY"))
+    vaultDungeonText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     vaultDungeonText:SetJustifyH("CENTER")
     table.insert(charRow.cells, vaultDungeonText)
 
     local vaultWorldText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     vaultWorldText:SetText(GetVaultTypeString(endgameData, "world"))
-    vaultWorldText:SetTextColor(T("TEXT_PRIMARY"))
+    vaultWorldText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     vaultWorldText:SetJustifyH("CENTER")
     table.insert(charRow.cells, vaultWorldText)
 end
@@ -1164,11 +1159,11 @@ local function BuildCurrenciesCells(charRow, charData, charKey, endgameData, pro
             if qty >= maxQty then
                 curText:SetTextColor(0.2, 0.9, 0.2)
             else
-                curText:SetTextColor(T("TEXT_PRIMARY"))
+                curText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         elseif qty > 0 then
             curText:SetText(tostring(qty))
-            curText:SetTextColor(T("TEXT_PRIMARY"))
+            curText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         else
             curText:SetText("--")
             curText:SetTextColor(0.4, 0.4, 0.4)
@@ -1240,8 +1235,6 @@ local function BuildCurrenciesTooltip(self, edg, chd, chk, contentFrame)
 end
 
 function ns.UI.CreateProgressTab(parent)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["PROGRESS_OVERVIEW"],
         height = 70,
@@ -1262,23 +1255,23 @@ function ns.UI.CreateProgressTab(parent)
     trackingBar:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -4)
     trackingBar:SetHeight(22)
     trackingBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    trackingBar:SetBackdropColor(T("BG_SECONDARY"))
-    trackingBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    trackingBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    trackingBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local trackingText = trackingBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     trackingText:SetPoint("LEFT", trackingBar, "LEFT", 10, 0)
     trackingText:SetPoint("RIGHT", trackingBar, "RIGHT", -10, 0)
     trackingText:SetJustifyH("LEFT")
     trackingText:SetText("")
-    trackingText:SetTextColor(T("TEXT_SECONDARY"))
+    trackingText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local subTabBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     subTabBar:SetPoint("TOPLEFT", trackingBar, "BOTTOMLEFT", 0, -4)
     subTabBar:SetPoint("TOPRIGHT", trackingBar, "BOTTOMRIGHT", 0, -4)
     subTabBar:SetHeight(28)
     subTabBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    subTabBar:SetBackdropColor(T("BG_SECONDARY"))
-    subTabBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    subTabBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    subTabBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local subTabButtons = {}
     local subTabFrames = {}
@@ -1301,13 +1294,13 @@ function ns.UI.CreateProgressTab(parent)
         end
         for n, btn in pairs(subTabButtons) do
             if n == name then
-                btn:SetBackdropColor(T("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(T("BORDER_ACCENT"))
-                btn.label:SetTextColor(T("TEXT_ACCENT"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                btn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                btn:SetBackdropColor(T("BG_SECONDARY"))
-                btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-                btn.label:SetTextColor(T("TEXT_PRIMARY"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                btn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end
         if subTabFrames[name] and subTabFrames[name].refreshFunc then
@@ -1322,14 +1315,14 @@ function ns.UI.CreateProgressTab(parent)
 
         btn:SetScript("OnEnter", function(self)
             if currentSubTab ~= self.tabKey then
-                self:SetBackdropColor(T("BG_HOVER"))
-                self.label:SetTextColor(T("TEXT_ACCENT"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                self.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         end)
         btn:SetScript("OnLeave", function(self)
             if currentSubTab ~= self.tabKey then
-                self:SetBackdropColor(T("BG_SECONDARY"))
-                self.label:SetTextColor(T("TEXT_PRIMARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                self.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end)
         btn:SetScript("OnClick", function() SelectSubTab(tabKey) end)

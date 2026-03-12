@@ -3,47 +3,46 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
-local S = ns.S
 
-local lib = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
+local backdrop = {
+    bgFile   = "Interface\\Buttons\\WHITE8x8",
+    edgeFile = "Interface\\Buttons\\WHITE8x8",
+    tile = true, tileSize = 16, edgeSize = 1,
+}
 
 local function CreateDetectionRow(parent, labelKey, descKey, isEnabled, onToggle, yPos)
     local rowFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     rowFrame:SetPoint("TOPLEFT",  parent, "TOPLEFT",  16, yPos)
     rowFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -16, yPos)
     rowFrame:SetHeight(62)
-    rowFrame:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    rowFrame:SetBackdropColor(T("BG_SECONDARY"))
-    rowFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    rowFrame:SetBackdrop(backdrop)
+    rowFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    rowFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local toggleBtn = CreateFrame("Button", nil, rowFrame, "BackdropTemplate")
     toggleBtn:SetSize(70, 28)
     toggleBtn:SetPoint("LEFT", rowFrame, "LEFT", 10, 0)
-    toggleBtn:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    toggleBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
 
     local toggleLabel = toggleBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     toggleLabel:SetPoint("CENTER")
 
     local function RefreshToggle(enabled)
         if enabled then
-            toggleBtn:SetBackdropColor(T("BG_ACTIVE"))
-            toggleBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+            toggleBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            toggleBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             toggleLabel:SetText(L["SETTINGS_ENABLED"] or "On")
-            toggleLabel:SetTextColor(T("ACCENT_PRIMARY"))
+            toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
-            toggleBtn:SetBackdropColor(T("BG_TERTIARY"))
-            toggleBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            toggleBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            toggleBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
             toggleLabel:SetText(L["SETTINGS_DISABLED"] or "Off")
-            toggleLabel:SetTextColor(T("TEXT_MUTED"))
+            toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
     end
 
@@ -54,7 +53,7 @@ local function CreateDetectionRow(parent, labelKey, descKey, isEnabled, onToggle
         RefreshToggle(newState)
     end)
     toggleBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
     end)
     toggleBtn:SetScript("OnLeave", function(self)
         RefreshToggle(isEnabled())
@@ -65,7 +64,7 @@ local function CreateDetectionRow(parent, labelKey, descKey, isEnabled, onToggle
     label:SetPoint("TOPRIGHT", rowFrame, "TOPRIGHT", -10, -12)
     label:SetJustifyH("LEFT")
     label:SetText(L[labelKey] or labelKey)
-    label:SetTextColor(T("TEXT_PRIMARY"))
+    label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local desc = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     desc:SetPoint("TOPLEFT",  label, "BOTTOMLEFT", 0, -4)
@@ -73,7 +72,7 @@ local function CreateDetectionRow(parent, labelKey, descKey, isEnabled, onToggle
     desc:SetJustifyH("LEFT")
     desc:SetWordWrap(true)
     desc:SetText(L[descKey] or "")
-    desc:SetTextColor(T("TEXT_MUTED"))
+    desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     return rowFrame
 end
@@ -91,7 +90,7 @@ function ns.UI.CreateSettingsTab(parent)
     local yOffset = -20
 
     yOffset = yOffset - 20
-    local detectionSection = lib:CreateSectionHeader(scrollChild, L["SETTINGS_DETECTION"] or "Detection & Alerts", yOffset)
+    local detectionSection = OneWoW_GUI:CreateSectionHeader(scrollChild, L["SETTINGS_DETECTION"] or "Detection & Alerts", yOffset)
     yOffset = detectionSection.bottomY - 16
 
     local npcRow = CreateDetectionRow(
@@ -158,20 +157,16 @@ function ns.UI.CreateSettingsTab(parent)
     yOffset = yOffset - 70
 
     yOffset = yOffset - 20
-    local importSection = lib:CreateSectionHeader(scrollChild, L["SETTINGS_IMPORT_SECTION"] or "Import From WoWNotes", yOffset)
+    local importSection = OneWoW_GUI:CreateSectionHeader(scrollChild, L["SETTINGS_IMPORT_SECTION"] or "Import From WoWNotes", yOffset)
     yOffset = importSection.bottomY - 16
 
     local importContainer = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
     importContainer:SetPoint("TOPLEFT",  scrollChild, "TOPLEFT",  16, yOffset)
     importContainer:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -16, yOffset)
     importContainer:SetHeight(160)
-    importContainer:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
-    importContainer:SetBackdropColor(T("BG_SECONDARY"))
-    importContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    importContainer:SetBackdrop(backdrop)
+    importContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    importContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local importDesc = importContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     importDesc:SetPoint("TOPLEFT",  importContainer, "TOPLEFT",  16, -14)
@@ -179,7 +174,7 @@ function ns.UI.CreateSettingsTab(parent)
     importDesc:SetJustifyH("LEFT")
     importDesc:SetWordWrap(true)
     importDesc:SetText(L["SETTINGS_IMPORT_DESC"] or "")
-    importDesc:SetTextColor(T("TEXT_SECONDARY"))
+    importDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local importBtn = ns.UI.CreateButton(nil, importContainer, L["SETTINGS_IMPORT_BUTTON"] or "Import From WoWNotes", 200, 28)
     importBtn:SetPoint("BOTTOMLEFT", importContainer, "BOTTOMLEFT", 16, 14)
@@ -201,7 +196,7 @@ function ns.UI.CreateSettingsTab(parent)
             importStatus:SetText(string.format(
                 L["SETTINGS_IMPORT_SUCCESS"] or "Done! Notes: %d, Players: %d, NPCs: %d, Zones: %d, Items: %d",
                 result.notes, result.players, result.npcs, result.zones, result.items))
-            importStatus:SetTextColor(T("ACCENT_PRIMARY"))
+            importStatus:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             if ns.UI.Reset then ns.UI:Reset() end
             C_Timer.After(0.05, function()
                 if ns.UI.Show then ns.UI:Show("settings") end

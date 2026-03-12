@@ -3,7 +3,12 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 local L = ns.L
-local T = ns.T
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 ns.UI = ns.UI or {}
 
@@ -57,12 +62,12 @@ end
 local function UpdateSourceButtonStates()
     for _, btn in ipairs(sourceButtons) do
         if btn.sourceKey == currentSource then
-            btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-            btn:SetBackdropColor(T("BG_ACTIVE"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             btn.highlight:Show()
         else
-            btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-            btn:SetBackdropColor(T("BG_SECONDARY"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             btn.highlight:Hide()
         end
     end
@@ -71,18 +76,14 @@ end
 local function CreateSourceButton(parent, def)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetHeight(SOURCE_BTN_H)
-    btn:SetBackdrop({
-        bgFile   = "Interface\\BUTTONS\\WHITE8x8",
-        edgeFile = "Interface\\BUTTONS\\WHITE8x8",
-        edgeSize = 1,
-    })
-    btn:SetBackdropColor(T("BG_SECONDARY"))
-    btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     label:SetPoint("CENTER", 0, 0)
     label:SetText(L[def.labelKey])
-    label:SetTextColor(T("TEXT_PRIMARY"))
+    label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local textWidth = label:GetStringWidth()
     btn:SetWidth(math.max(36, textWidth + SOURCE_BTN_PAD_X * 2))
@@ -92,12 +93,12 @@ local function CreateSourceButton(parent, def)
 
     btn.highlight = btn:CreateTexture(nil, "OVERLAY")
     btn.highlight:SetAllPoints()
-    btn.highlight:SetColorTexture(T("ACCENT_PRIMARY"))
+    btn.highlight:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     btn.highlight:SetAlpha(0.15)
     btn.highlight:Hide()
 
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
         GameTooltip:SetText(L[def.labelKey], 1, 1, 1)
         GameTooltip:AddLine(L[def.descKey], 0.7, 0.7, 0.7, true)
@@ -105,9 +106,9 @@ local function CreateSourceButton(parent, def)
     end)
     btn:SetScript("OnLeave", function(self)
         if self.sourceKey == currentSource then
-            self:SetBackdropColor(T("BG_ACTIVE"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
         else
-            self:SetBackdropColor(T("BG_SECONDARY"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         end
         GameTooltip:Hide()
     end)
@@ -131,24 +132,20 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
     row:SetHeight(ITEM_ROW_HEIGHT)
     row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
     row:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
-    row:SetBackdrop({ bgFile = "Interface\\BUTTONS\\WHITE8x8" })
+    row:SetBackdrop(BACKDROP_SIMPLE)
 
     if rowIdx % 2 == 0 then
-        row:SetBackdropColor(T("BG_PRIMARY"))
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     else
-        row:SetBackdropColor(T("BG_SECONDARY"))
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     end
 
     local iconFrame = CreateFrame("Frame", nil, row, "BackdropTemplate")
     iconFrame:SetSize(22, 22)
     iconFrame:SetPoint("LEFT", 4, 0)
-    iconFrame:SetBackdrop({
-        bgFile   = "Interface\\BUTTONS\\WHITE8x8",
-        edgeFile = "Interface\\BUTTONS\\WHITE8x8",
-        edgeSize = 1,
-    })
+    iconFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     iconFrame:SetBackdropColor(0, 0, 0, 1)
-    iconFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local icon = iconFrame:CreateTexture(nil, "ARTWORK")
     icon:SetPoint("TOPLEFT", 1, -1)
@@ -193,18 +190,18 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
     row.rowIdx = rowIdx
 
     row:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetItemByID(result.itemID)
         GameTooltip:Show()
     end)
     row:SetScript("OnLeave", function(self)
         if selectedItem and selectedItem.itemID == result.itemID then
-            self:SetBackdropColor(T("BG_ACTIVE"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
         elseif self.rowIdx % 2 == 0 then
-            self:SetBackdropColor(T("BG_PRIMARY"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
         else
-            self:SetBackdropColor(T("BG_SECONDARY"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         end
         GameTooltip:Hide()
     end)
@@ -229,20 +226,16 @@ ShowItemDetail = function(result)
     headerFrame:SetHeight(50)
     headerFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 0, yOffset)
     headerFrame:SetPoint("TOPRIGHT", child, "TOPRIGHT", 0, yOffset)
-    headerFrame:SetBackdrop({ bgFile = "Interface\\BUTTONS\\WHITE8x8" })
-    headerFrame:SetBackdropColor(T("BG_SECONDARY"))
+    headerFrame:SetBackdrop(BACKDROP_SIMPLE)
+    headerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     table.insert(detailElements, headerFrame)
 
     local hIconFrame = CreateFrame("Button", nil, headerFrame, "BackdropTemplate")
     hIconFrame:SetSize(40, 40)
     hIconFrame:SetPoint("LEFT", 8, 0)
-    hIconFrame:SetBackdrop({
-        bgFile   = "Interface\\BUTTONS\\WHITE8x8",
-        edgeFile = "Interface\\BUTTONS\\WHITE8x8",
-        edgeSize = 1,
-    })
+    hIconFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     hIconFrame:SetBackdropColor(0, 0, 0, 1)
-    hIconFrame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    hIconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local hIcon = hIconFrame:CreateTexture(nil, "ARTWORK")
     hIcon:SetPoint("TOPLEFT", 1, -1)
@@ -272,7 +265,7 @@ ShowItemDetail = function(result)
     local itemIDText = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     itemIDText:SetPoint("TOPLEFT", itemName, "BOTTOMLEFT", 0, -2)
     itemIDText:SetText(L["ITEMSEARCH_ITEM_ID"] .. ": " .. result.itemID)
-    itemIDText:SetTextColor(T("TEXT_SECONDARY"))
+    itemIDText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     yOffset = yOffset - 58
 
@@ -284,14 +277,14 @@ ShowItemDetail = function(result)
         sec:SetHeight(24)
         sec:SetPoint("TOPLEFT", child, "TOPLEFT", 0, yOffset)
         sec:SetPoint("TOPRIGHT", child, "TOPRIGHT", 0, yOffset)
-        sec:SetBackdrop({ bgFile = "Interface\\BUTTONS\\WHITE8x8" })
-        sec:SetBackdropColor(T("BG_TERTIARY"))
+        sec:SetBackdrop(BACKDROP_SIMPLE)
+        sec:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         table.insert(detailElements, sec)
 
         local title = sec:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         title:SetPoint("LEFT", 8, 0)
         title:SetText(L[titleKey])
-        title:SetTextColor(T("ACCENT_PRIMARY"))
+        title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         yOffset = yOffset - 28
     end
@@ -306,7 +299,7 @@ ShowItemDetail = function(result)
         local fs = r:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         fs:SetPoint("LEFT", 0, 0)
         fs:SetText(text)
-        fs:SetTextColor(T(colorKey or "TEXT_PRIMARY"))
+        fs:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey or "TEXT_PRIMARY"))
 
         yOffset = yOffset - 18
     end
@@ -425,11 +418,11 @@ RefreshItemList = function()
             selectedItem = r
             for _, el in ipairs(listElements) do
                 if el.result and el.result.itemID == r.itemID then
-                    el:SetBackdropColor(T("BG_ACTIVE"))
+                    el:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 elseif el.rowIdx and el.rowIdx % 2 == 0 then
-                    el:SetBackdropColor(T("BG_PRIMARY"))
+                    el:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
                 else
-                    el:SetBackdropColor(T("BG_SECONDARY"))
+                    el:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 end
             end
             ShowItemDetail(r)
@@ -534,12 +527,12 @@ function ns.UI.CreateItemSearchTab(parent)
     emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
     emptyList:SetText(L["ITEMSEARCH_EMPTY"])
-    emptyList:SetTextColor(T("TEXT_MUTED"))
+    emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     emptyDetail = panels.detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyDetail:SetPoint("CENTER", panels.detailScrollChild, "CENTER", 0, 0)
     emptyDetail:SetText(L["ITEMSEARCH_SELECT"])
-    emptyDetail:SetTextColor(T("TEXT_MUTED"))
+    emptyDetail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     panels.detailScrollChild:SetHeight(100)
 

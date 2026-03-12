@@ -1,5 +1,19 @@
 local ADDON_NAME, Addon = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
+local backdrop = {
+    bgFile = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = false,
+    edgeSize = 12,
+    insets = { left = 2, right = 2, top = 2, bottom = 2 }
+}
+
 local GUI = Addon.GUI or {}
 Addon.GUI = GUI
 
@@ -8,20 +22,6 @@ Addon.UI = UI
 
 UI.tabs = {}
 UI.currentTab = nil
-
-local function T(key)
-    if Addon.Constants and Addon.Constants.THEME and Addon.Constants.THEME[key] then
-        return unpack(Addon.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
-end
-
-local function S(key)
-    if Addon.Constants and Addon.Constants.SPACING then
-        return Addon.Constants.SPACING[key] or 8
-    end
-    return 8
-end
 
 local function StyleScrollBar(scrollFrame, container)
     local scrollBar = scrollFrame.ScrollBar
@@ -47,23 +47,19 @@ local function StyleScrollBar(scrollFrame, container)
     end
 
     if scrollBar.Background then
-        scrollBar.Background:SetColorTexture(T("BG_TERTIARY"))
+        scrollBar.Background:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     end
 
     if scrollBar.ThumbTexture then
         scrollBar.ThumbTexture:SetWidth(8)
-        scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
+        scrollBar.ThumbTexture:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     end
 end
 
 local function StyleContentPanel(panel)
-    panel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    panel:SetBackdropColor(T("BG_SECONDARY"))
-    panel:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    panel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    panel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 end
 
 function UI:Initialize()
@@ -99,15 +95,15 @@ function UI:Initialize()
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 2,
     })
-    frame:SetBackdropColor(T("BG_PRIMARY"))
-    frame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local titleBar = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     titleBar:SetHeight(20)
-    titleBar:SetPoint("TOPLEFT",  frame, "TOPLEFT",  S("XS"), -S("XS"))
-    titleBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -S("XS"), -S("XS"))
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+    titleBar:SetPoint("TOPLEFT",  frame, "TOPLEFT",  OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
+    titleBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
+    titleBar:SetBackdrop(BACKDROP_SIMPLE)
+    titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
     titleBar:SetFrameLevel(frame:GetFrameLevel() + 1)
 
     local factionTheme = Addon.db and Addon.db.minimap and Addon.db.minimap.theme or "horde"
@@ -122,21 +118,21 @@ function UI:Initialize()
 
     local brandIcon = titleBar:CreateTexture(nil, "OVERLAY")
     brandIcon:SetSize(14, 14)
-    brandIcon:SetPoint("LEFT", titleBar, "LEFT", S("SM"), 0)
+    brandIcon:SetPoint("LEFT", titleBar, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
     brandIcon:SetTexture(brandIconTex)
 
     local brandText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
     brandText:SetText("OneWoW")
-    brandText:SetTextColor(T("ACCENT_PRIMARY"))
+    brandText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
     titleText:SetText(Addon.L and Addon.L["ADDON_TITLE"] or "DevTool")
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
+    titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local closeBtn = GUI:CreateButton(nil, titleBar, "X", 20, 20)
-    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -S("XS") / 2, 0)
+    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -OneWoW_GUI:GetSpacing("XS") / 2, 0)
     closeBtn:SetScript("OnClick", function() UI:Hide() end)
 
     tinsert(UISpecialFrames, "OneWoW_UtilityDevToolFrame")
@@ -156,14 +152,14 @@ function UI:Initialize()
     }
 
     local tabButtons = {}
-    local tabY = -(S("XS") + 20 + S("XS"))
+    local tabY = -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS"))
 
     for i = 1, NUM_TABS do
         local btn = GUI:CreateButton(nil, frame, tabLabels[i], 90, TAB_HEIGHT)
         btn:SetID(i)
         btn.isSelected = false
         if i == 1 then
-            btn:SetPoint("TOPLEFT", frame, "TOPLEFT", S("SM"), tabY)
+            btn:SetPoint("TOPLEFT", frame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), tabY)
         else
             btn:SetPoint("LEFT", tabButtons[i - 1], "RIGHT", TAB_GAP, 0)
         end
@@ -171,29 +167,29 @@ function UI:Initialize()
         btn:SetScript("OnClick", function() UI:SelectTab(tabID) end)
         btn:SetScript("OnEnter", function(self)
             if not self.isSelected then
-                self:SetBackdropColor(T("BTN_HOVER"))
-                self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
-                self.text:SetTextColor(T("TEXT_ACCENT"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         end)
         btn:SetScript("OnLeave", function(self)
             if not self.isSelected then
-                self:SetBackdropColor(T("BTN_NORMAL"))
-                self:SetBackdropBorderColor(T("BTN_BORDER"))
-                self.text:SetTextColor(T("TEXT_PRIMARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end)
         btn:SetScript("OnMouseDown", function(self)
             if not self.isSelected then
-                self:SetBackdropColor(T("BTN_PRESSED"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
             end
         end)
         btn:SetScript("OnMouseUp", function(self)
             if not self.isSelected then
                 if self:IsMouseOver() then
-                    self:SetBackdropColor(T("BTN_HOVER"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
                 else
-                    self:SetBackdropColor(T("BTN_NORMAL"))
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
                 end
             end
         end)
@@ -206,7 +202,7 @@ function UI:Initialize()
 
     local function ResizeTabButtons()
         local frameWidth = frame:GetWidth()
-        local availWidth = frameWidth - S("SM") * 2 - (NUM_TABS - 1) * TAB_GAP
+        local availWidth = frameWidth - OneWoW_GUI:GetSpacing("SM") * 2 - (NUM_TABS - 1) * TAB_GAP
         local tabWidth = math.floor(availWidth / NUM_TABS)
         for i = 1, NUM_TABS do
             tabButtons[i]:SetWidth(tabWidth)
@@ -219,8 +215,8 @@ function UI:Initialize()
     ResizeTabButtons()
 
     local contentFrame = CreateFrame("Frame", nil, frame)
-    contentFrame:SetPoint("TOPLEFT",     frame, "TOPLEFT",     S("SM"), -(S("XS") + 20 + S("XS") + TAB_HEIGHT + S("XS")))
-    contentFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -S("SM"), S("SM"))
+    contentFrame:SetPoint("TOPLEFT",     frame, "TOPLEFT",     OneWoW_GUI:GetSpacing("SM"), -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS") + TAB_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
+    contentFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), OneWoW_GUI:GetSpacing("SM"))
 
     self.tabs[1] = {button = tab1, content = self:CreateFrameInspectorTab(contentFrame)}
     self.tabs[2] = {button = tab2, content = self:CreateEventMonitorTab(contentFrame)}
@@ -289,15 +285,15 @@ function UI:SelectTab(tabID)
         elseif id == tabID then
             tab.content:Show()
             tab.button.isSelected = true
-            tab.button:SetBackdropColor(T("BG_ACTIVE"))
-            tab.button:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-            tab.button.text:SetTextColor(T("TEXT_ACCENT"))
+            tab.button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            tab.button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            tab.button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
             tab.content:Hide()
             tab.button.isSelected = false
-            tab.button:SetBackdropColor(T("BTN_NORMAL"))
-            tab.button:SetBackdropBorderColor(T("BTN_BORDER"))
-            tab.button.text:SetTextColor(T("TEXT_PRIMARY"))
+            tab.button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            tab.button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            tab.button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end
 end
@@ -332,7 +328,7 @@ function UI:CreateFrameInspectorTab(parent)
     local leftTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     leftTitle:SetPoint("TOP", leftPanel, "TOP", 0, -5)
     leftTitle:SetText(Addon.L and Addon.L["LABEL_FRAME_HIERARCHY"] or "Frame Hierarchy")
-    leftTitle:SetTextColor(T("TEXT_PRIMARY"))
+    leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local copyHierarchyBtn = GUI:CreateButton(nil, leftPanel, Addon.L and Addon.L["BTN_COPY_HIERARCHY"] or "Copy All", 70, 18)
     copyHierarchyBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -5, -3)
@@ -360,7 +356,7 @@ function UI:CreateFrameInspectorTab(parent)
     tab.hierarchyText:SetPoint("RIGHT", leftContent, "RIGHT", -2, 0)
     tab.hierarchyText:SetJustifyH("LEFT")
     tab.hierarchyText:SetText(Addon.L and Addon.L["LABEL_NO_FRAME"] or "No frame selected")
-    tab.hierarchyText:SetTextColor(T("TEXT_PRIMARY"))
+    tab.hierarchyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local rightPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
     rightPanel:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 5, 0)
@@ -370,7 +366,7 @@ function UI:CreateFrameInspectorTab(parent)
     local rightTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     rightTitle:SetPoint("TOP", rightPanel, "TOP", 0, -5)
     rightTitle:SetText(Addon.L and Addon.L["LABEL_FRAME_DETAILS"] or "Frame Details")
-    rightTitle:SetTextColor(T("TEXT_PRIMARY"))
+    rightTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local copyDetailsBtn = GUI:CreateButton(nil, rightPanel, Addon.L and Addon.L["BTN_COPY_DETAILS"] or "Copy All", 70, 18)
     copyDetailsBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -5, -3)
@@ -398,7 +394,7 @@ function UI:CreateFrameInspectorTab(parent)
     tab.detailsText:SetPoint("RIGHT", rightContent, "RIGHT", -2, 0)
     tab.detailsText:SetJustifyH("LEFT")
     tab.detailsText:SetText(Addon.L and Addon.L["LABEL_NO_FRAME"] or "No frame selected")
-    tab.detailsText:SetTextColor(T("TEXT_PRIMARY"))
+    tab.detailsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     tab.leftScroll = leftScroll
     tab.rightScroll = rightScroll
@@ -536,7 +532,7 @@ function UI:CreateEventMonitorTab(parent)
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     filterLabel:SetPoint("LEFT", firehoseBtn, "RIGHT", 10, 0)
     filterLabel:SetText(Addon.L and Addon.L["LABEL_FILTER"] or "Filter:")
-    filterLabel:SetTextColor(T("TEXT_PRIMARY"))
+    filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local filterBox = CreateFrame("EditBox", nil, tab, "InputBoxTemplate")
     filterBox:SetSize(150, 22)
@@ -572,7 +568,7 @@ function UI:CreateEventMonitorTab(parent)
     tab.logText:SetJustifyH("LEFT")
     local L = Addon.L or {}
     tab.logText:SetText((L["MSG_CLICK_START"] or "Click 'Start' to begin monitoring (auto-selects common events)\nOr click 'Select Events' to customize"))
-    tab.logText:SetTextColor(T("TEXT_PRIMARY"))
+    tab.logText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     tab.startBtn = startBtn
     tab.stopBtn = stopBtn
@@ -602,7 +598,7 @@ function UI:CreateLuaConsoleTab(parent)
     local countLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     countLabel:SetPoint("LEFT", clearBtn, "RIGHT", 10, 0)
     countLabel:SetText((Addon.L and Addon.L["LABEL_ERRORS"] or "Errors:") .. " 0")
-    countLabel:SetTextColor(T("TEXT_PRIMARY"))
+    countLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local soundCheck = CreateFrame("CheckButton", nil, tab, "UICheckButtonTemplate")
     soundCheck:SetSize(22, 22)
@@ -617,7 +613,7 @@ function UI:CreateLuaConsoleTab(parent)
     local soundLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     soundLabel:SetPoint("LEFT", soundCheck, "RIGHT", 2, 0)
     soundLabel:SetText(Addon.L and Addon.L["ERR_PLAY_ALERT"] or "Play Alert")
-    soundLabel:SetTextColor(T("TEXT_PRIMARY"))
+    soundLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local listPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
     listPanel:SetPoint("TOPLEFT", clearBtn, "BOTTOMLEFT", 0, -5)
@@ -649,7 +645,7 @@ function UI:CreateLuaConsoleTab(parent)
 
         btn.bg = btn:CreateTexture(nil, "BACKGROUND")
         btn.bg:SetAllPoints()
-        btn.bg:SetColorTexture(T("ACCENT_PRIMARY"))
+        btn.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         btn.bg:SetAlpha(0.3)
 
         btn:SetScript("OnClick", function(self)
@@ -684,7 +680,7 @@ function UI:CreateLuaConsoleTab(parent)
     tab.detailsText:SetPoint("RIGHT", detailsContent, "RIGHT", -2, 0)
     tab.detailsText:SetJustifyH("LEFT")
     tab.detailsText:SetText(Addon.L and Addon.L["LABEL_NO_ERROR"] or "No error selected")
-    tab.detailsText:SetTextColor(T("TEXT_PRIMARY"))
+    tab.detailsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local copyBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_COPY_ERROR"] or "Copy Error", 100, 25)
     copyBtn:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 5, 5)
@@ -784,7 +780,7 @@ function UI:CreateTextureTab(parent)
     tab.nameText = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     tab.nameText:SetPoint("TOP", 0, -5)
     tab.nameText:SetText("")
-    tab.nameText:SetTextColor(T("TEXT_PRIMARY"))
+    tab.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local zoomInBtn = GUI:CreateButton(nil, rightPanel, Addon.L and Addon.L["BTN_ZOOM_IN"] or "+", 40, 22)
     zoomInBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -5, -5)
@@ -807,7 +803,7 @@ function UI:CreateTextureTab(parent)
     local previewBg = rightPanel:CreateTexture(nil, "BACKGROUND")
     previewBg:SetPoint("TOP", tab.nameText, "BOTTOM", 0, -10)
     previewBg:SetSize(400, 400)
-    previewBg:SetColorTexture(T("BG_SECONDARY"))
+    previewBg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
     tab.previewFrame = CreateFrame("Frame", nil, rightPanel)
     tab.previewFrame:SetPoint("CENTER", previewBg, "CENTER")
@@ -819,13 +815,9 @@ function UI:CreateTextureTab(parent)
     local border = CreateFrame("Frame", nil, rightPanel, "BackdropTemplate")
     border:SetPoint("TOPLEFT", previewBg, "TOPLEFT", -1, 1)
     border:SetPoint("BOTTOMRIGHT", previewBg, "BOTTOMRIGHT", 1, -1)
-    border:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    border:SetBackdropColor(T("BG_TERTIARY"))
-    border:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    border:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    border:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    border:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local infoPanel = CreateFrame("Frame", nil, rightPanel, "BackdropTemplate")
     infoPanel:SetPoint("TOPLEFT", previewBg, "BOTTOMLEFT", 0, -10)
@@ -850,7 +842,7 @@ function UI:CreateTextureTab(parent)
     tab.infoText:SetPoint("RIGHT", infoContent, "RIGHT", -2, 0)
     tab.infoText:SetJustifyH("LEFT")
     tab.infoText:SetText("")
-    tab.infoText:SetTextColor(T("TEXT_PRIMARY"))
+    tab.infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     tab.infoScroll = infoScroll
 
@@ -1095,7 +1087,7 @@ function UI:CreateLayoutTab(parent)
     local gridLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     gridLabel:SetPoint("TOPLEFT", tab, "TOPLEFT", 10, -10)
     gridLabel:SetText(Addon.L and Addon.L["LABEL_GRID_OVERLAY"] or "Grid Overlay")
-    gridLabel:SetTextColor(T("TEXT_PRIMARY"))
+    gridLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local toggleBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_TOGGLE_GRID"] or "Toggle Grid", 120, 25)
     toggleBtn:SetPoint("TOPLEFT", gridLabel, "BOTTOMLEFT", 0, -10)
@@ -1106,7 +1098,7 @@ function UI:CreateLayoutTab(parent)
     local sizeLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     sizeLabel:SetPoint("TOPLEFT", toggleBtn, "BOTTOMLEFT", 0, -15)
     sizeLabel:SetText((Addon.L and Addon.L["LABEL_GRID_SIZE"] or "Grid Size:") .. " 50")
-    sizeLabel:SetTextColor(T("TEXT_PRIMARY"))
+    sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local sizeSlider = CreateFrame("Slider", nil, tab, "OptionsSliderTemplate")
     sizeSlider:SetPoint("TOPLEFT", sizeLabel, "BOTTOMLEFT", 0, -5)
@@ -1125,7 +1117,7 @@ function UI:CreateLayoutTab(parent)
     local opacityLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     opacityLabel:SetPoint("TOPLEFT", sizeSlider, "BOTTOMLEFT", 0, -15)
     opacityLabel:SetText((Addon.L and Addon.L["LABEL_OPACITY"] or "Opacity:") .. " 0.3")
-    opacityLabel:SetTextColor(T("TEXT_PRIMARY"))
+    opacityLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local opacitySlider = CreateFrame("Slider", nil, tab, "OptionsSliderTemplate")
     opacitySlider:SetPoint("TOPLEFT", opacityLabel, "BOTTOMLEFT", 0, -5)
@@ -1275,18 +1267,14 @@ function UI:ShowEventSelector()
         frame:RegisterForDrag("LeftButton")
         frame:SetScript("OnDragStart", frame.StartMoving)
         frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-        frame:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        frame:SetBackdropColor(T("BG_PRIMARY"))
-        frame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        frame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         frame.title:SetPoint("TOP", 0, -5)
         frame.title:SetText(Addon.L and Addon.L["DIALOG_TITLE_SELECT_EVENTS"] or "Event Monitor - Select Events")
-        frame.title:SetTextColor(T("TEXT_PRIMARY"))
+        frame.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local commonBtn = GUI:CreateButton(nil, frame, Addon.L and Addon.L["BTN_COMMON_EVENTS"] or "Common Events", 110, 25)
         commonBtn:SetPoint("TOPLEFT", 10, -30)
@@ -1314,7 +1302,7 @@ function UI:ShowEventSelector()
         local searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         searchLabel:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -215, -37)
         searchLabel:SetText((Addon.L and Addon.L["LABEL_FILTER"] or "Search:"))
-        searchLabel:SetTextColor(T("TEXT_PRIMARY"))
+        searchLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local searchBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
         searchBox:SetSize(180, 25)
@@ -1327,7 +1315,7 @@ function UI:ShowEventSelector()
         local eventCount = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         eventCount:SetPoint("TOPLEFT", commonBtn, "BOTTOMLEFT", 0, -8)
         eventCount:SetText((Addon.L and Addon.L["LABEL_SELECTED"] or "Selected:") .. " 0")
-        eventCount:SetTextColor(T("TEXT_PRIMARY"))
+        eventCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local leftPanel = CreateFrame("Frame", nil, frame, "BackdropTemplate")
         leftPanel:SetPoint("TOPLEFT", eventCount, "BOTTOMLEFT", 0, -8)
@@ -1338,7 +1326,7 @@ function UI:ShowEventSelector()
         local leftTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         leftTitle:SetPoint("TOP", 0, -5)
         leftTitle:SetText(Addon.L and Addon.L["LABEL_EVENT_LIST"] or "Event List")
-        leftTitle:SetTextColor(T("TEXT_PRIMARY"))
+        leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local leftScroll = CreateFrame("ScrollFrame", nil, leftPanel, "UIPanelScrollFrameTemplate")
         leftScroll:SetPoint("TOPLEFT", 4, -25)
@@ -1362,7 +1350,7 @@ function UI:ShowEventSelector()
             btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             btn.text:SetPoint("LEFT", btn, "RIGHT", 5, 0)
             btn.text:SetText("")
-            btn.text:SetTextColor(T("TEXT_PRIMARY"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             btn:SetScript("OnClick", function(self)
                 if self.eventName then
@@ -1382,12 +1370,12 @@ function UI:ShowEventSelector()
         local rightTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         rightTitle:SetPoint("TOP", 0, -5)
         rightTitle:SetText(Addon.L and Addon.L["LABEL_CUSTOM_ATLAS"] or "Custom Event")
-        rightTitle:SetTextColor(T("TEXT_PRIMARY"))
+        rightTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local customLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         customLabel:SetPoint("TOPLEFT", 10, -30)
         customLabel:SetText(Addon.L and Addon.L["LABEL_ENTER_EVENT"] or "Enter event name:")
-        customLabel:SetTextColor(T("TEXT_PRIMARY"))
+        customLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local customBox = CreateFrame("EditBox", nil, rightPanel, "InputBoxTemplate")
         customBox:SetSize(250, 25)
@@ -1411,7 +1399,7 @@ function UI:ShowEventSelector()
         helpText:SetPoint("RIGHT", rightPanel, "RIGHT", -10, 0)
         helpText:SetJustifyH("LEFT")
         helpText:SetText(Addon.L and Addon.L["HELP_TEXT_EVENTS"] or "Enter any WoW event name to monitor.\n\nCommon events:\nPLAYER_ENTERING_WORLD\nZONE_CHANGED\nPLAYER_REGEN_DISABLED\nPLAYER_REGEN_ENABLED\nBAG_UPDATE\nUNIT_HEALTH\nCHAT_MSG_SAY\nADDON_LOADED\n\nYou can find more events on:\nwarcraft.wiki.gg")
-        helpText:SetTextColor(T("TEXT_SECONDARY"))
+        helpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local closeBtn = GUI:CreateButton(nil, frame, Addon.L and Addon.L["BTN_CLOSE"] or "Close", 80, 25)
         closeBtn:SetPoint("BOTTOM", 0, 10)
@@ -1557,12 +1545,12 @@ function UI:CreateMonitorTab(parent)
     local cpuLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     cpuLabel:SetPoint("LEFT", cpuCheck, "RIGHT", 2, 0)
     cpuLabel:SetText(L["MON_LABEL_CPU_PROFILING"] or "CPU Profiling")
-    cpuLabel:SetTextColor(T("TEXT_PRIMARY"))
+    cpuLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     filterLabel:SetPoint("LEFT", cpuLabel, "RIGHT", 15, 0)
     filterLabel:SetText(L["MON_LABEL_FILTER"] or "Filter:")
-    filterLabel:SetTextColor(T("TEXT_PRIMARY"))
+    filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local filterBox = CreateFrame("EditBox", nil, tab, "InputBoxTemplate")
     filterBox:SetSize(150, 22)
@@ -1577,7 +1565,7 @@ function UI:CreateMonitorTab(parent)
     local showOnLoadLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     showOnLoadLabel:SetPoint("LEFT", showOnLoadCheck, "RIGHT", 2, 0)
     showOnLoadLabel:SetText(L["MON_LABEL_SHOW_ON_LOAD"] or "Show on Load")
-    showOnLoadLabel:SetTextColor(T("TEXT_PRIMARY"))
+    showOnLoadLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local hasCPU = Monitor and Monitor:IsCPUProfilingEnabled() or false
 
@@ -1585,8 +1573,8 @@ function UI:CreateMonitorTab(parent)
     headerFrame:SetPoint("TOPLEFT", showOnLoadCheck, "BOTTOMLEFT", 0, -5)
     headerFrame:SetPoint("RIGHT", tab, "RIGHT", -5, 0)
     headerFrame:SetHeight(22)
-    headerFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    headerFrame:SetBackdropColor(T("BG_TERTIARY"))
+    headerFrame:SetBackdrop(BACKDROP_SIMPLE)
+    headerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
     local nameHeader = CreateFrame("Button", nil, headerFrame)
     nameHeader:SetPoint("LEFT", headerFrame, "LEFT", 5, 0)
@@ -1594,35 +1582,35 @@ function UI:CreateMonitorTab(parent)
     nameHeader.text = nameHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     nameHeader.text:SetPoint("LEFT", 0, 0)
     nameHeader.text:SetText(L["MON_HEADER_NAME"] or "Addon")
-    nameHeader.text:SetTextColor(T("ACCENT_PRIMARY"))
+    nameHeader.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local memHeader = CreateFrame("Button", nil, headerFrame)
     memHeader:SetSize(90, 22)
     memHeader.text = memHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     memHeader.text:SetPoint("RIGHT", 0, 0)
     memHeader.text:SetText(L["MON_HEADER_MEMORY"] or "Memory (k)")
-    memHeader.text:SetTextColor(T("ACCENT_PRIMARY"))
+    memHeader.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local memPctHeader = CreateFrame("Button", nil, headerFrame)
     memPctHeader:SetSize(55, 22)
     memPctHeader.text = memPctHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     memPctHeader.text:SetPoint("RIGHT", 0, 0)
     memPctHeader.text:SetText(L["MON_HEADER_MEM_PCT"] or "Mem %")
-    memPctHeader.text:SetTextColor(T("ACCENT_PRIMARY"))
+    memPctHeader.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local cpuHeader = CreateFrame("Button", nil, headerFrame)
     cpuHeader:SetSize(90, 22)
     cpuHeader.text = cpuHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     cpuHeader.text:SetPoint("RIGHT", 0, 0)
     cpuHeader.text:SetText(L["MON_HEADER_CPU"] or "CPU (ms/s)")
-    cpuHeader.text:SetTextColor(T("ACCENT_PRIMARY"))
+    cpuHeader.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local cpuPctHeader = CreateFrame("Button", nil, headerFrame)
     cpuPctHeader:SetSize(55, 22)
     cpuPctHeader.text = cpuPctHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     cpuPctHeader.text:SetPoint("RIGHT", -14, 0)
     cpuPctHeader.text:SetText(L["MON_HEADER_CPU_PCT"] or "CPU %")
-    cpuPctHeader.text:SetTextColor(T("ACCENT_PRIMARY"))
+    cpuPctHeader.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     if hasCPU then
         cpuPctHeader:SetPoint("RIGHT", headerFrame, "RIGHT", 0, 0)
@@ -1689,29 +1677,29 @@ function UI:CreateMonitorTab(parent)
 
         row.highlight = row:CreateTexture(nil, "HIGHLIGHT")
         row.highlight:SetAllPoints()
-        row.highlight:SetColorTexture(T("ACCENT_PRIMARY"))
+        row.highlight:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         row.highlight:SetAlpha(0.15)
 
         row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.nameText:SetPoint("LEFT", row, "LEFT", 5, 0)
         row.nameText:SetJustifyH("LEFT")
-        row.nameText:SetTextColor(T("TEXT_PRIMARY"))
+        row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         row.memText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.memText:SetJustifyH("RIGHT")
-        row.memText:SetTextColor(T("TEXT_SECONDARY"))
+        row.memText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         row.memPctText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.memPctText:SetJustifyH("RIGHT")
-        row.memPctText:SetTextColor(T("TEXT_MUTED"))
+        row.memPctText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         row.cpuText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.cpuText:SetJustifyH("RIGHT")
-        row.cpuText:SetTextColor(T("TEXT_SECONDARY"))
+        row.cpuText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         row.cpuPctText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.cpuPctText:SetJustifyH("RIGHT")
-        row.cpuPctText:SetTextColor(T("TEXT_MUTED"))
+        row.cpuPctText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         if hasCPU then
             row.cpuPctText:SetPoint("RIGHT", row, "RIGHT", -14, 0)
@@ -1741,18 +1729,18 @@ function UI:CreateMonitorTab(parent)
     totalsBar:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 5, 5)
     totalsBar:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
     totalsBar:SetHeight(25)
-    totalsBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    totalsBar:SetBackdropColor(T("BG_TERTIARY"))
+    totalsBar:SetBackdrop(BACKDROP_SIMPLE)
+    totalsBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
     tab.totalsText = totalsBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     tab.totalsText:SetPoint("LEFT", totalsBar, "LEFT", 10, 0)
     tab.totalsText:SetText("")
-    tab.totalsText:SetTextColor(T("TEXT_PRIMARY"))
+    tab.totalsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     tab.noDataText = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     tab.noDataText:SetPoint("CENTER", listPanel, "CENTER", 0, 0)
     tab.noDataText:SetText(L["MON_MSG_NO_DATA"] or "Click 'Update' or 'Play' to begin monitoring")
-    tab.noDataText:SetTextColor(T("TEXT_MUTED"))
+    tab.noDataText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     function tab:RefreshList()
         if not Monitor then return end
@@ -1890,9 +1878,9 @@ function UI:CreateSettingsTab(parent)
     splitContainer:SetPoint("TOPLEFT", tab, "TOPLEFT", 10, yOffset)
     splitContainer:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -10, yOffset)
     splitContainer:SetHeight(165)
-    splitContainer:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    splitContainer:SetBackdropColor(T("BG_SECONDARY"))
-    splitContainer:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    splitContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    splitContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    splitContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local leftPanel = CreateFrame("Frame", nil, splitContainer)
     leftPanel:SetPoint("TOPLEFT", splitContainer, "TOPLEFT", 0, 0)
@@ -1901,7 +1889,7 @@ function UI:CreateSettingsTab(parent)
     local langTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     langTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -12)
     langTitle:SetText(L["SETTINGS_LANGUAGE_SELECTION"])
-    langTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    langTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local langDescText = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     langDescText:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -38)
@@ -1909,7 +1897,7 @@ function UI:CreateSettingsTab(parent)
     langDescText:SetJustifyH("LEFT")
     langDescText:SetWordWrap(true)
     langDescText:SetText(L["SETTINGS_LANGUAGE_DESC"])
-    langDescText:SetTextColor(T("TEXT_SECONDARY"))
+    langDescText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local LANGUAGES = {
         { code = "enUS", name = L["LANG_ENGLISH"] },
@@ -1929,36 +1917,34 @@ function UI:CreateSettingsTab(parent)
     local langCurrentLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     langCurrentLabel:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -90)
     langCurrentLabel:SetText(L["SETTINGS_LANGUAGE_SELECTION"] .. ": " .. currentLangName)
-    langCurrentLabel:SetTextColor(T("ACCENT_PRIMARY"))
+    langCurrentLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local langDropdown = CreateFrame("Button", nil, leftPanel, "BackdropTemplate")
     langDropdown:SetSize(190, 30)
     langDropdown:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -115)
-    langDropdown:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false, edgeSize = 12, insets = { left = 2, right = 2, top = 2, bottom = 2 } })
-    langDropdown:SetBackdropColor(T("BG_TERTIARY"))
-    langDropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    langDropdown:SetBackdrop(backdrop)
+    langDropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    langDropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local langDropText = langDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     langDropText:SetPoint("CENTER")
     langDropText:SetText(currentLangName)
-    langDropText:SetTextColor(T("TEXT_PRIMARY"))
+    langDropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local langDropArrow = langDropdown:CreateTexture(nil, "OVERLAY")
     langDropArrow:SetSize(16, 16)
     langDropArrow:SetPoint("RIGHT", langDropdown, "RIGHT", -5, 0)
     langDropArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
 
-    langDropdown:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")) self:SetBackdropBorderColor(T("BORDER_FOCUS")) end)
-    langDropdown:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_TERTIARY")) self:SetBackdropBorderColor(T("BORDER_SUBTLE")) end)
+    langDropdown:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS")) end)
+    langDropdown:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY")) self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE")) end)
 
     langDropdown:SetScript("OnClick", function(self)
         local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
         menu:SetSize(190, #LANGUAGES * 27 + 10)
         menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-        menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = false, edgeSize = 12, insets = { left = 2, right = 2, top = 2, bottom = 2 } })
+        menu:SetBackdrop(backdrop)
         menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
         menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         menu:EnableMouse(true)
@@ -1966,7 +1952,7 @@ function UI:CreateSettingsTab(parent)
             local btn = CreateFrame("Button", nil, menu, "BackdropTemplate")
             btn:SetSize(180, 25)
             btn:SetPoint("TOP", menu, "TOP", 0, -(5 + (i - 1) * 27))
-            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
+            btn:SetBackdrop(BACKDROP_SIMPLE)
             btn:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
             local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             txt:SetPoint("CENTER")
@@ -2000,7 +1986,7 @@ function UI:CreateSettingsTab(parent)
     vertDivider:SetWidth(1)
     vertDivider:SetPoint("TOP", splitContainer, "TOP", 0, -8)
     vertDivider:SetPoint("BOTTOM", splitContainer, "BOTTOM", 0, 8)
-    vertDivider:SetColorTexture(T("BORDER_SUBTLE"))
+    vertDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local rightPanel = CreateFrame("Frame", nil, splitContainer)
     rightPanel:SetPoint("TOPLEFT", splitContainer, "TOP", 0, 0)
@@ -2024,7 +2010,7 @@ function UI:CreateSettingsTab(parent)
     local themeTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     themeTitle:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -12)
     themeTitle:SetText(L["SETTINGS_THEME_SELECTION"])
-    themeTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    themeTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local themeDescText = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     themeDescText:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -38)
@@ -2032,25 +2018,24 @@ function UI:CreateSettingsTab(parent)
     themeDescText:SetJustifyH("LEFT")
     themeDescText:SetWordWrap(true)
     themeDescText:SetText(L["SETTINGS_THEME_DESC"])
-    themeDescText:SetTextColor(T("TEXT_SECONDARY"))
+    themeDescText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local themeCurrentLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     themeCurrentLabel:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -90)
     themeCurrentLabel:SetText(L["SETTINGS_THEME_SELECTION"] .. ": " .. currentThemeName)
-    themeCurrentLabel:SetTextColor(T("ACCENT_PRIMARY"))
+    themeCurrentLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local themeDropdown = CreateFrame("Button", nil, rightPanel, "BackdropTemplate")
     themeDropdown:SetSize(210, 30)
     themeDropdown:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -115)
-    themeDropdown:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false, edgeSize = 12, insets = { left = 2, right = 2, top = 2, bottom = 2 } })
-    themeDropdown:SetBackdropColor(T("BG_TERTIARY"))
-    themeDropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    themeDropdown:SetBackdrop(backdrop)
+    themeDropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    themeDropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local themeDropText = themeDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     themeDropText:SetPoint("LEFT", themeDropdown, "LEFT", 25, 0)
     themeDropText:SetText(currentThemeName)
-    themeDropText:SetTextColor(T("TEXT_PRIMARY"))
+    themeDropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local themeColorPreview = themeDropdown:CreateTexture(nil, "OVERLAY")
     themeColorPreview:SetSize(14, 14)
@@ -2063,16 +2048,15 @@ function UI:CreateSettingsTab(parent)
     themeDropArrow:SetPoint("RIGHT", themeDropdown, "RIGHT", -5, 0)
     themeDropArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
 
-    themeDropdown:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")) self:SetBackdropBorderColor(T("BORDER_FOCUS")) end)
-    themeDropdown:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_TERTIARY")) self:SetBackdropBorderColor(T("BORDER_SUBTLE")) end)
+    themeDropdown:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS")) end)
+    themeDropdown:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY")) self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE")) end)
 
     themeDropdown:SetScript("OnClick", function(self)
         local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
         menu:SetSize(240, 318)
         menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-        menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = false, edgeSize = 12, insets = { left = 2, right = 2, top = 2, bottom = 2 } })
+        menu:SetBackdrop(backdrop)
         menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
         menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         menu:EnableMouse(true)
@@ -2089,7 +2073,7 @@ function UI:CreateSettingsTab(parent)
         scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 0, -2)
         scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 0, 2)
         scrollBar:SetWidth(12)
-        scrollBar:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
+        scrollBar:SetBackdrop(BACKDROP_SIMPLE)
         scrollBar:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
         scrollBar:EnableMouse(true)
         scrollBar:SetScript("OnValueChanged", function(self, value) scrollFrame:SetVerticalScroll(value) end)
@@ -2115,7 +2099,7 @@ function UI:CreateSettingsTab(parent)
                 local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
                 btn:SetSize(230, 26)
                 btn:SetPoint("TOP", scrollChild, "TOP", 0, -(5 + (i - 1) * 28))
-                btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
+                btn:SetBackdrop(BACKDROP_SIMPLE)
                 btn:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
                 local dot = btn:CreateTexture(nil, "OVERLAY")
                 dot:SetSize(14, 14)
@@ -2160,9 +2144,9 @@ function UI:CreateSettingsTab(parent)
     minimapSplit:SetPoint("TOPLEFT", tab, "TOPLEFT", 10, yOffset)
     minimapSplit:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -10, yOffset)
     minimapSplit:SetHeight(140)
-    minimapSplit:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    minimapSplit:SetBackdropColor(T("BG_SECONDARY"))
-    minimapSplit:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    minimapSplit:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    minimapSplit:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    minimapSplit:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local mmLeftPanel = CreateFrame("Frame", nil, minimapSplit)
     mmLeftPanel:SetPoint("TOPLEFT", minimapSplit, "TOPLEFT", 0, 0)
@@ -2171,7 +2155,7 @@ function UI:CreateSettingsTab(parent)
     local mmLeftTitle = mmLeftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     mmLeftTitle:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 15, -12)
     mmLeftTitle:SetText(L["MINIMAP_SECTION"])
-    mmLeftTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    mmLeftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local mmLeftDesc = mmLeftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     mmLeftDesc:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 15, -38)
@@ -2179,7 +2163,7 @@ function UI:CreateSettingsTab(parent)
     mmLeftDesc:SetJustifyH("LEFT")
     mmLeftDesc:SetWordWrap(true)
     mmLeftDesc:SetText(L["MINIMAP_SECTION_DESC"])
-    mmLeftDesc:SetTextColor(T("TEXT_SECONDARY"))
+    mmLeftDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local mmCheckbox = CreateFrame("CheckButton", nil, mmLeftPanel, "UICheckButtonTemplate")
     mmCheckbox:SetSize(26, 26)
@@ -2191,7 +2175,7 @@ function UI:CreateSettingsTab(parent)
     local mmCheckLabel = mmLeftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     mmCheckLabel:SetPoint("LEFT", mmCheckbox, "RIGHT", 4, 0)
     mmCheckLabel:SetText(L["MINIMAP_SHOW_BTN"])
-    mmCheckLabel:SetTextColor(T("TEXT_PRIMARY"))
+    mmCheckLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     mmCheckbox:SetScript("OnClick", function(self)
         local checked = self:GetChecked()
@@ -2208,7 +2192,7 @@ function UI:CreateSettingsTab(parent)
     mmVertDiv:SetWidth(1)
     mmVertDiv:SetPoint("TOP", minimapSplit, "TOP", 0, -8)
     mmVertDiv:SetPoint("BOTTOM", minimapSplit, "BOTTOM", 0, 8)
-    mmVertDiv:SetColorTexture(T("BORDER_SUBTLE"))
+    mmVertDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local mmRightPanel = CreateFrame("Frame", nil, minimapSplit)
     mmRightPanel:SetPoint("TOPLEFT", minimapSplit, "TOP", 0, 0)
@@ -2217,7 +2201,7 @@ function UI:CreateSettingsTab(parent)
     local mmRightTitle = mmRightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     mmRightTitle:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -12)
     mmRightTitle:SetText(L["MINIMAP_ICON_SECTION"])
-    mmRightTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    mmRightTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local mmRightDesc = mmRightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     mmRightDesc:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -38)
@@ -2225,7 +2209,7 @@ function UI:CreateSettingsTab(parent)
     mmRightDesc:SetJustifyH("LEFT")
     mmRightDesc:SetWordWrap(true)
     mmRightDesc:SetText(L["MINIMAP_ICON_DESC"])
-    mmRightDesc:SetTextColor(T("TEXT_SECONDARY"))
+    mmRightDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local currentIconTheme = Addon.db and Addon.db.minimap and Addon.db.minimap.theme or "horde"
     local iconThemeNames = {
@@ -2242,14 +2226,9 @@ function UI:CreateSettingsTab(parent)
     local mmIconDropdown = CreateFrame("Button", nil, mmRightPanel, "BackdropTemplate")
     mmIconDropdown:SetSize(190, 30)
     mmIconDropdown:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -70)
-    mmIconDropdown:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false, edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
-    })
-    mmIconDropdown:SetBackdropColor(T("BG_TERTIARY"))
-    mmIconDropdown:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    mmIconDropdown:SetBackdrop(backdrop)
+    mmIconDropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    mmIconDropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local mmIconPreview = mmIconDropdown:CreateTexture(nil, "OVERLAY")
     mmIconPreview:SetSize(18, 18)
@@ -2259,27 +2238,22 @@ function UI:CreateSettingsTab(parent)
     local mmIconText = mmIconDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     mmIconText:SetPoint("LEFT", mmIconPreview, "RIGHT", 6, 0)
     mmIconText:SetText(iconThemeNames[currentIconTheme] or currentIconTheme)
-    mmIconText:SetTextColor(T("TEXT_PRIMARY"))
+    mmIconText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local mmIconArrow = mmIconDropdown:CreateTexture(nil, "OVERLAY")
     mmIconArrow:SetSize(16, 16)
     mmIconArrow:SetPoint("RIGHT", mmIconDropdown, "RIGHT", -5, 0)
     mmIconArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
 
-    mmIconDropdown:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")) self:SetBackdropBorderColor(T("BORDER_FOCUS")) end)
-    mmIconDropdown:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_TERTIARY")) self:SetBackdropBorderColor(T("BORDER_SUBTLE")) end)
+    mmIconDropdown:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS")) end)
+    mmIconDropdown:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY")) self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE")) end)
 
     mmIconDropdown:SetScript("OnClick", function(self)
         local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
         menu:SetSize(190, 88)
         menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-        menu:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = false, edgeSize = 12,
-            insets = { left = 2, right = 2, top = 2, bottom = 2 }
-        })
+        menu:SetBackdrop(backdrop)
         menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
         menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         menu:EnableMouse(true)
@@ -2289,7 +2263,7 @@ function UI:CreateSettingsTab(parent)
             local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
             btn:SetSize(180, 25)
             btn:SetPoint("TOP", parent, "TOP", 0, yPos)
-            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
+            btn:SetBackdrop(BACKDROP_SIMPLE)
             btn:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
             local ico = btn:CreateTexture(nil, "OVERLAY")
             ico:SetSize(18, 18)
@@ -2346,23 +2320,19 @@ function UI:ShowEventImportDialog()
         frame:RegisterForDrag("LeftButton")
         frame:SetScript("OnDragStart", frame.StartMoving)
         frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-        frame:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        frame:SetBackdropColor(T("BG_PRIMARY"))
-        frame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        frame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         title:SetPoint("TOP", 0, -8)
         title:SetText("Import Events to Monitor")
-        title:SetTextColor(T("TEXT_PRIMARY"))
+        title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local instrLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         instrLabel:SetPoint("TOPLEFT", 10, -28)
         instrLabel:SetText("Paste event search output below, then click Import:")
-        instrLabel:SetTextColor(T("TEXT_SECONDARY"))
+        instrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local panel = CreateFrame("Frame", nil, frame, "BackdropTemplate")
         panel:SetPoint("TOPLEFT", 10, -48)
@@ -2380,7 +2350,7 @@ function UI:ShowEventImportDialog()
         editBox:SetFontObject(GameFontNormalSmall)
         editBox:SetHeight(400)
         editBox:SetMaxLetters(0)
-        editBox:SetTextColor(T("TEXT_PRIMARY"))
+        editBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         editBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
         editScroll:SetScrollChild(editBox)
 
@@ -2391,7 +2361,7 @@ function UI:ShowEventImportDialog()
         local statusLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         statusLabel:SetPoint("BOTTOMLEFT", 10, 33)
         statusLabel:SetText("")
-        statusLabel:SetTextColor(T("TEXT_ACCENT"))
+        statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
         local importBtn = GUI:CreateButton(nil, frame, "Import Events", 120, 26)
         importBtn:SetPoint("BOTTOMRIGHT", -100, 8)

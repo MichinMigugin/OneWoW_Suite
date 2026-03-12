@@ -2,9 +2,12 @@ local ADDON_NAME, OneWoW = ...
 
 local GUI = OneWoW.GUI
 local L    = OneWoW.L
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-local function T(key) return OneWoW_GUI:GetThemeColor(key) end
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 local OVERLAY_SETTINGS_IDS = {
     consumables  = true,
@@ -120,9 +123,9 @@ local function CreateIconPicker(parent, initialIcon, onChange)
     local currentSelected = initialIcon or "VignetteEvent-SuperTracked"
 
     local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    container:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    container:SetBackdropColor(T("BG_TERTIARY"))
-    container:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    container:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local sbw = 10
 
@@ -136,7 +139,7 @@ local function CreateIconPicker(parent, initialIcon, onChange)
     scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 0, 0)
     scrollBar:SetWidth(sbw)
     scrollBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    scrollBar:SetBackdropColor(T("BG_SECONDARY"))
+    scrollBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     scrollBar:SetMinMaxValues(0, 1)
     scrollBar:SetValue(0)
     scrollBar:SetScript("OnValueChanged", function(_, value)
@@ -145,7 +148,7 @@ local function CreateIconPicker(parent, initialIcon, onChange)
 
     local thumb = scrollBar:CreateTexture(nil, "OVERLAY")
     thumb:SetSize(8, 20)
-    thumb:SetColorTexture(T("ACCENT_PRIMARY"))
+    thumb:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     scrollBar:SetThumbTexture(thumb)
 
     local scrollChild = CreateFrame("Frame", nil, scrollFrame)
@@ -173,9 +176,9 @@ local function CreateIconPicker(parent, initialIcon, onChange)
 
         local hdr = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
         hdr:SetHeight(PICKER_HDR_HEIGHT)
-        hdr:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        hdr:SetBackdropColor(T("BG_SECONDARY"))
-        hdr:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        hdr:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        hdr:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        hdr:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         hdr:Hide()
 
         local hdrArrow = hdr:CreateTexture(nil, "OVERLAY")
@@ -190,14 +193,14 @@ local function CreateIconPicker(parent, initialIcon, onChange)
         local hdrLabel = hdr:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         hdrLabel:SetPoint("LEFT", hdr, "LEFT", 20, 0)
         hdrLabel:SetText(L[cat.nameKey] or cat.nameKey)
-        hdrLabel:SetTextColor(T("ACCENT_PRIMARY"))
+        hdrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local catRows = {}
         for _, iconName in ipairs(cat.icons) do
             local row = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
             row:SetHeight(PICKER_ROW_HEIGHT)
-            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-            row:SetBackdropColor(T("BG_TERTIARY"))
+            row:SetBackdrop(BACKDROP_SIMPLE)
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
             row:Hide()
 
             local icoFrame = CreateFrame("Frame", nil, row)
@@ -212,7 +215,7 @@ local function CreateIconPicker(parent, initialIcon, onChange)
             lbl:SetPoint("RIGHT", row, "RIGHT", -4, 0)
             lbl:SetJustifyH("LEFT")
             lbl:SetText(OneWoW.OverlayIcons:GetDisplayName(iconName))
-            lbl:SetTextColor(T("TEXT_PRIMARY"))
+            lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             table.insert(catRows,    { iconName = iconName, frame = row, label = lbl })
             table.insert(allItemRows, { iconName = iconName, frame = row, label = lbl })
@@ -249,11 +252,11 @@ local function CreateIconPicker(parent, initialIcon, onChange)
                     yPos = yPos - (PICKER_ROW_HEIGHT + 2)
 
                     if rowData.iconName == currentSelected then
-                        rowData.frame:SetBackdropColor(T("BG_ACTIVE"))
-                        rowData.label:SetTextColor(T("TEXT_ACCENT"))
+                        rowData.frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                        rowData.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                     else
-                        rowData.frame:SetBackdropColor(T("BG_TERTIARY"))
-                        rowData.label:SetTextColor(T("TEXT_PRIMARY"))
+                        rowData.frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                        rowData.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                     end
                 else
                     rowData.frame:Hide()
@@ -290,14 +293,14 @@ local function CreateIconPicker(parent, initialIcon, onChange)
 
         capturedFrame:SetScript("OnEnter", function(self)
             if capturedName ~= currentSelected then
-                self:SetBackdropColor(T("BG_HOVER"))
-                capturedLabel:SetTextColor(T("TEXT_ACCENT"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                capturedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         end)
         capturedFrame:SetScript("OnLeave", function(self)
             if capturedName ~= currentSelected then
-                self:SetBackdropColor(T("BG_TERTIARY"))
-                capturedLabel:SetTextColor(T("TEXT_PRIMARY"))
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                capturedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end)
         capturedFrame:SetScript("OnClick", function()
@@ -316,24 +319,16 @@ local function CreateSlotPreview(parent, featureId, reg)
 
     local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     container:SetSize(SLOT_SIZE + 6, SLOT_SIZE + 6)
-    container:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    container:SetBackdropColor(T("BG_SECONDARY"))
-    container:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    container:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local slotFrame = CreateFrame("Frame", nil, container, "BackdropTemplate")
     slotFrame:SetSize(SLOT_SIZE, SLOT_SIZE)
     slotFrame:SetPoint("CENTER", container, "CENTER", 0, 0)
-    slotFrame:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    slotFrame:SetBackdropColor(0.07, 0.07, 0.07, 1)
-    slotFrame:SetBackdropBorderColor(0.35, 0.35, 0.35, 1)
+    slotFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    slotFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    slotFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local itemTex = slotFrame:CreateTexture(nil, "ARTWORK")
     itemTex:SetPoint("TOPLEFT",     slotFrame, "TOPLEFT",     1, -1)
@@ -377,14 +372,14 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
     titleLabel:SetText(L["OVR_GENERAL_TITLE"])
-    titleLabel:SetTextColor(T("ACCENT_PRIMARY"))
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
     local div = dsc:CreateTexture(nil, "ARTWORK")
     div:SetHeight(1)
     div:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(T("BORDER_SUBTLE"))
+    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOffset = yOffset - 12
 
     local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -394,7 +389,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
     descLabel:SetText(L["OVR_GENERAL_DESC"])
-    descLabel:SetTextColor(T("TEXT_PRIMARY"))
+    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
     local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general")
@@ -402,16 +397,16 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(T("TEXT_PRIMARY"))
+    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
     local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
@@ -422,10 +417,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
         if selectedRow and selectedRow.dot then
@@ -442,14 +437,14 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     noteLabel:SetWordWrap(true)
     noteLabel:SetSpacing(3)
     noteLabel:SetText(L["OVR_GENERAL_NOTE"])
-    noteLabel:SetTextColor(T("TEXT_SECONDARY"))
+    noteLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - noteLabel:GetStringHeight() - 20
 
     local intDiv = dsc:CreateTexture(nil, "ARTWORK")
     intDiv:SetHeight(1)
     intDiv:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     intDiv:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    intDiv:SetColorTexture(T("BORDER_SUBTLE"))
+    intDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOffset = yOffset - 14
 
     local intHeader = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -457,7 +452,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     intHeader:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     intHeader:SetJustifyH("LEFT")
     intHeader:SetText(L["OVR_INTEGRATIONS_HEADER"])
-    intHeader:SetTextColor(T("ACCENT_PRIMARY"))
+    intHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - intHeader:GetStringHeight() - 6
 
     local intDesc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -467,7 +462,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     intDesc:SetWordWrap(true)
     intDesc:SetSpacing(3)
     intDesc:SetText(L["OVR_INTEGRATIONS_DESC"])
-    intDesc:SetTextColor(T("TEXT_SECONDARY"))
+    intDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - intDesc:GetStringHeight() - 10
 
     local arkDetected  = C_AddOns.IsAddOnLoaded("ArkInventory")
@@ -478,33 +473,33 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     arkRow:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     arkRow:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     arkRow:SetHeight(30)
-    arkRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    arkRow:SetBackdropColor(T("BG_TERTIARY"))
-    arkRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    arkRow:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    arkRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    arkRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local arkName = arkRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     arkName:SetPoint("LEFT", arkRow, "LEFT", 10, 0)
     arkName:SetText("ArkInventory")
-    arkName:SetTextColor(T("TEXT_PRIMARY"))
+    arkName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local arkStatusLabel = arkRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     arkStatusLabel:SetPoint("LEFT", arkName, "RIGHT", 16, 0)
     arkStatusLabel:SetText(L["FEATURE_STATUS_LABEL"])
-    arkStatusLabel:SetTextColor(T("TEXT_SECONDARY"))
+    arkStatusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local arkStatusValue = arkRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     arkStatusValue:SetPoint("LEFT", arkStatusLabel, "RIGHT", 4, 0)
 
     if not arkDetected then
         arkStatusValue:SetText(L["OVR_INT_NOT_DETECTED"])
-        arkStatusValue:SetTextColor(0.5, 0.5, 0.5)
+        arkStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     else
         if arkEnabled then
             arkStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-            arkStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+            arkStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             arkStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-            arkStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+            arkStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
         local arkToggleBtn = OneWoW_GUI:CreateButton(nil, arkRow, arkEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
@@ -518,10 +513,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             nowEnabled = not nowEnabled
             if nowEnabled then
                 arkStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-                arkStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+                arkStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
                 arkStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-                arkStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+                arkStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             end
             self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
             OneWoW.OverlayEngine:Refresh()
@@ -537,33 +532,33 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     bagRow:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     bagRow:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     bagRow:SetHeight(30)
-    bagRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    bagRow:SetBackdropColor(T("BG_TERTIARY"))
-    bagRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    bagRow:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    bagRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    bagRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local bagName = bagRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bagName:SetPoint("LEFT", bagRow, "LEFT", 10, 0)
     bagName:SetText("Baganator")
-    bagName:SetTextColor(T("TEXT_PRIMARY"))
+    bagName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local bagStatusLabel = bagRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bagStatusLabel:SetPoint("LEFT", bagName, "RIGHT", 16, 0)
     bagStatusLabel:SetText(L["FEATURE_STATUS_LABEL"])
-    bagStatusLabel:SetTextColor(T("TEXT_SECONDARY"))
+    bagStatusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local bagStatusValue = bagRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bagStatusValue:SetPoint("LEFT", bagStatusLabel, "RIGHT", 4, 0)
 
     if not bagDetected then
         bagStatusValue:SetText(L["OVR_INT_NOT_DETECTED"])
-        bagStatusValue:SetTextColor(0.5, 0.5, 0.5)
+        bagStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     else
         if bagEnabled then
             bagStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-            bagStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+            bagStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             bagStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-            bagStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+            bagStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
         local bagToggleBtn = OneWoW_GUI:CreateButton(nil, bagRow, bagEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
@@ -577,10 +572,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             nowEnabled = not nowEnabled
             if nowEnabled then
                 bagStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-                bagStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+                bagStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
                 bagStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-                bagStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+                bagStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             end
             self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
             OneWoW.OverlayEngine:Refresh()
@@ -595,29 +590,29 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     bgnRow:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     bgnRow:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     bgnRow:SetHeight(30)
-    bgnRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    bgnRow:SetBackdropColor(T("BG_TERTIARY"))
-    bgnRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    bgnRow:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    bgnRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    bgnRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local bgnName = bgnRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bgnName:SetPoint("LEFT", bgnRow, "LEFT", 10, 0)
     bgnName:SetText("Bagnon")
-    bgnName:SetTextColor(T("TEXT_PRIMARY"))
+    bgnName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local bgnStatusLabel = bgnRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bgnStatusLabel:SetPoint("LEFT", bgnName, "RIGHT", 16, 0)
     bgnStatusLabel:SetText(L["FEATURE_STATUS_LABEL"])
-    bgnStatusLabel:SetTextColor(T("TEXT_SECONDARY"))
+    bgnStatusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local bgnStatusValue = bgnRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bgnStatusValue:SetPoint("LEFT", bgnStatusLabel, "RIGHT", 4, 0)
 
     if not bgnDetected then
         bgnStatusValue:SetText(L["OVR_INT_NOT_DETECTED"])
-        bgnStatusValue:SetTextColor(0.5, 0.5, 0.5)
+        bgnStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     else
         bgnStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["OVR_INT_NOT_COMPATIBLE"] .. ")")
-        bgnStatusValue:SetTextColor(1.0, 0.65, 0.0)
+        bgnStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
     end
 
     yOffset = yOffset - 34
@@ -629,33 +624,33 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     bbRow:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     bbRow:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     bbRow:SetHeight(30)
-    bbRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    bbRow:SetBackdropColor(T("BG_TERTIARY"))
-    bbRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    bbRow:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    bbRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    bbRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local bbName = bbRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bbName:SetPoint("LEFT", bbRow, "LEFT", 10, 0)
     bbName:SetText("BetterBags")
-    bbName:SetTextColor(T("TEXT_PRIMARY"))
+    bbName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local bbStatusLabel = bbRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bbStatusLabel:SetPoint("LEFT", bbName, "RIGHT", 16, 0)
     bbStatusLabel:SetText(L["FEATURE_STATUS_LABEL"])
-    bbStatusLabel:SetTextColor(T("TEXT_SECONDARY"))
+    bbStatusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local bbStatusValue = bbRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     bbStatusValue:SetPoint("LEFT", bbStatusLabel, "RIGHT", 4, 0)
 
     if not bbDetected then
         bbStatusValue:SetText(L["OVR_INT_NOT_DETECTED"])
-        bbStatusValue:SetTextColor(0.5, 0.5, 0.5)
+        bbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     else
         if bbEnabled then
             bbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-            bbStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+            bbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             bbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-            bbStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+            bbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
         local bbToggleBtn = OneWoW_GUI:CreateButton(nil, bbRow, bbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
@@ -669,10 +664,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             nowEnabled = not nowEnabled
             if nowEnabled then
                 bbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-                bbStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+                bbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
                 bbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-                bbStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+                bbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             end
             self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
             OneWoW.OverlayEngine:Refresh()
@@ -688,33 +683,33 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     owbRow:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     owbRow:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     owbRow:SetHeight(30)
-    owbRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    owbRow:SetBackdropColor(T("BG_TERTIARY"))
-    owbRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    owbRow:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    owbRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    owbRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local owbName = owbRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     owbName:SetPoint("LEFT", owbRow, "LEFT", 10, 0)
     owbName:SetText("OneWoW Bags")
-    owbName:SetTextColor(T("TEXT_PRIMARY"))
+    owbName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local owbStatusLabel = owbRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     owbStatusLabel:SetPoint("LEFT", owbName, "RIGHT", 16, 0)
     owbStatusLabel:SetText(L["FEATURE_STATUS_LABEL"])
-    owbStatusLabel:SetTextColor(T("TEXT_SECONDARY"))
+    owbStatusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local owbStatusValue = owbRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     owbStatusValue:SetPoint("LEFT", owbStatusLabel, "RIGHT", 4, 0)
 
     if not owbDetected then
         owbStatusValue:SetText(L["OVR_INT_NOT_DETECTED"])
-        owbStatusValue:SetTextColor(0.5, 0.5, 0.5)
+        owbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     else
         if owbEnabled then
             owbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-            owbStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+            owbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             owbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-            owbStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+            owbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
         local owbToggleBtn = OneWoW_GUI:CreateButton(nil, owbRow, owbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
@@ -728,10 +723,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             nowEnabled = not nowEnabled
             if nowEnabled then
                 owbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-                owbStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+                owbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
                 owbStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-                owbStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+                owbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             end
             self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
             OneWoW.OverlayEngine:Refresh()
@@ -747,33 +742,33 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     elvRow:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     elvRow:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     elvRow:SetHeight(30)
-    elvRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    elvRow:SetBackdropColor(T("BG_TERTIARY"))
-    elvRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    elvRow:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    elvRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    elvRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local elvName = elvRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     elvName:SetPoint("LEFT", elvRow, "LEFT", 10, 0)
     elvName:SetText("ElvUI")
-    elvName:SetTextColor(T("TEXT_PRIMARY"))
+    elvName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local elvStatusLabel = elvRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     elvStatusLabel:SetPoint("LEFT", elvName, "RIGHT", 16, 0)
     elvStatusLabel:SetText(L["FEATURE_STATUS_LABEL"])
-    elvStatusLabel:SetTextColor(T("TEXT_SECONDARY"))
+    elvStatusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local elvStatusValue = elvRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     elvStatusValue:SetPoint("LEFT", elvStatusLabel, "RIGHT", 4, 0)
 
     if not elvDetected then
         elvStatusValue:SetText(L["OVR_INT_NOT_DETECTED"])
-        elvStatusValue:SetTextColor(0.5, 0.5, 0.5)
+        elvStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     else
         if elvEnabled then
             elvStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-            elvStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+            elvStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             elvStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-            elvStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+            elvStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
         local elvToggleBtn = OneWoW_GUI:CreateButton(nil, elvRow, elvEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
@@ -787,10 +782,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             nowEnabled = not nowEnabled
             if nowEnabled then
                 elvStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_ENABLED"] .. ")")
-                elvStatusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+                elvStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
                 elvStatusValue:SetText(L["OVR_INT_DETECTED"] .. " (" .. L["FEATURE_DISABLED"] .. ")")
-                elvStatusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+                elvStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             end
             self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
             OneWoW.OverlayEngine:Refresh()
@@ -823,14 +818,14 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
     titleLabel:SetText(L[feature.title] or feature.title)
-    titleLabel:SetTextColor(T("ACCENT_PRIMARY"))
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
     local div = dsc:CreateTexture(nil, "ARTWORK")
     div:SetHeight(1)
     div:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(T("BORDER_SUBTLE"))
+    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOffset = yOffset - 12
 
     local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -840,7 +835,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
     descLabel:SetText(L[feature.description] or feature.description)
-    descLabel:SetTextColor(T("TEXT_PRIMARY"))
+    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
     local isEnabled = reg:IsEnabled("overlays", featureId)
@@ -848,16 +843,16 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(T("TEXT_PRIMARY"))
+    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
     if isEnabled then
         statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     else
         statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
     local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
@@ -868,10 +863,10 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         nowEnabled = not nowEnabled
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(T("TEXT_FEATURES_ENABLED"))
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(T("TEXT_FEATURES_DISABLED"))
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
         self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
         if selectedRow and selectedRow.dot then
@@ -891,7 +886,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     secDiv:SetHeight(1)
     secDiv:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     secDiv:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    secDiv:SetColorTexture(T("BORDER_SUBTLE"))
+    secDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOffset = yOffset - 14
 
     if featureId == "quest" then
@@ -902,7 +897,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         questNote:SetWordWrap(true)
         questNote:SetSpacing(3)
         questNote:SetText(L["OVR_QUEST_NOTE"])
-        questNote:SetTextColor(T("TEXT_SECONDARY"))
+        questNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         yOffset = yOffset - questNote:GetStringHeight() - 16
 
         local vendorCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
@@ -929,7 +924,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     local settingsHdr = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     settingsHdr:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     settingsHdr:SetText(L["OVR_SETTINGS_HEADER"])
-    settingsHdr:SetTextColor(T("ACCENT_PRIMARY"))
+    settingsHdr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - settingsHdr:GetStringHeight() - 10
 
     if featureId == "itemlevel" then
@@ -938,7 +933,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         local posLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         posLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         posLabel:SetText(L["OVR_POSITION_LABEL"])
-        posLabel:SetTextColor(T("TEXT_PRIMARY"))
+        posLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         yOffset = yOffset - posLabel:GetStringHeight() - 6
 
         local currentPos = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
@@ -988,7 +983,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         local fsLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         fsLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         fsLabel:SetText(L["OVR_FONTSIZE_LABEL"])
-        fsLabel:SetTextColor(T("TEXT_PRIMARY"))
+        fsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         yOffset = yOffset - fsLabel:GetStringHeight() - 6
 
         local currentFS = reg:GetOverlaySetting(featureId, "fontSize") or 10
@@ -1008,7 +1003,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         local fontLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         fontLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
         fontLabel:SetText(L["OVR_FONT_LABEL"] or "Font")
-        fontLabel:SetTextColor(T("TEXT_PRIMARY"))
+        fontLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         rightY = rightY - fontLabel:GetStringHeight() - 6
 
         local currentFont = reg:GetOverlaySetting(featureId, "fontFamily") or "Friz Quadrata TF"
@@ -1036,7 +1031,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         local outlineLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         outlineLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
         outlineLabel:SetText("Font Outline")
-        outlineLabel:SetTextColor(T("TEXT_PRIMARY"))
+        outlineLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         rightY = rightY - outlineLabel:GetStringHeight() - 6
 
         local outlineOptions = {"None", "Outline", "Thick Outline"}
@@ -1088,7 +1083,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     local previewName = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     previewName:SetPoint("LEFT", previewFrame, "RIGHT", 6, 0)
     previewName:SetText(OneWoW.OverlayIcons:GetDisplayName(currentIcon))
-    previewName:SetTextColor(T("TEXT_SECONDARY"))
+    previewName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightY = rightY - 24 - 6
 
     previewContainer:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
@@ -1097,7 +1092,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     local posLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     posLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
     posLabel:SetText(L["OVR_POSITION_LABEL"])
-    posLabel:SetTextColor(T("TEXT_PRIMARY"))
+    posLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     rightY = rightY - posLabel:GetStringHeight() - 6
 
     local currentPos = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
@@ -1125,7 +1120,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     local scaleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     scaleLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
     scaleLabel:SetText(L["OVR_SCALE_LABEL"])
-    scaleLabel:SetTextColor(T("TEXT_PRIMARY"))
+    scaleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     rightY = rightY - scaleLabel:GetStringHeight() - 6
 
     local currentScale = reg:GetOverlaySetting(featureId, "scale") or 1.0
@@ -1140,7 +1135,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     local alphaLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     alphaLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
     alphaLabel:SetText(L["OVR_ALPHA_LABEL"])
-    alphaLabel:SetTextColor(T("TEXT_PRIMARY"))
+    alphaLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     rightY = rightY - alphaLabel:GetStringHeight() - 6
 
     local currentAlpha = reg:GetOverlaySetting(featureId, "alpha") or 1.0
@@ -1155,7 +1150,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     local iconLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     iconLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     iconLabel:SetText(L["OVR_ICON_LABEL"])
-    iconLabel:SetTextColor(T("TEXT_PRIMARY"))
+    iconLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 18 - 4
 
     local picker = CreateIconPicker(dsc, currentIcon, function(iconName)

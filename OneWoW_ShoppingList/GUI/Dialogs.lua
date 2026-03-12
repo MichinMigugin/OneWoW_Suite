@@ -1,23 +1,14 @@
 local ADDON_NAME, ns = ...
 local L = ns.L
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER
+local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT
+
 ns.Dialogs = {}
 local Dialogs = ns.Dialogs
-
-local function T(key)
-    if ns.Constants and ns.Constants.THEME and ns.Constants.THEME[key] then
-        return unpack(ns.Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
-end
-
-local BACKDROP_INNER = {
-    bgFile   = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-    insets   = { left = 1, right = 1, top = 1, bottom = 1 },
-}
-
 local activeDialog = nil
 
 local function CloseActive()
@@ -34,17 +25,9 @@ local function CreateBaseDialog(parent, width, height)
     dlg:SetSize(width or 360, height or 200)
     dlg:SetPoint("CENTER", UIParent, "CENTER")
     dlg:SetFrameLevel(300)
-    dlg:SetBackdrop({
-        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile     = true,
-        tileEdge = true,
-        tileSize = 16,
-        edgeSize = 14,
-        insets   = { left = 3, right = 3, top = 3, bottom = 3 },
-    })
-    dlg:SetBackdropColor(T("BG_SECONDARY"))
-    dlg:SetBackdropBorderColor(T("BORDER_ACCENT"))
+    dlg:SetBackdrop(BACKDROP_SOFT)
+    dlg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    dlg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
     dlg:EnableMouse(true)
     dlg:SetMovable(true)
     dlg:RegisterForDrag("LeftButton")
@@ -65,7 +48,7 @@ local function CreateLabel(parent, text, fontObj, x, y)
     local fs = parent:CreateFontString(nil, "OVERLAY", fontObj or "GameFontNormal")
     fs:SetPoint("TOPLEFT", parent, "TOPLEFT", x or 16, y or -16)
     fs:SetText(text or "")
-    fs:SetTextColor(T("TEXT_PRIMARY"))
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     return fs
 end
 
@@ -74,12 +57,12 @@ local function CreateInput(parent, width, height, y)
     box:SetSize(width or 300, height or 28)
     box:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, y or -44)
     box:SetBackdrop(BACKDROP_INNER)
-    box:SetBackdropColor(T("BG_TERTIARY"))
-    box:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    box:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    box:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     box:SetFontObject(GameFontHighlight)
     box:SetTextInsets(8, 8, 0, 0)
     box:SetAutoFocus(true)
-    box:SetTextColor(T("TEXT_PRIMARY"))
+    box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     box:SetScript("OnEscapePressed", CloseActive)
     return box
 end
@@ -89,19 +72,19 @@ local function CreateBtn(parent, text, w, h, x, y)
     btn:SetSize(w or 100, h or 28)
     btn:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", x or 16, y or 12)
     btn:SetBackdrop(BACKDROP_INNER)
-    btn:SetBackdropColor(T("BTN_NORMAL"))
-    btn:SetBackdropBorderColor(T("BTN_BORDER"))
+    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
     btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     btn.text:SetPoint("CENTER")
     btn.text:SetText(text or "")
-    btn.text:SetTextColor(T("TEXT_PRIMARY"))
+    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BTN_HOVER"))
-        self.text:SetTextColor(T("TEXT_ACCENT"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     end)
     btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BTN_NORMAL"))
-        self.text:SetTextColor(T("TEXT_PRIMARY"))
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
     return btn
 end
@@ -140,7 +123,7 @@ function Dialogs:ConfirmDialog(titleText, bodyText, onConfirm, confirmLabel, par
 
     CreateLabel(dlg, titleText, "GameFontNormalLarge", 16, -16)
     local bodyLabel = CreateLabel(dlg, bodyText, "GameFontNormal", 16, -44)
-    bodyLabel:SetTextColor(T("TEXT_SECONDARY"))
+    bodyLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local confirmBtn = CreateBtn(dlg, confirmLabel or L["OWSL_BTN_DELETE"], 100, 28, 16, 12)
     confirmBtn.text:SetTextColor(1, 0.3, 0.3)
@@ -171,7 +154,7 @@ function Dialogs:ExportDialog(title, exportText, parent)
     editBox:SetMaxLetters(0)
     editBox:SetWidth(430)
     editBox:SetFontObject(GameFontHighlightSmall)
-    editBox:SetTextColor(T("TEXT_PRIMARY"))
+    editBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     editBox:SetText(exportText or "")
     editBox:SetScript("OnEscapePressed", CloseActive)
     scrollArea:SetScrollChild(editBox)
@@ -194,7 +177,7 @@ function Dialogs:ImportDialog(onImport, parent)
     CreateLabel(dlg, L["OWSL_IMPORT_TITLE"], "GameFontNormalLarge", 16, -16)
     CreateLabel(dlg, L["OWSL_DIALOG_IMPORT_INSTRUCTIONS"], "GameFontNormal", 16, -44)
     local formatLabel = CreateLabel(dlg, L["OWSL_DIALOG_IMPORT_FORMAT"], "GameFontNormalSmall", 16, -66)
-    formatLabel:SetTextColor(T("TEXT_MUTED"))
+    formatLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local scrollArea = CreateFrame("ScrollFrame", nil, dlg, "UIPanelScrollFrameTemplate")
     scrollArea:SetPoint("TOPLEFT", dlg, "TOPLEFT", 16, -118)
@@ -205,7 +188,7 @@ function Dialogs:ImportDialog(onImport, parent)
     editBox:SetMaxLetters(0)
     editBox:SetWidth(430)
     editBox:SetFontObject(GameFontHighlightSmall)
-    editBox:SetTextColor(T("TEXT_PRIMARY"))
+    editBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     editBox:SetAutoFocus(true)
     editBox:SetScript("OnEscapePressed", CloseActive)
     scrollArea:SetScrollChild(editBox)
@@ -272,26 +255,26 @@ function Dialogs:RecipeSelectDialog(recipes, knownByData, onSelect, parent)
         btn:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
         btn:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
         btn:SetHeight(36)
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1, insets = { left = 1, right = 1, top = 1, bottom = 1 } })
-        btn:SetBackdropColor(T("BTN_NORMAL"))
-        btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        btn:SetBackdrop(BACKDROP_INNER)
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
         local recipeName = recipe.name or (string.format(L["OWSL_RECIPE_UNKNOWN"], recipe.recipeID))
         local nameText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", 8, -6)
         nameText:SetText(recipeName)
-        nameText:SetTextColor(T("TEXT_PRIMARY"))
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local knownText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         knownText:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 8, 6)
         knownText:SetText(knownStr)
-        knownText:SetTextColor(T("TEXT_MUTED"))
+        knownText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BTN_HOVER"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         end)
         btn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BTN_NORMAL"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
         end)
 
         local capturedRecipe = recipe
@@ -320,7 +303,7 @@ function Dialogs:CraftablesDialog(craftableItems, listName, onCraft, parent)
     local countLabel = CreateLabel(dlg,
         string.format(L["OWSL_DIALOG_FOUND_CRAFTABLES"], #craftableItems),
         "GameFontNormal", 16, -44)
-    countLabel:SetTextColor(T("TEXT_SECONDARY"))
+    countLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local listContainer = CreateFrame("Frame", nil, dlg)
     listContainer:SetPoint("TOPLEFT", dlg, "TOPLEFT", 16, -70)
@@ -350,9 +333,9 @@ function Dialogs:CraftablesDialog(craftableItems, listName, onCraft, parent)
         row:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
         row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
         row:SetHeight(36)
-        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1, insets = { left = 1, right = 1, top = 1, bottom = 1 } })
-        row:SetBackdropColor(T("BG_TERTIARY"))
-        row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        row:SetBackdrop(BACKDROP_INNER)
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
         local icon = row:CreateTexture(nil, "ARTWORK")
         icon:SetSize(28, 28)
@@ -362,25 +345,25 @@ function Dialogs:CraftablesDialog(craftableItems, listName, onCraft, parent)
         local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameText:SetPoint("LEFT", icon, "RIGHT", 6, 4)
         nameText:SetText(itemInfo.name or (string.format(L["OWSL_ITEM_PREFIX"], itemInfo.itemID or 0)))
-        nameText:SetTextColor(T("TEXT_PRIMARY"))
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local qtyText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         qtyText:SetPoint("LEFT", icon, "RIGHT", 6, -8)
         qtyText:SetText(string.format(L["OWSL_DIALOG_QTY_NEEDED"], itemInfo.quantity or 1))
-        qtyText:SetTextColor(T("TEXT_SECONDARY"))
+        qtyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local craftBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
         craftBtn:SetSize(60, 24)
         craftBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        craftBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1, insets = { left = 1, right = 1, top = 1, bottom = 1 } })
-        craftBtn:SetBackdropColor(T("BTN_NORMAL"))
-        craftBtn:SetBackdropBorderColor(T("BTN_BORDER"))
+        craftBtn:SetBackdrop(BACKDROP_INNER)
+        craftBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        craftBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
         craftBtn.text = craftBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         craftBtn.text:SetPoint("CENTER")
         craftBtn.text:SetText(L["OWSL_BTN_CRAFT"])
-        craftBtn.text:SetTextColor(T("TEXT_PRIMARY"))
-        craftBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BTN_HOVER")) end)
-        craftBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BTN_NORMAL")) end)
+        craftBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        craftBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER")) end)
+        craftBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL")) end)
 
         local capturedItem = itemInfo
         craftBtn:SetScript("OnClick", function()

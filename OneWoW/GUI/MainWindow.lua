@@ -2,10 +2,9 @@ local ADDON_NAME, OneWoW = ...
 
 local GUI = OneWoW.GUI
 local L = OneWoW.L
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-local function T(key) return OneWoW_GUI:GetThemeColor(key) end
-local function S(key) return OneWoW_GUI:GetSpacing(key) end
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 local MainWindow = nil
 local isInitialized = false
@@ -29,37 +28,27 @@ local ALWAYS_SHOW_MODULES = {
 }
 local placeholderData = {}
 
-local function GetBrandIcon()
-    local factionTheme = (OneWoW_GUI and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
-    if factionTheme == "alliance" then
-        return "Interface\\AddOns\\OneWoW\\Media\\alliance-mini.png"
-    elseif factionTheme == "neutral" then
-        return "Interface\\AddOns\\OneWoW\\Media\\neutral-mini.png"
-    end
-    return "Interface\\AddOns\\OneWoW\\Media\\horde-mini.png"
-end
-
 local function CreateRow1TabButton(parent, text, moduleName)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetHeight(30)
     btn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
-    btn:SetBackdropColor(T("BG_SECONDARY"))
-    btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     btn.text:SetPoint("CENTER")
     btn.text:SetText(text)
-    btn.text:SetTextColor(T("TEXT_PRIMARY"))
+    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     btn.moduleName = moduleName
 
     btn:SetScript("OnEnter", function(self)
         if self.moduleName ~= currentModuleTab then
-            self:SetBackdropColor(T("BG_HOVER"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         end
     end)
     btn:SetScript("OnLeave", function(self)
         if self.moduleName ~= currentModuleTab then
-            self:SetBackdropColor(T("BG_SECONDARY"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         end
     end)
     btn:SetScript("OnClick", function(self)
@@ -81,24 +70,24 @@ local function CreateRow2TabButton(parent, text, subTabName, disabled)
     btn.text:SetText(text)
 
     if disabled then
-        btn:SetBackdropColor(T("BG_PRIMARY"))
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
         btn:SetBackdropBorderColor(0.15, 0.15, 0.15, 0.6)
         btn.text:SetTextColor(0.32, 0.32, 0.32, 1)
         return btn
     end
 
-    btn:SetBackdropColor(T("BG_SECONDARY"))
-    btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    btn.text:SetTextColor(T("TEXT_PRIMARY"))
+    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     btn:SetScript("OnEnter", function(self)
         if self.subTabName ~= currentSubTab then
-            self:SetBackdropColor(T("BG_HOVER"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         end
     end)
     btn:SetScript("OnLeave", function(self)
         if self.subTabName ~= currentSubTab then
-            self:SetBackdropColor(T("BG_SECONDARY"))
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         end
     end)
     btn:SetScript("OnClick", function(self)
@@ -111,13 +100,13 @@ end
 local function UpdateRow1Styling()
     for _, btn in ipairs(row1Buttons) do
         if btn.moduleName == currentModuleTab then
-            btn:SetBackdropColor(T("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(T("BORDER_ACCENT"))
-            btn.text:SetTextColor(T("TEXT_ACCENT"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            btn:SetBackdropColor(T("BG_SECONDARY"))
-            btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-            btn.text:SetTextColor(T("TEXT_PRIMARY"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end
 end
@@ -126,13 +115,13 @@ local function UpdateRow2Styling()
     for _, btn in ipairs(row2Buttons) do
         if btn.disabled then
         elseif btn.subTabName == currentSubTab then
-            btn:SetBackdropColor(T("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(T("BORDER_ACCENT"))
-            btn.text:SetTextColor(T("TEXT_ACCENT"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            btn:SetBackdropColor(T("BG_SECONDARY"))
-            btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-            btn.text:SetTextColor(T("TEXT_PRIMARY"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end
 end
@@ -141,11 +130,11 @@ local function UpdateContentAreaAnchors()
     if not contentArea then return end
     contentArea:ClearAllPoints()
     if row2Container and row2Container:IsShown() then
-        contentArea:SetPoint("TOPLEFT", row2Container, "BOTTOMLEFT", 0, -S("XS"))
+        contentArea:SetPoint("TOPLEFT", row2Container, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
     else
-        contentArea:SetPoint("TOPLEFT", row1Container, "BOTTOMLEFT", 0, -S("XS"))
+        contentArea:SetPoint("TOPLEFT", row1Container, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
     end
-    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -S("XS"), S("XS"))
+    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS"), OneWoW_GUI:GetSpacing("XS"))
 end
 
 local function HideAllContent()
@@ -161,7 +150,7 @@ local function LayoutRow1Buttons()
     local containerWidth = row1Container:GetWidth()
     if containerWidth <= 0 then containerWidth = 1380 end
     local numBtns = #row1Buttons
-    local spacing = S("XS")
+    local spacing = OneWoW_GUI:GetSpacing("XS")
     local btnWidth = (containerWidth - (numBtns - 1) * spacing) / numBtns
 
     for i, btn in ipairs(row1Buttons) do
@@ -180,7 +169,7 @@ local function LayoutRow2Buttons()
     local containerWidth = row2Container:GetWidth()
     if containerWidth <= 0 then containerWidth = 1380 end
     local numBtns = #row2Buttons
-    local spacing = S("XS")
+    local spacing = OneWoW_GUI:GetSpacing("XS")
     local btnWidth = (containerWidth - (numBtns - 1) * spacing) / numBtns
 
     for i, btn in ipairs(row2Buttons) do
@@ -400,7 +389,7 @@ function GUI:InitMainWindow()
         savedSize.height = frameH
     end
 
-    MainWindow = GUI:CreateFrame("OneWoWMainWindow", UIParent, frameW, frameH, true)
+    MainWindow = OneWoW_GUI:CreateFrame("OneWoWMainWindow", UIParent, frameW, frameH, OneWoW_GUI.Constants.BACKDROP_SOFT)
 
     local savedPos = OneWoW.db and OneWoW.db.global and OneWoW.db.global.mainFramePosition
     if savedPos then
@@ -427,8 +416,8 @@ function GUI:InitMainWindow()
         onClose = function() GUI:Hide() end,
     })
     titleBar:ClearAllPoints()
-    titleBar:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", S("XS"), -S("XS"))
-    titleBar:SetPoint("TOPRIGHT", MainWindow, "TOPRIGHT", -S("XS"), -S("XS"))
+    titleBar:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
+    titleBar:SetPoint("TOPRIGHT", MainWindow, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
     titleBar:EnableMouse(true)
     titleBar:RegisterForDrag("LeftButton")
     titleBar:SetScript("OnDragStart", function() MainWindow:StartMoving() end)
@@ -446,13 +435,13 @@ function GUI:InitMainWindow()
 
     row1Container = CreateFrame("Frame", nil, MainWindow)
     row1Container:SetHeight(C.ROW1_HEIGHT)
-    row1Container:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, -S("XS"))
-    row1Container:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, -S("XS"))
+    row1Container:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
+    row1Container:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, -OneWoW_GUI:GetSpacing("XS"))
 
     row2Container = CreateFrame("Frame", nil, MainWindow)
     row2Container:SetHeight(C.ROW2_HEIGHT)
-    row2Container:SetPoint("TOPLEFT", row1Container, "BOTTOMLEFT", 0, -S("XS"))
-    row2Container:SetPoint("TOPRIGHT", row1Container, "BOTTOMRIGHT", 0, -S("XS"))
+    row2Container:SetPoint("TOPLEFT", row1Container, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
+    row2Container:SetPoint("TOPRIGHT", row1Container, "BOTTOMRIGHT", 0, -OneWoW_GUI:GetSpacing("XS"))
     row2Container:Hide()
 
     contentArea = CreateFrame("Frame", nil, MainWindow)
@@ -580,17 +569,17 @@ function GUI:CreateAddonPlaceholderFrame(parent, info)
     local nameText = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     nameText:SetPoint("TOP", icon, "BOTTOM", 0, -16)
     nameText:SetText(L[info.localeKey] or info.name)
-    nameText:SetTextColor(T("TEXT_PRIMARY"))
+    nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local statusText = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     statusText:SetPoint("TOP", nameText, "BOTTOM", 0, -8)
     statusText:SetText(L["HOME_NOT_DETECTED"])
-    statusText:SetTextColor(T("TEXT_MUTED"))
+    statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local installLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     installLabel:SetPoint("TOP", statusText, "BOTTOM", 0, -24)
     installLabel:SetText(L["HOME_INSTALL_FROM_CURSE"])
-    installLabel:SetTextColor(T("TEXT_SECONDARY"))
+    installLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local urlBox = GUI:CreateEditBox("OneWoW_Placeholder_" .. info.name .. "_URL", parent, 400, 24)
     urlBox:SetPoint("TOP", installLabel, "BOTTOM", 0, -8)
@@ -599,7 +588,7 @@ function GUI:CreateAddonPlaceholderFrame(parent, info)
     urlBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
     urlBox:SetScript("OnEditFocusLost", function(self)
         self:HighlightText(0, 0)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 end
 

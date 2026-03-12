@@ -1,9 +1,9 @@
 local ADDON_NAME, OneWoW = ...
 
 local GUI = OneWoW.GUI
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-local function T(key) return OneWoW_GUI:GetThemeColor(key) end
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 local RESERVED_DEFAULT = "Default"
 
@@ -258,7 +258,7 @@ local function CreateScrollableEditBox(parent, onEscape)
     eb:SetMaxLetters(0)
     local fontPath = OneWoW_GUI and OneWoW_GUI.GetFont and OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
     eb:SetFont(fontPath, 12, "")
-    eb:SetTextColor(T("TEXT_PRIMARY"))
+    eb:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     eb:SetScript("OnEscapePressed", onEscape or function() end)
     eb:SetScript("OnTextChanged", function() sf:UpdateScrollChildRect() end)
 
@@ -291,7 +291,7 @@ function GUI:ShowSettingsProfileExportDialog(profileName, serializedStr)
     local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText("Select all and copy (Ctrl+A, Ctrl+C) to share this profile:")
-    hint:SetTextColor(T("TEXT_SECONDARY"))
+    hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local textBG = OneWoW_GUI:CreateFrame(nil, cf, 600, 420)
     textBG:ClearAllPoints()
@@ -337,7 +337,7 @@ function GUI:ShowSettingsProfileImportDialog(onImported)
     local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText("Paste exported profile data below, then click Import:")
-    hint:SetTextColor(T("TEXT_SECONDARY"))
+    hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local textBG = OneWoW_GUI:CreateFrame(nil, cf, 600, 380)
     textBG:ClearAllPoints()
@@ -411,7 +411,7 @@ function GUI:CreateProfilesTab(parent)
     end
 
     -- ── Panel A: UI & Addon Settings Profiles ─────────────────
-    local scrollFrame, content = GUI:CreateScrollFrame("OneWoW_ProfilesScroll", panelA)
+    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame("OneWoW_ProfilesScroll", panelA)
 
     local yOffset = -10
 
@@ -422,7 +422,7 @@ function GUI:CreateProfilesTab(parent)
     descText:SetWordWrap(true)
     descText:SetSpacing(2)
     descText:SetText("Saves your OneWoW theme, language, overlays, portal settings, and all QoL feature toggles. Export to share your setup or import from another player.")
-    descText:SetTextColor(T("TEXT_SECONDARY"))
+    descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     yOffset = yOffset - 36
 
@@ -433,7 +433,7 @@ function GUI:CreateProfilesTab(parent)
     nameInput:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
     nameInput:SetAutoFocus(false)
 
-    local saveBtn = GUI:CreateButton(nil, content, "Save Profile", 130, 26)
+    local saveBtn = OneWoW_GUI:CreateButton(nil, content, "Save Profile", 130, 26)
     saveBtn:SetPoint("LEFT", nameInput, "RIGHT", 8, 0)
 
     yOffset = yOffset - 40
@@ -441,7 +441,7 @@ function GUI:CreateProfilesTab(parent)
     local listHeaderSection = OneWoW_GUI:CreateSectionHeader(content, "Saved Profiles", yOffset)
     yOffset = listHeaderSection.bottomY - 8
 
-    local importBtn = GUI:CreateButton(nil, content, "Import Profile", 130, 24)
+    local importBtn = OneWoW_GUI:CreateButton(nil, content, "Import Profile", 130, 24)
     importBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset + 32)
 
     local listContainer = CreateFrame("Frame", nil, content)
@@ -476,7 +476,7 @@ function GUI:CreateProfilesTab(parent)
             local empty = listContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             empty:SetPoint("TOPLEFT", 10, -14)
             empty:SetText("No profiles saved yet. Save one above.")
-            empty:SetTextColor(T("TEXT_SECONDARY"))
+            empty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             listContainer:SetHeight(40)
             return
         end
@@ -501,23 +501,23 @@ function GUI:CreateProfilesTab(parent)
             nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -8)
             nameText:SetText(isDefault and ("|cFFFFD100" .. name .. "|r") or name)
             if isActive then
-                nameText:SetTextColor(T("TEXT_ACCENT"))
+                nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                nameText:SetTextColor(T("TEXT_PRIMARY"))
+                nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
 
             if isDefault then
                 local badge = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 badge:SetPoint("LEFT", nameText, "RIGHT", 8, 0)
                 badge:SetText("Account Default - Auto-Updates")
-                badge:SetTextColor(T("ACCENT_SECONDARY"))
+                badge:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
             end
 
             if isActive and not isDefault then
                 local activeBadge = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 activeBadge:SetPoint("LEFT", nameText, "RIGHT", 8, 0)
                 activeBadge:SetText("Active")
-                activeBadge:SetTextColor(T("TEXT_ACCENT"))
+                activeBadge:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
 
             local dateText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -525,7 +525,7 @@ function GUI:CreateProfilesTab(parent)
             local ts = data._updatedAt or 0
             local dateLabel = isDefault and "Updated: " or "Saved: "
             dateText:SetText(dateLabel .. (ts > 0 and date("%Y-%m-%d %H:%M", ts) or "Unknown"))
-            dateText:SetTextColor(T("TEXT_SECONDARY"))
+            dateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
             local tags = {}
             if data.core then
@@ -550,22 +550,22 @@ function GUI:CreateProfilesTab(parent)
             tagsText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -280, -44)
             tagsText:SetJustifyH("LEFT")
             tagsText:SetText(#tags > 0 and table.concat(tags, "  |cFF444444/|r  ") or "")
-            tagsText:SetTextColor(T("TEXT_SECONDARY"))
+            tagsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
             local btnY = 6
 
             if not isDefault then
-                local delBtn = GUI:CreateButton(nil, card, "Delete", 76, 26)
+                local delBtn = OneWoW_GUI:CreateButton(nil, card, "Delete", 76, 26)
                 delBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
-                delBtn:SetBackdropColor(0.45, 0.12, 0.12)
-                delBtn:SetBackdropBorderColor(0.65, 0.25, 0.25)
+                delBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+                delBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
                 delBtn:SetScript("OnEnter", function(self)
-                    self:SetBackdropColor(0.65, 0.18, 0.18)
-                    self:SetBackdropBorderColor(0.8, 0.3, 0.3)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER_HOVER"))
                 end)
                 delBtn:SetScript("OnLeave", function(self)
-                    self:SetBackdropColor(0.45, 0.12, 0.12)
-                    self:SetBackdropBorderColor(0.65, 0.25, 0.25)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
                 end)
                 local capturedName = name
                 delBtn:SetScript("OnClick", function()
@@ -578,27 +578,27 @@ function GUI:CreateProfilesTab(parent)
                     end)
                 end)
 
-                local exportBtn = GUI:CreateButton(nil, card, "Export", 76, 26)
+                local exportBtn = OneWoW_GUI:CreateButton(nil, card, "Export", 76, 26)
                 exportBtn:SetPoint("RIGHT", delBtn, "LEFT", -6, 0)
                 exportBtn:SetScript("OnClick", function()
                     local serialized = OneWoW.Profiles.SerializeProfile(capturedName, data)
                     if serialized then GUI:ShowSettingsProfileExportDialog(capturedName, serialized) end
                 end)
 
-                local loadBtn = GUI:CreateButton(nil, card, "Load", 76, 26)
+                local loadBtn = OneWoW_GUI:CreateButton(nil, card, "Load", 76, 26)
                 loadBtn:SetPoint("RIGHT", exportBtn, "LEFT", -6, 0)
                 loadBtn:SetScript("OnClick", function()
                     OneWoW.Profiles.ApplySettings(data, capturedName)
                 end)
             else
-                local exportBtn = GUI:CreateButton(nil, card, "Export", 90, 26)
+                local exportBtn = OneWoW_GUI:CreateButton(nil, card, "Export", 90, 26)
                 exportBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
                 exportBtn:SetScript("OnClick", function()
                     local serialized = OneWoW.Profiles.SerializeProfile(RESERVED_DEFAULT, data)
                     if serialized then GUI:ShowSettingsProfileExportDialog(RESERVED_DEFAULT, serialized) end
                 end)
 
-                local restoreBtn = GUI:CreateButton(nil, card, "Restore Now", 110, 26)
+                local restoreBtn = OneWoW_GUI:CreateButton(nil, card, "Restore Now", 110, 26)
                 restoreBtn:SetPoint("RIGHT", exportBtn, "LEFT", -6, 0)
                 restoreBtn:SetScript("OnClick", function()
                     OneWoW.Profiles.ApplySettings(data, RESERVED_DEFAULT)
