@@ -25,6 +25,7 @@ All ecosystem addons read/write through GUI. No more duplicate theme/language/mi
 ### Settings stored
 - `theme` - color theme key (default: "green")
 - `language` - locale key (default: GetLocale())
+- `font` - font key (default: "default")
 - `minimap.hide` - minimap button visibility (default: false)
 - `minimap.theme` - faction icon: "horde", "alliance", or "neutral" (default: "horde")
 
@@ -32,6 +33,7 @@ All ecosystem addons read/write through GUI. No more duplicate theme/language/mi
 ```lua
 local theme = OneWoW_GUI:GetSetting("theme")         -- "green", "blue", etc.
 local lang  = OneWoW_GUI:GetSetting("language")       -- "enUS", "koKR", etc.
+local font  = OneWoW_GUI:GetSetting("font")           -- "default", "expressway", etc.
 local hide  = OneWoW_GUI:GetSetting("minimap.hide")   -- true/false
 local icon  = OneWoW_GUI:GetSetting("minimap.theme")  -- "horde"/"alliance"/"neutral"
 ```
@@ -40,6 +42,7 @@ local icon  = OneWoW_GUI:GetSetting("minimap.theme")  -- "horde"/"alliance"/"neu
 ```lua
 OneWoW_GUI:SetSetting("theme", "blue")
 OneWoW_GUI:SetSetting("language", "koKR")
+OneWoW_GUI:SetSetting("font", "expressway")
 OneWoW_GUI:SetSetting("minimap.hide", true)
 OneWoW_GUI:SetSetting("minimap.theme", "alliance")
 ```
@@ -62,7 +65,32 @@ end)
 OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", myAddon, function(self, newIconTheme)
     -- update your minimap icon
 end)
+
+OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", myAddon, function(self, newFontKey)
+    -- refresh your UI text with the new font
+end)
 ```
+
+### Get the current font file path
+```lua
+local fontPath = OneWoW_GUI:GetFont()
+-- Returns the font file path string, or nil if set to "WoW Default"
+-- Example: "Interface\AddOns\OneWoW_GUI\Media\Fonts\Expressway.ttf"
+if fontPath then
+    myFontString:SetFont(fontPath, 12)
+end
+```
+
+### Available font keys
+| Key | Label | File |
+|-----|-------|------|
+| default | WoW Default | (nil - game default) |
+| expressway | Expressway | Expressway.ttf |
+| ptsansnarrow | PT Sans Narrow | PTSansNarrow.ttf |
+| continuum | Continuum Medium | ContinuumMedium.ttf |
+| actionman | Action Man | ActionMan.ttf |
+| homespun | Homespun | Homespun.ttf |
+| diedidie | DieDieDie | DieDieDie.ttf |
 
 ### Stamp out the standard 4-part settings panel
 ```lua
@@ -71,12 +99,13 @@ local yOffset = OneWoW_GUI:CreateSettingsPanel(parentFrame, {
 })
 -- yOffset is now updated; continue adding addon-specific content below
 ```
-This creates two themed containers:
+This creates three themed containers:
 1. Language Selection (left) | Color Theme (right) - with dropdowns
-2. Minimap Button checkbox (left) | Icon Theme dropdown (right)
+2. Font (full width) - dropdown with live preview text
+3. Minimap Button checkbox (left) | Icon Theme dropdown (right)
 
 All dropdowns read/write directly to `OneWoW_GUI_DB` and fire callbacks.
-The panel consumes ~370px of vertical space.
+The panel consumes ~495px of vertical space.
 
 ### Migrate existing settings (call once at addon init)
 ```lua
@@ -104,6 +133,9 @@ function addon:OnInitialize()
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(self2)
         -- update minimap icon
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2, newFontKey)
+        -- refresh UI text with OneWoW_GUI:GetFont()
     end)
 end
 
@@ -175,12 +207,75 @@ local frame = OneWoW_GUI:CreateFrame(name, parent, width, height, backdrop)
 Returns a BackdropTemplate frame with theme BG_PRIMARY + BORDER_DEFAULT.
 Optional `backdrop` param overrides the default (BACKDROP_SOFT).
 
-### Movable dialog
+### Movable dialog (low-level)
 ```lua
 local dialog = OneWoW_GUI:CreateMovableDialog(name, parent, width, height)
 ```
 Centered, draggable, clamped to screen, ESC closes it (via UISpecialFrames).
-Uses BACKDROP_INNER_NO_INSETS.
+Uses BACKDROP_INNER_NO_INSETS. For most dialogs, prefer `CreateDialog` instead.
+
+### Dialog (full featured)
+```lua
+local result = OneWoW_GUI:CreateDialog({
+    name = "MyDialog",              -- frame name (nil = anonymous, but needed for ESC close)
+    title = "Export Profile",       -- title bar text
+    width = 620,                    -- required
+    height = 500,                   -- required
+    strata = "DIALOG",             -- optional, default "DIALOG"
+    movable = true,                -- optional, default true
+    escClose = true,               -- optional, default true (adds to UISpecialFrames)
+    showBrand = false,             -- optional, OneWoW brand icon in title bar
+    titleIcon = nil,               -- optional, texture path for icon left of title
+    titleHeight = 28,              -- optional, default 28
+    onClose = function() end,      -- optional, called when X button or ESC closes
+    showScrollFrame = false,       -- optional, creates scroll frame in content area
+    buttons = {                    -- optional footer button row
+        { text = "Import", onClick = function(dialog) end },
+        { text = "Cancel", onClick = function(dialog) dialog:Hide() end, color = {0.6, 0.2, 0.2} },
+    },
+})
+```
+Returns a table:
+- `result.frame` - main frame (call `:Show()` / `:Hide()`)
+- `result.titleBar` - title bar frame from CreateTitleBar
+- `result.contentFrame` - area between title bar and button row (add your content here)
+- `result.scrollFrame` / `result.scrollContent` - if `showScrollFrame = true`
+- `result.buttons` - indexed table of button frames matching `buttons` order
+
+Button `color` option: `{r, g, b}` overrides the button background (useful for green confirm, red destructive).
+Buttons are right-aligned in footer. A 1px divider separates content from buttons.
+Frame starts hidden - call `result.frame:Show()` when ready.
+
+### Confirm dialog (simple yes/no)
+```lua
+local result = OneWoW_GUI:CreateConfirmDialog({
+    name = "MyConfirm",             -- optional frame name
+    title = "Confirm Restore",      -- accent header text
+    message = "Are you sure?",      -- body text below title
+    width = 420,                    -- optional, default 420
+    buttons = {
+        { text = "Confirm", color = {0.2, 0.6, 0.2}, onClick = function(dialog) end },
+        { text = "Cancel", onClick = function(dialog) dialog:Hide() end },
+    },
+})
+```
+Convenience wrapper around `CreateDialog` with `movable = false` and auto-calculated height.
+Returns the same table as `CreateDialog` plus:
+- `result.titleLabel` - FontString for the title text
+- `result.messageLabel` - FontString for the message text
+
+Not movable, centered on screen, ESC closes. Title displayed as large accent text (no title bar).
+
+### Filter bar (horizontal control container)
+```lua
+local filterBar = OneWoW_GUI:CreateFilterBar(parent, {
+    height = 40,              -- optional, default 40
+    anchorBelow = someFrame,  -- optional, anchor below this frame instead of parent top
+    offset = -5,              -- optional, vertical gap from anchor
+})
+```
+Creates a themed container bar (BG_SECONDARY + BORDER_DEFAULT) anchored across the top of parent.
+Add your own controls inside (dropdowns, search boxes, buttons) using existing library functions.
 
 ### Title bar
 ```lua
@@ -188,10 +283,14 @@ local titleBar = OneWoW_GUI:CreateTitleBar(parent, "My Title", {
     height = 20,           -- optional, default 20
     onClose = function() parent:Hide() end,  -- optional close button
     showBrand = true,      -- optional OneWoW brand icon + text
-    factionTheme = "horde" -- optional, used with showBrand
+    factionTheme = "horde" -- optional, auto-reads from GUI settings if omitted
 })
 ```
 Access title text via `titleBar._titleText`.
+Access close button via `titleBar._closeBtn` (nil if no `onClose` provided).
+When `showBrand = true` and `factionTheme` is omitted, the icon is auto-read from
+`OneWoW_GUI:GetSetting("minimap.theme")` (horde/alliance/neutral). This means all
+title bars automatically update when the user changes their faction icon setting.
 
 ---
 
@@ -264,29 +363,25 @@ Uses UICheckButtonTemplate. Access label via `cb.label`.
 ### Edit box
 ```lua
 local box = OneWoW_GUI:CreateEditBox(name, parent, {
-    width = 200,           -- optional, default 200
-    height = 22,           -- optional, default 22
+    width = 200,           -- optional, omit for anchor-based width (flexible)
+    height = 22,           -- optional, default SEARCH_HEIGHT
     placeholderText = "Search...",  -- optional
     maxLetters = 50,       -- optional
-})
-```
-Themed with focus border highlight and placeholder text behavior.
-
-### Search box
-```lua
-local searchBox = OneWoW_GUI:CreateSearchBox(parent, {
-    height = 22,                    -- optional, default SEARCH_HEIGHT
-    placeholderText = "Search...",  -- optional
     onTextChanged = function(text)  -- optional, text has placeholder filtered out
         FilterMyList(text)
     end,
 })
-searchBox:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, -30)
-searchBox:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, -30)
 ```
-Width-flexible search box (no fixed width, use anchors). Placeholder text auto-manages
-on focus gained/lost. Use `searchBox:GetSearchText()` to get text with placeholder filtered out.
-Also used internally by CreateSplitPanel when `showSearch = true`.
+Themed with focus border highlight and placeholder text behavior.
+When `width` is omitted, only height is set - use anchor points for flexible width.
+Use `box:GetSearchText()` to get current text with placeholder filtered out.
+
+### Search box (deprecated - use CreateEditBox instead)
+```lua
+local searchBox = OneWoW_GUI:CreateSearchBox(parent, options)
+```
+Thin wrapper that calls `CreateEditBox(nil, parent, options)`. Kept for backward compatibility.
+Use `CreateEditBox` directly with no `width` option for the same flexible-width behavior.
 
 ### Status dot
 ```lua
@@ -346,14 +441,28 @@ local newYOffset = OneWoW_GUI:CreateSection(parent, "Section Title", yOffset)
 
 ---
 
+## Section Headers
+
+### Themed section header bar
+```lua
+local section = OneWoW_GUI:CreateSectionHeader(parent, "Section Title", yOffset)
+-- section.bottomY = yOffset below the header for continued layout
+```
+Creates a themed bar with background, border, and accent-colored title text.
+
+---
+
 ## Scroll Frames
 
 ### Standalone scroll frame
 ```lua
 local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(name, parent)
+local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(name, parent, width, height)
 ```
 Uses UIPanelScrollFrameTemplate (Lesson 3 compliant).
-ScrollBar anchored to parent container. Content width auto-syncs on resize.
+ScrollBar anchored to parent container.
+- Without width/height: content width auto-syncs on resize.
+- With width: content width set to (width - 32). Name param can be nil for anonymous frames.
 
 ### Style an existing scroll bar
 ```lua

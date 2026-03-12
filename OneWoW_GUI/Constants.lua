@@ -4,6 +4,20 @@ if not OneWoW_GUI then return end
 local MEDIA_BASE = "Interface\\AddOns\\OneWoW_GUI\\Media\\"
 
 OneWoW_GUI.Constants = {
+    BAR_TEXTURE = MEDIA_BASE .. "bar.tga",
+
+    PROGRESS_COLORS = {
+        NONE    = { 0.35, 0.35, 0.35 },
+        LOW     = { 0.55, 0.15, 0.15 },
+        MID     = { 0.55, 0.55, 0.15 },
+        FULL    = { 0.15, 0.55, 0.15 },
+    },
+
+    PROGRESS_BAR = {
+        HEIGHT = 12,
+        BG_COLOR = { 0.15, 0.15, 0.15, 0.8 },
+    },
+
     ICON_TEXTURES = {
         horde    = MEDIA_BASE .. "horde-mini.png",
         alliance = MEDIA_BASE .. "alliance-mini.png",

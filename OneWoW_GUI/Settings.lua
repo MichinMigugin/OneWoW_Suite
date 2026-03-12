@@ -27,6 +27,7 @@ local function InitSettingsDB()
     local db = OneWoW_GUI_DB
     if not db.language then db.language = GetLocale() end
     if not db.theme then db.theme = "green" end
+    if not db.font then db.font = "default" end
     if not db.minimap then db.minimap = {} end
     if db.minimap.hide == nil then db.minimap.hide = false end
     if db.minimap.theme == nil then db.minimap.theme = "horde" end
@@ -38,6 +39,7 @@ function OneWoW_GUI:GetSetting(key)
     if not db then return nil end
     if key == "theme" then return db.theme
     elseif key == "language" then return db.language
+    elseif key == "font" then return db.font
     elseif key == "minimap.hide" then return db.minimap and db.minimap.hide
     elseif key == "minimap.theme" then return db.minimap and db.minimap.theme
     end
@@ -53,6 +55,9 @@ function OneWoW_GUI:SetSetting(key, value)
     elseif key == "language" then
         db.language = value
         FireCallbacks("OnLanguageChanged", value)
+    elseif key == "font" then
+        db.font = value
+        FireCallbacks("OnFontChanged", value)
     elseif key == "minimap.hide" then
         if not db.minimap then db.minimap = {} end
         db.minimap.hide = value
@@ -74,6 +79,9 @@ function OneWoW_GUI:MigrateSettings(sourceGlobal)
     end
     if sourceGlobal.language then
         db.language = sourceGlobal.language
+    end
+    if sourceGlobal.font then
+        db.font = sourceGlobal.font
     end
     if sourceGlobal.minimap then
         if sourceGlobal.minimap.hide ~= nil then db.minimap.hide = sourceGlobal.minimap.hide end
@@ -110,6 +118,32 @@ local THEMES_ORDER = Constants.THEMES_ORDER
 local THEMES = Constants.THEMES
 
 local MEDIA_BASE = "Interface\\AddOns\\OneWoW_GUI\\Media\\"
+local FONT_BASE = MEDIA_BASE .. "Fonts\\"
+
+local FONTS = {
+    { key = "default",          label = "WoW Default",      file = nil },
+    { key = "expressway",       label = "Expressway",       file = FONT_BASE .. "Expressway.ttf" },
+    { key = "ptsansnarrow",     label = "PT Sans Narrow",   file = FONT_BASE .. "PTSansNarrow.ttf" },
+    { key = "continuum",        label = "Continuum Medium", file = FONT_BASE .. "ContinuumMedium.ttf" },
+    { key = "actionman",        label = "Action Man",       file = FONT_BASE .. "ActionMan.ttf" },
+    { key = "homespun",         label = "Homespun",         file = FONT_BASE .. "Homespun.ttf" },
+    { key = "diedidie",         label = "DieDieDie",        file = FONT_BASE .. "DieDieDie.ttf" },
+}
+
+local FONT_LOOKUP = {}
+for _, f in ipairs(FONTS) do
+    FONT_LOOKUP[f.key] = f
+end
+
+function OneWoW_GUI:GetFont()
+    local fontKey = self:GetSetting("font") or "default"
+    local fontData = FONT_LOOKUP[fontKey]
+    if fontData and fontData.file then
+        return fontData.file
+    end
+    return nil
+end
+
 local ICON_TEXTURES = {
     horde    = MEDIA_BASE .. "horde-mini.png",
     alliance = MEDIA_BASE .. "alliance-mini.png",
@@ -420,6 +454,138 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     end)
 
     yOffset = yOffset - 185
+
+    local currentFontKey = self:GetSetting("font") or "default"
+    local currentFontData = FONT_LOOKUP[currentFontKey]
+    local currentFontLabel = currentFontData and currentFontData.label or "WoW Default"
+
+    local fontContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    fontContainer:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+    fontContainer:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+    fontContainer:SetHeight(110)
+    fontContainer:SetBackdrop(panelBackdrop)
+    fontContainer:SetBackdropColor(self:GetThemeColor("BG_SECONDARY"))
+    fontContainer:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
+
+    local fontTitle = fontContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    fontTitle:SetPoint("TOPLEFT", fontContainer, "TOPLEFT", 15, -12)
+    fontTitle:SetText("Font")
+    fontTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
+
+    local fontDesc = fontContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fontDesc:SetPoint("TOPLEFT", fontContainer, "TOPLEFT", 15, -38)
+    fontDesc:SetPoint("RIGHT", fontContainer, "RIGHT", -15, 0)
+    fontDesc:SetText("(BETA – Coming Soon) Choose the font used across all OneWoW addons.")
+    fontDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
+    fontDesc:SetJustifyH("LEFT")
+    fontDesc:SetWordWrap(true)
+
+    local fontPreview = fontContainer:CreateFontString(nil, "OVERLAY")
+    fontPreview:SetPoint("TOPRIGHT", fontContainer, "TOPRIGHT", -15, -12)
+    if currentFontData and currentFontData.file then
+        fontPreview:SetFont(currentFontData.file, 14)
+    else
+        fontPreview:SetFontObject(GameFontNormal)
+    end
+    fontPreview:SetText("Preview: AaBbCc 123")
+    fontPreview:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+
+    local fontDropdown = CreateFrame("Button", nil, fontContainer, "BackdropTemplate")
+    fontDropdown:SetSize(210, 30)
+    fontDropdown:SetPoint("TOPLEFT", fontContainer, "TOPLEFT", 15, -65)
+    fontDropdown:SetBackdrop(dropdownBackdrop)
+    fontDropdown:SetBackdropColor(self:GetThemeColor("BG_TERTIARY"))
+    fontDropdown:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
+
+    local fontDropText = fontDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fontDropText:SetPoint("LEFT", 10, 0)
+    fontDropText:SetText(currentFontLabel)
+    fontDropText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+
+    local fontArrow = fontDropdown:CreateTexture(nil, "OVERLAY")
+    fontArrow:SetSize(16, 16)
+    fontArrow:SetPoint("RIGHT", fontDropdown, "RIGHT", -5, 0)
+    fontArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
+
+    local fontMenuRef = nil
+    fontDropdown:SetScript("OnClick", function(btn)
+        if fontMenuRef and fontMenuRef:IsShown() then
+            fontMenuRef:Hide()
+            return
+        end
+
+        local menu = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+        fontMenuRef = menu
+        menu:SetFrameStrata("FULLSCREEN_DIALOG")
+        menu:SetBackdrop(dropdownBackdrop)
+        menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
+        menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+        menu:EnableMouse(true)
+
+        local yOff = -4
+        local maxWidth = 220
+        for _, fontInfo in ipairs(FONTS) do
+            local fbtn = CreateFrame("Button", nil, menu, "BackdropTemplate")
+            fbtn:SetHeight(26)
+            fbtn:SetPoint("TOPLEFT", menu, "TOPLEFT", 4, yOff)
+            fbtn:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -4, yOff)
+            fbtn:SetBackdrop(simpleBackdrop)
+            fbtn:SetBackdropColor(0, 0, 0, 0)
+
+            fbtn.text = fbtn:CreateFontString(nil, "OVERLAY")
+            fbtn.text:SetPoint("LEFT", 8, 0)
+            if fontInfo.file then
+                fbtn.text:SetFont(fontInfo.file, 13)
+            else
+                fbtn.text:SetFontObject(GameFontNormal)
+            end
+            fbtn.text:SetText(fontInfo.label)
+            fbtn.text:SetTextColor(0.9, 0.9, 0.9)
+
+            fbtn:SetScript("OnEnter", function(s)
+                s:SetBackdropColor(0.2, 0.2, 0.2, 1)
+                fbtn.text:SetTextColor(1, 0.82, 0)
+            end)
+            fbtn:SetScript("OnLeave", function(s)
+                s:SetBackdropColor(0, 0, 0, 0)
+                fbtn.text:SetTextColor(0.9, 0.9, 0.9)
+            end)
+
+            local capturedKey = fontInfo.key
+            local capturedLabel = fontInfo.label
+            local capturedFile = fontInfo.file
+            fbtn:SetScript("OnClick", function()
+                menu:Hide()
+                fontDropText:SetText(capturedLabel)
+                if capturedFile then
+                    fontPreview:SetFont(capturedFile, 14)
+                else
+                    fontPreview:SetFontObject(GameFontNormal)
+                end
+                fontPreview:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                OneWoW_GUI:SetSetting("font", capturedKey)
+            end)
+
+            yOff = yOff - 26
+        end
+
+        menu:SetSize(maxWidth + 16, math.abs(yOff) + 8)
+        menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
+
+        menu:SetScript("OnShow", function(self)
+            local timeOutside = 0
+            self:SetScript("OnUpdate", function(self2, elapsed)
+                if not MouseIsOver(menu) and not MouseIsOver(btn) then
+                    timeOutside = timeOutside + elapsed
+                    if timeOutside > 0.5 then self2:Hide() self2:SetScript("OnUpdate", nil) end
+                else timeOutside = 0 end
+            end)
+        end)
+
+        menu:Show()
+    end)
+
+    yOffset = yOffset - 125
 
     local minimapContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     minimapContainer:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
