@@ -236,9 +236,10 @@ end
 ns.UI = ns.UI or {}
 
 function ns.UI.CreateNotesHelpPanel()
-    local L = ns.L
-    local T = ns.T
-    local S = ns.S
+    local L      = ns.L
+    local T      = ns.T
+    local S      = ns.S
+    local guiLib = LibStub("OneWoW_GUI-1.0", true)
 
     local EDGE     = S("XS")
     local TITLE_H  = 20
@@ -297,50 +298,33 @@ function ns.UI.CreateNotesHelpPanel()
 
     -- =============================================
     -- CONTENT AREA + TAB BUTTONS
-    -- Tab buttons anchor their BOTTOM to the TOPLEFT of contentArea
-    -- so they visually hang above it.
     -- =============================================
-    local contentArea = CreateFrame("Frame", nil, helpPanel)
-    contentArea:SetPoint("TOPLEFT",     helpPanel, "TOPLEFT",     EDGE, -(EDGE + TITLE_H + 32))
-    contentArea:SetPoint("BOTTOMRIGHT", helpPanel, "BOTTOMRIGHT", -EDGE, EDGE)
+    local tabAreaTop = -(EDGE + TITLE_H + S("XS"))
 
-    local linksTabBtn = CreateFrame("Button", "OneWoW_Notes_HelpLinksTab", helpPanel, "PanelTabButtonTemplate")
-    linksTabBtn:SetText(L["UI_HELP_TAB_LINKS"])
-    linksTabBtn:SetWidth(142)
-    linksTabBtn:SetID(1)
-    linksTabBtn:SetPoint("BOTTOMLEFT", contentArea, "TOPLEFT", 0, 0)
-
-    local pinsTabBtn = CreateFrame("Button", "OneWoW_Notes_HelpPinsTab", helpPanel, "PanelTabButtonTemplate")
-    pinsTabBtn:SetText(L["UI_HELP_TAB_PINS"])
-    pinsTabBtn:SetWidth(142)
-    pinsTabBtn:SetID(2)
-    pinsTabBtn:SetPoint("LEFT", linksTabBtn, "RIGHT", -5, 0)
-
-    PanelTemplates_SetNumTabs(helpPanel, 2)
-
-    local linksContent = CreateFrame("Frame", nil, contentArea)
-    linksContent:SetAllPoints(contentArea)
-
-    local pinsContent = CreateFrame("Frame", nil, contentArea)
-    pinsContent:SetAllPoints(contentArea)
+    local linksContent = CreateFrame("Frame", nil, helpPanel)
+    local pinsContent  = CreateFrame("Frame", nil, helpPanel)
     pinsContent:Hide()
 
-    local function SelectTab(tabName)
-        if tabName == "links" then
-            linksContent:Show()
-            pinsContent:Hide()
-            PanelTemplates_SelectTab(linksTabBtn)
-            PanelTemplates_DeselectTab(pinsTabBtn)
-        else
-            linksContent:Hide()
-            pinsContent:Show()
-            PanelTemplates_SelectTab(pinsTabBtn)
-            PanelTemplates_DeselectTab(linksTabBtn)
-        end
-    end
+    local tabBtns, tabsBottomY = guiLib:CreateFitFrameButtons(helpPanel, tabAreaTop, {
+        { text = L["UI_HELP_TAB_LINKS"], value = "links", isActive = true },
+        { text = L["UI_HELP_TAB_PINS"],  value = "pins"                   },
+    }, {
+        height   = 28,
+        gap      = 4,
+        marginX  = EDGE,
+        onSelect = function(value)
+            linksContent:SetShown(value == "links")
+            pinsContent:SetShown(value == "pins")
+        end,
+    })
 
-    linksTabBtn:SetScript("OnClick", function() SelectTab("links") end)
-    pinsTabBtn:SetScript("OnClick",  function() SelectTab("pins")  end)
+    local contentTop = tabsBottomY - S("XS")
+
+    linksContent:SetPoint("TOPLEFT",     helpPanel, "TOPLEFT",     EDGE, contentTop)
+    linksContent:SetPoint("BOTTOMRIGHT", helpPanel, "BOTTOMRIGHT", -EDGE, EDGE)
+
+    pinsContent:SetPoint("TOPLEFT",     helpPanel, "TOPLEFT",     EDGE, contentTop)
+    pinsContent:SetPoint("BOTTOMRIGHT", helpPanel, "BOTTOMRIGHT", -EDGE, EDGE)
 
     -- =============================================
     -- LINKS TAB
@@ -574,8 +558,6 @@ function ns.UI.CreateNotesHelpPanel()
 
     pinsScrollContent:SetHeight(math.abs(cardY) + 20)
     pinsScrollObj.UpdateThumb()
-
-    SelectTab("links")
 
     return helpPanel
 end
