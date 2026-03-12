@@ -188,6 +188,38 @@ function ns.UI.RefreshSummaryTab(summaryTab)
             elseif currentSortColumn == "bags" then
                 aVal = 0
                 bVal = 0
+                if StorageAPI then
+                    local aBags = StorageAPI.GetBags(a.key)
+                    if aBags then
+                        for bagID = 0, 4 do
+                            if aBags[bagID] then
+                                local numSlots = aBags[bagID].numSlots or 0
+                                local usedSlots = 0
+                                if aBags[bagID].slots then
+                                    for _, itemData in pairs(aBags[bagID].slots) do
+                                        if itemData then usedSlots = usedSlots + 1 end
+                                    end
+                                end
+                                aVal = aVal + (numSlots - usedSlots)
+                            end
+                        end
+                    end
+                    local bBags = StorageAPI.GetBags(b.key)
+                    if bBags then
+                        for bagID = 0, 4 do
+                            if bBags[bagID] then
+                                local numSlots = bBags[bagID].numSlots or 0
+                                local usedSlots = 0
+                                if bBags[bagID].slots then
+                                    for _, itemData in pairs(bBags[bagID].slots) do
+                                        if itemData then usedSlots = usedSlots + 1 end
+                                    end
+                                end
+                                bVal = bVal + (numSlots - usedSlots)
+                            end
+                        end
+                    end
+                end
             elseif currentSortColumn == "money" then
                 aVal = a.data.money or 0
                 bVal = b.data.money or 0
