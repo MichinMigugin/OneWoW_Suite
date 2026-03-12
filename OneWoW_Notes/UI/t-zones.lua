@@ -351,8 +351,8 @@ function ns.UI.CreateZonesTab(parent)
             noteEditBox:SetWidth(math.max(1, w))
         end)
 
-        local fontColorR, fontColorG, fontColorB, fontColorA = GetFontColorFromKey(zoneData.fontColor, zoneData.pinColor)
-        noteEditBox:SetTextColor(fontColorR, fontColorG, fontColorB, fontColorA or 1)
+        local fontColor = GetFontColorFromKey(zoneData.fontColor, zoneData.pinColor)
+        noteEditBox:SetTextColor(fontColor[1], fontColor[2], fontColor[3], 1)
 
         local saveTimer = nil
         noteEditBox:SetScript("OnTextChanged", function(self, userInput)
