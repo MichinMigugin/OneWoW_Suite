@@ -44,7 +44,7 @@ function ProfPanelUI:CreatePanel()
     panel:RegisterForDrag("LeftButton")
     panel:SetScript("OnDragStart", panel.StartMoving)
     panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
-    panel:SetFrameStrata("DIALOG")
+    panel:SetFrameStrata("MEDIUM")
 
     PositionPanel(panel)
 
@@ -168,29 +168,16 @@ function ProfPanelUI:CreateExpansionRow(parent, expansion, index)
     recipeText:SetText(string.format("|cff%02x%02x%02x%d/%d|r", countR * 255, countG * 255, countB * 255, expansion.learned, expansion.total))
 
     if expansion.maxSkill > 0 then
-        local bar = CreateFrame("StatusBar", nil, row)
-        bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-        bar:GetStatusBarTexture():SetHorizTile(false)
-        bar:SetMinMaxValues(0, expansion.maxSkill)
-        bar:SetValue(expansion.currentSkill)
-        local pR, pG, pB = Helpers.GetProgressColor(expansion.currentSkill, expansion.maxSkill)
-        bar:SetStatusBarColor(pR, pG, pB)
+        local bar = OneWoW_GUI:CreateProgressBar(row, {
+            min = 0,
+            max = expansion.maxSkill,
+            value = expansion.currentSkill,
+            height = BAR_HEIGHT,
+        })
         bar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 10, 6)
         bar:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -10, 6)
-        bar:SetHeight(BAR_HEIGHT)
         row.progressBar = bar
-
-        local barBg = bar:CreateTexture(nil, "BACKGROUND")
-        barBg:SetAllPoints(bar)
-        barBg:SetColorTexture(0.15, 0.15, 0.15, 0.8)
-
-        local skillText = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        skillText:SetPoint("CENTER", bar, "CENTER", 0, 0)
-        skillText:SetText(string.format("%d/%d", expansion.currentSkill, expansion.maxSkill))
-        skillText:SetTextColor(1, 1, 1, 1)
-        skillText:SetShadowOffset(1, -1)
-        skillText:SetShadowColor(0, 0, 0, 1)
-        row.skillText = skillText
+        row.skillText = bar._text
     end
 
     row.detailsFrame = nil

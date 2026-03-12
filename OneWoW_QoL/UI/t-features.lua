@@ -66,46 +66,22 @@ end
 
 local function ShowModuleDetailsDialog(module)
     if not modDetailsDialog then
-        local dialog = CreateFrame("Frame", "OneWoW_QoL_ModuleDetails", UIParent, "BackdropTemplate")
-        dialog:SetSize(340, 280)
-        dialog:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        dialog:SetFrameStrata("DIALOG")
-        dialog:SetToplevel(true)
-        dialog:SetMovable(true)
-        dialog:SetClampedToScreen(true)
-        dialog:EnableMouse(true)
-        dialog:RegisterForDrag("LeftButton")
-        dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-        dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-        dialog:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        dialog:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        dialog:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-        tinsert(UISpecialFrames, "OneWoW_QoL_ModuleDetails")
+        local result = OneWoW_GUI:CreateDialog({
+            name = "OneWoW_QoL_ModuleDetails",
+            title = L["FEATURES_DETAILS_TITLE"],
+            width = 340,
+            height = 280,
+            buttons = {
+                { text = L["CLOSE"], onClick = function(dialog) dialog:Hide() end },
+            },
+        })
 
-        local titleBar = OneWoW_GUI:CreateTitleBar(dialog, L["FEATURES_DETAILS_TITLE"], { height = 28 })
-
-        local headerDiv = dialog:CreateTexture(nil, "ARTWORK")
-        headerDiv:SetHeight(1)
-        headerDiv:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -29)
-        headerDiv:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -29)
-        headerDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-        local btnDiv = dialog:CreateTexture(nil, "ARTWORK")
-        btnDiv:SetHeight(1)
-        btnDiv:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 1, 46)
-        btnDiv:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -1, 46)
-        btnDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-        local closeBtn = OneWoW_GUI:CreateFitTextButton(dialog, L["CLOSE"], { height = 32 })
-        closeBtn:SetPoint("BOTTOM", dialog, "BOTTOM", 0, 8)
-        closeBtn:SetScript("OnClick", function() dialog:Hide() end)
-
-        local content = CreateFrame("Frame", nil, dialog)
-        content:SetPoint("TOPLEFT", dialog, "TOPLEFT", 20, -38)
-        content:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -20, -38)
+        local content = CreateFrame("Frame", nil, result.contentFrame)
+        content:SetPoint("TOPLEFT", result.contentFrame, "TOPLEFT", 20, -8)
+        content:SetPoint("TOPRIGHT", result.contentFrame, "TOPRIGHT", -20, -8)
         content:SetHeight(180)
         modDetailsContent = content
-        modDetailsDialog  = dialog
+        modDetailsDialog  = result.frame
     end
 
     ClearModDetailsContent()

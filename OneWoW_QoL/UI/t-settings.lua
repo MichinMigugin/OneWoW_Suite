@@ -61,38 +61,27 @@ local function ShowDevHelpDialog()
         return
     end
 
-    local dialog = CreateFrame("Frame", "OneWoW_QoLDevHelpDialog", UIParent, "BackdropTemplate")
-    dialog:SetSize(520, 560)
-    dialog:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    dialog:SetFrameStrata("DIALOG")
-    dialog:SetToplevel(true)
-    dialog:SetMovable(true)
-    dialog:SetClampedToScreen(true)
-    dialog:EnableMouse(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    dialog:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    dialog:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    tinsert(UISpecialFrames, "OneWoW_QoLDevHelpDialog")
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_QoLDevHelpDialog",
+        title = L["DEVHELP_TITLE"],
+        width = 520,
+        height = 560,
+        buttons = {
+            { text = L["DEVHELP_CLOSE"], onClick = function(dialog) dialog:Hide() end },
+        },
+    })
 
-    local titleBar = OneWoW_GUI:CreateTitleBar(dialog, L["DEVHELP_TITLE"], { height = 28 })
+    local dialog = result.frame
+    local cf = result.contentFrame
 
-    local divider = dialog:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -29)
-    divider:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -29)
-    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, dialog)
-    scrollFrame:SetPoint("TOPLEFT", dialog, "TOPLEFT", 16, -38)
-    scrollFrame:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -24, 50)
+    local scrollFrame = CreateFrame("ScrollFrame", nil, cf)
+    scrollFrame:SetPoint("TOPLEFT", cf, "TOPLEFT", 16, -4)
+    scrollFrame:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -24, 4)
     scrollFrame:EnableMouseWheel(true)
 
-    local scrollTrack = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    scrollTrack:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -4, -38)
-    scrollTrack:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -4, 50)
+    local scrollTrack = CreateFrame("Frame", nil, cf, "BackdropTemplate")
+    scrollTrack:SetPoint("TOPRIGHT", cf, "TOPRIGHT", -4, -4)
+    scrollTrack:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -4, 4)
     scrollTrack:SetWidth(8)
     scrollTrack:SetBackdrop(BACKDROP_SIMPLE)
     scrollTrack:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
@@ -172,16 +161,6 @@ local function ShowDevHelpDialog()
 
     scrollChild:SetHeight(bodyText:GetStringHeight() + 30)
     C_Timer.After(0.1, function() UpdateThumb() end)
-
-    local btnDivider = dialog:CreateTexture(nil, "ARTWORK")
-    btnDivider:SetHeight(1)
-    btnDivider:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 1, 46)
-    btnDivider:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -1, 46)
-    btnDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local closeBtn = OneWoW_GUI:CreateFitTextButton(dialog, L["DEVHELP_CLOSE"], { height = 32 })
-    closeBtn:SetPoint("BOTTOM", dialog, "BOTTOM", 0, 8)
-    closeBtn:SetScript("OnClick", function() dialog:Hide() end)
 
     dialog:Show()
 end

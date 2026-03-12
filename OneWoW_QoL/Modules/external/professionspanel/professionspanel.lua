@@ -65,11 +65,11 @@ local function GetRecipeCountColor(learned, total)
 end
 
 local function GetProgressColor(current, max)
-    if max == 0 then return 0.53, 0.53, 0.53 end
+    if max == 0 then return 0.35, 0.35, 0.35 end
     local pct = current / max
-    if pct >= 1.0 then return 0.2, 0.8, 0.2
-    elseif pct >= 0.5 then return 0.8, 0.8, 0.2
-    else return 0.8, 0.2, 0.2 end
+    if pct >= 1.0 then return 0.15, 0.55, 0.15
+    elseif pct >= 0.5 then return 0.55, 0.55, 0.15
+    else return 0.55, 0.15, 0.15 end
 end
 
 local function FormatTimeSince(seconds)

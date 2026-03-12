@@ -91,36 +91,22 @@ function ns.UI:CreateMainFrame(defaultTab)
         addon.db.global.mainFrameSize = { width = w, height = h }
     end)
 
-    local titleBg = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    local titleBg = OneWoW_GUI:CreateTitleBar(frame, L["ADDON_TITLE_FRAME"], {
+        height = 20,
+        showBrand = true,
+        onClose = function() frame:Hide() end,
+    })
+    titleBg:ClearAllPoints()
     titleBg:SetPoint("TOPLEFT", frame, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
     titleBg:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
-    titleBg:SetHeight(20)
-    titleBg:SetBackdrop(BACKDROP_SIMPLE)
-    titleBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
-    titleBg:SetFrameLevel(frame:GetFrameLevel() + 1)
-
-    local OneWoW_GUI_ref = LibStub("OneWoW_GUI-1.0", true)
-    local factionTheme = (OneWoW_GUI_ref and OneWoW_GUI_ref.GetSetting and OneWoW_GUI_ref:GetSetting("minimap.theme")) or "horde"
-    local brandIconTex = OneWoW_GUI:GetBrandIcon(factionTheme)
-
-    local brandIcon = titleBg:CreateTexture(nil, "OVERLAY")
-    brandIcon:SetSize(14, 14)
-    brandIcon:SetPoint("LEFT", titleBg, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-    brandIcon:SetTexture(brandIconTex)
-
-    local brandText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
-    brandText:SetText("OneWoW")
-    brandText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local titleText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("CENTER", titleBg, "CENTER", 0, 0)
-    titleText:SetText(L["ADDON_TITLE_FRAME"])
-    titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local closeBtn = OneWoW_GUI:CreateButton(nil, titleBg, "X", 20, 20)
-    closeBtn:SetPoint("RIGHT", titleBg, "RIGHT", -OneWoW_GUI:GetSpacing("XS") / 2, 0)
-    closeBtn:SetScript("OnClick", function() frame:Hide() end)
+    titleBg:EnableMouse(true)
+    titleBg:RegisterForDrag("LeftButton")
+    titleBg:SetScript("OnDragStart", function() frame:StartMoving() end)
+    titleBg:SetScript("OnDragStop", function()
+        frame:StopMovingOrSizing()
+        local w, h = frame:GetSize()
+        addon.db.global.mainFrameSize = { width = w, height = h }
+    end)
 
     tinsert(UISpecialFrames, "OneWoW_QoLMainFrame")
 
