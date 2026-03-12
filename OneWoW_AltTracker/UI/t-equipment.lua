@@ -112,6 +112,54 @@ function ns.UI.CreateEquipmentTab(parent)
     end)
 end
 
+local function GetEquipmentStats(charKey, charData)
+    local equipment = (_G.OneWoW_AltTracker_Character_DB.characters[charKey] and _G.OneWoW_AltTracker_Character_DB.characters[charKey].equipment)
+    local totalDurability, durabilityItems, missingEnchants, missingGems, tierCount = 0, 0, 0, 0, 0
+    if equipment then
+        local enchantableSlots = {[5]=true,[8]=true,[9]=true,[10]=true,[11]=true,[12]=true,[15]=true,[16]=true,[17]=true}
+        for slotId = 1, 19 do
+            if slotId ~= 4 and slotId ~= 18 and slotId ~= 19 then
+                local item = equipment[slotId]
+                if item and item.itemLink then
+                    if item.durability and item.maxDurability then
+                        totalDurability = totalDurability + (item.durability / item.maxDurability * 100)
+                        durabilityItems = durabilityItems + 1
+                    end
+                    if enchantableSlots[slotId] and charData.level and charData.level >= 70 then
+                        if item.quality and item.quality >= 3 then
+                            local enchantId = item.itemLink:match("item:%d+:(%d+)")
+                            if not enchantId or enchantId == "0" or enchantId == "" then
+                                missingEnchants = missingEnchants + 1
+                            end
+                        end
+                    end
+                    local itemSockets = item.numSockets or 0
+                    missingGems = missingGems + math.max(0, itemSockets - (item.socketsWithGems or 0))
+                    if item.name then
+                        if item.name:find("Hollow Sentinel's") or item.name:find("Charhound's Vicious") or
+                           item.name:find("Mother Eagle") or item.name:find("Skymane of the") or
+                           item.name:find("Spellweaver's Immaculate") or item.name:find("Midnight Herald's") or
+                           item.name:find("Augur's Ephemeral") or item.name:find("Fallen Storms") or
+                           item.name:find("Lucent Battalion") or item.name:find("Dying Star's") or
+                           item.name:find("Sudden Eclipse") or item.name:find("Channeled Fury") or
+                           item.name:find("Inquisitor's") or item.name:find("Living Weapon's") then
+                            tierCount = tierCount + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+    local durabilityPct = durabilityItems > 0 and math.floor(totalDurability / durabilityItems) or 100
+    local statusScore = 0
+    if durabilityPct < 30 or missingEnchants >= 5 or missingGems >= 5 then
+        statusScore = 2
+    elseif missingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
+        statusScore = 1
+    end
+    return durabilityPct, missingEnchants, missingGems, tierCount, statusScore
+end
+
 function ns.UI.RefreshEquipmentTab(equipmentTab)
     if not equipmentTab then return end
     if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
@@ -148,8 +196,28 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
                 aVal = a.data.itemLevel or 0
                 bVal = b.data.itemLevel or 0
             elseif currentSortColumn == "durability" then
-                aVal = 100
-                bVal = 100
+                aVal = GetEquipmentStats(a.key, a.data)
+                bVal = GetEquipmentStats(b.key, b.data)
+            elseif currentSortColumn == "enchants" then
+                local _, aEnch = GetEquipmentStats(a.key, a.data)
+                local _, bEnch = GetEquipmentStats(b.key, b.data)
+                aVal = aEnch
+                bVal = bEnch
+            elseif currentSortColumn == "gems" then
+                local _, _, aGems = GetEquipmentStats(a.key, a.data)
+                local _, _, bGems = GetEquipmentStats(b.key, b.data)
+                aVal = aGems
+                bVal = bGems
+            elseif currentSortColumn == "tierSet" then
+                local _, _, _, aTier = GetEquipmentStats(a.key, a.data)
+                local _, _, _, bTier = GetEquipmentStats(b.key, b.data)
+                aVal = aTier
+                bVal = bTier
+            elseif currentSortColumn == "status" then
+                local _, _, _, _, aStatus = GetEquipmentStats(a.key, a.data)
+                local _, _, _, _, bStatus = GetEquipmentStats(b.key, b.data)
+                aVal = aStatus
+                bVal = bStatus
             elseif currentSortColumn == "str" then
                 aVal = (a.data.stats and a.data.stats.strength) or 0
                 bVal = (b.data.stats and b.data.stats.strength) or 0
