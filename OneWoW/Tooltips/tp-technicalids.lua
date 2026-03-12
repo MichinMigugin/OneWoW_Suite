@@ -419,7 +419,8 @@ local function AddHookIDBlock(tooltip, idPairs)
     local hasSection = OneWoW.TooltipEngine:TooltipHasOneWoWSection(tooltip)
     if not hasSection then
         tooltip:AddLine(" ")
-        local iconTheme = OneWoW.db and OneWoW.db.global and OneWoW.db.global.minimap and OneWoW.db.global.minimap.theme or "neutral"
+        local _gui = LibStub and LibStub("OneWoW_GUI-1.0", true)
+        local iconTheme = (_gui and _gui:GetSetting("minimap.theme")) or "neutral"
         local addonIcon = CreateTextureMarkup("Interface\\AddOns\\OneWoW\\Media\\OneWoWMini-" .. iconTheme, 64, 64, 16, 16, 0, 1, 0, 1)
         local hc = TOOLTIP_CONFIG.headerColor or {0.2, 1.0, 0.2}
         tooltip:AddLine(addonIcon .. " OneWoW", hc[1], hc[2], hc[3])

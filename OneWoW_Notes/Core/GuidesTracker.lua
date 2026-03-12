@@ -10,6 +10,7 @@ local activeGuideID = nil
 local registeredEvents = {}
 local trackerFrame = nil
 local floatingTracker = nil
+local lib = LibStub("OneWoW_GUI-1.0", true)
 
 local OBJECTIVE_EVENTS = {
     level          = { "PLAYER_LEVEL_UP" },
@@ -352,71 +353,55 @@ end
 local function CreateFloatingTracker()
     local addon = _G.OneWoW_Notes
 
-    local frame = CreateFrame("Frame", "OneWoW_Notes_FloatingTracker", UIParent, "BackdropTemplate")
-    frame:SetSize(260, 180)
+    local frame = lib:CreateFrame("OneWoW_Notes_FloatingTracker", UIParent, 260, 180)
     frame:SetFrameStrata("MEDIUM")
     frame:SetToplevel(true)
     frame:SetClampedToScreen(true)
     frame:SetMovable(true)
     frame:EnableMouse(true)
     frame:RegisterForDrag("LeftButton")
-    frame:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    frame:SetBackdropColor(T("BG_PRIMARY"))
-    frame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local savedPos = addon.db.global.guideTrackerPosition
     if savedPos and savedPos.point then
+        frame:ClearAllPoints()
         frame:SetPoint(savedPos.point, UIParent, savedPos.relativePoint or "TOPRIGHT", savedPos.xOfs or -20, savedPos.yOfs or -260)
     else
+        frame:ClearAllPoints()
         frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -20, -260)
+    end
+
+    local function SavePosition()
+        local point, _, relativePoint, xOfs, yOfs = frame:GetPoint()
+        addon.db.global.guideTrackerPosition = { point = point, relativePoint = relativePoint, xOfs = xOfs, yOfs = yOfs }
     end
 
     frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
     frame:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
-        local point, _, relativePoint, xOfs, yOfs = self:GetPoint()
-        addon.db.global.guideTrackerPosition = { point = point, relativePoint = relativePoint, xOfs = xOfs, yOfs = yOfs }
+        SavePosition()
     end)
 
-    local titleBar = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(22)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    titleText:SetPoint("LEFT", titleBar, "LEFT", 8, 0)
-    titleText:SetTextColor(T("ACCENT_PRIMARY"))
-    frame.titleText = titleText
-
-    local closeBtn = CreateFrame("Button", nil, titleBar)
-    closeBtn:SetSize(16, 16)
-    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -4, 0)
-    closeBtn:SetNormalTexture("Interface\\Buttons\\UI-StopButton")
-    closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-StopButton")
-    closeBtn:GetHighlightTexture():SetAlpha(0.5)
-    closeBtn:SetScript("OnClick", function()
-        Tracker:Deactivate()
-        if ns.GuidesTracker.onObjectiveUpdate then
-            ns.GuidesTracker.onObjectiveUpdate(nil)
-        end
+    local titleBar = lib:CreateTitleBar(frame, "", {
+        height = 22,
+        onClose = function()
+            Tracker:Deactivate()
+            if ns.GuidesTracker.onObjectiveUpdate then
+                ns.GuidesTracker.onObjectiveUpdate(nil)
+            end
+        end,
+    })
+    titleBar:EnableMouse(true)
+    titleBar:RegisterForDrag("LeftButton")
+    titleBar:SetScript("OnDragStart", function() frame:StartMoving() end)
+    titleBar:SetScript("OnDragStop", function()
+        frame:StopMovingOrSizing()
+        SavePosition()
     end)
-    closeBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText(L["GUIDES_DEACTIVATE"], 1, 1, 1)
-        GameTooltip:AddLine(L["GUIDES_TT_STOP_DESC"], 0.8, 0.8, 0.8, true)
-        GameTooltip:Show()
-    end)
-    closeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    frame.titleText = titleBar._titleText
 
     local skipBtn = CreateFrame("Button", nil, titleBar)
     skipBtn:SetSize(16, 16)
-    skipBtn:SetPoint("RIGHT", closeBtn, "LEFT", -4, 0)
+    skipBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -4, 0)
     skipBtn:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
     skipBtn:SetHighlightTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
     skipBtn:GetHighlightTexture():SetAlpha(0.5)
@@ -456,6 +441,34 @@ local function CreateFloatingTracker()
     frame.objectivesContainer = objectivesContainer
 
     frame.objectiveRows = {}
+    frame.isExtended = false
+
+    local extendBtn = lib:CreateFitTextButton(frame, L["GUIDES_EXTEND"], { height = 18, minWidth = 60, paddingX = 16 })
+    extendBtn:Hide()
+    frame.extendBtn = extendBtn
+
+    local extendContainer = CreateFrame("Frame", nil, frame)
+    extendContainer:SetWidth(240)
+    extendContainer:Hide()
+    frame.extendContainer = extendContainer
+    frame.extendRows = {}
+
+    extendBtn:SetScript("OnClick", function()
+        frame.isExtended = not frame.isExtended
+        Tracker:RefreshFloatingTracker()
+    end)
+    extendBtn:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        if frame.isExtended then
+            GameTooltip:SetText(L["GUIDES_COLLAPSE"], 1, 1, 1)
+            GameTooltip:AddLine(L["GUIDES_COLLAPSE_DESC"], 0.8, 0.8, 0.8, true)
+        else
+            GameTooltip:SetText(L["GUIDES_EXTEND"], 1, 1, 1)
+            GameTooltip:AddLine(L["GUIDES_EXTEND_DESC"], 0.8, 0.8, 0.8, true)
+        end
+        GameTooltip:Show()
+    end)
+    extendBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
 
     frame:Hide()
     return frame
@@ -500,6 +513,13 @@ function Tracker:RefreshFloatingTracker()
     end
     wipe(floatingTracker.objectiveRows)
 
+    for _, row in ipairs(floatingTracker.extendRows) do
+        row:Hide()
+        row:SetParent(nil)
+    end
+    wipe(floatingTracker.extendRows)
+    floatingTracker.extendContainer:Hide()
+
     local trackerW = floatingTracker:GetWidth()
     local contentW = math.max(100, trackerW - 20)
     local curY = -26
@@ -512,6 +532,7 @@ function Tracker:RefreshFloatingTracker()
         floatingTracker.stepTitle:SetText("")
         floatingTracker.stepTitle:ClearAllPoints()
         floatingTracker.objectivesContainer:ClearAllPoints()
+        floatingTracker.extendBtn:Hide()
         floatingTracker:SetHeight(60)
         return
     end
@@ -579,5 +600,125 @@ function Tracker:RefreshFloatingTracker()
         objY = objY - rowH
     end
 
-    floatingTracker:SetHeight(math.max(60, math.abs(curY) + math.abs(objY) + 10))
+    curY = curY + objY
+
+    if stepIndex < #guide.steps then
+        curY = curY - 4
+        floatingTracker.extendBtn:ClearAllPoints()
+        floatingTracker.extendBtn:SetPoint("TOPLEFT", floatingTracker, "TOPLEFT", 8, curY)
+        floatingTracker.extendBtn:Show()
+
+        if floatingTracker.isExtended then
+            floatingTracker.extendBtn:SetFitText(L["GUIDES_COLLAPSE"])
+        else
+            floatingTracker.extendBtn:SetFitText(L["GUIDES_EXTEND"])
+        end
+
+        curY = curY - 22
+
+        if floatingTracker.isExtended then
+            floatingTracker.extendContainer:ClearAllPoints()
+            floatingTracker.extendContainer:SetPoint("TOPLEFT", floatingTracker, "TOPLEFT", 8, curY)
+            floatingTracker.extendContainer:SetWidth(contentW)
+            floatingTracker.extendContainer:Show()
+
+            local extY = 0
+            local playerFaction = UnitFactionGroup("player")
+            local shown = 0
+
+            for nextIdx = stepIndex + 1, #guide.steps do
+                if shown >= 3 then break end
+                local nextStep = guide.steps[nextIdx]
+
+                local skipFaction = false
+                if nextStep.faction and nextStep.faction ~= "both" then
+                    if nextStep.faction ~= string.lower(playerFaction or "") then
+                        skipFaction = true
+                    end
+                end
+
+                if not skipFaction then
+                    shown = shown + 1
+                    local isStepDone = ns.GuidesData:IsStepComplete(activeGuideID, nextIdx)
+
+                    local stepRow = CreateFrame("Button", nil, floatingTracker.extendContainer)
+                    stepRow:SetPoint("TOPLEFT", floatingTracker.extendContainer, "TOPLEFT", 0, extY)
+                    stepRow:SetWidth(contentW)
+
+                    local icon = stepRow:CreateTexture(nil, "ARTWORK")
+                    icon:SetSize(12, 12)
+                    icon:SetPoint("TOPLEFT", stepRow, "TOPLEFT", 0, -2)
+                    if isStepDone then
+                        icon:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-Ready")
+                    else
+                        icon:SetTexture("Interface\\RAIDFRAME\\ReadyCheck-Waiting")
+                    end
+
+                    local stepText = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    stepText:SetPoint("TOPLEFT", icon, "TOPRIGHT", 4, 0)
+                    stepText:SetPoint("RIGHT", stepRow, "RIGHT", -4, 0)
+                    stepText:SetJustifyH("LEFT")
+                    stepText:SetWordWrap(true)
+                    stepText:SetWidth(contentW - 20)
+                    stepText:SetText(string.format("%d. %s", nextIdx, nextStep.title or ""))
+
+                    if isStepDone then
+                        stepText:SetTextColor(0.4, 0.8, 0.4, 1.0)
+                    else
+                        stepText:SetTextColor(T("TEXT_SECONDARY"))
+                    end
+
+                    local titleH = math.max(14, stepText:GetStringHeight())
+                    local subtitleH = 0
+
+                    if nextStep.objectives and #nextStep.objectives > 0 then
+                        local firstObj = nextStep.objectives[1]
+                        local subtitle = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                        subtitle:SetPoint("TOPLEFT", stepText, "BOTTOMLEFT", 0, -2)
+                        subtitle:SetPoint("RIGHT", stepRow, "RIGHT", -4, 0)
+                        subtitle:SetJustifyH("LEFT")
+                        subtitle:SetWordWrap(false)
+                        subtitle:SetWidth(contentW - 20)
+
+                        local desc = firstObj.description or ""
+                        if #desc > 50 then desc = desc:sub(1, 47) .. "..." end
+                        local objCount = #nextStep.objectives
+                        if objCount > 1 then
+                            desc = desc .. string.format(" (+%d)", objCount - 1)
+                        end
+                        subtitle:SetText(desc)
+                        subtitle:SetTextColor(T("TEXT_MUTED"))
+                        subtitleH = subtitle:GetStringHeight() + 2
+                    end
+
+                    local rowH = titleH + subtitleH + 6
+                    stepRow:SetHeight(rowH)
+
+                    local capturedIdx = nextIdx
+                    stepRow:SetHighlightTexture("Interface\\Buttons\\WHITE8x8")
+                    stepRow:GetHighlightTexture():SetAlpha(0.1)
+                    stepRow:SetScript("OnClick", function()
+                        Tracker:GoToStep(capturedIdx)
+                    end)
+                    stepRow:SetScript("OnEnter", function(self)
+                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                        GameTooltip:SetText(string.format(L["GUIDES_STEP_FORMAT"], capturedIdx) .. " " .. (nextStep.title or ""), 1, 1, 1)
+                        GameTooltip:AddLine(L["GUIDES_GO_TO_STEP"], 0.8, 0.8, 0.8, true)
+                        GameTooltip:Show()
+                    end)
+                    stepRow:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+                    table.insert(floatingTracker.extendRows, stepRow)
+                    extY = extY - rowH - 2
+                end
+            end
+
+            floatingTracker.extendContainer:SetHeight(math.max(1, math.abs(extY)))
+            curY = curY + extY
+        end
+    else
+        floatingTracker.extendBtn:Hide()
+    end
+
+    floatingTracker:SetHeight(math.max(60, math.abs(curY) + 10))
 end

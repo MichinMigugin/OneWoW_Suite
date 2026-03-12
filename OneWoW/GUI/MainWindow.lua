@@ -30,8 +30,7 @@ local ALWAYS_SHOW_MODULES = {
 local placeholderData = {}
 
 local function GetBrandIcon()
-    local db = OneWoW.db
-    local factionTheme = db and db.global and db.global.minimap and db.global.minimap.theme or "horde"
+    local factionTheme = (OneWoW_GUI and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
     if factionTheme == "alliance" then
         return "Interface\\AddOns\\OneWoW\\Media\\alliance-mini.png"
     elseif factionTheme == "neutral" then
@@ -421,16 +420,6 @@ function GUI:InitMainWindow()
     local maxH = math.min(C.MAX_HEIGHT, screenH)
     MainWindow:SetResizeBounds(C.MIN_WIDTH, C.MIN_HEIGHT, maxW, maxH)
     MainWindow:Hide()
-
-    MainWindow:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    MainWindow:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        local point, _, relativePoint, x, y = self:GetPoint()
-        if OneWoW.db and OneWoW.db.global then
-            OneWoW.db.global.mainFramePosition = { point = point, relativePoint = relativePoint, x = x, y = y }
-        end
-    end)
-    MainWindow:RegisterForDrag("LeftButton")
 
     local titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, L["ADDON_TITLE"] or "OneWoW", {
         height = 20,

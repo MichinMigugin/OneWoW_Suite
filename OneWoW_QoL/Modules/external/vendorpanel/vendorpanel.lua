@@ -557,7 +557,9 @@ function VendorPanel:SellJunkItems()
         end
         local item = itemsToSell[currentIndex]
         table.insert(pendingSells, item)
-        C_Container.UseContainerItem(item.bag, item.slot)
+        ClearCursor()
+        C_Container.PickupContainerItem(item.bag, item.slot)
+        SellCursorItem()
         currentIndex = currentIndex + 1
     end)
 end

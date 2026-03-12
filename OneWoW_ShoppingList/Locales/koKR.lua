@@ -227,6 +227,9 @@ ns.RegisterLocale("koKR", {
     ["OWSL_PROF_BTN_OPEN"] = "TEST",
     ["OWSL_PROF_BTN_MAKE_LIST"] = "TEST",
     ["OWSL_PROF_BTN_ADD_TO_ACTIVE"] = "TEST",
+    ["OWSL_PROF_BTN_ADD_TO_LIST"] = "TEST",
+    ["OWSL_TT_ADD_TO_LIST_TITLE"] = "TEST",
+    ["OWSL_TT_ADD_TO_LIST_DESC"] = "TEST",
 
     ["OWSL_MM_CLICK_TO_OPEN"] = "TEST",
     ["OWSL_MM_DRAG_TO_MOVE"] = "TEST",

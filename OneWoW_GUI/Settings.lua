@@ -289,7 +289,7 @@ local function CreateDropdownMenu(parent, items, onSelect)
         self:SetScript("OnUpdate", function(self2, elapsed)
             if not MouseIsOver(menu) and not MouseIsOver(parent) then
                 timeOutside = timeOutside + elapsed
-                if timeOutside > 0.5 then
+                if timeOutside > 1.0 then
                     self2:Hide()
                     self2:SetScript("OnUpdate", nil)
                 end
@@ -510,7 +510,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             self:SetScript("OnUpdate", function(self2, elapsed)
                 if not MouseIsOver(menu) and not MouseIsOver(btn) then
                     timeOutside = timeOutside + elapsed
-                    if timeOutside > 0.5 then self2:Hide() self2:SetScript("OnUpdate", nil) end
+                    if timeOutside > 1.0 then self2:Hide() self2:SetScript("OnUpdate", nil) end
                 else timeOutside = 0 end
             end)
         end)
@@ -673,7 +673,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             self:SetScript("OnUpdate", function(self2, elapsed)
                 if not MouseIsOver(menu) and not MouseIsOver(btn) then
                     timeOutside = timeOutside + elapsed
-                    if timeOutside > 0.5 then self2:Hide() self2:SetScript("OnUpdate", nil) end
+                    if timeOutside > 1.0 then self2:Hide() self2:SetScript("OnUpdate", nil) end
                 else timeOutside = 0 end
             end)
         end)

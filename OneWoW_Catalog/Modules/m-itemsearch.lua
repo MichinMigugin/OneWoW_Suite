@@ -19,6 +19,13 @@ local TRADESKILL_PROFS = {
 }
 
 local MAX_RESULTS = 200
+local DEFAULT_LIMIT = 50
+
+local EXPANSION_PRIORITY = {
+    "Midnight", "TheWarWithin", "Dragonflight", "Shadowlands",
+    "BattleforAzeroth", "Legion", "WarlordsofDraenor", "MistsofPandaria",
+    "Cataclysm", "WrathoftheLichKing", "BurningCrusade", "Classic",
+}
 
 local function GetOwnedItems()
     local owned = {}
@@ -238,6 +245,49 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     end)
 
     return results, limitReached
+end
+
+function ItemSearch:GetDefaultItems(limit)
+    limit = limit or DEFAULT_LIMIT
+    local results = {}
+    local resultMap = {}
+    local count = 0
+
+    local ownedMap = GetOwnedItems()
+
+    for _, expName in ipairs(EXPANSION_PRIORITY) do
+        local items = _G["OneWoWItems_" .. expName]
+        if items then
+            for itemID, idata in pairs(items) do
+                if idata.name and not resultMap[itemID] then
+                    count = count + 1
+                    local od = ownedMap[itemID]
+                    results[count] = {
+                        itemID     = itemID,
+                        name       = idata.name,
+                        icon       = idata.icon,
+                        quality    = idata.quality or 1,
+                        ownedCount = od and od.total or 0,
+                        isJournal  = true,
+                        isVendor   = false,
+                        isCrafted  = false,
+                        isOwned    = od and true or false,
+                    }
+                    resultMap[itemID] = count
+                    if count >= limit then break end
+                end
+            end
+        end
+        if count >= limit then break end
+    end
+
+    table.sort(results, function(a, b)
+        if a.ownedCount > 0 and b.ownedCount == 0 then return true end
+        if a.ownedCount == 0 and b.ownedCount > 0 then return false end
+        return (a.name or "") < (b.name or "")
+    end)
+
+    return results
 end
 
 function ItemSearch:GetDetail(itemID)

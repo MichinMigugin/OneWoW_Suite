@@ -505,6 +505,33 @@ function Module:ImportProfile(str)
 end
 
 -- ============================================================
+-- Scrollable EditBox helper
+-- ============================================================
+
+local function CreateScrollableEditBox(parent, onEscape)
+    local sf = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
+    sf:SetPoint("TOPLEFT",     parent, "TOPLEFT",     4,  -4)
+    sf:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -20, 4)
+    sf:EnableMouseWheel(true)
+    OneWoW_GUI:StyleScrollBar(sf, { container = parent, offset = -4 })
+
+    local eb = CreateFrame("EditBox", nil, sf)
+    eb:SetMultiLine(true)
+    eb:SetAutoFocus(false)
+    eb:SetMaxLetters(0)
+    local fontPath = OneWoW_GUI and OneWoW_GUI.GetFont and OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
+    eb:SetFont(fontPath, 12, "")
+    eb:SetTextColor(T("TEXT_PRIMARY"))
+    eb:SetScript("OnEscapePressed", onEscape or function() end)
+    eb:SetScript("OnTextChanged", function() sf:UpdateScrollChildRect() end)
+
+    sf:SetScrollChild(eb)
+    sf:HookScript("OnSizeChanged", function(self, w) eb:SetWidth(w) end)
+
+    return eb, sf
+end
+
+-- ============================================================
 -- Dialogs
 -- ============================================================
 
@@ -571,17 +598,17 @@ function GUI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
                 if reloadNeeded then
                     print("|cFFFFD100OneWoW:|r A UI reload is required to apply changes.")
                     C_Timer.After(1.5, function()
-                        StaticPopupDialogs["OW_CP_RELOAD"] = {
-                            text = "A UI reload is required to apply restored settings. Reload now?",
-                            button1 = "Reload",
-                            button2 = "Later",
-                            OnAccept = function() ReloadUI() end,
-                            timeout = 0,
-                            whileDead = true,
-                            hideOnEscape = true,
-                            preferredIndex = 3,
-                        }
-                        StaticPopup_Show("OW_CP_RELOAD")
+                        local reloadDialog = OneWoW_GUI:CreateConfirmDialog({
+                            name    = "OneWoW_CharProfileReloadConfirm",
+                            title   = "Reload Required",
+                            message = "A UI reload is required to apply restored settings. Reload now?",
+                            width   = 420,
+                            buttons = {
+                                { text = "Reload Now", onClick = function(d) d:Hide(); ReloadUI() end },
+                                { text = "Later",      onClick = function(d) d:Hide() end },
+                            },
+                        })
+                        reloadDialog.frame:Show()
                     end)
                 end
 
@@ -685,27 +712,13 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
     hint:SetText("Select all text and copy (Ctrl+A, Ctrl+C) to share this profile:")
     hint:SetTextColor(T("TEXT_SECONDARY"))
 
-    local textBG = CreateFrame("Frame", nil, cf, "BackdropTemplate")
-    textBG:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -28)
+    local textBG = OneWoW_GUI:CreateFrame(nil, cf, 600, 420)
+    textBG:ClearAllPoints()
+    textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
-    textBG:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    textBG:SetBackdropColor(0.06, 0.06, 0.06)
-    textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    eb = CreateFrame("EditBox", nil, textBG)
-    eb:SetPoint("TOPLEFT", textBG, "TOPLEFT", 4, -4)
-    eb:SetPoint("BOTTOMRIGHT", textBG, "BOTTOMRIGHT", -4, 4)
-    eb:SetMultiLine(true)
+    eb = CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
     eb:SetAutoFocus(true)
-    local _cpFontPath = OneWoW_GUI and OneWoW_GUI.GetFont and OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
-    eb:SetFont(_cpFontPath, 12, "")
-    eb:SetTextColor(1, 1, 1)
-    eb:SetMaxLetters(0)
-    eb:SetScript("OnEscapePressed", function() result.frame:Hide() end)
 
     result.frame:Show()
     C_Timer.After(0, function()
@@ -746,27 +759,13 @@ function GUI:ShowCharProfileImportDialog(onImported)
     hint:SetText("Paste exported profile data below, then click Import:")
     hint:SetTextColor(T("TEXT_SECONDARY"))
 
-    local textBG = CreateFrame("Frame", nil, cf, "BackdropTemplate")
-    textBG:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -28)
+    local textBG = OneWoW_GUI:CreateFrame(nil, cf, 600, 380)
+    textBG:ClearAllPoints()
+    textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
-    textBG:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    textBG:SetBackdropColor(0.06, 0.06, 0.06)
-    textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    eb = CreateFrame("EditBox", nil, textBG)
-    eb:SetPoint("TOPLEFT", textBG, "TOPLEFT", 4, -4)
-    eb:SetPoint("BOTTOMRIGHT", textBG, "BOTTOMRIGHT", -4, 4)
-    eb:SetMultiLine(true)
+    eb = CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
     eb:SetAutoFocus(true)
-    local _cpFontPath = OneWoW_GUI and OneWoW_GUI.GetFont and OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
-    eb:SetFont(_cpFontPath, 12, "")
-    eb:SetTextColor(1, 1, 1)
-    eb:SetMaxLetters(0)
-    eb:SetScript("OnEscapePressed", function() result.frame:Hide() end)
 
     result.frame:Show()
 end
@@ -787,7 +786,7 @@ function GUI:CreateCharProfilesPanel(parent)
     descText:SetJustifyH("LEFT")
     descText:SetWordWrap(true)
     descText:SetSpacing(2)
-    descText:SetText("Save and restore character-specific settings: keybinds, macros, WoW game settings, which addons are enabled, and addon settings.")
+    descText:SetText("Backs up your character's complete setup: keybinds, macros, game settings, enabled addons, and all OneWoW addon data. Export to restore on alts or share with others.")
     descText:SetTextColor(T("TEXT_SECONDARY"))
 
     yOffset = yOffset - 40
@@ -949,40 +948,35 @@ function GUI:CreateCharProfilesPanel(parent)
                 GUI:ShowCharProfileRestoreDialog(name, data, RefreshListing)
             end)
 
-            local deleteBtn = CreateFrame("Button", nil, card, "BackdropTemplate")
-            deleteBtn:SetSize(82, 26)
+            local capturedName = name
+            local deleteBtn = GUI:CreateButton(nil, card, "Delete", 82, 26)
             deleteBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 6)
-            deleteBtn:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
             deleteBtn:SetBackdropColor(0.45, 0.12, 0.12)
             deleteBtn:SetBackdropBorderColor(0.65, 0.25, 0.25)
-
-            local delText = deleteBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            delText:SetPoint("CENTER")
-            delText:SetText("Delete")
-            delText:SetTextColor(1, 1, 1)
-
-            deleteBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.65, 0.18, 0.18) end)
-            deleteBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.45, 0.12, 0.12) end)
-            local capturedName = name
+            deleteBtn:SetScript("OnEnter", function(self)
+                self:SetBackdropColor(0.65, 0.18, 0.18)
+                self:SetBackdropBorderColor(0.8, 0.3, 0.3)
+            end)
+            deleteBtn:SetScript("OnLeave", function(self)
+                self:SetBackdropColor(0.45, 0.12, 0.12)
+                self:SetBackdropBorderColor(0.65, 0.25, 0.25)
+            end)
             deleteBtn:SetScript("OnClick", function()
-                StaticPopupDialogs["OW_CP_DELETE"] = {
-                    text = "Delete character profile: |cFFFFD100" .. capturedName .. "|r?",
-                    button1 = "Delete",
-                    button2 = "Cancel",
-                    OnAccept = function()
-                        M:DeleteProfile(capturedName)
-                        RefreshListing()
-                    end,
-                    timeout = 0,
-                    whileDead = true,
-                    hideOnEscape = true,
-                    preferredIndex = 3,
-                }
-                StaticPopup_Show("OW_CP_DELETE")
+                local dlg = OneWoW_GUI:CreateConfirmDialog({
+                    name    = "OneWoW_CharProfileDeleteConfirm",
+                    title   = "Delete Character Profile",
+                    message = "Delete character profile: |cFFFFD100" .. capturedName .. "|r?\nThis cannot be undone.",
+                    width   = 420,
+                    buttons = {
+                        { text = "Delete", color = { 0.7, 0.15, 0.15 }, onClick = function(d)
+                            d:Hide()
+                            M:DeleteProfile(capturedName)
+                            RefreshListing()
+                        end },
+                        { text = "Cancel", onClick = function(d) d:Hide() end },
+                    },
+                })
+                dlg.frame:Show()
             end)
 
             yOff = yOff - (CARD_H + CARD_GAP)

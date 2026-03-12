@@ -57,6 +57,7 @@ end
 local openBtn
 local makeListBtn
 local addToActiveBtn
+local addToListBtn
 
 local function CreateButtons(schematicForm)
     if openBtn then return end
@@ -164,6 +165,53 @@ local function CreateButtons(schematicForm)
         GameTooltip:Show()
     end)
     addToActiveBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    addToListBtn = CreateFrame("Button", nil, schematicForm, "BackdropTemplate")
+    addToListBtn:SetSize(100, 30)
+    addToListBtn:SetPoint("RIGHT", addToActiveBtn, "LEFT", -5, 0)
+    addToListBtn:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+        insets   = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    addToListBtn:SetBackdropColor(0.14, 0.16, 0.14, 1.0)
+    addToListBtn:SetBackdropBorderColor(0.32, 0.48, 0.35, 0.5)
+
+    addToListBtn.text = addToListBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    addToListBtn.text:SetPoint("CENTER")
+    addToListBtn.text:SetText(L["OWSL_PROF_BTN_ADD_TO_LIST"])
+    addToListBtn.text:SetTextColor(0.88, 0.90, 0.88, 1.0)
+
+    addToListBtn:SetScript("OnClick", function(self)
+        local recipeID, recipeInfo = GetCurrentRecipeInfo()
+        if not recipeID then return end
+
+        local db = GetDB()
+        if not db then return end
+
+        local allLists = ns.ShoppingList:GetAllLists()
+        MenuUtil.CreateContextMenu(UIParent, function(ownerRegion, rootDescription)
+            rootDescription:CreateTitle(L["OWSL_TT_ADD_TO_LIST_TITLE"])
+            for listName in pairs(allLists) do
+                local capturedName = listName
+                rootDescription:CreateButton(listName, function()
+                    local ok, count = AddIngredientsToList(capturedName, recipeID, 1)
+                    if ok then
+                        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], capturedName, count, count ~= 1 and "s" or "", ""))
+                    end
+                end)
+            end
+        end)
+    end)
+
+    addToListBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetText(L["OWSL_TT_ADD_TO_LIST_TITLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["OWSL_TT_ADD_TO_LIST_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    addToListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
 function GetDB()
@@ -196,10 +244,12 @@ function ProfessionUI:UpdateVisibility()
         if openBtn then openBtn:Show() end
         if makeListBtn then makeListBtn:Show() end
         if addToActiveBtn then addToActiveBtn:Show() end
+        if addToListBtn then addToListBtn:Show() end
     else
         if openBtn then openBtn:Hide() end
         if makeListBtn then makeListBtn:Hide() end
         if addToActiveBtn then addToActiveBtn:Hide() end
+        if addToListBtn then addToListBtn:Hide() end
     end
 end
 

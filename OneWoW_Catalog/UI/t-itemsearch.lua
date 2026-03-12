@@ -115,14 +115,12 @@ local function CreateSourceButton(parent, def)
         currentSource = self.sourceKey
         selectedItem  = nil
         UpdateSourceButtonStates()
-        if currentSearch ~= "" then
-            RefreshItemList()
-        end
         ClearDetailElements()
         if emptyDetail then
             emptyDetail:SetText(L["ITEMSEARCH_SELECT"])
             emptyDetail:Show()
         end
+        RefreshItemList()
     end)
 
     return btn
@@ -396,30 +394,28 @@ RefreshItemList = function()
         return
     end
 
-    if currentSearch == "" then
-        panels.listScrollChild:SetHeight(100)
-        if emptyList then emptyList:SetText(L["ITEMSEARCH_EMPTY"]); emptyList:Show() end
-        if panels.leftStatusText then panels.leftStatusText:SetText("") end
-        return
-    end
+    local results, limitReached
 
-    if #currentSearch < 2 then
-        panels.listScrollChild:SetHeight(100)
-        if emptyList then emptyList:SetText(L["ITEMSEARCH_MIN_CHARS"]); emptyList:Show() end
-        if panels.leftStatusText then panels.leftStatusText:SetText("") end
-        return
+    if currentSearch == "" or #currentSearch < 2 then
+        results = ns.ItemSearch:GetDefaultItems(50)
+        limitReached = false
+        if not results or #results == 0 then
+            panels.listScrollChild:SetHeight(100)
+            if emptyList then emptyList:SetText(L["ITEMSEARCH_EMPTY"]); emptyList:Show() end
+            if panels.leftStatusText then panels.leftStatusText:SetText("") end
+            return
+        end
+    else
+        results, limitReached = ns.ItemSearch:Query(currentSearch, currentSource)
+        if not results or #results == 0 then
+            panels.listScrollChild:SetHeight(100)
+            if emptyList then emptyList:SetText(L["ITEMSEARCH_NO_RESULTS"]); emptyList:Show() end
+            if panels.leftStatusText then panels.leftStatusText:SetText("") end
+            return
+        end
     end
 
     if emptyList then emptyList:Hide() end
-
-    local results, limitReached = ns.ItemSearch:Query(currentSearch, currentSource)
-
-    if not results or #results == 0 then
-        panels.listScrollChild:SetHeight(100)
-        if emptyList then emptyList:SetText(L["ITEMSEARCH_NO_RESULTS"]); emptyList:Show() end
-        if panels.leftStatusText then panels.leftStatusText:SetText("") end
-        return
-    end
 
     local yOffset = -4
     local rowIdx  = 0
@@ -447,7 +443,9 @@ RefreshItemList = function()
 
     if panels.leftStatusText then
         local n = #results
-        if limitReached then
+        if currentSearch == "" or #currentSearch < 2 then
+            panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_BROWSE_DEFAULT"], n))
+        elseif limitReached then
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_RESULTS_CAPPED"], n))
         else
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_RESULTS"], n))
@@ -543,8 +541,8 @@ function ns.UI.CreateItemSearchTab(parent)
     emptyDetail:SetText(L["ITEMSEARCH_SELECT"])
     emptyDetail:SetTextColor(T("TEXT_MUTED"))
 
-    panels.listScrollChild:SetHeight(100)
     panels.detailScrollChild:SetHeight(100)
 
     UpdateSourceButtonStates()
+    RefreshItemList()
 end
