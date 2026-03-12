@@ -786,27 +786,28 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
     local isNew = not popup
 
     if isNew then
-        popup = OneWoW_GUI:CreateMovableDialog("OneWoW_QoL_MountPickerPopup", UIParent, 350, 450)
-        -- Leave title empty, it's set further down
-        popup._titleBar = OneWoW_GUI:CreateTitleBar(popup, "", { height = 28 })
+        local result = OneWoW_GUI:CreateDialog({
+            name = "OneWoW_QoL_MountPickerPopup",
+            title = "",
+            width = 350,
+            height = 450,
+            onClose = function(frame) frame:Hide() end,
+        })
+        popup = result.frame
+        popup._titleBar = result.titleBar
+        local popupContent = result.contentFrame
 
-        local headerDiv = OneWoW_GUI:CreateDivider(popup, -29)
-        headerDiv:ClearAllPoints()
-        headerDiv:SetPoint("TOPLEFT",  popup, "TOPLEFT",  1, -29)
-        headerDiv:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -29)
-
-        -- NOTE: See OneWoW_GUI CreateEditBox for NOTE on onTextChanged callback
-        popup._searchBox = OneWoW_GUI:CreateEditBox(nil, popup, { width = 220, height = 24, placeholderText = L["AUTOMOUNT_SEARCH"], maxLetters = 50 })
-        popup._searchBox:SetPoint("TOPLEFT",  popup, "TOPLEFT",  15, -38)
-        popup._searchBox:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -15, -38)
+        popup._searchBox = OneWoW_GUI:CreateEditBox(nil, popupContent, { width = 220, height = 24, placeholderText = L["AUTOMOUNT_SEARCH"], maxLetters = 50 })
+        popup._searchBox:SetPoint("TOPLEFT",  popupContent, "TOPLEFT",  15, -10)
+        popup._searchBox:SetPoint("TOPRIGHT", popupContent, "TOPRIGHT", -15, -10)
 
         local scrollBarWidth = 10
         local contentWidth   = 350 - 24 - scrollBarWidth
         popup._contentWidth  = contentWidth
 
-        local listContainer = CreateFrame("Frame", nil, popup)
-        listContainer:SetPoint("TOPLEFT",     popup, "TOPLEFT",     12, -68)
-        listContainer:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -12, 48)
+        local listContainer = CreateFrame("Frame", nil, popupContent)
+        listContainer:SetPoint("TOPLEFT",     popupContent, "TOPLEFT",     12, -40)
+        listContainer:SetPoint("BOTTOMRIGHT", popupContent, "BOTTOMRIGHT", -12, 48)
 
         popup._scrollFrame = CreateFrame("ScrollFrame", nil, listContainer)
         popup._scrollFrame:SetPoint("TOPLEFT",     listContainer, "TOPLEFT",     0, 0)
@@ -890,14 +891,14 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
             UpdateScrollThumb()
         end)
 
-        local btnDiv = popup:CreateTexture(nil, "ARTWORK")
+        local btnDiv = popupContent:CreateTexture(nil, "ARTWORK")
         btnDiv:SetHeight(1)
-        btnDiv:SetPoint("BOTTOMLEFT",  popup, "BOTTOMLEFT",  1, 42)
-        btnDiv:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -1, 42)
+        btnDiv:SetPoint("BOTTOMLEFT",  popupContent, "BOTTOMLEFT",  1, 42)
+        btnDiv:SetPoint("BOTTOMRIGHT", popupContent, "BOTTOMRIGHT", -1, 42)
         btnDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        local closeBtn = OneWoW_GUI:CreateFitTextButton(popup, L["AUTOMOUNT_CLOSE"], { height = 32 })
-        closeBtn:SetPoint("BOTTOM", popup, "BOTTOM", 0, 6)
+        local closeBtn = OneWoW_GUI:CreateFitTextButton(popupContent, L["AUTOMOUNT_CLOSE"], { height = 32 })
+        closeBtn:SetPoint("BOTTOM", popupContent, "BOTTOM", 0, 6)
         closeBtn:SetScript("OnClick", function() popup:Hide() end)
 
         popup._mountButtons = {}
