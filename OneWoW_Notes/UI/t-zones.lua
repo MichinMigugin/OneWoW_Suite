@@ -516,7 +516,7 @@ function ns.UI.CreateZonesTab(parent)
         end
 
         local function BuildZoneRow(zone, yOfs)
-            local listItemColor = {T("BG_SECONDARY")}
+            local listItemColor = {OneWoW_GUI:GetThemeColor("BG_SECONDARY")}
             local resolvedColor = ns.Config:GetResolvedColorConfig(zone.data.pinColor)
             local cR, cG, cB = resolvedColor.bg[1], resolvedColor.bg[2], resolvedColor.bg[3]
 
