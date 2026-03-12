@@ -59,7 +59,9 @@ function ns.UI.ApplyFont(fs, size)
         local _, currentSize = fs:GetFont()
         size = currentSize or 13
     end
-    fs:SetFont(fontPath, size)
+    if size and size > 0 then
+        fs:SetFont(fontPath, size)
+    end
 end
 
 function ns.UI.ApplyFontToFrame(frame)
@@ -69,13 +71,13 @@ function ns.UI.ApplyFontToFrame(frame)
     for _, region in ipairs({frame:GetRegions()}) do
         if region.GetFont and region.SetFont then
             local _, sz = region:GetFont()
-            if sz then region:SetFont(fontPath, sz) end
+            if sz and sz > 0 then region:SetFont(fontPath, sz) end
         end
     end
     for _, child in ipairs({frame:GetChildren()}) do
         if child:GetObjectType() == "EditBox" and child.GetFont then
             local _, sz, flags = child:GetFont()
-            if sz then child:SetFont(fontPath, sz, flags or "") end
+            if sz and sz > 0 then child:SetFont(fontPath, sz, flags or "") end
         end
         ns.UI.ApplyFontToFrame(child)
     end
