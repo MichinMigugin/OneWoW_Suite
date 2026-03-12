@@ -2,6 +2,7 @@ local addonName, ns = ...
 local L = ns.L
 local T = ns.T
 local S = ns.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.UI = ns.UI or {}
 
@@ -19,11 +20,7 @@ function ns.UI.CreateBankTab(parent)
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -5)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -5, -5)
     controlPanel:SetHeight(85)
-    controlPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    controlPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     controlPanel:SetBackdropColor(T("BG_SECONDARY"))
     controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -32,68 +29,16 @@ function ns.UI.CreateBankTab(parent)
     controlTitle:SetText(currentChar .. " - " .. L["BANK_PERSONAL"])
     controlTitle:SetTextColor(T("ACCENT_PRIMARY"))
 
-    local charDropdown = CreateFrame("Button", nil, controlPanel, "BackdropTemplate")
-    charDropdown:SetSize(170, 28)
+    local charDropdown, charDropdownText = OneWoW_GUI:CreateDropdown(controlPanel, {
+        width = 170, height = 28, text = ""
+    })
     charDropdown:SetPoint("BOTTOMLEFT", controlPanel, "BOTTOMLEFT", 10, 6)
-    charDropdown:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+
+    local guildDropdown, guildDropdownText = OneWoW_GUI:CreateDropdown(controlPanel, {
+        width = 170, height = 28, text = ""
     })
-    charDropdown:SetBackdropColor(T("BG_TERTIARY"))
-    charDropdown:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local charDropdownText = charDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    charDropdownText:SetPoint("LEFT", charDropdown, "LEFT", 8, 0)
-    charDropdownText:SetPoint("RIGHT", charDropdown, "RIGHT", -20, 0)
-    charDropdownText:SetJustifyH("LEFT")
-    charDropdownText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local charDropdownArrow = charDropdown:CreateTexture(nil, "OVERLAY")
-    charDropdownArrow:SetSize(14, 14)
-    charDropdownArrow:SetPoint("RIGHT", charDropdown, "RIGHT", -4, 0)
-    charDropdownArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-
-    charDropdown:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-    end)
-    charDropdown:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_TERTIARY"))
-        self:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    end)
-
-    local guildDropdown = CreateFrame("Button", nil, controlPanel, "BackdropTemplate")
-    guildDropdown:SetSize(170, 28)
     guildDropdown:SetPoint("LEFT", charDropdown, "RIGHT", 6, 0)
-    guildDropdown:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    guildDropdown:SetBackdropColor(T("BG_TERTIARY"))
-    guildDropdown:SetBackdropBorderColor(T("BORDER_DEFAULT"))
     guildDropdown:Hide()
-
-    local guildDropdownText = guildDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    guildDropdownText:SetPoint("LEFT", guildDropdown, "LEFT", 8, 0)
-    guildDropdownText:SetPoint("RIGHT", guildDropdown, "RIGHT", -20, 0)
-    guildDropdownText:SetJustifyH("LEFT")
-    guildDropdownText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local guildDropdownArrow = guildDropdown:CreateTexture(nil, "OVERLAY")
-    guildDropdownArrow:SetSize(14, 14)
-    guildDropdownArrow:SetPoint("RIGHT", guildDropdown, "RIGHT", -4, 0)
-    guildDropdownArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-
-    guildDropdown:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-    end)
-    guildDropdown:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_TERTIARY"))
-        self:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    end)
 
     local buttonContainer = CreateFrame("Frame", nil, controlPanel)
     buttonContainer:SetPoint("LEFT", charDropdown, "RIGHT", 8, 0)
@@ -101,22 +46,8 @@ function ns.UI.CreateBankTab(parent)
     buttonContainer:SetHeight(30)
 
     local function CreateBankTypeButton(btnText, bankTypeKey, index)
-        local btn = CreateFrame("Button", nil, buttonContainer, "BackdropTemplate")
-        btn:SetHeight(28)
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        btn:SetBackdropColor(T("BG_TERTIARY"))
-        btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-        local btnLabel = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        btnLabel:SetPoint("CENTER")
-        btnLabel:SetText(btnText)
-        btnLabel:SetTextColor(T("TEXT_SECONDARY"))
-
-        btn.label = btnLabel
+        local btn = OneWoW_GUI:CreateButton(nil, buttonContainer, btnText, 80, 28)
+        btn.label = btn.text
         btn.bankType = bankTypeKey
         btn.index = index
 
@@ -201,30 +132,8 @@ function ns.UI.CreateBankTab(parent)
     personalBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
     personalBtn.label:SetTextColor(1, 1, 1)
 
-    local updateButton = CreateFrame("Button", nil, controlPanel, "BackdropTemplate")
-    updateButton:SetSize(120, 28)
+    local updateButton = OneWoW_GUI:CreateButton(nil, controlPanel, L["BANK_UPDATE_BANKS"], 120, 28)
     updateButton:SetPoint("BOTTOMRIGHT", controlPanel, "BOTTOMRIGHT", -10, 6)
-    updateButton:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    updateButton:SetBackdropColor(T("BG_TERTIARY"))
-    updateButton:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local updateText = updateButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    updateText:SetPoint("CENTER")
-    updateText:SetText(L["BANK_UPDATE_BANKS"])
-    updateText:SetTextColor(T("TEXT_PRIMARY"))
-
-    updateButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        updateText:SetTextColor(T("TEXT_ACCENT"))
-    end)
-    updateButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_TERTIARY"))
-        updateText:SetTextColor(T("TEXT_PRIMARY"))
-    end)
     updateButton:SetScript("OnClick", function()
         print("|cFFFFD100OneWoW|r AltTracker: " .. L["BANK_UPDATE_BANKS"])
     end)
@@ -232,11 +141,7 @@ function ns.UI.CreateBankTab(parent)
     local bankViewPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     bankViewPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -8)
     bankViewPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
-    bankViewPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    bankViewPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     bankViewPanel:SetBackdropColor(T("BG_PRIMARY"))
     bankViewPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -263,7 +168,7 @@ function ns.UI.CreateBankTab(parent)
     bagScrollBar:SetPoint("TOPLEFT", bagScrollFrame, "TOPRIGHT", 2, 0)
     bagScrollBar:SetPoint("BOTTOMLEFT", bagScrollFrame, "BOTTOMRIGHT", 2, 0)
     bagScrollBar:SetWidth(10)
-    bagScrollBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    bagScrollBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
     bagScrollBar:SetBackdropColor(T("BG_TERTIARY"))
     bagScrollBar:SetMinMaxValues(0, 0)
     bagScrollBar:SetValue(0)
@@ -290,11 +195,7 @@ function ns.UI.CreateBankTab(parent)
     statusBar:SetPoint("TOPLEFT", bankViewPanel, "BOTTOMLEFT", 0, -5)
     statusBar:SetPoint("TOPRIGHT", bankViewPanel, "BOTTOMRIGHT", 0, -5)
     statusBar:SetHeight(25)
-    statusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    statusBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     statusBar:SetBackdropColor(T("BG_SECONDARY"))
     statusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -347,166 +248,31 @@ function ns.UI.CreateBankTab(parent)
             end
         end
 
-        charDropdown:SetScript("OnClick", function(self)
-            if self._menu and self._menu:IsShown() then
-                self._menu:Hide()
-                return
-            end
-
-            local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
-            self._menu = menu
-            menu:SetFrameStrata("FULLSCREEN_DIALOG")
-            menu:SetSize(self:GetWidth() + 20, 314)
-            menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-            menu:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
-            menu:SetBackdropColor(T("BG_SECONDARY"))
-            menu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-            menu:EnableMouse(true)
-
-            local searchBox = ns.UI.CreateEditBox(nil, menu, menu:GetWidth() - 15, 28)
-            searchBox:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
-            searchBox:SetMaxLetters(50)
-
-            local separator = menu:CreateTexture(nil, "ARTWORK")
-            separator:SetSize(menu:GetWidth() - 4, 1)
-            separator:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -32)
-            separator:SetColorTexture(T("BORDER_DEFAULT"))
-
-            local scrollFrame = CreateFrame("ScrollFrame", nil, menu)
-            scrollFrame:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -36)
-            scrollFrame:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -13, 2)
-
-            local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-            scrollChild:SetWidth(scrollFrame:GetWidth())
-            scrollFrame:SetScrollChild(scrollChild)
-
-            local scrollBar = CreateFrame("Slider", nil, menu, "BackdropTemplate")
-            scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 1, 0)
-            scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 1, 0)
-            scrollBar:SetWidth(10)
-            scrollBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-            scrollBar:SetBackdropColor(T("BG_TERTIARY"))
-            scrollBar:SetMinMaxValues(0, 1)
-            scrollBar:SetValue(0)
-            scrollBar:SetScript("OnValueChanged", function(s, value)
-                scrollFrame:SetVerticalScroll(value)
-            end)
-
-            local thumb = scrollBar:CreateTexture(nil, "OVERLAY")
-            thumb:SetSize(8, 30)
-            thumb:SetColorTexture(T("ACCENT_PRIMARY"))
-            scrollBar:SetThumbTexture(thumb)
-
-            scrollFrame:EnableMouseWheel(true)
-            scrollFrame:SetScript("OnMouseWheel", function(sf, direction)
-                local current = scrollFrame:GetVerticalScroll()
-                local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
-                local new = math.max(0, math.min(maxScroll, current - (direction * 28)))
-                scrollFrame:SetVerticalScroll(new)
-                scrollBar:SetValue(new)
-            end)
-
-            local buttons = {}
-            for _, charInfo in ipairs(characterList) do
-                local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-                btn:SetSize(scrollFrame:GetWidth() - 4, 26)
-                btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-                if charInfo.key == selectedCharacterKey then
-                    btn:SetBackdropColor(T("ACCENT_PRIMARY"))
-                else
-                    btn:SetBackdropColor(T("BG_TERTIARY"))
+        OneWoW_GUI:AttachFilterMenu(charDropdown, charDropdownText, {
+            searchable = true,
+            menuHeight = 314,
+            buildItems = function()
+                local items = {}
+                for _, charInfo in ipairs(characterList) do
+                    table.insert(items, {
+                        text = charInfo.text,
+                        value = charInfo.key,
+                    })
                 end
-
-                local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                txt:SetPoint("LEFT", btn, "LEFT", 8, 0)
-                txt:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
-                txt:SetJustifyH("LEFT")
-                txt:SetText(charInfo.text)
-                txt:SetTextColor(T("TEXT_PRIMARY"))
-
-                btn:SetScript("OnEnter", function(b)
-                    if charInfo.key ~= selectedCharacterKey then
-                        b:SetBackdropColor(T("BG_HOVER"))
-                        txt:SetTextColor(T("TEXT_ACCENT"))
-                    end
-                end)
-                btn:SetScript("OnLeave", function(b)
-                    if charInfo.key ~= selectedCharacterKey then
-                        b:SetBackdropColor(T("BG_TERTIARY"))
-                        txt:SetTextColor(T("TEXT_PRIMARY"))
-                    end
-                end)
-                btn:SetScript("OnClick", function()
-                    selectedCharacterKey = charInfo.key
-                    charDropdownText:SetText(charInfo.text)
-                    currentTab = 1
-                    menu:Hide()
-                    if ns.UI.RefreshBankDisplay then
-                        ns.UI.RefreshBankDisplay(parent)
-                    end
-                end)
-
-                btn.filterKey = charInfo.name:lower()
-                btn:Hide()
-                table.insert(buttons, btn)
-            end
-
-            local function renderList(filter)
-                local yPos = -2
-                for _, btn in ipairs(buttons) do
-                    if filter == "" or string.find(btn.filterKey, filter, 1, true) then
-                        btn:ClearAllPoints()
-                        btn:SetPoint("TOP", scrollChild, "TOP", 0, yPos)
-                        btn:Show()
-                        yPos = yPos - 28
-                    else
-                        btn:Hide()
-                    end
+                return items
+            end,
+            getActiveValue = function()
+                return selectedCharacterKey
+            end,
+            onSelect = function(value, text)
+                selectedCharacterKey = value
+                charDropdownText:SetText(text)
+                currentTab = 1
+                if ns.UI.RefreshBankDisplay then
+                    ns.UI.RefreshBankDisplay(parent)
                 end
-                local totalH = math.max(28, math.abs(yPos) + 2)
-                scrollChild:SetHeight(totalH)
-                local maxScroll = math.max(0, totalH - scrollFrame:GetHeight())
-                scrollBar:SetMinMaxValues(0, maxScroll)
-                scrollFrame:SetVerticalScroll(0)
-                scrollBar:SetValue(0)
-            end
-
-            renderList("")
-
-            searchBox:SetScript("OnTextChanged", function(s)
-                renderList(s:GetText():lower())
-            end)
-            searchBox:SetScript("OnEscapePressed", function(s)
-                if s:GetText() ~= "" then
-                    s:SetText("")
-                    renderList("")
-                else
-                    menu:Hide()
-                end
-            end)
-
-            menu:SetScript("OnShow", function(m)
-                local timeOutside = 0
-                m:SetScript("OnUpdate", function(m2, elapsed)
-                    if not MouseIsOver(menu) and not MouseIsOver(self) and not searchBox:HasFocus() then
-                        timeOutside = timeOutside + elapsed
-                        if timeOutside > 0.5 then
-                            m2:Hide()
-                            m2:SetScript("OnUpdate", nil)
-                        end
-                    else
-                        timeOutside = 0
-                    end
-                end)
-            end)
-
-            menu:Show()
-            searchBox:SetFocus()
-        end)
+            end,
+        })
     end
 
     local function InitializeGuildDropdown()
@@ -549,166 +315,31 @@ function ns.UI.CreateBankTab(parent)
                 guildDropdownText:SetText(guildList[1].name)
             end
 
-            guildDropdown:SetScript("OnClick", function(self)
-                if self._menu and self._menu:IsShown() then
-                    self._menu:Hide()
-                    return
-                end
-
-                local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
-                self._menu = menu
-                menu:SetFrameStrata("FULLSCREEN_DIALOG")
-                menu:SetSize(self:GetWidth() + 20, 314)
-                menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-                menu:SetBackdrop({
-                    bgFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1,
-                })
-                menu:SetBackdropColor(T("BG_SECONDARY"))
-                menu:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-                menu:EnableMouse(true)
-
-                local searchBox = ns.UI.CreateEditBox(nil, menu, menu:GetWidth() - 15, 28)
-                searchBox:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
-                searchBox:SetMaxLetters(50)
-
-                local separator = menu:CreateTexture(nil, "ARTWORK")
-                separator:SetSize(menu:GetWidth() - 4, 1)
-                separator:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -32)
-                separator:SetColorTexture(T("BORDER_DEFAULT"))
-
-                local scrollFrame = CreateFrame("ScrollFrame", nil, menu)
-                scrollFrame:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -36)
-                scrollFrame:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -13, 2)
-
-                local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-                scrollChild:SetWidth(scrollFrame:GetWidth())
-                scrollFrame:SetScrollChild(scrollChild)
-
-                local scrollBar = CreateFrame("Slider", nil, menu, "BackdropTemplate")
-                scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 1, 0)
-                scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 1, 0)
-                scrollBar:SetWidth(10)
-                scrollBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-                scrollBar:SetBackdropColor(T("BG_TERTIARY"))
-                scrollBar:SetMinMaxValues(0, 1)
-                scrollBar:SetValue(0)
-                scrollBar:SetScript("OnValueChanged", function(s, value)
-                    scrollFrame:SetVerticalScroll(value)
-                end)
-
-                local thumb = scrollBar:CreateTexture(nil, "OVERLAY")
-                thumb:SetSize(8, 30)
-                thumb:SetColorTexture(T("ACCENT_PRIMARY"))
-                scrollBar:SetThumbTexture(thumb)
-
-                scrollFrame:EnableMouseWheel(true)
-                scrollFrame:SetScript("OnMouseWheel", function(sf, direction)
-                    local current = scrollFrame:GetVerticalScroll()
-                    local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
-                    local new = math.max(0, math.min(maxScroll, current - (direction * 28)))
-                    scrollFrame:SetVerticalScroll(new)
-                    scrollBar:SetValue(new)
-                end)
-
-                local buttons = {}
-                for _, guildInfo in ipairs(guildList) do
-                    local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-                    btn:SetSize(scrollFrame:GetWidth() - 4, 26)
-                    btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-                    if guildInfo.name == selectedGuildName then
-                        btn:SetBackdropColor(T("ACCENT_PRIMARY"))
-                    else
-                        btn:SetBackdropColor(T("BG_TERTIARY"))
+            OneWoW_GUI:AttachFilterMenu(guildDropdown, guildDropdownText, {
+                searchable = true,
+                menuHeight = 314,
+                buildItems = function()
+                    local items = {}
+                    for _, guildInfo in ipairs(guildList) do
+                        table.insert(items, {
+                            text = guildInfo.name,
+                            value = guildInfo.name,
+                        })
                     end
-
-                    local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    txt:SetPoint("LEFT", btn, "LEFT", 8, 0)
-                    txt:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
-                    txt:SetJustifyH("LEFT")
-                    txt:SetText(guildInfo.name)
-                    txt:SetTextColor(T("TEXT_PRIMARY"))
-
-                    btn:SetScript("OnEnter", function(b)
-                        if guildInfo.name ~= selectedGuildName then
-                            b:SetBackdropColor(T("BG_HOVER"))
-                            txt:SetTextColor(T("TEXT_ACCENT"))
-                        end
-                    end)
-                    btn:SetScript("OnLeave", function(b)
-                        if guildInfo.name ~= selectedGuildName then
-                            b:SetBackdropColor(T("BG_TERTIARY"))
-                            txt:SetTextColor(T("TEXT_PRIMARY"))
-                        end
-                    end)
-                    btn:SetScript("OnClick", function()
-                        selectedGuildName = guildInfo.name
-                        guildDropdownText:SetText(guildInfo.name)
-                        currentTab = 1
-                        menu:Hide()
-                        if ns.UI.RefreshBankDisplay then
-                            ns.UI.RefreshBankDisplay(parent)
-                        end
-                    end)
-
-                    btn.filterKey = guildInfo.name:lower()
-                    btn:Hide()
-                    table.insert(buttons, btn)
-                end
-
-                local function renderList(filter)
-                    local yPos = -2
-                    for _, btn in ipairs(buttons) do
-                        if filter == "" or string.find(btn.filterKey, filter, 1, true) then
-                            btn:ClearAllPoints()
-                            btn:SetPoint("TOP", scrollChild, "TOP", 0, yPos)
-                            btn:Show()
-                            yPos = yPos - 28
-                        else
-                            btn:Hide()
-                        end
+                    return items
+                end,
+                getActiveValue = function()
+                    return selectedGuildName
+                end,
+                onSelect = function(value, text)
+                    selectedGuildName = value
+                    guildDropdownText:SetText(text)
+                    currentTab = 1
+                    if ns.UI.RefreshBankDisplay then
+                        ns.UI.RefreshBankDisplay(parent)
                     end
-                    local totalH = math.max(28, math.abs(yPos) + 2)
-                    scrollChild:SetHeight(totalH)
-                    local maxScroll = math.max(0, totalH - scrollFrame:GetHeight())
-                    scrollBar:SetMinMaxValues(0, maxScroll)
-                    scrollFrame:SetVerticalScroll(0)
-                    scrollBar:SetValue(0)
-                end
-
-                renderList("")
-
-                searchBox:SetScript("OnTextChanged", function(s)
-                    renderList(s:GetText():lower())
-                end)
-                searchBox:SetScript("OnEscapePressed", function(s)
-                    if s:GetText() ~= "" then
-                        s:SetText("")
-                        renderList("")
-                    else
-                        menu:Hide()
-                    end
-                end)
-
-                menu:SetScript("OnShow", function(m)
-                    local timeOutside = 0
-                    m:SetScript("OnUpdate", function(m2, elapsed)
-                        if not MouseIsOver(menu) and not MouseIsOver(self) and not searchBox:HasFocus() then
-                            timeOutside = timeOutside + elapsed
-                            if timeOutside > 0.5 then
-                                m2:Hide()
-                                m2:SetScript("OnUpdate", nil)
-                            end
-                        else
-                            timeOutside = 0
-                        end
-                    end)
-                end)
-
-                menu:Show()
-                searchBox:SetFocus()
-            end)
+                end,
+            })
         else
             selectedGuildName = nil
             guildDropdownText:SetText(L["BANK_NO_GUILDS"])
@@ -943,16 +574,20 @@ function ns.UI.CreateBankTabs(parent)
     }
 
     for i = 1, maxTabs do
-        local tabBtn = CreateFrame("Button", nil, parent.tabContainer, "BackdropTemplate")
-        tabBtn:SetSize(58, 50)
+        local tabLabel
+        if currentBankType == "bags" then
+            tabLabel = bagNames[i]:gsub("Bag ", ""):gsub("Backpack", "BP"):gsub("Reagents", "R")
+        else
+            tabLabel = tostring(i)
+        end
+
+        local tabBtn = OneWoW_GUI:CreateButton(nil, parent.tabContainer, tabLabel, 58, 50)
         tabBtn:SetPoint("TOP", parent.tabContainer, "TOP", 0, -((i - 1) * 55))
-        tabBtn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        tabBtn:SetBackdropColor(T("BG_TERTIARY"))
-        tabBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+        tabBtn.text:ClearAllPoints()
+        tabBtn.text:SetPoint("BOTTOM", tabBtn, "BOTTOM", 0, 4)
+        tabBtn.text:SetFontObject("GameFontNormalSmall")
+        tabBtn.text:SetTextColor(T("TEXT_SECONDARY"))
 
         local icon = tabBtn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(32, 32)
@@ -994,19 +629,6 @@ function ns.UI.CreateBankTabs(parent)
         end
 
         tabBtn.icon = icon
-
-        local tabText = tabBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        tabText:SetPoint("BOTTOM", tabBtn, "BOTTOM", 0, 4)
-        tabText:SetTextColor(T("TEXT_SECONDARY"))
-
-        if currentBankType == "bags" then
-            local shortName = bagNames[i]:gsub("Bag ", ""):gsub("Backpack", "BP"):gsub("Reagents", "R")
-            tabText:SetText(shortName)
-        else
-            tabText:SetText(tostring(i))
-        end
-
-        tabBtn.text = tabText
 
         tabBtn:SetScript("OnEnter", function(self)
             if currentTab ~= i then

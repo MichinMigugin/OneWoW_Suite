@@ -3,6 +3,7 @@ local OneWoWAltTracker = OneWoW_AltTracker
 local L = ns.L
 local T = ns.T
 local S = ns.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.PatchDialog = ns.PatchDialog or {}
 local PatchDialog = ns.PatchDialog
@@ -69,55 +70,30 @@ function PatchDialog:Show()
         {name = L["PATCH_DIALOG_ADDON_DEVTOOLS"], url = "https://www.curseforge.com/wow/addons/wownotes-dev-tools"}
     }
 
-    local dialog = CreateFrame("Frame", "OneWoWAltTrackerPatchDialog", UIParent, "BackdropTemplate")
-    dialog:SetSize(700, 600)
-    dialog:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    dialog:SetFrameStrata("DIALOG")
-    dialog:SetToplevel(true)
-    dialog:SetMovable(true)
-    dialog:EnableMouse(true)
-    dialog:RegisterForDrag("LeftButton")
-
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoWAltTrackerPatchDialog",
+        title = L["PATCH_DIALOG_TITLE"] .. " " .. L["PATCH_DIALOG_VERSION"] .. " " .. ns.GetVersionString(),
+        width = 700,
+        height = 600,
+        titleHeight = 40,
+        showBrand = true,
+        onClose = function()
+            OneWoWAltTracker.db.global.patchDialog.lastShownVersion = ns.GetVersionString()
+        end,
+        buttons = {
+            { text = L["PATCH_DIALOG_CLOSE"], onClick = function(dialog)
+                OneWoWAltTracker.db.global.patchDialog.lastShownVersion = ns.GetVersionString()
+                dialog:Hide()
+            end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    local dialog = result.frame
+    local cf = result.contentFrame
 
-    local titleBg = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    titleBg:SetPoint("TOPLEFT", dialog, "TOPLEFT", S("XS"), -S("XS"))
-    titleBg:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -S("XS"), -S("XS"))
-    titleBg:SetHeight(40)
-    titleBg:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-    })
-    titleBg:SetBackdropColor(T("TITLEBAR_BG"))
-    titleBg:SetFrameLevel(dialog:GetFrameLevel() + 1)
-
-    local title = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("LEFT", titleBg, "LEFT", S("SM"), 0)
-    title:SetText(L["PATCH_DIALOG_TITLE"] .. " " .. L["PATCH_DIALOG_VERSION"] .. " " .. ns.GetVersionString())
-    title:SetTextColor(T("TEXT_PRIMARY"))
-
-    local closeButton = ns.UI.CreateButton(nil, titleBg, "X", 20, 20)
-    closeButton:SetPoint("RIGHT", titleBg, "RIGHT", -S("XS")/2, 0)
-    closeButton:SetScript("OnClick", function()
-        OneWoWAltTracker.db.global.patchDialog.lastShownVersion = ns.GetVersionString()
-        dialog:Hide()
-    end)
-
-    local contentFrame = CreateFrame("Frame", nil, dialog)
-    contentFrame:SetPoint("TOPLEFT", titleBg, "BOTTOMLEFT", S("XS"), -S("SM"))
-    contentFrame:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -S("XS"), S("XS")*2 + 40)
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, contentFrame)
-    scrollFrame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, 0)
-    scrollFrame:SetPoint("BOTTOMRIGHT", contentFrame, "BOTTOMRIGHT", -2, 0)
+    local scrollFrame = CreateFrame("ScrollFrame", nil, cf)
+    scrollFrame:SetPoint("TOPLEFT", cf, "TOPLEFT", 0, 0)
+    scrollFrame:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -2, 0)
     scrollFrame:EnableMouseWheel(true)
 
     local scrollContent = CreateFrame("Frame", nil, scrollFrame)
@@ -264,13 +240,6 @@ function PatchDialog:Show()
     yOffset = yOffset - 25
 
     scrollContent:SetHeight(math.abs(yOffset) + 30)
-
-    local closeBtn = ns.UI.CreateButton(nil, dialog, L["PATCH_DIALOG_CLOSE"], 120, 28)
-    closeBtn:SetPoint("BOTTOM", dialog, "BOTTOM", 0, S("SM"))
-    closeBtn:SetScript("OnClick", function()
-        OneWoWAltTracker.db.global.patchDialog.lastShownVersion = ns.GetVersionString()
-        dialog:Hide()
-    end)
 
     dialog:Show()
 end

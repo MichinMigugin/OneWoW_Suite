@@ -3,6 +3,7 @@ local OneWoWAltTracker = OneWoW_AltTracker
 local L = ns.L
 local T = ns.T
 local S = ns.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.UI = ns.UI or {}
 
@@ -251,11 +252,7 @@ local function ShowManageAltsDialog()
     local listBg = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
     listBg:SetPoint("TOPLEFT", dialog, "TOPLEFT", 10, -108)
     listBg:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 56)
-    listBg:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    listBg:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     listBg:SetBackdropColor(T("BG_SECONDARY"))
     listBg:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -291,16 +288,17 @@ local function ShowManageAltsDialog()
         row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -yPos)
         row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, -yPos)
         row:SetHeight(ROW_H)
-        row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
         if i % 2 == 0 then
             row:SetBackdropColor(T("BG_TERTIARY"))
         else
             row:SetBackdropColor(T("BG_PRIMARY"))
         end
 
-        local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
+        local cb = OneWoW_GUI:CreateCheckbox(nil, row, "")
         cb:SetSize(20, 20)
         cb:SetPoint("LEFT", row, "LEFT", 4, 0)
+        if cb.label then cb.label:SetText("") end
         cb:SetScript("OnClick", function(self) charInfo.checked = self:GetChecked() end)
         allCheckboxes[#allCheckboxes + 1] = { cb = cb, info = charInfo }
 
@@ -519,31 +517,8 @@ function ns.UI.CreateSettingsTab(parent)
     end)
     yOffset = yOffset - 20
 
-    local importBtn = CreateFrame("Button", nil, scrollContent, "BackdropTemplate")
-    importBtn:SetSize(280, 35)
+    local importBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, scrollContent, "Import from WoWNotes", 280, 35) or ns.UI.CreateButton(nil, scrollContent, "Import from WoWNotes", 280, 35)
     importBtn:SetPoint("TOPLEFT", 25, yOffset)
-    importBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Buttons\\WHITE8X8",
-        edgeSize = 1,
-    })
-    importBtn:SetBackdropColor(T("BG_SECONDARY"))
-    importBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local importBtnText = importBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    importBtnText:SetPoint("CENTER")
-    importBtnText:SetText("Import from WoWNotes")
-    importBtnText:SetTextColor(T("TEXT_PRIMARY"))
-
-    importBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        importBtnText:SetTextColor(T("TEXT_ACCENT"))
-    end)
-
-    importBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_SECONDARY"))
-        importBtnText:SetTextColor(T("TEXT_PRIMARY"))
-    end)
 
     importBtn:SetScript("OnClick", function()
         if not (_G.WoWNotes and _G.WoWNotes.db and _G.WoWNotes.db.global and _G.WoWNotes.db.global.altTracker) then
@@ -616,11 +591,7 @@ function ns.UI.CreateSettingsTab(parent)
         local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
         container:SetPoint("TOPLEFT", parent, "TOPLEFT", 15, yPos)
         container:SetSize(770, 60)
-        container:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Buttons\\WHITE8X8",
-            edgeSize = 1,
-        })
+        container:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
         container:SetBackdropColor(T("BG_TERTIARY"))
         container:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -651,31 +622,20 @@ function ns.UI.CreateSettingsTab(parent)
         end
         UpdateSize()
 
-        local resetBtn = CreateFrame("Button", nil, container, "BackdropTemplate")
-        resetBtn:SetSize(75, 28)
+        local resetBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, container, "Reset", 75, 28) or ns.UI.CreateButton(nil, container, "Reset", 75, 28)
         resetBtn:SetPoint("TOPRIGHT", -12, -16)
-        resetBtn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Buttons\\WHITE8X8",
-            edgeSize = 1,
-        })
         resetBtn:SetBackdropColor(1, 0.3, 0.3)
         resetBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        if resetBtn.text then resetBtn.text:SetTextColor(1, 1, 1) end
 
-        local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        resetText:SetPoint("CENTER")
-        resetText:SetText("Reset")
-        resetText:SetTextColor(1, 1, 1)
-
-        resetBtn:EnableMouse(true)
         resetBtn:SetScript("OnEnter", function(self)
             self:SetBackdropColor(1, 0.1, 0.1)
-            resetText:SetTextColor(1, 1, 1)
+            if self.text then self.text:SetTextColor(1, 1, 1) end
         end)
 
         resetBtn:SetScript("OnLeave", function(self)
             self:SetBackdropColor(1, 0.3, 0.3)
-            resetText:SetTextColor(1, 1, 1)
+            if self.text then self.text:SetTextColor(1, 1, 1) end
         end)
 
         resetBtn:SetScript("OnClick", function()
@@ -723,31 +683,10 @@ function ns.UI.CreateSettingsTab(parent)
     end)
     yOffset = yOffset - 50
 
-    local overrideBtn = CreateFrame("Button", nil, scrollContent, "BackdropTemplate")
-    overrideBtn:SetSize(280, 35)
+    local overrideBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, scrollContent, L["OVERRIDE_BTN"], 280, 35) or ns.UI.CreateButton(nil, scrollContent, L["OVERRIDE_BTN"], 280, 35)
     overrideBtn:SetPoint("TOPLEFT", 25, yOffset)
-    overrideBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Buttons\\WHITE8X8",
-        edgeSize = 1,
-    })
-    overrideBtn:SetBackdropColor(T("BG_SECONDARY"))
     overrideBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-
-    local overrideBtnText = overrideBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    overrideBtnText:SetPoint("CENTER")
-    overrideBtnText:SetText(L["OVERRIDE_BTN"])
-    overrideBtnText:SetTextColor(T("ACCENT_PRIMARY"))
-
-    overrideBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        overrideBtnText:SetTextColor(T("TEXT_ACCENT"))
-    end)
-
-    overrideBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_SECONDARY"))
-        overrideBtnText:SetTextColor(T("ACCENT_PRIMARY"))
-    end)
+    if overrideBtn.text then overrideBtn.text:SetTextColor(T("ACCENT_PRIMARY")) end
 
     local overrideDialog = nil
 
@@ -783,54 +722,17 @@ function ns.UI.CreateSettingsTab(parent)
             return
         end
 
-        overrideDialog = CreateFrame("Frame", "OneWoWOverrideDialog", UIParent, "BackdropTemplate")
-        overrideDialog:SetSize(600, 660)
-        overrideDialog:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        overrideDialog:SetFrameStrata("DIALOG")
-        overrideDialog:SetMovable(true)
-        overrideDialog:SetClampedToScreen(true)
-        overrideDialog:EnableMouse(true)
-        overrideDialog:RegisterForDrag("LeftButton")
-        overrideDialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-        overrideDialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-        overrideDialog:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+        local result = OneWoW_GUI:CreateDialog({
+            name = "OneWoWOverrideDialog",
+            title = L["OVERRIDE_SYSTEM_TITLE"],
+            width = 600,
+            height = 660,
+            titleHeight = 26,
+            showScrollFrame = true,
         })
-        overrideDialog:SetBackdropColor(T("BG_PRIMARY"))
-        overrideDialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-        tinsert(UISpecialFrames, "OneWoWOverrideDialog")
-
-        local titleBar = CreateFrame("Frame", nil, overrideDialog, "BackdropTemplate")
-        titleBar:SetPoint("TOPLEFT", overrideDialog, "TOPLEFT", 1, -1)
-        titleBar:SetPoint("TOPRIGHT", overrideDialog, "TOPRIGHT", -1, -1)
-        titleBar:SetHeight(26)
-        titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        titleBar:SetBackdropColor(T("BG_SECONDARY"))
-
-        local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-        titleText:SetText(L["OVERRIDE_SYSTEM_TITLE"])
-        titleText:SetTextColor(T("ACCENT_PRIMARY"))
-
-        local closeX = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
-        closeX:SetSize(22, 22)
-        closeX:SetPoint("RIGHT", titleBar, "RIGHT", -3, 0)
-        closeX:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        closeX:SetBackdropColor(T("BG_TERTIARY"))
-        local closeXText = closeX:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        closeXText:SetPoint("CENTER")
-        closeXText:SetText("X")
-        closeXText:SetTextColor(T("TEXT_PRIMARY"))
-        closeX:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")); closeXText:SetTextColor(T("TEXT_ACCENT")) end)
-        closeX:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_TERTIARY")); closeXText:SetTextColor(T("TEXT_PRIMARY")) end)
-        closeX:SetScript("OnClick", function() overrideDialog:Hide() end)
-
-        local scrollFrame, sc = ns.UI.CreateScrollFrame(nil, overrideDialog, 580, 580)
-        scrollFrame:ClearAllPoints()
-        scrollFrame:SetPoint("TOPLEFT", overrideDialog, "TOPLEFT", 1, -28)
-        scrollFrame:SetPoint("BOTTOMRIGHT", overrideDialog, "BOTTOMRIGHT", -1, 46)
+        overrideDialog = result.frame
+        local scrollFrame = result.scrollFrame
+        local sc = result.scrollContent
 
         local dy = -8
 
@@ -849,7 +751,7 @@ function ns.UI.CreateSettingsTab(parent)
             row:SetPoint("TOPLEFT", 8, yPos)
             row:SetPoint("TOPRIGHT", -8, yPos)
             row:SetHeight(28)
-            row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+            row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
             row:SetBackdropColor(T("BG_TERTIARY"))
             row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -871,16 +773,11 @@ function ns.UI.CreateSettingsTab(parent)
         end
 
         local function MakeRemoveBtn(parent, row, onClick)
-            local btn = CreateFrame("Button", nil, row, "BackdropTemplate")
-            btn:SetSize(60, 20)
+            local btn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, row, L["OVERRIDE_REMOVE"] .. " Remove", 60, 20) or ns.UI.CreateButton(nil, row, L["OVERRIDE_REMOVE"] .. " Remove", 60, 20)
             btn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
             btn:SetBackdropColor(0.5, 0.15, 0.15)
             btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-            local bt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            bt:SetPoint("CENTER")
-            bt:SetText(L["OVERRIDE_REMOVE"] .. " Remove")
-            bt:SetTextColor(1, 0.7, 0.7)
+            if btn.text then btn.text:SetTextColor(1, 0.7, 0.7) end
             btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.7, 0.1, 0.1) end)
             btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.5, 0.15, 0.15) end)
             btn:SetScript("OnClick", onClick)
@@ -976,7 +873,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         local addCurrRow = CreateFrame("Frame", nil, sc, "BackdropTemplate")
         addCurrRow:SetHeight(28)
-        addCurrRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        addCurrRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
         addCurrRow:SetBackdropColor(T("BG_SECONDARY"))
         addCurrRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
         local addCurrLabel = addCurrRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1015,7 +912,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         local addBossRow = CreateFrame("Frame", nil, sc, "BackdropTemplate")
         addBossRow:SetHeight(28)
-        addBossRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        addBossRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
         addBossRow:SetBackdropColor(T("BG_SECONDARY"))
         addBossRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
         local addBossLabel = addBossRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1184,46 +1081,17 @@ function ns.UI.CreateSettingsTab(parent)
             return
         end
 
-        checklistDialog = CreateFrame("Frame", "OneWoWSeasonChecklist", UIParent, "BackdropTemplate")
-        checklistDialog:SetSize(780, 700)
-        checklistDialog:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        checklistDialog:SetFrameStrata("DIALOG")
-        checklistDialog:SetMovable(true)
-        checklistDialog:SetClampedToScreen(true)
-        checklistDialog:EnableMouse(true)
-        checklistDialog:RegisterForDrag("LeftButton")
-        checklistDialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-        checklistDialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-        checklistDialog:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        checklistDialog:SetBackdropColor(T("BG_PRIMARY"))
-        checklistDialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-        tinsert(UISpecialFrames, "OneWoWSeasonChecklist")
-
-        local titleBar = CreateFrame("Frame", nil, checklistDialog, "BackdropTemplate")
-        titleBar:SetPoint("TOPLEFT", checklistDialog, "TOPLEFT", 1, -1)
-        titleBar:SetPoint("TOPRIGHT", checklistDialog, "TOPRIGHT", -1, -1)
-        titleBar:SetHeight(26)
-        titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        titleBar:SetBackdropColor(T("BG_SECONDARY"))
-        local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-        titleText:SetText(L["SEASON_CHECKLIST_TITLE"])
-        titleText:SetTextColor(T("ACCENT_PRIMARY"))
-        local closeX = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
-        closeX:SetSize(22, 22)
-        closeX:SetPoint("RIGHT", titleBar, "RIGHT", -3, 0)
-        closeX:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        closeX:SetBackdropColor(T("BG_TERTIARY"))
-        local closeXTxt = closeX:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        closeXTxt:SetPoint("CENTER"); closeXTxt:SetText("X"); closeXTxt:SetTextColor(T("TEXT_PRIMARY"))
-        closeX:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")); closeXTxt:SetTextColor(T("TEXT_ACCENT")) end)
-        closeX:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_TERTIARY")); closeXTxt:SetTextColor(T("TEXT_PRIMARY")) end)
-        closeX:SetScript("OnClick", function() checklistDialog:Hide() end)
-
-        local scrollFrame2, sc2 = ns.UI.CreateScrollFrame(nil, checklistDialog, 760, 640)
-        scrollFrame2:ClearAllPoints()
-        scrollFrame2:SetPoint("TOPLEFT", checklistDialog, "TOPLEFT", 1, -28)
-        scrollFrame2:SetPoint("BOTTOMRIGHT", checklistDialog, "BOTTOMRIGHT", -1, 46)
+        local clResult = OneWoW_GUI:CreateDialog({
+            name = "OneWoWSeasonChecklist",
+            title = L["SEASON_CHECKLIST_TITLE"],
+            width = 780,
+            height = 700,
+            titleHeight = 26,
+            showScrollFrame = true,
+        })
+        checklistDialog = clResult.frame
+        local scrollFrame2 = clResult.scrollFrame
+        local sc2 = clResult.scrollContent
 
         local cdy = -8
         local ROW_H = 54
@@ -1238,7 +1106,7 @@ function ns.UI.CreateSettingsTab(parent)
                 row:SetPoint("TOPLEFT", 8, cdy)
                 row:SetPoint("TOPRIGHT", -8, cdy)
                 row:SetHeight(ROW_H)
-                row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+                row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
 
                 local isChecked = OneWoWAltTracker.db.global.seasonChecklist[item.key] == true
                 local isAuto = item.auto == true
@@ -1257,7 +1125,7 @@ function ns.UI.CreateSettingsTab(parent)
                 local checkBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
                 checkBtn:SetSize(22, 22)
                 checkBtn:SetPoint("LEFT", row, "LEFT", 6, 0)
-                checkBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+                checkBtn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
                 if isChecked then
                     checkBtn:SetBackdropColor(0.2, 0.7, 0.2)
                     checkBtn:SetBackdropBorderColor(0.2, 0.9, 0.2)

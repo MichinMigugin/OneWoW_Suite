@@ -2,6 +2,7 @@ local addonName, ns = ...
 local L = ns.L
 local T = ns.T
 local S = ns.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.UI = ns.UI or {}
 
@@ -29,347 +30,150 @@ local BAR_NAMES = {
 local BAR_DISPLAY_ORDER = {1, 2, 6, 5, 4, 3, 13, 14, 15, 7, 8, 9, 10, 11, 12}
 
 local function ShowRestoreBarDialog(charKey, sourceBarNumber, specName, parent)
-    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dialog:SetSize(400, 220)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("DIALOG")
-    dialog:SetToplevel(true)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    dialog:EnableMouse(true)
-
-    local title = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", dialog, "TOP", 0, -15)
     local barName = L[BAR_NAMES[sourceBarNumber]] or string.format(L["AB_LABEL_BAR"], sourceBarNumber)
-    title:SetText(string.format(L["AB_RESTORE_SINGLE"], barName))
-    title:SetTextColor(T("ACCENT_PRIMARY"))
+    local selectedTargetBar = sourceBarNumber
 
-    local instructionText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    instructionText:SetPoint("TOP", title, "BOTTOM", 0, -15)
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_AT_RestoreBarDialog",
+        title = string.format(L["AB_RESTORE_SINGLE"], barName),
+        width = 400,
+        height = 220,
+        movable = false,
+        buttons = {
+            { text = L["AB_LABEL_RESTORE"], color = {0.2, 0.6, 0.2}, onClick = function(dialog)
+                if ns.ActionBarsModule and ns.ActionBarsModule.RestoreSingleActionBar then
+                    ns.ActionBarsModule:RestoreSingleActionBar(charKey, sourceBarNumber, selectedTargetBar, specName)
+                end
+                dialog:Hide()
+            end },
+            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+        },
+    })
+
+    local cf = result.contentFrame
+    local instructionText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    instructionText:SetPoint("TOP", cf, "TOP", 0, -10)
     instructionText:SetText(L["AB_SELECT_TARGET_BAR"])
     instructionText:SetTextColor(T("TEXT_PRIMARY"))
 
-    local selectedTargetBar = sourceBarNumber
-
-    local dropdown = CreateFrame("Frame", "OneWoWRestoreBarDropdown", dialog, "UIDropDownMenuTemplate")
+    local dropdown, dropdownText = OneWoW_GUI:CreateDropdown(cf, {
+        width = 200,
+        height = 28,
+        text = L[BAR_NAMES[sourceBarNumber]] or string.format(L["AB_LABEL_BAR"], sourceBarNumber),
+    })
     dropdown:SetPoint("TOP", instructionText, "BOTTOM", 0, -10)
-    UIDropDownMenu_SetWidth(dropdown, 150)
-    UIDropDownMenu_SetText(dropdown, string.format(L["AB_LABEL_BAR"], selectedTargetBar))
 
-    UIDropDownMenu_Initialize(dropdown, function(self, level)
-        for _, barNumber in ipairs(BAR_DISPLAY_ORDER) do
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = L[BAR_NAMES[barNumber]] or string.format(L["AB_LABEL_BAR"], barNumber)
-            info.value = barNumber
-            info.func = function(btn)
-                selectedTargetBar = btn.value
-                UIDropDownMenu_SetText(dropdown, L[BAR_NAMES[btn.value]] or string.format(L["AB_LABEL_BAR"], btn.value))
-                CloseDropDownMenus()
+    OneWoW_GUI:AttachFilterMenu(dropdown, dropdownText, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for _, barNumber in ipairs(BAR_DISPLAY_ORDER) do
+                table.insert(items, {
+                    value = barNumber,
+                    text = L[BAR_NAMES[barNumber]] or string.format(L["AB_LABEL_BAR"], barNumber),
+                })
             end
-            UIDropDownMenu_AddButton(info, level)
-        end
-    end)
-
-    local restoreBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    restoreBtn:SetSize(120, 30)
-    restoreBtn:SetPoint("BOTTOM", dialog, "BOTTOM", -65, 15)
-    restoreBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+            return items
+        end,
+        onSelect = function(value, displayText)
+            selectedTargetBar = value
+            dropdownText:SetText(displayText)
+        end,
+        getActiveValue = function() return selectedTargetBar end,
     })
-    restoreBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
-    restoreBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
 
-    local restoreBtnText = restoreBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    restoreBtnText:SetPoint("CENTER")
-    restoreBtnText:SetText(L["AB_LABEL_RESTORE"])
-    restoreBtnText:SetTextColor(1, 1, 1)
-
-    restoreBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.3, 0.7, 0.3, 1.0)
-    end)
-    restoreBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
-    end)
-    restoreBtn:SetScript("OnClick", function()
-        if ns.ActionBarsModule and ns.ActionBarsModule.RestoreSingleActionBar then
-            ns.ActionBarsModule:RestoreSingleActionBar(charKey, sourceBarNumber, selectedTargetBar, specName)
-        end
-        dialog:Hide()
-    end)
-
-    local cancelBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    cancelBtn:SetSize(120, 30)
-    cancelBtn:SetPoint("BOTTOM", dialog, "BOTTOM", 65, 15)
-    cancelBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    cancelBtn:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
-    cancelBtn:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
-
-    local cancelBtnText = cancelBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    cancelBtnText:SetPoint("CENTER")
-    cancelBtnText:SetText(L["AB_LABEL_CANCEL"])
-    cancelBtnText:SetTextColor(1, 1, 1)
-
-    cancelBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.7, 0.3, 0.3, 1.0)
-    end)
-    cancelBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
-    end)
-    cancelBtn:SetScript("OnClick", function()
-        dialog:Hide()
-    end)
-
-    dialog:Show()
+    result.frame:Show()
 end
 
 local function ShowRestoreAllDialog(charKey, specName, charName)
-    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dialog:SetSize(420, 200)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("DIALOG")
-    dialog:SetToplevel(true)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    local result = OneWoW_GUI:CreateConfirmDialog({
+        name = "OneWoW_AT_RestoreAllDialog",
+        title = L["AB_DIALOG_RESTORE_ALL_TITLE"],
+        message = string.format(L["AB_DIALOG_RESTORE_ALL"], charName .. " - " .. specName),
+        buttons = {
+            { text = L["AB_BUTTON_RESTORE_ALL"], color = {0.6, 0.2, 0.2}, onClick = function(dialog)
+                if ns.ActionBarsModule and ns.ActionBarsModule.RestoreAllActionBars then
+                    ns.ActionBarsModule:RestoreAllActionBars(charKey, specName)
+                end
+                dialog:Hide()
+            end },
+            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    dialog:EnableMouse(true)
-
-    local title = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", dialog, "TOP", 0, -15)
-    title:SetText(L["AB_DIALOG_RESTORE_ALL_TITLE"])
-    title:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local warningText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    warningText:SetPoint("TOP", title, "BOTTOM", 0, -15)
-    warningText:SetWidth(380)
-    warningText:SetText(string.format(L["AB_DIALOG_RESTORE_ALL"], charName .. " - " .. specName))
-    warningText:SetTextColor(T("TEXT_PRIMARY"))
-    warningText:SetJustifyH("CENTER")
-
-    local restoreBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    restoreBtn:SetSize(140, 32)
-    restoreBtn:SetPoint("BOTTOM", dialog, "BOTTOM", -75, 15)
-    restoreBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    restoreBtn:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
-    restoreBtn:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
-
-    local restoreBtnText = restoreBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    restoreBtnText:SetPoint("CENTER")
-    restoreBtnText:SetText(L["AB_BUTTON_RESTORE_ALL"])
-    restoreBtnText:SetTextColor(1, 1, 1)
-
-    restoreBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.7, 0.3, 0.3, 1.0)
-    end)
-    restoreBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
-    end)
-    restoreBtn:SetScript("OnClick", function()
-        if ns.ActionBarsModule and ns.ActionBarsModule.RestoreAllActionBars then
-            ns.ActionBarsModule:RestoreAllActionBars(charKey, specName)
-        end
-        dialog:Hide()
-    end)
-
-    local cancelBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    cancelBtn:SetSize(140, 32)
-    cancelBtn:SetPoint("BOTTOM", dialog, "BOTTOM", 75, 15)
-    cancelBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    cancelBtn:SetBackdropColor(T("BG_TERTIARY"))
-    cancelBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local cancelBtnText = cancelBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    cancelBtnText:SetPoint("CENTER")
-    cancelBtnText:SetText(L["AB_LABEL_CANCEL"])
-    cancelBtnText:SetTextColor(T("TEXT_PRIMARY"))
-
-    cancelBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-    end)
-    cancelBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_TERTIARY"))
-    end)
-    cancelBtn:SetScript("OnClick", function()
-        dialog:Hide()
-    end)
-
-    dialog:Show()
+    result.frame:Show()
 end
 
 local function ShowRestoreMacrosDialog(charKey, charName, accountCount, charCount)
-    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dialog:SetSize(420, 240)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("DIALOG")
-    dialog:SetToplevel(true)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_AT_RestoreMacrosDialog",
+        title = L["AB_DIALOG_RESTORE_MACROS_TITLE"],
+        width = 420,
+        height = 240,
+        movable = false,
+        buttons = {},
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    dialog:EnableMouse(true)
 
-    local title = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", dialog, "TOP", 0, -15)
-    title:SetText(L["AB_DIALOG_RESTORE_MACROS_TITLE"])
-    title:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local infoText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    infoText:SetPoint("TOP", title, "BOTTOM", 0, -15)
+    local cf = result.contentFrame
+    local infoText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    infoText:SetPoint("TOP", cf, "TOP", 0, -10)
     infoText:SetWidth(380)
     infoText:SetText(string.format(L["AB_DIALOG_RESTORE_MACROS"], charName))
     infoText:SetTextColor(T("TEXT_PRIMARY"))
     infoText:SetJustifyH("CENTER")
 
-    local accountBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    accountBtn:SetSize(180, 30)
+    local accountBtn = OneWoW_GUI:CreateButton(nil, cf, string.format(L["AB_BUTTON_ACCOUNT_ONLY"], accountCount), 180, 30)
     accountBtn:SetPoint("TOP", infoText, "BOTTOM", -95, -20)
-    accountBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
     accountBtn:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
     accountBtn:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
-
-    local accountBtnText = accountBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    accountBtnText:SetPoint("CENTER")
-    accountBtnText:SetText(string.format(L["AB_BUTTON_ACCOUNT_ONLY"], accountCount))
-    accountBtnText:SetTextColor(1, 1, 1)
-
-    accountBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.5, 0.3, 0.6, 1.0)
-    end)
-    accountBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
-    end)
+    accountBtn.text:SetTextColor(1, 1, 1)
+    accountBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.3, 0.6, 1.0) end)
+    accountBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.5, 1.0) end)
     accountBtn:SetScript("OnClick", function()
-        if ns.ActionBarsModule then
-            ns.ActionBarsModule:RestoreMacros(charKey, "account")
-        end
-        dialog:Hide()
+        if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacros(charKey, "account") end
+        result.frame:Hide()
     end)
 
-    local charBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    charBtn:SetSize(180, 30)
+    local charBtn = OneWoW_GUI:CreateButton(nil, cf, string.format(L["AB_BUTTON_CHARACTER_ONLY"], charCount), 180, 30)
     charBtn:SetPoint("TOP", infoText, "BOTTOM", 95, -20)
-    charBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
     charBtn:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
     charBtn:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
-
-    local charBtnText = charBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    charBtnText:SetPoint("CENTER")
-    charBtnText:SetText(string.format(L["AB_BUTTON_CHARACTER_ONLY"], charCount))
-    charBtnText:SetTextColor(1, 1, 1)
-
-    charBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.5, 0.3, 0.6, 1.0)
-    end)
-    charBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
-    end)
+    charBtn.text:SetTextColor(1, 1, 1)
+    charBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.3, 0.6, 1.0) end)
+    charBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.5, 1.0) end)
     charBtn:SetScript("OnClick", function()
-        if ns.ActionBarsModule then
-            ns.ActionBarsModule:RestoreMacros(charKey, "character")
-        end
-        dialog:Hide()
+        if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacros(charKey, "character") end
+        result.frame:Hide()
     end)
 
-    local bothBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    bothBtn:SetSize(180, 30)
+    local bothBtn = OneWoW_GUI:CreateButton(nil, cf, L["AB_BUTTON_BOTH"], 180, 30)
     bothBtn:SetPoint("TOP", accountBtn, "BOTTOM", 0, -8)
-    bothBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
     bothBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
     bothBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
-
-    local bothBtnText = bothBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    bothBtnText:SetPoint("CENTER")
-    bothBtnText:SetText(L["AB_BUTTON_BOTH"])
-    bothBtnText:SetTextColor(1, 1, 1)
-
-    bothBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.3, 0.7, 0.3, 1.0)
-    end)
-    bothBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
-    end)
+    bothBtn.text:SetTextColor(1, 1, 1)
+    bothBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.3, 0.7, 0.3, 1.0) end)
+    bothBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.6, 0.2, 1.0) end)
     bothBtn:SetScript("OnClick", function()
-        if ns.ActionBarsModule then
-            ns.ActionBarsModule:RestoreMacros(charKey, "both")
-        end
-        dialog:Hide()
+        if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacros(charKey, "both") end
+        result.frame:Hide()
     end)
 
-    local cancelBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    cancelBtn:SetSize(180, 30)
+    local cancelBtn = OneWoW_GUI:CreateButton(nil, cf, L["AB_LABEL_CANCEL"], 180, 30)
     cancelBtn:SetPoint("TOP", charBtn, "BOTTOM", 0, -8)
-    cancelBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
     cancelBtn:SetBackdropColor(T("BG_TERTIARY"))
     cancelBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    cancelBtn.text:SetTextColor(T("TEXT_PRIMARY"))
+    cancelBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(T("BG_HOVER")) end)
+    cancelBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(T("BG_TERTIARY")) end)
+    cancelBtn:SetScript("OnClick", function() result.frame:Hide() end)
 
-    local cancelBtnText = cancelBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    cancelBtnText:SetPoint("CENTER")
-    cancelBtnText:SetText(L["AB_LABEL_CANCEL"])
-    cancelBtnText:SetTextColor(T("TEXT_PRIMARY"))
-
-    cancelBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-    end)
-    cancelBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_TERTIARY"))
-    end)
-    cancelBtn:SetScript("OnClick", function()
-        dialog:Hide()
-    end)
-
-    dialog:Show()
+    result.frame:Show()
 end
 
 function ns.UI.CreateActionBarsTab(parent)
     local contentPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     contentPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     contentPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    contentPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    contentPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     contentPanel:SetBackdropColor(T("BG_PRIMARY"))
     contentPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -380,11 +184,7 @@ function ns.UI.CreateActionBarsTab(parent)
     controlPanel:SetPoint("TOPLEFT", contentPanel, "TOPLEFT", 5, -5)
     controlPanel:SetPoint("TOPRIGHT", contentPanel, "TOPRIGHT", -5, -5)
     controlPanel:SetHeight(85)
-    controlPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    controlPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     controlPanel:SetBackdropColor(T("BG_SECONDARY"))
     controlPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -427,29 +227,20 @@ function ns.UI.CreateActionBarsTab(parent)
         statusMacros:SetText(string.format(L["AB_LABEL_MACROS"], hasMacros and L["AB_YES"] or L["AB_NO"]))
     end
 
-    local backupButton = CreateFrame("Button", nil, controlPanel, "BackdropTemplate")
-    backupButton:SetSize(120, 28)
+    local backupButton = OneWoW_GUI:CreateButton(nil, controlPanel, string.format(L["AB_LABEL_BACKUP"], currentSpec), 120, 28)
     backupButton:SetPoint("BOTTOMLEFT", controlPanel, "BOTTOMLEFT", 10, 6)
-    backupButton:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
     backupButton:SetBackdropColor(T("BG_TERTIARY"))
     backupButton:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local backupText = backupButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    backupText:SetPoint("CENTER")
-    backupText:SetText(string.format(L["AB_LABEL_BACKUP"], currentSpec))
-    backupText:SetTextColor(T("TEXT_PRIMARY"))
+    backupButton.text:SetFontObject("GameFontNormalSmall")
+    backupButton.text:SetTextColor(T("TEXT_PRIMARY"))
 
     backupButton:SetScript("OnEnter", function(self)
         self:SetBackdropColor(T("BG_HOVER"))
-        backupText:SetTextColor(T("TEXT_ACCENT"))
+        self.text:SetTextColor(T("TEXT_ACCENT"))
     end)
     backupButton:SetScript("OnLeave", function(self)
         self:SetBackdropColor(T("BG_TERTIARY"))
-        backupText:SetTextColor(T("TEXT_PRIMARY"))
+        self.text:SetTextColor(T("TEXT_PRIMARY"))
     end)
     backupButton:SetScript("OnClick", function()
         if ns.ActionBarsModule and ns.ActionBarsModule.CollectActionBarsData then
@@ -463,15 +254,12 @@ function ns.UI.CreateActionBarsTab(parent)
         end
     end)
 
-    local showAllCheckbox = CreateFrame("CheckButton", nil, controlPanel, "UICheckButtonTemplate")
+    local showAllCheckbox = OneWoW_GUI:CreateCheckbox(nil, controlPanel, L["AB_SHOW_ALL_BARS"])
     showAllCheckbox:SetPoint("BOTTOMRIGHT", controlPanel, "BOTTOMRIGHT", -10, 6)
-    showAllCheckbox:SetSize(24, 24)
     showAllCheckbox:SetChecked(showAllBars)
-
-    local checkboxLabel = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    checkboxLabel:SetPoint("RIGHT", showAllCheckbox, "LEFT", -5, 0)
-    checkboxLabel:SetText(L["AB_SHOW_ALL_BARS"])
-    checkboxLabel:SetTextColor(T("TEXT_PRIMARY"))
+    showAllCheckbox.label:SetFontObject("GameFontNormalSmall")
+    showAllCheckbox.label:ClearAllPoints()
+    showAllCheckbox.label:SetPoint("RIGHT", showAllCheckbox, "LEFT", -5, 0)
 
     showAllCheckbox:SetScript("OnClick", function(self)
         showAllBars = self:GetChecked()
@@ -484,11 +272,7 @@ function ns.UI.CreateActionBarsTab(parent)
     listingPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -8)
     listingPanel:SetPoint("BOTTOMLEFT", contentPanel, "BOTTOMLEFT", 5, 30)
     listingPanel:SetWidth(280)
-    listingPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    listingPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     listingPanel:SetBackdropColor(T("BG_PRIMARY"))
     listingPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -536,11 +320,7 @@ function ns.UI.CreateActionBarsTab(parent)
     local detailPanel = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
     detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 8, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", contentPanel, "BOTTOMRIGHT", -5, 30)
-    detailPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    detailPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     detailPanel:SetBackdropColor(T("BG_PRIMARY"))
     detailPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -589,11 +369,7 @@ function ns.UI.CreateActionBarsTab(parent)
     leftStatusBar:SetPoint("TOPLEFT", listingPanel, "BOTTOMLEFT", 0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
-    leftStatusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    leftStatusBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     leftStatusBar:SetBackdropColor(T("BG_SECONDARY"))
     leftStatusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -606,11 +382,7 @@ function ns.UI.CreateActionBarsTab(parent)
     rightStatusBar:SetPoint("TOPLEFT", detailPanel, "BOTTOMLEFT", 0, -5)
     rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
-    rightStatusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    rightStatusBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     rightStatusBar:SetBackdropColor(T("BG_SECONDARY"))
     rightStatusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -642,6 +414,8 @@ function ns.UI.CreateActionBarsTab(parent)
     C_Timer.After(0.3, function()
         UpdateControlPanelStatus()
     end)
+
+    ns.UI.ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         if ns.UI.RefreshActionBarsListing then
@@ -692,7 +466,7 @@ function ns.UI.RefreshActionBarsListing(actionBarsTab)
         charBubble:SetPoint("TOPLEFT", actionBarsTab.listingScrollChild, "TOPLEFT", 8, yOffset)
         charBubble:SetPoint("TOPRIGHT", actionBarsTab.listingScrollChild, "TOPRIGHT", -10, yOffset)
         charBubble:SetHeight(bubbleHeight)
-        charBubble:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        charBubble:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
         charBubble:SetBackdropColor(T("BG_TERTIARY"))
         charBubble:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -729,16 +503,11 @@ function ns.UI.RefreshActionBarsListing(actionBarsTab)
             local specData = ns.ActionBarsModule:GetSpecData(charKey, specName)
             local hasSpecData = ns.ActionBarsModule:HasActionBarData(charKey, specName)
 
-            local specBtn = CreateFrame("Button", nil, charBubble, "BackdropTemplate")
-            specBtn:SetSize(24, 24)
+            local specBtn = OneWoW_GUI:CreateButton(nil, charBubble, "", 24, 24)
             specBtn:SetPoint("RIGHT", charBubble, "RIGHT", specXOffset, 0)
-            specBtn:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
             specBtn:SetBackdropColor(T("BG_SECONDARY"))
             specBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            specBtn.text:Hide()
 
             local specIcon = specBtn:CreateTexture(nil, "ARTWORK")
             specIcon:SetSize(20, 20)
@@ -838,6 +607,8 @@ function ns.UI.RefreshActionBarsListing(actionBarsTab)
     if actionBarsTab.leftStatusText then
         actionBarsTab.leftStatusText:SetText(string.format(L["AB_CHARACTERS_COUNT"], #charList))
     end
+
+    ns.UI.ApplyFontToFrame(actionBarsTab)
 end
 
 function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
@@ -892,11 +663,7 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
     headerBox:SetPoint("TOPLEFT", actionBarsTab.detailPanel, "TOPLEFT", 8, -8)
     headerBox:SetPoint("TOPRIGHT", actionBarsTab.detailPanel, "TOPRIGHT", -8, -8)
     headerBox:SetHeight(60)
-    headerBox:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    headerBox:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     headerBox:SetBackdropColor(T("BG_SECONDARY"))
     headerBox:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -905,21 +672,12 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
     headerTitle:SetText((charData.name or charKey) .. " - " .. specName)
     headerTitle:SetTextColor(T("ACCENT_PRIMARY"))
 
-    local restoreAllBtn = CreateFrame("Button", nil, headerBox, "BackdropTemplate")
-    restoreAllBtn:SetSize(110, 24)
+    local restoreAllBtn = OneWoW_GUI:CreateButton(nil, headerBox, L["AB_RESTORE_ALL_BARS"], 110, 24)
     restoreAllBtn:SetPoint("BOTTOMLEFT", headerBox, "BOTTOMLEFT", 10, 6)
-    restoreAllBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
     restoreAllBtn:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
     restoreAllBtn:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
-
-    local restoreAllText = restoreAllBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    restoreAllText:SetPoint("CENTER")
-    restoreAllText:SetText(L["AB_RESTORE_ALL_BARS"])
-    restoreAllText:SetTextColor(1, 1, 1)
+    restoreAllBtn.text:SetFontObject("GameFontNormalSmall")
+    restoreAllBtn.text:SetTextColor(1, 1, 1)
 
     restoreAllBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.7, 0.3, 0.3, 1.0)
@@ -940,23 +698,14 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
         end
     end
 
-    local restoreKeybindsBtn = CreateFrame("Button", nil, headerBox, "BackdropTemplate")
-    restoreKeybindsBtn:SetSize(110, 24)
+    local restoreKeybindsBtn = OneWoW_GUI:CreateButton(nil, headerBox, L["AB_RESTORE_KEYBINDS"], 110, 24)
     restoreKeybindsBtn:SetPoint("LEFT", restoreAllBtn, "RIGHT", 8, 0)
-    restoreKeybindsBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-
-    local restoreKeybindsText = restoreKeybindsBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    restoreKeybindsText:SetPoint("CENTER")
-    restoreKeybindsText:SetText(L["AB_RESTORE_KEYBINDS"])
+    restoreKeybindsBtn.text:SetFontObject("GameFontNormalSmall")
 
     if keybindCount > 0 then
         restoreKeybindsBtn:SetBackdropColor(0.2, 0.3, 0.5, 1.0)
         restoreKeybindsBtn:SetBackdropBorderColor(0.4, 0.5, 0.7, 1.0)
-        restoreKeybindsText:SetTextColor(1, 1, 1)
+        restoreKeybindsBtn.text:SetTextColor(1, 1, 1)
         restoreKeybindsBtn:SetScript("OnEnter", function(self)
             self:SetBackdropColor(0.3, 0.4, 0.6, 1.0)
             self:SetBackdropBorderColor(0.5, 0.6, 0.8, 1.0)
@@ -974,7 +723,7 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
         restoreKeybindsBtn:SetBackdropColor(T("BG_SECONDARY"))
         restoreKeybindsBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
         restoreKeybindsBtn:SetAlpha(0.5)
-        restoreKeybindsText:SetTextColor(T("TEXT_SECONDARY"))
+        restoreKeybindsBtn.text:SetTextColor(T("TEXT_SECONDARY"))
     end
 
     local accountMacros = 0
@@ -993,23 +742,14 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
     end
     local macroCount = accountMacros + charMacros
 
-    local restoreMacrosBtn = CreateFrame("Button", nil, headerBox, "BackdropTemplate")
-    restoreMacrosBtn:SetSize(110, 24)
+    local restoreMacrosBtn = OneWoW_GUI:CreateButton(nil, headerBox, L["AB_RESTORE_MACROS"], 110, 24)
     restoreMacrosBtn:SetPoint("LEFT", restoreKeybindsBtn, "RIGHT", 8, 0)
-    restoreMacrosBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-
-    local restoreMacrosText = restoreMacrosBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    restoreMacrosText:SetPoint("CENTER")
-    restoreMacrosText:SetText(L["AB_RESTORE_MACROS"])
+    restoreMacrosBtn.text:SetFontObject("GameFontNormalSmall")
 
     if macroCount > 0 then
         restoreMacrosBtn:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
         restoreMacrosBtn:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
-        restoreMacrosText:SetTextColor(1, 1, 1)
+        restoreMacrosBtn.text:SetTextColor(1, 1, 1)
         restoreMacrosBtn:SetScript("OnEnter", function(self)
             self:SetBackdropColor(0.5, 0.3, 0.6, 1.0)
             self:SetBackdropBorderColor(0.7, 0.5, 0.8, 1.0)
@@ -1025,7 +765,7 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
         restoreMacrosBtn:SetBackdropColor(T("BG_SECONDARY"))
         restoreMacrosBtn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
         restoreMacrosBtn:SetAlpha(0.5)
-        restoreMacrosText:SetTextColor(T("TEXT_SECONDARY"))
+        restoreMacrosBtn.text:SetTextColor(T("TEXT_SECONDARY"))
     end
 
     if actionBarsTab.detailScrollFrame then
@@ -1059,11 +799,7 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
                 local slotFrame = CreateFrame("Button", nil, actionBarsTab.detailScrollChild, "BackdropTemplate")
                 slotFrame:SetSize(32, 32)
                 slotFrame:SetPoint("TOPLEFT", actionBarsTab.detailScrollChild, "TOPLEFT", xPos, slotYOffset)
-                slotFrame:SetBackdrop({
-                    bgFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1,
-                })
+                slotFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
 
                 if slotData then
                     local r, g, b = unpack(ns.ActionBarsModule:GetActionColor(slotData))
@@ -1120,21 +856,12 @@ function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
             end
 
             if barData and barData.slots then
-                local restoreBarBtn = CreateFrame("Button", nil, actionBarsTab.detailScrollChild, "BackdropTemplate")
-                restoreBarBtn:SetSize(70, 26)
+                local restoreBarBtn = OneWoW_GUI:CreateButton(nil, actionBarsTab.detailScrollChild, L["AB_LABEL_RESTORE"], 70, 26)
                 restoreBarBtn:SetPoint("TOPLEFT", actionBarsTab.detailScrollChild, "TOPLEFT", slotXStart + (12 * 36) + 10, slotYOffset + 3)
-                restoreBarBtn:SetBackdrop({
-                    bgFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1,
-                })
                 restoreBarBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
                 restoreBarBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
-
-                local restoreBarText = restoreBarBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                restoreBarText:SetPoint("CENTER")
-                restoreBarText:SetText(L["AB_LABEL_RESTORE"])
-                restoreBarText:SetTextColor(1, 1, 1)
+                restoreBarBtn.text:SetFontObject("GameFontNormalSmall")
+                restoreBarBtn.text:SetTextColor(1, 1, 1)
 
                 restoreBarBtn:SetScript("OnEnter", function(self)
                     self:SetBackdropColor(0.3, 0.7, 0.3, 1.0)

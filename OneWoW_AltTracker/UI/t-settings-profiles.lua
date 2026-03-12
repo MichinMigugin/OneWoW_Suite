@@ -2,6 +2,7 @@ local addonName, ns = ...
 local L = ns.L
 local T = ns.T
 local S = ns.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.UI = ns.UI or {}
 
@@ -13,62 +14,120 @@ ns.UI = ns.UI or {}
 -- ============================================================
 
 function ns.UI.ShowSettingsRestoreDialog(parent, profileName, profile)
-    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dialog:SetSize(480, 360)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
-    dialog:SetToplevel(true)
-    dialog:EnableMouse(true)
-    dialog:SetMovable(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    local restoreChecks = {}
+    local yOff = -10
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_AT_SettingsRestoreDialog",
+        title = L["SP_RESTORE_PROFILE"] .. ": |cFFFFD100" .. profileName .. "|r",
+        width = 480,
+        height = 360,
+        strata = "FULLSCREEN_DIALOG",
+        buttons = {
+            { text = L["SP_RESTORE_PROFILE"], onClick = function(dialog)
+                if not ns.SettingsProfilesModule then
+                    print("|cFFFFD100OneWoW - AltTracker:|r Character addon not loaded.")
+                    dialog:Hide()
+                    return
+                end
+
+                local M = ns.SettingsProfilesModule
+                local results = {}
+                local reloadNeeded = false
+
+                if restoreChecks.keybinds and restoreChecks.keybinds:GetChecked() then
+                    local n = M:RestoreKeybinds(profile.keybinds)
+                    table.insert(results, string.format("%d %s", n, L["SP_KEYBINDS"]))
+                end
+
+                if restoreChecks.accountMacros and restoreChecks.accountMacros:GetChecked() then
+                    local n = M:RestoreMacros(
+                        { account = type(profile.accountMacros) == "table" and profile.accountMacros.data or {} },
+                        true, false)
+                    table.insert(results, string.format("%d %s", n, L["SP_ACCOUNT_MACROS"]))
+                end
+
+                if restoreChecks.characterMacros and restoreChecks.characterMacros:GetChecked() then
+                    local n = M:RestoreMacros(
+                        { character = type(profile.characterMacros) == "table" and profile.characterMacros.data or {} },
+                        false, true)
+                    table.insert(results, string.format("%d %s", n, L["SP_CHARACTER_MACROS"]))
+                end
+
+                if restoreChecks.gameSettings and restoreChecks.gameSettings:GetChecked() then
+                    local n = M:RestoreGameSettings(profile.gameSettings)
+                    table.insert(results, string.format("%d %s", n, L["SP_GAME_SETTINGS"]))
+                    reloadNeeded = true
+                end
+
+                if restoreChecks.addonSet and restoreChecks.addonSet:GetChecked() then
+                    local n = M:RestoreAddonSet(profile.addonSet)
+                    table.insert(results, string.format("%d changes to %s", n, L["SP_ADDON_SET"]))
+                    reloadNeeded = true
+                end
+
+                if restoreChecks.addonSettings and restoreChecks.addonSettings:GetChecked() then
+                    local n = M:RestoreAddonSettings(profile.addonSettings)
+                    table.insert(results, string.format("%d %s", n, L["SP_ADDON_SETTINGS"]))
+                    reloadNeeded = true
+                end
+
+                dialog:Hide()
+
+                print(string.format(L["SP_PROFILE_RESTORED"], profileName))
+                for _, line in ipairs(results) do
+                    print("  |cFFFFD100-|r " .. line)
+                end
+
+                if reloadNeeded then
+                    print("|cFFFFD100OneWoW - AltTracker:|r A UI reload is required to apply changes.")
+                    C_Timer.After(1.5, function()
+                        StaticPopupDialogs["WNAT_SP_RELOAD"] = {
+                            text = "A UI reload is required to apply restored settings. Reload now?",
+                            button1 = "Reload",
+                            button2 = "Later",
+                            OnAccept = function() ReloadUI() end,
+                            timeout = 0,
+                            whileDead = true,
+                            hideOnEscape = true,
+                            preferredIndex = 3,
+                        }
+                        StaticPopup_Show("WNAT_SP_RELOAD")
+                    end)
+                end
+            end },
+            { text = "Cancel", onClick = function(dialog) dialog:Hide() end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(28)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+    local cf = result.contentFrame
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-    titleText:SetText(L["SP_RESTORE_PROFILE"] .. ": |cFFFFD100" .. profileName .. "|r")
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local savedDate = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    savedDate:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 10, -10)
+    local savedDate = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    savedDate:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, yOff)
     savedDate:SetText("Saved: " .. date("%Y-%m-%d %H:%M", profile.timestamp or 0))
     savedDate:SetTextColor(T("TEXT_SECONDARY"))
+    yOff = yOff - 18
 
     local lastAnchor = savedDate
     if profile.savedBy then
-        local savedByFS = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local savedByFS = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         savedByFS:SetPoint("TOPLEFT", savedDate, "BOTTOMLEFT", 0, -4)
         savedByFS:SetText(L["SP_SAVED_BY"] .. ": |cFFFFD100" .. profile.savedBy .. "|r")
         savedByFS:SetTextColor(T("TEXT_SECONDARY"))
         lastAnchor = savedByFS
+        yOff = yOff - 18
     end
 
-    local selectLabel = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local selectLabel = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     selectLabel:SetPoint("TOPLEFT", lastAnchor, "BOTTOMLEFT", 0, -10)
     selectLabel:SetText("Select what to restore:")
     selectLabel:SetTextColor(T("TEXT_PRIMARY"))
-
-    local yOff = profile.savedBy and -93 or -75
-    local restoreChecks = {}
+    yOff = yOff - 28
 
     local function AddRestoreRow(key, labelText, count, available)
         if not available then return end
-        local cb = ns.UI.CreateCheckbox(nil, dialog, "")
-        cb:SetPoint("TOPLEFT", dialog, "TOPLEFT", 20, yOff)
+        local cb = ns.UI.CreateCheckbox(nil, cf, "")
+        cb:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, yOff)
         cb:SetChecked(true)
         local display = count and count > 0
             and (labelText .. " |cFF888888(" .. count .. ")|r")
@@ -108,109 +167,8 @@ function ns.UI.ShowSettingsRestoreDialog(parent, profileName, profile)
         type(profile.addonSettings) == "table" and profile.addonSettings.count or 0,
         type(profile.addonSettings) == "table")
 
-    local restoreBtn = ns.UI.CreateButton(nil, dialog, L["SP_RESTORE_PROFILE"], 140, 30)
-    restoreBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 10)
-    restoreBtn:SetScript("OnClick", function()
-        if not ns.SettingsProfilesModule then
-            print("|cFFFFD100OneWoW - AltTracker:|r Character addon not loaded.")
-            dialog:Hide()
-            return
-        end
-
-        local M = ns.SettingsProfilesModule
-        local results = {}
-        local reloadNeeded = false
-
-        if restoreChecks.keybinds and restoreChecks.keybinds:GetChecked() then
-            local n = M:RestoreKeybinds(profile.keybinds)
-            table.insert(results, string.format("%d %s", n, L["SP_KEYBINDS"]))
-        end
-
-        if restoreChecks.accountMacros and restoreChecks.accountMacros:GetChecked() then
-            local n = M:RestoreMacros(
-                { account = type(profile.accountMacros) == "table" and profile.accountMacros.data or {} },
-                true, false)
-            table.insert(results, string.format("%d %s", n, L["SP_ACCOUNT_MACROS"]))
-        end
-
-        if restoreChecks.characterMacros and restoreChecks.characterMacros:GetChecked() then
-            local n = M:RestoreMacros(
-                { character = type(profile.characterMacros) == "table" and profile.characterMacros.data or {} },
-                false, true)
-            table.insert(results, string.format("%d %s", n, L["SP_CHARACTER_MACROS"]))
-        end
-
-        if restoreChecks.gameSettings and restoreChecks.gameSettings:GetChecked() then
-            local n = M:RestoreGameSettings(profile.gameSettings)
-            table.insert(results, string.format("%d %s", n, L["SP_GAME_SETTINGS"]))
-            reloadNeeded = true
-        end
-
-        if restoreChecks.addonSet and restoreChecks.addonSet:GetChecked() then
-            local n = M:RestoreAddonSet(profile.addonSet)
-            table.insert(results, string.format("%d changes to %s", n, L["SP_ADDON_SET"]))
-            reloadNeeded = true
-        end
-
-        if restoreChecks.addonSettings and restoreChecks.addonSettings:GetChecked() then
-            local n = M:RestoreAddonSettings(profile.addonSettings)
-            table.insert(results, string.format("%d %s", n, L["SP_ADDON_SETTINGS"]))
-            reloadNeeded = true
-        end
-
-        dialog:Hide()
-
-        print(string.format(L["SP_PROFILE_RESTORED"], profileName))
-        for _, line in ipairs(results) do
-            print("  |cFFFFD100-|r " .. line)
-        end
-
-        if reloadNeeded then
-            print("|cFFFFD100OneWoW - AltTracker:|r A UI reload is required to apply changes.")
-            C_Timer.After(1.5, function()
-                StaticPopupDialogs["WNAT_SP_RELOAD"] = {
-                    text = "A UI reload is required to apply restored settings. Reload now?",
-                    button1 = "Reload",
-                    button2 = "Later",
-                    OnAccept = function() ReloadUI() end,
-                    timeout = 0,
-                    whileDead = true,
-                    hideOnEscape = true,
-                    preferredIndex = 3,
-                }
-                StaticPopup_Show("WNAT_SP_RELOAD")
-            end)
-        end
-    end)
-
-    local cancelBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    cancelBtn:SetSize(100, 30)
-    cancelBtn:SetPoint("BOTTOMRIGHT", restoreBtn, "BOTTOMLEFT", -8, 0)
-    cancelBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    cancelBtn:SetBackdropColor(T("BG_SECONDARY"))
-    cancelBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    cancelText:SetPoint("CENTER")
-    cancelText:SetText("Cancel")
-    cancelText:SetTextColor(T("TEXT_PRIMARY"))
-
-    cancelBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        cancelText:SetTextColor(T("TEXT_ACCENT"))
-    end)
-    cancelBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_SECONDARY"))
-        cancelText:SetTextColor(T("TEXT_PRIMARY"))
-    end)
-    cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
-
-    dialog:SetHeight(math.abs(yOff) + 60)
-    dialog:Show()
+    result.frame:SetHeight(math.abs(yOff) + 28 + 10 + 10 + 28 + 10)
+    result.frame:Show()
 end
 
 -- ============================================================
@@ -218,75 +176,49 @@ end
 -- ============================================================
 
 function ns.UI.ShowExportDialog(profileName, serializedStr)
-    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dialog:SetSize(620, 500)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
-    dialog:SetToplevel(true)
-    dialog:EnableMouse(true)
-    dialog:SetMovable(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    local eb
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_AT_ExportDialog",
+        title = L["SP_EXPORT_PROFILE"] .. ": |cFFFFD100" .. profileName .. "|r",
+        width = 620,
+        height = 500,
+        strata = "FULLSCREEN_DIALOG",
+        buttons = {
+            { text = L["SP_SELECT_ALL"], onClick = function(dialog)
+                eb:SetFocus()
+                eb:HighlightText()
+            end },
+            { text = "Close", onClick = function(dialog) dialog:Hide() end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(28)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+    local cf = result.contentFrame
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-    titleText:SetText(L["SP_EXPORT_PROFILE"] .. ": |cFFFFD100" .. profileName .. "|r")
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local hint = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hint:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -38)
+    local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText(L["SP_EXPORT_COPY_HINT"])
     hint:SetTextColor(T("TEXT_SECONDARY"))
 
-    local textBG = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    textBG:SetPoint("TOPLEFT", dialog, "TOPLEFT", 10, -58)
-    textBG:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 46)
-    textBG:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    local textBG = CreateFrame("Frame", nil, cf, "BackdropTemplate")
+    textBG:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -28)
+    textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
+    textBG:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     textBG:SetBackdropColor(0.06, 0.06, 0.06)
     textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
     textBG:SetClipsChildren(true)
 
-    local eb = CreateFrame("EditBox", nil, textBG)
+    eb = CreateFrame("EditBox", nil, textBG)
     eb:SetPoint("TOPLEFT", textBG, "TOPLEFT", 4, -4)
     eb:SetPoint("BOTTOMRIGHT", textBG, "BOTTOMRIGHT", -4, 4)
     eb:SetMultiLine(true)
     eb:SetAutoFocus(true)
-    eb:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    ns.UI.ApplyFont(eb, 12)
     eb:SetTextColor(1, 1, 1)
     eb:SetMaxLetters(0)
-    eb:SetScript("OnEscapePressed", function() dialog:Hide() end)
+    eb:SetScript("OnEscapePressed", function() result.frame:Hide() end)
 
-    local closeBtn = ns.UI.CreateButton(nil, dialog, "Close", 100, 28)
-    closeBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 10)
-    closeBtn:SetScript("OnClick", function() dialog:Hide() end)
-
-    local selectAllBtn = ns.UI.CreateButton(nil, dialog, L["SP_SELECT_ALL"], 110, 28)
-    selectAllBtn:SetPoint("BOTTOMRIGHT", closeBtn, "BOTTOMLEFT", -8, 0)
-    selectAllBtn:SetScript("OnClick", function()
-        eb:SetFocus()
-        eb:HighlightText()
-    end)
-
-    dialog:Show()
+    result.frame:Show()
     C_Timer.After(0, function()
         eb:SetText(serializedStr or "")
         eb:SetCursorPosition(0)
@@ -298,106 +230,59 @@ end
 -- ============================================================
 
 function ns.UI.ShowImportDialog(parent)
-    local dialog = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    dialog:SetSize(620, 460)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
-    dialog:SetToplevel(true)
-    dialog:EnableMouse(true)
-    dialog:SetMovable(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    local eb
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_AT_ImportDialog",
+        title = L["SP_IMPORT_PROFILE"],
+        width = 620,
+        height = 460,
+        strata = "FULLSCREEN_DIALOG",
+        buttons = {
+            { text = L["SP_IMPORT_BTN"], onClick = function(dialog)
+                local text = eb:GetText()
+                if not ns.SettingsProfilesModule then
+                    print("|cFFFFD100OneWoW - AltTracker:|r Character addon not loaded.")
+                    return
+                end
+                local ok, res = ns.SettingsProfilesModule:ImportProfile(text)
+                if ok then
+                    print(string.format(L["SP_IMPORT_SUCCESS"], res))
+                    dialog:Hide()
+                    ns.UI.RefreshSettingsListing(parent)
+                else
+                    print(string.format(L["SP_IMPORT_FAILED"], res or "unknown error"))
+                end
+            end },
+            { text = "Cancel", onClick = function(dialog) dialog:Hide() end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(28)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+    local cf = result.contentFrame
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-    titleText:SetText(L["SP_IMPORT_PROFILE"])
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local hint = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hint:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -38)
+    local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText(L["SP_IMPORT_PASTE_HINT"])
     hint:SetTextColor(T("TEXT_SECONDARY"))
 
-    local textBG = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    textBG:SetPoint("TOPLEFT", dialog, "TOPLEFT", 10, -58)
-    textBG:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 46)
-    textBG:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    local textBG = CreateFrame("Frame", nil, cf, "BackdropTemplate")
+    textBG:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -28)
+    textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
+    textBG:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     textBG:SetBackdropColor(0.06, 0.06, 0.06)
     textBG:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local eb = CreateFrame("EditBox", nil, dialog)
+    eb = CreateFrame("EditBox", nil, textBG)
+    eb:SetPoint("TOPLEFT", textBG, "TOPLEFT", 4, -4)
+    eb:SetPoint("BOTTOMRIGHT", textBG, "BOTTOMRIGHT", -4, 4)
     eb:SetMultiLine(true)
     eb:SetAutoFocus(true)
-    eb:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    ns.UI.ApplyFont(eb, 12)
     eb:SetTextColor(1, 1, 1)
     eb:SetMaxLetters(0)
-    eb:SetSize(588, 340)
-    eb:SetPoint("TOPLEFT", dialog, "TOPLEFT", 16, -64)
-    eb:SetScript("OnEscapePressed", function() dialog:Hide() end)
+    eb:SetScript("OnEscapePressed", function() result.frame:Hide() end)
 
-    local importBtn = ns.UI.CreateButton(nil, dialog, L["SP_IMPORT_BTN"], 120, 28)
-    importBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 10)
-    importBtn:SetScript("OnClick", function()
-        local text = eb:GetText()
-        if not ns.SettingsProfilesModule then
-            print("|cFFFFD100OneWoW - AltTracker:|r Character addon not loaded.")
-            return
-        end
-        local ok, result = ns.SettingsProfilesModule:ImportProfile(text)
-        if ok then
-            print(string.format(L["SP_IMPORT_SUCCESS"], result))
-            dialog:Hide()
-            ns.UI.RefreshSettingsListing(parent)
-        else
-            print(string.format(L["SP_IMPORT_FAILED"], result or "unknown error"))
-        end
-    end)
-
-    local cancelBtn = CreateFrame("Button", nil, dialog, "BackdropTemplate")
-    cancelBtn:SetSize(100, 28)
-    cancelBtn:SetPoint("BOTTOMRIGHT", importBtn, "BOTTOMLEFT", -8, 0)
-    cancelBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    cancelBtn:SetBackdropColor(T("BG_SECONDARY"))
-    cancelBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    cancelText:SetPoint("CENTER")
-    cancelText:SetText("Cancel")
-    cancelText:SetTextColor(T("TEXT_PRIMARY"))
-    cancelBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        cancelText:SetTextColor(T("TEXT_ACCENT"))
-    end)
-    cancelBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_SECONDARY"))
-        cancelText:SetTextColor(T("TEXT_PRIMARY"))
-    end)
-    cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
-
-    dialog:Show()
+    result.frame:Show()
 end
 
 -- ============================================================
@@ -547,11 +432,7 @@ function ns.UI.RefreshSettingsListing(parent)
         card:SetPoint("TOPLEFT", listContainer, "TOPLEFT", 8, yOff)
         card:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", -8, yOff)
         card:SetHeight(CARD_H)
-        card:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
+        card:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
         card:SetBackdropColor(T("BG_TERTIARY"))
         card:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -618,21 +499,11 @@ function ns.UI.RefreshSettingsListing(parent)
             ns.UI.ShowSettingsRestoreDialog(parent, name, data)
         end)
 
-        local deleteBtn = CreateFrame("Button", nil, card, "BackdropTemplate")
-        deleteBtn:SetSize(82, 26)
+        local deleteBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, card, "Delete", 82, 26) or ns.UI.CreateButton(nil, card, "Delete", 82, 26)
         deleteBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 6)
-        deleteBtn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
         deleteBtn:SetBackdropColor(0.45, 0.12, 0.12)
         deleteBtn:SetBackdropBorderColor(0.65, 0.25, 0.25)
-
-        local delText = deleteBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        delText:SetPoint("CENTER")
-        delText:SetText("Delete")
-        delText:SetTextColor(1, 1, 1)
+        if deleteBtn.text then deleteBtn.text:SetTextColor(1, 1, 1) end
 
         deleteBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.65, 0.18, 0.18) end)
         deleteBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.45, 0.12, 0.12) end)

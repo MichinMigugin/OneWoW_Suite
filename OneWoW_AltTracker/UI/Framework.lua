@@ -1,163 +1,82 @@
+-- ============================================================================
+-- OneWoW_AltTracker/UI/Framework.lua
+-- INTERNAL BRIDGE ONLY - Do NOT add UI creation code here.
+-- All shared UI functions belong in the OneWoW_GUI Library (OneWoW_GUI-1.0).
+-- This file only maps library calls into the local ns.UI namespace.
+-- If you need a new UI function, add it to OneWoW_GUI/OneWoW_GUI.lua first,
+-- then add a thin wrapper here.
+-- ============================================================================
 local addonName, ns = ...
-local OneWoWAltTracker = OneWoW_AltTracker
-local L = ns.L
-local T = ns.T
-local S = ns.S
 
 ns.UI = ns.UI or {}
 
-function ns.UI.CreateScrollFrame(name, parent, width, height)
-    local scrollFrame = CreateFrame("ScrollFrame", name, parent, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 5, -5)
-    scrollFrame:SetPoint("BOTTOMRIGHT", -5, 5)
-
-    local scrollBar = scrollFrame.ScrollBar
-    if scrollBar then
-        scrollBar:ClearAllPoints()
-        scrollBar:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", -3, 0)
-        scrollBar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", -3, 0)
-        scrollBar:SetWidth(8)
-
-        if scrollBar.ScrollUpButton then
-            scrollBar.ScrollUpButton:Hide()
-            scrollBar.ScrollUpButton:SetAlpha(0)
-            scrollBar.ScrollUpButton:EnableMouse(false)
-        end
-        if scrollBar.ScrollDownButton then
-            scrollBar.ScrollDownButton:Hide()
-            scrollBar.ScrollDownButton:SetAlpha(0)
-            scrollBar.ScrollDownButton:EnableMouse(false)
-        end
-
-        if scrollBar.Background then
-            scrollBar.Background:SetColorTexture(T("BG_TERTIARY"))
-        end
-
-        if scrollBar.ThumbTexture then
-            scrollBar.ThumbTexture:SetWidth(8)
-            scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
-        end
-    end
-
-    local contentName = name and (name .. "Content") or nil
-    local content = CreateFrame("Frame", contentName, scrollFrame)
-    content:SetWidth(width - 20)
-    content:SetHeight(1)
-    scrollFrame:SetScrollChild(content)
-
-    return scrollFrame, content
-end
+local lib = LibStub("OneWoW_GUI-1.0", true)
 
 function ns.UI.CreateButton(name, parent, text, width, height)
-    local C = ns.Constants.GUI
-
-    local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
-    btn:SetSize(width or 100, height or C.BUTTON_HEIGHT)
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    btn:SetBackdropColor(T("BTN_NORMAL"))
-    btn:SetBackdropBorderColor(T("BTN_BORDER"))
-
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    btn.text:SetPoint("CENTER")
-    btn.text:SetText(text)
-    btn.text:SetTextColor(T("TEXT_PRIMARY"))
-
-    btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BTN_HOVER"))
-        self:SetBackdropBorderColor(T("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(T("TEXT_ACCENT"))
-    end)
-
-    btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BTN_NORMAL"))
-        self:SetBackdropBorderColor(T("BTN_BORDER"))
-        self.text:SetTextColor(T("TEXT_PRIMARY"))
-    end)
-
-    btn:SetScript("OnMouseDown", function(self)
-        self:SetBackdropColor(T("BTN_PRESSED"))
-    end)
-
-    btn:SetScript("OnMouseUp", function(self)
-        if self:IsMouseOver() then
-            self:SetBackdropColor(T("BTN_HOVER"))
-        else
-            self:SetBackdropColor(T("BTN_NORMAL"))
-        end
-    end)
-
-    return btn
+    if lib then return lib:CreateButton(name, parent, text, width, height) end
 end
 
 function ns.UI.CreateEditBox(name, parent, width, height)
-    local C = ns.Constants.GUI
-
-    local box = CreateFrame("EditBox", name, parent, "BackdropTemplate")
-    box:SetSize(width or 200, height or C.SEARCH_HEIGHT)
-    box:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    box:SetBackdropColor(T("BG_TERTIARY"))
-    box:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    box:SetFontObject(GameFontHighlight)
-    box:SetTextInsets(S("SM") + 2, S("SM"), 0, 0)
-    box:SetAutoFocus(false)
-    box:EnableMouse(true)
-    box:SetTextColor(T("TEXT_PRIMARY"))
-
-    box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    box:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-    end)
-    box:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end)
-
-    return box
+    if lib then return lib:CreateEditBox(name, parent, { width = width, height = height }) end
 end
 
 function ns.UI.CreateCheckbox(name, parent, label)
-    local checkbox = CreateFrame("CheckButton", name, parent, "UICheckButtonTemplate")
-    checkbox:SetSize(24, 24)
+    if lib then return lib:CreateCheckbox(name, parent, label) end
+end
 
-    if label then
-        local text = checkbox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        text:SetPoint("LEFT", checkbox, "RIGHT", 5, 0)
-        text:SetText(label)
-        text:SetTextColor(T("TEXT_PRIMARY"))
-        checkbox.label = text
-    end
+function ns.UI.CreateSearchBox(parent, options)
+    if lib then return lib:CreateSearchBox(parent, options) end
+end
 
-    return checkbox
+function ns.UI.CreateScrollFrame(name, parent, width, height)
+    if lib then return lib:CreateScrollFrame(name, parent, width, height) end
 end
 
 function ns.UI.CreateSectionHeader(parent, title, yOffset)
-    local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    section:SetPoint("TOPLEFT", 8, yOffset)
-    section:SetPoint("TOPRIGHT", -8, yOffset)
-    section:SetHeight(30)
-    section:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    section:SetBackdropColor(T("BG_SECONDARY"))
-    section:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    if lib then return lib:CreateSectionHeader(parent, title, yOffset) end
+end
 
-    local titleText = section:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", 12, 0)
-    titleText:SetText(title)
-    titleText:SetTextColor(T("ACCENT_PRIMARY"))
+function ns.UI.ClearFrame(frame)
+    if lib then return lib:ClearFrame(frame) end
+end
 
-    section.bottomY = yOffset - 30
+function ns.UI.CreateDialog(config)
+    if lib then return lib:CreateDialog(config) end
+end
 
-    return section
+function ns.UI.CreateConfirmDialog(config)
+    if lib then return lib:CreateConfirmDialog(config) end
+end
+
+function ns.UI.CreateFilterBar(parent, config)
+    if lib then return lib:CreateFilterBar(parent, config) end
+end
+
+function ns.UI.ApplyFont(fs, size)
+    local fontPath = lib and lib.GetFont and lib:GetFont()
+    if not fontPath or not fs then return end
+    if not size and fs.GetFont then
+        local _, currentSize = fs:GetFont()
+        size = currentSize or 13
+    end
+    fs:SetFont(fontPath, size)
+end
+
+function ns.UI.ApplyFontToFrame(frame)
+    if not frame then return end
+    local fontPath = lib and lib.GetFont and lib:GetFont()
+    if not fontPath then return end
+    for _, region in ipairs({frame:GetRegions()}) do
+        if region.GetFont and region.SetFont then
+            local _, sz = region:GetFont()
+            if sz then region:SetFont(fontPath, sz) end
+        end
+    end
+    for _, child in ipairs({frame:GetChildren()}) do
+        if child:GetObjectType() == "EditBox" and child.GetFont then
+            local _, sz, flags = child:GetFont()
+            if sz then child:SetFont(fontPath, sz, flags or "") end
+        end
+        ns.UI.ApplyFontToFrame(child)
+    end
 end

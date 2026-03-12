@@ -42,6 +42,58 @@ function ProfessionsModule:GetCharacterProfessions(characterKey)
         professionData.recipeCount = count
     end
 
+    local catalogGlobals = {
+        ["Alchemy"] = "OneWoWTradeskills_Alchemy",
+        ["Blacksmithing"] = "OneWoWTradeskills_Blacksmithing",
+        ["Cooking"] = "OneWoWTradeskills_Cooking",
+        ["Enchanting"] = "OneWoWTradeskills_Enchanting",
+        ["Engineering"] = "OneWoWTradeskills_Engineering",
+        ["Fishing"] = "OneWoWTradeskills_Fishing",
+        ["Herbalism"] = "OneWoWTradeskills_Herbalism",
+        ["Inscription"] = "OneWoWTradeskills_Inscription",
+        ["Jewelcrafting"] = "OneWoWTradeskills_Jewelcrafting",
+        ["Leatherworking"] = "OneWoWTradeskills_Leatherworking",
+        ["Mining"] = "OneWoWTradeskills_Mining",
+        ["Skinning"] = "OneWoWTradeskills_Skinning",
+        ["Tailoring"] = "OneWoWTradeskills_Tailoring",
+    }
+
+    local recipesByExpansion = {}
+    local professions = charData.professions or {}
+    local knownRecipes = charData.recipes or {}
+
+    for slotName, profInfo in pairs(professions) do
+        if profInfo and profInfo.name then
+            local globalName = catalogGlobals[profInfo.name]
+            local catalogData = globalName and _G[globalName]
+            if catalogData and catalogData.r then
+                local knownSet = {}
+                if knownRecipes[profInfo.name] then
+                    for k in pairs(knownRecipes[profInfo.name]) do
+                        knownSet[tonumber(k) or k] = true
+                    end
+                end
+
+                local profExpData = {}
+                for recipeID, recipe in pairs(catalogData.r) do
+                    local expKey = recipe.exp or "Unknown"
+                    if not profExpData[expKey] then
+                        profExpData[expKey] = {
+                            learnedRecipes = 0,
+                            totalRecipes = 0,
+                        }
+                    end
+                    profExpData[expKey].totalRecipes = profExpData[expKey].totalRecipes + 1
+                    if knownSet[recipeID] then
+                        profExpData[expKey].learnedRecipes = profExpData[expKey].learnedRecipes + 1
+                    end
+                end
+                recipesByExpansion[profInfo.name] = profExpData
+            end
+        end
+    end
+    professionData.recipesByExpansion = recipesByExpansion
+
     return professionData
 end
 

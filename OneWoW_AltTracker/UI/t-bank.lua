@@ -2,6 +2,7 @@ local addonName, ns = ...
 local L = ns.L
 local T = ns.T
 local S = ns.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.UI = ns.UI or {}
 
@@ -9,12 +10,7 @@ function ns.UI.CreateBankTab(parent)
     local contentPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     contentPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     contentPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-
-    contentPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    contentPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     contentPanel:SetBackdropColor(T("BG_PRIMARY"))
     contentPanel:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -22,11 +18,7 @@ function ns.UI.CreateBankTab(parent)
     statusBar:SetPoint("TOPLEFT", contentPanel, "TOPLEFT", 0, 0)
     statusBar:SetPoint("TOPRIGHT", contentPanel, "TOPRIGHT", 0, 0)
     statusBar:SetHeight(32)
-    statusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    statusBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     statusBar:SetBackdropColor(T("BG_SECONDARY"))
     statusBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -40,7 +32,7 @@ function ns.UI.CreateBankTab(parent)
     headerRow:SetPoint("TOPLEFT", statusBar, "BOTTOMLEFT", 0, -2)
     headerRow:SetPoint("TOPRIGHT", statusBar, "BOTTOMRIGHT", 0, -2)
     headerRow:SetHeight(28)
-    headerRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    headerRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
     headerRow:SetBackdropColor(T("BG_SECONDARY"))
 
     local columnDefs = {
@@ -116,6 +108,8 @@ function ns.UI.CreateBankTab(parent)
     parent.scrollFrame = scrollFrame
     parent.scrollContent = scrollContent
     parent.contentPanel = contentPanel
+
+    ns.UI.ApplyFontToFrame(parent)
 
     if ns.UI.RefreshBankTab then
         ns.UI.RefreshBankTab(parent)

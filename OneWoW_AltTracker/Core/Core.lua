@@ -1,5 +1,6 @@
 local addonName, ns = ...
 local OneWoWAltTracker = OneWoW_AltTracker
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.Core = {}
 local Core = ns.Core
@@ -111,51 +112,31 @@ function Core:ShowMigrationDialog(charCount)
         return
     end
 
-    local dialog = CreateFrame("Frame", "OneWoWMigrationDialog", UIParent, "BackdropTemplate")
-    dialog:SetSize(500, 390)
-    dialog:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    dialog:SetFrameStrata("DIALOG")
-    dialog:SetMovable(true)
-    dialog:SetClampedToScreen(true)
-    dialog:EnableMouse(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoWMigrationDialog",
+        title = L["IMPORT_FROM_WOWNOTES"] or "Import WoWNotes Data",
+        width = 500,
+        height = 390,
+        titleIcon = "Interface\\Icons\\INV_Misc_Coin_01",
+        buttons = {
+            { text = L["MIGRATION_YES"], onClick = function(dialog)
+                dialog:Hide()
+                Core:PerformDataMigration()
+            end },
+            { text = L["MIGRATION_NO"], onClick = function(dialog)
+                dialog:Hide()
+                _G.OneWoW_AltTracker.db.global.migrationStatus.checkedForWoWNotesData = true
+                _G.OneWoW_AltTracker.db.global.migrationStatus.lastMigrationCheck = time()
+            end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    tinsert(UISpecialFrames, "OneWoWMigrationDialog")
 
-    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(28)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("BG_SECONDARY"))
+    local dialog = result.frame
+    local cf = result.contentFrame
 
-    local titleIcon = titleBar:CreateTexture(nil, "ARTWORK")
-    titleIcon:SetSize(16, 16)
-    titleIcon:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-    titleIcon:SetTexture("Interface\\Icons\\INV_Misc_Coin_01")
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleIcon, "RIGHT", 6, 0)
-    titleText:SetText(L["IMPORT_FROM_WOWNOTES"] or "Import WoWNotes Data")
-    titleText:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local divider = dialog:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -29)
-    divider:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -29)
-    divider:SetColorTexture(T("BORDER_SUBTLE"))
-
-    local bodyText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    bodyText:SetPoint("TOPLEFT", dialog, "TOPLEFT", 18, -46)
-    bodyText:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -18, -46)
+    local bodyText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    bodyText:SetPoint("TOPLEFT", cf, "TOPLEFT", 18, -10)
+    bodyText:SetPoint("TOPRIGHT", cf, "TOPRIGHT", -18, -10)
     bodyText:SetJustifyH("LEFT")
     bodyText:SetWordWrap(true)
     bodyText:SetSpacing(4)
@@ -164,7 +145,7 @@ function Core:ShowMigrationDialog(charCount)
     dialog.bodyText = bodyText
 
     if #missing > 0 then
-        local warnText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local warnText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         warnText:SetPoint("TOPLEFT", bodyText, "BOTTOMLEFT", 0, -10)
         warnText:SetPoint("TOPRIGHT", bodyText, "BOTTOMRIGHT", 0, -10)
         warnText:SetJustifyH("LEFT")
@@ -172,27 +153,6 @@ function Core:ShowMigrationDialog(charCount)
         warnText:SetText(string.format(L["MIGRATION_ERROR_MISSING_SUBADDONS"], table.concat(missing, ", ")))
         warnText:SetTextColor(1, 0.7, 0.3)
     end
-
-    local btnDivider = dialog:CreateTexture(nil, "ARTWORK")
-    btnDivider:SetHeight(1)
-    btnDivider:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 1, 56)
-    btnDivider:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -1, 56)
-    btnDivider:SetColorTexture(T("BORDER_SUBTLE"))
-
-    local yesBtn = ns.UI.CreateButton(nil, dialog, L["MIGRATION_YES"], 180, 32)
-    yesBtn:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 16, 14)
-    yesBtn:SetScript("OnClick", function()
-        dialog:Hide()
-        Core:PerformDataMigration()
-    end)
-
-    local noBtn = ns.UI.CreateButton(nil, dialog, L["MIGRATION_NO"], 180, 32)
-    noBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -16, 14)
-    noBtn:SetScript("OnClick", function()
-        dialog:Hide()
-        _G.OneWoW_AltTracker.db.global.migrationStatus.checkedForWoWNotesData = true
-        _G.OneWoW_AltTracker.db.global.migrationStatus.lastMigrationCheck = time()
-    end)
 
     dialog:Show()
 end
@@ -395,68 +355,29 @@ function Core:ShowCleanupReminderDialog()
         return
     end
 
-    local dialog = CreateFrame("Frame", "OneWoWCleanupDialog", UIParent, "BackdropTemplate")
-    dialog:SetSize(460, 210)
-    dialog:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    dialog:SetFrameStrata("DIALOG")
-    dialog:SetMovable(true)
-    dialog:SetClampedToScreen(true)
-    dialog:EnableMouse(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    dialog:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoWCleanupDialog",
+        title = L["IMPORT_FROM_WOWNOTES"] or "Import WoWNotes Data",
+        width = 460,
+        height = 210,
+        titleIcon = "Interface\\Icons\\INV_Misc_Coin_01",
+        buttons = {
+            { text = L["MIGRATION_CLEANUP_OK"], onClick = function(dialog)
+                dialog:Hide()
+            end },
+        },
     })
-    dialog:SetBackdropColor(T("BG_PRIMARY"))
-    dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    tinsert(UISpecialFrames, "OneWoWCleanupDialog")
 
-    local titleBar = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    titleBar:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -1)
-    titleBar:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -1)
-    titleBar:SetHeight(28)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("BG_SECONDARY"))
+    local cf = result.contentFrame
 
-    local titleIcon = titleBar:CreateTexture(nil, "ARTWORK")
-    titleIcon:SetSize(16, 16)
-    titleIcon:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
-    titleIcon:SetTexture("Interface\\Icons\\INV_Misc_Coin_01")
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("LEFT", titleIcon, "RIGHT", 6, 0)
-    titleText:SetText(L["IMPORT_FROM_WOWNOTES"] or "Import WoWNotes Data")
-    titleText:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local divider = dialog:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -29)
-    divider:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -29)
-    divider:SetColorTexture(T("BORDER_SUBTLE"))
-
-    local bodyText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    bodyText:SetPoint("TOPLEFT", dialog, "TOPLEFT", 18, -46)
-    bodyText:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -18, -46)
+    local bodyText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    bodyText:SetPoint("TOPLEFT", cf, "TOPLEFT", 18, -10)
+    bodyText:SetPoint("TOPRIGHT", cf, "TOPRIGHT", -18, -10)
     bodyText:SetJustifyH("LEFT")
     bodyText:SetWordWrap(true)
     bodyText:SetSpacing(4)
     bodyText:SetText(L["MIGRATION_CLEANUP_REMINDER"])
     bodyText:SetTextColor(T("TEXT_PRIMARY"))
 
-    local btnDivider = dialog:CreateTexture(nil, "ARTWORK")
-    btnDivider:SetHeight(1)
-    btnDivider:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 1, 56)
-    btnDivider:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -1, 56)
-    btnDivider:SetColorTexture(T("BORDER_SUBTLE"))
-
-    local okBtn = ns.UI.CreateButton(nil, dialog, L["MIGRATION_CLEANUP_OK"], 180, 32)
-    okBtn:SetPoint("BOTTOM", dialog, "BOTTOM", 0, 14)
-    okBtn:SetScript("OnClick", function()
-        dialog:Hide()
-    end)
-
-    dialog:Show()
+    result.frame:Show()
 end

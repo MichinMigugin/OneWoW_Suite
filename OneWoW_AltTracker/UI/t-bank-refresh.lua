@@ -1,6 +1,7 @@
 local addonName, ns = ...
 local L = ns.L
 local T = ns.T
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 -- APIs removed, using direct DB access
 
@@ -53,7 +54,7 @@ function ns.UI.RefreshBankTab(bankTab)
         charRow:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 8, yOffset)
         charRow:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -10, yOffset)
         charRow:SetHeight(rowHeight)
-        charRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        charRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
         charRow:SetBackdropColor(T("BG_TERTIARY"))
         charRow.charKey = charKey
         charRow.cells = {}
@@ -78,7 +79,7 @@ function ns.UI.RefreshBankTab(bankTab)
                     charRow.expandedFrame:SetPoint("TOPLEFT", charRow, "BOTTOMLEFT", 0, -2)
                     charRow.expandedFrame:SetPoint("TOPRIGHT", charRow, "BOTTOMRIGHT", 0, -2)
                     charRow.expandedFrame:SetHeight(80)
-                    charRow.expandedFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+                    charRow.expandedFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
                     charRow.expandedFrame:SetBackdropColor(T("BG_SECONDARY"))
 
                     local leftCol = charRow.expandedFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -381,6 +382,8 @@ function ns.UI.RefreshBankTab(bankTab)
     if bankTab.statusText then
         bankTab.statusText:SetText(string.format(L["CHARACTERS_TRACKED"], #allChars, ""))
     end
+
+    ns.UI.ApplyFontToFrame(bankTab)
 
     C_Timer.After(0.1, function()
         if bankTab.headerRow then

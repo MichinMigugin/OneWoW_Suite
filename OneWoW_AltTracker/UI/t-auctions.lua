@@ -2,144 +2,74 @@ local addonName, ns = ...
 local L = ns.L
 local T = ns.T
 local S = ns.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.UI = ns.UI or {}
 
-local expandedRows = {}
-local UpdateRowLayout
 local currentSortColumn = nil
 local currentSortAscending = true
 local characterRows = {}
 
-function ns.UI.CreateAuctionsTab(parent)
-    local overviewPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    overviewPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -5)
-    overviewPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -5, -5)
-    overviewPanel:SetHeight(110)
-    overviewPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    overviewPanel:SetBackdropColor(T("BG_SECONDARY"))
-    overviewPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+local columnsConfig = {
+    {key = "expand", label = "", width = 25, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_EXPAND"], ttDesc = L["TT_COL_EXPAND_DESC"]},
+    {key = "item", label = L["AUCTIONS_COL_ITEM"], width = 150, fixed = false, align = "left", ttTitle = L["TT_COL_ITEM"], ttDesc = L["TT_COL_ITEM_DESC"]},
+    {key = "qty", label = L["AUCTIONS_COL_QTY"], width = 40, fixed = true, align = "center", ttTitle = L["TT_COL_QTY"], ttDesc = L["TT_COL_QTY_DESC"]},
+    {key = "each", label = L["AUCTIONS_COL_EACH"], width = 60, fixed = false, align = "left", ttTitle = L["TT_COL_EACH"], ttDesc = L["TT_COL_EACH_DESC"]},
+    {key = "total", label = L["AUCTIONS_COL_TOTAL"], width = 70, fixed = false, align = "left", ttTitle = L["TT_COL_TOTAL"], ttDesc = L["TT_COL_TOTAL_DESC"]},
+    {key = "bid", label = L["AUCTIONS_COL_BID"], width = 60, fixed = false, align = "left", ttTitle = L["TT_COL_BID"], ttDesc = L["TT_COL_BID_DESC"]},
+    {key = "time", label = L["AUCTIONS_COL_TIME"], width = 50, fixed = true, align = "center", ttTitle = L["TT_COL_TIME"], ttDesc = L["TT_COL_TIME_DESC"]},
+    {key = "character", label = L["COL_CHARACTER"], width = 100, fixed = false, align = "left", ttTitle = L["TT_COL_CHARACTER_AUCTION"], ttDesc = L["TT_COL_CHARACTER_AUCTION_DESC"]},
+    {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_FACTION"], ttDesc = L["TT_COL_FACTION_DESC"]},
+    {key = "status", label = L["AUCTIONS_COL_STATUS"], width = 60, fixed = false, align = "left", ttTitle = L["TT_COL_AUCTION_STATUS"], ttDesc = L["TT_COL_AUCTION_STATUS_DESC"]},
+    {key = "delete", label = L["AUCTIONS_COL_DELETE"], width = 50, fixed = true, align = "center", sortable = false, ttTitle = L["TT_COL_DELETE"], ttDesc = L["TT_COL_DELETE_DESC"]}
+}
 
-    local overviewTitle = overviewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    overviewTitle:SetPoint("TOPLEFT", overviewPanel, "TOPLEFT", 10, -6)
-    overviewTitle:SetText(L["AUCTIONS_OVERVIEW"])
-    overviewTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local statsContainer = CreateFrame("Frame", nil, overviewPanel)
-    statsContainer:SetPoint("TOPLEFT", overviewTitle, "BOTTOMLEFT", 0, -8)
-    statsContainer:SetPoint("BOTTOMRIGHT", overviewPanel, "BOTTOMRIGHT", -10, 6)
-
-    local statLabels = {
-        L["AUCTIONS_ATTENTION"], L["AUCTIONS_TOTAL"], L["AUCTIONS_ACTIVE"], L["AUCTIONS_LIKELY_SOLD"], L["AUCTIONS_VALUE"],
-        L["AUCTIONS_CHARACTERS"], L["AUCTIONS_EXPIRING"], L["AUCTIONS_EXPIRED"], L["MAIL_GOLD_WAITING"], L["HISTORY_GOLD_EARNED"]
-    }
-
-    local statTooltipTitles = {
-        L["TT_AUCTIONS_ATTENTION"], L["TT_AUCTIONS_TOTAL"], L["TT_AUCTIONS_ACTIVE"], L["TT_AUCTIONS_LIKELY_SOLD"], L["TT_AUCTIONS_VALUE"],
-        L["TT_AUCTIONS_CHARACTERS"], L["TT_AUCTIONS_EXPIRING"], L["TT_AUCTIONS_EXPIRED"], L["TT_MAIL_GOLD_WAITING"], L["TT_HISTORY_GOLD_EARNED"]
-    }
-
-    local statTooltips = {
-        L["TT_AUCTIONS_ATTENTION_DESC"], L["TT_AUCTIONS_TOTAL_DESC"], L["TT_AUCTIONS_ACTIVE_DESC"], L["TT_AUCTIONS_LIKELY_SOLD_DESC"], L["TT_AUCTIONS_VALUE_DESC"],
-        L["TT_AUCTIONS_CHARACTERS_DESC"], L["TT_AUCTIONS_EXPIRING_DESC"], L["TT_AUCTIONS_EXPIRED_DESC"], L["TT_MAIL_GOLD_WAITING_DESC"], L["TT_HISTORY_GOLD_EARNED_DESC"]
-    }
-
-    local statValues = {
-        "0", "0", "0", "0", "0g",
-        "0", "0", "0", "Closed", "0"
-    }
-
-    local cols = 5
-    local rows = 2
-    local statBoxes = {}
-
-    for i = 1, #statLabels do
-        local row = math.ceil(i / cols)
-        local col = ((i - 1) % cols) + 1
-
-        local statBox = CreateFrame("Frame", nil, statsContainer, "BackdropTemplate")
-        statBox:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        statBox:SetBackdropColor(T("BG_TERTIARY"))
-        statBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-        local label = statBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        label:SetPoint("TOP", statBox, "TOP", 0, -5)
-        label:SetText(statLabels[i])
-        label:SetTextColor(T("TEXT_SECONDARY"))
-
-        local value = statBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        value:SetPoint("BOTTOM", statBox, "BOTTOM", 0, 6)
-        value:SetText(statValues[i])
-        value:SetTextColor(T("TEXT_PRIMARY"))
-
-        statBox.label = label
-        statBox.value = value
-
-        statBox:EnableMouse(true)
-        statBox:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(statTooltipTitles[i], 1, 1, 1)
-            GameTooltip:AddLine(statTooltips[i], nil, nil, nil, true)
-            GameTooltip:Show()
-        end)
-        statBox:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-            GameTooltip:Hide()
-        end)
-
-        table.insert(statBoxes, statBox)
+local onHeaderCreate = function(btn, col, index)
+    if col.key == "expand" then
+        local icon = btn:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(14, 14)
+        icon:SetPoint("CENTER")
+        icon:SetAtlas("Gamepad_Rev_Plus_64")
+        btn.icon = icon
+        if btn.text then btn.text:SetText("") end
+    elseif col.key == "faction" then
+        if btn.text then btn.text:SetText("") end
     end
+end
 
-    statsContainer:SetScript("OnSizeChanged", function(self, width, height)
-        local boxWidth = (width - (cols + 1) * 3) / cols
-        local boxHeight = (height - (rows + 1) * 3) / rows
+function ns.UI.CreateAuctionsTab(parent)
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-        for i, box in ipairs(statBoxes) do
-            local row = math.ceil(i / cols)
-            local col = ((i - 1) % cols) + 1
-
-            local x = 3 + (col - 1) * (boxWidth + 3)
-            local y = -3 - (row - 1) * (boxHeight + 3)
-
-            box:SetSize(boxWidth, boxHeight)
-            box:ClearAllPoints()
-            box:SetPoint("TOPLEFT", self, "TOPLEFT", x, y)
-        end
-    end)
+    local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
+        title = L["AUCTIONS_OVERVIEW"],
+        height = 110,
+        columns = 5,
+        stats = {
+            { label = L["AUCTIONS_ATTENTION"], value = "0", ttTitle = L["TT_AUCTIONS_ATTENTION"], ttDesc = L["TT_AUCTIONS_ATTENTION_DESC"] },
+            { label = L["AUCTIONS_TOTAL"], value = "0", ttTitle = L["TT_AUCTIONS_TOTAL"], ttDesc = L["TT_AUCTIONS_TOTAL_DESC"] },
+            { label = L["AUCTIONS_ACTIVE"], value = "0", ttTitle = L["TT_AUCTIONS_ACTIVE"], ttDesc = L["TT_AUCTIONS_ACTIVE_DESC"] },
+            { label = L["AUCTIONS_LIKELY_SOLD"], value = "0", ttTitle = L["TT_AUCTIONS_LIKELY_SOLD"], ttDesc = L["TT_AUCTIONS_LIKELY_SOLD_DESC"] },
+            { label = L["AUCTIONS_VALUE"], value = "0g", ttTitle = L["TT_AUCTIONS_VALUE"], ttDesc = L["TT_AUCTIONS_VALUE_DESC"] },
+            { label = L["AUCTIONS_CHARACTERS"], value = "0", ttTitle = L["TT_AUCTIONS_CHARACTERS"], ttDesc = L["TT_AUCTIONS_CHARACTERS_DESC"] },
+            { label = L["AUCTIONS_EXPIRING"], value = "0", ttTitle = L["TT_AUCTIONS_EXPIRING"], ttDesc = L["TT_AUCTIONS_EXPIRING_DESC"] },
+            { label = L["AUCTIONS_EXPIRED"], value = "0", ttTitle = L["TT_AUCTIONS_EXPIRED"], ttDesc = L["TT_AUCTIONS_EXPIRED_DESC"] },
+            { label = L["MAIL_GOLD_WAITING"], value = "Closed", ttTitle = L["TT_MAIL_GOLD_WAITING"], ttDesc = L["TT_MAIL_GOLD_WAITING_DESC"] },
+            { label = L["HISTORY_GOLD_EARNED"], value = "0", ttTitle = L["TT_HISTORY_GOLD_EARNED"], ttDesc = L["TT_HISTORY_GOLD_EARNED_DESC"] },
+        },
+    })
 
     local filterPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    filterPanel:SetPoint("TOPLEFT", overviewPanel, "BOTTOMLEFT", 0, -8)
-    filterPanel:SetPoint("TOPRIGHT", overviewPanel, "BOTTOMRIGHT", 0, -8)
+    filterPanel:SetPoint("TOPLEFT", overview.panel, "BOTTOMLEFT", 0, -8)
+    filterPanel:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -8)
     filterPanel:SetHeight(32)
-    filterPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    filterPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     filterPanel:SetBackdropColor(T("BG_SECONDARY"))
     filterPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     parent.auctionFilter = "all"
 
-    local mailIconButton = CreateFrame("Button", nil, filterPanel, "BackdropTemplate")
-    mailIconButton:SetSize(32, 32)
+    local mailIconButton = OneWoW_GUI:CreateButton(nil, filterPanel, "", 32, 32)
     mailIconButton:SetPoint("LEFT", filterPanel, "LEFT", 8, 0)
-    mailIconButton:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    mailIconButton:SetBackdropColor(T("BG_TERTIARY"))
-    mailIconButton:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     local mailIcon = mailIconButton:CreateTexture(nil, "ARTWORK")
     mailIcon:SetSize(24, 24)
@@ -169,6 +99,7 @@ function ns.UI.CreateAuctionsTab(parent)
 
     mailIconButton:SetScript("OnEnter", function(self)
         self:SetBackdropColor(T("BG_HOVER"))
+        self:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
         if not _G.OneWoW_AltTracker_Storage_DB then return end
 
@@ -220,6 +151,7 @@ function ns.UI.CreateAuctionsTab(parent)
 
     mailIconButton:SetScript("OnLeave", function(self)
         self:SetBackdropColor(T("BG_TERTIARY"))
+        self:SetBackdropBorderColor(T("BORDER_DEFAULT"))
         GameTooltip:Hide()
     end)
 
@@ -236,21 +168,10 @@ function ns.UI.CreateAuctionsTab(parent)
     }
 
     for i, option in ipairs(filterOptions) do
-        local btn = CreateFrame("Button", nil, filterPanel, "BackdropTemplate")
-        btn:SetSize(120, 24)
+        local btn = OneWoW_GUI:CreateButton(nil, filterPanel, option.label, 120, 24)
         btn:SetPoint("LEFT", filterPanel, "LEFT", 48 + (i - 1) * 124, 0)
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-
-        local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        btnText:SetPoint("CENTER")
-        btnText:SetText(option.label)
 
         btn.filterKey = option.key
-        btn.text = btnText
 
         btn:SetScript("OnClick", function(self)
             parent.auctionFilter = self.filterKey
@@ -280,21 +201,18 @@ function ns.UI.CreateAuctionsTab(parent)
 
         btn:SetScript("OnLeave", function(self)
             if self.filterKey ~= parent.auctionFilter then
-                if self.filterKey == parent.auctionFilter then
-                    self:SetBackdropColor(T("ACCENT_PRIMARY"))
-                else
-                    self:SetBackdropColor(T("BG_TERTIARY"))
-                end
+                self:SetBackdropColor(T("BG_TERTIARY"))
+                self.text:SetTextColor(T("TEXT_PRIMARY"))
             end
             GameTooltip:Hide()
         end)
 
         if option.key == "all" then
             btn:SetBackdropColor(T("ACCENT_PRIMARY"))
-            btnText:SetTextColor(T("BG_PRIMARY"))
+            btn.text:SetTextColor(T("BG_PRIMARY"))
         else
             btn:SetBackdropColor(T("BG_TERTIARY"))
-            btnText:SetTextColor(T("TEXT_PRIMARY"))
+            btn.text:SetTextColor(T("TEXT_PRIMARY"))
         end
 
         btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
@@ -304,341 +222,37 @@ function ns.UI.CreateAuctionsTab(parent)
     local rosterPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     rosterPanel:SetPoint("TOPLEFT", filterPanel, "BOTTOMLEFT", 0, -5)
     rosterPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
-    rosterPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    rosterPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     rosterPanel:SetBackdropColor(T("BG_PRIMARY"))
     rosterPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    -- List container: single reference frame that header, scrollframe, and scrollbar all anchor to
-    local listContainer = CreateFrame("Frame", nil, rosterPanel)
-    listContainer:SetPoint("TOPLEFT", rosterPanel, "TOPLEFT", 8, -8)
-    listContainer:SetPoint("BOTTOMRIGHT", rosterPanel, "BOTTOMRIGHT", -8, 8)
-
-    local scrollBarWidth = 10
-
-    -- Column Headers (inside listContainer, right edge leaves room for scrollbar)
-    local headerRow = CreateFrame("Frame", nil, listContainer, "BackdropTemplate")
-    headerRow:SetPoint("TOPLEFT", listContainer, "TOPLEFT", 0, 0)
-    headerRow:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", -scrollBarWidth, 0)
-    headerRow:SetHeight(26)
-    headerRow:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local dt
+    dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
+        columns = columnsConfig,
+        headerHeight = 26,
+        onHeaderCreate = onHeaderCreate,
+        onSort = function(sortColumn, sortAscending)
+            currentSortColumn = sortColumn
+            currentSortAscending = sortAscending
+            ns.UI.RefreshAuctionsTab(parent)
+            C_Timer.After(0.1, function() dt.UpdateSortIndicators() end)
+        end,
     })
-    headerRow:SetBackdropColor(T("BG_TERTIARY"))
-    headerRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local columns = {
-        {key = "expand", label = "", width = 25, fixed = true, ttTitle = L["TT_COL_EXPAND"], ttDesc = L["TT_COL_EXPAND_DESC"]},
-        {key = "item", label = L["AUCTIONS_COL_ITEM"], width = 150, fixed = false, ttTitle = L["TT_COL_ITEM"], ttDesc = L["TT_COL_ITEM_DESC"]},
-        {key = "qty", label = L["AUCTIONS_COL_QTY"], width = 40, fixed = true, ttTitle = L["TT_COL_QTY"], ttDesc = L["TT_COL_QTY_DESC"]},
-        {key = "each", label = L["AUCTIONS_COL_EACH"], width = 60, fixed = false, ttTitle = L["TT_COL_EACH"], ttDesc = L["TT_COL_EACH_DESC"]},
-        {key = "total", label = L["AUCTIONS_COL_TOTAL"], width = 70, fixed = false, ttTitle = L["TT_COL_TOTAL"], ttDesc = L["TT_COL_TOTAL_DESC"]},
-        {key = "bid", label = L["AUCTIONS_COL_BID"], width = 60, fixed = false, ttTitle = L["TT_COL_BID"], ttDesc = L["TT_COL_BID_DESC"]},
-        {key = "time", label = L["AUCTIONS_COL_TIME"], width = 50, fixed = true, ttTitle = L["TT_COL_TIME"], ttDesc = L["TT_COL_TIME_DESC"]},
-        {key = "character", label = L["COL_CHARACTER"], width = 100, fixed = false, ttTitle = L["TT_COL_CHARACTER_AUCTION"], ttDesc = L["TT_COL_CHARACTER_AUCTION_DESC"]},
-        {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, ttTitle = L["TT_COL_FACTION"], ttDesc = L["TT_COL_FACTION_DESC"]},
-        {key = "status", label = L["AUCTIONS_COL_STATUS"], width = 60, fixed = false, ttTitle = L["TT_COL_AUCTION_STATUS"], ttDesc = L["TT_COL_AUCTION_STATUS_DESC"]},
-        {key = "delete", label = L["AUCTIONS_COL_DELETE"], width = 50, fixed = true, ttTitle = L["TT_COL_DELETE"], ttDesc = L["TT_COL_DELETE_DESC"]}
-    }
-
-    local colGap = 4
-    headerRow.columnButtons = {}
-    headerRow.columns = columns
-
-    local function UpdateSortIndicators()
-        if not headerRow or not headerRow.columnButtons then return end
-
-        for i, btn in ipairs(headerRow.columnButtons) do
-            local col = columns[i]
-            if btn.sortArrow then
-                btn.sortArrow:Hide()
-            end
-
-            if col and col.key == currentSortColumn then
-                if not btn.sortArrow then
-                    btn.sortArrow = btn:CreateTexture(nil, "OVERLAY")
-                    btn.sortArrow:SetSize(8, 8)
-                    btn.sortArrow:SetPoint("RIGHT", btn, "RIGHT", -3, 0)
-                end
-
-                if currentSortAscending then
-                    btn.sortArrow:SetTexture("Interface\\Buttons\\UI-SortArrow")
-                    btn.sortArrow:SetTexCoord(0, 1, 1, 0)
-                else
-                    btn.sortArrow:SetTexture("Interface\\Buttons\\UI-SortArrow")
-                    btn.sortArrow:SetTexCoord(0, 1, 0, 1)
-                end
-                btn.sortArrow:Show()
-            end
-        end
-    end
-
-    local function UpdateColumnLayout()
-        local availableWidth = headerRow:GetWidth() - 10
-        if availableWidth <= 0 then return end
-
-        local fixedWidth = 0
-        local flexCount = 0
-        for _, col in ipairs(columns) do
-            if col.fixed then
-                fixedWidth = fixedWidth + col.width
-            else
-                flexCount = flexCount + 1
-            end
-        end
-
-        local totalGaps = (#columns - 1) * colGap
-        local remainingWidth = availableWidth - fixedWidth - totalGaps
-        local flexWidth = flexCount > 0 and math.max(0, remainingWidth / flexCount) or 0
-
-        local xOffset = 5
-        local visibleButtons = {}
-        for i, col in ipairs(columns) do
-            local btn = headerRow.columnButtons[i]
-            if btn then
-                local width = col.fixed and col.width or math.max(col.width, flexWidth)
-                btn.columnWidth = width
-                btn.columnX = xOffset
-                table.insert(visibleButtons, {btn = btn, width = width, xOffset = xOffset})
-                xOffset = xOffset + width + colGap
-            end
-        end
-
-        if #visibleButtons > 0 then
-            local lastBtn = visibleButtons[#visibleButtons]
-            local totalWidth = lastBtn.xOffset + lastBtn.width
-            local maxWidth = headerRow:GetWidth() - 5
-            if totalWidth > maxWidth then
-                local overflow = totalWidth - maxWidth
-                lastBtn.width = math.max(30, lastBtn.width - overflow)
-                lastBtn.btn.columnWidth = lastBtn.width
-            end
-        end
-
-        for _, btnInfo in ipairs(visibleButtons) do
-            btnInfo.btn:SetWidth(btnInfo.width)
-            btnInfo.btn:ClearAllPoints()
-            btnInfo.btn:SetPoint("LEFT", headerRow, "LEFT", btnInfo.xOffset, 0)
-        end
-    end
-
-    for i, col in ipairs(columns) do
-        local btn = CreateFrame("Button", nil, headerRow, "BackdropTemplate")
-        btn:SetHeight(22)
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        btn:SetBackdropColor(T("BG_TERTIARY"))
-        btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-        if col.key == "expand" then
-            local icon = btn:CreateTexture(nil, "ARTWORK")
-            icon:SetSize(14, 14)
-            icon:SetPoint("CENTER")
-            icon:SetAtlas("Gamepad_Rev_Plus_64")
-            btn.icon = icon
-        elseif col.key == "faction" then
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            text:SetPoint("CENTER")
-            text:SetText(col.label)
-            text:SetTextColor(T("TEXT_PRIMARY"))
-            btn.text = text
-        elseif col.key == "mail" then
-            local icon = btn:CreateTexture(nil, "ARTWORK")
-            icon:SetSize(12, 12)
-            icon:SetPoint("CENTER")
-            icon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
-            btn.icon = icon
-        else
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            text:SetPoint("CENTER")
-            text:SetText(col.label)
-            text:SetTextColor(T("TEXT_PRIMARY"))
-            btn.text = text
-        end
-
-        btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-            if btn.text then btn.text:SetTextColor(T("TEXT_ACCENT")) end
-            if col.ttTitle and col.ttDesc then
-                GameTooltip:SetOwner(self, "ANCHOR_TOP")
-                GameTooltip:SetText(col.ttTitle, 1, 1, 1)
-                GameTooltip:AddLine(col.ttDesc, nil, nil, nil, true)
-                GameTooltip:Show()
-            end
-        end)
-
-        btn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-            if btn.text then btn.text:SetTextColor(T("TEXT_PRIMARY")) end
-            GameTooltip:Hide()
-        end)
-
-        btn:SetScript("OnClick", function(self)
-            if col.key == "expand" or col.key == "faction" or col.key == "mail" or col.key == "delete" then
-                return
-            end
-
-            if currentSortColumn == col.key then
-                currentSortAscending = not currentSortAscending
-            else
-                currentSortColumn = col.key
-                currentSortAscending = true
-            end
-
-            if parent then
-                ns.UI.RefreshAuctionsTab(parent)
-                C_Timer.After(0.1, function()
-                    UpdateSortIndicators()
-                end)
-            end
-        end)
-
-        table.insert(headerRow.columnButtons, btn)
-    end
-
-    headerRow:SetScript("OnSizeChanged", function()
-        C_Timer.After(0.1, function()
-            UpdateColumnLayout()
-        end)
-    end)
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, listContainer)
-    scrollFrame:SetPoint("TOPLEFT", headerRow, "BOTTOMLEFT", 0, -5)
-    scrollFrame:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -scrollBarWidth, 0)
-    scrollFrame:EnableMouseWheel(true)
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local current = self:GetVerticalScroll()
-        local maxScroll = self:GetVerticalScrollRange()
-        if delta > 0 then
-            self:SetVerticalScroll(math.max(0, current - 40))
-        else
-            self:SetVerticalScroll(math.min(maxScroll, current + 40))
-        end
-    end)
-
-    local scrollTrack = CreateFrame("Frame", nil, listContainer, "BackdropTemplate")
-    scrollTrack:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", -2, 0)
-    scrollTrack:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -2, 0)
-    scrollTrack:SetWidth(8)
-    scrollTrack:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    scrollTrack:SetBackdropColor(T("BG_TERTIARY"))
-
-    local scrollThumb = CreateFrame("Frame", nil, scrollTrack, "BackdropTemplate")
-    scrollThumb:SetWidth(6)
-    scrollThumb:SetHeight(30)
-    scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, 0)
-    scrollThumb:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    scrollThumb:SetBackdropColor(T("ACCENT_PRIMARY"))
-
-    local function UpdateScrollThumb()
-        local maxScroll = scrollFrame:GetVerticalScrollRange()
-        if maxScroll <= 0 then
-            scrollThumb:Hide()
-            return
-        end
-        scrollThumb:Show()
-        local viewHeight = scrollFrame:GetHeight()
-        local trackHeight = scrollTrack:GetHeight()
-        local thumbHeight = math.max(20, trackHeight * (viewHeight / (viewHeight + maxScroll)))
-        local thumbRange = trackHeight - thumbHeight
-        local thumbPos = (scrollFrame:GetVerticalScroll() / maxScroll) * thumbRange
-        scrollThumb:SetHeight(thumbHeight)
-        scrollThumb:ClearAllPoints()
-        scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, -thumbPos)
-    end
-
-    scrollFrame:SetScript("OnVerticalScroll", function() UpdateScrollThumb() end)
-    scrollFrame:SetScript("OnScrollRangeChanged", function() UpdateScrollThumb() end)
-
-    scrollThumb:EnableMouse(true)
-    scrollThumb:RegisterForDrag("LeftButton")
-    scrollThumb:SetScript("OnDragStart", function(self)
-        self.dragging = true
-        self.dragStartY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        self.dragStartScroll = scrollFrame:GetVerticalScroll()
-    end)
-    scrollThumb:SetScript("OnDragStop", function(self) self.dragging = false end)
-    scrollThumb:SetScript("OnUpdate", function(self)
-        if not self.dragging then return end
-        local curY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        local delta = self.dragStartY - curY
-        local trackHeight = scrollTrack:GetHeight()
-        local thumbRange = trackHeight - self:GetHeight()
-        if thumbRange > 0 then
-            local maxScroll = scrollFrame:GetVerticalScrollRange()
-            local newScroll = self.dragStartScroll + (delta / thumbRange) * maxScroll
-            scrollFrame:SetVerticalScroll(math.max(0, math.min(maxScroll, newScroll)))
-        end
-    end)
-
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetWidth(scrollFrame:GetWidth())
-    scrollContent:SetHeight(400)
-    scrollFrame:SetScrollChild(scrollContent)
-
-    scrollFrame:HookScript("OnSizeChanged", function(self, width, height)
-        scrollContent:SetWidth(width)
-        UpdateScrollThumb()
-    end)
-
-    function UpdateRowLayout()
-        if ns.UI.RefreshAuctionsTab and parent then
-            C_Timer.After(0.05, function()
-                if parent.headerRow then
-                    parent.headerRow:GetScript("OnSizeChanged")(parent.headerRow)
-                end
-            end)
-        end
-    end
-
-    headerRow:HookScript("OnSizeChanged", function()
-        C_Timer.After(0.1, function()
-            UpdateRowLayout()
-        end)
-    end)
-
-    local statusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    statusBar:SetPoint("TOPLEFT", rosterPanel, "BOTTOMLEFT", 0, -5)
-    statusBar:SetPoint("TOPRIGHT", rosterPanel, "BOTTOMRIGHT", 0, -5)
-    statusBar:SetHeight(25)
-    statusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local statusBar = OneWoW_GUI:CreateStatusBar(parent, rosterPanel, {
+        text = string.format(L["CHARACTERS_TRACKED"], 1, ""),
     })
-    statusBar:SetBackdropColor(T("BG_SECONDARY"))
-    statusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local statusText = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    statusText:SetPoint("LEFT", statusBar, "LEFT", 10, 0)
-    statusText:SetText(string.format(L["CHARACTERS_TRACKED"], 1, ""))
-    statusText:SetTextColor(T("TEXT_SECONDARY"))
-
-    C_Timer.After(0.2, function()
-        UpdateColumnLayout()
-        C_Timer.After(0.1, function()
-            UpdateRowLayout()
-        end)
-    end)
-
-    parent.overviewPanel = overviewPanel
-    parent.statsContainer = statsContainer
-    parent.statBoxes = statBoxes
+    parent.dataTable = dt
+    parent.headerRow = dt.headerRow
+    parent.scrollContent = dt.scrollContent
     parent.rosterPanel = rosterPanel
-    parent.listContainer = listContainer
-    parent.headerRow = headerRow
-    parent.scrollFrame = scrollFrame
-    parent.scrollContent = scrollContent
-    parent.statusBar = statusBar
-    parent.statusText = statusText
+    parent.statBoxes = overview.statBoxes
+    parent.statusText = statusBar.text
+    parent.statusBar = statusBar.bar
+    parent.filterPanel = filterPanel
+
+    ns.UI.ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         if ns.UI.RefreshAuctionsTab then
@@ -656,15 +270,11 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
     local scrollContent = auctionsTab.scrollContent
     if not scrollContent then return end
 
-    for _, row in ipairs(auctionRows) do
-        if row.expandedFrame then
-            row.expandedFrame:Hide()
-            row.expandedFrame = nil
-        end
-        row:Hide()
-        row:SetParent(nil)
-    end
+    local dt = auctionsTab.dataTable
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(auctionRows)
+    if dt then dt:ClearRows() end
 
     local currentFilter = auctionsTab.auctionFilter or "all"
     local allAuctions = {}
@@ -742,28 +352,8 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         return
     end
 
-    local yOffset = -5
     local rowHeight = 32
     local rowGap = 2
-
-    local function RepositionAllRows()
-        local yOffset = -5
-
-        for _, row in ipairs(auctionRows) do
-            row:ClearAllPoints()
-            row:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
-            row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
-            yOffset = yOffset - (rowHeight + rowGap)
-
-            if row.isExpanded and row.expandedFrame and row.expandedFrame:IsShown() then
-                local expandedHeight = row.expandedFrame:GetHeight()
-                yOffset = yOffset - (expandedHeight + rowGap)
-            end
-        end
-
-        local totalHeight = math.abs(yOffset) + 50
-        scrollContent:SetHeight(totalHeight)
-    end
 
     for _, entry in ipairs(allAuctions) do
         local charKey = entry.charKey
@@ -774,72 +364,44 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         local itemData = auction or bid or history
         local isHistory = (entry.type == "history")
 
-        local auctionRow = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-        auctionRow:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
-        auctionRow:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
-        auctionRow:SetHeight(rowHeight)
-        auctionRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        local auctionRow = OneWoW_GUI:CreateDataRow(scrollContent, {
+            rowHeight = rowHeight,
+            expandedHeight = 50,
+            rowGap = rowGap,
+            data = { charKey = charKey, charData = charData, itemData = itemData, isHistory = isHistory },
+            createDetails = function(ef, d)
+                local text = ef:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                text:SetPoint("CENTER")
+                text:SetText(L["EXPANDED_DETAILS_SOON"])
+                text:SetTextColor(T("TEXT_SECONDARY"))
+                ns.UI.ApplyFontToFrame(ef)
+            end,
+        })
+        auctionRow.charKey = charKey
 
         if not isHistory and auction and auction.endsAt then
             local timeLeft = auction.endsAt - GetServerTime()
             if timeLeft > 0 and timeLeft < 1800 then
-                auctionRow:SetBackdropColor(0.3, 0.1, 0.1, 1)
+                auctionRow.bg:SetColorTexture(0.3, 0.1, 0.1, 1)
                 auctionRow.normalBgColor = {0.3, 0.1, 0.1, 1}
             elseif timeLeft > 0 and timeLeft < 3600 then
-                auctionRow:SetBackdropColor(0.3, 0.2, 0.1, 1)
+                auctionRow.bg:SetColorTexture(0.3, 0.2, 0.1, 1)
                 auctionRow.normalBgColor = {0.3, 0.2, 0.1, 1}
-            else
-                auctionRow:SetBackdropColor(T("BG_TERTIARY"))
-                auctionRow.normalBgColor = {T("BG_TERTIARY")}
             end
-        else
-            auctionRow:SetBackdropColor(T("BG_TERTIARY"))
-            auctionRow.normalBgColor = {T("BG_TERTIARY")}
         end
 
-        auctionRow.charKey = charKey
-        auctionRow.cells = {}
-
-        local expandBtn = CreateFrame("Button", nil, auctionRow)
-        expandBtn:SetSize(25, rowHeight)
-        local expandIcon = expandBtn:CreateTexture(nil, "ARTWORK")
-        expandIcon:SetSize(14, 14)
-        expandIcon:SetPoint("CENTER")
-        expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
-        expandBtn.icon = expandIcon
-        table.insert(auctionRow.cells, expandBtn)
-
-        local function ToggleExpanded()
-            local isExpanded = auctionRow.isExpanded or false
-            auctionRow.isExpanded = not isExpanded
-
-            if auctionRow.isExpanded then
-                expandIcon:SetAtlas("Gamepad_Rev_Minus_64")
-                if not auctionRow.expandedFrame then
-                    auctionRow.expandedFrame = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-                    auctionRow.expandedFrame:SetPoint("TOPLEFT", auctionRow, "BOTTOMLEFT", 0, -2)
-                    auctionRow.expandedFrame:SetPoint("TOPRIGHT", auctionRow, "BOTTOMRIGHT", 0, -2)
-                    auctionRow.expandedFrame:SetHeight(50)
-                    auctionRow.expandedFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-                    auctionRow.expandedFrame:SetBackdropColor(T("BG_SECONDARY"))
-
-                    local text = auctionRow.expandedFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                    text:SetPoint("CENTER")
-                    text:SetText(L["EXPANDED_DETAILS_SOON"])
-                    text:SetTextColor(T("TEXT_SECONDARY"))
-                end
-                auctionRow.expandedFrame:Show()
+        auctionRow:SetScript("OnEnter", function(self)
+            local hR, hG, hB = T("BG_HOVER")
+            self.bg:SetColorTexture(hR, hG, hB, 0.8)
+        end)
+        auctionRow:SetScript("OnLeave", function(self)
+            if self.normalBgColor then
+                self.bg:SetColorTexture(unpack(self.normalBgColor))
             else
-                expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
-                if auctionRow.expandedFrame then
-                    auctionRow.expandedFrame:Hide()
-                end
+                local bgR, bgG, bgB = T("BG_TERTIARY")
+                self.bg:SetColorTexture(bgR, bgG, bgB, 0.6)
             end
-
-            RepositionAllRows()
-        end
-
-        expandBtn:SetScript("OnClick", ToggleExpanded)
+        end)
 
         local itemContainer = CreateFrame("Frame", nil, auctionRow)
         itemContainer:SetHeight(rowHeight - 4)
@@ -871,7 +433,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         if itemData.itemLevel and itemData.itemLevel > 0 then
             itemLevelText:SetText(tostring(itemData.itemLevel))
             itemLevelText:SetTextColor(1, 1, 1)
-            itemLevelText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+            ns.UI.ApplyFont(itemLevelText, 10)
         end
 
         local itemLinkFrame = CreateFrame("Button", nil, itemContainer)
@@ -1054,17 +616,8 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         charNameText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, charNameText)
 
-        local factionIcon = auctionRow:CreateTexture(nil, "ARTWORK")
-        factionIcon:SetSize(18, 18)
-        if charData.faction == "Alliance" then
-            factionIcon:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-        elseif charData.faction == "Horde" then
-            factionIcon:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
-        else
-            factionIcon:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-            factionIcon:SetDesaturated(true)
-        end
-        table.insert(auctionRow.cells, factionIcon)
+        local factionCell = OneWoW_GUI:CreateFactionIcon(auctionRow, charData.faction)
+        table.insert(auctionRow.cells, factionCell)
 
         local statusText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         if isHistory then
@@ -1088,85 +641,39 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         statusText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, statusText)
 
-        local deleteBtn = CreateFrame("Button", nil, auctionRow, "BackdropTemplate")
-        deleteBtn:SetSize(40, 22)
-        deleteBtn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        deleteBtn:SetBackdropColor(T("BG_TERTIARY"))
-        deleteBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-        local deleteText = deleteBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        deleteText:SetPoint("CENTER")
-        deleteText:SetText(L["PLACEHOLDER_DELETE"])
-        deleteText:SetTextColor(T("TEXT_PRIMARY"))
-        deleteBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-            deleteText:SetTextColor(T("TEXT_ACCENT"))
-        end)
-        deleteBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-            deleteText:SetTextColor(T("TEXT_PRIMARY"))
-        end)
+        local deleteBtn = OneWoW_GUI:CreateButton(nil, auctionRow, L["PLACEHOLDER_DELETE"], 40, 22)
         table.insert(auctionRow.cells, deleteBtn)
 
-        auctionRow:EnableMouse(true)
-        auctionRow:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-        end)
-
-        auctionRow:SetScript("OnLeave", function(self)
-            if self.normalBgColor then
-                self:SetBackdropColor(unpack(self.normalBgColor))
-            else
-                self:SetBackdropColor(T("BG_TERTIARY"))
-            end
-        end)
-
-        auctionRow:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                ToggleExpanded()
-            end
-        end)
-
-        local headerRow = auctionsTab.headerRow
-        if headerRow and headerRow.columnButtons then
+        if dt and dt.headerRow and dt.headerRow.columnButtons and columnsConfig then
             for i, cell in ipairs(auctionRow.cells) do
-                local btn = headerRow.columnButtons[i]
+                local btn = dt.headerRow.columnButtons[i]
                 if btn and btn.columnWidth and btn.columnX then
                     local width = btn.columnWidth
                     local x = btn.columnX
-
+                    local col = columnsConfig[i]
                     cell:ClearAllPoints()
-
-                    if i == 1 then
+                    if col and col.align == "icon" then
                         cell:SetSize(width, rowHeight)
                         cell:SetPoint("LEFT", auctionRow, "LEFT", x, 0)
-                    elseif i == 9 or i == 10 then
-                        cell:SetPoint("CENTER", auctionRow, "LEFT", x + width/2, 0)
-                    elseif i == 12 then
-                        cell:SetSize(width - 6, 22)
-                        cell:SetPoint("CENTER", auctionRow, "LEFT", x + width/2, 0)
+                    elseif col and col.align == "center" then
+                        cell:SetWidth(width - 6)
+                        cell:SetPoint("CENTER", auctionRow, "LEFT", x + width / 2, 0)
+                    elseif col and col.align == "right" then
+                        cell:SetWidth(width - 6)
+                        cell:SetPoint("RIGHT", auctionRow, "LEFT", x + width - 3, 0)
                     else
                         cell:SetWidth(width - 6)
-                        if i == 2 or i == 4 or i == 5 or i == 6 or i == 8 or i == 11 then
-                            cell:SetPoint("LEFT", auctionRow, "LEFT", x + 3, 0)
-                        else
-                            cell:SetPoint("CENTER", auctionRow, "LEFT", x + width/2, 0)
-                        end
+                        cell:SetPoint("LEFT", auctionRow, "LEFT", x + 3, 0)
                     end
                 end
             end
         end
 
-        auctionRow:Show()
         table.insert(auctionRows, auctionRow)
-        yOffset = yOffset - (rowHeight + rowGap)
+        if dt then dt:RegisterRow(auctionRow) end
     end
 
-    local newHeight = math.max(400, #auctionRows * (rowHeight + rowGap) + 10)
-    scrollContent:SetHeight(newHeight)
+    OneWoW_GUI:LayoutDataRows(scrollContent)
 
     if auctionsTab.statusText then
         local totalItems = #allAuctions
@@ -1178,6 +685,8 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
     if auctionsTab.UpdateMailIcon then
         auctionsTab.UpdateMailIcon()
     end
+
+    ns.UI.ApplyFontToFrame(auctionsTab)
 
     C_Timer.After(0.1, function()
         if auctionsTab.headerRow then

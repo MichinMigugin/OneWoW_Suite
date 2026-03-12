@@ -5,644 +5,105 @@ local S = ns.S
 
 ns.UI = ns.UI or {}
 
-local expandedRows = {}
-local UpdateRowLayout
 local currentSortColumn = nil
 local currentSortAscending = true
 local characterRows = {}
-local hiddenColumns = {}
 
 function ns.UI.CreateEquipmentTab(parent)
-    local overviewPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    overviewPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -5)
-    overviewPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -5, -5)
-    overviewPanel:SetHeight(110)
-    overviewPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+    local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
+        title = L["EQUIPMENT_OVERVIEW"],
+        height = 110,
+        columns = 5,
+        stats = {
+            {label = L["EQUIPMENT_ATTENTION"],       value = "0", ttTitle = L["TT_EQUIPMENT_ATTENTION"],       ttDesc = L["TT_EQUIPMENT_ATTENTION_DESC"]},
+            {label = L["EQUIPMENT_CHARACTERS"],      value = "0", ttTitle = L["TT_EQUIPMENT_CHARACTERS"],      ttDesc = L["TT_EQUIPMENT_CHARACTERS_DESC"]},
+            {label = L["EQUIPMENT_AVG_ILVL"],        value = "0", ttTitle = L["TT_EQUIPMENT_AVG_ILVL"],        ttDesc = L["TT_EQUIPMENT_AVG_ILVL_DESC"]},
+            {label = L["EQUIPMENT_HIGHEST_ILVL"],    value = "0", ttTitle = L["TT_EQUIPMENT_HIGHEST_ILVL"],    ttDesc = L["TT_EQUIPMENT_HIGHEST_ILVL_DESC"]},
+            {label = L["EQUIPMENT_LOWEST_ILVL"],     value = "0", ttTitle = L["TT_EQUIPMENT_LOWEST_ILVL"],     ttDesc = L["TT_EQUIPMENT_LOWEST_ILVL_DESC"]},
+            {label = L["EQUIPMENT_MISSING_ENCHANTS"], value = "0", ttTitle = L["TT_EQUIPMENT_MISSING_ENCHANTS"], ttDesc = L["TT_EQUIPMENT_MISSING_ENCHANTS_DESC"]},
+            {label = L["EQUIPMENT_MISSING_GEMS"],    value = "0", ttTitle = L["TT_EQUIPMENT_MISSING_GEMS"],    ttDesc = L["TT_EQUIPMENT_MISSING_GEMS_DESC"]},
+            {label = L["EQUIPMENT_LOW_DURABILITY"],  value = "0", ttTitle = L["TT_EQUIPMENT_LOW_DURABILITY"],  ttDesc = L["TT_EQUIPMENT_LOW_DURABILITY_DESC"]},
+            {label = L["EQUIPMENT_UPGRADE_READY"],   value = "0", ttTitle = L["TT_EQUIPMENT_UPGRADE_READY"],   ttDesc = L["TT_EQUIPMENT_UPGRADE_READY_DESC"]},
+            {label = L["EQUIPMENT_SET_BONUSES"],     value = "0", ttTitle = L["TT_EQUIPMENT_SET_BONUSES"],     ttDesc = L["TT_EQUIPMENT_SET_BONUSES_DESC"]},
+        },
     })
-    overviewPanel:SetBackdropColor(T("BG_SECONDARY"))
-    overviewPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local overviewTitle = overviewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    overviewTitle:SetPoint("TOPLEFT", overviewPanel, "TOPLEFT", 10, -6)
-    overviewTitle:SetText(L["EQUIPMENT_OVERVIEW"])
-    overviewTitle:SetTextColor(T("ACCENT_PRIMARY"))
+    local rosterPanel = OneWoW_GUI:CreateRosterPanel(parent, overview.panel)
 
-    local statsContainer = CreateFrame("Frame", nil, overviewPanel)
-    statsContainer:SetPoint("TOPLEFT", overviewTitle, "BOTTOMLEFT", 0, -8)
-    statsContainer:SetPoint("BOTTOMRIGHT", overviewPanel, "BOTTOMRIGHT", -10, 6)
-
-    local statLabels = {
-        L["EQUIPMENT_ATTENTION"], L["EQUIPMENT_CHARACTERS"], L["EQUIPMENT_AVG_ILVL"], L["EQUIPMENT_HIGHEST_ILVL"], L["EQUIPMENT_LOWEST_ILVL"],
-        L["EQUIPMENT_MISSING_ENCHANTS"], L["EQUIPMENT_MISSING_GEMS"], L["EQUIPMENT_LOW_DURABILITY"], L["EQUIPMENT_UPGRADE_READY"], L["EQUIPMENT_SET_BONUSES"]
+    local columnsConfig = {
+        {key = "expand",    label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],            ttDesc = L["TT_COL_EXPAND_DESC"]},
+        {key = "faction",   label = L["COL_FACTION"],            width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],           ttDesc = L["TT_COL_FACTION_DESC"]},
+        {key = "mail",      label = L["COL_MAIL"],               width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],              ttDesc = L["TT_COL_MAIL_DESC"]},
+        {key = "name",      label = L["COL_CHARACTER"],          width = 135, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],         ttDesc = L["TT_COL_CHARACTER_DESC"]},
+        {key = "level",     label = L["COL_LEVEL"],              width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_LEVEL"],             ttDesc = L["TT_COL_LEVEL_DESC"]},
+        {key = "itemLevel", label = L["EQUIPMENT_COL_ILVL"],     width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ILVL"],             ttDesc = L["TT_COL_ILVL_DESC"]},
+        {key = "durability", label = L["EQUIPMENT_COL_DURABILITY"], width = 50, fixed = false, align = "center",                  ttTitle = L["TT_COL_DURABILITY"],       ttDesc = L["TT_COL_DURABILITY_DESC"]},
+        {key = "enchants",  label = L["EQUIPMENT_COL_ENCHANTS"], width = 55,  fixed = false, align = "center",                   ttTitle = L["TT_COL_ENCHANTS"],         ttDesc = L["TT_COL_ENCHANTS_DESC"]},
+        {key = "gems",      label = L["EQUIPMENT_COL_GEMS"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_GEMS"],             ttDesc = L["TT_COL_GEMS_DESC"]},
+        {key = "tierSet",   label = L["EQUIPMENT_COL_TIER_SET"], width = 45,  fixed = false, align = "center",                   ttTitle = L["TT_COL_TIER_SET"],         ttDesc = L["TT_COL_TIER_SET_DESC"]},
+        {key = "str",       label = L["EQUIPMENT_COL_STR"],      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_STR"],              ttDesc = L["TT_COL_STR_DESC"]},
+        {key = "agi",       label = L["EQUIPMENT_COL_AGI"],      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_AGI"],              ttDesc = L["TT_COL_AGI_DESC"]},
+        {key = "sta",       label = L["EQUIPMENT_COL_STA"],      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_STA"],              ttDesc = L["TT_COL_STA_DESC"]},
+        {key = "int",       label = L["EQUIPMENT_COL_INT"],      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_INT"],              ttDesc = L["TT_COL_INT_DESC"]},
+        {key = "armor",     label = L["EQUIPMENT_COL_ARMOR"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ARMOR"],            ttDesc = L["TT_COL_ARMOR_DESC"]},
+        {key = "ap",        label = L["EQUIPMENT_COL_AP"],       width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_AP"],               ttDesc = L["TT_COL_AP_DESC"]},
+        {key = "crit",      label = L["EQUIPMENT_COL_CRIT"],     width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_CRIT"],             ttDesc = L["TT_COL_CRIT_DESC"]},
+        {key = "haste",     label = L["EQUIPMENT_COL_HASTE"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_HASTE"],            ttDesc = L["TT_COL_HASTE_DESC"]},
+        {key = "mastery",   label = L["EQUIPMENT_COL_MASTERY"],  width = 60,  fixed = false, align = "center",                   ttTitle = L["TT_COL_MASTERY"],          ttDesc = L["TT_COL_MASTERY_DESC"]},
+        {key = "vers",      label = L["EQUIPMENT_COL_VERS"],     width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_VERS"],             ttDesc = L["TT_COL_VERS_DESC"]},
+        {key = "status",    label = L["EQUIPMENT_COL_STATUS"],   width = 60,  fixed = false, align = "left",                     ttTitle = L["TT_COL_STATUS"],           ttDesc = L["TT_COL_STATUS_DESC"]}
     }
 
-    local statTooltipTitles = {
-        L["TT_EQUIPMENT_ATTENTION"], L["TT_EQUIPMENT_CHARACTERS"], L["TT_EQUIPMENT_AVG_ILVL"], L["TT_EQUIPMENT_HIGHEST_ILVL"], L["TT_EQUIPMENT_LOWEST_ILVL"],
-        L["TT_EQUIPMENT_MISSING_ENCHANTS"], L["TT_EQUIPMENT_MISSING_GEMS"], L["TT_EQUIPMENT_LOW_DURABILITY"], L["TT_EQUIPMENT_UPGRADE_READY"], L["TT_EQUIPMENT_SET_BONUSES"]
-    }
-
-    local statTooltips = {
-        L["TT_EQUIPMENT_ATTENTION_DESC"], L["TT_EQUIPMENT_CHARACTERS_DESC"], L["TT_EQUIPMENT_AVG_ILVL_DESC"], L["TT_EQUIPMENT_HIGHEST_ILVL_DESC"], L["TT_EQUIPMENT_LOWEST_ILVL_DESC"],
-        L["TT_EQUIPMENT_MISSING_ENCHANTS_DESC"], L["TT_EQUIPMENT_MISSING_GEMS_DESC"], L["TT_EQUIPMENT_LOW_DURABILITY_DESC"], L["TT_EQUIPMENT_UPGRADE_READY_DESC"], L["TT_EQUIPMENT_SET_BONUSES_DESC"]
-    }
-
-    local statValues = {
-        "0", "0", "0", "0", "0",
-        "0", "0", "0", "0", "0"
-    }
-
-    local cols = 5
-    local rows = 2
-    local statBoxes = {}
-
-    for i = 1, #statLabels do
-        local row = math.ceil(i / cols)
-        local col = ((i - 1) % cols) + 1
-
-        local statBox = CreateFrame("Frame", nil, statsContainer, "BackdropTemplate")
-        statBox:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        statBox:SetBackdropColor(T("BG_TERTIARY"))
-        statBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-        local label = statBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        label:SetPoint("TOP", statBox, "TOP", 0, -5)
-        label:SetText(statLabels[i])
-        label:SetTextColor(T("TEXT_SECONDARY"))
-
-        local value = statBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        value:SetPoint("BOTTOM", statBox, "BOTTOM", 0, 6)
-        value:SetText(statValues[i])
-        value:SetTextColor(T("TEXT_PRIMARY"))
-
-        statBox.label = label
-        statBox.value = value
-
-        statBox:EnableMouse(true)
-        statBox:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(statTooltipTitles[i], 1, 1, 1)
-            GameTooltip:AddLine(statTooltips[i], nil, nil, nil, true)
-            GameTooltip:Show()
-        end)
-        statBox:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-            GameTooltip:Hide()
-        end)
-
-        table.insert(statBoxes, statBox)
-    end
-
-    statsContainer:SetScript("OnSizeChanged", function(self, width, height)
-        local boxWidth = (width - (cols + 1) * 3) / cols
-        local boxHeight = (height - (rows + 1) * 3) / rows
-
-        for i, box in ipairs(statBoxes) do
-            local row = math.ceil(i / cols)
-            local col = ((i - 1) % cols) + 1
-
-            local x = 3 + (col - 1) * (boxWidth + 3)
-            local y = -3 - (row - 1) * (boxHeight + 3)
-
-            box:SetSize(boxWidth, boxHeight)
-            box:ClearAllPoints()
-            box:SetPoint("TOPLEFT", self, "TOPLEFT", x, y)
-        end
-    end)
-
-    local rosterPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    rosterPanel:SetPoint("TOPLEFT", overviewPanel, "BOTTOMLEFT", 0, -8)
-    rosterPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
-    rosterPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    rosterPanel:SetBackdropColor(T("BG_PRIMARY"))
-    rosterPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    -- List container: single reference frame that header, scrollframe, and scrollbar all anchor to
-    local listContainer = CreateFrame("Frame", nil, rosterPanel)
-    listContainer:SetPoint("TOPLEFT", rosterPanel, "TOPLEFT", 8, -8)
-    listContainer:SetPoint("BOTTOMRIGHT", rosterPanel, "BOTTOMRIGHT", -8, 8)
-
-    local scrollBarWidth = 10
-
-    -- Column Headers (inside listContainer, right edge leaves room for scrollbar)
-    local headerRow = CreateFrame("Frame", nil, listContainer, "BackdropTemplate")
-    headerRow:SetPoint("TOPLEFT", listContainer, "TOPLEFT", 0, 0)
-    headerRow:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", -scrollBarWidth, 0)
-    headerRow:SetHeight(26)
-    headerRow:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    headerRow:SetBackdropColor(T("BG_TERTIARY"))
-    headerRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    local columns = {
-        {key = "expand", label = "", width = 25, fixed = true, ttTitle = L["TT_COL_EXPAND"], ttDesc = L["TT_COL_EXPAND_DESC"]},
-        {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, ttTitle = L["TT_COL_FACTION"], ttDesc = L["TT_COL_FACTION_DESC"]},
-        {key = "mail", label = L["COL_MAIL"], width = 35, fixed = true, ttTitle = L["TT_COL_MAIL"], ttDesc = L["TT_COL_MAIL_DESC"]},
-        {key = "name", label = L["COL_CHARACTER"], width = 135, fixed = false, ttTitle = L["TT_COL_CHARACTER"], ttDesc = L["TT_COL_CHARACTER_DESC"]},
-        {key = "level", label = L["COL_LEVEL"], width = 40, fixed = true, ttTitle = L["TT_COL_LEVEL"], ttDesc = L["TT_COL_LEVEL_DESC"]},
-        {key = "itemLevel", label = L["EQUIPMENT_COL_ILVL"], width = 50, fixed = true, ttTitle = L["TT_COL_ILVL"], ttDesc = L["TT_COL_ILVL_DESC"]},
-        {key = "durability", label = L["EQUIPMENT_COL_DURABILITY"], width = 50, fixed = false, ttTitle = L["TT_COL_DURABILITY"], ttDesc = L["TT_COL_DURABILITY_DESC"]},
-        {key = "enchants", label = L["EQUIPMENT_COL_ENCHANTS"], width = 55, fixed = false, ttTitle = L["TT_COL_ENCHANTS"], ttDesc = L["TT_COL_ENCHANTS_DESC"]},
-        {key = "gems", label = L["EQUIPMENT_COL_GEMS"], width = 50, fixed = true, ttTitle = L["TT_COL_GEMS"], ttDesc = L["TT_COL_GEMS_DESC"]},
-        {key = "tierSet", label = L["EQUIPMENT_COL_TIER_SET"], width = 45, fixed = false, ttTitle = L["TT_COL_TIER_SET"], ttDesc = L["TT_COL_TIER_SET_DESC"]},
-        {key = "str", label = L["EQUIPMENT_COL_STR"], width = 45, fixed = true, ttTitle = L["TT_COL_STR"], ttDesc = L["TT_COL_STR_DESC"]},
-        {key = "agi", label = L["EQUIPMENT_COL_AGI"], width = 45, fixed = true, ttTitle = L["TT_COL_AGI"], ttDesc = L["TT_COL_AGI_DESC"]},
-        {key = "sta", label = L["EQUIPMENT_COL_STA"], width = 45, fixed = true, ttTitle = L["TT_COL_STA"], ttDesc = L["TT_COL_STA_DESC"]},
-        {key = "int", label = L["EQUIPMENT_COL_INT"], width = 45, fixed = true, ttTitle = L["TT_COL_INT"], ttDesc = L["TT_COL_INT_DESC"]},
-        {key = "armor", label = L["EQUIPMENT_COL_ARMOR"], width = 50, fixed = true, ttTitle = L["TT_COL_ARMOR"], ttDesc = L["TT_COL_ARMOR_DESC"]},
-        {key = "ap", label = L["EQUIPMENT_COL_AP"], width = 50, fixed = true, ttTitle = L["TT_COL_AP"], ttDesc = L["TT_COL_AP_DESC"]},
-        {key = "crit", label = L["EQUIPMENT_COL_CRIT"], width = 45, fixed = true, ttTitle = L["TT_COL_CRIT"], ttDesc = L["TT_COL_CRIT_DESC"]},
-        {key = "haste", label = L["EQUIPMENT_COL_HASTE"], width = 50, fixed = true, ttTitle = L["TT_COL_HASTE"], ttDesc = L["TT_COL_HASTE_DESC"]},
-        {key = "mastery", label = L["EQUIPMENT_COL_MASTERY"], width = 60, fixed = false, ttTitle = L["TT_COL_MASTERY"], ttDesc = L["TT_COL_MASTERY_DESC"]},
-        {key = "vers", label = L["EQUIPMENT_COL_VERS"], width = 50, fixed = true, ttTitle = L["TT_COL_VERS"], ttDesc = L["TT_COL_VERS_DESC"]},
-        {key = "status", label = L["EQUIPMENT_COL_STATUS"], width = 60, fixed = false, ttTitle = L["TT_COL_STATUS"], ttDesc = L["TT_COL_STATUS_DESC"]}
-    }
-
-    local colGap = 4
-    headerRow.columnButtons = {}
-    headerRow.columns = columns
-
-    local hiddenIndicator = CreateFrame("Frame", nil, headerRow, "BackdropTemplate")
-    hiddenIndicator:SetSize(30, 22)
-    hiddenIndicator:SetPoint("RIGHT", headerRow, "RIGHT", -5, 0)
-    hiddenIndicator:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    hiddenIndicator:SetBackdropColor(T("BG_SECONDARY"))
-    hiddenIndicator:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    hiddenIndicator:Hide()
-
-    local hiddenText = hiddenIndicator:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hiddenText:SetPoint("CENTER")
-    hiddenText:SetTextColor(1, 0.5, 0)
-    hiddenIndicator.text = hiddenText
-
-    hiddenIndicator:EnableMouse(true)
-    hiddenIndicator:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(T("BG_HOVER"))
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["TT_HIDDEN_COLS_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(L["TT_HIDDEN_COLS_DESC"], 0.7, 0.7, 0.7, true)
-        GameTooltip:AddLine(" ", 1, 1, 1)
-
-        local hiddenList = {"Str", "Agi", "Sta", "Int", "Armor", "AP", "Crit", "Haste", "Mast", "Vers"}
-        for _, colName in ipairs(hiddenList) do
-            GameTooltip:AddLine(colName, 1, 0.5, 0)
-        end
-
-        GameTooltip:Show()
-    end)
-    hiddenIndicator:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(T("BG_SECONDARY"))
-        GameTooltip:Hide()
-    end)
-
-    headerRow.hiddenIndicator = hiddenIndicator
-
-    local function CalculateContentMinWidths()
-        if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
-        if not headerRow or not headerRow.columns then return end
-
-        for i, col in ipairs(headerRow.columns) do
-            local maxChars = string.len(col.label or "")
-
-            for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
-                local text = ""
-
-                if col.key == "name" then
-                    text = charData.name or ""
-                elseif col.key == "level" then
-                    text = tostring(charData.level or 0)
-                elseif col.key == "itemLevel" then
-                    text = tostring(charData.itemLevel or 0)
-                elseif col.key == "durability" then
-                    text = "100%"
-                elseif col.key == "enchants" then
-                    text = "Missing: 10"
-                elseif col.key == "gems" then
-                    text = "Missing: 10"
-                elseif col.key == "tierSet" then
-                    text = "5/5"
-                elseif col.key == "str" then
-                    text = tostring((charData.stats and charData.stats.strength) or 0)
-                elseif col.key == "agi" then
-                    text = tostring((charData.stats and charData.stats.agility) or 0)
-                elseif col.key == "sta" then
-                    text = tostring((charData.stats and charData.stats.stamina) or 0)
-                elseif col.key == "int" then
-                    text = tostring((charData.stats and charData.stats.intellect) or 0)
-                elseif col.key == "armor" then
-                    text = tostring((charData.stats and charData.stats.armor) or 0)
-                elseif col.key == "ap" then
-                    text = tostring((charData.stats and charData.stats.attackPower) or 0)
-                elseif col.key == "crit" then
-                    text = "100.0%"
-                elseif col.key == "haste" then
-                    text = "100.0%"
-                elseif col.key == "mastery" then
-                    text = "100.0%"
-                elseif col.key == "vers" then
-                    text = "100.0%"
-                elseif col.key == "status" then
-                    text = "Needs Attention"
-                end
-
-                maxChars = math.max(maxChars, string.len(text))
-            end
-
-            col.contentMinWidth = math.max(col.width, (maxChars * 7) + 4)
-        end
-    end
-
-    local function UpdateSortIndicators()
-        if not headerRow or not headerRow.columnButtons then return end
-
-        for i, btn in ipairs(headerRow.columnButtons) do
-            local col = columns[i]
-            if btn.sortArrow then
-                btn.sortArrow:Hide()
-            end
-
-            if col and col.key == currentSortColumn then
-                if not btn.sortArrow then
-                    btn.sortArrow = btn:CreateTexture(nil, "OVERLAY")
-                    btn.sortArrow:SetSize(8, 8)
-                    btn.sortArrow:SetPoint("RIGHT", btn, "RIGHT", -3, 0)
-                end
-
-                if currentSortAscending then
-                    btn.sortArrow:SetTexture("Interface\\Buttons\\UI-SortArrow")
-                    btn.sortArrow:SetTexCoord(0, 1, 1, 0)
-                else
-                    btn.sortArrow:SetTexture("Interface\\Buttons\\UI-SortArrow")
-                    btn.sortArrow:SetTexCoord(0, 1, 0, 1)
-                end
-                btn.sortArrow:Show()
-            end
-        end
-    end
-
-    local function UpdateAllRowCells()
-        if not headerRow or not headerRow.columnButtons then return end
-        if not characterRows then return end
-
-        for _, charRow in ipairs(characterRows) do
-            if charRow.cells then
-                for i, cell in ipairs(charRow.cells) do
-                    local btn = headerRow.columnButtons[i]
-                    local col = columns[i]
-
-                    if col and hiddenColumns[col.key] then
-                        if cell.Hide then
-                            cell:Hide()
-                        elseif cell.SetAlpha then
-                            cell:SetAlpha(0)
-                        end
-                    else
-                        if cell.Show then
-                            cell:Show()
-                        elseif cell.SetAlpha then
-                            cell:SetAlpha(1)
-                        end
-
-                        if btn and btn.columnWidth and btn.columnX then
-                            local width = btn.columnWidth
-                            local x = btn.columnX
-
-                            cell:ClearAllPoints()
-
-                            if i == 1 then
-                                cell:SetSize(width, 32)
-                                cell:SetPoint("LEFT", charRow, "LEFT", x, 0)
-                            elseif i == 2 or i == 3 then
-                                cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
-                            else
-                                cell:SetWidth(width - 6)
-                                if i == 4 or i == 21 then
-                                    cell:SetPoint("LEFT", charRow, "LEFT", x + 3, 0)
-                                else
-                                    cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local function UpdateColumnLayout()
-        local availableWidth = headerRow:GetWidth() - 10
-        if availableWidth <= 0 then return end
-
-        local hideableColumns = {"str", "agi", "sta", "int", "armor", "ap", "crit", "haste", "mastery", "vers"}
-
-        wipe(hiddenColumns)
-
-        local testWidth = 0
-        for _, col in ipairs(columns) do
-            if not hiddenColumns[col.key] then
-                local minWidth = col.contentMinWidth or col.width
-                testWidth = testWidth + minWidth
-            end
-        end
-        testWidth = testWidth + (#columns - 1) * colGap
-
-        local shouldHide = (testWidth > availableWidth * 1.25)
-
-        if shouldHide then
-            for _, hideKey in ipairs(hideableColumns) do
-                hiddenColumns[hideKey] = true
-            end
-        end
-
-        fixedWidth = 0
-        flexCount = 0
-        local visibleCols = 0
-        for _, col in ipairs(columns) do
-            if not hiddenColumns[col.key] then
-                visibleCols = visibleCols + 1
-                local minWidth = col.contentMinWidth or col.width
-                if col.fixed then
-                    fixedWidth = fixedWidth + minWidth
-                else
-                    flexCount = flexCount + 1
-                end
-            end
-        end
-
-        local totalGaps = (visibleCols - 1) * colGap
-        local remainingWidth = availableWidth - fixedWidth - totalGaps
-        local flexWidth = flexCount > 0 and math.max(0, remainingWidth / flexCount) or 0
-
-        local xOffset = 5
-        local visibleButtons = {}
-        for i, col in ipairs(columns) do
-            local btn = headerRow.columnButtons[i]
-            if btn then
-                if hiddenColumns[col.key] then
-                    btn:Hide()
-                else
-                    btn:Show()
-                    local minWidth = col.contentMinWidth or col.width
-                    local width = col.fixed and minWidth or math.max(minWidth, flexWidth)
-                    btn.columnWidth = width
-                    btn.columnX = xOffset
-                    table.insert(visibleButtons, {btn = btn, width = width, xOffset = xOffset})
-                    xOffset = xOffset + width + colGap
-                end
-            end
-        end
-
-        if #visibleButtons > 0 then
-            local lastBtn = visibleButtons[#visibleButtons]
-            local totalWidth = lastBtn.xOffset + lastBtn.width
-            local maxWidth = headerRow:GetWidth() - 5
-            if totalWidth > maxWidth then
-                local overflow = totalWidth - maxWidth
-                lastBtn.width = math.max(30, lastBtn.width - overflow)
-                lastBtn.btn.columnWidth = lastBtn.width
-            end
-        end
-
-        for _, btnInfo in ipairs(visibleButtons) do
-            btnInfo.btn:SetWidth(btnInfo.width)
-            btnInfo.btn:ClearAllPoints()
-            btnInfo.btn:SetPoint("LEFT", headerRow, "LEFT", btnInfo.xOffset, 0)
-        end
-
-        UpdateAllRowCells()
-
-        if headerRow.hiddenIndicator then
-            local hiddenCount = 0
-            for _ in pairs(hiddenColumns) do
-                hiddenCount = hiddenCount + 1
-            end
-
-            if hiddenCount > 0 then
-                headerRow.hiddenIndicator.text:SetText(string.format(L["EQUIPMENT_HIDDEN_COLS"], hiddenCount))
-                headerRow.hiddenIndicator:Show()
-            else
-                headerRow.hiddenIndicator:Hide()
-            end
-        end
-    end
-
-    for i, col in ipairs(columns) do
-        local btn = CreateFrame("Button", nil, headerRow, "BackdropTemplate")
-        btn:SetHeight(22)
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        btn:SetBackdropColor(T("BG_TERTIARY"))
-        btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
+    local onHeaderCreate = function(btn, col, index)
         if col.key == "expand" then
             local icon = btn:CreateTexture(nil, "ARTWORK")
             icon:SetSize(14, 14)
             icon:SetPoint("CENTER")
             icon:SetAtlas("Gamepad_Rev_Plus_64")
             btn.icon = icon
-        elseif col.key == "faction" then
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            text:SetPoint("CENTER")
-            text:SetText(col.label)
-            text:SetTextColor(T("TEXT_PRIMARY"))
-            btn.text = text
+            if btn.text then btn.text:SetText("") end
         elseif col.key == "mail" then
             local icon = btn:CreateTexture(nil, "ARTWORK")
             icon:SetSize(12, 12)
             icon:SetPoint("CENTER")
             icon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
             btn.icon = icon
-        else
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            text:SetPoint("CENTER")
-            text:SetText(col.label)
-            text:SetTextColor(T("TEXT_PRIMARY"))
-            if col.key == "durability" or col.key == "tierSet" or col.key == "mastery" then
-                text:SetJustifyH("CENTER")
-            end
-            btn.text = text
+            if btn.text then btn.text:SetText("") end
         end
-
-        btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-            if btn.text then btn.text:SetTextColor(T("TEXT_ACCENT")) end
-            if col.ttTitle and col.ttDesc then
-                GameTooltip:SetOwner(self, "ANCHOR_TOP")
-                GameTooltip:SetText(col.ttTitle, 1, 1, 1)
-                GameTooltip:AddLine(col.ttDesc, nil, nil, nil, true)
-                GameTooltip:Show()
-            end
-        end)
-
-        btn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-            if btn.text then btn.text:SetTextColor(T("TEXT_PRIMARY")) end
-            GameTooltip:Hide()
-        end)
-
-        btn:SetScript("OnClick", function(self)
-            if col.key == "expand" or col.key == "faction" or col.key == "mail" then
-                return
-            end
-
-            if currentSortColumn == col.key then
-                currentSortAscending = not currentSortAscending
-            else
-                currentSortColumn = col.key
-                currentSortAscending = true
-            end
-
-            if parent then
-                ns.UI.RefreshEquipmentTab(parent)
-                C_Timer.After(0.1, function()
-                    UpdateSortIndicators()
-                end)
-            end
-        end)
-
-        table.insert(headerRow.columnButtons, btn)
     end
 
-    headerRow:SetScript("OnSizeChanged", function()
-        C_Timer.After(0.1, function()
-            UpdateColumnLayout()
-        end)
-    end)
-
-    -- Bare ScrollFrame (no template) - avoids SecureScrollTemplates auto-wiring that breaks in 12.0.x
-    local scrollFrame = CreateFrame("ScrollFrame", nil, listContainer)
-    scrollFrame:SetPoint("TOPLEFT", headerRow, "BOTTOMLEFT", 0, -2)
-    scrollFrame:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -scrollBarWidth, 0)
-    scrollFrame:EnableMouseWheel(true)
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local current = self:GetVerticalScroll()
-        local maxScroll = self:GetVerticalScrollRange()
-        if delta > 0 then
-            self:SetVerticalScroll(math.max(0, current - 40))
-        else
-            self:SetVerticalScroll(math.min(maxScroll, current + 40))
-        end
-    end)
-
-    -- Custom scrollbar track anchored to listContainer right side
-    local scrollTrack = CreateFrame("Frame", nil, listContainer, "BackdropTemplate")
-    scrollTrack:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", -2, 0)
-    scrollTrack:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -2, 0)
-    scrollTrack:SetWidth(8)
-    scrollTrack:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    scrollTrack:SetBackdropColor(T("BG_TERTIARY"))
-
-    local scrollThumb = CreateFrame("Frame", nil, scrollTrack, "BackdropTemplate")
-    scrollThumb:SetWidth(6)
-    scrollThumb:SetHeight(30)
-    scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, 0)
-    scrollThumb:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    scrollThumb:SetBackdropColor(T("ACCENT_PRIMARY"))
-
-    local function UpdateScrollThumb()
-        local maxScroll = scrollFrame:GetVerticalScrollRange()
-        if maxScroll <= 0 then
-            scrollThumb:Hide()
-            return
-        end
-        scrollThumb:Show()
-        local viewHeight = scrollFrame:GetHeight()
-        local trackHeight = scrollTrack:GetHeight()
-        local thumbHeight = math.max(20, trackHeight * (viewHeight / (viewHeight + maxScroll)))
-        local thumbRange = trackHeight - thumbHeight
-        local thumbPos = (scrollFrame:GetVerticalScroll() / maxScroll) * thumbRange
-        scrollThumb:SetHeight(thumbHeight)
-        scrollThumb:ClearAllPoints()
-        scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, -thumbPos)
-    end
-
-    scrollFrame:SetScript("OnVerticalScroll", function() UpdateScrollThumb() end)
-    scrollFrame:SetScript("OnScrollRangeChanged", function() UpdateScrollThumb() end)
-
-    scrollThumb:EnableMouse(true)
-    scrollThumb:RegisterForDrag("LeftButton")
-    scrollThumb:SetScript("OnDragStart", function(self)
-        self.dragging = true
-        self.dragStartY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        self.dragStartScroll = scrollFrame:GetVerticalScroll()
-    end)
-    scrollThumb:SetScript("OnDragStop", function(self) self.dragging = false end)
-    scrollThumb:SetScript("OnUpdate", function(self)
-        if not self.dragging then return end
-        local curY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        local delta = self.dragStartY - curY
-        local trackHeight = scrollTrack:GetHeight()
-        local thumbRange = trackHeight - self:GetHeight()
-        if thumbRange > 0 then
-            local maxScroll = scrollFrame:GetVerticalScrollRange()
-            local newScroll = self.dragStartScroll + (delta / thumbRange) * maxScroll
-            scrollFrame:SetVerticalScroll(math.max(0, math.min(maxScroll, newScroll)))
-        end
-    end)
-
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetWidth(scrollFrame:GetWidth())
-    scrollContent:SetHeight(400)
-    scrollFrame:SetScrollChild(scrollContent)
-
-    scrollFrame:HookScript("OnSizeChanged", function(self, width, height)
-        scrollContent:SetWidth(width)
-        UpdateScrollThumb()
-    end)
-
-    local statusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    statusBar:SetPoint("TOPLEFT", rosterPanel, "BOTTOMLEFT", 0, -5)
-    statusBar:SetPoint("TOPRIGHT", rosterPanel, "BOTTOMRIGHT", 0, -5)
-    statusBar:SetHeight(25)
-    statusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
+        columns = columnsConfig,
+        headerHeight = 26,
+        rowHeight = 32,
+        onHeaderCreate = onHeaderCreate,
+        onSort = function(sortColumn, sortAscending)
+            currentSortColumn = sortColumn
+            currentSortAscending = sortAscending
+            ns.UI.RefreshEquipmentTab(parent)
+            C_Timer.After(0.1, function() dt.UpdateSortIndicators() end)
+        end,
     })
-    statusBar:SetBackdropColor(T("BG_SECONDARY"))
-    statusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local statusText = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    statusText:SetPoint("LEFT", statusBar, "LEFT", 10, 0)
-    statusText:SetText(string.format(L["CHARACTERS_TRACKED"], 0, ""))
-    statusText:SetTextColor(T("TEXT_SECONDARY"))
+    parent.dataTable = dt
+    parent.columnsConfig = columnsConfig
 
-    C_Timer.After(0.2, function()
-        UpdateColumnLayout()
-    end)
+    local status = OneWoW_GUI:CreateStatusBar(parent, rosterPanel, {
+        text = string.format(L["CHARACTERS_TRACKED"], 0, ""),
+    })
 
-    parent.overviewPanel = overviewPanel
-    parent.statsContainer = statsContainer
-    parent.statBoxes = statBoxes
+    parent.overviewPanel = overview.panel
+    parent.statsContainer = overview.statsContainer
+    parent.statBoxes = overview.statBoxes
     parent.rosterPanel = rosterPanel
-    parent.listContainer = listContainer
-    parent.headerRow = headerRow
-    parent.scrollFrame = scrollFrame
-    parent.scrollContent = scrollContent
-    parent.statusBar = statusBar
-    parent.statusText = statusText
-    parent.CalculateContentMinWidths = CalculateContentMinWidths
+    parent.headerRow = dt.headerRow
+    parent.scrollContent = dt.scrollContent
+    parent.statusBar = status.bar
+    parent.statusText = status.text
+
+    ns.UI.ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         if ns.UI.RefreshEquipmentTab then
@@ -654,10 +115,6 @@ end
 function ns.UI.RefreshEquipmentTab(equipmentTab)
     if not equipmentTab then return end
     if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
-
-    if equipmentTab.headerRow and equipmentTab.headerRow.columns and equipmentTab.CalculateContentMinWidths then
-        equipmentTab.CalculateContentMinWidths()
-    end
 
     local allChars = {}
     for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
@@ -749,17 +206,14 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
     local scrollContent = equipmentTab.scrollContent
     if not scrollContent then return end
 
-    for _, row in ipairs(characterRows) do
-        if row.expandedFrame then
-            row.expandedFrame:Hide()
-            row.expandedFrame = nil
-        end
-        row:Hide()
-        row:SetParent(nil)
-    end
-    wipe(characterRows)
+    local dt = equipmentTab.dataTable
+    local columnsConfig = equipmentTab.columnsConfig
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-    local yOffset = -5
+    OneWoW_GUI:ClearDataRows(scrollContent)
+    wipe(characterRows)
+    if dt then dt:ClearRows() end
+
     local rowHeight = 32
     local rowGap = 2
 
@@ -770,224 +224,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local charKey = charInfo.key
         local charData = charInfo.data
 
-        local charRow = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-        charRow:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
-        charRow:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
-        charRow:SetHeight(rowHeight)
-        charRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        charRow:SetBackdropColor(T("BG_TERTIARY"))
-        charRow.charKey = charKey
-        charRow.cells = {}
-
-        local expandBtn = CreateFrame("Button", nil, charRow)
-        expandBtn:SetSize(25, rowHeight)
-        local expandIcon = expandBtn:CreateTexture(nil, "ARTWORK")
-        expandIcon:SetSize(14, 14)
-        expandIcon:SetPoint("CENTER")
-        expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
-        expandBtn.icon = expandIcon
-        table.insert(charRow.cells, expandBtn)
-
-        local function CreateExpandedDetails()
-            if not charRow.expandedFrame then
-                charRow.expandedFrame = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-                charRow.expandedFrame:SetPoint("TOPLEFT", charRow, "BOTTOMLEFT", 0, -2)
-                charRow.expandedFrame:SetPoint("TOPRIGHT", charRow, "BOTTOMRIGHT", 0, -2)
-                charRow.expandedFrame:SetHeight(70)
-                charRow.expandedFrame:SetBackdrop({
-                    bgFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeFile = "Interface\\Buttons\\WHITE8x8",
-                    edgeSize = 1
-                })
-                charRow.expandedFrame:SetBackdropColor(T("BG_SECONDARY"))
-                charRow.expandedFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-                local equipment = (_G.OneWoW_AltTracker_Character_DB.characters[charKey] and _G.OneWoW_AltTracker_Character_DB.characters[charKey].equipment)
-                if equipment then
-                    local slotOrder = {1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 4, 19}
-                    local iconSize = 48
-                    local iconGap = 4
-                    local largeGap = 12
-                    local startX = 10
-                    local startY = -10
-
-                    for i, slotID in ipairs(slotOrder) do
-                        local item = equipment[slotID]
-                        local xPos = startX + (i - 1) * (iconSize + iconGap)
-
-                        if i == 17 then
-                            xPos = xPos + (largeGap - iconGap)
-                        elseif i >= 18 then
-                            xPos = xPos + (largeGap - iconGap) + (largeGap - iconGap)
-                        end
-
-                        local iconFrame = CreateFrame("Button", nil, charRow.expandedFrame, "BackdropTemplate")
-                        iconFrame:SetSize(iconSize, iconSize)
-                        iconFrame:SetPoint("TOPLEFT", charRow.expandedFrame, "TOPLEFT", xPos, startY)
-
-                        local iconTexture = iconFrame:CreateTexture(nil, "BACKGROUND")
-                        iconTexture:SetAllPoints(iconFrame)
-
-                        local borderFrame = CreateFrame("Frame", nil, iconFrame, "BackdropTemplate")
-                        borderFrame:SetAllPoints(iconFrame)
-                        borderFrame:SetFrameLevel(iconFrame:GetFrameLevel() + 1)
-
-                        local ilvlText = iconFrame:CreateFontString(nil, "OVERLAY")
-                        ilvlText:SetFont("Fonts\\ARIALN.TTF", 11, "OUTLINE")
-                        ilvlText:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -2, 2)
-                        ilvlText:SetTextColor(1, 1, 1, 1)
-                        ilvlText:SetShadowColor(0, 0, 0, 1)
-                        ilvlText:SetShadowOffset(1, -1)
-
-                        if item and item.itemLink then
-                            local itemTexture = GetItemIcon(item.itemID)
-                            if itemTexture then
-                                iconTexture:SetTexture(itemTexture)
-                            else
-                                iconTexture:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-                            end
-
-                            if item.itemLevel and item.itemLevel > 0 then
-                                ilvlText:SetText(tostring(item.itemLevel))
-                            else
-                                ilvlText:SetText("")
-                            end
-
-                            local qualityColors = {
-                                [0] = {0.6, 0.6, 0.6, 1},
-                                [1] = {1, 1, 1, 1},
-                                [2] = {0.12, 1, 0, 1},
-                                [3] = {0, 0.44, 0.87, 1},
-                                [4] = {0.64, 0.21, 0.93, 1},
-                                [5] = {1, 0.5, 0, 1},
-                                [6] = {0.9, 0.8, 0.5, 1},
-                                [7] = {0.41, 0.8, 0.94, 1}
-                            }
-
-                            local quality = item.quality or 1
-                            local color = qualityColors[quality] or qualityColors[1]
-                            borderFrame:SetBackdrop({
-                                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                                edgeSize = 12,
-                                insets = { left = 2, right = 2, top = 2, bottom = 2 }
-                            })
-                            borderFrame:SetBackdropBorderColor(color[1], color[2], color[3], color[4])
-
-                            iconFrame:SetScript("OnEnter", function(self)
-                                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                                GameTooltip:SetHyperlink(item.itemLink)
-                                GameTooltip:Show()
-                            end)
-
-                            iconFrame:SetScript("OnLeave", function(self)
-                                GameTooltip:Hide()
-                            end)
-                        else
-                            iconTexture:SetTexture("Interface\\PaperDoll\\UI-Backpack-EmptySlot")
-                            ilvlText:SetText("")
-
-                            borderFrame:SetBackdrop({
-                                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                                edgeSize = 12,
-                                insets = { left = 2, right = 2, top = 2, bottom = 2 }
-                            })
-                            borderFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.8)
-                        end
-                    end
-                end
-            end
-            charRow.expandedFrame:Show()
-        end
-
-        local function RepositionAllRows()
-            local yOffset = -5
-            local rowHeight = 32
-            local rowGap = 2
-
-            for _, row in ipairs(characterRows) do
-                row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
-                row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
-                yOffset = yOffset - (rowHeight + rowGap)
-
-                if row.isExpanded and row.expandedFrame and row.expandedFrame:IsShown() then
-                    local expandedHeight = row.expandedFrame:GetHeight()
-                    yOffset = yOffset - (expandedHeight + rowGap)
-                end
-            end
-
-            local totalHeight = math.abs(yOffset) + 50
-            scrollContent:SetHeight(totalHeight)
-        end
-
-        local function ToggleExpanded()
-            local isExpanded = charRow.isExpanded or false
-            charRow.isExpanded = not isExpanded
-
-            if charRow.isExpanded then
-                expandIcon:SetAtlas("Gamepad_Rev_Minus_64")
-                CreateExpandedDetails()
-            else
-                expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
-                if charRow.expandedFrame then
-                    charRow.expandedFrame:Hide()
-                end
-            end
-
-            RepositionAllRows()
-        end
-
-        expandBtn:SetScript("OnClick", ToggleExpanded)
-
-        local factionIcon = charRow:CreateTexture(nil, "ARTWORK")
-        factionIcon:SetSize(18, 18)
-        if charData.faction == "Alliance" then
-            factionIcon:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-        elseif charData.faction == "Horde" then
-            factionIcon:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
-        else
-            factionIcon:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-            factionIcon:SetDesaturated(true)
-        end
-        table.insert(charRow.cells, factionIcon)
-
-        local mailIcon = charRow:CreateTexture(nil, "ARTWORK")
-        mailIcon:SetSize(16, 16)
-        mailIcon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
-        local hasMail = false
-        if StorageAPI then
-            local mailData = StorageAPI.GetMail(charKey)
-            hasMail = mailData and mailData.hasNewMail
-        end
-        if hasMail then
-            mailIcon:SetVertexColor(1, 1, 0, 1)
-        else
-            mailIcon:SetVertexColor(0.3, 0.3, 0.3, 0.5)
-        end
-        table.insert(charRow.cells, mailIcon)
-
-        local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        nameText:SetText(charData.name or charKey)
-        local classColor = RAID_CLASS_COLORS[charData.class]
-        if classColor then
-            nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
-        else
-            nameText:SetTextColor(1, 1, 1)
-        end
-        nameText:SetJustifyH("LEFT")
-        table.insert(charRow.cells, nameText)
-
-        local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        levelText:SetText(tostring(charData.level or 0))
-        levelText:SetTextColor(T("TEXT_PRIMARY"))
-        table.insert(charRow.cells, levelText)
-
-        local ilvlText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         local ilvl = charData.itemLevel or 0
-        ilvlText:SetText(tostring(ilvl))
-        ilvlText:SetTextColor(T("TEXT_PRIMARY"))
-        table.insert(charRow.cells, ilvlText)
-
         if ilvl > 0 then
             totalILevel = totalILevel + ilvl
             charCount = charCount + 1
@@ -1003,7 +240,6 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local totalGemSlots = 0
         local tierCount = 0
         local tierPieces = {}
-        local embellishmentCount = 0
 
         if equipment then
             local enchantableSlots = {
@@ -1070,6 +306,81 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
             durabilityPct = math.floor(totalDurability / durabilityItems)
         end
 
+        local charRow = OneWoW_GUI:CreateDataRow(scrollContent, {
+            rowHeight = rowHeight,
+            expandedHeight = 70,
+            rowGap = rowGap,
+            data = { charKey = charKey, charData = charData },
+            createDetails = function(ef, d)
+                local cKey = d.charKey
+                local eq = (_G.OneWoW_AltTracker_Character_DB.characters[cKey] and _G.OneWoW_AltTracker_Character_DB.characters[cKey].equipment)
+                if eq then
+                    local slotOrder = {1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 4, 19}
+                    local iconSize = 48
+                    local iconGap = 4
+                    local largeGap = 12
+                    local startX = 10
+                    local startY = -10
+
+                    for i, slotID in ipairs(slotOrder) do
+                        local item = eq[slotID]
+                        local xPos = startX + (i - 1) * (iconSize + iconGap)
+
+                        if i == 17 then
+                            xPos = xPos + (largeGap - iconGap)
+                        elseif i >= 18 then
+                            xPos = xPos + (largeGap - iconGap) + (largeGap - iconGap)
+                        end
+
+                        local itemIcon = OneWoW_GUI:CreateItemIcon(ef, {
+                            size = iconSize,
+                            showIlvl = true,
+                            itemLink = item and item.itemLink,
+                            itemID = item and item.itemID,
+                            quality = item and item.quality or 1,
+                            itemLevel = item and item.itemLevel,
+                            iconTexture = (item and item.itemLink) and GetItemIcon(item.itemID) or nil,
+                        })
+                        itemIcon.frame:SetPoint("TOPLEFT", ef, "TOPLEFT", xPos, startY)
+                    end
+                end
+                ns.UI.ApplyFontToFrame(ef)
+            end,
+        })
+        charRow.charKey = charKey
+
+        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, charData.faction)
+        table.insert(charRow.cells, factionCell)
+
+        local hasMail = false
+        if StorageAPI then
+            local mailData = StorageAPI.GetMail(charKey)
+            hasMail = mailData and mailData.hasNewMail
+        end
+        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, hasMail)
+        table.insert(charRow.cells, mailCell)
+
+        local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        nameText:SetText(charData.name or charKey)
+        local classColor = RAID_CLASS_COLORS[charData.class]
+        if classColor then
+            nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
+        else
+            nameText:SetTextColor(1, 1, 1)
+        end
+        nameText:SetJustifyH("LEFT")
+        table.insert(charRow.cells, nameText)
+
+        local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        levelText:SetText(tostring(charData.level or 0))
+        levelText:SetTextColor(T("TEXT_PRIMARY"))
+        table.insert(charRow.cells, levelText)
+
+        local ilvlText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        ilvlText:SetText(tostring(ilvl))
+        ilvlText:SetTextColor(T("TEXT_PRIMARY"))
+        table.insert(charRow.cells, ilvlText)
+
         local durabilityText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         durabilityText:SetText(durabilityPct .. "%")
         if durabilityPct < 30 then
@@ -1085,11 +396,6 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local enchantsCell = CreateFrame("Frame", nil, charRow)
         enchantsCell:SetHeight(32)
         enchantsCell:EnableMouse(true)
-        enchantsCell:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                ToggleExpanded()
-            end
-        end)
         enchantsCell:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             if missingEnchants > 0 then
@@ -1122,11 +428,6 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local gemsCell = CreateFrame("Frame", nil, charRow)
         gemsCell:SetHeight(32)
         gemsCell:EnableMouse(true)
-        gemsCell:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                ToggleExpanded()
-            end
-        end)
         gemsCell:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             if missingGems > 0 then
@@ -1157,11 +458,6 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local tierCell = CreateFrame("Frame", nil, charRow)
         tierCell:SetHeight(32)
         tierCell:EnableMouse(true)
-        tierCell:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                ToggleExpanded()
-            end
-        end)
         tierCell:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             if tierCount >= 5 then
@@ -1253,11 +549,6 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local statusCell = CreateFrame("Frame", nil, charRow)
         statusCell:SetHeight(32)
         statusCell:EnableMouse(true)
-        statusCell:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                ToggleExpanded()
-            end
-        end)
         statusCell:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             if durabilityPct < 30 or missingEnchants >= 5 or missingGems >= 5 then
@@ -1298,55 +589,36 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         end
         table.insert(charRow.cells, statusCell)
 
-        charRow:EnableMouse(true)
-        charRow:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-        end)
-
-        charRow:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-        end)
-
-        charRow:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                ToggleExpanded()
-            end
-        end)
-
-        local headerRow = equipmentTab.headerRow
-        if headerRow and headerRow.columnButtons then
+        if dt and dt.headerRow and dt.headerRow.columnButtons and columnsConfig then
             for i, cell in ipairs(charRow.cells) do
-                local btn = headerRow.columnButtons[i]
+                local btn = dt.headerRow.columnButtons[i]
                 if btn and btn.columnWidth and btn.columnX then
                     local width = btn.columnWidth
                     local x = btn.columnX
-
+                    local col = columnsConfig[i]
                     cell:ClearAllPoints()
-
-                    if i == 1 then
+                    if col and col.align == "icon" then
                         cell:SetSize(width, rowHeight)
                         cell:SetPoint("LEFT", charRow, "LEFT", x, 0)
-                    elseif i == 2 or i == 3 then
-                        cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
+                    elseif col and col.align == "center" then
+                        cell:SetWidth(width - 6)
+                        cell:SetPoint("CENTER", charRow, "LEFT", x + width / 2, 0)
+                    elseif col and col.align == "right" then
+                        cell:SetWidth(width - 6)
+                        cell:SetPoint("RIGHT", charRow, "LEFT", x + width - 3, 0)
                     else
                         cell:SetWidth(width - 6)
-                        if i == 4 or i == 21 then
-                            cell:SetPoint("LEFT", charRow, "LEFT", x + 3, 0)
-                        else
-                            cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
-                        end
+                        cell:SetPoint("LEFT", charRow, "LEFT", x + 3, 0)
                     end
                 end
             end
         end
 
-        charRow:Show()
         table.insert(characterRows, charRow)
-        yOffset = yOffset - (rowHeight + rowGap)
+        if dt then dt:RegisterRow(charRow) end
     end
 
-    local newHeight = math.max(400, #characterRows * (rowHeight + rowGap) + 10)
-    scrollContent:SetHeight(newHeight)
+    OneWoW_GUI:LayoutDataRows(scrollContent, { rowHeight = rowHeight, rowGap = rowGap })
 
     if equipmentTab.statusText then
         equipmentTab.statusText:SetText(string.format(L["CHARACTERS_TRACKED"], #allChars, ""))
@@ -1354,11 +626,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
 
     ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILevel)
 
-    C_Timer.After(0.1, function()
-        if equipmentTab.headerRow then
-            equipmentTab.headerRow:GetScript("OnSizeChanged")(equipmentTab.headerRow)
-        end
-    end)
+    ns.UI.ApplyFontToFrame(equipmentTab)
 end
 
 function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILevel)

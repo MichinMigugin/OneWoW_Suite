@@ -3,6 +3,7 @@ local OneWoWAltTracker = OneWoW_AltTracker
 local L = ns.L
 local T = ns.T
 local S = ns.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.UI = ns.UI or {}
 
@@ -77,11 +78,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     frame:SetResizable(true)
     frame:EnableMouse(true)
 
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    frame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     frame:SetBackdropColor(T("BG_PRIMARY"))
     frame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
@@ -116,44 +113,26 @@ function ns.UI:CreateMainFrame(defaultTab)
         OneWoWAltTracker.db.global.mainFrameSize = {width = width, height = height}
     end)
 
-    local titleBg = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    local titleBg = OneWoW_GUI:CreateTitleBar(frame, L["ADDON_TITLE_FRAME"], {
+        height = 20,
+        showBrand = true,
+        onClose = function() frame:Hide() end,
+    })
+    titleBg:ClearAllPoints()
     titleBg:SetPoint("TOPLEFT", frame, "TOPLEFT", S("XS"), -S("XS"))
     titleBg:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -S("XS"), -S("XS"))
-    titleBg:SetHeight(20)
-    titleBg:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBg:SetBackdropColor(T("TITLEBAR_BG"))
-    titleBg:SetFrameLevel(frame:GetFrameLevel() + 1)
-
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-    local factionTheme = (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
-    local brandIconTex
-    if factionTheme == "alliance" then
-        brandIconTex = "Interface\\AddOns\\OneWoW_AltTracker\\Media\\alliance-mini.png"
-    elseif factionTheme == "neutral" then
-        brandIconTex = "Interface\\AddOns\\OneWoW_AltTracker\\Media\\neutral-mini.png"
-    else
-        brandIconTex = "Interface\\AddOns\\OneWoW_AltTracker\\Media\\horde-mini.png"
-    end
-
-    local brandIcon = titleBg:CreateTexture(nil, "OVERLAY")
-    brandIcon:SetSize(14, 14)
-    brandIcon:SetPoint("LEFT", titleBg, "LEFT", S("SM"), 0)
-    brandIcon:SetTexture(brandIconTex)
-
-    local brandText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
-    brandText:SetText("OneWoW")
-    brandText:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local titleText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("CENTER", titleBg, "CENTER", 0, 0)
-    titleText:SetText(L["ADDON_TITLE_FRAME"])
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-
-    local closeButton = ns.UI.CreateButton(nil, titleBg, "X", 20, 20)
-    closeButton:SetPoint("RIGHT", titleBg, "RIGHT", -S("XS") / 2, 0)
-    closeButton:SetScript("OnClick", function()
-        frame:Hide()
+    titleBg:EnableMouse(true)
+    titleBg:RegisterForDrag("LeftButton")
+    titleBg:SetScript("OnDragStart", function() frame:StartMoving() end)
+    titleBg:SetScript("OnDragStop", function()
+        frame:StopMovingOrSizing()
+        local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
+        OneWoWAltTracker.db.global.mainFramePosition = {
+            point = point,
+            relativePoint = relativePoint,
+            xOfs = xOfs,
+            yOfs = yOfs
+        }
     end)
 
     tinsert(UISpecialFrames, "OneWoWAltTrackerMainFrame")
@@ -236,21 +215,11 @@ function ns.UI:CreateMainFrame(defaultTab)
     end)
 
     local function CreateTab(name, displayName)
-        local button = CreateFrame("Button", nil, tabButtonContainer, "BackdropTemplate")
-        button:SetHeight(28)
-
-        button:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
+        local GUI = LibStub("OneWoW_GUI-1.0", true)
+        local button = GUI:CreateButton(nil, tabButtonContainer, displayName, 100, 28)
         button:SetBackdropColor(T("BG_SECONDARY"))
         button:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-        local text = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        text:SetPoint("CENTER", button, "CENTER")
-        text:SetText(displayName)
-        text:SetTextColor(T("TEXT_PRIMARY"))
+        button.text:SetTextColor(T("TEXT_PRIMARY"))
 
         button:SetScript("OnClick", function() SelectTab(name) end)
         button:SetScript("OnEnter", function(self)
@@ -261,6 +230,7 @@ function ns.UI:CreateMainFrame(defaultTab)
         button:SetScript("OnLeave", function(self)
             if tabs[name] and not tabs[name]:IsShown() then
                 self:SetBackdropColor(T("BG_SECONDARY"))
+                self.text:SetTextColor(T("TEXT_PRIMARY"))
             end
         end)
 

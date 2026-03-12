@@ -66,6 +66,12 @@ function OneWoWAltTracker:OnInitialize()
         OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
             if ns.ApplyLanguage then ns.ApplyLanguage() end
         end)
+        OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+            local mainFrame = _G["OneWoWAltTrackerMainFrame"]
+            if mainFrame then
+                ns.UI.ApplyFontToFrame(mainFrame)
+            end
+        end)
     end
 
     local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION

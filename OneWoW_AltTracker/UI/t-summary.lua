@@ -2,487 +2,104 @@ local addonName, ns = ...
 local L = ns.L
 local T = ns.T
 local S = ns.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 ns.UI = ns.UI or {}
 
-local expandedRows = {}
-local UpdateRowLayout
 local currentSortColumn = nil
 local currentSortAscending = true
 local characterRows = {}
 
 function ns.UI.CreateSummaryTab(parent)
-    -- Account Overview Panel (Control Panel at top)
-    local overviewPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    overviewPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -5)
-    overviewPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -5, -5)
-    overviewPanel:SetHeight(110)
-    overviewPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+    local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
+        title = L["ACCOUNT_OVERVIEW"],
+        height = 110,
+        columns = 5,
+        stats = {
+            {label = L["ATTENTION"],            value = "0",    ttTitle = L["TT_ATTENTION"],            ttDesc = L["TT_ATTENTION_DESC"]},
+            {label = L["CHARACTERS"],           value = "0",    ttTitle = L["TT_CHARACTERS"],           ttDesc = L["TT_CHARACTERS_DESC"]},
+            {label = L["TOTAL_GOLD"],           value = "0g",   ttTitle = L["TT_TOTAL_GOLD"],           ttDesc = L["TT_TOTAL_GOLD_DESC"]},
+            {label = L["FACTIONS"],             value = "0/0",  ttTitle = L["TT_FACTIONS"],             ttDesc = L["TT_FACTIONS_DESC"]},
+            {label = L["RESTED"],               value = "0",    ttTitle = L["TT_RESTED"],               ttDesc = L["TT_RESTED_DESC"]},
+            {label = L["PLAYTIME"],             value = "0h",   ttTitle = L["TT_PLAYTIME"],             ttDesc = L["TT_PLAYTIME_DESC"]},
+            {label = L["MOUNTS"],               value = "0/0",  ttTitle = L["TT_MOUNTS"],               ttDesc = L["TT_MOUNTS_DESC"]},
+            {label = L["PETS"],                 value = "0/0",  ttTitle = L["TT_PETS"],                 ttDesc = L["TT_PETS_DESC"]},
+            {label = L["PRIMARY_PROFESSIONS"],  value = "0/11", ttTitle = L["TT_PRIMARY_PROFESSIONS"],  ttDesc = L["TT_PRIMARY_PROFESSIONS_DESC"]},
+            {label = L["ACHIEVEMENTS"],         value = "0",    ttTitle = L["TT_ACHIEVEMENTS"],         ttDesc = L["TT_ACHIEVEMENTS_DESC"]},
+        },
     })
-    overviewPanel:SetBackdropColor(T("BG_SECONDARY"))
-    overviewPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local overviewTitle = overviewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    overviewTitle:SetPoint("TOPLEFT", overviewPanel, "TOPLEFT", 10, -6)
-    overviewTitle:SetText(L["ACCOUNT_OVERVIEW"])
-    overviewTitle:SetTextColor(T("ACCENT_PRIMARY"))
-
-    -- Stats grid (2 rows x 5 columns) with more vertical space
-    local statsContainer = CreateFrame("Frame", nil, overviewPanel)
-    statsContainer:SetPoint("TOPLEFT", overviewTitle, "BOTTOMLEFT", 0, -8)
-    statsContainer:SetPoint("BOTTOMRIGHT", overviewPanel, "BOTTOMRIGHT", -10, 6)
-
-    local statLabels = {
-        L["ATTENTION"], L["CHARACTERS"], L["TOTAL_GOLD"], L["FACTIONS"], L["RESTED"],
-        L["PLAYTIME"], L["MOUNTS"], L["PETS"], L["PRIMARY_PROFESSIONS"], L["ACHIEVEMENTS"]
-    }
-
-    local statTooltipTitles = {
-        L["TT_ATTENTION"], L["TT_CHARACTERS"], L["TT_TOTAL_GOLD"], L["TT_FACTIONS"], L["TT_RESTED"],
-        L["TT_PLAYTIME"], L["TT_MOUNTS"], L["TT_PETS"], L["TT_PRIMARY_PROFESSIONS"], L["TT_ACHIEVEMENTS"]
-    }
-
-    local statTooltips = {
-        L["TT_ATTENTION_DESC"], L["TT_CHARACTERS_DESC"], L["TT_TOTAL_GOLD_DESC"], L["TT_FACTIONS_DESC"], L["TT_RESTED_DESC"],
-        L["TT_PLAYTIME_DESC"], L["TT_MOUNTS_DESC"], L["TT_PETS_DESC"], L["TT_PRIMARY_PROFESSIONS_DESC"], L["TT_ACHIEVEMENTS_DESC"]
-    }
-
-    local statValues = {
-        "0", "0", "0g", "0/0", "0",
-        "0h", "0/0", "0/0", "0/11", "0"
-    }
-
-    local cols = 5
-    local rows = 2
-    local statBoxes = {}
-
-    for i = 1, #statLabels do
-        local row = math.ceil(i / cols)
-        local col = ((i - 1) % cols) + 1
-
-        local statBox = CreateFrame("Frame", nil, statsContainer, "BackdropTemplate")
-        statBox:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        statBox:SetBackdropColor(T("BG_TERTIARY"))
-        statBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-        local label = statBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        label:SetPoint("TOP", statBox, "TOP", 0, -5)
-        label:SetText(statLabels[i])
-        label:SetTextColor(T("TEXT_SECONDARY"))
-
-        local value = statBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        value:SetPoint("BOTTOM", statBox, "BOTTOM", 0, 6)
-        value:SetText(statValues[i])
-        value:SetTextColor(T("TEXT_PRIMARY"))
-
-        statBox.label = label
-        statBox.value = value
-
-        statBox:EnableMouse(true)
-        statBox:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(statTooltipTitles[i], 1, 1, 1)
-            GameTooltip:AddLine(statTooltips[i], nil, nil, nil, true)
-            GameTooltip:Show()
-        end)
-        statBox:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-            GameTooltip:Hide()
-        end)
-
-        table.insert(statBoxes, statBox)
-    end
-
-    statsContainer:SetScript("OnSizeChanged", function(self, width, height)
-        local boxWidth = (width - (cols + 1) * 3) / cols
-        local boxHeight = (height - (rows + 1) * 3) / rows
-
-        for i, box in ipairs(statBoxes) do
-            local row = math.ceil(i / cols)
-            local col = ((i - 1) % cols) + 1
-
-            local x = 3 + (col - 1) * (boxWidth + 3)
-            local y = -3 - (row - 1) * (boxHeight + 3)
-
-            box:SetSize(boxWidth, boxHeight)
-            box:ClearAllPoints()
-            box:SetPoint("TOPLEFT", self, "TOPLEFT", x, y)
-        end
-    end)
-
-    -- Character Roster Panel
-    local rosterPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    rosterPanel:SetPoint("TOPLEFT", overviewPanel, "BOTTOMLEFT", 0, -8)
+    local rosterPanel = CreateFrame("Frame", nil, parent)
+    rosterPanel:SetPoint("TOPLEFT", overview.panel, "BOTTOMLEFT", 0, -8)
     rosterPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
-    rosterPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    rosterPanel:SetBackdropColor(T("BG_PRIMARY"))
-    rosterPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    -- List container: single reference frame that header, scrollframe, and scrollbar all anchor to
-    local listContainer = CreateFrame("Frame", nil, rosterPanel)
-    listContainer:SetPoint("TOPLEFT", rosterPanel, "TOPLEFT", 8, -8)
-    listContainer:SetPoint("BOTTOMRIGHT", rosterPanel, "BOTTOMRIGHT", -8, 8)
-
-    local scrollBarWidth = 10
-
-    -- Column Headers (inside listContainer, right edge leaves room for scrollbar)
-    local headerRow = CreateFrame("Frame", nil, listContainer, "BackdropTemplate")
-    headerRow:SetPoint("TOPLEFT", listContainer, "TOPLEFT", 0, 0)
-    headerRow:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", -scrollBarWidth, 0)
-    headerRow:SetHeight(26)
-    headerRow:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    headerRow:SetBackdropColor(T("BG_TERTIARY"))
-    headerRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-
-    -- Column definitions with 4px gaps
     local columns = {
-        {key = "expand", label = "", width = 25, fixed = true, ttTitle = L["TT_COL_EXPAND"], ttDesc = L["TT_COL_EXPAND_DESC"]},
-        {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, ttTitle = L["TT_COL_FACTION"], ttDesc = L["TT_COL_FACTION_DESC"]},
-        {key = "mail", label = L["COL_MAIL"], width = 35, fixed = true, ttTitle = L["TT_COL_MAIL"], ttDesc = L["TT_COL_MAIL_DESC"]},
-        {key = "name", label = L["COL_CHARACTER"], width = 101, fixed = false, ttTitle = L["TT_COL_CHARACTER"], ttDesc = L["TT_COL_CHARACTER_DESC"]},
-        {key = "server", label = L["COL_SERVER"], width = 50, fixed = false, ttTitle = L["TT_COL_SERVER"], ttDesc = L["TT_COL_SERVER_DESC"]},
-        {key = "level", label = L["COL_LEVEL"], width = 40, fixed = true, ttTitle = L["TT_COL_LEVEL"], ttDesc = L["TT_COL_LEVEL_DESC"]},
-        {key = "class", label = L["COL_CLASS"], width = 60, fixed = false, ttTitle = L["TT_COL_CLASS"], ttDesc = L["TT_COL_CLASS_DESC"]},
-        {key = "spec", label = L["COL_SPEC"], width = 70, fixed = false, ttTitle = L["TT_COL_SPEC"], ttDesc = L["TT_COL_SPEC_DESC"]},
-        {key = "rested", label = L["COL_RESTED_XP"], width = 50, fixed = true, ttTitle = L["TT_COL_RESTED_XP"], ttDesc = L["TT_COL_RESTED_XP_DESC"]},
-        {key = "itemLevel", label = L["COL_ITEM_LEVEL"], width = 50, fixed = true, ttTitle = L["TT_COL_ITEM_LEVEL"], ttDesc = L["TT_COL_ITEM_LEVEL_DESC"]},
-        {key = "bags", label = L["COL_BAGS"], width = 40, fixed = true, ttTitle = L["TT_COL_BAGS"], ttDesc = L["TT_COL_BAGS_DESC"]},
-        {key = "money", label = L["COL_GOLD"], width = 90, fixed = false, ttTitle = L["TT_COL_GOLD"], ttDesc = L["TT_COL_GOLD_DESC"]},
-        {key = "hearth", label = L["COL_HEARTH"], width = 80, fixed = false, ttTitle = L["TT_COL_HEARTH"], ttDesc = L["TT_COL_HEARTH_DESC"]},
-        {key = "lastSeen", label = L["COL_LAST_SEEN"], width = 80, fixed = false, ttTitle = L["TT_COL_LAST_SEEN"], ttDesc = L["TT_COL_LAST_SEEN_DESC"]}
+        {key = "expand",    label = "",                  width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],     ttDesc = L["TT_COL_EXPAND_DESC"]},
+        {key = "faction",   label = L["COL_FACTION"],    width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],    ttDesc = L["TT_COL_FACTION_DESC"]},
+        {key = "mail",      label = L["COL_MAIL"],       width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],       ttDesc = L["TT_COL_MAIL_DESC"]},
+        {key = "name",      label = L["COL_CHARACTER"],  width = 101, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],  ttDesc = L["TT_COL_CHARACTER_DESC"]},
+        {key = "server",    label = L["COL_SERVER"],     width = 50,  fixed = false, align = "left",                     ttTitle = L["TT_COL_SERVER"],     ttDesc = L["TT_COL_SERVER_DESC"]},
+        {key = "level",     label = L["COL_LEVEL"],      width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_LEVEL"],      ttDesc = L["TT_COL_LEVEL_DESC"]},
+        {key = "class",     label = L["COL_CLASS"],      width = 60,  fixed = false, align = "left",                     ttTitle = L["TT_COL_CLASS"],      ttDesc = L["TT_COL_CLASS_DESC"]},
+        {key = "spec",      label = L["COL_SPEC"],       width = 70,  fixed = false, align = "left",                     ttTitle = L["TT_COL_SPEC"],       ttDesc = L["TT_COL_SPEC_DESC"]},
+        {key = "rested",    label = L["COL_RESTED_XP"],  width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_RESTED_XP"],  ttDesc = L["TT_COL_RESTED_XP_DESC"]},
+        {key = "itemLevel", label = L["COL_ITEM_LEVEL"], width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ITEM_LEVEL"], ttDesc = L["TT_COL_ITEM_LEVEL_DESC"]},
+        {key = "bags",      label = L["COL_BAGS"],       width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_BAGS"],       ttDesc = L["TT_COL_BAGS_DESC"]},
+        {key = "money",     label = L["COL_GOLD"],       width = 90,  fixed = false, align = "right",                    ttTitle = L["TT_COL_GOLD"],       ttDesc = L["TT_COL_GOLD_DESC"]},
+        {key = "hearth",    label = L["COL_HEARTH"],     width = 80,  fixed = false, align = "left",                     ttTitle = L["TT_COL_HEARTH"],     ttDesc = L["TT_COL_HEARTH_DESC"]},
+        {key = "lastSeen",  label = L["COL_LAST_SEEN"],  width = 80,  fixed = false, align = "left",                     ttTitle = L["TT_COL_LAST_SEEN"],  ttDesc = L["TT_COL_LAST_SEEN_DESC"]},
     }
 
-    local colGap = 4
-    headerRow.columnButtons = {}
-    headerRow.columns = columns
-
-    local function UpdateSortIndicators()
-        if not headerRow or not headerRow.columnButtons then return end
-
-        for i, btn in ipairs(headerRow.columnButtons) do
-            local col = columns[i]
-            if btn.sortArrow then
-                btn.sortArrow:Hide()
-            end
-
-            if col and col.key == currentSortColumn then
-                if not btn.sortArrow then
-                    btn.sortArrow = btn:CreateTexture(nil, "OVERLAY")
-                    btn.sortArrow:SetSize(8, 8)
-                    btn.sortArrow:SetPoint("RIGHT", btn, "RIGHT", -3, 0)
-                end
-
-                if currentSortAscending then
-                    btn.sortArrow:SetTexture("Interface\\Buttons\\UI-SortArrow")
-                    btn.sortArrow:SetTexCoord(0, 1, 1, 0)
-                else
-                    btn.sortArrow:SetTexture("Interface\\Buttons\\UI-SortArrow")
-                    btn.sortArrow:SetTexCoord(0, 1, 0, 1)
-                end
-                btn.sortArrow:Show()
-            end
-        end
-    end
-
-    local function UpdateAllRowCells()
-        if not headerRow or not headerRow.columnButtons then return end
-        if not characterRows then return end
-
-        for _, charRow in ipairs(characterRows) do
-            if charRow.cells then
-                for i, cell in ipairs(charRow.cells) do
-                    local btn = headerRow.columnButtons[i]
-                    if btn and btn.columnWidth and btn.columnX then
-                        local width = btn.columnWidth
-                        local x = btn.columnX
-
-                        cell:ClearAllPoints()
-
-                        if i == 1 then
-                            cell:SetSize(width, 32)
-                            cell:SetPoint("LEFT", charRow, "LEFT", x, 0)
-                        elseif i == 2 or i == 3 then
-                            cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
-                        else
-                            cell:SetWidth(width - 6)
-                            if i == 4 or i == 5 or i == 7 or i == 8 or i == 13 or i == 14 then
-                                cell:SetPoint("LEFT", charRow, "LEFT", x + 3, 0)
-                            elseif i == 12 then
-                                cell:SetPoint("RIGHT", charRow, "LEFT", x + width - 3, 0)
-                            else
-                                cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local function UpdateColumnLayout()
-        local availableWidth = headerRow:GetWidth() - 10
-        if availableWidth <= 0 then return end
-
-        local fixedWidth = 0
-        local flexCount = 0
-        for _, col in ipairs(columns) do
-            if col.fixed then
-                fixedWidth = fixedWidth + col.width
-            else
-                flexCount = flexCount + 1
-            end
-        end
-
-        local totalGaps = (#columns - 1) * colGap
-        local remainingWidth = availableWidth - fixedWidth - totalGaps
-        local flexWidth = flexCount > 0 and math.max(0, remainingWidth / flexCount) or 0
-
-        local xOffset = 5
-        local visibleButtons = {}
-        for i, col in ipairs(columns) do
-            local btn = headerRow.columnButtons[i]
-            if btn then
-                local width = col.fixed and col.width or math.max(col.width, flexWidth)
-                btn.columnWidth = width
-                btn.columnX = xOffset
-                table.insert(visibleButtons, {btn = btn, width = width, xOffset = xOffset})
-                xOffset = xOffset + width + colGap
-            end
-        end
-
-        if #visibleButtons > 0 then
-            local lastBtn = visibleButtons[#visibleButtons]
-            local totalWidth = lastBtn.xOffset + lastBtn.width
-            local maxWidth = headerRow:GetWidth() - 5
-            if totalWidth > maxWidth then
-                local overflow = totalWidth - maxWidth
-                lastBtn.width = math.max(30, lastBtn.width - overflow)
-                lastBtn.btn.columnWidth = lastBtn.width
-            end
-        end
-
-        for _, btnInfo in ipairs(visibleButtons) do
-            btnInfo.btn:SetWidth(btnInfo.width)
-            btnInfo.btn:ClearAllPoints()
-            btnInfo.btn:SetPoint("LEFT", headerRow, "LEFT", btnInfo.xOffset, 0)
-        end
-
-        UpdateAllRowCells()
-    end
-
-    -- Create column header buttons
-    for i, col in ipairs(columns) do
-        local btn = CreateFrame("Button", nil, headerRow, "BackdropTemplate")
-        btn:SetHeight(22)
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        btn:SetBackdropColor(T("BG_TERTIARY"))
-        btn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
+    local function onHeaderCreate(btn, col, i)
         if col.key == "expand" then
             local icon = btn:CreateTexture(nil, "ARTWORK")
             icon:SetSize(14, 14)
             icon:SetPoint("CENTER")
             icon:SetAtlas("Gamepad_Rev_Plus_64")
             btn.icon = icon
-        elseif col.key == "faction" then
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            text:SetPoint("CENTER")
-            text:SetText(col.label)
-            text:SetTextColor(T("TEXT_PRIMARY"))
-            btn.text = text
+            if btn.text then btn.text:SetText("") end
         elseif col.key == "mail" then
             local icon = btn:CreateTexture(nil, "ARTWORK")
             icon:SetSize(12, 12)
             icon:SetPoint("CENTER")
             icon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
             btn.icon = icon
-        else
-            local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            text:SetPoint("CENTER")
-            text:SetText(col.label)
-            text:SetTextColor(T("TEXT_PRIMARY"))
-            btn.text = text
+            if btn.text then btn.text:SetText("") end
         end
-
-        btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-            if btn.text then btn.text:SetTextColor(T("TEXT_ACCENT")) end
-            if col.ttTitle and col.ttDesc then
-                GameTooltip:SetOwner(self, "ANCHOR_TOP")
-                GameTooltip:SetText(col.ttTitle, 1, 1, 1)
-                GameTooltip:AddLine(col.ttDesc, nil, nil, nil, true)
-                GameTooltip:Show()
-            end
-        end)
-
-        btn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-            if btn.text then btn.text:SetTextColor(T("TEXT_PRIMARY")) end
-            GameTooltip:Hide()
-        end)
-
-        btn:SetScript("OnClick", function(self)
-            if col.key == "expand" or col.key == "faction" or col.key == "mail" then
-                return
-            end
-
-            if currentSortColumn == col.key then
-                currentSortAscending = not currentSortAscending
-            else
-                currentSortColumn = col.key
-                currentSortAscending = true
-            end
-
-            if parent then
-                ns.UI.RefreshSummaryTab(parent)
-                C_Timer.After(0.1, function()
-                    UpdateSortIndicators()
-                end)
-            end
-        end)
-
-        table.insert(headerRow.columnButtons, btn)
     end
 
-    headerRow:SetScript("OnSizeChanged", function()
-        C_Timer.After(0.1, function()
-            UpdateColumnLayout()
-        end)
-    end)
-
-    -- Bare ScrollFrame (no template) - avoids SecureScrollTemplates auto-wiring that breaks in 12.0.x
-    local scrollFrame = CreateFrame("ScrollFrame", nil, listContainer)
-    scrollFrame:SetPoint("TOPLEFT", headerRow, "BOTTOMLEFT", 0, -2)
-    scrollFrame:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -scrollBarWidth, 0)
-    scrollFrame:EnableMouseWheel(true)
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local current = self:GetVerticalScroll()
-        local maxScroll = self:GetVerticalScrollRange()
-        if delta > 0 then
-            self:SetVerticalScroll(math.max(0, current - 40))
-        else
-            self:SetVerticalScroll(math.min(maxScroll, current + 40))
-        end
-    end)
-
-    -- Custom scrollbar track anchored to listContainer right side
-    local scrollTrack = CreateFrame("Frame", nil, listContainer, "BackdropTemplate")
-    scrollTrack:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", -2, 0)
-    scrollTrack:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -2, 0)
-    scrollTrack:SetWidth(8)
-    scrollTrack:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    scrollTrack:SetBackdropColor(T("BG_TERTIARY"))
-
-    local scrollThumb = CreateFrame("Frame", nil, scrollTrack, "BackdropTemplate")
-    scrollThumb:SetWidth(6)
-    scrollThumb:SetHeight(30)
-    scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, 0)
-    scrollThumb:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    scrollThumb:SetBackdropColor(T("ACCENT_PRIMARY"))
-
-    local function UpdateScrollThumb()
-        local maxScroll = scrollFrame:GetVerticalScrollRange()
-        if maxScroll <= 0 then
-            scrollThumb:Hide()
-            return
-        end
-        scrollThumb:Show()
-        local viewHeight = scrollFrame:GetHeight()
-        local trackHeight = scrollTrack:GetHeight()
-        local thumbHeight = math.max(20, trackHeight * (viewHeight / (viewHeight + maxScroll)))
-        local thumbRange = trackHeight - thumbHeight
-        local thumbPos = (scrollFrame:GetVerticalScroll() / maxScroll) * thumbRange
-        scrollThumb:SetHeight(thumbHeight)
-        scrollThumb:ClearAllPoints()
-        scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, -thumbPos)
-    end
-
-    scrollFrame:SetScript("OnVerticalScroll", function() UpdateScrollThumb() end)
-    scrollFrame:SetScript("OnScrollRangeChanged", function() UpdateScrollThumb() end)
-
-    scrollThumb:EnableMouse(true)
-    scrollThumb:RegisterForDrag("LeftButton")
-    scrollThumb:SetScript("OnDragStart", function(self)
-        self.dragging = true
-        self.dragStartY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        self.dragStartScroll = scrollFrame:GetVerticalScroll()
-    end)
-    scrollThumb:SetScript("OnDragStop", function(self) self.dragging = false end)
-    scrollThumb:SetScript("OnUpdate", function(self)
-        if not self.dragging then return end
-        local curY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        local delta = self.dragStartY - curY
-        local trackHeight = scrollTrack:GetHeight()
-        local thumbRange = trackHeight - self:GetHeight()
-        if thumbRange > 0 then
-            local maxScroll = scrollFrame:GetVerticalScrollRange()
-            local newScroll = self.dragStartScroll + (delta / thumbRange) * maxScroll
-            scrollFrame:SetVerticalScroll(math.max(0, math.min(maxScroll, newScroll)))
-        end
-    end)
-
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetWidth(scrollFrame:GetWidth())
-    scrollContent:SetHeight(400)
-    scrollFrame:SetScrollChild(scrollContent)
-
-    scrollFrame:HookScript("OnSizeChanged", function(self, width, height)
-        scrollContent:SetWidth(width)
-        UpdateScrollThumb()
-    end)
-
-    -- Status Bar
-    local statusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    statusBar:SetPoint("TOPLEFT", rosterPanel, "BOTTOMLEFT", 0, -5)
-    statusBar:SetPoint("TOPRIGHT", rosterPanel, "BOTTOMRIGHT", 0, -5)
-    statusBar:SetHeight(25)
-    statusBar:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
+        columns = columns,
+        headerHeight = 26,
+        rowHeight = 32,
+        onHeaderCreate = onHeaderCreate,
+        onSort = function(sortColumn, sortAscending)
+            currentSortColumn = sortColumn
+            currentSortAscending = sortAscending
+            ns.UI.RefreshSummaryTab(parent)
+            C_Timer.After(0.1, function() dt.UpdateSortIndicators() end)
+        end,
     })
-    statusBar:SetBackdropColor(T("BG_SECONDARY"))
-    statusBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local statusText = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    statusText:SetPoint("LEFT", statusBar, "LEFT", 10, 0)
-    statusText:SetText(string.format(L["CHARACTERS_TRACKED"], 1, ""))
-    statusText:SetTextColor(T("TEXT_SECONDARY"))
+    parent.dataTable = dt
+    parent.columnsConfig = columns
 
-    C_Timer.After(0.2, function()
-        UpdateColumnLayout()
-    end)
+    local status = OneWoW_GUI:CreateStatusBar(parent, rosterPanel, {
+        text = string.format(L["CHARACTERS_TRACKED"], 1, ""),
+    })
 
-    parent.overviewPanel = overviewPanel
-    parent.statsContainer = statsContainer
-    parent.statBoxes = statBoxes
+    parent.overviewPanel = overview.panel
+    parent.statsContainer = overview.statsContainer
+    parent.statBoxes = overview.statBoxes
     parent.rosterPanel = rosterPanel
-    parent.listContainer = listContainer
-    parent.headerRow = headerRow
-    parent.scrollFrame = scrollFrame
-    parent.scrollContent = scrollContent
-    parent.statusBar = statusBar
-    parent.statusText = statusText
+    parent.headerRow = dt.headerRow
+    parent.scrollContent = dt.scrollContent
+    parent.statusBar = status.bar
+    parent.statusText = status.text
+
+    ns.UI.ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         if ns.UI.RefreshSummaryTab then
@@ -607,17 +224,14 @@ function ns.UI.RefreshSummaryTab(summaryTab)
     local scrollContent = summaryTab.scrollContent
     if not scrollContent then return end
 
-    for _, row in ipairs(characterRows) do
-        if row.expandedFrame then
-            row.expandedFrame:Hide()
-            row.expandedFrame = nil
-        end
-        row:Hide()
-        row:SetParent(nil)
-    end
-    wipe(characterRows)
+    local dt = summaryTab.dataTable
+    local columnsConfig = summaryTab.columnsConfig
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-    local yOffset = -5
+    OneWoW_GUI:ClearDataRows(scrollContent)
+    wipe(characterRows)
+    if dt then dt:ClearRows() end
+
     local rowHeight = 32
     local rowGap = 2
 
@@ -625,143 +239,79 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         local charKey = charInfo.key
         local charData = charInfo.data
 
-        local charRow = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-        charRow:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
-        charRow:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
-        charRow:SetHeight(rowHeight)
-        charRow:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        charRow:SetBackdropColor(T("BG_TERTIARY"))
+        local charRow = OneWoW_GUI:CreateDataRow(scrollContent, {
+            rowHeight = rowHeight,
+            expandedHeight = 100,
+            rowGap = rowGap,
+            data = { charKey = charKey, charData = charData },
+            createDetails = function(ef, d)
+                local cData = d.charData
+                local cKey = d.charKey
+
+                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef, T)
+
+                local p1 = grid:AddPanel(L["EXPANDED_TOTAL_PLAYTIME"])
+                local totalTime = (cData.playTime and cData.playTime.total) or 0
+                local days = math.floor(totalTime / 86400)
+                local hours = math.floor((totalTime % 86400) / 3600)
+                grid:AddLine(p1, L["EXPANDED_TOTAL_PLAYTIME"], string.format("%dd %dh", days, hours), {1, 0.82, 0})
+
+                local restedPercent = 0
+                local eFmt = ns.AltTrackerFormatters
+                if eFmt and cData.xp and cData.xp.maxXP and cData.xp.maxXP > 0 then
+                    local estimatedRested = eFmt:EstimateRestedXP(cData, cKey)
+                    restedPercent = math.floor((estimatedRested / cData.xp.maxXP) * 100)
+                    local race = cData.race or cData.raceName or ""
+                    local maxPercent = (race == "Pandaren") and 300 or 150
+                    restedPercent = math.min(restedPercent, maxPercent)
+                end
+                local restedColor = {1, 0.3, 0.3}
+                if restedPercent >= 150 then restedColor = {0.3, 1, 0.3}
+                elseif restedPercent >= 60 then restedColor = {0, 0.74, 0.83}
+                elseif restedPercent >= 30 then restedColor = {1, 1, 0}
+                end
+                grid:AddLine(p1, L["EXPANDED_RESTED_XP"], restedPercent .. "%", restedColor)
+
+                if cData.location and cData.location.bindLocation then
+                    grid:AddLine(p1, L["COL_HEARTH"], cData.location.bindLocation)
+                end
+
+                if cData.location and cData.location.zone then
+                    grid:AddLine(p1, L["COL_LAST_SEEN"], cData.location.zone, {T("TEXT_SECONDARY")})
+                end
+
+                local p2 = grid:AddPanel(L["EXPANDED_GUILD"])
+                local guildName = L["EXPANDED_NO_GUILD"]
+                local guildRank = ""
+                if cData.guild and cData.guild.name then
+                    guildName = cData.guild.name
+                    guildRank = cData.guild.rank or ""
+                end
+                grid:AddLine(p2, L["EXPANDED_GUILD"], guildName, {0.3, 1, 0.3})
+                if guildRank ~= "" then
+                    grid:AddLine(p2, L["EXPANDED_GUILD_RANK"], guildRank, {T("TEXT_SECONDARY")})
+                end
+
+                if cData.race or cData.raceName then
+                    grid:AddLine(p2, "", cData.race or cData.raceName, {T("TEXT_SECONDARY")})
+                end
+
+                grid:Finish()
+                ns.UI.ApplyFontToFrame(ef)
+            end,
+        })
         charRow.charKey = charKey
-        charRow.cells = {}
 
-        local expandBtn = CreateFrame("Button", nil, charRow)
-        expandBtn:SetSize(25, rowHeight)
-        local expandIcon = expandBtn:CreateTexture(nil, "ARTWORK")
-        expandIcon:SetSize(14, 14)
-        expandIcon:SetPoint("CENTER")
-        expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
-        expandBtn.icon = expandIcon
-        table.insert(charRow.cells, expandBtn)
-
-        local function RepositionAllRows()
-            local yOffset = -5
-            local rowHeight = 32
-            local rowGap = 2
-
-            for _, row in ipairs(characterRows) do
-                row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
-                row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
-                yOffset = yOffset - (rowHeight + rowGap)
-
-                if row.isExpanded and row.expandedFrame and row.expandedFrame:IsShown() then
-                    local expandedHeight = row.expandedFrame:GetHeight()
-                    yOffset = yOffset - (expandedHeight + rowGap)
-                end
-            end
-
-            local totalHeight = math.abs(yOffset) + 50
-            scrollContent:SetHeight(totalHeight)
-        end
-
-        local function ToggleExpanded()
-            local isExpanded = charRow.isExpanded or false
-            charRow.isExpanded = not isExpanded
-
-            if charRow.isExpanded then
-                expandIcon:SetAtlas("Gamepad_Rev_Minus_64")
-                if not charRow.expandedFrame then
-                    charRow.expandedFrame = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-                    charRow.expandedFrame:SetPoint("TOPLEFT", charRow, "BOTTOMLEFT", 0, -2)
-                    charRow.expandedFrame:SetPoint("TOPRIGHT", charRow, "BOTTOMRIGHT", 0, -2)
-                    charRow.expandedFrame:SetHeight(50)
-                    charRow.expandedFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-                    charRow.expandedFrame:SetBackdropColor(T("BG_SECONDARY"))
-
-                    local leftCol = charRow.expandedFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                    leftCol:SetPoint("LEFT", charRow.expandedFrame, "LEFT", 15, 0)
-                    leftCol:SetJustifyH("LEFT")
-                    leftCol:SetTextColor(T("TEXT_PRIMARY"))
-
-                    local rightCol = charRow.expandedFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                    rightCol:SetPoint("LEFT", charRow.expandedFrame, "CENTER", 15, 0)
-                    rightCol:SetJustifyH("LEFT")
-                    rightCol:SetTextColor(T("TEXT_PRIMARY"))
-
-                    local totalTime = (charData.playTime and charData.playTime.total) or 0
-                    local days = math.floor(totalTime / 86400)
-                    local hours = math.floor((totalTime % 86400) / 3600)
-                    local playtimeText = string.format("%d days, %d hours", days, hours)
-
-                    local restedPercent = 0
-                    local eFmt = ns.AltTrackerFormatters
-                    if eFmt and charData.xp and charData.xp.maxXP and charData.xp.maxXP > 0 then
-                        local estimatedRested = eFmt:EstimateRestedXP(charData, charKey)
-                        restedPercent = math.floor((estimatedRested / charData.xp.maxXP) * 100)
-                        local race = charData.race or charData.raceName or ""
-                        local maxPercent = (race == "Pandaren") and 300 or 150
-                        restedPercent = math.min(restedPercent, maxPercent)
-                    end
-
-                    local guildName = L["EXPANDED_NO_GUILD"]
-                    local guildRank = ""
-                    if charData.guild and charData.guild.name then
-                        guildName = charData.guild.name
-                        guildRank = charData.guild.rank or ""
-                    end
-
-                    leftCol:SetText(string.format("%s %s\n%s %s",
-                        L["EXPANDED_TOTAL_PLAYTIME"], playtimeText,
-                        L["EXPANDED_GUILD"], guildName))
-
-                    rightCol:SetText(string.format("%s %d%%\n%s %s",
-                        L["EXPANDED_RESTED_XP"], restedPercent,
-                        L["EXPANDED_GUILD_RANK"], guildRank))
-
-                    charRow.expandedFrame.leftCol = leftCol
-                    charRow.expandedFrame.rightCol = rightCol
-                end
-                charRow.expandedFrame:Show()
-            else
-                expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
-                if charRow.expandedFrame then
-                    charRow.expandedFrame:Hide()
-                end
-            end
-
-            RepositionAllRows()
-        end
-
-        expandBtn:SetScript("OnClick", ToggleExpanded)
-
-        local factionIcon = charRow:CreateTexture(nil, "ARTWORK")
-        factionIcon:SetSize(18, 18)
-        if charData.faction == "Alliance" then
-            factionIcon:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-        elseif charData.faction == "Horde" then
-            factionIcon:SetTexture("Interface\\FriendsFrame\\PlusManz-Horde")
-        else
-            factionIcon:SetTexture("Interface\\FriendsFrame\\PlusManz-Alliance")
-            factionIcon:SetDesaturated(true)
-        end
-        table.insert(charRow.cells, factionIcon)
-
-        local mailIcon = charRow:CreateTexture(nil, "ARTWORK")
-        mailIcon:SetSize(16, 16)
-        mailIcon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
+        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, charData.faction)
+        table.insert(charRow.cells, factionCell)
 
         local hasMail = false
         if StorageAPI then
             local mailData = StorageAPI.GetMail(charKey)
             hasMail = mailData and mailData.hasNewMail
         end
-
-        if hasMail then
-            mailIcon:SetVertexColor(1, 1, 0, 1)
-        else
-            mailIcon:SetVertexColor(0.3, 0.3, 0.3, 0.5)
-        end
-        table.insert(charRow.cells, mailIcon)
+        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, hasMail)
+        table.insert(charRow.cells, mailCell)
 
         local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameText:SetText(charData.name or charKey)
@@ -1106,57 +656,36 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
         table.insert(charRow.cells, lastSeenContainer)
 
-        charRow:EnableMouse(true)
-        charRow:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(T("BG_HOVER"))
-        end)
-
-        charRow:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(T("BG_TERTIARY"))
-        end)
-
-        charRow:SetScript("OnMouseDown", function(self, button)
-            if button == "LeftButton" then
-                ToggleExpanded()
-            end
-        end)
-
-        local headerRow = summaryTab.headerRow
-        if headerRow and headerRow.columnButtons then
+        if dt and dt.headerRow and dt.headerRow.columnButtons and columnsConfig then
             for i, cell in ipairs(charRow.cells) do
-                local btn = headerRow.columnButtons[i]
+                local btn = dt.headerRow.columnButtons[i]
                 if btn and btn.columnWidth and btn.columnX then
                     local width = btn.columnWidth
                     local x = btn.columnX
-
+                    local col = columnsConfig[i]
                     cell:ClearAllPoints()
-
-                    if i == 1 then
+                    if col and col.align == "icon" then
                         cell:SetSize(width, rowHeight)
                         cell:SetPoint("LEFT", charRow, "LEFT", x, 0)
-                    elseif i == 2 or i == 3 then
-                        cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
+                    elseif col and col.align == "center" then
+                        cell:SetWidth(width - 6)
+                        cell:SetPoint("CENTER", charRow, "LEFT", x + width / 2, 0)
+                    elseif col and col.align == "right" then
+                        cell:SetWidth(width - 6)
+                        cell:SetPoint("RIGHT", charRow, "LEFT", x + width - 3, 0)
                     else
                         cell:SetWidth(width - 6)
-                        if i == 4 or i == 5 or i == 7 or i == 8 or i == 13 then
-                            cell:SetPoint("LEFT", charRow, "LEFT", x + 3, 0)
-                        elseif i == 12 then
-                            cell:SetPoint("RIGHT", charRow, "LEFT", x + width - 3, 0)
-                        else
-                            cell:SetPoint("CENTER", charRow, "LEFT", x + width/2, 0)
-                        end
+                        cell:SetPoint("LEFT", charRow, "LEFT", x + 3, 0)
                     end
                 end
             end
         end
 
-        charRow:Show()
         table.insert(characterRows, charRow)
-        yOffset = yOffset - (rowHeight + rowGap)
+        if dt then dt:RegisterRow(charRow) end
     end
 
-    local newHeight = math.max(400, #characterRows * (rowHeight + rowGap) + 10)
-    scrollContent:SetHeight(newHeight)
+    OneWoW_GUI:LayoutDataRows(scrollContent, { rowHeight = rowHeight, rowGap = rowGap })
 
     if summaryTab.statusText then
         summaryTab.statusText:SetText(string.format(L["CHARACTERS_TRACKED"], #allChars, ""))
@@ -1164,10 +693,10 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
     ns.UI.RefreshSummaryStats(summaryTab)
 
+    ns.UI.ApplyFontToFrame(summaryTab)
+
     C_Timer.After(0.1, function()
-        if summaryTab.headerRow then
-            summaryTab.headerRow:GetScript("OnSizeChanged")(summaryTab.headerRow)
-        end
+        if dt then dt.UpdateColumnLayout() end
     end)
 end
 
@@ -1221,49 +750,18 @@ function ns.UI.ShowPlaytimeDialog(stats)
     end
     table.sort(sortedClasses, function(a, b) return a.time > b.time end)
 
-    local frame = CreateFrame("Frame", "OneWoWPlaytimeDialog", UIParent, "BackdropTemplate")
-    frame:SetSize(500, 400)
-    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    frame:SetFrameStrata("DIALOG")
-    frame:SetToplevel(true)
-    frame:SetClampedToScreen(true)
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoWPlaytimeDialog",
+        title = L["PLAYTIME_BY_CLASS"],
+        width = 500,
+        height = 400,
     })
-    frame:SetBackdropColor(T("BG_PRIMARY"))
-    frame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    frame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    local cf = result.contentFrame
 
-    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    title:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -10)
-    title:SetText(L["PLAYTIME_BY_CLASS"])
-    title:SetTextColor(T("ACCENT_PRIMARY"))
-
-    local closeBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    closeBtn:SetSize(20, 20)
-    closeBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -8, -8)
-    closeBtn:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1})
-    closeBtn:SetBackdropColor(T("BG_TERTIARY"))
-    closeBtn:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    local closeText = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    closeText:SetPoint("CENTER")
-    closeText:SetText("X")
-    closeText:SetTextColor(T("TEXT_PRIMARY"))
-
-    closeBtn:SetScript("OnClick", function() frame:Hide() end)
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, frame)
-    scrollFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -40)
-    scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 40)
+    local scrollFrame = CreateFrame("ScrollFrame", nil, cf)
+    scrollFrame:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -4)
+    scrollFrame:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 30)
     scrollFrame:EnableMouseWheel(true)
 
     scrollFrame:SetScript("OnMouseWheel", function(self, delta)
@@ -1300,18 +798,16 @@ function ns.UI.ShowPlaytimeDialog(stats)
         classText:SetTextColor(classColor.r, classColor.g, classColor.b)
         classText:SetJustifyH("LEFT")
 
-        local bar = CreateFrame("StatusBar", nil, rowFrame)
+        local bar = OneWoW_GUI:CreateProgressBar(rowFrame, {
+            min = 0,
+            max = 1,
+            value = barPercent,
+            height = rowHeight - 6,
+        })
         bar:SetPoint("LEFT", classText, "RIGHT", 8, 0)
         bar:SetPoint("RIGHT", rowFrame, "RIGHT", -160, 0)
-        bar:SetHeight(rowHeight - 6)
-        bar:SetMinMaxValues(0, 1)
-        bar:SetValue(barPercent)
-        bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
         bar:SetStatusBarColor(classColor.r, classColor.g, classColor.b)
-
-        local barBg = bar:CreateTexture(nil, "BACKGROUND")
-        barBg:SetAllPoints()
-        barBg:SetColorTexture(0, 0, 0, 0.4)
+        bar._text:SetText("")
 
         local timeText = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         timeText:SetPoint("LEFT", bar, "RIGHT", 8, 0)
@@ -1354,13 +850,12 @@ function ns.UI.ShowPlaytimeDialog(stats)
     local totalHeight = math.abs(yOffset) + 10
     scrollContent:SetHeight(totalHeight)
 
-    local totalText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    totalText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 10)
+    local totalText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    totalText:SetPoint("BOTTOMLEFT", cf, "BOTTOMLEFT", 10, 8)
     totalText:SetText(L["TOTAL"] .. ": " .. ns.UI.FormatPlaytimeCompact(accountTotal))
     totalText:SetTextColor(T("ACCENT_PRIMARY"))
 
-    table.insert(UISpecialFrames, "OneWoWPlaytimeDialog")
-    frame:Show()
+    result.frame:Show()
 end
 
 function ns.UI.RefreshSummaryStats(summaryTab)
