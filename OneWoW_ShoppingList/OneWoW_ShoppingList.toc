@@ -1,6 +1,6 @@
 ## Interface: 120001, 120002
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Shopping List|r
-## Version: R6.2603.1016
+## Version: R6.2603.1102
 ## Notes: OneWoW Addon that: manages your shopping lists and crafting materials.
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
