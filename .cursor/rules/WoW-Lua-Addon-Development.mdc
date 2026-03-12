@@ -1,0 +1,654 @@
+---
+description: WoW addon development — Lua 5.1, 12.0+ API, frames, tooltips, closures, backdrop. Single rule for WoW Lua-focused work.
+alwaysApply: true
+---
+
+# World of Warcraft Addon Development — Cursor Rules
+
+You are an expert World of Warcraft addon developer. You write addons targeting
+**WoW Retail 12.0+ (Midnight)** using the Blizzard addon API. Follow every rule
+in this file; when in doubt, check the reference links at the bottom.
+
+---
+
+## 1. Language & Runtime
+
+- WoW uses a **Lua 5.1 subset**. Do NOT use features from Lua 5.2+:
+  - No `goto`, no `\z` string escapes, no `__len` on tables, no bitwise ops
+    from 5.3 (WoW includes Lua bitlib library), no `utf8` lib,
+    no `table.pack`/`table.unpack` (use `unpack()`).
+  - `setfenv`/`getfenv` are **available** but have taint implications — modifying
+    a function's environment taints it. Patch 10.1.0: errors if modifying a
+    protected environment. See section 1.1 for details.
+  - `loadstring()` is **available**. Use with care for untrusted input.
+  - `coroutine.*` is **available** but use sparingly (memory cost).
+  - `table.wipe(t)` and `wipe(t)` are WoW-specific additions (clear a table
+    in-place). Prefer them over creating new tables in hot paths.
+  - `strsplit`, `strtrim`, `strjoin`, `tinsert`, `tremove`, `tContains`,
+    `tInvert`, `tFilter`, `CopyTable`, `MergeTable` are available globally.
+  - String matching uses Lua patterns (`%d`, `%a`, etc.), NOT regex.
+  - `format()` is a global alias for `string.format()`.
+- **No file I/O, no `os.*`, no `io.*`, no `require()`, no `dofile()`.**
+  File loading is controlled entirely by the TOC and XML includes.
+
+### 1.1 Lua Environment — Availability & Caveats
+
+Reference for what is actually available in WoW's Lua 5.1 environment. Corrects common misconceptions.
+**Authoritative source:** [warcraft.wiki.gg/wiki/Lua_functions](https://warcraft.wiki.gg/wiki/Lua_functions)
+
+**Functions often incorrectly said to be removed:**
+
+- **setfenv / getfenv:** Available in WoW. Caveats: If called insecurely and the modified function is a Lua function, the modified function will be **irrevocably tainted**. Patch 10.1.0: Raises an error if the function to be modified has a **protected environment** (e.g. Blizzard secure code). Use with awareness of taint. [API_setfenv](https://warcraft.wiki.gg/wiki/API_setfenv)
+- **loadstring:** Available in WoW. Caveats: Security — avoid executing untrusted user input. Use `setfenv` with a restricted environment when sandboxing. [API_loadstring](https://warcraft.wiki.gg/wiki/API_loadstring)
+- **coroutine.\*:** Available in WoW. Caveats: "Coroutine functions should be used sparingly because of the amount of memory they use." (Lua functions wiki)
+
+---
+
+## 2. Addon Structure
+
+### 2.1 TOC File
+
+```
+## Interface: 120000
+## Title: MyAddon
+## Notes: Short description
+## Author: YourName
+## Version: 1.0.0
+## SavedVariables: MyAddonDB
+## SavedVariablesPerCharacter: MyAddonCharDB
+## Dependencies: SomeRequiredAddon
+## OptionalDeps: Ace3
+## Group: OneWoW
+
+# Load order matters — libraries first, then core, then modules
+libs\LibStub\LibStub.lua
+libs\AceAddon-3.0\AceAddon-3.0.lua
+libs\AceDB-3.0\AceDB-3.0.lua
+
+Core.lua
+Modules\SomeModule.lua
+```
+
+- TOC filename **must** match the addon folder name exactly.
+- `## Interface:` accepts comma-separated values for multi-flavor support
+  (e.g., `120000, 120005`). For Retail-only addons, use `120000` minimum.
+- `## SavedVariables:` names become global tables persisted across sessions.
+  They are loaded _before_ your addon code runs.
+- Use `## Category:` for the addon list category (added in 11.1.0).
+- Backslashes `\` are recommended for subdirectory paths in file listings.
+- Lines starting with `#` (no second `#`) are comments.
+
+**TOC format:** https://warcraft.wiki.gg/wiki/TOC_format
+
+### 2.2 Addon Namespace
+
+Every Lua file in an addon receives two implicit varargs:
+
+```lua
+local addonName, ns = ...
+```
+
+- `addonName` — string, the folder name of your addon.
+- `ns` — a **private table** shared across all files in this addon. Use it
+  instead of globals to pass data between files.
+
+---
+
+## 3. Modern API Patterns (12.0+)
+
+### 3.1 C\_\* Namespace APIs
+
+Most modern APIs live in `C_` prefixed namespaces. **Always prefer these over
+legacy global functions** when both exist.
+
+```lua
+-- GOOD
+local info = C_Item.GetItemInfo(itemID)
+local name = C_Map.GetMapInfo(mapID).name
+
+-- BAD / DEPRECATED
+local name = GetMapNameByID(mapID)
+```
+
+Common namespaces: `C_Item`, `C_Spell`, `C_Map`, `C_Timer`, `C_ChatInfo`,
+`C_AddOns`, `C_ClassTalents`, `C_UnitAuras`, `C_Container`, `C_CurrencyInfo`,
+`C_MountJournal`, `C_QuestLog`, `C_GossipInfo`, `C_AchievementInfo`,
+`C_EncounterJournal`, `C_LFGList`, `C_Minimap`, `C_TooltipInfo`.
+
+Many older global functions (e.g. `GetSpellInfo`, `GetItemInfo`, `UnitBuff`,
+`UnitDebuff`, `GetContainerItemInfo`) were **deprecated in 11.x and removed
+in 12.0**. Use the `C_*` equivalents.
+
+### 3.2 Enum Values
+
+WoW exposes `Enum.*` tables for constants. Always use them:
+
+```lua
+if powerType == Enum.PowerType.Mana then ...
+if quality >= Enum.ItemQuality.Epic then ...
+```
+
+Never hardcode magic numbers for power types, item quality, etc.
+
+### 3.3 Secret Values (12.0+ Restriction System)
+
+Patch 12.0 introduced **secret values** — combat-related data that addons can
+display but cannot read or branch on programmatically.
+
+Key rules:
+
+- Secret values behave like opaque tokens. You can pass them to UI display
+  functions (SetText, SetValue, etc.) but you **cannot** use them in `if`
+  statements, concatenations with non-secret strings, `tonumber()`, or
+  comparisons from tainted (addon) code.
+- Unit names, GUIDs, and IDs are secret while in instanced content.
+- Aura instance data, health values, cast info for enemy units may be secret.
+- `tonumber()` on a secret string is explicitly forbidden.
+- Some APIs accept secrets (whitelisted); consult the wiki for the current
+  list of APIs that can receive secrets from tainted code.
+- If your addon needs to display combat info, use Blizzard's provided
+  templates (SecureAuraHeaderTemplate, unit frame templates, status bar
+  templates) rather than rebuilding from raw data.
+- Test your addon **inside instanced content** (dungeons, raids, arenas) —
+  many secret restrictions only activate in instances.
+
+### 3.4 C_Timer (Prefer Over OnUpdate)
+
+```lua
+-- One-shot timer (seconds)
+C_Timer.After(2, function()
+    print("Two seconds later")
+end)
+
+-- Repeating ticker
+local ticker = C_Timer.NewTicker(1, function()
+    -- runs every 1 second
+end, 10)  -- optional count limit
+
+-- Cancel a ticker
+ticker:Cancel()
+```
+
+Use `C_Timer` instead of OnUpdate scripts for timed operations. Reserve
+`OnUpdate` only for per-frame visual updates that genuinely need 60fps cadence.
+
+---
+
+## 4. Frame & Event System
+
+### 4.1 Creating Frames
+
+```lua
+local frame = CreateFrame("Frame", "MyAddonFrame", UIParent)
+frame:SetSize(200, 100)
+frame:SetPoint("CENTER")
+```
+
+- First arg: frame type (`"Frame"`, `"Button"`, `"EditBox"`, `"ScrollFrame"`,
+  `"StatusBar"`, `"GameTooltip"`, `"CheckButton"`, `"Slider"`, etc.)
+- Second arg: global name (or nil for anonymous frames). **Minimize global
+  names** — only name frames that must be accessed by XML or secure templates.
+- Third arg: parent frame.
+- Optional fourth arg: template string(s), comma-separated.
+
+### 4.2 Event Handling — Frame-Based (Traditional)
+
+```lua
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("PLAYER_LOGIN")
+f:SetScript("OnEvent", function(self, event, ...)
+    if event == "PLAYER_ENTERING_WORLD" then
+        local isLogin, isReload = ...
+        -- handle
+    elseif event == "PLAYER_LOGIN" then
+        -- handle
+    end
+end)
+```
+
+### 4.3 Event Handling — EventRegistry (Modern)
+
+```lua
+-- For Blizzard frame events:
+EventRegistry:RegisterFrameEventAndCallback("PLAYER_ENTERING_WORLD",
+    function(ownerID, isLogin, isReload)
+        -- handle
+    end
+)
+
+-- For custom / FrameXML callback events:
+EventRegistry:RegisterCallback("CollectionsJournal.TabSet",
+    function(ownerID, journal, tabID)
+        -- handle
+    end
+)
+```
+
+EventRegistry is built into FrameXML and does NOT require creating a frame.
+The first parameter to your callback is always `ownerID` (used for
+unregistering), followed by the event payload.
+
+### 4.4 Important Events
+
+- `ADDON_LOADED` — fires per-addon; check `arg1 == addonName`. Good place
+  to initialize SavedVariables.
+- `PLAYER_LOGIN` — fires once, after all addons are loaded and the player
+  exists in the world. Safe to query unit info.
+- `PLAYER_ENTERING_WORLD` — fires on login, reload, and every zone transition
+  (loading screens). Args: `isLogin`, `isReload`.
+- `PLAYER_LOGOUT` — last chance to write to SavedVariables.
+
+### 4.5 Slash Commands
+
+```lua
+SLASH_MYADDON1 = "/myaddon"
+SLASH_MYADDON2 = "/ma"
+SlashCmdList["MYADDON"] = function(msg)
+    local cmd, rest = strsplit(" ", msg, 2)
+    -- handle commands
+end
+```
+
+### 4.6 Backdrop & Positioning
+
+**SetBackdrop resets colors:** With `BackdropTemplate`, **`Frame:SetBackdrop(backdrop)` resets backdrop colors to defaults** (typically white). You must re-apply colors after any `SetBackdrop` call.
+
+```lua
+-- BAD: background will appear white after SetBackdrop
+frame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+
+-- GOOD: always pair SetBackdrop with color calls
+frame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+```
+
+This applies even when replacing a backdrop set by a factory (e.g. `OneWoW_GUI:CreateFrame`). Calling `SetBackdrop(nil)` and re-setting does not help — you must call `SetBackdropColor` and `SetBackdropBorderColor` after `SetBackdrop`.
+
+**Overriding SetPoint:** To override a frame's existing anchor, call **`ClearAllPoints()`** before `SetPoint()`. Otherwise the new `SetPoint` may be ignored or conflict with prior anchors.
+
+```lua
+-- BAD: may not override existing anchor
+divider:SetPoint("TOPLEFT", parent, "TOPLEFT", 1, -29)
+
+-- GOOD: clear first when changing anchors
+divider:ClearAllPoints()
+divider:SetPoint("TOPLEFT", parent, "TOPLEFT", 1, -29)
+```
+
+---
+
+## 5. Secure Execution & Taint
+
+- **All addon code is tainted.** Tainted code cannot call protected functions
+  or modify secure frames while in combat.
+- **Protected functions** include anything that casts spells, changes targets,
+  uses items, or manipulates action bars programmatically.
+- **Never directly replace** a Blizzard global function. Use `hooksecurefunc`:
+
+  ```lua
+  -- GOOD: post-hook — runs your code AFTER the original, no taint spread
+  hooksecurefunc("SomeBlizzardFunction", function(...)
+      -- your tracking / logging code
+  end)
+
+  -- BAD: overwrites the original, spreads taint
+  local orig = SomeBlizzardFunction
+  SomeBlizzardFunction = function(...)
+      -- taint spreads to everything downstream
+      return orig(...)
+  end
+  ```
+
+- **Secure templates** (`SecureActionButtonTemplate`, `SecureHandlerBaseTemplate`,
+  `SecureUnitButtonTemplate`) let addons create buttons that can cast/target
+  in combat — but they must be configured _out of combat_ via attributes.
+  ```lua
+  local btn = CreateFrame("Button", "MySecureBtn", UIParent,
+      "SecureActionButtonTemplate")
+  btn:SetAttribute("type", "spell")
+  btn:SetAttribute("spell", "Flash Heal")
+  ```
+  You **cannot** call `SetAttribute` on secure frames during combat.
+- Use `InCombatLockdown()` to check before modifying secure frames:
+  ```lua
+  if not InCombatLockdown() then
+      secureFrame:SetAttribute("unit", "target")
+  end
+  ```
+- Use `RegisterAttributeDriver` / `RegisterStateDriver` for combat-safe
+  reactive behavior on secure frames.
+
+---
+
+## 6. Ace3 Framework
+
+When using Ace3, embed libraries rather than depending on standalone installs.
+
+### 6.1 Basic Ace3 Addon
+
+```lua
+local MyAddon = LibStub("AceAddon-3.0"):NewAddon("MyAddon",
+    "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0")
+
+function MyAddon:OnInitialize()
+    -- Fires on ADDON_LOADED. Set up DB, options, etc.
+    self.db = LibStub("AceDB-3.0"):New("MyAddonDB", defaults, true)
+end
+
+function MyAddon:OnEnable()
+    -- Fires on PLAYER_LOGIN. Safe to interact with the world.
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self:RegisterChatCommand("myaddon", "SlashHandler")
+end
+
+function MyAddon:OnDisable()
+    -- Cleanup if the addon is disabled at runtime.
+end
+
+function MyAddon:PLAYER_ENTERING_WORLD(event, isLogin, isReload)
+    -- AceEvent routes events to methods named after the event.
+end
+
+function MyAddon:SlashHandler(input)
+    local cmd = self:GetArgs(input)
+    -- handle
+end
+```
+
+### 6.2 AceDB Defaults
+
+```lua
+local defaults = {
+    profile = {
+        enabled = true,
+        scale = 1.0,
+        position = { x = 0, y = 0 },
+    },
+    char = {
+        -- per-character data
+    },
+    global = {
+        -- account-wide data
+    },
+}
+```
+
+---
+
+## 7. Coding Standards
+
+### 7.1 Globals & Locals
+
+- **Localize frequently-used globals** at the top of each file for performance
+  and clarity:
+  ```lua
+  local pairs, ipairs, type = pairs, ipairs, type
+  local CreateFrame = CreateFrame
+  local C_Timer = C_Timer
+  ```
+- **Never pollute the global namespace.** Use the addon namespace (`ns`) or
+  Ace3's addon object to share data between files.
+- Name global frames sparingly with a unique prefix: `MyAddon_MainFrame`.
+
+### 7.2 Performance
+
+- Avoid allocations in OnUpdate, CLEU handlers, or any high-frequency path.
+  Reuse tables with `wipe()`.
+- Avoid string concatenation in loops; use `format()` or `table.concat()`.
+- Cache API results that don't change mid-frame (e.g., `UnitName("player")`).
+- Use `C_Timer.After` / `C_Timer.NewTicker` instead of OnUpdate when frame-
+  perfect timing isn't required.
+- For COMBAT_LOG_EVENT_UNFILTERED, always call `CombatLogGetCurrentEventInfo()`
+  inside the handler — do NOT pass args via `...` (they don't exist for CLEU).
+
+### 7.3 Error Handling
+
+```lua
+local ok, err = pcall(riskyFunction, arg1, arg2)
+if not ok then
+    -- handle error, don't silently swallow it
+    print("MyAddon error:", err)
+end
+```
+
+### 7.4 SavedVariables
+
+- Initialize defaults on `ADDON_LOADED` or in Ace3's `OnInitialize`.
+- Always validate / migrate saved data — the user might have data from an
+  older version.
+  ```lua
+  if not MyAddonDB or MyAddonDB.version ~= CURRENT_DB_VERSION then
+      MyAddonDB = CopyTable(defaults)
+      MyAddonDB.version = CURRENT_DB_VERSION
+  end
+  ```
+- Use AceDB when possible; it handles profile management and defaults.
+
+### 7.5 Tooltip System (Modern — 10.0.2+)
+
+The tooltip system was **completely rewritten** in Dragonflight (10.0.2).
+The old `OnTooltipSetItem`/`OnTooltipSetSpell` script handlers are **removed**.
+GameTooltip no longer exposes native methods for retrieving or populating
+tooltip contents directly. There are now three key patterns:
+
+#### 7.5.1 Displaying Simple Custom Tooltips
+
+For basic addon-owned tooltips (hover info on your own frames), the
+`SetOwner` / `SetText` / `AddLine` / `Show` pattern still works:
+
+```lua
+frame:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Title", 1, 1, 1)             -- white title
+    GameTooltip:AddLine("Description text", nil, nil, nil, true) -- wrap
+    GameTooltip:AddDoubleLine("Left", "Right", 1,1,1, 0.5,0.5,0.5)
+    GameTooltip:Show()
+end)
+frame:SetScript("OnLeave", GameTooltip_Hide)
+```
+
+#### 7.5.2 Hooking Into Existing Tooltips (TooltipDataProcessor)
+
+To add lines or modify tooltips for items, spells, units, etc., use
+`TooltipDataProcessor.AddTooltipPostCall`. This **replaces** the old
+`GameTooltip:HookScript("OnTooltipSetItem", ...)` pattern.
+
+```lua
+-- Add extra info to item tooltips
+TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item,
+    function(tooltip, data)
+        if tooltip == GameTooltip then
+            tooltip:AddLine("My custom line", 0.5, 1, 0.5)
+        end
+    end
+)
+
+-- For spell tooltips, use Enum.TooltipDataType.Spell
+-- For unit tooltips, use Enum.TooltipDataType.Unit
+-- For ALL tooltip types, use TooltipDataProcessor.AllTypes (or "ALL")
+```
+
+There are also `AddTooltipPreCall`, `AddLinePreCall`, and `AddLinePostCall`
+variants for more granular control.
+
+**Important:** Callbacks registered with TooltipDataProcessor are global —
+they fire for ALL tooltip frames inheriting `GameTooltipTemplate`. Always
+check `tooltip == GameTooltip` (or your specific tooltip) if you only want
+to modify a particular tooltip instance.
+
+#### 7.5.3 Scanning / Extracting Tooltip Data (C_TooltipInfo)
+
+To programmatically read tooltip information **without displaying a tooltip**
+(replaces the old hidden-tooltip scanning technique), use `C_TooltipInfo`:
+
+```lua
+-- Get structured tooltip data for an item
+local tooltipData = C_TooltipInfo.GetItemByID(itemID)
+if tooltipData then
+    TooltipUtil.SurfaceArgs(tooltipData)    -- REQUIRED: populates fields
+    for _, line in ipairs(tooltipData.lines) do
+        TooltipUtil.SurfaceArgs(line)       -- REQUIRED per line
+        -- line.leftText, line.rightText, line.type, etc. now accessible
+        print(line.leftText)
+    end
+end
+
+-- Other C_TooltipInfo functions:
+-- C_TooltipInfo.GetUnit(unitToken)
+-- C_TooltipInfo.GetSpellByID(spellID)
+-- C_TooltipInfo.GetHyperlink(hyperlink)
+-- C_TooltipInfo.GetUnitAura(unit, index, filter)
+-- C_TooltipInfo.GetUnitBuffByAuraInstanceID(unit, auraInstanceID)
+-- C_TooltipInfo.GetEquipmentSet(name)
+-- C_TooltipInfo.GetItemByItemLink(itemLink)
+-- ... and many more (see warcraft.wiki.gg/wiki/Category:API_systems/TooltipInfo)
+```
+
+**Critical:** You MUST call `TooltipUtil.SurfaceArgs()` on the returned
+`tooltipData` and on each `line` entry before accessing fields like
+`leftText`, `type`, `guid`, etc. Without this call, those fields are nil.
+
+#### 7.5.4 Custom Tooltip Frames
+
+If creating your own GameTooltip-type frame, it **must** inherit
+`GameTooltipTemplate` (which includes `GameTooltipDataMixin` for automatic
+handling of `TOOLTIP_DATA_UPDATE` events):
+
+```lua
+local myTooltip = CreateFrame("GameTooltip", "MyAddonTooltip", UIParent,
+    "GameTooltipTemplate")
+```
+
+#### 7.5.5 Key Enum.TooltipDataType Values
+
+`Item`, `Spell`, `Unit`, `UnitAura`, `Currency`, `Mount`, `Macro`,
+`Achievement`, `Quest`, `QuestPartyProgress`, `BattlePet`, `Toy`,
+`Hyperlink`, `MinimapPing`, `EquipmentSet`.
+
+### 7.6 Menus (Modern)
+
+The old `UIDropDownMenu` system is deprecated. Use `MenuUtil` in 12.0+:
+
+```lua
+MenuUtil.CreateContextMenu(ownerFrame, function(ownerRegion, rootDescription)
+    rootDescription:CreateTitle("My Menu")
+    rootDescription:CreateButton("Option 1", function() ... end)
+    rootDescription:CreateCheckbox("Toggle", isChecked, function() ... end)
+end)
+```
+
+### 7.7 Closures & Frame Scripts
+
+Pitfalls when writing frame scripts and event handlers in WoW addons.
+
+**Closure variable order:** Variables captured by closures (e.g. `OnClick` handlers) must be **declared and initialized before** the handler is defined. If declared after, the closure can reference `nil` at runtime.
+
+```lua
+-- BAD: customRefreshCallbacks is nil when OnClick runs
+toggleBtn:SetScript("OnClick", function()
+    for _, fn in ipairs(customRefreshCallbacks) do fn() end  -- error: nil
+end)
+local customRefreshCallbacks = {}
+
+-- GOOD: declare and init first
+local customRefreshCallbacks = {}
+local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
+toggleBtn:SetScript("OnClick", function()
+    for _, fn in ipairs(customRefreshCallbacks) do fn() end
+end)
+```
+
+**Stale upvalue sync:** When a callback updates state that closures depend on, reassign the upvalue in that callback so the closure sees the new value.
+
+```lua
+local isEnabled = false
+local function refresh(enabled, ...)
+    isEnabled = enabled  -- keep closure's upvalue in sync
+    for _, btn in ipairs(toggleBtnSets) do
+        btn:EnableMouse(enabled)
+        -- ...
+    end
+end
+```
+
+**Button event order:** For Button widgets: OnMouseDown → OnMouseUp → PreClick → OnClick → PostClick. OnMouseUp runs **before** OnClick.
+
+**Radio-style / active-state buttons:** Buttons created with `CreateButton` (or similar) use default OnEnter/OnLeave handlers that revert to BTN_NORMAL when the mouse leaves. For radio-style buttons where one option stays visually "active" after selection, that OnLeave overwrites your custom active styling.
+
+**Fix:** Use `HookScript("OnLeave", UpdateStyling)` instead of `SetScript`. The hook runs after the default handler, so your refresh reapplies the correct styling based on the active state.
+
+**SetScript vs HookScript:**
+
+- `SetScript` — replaces the handler.
+- `HookScript` — appends to the existing handler. Use when layering behavior on top of Blizzard or other addon handlers.
+
+**Modular UI refresh:** When a parent action (e.g. main Enable/Disable) must refresh child UI in custom modules, use a `registerRefresh` pattern so modules can register callbacks that the parent invokes.
+
+```lua
+local customRefreshCallbacks = {}
+local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
+-- Pass registerRefresh to CreateCustomDetail; modules call registerRefresh(UpdateRow)
+-- Parent's toggle handler: for _, fn in ipairs(customRefreshCallbacks) do fn() end
+```
+
+---
+
+## 9. Common Mistakes to Avoid
+
+1. **Using removed/deprecated APIs.** If you learned WoW addon dev before
+   Dragonflight, many APIs you knew have moved to `C_*` namespaces or been
+   removed entirely. Always check the wiki.
+2. **Modifying secure frames in combat.** This will silently fail or throw
+   taint errors. Gate all secure frame modifications behind
+   `not InCombatLockdown()`.
+3. **Hardcoding spell/item IDs without fallbacks.** IDs can change between
+   patches. Prefer name-based lookups with ID as cache keys, and always
+   nil-check returns.
+4. **Forgetting that CLEU doesn't pass event args via `...`.** You MUST call
+   `CombatLogGetCurrentEventInfo()` inside the handler.
+5. **Creating frames in a loop without pooling.** Use `CreateFramePool` or
+   manually pool/recycle frames.
+6. **Using `UIDropDownMenu` in new code.** It's deprecated; use `MenuUtil`.
+7. **Using `OnTooltipSetItem` / `OnTooltipSetSpell` hooks.** These script
+   handlers were removed in 10.0.2. Use `TooltipDataProcessor.AddTooltipPostCall`
+   with `Enum.TooltipDataType.*` instead. Also don't create hidden
+   `GameTooltip` frames for scanning — use `C_TooltipInfo` + `TooltipUtil.SurfaceArgs`.
+8. **Not testing inside instances.** Secret value restrictions often only
+   apply in instanced content. Your addon may work in the open world and
+   break in dungeons/raids.
+9. **Writing to global table keys carelessly.** Every addon shares the same
+   global environment. A stray `count = 0` at file scope clobbers (and
+   taints) any other addon's `count` global.
+10. **Assuming SavedVariables exist on first load.** They're `nil` until the
+    player has logged out at least once with your addon enabled.
+11. **Calling API functions too early.** Many APIs return nil before
+    `PLAYER_LOGIN`. Don't query unit info or map data at file load time.
+12. **Closure/upvalue pitfalls in frame scripts.** Event handlers capture
+    variables by reference. Declare and initialize variables used by
+    closures _before_ defining the handler. When a callback updates state
+    that closures depend on, reassign the upvalue in that callback (e.g.
+    `isEnabled = enabled`). See section 7.7.
+
+---
+
+## 10. Reference Links
+
+- **WoW API (authoritative):** https://warcraft.wiki.gg/wiki/World_of_Warcraft_API
+- **Events list:** https://warcraft.wiki.gg/wiki/Events
+- **TOC format:** https://warcraft.wiki.gg/wiki/TOC_format
+- **Secure execution / taint:** https://warcraft.wiki.gg/wiki/Secure_Execution_and_Tainting
+- **UI technical details:** https://warcraft.wiki.gg/wiki/Category:UI_technical_details
+- **EventRegistry:** https://warcraft.wiki.gg/wiki/EventRegistry
+- **12.0 API changes:** https://warcraft.wiki.gg/wiki/Patch_12.0.0/API_changes
+- **12.0 planned API changes:** https://warcraft.wiki.gg/wiki/Patch_12.0.0/Planned_API_changes
+- **Tooltip API:** https://warcraft.wiki.gg/wiki/Tooltip_API
+- **C_TooltipInfo functions:** https://warcraft.wiki.gg/wiki/Category:API_systems/TooltipInfo
+- **Widget API (frames):** https://warcraft.wiki.gg/wiki/Widget_API
+- **Blizzard tooltip source:** https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_SharedXMLGame/Tooltip
+- **Blizzard UI source:** https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns
+- **Ace3:** https://github.com/WoWUIDev/Ace3
+- **Lua 5.1 manual:** https://www.lua.org/manual/5.1/
+- **Lua functions in WoW:** https://warcraft.wiki.gg/wiki/Lua_functions (what's available/removed)
+- **Secret values:** https://warcraft.wiki.gg/wiki/API_issecretvalue, https://warcraft.wiki.gg/wiki/API_issecrettable
