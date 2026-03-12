@@ -121,19 +121,76 @@ local MEDIA_BASE = "Interface\\AddOns\\OneWoW_GUI\\Media\\"
 local FONT_BASE = MEDIA_BASE .. "Fonts\\"
 
 local FONTS = {
-    { key = "default",          label = "WoW Default",      file = nil },
-    { key = "expressway",       label = "Expressway",       file = FONT_BASE .. "Expressway.ttf" },
-    { key = "ptsansnarrow",     label = "PT Sans Narrow",   file = FONT_BASE .. "PTSansNarrow.ttf" },
-    { key = "continuum",        label = "Continuum Medium", file = FONT_BASE .. "ContinuumMedium.ttf" },
-    { key = "actionman",        label = "Action Man",       file = FONT_BASE .. "ActionMan.ttf" },
-    { key = "homespun",         label = "Homespun",         file = FONT_BASE .. "Homespun.ttf" },
-    { key = "diedidie",         label = "DieDieDie",        file = FONT_BASE .. "DieDieDie.ttf" },
+    { key = "default",              label = "WoW Default",          file = nil },
+    { key = "actionman",            label = "Action Man",           file = FONT_BASE .. "ActionMan.ttf" },
+    { key = "adventure",            label = "Adventure",            file = FONT_BASE .. "Adventure.ttf" },
+    { key = "bazooka",              label = "Bazooka",              file = FONT_BASE .. "Bazooka.ttf" },
+    { key = "blackchancery",        label = "Black Chancery",       file = FONT_BASE .. "BlackChancery.ttf" },
+    { key = "celestia",             label = "Celestia Medium Redux", file = FONT_BASE .. "CelestiaMediumRedux1.55.ttf" },
+    { key = "continuum",            label = "Continuum Medium",     file = FONT_BASE .. "ContinuumMedium.ttf" },
+    { key = "dejavusans",           label = "DejaVu Sans",          file = FONT_BASE .. "DejaVuLGCSans.ttf" },
+    { key = "dejavuserif",          label = "DejaVu Serif",         file = FONT_BASE .. "DejaVuLGCSerif.ttf" },
+    { key = "diedidie",             label = "DieDieDie",            file = FONT_BASE .. "DieDieDie.ttf" },
+    { key = "dorispp",              label = "DorisPP",              file = FONT_BASE .. "DorisPP.ttf" },
+    { key = "enigmatic",            label = "Enigmatic",            file = FONT_BASE .. "EnigmaU_2.TTF" },
+    { key = "expressway",           label = "Expressway",           file = FONT_BASE .. "Expressway.ttf" },
+    { key = "fitzgerald",           label = "Fitzgerald",           file = FONT_BASE .. "Fitzgerald.ttf" },
+    { key = "gentiumplus",          label = "Gentium Plus",         file = FONT_BASE .. "GentiumPlus-Regular.ttf" },
+    { key = "hack",                 label = "Hack",                 file = FONT_BASE .. "Hack-Regular.ttf" },
+    { key = "homespun",             label = "Homespun",             file = FONT_BASE .. "Homespun.ttf" },
+    { key = "hookedup",             label = "All Hooked Up",        file = FONT_BASE .. "HookedUp.ttf" },
+    { key = "liberationmono",       label = "Liberation Mono",      file = FONT_BASE .. "LiberationMono-Regular.ttf" },
+    { key = "liberationsans",       label = "Liberation Sans",      file = FONT_BASE .. "LiberationSans-Regular.ttf" },
+    { key = "liberationserif",      label = "Liberation Serif",     file = FONT_BASE .. "LiberationSerif-Regular.ttf" },
+    { key = "ptsansnarrow",         label = "PT Sans Narrow",       file = FONT_BASE .. "PTSansNarrow.ttf" },
+    { key = "sfatarian",            label = "SF Atarian System",    file = FONT_BASE .. "SFAtarianSystem.ttf" },
+    { key = "sfcovington",          label = "SF Covington",         file = FONT_BASE .. "SFCovington.ttf" },
+    { key = "sfmovieposter",        label = "SF Movie Poster",      file = FONT_BASE .. "SFMoviePoster-Bold.ttf" },
+    { key = "sfwondercomic",        label = "SF Wonder Comic",      file = FONT_BASE .. "SFWonderComic.ttf" },
+    { key = "swfit",                label = "SWF!T",                file = FONT_BASE .. "SWFIT.ttf" },
+    { key = "texgyreadventor",      label = "TeX Gyre Adventor",    file = FONT_BASE .. "texgyreadventor-regular.otf" },
+    { key = "texgyreadventorbold",  label = "TeX Gyre Adventor Bold", file = FONT_BASE .. "texgyreadventor-bold.otf" },
+    { key = "wenquanyi",            label = "WenQuanYi Zen Hei",    file = FONT_BASE .. "wqy-zenhei.ttf" },
+    { key = "yellowjacket",         label = "Yellowjacket",         file = FONT_BASE .. "yellow.ttf" },
 }
 
 local FONT_LOOKUP = {}
 for _, f in ipairs(FONTS) do
     FONT_LOOKUP[f.key] = f
 end
+
+local LSM_NAME_TO_KEY = {
+    ["Adventure"]              = "adventure",
+    ["All Hooked Up"]          = "hookedup",
+    ["Bazooka"]                = "bazooka",
+    ["Black Chancery"]         = "blackchancery",
+    ["Celestia Medium Redux"]  = "celestia",
+    ["DejaVu Sans"]            = "dejavusans",
+    ["DejaVu Serif"]           = "dejavuserif",
+    ["DorisPP"]                = "dorispp",
+    ["Enigmatic"]              = "enigmatic",
+    ["Fitzgerald"]             = "fitzgerald",
+    ["Gentium Plus"]           = "gentiumplus",
+    ["Hack"]                   = "hack",
+    ["Liberation Mono"]        = "liberationmono",
+    ["Liberation Sans"]        = "liberationsans",
+    ["Liberation Serif"]       = "liberationserif",
+    ["SF Atarian System"]      = "sfatarian",
+    ["SF Covington"]           = "sfcovington",
+    ["SF Movie Poster"]        = "sfmovieposter",
+    ["SF Wonder Comic"]        = "sfwondercomic",
+    ["SWF!T"]                  = "swfit",
+    ["TeX Gyre Adventor"]      = "texgyreadventor",
+    ["TeX Gyre Adventor Bold"] = "texgyreadventorbold",
+    ["WenQuanYi Zen Hei"]      = "wenquanyi",
+    ["Yellowjacket"]           = "yellowjacket",
+    ["Action Man"]             = "actionman",
+    ["Expressway"]             = "expressway",
+    ["PT Sans Narrow"]         = "ptsansnarrow",
+    ["Continuum Medium"]       = "continuum",
+    ["Homespun"]               = "homespun",
+    ["DieDieDie"]              = "diedidie",
+}
 
 function OneWoW_GUI:GetFont()
     local fontKey = self:GetSetting("font") or "default"
@@ -142,6 +199,22 @@ function OneWoW_GUI:GetFont()
         return fontData.file
     end
     return nil
+end
+
+function OneWoW_GUI:GetFontList()
+    return FONTS
+end
+
+function OneWoW_GUI:GetFontByKey(key)
+    if not key or key == "default" then return nil end
+    local fontData = FONT_LOOKUP[key]
+    if fontData and fontData.file then return fontData.file end
+    return nil
+end
+
+function OneWoW_GUI:MigrateLSMFontName(lsmName)
+    if not lsmName then return nil end
+    return LSM_NAME_TO_KEY[lsmName]
 end
 
 local ICON_TEXTURES = Constants.ICON_TEXTURES
@@ -467,7 +540,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local fontDesc = fontContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     fontDesc:SetPoint("TOPLEFT", fontContainer, "TOPLEFT", 15, -38)
     fontDesc:SetPoint("RIGHT", fontContainer, "RIGHT", -15, 0)
-    fontDesc:SetText("(BETA – Coming Soon) Choose the font used across all OneWoW addons.")
+    fontDesc:SetText("Choose the font used across all OneWoW addons.")
     fontDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     fontDesc:SetJustifyH("LEFT")
     fontDesc:SetWordWrap(true)
@@ -509,18 +582,49 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         local menu = CreateFrame("Frame", nil, btn, "BackdropTemplate")
         fontMenuRef = menu
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
+        menu:SetSize(260, 318)
+        menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
         menu:SetBackdrop(dropdownBackdrop)
         menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
         menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         menu:EnableMouse(true)
 
-        local yOff = -4
-        local maxWidth = 220
-        for _, fontInfo in ipairs(FONTS) do
-            local fbtn = CreateFrame("Button", nil, menu, "BackdropTemplate")
-            fbtn:SetHeight(26)
-            fbtn:SetPoint("TOPLEFT", menu, "TOPLEFT", 4, yOff)
-            fbtn:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -4, yOff)
+        local scrollFrame = CreateFrame("ScrollFrame", nil, menu)
+        scrollFrame:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
+        scrollFrame:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -15, 2)
+
+        local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+        scrollChild:SetWidth(scrollFrame:GetWidth())
+        scrollFrame:SetScrollChild(scrollChild)
+
+        local scrollBar = CreateFrame("Slider", nil, scrollFrame, "BackdropTemplate")
+        scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 0, -2)
+        scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 0, 2)
+        scrollBar:SetWidth(12)
+        scrollBar:SetBackdrop(simpleBackdrop)
+        scrollBar:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+        scrollBar:EnableMouse(true)
+        scrollBar:SetScript("OnValueChanged", function(self, value) scrollFrame:SetVerticalScroll(value) end)
+
+        local thumb = scrollBar:CreateTexture(nil, "OVERLAY")
+        thumb:SetSize(8, 40)
+        thumb:SetPoint("TOP", scrollBar, "TOP", 0, -2)
+        thumb:SetColorTexture(0.5, 0.5, 0.5)
+        scrollBar:SetThumbTexture(thumb)
+
+        scrollFrame:EnableMouseWheel(true)
+        scrollFrame:SetScript("OnMouseWheel", function(self, direction)
+            local currentScroll = scrollFrame:GetVerticalScroll()
+            local maxScroll = scrollChild:GetHeight() - scrollFrame:GetHeight()
+            local newScroll = math.max(0, math.min(maxScroll, currentScroll - (direction * 30)))
+            scrollFrame:SetVerticalScroll(newScroll)
+            scrollBar:SetValue(newScroll)
+        end)
+
+        for i, fontInfo in ipairs(FONTS) do
+            local fbtn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+            fbtn:SetSize(240, 26)
+            fbtn:SetPoint("TOP", scrollChild, "TOP", 0, -(2 + (i - 1) * 26))
             fbtn:SetBackdrop(simpleBackdrop)
             fbtn:SetBackdropColor(0, 0, 0, 0)
 
@@ -557,12 +661,12 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
                 fontPreview:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 OneWoW_GUI:SetSetting("font", capturedKey)
             end)
-
-            yOff = yOff - 26
         end
 
-        menu:SetSize(maxWidth + 16, math.abs(yOff) + 8)
-        menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
+        scrollChild:SetHeight(#FONTS * 26 + 4)
+        local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
+        scrollBar:SetMinMaxValues(0, maxScroll)
+        scrollFrame:SetVerticalScroll(0)
 
         menu:SetScript("OnShow", function(self)
             local timeOutside = 0

@@ -87,22 +87,6 @@ function OneWoW_GUI:CreateFrame(name, parent, width, height, backdrop)
     return frame
 end
 
-function OneWoW_GUI:CreateMovableDialog(name, parent, width, height)
-    local dialog = OneWoW_GUI:CreateFrame(name, parent, width, height, Constants.BACKDROP_INNER_NO_INSETS)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("DIALOG")
-    dialog:SetToplevel(true)
-    dialog:SetMovable(true)
-    dialog:SetClampedToScreen(true)
-    dialog:EnableMouse(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dialog:SetScript("OnDragStop",  function(self) self:StopMovingOrSizing() end)
-    -- allow ESC to close the dialog
-    tinsert(UISpecialFrames, name)
-    return dialog
-end
-
 function OneWoW_GUI:CreateDialog(config)
     config = config or {}
     local name = config.name
@@ -119,20 +103,22 @@ function OneWoW_GUI:CreateDialog(config)
     local buttonDefs = config.buttons
     local showScrollFrame = config.showScrollFrame
 
-    local frame
+    local frame = self:CreateFrame(name, UIParent, width, height, Constants.BACKDROP_INNER_NO_INSETS)
+    frame:SetPoint("CENTER")
+    frame:SetFrameStrata(strata)
+    frame:SetToplevel(true)
+    frame:EnableMouse(true)
+    frame:SetClampedToScreen(true)
+
     if movable then
-        frame = self:CreateMovableDialog(name, UIParent, width, height)
-        frame:SetFrameStrata(strata)
-    else
-        frame = self:CreateFrame(name, UIParent, width, height, Constants.BACKDROP_INNER_NO_INSETS)
-        frame:SetPoint("CENTER")
-        frame:SetFrameStrata(strata)
-        frame:SetToplevel(true)
-        frame:EnableMouse(true)
-        frame:SetClampedToScreen(true)
-        if escClose and name then
-            tinsert(UISpecialFrames, name)
-        end
+        frame:SetMovable(true)
+        frame:RegisterForDrag("LeftButton")
+        frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
+        frame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    end
+
+    if escClose and name then
+        tinsert(UISpecialFrames, name)
     end
 
     local result = { frame = frame, buttons = {} }
