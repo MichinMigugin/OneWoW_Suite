@@ -73,7 +73,8 @@ function ns.UI.CreateEquipmentTab(parent)
         end
     end
 
-    local dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
+    local dt
+    dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
         columns = columnsConfig,
         headerHeight = 26,
         rowHeight = 32,

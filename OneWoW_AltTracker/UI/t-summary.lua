@@ -68,7 +68,8 @@ function ns.UI.CreateSummaryTab(parent)
         end
     end
 
-    local dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
+    local dt
+    dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
         columns = columns,
         headerHeight = 26,
         rowHeight = 32,
