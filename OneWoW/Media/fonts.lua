@@ -3,7 +3,7 @@ local ADDON_NAME, OneWoW = ...
 local LSM = LibStub("LibSharedMedia-3.0", true)
 if not LSM then return end
 
-local BASE = "Interface\\AddOns\\OneWoW\\Media\\Fonts\\"
+local BASE = "Interface\\AddOns\\OneWoW_GUI\\Media\\Fonts\\"
 
 LSM:Register("font", "Adventure",              BASE .. "Adventure.ttf")
 LSM:Register("font", "All Hooked Up",          BASE .. "HookedUp.ttf")

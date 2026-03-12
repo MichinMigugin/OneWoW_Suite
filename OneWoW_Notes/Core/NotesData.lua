@@ -250,3 +250,37 @@ function NotesData:MigrateDefaultColors()
         print("|cFF00FF00OneWoW_Notes|r: Migrated " .. migratedCount .. " note(s) to OneWoW Sync theme")
     end
 end
+
+function NotesData:MigrateFontFamily()
+    local addon = _G.OneWoW_Notes
+    if not addon.db or not addon.db.global then return end
+    if addon.db.global.fontFamilyMigrated then return end
+
+    local GUI = LibStub("OneWoW_GUI-1.0", true)
+    if not GUI or not GUI.MigrateLSMFontName then
+        addon.db.global.fontFamilyMigrated = true
+        return
+    end
+
+    local migratedCount = 0
+    local function migrateDB(notesDB)
+        if not notesDB then return end
+        for _, noteData in pairs(notesDB) do
+            if noteData and type(noteData) == "table" and noteData.fontFamily then
+                local newKey = GUI:MigrateLSMFontName(noteData.fontFamily)
+                if newKey then
+                    noteData.fontFamily = newKey
+                    migratedCount = migratedCount + 1
+                end
+            end
+        end
+    end
+
+    migrateDB(addon.db.global.notes)
+    if addon.db.char then migrateDB(addon.db.char.notes) end
+
+    addon.db.global.fontFamilyMigrated = true
+    if migratedCount > 0 then
+        print("|cFF00FF00OneWoW_Notes|r: Migrated " .. migratedCount .. " note font(s) to new font system")
+    end
+end

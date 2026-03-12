@@ -351,16 +351,10 @@ function ns.UI.CreateZonesTab(parent)
         noteScroll:SetPoint("TOPLEFT", noteBg, "TOPLEFT", 4, -4)
         noteScroll:SetPoint("BOTTOMRIGHT", noteBg, "BOTTOMRIGHT", -26, 4)
 
-        local fontPath = "Fonts\\FRIZQT__.TTF"
-        if zoneData.fontFamily then
-            local LSM = LibStub("LibSharedMedia-3.0", true)
-            if LSM then
-                local p = LSM:Fetch("font", zoneData.fontFamily)
-                if p then fontPath = p end
-            end
-        end
+        local fontPath = ns.Config:ResolveFontPath(zoneData.fontFamily)
 
         local noteEditBox = CreateFrame("EditBox", nil, noteScroll)
+        noteEditBox._skipGlobalFont = true
         noteEditBox:SetMultiLine(true)
         noteEditBox:SetFont(fontPath, zoneData.fontSize or 12, zoneData.fontOutline or "")
         noteEditBox:SetAutoFocus(false)
@@ -923,14 +917,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     MakeZoneLabel(content, L["LABEL_NOTE_FONT"], COL2_X, yPos)
     dialog._fontFamily = nil
     local addPreviewEditBox = nil
-    local addLSM = LibStub("LibSharedMedia-3.0", true)
-    local addFontList = addLSM and addLSM:List("font") or {}
-    table.sort(addFontList)
-    local addFontOpts = {}
-    for _, fn in ipairs(addFontList) do
-        addFontOpts[#addFontOpts + 1] = {text = fn, value = fn}
-    end
-    addFontOpts[#addFontOpts + 1] = {text = L["FONT_DEFAULT"], value = "default"}
+    local addFontOpts = ns.Config:GetFontOptions()
     local addFontDD = ns.UI.CreateFontDropdown(content, COL_W, 26)
     addFontDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     addFontDD:SetOptions(addFontOpts)
@@ -939,14 +926,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
         local fontValue = (value == "default") and nil or value
         dialog._fontFamily = fontValue
         if addPreviewEditBox then
-            local fp = "Fonts\\FRIZQT__.TTF"
-            if fontValue then
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local p = LSM:Fetch("font", fontValue)
-                    if p then fp = p end
-                end
-            end
+            local fp = ns.Config:ResolveFontPath(fontValue)
             addPreviewEditBox:SetFont(fp, dialog._fontSize or 12, dialog._fontOutline or "")
         end
     end
@@ -966,14 +946,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     addOutlineDD.onSelect = function(value)
         dialog._fontOutline = value
         if addPreviewEditBox then
-            local fp = "Fonts\\FRIZQT__.TTF"
-            if dialog._fontFamily then
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local p = LSM:Fetch("font", dialog._fontFamily)
-                    if p then fp = p end
-                end
-            end
+            local fp = ns.Config:ResolveFontPath(dialog._fontFamily)
             addPreviewEditBox:SetFont(fp, dialog._fontSize or 12, value)
         end
     end
@@ -1019,13 +992,14 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
 
     local noteEditBox = CreateFrame("EditBox", nil, noteScroll)
     noteEditBox:SetMultiLine(true)
-    noteEditBox:SetFont("Fonts\\FRIZQT__.TTF", dialog._fontSize or 12, dialog._fontOutline or "")
+    noteEditBox:SetFont(ns.Config:ResolveFontPath(dialog._fontFamily), dialog._fontSize or 12, dialog._fontOutline or "")
     noteEditBox:SetAutoFocus(false)
     noteEditBox:SetMaxLetters(0)
     noteScroll:SetScrollChild(noteEditBox)
     noteScroll:HookScript("OnSizeChanged", function(self, w)
         noteEditBox:SetWidth(math.max(1, w))
     end)
+    noteEditBox._skipGlobalFont = true
     addPreviewEditBox = noteEditBox
     dialog._noteEditBox = noteEditBox
 
@@ -1231,14 +1205,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
 
     MakeZoneLabel(content, L["LABEL_NOTE_FONT"], COL2_X, yPos)
     local propPreviewEditBox = nil
-    local propLSM = LibStub("LibSharedMedia-3.0", true)
-    local propFontList = propLSM and propLSM:List("font") or {}
-    table.sort(propFontList)
-    local propFontOpts = {}
-    for _, fn in ipairs(propFontList) do
-        propFontOpts[#propFontOpts + 1] = {text = fn, value = fn}
-    end
-    propFontOpts[#propFontOpts + 1] = {text = L["FONT_DEFAULT"], value = "default"}
+    local propFontOpts = ns.Config:GetFontOptions()
     local propFontDD = ns.UI.CreateFontDropdown(content, COL_W, 26)
     propFontDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     propFontDD:SetOptions(propFontOpts)
@@ -1248,14 +1215,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         SaveField("fontFamily", fontValue)
         RefreshEditor()
         if propPreviewEditBox then
-            local fp = "Fonts\\FRIZQT__.TTF"
-            if fontValue then
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local p = LSM:Fetch("font", fontValue)
-                    if p then fp = p end
-                end
-            end
+            local fp = ns.Config:ResolveFontPath(fontValue)
             local d = ns.Zones:GetZone(zoneName)
             propPreviewEditBox:SetFont(fp, d and d.fontSize or 12, d and d.fontOutline or "")
         end
@@ -1276,14 +1236,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         RefreshEditor()
         if propPreviewEditBox then
             local d = ns.Zones:GetZone(zoneName)
-            local fp = "Fonts\\FRIZQT__.TTF"
-            if d and d.fontFamily then
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local p = LSM:Fetch("font", d.fontFamily)
-                    if p then fp = p end
-                end
-            end
+            local fp = ns.Config:ResolveFontPath(d and d.fontFamily)
             propPreviewEditBox:SetFont(fp, d and d.fontSize or 12, value)
         end
     end
@@ -1328,18 +1281,12 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
 
     local noteEditBox = CreateFrame("EditBox", nil, noteScroll)
     noteEditBox:SetMultiLine(true)
-    local propInitFontPath = "Fonts\\FRIZQT__.TTF"
-    if zoneData.fontFamily then
-        local LSM = LibStub("LibSharedMedia-3.0", true)
-        if LSM then
-            local path = LSM:Fetch("font", zoneData.fontFamily)
-            if path then propInitFontPath = path end
-        end
-    end
+    local propInitFontPath = ns.Config:ResolveFontPath(zoneData.fontFamily)
     noteEditBox:SetFont(propInitFontPath, zoneData.fontSize or 12, zoneData.fontOutline or "")
     noteEditBox:SetAutoFocus(false)
     noteEditBox:SetMaxLetters(0)
     noteEditBox:SetText(zoneData.content or "")
+    noteEditBox._skipGlobalFont = true
     propPreviewEditBox = noteEditBox
     noteEditBox:EnableMouse(false)
     noteScroll:SetScrollChild(noteEditBox)

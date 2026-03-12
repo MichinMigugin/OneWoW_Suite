@@ -24,14 +24,6 @@ ns.Constants = {
         SEARCH_HEIGHT     = 28,
     },
 
-    SPACING = {
-        XS = 4,
-        SM = 8,
-        MD = 12,
-        LG = 16,
-        XL = 24,
-    },
-
     QUALITY_COLORS = {
         [0] = {0.62, 0.62, 0.62, 1.0},
         [1] = {1.00, 1.00, 1.00, 1.0},

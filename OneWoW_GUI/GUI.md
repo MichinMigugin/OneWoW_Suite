@@ -207,14 +207,7 @@ local frame = OneWoW_GUI:CreateFrame(name, parent, width, height, backdrop)
 Returns a BackdropTemplate frame with theme BG_PRIMARY + BORDER_DEFAULT.
 Optional `backdrop` param overrides the default (BACKDROP_SOFT).
 
-### Movable dialog (low-level)
-```lua
-local dialog = OneWoW_GUI:CreateMovableDialog(name, parent, width, height)
-```
-Centered, draggable, clamped to screen, ESC closes it (via UISpecialFrames).
-Uses BACKDROP_INNER_NO_INSETS. For most dialogs, prefer `CreateDialog` instead.
-
-### Dialog (full featured)
+### Dialog
 ```lua
 local result = OneWoW_GUI:CreateDialog({
     name = "MyDialog",              -- frame name (nil = anonymous, but needed for ESC close)

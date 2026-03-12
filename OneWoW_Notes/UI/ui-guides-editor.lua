@@ -58,7 +58,7 @@ local function MakeMultiLineScrollBox(parent, font, fontSize)
 
     local editBox = CreateFrame("EditBox", nil, scrollFrame)
     editBox:SetWidth(scrollFrame:GetWidth() or 400)
-    editBox:SetFont(font or "Fonts\\FRIZQT__.TTF", fontSize or 11, "")
+    editBox:SetFont(font or ns.Config:ResolveFontPath(nil), fontSize or 11, "")
     editBox:SetTextColor(T("TEXT_PRIMARY"))
     editBox:SetMultiLine(true)
     editBox:SetAutoFocus(false)
@@ -157,7 +157,7 @@ function ns.UI.ShowGuideEditorDialog(guideID, onSaveCallback)
     markupContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     markupContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
 
-    local _, markupBox = MakeMultiLineScrollBox(markupContainer, "Fonts\\FRIZQT__.TTF", 11)
+    local _, markupBox = MakeMultiLineScrollBox(markupContainer, ns.Config:ResolveFontPath(nil), 11)
 
     if isEdit and guideID then
         markupBox:SetText(ns.GuidesData:GuideToMarkup(guideID))
@@ -244,7 +244,7 @@ function ns.UI.ShowStepEditorDialog(guideID, stepIndex, onSaveCallback)
     descContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
     descContainer:SetHeight(80)
 
-    local _, descBox = MakeMultiLineScrollBox(descContainer, "Fonts\\FRIZQT__.TTF", 11)
+    local _, descBox = MakeMultiLineScrollBox(descContainer, ns.Config:ResolveFontPath(nil), 11)
     descBox:SetText(step and step.description or "")
     dialog._descBox = descBox
 
@@ -492,7 +492,7 @@ function ns.UI.ShowGuideImportDialog(onImportCallback)
     importContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     importContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
 
-    local _, importBox = MakeMultiLineScrollBox(importContainer, "Fonts\\FRIZQT__.TTF", 10)
+    local _, importBox = MakeMultiLineScrollBox(importContainer, ns.Config:ResolveFontPath(nil), 10)
     dialog._importBox = importBox
 
     dialog:Show()
@@ -535,7 +535,7 @@ function ns.UI.ShowGuideExportDialog(guideID)
     exportContainer:SetPoint("TOPLEFT", hintText, "BOTTOMLEFT", 0, -10)
     exportContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
 
-    local _, exportBox = MakeMultiLineScrollBox(exportContainer, "Fonts\\FRIZQT__.TTF", 10)
+    local _, exportBox = MakeMultiLineScrollBox(exportContainer, ns.Config:ResolveFontPath(nil), 10)
     exportBox:SetText(exportStr)
     exportBox:HighlightText()
     exportBox:SetFocus()

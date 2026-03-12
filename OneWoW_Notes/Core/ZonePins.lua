@@ -236,17 +236,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     end)
 
     local fontSize = zoneData.fontSize or 12
-    local fontPath = "Fonts\\FRIZQT__.TTF"
-    local fontName = zoneData.fontFamily
-    if fontName then
-        local LSM = LibStub("LibSharedMedia-3.0", true)
-        if LSM then
-            local path = LSM:Fetch("font", fontName)
-            if path then
-                fontPath = path
-            end
-        end
-    end
+    local fontPath = ns.Config:ResolveFontPath(zoneData.fontFamily)
     contentText:SetFont(fontPath, fontSize, zoneData.fontOutline or "")
 
     local contentTextColor
@@ -392,17 +382,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
             todoText:SetText(todo.text or "")
 
             local fs = zd.fontSize or 12
-            local todoFontPath = "Fonts\\FRIZQT__.TTF"
-            local todoFontName = zd.fontFamily
-            if todoFontName then
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local path = LSM:Fetch("font", todoFontName)
-                    if path then
-                        todoFontPath = path
-                    end
-                end
-            end
+            local todoFontPath = ns.Config:ResolveFontPath(zd.fontFamily)
             todoText:SetFont(todoFontPath, fs, zd.fontOutline or "")
 
             if todo.completed then
@@ -636,21 +616,21 @@ function ZonePins:RefreshZonePinColors(zoneName)
     end
     if pinFrame.contentText then
         pinFrame.contentText:SetTextColor(textColor[1], textColor[2], textColor[3], 1)
-        local fontPath = "Fonts\\FRIZQT__.TTF"
-        local fontName = zoneData.fontFamily
-        if fontName then
-            local LSM = LibStub("LibSharedMedia-3.0", true)
-            if LSM then
-                local path = LSM:Fetch("font", fontName)
-                if path then
-                    fontPath = path
-                end
-            end
-        end
+        local fontPath = ns.Config:ResolveFontPath(zoneData.fontFamily)
         pinFrame.contentText:SetFont(fontPath, fontSize, zoneData.fontOutline or "")
     end
     if pinFrame.RefreshTodos then
         pinFrame:RefreshTodos()
+    end
+end
+
+function ZonePins:RefreshAllPinFonts()
+    local addon = _G.OneWoW_Notes
+    if not addon.zonePins then return end
+    for zoneName, pinFrame in pairs(addon.zonePins) do
+        if pinFrame and pinFrame:IsShown() then
+            self:RefreshZonePinColors(zoneName)
+        end
     end
 end
 

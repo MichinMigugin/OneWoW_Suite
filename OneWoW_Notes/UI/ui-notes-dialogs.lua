@@ -152,17 +152,7 @@ function ns.UI.ShowAddNoteDialog()
             local fc = GetFontColorFromKey(currentFontColor, currentPinColor)
             dialog.contentEditBox:SetTextColor(fc[1], fc[2], fc[3], 1)
             local fontSize = dialog.selectedFontSize or 12
-            local fontPath = "Fonts\\FRIZQT__.TTF"
-            local fontName = dialog.selectedFontFamily
-            if fontName then
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local path = LSM:Fetch("font", fontName)
-                    if path then
-                        fontPath = path
-                    end
-                end
-            end
+            local fontPath = ns.Config:ResolveFontPath(dialog.selectedFontFamily)
             dialog.contentEditBox:SetFont(fontPath, fontSize, dialog.selectedFontOutline or "")
         end
     end
@@ -209,17 +199,7 @@ function ns.UI.ShowAddNoteDialog()
     fontSizeContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, L["LABEL_NOTE_FONT"], COL2_X, yPos)
-    local LSM = LibStub("LibSharedMedia-3.0", true)
-    local fontList = {}
-    if LSM then
-        fontList = LSM:List("font") or {}
-    end
-    table.sort(fontList)
-    local fontOpts = {}
-    for _, fontName in ipairs(fontList) do
-        fontOpts[#fontOpts + 1] = {text = fontName, value = fontName}
-    end
-    fontOpts[#fontOpts + 1] = {text = L["FONT_DEFAULT"], value = "default"}
+    local fontOpts = ns.Config:GetFontOptions()
     local fontFamilyDD = ns.UI.CreateFontDropdown(content, COL_W, 26)
     fontFamilyDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     fontFamilyDD:SetOptions(fontOpts)
@@ -325,6 +305,7 @@ function ns.UI.ShowAddNoteDialog()
     contentScroll:HookScript("OnSizeChanged", function(self, w)
         contentEditBox:SetWidth(math.max(1, w))
     end)
+    contentEditBox._skipGlobalFont = true
     dialog.contentEditBox = contentEditBox
 
     UpdatePreview()
@@ -460,16 +441,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
             local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
             local fontSize = 12
             if notesDB and notesDB[noteID] then fontSize = notesDB[noteID].fontSize or 12 end
-            local fontPath = "Fonts\\FRIZQT__.TTF"
-            if currentFontFamily then
-                local LSM = LibStub("LibSharedMedia-3.0", true)
-                if LSM then
-                    local path = LSM:Fetch("font", currentFontFamily)
-                    if path then
-                        fontPath = path
-                    end
-                end
-            end
+            local fontPath = ns.Config:ResolveFontPath(currentFontFamily)
             dialog.contentEditBox:SetFont(fontPath, fontSize, currentFontOutline or "")
         end
         if ns.UI.notesFrame and ns.UI.notesFrame.UpdateEditorColors then
@@ -542,17 +514,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     fontSizeContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, L["LABEL_NOTE_FONT"], COL2_X, yPos)
-    local LSM2 = LibStub("LibSharedMedia-3.0", true)
-    local fontList2 = {}
-    if LSM2 then
-        fontList2 = LSM2:List("font") or {}
-    end
-    table.sort(fontList2)
-    local fontOpts2 = {}
-    for _, fontName in ipairs(fontList2) do
-        fontOpts2[#fontOpts2 + 1] = {text = fontName, value = fontName}
-    end
-    fontOpts2[#fontOpts2 + 1] = {text = L["FONT_DEFAULT"], value = "default"}
+    local fontOpts2 = ns.Config:GetFontOptions()
     local fontFamilyDD = ns.UI.CreateFontDropdown(content, COL_W, 26)
     fontFamilyDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     fontFamilyDD:SetOptions(fontOpts2)
@@ -678,16 +640,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
 
     local contentEditBox = CreateFrame("EditBox", nil, contentScroll)
     contentEditBox:SetMultiLine(true)
-    local initFontPath = "Fonts\\FRIZQT__.TTF"
-    if noteData.fontFamily then
-        local LSM = LibStub("LibSharedMedia-3.0", true)
-        if LSM then
-            local path = LSM:Fetch("font", noteData.fontFamily)
-            if path then
-                initFontPath = path
-            end
-        end
-    end
+    local initFontPath = ns.Config:ResolveFontPath(noteData.fontFamily)
     contentEditBox:SetFont(initFontPath, noteData.fontSize or 12, "")
     contentEditBox:SetAutoFocus(false)
     contentEditBox:SetMaxLetters(0)
@@ -711,6 +664,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     contentScroll:HookScript("OnSizeChanged", function(self, w)
         contentEditBox:SetWidth(math.max(1, w))
     end)
+    contentEditBox._skipGlobalFont = true
     dialog.contentEditBox = contentEditBox
 
     UpdatePreview()

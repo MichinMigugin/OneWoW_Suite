@@ -59,6 +59,12 @@ function addon:OnInitialize()
         OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
             if ns.ApplyLanguage then ns.ApplyLanguage() end
         end)
+        OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+            local mainFrame = _G["OneWoW_CatalogMainFrame"]
+            if mainFrame and ns.UI and ns.UI.ApplyFontToFrame then
+                ns.UI.ApplyFontToFrame(mainFrame)
+            end
+        end)
     end
 
     local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION

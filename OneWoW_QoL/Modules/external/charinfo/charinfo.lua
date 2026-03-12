@@ -97,7 +97,8 @@ local function CreateInfoPanel(button)
 
     if not button.onewow_durabilityText then
         button.onewow_durabilityText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        local fontPath = "Fonts\\FRIZQT__.TTF"
+        local _guiLib = LibStub("OneWoW_GUI-1.0", true)
+        local fontPath = (_guiLib and _guiLib.GetFont and _guiLib:GetFont()) or "Fonts\\FRIZQT__.TTF"
         button.onewow_durabilityText:SetFont(fontPath, 10, "OUTLINE")
     end
 

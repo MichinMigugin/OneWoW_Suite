@@ -213,45 +213,43 @@ local function ShowManageAltsDialog()
 
     local characters = CollectAllCharacterKeys()
 
-    local dialog = OneWoW_GUI:CreateMovableDialog("OneWoW_AT_ManageAltsDialog", UIParent, 620, 560)
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_AT_ManageAltsDialog",
+        title = "Manage Characters",
+        width = 620,
+        height = 560,
+        onClose = function(frame) frame:Hide() end,
+    })
+    local dialog = result.frame
     dialog:SetBackdropColor(T("BG_PRIMARY"))
     dialog:SetBackdropBorderColor(T("BORDER_DEFAULT"))
     _G.OneWoW_AT_ManageAltsDialog = dialog
 
-    local titleBar = OneWoW_GUI:CreateTitleBar(dialog, "Manage Characters", {
-        height = 28,
-        onClose = function() dialog:Hide() end,
-    })
+    local content = result.contentFrame
 
-    local divider = dialog:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", dialog, "TOPLEFT", 1, -29)
-    divider:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -1, -29)
-    divider:SetColorTexture(T("BORDER_SUBTLE"))
-
-    local descText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    descText:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -38)
-    descText:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -14, -38)
+    local descText = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    descText:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -10)
+    descText:SetPoint("TOPRIGHT", content, "TOPRIGHT", -14, -10)
     descText:SetJustifyH("LEFT")
     descText:SetWordWrap(true)
     descText:SetSpacing(3)
     descText:SetText("Select characters to permanently remove from all OneWoW databases. This is for characters you have deleted or renamed in-game. A UI reload is required after removal.")
     descText:SetTextColor(T("TEXT_SECONDARY"))
 
-    local selectAllBtn = OneWoW_GUI:CreateButton(nil, dialog, "Select All", 90, 25)
-    selectAllBtn:SetPoint("TOPLEFT", dialog, "TOPLEFT", 14, -80)
+    local selectAllBtn = OneWoW_GUI:CreateButton(nil, content, "Select All", 90, 25)
+    selectAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -52)
 
-    local deselectAllBtn = OneWoW_GUI:CreateButton(nil, dialog, "Deselect All", 90, 25)
+    local deselectAllBtn = OneWoW_GUI:CreateButton(nil, content, "Deselect All", 90, 25)
     deselectAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 6, 0)
 
-    local countText = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    countText:SetPoint("RIGHT", dialog, "TOPRIGHT", -14, -92)
+    local countText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    countText:SetPoint("RIGHT", content, "TOPRIGHT", -14, -64)
     countText:SetText(#characters .. " characters found across all databases")
     countText:SetTextColor(T("TEXT_SECONDARY"))
 
-    local listBg = CreateFrame("Frame", nil, dialog, "BackdropTemplate")
-    listBg:SetPoint("TOPLEFT", dialog, "TOPLEFT", 10, -108)
-    listBg:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -10, 56)
+    local listBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    listBg:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -80)
+    listBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 56)
     listBg:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     listBg:SetBackdropColor(T("BG_SECONDARY"))
     listBg:SetBackdropBorderColor(T("BORDER_SUBTLE"))
@@ -383,14 +381,14 @@ local function ShowManageAltsDialog()
         end
     end)
 
-    local btnDivider = dialog:CreateTexture(nil, "ARTWORK")
+    local btnDivider = content:CreateTexture(nil, "ARTWORK")
     btnDivider:SetHeight(1)
-    btnDivider:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 1, 50)
-    btnDivider:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -1, 50)
+    btnDivider:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 1, 50)
+    btnDivider:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -1, 50)
     btnDivider:SetColorTexture(T("BORDER_SUBTLE"))
 
-    local deleteBtn = OneWoW_GUI:CreateButton(nil, dialog, "Delete Selected", 160, 32)
-    deleteBtn:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 14, 10)
+    local deleteBtn = OneWoW_GUI:CreateButton(nil, content, "Delete Selected", 160, 32)
+    deleteBtn:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 14, 10)
     deleteBtn:SetBackdropColor(0.5, 0.15, 0.15, 1)
     deleteBtn:SetBackdropBorderColor(0.7, 0.2, 0.2, 0.6)
     deleteBtn.text:SetTextColor(1, 0.4, 0.4)
@@ -406,8 +404,8 @@ local function ShowManageAltsDialog()
         self.text:SetTextColor(1, 0.4, 0.4)
     end)
 
-    local cancelBtn = OneWoW_GUI:CreateButton(nil, dialog, "Cancel", 120, 32)
-    cancelBtn:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -14, 10)
+    local cancelBtn = OneWoW_GUI:CreateButton(nil, content, "Cancel", 120, 32)
+    cancelBtn:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -14, 10)
     cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
 
     deleteBtn:SetScript("OnClick", function()
