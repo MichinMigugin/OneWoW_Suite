@@ -1234,12 +1234,14 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, dropdownText, options)
                         b:SetBackdropColor(GetThemeColor("BG_HOVER"))
                         txt:SetTextColor(GetThemeColor("TEXT_ACCENT"))
                     end
+                    if item.onEnter then item.onEnter(b) end
                 end)
                 btn:SetScript("OnLeave", function(b)
                     if activeValue ~= item.value then
                         b:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
                         txt:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
                     end
+                    if item.onLeave then item.onLeave(b) end
                 end)
                 btn:SetScript("OnClick", function()
                     menu:Hide()
