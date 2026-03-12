@@ -57,7 +57,7 @@ function ns.UI.CreateItemsTab(parent)
     filterBar:SetBackdropColor(T("BG_SECONDARY"))
     filterBar:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
-    local searchBox = OneWoW_GUI:CreateSearchBox(filterBar, {
+    local searchBox = OneWoW_GUI:CreateEditBox(nil, filterBar, {
         height = 20,
         placeholderText = L["ITEMS_SEARCH_HINT"],
         onTextChanged = function(text)

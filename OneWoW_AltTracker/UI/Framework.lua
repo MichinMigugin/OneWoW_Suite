@@ -25,7 +25,7 @@ function ns.UI.CreateCheckbox(name, parent, label)
 end
 
 function ns.UI.CreateSearchBox(parent, options)
-    if lib then return lib:CreateSearchBox(parent, options) end
+    if lib then return lib:CreateEditBox(nil, parent, options) end
 end
 
 function ns.UI.CreateScrollFrame(name, parent, width, height)
