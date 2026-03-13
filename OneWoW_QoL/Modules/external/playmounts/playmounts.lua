@@ -231,11 +231,17 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled, registe
         end
     end
 
+    local prevModeBtn = nil
     for _, mode in ipairs(modes) do
         local capturedMode = mode
         local isActive = (currentMode == mode.id)
         local btn = OneWoW_GUI:CreateFitTextButton(parent, L[mode.labelKey] or mode.id, { height = 22 })
-        btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 12 + (#modeBtns * 96), yOffset)
+        if prevModeBtn then
+            btn:SetPoint("TOPLEFT", prevModeBtn, "TOPRIGHT", 6, 0)
+        else
+            btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+        end
+        prevModeBtn = btn
         btn.isActive = isActive
 
         btn:HookScript("OnLeave", function(self)

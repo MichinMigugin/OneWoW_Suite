@@ -580,6 +580,9 @@ function ns.UI.CreateQuestsTab(parent)
     panels.listTitle:SetText(L["QUESTS_LIST_TITLE"])
     panels.detailTitle:SetText(L["QUESTS_DETAIL_TITLE"])
 
+    local clearBtn = ns.UI.CreateFitTextButton(leftHeader, L["QUESTS_CLEAR"], { height = 26, minWidth = 34 })
+    clearBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
+
     local searchBox = ns.UI.CreateEditBox(nil, leftHeader, {
         height = 26,
         placeholderText = L["QUESTS_SEARCH"],
@@ -592,10 +595,7 @@ function ns.UI.CreateQuestsTab(parent)
         end,
     })
     searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
-    searchBox:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -42, -8)
-
-    local clearBtn = ns.UI.CreateFitTextButton(leftHeader, L["QUESTS_CLEAR"], { height = 26, minWidth = 34 })
-    clearBtn:SetPoint("TOPLEFT", searchBox, "TOPRIGHT", 4, 0)
+    searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
 
     local DD_GAP = 4
     local DD_PAD = 8

@@ -12,7 +12,6 @@ ns.Constants = {
         MAIN_FRAME_HEIGHT = 900,
         MIN_WIDTH         = 900,
         MIN_HEIGHT        = 600,
-        LEFT_PANEL_WIDTH  = 300,
         SEARCH_HEIGHT     = 28,
     }),
 

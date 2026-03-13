@@ -521,8 +521,8 @@ function ns.UI.CreateItemSearchTab(parent)
             end)
         end,
     })
-    searchBox:SetPoint("LEFT", searchHeader, "LEFT", 8, 0)
-    searchBox:SetPoint("RIGHT", searchHeader, "RIGHT", -8, 0)
+    searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
+    searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
 
     emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)

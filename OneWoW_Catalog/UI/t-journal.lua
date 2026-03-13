@@ -788,7 +788,7 @@ end
 function ns.UI.CreateJournalTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP    = ns.Constants.GUI.PANEL_GAP
-    local HDR_H  = 80
+    local HDR_H  = 86  -- was 80; adds bottom padding for expansion dropdown
 
     local leftHeader = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
     leftHeader:ClearAllPoints()
@@ -808,6 +808,9 @@ function ns.UI.CreateJournalTab(parent)
     panels.listTitle:SetText(L["JOURNAL_LIST_TITLE"])
     panels.detailTitle:SetText(L["JOURNAL_DETAIL_TITLE"])
 
+    local clearBtn = ns.UI.CreateFitTextButton(leftHeader, L["JOURNAL_FILTER_CLEAR"], { height = 26, minWidth = 34 })
+    clearBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
+
     local searchBox = ns.UI.CreateEditBox(nil, leftHeader, {
         height = 26,
         placeholderText = L["JOURNAL_SEARCH"],
@@ -820,10 +823,7 @@ function ns.UI.CreateJournalTab(parent)
         end,
     })
     searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
-    searchBox:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -42, -8)
-
-    local clearBtn = ns.UI.CreateFitTextButton(leftHeader, L["JOURNAL_FILTER_CLEAR"], { height = 26, minWidth = 34 })
-    clearBtn:SetPoint("TOPLEFT", searchBox, "TOPRIGHT", 4, 0)
+    searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
 
     -- LEFT HEADER: Row 2 - Expansion label + dropdown
     local expLabel = leftHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

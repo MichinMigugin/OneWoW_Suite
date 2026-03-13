@@ -513,10 +513,16 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
         local catEnabledKey = capturedKey .. "Enabled"
         local UpdateRow     -- forward declaration; defined after mountBtn/refresh exist
 
-        -- Label + On/Off on same row
+        -- Label above Random Favorite button
         local label = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         label:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
         label:SetText(mountInfo.label)
+        yOffset = yOffset - label:GetStringHeight() - 4
+
+        -- Mount picker button (Random Favorite) below label
+        local mountBtn = CreateFrame("Button", nil, detailScrollChild, "BackdropTemplate")
+        mountBtn:SetSize(220, 30)
+        mountBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
 
         local prefs = GetPreferences()
         local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(
@@ -525,15 +531,16 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
             ON_OFF_BUTTON_WIDTH, ON_OFF_BUTTON_HEIGHT, isEnabled, prefs[catEnabledKey],
             function(val) SavePreference(catEnabledKey, val); UpdateRow(); AM:UpdatePollingState() end
         )
+        offBtn:ClearAllPoints()
+        offBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+        onBtn:ClearAllPoints()
+        onBtn:SetPoint("RIGHT", offBtn, "LEFT", -4, 0)
+        statusVal:ClearAllPoints()
+        statusVal:SetPoint("RIGHT", onBtn, "LEFT", -10, 0)
         statusPfx:ClearAllPoints()
-        statusPfx:SetPoint("LEFT", label, "RIGHT", 10, 0)
+        statusPfx:SetPoint("RIGHT", statusVal, "LEFT", -4, 0)
 
-        yOffset = yOffset - 24
-
-        -- Mount picker button
-        local mountBtn = CreateFrame("Button", nil, detailScrollChild, "BackdropTemplate")
-        mountBtn:SetSize(220, 30)
-        mountBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+        yOffset = yOffset - 30 - 10
         mountBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
         mountBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         mountBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -623,7 +630,6 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
 
         if registerRefresh then registerRefresh(UpdateRow) end
         UpdateRow()
-        yOffset = yOffset - 34 - 10
     end
 
     -- Druid section: only shown when player is a druid
@@ -667,8 +673,14 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
         ON_OFF_BUTTON_WIDTH, ON_OFF_BUTTON_HEIGHT, isEnabled, druidPrefs.druidEnabled,
         function(val) SavePreference("druidEnabled", val); UpdateDruidRow(); AM:UpdatePollingState() end
     )
+    druidOffBtn:ClearAllPoints()
+    druidOffBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+    druidOnBtn:ClearAllPoints()
+    druidOnBtn:SetPoint("RIGHT", druidOffBtn, "LEFT", -4, 0)
+    druidStatusVal:ClearAllPoints()
+    druidStatusVal:SetPoint("RIGHT", druidOnBtn, "LEFT", -10, 0)
     druidStatusPfx:ClearAllPoints()
-    druidStatusPfx:SetPoint("LEFT", druidLabel, "RIGHT", 10, 0)
+    druidStatusPfx:SetPoint("RIGHT", druidStatusVal, "LEFT", -4, 0)
 
     yOffset = yOffset - 24
 
@@ -717,8 +729,14 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
             AM:UpdateDruidFlightWatcher()
         end
     )
+    cancelOffBtn:ClearAllPoints()
+    cancelOffBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+    cancelOnBtn:ClearAllPoints()
+    cancelOnBtn:SetPoint("RIGHT", cancelOffBtn, "LEFT", -4, 0)
+    cancelStatusVal:ClearAllPoints()
+    cancelStatusVal:SetPoint("RIGHT", cancelOnBtn, "LEFT", -10, 0)
     cancelStatusPfx:ClearAllPoints()
-    cancelStatusPfx:SetPoint("LEFT", cancelLabel, "RIGHT", 10, 0)
+    cancelStatusPfx:SetPoint("RIGHT", cancelStatusVal, "LEFT", -4, 0)
 
     yOffset = yOffset - 24
 

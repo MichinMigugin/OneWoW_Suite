@@ -907,22 +907,32 @@ function ns.UI.CreateTradeskillsTab(parent)
         end
     end
 
-    local containerWidth = profHeader:GetWidth()
-    if containerWidth < 100 then containerWidth = 900 end
-    local padLeft = 6
-    local padTop = 5
-    local xOff = padLeft
-    local row = 0
-    for _, btn in ipairs(buttonList) do
-        local btnWidth = btn:GetWidth()
-        if xOff + btnWidth + PROF_BTN_GAP > containerWidth - padLeft and xOff > padLeft then
-            row = row + 1
-            xOff = padLeft
+    local function LayoutProfButtons()
+        local w = profHeader:GetWidth()
+        if not w or w < 100 then return end
+        local padLeft = 6
+        local padTop = 5
+        local xOff = padLeft
+        local row = 0
+        for _, btn in ipairs(buttonList) do
+            local btnWidth = btn:GetWidth()
+            if xOff + btnWidth + PROF_BTN_GAP > w - padLeft and xOff > padLeft then
+                row = row + 1
+                xOff = padLeft
+            end
+            local yOff = -padTop - (row * (PROF_BTN_HEIGHT + PROF_BTN_GAP))
+            btn:ClearAllPoints()
+            btn:SetPoint("TOPLEFT", profHeader, "TOPLEFT", xOff, yOff)
+            xOff = xOff + btnWidth + PROF_BTN_GAP
         end
-        local yOff = -padTop - (row * (PROF_BTN_HEIGHT + PROF_BTN_GAP))
-        btn:SetPoint("TOPLEFT", profHeader, "TOPLEFT", xOff, yOff)
-        xOff = xOff + btnWidth + PROF_BTN_GAP
     end
+
+    profHeader:SetScript("OnSizeChanged", function(self, w)
+        LayoutProfButtons()
+    end)
+    C_Timer.After(0, function()
+        LayoutProfButtons()
+    end)
 
     searchBox = ns.UI.CreateEditBox(nil, searchHeader, {
         height = 26,
@@ -935,8 +945,8 @@ function ns.UI.CreateTradeskillsTab(parent)
             end)
         end,
     })
-    searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -16)
-    searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -16)
+    searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
+    searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
 
     local knownMeCheck = ns.UI.CreateCheckbox(nil, searchHeader, L["TRADESKILLS_SHOW_KNOWN_ME"])
     knownMeCheck:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -4)
