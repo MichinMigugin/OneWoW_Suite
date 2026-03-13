@@ -698,7 +698,7 @@ function Tracker:RefreshFloatingTracker()
                     stepRow:SetHeight(rowH)
 
                     local capturedIdx = nextIdx
-                    stepRow:SetHighlightTexture(BACKDROP_SIMPLE)
+                    stepRow:SetHighlightTexture("Interface\\Buttons\\WHITE8x8")
                     stepRow:GetHighlightTexture():SetAlpha(0.1)
                     stepRow:SetScript("OnClick", function()
                         Tracker:GoToStep(capturedIdx)

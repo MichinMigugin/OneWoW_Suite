@@ -560,6 +560,7 @@ function ns.UI.CreateNPCsTab(parent)
             if f and f.Show then f:Show() end
         end
         if detailPanel.contentEditBox then detailPanel.contentEditBox:Show() end
+        ns.UI.activeContentEditBox = detailPanel.contentEditBox
 
         if selectedNPC and ns.NPCs then
             local nd = ns.NPCs:GetNPC(selectedNPC)

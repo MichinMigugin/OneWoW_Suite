@@ -10,40 +10,56 @@ if not OneWoW_GUI then return end
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
-local backdrop = {
+ns.UI = ns.UI or {}
+
+local selectedZone   = nil
+local zoneListItems  = {}
+local categoryFilter = "All"
+local storageFilter  = "All"
+
+local contentEditBox  = nil
+local detailPanel     = nil
+local emptyMessage    = nil
+local leftStatusText  = nil
+local rightStatusText = nil
+local scrollFrame     = nil
+local scrollChild     = nil
+local todoContainer       = nil
+local contentUpdateTimer  = nil
+
+local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
+
+local BACKDROP_STANDARD = {
     bgFile   = "Interface\\Buttons\\WHITE8x8",
     edgeFile = "Interface\\Buttons\\WHITE8x8",
     tile = true, tileSize = 16, edgeSize = 1,
 }
 
-ns.UI = ns.UI or {}
+local function CreateThemedPanel(name, parentFrame)
+    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
+    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    return f
+end
 
-local selectedZone  = nil
-local zoneListItems = {}
-local categoryFilter = "All"
-local storageFilter  = "All"
-
-local detailPanel    = nil
-local emptyMessage   = nil
-local leftStatusText = nil
-local scrollFrame    = nil
-local scrollChild    = nil
-local todoContainer  = nil
-
-local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
+local function CreateThemedBar(name, parentFrame)
+    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
+    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    return f
+end
 
 local function GetFontColorFromKey(fontColorKey, pinColorKey)
     return ns.Config:GetResolvedFontColor(fontColorKey, pinColorKey)
 end
 
 function ns.UI.CreateZonesTab(parent)
-    local controlPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
+    local controlPanel = CreateThemedBar(nil, parent)
+    controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(75)
-    controlPanel:SetBackdrop(backdrop)
-    controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
@@ -132,9 +148,9 @@ function ns.UI.CreateZonesTab(parent)
     local storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storageDropdown:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storageDropdown:SetOptions({
-        {text = L["UI_ALL"] or "All",                         value = "All"},
-        {text = L["UI_STORAGE_ACCOUNT"] or "Account",         value = "account"},
-        {text = L["UI_STORAGE_CHARACTER"] or "Character",     value = "character"},
+        {text = L["UI_ALL"] or "All",                     value = "All"},
+        {text = L["UI_STORAGE_ACCOUNT"] or "Account",     value = "account"},
+        {text = L["UI_STORAGE_CHARACTER"] or "Character", value = "character"},
     })
     storageDropdown:SetSelected("All")
     storageDropdown.onSelect = function(value)
@@ -150,14 +166,14 @@ function ns.UI.CreateZonesTab(parent)
     helpIcon:SetPoint("CENTER", helpButton, "CENTER", 0, 0)
     helpIcon:SetAtlas("CampaignActiveQuestIcon")
     helpButton:SetScript("OnClick", function()
-        if not ns.UI.zonesHelpPanel and ns.UI.CreateZonesHelpPanel then
-            ns.UI.zonesHelpPanel = ns.UI.CreateZonesHelpPanel()
+        if not ns.UI.notesHelpPanel and ns.UI.CreateNotesHelpPanel then
+            ns.UI.notesHelpPanel = ns.UI.CreateNotesHelpPanel()
         end
-        if ns.UI.zonesHelpPanel then
-            if ns.UI.zonesHelpPanel:IsShown() then
-                ns.UI.zonesHelpPanel:Hide()
+        if ns.UI.notesHelpPanel then
+            if ns.UI.notesHelpPanel:IsShown() then
+                ns.UI.notesHelpPanel:Hide()
             else
-                ns.UI.zonesHelpPanel:Show()
+                ns.UI.notesHelpPanel:Show()
             end
         end
     end)
@@ -169,303 +185,636 @@ function ns.UI.CreateZonesTab(parent)
     end)
     helpButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local listingPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local listingPanel = CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 35)
-    listingPanel:SetWidth(350)
-    listingPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    listingPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    listingPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    listingPanel:SetWidth(258)
 
-    local listTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    listTitle:SetPoint("TOPLEFT", listingPanel, "TOPLEFT", 10, -10)
-    listTitle:SetText(L["TAB_ZONES"] or "Zones")
-    listTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
+    listingTitle:SetText(L["TAB_ZONES"] or "Zones")
+    listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local scrollData = ns.UI.CreateCustomScroll(listingPanel)
-    local listContainer = scrollData.container
-    listContainer:SetPoint("TOPLEFT", listingPanel, "TOPLEFT", 8, -32)
-    listContainer:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -8, 8)
-    scrollFrame = scrollData.scrollFrame
-    scrollChild = scrollData.scrollChild
+    local listScroll = ns.UI.CreateCustomScroll(listingPanel)
+    scrollFrame = listScroll.scrollFrame
+    scrollChild = listScroll.scrollChild
+    listScroll.container:SetPoint("TOPLEFT", listingPanel, "TOPLEFT", 10, -40)
+    listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
-    detailPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    detailPanel = CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 35)
-    detailPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    detailPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     emptyMessage = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    emptyMessage:SetPoint("CENTER", detailPanel, "CENTER", 0, 0)
+    emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["ZONES_SELECT_PROMPT"] or "Select a zone to view its content")
-    emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
 
-    local leftStatusBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local leftStatusBar = CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT", listingPanel, "BOTTOMLEFT", 0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
-    leftStatusBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    leftStatusBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    leftStatusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    leftStatusText:SetText("")
+    leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ZONES"], 0))
+
+    local rightStatusBar = CreateThemedBar(nil, parent)
+    rightStatusBar:SetPoint("TOPLEFT", detailPanel, "BOTTOMLEFT", 0, -5)
+    rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
+    rightStatusBar:SetHeight(25)
+
+    rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
+    rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    rightStatusText:SetText(L["STATUS_READY"])
 
     local function ShowEditor()
-        if not selectedZone or not ns.Zones then return end
-        local zoneData = ns.Zones:GetZone(selectedZone)
-        if not zoneData then return end
-
-        if OneWoW_GUI then OneWoW_GUI:ClearFrame(detailPanel) end
         emptyMessage:Hide()
 
-        local detailScroll = ns.UI.CreateCustomScroll(detailPanel)
-        local detailContainer = detailScroll.container
-        detailContainer:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, -8)
-        detailContainer:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 8)
-        local detailScrollChild = detailScroll.scrollChild
-
-        local yPos = 0
-
-        local zoneTitleFS = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        zoneTitleFS:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yPos)
-        zoneTitleFS:SetText(selectedZone)
-        zoneTitleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-        local propertiesBtn = ns.UI.CreateButton(nil, detailScrollChild, L["ZONE_PROPERTIES"] or "Properties", 100, 22)
-        ns.UI.AutoResizeButton(propertiesBtn, 80, 200)
-        propertiesBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -10, yPos)
-        propertiesBtn:SetScript("OnClick", function()
-            ns.UI.ShowZonePropertiesDialog(selectedZone, parent)
-        end)
-
-        yPos = yPos - 30
-
-        local resolvedColor = ns.Config:GetResolvedColorConfig(zoneData.pinColor)
-        local pinR, pinG, pinB = resolvedColor.background[1], resolvedColor.background[2], resolvedColor.background[3]
-
-        local colorBar = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
-        colorBar:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yPos)
-        colorBar:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yPos)
-        colorBar:SetHeight(4)
-        colorBar:SetBackdrop(BACKDROP_SIMPLE)
-        colorBar:SetBackdropColor(pinR, pinG, pinB, 1)
-
-        yPos = yPos - 14
-
-        local infoLine = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        infoLine:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yPos)
-        local catText = zoneData.category or "General"
-        local storeText = zoneData.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Character") or (L["STORAGE_ACCOUNT_WIDE"] or "Account")
-        infoLine:SetText(catText .. "  |  " .. storeText)
-        infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-        if zoneData.mapID then
-            local mapInfo = C_Map.GetMapInfo(zoneData.mapID)
-            if mapInfo then
-                local mapLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                mapLabel:SetPoint("LEFT", infoLine, "RIGHT", 10, 0)
-                mapLabel:SetText("Map: " .. mapInfo.name .. " (" .. zoneData.mapID .. ")")
-                mapLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            end
+        for _, child in ipairs({detailPanel:GetChildren()}) do
+            child:Hide()
         end
 
-        yPos = yPos - 20
+        if not detailPanel.editorContent then
+            local editorHeader = CreateThemedBar(nil, detailPanel)
+            editorHeader:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -10)
+            editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
+            editorHeader:SetHeight(85)
 
-        OneWoW_GUI:CreateDivider(detailScrollChild, yPos)
-        yPos = yPos - 10
+            local zoneTitleFS = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+            zoneTitleFS:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 12, -8)
+            zoneTitleFS:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -110, -8)
+            zoneTitleFS:SetJustifyH("LEFT")
+            zoneTitleFS:SetWordWrap(false)
+            zoneTitleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            editorHeader.zoneTitleFS = zoneTitleFS
 
-        local contentLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        contentLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yPos)
-        contentLabel:SetText(L["LABEL_NOTE_CONTENT"] or "Note Content")
-        contentLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            local deleteBtn = CreateFrame("Button", nil, editorHeader)
+            deleteBtn:SetSize(22, 22)
+            deleteBtn:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -12, -12)
+            deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
+            deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
+            deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
+            deleteBtn:GetHighlightTexture():SetAlpha(0.5)
+            deleteBtn:SetScript("OnClick", function()
+                if selectedZone then
+                    local zName = selectedZone
+                    local confirmResult = OneWoW_GUI:CreateConfirmDialog({
+                        name = "OneWoW_NotesDeleteZoneConfirm",
+                        title = L["DIALOG_CONFIRM_DELETE"] or "Confirm Delete",
+                        message = string.format(L["ZONE_CONFIRM_DELETE"] or "Delete zone: %s?", zName),
+                        buttons = {
+                            {
+                                text = L["BUTTON_DELETE"] or "Delete",
+                                color = {0.8, 0.2, 0.2},
+                                onClick = function(dlg)
+                                    if ns.ZonePins then ns.ZonePins:RemovePin(zName) end
+                                    if ns.Zones then ns.Zones:RemoveZone(zName) end
+                                    selectedZone = nil
+                                    if detailPanel.editorContent then
+                                        for _, frame in pairs(detailPanel.editorContent) do
+                                            if frame and frame.Hide then frame:Hide() end
+                                        end
+                                    end
+                                    emptyMessage:Show()
+                                    parent.RefreshZonesList()
+                                    dlg:Hide()
+                                end,
+                            },
+                            { text = L["BUTTON_CANCEL"] or "Cancel", onClick = function(dlg) dlg:Hide() end },
+                        },
+                    })
+                    confirmResult.frame:Show()
+                end
+            end)
+            deleteBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["TOOLTIP_NOTE_DELETE"] or "Delete", 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_DELETE_DESC"] or "Delete this zone.", 0.8, 0.8, 0.8, true)
+                GameTooltip:Show()
+            end)
+            deleteBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-        local pinBtn = ns.UI.CreateButton(nil, detailScrollChild, L["ZONE_PIN_BUTTON"] or "Pin", 60, 22)
-        ns.UI.AutoResizeButton(pinBtn, 50, 120)
-        pinBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -80, yPos + 4)
-        pinBtn:SetScript("OnClick", function()
-            if ns.ZonePins then
-                ns.ZonePins:TogglePin(selectedZone)
-            end
-        end)
+            local propertiesBtn = CreateFrame("Button", nil, editorHeader)
+            propertiesBtn:SetSize(22, 22)
+            propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
+            propertiesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
+            propertiesBtn:SetPushedTexture(MEDIA .. "icon-gears.png")
+            propertiesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
+            propertiesBtn:GetHighlightTexture():SetAlpha(0.5)
+            propertiesBtn:SetScript("OnClick", function()
+                if selectedZone then
+                    ns.UI.ShowZonePropertiesDialog(selectedZone, parent)
+                end
+            end)
+            propertiesBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["TOOLTIP_NOTE_PROPERTIES"] or "Properties", 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_PROPERTIES_DESC"] or "Edit zone properties.", 0.8, 0.8, 0.8, true)
+                GameTooltip:Show()
+            end)
+            propertiesBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 
-        local deleteBtn = ns.UI.CreateButton(nil, detailScrollChild, L["BUTTON_DELETE"] or "Delete", 60, 22)
-        ns.UI.AutoResizeButton(deleteBtn, 50, 120)
-        deleteBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -10, yPos + 4)
-        deleteBtn:SetScript("OnClick", function()
-            if not selectedZone then return end
-            local zName = selectedZone
+            local pinBtn = CreateFrame("CheckButton", nil, editorHeader)
+            pinBtn:SetSize(22, 22)
+            pinBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -2, 0)
 
-            local confirmResult = OneWoW_GUI:CreateConfirmDialog({
-                name = "OneWoW_NotesDeleteZoneConfirm",
-                title = L["DIALOG_CONFIRM_DELETE"] or "Confirm Delete",
-                message = string.format(L["ZONE_CONFIRM_DELETE"] or "Delete zone: %s?", zName),
-                buttons = {
-                    {
-                        text = L["BUTTON_DELETE"] or "Delete",
-                        color = {0.8, 0.2, 0.2},
-                        onClick = function(dlg)
-                            if ns.ZonePins then ns.ZonePins:RemovePin(zName) end
-                            if ns.Zones then ns.Zones:RemoveZone(zName) end
-                            selectedZone = nil
-                            OneWoW_GUI:ClearFrame(detailPanel)
-                            emptyMessage:Show()
-                            parent.RefreshZonesList()
-                            dlg:Hide()
-                        end,
-                    },
-                    { text = L["BUTTON_CANCEL"] or "Cancel", onClick = function(dlg) dlg:Hide() end },
-                },
-            })
-            confirmResult.frame:Show()
-        end)
+            local pinNormalTex = pinBtn:CreateTexture(nil, "BACKGROUND")
+            pinNormalTex:SetAllPoints()
+            pinNormalTex:SetTexture(MEDIA .. "icon-pin.png")
+            pinNormalTex:SetDesaturated(true)
+            pinNormalTex:SetAlpha(0.3)
+            pinBtn:SetNormalTexture(pinNormalTex)
 
-        yPos = yPos - 24
+            local pinHighlightTex = pinBtn:CreateTexture(nil, "HIGHLIGHT")
+            pinHighlightTex:SetAllPoints()
+            pinHighlightTex:SetTexture(MEDIA .. "icon-pin.png")
+            pinHighlightTex:SetAlpha(0.5)
+            pinBtn:SetHighlightTexture(pinHighlightTex)
 
-        local noteBg = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
-        noteBg:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yPos)
-        noteBg:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -10, yPos)
-        noteBg:SetHeight(200)
-        noteBg:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        noteBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        noteBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+            pinBtn:SetScript("OnClick", function(self)
+                if selectedZone and ns.ZonePins and ns.Zones then
+                    local zoneData = ns.Zones:GetZone(selectedZone)
+                    local addon = _G.OneWoW_Notes
+                    if zoneData then
+                        if zoneData.pinEnabled and addon.zonePins and addon.zonePins[selectedZone] then
+                            ns.ZonePins:HideZonePin(selectedZone)
+                            zoneData.pinEnabled = false
+                            self:GetNormalTexture():SetDesaturated(true)
+                            self:GetNormalTexture():SetAlpha(0.3)
+                            self:SetChecked(false)
+                        else
+                            zoneData.pinEnabled = true
+                            ns.ZonePins:ShowZonePin(selectedZone, zoneData)
+                            self:GetNormalTexture():SetDesaturated(false)
+                            self:GetNormalTexture():SetAlpha(1.0)
+                            self:SetChecked(true)
+                        end
+                        parent.RefreshZonesList()
+                    end
+                end
+            end)
+            pinBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["TOOLTIP_NOTE_PIN"] or "Pin", 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_PIN_DESC"] or "Pin this zone.", 0.8, 0.8, 0.8, true)
+                GameTooltip:Show()
+            end)
+            pinBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
+            editorHeader.pinBtn = pinBtn
 
-        local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
-        noteScroll:SetPoint("TOPLEFT", noteBg, "TOPLEFT", 4, -4)
-        noteScroll:SetPoint("BOTTOMRIGHT", noteBg, "BOTTOMRIGHT", -26, 4)
+            local favoriteBtn = CreateFrame("CheckButton", nil, editorHeader)
+            favoriteBtn:SetSize(22, 22)
+            favoriteBtn:SetPoint("RIGHT", pinBtn, "LEFT", -2, 0)
 
-        local fontPath = ns.Config:ResolveFontPath(zoneData.fontFamily)
+            local favNormalTex = favoriteBtn:CreateTexture(nil, "BACKGROUND")
+            favNormalTex:SetAllPoints()
+            favNormalTex:SetTexture(MEDIA .. "icon-fav.png")
+            favNormalTex:SetDesaturated(true)
+            favNormalTex:SetAlpha(0.3)
+            favoriteBtn:SetNormalTexture(favNormalTex)
 
-        local noteEditBox = CreateFrame("EditBox", nil, noteScroll)
-        noteEditBox._skipGlobalFont = true
-        noteEditBox:SetMultiLine(true)
-        noteEditBox:SetFont(fontPath, zoneData.fontSize or 12, zoneData.fontOutline or "")
-        noteEditBox:SetAutoFocus(false)
-        noteEditBox:SetMaxLetters(0)
-        noteEditBox:SetText(zoneData.content or "")
-        noteScroll:SetScrollChild(noteEditBox)
-        noteScroll:HookScript("OnSizeChanged", function(self, w)
-            noteEditBox:SetWidth(math.max(1, w))
-        end)
+            local favCheckedTex = favoriteBtn:CreateTexture(nil, "BACKGROUND")
+            favCheckedTex:SetAllPoints()
+            favCheckedTex:SetTexture(MEDIA .. "icon-fav.png")
+            favoriteBtn:SetCheckedTexture(favCheckedTex)
 
-        local fontColor = GetFontColorFromKey(zoneData.fontColor, zoneData.pinColor)
-        noteEditBox:SetTextColor(fontColor[1], fontColor[2], fontColor[3], 1)
+            local favHighlightTex = favoriteBtn:CreateTexture(nil, "HIGHLIGHT")
+            favHighlightTex:SetAllPoints()
+            favHighlightTex:SetTexture(MEDIA .. "icon-fav.png")
+            favHighlightTex:SetAlpha(0.5)
+            favoriteBtn:SetHighlightTexture(favHighlightTex)
 
-        local saveTimer = nil
-        noteEditBox:SetScript("OnTextChanged", function(self, userInput)
-            if userInput then
-                if saveTimer then saveTimer:Cancel() end
-                saveTimer = C_Timer.NewTimer(1.0, function()
+            favoriteBtn:SetScript("OnClick", function(self)
+                if selectedZone and ns.Zones then
+                    local zoneData = ns.Zones:GetZone(selectedZone)
+                    if zoneData then
+                        zoneData.favorite = not zoneData.favorite
+                        if zoneData.favorite then
+                            self:GetNormalTexture():SetDesaturated(false)
+                            self:GetNormalTexture():SetAlpha(1.0)
+                            self:SetChecked(true)
+                        else
+                            self:GetNormalTexture():SetDesaturated(true)
+                            self:GetNormalTexture():SetAlpha(0.3)
+                            self:SetChecked(false)
+                        end
+                        ns.Zones:SaveZone(selectedZone, zoneData)
+                        parent.RefreshZonesList()
+                    end
+                end
+            end)
+            favoriteBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["TOOLTIP_NOTE_FAVORITE"] or "Favorite", 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_FAVORITE_DESC"] or "Mark as favorite.", 0.8, 0.8, 0.8, true)
+                GameTooltip:Show()
+            end)
+            favoriteBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
+            editorHeader.favoriteBtn = favoriteBtn
+
+            local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            categoryLine:SetPoint("BOTTOMLEFT", editorHeader, "BOTTOMLEFT", 12, 8)
+            categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            categoryLine:SetJustifyH("LEFT")
+            editorHeader.categoryLine = categoryLine
+
+            local mapLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            mapLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
+            mapLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            mapLine:SetJustifyH("RIGHT")
+            editorHeader.mapLine = mapLine
+
+            local contentBg = CreateThemedBar(nil, detailPanel)
+            contentBg:SetPoint("TOPLEFT", editorHeader, "BOTTOMLEFT", 0, -10)
+            contentBg:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -10)
+            contentBg:SetHeight(190)
+            contentBg:EnableMouse(true)
+
+            local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
+            contentScroll:SetPoint("TOPLEFT", contentBg, "TOPLEFT", 4, -4)
+            contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
+            contentBg:SetFrameLevel(contentScroll:GetFrameLevel() - 1)
+
+            contentEditBox = CreateFrame("EditBox", nil, contentScroll)
+            contentEditBox:SetMultiLine(true)
+            contentEditBox:SetFontObject("ChatFontNormal")
+            contentEditBox:SetWidth(contentScroll:GetWidth() - 20)
+            contentEditBox:SetAutoFocus(false)
+            contentEditBox:SetMaxLetters(0)
+            contentEditBox:SetHyperlinksEnabled(true)
+            contentEditBox:SetScript("OnHyperlinkClick", function(self, link, text, button)
+                SetItemRef(link, text, button)
+            end)
+            contentEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+            contentEditBox:SetScript("OnTextChanged", function(self, userInput)
+                if userInput and selectedZone and ns.Zones then
                     local d = ns.Zones:GetZone(selectedZone)
                     if d then
                         d.content = self:GetText()
+                        d.modified = GetServerTime()
                         ns.Zones:SaveZone(selectedZone, d)
-                        if ns.ZonePins then ns.ZonePins:RefreshZonePinContent(selectedZone) end
+
+                        if contentUpdateTimer then contentUpdateTimer:Cancel() end
+                        contentUpdateTimer = C_Timer.NewTimer(2, function()
+                            local addon = _G.OneWoW_Notes
+                            if selectedZone and addon.zonePins and addon.zonePins[selectedZone] then
+                                local pinFrame = addon.zonePins[selectedZone]
+                                if pinFrame and pinFrame.contentText then
+                                    local zone = ns.Zones:GetZone(selectedZone)
+                                    if zone then
+                                        pinFrame.contentText:SetText(zone.content or "")
+                                    end
+                                end
+                            end
+                            contentUpdateTimer = nil
+                        end)
                     end
-                end)
+                end
+            end)
+            contentEditBox:SetScript("OnReceiveDrag", function(self)
+                local cursorType, itemID, itemLink = GetCursorInfo()
+                if cursorType == "item" and itemLink then
+                    self:Insert(itemLink)
+                    ClearCursor()
+                end
+            end)
+            contentEditBox:SetScript("OnMouseUp", function(self, button)
+                if button == "RightButton" and ns.NotesContextMenu then
+                    ns.NotesContextMenu:ShowEditBoxContextMenu(self)
+                end
+            end)
+            if ns.NotesHyperlinks then
+                ns.NotesHyperlinks:EnhanceEditBox(contentEditBox)
             end
-        end)
+            contentEditBox._skipGlobalFont = true
+            contentScroll:SetScrollChild(contentEditBox)
+            detailPanel.contentEditBox = contentEditBox
 
-        yPos = yPos - 210
-
-        OneWoW_GUI:CreateDivider(detailScrollChild, yPos)
-        yPos = yPos - 10
-
-        todoContainer = CreateFrame("Frame", nil, detailScrollChild)
-        todoContainer:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yPos)
-        todoContainer:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -10, yPos)
-
-        local todoLabel = todoContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        todoLabel:SetPoint("TOPLEFT", todoContainer, "TOPLEFT", 0, 0)
-        todoLabel:SetText(L["ZONE_TODO_HEADER"] or "Checklist")
-        todoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-        local addTodoBtn = ns.UI.CreateButton(nil, todoContainer, "+", 22, 22)
-        addTodoBtn:SetPoint("LEFT", todoLabel, "RIGHT", 6, 0)
-        addTodoBtn:SetScript("OnClick", function()
-            local d = ns.Zones:GetZone(selectedZone)
-            if not d then return end
-            d.todos = d.todos or {}
-            table.insert(d.todos, { text = "", done = false })
-            ns.Zones:SaveZone(selectedZone, d)
-            ShowEditor()
-        end)
-
-        local todoY = -24
-        local todos = zoneData.todos or {}
-        for i, todo in ipairs(todos) do
-            local todoRow = CreateFrame("Frame", nil, todoContainer, "BackdropTemplate")
-            todoRow:SetPoint("TOPLEFT", todoContainer, "TOPLEFT", 0, todoY)
-            todoRow:SetPoint("TOPRIGHT", todoContainer, "TOPRIGHT", 0, todoY)
-            todoRow:SetHeight(26)
-            todoRow:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-            todoRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            todoRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-            local cb = CreateFrame("CheckButton", nil, todoRow, "UICheckButtonTemplate")
-            cb:SetSize(20, 20)
-            cb:SetPoint("LEFT", todoRow, "LEFT", 4, 0)
-            cb:SetChecked(todo.done)
-            cb:SetScript("OnClick", function(self)
-                local d = ns.Zones:GetZone(selectedZone)
-                if d and d.todos and d.todos[i] then
-                    d.todos[i].done = self:GetChecked()
-                    ns.Zones:SaveZone(selectedZone, d)
+            contentBg:SetScript("OnMouseDown", function(self, button)
+                if detailPanel.contentEditBox then
+                    detailPanel.contentEditBox:SetFocus()
+                    if button == "LeftButton" then
+                        local cursorType, itemID, itemLink = GetCursorInfo()
+                        if cursorType == "item" and itemLink then
+                            detailPanel.contentEditBox:Insert(itemLink)
+                            ClearCursor()
+                        elseif cursorType == "spell" then
+                            local spellID = select(2, GetCursorInfo())
+                            if spellID then
+                                local spellLink = nil
+                                if C_Spell and C_Spell.GetSpellLink then
+                                    spellLink = C_Spell.GetSpellLink(spellID)
+                                elseif GetSpellLink then
+                                    spellLink = GetSpellLink(spellID)
+                                end
+                                if spellLink then detailPanel.contentEditBox:Insert(spellLink) end
+                            end
+                            ClearCursor()
+                        end
+                    elseif button == "RightButton" and ns.NotesContextMenu then
+                        ns.NotesContextMenu:ShowEditBoxContextMenu(detailPanel.contentEditBox)
+                    end
                 end
             end)
 
-            local todoInput = CreateFrame("EditBox", nil, todoRow, "BackdropTemplate")
-            todoInput:SetPoint("LEFT", cb, "RIGHT", 4, 0)
-            todoInput:SetPoint("RIGHT", todoRow, "RIGHT", -30, 0)
-            todoInput:SetHeight(20)
-            todoInput:SetFontObject("GameFontNormal")
-            todoInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            todoInput:SetAutoFocus(false)
-            todoInput:SetText(todo.text or "")
-            todoInput:SetScript("OnEnterPressed", function(self)
-                local d = ns.Zones:GetZone(selectedZone)
-                if d and d.todos and d.todos[i] then
-                    d.todos[i].text = self:GetText()
-                    ns.Zones:SaveZone(selectedZone, d)
+            local todoSection = CreateFrame("Frame", nil, detailPanel)
+            todoSection:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -10)
+            todoSection:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 10)
+            todoSection:SetClipsChildren(true)
+
+            local todoHeader = CreateFrame("Frame", nil, todoSection)
+            todoHeader:SetPoint("TOPLEFT", todoSection, "TOPLEFT", 0, 0)
+            todoHeader:SetPoint("TOPRIGHT", todoSection, "TOPRIGHT", -22, 0)
+            todoHeader:SetHeight(30)
+
+            local todoLabel = todoHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            todoLabel:SetPoint("LEFT", todoHeader, "LEFT", 5, 0)
+            todoLabel:SetText(L["ZONE_TODO_HEADER"] or "Checklist")
+            todoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+            local resetTasksBtn = CreateFrame("Button", nil, todoHeader)
+            resetTasksBtn:SetSize(20, 20)
+            resetTasksBtn:SetPoint("LEFT", todoLabel, "RIGHT", 5, 0)
+            resetTasksBtn:SetNormalAtlas("talents-button-undo")
+            resetTasksBtn:SetPushedAtlas("talents-button-undo")
+            resetTasksBtn:SetHighlightAtlas("talents-button-undo")
+            resetTasksBtn:GetHighlightTexture():SetAlpha(0.5)
+            resetTasksBtn:SetScript("OnClick", function()
+                if selectedZone and ns.Zones then
+                    local d = ns.Zones:GetZone(selectedZone)
+                    if d and d.todos then
+                        for _, todo in ipairs(d.todos) do
+                            todo.done = false
+                        end
+                        ns.Zones:SaveZone(selectedZone, d)
+                        if parent.RefreshZoneTodos then parent.RefreshZoneTodos() end
+                    end
+                end
+            end)
+            resetTasksBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetText(L["NOTE_RESET_TODOS"] or "Reset Tasks", 1, 1, 1)
+                GameTooltip:AddLine(L["NOTE_RESET_TODOS_DESC"] or "Uncheck all tasks.", 0.8, 0.8, 0.8, true)
+                GameTooltip:Show()
+            end)
+            resetTasksBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
+
+            local addTaskBtn = CreateFrame("Button", nil, todoHeader)
+            addTaskBtn:SetSize(24, 24)
+            addTaskBtn:SetPoint("RIGHT", todoHeader, "RIGHT", 0, 0)
+
+            local taskInputBox = CreateFrame("EditBox", nil, todoHeader, "InputBoxTemplate")
+            taskInputBox:SetPoint("LEFT", resetTasksBtn, "RIGHT", 5, 0)
+            taskInputBox:SetPoint("RIGHT", addTaskBtn, "LEFT", -5, 0)
+            taskInputBox:SetHeight(25)
+            taskInputBox:SetAutoFocus(false)
+            taskInputBox:SetScript("OnEnterPressed", function(self)
+                local text = self:GetText()
+                if text and text ~= "" and selectedZone and ns.Zones then
+                    local d = ns.Zones:GetZone(selectedZone)
+                    if d then
+                        d.todos = d.todos or {}
+                        table.insert(d.todos, { text = text, done = false })
+                        ns.Zones:SaveZone(selectedZone, d)
+                        self:SetText("")
+                        if parent.RefreshZoneTodos then parent.RefreshZoneTodos() end
+                    end
                 end
                 self:ClearFocus()
             end)
-            todoInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-
-            if todo.done then
-                todoInput:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            end
-
-            local removeBtn = CreateFrame("Button", nil, todoRow)
-            removeBtn:SetSize(16, 16)
-            removeBtn:SetPoint("RIGHT", todoRow, "RIGHT", -6, 0)
-            removeBtn:SetNormalTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
-            removeBtn:SetScript("OnClick", function()
-                local d = ns.Zones:GetZone(selectedZone)
-                if d and d.todos then
-                    table.remove(d.todos, i)
-                    ns.Zones:SaveZone(selectedZone, d)
-                    ShowEditor()
+            addTaskBtn:SetNormalTexture(MEDIA .. "icon-add.png")
+            addTaskBtn:SetHighlightTexture(MEDIA .. "icon-add.png")
+            addTaskBtn:SetPushedTexture(MEDIA .. "icon-add.png")
+            addTaskBtn:GetHighlightTexture():SetAlpha(0.5)
+            addTaskBtn:SetScript("OnClick", function()
+                local text = taskInputBox:GetText()
+                if text and text ~= "" and selectedZone and ns.Zones then
+                    local d = ns.Zones:GetZone(selectedZone)
+                    if d then
+                        d.todos = d.todos or {}
+                        table.insert(d.todos, { text = text, done = false })
+                        ns.Zones:SaveZone(selectedZone, d)
+                        taskInputBox:SetText("")
+                        if parent.RefreshZoneTodos then parent.RefreshZoneTodos() end
+                    end
                 end
             end)
 
-            todoY = todoY - 28
+            local todoScroll = CreateFrame("ScrollFrame", nil, todoSection, "UIPanelScrollFrameTemplate")
+            todoScroll:SetPoint("TOPLEFT", todoHeader, "BOTTOMLEFT", 0, -5)
+            todoScroll:SetPoint("BOTTOMRIGHT", todoSection, "BOTTOMRIGHT", -22, 0)
+
+            todoContainer = CreateFrame("Frame", nil, todoScroll)
+            todoContainer:SetSize(todoScroll:GetWidth() - 20, 1)
+            todoScroll:SetScrollChild(todoContainer)
+            detailPanel.todoContainer = todoContainer
+
+            todoScroll:SetScript("OnSizeChanged", function(self, width)
+                if todoContainer then todoContainer:SetWidth(width - 20) end
+            end)
+
+            local separatorLine = OneWoW_GUI:CreateDivider(detailPanel, 0)
+            separatorLine:ClearAllPoints()
+            separatorLine:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -5)
+            separatorLine:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -5)
+
+            detailPanel.editorContent = {
+                header        = editorHeader,
+                contentScroll = contentScroll,
+                contentBg     = contentBg,
+                todoSection   = todoSection,
+                separatorLine = separatorLine,
+            }
         end
 
-        local totalTodoH = math.abs(todoY) + 24
-        todoContainer:SetHeight(totalTodoH)
+        for _, frame in pairs(detailPanel.editorContent) do
+            if frame and frame.Show then frame:Show() end
+        end
+        ns.UI.activeContentEditBox = detailPanel.contentEditBox
 
-        yPos = yPos - totalTodoH - 10
-        detailScrollChild:SetHeight(math.abs(yPos) + 50)
+        if selectedZone and ns.Zones then
+            local zoneData = ns.Zones:GetZone(selectedZone)
+            if zoneData and type(zoneData) == "table" then
+                local header = detailPanel.editorContent.header
+
+                if header.zoneTitleFS then
+                    header.zoneTitleFS:SetText(selectedZone)
+                end
+
+                if detailPanel.contentEditBox then
+                    detailPanel.contentEditBox:SetText(zoneData.content or "")
+                end
+
+                local pinColor  = zoneData.pinColor or "sync"
+                local fontColor = zoneData.fontColor or "match"
+                local fontSize  = zoneData.fontSize or 12
+
+                local colorConfig = ns.Config:GetResolvedColorConfig(pinColor)
+                local bgColor     = colorConfig.background
+                local listItemColor = colorConfig.listItem
+                local borderColor = colorConfig.border
+
+                if detailPanel.editorContent.contentBg then
+                    detailPanel.editorContent.contentBg:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], zoneData.opacity or 0.9)
+                    detailPanel.editorContent.contentBg:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+                end
+
+                if detailPanel.contentEditBox then
+                    local textColor = GetFontColorFromKey(fontColor, pinColor)
+                    detailPanel.contentEditBox:SetTextColor(textColor[1], textColor[2], textColor[3], 1)
+                    local fontPath = ns.Config:ResolveFontPath(zoneData.fontFamily)
+                    detailPanel.contentEditBox:SetFont(fontPath, fontSize, zoneData.fontOutline or "")
+                end
+
+                if header then
+                    local textColor = GetFontColorFromKey(fontColor, pinColor)
+                    header:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4] or 0.9)
+                    header:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+
+                    if header.categoryLine then
+                        header.categoryLine:SetTextColor(textColor[1], textColor[2], textColor[3])
+                        local catText = zoneData.category or "General"
+                        local storeText = zoneData.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Character") or (L["STORAGE_ACCOUNT_WIDE"] or "Account")
+                        header.categoryLine:SetText(catText .. "  |  " .. storeText)
+                    end
+
+                    if header.mapLine then
+                        header.mapLine:SetTextColor(textColor[1], textColor[2], textColor[3])
+                        if zoneData.mapID then
+                            local mapInfo = C_Map.GetMapInfo(zoneData.mapID)
+                            if mapInfo then
+                                header.mapLine:SetText("Map: " .. mapInfo.name .. " (" .. zoneData.mapID .. ")")
+                            else
+                                header.mapLine:SetText("Map ID: " .. zoneData.mapID)
+                            end
+                        else
+                            header.mapLine:SetText("")
+                        end
+                    end
+
+                    if header.favoriteBtn then
+                        if zoneData.favorite then
+                            header.favoriteBtn:GetNormalTexture():SetDesaturated(false)
+                            header.favoriteBtn:GetNormalTexture():SetAlpha(1.0)
+                            header.favoriteBtn:SetChecked(true)
+                        else
+                            header.favoriteBtn:GetNormalTexture():SetDesaturated(true)
+                            header.favoriteBtn:GetNormalTexture():SetAlpha(0.3)
+                            header.favoriteBtn:SetChecked(false)
+                        end
+                    end
+
+                    if header.pinBtn then
+                        local pinEnabled = zoneData.pinEnabled
+                        header.pinBtn:GetNormalTexture():SetDesaturated(not pinEnabled)
+                        header.pinBtn:GetNormalTexture():SetAlpha(pinEnabled and 1.0 or 0.3)
+                        header.pinBtn:SetChecked(pinEnabled and true or false)
+                    end
+                end
+
+                if parent.RefreshZoneTodos then parent.RefreshZoneTodos() end
+            end
+        end
     end
 
     parent.SelectZone = function(zoneName)
         selectedZone = zoneName
         ShowEditor()
         parent.RefreshZonesList()
+    end
+
+    function parent.RefreshZoneTodos()
+        if not todoContainer or not selectedZone then return end
+
+        for _, child in ipairs({todoContainer:GetChildren()}) do
+            child:Hide()
+            child:SetParent(nil)
+        end
+
+        if not ns.Zones then return end
+        local zoneData = ns.Zones:GetZone(selectedZone)
+        if not zoneData or not zoneData.todos then return end
+
+        local yOffset = 0
+        for i, todo in ipairs(zoneData.todos) do
+            local todoFrame = CreateFrame("Frame", nil, todoContainer)
+            todoFrame:SetPoint("TOPLEFT", todoContainer, "TOPLEFT", 0, yOffset)
+            todoFrame:SetPoint("RIGHT", todoContainer, "RIGHT", 0, 0)
+            todoFrame:SetHeight(25)
+
+            local checkbox = CreateFrame("CheckButton", nil, todoFrame, "UICheckButtonTemplate")
+            checkbox:SetSize(20, 20)
+            checkbox:SetPoint("LEFT", todoFrame, "LEFT", 5, 0)
+            checkbox:SetChecked(todo.done)
+            checkbox:SetScript("OnClick", function(self)
+                local d = ns.Zones:GetZone(selectedZone)
+                if d and d.todos and d.todos[i] then
+                    d.todos[i].done = self:GetChecked()
+                    ns.Zones:SaveZone(selectedZone, d)
+                    parent.RefreshZoneTodos()
+                end
+            end)
+
+            local todoEditBox = CreateFrame("EditBox", nil, todoFrame, "InputBoxTemplate")
+            todoEditBox:SetPoint("LEFT", checkbox, "RIGHT", 10, 0)
+            todoEditBox:SetPoint("RIGHT", todoFrame, "RIGHT", -35, 0)
+            todoEditBox:SetHeight(20)
+            todoEditBox:SetAutoFocus(false)
+            todoEditBox:SetText(todo.text or "")
+            if todo.done then
+                todoEditBox:SetTextColor(0.5, 0.5, 0.5)
+            else
+                todoEditBox:SetTextColor(1, 1, 1)
+            end
+            todoEditBox:SetScript("OnEnterPressed", function(self)
+                local d = ns.Zones:GetZone(selectedZone)
+                if d and d.todos and d.todos[i] then
+                    d.todos[i].text = self:GetText()
+                    ns.Zones:SaveZone(selectedZone, d)
+                    parent.RefreshZoneTodos()
+                end
+                self:ClearFocus()
+            end)
+            todoEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+            todoEditBox:SetScript("OnEditFocusLost", function(self)
+                local d = ns.Zones:GetZone(selectedZone)
+                if d and d.todos and d.todos[i] then
+                    d.todos[i].text = self:GetText()
+                    ns.Zones:SaveZone(selectedZone, d)
+                end
+            end)
+            todoEditBox:SetScript("OnMouseUp", function(self, button)
+                if button == "RightButton" and ns.NotesContextMenu then
+                    ns.NotesContextMenu:ShowEditBoxContextMenu(self)
+                end
+            end)
+            if ns.NotesHyperlinks then
+                ns.NotesHyperlinks:EnhanceEditBox(todoEditBox)
+            end
+
+            local deleteTodoBtn = CreateFrame("Button", nil, todoFrame)
+            deleteTodoBtn:SetSize(16, 16)
+            deleteTodoBtn:SetPoint("RIGHT", todoFrame, "RIGHT", -5, 0)
+            deleteTodoBtn:SetNormalTexture(MEDIA .. "icon-minus.png")
+            deleteTodoBtn:SetPushedTexture(MEDIA .. "icon-minus.png")
+            deleteTodoBtn:SetHighlightTexture(MEDIA .. "icon-minus.png")
+            deleteTodoBtn:GetHighlightTexture():SetAlpha(0.5)
+            deleteTodoBtn:SetScript("OnClick", function()
+                local d = ns.Zones:GetZone(selectedZone)
+                if d and d.todos then
+                    table.remove(d.todos, i)
+                    ns.Zones:SaveZone(selectedZone, d)
+                    parent.RefreshZoneTodos()
+                end
+            end)
+
+            yOffset = yOffset - 30
+        end
+
+        todoContainer:SetHeight(math.abs(yOffset) + 50)
     end
 
     parent.RefreshZonesList = function()

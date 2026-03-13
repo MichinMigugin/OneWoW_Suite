@@ -703,6 +703,7 @@ function ns.UI.CreateNotesTab(parent)
         for _, frame in pairs(detailPanel.editorContent) do
             if frame and frame.Show then frame:Show() end
         end
+        ns.UI.activeContentEditBox = detailPanel.contentEditBox
 
         if selectedNote and ns.NotesData then
             local allNotes = ns.NotesData:GetAllNotes()

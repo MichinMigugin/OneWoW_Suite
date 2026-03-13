@@ -448,12 +448,12 @@ function ns.UI.CreateNotesHelpPanel()
         local pasteBtn = ns.UI.CreateButton(nil, detailFrame, L["UI_HELP_PASTE_BUTTON"], 60, 20)
         pasteBtn:SetPoint("BOTTOMLEFT", detailFrame, "BOTTOMLEFT", 8, 6)
         pasteBtn:SetScript("OnClick", function()
-            local editBox = ns.UI.notesDetailPanel and ns.UI.notesDetailPanel.contentEditBox
+            local editBox = ns.UI.activeContentEditBox
             if editBox then
                 local template = linkType.syntax:match("^%(.-=") or linkType.syntax:match("^%(/way ")
                 if template then
-                    editBox:Insert(template)
                     editBox:SetFocus()
+                    editBox:Insert(template)
                 end
             end
         end)

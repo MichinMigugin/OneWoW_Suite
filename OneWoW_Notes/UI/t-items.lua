@@ -554,6 +554,7 @@ function ns.UI.CreateItemsTab(parent)
             if f and f.Show then f:Show() end
         end
         if detailPanel.contentEditBox then detailPanel.contentEditBox:Show() end
+        ns.UI.activeContentEditBox = detailPanel.contentEditBox
 
         if selectedItem and ns.Items then
             local itemData = ns.Items:GetItem(selectedItem)
@@ -689,15 +690,12 @@ function ns.UI.CreateItemsTab(parent)
         table.sort(regular,   sortByName)
 
         local function BuildItemRow(item, yOffset)
-            local rarity = item.data.rarity or 1
-            local r, g, b = GetItemQualityColor(rarity)
-
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
             row:SetSize(scrollChild:GetWidth(), 50)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
             row:SetBackdrop(BACKDROP_STANDARD)
-            row:SetBackdropColor(r * 0.15, g * 0.15, b * 0.15, 0.5)
-            row:SetBackdropBorderColor(r, g, b, 0.8)
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local icon = row:CreateTexture(nil, "ARTWORK")
             icon:SetSize(32, 32)
@@ -709,7 +707,7 @@ function ns.UI.CreateItemsTab(parent)
             titleText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -10)
             titleText:SetJustifyH("LEFT")
             titleText:SetText(item.data.name or ("Item " .. item.id))
-            titleText:SetTextColor(r, g, b)
+            titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local deleteBtn = CreateFrame("Button", nil, row)
             deleteBtn:SetSize(18, 18)
@@ -814,17 +812,17 @@ function ns.UI.CreateItemsTab(parent)
             end)
             row:SetScript("OnEnter", function(self)
                 if selectedItem ~= item.id then
-                    self:SetBackdropColor(r * 0.25, g * 0.25, b * 0.25, 0.7)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 end
             end)
             row:SetScript("OnLeave", function(self)
                 if selectedItem ~= item.id then
-                    self:SetBackdropColor(r * 0.15, g * 0.15, b * 0.15, 0.5)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 end
             end)
 
             if selectedItem == item.id then
-                row:SetBackdropColor(r * 0.3, g * 0.3, b * 0.3, 0.9)
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 row:SetBackdropBorderColor(1, 0.82, 0, 1)
             end
 

@@ -557,6 +557,7 @@ function ns.UI.CreatePlayersTab(parent)
             if f and f.Show then f:Show() end
         end
         if detailPanel.contentEditBox then detailPanel.contentEditBox:Show() end
+        ns.UI.activeContentEditBox = detailPanel.contentEditBox
 
         if selectedPlayer and ns.Players then
             local pd = ns.Players:GetPlayer(selectedPlayer)
@@ -686,24 +687,19 @@ function ns.UI.CreatePlayersTab(parent)
         table.sort(regular,    sortByName)
 
         local function BuildPlayerRow(player, yOffset)
-            local pinColorKey = ns.Players:GetPinColorKey(player.data.class)
-            local colorConfig = ns.Config.PIN_COLORS[pinColorKey] or ns.Config.PIN_COLORS["hunter"]
-            local listItemColor = colorConfig.listItem
-            local borderColor   = colorConfig.border
-
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
             row:SetSize(scrollChild:GetWidth(), 50)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
             row:SetBackdrop(BACKDROP_STANDARD)
-            row:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
-            row:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             nameText:SetPoint("TOPLEFT",  row, "TOPLEFT",  10, -10)
             nameText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -10)
             nameText:SetJustifyH("LEFT")
             nameText:SetText(player.data.name or player.fullName)
-            nameText:SetTextColor(borderColor[1], borderColor[2], borderColor[3])
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local subText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             subText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 10, 8)
@@ -812,17 +808,17 @@ function ns.UI.CreatePlayersTab(parent)
             end)
             row:SetScript("OnEnter", function(self)
                 if selectedPlayer ~= player.fullName then
-                    self:SetBackdropColor(listItemColor[1] * 1.2, listItemColor[2] * 1.2, listItemColor[3] * 1.2, listItemColor[4] + 0.1)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 end
             end)
             row:SetScript("OnLeave", function(self)
                 if selectedPlayer ~= player.fullName then
-                    self:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 end
             end)
 
             if selectedPlayer == player.fullName then
-                row:SetBackdropColor(listItemColor[1] + 0.15, listItemColor[2] + 0.15, listItemColor[3] + 0.15, 0.9)
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 row:SetBackdropBorderColor(1, 0.82, 0, 1)
             end
 
