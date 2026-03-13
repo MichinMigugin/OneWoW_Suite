@@ -10,7 +10,7 @@
 ## AddonCompartmentFunc: 1WoW_ShoppingList_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: 1WoW_ShoppingList_OnAddonCompartmentEnter
 ## AddonCompartmentFuncOnLeave: 1WoW_ShoppingList_OnAddonCompartmentLeave
-## IconTexture: Interface\AddOns\OneWoW_DirectDeposit\Media\neutral-mini.png
+## IconTexture: Interface\AddOns\OneWoW_ShoppingList\Media\neutral-mini.png
 ## RequiredDeps: OneWoW_GUI
 ## OptionalDeps: OneWoW
 ## Category: OneWoW

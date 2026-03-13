@@ -12,7 +12,7 @@
 ## AddonCompartmentFuncOnLeave: 1WoW_OnAddonCompartmentLeave
 ## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
 ## RequiredDeps: OneWoW_GUI
-## OptionalDeps: OneWoW_AltTracker, OneWoW_Catalog, OneWoW_NOtes, OneWoW_QoL, OneWoW_DirectDeposit, OneWOW_ShoppingList, OneWoW_Bags, OneWoW_Utility_Extractor, OneWoW_Utility_DevTool
+## OptionalDeps: OneWoW_AltTracker, OneWoW_Catalog, OneWoW_Notes, OneWoW_QoL, OneWoW_DirectDeposit, OneWoW_ShoppingList, OneWoW_Bags, OneWoW_Utility_Extractor, OneWoW_Utility_DevTool
 ## Category: OneWoW
 ## Group: OneWoW
 
