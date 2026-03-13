@@ -26,7 +26,3 @@ ns.Constants = {
         [7] = {0.00, 0.80, 1.00, 1.0},
     },
 }
-
-function ns.ApplyTheme()
-    OneWoW_GUI:ApplyTheme(addonName)
-end

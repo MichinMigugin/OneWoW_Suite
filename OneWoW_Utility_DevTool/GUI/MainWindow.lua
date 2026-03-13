@@ -2002,9 +2002,9 @@ function UI:CreateSettingsTab(parent)
         neon = "Neon Synthwave", glassmorphic = "Glassmorphic", lightmode = "Minimal White",
         retro = "Retro Classic", fantasy = "RPG Fantasy", nightfae = "Covenant Twilight",
     }
-    local themeKeys = {"green", "blue", "purple", "red", "orange", "teal", "gold", "pink", "dark", "amber", "cyan", "slate", "voidblack", "charcoal", "forestnight", "obsidian", "monochrome", "twilight", "neon", "glassmorphic", "lightmode", "retro", "fantasy", "nightfae"}
+    local themeKeys = OneWoW_GUI.Constants.THEMES_ORDER
 
-    local currentTheme = Addon.db and Addon.db.theme or "green"
+    local currentTheme = OneWoW_GUI:GetSetting("theme") or Addon.db and Addon.db.theme or "green"
     local currentThemeName = themeNames[currentTheme] or "Forest Green"
 
     local themeTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -2040,8 +2040,7 @@ function UI:CreateSettingsTab(parent)
     local themeColorPreview = themeDropdown:CreateTexture(nil, "OVERLAY")
     themeColorPreview:SetSize(14, 14)
     themeColorPreview:SetPoint("LEFT", themeDropdown, "LEFT", 6, 0)
-    local currentThemeData = Addon.Constants.THEMES[currentTheme]
-    if currentThemeData then themeColorPreview:SetColorTexture(unpack(currentThemeData.ACCENT_PRIMARY)) end
+    themeColorPreview:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local themeDropArrow = themeDropdown:CreateTexture(nil, "OVERLAY")
     themeDropArrow:SetSize(16, 16)
@@ -2093,8 +2092,9 @@ function UI:CreateSettingsTab(parent)
             scrollBar:SetValue(newScroll)
         end)
 
+        local guiThemesForMenu = OneWoW_GUI.Constants.THEMES
         for i, themeKey in ipairs(themeKeys) do
-            local themeData = Addon.Constants.THEMES[themeKey]
+            local themeData = guiThemesForMenu[themeKey]
             if themeData then
                 local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
                 btn:SetSize(230, 26)
@@ -2107,19 +2107,15 @@ function UI:CreateSettingsTab(parent)
                 dot:SetColorTexture(unpack(themeData.ACCENT_PRIMARY))
                 local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 txt:SetPoint("LEFT", btn, "LEFT", 28, 0)
-                txt:SetText(themeNames[themeKey] or themeKey)
+                txt:SetText(themeNames[themeKey] or themeData.name or themeKey)
                 txt:SetTextColor(0.9, 0.9, 0.9)
                 btn:SetScript("OnEnter", function(s) s:SetBackdropColor(0.2, 0.2, 0.2, 1) txt:SetTextColor(1, 0.82, 0) end)
                 btn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.1, 0.1, 0.1, 0.8) txt:SetTextColor(0.9, 0.9, 0.9) end)
                 local capturedKey = themeKey
                 btn:SetScript("OnClick", function()
-                    Addon.db.theme = capturedKey
-                    Addon:ApplyTheme()
+                    OneWoW_GUI:SetSetting("theme", capturedKey)
                     menu:Hide()
-                    if UI.mainFrame then UI.mainFrame:Hide() end
-                    UI.mainFrame = nil
-                    UI.tabs = {}
-                    C_Timer.After(0.1, function() UI:Show() end)
+                    -- OnThemeChanged callback handles ApplyTheme + FullReset + Show
                 end)
             end
         end

@@ -92,6 +92,46 @@ local addonName, ns = ...
 - `ns` — a **private table** shared across all files in this addon. Use it
   instead of globals to pass data between files.
 
+### 2.3 OneWoW Suite — OneWoW_GUI Dependency
+
+OneWoW addons that depend on OneWoW_GUI must check for it **near the top** of
+the main addon file and exit early if it is not available:
+
+```lua
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+```
+
+Place this immediately after addon namespace setup and any minimal globals.
+Since OneWoW_GUI is required for theming and UI, failing fast avoids errors
+later in the file.
+
+**No defensive checks downstream.** Once the early-return is in place, do not
+guard calls with `if OneWoW_GUI and OneWoW_GUI.SomeMethod then`. Call
+`OneWoW_GUI.SomeMethod(...)` directly. If a method does not exist, that is a
+bug to fix before packaging — do not silently skip; let it error so it is
+caught during development.
+
+### 2.4 OneWoW Suite — Theme Colors
+
+Always use `OneWoW_GUI:GetThemeColor(key)` for theme colors. Do **not** access
+raw theme data (e.g. `currentThemeData.ACCENT_PRIMARY` or
+`unpack(currentThemeData.ACCENT_PRIMARY)`).
+
+```lua
+-- BAD: direct theme data access
+if currentThemeData and currentThemeData.ACCENT_PRIMARY then
+    themeColorPreview:SetColorTexture(unpack(currentThemeData.ACCENT_PRIMARY))
+end
+
+-- GOOD: use the API
+themeColorPreview:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+```
+
+`GetThemeColor` returns `r, g, b, a` (suitable for `SetColorTexture`,
+`SetBackdropColor`, `SetTextColor`, etc.). Centralizing theme access via the
+API ensures consistency and correct behavior when themes change.
+
 ---
 
 ## 3. Modern API Patterns (12.0+)

@@ -3,7 +3,6 @@ local ADDON_NAME, OneWoW = ...
 _G.OneWoW = OneWoW
 
 local L = OneWoW.L
-local Constants = OneWoW.Constants
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -189,7 +188,7 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
 
         local comps = OneWoW._loadedComponents
         if comps and #comps > 0 then
-            local ver = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or Constants.VERSION
+            local ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
             local parts = {}
             for _, c in ipairs(comps) do
                 table.insert(parts, "|cFFFFFFFF" .. c.name .. "|r")

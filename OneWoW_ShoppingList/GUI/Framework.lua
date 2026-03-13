@@ -20,6 +20,10 @@ function GUI:CreateEditBox(name, parent, width, height)
     return OneWoW_GUI:CreateEditBox(name, parent, { width = width, height = height })
 end
 
+function GUI:CreateButton(name, parent, text, width, height)
+    return OneWoW_GUI:CreateButton(name, parent, text, width, height)
+end
+
 -- LESSON 9 compliant scroll area
 -- Returns: container, scrollFrame, scrollContent, UpdateThumb
 function GUI:CreateScrollArea(parent, name, offsetL, offsetR, offsetT, offsetB)
@@ -74,8 +78,4 @@ function GUI:CreateScrollArea(parent, name, offsetL, offsetR, offsetT, offsetB)
     container.UpdateThumb   = function() end
 
     return container
-end
-
-function GUI:ApplyTheme(themeName)
-    OneWoW_GUI:ApplyTheme(themeName)
 end

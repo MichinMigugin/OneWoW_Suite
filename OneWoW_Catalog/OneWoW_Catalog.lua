@@ -3,6 +3,9 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Catalog = LibStub("AceAddon-3.0"):NewAddon("OneWoW_Catalog", "AceEvent-3.0", "AceConsole-3.0")
 local addon = OneWoW_Catalog
 
@@ -39,35 +42,29 @@ end
 function addon:OnInitialize()
     self:InitializeDatabase()
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    OneWoW_GUI:MigrateSettings(self.db.global)
 
-    if OneWoW_GUI and OneWoW_GUI.MigrateSettings then
-        OneWoW_GUI:MigrateSettings(self.db.global)
-    end
-
-    if ns.ApplyTheme then ns.ApplyTheme() end
+    self:ApplyTheme()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
     addon.Catalog = ns.Catalog
     addon.UI = ns.UI
     self:RegisterChatCommand("owcat", "SlashCommandHandler")
     self:RegisterChatCommand("onewowcatalog", "SlashCommandHandler")
 
-    if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
-        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
-            if ns.ApplyTheme then ns.ApplyTheme() end
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
-            if ns.ApplyLanguage then ns.ApplyLanguage() end
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
-            local mainFrame = _G["OneWoW_CatalogMainFrame"]
-            if mainFrame and ns.UI and ns.UI.ApplyFontToFrame then
-                ns.UI.ApplyFontToFrame(mainFrame)
-            end
-        end)
-    end
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+        self2:ApplyTheme()
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+        if ns.ApplyLanguage then ns.ApplyLanguage() end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+        local mainFrame = _G["OneWoW_CatalogMainFrame"]
+        if mainFrame and ns.UI and ns.UI.ApplyFontToFrame then
+            ns.UI.ApplyFontToFrame(mainFrame)
+        end
+    end)
 
-    local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION
+    local _ver = OneWoW_GUI:GetAddonVersion(addonName)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("Catalog", _ver, "/owcat")
     end
@@ -83,7 +80,7 @@ function addon:OnEnable()
 end
 
 function addon:ApplyTheme()
-    if ns.ApplyTheme then ns.ApplyTheme() end
+    OneWoW_GUI:ApplyTheme(self)
 end
 
 function addon:ApplyLanguage()

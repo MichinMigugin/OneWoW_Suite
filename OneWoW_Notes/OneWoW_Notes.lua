@@ -3,6 +3,9 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Notes = LibStub("AceAddon-3.0"):NewAddon("OneWoW_Notes", "AceEvent-3.0", "AceConsole-3.0")
 local addon = OneWoW_Notes
 
@@ -41,48 +44,42 @@ end
 function addon:OnInitialize()
     self:InitializeDatabase()
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    OneWoW_GUI:MigrateSettings(self.db.global)
 
-    if OneWoW_GUI and OneWoW_GUI.MigrateSettings then
-        OneWoW_GUI:MigrateSettings(self.db.global)
-    end
-
-    if ns.ApplyTheme then ns.ApplyTheme() end
+    self:ApplyTheme()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
     self:RegisterChatCommand("own", "SlashCommandHandler")
     self:RegisterChatCommand("onewownotes", "SlashCommandHandler")
     self:RegisterChatCommand("1wn", "SlashCommandHandler")
 
-    if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
-        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
-            if ns.ApplyTheme then ns.ApplyTheme() end
-            if ns.NotesPins and ns.NotesPins.RefreshSyncPins then
-                ns.NotesPins:RefreshSyncPins()
-            end
-            if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
-                ns.ZonePins:RefreshSyncPins()
-            end
-            if ns.RoutinesEngine and ns.RoutinesEngine.RefreshAllPinnedWindows then
-                ns.RoutinesEngine:RefreshAllPinnedWindows()
-            end
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
-            if ns.ApplyLanguage then ns.ApplyLanguage() end
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
-            if ns.NotesPins and ns.NotesPins.RefreshAllPinFonts then
-                ns.NotesPins:RefreshAllPinFonts()
-            end
-            if ns.ZonePins and ns.ZonePins.RefreshAllPinFonts then
-                ns.ZonePins:RefreshAllPinFonts()
-            end
-            if ns.RoutinesEngine and ns.RoutinesEngine.RefreshAllPinnedWindows then
-                ns.RoutinesEngine:RefreshAllPinnedWindows()
-            end
-        end)
-    end
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+        if ns.ApplyTheme then ns.ApplyTheme() end
+        if ns.NotesPins and ns.NotesPins.RefreshSyncPins then
+            ns.NotesPins:RefreshSyncPins()
+        end
+        if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
+            ns.ZonePins:RefreshSyncPins()
+        end
+        if ns.RoutinesEngine and ns.RoutinesEngine.RefreshAllPinnedWindows then
+            ns.RoutinesEngine:RefreshAllPinnedWindows()
+        end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+        if ns.ApplyLanguage then ns.ApplyLanguage() end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+        if ns.NotesPins and ns.NotesPins.RefreshAllPinFonts then
+            ns.NotesPins:RefreshAllPinFonts()
+        end
+        if ns.ZonePins and ns.ZonePins.RefreshAllPinFonts then
+            ns.ZonePins:RefreshAllPinFonts()
+        end
+        if ns.RoutinesEngine and ns.RoutinesEngine.RefreshAllPinnedWindows then
+            ns.RoutinesEngine:RefreshAllPinnedWindows()
+        end
+    end)
 
-    local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ns.Constants.VERSION
+    local _ver = OneWoW_GUI:GetAddonVersion(addonName)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("Notes", _ver, "/1wn")
     end
@@ -95,9 +92,8 @@ function addon:CloseHelpPanel()
 end
 
 function addon:ApplyTheme()
-    if ns.ApplyTheme then
-        ns.ApplyTheme()
-    end
+    OneWoW_GUI:ApplyTheme(self)
+    
     if ns.NotesPins and ns.NotesPins.RefreshSyncPins then
         ns.NotesPins:RefreshSyncPins()
     end

@@ -964,7 +964,7 @@ function GUI:CreateSettingsPanel(parent)
     themeDescText:SetText(L["THEME_DESC"])
     themeDescText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local currentTheme = OneWoW_DirectDeposit.db.global.theme or "green"
+    local currentTheme = OneWoW_GUI:GetSetting("theme") or OneWoW_DirectDeposit.db.global.theme or "green"
     local themeNames = {
         ["green"] = L["THEME_GREEN"],
         ["blue"] = L["THEME_BLUE"],
@@ -1012,10 +1012,7 @@ function GUI:CreateSettingsPanel(parent)
     local themeColorPreview = themeDropdown:CreateTexture(nil, "OVERLAY")
     themeColorPreview:SetSize(14, 14)
     themeColorPreview:SetPoint("LEFT", themeDropdown, "LEFT", 6, 0)
-    local currentThemeData = Constants.THEMES[currentTheme]
-    if currentThemeData then
-        themeColorPreview:SetColorTexture(unpack(currentThemeData.ACCENT_PRIMARY))
-    end
+    themeColorPreview:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local themeDropArrow = themeDropdown:CreateTexture(nil, "OVERLAY")
     themeDropArrow:SetSize(16, 16)
@@ -1074,10 +1071,11 @@ function GUI:CreateSettingsPanel(parent)
             scrollBar:SetValue(newScroll)
         end)
 
-        local themeOrder = { "green", "blue", "purple", "gold", "red", "slate", "orange", "teal", "cyan", "pink", "dark", "amber", "voidblack", "charcoal", "forestnight", "obsidian", "monochrome", "twilight", "neon", "glassmorphic", "lightmode", "retro", "fantasy", "nightfae" }
+        local themeOrder = OneWoW_GUI.Constants.THEMES_ORDER
+        local guiThemesForMenu = OneWoW_GUI.Constants.THEMES
 
         for i, themeKey in ipairs(themeOrder) do
-            local themeData = Constants.THEMES[themeKey]
+            local themeData = guiThemesForMenu[themeKey]
             if themeData then
                 local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
                 btn:SetSize(230, 26)
@@ -1087,7 +1085,7 @@ function GUI:CreateSettingsPanel(parent)
                 local dot = btn:CreateTexture(nil, "OVERLAY")
                 dot:SetSize(14, 14)
                 dot:SetPoint("LEFT", btn, "LEFT", 8, 0)
-                dot:SetColorTexture(unpack(themeData.ACCENT_PRIMARY))
+                dot:SetColorTexture(OneWoW_GUI:GetThemeColor(themeData.ACCENT_PRIMARY))
                 local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 txt:SetPoint("LEFT", btn, "LEFT", 28, 0)
                 txt:SetText(themeNames[themeKey] or themeData.name)
@@ -1096,17 +1094,8 @@ function GUI:CreateSettingsPanel(parent)
                 btn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.1, 0.1, 0.1, 0.8) txt:SetTextColor(0.9, 0.9, 0.9) end)
                 local capturedKey = themeKey
                 btn:SetScript("OnClick", function()
-                    OneWoW_DirectDeposit.db.global.theme = capturedKey
+                    OneWoW_GUI:SetSetting("theme", capturedKey)
                     themeDropText:SetText(themeNames[capturedKey] or themeData.name)
-                    local Constants = OneWoW_DirectDeposit.Constants
-                    if Constants.THEMES and Constants.THEMES[capturedKey] then
-                        local selectedTheme = Constants.THEMES[capturedKey]
-                        for key, value in pairs(selectedTheme) do
-                            if key ~= "name" then
-                                Constants.THEME[key] = value
-                            end
-                        end
-                    end
                     menu:Hide()
                     GUI:FullReset()
                     C_Timer.After(0.1, function()

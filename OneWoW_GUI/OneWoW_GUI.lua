@@ -25,7 +25,8 @@ local noop = function() end
 
 local themeMetatable = {
     __index = function(self, key)
-        return Constants.FALLBACK_THEME[key] or DEFAULT_THEME_COLOR
+        -- Use rawget to avoid recursion when FALLBACK_THEME is the same table as self (e.g. green theme)
+        return rawget(Constants.FALLBACK_THEME, key) or DEFAULT_THEME_COLOR
     end,
     __newindex = noop,
 }

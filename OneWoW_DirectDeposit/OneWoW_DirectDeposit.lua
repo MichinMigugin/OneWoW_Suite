@@ -7,6 +7,9 @@ local L = OneWoW_DirectDeposit.L
 OneWoW_DirectDeposit.wownotesDetected = false
 OneWoW_DirectDeposit.oneWoWHubActive = false
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 local function DetectOneWoW()
     if _G.OneWoW then
         OneWoW_DirectDeposit.oneWoWHubActive = true
@@ -14,23 +17,7 @@ local function DetectOneWoW()
 end
 
 local function ApplyTheme()
-    local themeKey
-    local hub = _G.OneWoW
-    if hub and hub.db and hub.db.global then
-        themeKey = hub.db.global.theme or "green"
-    else
-        themeKey = OneWoW_DirectDeposit.db and OneWoW_DirectDeposit.db.global.theme or "green"
-    end
-    local Constants = OneWoW_DirectDeposit.Constants
-
-    if Constants.THEMES and Constants.THEMES[themeKey] then
-        local selectedTheme = Constants.THEMES[themeKey]
-        for key, value in pairs(selectedTheme) do
-            if key ~= "name" then
-                Constants.THEME[key] = value
-            end
-        end
-    end
+    OneWoW_GUI:ApplyTheme(OneWoW_DirectDeposit)
 end
 
 local function ApplyLanguage()
@@ -167,12 +154,30 @@ function OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
     CheckForWoWNotes()
 
     self:InitializeDatabase()
+
+    local g = self.db and self.db.global or {}
+    OneWoW_GUI:MigrateSettings({
+        theme = g.theme,
+        language = g.language,
+        minimap = g.minimap,
+    })
+
     ApplyTheme()
     ApplyLanguage()
     self:InitializeModules()
     self:RegisterSlashCommands()
 
-    local _ver = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or OneWoW_DirectDeposit.Constants.VERSION
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
+        ApplyTheme()
+        if self.GUI and self.GUI.FullReset then
+            self.GUI:FullReset()
+            C_Timer.After(0.1, function()
+                if self.GUI and self.GUI.Show then self.GUI:Show() end
+            end)
+        end
+    end)
+
+    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
     else

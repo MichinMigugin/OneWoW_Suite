@@ -15,7 +15,3 @@ ns.Constants = {
         LEFT_PANEL_WIDTH = 300,
     }),
 }
-
-function ns.ApplyTheme()
-    OneWoW_GUI:ApplyTheme(addonName)
-end

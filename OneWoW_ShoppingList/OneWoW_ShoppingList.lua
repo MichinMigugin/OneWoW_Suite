@@ -6,6 +6,9 @@ local L = ns.L
 
 ns.oneWoWHubActive = false
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 local function DetectOneWoW()
     if _G.OneWoW then
         ns.oneWoWHubActive = true
@@ -13,23 +16,8 @@ local function DetectOneWoW()
 end
 
 local function ApplyTheme()
-    local themeKey
-    local hub = _G.OneWoW
-    if hub and hub.db and hub.db.global then
-        themeKey = hub.db.global.theme or "green"
-    else
-        local db = _G.OneWoW_ShoppingList_DB
-        themeKey = (db and db.global and db.global.settings and db.global.settings.theme) or "green"
-    end
-    local Constants = ns.Constants
-
-    if Constants and Constants.THEMES and Constants.THEMES[themeKey] then
-        local selected = Constants.THEMES[themeKey]
-        for key, value in pairs(selected) do
-            if key ~= "name" then
-                Constants.THEME[key] = value
-            end
-        end
+    if OneWoW_GUI then
+        OneWoW_GUI:ApplyTheme(ns)
     end
 end
 
@@ -98,11 +86,31 @@ local function OnAddonLoaded(loadedAddon)
 
     _G.OneWoW_ShoppingList_DB = ns.Database:Initialize(_G.OneWoW_ShoppingList_DB)
 
+    local db = _G.OneWoW_ShoppingList_DB
+    local g = db and db.global or {}
+    local s = g.settings or {}
+    OneWoW_GUI:MigrateSettings({
+        theme = s.theme,
+        language = s.language,
+        minimap = g.minimap,
+    })
+
     ApplyTheme()
     ApplyLanguage()
+
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", ns, function()
+        ApplyTheme()
+        if ns.MainWindow and ns.MainWindow.Rebuild then
+            ns.MainWindow:Rebuild()
+            C_Timer.After(0.1, function()
+                if ns.MainWindow and ns.MainWindow.Show then ns.MainWindow:Show() end
+            end)
+        end
+    end)
+
     InitializeModules()
 
-    local _ver = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or ns.Constants.VERSION
+    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("ShoppingList", _ver, "/1wsl")
     else

@@ -865,9 +865,11 @@ function MainWindow:BuildSettingsPanel()
     themeDescText:SetText(L["OWSL_SETTINGS_THEME_DESC"])
     themeDescText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local themeOrder = { "green", "blue", "purple", "gold", "red", "slate", "orange", "teal", "pink", "dark", "amber", "cyan", "voidblack", "charcoal", "forestnight", "obsidian", "monochrome", "twilight", "neon", "glassmorphic", "lightmode", "retro", "fantasy", "nightfae" }
-    local currentTheme = GetDB() and GetDB().global.settings.theme or "green"
-    local currentThemeName = (ns.Constants.THEMES[currentTheme] and ns.Constants.THEMES[currentTheme].name) or currentTheme
+    local themeOrder = OneWoW_GUI.Constants.THEMES_ORDER
+    local currentTheme = OneWoW_GUI:GetSetting("theme") or (GetDB() and GetDB().global.settings.theme) or OneWoW_GUI.Constants.DEFAULT_THEME_KEY
+    local guiThemes = OneWoW_GUI.Constants.THEMES
+    local currentThemeData = guiThemes[currentTheme]
+    local currentThemeName = (currentThemeData and currentThemeData.name) or currentTheme
 
     local themeCurrentLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     themeCurrentLabel:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -90)
@@ -889,9 +891,7 @@ function MainWindow:BuildSettingsPanel()
     local themeColorPreview = themeDropdown:CreateTexture(nil, "OVERLAY")
     themeColorPreview:SetSize(14, 14)
     themeColorPreview:SetPoint("LEFT", themeDropdown, "LEFT", 6, 0)
-    if ns.Constants.THEMES[currentTheme] then
-        themeColorPreview:SetColorTexture(unpack(ns.Constants.THEMES[currentTheme].ACCENT_PRIMARY))
-    end
+    themeColorPreview:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local themeDropArrow = themeDropdown:CreateTexture(nil, "OVERLAY")
     themeDropArrow:SetSize(16, 16)
@@ -948,7 +948,7 @@ function MainWindow:BuildSettingsPanel()
         end)
 
         for i, themeKey in ipairs(themeOrder) do
-            local themeData = ns.Constants.THEMES[themeKey]
+            local themeData = guiThemes[themeKey]
             if themeData then
                 local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
                 btn:SetSize(230, 26)
@@ -958,7 +958,7 @@ function MainWindow:BuildSettingsPanel()
                 local dot = btn:CreateTexture(nil, "OVERLAY")
                 dot:SetSize(14, 14)
                 dot:SetPoint("LEFT", btn, "LEFT", 8, 0)
-                dot:SetColorTexture(unpack(themeData.ACCENT_PRIMARY))
+                dot:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                 local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 txt:SetPoint("LEFT", btn, "LEFT", 28, 0)
                 txt:SetText(themeData.name)
@@ -967,12 +967,9 @@ function MainWindow:BuildSettingsPanel()
                 btn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.1, 0.1, 0.1, 0.8) txt:SetTextColor(0.9, 0.9, 0.9) end)
                 local capturedKey = themeKey
                 btn:SetScript("OnClick", function()
-                    local db = GetDB()
-                    if db then db.global.settings.theme = capturedKey end
-                    ns.GUI:ApplyTheme(capturedKey)
+                    OneWoW_GUI:SetSetting("theme", capturedKey)
                     themeMenu:Hide()
-                    MainWindow:Rebuild()
-                    C_Timer.After(0.1, function() MainWindow:Show() end)
+                    -- OnThemeChanged callback handles ApplyTheme + Rebuild
                 end)
             end
         end
@@ -1431,6 +1428,8 @@ function MainWindow:RegisterDragDrop(frame)
 end
 
 function MainWindow:RefreshSidebar()
+    if not sidebarPanel then return end
+
     HideAllRows(listRowPool)
 
     local allLists = ns.ShoppingList:GetAllLists()

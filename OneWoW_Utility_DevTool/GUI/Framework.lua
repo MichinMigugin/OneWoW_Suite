@@ -9,7 +9,7 @@ local GUI = {}
 Addon.GUI = GUI
 
 function GUI:CreateButton(name, parent, text, width, height)
-    local C = Addon.Constants and Addon.Constants.BUTTON_HEIGHT or 28
+    local C = Addon.Constants and Addon.Constants.GUI.BUTTON_HEIGHT or 28
     local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
     btn:SetSize(width or 100, height or C)
     btn:SetBackdrop(BACKDROP_INNER)
@@ -49,7 +49,7 @@ function GUI:CreateButton(name, parent, text, width, height)
 end
 
 function GUI:CreateEditBox(name, parent, width, height)
-    local C = Addon.Constants and Addon.Constants.SEARCH_HEIGHT or 32
+    local C = Addon.Constants and Addon.Constants.GUI.SEARCH_HEIGHT or 32
     local box = CreateFrame("EditBox", name, parent, "BackdropTemplate")
     box:SetSize(width or 200, height or C)
     box:SetBackdrop(BACKDROP_INNER)

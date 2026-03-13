@@ -14,9 +14,3 @@ ns.Constants = {
         SEARCH_HEIGHT = 32,
     }),
 }
-
-function ns.ApplyTheme()
-    OneWoW_GUI:ApplyTheme(addonName)
-end
-
-

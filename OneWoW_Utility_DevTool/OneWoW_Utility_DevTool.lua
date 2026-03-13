@@ -2,6 +2,9 @@ local AddonName, Addon = ...
 
 OneWoW_UtilityDevTool = Addon
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 Addon.version = "R6.2602.1920"
 Addon.frames = {}
 Addon.selectedFrame = nil
@@ -149,8 +152,24 @@ function Addon:OnInitialize()
         self.db.minimap.theme = "horde"
     end
 
+    OneWoW_GUI:MigrateSettings({
+        theme = self.db.theme,
+        language = self.db.language,
+        minimap = self.db.minimap,
+    })
+
     self:ApplyTheme()
     self:ApplyLanguage()
+
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
+        self:ApplyTheme()
+        if self.UI and self.UI.FullReset then
+            self.UI:FullReset()
+            C_Timer.After(0.1, function()
+                if self.UI and self.UI.Show then self.UI:Show() end
+            end)
+        end
+    end)
 
     if self.ErrorLogger then
         self.ErrorLogger:Initialize()
@@ -159,23 +178,7 @@ function Addon:OnInitialize()
 end
 
 function Addon:ApplyTheme()
-    local themeKey
-    local hub = _G.OneWoW
-    if hub and hub.db and hub.db.global then
-        themeKey = hub.db.global.theme or "green"
-    else
-        themeKey = self.db and self.db.theme or "green"
-    end
-    local Constants = self.Constants
-
-    if Constants.THEMES and Constants.THEMES[themeKey] then
-        local selectedTheme = Constants.THEMES[themeKey]
-        for key, value in pairs(selectedTheme) do
-            if key ~= "name" then
-                Constants.THEME[key] = value
-            end
-        end
-    end
+    OneWoW_GUI:ApplyTheme(self)
 end
 
 function Addon:ApplyLanguage()
