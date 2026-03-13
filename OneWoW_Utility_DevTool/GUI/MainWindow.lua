@@ -131,7 +131,7 @@ function UI:Initialize()
     titleText:SetText(Addon.L and Addon.L["ADDON_TITLE"] or "DevTool")
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local closeBtn = GUI:CreateButton(nil, titleBar, "X", 20, 20)
+    local closeBtn = OneWoW_GUI:CreateButton(titleBar, { text = "X", width = 20, height = 20 })
     closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -OneWoW_GUI:GetSpacing("XS") / 2, 0)
     closeBtn:SetScript("OnClick", function() UI:Hide() end)
 
@@ -155,7 +155,7 @@ function UI:Initialize()
     local tabY = -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS"))
 
     for i = 1, NUM_TABS do
-        local btn = GUI:CreateButton(nil, frame, tabLabels[i], 90, TAB_HEIGHT)
+        local btn = OneWoW_GUI:CreateButton(frame, { text = tabLabels[i], width = 90, height = TAB_HEIGHT })
         btn:SetID(i)
         btn.isSelected = false
         if i == 1 then
@@ -242,31 +242,13 @@ function UI:Initialize()
     self.mainFrame = frame
     self.contentFrame = contentFrame
 
-    if Addon.db.position and Addon.db.position.point then
-        frame:ClearAllPoints()
-        frame:SetPoint(
-            Addon.db.position.point,
-            UIParent,
-            Addon.db.position.relativePoint,
-            Addon.db.position.x,
-            Addon.db.position.y
-        )
-    end
-
-    if Addon.db.position and Addon.db.position.width then
-        frame:SetSize(Addon.db.position.width, Addon.db.position.height)
+    if not OneWoW_GUI:RestoreWindowPosition(frame, Addon.db.position or {}) then
+        frame:SetPoint("CENTER")
     end
 
     frame:SetScript("OnHide", function()
-        local point, _, relativePoint, x, y = frame:GetPoint()
-        Addon.db.position = {
-            point = point,
-            relativePoint = relativePoint,
-            x = x,
-            y = y,
-            width = frame:GetWidth(),
-            height = frame:GetHeight(),
-        }
+        Addon.db.position = Addon.db.position or {}
+        OneWoW_GUI:SaveWindowPosition(frame, Addon.db.position)
         if Addon.FrameInspector then
             Addon.FrameInspector:ClearHighlight()
         end
@@ -303,7 +285,7 @@ function UI:CreateFrameInspectorTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local pickBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_PICK_FRAME"] or "Pick Frame", 100, 22)
+    local pickBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_PICK_FRAME"] or "Pick Frame", width = 100, height = 22 })
     pickBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
     pickBtn:SetScript("OnClick", function()
         if Addon.FramePicker then
@@ -316,7 +298,7 @@ function UI:CreateFrameInspectorTab(parent)
     searchBox:SetPoint("LEFT", pickBtn, "RIGHT", 5, 0)
     searchBox:SetAutoFocus(false)
 
-    local searchBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_SEARCH"] or "Search", 70, 22)
+    local searchBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_SEARCH"] or "Search", width = 70, height = 22 })
     searchBtn:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
 
     local leftPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
@@ -330,7 +312,7 @@ function UI:CreateFrameInspectorTab(parent)
     leftTitle:SetText(Addon.L and Addon.L["LABEL_FRAME_HIERARCHY"] or "Frame Hierarchy")
     leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local copyHierarchyBtn = GUI:CreateButton(nil, leftPanel, Addon.L and Addon.L["BTN_COPY_HIERARCHY"] or "Copy All", 70, 18)
+    local copyHierarchyBtn = OneWoW_GUI:CreateButton(leftPanel, { text = Addon.L and Addon.L["BTN_COPY_HIERARCHY"] or "Copy All", width = 70, height = 18 })
     copyHierarchyBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -5, -3)
     copyHierarchyBtn:SetScript("OnClick", function()
         if tab.hierarchyText then
@@ -368,7 +350,7 @@ function UI:CreateFrameInspectorTab(parent)
     rightTitle:SetText(Addon.L and Addon.L["LABEL_FRAME_DETAILS"] or "Frame Details")
     rightTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local copyDetailsBtn = GUI:CreateButton(nil, rightPanel, Addon.L and Addon.L["BTN_COPY_DETAILS"] or "Copy All", 70, 18)
+    local copyDetailsBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_COPY_DETAILS"] or "Copy All", width = 70, height = 18 })
     copyDetailsBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -5, -3)
     copyDetailsBtn:SetScript("OnClick", function()
         if tab.detailsText then
@@ -485,7 +467,7 @@ function UI:CreateEventMonitorTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local startBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_START"] or "Start", 80, 22)
+    local startBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_START"] or "Start", width = 80, height = 22 })
     startBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
     startBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -493,7 +475,7 @@ function UI:CreateEventMonitorTab(parent)
         end
     end)
 
-    local stopBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_STOP"] or "Stop", 80, 22)
+    local stopBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_STOP"] or "Stop", width = 80, height = 22 })
     stopBtn:SetPoint("LEFT", startBtn, "RIGHT", 5, 0)
     stopBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -501,7 +483,7 @@ function UI:CreateEventMonitorTab(parent)
         end
     end)
 
-    local clearBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_CLEAR"] or "Clear", 80, 22)
+    local clearBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_CLEAR"] or "Clear", width = 80, height = 22 })
     clearBtn:SetPoint("LEFT", stopBtn, "RIGHT", 5, 0)
     clearBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -509,19 +491,19 @@ function UI:CreateEventMonitorTab(parent)
         end
     end)
 
-    local configBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_SELECT_EVENTS"] or "Select Events", 100, 22)
+    local configBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_SELECT_EVENTS"] or "Select Events", width = 100, height = 22 })
     configBtn:SetPoint("LEFT", clearBtn, "RIGHT", 5, 0)
     configBtn:SetScript("OnClick", function()
         UI:ShowEventSelector()
     end)
 
-    local importBtn = GUI:CreateButton(nil, tab, "Import Events", 110, 22)
+    local importBtn = OneWoW_GUI:CreateButton(tab, { text = "Import Events", width = 110, height = 22 })
     importBtn:SetPoint("LEFT", configBtn, "RIGHT", 5, 0)
     importBtn:SetScript("OnClick", function()
         UI:ShowEventImportDialog()
     end)
 
-    local firehoseBtn = GUI:CreateButton(nil, tab, "Firehose", 90, 22)
+    local firehoseBtn = OneWoW_GUI:CreateButton(tab, { text = "Firehose", width = 90, height = 22 })
     firehoseBtn:SetPoint("LEFT", importBtn, "RIGHT", 5, 0)
     firehoseBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -587,7 +569,7 @@ function UI:CreateLuaConsoleTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local clearBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_CLEAR"] or "Clear", 80, 22)
+    local clearBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_CLEAR"] or "Clear", width = 80, height = 22 })
     clearBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
     clearBtn:SetScript("OnClick", function()
         if Addon.ErrorLogger then
@@ -682,7 +664,7 @@ function UI:CreateLuaConsoleTab(parent)
     tab.detailsText:SetText(Addon.L and Addon.L["LABEL_NO_ERROR"] or "No error selected")
     tab.detailsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local copyBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_COPY_ERROR"] or "Copy Error", 100, 25)
+    local copyBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_COPY_ERROR"] or "Copy Error", width = 100, height = 25 })
     copyBtn:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 5, 5)
     copyBtn:SetScript("OnClick", function()
         if Addon.ErrorLogger then
@@ -723,13 +705,13 @@ function UI:CreateTextureTab(parent)
         UI:FilterAtlases(self:GetText())
     end)
 
-    local favsBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_FAVORITES"] or "Favorites", 100, 22)
+    local favsBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_FAVORITES"] or "Favorites", width = 100, height = 22 })
     favsBtn:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
     favsBtn:SetScript("OnClick", function()
         UI:ShowFavorites()
     end)
 
-    local bookmarkBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_BOOKMARK"] or "Bookmark", 100, 22)
+    local bookmarkBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_BOOKMARK"] or "Bookmark", width = 100, height = 22 })
     bookmarkBtn:SetPoint("LEFT", favsBtn, "RIGHT", 5, 0)
     bookmarkBtn:SetScript("OnClick", function()
         UI:ToggleBookmark()
@@ -782,19 +764,19 @@ function UI:CreateTextureTab(parent)
     tab.nameText:SetText("")
     tab.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local zoomInBtn = GUI:CreateButton(nil, rightPanel, Addon.L and Addon.L["BTN_ZOOM_IN"] or "+", 40, 22)
+    local zoomInBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_ZOOM_IN"] or "+", width = 40, height = 22 })
     zoomInBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -5, -5)
     zoomInBtn:SetScript("OnClick", function()
         UI:ZoomTexture(1.2)
     end)
 
-    local zoomOutBtn = GUI:CreateButton(nil, rightPanel, Addon.L and Addon.L["BTN_ZOOM_OUT"] or "-", 40, 22)
+    local zoomOutBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_ZOOM_OUT"] or "-", width = 40, height = 22 })
     zoomOutBtn:SetPoint("RIGHT", zoomInBtn, "LEFT", -2, 0)
     zoomOutBtn:SetScript("OnClick", function()
         UI:ZoomTexture(0.8)
     end)
 
-    local resetBtn = GUI:CreateButton(nil, rightPanel, Addon.L and Addon.L["BTN_RESET_ZOOM"] or "Reset", 60, 22)
+    local resetBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_RESET_ZOOM"] or "Reset", width = 60, height = 22 })
     resetBtn:SetPoint("RIGHT", zoomOutBtn, "LEFT", -2, 0)
     resetBtn:SetScript("OnClick", function()
         UI:ResetTextureZoom()
@@ -846,7 +828,7 @@ function UI:CreateTextureTab(parent)
 
     tab.infoScroll = infoScroll
 
-    local copyBtn = GUI:CreateButton(nil, rightPanel, Addon.L and Addon.L["BTN_COPY_NAME"] or "Copy Name", 100, 22)
+    local copyBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_COPY_NAME"] or "Copy Name", width = 100, height = 22 })
     copyBtn:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 5, 5)
     copyBtn:SetScript("OnClick", function()
         if tab.currentAtlas then
@@ -1089,7 +1071,7 @@ function UI:CreateLayoutTab(parent)
     gridLabel:SetText(Addon.L and Addon.L["LABEL_GRID_OVERLAY"] or "Grid Overlay")
     gridLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local toggleBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_TOGGLE_GRID"] or "Toggle Grid", 120, 25)
+    local toggleBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_TOGGLE_GRID"] or "Toggle Grid", width = 120, height = 25 })
     toggleBtn:SetPoint("TOPLEFT", gridLabel, "BOTTOMLEFT", 0, -10)
     toggleBtn:SetScript("OnClick", function()
         UI:ToggleGrid()
@@ -1133,7 +1115,7 @@ function UI:CreateLayoutTab(parent)
         end
     end)
 
-    local centerBtn = GUI:CreateButton(nil, tab, Addon.L and Addon.L["BTN_TOGGLE_CENTER"] or "Toggle Center Lines", 150, 25)
+    local centerBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_TOGGLE_CENTER"] or "Toggle Center Lines", width = 150, height = 25 })
     centerBtn:SetPoint("TOPLEFT", opacitySlider, "BOTTOMLEFT", 0, -20)
     centerBtn:SetScript("OnClick", function()
         UI:ToggleCenterLines()
@@ -1276,7 +1258,7 @@ function UI:ShowEventSelector()
         frame.title:SetText(Addon.L and Addon.L["DIALOG_TITLE_SELECT_EVENTS"] or "Event Monitor - Select Events")
         frame.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local commonBtn = GUI:CreateButton(nil, frame, Addon.L and Addon.L["BTN_COMMON_EVENTS"] or "Common Events", 110, 25)
+        local commonBtn = OneWoW_GUI:CreateButton(frame, { text = Addon.L and Addon.L["BTN_COMMON_EVENTS"] or "Common Events", width = 110, height = 25 })
         commonBtn:SetPoint("TOPLEFT", 10, -30)
         commonBtn:SetScript("OnClick", function()
             Addon.EventMonitor:RegisterCommonEvents()
@@ -1284,14 +1266,14 @@ function UI:ShowEventSelector()
             Addon:Print((Addon.L and Addon.L["MSG_ADDED_COMMON_EVENTS"] or "Added common events ({count} total)"):gsub("{count}", Addon.EventMonitor:GetEventCount()))
         end)
 
-        local selectAllBtn = GUI:CreateButton(nil, frame, Addon.L and Addon.L["BTN_SELECT_ALL"] or "Select All", 80, 25)
+        local selectAllBtn = OneWoW_GUI:CreateButton(frame, { text = Addon.L and Addon.L["BTN_SELECT_ALL"] or "Select All", width = 80, height = 25 })
         selectAllBtn:SetPoint("LEFT", commonBtn, "RIGHT", 5, 0)
         selectAllBtn:SetScript("OnClick", function()
             UI:SelectAllEvents()
             Addon:Print((Addon.L and Addon.L["MSG_SELECTED_ALL_EVENTS"] or "Selected all events ({count} total)"):gsub("{count}", Addon.EventMonitor:GetEventCount()))
         end)
 
-        local clearAllBtn = GUI:CreateButton(nil, frame, Addon.L and Addon.L["BTN_CLEAR_ALL"] or "Clear All", 80, 25)
+        local clearAllBtn = OneWoW_GUI:CreateButton(frame, { text = Addon.L and Addon.L["BTN_CLEAR_ALL"] or "Clear All", width = 80, height = 25 })
         clearAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 5, 0)
         clearAllBtn:SetScript("OnClick", function()
             Addon.EventMonitor.selectedEvents = {}
@@ -1382,7 +1364,7 @@ function UI:ShowEventSelector()
         customBox:SetPoint("TOPLEFT", customLabel, "BOTTOMLEFT", 0, -5)
         customBox:SetAutoFocus(false)
 
-        local addBtn = GUI:CreateButton(nil, rightPanel, Addon.L and Addon.L["BTN_ADD_EVENT"] or "Add", 80, 25)
+        local addBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_ADD_EVENT"] or "Add", width = 80, height = 25 })
         addBtn:SetPoint("LEFT", customBox, "RIGHT", 5, 0)
         addBtn:SetScript("OnClick", function()
             local eventName = customBox:GetText()
@@ -1401,7 +1383,7 @@ function UI:ShowEventSelector()
         helpText:SetText(Addon.L and Addon.L["HELP_TEXT_EVENTS"] or "Enter any WoW event name to monitor.\n\nCommon events:\nPLAYER_ENTERING_WORLD\nZONE_CHANGED\nPLAYER_REGEN_DISABLED\nPLAYER_REGEN_ENABLED\nBAG_UPDATE\nUNIT_HEALTH\nCHAT_MSG_SAY\nADDON_LOADED\n\nYou can find more events on:\nwarcraft.wiki.gg")
         helpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-        local closeBtn = GUI:CreateButton(nil, frame, Addon.L and Addon.L["BTN_CLOSE"] or "Close", 80, 25)
+        local closeBtn = OneWoW_GUI:CreateButton(frame, { text = Addon.L and Addon.L["BTN_CLOSE"] or "Close", width = 80, height = 25 })
         closeBtn:SetPoint("BOTTOM", 0, 10)
         closeBtn:SetScript("OnClick", function()
             frame:Hide()
@@ -1528,13 +1510,13 @@ function UI:CreateMonitorTab(parent)
     local ROW_HEIGHT = 20
     local MAX_ROWS = 60
 
-    local playBtn = GUI:CreateButton(nil, tab, L["MON_BTN_PLAY"] or "Play", 80, 22)
+    local playBtn = OneWoW_GUI:CreateButton(tab, { text = L["MON_BTN_PLAY"] or "Play", width = 80, height = 22 })
     playBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
 
-    local updateBtn = GUI:CreateButton(nil, tab, L["MON_BTN_UPDATE"] or "Update", 80, 22)
+    local updateBtn = OneWoW_GUI:CreateButton(tab, { text = L["MON_BTN_UPDATE"] or "Update", width = 80, height = 22 })
     updateBtn:SetPoint("LEFT", playBtn, "RIGHT", 5, 0)
 
-    local resetBtn = GUI:CreateButton(nil, tab, L["MON_BTN_RESET"] or "Reset", 80, 22)
+    local resetBtn = OneWoW_GUI:CreateButton(tab, { text = L["MON_BTN_RESET"] or "Reset", width = 80, height = 22 })
     resetBtn:SetPoint("LEFT", updateBtn, "RIGHT", 5, 0)
 
     local cpuCheck = CreateFrame("CheckButton", nil, tab, "UICheckButtonTemplate")
@@ -2359,7 +2341,7 @@ function UI:ShowEventImportDialog()
         statusLabel:SetText("")
         statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
-        local importBtn = GUI:CreateButton(nil, frame, "Import Events", 120, 26)
+        local importBtn = OneWoW_GUI:CreateButton(frame, { text = "Import Events", width = 120, height = 26 })
         importBtn:SetPoint("BOTTOMRIGHT", -100, 8)
         importBtn:SetScript("OnClick", function()
             local text = editBox:GetText()
@@ -2378,7 +2360,7 @@ function UI:ShowEventImportDialog()
             end
         end)
 
-        local cancelBtn = GUI:CreateButton(nil, frame, "Close", 80, 26)
+        local cancelBtn = OneWoW_GUI:CreateButton(frame, { text = "Close", width = 80, height = 26 })
         cancelBtn:SetPoint("BOTTOMRIGHT", -10, 8)
         cancelBtn:SetScript("OnClick", function()
             frame:Hide()
@@ -2403,6 +2385,13 @@ end
 function UI:Hide()
     if self.mainFrame then
         self.mainFrame:Hide()
+    end
+end
+
+function UI:FullReset()
+    if self.mainFrame then
+        self.mainFrame:Hide()
+        self.mainFrame = nil
     end
 end
 

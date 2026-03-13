@@ -94,23 +94,32 @@ local addonName, ns = ...
 
 ### 2.3 OneWoW Suite — OneWoW_GUI Dependency
 
-OneWoW addons that depend on OneWoW_GUI must check for it **near the top** of
-the main addon file and exit early if it is not available:
+**Every Lua file** that uses OneWoW_GUI must have this block **near the top**
+(immediately after addon namespace setup and any minimal globals):
 
 ```lua
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 ```
 
-Place this immediately after addon namespace setup and any minimal globals.
-Since OneWoW_GUI is required for theming and UI, failing fast avoids errors
-later in the file.
+This applies to all files that call OneWoW_GUI — not just the main addon file.
+Fail fast: if OneWoW_GUI is unavailable, the file exits immediately. No defensive
+guards like `if OneWoW_GUI and OneWoW_GUI.SomeMethod then`. Call
+`OneWoW_GUI.SomeMethod(...)` directly. When something fails (e.g. missing method),
+it errors and gets fixed, not silently ignored.
 
-**No defensive checks downstream.** Once the early-return is in place, do not
-guard calls with `if OneWoW_GUI and OneWoW_GUI.SomeMethod then`. Call
-`OneWoW_GUI.SomeMethod(...)` directly. If a method does not exist, that is a
-bug to fix before packaging — do not silently skip; let it error so it is
-caught during development.
+### 2.3.1 OneWoW_GUI Component API
+
+OneWoW_GUI uses a consistent `CreateComponent(parent, options)` pattern: parent
+first, all other parameters in `options`. Call OneWoW_GUI directly; do not add
+Framework shims or wrappers. Examples:
+
+```lua
+OneWoW_GUI:CreateButton(parent, { text = "Save", width = 100, height = 28 })
+OneWoW_GUI:CreateFitTextButton(parent, { text = "Click Me", height = 24 })
+OneWoW_GUI:CreateScrollFrame(parent, { name = "MyScroll" })
+OneWoW_GUI:CreateSectionHeader(parent, { title = "Section", yOffset = 0 })
+```
 
 ### 2.4 OneWoW Suite — Theme Colors
 

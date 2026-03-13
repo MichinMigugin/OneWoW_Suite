@@ -13,48 +13,16 @@ ns.UI = ns.UI or {}
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-function ns.UI.CreateButton(name, parent, text, width, height)
-    return OneWoW_GUI:CreateButton(name, parent, text, width, height)
-end
-
-function ns.UI.CreateFitTextButton(parent, text, options)
-    return OneWoW_GUI:CreateFitTextButton(parent, text, options)
-end
-
-function ns.UI.CreateScrollFrame(name, parent, width, height)
-    return OneWoW_GUI:CreateScrollFrame(name, parent, width, height)
-end
-
-function ns.UI.CreateSectionHeader(parent, title, yOffset)
-    return OneWoW_GUI:CreateSectionHeader(parent, title, yOffset)
-end
-
 function ns.UI.CreateSplitPanel(parent, options)
     return OneWoW_GUI:CreateSplitPanel(parent, options)
-end
-
-function ns.UI.CreateTitleBar(parent, title, options)
-    return OneWoW_GUI:CreateTitleBar(parent, title, options)
 end
 
 function ns.UI.CreateFilterBar(parent, options)
     return OneWoW_GUI:CreateFilterBar(parent, options)
 end
 
-function ns.UI.CreateEditBox(name, parent, options)
-    return OneWoW_GUI:CreateEditBox(name, parent, options)
-end
-
 function ns.UI.CreateDropdown(parent, options)
     return OneWoW_GUI:CreateDropdown(parent, options)
-end
-
-function ns.UI.AttachFilterMenu(dropdown, text, options)
-    return OneWoW_GUI:AttachFilterMenu(dropdown, text, options)
-end
-
-function ns.UI.CreateCheckbox(name, parent, label)
-    return OneWoW_GUI:CreateCheckbox(name, parent, label)
 end
 
 function ns.UI.ClearFrame(frame)
@@ -63,10 +31,6 @@ end
 
 function ns.UI.CreateItemIcon(parent, options)
     return OneWoW_GUI:CreateItemIcon(parent, options)
-end
-
-function ns.UI.CreateDivider(parent, yOffset)
-    return OneWoW_GUI:CreateDivider(parent, yOffset)
 end
 
 function ns.UI.ApplyFont(fs, size)

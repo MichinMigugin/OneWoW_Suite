@@ -333,7 +333,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         })
         charRow.charKey = charKey
 
-        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, charData.faction)
+        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
         table.insert(charRow.cells, factionCell)
 
         local hasMail = false
@@ -341,7 +341,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
             local mailData = StorageAPI.GetMail(charKey)
             hasMail = mailData and mailData.hasNewMail
         end
-        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, hasMail)
+        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
         table.insert(charRow.cells, mailCell)
 
         local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")

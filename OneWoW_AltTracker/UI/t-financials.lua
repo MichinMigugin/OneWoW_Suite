@@ -139,7 +139,7 @@ function ns.UI.CreateFinancialsTab(parent)
     })
     periodDropdown:SetPoint("LEFT", filterPanel, "LEFT", 8, 0)
 
-    OneWoW_GUI:AttachFilterMenu(periodDropdown, periodDropdownText, {
+    OneWoW_GUI:AttachFilterMenu(periodDropdown, {
         searchable = false,
         menuHeight = #timePeriods * 26 + 8,
         buildItems = function()
@@ -155,7 +155,7 @@ function ns.UI.CreateFinancialsTab(parent)
         end,
         onSelect = function(value, text)
             parent.timePeriod = value
-            periodDropdownText:SetText(text)
+            periodDropdown._text:SetText(text)
             if ns.UI.RefreshFinancialsTab then
                 ns.UI.RefreshFinancialsTab(parent)
             end
@@ -173,7 +173,7 @@ function ns.UI.CreateFinancialsTab(parent)
 
     local typeButtons = {}
     for i, filter in ipairs(typeFilters) do
-        local btn = OneWoW_GUI:CreateButton(nil, filterPanel, filter.label, 60, 24)
+        local btn = OneWoW_GUI:CreateButton(filterPanel, { text = filter.label, width = 60, height = 24 })
 
         if i == 1 then
             btn:SetPoint("LEFT", periodDropdown, "RIGHT", 25, 0)
@@ -216,7 +216,7 @@ function ns.UI.CreateFinancialsTab(parent)
     charLabel:SetText(L["FIN_CHAR_LABEL"])
     charLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local charBtn = OneWoW_GUI:CreateButton(nil, filterPanel, L["FIN_CHAR_ALL"], 60, 24)
+    local charBtn = OneWoW_GUI:CreateButton(filterPanel, { text = L["FIN_CHAR_ALL"], width = 60, height = 24 })
     charBtn:SetPoint("LEFT", charLabel, "RIGHT", 2, 0)
 
     charBtn:SetScript("OnClick", function(self)
@@ -239,7 +239,7 @@ function ns.UI.CreateFinancialsTab(parent)
     catLabel:SetText(L["FIN_CAT_LABEL"])
     catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local catBtn = OneWoW_GUI:CreateButton(nil, filterPanel, L["FIN_CAT_ALL"], 70, 24)
+    local catBtn = OneWoW_GUI:CreateButton(filterPanel, { text = L["FIN_CAT_ALL"], width = 70, height = 24 })
     catBtn:SetPoint("LEFT", catLabel, "RIGHT", 2, 0)
 
     catBtn:SetScript("OnClick", function(self)
@@ -255,7 +255,7 @@ function ns.UI.CreateFinancialsTab(parent)
         end
     end)
 
-    local resetBtn = OneWoW_GUI:CreateButton(nil, filterPanel, L["FIN_RESET_DATA"], 80, 24)
+    local resetBtn = OneWoW_GUI:CreateButton(filterPanel, { text = L["FIN_RESET_DATA"], width = 80, height = 24 })
     resetBtn:SetPoint("LEFT", catBtn, "RIGHT", 25, 0)
     resetBtn:SetBackdropColor(0.3, 0.1, 0.1, 1)
     resetBtn:SetBackdropBorderColor(0.6, 0.2, 0.2, 1)
@@ -305,7 +305,7 @@ function ns.UI.CreateFinancialsTab(parent)
         GameTooltip:Hide()
     end)
 
-    local guildPersonalCheck = OneWoW_GUI:CreateCheckbox(nil, filterPanel, L["FIN_GUILD_AS_PERSONAL"])
+    local guildPersonalCheck = OneWoW_GUI:CreateCheckbox(filterPanel, { label = L["FIN_GUILD_AS_PERSONAL"] })
     guildPersonalCheck:SetPoint("RIGHT", filterPanel, "RIGHT", -10 - guildPersonalCheck.label:GetStringWidth(), 0)
 
     C_Timer.After(0.6, function()

@@ -8,10 +8,6 @@ ns.UI = ns.UI or {}
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-function ns.UI.CreateButton(name, parent, text, width, height)
-    return OneWoW_GUI:CreateButton(name, parent, text, width, height)
-end
-
 function ns.UI.AutoResizeButton(btn, minWidth, maxWidth)
     if not btn or not btn.text then return end
     local textWidth = btn.text:GetStringWidth()
@@ -101,7 +97,7 @@ function ns.UI.CreateThemedDropdown(parent, labelPrefix, width, height)
         end
     end
 
-    OneWoW_GUI:AttachFilterMenu(dropdown, textFS, {
+    OneWoW_GUI:AttachFilterMenu(dropdown, {
         searchable = false,
         buildItems = function()
             local items = {}
@@ -179,7 +175,7 @@ function ns.UI.CreateFontDropdown(parent, width, height)
         end
     end
 
-    OneWoW_GUI:AttachFilterMenu(dropdown, textFS, {
+    OneWoW_GUI:AttachFilterMenu(dropdown, {
         searchable = false,
         buildItems = function()
             local items = {}
@@ -288,7 +284,7 @@ end
 function ns.UI.CreateCustomScroll(parent)
     local container = CreateFrame("Frame", nil, parent)
 
-    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(nil, container)
+    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(container, {})
     scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
     scrollFrame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -14, 0)

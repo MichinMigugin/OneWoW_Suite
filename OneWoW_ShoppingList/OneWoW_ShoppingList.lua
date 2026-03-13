@@ -101,10 +101,13 @@ local function OnAddonLoaded(loadedAddon)
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", ns, function()
         ApplyTheme()
         if ns.MainWindow and ns.MainWindow.Rebuild then
+            local wasShown = ns.MainWindow:IsShown()
             ns.MainWindow:Rebuild()
-            C_Timer.After(0.1, function()
-                if ns.MainWindow and ns.MainWindow.Show then ns.MainWindow:Show() end
-            end)
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    if ns.MainWindow and ns.MainWindow.Show then ns.MainWindow:Show() end
+                end)
+            end
         end
     end)
 

@@ -6,24 +6,6 @@ local GUI = ns.GUI
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-function GUI:CreateFrame(name, parent, width, height, useModernBackdrop)
-    local backdrop = nil
-    if useModernBackdrop == true then
-        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT
-    elseif type(useModernBackdrop) == "table" then
-        backdrop = useModernBackdrop
-    end
-    return OneWoW_GUI:CreateFrame(name, parent, width, height, backdrop)
-end
-
-function GUI:CreateEditBox(name, parent, width, height)
-    return OneWoW_GUI:CreateEditBox(name, parent, { width = width, height = height })
-end
-
-function GUI:CreateButton(name, parent, text, width, height)
-    return OneWoW_GUI:CreateButton(name, parent, text, width, height)
-end
-
 -- LESSON 9 compliant scroll area
 -- Returns: container, scrollFrame, scrollContent, UpdateThumb
 function GUI:CreateScrollArea(parent, name, offsetL, offsetR, offsetT, offsetB)

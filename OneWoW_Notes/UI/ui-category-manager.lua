@@ -179,7 +179,7 @@ function ns.UI.ShowCategoryManager(initialSection)
     addInput:SetTextInsets(6, 6, 2, 2)
     addInput:SetAutoFocus(false)
 
-    local addBtn = ns.UI.CreateButton(nil, addContainer, L["CATMGR_ADD"], 76, 24)
+    local addBtn = OneWoW_GUI:CreateButton(addContainer, { text = L["CATMGR_ADD"], width = 76, height = 24 })
     addBtn:SetPoint("RIGHT", addContainer, "RIGHT", -3, 0)
 
     local statusLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -305,7 +305,7 @@ function ns.UI.ShowCategoryManager(initialSection)
     end
 
     for i, sectionDef in ipairs(SECTIONS) do
-        local btn = ns.UI.CreateButton(nil, sectionBtnContainer, L[sectionDef.label], btnWidth, 26)
+        local btn = OneWoW_GUI:CreateButton(sectionBtnContainer, { text = L[sectionDef.label], width = btnWidth, height = 26 })
         btn:SetPoint("TOPLEFT", sectionBtnContainer, "TOPLEFT", (i - 1) * (btnWidth + btnGap), 0)
         btn.sectionKey = sectionDef.key
 

@@ -66,14 +66,14 @@ function ns.UI.CreateZonesTab(parent)
     controlTitle:SetText(L["ZONES_CONTROLS"] or "Zones Controls")
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addZoneBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_ZONE"] or "Add Zone", 100, 25)
+    local addZoneBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_ZONE"] or "Add Zone", width = 100, height = 25 })
     ns.UI.AutoResizeButton(addZoneBtn, 80, 200)
     addZoneBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addZoneBtn:SetScript("OnClick", function()
         ns.UI.ShowManualZoneEntryDialog(parent)
     end)
 
-    local detectBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_DETECT_ZONE"] or "Detect Zone", 100, 25)
+    local detectBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_DETECT_ZONE"] or "Detect Zone", width = 100, height = 25 })
     ns.UI.AutoResizeButton(detectBtn, 80, 200)
     detectBtn:SetPoint("LEFT", addZoneBtn, "RIGHT", 6, 0)
     detectBtn:SetScript("OnClick", function()
@@ -616,7 +616,7 @@ function ns.UI.CreateZonesTab(parent)
                 if todoContainer then todoContainer:SetWidth(width - 20) end
             end)
 
-            local separatorLine = OneWoW_GUI:CreateDivider(detailPanel, 0)
+            local separatorLine = OneWoW_GUI:CreateDivider(detailPanel, { yOffset = 0 })
             separatorLine:ClearAllPoints()
             separatorLine:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -5)
             separatorLine:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -5)
@@ -859,7 +859,7 @@ function ns.UI.CreateZonesTab(parent)
         end
 
         local function CreateSectionHeader(title, yOfs)
-            local section = OneWoW_GUI:CreateSectionHeader(scrollChild, title, yOfs)
+            local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = title, yOffset = yOfs })
             table.insert(zoneListItems, section)
             return section
         end
@@ -1007,7 +1007,7 @@ local function MakeZoneLabel(parent, text, x, y)
 end
 
 local function MakeZoneInput(parent, x, y, w)
-    local box = OneWoW_GUI:CreateEditBox(nil, parent, {
+    local box = OneWoW_GUI:CreateEditBox(parent, {
         width = w,
         height = 26,
         placeholderText = "",
@@ -1032,7 +1032,15 @@ local function MakeZoneSlider(parent, name, x, y, w, minV, maxV, defV, fmt)
     local step = (fmt == "pct") and 0.05 or 1
     local fmtStr = (fmt == "pct") and "%d%%" or "%d"
     local currentDisplay = defV
-    local container = OneWoW_GUI:CreateSlider(parent, minV, maxV, step, defV, function() end, w, fmtStr)
+    local container = OneWoW_GUI:CreateSlider(parent, {
+        minVal = minV,
+        maxVal = maxV,
+        step = step,
+        currentVal = defV,
+        onChange = function() end,
+        width = w,
+        fmt = fmtStr,
+    })
     container:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     return container, nil, container
 end
@@ -1111,7 +1119,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     mapIDInput:SetNumeric(true)
     dialog._validatedMapID = nil
 
-    local validateBtn = ns.UI.CreateButton(nil, content, L["BUTTON_VALIDATE"] or "Validate", 80, 26)
+    local validateBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", width = 80, height = 26 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
     ns.UI.AutoResizeButton(validateBtn, 70, 150)
 
@@ -1368,7 +1376,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     mapIDInput:SetNumeric(true)
     mapIDInput:SetText(zoneData.mapID and tostring(zoneData.mapID) or "")
 
-    local validateBtn = ns.UI.CreateButton(nil, content, L["BUTTON_VALIDATE"] or "Validate", 80, 26)
+    local validateBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", width = 80, height = 26 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
     ns.UI.AutoResizeButton(validateBtn, 70, 150)
 

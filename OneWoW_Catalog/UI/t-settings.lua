@@ -13,13 +13,13 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 ns.UI = ns.UI or {}
 
 function ns.UI.CreateSettingsTab(parent)
-    local scrollFrame, scrollContent = ns.UI.CreateScrollFrame(nil, parent, parent:GetWidth(), parent:GetHeight())
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(parent, { width = parent:GetWidth(), height = parent:GetHeight() })
     scrollFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     scrollFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
     local yOffset = -10
 
-    local dbSection = ns.UI.CreateSectionHeader(scrollContent, L["DATA_MANAGER_TITLE"], yOffset)
+    local dbSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["DATA_MANAGER_TITLE"], yOffset = yOffset })
     yOffset = dbSection.bottomY - 8
 
     local dbDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -83,7 +83,7 @@ function ns.UI.CreateSettingsTab(parent)
         end
         UpdateSize()
 
-        local resetBtn = ns.UI.CreateFitTextButton(container, "Reset", { height = 28, minWidth = 75 })
+        local resetBtn = OneWoW_GUI:CreateFitTextButton(container, { text = "Reset", height = 28, minWidth = 75 })
         resetBtn:SetPoint("TOPRIGHT", -12, -16)
         resetBtn:SetBackdropColor(1, 0.3, 0.3)
         resetBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(1, 0.1, 0.1) end)

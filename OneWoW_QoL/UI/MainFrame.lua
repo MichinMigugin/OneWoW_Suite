@@ -91,7 +91,8 @@ function ns.UI:CreateMainFrame(defaultTab)
         addon.db.global.mainFrameSize = { width = w, height = h }
     end)
 
-    local titleBg = OneWoW_GUI:CreateTitleBar(frame, L["ADDON_TITLE_FRAME"], {
+    local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
+        title = L["ADDON_TITLE_FRAME"],
         height = 20,
         showBrand = true,
         onClose = function() frame:Hide() end,
@@ -168,7 +169,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     tabButtonContainer:SetScript("OnSizeChanged", function() UpdateTabLayout() end)
 
     local function CreateTab(name, displayName)
-        local btn = OneWoW_GUI:CreateButton(nil, tabButtonContainer, displayName, 100, ns.Constants.GUI.TAB_BUTTON_HEIGHT)
+        local btn = OneWoW_GUI:CreateButton(tabButtonContainer, { text = displayName, width = 100, height = ns.Constants.GUI.TAB_BUTTON_HEIGHT })
 
         btn:SetScript("OnClick", function() SelectTab(name) end)
         btn:SetScript("OnEnter", function(self)

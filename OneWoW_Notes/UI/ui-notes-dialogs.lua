@@ -103,7 +103,7 @@ function ns.UI.ShowAddNoteDialog()
     local LBL_GAP = 18
 
     MakeLabel(content, L["LABEL_NOTE_TITLE"], COL1_X, yPos)
-    local titleInput = OneWoW_GUI:CreateEditBox(nil, content, { height = 26 })
+    local titleInput = OneWoW_GUI:CreateEditBox(content, { height = 26 })
     titleInput:SetPoint("TOPLEFT",  content, "TOPLEFT",  COL1_X,  yPos - LBL_GAP)
     titleInput:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos - LBL_GAP)
     titleInput:SetAutoFocus(true)
@@ -192,10 +192,18 @@ function ns.UI.ShowAddNoteDialog()
 
     MakeLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
     dialog.selectedFontSize = 12
-    local fontSizeContainer = OneWoW_GUI:CreateSlider(content, 10, 20, 1, 12, function(val)
-        dialog.selectedFontSize = val
-        UpdatePreview()
-    end, COL_W, "%d")
+    local fontSizeContainer = OneWoW_GUI:CreateSlider(content, {
+        minVal = 10,
+        maxVal = 20,
+        step = 1,
+        currentVal = 12,
+        onChange = function(val)
+            dialog.selectedFontSize = val
+            UpdatePreview()
+        end,
+        width = COL_W,
+        fmt = "%d",
+    })
     fontSizeContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, L["LABEL_NOTE_FONT"], COL2_X, yPos)
@@ -213,10 +221,18 @@ function ns.UI.ShowAddNoteDialog()
 
     MakeLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
     dialog.selectedOpacity = 0.9
-    local opacityContainer = OneWoW_GUI:CreateSlider(content, 50, 100, 5, 90, function(val)
-        dialog.selectedOpacity = val / 100
-        UpdatePreview()
-    end, COL_W, "%d%%")
+    local opacityContainer = OneWoW_GUI:CreateSlider(content, {
+        minVal = 50,
+        maxVal = 100,
+        step = 5,
+        currentVal = 90,
+        onChange = function(val)
+            dialog.selectedOpacity = val / 100
+            UpdatePreview()
+        end,
+        width = COL_W,
+        fmt = "%d%%",
+    })
     opacityContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, "Font Outline", COL2_X, yPos)
@@ -253,7 +269,7 @@ function ns.UI.ShowAddNoteDialog()
     autoPinSection:SetSize(COL_W, 35)
     autoPinSection:Hide()
 
-    local autoPinCheckbox = OneWoW_GUI:CreateCheckbox(nil, autoPinSection, L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
+    local autoPinCheckbox = OneWoW_GUI:CreateCheckbox(autoPinSection, { label = L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete" })
     autoPinCheckbox:SetPoint("LEFT", autoPinSection, "LEFT", 5, 0)
     dialog.autoPinCheckbox = autoPinCheckbox
     dialog.autoPinSection  = autoPinSection
@@ -274,7 +290,11 @@ function ns.UI.ShowAddNoteDialog()
     previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yPos = yPos - 18
 
-    contentBg = OneWoW_GUI:CreateFrame(nil, content, 100, 100)
+    contentBg = OneWoW_GUI:CreateFrame(content, {
+        width = 100,
+        height = 100,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
     contentBg:ClearAllPoints()
     contentBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X,  yPos)
     contentBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
@@ -360,7 +380,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     local LBL_GAP = 18
 
     MakeLabel(content, L["LABEL_NOTE_TITLE"], COL1_X, yPos)
-    local titleInput = OneWoW_GUI:CreateEditBox(nil, content, { height = 26 })
+    local titleInput = OneWoW_GUI:CreateEditBox(content, { height = 26 })
     titleInput:SetPoint("TOPLEFT",  content, "TOPLEFT",  COL1_X,  yPos - LBL_GAP)
     titleInput:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos - LBL_GAP)
     titleInput:SetAutoFocus(false)
@@ -497,20 +517,28 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
-    local fontSizeContainer = OneWoW_GUI:CreateSlider(content, 10, 20, 1, noteData.fontSize or 12, function(val)
-        local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
-        if notesDB and notesDB[noteID] then
-            notesDB[noteID].fontSize = val
-            notesDB[noteID].modified = GetServerTime()
-        end
-        UpdatePreview()
-        if ns.UI.notesFrame and ns.UI.notesFrame.UpdateEditorColors then
-            ns.UI.notesFrame.UpdateEditorColors(noteID)
-        end
-        if ns.NotesPins and ns.NotesPins.RefreshNotePinColors then
-            ns.NotesPins:RefreshNotePinColors(noteID)
-        end
-    end, COL_W, "%d")
+    local fontSizeContainer = OneWoW_GUI:CreateSlider(content, {
+        minVal = 10,
+        maxVal = 20,
+        step = 1,
+        currentVal = noteData.fontSize or 12,
+        onChange = function(val)
+            local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
+            if notesDB and notesDB[noteID] then
+                notesDB[noteID].fontSize = val
+                notesDB[noteID].modified = GetServerTime()
+            end
+            UpdatePreview()
+            if ns.UI.notesFrame and ns.UI.notesFrame.UpdateEditorColors then
+                ns.UI.notesFrame.UpdateEditorColors(noteID)
+            end
+            if ns.NotesPins and ns.NotesPins.RefreshNotePinColors then
+                ns.NotesPins:RefreshNotePinColors(noteID)
+            end
+        end,
+        width = COL_W,
+        fmt = "%d",
+    })
     fontSizeContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, L["LABEL_NOTE_FONT"], COL2_X, yPos)
@@ -535,15 +563,23 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     yPos = yPos - ROW_H
 
     MakeLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
-    local opacityContainer = OneWoW_GUI:CreateSlider(content, 50, 100, 5, math.floor((noteData.opacity or 0.9) * 100 + 0.5), function(val)
-        local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
-        if notesDB and notesDB[noteID] then
-            notesDB[noteID].opacity = val / 100
-            notesDB[noteID].modified = GetServerTime()
-        end
-        noteData.opacity = val / 100
-        UpdatePreview()
-    end, COL_W, "%d%%")
+    local opacityContainer = OneWoW_GUI:CreateSlider(content, {
+        minVal = 50,
+        maxVal = 100,
+        step = 5,
+        currentVal = math.floor((noteData.opacity or 0.9) * 100 + 0.5),
+        onChange = function(val)
+            local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
+            if notesDB and notesDB[noteID] then
+                notesDB[noteID].opacity = val / 100
+                notesDB[noteID].modified = GetServerTime()
+            end
+            noteData.opacity = val / 100
+            UpdatePreview()
+        end,
+        width = COL_W,
+        fmt = "%d%%",
+    })
     opacityContainer:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
 
     MakeLabel(content, "Font Outline", COL2_X, yPos)
@@ -584,7 +620,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     propAutoPinSection:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - 4)
     propAutoPinSection:SetSize(COL_W, 35)
 
-    local propAutoPinCheckbox = OneWoW_GUI:CreateCheckbox(nil, propAutoPinSection, L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
+    local propAutoPinCheckbox = OneWoW_GUI:CreateCheckbox(propAutoPinSection, { label = L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete" })
     propAutoPinCheckbox:SetPoint("LEFT", propAutoPinSection, "LEFT", 5, 0)
     propAutoPinCheckbox:SetChecked(noteData.autoPinEnabled == true)
     propAutoPinCheckbox:SetScript("OnClick", function(self)
@@ -629,7 +665,11 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yPos = yPos - 18
 
-    contentBg = OneWoW_GUI:CreateFrame(nil, content, 100, 100)
+    contentBg = OneWoW_GUI:CreateFrame(content, {
+        width = 100,
+        height = 100,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
     contentBg:ClearAllPoints()
     contentBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X,  yPos)
     contentBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)

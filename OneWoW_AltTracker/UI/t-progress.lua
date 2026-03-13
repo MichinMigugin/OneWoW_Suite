@@ -436,7 +436,7 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
 end
 
 local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHeight)
-    local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, charData.faction)
+    local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
     table.insert(charRow.cells, factionCell)
 
     local hasMail = false
@@ -444,7 +444,7 @@ local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHei
         local mailData = StorageAPI.GetMail(charKey)
         hasMail = mailData and mailData.hasNewMail
     end
-    local mailCell = OneWoW_GUI:CreateMailIcon(charRow, hasMail)
+    local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
     table.insert(charRow.cells, mailCell)
 
     local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -1310,7 +1310,7 @@ function ns.UI.CreateProgressTab(parent)
     end
 
     for _, tabKey in ipairs(subTabOrder) do
-        local btn = OneWoW_GUI:CreateButton(nil, subTabBar, subTabNames[tabKey], 100, 28)
+        local btn = OneWoW_GUI:CreateButton(subTabBar, { text = subTabNames[tabKey], width = 100, height = 28 })
         btn.label = btn.text
         btn.tabKey = tabKey
 

@@ -149,7 +149,7 @@ local function ShowModuleDetail(split, module)
 
     if hasDetails then
         local capturedModule = module
-        local detailsBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, L["FEATURES_DETAILS_BTN"], { height = 24 })
+        local detailsBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, { text = L["FEATURES_DETAILS_BTN"], height = 24 })
         detailsBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
         detailsBtn:SetScript("OnClick", function() ShowModuleDetailsDialog(capturedModule) end)
     end
@@ -186,7 +186,8 @@ local function ShowModuleDetail(split, module)
     local customRefreshCallbacks = {}
     local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 
-    yOffset, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+    yOffset, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+        yOffset = yOffset,
         label = "",
         align = "left",
         value = isEnabled,
@@ -271,7 +272,8 @@ local function ShowModuleDetail(split, module)
             local currentVal = ns.ModuleRegistry:GetToggleValue(module.id, toggle.id)
 
             local rowRefresh
-            yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+            yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+                yOffset = yOffset,
                 label = ns.L[toggle.label] or toggle.label,
                 description = toggle.description and (ns.L[toggle.description] or toggle.description) or nil,
                 value = currentVal,

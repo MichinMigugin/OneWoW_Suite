@@ -4,6 +4,7 @@ local defaults = {
     global = {
         language = GetLocale(),
         theme = "green",
+        mainFramePosition = {},
         minimap = {
             hide = false,
             minimapPos = 220,

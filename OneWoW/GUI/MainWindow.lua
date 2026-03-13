@@ -187,6 +187,7 @@ end
 local function BuildRow2ForModule(moduleName)
     for _, btn in ipairs(row2Buttons) do
         btn:Hide()
+        btn:ClearAllPoints()
         btn:SetParent(nil)
     end
     row2Buttons = {}
@@ -243,6 +244,7 @@ function GUI:SelectModuleTab(moduleName)
         if GUI.settingsTabs and #GUI.settingsTabs > 0 then
             for _, btn in ipairs(row2Buttons) do
                 btn:Hide()
+                btn:ClearAllPoints()
                 btn:SetParent(nil)
             end
             row2Buttons = {}
@@ -377,26 +379,26 @@ function GUI:InitMainWindow()
     local C = OneWoW.Constants.GUI
 
     local screenW, screenH = GetScreenWidth(), GetScreenHeight()
-
-    local savedSize = OneWoW.db and OneWoW.db.global and OneWoW.db.global.mainFrameSize
-    local frameW = savedSize and savedSize.width or C.WINDOW_WIDTH
-    local frameH = savedSize and savedSize.height or C.WINDOW_HEIGHT
-
+    local db = OneWoW.db and OneWoW.db.global or {}
+    local storage = db.mainFramePosition or {}
+    if db.mainFrameSize and not storage.width then
+        storage.width = db.mainFrameSize.width
+        storage.height = db.mainFrameSize.height
+        db.mainFramePosition = storage
+    end
+    local frameW = storage.width or C.WINDOW_WIDTH
+    local frameH = storage.height or C.WINDOW_HEIGHT
     frameW = math.min(frameW, screenW)
     frameH = math.min(frameH, screenH)
 
-    if savedSize then
-        savedSize.width = frameW
-        savedSize.height = frameH
-    end
+    MainWindow = OneWoW_GUI:CreateFrame(UIParent, {
+        name = "OneWoWMainWindow",
+        width = frameW,
+        height = frameH,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
 
-    MainWindow = OneWoW_GUI:CreateFrame("OneWoWMainWindow", UIParent, frameW, frameH, OneWoW_GUI.Constants.BACKDROP_SOFT)
-
-    local savedPos = OneWoW.db and OneWoW.db.global and OneWoW.db.global.mainFramePosition
-    if savedPos then
-        MainWindow:ClearAllPoints()
-        MainWindow:SetPoint(savedPos.point, UIParent, savedPos.relativePoint, savedPos.x, savedPos.y)
-    else
+    if not OneWoW_GUI:RestoreWindowPosition(MainWindow, storage) then
         MainWindow:SetPoint("CENTER")
     end
 
@@ -409,9 +411,17 @@ function GUI:InitMainWindow()
     local maxW = math.min(C.MAX_WIDTH, screenW)
     local maxH = math.min(C.MAX_HEIGHT, screenH)
     MainWindow:SetResizeBounds(C.MIN_WIDTH, C.MIN_HEIGHT, maxW, maxH)
+    MainWindow:SetScript("OnHide", function()
+        local g = OneWoW.db and OneWoW.db.global
+        if g then
+            g.mainFramePosition = g.mainFramePosition or {}
+            OneWoW_GUI:SaveWindowPosition(MainWindow, g.mainFramePosition)
+        end
+    end)
     MainWindow:Hide()
 
-    local titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, L["ADDON_TITLE"] or "OneWoW", {
+    local titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, {
+        title = L["ADDON_TITLE"] or "OneWoW",
         height = 20,
         showBrand = true,
         onClose = function() GUI:Hide() end,
@@ -422,13 +432,7 @@ function GUI:InitMainWindow()
     titleBar:EnableMouse(true)
     titleBar:RegisterForDrag("LeftButton")
     titleBar:SetScript("OnDragStart", function() MainWindow:StartMoving() end)
-    titleBar:SetScript("OnDragStop", function()
-        MainWindow:StopMovingOrSizing()
-        local point, relativeTo, relativePoint, x, y = MainWindow:GetPoint()
-        if OneWoW.db and OneWoW.db.global then
-            OneWoW.db.global.mainFramePosition = { point = point, relativePoint = relativePoint, x = x, y = y }
-        end
-    end)
+    titleBar:SetScript("OnDragStop", function() MainWindow:StopMovingOrSizing() end)
 
     if OneWoW.Search then
         OneWoW.Search:Init(titleBar, titleBar._closeBtn)
@@ -511,10 +515,6 @@ function GUI:InitMainWindow()
         local w, h = MainWindow:GetWidth(), MainWindow:GetHeight()
         if w > sw then MainWindow:SetWidth(sw) end
         if h > sh then MainWindow:SetHeight(sh) end
-        if OneWoW.db and OneWoW.db.global and OneWoW.db.global.mainFrameSize then
-            OneWoW.db.global.mainFrameSize.width = MainWindow:GetWidth()
-            OneWoW.db.global.mainFrameSize.height = MainWindow:GetHeight()
-        end
     end)
 
     tinsert(UISpecialFrames, "OneWoWMainWindow")
@@ -562,6 +562,10 @@ function GUI:Toggle()
     end
 end
 
+function GUI:GetMainWindow()
+    return MainWindow
+end
+
 function GUI:CreateAddonPlaceholderFrame(parent, info)
     local icon = parent:CreateTexture(nil, "ARTWORK")
     icon:SetSize(96, 96)
@@ -583,7 +587,11 @@ function GUI:CreateAddonPlaceholderFrame(parent, info)
     installLabel:SetText(L["HOME_INSTALL_FROM_CURSE"])
     installLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local urlBox = GUI:CreateEditBox("OneWoW_Placeholder_" .. info.name .. "_URL", parent, 400, 24)
+    local urlBox = OneWoW_GUI:CreateEditBox(parent, {
+        name = "OneWoW_Placeholder_" .. info.name .. "_URL",
+        width = 400,
+        height = 24,
+    })
     urlBox:SetPoint("TOP", installLabel, "BOTTOM", 0, -8)
     urlBox:SetText(info.url)
     urlBox:SetAutoFocus(false)

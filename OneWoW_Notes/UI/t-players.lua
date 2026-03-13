@@ -57,7 +57,7 @@ function ns.UI.CreatePlayersTab(parent)
     controlTitle:SetText(L["PLAYERS_CONTROLS"] or "Players Controls")
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addTargetBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_TARGET"] or "Add Target", 100, 25)
+    local addTargetBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_TARGET"] or "Add Target", width = 100, height = 25 })
     ns.UI.AutoResizeButton(addTargetBtn, 80, 200)
     addTargetBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addTargetBtn:SetScript("OnClick", function()
@@ -85,7 +85,7 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addTargetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local addManualBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_MANUAL_ENTRY"] or "Manual", 90, 25)
+    local addManualBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"] or "Manual", width = 90, height = 25 })
     ns.UI.AutoResizeButton(addManualBtn, 70, 200)
     addManualBtn:SetPoint("LEFT", addTargetBtn, "RIGHT", 5, 0)
     addManualBtn:SetScript("OnClick", function()
@@ -102,7 +102,7 @@ function ns.UI.CreatePlayersTab(parent)
     addManualBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     local altTrackerLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Character")
-    local addAltsBtn = ns.UI.CreateButton(nil, controlPanel, L["PLAYER_ADD_ALTS"] or "Add Alts", 80, 25)
+    local addAltsBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["PLAYER_ADD_ALTS"] or "Add Alts", width = 80, height = 25 })
     ns.UI.AutoResizeButton(addAltsBtn, 70, 200)
     addAltsBtn:SetPoint("LEFT", addManualBtn, "RIGHT", 5, 0)
     if not altTrackerLoaded then
@@ -130,7 +130,7 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addAltsBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local addGuildBtn = ns.UI.CreateButton(nil, controlPanel, L["PLAYER_ADD_GUILD"] or "Add Guild", 90, 25)
+    local addGuildBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["PLAYER_ADD_GUILD"] or "Add Guild", width = 90, height = 25 })
     ns.UI.AutoResizeButton(addGuildBtn, 70, 200)
     addGuildBtn:SetPoint("LEFT", addAltsBtn, "RIGHT", 5, 0)
     addGuildBtn:SetScript("OnClick", function()
@@ -507,7 +507,7 @@ function ns.UI.CreatePlayersTab(parent)
 
             local tooltipEdits = {}
             for i = 1, 4 do
-                local edit = OneWoW_GUI:CreateEditBox(nil, tooltipSection, {
+                local edit = OneWoW_GUI:CreateEditBox(tooltipSection, {
                     height = 22,
                     maxLetters = 255,
                 })
@@ -635,7 +635,7 @@ function ns.UI.CreatePlayersTab(parent)
     end)
 
     local function CreateSectionHeader(text, yPos)
-        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, text, yPos)
+        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = text, yOffset = yPos })
         section:ClearAllPoints()
         section:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
         section:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yPos)
@@ -885,7 +885,7 @@ local function MakeDialogLabel(parentFrame, text, x, y)
 end
 
 local function MakeDialogInput(parentFrame, x, y, w)
-    local input = OneWoW_GUI:CreateEditBox(nil, parentFrame, {
+    local input = OneWoW_GUI:CreateEditBox(parentFrame, {
         width = w,
         height = 26,
     })
@@ -1234,7 +1234,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     end
     yPos = yPos - ROW_H
 
-    local alertCB = OneWoW_GUI:CreateCheckbox(nil, content, L["TOOLTIP_PLAYER_SOUND"] or "Alert on Target")
+    local alertCB = OneWoW_GUI:CreateCheckbox(content, { label = L["TOOLTIP_PLAYER_SOUND"] or "Alert on Target" })
     alertCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     alertCB:SetChecked(pd.soundEnabled or false)
     alertCB:SetScript("OnClick", function(self)
@@ -1366,14 +1366,14 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
     local content = dialog.content
     local allCheckboxes = {}
 
-    local selectAllBtn = ns.UI.CreateButton(nil, content, L["BUTTON_SELECT_ALL"] or "Select All", 100, 25)
+    local selectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_SELECT_ALL"] or "Select All", width = 100, height = 25 })
     selectAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 8, -8)
     selectAllBtn:SetScript("OnClick", function()
         for _, entry in ipairs(altsToAdd) do entry.checked = true end
         for _, cb in ipairs(allCheckboxes) do cb:SetChecked(true) end
     end)
 
-    local deselectAllBtn = ns.UI.CreateButton(nil, content, L["BUTTON_DESELECT_ALL"] or "Deselect All", 100, 25)
+    local deselectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_DESELECT_ALL"] or "Deselect All", width = 100, height = 25 })
     deselectAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 6, 0)
     deselectAllBtn:SetScript("OnClick", function()
         for _, entry in ipairs(altsToAdd) do entry.checked = false end
@@ -1510,14 +1510,14 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
     local content = dialog.content
     local allCheckboxes = {}
 
-    local selectAllBtn = ns.UI.CreateButton(nil, content, L["BUTTON_SELECT_ALL"] or "Select All", 100, 25)
+    local selectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_SELECT_ALL"] or "Select All", width = 100, height = 25 })
     selectAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 8, -8)
     selectAllBtn:SetScript("OnClick", function()
         for _, entry in ipairs(guildMembers) do entry.checked = true end
         for _, cb in ipairs(allCheckboxes) do cb:SetChecked(true) end
     end)
 
-    local deselectAllBtn = ns.UI.CreateButton(nil, content, L["BUTTON_DESELECT_ALL"] or "Deselect All", 100, 25)
+    local deselectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_DESELECT_ALL"] or "Deselect All", width = 100, height = 25 })
     deselectAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 6, 0)
     deselectAllBtn:SetScript("OnClick", function()
         for _, entry in ipairs(guildMembers) do entry.checked = false end

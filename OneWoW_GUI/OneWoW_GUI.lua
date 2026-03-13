@@ -3,8 +3,7 @@
 -- THIS IS THE GUI LIBRARY (OneWoW_GUI-1.0) - The single source of truth for
 -- all shared UI creation functions. Other addons consume this via LibStub.
 -- ALL reusable UI functions (buttons, scroll frames, split panels, etc.)
--- MUST be defined here. Addon Framework.lua files are thin wrappers only.
--- Do NOT duplicate these functions in any addon's Framework.lua.
+-- MUST be defined here. Do NOT duplicate these functions in any addon.
 -- ============================================================================
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -25,7 +24,7 @@ local noop = function() end
 
 local themeMetatable = {
     __index = function(self, key)
-        -- Use rawget to avoid recursion when FALLBACK_THEME is the same table as self (e.g. green theme)
+        -- Use rawget to avoid recursion when FALLBACK_THEME == self
         return rawget(Constants.FALLBACK_THEME, key) or DEFAULT_THEME_COLOR
     end,
     __newindex = noop,
@@ -85,10 +84,44 @@ function OneWoW_GUI:ApplyTheme(addon)
     Constants.ACTIVE_THEME = setmetatable(selectedTheme, themeMetatable)
 end
 
-function OneWoW_GUI:CreateFrame(name, parent, width, height, backdrop)
-    local frame = CreateFrame("Frame", name, parent or UIParent, "BackdropTemplate")
-    frame:SetSize(width, height)
-    frame:SetBackdrop(backdrop or Constants.BACKDROP_SOFT)
+-- Save frame position (and size if resizable) into storage table.
+-- Call from frame's OnHide script. Storage shape: { point, relativePoint, x, y, width?, height? }
+function OneWoW_GUI:SaveWindowPosition(frame, storage)
+    if not frame or not storage then return end
+    local point, _, relativePoint, x, y = frame:GetPoint()
+    storage.point = point
+    storage.relativePoint = relativePoint
+    storage.x = x
+    storage.y = y
+    if frame.GetWidth and frame.GetHeight then
+        storage.width = frame:GetWidth()
+        storage.height = frame:GetHeight()
+    end
+end
+
+-- Restore frame position/size from storage. Returns true if restored.
+-- Call after creating frame, before first Show. Caller should SetPoint("CENTER") if false.
+function OneWoW_GUI:RestoreWindowPosition(frame, storage)
+    if not frame or not storage or not storage.point then return false end
+    frame:ClearAllPoints()
+    frame:SetPoint(storage.point, UIParent, storage.relativePoint, storage.x, storage.y)
+    if storage.width and storage.height and frame.SetSize then
+        frame:SetSize(storage.width, storage.height)
+    end
+    return true
+end
+
+function OneWoW_GUI:CreateFrame(parent, options)
+    options = options or {}
+    local name = options.name
+    local width = options.width
+    local height = options.height
+    local backdrop = options.backdrop
+    assert(backdrop, "CreateFrame requires options.backdrop")
+    parent = parent or UIParent
+    local frame = CreateFrame("Frame", name, parent, "BackdropTemplate")
+    frame:SetSize(width or 100, height or 100)
+    frame:SetBackdrop(backdrop)
     frame:SetBackdropColor(GetThemeColor("BG_PRIMARY"))
     frame:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
     return frame
@@ -110,7 +143,7 @@ function OneWoW_GUI:CreateDialog(config)
     local buttonDefs = config.buttons
     local showScrollFrame = config.showScrollFrame
 
-    local frame = self:CreateFrame(name, UIParent, width, height, Constants.BACKDROP_INNER_NO_INSETS)
+    local frame = self:CreateFrame(UIParent, { name = name, width = width, height = height, backdrop = Constants.BACKDROP_INNER_NO_INSETS })
     frame:SetPoint("CENTER")
     frame:SetFrameStrata(strata)
     frame:SetToplevel(true)
@@ -136,12 +169,13 @@ function OneWoW_GUI:CreateDialog(config)
     end
 
     local titleBarOpts = {
+        title = title,
         height = titleHeight,
         onClose = closeFunc,
         showBrand = showBrand,
         factionTheme = config.factionTheme,
     }
-    local titleBar = self:CreateTitleBar(frame, title, titleBarOpts)
+    local titleBar = self:CreateTitleBar(frame, titleBarOpts)
     result.titleBar = titleBar
 
     if movable then
@@ -173,7 +207,7 @@ function OneWoW_GUI:CreateDialog(config)
         local prevBtn
         for i = #buttonDefs, 1, -1 do
             local def = buttonDefs[i]
-            local btn = self:CreateFitTextButton(frame, def.text, { height = 28, minWidth = 80 })
+            local btn = self:CreateFitTextButton(frame, { text = def.text, height = 28, minWidth = 80 })
             if not prevBtn then
                 btn:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 10)
             else
@@ -217,7 +251,7 @@ function OneWoW_GUI:CreateDialog(config)
     result.contentFrame = contentFrame
 
     if showScrollFrame then
-        local scrollFrame, scrollContent = self:CreateScrollFrame(nil, contentFrame)
+        local scrollFrame, scrollContent = self:CreateScrollFrame(contentFrame, {})
         result.scrollFrame = scrollFrame
         result.scrollContent = scrollContent
     end
@@ -305,16 +339,21 @@ function OneWoW_GUI:CreateFilterBar(parent, config)
     return bar
 end
 
-function OneWoW_GUI:CreateButton(name, parent, text, width, height)
+function OneWoW_GUI:CreateButton(parent, options)
+    options = options or {}
+    local name = options.name
+    local text = options.text or ""
+    local width = options.width or Constants.GUI.BUTTON_WIDTH
+    local height = options.height or Constants.GUI.BUTTON_HEIGHT
     local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
-    btn:SetSize(width or Constants.GUI.BUTTON_WIDTH, height or Constants.GUI.BUTTON_HEIGHT)
+    btn:SetSize(width, height)
     btn:SetBackdrop(Constants.BACKDROP_INNER)
     btn:SetBackdropColor(GetThemeColor("BTN_NORMAL"))
     btn:SetBackdropBorderColor(GetThemeColor("BTN_BORDER"))
 
     btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     btn.text:SetPoint("CENTER")
-    btn.text:SetText(text or "")
+    btn.text:SetText(text)
     btn.text:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
 
     btn:SetScript("OnEnter", function(self)
@@ -341,13 +380,14 @@ function OneWoW_GUI:CreateButton(name, parent, text, width, height)
     return btn
 end
 
-function OneWoW_GUI:CreateFitTextButton(parent, text, options)
+function OneWoW_GUI:CreateFitTextButton(parent, options)
     options = options or {}
+    local text = options.text or ""
     local height = options.height or Constants.GUI.BUTTON_HEIGHT
     local minWidth = options.minWidth or 40
     local paddingX = options.paddingX or 24
 
-    local btn = self:CreateButton(nil, parent, text, minWidth, height)
+    local btn = self:CreateButton(parent, { text = text, width = minWidth, height = height })
     local textWidth = btn.text:GetStringWidth()
     local finalWidth = math.max(minWidth, textWidth + paddingX)
     btn:SetWidth(finalWidth)
@@ -364,8 +404,10 @@ function OneWoW_GUI:CreateFitTextButton(parent, text, options)
     return btn
 end
 
-function OneWoW_GUI:CreateFitFrameButtons(parent, yOffset, items, options)
+function OneWoW_GUI:CreateFitFrameButtons(parent, options)
     options = options or {}
+    local yOffset = options.yOffset or 0
+    local items = options.items or {}
     local height = options.height or 26
     local gap = options.gap or 4
     local marginX = options.marginX or 12
@@ -402,7 +444,7 @@ function OneWoW_GUI:CreateFitFrameButtons(parent, yOffset, items, options)
     local rowY = yOffset
 
     for i, item in ipairs(items) do
-        local btn = self:CreateButton(nil, parent, item.text, bw, height)
+        local btn = self:CreateButton(parent, { text = item.text, width = bw, height = height })
         btn:SetPoint("TOPLEFT", parent, "TOPLEFT", xPos, rowY)
         btn.itemValue = item.value
         btn.isActive = item.isActive or false
@@ -444,12 +486,19 @@ function OneWoW_GUI:CreateFitFrameButtons(parent, yOffset, items, options)
     return buttons, finalY
 end
 
-function OneWoW_GUI:CreateOnOffToggleButtons(parent, yOffset, onLabel, offLabel, width, height, isEnabled, value, onValueChange)
-    width = width or Constants.TOGGLE_BUTTON_WIDTH
-    height = height or Constants.TOGGLE_BUTTON_HEIGHT
+function OneWoW_GUI:CreateOnOffToggleButtons(parent, options)
+    options = options or {}
+    local yOffset = options.yOffset or 0
+    local onLabel = options.onLabel or "On"
+    local offLabel = options.offLabel or "Off"
+    local width = options.width or Constants.TOGGLE_BUTTON_WIDTH
+    local height = options.height or Constants.TOGGLE_BUTTON_HEIGHT
+    local isEnabled = options.isEnabled
+    local value = options.value
+    local onValueChange = options.onValueChange
 
-    local onBtn = self:CreateFitTextButton(parent, onLabel, { height = height, minWidth = width })
-    local offBtn = self:CreateFitTextButton(parent, offLabel, { height = height, minWidth = width })
+    local onBtn = self:CreateFitTextButton(parent, { text = onLabel, height = height, minWidth = width })
+    local offBtn = self:CreateFitTextButton(parent, { text = offLabel, height = height, minWidth = width })
 
     local maxW = math.max(onBtn:GetWidth(), offBtn:GetWidth())
     onBtn:SetWidth(maxW)
@@ -563,8 +612,9 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, yOffset, onLabel, offLabel,
     return onBtn, offBtn, refresh, statusPfx, statusVal
 end
 
-function OneWoW_GUI:CreateToggleRow(parent, yOffset, options)
+function OneWoW_GUI:CreateToggleRow(parent, options)
     options = options or {}
+    local yOffset = options.yOffset or 0
     local label = options.label or ""
     local description = options.description
     local createContent = options.createContent
@@ -585,10 +635,16 @@ function OneWoW_GUI:CreateToggleRow(parent, yOffset, options)
         labelFs:Hide()
     end
 
-    local onBtn, offBtn, refresh, statusPfx, statusVal = self:CreateOnOffToggleButtons(
-        parent, yOffset, onLabel, offLabel, buttonWidth, buttonHeight,
-        isEnabled, value, onValueChange
-    )
+    local onBtn, offBtn, refresh, statusPfx, statusVal = self:CreateOnOffToggleButtons(parent, {
+        yOffset = yOffset,
+        onLabel = onLabel,
+        offLabel = offLabel,
+        width = buttonWidth,
+        height = buttonHeight,
+        isEnabled = isEnabled,
+        value = value,
+        onValueChange = onValueChange,
+    })
 
     if alignLeft then
         if label ~= "" then
@@ -655,8 +711,9 @@ function OneWoW_GUI:CreateToggleRow(parent, yOffset, options)
     return newYOffset, rowRefresh, { label = labelFs, contentArea = contentArea }
 end
 
-function OneWoW_GUI:CreateEditBox(name, parent, options)
+function OneWoW_GUI:CreateEditBox(parent, options)
     options = options or {}
+    local name = options.name
     local width = options.width
     local height = options.height or Constants.GUI.SEARCH_HEIGHT
     local placeholderText = options.placeholderText or ""
@@ -727,7 +784,7 @@ function OneWoW_GUI:CreateStatusDot(parent, options)
 
     local dot = parent:CreateTexture(nil, "OVERLAY")
     dot:SetSize(size, size)
-    dot:SetTexture("Interface\\Buttons\\WHITE8x8")
+    dot:SetTexture(Constants.BACKDROP_SIMPLE.bgFile)
 
     if options.enabled == true then
         dot:SetVertexColor(GetThemeColor("DOT_FEATURES_ENABLED"))
@@ -822,7 +879,10 @@ function OneWoW_GUI:CreateListRowBasic(parent, options)
     return row
 end
 
-function OneWoW_GUI:CreateCheckbox(name, parent, label)
+function OneWoW_GUI:CreateCheckbox(parent, options)
+    options = options or {}
+    local name = options.name
+    local label = options.label or ""
     local cb = CreateFrame("CheckButton", name, parent, "UICheckButtonTemplate")
     cb:SetSize(Constants.GUI.CHECKBOX_SIZE, Constants.GUI.CHECKBOX_SIZE)
 
@@ -834,15 +894,20 @@ function OneWoW_GUI:CreateCheckbox(name, parent, label)
     return cb
 end
 
-function OneWoW_GUI:CreateHeader(parent, text, yOffset)
+function OneWoW_GUI:CreateHeader(parent, options)
+    options = options or {}
+    local text = options.text or ""
+    local yOffset = options.yOffset or -GetSpacing("MD")
     local header = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    header:SetPoint("TOPLEFT", GetSpacing("MD"), yOffset or -GetSpacing("MD"))
+    header:SetPoint("TOPLEFT", GetSpacing("MD"), yOffset)
     header:SetText(text)
     header:SetTextColor(GetThemeColor("ACCENT_PRIMARY"))
     return header
 end
 
-function OneWoW_GUI:CreateDivider(parent, yOffset)
+function OneWoW_GUI:CreateDivider(parent, options)
+    options = options or {}
+    local yOffset = options.yOffset or 0
     local divider = parent:CreateTexture(nil, "ARTWORK")
     divider:SetHeight(1)
     divider:SetPoint("LEFT", GetSpacing("MD"), 0)
@@ -852,7 +917,10 @@ function OneWoW_GUI:CreateDivider(parent, yOffset)
     return divider
 end
 
-function OneWoW_GUI:CreateSection(parent, title, yOffset)
+function OneWoW_GUI:CreateSection(parent, options)
+    options = options or {}
+    local title = options.title or ""
+    local yOffset = options.yOffset or 0
     local header = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     header:SetPoint("TOPLEFT", parent, "TOPLEFT", GetSpacing("MD"), yOffset)
     header:SetText(title)
@@ -869,8 +937,9 @@ function OneWoW_GUI:CreateSection(parent, title, yOffset)
     return yOffset
 end
 
-function OneWoW_GUI:CreateTitleBar(parent, title, options)
+function OneWoW_GUI:CreateTitleBar(parent, options)
     options = options or {}
+    local title = options.title or ""
     local height = options.height or 20
     local onClose = options.onClose
     local showBrand = options.showBrand
@@ -911,7 +980,7 @@ function OneWoW_GUI:CreateTitleBar(parent, title, options)
     end
 
     if onClose then
-        local closeBtn = self:CreateButton(nil, titleBg, "X", 20, 20)
+        local closeBtn = self:CreateButton(titleBg, { text = "X", width = 20, height = 20 })
         closeBtn:SetPoint("RIGHT", titleBg, "RIGHT", -GetSpacing("XS") / 2, 0)
         closeBtn:SetScript("OnClick", onClose)
         titleBg._closeBtn = closeBtn
@@ -966,7 +1035,10 @@ function OneWoW_GUI:StyleScrollBar(scrollFrame, options)
     applyScrollBarStyle(scrollBar, container, offset)
 end
 
-function OneWoW_GUI:CreateScrollFrame(name, parent, width, height)
+function OneWoW_GUI:CreateScrollFrame(parent, options)
+    options = options or {}
+    local name = options.name
+    local width = options.width
     local scrollFrame = CreateFrame("ScrollFrame", name, parent, "UIPanelScrollFrameTemplate")
     scrollFrame:SetPoint("TOPLEFT", 8, -8)
     scrollFrame:SetPoint("BOTTOMRIGHT", -8, 8)
@@ -989,7 +1061,10 @@ function OneWoW_GUI:CreateScrollFrame(name, parent, width, height)
     return scrollFrame, content
 end
 
-function OneWoW_GUI:CreateSectionHeader(parent, title, yOffset)
+function OneWoW_GUI:CreateSectionHeader(parent, options)
+    options = options or {}
+    local title = options.title or ""
+    local yOffset = options.yOffset or 0
     local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     section:SetPoint("TOPLEFT", 8, yOffset)
     section:SetPoint("TOPRIGHT", -8, yOffset)
@@ -1035,7 +1110,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
 
     local searchBox
     if showSearch then
-        searchBox = self:CreateEditBox(nil, listPanel, {
+        searchBox = self:CreateEditBox(listPanel, {
             placeholderText = options.searchPlaceholder or "",
         })
         searchBox:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 8, -30)
@@ -1177,7 +1252,7 @@ end
 
 local _dropdownMenuCount = 0
 
-function OneWoW_GUI:AttachFilterMenu(dropdown, dropdownText, options)
+function OneWoW_GUI:AttachFilterMenu(dropdown, options)
     options = options or {}
     local searchable = options.searchable ~= false
     local buildItems = options.buildItems
@@ -1439,9 +1514,17 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, dropdownText, options)
     end)
 end
 
-function OneWoW_GUI:CreateSlider(parent, minVal, maxVal, step, currentVal, onChange, width, fmt)
+function OneWoW_GUI:CreateSlider(parent, options)
+    options = options or {}
+    local minVal = options.minVal or 0
+    local maxVal = options.maxVal or 100
+    local step = options.step or 1
+    local currentVal = options.currentVal or minVal
+    local onChange = options.onChange or noop
+    local width = options.width or 200
+    local fmt = options.fmt or "%.1f"
     local container = CreateFrame("Frame", nil, parent)
-    container:SetSize(width or 200, 36)
+    container:SetSize(width, 36)
 
     local slider = CreateFrame("Slider", nil, container, "OptionsSliderTemplate")
     slider:SetPoint("TOPLEFT",  container, "TOPLEFT",  0,   0)
@@ -1454,7 +1537,7 @@ function OneWoW_GUI:CreateSlider(parent, minVal, maxVal, step, currentVal, onCha
 
     local valLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     valLabel:SetPoint("LEFT", slider, "RIGHT", 6, 0)
-    valLabel:SetText(string.format(fmt or "%.1f", currentVal))
+    valLabel:SetText(string.format(fmt, currentVal))
     valLabel:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
 
     if slider.Low  then slider.Low:SetText(tostring(minVal)) end
@@ -1464,7 +1547,7 @@ function OneWoW_GUI:CreateSlider(parent, minVal, maxVal, step, currentVal, onCha
     slider:SetScript("OnValueChanged", function(self, val)
         local rounded = math.floor(val / step + 0.5) * step
         rounded = math.max(minVal, math.min(maxVal, rounded))
-        valLabel:SetText(string.format(fmt or "%.1f", rounded))
+        valLabel:SetText(string.format(fmt, rounded))
         onChange(rounded)
     end)
 
@@ -2243,8 +2326,10 @@ function OneWoW_GUI:CreateItemIcon(parent, options)
     }
 end
 
-function OneWoW_GUI:CreateFactionIcon(parent, faction, size)
-    size = size or 18
+function OneWoW_GUI:CreateFactionIcon(parent, options)
+    options = options or {}
+    local faction = options.faction or "Alliance"
+    local size = options.size or 18
     local frame = CreateFrame("Frame", nil, parent)
     frame:SetSize(size, size)
     local icon = frame:CreateTexture(nil, "ARTWORK")
@@ -2262,8 +2347,10 @@ function OneWoW_GUI:CreateFactionIcon(parent, faction, size)
     return frame
 end
 
-function OneWoW_GUI:CreateMailIcon(parent, hasMail, size)
-    size = size or 16
+function OneWoW_GUI:CreateMailIcon(parent, options)
+    options = options or {}
+    local hasMail = options.hasMail or false
+    local size = options.size or 16
     local frame = CreateFrame("Frame", nil, parent)
     frame:SetSize(size, size)
     local icon = frame:CreateTexture(nil, "ARTWORK")

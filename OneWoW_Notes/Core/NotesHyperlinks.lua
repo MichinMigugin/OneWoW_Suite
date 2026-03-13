@@ -291,7 +291,7 @@ function ns.UI.CreateNotesHelpPanel()
     titleText:SetText(L["UI_HELP_PANEL_TITLE"])
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local closeBtn = ns.UI.CreateButton(nil, titleBar, "X", 20, 20)
+    local closeBtn = OneWoW_GUI:CreateButton(titleBar, { text = "X", width = 20, height = 20 })
     closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -EDGE / 2, 0)
     closeBtn:SetScript("OnClick", function() helpPanel:Hide() end)
 
@@ -445,7 +445,7 @@ function ns.UI.CreateNotesHelpPanel()
         exampleText:SetText(string.format(L["UI_HELP_DETAIL_EXAMPLE"], linkType.example))
         exampleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-        local pasteBtn = ns.UI.CreateButton(nil, detailFrame, L["UI_HELP_PASTE_BUTTON"], 60, 20)
+        local pasteBtn = OneWoW_GUI:CreateButton(detailFrame, { text = L["UI_HELP_PASTE_BUTTON"], width = 60, height = 20 })
         pasteBtn:SetPoint("BOTTOMLEFT", detailFrame, "BOTTOMLEFT", 8, 6)
         pasteBtn:SetScript("OnClick", function()
             local editBox = ns.UI.activeContentEditBox

@@ -59,7 +59,7 @@ function ns.UI.CreateItemsTab(parent)
     controlTitle:SetText(L["ITEMS_CONTROLS"])
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addItemBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_ITEM"], 100, 25)
+    local addItemBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_ITEM"], width = 100, height = 25 })
     ns.UI.AutoResizeButton(addItemBtn, 80, 200)
     addItemBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addItemBtn:RegisterForDrag("LeftButton")
@@ -116,7 +116,7 @@ function ns.UI.CreateItemsTab(parent)
         controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     end)
 
-    local addByIDBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_BY_ID"] or "Add by ID", 90, 25)
+    local addByIDBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_BY_ID"] or "Add by ID", width = 90, height = 25 })
     ns.UI.AutoResizeButton(addByIDBtn, 70, 200)
     addByIDBtn:SetPoint("LEFT", addItemBtn, "RIGHT", 5, 0)
     addByIDBtn:SetScript("OnClick", function()
@@ -932,7 +932,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
 
     MakeItemLabel(content, L["LABEL_ITEM_ID"] or "Item ID:", COL1_X, yPos)
 
-    local idInput = OneWoW_GUI:CreateEditBox(nil, content, {
+    local idInput = OneWoW_GUI:CreateEditBox(content, {
         width = 160,
         height = 26,
     })
@@ -944,7 +944,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
     idInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     dialog._idInput = idInput
 
-    local validateBtn = ns.UI.CreateButton(nil, content, L["ITEM_VALIDATE"] or "Validate", 80, 26)
+    local validateBtn = OneWoW_GUI:CreateButton(content, { text = L["ITEM_VALIDATE"] or "Validate", width = 80, height = 26 })
     validateBtn:SetPoint("LEFT", idInput, "RIGHT", 6, 0)
 
     local resultFrame = CreateThemedBar(nil, content)
@@ -1167,7 +1167,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     end
     yPos = yPos - ROW_H - 8
 
-    local alertCB = OneWoW_GUI:CreateCheckbox(nil, content, L["ITEM_ALERT_ON_LOOT"] or "Alert on Loot")
+    local alertCB = OneWoW_GUI:CreateCheckbox(content, { label = L["ITEM_ALERT_ON_LOOT"] or "Alert on Loot" })
     alertCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     alertCB:SetChecked(itemData.alertOnLoot or false)
     alertCB:SetScript("OnClick", function(self)

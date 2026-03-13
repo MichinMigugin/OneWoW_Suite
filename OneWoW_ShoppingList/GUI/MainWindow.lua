@@ -196,7 +196,9 @@ function MainWindow:Create()
 
     mainFrame = CreateFrame("Frame", "OneWoW_ShoppingList_MainFrame", UIParent, "BackdropTemplate")
     mainFrame:SetSize(G.WINDOW_WIDTH, G.WINDOW_HEIGHT)
-    mainFrame:SetPoint("CENTER")
+    if not OneWoW_GUI:RestoreWindowPosition(mainFrame, GetDB().global.mainFramePosition or {}) then
+        mainFrame:SetPoint("CENTER")
+    end
     mainFrame:SetFrameStrata("MEDIUM")
     mainFrame:SetToplevel(true)
     mainFrame:SetMovable(true)
@@ -213,6 +215,11 @@ function MainWindow:Create()
     })
     mainFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     mainFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    mainFrame:SetScript("OnHide", function()
+        local db = GetDB().global
+        db.mainFramePosition = db.mainFramePosition or {}
+        OneWoW_GUI:SaveWindowPosition(mainFrame, db.mainFramePosition)
+    end)
     mainFrame:Hide()
 
     tinsert(UISpecialFrames, "OneWoW_ShoppingList_MainFrame")
@@ -244,7 +251,7 @@ function MainWindow:Create()
     titleText:SetText(L["OWSL_WINDOW_TITLE"])
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local closeBtn = ns.GUI:CreateButton(nil, titleBar, "X", 20, 20)
+    local closeBtn = OneWoW_GUI:CreateButton(titleBar, { text = "X", width = 20, height = 20 })
     closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -4, 0)
     closeBtn:SetScript("OnClick", function() mainFrame:Hide() end)
 
@@ -455,7 +462,7 @@ function MainWindow:Create()
     altLabel:SetText(L["OWSL_LABEL_SEARCH_ALTS"])
     altLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    searchBox = ns.GUI:CreateEditBox("OWSL_SearchBox", contentHeader, 120, 22)
+    searchBox = OneWoW_GUI:CreateEditBox(contentHeader, { name = "OWSL_SearchBox", width = 120, height = 22 })
     searchBox:SetPoint("RIGHT", altLabel, "LEFT", -8, 0)
     searchBox:SetScript("OnTextChanged", function(self, userInput)
         if userInput then

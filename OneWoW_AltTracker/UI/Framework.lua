@@ -13,28 +13,8 @@ ns.UI = ns.UI or {}
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-function ns.UI.CreateButton(name, parent, text, width, height)
-    return OneWoW_GUI:CreateButton(name, parent, text, width, height)
-end
-
-function ns.UI.CreateEditBox(name, parent, width, height)
-    return OneWoW_GUI:CreateEditBox(name, parent, { width = width, height = height })
-end
-
-function ns.UI.CreateCheckbox(name, parent, label)
-    return OneWoW_GUI:CreateCheckbox(name, parent, label)
-end
-
 function ns.UI.CreateSearchBox(parent, options)
-    return OneWoW_GUI:CreateEditBox(nil, parent, options)
-end
-
-function ns.UI.CreateScrollFrame(name, parent, width, height)
-    return OneWoW_GUI:CreateScrollFrame(name, parent, width, height)
-end
-
-function ns.UI.CreateSectionHeader(parent, title, yOffset)
-    return OneWoW_GUI:CreateSectionHeader(parent, title, yOffset)
+    return OneWoW_GUI:CreateEditBox(parent, options)
 end
 
 function ns.UI.ClearFrame(frame)

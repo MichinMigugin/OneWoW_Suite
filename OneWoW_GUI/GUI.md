@@ -114,6 +114,26 @@ OneWoW_GUI:MigrateSettings(addon.db.global)
 On first run, copies theme/language/minimap from the addon's old DB into GUI DB.
 Only runs once (sets `_migrated` flag). Safe to call every load.
 
+### Window Position Persistence
+
+Use `SaveWindowPosition` and `RestoreWindowPosition` for movable main windows. Standard DB key: `mainFramePosition` (shape: `{ point, relativePoint, x, y, width?, height? }`). Save on `OnHide` so position persists on close, FullReset, and theme change.
+
+```lua
+-- In addon DB defaults: mainFramePosition = {}
+
+-- After creating the main frame:
+local storage = addon.db.global.mainFramePosition or {}
+if not OneWoW_GUI:RestoreWindowPosition(mainFrame, storage) then
+    mainFrame:SetPoint("CENTER")
+end
+
+mainFrame:SetScript("OnHide", function()
+    local db = addon.db.global
+    db.mainFramePosition = db.mainFramePosition or {}
+    OneWoW_GUI:SaveWindowPosition(mainFrame, db.mainFramePosition)
+end)
+```
+
 ### Adding GUI settings to a new addon (full pattern)
 ```lua
 function addon:OnInitialize()
@@ -200,12 +220,32 @@ local myConstants = OneWoW_GUI:RegisterGUIConstants({ MY_WIDTH = 500 })
 
 ## Frames & Layout
 
+### Component API Conventions
+
+All component creation functions use the **`(parent, options)`** pattern: parent first (when applicable), all other parameters in an options table. This improves discoverability and extensibility.
+
+```lua
+local C = OneWoW_GUI.Constants
+local frame = OneWoW_GUI:CreateFrame(parent, {
+    name = "MyFrame",
+    width = 400,
+    height = 300,
+    backdrop = C.BACKDROP_SOFT,  -- required; use Constants.BACKDROP_SOFT, BACKDROP_INNER_NO_INSETS, etc.
+})
+```
+
 ### Basic themed frame
 ```lua
-local frame = OneWoW_GUI:CreateFrame(name, parent, width, height, backdrop)
+local C = OneWoW_GUI.Constants
+local frame = OneWoW_GUI:CreateFrame(parent, {
+    name = "MyFrame",
+    width = 400,
+    height = 300,
+    backdrop = C.BACKDROP_SOFT,
+})
 ```
 Returns a BackdropTemplate frame with theme BG_PRIMARY + BORDER_DEFAULT.
-Optional `backdrop` param overrides the default (BACKDROP_SOFT).
+`backdrop` is required; use `OneWoW_GUI.Constants.BACKDROP_SOFT`, `BACKDROP_INNER_NO_INSETS`, etc.
 
 ### Dialog
 ```lua

@@ -166,11 +166,7 @@ local function ShowDevHelpDialog()
 end
 
 local function CreateSectionHeader(parent, text, yOffset)
-    local header = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    header:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, yOffset)
-    header:SetText(text)
-    header:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    return header
+    return OneWoW_GUI:CreateSectionHeader(parent, { title = text, yOffset = yOffset })
 end
 
 local function CreateSectionDivider(parent, yOffset)
@@ -271,7 +267,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     yOffset = yOffset - 20
     local devHeader = CreateSectionHeader(scrollChild, L["SETTINGS_DEVELOPER_HEADER"], yOffset)
-    yOffset = yOffset - devHeader:GetStringHeight() - 8
+    yOffset = yOffset - devHeader:GetHeight() - 8
     CreateSectionDivider(scrollChild, yOffset)
     yOffset = yOffset - 12
 
@@ -285,7 +281,7 @@ function ns.UI.CreateSettingsTab(parent)
     devDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - devDesc:GetStringHeight() - 14
 
-    local devHelpBtn = OneWoW_GUI:CreateFitTextButton(scrollChild, L["SETTINGS_DEV_HELP_BTN"], { height = 32 })
+    local devHelpBtn = OneWoW_GUI:CreateFitTextButton(scrollChild, { text = L["SETTINGS_DEV_HELP_BTN"], height = 32 })
     devHelpBtn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 16, yOffset)
     devHelpBtn:SetScript("OnClick", function()
         ShowDevHelpDialog()

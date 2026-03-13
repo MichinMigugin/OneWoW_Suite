@@ -51,7 +51,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
         statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general")
@@ -106,10 +106,10 @@ local function CreateNoteToggleRows(dsc, toggleList, toggleBtnSets, isEnabled, c
         local capturedKey = toggle.key
         local currentVal = cnSettings[capturedKey] ~= false
 
-        local onBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_ON"], 50, 22)
+        local onBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_ON"], width = 50, height = 22 })
         onBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
 
-        local offBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_OFF"], 50, 22)
+        local offBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_OFF"], width = 50, height = 22 })
         offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
 
         local rowStatusVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -282,7 +282,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
         statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
@@ -522,7 +522,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
         statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
@@ -614,10 +614,10 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
         local capturedKey = toggle.key
         local currentVal = tidSettings[capturedKey] ~= false
 
-        local onBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_ON"], 50, 22)
+        local onBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_ON"], width = 50, height = 22 })
         onBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
 
-        local offBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_OFF"], 50, 22)
+        local offBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_OFF"], width = 50, height = 22 })
         offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
 
         local rowStatusVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -798,7 +798,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
         statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
@@ -900,10 +900,10 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
         local capturedKey = toggle.key
         local currentVal = itSettings[capturedKey] ~= false
 
-        local onBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_ON"], 50, 22)
+        local onBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_ON"], width = 50, height = 22 })
         onBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
 
-        local offBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TIPS_TOGGLE_OFF"], 50, 22)
+        local offBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_OFF"], width = 50, height = 22 })
         offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
 
         local rowStatusVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1126,7 +1126,7 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
         statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
@@ -1263,7 +1263,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
         statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)

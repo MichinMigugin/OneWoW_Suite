@@ -503,7 +503,7 @@ function ns.UI.CreateItemSearchTab(parent)
         xOff = xOff + btnWidth + SOURCE_BTN_GAP
     end
 
-    searchBox = ns.UI.CreateEditBox(nil, searchHeader, {
+    searchBox = OneWoW_GUI:CreateEditBox(searchHeader, {
         height = 26,
         maxLetters = 50,
         placeholderText = L["ITEMSEARCH_PLACEHOLDER"],

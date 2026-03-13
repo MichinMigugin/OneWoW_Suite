@@ -90,7 +90,7 @@ function ns.UI.CreateSettingsTab(parent)
     local yOffset = -20
 
     yOffset = yOffset - 20
-    local detectionSection = OneWoW_GUI:CreateSectionHeader(scrollChild, L["SETTINGS_DETECTION"] or "Detection & Alerts", yOffset)
+    local detectionSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["SETTINGS_DETECTION"] or "Detection & Alerts", yOffset = yOffset })
     yOffset = detectionSection.bottomY - 16
 
     local npcRow = CreateDetectionRow(
@@ -157,7 +157,7 @@ function ns.UI.CreateSettingsTab(parent)
     yOffset = yOffset - 70
 
     yOffset = yOffset - 20
-    local importSection = OneWoW_GUI:CreateSectionHeader(scrollChild, L["SETTINGS_IMPORT_SECTION"] or "Import From WoWNotes", yOffset)
+    local importSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["SETTINGS_IMPORT_SECTION"] or "Import From WoWNotes", yOffset = yOffset })
     yOffset = importSection.bottomY - 16
 
     local importContainer = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
@@ -176,7 +176,7 @@ function ns.UI.CreateSettingsTab(parent)
     importDesc:SetText(L["SETTINGS_IMPORT_DESC"] or "")
     importDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local importBtn = ns.UI.CreateButton(nil, importContainer, L["SETTINGS_IMPORT_BUTTON"] or "Import From WoWNotes", 200, 28)
+    local importBtn = OneWoW_GUI:CreateButton(importContainer, { text = L["SETTINGS_IMPORT_BUTTON"] or "Import From WoWNotes", width = 200, height = 28 })
     importBtn:SetPoint("BOTTOMLEFT", importContainer, "BOTTOMLEFT", 16, 14)
 
     local importStatus = importContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")

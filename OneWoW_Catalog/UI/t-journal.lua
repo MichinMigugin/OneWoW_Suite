@@ -615,7 +615,7 @@ local function ShowInstanceDetail(panels, instData)
             panels.diffDropdown:Show()
             panels.diffText:SetText(L["JOURNAL_DIFF_ALL"])
 
-            ns.UI.AttachFilterMenu(panels.diffDropdown, panels.diffText, {
+            OneWoW_GUI:AttachFilterMenu(panels.diffDropdown, {
                 searchable = false,
                 getActiveValue = function() return selectedDifficulty end,
                 buildItems = function()
@@ -710,7 +710,7 @@ local function InitializeDropdowns(panels)
 
     if panels.expDropdown then
         panels.expText:SetText(L["JOURNAL_EXPANSION_ALL"])
-        ns.UI.AttachFilterMenu(panels.expDropdown, panels.expText, {
+        OneWoW_GUI:AttachFilterMenu(panels.expDropdown, {
             searchable = false,
             getActiveValue = function() return expansionFilter end,
             buildItems = function()
@@ -737,7 +737,7 @@ local function InitializeDropdowns(panels)
 
     if panels.itemFilterDropdown then
         panels.itemFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
-        ns.UI.AttachFilterMenu(panels.itemFilterDropdown, panels.itemFilterText, {
+        OneWoW_GUI:AttachFilterMenu(panels.itemFilterDropdown, {
             searchable = false,
             getActiveValue = function() return filterItemType end,
             buildItems = function()
@@ -764,7 +764,7 @@ local function InitializeDropdowns(panels)
 
     if panels.collectionFilterDropdown then
         panels.collectionFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
-        ns.UI.AttachFilterMenu(panels.collectionFilterDropdown, panels.collectionFilterText, {
+        OneWoW_GUI:AttachFilterMenu(panels.collectionFilterDropdown, {
             searchable = false,
             getActiveValue = function() return filterCollection end,
             buildItems = function()
@@ -808,10 +808,10 @@ function ns.UI.CreateJournalTab(parent)
     panels.listTitle:SetText(L["JOURNAL_LIST_TITLE"])
     panels.detailTitle:SetText(L["JOURNAL_DETAIL_TITLE"])
 
-    local clearBtn = ns.UI.CreateFitTextButton(leftHeader, L["JOURNAL_FILTER_CLEAR"], { height = 26, minWidth = 34 })
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = L["JOURNAL_FILTER_CLEAR"], height = 26, minWidth = 34 })
     clearBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
 
-    local searchBox = ns.UI.CreateEditBox(nil, leftHeader, {
+    local searchBox = OneWoW_GUI:CreateEditBox(leftHeader, {
         height = 26,
         placeholderText = L["JOURNAL_SEARCH"],
         onTextChanged = function(text)

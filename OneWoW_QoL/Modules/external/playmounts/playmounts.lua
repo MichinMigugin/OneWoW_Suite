@@ -235,7 +235,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled, registe
     for _, mode in ipairs(modes) do
         local capturedMode = mode
         local isActive = (currentMode == mode.id)
-        local btn = OneWoW_GUI:CreateFitTextButton(parent, L[mode.labelKey] or mode.id, { height = 22 })
+        local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = L[mode.labelKey] or mode.id, height = 22 })
         if prevModeBtn then
             btn:SetPoint("TOPLEFT", prevModeBtn, "TOPRIGHT", 6, 0)
         else
@@ -294,7 +294,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, isEnabled, registe
     end
     yOffset = yOffset - 24
 
-    local viewBtn = OneWoW_GUI:CreateFitTextButton(parent, L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"], { height = 22 })
+    local viewBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"], height = 22 })
     viewBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
     if coreLoaded then
         viewBtn:SetScript("OnClick", function()

@@ -72,7 +72,7 @@ local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
     })
     dropdown:SetPoint("TOP", instructionText, "BOTTOM", 0, -10)
 
-    OneWoW_GUI:AttachFilterMenu(dropdown, dropdownText, {
+    OneWoW_GUI:AttachFilterMenu(dropdown, {
         searchable = false,
         buildItems = function()
             local items = {}
@@ -86,7 +86,7 @@ local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
         end,
         onSelect = function(value, displayText)
             selectedTargetBar = value
-            dropdownText:SetText(displayText)
+            dropdown._text:SetText(displayText)
         end,
         getActiveValue = function() return selectedTargetBar end,
     })
@@ -141,7 +141,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
     infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     infoText:SetJustifyH("CENTER")
 
-    local accountBtn = OneWoW_GUI:CreateButton(nil, cf, string.format(L["AB_BUTTON_ACCOUNT_ONLY"], accountCount), 180, 30)
+    local accountBtn = OneWoW_GUI:CreateButton(cf, { text = string.format(L["AB_BUTTON_ACCOUNT_ONLY"], accountCount), width = 180, height = 30 })
     accountBtn:SetPoint("TOP", infoText, "BOTTOM", -95, -20)
     accountBtn:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
     accountBtn:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
@@ -153,7 +153,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
         result.frame:Hide()
     end)
 
-    local charBtn = OneWoW_GUI:CreateButton(nil, cf, string.format(L["AB_BUTTON_CHARACTER_ONLY"], charCount), 180, 30)
+    local charBtn = OneWoW_GUI:CreateButton(cf, { text = string.format(L["AB_BUTTON_CHARACTER_ONLY"], charCount), width = 180, height = 30 })
     charBtn:SetPoint("TOP", infoText, "BOTTOM", 95, -20)
     charBtn:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
     charBtn:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
@@ -165,7 +165,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
         result.frame:Hide()
     end)
 
-    local bothBtn = OneWoW_GUI:CreateButton(nil, cf, L["AB_BUTTON_BOTH"], 180, 30)
+    local bothBtn = OneWoW_GUI:CreateButton(cf, { text = L["AB_BUTTON_BOTH"], width = 180, height = 30 })
     bothBtn:SetPoint("TOP", accountBtn, "BOTTOM", 0, -8)
     bothBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
     bothBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
@@ -177,7 +177,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
         result.frame:Hide()
     end)
 
-    local cancelBtn = OneWoW_GUI:CreateButton(nil, cf, L["AB_LABEL_CANCEL"], 180, 30)
+    local cancelBtn = OneWoW_GUI:CreateButton(cf, { text = L["AB_LABEL_CANCEL"], width = 180, height = 30 })
     cancelBtn:SetPoint("TOP", charBtn, "BOTTOM", 0, -8)
     cancelBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     cancelBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
@@ -235,7 +235,7 @@ local function ShowBackupDialog(split)
     msgText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     msgText:SetJustifyH("CENTER")
 
-    local nameBox = OneWoW_GUI:CreateEditBox(nil, cf, {
+    local nameBox = OneWoW_GUI:CreateEditBox(cf, {
         width = 300,
         height = 28,
         placeholder = "",
@@ -300,7 +300,7 @@ local function ShowRenameDialog(split, oldName)
     msgText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     msgText:SetJustifyH("CENTER")
 
-    local nameBox = OneWoW_GUI:CreateEditBox(nil, cf, {
+    local nameBox = OneWoW_GUI:CreateEditBox(cf, {
         width = 300,
         height = 28,
         placeholder = "",
@@ -413,13 +413,13 @@ function ns.UI.ShowSetDetails(split, setName)
         updatedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     end
 
-    local renameBtn = OneWoW_GUI:CreateFitTextButton(headerBox, L["AB_RENAME_SET"], { height = 24 })
+    local renameBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_RENAME_SET"], height = 24 })
     renameBtn:SetPoint("TOPRIGHT", headerBox, "TOPRIGHT", -10, -8)
     renameBtn:SetScript("OnClick", function()
         ShowRenameDialog(split, setName)
     end)
 
-    local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerBox, L["AB_DELETE_SET"], { height = 24 })
+    local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_DELETE_SET"], height = 24 })
     deleteBtn:SetPoint("RIGHT", renameBtn, "LEFT", -6, 0)
     deleteBtn:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
     deleteBtn:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
@@ -434,7 +434,7 @@ function ns.UI.ShowSetDetails(split, setName)
         ShowDeleteDialog(split, setName)
     end)
 
-    local restoreAllBtn = OneWoW_GUI:CreateButton(nil, headerBox, L["AB_RESTORE_ALL_BARS"], 110, 24)
+    local restoreAllBtn = OneWoW_GUI:CreateButton(headerBox, { text = L["AB_RESTORE_ALL_BARS"], width = 110, height = 24 })
     restoreAllBtn:SetPoint("BOTTOMLEFT", headerBox, "BOTTOMLEFT", 10, 6)
     restoreAllBtn:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
     restoreAllBtn:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
@@ -459,7 +459,7 @@ function ns.UI.ShowSetDetails(split, setName)
         end
     end
 
-    local restoreKeybindsBtn = OneWoW_GUI:CreateButton(nil, headerBox, L["AB_RESTORE_KEYBINDS"], 110, 24)
+    local restoreKeybindsBtn = OneWoW_GUI:CreateButton(headerBox, { text = L["AB_RESTORE_KEYBINDS"], width = 110, height = 24 })
     restoreKeybindsBtn:SetPoint("LEFT", restoreAllBtn, "RIGHT", 8, 0)
     restoreKeybindsBtn.text:SetFontObject("GameFontNormalSmall")
 
@@ -499,7 +499,7 @@ function ns.UI.ShowSetDetails(split, setName)
     end
     local macroCount = accountMacros + charMacros
 
-    local restoreMacrosBtn = OneWoW_GUI:CreateButton(nil, headerBox, L["AB_RESTORE_MACROS"], 110, 24)
+    local restoreMacrosBtn = OneWoW_GUI:CreateButton(headerBox, { text = L["AB_RESTORE_MACROS"], width = 110, height = 24 })
     restoreMacrosBtn:SetPoint("LEFT", restoreKeybindsBtn, "RIGHT", 8, 0)
     restoreMacrosBtn.text:SetFontObject("GameFontNormalSmall")
 
@@ -527,7 +527,7 @@ function ns.UI.ShowSetDetails(split, setName)
 
     yOffset = yOffset - 80 - 10
 
-    local showAllCheckbox = OneWoW_GUI:CreateCheckbox(nil, detailScrollChild, L["AB_SHOW_ALL_BARS"])
+    local showAllCheckbox = OneWoW_GUI:CreateCheckbox(detailScrollChild, { label = L["AB_SHOW_ALL_BARS"] })
     showAllCheckbox:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yOffset)
     showAllCheckbox:SetChecked(showAllBars)
     showAllCheckbox:SetScript("OnClick", function(self)
@@ -619,7 +619,7 @@ function ns.UI.ShowSetDetails(split, setName)
             end
 
             if barData and barData.slots then
-                local restoreBarBtn = OneWoW_GUI:CreateButton(nil, detailScrollChild, L["AB_LABEL_RESTORE"], 70, 26)
+                local restoreBarBtn = OneWoW_GUI:CreateButton(detailScrollChild, { text = L["AB_LABEL_RESTORE"], width = 70, height = 26 })
                 restoreBarBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", slotXStart + (12 * 36) + 10, slotYOffset + 3)
                 restoreBarBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
                 restoreBarBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
@@ -815,7 +815,7 @@ function ns.UI.CreateActionBarsTab(parent)
     split.listTitle:SetText(L["AB_SETS_LIST"])
     split.detailTitle:SetText(L["AB_SET_DETAILS"])
 
-    local backupBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, L["AB_BACKUP_SET"], { height = 28 })
+    local backupBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["AB_BACKUP_SET"], height = 28 })
     backupBtn:SetPoint("RIGHT", controlPanel, "RIGHT", -10, 0)
     backupBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
     backupBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
@@ -837,7 +837,7 @@ function ns.UI.CreateActionBarsTab(parent)
     })
     filterDropdown:SetPoint("RIGHT", backupBtn, "LEFT", -10, 0)
 
-    OneWoW_GUI:AttachFilterMenu(filterDropdown, filterDropdownText, {
+    OneWoW_GUI:AttachFilterMenu(filterDropdown, {
         searchable = false,
         buildItems = function()
             local items = {{ value = nil, text = L["AB_FILTER_ALL"] }}
@@ -862,7 +862,7 @@ function ns.UI.CreateActionBarsTab(parent)
         end,
         onSelect = function(value, displayText)
             activeFilterClass = value
-            filterDropdownText:SetText(displayText)
+            filterDropdown._text:SetText(displayText)
             local searchText = split.searchBox and split.searchBox:GetSearchText() or ""
             ns.UI.BuildActionBarSetsList(split, searchText)
         end,

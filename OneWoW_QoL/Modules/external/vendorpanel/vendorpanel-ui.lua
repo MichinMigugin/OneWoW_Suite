@@ -3,6 +3,7 @@
 local addonName, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 local VendorPanel = ns.VendorPanel
 local state = ns.VPState
@@ -35,7 +36,7 @@ end
 function VendorPanel:CreateVendorButton()
     if state.vendorButton then return end
 
-    state.vendorButton = OneWoW_GUI:CreateButton("OneWoW_QoL_VendorButton", MerchantFrame, "Sell (0/0)", 100, 22)
+    state.vendorButton = OneWoW_GUI:CreateButton(MerchantFrame, { name = "OneWoW_QoL_VendorButton", text = "Sell (0/0)", width = 100, height = 22 })
     state.vendorButton:SetPoint("TOPLEFT", MerchantFrame, "TOPLEFT", 60, -28)
     state.vendorButton:SetFrameLevel(MerchantFrame:GetFrameLevel() + 10)
     state.vendorButton.fontString = state.vendorButton.text
@@ -112,7 +113,7 @@ function VendorPanel:CreateReplacementSellButton()
     local blizzButton = _G["MerchantSellAllJunkButton"]
     if not blizzButton then return end
 
-    state.replacementSellButton = OneWoW_GUI:CreateButton("OneWoW_QoL_ReplacementSellButton", MerchantFrame, "", blizzButton:GetWidth(), blizzButton:GetHeight())
+    state.replacementSellButton = OneWoW_GUI:CreateButton(MerchantFrame, { name = "OneWoW_QoL_ReplacementSellButton", text = "", width = blizzButton:GetWidth(), height = blizzButton:GetHeight() })
     state.replacementSellButton:SetPoint("CENTER", blizzButton, "CENTER", 0, 0)
     state.replacementSellButton:SetFrameLevel(blizzButton:GetFrameLevel() + 5)
     state.replacementSellButton.text:Hide()
@@ -169,7 +170,8 @@ function VendorPanel:CreatePreviewPanel()
     state.junkPreviewPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     state.junkPreviewPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local titleBar = OneWoW_GUI:CreateTitleBar(state.junkPreviewPanel, ns.L["VENDOR_TOOLS_TITLE"], {
+    local titleBar = OneWoW_GUI:CreateTitleBar(state.junkPreviewPanel, {
+        title = ns.L["VENDOR_TOOLS_TITLE"],
         showBrand = true,
         factionTheme = GetFactionTheme(),
         onClose = function()
@@ -281,7 +283,7 @@ function VendorPanel:CreatePreviewPanel()
         return items
     end
 
-    OneWoW_GUI:AttachFilterMenu(vendorDropdown, dropText, {
+    OneWoW_GUI:AttachFilterMenu(vendorDropdown, {
         searchable = false,
         menuHeight = 300,
         maxVisible = 50,
@@ -307,7 +309,7 @@ function VendorPanel:CreatePreviewPanel()
     dimKnownRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
     dimKnownRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
-    local dimCheckBox = OneWoW_GUI:CreateCheckbox(nil, dimKnownRow, ns.L["VENDOR_DIM_KNOWN"])
+    local dimCheckBox = OneWoW_GUI:CreateCheckbox(dimKnownRow, { label = ns.L["VENDOR_DIM_KNOWN"] })
     dimCheckBox:SetSize(18, 18)
     dimCheckBox:SetPoint("LEFT", dimKnownRow, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
     dimCheckBox:SetChecked(state.dimKnownItems)
@@ -341,7 +343,7 @@ function VendorPanel:CreatePreviewPanel()
 
     state.junkPreviewPanel.dimKnownCheckBox = dimCheckBox
 
-    local quickAddBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, ns.L["VENDOR_QUICK_ADD"], { height = 26, minWidth = panelWidth - 16 })
+    local quickAddBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = ns.L["VENDOR_QUICK_ADD"], height = 26, minWidth = panelWidth - 16 })
     quickAddBtn:SetPoint("TOPLEFT", dimKnownRow, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
     quickAddBtn:SetPoint("TOPRIGHT", dimKnownRow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
     quickAddBtn:SetScript("OnClick", function() VendorPanel:ToggleFiltersDialog() end)
@@ -368,7 +370,7 @@ function VendorPanel:CreatePreviewPanel()
     scrollFrame:SetScrollChild(scrollChild)
     state.junkPreviewPanel.scrollChild = scrollChild
 
-    local bottomCloseBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, ns.L["VENDOR_CLOSE"], { height = 28 })
+    local bottomCloseBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = ns.L["VENDOR_CLOSE"], height = 28 })
     bottomCloseBtn:SetPoint("BOTTOMLEFT", state.junkPreviewPanel, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), 12)
     bottomCloseBtn:SetScript("OnClick", function()
         state.junkPreviewPanel.manuallyHidden = true
@@ -399,7 +401,7 @@ function VendorPanel:CreatePreviewPanel()
     totalValueText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     state.junkPreviewPanel.totalValueText = totalValueText
 
-    local destroyButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, string.format(ns.L["VENDOR_DESTROY_COUNT"], 0), { height = 28 })
+    local destroyButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = string.format(ns.L["VENDOR_DESTROY_COUNT"], 0), height = 28 })
     destroyButton:SetPoint("LEFT", bottomCloseBtn, "RIGHT", 3, 0)
     destroyButton.text:SetTextColor(1, 0.5, 0.5, 1)
     destroyButton.fontString = destroyButton.text
@@ -416,7 +418,7 @@ function VendorPanel:CreatePreviewPanel()
     end)
     state.junkPreviewPanel.destroyButton = destroyButton
 
-    local sellJunkButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, string.format(ns.L["VENDOR_SELL_COUNT"], 0), { height = 28 })
+    local sellJunkButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = string.format(ns.L["VENDOR_SELL_COUNT"], 0), height = 28 })
     sellJunkButton:SetPoint("LEFT", destroyButton, "RIGHT", 3, 0)
     sellJunkButton.fontString = sellJunkButton.text
     sellJunkButton:SetScript("OnClick", function()
@@ -479,7 +481,7 @@ function VendorPanel:CreateFiltersDialog()
     local content = result.contentFrame
     local yOffset = 0
 
-    local reagentsBtn = OneWoW_GUI:CreateFitTextButton(content, ns.L["VENDOR_REAGENTS"], { height = 26 })
+    local reagentsBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ns.L["VENDOR_REAGENTS"], height = 26 })
     reagentsBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
     reagentsBtn:SetScript("OnClick", function() VendorPanel:AddNonSoulboundReagents() end)
     reagentsBtn:HookScript("OnEnter", function(self)
@@ -494,7 +496,7 @@ function VendorPanel:CreateFiltersDialog()
     end)
     yOffset = yOffset - 28
 
-    local consumablesBtn = OneWoW_GUI:CreateFitTextButton(content, ns.L["UI_VENDOR_CONSUMABLES_TITLE"], { height = 26 })
+    local consumablesBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ns.L["UI_VENDOR_CONSUMABLES_TITLE"], height = 26 })
     consumablesBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
     consumablesBtn:SetScript("OnClick", function() VendorPanel:AddConsumables() end)
     consumablesBtn:HookScript("OnEnter", function(self)
@@ -508,7 +510,7 @@ function VendorPanel:CreateFiltersDialog()
     end)
     yOffset = yOffset - 28
 
-    local whiteBtn = OneWoW_GUI:CreateFitTextButton(content, ns.L["UI_VENDOR_WHITES_TITLE"], { height = 26 })
+    local whiteBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ns.L["UI_VENDOR_WHITES_TITLE"], height = 26 })
     whiteBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
     whiteBtn:SetScript("OnClick", function() VendorPanel:AddWhiteQuality() end)
     whiteBtn:HookScript("OnEnter", function(self)
@@ -522,7 +524,7 @@ function VendorPanel:CreateFiltersDialog()
     end)
     yOffset = yOffset - 28
 
-    local clearAllBtn = OneWoW_GUI:CreateFitTextButton(content, ns.L["UI_VENDOR_CLEAR_TITLE"], { height = 26 })
+    local clearAllBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ns.L["UI_VENDOR_CLEAR_TITLE"], height = 26 })
     clearAllBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
     clearAllBtn:SetScript("OnClick", function()
         state.oneTimeItems.ilvlGear = {}; state.oneTimeItems.reagents = {}
@@ -540,7 +542,7 @@ function VendorPanel:CreateFiltersDialog()
     end)
     yOffset = yOffset - 30
 
-    OneWoW_GUI:CreateDivider(content, yOffset)
+    OneWoW_GUI:CreateDivider(content, { yOffset = yOffset })
     yOffset = yOffset - 18
 
     local ilvlLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -549,7 +551,7 @@ function VendorPanel:CreateFiltersDialog()
     ilvlLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 22
 
-    local ilvlEditBox = OneWoW_GUI:CreateEditBox(nil, content, {
+    local ilvlEditBox = OneWoW_GUI:CreateEditBox(content, {
         width = 60,
         height = 22,
         maxLetters = 4,
@@ -560,7 +562,7 @@ function VendorPanel:CreateFiltersDialog()
     ilvlEditBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     state.filtersDialog.ilvlEditBox = ilvlEditBox
 
-    local ilvlBtn = OneWoW_GUI:CreateFitTextButton(content, "Add", { height = 26 })
+    local ilvlBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Add", height = 26 })
     ilvlBtn:SetPoint("LEFT", ilvlEditBox, "RIGHT", 10, 0)
     ilvlBtn:SetScript("OnClick", function()
         local ilvl = tonumber(state.filtersDialog.ilvlEditBox:GetText())
@@ -573,14 +575,14 @@ function VendorPanel:CreateFiltersDialog()
     end)
     yOffset = yOffset - 26
 
-    local excludeIlvl1 = OneWoW_GUI:CreateCheckbox(nil, content, "Skip iLvl 1 items")
+    local excludeIlvl1 = OneWoW_GUI:CreateCheckbox(content, { label = "Skip iLvl 1 items" })
     excludeIlvl1:SetPoint("TOP", content, "TOP", -45, yOffset)
     excludeIlvl1:SetSize(20, 20)
     excludeIlvl1:SetChecked(true)
     state.filtersDialog.excludeIlvl1 = excludeIlvl1
     yOffset = yOffset - 26
 
-    local showBlizzJunk = OneWoW_GUI:CreateCheckbox(nil, content, ns.L["VENDOR_SHOW_BLIZZ_JUNK"])
+    local showBlizzJunk = OneWoW_GUI:CreateCheckbox(content, { label = ns.L["VENDOR_SHOW_BLIZZ_JUNK"] })
     showBlizzJunk:SetPoint("TOP", content, "TOP", -45, yOffset)
     showBlizzJunk:SetSize(20, 20)
     showBlizzJunk:SetChecked(GetShowBlizzJunk())
@@ -601,10 +603,10 @@ function VendorPanel:CreateFiltersDialog()
     showBlizzJunk:SetScript("OnLeave", function() GameTooltip:Hide() end)
     yOffset = yOffset - 30
 
-    OneWoW_GUI:CreateDivider(content, yOffset)
+    OneWoW_GUI:CreateDivider(content, { yOffset = yOffset })
     yOffset = yOffset - 26
 
-    local neverSellBtn = OneWoW_GUI:CreateFitTextButton(content, "", { height = 26, minWidth = 176 })
+    local neverSellBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "", height = 26, minWidth = 176 })
     neverSellBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
     neverSellBtn.text:SetText(string.format(ns.L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", 0))
     state.filtersDialog.neverSellBtnText = neverSellBtn.text
@@ -889,7 +891,7 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
         oneTimeLabel:SetText(ns.L["VENDOR_ONETIME_LABEL"])
         oneTimeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
-        local clearBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, ns.L["VENDOR_CLEAR_ALL"], { height = 20 })
+        local clearBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = ns.L["VENDOR_CLEAR_ALL"], height = 20 })
         clearBtn:SetPoint("RIGHT", headerFrame, "RIGHT", -3, 0)
         clearBtn:SetScript("OnClick", function(self, button)
             if button == "LeftButton" then

@@ -233,10 +233,10 @@ local function ShowManageAltsDialog()
     descText:SetText("Select characters to permanently remove from all OneWoW databases. This is for characters you have deleted or renamed in-game. A UI reload is required after removal.")
     descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local selectAllBtn = OneWoW_GUI:CreateButton(nil, content, "Select All", 90, 25)
+    local selectAllBtn = OneWoW_GUI:CreateButton(content, { text = "Select All", width = 90, height = 25 })
     selectAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -52)
 
-    local deselectAllBtn = OneWoW_GUI:CreateButton(nil, content, "Deselect All", 90, 25)
+    local deselectAllBtn = OneWoW_GUI:CreateButton(content, { text = "Deselect All", width = 90, height = 25 })
     deselectAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 6, 0)
 
     local countText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -290,7 +290,7 @@ local function ShowManageAltsDialog()
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
         end
 
-        local cb = OneWoW_GUI:CreateCheckbox(nil, row, "")
+        local cb = OneWoW_GUI:CreateCheckbox(row, { label = "" })
         cb:SetSize(20, 20)
         cb:SetPoint("LEFT", row, "LEFT", 4, 0)
         if cb.label then cb.label:SetText("") end
@@ -384,7 +384,7 @@ local function ShowManageAltsDialog()
     btnDivider:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -1, 50)
     btnDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local deleteBtn = OneWoW_GUI:CreateButton(nil, content, "Delete Selected", 160, 32)
+    local deleteBtn = OneWoW_GUI:CreateButton(content, { text = "Delete Selected", width = 160, height = 32 })
     deleteBtn:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 14, 10)
     deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
     deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
@@ -401,7 +401,7 @@ local function ShowManageAltsDialog()
         self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
 
-    local cancelBtn = OneWoW_GUI:CreateButton(nil, content, "Cancel", 120, 32)
+    local cancelBtn = OneWoW_GUI:CreateButton(content, { text = "Cancel", width = 120, height = 32 })
     cancelBtn:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -14, 10)
     cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
 
@@ -456,13 +456,13 @@ local function ShowManageAltsDialog()
 end
 
 function ns.UI.CreateSettingsTab(parent)
-    local scrollFrame, scrollContent = ns.UI.CreateScrollFrame(nil, parent, parent:GetWidth(), parent:GetHeight())
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(parent, { width = parent:GetWidth(), height = parent:GetHeight() })
     scrollFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     scrollFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
     local yOffset = -10
 
-    local manageSection = ns.UI.CreateSectionHeader(scrollContent, "Manage Characters", yOffset)
+    local manageSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = "Manage Characters", yOffset = yOffset })
     yOffset = manageSection.bottomY - 8
 
     local manageDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -480,12 +480,7 @@ function ns.UI.CreateSettingsTab(parent)
     end)
     yOffset = yOffset - 20
 
-    local manageBtn
-    if OneWoW_GUI then
-        manageBtn = OneWoW_GUI:CreateButton(nil, scrollContent, "Manage Characters", 200, 35)
-    else
-        manageBtn = ns.UI.CreateButton(nil, scrollContent, "Manage Characters", 200, 35)
-    end
+    local manageBtn = OneWoW_GUI:CreateButton(scrollContent, { text = "Manage Characters", width = 200, height = 35 })
     manageBtn:SetPoint("TOPLEFT", 25, yOffset)
     manageBtn:SetScript("OnClick", function()
         ShowManageAltsDialog()
@@ -493,7 +488,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     yOffset = yOffset - 50
 
-    local importSection = ns.UI.CreateSectionHeader(scrollContent, L["IMPORT_FROM_WOWNOTES"] or "Import Data", yOffset)
+    local importSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["IMPORT_FROM_WOWNOTES"] or "Import Data", yOffset = yOffset })
     yOffset = importSection.bottomY - 8
 
     local importDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -511,7 +506,7 @@ function ns.UI.CreateSettingsTab(parent)
     end)
     yOffset = yOffset - 20
 
-    local importBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, scrollContent, "Import from WoWNotes", 280, 35) or ns.UI.CreateButton(nil, scrollContent, "Import from WoWNotes", 280, 35)
+    local importBtn = OneWoW_GUI:CreateButton(scrollContent, { text = "Import from WoWNotes", width = 280, height = 35 })
     importBtn:SetPoint("TOPLEFT", 25, yOffset)
 
     importBtn:SetScript("OnClick", function()
@@ -537,7 +532,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     yOffset = yOffset - 45
 
-    local dbSection = ns.UI.CreateSectionHeader(scrollContent, "Database Manager", yOffset)
+    local dbSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = "Database Manager", yOffset = yOffset })
     yOffset = dbSection.bottomY - 8
 
     local dbDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -616,7 +611,7 @@ function ns.UI.CreateSettingsTab(parent)
         end
         UpdateSize()
 
-        local resetBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, container, "Reset", 75, 28) or ns.UI.CreateButton(nil, container, "Reset", 75, 28)
+        local resetBtn = OneWoW_GUI:CreateButton(container, { text = "Reset", width = 75, height = 28 })
         resetBtn:SetPoint("TOPRIGHT", -12, -16)
         resetBtn:SetBackdropColor(1, 0.3, 0.3)
         resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
@@ -659,7 +654,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     yOffset = yOffset - 10
 
-    local overrideSection = ns.UI.CreateSectionHeader(scrollContent, L["OVERRIDE_BTN"], yOffset)
+    local overrideSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["OVERRIDE_BTN"], yOffset = yOffset })
     yOffset = overrideSection.bottomY - 8
 
     local overrideDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -677,7 +672,7 @@ function ns.UI.CreateSettingsTab(parent)
     end)
     yOffset = yOffset - 50
 
-    local overrideBtn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, scrollContent, L["OVERRIDE_BTN"], 280, 35) or ns.UI.CreateButton(nil, scrollContent, L["OVERRIDE_BTN"], 280, 35)
+    local overrideBtn = OneWoW_GUI:CreateButton(scrollContent, { text = L["OVERRIDE_BTN"], width = 280, height = 35 })
     overrideBtn:SetPoint("TOPLEFT", 25, yOffset)
     overrideBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     if overrideBtn.text then overrideBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")) end
@@ -767,7 +762,7 @@ function ns.UI.CreateSettingsTab(parent)
         end
 
         local function MakeRemoveBtn(parent, row, onClick)
-            local btn = OneWoW_GUI and OneWoW_GUI:CreateButton(nil, row, L["OVERRIDE_REMOVE"] .. " Remove", 60, 20) or ns.UI.CreateButton(nil, row, L["OVERRIDE_REMOVE"] .. " Remove", 60, 20)
+            local btn = OneWoW_GUI:CreateButton(row, { text = L["OVERRIDE_REMOVE"] .. " Remove", width = 60, height = 20 })
             btn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
             btn:SetBackdropColor(0.5, 0.15, 0.15)
             btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
@@ -853,7 +848,7 @@ function ns.UI.CreateSettingsTab(parent)
             sc:SetHeight(math.abs(ldY) + 20)
         end
 
-        local sec1 = ns.UI.CreateSectionHeader(sc, L["OVERRIDE_SECTION_SUMMARY"], dy)
+        local sec1 = OneWoW_GUI:CreateSectionHeader(sc, { title = L["OVERRIDE_SECTION_SUMMARY"], yOffset = dy })
         dy = sec1.bottomY - 6
         local noneText = sc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         noneText:SetPoint("TOPLEFT", 15, dy)
@@ -861,7 +856,7 @@ function ns.UI.CreateSettingsTab(parent)
         noneText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         dy = dy - 26
 
-        local sec2 = ns.UI.CreateSectionHeader(sc, L["OVERRIDE_TRACKED_CURRENCIES"], dy)
+        local sec2 = OneWoW_GUI:CreateSectionHeader(sc, { title = L["OVERRIDE_TRACKED_CURRENCIES"], yOffset = dy })
         dy = sec2.bottomY - 6
         sc.currencyListStartDY = dy
 
@@ -874,11 +869,11 @@ function ns.UI.CreateSettingsTab(parent)
         addCurrLabel:SetPoint("LEFT", 8, 0)
         addCurrLabel:SetText("Add Currency ID:")
         addCurrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        local addCurrBox = ns.UI.CreateEditBox(nil, addCurrRow, 90, 22)
+        local addCurrBox = OneWoW_GUI:CreateEditBox(addCurrRow, { width = 90, height = 22 })
         addCurrBox:SetPoint("LEFT", addCurrLabel, "RIGHT", 8, 0)
         addCurrBox:SetNumeric(true)
         addCurrBox:SetMaxLetters(8)
-        local addCurrBtn = ns.UI.CreateButton(nil, addCurrRow, "Add", 50, 22)
+        local addCurrBtn = OneWoW_GUI:CreateButton(addCurrRow, { text = "Add", width = 50, height = 22 })
         addCurrBtn:SetPoint("LEFT", addCurrBox, "RIGHT", 6, 0)
         addCurrBtn:SetScript("OnClick", function()
             local val = tonumber(addCurrBox:GetText()) or 0
@@ -900,7 +895,7 @@ function ns.UI.CreateSettingsTab(parent)
         RebuildCurrencyList()
 
         local sec3DY = (sc.currencyListEndDY or dy) - 12
-        local sec3 = ns.UI.CreateSectionHeader(sc, L["OVERRIDE_WORLD_BOSS_QUEST"], sec3DY)
+        local sec3 = OneWoW_GUI:CreateSectionHeader(sc, { title = L["OVERRIDE_WORLD_BOSS_QUEST"], yOffset = sec3DY })
         sc.bossListStartDY = sec3.bottomY - 6
         sc.bossSecHeader = sec3
 
@@ -913,11 +908,11 @@ function ns.UI.CreateSettingsTab(parent)
         addBossLabel:SetPoint("LEFT", 8, 0)
         addBossLabel:SetText("Add Quest ID:")
         addBossLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        local addBossBox = ns.UI.CreateEditBox(nil, addBossRow, 90, 22)
+        local addBossBox = OneWoW_GUI:CreateEditBox(addBossRow, { width = 90, height = 22 })
         addBossBox:SetPoint("LEFT", addBossLabel, "RIGHT", 8, 0)
         addBossBox:SetNumeric(true)
         addBossBox:SetMaxLetters(8)
-        local addBossBtn = ns.UI.CreateButton(nil, addBossRow, "Add", 50, 22)
+        local addBossBtn = OneWoW_GUI:CreateButton(addBossRow, { text = "Add", width = 50, height = 22 })
         addBossBtn:SetPoint("LEFT", addBossBox, "RIGHT", 6, 0)
         addBossBtn:SetScript("OnClick", function()
             local val = tonumber(addBossBox:GetText()) or 0
@@ -945,7 +940,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         RebuildBossList()
 
-        local resetBtn = ns.UI.CreateButton(nil, overrideDialog, L["OVERRIDE_RESET_DEFAULTS"], 160, 30)
+        local resetBtn = OneWoW_GUI:CreateButton(overrideDialog, { text = L["OVERRIDE_RESET_DEFAULTS"], width = 160, height = 30 })
         resetBtn:ClearAllPoints()
         resetBtn:SetPoint("BOTTOMLEFT", overrideDialog, "BOTTOMLEFT", 10, 10)
         resetBtn:SetScript("OnClick", function()
@@ -955,7 +950,7 @@ function ns.UI.CreateSettingsTab(parent)
             RebuildBossList()
         end)
 
-        local closeBtn2 = ns.UI.CreateButton(nil, overrideDialog, L["OVERRIDE_CLOSE"], 100, 30)
+        local closeBtn2 = OneWoW_GUI:CreateButton(overrideDialog, { text = L["OVERRIDE_CLOSE"], width = 100, height = 30 })
         closeBtn2:ClearAllPoints()
         closeBtn2:SetPoint("BOTTOMRIGHT", overrideDialog, "BOTTOMRIGHT", -10, 10)
         closeBtn2:SetScript("OnClick", function() overrideDialog:Hide() end)
@@ -968,7 +963,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     yOffset = yOffset - 50
 
-    local checklistSection = ns.UI.CreateSectionHeader(scrollContent, L["SEASON_CHECKLIST_BTN"], yOffset)
+    local checklistSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["SEASON_CHECKLIST_BTN"], yOffset = yOffset })
     yOffset = checklistSection.bottomY - 8
 
     local checklistDescText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -981,7 +976,7 @@ function ns.UI.CreateSettingsTab(parent)
     checklistDescText:SetSpacing(3)
     yOffset = yOffset - 50
 
-    local checklistBtn = ns.UI.CreateButton(nil, scrollContent, L["SEASON_CHECKLIST_BTN"], 280, 35)
+    local checklistBtn = OneWoW_GUI:CreateButton(scrollContent, { text = L["SEASON_CHECKLIST_BTN"], width = 280, height = 35 })
     checklistBtn:ClearAllPoints()
     checklistBtn:SetPoint("TOPLEFT", 25, yOffset)
     checklistBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -1093,7 +1088,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         for _, item in ipairs(CHECKLIST_ITEMS) do
             if item.section then
-                local sh = ns.UI.CreateSectionHeader(sc2, item.section, cdy)
+                local sh = OneWoW_GUI:CreateSectionHeader(sc2, { title = item.section, yOffset = cdy })
                 cdy = sh.bottomY - 6
             else
                 local row = CreateFrame("Frame", nil, sc2, "BackdropTemplate")
@@ -1196,7 +1191,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         sc2:SetHeight(math.abs(cdy) + 20)
 
-        local clearBtn = ns.UI.CreateButton(nil, checklistDialog, L["SEASON_CHECKLIST_CLEAR"], 130, 30)
+        local clearBtn = OneWoW_GUI:CreateButton(checklistDialog, { text = L["SEASON_CHECKLIST_CLEAR"], width = 130, height = 30 })
         clearBtn:ClearAllPoints()
         clearBtn:SetPoint("BOTTOMLEFT", checklistDialog, "BOTTOMLEFT", 10, 10)
         clearBtn:SetScript("OnClick", function()
@@ -1212,7 +1207,7 @@ function ns.UI.CreateSettingsTab(parent)
             end
         end)
 
-        local closeBtnCL = ns.UI.CreateButton(nil, checklistDialog, L["OVERRIDE_CLOSE"], 100, 30)
+        local closeBtnCL = OneWoW_GUI:CreateButton(checklistDialog, { text = L["OVERRIDE_CLOSE"], width = 100, height = 30 })
         closeBtnCL:ClearAllPoints()
         closeBtnCL:SetPoint("BOTTOMRIGHT", checklistDialog, "BOTTOMRIGHT", -10, 10)
         closeBtnCL:SetScript("OnClick", function() checklistDialog:Hide() end)

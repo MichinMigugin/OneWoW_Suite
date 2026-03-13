@@ -111,6 +111,17 @@ _G.OneWoW:RegisterSettingsPanel({
 
 All addons use `LibStub("OneWoW_GUI-1.0")` for shared UI creation and theme colors. **OneWoW_GUI is required for every addon**, including standalone. Theme is the single source of truth in `OneWoW_GUI_DB`; no addon should maintain its own theme copy.
 
+**OneWoW_GUI Early-Return Convention:** Every Lua file that depends on OneWoW_GUI must include this near the top:
+
+```lua
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+```
+
+Fail fast. No defensive `if OneWoW_GUI and OneWoW_GUI.SomeMethod then` guards — call methods directly; let errors surface during development.
+
+**Component API Conventions:** All component creation uses `(parent, options)` — parent first, all other parameters in an options table. Example: `OneWoW_GUI:CreateFrame(parent, { name = "MyFrame", width = 400, height = 300, backdrop = Constants.BACKDROP_SOFT })`. See `OneWoW_GUI/GUI.md` for full API reference.
+
 ---
 
 ## 4. Theme Flow

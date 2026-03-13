@@ -154,7 +154,7 @@ function GUI:CreateHomeTab(parent)
             local dialogKey  = isActive and "ONEWOW_CONFIRM_DISABLE_ADDON" or "ONEWOW_CONFIRM_ENABLE_ADDON"
             local confirmKey = isActive and "HOME_ADDON_DISABLE_CONFIRM" or "HOME_ADDON_ENABLE_CONFIRM"
 
-            local toggleBtn = OneWoW_GUI:CreateButton(nil, panel, btnLabel, 90, 20)
+            local toggleBtn = OneWoW_GUI:CreateButton(panel, { text = btnLabel, width = 90, height = 20 })
             toggleBtn:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, rowY - 2)
 
             if status == "not_found" then
@@ -168,7 +168,7 @@ function GUI:CreateHomeTab(parent)
         end
     end
 
-    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame("OneWoW_HomeScroll", parent)
+    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_HomeScroll" })
     content:SetHeight(1200)
 
     local yOffset = -30
@@ -202,7 +202,7 @@ function GUI:CreateHomeTab(parent)
     discordLabel:SetText((L["HOME_DISCORD"] or "Discord") .. ":")
     discordLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local discordBox = GUI:CreateEditBox("OneWoW_DiscordLink", discordRow, 350, 24)
+    local discordBox = OneWoW_GUI:CreateEditBox(discordRow, { name = "OneWoW_DiscordLink", width = 350, height = 24 })
     discordBox:SetPoint("LEFT", discordLabel, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     discordBox:SetText(L["HOME_DISCORD_LINK"] or "https://discord.gg/6vnabDVnDu")
     discordBox:SetAutoFocus(false)
@@ -219,7 +219,7 @@ function GUI:CreateHomeTab(parent)
     supportLabel:SetText((L["HOME_SUPPORT"] or "Support OneWoW") .. ":")
     supportLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local supportBox = GUI:CreateEditBox("OneWoW_SupportLink", discordRow, 350, 24)
+    local supportBox = OneWoW_GUI:CreateEditBox(discordRow, { name = "OneWoW_SupportLink", width = 350, height = 24 })
     supportBox:SetPoint("LEFT", supportLabel, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     supportBox:SetText(L["HOME_SUPPORT_LINK"] or "https://buymeacoffee.com/migugin")
     supportBox:SetAutoFocus(false)

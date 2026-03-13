@@ -57,7 +57,7 @@ function ns.UI.CreateItemsTab(parent)
     filterBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     filterBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local searchBox = OneWoW_GUI:CreateEditBox(nil, filterBar, {
+    local searchBox = OneWoW_GUI:CreateEditBox(filterBar, {
         height = 20,
         placeholderText = L["ITEMS_SEARCH_HINT"],
         onTextChanged = function(text)
@@ -70,7 +70,7 @@ function ns.UI.CreateItemsTab(parent)
     searchBox:SetWidth(200)
     searchBox:SetPoint("LEFT", filterBar, "LEFT", 8, 0)
 
-    local checkBound = OneWoW_GUI:CreateCheckbox(nil, filterBar, L["ITEMS_FILTER_BOUND"])
+    local checkBound = OneWoW_GUI:CreateCheckbox(filterBar, { label = L["ITEMS_FILTER_BOUND"] })
     checkBound:SetPoint("LEFT", searchBox, "RIGHT", 15, 1)
     checkBound:SetScript("OnClick", function(self)
         hidebound = self:GetChecked()
@@ -79,7 +79,7 @@ function ns.UI.CreateItemsTab(parent)
         end
     end)
 
-    local checkVendor = OneWoW_GUI:CreateCheckbox(nil, filterBar, L["ITEMS_FILTER_NO_VENDOR"])
+    local checkVendor = OneWoW_GUI:CreateCheckbox(filterBar, { label = L["ITEMS_FILTER_NO_VENDOR"] })
     checkVendor:SetPoint("LEFT", checkBound.label, "RIGHT", 15, 0)
     checkVendor:SetScript("OnClick", function(self)
         hideNoVendor = self:GetChecked()
@@ -88,7 +88,7 @@ function ns.UI.CreateItemsTab(parent)
         end
     end)
 
-    local scanAHButton = OneWoW_GUI:CreateButton(nil, filterBar, L["ITEMS_SCAN_AH"], 100, 20)
+    local scanAHButton = OneWoW_GUI:CreateButton(filterBar, { text = L["ITEMS_SCAN_AH"], width = 100, height = 20 })
     scanAHButton:SetPoint("RIGHT", filterBar, "RIGHT", -8, 0)
     scanAHButton:SetEnabled(false)
     scanAHButton.isAHScanning = false

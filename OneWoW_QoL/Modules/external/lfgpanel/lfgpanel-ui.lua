@@ -3,6 +3,7 @@
 local addonName, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 local LFGPanel = ns.LFGPanel
 local state = ns.LFGState
@@ -44,7 +45,8 @@ function LFGPanelUI:CreateDialog()
     panel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local titleBar = OneWoW_GUI:CreateTitleBar(panel, L["LFGPANEL_DIALOG_TITLE"], {
+    local titleBar = OneWoW_GUI:CreateTitleBar(panel, {
+        title = L["LFGPANEL_DIALOG_TITLE"],
         showBrand = true,
         factionTheme = GetFactionTheme(),
         onClose = function()
@@ -80,7 +82,7 @@ function LFGPanelUI:CreateDialog()
         return items
     end
 
-    OneWoW_GUI:AttachFilterMenu(filterDropdown, dropText, {
+    OneWoW_GUI:AttachFilterMenu(filterDropdown, {
         searchable = false,
         menuHeight = 200,
         maxVisible = 10,
@@ -104,7 +106,7 @@ function LFGPanelUI:CreateDialog()
         end,
     })
 
-    local filterCB = OneWoW_GUI:CreateCheckbox("OneWoW_QoL_LFGFilterCB", controlBar, L["LFGPANEL_OPT_FILTER_LFG"])
+    local filterCB = OneWoW_GUI:CreateCheckbox(controlBar, { name = "OneWoW_QoL_LFGFilterCB", label = L["LFGPANEL_OPT_FILTER_LFG"] })
     filterCB:SetPoint("TOPLEFT", controlBar, "TOPLEFT", 6, -32)
     filterCB:SetChecked(GetFilterResults())
     if filterCB.label then ApplyFont(filterCB.label, 11) end
@@ -135,12 +137,13 @@ function LFGPanelUI:CreateDialog()
     scrollContainer:SetPoint("TOPLEFT", controlBar, "BOTTOMLEFT", 0, -4)
     scrollContainer:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 38)
 
-    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame("OneWoW_QoL_LFGScroll", scrollContainer)
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(scrollContainer, { name = "OneWoW_QoL_LFGScroll" })
     scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", scrollContainer, "TOPLEFT", 0, 0)
     scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", 0, 0)
 
-    local refreshBtn = OneWoW_GUI:CreateFitTextButton(panel, L["LFGPANEL_REFRESH"], {
+    local refreshBtn = OneWoW_GUI:CreateFitTextButton(panel, {
+        text = L["LFGPANEL_REFRESH"],
         height = 22,
         minWidth = 80,
         padding = 16,
@@ -195,7 +198,8 @@ function LFGPanelUI:CreateToggleButton()
 
     local L = ns.L
 
-    local btn = OneWoW_GUI:CreateFitTextButton(PVEFrame, "L", {
+    local btn = OneWoW_GUI:CreateFitTextButton(PVEFrame, {
+        text = "L",
         height = 28,
         minWidth = 28,
         padding = 0,
@@ -367,7 +371,7 @@ function LFGPanelUI:UpdateDisplay()
     local yOffset = -5
 
     if #raids > 0 then
-        local header = OneWoW_GUI:CreateSectionHeader(scrollContent, L["LFGPANEL_CATEGORY_RAIDS"], yOffset)
+        local header = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["LFGPANEL_CATEGORY_RAIDS"], yOffset = yOffset })
         table.insert(state.dialog.lockoutFrames, header)
         yOffset = yOffset - (HEADER_HEIGHT + 4)
 
@@ -381,7 +385,7 @@ function LFGPanelUI:UpdateDisplay()
     end
 
     if #dungeons > 0 then
-        local header = OneWoW_GUI:CreateSectionHeader(scrollContent, L["LFGPANEL_CATEGORY_DUNGEONS"], yOffset)
+        local header = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["LFGPANEL_CATEGORY_DUNGEONS"], yOffset = yOffset })
         table.insert(state.dialog.lockoutFrames, header)
         yOffset = yOffset - (HEADER_HEIGHT + 4)
 

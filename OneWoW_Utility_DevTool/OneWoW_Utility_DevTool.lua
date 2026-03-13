@@ -164,10 +164,13 @@ function Addon:OnInitialize()
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
         self:ApplyTheme()
         if self.UI and self.UI.FullReset then
+            local wasShown = self.UI.mainFrame and self.UI.mainFrame:IsShown()
             self.UI:FullReset()
-            C_Timer.After(0.1, function()
-                if self.UI and self.UI.Show then self.UI:Show() end
-            end)
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    if self.UI and self.UI.Show then self.UI:Show() end
+                end)
+            end
         end
     end)
 

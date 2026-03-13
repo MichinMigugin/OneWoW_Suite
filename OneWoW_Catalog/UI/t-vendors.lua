@@ -352,7 +352,7 @@ local function ShowVendorDetail(panels, vendor)
             locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             table.insert(detailElements, locLine)
 
-            local wpBtn = ns.UI.CreateButton(nil, parent, L["VENDORS_WAYPOINT"], 50, 16)
+            local wpBtn = OneWoW_GUI:CreateButton(parent, { text = L["VENDORS_WAYPOINT"], width = 50, height = 16 })
             wpBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
             table.insert(detailElements, wpBtn)
 
@@ -633,7 +633,7 @@ function ns.UI.CreateVendorsTab(parent)
     panels.listTitle:SetText(L["VENDORS_LIST_TITLE"])
     panels.detailTitle:SetText(L["VENDORS_DETAIL_TITLE"])
 
-    local searchBox = ns.UI.CreateEditBox(nil, headerBar, {
+    local searchBox = OneWoW_GUI:CreateEditBox(headerBar, {
         width = 280,
         height = 26,
         placeholderText = L["VENDORS_SEARCH"],
@@ -647,10 +647,10 @@ function ns.UI.CreateVendorsTab(parent)
     })
     searchBox:SetPoint("TOPLEFT", headerBar, "TOPLEFT", 8, -8)
 
-    local clearBtn = ns.UI.CreateFitTextButton(headerBar, L["VENDORS_FILTER_CLEAR"], { height = 26, minWidth = 34 })
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(headerBar, { text = L["VENDORS_FILTER_CLEAR"], height = 26, minWidth = 34 })
     clearBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, 0)
 
-    local chkBox = ns.UI.CreateCheckbox(nil, headerBar, L["VENDORS_ZONE_CURRENT"])
+    local chkBox = OneWoW_GUI:CreateCheckbox(headerBar, { label = L["VENDORS_ZONE_CURRENT"] })
     chkBox:SetPoint("TOPRIGHT", headerBar, "TOPRIGHT", -8, -13)
 
     local zoneDropdown, zoneDropdownText = OneWoW_GUI:CreateDropdown(headerBar, {
@@ -660,7 +660,7 @@ function ns.UI.CreateVendorsTab(parent)
     })
     zoneDropdown:SetPoint("RIGHT", chkBox, "LEFT", -10, 0)
 
-    OneWoW_GUI:AttachFilterMenu(zoneDropdown, zoneDropdownText, {
+    OneWoW_GUI:AttachFilterMenu(zoneDropdown, {
         searchable = true,
         getActiveValue = function() return zoneFilter end,
         buildItems = function()
@@ -689,7 +689,7 @@ function ns.UI.CreateVendorsTab(parent)
     })
     currencyDropdown:SetPoint("RIGHT", zoneDropdown, "LEFT", -10, 0)
 
-    OneWoW_GUI:AttachFilterMenu(currencyDropdown, currencyDropdownText, {
+    OneWoW_GUI:AttachFilterMenu(currencyDropdown, {
         searchable = true,
         maxVisible = 10,
         getActiveValue = function() return currencyFilter end,

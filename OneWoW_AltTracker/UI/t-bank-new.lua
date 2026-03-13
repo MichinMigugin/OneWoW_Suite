@@ -49,7 +49,7 @@ function ns.UI.CreateBankTab(parent)
     buttonContainer:SetHeight(30)
 
     local function CreateBankTypeButton(btnText, bankTypeKey, index)
-        local btn = OneWoW_GUI:CreateButton(nil, buttonContainer, btnText, 80, 28)
+        local btn = OneWoW_GUI:CreateButton(buttonContainer, { text = btnText, width = 80, height = 28 })
         btn.label = btn.text
         btn.bankType = bankTypeKey
         btn.index = index
@@ -135,7 +135,7 @@ function ns.UI.CreateBankTab(parent)
     personalBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     personalBtn.label:SetTextColor(1, 1, 1)
 
-    local updateButton = OneWoW_GUI:CreateButton(nil, controlPanel, L["BANK_UPDATE_BANKS"], 120, 28)
+    local updateButton = OneWoW_GUI:CreateButton(controlPanel, { text = L["BANK_UPDATE_BANKS"], width = 120, height = 28 })
     updateButton:SetPoint("BOTTOMRIGHT", controlPanel, "BOTTOMRIGHT", -10, 6)
     updateButton:SetScript("OnClick", function()
         print("|cFFFFD100OneWoW|r AltTracker: " .. L["BANK_UPDATE_BANKS"])
@@ -251,7 +251,7 @@ function ns.UI.CreateBankTab(parent)
             end
         end
 
-        OneWoW_GUI:AttachFilterMenu(charDropdown, charDropdownText, {
+        OneWoW_GUI:AttachFilterMenu(charDropdown, {
             searchable = true,
             menuHeight = 314,
             buildItems = function()
@@ -269,7 +269,7 @@ function ns.UI.CreateBankTab(parent)
             end,
             onSelect = function(value, text)
                 selectedCharacterKey = value
-                charDropdownText:SetText(text)
+                charDropdown._text:SetText(text)
                 currentTab = 1
                 if ns.UI.RefreshBankDisplay then
                     ns.UI.RefreshBankDisplay(parent)
@@ -318,7 +318,7 @@ function ns.UI.CreateBankTab(parent)
                 guildDropdownText:SetText(guildList[1].name)
             end
 
-            OneWoW_GUI:AttachFilterMenu(guildDropdown, guildDropdownText, {
+            OneWoW_GUI:AttachFilterMenu(guildDropdown, {
                 searchable = true,
                 menuHeight = 314,
                 buildItems = function()
@@ -336,7 +336,7 @@ function ns.UI.CreateBankTab(parent)
                 end,
                 onSelect = function(value, text)
                     selectedGuildName = value
-                    guildDropdownText:SetText(text)
+                    guildDropdown._text:SetText(text)
                     currentTab = 1
                     if ns.UI.RefreshBankDisplay then
                         ns.UI.RefreshBankDisplay(parent)
@@ -584,7 +584,7 @@ function ns.UI.CreateBankTabs(parent)
             tabLabel = tostring(i)
         end
 
-        local tabBtn = OneWoW_GUI:CreateButton(nil, parent.tabContainer, tabLabel, 58, 50)
+        local tabBtn = OneWoW_GUI:CreateButton(parent.tabContainer, { text = tabLabel, width = 58, height = 50 })
         tabBtn:SetPoint("TOP", parent.tabContainer, "TOP", 0, -((i - 1) * 55))
 
         tabBtn.text:ClearAllPoints()

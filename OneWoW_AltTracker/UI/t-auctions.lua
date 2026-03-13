@@ -68,7 +68,7 @@ function ns.UI.CreateAuctionsTab(parent)
 
     parent.auctionFilter = "all"
 
-    local mailIconButton = OneWoW_GUI:CreateButton(nil, filterPanel, "", 32, 32)
+    local mailIconButton = OneWoW_GUI:CreateButton(filterPanel, { text = "", width = 32, height = 32 })
     mailIconButton:SetPoint("LEFT", filterPanel, "LEFT", 8, 0)
 
     local mailIcon = mailIconButton:CreateTexture(nil, "ARTWORK")
@@ -168,7 +168,7 @@ function ns.UI.CreateAuctionsTab(parent)
     }
 
     for i, option in ipairs(filterOptions) do
-        local btn = OneWoW_GUI:CreateButton(nil, filterPanel, option.label, 120, 24)
+        local btn = OneWoW_GUI:CreateButton(filterPanel, { text = option.label, width = 120, height = 24 })
         btn:SetPoint("LEFT", filterPanel, "LEFT", 48 + (i - 1) * 124, 0)
 
         btn.filterKey = option.key
@@ -616,7 +616,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         charNameText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, charNameText)
 
-        local factionCell = OneWoW_GUI:CreateFactionIcon(auctionRow, charData.faction)
+        local factionCell = OneWoW_GUI:CreateFactionIcon(auctionRow, { faction = charData.faction })
         table.insert(auctionRow.cells, factionCell)
 
         local statusText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -641,7 +641,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         statusText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, statusText)
 
-        local deleteBtn = OneWoW_GUI:CreateButton(nil, auctionRow, L["PLACEHOLDER_DELETE"], 40, 22)
+        local deleteBtn = OneWoW_GUI:CreateButton(auctionRow, { text = L["PLACEHOLDER_DELETE"], width = 40, height = 22 })
         table.insert(auctionRow.cells, deleteBtn)
 
         if dt and dt.headerRow and dt.headerRow.columnButtons and columnsConfig then

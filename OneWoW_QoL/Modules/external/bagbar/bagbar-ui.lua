@@ -36,7 +36,7 @@ local function MakeItemDropZone(parent, label, yOffset, onReceive)
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
-    local addBtn = OneWoW_GUI:CreateFitTextButton(parent, ns.L["BAGBAR_ADD_BUTTON"], { height = 24 })
+    local addBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = ns.L["BAGBAR_ADD_BUTTON"], height = 24 })
     addBtn:SetPoint("LEFT", itemIDBox, "RIGHT", 6, 0)
     addBtn:SetScript("OnClick", function()
         local id = tonumber(itemIDBox:GetText())
@@ -147,12 +147,13 @@ local function BuildContent(container, isEnabled)
     local s = GetSettings()
     local cy = 0
 
-    cy = OneWoW_GUI:CreateSection(container, L["BAGBAR_SETTINGS_HEADER"], cy)
+    cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_SETTINGS_HEADER"], yOffset = cy })
 
     local previewing = ns.BagBarModule:IsPreviewActive()
-    local previewBtn = OneWoW_GUI:CreateFitTextButton(container,
-        previewing and L["BAGBAR_HIDE_BAR"] or L["BAGBAR_SHOW_BAR"],
-        { height = 26 })
+    local previewBtn = OneWoW_GUI:CreateFitTextButton(container, {
+        text = previewing and L["BAGBAR_HIDE_BAR"] or L["BAGBAR_SHOW_BAR"],
+        height = 26,
+    })
     previewBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     previewBtn:SetScript("OnClick", function()
         if ns.BagBarModule:IsPreviewActive() then
@@ -164,9 +165,10 @@ local function BuildContent(container, isEnabled)
     end)
     cy = cy - 32
 
-    local lockBtn = OneWoW_GUI:CreateFitTextButton(container,
-        s.locked and (L["BAGBAR_LOCK_POSITION"] .. " (ON)") or (L["BAGBAR_LOCK_POSITION"] .. " (OFF)"),
-        { height = 26 })
+    local lockBtn = OneWoW_GUI:CreateFitTextButton(container, {
+        text = s.locked and (L["BAGBAR_LOCK_POSITION"] .. " (ON)") or (L["BAGBAR_LOCK_POSITION"] .. " (OFF)"),
+        height = 26,
+    })
     lockBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     lockBtn:SetScript("OnClick", function()
         ns.BagBarModule:SetLocked(not GetSettings().locked)
@@ -241,7 +243,7 @@ local function BuildContent(container, isEnabled)
     descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     cy = cy - 14
 
-    cy = OneWoW_GUI:CreateSection(container, L["BAGBAR_MANUAL_ITEMS_HEADER"], cy)
+    cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_MANUAL_ITEMS_HEADER"], yOffset = cy })
 
     cy = MakeItemDropZone(container, L["BAGBAR_ITEM_ID_LABEL"], cy,
         function(itemID)
@@ -259,7 +261,7 @@ local function BuildContent(container, isEnabled)
             ns.BagBarModule._refreshCustomDetail()
         end)
 
-    cy = OneWoW_GUI:CreateSection(container, L["BAGBAR_BLACKLIST_HEADER"], cy)
+    cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_BLACKLIST_HEADER"], yOffset = cy })
 
     local blDesc = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     blDesc:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -287,7 +289,7 @@ local function BuildContent(container, isEnabled)
             ns.BagBarModule._refreshCustomDetail()
         end)
 
-    local clearBtn = OneWoW_GUI:CreateFitTextButton(container, L["BAGBAR_CLEAR_BLACKLIST"], { height = 26 })
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(container, { text = L["BAGBAR_CLEAR_BLACKLIST"], height = 26 })
     clearBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     clearBtn:SetScript("OnClick", function()
         local cur = GetSettings()

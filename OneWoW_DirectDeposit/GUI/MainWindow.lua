@@ -63,12 +63,19 @@ function GUI:InitMainWindow()
 
     local C = Constants.GUI
 
-    MainWindow = GUI:CreateFrame("OneWoW_DirectDepositMainWindow", UIParent, C.WINDOW_WIDTH, C.WINDOW_HEIGHT, true)
+    MainWindow = OneWoW_GUI:CreateFrame(UIParent, {
+        name = "OneWoW_DirectDepositMainWindow",
+        width = C.WINDOW_WIDTH,
+        height = C.WINDOW_HEIGHT,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
     if not MainWindow then return end
 
     MainWindow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     MainWindow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    MainWindow:SetPoint("CENTER")
+    if not OneWoW_GUI:RestoreWindowPosition(MainWindow, OneWoW_DirectDeposit.db.global.mainFramePosition or {}) then
+        MainWindow:SetPoint("CENTER")
+    end
     MainWindow:SetMovable(true)
     MainWindow:EnableMouse(true)
     MainWindow:RegisterForDrag("LeftButton")
@@ -77,6 +84,11 @@ function GUI:InitMainWindow()
     MainWindow:SetClampedToScreen(true)
     MainWindow:SetFrameStrata("MEDIUM")
     MainWindow:SetToplevel(true)
+    MainWindow:SetScript("OnHide", function()
+        local db = OneWoW_DirectDeposit.db.global
+        db.mainFramePosition = db.mainFramePosition or {}
+        OneWoW_GUI:SaveWindowPosition(MainWindow, db.mainFramePosition)
+    end)
     MainWindow:Hide()
 
     local titleBar = CreateFrame("Frame", nil, MainWindow, "BackdropTemplate")
@@ -114,7 +126,7 @@ function GUI:InitMainWindow()
     titleText:SetText(L["ADDON_TITLE"])
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local closeBtn = GUI:CreateButton(nil, titleBar, "X", 20, 20)
+    local closeBtn = OneWoW_GUI:CreateButton(titleBar, { text = "X", width = 20, height = 20 })
     closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -OneWoW_GUI:GetSpacing("XS") / 2, 0)
     closeBtn:SetScript("OnClick", function() MainWindow:Hide() end)
 
@@ -133,7 +145,11 @@ function GUI:CreateWoWNotesDetectedPanel(parent)
     local panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     panel:SetAllPoints()
 
-    local warningFrame = GUI:CreateFrame(nil, panel, 500, 200, true)
+    local warningFrame = OneWoW_GUI:CreateFrame(panel, {
+        width = 500,
+        height = 200,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
     warningFrame:SetPoint("CENTER", 0, 50)
     warningFrame:SetBackdropColor(0.15, 0.05, 0.05, 0.95)
     warningFrame:SetBackdropBorderColor(0.8, 0.2, 0.2, 1)
@@ -158,7 +174,7 @@ function GUI:CreateWoWNotesDetectedPanel(parent)
     messageText:SetTextColor(0.9, 0.9, 0.9)
     messageText:SetSpacing(2)
 
-    local okBtn = GUI:CreateButton(nil, warningFrame, L["OK"], 120, 30)
+    local okBtn = OneWoW_GUI:CreateButton(warningFrame, { text = L["OK"], width = 120, height = 30 })
     okBtn:SetPoint("BOTTOM", 0, 15)
     okBtn:SetScript("OnClick", function() MainWindow:Hide() end)
 end
@@ -184,14 +200,14 @@ function GUI:CreateTabSystem(parent)
     table.insert(MainWindow.tabs, tab2)
     table.insert(MainWindow.tabs, tab3)
 
-    local depositNowBtn = GUI:CreateButton(nil, tabContainer, "Deposit Now", 120, 30)
+    local depositNowBtn = OneWoW_GUI:CreateButton(tabContainer, { text = "Deposit Now", width = 120, height = 30 })
     depositNowBtn:SetPoint("BOTTOMRIGHT", tabContainer, "BOTTOMRIGHT", -5, 0)
     depositNowBtn:SetScript("OnClick", function()
         OneWoW_DirectDeposit.DirectDeposit:ManualDeposit()
     end)
     MainWindow.depositNowBtn = depositNowBtn
 
-    local pauseBtn = GUI:CreateButton(nil, tabContainer, "Pause", 80, 30)
+    local pauseBtn = OneWoW_GUI:CreateButton(tabContainer, { text = "Pause", width = 80, height = 30 })
     pauseBtn:SetPoint("RIGHT", depositNowBtn, "LEFT", -5, 0)
     pauseBtn:Hide()
     pauseBtn:SetScript("OnClick", function()
@@ -241,7 +257,7 @@ function GUI:CreateTabSystem(parent)
     statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     MainWindow.statusText = statusText
 
-    local clearBtn = GUI:CreateButton(nil, bottomBar, L["CLEAR"], 100, Constants.GUI.BUTTON_HEIGHT)
+    local clearBtn = OneWoW_GUI:CreateButton(bottomBar, { text = L["CLEAR"], width = 100, height = Constants.GUI.BUTTON_HEIGHT })
     clearBtn:SetPoint("RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
     clearBtn:SetScript("OnClick", function()
         OneWoW_DirectDeposit.db.global.directDeposit.targetGold = 0
@@ -319,15 +335,18 @@ function GUI:CreateGoldPanel(parent)
     panel:SetAllPoints()
     panel.widgets = {}
 
-    local scrollFrame, scrollContent = GUI:CreateScrollFrame("OneWoW_DirectDepositGoldSettings", panel,
-        Constants.GUI.WINDOW_WIDTH - 20, Constants.GUI.WINDOW_HEIGHT - 135)
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(panel, {
+        name = "OneWoW_DirectDepositGoldSettings",
+        width = Constants.GUI.WINDOW_WIDTH - 20,
+        height = Constants.GUI.WINDOW_HEIGHT - 135,
+    })
 
     local yOffset = -15
 
     local accountSection = GUI:CreateSettingsSection(scrollContent, L["ACCOUNT_SETTINGS"], yOffset)
     yOffset = accountSection.bottomY - 15
 
-    local accountEnabled = GUI:CreateCheckbox(nil, scrollContent, L["DIRECT_DEPOSIT_ENABLE"])
+    local accountEnabled = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["DIRECT_DEPOSIT_ENABLE"] })
     accountEnabled:SetPoint("TOPLEFT", 20, yOffset)
     accountEnabled:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.enabled)
     accountEnabled:SetScript("OnClick", function(self)
@@ -342,7 +361,7 @@ function GUI:CreateGoldPanel(parent)
     targetGoldLabel:SetText(L["TARGET_GOLD"] .. ":")
     targetGoldLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local targetGoldBox = GUI:CreateEditBox(nil, scrollContent, 100, 28)
+    local targetGoldBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 100, height = 28 })
     targetGoldBox:SetPoint("LEFT", targetGoldLabel, "RIGHT", 10, 0)
     targetGoldBox:SetText(tostring(OneWoW_DirectDeposit.db.global.directDeposit.targetGold or 0))
     targetGoldBox:SetScript("OnTextChanged", function(self)
@@ -359,7 +378,7 @@ function GUI:CreateGoldPanel(parent)
 
     yOffset = yOffset - 40
 
-    local depositCheck = GUI:CreateCheckbox(nil, scrollContent, L["DEPOSIT_ENABLE"])
+    local depositCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["DEPOSIT_ENABLE"] })
     depositCheck:SetPoint("TOPLEFT", 40, yOffset)
     depositCheck:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.depositEnabled)
     depositCheck:SetScript("OnClick", function(self)
@@ -368,7 +387,7 @@ function GUI:CreateGoldPanel(parent)
     panel.depositCheck = depositCheck
     yOffset = yOffset - 30
 
-    local withdrawCheck = GUI:CreateCheckbox(nil, scrollContent, L["WITHDRAW_ENABLE"])
+    local withdrawCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["WITHDRAW_ENABLE"] })
     withdrawCheck:SetPoint("TOPLEFT", 40, yOffset)
     withdrawCheck:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.withdrawEnabled)
     withdrawCheck:SetScript("OnClick", function(self)
@@ -380,7 +399,7 @@ function GUI:CreateGoldPanel(parent)
     local charSection = GUI:CreateSettingsSection(scrollContent, L["CHARACTER_SETTINGS"], yOffset)
     yOffset = charSection.bottomY - 15
 
-    local useCharSettings = GUI:CreateCheckbox(nil, scrollContent, L["USE_CHAR_SETTINGS"])
+    local useCharSettings = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["USE_CHAR_SETTINGS"] })
     useCharSettings:SetPoint("TOPLEFT", 20, yOffset)
     useCharSettings:SetChecked(not OneWoW_DirectDeposit.db.char.directDeposit.useAccountSettings)
     useCharSettings:SetScript("OnClick", function(self)
@@ -410,7 +429,7 @@ function GUI:CreateCharacterSettings(scrollContent, yOffset, framesTable, panel)
     charTargetGoldLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     table.insert(framesTable, charTargetGoldLabel)
 
-    local charTargetGoldBox = GUI:CreateEditBox(nil, scrollContent, 100, 28)
+    local charTargetGoldBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 100, height = 28 })
     charTargetGoldBox:SetPoint("LEFT", charTargetGoldLabel, "RIGHT", 10, 0)
     charTargetGoldBox:SetText(tostring(OneWoW_DirectDeposit.db.char.directDeposit.targetGold or 0))
     charTargetGoldBox:SetScript("OnTextChanged", function(self)
@@ -429,7 +448,7 @@ function GUI:CreateCharacterSettings(scrollContent, yOffset, framesTable, panel)
 
     yOffset = yOffset - 40
 
-    local charDepositCheck = GUI:CreateCheckbox(nil, scrollContent, L["DEPOSIT_ENABLE"])
+    local charDepositCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["DEPOSIT_ENABLE"] })
     charDepositCheck:SetPoint("TOPLEFT", 40, yOffset)
     charDepositCheck:SetChecked(OneWoW_DirectDeposit.db.char.directDeposit.depositEnabled)
     charDepositCheck:SetScript("OnClick", function(self)
@@ -439,7 +458,7 @@ function GUI:CreateCharacterSettings(scrollContent, yOffset, framesTable, panel)
     if panel then panel.charDepositCheck = charDepositCheck end
     yOffset = yOffset - 30
 
-    local charWithdrawCheck = GUI:CreateCheckbox(nil, scrollContent, L["WITHDRAW_ENABLE"])
+    local charWithdrawCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["WITHDRAW_ENABLE"] })
     charWithdrawCheck:SetPoint("TOPLEFT", 40, yOffset)
     charWithdrawCheck:SetChecked(OneWoW_DirectDeposit.db.char.directDeposit.withdrawEnabled)
     charWithdrawCheck:SetScript("OnClick", function(self)
@@ -480,15 +499,18 @@ function GUI:CreateItemsPanel(parent)
     panel:SetAllPoints()
     panel:Hide()
 
-    local scrollFrame, scrollContent = GUI:CreateScrollFrame("OneWoW_DirectDepositItemSettings", panel,
-        Constants.GUI.WINDOW_WIDTH - 20, Constants.GUI.WINDOW_HEIGHT - 135)
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(panel, {
+        name = "OneWoW_DirectDepositItemSettings",
+        width = Constants.GUI.WINDOW_WIDTH - 20,
+        height = Constants.GUI.WINDOW_HEIGHT - 135,
+    })
 
     local yOffset = -15
 
     local itemSection = GUI:CreateSettingsSection(scrollContent, L["ITEM_DEPOSIT"], yOffset)
     yOffset = itemSection.bottomY - 15
 
-    local itemDepositCheck = GUI:CreateCheckbox(nil, scrollContent, L["ITEM_DEPOSIT_ENABLE"])
+    local itemDepositCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["ITEM_DEPOSIT_ENABLE"] })
     itemDepositCheck:SetPoint("TOPLEFT", 20, yOffset)
     itemDepositCheck:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.itemDepositEnabled)
     itemDepositCheck:SetScript("OnClick", function(self)
@@ -543,7 +565,7 @@ function GUI:CreateItemsPanel(parent)
     addItemLabel:SetText("Item ID:")
     addItemLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local itemInputBox = GUI:CreateEditBox(nil, dropZoneFrame, 100, 28)
+    local itemInputBox = OneWoW_GUI:CreateEditBox(dropZoneFrame, { width = 100, height = 28 })
     itemInputBox:SetPoint("LEFT", addItemLabel, "RIGHT", 10, 0)
     itemInputBox:SetNumeric(true)
 
@@ -566,7 +588,7 @@ function GUI:CreateItemsPanel(parent)
         self:ClearFocus()
     end)
 
-    local addBtn = GUI:CreateButton(nil, dropZoneFrame, L["ITEM_DEPOSIT_ADD"], 80, 28)
+    local addBtn = OneWoW_GUI:CreateButton(dropZoneFrame, { text = L["ITEM_DEPOSIT_ADD"], width = 80, height = 28 })
     addBtn:SetPoint("LEFT", itemInputBox, "RIGHT", 10, 0)
     addBtn:SetScript("OnClick", function()
         itemInputBox:GetScript("OnEnterPressed")(itemInputBox)
@@ -671,7 +693,7 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
         itemRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         itemRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        local removeBtn = GUI:CreateButton(nil, itemRow, "X", 22, 22)
+        local removeBtn = OneWoW_GUI:CreateButton(itemRow, { text = "X", width = 22, height = 22 })
         removeBtn:SetPoint("LEFT", itemRow, "LEFT", 5, 0)
         removeBtn:SetScript("OnClick", function()
             print("|cFFFFD100DirectDeposit:|r Delete button clicked for item ID: " .. tostring(item.id))
@@ -803,8 +825,11 @@ function GUI:CreateSettingsPanel(parent)
     panel:SetAllPoints()
     panel:Hide()
 
-    local scrollFrame, scrollContent = GUI:CreateScrollFrame("OneWoW_DirectDepositSettings", panel,
-        Constants.GUI.WINDOW_WIDTH - 20, Constants.GUI.WINDOW_HEIGHT - 135)
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(panel, {
+        name = "OneWoW_DirectDepositSettings",
+        width = Constants.GUI.WINDOW_WIDTH - 20,
+        height = Constants.GUI.WINDOW_HEIGHT - 135,
+    })
 
     local yOffset = -15
 
@@ -1146,7 +1171,7 @@ function GUI:CreateSettingsPanel(parent)
     mmLeftDesc:SetText(L["MINIMAP_SECTION_DESC"])
     mmLeftDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local mmShowCheck = GUI:CreateCheckbox(nil, mmLeftPanel, L["MINIMAP_SHOW_BTN"])
+    local mmShowCheck = OneWoW_GUI:CreateCheckbox(mmLeftPanel, { label = L["MINIMAP_SHOW_BTN"] })
     mmShowCheck:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 10, -85)
     local isMinimapHidden = OneWoW_DirectDeposit.db and OneWoW_DirectDeposit.db.global and
                             OneWoW_DirectDeposit.db.global.minimap and
@@ -1359,7 +1384,7 @@ function GUI:CreateSettingsPanel(parent)
     discordLabel:SetText(L["DISCORD_LABEL"])
     discordLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local discordBox = GUI:CreateEditBox(nil, discordContainer, scrollFrame:GetWidth() - 70, 28)
+    local discordBox = OneWoW_GUI:CreateEditBox(discordContainer, { width = scrollFrame:GetWidth() - 70, height = 28 })
     discordBox:SetPoint("TOPLEFT", 15, -35)
     discordBox:SetPoint("TOPRIGHT", -15, -35)
     discordBox:SetText(L["DISCORD_URL"])
@@ -1397,7 +1422,7 @@ function GUI:CreateSettingsPanel(parent)
     websiteLabel:SetText(L["WEBSITE_LABEL"])
     websiteLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local websiteBox = GUI:CreateEditBox(nil, websiteContainer, scrollFrame:GetWidth() - 70, 28)
+    local websiteBox = OneWoW_GUI:CreateEditBox(websiteContainer, { width = scrollFrame:GetWidth() - 70, height = 28 })
     websiteBox:SetPoint("TOPLEFT", 15, -35)
     websiteBox:SetPoint("TOPRIGHT", -15, -35)
     websiteBox:SetText(L["WEBSITE_URL"])
@@ -1436,7 +1461,7 @@ function GUI:CreateSettingsPanel(parent)
     local importDescHeight = importDesc:GetStringHeight()
     yOffset = yOffset - importDescHeight - 20
 
-    local importBtn = GUI:CreateButton(nil, scrollContent, L["IMPORT_BUTTON"], 240, 30)
+    local importBtn = OneWoW_GUI:CreateButton(scrollContent, { text = L["IMPORT_BUTTON"], width = 240, height = 30 })
     importBtn:SetPoint("TOPLEFT", 40, yOffset)
     importBtn:SetScript("OnClick", function()
         local success, result = OneWoW_DirectDeposit:ImportFromWoWNotes()

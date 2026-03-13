@@ -286,7 +286,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
         })
         charRow.charKey = charKey
 
-        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, charData.faction)
+        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
         table.insert(charRow.cells, factionCell)
 
         local hasMail = false
@@ -294,7 +294,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
             local storageData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
             hasMail = storageData and storageData.mail and storageData.mail.hasNewMail
         end
-        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, hasMail)
+        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
         table.insert(charRow.cells, mailCell)
 
         local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")

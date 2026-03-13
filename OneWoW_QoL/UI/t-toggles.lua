@@ -266,15 +266,17 @@ local function ShowToggleDetail(split, entry)
         local isOn = (curVal == "1")
         local capturedEntry = entry
 
-        local onBtn, offBtn, refresh = OneWoW_GUI:CreateOnOffToggleButtons(
-            child, yOfs,
-            L["TOGGLES_ON"], L["TOGGLES_OFF"],
-            nil, nil, true, isOn,
-            function(newVal)
+        local onBtn, offBtn, refresh = OneWoW_GUI:CreateOnOffToggleButtons(child, {
+            yOffset = yOfs,
+            onLabel = L["TOGGLES_ON"],
+            offLabel = L["TOGGLES_OFF"],
+            isEnabled = true,
+            value = isOn,
+            onValueChange = function(newVal)
                 C_CVar.SetCVar(capturedEntry.cvar, newVal and "1" or "0")
                 UpdateRowIndicator(selectedRow, capturedEntry)
-            end
-        )
+            end,
+        })
 
         yOfs = yOfs - 22 - 8
 
@@ -338,7 +340,9 @@ local function ShowToggleDetail(split, entry)
             })
         end
 
-        local optBtns, finalY = OneWoW_GUI:CreateFitFrameButtons(child, yOfs, items, {
+        local optBtns, finalY = OneWoW_GUI:CreateFitFrameButtons(child, {
+            yOffset = yOfs,
+            items = items,
             height = 26,
             gap = 4,
             width = child:GetWidth(),

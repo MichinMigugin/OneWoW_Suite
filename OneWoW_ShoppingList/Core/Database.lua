@@ -9,6 +9,7 @@ ns.MAIN_LIST_KEY = MAIN_LIST_KEY
 local DB_DEFAULTS = {
     global = {
         schemaVersion = 1,
+        mainFramePosition = {},
         shoppingLists = {
             lists = {},
             activeList = MAIN_LIST_KEY,
@@ -72,6 +73,9 @@ function Database:Initialize(savedDB)
     if o.scale == nil then o.scale = 1.0 end
     if o.alpha == nil then o.alpha = 1.0 end
 
+    if not db.global.mainFramePosition then
+        db.global.mainFramePosition = {}
+    end
     if not db.global.minimap then
         db.global.minimap = {}
     end

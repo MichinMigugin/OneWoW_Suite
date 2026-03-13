@@ -535,11 +535,11 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         charRow.charKey = charKey
         charRow.professionData = professionData
 
-        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, charData.faction)
+        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
         table.insert(charRow.cells, factionCell)
 
         local hasMail = charData.hasNewMail or false
-        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, hasMail)
+        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
         table.insert(charRow.cells, mailCell)
 
         local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")

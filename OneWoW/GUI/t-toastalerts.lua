@@ -37,7 +37,7 @@ local function CreateSoundDropdown(dsc, dbSection, yOffset)
     })
     dropBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
 
-    OneWoW_GUI:AttachFilterMenu(dropBtn, dropText, {
+    OneWoW_GUI:AttachFilterMenu(dropBtn, {
         searchable = false,
         buildItems = function()
             local items = {}
@@ -48,12 +48,12 @@ local function CreateSoundDropdown(dsc, dbSection, yOffset)
         end,
         onSelect = function(value, text)
             section.sound = value
-            dropText:SetText(text)
+            dropBtn._text:SetText(text)
         end,
         getActiveValue = function() return section.sound end,
     })
 
-    local playBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TOAST_SOUND_PLAY_BTN"] or "Play", 48, 26)
+    local playBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TOAST_SOUND_PLAY_BTN"] or "Play", width = 48, height = 26 })
     playBtn:SetPoint("LEFT", dropBtn, "RIGHT", 6, 0)
     playBtn:SetScript("OnClick", function()
         local soundId = section.sound or 0
@@ -66,7 +66,7 @@ local function CreateSoundDropdown(dsc, dbSection, yOffset)
 end
 
 local function AddGeneralExtras(dsc, yOffset)
-    yOffset = OneWoW_GUI:CreateSection(dsc, "Anchor Position", yOffset)
+    yOffset = OneWoW_GUI:CreateSection(dsc, { title = "Anchor Position", yOffset = yOffset })
 
     local infoText = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     infoText:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
@@ -77,7 +77,7 @@ local function AddGeneralExtras(dsc, yOffset)
     infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - infoText:GetStringHeight() - 10
 
-    local showAnchorBtn = OneWoW_GUI:CreateButton(nil, dsc, L["TOAST_ANCHOR_SHOW_BTN"] or "Show Anchor", 120, 28)
+    local showAnchorBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TOAST_ANCHOR_SHOW_BTN"] or "Show Anchor", width = 120, height = 28 })
     showAnchorBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     showAnchorBtn:SetScript("OnClick", function(self)
         local Toasts = OneWoW.Toasts
@@ -96,7 +96,7 @@ local function AddGeneralExtras(dsc, yOffset)
 end
 
 local function AddDetectionExtras(dsc, yOffset)
-    yOffset = OneWoW_GUI:CreateSection(dsc, L["TOAST_LOOT_TYPES_HEADER"] or "Collection Types", yOffset)
+    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_LOOT_TYPES_HEADER"] or "Collection Types", yOffset = yOffset })
 
     local db   = GetToastsDB()
     local loot = db and db.loot or {}
@@ -111,7 +111,7 @@ local function AddDetectionExtras(dsc, yOffset)
 
     for _, entry in ipairs(types) do
         local capturedKey = entry.key
-        local cb = OneWoW_GUI:CreateCheckbox(nil, dsc, entry.label)
+        local cb = OneWoW_GUI:CreateCheckbox(dsc, { label = entry.label })
         cb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         cb:SetChecked(loot[capturedKey] ~= false)
         cb:SetScript("OnClick", function(self)
@@ -124,7 +124,7 @@ local function AddDetectionExtras(dsc, yOffset)
     end
 
     yOffset = yOffset - 8
-    yOffset = OneWoW_GUI:CreateSection(dsc, L["TOAST_SOUND_HEADER"] or "Alert Sound", yOffset)
+    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_SOUND_HEADER"] or "Alert Sound", yOffset = yOffset })
     yOffset = CreateSoundDropdown(dsc, "loot", yOffset)
 
     return yOffset
@@ -152,7 +152,7 @@ local function AddInstanceExtras(dsc, yOffset)
 end
 
 local function AddItemAlertsExtras(dsc, yOffset)
-    yOffset = OneWoW_GUI:CreateSection(dsc, L["TOAST_NOTES_TYPES_HEADER"] or "Alert Types", yOffset)
+    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_NOTES_TYPES_HEADER"] or "Alert Types", yOffset = yOffset })
 
     local db    = GetToastsDB()
     local notes = db and db.notes or {}
@@ -165,7 +165,7 @@ local function AddItemAlertsExtras(dsc, yOffset)
 
     for _, entry in ipairs(types) do
         local capturedKey = entry.key
-        local cb = OneWoW_GUI:CreateCheckbox(nil, dsc, entry.label)
+        local cb = OneWoW_GUI:CreateCheckbox(dsc, { label = entry.label })
         cb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         cb:SetChecked(notes[capturedKey] ~= false)
         cb:SetScript("OnClick", function(self)
@@ -178,7 +178,7 @@ local function AddItemAlertsExtras(dsc, yOffset)
     end
 
     yOffset = yOffset - 8
-    yOffset = OneWoW_GUI:CreateSection(dsc, L["TOAST_SOUND_HEADER"] or "Alert Sound", yOffset)
+    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_SOUND_HEADER"] or "Alert Sound", yOffset = yOffset })
     yOffset = CreateSoundDropdown(dsc, "notes", yOffset)
 
     return yOffset
@@ -232,7 +232,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
         statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)

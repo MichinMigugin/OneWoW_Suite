@@ -722,7 +722,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     mmDesc:SetJustifyH("LEFT")
     mmDesc:SetWordWrap(true)
 
-    local mmCheckbox = self:CreateCheckbox(nil, mmLeftPanel, "Show Minimap Button")
+    local mmCheckbox = self:CreateCheckbox(mmLeftPanel, { label = "Show Minimap Button" })
     mmCheckbox:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 12, -80)
     mmCheckbox:SetChecked(not isMinimapHidden)
     mmCheckbox:SetScript("OnClick", function(cb)

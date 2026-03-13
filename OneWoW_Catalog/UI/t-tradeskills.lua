@@ -934,7 +934,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         LayoutProfButtons()
     end)
 
-    searchBox = ns.UI.CreateEditBox(nil, searchHeader, {
+    searchBox = OneWoW_GUI:CreateEditBox(searchHeader, {
         height = 26,
         placeholderText = L["TRADESKILLS_SEARCH"],
         onTextChanged = function(text)
@@ -948,7 +948,7 @@ function ns.UI.CreateTradeskillsTab(parent)
     searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
 
-    local knownMeCheck = ns.UI.CreateCheckbox(nil, searchHeader, L["TRADESKILLS_SHOW_KNOWN_ME"])
+    local knownMeCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_KNOWN_ME"] })
     knownMeCheck:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -4)
     knownMeCheck:SetChecked(false)
     knownMeCheck:SetScript("OnClick", function(self)
@@ -956,7 +956,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         RefreshRecipeList()
     end)
 
-    local knownAltsCheck = ns.UI.CreateCheckbox(nil, searchHeader, L["TRADESKILLS_SHOW_KNOWN_ALTS"])
+    local knownAltsCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_KNOWN_ALTS"] })
     knownAltsCheck:SetPoint("LEFT", knownMeCheck.label, "RIGHT", 10, 0)
     knownAltsCheck:SetChecked(false)
     knownAltsCheck:SetScript("OnClick", function(self)
@@ -988,7 +988,7 @@ function ns.UI.CreateTradeskillsTab(parent)
     expDropdown:SetPoint("TOPLEFT", knownMeCheck, "BOTTOMLEFT", 0, -4)
     expDropdown:SetPoint("RIGHT", searchHeader, "RIGHT", -8, 0)
 
-    ns.UI.AttachFilterMenu(expDropdown, expDropText, {
+    OneWoW_GUI:AttachFilterMenu(expDropdown, {
         searchable = false,
         getActiveValue = function() return filterExpansion end,
         buildItems = function()

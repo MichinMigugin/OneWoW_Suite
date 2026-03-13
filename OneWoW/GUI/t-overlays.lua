@@ -409,7 +409,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
         statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general")
@@ -502,7 +502,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             arkStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
-        local arkToggleBtn = OneWoW_GUI:CreateButton(nil, arkRow, arkEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        local arkToggleBtn = OneWoW_GUI:CreateButton(arkRow, { text = arkEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 22 })
         arkToggleBtn:SetPoint("RIGHT", arkRow, "RIGHT", -6, 0)
         arkToggleBtn:SetScript("OnClick", function(self)
             local db = OneWoW.db.global.settings.overlays
@@ -561,7 +561,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             bagStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
-        local bagToggleBtn = OneWoW_GUI:CreateButton(nil, bagRow, bagEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        local bagToggleBtn = OneWoW_GUI:CreateButton(bagRow, { text = bagEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 22 })
         bagToggleBtn:SetPoint("RIGHT", bagRow, "RIGHT", -6, 0)
         bagToggleBtn:SetScript("OnClick", function(self)
             local db = OneWoW.db.global.settings.overlays
@@ -653,7 +653,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             bbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
-        local bbToggleBtn = OneWoW_GUI:CreateButton(nil, bbRow, bbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        local bbToggleBtn = OneWoW_GUI:CreateButton(bbRow, { text = bbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 22 })
         bbToggleBtn:SetPoint("RIGHT", bbRow, "RIGHT", -6, 0)
         bbToggleBtn:SetScript("OnClick", function(self)
             local db = OneWoW.db.global.settings.overlays
@@ -712,7 +712,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             owbStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
-        local owbToggleBtn = OneWoW_GUI:CreateButton(nil, owbRow, owbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        local owbToggleBtn = OneWoW_GUI:CreateButton(owbRow, { text = owbEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 22 })
         owbToggleBtn:SetPoint("RIGHT", owbRow, "RIGHT", -6, 0)
         owbToggleBtn:SetScript("OnClick", function(self)
             local db = OneWoW.db.global.settings.overlays
@@ -771,7 +771,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             elvStatusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
-        local elvToggleBtn = OneWoW_GUI:CreateButton(nil, elvRow, elvEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 22)
+        local elvToggleBtn = OneWoW_GUI:CreateButton(elvRow, { text = elvEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 22 })
         elvToggleBtn:SetPoint("RIGHT", elvRow, "RIGHT", -6, 0)
         elvToggleBtn:SetScript("OnClick", function(self)
             local db = OneWoW.db.global.settings.overlays
@@ -855,7 +855,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    local toggleBtn = OneWoW_GUI:CreateButton(nil, dsc, isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], 90, 24)
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
     toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
     toggleBtn:SetScript("OnClick", function(self)
         local nowEnabled = reg:IsEnabled("overlays", featureId)
@@ -900,7 +900,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         questNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         yOffset = yOffset - questNote:GetStringHeight() - 16
 
-        local vendorCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
+        local vendorCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_VENDOR_LABEL"] })
         vendorCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         vendorCb:SetChecked(reg:GetOverlaySetting(featureId, "applyToVendorItems") or false)
         vendorCb:SetScript("OnClick", function(self)
@@ -908,7 +908,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end)
         yOffset = yOffset - 30
 
-        local ahCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_AH_LABEL"])
+        local ahCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_AH_LABEL"] })
         ahCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         ahCb:SetChecked(reg:GetOverlaySetting(featureId, "applyToAuctionHouse") or false)
         ahCb:SetScript("OnClick", function(self)
@@ -938,7 +938,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
 
         local currentPos = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
         local posDD, posDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 160, text = currentPos })
-        OneWoW_GUI:AttachFilterMenu(posDD, posDDText, {
+        OneWoW_GUI:AttachFilterMenu(posDD, {
             searchable = false,
             buildItems = function()
                 local items = {}
@@ -956,7 +956,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         posDD:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         yOffset = yOffset - 26 - 16
 
-        local qualCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_QUALITY_COLORS_LABEL"])
+        local qualCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_QUALITY_COLORS_LABEL"] })
         qualCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         qualCb:SetChecked(reg:GetOverlaySetting(featureId, "useQualityColors") or false)
         qualCb:SetScript("OnClick", function(self)
@@ -964,7 +964,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end)
         yOffset = yOffset - 30 - 16
 
-        local vendorCb2 = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
+        local vendorCb2 = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_VENDOR_LABEL"] })
         vendorCb2:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         vendorCb2:SetChecked(reg:GetOverlaySetting(featureId, "applyToVendorItems") ~= false)
         vendorCb2:SetScript("OnClick", function(self)
@@ -972,7 +972,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end)
         yOffset = yOffset - 30
 
-        local ahCb2 = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_AH_LABEL"])
+        local ahCb2 = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_AH_LABEL"] })
         ahCb2:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         ahCb2:SetChecked(reg:GetOverlaySetting(featureId, "applyToAuctionHouse") or false)
         ahCb2:SetScript("OnClick", function(self)
@@ -987,9 +987,11 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         yOffset = yOffset - fsLabel:GetStringHeight() - 6
 
         local currentFS = reg:GetOverlaySetting(featureId, "fontSize") or 10
-        local fsSlider = OneWoW_GUI:CreateSlider(dsc, 7, 20, 1, currentFS, function(val)
-            reg:SetOverlaySetting(featureId, "fontSize", val)
-        end, 240, "%d")
+        local fsSlider = OneWoW_GUI:CreateSlider(dsc, {
+            minVal = 7, maxVal = 20, step = 1, currentVal = currentFS,
+            onChange = function(val) reg:SetOverlaySetting(featureId, "fontSize", val) end,
+            width = 240, fmt = "%d",
+        })
         fsSlider:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         yOffset = yOffset - 36 - 10
 
@@ -1008,7 +1010,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
 
         local currentFont = reg:GetOverlaySetting(featureId, "fontFamily") or "Friz Quadrata TF"
         local fontDD, fontDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = currentFont })
-        OneWoW_GUI:AttachFilterMenu(fontDD, fontDDText, {
+        OneWoW_GUI:AttachFilterMenu(fontDD, {
             searchable = true,
             buildItems = function()
                 local items = {}
@@ -1018,7 +1020,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 return items
             end,
             onSelect = function(value, text)
-                fontDDText:SetText(text)
+                fontDD._text:SetText(text)
                 reg:SetOverlaySetting(featureId, "fontFamily", value)
                 OneWoW.OverlayEngine:Refresh()
             end,
@@ -1039,7 +1041,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         local outlineDisplayMap = {[""] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline"}
         local outlineValueMap = {["None"] = "", ["Outline"] = "OUTLINE", ["Thick Outline"] = "THICKOUTLINE"}
         local outlineDD, outlineDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = outlineDisplayMap[currentOutline] })
-        OneWoW_GUI:AttachFilterMenu(outlineDD, outlineDDText, {
+        OneWoW_GUI:AttachFilterMenu(outlineDD, {
             searchable = false,
             buildItems = function()
                 local items = {}
@@ -1049,7 +1051,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 return items
             end,
             onSelect = function(value, text)
-                outlineDDText:SetText(text)
+                outlineDD._text:SetText(text)
                 reg:SetOverlaySetting(featureId, "fontOutline", outlineValueMap[value])
                 OneWoW.OverlayEngine:Refresh()
             end,
@@ -1097,7 +1099,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
 
     local currentPos = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
     local posDropdown, posDropdownText = OneWoW_GUI:CreateDropdown(dsc, { width = 160, text = currentPos })
-    OneWoW_GUI:AttachFilterMenu(posDropdown, posDropdownText, {
+    OneWoW_GUI:AttachFilterMenu(posDropdown, {
         searchable = false,
         buildItems = function()
             local items = {}
@@ -1124,10 +1126,14 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     rightY = rightY - scaleLabel:GetStringHeight() - 6
 
     local currentScale = reg:GetOverlaySetting(featureId, "scale") or 1.0
-    local scaleSlider  = OneWoW_GUI:CreateSlider(dsc, 0.5, 2.0, 0.1, currentScale, function(val)
-        reg:SetOverlaySetting(featureId, "scale", val)
-        RefreshPreview()
-    end, 160)
+    local scaleSlider  = OneWoW_GUI:CreateSlider(dsc, {
+        minVal = 0.5, maxVal = 2.0, step = 0.1, currentVal = currentScale,
+        onChange = function(val)
+            reg:SetOverlaySetting(featureId, "scale", val)
+            RefreshPreview()
+        end,
+        width = 160,
+    })
     scaleSlider:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
     scaleSlider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
     rightY = rightY - 36 - 10
@@ -1139,10 +1145,14 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     rightY = rightY - alphaLabel:GetStringHeight() - 6
 
     local currentAlpha = reg:GetOverlaySetting(featureId, "alpha") or 1.0
-    local alphaSlider  = OneWoW_GUI:CreateSlider(dsc, 0.1, 1.0, 0.1, currentAlpha, function(val)
-        reg:SetOverlaySetting(featureId, "alpha", val)
-        RefreshPreview()
-    end, 160)
+    local alphaSlider  = OneWoW_GUI:CreateSlider(dsc, {
+        minVal = 0.1, maxVal = 1.0, step = 0.1, currentVal = currentAlpha,
+        onChange = function(val)
+            reg:SetOverlaySetting(featureId, "alpha", val)
+            RefreshPreview()
+        end,
+        width = 160,
+    })
     alphaSlider:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
     alphaSlider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
     rightY = rightY - 36 - 16
@@ -1165,7 +1175,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
 
     yOffset = math.min(yOffset, rightY)
 
-    local vendorCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_VENDOR_LABEL"])
+    local vendorCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_VENDOR_LABEL"] })
     vendorCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     local vendorEnabled = reg:GetOverlaySetting(featureId, "applyToVendorItems") or false
     vendorCb:SetChecked(vendorEnabled)
@@ -1174,7 +1184,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     end)
     yOffset = yOffset - 30
 
-    local ahCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_AH_LABEL"])
+    local ahCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_AH_LABEL"] })
     ahCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     local ahEnabled = reg:GetOverlaySetting(featureId, "applyToAuctionHouse") or false
     ahCb:SetChecked(ahEnabled)
@@ -1184,7 +1194,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     yOffset = yOffset - 30 - 10
 
     if featureId == "junk" or featureId == "protected" then
-        local tooltipCb = OneWoW_GUI:CreateCheckbox(nil, dsc, L["OVR_TOOLTIP_LABEL"])
+        local tooltipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_TOOLTIP_LABEL"] })
         tooltipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         tooltipCb:SetChecked(reg:GetOverlaySetting(featureId, "showInTooltip") ~= false)
         tooltipCb:SetScript("OnClick", function(self)

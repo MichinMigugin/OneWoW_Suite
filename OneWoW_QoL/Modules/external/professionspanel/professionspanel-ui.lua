@@ -74,7 +74,7 @@ function ProfPanelUI:CreatePanel()
     scrollContainer:SetClipsChildren(true)
     panel.scrollContainer = scrollContainer
 
-    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame("OneWoW_QoL_ProfPanel_Scroll", scrollContainer)
+    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(scrollContainer, { name = "OneWoW_QoL_ProfPanel_Scroll" })
     scrollFrame:SetPoint("TOPLEFT", scrollContainer, "TOPLEFT", 8, 0)
     scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", -8, 0)
     OneWoW_GUI:StyleScrollBar(scrollFrame, { container = scrollContainer, offset = -4 })

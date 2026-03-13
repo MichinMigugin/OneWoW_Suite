@@ -513,7 +513,8 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
         local rowRefresh
 
         local prefs = GetPreferences()
-        yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+        yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+            yOffset = yOffset,
             label = mountInfo.label,
             createContent = function(container)
                 local mountBtn = CreateFrame("Button", nil, container, "BackdropTemplate")
@@ -651,7 +652,8 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     local druidPrefs = GetPreferences()
     local druidRowRefresh
     local UpdateDruidRow
-    yOffset, druidRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+    yOffset, druidRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+        yOffset = yOffset,
         label = L["AUTOMOUNT_DRUID_MODE_LABEL"],
         description = L["AUTOMOUNT_DRUID_MODE_DESC"],
         value = druidPrefs.druidEnabled,
@@ -680,7 +682,8 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     local cancelPrefs = GetPreferences()
     local cancelRowRefresh
     local UpdateCancelRow
-    yOffset, cancelRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+    yOffset, cancelRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+        yOffset = yOffset,
         label = L["AUTOMOUNT_DRUID_CANCEL_LABEL"],
         description = L["AUTOMOUNT_DRUID_CANCEL_DESC"],
         value = cancelPrefs.druidCancelTravelForm,
@@ -753,7 +756,7 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
         popup._titleBar = result.titleBar
         local popupContent = result.contentFrame
 
-        popup._searchBox = OneWoW_GUI:CreateEditBox(nil, popupContent, { width = 220, height = 24, placeholderText = L["AUTOMOUNT_SEARCH"], maxLetters = 50 })
+        popup._searchBox = OneWoW_GUI:CreateEditBox(popupContent, { width = 220, height = 24, placeholderText = L["AUTOMOUNT_SEARCH"], maxLetters = 50 })
         popup._searchBox:SetPoint("TOPLEFT",  popupContent, "TOPLEFT",  15, -10)
         popup._searchBox:SetPoint("TOPRIGHT", popupContent, "TOPRIGHT", -15, -10)
 
@@ -853,7 +856,7 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
         btnDiv:SetPoint("BOTTOMRIGHT", popupContent, "BOTTOMRIGHT", -1, 42)
         btnDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        local closeBtn = OneWoW_GUI:CreateFitTextButton(popupContent, L["AUTOMOUNT_CLOSE"], { height = 32 })
+        local closeBtn = OneWoW_GUI:CreateFitTextButton(popupContent, { text = L["AUTOMOUNT_CLOSE"], height = 32 })
         closeBtn:SetPoint("BOTTOM", popupContent, "BOTTOM", 0, 6)
         closeBtn:SetScript("OnClick", function() popup:Hide() end)
 

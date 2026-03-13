@@ -10,7 +10,7 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 function GUI:CreateSettingsMainTab(parent)
     local L = OneWoW.L or {}
 
-    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame("OneWoW_SettingsScroll", parent)
+    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_SettingsScroll" })
     content:SetHeight(800)
 
     local yOffset = -10
@@ -37,7 +37,7 @@ function GUI:CreateSettingsMainTab(parent)
     discordLinkLabel:SetText(L["DISCORD_LABEL"] or "Discord")
     discordLinkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local discordLinkBox = GUI:CreateEditBox("OneWoW_SettingsDiscord", linksContainer, 300, 24)
+    local discordLinkBox = OneWoW_GUI:CreateEditBox(linksContainer, { name = "OneWoW_SettingsDiscord", width = 300, height = 24 })
     discordLinkBox:SetPoint("LEFT", discordLinkLabel, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     discordLinkBox:SetText(L["DISCORD_URL"] or "https://discord.gg/6vnabDVnDu")
     discordLinkBox:SetAutoFocus(false)
@@ -52,7 +52,7 @@ function GUI:CreateSettingsMainTab(parent)
     websiteLinkLabel:SetText(L["WEBSITE_LABEL"] or "Website")
     websiteLinkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local websiteLinkBox = GUI:CreateEditBox("OneWoW_SettingsWebsite", linksContainer, 300, 24)
+    local websiteLinkBox = OneWoW_GUI:CreateEditBox(linksContainer, { name = "OneWoW_SettingsWebsite", width = 300, height = 24 })
     websiteLinkBox:SetPoint("LEFT", websiteLinkLabel, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     websiteLinkBox:SetText(L["WEBSITE_URL"] or "https://wow2.xyz/")
     websiteLinkBox:SetAutoFocus(false)
@@ -85,7 +85,7 @@ function GUI:CreateSettingsMainTab(parent)
     resetDesc:SetJustifyH("LEFT")
     resetDesc:SetWordWrap(true)
 
-    local resetBtn = OneWoW_GUI:CreateButton("OneWoW_ResetUIBtn", resetContainer, L["RESET_UI_BTN"] or "Reset Window", 160, 28)
+    local resetBtn = OneWoW_GUI:CreateButton(resetContainer, { name = "OneWoW_ResetUIBtn", text = L["RESET_UI_BTN"] or "Reset Window", width = 160, height = 28 })
     resetBtn:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -58)
     resetBtn:SetScript("OnClick", function()
         GUI:ResetUIToDefaults()

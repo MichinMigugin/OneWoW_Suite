@@ -91,7 +91,8 @@ function ns.UI:CreateMainFrame(defaultTab)
         addon.db.global.mainFrameSize = { width = w, height = h }
     end)
 
-    local titleBg = OneWoW_GUI:CreateTitleBar(frame, L["ADDON_TITLE_FRAME"], {
+    local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
+        title = L["ADDON_TITLE_FRAME"],
         showBrand = true,
         onClose = function() frame:Hide() end,
     })

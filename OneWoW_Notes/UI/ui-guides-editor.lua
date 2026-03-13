@@ -51,7 +51,7 @@ local function MakeLabel(parent, text, x, y)
 end
 
 local function MakeMultiLineScrollBox(parent, font, fontSize)
-    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(nil, parent)
+    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(parent, {})
     scrollFrame:ClearAllPoints()
     scrollFrame:SetAllPoints(parent)
 
@@ -151,7 +151,11 @@ function ns.UI.ShowGuideEditorDialog(guideID, onSaveCallback)
     hintLabel:SetWordWrap(true)
 
     yOff = yOff - 24
-    local markupContainer = OneWoW_GUI:CreateFrame(nil, content, 1, 1)
+    local markupContainer = OneWoW_GUI:CreateFrame(content, {
+        width = 1,
+        height = 1,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
     markupContainer:ClearAllPoints()
     markupContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     markupContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
@@ -225,7 +229,7 @@ function ns.UI.ShowStepEditorDialog(guideID, stepIndex, onSaveCallback)
 
     MakeLabel(content, L["GUIDES_STEP_TITLE"], 10, yOff)
     yOff = yOff - 16
-    local titleBox = OneWoW_GUI:CreateEditBox(nil, content, { width = 460, height = 28 })
+    local titleBox = OneWoW_GUI:CreateEditBox(content, { width = 460, height = 28 })
     titleBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     titleBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
     if step and step.title then
@@ -237,7 +241,11 @@ function ns.UI.ShowStepEditorDialog(guideID, stepIndex, onSaveCallback)
     yOff = yOff - 36
     MakeLabel(content, L["GUIDES_STEP_DESC"], 10, yOff)
     yOff = yOff - 16
-    local descContainer = OneWoW_GUI:CreateFrame(nil, content, 1, 80)
+    local descContainer = OneWoW_GUI:CreateFrame(content, {
+        width = 1,
+        height = 80,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
     descContainer:ClearAllPoints()
     descContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     descContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
@@ -255,7 +263,7 @@ function ns.UI.ShowStepEditorDialog(guideID, stepIndex, onSaveCallback)
     factionDD:SetSelected(step and step.faction or "both")
     dialog._factionDD = factionDD
 
-    local optionalCB = OneWoW_GUI:CreateCheckbox(nil, content, L["GUIDES_OPTIONAL"])
+    local optionalCB = OneWoW_GUI:CreateCheckbox(content, { label = L["GUIDES_OPTIONAL"] })
     optionalCB:SetPoint("TOPLEFT", content, "TOPLEFT", 280, yOff + 4)
     optionalCB:SetChecked(step and step.optional or false)
     dialog._optionalCB = optionalCB
@@ -338,7 +346,7 @@ function ns.UI.ShowObjectiveEditorDialog(guideID, stepIndex, objIndex, onSaveCal
     yOff = yOff - 36
     MakeLabel(content, L["GUIDES_OBJ_DESC"], 10, yOff)
     yOff = yOff - 16
-    local descBox = OneWoW_GUI:CreateEditBox(nil, content, { width = 460, height = 28 })
+    local descBox = OneWoW_GUI:CreateEditBox(content, { width = 460, height = 28 })
     descBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     descBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOff)
     if obj and obj.description then
@@ -373,7 +381,7 @@ function ns.UI.ShowObjectiveEditorDialog(guideID, stepIndex, objIndex, onSaveCal
             lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
             pY = pY - 16
-            local box = OneWoW_GUI:CreateEditBox(nil, paramContainer, { width = 200, height = 28 })
+            local box = OneWoW_GUI:CreateEditBox(paramContainer, { width = 200, height = 28 })
             box:SetPoint("TOPLEFT", paramContainer, "TOPLEFT", 10, pY)
             box:SetNumeric(true)
             local val = tostring(existingParams[field.key] or "")
@@ -453,7 +461,7 @@ function ns.UI.ShowGuideImportDialog(onImportCallback)
 
     MakeLabel(content, L["LABEL_NOTE_TITLE"], 10, yOff)
     yOff = yOff - 16
-    local titleBox = OneWoW_GUI:CreateEditBox(nil, content, { width = 360, height = 28 })
+    local titleBox = OneWoW_GUI:CreateEditBox(content, { width = 360, height = 28 })
     titleBox:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     dialog._titleBox = titleBox
 
@@ -486,7 +494,11 @@ function ns.UI.ShowGuideImportDialog(onImportCallback)
     markupHint:SetWordWrap(true)
 
     yOff = yOff - 30
-    local importContainer = OneWoW_GUI:CreateFrame(nil, content, 1, 1)
+    local importContainer = OneWoW_GUI:CreateFrame(content, {
+        width = 1,
+        height = 1,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
     importContainer:ClearAllPoints()
     importContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOff)
     importContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)
@@ -529,7 +541,11 @@ function ns.UI.ShowGuideExportDialog(guideID)
     hintText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     hintText:SetWordWrap(true)
 
-    local exportContainer = OneWoW_GUI:CreateFrame(nil, content, 1, 1)
+    local exportContainer = OneWoW_GUI:CreateFrame(content, {
+        width = 1,
+        height = 1,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
     exportContainer:ClearAllPoints()
     exportContainer:SetPoint("TOPLEFT", hintText, "BOTTOMLEFT", 0, -10)
     exportContainer:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 10)

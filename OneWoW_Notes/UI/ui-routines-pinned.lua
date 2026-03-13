@@ -21,7 +21,12 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
     local SECTION_H = 20
     local ROW_H = 18
 
-    local f = OneWoW_GUI:CreateFrame("OneWoW_Notes_RoutinePin_" .. routineID:gsub("-", ""), UIParent, W, H)
+    local f = OneWoW_GUI:CreateFrame(UIParent, {
+        name = "OneWoW_Notes_RoutinePin_" .. routineID:gsub("-", ""),
+        width = W,
+        height = H,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
     f:SetFrameStrata("MEDIUM")
     f:SetToplevel(true)
     f:SetClampedToScreen(true)
@@ -35,7 +40,8 @@ function ns.UI.CreateRoutinePinnedWindow(routineID)
         f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     end
 
-    local titleBar = OneWoW_GUI:CreateTitleBar(f, routine.title or L["ROUTINES_UNTITLED"], {
+    local titleBar = OneWoW_GUI:CreateTitleBar(f, {
+        title = routine.title or L["ROUTINES_UNTITLED"],
         height = TITLE_H,
         onClose = function()
             ns.RoutinesEngine:UnpinRoutine(routineID)

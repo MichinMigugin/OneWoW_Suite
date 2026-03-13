@@ -57,7 +57,7 @@ function ns.UI.CreateNPCsTab(parent)
     controlTitle:SetText(L["NPCS_CONTROLS"] or "NPCs Controls")
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addTargetBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_ADD_TARGET"] or "Add Target", 100, 25)
+    local addTargetBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_TARGET"] or "Add Target", width = 100, height = 25 })
     ns.UI.AutoResizeButton(addTargetBtn, 80, 200)
     addTargetBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addTargetBtn:SetScript("OnClick", function()
@@ -85,7 +85,7 @@ function ns.UI.CreateNPCsTab(parent)
     end)
     addTargetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local addManualBtn = ns.UI.CreateButton(nil, controlPanel, L["BUTTON_MANUAL_ENTRY"] or "Manual", 90, 25)
+    local addManualBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"] or "Manual", width = 90, height = 25 })
     ns.UI.AutoResizeButton(addManualBtn, 70, 200)
     addManualBtn:SetPoint("LEFT", addTargetBtn, "RIGHT", 5, 0)
     addManualBtn:SetScript("OnClick", function()
@@ -839,21 +839,21 @@ function ns.UI.CreateNPCsTab(parent)
         local yOffset = 0
 
         if #newNPCs > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, L["NOTES_SECTION_NEW"] or "New", yOffset)
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["NOTES_SECTION_NEW"] or "New", yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
         for _, n in ipairs(newNPCs) do BuildNPCRow(n, yOffset) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset)
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
         for _, n in ipairs(favorites) do BuildNPCRow(n, yOffset) yOffset = yOffset - 55 end
 
         if #regular > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, L["TAB_NPCS"], yOffset)
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["TAB_NPCS"], yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
@@ -877,7 +877,7 @@ local function MakeNPCLabel(parent, text, x, y)
 end
 
 local function MakeNPCInput(parent, x, y, w)
-    local input = OneWoW_GUI:CreateEditBox(nil, parent, {
+    local input = OneWoW_GUI:CreateEditBox(parent, {
         width = w,
         height = 26,
     })
@@ -1170,7 +1170,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
         self:ClearFocus()
     end)
 
-    local setLocBtn = ns.UI.CreateButton(nil, content, L["NPC_SET_CURRENT"] or "Set Current", 80, 25)
+    local setLocBtn = OneWoW_GUI:CreateButton(content, { text = L["NPC_SET_CURRENT"] or "Set Current", width = 80, height = 25 })
     setLocBtn:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X + 110, yPos - LBL_GAP)
     ns.UI.AutoResizeButton(setLocBtn, 80, 200)
     setLocBtn:SetScript("OnEnter", function(self)

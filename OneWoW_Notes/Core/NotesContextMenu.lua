@@ -179,7 +179,7 @@ local function GetHyperlinkDialog()
     helpLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     dlg.helpLabel = helpLabel
 
-    local insertBtn = ns.UI.CreateButton(nil, dlg, L["CTX_BUTTON_INSERT"], 100, 28)
+    local insertBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_INSERT"], width = 100, height = 28 })
     insertBtn:SetPoint("BOTTOMLEFT", dlg, "BOTTOMLEFT", 12, 10)
     insertBtn:SetScript("OnClick", function()
         local linkType = dlg.selectedLinkType or "item"
@@ -196,7 +196,7 @@ local function GetHyperlinkDialog()
         end
     end)
 
-    local cancelBtn = ns.UI.CreateButton(nil, dlg, L["CTX_BUTTON_CANCEL"], 100, 28)
+    local cancelBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_CANCEL"], width = 100, height = 28 })
     cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     cancelBtn:SetScript("OnClick", function()
         dlg:Hide()
@@ -262,7 +262,7 @@ local function GetWaypointDialog()
     descEditBox:SetPoint("TOPLEFT", descLbl, "BOTTOMLEFT", 0, -6)
     dlg.descEditBox = descEditBox
 
-    local insertBtn = ns.UI.CreateButton(nil, dlg, L["CTX_BUTTON_INSERT"], 100, 28)
+    local insertBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_INSERT"], width = 100, height = 28 })
     insertBtn:SetPoint("BOTTOMLEFT", dlg, "BOTTOMLEFT", 12, 10)
     insertBtn:SetScript("OnClick", function()
         local mapID = dlg.mapEditBox:GetNumber()
@@ -293,7 +293,7 @@ local function GetWaypointDialog()
         end
     end)
 
-    local cancelBtn = ns.UI.CreateButton(nil, dlg, L["CTX_BUTTON_CANCEL"], 100, 28)
+    local cancelBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_CANCEL"], width = 100, height = 28 })
     cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     cancelBtn:SetScript("OnClick", function()
         dlg:Hide()

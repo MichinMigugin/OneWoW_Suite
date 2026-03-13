@@ -5,6 +5,7 @@ local GUI = OneWoW.GUI
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local Constants = OneWoW_GUI.Constants
 local RESERVED_DEFAULT = "Default"
 
 -- ============================================================
@@ -293,7 +294,7 @@ function GUI:ShowSettingsProfileExportDialog(profileName, serializedStr)
     hint:SetText("Select all and copy (Ctrl+A, Ctrl+C) to share this profile:")
     hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local textBG = OneWoW_GUI:CreateFrame(nil, cf, 600, 420)
+    local textBG = OneWoW_GUI:CreateFrame(cf, { width = 600, height = 420, backdrop = Constants.BACKDROP_SOFT })
     textBG:ClearAllPoints()
     textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
@@ -339,7 +340,7 @@ function GUI:ShowSettingsProfileImportDialog(onImported)
     hint:SetText("Paste exported profile data below, then click Import:")
     hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local textBG = OneWoW_GUI:CreateFrame(nil, cf, 600, 380)
+    local textBG = OneWoW_GUI:CreateFrame(cf, { width = 600, height = 380, backdrop = Constants.BACKDROP_SOFT })
     textBG:ClearAllPoints()
     textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
@@ -386,10 +387,12 @@ function GUI:CreateProfilesTab(parent)
     local panelB = CreateFrame("Frame", nil, parent)
     panelB:Hide()
 
-    local tabBtns, tabsBottomY = OneWoW_GUI:CreateFitFrameButtons(parent, -4, {
-        { text = "UI & Addon Settings", value = "settings",    isActive = true },
-        { text = "Character Backup",    value = "charprofiles"                 },
-    }, {
+    local tabBtns, tabsBottomY = OneWoW_GUI:CreateFitFrameButtons(parent, {
+        yOffset = -4,
+        items = {
+            { text = "UI & Addon Settings", value = "settings",    isActive = true },
+            { text = "Character Backup",    value = "charprofiles"                 },
+        },
         height = 30,
         gap    = 6,
         onSelect = function(value)
@@ -411,7 +414,7 @@ function GUI:CreateProfilesTab(parent)
     end
 
     -- ── Panel A: UI & Addon Settings Profiles ─────────────────
-    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame("OneWoW_ProfilesScroll", panelA)
+    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(panelA, { name = "OneWoW_ProfilesScroll" })
 
     local yOffset = -10
 
@@ -426,22 +429,22 @@ function GUI:CreateProfilesTab(parent)
 
     yOffset = yOffset - 36
 
-    local saveSection = OneWoW_GUI:CreateSectionHeader(content, "Save New Profile", yOffset)
+    local saveSection = OneWoW_GUI:CreateSectionHeader(content, { title = "Save New Profile", yOffset = yOffset })
     yOffset = saveSection.bottomY - 8
 
-    local nameInput = GUI:CreateEditBox("OneWoW_ProfileNameInput", content, 280, 26)
+    local nameInput = OneWoW_GUI:CreateEditBox(content, { name = "OneWoW_ProfileNameInput", width = 280, height = 26 })
     nameInput:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
     nameInput:SetAutoFocus(false)
 
-    local saveBtn = OneWoW_GUI:CreateButton(nil, content, "Save Profile", 130, 26)
+    local saveBtn = OneWoW_GUI:CreateButton(content, { text = "Save Profile", width = 130, height = 26 })
     saveBtn:SetPoint("LEFT", nameInput, "RIGHT", 8, 0)
 
     yOffset = yOffset - 40
 
-    local listHeaderSection = OneWoW_GUI:CreateSectionHeader(content, "Saved Profiles", yOffset)
+    local listHeaderSection = OneWoW_GUI:CreateSectionHeader(content, { title = "Saved Profiles", yOffset = yOffset })
     yOffset = listHeaderSection.bottomY - 8
 
-    local importBtn = OneWoW_GUI:CreateButton(nil, content, "Import Profile", 130, 24)
+    local importBtn = OneWoW_GUI:CreateButton(content, { text = "Import Profile", width = 130, height = 24 })
     importBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset + 32)
 
     local listContainer = CreateFrame("Frame", nil, content)
@@ -491,7 +494,7 @@ function GUI:CreateProfilesTab(parent)
             local isDefault = (name == RESERVED_DEFAULT)
             local isActive  = (activeProfile == name)
 
-            local card = OneWoW_GUI:CreateFrame(nil, listContainer, 100, CARD_H)
+            local card = OneWoW_GUI:CreateFrame(listContainer, { width = 100, height = CARD_H, backdrop = Constants.BACKDROP_SOFT })
             card:ClearAllPoints()
             card:SetPoint("TOPLEFT",  listContainer, "TOPLEFT",  0, yOff)
             card:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", 0, yOff)
@@ -555,7 +558,7 @@ function GUI:CreateProfilesTab(parent)
             local btnY = 6
 
             if not isDefault then
-                local delBtn = OneWoW_GUI:CreateButton(nil, card, "Delete", 76, 26)
+                local delBtn = OneWoW_GUI:CreateButton(card, { text = "Delete", width = 76, height = 26 })
                 delBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
                 delBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
                 delBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
@@ -578,27 +581,27 @@ function GUI:CreateProfilesTab(parent)
                     end)
                 end)
 
-                local exportBtn = OneWoW_GUI:CreateButton(nil, card, "Export", 76, 26)
+                local exportBtn = OneWoW_GUI:CreateButton(card, { text = "Export", width = 76, height = 26 })
                 exportBtn:SetPoint("RIGHT", delBtn, "LEFT", -6, 0)
                 exportBtn:SetScript("OnClick", function()
                     local serialized = OneWoW.Profiles.SerializeProfile(capturedName, data)
                     if serialized then GUI:ShowSettingsProfileExportDialog(capturedName, serialized) end
                 end)
 
-                local loadBtn = OneWoW_GUI:CreateButton(nil, card, "Load", 76, 26)
+                local loadBtn = OneWoW_GUI:CreateButton(card, { text = "Load", width = 76, height = 26 })
                 loadBtn:SetPoint("RIGHT", exportBtn, "LEFT", -6, 0)
                 loadBtn:SetScript("OnClick", function()
                     OneWoW.Profiles.ApplySettings(data, capturedName)
                 end)
             else
-                local exportBtn = OneWoW_GUI:CreateButton(nil, card, "Export", 90, 26)
+                local exportBtn = OneWoW_GUI:CreateButton(card, { text = "Export", width = 90, height = 26 })
                 exportBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
                 exportBtn:SetScript("OnClick", function()
                     local serialized = OneWoW.Profiles.SerializeProfile(RESERVED_DEFAULT, data)
                     if serialized then GUI:ShowSettingsProfileExportDialog(RESERVED_DEFAULT, serialized) end
                 end)
 
-                local restoreBtn = OneWoW_GUI:CreateButton(nil, card, "Restore Now", 110, 26)
+                local restoreBtn = OneWoW_GUI:CreateButton(card, { text = "Restore Now", width = 110, height = 26 })
                 restoreBtn:SetPoint("RIGHT", exportBtn, "LEFT", -6, 0)
                 restoreBtn:SetScript("OnClick", function()
                     OneWoW.Profiles.ApplySettings(data, RESERVED_DEFAULT)

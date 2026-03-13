@@ -462,7 +462,7 @@ local function PopulateExpansionDropdown(panels)
     local addon = GetDataAddon()
     if not addon or not addon.QuestData then return end
 
-    ns.UI.AttachFilterMenu(panels.expDropdown, panels.expText, {
+    OneWoW_GUI:AttachFilterMenu(panels.expDropdown, {
         searchable = false,
         getActiveValue = function() return expansionFilter end,
         buildItems = function()
@@ -491,7 +491,7 @@ PopulateZoneDropdown = function(panels)
     local addon = GetDataAddon()
     if not addon or not addon.QuestData then return end
 
-    ns.UI.AttachFilterMenu(panels.zoneDropdown, panels.zoneText, {
+    OneWoW_GUI:AttachFilterMenu(panels.zoneDropdown, {
         searchable = true,
         getActiveValue = function() return zoneFilter end,
         buildItems = function()
@@ -514,7 +514,7 @@ PopulateZoneDropdown = function(panels)
 end
 
 local function SetupTypeDropdown(panels)
-    ns.UI.AttachFilterMenu(panels.typeDropdown, panels.typeText, {
+    OneWoW_GUI:AttachFilterMenu(panels.typeDropdown, {
         searchable = false,
         getActiveValue = function() return typeFilter end,
         buildItems = function()
@@ -534,7 +534,7 @@ local function SetupTypeDropdown(panels)
 end
 
 local function SetupQuestTypeDropdown(panels)
-    ns.UI.AttachFilterMenu(panels.qTypeDropdown, panels.qTypeText, {
+    OneWoW_GUI:AttachFilterMenu(panels.qTypeDropdown, {
         searchable = false,
         getActiveValue = function() return questTypeFilter end,
         buildItems = function()
@@ -580,10 +580,10 @@ function ns.UI.CreateQuestsTab(parent)
     panels.listTitle:SetText(L["QUESTS_LIST_TITLE"])
     panels.detailTitle:SetText(L["QUESTS_DETAIL_TITLE"])
 
-    local clearBtn = ns.UI.CreateFitTextButton(leftHeader, L["QUESTS_CLEAR"], { height = 26, minWidth = 34 })
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = L["QUESTS_CLEAR"], height = 26, minWidth = 34 })
     clearBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
 
-    local searchBox = ns.UI.CreateEditBox(nil, leftHeader, {
+    local searchBox = OneWoW_GUI:CreateEditBox(leftHeader, {
         height = 26,
         placeholderText = L["QUESTS_SEARCH"],
         onTextChanged = function(text)

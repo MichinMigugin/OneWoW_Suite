@@ -170,10 +170,13 @@ function OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
         ApplyTheme()
         if self.GUI and self.GUI.FullReset then
+            local wasShown = self.GUI:GetMainWindow() and self.GUI:GetMainWindow():IsShown()
             self.GUI:FullReset()
-            C_Timer.After(0.1, function()
-                if self.GUI and self.GUI.Show then self.GUI:Show() end
-            end)
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    if self.GUI and self.GUI.Show then self.GUI:Show() end
+                end)
+            end
         end
     end)
 
