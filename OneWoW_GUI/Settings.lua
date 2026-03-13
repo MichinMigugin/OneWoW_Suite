@@ -214,6 +214,20 @@ function OneWoW_GUI:GetFontByKey(key)
     return nil
 end
 
+-- Safely apply a font file; falls back to GameFontNormal if the asset is missing.
+-- Use this when applying fonts from GetFont/GetFontByKey to avoid errors for missing files.
+function OneWoW_GUI:SafeSetFont(fontString, fontPath, size, flags)
+    if not fontString then return end
+    if not fontPath then
+        fontString:SetFontObject(GameFontNormal)
+        return
+    end
+    local ok = pcall(fontString.SetFont, fontString, fontPath, size or 12, flags or "")
+    if not ok then
+        fontString:SetFontObject(GameFontNormal)
+    end
+end
+
 function OneWoW_GUI:MigrateLSMFontName(lsmName)
     if not lsmName then return nil end
     return LSM_NAME_TO_KEY[lsmName]
@@ -549,11 +563,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local fontPreview = fontContainer:CreateFontString(nil, "OVERLAY")
     fontPreview:SetPoint("TOPRIGHT", fontContainer, "TOPRIGHT", -15, -12)
-    if currentFontData and currentFontData.file then
-        fontPreview:SetFont(currentFontData.file, 14)
-    else
-        fontPreview:SetFontObject(GameFontNormal)
-    end
+    OneWoW_GUI:SafeSetFont(fontPreview, currentFontData and currentFontData.file, 14)
     fontPreview:SetText("Preview: AaBbCc 123")
     fontPreview:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
 
@@ -632,11 +642,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
             fbtn.text = fbtn:CreateFontString(nil, "OVERLAY")
             fbtn.text:SetPoint("LEFT", 8, 0)
-            if fontInfo.file then
-                fbtn.text:SetFont(fontInfo.file, 13)
-            else
-                fbtn.text:SetFontObject(GameFontNormal)
-            end
+            OneWoW_GUI:SafeSetFont(fbtn.text, fontInfo.file, 13)
             fbtn.text:SetText(fontInfo.label)
             fbtn.text:SetTextColor(0.9, 0.9, 0.9)
 
@@ -655,11 +661,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             fbtn:SetScript("OnClick", function()
                 menu:Hide()
                 fontDropText:SetText(capturedLabel)
-                if capturedFile then
-                    fontPreview:SetFont(capturedFile, 14)
-                else
-                    fontPreview:SetFontObject(GameFontNormal)
-                end
+                OneWoW_GUI:SafeSetFont(fontPreview, capturedFile, 14)
                 fontPreview:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 OneWoW_GUI:SetSetting("font", capturedKey)
             end)

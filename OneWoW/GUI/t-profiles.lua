@@ -450,7 +450,7 @@ function GUI:CreateProfilesTab(parent)
     listContainer:SetHeight(20)
 
     local function RefreshListing()
-        GUI:ClearFrame(listContainer)
+        OneWoW_GUI:ClearFrame(listContainer)
 
         local profiles = OneWoW.db.global.profiles
         if not profiles then profiles = {} end

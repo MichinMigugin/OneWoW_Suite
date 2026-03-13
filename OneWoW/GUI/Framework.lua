@@ -36,7 +36,7 @@ function GUI:ApplyFont(fs, size)
         size = currentSize or 13
     end
     if size and size > 0 then
-        fs:SetFont(fontPath, size)
+        OneWoW_GUI:SafeSetFont(fs, fontPath, size)
     end
 end
 
@@ -47,13 +47,13 @@ function GUI:ApplyFontToFrame(frame)
     for _, region in ipairs({frame:GetRegions()}) do
         if region.GetFont and region.SetFont then
             local _, sz = region:GetFont()
-            if sz and sz > 0 then region:SetFont(fontPath, sz) end
+            if sz and sz > 0 then OneWoW_GUI:SafeSetFont(region, fontPath, sz) end
         end
     end
     for _, child in ipairs({frame:GetChildren()}) do
         if child:GetObjectType() == "EditBox" and child.GetFont then
             local _, sz, flags = child:GetFont()
-            if sz and sz > 0 then child:SetFont(fontPath, sz, flags or "") end
+            if sz and sz > 0 then OneWoW_GUI:SafeSetFont(child, fontPath, sz, flags or "") end
         end
         GUI:ApplyFontToFrame(child)
     end

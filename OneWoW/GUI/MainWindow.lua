@@ -134,7 +134,8 @@ local function UpdateContentAreaAnchors()
     else
         contentArea:SetPoint("TOPLEFT", row1Container, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
     end
-    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS"), OneWoW_GUI:GetSpacing("XS"))
+    local resizeInset = 18  -- Clear 16px resize handle + 2px margin
+    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -resizeInset, resizeInset)
 end
 
 local function HideAllContent()
@@ -500,6 +501,7 @@ function GUI:InitMainWindow()
     resizeBtn:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
     resizeBtn:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
     resizeBtn:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    resizeBtn:SetFrameLevel(MainWindow:GetFrameLevel() + 10)
     resizeBtn:SetScript("OnMouseDown", function()
         MainWindow:StartSizing("BOTTOMRIGHT")
     end)
