@@ -222,8 +222,8 @@ function OneWoW_GUI:SafeSetFont(fontString, fontPath, size, flags)
         fontString:SetFontObject(GameFontNormal)
         return
     end
-    local ok = pcall(fontString.SetFont, fontString, fontPath, size or 12, flags or "")
-    if not ok then
+    local ok, success = pcall(fontString.SetFont, fontString, fontPath, size or 12, flags or "")
+    if not ok or not success then
         fontString:SetFontObject(GameFontNormal)
     end
 end
