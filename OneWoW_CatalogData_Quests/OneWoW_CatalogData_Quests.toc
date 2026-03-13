@@ -6,7 +6,9 @@
 ## X-Website: https://wow2.xyz/
 ## X-Category: |cFFFFD100OneWoW|r
 ## SavedVariables: OneWoW_CatalogData_Quests_DB
-## RequiredDeps: OneWoW_Catalog
+## RequiredDeps: OneWoW_GUI, OneWoW_Catalog
+## Category: OneWoW
+## Group: OneWoW_Catalog
 
 # Locales
 Locales\enUS.lua

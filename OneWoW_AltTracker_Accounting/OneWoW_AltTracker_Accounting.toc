@@ -7,7 +7,9 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 ## SavedVariables: OneWoW_AltTracker_Accounting_DB
-## RequiredDeps: OneWoW_AltTracker
+## RequiredDeps: OneWoW_GUI, OneWoW_AltTracker
+## Category: OneWoW
+## Group: OneWoW_AltTracker
 
 # Localization
 Locales\enUS.lua
