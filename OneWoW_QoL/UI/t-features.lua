@@ -186,11 +186,12 @@ local function ShowModuleDetail(split, module)
     local customRefreshCallbacks = {}
     local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 
-    local masterOnBtn, masterOffBtn, refreshMaster = OneWoW_GUI:CreateOnOffToggleButtons(
-        detailScrollChild, yOffset,
-        L["FEATURES_ON"], L["FEATURES_OFF"],
-        50, 22, true, isEnabled,
-        function(newVal)
+    yOffset, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+        label = "",
+        align = "left",
+        value = isEnabled,
+        isEnabled = true,
+        onValueChange = function(newVal)
             ns.ModuleRegistry:SetEnabled(module.id, newVal)
             isEnabled = newVal
             if selectedRow and selectedRow.dot then
@@ -216,17 +217,12 @@ local function ShowModuleDetail(split, module)
             for _, tbs in ipairs(toggleBtnSets) do
                 local val = ns.ModuleRegistry:GetToggleValue(module.id, tbs.toggle.id)
                 tbs.refresh(newVal, val)
-                if newVal then
-                    tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                else
-                    tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                end
             end
             for _, fn in ipairs(customRefreshCallbacks) do fn() end
-        end
-    )
-
-    yOffset = yOffset - 30 - 14
+        end,
+        onLabel = L["FEATURES_ON"],
+        offLabel = L["FEATURES_OFF"],
+    })
 
     if module.toggles and #module.toggles > 0 then
         local lastGroup = nil
@@ -274,53 +270,21 @@ local function ShowModuleDetail(split, module)
             local capturedModule = module
             local currentVal = ns.ModuleRegistry:GetToggleValue(module.id, toggle.id)
 
-            local toggleBtnWidth = 50
-
-            local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(
-                detailScrollChild, yOffset,
-                L["FEATURES_ON"], L["FEATURES_OFF"],
-                toggleBtnWidth, 22, isEnabled, currentVal,
-                function(newVal)
+            local rowRefresh
+            yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+                label = ns.L[toggle.label] or toggle.label,
+                description = toggle.description and (ns.L[toggle.description] or toggle.description) or nil,
+                value = currentVal,
+                isEnabled = isEnabled,
+                onValueChange = function(newVal)
                     ns.ModuleRegistry:SetToggleValue(capturedModule.id, capturedToggle.id, newVal)
-                end
-            )
-            offBtn:ClearAllPoints()
-            offBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-            onBtn:ClearAllPoints()
-            onBtn:SetPoint("RIGHT", offBtn, "LEFT", -4, 0)
-            statusVal:ClearAllPoints()
-            statusVal:SetPoint("RIGHT", onBtn, "LEFT", -10, 0)
-            statusPfx:ClearAllPoints()
-            statusPfx:SetPoint("RIGHT", statusVal, "LEFT", -4, 0)
+                end,
+                onLabel = L["FEATURES_ON"],
+                offLabel = L["FEATURES_OFF"],
+                buttonWidth = 50,
+            })
 
-            local toggleLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            toggleLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-            toggleLabel:SetPoint("RIGHT", statusPfx, "LEFT", -8, 0)
-            toggleLabel:SetJustifyH("LEFT")
-            toggleLabel:SetText(ns.L[toggle.label] or toggle.label)
-
-            if isEnabled then
-                toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            else
-                toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            end
-
-            tinsert(toggleBtnSets, { onBtn = onBtn, offBtn = offBtn, refresh = refresh, label = toggleLabel, toggle = capturedToggle })
-
-            yOffset = yOffset - 22 - 4
-
-            if toggle.description then
-                local descText = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                descText:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-                descText:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-                descText:SetJustifyH("LEFT")
-                descText:SetWordWrap(true)
-                descText:SetText(ns.L[toggle.description] or toggle.description)
-                descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                yOffset = yOffset - descText:GetStringHeight() - 6
-            end
-
-            yOffset = yOffset - 10
+            tinsert(toggleBtnSets, { refresh = rowRefresh, toggle = capturedToggle })
         end
     end
 

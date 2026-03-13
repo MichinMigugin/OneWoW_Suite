@@ -562,6 +562,98 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, yOffset, onLabel, offLabel,
     return onBtn, offBtn, refresh, statusPfx, statusVal
 end
 
+function OneWoW_GUI:CreateToggleRow(parent, yOffset, options)
+    options = options or {}
+    local label = options.label or ""
+    local description = options.description
+    local createContent = options.createContent
+    local value = options.value
+    local isEnabled = options.isEnabled
+    local onValueChange = options.onValueChange
+    local onLabel = options.onLabel or "On"
+    local offLabel = options.offLabel or "Off"
+    local buttonWidth = options.buttonWidth or Constants.TOGGLE_BUTTON_WIDTH
+    local buttonHeight = options.buttonHeight or Constants.TOGGLE_BUTTON_HEIGHT
+    local alignLeft = (options.align == "left")
+
+    local labelFs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    labelFs:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+    labelFs:SetJustifyH("LEFT")
+    labelFs:SetText(label)
+    if label == "" then
+        labelFs:Hide()
+    end
+
+    local onBtn, offBtn, refresh, statusPfx, statusVal = self:CreateOnOffToggleButtons(
+        parent, yOffset, onLabel, offLabel, buttonWidth, buttonHeight,
+        isEnabled, value, onValueChange
+    )
+
+    if alignLeft then
+        if label ~= "" then
+            statusPfx:ClearAllPoints()
+            statusPfx:SetPoint("LEFT", labelFs, "RIGHT", 8, 0)
+        end
+        -- when label is empty, statusPfx stays at default TOPLEFT 12 from CreateOnOffToggleButtons
+    else
+        offBtn:ClearAllPoints()
+        offBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
+        onBtn:ClearAllPoints()
+        onBtn:SetPoint("RIGHT", offBtn, "LEFT", -4, 0)
+        statusVal:ClearAllPoints()
+        statusVal:SetPoint("RIGHT", onBtn, "LEFT", -10, 0)
+        statusPfx:ClearAllPoints()
+        statusPfx:SetPoint("RIGHT", statusVal, "LEFT", -4, 0)
+        labelFs:SetPoint("RIGHT", statusPfx, "LEFT", -8, 0)
+    end
+
+    local rowHeight = buttonHeight
+    local newYOffset = yOffset - rowHeight - 4
+
+    local descFs
+    local contentArea
+
+    if description then
+        descFs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        descFs:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, newYOffset)
+        descFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, newYOffset)
+        descFs:SetJustifyH("LEFT")
+        descFs:SetWordWrap(true)
+        descFs:SetText(description)
+        descFs:SetTextColor(GetThemeColor("TEXT_MUTED"))
+        newYOffset = newYOffset - descFs:GetStringHeight() - 6
+    elseif createContent then
+        contentArea = CreateFrame("Frame", nil, parent)
+        contentArea:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, newYOffset)
+        contentArea:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, newYOffset)
+        local contentFrame, contentHeight = createContent(contentArea)
+        contentHeight = contentHeight or 0
+        contentArea:SetHeight(contentHeight)
+        newYOffset = newYOffset - contentHeight - 6
+    end
+
+    newYOffset = newYOffset - 10
+
+    local function rowRefresh(enabled, val)
+        refresh(enabled, val)
+        if enabled then
+            labelFs:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+            if descFs then
+                descFs:SetTextColor(GetThemeColor("TEXT_MUTED"))
+            end
+        else
+            labelFs:SetTextColor(GetThemeColor("TEXT_MUTED"))
+            if descFs then
+                descFs:SetTextColor(GetThemeColor("TEXT_MUTED"))
+            end
+        end
+    end
+
+    rowRefresh(isEnabled, value)
+
+    return newYOffset, rowRefresh, { label = labelFs, contentArea = contentArea }
+end
+
 function OneWoW_GUI:CreateEditBox(name, parent, options)
     options = options or {}
     local width = options.width

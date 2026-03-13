@@ -53,9 +53,6 @@ for _, id in ipairs(GATHERING_SPELL_IDS) do
     gatheringSpellSet[id] = true
 end
 
-local ON_OFF_BUTTON_WIDTH = nil
-local ON_OFF_BUTTON_HEIGHT = nil
-
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
@@ -511,66 +508,89 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     for _, mountInfo in ipairs(mountTypes) do
         local capturedKey   = mountInfo.key
         local catEnabledKey = capturedKey .. "Enabled"
-        local UpdateRow     -- forward declaration; defined after mountBtn/refresh exist
-
-        -- Label above Random Favorite button
-        local label = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        label:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-        label:SetText(mountInfo.label)
-        yOffset = yOffset - label:GetStringHeight() - 4
-
-        -- Mount picker button (Random Favorite) below label
-        local mountBtn = CreateFrame("Button", nil, detailScrollChild, "BackdropTemplate")
-        mountBtn:SetSize(220, 30)
-        mountBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+        local UpdateRow
+        local mountBtnRef   = {}
+        local rowRefresh
 
         local prefs = GetPreferences()
-        local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(
-            detailScrollChild, yOffset,
-            L["AUTOMOUNT_CAT_ON"], L["AUTOMOUNT_CAT_OFF"],
-            ON_OFF_BUTTON_WIDTH, ON_OFF_BUTTON_HEIGHT, isEnabled, prefs[catEnabledKey],
-            function(val) SavePreference(catEnabledKey, val); UpdateRow(); AM:UpdatePollingState() end
-        )
-        offBtn:ClearAllPoints()
-        offBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-        onBtn:ClearAllPoints()
-        onBtn:SetPoint("RIGHT", offBtn, "LEFT", -4, 0)
-        statusVal:ClearAllPoints()
-        statusVal:SetPoint("RIGHT", onBtn, "LEFT", -10, 0)
-        statusPfx:ClearAllPoints()
-        statusPfx:SetPoint("RIGHT", statusVal, "LEFT", -4, 0)
+        yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+            label = mountInfo.label,
+            createContent = function(container)
+                local mountBtn = CreateFrame("Button", nil, container, "BackdropTemplate")
+                mountBtn:SetSize(220, 30)
+                mountBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+                mountBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+                mountBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                mountBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        yOffset = yOffset - 30 - 10
-        mountBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        mountBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        mountBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                mountBtn.mountIcon = mountBtn:CreateTexture(nil, "ARTWORK")
+                mountBtn.mountIcon:SetSize(22, 22)
+                mountBtn.mountIcon:SetPoint("LEFT", mountBtn, "LEFT", 4, 0)
 
-        mountBtn.mountIcon = mountBtn:CreateTexture(nil, "ARTWORK")
-        mountBtn.mountIcon:SetSize(22, 22)
-        mountBtn.mountIcon:SetPoint("LEFT", mountBtn, "LEFT", 4, 0)
+                mountBtn.mountText = mountBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                mountBtn.mountText:SetPoint("LEFT", mountBtn.mountIcon, "RIGHT", 6, 0)
+                mountBtn.mountText:SetPoint("RIGHT", mountBtn, "RIGHT", -6, 0)
+                mountBtn.mountText:SetJustifyH("LEFT")
 
-        mountBtn.mountText = mountBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        mountBtn.mountText:SetPoint("LEFT", mountBtn.mountIcon, "RIGHT", 6, 0)
-        mountBtn.mountText:SetPoint("RIGHT", mountBtn, "RIGHT", -6, 0)
-        mountBtn.mountText:SetJustifyH("LEFT")
+                mountBtn:SetScript("OnEnter", function(btn)
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+                    GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(L["AUTOMOUNT_SELECT_TOOLTIP"])
+                    GameTooltip:AddLine(L["AUTOMOUNT_SELECT_TOOLTIP_DESC"], 1, 1, 1, true)
+                    GameTooltip:Show()
+                end)
+                mountBtn:SetScript("OnLeave", function(btn)
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                    GameTooltip:Hide()
+                end)
+                mountBtn:SetScript("OnClick", function()
+                    AM:ShowMountPicker(capturedKey, function()
+                        local prefs2 = GetPreferences()
+                        local sel    = prefs2[capturedKey]
+                        if sel == "auto" or not sel then
+                            mountBtn.mountIcon:SetTexture("Interface\\Icons\\achievement_guildperk_mountup")
+                            mountBtn.mountText:SetText(L["AUTOMOUNT_RANDOM_FAVORITE"])
+                        else
+                            local name, _, icon = C_MountJournal.GetMountInfoByID(sel)
+                            if name then
+                                mountBtn.mountIcon:SetTexture(icon)
+                                mountBtn.mountText:SetText(name)
+                            else
+                                mountBtn.mountIcon:SetTexture("Interface\\Icons\\achievement_guildperk_mountup")
+                                mountBtn.mountText:SetText(L["AUTOMOUNT_RANDOM_FAVORITE"])
+                                SavePreference(capturedKey, "auto")
+                            end
+                        end
+                    end)
+                end)
 
-        mountBtn:SetScript("OnEnter", function(btn)
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-            GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
-            GameTooltip:SetText(L["AUTOMOUNT_SELECT_TOOLTIP"])
-            GameTooltip:AddLine(L["AUTOMOUNT_SELECT_TOOLTIP_DESC"], 1, 1, 1, true)
-            GameTooltip:Show()
-        end)
-        mountBtn:SetScript("OnLeave", function(btn)
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            GameTooltip:Hide()
-        end)
-        mountBtn:SetScript("OnClick", function()
-            AM:ShowMountPicker(capturedKey, function()
-                local prefs = GetPreferences()
-                local sel   = prefs[capturedKey]
+                mountBtnRef[1] = mountBtn
+                return mountBtn, 30
+            end,
+            value = prefs[catEnabledKey],
+            isEnabled = isEnabled,
+            onValueChange = function(val)
+                SavePreference(catEnabledKey, val)
+                UpdateRow()
+                AM:UpdatePollingState()
+            end,
+            onLabel = L["AUTOMOUNT_CAT_ON"],
+            offLabel = L["AUTOMOUNT_CAT_OFF"],
+        })
+
+        UpdateRow = function()
+            local isEnabledNow = ns.ModuleRegistry:IsEnabled(AM.id)
+            local prefs2       = GetPreferences()
+            local catEnabled   = prefs2[catEnabledKey]
+            local active       = isEnabledNow and catEnabled
+
+            rowRefresh(isEnabledNow, catEnabled)
+
+            local mountBtn = mountBtnRef[1]
+            if mountBtn then
+                local sel = prefs2[capturedKey]
                 if sel == "auto" or not sel then
                     mountBtn.mountIcon:SetTexture("Interface\\Icons\\achievement_guildperk_mountup")
                     mountBtn.mountText:SetText(L["AUTOMOUNT_RANDOM_FAVORITE"])
@@ -585,46 +605,13 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
                         SavePreference(capturedKey, "auto")
                     end
                 end
-            end)
-        end)
-
-        UpdateRow = function()
-            local isEnabledNow = ns.ModuleRegistry:IsEnabled(AM.id)
-            local prefs        = GetPreferences()
-            local catEnabled   = prefs[catEnabledKey]
-            local active       = isEnabledNow and catEnabled
-
-            refresh(isEnabledNow, catEnabled)
-
-            if not isEnabledNow then
-                label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            else
-                label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-
-            -- Mount picker state
-            local prefs2 = GetPreferences()
-            local sel    = prefs2[capturedKey]
-            if sel == "auto" or not sel then
-                mountBtn.mountIcon:SetTexture("Interface\\Icons\\achievement_guildperk_mountup")
-                mountBtn.mountText:SetText(L["AUTOMOUNT_RANDOM_FAVORITE"])
-            else
-                local name, _, icon = C_MountJournal.GetMountInfoByID(sel)
-                if name then
-                    mountBtn.mountIcon:SetTexture(icon)
-                    mountBtn.mountText:SetText(name)
+                if active then
+                    mountBtn:EnableMouse(true)
+                    mountBtn.mountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 else
-                    mountBtn.mountIcon:SetTexture("Interface\\Icons\\achievement_guildperk_mountup")
-                    mountBtn.mountText:SetText(L["AUTOMOUNT_RANDOM_FAVORITE"])
-                    SavePreference(capturedKey, "auto")
+                    mountBtn:EnableMouse(false)
+                    mountBtn.mountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 end
-            end
-            if active then
-                mountBtn:EnableMouse(true)
-                mountBtn.mountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            else
-                mountBtn:EnableMouse(false)
-                mountBtn.mountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
         end
 
@@ -661,111 +648,61 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     druidSectionDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yOffset = yOffset - 10
 
-    local druidLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    druidLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    druidLabel:SetText(L["AUTOMOUNT_DRUID_MODE_LABEL"])
-
     local druidPrefs = GetPreferences()
+    local druidRowRefresh
     local UpdateDruidRow
-    local druidOnBtn, druidOffBtn, refreshDruid, druidStatusPfx, druidStatusVal = OneWoW_GUI:CreateOnOffToggleButtons(
-        detailScrollChild, yOffset,
-        L["AUTOMOUNT_CAT_ON"], L["AUTOMOUNT_CAT_OFF"],
-        ON_OFF_BUTTON_WIDTH, ON_OFF_BUTTON_HEIGHT, isEnabled, druidPrefs.druidEnabled,
-        function(val) SavePreference("druidEnabled", val); UpdateDruidRow(); AM:UpdatePollingState() end
-    )
-    druidOffBtn:ClearAllPoints()
-    druidOffBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    druidOnBtn:ClearAllPoints()
-    druidOnBtn:SetPoint("RIGHT", druidOffBtn, "LEFT", -4, 0)
-    druidStatusVal:ClearAllPoints()
-    druidStatusVal:SetPoint("RIGHT", druidOnBtn, "LEFT", -10, 0)
-    druidStatusPfx:ClearAllPoints()
-    druidStatusPfx:SetPoint("RIGHT", druidStatusVal, "LEFT", -4, 0)
+    yOffset, druidRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+        label = L["AUTOMOUNT_DRUID_MODE_LABEL"],
+        description = L["AUTOMOUNT_DRUID_MODE_DESC"],
+        value = druidPrefs.druidEnabled,
+        isEnabled = isEnabled,
+        onValueChange = function(val)
+            SavePreference("druidEnabled", val)
+            UpdateDruidRow()
+            AM:UpdatePollingState()
+        end,
+        onLabel = L["AUTOMOUNT_CAT_ON"],
+        offLabel = L["AUTOMOUNT_CAT_OFF"],
+    })
 
-    yOffset = yOffset - 24
-
-    local druidDesc = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    druidDesc:SetPoint("TOPLEFT",  detailScrollChild, "TOPLEFT",  12, yOffset)
-    druidDesc:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    druidDesc:SetJustifyH("LEFT")
-    druidDesc:SetWordWrap(true)
-    druidDesc:SetText(L["AUTOMOUNT_DRUID_MODE_DESC"])
-
-    function UpdateDruidRow()
+    UpdateDruidRow = function()
         local isEnabledNow = ns.ModuleRegistry:IsEnabled(AM.id)
         local prefs        = GetPreferences()
         local druidEnabled = prefs.druidEnabled
-
-        refreshDruid(isEnabledNow, druidEnabled)
-
-        if not isEnabledNow then
-            druidLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            druidDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        else
-            druidLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            druidDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
+        druidRowRefresh(isEnabledNow, druidEnabled)
     end
 
     if registerRefresh then registerRefresh(UpdateDruidRow) end
     UpdateDruidRow()
-    yOffset = yOffset - druidDesc:GetStringHeight() - 10
 
     yOffset = yOffset - 4
 
-    local cancelLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    cancelLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    cancelLabel:SetText(L["AUTOMOUNT_DRUID_CANCEL_LABEL"])
-
     local cancelPrefs = GetPreferences()
+    local cancelRowRefresh
     local UpdateCancelRow
-    local cancelOnBtn, cancelOffBtn, refreshCancel, cancelStatusPfx, cancelStatusVal = OneWoW_GUI:CreateOnOffToggleButtons(
-        detailScrollChild, yOffset,
-        L["AUTOMOUNT_CAT_ON"], L["AUTOMOUNT_CAT_OFF"],
-        ON_OFF_BUTTON_WIDTH, ON_OFF_BUTTON_HEIGHT, isEnabled, cancelPrefs.druidCancelTravelForm,
-        function(val)
+    yOffset, cancelRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, yOffset, {
+        label = L["AUTOMOUNT_DRUID_CANCEL_LABEL"],
+        description = L["AUTOMOUNT_DRUID_CANCEL_DESC"],
+        value = cancelPrefs.druidCancelTravelForm,
+        isEnabled = isEnabled,
+        onValueChange = function(val)
             SavePreference("druidCancelTravelForm", val)
             UpdateCancelRow()
             AM:UpdateDruidFlightWatcher()
-        end
-    )
-    cancelOffBtn:ClearAllPoints()
-    cancelOffBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    cancelOnBtn:ClearAllPoints()
-    cancelOnBtn:SetPoint("RIGHT", cancelOffBtn, "LEFT", -4, 0)
-    cancelStatusVal:ClearAllPoints()
-    cancelStatusVal:SetPoint("RIGHT", cancelOnBtn, "LEFT", -10, 0)
-    cancelStatusPfx:ClearAllPoints()
-    cancelStatusPfx:SetPoint("RIGHT", cancelStatusVal, "LEFT", -4, 0)
+        end,
+        onLabel = L["AUTOMOUNT_CAT_ON"],
+        offLabel = L["AUTOMOUNT_CAT_OFF"],
+    })
 
-    yOffset = yOffset - 24
-
-    local cancelDesc = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    cancelDesc:SetPoint("TOPLEFT",  detailScrollChild, "TOPLEFT",  12, yOffset)
-    cancelDesc:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    cancelDesc:SetJustifyH("LEFT")
-    cancelDesc:SetWordWrap(true)
-    cancelDesc:SetText(L["AUTOMOUNT_DRUID_CANCEL_DESC"])
-
-    function UpdateCancelRow()
+    UpdateCancelRow = function()
         local isEnabledNow = ns.ModuleRegistry:IsEnabled(AM.id)
         local prefs        = GetPreferences()
         local cancelEnabled = prefs.druidCancelTravelForm
-
-        refreshCancel(isEnabledNow, cancelEnabled)
-
-        if not isEnabledNow then
-            cancelLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            cancelDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        else
-            cancelLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            cancelDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
+        cancelRowRefresh(isEnabledNow, cancelEnabled)
     end
 
     if registerRefresh then registerRefresh(UpdateCancelRow) end
     UpdateCancelRow()
-    yOffset = yOffset - cancelDesc:GetStringHeight() - 10
 
     return yOffset
 end

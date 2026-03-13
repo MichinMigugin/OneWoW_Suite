@@ -347,6 +347,40 @@ When disabled (isEnabled=false): all elements muted, buttons non-interactive.
 To right-align, clear points on offBtn/onBtn/statusVal/statusPfx and re-anchor from TOPRIGHT.
 To reposition the cluster after a label, call `statusPfx:ClearAllPoints()` + `statusPfx:SetPoint(...)`.
 
+### Toggle row (label + description/custom + On/Off)
+```lua
+local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, yOffset, {
+    label = "Show Lockouts Panel",
+    description = "Show the lockouts panel when the Group Finder opens.",  -- optional
+    value = true,
+    isEnabled = true,
+    onValueChange = function(newVal) SaveSetting("show_panel", newVal) end,
+    onLabel = "On",   -- optional
+    offLabel = "Off", -- optional
+})
+-- Update state later:
+refresh(isEnabled, newValue)
+-- refs.label, refs.contentArea (nil if description used)
+```
+Layout: Row 1: [Label] ... [Status: On] [On] [Off] (right-aligned by default). Row 2: [Description] or custom content.
+Use `align = "left"` for module-level Enable: [Label] [Status: On] [On] [Off] all left-aligned.
+Use `createContent` instead of `description` for custom widgets (e.g. mount picker):
+```lua
+local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, yOffset, {
+    label = "Ground Mount",
+    createContent = function(container)
+        local btn = CreateFrame("Button", nil, container, "BackdropTemplate")
+        btn:SetSize(220, 30)
+        btn:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+        -- ... setup btn ...
+        return btn, 30  -- widget, height
+    end,
+    value = true,
+    isEnabled = true,
+    onValueChange = function(newVal) ... end,
+})
+```
+
 ### Checkbox
 ```lua
 local cb = OneWoW_GUI:CreateCheckbox(name, parent, "Label text")
