@@ -16,13 +16,11 @@ local QuestToolsModule = {
         { id = "auto_accept",  label = "QUESTTOOLS_TOGGLE_ACCEPT",  description = "QUESTTOOLS_TOGGLE_ACCEPT_DESC",  default = true  },
         { id = "auto_turnin",  label = "QUESTTOOLS_TOGGLE_TURNIN",  description = "QUESTTOOLS_TOGGLE_TURNIN_DESC",  default = true  },
         { id = "reward_picker",label = "QUESTTOOLS_TOGGLE_REWARDS", description = "QUESTTOOLS_TOGGLE_REWARDS_DESC", default = true  },
-        { id = "auto_select_quest_gossip", label = "QUESTTOOLS_TOGGLE_GOSSIP", description = "QUESTTOOLS_TOGGLE_GOSSIP_DESC", default = true },
     },
     preview       = true,
     _acceptFrame  = nil,
     _turninFrame  = nil,
     _goldIcon     = nil,
-    _gossipFrame  = nil,
 }
 
 local function GetToggle(id)
@@ -89,23 +87,6 @@ function QuestToolsModule:InitRewardPicker()
             C_Timer.After(0.1, function() self:EvaluateRewards() end)
         end)
     end
-end
-
-function QuestToolsModule:InitGossip()
-    if self._gossipFrame then return end
-    self._gossipFrame = CreateFrame("Frame", "OneWoW_QoL_QuestGossip")
-    self._gossipFrame:SetScript("OnEvent", function(frame, event, ...)
-        if event == "GOSSIP_SHOW" then
-            if not GetToggle("auto_select_quest_gossip") then return end
-            if IsShiftKeyDown() then return end
-            local options = C_GossipInfo.GetOptions()
-            for _, option in ipairs(options) do
-                if string.find(option.name, "Quest") then
-                    C_GossipInfo.SelectOption(option.gossipOptionID)
-                end
-            end
-        end
-    end)
 end
 
 function QuestToolsModule:EvaluateRewards()
@@ -190,19 +171,16 @@ function QuestToolsModule:OnEnable()
     self:InitAccept()
     self:InitTurnin()
     self:InitRewardPicker()
-    self:InitGossip()
 
     self._acceptFrame:RegisterEvent("QUEST_DETAIL")
     self._acceptFrame:RegisterEvent("QUEST_GREETING")
     self._turninFrame:RegisterEvent("QUEST_PROGRESS")
     self._turninFrame:RegisterEvent("QUEST_COMPLETE")
-    self._gossipFrame:RegisterEvent("GOSSIP_SHOW")
 end
 
 function QuestToolsModule:OnDisable()
     if self._acceptFrame then self._acceptFrame:UnregisterAllEvents() end
     if self._turninFrame then self._turninFrame:UnregisterAllEvents() end
-    if self._gossipFrame then self._gossipFrame:UnregisterAllEvents() end
     if self._goldIcon then self._goldIcon:Hide() end
 end
 
@@ -228,14 +206,6 @@ function QuestToolsModule:OnToggle(toggleId, value)
     elseif toggleId == "reward_picker" then
         if not value and self._goldIcon then
             self._goldIcon:Hide()
-        end
-    elseif toggleId == "auto_select_quest_gossip" then
-        if self._gossipFrame then
-            if value then
-                self._gossipFrame:RegisterEvent("GOSSIP_SHOW")
-            else
-                self._gossipFrame:UnregisterEvent("GOSSIP_SHOW")
-            end
         end
     end
 end
