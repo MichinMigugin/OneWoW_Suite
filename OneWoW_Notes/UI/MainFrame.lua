@@ -47,8 +47,8 @@ function ns.UI:CreateMainFrame(defaultTab)
     if not addon or not addon.db or not addon.db.global then return nil end
 
     local savedSize = addon.db.global.mainFrameSize
-    local width  = (savedSize and savedSize.width)  or ns.Constants.GUI.MAIN_FRAME_WIDTH
-    local height = (savedSize and savedSize.height) or ns.Constants.GUI.MAIN_FRAME_HEIGHT
+    local width  = (savedSize and savedSize.width)  or ns.Constants.GUI.WINDOW_WIDTH
+    local height = (savedSize and savedSize.height) or ns.Constants.GUI.WINDOW_HEIGHT
 
     local frame = CreateFrame("Frame", "OneWoW_NotesMainFrame", UIParent, "BackdropTemplate")
     frame:SetSize(width, height)

@@ -59,8 +59,8 @@ function ns.UI:CreateMainFrame(defaultTab)
     local frame = CreateFrame("Frame", "OneWoWAltTrackerMainFrame", UIParent, "BackdropTemplate")
 
     local savedSize = OneWoWAltTracker.db.global.mainFrameSize
-    local width = (savedSize and savedSize.width) or ns.Constants.GUI.MAIN_FRAME_WIDTH
-    local height = (savedSize and savedSize.height) or ns.Constants.GUI.MAIN_FRAME_HEIGHT
+    local width = (savedSize and savedSize.width) or ns.Constants.GUI.WINDOW_WIDTH
+    local height = (savedSize and savedSize.height) or ns.Constants.GUI.WINDOW_HEIGHT
 
     frame:SetSize(width, height)
 

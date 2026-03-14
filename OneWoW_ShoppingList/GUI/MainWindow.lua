@@ -19,14 +19,7 @@ local backdrop = {
 ns.MainWindow = {}
 local MainWindow = ns.MainWindow
 
-local C = function()
-    return ns.Constants and ns.Constants.GUI or {
-        WINDOW_WIDTH = 820, WINDOW_HEIGHT = 580,
-        SIDEBAR_WIDTH = 300, PADDING = 12,
-        BUTTON_HEIGHT = 28, SEARCH_HEIGHT = 28,
-        ROW_HEIGHT = 38, ROW_GAP = 2, SCROLLBAR_W = 10,
-    }
-end
+local C = ns.Constants
 
 local POOL_SIZE     = 32
 local listRowPool   = {}
@@ -187,15 +180,11 @@ local function ConfigureListRow(row, listName, isSelected, isDefault, childCount
     end
 end
 
-
-
 function MainWindow:Create()
     if mainFrame then return end
 
-    local G = C()
-
     mainFrame = CreateFrame("Frame", "OneWoW_ShoppingList_MainFrame", UIParent, "BackdropTemplate")
-    mainFrame:SetSize(G.WINDOW_WIDTH, G.WINDOW_HEIGHT)
+    mainFrame:SetSize(C.GUI.WINDOW_WIDTH, C.GUI.WINDOW_HEIGHT)
     if not OneWoW_GUI:RestoreWindowPosition(mainFrame, GetDB().global.mainFramePosition or {}) then
         mainFrame:SetPoint("CENTER")
     end
@@ -281,7 +270,7 @@ function MainWindow:Create()
         MainWindow:ToggleSettings()
     end)
 
-    local sidebarW = G.SIDEBAR_WIDTH
+    local sidebarW = C.GUI.SIDEBAR_WIDTH
     local dividerX = sidebarW + 4
 
     local divider = mainFrame:CreateTexture(nil, "ARTWORK")
@@ -680,8 +669,7 @@ function MainWindow:BuildSettingsPanel()
     settingsPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     settingsPanel:Hide()
 
-    local G = C()
-    local pad = G.PADDING
+    local pad = C.GUI.PADDING
     local yOff = -pad
 
     local settingsTitle = settingsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
