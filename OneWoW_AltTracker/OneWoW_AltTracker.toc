@@ -44,7 +44,6 @@ OneWoW_AltTracker.lua
 Modules\t-alttracker.lua
 Modules\alttracker\m-cache.lua
 Modules\alttracker\m-formatters.lua
-Modules\m-patch-dialog.lua
 
 # Alt Tracker UI Section Handlers
 Modules\alttracker\st-professions.lua

@@ -89,10 +89,6 @@ function OneWoWAltTracker:OnEnable()
     end
 
     RegisterWithOneWoW()
-
-    if ns.PatchDialog and ns.PatchDialog.CheckAndShow then
-        ns.PatchDialog:CheckAndShow()
-    end
 end
 
 function OneWoWAltTracker:SlashCommandHandler(input)
