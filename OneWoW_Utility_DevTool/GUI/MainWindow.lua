@@ -23,39 +23,6 @@ Addon.UI = UI
 UI.tabs = {}
 UI.currentTab = nil
 
-local function StyleScrollBar(scrollFrame, container)
-    local scrollBar = scrollFrame.ScrollBar
-    if not scrollBar then return end
-
-    local anchor = container or scrollFrame
-
-    scrollBar:ClearAllPoints()
-    scrollBar:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", -2, 0)
-    scrollBar:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", -2, 0)
-    scrollBar:SetWidth(10)
-
-    if scrollBar.ScrollUpButton then
-        scrollBar.ScrollUpButton:Hide()
-        scrollBar.ScrollUpButton:SetAlpha(0)
-        scrollBar.ScrollUpButton:EnableMouse(false)
-    end
-
-    if scrollBar.ScrollDownButton then
-        scrollBar.ScrollDownButton:Hide()
-        scrollBar.ScrollDownButton:SetAlpha(0)
-        scrollBar.ScrollDownButton:EnableMouse(false)
-    end
-
-    if scrollBar.Background then
-        scrollBar.Background:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    end
-
-    if scrollBar.ThumbTexture then
-        scrollBar.ThumbTexture:SetWidth(8)
-        scrollBar.ThumbTexture:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    end
-end
-
 local function StyleContentPanel(panel)
     panel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     panel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -74,10 +41,15 @@ function UI:Initialize()
     frame:EnableMouse(true)
     frame:RegisterForDrag("LeftButton")
     frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+    frame:SetScript("OnDragStop", function()
+        frame:StopMovingOrSizing()
+        frame:SetClampedToScreen(true)
+    end)
     frame:SetClampedToScreen(true)
     frame:SetResizable(true)
-    frame:SetResizeBounds(750, 450)
+    local maxW = math.floor(GetScreenWidth() * 0.95)
+    local maxH = math.floor(GetScreenHeight() * 0.95)
+    frame:SetResizeBounds(750, 450, maxW, maxH)
 
     local resizeHandle = CreateFrame("Button", nil, frame)
     resizeHandle:SetSize(16, 16)
@@ -85,8 +57,14 @@ function UI:Initialize()
     resizeHandle:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
     resizeHandle:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
     resizeHandle:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-    resizeHandle:SetScript("OnMouseDown", function() frame:StartSizing("BOTTOMRIGHT") end)
-    resizeHandle:SetScript("OnMouseUp", function() frame:StopMovingOrSizing() end)
+    resizeHandle:SetScript("OnMouseDown", function()
+        frame:SetClampedToScreen(false)
+        frame:StartSizing("BOTTOMRIGHT")
+    end)
+    resizeHandle:SetScript("OnMouseUp", function()
+        frame:StopMovingOrSizing()
+        frame:SetClampedToScreen(true)
+    end)
 
     frame:Hide()
 
@@ -295,7 +273,7 @@ function UI:CreateFrameInspectorTab(parent)
 
     local searchBox = CreateFrame("EditBox", nil, tab, "InputBoxTemplate")
     searchBox:SetSize(150, 22)
-    searchBox:SetPoint("LEFT", pickBtn, "RIGHT", 5, 0)
+    searchBox:SetPoint("LEFT", pickBtn, "RIGHT", 10, 0)
     searchBox:SetAutoFocus(false)
 
     local searchBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_SEARCH"] or "Search", width = 70, height = 22 })
@@ -313,7 +291,7 @@ function UI:CreateFrameInspectorTab(parent)
     leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local copyHierarchyBtn = OneWoW_GUI:CreateButton(leftPanel, { text = Addon.L and Addon.L["BTN_COPY_HIERARCHY"] or "Copy All", width = 70, height = 18 })
-    copyHierarchyBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -5, -3)
+    copyHierarchyBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -25, -3)
     copyHierarchyBtn:SetScript("OnClick", function()
         if tab.hierarchyText then
             Addon:CopyToClipboard(tab.hierarchyText:GetText())
@@ -323,7 +301,7 @@ function UI:CreateFrameInspectorTab(parent)
     local leftScroll = CreateFrame("ScrollFrame", nil, leftPanel, "UIPanelScrollFrameTemplate")
     leftScroll:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -25)
     leftScroll:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -14, 4)
-    StyleScrollBar(leftScroll, leftPanel)
+    OneWoW_GUI:StyleScrollBar(leftScroll, { container = leftPanel })
 
     local leftContent = CreateFrame("Frame", nil, leftScroll)
     leftContent:SetHeight(1)
@@ -351,7 +329,7 @@ function UI:CreateFrameInspectorTab(parent)
     rightTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local copyDetailsBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_COPY_DETAILS"] or "Copy All", width = 70, height = 18 })
-    copyDetailsBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -5, -3)
+    copyDetailsBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -25, -3)
     copyDetailsBtn:SetScript("OnClick", function()
         if tab.detailsText then
             Addon:CopyToClipboard(tab.detailsText:GetText())
@@ -361,7 +339,7 @@ function UI:CreateFrameInspectorTab(parent)
     local rightScroll = CreateFrame("ScrollFrame", nil, rightPanel, "UIPanelScrollFrameTemplate")
     rightScroll:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 4, -25)
     rightScroll:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -14, 4)
-    StyleScrollBar(rightScroll, rightPanel)
+    OneWoW_GUI:StyleScrollBar(rightScroll, { container = rightPanel })
 
     local rightContent = CreateFrame("Frame", nil, rightScroll)
     rightContent:SetHeight(1)
@@ -512,7 +490,7 @@ function UI:CreateEventMonitorTab(parent)
     end)
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    filterLabel:SetPoint("LEFT", firehoseBtn, "RIGHT", 10, 0)
+    filterLabel:SetPoint("TOPLEFT", startBtn, "BOTTOMLEFT", 0, -8)
     filterLabel:SetText(Addon.L and Addon.L["LABEL_FILTER"] or "Filter:")
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
@@ -527,14 +505,14 @@ function UI:CreateEventMonitorTab(parent)
     end)
 
     local panel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
-    panel:SetPoint("TOPLEFT", startBtn, "BOTTOMLEFT", 0, -5)
+    panel:SetPoint("TOPLEFT", startBtn, "BOTTOMLEFT", 0, -35)
     panel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
     StyleContentPanel(panel)
 
     local scroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -4)
     scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 4)
-    StyleScrollBar(scroll, panel)
+    OneWoW_GUI:StyleScrollBar(scroll, { container = panel })
 
     local content = CreateFrame("Frame", nil, scroll)
     content:SetHeight(1)
@@ -606,7 +584,7 @@ function UI:CreateLuaConsoleTab(parent)
     local listScroll = CreateFrame("ScrollFrame", nil, listPanel, "UIPanelScrollFrameTemplate")
     listScroll:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 4, -4)
     listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -14, 4)
-    StyleScrollBar(listScroll, listPanel)
+    OneWoW_GUI:StyleScrollBar(listScroll, { container = listPanel })
 
     local listContent = CreateFrame("Frame", nil, listScroll)
     listContent:SetHeight(1)
@@ -647,7 +625,7 @@ function UI:CreateLuaConsoleTab(parent)
     local detailsScroll = CreateFrame("ScrollFrame", nil, detailsPanel, "UIPanelScrollFrameTemplate")
     detailsScroll:SetPoint("TOPLEFT", detailsPanel, "TOPLEFT", 4, -4)
     detailsScroll:SetPoint("BOTTOMRIGHT", detailsPanel, "BOTTOMRIGHT", -14, 4)
-    StyleScrollBar(detailsScroll, detailsPanel)
+    OneWoW_GUI:StyleScrollBar(detailsScroll, { container = detailsPanel })
 
     local detailsContent = CreateFrame("Frame", nil, detailsScroll)
     detailsContent:SetHeight(1)
@@ -726,7 +704,7 @@ function UI:CreateTextureTab(parent)
     local listScroll = CreateFrame("ScrollFrame", nil, leftPanel, "UIPanelScrollFrameTemplate")
     listScroll:SetPoint("TOPLEFT", 4, -4)
     listScroll:SetPoint("BOTTOMRIGHT", -14, 4)
-    StyleScrollBar(listScroll, leftPanel)
+    OneWoW_GUI:StyleScrollBar(listScroll, { container = leftPanel })
 
     local listContent = CreateFrame("Frame", nil, listScroll)
     listContent:SetHeight(1)
@@ -809,7 +787,7 @@ function UI:CreateTextureTab(parent)
     local infoScroll = CreateFrame("ScrollFrame", nil, infoPanel, "UIPanelScrollFrameTemplate")
     infoScroll:SetPoint("TOPLEFT", 4, -4)
     infoScroll:SetPoint("BOTTOMRIGHT", -14, 4)
-    StyleScrollBar(infoScroll, infoPanel)
+    OneWoW_GUI:StyleScrollBar(infoScroll, { container = infoPanel })
 
     local infoContent = CreateFrame("Frame", nil, infoScroll)
     infoContent:SetHeight(1)
@@ -1313,7 +1291,7 @@ function UI:ShowEventSelector()
         local leftScroll = CreateFrame("ScrollFrame", nil, leftPanel, "UIPanelScrollFrameTemplate")
         leftScroll:SetPoint("TOPLEFT", 4, -25)
         leftScroll:SetPoint("BOTTOMRIGHT", -14, 4)
-        StyleScrollBar(leftScroll, leftPanel)
+        OneWoW_GUI:StyleScrollBar(leftScroll, { container = leftPanel })
 
         local leftContent = CreateFrame("Frame", nil, leftScroll)
         leftContent:SetHeight(1)
@@ -1529,8 +1507,18 @@ function UI:CreateMonitorTab(parent)
     cpuLabel:SetText(L["MON_LABEL_CPU_PROFILING"] or "CPU Profiling")
     cpuLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
+    local showOnLoadCheck = CreateFrame("CheckButton", nil, tab, "UICheckButtonTemplate")
+    showOnLoadCheck:SetSize(22, 22)
+    showOnLoadCheck:SetPoint("LEFT", cpuLabel, "RIGHT", 15, 0)
+    showOnLoadCheck:SetChecked(Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad or false)
+
+    local showOnLoadLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    showOnLoadLabel:SetPoint("LEFT", showOnLoadCheck, "RIGHT", 2, 0)
+    showOnLoadLabel:SetText(L["MON_LABEL_SHOW_ON_LOAD"] or "Show on Load")
+    showOnLoadLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    filterLabel:SetPoint("LEFT", cpuLabel, "RIGHT", 15, 0)
+    filterLabel:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -8)
     filterLabel:SetText(L["MON_LABEL_FILTER"] or "Filter:")
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
@@ -1539,20 +1527,10 @@ function UI:CreateMonitorTab(parent)
     filterBox:SetPoint("LEFT", filterLabel, "RIGHT", 5, 0)
     filterBox:SetAutoFocus(false)
 
-    local showOnLoadCheck = CreateFrame("CheckButton", nil, tab, "UICheckButtonTemplate")
-    showOnLoadCheck:SetSize(22, 22)
-    showOnLoadCheck:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -3)
-    showOnLoadCheck:SetChecked(Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad or false)
-
-    local showOnLoadLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    showOnLoadLabel:SetPoint("LEFT", showOnLoadCheck, "RIGHT", 2, 0)
-    showOnLoadLabel:SetText(L["MON_LABEL_SHOW_ON_LOAD"] or "Show on Load")
-    showOnLoadLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
     local hasCPU = Monitor and Monitor:IsCPUProfilingEnabled() or false
 
     local headerFrame = CreateFrame("Frame", nil, tab, "BackdropTemplate")
-    headerFrame:SetPoint("TOPLEFT", showOnLoadCheck, "BOTTOMLEFT", 0, -5)
+    headerFrame:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -35)
     headerFrame:SetPoint("RIGHT", tab, "RIGHT", -5, 0)
     headerFrame:SetHeight(22)
     headerFrame:SetBackdrop(BACKDROP_SIMPLE)
@@ -1632,7 +1610,7 @@ function UI:CreateMonitorTab(parent)
     local listScroll = CreateFrame("ScrollFrame", nil, listPanel, "UIPanelScrollFrameTemplate")
     listScroll:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 0, 0)
     listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -14, 0)
-    StyleScrollBar(listScroll, listPanel)
+    OneWoW_GUI:StyleScrollBar(listScroll, { container = listPanel })
 
     local listContent = CreateFrame("Frame", nil, listScroll)
     listContent:SetHeight(1)
@@ -2320,7 +2298,7 @@ function UI:ShowEventImportDialog()
         local editScroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
         editScroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -4)
         editScroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 4)
-        StyleScrollBar(editScroll, panel)
+        OneWoW_GUI:StyleScrollBar(editScroll, { container = panel })
 
         local editBox = CreateFrame("EditBox", nil, editScroll)
         editBox:SetMultiLine(true)

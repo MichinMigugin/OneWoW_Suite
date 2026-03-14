@@ -128,21 +128,10 @@ function Addon:SearchFramesByName(searchText)
 end
 
 function Addon:CopyToClipboard(text)
-    if not OneWoW_UtilityDevToolClipboardFrame then
-        local cf = CreateFrame("Frame", "OneWoW_UtilityDevToolClipboardFrame", UIParent)
-        cf:Hide()
-        cf.editBox = CreateFrame("EditBox", nil, cf)
-        cf.editBox:Hide()
-    end
-
-    OneWoW_UtilityDevToolClipboardFrame.editBox:SetText(text)
-    OneWoW_UtilityDevToolClipboardFrame.editBox:HighlightText()
-    OneWoW_UtilityDevToolClipboardFrame.editBox:SetFocus()
-    C_Timer.After(0.1, function()
-        OneWoW_UtilityDevToolClipboardFrame.editBox:ClearFocus()
-    end)
-
-    self:Print("Copied to clipboard: " .. text)
+    local lib = LibStub("LibCopyPaste-1.0")
+    -- Omit readOnly: when true, SetReadOnly captures GetText() from a hidden EditBox (which can return ""), then OnTextChanged overwrites with that empty value
+    lib:Copy("Copy", text)
+    self:Print("Press Ctrl+C to copy, then close the window.")
 end
 
 function Addon:OnInitialize()

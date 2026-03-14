@@ -1,5 +1,10 @@
 local AddonName, Addon = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local C = OneWoW_GUI.Constants
+
 local ColorToolsTab = {}
 Addon.ColorToolsTab = ColorToolsTab
 
@@ -37,109 +42,113 @@ ColorToolsTab.commonColors = {
 function ColorToolsTab:Initialize(parent)
     self.parent = parent
 
-    local pickerPanel = CreateFrame("Frame", nil, parent)
-    pickerPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10)
-    pickerPanel:SetSize(400, 350)
-
-    pickerPanel.bg = pickerPanel:CreateTexture(nil, "BACKGROUND")
-    pickerPanel.bg:SetAllPoints()
-    pickerPanel.bg:SetColorTexture(0.15, 0.15, 0.15, 0.9)
+    local pickerPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    pickerPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -10)
+    pickerPanel:SetSize(280, 350)
+    pickerPanel:SetBackdrop(C.BACKDROP_INNER_NO_INSETS)
+    pickerPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    pickerPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     pickerPanel.title = pickerPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     pickerPanel.title:SetPoint("TOP", 0, -10)
     pickerPanel.title:SetText("Custom Color Picker")
+    pickerPanel.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    self.colorPreview = CreateFrame("Frame", nil, pickerPanel)
-    self.colorPreview:SetSize(200, 100)
+    self.colorPreview = CreateFrame("Frame", nil, pickerPanel, "BackdropTemplate")
+    self.colorPreview:SetSize(260, 100)
     self.colorPreview:SetPoint("TOP", pickerPanel.title, "BOTTOM", 0, -20)
+    self.colorPreview:SetBackdrop(C.BACKDROP_INNER_NO_INSETS)
+    self.colorPreview:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    self.colorPreview:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    self.colorPreview.bg = self.colorPreview:CreateTexture(nil, "BACKGROUND")
+    self.colorPreview.bg = self.colorPreview:CreateTexture(nil, "ARTWORK")
     self.colorPreview.bg:SetAllPoints()
     self.colorPreview.bg:SetColorTexture(1, 1, 1, 1)
 
     local rLabel = pickerPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rLabel:SetPoint("TOPLEFT", self.colorPreview, "BOTTOMLEFT", 10, -20)
     rLabel:SetText("R:")
+    rLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    self.rSlider = CreateFrame("Slider", nil, pickerPanel, "OptionsSliderTemplate")
-    self.rSlider:SetPoint("LEFT", rLabel, "RIGHT", 10, 0)
-    self.rSlider:SetWidth(150)
-    self.rSlider:SetMinMaxValues(0, 255)
-    self.rSlider:SetValueStep(1)
-    self.rSlider:SetValue(255)
-    self.rSlider:SetScript("OnValueChanged", function()
-        ColorToolsTab:UpdateColor()
-    end)
+    local rContainer = OneWoW_GUI:CreateSlider(pickerPanel, {
+        minVal = 0, maxVal = 255, step = 1, currentVal = 255,
+        onChange = function() ColorToolsTab:UpdateColor() end,
+        width = 150, fmt = "%.0f"
+    })
+    rContainer:SetPoint("LEFT", rLabel, "RIGHT", 10, 0)
+    self.rSlider = select(1, rContainer:GetChildren())
 
     local gLabel = pickerPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     gLabel:SetPoint("TOPLEFT", rLabel, "BOTTOMLEFT", 0, -25)
     gLabel:SetText("G:")
+    gLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    self.gSlider = CreateFrame("Slider", nil, pickerPanel, "OptionsSliderTemplate")
-    self.gSlider:SetPoint("LEFT", gLabel, "RIGHT", 10, 0)
-    self.gSlider:SetWidth(150)
-    self.gSlider:SetMinMaxValues(0, 255)
-    self.gSlider:SetValueStep(1)
-    self.gSlider:SetValue(255)
-    self.gSlider:SetScript("OnValueChanged", function()
-        ColorToolsTab:UpdateColor()
-    end)
+    local gContainer = OneWoW_GUI:CreateSlider(pickerPanel, {
+        minVal = 0, maxVal = 255, step = 1, currentVal = 255,
+        onChange = function() ColorToolsTab:UpdateColor() end,
+        width = 150, fmt = "%.0f"
+    })
+    gContainer:SetPoint("LEFT", gLabel, "RIGHT", 10, 0)
+    self.gSlider = select(1, gContainer:GetChildren())
 
     local bLabel = pickerPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bLabel:SetPoint("TOPLEFT", gLabel, "BOTTOMLEFT", 0, -25)
     bLabel:SetText("B:")
+    bLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    self.bSlider = CreateFrame("Slider", nil, pickerPanel, "OptionsSliderTemplate")
-    self.bSlider:SetPoint("LEFT", bLabel, "RIGHT", 10, 0)
-    self.bSlider:SetWidth(150)
-    self.bSlider:SetMinMaxValues(0, 255)
-    self.bSlider:SetValueStep(1)
-    self.bSlider:SetValue(255)
-    self.bSlider:SetScript("OnValueChanged", function()
-        ColorToolsTab:UpdateColor()
-    end)
+    local bContainer = OneWoW_GUI:CreateSlider(pickerPanel, {
+        minVal = 0, maxVal = 255, step = 1, currentVal = 255,
+        onChange = function() ColorToolsTab:UpdateColor() end,
+        width = 150, fmt = "%.0f"
+    })
+    bContainer:SetPoint("LEFT", bLabel, "RIGHT", 10, 0)
+    self.bSlider = select(1, bContainer:GetChildren())
 
     self.colorCodeText = pickerPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    self.colorCodeText:SetPoint("TOP", self.bSlider, "BOTTOM", 50, -30)
+    self.colorCodeText:SetPoint("TOP", bContainer, "BOTTOM", 0, -30)
     self.colorCodeText:SetText("|cFFFFFFFF|cFFFFFFFF|r")
 
-    local copyButton = CreateFrame("Button", nil, pickerPanel, "UIPanelButtonTemplate")
-    copyButton:SetSize(150, 25)
+    local copyButton = OneWoW_GUI:CreateButton(pickerPanel, { text = "Copy Color Code", width = 150, height = 25 })
     copyButton:SetPoint("TOP", self.colorCodeText, "BOTTOM", 0, -10)
-    copyButton:SetText("Copy Color Code")
     copyButton:SetScript("OnClick", function()
         ColorToolsTab:CopyColorCode()
     end)
 
-    local classColorsPanel = CreateFrame("Frame", nil, parent)
-    classColorsPanel:SetPoint("TOPLEFT", pickerPanel, "TOPRIGHT", 10, 0)
+    local classColorsPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    classColorsPanel:SetPoint("TOPLEFT", pickerPanel, "TOPRIGHT", 5, 0)
     classColorsPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -10, 10)
-
-    classColorsPanel.bg = classColorsPanel:CreateTexture(nil, "BACKGROUND")
-    classColorsPanel.bg:SetAllPoints()
-    classColorsPanel.bg:SetColorTexture(0.15, 0.15, 0.15, 0.9)
+    classColorsPanel:SetBackdrop(C.BACKDROP_INNER_NO_INSETS)
+    classColorsPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    classColorsPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     classColorsPanel.title = classColorsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    classColorsPanel.title:SetPoint("TOP", 0, -10)
+    classColorsPanel.title:SetPoint("TOPLEFT", 0, -10)
     classColorsPanel.title:SetText("Class Colors")
+    classColorsPanel.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, classColorsPanel, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", classColorsPanel.title, "BOTTOMLEFT", 5, -10)
+    scrollFrame:SetPoint("TOPLEFT", classColorsPanel.title, "BOTTOMLEFT", 0, -10)
     scrollFrame:SetPoint("BOTTOMRIGHT", classColorsPanel, "BOTTOMRIGHT", -25, 10)
+    OneWoW_GUI:StyleScrollBar(scrollFrame, { container = classColorsPanel })
 
     local scrollChild = CreateFrame("Frame", nil, scrollFrame)
     scrollFrame:SetScrollChild(scrollChild)
-    scrollChild:SetWidth(scrollFrame:GetWidth() - 10)
+    scrollChild:SetWidth(math.max(250, (parent:GetWidth() or 0) - 320))
+
+    self.scrollFrame = scrollFrame
+    self.scrollChild = scrollChild
+    self.colorRows = {}
 
     local yOffset = -10
     for _, data in ipairs(self.classColors) do
         local frame = CreateFrame("Frame", nil, scrollChild)
-        frame:SetSize(scrollChild:GetWidth() - 10, 25)
-        frame:SetPoint("TOP", scrollChild, "TOP", 0, yOffset)
+        frame:SetSize(math.max(200, scrollChild:GetWidth()), 25)
+        tinsert(self.colorRows, frame)
+        frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
 
         frame.colorBox = frame:CreateTexture(nil, "ARTWORK")
         frame.colorBox:SetSize(20, 20)
-        frame.colorBox:SetPoint("LEFT", 10, 0)
+        frame.colorBox:SetPoint("LEFT", 5, 0)
         frame.colorBox:SetColorTexture(
             tonumber(data.color:sub(1,2), 16) / 255,
             tonumber(data.color:sub(3,4), 16) / 255,
@@ -148,33 +157,34 @@ function ColorToolsTab:Initialize(parent)
         )
 
         frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        frame.text:SetPoint("LEFT", frame.colorBox, "RIGHT", 10, 0)
+        frame.text:SetPoint("LEFT", frame.colorBox, "RIGHT", 5, 0)
         frame.text:SetText(data.class .. ": |cFF" .. data.color .. data.color .. "|r")
 
-        frame.copyBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-        frame.copyBtn:SetSize(60, 20)
-        frame.copyBtn:SetPoint("RIGHT", -10, 0)
-        frame.copyBtn:SetText("Copy")
+        frame.copyBtn = OneWoW_GUI:CreateButton(frame, { text = "Copy", width = 60, height = 20 })
+        frame.copyBtn:SetPoint("RIGHT", -5, 0)
         frame.copyBtn:SetScript("OnClick", function()
-            Addon:CopyToClipboard("|cFF" .. data.color)
+            Addon:CopyToClipboard(data.color)
         end)
+        frame.text:SetPoint("RIGHT", frame.copyBtn, "LEFT", -5, 0)
 
         yOffset = yOffset - 27
     end
 
     local commonTitle = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    commonTitle:SetPoint("TOP", scrollChild, "TOP", 0, yOffset - 10)
+    commonTitle:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset - 10)
     commonTitle:SetText("Common Colors")
+    commonTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     yOffset = yOffset - 40
     for _, data in ipairs(self.commonColors) do
         local frame = CreateFrame("Frame", nil, scrollChild)
-        frame:SetSize(scrollChild:GetWidth() - 10, 25)
-        frame:SetPoint("TOP", scrollChild, "TOP", 0, yOffset)
+        frame:SetSize(math.max(200, scrollChild:GetWidth()), 25)
+        tinsert(self.colorRows, frame)
+        frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
 
         frame.colorBox = frame:CreateTexture(nil, "ARTWORK")
         frame.colorBox:SetSize(20, 20)
-        frame.colorBox:SetPoint("LEFT", 10, 0)
+        frame.colorBox:SetPoint("LEFT", 5, 0)
         frame.colorBox:SetColorTexture(
             tonumber(data.color:sub(1,2), 16) / 255,
             tonumber(data.color:sub(3,4), 16) / 255,
@@ -183,23 +193,40 @@ function ColorToolsTab:Initialize(parent)
         )
 
         frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        frame.text:SetPoint("LEFT", frame.colorBox, "RIGHT", 10, 0)
+        frame.text:SetPoint("LEFT", frame.colorBox, "RIGHT", 5, 0)
         frame.text:SetText(data.name .. ": |cFF" .. data.color .. data.color .. "|r")
 
-        frame.copyBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-        frame.copyBtn:SetSize(60, 20)
-        frame.copyBtn:SetPoint("RIGHT", -10, 0)
-        frame.copyBtn:SetText("Copy")
+        frame.copyBtn = OneWoW_GUI:CreateButton(frame, { text = "Copy", width = 60, height = 20 })
+        frame.copyBtn:SetPoint("RIGHT", -5, 0)
         frame.copyBtn:SetScript("OnClick", function()
-            Addon:CopyToClipboard("|cFF" .. data.color)
+            Addon:CopyToClipboard(data.color)
         end)
+        frame.text:SetPoint("RIGHT", frame.copyBtn, "LEFT", -5, 0)
 
         yOffset = yOffset - 27
     end
 
     scrollChild:SetHeight(math.abs(yOffset) + 20)
 
+    parent:SetScript("OnShow", function()
+        ColorToolsTab:OnShow()
+    end)
+    parent:SetScript("OnSizeChanged", function()
+        if parent:IsVisible() then
+            ColorToolsTab:UpdateLayout()
+        end
+    end)
+
     self:UpdateColor()
+end
+
+function ColorToolsTab:UpdateLayout()
+    if not self.scrollFrame or not self.scrollChild then return end
+    local w = math.max(250, self.scrollFrame:GetWidth())
+    self.scrollChild:SetWidth(w)
+    for _, row in ipairs(self.colorRows or {}) do
+        row:SetSize(w, 25)
+    end
 end
 
 function ColorToolsTab:UpdateColor()
@@ -216,7 +243,7 @@ function ColorToolsTab:UpdateColor()
     local colorCode = "|cFF" .. rHex .. gHex .. bHex
 
     self.colorCodeText:SetText(colorCode .. colorCode .. "|r")
-    self.currentColorCode = colorCode
+    self.currentColorCode = rHex .. gHex .. bHex
 end
 
 function ColorToolsTab:CopyColorCode()
@@ -226,6 +253,7 @@ function ColorToolsTab:CopyColorCode()
 end
 
 function ColorToolsTab:OnShow()
+    self:UpdateLayout()
 end
 
 function ColorToolsTab:OnHide()
