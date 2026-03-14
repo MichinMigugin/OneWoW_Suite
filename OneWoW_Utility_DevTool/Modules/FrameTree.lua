@@ -3,147 +3,356 @@ local AddonName, Addon = ...
 local FrameTree = {}
 Addon.FrameTree = FrameTree
 
-function FrameTree:Create(parent)
-    local tree = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
-    tree.content = CreateFrame("Frame", nil, tree)
-    tree:SetScrollChild(tree.content)
-    tree.content:SetSize(1, 1)
+local safeGet, safeGetMulti
+local NODE_HEIGHT = 20
+local INDENT_PX = 15
+local MAX_DEPTH = 20
 
-    tree.nodes = {}
-    tree.nodeFrames = {}
+local function ensureHelpers()
+    if not safeGet then
+        safeGet = Addon.safeGet
+        safeGetMulti = Addon.safeGetMulti
+    end
+end
+
+local function resolveNameValue(val)
+    if type(val) == "string" then return val end
+    if val and type(val) == "table" then
+        local ok, text = pcall(function() return val.GetText and val:GetText() end)
+        if ok and type(text) == "string" then return text end
+    end
+    return nil
+end
+
+local function getNodeName(frame)
+    ensureHelpers()
+    local name
+    if safeGet then
+        name = resolveNameValue(safeGet(frame, "GetName"))
+        if not name or name == "" then
+            name = resolveNameValue(safeGet(frame, "GetDebugName"))
+        end
+    else
+        local ok, result = pcall(frame.GetName, frame)
+        name = ok and resolveNameValue(result)
+        if not name or name == "" then
+            ok, result = pcall(frame.GetDebugName, frame)
+            name = ok and resolveNameValue(result)
+        end
+    end
+    return name or "Anonymous"
+end
+
+local function getNodeType(frame)
+    ensureHelpers()
+    if safeGet then
+        return safeGet(frame, "GetObjectType") or "Unknown"
+    end
+    local ok, result = pcall(frame.GetObjectType, frame)
+    return (ok and result) or "Unknown"
+end
+
+local function makeNodeId(frame)
+    return tostring(frame)
+end
+
+function FrameTree:Create(parentContent, scrollFrame)
+    local tree = {}
+    tree.parentContent = parentContent
+    tree.scrollFrame = scrollFrame
+    tree.rootNodes = {}
+    tree.nodeFramePool = {}
     tree.expandedNodes = {}
+    tree.selectedNodeId = nil
+    tree.pendingScroll = false
+    tree.visibleCount = 0
 
     function tree:Clear()
-        for _, nodeFrame in ipairs(self.nodeFrames) do
-            nodeFrame:Hide()
-            nodeFrame:ClearAllPoints()
+        for _, nf in ipairs(self.nodeFramePool) do
+            nf:Hide()
         end
-        self.nodes = {}
-        self.nodeFrames = {}
+        self.rootNodes = {}
+        self.expandedNodes = {}
+        self.selectedNodeId = nil
+        self.pendingScroll = false
+        self.visibleCount = 0
+    end
+
+    local function buildChildNodes(frame, depth)
+        if depth > MAX_DEPTH then return nil end
+        local children = {}
+
+        if frame.GetChildren then
+            local ok, childList = pcall(function() return { frame:GetChildren() } end)
+            if ok and childList then
+                for _, child in ipairs(childList) do
+                    local node = {
+                        id = makeNodeId(child),
+                        text = getNodeName(child) .. " |cFF808080(" .. getNodeType(child) .. ")|r",
+                        data = child,
+                        children = nil,
+                        isRegion = false,
+                        depth = depth,
+                    }
+                    table.insert(children, node)
+                end
+            end
+        end
+
+        if frame.GetRegions then
+            local ok, regionList = pcall(function() return { frame:GetRegions() } end)
+            if ok and regionList then
+                for _, region in ipairs(regionList) do
+                    local node = {
+                        id = makeNodeId(region),
+                        text = getNodeName(region) .. " |cFF808080(" .. getNodeType(region) .. ")|r",
+                        data = region,
+                        children = {},
+                        isRegion = true,
+                        depth = depth,
+                    }
+                    table.insert(children, node)
+                end
+            end
+        end
+
+        return #children > 0 and children or {}
+    end
+
+    function tree:ExpandNode(node)
+        if node.isRegion then return end
+        if node.children == nil and node.data then
+            node.children = buildChildNodes(node.data, node.depth + 1)
+        end
+        self.expandedNodes[node.id] = true
+        self:Render()
+    end
+
+    function tree:CollapseNode(node)
+        self.expandedNodes[node.id] = false
+        self:Render()
+    end
+
+    function tree:ToggleNode(node)
+        if self.expandedNodes[node.id] then
+            self:CollapseNode(node)
+        else
+            self:ExpandNode(node)
+        end
     end
 
     function tree:BuildFromFrame(frame)
         self:Clear()
-
         if not frame then return end
 
-        local rootNode = {
-            frame = frame,
-            name = frame.GetName and frame:GetName() or "Anonymous",
-            type = frame.GetObjectType and frame:GetObjectType() or "Frame",
-            level = 0,
-            expanded = true,
-        }
-
-        local parentChain = Addon:GetParentChain(frame)
-        for i = #parentChain, 1, -1 do
-            local pframe = parentChain[i]
-            table.insert(self.nodes, {
-                frame = pframe,
-                name = pframe.GetName and pframe:GetName() or "Anonymous",
-                type = pframe.GetObjectType and pframe:GetObjectType() or "Frame",
-                level = #parentChain - i,
-                isParent = i ~= 1,
-                expanded = true,
-            })
-        end
-
-        self.nodes[#self.nodes].isSelected = true
-
-        local function addChildren(parentFrame, level)
-            local children = Addon:GetChildren(parentFrame)
-            for _, child in ipairs(children) do
-                table.insert(self.nodes, {
-                    frame = child,
-                    name = child.GetName and child:GetName() or "Anonymous",
-                    type = child.GetObjectType and child:GetObjectType() or "Frame",
-                    level = level,
-                    isChild = true,
-                    expanded = false,
-                })
+        local parentChain = {}
+        local current = frame
+        while current do
+            table.insert(parentChain, 1, current)
+            if current.GetParent then
+                current = current:GetParent()
+            else
+                break
             end
         end
 
-        addChildren(frame, #parentChain)
+        local rootNode
+        local prevNode
+
+        for i, pf in ipairs(parentChain) do
+            local node = {
+                id = makeNodeId(pf),
+                text = getNodeName(pf) .. " |cFF808080(" .. getNodeType(pf) .. ")|r",
+                data = pf,
+                children = nil,
+                isRegion = false,
+                depth = i - 1,
+            }
+
+            if pf == frame then
+                self.selectedNodeId = node.id
+                self.pendingScroll = true
+                node.children = buildChildNodes(pf, i)
+                self.expandedNodes[node.id] = true
+            else
+                self.expandedNodes[node.id] = true
+            end
+
+            if i == 1 then
+                rootNode = node
+                table.insert(self.rootNodes, node)
+            else
+                if prevNode.children == nil then
+                    prevNode.children = buildChildNodes(prevNode.data, prevNode.depth + 1)
+                end
+
+                for ci, child in ipairs(prevNode.children) do
+                    if child.id == node.id then
+                        prevNode.children[ci] = node
+                        break
+                    end
+                end
+            end
+            prevNode = node
+        end
 
         self:Render()
     end
 
-    function tree:Render()
-        local yOffset = 0
-        local nodeHeight = 20
-        local indent = 15
+    local function getOrCreateNodeFrame(pool, index, parent)
+        local nf = pool[index]
+        if nf then return nf end
 
-        for i, node in ipairs(self.nodes) do
-            local nodeFrame = self.nodeFrames[i]
-            if not nodeFrame then
-                nodeFrame = CreateFrame("Button", nil, self.content)
-                nodeFrame:SetSize(280, nodeHeight)
-                nodeFrame:SetNormalFontObject(GameFontNormal)
-                nodeFrame:SetHighlightFontObject(GameFontHighlight)
+        nf = CreateFrame("Button", nil, parent)
+        nf:SetHeight(NODE_HEIGHT)
+        nf:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
-                nodeFrame.bg = nodeFrame:CreateTexture(nil, "BACKGROUND")
-                nodeFrame.bg:SetAllPoints()
-                nodeFrame.bg:SetColorTexture(0.2, 0.2, 0.2, 0.5)
-                nodeFrame.bg:Hide()
+        nf.bg = nf:CreateTexture(nil, "BACKGROUND")
+        nf.bg:SetAllPoints()
+        nf.bg:SetColorTexture(0.2, 0.2, 0.2, 0.5)
+        nf.bg:Hide()
 
-                nodeFrame.text = nodeFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                nodeFrame.text:SetPoint("LEFT", indent, 0)
-                nodeFrame.text:SetJustifyH("LEFT")
+        nf.toggle = nf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        nf.toggle:SetPoint("LEFT", 0, 0)
+        nf.toggle:SetWidth(14)
+        nf.toggle:SetJustifyH("CENTER")
 
-                nodeFrame:SetScript("OnEnter", function(self)
-                    self.bg:Show()
-                    if self.node and self.node.frame then
-                        Addon.FrameInspector:HighlightFrame(self.node.frame)
-                    end
-                end)
+        nf.label = nf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        nf.label:SetPoint("LEFT", nf.toggle, "RIGHT", 2, 0)
+        nf.label:SetPoint("RIGHT", nf, "RIGHT", -2, 0)
+        nf.label:SetJustifyH("LEFT")
 
-                nodeFrame:SetScript("OnLeave", function(self)
-                    if not self.node or not self.node.isSelected then
-                        self.bg:Hide()
-                    end
-                    Addon.FrameInspector:ClearHighlight()
-                end)
-
-                nodeFrame:SetScript("OnClick", function(self, button)
-                    if self.node and self.node.frame then
-                        Addon.FrameInspector:InspectFrame(self.node.frame)
-                        if button == "RightButton" then
-                            Addon:CopyToClipboard(self.node.name)
-                        end
-                    end
-                end)
-
-                nodeFrame:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-
-                self.nodeFrames[i] = nodeFrame
+        nf:SetScript("OnEnter", function(self)
+            self.bg:Show()
+            if self.nodeData and self.nodeData.data then
+                Addon.FrameInspector:HighlightFrame(self.nodeData.data)
             end
+        end)
 
-            nodeFrame.node = node
-            nodeFrame:ClearAllPoints()
-            nodeFrame:SetPoint("TOPLEFT", self.content, "TOPLEFT", node.level * indent, -yOffset)
-
-            local displayName = node.name
-            if node.isParent then
-                displayName = "> " .. displayName
-            elseif node.isChild then
-                displayName = "  - " .. displayName
+        nf:SetScript("OnLeave", function(self)
+            if not self.isSelectedStyle then
+                self.bg:Hide()
             end
+            Addon.FrameInspector:ClearHighlight()
+        end)
 
-            if node.isSelected then
-                displayName = "[" .. displayName .. "]"
-                nodeFrame.bg:Show()
+        nf:SetScript("OnClick", function(self, button)
+            if not self.nodeData then return end
+            if button == "RightButton" then
+                Addon:CopyToClipboard(getNodeName(self.nodeData.data))
+                return
+            end
+            if self.isToggleHit then
+                tree:ToggleNode(self.nodeData)
             else
-                nodeFrame.bg:Hide()
+                if self.nodeData.data then
+                    Addon.FrameInspector:InspectFrame(self.nodeData.data)
+                end
             end
+        end)
 
-            nodeFrame.text:SetText(displayName)
-            nodeFrame:Show()
+        nf:SetScript("OnMouseDown", function(self, button)
+            if button == "LeftButton" then
+                local cursorX = GetCursorPosition()
+                local scale = self:GetEffectiveScale()
+                local frameLeft = self:GetLeft() * scale
+                local toggleEnd = frameLeft + (self.nodeData and self.nodeData.depth or 0) * INDENT_PX * scale + 14 * scale
+                self.isToggleHit = cursorX < toggleEnd
+            end
+        end)
 
-            yOffset = yOffset + nodeHeight
+        pool[index] = nf
+        return nf
+    end
+
+    function tree:Render()
+        local visibleNodes = {}
+
+        local function walkNodes(nodes)
+            if not nodes then return end
+            for _, node in ipairs(nodes) do
+                table.insert(visibleNodes, node)
+                if self.expandedNodes[node.id] and node.children and #node.children > 0 then
+                    walkNodes(node.children)
+                end
+            end
         end
 
-        self.content:SetHeight(math.max(yOffset, 1))
+        walkNodes(self.rootNodes)
+        self.visibleCount = #visibleNodes
+
+        for i = #visibleNodes + 1, #self.nodeFramePool do
+            if self.nodeFramePool[i] then
+                self.nodeFramePool[i]:Hide()
+            end
+        end
+
+        for i, node in ipairs(visibleNodes) do
+            local nf = getOrCreateNodeFrame(self.nodeFramePool, i, self.parentContent)
+            nf.nodeData = node
+            nf:ClearAllPoints()
+            nf:SetPoint("TOPLEFT", self.parentContent, "TOPLEFT", node.depth * INDENT_PX, -(i - 1) * NODE_HEIGHT)
+            nf:SetPoint("RIGHT", self.parentContent, "RIGHT", 0, 0)
+
+            local hasChildren = not node.isRegion and (node.children == nil or (node.children and #node.children > 0))
+            if hasChildren then
+                nf.toggle:SetText(self.expandedNodes[node.id] and "-" or "+")
+            else
+                nf.toggle:SetText(node.isRegion and "-" or " ")
+            end
+
+            local isSelected = node.id == self.selectedNodeId
+            nf.isSelectedStyle = isSelected
+            if isSelected then
+                nf.bg:Show()
+                nf.label:SetText("|cFF00FF00" .. node.text .. "|r")
+            else
+                nf.bg:Hide()
+                nf.label:SetText(node.text)
+            end
+
+            nf:Show()
+        end
+
+        local totalHeight = math.max(#visibleNodes * NODE_HEIGHT, 1)
+        self.parentContent:SetHeight(totalHeight)
+
+        if self.scrollFrame and self.selectedNodeId and self.pendingScroll then
+            self.pendingScroll = false
+            for i, node in ipairs(visibleNodes) do
+                if node.id == self.selectedNodeId then
+                    local selectedY = (i - 1) * NODE_HEIGHT
+                    local scrollHeight = self.scrollFrame:GetHeight()
+                    local targetScroll = selectedY - (scrollHeight / 2) + (NODE_HEIGHT / 2)
+                    targetScroll = math.max(0, math.min(targetScroll, totalHeight - scrollHeight))
+                    self.scrollFrame:SetVerticalScroll(targetScroll)
+                    break
+                end
+            end
+        end
+    end
+
+    function tree:SerializeToText()
+        local lines = {}
+
+        local function walkForText(nodes, prefix)
+            if not nodes then return end
+            for _, node in ipairs(nodes) do
+                local indent = string.rep("  ", node.depth)
+                local marker = node.isRegion and "- " or ""
+                local name = node.data and getNodeName(node.data) or "?"
+                local objType = node.data and getNodeType(node.data) or "?"
+                local sel = (node.id == self.selectedNodeId) and "[" or ""
+                local selEnd = (node.id == self.selectedNodeId) and "]" or ""
+                table.insert(lines, indent .. marker .. sel .. name .. " (" .. objType .. ")" .. selEnd)
+                if self.expandedNodes[node.id] and node.children then
+                    walkForText(node.children, prefix)
+                end
+            end
+        end
+
+        walkForText(self.rootNodes, "")
+        return table.concat(lines, "\n")
     end
 
     return tree

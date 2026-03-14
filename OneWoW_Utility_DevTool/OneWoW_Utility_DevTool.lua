@@ -10,54 +10,303 @@ Addon.frames = {}
 Addon.selectedFrame = nil
 Addon.pickerActive = false
 
+local format = string.format
+local tinsert = table.insert
+local pcall = pcall
+local type = type
+local tostring = tostring
+
+local function safeGet(frame, method, ...)
+    local fn = frame[method]
+    if not fn then return nil, false end
+    local ok, result = pcall(fn, frame, ...)
+    if not ok then return nil, true end
+    if result ~= nil then
+        if type(result) == "table" and issecrettable(result) then return nil, true end
+        if issecretvalue(result) then return nil, true end
+    end
+    return result, false
+end
+
+local function safeGetMulti(frame, method, ...)
+    local fn = frame[method]
+    if not fn then return nil end
+    local results = { pcall(fn, frame, ...) }
+    if not results[1] then return nil end
+    for i = 2, #results do
+        if issecretvalue(results[i]) then
+            results[i] = "[secret]"
+        end
+    end
+    table.remove(results, 1)
+    return results
+end
+
+Addon.safeGet = safeGet
+Addon.safeGetMulti = safeGetMulti
+
 function Addon:Print(msg)
     local L = self.L or {}
     print("|cFFFFD100OneWoW|r - " .. L["ADDON_TITLE"] .. ": " .. tostring(msg))
 end
 
+local function getRegisteredEvents(frame)
+    if not frame.IsEventRegistered then return nil end
+    local hasOnEvent = frame.GetScript and pcall(frame.GetScript, frame, "OnEvent")
+    if not hasOnEvent then return nil end
+    local events = {}
+    for _, event in ipairs(Addon.COMMON_EVENTS) do
+        local ok, registered = pcall(frame.IsEventRegistered, frame, event)
+        if ok and registered then
+            tinsert(events, event)
+        end
+    end
+    return events
+end
+
+local function getScriptInfo(frame)
+    if not frame.GetScript then return nil end
+    local scripts = {}
+    for _, scriptName in ipairs(Addon.COMMON_SCRIPTS) do
+        local ok, handler = pcall(frame.GetScript, frame, scriptName)
+        if ok and handler then
+            tinsert(scripts, scriptName)
+        end
+    end
+    return scripts
+end
+
+local function getTypeSpecificInfo(obj)
+    local objType = safeGet(obj, "GetObjectType")
+    if not objType then return nil end
+
+    local props = {}
+    props._type = objType
+
+    if objType == "Texture" or objType == "MaskTexture" then
+        props.atlas = safeGet(obj, "GetAtlas")
+        props.texture = safeGet(obj, "GetTexture")
+        props.textureFileID = safeGet(obj, "GetTextureFileID")
+        props.blendMode = safeGet(obj, "GetBlendMode")
+        props.texCoord = safeGetMulti(obj, "GetTexCoord")
+        local drawVals = safeGetMulti(obj, "GetDrawLayer")
+        if drawVals then
+            props.drawLayer = drawVals[1]
+            props.drawSublevel = drawVals[2]
+        end
+        props.vertexColor = safeGetMulti(obj, "GetVertexColor")
+        props.desaturation = safeGet(obj, "GetDesaturation")
+        props.rotation = safeGet(obj, "GetRotation")
+        props.horizTile = safeGet(obj, "GetHorizTile")
+        props.vertTile = safeGet(obj, "GetVertTile")
+    elseif objType == "FontString" then
+        props.text = safeGet(obj, "GetText")
+        props.font = safeGetMulti(obj, "GetFont")
+        props.fontObject = safeGet(obj, "GetFontObject")
+        props.justifyH = safeGet(obj, "GetJustifyH")
+        props.justifyV = safeGet(obj, "GetJustifyV")
+        props.shadowColor = safeGetMulti(obj, "GetShadowColor")
+        props.shadowOffset = safeGetMulti(obj, "GetShadowOffset")
+        props.spacing = safeGet(obj, "GetSpacing")
+        props.stringWidth = safeGet(obj, "GetStringWidth")
+        props.stringHeight = safeGet(obj, "GetStringHeight")
+        props.numLines = safeGet(obj, "GetNumLines")
+        props.isTruncated = safeGet(obj, "IsTruncated")
+    elseif objType == "Line" then
+        props.startPoint = safeGetMulti(obj, "GetStartPoint")
+        props.endPoint = safeGetMulti(obj, "GetEndPoint")
+        props.thickness = safeGet(obj, "GetThickness")
+    elseif objType == "Button" or objType == "CheckButton" then
+        props.buttonState = safeGet(obj, "GetButtonState")
+        props.buttonText = safeGet(obj, "GetText")
+        props.enabled = safeGet(obj, "IsEnabled")
+        props.normalTexture = safeGet(obj, "GetNormalTexture")
+        props.highlightTexture = safeGet(obj, "GetHighlightTexture")
+        props.pushedTexture = safeGet(obj, "GetPushedTexture")
+        props.disabledTexture = safeGet(obj, "GetDisabledTexture")
+    elseif objType == "EditBox" then
+        props.text = safeGet(obj, "GetText")
+        props.cursorPosition = safeGet(obj, "GetCursorPosition")
+        props.numLetters = safeGet(obj, "GetNumLetters")
+        props.maxLetters = safeGet(obj, "GetMaxLetters")
+        props.inputLanguage = safeGet(obj, "GetInputLanguage")
+        props.isMultiLine = safeGet(obj, "IsMultiLine")
+        props.isAutoFocus = safeGet(obj, "IsAutoFocus")
+        props.isNumeric = safeGet(obj, "IsNumericFullRange")
+    elseif objType == "ScrollFrame" then
+        props.scrollChild = safeGet(obj, "GetScrollChild")
+        props.horizontalScroll = safeGet(obj, "GetHorizontalScroll")
+        props.verticalScroll = safeGet(obj, "GetVerticalScroll")
+    elseif objType == "Slider" then
+        props.minMax = safeGetMulti(obj, "GetMinMaxValues")
+        props.value = safeGet(obj, "GetValue")
+        props.valueStep = safeGet(obj, "GetValueStep")
+        props.obeyStep = safeGet(obj, "GetObeyStepOnDrag")
+    elseif objType == "StatusBar" then
+        props.minMax = safeGetMulti(obj, "GetMinMaxValues")
+        props.value = safeGet(obj, "GetValue")
+        props.statusBarColor = safeGetMulti(obj, "GetStatusBarColor")
+        props.statusBarTexture = safeGet(obj, "GetStatusBarTexture")
+    elseif objType == "Cooldown" then
+        props.cooldownTimes = safeGetMulti(obj, "GetCooldownTimes")
+        props.cooldownDuration = safeGet(obj, "GetCooldownDuration")
+    elseif objType == "ColorSelect" then
+        props.colorRGB = safeGetMulti(obj, "GetColorRGB")
+        props.colorHSV = safeGetMulti(obj, "GetColorValueHSV")
+    elseif objType == "Model" or objType == "PlayerModel" or objType == "DressUpModel" or objType == "CinematicModel" then
+        props.facing = safeGet(obj, "GetFacing")
+        props.position = safeGetMulti(obj, "GetPosition")
+        props.modelScale = safeGet(obj, "GetModelScale")
+    end
+
+    local hasAny = false
+    for k, v in pairs(props) do
+        if k ~= "_type" and v ~= nil then
+            hasAny = true
+            break
+        end
+    end
+    if not hasAny then return nil end
+
+    return props
+end
+
 function Addon:GetFrameInfo(frame)
     if not frame then return nil end
 
+    -- Tier 1: Universal properties (all objects)
     local info = {
-        name = frame.GetName and frame:GetName() or "Anonymous",
-        type = frame.GetObjectType and frame:GetObjectType() or "Unknown",
-        shown = frame.IsShown and frame:IsShown() or false,
-        mouse = frame.IsMouseEnabled and frame:IsMouseEnabled() or false,
-        protected = frame.IsProtected and frame:IsProtected() or false,
-        forbidden = frame.IsForbidden and frame:IsForbidden() or false,
+        name = safeGet(frame, "GetName") or "Anonymous",
+        type = safeGet(frame, "GetObjectType") or "Unknown",
+        debugName = safeGet(frame, "GetDebugName"),
+        parentKey = safeGet(frame, "GetParentKey"),
     }
 
-    if frame.GetFrameStrata then
-        info.strata = frame:GetFrameStrata()
+    local parentRef = frame.GetParent and frame:GetParent()
+    info.parent = parentRef
+    if parentRef then
+        info.parentName = safeGet(parentRef, "GetName") or safeGet(parentRef, "GetDebugName") or "Anonymous"
     end
 
-    if frame.GetFrameLevel then
-        info.level = frame:GetFrameLevel()
-    end
+    info.width = safeGet(frame, "GetWidth")
+    info.height = safeGet(frame, "GetHeight")
+    info.left = safeGet(frame, "GetLeft")
+    info.top = safeGet(frame, "GetTop")
+    info.right = safeGet(frame, "GetRight")
+    info.bottom = safeGet(frame, "GetBottom")
+    info.scale = safeGet(frame, "GetScale")
+    info.effectiveScale = safeGet(frame, "GetEffectiveScale")
+    info.alpha = safeGet(frame, "GetAlpha")
+    info.effectiveAlpha = safeGet(frame, "GetEffectiveAlpha")
+    info.shown = frame.IsShown and frame:IsShown() or false
+    info.isVisible = frame.IsVisible and frame:IsVisible() or false
+    info.ignoreParentAlpha = safeGet(frame, "IsIgnoringParentAlpha")
+    info.ignoreParentScale = safeGet(frame, "IsIgnoringParentScale")
+    info.objectLoaded = safeGet(frame, "IsObjectLoaded")
+    info.sourceLocation = safeGet(frame, "GetSourceLocation")
+    info.hasSecretValues = safeGet(frame, "HasSecretValues")
+    info.hasAnySecretAspect = safeGet(frame, "HasAnySecretAspect")
 
-    if frame.GetWidth and frame.GetHeight then
-        info.width = frame:GetWidth()
-        info.height = frame:GetHeight()
-    end
-
-    if frame.GetPoint then
-        local numPoints = frame:GetNumPoints()
-        info.points = {}
-        for i = 1, numPoints do
-            local point, relativeTo, relativePoint, x, y = frame:GetPoint(i)
-            local relName = "nil"
-            if relativeTo then
-                relName = relativeTo.GetName and relativeTo:GetName() or "Anonymous"
+    -- Anchors
+    if frame.GetNumPoints then
+        local ok, numPoints = pcall(frame.GetNumPoints, frame)
+        if ok and numPoints then
+            info.points = {}
+            for i = 1, numPoints do
+                local vals = safeGetMulti(frame, "GetPoint", i)
+                if vals then
+                    local relName = "nil"
+                    local relativeTo = vals[2]
+                    if relativeTo and type(relativeTo) ~= "string" then
+                        relName = safeGet(relativeTo, "GetName") or "Anonymous"
+                    elseif type(relativeTo) == "string" then
+                        relName = relativeTo
+                    end
+                    tinsert(info.points, {
+                        point = vals[1],
+                        relativeTo = relName,
+                        relativePoint = vals[3],
+                        x = vals[4],
+                        y = vals[5],
+                    })
+                end
             end
-            table.insert(info.points, {
-                point = point,
-                relativeTo = relName,
-                relativePoint = relativePoint,
-                x = x,
-                y = y,
-            })
         end
     end
+
+    -- Tier 2: Frame-only properties (gate on GetFrameStrata)
+    if frame.GetFrameStrata then
+        info.strata = safeGet(frame, "GetFrameStrata")
+        info.level = safeGet(frame, "GetFrameLevel")
+        info.mouse = frame.IsMouseEnabled and frame:IsMouseEnabled() or false
+        info.keyboard = frame.IsKeyboardEnabled and frame:IsKeyboardEnabled() or false
+        info.protected = frame.IsProtected and frame:IsProtected() or false
+        info.forbidden = frame.IsForbidden and frame:IsForbidden() or false
+        info.numChildren = safeGet(frame, "GetNumChildren")
+        info.numRegions = safeGet(frame, "GetNumRegions")
+        info.ID = safeGet(frame, "GetID")
+        info.clipsChildren = safeGet(frame, "DoesClipChildren")
+        info.ignoreChildrenBounds = safeGet(frame, "IsIgnoringChildrenForBounds")
+        info.clampedToScreen = safeGet(frame, "IsClampedToScreen")
+        info.clampInsets = safeGetMulti(frame, "GetClampRectInsets")
+        info.hitRectInsets = safeGetMulti(frame, "GetHitRectInsets")
+        info.movable = safeGet(frame, "IsMovable")
+        info.resizable = safeGet(frame, "IsResizable")
+        info.resizeBounds = safeGetMulti(frame, "GetResizeBounds")
+        info.userPlaced = safeGet(frame, "IsUserPlaced")
+        info.dontSavePosition = safeGet(frame, "GetDontSavePosition")
+        info.propagateKeyboard = safeGet(frame, "GetPropagateKeyboardInput")
+        info.hyperlinksEnabled = safeGet(frame, "GetHyperlinksEnabled")
+        info.hyperlinkPropagate = safeGet(frame, "DoesHyperlinkPropagateToParent")
+        info.flattensRenderLayers = safeGet(frame, "GetFlattensRenderLayers")
+        info.effectivelyFlattens = safeGet(frame, "GetEffectivelyFlattensRenderLayers")
+        info.isFrameBuffer = safeGet(frame, "IsFrameBuffer")
+        info.hasAlphaGradient = safeGet(frame, "HasAlphaGradient")
+        info.gamePadButton = safeGet(frame, "IsGamePadButtonEnabled")
+        info.gamePadStick = safeGet(frame, "IsGamePadStickEnabled")
+        info.fixedLevel = safeGet(frame, "HasFixedFrameLevel")
+        info.fixedStrata = safeGet(frame, "HasFixedFrameStrata")
+        info.toplevel = safeGet(frame, "IsToplevel")
+        info.usingParentLevel = safeGet(frame, "IsUsingParentLevel")
+        info.raisedLevel = safeGet(frame, "GetRaisedFrameLevel")
+        info.highestLevel = safeGet(frame, "GetHighestFrameLevel")
+        info.canChangeAttribute = safeGet(frame, "CanChangeAttribute")
+        info.boundsRect = safeGetMulti(frame, "GetBoundsRect")
+    end
+
+    -- Tier 3: Screen position (from GetRect)
+    if frame.GetRect then
+        local ok, l, b, w, h = pcall(frame.GetRect, frame)
+        if ok and l then
+            local t = b + h
+            local r = l + w
+            info.screenPos = {
+                left = l, right = r, bottom = b, top = t,
+                centerX = l + (w / 2),
+                centerY = b + (h / 2),
+            }
+            if parentRef and parentRef.GetRect then
+                local pok, pl, pb, pw, ph = pcall(parentRef.GetRect, parentRef)
+                if pok and pl then
+                    info.relativeToParent = {
+                        fromLeft = l - pl,
+                        fromRight = (pl + pw) - r,
+                        fromBottom = b - pb,
+                        fromTop = (pb + ph) - t,
+                        fromCenterX = (l + w / 2) - (pl + pw / 2),
+                        fromCenterY = (b + h / 2) - (pb + ph / 2),
+                    }
+                end
+            end
+        end
+    end
+
+    -- Tier 4: Events and Scripts
+    info.registeredEvents = getRegisteredEvents(frame)
+    info.scripts = getScriptInfo(frame)
+
+    -- Tier 5: Type-specific
+    info.typeSpecific = getTypeSpecificInfo(frame)
 
     return info
 end
@@ -111,14 +360,24 @@ function Addon:SearchFramesByName(searchText)
     local function searchFrame(frame)
         if not frame then return end
 
-        local name = frame.GetName and frame:GetName()
-        if name and string.find(string.lower(name), searchText, 1, true) then
-            table.insert(results, frame)
+        local ok, name = pcall(function() return frame.GetName and frame:GetName() end)
+        if ok and name then
+            if type(name) ~= "string" then
+                local tok, text = pcall(function() return name.GetText and name:GetText() end)
+                name = (tok and type(text) == "string") and text or nil
+            end
+            if name and string.find(string.lower(name), searchText, 1, true) then
+                tinsert(results, frame)
+            end
         end
 
-        local children = Addon:GetChildren(frame)
-        for _, child in ipairs(children) do
-            searchFrame(child)
+        if frame.GetChildren then
+            local cok, children = pcall(function() return { frame:GetChildren() } end)
+            if cok and children then
+                for _, child in ipairs(children) do
+                    searchFrame(child)
+                end
+            end
         end
     end
 

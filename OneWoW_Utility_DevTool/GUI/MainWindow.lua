@@ -265,11 +265,6 @@ function UI:CreateFrameInspectorTab(parent)
 
     local pickBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_PICK_FRAME"] or "Pick Frame", width = 100, height = 22 })
     pickBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
-    pickBtn:SetScript("OnClick", function()
-        if Addon.FramePicker then
-            Addon.FramePicker:Start()
-        end
-    end)
 
     local searchBox = CreateFrame("EditBox", nil, tab, "InputBoxTemplate")
     searchBox:SetSize(150, 22)
@@ -279,10 +274,43 @@ function UI:CreateFrameInspectorTab(parent)
     local searchBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_SEARCH"] or "Search", width = 70, height = 22 })
     searchBtn:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
 
+    pickBtn:SetScript("OnClick", function()
+        if Addon.FramePicker then
+            searchBox:SetText("")
+            Addon.FramePicker:Start()
+        end
+    end)
+
+    local function doSearch()
+        local text = searchBox:GetText()
+        if not text or text == "" then return end
+        local results = Addon:SearchFramesByName(text)
+        if #results == 0 then
+            Addon:Print("No frames found matching: " .. text)
+        else
+            Addon.FrameInspector:InspectFrame(results[1])
+            if #results > 1 then
+                Addon:Print(string.format("Found %d frames, showing first: %s", #results, results[1].GetName and results[1]:GetName() or "Anonymous"))
+            end
+        end
+    end
+    searchBtn:SetScript("OnClick", doSearch)
+    searchBox:SetScript("OnEnterPressed", function(self)
+        doSearch()
+        self:ClearFocus()
+    end)
+
+    -- Left panel: Frame Hierarchy (FrameTree)
+    local LEFT_DEFAULT_WIDTH = 350
+    local LEFT_MIN_WIDTH = LEFT_DEFAULT_WIDTH
+    local RIGHT_MIN_WIDTH = 300
+    local DIVIDER_WIDTH = 6
+    local PADDING = DIVIDER_WIDTH + 10
+
     local leftPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
     leftPanel:SetPoint("TOPLEFT", pickBtn, "BOTTOMLEFT", 0, -5)
     leftPanel:SetPoint("BOTTOM", tab, "BOTTOM", 0, 5)
-    leftPanel:SetWidth(350)
+    leftPanel:SetWidth(LEFT_DEFAULT_WIDTH)
     StyleContentPanel(leftPanel)
 
     local leftTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -293,8 +321,8 @@ function UI:CreateFrameInspectorTab(parent)
     local copyHierarchyBtn = OneWoW_GUI:CreateButton(leftPanel, { text = Addon.L and Addon.L["BTN_COPY_HIERARCHY"] or "Copy All", width = 70, height = 18 })
     copyHierarchyBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -25, -3)
     copyHierarchyBtn:SetScript("OnClick", function()
-        if tab.hierarchyText then
-            Addon:CopyToClipboard(tab.hierarchyText:GetText())
+        if tab.frameTree then
+            Addon:CopyToClipboard(tab.frameTree:SerializeToText())
         end
     end)
 
@@ -311,25 +339,119 @@ function UI:CreateFrameInspectorTab(parent)
         leftContent:SetWidth(w)
     end)
 
-    tab.hierarchyText = leftContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    tab.hierarchyText:SetPoint("TOPLEFT", 2, -2)
-    tab.hierarchyText:SetPoint("RIGHT", leftContent, "RIGHT", -2, 0)
-    tab.hierarchyText:SetJustifyH("LEFT")
-    tab.hierarchyText:SetText(Addon.L and Addon.L["LABEL_NO_FRAME"] or "No frame selected")
-    tab.hierarchyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    tab.frameTree = Addon.FrameTree:Create(leftContent, leftScroll)
 
+    -- Divider handle between left and right panels
+    local divider = CreateFrame("Button", nil, tab)
+    divider:SetWidth(DIVIDER_WIDTH)
+    divider:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 0, 0)
+    divider:SetPoint("BOTTOM", tab, "BOTTOM", 0, 5)
+    divider:EnableMouse(true)
+
+    local dividerTex = divider:CreateTexture(nil, "OVERLAY")
+    dividerTex:SetWidth(2)
+    dividerTex:SetPoint("TOP", divider, "TOP", 0, 0)
+    dividerTex:SetPoint("BOTTOM", divider, "BOTTOM", 0, 0)
+    dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+
+    divider:SetScript("OnEnter", function(self)
+        dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        SetCursor("UI_RESIZE_CURSOR")
+    end)
+    divider:SetScript("OnLeave", function(self)
+        if not self.isDragging then
+            dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+            SetCursor(nil)
+        end
+    end)
+
+    divider:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" then
+            self.isDragging = true
+            self.startX = GetCursorPosition() / self:GetEffectiveScale()
+            self.startWidth = leftPanel:GetWidth()
+        end
+    end)
+
+    divider:SetScript("OnMouseUp", function(self, button)
+        if button == "LeftButton" then
+            self.isDragging = false
+            dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+            SetCursor(nil)
+        end
+    end)
+
+    local function getNeededRightWidth()
+        local dt = tab.detailsText
+        if dt and dt.GetUnboundedStringWidth then
+            local textWidth = dt:GetUnboundedStringWidth()
+            local needed = textWidth + 32
+            if needed > RIGHT_MIN_WIDTH then return needed end
+        end
+        return RIGHT_MIN_WIDTH
+    end
+
+    divider:SetScript("OnUpdate", function(self)
+        if not self.isDragging then return end
+        local cursorX = GetCursorPosition() / self:GetEffectiveScale()
+        local delta = cursorX - self.startX
+        local desiredLeftWidth = math.max(LEFT_MIN_WIDTH, self.startWidth + delta)
+
+        local mainFrame = Addon.UI and Addon.UI.mainFrame
+        local tabWidth = tab:GetWidth()
+        local neededRight = getNeededRightWidth()
+        local rightAvailable = tabWidth - desiredLeftWidth - PADDING
+
+        if rightAvailable < neededRight and mainFrame then
+            local shortage = neededRight - rightAvailable
+            local currentMainW = mainFrame:GetWidth()
+            local screenMax = math.floor(GetScreenWidth() * 0.95)
+            local newMainW = math.min(currentMainW + shortage, screenMax)
+            if newMainW > currentMainW then
+                mainFrame:SetWidth(newMainW)
+                tabWidth = tab:GetWidth()
+            end
+        end
+
+        local maxLeftWidth = tabWidth - RIGHT_MIN_WIDTH - PADDING
+        local newLeftWidth = math.max(LEFT_MIN_WIDTH, math.min(desiredLeftWidth, maxLeftWidth))
+        leftPanel:SetWidth(newLeftWidth)
+    end)
+
+    -- Clamp left panel when main window is resized smaller
+    tab:HookScript("OnSizeChanged", function(self, w)
+        local maxLeftWidth = w - RIGHT_MIN_WIDTH - PADDING
+        if maxLeftWidth < LEFT_MIN_WIDTH then maxLeftWidth = LEFT_MIN_WIDTH end
+        local currentLeftWidth = leftPanel:GetWidth()
+        if currentLeftWidth > maxLeftWidth then
+            leftPanel:SetWidth(maxLeftWidth)
+        end
+    end)
+
+    -- Right panel: Frame Details
     local rightPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
-    rightPanel:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 5, 0)
+    rightPanel:SetPoint("TOPLEFT", divider, "TOPRIGHT", 0, 0)
     rightPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
     StyleContentPanel(rightPanel)
 
     local rightTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    rightTitle:SetPoint("TOP", rightPanel, "TOP", 0, -5)
+    rightTitle:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 5, -5)
     rightTitle:SetText(Addon.L and Addon.L["LABEL_FRAME_DETAILS"] or "Frame Details")
     rightTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local copyDetailsBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_COPY_DETAILS"] or "Copy All", width = 70, height = 18 })
     copyDetailsBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -25, -3)
+
+    local parentGoBtn = OneWoW_GUI:CreateButton(rightPanel, { text = "-> Parent", height = 18 })
+    parentGoBtn:SetPoint("LEFT", rightTitle, "RIGHT", 8, 0)
+    parentGoBtn:SetPoint("RIGHT", copyDetailsBtn, "LEFT", -4, 0)
+    parentGoBtn:SetScript("OnClick", function()
+        if tab.currentParentRef then
+            Addon.FrameInspector:InspectFrame(tab.currentParentRef)
+        end
+    end)
+    parentGoBtn:Hide()
+    tab.parentGoBtn = parentGoBtn
     copyDetailsBtn:SetScript("OnClick", function()
         if tab.detailsText then
             Addon:CopyToClipboard(tab.detailsText:GetText())
@@ -359,37 +481,296 @@ function UI:CreateFrameInspectorTab(parent)
     tab.leftScroll = leftScroll
     tab.rightScroll = rightScroll
 
+    local function boolStr(v)
+        if v == nil then return nil end
+        return v and "Yes" or "No"
+    end
+
+    local function fmtNum(v)
+        if v == nil then return nil end
+        if type(v) == "string" then return v end
+        return string.format("%.1f", v)
+    end
+
+    local function fmtMulti(vals)
+        if not vals then return nil end
+        local parts = {}
+        for _, v in ipairs(vals) do
+            if type(v) == "number" then
+                table.insert(parts, string.format("%.2f", v))
+            else
+                table.insert(parts, tostring(v))
+            end
+        end
+        return table.concat(parts, ", ")
+    end
+
+    local function addSection(lines, title, entries)
+        local any = false
+        for _, entry in ipairs(entries) do
+            if entry[2] ~= nil then
+                any = true
+                break
+            end
+        end
+        if not any then return end
+        table.insert(lines, "")
+        table.insert(lines, "|cFFFFD100" .. title .. "|r")
+        for _, entry in ipairs(entries) do
+            if entry[2] ~= nil then
+                table.insert(lines, "  " .. entry[1] .. ": " .. tostring(entry[2]))
+            end
+        end
+    end
+
     function tab:UpdateFrameDetails(frame, info)
         if not info then return end
-        local L = Addon.L or {}
+
+        -- Parent [Go] button
+        if info.parent then
+            self.currentParentRef = info.parent
+            self.parentGoBtn:SetText("-> " .. (info.parentName or "Parent"))
+            self.parentGoBtn:Show()
+        else
+            self.currentParentRef = nil
+            self.parentGoBtn:Hide()
+        end
 
         local lines = {}
-        table.insert(lines, (L["LABEL_NAME"] or "NAME:") .. " " .. (info.name or L["LABEL_ANONYMOUS"] or "Anonymous"))
-        table.insert(lines, (L["LABEL_TYPE"] or "TYPE:") .. " " .. (info.type or L["LABEL_UNKNOWN"] or "Unknown"))
-        table.insert(lines, "")
-        table.insert(lines, (L["LABEL_SHOWN"] or "SHOWN:") .. " " .. (info.shown and (L["LABEL_YES"] or "Yes") or (L["LABEL_NO"] or "No")))
-        table.insert(lines, (L["LABEL_MOUSE"] or "MOUSE:") .. " " .. (info.mouse and (L["LABEL_YES"] or "Yes") or (L["LABEL_NO"] or "No")))
-        table.insert(lines, "")
 
-        if info.width and info.height then
-            table.insert(lines, string.format((L["LABEL_SIZE"] or "SIZE:") .. " %.0f x %.0f", info.width, info.height))
+        -- Identity
+        table.insert(lines, "|cFFFFD100IDENTITY|r")
+        table.insert(lines, "  Name: " .. (info.name or "Anonymous"))
+        table.insert(lines, "  Type: " .. (info.type or "Unknown"))
+        if info.parentName then
+            table.insert(lines, "  Parent: " .. info.parentName)
+        end
+        if info.debugName and info.debugName ~= info.name then
+            table.insert(lines, "  DebugName: " .. info.debugName)
+        end
+        if info.ID and info.ID ~= 0 then
+            table.insert(lines, "  ID: " .. info.ID)
+        end
+        if info.parentKey then
+            table.insert(lines, "  ParentKey: " .. info.parentKey)
         end
 
-        if info.strata then
-            table.insert(lines, (L["LABEL_STRATA"] or "STRATA:") .. " " .. info.strata)
+        -- State (Frame-only)
+        if info.protected ~= nil then
+            addSection(lines, "STATE", {
+                { "Protected", boolStr(info.protected) },
+                { "Forbidden", boolStr(info.forbidden) },
+            })
         end
 
-        if info.level then
-            table.insert(lines, (L["LABEL_LEVEL"] or "LEVEL:") .. " " .. info.level)
+        -- Geometry
+        addSection(lines, "GEOMETRY", {
+            { "Size", (info.width and info.height) and string.format("%.1f x %.1f", info.width, info.height) or nil },
+            { "Left", fmtNum(info.left) },
+            { "Top", fmtNum(info.top) },
+            { "Right", fmtNum(info.right) },
+            { "Bottom", fmtNum(info.bottom) },
+            { "Scale", fmtNum(info.scale) },
+            { "Eff. Scale", fmtNum(info.effectiveScale) },
+            { "BoundsRect", fmtMulti(info.boundsRect) },
+        })
+
+        -- Screen Position
+        if info.screenPos then
+            local sp = info.screenPos
+            local spEntries = {
+                { "Left", fmtNum(sp.left) },
+                { "Right", fmtNum(sp.right) },
+                { "Bottom", fmtNum(sp.bottom) },
+                { "Top", fmtNum(sp.top) },
+                { "Center", string.format("%.1f, %.1f", sp.centerX, sp.centerY) },
+            }
+            if info.relativeToParent then
+                local rp = info.relativeToParent
+                table.insert(spEntries, { "From Left Edge", fmtNum(rp.fromLeft) })
+                table.insert(spEntries, { "From Right Edge", fmtNum(rp.fromRight) })
+                table.insert(spEntries, { "From Bottom Edge", fmtNum(rp.fromBottom) })
+                table.insert(spEntries, { "From Top Edge", fmtNum(rp.fromTop) })
+                table.insert(spEntries, { "From Parent Center", string.format("%.1f, %.1f", rp.fromCenterX, rp.fromCenterY) })
+            end
+            addSection(lines, "SCREEN POSITION", spEntries)
         end
 
-        table.insert(lines, "")
+        -- Strata / Visibility
+        addSection(lines, "STRATA / VISIBILITY", {
+            { "Strata", info.strata },
+            { "Level", info.level },
+            { "Alpha", fmtNum(info.alpha) },
+            { "Eff. Alpha", fmtNum(info.effectiveAlpha) },
+            { "IsShown", boolStr(info.shown) },
+            { "IsVisible", boolStr(info.isVisible) },
+            { "Mouse", boolStr(info.mouse) },
+            { "Keyboard", boolStr(info.keyboard) },
+            { "FixedLevel", boolStr(info.fixedLevel) },
+            { "FixedStrata", boolStr(info.fixedStrata) },
+            { "Toplevel", boolStr(info.toplevel) },
+            { "UsingParentLevel", boolStr(info.usingParentLevel) },
+            { "RaisedLevel", info.raisedLevel },
+            { "HighestLevel", info.highestLevel },
+        })
 
+        -- Layout
+        addSection(lines, "LAYOUT", {
+            { "NumChildren", info.numChildren },
+            { "NumRegions", info.numRegions },
+            { "ClipsChildren", boolStr(info.clipsChildren) },
+            { "IgnoreChildrenBounds", boolStr(info.ignoreChildrenBounds) },
+            { "ClampedToScreen", boolStr(info.clampedToScreen) },
+            { "ClampInsets", fmtMulti(info.clampInsets) },
+            { "HitRectInsets", fmtMulti(info.hitRectInsets) },
+        })
+
+        -- Behavior
+        addSection(lines, "BEHAVIOR", {
+            { "Movable", boolStr(info.movable) },
+            { "Resizable", boolStr(info.resizable) },
+            { "ResizeBounds", fmtMulti(info.resizeBounds) },
+            { "UserPlaced", boolStr(info.userPlaced) },
+            { "DontSavePosition", boolStr(info.dontSavePosition) },
+            { "PropagateKeyboard", boolStr(info.propagateKeyboard) },
+            { "HyperlinksEnabled", boolStr(info.hyperlinksEnabled) },
+            { "HyperlinkPropagate", boolStr(info.hyperlinkPropagate) },
+            { "CanChangeAttribute", boolStr(info.canChangeAttribute) },
+        })
+
+        -- Render
+        addSection(lines, "RENDER", {
+            { "FlattensRenderLayers", boolStr(info.flattensRenderLayers) },
+            { "EffectivelyFlattens", boolStr(info.effectivelyFlattens) },
+            { "IsFrameBuffer", boolStr(info.isFrameBuffer) },
+            { "HasAlphaGradient", boolStr(info.hasAlphaGradient) },
+        })
+
+        -- Input
+        addSection(lines, "INPUT", {
+            { "GamePadButton", boolStr(info.gamePadButton) },
+            { "GamePadStick", boolStr(info.gamePadStick) },
+        })
+
+        -- Anchors
         if info.points and #info.points > 0 then
-            table.insert(lines, L["LABEL_ANCHORS"] or "ANCHORS:")
-            for i, point in ipairs(info.points) do
-                table.insert(lines, string.format("  %s to %s %s (%.0f, %.0f)",
-                    point.point, point.relativeTo, point.relativePoint or "", point.x or 0, point.y or 0))
+            table.insert(lines, "")
+            table.insert(lines, "|cFFFFD100ANCHORS|r")
+            for i, pt in ipairs(info.points) do
+                local x = type(pt.x) == "number" and string.format("%.1f", pt.x) or tostring(pt.x or 0)
+                local y = type(pt.y) == "number" and string.format("%.1f", pt.y) or tostring(pt.y or 0)
+                table.insert(lines, string.format("  Point %d -> %s.%s (%s, %s)",
+                    i, pt.relativeTo or "nil", pt.relativePoint or "", x, y))
+            end
+        end
+
+        -- Registered Events
+        if info.registeredEvents then
+            table.insert(lines, "")
+            table.insert(lines, "|cFFFFD100REGISTERED EVENTS|r")
+            if #info.registeredEvents > 0 then
+                for _, event in ipairs(info.registeredEvents) do
+                    table.insert(lines, "  " .. event)
+                end
+            else
+                table.insert(lines, "  (none detected among " .. #Addon.COMMON_EVENTS .. " common events)")
+            end
+        end
+
+        -- Scripts
+        if info.scripts then
+            table.insert(lines, "")
+            table.insert(lines, "|cFFFFD100SCRIPTS|r")
+            if #info.scripts > 0 then
+                for _, scriptName in ipairs(info.scripts) do
+                    table.insert(lines, "  " .. scriptName .. ": [handler]")
+                end
+            else
+                table.insert(lines, "  no script handlers attached")
+            end
+        end
+
+        -- Region properties (for non-frame objects)
+        addSection(lines, "REGION", {
+            { "IgnoreParentAlpha", boolStr(info.ignoreParentAlpha) },
+            { "IgnoreParentScale", boolStr(info.ignoreParentScale) },
+            { "ObjectLoaded", boolStr(info.objectLoaded) },
+        })
+
+        -- Debug
+        addSection(lines, "DEBUG", {
+            { "SourceLocation", info.sourceLocation },
+            { "HasSecretValues", boolStr(info.hasSecretValues) },
+            { "HasAnySecretAspect", boolStr(info.hasAnySecretAspect) },
+        })
+
+        -- Type-specific
+        local ts = info.typeSpecific
+        if ts then
+            local tsType = ts._type
+            table.insert(lines, "")
+            table.insert(lines, "|cFFFFD100" .. (tsType or "TYPE-SPECIFIC") .. " PROPERTIES|r")
+
+            if tsType == "Texture" or tsType == "MaskTexture" then
+                if ts.atlas then table.insert(lines, "  Atlas: " .. tostring(ts.atlas)) end
+                if ts.texture then table.insert(lines, "  Texture: " .. tostring(ts.texture)) end
+                if ts.textureFileID then table.insert(lines, "  FileID: " .. tostring(ts.textureFileID)) end
+                if ts.blendMode then table.insert(lines, "  BlendMode: " .. tostring(ts.blendMode)) end
+                if ts.texCoord then table.insert(lines, "  TexCoord: " .. fmtMulti(ts.texCoord)) end
+                if ts.drawLayer then table.insert(lines, "  DrawLayer: " .. tostring(ts.drawLayer) .. (ts.drawSublevel and (" (" .. ts.drawSublevel .. ")") or "")) end
+                if ts.vertexColor then table.insert(lines, "  VertexColor: " .. fmtMulti(ts.vertexColor)) end
+                if ts.desaturation then table.insert(lines, "  Desaturation: " .. fmtNum(ts.desaturation)) end
+                if ts.rotation then table.insert(lines, "  Rotation: " .. fmtNum(ts.rotation)) end
+                if ts.horizTile ~= nil then table.insert(lines, "  HorizTile: " .. boolStr(ts.horizTile)) end
+                if ts.vertTile ~= nil then table.insert(lines, "  VertTile: " .. boolStr(ts.vertTile)) end
+            elseif tsType == "FontString" then
+                if ts.text then table.insert(lines, "  Text: " .. tostring(ts.text)) end
+                if ts.font then table.insert(lines, "  Font: " .. fmtMulti(ts.font)) end
+                if ts.justifyH then table.insert(lines, "  JustifyH: " .. tostring(ts.justifyH)) end
+                if ts.justifyV then table.insert(lines, "  JustifyV: " .. tostring(ts.justifyV)) end
+                if ts.spacing then table.insert(lines, "  Spacing: " .. fmtNum(ts.spacing)) end
+                if ts.stringWidth then table.insert(lines, "  StringWidth: " .. fmtNum(ts.stringWidth)) end
+                if ts.stringHeight then table.insert(lines, "  StringHeight: " .. fmtNum(ts.stringHeight)) end
+                if ts.numLines then table.insert(lines, "  NumLines: " .. ts.numLines) end
+                if ts.isTruncated ~= nil then table.insert(lines, "  IsTruncated: " .. boolStr(ts.isTruncated)) end
+            elseif tsType == "Line" then
+                if ts.startPoint then table.insert(lines, "  StartPoint: " .. fmtMulti(ts.startPoint)) end
+                if ts.endPoint then table.insert(lines, "  EndPoint: " .. fmtMulti(ts.endPoint)) end
+                if ts.thickness then table.insert(lines, "  Thickness: " .. fmtNum(ts.thickness)) end
+            elseif tsType == "Button" or tsType == "CheckButton" then
+                if ts.buttonState then table.insert(lines, "  ButtonState: " .. tostring(ts.buttonState)) end
+                if ts.buttonText then table.insert(lines, "  Text: " .. tostring(ts.buttonText)) end
+                if ts.enabled ~= nil then table.insert(lines, "  Enabled: " .. boolStr(ts.enabled)) end
+            elseif tsType == "EditBox" then
+                if ts.text then table.insert(lines, "  Text: " .. tostring(ts.text)) end
+                if ts.cursorPosition then table.insert(lines, "  CursorPosition: " .. ts.cursorPosition) end
+                if ts.numLetters then table.insert(lines, "  NumLetters: " .. ts.numLetters) end
+                if ts.maxLetters then table.insert(lines, "  MaxLetters: " .. ts.maxLetters) end
+                if ts.isMultiLine ~= nil then table.insert(lines, "  MultiLine: " .. boolStr(ts.isMultiLine)) end
+                if ts.isAutoFocus ~= nil then table.insert(lines, "  AutoFocus: " .. boolStr(ts.isAutoFocus)) end
+                if ts.isNumeric ~= nil then table.insert(lines, "  Numeric: " .. boolStr(ts.isNumeric)) end
+            elseif tsType == "ScrollFrame" then
+                if ts.horizontalScroll then table.insert(lines, "  HorizontalScroll: " .. fmtNum(ts.horizontalScroll)) end
+                if ts.verticalScroll then table.insert(lines, "  VerticalScroll: " .. fmtNum(ts.verticalScroll)) end
+            elseif tsType == "Slider" then
+                if ts.minMax then table.insert(lines, "  MinMax: " .. fmtMulti(ts.minMax)) end
+                if ts.value then table.insert(lines, "  Value: " .. fmtNum(ts.value)) end
+                if ts.valueStep then table.insert(lines, "  ValueStep: " .. fmtNum(ts.valueStep)) end
+                if ts.obeyStep ~= nil then table.insert(lines, "  ObeyStepOnDrag: " .. boolStr(ts.obeyStep)) end
+            elseif tsType == "StatusBar" then
+                if ts.minMax then table.insert(lines, "  MinMax: " .. fmtMulti(ts.minMax)) end
+                if ts.value then table.insert(lines, "  Value: " .. fmtNum(ts.value)) end
+                if ts.statusBarColor then table.insert(lines, "  Color: " .. fmtMulti(ts.statusBarColor)) end
+            elseif tsType == "Cooldown" then
+                if ts.cooldownTimes then table.insert(lines, "  CooldownTimes: " .. fmtMulti(ts.cooldownTimes)) end
+                if ts.cooldownDuration then table.insert(lines, "  Duration: " .. fmtNum(ts.cooldownDuration)) end
+            elseif tsType == "ColorSelect" then
+                if ts.colorRGB then table.insert(lines, "  RGB: " .. fmtMulti(ts.colorRGB)) end
+                if ts.colorHSV then table.insert(lines, "  HSV: " .. fmtMulti(ts.colorHSV)) end
+            elseif tsType == "Model" or tsType == "PlayerModel" or tsType == "DressUpModel" or tsType == "CinematicModel" then
+                if ts.facing then table.insert(lines, "  Facing: " .. fmtNum(ts.facing)) end
+                if ts.position then table.insert(lines, "  Position: " .. fmtMulti(ts.position)) end
+                if ts.modelScale then table.insert(lines, "  ModelScale: " .. fmtNum(ts.modelScale)) end
             end
         end
 
@@ -397,43 +778,26 @@ function UI:CreateFrameInspectorTab(parent)
 
         local height = self.detailsText:GetStringHeight()
         self.rightScroll:GetScrollChild():SetHeight(math.max(height + 10, self.rightScroll:GetHeight()))
-    end
 
-    function tab:UpdateFrameTree(frame)
-        if not frame then return end
-        local L = Addon.L or {}
+        -- Auto-expand main window if right panel is too narrow for content
+        local mainFrame = Addon.UI and Addon.UI.mainFrame
+        if mainFrame then
+            local neededRightWidth = getNeededRightWidth()
 
-        local lines = {}
+            local currentLeftWidth = leftPanel:GetWidth()
+            local neededTabWidth = currentLeftWidth + PADDING + neededRightWidth
+            local tabWidth = tab:GetWidth()
 
-        local parentChain = {}
-        local current = frame
-        while current do
-            table.insert(parentChain, 1, current)
-            current = current.GetParent and current:GetParent()
-        end
-
-        for i, f in ipairs(parentChain) do
-            local indent = string.rep("  ", i - 1)
-            local name = f.GetName and f:GetName() or L["LABEL_ANONYMOUS"] or "Anonymous"
-            if f == frame then
-                name = "[" .. name .. "]"
+            if neededTabWidth > tabWidth then
+                local extraNeeded = neededTabWidth - tabWidth
+                local currentMainW = mainFrame:GetWidth()
+                local screenMax = math.floor(GetScreenWidth() * 0.95)
+                local newMainW = math.min(currentMainW + extraNeeded, screenMax)
+                if newMainW > currentMainW then
+                    mainFrame:SetWidth(newMainW)
+                end
             end
-            table.insert(lines, indent .. name)
         end
-
-        table.insert(lines, "")
-        table.insert(lines, L["LABEL_CHILDREN"] or "CHILDREN:")
-
-        local children = frame.GetChildren and {frame:GetChildren()} or {}
-        for _, child in ipairs(children) do
-            local name = child.GetName and child:GetName() or L["LABEL_ANONYMOUS"] or "Anonymous"
-            table.insert(lines, "  - " .. name)
-        end
-
-        self.hierarchyText:SetText(table.concat(lines, "\n"))
-
-        local height = self.hierarchyText:GetStringHeight()
-        self.leftScroll:GetScrollChild():SetHeight(math.max(height + 10, self.leftScroll:GetHeight()))
     end
 
     Addon.FrameInspectorTab = tab
