@@ -133,7 +133,10 @@ if currentThemeData and currentThemeData.ACCENT_PRIMARY then
     themeColorPreview:SetColorTexture(unpack(currentThemeData.ACCENT_PRIMARY))
 end
 
--- GOOD: use the API
+-- BAD: pass-through wrapper — adds extra function call overhead for no benefit
+local GetThemeColor = function(key) return OneWoW_GUI:GetThemeColor(key) end
+
+-- GOOD: use the API directly
 themeColorPreview:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 ```
 
