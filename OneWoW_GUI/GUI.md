@@ -82,15 +82,50 @@ end
 ```
 
 ### Available font keys
-| Key | Label | File |
-|-----|-------|------|
-| default | WoW Default | (nil - game default) |
-| expressway | Expressway | Expressway.ttf |
-| ptsansnarrow | PT Sans Narrow | PTSansNarrow.ttf |
-| continuum | Continuum Medium | ContinuumMedium.ttf |
-| actionman | Action Man | ActionMan.ttf |
-| homespun | Homespun | Homespun.ttf |
-| diedidie | DieDieDie | DieDieDie.ttf |
+
+Use `OneWoW_GUI:GetFontList()` for the complete list. Sample:
+
+| Key | Label |
+|-----|-------|
+| default | WoW Default |
+| actionman | Action Man |
+| adventure | Adventure |
+| bazooka | Bazooka |
+| blackchancery | Black Chancery |
+| celestia | Celestia Medium Redux |
+| continuum | Continuum Medium |
+| dejavusans | DejaVu Sans |
+| dejavuserif | DejaVu Serif |
+| diedidie | DieDieDie |
+| dorispp | DorisPP |
+| enigmatic | Enigmatic |
+| expressway | Expressway |
+| fitzgerald | Fitzgerald |
+| gentiumplus | Gentium Plus |
+| hack | Hack |
+| homespun | Homespun |
+| hookedup | All Hooked Up |
+| liberationmono | Liberation Mono |
+| liberationsans | Liberation Sans |
+| liberationserif | Liberation Serif |
+| ptsansnarrow | PT Sans Narrow |
+| sfatarian | SF Atarian System |
+| sfcovington | SF Covington |
+| sfmovieposter | SF Movie Poster |
+| sfwondercomic | SF Wonder Comic |
+| swfit | SWF!T |
+| texgyreadventor | TeX Gyre Adventor |
+| texgyreadventorbold | TeX Gyre Adventor Bold |
+| wenquanyi | WenQuanYi Zen Hei |
+| yellowjacket | Yellowjacket |
+
+### Font API
+```lua
+local fontList = OneWoW_GUI:GetFontList()           -- full list of { key, label, file }
+local path = OneWoW_GUI:GetFontByKey("expressway") -- path or nil for default
+OneWoW_GUI:SafeSetFont(fontString, path, 12, "")  -- applies font with fallback to GameFontNormal
+local key = OneWoW_GUI:MigrateLSMFontName("Expressway")  -- maps LibSharedMedia names to GUI keys
+```
 
 ### Stamp out the standard 4-part settings panel
 ```lua
@@ -105,7 +140,7 @@ This creates three themed containers:
 3. Minimap Button checkbox (left) | Icon Theme dropdown (right)
 
 All dropdowns read/write directly to `OneWoW_GUI_DB` and fire callbacks.
-The panel consumes ~495px of vertical space.
+The panel consumes ~480px of vertical space.
 
 ### Migrate existing settings (call once at addon init)
 ```lua
@@ -190,7 +225,9 @@ BORDER_DEFAULT, BORDER_SUBTLE, BORDER_FOCUS, BORDER_ACCENT,
 TITLEBAR_BG, TITLEBAR_BORDER,
 BTN_NORMAL, BTN_HOVER, BTN_PRESSED, BTN_BORDER, BTN_BORDER_HOVER,
 TEXT_FEATURES_ENABLED, TEXT_FEATURES_DISABLED,
-DOT_FEATURES_ENABLED, DOT_FEATURES_DISABLED
+DOT_FEATURES_ENABLED, DOT_FEATURES_DISABLED,
+TEXT_WARNING,
+BTN_DANGER_NORMAL, BTN_DANGER_HOVER, BTN_DANGER_BORDER, BTN_DANGER_BORDER_HOVER
 
 ### Get spacing value
 ```lua
@@ -211,10 +248,33 @@ local texture = OneWoW_GUI:GetBrandIcon("horde")  -- or "alliance" or "neutral"
 ```
 
 ### Register GUI constants with fallback
+
+Addons can override or add GUI constants (especially window sizes). Missing keys fall back to `Constants.GUI`, then to `0`. The returned table is read-only.
+
+**Signature:** `OneWoW_GUI:RegisterGUIConstants(guiConstants)` — takes a table, returns a table with metatable.
+
+**Typical usage** — store as `addon.Constants.GUI` in Core/Constants.lua:
+
 ```lua
-local myConstants = OneWoW_GUI:RegisterGUIConstants({ MY_WIDTH = 500 })
--- Missing keys fall back to Constants.GUI values, then 0
+OneWoW_MyAddon.Constants = {
+    GUI = OneWoW_GUI:RegisterGUIConstants({
+        WINDOW_WIDTH  = 820,
+        WINDOW_HEIGHT = 580,
+        MIN_WIDTH     = 820,
+        MIN_HEIGHT    = 500,
+        LEFT_PANEL_WIDTH = 300,
+        SEARCH_HEIGHT = 28,
+        ROW_HEIGHT    = 38,  -- addon-specific; falls back to 0 if unused
+    }),
+}
 ```
+
+**Base GUI keys** (override any; add custom keys as needed):
+WINDOW_WIDTH, WINDOW_HEIGHT, MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT,
+PADDING, BUTTON_HEIGHT, BUTTON_WIDTH, SEARCH_HEIGHT, SEARCH_WIDTH,
+CHECKBOX_SIZE, ROW1_HEIGHT, ROW2_HEIGHT, LEFT_PANEL_WIDTH, PANEL_GAP, TAB_BUTTON_HEIGHT
+
+**Common overrides:** WINDOW_WIDTH, WINDOW_HEIGHT, MIN_WIDTH, MIN_HEIGHT, LEFT_PANEL_WIDTH, SIDEBAR_WIDTH, SEARCH_HEIGHT, ROW_HEIGHT, SUBTAB_BUTTON_HEIGHT. Some addons use MAIN_FRAME_WIDTH / MAIN_FRAME_HEIGHT instead of WINDOW_* — both work.
 
 ---
 
@@ -312,7 +372,8 @@ Add your own controls inside (dropdowns, search boxes, buttons) using existing l
 
 ### Title bar
 ```lua
-local titleBar = OneWoW_GUI:CreateTitleBar(parent, "My Title", {
+local titleBar = OneWoW_GUI:CreateTitleBar(parent, {
+    title = "My Title",
     height = 20,           -- optional, default 20
     onClose = function() parent:Hide() end,  -- optional close button
     showBrand = true,      -- optional OneWoW brand icon + text
@@ -331,13 +392,19 @@ title bars automatically update when the user changes their faction icon setting
 
 ### Button (base - fixed size)
 ```lua
-local btn = OneWoW_GUI:CreateButton(name, parent, "X", 20, 20)
+local btn = OneWoW_GUI:CreateButton(parent, {
+    name = "CloseBtn",
+    text = "X",
+    width = 20,
+    height = 20,
+})
 ```
 Fixed-size button. Use only for icon buttons (e.g. "X" close). For text buttons, use FitText or FitFrame.
 
 ### Fit Text Button (auto-sizes to text)
 ```lua
-local btn = OneWoW_GUI:CreateFitTextButton(parent, "Click Me", {
+local btn = OneWoW_GUI:CreateFitTextButton(parent, {
+    text = "Click Me",
     height = 28,      -- optional, default BUTTON_HEIGHT
     minWidth = 40,    -- optional, default 40
     paddingX = 24,    -- optional, default 24 (12 each side)
@@ -349,11 +416,13 @@ Access label via `btn.text`.
 
 ### Fit Frame Buttons (fill container width)
 ```lua
-local buttons, finalY = OneWoW_GUI:CreateFitFrameButtons(parent, yOffset, {
-    { text = "Option A", value = "a", isActive = true },
-    { text = "Option B", value = "b" },
-    { text = "Option C", value = "c" },
-}, {
+local buttons, finalY = OneWoW_GUI:CreateFitFrameButtons(parent, {
+    yOffset = 0,
+    items = {
+        { text = "Option A", value = "a", isActive = true },
+        { text = "Option B", value = "b" },
+        { text = "Option C", value = "c" },
+    },
     height = 26,      -- optional, default 26
     gap = 4,          -- optional, default 4
     marginX = 12,     -- optional, default 12
@@ -371,12 +440,18 @@ Returns buttons table and finalY offset for layout continuation.
 
 ### On/Off toggle pair
 ```lua
-local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(
-    parent, yOffset, "On", "Off", width, height,
-    isEnabled, currentValue, function(newValue)
+local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(parent, {
+    yOffset = 0,
+    onLabel = "On",
+    offLabel = "Off",
+    width = 50,
+    height = 22,
+    isEnabled = true,
+    value = true,
+    onValueChange = function(newValue)
         -- handle value change
-    end
-)
+    end,
+})
 -- Update state later:
 refresh(isEnabled, newValue)
 ```
@@ -389,7 +464,8 @@ To reposition the cluster after a label, call `statusPfx:ClearAllPoints()` + `st
 
 ### Toggle row (label + description/custom + On/Off)
 ```lua
-local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, yOffset, {
+local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, {
+    yOffset = 0,
     label = "Show Lockouts Panel",
     description = "Show the lockouts panel when the Group Finder opens.",  -- optional
     value = true,
@@ -404,16 +480,17 @@ refresh(isEnabled, newValue)
 ```
 Layout: Row 1: [Label] ... [Status: On] [On] [Off] (right-aligned by default). Row 2: [Description] or custom content.
 Use `align = "left"` for module-level Enable: [Label] [Status: On] [On] [Off] all left-aligned.
-Use `createContent` instead of `description` for custom widgets (e.g. mount picker):
+Use `createContent` instead of `description` for custom widgets (e.g. mount picker). Must return `(widget, height)`:
 ```lua
-local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, yOffset, {
+local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, {
+    yOffset = 0,
     label = "Ground Mount",
     createContent = function(container)
         local btn = CreateFrame("Button", nil, container, "BackdropTemplate")
         btn:SetSize(220, 30)
         btn:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
         -- ... setup btn ...
-        return btn, 30  -- widget, height
+        return btn, 30  -- widget, height (required)
     end,
     value = true,
     isEnabled = true,
@@ -423,13 +500,17 @@ local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, yOffset, {
 
 ### Checkbox
 ```lua
-local cb = OneWoW_GUI:CreateCheckbox(name, parent, "Label text")
+local cb = OneWoW_GUI:CreateCheckbox(parent, {
+    name = "MyCheckbox",
+    label = "Label text",
+})
 ```
 Uses UICheckButtonTemplate. Access label via `cb.label`.
 
 ### Edit box
 ```lua
-local box = OneWoW_GUI:CreateEditBox(name, parent, {
+local box = OneWoW_GUI:CreateEditBox(parent, {
+    name = "MyEditBox",
     width = 200,           -- optional, omit for anchor-based width (flexible)
     height = 22,           -- optional, default SEARCH_HEIGHT
     placeholderText = "Search...",  -- optional
@@ -443,12 +524,7 @@ Themed with focus border highlight and placeholder text behavior.
 When `width` is omitted, only height is set - use anchor points for flexible width.
 Use `box:GetSearchText()` to get current text with placeholder filtered out.
 
-### Search box (deprecated - use CreateEditBox instead)
-```lua
-local searchBox = OneWoW_GUI:CreateSearchBox(parent, options)
-```
-Thin wrapper that calls `CreateEditBox(nil, parent, options)`. Kept for backward compatibility.
-Use `CreateEditBox` directly with no `width` option for the same flexible-width behavior.
+Use `CreateEditBox` with `placeholderText` for search boxes. The deprecated `CreateSearchBox` wrapper has been removed.
 
 ### Status dot
 ```lua
@@ -492,17 +568,25 @@ Future variants: `CreateListRowExtended` (expandable content section on click).
 
 ### Header (large accent text)
 ```lua
-local header = OneWoW_GUI:CreateHeader(parent, "Section Title", yOffset)
+local header = OneWoW_GUI:CreateHeader(parent, {
+    text = "Section Title",
+    yOffset = -12,
+})
 ```
 
 ### Divider (1px horizontal line)
 ```lua
-local divider = OneWoW_GUI:CreateDivider(parent, yOffset)
+local divider = OneWoW_GUI:CreateDivider(parent, {
+    yOffset = 0,
+})
 ```
 
 ### Section (header + divider combo)
 ```lua
-local newYOffset = OneWoW_GUI:CreateSection(parent, "Section Title", yOffset)
+local newYOffset = OneWoW_GUI:CreateSection(parent, {
+    title = "Section Title",
+    yOffset = 0,
+})
 -- Returns updated yOffset to continue laying out below
 ```
 
@@ -512,7 +596,10 @@ local newYOffset = OneWoW_GUI:CreateSection(parent, "Section Title", yOffset)
 
 ### Themed section header bar
 ```lua
-local section = OneWoW_GUI:CreateSectionHeader(parent, "Section Title", yOffset)
+local section = OneWoW_GUI:CreateSectionHeader(parent, {
+    title = "Section Title",
+    yOffset = 0,
+})
 -- section.bottomY = yOffset below the header for continued layout
 ```
 Creates a themed bar with background, border, and accent-colored title text.
@@ -523,13 +610,15 @@ Creates a themed bar with background, border, and accent-colored title text.
 
 ### Standalone scroll frame
 ```lua
-local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(name, parent)
-local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(name, parent, width, height)
+local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(parent, {
+    name = "MyScroll",  -- optional, nil for anonymous
+    width = 400,        -- optional; omit for auto-sync on resize
+})
 ```
 Uses UIPanelScrollFrameTemplate (Lesson 3 compliant).
 ScrollBar anchored to parent container.
-- Without width/height: content width auto-syncs on resize.
-- With width: content width set to (width - 32). Name param can be nil for anonymous frames.
+- Without width: content width auto-syncs on resize.
+- With width: content width set to (width - 32).
 
 ### Style an existing scroll bar
 ```lua
@@ -576,8 +665,8 @@ local dropdown, text = OneWoW_GUI:CreateDropdown(parent, {
 })
 dropdown:SetPoint("LEFT", someFrame, "RIGHT", 8, 0)
 
-OneWoW_GUI:AttachFilterMenu(dropdown, text, {
-    searchable = false,
+OneWoW_GUI:AttachFilterMenu(dropdown, {
+    searchable = false,  -- default is true
     buildItems = function()
         return {
             { value = nil, text = "All Characters" },
@@ -601,8 +690,8 @@ local dropdown, text = OneWoW_GUI:CreateDropdown(parent, {
 })
 dropdown:SetPoint(...)
 
-OneWoW_GUI:AttachFilterMenu(dropdown, text, {
-    searchable = true,  -- adds search box at top of menu
+OneWoW_GUI:AttachFilterMenu(dropdown, {
+    searchable = true,  -- default; adds search box at top of menu
     buildItems = function()
         local items = {}
         table.insert(items, { value = nil, text = "All Zones" })
@@ -638,6 +727,27 @@ dropdown._activeValue = nil
 
 ---
 
+## Additional Components
+
+These components exist in the library but are not fully documented here. See source for option keys.
+
+- **CreateSlider(parent, options)** — minVal, maxVal, step, currentVal, onChange, width, fmt
+- **CreateProgressBar(parent, options)** — progress bar with theme colors
+- **CreateDataTable(parent, options)** — table with `ClearDataRows`, `LayoutDataRows`, `CreateDataRow`
+- **CreateOverviewPanel(parent, options)** — overview layout
+- **CreateStatusBar(parent, anchorFrame, options)** — status bar
+- **CreateRosterPanel(parent, anchorFrame)** — roster layout
+- **CreateItemIcon(parent, options)** — item icon frame
+- **CreateFactionIcon(parent, options)** — faction icon
+- **CreateMailIcon(parent, options)** — mail icon
+- **CreateExpandedPanelGrid(ef, options)** — expanded panel grid
+
+**Utility:**
+- `GetAddonVersion(addonName)` — returns addon version via C_AddOns
+- `GetProgressColor(current, max)` — returns color from PROGRESS_COLORS (NONE/LOW/MID/FULL)
+
+---
+
 ## Utility
 
 ### Clear all children from a frame
@@ -668,22 +778,20 @@ PADDING = 12            BUTTON_HEIGHT = 28    BUTTON_WIDTH = 100
 SEARCH_HEIGHT = 22      SEARCH_WIDTH = 200    CHECKBOX_SIZE = 24
 ROW1_HEIGHT = 35        ROW2_HEIGHT = 30
 LEFT_PANEL_WIDTH = 320  PANEL_GAP = 10        TAB_BUTTON_HEIGHT = 30
+```
 
+### Adding OneWoW_GUI to a new addon
 
-Adding to new addon - Same thing as OneWoW's TOC. add:                                        
- 
-  1. OneWoW_GUI_DB to the SavedVariables line                                   
-  2. The 4 library files to the load order (after LibStub, before any UI code)
- 
-  So in DirectDeposit's TOC it would look like:                   
+**Standard (recommended):** Add `## RequiredDeps: OneWoW_GUI` to your TOC. No need to add `OneWoW_GUI_DB` — OneWoW_GUI declares it. All suite addons use this approach.
 
-  ## SavedVariables: OneWoW_DirectDeposit_DB, OneWoW_GUI_DB
+**Embedding (legacy):** Only if embedding the library files into your addon. Add `OneWoW_GUI_DB` to SavedVariables and the 4 library files to load order (after LibStub, before any UI code). Embedding is uncommon in this suite.
 
-  Libs\LibStub\LibStub.lua
-  Libs\OneWoW_GUI\Core.lua
-  Libs\OneWoW_GUI\Constants.lua
-  Libs\OneWoW_GUI\OneWoW_GUI.lua
-  Libs\OneWoW_GUI\Settings.lua
+```
+## SavedVariables: MyAddon_DB, OneWoW_GUI_DB
 
-
+Libs\LibStub\LibStub.lua
+Libs\OneWoW_GUI\Core.lua
+Libs\OneWoW_GUI\Constants.lua
+Libs\OneWoW_GUI\OneWoW_GUI.lua
+Libs\OneWoW_GUI\Settings.lua
 ```
