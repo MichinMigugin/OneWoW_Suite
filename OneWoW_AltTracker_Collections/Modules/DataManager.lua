@@ -26,6 +26,9 @@ function DataManager:RegisterEvents()
         "QUEST_REMOVED",
         "QUEST_LOG_UPDATE",
         "CRITERIA_UPDATE",
+        "NEW_MOUNT_ADDED",
+        "COMPANION_LEARNED",
+        "PET_JOURNAL_LIST_UPDATE",
     }
 
     for _, event in ipairs(events) do
@@ -62,6 +65,11 @@ function DataManager:HandleEvent(event, ...)
             self:UpdateAchievements()
         end)
 
+    elseif event == "NEW_MOUNT_ADDED" or event == "COMPANION_LEARNED" or event == "PET_JOURNAL_LIST_UPDATE" then
+        C_Timer.After(1, function()
+            self:UpdatePetsMounts()
+        end)
+
     end
 end
 
@@ -75,6 +83,7 @@ function DataManager:CollectAllData()
     ns.Quests:CollectData(charKey, charData)
     ns.Reputations:CollectData(charKey, charData)
     ns.Achievements:CollectData(charKey, charData)
+    ns.PetsMounts:CollectData(charKey, charData)
 
     return true
 end
@@ -107,6 +116,16 @@ function DataManager:UpdateAchievements()
     if not charData then return false end
 
     ns.Achievements:CollectData(charKey, charData)
+end
+
+function DataManager:UpdatePetsMounts()
+    local charKey = ns:GetCharacterKey()
+    if not charKey then return false end
+
+    local charData = ns:GetCharacterData(charKey)
+    if not charData then return false end
+
+    ns.PetsMounts:CollectData(charKey, charData)
 end
 
 function DataManager:GetCharacterData(charKey)

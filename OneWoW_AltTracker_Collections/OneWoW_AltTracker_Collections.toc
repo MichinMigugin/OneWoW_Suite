@@ -22,6 +22,7 @@ Core\Core.lua
 Modules\Quests.lua
 Modules\Reputations.lua
 Modules\Achievements.lua
+Modules\PetsMounts.lua
 # Data Manager (orchestrates all modules)
 Modules\DataManager.lua
 
