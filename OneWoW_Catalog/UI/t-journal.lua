@@ -30,8 +30,6 @@ local hideNonCollectable = false
 local CARD_HEIGHT = 85
 local ITEM_ROW_HEIGHT = 32
 
-local QUALITY_COLORS = ns.Constants.QUALITY_COLORS
-
 local SPECIAL_COLORS = {
     TMog    = { 0.8, 0.4, 1.0 },
     Recipe  = { 1.0, 0.8, 0.2 },
@@ -510,8 +508,7 @@ local function RefreshDetailView(isSecondRefresh)
                 iconFrame:SetSize(26, 26)
                 iconFrame:SetPoint("LEFT", itemRow, "LEFT", 6, 0)
                 iconFrame:SetBackdrop(BACKDROP_EDGE)
-                local qColor = QUALITY_COLORS[item.quality] or QUALITY_COLORS[1]
-                iconFrame:SetBackdropBorderColor(qColor[1], qColor[2], qColor[3], 0.6)
+                iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetItemQualityColor(item.quality))
                 table.insert(detailElements, iconFrame)
 
                 local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
@@ -526,7 +523,7 @@ local function RefreshDetailView(isSecondRefresh)
                 itemName:SetJustifyH("LEFT")
                 itemName:SetWordWrap(false)
                 itemName:SetText(item.name)
-                itemName:SetTextColor(qColor[1], qColor[2], qColor[3], 1.0)
+                itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(item.quality))
 
                 local diffText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 diffText:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT, 0)

@@ -8,21 +8,23 @@ local C = OneWoW_GUI.Constants
 local ColorToolsTab = {}
 Addon.ColorToolsTab = ColorToolsTab
 
-ColorToolsTab.classColors = {
-    {class = "Death Knight", color = "C41E3A"},
-    {class = "Demon Hunter", color = "A330C9"},
-    {class = "Druid", color = "FF7C0A"},
-    {class = "Evoker", color = "33937F"},
-    {class = "Hunter", color = "AAD372"},
-    {class = "Mage", color = "3FC7EB"},
-    {class = "Monk", color = "00FF98"},
-    {class = "Paladin", color = "F48CBA"},
-    {class = "Priest", color = "FFFFFF"},
-    {class = "Rogue", color = "FFF468"},
-    {class = "Shaman", color = "0070DD"},
-    {class = "Warlock", color = "8788EE"},
-    {class = "Warrior", color = "C69B6D"},
-}
+-- Build class colors table from game data
+local classColors = {}
+do
+    for key, _ in pairs(RAID_CLASS_COLORS) do
+        if key ~= "ADVENTURER" and key ~= "TRAVELER" then
+            tinsert(classColors, key)
+        end
+    end
+    sort(classColors)
+
+    for i, className  in ipairs(classColors) do
+        classColors[i] = {
+            colorMixin = RAID_CLASS_COLORS[className],
+            className = LOCALIZED_CLASS_NAMES_MALE[className]
+        }
+    end
+end
 
 ColorToolsTab.commonColors = {
     {name = "White", color = "FFFFFF"},
@@ -140,7 +142,11 @@ function ColorToolsTab:Initialize(parent)
     self.colorRows = {}
 
     local yOffset = -10
-    for _, data in ipairs(self.classColors) do
+    for _, data in ipairs(classColors) do
+        local colorMixin = data.colorMixin
+        local className = data.className
+        local colorStr = colorMixin:GenerateHexColorNoAlpha()
+
         local frame = CreateFrame("Frame", nil, scrollChild)
         frame:SetSize(math.max(200, scrollChild:GetWidth()), 25)
         tinsert(self.colorRows, frame)
@@ -149,21 +155,16 @@ function ColorToolsTab:Initialize(parent)
         frame.colorBox = frame:CreateTexture(nil, "ARTWORK")
         frame.colorBox:SetSize(20, 20)
         frame.colorBox:SetPoint("LEFT", 5, 0)
-        frame.colorBox:SetColorTexture(
-            tonumber(data.color:sub(1,2), 16) / 255,
-            tonumber(data.color:sub(3,4), 16) / 255,
-            tonumber(data.color:sub(5,6), 16) / 255,
-            1
-        )
+        frame.colorBox:SetColorTexture(colorMixin:GetRGB())
 
         frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         frame.text:SetPoint("LEFT", frame.colorBox, "RIGHT", 5, 0)
-        frame.text:SetText(data.class .. ": |cFF" .. data.color .. data.color .. "|r")
+        frame.text:SetText(className .. ": " .. colorMixin:WrapTextInColorCode(colorStr, colorStr))
 
         frame.copyBtn = OneWoW_GUI:CreateButton(frame, { text = "Copy", width = 60, height = 20 })
         frame.copyBtn:SetPoint("RIGHT", -5, 0)
         frame.copyBtn:SetScript("OnClick", function()
-            Addon:CopyToClipboard(data.color)
+            Addon:CopyToClipboard(colorStr)
         end)
         frame.text:SetPoint("RIGHT", frame.copyBtn, "LEFT", -5, 0)
 

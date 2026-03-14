@@ -43,8 +43,6 @@ local PROF_BTN_PAD_X = 8
 local PROF_BTN_GAP = 3
 local PROF_HEADER_H = 58
 
-local QUALITY_COLORS = ns.Constants.QUALITY_COLORS
-
 local EXPANSION_DISPLAY = {
     Classic = "Classic",
     BurningCrusade = "The Burning Crusade",
@@ -257,8 +255,7 @@ local function CreateRecipeRow(parent, recipe, yOffset, rowIdx, onClick)
         local cached = addon.DataLoader:GetCachedItem(recipe.item)
         if cached and cached.name then
             nameText:SetText(cached.name)
-            local qc = QUALITY_COLORS[cached.quality] or QUALITY_COLORS[1]
-            nameText:SetTextColor(unpack(qc))
+            nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(cached.quality))
             icon:SetTexture(cached.icon or recipe.icon)
         else
             nameText:SetText("...")
@@ -267,8 +264,7 @@ local function CreateRecipeRow(parent, recipe, yOffset, rowIdx, onClick)
             addon.DataLoader:LoadItemData(recipe.item, function(itemID, itemData)
                 if row:IsVisible() and itemData then
                     nameText:SetText(itemData.name)
-                    local qc = QUALITY_COLORS[itemData.quality] or QUALITY_COLORS[1]
-                    nameText:SetTextColor(unpack(qc))
+                    nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
                     if itemData.icon then
                         icon:SetTexture(itemData.icon)
                     end
@@ -377,8 +373,7 @@ ShowRecipeDetail = function(recipe)
         local cached = addon.DataLoader:GetCachedItem(recipe.item)
         if cached and cached.name then
             recipeName:SetText(cached.name)
-            local qc = QUALITY_COLORS[cached.quality] or QUALITY_COLORS[1]
-            recipeName:SetTextColor(unpack(qc))
+            recipeName:SetTextColor(OneWoW_GUI:GetItemQualityColor(cached.quality))
             hIcon:SetTexture(cached.icon or recipe.icon)
         else
             hIcon:SetTexture(recipe.icon)
@@ -387,8 +382,7 @@ ShowRecipeDetail = function(recipe)
             addon.DataLoader:LoadItemData(recipe.item, function(itemID, itemData)
                 if headerFrame:IsVisible() and itemData then
                     recipeName:SetText(itemData.name)
-                    local qc = QUALITY_COLORS[itemData.quality] or QUALITY_COLORS[1]
-                    recipeName:SetTextColor(unpack(qc))
+                    recipeName:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
                     if itemData.icon then
                         hIcon:SetTexture(itemData.icon)
                     end
@@ -518,8 +512,7 @@ ShowRecipeDetail = function(recipe)
             if cached and cached.name then
                 rgName:SetText(cached.name)
                 rgIconTex:SetTexture(cached.icon)
-                local qc = QUALITY_COLORS[cached.quality] or QUALITY_COLORS[1]
-                rgName:SetTextColor(unpack(qc))
+                rgName:SetTextColor(OneWoW_GUI:GetItemQualityColor(cached.quality))
             else
                 rgName:SetText("...")
                 rgName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -528,8 +521,7 @@ ShowRecipeDetail = function(recipe)
                     if rgRow:IsVisible() and itemData then
                         rgName:SetText(itemData.name)
                         rgIconTex:SetTexture(itemData.icon)
-                        local qc = QUALITY_COLORS[itemData.quality] or QUALITY_COLORS[1]
-                        rgName:SetTextColor(unpack(qc))
+                        rgName:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
                     end
                 end)
             end
@@ -579,16 +571,14 @@ ShowRecipeDetail = function(recipe)
                         local optCached = addon.DataLoader:GetCachedItem(optItemID)
                         if optCached and optCached.name then
                             optName:SetText("- " .. optCached.name)
-                            local qc = QUALITY_COLORS[optCached.quality] or QUALITY_COLORS[1]
-                            optName:SetTextColor(unpack(qc))
+                            optName:SetTextColor(OneWoW_GUI:GetItemQualityColor(optCached.quality))
                         else
                             optName:SetText("- ...")
                             optName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                             addon.DataLoader:LoadItemData(optItemID, function(itemID, itemData)
                                 if optRow:IsVisible() and itemData then
                                     optName:SetText("- " .. itemData.name)
-                                    local qc = QUALITY_COLORS[itemData.quality] or QUALITY_COLORS[1]
-                                    optName:SetTextColor(unpack(qc))
+                                    optName:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
                                 end
                             end)
                         end

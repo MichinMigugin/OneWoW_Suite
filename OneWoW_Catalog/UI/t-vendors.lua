@@ -18,8 +18,6 @@ local currentZoneOnly = false
 local currencyFilter = nil
 local dataAddon = nil
 
-local QUALITY_COLORS = ns.Constants.QUALITY_COLORS
-
 local function FormatGold(copper)
     if not copper or copper <= 0 then return "" end
     local gold = math.floor(copper / 10000)
@@ -470,10 +468,9 @@ local function ShowVendorDetail(panels, vendor)
             local cachedItem = addon and addon.DataLoader and addon.DataLoader:GetCachedItem(itemID)
             if cachedItem and cachedItem.name then
                 itemName:SetText(cachedItem.name)
-                local qColor = QUALITY_COLORS[cachedItem.quality] or QUALITY_COLORS[1]
-                itemName:SetTextColor(unpack(qColor))
+                itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(cachedItem.quality))
                 iconTex:SetTexture(cachedItem.icon)
-                iconFrame:SetBackdropBorderColor(unpack(qColor))
+                iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetItemQualityColor(cachedItem.quality))
             else
                 itemName:SetText(L["VENDORS_LOADING"] .. " (" .. itemID .. ")")
                 itemName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -483,10 +480,9 @@ local function ShowVendorDetail(panels, vendor)
                     addon.DataLoader:LoadItemData(itemID, function(loadedID, data)
                         if data and itemName:IsVisible() then
                             itemName:SetText(data.name or "")
-                            local qColor = QUALITY_COLORS[data.quality] or QUALITY_COLORS[1]
-                            itemName:SetTextColor(unpack(qColor))
+                            itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(data.quality))
                             iconTex:SetTexture(data.icon)
-                            iconFrame:SetBackdropBorderColor(unpack(qColor))
+                            iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetItemQualityColor(data.quality))
                         end
                     end)
                 end

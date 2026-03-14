@@ -30,8 +30,6 @@ local SOURCE_BTN_PAD_X = 10
 local SOURCE_BTN_GAP   = 3
 local HEADER_H         = 58
 
-local QUALITY_COLORS = ns.Constants.QUALITY_COLORS
-
 local SOURCE_DEFS = {
     { key = "all",     labelKey = "TT_IS_FILTER_ALL",     descKey = "TT_IS_FILTER_ALL_DESC"     },
     { key = "drops",   labelKey = "TT_IS_FILTER_DROPS",   descKey = "TT_IS_FILTER_DROPS_DESC"   },
@@ -175,9 +173,7 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     nameText:SetText(result.name or ("Item #" .. result.itemID))
-
-    local qc = QUALITY_COLORS[result.quality] or QUALITY_COLORS[1]
-    nameText:SetTextColor(unpack(qc))
+    nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
 
     if hasOwned then
         local badge = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -258,9 +254,7 @@ ShowItemDetail = function(result)
     itemName:SetJustifyH("LEFT")
     itemName:SetWordWrap(false)
     itemName:SetText(result.name or ("Item #" .. result.itemID))
-
-    local qc = QUALITY_COLORS[result.quality] or QUALITY_COLORS[1]
-    itemName:SetTextColor(unpack(qc))
+    itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
 
     local itemIDText = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     itemIDText:SetPoint("TOPLEFT", itemName, "BOTTOMLEFT", 0, -2)

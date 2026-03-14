@@ -69,6 +69,14 @@ function OneWoW_GUI:GetBrandIcon(factionTheme)
     return OneWoW_GUI.Constants.ICON_TEXTURES[factionTheme] or DEFAULT_ICON_TEXTURE
 end
 
+-- Accounts for color overrides in game accessibility settings
+function OneWoW_GUI:GetItemQualityColor(quality)
+    local t = ColorManager.GetColorDataForItemQuality(quality or 1)
+    local colorMixin = t.color
+    -- Returns r, g, b, a floats
+    return colorMixin:GetRGBA()
+end
+
 function OneWoW_GUI:ApplyTheme(addon)
     local themeKey
 
@@ -2244,17 +2252,6 @@ function OneWoW_GUI:CreateItemIcon(parent, options)
     local itemLevel = options.itemLevel
     local iconTexture = options.iconTexture
 
-    local QUALITY_COLORS = {
-        [0] = {0.6, 0.6, 0.6, 1},
-        [1] = {1, 1, 1, 1},
-        [2] = {0.12, 1, 0, 1},
-        [3] = {0, 0.44, 0.87, 1},
-        [4] = {0.64, 0.21, 0.93, 1},
-        [5] = {1, 0.5, 0, 1},
-        [6] = {0.9, 0.8, 0.5, 1},
-        [7] = {0.41, 0.8, 0.94, 1},
-    }
-
     local iconFrame = CreateFrame("Button", nil, parent, "BackdropTemplate")
     iconFrame:SetSize(size, size)
 
@@ -2274,14 +2271,13 @@ function OneWoW_GUI:CreateItemIcon(parent, options)
     borderFrame:SetAllPoints(iconFrame)
     borderFrame:SetFrameLevel(iconFrame:GetFrameLevel() + 1)
 
-    local color = QUALITY_COLORS[quality] or QUALITY_COLORS[1]
     if itemLink or itemID then
         borderFrame:SetBackdrop({
             edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
             edgeSize = 12,
             insets = { left = 2, right = 2, top = 2, bottom = 2 },
         })
-        borderFrame:SetBackdropBorderColor(color[1], color[2], color[3], color[4])
+        borderFrame:SetBackdropBorderColor(OneWoW_GUI:GetItemQualityColor(quality))
     else
         borderFrame:SetBackdrop({
             edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -2387,12 +2383,12 @@ function OneWoW_GUI:CreateExpandedPanelGrid(ef, options)
         p:SetPoint("BOTTOMLEFT", ef, "BOTTOMLEFT", inset, inset)
         p:SetWidth(100)
         p:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
-        p:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        p:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        p:SetBackdropColor(GetThemeColor("BG_TERTIARY"))
+        p:SetBackdropBorderColor(GetThemeColor("BORDER_SUBTLE"))
         local titleFS = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         titleFS:SetPoint("TOPLEFT", p, "TOPLEFT", 6, -5)
         titleFS:SetText(title)
-        titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        titleFS:SetTextColor(GetThemeColor("ACCENT_PRIMARY"))
         p.titleFS = titleFS
         p.dy = -18
         table.insert(panels, p)
@@ -2421,7 +2417,7 @@ function OneWoW_GUI:CreateExpandedPanelGrid(ef, options)
                 fs:SetTextColor(color)
             end
         else
-            fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            fs:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
         end
         panel.dy = panel.dy - lineHeight
         return fs
