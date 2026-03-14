@@ -123,7 +123,7 @@ function PatchDialog:Show()
     discordLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     yOffset = yOffset - 22
 
-    local discordBox = ns.UI.CreateEditBox(nil, scrollContent, 650, 24)
+    local discordBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 650, height = 24 })
     discordBox:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     discordBox:SetText(DISCORD_LINK)
     discordBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
@@ -138,7 +138,7 @@ function PatchDialog:Show()
     coffeeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     yOffset = yOffset - 22
 
-    local coffeeBox = ns.UI.CreateEditBox(nil, scrollContent, 650, 24)
+    local coffeeBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 650, height = 24 })
     coffeeBox:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
     coffeeBox:SetText(COFFEE_LINK)
     coffeeBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
@@ -221,7 +221,7 @@ function PatchDialog:Show()
         addonLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         yOffset = yOffset - 22
 
-        local addonBox = ns.UI.CreateEditBox(nil, scrollContent, 650, 24)
+        local addonBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 650, height = 24 })
         addonBox:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
         addonBox:SetText(addon.url)
         addonBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
