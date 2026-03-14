@@ -23,6 +23,7 @@ function DataManager:RegisterEvents()
         "GUILDBANKFRAME_OPENED",
         "GUILDBANKFRAME_CLOSED",
         "GUILDBANK_UPDATE_TABS",
+        "GUILDBANKBAGSLOTS_CHANGED",
         "MAIL_SHOW",
         "MAIL_CLOSED",
         "MAIL_INBOX_UPDATE",
@@ -74,6 +75,11 @@ function DataManager:HandleEvent(event, ...)
 
     elseif event == "GUILDBANK_UPDATE_TABS" then
         C_Timer.After(0.2, function()
+            self:CollectGuildBank()
+        end)
+
+    elseif event == "GUILDBANKBAGSLOTS_CHANGED" then
+        C_Timer.After(0.3, function()
             self:CollectGuildBank()
         end)
 

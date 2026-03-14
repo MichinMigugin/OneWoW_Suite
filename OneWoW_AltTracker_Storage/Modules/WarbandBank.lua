@@ -56,7 +56,7 @@ function Module:CollectData(charKey, charData)
                             itemLevel = itemLevel,
                             texture = itemTexture,
                             sellPrice = sellPrice or 0,
-                            count = itemInfo.stackCount or 1,
+                            stackCount = itemInfo.stackCount or 1,
                         }
                         usedCount = usedCount + 1
                     end
