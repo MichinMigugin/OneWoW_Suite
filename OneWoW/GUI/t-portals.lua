@@ -35,7 +35,7 @@ function GUI:CreatePortalsTab(parent)
 	if ph.showSeasonal == nil then ph.showSeasonal = true end
 
 
-	local escCheckbox = OneWoW_GUI:CreateCheckbox(nil, controlPanel, L["Enable ESC Menu"])
+	local escCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Enable ESC Menu"] })
 	escCheckbox:SetPoint("LEFT", controlPanel, "LEFT", 10, 0)
 	escCheckbox:SetChecked(OneWoW.db.global.portalHub.escEnabled)
 	escCheckbox:SetScript("OnClick", function(self)
@@ -51,7 +51,7 @@ function GUI:CreatePortalsTab(parent)
 
 	local escLabel = escCheckbox.label
 
-	local randomHearthCheckbox = OneWoW_GUI:CreateCheckbox(nil, controlPanel, L["Random Hearthstone"])
+	local randomHearthCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Random Hearthstone"] })
 	randomHearthCheckbox:SetPoint("LEFT", escLabel, "RIGHT", 20, 0)
 	randomHearthCheckbox:SetChecked(OneWoW.db.global.portalHub.randomHearthstone)
 	randomHearthCheckbox:SetScript("OnClick", function(self)
@@ -63,13 +63,13 @@ function GUI:CreatePortalsTab(parent)
 
 	local randomHearthLabel = randomHearthCheckbox.label
 
-	local showAllCheckbox = OneWoW_GUI:CreateCheckbox(nil, controlPanel, L["Show Unavailable"])
+	local showAllCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show Unavailable"] })
 	showAllCheckbox:SetPoint("LEFT", randomHearthLabel, "RIGHT", 20, 0)
 	showAllCheckbox:SetChecked(OneWoW.db.global.portalHub.showAll)
 
 	local showAllLabel = showAllCheckbox.label
 
-	local showAllEscCheckbox = OneWoW_GUI:CreateCheckbox(nil, controlPanel, L["Show All On ESC"])
+	local showAllEscCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show All On ESC"] })
 	showAllEscCheckbox:SetPoint("LEFT", showAllLabel, "RIGHT", 20, 0)
 	showAllEscCheckbox:SetChecked(OneWoW.db.global.portalHub.showAllOnEsc or false)
 	showAllEscCheckbox:SetScript("OnClick", function(self)
@@ -81,7 +81,7 @@ function GUI:CreatePortalsTab(parent)
 
 	local showAllEscLabel = showAllEscCheckbox.label
 
-	local showSeasonalCheckbox = OneWoW_GUI:CreateCheckbox(nil, controlPanel, L["Show Seasonal"])
+	local showSeasonalCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show Seasonal"] })
 	showSeasonalCheckbox:SetPoint("LEFT", showAllEscLabel, "RIGHT", 20, 0)
 	showSeasonalCheckbox:SetChecked(OneWoW.db.global.portalHub.showSeasonal)
 	showSeasonalCheckbox:SetScript("OnClick", function(self)
