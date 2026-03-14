@@ -57,13 +57,13 @@ UI\MainFrame.lua
 # Tab UI Files
 UI\t-summary.lua
 UI\t-progress.lua
-UI\t-bank-new.lua
+UI\t-bank.lua
 UI\t-equipment.lua
 UI\t-professions.lua
 UI\t-auctions.lua
 UI\t-financials.lua
 UI\t-items.lua
-UI\t-actionbars-new.lua
+UI\t-actionbars.lua
 UI\t-lockouts.lua
 UI\t-settings.lua
 
