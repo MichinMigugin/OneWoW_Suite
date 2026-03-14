@@ -27,6 +27,31 @@ local ALWAYS_SHOW_MODULES = {
       url = "https://www.curseforge.com/wow/addons/onewow-catalog" },
 }
 local placeholderData = {}
+local FRAME_NAME = "OneWoWMainWindow"
+
+local function RemoveFromUISpecialFrames(name)
+    for i = #UISpecialFrames, 1, -1 do
+        if UISpecialFrames[i] == name then
+            tremove(UISpecialFrames, i)
+        end
+    end
+end
+
+local function EnsureInUISpecialFrames(name)
+    for _, v in ipairs(UISpecialFrames) do
+        if v == name then return end
+    end
+    tinsert(UISpecialFrames, name)
+end
+
+hooksecurefunc("ToggleGameMenu", function()
+    if MainWindow and MainWindow:IsShown() then
+        GUI:Hide()
+        if GameMenuFrame and GameMenuFrame:IsShown() then
+            HideUIPanel(GameMenuFrame)
+        end
+    end
+end)
 
 local function CreateRow1TabButton(parent, text, moduleName)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
@@ -517,7 +542,7 @@ function GUI:InitMainWindow()
         if h > sh then MainWindow:SetHeight(sh) end
     end)
 
-    tinsert(UISpecialFrames, "OneWoWMainWindow")
+    EnsureInUISpecialFrames(FRAME_NAME)
     isInitialized = true
 
     GUI:ApplyFontToFrame(MainWindow)
@@ -616,6 +641,7 @@ function GUI:ResetUIToDefaults()
 end
 
 function GUI:FullReset()
+    RemoveFromUISpecialFrames(FRAME_NAME)
     if MainWindow then
         MainWindow:Hide()
         MainWindow:SetParent(nil)
