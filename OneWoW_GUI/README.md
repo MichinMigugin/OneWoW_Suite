@@ -1,8 +1,8 @@
 # OneWoW_GUI - Quick Reference
 
-**Library:** `LibStub("OneWoW_GUI-1.0")`
-**Location:** `/OneWoW_GUI/`
-**Loaded by:** OneWoW, OneWoW_QoL (via RequiredDeps)
+- **Library:** `LibStub("OneWoW_GUI-1.0")`
+- **Location:** `/OneWoW_GUI/`
+- **Loaded by:** All addons (via RequiredDeps)
 
 ---
 
@@ -12,8 +12,6 @@
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 ```
-
-Any addon that depends on OneWoW or OneWoW_GUI can use it.
 
 ---
 
