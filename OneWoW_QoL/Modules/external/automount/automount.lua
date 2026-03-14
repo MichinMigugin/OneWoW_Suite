@@ -15,6 +15,7 @@ local AutoMountModule = {
     contact     = "ricky@wow2.xyz",
     link        = "https://www.wow2.xyz",
     toggles     = {},
+    preview     = true,
     _ticker     = nil,
     _eventFrame = nil,
 }

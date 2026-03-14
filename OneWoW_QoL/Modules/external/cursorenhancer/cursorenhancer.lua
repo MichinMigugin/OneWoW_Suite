@@ -21,6 +21,7 @@ local CursorEnhancerModule = {
         { id = "center_marker",      label = "CURSORENHANCER_CENTER_MARKER", default = true,  group = "CURSORENHANCER_MARKER_TOGGLES" },
         { id = "mouse_trail",        label = "CURSORENHANCER_MOUSE_TRAIL",   default = false, group = "CURSORENHANCER_MARKER_TOGGLES" },
     },
+    preview        = true,
     _moduleEnabled = false,
     _eventFrame    = nil,
 }

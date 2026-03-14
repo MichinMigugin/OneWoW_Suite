@@ -9,6 +9,10 @@ if not OneWoW_GUI then return end
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
+local PREVIEW_MAX_HEIGHT = 200
+local PREVIEW_TEXTURE_BASE = "Interface\\AddOns\\OneWoW_QoL\\Modules\\external\\"
+local PREVIEW_EXTENSIONS = { ".png", ".blp", ".tga" }
+
 local selectedModuleId  = nil
 local selectedRow       = nil
 local modDetailsDialog  = nil
@@ -65,28 +69,29 @@ local function CreateReadOnlyContactBox(parent, label, text, yOffset)
     return yOffset - 22 - 8
 end
 
+local DETAILS_HEIGHT_DEFAULT = 280
+local DETAILS_HEIGHT_PREVIEW = 470
+
 local function ShowModuleDetailsDialog(module)
     if not modDetailsDialog then
         local result = OneWoW_GUI:CreateDialog({
             name = "OneWoW_QoL_ModuleDetails",
             title = L["FEATURES_DETAILS_TITLE"],
             width = 340,
-            height = 280,
+            height = DETAILS_HEIGHT_DEFAULT,
+            showScrollFrame = true,
             buttons = {
                 { text = L["CLOSE"], onClick = function(dialog) dialog:Hide() end },
             },
         })
 
-        local content = CreateFrame("Frame", nil, result.contentFrame)
-        content:SetPoint("TOPLEFT", result.contentFrame, "TOPLEFT", 20, -8)
-        content:SetPoint("TOPRIGHT", result.contentFrame, "TOPRIGHT", -20, -8)
-        content:SetHeight(180)
-        modDetailsContent = content
+        modDetailsContent = result.scrollContent
         modDetailsDialog  = result.frame
     end
 
     ClearModDetailsContent()
 
+    local hasPreviewImage = false
     local yOffset = 0
 
     local modName = modDetailsContent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -120,6 +125,54 @@ local function ShowModuleDetailsDialog(module)
     if module.link then
         yOffset = CreateReadOnlyContactBox(modDetailsContent, L["FEATURES_LINK_LABEL"], module.link, yOffset)
     end
+
+    if module.preview then
+        local basePath = PREVIEW_TEXTURE_BASE .. module.id .. "\\preview"
+        local resolvedPath = nil
+
+        local probe = modDetailsContent:CreateTexture(nil, "BACKGROUND")
+        probe:SetSize(1, 1)
+        probe:SetAlpha(0)
+        for _, ext in ipairs(PREVIEW_EXTENSIONS) do
+            probe:SetTexture(basePath .. ext)
+            if probe:GetTexture() then
+                resolvedPath = basePath .. ext
+                break
+            end
+        end
+        probe:SetTexture(nil)
+        probe:Hide()
+
+        if resolvedPath then
+            hasPreviewImage = true
+            yOffset = yOffset - 4
+
+            local previewLabel = modDetailsContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            previewLabel:SetPoint("TOPLEFT", modDetailsContent, "TOPLEFT", 0, yOffset)
+            previewLabel:SetText(L["FEATURES_PREVIEW_LABEL"])
+            previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            yOffset = yOffset - previewLabel:GetStringHeight() - 4
+
+            local container = CreateFrame("Frame", nil, modDetailsContent, "BackdropTemplate")
+            container:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+            container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            container:SetPoint("TOPLEFT", modDetailsContent, "TOPLEFT", 0, yOffset)
+            container:SetPoint("TOPRIGHT", modDetailsContent, "TOPRIGHT", 0, yOffset)
+            container:SetHeight(PREVIEW_MAX_HEIGHT)
+
+            local img = container:CreateTexture(nil, "ARTWORK")
+            img:SetPoint("TOPLEFT", container, "TOPLEFT", 2, -2)
+            img:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -2, 2)
+            img:SetTexture(resolvedPath)
+            img:SetTexCoord(0, 1, 0, 1)
+
+            yOffset = yOffset - PREVIEW_MAX_HEIGHT - 8
+        end
+    end
+
+    modDetailsContent:SetHeight(math.abs(yOffset) + 10)
+    modDetailsDialog:SetHeight(hasPreviewImage and DETAILS_HEIGHT_PREVIEW or DETAILS_HEIGHT_DEFAULT)
 
     modDetailsDialog:Show()
     modDetailsDialog:Raise()

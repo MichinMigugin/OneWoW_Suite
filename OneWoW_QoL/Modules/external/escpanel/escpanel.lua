@@ -17,6 +17,7 @@ local ESCPanelModule = {
         { id = "esc_hide_zone_when_empty",   label = "ESCPANEL_TOGGLE_HIDE_ZONE_EMPTY",  default = true },
         { id = "esc_show_alerts",            label = "ESCPANEL_TOGGLE_ALERTS",            default = true },
     },
+    preview        = true,
     defaultEnabled = true,
 }
 

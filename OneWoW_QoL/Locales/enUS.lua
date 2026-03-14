@@ -29,6 +29,7 @@ L_enUS["FEATURES_DETAILS_TITLE"]  = "Module Details"
 L_enUS["FEATURES_TOGGLES_HEADER"] = "Module Toggles"
 L_enUS["FEATURES_ON"]  = "On"
 L_enUS["FEATURES_OFF"] = "Off"
+L_enUS["FEATURES_PREVIEW_LABEL"] = "Preview:"
 
 L_enUS["CATEGORY_AUTOMATION"] = "Automation"
 L_enUS["CATEGORY_INTERFACE"]  = "Interface"

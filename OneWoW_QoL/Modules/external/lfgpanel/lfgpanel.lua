@@ -260,6 +260,7 @@ LFGPanelModule.toggles = {
     { id = "show_panel", label = "LFGPANEL_SHOW_PANEL", description = "LFGPANEL_SHOW_PANEL_DESC", default = true },
     { id = "filter_results", label = "LFGPANEL_FILTER_RESULTS", description = "LFGPANEL_FILTER_RESULTS_DESC", default = true },
 }
+LFGPanelModule.preview = true
 LFGPanelModule.defaultEnabled = true
 
 function LFGPanelModule:OnEnable()

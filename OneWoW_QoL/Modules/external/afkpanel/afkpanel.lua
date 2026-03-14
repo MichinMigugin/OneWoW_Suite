@@ -16,6 +16,7 @@ local AFKPanelModule = {
         { id = "show_daily",      label = "AFKPANEL_SHOW_DAILY",  default = true  },
         { id = "show_weekly",     label = "AFKPANEL_SHOW_WEEKLY", default = true  },
     },
+    preview        = true,
     defaultEnabled = true,
     isAFK       = false,
     _initialized = false,

@@ -17,6 +17,7 @@ local CopyTextModule = {
         { id = "mode_anything", label = "COPYTEXT_TOGGLE_ANYTHING", description = "COPYTEXT_TOGGLE_ANYTHING_DESC", default = false },
         { id = "fast_copy",     label = "COPYTEXT_TOGGLE_FAST",     description = "COPYTEXT_TOGGLE_FAST_DESC",     default = false },
     },
+    preview        = true,
     defaultEnabled = true,
     _libCopyPaste = nil,
 }

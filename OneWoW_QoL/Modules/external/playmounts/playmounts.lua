@@ -18,6 +18,7 @@ local PlayMountsModule = {
         { id = "announce_chat",    label = "PLAYMOUNTS_TOGGLE_CHAT",       description = "PLAYMOUNTS_TOGGLE_CHAT_DESC",       default = false },
         { id = "enableMatchMount", label = "PLAYMOUNTS_TOGGLE_MATCHMOUNT", description = "PLAYMOUNTS_TOGGLE_MATCHMOUNT_DESC", default = true  },
     },
+    preview        = true,
     defaultEnabled = true,
     _frame = nil,
 }

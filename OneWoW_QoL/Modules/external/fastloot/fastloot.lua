@@ -13,6 +13,7 @@ local FastLootModule = {
     contact     = "ricky@wow2.xyz",
     link        = "https://www.wow2.xyz",
     toggles     = {},
+    preview     = true,
     _frame      = nil,
     _epoch      = 0,
 }

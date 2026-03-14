@@ -18,6 +18,7 @@ local FastForwardModule = {
         { id = "instance_only",         label = "FASTFORWARD_TOGGLE_INSTANCE",         description = "FASTFORWARD_TOGGLE_INSTANCE_DESC",         default = false },
         { id = "respect_uncancellable", label = "FASTFORWARD_TOGGLE_UNCANCELLABLE",    description = "FASTFORWARD_TOGGLE_UNCANCELLABLE_DESC",    default = false },
     },
+    preview = true,
     _frame = nil,
 }
 

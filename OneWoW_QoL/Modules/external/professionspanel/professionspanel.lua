@@ -12,6 +12,7 @@ local ProfPanelModule = {
     toggles     = {
         { id = "auto_show", label = "PROFPANEL_AUTO_SHOW", default = true },
     },
+    preview        = true,
     defaultEnabled = true,
     _panel           = nil,
     _toggleButton    = nil,

@@ -15,6 +15,7 @@ local AutoRepairModule = {
     toggles = {
         { id = "use_guild_bank", label = "AUTOREPAIR_TOGGLE_GUILD", description = "AUTOREPAIR_TOGGLE_GUILD_DESC", default = true },
     },
+    preview = true,
     _frame = nil,
 }
 
