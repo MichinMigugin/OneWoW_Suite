@@ -252,7 +252,7 @@ local function GetFastestMount()
     local prefs       = GetPreferences()
 
     if isInWater and not prefs.aquaticEnabled then return {} end
-    if (isFlying or isAdvFlying) and not prefs.flyingEnabled then return {} end
+    if (isFlying or isAdvFlying) and not isInWater and not prefs.flyingEnabled then return {} end
     if not isFlying and not isAdvFlying and not isInWater and not prefs.groundEnabled then return {} end
 
     wipe(fastestMountIds)
