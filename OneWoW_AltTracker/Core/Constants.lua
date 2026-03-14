@@ -11,6 +11,5 @@ ns.Constants = {
         LEFT_PANEL_WIDTH = 350,
         SUBTAB_BUTTON_HEIGHT = 28,
         CONTROL_PANEL_HEIGHT = 75,
-        SEARCH_HEIGHT = 32,
     }),
 }

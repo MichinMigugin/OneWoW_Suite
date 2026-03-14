@@ -12,7 +12,6 @@ ns.Constants = {
         WINDOW_HEIGHT = 900,
         MIN_WIDTH         = 900,
         MIN_HEIGHT        = 600,
-        SEARCH_HEIGHT     = 28,
     }),
 
     QUALITY_COLORS = {

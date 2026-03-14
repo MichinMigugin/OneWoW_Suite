@@ -7,6 +7,5 @@ OneWoW_DirectDeposit.Constants = {
     GUI = OneWoW_GUI:RegisterGUIConstants({
         WINDOW_WIDTH = 600,
         WINDOW_HEIGHT = 500,
-        SEARCH_HEIGHT = 32,
     }),
 }

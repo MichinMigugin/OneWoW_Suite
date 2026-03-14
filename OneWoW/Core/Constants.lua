@@ -9,6 +9,5 @@ OneWoW.Constants = {
         WINDOW_HEIGHT = 720,
         MIN_WIDTH = 860,
         MIN_HEIGHT = 560,
-        SEARCH_HEIGHT = 32,
     }),
 }

@@ -8,7 +8,6 @@ OneWoW_ShoppingList.Constants = {
         WINDOW_WIDTH  = 820,
         WINDOW_HEIGHT = 580,
         SIDEBAR_WIDTH = 300,
-        SEARCH_HEIGHT = 28,
         ROW_HEIGHT    = 38,
         ROW_GAP       = 2,
         SCROLLBAR_W   = 10,
