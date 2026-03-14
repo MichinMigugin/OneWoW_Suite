@@ -34,9 +34,9 @@ function LFGPanelUI:CreateDialog()
 
     local L = ns.L
 
-    local panel = OneWoW_GUI:CreateFrame(
-        "OneWoW_QoL_LFGDialog", PVEFrame, 300, 500, BACKDROP_INNER
-    )
+    local panel = OneWoW_GUI:CreateFrame(PVEFrame, {
+        name = "OneWoW_QoL_LFGDialog", width = 300, height = 500, backdrop = BACKDROP_INNER
+    })
     panel:SetPoint("TOPLEFT", PVEFrame, "TOPRIGHT", 3, 0)
     panel:SetFrameStrata("FULLSCREEN")
     panel:EnableMouse(true)
