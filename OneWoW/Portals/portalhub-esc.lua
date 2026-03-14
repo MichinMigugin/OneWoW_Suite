@@ -90,6 +90,8 @@ function EscMenu:HidePortalFrames()
 	if OneWoW.EscPanels then
 		OneWoW.EscPanels:HideAll()
 	end
+	if leftFrame then leftFrame:Hide() end
+	if rightFrame then rightFrame:Hide() end
 end
 
 function EscMenu:ShowPortalFrames()
@@ -572,7 +574,9 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize)
 end
 
 function EscMenu:Reload()
-	if leftFrame and leftFrame:IsShown() then
+	-- Only refresh when ESC menu is actually open; otherwise ShowPortalFrames would display
+	-- panels (CHARACTER INFO, ALERTS, ZONE NOTES) as stray UI outside the menu
+	if GameMenuFrame and GameMenuFrame:IsShown() then
 		self:ShowPortalFrames()
 	end
 end

@@ -42,7 +42,10 @@ function GUI:CreatePortalsTab(parent)
 		OneWoW.db.global.portalHub.escEnabled = self:GetChecked()
 		if OneWoW.PortalHubEsc then
 			if self:GetChecked() then
-				OneWoW.PortalHubEsc:ShowPortalFrames()
+				-- Only show panels when ESC menu is actually open; otherwise they appear as stray UI
+				if GameMenuFrame and GameMenuFrame:IsShown() then
+					OneWoW.PortalHubEsc:ShowPortalFrames()
+				end
 			else
 				OneWoW.PortalHubEsc:HidePortalFrames()
 			end
@@ -51,7 +54,7 @@ function GUI:CreatePortalsTab(parent)
 
 	local escLabel = escCheckbox.label
 
-	local randomHearthCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Random Hearthstone"] })
+	local randomHearthCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_RANDOM_HEARTHSTONE"] })
 	randomHearthCheckbox:SetPoint("LEFT", escLabel, "RIGHT", 20, 0)
 	randomHearthCheckbox:SetChecked(OneWoW.db.global.portalHub.randomHearthstone)
 	randomHearthCheckbox:SetScript("OnClick", function(self)
@@ -69,7 +72,7 @@ function GUI:CreatePortalsTab(parent)
 
 	local showAllLabel = showAllCheckbox.label
 
-	local showAllEscCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show All On ESC"] })
+	local showAllEscCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_SHOW_ALL_ESC"] })
 	showAllEscCheckbox:SetPoint("LEFT", showAllLabel, "RIGHT", 20, 0)
 	showAllEscCheckbox:SetChecked(OneWoW.db.global.portalHub.showAllOnEsc or false)
 	showAllEscCheckbox:SetScript("OnClick", function(self)
@@ -81,7 +84,7 @@ function GUI:CreatePortalsTab(parent)
 
 	local showAllEscLabel = showAllEscCheckbox.label
 
-	local showSeasonalCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show Seasonal"] })
+	local showSeasonalCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_SHOW_SEASONAL"] })
 	showSeasonalCheckbox:SetPoint("LEFT", showAllEscLabel, "RIGHT", 20, 0)
 	showSeasonalCheckbox:SetChecked(OneWoW.db.global.portalHub.showSeasonal)
 	showSeasonalCheckbox:SetScript("OnClick", function(self)
