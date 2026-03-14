@@ -18,6 +18,7 @@ local QuestToolsModule = {
         { id = "reward_picker",label = "QUESTTOOLS_TOGGLE_REWARDS", description = "QUESTTOOLS_TOGGLE_REWARDS_DESC", default = true  },
         { id = "auto_select_quest_gossip", label = "QUESTTOOLS_TOGGLE_GOSSIP", description = "QUESTTOOLS_TOGGLE_GOSSIP_DESC", default = true },
     },
+    preview       = true,
     _acceptFrame  = nil,
     _turninFrame  = nil,
     _goldIcon     = nil,
@@ -100,7 +101,7 @@ function QuestToolsModule:InitGossip()
             local options = C_GossipInfo.GetOptions()
             for _, option in ipairs(options) do
                 if string.find(option.name, "Quest") then
-                    C_GossipInfo.SelectOption(option.optionID)
+                    C_GossipInfo.SelectOption(option.gossipOptionID)
                 end
             end
         end
