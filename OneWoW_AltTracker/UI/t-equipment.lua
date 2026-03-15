@@ -10,6 +10,37 @@ local currentSortColumn = nil
 local currentSortAscending = true
 local characterRows = {}
 
+local enchantableSlots = {
+    [1] = true,
+    [3] = true,
+    [5] = true,
+    [7] = true,
+    [8] = true,
+    [11] = true,
+    [12] = true,
+    [16] = true,
+}
+
+local OFFHAND_SLOT = 17
+
+local function IsOffHandWeaponFromLink(item)
+    if not item or not item.itemID then return false end
+    local _, _, _, itemEquipLoc = C_Item.GetItemInfoInstant(item.itemID)
+    if not itemEquipLoc then return false end
+    return itemEquipLoc == "INVTYPE_WEAPON"
+        or itemEquipLoc == "INVTYPE_WEAPONOFFHAND"
+        or itemEquipLoc == "INVTYPE_WEAPONMAINHAND"
+        or itemEquipLoc == "INVTYPE_2HWEAPON"
+end
+
+local function IsSlotEnchantable(slotId, equipment)
+    if enchantableSlots[slotId] then return true end
+    if slotId == OFFHAND_SLOT and equipment then
+        return IsOffHandWeaponFromLink(equipment[OFFHAND_SLOT])
+    end
+    return false
+end
+
 function ns.UI.CreateEquipmentTab(parent)
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["EQUIPMENT_OVERVIEW"],
@@ -116,7 +147,6 @@ local function GetEquipmentStats(charKey, charData)
     local equipment = (_G.OneWoW_AltTracker_Character_DB.characters[charKey] and _G.OneWoW_AltTracker_Character_DB.characters[charKey].equipment)
     local totalDurability, durabilityItems, missingEnchants, missingGems, tierCount = 0, 0, 0, 0, 0
     if equipment then
-        local enchantableSlots = {[5]=true,[8]=true,[9]=true,[10]=true,[11]=true,[12]=true,[15]=true,[16]=true,[17]=true}
         for slotId = 1, 19 do
             if slotId ~= 4 and slotId ~= 18 and slotId ~= 19 then
                 local item = equipment[slotId]
@@ -125,12 +155,10 @@ local function GetEquipmentStats(charKey, charData)
                         totalDurability = totalDurability + (item.durability / item.maxDurability * 100)
                         durabilityItems = durabilityItems + 1
                     end
-                    if enchantableSlots[slotId] and charData.level and charData.level >= 70 then
-                        if item.quality and item.quality >= 3 then
-                            local enchantId = item.itemLink:match("item:%d+:(%d+)")
-                            if not enchantId or enchantId == "0" or enchantId == "" then
-                                missingEnchants = missingEnchants + 1
-                            end
+                    if IsSlotEnchantable(slotId, equipment) and charData.level and charData.level >= 70 then
+                        local enchantId = item.itemLink:match("item:%d+:(%d+)")
+                        if not enchantId or enchantId == "0" or enchantId == "" then
+                            missingEnchants = missingEnchants + 1
                         end
                     end
                     local itemSockets = item.numSockets or 0
@@ -310,18 +338,6 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local tierPieces = {}
 
         if equipment then
-            local enchantableSlots = {
-                [5] = true,
-                [8] = true,
-                [9] = true,
-                [10] = true,
-                [11] = true,
-                [12] = true,
-                [15] = true,
-                [16] = true,
-                [17] = true
-            }
-
             for slotId = 1, 19 do
                 if slotId ~= 4 and slotId ~= 18 and slotId ~= 19 then
                     local item = equipment[slotId]
@@ -331,13 +347,11 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
                             durabilityItems = durabilityItems + 1
                         end
 
-                        if enchantableSlots[slotId] and charData.level and charData.level >= 70 then
-                            if item.quality and item.quality >= 3 then
-                                totalEnchantableSlots = totalEnchantableSlots + 1
-                                local enchantId = item.itemLink:match("item:%d+:(%d+)")
-                                if not enchantId or enchantId == "0" or enchantId == "" then
-                                    missingEnchants = missingEnchants + 1
-                                end
+                        if IsSlotEnchantable(slotId, equipment) and charData.level and charData.level >= 70 then
+                            totalEnchantableSlots = totalEnchantableSlots + 1
+                            local enchantId = item.itemLink:match("item:%d+:(%d+)")
+                            if not enchantId or enchantId == "0" or enchantId == "" then
+                                missingEnchants = missingEnchants + 1
                             end
                         end
 
@@ -731,11 +745,6 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
         end
 
         if equipment then
-            local enchantableSlots = {
-                [5] = true, [8] = true, [9] = true, [10] = true,
-                [11] = true, [12] = true, [15] = true, [16] = true, [17] = true
-            }
-
             local charMissingEnchants = 0
             local charMissingGems = 0
             local charLowDurability = 0
@@ -751,12 +760,10 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
                             end
                         end
 
-                        if enchantableSlots[slotId] and charData.level and charData.level >= 70 then
-                            if item.quality and item.quality >= 3 then
-                                local enchantId = item.itemLink:match("item:%d+:(%d+)")
-                                if not enchantId or enchantId == "0" or enchantId == "" then
-                                    charMissingEnchants = charMissingEnchants + 1
-                                end
+                        if IsSlotEnchantable(slotId, equipment) and charData.level and charData.level >= 70 then
+                            local enchantId = item.itemLink:match("item:%d+:(%d+)")
+                            if not enchantId or enchantId == "0" or enchantId == "" then
+                                charMissingEnchants = charMissingEnchants + 1
                             end
                         end
 
