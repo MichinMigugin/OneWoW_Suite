@@ -156,6 +156,82 @@ local function BuildContent(container, isEnabled, contentYOffset)
     end)
     cy = cy - 34
 
+    -- Dynamic order panel (only when sortMode == 5)
+    local TIER_LABEL_KEYS = {
+        supertracked = "QUESTITEMBAR_TIER_SUPERTRACKED",
+        proximity    = "QUESTITEMBAR_TIER_PROXIMITY",
+        zone        = "QUESTITEMBAR_TIER_ZONE",
+        tracked     = "QUESTITEMBAR_TIER_TRACKED",
+    }
+    local DYNAMIC_ROW_HEIGHT = 24
+    if s.sortMode == 5 then
+        local orderLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        orderLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+        orderLabel:SetText(L["QUESTITEMBAR_DYNAMIC_ORDER"])
+        orderLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        cy = cy - (orderLabel:GetStringHeight() + 4)
+
+        local order = ns.QuestItemBarModule:GetDynamicOrder()
+        for i = 1, #order do
+            local key = order[i]
+            local row = CreateFrame("Frame", nil, container)
+            row:SetHeight(DYNAMIC_ROW_HEIGHT)
+            row:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+            row:SetPoint("TOPRIGHT", container, "TOPRIGHT", -12, cy)
+
+            local labelText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            labelText:SetPoint("LEFT", row, "LEFT", 0, 0)
+            labelText:SetText(L[TIER_LABEL_KEYS[key]] or key)
+            labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+            local canMoveUp = i > 1
+            local canMoveDown = i < #order
+
+            local upBtn = CreateFrame("Button", nil, row)
+            upBtn:SetSize(18, 22)
+            upBtn:SetPoint("RIGHT", row, "RIGHT", -28, 0)
+            upBtn:SetNormalAtlas("common-button-collapseExpand-up")
+            upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
+            if upBtn:GetNormalTexture() then upBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
+            if upBtn:GetHighlightTexture() then upBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            if canMoveUp then upBtn:Show() else upBtn:Hide() end
+            upBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["QUESTITEMBAR_MOVE_UP"])
+                GameTooltip:Show()
+            end)
+            upBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            upBtn:SetScript("OnClick", function()
+                if not canMoveUp then return end
+                ns.QuestItemBarModule:SwapDynamicOrder(i, -1)
+                ns.QuestItemBarModule._refreshCustomDetail()
+            end)
+
+            local downBtn = CreateFrame("Button", nil, row)
+            downBtn:SetSize(18, 22)
+            downBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+            downBtn:SetNormalAtlas("common-button-collapseExpand-down")
+            downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
+            if downBtn:GetNormalTexture() then downBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
+            if downBtn:GetHighlightTexture() then downBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            if canMoveDown then downBtn:Show() else downBtn:Hide() end
+            downBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["QUESTITEMBAR_MOVE_DOWN"])
+                GameTooltip:Show()
+            end)
+            downBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+            downBtn:SetScript("OnClick", function()
+                if not canMoveDown then return end
+                ns.QuestItemBarModule:SwapDynamicOrder(i, 1)
+                ns.QuestItemBarModule._refreshCustomDetail()
+            end)
+
+            cy = cy - (DYNAMIC_ROW_HEIGHT + 2)
+        end
+        cy = cy - 8
+    end
+
     -- Row 3: Sliders (Button Size left, Columns right)
     local sliderRowY = cy
     local sizeLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

@@ -41,7 +41,10 @@ local SORT_MODES = {
     { value = 2, labelKey = "QUESTITEMBAR_SORT_QUEST" },
     { value = 3, labelKey = "QUESTITEMBAR_SORT_ITEM" },
     { value = 4, labelKey = "QUESTITEMBAR_SORT_PROXIMITY" },
+    { value = 5, labelKey = "QUESTITEMBAR_SORT_DYNAMIC" },
 }
+
+local DYNAMIC_TIER_KEYS = { "supertracked", "proximity", "zone", "tracked" }
 
 local function SyncKeybindings()
     if InCombatLockdown() then return end
@@ -77,6 +80,9 @@ local function GetSettings()
     if s.buttonSize       == nil then s.buttonSize       = defaultButtonSize    end
     if s.columns          == nil then s.columns         = defaultColumns    end
     if s.sortMode         == nil then s.sortMode        = defaultSortMode     end
+    if s.dynamicOrder     == nil or #s.dynamicOrder == 0 then
+        s.dynamicOrder = { "supertracked", "proximity", "zone", "tracked" }
+    end
     return s
 end
 
@@ -89,6 +95,29 @@ QuestItemBarModule.MIN_BUTTON_SIZE = MIN_BUTTON_SIZE
 QuestItemBarModule.MAX_BUTTON_SIZE = MAX_BUTTON_SIZE
 QuestItemBarModule.MIN_COLUMNS = MIN_COLUMNS
 QuestItemBarModule.MAX_COLUMNS = MAX_COLUMNS
+QuestItemBarModule.DYNAMIC_TIER_KEYS = DYNAMIC_TIER_KEYS
+
+function QuestItemBarModule:GetDynamicOrder()
+    local s = GetSettings()
+    if not s.dynamicOrder or #s.dynamicOrder == 0 then
+        return { "supertracked", "proximity", "zone", "tracked" }
+    end
+    return s.dynamicOrder
+end
+
+function QuestItemBarModule:SwapDynamicOrder(index, direction)
+    local s = GetSettings()
+    local order = s.dynamicOrder
+    if not order or #order == 0 then
+        order = { "supertracked", "proximity", "zone", "tracked" }
+        s.dynamicOrder = order
+    end
+    local other = index + direction
+    if other < 1 or other > #order then return order end
+    order[index], order[other] = order[other], order[index]
+    QuestItemBarModule:ScheduleUpdate()
+    return order
+end
 
 function QuestItemBarModule:GetSortLabel(mode)
     mode = mode or GetSettings().sortMode or defaultSortMode
@@ -153,9 +182,9 @@ local function BuildQuestItemList(shouldSortProximity)
         return items
     end
 
-    -- 2. Build zone quest set when Current Zone filter is on
+    -- 2. Build zone quest set when Current Zone filter is on or Dynamic sort (for tier classification)
     local zoneQuestSet = {}
-    if s.showOnlyCurrentZone then
+    if s.showOnlyCurrentZone or s.sortMode == 5 then
         local mapID = C_Map.GetBestMapForUnit("player")
         if mapID then
             local questsOnMap = C_QuestLog.GetQuestsOnMap(mapID)
@@ -224,7 +253,85 @@ local function BuildQuestItemList(shouldSortProximity)
             end
         end
 
-        if s.sortMode == defaultSortMode then
+        if s.sortMode == 5 then
+            -- Dynamic: tier-based ordering
+            if shouldSortProximity then
+                C_QuestLog.SortQuestWatches()
+                C_Timer.After(0, function()
+                    QuestItemBarModule:ScheduleUpdate()
+                end)
+            end
+            local watchedProximityOrder = {}
+            for i = 1, C_QuestLog.GetNumQuestWatches() do
+                local questID = C_QuestLog.GetQuestIDForQuestWatchIndex(i)
+                if questID then
+                    watchedProximityOrder[questID] = i
+                end
+            end
+            local superID = C_SuperTrack.GetSuperTrackedQuestID()
+            local order = s.dynamicOrder
+            if not order or #order == 0 then
+                order = DYNAMIC_TIER_KEYS
+            end
+            local tierBuckets = {}
+            for _, key in ipairs(order) do
+                tierBuckets[key] = {}
+            end
+            for _, it in ipairs(items) do
+                local questID = it.questID
+                local isSuper = (questID == superID)
+                local isProximity = watchedProximityOrder[questID]
+                local isZone = zoneQuestSet[questID]
+                local isTracked = C_QuestLog.GetQuestWatchType(questID)
+                local assigned = false
+                for _, key in ipairs(order) do
+                    if key == "supertracked" and isSuper then
+                        tinsert(tierBuckets[key], it)
+                        assigned = true
+                        break
+                    elseif key == "proximity" and isProximity then
+                        tinsert(tierBuckets[key], it)
+                        assigned = true
+                        break
+                    elseif key == "zone" and isZone then
+                        tinsert(tierBuckets[key], it)
+                        assigned = true
+                        break
+                    elseif key == "tracked" and isTracked then
+                        tinsert(tierBuckets[key], it)
+                        assigned = true
+                        break
+                    end
+                end
+                if not assigned then
+                    local lastKey = order[#order]
+                    tinsert(tierBuckets[lastKey], it)
+                end
+            end
+            local function sortProximity(a, b)
+                local pa = watchedProximityOrder[a.questID] or 9999
+                local pb = watchedProximityOrder[b.questID] or 9999
+                if pa ~= pb then return pa < pb end
+                if a.questTitle ~= b.questTitle then return a.questTitle < b.questTitle end
+                return (a.link or "") < (b.link or "")
+            end
+            local function sortQuestItem(a, b)
+                if a.questTitle ~= b.questTitle then return a.questTitle < b.questTitle end
+                return (a.link or "") < (b.link or "")
+            end
+            wipe(items)
+            for _, key in ipairs(order) do
+                local bucket = tierBuckets[key]
+                if key == "proximity" then
+                    sort(bucket, sortProximity)
+                else
+                    sort(bucket, sortQuestItem)
+                end
+                for _, it in ipairs(bucket) do
+                    tinsert(items, it)
+                end
+            end
+        elseif s.sortMode == defaultSortMode then
             sort(items, function(a, b)
                 if a.questTitle ~= b.questTitle then
                     return a.questTitle < b.questTitle
@@ -586,7 +693,7 @@ end
 
 local function UpdateProximityTickerState()
     local s = GetSettings()
-    local inProximityMode = (s.sortMode == 4) and ns.ModuleRegistry:IsEnabled("questitembar") and not s.showOnlySupertracked
+    local inProximityMode = (s.sortMode == 4 or s.sortMode == 5) and ns.ModuleRegistry:IsEnabled("questitembar") and not s.showOnlySupertracked
     if inProximityMode then
         if not proximityTicker then
             proximityTicker = C_Timer.NewTicker(5, function()
@@ -779,9 +886,10 @@ function QuestItemBarModule:RegisterEvents()
 
         if event == "ZONE_CHANGED" or event == "ZONE_CHANGED_NEW_AREA" then
             local s = GetSettings()
-            if s.sortMode == 4 then
+            if s.sortMode == 4 or s.sortMode == 5 then
                 QuestItemBarModule:ScheduleUpdate(true)
-            elseif s.showOnlyCurrentZone then
+            end
+            if s.showOnlyCurrentZone and s.sortMode ~= 4 and s.sortMode ~= 5 then
                 if QuestItemBarModule._detailScrollChild and QuestItemBarModule._refreshCustomDetail then
                     local container = QuestItemBarModule._detailScrollChild._qibContainer
                     if container and container:GetParent() == QuestItemBarModule._detailScrollChild then
