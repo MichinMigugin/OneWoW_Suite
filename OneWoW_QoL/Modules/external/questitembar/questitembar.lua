@@ -21,6 +21,18 @@ local updateTimer   = nil
 local pendingUpdate = false
 local previewMode   = false
 
+local function SyncKeybindings()
+    if InCombatLockdown() then return end
+    if not barFrame then return end
+    ClearOverrideBindings(barFrame)
+    for i = 1, 4 do
+        local key = GetBindingKey("QUESTITEM_" .. i)
+        if key then
+            SetOverrideBindingClick(barFrame, false, key, "OneWoW_QoL_QuestItemBarBtn" .. i)
+        end
+    end
+end
+
 local function GetSettings()
     local addon = _G.OneWoW_QoL
     if not addon or not addon.db then return {} end
@@ -441,7 +453,13 @@ function QuestItemBarModule:RegisterEvents()
     eventFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
     eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
     eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    eventFrame:RegisterEvent("UPDATE_BINDINGS")
     eventFrame:SetScript("OnEvent", function(_, event)
+        if event == "UPDATE_BINDINGS" then
+            SyncKeybindings()
+            return
+        end
+
         if not ns.ModuleRegistry:IsEnabled("questitembar") then return end
 
         if event == "PLAYER_ENTERING_WORLD" then
@@ -455,6 +473,7 @@ function QuestItemBarModule:RegisterEvents()
             if pendingUpdate then
                 QuestItemBarModule:FullUpdate()
             end
+            SyncKeybindings()
             return
         end
 
@@ -482,8 +501,10 @@ function QuestItemBarModule:OnEnable()
         eventFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
         eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
         eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+        eventFrame:RegisterEvent("UPDATE_BINDINGS")
     end
     self:FullUpdate()
+    SyncKeybindings()
 end
 
 function QuestItemBarModule:OnDisable()
@@ -495,6 +516,7 @@ function QuestItemBarModule:OnDisable()
         updateTimer = nil
     end
     if barFrame then
+        ClearOverrideBindings(barFrame)
         barFrame:Hide()
         if barFrame.dragHandle then
             barFrame.dragHandle:Hide()

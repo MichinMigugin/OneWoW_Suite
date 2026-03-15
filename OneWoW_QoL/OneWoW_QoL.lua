@@ -105,19 +105,6 @@ function addon:CopyTextKeybind()
     end
 end
 
-function addon:TriggerQuestItem(index)
-    local btnName = "OneWoW_QoL_QuestItemBarBtn" .. index
-    if _G[btnName] then
-        _G[btnName]:Click()
-    end
-end
-
-function addon:TriggerBagItem(index)
-    local btnName = "OneWoW_QoL_BagBarBtn" .. index
-    if _G[btnName] then
-        _G[btnName]:Click()
-    end
-end
 
 function addon:InitializeDatabase()
     local defaults = ns.DatabaseDefaults or {}

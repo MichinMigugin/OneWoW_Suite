@@ -24,6 +24,18 @@ local updateTimer   = nil
 local tempBlacklist = {}
 local previewMode   = false
 
+local function SyncKeybindings()
+    if InCombatLockdown() then return end
+    if not barFrame then return end
+    ClearOverrideBindings(barFrame)
+    for i = 1, 4 do
+        local key = GetBindingKey("BAGITEM_" .. i)
+        if key then
+            SetOverrideBindingClick(barFrame, false, key, "OneWoW_QoL_BagBarBtn" .. i, "RightButton")
+        end
+    end
+end
+
 local function GetSettings()
     local addon = _G.OneWoW_QoL
     if not addon or not addon.db then return {} end
@@ -67,11 +79,15 @@ function BagBarModule:OnEnable()
     end
     self:RegisterEvents()
     self:UpdateBar()
+    SyncKeybindings()
 end
 
 function BagBarModule:OnDisable()
     if self._eventFrame then
         self._eventFrame:UnregisterAllEvents()
+    end
+    if barFrame then
+        ClearOverrideBindings(barFrame)
     end
     for i = 1, 12 do
         if holders[i] then holders[i]:SetID(0) end
@@ -257,9 +273,13 @@ function BagBarModule:RegisterEvents()
     self._eventFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
     self._eventFrame:RegisterEvent("TRADE_SKILL_SHOW")
     self._eventFrame:RegisterEvent("TRADE_SKILL_CLOSE")
+    self._eventFrame:RegisterEvent("UPDATE_BINDINGS")
 
     self._eventFrame:SetScript("OnEvent", function(self, event)
-        if event == "TRADE_SKILL_SHOW" then
+        if event == "UPDATE_BINDINGS" then
+            SyncKeybindings()
+            return
+        elseif event == "TRADE_SKILL_SHOW" then
             BagBarModule._suppressedForProfessions = true
             if updateTimer then updateTimer:Cancel() end
             if barFrame then
@@ -276,6 +296,7 @@ function BagBarModule:RegisterEvents()
                 BagBarModule:ScheduleUpdate()
             end
             BagBarModule:UpdateCooldowns()
+            SyncKeybindings()
         elseif event == "PLAYER_REGEN_DISABLED" then
             BagBarModule:UpdateCooldowns()
         elseif event == "PLAYER_ENTERING_WORLD" then
