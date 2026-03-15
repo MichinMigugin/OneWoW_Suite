@@ -27,3 +27,8 @@ L["BAGBAR_CLEAR_BLACKLIST"]               = "Clear Blacklist"
 L["BAGBAR_BLACKLIST_CLEARED"]             = "Bag Bar blacklist cleared."
 L["BAGBAR_SHOW_BAR"]                      = "Show Bar"
 L["BAGBAR_HIDE_BAR"]                      = "Hide Bar"
+
+BINDING_NAME_BAGITEM_1 = "Bag Item 1"
+BINDING_NAME_BAGITEM_2 = "Bag Item 2"
+BINDING_NAME_BAGITEM_3 = "Bag Item 3"
+BINDING_NAME_BAGITEM_4 = "Bag Item 4"

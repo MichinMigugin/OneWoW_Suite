@@ -18,3 +18,8 @@ L["QUESTITEMBAR_LEFT_CLICK_USE"]     = "Left-click to use"
 L["QUESTITEMBAR_QUEST_LABEL"]        = "Quest:"
 L["QUESTITEMBAR_SHOW_BAR"]          = "Show Bar"
 L["QUESTITEMBAR_HIDE_BAR"]          = "Hide Bar"
+
+BINDING_NAME_QUESTITEM_1 = "Quest Item 1"
+BINDING_NAME_QUESTITEM_2 = "Quest Item 2"
+BINDING_NAME_QUESTITEM_3 = "Quest Item 3"
+BINDING_NAME_QUESTITEM_4 = "Quest Item 4"

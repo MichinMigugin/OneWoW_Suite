@@ -441,7 +441,6 @@ function QuestItemBarModule:RegisterEvents()
     eventFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
     eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
     eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-
     eventFrame:SetScript("OnEvent", function(_, event)
         if not ns.ModuleRegistry:IsEnabled("questitembar") then return end
 

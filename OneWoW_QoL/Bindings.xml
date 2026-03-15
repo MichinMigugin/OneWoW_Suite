@@ -2,4 +2,28 @@
     <Binding name="COPY_TEXT" category="BINDING_HEADER_ONEWOW_QOL">
         OneWoW_QoL:CopyTextKeybind()
     </Binding>
+    <Binding name="QUESTITEM_1" category="BINDING_HEADER_ONEWOW_QOL">
+        OneWoW_QoL:TriggerQuestItem(1)
+    </Binding>
+    <Binding name="QUESTITEM_2" category="BINDING_HEADER_ONEWOW_QOL">
+        OneWoW_QoL:TriggerQuestItem(2)
+    </Binding>
+    <Binding name="QUESTITEM_3" category="BINDING_HEADER_ONEWOW_QOL">
+        OneWoW_QoL:TriggerQuestItem(3)
+    </Binding>
+    <Binding name="QUESTITEM_4" category="BINDING_HEADER_ONEWOW_QOL">
+        OneWoW_QoL:TriggerQuestItem(4)
+    </Binding>
+    <Binding name="BAGITEM_1" category="BINDING_HEADER_ONEWOW_QOL">
+        OneWoW_QoL:TriggerBagItem(1)
+    </Binding>
+    <Binding name="BAGITEM_2" category="BINDING_HEADER_ONEWOW_QOL">
+        OneWoW_QoL:TriggerBagItem(2)
+    </Binding>
+    <Binding name="BAGITEM_3" category="BINDING_HEADER_ONEWOW_QOL">
+        OneWoW_QoL:TriggerBagItem(3)
+    </Binding>
+    <Binding name="BAGITEM_4" category="BINDING_HEADER_ONEWOW_QOL">
+        OneWoW_QoL:TriggerBagItem(4)
+    </Binding>
 </Bindings>
