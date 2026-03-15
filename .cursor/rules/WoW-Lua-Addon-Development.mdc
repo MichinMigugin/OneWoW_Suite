@@ -115,11 +115,16 @@ first, all other parameters in `options`. Call OneWoW_GUI directly; do not add
 Framework shims or wrappers. Examples:
 
 ```lua
-OneWoW_GUI:CreateButton(parent, { text = "Save", width = 100, height = 28 })
-OneWoW_GUI:CreateFitTextButton(parent, { text = "Click Me", height = 24 })
+OneWoW_GUI:CreateFitTextButton(parent, { text = L.SAVE, height = 24 })
 OneWoW_GUI:CreateScrollFrame(parent, { name = "MyScroll" })
-OneWoW_GUI:CreateSectionHeader(parent, { title = "Section", yOffset = 0 })
+OneWoW_GUI:CreateSectionHeader(parent, { title = L.SECTION, yOffset = 0 })
 ```
+
+**Button auto-sizing:** ALL buttons in every addon must auto-size to their text.
+Different languages need different amounts of space; fixed-width buttons cause
+truncation or overflow. Prefer `CreateFitTextButton` over `CreateButton` for
+user-facing buttons. Only use fixed-width buttons when layout explicitly
+requires it (e.g. a rigid grid).
 
 ### 2.4 OneWoW Suite — Theme Colors
 
@@ -143,6 +148,27 @@ themeColorPreview:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 `GetThemeColor` returns `r, g, b, a` (suitable for `SetColorTexture`,
 `SetBackdropColor`, `SetTextColor`, etc.). Centralizing theme access via the
 API ensures consistency and correct behavior when themes change.
+
+### 2.5 Constants & Localization
+
+**No static strings in code.** All user-facing text (labels, tooltips, titles,
+button text, error messages, etc.) must reference constants or translations.
+Never hardcode display strings like `"Save"` or `"Cancel"` directly in UI code.
+
+**Constants:** Every addon has `Addon/Core/Constants.lua`. Create it if it does
+not exist. Constants are stored as `Addon.Constants.X` where `X` can be any
+data type (tables, strings, numbers, etc.). Example:
+
+```lua
+-- MyAddon/Core/Constants.lua
+Addon.Constants = Addon.Constants or {}
+Addon.Constants.DEFAULT_SCALE = 1.0
+Addon.Constants.KEY_SAVE = "SAVE"
+```
+
+**Translations:** All translations live in `Addon/Locales/` (e.g.
+`MyAddon/Locales/enUS.lua`, `MyAddon/Locales/deDE.lua`). Reference them via
+the addon's locale table (e.g. `L.SAVE`, `L.BUTTON_CANCEL`).
 
 ---
 
@@ -682,6 +708,12 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
     closures _before_ defining the handler. When a callback updates state
     that closures depend on, reassign the upvalue in that callback (e.g.
     `isEnabled = enabled`). See section 7.7.
+13. **Fixed-width buttons.** Buttons must auto-size to text for localization.
+    Use `CreateFitTextButton` (or equivalent) — fixed widths cause truncation
+    in other languages.
+14. **Static strings in UI code.** Never hardcode user-facing strings. Use
+    `Addon.Constants` (in `Core/Constants.lua`) or locale tables in
+    `Addon/Locales/` (e.g. `L.SAVE`). See section 2.5.
 
 ---
 
