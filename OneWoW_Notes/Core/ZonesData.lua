@@ -200,6 +200,7 @@ function Zones:AddZone(zoneName, zoneData)
     zoneData.category      = zoneData.category  or "General"
     zoneData.created       = zoneData.created   or GetServerTime()
     zoneData.modified      = GetServerTime()
+    zoneData.sortOrder     = zoneData.sortOrder or 0
 
     if addon.mainFrame and addon.mainFrame:IsShown() then
         zoneData.isNew          = true

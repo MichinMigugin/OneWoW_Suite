@@ -11,55 +11,29 @@ ns.UI = ns.UI or {}
 
 local selectedRoutine = nil
 local routineListItems = {}
-
-local function CreateScrollPanel(parent, titleText)
-    local panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    panel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    panel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-
-    local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    title:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -10)
-    title:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, -10)
-    title:SetJustifyH("LEFT")
-    title:SetText(titleText or "")
-    title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local scroll = ns.UI.CreateCustomScroll(panel)
-    scroll.container:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -32)
-    scroll.container:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -8, 8)
-
-    return {
-        panel       = panel,
-        title       = title,
-        scrollFrame = scroll.scrollFrame,
-        scrollChild = scroll.scrollChild,
-    }
-end
+local searchFilter = ""
 
 function ns.UI.CreateRoutinesTab(parent)
     local controlPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    controlPanel:SetHeight(40)
-    controlPanel:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-    })
+    controlPanel:SetHeight(75)
+    controlPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local newBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["ROUTINES_NEW"], width = 120, height = 25 })
-    ns.UI.AutoResizeButton(newBtn, 80, 200)
-    newBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
+    local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
+    controlTitle:SetText(L["ROUTINES_CONTROLS"])
+    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local importBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["ROUTINES_IMPORT"], width = 90, height = 25 })
-    ns.UI.AutoResizeButton(importBtn, 80, 200)
+    local newBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ROUTINES_NEW"], height = 25, minWidth = 80 })
+    newBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
+
+    local importBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ROUTINES_IMPORT"], height = 25, minWidth = 80 })
     importBtn:SetPoint("LEFT", newBtn, "RIGHT", 5, 0)
 
-    local restoreBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["ROUTINES_RESTORE_BUNDLED"], width = 120, height = 25 })
-    ns.UI.AutoResizeButton(restoreBtn, 80, 200)
+    local restoreBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ROUTINES_RESTORE_BUNDLED"], height = 25, minWidth = 80 })
     restoreBtn:SetPoint("LEFT", importBtn, "RIGHT", 5, 0)
     restoreBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
@@ -75,25 +49,56 @@ function ns.UI.CreateRoutinesTab(parent)
         end
     end)
 
-    local contentArea = CreateFrame("Frame", nil, parent)
-    contentArea:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -1)
-    contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+    local listPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    listPanel:SetPoint("TOPLEFT",  controlPanel, "BOTTOMLEFT",  0, -10)
+    listPanel:SetPoint("BOTTOMLEFT", parent,     "BOTTOMLEFT",  0,   0)
+    listPanel:SetWidth(ns.Constants.GUI.LEFT_PANEL_WIDTH)
+    listPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    listPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    listPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local listScroll = CreateScrollPanel(contentArea, L["ROUTINES_LIST_TITLE"])
-    listScroll.panel:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
-    listScroll.panel:SetPoint("BOTTOMLEFT", contentArea, "BOTTOMLEFT", 0, 0)
-    listScroll.panel:SetWidth(ns.Constants.GUI.LEFT_PANEL_WIDTH)
+    local listPanelTitle = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    listPanelTitle:SetPoint("TOP", listPanel, "TOP", 0, -10)
+    listPanelTitle:SetText(L["ROUTINES_LIST_TITLE"])
+    listPanelTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local detailScroll = CreateScrollPanel(contentArea, L["ROUTINES_DETAIL_TITLE"])
-    detailScroll.panel:SetPoint("TOPLEFT", listScroll.panel, "TOPRIGHT", ns.Constants.GUI.PANEL_GAP, 0)
-    detailScroll.panel:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", 0, 0)
+    local routineSearchBox = OneWoW_GUI:CreateEditBox(listPanel, {
+        placeholderText = L["UI_SEARCH_PLACEHOLDER"],
+        onTextChanged = function(text)
+            searchFilter = text
+            if parent.RefreshRoutinesList then parent.RefreshRoutinesList() end
+        end,
+    })
+    routineSearchBox:SetPoint("TOPLEFT",  listPanel, "TOPLEFT",  8, -30)
+    routineSearchBox:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -8, -30)
+
+    local listScroll = ns.UI.CreateCustomScroll(listPanel)
+    listScroll.container:SetPoint("TOPLEFT",     listPanel, "TOPLEFT",     10, -62)
+    listScroll.container:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -10,  10)
+
+    local detailPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    detailPanel:SetPoint("TOPLEFT",     listPanel, "TOPRIGHT",    10, 0)
+    detailPanel:SetPoint("BOTTOMRIGHT", parent,    "BOTTOMRIGHT",  0, 0)
+    detailPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    detailPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+
+    local detailTitle = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -10)
+    detailTitle:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
+    detailTitle:SetJustifyH("LEFT")
+    detailTitle:SetText(L["ROUTINES_DETAIL_TITLE"])
+    detailTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    local detailScroll = ns.UI.CreateCustomScroll(detailPanel)
+    detailScroll.container:SetPoint("TOPLEFT",     detailPanel, "TOPLEFT",     10, -32)
+    detailScroll.container:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -10,  10)
 
     local listScrollChild = listScroll.scrollChild
     local detailScrollChild = detailScroll.scrollChild
-    local detailTitle = detailScroll.title
 
-    local emptyMessage = CreateFrame("Frame", nil, detailScroll.panel)
-    emptyMessage:SetAllPoints(detailScroll.panel)
+    local emptyMessage = CreateFrame("Frame", nil, detailPanel)
+    emptyMessage:SetAllPoints(detailPanel)
     local emptyText = emptyMessage:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyText:SetPoint("CENTER", emptyMessage, "CENTER", 0, 0)
     emptyText:SetText(L["ROUTINES_SELECT"])
@@ -134,8 +139,7 @@ function ns.UI.CreateRoutinesTab(parent)
 
         local isPinned = routine.pinned
 
-        local pinBtn = OneWoW_GUI:CreateButton(headerFrame, { text = isPinned and L["ROUTINES_UNPIN"] or L["ROUTINES_PIN"], width = 80, height = 22 })
-        ns.UI.AutoResizeButton(pinBtn, 60, 100)
+        local pinBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = isPinned and L["ROUTINES_UNPIN"] or L["ROUTINES_PIN"], height = 22, minWidth = 60 })
         pinBtn:SetPoint("TOPRIGHT", headerFrame, "TOPRIGHT", -10, -8)
         pinBtn:SetScript("OnClick", function()
             ns.RoutinesEngine:TogglePin(routineID)
@@ -150,8 +154,7 @@ function ns.UI.CreateRoutinesTab(parent)
         end)
         pinBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-        local exportBtn = OneWoW_GUI:CreateButton(headerFrame, { text = L["ROUTINES_EXPORT"], width = 70, height = 22 })
-        ns.UI.AutoResizeButton(exportBtn, 50, 90)
+        local exportBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["ROUTINES_EXPORT"], height = 22, minWidth = 50 })
         exportBtn:SetPoint("RIGHT", pinBtn, "LEFT", -5, 0)
         exportBtn:SetScript("OnClick", function()
             local exportStr = ns.RoutinesData:ExportRoutine(routineID)
@@ -160,8 +163,7 @@ function ns.UI.CreateRoutinesTab(parent)
             end
         end)
 
-        local deleteBtn = OneWoW_GUI:CreateButton(headerFrame, { text = L["ROUTINES_DELETE"], width = 70, height = 22 })
-        ns.UI.AutoResizeButton(deleteBtn, 50, 80)
+        local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["ROUTINES_DELETE"], height = 22, minWidth = 50 })
         deleteBtn:SetPoint("RIGHT", exportBtn, "LEFT", -5, 0)
         deleteBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_NOTES_DELETE_ROUTINE", routine.title, nil, { routineID = routineID, refreshFunc = function()
@@ -169,8 +171,7 @@ function ns.UI.CreateRoutinesTab(parent)
             end})
         end)
 
-        local resetBtn = OneWoW_GUI:CreateButton(headerFrame, { text = L["ROUTINES_RESET"], width = 60, height = 22 })
-        ns.UI.AutoResizeButton(resetBtn, 50, 80)
+        local resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["ROUTINES_RESET"], height = 22, minWidth = 50 })
         resetBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -5, 0)
         resetBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_NOTES_RESET_ROUTINE", routine.title, nil, { routineID = routineID, refreshFunc = function()
@@ -372,8 +373,7 @@ function ns.UI.CreateRoutinesTab(parent)
             end
 
             if section.type == "custom" then
-                local addTaskBtn = OneWoW_GUI:CreateButton(secFrame, { text = L["ROUTINES_ADD_TASK"], width = 110, height = 20 })
-                ns.UI.AutoResizeButton(addTaskBtn, 80, 140)
+                local addTaskBtn = OneWoW_GUI:CreateFitTextButton(secFrame, { text = L["ROUTINES_ADD_TASK"], height = 20, minWidth = 80 })
                 addTaskBtn:SetPoint("TOPLEFT", secFrame, "TOPLEFT", 20, taskYOff - 4)
                 addTaskBtn:SetScript("OnClick", function()
                     ns.UI.ShowRoutineTaskEditorDialog(routineID, secIdx, function()
@@ -391,8 +391,7 @@ function ns.UI.CreateRoutinesTab(parent)
             yOffset = yOffset - innerH - 4
         end
 
-        local addSectionBtn = OneWoW_GUI:CreateButton(detailScrollChild, { text = L["ROUTINES_ADD_SECTION"], width = 140, height = 28 })
-        ns.UI.AutoResizeButton(addSectionBtn, 100, 200)
+        local addSectionBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, { text = L["ROUTINES_ADD_SECTION"], height = 28, minWidth = 100 })
         addSectionBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yOffset - 8)
         addSectionBtn:SetScript("OnClick", function()
             ns.UI.ShowRoutineSectionEditorDialog(routineID, function()
@@ -419,7 +418,10 @@ function ns.UI.CreateRoutinesTab(parent)
         local sorted = {}
         for id, routine in pairs(routines) do
             if type(routine) == "table" then
-                table.insert(sorted, { id = id, routine = routine })
+                local passSearch = searchFilter == "" or (routine.title or ""):lower():find(searchFilter:lower(), 1, true)
+                if passSearch then
+                    table.insert(sorted, { id = id, routine = routine })
+                end
             end
         end
 
@@ -530,7 +532,7 @@ function ns.UI.CreateRoutinesTab(parent)
             emptyFrame:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", 0, 0)
             emptyFrame:SetHeight(40)
             local emptyFS = emptyFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            emptyFS:SetPoint("CENTER", listScroll.panel, "CENTER", 0, 0)
+            emptyFS:SetPoint("CENTER", listPanel, "CENTER", 0, 0)
             emptyFS:SetText(L["ROUTINES_EMPTY"])
             emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             table.insert(routineListItems, emptyFrame)

@@ -9,7 +9,6 @@ local private = {
     auctionIdToQuantity = {},
     auctionIdToBuyout = {},
     commodityIdToName = {},
-    commodityResults = {},
     pendingPost = {
         itemLink = nil,
         quantity = nil,
@@ -17,6 +16,7 @@ local private = {
         goldBefore = nil,
         timestamp = nil,
     },
+    pendingCommodity = nil,
 }
 
 function Module:Initialize()
@@ -79,14 +79,6 @@ end
 
 function private.UpdateCommodityMap(itemID)
     private.commodityIdToName[itemID] = C_Item.GetItemNameByID(itemID)
-    wipe(private.commodityResults)
-    local numResults = C_AuctionHouse.GetNumCommoditySearchResults(itemID)
-    for i = 1, numResults do
-        local info = C_AuctionHouse.GetCommoditySearchResultInfo(itemID, i)
-        if info then
-            table.insert(private.commodityResults, {quantity = info.quantity, unitPrice = info.unitPrice})
-        end
-    end
 end
 
 function private.OnPlaceBid(auctionId, bidAmount)
@@ -102,20 +94,14 @@ end
 
 function private.OnConfirmCommodityPurchase(itemId, quantity)
     local name = private.commodityIdToName[itemId] or C_Item.GetItemNameByID(itemId)
-    if not name then return end
 
-    local totalCost = 0
-    local remaining = quantity
-    for _, result in ipairs(private.commodityResults) do
-        if remaining <= 0 then break end
-        local take = math.min(remaining, result.quantity)
-        totalCost = totalCost + take * result.unitPrice
-        remaining = remaining - take
-    end
-
-    if totalCost > 0 then
-        ns.Transactions:RecordExpense("auction_purchase", totalCost, "Auction House", nil, name, quantity, "Commodity purchase")
-    end
+    private.pendingCommodity = {
+        itemId = itemId,
+        name = name or "Commodity",
+        quantity = quantity,
+        goldBefore = GetMoney(),
+        time = GetTime(),
+    }
 end
 
 function private.OnPostItem(item, duration, quantity, buyoutPrice)
@@ -146,6 +132,17 @@ function private.OnAuctionCreated()
 end
 
 function private.OnPlayerMoney()
+    if private.pendingCommodity and (GetTime() - private.pendingCommodity.time) < 10 then
+        local cost = private.pendingCommodity.goldBefore - GetMoney()
+        if cost > 0 then
+            ns.Transactions:RecordExpense("auction_purchase", cost, "Auction House", nil,
+                private.pendingCommodity.name, private.pendingCommodity.quantity, "Commodity purchase")
+        end
+        private.pendingCommodity = nil
+        return
+    end
+    private.pendingCommodity = nil
+
     if not private.pendingPost.auctionConfirmed then return end
     if not private.pendingPost.goldBefore then
         wipe(private.pendingPost)

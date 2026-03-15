@@ -66,8 +66,7 @@ local categoryNames = {
     trainer_purchase = "FIN_CAT_TRAINER",
     mythicplus_reward = "FIN_CAT_MYTHICPLUS",
     bmah_purchase = "FIN_CAT_BMAH",
-    detected_profit = "FIN_CAT_DETECTED_PROFIT",
-    detected_loss = "FIN_CAT_DETECTED_LOSS",
+    uncategorized = "FIN_CAT_UNCATEGORIZED",
 }
 
 function ns.UI.GetCategoryDisplayName(category)
@@ -364,8 +363,10 @@ function ns.UI.CreateFinancialsTab(parent)
         end
     end)
 
+    parent.financialsDirty = false
+
     local function SetupRefreshCallback()
-        if not _G.OneWoW_AltTracker_Accounting then return end
+        if not _G.OneWoW_AltTracker_Accounting then return false end
         local refreshPending = false
         _G.OneWoW_AltTracker_Accounting.onNewTransaction = function()
             if refreshPending then return end
@@ -374,12 +375,28 @@ function ns.UI.CreateFinancialsTab(parent)
                 refreshPending = false
                 if parent and parent:IsVisible() then
                     ns.UI.RefreshFinancialsTab(parent)
+                else
+                    parent.financialsDirty = true
                 end
             end)
         end
+        return true
     end
-    SetupRefreshCallback()
-    C_Timer.After(1, SetupRefreshCallback)
+
+    local function TrySetupCallback(attempt)
+        if SetupRefreshCallback() then return end
+        if attempt < 10 then
+            C_Timer.After(1, function() TrySetupCallback(attempt + 1) end)
+        end
+    end
+    TrySetupCallback(1)
+
+    parent:HookScript("OnShow", function()
+        if parent.financialsDirty then
+            parent.financialsDirty = false
+            ns.UI.RefreshFinancialsTab(parent)
+        end
+    end)
 
     ns.UI.ApplyFontToFrame(parent)
 end

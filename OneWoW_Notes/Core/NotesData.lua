@@ -49,6 +49,7 @@ function NotesData:AddNote(noteTitle, noteData)
         noteData.modified = noteData.modified or GetServerTime()
         noteData.noteType = noteData.noteType or "standard"
         noteData.lastReset = noteData.lastReset or 0
+        noteData.sortOrder = noteData.sortOrder or 0
         storageType = noteData.storage
     else
         noteData = {
@@ -73,7 +74,8 @@ function NotesData:AddNote(noteTitle, noteData)
             created = GetServerTime(),
             modified = GetServerTime(),
             noteType = "standard",
-            lastReset = 0
+            lastReset = 0,
+            sortOrder = 0
         }
     end
 

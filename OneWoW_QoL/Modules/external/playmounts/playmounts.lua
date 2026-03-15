@@ -341,7 +341,9 @@ end
 
 ns.PlayMountsModule = PlayMountsModule
 
-if _G.OneWoW and _G.OneWoW.TooltipEngine then
+local function RegisterTooltipProvider()
+    if not _G.OneWoW or not _G.OneWoW.TooltipEngine then return end
+
     local function PlayerMountsTooltipProvider(tooltip, context)
         if not ns.ModuleRegistry:IsEnabled("playmounts") then return nil end
         if not context.isPlayer or not context.unit then return nil end
@@ -403,3 +405,10 @@ if _G.OneWoW and _G.OneWoW.TooltipEngine then
         callback     = PlayerMountsTooltipProvider,
     })
 end
+
+local regFrame = CreateFrame("Frame")
+regFrame:RegisterEvent("PLAYER_LOGIN")
+regFrame:SetScript("OnEvent", function(self)
+    RegisterTooltipProvider()
+    self:UnregisterAllEvents()
+end)

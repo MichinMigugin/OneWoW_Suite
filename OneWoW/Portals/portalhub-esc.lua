@@ -145,7 +145,9 @@ function EscMenu:BuildLeftSide(parent, iconSize, iconGap)
 end
 
 function EscMenu:BuildRightSide(parent, iconSize, iconGap)
-	local showAll = OneWoW.db.global.portalHub.showAllOnEsc or false
+	local ph = OneWoW.db.global.portalHub
+	if not ph or not ph.escPortalsEnabled then return end
+	local showAll = ph.showAllOnEsc or false
 	local yOffset = 0
 	local xOffset = 0
 

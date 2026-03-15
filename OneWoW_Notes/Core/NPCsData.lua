@@ -95,6 +95,7 @@ function NPCs:AddNPC(npcID, npcInfo)
         favorite     = npcInfo.favorite or false,
         created      = GetServerTime(),
         modified     = GetServerTime(),
+        sortOrder    = 0,
     }
 
     if addon.mainFrame and addon.mainFrame:IsShown() then

@@ -618,6 +618,38 @@ ScrollBar anchored to parent container.
 - Without width: content width auto-syncs on resize.
 - With width: content width set to (width - 32).
 
+### Scrollable multiline edit box
+```lua
+local scrollFrame, editBox = OneWoW_GUI:CreateScrollEditBox(parent, {
+    name = "MyEditBox",        -- optional; scrollFrame gets name.."Scroll"
+    font = fontPath,           -- optional; falls back to user's chosen GUI font, then ChatFontNormal
+    fontSize = 12,             -- optional, default 12 (used when font is set)
+    fontFlags = "",            -- optional, default ""
+    maxLetters = 0,            -- optional, default 0 (unlimited)
+    textInsets = { 4, 4, 4, 4 },  -- optional, {left, right, top, bottom}, default 4px all sides
+    textColor = { r, g, b },  -- optional; defaults to TEXT_PRIMARY theme color
+    onTextChanged = function(self, userInput)  -- optional
+        -- fires on every keystroke
+    end,
+    onEscapePressed = function(self)  -- optional
+        -- fires after ClearFocus() is already called
+    end,
+})
+```
+Correct pattern for multiline text entry areas. Fixes the focus dead-zone bug inherent to
+`SetHeight(1)` scroll children: clicking anywhere in the visible area always focuses the edit box.
+
+- ScrollFrame uses `UIPanelScrollFrameTemplate` with styled scrollbar.
+- EditBox is the scroll child, starts at height 1 and auto-expands with content.
+- Width auto-syncs to scrollFrame on resize.
+- `scrollFrame:HookScript("OnMouseDown")` calls `editBox:SetFocus()` so clicks anywhere in the
+  visible area work, not just the first pixel row.
+- Font defaults to the user's active GUI font setting, then `ChatFontNormal`.
+- Default anchor: TOPLEFT +8,-8 / BOTTOMRIGHT -8,8 relative to parent. Override after creation if needed.
+
+Use this instead of manually creating `ScrollFrame + EditBox` pairs. Migrate existing scroll+editbox
+combos to this function to get the focus fix for free.
+
 ### Style an existing scroll bar
 ```lua
 OneWoW_GUI:StyleScrollBar(scrollFrame, {

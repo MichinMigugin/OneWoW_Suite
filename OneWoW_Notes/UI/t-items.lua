@@ -7,12 +7,16 @@ local L = ns.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
 ns.UI = ns.UI or {}
 
 local selectedItem  = nil
 local itemListItems = {}
 local categoryFilter = "All"
 local storageFilter  = "All"
+local searchFilter   = ""
+local currentSort    = { by = "name", ascending = true }
 
 local detailPanel    = nil
 local emptyMessage   = nil
@@ -23,15 +27,9 @@ local todoContainer  = nil
 
 local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
 
-local BACKDROP_STANDARD = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    tile = true, tileSize = 16, edgeSize = 1,
-}
-
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
@@ -39,7 +37,7 @@ end
 
 local function CreateThemedBar(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
@@ -47,6 +45,15 @@ end
 
 function ns.UI.CreateItemsTab(parent)
     local addon = _G.OneWoW_Notes
+
+    do
+        local a = _G.OneWoW_Notes
+        if a and a.db and a.db.global.tabSortPrefs and a.db.global.tabSortPrefs.items then
+            local p = a.db.global.tabSortPrefs.items
+            currentSort.by        = p.by or "name"
+            currentSort.ascending = p.ascending ~= false
+        end
+    end
 
     local controlPanel = CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
@@ -59,8 +66,7 @@ function ns.UI.CreateItemsTab(parent)
     controlTitle:SetText(L["ITEMS_CONTROLS"])
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addItemBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_ITEM"], width = 100, height = 25 })
-    ns.UI.AutoResizeButton(addItemBtn, 80, 200)
+    local addItemBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_ITEM"], height = 25, minWidth = 80 })
     addItemBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addItemBtn:RegisterForDrag("LeftButton")
     addItemBtn:SetScript("OnClick", function()
@@ -116,8 +122,7 @@ function ns.UI.CreateItemsTab(parent)
         controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     end)
 
-    local addByIDBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_BY_ID"] or "Add by ID", width = 90, height = 25 })
-    ns.UI.AutoResizeButton(addByIDBtn, 70, 200)
+    local addByIDBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_BY_ID"] or "Add by ID", height = 25, minWidth = 70 })
     addByIDBtn:SetPoint("LEFT", addItemBtn, "RIGHT", 5, 0)
     addByIDBtn:SetScript("OnClick", function()
         if ns.UI and ns.UI.ShowAddItemByIDDialog then
@@ -184,6 +189,27 @@ function ns.UI.CreateItemsTab(parent)
         parent.RefreshItemsList()
     end
 
+    local itemSortHandle = OneWoW_GUI:CreateSortControls(controlPanel, {
+        sortFields = {
+            {key = "name",     label = L["NOTE_SORT_NAME"]},
+            {key = "category", label = L["NOTE_SORT_CATEGORY"]},
+        },
+        defaultField  = currentSort.by,
+        defaultAsc    = currentSort.ascending,
+        dropdownWidth = 100,
+        onChange = function(field, ascending)
+            currentSort.by        = field
+            currentSort.ascending = ascending
+            local a = _G.OneWoW_Notes
+            if a and a.db and a.db.global.tabSortPrefs then
+                a.db.global.tabSortPrefs.items = { by = field, ascending = ascending }
+            end
+            parent.RefreshItemsList()
+        end,
+    })
+    itemSortHandle.dropdown:SetPoint("LEFT", storeDD, "RIGHT", 6, 0)
+    itemSortHandle.dirBtn:SetPoint("LEFT", itemSortHandle.dropdown, "RIGHT", 4, 0)
+
     local helpButton = CreateFrame("Button", nil, controlPanel)
     helpButton:SetSize(28, 28)
     helpButton:SetPoint("TOPRIGHT", controlPanel, "TOPRIGHT", -10, -10)
@@ -221,10 +247,20 @@ function ns.UI.CreateItemsTab(parent)
     listingTitle:SetText(L["ITEMS_LIST"] or "Items")
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
+    local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
+        placeholderText = L["UI_SEARCH_PLACEHOLDER"],
+        onTextChanged = function(text)
+            searchFilter = text
+            if parent.RefreshItemsList then parent.RefreshItemsList() end
+        end,
+    })
+    searchBox:SetPoint("TOPLEFT",  listingPanel, "TOPLEFT",  8, -30)
+    searchBox:SetPoint("TOPRIGHT", listingPanel, "TOPRIGHT", -8, -30)
+
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
     scrollFrame = listScroll.scrollFrame
     scrollChild = listScroll.scrollChild
-    listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -40)
+    listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
     detailPanel = CreateThemedPanel(nil, parent)
@@ -608,29 +644,9 @@ function ns.UI.CreateItemsTab(parent)
     end
 
     local function CreateSectionHeader(text, yPos)
-        local header = CreateFrame("Frame", nil, scrollChild)
-        header:SetSize(scrollChild:GetWidth(), 25)
-        header:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
-
-        local bg = header:CreateTexture(nil, "BACKGROUND")
-        bg:SetAllPoints()
-        bg:SetAtlas("UI-CastingBar-Background")
-
-        local frame = header:CreateTexture(nil, "BORDER")
-        frame:SetAllPoints()
-        frame:SetAtlas("UI-CastingBar-Full-Glow-Standard")
-
-        local tint = header:CreateTexture(nil, "ARTWORK")
-        tint:SetAllPoints()
-        tint:SetColorTexture(0, 0, 0, 0.4)
-
-        local headerText = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        headerText:SetPoint("CENTER", header, "CENTER")
-        headerText:SetText(text)
-        headerText:SetTextColor(1, 0.82, 0)
-
-        table.insert(itemListItems, header)
-        return header
+        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = text, yOffset = yPos })
+        table.insert(itemListItems, section)
+        return section
     end
 
     function parent.RefreshItemsList()
@@ -653,6 +669,10 @@ function ns.UI.CreateItemsTab(parent)
                 local matches = true
                 if categoryFilter ~= "All" and itemData.category ~= categoryFilter then matches = false end
                 if storageFilter  ~= "All" and itemData.storage  ~= storageFilter  then matches = false end
+                if searchFilter ~= "" then
+                    local nameLower = (itemData.name or ""):lower()
+                    if not nameLower:find(searchFilter:lower(), 1, true) then matches = false end
+                end
                 if matches then
                     table.insert(itemsList, {id = tonumber(itemID), data = itemData})
                 end
@@ -682,18 +702,30 @@ function ns.UI.CreateItemsTab(parent)
             end
         end
 
-        local function sortByName(a, b)
-            return (a.data.name or "") < (b.data.name or "")
+        local function sortItems(a, b)
+            local nameA = a.data.name or ""
+            local nameB = b.data.name or ""
+            if currentSort.by == "category" then
+                local ca = a.data.category or ""
+                local cb = b.data.category or ""
+                if ca == cb then return nameA < nameB end
+                if currentSort.ascending then return ca < cb else return ca > cb end
+            elseif currentSort.by == "modified" then
+                if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
+                else return (a.data.modified or 0) > (b.data.modified or 0) end
+            else
+                if currentSort.ascending then return nameA < nameB else return nameA > nameB end
+            end
         end
-        table.sort(newItems,  sortByName)
-        table.sort(favorites, sortByName)
-        table.sort(regular,   sortByName)
+        table.sort(newItems,  sortItems)
+        table.sort(favorites, sortItems)
+        table.sort(regular,   sortItems)
 
         local function BuildItemRow(item, yOffset)
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
             row:SetSize(scrollChild:GetWidth(), 50)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
-            row:SetBackdrop(BACKDROP_STANDARD)
+            row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 

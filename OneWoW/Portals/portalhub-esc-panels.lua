@@ -215,7 +215,7 @@ end
 
 local function CalculateLayout(ph, showZone, hasDaily, hasWeekly, hasEscNotes)
 	local screenHeight = UIParent:GetHeight()
-	local fixedHeight = CHARINFO_HEIGHT
+	local fixedHeight = ph.escShowCharacterInfo ~= false and CHARINFO_HEIGHT or 0
 	local gapCount = 0
 	local flexCount = 0
 
@@ -824,8 +824,12 @@ function EscPanels:Build(parent)
 	local lastPanel = panelsContainer
 
 	local charPanel
-	charPanel, yOffset = BuildCharacterInfoPanel(panelsContainer, yOffset)
-	lastPanel = charPanel
+	if ph.escShowCharacterInfo ~= false then
+		charPanel, yOffset = BuildCharacterInfoPanel(panelsContainer, yOffset)
+		lastPanel = charPanel
+	elseif panelFrames.charInfo then
+		panelFrames.charInfo:Hide()
+	end
 
 	local instPanel
 	instPanel, yOffset = BuildInstanceToastPanel(panelsContainer, yOffset, lastPanel)

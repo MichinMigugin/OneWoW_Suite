@@ -44,6 +44,10 @@ function DataManager:Initialize()
     if ns.TrainerTracker then
         ns.TrainerTracker:Initialize()
     end
+
+    if ns.GoldWatcher then
+        ns.GoldWatcher:Initialize()
+    end
 end
 
 function DataManager:RegisterEvents()

@@ -69,6 +69,8 @@ function OneWoW:InitializeDatabase()
     if ph.escHideZoneNotesWhenEmpty == nil then ph.escHideZoneNotesWhenEmpty = false end
     if ph.escShowAlerts == nil then ph.escShowAlerts = true end
     if ph.escShowEscNotes == nil then ph.escShowEscNotes = true end
+    if ph.escPortalsEnabled == nil then ph.escPortalsEnabled = true end
+    if ph.escShowCharacterInfo == nil then ph.escShowCharacterInfo = true end
 
     if not self.db.global.settings then
         self.db.global.settings = {}

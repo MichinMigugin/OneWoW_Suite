@@ -4,6 +4,7 @@ ns.Transactions = {}
 local Transactions = ns.Transactions
 
 local COMBINE_WINDOW = 300
+local recentClaims = {}
 
 function Transactions:RecordTransaction(txData)
     if not OneWoW_AltTracker_Accounting_DB or not OneWoW_AltTracker_Accounting_DB.transactions then
@@ -29,6 +30,13 @@ function Transactions:RecordTransaction(txData)
         ns:TrimTransactions()
     end
 
+    if txData.category ~= "uncategorized" then
+        table.insert(recentClaims, {
+            amount = txData.amount,
+            time = GetTime(),
+        })
+    end
+
     ns:InvalidateStatistics()
 
     if ns.onNewTransaction then
@@ -36,6 +44,44 @@ function Transactions:RecordTransaction(txData)
     end
 
     return true
+end
+
+function Transactions:IsAmountClaimed(amount, withinSeconds)
+    withinSeconds = withinSeconds or 1.5
+    local now = GetTime()
+
+    for i = #recentClaims, 1, -1 do
+        if (now - recentClaims[i].time) > 5 then
+            table.remove(recentClaims, i)
+        end
+    end
+
+    for i, claim in ipairs(recentClaims) do
+        if (now - claim.time) <= withinSeconds and
+           math.abs(claim.amount - amount) <= 1 then
+            table.remove(recentClaims, i)
+            return true
+        end
+    end
+
+    local remaining = amount
+    local matched = {}
+    for i, claim in ipairs(recentClaims) do
+        if (now - claim.time) <= withinSeconds and claim.amount <= remaining + 1 then
+            table.insert(matched, i)
+            remaining = remaining - claim.amount
+            if remaining <= 1 then break end
+        end
+    end
+
+    if remaining <= 1 and #matched > 0 then
+        for i = #matched, 1, -1 do
+            table.remove(recentClaims, matched[i])
+        end
+        return true
+    end
+
+    return false
 end
 
 function Transactions:FindRecentTransaction(txData)

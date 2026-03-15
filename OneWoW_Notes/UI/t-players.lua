@@ -8,6 +8,7 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 ns.UI = ns.UI or {}
 
@@ -15,6 +16,8 @@ local selectedPlayer  = nil
 local playerListItems = {}
 local categoryFilter  = "All"
 local storageFilter   = "All"
+local searchFilter    = ""
+local currentSort     = { by = "name", ascending = true }
 
 local detailPanel    = nil
 local emptyMessage   = nil
@@ -24,15 +27,9 @@ local scrollChild    = nil
 
 local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
 
-local BACKDROP_STANDARD = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    tile = true, tileSize = 16, edgeSize = 1,
-}
-
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
@@ -40,13 +37,22 @@ end
 
 local function CreateThemedBar(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
 end
 
 function ns.UI.CreatePlayersTab(parent)
+    do
+        local a = _G.OneWoW_Notes
+        if a and a.db and a.db.global.tabSortPrefs and a.db.global.tabSortPrefs.players then
+            local p = a.db.global.tabSortPrefs.players
+            currentSort.by        = p.by or "name"
+            currentSort.ascending = p.ascending ~= false
+        end
+    end
+
     local controlPanel = CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
@@ -57,8 +63,7 @@ function ns.UI.CreatePlayersTab(parent)
     controlTitle:SetText(L["PLAYERS_CONTROLS"] or "Players Controls")
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addTargetBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_TARGET"] or "Add Target", width = 100, height = 25 })
-    ns.UI.AutoResizeButton(addTargetBtn, 80, 200)
+    local addTargetBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_TARGET"] or "Add Target", height = 25, minWidth = 80 })
     addTargetBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addTargetBtn:SetScript("OnClick", function()
         if ns.Players then
@@ -85,8 +90,7 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addTargetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local addManualBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"] or "Manual", width = 90, height = 25 })
-    ns.UI.AutoResizeButton(addManualBtn, 70, 200)
+    local addManualBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"] or "Manual", height = 25, minWidth = 70 })
     addManualBtn:SetPoint("LEFT", addTargetBtn, "RIGHT", 5, 0)
     addManualBtn:SetScript("OnClick", function()
         if ns.UI and ns.UI.ShowManualPlayerEntryDialog then
@@ -102,8 +106,7 @@ function ns.UI.CreatePlayersTab(parent)
     addManualBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     local altTrackerLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Character")
-    local addAltsBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["PLAYER_ADD_ALTS"] or "Add Alts", width = 80, height = 25 })
-    ns.UI.AutoResizeButton(addAltsBtn, 70, 200)
+    local addAltsBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["PLAYER_ADD_ALTS"] or "Add Alts", height = 25, minWidth = 70 })
     addAltsBtn:SetPoint("LEFT", addManualBtn, "RIGHT", 5, 0)
     if not altTrackerLoaded then
         addAltsBtn:Disable()
@@ -130,8 +133,7 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addAltsBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local addGuildBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["PLAYER_ADD_GUILD"] or "Add Guild", width = 90, height = 25 })
-    ns.UI.AutoResizeButton(addGuildBtn, 70, 200)
+    local addGuildBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["PLAYER_ADD_GUILD"] or "Add Guild", height = 25, minWidth = 70 })
     addGuildBtn:SetPoint("LEFT", addAltsBtn, "RIGHT", 5, 0)
     addGuildBtn:SetScript("OnClick", function()
         if ns.UI and ns.UI.ShowAddGuildDialog then
@@ -198,6 +200,31 @@ function ns.UI.CreatePlayersTab(parent)
         parent.RefreshPlayersList()
     end
 
+    local playerSortHandle = OneWoW_GUI:CreateSortControls(controlPanel, {
+        sortFields = {
+            {key = "name",     label = L["NOTE_SORT_NAME"]},
+            {key = "class",    label = L["NOTE_SORT_CLASS"]},
+            {key = "faction",  label = L["NOTE_SORT_FACTION"]},
+            {key = "level",    label = L["NOTE_SORT_LEVEL"]},
+            {key = "category", label = L["NOTE_SORT_CATEGORY"]},
+            {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
+        },
+        defaultField  = currentSort.by,
+        defaultAsc    = currentSort.ascending,
+        dropdownWidth = 100,
+        onChange = function(field, ascending)
+            currentSort.by        = field
+            currentSort.ascending = ascending
+            local a = _G.OneWoW_Notes
+            if a and a.db and a.db.global.tabSortPrefs then
+                a.db.global.tabSortPrefs.players = { by = field, ascending = ascending }
+            end
+            parent.RefreshPlayersList()
+        end,
+    })
+    playerSortHandle.dropdown:SetPoint("LEFT", storeDD, "RIGHT", 6, 0)
+    playerSortHandle.dirBtn:SetPoint("LEFT", playerSortHandle.dropdown, "RIGHT", 4, 0)
+
     local helpButton = CreateFrame("Button", nil, controlPanel)
     helpButton:SetSize(28, 28)
     helpButton:SetPoint("TOPRIGHT", controlPanel, "TOPRIGHT", -10, -10)
@@ -235,10 +262,20 @@ function ns.UI.CreatePlayersTab(parent)
     listingTitle:SetText(L["PLAYERS_LIST"] or "Players")
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
+    local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
+        placeholderText = L["UI_SEARCH_PLACEHOLDER"],
+        onTextChanged = function(text)
+            searchFilter = text
+            if parent.RefreshPlayersList then parent.RefreshPlayersList() end
+        end,
+    })
+    searchBox:SetPoint("TOPLEFT",  listingPanel, "TOPLEFT",  8, -30)
+    searchBox:SetPoint("TOPRIGHT", listingPanel, "TOPRIGHT", -8, -30)
+
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
     scrollFrame = listScroll.scrollFrame
     scrollChild = listScroll.scrollChild
-    listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -40)
+    listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
     detailPanel = CreateThemedPanel(nil, parent)
@@ -636,9 +673,6 @@ function ns.UI.CreatePlayersTab(parent)
 
     local function CreateSectionHeader(text, yPos)
         local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = text, yOffset = yPos })
-        section:ClearAllPoints()
-        section:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
-        section:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yPos)
         table.insert(playerListItems, section)
         return section
     end
@@ -664,6 +698,10 @@ function ns.UI.CreatePlayersTab(parent)
                 local matches = true
                 if categoryFilter ~= "All" and pd.category ~= categoryFilter then matches = false end
                 if storageFilter  ~= "All" and pd.storage  ~= storageFilter  then matches = false end
+                if searchFilter ~= "" then
+                    local nameLower = (pd.name or fullName):lower()
+                    if not nameLower:find(searchFilter:lower(), 1, true) then matches = false end
+                end
                 if matches then
                     table.insert(playersList, {fullName = fullName, data = pd})
                 end
@@ -679,24 +717,56 @@ function ns.UI.CreatePlayersTab(parent)
             else table.insert(regular, p) end
         end
 
-        local function sortByName(a, b)
-            return (a.data.name or a.fullName) < (b.data.name or b.fullName)
+        local function sortPlayers(a, b)
+            local nameA = a.data.name or a.id or ""
+            local nameB = b.data.name or b.id or ""
+            if currentSort.by == "class" then
+                local ca = a.data.class or ""
+                local cb = b.data.class or ""
+                if ca == cb then return nameA < nameB end
+                if currentSort.ascending then return ca < cb else return ca > cb end
+            elseif currentSort.by == "faction" then
+                local fa = a.data.faction or ""
+                local fb = b.data.faction or ""
+                if fa == fb then return nameA < nameB end
+                if currentSort.ascending then return fa < fb else return fa > fb end
+            elseif currentSort.by == "level" then
+                local la = a.data.level or 0
+                local lb = b.data.level or 0
+                if la == lb then return nameA < nameB end
+                if currentSort.ascending then return la < lb else return la > lb end
+            elseif currentSort.by == "category" then
+                local ca = a.data.category or ""
+                local cb = b.data.category or ""
+                if ca == cb then return nameA < nameB end
+                if currentSort.ascending then return ca < cb else return ca > cb end
+            elseif currentSort.by == "modified" then
+                if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
+                else return (a.data.modified or 0) > (b.data.modified or 0) end
+            elseif currentSort.by == "manual" then
+                local sa = a.data.sortOrder or 0
+                local sb = b.data.sortOrder or 0
+                if sa == sb then return nameA < nameB end
+                if currentSort.ascending then return sa < sb else return sa > sb end
+            else
+                if currentSort.ascending then return nameA < nameB else return nameA > nameB end
+            end
         end
-        table.sort(newPlayers, sortByName)
-        table.sort(favorites,  sortByName)
-        table.sort(regular,    sortByName)
+        table.sort(newPlayers, sortPlayers)
+        table.sort(favorites,  sortPlayers)
+        table.sort(regular,    sortPlayers)
 
-        local function BuildPlayerRow(player, yOffset)
+        local function BuildPlayerRow(player, yOffset, groupArray, groupIndex)
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
             row:SetSize(scrollChild:GetWidth(), 50)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
-            row:SetBackdrop(BACKDROP_STANDARD)
+            row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             nameText:SetPoint("TOPLEFT",  row, "TOPLEFT",  10, -10)
-            nameText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -10)
+            nameText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -27, -10)
             nameText:SetJustifyH("LEFT")
             nameText:SetText(player.data.name or player.fullName)
             nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -711,7 +781,7 @@ function ns.UI.CreatePlayersTab(parent)
 
             local deleteBtn = CreateFrame("Button", nil, row)
             deleteBtn:SetSize(18, 18)
-            deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -5, 5)
+            deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -27, 5)
             deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
             deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
             deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
@@ -800,6 +870,59 @@ function ns.UI.CreatePlayersTab(parent)
                 end
             end)
 
+            local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
+            local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
+
+            local upBtn = CreateFrame("Button", nil, row)
+            upBtn:SetSize(18, 22)
+            upBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -3)
+            upBtn:SetNormalAtlas("common-button-collapseExpand-up")
+            upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
+            if upBtn:GetNormalTexture()    then upBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
+            if upBtn:GetHighlightTexture() then upBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            if canMoveUp then upBtn:Show() else upBtn:Hide() end
+            upBtn:SetScript("OnClick", function()
+                if not canMoveUp then return end
+                if currentSort.by ~= "manual" then
+                    currentSort.by = "manual"
+                    currentSort.ascending = true
+                    playerSortHandle:SetSort("manual", true)
+                    local a = _G.OneWoW_Notes
+                    if a and a.db and a.db.global.tabSortPrefs then
+                        a.db.global.tabSortPrefs.players = { by = "manual", ascending = true }
+                    end
+                end
+                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                groupArray[groupIndex].data.sortOrder     = groupIndex - 1
+                groupArray[groupIndex - 1].data.sortOrder = groupIndex
+                parent.RefreshPlayersList()
+            end)
+
+            local downBtn = CreateFrame("Button", nil, row)
+            downBtn:SetSize(18, 22)
+            downBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 3)
+            downBtn:SetNormalAtlas("common-button-collapseExpand-down")
+            downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
+            if downBtn:GetNormalTexture()    then downBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
+            if downBtn:GetHighlightTexture() then downBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            if canMoveDown then downBtn:Show() else downBtn:Hide() end
+            downBtn:SetScript("OnClick", function()
+                if not canMoveDown then return end
+                if currentSort.by ~= "manual" then
+                    currentSort.by = "manual"
+                    currentSort.ascending = true
+                    playerSortHandle:SetSort("manual", true)
+                    local a = _G.OneWoW_Notes
+                    if a and a.db and a.db.global.tabSortPrefs then
+                        a.db.global.tabSortPrefs.players = { by = "manual", ascending = true }
+                    end
+                end
+                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                groupArray[groupIndex].data.sortOrder     = groupIndex + 1
+                groupArray[groupIndex + 1].data.sortOrder = groupIndex
+                parent.RefreshPlayersList()
+            end)
+
             row:EnableMouse(true)
             row:SetScript("OnMouseDown", function()
                 selectedPlayer = player.fullName
@@ -830,17 +953,17 @@ function ns.UI.CreatePlayersTab(parent)
         if #newPlayers > 0 then
             CreateSectionHeader(L["NOTES_SECTION_NEW"] or "New", yOffset) yOffset = yOffset - 30
         end
-        for _, p in ipairs(newPlayers) do BuildPlayerRow(p, yOffset) yOffset = yOffset - 55 end
+        for i, p in ipairs(newPlayers) do BuildPlayerRow(p, yOffset, newPlayers, i) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
             CreateSectionHeader(L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset) yOffset = yOffset - 30
         end
-        for _, p in ipairs(favorites) do BuildPlayerRow(p, yOffset) yOffset = yOffset - 55 end
+        for i, p in ipairs(favorites) do BuildPlayerRow(p, yOffset, favorites, i) yOffset = yOffset - 55 end
 
         if #regular > 0 then
             CreateSectionHeader(L["TAB_PLAYERS"], yOffset) yOffset = yOffset - 30
         end
-        for _, p in ipairs(regular) do BuildPlayerRow(p, yOffset) yOffset = yOffset - 55 end
+        for i, p in ipairs(regular) do BuildPlayerRow(p, yOffset, regular, i) yOffset = yOffset - 55 end
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then

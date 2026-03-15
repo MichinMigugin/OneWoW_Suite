@@ -97,6 +97,7 @@ function Players:AddPlayer(fullName, playerInfo)
         favorite     = playerInfo.favorite or false,
         created      = GetServerTime(),
         modified     = GetServerTime(),
+        sortOrder    = 0,
     }
 
     if addon.mainFrame and addon.mainFrame:IsShown() then

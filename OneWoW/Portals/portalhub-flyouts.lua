@@ -152,20 +152,25 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 	end)
 
 	if button.cooldownFrame then
-		local start, duration, enabled
-		if portalData.type == "toy" or portalData.type == "item" then
-			start, duration, enabled = C_Item.GetItemCooldown(portalData.id)
-		elseif portalData.type == "spell" then
-			local cooldown = C_Spell.GetSpellCooldown(portalData.id)
-			if cooldown then
-				start = cooldown.startTime
-				duration = cooldown.duration
-				enabled = true
+		local ok = pcall(function()
+			local start, duration, enabled
+			if portalData.type == "toy" or portalData.type == "item" then
+				start, duration, enabled = C_Item.GetItemCooldown(portalData.id)
+			elseif portalData.type == "spell" then
+				local cooldown = C_Spell.GetSpellCooldown(portalData.id)
+				if cooldown then
+					start = cooldown.startTime
+					duration = cooldown.duration
+					enabled = true
+				end
 			end
-		end
-		if enabled and duration > 0 then
-			button.cooldownFrame:SetCooldown(start, duration)
-		else
+			if enabled and duration > 0 then
+				button.cooldownFrame:SetCooldown(start, duration)
+			else
+				button.cooldownFrame:Clear()
+			end
+		end)
+		if not ok then
 			button.cooldownFrame:Clear()
 		end
 	end

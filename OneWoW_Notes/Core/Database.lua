@@ -31,6 +31,13 @@ ns.DatabaseDefaults = {
         guideTrackerPosition  = nil,
         routines              = {},
         sortCompletedTasks    = false,
+        tabSortPrefs = {
+            notes   = { by = "modified", ascending = false },
+            npcs    = { by = "name",     ascending = true  },
+            players = { by = "name",     ascending = true  },
+            zones   = { by = "name",     ascending = true  },
+            items   = { by = "name",     ascending = true  },
+        },
         zoneAlertsEnabled     = true,
         npcScanEnabled        = true,
         playerScanEnabled     = true,

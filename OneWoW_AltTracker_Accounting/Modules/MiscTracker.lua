@@ -29,7 +29,6 @@ function Module:Initialize()
     frame:RegisterEvent("PLAYER_DEAD")
     frame:RegisterEvent("PLAYER_UNGHOST")
     frame:RegisterEvent("PLAYER_MONEY")
-    frame:RegisterEvent("SHOW_LOOT_TOAST")
     frame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
 
     if C_BlackMarket then
@@ -95,15 +94,6 @@ function Module:Initialize()
             local _, _, playerName, tipAmount = ...
             if tipAmount and tipAmount > 0 then
                 ns.Transactions:RecordIncome("crafting_order", tipAmount, playerName or "Customer", nil, "Crafting Order", nil, nil)
-            end
-
-        elseif event == "SHOW_LOOT_TOAST" then
-            local typeIdentifier, itemLink, quantity = ...
-            if typeIdentifier == "money" and quantity and quantity > 0 then
-                local goldAmount = math.floor(quantity / 10000)
-                if goldAmount > 0 then
-                    ns.Transactions:RecordIncome("loot_money", goldAmount, "Loot", nil, "Looted Gold", nil, nil)
-                end
             end
 
         elseif event == "PLAYER_MONEY" then

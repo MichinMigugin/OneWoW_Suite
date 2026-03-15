@@ -28,27 +28,20 @@ function GUI:CreatePortalsTab(parent)
 		OneWoW.db.global.portalHub = {}
 	end
 	local ph = OneWoW.db.global.portalHub
-	if ph.escEnabled == nil then ph.escEnabled = true end
+	if ph.escPortalsEnabled == nil then ph.escPortalsEnabled = true end
 	if ph.randomHearthstone == nil then ph.randomHearthstone = true end
 	if ph.showAll == nil then ph.showAll = true end
 	if ph.showAllOnEsc == nil then ph.showAllOnEsc = false end
 	if ph.showSeasonal == nil then ph.showSeasonal = true end
 
 
-	local escCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Enable ESC Menu"] })
+	local escCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show Portals on ESC"] })
 	escCheckbox:SetPoint("LEFT", controlPanel, "LEFT", 10, 0)
-	escCheckbox:SetChecked(OneWoW.db.global.portalHub.escEnabled)
+	escCheckbox:SetChecked(OneWoW.db.global.portalHub.escPortalsEnabled)
 	escCheckbox:SetScript("OnClick", function(self)
-		OneWoW.db.global.portalHub.escEnabled = self:GetChecked()
-		if OneWoW.PortalHubEsc then
-			if self:GetChecked() then
-				-- Only show panels when ESC menu is actually open; otherwise they appear as stray UI
-				if GameMenuFrame and GameMenuFrame:IsShown() then
-					OneWoW.PortalHubEsc:ShowPortalFrames()
-				end
-			else
-				OneWoW.PortalHubEsc:HidePortalFrames()
-			end
+		OneWoW.db.global.portalHub.escPortalsEnabled = self:GetChecked()
+		if OneWoW.PortalHubEsc and GameMenuFrame and GameMenuFrame:IsShown() then
+			OneWoW.PortalHubEsc:ShowPortalFrames()
 		end
 	end)
 

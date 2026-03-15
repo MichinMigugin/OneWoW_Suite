@@ -7,6 +7,8 @@ local L = ns.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
 ns.UI = ns.UI or {}
 
 local selectedNote = nil
@@ -34,15 +36,9 @@ local scrollFrame = nil
 
 local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
 
-local BACKDROP_STANDARD = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    tile = true, tileSize = 16, edgeSize = 1,
-}
-
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
@@ -50,7 +46,7 @@ end
 
 local function CreateThemedBar(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
@@ -64,6 +60,15 @@ function ns.UI.CreateNotesTab(parent)
     notesFrame = parent
     ns.UI.notesFrame = parent
 
+    do
+        local a = _G.OneWoW_Notes
+        if a and a.db and a.db.global.tabSortPrefs and a.db.global.tabSortPrefs.notes then
+            local p = a.db.global.tabSortPrefs.notes
+            currentSort.by        = p.by or "modified"
+            currentSort.ascending = p.ascending ~= false
+        end
+    end
+
     local controlPanel = CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
@@ -74,8 +79,7 @@ function ns.UI.CreateNotesTab(parent)
     controlTitle:SetText(L["NOTES_CONTROLS"])
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addNoteBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_NOTE"], width = 100, height = 25 })
-    ns.UI.AutoResizeButton(addNoteBtn, 80, 200)
+    local addNoteBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_NOTE"], height = 25, minWidth = 80 })
     addNoteBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addNoteBtn:SetScript("OnClick", function()
         if ns.UI.ShowAddNoteDialog then
@@ -142,34 +146,30 @@ function ns.UI.CreateNotesTab(parent)
         if parent.RefreshNotesList then parent.RefreshNotesList() end
     end
 
-    local sortDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["NOTE_SORT_BY"] and "Sort" or "Sort", 120, 25)
-    sortDropdown:SetPoint("LEFT", storageDropdown, "RIGHT", 6, 0)
-    sortDropdown:SetOptions({
-        {text = L["NOTE_SORT_TITLE"],    value = "title"},
-        {text = L["NOTE_SORT_CREATED"],  value = "created"},
-        {text = L["NOTE_SORT_MODIFIED"], value = "modified"},
+    local sortHandle = OneWoW_GUI:CreateSortControls(controlPanel, {
+        sortFields = {
+            {key = "title",    label = L["NOTE_SORT_TITLE"]},
+            {key = "created",  label = L["NOTE_SORT_CREATED"]},
+            {key = "category", label = L["NOTE_SORT_CATEGORY"]},
+            {key = "color",    label = L["NOTE_SORT_COLOR"]},
+            {key = "type",     label = L["NOTE_SORT_TYPE"]},
+            {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
+        },
+        defaultField  = currentSort.by,
+        defaultAsc    = currentSort.ascending,
+        dropdownWidth = 110,
+        onChange = function(field, ascending)
+            currentSort.by        = field
+            currentSort.ascending = ascending
+            local a = _G.OneWoW_Notes
+            if a and a.db and a.db.global.tabSortPrefs then
+                a.db.global.tabSortPrefs.notes = { by = field, ascending = ascending }
+            end
+            if parent.RefreshNotesList then parent.RefreshNotesList() end
+        end,
     })
-    sortDropdown:SetSelected("modified")
-    sortDropdown.onSelect = function(value)
-        currentSort.by = value
-        if parent.RefreshNotesList then parent.RefreshNotesList() end
-    end
-
-    local sortDirectionBtn = CreateFrame("Button", nil, controlPanel)
-    sortDirectionBtn:SetSize(24, 24)
-    sortDirectionBtn:SetPoint("LEFT", sortDropdown, "RIGHT", 4, 0)
-    sortDirectionBtn:SetNormalAtlas(currentSort.ascending and "common-button-collapseExpand-up" or "common-button-collapseExpand-down")
-    sortDirectionBtn:SetPushedAtlas(currentSort.ascending and "common-button-collapseExpand-up" or "common-button-collapseExpand-down")
-    sortDirectionBtn:SetHighlightAtlas(currentSort.ascending and "common-button-collapseExpand-up" or "common-button-collapseExpand-down")
-    sortDirectionBtn:GetHighlightTexture():SetAlpha(0.5)
-    sortDirectionBtn:SetScript("OnClick", function(self)
-        currentSort.ascending = not currentSort.ascending
-        local atlas = currentSort.ascending and "common-button-collapseExpand-up" or "common-button-collapseExpand-down"
-        self:SetNormalAtlas(atlas)
-        self:SetPushedAtlas(atlas)
-        self:SetHighlightAtlas(atlas)
-        if parent.RefreshNotesList then parent.RefreshNotesList() end
-    end)
+    sortHandle.dropdown:SetPoint("LEFT", storageDropdown, "RIGHT", 6, 0)
+    sortHandle.dirBtn:SetPoint("LEFT", sortHandle.dropdown, "RIGHT", 4, 0)
 
     local helpButton = CreateFrame("Button", nil, controlPanel)
     helpButton:SetSize(28, 28)
@@ -208,10 +208,20 @@ function ns.UI.CreateNotesTab(parent)
     listingTitle:SetText(L["NOTES_LIST"])
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
+    local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
+        placeholderText = L["UI_SEARCH_PLACEHOLDER"],
+        onTextChanged = function(text)
+            currentFilters.search = text
+            if parent.RefreshNotesList then parent.RefreshNotesList() end
+        end,
+    })
+    searchBox:SetPoint("TOPLEFT",  listingPanel, "TOPLEFT",  8, -30)
+    searchBox:SetPoint("TOPRIGHT", listingPanel, "TOPRIGHT", -8, -30)
+
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
     scrollFrame = listScroll.scrollFrame
     scrollChild = listScroll.scrollChild
-    listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -40)
+    listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
     local detailPanel = CreateThemedPanel(nil, parent)
@@ -1026,13 +1036,32 @@ function ns.UI.CreateNotesTab(parent)
 
         local function sortNotes(a, b)
             if currentSort.by == "title" then
-                local titleA = a.data.title or ""
-                local titleB = b.data.title or ""
-                if currentSort.ascending then return titleA < titleB
-                else return titleA > titleB end
+                local ta = a.data.title or ""
+                local tb = b.data.title or ""
+                if currentSort.ascending then return ta < tb else return ta > tb end
             elseif currentSort.by == "created" then
                 if currentSort.ascending then return (a.data.created or 0) < (b.data.created or 0)
                 else return (a.data.created or 0) > (b.data.created or 0) end
+            elseif currentSort.by == "category" then
+                local ca = a.data.category or ""
+                local cb = b.data.category or ""
+                if ca == cb then return (a.data.title or "") < (b.data.title or "") end
+                if currentSort.ascending then return ca < cb else return ca > cb end
+            elseif currentSort.by == "color" then
+                local ca = a.data.pinColor or ""
+                local cb = b.data.pinColor or ""
+                if ca == cb then return (a.data.title or "") < (b.data.title or "") end
+                if currentSort.ascending then return ca < cb else return ca > cb end
+            elseif currentSort.by == "type" then
+                local ta = a.data.noteType or "standard"
+                local tb = b.data.noteType or "standard"
+                if ta == tb then return (a.data.title or "") < (b.data.title or "") end
+                if currentSort.ascending then return ta < tb else return ta > tb end
+            elseif currentSort.by == "manual" then
+                local sa = a.data.sortOrder or 0
+                local sb = b.data.sortOrder or 0
+                if sa == sb then return (a.data.title or "") < (b.data.title or "") end
+                if currentSort.ascending then return sa < sb else return sa > sb end
             else
                 if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
                 else return (a.data.modified or 0) > (b.data.modified or 0) end
@@ -1045,33 +1074,34 @@ function ns.UI.CreateNotesTab(parent)
 
         local function CreateSectionHeader(text, yPos)
             local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = text, yOffset = yPos })
-            section:ClearAllPoints()
-            section:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yPos)
-            section:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yPos)
             table.insert(noteListItems, section)
             return section
         end
 
         local addon = _G.OneWoW_Notes
-        local function BuildNoteRow(note, yOffset)
-            local noteFrame = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-            noteFrame:SetSize(scrollChild:GetWidth(), 50)
-            noteFrame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
-
-            noteFrame:SetBackdrop(BACKDROP_STANDARD)
-
+        local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+        local function BuildNoteRow(note, yOffset, groupArray, groupIndex)
+            local listItemColor = {OneWoW_GUI:GetThemeColor("BG_SECONDARY")}
             local pinColor = note.data.pinColor or "hunter"
-            local fontColor = note.data.fontColor or "match"
             local colorConfig = ns.Config:GetResolvedColorConfig(pinColor)
-            local listItemColor = colorConfig.listItem
-            local borderColor = colorConfig.border
+            local cR, cG, cB = colorConfig.background[1], colorConfig.background[2], colorConfig.background[3]
 
+            local noteFrame = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
+            noteFrame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
+            noteFrame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yOffset)
+            noteFrame:SetHeight(50)
+            noteFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
             noteFrame:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
-            noteFrame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+            noteFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+            local colorStrip = noteFrame:CreateTexture(nil, "ARTWORK")
+            colorStrip:SetSize(4, 46)
+            colorStrip:SetPoint("LEFT", noteFrame, "LEFT", 2, 0)
+            colorStrip:SetColorTexture(cR, cG, cB, 1)
 
             local deleteBtn = CreateFrame("Button", nil, noteFrame)
             deleteBtn:SetSize(22, 22)
-            deleteBtn:SetPoint("BOTTOMRIGHT", noteFrame, "BOTTOMRIGHT", -5, 5)
+            deleteBtn:SetPoint("BOTTOMRIGHT", noteFrame, "BOTTOMRIGHT", -27, 5)
             deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
             deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
             deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
@@ -1266,12 +1296,70 @@ function ns.UI.CreateNotesTab(parent)
             end
 
             local titleText = noteFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            titleText:SetPoint("TOPLEFT", noteFrame, "TOPLEFT", 10, -10)
-            titleText:SetPoint("TOPRIGHT", noteFrame, "TOPRIGHT", -10, -10)
+            titleText:SetPoint("TOPLEFT", noteFrame, "TOPLEFT", 12, -6)
+            titleText:SetPoint("TOPRIGHT", noteFrame, "TOPRIGHT", -80, -6)
             titleText:SetJustifyH("LEFT")
             titleText:SetText(note.data.title or L["NOTE_UNTITLED"])
-            local titleTextColor = GetFontColorFromKey(fontColor, pinColor)
-            titleText:SetTextColor(titleTextColor[1], titleTextColor[2], titleTextColor[3])
+            titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+            local storageFS = noteFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            storageFS:SetPoint("BOTTOMLEFT", noteFrame, "BOTTOMLEFT", 12, 6)
+            local stText = note.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Char") or (L["STORAGE_ACCOUNT_WIDE"] or "Acct")
+            storageFS:SetText(stText)
+            storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+            local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
+            local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
+
+            local upBtn = CreateFrame("Button", nil, noteFrame)
+            upBtn:SetSize(18, 22)
+            upBtn:SetPoint("TOPRIGHT", noteFrame, "TOPRIGHT", -4, -3)
+            upBtn:SetNormalAtlas("common-button-collapseExpand-up")
+            upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
+            if upBtn:GetNormalTexture()    then upBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
+            if upBtn:GetHighlightTexture() then upBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            if canMoveUp then upBtn:Show() else upBtn:Hide() end
+            upBtn:SetScript("OnClick", function()
+                if not canMoveUp then return end
+                if currentSort.by ~= "manual" then
+                    currentSort.by = "manual"
+                    currentSort.ascending = true
+                    sortHandle:SetSort("manual", true)
+                    local a = _G.OneWoW_Notes
+                    if a and a.db and a.db.global.tabSortPrefs then
+                        a.db.global.tabSortPrefs.notes = { by = "manual", ascending = true }
+                    end
+                end
+                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                groupArray[groupIndex].data.sortOrder     = groupIndex - 1
+                groupArray[groupIndex - 1].data.sortOrder = groupIndex
+                parent.RefreshNotesList()
+            end)
+
+            local downBtn = CreateFrame("Button", nil, noteFrame)
+            downBtn:SetSize(18, 22)
+            downBtn:SetPoint("BOTTOMRIGHT", noteFrame, "BOTTOMRIGHT", -4, 3)
+            downBtn:SetNormalAtlas("common-button-collapseExpand-down")
+            downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
+            if downBtn:GetNormalTexture()    then downBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
+            if downBtn:GetHighlightTexture() then downBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            if canMoveDown then downBtn:Show() else downBtn:Hide() end
+            downBtn:SetScript("OnClick", function()
+                if not canMoveDown then return end
+                if currentSort.by ~= "manual" then
+                    currentSort.by = "manual"
+                    currentSort.ascending = true
+                    sortHandle:SetSort("manual", true)
+                    local a = _G.OneWoW_Notes
+                    if a and a.db and a.db.global.tabSortPrefs then
+                        a.db.global.tabSortPrefs.notes = { by = "manual", ascending = true }
+                    end
+                end
+                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                groupArray[groupIndex].data.sortOrder     = groupIndex + 1
+                groupArray[groupIndex + 1].data.sortOrder = groupIndex
+                parent.RefreshNotesList()
+            end)
 
             noteFrame:EnableMouse(true)
             noteFrame:SetScript("OnMouseDown", function(self)
@@ -1302,28 +1390,28 @@ function ns.UI.CreateNotesTab(parent)
 
         if #newNotes > 0 then
             CreateSectionHeader(L["NOTES_SECTION_NEW"] or "New", yOffset)
-            yOffset = yOffset - 35
+            yOffset = yOffset - 30
         end
-        for _, note in ipairs(newNotes) do
-            BuildNoteRow(note, yOffset)
+        for i, note in ipairs(newNotes) do
+            BuildNoteRow(note, yOffset, newNotes, i)
             yOffset = yOffset - 55
         end
 
         if #favorites > 0 then
             CreateSectionHeader(L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset)
-            yOffset = yOffset - 35
+            yOffset = yOffset - 30
         end
-        for _, note in ipairs(favorites) do
-            BuildNoteRow(note, yOffset)
+        for i, note in ipairs(favorites) do
+            BuildNoteRow(note, yOffset, favorites, i)
             yOffset = yOffset - 55
         end
 
         if #regular > 0 then
             CreateSectionHeader(L["TAB_NOTES"], yOffset)
-            yOffset = yOffset - 35
+            yOffset = yOffset - 30
         end
-        for _, note in ipairs(regular) do
-            BuildNoteRow(note, yOffset)
+        for i, note in ipairs(regular) do
+            BuildNoteRow(note, yOffset, regular, i)
             yOffset = yOffset - 55
         end
 

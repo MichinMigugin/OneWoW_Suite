@@ -8,11 +8,6 @@ if not OneWoW_GUI then return end
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
-local backdrop = {
-    bgFile   = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    tile = true, tileSize = 16, edgeSize = 1,
-}
 
 local selectedGuide = nil
 local guideListItems = {}
@@ -57,21 +52,23 @@ function ns.UI.CreateGuidesTab(parent)
     local controlPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    controlPanel:SetHeight(40)
-    controlPanel:SetBackdrop(backdrop)
+    controlPanel:SetHeight(75)
+    controlPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local newBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["GUIDES_NEW"], width = 110, height = 25 })
-    ns.UI.AutoResizeButton(newBtn, 80, 200)
-    newBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
+    local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
+    controlTitle:SetText(L["GUIDES_CONTROLS"])
+    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local importBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["GUIDES_IMPORT"], width = 90, height = 25 })
-    ns.UI.AutoResizeButton(importBtn, 80, 200)
+    local newBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["GUIDES_NEW"], height = 25, minWidth = 80 })
+    newBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
+
+    local importBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["GUIDES_IMPORT"], height = 25, minWidth = 80 })
     importBtn:SetPoint("LEFT", newBtn, "RIGHT", 5, 0)
 
-    local restoreBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["GUIDES_RESTORE_BUNDLED"], width = 120, height = 25 })
-    ns.UI.AutoResizeButton(restoreBtn, 80, 200)
+    local restoreBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["GUIDES_RESTORE_BUNDLED"], height = 25, minWidth = 80 })
     restoreBtn:SetPoint("LEFT", importBtn, "RIGHT", 5, 0)
     restoreBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
@@ -103,60 +100,37 @@ function ns.UI.CreateGuidesTab(parent)
         parent.RefreshGuidesList()
     end
 
-    local searchBox = CreateFrame("EditBox", nil, controlPanel, "BackdropTemplate")
-    searchBox:SetSize(150, 25)
-    searchBox:SetPoint("LEFT", catDD, "RIGHT", 8, 0)
-    searchBox:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    searchBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    searchBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    searchBox:SetFont(ns.Config:ResolveFontPath(nil), 11, "")
-    searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    searchBox:SetTextInsets(8, 8, 0, 0)
-    searchBox:SetAutoFocus(false)
-    searchBox:SetScript("OnTextChanged", function(self)
-        searchText = self:GetText() or ""
-        parent.RefreshGuidesList()
-    end)
-    searchBox:SetScript("OnEscapePressed", function(self)
-        self:ClearFocus()
-    end)
-
-    local searchPlaceholder = searchBox:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    searchPlaceholder:SetPoint("LEFT", searchBox, "LEFT", 8, 0)
-    searchPlaceholder:SetText(L["GUIDES_SEARCH"])
-    searchPlaceholder:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    searchBox:SetScript("OnEditFocusGained", function() searchPlaceholder:Hide() end)
-    searchBox:SetScript("OnEditFocusLost", function()
-        if searchBox:GetText() == "" then searchPlaceholder:Show() end
-    end)
-
-    local contentArea = CreateFrame("Frame", nil, parent)
-    contentArea:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -1)
-    contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-
-    local listPanel = CreateFrame("Frame", nil, contentArea, "BackdropTemplate")
-    listPanel:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
-    listPanel:SetPoint("BOTTOMLEFT", contentArea, "BOTTOMLEFT", 0, 0)
+    local listPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    listPanel:SetPoint("TOPLEFT",  controlPanel, "BOTTOMLEFT",  0, -10)
+    listPanel:SetPoint("BOTTOMLEFT", parent,     "BOTTOMLEFT",  0,   0)
     listPanel:SetWidth(ns.Constants.GUI.LEFT_PANEL_WIDTH)
     listPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     listPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     listPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local listTitle = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    listTitle:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 10, -10)
-    listTitle:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -10, -10)
-    listTitle:SetJustifyH("LEFT")
+    local listTitle = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    listTitle:SetPoint("TOP", listPanel, "TOP", 0, -10)
     listTitle:SetText(L["GUIDES_LIST_TITLE"])
     listTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
+    local listSearchBox = OneWoW_GUI:CreateEditBox(listPanel, {
+        placeholderText = L["UI_SEARCH_PLACEHOLDER"],
+        onTextChanged = function(text)
+            searchText = text
+            parent.RefreshGuidesList()
+        end,
+    })
+    listSearchBox:SetPoint("TOPLEFT",  listPanel, "TOPLEFT",  8, -30)
+    listSearchBox:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -8, -30)
+
     local listScroll = ns.UI.CreateCustomScroll(listPanel)
     local listScrollChild = listScroll.scrollChild
-    listScroll.container:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 8, -32)
-    listScroll.container:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -8, 8)
+    listScroll.container:SetPoint("TOPLEFT",     listPanel, "TOPLEFT",     10, -62)
+    listScroll.container:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -10,  10)
 
-    local detailPanel = CreateFrame("Frame", nil, contentArea, "BackdropTemplate")
-    detailPanel:SetPoint("TOPLEFT", listPanel, "TOPRIGHT", ns.Constants.GUI.PANEL_GAP, 0)
-    detailPanel:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", 0, 0)
+    local detailPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    detailPanel:SetPoint("TOPLEFT",     listPanel, "TOPRIGHT",    10, 0)
+    detailPanel:SetPoint("BOTTOMRIGHT", parent,    "BOTTOMRIGHT",  0, 0)
     detailPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     detailPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
@@ -170,8 +144,8 @@ function ns.UI.CreateGuidesTab(parent)
 
     local detailScroll = ns.UI.CreateCustomScroll(detailPanel)
     local detailScrollChild = detailScroll.scrollChild
-    detailScroll.container:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, -32)
-    detailScroll.container:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 8)
+    detailScroll.container:SetPoint("TOPLEFT",     detailPanel, "TOPLEFT",     10, -32)
+    detailScroll.container:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -10,  10)
 
     local emptyMessage = CreateFrame("Frame", nil, detailPanel)
     emptyMessage:SetAllPoints(detailPanel)
@@ -325,8 +299,7 @@ function ns.UI.CreateGuidesTab(parent)
             end
         end)
 
-        local activateBtn = OneWoW_GUI:CreateButton(headerFrame, { text = isActive and L["GUIDES_DEACTIVATE"] or L["GUIDES_ACTIVATE"], width = 100, height = 22 })
-        ns.UI.AutoResizeButton(activateBtn, 70, 120)
+        local activateBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = isActive and L["GUIDES_DEACTIVATE"] or L["GUIDES_ACTIVATE"], height = 22, minWidth = 70 })
         activateBtn:SetPoint("TOPRIGHT", headerFrame, "TOPRIGHT", -10, -8)
         activateBtn:SetScript("OnClick", function()
             if isActive then
@@ -345,8 +318,7 @@ function ns.UI.CreateGuidesTab(parent)
         end)
         activateBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-        local editBtn = OneWoW_GUI:CreateButton(headerFrame, { text = L["GUIDES_EDIT"], width = 60, height = 22 })
-        ns.UI.AutoResizeButton(editBtn, 50, 80)
+        local editBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["GUIDES_EDIT"], height = 22, minWidth = 50 })
         editBtn:SetPoint("RIGHT", activateBtn, "LEFT", -5, 0)
         editBtn:SetScript("OnClick", function()
             ns.UI.ShowGuideEditorDialog(guideID, function()
@@ -355,15 +327,13 @@ function ns.UI.CreateGuidesTab(parent)
             end)
         end)
 
-        local exportBtn = OneWoW_GUI:CreateButton(headerFrame, { text = L["GUIDES_EXPORT"], width = 70, height = 22 })
-        ns.UI.AutoResizeButton(exportBtn, 50, 80)
+        local exportBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["GUIDES_EXPORT"], height = 22, minWidth = 50 })
         exportBtn:SetPoint("RIGHT", editBtn, "LEFT", -5, 0)
         exportBtn:SetScript("OnClick", function()
             ns.UI.ShowGuideExportDialog(guideID)
         end)
 
-        local deleteBtn = OneWoW_GUI:CreateButton(headerFrame, { text = L["GUIDES_DELETE"], width = 70, height = 22 })
-        ns.UI.AutoResizeButton(deleteBtn, 50, 80)
+        local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["GUIDES_DELETE"], height = 22, minWidth = 50 })
         deleteBtn:SetPoint("RIGHT", exportBtn, "LEFT", -5, 0)
         deleteBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_NOTES_DELETE_GUIDE", guide.title, nil, { guideID = guideID, refreshFunc = function()
@@ -371,8 +341,7 @@ function ns.UI.CreateGuidesTab(parent)
             end})
         end)
 
-        local resetBtn = OneWoW_GUI:CreateButton(headerFrame, { text = L["GUIDES_RESET"], width = 60, height = 22 })
-        ns.UI.AutoResizeButton(resetBtn, 50, 80)
+        local resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["GUIDES_RESET"], height = 22, minWidth = 50 })
         resetBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -5, 0)
         resetBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_NOTES_RESET_GUIDE", guide.title, nil, { guideID = guideID, refreshFunc = function()
@@ -432,8 +401,7 @@ function ns.UI.CreateGuidesTab(parent)
             end
         end
 
-        local addStepBtn = OneWoW_GUI:CreateButton(detailScrollChild, { text = L["GUIDES_ADD_STEP"], width = 140, height = 28 })
-        ns.UI.AutoResizeButton(addStepBtn, 100, 200)
+        local addStepBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, { text = L["GUIDES_ADD_STEP"], height = 28, minWidth = 100 })
         addStepBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yOffset - 8)
         addStepBtn:SetScript("OnClick", function()
             ns.UI.ShowStepEditorDialog(guideID, nil, function()
@@ -595,8 +563,7 @@ function ns.UI.CreateGuidesTab(parent)
             innerHeight = innerHeight + rowH + 2
         end
 
-        local addObjBtn = OneWoW_GUI:CreateButton(stepFrame, { text = L["GUIDES_ADD_OBJECTIVE"], width = 130, height = 20 })
-        ns.UI.AutoResizeButton(addObjBtn, 100, 160)
+        local addObjBtn = OneWoW_GUI:CreateFitTextButton(stepFrame, { text = L["GUIDES_ADD_OBJECTIVE"], height = 20, minWidth = 100 })
         addObjBtn:SetPoint("TOPLEFT", stepFrame, "TOPLEFT", 30, objsYOffset - 4)
         addObjBtn:SetScript("OnClick", function()
             ns.UI.ShowObjectiveEditorDialog(guideID, stepIdx, nil, function()

@@ -78,8 +78,7 @@ function private.RecordMail(index)
         return AccountingAddon.Transactions:RecordIncome("auction_sale", netAmount, buyer or "Auction House", nil, itemName, quantity, "Auction sold")
 
     elseif invoiceType == "buyer" then
-        if not bid or bid == 0 then return true end
-        return AccountingAddon.Transactions:RecordExpense("auction_purchase", bid, buyer or "Auction House", nil, itemName, quantity, "Auction bought")
+        return true
 
     elseif money and money > 0 and CODAmount and CODAmount > 0 then
         local itemLink = GetInboxItemLink(index, 1)

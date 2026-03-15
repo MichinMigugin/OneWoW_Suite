@@ -138,7 +138,8 @@ OneWoW.Locales["enUS"] = {
     ["OVR_ITEMLEVEL_DESC"] = "Display the item level as a number on equippable gear and containers.",
     ["OVR_QUALITY_COLORS_LABEL"] = "Use Item Quality Colors",
     ["OVR_JUNK_TITLE"] = "Junk Items Overlay",
-    ["OVR_JUNK_DESC"] = "Highlight items marked as junk.",
+    ["OVR_JUNK_DESC"] = "Shows an overlay icon on items you have manually marked as junk in your bags.",
+    ["OVR_JUNK_NOTE"] = "To mark an item as junk, hover over it in your bags and press your Mark Item as Junk keybind. You can assign this keybind under Game Menu > Key Bindings. Junk items also appear highlighted in the Bags Vendor tab for quick selling.",
     ["OVR_KNOWNITEMS_TITLE"] = "Known Items Overlay",
     ["OVR_KNOWNITEMS_DESC"] = "Show an icon on collectible items you already own — pets, mounts, toys, recipes, and transmog appearances you have collected.",
     ["OVR_UNKNOWNITEMS_TITLE"] = "Needed Items Overlay",
@@ -374,7 +375,7 @@ OneWoW.Locales["enUS"] = {
 
     ["PORTALS_SUBTAB"] = "Portals",
 
-    ["Enable ESC Menu"] = "Enable ESC Menu",
+    ["Show Portals on ESC"] = "Show Portals on ESC",
     ["PORTAL_RANDOM_HEARTHSTONE"] = "Random Hearthstone",
     ["Show Unavailable"] = "Show Unavailable (Dimmed)",
     ["PORTAL_SHOW_ALL_ESC"] = "Show All on ESC",
@@ -435,7 +436,8 @@ OneWoW.Locales["enUS"] = {
     ["SETTINGS_PORTALHUB_TOYS_FORMAT"] = "Toys - %d/%d",
 
     ["OVR_PROTECTED_TITLE"] = "Protected Items Overlay",
-    ["OVR_PROTECTED_DESC"] = "Shows an overlay icon on items you have marked as protected, preventing them from being sold or destroyed.",
+    ["OVR_PROTECTED_DESC"] = "Shows an overlay icon on items you have manually marked as protected in your bags.",
+    ["OVR_PROTECTED_NOTE"] = "To mark an item as protected, hover over it in your bags and press your Mark Item as Protected keybind. You can assign this keybind under Game Menu > Key Bindings. Protected items cannot be sold to vendors or cleared by any auto-sell features.",
     ["OVR_TOOLTIP_LABEL"] = "Show Item Status in Tooltip",
 
     ["ITEMSTATUS_MARKED_JUNK"] = "Marked as Junk: %s",

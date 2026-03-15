@@ -16,6 +16,8 @@ local selectedZone   = nil
 local zoneListItems  = {}
 local categoryFilter = "All"
 local storageFilter  = "All"
+local searchFilter   = ""
+local currentSort    = { by = "name", ascending = true }
 
 local contentEditBox  = nil
 local detailPanel     = nil
@@ -29,15 +31,9 @@ local contentUpdateTimer  = nil
 
 local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
 
-local BACKDROP_STANDARD = {
-    bgFile   = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    tile = true, tileSize = 16, edgeSize = 1,
-}
-
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
@@ -45,7 +41,7 @@ end
 
 local function CreateThemedBar(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_STANDARD)
+    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     return f
@@ -56,6 +52,15 @@ local function GetFontColorFromKey(fontColorKey, pinColorKey)
 end
 
 function ns.UI.CreateZonesTab(parent)
+    do
+        local a = _G.OneWoW_Notes
+        if a and a.db and a.db.global.tabSortPrefs and a.db.global.tabSortPrefs.zones then
+            local p = a.db.global.tabSortPrefs.zones
+            currentSort.by        = p.by or "name"
+            currentSort.ascending = p.ascending ~= false
+        end
+    end
+
     local controlPanel = CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
@@ -66,15 +71,13 @@ function ns.UI.CreateZonesTab(parent)
     controlTitle:SetText(L["ZONES_CONTROLS"] or "Zones Controls")
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addZoneBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_ADD_ZONE"] or "Add Zone", width = 100, height = 25 })
-    ns.UI.AutoResizeButton(addZoneBtn, 80, 200)
+    local addZoneBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_ZONE"] or "Add Zone", height = 25, minWidth = 80 })
     addZoneBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addZoneBtn:SetScript("OnClick", function()
         ns.UI.ShowManualZoneEntryDialog(parent)
     end)
 
-    local detectBtn = OneWoW_GUI:CreateButton(controlPanel, { text = L["BUTTON_DETECT_ZONE"] or "Detect Zone", width = 100, height = 25 })
-    ns.UI.AutoResizeButton(detectBtn, 80, 200)
+    local detectBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_DETECT_ZONE"] or "Detect Zone", height = 25, minWidth = 80 })
     detectBtn:SetPoint("LEFT", addZoneBtn, "RIGHT", 6, 0)
     detectBtn:SetScript("OnClick", function()
         local mapID = C_Map.GetBestMapForUnit("player")
@@ -158,6 +161,29 @@ function ns.UI.CreateZonesTab(parent)
         parent.RefreshZonesList()
     end
 
+    local zoneSortHandle = OneWoW_GUI:CreateSortControls(controlPanel, {
+        sortFields = {
+            {key = "name",     label = L["NOTE_SORT_NAME"]},
+            {key = "category", label = L["NOTE_SORT_CATEGORY"]},
+            {key = "color",    label = L["NOTE_SORT_COLOR"]},
+            {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
+        },
+        defaultField  = currentSort.by,
+        defaultAsc    = currentSort.ascending,
+        dropdownWidth = 100,
+        onChange = function(field, ascending)
+            currentSort.by        = field
+            currentSort.ascending = ascending
+            local a = _G.OneWoW_Notes
+            if a and a.db and a.db.global.tabSortPrefs then
+                a.db.global.tabSortPrefs.zones = { by = field, ascending = ascending }
+            end
+            parent.RefreshZonesList()
+        end,
+    })
+    zoneSortHandle.dropdown:SetPoint("LEFT", storageDropdown, "RIGHT", 6, 0)
+    zoneSortHandle.dirBtn:SetPoint("LEFT", zoneSortHandle.dropdown, "RIGHT", 4, 0)
+
     local helpButton = CreateFrame("Button", nil, controlPanel)
     helpButton:SetSize(28, 28)
     helpButton:SetPoint("TOPRIGHT", controlPanel, "TOPRIGHT", -10, -10)
@@ -195,10 +221,20 @@ function ns.UI.CreateZonesTab(parent)
     listingTitle:SetText(L["TAB_ZONES"] or "Zones")
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
+    local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
+        placeholderText = L["UI_SEARCH_PLACEHOLDER"],
+        onTextChanged = function(text)
+            searchFilter = text
+            if parent.RefreshZonesList then parent.RefreshZonesList() end
+        end,
+    })
+    searchBox:SetPoint("TOPLEFT",  listingPanel, "TOPLEFT",  8, -30)
+    searchBox:SetPoint("TOPRIGHT", listingPanel, "TOPRIGHT", -8, -30)
+
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
     scrollFrame = listScroll.scrollFrame
     scrollChild = listScroll.scrollChild
-    listScroll.container:SetPoint("TOPLEFT", listingPanel, "TOPLEFT", 10, -40)
+    listScroll.container:SetPoint("TOPLEFT", listingPanel, "TOPLEFT", 10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
     detailPanel = CreateThemedPanel(nil, parent)
@@ -838,12 +874,11 @@ function ns.UI.CreateZonesTab(parent)
         for name, data in pairs(allZones) do
             local passCategory = (categoryFilter == "All") or (data.category == categoryFilter)
             local passStorage  = (storageFilter == "All") or (data.storage == storageFilter)
-            if passCategory and passStorage then
+            local passSearch   = (searchFilter == "") or name:lower():find(searchFilter:lower(), 1, true)
+            if passCategory and passStorage and passSearch then
                 filtered[#filtered + 1] = { name = name, data = data }
             end
         end
-
-        table.sort(filtered, function(a, b) return a.name < b.name end)
 
         local newZones  = {}
         local favorites = {}
@@ -858,20 +893,49 @@ function ns.UI.CreateZonesTab(parent)
             end
         end
 
+        local function sortZones(a, b)
+            local nameA = a.name or ""
+            local nameB = b.name or ""
+            if currentSort.by == "category" then
+                local ca = a.data.category or ""
+                local cb = b.data.category or ""
+                if ca == cb then return nameA < nameB end
+                if currentSort.ascending then return ca < cb else return ca > cb end
+            elseif currentSort.by == "color" then
+                local ca = a.data.pinColor or ""
+                local cb = b.data.pinColor or ""
+                if ca == cb then return nameA < nameB end
+                if currentSort.ascending then return ca < cb else return ca > cb end
+            elseif currentSort.by == "modified" then
+                if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
+                else return (a.data.modified or 0) > (b.data.modified or 0) end
+            elseif currentSort.by == "manual" then
+                local sa = a.data.sortOrder or 0
+                local sb = b.data.sortOrder or 0
+                if sa == sb then return nameA < nameB end
+                if currentSort.ascending then return sa < sb else return sa > sb end
+            else
+                if currentSort.ascending then return nameA < nameB else return nameA > nameB end
+            end
+        end
+        table.sort(newZones,  sortZones)
+        table.sort(favorites, sortZones)
+        table.sort(regular,   sortZones)
+
         local function CreateSectionHeader(title, yOfs)
             local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = title, yOffset = yOfs })
             table.insert(zoneListItems, section)
             return section
         end
 
-        local function BuildZoneRow(zone, yOfs)
+        local function BuildZoneRow(zone, yOfs, groupArray, groupIndex)
             local listItemColor = {OneWoW_GUI:GetThemeColor("BG_SECONDARY")}
             local resolvedColor = ns.Config:GetResolvedColorConfig(zone.data.pinColor)
             local cR, cG, cB = resolvedColor.background[1], resolvedColor.background[2], resolvedColor.background[3]
 
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-            row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, yOfs)
-            row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -8, yOfs)
+            row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOfs)
+            row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yOfs)
             row:SetHeight(50)
             row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
             row:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
@@ -889,20 +953,15 @@ function ns.UI.CreateZonesTab(parent)
             titleFS:SetText(zone.name)
             titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-            local catFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            catFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 12, 6)
-            catFS:SetText(zone.data.category or "General")
-            catFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
             local storageFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            storageFS:SetPoint("LEFT", catFS, "RIGHT", 8, 0)
+            storageFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 12, 6)
             local stText = zone.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Char") or (L["STORAGE_ACCOUNT_WIDE"] or "Acct")
             storageFS:SetText(stText)
             storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local alertBtn = CreateFrame("Button", nil, row)
             alertBtn:SetSize(18, 18)
-            alertBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -6, -6)
+            alertBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -28, -6)
             local aN = alertBtn:CreateTexture(nil, "BACKGROUND")
             aN:SetAllPoints()
             aN:SetTexture(MEDIA .. "icon-alert.png")
@@ -944,6 +1003,59 @@ function ns.UI.CreateZonesTab(parent)
                 end
             end)
 
+            local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
+            local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
+
+            local upBtn = CreateFrame("Button", nil, row)
+            upBtn:SetSize(18, 22)
+            upBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -3)
+            upBtn:SetNormalAtlas("common-button-collapseExpand-up")
+            upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
+            if upBtn:GetNormalTexture()    then upBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
+            if upBtn:GetHighlightTexture() then upBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            if canMoveUp then upBtn:Show() else upBtn:Hide() end
+            upBtn:SetScript("OnClick", function()
+                if not canMoveUp then return end
+                if currentSort.by ~= "manual" then
+                    currentSort.by = "manual"
+                    currentSort.ascending = true
+                    zoneSortHandle:SetSort("manual", true)
+                    local a = _G.OneWoW_Notes
+                    if a and a.db and a.db.global.tabSortPrefs then
+                        a.db.global.tabSortPrefs.zones = { by = "manual", ascending = true }
+                    end
+                end
+                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                groupArray[groupIndex].data.sortOrder     = groupIndex - 1
+                groupArray[groupIndex - 1].data.sortOrder = groupIndex
+                parent.RefreshZonesList()
+            end)
+
+            local downBtn = CreateFrame("Button", nil, row)
+            downBtn:SetSize(18, 22)
+            downBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 3)
+            downBtn:SetNormalAtlas("common-button-collapseExpand-down")
+            downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
+            if downBtn:GetNormalTexture()    then downBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
+            if downBtn:GetHighlightTexture() then downBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            if canMoveDown then downBtn:Show() else downBtn:Hide() end
+            downBtn:SetScript("OnClick", function()
+                if not canMoveDown then return end
+                if currentSort.by ~= "manual" then
+                    currentSort.by = "manual"
+                    currentSort.ascending = true
+                    zoneSortHandle:SetSort("manual", true)
+                    local a = _G.OneWoW_Notes
+                    if a and a.db and a.db.global.tabSortPrefs then
+                        a.db.global.tabSortPrefs.zones = { by = "manual", ascending = true }
+                    end
+                end
+                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                groupArray[groupIndex].data.sortOrder     = groupIndex + 1
+                groupArray[groupIndex + 1].data.sortOrder = groupIndex
+                parent.RefreshZonesList()
+            end)
+
             row:EnableMouse(true)
             row:SetScript("OnMouseDown", function()
                 selectedZone = zone.name
@@ -975,19 +1087,19 @@ function ns.UI.CreateZonesTab(parent)
             CreateSectionHeader(L["NOTES_SECTION_NEW"] or "New", yOffset)
             yOffset = yOffset - 30
         end
-        for _, zone in ipairs(newZones) do BuildZoneRow(zone, yOffset) yOffset = yOffset - 55 end
+        for i, zone in ipairs(newZones) do BuildZoneRow(zone, yOffset, newZones, i) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
             CreateSectionHeader(L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset)
             yOffset = yOffset - 30
         end
-        for _, zone in ipairs(favorites) do BuildZoneRow(zone, yOffset) yOffset = yOffset - 55 end
+        for i, zone in ipairs(favorites) do BuildZoneRow(zone, yOffset, favorites, i) yOffset = yOffset - 55 end
 
         if #regular > 0 then
             CreateSectionHeader(L["TAB_ZONES"], yOffset)
             yOffset = yOffset - 30
         end
-        for _, zone in ipairs(regular) do BuildZoneRow(zone, yOffset) yOffset = yOffset - 55 end
+        for i, zone in ipairs(regular) do BuildZoneRow(zone, yOffset, regular, i) yOffset = yOffset - 55 end
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
@@ -1119,9 +1231,8 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     mapIDInput:SetNumeric(true)
     dialog._validatedMapID = nil
 
-    local validateBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", width = 80, height = 26 })
+    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", height = 26, minWidth = 70 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
-    ns.UI.AutoResizeButton(validateBtn, 70, 150)
 
     local validationFS = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     validationFS:SetPoint("LEFT", validateBtn, "RIGHT", 8, 0)
@@ -1376,9 +1487,8 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     mapIDInput:SetNumeric(true)
     mapIDInput:SetText(zoneData.mapID and tostring(zoneData.mapID) or "")
 
-    local validateBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", width = 80, height = 26 })
+    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", height = 26, minWidth = 70 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
-    ns.UI.AutoResizeButton(validateBtn, 70, 150)
 
     local validationFS = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     validationFS:SetPoint("LEFT", validateBtn, "RIGHT", 8, 0)

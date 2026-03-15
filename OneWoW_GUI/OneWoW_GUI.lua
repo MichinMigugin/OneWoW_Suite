@@ -347,6 +347,84 @@ function OneWoW_GUI:CreateFilterBar(parent, config)
     return bar
 end
 
+function OneWoW_GUI:CreateSortControls(parent, options)
+    options = options or {}
+    local sortFields   = options.sortFields   or {}
+    local defaultField = options.defaultField or (sortFields[1] and sortFields[1].key) or ""
+    local defaultAsc   = options.defaultAsc ~= false
+    local onChange     = options.onChange or function() end
+    local dropWidth    = options.dropdownWidth or 110
+
+    local state = { field = defaultField, ascending = defaultAsc }
+
+    local dropdown, textFS = self:CreateDropdown(parent, { width = dropWidth, height = 25 })
+
+    local function RefreshDropText()
+        for _, f in ipairs(sortFields) do
+            if f.key == state.field then
+                textFS:SetText(f.label)
+                break
+            end
+        end
+    end
+    RefreshDropText()
+    dropdown._activeValue = defaultField
+
+    self:AttachFilterMenu(dropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for _, f in ipairs(sortFields) do
+                items[#items + 1] = { text = f.label, value = f.key }
+            end
+            return items
+        end,
+        onSelect = function(value, label)
+            state.field = value
+            textFS:SetText(label)
+            dropdown._activeValue = value
+            onChange(state.field, state.ascending)
+        end,
+        getActiveValue = function() return state.field end,
+    })
+
+    local dirBtn = CreateFrame("Button", nil, parent)
+    dirBtn:SetSize(24, 25)
+
+    local function UpdateDirAtlas()
+        local atlas = state.ascending and "common-button-collapseExpand-up" or "common-button-collapseExpand-down"
+        dirBtn:SetNormalAtlas(atlas)
+        dirBtn:SetPushedAtlas(atlas)
+        dirBtn:SetHighlightAtlas(atlas)
+        if dirBtn:GetHighlightTexture() then
+            dirBtn:GetHighlightTexture():SetAlpha(0.5)
+        end
+    end
+    UpdateDirAtlas()
+
+    dirBtn:SetScript("OnClick", function()
+        state.ascending = not state.ascending
+        UpdateDirAtlas()
+        onChange(state.field, state.ascending)
+    end)
+
+    local handle = { dropdown = dropdown, dirBtn = dirBtn }
+
+    function handle:GetSort()
+        return state.field, state.ascending
+    end
+
+    function handle:SetSort(field, ascending)
+        state.field     = field
+        state.ascending = ascending ~= false
+        dropdown._activeValue = field
+        RefreshDropText()
+        UpdateDirAtlas()
+    end
+
+    return handle
+end
+
 function OneWoW_GUI:CreateButton(parent, options)
     options = options or {}
     local name = options.name
@@ -1069,13 +1147,75 @@ function OneWoW_GUI:CreateScrollFrame(parent, options)
     return scrollFrame, content
 end
 
+function OneWoW_GUI:CreateScrollEditBox(parent, options)
+    options = options or {}
+    local name            = options.name
+    local fontSize        = options.fontSize or 12
+    local fontFlags       = options.fontFlags or ""
+    local maxLetters      = options.maxLetters or 0
+    local onTextChanged   = options.onTextChanged
+    local onEscapePressed = options.onEscapePressed
+    local ti              = options.textInsets or { 4, 4, 4, 4 }
+
+    local scrollFrame = CreateFrame("ScrollFrame", name and (name .. "Scroll") or nil, parent, "UIPanelScrollFrameTemplate")
+    scrollFrame:SetPoint("TOPLEFT", 8, -8)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -8, 8)
+    scrollFrame:EnableMouse(true)
+    scrollFrame:EnableMouseWheel(true)
+
+    applyScrollBarStyle(scrollFrame.ScrollBar, parent, -2)
+
+    local editBox = CreateFrame("EditBox", name, scrollFrame)
+    editBox:SetMultiLine(true)
+    editBox:SetAutoFocus(false)
+    editBox:SetMaxLetters(maxLetters)
+    editBox:SetHeight(1)
+    editBox:SetTextInsets(ti[1], ti[2], ti[3], ti[4])
+
+    local resolvedFont = options.font or self:GetFont()
+    if resolvedFont then
+        editBox:SetFont(resolvedFont, fontSize, fontFlags)
+    else
+        editBox:SetFontObject(ChatFontNormal)
+    end
+
+    if options.textColor then
+        editBox:SetTextColor(unpack(options.textColor))
+    else
+        editBox:SetTextColor(GetThemeColor("TEXT_PRIMARY"))
+    end
+
+    scrollFrame:SetScrollChild(editBox)
+
+    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+        editBox:SetWidth(math.max(1, w))
+    end)
+
+    scrollFrame:HookScript("OnMouseDown", function()
+        editBox:SetFocus()
+    end)
+
+    editBox:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+        if onEscapePressed then onEscapePressed(self) end
+    end)
+
+    if onTextChanged then
+        editBox:SetScript("OnTextChanged", function(self, userInput)
+            onTextChanged(self, userInput)
+        end)
+    end
+
+    return scrollFrame, editBox
+end
+
 function OneWoW_GUI:CreateSectionHeader(parent, options)
     options = options or {}
     local title = options.title or ""
     local yOffset = options.yOffset or 0
     local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    section:SetPoint("TOPLEFT", 8, yOffset)
-    section:SetPoint("TOPRIGHT", -8, yOffset)
+    section:SetPoint("TOPLEFT", 0, yOffset)
+    section:SetPoint("TOPRIGHT", 0, yOffset)
     section:SetHeight(30)
     section:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     section:SetBackdropColor(GetThemeColor("BG_SECONDARY"))

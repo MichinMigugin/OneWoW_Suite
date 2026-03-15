@@ -52,7 +52,7 @@ function ns.UI.CreateEquipmentTab(parent)
         {key = "haste",     label = L["EQUIPMENT_COL_HASTE"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_HASTE"],            ttDesc = L["TT_COL_HASTE_DESC"]},
         {key = "mastery",   label = L["EQUIPMENT_COL_MASTERY"],  width = 60,  fixed = false, align = "center",                   ttTitle = L["TT_COL_MASTERY"],          ttDesc = L["TT_COL_MASTERY_DESC"]},
         {key = "vers",      label = L["EQUIPMENT_COL_VERS"],     width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_VERS"],             ttDesc = L["TT_COL_VERS_DESC"]},
-        {key = "status",    label = L["EQUIPMENT_COL_STATUS"],   width = 60,  fixed = false, align = "left",                     ttTitle = L["TT_COL_STATUS"],           ttDesc = L["TT_COL_STATUS_DESC"]}
+        {key = "status",    label = L["EQUIPMENT_COL_STATUS"],   width = 40,  fixed = false, align = "center",                   ttTitle = L["TT_COL_STATUS"],           ttDesc = L["TT_COL_STATUS_DESC"]}
     }
 
     local onHeaderCreate = function(btn, col, index)
@@ -643,17 +643,15 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         statusCell:SetScript("OnLeave", function(self)
             GameTooltip:Hide()
         end)
-        local statusText = statusCell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        statusText:SetPoint("LEFT", statusCell, "LEFT", 0, 0)
+        local statusIcon = statusCell:CreateTexture(nil, "OVERLAY")
+        statusIcon:SetSize(14, 14)
+        statusIcon:SetPoint("CENTER", statusCell, "CENTER", 0, 0)
         if durabilityPct < 30 or missingEnchants >= 5 or missingGems >= 5 then
-            statusText:SetText(L["STATUS_ATTENTION"])
-            statusText:SetTextColor(1, 0.34, 0.13)
+            statusIcon:SetTexture("Interface\\FriendsFrame\\StatusIcon-DnD")
         elseif missingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
-            statusText:SetText(L["STATUS_REVIEW"])
-            statusText:SetTextColor(1, 1, 0)
+            statusIcon:SetTexture("Interface\\FriendsFrame\\StatusIcon-Away")
         else
-            statusText:SetText(L["STATUS_OK"])
-            statusText:SetTextColor(0.30, 0.69, 0.31)
+            statusIcon:SetTexture("Interface\\FriendsFrame\\StatusIcon-Online")
         end
         table.insert(charRow.cells, statusCell)
 

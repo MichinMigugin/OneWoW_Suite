@@ -8,17 +8,6 @@ ns.UI = ns.UI or {}
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-function ns.UI.AutoResizeButton(btn, minWidth, maxWidth)
-    if not btn or not btn.text then return end
-    local textWidth = btn.text:GetStringWidth()
-    local padding = 20
-    local currentWidth, currentHeight = btn:GetSize()
-    local calculatedWidth = math.max(minWidth or currentWidth, textWidth + padding)
-    if maxWidth then
-        calculatedWidth = math.min(calculatedWidth, maxWidth)
-    end
-    btn:SetSize(calculatedWidth, currentHeight)
-end
 
 function ns.UI.CreateSplitPanel(parent)
     local panels = OneWoW_GUI:CreateSplitPanel(parent)
