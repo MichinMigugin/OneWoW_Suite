@@ -16,9 +16,16 @@ local enchantableSlots = {
     [5] = true,
     [7] = true,
     [8] = true,
+    [9] = true,
     [11] = true,
     [12] = true,
+    [15] = true,
     [16] = true,
+}
+
+local softEnchantSlots = {
+    [9] = true,
+    [15] = true,
 }
 
 local OFFHAND_SLOT = 17
@@ -39,6 +46,10 @@ local function IsSlotEnchantable(slotId, equipment)
         return IsOffHandWeaponFromLink(equipment[OFFHAND_SLOT])
     end
     return false
+end
+
+local function IsSoftEnchantSlot(slotId)
+    return softEnchantSlots[slotId] or false
 end
 
 function ns.UI.CreateEquipmentTab(parent)
@@ -146,6 +157,7 @@ end
 local function GetEquipmentStats(charKey, charData)
     local equipment = (_G.OneWoW_AltTracker_Character_DB.characters[charKey] and _G.OneWoW_AltTracker_Character_DB.characters[charKey].equipment)
     local totalDurability, durabilityItems, missingEnchants, missingGems, tierCount = 0, 0, 0, 0, 0
+    local hardMissingEnchants = 0
     if equipment then
         for slotId = 1, 19 do
             if slotId ~= 4 and slotId ~= 18 and slotId ~= 19 then
@@ -159,6 +171,9 @@ local function GetEquipmentStats(charKey, charData)
                         local enchantId = item.itemLink:match("item:%d+:(%d+)")
                         if not enchantId or enchantId == "0" or enchantId == "" then
                             missingEnchants = missingEnchants + 1
+                            if not IsSoftEnchantSlot(slotId) then
+                                hardMissingEnchants = hardMissingEnchants + 1
+                            end
                         end
                     end
                     local itemSockets = item.numSockets or 0
@@ -180,9 +195,9 @@ local function GetEquipmentStats(charKey, charData)
     end
     local durabilityPct = durabilityItems > 0 and math.floor(totalDurability / durabilityItems) or 100
     local statusScore = 0
-    if durabilityPct < 30 or missingEnchants >= 5 or missingGems >= 5 then
+    if durabilityPct < 30 or hardMissingEnchants >= 5 or missingGems >= 5 then
         statusScore = 2
-    elseif missingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
+    elseif hardMissingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
         statusScore = 1
     end
     return durabilityPct, missingEnchants, missingGems, tierCount, statusScore
@@ -331,6 +346,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local totalDurability = 0
         local durabilityItems = 0
         local missingEnchants = 0
+        local hardMissingEnchants = 0
         local totalEnchantableSlots = 0
         local missingGems = 0
         local totalGemSlots = 0
@@ -352,6 +368,9 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
                             local enchantId = item.itemLink:match("item:%d+:(%d+)")
                             if not enchantId or enchantId == "0" or enchantId == "" then
                                 missingEnchants = missingEnchants + 1
+                                if not IsSoftEnchantSlot(slotId) then
+                                    hardMissingEnchants = hardMissingEnchants + 1
+                                end
                             end
                         end
 
@@ -633,9 +652,9 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         statusCell:EnableMouse(true)
         statusCell:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            if durabilityPct < 30 or missingEnchants >= 5 or missingGems >= 5 then
+            if durabilityPct < 30 or hardMissingEnchants >= 5 or missingGems >= 5 then
                 GameTooltip:SetText(L["STATUS_ATTENTION"], 1, 0.34, 0.13)
-            elseif missingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
+            elseif hardMissingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
                 GameTooltip:SetText(L["STATUS_REVIEW"], 1, 1, 0)
             else
                 GameTooltip:SetText(L["STATUS_OK"], 0.30, 0.69, 0.31)
@@ -660,9 +679,9 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local statusIcon = statusCell:CreateTexture(nil, "OVERLAY")
         statusIcon:SetSize(14, 14)
         statusIcon:SetPoint("CENTER", statusCell, "CENTER", 0, 0)
-        if durabilityPct < 30 or missingEnchants >= 5 or missingGems >= 5 then
+        if durabilityPct < 30 or hardMissingEnchants >= 5 or missingGems >= 5 then
             statusIcon:SetTexture("Interface\\FriendsFrame\\StatusIcon-DnD")
-        elseif missingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
+        elseif hardMissingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
             statusIcon:SetTexture("Interface\\FriendsFrame\\StatusIcon-Away")
         else
             statusIcon:SetTexture("Interface\\FriendsFrame\\StatusIcon-Online")
@@ -746,6 +765,7 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
 
         if equipment then
             local charMissingEnchants = 0
+            local charHardMissingEnchants = 0
             local charMissingGems = 0
             local charLowDurability = 0
             local charTierCount = 0
@@ -764,6 +784,9 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
                             local enchantId = item.itemLink:match("item:%d+:(%d+)")
                             if not enchantId or enchantId == "0" or enchantId == "" then
                                 charMissingEnchants = charMissingEnchants + 1
+                                if not IsSoftEnchantSlot(slotId) then
+                                    charHardMissingEnchants = charHardMissingEnchants + 1
+                                end
                             end
                         end
 
@@ -804,7 +827,7 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
                 stats.tierSets = stats.tierSets + 1
             end
 
-            if charLowDurability >= 3 or charMissingEnchants >= 5 or charMissingGems >= 5 then
+            if charLowDurability >= 3 or charHardMissingEnchants >= 5 or charMissingGems >= 5 then
                 stats.attention = stats.attention + 1
             end
         end

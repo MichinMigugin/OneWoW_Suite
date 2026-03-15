@@ -1003,7 +1003,7 @@ L_enUS["SEASON_CURRENT"] = "Current:"
 
 L_enUS["TT_ENCHANTS_MISSING_OF"] = "%d of %d enchantable slots are missing enchants"
 L_enUS["TT_ENCHANTS_ALL_OK"] = "All %d enchantable slots are enchanted"
-L_enUS["TT_ENCHANTS_SLOT_LIST"] = "Checks: Head, Shoulders, Chest, Legs, Feet, Rings, Weapons"
+L_enUS["TT_ENCHANTS_SLOT_LIST"] = "Checks: Head, Shoulders, Chest, Wrists, Legs, Feet, Back, Rings, Weapons"
 L_enUS["TT_ENCHANTS_QUALITY_NOTE"] = "Level 70+ characters only"
 L_enUS["TT_GEMS_MISSING_OF"] = "%d of %d gem sockets are empty"
 L_enUS["TT_GEMS_ALL_OK"] = "All %d gem sockets are filled"
