@@ -23,16 +23,33 @@ local CharInfoModule = {
 local CI = CharInfoModule
 
 local enchantableSlotIDs = {
+    [GetInventorySlotInfo("HeadSlot")] = true,
+    [GetInventorySlotInfo("ShoulderSlot")] = true,
     [GetInventorySlotInfo("ChestSlot")] = true,
     [GetInventorySlotInfo("LegsSlot")] = true,
     [GetInventorySlotInfo("FeetSlot")] = true,
-    [GetInventorySlotInfo("WristSlot")] = true,
     [GetInventorySlotInfo("Finger0Slot")] = true,
     [GetInventorySlotInfo("Finger1Slot")] = true,
-    [GetInventorySlotInfo("BackSlot")] = true,
     [GetInventorySlotInfo("MainHandSlot")] = true,
-    [GetInventorySlotInfo("SecondaryHandSlot")] = true,
 }
+
+local SECONDARY_HAND_SLOT = GetInventorySlotInfo("SecondaryHandSlot")
+
+local function IsOffHandWeapon()
+    local itemID = GetInventoryItemID("player", SECONDARY_HAND_SLOT)
+    if not itemID then return false end
+    local invType = C_Item.GetItemInventoryTypeByID(itemID)
+    if not invType then return false end
+    return invType == Enum.InventoryType.IndexWeaponType
+        or invType == Enum.InventoryType.IndexWeaponoffhandType
+        or invType == Enum.InventoryType.IndexWeaponmainhandType
+end
+
+local function IsSlotEnchantable(slotId)
+    if enchantableSlotIDs[slotId] then return true end
+    if slotId == SECONDARY_HAND_SLOT then return IsOffHandWeapon() end
+    return false
+end
 
 local slotNames = {
     [1] = "Head",
@@ -187,9 +204,8 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
     local showEnchantIcon = false
     local showGemIcon = false
 
-    if enchantableSlotIDs[slotId] then
+    if IsSlotEnchantable(slotId) then
         showEnchantIcon = true
-        panel.enchantIcon:Show()
         if enchantID > 0 then
             panel.enchantIcon.texture:SetAtlas("Perks-PreviewOn")
             panel.enchantIcon.texture:SetDesaturated(false)
@@ -209,18 +225,6 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
                 GameTooltip:Show()
             end)
         end
-        panel.enchantIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    else
-        showEnchantIcon = true
-        panel.enchantIcon:Show()
-        panel.enchantIcon.texture:SetAtlas("Perks-PreviewOn-Gray")
-        panel.enchantIcon.texture:SetDesaturated(false)
-        panel.enchantIcon.texture:SetVertexColor(0.4, 0.4, 0.4, 0.6)
-        panel.enchantIcon:SetScript("OnEnter", function(ic)
-            GameTooltip:SetOwner(ic, "ANCHOR_RIGHT")
-            GameTooltip:AddLine(L["CHARINFO_NO_ENCHANT_NEEDED"], 0.6, 0.6, 0.6)
-            GameTooltip:Show()
-        end)
         panel.enchantIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
     end
 
@@ -246,7 +250,6 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
 
         local emptyGems = totalSockets - filledGems
 
-        panel.gemIcon:Show()
         panel.gemIcon.texture:SetAtlas("soulbinds_tree_conduit_icon_utility")
 
         if emptyGems == totalSockets then
@@ -278,22 +281,21 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
             end)
         end
         panel.gemIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    else
-        if showSockets then
-            showGemIcon = true
-            panel.gemIcon:Show()
-            panel.gemIcon.texture:SetAtlas("soulbinds_tree_conduit_icon_utility")
-            panel.gemIcon.texture:SetDesaturated(true)
-            panel.gemIcon.texture:SetVertexColor(0.4, 0.4, 0.4, 0.6)
-            panel.gemIcon:SetScript("OnEnter", function(ic)
-                GameTooltip:SetOwner(ic, "ANCHOR_RIGHT")
-                GameTooltip:AddLine(L["CHARINFO_NO_SOCKETS"], 0.6, 0.6, 0.6)
-                GameTooltip:Show()
-            end)
-            panel.gemIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        else
-            showGemIcon = false
-        end
+    end
+
+    panel.enchantIcon:ClearAllPoints()
+    panel.gemIcon:ClearAllPoints()
+    if showEnchantIcon and showGemIcon then
+        panel.enchantIcon:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 4, 6)
+        panel.enchantIcon:Show()
+        panel.gemIcon:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 6)
+        panel.gemIcon:Show()
+    elseif showEnchantIcon then
+        panel.enchantIcon:SetPoint("BOTTOM", panel, "BOTTOM", 0, 6)
+        panel.enchantIcon:Show()
+    elseif showGemIcon then
+        panel.gemIcon:SetPoint("BOTTOM", panel, "BOTTOM", 0, 6)
+        panel.gemIcon:Show()
     end
 
     local current, maximum = GetInventoryItemDurability(slotId)
