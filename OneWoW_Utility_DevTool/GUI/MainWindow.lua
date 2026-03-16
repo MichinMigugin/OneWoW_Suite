@@ -6,14 +6,6 @@ if not OneWoW_GUI then return end
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
-local backdrop = {
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = false,
-    edgeSize = 12,
-    insets = { left = 2, right = 2, top = 2, bottom = 2 }
-}
-
 local GUI = Addon.GUI or {}
 Addon.GUI = GUI
 
@@ -22,6 +14,8 @@ Addon.UI = UI
 
 UI.tabs = {}
 UI.currentTab = nil
+
+local L = Addon.L or {}
 
 local function StyleContentPanel(panel)
     panel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
@@ -32,8 +26,13 @@ end
 function UI:Initialize()
     if self.mainFrame then return end
 
-    local frame = CreateFrame("Frame", "OneWoW_UtilityDevToolFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(750, 450)
+    local factionTheme = Addon.db and Addon.db.minimap and Addon.db.minimap.theme or "horde"
+    local frame = OneWoW_GUI:CreateFrame(UIParent, {
+        name = "OneWoW_UtilityDevToolFrame",
+        width = 750,
+        height = 450,
+        backdrop = BACKDROP_INNER_NO_INSETS,
+    })
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("MEDIUM")
     frame:SetToplevel(true)
@@ -68,50 +67,15 @@ function UI:Initialize()
 
     frame:Hide()
 
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    local titleBar = OneWoW_GUI:CreateTitleBar(frame, {
+        title = Addon.L and Addon.L["ADDON_TITLE"] or "DevTool",
+        height = 20,
+        showBrand = true,
+        factionTheme = factionTheme,
+        onClose = function() UI:Hide() end,
     })
-    frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-
-    local titleBar = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    titleBar:SetHeight(20)
-    titleBar:SetPoint("TOPLEFT",  frame, "TOPLEFT",  OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
+    titleBar:SetPoint("TOPLEFT", frame, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
     titleBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
-    titleBar:SetBackdrop(BACKDROP_SIMPLE)
-    titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
-    titleBar:SetFrameLevel(frame:GetFrameLevel() + 1)
-
-    local factionTheme = Addon.db and Addon.db.minimap and Addon.db.minimap.theme or "horde"
-    local brandIconTex
-    if factionTheme == "alliance" then
-        brandIconTex = "Interface\\AddOns\\OneWoW_Utility_DevTool\\Media\\alliance-mini.png"
-    elseif factionTheme == "neutral" then
-        brandIconTex = "Interface\\AddOns\\OneWoW_Utility_DevTool\\Media\\neutral-mini.png"
-    else
-        brandIconTex = "Interface\\AddOns\\OneWoW_Utility_DevTool\\Media\\horde-mini.png"
-    end
-
-    local brandIcon = titleBar:CreateTexture(nil, "OVERLAY")
-    brandIcon:SetSize(14, 14)
-    brandIcon:SetPoint("LEFT", titleBar, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-    brandIcon:SetTexture(brandIconTex)
-
-    local brandText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
-    brandText:SetText("OneWoW")
-    brandText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
-    titleText:SetText(Addon.L and Addon.L["ADDON_TITLE"] or "DevTool")
-    titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local closeBtn = OneWoW_GUI:CreateButton(titleBar, { text = "X", width = 20, height = 20 })
-    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -OneWoW_GUI:GetSpacing("XS") / 2, 0)
-    closeBtn:SetScript("OnClick", function() UI:Hide() end)
 
     tinsert(UISpecialFrames, "OneWoW_UtilityDevToolFrame")
 
@@ -244,6 +208,9 @@ function UI:SelectTab(tabID)
             tab.content:Hide()
         elseif id == tabID then
             tab.content:Show()
+            if id == 2 and Addon.EventMonitor then
+                Addon.EventMonitor:UpdateUI()
+            end
             tab.button.isSelected = true
             tab.button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             tab.button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -266,23 +233,26 @@ function UI:CreateFrameInspectorTab(parent)
     local pickBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_PICK_FRAME"] or "Pick Frame", width = 100, height = 22 })
     pickBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
 
-    local searchBox = CreateFrame("EditBox", nil, tab, "InputBoxTemplate")
-    searchBox:SetSize(150, 22)
+    local searchBox = OneWoW_GUI:CreateEditBox(tab, {
+        width = 150,
+        height = 22,
+        placeholderText = Addon.L and Addon.L["LABEL_FRAME_NAME"] or "Frame name...",
+    })
     searchBox:SetPoint("LEFT", pickBtn, "RIGHT", 10, 0)
-    searchBox:SetAutoFocus(false)
 
     local searchBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_SEARCH"] or "Search", width = 70, height = 22 })
     searchBtn:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
 
     pickBtn:SetScript("OnClick", function()
         if Addon.FramePicker then
-            searchBox:SetText("")
+            searchBox:SetText(searchBox.placeholderText or "")
+            searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             Addon.FramePicker:Start()
         end
     end)
 
     local function doSearch()
-        local text = searchBox:GetText()
+        local text = searchBox:GetSearchText()
         if not text or text == "" then return end
         local results = Addon:SearchFramesByName(text)
         if #results == 0 then
@@ -307,7 +277,8 @@ function UI:CreateFrameInspectorTab(parent)
     local DIVIDER_WIDTH = 6
     local PADDING = DIVIDER_WIDTH + 10
 
-    local leftPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    local leftPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = LEFT_DEFAULT_WIDTH, height = 100 })
+    leftPanel:ClearAllPoints()
     leftPanel:SetPoint("TOPLEFT", pickBtn, "BOTTOMLEFT", 0, -5)
     leftPanel:SetPoint("BOTTOM", tab, "BOTTOM", 0, 5)
     leftPanel:SetWidth(LEFT_DEFAULT_WIDTH)
@@ -326,14 +297,10 @@ function UI:CreateFrameInspectorTab(parent)
         end
     end)
 
-    local leftScroll = CreateFrame("ScrollFrame", nil, leftPanel, "UIPanelScrollFrameTemplate")
+    local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "FrameInspectorLeftScroll" })
+    leftScroll:ClearAllPoints()
     leftScroll:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -25)
     leftScroll:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -14, 4)
-    OneWoW_GUI:StyleScrollBar(leftScroll, { container = leftPanel })
-
-    local leftContent = CreateFrame("Frame", nil, leftScroll)
-    leftContent:SetHeight(1)
-    leftScroll:SetScrollChild(leftContent)
 
     leftScroll:HookScript("OnSizeChanged", function(self, w)
         leftContent:SetWidth(w)
@@ -429,7 +396,8 @@ function UI:CreateFrameInspectorTab(parent)
     end)
 
     -- Right panel: Frame Details
-    local rightPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+    rightPanel:ClearAllPoints()
     rightPanel:SetPoint("TOPLEFT", divider, "TOPRIGHT", 0, 0)
     rightPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
     StyleContentPanel(rightPanel)
@@ -458,14 +426,10 @@ function UI:CreateFrameInspectorTab(parent)
         end
     end)
 
-    local rightScroll = CreateFrame("ScrollFrame", nil, rightPanel, "UIPanelScrollFrameTemplate")
+    local rightScroll, rightContent = OneWoW_GUI:CreateScrollFrame(rightPanel, { name = "FrameInspectorRightScroll" })
+    rightScroll:ClearAllPoints()
     rightScroll:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 4, -25)
     rightScroll:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -14, 4)
-    OneWoW_GUI:StyleScrollBar(rightScroll, { container = rightPanel })
-
-    local rightContent = CreateFrame("Frame", nil, rightScroll)
-    rightContent:SetHeight(1)
-    rightScroll:SetScrollChild(rightContent)
 
     rightScroll:HookScript("OnSizeChanged", function(self, w)
         rightContent:SetWidth(w)
@@ -673,7 +637,7 @@ function UI:CreateFrameInspectorTab(parent)
                     tinsert(lines, "  " .. event)
                 end
             else
-                tinsert(lines, "  (none detected among " .. #Addon.COMMON_EVENTS .. " common events)")
+                tinsert(lines, "  (none detected among " .. #Addon.Constants.COMMON_EVENTS .. " common events)")
             end
         end
 
@@ -809,43 +773,47 @@ function UI:CreateEventMonitorTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local startBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_START"] or "Start", width = 80, height = 22 })
-    startBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
-    startBtn:SetScript("OnClick", function()
+    local startStopBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_START"] or "Start", height = 22, minWidth = 60 })
+    startStopBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
+    startStopBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
-            Addon.EventMonitor:Start()
+            if Addon.EventMonitor.monitoring then
+                Addon.EventMonitor:Stop()
+            else
+                Addon.EventMonitor:Start()
+            end
         end
     end)
 
-    local stopBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_STOP"] or "Stop", width = 80, height = 22 })
-    stopBtn:SetPoint("LEFT", startBtn, "RIGHT", 5, 0)
-    stopBtn:SetScript("OnClick", function()
+    local pauseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_PAUSE"] or "Pause", height = 22, minWidth = 70 })
+    pauseBtn:SetPoint("LEFT", startStopBtn, "RIGHT", 5, 0)
+    pauseBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
-            Addon.EventMonitor:Stop()
+            Addon.EventMonitor:TogglePause()
         end
     end)
 
-    local clearBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_CLEAR"] or "Clear", width = 80, height = 22 })
-    clearBtn:SetPoint("LEFT", stopBtn, "RIGHT", 5, 0)
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_CLEAR"] or "Clear", height = 22, minWidth = 50 })
+    clearBtn:SetPoint("LEFT", pauseBtn, "RIGHT", 5, 0)
     clearBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
             Addon.EventMonitor:Clear()
         end
     end)
 
-    local configBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_SELECT_EVENTS"] or "Select Events", width = 100, height = 22 })
+    local configBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_SELECT_EVENTS"] or "Select Events", height = 22, minWidth = 80 })
     configBtn:SetPoint("LEFT", clearBtn, "RIGHT", 5, 0)
     configBtn:SetScript("OnClick", function()
         UI:ShowEventSelector()
     end)
 
-    local importBtn = OneWoW_GUI:CreateButton(tab, { text = "Import Events", width = 110, height = 22 })
+    local importBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = "Import Events", height = 22, minWidth = 80 })
     importBtn:SetPoint("LEFT", configBtn, "RIGHT", 5, 0)
     importBtn:SetScript("OnClick", function()
         UI:ShowEventImportDialog()
     end)
 
-    local firehoseBtn = OneWoW_GUI:CreateButton(tab, { text = "Firehose", width = 90, height = 22 })
+    local firehoseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = "Firehose", height = 22, minWidth = 60 })
     firehoseBtn:SetPoint("LEFT", importBtn, "RIGHT", 5, 0)
     firehoseBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -854,53 +822,117 @@ function UI:CreateEventMonitorTab(parent)
     end)
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    filterLabel:SetPoint("TOPLEFT", startBtn, "BOTTOMLEFT", 0, -8)
+    filterLabel:SetPoint("TOPLEFT", startStopBtn, "BOTTOMLEFT", 0, -8)
     filterLabel:SetText(Addon.L and Addon.L["LABEL_FILTER"] or "Filter:")
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local filterBox = CreateFrame("EditBox", nil, tab, "InputBoxTemplate")
-    filterBox:SetSize(150, 22)
+    local filterBox = OneWoW_GUI:CreateEditBox(tab, {
+        width = 150,
+        height = 22,
+        placeholderText = Addon.L and Addon.L["LABEL_FILTER"] or "Filter...",
+        onTextChanged = function()
+            if Addon.EventMonitor then
+                Addon.EventMonitor:UpdateUI()
+            end
+        end,
+    })
     filterBox:SetPoint("LEFT", filterLabel, "RIGHT", 5, 0)
-    filterBox:SetAutoFocus(false)
-    filterBox:SetScript("OnTextChanged", function()
-        if Addon.EventMonitor then
-            Addon.EventMonitor:UpdateUI()
-        end
-    end)
 
-    local panel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
-    panel:SetPoint("TOPLEFT", startBtn, "BOTTOMLEFT", 0, -35)
+    local panel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+    panel:ClearAllPoints()
+    panel:SetPoint("TOPLEFT", startStopBtn, "BOTTOMLEFT", 0, -35)
     panel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
     StyleContentPanel(panel)
 
-    local scroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
+    local scroll, content = OneWoW_GUI:CreateScrollFrame(panel, { name = "EventMonitorScroll" })
+    scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -4)
     scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 4)
-    OneWoW_GUI:StyleScrollBar(scroll, { container = panel })
 
-    local content = CreateFrame("Frame", nil, scroll)
-    content:SetHeight(1)
-    scroll:SetScrollChild(content)
-
+    tab.maxRowWidth = 0
     scroll:HookScript("OnSizeChanged", function(self, w)
-        content:SetWidth(w)
+        content:SetWidth(math.max(w, tab.maxRowWidth or 0))
     end)
 
-    tab.logText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    tab.logText:SetPoint("TOPLEFT", 2, -2)
-    tab.logText:SetPoint("RIGHT", content, "RIGHT", -2, 0)
-    tab.logText:SetJustifyH("LEFT")
-    local L = Addon.L or {}
-    tab.logText:SetText((L["MSG_CLICK_START"] or "Click 'Start' to begin monitoring (auto-selects common events)\nOr click 'Select Events' to customize"))
-    tab.logText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local ROW_HEIGHT = Addon.Constants and Addon.Constants.EVENT_VIEWER_ROW_HEIGHT or 14
+    local COL_EVENT = Addon.Constants and Addon.Constants.EVENT_VIEWER_COL_EVENT or 280
+    local COL_ARGS = Addon.Constants and Addon.Constants.EVENT_VIEWER_COL_ARGS or 260
+    local MAX_EVENT_ROWS = 201  -- 200 events + 1 truncation row
 
-    tab.startBtn = startBtn
-    tab.stopBtn = stopBtn
+    tab.emptyStateText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    tab.emptyStateText:SetPoint("CENTER", content, "CENTER", 0, 0)
+    tab.emptyStateText:SetJustifyH("CENTER")
+    tab.emptyStateText:SetText(L["MSG_CLICK_START"] or "Click 'Start' to begin monitoring (auto-selects common events)\nOr click 'Select Events' to customize")
+    tab.emptyStateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    tab.rowPool = {}
+    for i = 1, MAX_EVENT_ROWS do
+        local row = CreateFrame("Frame", nil, content)
+        row:SetHeight(ROW_HEIGHT)
+        row:SetPoint("TOPLEFT", content, "TOPLEFT", 2, -(i - 1) * ROW_HEIGHT)
+        row:SetPoint("RIGHT", content, "RIGHT", -2, 0)
+
+        row.eventCol = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.eventCol:SetPoint("LEFT", row, "LEFT", 0, 0)
+        row.eventCol:SetJustifyH("LEFT")
+        row.eventCol:SetWordWrap(false)
+
+        row.argsCol = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.argsCol:SetPoint("LEFT", row, "LEFT", COL_EVENT, 0)
+        row.argsCol:SetJustifyH("LEFT")
+        row.argsCol:SetWordWrap(false)
+
+        row.countCol = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.countCol:SetPoint("LEFT", row, "LEFT", COL_EVENT + COL_ARGS, 0)
+        row.countCol:SetJustifyH("LEFT")
+        row.countCol:SetWordWrap(false)
+
+        row:Hide()
+        tab.rowPool[i] = row
+    end
+
+    tab.content = content
+    tab.ROW_HEIGHT = ROW_HEIGHT
+    tab.COL_EVENT = COL_EVENT
+    tab.COL_ARGS = COL_ARGS
+
+    -- CreateScrollFrame sets content height to 1; set minimum so empty state is visible
+    content:SetHeight(math.max(100, panel:GetHeight() or 100))
+
+    tab.startStopBtn = startStopBtn
+    tab.pauseBtn = pauseBtn
     tab.firehoseBtn = firehoseBtn
     tab.filterBox = filterBox
     tab.scroll = scroll
 
-    stopBtn:Disable()
+    pauseBtn:Disable()
+
+    -- Hook OnLeave so correct styling persists: CreateButton's OnLeave always sets BTN_NORMAL,
+    -- which overwrites our active state. Re-apply state-based styling.
+    startStopBtn:HookScript("OnLeave", function(self)
+        if Addon.EventMonitor and Addon.EventMonitor.monitoring then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        else
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end)
+    pauseBtn:HookScript("OnLeave", function(self)
+        if Addon.EventMonitor and Addon.EventMonitor.monitoring then
+            if Addon.EventMonitor.paused then
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            else
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+        end
+    end)
 
     Addon.EventMonitorTab = tab
     return tab
@@ -924,8 +956,9 @@ function UI:CreateLuaConsoleTab(parent)
     countLabel:SetText((Addon.L and Addon.L["LABEL_ERRORS"] or "Errors:") .. " 0")
     countLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local soundCheck = CreateFrame("CheckButton", nil, tab, "UICheckButtonTemplate")
-    soundCheck:SetSize(22, 22)
+    local soundCheck = OneWoW_GUI:CreateCheckbox(tab, {
+        label = Addon.L and Addon.L["ERR_PLAY_ALERT"] or "Play Alert",
+    })
     soundCheck:SetPoint("LEFT", countLabel, "RIGHT", 15, 0)
     soundCheck:SetChecked(Addon.db and Addon.db.errorDB and Addon.db.errorDB.playSound or false)
     soundCheck:SetScript("OnClick", function(self)
@@ -934,25 +967,18 @@ function UI:CreateLuaConsoleTab(parent)
         end
     end)
 
-    local soundLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    soundLabel:SetPoint("LEFT", soundCheck, "RIGHT", 2, 0)
-    soundLabel:SetText(Addon.L and Addon.L["ERR_PLAY_ALERT"] or "Play Alert")
-    soundLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local listPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    local listPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 250 })
+    listPanel:ClearAllPoints()
     listPanel:SetPoint("TOPLEFT", clearBtn, "BOTTOMLEFT", 0, -5)
     listPanel:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -5, 0)
     listPanel:SetHeight(250)
     StyleContentPanel(listPanel)
 
-    local listScroll = CreateFrame("ScrollFrame", nil, listPanel, "UIPanelScrollFrameTemplate")
+    local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(listPanel, { name = "ErrorLoggerListScroll" })
+    listScroll:ClearAllPoints()
     listScroll:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 4, -4)
     listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -14, 4)
-    OneWoW_GUI:StyleScrollBar(listScroll, { container = listPanel })
-
-    local listContent = CreateFrame("Frame", nil, listScroll)
-    listContent:SetHeight(1)
-    listScroll:SetScrollChild(listContent)
 
     listScroll:HookScript("OnSizeChanged", function(self, w)
         listContent:SetWidth(w)
@@ -960,40 +986,33 @@ function UI:CreateLuaConsoleTab(parent)
 
     tab.errorButtons = {}
     for i = 1, 100 do
-        local btn = CreateFrame("Button", nil, listContent)
-        btn:SetHeight(20)
+        local btn = OneWoW_GUI:CreateListRowBasic(listContent, {
+            height = 20,
+            label = "",
+            onClick = function(self)
+                if Addon.ErrorLogger and self.errorData then
+                    Addon.ErrorLogger:ShowErrorDetails(self.errorData)
+                end
+            end,
+        })
+        btn:ClearAllPoints()
         btn:SetPoint("TOPLEFT", listContent, "TOPLEFT", 2, -(i-1) * 20 - 2)
         btn:SetPoint("RIGHT", listContent, "RIGHT", 0, 0)
-        btn:SetNormalFontObject(GameFontNormalSmall)
-        btn:SetHighlightFontObject(GameFontHighlightSmall)
-
-        btn.bg = btn:CreateTexture(nil, "BACKGROUND")
-        btn.bg:SetAllPoints()
-        btn.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        btn.bg:SetAlpha(0.3)
-
-        btn:SetScript("OnClick", function(self)
-            if Addon.ErrorLogger and self.errorData then
-                Addon.ErrorLogger:ShowErrorDetails(self.errorData)
-            end
-        end)
+        btn.label:SetFontObject(GameFontNormalSmall)
 
         tab.errorButtons[i] = btn
     end
 
-    local detailsPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    local detailsPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+    detailsPanel:ClearAllPoints()
     detailsPanel:SetPoint("TOPLEFT", listPanel, "BOTTOMLEFT", 0, -5)
     detailsPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 35)
     StyleContentPanel(detailsPanel)
 
-    local detailsScroll = CreateFrame("ScrollFrame", nil, detailsPanel, "UIPanelScrollFrameTemplate")
+    local detailsScroll, detailsContent = OneWoW_GUI:CreateScrollFrame(detailsPanel, { name = "ErrorLoggerDetailsScroll" })
+    detailsScroll:ClearAllPoints()
     detailsScroll:SetPoint("TOPLEFT", detailsPanel, "TOPLEFT", 4, -4)
     detailsScroll:SetPoint("BOTTOMRIGHT", detailsPanel, "BOTTOMRIGHT", -14, 4)
-    OneWoW_GUI:StyleScrollBar(detailsScroll, { container = detailsPanel })
-
-    local detailsContent = CreateFrame("Frame", nil, detailsScroll)
-    detailsContent:SetHeight(1)
-    detailsScroll:SetScrollChild(detailsContent)
 
     detailsScroll:HookScript("OnSizeChanged", function(self, w)
         detailsContent:SetWidth(w)
@@ -1039,13 +1058,15 @@ function UI:CreateTextureTab(parent)
         tinsert(tab.filteredList, name)
     end
 
-    local searchBox = CreateFrame("EditBox", nil, tab, "InputBoxTemplate")
-    searchBox:SetSize(200, 22)
+    local searchBox = OneWoW_GUI:CreateEditBox(tab, {
+        width = 200,
+        height = 22,
+        placeholderText = Addon.L and Addon.L["LABEL_FILTER"] or "Filter...",
+        onTextChanged = function(text)
+            UI:FilterAtlases(text)
+        end,
+    })
     searchBox:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
-    searchBox:SetAutoFocus(false)
-    searchBox:SetScript("OnTextChanged", function(self)
-        UI:FilterAtlases(self:GetText())
-    end)
 
     local favsBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_FAVORITES"] or "Favorites", width = 100, height = 22 })
     favsBtn:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
@@ -1059,20 +1080,17 @@ function UI:CreateTextureTab(parent)
         UI:ToggleBookmark()
     end)
 
-    local leftPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    local leftPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 320, height = 100 })
+    leftPanel:ClearAllPoints()
     leftPanel:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -5)
     leftPanel:SetPoint("BOTTOM", tab, "BOTTOM", 0, 5)
     leftPanel:SetWidth(320)
     StyleContentPanel(leftPanel)
 
-    local listScroll = CreateFrame("ScrollFrame", nil, leftPanel, "UIPanelScrollFrameTemplate")
+    local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "TextureTabListScroll" })
+    listScroll:ClearAllPoints()
     listScroll:SetPoint("TOPLEFT", 4, -4)
     listScroll:SetPoint("BOTTOMRIGHT", -14, 4)
-    OneWoW_GUI:StyleScrollBar(listScroll, { container = leftPanel })
-
-    local listContent = CreateFrame("Frame", nil, listScroll)
-    listContent:SetHeight(1)
-    listScroll:SetScrollChild(listContent)
 
     listScroll:HookScript("OnSizeChanged", function(self, w)
         listContent:SetWidth(w)
@@ -1096,7 +1114,8 @@ function UI:CreateTextureTab(parent)
         tab.listButtons[i] = btn
     end
 
-    local rightPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+    rightPanel:ClearAllPoints()
     rightPanel:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 5, 0)
     rightPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
     StyleContentPanel(rightPanel)
@@ -1143,19 +1162,16 @@ function UI:CreateTextureTab(parent)
     border:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     border:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local infoPanel = CreateFrame("Frame", nil, rightPanel, "BackdropTemplate")
+    local infoPanel = OneWoW_GUI:CreateFrame(rightPanel, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+    infoPanel:ClearAllPoints()
     infoPanel:SetPoint("TOPLEFT", previewBg, "BOTTOMLEFT", 0, -10)
     infoPanel:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -5, 35)
     StyleContentPanel(infoPanel)
 
-    local infoScroll = CreateFrame("ScrollFrame", nil, infoPanel, "UIPanelScrollFrameTemplate")
+    local infoScroll, infoContent = OneWoW_GUI:CreateScrollFrame(infoPanel, { name = "TextureTabInfoScroll" })
+    infoScroll:ClearAllPoints()
     infoScroll:SetPoint("TOPLEFT", 4, -4)
     infoScroll:SetPoint("BOTTOMRIGHT", -14, 4)
-    OneWoW_GUI:StyleScrollBar(infoScroll, { container = infoPanel })
-
-    local infoContent = CreateFrame("Frame", nil, infoScroll)
-    infoContent:SetHeight(1)
-    infoScroll:SetScrollChild(infoContent)
 
     infoScroll:HookScript("OnSizeChanged", function(self, w)
         infoContent:SetWidth(w)
@@ -1294,7 +1310,6 @@ end
 function UI:SelectAtlas(atlasName)
     local tab = Addon.TextureBrowserTab
     if not tab then return end
-    local L = Addon.L or {}
 
     for i, name in ipairs(tab.filteredList) do
         if name == atlasName then
@@ -1424,41 +1439,47 @@ function UI:CreateLayoutTab(parent)
     sizeLabel:SetText((Addon.L and Addon.L["LABEL_GRID_SIZE"] or "Grid Size:") .. " 50")
     sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local sizeSlider = CreateFrame("Slider", nil, tab, "OptionsSliderTemplate")
-    sizeSlider:SetPoint("TOPLEFT", sizeLabel, "BOTTOMLEFT", 0, -5)
-    sizeSlider:SetWidth(200)
-    sizeSlider:SetMinMaxValues(10, 200)
-    sizeSlider:SetValueStep(10)
-    sizeSlider:SetValue(50)
-    sizeSlider:SetScript("OnValueChanged", function(self, value)
-        sizeLabel:SetText((Addon.L and Addon.L["LABEL_GRID_SIZE"] or "Grid Size:") .. " " .. value)
-        tab.gridSize = value
-        if tab.gridActive then
-            UI:UpdateGridOverlay()
-        end
-    end)
+    local sizeContainer = OneWoW_GUI:CreateSlider(tab, {
+        minVal = 10,
+        maxVal = 200,
+        step = 10,
+        currentVal = 50,
+        width = 200,
+        fmt = "%.0f",
+        onChange = function(value)
+            sizeLabel:SetText((Addon.L and Addon.L["LABEL_GRID_SIZE"] or "Grid Size:") .. " " .. value)
+            tab.gridSize = value
+            if tab.gridActive then
+                UI:UpdateGridOverlay()
+            end
+        end,
+    })
+    sizeContainer:SetPoint("TOPLEFT", sizeLabel, "BOTTOMLEFT", 0, -5)
 
     local opacityLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    opacityLabel:SetPoint("TOPLEFT", sizeSlider, "BOTTOMLEFT", 0, -15)
+    opacityLabel:SetPoint("TOPLEFT", sizeContainer, "BOTTOMLEFT", 0, -15)
     opacityLabel:SetText((Addon.L and Addon.L["LABEL_OPACITY"] or "Opacity:") .. " 0.3")
     opacityLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local opacitySlider = CreateFrame("Slider", nil, tab, "OptionsSliderTemplate")
-    opacitySlider:SetPoint("TOPLEFT", opacityLabel, "BOTTOMLEFT", 0, -5)
-    opacitySlider:SetWidth(200)
-    opacitySlider:SetMinMaxValues(0.1, 1.0)
-    opacitySlider:SetValueStep(0.1)
-    opacitySlider:SetValue(0.3)
-    opacitySlider:SetScript("OnValueChanged", function(self, value)
-        opacityLabel:SetText((Addon.L and Addon.L["LABEL_OPACITY"] or "Opacity:") .. " " .. string.format("%.1f", value))
-        tab.gridOpacity = value
-        if tab.gridActive then
-            UI:UpdateGridOverlay()
-        end
-    end)
+    local opacityContainer = OneWoW_GUI:CreateSlider(tab, {
+        minVal = 0.1,
+        maxVal = 1.0,
+        step = 0.1,
+        currentVal = 0.3,
+        width = 200,
+        fmt = "%.1f",
+        onChange = function(value)
+            opacityLabel:SetText((Addon.L and Addon.L["LABEL_OPACITY"] or "Opacity:") .. " " .. string.format("%.1f", value))
+            tab.gridOpacity = value
+            if tab.gridActive then
+                UI:UpdateGridOverlay()
+            end
+        end,
+    })
+    opacityContainer:SetPoint("TOPLEFT", opacityLabel, "BOTTOMLEFT", 0, -5)
 
     local centerBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_TOGGLE_CENTER"] or "Toggle Center Lines", width = 150, height = 25 })
-    centerBtn:SetPoint("TOPLEFT", opacitySlider, "BOTTOMLEFT", 0, -20)
+    centerBtn:SetPoint("TOPLEFT", opacityContainer, "BOTTOMLEFT", 0, -20)
     centerBtn:SetScript("OnClick", function()
         UI:ToggleCenterLines()
     end)
@@ -1582,8 +1603,11 @@ end
 
 function UI:ShowEventSelector()
     if not self.eventSelector then
-        local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-        frame:SetSize(600, 500)
+        local frame = OneWoW_GUI:CreateFrame(UIParent, {
+            width = 600,
+            height = 500,
+            backdrop = BACKDROP_INNER_NO_INSETS,
+        })
         frame:SetPoint("CENTER")
         frame:SetFrameStrata("DIALOG")
         frame:SetMovable(true)
@@ -1591,9 +1615,6 @@ function UI:ShowEventSelector()
         frame:RegisterForDrag("LeftButton")
         frame:SetScript("OnDragStart", frame.StartMoving)
         frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-        frame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         frame.title:SetPoint("TOP", 0, -5)
@@ -1628,20 +1649,23 @@ function UI:ShowEventSelector()
         searchLabel:SetText((Addon.L and Addon.L["LABEL_FILTER"] or "Search:"))
         searchLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local searchBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
-        searchBox:SetSize(180, 25)
+        local searchBox = OneWoW_GUI:CreateEditBox(frame, {
+            width = 180,
+            height = 25,
+            placeholderText = Addon.L and Addon.L["LABEL_FILTER"] or "Filter...",
+            onTextChanged = function()
+                UI:UpdateEventSelector()
+            end,
+        })
         searchBox:SetPoint("LEFT", searchLabel, "RIGHT", 5, 0)
-        searchBox:SetAutoFocus(false)
-        searchBox:SetScript("OnTextChanged", function()
-            UI:UpdateEventSelector()
-        end)
 
         local eventCount = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         eventCount:SetPoint("TOPLEFT", commonBtn, "BOTTOMLEFT", 0, -8)
         eventCount:SetText((Addon.L and Addon.L["LABEL_SELECTED"] or "Selected:") .. " 0")
         eventCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local leftPanel = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+        local leftPanel = OneWoW_GUI:CreateFrame(frame, { backdrop = BACKDROP_INNER_NO_INSETS, width = 280, height = 100 })
+        leftPanel:ClearAllPoints()
         leftPanel:SetPoint("TOPLEFT", eventCount, "BOTTOMLEFT", 0, -8)
         leftPanel:SetPoint("BOTTOM", frame, "BOTTOM", 0, 40)
         leftPanel:SetWidth(280)
@@ -1652,21 +1676,19 @@ function UI:ShowEventSelector()
         leftTitle:SetText(Addon.L and Addon.L["LABEL_EVENT_LIST"] or "Event List")
         leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local leftScroll = CreateFrame("ScrollFrame", nil, leftPanel, "UIPanelScrollFrameTemplate")
+        local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "EventSelectorLeftScroll" })
+        leftScroll:ClearAllPoints()
         leftScroll:SetPoint("TOPLEFT", 4, -25)
         leftScroll:SetPoint("BOTTOMRIGHT", -14, 4)
-        OneWoW_GUI:StyleScrollBar(leftScroll, { container = leftPanel })
-
-        local leftContent = CreateFrame("Frame", nil, leftScroll)
-        leftContent:SetHeight(1)
-        leftScroll:SetScrollChild(leftContent)
 
         leftScroll:HookScript("OnSizeChanged", function(self, w)
             leftContent:SetWidth(w)
         end)
 
         frame.eventButtons = {}
-        for i = 1, 150 do
+        local commonCount = #Addon.EventMonitor:GetCommonEvents()
+        local poolSize = commonCount + (Addon.Constants.EVENT_SELECTOR_CUSTOM_BUFFER or 100)
+        for i = 1, poolSize do
             local btn = CreateFrame("CheckButton", nil, leftContent, "UICheckButtonTemplate")
             btn:SetSize(20, 20)
             btn:SetPoint("TOPLEFT", 5, -(i-1) * 22 - 5)
@@ -1686,7 +1708,8 @@ function UI:ShowEventSelector()
             frame.eventButtons[i] = btn
         end
 
-        local rightPanel = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+        local rightPanel = OneWoW_GUI:CreateFrame(frame, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+        rightPanel:ClearAllPoints()
         rightPanel:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 5, 0)
         rightPanel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 40)
         StyleContentPanel(rightPanel)
@@ -1701,18 +1724,21 @@ function UI:ShowEventSelector()
         customLabel:SetText(Addon.L and Addon.L["LABEL_ENTER_EVENT"] or "Enter event name:")
         customLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local customBox = CreateFrame("EditBox", nil, rightPanel, "InputBoxTemplate")
-        customBox:SetSize(250, 25)
+        local customBox = OneWoW_GUI:CreateEditBox(rightPanel, {
+            width = 180,
+            height = 25,
+            placeholderText = Addon.L and Addon.L["LABEL_ENTER_EVENT"] or "Event name...",
+        })
         customBox:SetPoint("TOPLEFT", customLabel, "BOTTOMLEFT", 0, -5)
-        customBox:SetAutoFocus(false)
 
-        local addBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_ADD_EVENT"] or "Add", width = 80, height = 25 })
+        local addBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = Addon.L and Addon.L["BTN_ADD_EVENT"] or "Add", height = 25 })
         addBtn:SetPoint("LEFT", customBox, "RIGHT", 5, 0)
         addBtn:SetScript("OnClick", function()
-            local eventName = customBox:GetText()
+            local eventName = customBox:GetSearchText()
             if eventName and eventName ~= "" then
                 Addon.EventMonitor:ToggleEvent(eventName:upper())
-                customBox:SetText("")
+                customBox:SetText(customBox.placeholderText or "")
+                customBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 UI:UpdateEventSelector()
                 Addon:Print((Addon.L and Addon.L["MSG_ADDED_EVENT"] or "Added event: {event}"):gsub("{event}", eventName:upper()))
             end
@@ -1756,7 +1782,7 @@ function UI:UpdateEventSelector()
     if not self.eventSelector then return end
 
     local frame = self.eventSelector
-    local searchText = frame.searchBox:GetText():upper()
+    local searchText = (frame.searchBox:GetSearchText() or ""):upper()
 
     local allEvents = {}
     for _, event in ipairs(Addon.EventMonitor:GetCommonEvents()) do
@@ -1808,7 +1834,6 @@ function UI:CreateMonitorTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local L = Addon.L or {}
     local Monitor = Addon.MonitorTab
 
     if Monitor then
@@ -1852,10 +1877,19 @@ function UI:CreateMonitorTab(parent)
     filterLabel:SetText(L["MON_LABEL_FILTER"] or "Filter:")
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local filterBox = CreateFrame("EditBox", nil, tab, "InputBoxTemplate")
-    filterBox:SetSize(150, 22)
+    local filterBox = OneWoW_GUI:CreateEditBox(tab, {
+        width = 150,
+        height = 22,
+        placeholderText = L["MON_LABEL_FILTER"] or "Filter...",
+        onTextChanged = function(text)
+            if Monitor then
+                Monitor:SetFilter(text)
+                Monitor:GetSortedList()
+                tab:RefreshList()
+            end
+        end,
+    })
     filterBox:SetPoint("LEFT", filterLabel, "RIGHT", 5, 0)
-    filterBox:SetAutoFocus(false)
 
     local hasCPU = Monitor and Monitor:IsCPUProfilingEnabled() or false
 
@@ -1932,19 +1966,16 @@ function UI:CreateMonitorTab(parent)
         if Monitor then Monitor:ToggleSort(3); Monitor:GetSortedList(); tab:RefreshList() end
     end)
 
-    local listPanel = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    local listPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+    listPanel:ClearAllPoints()
     listPanel:SetPoint("TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
     listPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 35)
     StyleContentPanel(listPanel)
 
-    local listScroll = CreateFrame("ScrollFrame", nil, listPanel, "UIPanelScrollFrameTemplate")
+    local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(listPanel, { name = "MonitorTabListScroll" })
+    listScroll:ClearAllPoints()
     listScroll:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 0, 0)
     listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -14, 0)
-    OneWoW_GUI:StyleScrollBar(listScroll, { container = listPanel })
-
-    local listContent = CreateFrame("Frame", nil, listScroll)
-    listContent:SetHeight(1)
-    listScroll:SetScrollChild(listContent)
 
     listScroll:HookScript("OnSizeChanged", function(self, w)
         listContent:SetWidth(w)
@@ -2128,14 +2159,6 @@ function UI:CreateMonitorTab(parent)
         end
     end)
 
-    filterBox:SetScript("OnTextChanged", function(self)
-        if Monitor then
-            Monitor:SetFilter(self:GetText())
-            Monitor:GetSortedList()
-            tab:RefreshList()
-        end
-    end)
-
     showOnLoadCheck:SetScript("OnClick", function(self)
         if Addon.db and Addon.db.monitor then
             Addon.db.monitor.showOnLoad = self:GetChecked() and true or false
@@ -2161,7 +2184,6 @@ function UI:CreateSettingsTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local L = Addon.L
     local yOffset = -10
 
     local splitContainer = CreateFrame("Frame", nil, tab, "BackdropTemplate")
@@ -2212,7 +2234,7 @@ function UI:CreateSettingsTab(parent)
     local langDropdown = CreateFrame("Button", nil, leftPanel, "BackdropTemplate")
     langDropdown:SetSize(190, 30)
     langDropdown:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -115)
-    langDropdown:SetBackdrop(backdrop)
+    langDropdown:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     langDropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     langDropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
@@ -2234,7 +2256,7 @@ function UI:CreateSettingsTab(parent)
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
         menu:SetSize(190, #LANGUAGES * 27 + 10)
         menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-        menu:SetBackdrop(backdrop)
+        menu:SetBackdrop(BACKDROP_INNER_NO_INSETS)
         menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
         menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         menu:EnableMouse(true)
@@ -2318,7 +2340,7 @@ function UI:CreateSettingsTab(parent)
     local themeDropdown = CreateFrame("Button", nil, rightPanel, "BackdropTemplate")
     themeDropdown:SetSize(210, 30)
     themeDropdown:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -115)
-    themeDropdown:SetBackdrop(backdrop)
+    themeDropdown:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     themeDropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     themeDropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
@@ -2345,7 +2367,7 @@ function UI:CreateSettingsTab(parent)
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
         menu:SetSize(240, 318)
         menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-        menu:SetBackdrop(backdrop)
+        menu:SetBackdrop(BACKDROP_INNER_NO_INSETS)
         menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
         menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         menu:EnableMouse(true)
@@ -2512,7 +2534,7 @@ function UI:CreateSettingsTab(parent)
     local mmIconDropdown = CreateFrame("Button", nil, mmRightPanel, "BackdropTemplate")
     mmIconDropdown:SetSize(190, 30)
     mmIconDropdown:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -70)
-    mmIconDropdown:SetBackdrop(backdrop)
+    mmIconDropdown:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     mmIconDropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     mmIconDropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
@@ -2539,7 +2561,7 @@ function UI:CreateSettingsTab(parent)
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
         menu:SetSize(190, 88)
         menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
-        menu:SetBackdrop(backdrop)
+        menu:SetBackdrop(BACKDROP_INNER_NO_INSETS)
         menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
         menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         menu:EnableMouse(true)

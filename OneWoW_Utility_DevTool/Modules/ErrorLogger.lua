@@ -194,7 +194,7 @@ function ErrorLogger:UpdateUI()
                 shortMsg = shortMsg:sub(1, 57) .. "..."
             end
 
-            btn:SetText(string.format("[%s] %s - %s%s", err.time or "?", sessionLabel, shortMsg, countStr))
+            btn.label:SetText(string.format("[%s] %s - %s%s", err.time or "?", sessionLabel, shortMsg, countStr))
             btn.errorData = err
             btn:Show()
         else

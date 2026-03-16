@@ -44,10 +44,12 @@ ColorToolsTab.commonColors = {
 function ColorToolsTab:Initialize(parent)
     self.parent = parent
 
-    local pickerPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local pickerPanel = OneWoW_GUI:CreateFrame(parent, {
+        backdrop = C.BACKDROP_INNER_NO_INSETS,
+        width = 280,
+        height = 350,
+    })
     pickerPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -10)
-    pickerPanel:SetSize(280, 350)
-    pickerPanel:SetBackdrop(C.BACKDROP_INNER_NO_INSETS)
     pickerPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     pickerPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
@@ -116,10 +118,14 @@ function ColorToolsTab:Initialize(parent)
         ColorToolsTab:CopyColorCode()
     end)
 
-    local classColorsPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local classColorsPanel = OneWoW_GUI:CreateFrame(parent, {
+        backdrop = C.BACKDROP_INNER_NO_INSETS,
+        width = 200,
+        height = 200,
+    })
+    classColorsPanel:ClearAllPoints()
     classColorsPanel:SetPoint("TOPLEFT", pickerPanel, "TOPRIGHT", 5, 0)
     classColorsPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -10, 10)
-    classColorsPanel:SetBackdrop(C.BACKDROP_INNER_NO_INSETS)
     classColorsPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     classColorsPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
@@ -128,14 +134,15 @@ function ColorToolsTab:Initialize(parent)
     classColorsPanel.title:SetText("Class Colors")
     classColorsPanel.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local scrollFrame = CreateFrame("ScrollFrame", nil, classColorsPanel, "UIPanelScrollFrameTemplate")
+    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(classColorsPanel, { name = "ColorToolsScroll" })
+    scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", classColorsPanel.title, "BOTTOMLEFT", 0, -10)
     scrollFrame:SetPoint("BOTTOMRIGHT", classColorsPanel, "BOTTOMRIGHT", -25, 10)
-    OneWoW_GUI:StyleScrollBar(scrollFrame, { container = classColorsPanel })
-
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollFrame:SetScrollChild(scrollChild)
     scrollChild:SetWidth(math.max(250, (parent:GetWidth() or 0) - 320))
+
+    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+        scrollChild:SetWidth(math.max(250, w))
+    end)
 
     self.scrollFrame = scrollFrame
     self.scrollChild = scrollChild

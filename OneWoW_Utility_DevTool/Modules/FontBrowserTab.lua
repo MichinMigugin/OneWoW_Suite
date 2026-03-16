@@ -1,7 +1,12 @@
 local AddonName, Addon = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 local FontBrowserTab = {}
 Addon.FontBrowserTab = FontBrowserTab
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 FontBrowserTab.fonts = {
     {name = "GameFontNormal", object = GameFontNormal},
@@ -30,95 +35,67 @@ FontBrowserTab.fonts = {
 function FontBrowserTab:Initialize(parent)
     self.parent = parent
 
-    local searchBox = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
-    searchBox:SetSize(300, 25)
+    local searchBox = OneWoW_GUI:CreateEditBox(parent, {
+        width = 300,
+        height = 25,
+        placeholderText = "Search fonts...",
+        onTextChanged = function(text)
+            FontBrowserTab:FilterFonts(text)
+        end,
+    })
     searchBox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10)
-    searchBox:SetAutoFocus(false)
 
-    searchBox.placeholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisable")
-    searchBox.placeholder:SetPoint("LEFT", searchBox, "LEFT", 5, 0)
-    searchBox.placeholder:SetText("Search fonts...")
-
-    searchBox:SetScript("OnEditFocusGained", function(self)
-        self.placeholder:Hide()
-    end)
-
-    searchBox:SetScript("OnEditFocusLost", function(self)
-        if self:GetText() == "" then
-            self.placeholder:Show()
-        end
-    end)
-
-    searchBox:SetScript("OnTextChanged", function(self)
-        FontBrowserTab:FilterFonts(self:GetText())
-        if self:GetText() ~= "" then
-            self.placeholder:Hide()
-        elseif not self:HasFocus() then
-            self.placeholder:Show()
-        end
-    end)
-
-    local bookmarkButton = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    bookmarkButton:SetSize(120, 25)
+    local bookmarkButton = OneWoW_GUI:CreateFitTextButton(parent, { text = "Bookmark", height = 25 })
     bookmarkButton:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
-    bookmarkButton:SetText("Bookmark")
     bookmarkButton:SetScript("OnClick", function()
         FontBrowserTab:ToggleBookmark()
     end)
 
-    local listScroll = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
-    listScroll:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -45)
-    listScroll:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 10, 10)
-    listScroll:SetWidth(350)
+    local listPanel = OneWoW_GUI:CreateFrame(parent, { backdrop = BACKDROP_INNER_NO_INSETS, width = 350, height = 200 })
+    listPanel:ClearAllPoints()
+    listPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -45)
+    listPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 10, 10)
+    listPanel:SetWidth(350)
+    listPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    listPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local listContent = CreateFrame("Frame", nil, listScroll)
-    listScroll:SetScrollChild(listContent)
-    listContent:SetSize(1, 1)
+    local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(listPanel, { name = "FontBrowserListScroll" })
+    listScroll:ClearAllPoints()
+    listScroll:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 4, -4)
+    listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -14, 4)
 
-    listContent.bg = listContent:CreateTexture(nil, "BACKGROUND")
-    listContent.bg:SetAllPoints()
-    listContent.bg:SetColorTexture(0.1, 0.1, 0.1, 0.9)
+    listScroll:HookScript("OnSizeChanged", function(self, w)
+        listContent:SetWidth(w)
+    end)
 
     self.listButtons = {}
     for i = 1, 25 do
-        local btn = CreateFrame("Button", nil, listContent)
-        btn:SetSize(330, 25)
-        btn:SetPoint("TOPLEFT", 5, -(i-1) * 25 - 5)
-        btn:SetNormalFontObject(GameFontNormalSmall)
-
-        btn.bg = btn:CreateTexture(nil, "BACKGROUND")
-        btn.bg:SetAllPoints()
-        btn.bg:SetColorTexture(0.2, 0.2, 0.2, 0.5)
-        btn.bg:Hide()
-
-        btn:SetScript("OnEnter", function(self)
-            self.bg:Show()
-        end)
-
-        btn:SetScript("OnLeave", function(self)
-            if not self.selected then
-                self.bg:Hide()
-            end
-        end)
-
-        btn:SetScript("OnClick", function(self)
-            FontBrowserTab:SelectFont(self.fontData)
-        end)
+        local btn = OneWoW_GUI:CreateListRowBasic(listContent, {
+            height = 25,
+            label = "",
+            onClick = function(self)
+                FontBrowserTab:SelectFont(self.fontData)
+            end,
+        })
+        btn:ClearAllPoints()
+        btn:SetPoint("TOPLEFT", listContent, "TOPLEFT", 5, -(i-1) * 25 - 5)
+        btn:SetPoint("RIGHT", listContent, "RIGHT", -5, 0)
+        btn.label:SetFontObject(GameFontNormalSmall)
 
         self.listButtons[i] = btn
     end
 
-    local previewPanel = CreateFrame("Frame", nil, parent)
-    previewPanel:SetPoint("TOPLEFT", listScroll, "TOPRIGHT", 10, 0)
+    local previewPanel = OneWoW_GUI:CreateFrame(parent, { backdrop = BACKDROP_INNER_NO_INSETS, width = 200, height = 200 })
+    previewPanel:ClearAllPoints()
+    previewPanel:SetPoint("TOPLEFT", listPanel, "TOPRIGHT", 10, 0)
     previewPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -10, 10)
-
-    previewPanel.bg = previewPanel:CreateTexture(nil, "BACKGROUND")
-    previewPanel.bg:SetAllPoints()
-    previewPanel.bg:SetColorTexture(0.15, 0.15, 0.15, 0.9)
+    previewPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    previewPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     previewPanel.title = previewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     previewPanel.title:SetPoint("TOP", 0, -10)
     previewPanel.title:SetText("Select a font to preview")
+    previewPanel.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     self.previewSmall = previewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     self.previewSmall:SetPoint("TOP", previewPanel.title, "BOTTOM", 0, -30)
@@ -140,11 +117,10 @@ function FontBrowserTab:Initialize(parent)
     self.infoText:SetWidth(previewPanel:GetWidth() - 40)
     self.infoText:SetJustifyH("LEFT")
     self.infoText:SetText("")
+    self.infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local copyButton = CreateFrame("Button", nil, previewPanel, "UIPanelButtonTemplate")
-    copyButton:SetSize(150, 25)
+    local copyButton = OneWoW_GUI:CreateFitTextButton(previewPanel, { text = "Copy Font Name", height = 25 })
     copyButton:SetPoint("TOP", self.infoText, "BOTTOM", 0, -20)
-    copyButton:SetText("Copy Font Name")
     copyButton:SetScript("OnClick", function()
         FontBrowserTab:CopyFontName()
     end)
@@ -175,17 +151,10 @@ function FontBrowserTab:UpdateList()
         local fontData = self.filteredFonts[i]
 
         if fontData then
-            btn:SetText(fontData.name)
+            btn.label:SetText(fontData.name)
             btn.fontData = fontData
+            btn:SetActive(fontData == self.currentFont)
             btn:Show()
-
-            if fontData == self.currentFont then
-                btn.selected = true
-                btn.bg:Show()
-            else
-                btn.selected = false
-                btn.bg:Hide()
-            end
         else
             btn:Hide()
         end

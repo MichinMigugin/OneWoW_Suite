@@ -61,6 +61,11 @@ function OneWoW_GUI:GetThemeColor(key)
     return GetThemeColor(key)
 end
 
+function OneWoW_GUI:WrapThemeColor(text, themeKey)
+    local r, g, b, a = GetThemeColor(themeKey)
+    return CreateColor(r or 1, g or 1, b or 1, a or 1):WrapTextInColorCode(text)
+end
+
 function OneWoW_GUI:GetSpacing(key)
     return GetSpacing(key)
 end

@@ -1,5 +1,8 @@
 local AddonName, Addon = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 local FramePicker = {}
 Addon.FramePicker = FramePicker
 
@@ -35,32 +38,27 @@ function FramePicker:Initialize()
 
     self.overlay:SetPropagateKeyboardInput(false)
 
-    local infoWindow = CreateFrame("Frame", "WoWNotesDevToolsPickerInfo", UIParent, "BasicFrameTemplateWithInset")
-    infoWindow:SetSize(450, 350)
+    local dialogResult = OneWoW_GUI:CreateDialog({
+        name = "WoWNotesDevToolsPickerInfo",
+        title = "ENTER/Click: Select | TAB: Cycle | ESC: Cancel | SHIFT: Move This",
+        width = 450,
+        height = 350,
+        strata = "TOOLTIP",
+        movable = true,
+        escClose = false,
+        showBrand = false,
+    })
+    local infoWindow = dialogResult.frame
+    infoWindow:ClearAllPoints()
     infoWindow:SetPoint("TOP", UIParent, "TOP", 0, -100)
-    infoWindow:SetFrameStrata("TOOLTIP")
-    infoWindow:SetMovable(true)
-    infoWindow:EnableMouse(true)
-    infoWindow:RegisterForDrag("LeftButton")
-    infoWindow:SetScript("OnDragStart", infoWindow.StartMoving)
-    infoWindow:SetScript("OnDragStop", infoWindow.StopMovingOrSizing)
     infoWindow:Hide()
 
-    if infoWindow.TitleBg then
-        infoWindow.TitleBg:SetHeight(30)
-        infoWindow.TitleBg:SetColorTexture(0.1, 0.5, 0.1, 1)
-    end
-
-    if infoWindow.TitleText then
-        infoWindow.TitleText:SetText("ENTER/Click: Select | TAB: Cycle | ESC: Cancel | SHIFT: Move This")
-    end
-
-    infoWindow.details = infoWindow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    infoWindow.details:SetPoint("TOPLEFT", infoWindow.Inset or infoWindow, "TOPLEFT", 10, -30)
-    infoWindow.details:SetPoint("TOPRIGHT", infoWindow.Inset or infoWindow, "TOPRIGHT", -10, -30)
+    infoWindow.details = dialogResult.contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    infoWindow.details:SetPoint("TOPLEFT", dialogResult.contentFrame, "TOPLEFT", 10, -10)
+    infoWindow.details:SetPoint("BOTTOMRIGHT", dialogResult.contentFrame, "BOTTOMRIGHT", -10, 10)
     infoWindow.details:SetJustifyH("LEFT")
     infoWindow.details:SetJustifyV("TOP")
-    infoWindow.details:SetTextColor(0, 1, 0)
+    infoWindow.details:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     infoWindow.details:SetText("Hover over a frame to see details...")
 
     self.infoWindow = infoWindow

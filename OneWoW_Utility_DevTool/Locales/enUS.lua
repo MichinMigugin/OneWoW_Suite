@@ -23,6 +23,7 @@ Addon.Locales["enUS"] = {
     ["LABEL_SEARCH"] = "Search",
     ["BTN_SEARCH"] = "Search",
     ["LABEL_FRAME_HIERARCHY"] = "Frame Hierarchy",
+    ["LABEL_FRAME_NAME"] = "Frame name...",
     ["BTN_COPY_HIERARCHY"] = "Copy All",
     ["LABEL_FRAME_DETAILS"] = "Frame Details",
     ["BTN_COPY_DETAILS"] = "Copy All",
@@ -44,6 +45,8 @@ Addon.Locales["enUS"] = {
     -- Event Monitor
     ["BTN_START"] = "Start",
     ["BTN_STOP"] = "Stop",
+    ["BTN_PAUSE"] = "Pause",
+    ["BTN_UNPAUSE"] = "Unpause",
     ["BTN_CLEAR"] = "Clear",
     ["BTN_SELECT_EVENTS"] = "Select Events",
     ["LABEL_FILTER"] = "Filter:",

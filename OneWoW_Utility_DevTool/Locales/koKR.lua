@@ -1,7 +1,175 @@
 local ADDON_NAME, Addon = ...
 
 Addon.Locales = Addon.Locales or {}
-Addon.Locales["koKR"] = {}
-for k in pairs(Addon.Locales["enUS"]) do
-    Addon.Locales["koKR"][k] = "TEST"
-end
+Addon.Locales["koKR"] = {
+    ["ADDON_TITLE"] = "DevTool",
+    ["ADDON_SUBTITLE"] = "프레임 검사기 및 개발 유틸리티",
+    ["LOADED"] = "v{version} 로드됨 - /devtools로 열기",
+
+    -- Commands
+    ["COMMAND_DEVTOOLS"] = "/devtools",
+    ["COMMAND_DT"] = "/dt",
+
+    -- Tab titles
+    ["TAB_FRAME"] = "프레임",
+    ["TAB_EVENTS"] = "이벤트",
+    ["TAB_LUA"] = "Lua",
+    ["TAB_TEXTURES"] = "텍스처",
+    ["TAB_COLORS"] = "색상",
+    ["TAB_LAYOUT"] = "레이아웃",
+
+    -- Frame Inspector
+    ["BTN_PICK_FRAME"] = "프레임 선택",
+    ["LABEL_SEARCH"] = "검색",
+    ["BTN_SEARCH"] = "검색",
+    ["LABEL_FRAME_HIERARCHY"] = "프레임 계층",
+    ["LABEL_FRAME_NAME"] = "프레임 이름...",
+    ["BTN_COPY_HIERARCHY"] = "전체 복사",
+    ["LABEL_FRAME_DETAILS"] = "프레임 세부정보",
+    ["BTN_COPY_DETAILS"] = "전체 복사",
+    ["LABEL_NO_FRAME"] = "선택된 프레임 없음",
+    ["LABEL_ANONYMOUS"] = "익명",
+    ["LABEL_UNKNOWN"] = "알 수 없음",
+    ["LABEL_NAME"] = "이름:",
+    ["LABEL_TYPE"] = "유형:",
+    ["LABEL_SHOWN"] = "표시:",
+    ["LABEL_MOUSE"] = "마우스:",
+    ["LABEL_SIZE"] = "크기:",
+    ["LABEL_STRATA"] = "층:",
+    ["LABEL_LEVEL"] = "레벨:",
+    ["LABEL_ANCHORS"] = "앵커:",
+    ["LABEL_YES"] = "예",
+    ["LABEL_NO"] = "아니오",
+    ["LABEL_CHILDREN"] = "자식:",
+
+    -- Event Monitor
+    ["BTN_START"] = "시작",
+    ["BTN_STOP"] = "중지",
+    ["BTN_PAUSE"] = "일시정지",
+    ["BTN_UNPAUSE"] = "재개",
+    ["BTN_CLEAR"] = "지우기",
+    ["BTN_SELECT_EVENTS"] = "이벤트 선택",
+    ["LABEL_FILTER"] = "필터:",
+    ["MSG_CLICK_START"] = "'시작'을 클릭하여 모니터링 시작 (일반 이벤트 자동 선택)\n또는 '이벤트 선택'을 클릭하여 사용자 지정",
+    ["MSG_GRID_ENABLED"] = "격자 활성화됨",
+    ["MSG_GRID_DISABLED"] = "격자 비활성화됨",
+    ["MSG_CENTER_LINES_ENABLED"] = "중심선 활성화됨",
+    ["MSG_CENTER_LINES_DISABLED"] = "중심선 비활성화됨",
+    ["MSG_COPIED"] = "클립보드에 복사됨: {text}",
+
+    -- Lua Console / Error Logger
+    ["LABEL_ERRORS"] = "오류:",
+    ["BTN_COPY_ERROR"] = "오류 복사",
+    ["LABEL_NO_ERROR"] = "선택된 오류 없음",
+    ["ERR_SESSION_CURRENT"] = "현재",
+    ["ERR_SESSION_CURRENT_FULL"] = "현재 세션",
+    ["ERR_SESSION_PREFIX"] = "세션",
+    ["ERR_DETAIL_TIME"] = "시간:",
+    ["ERR_DETAIL_SESSION"] = "세션:",
+    ["ERR_DETAIL_COUNT"] = "횟수:",
+    ["ERR_DETAIL_MESSAGE"] = "메시지:",
+    ["ERR_DETAIL_STACK"] = "스택 추적:",
+    ["ERR_DETAIL_LOCALS"] = "지역 변수:",
+    ["ERR_MSG_NONE_SELECTED"] = "선택된 오류 없음",
+    ["ERR_MSG_CLEARED"] = "오류 로그 지워짐",
+    ["ERR_PLAY_ALERT"] = "알림 재생",
+
+    -- Texture Browser
+    ["BTN_FAVORITES"] = "즐겨찾기",
+    ["BTN_BOOKMARK"] = "북마크",
+    ["BTN_ZOOM_IN"] = "+",
+    ["BTN_ZOOM_OUT"] = "-",
+    ["BTN_RESET_ZOOM"] = "초기화",
+    ["BTN_COPY_NAME"] = "이름 복사",
+    ["LABEL_ATLAS_LIST"] = "아틀라스 목록",
+    ["LABEL_CUSTOM_ATLAS"] = "사용자 지정 아틀라스",
+    ["MSG_SELECT_ATLAS"] = "먼저 아틀라스를 선택하세요",
+    ["MSG_NO_BOOKMARKS"] = "아직 북마크 없음",
+    ["MSG_REMOVED_BOOKMARK"] = "제거됨: {name}",
+    ["MSG_BOOKMARKED"] = "북마크됨: {name}",
+    ["LABEL_WIDTH"] = "너비:",
+    ["LABEL_HEIGHT"] = "높이:",
+    ["LABEL_FILE"] = "파일:",
+    ["LABEL_TEX_COORDS"] = "텍스처 좌표:",
+    ["LABEL_LEFT"] = "왼쪽:",
+    ["LABEL_RIGHT"] = "오른쪽:",
+    ["LABEL_TOP"] = "위:",
+    ["LABEL_BOTTOM"] = "아래:",
+    ["LABEL_TILES"] = "타일:",
+    ["LABEL_BOOKMARKED"] = "[북마크됨]",
+
+    -- Event Selector Dialog
+    ["DIALOG_TITLE_SELECT_EVENTS"] = "이벤트 모니터 - 이벤트 선택",
+    ["BTN_COMMON_EVENTS"] = "일반 이벤트",
+    ["BTN_SELECT_ALL"] = "전체 선택",
+    ["BTN_CLEAR_ALL"] = "전체 지우기",
+    ["LABEL_ENTER_EVENT"] = "이벤트 이름 입력:",
+    ["BTN_ADD_EVENT"] = "추가",
+    ["LABEL_EVENT_LIST"] = "이벤트 목록",
+    ["BTN_CLOSE"] = "닫기",
+    ["HELP_TEXT_EVENTS"] = "모니터링할 WoW 이벤트 이름을 입력하세요.\n\n일반 이벤트:\nPLAYER_ENTERING_WORLD\nZONE_CHANGED\nPLAYER_REGEN_DISABLED\nPLAYER_REGEN_ENABLED\nBAG_UPDATE\nUNIT_HEALTH\nCHAT_MSG_SAY\nADDON_LOADED\n\n더 많은 이벤트는 다음에서 찾을 수 있습니다:\nwarcraft.wiki.gg",
+
+    -- Layout Tools
+    ["LABEL_GRID_OVERLAY"] = "격자 오버레이",
+    ["BTN_TOGGLE_GRID"] = "격자 토글",
+    ["LABEL_GRID_SIZE"] = "격자 크기:",
+    ["LABEL_OPACITY"] = "불투명도:",
+    ["BTN_TOGGLE_CENTER"] = "중심선 토글",
+
+    -- Messages
+    ["MSG_ADDED_COMMON_EVENTS"] = "일반 이벤트 추가됨 (총 {count}개)",
+    ["MSG_SELECTED_ALL_EVENTS"] = "모든 이벤트 선택됨 (총 {count}개)",
+    ["MSG_CLEARED_ALL_EVENTS"] = "모든 이벤트 지워짐",
+    ["MSG_ADDED_EVENT"] = "이벤트 추가됨: {event}",
+    ["LABEL_SELECTED"] = "선택됨:",
+
+    -- Search Results
+    ["DIALOG_TITLE_SEARCH_RESULTS"] = "검색 결과",
+
+    -- Settings
+    ["SETTINGS_LANGUAGE_SELECTION"] = "언어",
+    ["SETTINGS_LANGUAGE_DESC"] = "선호하는 언어를 선택하세요. 변경 사항이 즉시 적용됩니다.",
+    ["SETTINGS_THEME_SELECTION"] = "테마 선택",
+    ["SETTINGS_THEME_DESC"] = "색상 테마를 선택하세요. 변경 사항이 즉시 적용됩니다.",
+    ["LANG_ENGLISH"] = "English",
+    ["LANG_KOREAN"] = "한국어",
+    ["LANG_SPANISH"] = "Español",
+    ["LANG_FRENCH"] = "Français",
+    ["LANG_RUSSIAN"] = "Русский",
+    ["LANG_GERMAN"] = "Deutsch",
+
+    -- Monitor
+    ["TAB_MONITOR"] = "모니터",
+    ["MON_BTN_PLAY"] = "재생",
+    ["MON_BTN_PAUSE"] = "일시정지",
+    ["MON_BTN_UPDATE"] = "업데이트",
+    ["MON_BTN_RESET"] = "초기화",
+    ["MON_LABEL_CPU_PROFILING"] = "CPU 프로파일링",
+    ["MON_LABEL_SHOW_ON_LOAD"] = "로드 시 표시",
+    ["MON_LABEL_FILTER"] = "필터:",
+    ["MON_HEADER_NAME"] = "애드온",
+    ["MON_HEADER_MEMORY"] = "메모리 (k)",
+    ["MON_HEADER_MEM_PCT"] = "메모리 %",
+    ["MON_HEADER_CPU"] = "CPU (ms/s)",
+    ["MON_HEADER_CPU_PCT"] = "CPU %",
+    ["MON_TOTALS_ADDONS"] = "애드온:",
+    ["MON_TOTALS_MEMORY"] = "메모리:",
+    ["MON_TOTALS_CPU"] = "CPU:",
+    ["MON_CPU_RELOAD_CONFIRM"] = "CPU 프로파일링 변경에는 UI 재시작이 필요합니다. 지금 재시작할까요?",
+    ["MON_MSG_RESET"] = "메모리 수집 및 CPU 사용량 초기화됨",
+    ["MON_MSG_CPU_ENABLED"] = "CPU 프로파일링 활성화됨 - UI 재시작 중",
+    ["MON_MSG_CPU_DISABLED"] = "CPU 프로파일링 비활성화됨 - UI 재시작 중",
+    ["MON_MSG_NO_DATA"] = "'업데이트' 또는 '재생'을 클릭하여 모니터링 시작",
+
+    -- Minimap
+    ["MINIMAP_TOOLTIP_HINT"] = "좌클릭으로 DevTool 토글",
+    ["MINIMAP_SECTION"] = "미니맵 버튼",
+    ["MINIMAP_SECTION_DESC"] = "미니맵 버튼 표시 또는 숨기기.",
+    ["MINIMAP_SHOW_BTN"] = "미니맵 버튼 표시",
+    ["MINIMAP_ICON_SECTION"] = "아이콘 테마",
+    ["MINIMAP_ICON_DESC"] = "미니맵 버튼과 제목 표시줄용 진영 아이콘을 선택하세요.",
+    ["MINIMAP_ICON_CURRENT"] = "현재 아이콘",
+    ["MINIMAP_ICON_HORDE"] = "호드",
+    ["MINIMAP_ICON_ALLIANCE"] = "얼라이언스",
+    ["MINIMAP_ICON_NEUTRAL"] = "중립",
+}

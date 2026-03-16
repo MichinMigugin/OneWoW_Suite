@@ -1,5 +1,8 @@
 local AddonName, Addon = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 local FrameTree = {}
 Addon.FrameTree = FrameTree
 
@@ -209,7 +212,7 @@ function FrameTree:Create(parentContent, scrollFrame)
 
         nf.bg = nf:CreateTexture(nil, "BACKGROUND")
         nf.bg:SetAllPoints()
-        nf.bg:SetColorTexture(0.2, 0.2, 0.2, 0.5)
+        nf.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         nf.bg:Hide()
 
         nf.toggle = nf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -305,7 +308,8 @@ function FrameTree:Create(parentContent, scrollFrame)
             nf.isSelectedStyle = isSelected
             if isSelected then
                 nf.bg:Show()
-                nf.label:SetText("|cFF00FF00" .. node.text .. "|r")
+                local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_ACCENT")
+                nf.label:SetText(string.format("|cFF%02x%02x%02x%s|r", math.floor(r * 255), math.floor(g * 255), math.floor(b * 255), node.text))
             else
                 nf.bg:Hide()
                 nf.label:SetText(node.text)

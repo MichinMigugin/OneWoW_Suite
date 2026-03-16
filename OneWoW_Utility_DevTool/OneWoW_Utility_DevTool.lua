@@ -54,7 +54,7 @@ local function getRegisteredEvents(frame)
     local hasOnEvent = frame.GetScript and pcall(frame.GetScript, frame, "OnEvent")
     if not hasOnEvent then return nil end
     local events = {}
-    for _, event in ipairs(Addon.COMMON_EVENTS) do
+    for _, event in ipairs(Addon.Constants.COMMON_EVENTS) do
         local ok, registered = pcall(frame.IsEventRegistered, frame, event)
         if ok and registered then
             tinsert(events, event)
@@ -66,7 +66,7 @@ end
 local function getScriptInfo(frame)
     if not frame.GetScript then return nil end
     local scripts = {}
-    for _, scriptName in ipairs(Addon.COMMON_SCRIPTS) do
+    for _, scriptName in ipairs(Addon.Constants.COMMON_SCRIPTS) do
         local ok, handler = pcall(frame.GetScript, frame, scriptName)
         if ok and handler then
             tinsert(scripts, scriptName)
