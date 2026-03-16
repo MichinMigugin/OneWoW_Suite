@@ -14,8 +14,6 @@ Integrations\OneWoWBags.lua
    
   if _G.OneWoW_Bags then                                                                                                     
                                                                   
-        local debugCount = 0
-
         local function UpdateItemButton(button, bagID, slotID)
                 if not button then return end
 
@@ -23,13 +21,6 @@ Integrations\OneWoWBags.lua
                         button.TLHOverlay = CreateFrame("Frame", nil, button)
                         button.TLHOverlay:SetAllPoints(button)
                         button.TLHOverlay:SetFrameLevel(button:GetFrameLevel() + 1)
-
-                        debugCount = debugCount + 1
-                        if debugCount <= 3 then
-                                local bw, bh = button:GetSize()
-                                local ow, oh = button.TLHOverlay:GetSize()
-                                print(string.format("TLH: Button=%fx%f, Overlay=%fx%f", bw, bh, ow, oh))
-                        end
                 end
 
                 local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)

@@ -47,11 +47,18 @@ function Mixin:OWB_FullUpdate()
 
     self:OWB_RefreshCooldown()
 
-    local isNew = false
-    if db and db.global and db.global.showNewItems and info and info.hyperlink then
-        isNew = C_NewItems.IsNewItem(self.owb_bagID, self.owb_slotID)
-    end
-    if not isNew then
+    local isBank = OneWoW_Bags.BagTypes and (OneWoW_Bags.BagTypes:IsBankBag(self.owb_bagID) or OneWoW_Bags.BagTypes:IsWarbandBag(self.owb_bagID))
+    local isGuild = self.owb_isGuildBank
+
+    if not isBank and not isGuild then
+        local isNew = false
+        if db and db.global and db.global.showNewItems and info and info.hyperlink then
+            isNew = C_NewItems.IsNewItem(self.owb_bagID, self.owb_slotID)
+        end
+        if not isNew then
+            OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
+        end
+    else
         OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
     end
 end

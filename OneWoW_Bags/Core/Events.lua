@@ -38,6 +38,30 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
             dirty[i] = true
         end
         OneWoW_Bags:ProcessBagUpdate(dirty)
+
+    elseif event == "BANKFRAME_OPENED" then
+        OneWoW_Bags:OnBankOpened()
+
+    elseif event == "BANKFRAME_CLOSED" then
+        OneWoW_Bags:OnBankClosed()
+
+    elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
+        local interactType = ...
+        if interactType == Enum.PlayerInteractionType.GuildBanker then
+            OneWoW_Bags:OnGuildBankOpened()
+        end
+
+    elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
+        local interactType = ...
+        if interactType == Enum.PlayerInteractionType.GuildBanker then
+            OneWoW_Bags:OnGuildBankClosed()
+        end
+
+    elseif event == "GUILDBANKBAGSLOTS_CHANGED" then
+        OneWoW_Bags:OnGuildBankSlotsChanged()
+
+    elseif event == "GUILDBANK_UPDATE_TABS" then
+        OneWoW_Bags:OnGuildBankTabsUpdated()
     end
 end)
 
@@ -49,6 +73,12 @@ function OneWoW_Bags.Events:RegisterBagEvents()
     eventFrame:RegisterEvent("PLAYER_LOGIN")
     eventFrame:RegisterEvent("QUEST_ACCEPTED")
     eventFrame:RegisterEvent("QUEST_REMOVED")
+    eventFrame:RegisterEvent("BANKFRAME_OPENED")
+    eventFrame:RegisterEvent("BANKFRAME_CLOSED")
+    eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
+    eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
+    eventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
+    eventFrame:RegisterEvent("GUILDBANK_UPDATE_TABS")
 end
 
 function OneWoW_Bags.Events:UnregisterBagEvents()
