@@ -33,6 +33,17 @@ local defaults = {
         disabledCategories = {},
         windowHeight = nil,
         showEmptySlots = true,
+        enableBankUI = true,
+        bankViewMode = "tabs",
+        bankWindowHeight = nil,
+        bankWindowPosition = nil,
+        bankShowWarband = false,
+        collapsedBankSections = {},
+        guildBankViewMode = "tabs",
+        guildBankWindowHeight = nil,
+        guildBankWindowPosition = nil,
+        guildBankSelectedTab = nil,
+        collapsedGuildBankSections = {},
     },
     char = {}
 }
@@ -158,5 +169,21 @@ function OneWoW_Bags:InitializeDatabase()
 
     if self.db.global.showEmptySlots == nil then
         self.db.global.showEmptySlots = true
+    end
+
+    if self.db.global.enableBankUI == nil then
+        self.db.global.enableBankUI = true
+    end
+
+    if not self.db.global.bankViewMode then
+        self.db.global.bankViewMode = "tabs"
+    end
+
+    if self.db.global.bankShowWarband == nil then
+        self.db.global.bankShowWarband = false
+    end
+
+    if not self.db.global.collapsedBankSections then
+        self.db.global.collapsedBankSections = {}
     end
 end

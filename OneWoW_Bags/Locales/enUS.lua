@@ -170,6 +170,28 @@ OneWoW_Bags.Locales["enUS"] = {
     ["POPUP_RENAME"] = "Rename",
     ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
     ["SORT"] = "Sort",
+
+    ["BANK_TITLE"] = "Personal Bank",
+    ["BANK_WARBAND_TITLE"] = "Warband Bank",
+    ["BANK_VIEW_TABS"] = "Tabs",
+    ["BANK_VIEW_LIST"] = "List",
+    ["BANK_SEARCH_PLACEHOLDER"] = "Search bank...",
+    ["BANK_FREE_SLOTS_FORMAT"] = "%d/%d slots",
+    ["BANK_DEPOSIT_REAGENTS"] = "Deposit Reagents",
+    ["BANK_SORT_DEFAULT"] = "Cleanup",
+    ["BANK_WARBAND"] = "Warband",
+    ["BANK_PERSONAL"] = "Bank",
+    ["BANK_TAB"] = "Tab %d",
+    ["BANK_TAB_EMPTY"] = "Empty Tab",
+    ["BANK_TAB_LOCKED"] = "Locked",
+    ["BANK_PURCHASE_TAB"] = "Purchase Tab",
+    ["BANK_NOT_AT_BANK"] = "You must be at a bank to view this.",
+    ["SETTING_ENABLE_BANK"] = "Enable Bank UI",
+
+    ["GUILD_BANK_TITLE"] = "Guild Bank",
+    ["GUILD_BANK_TAB"] = "Tab %d",
+    ["GUILD_BANK_SEARCH_PLACEHOLDER"] = "Search guild bank...",
+    ["GUILD_BANK_NO_ACCESS"] = "No access",
 }
 
 OneWoW_Bags.L = {}

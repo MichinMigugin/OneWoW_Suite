@@ -1,6 +1,6 @@
 ## Interface: 120001, 120005
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Bags|r
-## Version: R7.2603.0100
+## Version: R6.2603.1622
 ## Notes: Unified bag interface for World of Warcraft. Part of the OneWoW Suite.
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
@@ -42,7 +42,11 @@ Data\Categories.lua
 Modules\ItemPool.lua
 Modules\ItemButton.lua
 Modules\BagSet.lua
+Modules\BankSet.lua
 Modules\CategoryManager.lua
+Modules\BankCategoryManager.lua
+Modules\GuildBankSet.lua
+Modules\GuildBankCategoryManager.lua
 
 # Integrations
 Integrations\OneWoWBagsIntegration.lua
@@ -51,13 +55,23 @@ Integrations\OneWoWBagsIntegration.lua
 Views\ListView.lua
 Views\CategoryView.lua
 Views\BagView.lua
+Views\BankTabView.lua
+Views\BankListView.lua
+Views\GuildBankTabView.lua
+Views\GuildBankListView.lua
 
 # GUI
 GUI\InfoBar.lua
 GUI\BagsBar.lua
+GUI\BankInfoBar.lua
+GUI\BankBagsBar.lua
 GUI\CategoryManager.lua
 GUI\Settings.lua
 GUI\MainWindow.lua
+GUI\BankWindow.lua
+GUI\GuildBankInfoBar.lua
+GUI\GuildBankBagsBar.lua
+GUI\GuildBankWindow.lua
 GUI\Minimap.lua
 
 # Main

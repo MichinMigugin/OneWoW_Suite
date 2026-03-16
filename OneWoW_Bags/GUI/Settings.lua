@@ -119,6 +119,14 @@ function Settings:Create()
         cbLock:SetScript("OnClick", function(self)
             db.global.locked = self:GetChecked()
         end)
+        bagYOffset = bagYOffset - 28
+
+        local cbBank = OneWoW_GUI:CreateCheckbox(bagSettingsContainer, { label = L["SETTING_ENABLE_BANK"] })
+        cbBank:SetPoint("TOPLEFT", 10, bagYOffset)
+        cbBank:SetChecked(db.global.enableBankUI)
+        cbBank:SetScript("OnClick", function(self)
+            db.global.enableBankUI = self:GetChecked()
+        end)
         bagYOffset = bagYOffset - 35
 
         local sizeLabel = bagSettingsContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
