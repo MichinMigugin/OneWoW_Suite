@@ -6,14 +6,35 @@ local BagsBar = OneWoW_Bags.BagsBar
 local bagsBarFrame = nil
 local bagButtons = {}
 local eventFrame = nil
+local OneWoW_GUI = OneWoW_Bags.GUILib
 
 local ROW1_TRACKER_MAX = 2
 local ROW2_HEIGHT = 28
 
+local function T(key)
+    if OneWoW_GUI then
+        return OneWoW_GUI:GetThemeColor(key)
+    end
+    if OneWoW_Bags.Constants and OneWoW_Bags.Constants.THEME and OneWoW_Bags.Constants.THEME[key] then
+        return unpack(OneWoW_Bags.Constants.THEME[key])
+    end
+    return 0.5, 0.5, 0.5, 1.0
+end
+
+local function S(key)
+    if OneWoW_GUI then
+        return OneWoW_GUI:GetSpacing(key)
+    end
+    if OneWoW_Bags.Constants and OneWoW_Bags.Constants.SPACING then
+        return OneWoW_Bags.Constants.SPACING[key] or 8
+    end
+    return 8
+end
+
 StaticPopupDialogs["ONEWOW_BAGS_ADD_TRACKER"] = {
     text = "",
-    button1 = "Add",
-    button2 = "Cancel",
+    button1 = OneWoW_Bags.L["POPUP_ADD"] or "Add",
+    button2 = OneWoW_Bags.L["POPUP_CANCEL"] or "Cancel",
     hasEditBox = true,
     OnShow = function(self)
         self.Text:SetText(OneWoW_Bags.L["TRACKER_ADD_ID"])
@@ -64,21 +85,19 @@ function BagsBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
 
     local Constants = OneWoW_Bags.Constants
-    local GUI = OneWoW_Bags.GUI
     local L = OneWoW_Bags.L
     local C = Constants.GUI
-    local T = GUI.GetThemeColor
-    local S = GUI.GetSpacing
+    local BACKDROP = OneWoW_GUI and OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS or {
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    }
 
     bagsBarFrame = CreateFrame("Frame", "OneWoW_BagsBar", parent, "BackdropTemplate")
     bagsBarFrame:SetHeight(C.BAGSBAR_HEIGHT)
     bagsBarFrame:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
     bagsBarFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    bagsBarFrame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    bagsBarFrame:SetBackdrop(BACKDROP)
     bagsBarFrame:SetBackdropColor(T("BG_TERTIARY"))
     bagsBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -92,7 +111,7 @@ function BagsBar:Create(parent)
     row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
     row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
     row2Frame:SetHeight(ROW2_HEIGHT)
-    row2Frame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    row2Frame:SetBackdrop(BACKDROP)
     row2Frame:SetBackdropColor(T("BG_SECONDARY"))
     row2Frame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
     row2Frame:Hide()
@@ -129,8 +148,22 @@ function BagsBar:Create(parent)
     goldText:SetText(FormatGold(GetMoney()))
     bagsBarFrame.goldText = goldText
 
-    local sortBtn = GUI:CreateButton(nil, row1Frame, L["SORT"] or "Sort", 100, 22)
-    sortBtn:AutoFit(12)
+    local sortBtn
+    if OneWoW_GUI then
+        sortBtn = OneWoW_GUI:CreateFitTextButton(row1Frame, { text = L["SORT"], height = 22 })
+    else
+        sortBtn = CreateFrame("Button", nil, row1Frame, "BackdropTemplate")
+        sortBtn:SetSize(100, 22)
+        sortBtn:SetBackdrop(BACKDROP)
+        sortBtn:SetBackdropColor(T("BTN_NORMAL"))
+        sortBtn:SetBackdropBorderColor(T("BTN_BORDER"))
+        sortBtn.text = sortBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        sortBtn.text:SetPoint("CENTER")
+        sortBtn.text:SetText(L["SORT"])
+        sortBtn.text:SetTextColor(T("TEXT_PRIMARY"))
+        local tw = sortBtn.text:GetStringWidth()
+        sortBtn:SetWidth(tw + 12)
+    end
     sortBtn:SetPoint("RIGHT", row1Frame, "RIGHT", -S("SM"), 0)
     sortBtn:SetScript("OnClick", function()
         C_Container.SortBags()
@@ -142,12 +175,17 @@ function BagsBar:Create(parent)
     freeSlots:SetTextColor(T("TEXT_SECONDARY"))
     bagsBarFrame.freeSlots = freeSlots
 
-    local addTrackerBtn = CreateFrame("Button", nil, row1Frame)
-    addTrackerBtn:SetSize(20, 20)
+    local addTrackerBtn
+    if OneWoW_GUI then
+        addTrackerBtn = OneWoW_GUI:CreateButton(row1Frame, { text = "+", width = 20, height = 20 })
+    else
+        addTrackerBtn = CreateFrame("Button", nil, row1Frame)
+        addTrackerBtn:SetSize(20, 20)
+        addTrackerBtn:SetNormalTexture("Interface\\Buttons\\UI-PlusButton-Up")
+        addTrackerBtn:SetPushedTexture("Interface\\Buttons\\UI-PlusButton-Down")
+        addTrackerBtn:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight", "ADD")
+    end
     addTrackerBtn:SetPoint("RIGHT", freeSlots, "LEFT", -S("SM"), 0)
-    addTrackerBtn:SetNormalTexture("Interface\\Buttons\\UI-PlusButton-Up")
-    addTrackerBtn:SetPushedTexture("Interface\\Buttons\\UI-PlusButton-Down")
-    addTrackerBtn:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight", "ADD")
     addTrackerBtn:SetScript("OnClick", function()
         StaticPopup_Show("ONEWOW_BAGS_ADD_TRACKER")
     end)
@@ -187,45 +225,81 @@ function BagsBar:Create(parent)
 end
 
 function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
-    local T = OneWoW_Bags.GUI.GetThemeColor
     local L = OneWoW_Bags.L
     local db = OneWoW_Bags.db
 
     local tf = CreateFrame("Button", nil, parentFrame)
     tf:SetSize(65, 24)
 
-    local icon = tf:CreateTexture(nil, "ARTWORK")
-    icon:SetSize(18, 18)
-    icon:SetPoint("LEFT", tf, "LEFT", 2, 0)
-    tf.icon = icon
+    local iconTexture
+    local countValue = 0
+    if entry.type == "item" then
+        countValue = C_Item.GetItemCount(entry.id, true)
+        iconTexture = C_Item.GetItemIconByID(entry.id)
+    elseif entry.type == "currency" then
+        local info = C_CurrencyInfo.GetCurrencyInfo(entry.id)
+        if info then
+            iconTexture = info.iconFileID
+            countValue = info.quantity
+        end
+    end
+
+    if OneWoW_GUI then
+        local iconFrame = OneWoW_GUI:CreateSkinnedIcon(tf, {
+            size = 18,
+            preset = "clean",
+            iconTexture = iconTexture,
+        })
+        iconFrame:SetPoint("LEFT", tf, "LEFT", 2, 0)
+        tf.iconFrame = iconFrame
+    else
+        local icon = tf:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(18, 18)
+        icon:SetPoint("LEFT", tf, "LEFT", 2, 0)
+        if iconTexture then icon:SetTexture(iconTexture) end
+        tf.icon = icon
+    end
 
     local countText = tf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    countText:SetPoint("LEFT", icon, "RIGHT", 3, 0)
+    local iconAnchor = tf.iconFrame or tf.icon
+    countText:SetPoint("LEFT", iconAnchor, "RIGHT", 3, 0)
     countText:SetTextColor(T("TEXT_PRIMARY"))
+    countText:SetText("x" .. countValue)
     tf.countText = countText
 
-    local removeBtn = CreateFrame("Button", nil, tf)
-    removeBtn:SetSize(12, 12)
-    removeBtn:SetPoint("TOPRIGHT", tf, "TOPRIGHT", 0, 0)
-    removeBtn:SetNormalTexture("Interface\\Buttons\\UI-MinusButton-Up")
-    removeBtn:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight", "ADD")
     local capturedIdx = index
-    removeBtn:SetScript("OnClick", function()
-        table.remove(db.global.trackedCurrencies, capturedIdx)
-        BagsBar:UpdateTrackers()
-    end)
-    removeBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["TRACKER_REMOVE"], 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    removeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    if OneWoW_GUI then
+        local removeBtn = OneWoW_GUI:CreateButton(tf, { text = "X", width = 12, height = 12 })
+        removeBtn:SetPoint("TOPRIGHT", tf, "TOPRIGHT", 0, 0)
+        removeBtn:SetScript("OnClick", function()
+            table.remove(db.global.trackedCurrencies, capturedIdx)
+            BagsBar:UpdateTrackers()
+        end)
+        removeBtn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(L["TRACKER_REMOVE"], 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        removeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    else
+        local removeBtn = CreateFrame("Button", nil, tf)
+        removeBtn:SetSize(12, 12)
+        removeBtn:SetPoint("TOPRIGHT", tf, "TOPRIGHT", 0, 0)
+        removeBtn:SetNormalTexture("Interface\\Buttons\\UI-MinusButton-Up")
+        removeBtn:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight", "ADD")
+        removeBtn:SetScript("OnClick", function()
+            table.remove(db.global.trackedCurrencies, capturedIdx)
+            BagsBar:UpdateTrackers()
+        end)
+        removeBtn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(L["TRACKER_REMOVE"], 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        removeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
 
     if entry.type == "item" then
-        local count = C_Item.GetItemCount(entry.id, true)
-        local iconTex = C_Item.GetItemIconByID(entry.id)
-        if iconTex then icon:SetTexture(iconTex) end
-        countText:SetText("x" .. count)
         tf:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetItemByID(entry.id)
@@ -233,11 +307,6 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
         end)
         tf:SetScript("OnLeave", function() GameTooltip:Hide() end)
     elseif entry.type == "currency" then
-        local info = C_CurrencyInfo.GetCurrencyInfo(entry.id)
-        if info then
-            icon:SetTexture(info.iconFileID)
-            countText:SetText("x" .. info.quantity)
-        end
         tf:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetCurrencyByID(entry.id)
@@ -298,42 +367,35 @@ function BagsBar:UpdateTrackers()
 end
 
 function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
-    local T = OneWoW_Bags.GUI.GetThemeColor
     local L = OneWoW_Bags.L
 
-    local btn = CreateFrame("Button", "OneWoW_BagSlot" .. bagIndex, parent)
-    btn:SetSize(26, 26)
-    btn:SetPoint("LEFT", parent, "LEFT", xOffset, 0)
-    btn.bagIndex = bagIndex
-
-    local icon = btn:CreateTexture(nil, "ARTWORK")
-    icon:SetAllPoints()
-    btn.icon = icon
-
-    local border = btn:CreateTexture(nil, "OVERLAY")
-    border:SetSize(30, 30)
-    border:SetPoint("CENTER")
-    border:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    border:SetTexCoord(0.218, 0.718, 0.234, 0.781)
-    border:SetBlendMode("ADD")
-    border:SetVertexColor(T("ACCENT_MUTED"))
-    btn.border = border
-
+    local iconTexture
     if bagIndex == 0 then
-        icon:SetTexture("Interface\\Buttons\\Button-Backpack-Up")
+        iconTexture = "Interface\\Buttons\\Button-Backpack-Up"
     else
         local invSlotID = C_Container.ContainerIDToInventoryID(bagIndex)
         if invSlotID then
-            local texID = GetInventoryItemTexture("player", invSlotID)
-            if texID then
-                icon:SetTexture(texID)
-            else
-                icon:SetTexture("Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag")
-            end
+            iconTexture = GetInventoryItemTexture("player", invSlotID) or "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
         else
-            icon:SetTexture("Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag")
+            iconTexture = "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
         end
     end
+
+    local btn = CreateFrame("Button", "OneWoW_BagSlot" .. bagIndex, parent)
+    btn:SetSize(26, 26)
+
+    local icon = btn:CreateTexture(nil, "ARTWORK")
+    icon:SetAllPoints()
+    icon:SetTexture(iconTexture)
+    btn.icon = icon
+
+    if OneWoW_GUI then
+        btn._skinnedIcon = icon
+        OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
+    end
+
+    btn:SetPoint("LEFT", parent, "LEFT", xOffset, 0)
+    btn.bagIndex = bagIndex
 
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -349,9 +411,9 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
         end
         if selected == self.bagIndex then
             GameTooltip:AddLine(L["BAG_FILTER_ACTIVE"]:format(L["BAG_" .. self.bagIndex] or ("Bag " .. self.bagIndex)), 0.5, 1, 0.5, true)
-            GameTooltip:AddLine("Click to show all bags", 0.7, 0.7, 0.7, true)
+            GameTooltip:AddLine(L["BAG_SHOW_ALL"], 0.7, 0.7, 0.7, true)
         else
-            GameTooltip:AddLine("Click to show only this bag", 0.7, 0.7, 0.7, true)
+            GameTooltip:AddLine(L["BAG_SHOW_ONLY"], 0.7, 0.7, 0.7, true)
         end
         GameTooltip:Show()
     end)
@@ -382,11 +444,16 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
 end
 
 function BagsBar:UpdateBagHighlights()
-    local T = OneWoW_Bags.GUI.GetThemeColor
     local db = OneWoW_Bags.db
     local selected = db and db.global.selectedBag
     for idx, btn in pairs(bagButtons) do
-        if btn.border then
+        if btn._skinBorder then
+            if selected ~= nil and selected == idx then
+                btn._skinBorder:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+            else
+                btn._skinBorder:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+            end
+        elseif btn.border then
             if selected ~= nil and selected == idx then
                 btn.border:SetVertexColor(T("ACCENT_PRIMARY"))
             else
@@ -398,14 +465,14 @@ end
 
 function BagsBar:UpdateIcons()
     for bagIndex, btn in pairs(bagButtons) do
-        if bagIndex > 0 and btn.icon then
+        if bagIndex > 0 then
             local invSlotID = C_Container.ContainerIDToInventoryID(bagIndex)
             if invSlotID then
-                local texID = GetInventoryItemTexture("player", invSlotID)
-                if texID then
+                local texID = GetInventoryItemTexture("player", invSlotID) or "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
+                if OneWoW_GUI and btn._skinnedIcon then
+                    OneWoW_GUI:UpdateIconTexture(btn, texID)
+                elseif btn.icon then
                     btn.icon:SetTexture(texID)
-                else
-                    btn.icon:SetTexture("Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag")
                 end
             end
         end
@@ -415,7 +482,7 @@ end
 function BagsBar:UpdateFreeSlots(free, total)
     if not bagsBarFrame or not bagsBarFrame.freeSlots then return end
     local L = OneWoW_Bags.L
-    local text = string.format(L["FREE_SLOTS_FORMAT"] or "%d/%d", free, total)
+    local text = string.format(L["FREE_SLOTS_FORMAT"], free, total)
     bagsBarFrame.freeSlots:SetText(text)
 end
 

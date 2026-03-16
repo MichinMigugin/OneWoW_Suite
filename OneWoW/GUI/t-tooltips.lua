@@ -1190,6 +1190,624 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     split.UpdateDetailThumb()
 end
 
+local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
+    local yOffset = -10
+
+    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    titleLabel:SetJustifyH("LEFT")
+    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+
+    local div = dsc:CreateTexture(nil, "ARTWORK")
+    div:SetHeight(1)
+    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    yOffset = yOffset - 12
+
+    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    descLabel:SetJustifyH("LEFT")
+    descLabel:SetWordWrap(true)
+    descLabel:SetSpacing(3)
+    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - descLabel:GetStringHeight() - 16
+
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local allRefreshFuncs = {}
+
+    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
+    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
+    if isEnabled then
+        statusValue:SetText(L["FEATURE_ENABLED"])
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    else
+        statusValue:SetText(L["FEATURE_DISABLED"])
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+    end
+
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
+    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
+    toggleBtn:SetScript("OnClick", function(self)
+        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
+        nowEnabled = not nowEnabled
+        if nowEnabled then
+            statusValue:SetText(L["FEATURE_ENABLED"])
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            statusValue:SetText(L["FEATURE_DISABLED"])
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
+        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
+        if selectedRow and selectedRow.dot then
+            selectedRow.dot:SetStatus(nowEnabled)
+        end
+        for _, refreshFn in ipairs(allRefreshFuncs) do
+            refreshFn(nowEnabled)
+        end
+    end)
+
+    yOffset = yOffset - 30 - 14
+
+    if not OneWoW.db.global.settings.tooltips.talentmods then
+        OneWoW.db.global.settings.tooltips.talentmods = {}
+    end
+    local tmSettings = OneWoW.db.global.settings.tooltips.talentmods
+
+    local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_TALENTMODS_SECTION_SETTINGS"],
+        yOffset = yOffset,
+    })
+    yOffset = section1.bottomY - 6
+
+    local sec1Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sec1Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    sec1Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    sec1Desc:SetJustifyH("LEFT")
+    sec1Desc:SetWordWrap(true)
+    sec1Desc:SetSpacing(2)
+    sec1Desc:SetText(L["TIPS_TALENTMODS_SECTION_SETTINGS_DESC"])
+    sec1Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - sec1Desc:GetStringHeight() - 10
+
+    local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_TALENTMODS_INCLUDE_ACTIVE"],
+        description = L["TIPS_TALENTMODS_INCLUDE_ACTIVE_DESC"],
+        value = tmSettings.includeActive == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            tmSettings.includeActive = newVal
+        end,
+    })
+    yOffset = newY1
+    table.insert(allRefreshFuncs, function(enabled) refresh1(enabled, tmSettings.includeActive == true) end)
+
+    local newY2, refresh2 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_TALENTMODS_HIDE_COMBAT"],
+        description = L["TIPS_TALENTMODS_HIDE_COMBAT_DESC"],
+        value = tmSettings.hideInCombat == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            tmSettings.hideInCombat = newVal
+        end,
+    })
+    yOffset = newY2
+    table.insert(allRefreshFuncs, function(enabled) refresh2(enabled, tmSettings.hideInCombat == true) end)
+
+    dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
+    split.UpdateDetailThumb()
+end
+
+local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
+    local yOffset = -10
+
+    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    titleLabel:SetJustifyH("LEFT")
+    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+
+    local div = dsc:CreateTexture(nil, "ARTWORK")
+    div:SetHeight(1)
+    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    yOffset = yOffset - 12
+
+    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    descLabel:SetJustifyH("LEFT")
+    descLabel:SetWordWrap(true)
+    descLabel:SetSpacing(3)
+    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - descLabel:GetStringHeight() - 16
+
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local allRefreshFuncs = {}
+
+    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
+    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
+    if isEnabled then
+        statusValue:SetText(L["FEATURE_ENABLED"])
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    else
+        statusValue:SetText(L["FEATURE_DISABLED"])
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+    end
+
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
+    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
+    toggleBtn:SetScript("OnClick", function(self)
+        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
+        nowEnabled = not nowEnabled
+        if nowEnabled then
+            statusValue:SetText(L["FEATURE_ENABLED"])
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            statusValue:SetText(L["FEATURE_DISABLED"])
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
+        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
+        if selectedRow and selectedRow.dot then
+            selectedRow.dot:SetStatus(nowEnabled)
+        end
+        for _, refreshFn in ipairs(allRefreshFuncs) do
+            refreshFn(nowEnabled)
+        end
+    end)
+
+    yOffset = yOffset - 30 - 14
+
+    if not OneWoW.db.global.settings.tooltips.enhancements then
+        OneWoW.db.global.settings.tooltips.enhancements = {}
+    end
+    local enhSettings = OneWoW.db.global.settings.tooltips.enhancements
+
+    local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_ENHANCEMENTS_SECTION_APPEARANCE"],
+        yOffset = yOffset,
+    })
+    yOffset = section1.bottomY - 6
+
+    local sec1Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sec1Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    sec1Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    sec1Desc:SetJustifyH("LEFT")
+    sec1Desc:SetWordWrap(true)
+    sec1Desc:SetSpacing(2)
+    sec1Desc:SetText(L["TIPS_ENHANCEMENTS_SECTION_APPEARANCE_DESC"])
+    sec1Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - sec1Desc:GetStringHeight() - 10
+
+    local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_HIDE_HEALTHBAR"],
+        description = L["TIPS_ENHANCEMENTS_HIDE_HEALTHBAR_DESC"],
+        value = enhSettings.hideHealthbar == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.hideHealthbar = newVal
+        end,
+    })
+    yOffset = newY1
+    table.insert(allRefreshFuncs, function(enabled) refresh1(enabled, enhSettings.hideHealthbar == true) end)
+
+    local newY2, refresh2 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_HIDE_COMBAT"],
+        description = L["TIPS_ENHANCEMENTS_HIDE_COMBAT_DESC"],
+        value = enhSettings.hideInCombat == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.hideInCombat = newVal
+        end,
+    })
+    yOffset = newY2
+    table.insert(allRefreshFuncs, function(enabled) refresh2(enabled, enhSettings.hideInCombat == true) end)
+
+    local newY3, refresh3 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_SCALE"],
+        createContent = function(container)
+            local currentScale = enhSettings.tooltipScale or 100
+            local slider = OneWoW_GUI:CreateSlider(container, {
+                minVal = 50,
+                maxVal = 250,
+                step = 5,
+                currentVal = currentScale,
+                width = 280,
+                fmt = "%d%%",
+                onChange = function(val)
+                    enhSettings.tooltipScale = val
+                end,
+            })
+            slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+            return slider, 36
+        end,
+        value = enhSettings.scaleEnabled == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.scaleEnabled = newVal
+        end,
+    })
+    yOffset = newY3
+    table.insert(allRefreshFuncs, function(enabled) refresh3(enabled, enhSettings.scaleEnabled == true) end)
+
+    local newY4, refresh4 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_ANCHOR"],
+        createContent = function(container)
+            local currentAnchor = enhSettings.anchorPosition or "ANCHOR_CURSOR_RIGHT"
+            local displayText = L["TIPS_ENHANCEMENTS_ANCHOR_RIGHT"]
+            if currentAnchor == "ANCHOR_CURSOR_LEFT" then displayText = L["TIPS_ENHANCEMENTS_ANCHOR_LEFT"]
+            elseif currentAnchor == "ANCHOR_CURSOR" then displayText = L["TIPS_ENHANCEMENTS_ANCHOR_CENTER"] end
+
+            local dropdown, dropdownText = OneWoW_GUI:CreateDropdown(container, {
+                width = 160,
+                height = 26,
+                text = displayText,
+            })
+            dropdown:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+
+            OneWoW_GUI:AttachFilterMenu(dropdown, {
+                searchable = false,
+                buildItems = function()
+                    return {
+                        { value = "ANCHOR_CURSOR_LEFT", text = L["TIPS_ENHANCEMENTS_ANCHOR_LEFT"] },
+                        { value = "ANCHOR_CURSOR", text = L["TIPS_ENHANCEMENTS_ANCHOR_CENTER"] },
+                        { value = "ANCHOR_CURSOR_RIGHT", text = L["TIPS_ENHANCEMENTS_ANCHOR_RIGHT"] },
+                    }
+                end,
+                onSelect = function(value, text)
+                    enhSettings.anchorPosition = value
+                    dropdownText:SetText(text)
+                end,
+                getActiveValue = function() return enhSettings.anchorPosition or "ANCHOR_CURSOR_RIGHT" end,
+            })
+            return dropdown, 26
+        end,
+        value = enhSettings.anchorEnabled == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.anchorEnabled = newVal
+        end,
+    })
+    yOffset = newY4
+    table.insert(allRefreshFuncs, function(enabled) refresh4(enabled, enhSettings.anchorEnabled == true) end)
+
+    local section2 = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_ENHANCEMENTS_SECTION_PLAYERINFO"],
+        yOffset = yOffset,
+    })
+    yOffset = section2.bottomY - 6
+
+    local sec2Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sec2Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    sec2Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    sec2Desc:SetJustifyH("LEFT")
+    sec2Desc:SetWordWrap(true)
+    sec2Desc:SetSpacing(2)
+    sec2Desc:SetText(L["TIPS_ENHANCEMENTS_SECTION_PLAYERINFO_DESC"])
+    sec2Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - sec2Desc:GetStringHeight() - 10
+
+    local newY5, refresh5 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_CLASS_COLORS"],
+        description = L["TIPS_ENHANCEMENTS_CLASS_COLORS_DESC"],
+        value = enhSettings.classColorNames == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.classColorNames = newVal
+        end,
+    })
+    yOffset = newY5
+    table.insert(allRefreshFuncs, function(enabled) refresh5(enabled, enhSettings.classColorNames == true) end)
+
+    local newY6, refresh6 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_GUILD_RANK"],
+        description = L["TIPS_ENHANCEMENTS_GUILD_RANK_DESC"],
+        value = enhSettings.guildRank == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.guildRank = newVal
+        end,
+    })
+    yOffset = newY6
+    table.insert(allRefreshFuncs, function(enabled) refresh6(enabled, enhSettings.guildRank == true) end)
+
+    local newY7, refresh7 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_PLAYER_TARGET"],
+        description = L["TIPS_ENHANCEMENTS_PLAYER_TARGET_DESC"],
+        value = enhSettings.playerTarget == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.playerTarget = newVal
+        end,
+    })
+    yOffset = newY7
+    table.insert(allRefreshFuncs, function(enabled) refresh7(enabled, enhSettings.playerTarget == true) end)
+
+    local newY8, refresh8 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_MYTHIC_SCORE"],
+        description = L["TIPS_ENHANCEMENTS_MYTHIC_SCORE_DESC"],
+        value = enhSettings.mythicScore == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.mythicScore = newVal
+        end,
+    })
+    yOffset = newY8
+    table.insert(allRefreshFuncs, function(enabled) refresh8(enabled, enhSettings.mythicScore == true) end)
+
+    local newY9, refresh9 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_HIDE_SERVER"],
+        description = L["TIPS_ENHANCEMENTS_HIDE_SERVER_DESC"],
+        value = enhSettings.hideServerName == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.hideServerName = newVal
+        end,
+    })
+    yOffset = newY9
+    table.insert(allRefreshFuncs, function(enabled) refresh9(enabled, enhSettings.hideServerName == true) end)
+
+    local newY10, refresh10 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_HIDE_TITLES"],
+        description = L["TIPS_ENHANCEMENTS_HIDE_TITLES_DESC"],
+        value = enhSettings.hideTitles == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.hideTitles = newVal
+        end,
+    })
+    yOffset = newY10
+    table.insert(allRefreshFuncs, function(enabled) refresh10(enabled, enhSettings.hideTitles == true) end)
+
+    local newY11, refresh11 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_REMOVE_PVP_TAG"],
+        description = L["TIPS_ENHANCEMENTS_REMOVE_PVP_TAG_DESC"],
+        value = enhSettings.removePvpTag == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.removePvpTag = newVal
+        end,
+    })
+    yOffset = newY11
+    table.insert(allRefreshFuncs, function(enabled) refresh11(enabled, enhSettings.removePvpTag == true) end)
+
+    local section3 = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_ENHANCEMENTS_SECTION_OPACITY"],
+        yOffset = yOffset,
+    })
+    yOffset = section3.bottomY - 6
+
+    local sec3Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sec3Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    sec3Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    sec3Desc:SetJustifyH("LEFT")
+    sec3Desc:SetWordWrap(true)
+    sec3Desc:SetSpacing(2)
+    sec3Desc:SetText(L["TIPS_ENHANCEMENTS_SECTION_OPACITY_DESC"])
+    sec3Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - sec3Desc:GetStringHeight() - 10
+
+    local newY12, refresh12 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_BORDER_OPACITY"],
+        createContent = function(container)
+            local currentVal = enhSettings.borderOpacity or 100
+            local slider = OneWoW_GUI:CreateSlider(container, {
+                minVal = 0,
+                maxVal = 100,
+                step = 5,
+                currentVal = currentVal,
+                width = 280,
+                fmt = "%d%%",
+                onChange = function(val)
+                    enhSettings.borderOpacity = val
+                end,
+            })
+            slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+            return slider, 36
+        end,
+        value = enhSettings.borderOpacityEnabled == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.borderOpacityEnabled = newVal
+        end,
+    })
+    yOffset = newY12
+    table.insert(allRefreshFuncs, function(enabled) refresh12(enabled, enhSettings.borderOpacityEnabled == true) end)
+
+    local newY13, refresh13 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_BG_OPACITY"],
+        createContent = function(container)
+            local currentVal = enhSettings.bgOpacity or 100
+            local slider = OneWoW_GUI:CreateSlider(container, {
+                minVal = 0,
+                maxVal = 100,
+                step = 5,
+                currentVal = currentVal,
+                width = 280,
+                fmt = "%d%%",
+                onChange = function(val)
+                    enhSettings.bgOpacity = val
+                end,
+            })
+            slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+            return slider, 36
+        end,
+        value = enhSettings.bgOpacityEnabled == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.bgOpacityEnabled = newVal
+        end,
+    })
+    yOffset = newY13
+    table.insert(allRefreshFuncs, function(enabled) refresh13(enabled, enhSettings.bgOpacityEnabled == true) end)
+
+    local section4 = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_ENHANCEMENTS_SECTION_UNITCOLORS"],
+        yOffset = yOffset,
+    })
+    yOffset = section4.bottomY - 6
+
+    local sec4Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sec4Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    sec4Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    sec4Desc:SetJustifyH("LEFT")
+    sec4Desc:SetWordWrap(true)
+    sec4Desc:SetSpacing(2)
+    sec4Desc:SetText(L["TIPS_ENHANCEMENTS_SECTION_UNITCOLORS_DESC"])
+    sec4Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - sec4Desc:GetStringHeight() - 10
+
+    local function CreateColorSwatch(parent, colorKey, defaultR, defaultG, defaultB)
+        local c = enhSettings[colorKey] or { r = defaultR, g = defaultG, b = defaultB }
+        if not enhSettings[colorKey] then enhSettings[colorKey] = c end
+
+        local swatch = CreateFrame("Button", nil, parent, "BackdropTemplate")
+        swatch:SetSize(24, 24)
+        swatch:SetBackdrop({ bgFile = "Interface\\ChatFrame\\ChatFrameBackground", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 8, insets = { left = 1, right = 1, top = 1, bottom = 1 } })
+        swatch:SetBackdropColor(c.r, c.g, c.b, 1)
+        swatch:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+
+        swatch:SetScript("OnClick", function()
+            ColorPickerFrame:SetupColorPickerAndShow({
+                r = c.r, g = c.g, b = c.b,
+                swatchFunc = function()
+                    local r, g, b = ColorPickerFrame:GetColorRGB()
+                    c.r, c.g, c.b = r, g, b
+                    enhSettings[colorKey] = c
+                    swatch:SetBackdropColor(r, g, b, 1)
+                end,
+                cancelFunc = function(prev)
+                    if prev then
+                        c.r, c.g, c.b = prev.r, prev.g, prev.b
+                        enhSettings[colorKey] = c
+                        swatch:SetBackdropColor(prev.r, prev.g, prev.b, 1)
+                    end
+                end,
+            })
+        end)
+
+        return swatch
+    end
+
+    local newY14, refresh14 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_COLOR_PARTY"],
+        createContent = function(container)
+            local descFs = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+            descFs:SetPoint("RIGHT", container, "RIGHT", -34, 0)
+            descFs:SetJustifyH("LEFT")
+            descFs:SetWordWrap(true)
+            descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_PARTY_DESC"])
+            descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            local swatch = CreateColorSwatch(container, "partyColor", 0.5, 0.2, 0.65)
+            swatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+            local h = math.max(descFs:GetStringHeight(), 24)
+            return descFs, h
+        end,
+        value = enhSettings.colorParty == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.colorParty = newVal
+        end,
+    })
+    yOffset = newY14
+    table.insert(allRefreshFuncs, function(enabled) refresh14(enabled, enhSettings.colorParty == true) end)
+
+    local newY15, refresh15 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_COLOR_GUILD"],
+        createContent = function(container)
+            local descFs = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+            descFs:SetPoint("RIGHT", container, "RIGHT", -34, 0)
+            descFs:SetJustifyH("LEFT")
+            descFs:SetWordWrap(true)
+            descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_GUILD_DESC"])
+            descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            local swatch = CreateColorSwatch(container, "guildColor", 0.2, 0.6, 0.6)
+            swatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+            local h = math.max(descFs:GetStringHeight(), 24)
+            return descFs, h
+        end,
+        value = enhSettings.colorGuild == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.colorGuild = newVal
+        end,
+    })
+    yOffset = newY15
+    table.insert(allRefreshFuncs, function(enabled) refresh15(enabled, enhSettings.colorGuild == true) end)
+
+    local newY16, refresh16 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_COLOR_FACTION"],
+        createContent = function(container)
+            local descFs = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+            descFs:SetPoint("RIGHT", container, "RIGHT", -60, 0)
+            descFs:SetJustifyH("LEFT")
+            descFs:SetWordWrap(true)
+            descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_FACTION_DESC"])
+            descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            local friendSwatch = CreateColorSwatch(container, "factionFriendlyColor", 0.15, 0.15, 0.5)
+            friendSwatch:SetPoint("RIGHT", container, "RIGHT", -30, 0)
+            local enemySwatch = CreateColorSwatch(container, "factionEnemyColor", 0.5, 0.15, 0.12)
+            enemySwatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+            local h = math.max(descFs:GetStringHeight(), 24)
+            return descFs, h
+        end,
+        value = enhSettings.colorFaction == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.colorFaction = newVal
+        end,
+    })
+    yOffset = newY16
+    table.insert(allRefreshFuncs, function(enabled) refresh16(enabled, enhSettings.colorFaction == true) end)
+
+    dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
+    split.UpdateDetailThumb()
+end
+
 local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     local dsc = split.detailScrollChild
     OneWoW_GUI:ClearFrame(dsc)
@@ -1201,6 +1819,16 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     if feature.id == "customnotes" then
         ShowCustomNotesDetail(split, dsc, feature, selectedRow)
+        return
+    end
+
+    if feature.id == "enhancements" then
+        ShowEnhancementsDetail(split, dsc, feature, selectedRow)
+        return
+    end
+
+    if feature.id == "talentmods" then
+        ShowTalentModsDetail(split, dsc, feature, selectedRow)
         return
     end
 

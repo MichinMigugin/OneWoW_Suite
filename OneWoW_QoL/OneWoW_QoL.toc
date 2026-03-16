@@ -180,3 +180,8 @@ Modules\external\lfgpanel\lfgpanel.lua
 Modules\external\lfgpanel\lfgpanel-ui.lua
 Modules\external\lfgpanel\data.lua
 
+Modules\external\achieveuntrack\Locales\enUS.lua
+Modules\external\achieveuntrack\Locales\koKR.lua
+Modules\external\achieveuntrack\achieveuntrack.lua
+Modules\external\achieveuntrack\data.lua
+

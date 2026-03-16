@@ -4,61 +4,88 @@ OneWoW_Bags.InfoBar = {}
 local InfoBar = OneWoW_Bags.InfoBar
 
 local infoBarFrame = nil
+local OneWoW_GUI = OneWoW_Bags.GUILib
+
+local function T(key)
+    if OneWoW_GUI then
+        return OneWoW_GUI:GetThemeColor(key)
+    end
+    if OneWoW_Bags.Constants and OneWoW_Bags.Constants.THEME and OneWoW_Bags.Constants.THEME[key] then
+        return unpack(OneWoW_Bags.Constants.THEME[key])
+    end
+    return 0.5, 0.5, 0.5, 1.0
+end
+
+local function S(key)
+    if OneWoW_GUI then
+        return OneWoW_GUI:GetSpacing(key)
+    end
+    if OneWoW_Bags.Constants and OneWoW_Bags.Constants.SPACING then
+        return OneWoW_Bags.Constants.SPACING[key] or 8
+    end
+    return 8
+end
 
 function InfoBar:Create(parent)
     if infoBarFrame then return infoBarFrame end
 
     local Constants = OneWoW_Bags.Constants
-    local GUI = OneWoW_Bags.GUI
     local L = OneWoW_Bags.L
     local C = Constants.GUI
-    local T = GUI.GetThemeColor
-    local S = GUI.GetSpacing
+    local BACKDROP = OneWoW_GUI and OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS or {
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    }
 
     infoBarFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     infoBarFrame:SetHeight(C.INFOBAR_HEIGHT)
     infoBarFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     infoBarFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    infoBarFrame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    infoBarFrame:SetBackdrop(BACKDROP)
     infoBarFrame:SetBackdropColor(T("BG_TERTIARY"))
     infoBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local searchBox = GUI:CreateEditBox("OneWoW_BagsSearch", infoBarFrame, 160, 22)
+    local searchBox
+    if OneWoW_GUI then
+        searchBox = OneWoW_GUI:CreateEditBox(infoBarFrame, {
+            name = "OneWoW_BagsSearch",
+            width = 160,
+            height = 22,
+            placeholderText = L["SEARCH_PLACEHOLDER"],
+            onTextChanged = function(text)
+                if OneWoW_Bags.GUI.OnSearchChanged then
+                    OneWoW_Bags.GUI:OnSearchChanged(text)
+                end
+            end,
+        })
+    else
+        searchBox = CreateFrame("EditBox", "OneWoW_BagsSearch", infoBarFrame, "BackdropTemplate")
+        searchBox:SetSize(160, 22)
+        searchBox:SetBackdrop(BACKDROP)
+        searchBox:SetBackdropColor(T("BG_TERTIARY"))
+        searchBox:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        searchBox:SetFontObject(GameFontHighlight)
+        searchBox:SetTextInsets(S("SM") + 2, S("SM"), 0, 0)
+        searchBox:SetAutoFocus(false)
+        searchBox:EnableMouse(true)
+        searchBox:SetTextColor(T("TEXT_PRIMARY"))
+        searchBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+        searchBox:SetScript("OnTextChanged", function(self)
+            local text = self:GetText()
+            if OneWoW_Bags.GUI.OnSearchChanged then
+                OneWoW_Bags.GUI:OnSearchChanged(text)
+            end
+        end)
+        function searchBox:GetSearchText()
+            return self:GetText() or ""
+        end
+    end
     searchBox:SetPoint("LEFT", infoBarFrame, "LEFT", S("SM"), 0)
-    searchBox:SetScript("OnTextChanged", function(self)
-        local text = self:GetText()
-        if OneWoW_Bags.GUI.OnSearchChanged then
-            OneWoW_Bags.GUI:OnSearchChanged(text)
-        end
-    end)
-
-    searchBox.placeholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    searchBox.placeholder:SetPoint("LEFT", 8, 0)
-    searchBox.placeholder:SetText(L["SEARCH_PLACEHOLDER"] or "Search...")
-    searchBox.placeholder:SetTextColor(T("TEXT_MUTED"))
-
-    searchBox:SetScript("OnEditFocusGained", function(self)
-        self.placeholder:Hide()
-        self:SetBackdropBorderColor(T("BORDER_FOCUS"))
-    end)
-    searchBox:SetScript("OnEditFocusLost", function(self)
-        if self:GetText() == "" then
-            self.placeholder:Show()
-        end
-        self:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end)
-    searchBox:SetScript("OnEscapePressed", function(self)
-        self:SetText("")
-        self:ClearFocus()
-    end)
 
     infoBarFrame.searchBox = searchBox
 
-    local catMgrBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CATEGORY_MANAGER_BTN"] or "Categories")
+    local catMgrBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CATEGORY_MANAGER_BTN"])
     catMgrBtn:SetPoint("RIGHT", infoBarFrame, "RIGHT", -S("SM"), 0)
     catMgrBtn:SetScript("OnClick", function()
         if OneWoW_Bags.CategoryManagerUI then
@@ -67,7 +94,7 @@ function InfoBar:Create(parent)
     end)
     infoBarFrame.catMgrBtn = catMgrBtn
 
-    local viewBag = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"] or "Bag")
+    local viewBag = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"])
     viewBag:SetPoint("RIGHT", catMgrBtn, "LEFT", -3, 0)
     viewBag:SetScript("OnClick", function()
         OneWoW_Bags.db.global.viewMode = "bag"
@@ -78,7 +105,7 @@ function InfoBar:Create(parent)
     end)
     infoBarFrame.viewBag = viewBag
 
-    local viewCat = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_CATEGORY"] or "Category")
+    local viewCat = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_CATEGORY"])
     viewCat:SetPoint("RIGHT", viewBag, "LEFT", -3, 0)
     viewCat:SetScript("OnClick", function()
         OneWoW_Bags.db.global.viewMode = "category"
@@ -89,7 +116,7 @@ function InfoBar:Create(parent)
     end)
     infoBarFrame.viewCat = viewCat
 
-    local viewList = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_LIST"] or "List")
+    local viewList = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_LIST"])
     viewList:SetPoint("RIGHT", viewCat, "LEFT", -3, 0)
     viewList:SetScript("OnClick", function()
         OneWoW_Bags.db.global.viewMode = "list"
@@ -119,9 +146,9 @@ function InfoBar:Create(parent)
         local showing = OneWoW_Bags.db.global.showEmptySlots
         if showing == nil then showing = true end
         if showing then
-            GameTooltip:SetText(L["EMPTY_SLOTS_HIDE"] or "Hide Empty Slots", 1, 1, 1)
+            GameTooltip:SetText(L["EMPTY_SLOTS_HIDE"], 1, 1, 1)
         else
-            GameTooltip:SetText(L["EMPTY_SLOTS_SHOW"] or "Show Empty Slots", 1, 1, 1)
+            GameTooltip:SetText(L["EMPTY_SLOTS_SHOW"], 1, 1, 1)
         end
         GameTooltip:Show()
     end)
@@ -171,16 +198,38 @@ function InfoBar:Create(parent)
 end
 
 function InfoBar:CreateViewBtn(parent, label)
-    local T = OneWoW_Bags.GUI.GetThemeColor
+    if OneWoW_GUI then
+        local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = label, height = 22, minWidth = 36 })
+        btn.isActive = false
 
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetHeight(22)
-    btn:SetBackdrop({
+        btn._defaultEnter = btn:GetScript("OnEnter")
+        btn._defaultLeave = btn:GetScript("OnLeave")
+
+        btn:SetScript("OnEnter", function(self)
+            if not self.isActive and self._defaultEnter then
+                self._defaultEnter(self)
+            end
+        end)
+
+        btn:SetScript("OnLeave", function(self)
+            if not self.isActive and self._defaultLeave then
+                self._defaultLeave(self)
+            end
+        end)
+
+        return btn
+    end
+
+    local BACKDROP = {
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
+    }
+
+    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    btn:SetHeight(22)
+    btn:SetBackdrop(BACKDROP)
     btn:SetBackdropColor(T("BTN_NORMAL"))
     btn:SetBackdropBorderColor(T("BTN_BORDER"))
 
@@ -211,7 +260,6 @@ end
 
 function InfoBar:UpdateViewButtons()
     if not infoBarFrame then return end
-    local T = OneWoW_Bags.GUI.GetThemeColor
     local mode = OneWoW_Bags.db and OneWoW_Bags.db.global.viewMode or "list"
 
     local buttons = {
@@ -249,6 +297,9 @@ end
 
 function InfoBar:GetSearchText()
     if infoBarFrame and infoBarFrame.searchBox then
+        if infoBarFrame.searchBox.GetSearchText then
+            return infoBarFrame.searchBox:GetSearchText()
+        end
         return infoBarFrame.searchBox:GetText() or ""
     end
     return ""

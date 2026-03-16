@@ -11,7 +11,7 @@ function View:Layout(contentFrame, width, filteredButtons)
 
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
-    local padding = 4
+    local padding = 2
 
     local filterSet
     if filteredButtons then
@@ -70,14 +70,17 @@ function View:Layout(contentFrame, width, filteredButtons)
                 local cols = math.floor((width - padding * 2) / (iconSize + spacing))
                 cols = math.max(cols, 1)
 
+                local totalGridWidth = cols * (iconSize + spacing) - spacing
+                local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
+
                 local itemRow = 0
                 local itemCol = 0
 
                 section.content:SetHeight(1)
 
                 for _, button in ipairs(items) do
-                    local x = padding + (itemCol * (iconSize + spacing))
-                    local y = -(itemCol == 0 and 0 or 0) - (itemRow * (iconSize + spacing))
+                    local x = leftPadding + (itemCol * (iconSize + spacing))
+                    local y = -(itemRow * (iconSize + spacing))
 
                     button:ClearAllPoints()
                     button:SetPoint("TOPLEFT", section.content, "TOPLEFT", x, y)

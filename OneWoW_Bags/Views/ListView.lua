@@ -10,13 +10,16 @@ function View:Layout(contentFrame, buttons, width)
 
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
-    local padding = 4
+    local padding = 2
 
     local showEmpty = db.global.showEmptySlots
     if showEmpty == nil then showEmpty = true end
 
     local cols = math.floor((width - padding * 2) / (iconSize + spacing))
     cols = math.max(cols, 1)
+
+    local totalGridWidth = cols * (iconSize + spacing) - spacing
+    local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
 
     local normalButtons = {}
     local reagentButtons = {}
@@ -32,12 +35,11 @@ function View:Layout(contentFrame, buttons, width)
     local row = 0
     local col = 0
 
-    -- Extra vertical offset applied only after the normal section
     local extraYOffset = 0
-    local reagentGapPx = math.floor((iconSize + spacing) * 0.2) -- half-row-ish gap, tweak if you want
+    local reagentGapPx = math.floor((iconSize + spacing) * 0.2)
 
     local function placeButton(button)
-        local x = padding + (col * (iconSize + spacing))
+        local x = leftPadding + (col * (iconSize + spacing))
         local y = -(padding + (row * (iconSize + spacing)) + extraYOffset)
 
         button:ClearAllPoints()

@@ -433,8 +433,9 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
                             xPos = xPos + (largeGap - iconGap) + (largeGap - iconGap)
                         end
 
-                        local itemIcon = OneWoW_GUI:CreateItemIcon(ef, {
+                        local iconFrame = OneWoW_GUI:CreateSkinnedIcon(ef, {
                             size = iconSize,
+                            preset = "clean",
                             showIlvl = true,
                             itemLink = item and item.itemLink,
                             itemID = item and item.itemID,
@@ -442,7 +443,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
                             itemLevel = item and item.itemLevel,
                             iconTexture = (item and item.itemLink) and GetItemIcon(item.itemID) or nil,
                         })
-                        itemIcon.frame:SetPoint("TOPLEFT", ef, "TOPLEFT", xPos, startY)
+                        iconFrame:SetPoint("TOPLEFT", ef, "TOPLEFT", xPos, startY)
                     end
                 end
                 ns.UI.ApplyFontToFrame(ef)

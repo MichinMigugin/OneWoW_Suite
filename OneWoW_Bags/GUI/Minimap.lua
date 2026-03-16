@@ -42,8 +42,8 @@ function Minimap:Initialize()
             end
         end,
         OnTooltipShow = function(tooltip)
-            tooltip:SetText("|cFFFFD100OneWoW|r - |cFF00FF00" .. (L["ADDON_TITLE"] or "Bags") .. "|r")
-            tooltip:AddLine(L["MINIMAP_SECTION_DESC"] or "Left-click to toggle bags", 0.7, 0.7, 0.7)
+            tooltip:SetText("|cFFFFD100OneWoW|r - |cFF00FF00" .. L["ADDON_TITLE"] .. "|r")
+            tooltip:AddLine(L["MINIMAP_SECTION_DESC"], 0.7, 0.7, 0.7)
             tooltip:Show()
         end,
     })

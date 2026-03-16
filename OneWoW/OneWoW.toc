@@ -66,6 +66,8 @@ Tooltips\tp-itemtracker.lua
 Tooltips\tp-recipeknowledge.lua
 Tooltips\tp-customnotes.lua
 Tooltips\tp-technicalids.lua
+Tooltips\tp-enhancements.lua
+Tooltips\tp-talentmods.lua
 Tooltips\tp-notewarning.lua
 Tooltips\tp-itemstatus.lua
 

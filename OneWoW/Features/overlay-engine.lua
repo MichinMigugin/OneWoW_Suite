@@ -430,8 +430,17 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
         hits[#hits + 1] = "protected"
     end
 
-    if IsOverlayEnabled("junk") and OneWoW.ItemStatus and OneWoW.ItemStatus:IsItemJunk(itemID) then
-        hits[#hits + 1] = "junk"
+    if IsOverlayEnabled("junk") then
+        local isJunk = OneWoW.ItemStatus and OneWoW.ItemStatus:IsItemJunk(itemID)
+        if not isJunk and GetOverlayCfg("junk") and GetOverlayCfg("junk").includeGreyItems then
+            local quality = select(3, C_Item.GetItemInfo(itemLink))
+            if quality and quality == 0 then
+                isJunk = true
+            end
+        end
+        if isJunk then
+            hits[#hits + 1] = "junk"
+        end
     end
 
     local isMisc = (classID == Enum.ItemClass.Miscellaneous)

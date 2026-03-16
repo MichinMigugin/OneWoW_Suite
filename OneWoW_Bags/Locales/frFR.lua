@@ -51,6 +51,7 @@ OneWoW_Bags.Locales["frFR"] = {
     ["SETTING_RARITY_INTENSITY"] = "Intensite de Couleur de Rarete",
     ["SETTING_SHOW_NEW"] = "Mettre en Surbrillance les Nouveaux Objets",
     ["SETTING_RECENT_DURATION"] = "Duree des Objets Recents (secondes)",
+    ["SETTING_CATEGORY_SORT"] = "Category Sort",
 
     ["ICON_SIZE_S"] = "Petit",
     ["ICON_SIZE_M"] = "Moyen",
@@ -118,4 +119,55 @@ OneWoW_Bags.Locales["frFR"] = {
     ["MINIMAP_ICON_HORDE"] = "Horde",
     ["MINIMAP_ICON_ALLIANCE"] = "Alliance",
     ["MINIMAP_ICON_NEUTRAL"] = "Neutre",
+
+    ["SETTINGS_TITLE"] = "Bags Settings",
+
+    ["TRACKER_ADD"] = "Add Tracker",
+    ["TRACKER_ADD_DESC"] = "Click to add a currency or item to track\nOr drag an item here",
+    ["TRACKER_ADD_ID"] = "Enter Item ID or Currency ID to track:",
+    ["TRACKER_REMOVE"] = "Remove Tracker",
+
+    ["CATEGORY_MANAGER_BTN"] = "Categories",
+    ["CATEGORY_MANAGER_TITLE"] = "Custom Category Manager",
+    ["CATEGORY_MANAGER_INFO"] = "Create custom categories and assign items to them. Drag an item onto a category or add by Item ID.",
+    ["CATEGORY_CREATE"] = "Create New Category",
+    ["CATEGORY_CREATE_ENTER"] = "Enter category name:",
+    ["CATEGORY_RENAME"] = "Rename",
+    ["CATEGORY_RENAME_ENTER"] = "Enter new name:",
+    ["CATEGORY_DELETE"] = "Delete",
+    ["CATEGORY_DELETE_CONFIRM"] = "Delete this category and all its items?",
+    ["CATEGORY_NO_CATEGORIES"] = "No custom categories yet.",
+    ["CATEGORY_GET_STARTED"] = "Click 'Create New Category' to get started.",
+    ["CATEGORY_ADD_BY_ID"] = "Add Item by ID:",
+    ["CATEGORY_NO_ITEMS"] = "No items assigned.",
+    ["CATEGORY_ITEMS_COUNT"] = "(%d items)",
+
+    ["BAG_FILTER_ALL"] = "All Bags",
+    ["BAG_FILTER_ACTIVE"] = "Showing: %s",
+
+    ["SHOPPING_LIST"] = "Shopping List",
+    ["SHOPPING_LIST_DESC"] = "Open the Shopping List",
+
+    ["SORT_ALPHABETICAL"] = "Alphabetical",
+
+    ["BUILTIN_CATEGORIES"] = "Built-in Categories",
+    ["CATEGORY_DRAG_HINT"] = "Drop item here to assign",
+
+    ["OVERLAY_SECTION"] = "Item Overlays",
+    ["OVERLAY_SECTION_DESC"] = "Toggle OneWoW item overlay displays when detected.",
+    ["OVERLAY_TOGGLE_ON"] = "Overlays On",
+    ["OVERLAY_TOGGLE_OFF"] = "Overlays Off",
+    ["OVERLAY_NOT_DETECTED"] = "OneWoW not detected",
+
+    ["EMPTY_SLOTS_HIDE"] = "Hide Empty Slots",
+    ["EMPTY_SLOTS_SHOW"] = "Show Empty Slots",
+    ["BAG_SHOW_ALL"] = "Click to show all bags",
+    ["BAG_SHOW_ONLY"] = "Click to show only this bag",
+    ["POPUP_ADD"] = "Add",
+    ["POPUP_CANCEL"] = "Cancel",
+    ["POPUP_CREATE"] = "Create",
+    ["POPUP_DELETE"] = "Delete",
+    ["POPUP_RENAME"] = "Rename",
+    ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
+    ["SORT"] = "Sort",
 }

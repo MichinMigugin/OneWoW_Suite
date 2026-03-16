@@ -19,6 +19,7 @@ local expansionFilter  = -1
 local zoneFilter       = ""
 local typeFilter       = "all"
 local questTypeFilter  = "all"
+local completionFilter = "all"
 
 local dataAddon            = nil
 local PopulateZoneDropdown = nil
@@ -415,6 +416,22 @@ local function RefreshQuestList(panels)
         searchText
     )
 
+    if completionFilter ~= "all" then
+        local filtered = {}
+        for _, quest in ipairs(quests) do
+            if completionFilter == "completed" then
+                if C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
+            elseif completionFilter == "not_completed" then
+                if not C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
+            elseif completionFilter == "active" then
+                if C_QuestLog.IsOnQuest(quest.id) then table.insert(filtered, quest) end
+            elseif completionFilter == "warband" then
+                if C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.id) then table.insert(filtered, quest) end
+            end
+        end
+        quests = filtered
+    end
+
     if #quests == 0 then
         if panels.emptyList then
             panels.emptyList:SetText(
@@ -555,6 +572,27 @@ local function SetupQuestTypeDropdown(panels)
     })
 end
 
+local function SetupProgressDropdown(panels)
+    OneWoW_GUI:AttachFilterMenu(panels.progDropdown, {
+        searchable = false,
+        getActiveValue = function() return completionFilter end,
+        buildItems = function()
+            return {
+                { value = "all",           text = L["QUESTS_PROGRESS_ALL"]           },
+                { value = "completed",     text = L["QUESTS_PROGRESS_COMPLETED"]     },
+                { value = "not_completed", text = L["QUESTS_PROGRESS_NOT_COMPLETED"] },
+                { value = "active",        text = L["QUESTS_PROGRESS_ACTIVE"]        },
+                { value = "warband",       text = L["QUESTS_PROGRESS_WARBAND"]       },
+            }
+        end,
+        onSelect = function(value, text)
+            completionFilter = value
+            panels.progText:SetText(value == "all" and L["QUESTS_PROGRESS_ALL"] or text)
+            RefreshQuestList(panels)
+        end,
+    })
+end
+
 local panels_ref = nil
 
 function ns.UI.CreateQuestsTab(parent)
@@ -600,13 +638,14 @@ function ns.UI.CreateQuestsTab(parent)
     local DD_GAP = 4
     local DD_PAD = 8
 
-    local expDropdown, expText = ns.UI.CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_EXPANSION_ALL"] })
-    local zoneDropdown, zoneText = ns.UI.CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_ZONE_ALL"] })
-    local typeDropdown, typeText = ns.UI.CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_TYPE_ALL"] })
-    local qTypeDropdown, qTypeText = ns.UI.CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_QTYPE_ALL"] })
+    local expDropdown, expText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_EXPANSION_ALL"] })
+    local zoneDropdown, zoneText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_ZONE_ALL"] })
+    local typeDropdown, typeText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_TYPE_ALL"] })
+    local qTypeDropdown, qTypeText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_QTYPE_ALL"] })
+    local progDropdown, progText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_PROGRESS_ALL"] })
 
     local function LayoutFilterDropdowns(w)
-        local ddW = math.floor((w - (DD_PAD * 2) - (DD_GAP * 3)) / 4)
+        local ddW = math.floor((w - (DD_PAD * 2) - (DD_GAP * 4)) / 5)
         expDropdown:ClearAllPoints()
         expDropdown:SetSize(ddW, 26)
         expDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD, -8)
@@ -622,6 +661,10 @@ function ns.UI.CreateQuestsTab(parent)
         qTypeDropdown:ClearAllPoints()
         qTypeDropdown:SetSize(ddW, 26)
         qTypeDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD + (ddW + DD_GAP) * 3, -8)
+
+        progDropdown:ClearAllPoints()
+        progDropdown:SetSize(ddW, 26)
+        progDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD + (ddW + DD_GAP) * 4, -8)
     end
 
     rightHeader:SetScript("OnSizeChanged", function(self, w)
@@ -651,6 +694,8 @@ function ns.UI.CreateQuestsTab(parent)
     panels.typeText      = typeText
     panels.qTypeDropdown = qTypeDropdown
     panels.qTypeText     = qTypeText
+    panels.progDropdown  = progDropdown
+    panels.progText      = progText
     panels.searchBox     = searchBox
 
     ns.UI.questsPanels = panels
@@ -667,12 +712,14 @@ function ns.UI.CreateQuestsTab(parent)
         zoneFilter      = ""
         typeFilter      = "all"
         questTypeFilter = "all"
+        completionFilter = "all"
         searchBox:SetText("")
         searchBox:ClearFocus()
         expText:SetText(L["QUESTS_EXPANSION_ALL"])
         zoneText:SetText(L["QUESTS_ZONE_ALL"])
         typeText:SetText(L["QUESTS_TYPE_ALL"])
         qTypeText:SetText(L["QUESTS_QTYPE_ALL"])
+        progText:SetText(L["QUESTS_PROGRESS_ALL"])
         RefreshQuestList(panels)
     end)
 
@@ -681,6 +728,7 @@ function ns.UI.CreateQuestsTab(parent)
         PopulateZoneDropdown(panels)
         SetupTypeDropdown(panels)
         SetupQuestTypeDropdown(panels)
+        SetupProgressDropdown(panels)
         RefreshQuestList(panels)
     end)
 end

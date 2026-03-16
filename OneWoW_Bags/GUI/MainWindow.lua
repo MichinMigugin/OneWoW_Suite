@@ -1,8 +1,10 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+OneWoW_Bags.GUI = OneWoW_Bags.GUI or {}
 local GUI = OneWoW_Bags.GUI
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
+local OneWoW_GUI = OneWoW_Bags.GUILib
 
 local MainWindow = nil
 local isInitialized = false
@@ -14,6 +16,9 @@ local settingsBtn = nil
 local needsCleanupAfterCombat = false
 
 local function T(key)
+    if OneWoW_GUI then
+        return OneWoW_GUI:GetThemeColor(key)
+    end
     if Constants and Constants.THEME and Constants.THEME[key] then
         return unpack(Constants.THEME[key])
     end
@@ -21,6 +26,9 @@ local function T(key)
 end
 
 local function S(key)
+    if OneWoW_GUI then
+        return OneWoW_GUI:GetSpacing(key)
+    end
     if Constants and Constants.SPACING then
         return Constants.SPACING[key] or 8
     end
@@ -29,15 +37,28 @@ end
 
 function GUI:InitMainWindow()
     if isInitialized then return end
-
     if not Constants or not Constants.GUI then return end
 
     local C = Constants.GUI
-
     local savedHeight = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.windowHeight
     local windowHeight = savedHeight or C.WINDOW_HEIGHT
 
-    MainWindow = GUI:CreateFrame("OneWoW_BagsMainWindow", UIParent, C.WINDOW_WIDTH, windowHeight, true)
+    if OneWoW_GUI then
+        local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT
+        MainWindow = CreateFrame("Frame", "OneWoW_BagsMainWindow", UIParent, "BackdropTemplate")
+        MainWindow:SetSize(C.WINDOW_WIDTH, windowHeight)
+        MainWindow:SetBackdrop(BACKDROP_SOFT)
+    else
+        MainWindow = CreateFrame("Frame", "OneWoW_BagsMainWindow", UIParent, "BackdropTemplate")
+        MainWindow:SetSize(C.WINDOW_WIDTH, windowHeight)
+        MainWindow:SetBackdrop({
+            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            tile = true, tileEdge = true, tileSize = 16, edgeSize = 14,
+            insets = { left = 3, right = 3, top = 3, bottom = 3 },
+        })
+    end
+
     if not MainWindow then return end
 
     MainWindow:SetBackdropColor(T("BG_PRIMARY"))
@@ -69,54 +90,57 @@ function GUI:InitMainWindow()
     end)
     MainWindow:Hide()
 
-    titleBar = CreateFrame("Frame", nil, MainWindow, "BackdropTemplate")
-    titleBar:SetHeight(C.TITLEBAR_HEIGHT)
-    titleBar:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", S("XS"), -S("XS"))
-    titleBar:SetPoint("TOPRIGHT", MainWindow, "TOPRIGHT", -S("XS"), -S("XS"))
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(T("TITLEBAR_BG"))
-    titleBar:SetFrameLevel(MainWindow:GetFrameLevel() + 1)
+    if OneWoW_GUI then
+        local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
+        titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, {
+            title = L["ADDON_TITLE"],
+            height = C.TITLEBAR_HEIGHT,
+            showBrand = true,
+            factionTheme = factionTheme,
+            onClose = function() MainWindow:Hide() end,
+        })
 
-    local brandIcon = titleBar:CreateTexture(nil, "OVERLAY")
-    brandIcon:SetSize(14, 14)
-    brandIcon:SetPoint("LEFT", titleBar, "LEFT", S("SM"), 0)
-    local factionTheme = OneWoW_Bags.db and OneWoW_Bags.db.global and
-                         OneWoW_Bags.db.global.minimap and
-                         OneWoW_Bags.db.global.minimap.theme or "horde"
-    local brandIconTex
-    if factionTheme == "alliance" then
-        brandIconTex = "Interface\\AddOns\\OneWoW_Bags\\Media\\alliance-mini.png"
-    elseif factionTheme == "neutral" then
-        brandIconTex = "Interface\\AddOns\\OneWoW_Bags\\Media\\neutral-mini.png"
+        settingsBtn = OneWoW_GUI:CreateButton(titleBar, { text = "S", width = 20, height = 20 })
+        settingsBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -2, 0)
+        settingsBtn:SetScript("OnClick", function()
+            if OneWoW_Bags.Settings and OneWoW_Bags.Settings.Toggle then
+                OneWoW_Bags.Settings:Toggle()
+            end
+        end)
     else
-        brandIconTex = "Interface\\AddOns\\OneWoW_Bags\\Media\\horde-mini.png"
+        titleBar = CreateFrame("Frame", nil, MainWindow, "BackdropTemplate")
+        titleBar:SetHeight(C.TITLEBAR_HEIGHT)
+        titleBar:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", S("XS"), -S("XS"))
+        titleBar:SetPoint("TOPRIGHT", MainWindow, "TOPRIGHT", -S("XS"), -S("XS"))
+        titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+        titleBar:SetFrameLevel(MainWindow:GetFrameLevel() + 1)
+
+        local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
+        titleText:SetText(L["ADDON_TITLE"])
+        titleText:SetTextColor(T("TEXT_PRIMARY"))
+
+        local closeBtn = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
+        closeBtn:SetSize(20, 20)
+        closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -S("XS") / 2, 0)
+        closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        closeBtn.text:SetPoint("CENTER")
+        closeBtn.text:SetText("X")
+        closeBtn:SetScript("OnClick", function() MainWindow:Hide() end)
+
+        settingsBtn = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
+        settingsBtn:SetSize(20, 20)
+        settingsBtn:SetPoint("RIGHT", closeBtn, "LEFT", -2, 0)
+        settingsBtn.text = settingsBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        settingsBtn.text:SetPoint("CENTER")
+        settingsBtn.text:SetText("S")
+        settingsBtn:SetScript("OnClick", function()
+            if OneWoW_Bags.Settings and OneWoW_Bags.Settings.Toggle then
+                OneWoW_Bags.Settings:Toggle()
+            end
+        end)
     end
-    brandIcon:SetTexture(brandIconTex)
-    MainWindow.brandIcon = brandIcon
-
-    local brandText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
-    brandText:SetText("OneWoW")
-    brandText:SetTextColor(T("ACCENT_PRIMARY"))
-    MainWindow.brandText = brandText
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
-    titleText:SetText(L["ADDON_TITLE"])
-    titleText:SetTextColor(T("TEXT_PRIMARY"))
-    MainWindow.titleText = titleText
-
-    local closeBtn = GUI:CreateButton(nil, titleBar, "X", 20, 20)
-    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -S("XS") / 2, 0)
-    closeBtn:SetScript("OnClick", function() MainWindow:Hide() end)
-
-    settingsBtn = GUI:CreateButton(nil, titleBar, "S", 20, 20)
-    settingsBtn:SetPoint("RIGHT", closeBtn, "LEFT", -2, 0)
-    settingsBtn:SetScript("OnClick", function()
-        if OneWoW_Bags.Settings and OneWoW_Bags.Settings.Toggle then
-            OneWoW_Bags.Settings:Toggle()
-        end
-    end)
 
     contentArea = CreateFrame("Frame", nil, MainWindow)
     contentArea:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", S("XS"), -(S("XS") + C.TITLEBAR_HEIGHT + S("XS")))
@@ -139,31 +163,32 @@ function GUI:InitMainWindow()
         contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", -12, 0)
     end
 
-    local scrollBar = contentScrollFrame.ScrollBar
-    if scrollBar then
-        scrollBar:ClearAllPoints()
-        scrollBar:SetPoint("TOPRIGHT", contentScrollFrame, "TOPRIGHT", 12, 0)
-        scrollBar:SetPoint("BOTTOMRIGHT", contentScrollFrame, "BOTTOMRIGHT", 12, 0)
-        scrollBar:SetWidth(10)
-
-        if scrollBar.ScrollUpButton then
-            scrollBar.ScrollUpButton:Hide()
-            scrollBar.ScrollUpButton:SetAlpha(0)
-            scrollBar.ScrollUpButton:EnableMouse(false)
-        end
-        if scrollBar.ScrollDownButton then
-            scrollBar.ScrollDownButton:Hide()
-            scrollBar.ScrollDownButton:SetAlpha(0)
-            scrollBar.ScrollDownButton:EnableMouse(false)
-        end
-
-        if scrollBar.Background then
-            scrollBar.Background:SetColorTexture(T("BG_TERTIARY"))
-        end
-
-        if scrollBar.ThumbTexture then
-            scrollBar.ThumbTexture:SetWidth(8)
-            scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
+    if OneWoW_GUI then
+        OneWoW_GUI:StyleScrollBar(contentScrollFrame, { container = contentArea, offset = 0 })
+    else
+        local scrollBar = contentScrollFrame.ScrollBar
+        if scrollBar then
+            scrollBar:ClearAllPoints()
+            scrollBar:SetPoint("TOPRIGHT", contentScrollFrame, "TOPRIGHT", 12, 0)
+            scrollBar:SetPoint("BOTTOMRIGHT", contentScrollFrame, "BOTTOMRIGHT", 12, 0)
+            scrollBar:SetWidth(10)
+            if scrollBar.ScrollUpButton then
+                scrollBar.ScrollUpButton:Hide()
+                scrollBar.ScrollUpButton:SetAlpha(0)
+                scrollBar.ScrollUpButton:EnableMouse(false)
+            end
+            if scrollBar.ScrollDownButton then
+                scrollBar.ScrollDownButton:Hide()
+                scrollBar.ScrollDownButton:SetAlpha(0)
+                scrollBar.ScrollDownButton:EnableMouse(false)
+            end
+            if scrollBar.Background then
+                scrollBar.Background:SetColorTexture(T("BG_TERTIARY"))
+            end
+            if scrollBar.ThumbTexture then
+                scrollBar.ThumbTexture:SetWidth(8)
+                scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
+            end
         end
     end
 

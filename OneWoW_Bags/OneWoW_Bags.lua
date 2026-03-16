@@ -3,6 +3,7 @@ local ADDON_NAME, OneWoW_Bags = ...
 _G.OneWoW_Bags = OneWoW_Bags
 
 local L = OneWoW_Bags.L
+local OneWoW_GUI = OneWoW_Bags.GUILib
 
 OneWoW_Bags.oneWoWHubActive = false
 
@@ -13,31 +14,22 @@ local function DetectOneWoW()
 end
 
 local function ApplyTheme()
-    local themeKey
-    local hub = _G.OneWoW
-    if hub and hub.db and hub.db.global then
-        themeKey = hub.db.global.theme or "green"
-    else
-        themeKey = OneWoW_Bags.db and OneWoW_Bags.db.global.theme or "green"
-    end
-    local Constants = OneWoW_Bags.Constants
-    if Constants.THEMES and Constants.THEMES[themeKey] then
-        local selectedTheme = Constants.THEMES[themeKey]
-        for key, value in pairs(selectedTheme) do
-            if key ~= "name" then
-                Constants.THEME[key] = value
-            end
-        end
+    if OneWoW_GUI then
+        OneWoW_GUI:ApplyTheme(OneWoW_Bags)
     end
 end
 
 local function ApplyLanguage()
     local lang
-    local hub = _G.OneWoW
-    if hub and hub.db and hub.db.global then
-        lang = hub.db.global.language or "enUS"
+    if OneWoW_GUI then
+        lang = OneWoW_GUI:GetSetting("language") or "enUS"
     else
-        lang = OneWoW_Bags.db and OneWoW_Bags.db.global.language or "enUS"
+        local hub = _G.OneWoW
+        if hub and hub.db and hub.db.global then
+            lang = hub.db.global.language or "enUS"
+        else
+            lang = OneWoW_Bags.db and OneWoW_Bags.db.global.language or "enUS"
+        end
     end
     if lang == "esMX" then lang = "esES" end
     local localeData = OneWoW_Bags.Locales[lang] or OneWoW_Bags.Locales["enUS"]
@@ -51,7 +43,11 @@ OneWoW_Bags.ApplyTheme = ApplyTheme
 OneWoW_Bags.ApplyLanguage = ApplyLanguage
 
 function OneWoW_Bags:ReinitForLanguage(langCode)
-    self.db.global.language = langCode
+    if OneWoW_GUI then
+        OneWoW_GUI:SetSetting("language", langCode)
+    else
+        self.db.global.language = langCode
+    end
     ApplyLanguage()
     if self.GUI then
         self.GUI:FullReset()
@@ -65,6 +61,11 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
     if loadedAddon ~= ADDON_NAME then return end
 
     self:InitializeDatabase()
+
+    if OneWoW_GUI then
+        OneWoW_GUI:MigrateSettings(self.db.global)
+    end
+
     ApplyTheme()
     ApplyLanguage()
 
@@ -73,6 +74,67 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
     end
 
     self:RegisterSlashCommands()
+
+    if OneWoW_GUI then
+        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(owner, newTheme)
+            ApplyTheme()
+            local wasShown = owner.GUI and owner.GUI:IsShown()
+            if owner.GUI then
+                owner.GUI:FullReset()
+                if wasShown then
+                    C_Timer.After(0.1, function()
+                        owner.GUI:Show()
+                    end)
+                end
+            end
+        end)
+
+        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(owner, newLang)
+            ApplyLanguage()
+            local wasShown = owner.GUI and owner.GUI:IsShown()
+            if owner.GUI then
+                owner.GUI:FullReset()
+                if wasShown then
+                    C_Timer.After(0.1, function()
+                        owner.GUI:Show()
+                    end)
+                end
+            end
+        end)
+
+        OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(owner, newFont)
+            local wasShown = owner.GUI and owner.GUI:IsShown()
+            if owner.GUI then
+                owner.GUI:FullReset()
+                if wasShown then
+                    C_Timer.After(0.1, function()
+                        owner.GUI:Show()
+                    end)
+                end
+            end
+        end)
+
+        OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner, newIconTheme)
+            if owner.Minimap then
+                owner.Minimap:UpdateIcon()
+            end
+            local wasShown = owner.GUI and owner.GUI:IsShown()
+            if owner.GUI then
+                owner.GUI:FullReset()
+                if wasShown then
+                    C_Timer.After(0.1, function()
+                        owner.GUI:Show()
+                    end)
+                end
+            end
+        end)
+
+        OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, isHidden)
+            if owner.Minimap then
+                owner.Minimap:SetShown(not isHidden)
+            end
+        end)
+    end
 
     local _ver = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or self.Constants.VERSION
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then

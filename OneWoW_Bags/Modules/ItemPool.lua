@@ -65,17 +65,12 @@ function Pool:CreateButton()
 
     local normalTexture = button:GetNormalTexture()
     if normalTexture then
-        normalTexture:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-        normalTexture:SetSize(64, 64)
-        normalTexture:ClearAllPoints()
-        normalTexture:SetPoint("CENTER", 0, -1)
+        normalTexture:SetTexture(nil)
     end
 
-    button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
     local highlightTexture = button:GetHighlightTexture()
     if highlightTexture then
-        highlightTexture:SetAllPoints()
-        highlightTexture:SetBlendMode("ADD")
+        highlightTexture:SetTexture(nil)
     end
 
     button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
@@ -90,13 +85,9 @@ function Pool:CreateButton()
     if button.ExtendedSlot then button.ExtendedSlot:Hide() end
     if button.IconQuestTexture then button.IconQuestTexture:Hide() end
 
-    button.owb_rarityBorder = button:CreateTexture(nil, "OVERLAY")
-    button.owb_rarityBorder:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    button.owb_rarityBorder:SetTexCoord(0.218, 0.718, 0.234, 0.781)
-    button.owb_rarityBorder:SetBlendMode("ADD")
-    button.owb_rarityBorder:SetSize(41, 41)
-    button.owb_rarityBorder:SetPoint("CENTER", button, "CENTER", 0, 0)
-    button.owb_rarityBorder:Hide()
+    button._skinnedIcon = button.icon
+    OneWoW_Bags.GUILib:SkinIconFrame(button, { preset = "clean" })
+    button.icon:SetDrawLayer("ARTWORK")
 
     return button
 end
@@ -116,7 +107,7 @@ function Pool:ResetButton(button)
     button.owb_categoryName = nil
     button.owb_hasItem = false
     button:ClearAllPoints()
-    button.owb_rarityBorder:Hide()
+    OneWoW_Bags.GUILib:UpdateIconQuality(button, nil)
     if button.IconBorder then button.IconBorder:Hide() end
     Pool:ClearNewItemGlow(button)
     SetItemButtonTexture(button, nil)

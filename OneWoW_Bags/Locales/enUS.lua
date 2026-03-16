@@ -51,6 +51,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SETTING_RARITY_INTENSITY"] = "Rarity Color Intensity",
     ["SETTING_SHOW_NEW"] = "Highlight New Items",
     ["SETTING_RECENT_DURATION"] = "Recent Item Duration (seconds)",
+    ["SETTING_CATEGORY_SORT"] = "Category Sort",
 
     ["ICON_SIZE_S"] = "Small",
     ["ICON_SIZE_M"] = "Medium",
@@ -157,6 +158,18 @@ OneWoW_Bags.Locales["enUS"] = {
     ["OVERLAY_TOGGLE_ON"] = "Overlays On",
     ["OVERLAY_TOGGLE_OFF"] = "Overlays Off",
     ["OVERLAY_NOT_DETECTED"] = "OneWoW not detected",
+
+    ["EMPTY_SLOTS_HIDE"] = "Hide Empty Slots",
+    ["EMPTY_SLOTS_SHOW"] = "Show Empty Slots",
+    ["BAG_SHOW_ALL"] = "Click to show all bags",
+    ["BAG_SHOW_ONLY"] = "Click to show only this bag",
+    ["POPUP_ADD"] = "Add",
+    ["POPUP_CANCEL"] = "Cancel",
+    ["POPUP_CREATE"] = "Create",
+    ["POPUP_DELETE"] = "Delete",
+    ["POPUP_RENAME"] = "Rename",
+    ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
+    ["SORT"] = "Sort",
 }
 
 OneWoW_Bags.L = {}

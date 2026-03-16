@@ -757,6 +757,104 @@ dropdown._activeValue = nil
 
 ---
 
+## Icon Skinning System
+
+Unified icon/item slot skinning for all suite addons. Replaces default WoW icon borders with themed, consistent styling.
+
+### Style presets
+
+| Preset | Border | Trim | Highlight | Use case |
+|--------|--------|------|-----------|----------|
+| `clean` | 1px | Yes | 0.3 alpha | Default - item slots, gear displays |
+| `thick` | 2px | Yes | 0.3 alpha | Emphasized icons, headers |
+| `minimal` | 1px | Yes | 0.2 alpha | Compact lists, small icons |
+| `none` | 0 | Yes | None | Raw icon, no decoration |
+
+### Create a new skinned icon
+```lua
+local icon = OneWoW_GUI:CreateSkinnedIcon(parent, {
+    size = 36,                -- optional, default 36
+    preset = "clean",         -- optional, style preset name
+    iconTexture = texturePath,-- optional, icon texture
+    itemID = 12345,           -- optional, auto-resolves texture via GetItemIcon
+    itemLink = link,          -- optional, enables item tooltip on hover
+    quality = 4,              -- optional, colors border by rarity (>1 overrides theme border)
+    showIlvl = true,          -- optional, item level text bottom-right
+    itemLevel = 623,          -- optional, displayed when showIlvl is true
+    showCount = true,         -- optional, stack count text bottom-right
+    count = 5,                -- optional, displayed when showCount is true (hidden if <= 1)
+    tooltip = "My tooltip",   -- optional, string or function(self) for custom tooltip
+    onClick = function(self, button) end,  -- optional, click handler
+    onEnter = function(self) end,          -- optional, additional hover behavior
+    onLeave = function(self) end,          -- optional, additional leave behavior
+    borderColorKey = "BORDER_DEFAULT",     -- optional, theme color key for border
+    hoverBorderColorKey = "BORDER_ACCENT", -- optional, theme color key on hover
+    desaturate = false,       -- optional, gray out icon
+})
+icon:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10)
+```
+
+Returns a frame with skinned internals. Access via:
+- `icon._skinnedIcon` — the icon texture
+- `icon._skinBorder` — the border frame
+- `icon._skinHighlight` — the highlight texture
+- `icon._ilvlText` / `icon._countText` — overlay text FontStrings
+
+### Skin an existing icon frame
+```lua
+OneWoW_GUI:SkinIconFrame(existingFrame, {
+    preset = "clean",         -- optional, style preset
+    quality = 3,              -- optional, rarity border color
+    trimIcon = true,          -- optional, trims blurry WoW icon edges
+    borderSize = 1,           -- optional, override preset border
+    desaturate = false,       -- optional, gray out
+    iconTexture = newTexture, -- optional, swap texture
+    borderColorKey = "BORDER_DEFAULT",
+    hoverBorderColorKey = "BORDER_ACCENT",
+})
+```
+Finds the first texture on the frame and applies trimming, border, background, and highlight. Works on any frame that has a texture child (item buttons, action buttons, etc.).
+
+### Update helpers
+```lua
+OneWoW_GUI:UpdateIconQuality(frame, 4)           -- change rarity border color
+OneWoW_GUI:UpdateIconTexture(frame, newTexture)   -- swap icon texture
+OneWoW_GUI:SetIconDesaturated(frame, true)        -- toggle grayscale
+```
+
+### Create a row of icons
+```lua
+local row = OneWoW_GUI:CreateIconRow(parent, {
+    icons = {
+        { iconTexture = tex1, quality = 3, itemLink = link1 },
+        { iconTexture = tex2, quality = 4, itemLink = link2 },
+    },
+    iconSize = 36,        -- optional, default 36
+    spacing = 4,          -- optional, gap between icons
+    preset = "clean",     -- optional, default preset for all icons
+})
+row:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10)
+-- Access individual icons: row._icons[1], row._icons[2], etc.
+```
+
+### Skin a cooldown frame
+```lua
+OneWoW_GUI:SkinCooldown(cooldownFrame, {
+    swipeR = 0, swipeG = 0, swipeB = 0, -- optional, swipe color (default black)
+    swipeAlpha = 0.6,    -- optional, swipe opacity
+    hideEdge = true,     -- optional, hide edge texture (default true)
+    hideBling = true,    -- optional, hide bling texture (default true)
+})
+```
+
+### Get a preset table
+```lua
+local preset = OneWoW_GUI:GetIconStylePreset("clean")
+-- Returns: { borderSize=1, padding=1, trimIcon=true, showHighlight=true, highlightAlpha=0.3, bgAlpha=0.9 }
+```
+
+---
+
 ## Additional Components
 
 These components exist in the library but are not fully documented here. See source for option keys.
@@ -767,7 +865,7 @@ These components exist in the library but are not fully documented here. See sou
 - **CreateOverviewPanel(parent, options)** — overview layout
 - **CreateStatusBar(parent, anchorFrame, options)** — status bar
 - **CreateRosterPanel(parent, anchorFrame)** — roster layout
-- **CreateItemIcon(parent, options)** — item icon frame
+- **CreateItemIcon(parent, options)** — item icon frame (legacy, use CreateSkinnedIcon for new code)
 - **CreateFactionIcon(parent, options)** — faction icon
 - **CreateMailIcon(parent, options)** — mail icon
 - **CreateExpandedPanelGrid(ef, options)** — expanded panel grid
@@ -775,6 +873,7 @@ These components exist in the library but are not fully documented here. See sou
 **Utility:**
 - `GetAddonVersion(addonName)` — returns addon version via C_AddOns
 - `GetProgressColor(current, max)` — returns color from PROGRESS_COLORS (NONE/LOW/MID/FULL)
+- `GetItemQualityColor(quality)` — returns r, g, b, a for item rarity (respects accessibility settings)
 
 ---
 

@@ -183,6 +183,9 @@ function OneWoW:InitializeDatabase()
     if ov.junk.applyToAuctionHouse == nil then
         ov.junk.applyToAuctionHouse = false
     end
+    if ov.junk.includeGreyItems == nil then
+        ov.junk.includeGreyItems = false
+    end
     if not ov.protected then
         ov.protected    = { enabled = false, icon = "soulbinds_tree_conduit_icon_protect", position = "CENTER",  scale = 1.5, alpha = 1.0, applyToVendorItems = false, applyToAuctionHouse = false, showInTooltip = true }
     end

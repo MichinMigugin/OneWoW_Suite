@@ -51,6 +51,7 @@ OneWoW_Bags.Locales["koKR"] = {
     ["SETTING_RARITY_INTENSITY"] = "TEST",
     ["SETTING_SHOW_NEW"] = "TEST",
     ["SETTING_RECENT_DURATION"] = "TEST",
+    ["SETTING_CATEGORY_SORT"] = "TEST",
 
     ["ICON_SIZE_S"] = "TEST",
     ["ICON_SIZE_M"] = "TEST",
@@ -151,4 +152,21 @@ OneWoW_Bags.Locales["koKR"] = {
 
     ["BUILTIN_CATEGORIES"] = "TEST",
     ["CATEGORY_DRAG_HINT"] = "TEST",
+
+    ["OVERLAY_SECTION"] = "TEST",
+    ["OVERLAY_SECTION_DESC"] = "TEST",
+    ["OVERLAY_TOGGLE_ON"] = "TEST",
+    ["OVERLAY_TOGGLE_OFF"] = "TEST",
+    ["OVERLAY_NOT_DETECTED"] = "TEST",
+    ["EMPTY_SLOTS_HIDE"] = "TEST",
+    ["EMPTY_SLOTS_SHOW"] = "TEST",
+    ["BAG_SHOW_ALL"] = "TEST",
+    ["BAG_SHOW_ONLY"] = "TEST",
+    ["POPUP_ADD"] = "TEST",
+    ["POPUP_CANCEL"] = "TEST",
+    ["POPUP_CREATE"] = "TEST",
+    ["POPUP_DELETE"] = "TEST",
+    ["POPUP_RENAME"] = "TEST",
+    ["GUI_NOT_INSTALLED"] = "TEST",
+    ["SORT"] = "TEST",
 }

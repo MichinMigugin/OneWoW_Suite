@@ -876,6 +876,19 @@ local function ShowOverlayDetail(split, feature, selectedRow)
 
     yOffset = yOffset - 30 - 20
 
+    if featureId == "junk" or featureId == "protected" then
+        local noteKey = (featureId == "junk") and "OVR_JUNK_NOTE" or "OVR_PROTECTED_NOTE"
+        local markNote = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        markNote:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
+        markNote:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+        markNote:SetJustifyH("LEFT")
+        markNote:SetWordWrap(true)
+        markNote:SetSpacing(3)
+        markNote:SetText(L[noteKey])
+        markNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        yOffset = yOffset - markNote:GetStringHeight() - 16
+    end
+
     if not OVERLAY_SETTINGS_IDS[featureId] then
         dsc:SetHeight(math.abs(yOffset) + 20)
         split.UpdateDetailThumb()
@@ -1194,17 +1207,6 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     yOffset = yOffset - 30 - 10
 
     if featureId == "junk" or featureId == "protected" then
-        local noteKey = (featureId == "junk") and "OVR_JUNK_NOTE" or "OVR_PROTECTED_NOTE"
-        local markNote = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        markNote:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-        markNote:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-        markNote:SetJustifyH("LEFT")
-        markNote:SetWordWrap(true)
-        markNote:SetSpacing(3)
-        markNote:SetText(L[noteKey])
-        markNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        yOffset = yOffset - markNote:GetStringHeight() - 16
-
         local tooltipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_TOOLTIP_LABEL"] })
         tooltipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         tooltipCb:SetChecked(reg:GetOverlaySetting(featureId, "showInTooltip") ~= false)
@@ -1212,6 +1214,16 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             reg:SetOverlaySetting(featureId, "showInTooltip", self:GetChecked())
         end)
         yOffset = yOffset - 30 - 10
+
+        if featureId == "junk" then
+            local greyCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_JUNK_GREY_LABEL"] })
+            greyCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+            greyCb:SetChecked(reg:GetOverlaySetting(featureId, "includeGreyItems") or false)
+            greyCb:SetScript("OnClick", function(self)
+                reg:SetOverlaySetting(featureId, "includeGreyItems", self:GetChecked())
+            end)
+            yOffset = yOffset - 30 - 10
+        end
     end
 
     dsc:SetHeight(math.abs(yOffset) + 20)

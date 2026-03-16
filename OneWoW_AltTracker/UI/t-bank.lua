@@ -4,14 +4,10 @@ local L = ns.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
-local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
-
 ns.UI = ns.UI or {}
 
 local selectedCharacterKey = nil
 local currentBankType = "personal"
-local currentTab = 1
 local selectedGuildName = nil
 
 function ns.UI.CreateBankTab(parent)
@@ -35,7 +31,7 @@ function ns.UI.CreateBankTab(parent)
     local charDropdown, charDropdownText = OneWoW_GUI:CreateDropdown(controlPanel, {
         width = 170, height = 28, text = ""
     })
-    charDropdown:SetPoint("BOTTOMLEFT", controlPanel, "BOTTOMLEFT", 10, 6)
+    charDropdown:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
 
     local guildDropdown, guildDropdownText = OneWoW_GUI:CreateDropdown(controlPanel, {
         width = 170, height = 28, text = ""
@@ -45,7 +41,7 @@ function ns.UI.CreateBankTab(parent)
 
     local buttonContainer = CreateFrame("Frame", nil, controlPanel)
     buttonContainer:SetPoint("LEFT", charDropdown, "RIGHT", 8, 0)
-    buttonContainer:SetPoint("RIGHT", controlPanel, "RIGHT", -140, 0)
+    buttonContainer:SetPoint("RIGHT", controlPanel, "RIGHT", -10, 0)
     buttonContainer:SetHeight(30)
 
     local function CreateBankTypeButton(btnText, bankTypeKey, index)
@@ -70,7 +66,6 @@ function ns.UI.CreateBankTab(parent)
 
         btn:SetScript("OnClick", function(self)
             currentBankType = self.bankType
-            currentTab = 1
 
             for _, button in ipairs(parent.bankTypeButtons) do
                 if button.bankType == currentBankType then
@@ -88,12 +83,12 @@ function ns.UI.CreateBankTab(parent)
                 guildDropdown:Show()
                 buttonContainer:ClearAllPoints()
                 buttonContainer:SetPoint("LEFT", guildDropdown, "RIGHT", 8, 0)
-                buttonContainer:SetPoint("RIGHT", controlPanel, "RIGHT", -140, 0)
+                buttonContainer:SetPoint("RIGHT", controlPanel, "RIGHT", -10, 0)
             else
                 guildDropdown:Hide()
                 buttonContainer:ClearAllPoints()
                 buttonContainer:SetPoint("LEFT", charDropdown, "RIGHT", 8, 0)
-                buttonContainer:SetPoint("RIGHT", controlPanel, "RIGHT", -140, 0)
+                buttonContainer:SetPoint("RIGHT", controlPanel, "RIGHT", -10, 0)
             end
 
             if ns.UI.RefreshBankDisplay then
@@ -135,16 +130,14 @@ function ns.UI.CreateBankTab(parent)
     personalBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     personalBtn.label:SetTextColor(1, 1, 1)
 
-    local updateButton = OneWoW_GUI:CreateButton(controlPanel, { text = L["BANK_UPDATE_BANKS"], width = 120, height = 28 })
-    updateButton:SetPoint("BOTTOMRIGHT", controlPanel, "BOTTOMRIGHT", -10, 6)
-    updateButton:SetScript("OnClick", function()
-        if parent.RebuildGuildDropdown then
-            parent.RebuildGuildDropdown()
-        end
-        if ns.UI.RefreshBankDisplay then
-            ns.UI.RefreshBankDisplay(parent)
-        end
-    end)
+    local searchBox = OneWoW_GUI:CreateEditBox(controlPanel, {
+        placeholderText = L["BANK_SEARCH"] or "Search...",
+        onTextChanged = function(text)
+            ns.UI.FilterBankItems(parent, text)
+        end,
+    })
+    searchBox:SetPoint("BOTTOMLEFT", controlPanel, "BOTTOMLEFT", 10, 6)
+    searchBox:SetPoint("BOTTOMRIGHT", controlPanel, "BOTTOMRIGHT", -10, 6)
 
     local bankViewPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     bankViewPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -8)
@@ -152,15 +145,6 @@ function ns.UI.CreateBankTab(parent)
     bankViewPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     bankViewPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     bankViewPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-
-    local gridContainer = CreateFrame("Frame", nil, bankViewPanel)
-    gridContainer:SetPoint("TOPLEFT", bankViewPanel, "TOPLEFT", 10, -10)
-    gridContainer:SetPoint("BOTTOMRIGHT", bankViewPanel, "BOTTOMRIGHT", -75, 10)
-
-    local tabContainer = CreateFrame("Frame", nil, bankViewPanel)
-    tabContainer:SetPoint("TOPRIGHT", bankViewPanel, "TOPRIGHT", -5, -10)
-    tabContainer:SetPoint("BOTTOMRIGHT", bankViewPanel, "BOTTOMRIGHT", -5, 10)
-    tabContainer:SetWidth(65)
 
     local bagScrollFrame = CreateFrame("ScrollFrame", nil, bankViewPanel)
     bagScrollFrame:SetPoint("TOPLEFT", bankViewPanel, "TOPLEFT", 10, -10)
@@ -215,16 +199,12 @@ function ns.UI.CreateBankTab(parent)
     parent.controlPanel = controlPanel
     parent.controlTitle = controlTitle
     parent.bankViewPanel = bankViewPanel
-    parent.gridContainer = gridContainer
-    parent.tabContainer = tabContainer
     parent.statusBar = statusBar
     parent.statusText = statusText
     parent.charDropdown = charDropdown
     parent.guildDropdown = guildDropdown
     parent.buttonContainer = buttonContainer
-    parent.updateButton = updateButton
-    parent.itemFramePool = {}
-    parent.tabButtons = {}
+    parent.searchBox = searchBox
     parent.bagScrollFrame = bagScrollFrame
     parent.bagScrollContent = bagScrollContent
     parent.bagScrollBar = bagScrollBar
@@ -275,7 +255,6 @@ function ns.UI.CreateBankTab(parent)
             onSelect = function(value, text)
                 selectedCharacterKey = value
                 charDropdown._text:SetText(text)
-                currentTab = 1
                 if ns.UI.RefreshBankDisplay then
                     ns.UI.RefreshBankDisplay(parent)
                 end
@@ -342,7 +321,6 @@ function ns.UI.CreateBankTab(parent)
                 onSelect = function(value, text)
                     selectedGuildName = value
                     guildDropdown._text:SetText(text)
-                    currentTab = 1
                     if ns.UI.RefreshBankDisplay then
                         ns.UI.RefreshBankDisplay(parent)
                     end
@@ -378,14 +356,14 @@ function ns.UI.CreateBankTab(parent)
     parent.guildBankEventFrame = guildBankEventFrame
 
     parent:SetScript("OnSizeChanged", function(self)
-        if not (self.bagScrollFrame and self.bagScrollFrame:IsShown()) then return end
+        if not self.bagScrollFrame then return end
         if self._bagResizeTimer then
             self._bagResizeTimer:Cancel()
             self._bagResizeTimer = nil
         end
         self._bagResizeTimer = C_Timer.NewTimer(1, function()
             self._bagResizeTimer = nil
-            if ns.UI.RefreshBankDisplay and self.bagScrollFrame and self.bagScrollFrame:IsShown() then
+            if ns.UI.RefreshBankDisplay then
                 ns.UI.RefreshBankDisplay(self)
             end
         end)
@@ -432,110 +410,113 @@ function ns.UI.RefreshBankDisplay(parent)
     local charName = selectedCharacterKey:match("([^-]+)") or selectedCharacterKey
     local bankTypeName = L["BANK_" .. currentBankType:upper()] or currentBankType
 
-    if currentBankType == "bags" then
-        parent.gridContainer:Hide()
-        parent.tabContainer:Hide()
-        if parent.bagScrollFrame then parent.bagScrollFrame:Show() end
-        if parent.bagScrollBar then parent.bagScrollBar:Show() end
+    if parent.bagScrollFrame then parent.bagScrollFrame:Show() end
+    if parent.bagScrollBar then parent.bagScrollBar:Show() end
 
-        ns.UI.CleanupBankFrames(parent, true)
+    if parent.RebuildGuildDropdown and currentBankType == "guild" then
+        parent.RebuildGuildDropdown()
+    end
 
-        local bankData = ns.UI.GetBankData(selectedCharacterKey, currentBankType, selectedGuildName)
-        local sortedItems = {}
+    ns.UI.CleanupBankFrames(parent)
 
-        if bankData and bankData.bags then
-            for bagID = 0, 5 do
-                local bagData = bankData.bags[bagID]
-                if bagData and bagData.slots then
-                    for _, itemData in pairs(bagData.slots) do
-                        if itemData then
-                            table.insert(sortedItems, itemData)
+    local bankData = ns.UI.GetBankData(selectedCharacterKey, currentBankType, selectedGuildName)
+    local sortedItems = {}
+
+    if bankData then
+        if currentBankType == "bags" then
+            if bankData.bags then
+                for bagID = 0, 5 do
+                    local bagData = bankData.bags[bagID]
+                    if bagData and bagData.slots then
+                        for _, itemData in pairs(bagData.slots) do
+                            if itemData then
+                                table.insert(sortedItems, itemData)
+                            end
+                        end
+                    end
+                end
+            end
+        elseif currentBankType == "personal" then
+            if bankData.personalBank and bankData.personalBank.tabs then
+                for _, tabData in pairs(bankData.personalBank.tabs) do
+                    if tabData.items then
+                        for _, itemData in pairs(tabData.items) do
+                            if itemData and itemData.itemID then
+                                table.insert(sortedItems, itemData)
+                            end
+                        end
+                    end
+                end
+            end
+        elseif currentBankType == "warband" then
+            if bankData.warbandBank and bankData.warbandBank.tabs then
+                for _, tabData in pairs(bankData.warbandBank.tabs) do
+                    if tabData.items then
+                        for _, itemData in pairs(tabData.items) do
+                            if itemData and itemData.itemID then
+                                table.insert(sortedItems, itemData)
+                            end
+                        end
+                    end
+                end
+            end
+        elseif currentBankType == "guild" then
+            if bankData.guildBank and bankData.guildBank.tabs then
+                for _, tabData in pairs(bankData.guildBank.tabs) do
+                    if tabData.slots then
+                        for _, itemData in pairs(tabData.slots) do
+                            if itemData and itemData.itemID then
+                                table.insert(sortedItems, itemData)
+                            end
                         end
                     end
                 end
             end
         end
+    end
 
-        table.sort(sortedItems, function(a, b)
-            local nameA = a.itemName
-            local nameB = b.itemName
-            if nameA and nameB then
-                return nameA < nameB
-            elseif nameA then
-                return true
-            elseif nameB then
-                return false
-            else
-                return (a.itemID or 0) < (b.itemID or 0)
+    table.sort(sortedItems, function(a, b)
+        local nameA = a.itemName
+        local nameB = b.itemName
+        if nameA and nameB then
+            return nameA < nameB
+        elseif nameA then
+            return true
+        elseif nameB then
+            return false
+        else
+            return (a.itemID or 0) < (b.itemID or 0)
+        end
+    end)
+
+    parent._allItems = sortedItems
+
+    if parent.searchBox then
+        local searchText = parent.searchBox:GetSearchText()
+        if searchText and searchText ~= "" then
+            local filtered = {}
+            local searchLower = searchText:lower()
+            for _, itemData in ipairs(sortedItems) do
+                if itemData.itemName and itemData.itemName:lower():find(searchLower, 1, true) then
+                    table.insert(filtered, itemData)
+                end
             end
-        end)
+            sortedItems = filtered
+        end
+    end
 
-        ns.UI.DisplayOneBagGrid(parent, sortedItems)
+    ns.UI.DisplayOneBagGrid(parent, sortedItems)
 
-        if parent.controlTitle then
+    if parent.controlTitle then
+        if currentBankType == "guild" and selectedGuildName then
+            parent.controlTitle:SetText(selectedGuildName .. " - " .. L["BANK_GUILD"])
+        else
             parent.controlTitle:SetText(charName .. " - " .. bankTypeName)
         end
+    end
 
-        if parent.statusText then
-            parent.statusText:SetText(L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. #sortedItems .. " " .. L["BANK_ITEMS"])
-        end
-    else
-        if parent.bagScrollFrame then parent.bagScrollFrame:Hide() end
-        if parent.bagScrollBar then parent.bagScrollBar:Hide() end
-        parent.gridContainer:Show()
-        parent.tabContainer:Show()
-
-        if parent.RebuildGuildDropdown then
-            parent.RebuildGuildDropdown()
-        end
-
-        ns.UI.CleanupBankFrames(parent, true)
-
-        local bankData = ns.UI.GetBankData(selectedCharacterKey, currentBankType, selectedGuildName)
-        ns.UI.CreateBankTabs(parent, bankData)
-        local items = {}
-
-        if bankData then
-            if currentBankType == "personal" then
-                if bankData.personalBank and bankData.personalBank.tabs then
-                    if bankData.personalBank.tabs[currentTab] and bankData.personalBank.tabs[currentTab].items then
-                        for slotID, itemData in pairs(bankData.personalBank.tabs[currentTab].items) do
-                            items[slotID] = itemData
-                        end
-                    end
-                end
-            elseif currentBankType == "warband" then
-                if bankData.warbandBank and bankData.warbandBank.tabs and bankData.warbandBank.tabs[currentTab] then
-                    if bankData.warbandBank.tabs[currentTab].items then
-                        for slotID, itemData in pairs(bankData.warbandBank.tabs[currentTab].items) do
-                            items[slotID] = itemData
-                        end
-                    end
-                end
-            elseif currentBankType == "guild" then
-                if bankData.guildBank and bankData.guildBank.tabs and bankData.guildBank.tabs[currentTab] and bankData.guildBank.tabs[currentTab].slots then
-                    for slotID, itemData in pairs(bankData.guildBank.tabs[currentTab].slots) do
-                        items[slotID] = itemData
-                    end
-                end
-            end
-        end
-
-        ns.UI.DisplayBankGrid(parent, items)
-
-        local statusMessage = L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. string.format(L["AB_LABEL_BAR"], currentTab)
-
-        if parent.controlTitle then
-            if currentBankType == "guild" and selectedGuildName then
-                parent.controlTitle:SetText(selectedGuildName .. " - " .. L["BANK_GUILD"])
-            else
-                parent.controlTitle:SetText(charName .. " - " .. bankTypeName)
-            end
-        end
-
-        if parent.statusText then
-            parent.statusText:SetText(statusMessage)
-        end
+    if parent.statusText then
+        parent.statusText:SetText(L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. #sortedItems .. " " .. L["BANK_ITEMS"])
     end
 end
 
@@ -554,247 +535,28 @@ function ns.UI.GetBankData(characterKey, bankType, guildName)
     }
 end
 
-function ns.UI.CreateBankTabs(parent, bankData)
-    ns.UI.CleanupBankTabs(parent)
-    if currentBankType == "bags" then return end
+function ns.UI.FilterBankItems(parent, searchText)
+    if not parent or not parent._allItems then return end
 
-    if not parent.tabButtons then
-        parent.tabButtons = {}
+    local items = parent._allItems
+    if searchText and searchText ~= "" then
+        local filtered = {}
+        local searchLower = searchText:lower()
+        for _, itemData in ipairs(items) do
+            if itemData.itemName and itemData.itemName:lower():find(searchLower, 1, true) then
+                table.insert(filtered, itemData)
+            end
+        end
+        items = filtered
     end
 
-    local maxTabs = 6
-    if currentBankType == "bags" then
-        maxTabs = 6
-    elseif currentBankType == "personal" then
-        if bankData and bankData.personalBank and bankData.personalBank.tabs then
-            maxTabs = 0
-            for tabID, _ in pairs(bankData.personalBank.tabs) do
-                if tabID > maxTabs then
-                    maxTabs = tabID
-                end
-            end
-        else
-            maxTabs = 6
-        end
-    elseif currentBankType == "warband" then
-        maxTabs = 5
-    elseif currentBankType == "guild" then
-        maxTabs = 8
-    end
+    ns.UI.CleanupBankFrames(parent)
+    ns.UI.DisplayOneBagGrid(parent, items)
 
-    local bagNames = {
-        L["BANK_BACKPACK"], L["BANK_BAG_1"], L["BANK_BAG_2"],
-        L["BANK_BAG_3"], L["BANK_BAG_4"], L["BANK_REAGENTS"]
-    }
-
-    for i = 1, maxTabs do
-        local tabLabel
-        if currentBankType == "bags" then
-            tabLabel = bagNames[i]:gsub("Bag ", ""):gsub("Backpack", "BP"):gsub("Reagents", "R")
-        else
-            tabLabel = tostring(i)
-        end
-
-        local tabBtn = OneWoW_GUI:CreateButton(parent.tabContainer, { text = tabLabel, width = 58, height = 50 })
-        tabBtn:SetPoint("TOP", parent.tabContainer, "TOP", 0, -((i - 1) * 55))
-
-        tabBtn.text:ClearAllPoints()
-        tabBtn.text:SetPoint("BOTTOM", tabBtn, "BOTTOM", 0, 4)
-        tabBtn.text:SetFontObject("GameFontNormalSmall")
-        tabBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-        local icon = tabBtn:CreateTexture(nil, "ARTWORK")
-        icon:SetSize(32, 32)
-        icon:SetPoint("CENTER", tabBtn, "CENTER", 0, 4)
-
-        if currentBankType == "bags" and bankData and bankData.bags then
-            local bagSlot = i - 1
-            local bagItemID = nil
-
-            if bagSlot == 0 then
-                icon:SetTexture("Interface\\Icons\\INV_Misc_Bag_08")
-            elseif bagSlot == 5 then
-                icon:SetTexture("Interface\\Icons\\INV_Misc_Bag_CenarionHerbBag")
-            else
-                local containerInfo = C_Container.GetContainerNumSlots(bagSlot)
-                if containerInfo and containerInfo > 0 then
-                    local invSlot = ContainerIDToInventoryID(bagSlot)
-                    if invSlot then
-                        bagItemID = GetInventoryItemID("player", invSlot)
-                        if bagItemID then
-                            local bagIcon = C_Item.GetItemIconByID(bagItemID)
-                            if bagIcon then
-                                icon:SetTexture(bagIcon)
-                            else
-                                icon:SetTexture("Interface\\Icons\\INV_Misc_Bag_10_Blue")
-                            end
-                        else
-                            icon:SetTexture("Interface\\Icons\\INV_Misc_Bag_10_Blue")
-                        end
-                    else
-                        icon:SetTexture("Interface\\Icons\\INV_Misc_Bag_10_Blue")
-                    end
-                else
-                    icon:SetTexture("Interface\\Icons\\INV_Misc_Bag_10_Blue")
-                end
-            end
-        else
-            icon:SetTexture("Interface\\Icons\\INV_Misc_Bag_10_Blue")
-        end
-
-        tabBtn.icon = icon
-
-        tabBtn:SetScript("OnEnter", function(self)
-            if currentTab ~= i then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            end
-        end)
-
-        tabBtn:SetScript("OnLeave", function(self)
-            if currentTab ~= i then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            end
-        end)
-
-        tabBtn:SetScript("OnClick", function()
-            currentTab = i
-
-            for tabIndex, btn in ipairs(parent.tabButtons) do
-                if tabIndex == i then
-                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                    btn.text:SetTextColor(1, 1, 1)
-                else
-                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-                end
-            end
-
-            if ns.UI.RefreshBankDisplay then
-                ns.UI.RefreshBankDisplay(parent)
-            end
-        end)
-
-        if i == currentTab then
-            tabBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            tabBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            tabBtn.text:SetTextColor(1, 1, 1)
-        end
-
-        table.insert(parent.tabButtons, tabBtn)
-    end
-end
-
-function ns.UI.DisplayBankGrid(parent, items)
-    local itemSize = 40
-    local itemSpacing = 2
-    local slotsPerRow = 14
-    local maxRows = 7
-
-    for col = 0, slotsPerRow - 1 do
-        for row = 0, maxRows - 1 do
-            local slotIndex = col * maxRows + row + 1
-            local itemInfo = items[slotIndex]
-
-            local x = col * (itemSize + itemSpacing)
-            local y = -row * (itemSize + itemSpacing)
-
-            local itemFrame = ns.UI.GetItemFrame(parent)
-            itemFrame:SetSize(itemSize, itemSize)
-            itemFrame:SetPoint("TOPLEFT", parent.gridContainer, "TOPLEFT", x, y)
-            itemFrame:Show()
-
-            if not itemFrame.bg then
-                itemFrame.bg = itemFrame:CreateTexture(nil, "BACKGROUND")
-                itemFrame.bg:SetAllPoints()
-                itemFrame.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            end
-
-            if not itemFrame.border then
-                itemFrame.border = CreateFrame("Frame", nil, itemFrame, "BackdropTemplate")
-                itemFrame.border:SetAllPoints()
-                itemFrame.border:SetBackdrop(BACKDROP_EDGE)
-                itemFrame.border:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            end
-
-            if not itemFrame.texture then
-                itemFrame.texture = itemFrame:CreateTexture(nil, "ARTWORK")
-                itemFrame.texture:SetSize(itemSize - 6, itemSize - 6)
-                itemFrame.texture:SetPoint("CENTER")
-            end
-
-            if not itemFrame.qualityBorder then
-                itemFrame.qualityBorder = itemFrame:CreateTexture(nil, "BORDER")
-                itemFrame.qualityBorder:SetTexture(BACKDROP_SIMPLE.bgFile)
-                itemFrame.qualityBorder:SetSize(itemSize - 4, itemSize - 4)
-                itemFrame.qualityBorder:SetPoint("CENTER")
-                itemFrame.qualityBorder:Hide()
-            end
-
-            if not itemFrame.count then
-                itemFrame.count = itemFrame:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
-                itemFrame.count:SetPoint("BOTTOMRIGHT", itemFrame, "BOTTOMRIGHT", -2, 2)
-                itemFrame.count:SetJustifyH("RIGHT")
-            end
-
-            if itemInfo and itemInfo.itemID then
-                local itemTexture = C_Item.GetItemIconByID(itemInfo.itemID)
-                if itemTexture then
-                    itemFrame.texture:SetTexture(itemTexture)
-                else
-                    itemFrame.texture:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-                end
-
-                local quality = itemInfo.quality
-                if quality and quality > 1 then
-                    local r, g, b = C_Item.GetItemQualityColor(quality)
-                    itemFrame.qualityBorder:SetColorTexture(r, g, b, 1.0)
-                    itemFrame.qualityBorder:Show()
-                else
-                    itemFrame.qualityBorder:Hide()
-                end
-
-                local stack = itemInfo.stackCount or itemInfo.count
-                if stack and stack > 1 then
-                    itemFrame.count:SetText(stack)
-                    itemFrame.count:Show()
-                else
-                    itemFrame.count:Hide()
-                end
-
-                itemFrame:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    if itemInfo.itemLink then
-                        GameTooltip:SetHyperlink(itemInfo.itemLink)
-                    else
-                        GameTooltip:SetItemByID(itemInfo.itemID)
-                    end
-                    GameTooltip:Show()
-                end)
-
-                itemFrame:SetScript("OnLeave", function(self)
-                    GameTooltip:Hide()
-                end)
-            else
-                itemFrame.texture:SetTexture(nil)
-                itemFrame.qualityBorder:Hide()
-                itemFrame.count:Hide()
-
-                itemFrame:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(L["BANK_EMPTY_SLOT"], 1, 1, 1)
-                    GameTooltip:AddLine(L["BANK_SLOT"] .. " " .. slotIndex, 0.7, 0.7, 0.7, true)
-                    GameTooltip:Show()
-                end)
-
-                itemFrame:SetScript("OnLeave", function(self)
-                    GameTooltip:Hide()
-                end)
-            end
-        end
+    local charName = selectedCharacterKey:match("([^-]+)") or selectedCharacterKey
+    local bankTypeName = L["BANK_" .. currentBankType:upper()] or currentBankType
+    if parent.statusText then
+        parent.statusText:SetText(L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. #items .. " " .. L["BANK_ITEMS"])
     end
 end
 
@@ -833,76 +595,16 @@ function ns.UI.DisplayOneBagGrid(parent, sortedItems)
         itemFrame:SetPoint("TOPLEFT", parent.bagScrollContent, "TOPLEFT", x, y)
         itemFrame:Show()
 
-        if not itemFrame.bg then
-            itemFrame.bg = itemFrame:CreateTexture(nil, "BACKGROUND")
-            itemFrame.bg:SetAllPoints()
-            itemFrame.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        end
-
-        if not itemFrame.border then
-            itemFrame.border = CreateFrame("Frame", nil, itemFrame, "BackdropTemplate")
-            itemFrame.border:SetAllPoints()
-            itemFrame.border:SetBackdrop(BACKDROP_EDGE)
-            itemFrame.border:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        end
-
-        if not itemFrame.texture then
-            itemFrame.texture = itemFrame:CreateTexture(nil, "ARTWORK")
-            itemFrame.texture:SetSize(itemSize - 6, itemSize - 6)
-            itemFrame.texture:SetPoint("CENTER")
-        end
-
-        if not itemFrame.qualityBorder then
-            itemFrame.qualityBorder = itemFrame:CreateTexture(nil, "BORDER")
-            itemFrame.qualityBorder:SetTexture(BACKDROP_SIMPLE.bgFile)
-            itemFrame.qualityBorder:SetSize(itemSize - 4, itemSize - 4)
-            itemFrame.qualityBorder:SetPoint("CENTER")
-            itemFrame.qualityBorder:Hide()
-        end
-
-        if not itemFrame.count then
-            itemFrame.count = itemFrame:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
-            itemFrame.count:SetPoint("BOTTOMRIGHT", itemFrame, "BOTTOMRIGHT", -2, 2)
-            itemFrame.count:SetJustifyH("RIGHT")
-        end
+        itemFrame._itemInfo = itemData
 
         local itemTexture = C_Item.GetItemIconByID(itemData.itemID)
-        if itemTexture then
-            itemFrame.texture:SetTexture(itemTexture)
-        else
-            itemFrame.texture:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        end
-
-        local quality = itemData.quality
-        if quality and quality > 1 then
-            local r, g, b = C_Item.GetItemQualityColor(quality)
-            itemFrame.qualityBorder:SetColorTexture(r, g, b, 1.0)
-            itemFrame.qualityBorder:Show()
-        else
-            itemFrame.qualityBorder:Hide()
-        end
+        OneWoW_GUI:UpdateIconTexture(itemFrame, itemTexture or "Interface\\Icons\\INV_Misc_QuestionMark")
+        OneWoW_GUI:UpdateIconQuality(itemFrame, itemData.quality)
 
         local stack = itemData.stackCount or itemData.count
-        if stack and stack > 1 then
-            itemFrame.count:SetText(stack)
-            itemFrame.count:Show()
-        else
-            itemFrame.count:Hide()
+        if itemFrame._countText then
+            itemFrame._countText:SetText((stack and stack > 1) and tostring(stack) or "")
         end
-
-        itemFrame:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            if itemData.itemLink then
-                GameTooltip:SetHyperlink(itemData.itemLink)
-            else
-                GameTooltip:SetItemByID(itemData.itemID)
-            end
-            GameTooltip:Show()
-        end)
-
-        itemFrame:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
-        end)
     end
 
     local numRows = math.ceil(math.max(1, #sortedItems) / columns)
@@ -918,6 +620,42 @@ function ns.UI.DisplayOneBagGrid(parent, sortedItems)
     end
 end
 
+local function SetupItemTooltipScripts(frame)
+    frame:EnableMouse(true)
+    frame:SetScript("OnEnter", function(self)
+        if self._skinBorder then
+            local q = self._skinQuality
+            if not (q and q > 1) then
+                self._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            end
+        end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        local info = self._itemInfo
+        if info and info.itemID then
+            if info.itemLink then
+                GameTooltip:SetHyperlink(info.itemLink)
+            else
+                GameTooltip:SetItemByID(info.itemID)
+            end
+        else
+            GameTooltip:SetText(L["BANK_EMPTY_SLOT"], 1, 1, 1)
+            GameTooltip:AddLine(L["BANK_SLOT"] .. " " .. (self._slotIndex or 0), 0.7, 0.7, 0.7, true)
+        end
+        GameTooltip:Show()
+    end)
+    frame:SetScript("OnLeave", function(self)
+        if self._skinBorder then
+            local q = self._skinQuality
+            if q and q > 1 then
+                self._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetItemQualityColor(q))
+            else
+                self._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+            end
+        end
+        GameTooltip:Hide()
+    end)
+end
+
 function ns.UI.GetBagItemFrame(parent)
     for _, pooledFrame in ipairs(parent.bagItemFramePool) do
         if pooledFrame and not pooledFrame:IsShown() then
@@ -925,38 +663,19 @@ function ns.UI.GetBagItemFrame(parent)
         end
     end
 
-    local newFrame = CreateFrame("Button", nil, parent.bagScrollContent)
-    newFrame:EnableMouse(true)
+    local newFrame = OneWoW_GUI:CreateSkinnedIcon(parent.bagScrollContent, {
+        size = 40,
+        preset = "clean",
+        showCount = true,
+    })
+    SetupItemTooltipScripts(newFrame)
     table.insert(parent.bagItemFramePool, newFrame)
 
     return newFrame
 end
 
-function ns.UI.GetItemFrame(parent)
-    for _, pooledFrame in ipairs(parent.itemFramePool) do
-        if pooledFrame and not pooledFrame:IsShown() then
-            return pooledFrame
-        end
-    end
-
-    local newFrame = CreateFrame("Button", nil, parent.gridContainer)
-    newFrame:EnableMouse(true)
-    table.insert(parent.itemFramePool, newFrame)
-
-    return newFrame
-end
-
-function ns.UI.CleanupBankFrames(parent, gridOnly)
+function ns.UI.CleanupBankFrames(parent)
     if not parent then return end
-
-    if parent.itemFramePool then
-        for _, itemFrame in ipairs(parent.itemFramePool) do
-            if itemFrame then
-                itemFrame:Hide()
-                itemFrame:ClearAllPoints()
-            end
-        end
-    end
 
     if parent.bagItemFramePool then
         for _, itemFrame in ipairs(parent.bagItemFramePool) do
@@ -966,22 +685,4 @@ function ns.UI.CleanupBankFrames(parent, gridOnly)
             end
         end
     end
-
-    if not gridOnly then
-        ns.UI.CleanupBankTabs(parent)
-    end
-end
-
-function ns.UI.CleanupBankTabs(parent)
-    if not parent or not parent.tabButtons then return end
-
-    for _, tabBtn in ipairs(parent.tabButtons) do
-        if tabBtn then
-            tabBtn:Hide()
-            tabBtn:SetParent(nil)
-            tabBtn:ClearAllPoints()
-        end
-    end
-
-    wipe(parent.tabButtons)
 end

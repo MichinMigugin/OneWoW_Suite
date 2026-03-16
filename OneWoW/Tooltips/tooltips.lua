@@ -10,4 +10,6 @@ reg:Register("tooltips", { id = "itemtracker",      title = "TIPS_ITEMTRACKER_TI
 reg:Register("tooltips", { id = "recipeknowledge", title = "TIPS_RECIPEKNOWLEDGE_TITLE", description = "TIPS_RECIPEKNOWLEDGE_DESC" })
 reg:Register("tooltips", { id = "itemtypes",     title = "TIPS_ITEMTYPES_TITLE",     description = "TIPS_ITEMTYPES_DESC" })
 reg:Register("tooltips", { id = "playermounts",  title = "TIPS_PLAYERMOUNTS_TITLE",  description = "TIPS_PLAYERMOUNTS_DESC" })
+reg:Register("tooltips", { id = "enhancements",  title = "TIPS_ENHANCEMENTS_TITLE",  description = "TIPS_ENHANCEMENTS_DESC" })
+reg:Register("tooltips", { id = "talentmods",   title = "TIPS_TALENTMODS_TITLE",   description = "TIPS_TALENTMODS_DESC" })
 reg:Register("tooltips", { id = "technicalids",  title = "TIPS_TECHNICALIDS_TITLE",  description = "TIPS_TECHNICALIDS_DESC" })
