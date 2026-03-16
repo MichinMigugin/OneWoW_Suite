@@ -11,7 +11,6 @@ Addon.selectedFrame = nil
 Addon.pickerActive = false
 
 local format = string.format
-local tinsert = table.insert
 local pcall = pcall
 local type = type
 local tostring = tostring
@@ -38,7 +37,7 @@ local function safeGetMulti(frame, method, ...)
             results[i] = "[secret]"
         end
     end
-    table.remove(results, 1)
+    tremove(results, 1)
     return results
 end
 
@@ -315,7 +314,7 @@ function Addon:GetParentChain(frame)
     local chain = {}
     local current = frame
     while current do
-        table.insert(chain, current)
+        tinsert(chain, current)
         if current.GetParent then
             current = current:GetParent()
         else
@@ -341,7 +340,7 @@ function Addon:GetAllChildren(frame)
     local function addChildren(f)
         local children = Addon:GetChildren(f)
         for _, child in ipairs(children) do
-            table.insert(all, child)
+            tinsert(all, child)
             addChildren(child)
         end
     end
@@ -456,10 +455,10 @@ function Addon:LoadBuiltInAtlases()
     for i = 0, count - 1 do
         local atlasName = C_Texture.GetAtlasByIndex(i)
         if atlasName then
-            table.insert(list, atlasName)
+            tinsert(list, atlasName)
         end
     end
-    table.sort(list)
+    sort(list)
     return list
 end
 

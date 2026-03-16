@@ -724,9 +724,9 @@ OneWoW_GUI:AttachFilterMenu(dropdown, {
     searchable = true,  -- default; adds search box at top of menu
     buildItems = function()
         local items = {}
-        table.insert(items, { value = nil, text = "All Zones" })
+        tinsert(items, { value = nil, text = "All Zones" })
         for _, zone in ipairs(GetZoneList()) do
-            table.insert(items, { value = zone, text = zone })
+            tinsert(items, { value = zone, text = zone })
         end
         return items
     end,

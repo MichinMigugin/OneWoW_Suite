@@ -133,7 +133,7 @@ function FramePicker:GetGeometricFramesAtCursor()
                     local right = l + w
                     local top = b + h
                     if x >= l and x <= right and y >= b and y <= top then
-                        table.insert(framesAtCursor, frame)
+                        tinsert(framesAtCursor, frame)
                     end
                 end
             end)
@@ -158,7 +158,7 @@ function FramePicker:GetGeometricFramesAtCursor()
         TOOLTIP = 8
     }
 
-    table.sort(framesAtCursor, function(a, b)
+    sort(framesAtCursor, function(a, b)
         local strataA = a:GetFrameStrata()
         local strataB = b:GetFrameStrata()
         local orderA = strataOrder[strataA] or 0
@@ -205,7 +205,7 @@ function FramePicker:OnUpdate(elapsed)
 
     for _, frame in ipairs(geometricFrames) do
         if not frameSet[frame] then
-            table.insert(frames, frame)
+            tinsert(frames, frame)
             frameSet[frame] = true
         end
     end
@@ -243,7 +243,7 @@ function FramePicker:OnUpdate(elapsed)
             end)
 
             if not isForbidden then
-                table.insert(validFrames, frame)
+                tinsert(validFrames, frame)
             end
         end
     end
@@ -264,50 +264,50 @@ function FramePicker:OnUpdate(elapsed)
 
         local details = {}
         if #validFrames > 1 then
-            table.insert(details, string.format("FRAME %d of %d (TAB to cycle)", self.frameIndex, #validFrames))
-            table.insert(details, "")
+            tinsert(details, string.format("FRAME %d of %d (TAB to cycle)", self.frameIndex, #validFrames))
+            tinsert(details, "")
         end
-        table.insert(details, "NAME: " .. name)
-        table.insert(details, "TYPE: " .. ftype)
+        tinsert(details, "NAME: " .. name)
+        tinsert(details, "TYPE: " .. ftype)
 
         if targetFrame.IsShown then
-            table.insert(details, "SHOWN: " .. (targetFrame:IsShown() and "Yes" or "No"))
+            tinsert(details, "SHOWN: " .. (targetFrame:IsShown() and "Yes" or "No"))
         end
 
         if targetFrame.IsMouseEnabled then
-            table.insert(details, "MOUSE: " .. (targetFrame:IsMouseEnabled() and "Yes" or "No"))
+            tinsert(details, "MOUSE: " .. (targetFrame:IsMouseEnabled() and "Yes" or "No"))
         end
 
         if targetFrame.GetParent then
             local parent = targetFrame:GetParent()
             if parent then
                 local pname = parent.GetName and parent:GetName() or "Anonymous"
-                table.insert(details, "PARENT: " .. pname)
+                tinsert(details, "PARENT: " .. pname)
             end
         end
 
         if targetFrame.GetWidth and targetFrame.GetHeight then
             local width = targetFrame:GetWidth()
             local height = targetFrame:GetHeight()
-            table.insert(details, string.format("SIZE: %.0f x %.0f", width, height))
+            tinsert(details, string.format("SIZE: %.0f x %.0f", width, height))
         end
 
         if targetFrame.GetFrameStrata then
-            table.insert(details, "STRATA: " .. targetFrame:GetFrameStrata())
+            tinsert(details, "STRATA: " .. targetFrame:GetFrameStrata())
         end
 
         if targetFrame.GetFrameLevel then
-            table.insert(details, "LEVEL: " .. targetFrame:GetFrameLevel())
+            tinsert(details, "LEVEL: " .. targetFrame:GetFrameLevel())
         end
 
         if self.debugStats then
-            table.insert(details, "")
-            table.insert(details, "DEBUG: " .. self.debugStats)
-            table.insert(details, "TOTAL FRAMES FOUND: " .. #frames)
+            tinsert(details, "")
+            tinsert(details, "DEBUG: " .. self.debugStats)
+            tinsert(details, "TOTAL FRAMES FOUND: " .. #frames)
 
             if #validFrames > 1 then
-                table.insert(details, "")
-                table.insert(details, "ALL FRAMES AT CURSOR:")
+                tinsert(details, "")
+                tinsert(details, "ALL FRAMES AT CURSOR:")
                 for i = 1, math.min(8, #validFrames) do
                     local f = validFrames[i]
                     local fname = f.GetName and f:GetName() or "Anonymous"
@@ -316,10 +316,10 @@ function FramePicker:OnUpdate(elapsed)
                     local hasRect = "-"
                     pcall(function() if f.GetRect and select(1, f:GetRect()) ~= nil then hasRect = "R" end end)
                     local marker = (i == self.frameIndex) and ">>>" or "   "
-                    table.insert(details, string.format("%s[%d] %s (%s) %s%s", marker, i, fname, ftype, mouse, hasRect))
+                    tinsert(details, string.format("%s[%d] %s (%s) %s%s", marker, i, fname, ftype, mouse, hasRect))
                 end
                 if #validFrames > 8 then
-                    table.insert(details, string.format("  ... and %d more", #validFrames - 8))
+                    tinsert(details, string.format("  ... and %d more", #validFrames - 8))
                 end
             end
         end

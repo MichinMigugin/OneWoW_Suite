@@ -12,7 +12,7 @@ local callbacks = {}
 
 function OneWoW_GUI:RegisterSettingsCallback(event, owner, func)
     if not callbacks[event] then callbacks[event] = {} end
-    table.insert(callbacks[event], { owner = owner, func = func })
+    tinsert(callbacks[event], { owner = owner, func = func })
 end
 
 local function FireCallbacks(event, value)
@@ -392,7 +392,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         end
         local items = {}
         for _, lang in ipairs(LANGUAGES) do
-            table.insert(items, { label = lang.label, value = lang.key })
+            tinsert(items, { label = lang.label, value = lang.key })
         end
         langMenu = CreateDropdownMenu(btn, items, function(value)
             OneWoW_GUI:SetSetting("language", value)
@@ -777,7 +777,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         end
         local items = {}
         for _, ic in ipairs(ICON_THEMES) do
-            table.insert(items, { label = ic.label, value = ic.key, icon = ICON_TEXTURES[ic.key] })
+            tinsert(items, { label = ic.label, value = ic.key, icon = ICON_TEXTURES[ic.key] })
         end
         iconMenu = CreateDropdownMenu(btn, items, function(value)
             OneWoW_GUI:SetSetting("minimap.theme", value)

@@ -3,6 +3,70 @@ local AddonName, Addon = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local issecretvalue = issecretvalue
+local issecrettable = issecrettable
+
+local commonEvents = {
+    "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGIN", "PLAYER_LOGOUT",
+    "ZONE_CHANGED", "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED_INDOORS",
+    "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
+    "UNIT_HEALTH", "UNIT_POWER_UPDATE", "UNIT_AURA",
+    "BAG_UPDATE", "BAG_UPDATE_DELAYED", "ITEM_LOCKED", "ITEM_UNLOCKED",
+    "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_WHISPER", "CHAT_MSG_PARTY",
+    "CHAT_MSG_GUILD", "CHAT_MSG_OFFICER", "CHAT_MSG_RAID", "CHAT_MSG_SYSTEM",
+    "ADDON_LOADED", "VARIABLES_LOADED",
+    "QUEST_ACCEPTED", "QUEST_TURNED_IN", "QUEST_LOG_UPDATE", "QUEST_REMOVED",
+    "MERCHANT_SHOW", "MERCHANT_CLOSED",
+    "MAIL_INBOX_UPDATE", "MAIL_SHOW", "MAIL_CLOSED",
+    "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED",
+    "LOOT_OPENED", "LOOT_CLOSED", "LOOT_READY",
+    "TRADE_SHOW", "TRADE_CLOSED",
+    "BANKFRAME_OPENED", "BANKFRAME_CLOSED",
+    "TAXIMAP_OPENED", "TAXIMAP_CLOSED",
+    "GOSSIP_SHOW", "GOSSIP_CLOSED",
+    "TRANSMOGRIFY_OPEN", "TRANSMOGRIFY_CLOSE", "TRANSMOGRIFY_SUCCESS", "TRANSMOGRIFY_UPDATE",
+    "VIEWED_TRANSMOG_OUTFIT_CHANGED", "VIEWED_TRANSMOG_OUTFIT_SITUATIONS_CHANGED",
+    "VIEWED_TRANSMOG_OUTFIT_SLOT_REFRESH", "VIEWED_TRANSMOG_OUTFIT_SLOT_SAVE_SUCCESS",
+    "TRANSMOG_SEARCH_UPDATED",
+    "ITEM_SEARCH_RESULTS_UPDATED", "COMMODITY_SEARCH_RESULTS_UPDATED",
+    "AUCTION_HOUSE_AUCTION_CREATED", "BLACK_MARKET_OPEN", "BLACK_MARKET_BID_RESULT",
+    "CRAFTINGORDERS_DISPLAY_CRAFTER_FULFILLED_MSG",
+    "PLAYER_MONEY", "PLAYER_DEAD", "PLAYER_UNGHOST",
+    "UPDATE_INVENTORY_DURABILITY",
+    "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", "GUILDBANK_UPDATE_MONEY",
+    "TRADE_ACCEPT_UPDATE", "TRADE_MONEY_CHANGED",
+    "TRADE_PLAYER_ITEM_CHANGED", "TRADE_TARGET_ITEM_CHANGED",
+    "UI_INFO_MESSAGE",
+    "TRAIT_CONFIG_COMMIT_FAILED", "TRAIT_COND_INFO_CHANGED", "TRAIT_CONFIG_CREATED",
+    "TRAIT_CONFIG_DELETED", "TRAIT_CONFIG_LIST_UPDATED", "TRAIT_CONFIG_UPDATED",
+    "TRAIT_NODE_CHANGED", "TRAIT_NODE_CHANGED_PARTIAL", "TRAIT_NODE_ENTRY_UPDATED",
+    "TRAIT_SUB_TREE_CHANGED", "TRAIT_SYSTEM_INTERACTION_STARTED", "TRAIT_SYSTEM_NPC_CLOSED",
+    "TRAIT_TREE_CHANGED", "TRAIT_TREE_CURRENCY_INFO_UPDATED", "TRY_PURCHASE_TO_NODE_PARTIAL_SUCCESS",
+    "ACTIVE_COMBAT_CONFIG_CHANGED", "SELECTED_LOADOUT_CHANGED", "SPECIALIZATION_CHANGE_CAST_FAILED",
+    "STARTER_BUILD_ACTIVATION_FAILED", "TALENTS_INVOLUNTARILY_RESET",
+    "PORTRAITS_UPDATED", "PLAYER_LEVEL_UP",
+    "PLAYER_TARGET_CHANGED",
+    "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_STOP",
+    "UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_CHANNEL_STOP",
+    "CHAT_MSG_CHANNEL",
+    "BAG_OPEN", "BAG_CLOSED",
+    "LOOT_SLOT_CHANGED",
+    "GROUP_ROSTER_UPDATE",
+    "PLAYER_SPECIALIZATION_CHANGED",
+    "CURRENCY_DISPLAY_UPDATE",
+    "ENCOUNTER_START", "ENCOUNTER_END",
+}
+
+local function formatArgForDisplay(arg)
+    if issecretvalue(arg) then return "[secret]" end
+    if type(arg) == "table" and issecrettable(arg) then return "[secret]" end
+    local s = tostring(arg)
+    if #s > 30 then
+        return s:sub(1, 27) .. "..."
+    end
+    return s
+end
+
 local EventMonitor = {}
 Addon.EventMonitor = EventMonitor
 
@@ -29,48 +93,7 @@ end
 function EventMonitor:RegisterAllPossibleEvents()
     if self.allEventsRegistered then return end
 
-    local eventsToRegister = {
-        "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGIN", "PLAYER_LOGOUT",
-        "ZONE_CHANGED", "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED_INDOORS",
-        "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
-        "UNIT_HEALTH", "UNIT_POWER_UPDATE", "UNIT_AURA",
-        "BAG_UPDATE", "BAG_UPDATE_DELAYED", "ITEM_LOCKED", "ITEM_UNLOCKED",
-        "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_WHISPER", "CHAT_MSG_PARTY",
-        "CHAT_MSG_GUILD", "CHAT_MSG_OFFICER", "CHAT_MSG_RAID", "CHAT_MSG_SYSTEM",
-        "ADDON_LOADED", "VARIABLES_LOADED",
-        "QUEST_ACCEPTED", "QUEST_TURNED_IN", "QUEST_LOG_UPDATE", "QUEST_REMOVED",
-        "MERCHANT_SHOW", "MERCHANT_CLOSED",
-        "MAIL_INBOX_UPDATE", "MAIL_SHOW", "MAIL_CLOSED",
-        "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED",
-        "LOOT_OPENED", "LOOT_CLOSED", "LOOT_READY",
-        "TRADE_SHOW", "TRADE_CLOSED",
-        "BANKFRAME_OPENED", "BANKFRAME_CLOSED",
-        "TAXIMAP_OPENED", "TAXIMAP_CLOSED",
-        "GOSSIP_SHOW", "GOSSIP_CLOSED",
-        "TRANSMOGRIFY_OPEN", "TRANSMOGRIFY_CLOSE", "TRANSMOGRIFY_SUCCESS", "TRANSMOGRIFY_UPDATE",
-        "VIEWED_TRANSMOG_OUTFIT_CHANGED", "VIEWED_TRANSMOG_OUTFIT_SITUATIONS_CHANGED",
-        "VIEWED_TRANSMOG_OUTFIT_SLOT_REFRESH", "VIEWED_TRANSMOG_OUTFIT_SLOT_SAVE_SUCCESS",
-        "TRANSMOG_SEARCH_UPDATED",
-        "ITEM_SEARCH_RESULTS_UPDATED", "COMMODITY_SEARCH_RESULTS_UPDATED",
-        "AUCTION_HOUSE_AUCTION_CREATED", "BLACK_MARKET_OPEN", "BLACK_MARKET_BID_RESULT",
-        "CRAFTINGORDERS_DISPLAY_CRAFTER_FULFILLED_MSG",
-        "PLAYER_MONEY", "PLAYER_DEAD", "PLAYER_UNGHOST",
-        "UPDATE_INVENTORY_DURABILITY",
-        "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", "GUILDBANK_UPDATE_MONEY",
-        "TRADE_SHOW", "TRADE_ACCEPT_UPDATE", "TRADE_MONEY_CHANGED",
-        "TRADE_PLAYER_ITEM_CHANGED", "TRADE_TARGET_ITEM_CHANGED",
-        "UI_INFO_MESSAGE",
-        "TRAIT_CONFIG_COMMIT_FAILED", "TRAIT_COND_INFO_CHANGED", "TRAIT_CONFIG_CREATED",
-        "TRAIT_CONFIG_DELETED", "TRAIT_CONFIG_LIST_UPDATED", "TRAIT_CONFIG_UPDATED",
-        "TRAIT_NODE_CHANGED", "TRAIT_NODE_CHANGED_PARTIAL", "TRAIT_NODE_ENTRY_UPDATED",
-        "TRAIT_SUB_TREE_CHANGED", "TRAIT_SYSTEM_INTERACTION_STARTED", "TRAIT_SYSTEM_NPC_CLOSED",
-        "TRAIT_TREE_CHANGED", "TRAIT_TREE_CURRENCY_INFO_UPDATED", "TRY_PURCHASE_TO_NODE_PARTIAL_SUCCESS",
-        "ACTIVE_COMBAT_CONFIG_CHANGED", "SELECTED_LOADOUT_CHANGED", "SPECIALIZATION_CHANGE_CAST_FAILED",
-        "STARTER_BUILD_ACTIVATION_FAILED", "TALENTS_INVOLUNTARILY_RESET",
-        "PORTRAITS_UPDATED", "PLAYER_LEVEL_UP",
-    }
-
-    for _, event in ipairs(eventsToRegister) do
+    for _, event in ipairs(commonEvents) do
         pcall(function() self.frame:RegisterEvent(event) end)
     end
 
@@ -132,10 +155,10 @@ function EventMonitor:OnEvent(event, ...)
         time = GetTime(),
     }
 
-    table.insert(self.events, 1, eventData)
+    tinsert(self.events, 1, eventData)
 
     if #self.events > self.maxEvents then
-        table.remove(self.events, self.maxEvents + 1)
+        tremove(self.events, self.maxEvents + 1)
     end
 
     self:UpdateUI()
@@ -172,9 +195,9 @@ function EventMonitor:UpdateUI()
 
     if #self.events == 0 then
         if self.monitoring then
-            table.insert(lines, "Monitoring events... (0 captured)")
+            tinsert(lines, "Monitoring events... (0 captured)")
         else
-            table.insert(lines, "Click Start to monitor events")
+            tinsert(lines, "Click Start to monitor events")
         end
     else
         local filterText = tab.filterBox and tab.filterBox:GetText() or ""
@@ -188,30 +211,26 @@ function EventMonitor:UpdateUI()
                     local argStrings = {}
                     for i, arg in ipairs(data.args) do
                         if i > 5 then
-                            table.insert(argStrings, "...")
+                            tinsert(argStrings, "...")
                             break
                         end
-                        local argStr = tostring(arg)
-                        if #argStr > 30 then
-                            argStr = argStr:sub(1, 27) .. "..."
-                        end
-                        table.insert(argStrings, argStr)
+                        tinsert(argStrings, formatArgForDisplay(arg))
                     end
                     argsText = " | " .. table.concat(argStrings, ", ")
                 end
 
-                table.insert(lines, string.format("[%s] %s%s", data.timestamp, data.event, argsText))
+                tinsert(lines, string.format("[%s] %s%s", data.timestamp, data.event, argsText))
                 displayCount = displayCount + 1
 
                 if displayCount >= 200 then
-                    table.insert(lines, "... (showing first 200 events)")
+                    tinsert(lines, "... (showing first 200 events)")
                     break
                 end
             end
         end
 
         if filter and displayCount == 0 then
-            table.insert(lines, string.format("No events matching '%s' (total: %d)", filterText, #self.events))
+            tinsert(lines, string.format("No events matching '%s' (total: %d)", filterText, #self.events))
         end
     end
 
@@ -318,48 +337,11 @@ function EventMonitor:FirehoseToggle()
 end
 
 function EventMonitor:RegisterCommonEvents()
-    local commonEvents = {
-        "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGIN", "PLAYER_LOGOUT",
-        "ZONE_CHANGED", "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED_INDOORS",
-        "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
-        "UNIT_HEALTH", "UNIT_POWER_UPDATE", "UNIT_AURA",
-        "BAG_UPDATE", "BAG_UPDATE_DELAYED", "ITEM_LOCKED", "ITEM_UNLOCKED",
-        "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_WHISPER", "CHAT_MSG_PARTY",
-        "CHAT_MSG_GUILD", "CHAT_MSG_OFFICER", "CHAT_MSG_RAID", "CHAT_MSG_SYSTEM",
-        "ADDON_LOADED", "VARIABLES_LOADED",
-        "QUEST_ACCEPTED", "QUEST_TURNED_IN", "QUEST_LOG_UPDATE", "QUEST_REMOVED",
-        "MERCHANT_SHOW", "MERCHANT_CLOSED",
-        "MAIL_INBOX_UPDATE", "MAIL_SHOW", "MAIL_CLOSED",
-        "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED",
-        "LOOT_OPENED", "LOOT_CLOSED", "LOOT_READY",
-        "TRADE_SHOW", "TRADE_CLOSED",
-        "BANKFRAME_OPENED", "BANKFRAME_CLOSED",
-        "TAXIMAP_OPENED", "TAXIMAP_CLOSED",
-        "GOSSIP_SHOW", "GOSSIP_CLOSED",
-        "TRANSMOGRIFY_OPEN", "TRANSMOGRIFY_CLOSE", "TRANSMOGRIFY_SUCCESS", "TRANSMOGRIFY_UPDATE",
-        "VIEWED_TRANSMOG_OUTFIT_CHANGED", "VIEWED_TRANSMOG_OUTFIT_SITUATIONS_CHANGED",
-        "VIEWED_TRANSMOG_OUTFIT_SLOT_REFRESH", "VIEWED_TRANSMOG_OUTFIT_SLOT_SAVE_SUCCESS",
-        "TRANSMOG_SEARCH_UPDATED",
-        "ITEM_SEARCH_RESULTS_UPDATED", "COMMODITY_SEARCH_RESULTS_UPDATED",
-        "AUCTION_HOUSE_AUCTION_CREATED", "BLACK_MARKET_OPEN", "BLACK_MARKET_BID_RESULT",
-        "CRAFTINGORDERS_DISPLAY_CRAFTER_FULFILLED_MSG",
-        "PLAYER_MONEY", "PLAYER_DEAD", "PLAYER_UNGHOST",
-        "UPDATE_INVENTORY_DURABILITY",
-        "GUILDBANKFRAME_OPENED", "GUILDBANKFRAME_CLOSED", "GUILDBANK_UPDATE_MONEY",
-        "TRADE_SHOW", "TRADE_ACCEPT_UPDATE", "TRADE_MONEY_CHANGED",
-        "TRADE_PLAYER_ITEM_CHANGED", "TRADE_TARGET_ITEM_CHANGED",
-        "UI_INFO_MESSAGE",
-        "TRAIT_CONFIG_COMMIT_FAILED", "TRAIT_COND_INFO_CHANGED", "TRAIT_CONFIG_CREATED",
-        "TRAIT_CONFIG_DELETED", "TRAIT_CONFIG_LIST_UPDATED", "TRAIT_CONFIG_UPDATED",
-        "TRAIT_NODE_CHANGED", "TRAIT_NODE_CHANGED_PARTIAL", "TRAIT_NODE_ENTRY_UPDATED",
-        "TRAIT_SUB_TREE_CHANGED", "TRAIT_SYSTEM_INTERACTION_STARTED", "TRAIT_SYSTEM_NPC_CLOSED",
-        "TRAIT_TREE_CHANGED", "TRAIT_TREE_CURRENCY_INFO_UPDATED", "TRY_PURCHASE_TO_NODE_PARTIAL_SUCCESS",
-        "ACTIVE_COMBAT_CONFIG_CHANGED", "SELECTED_LOADOUT_CHANGED", "SPECIALIZATION_CHANGE_CAST_FAILED",
-        "STARTER_BUILD_ACTIVATION_FAILED", "TALENTS_INVOLUNTARILY_RESET",
-        "PORTRAITS_UPDATED", "PLAYER_LEVEL_UP",
-    }
-
     for _, event in ipairs(commonEvents) do
         self.selectedEvents[event] = true
     end
+end
+
+function EventMonitor:GetCommonEvents()
+    return commonEvents
 end

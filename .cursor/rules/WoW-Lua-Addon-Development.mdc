@@ -470,6 +470,15 @@ local defaults = {
   Ace3's addon object to share data between files.
 - Name global frames sparingly with a unique prefix: `MyAddon_MainFrame`.
 
+#### 7.1.5 WoW Table Globals
+
+Prefer WoW's global table helpers over Lua's `table.*` functions:
+
+- `tinsert` over `table.insert`
+- `tremove` over `table.remove`
+- `sort` over `table.sort`
+- `wipe` over `table.wipe`
+
 ### 7.2 Performance
 
 - Avoid allocations in OnUpdate, CLEU handlers, or any high-frequency path.

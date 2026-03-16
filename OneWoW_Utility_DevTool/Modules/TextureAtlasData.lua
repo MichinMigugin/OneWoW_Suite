@@ -15,12 +15,12 @@ function Addon:LoadBuiltInAtlases()
     for fileID, atlasTable in pairs(self.data) do
         for atlasName, atlasData in pairs(atlasTable) do
             if type(atlasName) == "string" then
-                table.insert(atlases, atlasName)
+                tinsert(atlases, atlasName)
             end
         end
     end
 
-    table.sort(atlases)
+    sort(atlases)
     self.cachedAtlases = atlases
 
     Addon:Print("Loaded " .. #atlases .. " atlases (data from TextureAtlasViewer)")

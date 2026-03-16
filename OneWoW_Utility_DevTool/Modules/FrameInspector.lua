@@ -31,15 +31,15 @@ function FrameInspector:AddToRecentFrames(frame)
 
     for i, fname in ipairs(recent) do
         if fname == name then
-            table.remove(recent, i)
+            tremove(recent, i)
             break
         end
     end
 
-    table.insert(recent, 1, name)
+    tinsert(recent, 1, name)
 
     if #recent > 20 then
-        table.remove(recent, 21)
+        tremove(recent, 21)
     end
 end
 
@@ -48,7 +48,7 @@ function FrameInspector:GetRecentFrames()
     for _, name in ipairs(Addon.db.recentFrames) do
         local frame = _G[name]
         if frame then
-            table.insert(frames, frame)
+            tinsert(frames, frame)
         end
     end
     return frames

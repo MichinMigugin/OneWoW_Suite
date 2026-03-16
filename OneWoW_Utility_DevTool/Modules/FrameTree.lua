@@ -94,7 +94,7 @@ function FrameTree:Create(parentContent, scrollFrame)
                         isRegion = false,
                         depth = depth,
                     }
-                    table.insert(children, node)
+                    tinsert(children, node)
                 end
             end
         end
@@ -111,7 +111,7 @@ function FrameTree:Create(parentContent, scrollFrame)
                         isRegion = true,
                         depth = depth,
                     }
-                    table.insert(children, node)
+                    tinsert(children, node)
                 end
             end
         end
@@ -148,7 +148,7 @@ function FrameTree:Create(parentContent, scrollFrame)
         local parentChain = {}
         local current = frame
         while current do
-            table.insert(parentChain, 1, current)
+            tinsert(parentChain, 1, current)
             if current.GetParent then
                 current = current:GetParent()
             else
@@ -180,7 +180,7 @@ function FrameTree:Create(parentContent, scrollFrame)
 
             if i == 1 then
                 rootNode = node
-                table.insert(self.rootNodes, node)
+                tinsert(self.rootNodes, node)
             else
                 if prevNode.children == nil then
                     prevNode.children = buildChildNodes(prevNode.data, prevNode.depth + 1)
@@ -271,7 +271,7 @@ function FrameTree:Create(parentContent, scrollFrame)
         local function walkNodes(nodes)
             if not nodes then return end
             for _, node in ipairs(nodes) do
-                table.insert(visibleNodes, node)
+                tinsert(visibleNodes, node)
                 if self.expandedNodes[node.id] and node.children and #node.children > 0 then
                     walkNodes(node.children)
                 end
@@ -344,7 +344,7 @@ function FrameTree:Create(parentContent, scrollFrame)
                 local objType = node.data and getNodeType(node.data) or "?"
                 local sel = (node.id == self.selectedNodeId) and "[" or ""
                 local selEnd = (node.id == self.selectedNodeId) and "]" or ""
-                table.insert(lines, indent .. marker .. sel .. name .. " (" .. objType .. ")" .. selEnd)
+                tinsert(lines, indent .. marker .. sel .. name .. " (" .. objType .. ")" .. selEnd)
                 if self.expandedNodes[node.id] and node.children then
                     walkForText(node.children, prefix)
                 end

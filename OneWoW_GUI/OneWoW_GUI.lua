@@ -551,7 +551,7 @@ function OneWoW_GUI:CreateFitFrameButtons(parent, options)
             end
         end)
 
-        table.insert(buttons, btn)
+        tinsert(buttons, btn)
         xPos = xPos + bw + gap
 
         if i < n and (xPos + bw) > (availWidth + marginX) then
@@ -1488,13 +1488,13 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                 local header = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 header:SetText(item.text)
                 header:SetTextColor(GetThemeColor("ACCENT_PRIMARY"))
-                table.insert(elements, { frame = header, type = "header", height = 24 })
+                tinsert(elements, { frame = header, type = "header", height = 24 })
 
             elseif itemType == "divider" then
                 local divider = scrollChild:CreateTexture(nil, "ARTWORK")
                 divider:SetHeight(1)
                 divider:SetColorTexture(GetThemeColor("BORDER_SUBTLE"))
-                table.insert(elements, { frame = divider, type = "divider", height = 10 })
+                tinsert(elements, { frame = divider, type = "divider", height = 10 })
 
             elseif itemType == "checkbox" then
                 local row = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
@@ -1531,7 +1531,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                 end)
 
                 row.checkbox = cb
-                table.insert(elements, { frame = row, type = "checkbox", height = 26 })
+                tinsert(elements, { frame = row, type = "checkbox", height = 26 })
 
             else
                 local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
@@ -1575,7 +1575,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
 
                 btn.filterKey = item.text:lower()
                 btn:Hide()
-                table.insert(elements, { frame = btn, type = "item", height = 28, filterKey = btn.filterKey })
+                tinsert(elements, { frame = btn, type = "item", height = 28, filterKey = btn.filterKey })
             end
         end
 
@@ -1963,7 +1963,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
             onHeaderCreate(btn, col, i)
         end
 
-        table.insert(headerRow.columnButtons, btn)
+        tinsert(headerRow.columnButtons, btn)
     end
 
     headerRow:SetScript("OnSizeChanged", function()
@@ -2081,7 +2081,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     end
 
     function dataTable:RegisterRow(row)
-        table.insert(state.rows, row)
+        tinsert(state.rows, row)
     end
 
     function dataTable:ClearRows()
@@ -2179,7 +2179,7 @@ function OneWoW_GUI:CreateDataRow(scrollContent, options)
         expandIcon:SetPoint("CENTER")
         expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
         expandBtn.icon = expandIcon
-        table.insert(row.cells, expandBtn)
+        tinsert(row.cells, expandBtn)
     end
 
     local function ToggleExpanded()
@@ -2241,7 +2241,7 @@ function OneWoW_GUI:CreateDataRow(scrollContent, options)
     if not scrollContent._dataRows then
         scrollContent._dataRows = {}
     end
-    table.insert(scrollContent._dataRows, row)
+    tinsert(scrollContent._dataRows, row)
 
     return row, expandBtn, expandIcon
 end
@@ -2314,7 +2314,7 @@ function OneWoW_GUI:CreateOverviewPanel(parent, options)
             GameTooltip:Hide()
         end)
 
-        table.insert(statBoxes, statBox)
+        tinsert(statBoxes, statBox)
     end
 
     statsContainer:SetScript("OnSizeChanged", function(self, width, height)
@@ -2531,7 +2531,7 @@ function OneWoW_GUI:CreateExpandedPanelGrid(ef, options)
         titleFS:SetTextColor(GetThemeColor("ACCENT_PRIMARY"))
         p.titleFS = titleFS
         p.dy = -18
-        table.insert(panels, p)
+        tinsert(panels, p)
         return p
     end
 

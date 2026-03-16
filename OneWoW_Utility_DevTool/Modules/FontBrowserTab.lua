@@ -163,7 +163,7 @@ function FontBrowserTab:FilterFonts(filter)
 
     for _, fontData in ipairs(self.fonts) do
         if filter == "" or string.find(fontData.name:upper(), filter, 1, true) then
-            table.insert(self.filteredFonts, fontData)
+            tinsert(self.filteredFonts, fontData)
         end
     end
 
@@ -213,7 +213,7 @@ function FontBrowserTab:SelectFont(fontData)
     }
 
     if self:IsBookmarked(fontData.name) then
-        table.insert(infoLines, "|cff00ff00[Bookmarked]|r")
+        tinsert(infoLines, "|cff00ff00[Bookmarked]|r")
     end
 
     self.infoText:SetText(table.concat(infoLines, "\n"))

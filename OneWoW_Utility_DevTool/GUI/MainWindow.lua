@@ -497,9 +497,9 @@ function UI:CreateFrameInspectorTab(parent)
         local parts = {}
         for _, v in ipairs(vals) do
             if type(v) == "number" then
-                table.insert(parts, string.format("%.2f", v))
+                tinsert(parts, string.format("%.2f", v))
             else
-                table.insert(parts, tostring(v))
+                tinsert(parts, tostring(v))
             end
         end
         return table.concat(parts, ", ")
@@ -514,11 +514,11 @@ function UI:CreateFrameInspectorTab(parent)
             end
         end
         if not any then return end
-        table.insert(lines, "")
-        table.insert(lines, "|cFFFFD100" .. title .. "|r")
+        tinsert(lines, "")
+        tinsert(lines, "|cFFFFD100" .. title .. "|r")
         for _, entry in ipairs(entries) do
             if entry[2] ~= nil then
-                table.insert(lines, "  " .. entry[1] .. ": " .. tostring(entry[2]))
+                tinsert(lines, "  " .. entry[1] .. ": " .. tostring(entry[2]))
             end
         end
     end
@@ -539,20 +539,20 @@ function UI:CreateFrameInspectorTab(parent)
         local lines = {}
 
         -- Identity
-        table.insert(lines, "|cFFFFD100IDENTITY|r")
-        table.insert(lines, "  Name: " .. (info.name or "Anonymous"))
-        table.insert(lines, "  Type: " .. (info.type or "Unknown"))
+        tinsert(lines, "|cFFFFD100IDENTITY|r")
+        tinsert(lines, "  Name: " .. (info.name or "Anonymous"))
+        tinsert(lines, "  Type: " .. (info.type or "Unknown"))
         if info.parentName then
-            table.insert(lines, "  Parent: " .. info.parentName)
+            tinsert(lines, "  Parent: " .. info.parentName)
         end
         if info.debugName and info.debugName ~= info.name then
-            table.insert(lines, "  DebugName: " .. info.debugName)
+            tinsert(lines, "  DebugName: " .. info.debugName)
         end
         if info.ID and info.ID ~= 0 then
-            table.insert(lines, "  ID: " .. info.ID)
+            tinsert(lines, "  ID: " .. info.ID)
         end
         if info.parentKey then
-            table.insert(lines, "  ParentKey: " .. info.parentKey)
+            tinsert(lines, "  ParentKey: " .. info.parentKey)
         end
 
         -- State (Frame-only)
@@ -587,11 +587,11 @@ function UI:CreateFrameInspectorTab(parent)
             }
             if info.relativeToParent then
                 local rp = info.relativeToParent
-                table.insert(spEntries, { "From Left Edge", fmtNum(rp.fromLeft) })
-                table.insert(spEntries, { "From Right Edge", fmtNum(rp.fromRight) })
-                table.insert(spEntries, { "From Bottom Edge", fmtNum(rp.fromBottom) })
-                table.insert(spEntries, { "From Top Edge", fmtNum(rp.fromTop) })
-                table.insert(spEntries, { "From Parent Center", string.format("%.1f, %.1f", rp.fromCenterX, rp.fromCenterY) })
+                tinsert(spEntries, { "From Left Edge", fmtNum(rp.fromLeft) })
+                tinsert(spEntries, { "From Right Edge", fmtNum(rp.fromRight) })
+                tinsert(spEntries, { "From Bottom Edge", fmtNum(rp.fromBottom) })
+                tinsert(spEntries, { "From Top Edge", fmtNum(rp.fromTop) })
+                tinsert(spEntries, { "From Parent Center", string.format("%.1f, %.1f", rp.fromCenterX, rp.fromCenterY) })
             end
             addSection(lines, "SCREEN POSITION", spEntries)
         end
@@ -654,39 +654,39 @@ function UI:CreateFrameInspectorTab(parent)
 
         -- Anchors
         if info.points and #info.points > 0 then
-            table.insert(lines, "")
-            table.insert(lines, "|cFFFFD100ANCHORS|r")
+            tinsert(lines, "")
+            tinsert(lines, "|cFFFFD100ANCHORS|r")
             for i, pt in ipairs(info.points) do
                 local x = type(pt.x) == "number" and string.format("%.1f", pt.x) or tostring(pt.x or 0)
                 local y = type(pt.y) == "number" and string.format("%.1f", pt.y) or tostring(pt.y or 0)
-                table.insert(lines, string.format("  Point %d -> %s.%s (%s, %s)",
+                tinsert(lines, string.format("  Point %d -> %s.%s (%s, %s)",
                     i, pt.relativeTo or "nil", pt.relativePoint or "", x, y))
             end
         end
 
         -- Registered Events
         if info.registeredEvents then
-            table.insert(lines, "")
-            table.insert(lines, "|cFFFFD100REGISTERED EVENTS|r")
+            tinsert(lines, "")
+            tinsert(lines, "|cFFFFD100REGISTERED EVENTS|r")
             if #info.registeredEvents > 0 then
                 for _, event in ipairs(info.registeredEvents) do
-                    table.insert(lines, "  " .. event)
+                    tinsert(lines, "  " .. event)
                 end
             else
-                table.insert(lines, "  (none detected among " .. #Addon.COMMON_EVENTS .. " common events)")
+                tinsert(lines, "  (none detected among " .. #Addon.COMMON_EVENTS .. " common events)")
             end
         end
 
         -- Scripts
         if info.scripts then
-            table.insert(lines, "")
-            table.insert(lines, "|cFFFFD100SCRIPTS|r")
+            tinsert(lines, "")
+            tinsert(lines, "|cFFFFD100SCRIPTS|r")
             if #info.scripts > 0 then
                 for _, scriptName in ipairs(info.scripts) do
-                    table.insert(lines, "  " .. scriptName .. ": [handler]")
+                    tinsert(lines, "  " .. scriptName .. ": [handler]")
                 end
             else
-                table.insert(lines, "  no script handlers attached")
+                tinsert(lines, "  no script handlers attached")
             end
         end
 
@@ -708,69 +708,69 @@ function UI:CreateFrameInspectorTab(parent)
         local ts = info.typeSpecific
         if ts then
             local tsType = ts._type
-            table.insert(lines, "")
-            table.insert(lines, "|cFFFFD100" .. (tsType or "TYPE-SPECIFIC") .. " PROPERTIES|r")
+            tinsert(lines, "")
+            tinsert(lines, "|cFFFFD100" .. (tsType or "TYPE-SPECIFIC") .. " PROPERTIES|r")
 
             if tsType == "Texture" or tsType == "MaskTexture" then
-                if ts.atlas then table.insert(lines, "  Atlas: " .. tostring(ts.atlas)) end
-                if ts.texture then table.insert(lines, "  Texture: " .. tostring(ts.texture)) end
-                if ts.textureFileID then table.insert(lines, "  FileID: " .. tostring(ts.textureFileID)) end
-                if ts.blendMode then table.insert(lines, "  BlendMode: " .. tostring(ts.blendMode)) end
-                if ts.texCoord then table.insert(lines, "  TexCoord: " .. fmtMulti(ts.texCoord)) end
-                if ts.drawLayer then table.insert(lines, "  DrawLayer: " .. tostring(ts.drawLayer) .. (ts.drawSublevel and (" (" .. ts.drawSublevel .. ")") or "")) end
-                if ts.vertexColor then table.insert(lines, "  VertexColor: " .. fmtMulti(ts.vertexColor)) end
-                if ts.desaturation then table.insert(lines, "  Desaturation: " .. fmtNum(ts.desaturation)) end
-                if ts.rotation then table.insert(lines, "  Rotation: " .. fmtNum(ts.rotation)) end
-                if ts.horizTile ~= nil then table.insert(lines, "  HorizTile: " .. boolStr(ts.horizTile)) end
-                if ts.vertTile ~= nil then table.insert(lines, "  VertTile: " .. boolStr(ts.vertTile)) end
+                if ts.atlas then tinsert(lines, "  Atlas: " .. tostring(ts.atlas)) end
+                if ts.texture then tinsert(lines, "  Texture: " .. tostring(ts.texture)) end
+                if ts.textureFileID then tinsert(lines, "  FileID: " .. tostring(ts.textureFileID)) end
+                if ts.blendMode then tinsert(lines, "  BlendMode: " .. tostring(ts.blendMode)) end
+                if ts.texCoord then tinsert(lines, "  TexCoord: " .. fmtMulti(ts.texCoord)) end
+                if ts.drawLayer then tinsert(lines, "  DrawLayer: " .. tostring(ts.drawLayer) .. (ts.drawSublevel and (" (" .. ts.drawSublevel .. ")") or "")) end
+                if ts.vertexColor then tinsert(lines, "  VertexColor: " .. fmtMulti(ts.vertexColor)) end
+                if ts.desaturation then tinsert(lines, "  Desaturation: " .. fmtNum(ts.desaturation)) end
+                if ts.rotation then tinsert(lines, "  Rotation: " .. fmtNum(ts.rotation)) end
+                if ts.horizTile ~= nil then tinsert(lines, "  HorizTile: " .. boolStr(ts.horizTile)) end
+                if ts.vertTile ~= nil then tinsert(lines, "  VertTile: " .. boolStr(ts.vertTile)) end
             elseif tsType == "FontString" then
-                if ts.text then table.insert(lines, "  Text: " .. tostring(ts.text)) end
-                if ts.font then table.insert(lines, "  Font: " .. fmtMulti(ts.font)) end
-                if ts.justifyH then table.insert(lines, "  JustifyH: " .. tostring(ts.justifyH)) end
-                if ts.justifyV then table.insert(lines, "  JustifyV: " .. tostring(ts.justifyV)) end
-                if ts.spacing then table.insert(lines, "  Spacing: " .. fmtNum(ts.spacing)) end
-                if ts.stringWidth then table.insert(lines, "  StringWidth: " .. fmtNum(ts.stringWidth)) end
-                if ts.stringHeight then table.insert(lines, "  StringHeight: " .. fmtNum(ts.stringHeight)) end
-                if ts.numLines then table.insert(lines, "  NumLines: " .. ts.numLines) end
-                if ts.isTruncated ~= nil then table.insert(lines, "  IsTruncated: " .. boolStr(ts.isTruncated)) end
+                if ts.text then tinsert(lines, "  Text: " .. tostring(ts.text)) end
+                if ts.font then tinsert(lines, "  Font: " .. fmtMulti(ts.font)) end
+                if ts.justifyH then tinsert(lines, "  JustifyH: " .. tostring(ts.justifyH)) end
+                if ts.justifyV then tinsert(lines, "  JustifyV: " .. tostring(ts.justifyV)) end
+                if ts.spacing then tinsert(lines, "  Spacing: " .. fmtNum(ts.spacing)) end
+                if ts.stringWidth then tinsert(lines, "  StringWidth: " .. fmtNum(ts.stringWidth)) end
+                if ts.stringHeight then tinsert(lines, "  StringHeight: " .. fmtNum(ts.stringHeight)) end
+                if ts.numLines then tinsert(lines, "  NumLines: " .. ts.numLines) end
+                if ts.isTruncated ~= nil then tinsert(lines, "  IsTruncated: " .. boolStr(ts.isTruncated)) end
             elseif tsType == "Line" then
-                if ts.startPoint then table.insert(lines, "  StartPoint: " .. fmtMulti(ts.startPoint)) end
-                if ts.endPoint then table.insert(lines, "  EndPoint: " .. fmtMulti(ts.endPoint)) end
-                if ts.thickness then table.insert(lines, "  Thickness: " .. fmtNum(ts.thickness)) end
+                if ts.startPoint then tinsert(lines, "  StartPoint: " .. fmtMulti(ts.startPoint)) end
+                if ts.endPoint then tinsert(lines, "  EndPoint: " .. fmtMulti(ts.endPoint)) end
+                if ts.thickness then tinsert(lines, "  Thickness: " .. fmtNum(ts.thickness)) end
             elseif tsType == "Button" or tsType == "CheckButton" then
-                if ts.buttonState then table.insert(lines, "  ButtonState: " .. tostring(ts.buttonState)) end
-                if ts.buttonText then table.insert(lines, "  Text: " .. tostring(ts.buttonText)) end
-                if ts.enabled ~= nil then table.insert(lines, "  Enabled: " .. boolStr(ts.enabled)) end
+                if ts.buttonState then tinsert(lines, "  ButtonState: " .. tostring(ts.buttonState)) end
+                if ts.buttonText then tinsert(lines, "  Text: " .. tostring(ts.buttonText)) end
+                if ts.enabled ~= nil then tinsert(lines, "  Enabled: " .. boolStr(ts.enabled)) end
             elseif tsType == "EditBox" then
-                if ts.text then table.insert(lines, "  Text: " .. tostring(ts.text)) end
-                if ts.cursorPosition then table.insert(lines, "  CursorPosition: " .. ts.cursorPosition) end
-                if ts.numLetters then table.insert(lines, "  NumLetters: " .. ts.numLetters) end
-                if ts.maxLetters then table.insert(lines, "  MaxLetters: " .. ts.maxLetters) end
-                if ts.isMultiLine ~= nil then table.insert(lines, "  MultiLine: " .. boolStr(ts.isMultiLine)) end
-                if ts.isAutoFocus ~= nil then table.insert(lines, "  AutoFocus: " .. boolStr(ts.isAutoFocus)) end
-                if ts.isNumeric ~= nil then table.insert(lines, "  Numeric: " .. boolStr(ts.isNumeric)) end
+                if ts.text then tinsert(lines, "  Text: " .. tostring(ts.text)) end
+                if ts.cursorPosition then tinsert(lines, "  CursorPosition: " .. ts.cursorPosition) end
+                if ts.numLetters then tinsert(lines, "  NumLetters: " .. ts.numLetters) end
+                if ts.maxLetters then tinsert(lines, "  MaxLetters: " .. ts.maxLetters) end
+                if ts.isMultiLine ~= nil then tinsert(lines, "  MultiLine: " .. boolStr(ts.isMultiLine)) end
+                if ts.isAutoFocus ~= nil then tinsert(lines, "  AutoFocus: " .. boolStr(ts.isAutoFocus)) end
+                if ts.isNumeric ~= nil then tinsert(lines, "  Numeric: " .. boolStr(ts.isNumeric)) end
             elseif tsType == "ScrollFrame" then
-                if ts.horizontalScroll then table.insert(lines, "  HorizontalScroll: " .. fmtNum(ts.horizontalScroll)) end
-                if ts.verticalScroll then table.insert(lines, "  VerticalScroll: " .. fmtNum(ts.verticalScroll)) end
+                if ts.horizontalScroll then tinsert(lines, "  HorizontalScroll: " .. fmtNum(ts.horizontalScroll)) end
+                if ts.verticalScroll then tinsert(lines, "  VerticalScroll: " .. fmtNum(ts.verticalScroll)) end
             elseif tsType == "Slider" then
-                if ts.minMax then table.insert(lines, "  MinMax: " .. fmtMulti(ts.minMax)) end
-                if ts.value then table.insert(lines, "  Value: " .. fmtNum(ts.value)) end
-                if ts.valueStep then table.insert(lines, "  ValueStep: " .. fmtNum(ts.valueStep)) end
-                if ts.obeyStep ~= nil then table.insert(lines, "  ObeyStepOnDrag: " .. boolStr(ts.obeyStep)) end
+                if ts.minMax then tinsert(lines, "  MinMax: " .. fmtMulti(ts.minMax)) end
+                if ts.value then tinsert(lines, "  Value: " .. fmtNum(ts.value)) end
+                if ts.valueStep then tinsert(lines, "  ValueStep: " .. fmtNum(ts.valueStep)) end
+                if ts.obeyStep ~= nil then tinsert(lines, "  ObeyStepOnDrag: " .. boolStr(ts.obeyStep)) end
             elseif tsType == "StatusBar" then
-                if ts.minMax then table.insert(lines, "  MinMax: " .. fmtMulti(ts.minMax)) end
-                if ts.value then table.insert(lines, "  Value: " .. fmtNum(ts.value)) end
-                if ts.statusBarColor then table.insert(lines, "  Color: " .. fmtMulti(ts.statusBarColor)) end
+                if ts.minMax then tinsert(lines, "  MinMax: " .. fmtMulti(ts.minMax)) end
+                if ts.value then tinsert(lines, "  Value: " .. fmtNum(ts.value)) end
+                if ts.statusBarColor then tinsert(lines, "  Color: " .. fmtMulti(ts.statusBarColor)) end
             elseif tsType == "Cooldown" then
-                if ts.cooldownTimes then table.insert(lines, "  CooldownTimes: " .. fmtMulti(ts.cooldownTimes)) end
-                if ts.cooldownDuration then table.insert(lines, "  Duration: " .. fmtNum(ts.cooldownDuration)) end
+                if ts.cooldownTimes then tinsert(lines, "  CooldownTimes: " .. fmtMulti(ts.cooldownTimes)) end
+                if ts.cooldownDuration then tinsert(lines, "  Duration: " .. fmtNum(ts.cooldownDuration)) end
             elseif tsType == "ColorSelect" then
-                if ts.colorRGB then table.insert(lines, "  RGB: " .. fmtMulti(ts.colorRGB)) end
-                if ts.colorHSV then table.insert(lines, "  HSV: " .. fmtMulti(ts.colorHSV)) end
+                if ts.colorRGB then tinsert(lines, "  RGB: " .. fmtMulti(ts.colorRGB)) end
+                if ts.colorHSV then tinsert(lines, "  HSV: " .. fmtMulti(ts.colorHSV)) end
             elseif tsType == "Model" or tsType == "PlayerModel" or tsType == "DressUpModel" or tsType == "CinematicModel" then
-                if ts.facing then table.insert(lines, "  Facing: " .. fmtNum(ts.facing)) end
-                if ts.position then table.insert(lines, "  Position: " .. fmtMulti(ts.position)) end
-                if ts.modelScale then table.insert(lines, "  ModelScale: " .. fmtNum(ts.modelScale)) end
+                if ts.facing then tinsert(lines, "  Facing: " .. fmtNum(ts.facing)) end
+                if ts.position then tinsert(lines, "  Position: " .. fmtMulti(ts.position)) end
+                if ts.modelScale then tinsert(lines, "  ModelScale: " .. fmtNum(ts.modelScale)) end
             end
         end
 
@@ -1036,7 +1036,7 @@ function UI:CreateTextureTab(parent)
     tab.atlasList = Addon:LoadBuiltInAtlases()
     tab.filteredList = {}
     for _, name in ipairs(tab.atlasList) do
-        table.insert(tab.filteredList, name)
+        tinsert(tab.filteredList, name)
     end
 
     local searchBox = CreateFrame("EditBox", nil, tab, "InputBoxTemplate")
@@ -1250,12 +1250,12 @@ function UI:FilterAtlases(filter)
 
     if filter == "" then
         for _, name in ipairs(tab.atlasList) do
-            table.insert(tab.filteredList, name)
+            tinsert(tab.filteredList, name)
         end
     else
         for _, name in ipairs(tab.atlasList) do
             if name:lower():find(filter, 1, true) then
-                table.insert(tab.filteredList, name)
+                tinsert(tab.filteredList, name)
             end
         end
     end
@@ -1316,30 +1316,30 @@ function UI:SelectAtlas(atlasName)
         local isBookmarked = Addon.db.textureBookmarks and Addon.db.textureBookmarks[atlasName]
 
         local details = {}
-        table.insert(details, (L["LABEL_WIDTH"] or "Width:") .. " " .. (info.width or 0))
-        table.insert(details, (L["LABEL_HEIGHT"] or "Height:") .. " " .. (info.height or 0))
-        table.insert(details, "")
-        table.insert(details, (L["LABEL_FILE"] or "File:") .. " " .. (info.file or info.filename or L["LABEL_UNKNOWN"] or "Unknown"))
+        tinsert(details, (L["LABEL_WIDTH"] or "Width:") .. " " .. (info.width or 0))
+        tinsert(details, (L["LABEL_HEIGHT"] or "Height:") .. " " .. (info.height or 0))
+        tinsert(details, "")
+        tinsert(details, (L["LABEL_FILE"] or "File:") .. " " .. (info.file or info.filename or L["LABEL_UNKNOWN"] or "Unknown"))
 
         if info.leftTexCoord then
-            table.insert(details, "")
-            table.insert(details, L["LABEL_TEX_COORDS"] or "Texture Coordinates:")
-            table.insert(details, string.format((L["LABEL_LEFT"] or "  Left:") .. " %.4f", info.leftTexCoord))
-            table.insert(details, string.format((L["LABEL_RIGHT"] or "  Right:") .. " %.4f", info.rightTexCoord))
-            table.insert(details, string.format((L["LABEL_TOP"] or "  Top:") .. " %.4f", info.topTexCoord))
-            table.insert(details, string.format((L["LABEL_BOTTOM"] or "  Bottom:") .. " %.4f", info.bottomTexCoord))
+            tinsert(details, "")
+            tinsert(details, L["LABEL_TEX_COORDS"] or "Texture Coordinates:")
+            tinsert(details, string.format((L["LABEL_LEFT"] or "  Left:") .. " %.4f", info.leftTexCoord))
+            tinsert(details, string.format((L["LABEL_RIGHT"] or "  Right:") .. " %.4f", info.rightTexCoord))
+            tinsert(details, string.format((L["LABEL_TOP"] or "  Top:") .. " %.4f", info.topTexCoord))
+            tinsert(details, string.format((L["LABEL_BOTTOM"] or "  Bottom:") .. " %.4f", info.bottomTexCoord))
         end
 
         if info.tilesHorizontally or info.tilesVertically then
-            table.insert(details, "")
-            table.insert(details, string.format((L["LABEL_TILES"] or "Tiles:") .. " %s x %s",
+            tinsert(details, "")
+            tinsert(details, string.format((L["LABEL_TILES"] or "Tiles:") .. " %s x %s",
                 tostring(info.tilesHorizontally or false),
                 tostring(info.tilesVertically or false)))
         end
 
         if isBookmarked then
-            table.insert(details, "")
-            table.insert(details, "|cff00ff00[" .. (L["LABEL_BOOKMARKED"] or "Bookmarked") .. "]|r")
+            tinsert(details, "")
+            tinsert(details, "|cff00ff00[" .. (L["LABEL_BOOKMARKED"] or "Bookmarked") .. "]|r")
         end
 
         tab.infoText:SetText(table.concat(details, "\n"))
@@ -1384,10 +1384,10 @@ function UI:ShowFavorites()
 
     tab.filteredList = {}
     for name, _ in pairs(Addon.db.textureBookmarks) do
-        table.insert(tab.filteredList, name)
+        tinsert(tab.filteredList, name)
     end
 
-    table.sort(tab.filteredList)
+    sort(tab.filteredList)
     self:UpdateAtlasList()
 end
 
@@ -1520,7 +1520,7 @@ function UI:UpdateGridOverlay()
         if lineIndex > #self.gridFrame.lines then
             local line = self.gridFrame:CreateTexture(nil, "ARTWORK")
             line:SetColorTexture(1, 1, 1, opacity)
-            table.insert(self.gridFrame.lines, line)
+            tinsert(self.gridFrame.lines, line)
         end
 
         local line = self.gridFrame.lines[lineIndex]
@@ -1535,7 +1535,7 @@ function UI:UpdateGridOverlay()
         if lineIndex > #self.gridFrame.lines then
             local line = self.gridFrame:CreateTexture(nil, "ARTWORK")
             line:SetColorTexture(1, 1, 1, opacity)
-            table.insert(self.gridFrame.lines, line)
+            tinsert(self.gridFrame.lines, line)
         end
 
         local line = self.gridFrame.lines[lineIndex]
@@ -1666,7 +1666,7 @@ function UI:ShowEventSelector()
         end)
 
         frame.eventButtons = {}
-        for i = 1, 50 do
+        for i = 1, 150 do
             local btn = CreateFrame("CheckButton", nil, leftContent, "UICheckButtonTemplate")
             btn:SetSize(20, 20)
             btn:SetPoint("TOPLEFT", 5, -(i-1) * 22 - 5)
@@ -1745,28 +1745,7 @@ function UI:ShowEventSelector()
 end
 
 function UI:SelectAllEvents()
-    local allEvents = {
-        "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGIN", "PLAYER_LOGOUT",
-        "ZONE_CHANGED", "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED_INDOORS",
-        "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
-        "UNIT_HEALTH", "UNIT_POWER_UPDATE", "UNIT_AURA",
-        "BAG_UPDATE", "BAG_UPDATE_DELAYED",
-        "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_WHISPER", "CHAT_MSG_PARTY", "CHAT_MSG_GUILD",
-        "ADDON_LOADED", "VARIABLES_LOADED",
-        "COMBAT_LOG_EVENT_UNFILTERED",
-        "QUEST_ACCEPTED", "QUEST_TURNED_IN", "QUEST_LOG_UPDATE",
-        "MERCHANT_SHOW", "MERCHANT_CLOSED",
-        "MAIL_INBOX_UPDATE", "MAIL_SHOW", "MAIL_CLOSED",
-        "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED",
-        "LOOT_OPENED", "LOOT_CLOSED",
-        "TRADE_SHOW", "TRADE_CLOSED",
-        "BANKFRAME_OPENED", "BANKFRAME_CLOSED",
-        "ITEM_LOCKED", "ITEM_UNLOCKED",
-        "GOSSIP_SHOW", "GOSSIP_CLOSED",
-        "TAXIMAP_OPENED", "TAXIMAP_CLOSED",
-    }
-
-    for _, event in ipairs(allEvents) do
+    for _, event in ipairs(Addon.EventMonitor:GetCommonEvents()) do
         Addon.EventMonitor.selectedEvents[event] = true
     end
 
@@ -1779,23 +1758,10 @@ function UI:UpdateEventSelector()
     local frame = self.eventSelector
     local searchText = frame.searchBox:GetText():upper()
 
-    local allEvents = {
-        "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_LOGIN", "PLAYER_LOGOUT",
-        "ZONE_CHANGED", "ZONE_CHANGED_NEW_AREA", "ZONE_CHANGED_INDOORS",
-        "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
-        "UNIT_HEALTH", "UNIT_POWER_UPDATE", "UNIT_AURA",
-        "BAG_UPDATE", "BAG_UPDATE_DELAYED",
-        "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_WHISPER", "CHAT_MSG_PARTY", "CHAT_MSG_GUILD",
-        "ADDON_LOADED", "VARIABLES_LOADED",
-        "COMBAT_LOG_EVENT_UNFILTERED",
-        "QUEST_ACCEPTED", "QUEST_TURNED_IN", "QUEST_LOG_UPDATE",
-        "MERCHANT_SHOW", "MERCHANT_CLOSED",
-        "MAIL_INBOX_UPDATE", "MAIL_SHOW", "MAIL_CLOSED",
-        "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED",
-        "LOOT_OPENED", "LOOT_CLOSED",
-        "TRADE_SHOW", "TRADE_CLOSED",
-        "BANKFRAME_OPENED", "BANKFRAME_CLOSED",
-    }
+    local allEvents = {}
+    for _, event in ipairs(Addon.EventMonitor:GetCommonEvents()) do
+        tinsert(allEvents, event)
+    end
 
     for event in pairs(Addon.EventMonitor.selectedEvents) do
         local exists = false
@@ -1806,16 +1772,16 @@ function UI:UpdateEventSelector()
             end
         end
         if not exists then
-            table.insert(allEvents, event)
+            tinsert(allEvents, event)
         end
     end
 
-    table.sort(allEvents)
+    sort(allEvents)
 
     local filteredEvents = {}
     for _, event in ipairs(allEvents) do
         if searchText == "" or string.find(event, searchText, 1, true) then
-            table.insert(filteredEvents, event)
+            tinsert(filteredEvents, event)
         end
     end
 

@@ -73,7 +73,7 @@ function MonitorTab:GatherUsage()
                 cpuPerSec = cpu / totals.duration
             end
 
-            table.insert(addonInfo, {
+            tinsert(addonInfo, {
                 index = i,
                 name = name,
                 title = displayTitle,
@@ -105,11 +105,11 @@ function MonitorTab:GetSortedList()
     for _, info in ipairs(addonInfo) do
         local matchesFilter = lowerFilter == "" or info.title:lower():find(lowerFilter, 1, true) or info.name:lower():find(lowerFilter, 1, true)
         if matchesFilter then
-            table.insert(displayedList, info)
+            tinsert(displayedList, info)
         end
     end
 
-    table.sort(displayedList, function(a, b)
+    sort(displayedList, function(a, b)
         local valA, valB
         if absOrder == 1 then
             valA, valB = a.title:lower(), b.title:lower()

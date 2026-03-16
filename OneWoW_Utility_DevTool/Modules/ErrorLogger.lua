@@ -134,7 +134,7 @@ function ErrorLogger:CaptureError(message, stack)
             err.counter = (err.counter or 1) + 1
             err.session = db.session
             err.time = date("%Y/%m/%d %H:%M:%S")
-            table.remove(errors, i)
+            tremove(errors, i)
             errors[#errors + 1] = err
             self:UpdateUI()
             self:UpdateErrorBadge()
@@ -154,7 +154,7 @@ function ErrorLogger:CaptureError(message, stack)
     errors[#errors + 1] = errorObj
 
     while #errors > MAX_ERRORS do
-        table.remove(errors, 1)
+        tremove(errors, 1)
     end
 
     self:PlayAlertSound()
@@ -223,22 +223,22 @@ function ErrorLogger:ShowErrorDetails(errorData)
     end
 
     local details = {}
-    table.insert(details, (L["ERR_DETAIL_TIME"] or "TIME:") .. " " .. (errorData.time or "?"))
-    table.insert(details, (L["ERR_DETAIL_SESSION"] or "SESSION:") .. " " .. sessionLabel)
+    tinsert(details, (L["ERR_DETAIL_TIME"] or "TIME:") .. " " .. (errorData.time or "?"))
+    tinsert(details, (L["ERR_DETAIL_SESSION"] or "SESSION:") .. " " .. sessionLabel)
     if errorData.counter and errorData.counter > 1 then
-        table.insert(details, (L["ERR_DETAIL_COUNT"] or "COUNT:") .. " " .. errorData.counter)
+        tinsert(details, (L["ERR_DETAIL_COUNT"] or "COUNT:") .. " " .. errorData.counter)
     end
-    table.insert(details, "")
-    table.insert(details, (L["ERR_DETAIL_MESSAGE"] or "MESSAGE:"))
-    table.insert(details, errorData.message or "")
-    table.insert(details, "")
-    table.insert(details, (L["ERR_DETAIL_STACK"] or "STACK TRACE:"))
-    table.insert(details, errorData.stack or "")
+    tinsert(details, "")
+    tinsert(details, (L["ERR_DETAIL_MESSAGE"] or "MESSAGE:"))
+    tinsert(details, errorData.message or "")
+    tinsert(details, "")
+    tinsert(details, (L["ERR_DETAIL_STACK"] or "STACK TRACE:"))
+    tinsert(details, errorData.stack or "")
 
     if errorData.locals and errorData.locals ~= "" then
-        table.insert(details, "")
-        table.insert(details, (L["ERR_DETAIL_LOCALS"] or "LOCALS:"))
-        table.insert(details, errorData.locals)
+        tinsert(details, "")
+        tinsert(details, (L["ERR_DETAIL_LOCALS"] or "LOCALS:"))
+        tinsert(details, errorData.locals)
     end
 
     tab.detailsText:SetText(table.concat(details, "\n"))
