@@ -6,13 +6,8 @@ local CatMgrUI = OneWoW_Bags.CategoryManagerUI
 local managerFrame = nil
 local OneWoW_GUI = OneWoW_Bags.GUILib
 
-local function T(key)
-    return OneWoW_GUI:GetThemeColor(key)
-end
-
-local function S(key)
-    return OneWoW_GUI:GetSpacing(key)
-end
+local T = OneWoW_Bags.T
+local S = OneWoW_Bags.S
 
 StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
     text = "",
@@ -326,7 +321,7 @@ function CatMgrUI:Refresh()
             header:SetHeight(28)
             header:SetPoint("TOPLEFT", catFrame, "TOPLEFT", 0, 0)
             header:SetPoint("TOPRIGHT", catFrame, "TOPRIGHT", 0, 0)
-            header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+            header:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
             header:SetBackdropColor(T("BG_TERTIARY"))
             header:EnableMouse(true)
             header:RegisterForDrag("LeftButton")

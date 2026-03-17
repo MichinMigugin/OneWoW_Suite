@@ -6,13 +6,8 @@ local InfoBar = OneWoW_Bags.InfoBar
 local infoBarFrame = nil
 local OneWoW_GUI = OneWoW_Bags.GUILib
 
-local function T(key)
-    return OneWoW_GUI:GetThemeColor(key)
-end
-
-local function S(key)
-    return OneWoW_GUI:GetSpacing(key)
-end
+local T = OneWoW_Bags.T
+local S = OneWoW_Bags.S
 
 function InfoBar:Create(parent)
     if infoBarFrame then return infoBarFrame end
@@ -157,25 +152,7 @@ function InfoBar:Create(parent)
 end
 
 function InfoBar:CreateViewBtn(parent, label)
-    local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = label, height = 22, minWidth = 36 })
-    btn.isActive = false
-
-    btn._defaultEnter = btn:GetScript("OnEnter")
-    btn._defaultLeave = btn:GetScript("OnLeave")
-
-    btn:SetScript("OnEnter", function(self)
-        if not self.isActive and self._defaultEnter then
-            self._defaultEnter(self)
-        end
-    end)
-
-    btn:SetScript("OnLeave", function(self)
-        if not self.isActive and self._defaultLeave then
-            self._defaultLeave(self)
-        end
-    end)
-
-    return btn
+    return OneWoW_Bags.CreateViewBtn(parent, label)
 end
 
 function InfoBar:UpdateViewButtons()

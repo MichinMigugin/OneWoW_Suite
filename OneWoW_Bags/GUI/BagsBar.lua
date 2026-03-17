@@ -11,13 +11,9 @@ local OneWoW_GUI = OneWoW_Bags.GUILib
 local ROW1_TRACKER_MAX = 2
 local ROW2_HEIGHT = 28
 
-local function T(key)
-    return OneWoW_GUI:GetThemeColor(key)
-end
-
-local function S(key)
-    return OneWoW_GUI:GetSpacing(key)
-end
+local T = OneWoW_Bags.T
+local S = OneWoW_Bags.S
+local FormatGold = OneWoW_Bags.FormatGold
 
 StaticPopupDialogs["ONEWOW_BAGS_ADD_TRACKER"] = {
     text = "",
@@ -55,30 +51,6 @@ StaticPopupDialogs["ONEWOW_BAGS_ADD_TRACKER"] = {
     hideOnEscape = true,
     preferredIndex = 3,
 }
-
-local function FormatNumber(n)
-    local s = tostring(n)
-    local pos = #s % 3
-    if pos == 0 then pos = 3 end
-    local parts = { s:sub(1, pos) }
-    for i = pos + 1, #s, 3 do
-        parts[#parts + 1] = s:sub(i, i + 2)
-    end
-    return table.concat(parts, ",")
-end
-
-local function FormatGold(copper)
-    local gold = math.floor(copper / 10000)
-    local silver = math.floor((copper % 10000) / 100)
-    local cop = copper % 100
-    if gold > 0 then
-        return string.format("|cFFFFD100%sg|r |cFFC0C0C0%ds|r |cFFAD6A24%dc|r", FormatNumber(gold), silver, cop)
-    elseif silver > 0 then
-        return string.format("|cFFC0C0C0%ds|r |cFFAD6A24%dc|r", silver, cop)
-    else
-        return string.format("|cFFAD6A24%dc|r", cop)
-    end
-end
 
 function BagsBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end

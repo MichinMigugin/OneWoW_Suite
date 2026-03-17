@@ -227,6 +227,26 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SETTING_ITEM_SORT"] = "Item Sort",
     ["SETTING_ITEM_SORT_DESC"] = "How items are sorted within each category",
     ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
+
+    ["SECTION_BANK"] = "Bank",
+    ["SECTION_DISPLAY"] = "Display",
+    ["SECTION_BEHAVIOR"] = "Behavior",
+    ["SECTION_INTEGRATION"] = "Integration",
+
+    ["TOGGLE_ON"] = "On",
+    ["TOGGLE_OFF"] = "Off",
+
+    ["DESC_ENABLE_BANK"] = "Replace the default bank window with the Bags bank UI.",
+    ["DESC_RARITY_COLOR"] = "Color item borders by their quality rarity.",
+    ["DESC_SHOW_NEW"] = "Glow effect on newly acquired items.",
+    ["DESC_SHOW_SCROLLBAR"] = "Show the scroll bar on the bag window.",
+    ["DESC_SHOW_BAGS_BAR"] = "Show individual bag slots at the bottom of the window.",
+    ["DESC_AUTO_OPEN"] = "Automatically open bags when visiting a vendor.",
+    ["DESC_AUTO_CLOSE"] = "Close bags when walking away from NPCs.",
+    ["DESC_LOCK"] = "Prevent dragging the bag window.",
+    ["DESC_OVERLAY"] = "Toggle item overlay displays from OneWoW.",
+    ["SETTING_BANK_OVERLAYS"] = "Bank Overlays",
+    ["DESC_BANK_OVERLAYS"] = "Show item overlays on bank and guild bank items.",
 }
 
 OneWoW_Bags.L = {}

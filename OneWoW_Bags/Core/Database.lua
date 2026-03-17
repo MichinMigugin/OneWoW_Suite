@@ -46,6 +46,7 @@ local defaults = {
         guildBankSelectedTab = nil,
         collapsedGuildBankSections = {},
         hideScrollBar = true,
+        enableBankOverlays = true,
     },
     char = {}
 }
@@ -195,5 +196,9 @@ function OneWoW_Bags:InitializeDatabase()
 
     if self.db.global.hideScrollBar == nil then
         self.db.global.hideScrollBar = true
+    end
+
+    if self.db.global.enableBankOverlays == nil then
+        self.db.global.enableBankOverlays = true
     end
 end

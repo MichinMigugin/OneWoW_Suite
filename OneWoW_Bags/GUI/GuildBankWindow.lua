@@ -15,37 +15,9 @@ local contentArea = nil
 local contentMode = "items"
 local logEntryFrames = {}
 
-local function T(key)
-    return OneWoW_GUI:GetThemeColor(key)
-end
-
-local function S(key)
-    return OneWoW_GUI:GetSpacing(key)
-end
-
-local function FormatNumber(n)
-    local s = tostring(n)
-    local pos = #s % 3
-    if pos == 0 then pos = 3 end
-    local parts = { s:sub(1, pos) }
-    for i = pos + 1, #s, 3 do
-        parts[#parts + 1] = s:sub(i, i + 2)
-    end
-    return table.concat(parts, ",")
-end
-
-local function FormatGold(copper)
-    local gold = math.floor(copper / 10000)
-    local silver = math.floor((copper % 10000) / 100)
-    local cop = copper % 100
-    if gold > 0 then
-        return string.format("|cFFFFD100%sg|r |cFFC0C0C0%ds|r |cFFAD6A24%dc|r", FormatNumber(gold), silver, cop)
-    elseif silver > 0 then
-        return string.format("|cFFC0C0C0%ds|r |cFFAD6A24%dc|r", silver, cop)
-    else
-        return string.format("|cFFAD6A24%dc|r", cop)
-    end
-end
+local T = OneWoW_Bags.T
+local S = OneWoW_Bags.S
+local FormatGold = OneWoW_Bags.FormatGold
 
 function GBGUI:InitWindow()
     if isInitialized then return end
@@ -168,7 +140,13 @@ function GBGUI:InitWindow()
     end)
 
 
-    tinsert(UISpecialFrames, "OneWoW_GuildBankMainWindow")
+    local alreadyInSpecial = false
+    for _, name in ipairs(UISpecialFrames) do
+        if name == "OneWoW_GuildBankMainWindow" then alreadyInSpecial = true; break end
+    end
+    if not alreadyInSpecial then
+        tinsert(UISpecialFrames, "OneWoW_GuildBankMainWindow")
+    end
     isInitialized = true
 
     if db and db.global and db.global.guildBankWindowPosition then
@@ -387,6 +365,7 @@ function GBGUI:RefreshLayout()
     if contentMode == "log" then
         local layoutHeight = GBGUI:RenderLog()
         contentFrame:SetHeight(layoutHeight)
+        OneWoW_Bags.ApplyFontToFrame(contentFrame)
 
         local freeSlots = 0
         local totalSlots = 0
@@ -403,6 +382,7 @@ function GBGUI:RefreshLayout()
     if contentMode == "moneylog" then
         local layoutHeight = GBGUI:RenderMoneyLog()
         contentFrame:SetHeight(layoutHeight)
+        OneWoW_Bags.ApplyFontToFrame(contentFrame)
         OneWoW_Bags.GuildBankBagsBar:UpdateGold()
         return
     end
@@ -410,6 +390,7 @@ function GBGUI:RefreshLayout()
     if contentMode == "info" then
         local layoutHeight = GBGUI:RenderInfo()
         contentFrame:SetHeight(layoutHeight)
+        OneWoW_Bags.ApplyFontToFrame(contentFrame)
         return
     end
 
@@ -456,6 +437,8 @@ function GBGUI:RefreshLayout()
     end
 
     contentFrame:SetHeight(layoutHeight)
+
+    OneWoW_Bags.ApplyFontToFrame(contentFrame)
 
     local freeSlots = GBSet:GetFreeSlotCount()
     local totalSlots = GBSet:GetSlotCount()
@@ -506,6 +489,9 @@ function GBGUI:Show()
             if w and w > 10 then contentFrame:SetWidth(w) end
         end
         GBGUI:RefreshLayout()
+        if GBWindow then
+            OneWoW_Bags.ApplyFontToFrame(GBWindow)
+        end
     end)
 end
 

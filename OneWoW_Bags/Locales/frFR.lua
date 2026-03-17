@@ -170,4 +170,26 @@ OneWoW_Bags.Locales["frFR"] = {
     ["POPUP_RENAME"] = "Rename",
     ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
     ["SORT"] = "Sort",
+
+    ["SECTION_BANK"] = "Banque",
+    ["SECTION_DISPLAY"] = "Affichage",
+    ["SECTION_BEHAVIOR"] = "Comportement",
+    ["SECTION_INTEGRATION"] = "Integration",
+
+    ["TOGGLE_ON"] = "On",
+    ["TOGGLE_OFF"] = "Off",
+
+    ["DESC_ENABLE_BANK"] = "Remplacer la fenetre de banque par defaut par l'interface Bags.",
+    ["DESC_RARITY_COLOR"] = "Colorer les bordures des objets selon leur rarete.",
+    ["DESC_SHOW_NEW"] = "Effet de brillance sur les objets nouvellement acquis.",
+    ["DESC_SHOW_SCROLLBAR"] = "Afficher la barre de defilement dans la fenetre de sacs.",
+    ["DESC_SHOW_BAGS_BAR"] = "Afficher les emplacements individuels des sacs en bas de la fenetre.",
+    ["DESC_AUTO_OPEN"] = "Ouvrir automatiquement les sacs chez un marchand.",
+    ["DESC_AUTO_CLOSE"] = "Fermer les sacs en quittant les PNJs.",
+    ["DESC_LOCK"] = "Empecher le deplacement de la fenetre de sacs.",
+    ["DESC_OVERLAY"] = "Activer ou desactiver les superpositions d'objets OneWoW.",
+    ["SETTING_BANK_OVERLAYS"] = "Superpositions Banque",
+    ["DESC_BANK_OVERLAYS"] = "Afficher les superpositions d'objets dans la banque et la banque de guilde.",
+
+    ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
 }

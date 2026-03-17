@@ -104,6 +104,24 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
                 end)
             end
         end
+        local bankWasShown = owner.BankGUI and owner.BankGUI:IsShown()
+        if owner.BankGUI then
+            owner.BankGUI:FullReset()
+            if bankWasShown and owner.bankOpen then
+                C_Timer.After(0.1, function()
+                    owner.BankGUI:Show()
+                end)
+            end
+        end
+        local gbWasShown = owner.GuildBankGUI and owner.GuildBankGUI:IsShown()
+        if owner.GuildBankGUI then
+            owner.GuildBankGUI:FullReset()
+            if gbWasShown and owner.guildBankOpen then
+                C_Timer.After(0.1, function()
+                    owner.GuildBankGUI:Show()
+                end)
+            end
+        end
     end)
 
     OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner, newIconTheme)

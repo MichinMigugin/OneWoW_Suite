@@ -7,55 +7,14 @@ local bagsBarFrame = nil
 local tabButtons = {}
 local OneWoW_GUI = OneWoW_Bags.GUILib
 
-local function T(key)
-    return OneWoW_GUI:GetThemeColor(key)
-end
-
-local function S(key)
-    return OneWoW_GUI:GetSpacing(key)
-end
-
-local function FormatNumber(n)
-    local s = tostring(n)
-    local pos = #s % 3
-    if pos == 0 then pos = 3 end
-    local parts = { s:sub(1, pos) }
-    for i = pos + 1, #s, 3 do
-        parts[#parts + 1] = s:sub(i, i + 2)
-    end
-    return table.concat(parts, ",")
-end
-
-local function FormatGold(copper)
-    local gold = math.floor(copper / 10000)
-    local silver = math.floor((copper % 10000) / 100)
-    local cop = copper % 100
-    if gold > 0 then
-        return string.format("|cFFFFD100%sg|r |cFFC0C0C0%ds|r |cFFAD6A24%dc|r", FormatNumber(gold), silver, cop)
-    elseif silver > 0 then
-        return string.format("|cFFC0C0C0%ds|r |cFFAD6A24%dc|r", silver, cop)
-    else
-        return string.format("|cFFAD6A24%dc|r", cop)
-    end
-end
+local T = OneWoW_Bags.T
+local S = OneWoW_Bags.S
+local FormatGold = OneWoW_Bags.FormatGold
+local CreateBarButton = OneWoW_Bags.CreateBarButton
 
 local ROW1_Y = 12
 local ROW2_Y = -14
 local BAR_HEIGHT = 58
-
-local function CreateBarButton(parent, label, height)
-    local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = label, height = height or 22 })
-    btn.isActive = false
-    btn._defaultEnter = btn:GetScript("OnEnter")
-    btn._defaultLeave = btn:GetScript("OnLeave")
-    btn:SetScript("OnEnter", function(self)
-        if not self.isActive and self._defaultEnter then self._defaultEnter(self) end
-    end)
-    btn:SetScript("OnLeave", function(self)
-        if not self.isActive and self._defaultLeave then self._defaultLeave(self) end
-    end)
-    return btn
-end
 
 function GBBagsBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end

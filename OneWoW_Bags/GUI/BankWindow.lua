@@ -14,13 +14,8 @@ local titleBar = nil
 local contentArea = nil
 local needsCleanupAfterCombat = false
 
-local function T(key)
-    return OneWoW_GUI:GetThemeColor(key)
-end
-
-local function S(key)
-    return OneWoW_GUI:GetSpacing(key)
-end
+local T = OneWoW_Bags.T
+local S = OneWoW_Bags.S
 
 function BankGUI:InitBankWindow()
     if isInitialized then return end
@@ -154,7 +149,13 @@ function BankGUI:InitBankWindow()
         if BankGUI.RefreshLayout then BankGUI:RefreshLayout() end
     end)
 
-    tinsert(UISpecialFrames, "OneWoW_BankMainWindow")
+    local alreadyInSpecial = false
+    for _, name in ipairs(UISpecialFrames) do
+        if name == "OneWoW_BankMainWindow" then alreadyInSpecial = true; break end
+    end
+    if not alreadyInSpecial then
+        tinsert(UISpecialFrames, "OneWoW_BankMainWindow")
+    end
     isInitialized = true
 
     if db and db.global and db.global.bankWindowPosition then
@@ -248,6 +249,8 @@ function BankGUI:RefreshLayout()
 
     contentFrame:SetHeight(layoutHeight)
 
+    OneWoW_Bags.ApplyFontToFrame(contentFrame)
+
     local freeSlots = BankSet:GetFreeSlotCount()
     local totalSlots = BankSet:GetSlotCount()
     OneWoW_Bags.BankBagsBar:UpdateFreeSlots(freeSlots, totalSlots)
@@ -338,6 +341,9 @@ function BankGUI:Show()
             end
         end
         BankGUI:RefreshLayout()
+        if BankWindow then
+            OneWoW_Bags.ApplyFontToFrame(BankWindow)
+        end
     end)
 end
 

@@ -170,4 +170,26 @@ OneWoW_Bags.Locales["esES"] = {
     ["POPUP_RENAME"] = "Rename",
     ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
     ["SORT"] = "Sort",
+
+    ["SECTION_BANK"] = "Banco",
+    ["SECTION_DISPLAY"] = "Visualizacion",
+    ["SECTION_BEHAVIOR"] = "Comportamiento",
+    ["SECTION_INTEGRATION"] = "Integracion",
+
+    ["TOGGLE_ON"] = "On",
+    ["TOGGLE_OFF"] = "Off",
+
+    ["DESC_ENABLE_BANK"] = "Reemplazar la ventana del banco por defecto con la interfaz de Bags.",
+    ["DESC_RARITY_COLOR"] = "Colorear los bordes de los objetos segun su rareza.",
+    ["DESC_SHOW_NEW"] = "Efecto de brillo en objetos recien adquiridos.",
+    ["DESC_SHOW_SCROLLBAR"] = "Mostrar la barra de desplazamiento en la ventana de bolsas.",
+    ["DESC_SHOW_BAGS_BAR"] = "Mostrar los espacios individuales de bolsas en la parte inferior.",
+    ["DESC_AUTO_OPEN"] = "Abrir automaticamente las bolsas al visitar un vendedor.",
+    ["DESC_AUTO_CLOSE"] = "Cerrar las bolsas al alejarse de los NPCs.",
+    ["DESC_LOCK"] = "Evitar arrastrar la ventana de bolsas.",
+    ["DESC_OVERLAY"] = "Alternar las superposiciones de objetos de OneWoW.",
+    ["SETTING_BANK_OVERLAYS"] = "Superposiciones del Banco",
+    ["DESC_BANK_OVERLAYS"] = "Mostrar superposiciones de objetos en el banco y banco de hermandad.",
+
+    ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
 }

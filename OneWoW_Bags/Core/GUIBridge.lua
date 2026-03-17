@@ -3,6 +3,40 @@ local ADDON_NAME, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
 OneWoW_Bags.GUILib = OneWoW_GUI
 
+function OneWoW_Bags.T(key)
+    return OneWoW_GUI:GetThemeColor(key)
+end
+
+function OneWoW_Bags.S(key)
+    return OneWoW_GUI:GetSpacing(key)
+end
+
+function OneWoW_Bags.FormatNumber(n)
+    return OneWoW_GUI:FormatNumber(n)
+end
+
+function OneWoW_Bags.FormatGold(copper)
+    return OneWoW_GUI:FormatGold(copper)
+end
+
+function OneWoW_Bags.CreateBarButton(parent, label, height)
+    local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = label, height = height or 22 })
+    btn.isActive = false
+    btn._defaultEnter = btn:GetScript("OnEnter")
+    btn._defaultLeave = btn:GetScript("OnLeave")
+    btn:SetScript("OnEnter", function(self)
+        if not self.isActive and self._defaultEnter then self._defaultEnter(self) end
+    end)
+    btn:SetScript("OnLeave", function(self)
+        if not self.isActive and self._defaultLeave then self._defaultLeave(self) end
+    end)
+    return btn
+end
+
+function OneWoW_Bags.CreateViewBtn(parent, label)
+    return OneWoW_Bags.CreateBarButton(parent, label, 22)
+end
+
 OneWoW_Bags.Constants = {
     VERSION = "R7.2603.0100",
     ADDON_NAME = "OneWoW_Bags",
@@ -51,6 +85,41 @@ setmetatable(Constants, {
 
 OneWoW_Bags.THEME = Constants.THEME
 OneWoW_Bags.SPACING = Constants.SPACING
+
+function OneWoW_Bags.ApplyFont(fs, size)
+    local fontPath = OneWoW_GUI:GetFont()
+    if not fontPath or not fs then return end
+    if not size and fs.GetFont then
+        local _, currentSize = fs:GetFont()
+        size = currentSize or 13
+    end
+    if size and size > 0 then
+        OneWoW_GUI:SafeSetFont(fs, fontPath, size)
+    end
+end
+
+function OneWoW_Bags.ApplyFontToFrame(frame)
+    if not frame then return end
+    local fontPath = OneWoW_GUI:GetFont()
+    if not fontPath then return end
+    for _, region in ipairs({frame:GetRegions()}) do
+        if region.GetFont and region.SetFont then
+            local _, sz = region:GetFont()
+            if sz and sz > 0 then
+                OneWoW_GUI:SafeSetFont(region, fontPath, sz)
+            end
+        end
+    end
+    for _, child in ipairs({frame:GetChildren()}) do
+        if child:GetObjectType() == "EditBox" and child.GetFont then
+            local _, sz, flags = child:GetFont()
+            if sz and sz > 0 then
+                OneWoW_GUI:SafeSetFont(child, fontPath, sz, flags or "")
+            end
+        end
+        OneWoW_Bags.ApplyFontToFrame(child)
+    end
+end
 
 function OneWoW_Bags:SortButtons(buttons)
     local db = self.db

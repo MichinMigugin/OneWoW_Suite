@@ -170,4 +170,26 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["POPUP_RENAME"] = "Rename",
     ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
     ["SORT"] = "Sort",
+
+    ["SECTION_BANK"] = "Банк",
+    ["SECTION_DISPLAY"] = "Отображение",
+    ["SECTION_BEHAVIOR"] = "Поведение",
+    ["SECTION_INTEGRATION"] = "Интеграция",
+
+    ["TOGGLE_ON"] = "Вкл",
+    ["TOGGLE_OFF"] = "Выкл",
+
+    ["DESC_ENABLE_BANK"] = "Заменить стандартное окно банка интерфейсом Bags.",
+    ["DESC_RARITY_COLOR"] = "Окрашивать рамки предметов по редкости.",
+    ["DESC_SHOW_NEW"] = "Эффект свечения на недавно полученных предметах.",
+    ["DESC_SHOW_SCROLLBAR"] = "Показывать полосу прокрутки в окне сумок.",
+    ["DESC_SHOW_BAGS_BAR"] = "Показывать отдельные слоты сумок внизу окна.",
+    ["DESC_AUTO_OPEN"] = "Автоматически открывать сумки при посещении торговца.",
+    ["DESC_AUTO_CLOSE"] = "Закрывать сумки при отходе от NPC.",
+    ["DESC_LOCK"] = "Запретить перемещение окна сумок.",
+    ["DESC_OVERLAY"] = "Переключить оверлеи предметов OneWoW.",
+    ["SETTING_BANK_OVERLAYS"] = "Оверлеи Банка",
+    ["DESC_BANK_OVERLAYS"] = "Показывать оверлеи предметов в банке и гильдейском банке.",
+
+    ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
 }

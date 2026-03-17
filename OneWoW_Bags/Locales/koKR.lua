@@ -169,4 +169,26 @@ OneWoW_Bags.Locales["koKR"] = {
     ["POPUP_RENAME"] = "TEST",
     ["GUI_NOT_INSTALLED"] = "TEST",
     ["SORT"] = "TEST",
+
+    ["SECTION_BANK"] = "TEST",
+    ["SECTION_DISPLAY"] = "TEST",
+    ["SECTION_BEHAVIOR"] = "TEST",
+    ["SECTION_INTEGRATION"] = "TEST",
+
+    ["TOGGLE_ON"] = "TEST",
+    ["TOGGLE_OFF"] = "TEST",
+
+    ["DESC_ENABLE_BANK"] = "TEST",
+    ["DESC_RARITY_COLOR"] = "TEST",
+    ["DESC_SHOW_NEW"] = "TEST",
+    ["DESC_SHOW_SCROLLBAR"] = "TEST",
+    ["DESC_SHOW_BAGS_BAR"] = "TEST",
+    ["DESC_AUTO_OPEN"] = "TEST",
+    ["DESC_AUTO_CLOSE"] = "TEST",
+    ["DESC_LOCK"] = "TEST",
+    ["DESC_OVERLAY"] = "TEST",
+    ["SETTING_BANK_OVERLAYS"] = "TEST",
+    ["DESC_BANK_OVERLAYS"] = "TEST",
+
+    ["SETTING_SHOW_SCROLLBAR"] = "TEST",
 }

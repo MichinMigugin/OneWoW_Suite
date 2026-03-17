@@ -170,4 +170,26 @@ OneWoW_Bags.Locales["deDE"] = {
     ["POPUP_RENAME"] = "Rename",
     ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
     ["SORT"] = "Sort",
+
+    ["SECTION_BANK"] = "Bank",
+    ["SECTION_DISPLAY"] = "Anzeige",
+    ["SECTION_BEHAVIOR"] = "Verhalten",
+    ["SECTION_INTEGRATION"] = "Integration",
+
+    ["TOGGLE_ON"] = "An",
+    ["TOGGLE_OFF"] = "Aus",
+
+    ["DESC_ENABLE_BANK"] = "Das Standard-Bankfenster durch die Bags-Bank-Oberflache ersetzen.",
+    ["DESC_RARITY_COLOR"] = "Gegenstandsrander nach Seltenheitsqualitat farben.",
+    ["DESC_SHOW_NEW"] = "Leuchteffekt auf neu erhaltene Gegenstande.",
+    ["DESC_SHOW_SCROLLBAR"] = "Die Bildlaufleiste im Taschenfenster anzeigen.",
+    ["DESC_SHOW_BAGS_BAR"] = "Einzelne Taschenplatze unten im Fenster anzeigen.",
+    ["DESC_AUTO_OPEN"] = "Taschen automatisch bei Handlern offnen.",
+    ["DESC_AUTO_CLOSE"] = "Taschen beim Verlassen von NPCs schliessen.",
+    ["DESC_LOCK"] = "Verschieben des Taschenfensters verhindern.",
+    ["DESC_OVERLAY"] = "OneWoW Gegenstands-Overlays umschalten.",
+    ["SETTING_BANK_OVERLAYS"] = "Bank-Overlays",
+    ["DESC_BANK_OVERLAYS"] = "Gegenstands-Overlays in Bank und Gildenbank anzeigen.",
+
+    ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
 }

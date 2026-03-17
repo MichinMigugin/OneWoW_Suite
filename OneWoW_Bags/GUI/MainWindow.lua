@@ -15,13 +15,8 @@ local contentArea = nil
 local settingsBtn = nil
 local needsCleanupAfterCombat = false
 
-local function T(key)
-    return OneWoW_GUI:GetThemeColor(key)
-end
-
-local function S(key)
-    return OneWoW_GUI:GetSpacing(key)
-end
+local T = OneWoW_Bags.T
+local S = OneWoW_Bags.S
 
 function GUI:InitMainWindow()
     if isInitialized then return end
@@ -153,7 +148,13 @@ function GUI:InitMainWindow()
         if GUI.RefreshLayout then GUI:RefreshLayout() end
     end)
 
-    tinsert(UISpecialFrames, "OneWoW_BagsMainWindow")
+    local alreadyInSpecial = false
+    for _, name in ipairs(UISpecialFrames) do
+        if name == "OneWoW_BagsMainWindow" then alreadyInSpecial = true; break end
+    end
+    if not alreadyInSpecial then
+        tinsert(UISpecialFrames, "OneWoW_BagsMainWindow")
+    end
     isInitialized = true
 
     if OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.windowPosition then
@@ -249,6 +250,8 @@ function GUI:RefreshLayout()
 
     contentFrame:SetHeight(layoutHeight)
 
+    OneWoW_Bags.ApplyFontToFrame(contentFrame)
+
     local freeSlots = BagSet:GetFreeSlotCount()
     local totalSlots = BagSet:GetSlotCount()
     OneWoW_Bags.BagsBar:UpdateFreeSlots(freeSlots, totalSlots)
@@ -281,6 +284,9 @@ function GUI:Show()
             end
         end
         GUI:RefreshLayout()
+        if MainWindow then
+            OneWoW_Bags.ApplyFontToFrame(MainWindow)
+        end
     end)
 end
 
