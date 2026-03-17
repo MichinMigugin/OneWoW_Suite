@@ -62,6 +62,11 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
 
     elseif event == "GUILDBANK_UPDATE_TABS" then
         OneWoW_Bags:OnGuildBankTabsUpdated()
+
+    elseif event == "GUILDBANK_UPDATE_MONEY" then
+        if OneWoW_Bags.guildBankOpen and OneWoW_Bags.GuildBankBagsBar then
+            OneWoW_Bags.GuildBankBagsBar:UpdateGold()
+        end
     end
 end)
 
@@ -79,6 +84,7 @@ function OneWoW_Bags.Events:RegisterBagEvents()
     eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
     eventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
     eventFrame:RegisterEvent("GUILDBANK_UPDATE_TABS")
+    eventFrame:RegisterEvent("GUILDBANK_UPDATE_MONEY")
 end
 
 function OneWoW_Bags.Events:UnregisterBagEvents()

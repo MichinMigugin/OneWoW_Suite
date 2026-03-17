@@ -16,23 +16,11 @@ local function DetectOneWoW()
 end
 
 local function ApplyTheme()
-    if OneWoW_GUI then
-        OneWoW_GUI:ApplyTheme(OneWoW_Bags)
-    end
+    OneWoW_GUI:ApplyTheme(OneWoW_Bags)
 end
 
 local function ApplyLanguage()
-    local lang
-    if OneWoW_GUI then
-        lang = OneWoW_GUI:GetSetting("language") or "enUS"
-    else
-        local hub = _G.OneWoW
-        if hub and hub.db and hub.db.global then
-            lang = hub.db.global.language or "enUS"
-        else
-            lang = OneWoW_Bags.db and OneWoW_Bags.db.global.language or "enUS"
-        end
-    end
+    local lang = OneWoW_GUI:GetSetting("language") or "enUS"
     if lang == "esMX" then lang = "esES" end
     local localeData = OneWoW_Bags.Locales[lang] or OneWoW_Bags.Locales["enUS"]
     local fallback = OneWoW_Bags.Locales["enUS"]
@@ -45,11 +33,7 @@ OneWoW_Bags.ApplyTheme = ApplyTheme
 OneWoW_Bags.ApplyLanguage = ApplyLanguage
 
 function OneWoW_Bags:ReinitForLanguage(langCode)
-    if OneWoW_GUI then
-        OneWoW_GUI:SetSetting("language", langCode)
-    else
-        self.db.global.language = langCode
-    end
+    OneWoW_GUI:SetSetting("language", langCode)
     ApplyLanguage()
     if self.GUI then
         self.GUI:FullReset()
@@ -64,9 +48,7 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
 
     self:InitializeDatabase()
 
-    if OneWoW_GUI then
-        OneWoW_GUI:MigrateSettings(self.db.global)
-    end
+    OneWoW_GUI:MigrateSettings(self.db.global)
 
     ApplyTheme()
     ApplyLanguage()
@@ -77,75 +59,73 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
 
     self:RegisterSlashCommands()
 
-    if OneWoW_GUI then
-        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(owner, newTheme)
-            ApplyTheme()
-            local wasShown = owner.GUI and owner.GUI:IsShown()
-            if owner.GUI then
-                owner.GUI:FullReset()
-                if wasShown then
-                    C_Timer.After(0.1, function()
-                        owner.GUI:Show()
-                    end)
-                end
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(owner, newTheme)
+        ApplyTheme()
+        local wasShown = owner.GUI and owner.GUI:IsShown()
+        if owner.GUI then
+            owner.GUI:FullReset()
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    owner.GUI:Show()
+                end)
             end
-            local bankWasShown = owner.BankGUI and owner.BankGUI:IsShown()
-            if owner.BankGUI then
-                owner.BankGUI:FullReset()
-                if bankWasShown and owner.bankOpen then
-                    C_Timer.After(0.1, function()
-                        owner.BankGUI:Show()
-                    end)
-                end
+        end
+        local bankWasShown = owner.BankGUI and owner.BankGUI:IsShown()
+        if owner.BankGUI then
+            owner.BankGUI:FullReset()
+            if bankWasShown and owner.bankOpen then
+                C_Timer.After(0.1, function()
+                    owner.BankGUI:Show()
+                end)
             end
-        end)
+        end
+    end)
 
-        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(owner, newLang)
-            ApplyLanguage()
-            local wasShown = owner.GUI and owner.GUI:IsShown()
-            if owner.GUI then
-                owner.GUI:FullReset()
-                if wasShown then
-                    C_Timer.After(0.1, function()
-                        owner.GUI:Show()
-                    end)
-                end
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(owner, newLang)
+        ApplyLanguage()
+        local wasShown = owner.GUI and owner.GUI:IsShown()
+        if owner.GUI then
+            owner.GUI:FullReset()
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    owner.GUI:Show()
+                end)
             end
-        end)
+        end
+    end)
 
-        OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(owner, newFont)
-            local wasShown = owner.GUI and owner.GUI:IsShown()
-            if owner.GUI then
-                owner.GUI:FullReset()
-                if wasShown then
-                    C_Timer.After(0.1, function()
-                        owner.GUI:Show()
-                    end)
-                end
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(owner, newFont)
+        local wasShown = owner.GUI and owner.GUI:IsShown()
+        if owner.GUI then
+            owner.GUI:FullReset()
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    owner.GUI:Show()
+                end)
             end
-        end)
+        end
+    end)
 
-        OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner, newIconTheme)
-            if owner.Minimap then
-                owner.Minimap:UpdateIcon()
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner, newIconTheme)
+        if owner.Minimap then
+            owner.Minimap:UpdateIcon()
+        end
+        local wasShown = owner.GUI and owner.GUI:IsShown()
+        if owner.GUI then
+            owner.GUI:FullReset()
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    owner.GUI:Show()
+                end)
             end
-            local wasShown = owner.GUI and owner.GUI:IsShown()
-            if owner.GUI then
-                owner.GUI:FullReset()
-                if wasShown then
-                    C_Timer.After(0.1, function()
-                        owner.GUI:Show()
-                    end)
-                end
-            end
-        end)
+        end
+    end)
 
-        OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, isHidden)
-            if owner.Minimap then
-                owner.Minimap:SetShown(not isHidden)
-            end
-        end)
-    end
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, isHidden)
+        if owner.Minimap then
+            owner.Minimap:SetShown(not isHidden)
+        end
+    end)
 
     local _ver = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or self.Constants.VERSION
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
@@ -250,6 +230,51 @@ function OneWoW_Bags:SuppressBankFrame()
     end
 end
 
+function OneWoW_Bags:RestoreBankFrame()
+    if not self._bankFrameSuppressed then return end
+    self._bankFrameSuppressed = false
+
+    if BankFrame then
+        BankFrame:SetParent(UIParent)
+        if self._bankOrigOnShow then
+            BankFrame:SetScript("OnShow", self._bankOrigOnShow)
+        end
+        if self._bankOrigOnHide then
+            BankFrame:SetScript("OnHide", self._bankOrigOnHide)
+        end
+        if self._bankOrigOnEvent then
+            BankFrame:SetScript("OnEvent", self._bankOrigOnEvent)
+        end
+
+        for i = 7, 13 do
+            local cf = _G["ContainerFrame" .. i]
+            if cf and self._bankHiddenParent and cf:GetParent() == self._bankHiddenParent then
+                cf:SetParent(UIParent)
+            end
+        end
+    end
+
+    self._bankOrigOnShow = nil
+    self._bankOrigOnHide = nil
+    self._bankOrigOnEvent = nil
+    self._bankHiddenParent = nil
+end
+
+function OneWoW_Bags:RestoreGuildBankFrame()
+    if not self._guildBankSuppressed then return end
+    self._guildBankSuppressed = false
+
+    if GuildBankFrame then
+        GuildBankFrame:SetParent(UIParent)
+        if self._gbOrigOnHide then
+            GuildBankFrame:SetScript("OnHide", self._gbOrigOnHide)
+        end
+    end
+
+    self._gbOrigOnHide = nil
+    self._gbHiddenParent = nil
+end
+
 function OneWoW_Bags:OnBankOpened()
     self.bankOpen = true
     local db = self.db
@@ -294,6 +319,7 @@ function OneWoW_Bags:SuppressGuildBankFrame()
     self._gbHiddenParent = CreateFrame("Frame")
     self._gbHiddenParent:Hide()
 
+    self._gbOrigOnHide = GuildBankFrame:GetScript("OnHide")
     GuildBankFrame:SetScript("OnHide", nil)
     GuildBankFrame:SetParent(self._gbHiddenParent)
 end
@@ -478,6 +504,120 @@ end
 
 _G["1WoW_Bags_OnAddonCompartmentLeave"] = function(addonName, button)
     GameTooltip:Hide()
+end
+
+local moneyDialog = nil
+
+function OneWoW_Bags:GetMoneyDialog()
+    if moneyDialog then return moneyDialog end
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_BagsMoneyDialog",
+        title = "",
+        width = 300,
+        height = 120,
+        strata = "DIALOG",
+        movable = true,
+        escClose = true,
+    })
+
+    moneyDialog = result.frame
+    moneyDialog:SetFrameLevel(500)
+    moneyDialog._titleBar = result.titleBar
+    moneyDialog._contentFrame = result.contentFrame
+
+    local moneyBox = CreateFrame("Frame", "OneWoW_BagsMoneyInput", result.contentFrame, "MoneyInputFrameTemplate")
+    moneyBox:SetPoint("TOP", result.contentFrame, "TOP", 0, -10)
+    moneyDialog.moneyBox = moneyBox
+
+    local btnRow = CreateFrame("Frame", nil, result.contentFrame)
+    btnRow:SetHeight(26)
+    btnRow:SetPoint("BOTTOM", result.contentFrame, "BOTTOM", 0, 10)
+
+    local depositBtn = OneWoW_GUI:CreateFitTextButton(btnRow, { text = self.L["BANK_DEPOSIT_GOLD"] or "Deposit", height = 26 })
+    moneyDialog.depositBtn = depositBtn
+
+    local withdrawBtn = OneWoW_GUI:CreateFitTextButton(btnRow, { text = self.L["BANK_WITHDRAW_GOLD"] or "Withdraw", height = 26 })
+    moneyDialog.withdrawBtn = withdrawBtn
+
+    local function LayoutButtons()
+        depositBtn:ClearAllPoints()
+        withdrawBtn:ClearAllPoints()
+        local depW = depositBtn:GetWidth()
+        local witW = withdrawBtn:GetWidth()
+        local gap = 10
+        local depShown = depositBtn:IsShown()
+        local witShown = withdrawBtn:IsShown()
+
+        if depShown and witShown then
+            local totalW = depW + witW + gap
+            btnRow:SetWidth(totalW)
+            depositBtn:SetPoint("LEFT", btnRow, "LEFT", 0, 0)
+            withdrawBtn:SetPoint("LEFT", depositBtn, "RIGHT", gap, 0)
+        elseif depShown then
+            btnRow:SetWidth(depW)
+            depositBtn:SetPoint("LEFT", btnRow, "LEFT", 0, 0)
+        elseif witShown then
+            btnRow:SetWidth(witW)
+            withdrawBtn:SetPoint("LEFT", btnRow, "LEFT", 0, 0)
+        end
+    end
+
+    moneyDialog._layoutButtons = LayoutButtons
+
+    return moneyDialog
+end
+
+function OneWoW_Bags:ShowMoneyDialog(config)
+    local dialog = self:GetMoneyDialog()
+    dialog:Hide()
+    MoneyInputFrame_ResetMoney(dialog.moneyBox)
+
+    if dialog._titleBar and dialog._titleBar._titleText then
+        dialog._titleBar._titleText:SetText(config.title or "")
+    end
+
+    if config.anchorFrame then
+        dialog:ClearAllPoints()
+        dialog:SetPoint("BOTTOM", config.anchorFrame, "TOP", 0, 5)
+    else
+        dialog:ClearAllPoints()
+        dialog:SetPoint("CENTER")
+    end
+
+    dialog.depositBtn:SetShown(config.onDeposit ~= nil)
+    dialog.withdrawBtn:SetShown(config.onWithdraw ~= nil)
+    if dialog._layoutButtons then dialog._layoutButtons() end
+
+    local function doAction(callback)
+        local copper = MoneyInputFrame_GetCopper(dialog.moneyBox)
+        if copper > 0 and callback then
+            callback(copper)
+        end
+        dialog:Hide()
+    end
+
+    dialog.depositBtn:SetScript("OnClick", function()
+        doAction(config.onDeposit)
+    end)
+
+    dialog.withdrawBtn:SetScript("OnClick", function()
+        doAction(config.onWithdraw)
+    end)
+
+    local onEnter = function()
+        if config.onDeposit and not config.onWithdraw then
+            doAction(config.onDeposit)
+        elseif config.onWithdraw and not config.onDeposit then
+            doAction(config.onWithdraw)
+        end
+    end
+    dialog.moneyBox.gold:SetScript("OnEnterPressed", onEnter)
+    dialog.moneyBox.silver:SetScript("OnEnterPressed", onEnter)
+    dialog.moneyBox.copper:SetScript("OnEnterPressed", onEnter)
+
+    dialog:Show()
+    dialog.moneyBox.gold:SetFocus()
 end
 
 local eventFrame = CreateFrame("Frame")

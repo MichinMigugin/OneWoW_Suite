@@ -49,6 +49,7 @@ function View:Layout(contentFrame, width, filteredButtons)
             buttons = filtered
         end
         if #buttons > 0 and (selectedTab == nil or tabID == selectedTab) then
+            OneWoW_Bags:SortButtons(buttons)
             local section = CM:AcquireSection(contentFrame)
             section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
             section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
@@ -75,7 +76,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                 cols = math.max(cols, 1)
 
                 local totalGridWidth = cols * (iconSize + spacing) - spacing
-                local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
+                local leftPadding = padding
 
                 local itemRow = 0
                 local itemCol = 0

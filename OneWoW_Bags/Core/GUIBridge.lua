@@ -51,3 +51,77 @@ setmetatable(Constants, {
 
 OneWoW_Bags.THEME = Constants.THEME
 OneWoW_Bags.SPACING = Constants.SPACING
+
+function OneWoW_Bags:SortButtons(buttons)
+    local db = self.db
+    local sortMode = db and db.global and db.global.itemSort or "name"
+    if sortMode == "name" then
+        table.sort(buttons, function(a, b)
+            if not a.owb_hasItem then return false end
+            if not b.owb_hasItem then return true end
+            local aID = a.owb_itemInfo and a.owb_itemInfo.itemID
+            local bID = b.owb_itemInfo and b.owb_itemInfo.itemID
+            if not aID then return false end
+            if not bID then return true end
+            local aName = C_Item.GetItemNameByID(aID) or ""
+            local bName = C_Item.GetItemNameByID(bID) or ""
+            return aName < bName
+        end)
+    elseif sortMode == "rarity" then
+        table.sort(buttons, function(a, b)
+            if not a.owb_hasItem then return false end
+            if not b.owb_hasItem then return true end
+            local aQ = a.owb_itemInfo and a.owb_itemInfo.quality or 0
+            local bQ = b.owb_itemInfo and b.owb_itemInfo.quality or 0
+            if aQ ~= bQ then return aQ > bQ end
+            local aID = a.owb_itemInfo and a.owb_itemInfo.itemID
+            local bID = b.owb_itemInfo and b.owb_itemInfo.itemID
+            local aName = aID and C_Item.GetItemNameByID(aID) or ""
+            local bName = bID and C_Item.GetItemNameByID(bID) or ""
+            return aName < bName
+        end)
+    elseif sortMode == "ilvl" then
+        table.sort(buttons, function(a, b)
+            if not a.owb_hasItem then return false end
+            if not b.owb_hasItem then return true end
+            local aLink = a.owb_itemInfo and a.owb_itemInfo.hyperlink
+            local bLink = b.owb_itemInfo and b.owb_itemInfo.hyperlink
+            local aIlvl = aLink and (select(4, C_Item.GetItemInfo(aLink)) or 0) or 0
+            local bIlvl = bLink and (select(4, C_Item.GetItemInfo(bLink)) or 0) or 0
+            if aIlvl ~= bIlvl then return aIlvl > bIlvl end
+            local aQ = a.owb_itemInfo and a.owb_itemInfo.quality or 0
+            local bQ = b.owb_itemInfo and b.owb_itemInfo.quality or 0
+            return aQ > bQ
+        end)
+    elseif sortMode == "recent" then
+        table.sort(buttons, function(a, b)
+            if not a.owb_hasItem then return false end
+            if not b.owb_hasItem then return true end
+            local aNew = a.owb_bagID and a.owb_slotID and C_NewItems.IsNewItem(a.owb_bagID, a.owb_slotID)
+            local bNew = b.owb_bagID and b.owb_slotID and C_NewItems.IsNewItem(b.owb_bagID, b.owb_slotID)
+            if aNew and not bNew then return true end
+            if bNew and not aNew then return false end
+            local aQ = a.owb_itemInfo and a.owb_itemInfo.quality or 0
+            local bQ = b.owb_itemInfo and b.owb_itemInfo.quality or 0
+            return aQ > bQ
+        end)
+    elseif sortMode == "type" then
+        table.sort(buttons, function(a, b)
+            if not a.owb_hasItem then return false end
+            if not b.owb_hasItem then return true end
+            local aID = a.owb_itemInfo and a.owb_itemInfo.itemID
+            local bID = b.owb_itemInfo and b.owb_itemInfo.itemID
+            if not aID then return false end
+            if not bID then return true end
+            local _, _, _, _, _, aType = C_Item.GetItemInfo(aID)
+            local _, _, _, _, _, bType = C_Item.GetItemInfo(bID)
+            aType = aType or ""
+            bType = bType or ""
+            if aType ~= bType then return aType < bType end
+            local aName = C_Item.GetItemNameByID(aID) or ""
+            local bName = C_Item.GetItemNameByID(bID) or ""
+            return aName < bName
+        end)
+    end
+    return buttons
+end

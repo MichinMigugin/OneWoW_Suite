@@ -1707,6 +1707,30 @@ function OneWoW_GUI:CreateSlider(parent, options)
     return container
 end
 
+function OneWoW_GUI:FormatNumber(n)
+    local s = tostring(n)
+    local pos = #s % 3
+    if pos == 0 then pos = 3 end
+    local parts = { s:sub(1, pos) }
+    for i = pos + 1, #s, 3 do
+        parts[#parts + 1] = s:sub(i, i + 2)
+    end
+    return table.concat(parts, ",")
+end
+
+function OneWoW_GUI:FormatGold(copper)
+    local gold = math.floor(copper / 10000)
+    local silver = math.floor((copper % 10000) / 100)
+    local cop = copper % 100
+    if gold > 0 then
+        return string.format("|cFFFFD100%sg|r |cFFC0C0C0%ds|r |cFFAD6A24%dc|r", self:FormatNumber(gold), silver, cop)
+    elseif silver > 0 then
+        return string.format("|cFFC0C0C0%ds|r |cFFAD6A24%dc|r", silver, cop)
+    else
+        return string.format("|cFFAD6A24%dc|r", cop)
+    end
+end
+
 function OneWoW_GUI:ClearFrame(frame)
     if not frame then return end
     for _, child in ipairs({ frame:GetChildren() }) do

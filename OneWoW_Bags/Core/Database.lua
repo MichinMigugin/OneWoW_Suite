@@ -27,6 +27,7 @@ local defaults = {
         collapsedSections = {},
         collapsedBagSections = {},
         categorySort = "priority",
+        itemSort = "name",
         categoryOrder = {},
         trackedCurrencies = {},
         selectedBag = nil,
@@ -44,6 +45,7 @@ local defaults = {
         guildBankWindowPosition = nil,
         guildBankSelectedTab = nil,
         collapsedGuildBankSections = {},
+        hideScrollBar = true,
     },
     char = {}
 }
@@ -155,6 +157,10 @@ function OneWoW_Bags:InitializeDatabase()
         self.db.global.categorySort = "priority"
     end
 
+    if not self.db.global.itemSort then
+        self.db.global.itemSort = "name"
+    end
+
     if not self.db.global.categoryOrder then
         self.db.global.categoryOrder = {}
     end
@@ -185,5 +191,9 @@ function OneWoW_Bags:InitializeDatabase()
 
     if not self.db.global.collapsedBankSections then
         self.db.global.collapsedBankSections = {}
+    end
+
+    if self.db.global.hideScrollBar == nil then
+        self.db.global.hideScrollBar = true
     end
 end

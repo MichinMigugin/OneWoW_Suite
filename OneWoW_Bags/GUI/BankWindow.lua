@@ -15,23 +15,11 @@ local contentArea = nil
 local needsCleanupAfterCombat = false
 
 local function T(key)
-    if OneWoW_GUI then
-        return OneWoW_GUI:GetThemeColor(key)
-    end
-    if Constants and Constants.THEME and Constants.THEME[key] then
-        return unpack(Constants.THEME[key])
-    end
-    return 0.5, 0.5, 0.5, 1.0
+    return OneWoW_GUI:GetThemeColor(key)
 end
 
 local function S(key)
-    if OneWoW_GUI then
-        return OneWoW_GUI:GetSpacing(key)
-    end
-    if Constants and Constants.SPACING then
-        return Constants.SPACING[key] or 8
-    end
-    return 8
+    return OneWoW_GUI:GetSpacing(key)
 end
 
 function BankGUI:InitBankWindow()
@@ -42,22 +30,12 @@ function BankGUI:InitBankWindow()
     local db = OneWoW_Bags.db
     local savedHeight = db and db.global and db.global.bankWindowHeight
     local windowHeight = savedHeight or C.WINDOW_HEIGHT
+    local savedWidth = db and db.global and db.global.bankWindowWidth
+    local windowWidth = savedWidth or C.WINDOW_WIDTH
 
-    if OneWoW_GUI then
-        local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT
-        BankWindow = CreateFrame("Frame", "OneWoW_BankMainWindow", UIParent, "BackdropTemplate")
-        BankWindow:SetSize(C.WINDOW_WIDTH, windowHeight)
-        BankWindow:SetBackdrop(BACKDROP_SOFT)
-    else
-        BankWindow = CreateFrame("Frame", "OneWoW_BankMainWindow", UIParent, "BackdropTemplate")
-        BankWindow:SetSize(C.WINDOW_WIDTH, windowHeight)
-        BankWindow:SetBackdrop({
-            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = true, tileEdge = true, tileSize = 16, edgeSize = 14,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 },
-        })
-    end
+    BankWindow = CreateFrame("Frame", "OneWoW_BankMainWindow", UIParent, "BackdropTemplate")
+    BankWindow:SetSize(windowWidth, windowHeight)
+    BankWindow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
 
     if not BankWindow then return end
 
@@ -66,7 +44,7 @@ function BankGUI:InitBankWindow()
     BankWindow:SetPoint("CENTER")
     BankWindow:SetMovable(true)
     BankWindow:SetResizable(true)
-    BankWindow:SetResizeBounds(C.WINDOW_WIDTH, 300, C.WINDOW_WIDTH, 1200)
+    BankWindow:SetResizeBounds(300, 300, 1400, 1200)
     BankWindow:EnableMouse(true)
     BankWindow:RegisterForDrag("LeftButton")
     BankWindow:SetScript("OnDragStart", BankWindow.StartMoving)
@@ -104,38 +82,22 @@ function BankGUI:InitBankWindow()
         titleText = L["BANK_WARBAND_TITLE"]
     end
 
-    if OneWoW_GUI then
-        local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
-        titleBar = OneWoW_GUI:CreateTitleBar(BankWindow, {
-            title = titleText,
-            height = C.TITLEBAR_HEIGHT,
-            showBrand = true,
-            factionTheme = factionTheme,
-            onClose = function() BankWindow:Hide() end,
-        })
-    else
-        titleBar = CreateFrame("Frame", nil, BankWindow, "BackdropTemplate")
-        titleBar:SetHeight(C.TITLEBAR_HEIGHT)
-        titleBar:SetPoint("TOPLEFT", BankWindow, "TOPLEFT", S("XS"), -S("XS"))
-        titleBar:SetPoint("TOPRIGHT", BankWindow, "TOPRIGHT", -S("XS"), -S("XS"))
-        titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        titleBar:SetBackdropColor(T("TITLEBAR_BG"))
-        titleBar:SetFrameLevel(BankWindow:GetFrameLevel() + 1)
+    local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
+    titleBar = OneWoW_GUI:CreateTitleBar(BankWindow, {
+        title = titleText,
+        height = C.TITLEBAR_HEIGHT,
+        showBrand = true,
+        factionTheme = factionTheme,
+        onClose = function() BankWindow:Hide() end,
+    })
 
-        local titleFS = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleFS:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
-        titleFS:SetText(titleText)
-        titleFS:SetTextColor(T("TEXT_PRIMARY"))
-        titleBar._titleText = titleFS
-
-        local closeBtn = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
-        closeBtn:SetSize(20, 20)
-        closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -S("XS") / 2, 0)
-        closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        closeBtn.text:SetPoint("CENTER")
-        closeBtn.text:SetText("X")
-        closeBtn:SetScript("OnClick", function() BankWindow:Hide() end)
-    end
+    local settingsBtn = OneWoW_GUI:CreateButton(titleBar, { text = "S", width = 20, height = 20 })
+    settingsBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -2, 0)
+    settingsBtn:SetScript("OnClick", function()
+        if OneWoW_Bags.Settings and OneWoW_Bags.Settings.Toggle then
+            OneWoW_Bags.Settings:Toggle()
+        end
+    end)
 
     contentArea = CreateFrame("Frame", nil, BankWindow)
     contentArea:SetPoint("TOPLEFT", BankWindow, "TOPLEFT", S("XS"), -(S("XS") + C.TITLEBAR_HEIGHT + S("XS")))
@@ -148,28 +110,14 @@ function BankGUI:InitBankWindow()
     local scrollName = "OneWoW_BankContentScroll"
     contentScrollFrame = CreateFrame("ScrollFrame", scrollName, contentArea, "UIPanelScrollFrameTemplate")
     contentScrollFrame:SetPoint("TOPLEFT", infoBar, "BOTTOMLEFT", 0, -2)
-    contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBar, "TOPRIGHT", -12, 2)
+    local hideScroll = db and db.global and db.global.hideScrollBar
+    local scrollRightOffset = hideScroll and 0 or -16
+    contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBar, "TOPRIGHT", scrollRightOffset, 2)
 
-    if OneWoW_GUI then
-        OneWoW_GUI:StyleScrollBar(contentScrollFrame, { container = contentArea, offset = 0 })
-    else
-        local scrollBar = contentScrollFrame.ScrollBar
-        if scrollBar then
-            scrollBar:ClearAllPoints()
-            scrollBar:SetPoint("TOPRIGHT", contentScrollFrame, "TOPRIGHT", 12, 0)
-            scrollBar:SetPoint("BOTTOMRIGHT", contentScrollFrame, "BOTTOMRIGHT", 12, 0)
-            scrollBar:SetWidth(10)
-            if scrollBar.ScrollUpButton then
-                scrollBar.ScrollUpButton:Hide()
-                scrollBar.ScrollUpButton:SetAlpha(0)
-                scrollBar.ScrollUpButton:EnableMouse(false)
-            end
-            if scrollBar.ScrollDownButton then
-                scrollBar.ScrollDownButton:Hide()
-                scrollBar.ScrollDownButton:SetAlpha(0)
-                scrollBar.ScrollDownButton:EnableMouse(false)
-            end
-        end
+    OneWoW_GUI:StyleScrollBar(contentScrollFrame, { container = contentArea, offset = 0 })
+    if hideScroll and contentScrollFrame.ScrollBar then
+        contentScrollFrame.ScrollBar:SetAlpha(0)
+        contentScrollFrame.ScrollBar:EnableMouse(false)
     end
 
     contentFrame = CreateFrame("Frame", scrollName .. "Content", contentScrollFrame)
@@ -191,13 +139,17 @@ function BankGUI:InitBankWindow()
     resizeBtn:SetFrameLevel(BankWindow:GetFrameLevel() + 10)
     resizeBtn:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
-            BankWindow:StartSizing("BOTTOM")
+            BankWindow:StartSizing("BOTTOMRIGHT")
         end
     end)
     resizeBtn:SetScript("OnMouseUp", function(self)
         BankWindow:StopMovingOrSizing()
         if db and db.global then
             db.global.bankWindowHeight = BankWindow:GetHeight()
+            db.global.bankWindowWidth = BankWindow:GetWidth()
+        end
+        if contentScrollFrame and contentFrame then
+            contentFrame:SetWidth(contentScrollFrame:GetWidth())
         end
         if BankGUI.RefreshLayout then BankGUI:RefreshLayout() end
     end)
@@ -299,6 +251,7 @@ function BankGUI:RefreshLayout()
     local freeSlots = BankSet:GetFreeSlotCount()
     local totalSlots = BankSet:GetSlotCount()
     OneWoW_Bags.BankBagsBar:UpdateFreeSlots(freeSlots, totalSlots)
+    OneWoW_Bags.BankBagsBar:UpdateGold()
 end
 
 function BankGUI:OnSearchChanged(text)
@@ -451,16 +404,6 @@ function BankGUI:ApplyTheme()
     if bagsBarFrame then
         bagsBarFrame:SetBackdropColor(T("BG_TERTIARY"))
         bagsBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end
-
-    if contentScrollFrame and contentScrollFrame.ScrollBar then
-        local scrollBar = contentScrollFrame.ScrollBar
-        if scrollBar.Background then
-            scrollBar.Background:SetColorTexture(T("BG_TERTIARY"))
-        end
-        if scrollBar.ThumbTexture then
-            scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
-        end
     end
 
     OneWoW_Bags.BankInfoBar:UpdateViewButtons()

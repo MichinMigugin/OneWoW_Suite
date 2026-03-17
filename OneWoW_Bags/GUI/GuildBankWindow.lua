@@ -12,17 +12,39 @@ local contentScrollFrame = nil
 local contentFrame = nil
 local titleBar = nil
 local contentArea = nil
+local contentMode = "items"
+local logEntryFrames = {}
 
 local function T(key)
-    if OneWoW_GUI then return OneWoW_GUI:GetThemeColor(key) end
-    if Constants and Constants.THEME and Constants.THEME[key] then return unpack(Constants.THEME[key]) end
-    return 0.5, 0.5, 0.5, 1.0
+    return OneWoW_GUI:GetThemeColor(key)
 end
 
 local function S(key)
-    if OneWoW_GUI then return OneWoW_GUI:GetSpacing(key) end
-    if Constants and Constants.SPACING then return Constants.SPACING[key] or 8 end
-    return 8
+    return OneWoW_GUI:GetSpacing(key)
+end
+
+local function FormatNumber(n)
+    local s = tostring(n)
+    local pos = #s % 3
+    if pos == 0 then pos = 3 end
+    local parts = { s:sub(1, pos) }
+    for i = pos + 1, #s, 3 do
+        parts[#parts + 1] = s:sub(i, i + 2)
+    end
+    return table.concat(parts, ",")
+end
+
+local function FormatGold(copper)
+    local gold = math.floor(copper / 10000)
+    local silver = math.floor((copper % 10000) / 100)
+    local cop = copper % 100
+    if gold > 0 then
+        return string.format("|cFFFFD100%sg|r |cFFC0C0C0%ds|r |cFFAD6A24%dc|r", FormatNumber(gold), silver, cop)
+    elseif silver > 0 then
+        return string.format("|cFFC0C0C0%ds|r |cFFAD6A24%dc|r", silver, cop)
+    else
+        return string.format("|cFFAD6A24%dc|r", cop)
+    end
 end
 
 function GBGUI:InitWindow()
@@ -33,21 +55,12 @@ function GBGUI:InitWindow()
     local db = OneWoW_Bags.db
     local savedHeight = db and db.global and db.global.guildBankWindowHeight
     local windowHeight = savedHeight or C.WINDOW_HEIGHT
+    local savedWidth = db and db.global and db.global.guildBankWindowWidth
+    local windowWidth = savedWidth or C.WINDOW_WIDTH
 
-    if OneWoW_GUI then
-        GBWindow = CreateFrame("Frame", "OneWoW_GuildBankMainWindow", UIParent, "BackdropTemplate")
-        GBWindow:SetSize(C.WINDOW_WIDTH, windowHeight)
-        GBWindow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
-    else
-        GBWindow = CreateFrame("Frame", "OneWoW_GuildBankMainWindow", UIParent, "BackdropTemplate")
-        GBWindow:SetSize(C.WINDOW_WIDTH, windowHeight)
-        GBWindow:SetBackdrop({
-            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = true, tileEdge = true, tileSize = 16, edgeSize = 14,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 },
-        })
-    end
+    GBWindow = CreateFrame("Frame", "OneWoW_GuildBankMainWindow", UIParent, "BackdropTemplate")
+    GBWindow:SetSize(windowWidth, windowHeight)
+    GBWindow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
 
     if not GBWindow then return end
 
@@ -56,7 +69,7 @@ function GBGUI:InitWindow()
     GBWindow:SetPoint("CENTER")
     GBWindow:SetMovable(true)
     GBWindow:SetResizable(true)
-    GBWindow:SetResizeBounds(C.WINDOW_WIDTH, 300, C.WINDOW_WIDTH, 1200)
+    GBWindow:SetResizeBounds(300, 300, 1400, 1200)
     GBWindow:EnableMouse(true)
     GBWindow:RegisterForDrag("LeftButton")
     GBWindow:SetScript("OnDragStart", GBWindow.StartMoving)
@@ -87,38 +100,22 @@ function GBGUI:InitWindow()
 
     local guildName = GetGuildInfo("player") or L["GUILD_BANK_TITLE"]
 
-    if OneWoW_GUI then
-        local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
-        titleBar = OneWoW_GUI:CreateTitleBar(GBWindow, {
-            title = guildName,
-            height = C.TITLEBAR_HEIGHT,
-            showBrand = true,
-            factionTheme = factionTheme,
-            onClose = function() GBWindow:Hide() end,
-        })
-    else
-        titleBar = CreateFrame("Frame", nil, GBWindow, "BackdropTemplate")
-        titleBar:SetHeight(C.TITLEBAR_HEIGHT)
-        titleBar:SetPoint("TOPLEFT", GBWindow, "TOPLEFT", S("XS"), -S("XS"))
-        titleBar:SetPoint("TOPRIGHT", GBWindow, "TOPRIGHT", -S("XS"), -S("XS"))
-        titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-        titleBar:SetBackdropColor(T("TITLEBAR_BG"))
-        titleBar:SetFrameLevel(GBWindow:GetFrameLevel() + 1)
+    local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
+    titleBar = OneWoW_GUI:CreateTitleBar(GBWindow, {
+        title = guildName,
+        height = C.TITLEBAR_HEIGHT,
+        showBrand = true,
+        factionTheme = factionTheme,
+        onClose = function() GBWindow:Hide() end,
+    })
 
-        local titleFS = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleFS:SetPoint("CENTER")
-        titleFS:SetText(guildName)
-        titleFS:SetTextColor(T("TEXT_PRIMARY"))
-        titleBar._titleText = titleFS
-
-        local closeBtn = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
-        closeBtn:SetSize(20, 20)
-        closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -S("XS") / 2, 0)
-        closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        closeBtn.text:SetPoint("CENTER")
-        closeBtn.text:SetText("X")
-        closeBtn:SetScript("OnClick", function() GBWindow:Hide() end)
-    end
+    local settingsBtn = OneWoW_GUI:CreateButton(titleBar, { text = "S", width = 20, height = 20 })
+    settingsBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -2, 0)
+    settingsBtn:SetScript("OnClick", function()
+        if OneWoW_Bags.Settings and OneWoW_Bags.Settings.Toggle then
+            OneWoW_Bags.Settings:Toggle()
+        end
+    end)
 
     contentArea = CreateFrame("Frame", nil, GBWindow)
     contentArea:SetPoint("TOPLEFT", GBWindow, "TOPLEFT", S("XS"), -(S("XS") + C.TITLEBAR_HEIGHT + S("XS")))
@@ -130,10 +127,14 @@ function GBGUI:InitWindow()
     local scrollName = "OneWoW_GuildBankContentScroll"
     contentScrollFrame = CreateFrame("ScrollFrame", scrollName, contentArea, "UIPanelScrollFrameTemplate")
     contentScrollFrame:SetPoint("TOPLEFT", infoBar, "BOTTOMLEFT", 0, -2)
-    contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBar, "TOPRIGHT", -12, 2)
+    local hideScroll = db and db.global and db.global.hideScrollBar
+    local scrollRightOffset = hideScroll and 0 or -16
+    contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBar, "TOPRIGHT", scrollRightOffset, 2)
 
-    if OneWoW_GUI then
-        OneWoW_GUI:StyleScrollBar(contentScrollFrame, { container = contentArea, offset = 0 })
+    OneWoW_GUI:StyleScrollBar(contentScrollFrame, { container = contentArea, offset = 0 })
+    if hideScroll and contentScrollFrame.ScrollBar then
+        contentScrollFrame.ScrollBar:SetAlpha(0)
+        contentScrollFrame.ScrollBar:EnableMouse(false)
     end
 
     contentFrame = CreateFrame("Frame", scrollName .. "Content", contentScrollFrame)
@@ -152,13 +153,20 @@ function GBGUI:InitWindow()
     resizeBtn:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
     resizeBtn:SetFrameLevel(GBWindow:GetFrameLevel() + 10)
     resizeBtn:SetScript("OnMouseDown", function(_, button)
-        if button == "LeftButton" then GBWindow:StartSizing("BOTTOM") end
+        if button == "LeftButton" then GBWindow:StartSizing("BOTTOMRIGHT") end
     end)
     resizeBtn:SetScript("OnMouseUp", function()
         GBWindow:StopMovingOrSizing()
-        if db and db.global then db.global.guildBankWindowHeight = GBWindow:GetHeight() end
+        if db and db.global then
+            db.global.guildBankWindowHeight = GBWindow:GetHeight()
+            db.global.guildBankWindowWidth = GBWindow:GetWidth()
+        end
+        if contentScrollFrame and contentFrame then
+            contentFrame:SetWidth(contentScrollFrame:GetWidth())
+        end
         GBGUI:RefreshLayout()
     end)
+
 
     tinsert(UISpecialFrames, "OneWoW_GuildBankMainWindow")
     isInitialized = true
@@ -182,11 +190,228 @@ function GBGUI:CleanupAllViews()
     if OneWoW_Bags.GuildBankCategoryManager then
         OneWoW_Bags.GuildBankCategoryManager:ReleaseAllSections()
     end
+    GBGUI:ClearLogEntries()
+end
+
+function GBGUI:ClearLogEntries()
+    for _, frame in ipairs(logEntryFrames) do
+        frame:Hide()
+        frame:ClearAllPoints()
+    end
+end
+
+function GBGUI:AcquireLogEntry(index)
+    if logEntryFrames[index] then
+        logEntryFrames[index]:Show()
+        return logEntryFrames[index]
+    end
+    local entry = CreateFrame("Frame", nil, contentFrame)
+    entry:SetHeight(18)
+    entry.text = entry:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    entry.text:SetPoint("LEFT", 4, 0)
+    entry.text:SetPoint("RIGHT", -4, 0)
+    entry.text:SetJustifyH("LEFT")
+    entry.text:SetWordWrap(false)
+    logEntryFrames[index] = entry
+    return entry
+end
+
+function GBGUI:GetContentMode()
+    return contentMode
+end
+
+function GBGUI:SetContentMode(mode)
+    contentMode = mode or "items"
+    if contentScrollFrame then
+        contentScrollFrame:SetVerticalScroll(0)
+    end
+    if OneWoW_Bags.GuildBankBagsBar then
+        OneWoW_Bags.GuildBankBagsBar:UpdateRow2Highlights()
+    end
+
+    if mode == "log" then
+        local selectedTab = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.guildBankSelectedTab or 1
+        QueryGuildBankLog(selectedTab)
+        GBGUI:RefreshLayout()
+        C_Timer.After(0.3, function() if contentMode == "log" then GBGUI:RefreshLayout() end end)
+        C_Timer.After(0.8, function() if contentMode == "log" then GBGUI:RefreshLayout() end end)
+    elseif mode == "moneylog" then
+        QueryGuildBankLog(MAX_GUILDBANK_TABS + 1)
+        GBGUI:RefreshLayout()
+        C_Timer.After(0.3, function() if contentMode == "moneylog" then GBGUI:RefreshLayout() end end)
+        C_Timer.After(0.8, function() if contentMode == "moneylog" then GBGUI:RefreshLayout() end end)
+    elseif mode == "info" then
+        local selectedTab = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.guildBankSelectedTab or 1
+        QueryGuildBankText(selectedTab)
+        GBGUI:RefreshLayout()
+        C_Timer.After(0.3, function() if contentMode == "info" then GBGUI:RefreshLayout() end end)
+        C_Timer.After(0.8, function() if contentMode == "info" then GBGUI:RefreshLayout() end end)
+    else
+        GBGUI:RefreshLayout()
+    end
+end
+
+local function FormatTimeAgo(years, months, days, hours)
+    if years and years > 0 then return string.format("%dy ago", years) end
+    if months and months > 0 then return string.format("%dmo ago", months) end
+    if days and days > 0 then return string.format("%dd ago", days) end
+    if hours and hours > 0 then return string.format("%dh ago", hours) end
+    return "just now"
+end
+
+function GBGUI:RenderLog()
+    if not contentFrame then return 1 end
+    local db = OneWoW_Bags.db
+    local selectedTab = db and db.global and db.global.guildBankSelectedTab or 1
+
+    local numTransactions = GetNumGuildBankTransactions(selectedTab) or 0
+    if numTransactions == 0 then
+        local entry = GBGUI:AcquireLogEntry(1)
+        entry:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, 0)
+        entry:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
+        entry.text:SetText(L["GUILD_BANK_LOG_EMPTY"])
+        entry.text:SetTextColor(T("TEXT_SECONDARY"))
+        return 20
+    end
+
+    local yOffset = 0
+    local entryIndex = 0
+
+    for i = numTransactions, 1, -1 do
+        local ttype, name, itemLink, count, tab1, tab2, years, months, days, hours = GetGuildBankTransaction(selectedTab, i)
+        if ttype then
+            entryIndex = entryIndex + 1
+            local entry = GBGUI:AcquireLogEntry(entryIndex)
+            entry:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
+            entry:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
+
+            local actionText = ""
+            if ttype == "deposit" then actionText = L["GUILD_BANK_LOG_DEPOSITED"]
+            elseif ttype == "withdraw" then actionText = L["GUILD_BANK_LOG_WITHDREW"]
+            elseif ttype == "move" then actionText = L["GUILD_BANK_LOG_MOVED"]
+            else actionText = ttype or ""
+            end
+
+            local countText = (count and count > 1) and (" x" .. count) or ""
+            local timeText = " |cFF808080(" .. FormatTimeAgo(years, months, days, hours) .. ")|r"
+
+            local line = string.format("|cFFFFD100%s|r %s %s%s%s", name or "Unknown", actionText, itemLink or "", countText, timeText)
+            entry.text:SetText(line)
+            entry.text:SetTextColor(T("TEXT_PRIMARY"))
+
+            yOffset = yOffset + 18
+        end
+    end
+
+    return math.max(yOffset, 1)
+end
+
+function GBGUI:RenderMoneyLog()
+    if not contentFrame then return 1 end
+
+    local numTransactions = GetNumGuildBankMoneyTransactions() or 0
+    if numTransactions == 0 then
+        local entry = GBGUI:AcquireLogEntry(1)
+        entry:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, 0)
+        entry:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
+        entry.text:SetText(L["GUILD_BANK_LOG_EMPTY"])
+        entry.text:SetTextColor(T("TEXT_SECONDARY"))
+        return 20
+    end
+
+    local yOffset = 0
+    local entryIndex = 0
+
+    for i = numTransactions, 1, -1 do
+        local ttype, name, amount, years, months, days, hours = GetGuildBankMoneyTransaction(i)
+        if ttype then
+            entryIndex = entryIndex + 1
+            local entry = GBGUI:AcquireLogEntry(entryIndex)
+            entry:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
+            entry:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
+
+            local actionText = ""
+            if ttype == "deposit" then actionText = L["GUILD_BANK_LOG_DEPOSITED"]
+            elseif ttype == "withdrawal" then actionText = L["GUILD_BANK_LOG_WITHDREW"]
+            elseif ttype == "repair" then actionText = L["GUILD_BANK_LOG_REPAIRED"]
+            else actionText = ttype or ""
+            end
+
+            local goldText = FormatGold(amount or 0)
+            local timeText = " |cFF808080(" .. FormatTimeAgo(years, months, days, hours) .. ")|r"
+
+            local line = string.format("|cFFFFD100%s|r %s %s%s", name or "Unknown", actionText, goldText, timeText)
+            entry.text:SetText(line)
+            entry.text:SetTextColor(T("TEXT_PRIMARY"))
+
+            yOffset = yOffset + 18
+        end
+    end
+
+    return math.max(yOffset, 1)
+end
+
+function GBGUI:RenderInfo()
+    if not contentFrame then return 1 end
+    local db = OneWoW_Bags.db
+    local selectedTab = db and db.global and db.global.guildBankSelectedTab or 1
+
+    local infoText = GetGuildBankText(selectedTab) or ""
+    if infoText == "" then
+        infoText = L["GUILD_BANK_INFO_EMPTY"]
+    end
+
+    local entry = GBGUI:AcquireLogEntry(1)
+    entry:SetHeight(0)
+    entry:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 4, -4)
+    entry:SetPoint("RIGHT", contentFrame, "RIGHT", -4, 0)
+    entry.text:ClearAllPoints()
+    entry.text:SetPoint("TOPLEFT")
+    entry.text:SetPoint("TOPRIGHT")
+    entry.text:SetWordWrap(true)
+    entry.text:SetText(infoText)
+    entry.text:SetTextColor(T("TEXT_PRIMARY"))
+
+    local textHeight = entry.text:GetStringHeight() or 20
+    entry:SetHeight(textHeight + 8)
+
+    return textHeight + 16
 end
 
 function GBGUI:RefreshLayout()
     if not isInitialized or not GBWindow then return end
     if not GBWindow:IsShown() then return end
+
+    GBGUI:CleanupAllViews()
+
+    if contentMode == "log" then
+        local layoutHeight = GBGUI:RenderLog()
+        contentFrame:SetHeight(layoutHeight)
+
+        local freeSlots = 0
+        local totalSlots = 0
+        local GBSet = OneWoW_Bags.GuildBankSet
+        if GBSet and GBSet.isBuilt then
+            freeSlots = GBSet:GetFreeSlotCount()
+            totalSlots = GBSet:GetSlotCount()
+        end
+        OneWoW_Bags.GuildBankBagsBar:UpdateFreeSlots(freeSlots, totalSlots)
+        OneWoW_Bags.GuildBankBagsBar:UpdateGold()
+        return
+    end
+
+    if contentMode == "moneylog" then
+        local layoutHeight = GBGUI:RenderMoneyLog()
+        contentFrame:SetHeight(layoutHeight)
+        OneWoW_Bags.GuildBankBagsBar:UpdateGold()
+        return
+    end
+
+    if contentMode == "info" then
+        local layoutHeight = GBGUI:RenderInfo()
+        contentFrame:SetHeight(layoutHeight)
+        return
+    end
 
     local GBSet = OneWoW_Bags.GuildBankSet
     if not GBSet or not GBSet.isBuilt then return end
@@ -198,8 +423,6 @@ function GBGUI:RefreshLayout()
             end
         end
     end
-
-    GBGUI:CleanupAllViews()
 
     local allButtons = GBSet:GetAllButtons()
     local searchText = OneWoW_Bags.GuildBankInfoBar:GetSearchText()
@@ -240,14 +463,27 @@ function GBGUI:RefreshLayout()
     OneWoW_Bags.GuildBankBagsBar:UpdateGold()
 end
 
-function GBGUI:OnSearchChanged(text) self:RefreshLayout() end
+function GBGUI:OnSearchChanged(text)
+    if contentMode ~= "items" then
+        contentMode = "items"
+        if OneWoW_Bags.GuildBankBagsBar then
+            OneWoW_Bags.GuildBankBagsBar:UpdateRow2Highlights()
+        end
+    end
+    self:RefreshLayout()
+end
 
 function GBGUI:Show()
     if not isInitialized then
         local ok, err = pcall(function() GBGUI:InitWindow() end)
-        if not ok then return end
+        if not ok then
+            print("|cFFFF0000[OneWoW_Bags] Guild Bank init error:|r " .. tostring(err))
+            return
+        end
     end
     if not GBWindow then return end
+
+    contentMode = "items"
 
     GBWindow._ready = true
     GBWindow:Show()
@@ -260,6 +496,7 @@ function GBGUI:Show()
     if OneWoW_Bags.GuildBankBagsBar then
         OneWoW_Bags.GuildBankBagsBar:BuildTabButtons()
         OneWoW_Bags.GuildBankBagsBar:UpdateTabHighlights()
+        OneWoW_Bags.GuildBankBagsBar:UpdateRow2Highlights()
     end
 
     C_Timer.After(0, function()
@@ -292,6 +529,8 @@ function GBGUI:FullReset()
     contentScrollFrame = nil
     contentFrame = nil
     isInitialized = false
+    contentMode = "items"
+    logEntryFrames = {}
 end
 
 function GBGUI:GetMainWindow() return GBWindow end

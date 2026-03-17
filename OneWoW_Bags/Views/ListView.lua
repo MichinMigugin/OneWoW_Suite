@@ -19,7 +19,7 @@ function View:Layout(contentFrame, buttons, width)
     cols = math.max(cols, 1)
 
     local totalGridWidth = cols * (iconSize + spacing) - spacing
-    local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
+    local leftPadding = padding
 
     local normalButtons = {}
     local reagentButtons = {}
@@ -31,6 +31,9 @@ function View:Layout(contentFrame, buttons, width)
             table.insert(normalButtons, button)
         end
     end
+
+    OneWoW_Bags:SortButtons(normalButtons)
+    OneWoW_Bags:SortButtons(reagentButtons)
 
     local row = 0
     local col = 0
