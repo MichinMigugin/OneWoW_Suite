@@ -913,7 +913,7 @@ LEFT_PANEL_WIDTH = 320  PANEL_GAP = 10        TAB_BUTTON_HEIGHT = 30
 
 **Standard (recommended):** Add `## RequiredDeps: OneWoW_GUI` to your TOC. No need to add `OneWoW_GUI_DB` — OneWoW_GUI declares it. All suite addons use this approach.
 
-**Embedding (legacy):** Only if embedding the library files into your addon. Add `OneWoW_GUI_DB` to SavedVariables and the 4 library files to load order (after LibStub, before any UI code). Embedding is uncommon in this suite.
+**Embedding (legacy):** Only if embedding the library files into your addon. Add `OneWoW_GUI_DB` to SavedVariables and all library files to load order (after LibStub, before any UI code). Embedding is uncommon in this suite.
 
 ```
 ## SavedVariables: MyAddon_DB, OneWoW_GUI_DB
@@ -922,5 +922,12 @@ Libs\LibStub\LibStub.lua
 Libs\OneWoW_GUI\Core.lua
 Libs\OneWoW_GUI\Constants.lua
 Libs\OneWoW_GUI\OneWoW_GUI.lua
+Libs\OneWoW_GUI\Buttons.lua
+Libs\OneWoW_GUI\Display.lua
+Libs\OneWoW_GUI\Controls.lua
+Libs\OneWoW_GUI\EditBoxes.lua
+Libs\OneWoW_GUI\Layout.lua
+Libs\OneWoW_GUI\Panels.lua
+Libs\OneWoW_GUI\Icons.lua
 Libs\OneWoW_GUI\Settings.lua
 ```

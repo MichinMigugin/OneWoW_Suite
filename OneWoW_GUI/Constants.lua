@@ -4,6 +4,7 @@ if not OneWoW_GUI then return end
 local MEDIA_BASE = "Interface\\AddOns\\OneWoW_GUI\\Media\\"
 
 OneWoW_GUI.Constants = {
+    -- progress bar
     BAR_TEXTURE = MEDIA_BASE .. "bar.tga",
 
     PROGRESS_COLORS = {
@@ -18,6 +19,7 @@ OneWoW_GUI.Constants = {
         BG_COLOR = { 0.15, 0.15, 0.15, 0.8 },
     },
 
+    -- media
     MEDIA_BASE = MEDIA_BASE,
     FONT_BASE = MEDIA_BASE .. "Fonts\\",
 
@@ -27,6 +29,7 @@ OneWoW_GUI.Constants = {
         neutral  = MEDIA_BASE .. "neutral-mini.png",
     },
 
+    -- backdrops
     BACKDROP_SIMPLE = {
         bgFile = "Interface\\Buttons\\WHITE8x8",
     },
@@ -53,17 +56,13 @@ OneWoW_GUI.Constants = {
         insets = { left = 1, right = 1, top = 1, bottom = 1 },
     },
 
-    TOGGLE_BUTTON_WIDTH  = 50,
-    TOGGLE_BUTTON_HEIGHT = 22,
-
     BACKDROP_INNER_NO_INSETS = {
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     },
 
-    ACTIVE_THEME = nil,
-
+    -- spacing/sizing
     SPACING = {
         XS = 4,
         SM = 8,
@@ -90,13 +89,14 @@ OneWoW_GUI.Constants = {
         LEFT_PANEL_WIDTH = 320,
         PANEL_GAP = 10,
         TAB_BUTTON_HEIGHT = 30,
+        TOGGLE_BUTTON_WIDTH  = 50,
+        TOGGLE_BUTTON_HEIGHT = 22,
     },
 
-    DEFAULT_THEME = {
-        COLOR = { 0.5, 0.5, 0.5, 1.0 },
-        SPACING = 8,
-    },
-
+    -- themes
+    ACTIVE_THEME = nil,
+    DEFAULT_THEME_COLOR = { 0.5, 0.5, 0.5, 1.0 },
+    DEFAULT_THEME_SPACING = 8,
     DEFAULT_THEME_KEY = "green",
     DEFAULT_THEME_NAME = "Forest Green",
 

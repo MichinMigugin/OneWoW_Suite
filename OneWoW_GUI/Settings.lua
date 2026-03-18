@@ -118,8 +118,6 @@ end
 
 local THEMES_ORDER = Constants.THEMES_ORDER
 local THEMES = Constants.THEMES
-
-local MEDIA_BASE = Constants.MEDIA_BASE
 local FONT_BASE = Constants.FONT_BASE
 
 local FONTS = {
@@ -234,8 +232,8 @@ function OneWoW_GUI:MigrateLSMFontName(lsmName)
 end
 
 local ICON_TEXTURES = Constants.ICON_TEXTURES
-
 local panelBackdrop = Constants.BACKDROP_INNER_NO_INSETS
+local simpleBackdrop = Constants.BACKDROP_SIMPLE
 
 local dropdownBackdrop = {
     bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -244,8 +242,6 @@ local dropdownBackdrop = {
     edgeSize = 12,
     insets = { left = 2, right = 2, top = 2, bottom = 2 },
 }
-
-local simpleBackdrop = Constants.BACKDROP_SIMPLE
 
 local function CreateDropdownMenu(parent, items, onSelect)
     local menu = CreateFrame("Frame", nil, parent, "BackdropTemplate")

@@ -15,4 +15,15 @@ Libs\LibStub\LibStub.lua
 Core.lua
 Constants.lua
 OneWoW_GUI.lua
+
+# Widget files - DO NOT reorder. Dependencies: Controls needs Buttons+Display;
+# Layout needs Buttons+Controls; Panels needs Buttons+Layout+EditBoxes.
+Buttons.lua
+Display.lua
+Controls.lua
+EditBoxes.lua
+Layout.lua
+Panels.lua
+Icons.lua
+
 Settings.lua
