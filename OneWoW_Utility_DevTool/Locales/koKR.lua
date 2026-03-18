@@ -16,6 +16,7 @@ Addon.Locales["koKR"] = {
     ["TAB_LUA"] = "Lua",
     ["TAB_TEXTURES"] = "텍스처",
     ["TAB_COLORS"] = "색상",
+    ["COLOR_TOOLS_CLICK_TO_COPY"] = "클릭하여 16진수 코드 복사",
     ["TAB_LAYOUT"] = "레이아웃",
 
     -- Frame Inspector

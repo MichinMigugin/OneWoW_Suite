@@ -6,9 +6,6 @@ if not OneWoW_GUI then return end
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
-local GUI = Addon.GUI or {}
-Addon.GUI = GUI
-
 local UI = {}
 Addon.UI = UI
 
@@ -1686,17 +1683,12 @@ function UI:ShowEventSelector()
         end)
 
         frame.eventButtons = {}
+        frame.eventRowHeight = 26
         local commonCount = #Addon.EventMonitor:GetCommonEvents()
         local poolSize = commonCount + (Addon.Constants.EVENT_SELECTOR_CUSTOM_BUFFER or 100)
         for i = 1, poolSize do
-            local btn = CreateFrame("CheckButton", nil, leftContent, "UICheckButtonTemplate")
-            btn:SetSize(20, 20)
-            btn:SetPoint("TOPLEFT", 5, -(i-1) * 22 - 5)
-
-            btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            btn.text:SetPoint("LEFT", btn, "RIGHT", 5, 0)
-            btn.text:SetText("")
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            local btn = OneWoW_GUI:CreateCheckbox(leftContent, { label = "" })
+            btn:SetPoint("TOPLEFT", 5, -(i-1) * frame.eventRowHeight - 5)
 
             btn:SetScript("OnClick", function(self)
                 if self.eventName then
@@ -1811,11 +1803,12 @@ function UI:UpdateEventSelector()
         end
     end
 
+    local rowHeight = frame.eventRowHeight or 26
     for i, btn in ipairs(frame.eventButtons) do
         local event = filteredEvents[i]
         if event then
             btn.eventName = event
-            btn.text:SetText(event)
+            btn.label:SetText(event)
             btn:SetChecked(Addon.EventMonitor:IsEventRegistered(event))
             btn:Show()
         else
@@ -1823,7 +1816,7 @@ function UI:UpdateEventSelector()
         end
     end
 
-    local height = math.max(#filteredEvents * 22 + 10, frame.leftScroll:GetHeight())
+    local height = math.max(#filteredEvents * rowHeight + 10, frame.leftScroll:GetHeight())
     frame.leftScroll:GetScrollChild():SetHeight(height)
 
     frame.eventCount:SetText((Addon.L and Addon.L["LABEL_SELECTED"] or "Selected:") .. " " .. Addon.EventMonitor:GetEventCount())
@@ -1852,25 +1845,13 @@ function UI:CreateMonitorTab(parent)
     local resetBtn = OneWoW_GUI:CreateButton(tab, { text = L["MON_BTN_RESET"] or "Reset", width = 80, height = 22 })
     resetBtn:SetPoint("LEFT", updateBtn, "RIGHT", 5, 0)
 
-    local cpuCheck = CreateFrame("CheckButton", nil, tab, "UICheckButtonTemplate")
-    cpuCheck:SetSize(22, 22)
+    local cpuCheck = OneWoW_GUI:CreateCheckbox(tab, { label = L["MON_LABEL_CPU_PROFILING"] or "CPU Profiling" })
     cpuCheck:SetPoint("LEFT", resetBtn, "RIGHT", 10, 0)
     cpuCheck:SetChecked(Monitor and Monitor:IsCPUProfilingEnabled() or false)
 
-    local cpuLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    cpuLabel:SetPoint("LEFT", cpuCheck, "RIGHT", 2, 0)
-    cpuLabel:SetText(L["MON_LABEL_CPU_PROFILING"] or "CPU Profiling")
-    cpuLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local showOnLoadCheck = CreateFrame("CheckButton", nil, tab, "UICheckButtonTemplate")
-    showOnLoadCheck:SetSize(22, 22)
-    showOnLoadCheck:SetPoint("LEFT", cpuLabel, "RIGHT", 15, 0)
+    local showOnLoadCheck = OneWoW_GUI:CreateCheckbox(tab, { label = L["MON_LABEL_SHOW_ON_LOAD"] or "Show on Load" })
+    showOnLoadCheck:SetPoint("LEFT", cpuCheck.label, "RIGHT", 15, 0)
     showOnLoadCheck:SetChecked(Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad or false)
-
-    local showOnLoadLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    showOnLoadLabel:SetPoint("LEFT", showOnLoadCheck, "RIGHT", 2, 0)
-    showOnLoadLabel:SetText(L["MON_LABEL_SHOW_ON_LOAD"] or "Show on Load")
-    showOnLoadLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     filterLabel:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -8)
@@ -1893,11 +1874,10 @@ function UI:CreateMonitorTab(parent)
 
     local hasCPU = Monitor and Monitor:IsCPUProfilingEnabled() or false
 
-    local headerFrame = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    local headerFrame = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_SIMPLE, width = 100, height = 22 })
+    headerFrame:ClearAllPoints()
     headerFrame:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -35)
     headerFrame:SetPoint("RIGHT", tab, "RIGHT", -5, 0)
-    headerFrame:SetHeight(22)
-    headerFrame:SetBackdrop(BACKDROP_SIMPLE)
     headerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
     local nameHeader = CreateFrame("Button", nil, headerFrame)
@@ -2046,11 +2026,10 @@ function UI:CreateMonitorTab(parent)
         tab.rows[i] = row
     end
 
-    local totalsBar = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    local totalsBar = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_SIMPLE, width = 100, height = 25 })
+    totalsBar:ClearAllPoints()
     totalsBar:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 5, 5)
     totalsBar:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
-    totalsBar:SetHeight(25)
-    totalsBar:SetBackdrop(BACKDROP_SIMPLE)
     totalsBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
     tab.totalsText = totalsBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

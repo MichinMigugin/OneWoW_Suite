@@ -50,9 +50,6 @@ Modules\ColorToolsTab.lua
 Modules\FontBrowserTab.lua
 Modules\MonitorTab.lua
 
-# GUI Framework
-GUI\Framework.lua
-
 # Main UI
 GUI\MainWindow.lua
 GUI\Minimap.lua
