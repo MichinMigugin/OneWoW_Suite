@@ -28,7 +28,6 @@ Locales\koKR.lua
 # Core (load before everything else)
 Core\Constants.lua
 Core\Database.lua
-Core\Config.lua
 Core\MigrationFix.lua
 Core\Core.lua
 
