@@ -16,6 +16,7 @@ Addon.Locales["ruRU"] = {
     ["TAB_LUA"] = "Lua",
     ["TAB_TEXTURES"] = "Текстуры",
     ["TAB_COLORS"] = "Цвета",
+    ["COLOR_TOOLS_CLICK_TO_COPY"] = "Нажмите, чтобы скопировать шестнадцатеричный код",
     ["TAB_LAYOUT"] = "Макет",
 
     -- Frame Inspector

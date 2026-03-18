@@ -16,6 +16,7 @@ Addon.Locales["frFR"] = {
     ["TAB_LUA"] = "Lua",
     ["TAB_TEXTURES"] = "Textures",
     ["TAB_COLORS"] = "Couleurs",
+    ["COLOR_TOOLS_CLICK_TO_COPY"] = "Cliquez pour copier le code hexadécimal",
     ["TAB_LAYOUT"] = "Disposition",
 
     -- Frame Inspector
