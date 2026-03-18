@@ -26,16 +26,18 @@ function DirectDeposit:RegisterEvents()
 
     eventFrame:SetScript("OnEvent", function(self, event, ...)
         if event == "BANKFRAME_OPENED" then
-            DirectDeposit:OnBankOpened()
+            if not DirectDeposit.guildBankOpen then
+                DirectDeposit:OnBankOpened()
+            end
         elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
             local interactionType = ...
-            if interactionType == 10 then
+            if interactionType == Enum.PlayerInteractionType.GuildBanker then
                 DirectDeposit.guildBankOpen = true
                 DirectDeposit:OnBankOpened()
             end
         elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
             local interactionType = ...
-            if interactionType == 10 then
+            if interactionType == Enum.PlayerInteractionType.GuildBanker then
                 DirectDeposit.guildBankOpen = false
             end
         end
@@ -166,7 +168,16 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
         print("|cFFFFD100Direct Deposit:|r |cFF00FF00Starting manual deposit of " .. #itemsToDeposit .. " item(s)...|r")
     end
 
-    local delay = 0.3
+    local hasGuildItems = false
+    for _, itemInfo in ipairs(itemsToDeposit) do
+        if itemInfo.bankType == "guild" then
+            hasGuildItems = true
+            break
+        end
+    end
+    local delayStep = hasGuildItems and 1.0 or 0.3
+
+    local delay = delayStep
     for i, itemInfo in ipairs(itemsToDeposit) do
         local timer = C_Timer.After(delay, function()
             if self.isPaused then
@@ -185,7 +196,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
             end
         end)
         table.insert(self.depositTimers, timer)
-        delay = delay + 0.3
+        delay = delay + delayStep
     end
 end
 
@@ -202,7 +213,6 @@ function DirectDeposit:DepositItemByID(itemID, targetBankType, itemName)
     elseif targetBankType == "personal" then
         bankTypeEnum = Enum.BankType.Character
     elseif targetBankType == "guild" then
-        bankTypeEnum = Enum.BankType.Guild
         isGuildBank = true
         if not self.guildBankOpen then
             table.insert(self.failedItems, {itemID = itemID, itemName = itemName or "Unknown", reason = "Guild bank not open"})
@@ -239,8 +249,8 @@ function DirectDeposit:DepositItemByID(itemID, targetBankType, itemName)
                                 errorReason = "Item binding prevents deposit"
                             end
                         else
-                            local bindType = C_Item.GetItemBindType(itemLocation)
-                            if bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest then
+                            local ok, bindType = pcall(C_Item.GetItemBindType, itemLocation)
+                            if ok and (bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest) then
                                 canDeposit = false
                                 hadError = true
                                 errorReason = "Item binding prevents deposit"
@@ -280,9 +290,6 @@ function DirectDeposit:DepositItemByID(itemID, targetBankType, itemName)
         if not self.isDepositing then
             local errorIcon = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:16|t"
             print("|cFFFFD100Direct Deposit:|r " .. errorIcon .. " |cFFFF0000Cannot deposit|r |cFFFFFFFF" .. resolvedItemName .. "|r - " .. errorReason)
-        end
-    else
-        if not self.isDepositing then
         end
     end
 end

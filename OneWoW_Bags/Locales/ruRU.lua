@@ -171,25 +171,39 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
     ["SORT"] = "Sort",
 
-    ["SECTION_BANK"] = "Банк",
-    ["SECTION_DISPLAY"] = "Отображение",
-    ["SECTION_BEHAVIOR"] = "Поведение",
-    ["SECTION_INTEGRATION"] = "Интеграция",
-
     ["TOGGLE_ON"] = "Вкл",
     ["TOGGLE_OFF"] = "Выкл",
 
-    ["DESC_ENABLE_BANK"] = "Заменить стандартное окно банка интерфейсом Bags.",
-    ["DESC_RARITY_COLOR"] = "Окрашивать рамки предметов по редкости.",
-    ["DESC_SHOW_NEW"] = "Эффект свечения на недавно полученных предметах.",
-    ["DESC_SHOW_SCROLLBAR"] = "Показывать полосу прокрутки в окне сумок.",
-    ["DESC_SHOW_BAGS_BAR"] = "Показывать отдельные слоты сумок внизу окна.",
-    ["DESC_AUTO_OPEN"] = "Автоматически открывать сумки при посещении торговца.",
-    ["DESC_AUTO_CLOSE"] = "Закрывать сумки при отходе от NPC.",
-    ["DESC_LOCK"] = "Запретить перемещение окна сумок.",
-    ["DESC_OVERLAY"] = "Переключить оверлеи предметов OneWoW.",
-    ["SETTING_BANK_OVERLAYS"] = "Оверлеи Банка",
-    ["DESC_BANK_OVERLAYS"] = "Показывать оверлеи предметов в банке и гильдейском банке.",
+    ["SECTION_BANK"] = "Банк",
+    ["SETTING_ENABLE_BANK"] = "Включить интерфейс банка",
+    ["DESC_ENABLE_BANK"] = "Заменяет стандартное окно банка интерфейсом OneWoW Bags.",
+    ["SETTING_BANK_OVERLAYS"] = "Оверлеи предметов банка",
+    ["DESC_BANK_OVERLAYS"] = "Показывать оверлеи на предметах банка.",
 
-    ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
+    ["SECTION_DISPLAY"] = "Отображение",
+    ["DESC_RARITY_COLOR"] = "Цвет рамок предметов по редкости.",
+    ["DESC_SHOW_NEW"] = "Подсвечивать вновь полученные предметы.",
+    ["SETTING_SHOW_SCROLLBAR"] = "Показывать полосу прокрутки",
+    ["DESC_SHOW_SCROLLBAR"] = "Показать или скрыть полосу прокрутки.",
+    ["DESC_SHOW_BAGS_BAR"] = "Показывать панель сумок с иконками и золотом.",
+    ["SETTING_BAG_COLUMNS"] = "Столбцы сумок",
+    ["SETTING_BANK_COLUMNS"] = "Столбцы банка",
+
+    ["SETTING_ITEM_SORT"] = "Сортировка предметов",
+    ["SORT_NAME"] = "Название",
+    ["SORT_RARITY"] = "Редкость",
+    ["SORT_ITEM_LEVEL"] = "Уровень предмета",
+    ["SORT_RECENT"] = "Недавние",
+    ["SORT_TYPE"] = "Тип",
+
+    ["SECTION_BEHAVIOR"] = "Поведение",
+    ["DESC_AUTO_OPEN"] = "Автоматически открывать при посещении торговца.",
+    ["DESC_AUTO_CLOSE"] = "Автоматически закрывать при уходе от торговца.",
+    ["DESC_LOCK"] = "Запретить перемещение окна.",
+
+    ["SECTION_INTEGRATION"] = "Интеграция OneWoW",
+    ["DESC_OVERLAY"] = "Включить/выключить оверлеи OneWoW на предметах.",
+
+    ["CLEANUP"] = "Очистить",
+
 }

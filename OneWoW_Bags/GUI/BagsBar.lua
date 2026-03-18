@@ -6,51 +6,85 @@ local BagsBar = OneWoW_Bags.BagsBar
 local bagsBarFrame = nil
 local bagButtons = {}
 local eventFrame = nil
+local trackerDialog = nil
 local OneWoW_GUI = OneWoW_Bags.GUILib
-
-local ROW1_TRACKER_MAX = 2
-local ROW2_HEIGHT = 28
-
 local T = OneWoW_Bags.T
 local S = OneWoW_Bags.S
-local FormatGold = OneWoW_Bags.FormatGold
 
-StaticPopupDialogs["ONEWOW_BAGS_ADD_TRACKER"] = {
-    text = "",
-    button1 = OneWoW_Bags.L["POPUP_ADD"] or "Add",
-    button2 = OneWoW_Bags.L["POPUP_CANCEL"] or "Cancel",
-    hasEditBox = true,
-    OnShow = function(self)
-        self.Text:SetText(OneWoW_Bags.L["TRACKER_ADD_ID"])
-        self.EditBox:SetFocus()
-    end,
-    OnAccept = function(self)
-        local id = tonumber(self.EditBox:GetText())
-        if id and id > 0 then
-            local db = OneWoW_Bags.db
-            if not db.global.trackedCurrencies then
-                db.global.trackedCurrencies = {}
+local ROW1_HEIGHT = 32
+local ROW2_HEIGHT = 26
+local ROW1_TRACKER_MAX = 3
+local MAX_ALT_DISPLAY = 10
+
+local function ShowTrackerDialog()
+    local L = OneWoW_Bags.L
+
+    if not trackerDialog then
+        local function doAdd()
+            local id = tonumber(trackerDialog.editBox:GetText())
+            if id and id > 0 then
+                local db = OneWoW_Bags.db
+                if not db.global.trackedCurrencies then
+                    db.global.trackedCurrencies = {}
+                end
+                local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
+                local trackType = "item"
+                if currencyInfo and currencyInfo.name and currencyInfo.name ~= "" then
+                    trackType = "currency"
+                end
+                table.insert(db.global.trackedCurrencies, { type = trackType, id = id })
+                BagsBar:UpdateTrackers()
             end
-            local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
-            local trackType = "item"
-            if currencyInfo and currencyInfo.name and currencyInfo.name ~= "" then
-                trackType = "currency"
-            end
-            table.insert(db.global.trackedCurrencies, { type = trackType, id = id })
-            BagsBar:UpdateTrackers()
+            trackerDialog.editBox:SetText("")
+            trackerDialog.frame:Hide()
         end
-    end,
-    EditBoxOnEnterPressed = function(self)
-        local parent = self:GetParent()
-        StaticPopupDialogs["ONEWOW_BAGS_ADD_TRACKER"].OnAccept(parent)
-        parent:Hide()
-    end,
-    EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3,
-}
+
+        local dialog = OneWoW_GUI:CreateDialog({
+            name = "OneWoW_BagsTrackerDialog",
+            title = L["TRACKER_ADD"],
+            width = 380,
+            height = 170,
+            strata = "DIALOG",
+            movable = false,
+            escClose = true,
+            buttons = {
+                { text = L["POPUP_ADD"], onClick = function() doAdd() end },
+                { text = L["POPUP_CANCEL"], onClick = function(frame) frame:Hide() end },
+            },
+        })
+
+        local content = dialog.contentFrame
+
+        local label = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        label:SetPoint("TOPLEFT", content, "TOPLEFT", 12, -10)
+        label:SetPoint("TOPRIGHT", content, "TOPRIGHT", -12, -10)
+        label:SetJustifyH("LEFT")
+        label:SetWordWrap(true)
+        label:SetText(L["TRACKER_ADD_ID"])
+        label:SetTextColor(T("TEXT_SECONDARY"))
+
+        local editBox = OneWoW_GUI:CreateEditBox(content, {
+            name = "OneWoW_BagsTrackerInput",
+            height = 22,
+            maxLetters = 10,
+        })
+        editBox:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, -8)
+        editBox:SetPoint("TOPRIGHT", label, "BOTTOMRIGHT", 0, -8)
+        editBox:SetNumeric(true)
+        editBox:SetScript("OnEnterPressed", function() doAdd() end)
+
+        dialog.editBox = editBox
+        trackerDialog = dialog
+    end
+
+    trackerDialog.frame:Show()
+    trackerDialog.editBox:SetText("")
+    C_Timer.After(0, function()
+        if trackerDialog and trackerDialog.editBox then
+            trackerDialog.editBox:SetFocus()
+        end
+    end)
+end
 
 function BagsBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
@@ -67,12 +101,14 @@ function BagsBar:Create(parent)
     bagsBarFrame:SetBackdropColor(T("BG_TERTIARY"))
     bagsBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
+    -- Row 1: bag icons | cleanup button + slots right
     local row1Frame = CreateFrame("Frame", nil, bagsBarFrame)
     row1Frame:SetPoint("TOPLEFT", bagsBarFrame, "TOPLEFT", 0, 0)
     row1Frame:SetPoint("TOPRIGHT", bagsBarFrame, "TOPRIGHT", 0, 0)
-    row1Frame:SetHeight(C.BAGSBAR_HEIGHT)
+    row1Frame:SetHeight(ROW1_HEIGHT)
     bagsBarFrame.row1Frame = row1Frame
 
+    -- Row 2: add tracker | trackers | gold right
     local row2Frame = CreateFrame("Frame", nil, bagsBarFrame, "BackdropTemplate")
     row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
     row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
@@ -80,9 +116,9 @@ function BagsBar:Create(parent)
     row2Frame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     row2Frame:SetBackdropColor(T("BG_SECONDARY"))
     row2Frame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    row2Frame:Hide()
     bagsBarFrame.row2Frame = row2Frame
 
+    -- Bag icon buttons (row 1, left)
     local BagTypes = OneWoW_Bags.BagTypes
     local xOffset = S("SM")
 
@@ -101,49 +137,26 @@ function BagsBar:Create(parent)
 
         local reagentSlot = BagsBar:CreateBagButton(row1Frame, 5, xOffset)
         bagButtons[5] = reagentSlot
-        xOffset = xOffset + 30
     end
 
-    local sep2 = row1Frame:CreateTexture(nil, "ARTWORK")
-    sep2:SetSize(1, 20)
-    sep2:SetPoint("LEFT", row1Frame, "LEFT", xOffset + 2, 0)
-    sep2:SetColorTexture(T("BORDER_SUBTLE"))
-
-    local goldBtn = CreateFrame("Button", nil, row1Frame)
-    goldBtn:SetPoint("LEFT", row1Frame, "LEFT", xOffset + 10, 0)
-    goldBtn:SetHeight(22)
-
-    local goldText = goldBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    goldText:SetPoint("LEFT", goldBtn, "LEFT", 0, 0)
-    goldText:SetText(FormatGold(GetMoney()))
-    bagsBarFrame.goldText = goldText
-
-    goldBtn:SetWidth(math.max(goldText:GetStringWidth() + 4, 60))
-
-    goldBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        BagsBar:ShowGoldTooltip()
-        GameTooltip:Show()
-    end)
-    goldBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    bagsBarFrame.goldBtn = goldBtn
-
-    local sortBtn = OneWoW_GUI:CreateFitTextButton(row1Frame, { text = L["SORT"], height = 22 })
-    sortBtn:SetPoint("RIGHT", row1Frame, "RIGHT", -S("SM"), 0)
-    sortBtn:SetScript("OnClick", function()
-        C_Container.SortBags()
-    end)
-    bagsBarFrame.sortBtn = sortBtn
-
+    -- Row 1 right: free slots then cleanup button
     local freeSlots = row1Frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    freeSlots:SetPoint("RIGHT", sortBtn, "LEFT", -S("SM"), 0)
+    freeSlots:SetPoint("RIGHT", row1Frame, "RIGHT", -S("SM"), 0)
     freeSlots:SetTextColor(T("TEXT_SECONDARY"))
     bagsBarFrame.freeSlots = freeSlots
 
-    local addTrackerBtn = OneWoW_GUI:CreateButton(row1Frame, { text = "+", width = 20, height = 20 })
-    addTrackerBtn:SetPoint("RIGHT", freeSlots, "LEFT", -S("SM"), 0)
+    local cleanupBtn = OneWoW_GUI:CreateFitTextButton(row1Frame, { text = L["CLEANUP"], height = 22 })
+    cleanupBtn:SetPoint("RIGHT", freeSlots, "LEFT", -S("SM"), 0)
+    cleanupBtn:SetScript("OnClick", function()
+        C_Container.SortBags()
+    end)
+    bagsBarFrame.cleanupBtn = cleanupBtn
+
+    -- Row 2 left: add tracker button
+    local addTrackerBtn = OneWoW_GUI:CreateButton(row2Frame, { text = "+", width = 20, height = 20 })
+    addTrackerBtn:SetPoint("LEFT", row2Frame, "LEFT", S("SM"), 0)
     addTrackerBtn:SetScript("OnClick", function()
-        StaticPopup_Show("ONEWOW_BAGS_ADD_TRACKER")
+        ShowTrackerDialog()
     end)
     addTrackerBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -165,15 +178,47 @@ function BagsBar:Create(parent)
     end)
     bagsBarFrame.addTrackerBtn = addTrackerBtn
 
-    bagsBarFrame.trackerFrames = {}
+    local goldBtn = CreateFrame("Button", nil, row2Frame)
+    goldBtn:SetHeight(20)
+    goldBtn:SetPoint("RIGHT", row2Frame, "RIGHT", -S("SM"), 0)
 
+    local goldText = goldBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    goldText:SetPoint("RIGHT", goldBtn, "RIGHT", 0, 0)
+    goldText:SetText(OneWoW_GUI:FormatGold(GetMoney()))
+    bagsBarFrame.goldText = goldText
+
+    goldBtn:SetWidth(math.max(goldText:GetStringWidth() + 4, 60))
+    goldBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        BagsBar:ShowGoldTooltip()
+        GameTooltip:Show()
+    end)
+    goldBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    bagsBarFrame.goldBtn = goldBtn
+
+    local bankBtn = OneWoW_GUI:CreateFitTextButton(row2Frame, { text = L["BANK_BTN"] or "Bank", height = 20, minWidth = 40 })
+    bankBtn:SetPoint("RIGHT", goldBtn, "LEFT", -S("SM"), 0)
+    bankBtn:SetScript("OnClick", function()
+        if OneWoW_Bags.BankGUI then
+            OneWoW_Bags.BankGUI:Toggle()
+        end
+    end)
+    bankBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText(L["BANK_BTN"] or "Bank", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    bankBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    bagsBarFrame.bankBtn = bankBtn
+
+    bagsBarFrame.trackerFrames = {}
     BagsBar:UpdateTrackers()
 
     eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_MONEY")
     eventFrame:SetScript("OnEvent", function(_, event)
         if event == "PLAYER_MONEY" and bagsBarFrame and bagsBarFrame.goldText then
-            bagsBarFrame.goldText:SetText(FormatGold(GetMoney()))
+            bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(GetMoney()))
             if bagsBarFrame.goldBtn then
                 bagsBarFrame.goldBtn:SetWidth(math.max(bagsBarFrame.goldText:GetStringWidth() + 4, 60))
             end
@@ -183,15 +228,13 @@ function BagsBar:Create(parent)
     return bagsBarFrame
 end
 
-local MAX_ALT_DISPLAY = 10
-
 function BagsBar:ShowGoldTooltip()
     local L = OneWoW_Bags.L
     local personalCopper = GetMoney()
 
     if not _G.OneWoW_AltTracker_Character_API then
         GameTooltip:SetText(L["GOLD_TOOLTIP_PERSONAL"], 1, 0.82, 0)
-        GameTooltip:AddLine(FormatGold(personalCopper), 1, 1, 1)
+        GameTooltip:AddLine(OneWoW_GUI:FormatGold(personalCopper), 1, 1, 1)
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(L["GOLD_TOOLTIP_NO_ALTTRACKER"], 0.5, 0.5, 0.5, true)
         return
@@ -214,13 +257,13 @@ function BagsBar:ShowGoldTooltip()
 
     table.sort(altList, function(a, b) return a.money > b.money end)
 
-    GameTooltip:SetText(L["GOLD_TOOLTIP_PERSONAL"] .. " - " .. FormatGold(personalCopper), 1, 0.82, 0)
+    GameTooltip:SetText(L["GOLD_TOOLTIP_PERSONAL"] .. " - " .. OneWoW_GUI:FormatGold(personalCopper), 1, 0.82, 0)
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine(L["GOLD_TOOLTIP_TOTAL"] .. " - " .. FormatGold(totalGold), 0.2, 1, 0.2)
+    GameTooltip:AddLine(L["GOLD_TOOLTIP_TOTAL"] .. " - " .. OneWoW_GUI:FormatGold(totalGold), 0.2, 1, 0.2)
     GameTooltip:AddLine(" ")
 
     if warbandGold > 0 then
-        GameTooltip:AddLine(L["GOLD_TOOLTIP_WARBAND"] .. " - " .. FormatGold(warbandGold), 0.6, 0.8, 1)
+        GameTooltip:AddLine(L["GOLD_TOOLTIP_WARBAND"] .. " - " .. OneWoW_GUI:FormatGold(warbandGold), 0.6, 0.8, 1)
     end
 
     local displayCount = math.min(#altList, MAX_ALT_DISPLAY)
@@ -229,14 +272,14 @@ function BagsBar:ShowGoldTooltip()
 
     for i = 1, #altList do
         if i <= displayCount then
-            GameTooltip:AddLine(altList[i].name .. " - " .. FormatGold(altList[i].money), 0.8, 0.8, 0.8)
+            GameTooltip:AddLine(altList[i].name .. " - " .. OneWoW_GUI:FormatGold(altList[i].money), 0.8, 0.8, 0.8)
         else
             othersGold = othersGold + altList[i].money
         end
     end
 
     if othersCount > 0 then
-        GameTooltip:AddLine(string.format(L["GOLD_TOOLTIP_OTHERS"], othersCount) .. " - " .. FormatGold(othersGold), 0.5, 0.5, 0.5)
+        GameTooltip:AddLine(string.format(L["GOLD_TOOLTIP_OTHERS"], othersCount) .. " - " .. OneWoW_GUI:FormatGold(othersGold), 0.5, 0.5, 0.5)
     end
 end
 
@@ -245,7 +288,7 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
     local db = OneWoW_Bags.db
 
     local tf = CreateFrame("Button", nil, parentFrame)
-    tf:SetSize(65, 24)
+    tf:SetSize(65, 22)
 
     local iconTexture
     local countValue = 0
@@ -261,7 +304,7 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
     end
 
     local iconFrame = OneWoW_GUI:CreateSkinnedIcon(tf, {
-        size = 18,
+        size = 16,
         preset = "clean",
         iconTexture = iconTexture,
     })
@@ -275,7 +318,7 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
     tf.countText = countText
 
     local capturedIdx = index
-    local removeBtn = OneWoW_GUI:CreateButton(tf, { text = "X", width = 12, height = 12 })
+    local removeBtn = OneWoW_GUI:CreateButton(tf, { text = "X", width = 10, height = 10 })
     removeBtn:SetPoint("TOPRIGHT", tf, "TOPRIGHT", 0, 0)
     removeBtn:SetScript("OnClick", function()
         table.remove(db.global.trackedCurrencies, capturedIdx)
@@ -326,32 +369,57 @@ function BagsBar:UpdateTrackers()
 
     local trackers = db.global.trackedCurrencies
     local count = #trackers
-    local row1Frame = bagsBarFrame.row1Frame
     local row2Frame = bagsBarFrame.row2Frame
 
-    local needRow2 = count > ROW1_TRACKER_MAX
-    row2Frame:SetShown(needRow2)
-    bagsBarFrame:SetHeight(C.BAGSBAR_HEIGHT + (needRow2 and ROW2_HEIGHT or 0))
+    local needExtraRow = count > ROW1_TRACKER_MAX
+    if needExtraRow then
+        bagsBarFrame:SetHeight(C.BAGSBAR_HEIGHT + ROW2_HEIGHT)
+    else
+        bagsBarFrame:SetHeight(C.BAGSBAR_HEIGHT)
+    end
 
-    local row1Count = math.min(count, ROW1_TRACKER_MAX)
-    local anchorRight = bagsBarFrame.addTrackerBtn
-    for i = row1Count, 1, -1 do
-        local tf = BagsBar:CreateTrackerFrame(row1Frame, i, trackers[i])
-        tf:SetPoint("RIGHT", anchorRight, "LEFT", -4, 0)
-        anchorRight = tf
+    local row2Count = math.min(count, ROW1_TRACKER_MAX)
+    local anchorLeft = bagsBarFrame.addTrackerBtn
+    for i = 1, row2Count do
+        local tf = BagsBar:CreateTrackerFrame(row2Frame, i, trackers[i])
+        tf:SetPoint("LEFT", anchorLeft, "RIGHT", 4, 0)
+        anchorLeft = tf
         table.insert(bagsBarFrame.trackerFrames, tf)
         tf:Show()
     end
 
-    if needRow2 then
+    if needExtraRow then
+        local extraRow = bagsBarFrame.extraRow
+        if not extraRow then
+            extraRow = CreateFrame("Frame", nil, bagsBarFrame, "BackdropTemplate")
+            extraRow:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
+            extraRow:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
+            extraRow:SetHeight(ROW2_HEIGHT)
+            extraRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+            extraRow:SetBackdropColor(T("BG_SECONDARY"))
+            extraRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            bagsBarFrame.extraRow = extraRow
+        end
+        extraRow:Show()
+        row2Frame:ClearAllPoints()
+        row2Frame:SetPoint("BOTTOMLEFT", extraRow, "TOPLEFT", 0, 0)
+        row2Frame:SetPoint("BOTTOMRIGHT", extraRow, "TOPRIGHT", 0, 0)
+
         local xOff = 8
         for i = ROW1_TRACKER_MAX + 1, count do
-            local tf = BagsBar:CreateTrackerFrame(row2Frame, i, trackers[i])
-            tf:SetPoint("LEFT", row2Frame, "LEFT", xOff, 0)
+            local tf = BagsBar:CreateTrackerFrame(extraRow, i, trackers[i])
+            tf:SetPoint("LEFT", extraRow, "LEFT", xOff, 0)
             xOff = xOff + 69
             table.insert(bagsBarFrame.trackerFrames, tf)
             tf:Show()
         end
+    else
+        if bagsBarFrame.extraRow then
+            bagsBarFrame.extraRow:Hide()
+        end
+        row2Frame:ClearAllPoints()
+        row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
+        row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
     end
 end
 
@@ -377,7 +445,6 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
     icon:SetAllPoints()
     icon:SetTexture(iconTexture)
     btn.icon = icon
-
     btn._skinnedIcon = icon
     OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
 
@@ -404,11 +471,7 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
         end
         GameTooltip:Show()
     end)
-
-    btn:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-
+    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     btn:SetScript("OnClick", function(self)
         local db = OneWoW_Bags.db
         if not db then return end
@@ -464,9 +527,7 @@ end
 
 function BagsBar:UpdateFreeSlots(free, total)
     if not bagsBarFrame or not bagsBarFrame.freeSlots then return end
-    local L = OneWoW_Bags.L
-    local text = string.format(L["FREE_SLOTS_FORMAT"], free, total)
-    bagsBarFrame.freeSlots:SetText(text)
+    bagsBarFrame.freeSlots:SetText(string.format("%d/%d", free, total))
 end
 
 function BagsBar:GetFrame()
@@ -480,11 +541,10 @@ function BagsBar:SetShown(show)
 end
 
 function BagsBar:Reset()
+    if trackerDialog then
+        trackerDialog.frame:Hide()
+    end
     if bagsBarFrame then
-        if bagsBarFrame.hoverZone then
-            bagsBarFrame.hoverZone:Hide()
-            bagsBarFrame.hoverZone:SetParent(UIParent)
-        end
         bagsBarFrame:Hide()
         bagsBarFrame:SetParent(UIParent)
     end

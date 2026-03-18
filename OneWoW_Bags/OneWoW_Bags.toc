@@ -36,6 +36,7 @@ Core\Events.lua
 
 # Data
 Data\BagTypes.lua
+Data\BankTypes.lua
 Data\Categories.lua
 
 # Modules
@@ -43,9 +44,9 @@ Modules\ItemPool.lua
 Modules\ItemButton.lua
 Modules\BagSet.lua
 Modules\BankSet.lua
+Modules\GuildBankSet.lua
 Modules\CategoryManager.lua
 Modules\BankCategoryManager.lua
-Modules\GuildBankSet.lua
 Modules\GuildBankCategoryManager.lua
 
 # Integrations
@@ -56,22 +57,20 @@ Views\ListView.lua
 Views\CategoryView.lua
 Views\BagView.lua
 Views\BankTabView.lua
-Views\BankListView.lua
 Views\GuildBankTabView.lua
-Views\GuildBankListView.lua
 
 # GUI
 GUI\InfoBar.lua
 GUI\BagsBar.lua
 GUI\BankInfoBar.lua
-GUI\BankBagsBar.lua
+GUI\BankBar.lua
+GUI\BankWindow.lua
+GUI\GuildBankInfoBar.lua
+GUI\GuildBankBar.lua
+GUI\GuildBankWindow.lua
 GUI\CategoryManager.lua
 GUI\Settings.lua
 GUI\MainWindow.lua
-GUI\BankWindow.lua
-GUI\GuildBankInfoBar.lua
-GUI\GuildBankBagsBar.lua
-GUI\GuildBankWindow.lua
 GUI\Minimap.lua
 
 # Main

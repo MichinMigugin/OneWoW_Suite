@@ -6,8 +6,77 @@ local CatMgrUI = OneWoW_Bags.CategoryManagerUI
 local managerFrame = nil
 local OneWoW_GUI = OneWoW_Bags.GUILib
 
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
+local function T(key)
+    if OneWoW_GUI then
+        return OneWoW_GUI:GetThemeColor(key)
+    end
+    if OneWoW_Bags.Constants and OneWoW_Bags.Constants.THEME and OneWoW_Bags.Constants.THEME[key] then
+        return unpack(OneWoW_Bags.Constants.THEME[key])
+    end
+    return 0.5, 0.5, 0.5, 1.0
+end
+
+local function S(key)
+    if OneWoW_GUI then
+        return OneWoW_GUI:GetSpacing(key)
+    end
+    if OneWoW_Bags.Constants and OneWoW_Bags.Constants.SPACING then
+        return OneWoW_Bags.Constants.SPACING[key] or 8
+    end
+    return 8
+end
+
+local BACKDROP = nil
+local function GetBackdrop()
+    if not BACKDROP then
+        BACKDROP = OneWoW_GUI and OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS or {
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+            insets = { left = 1, right = 1, top = 1, bottom = 1 },
+        }
+    end
+    return BACKDROP
+end
+
+local function CreateBtn(parent, text, width, height)
+    if OneWoW_GUI then
+        local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = text, height = height or 22 })
+        return btn
+    else
+        local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
+        btn:SetSize(width or 100, height or 22)
+        btn:SetBackdrop(GetBackdrop())
+        btn:SetBackdropColor(T("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(T("BTN_BORDER"))
+        btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        btn.text:SetPoint("CENTER")
+        btn.text:SetText(text)
+        btn.text:SetTextColor(T("TEXT_PRIMARY"))
+        local tw = btn.text:GetStringWidth()
+        btn:SetWidth(tw + 12)
+        return btn
+    end
+end
+
+local function CreateEditBox(parent, width, height)
+    if OneWoW_GUI then
+        return OneWoW_GUI:CreateEditBox(parent, { width = width or 100, height = height or 22 })
+    else
+        local box = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
+        box:SetSize(width or 100, height or 22)
+        box:SetBackdrop(GetBackdrop())
+        box:SetBackdropColor(T("BG_TERTIARY"))
+        box:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        box:SetFontObject(GameFontHighlight)
+        box:SetTextInsets(S("SM") + 2, S("SM"), 0, 0)
+        box:SetAutoFocus(false)
+        box:EnableMouse(true)
+        box:SetTextColor(T("TEXT_PRIMARY"))
+        box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+        return box
+    end
+end
 
 StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
     text = "",
@@ -243,7 +312,7 @@ function CatMgrUI:Refresh()
             row:SetHeight(28)
             row:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, -yOffset)
             row:SetPoint("RIGHT", scrollContent, "RIGHT", 0, 0)
-            row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+            row:SetBackdrop(GetBackdrop())
             if isDisabled then
                 row:SetBackdropColor(T("BG_SECONDARY"))
             else
@@ -251,7 +320,7 @@ function CatMgrUI:Refresh()
             end
             row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-            local downBtn = OneWoW_GUI:CreateFitTextButton(row, { text = "Dn", height = 22 })
+            local downBtn = CreateBtn(row, "Dn", 30, 22)
             downBtn:SetPoint("RIGHT", row, "RIGHT", -8, 0)
             if idx < #allCategories then
                 downBtn:SetScript("OnClick", doMoveDown)
@@ -259,7 +328,7 @@ function CatMgrUI:Refresh()
                 downBtn:Disable()
             end
 
-            local upBtn = OneWoW_GUI:CreateFitTextButton(row, { text = "Up", height = 22 })
+            local upBtn = CreateBtn(row, "Up", 30, 22)
             upBtn:SetPoint("RIGHT", downBtn, "LEFT", -4, 0)
             if idx > 1 then
                 upBtn:SetScript("OnClick", doMoveUp)
@@ -267,7 +336,7 @@ function CatMgrUI:Refresh()
                 upBtn:Disable()
             end
 
-            local cb = OneWoW_GUI:CreateCheckbox(row, { label = "" })
+            local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
             cb:SetSize(22, 22)
             cb:SetPoint("LEFT", row, "LEFT", 4, 0)
             cb:SetChecked(not isDisabled)
@@ -313,7 +382,7 @@ function CatMgrUI:Refresh()
             local catFrame = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
             catFrame:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, -yOffset)
             catFrame:SetPoint("RIGHT", scrollContent, "RIGHT", 0, 0)
-            catFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+            catFrame:SetBackdrop(GetBackdrop())
             catFrame:SetBackdropColor(T("BG_SECONDARY"))
             catFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
@@ -321,7 +390,7 @@ function CatMgrUI:Refresh()
             header:SetHeight(28)
             header:SetPoint("TOPLEFT", catFrame, "TOPLEFT", 0, 0)
             header:SetPoint("TOPRIGHT", catFrame, "TOPRIGHT", 0, 0)
-            header:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
+            header:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
             header:SetBackdropColor(T("BG_TERTIARY"))
             header:EnableMouse(true)
             header:RegisterForDrag("LeftButton")
@@ -361,19 +430,19 @@ function CatMgrUI:Refresh()
             countText:SetText(string.format(L["CATEGORY_ITEMS_COUNT"], itemCount))
             countText:SetTextColor(T("TEXT_MUTED"))
 
-            local deleteBtn = OneWoW_GUI:CreateFitTextButton(header, { text = L["CATEGORY_DELETE"], height = 22 })
+            local deleteBtn = CreateBtn(header, L["CATEGORY_DELETE"], 100, 22)
             deleteBtn:SetPoint("RIGHT", header, "RIGHT", -8, 0)
             deleteBtn:SetScript("OnClick", function()
                 StaticPopup_Show("ONEWOW_BAGS_DELETE_CATEGORY", catData.name, nil, capturedID)
             end)
 
-            local renameBtn = OneWoW_GUI:CreateFitTextButton(header, { text = L["CATEGORY_RENAME"], height = 22 })
+            local renameBtn = CreateBtn(header, L["CATEGORY_RENAME"], 100, 22)
             renameBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -4, 0)
             renameBtn:SetScript("OnClick", function()
                 StaticPopup_Show("ONEWOW_BAGS_RENAME_CATEGORY", catData.name, nil, capturedID)
             end)
 
-            local downBtn = OneWoW_GUI:CreateFitTextButton(header, { text = "Dn", height = 22 })
+            local downBtn = CreateBtn(header, "Dn", 30, 22)
             downBtn:SetPoint("RIGHT", renameBtn, "LEFT", -4, 0)
             if idx < #allCategories then
                 downBtn:SetScript("OnClick", doMoveDown)
@@ -381,7 +450,7 @@ function CatMgrUI:Refresh()
                 downBtn:Disable()
             end
 
-            local upBtn = OneWoW_GUI:CreateFitTextButton(header, { text = "Up", height = 22 })
+            local upBtn = CreateBtn(header, "Up", 30, 22)
             upBtn:SetPoint("RIGHT", downBtn, "LEFT", -4, 0)
             if idx > 1 then
                 upBtn:SetScript("OnClick", doMoveUp)
@@ -404,11 +473,11 @@ function CatMgrUI:Refresh()
             addLabel:SetText(L["CATEGORY_ADD_BY_ID"])
             addLabel:SetTextColor(T("TEXT_PRIMARY"))
 
-            local addBox = OneWoW_GUI:CreateEditBox(catBody, { width = 100, height = 22 })
+            local addBox = CreateEditBox(catBody, 100, 22)
             addBox:SetPoint("LEFT", addLabel, "RIGHT", 6, 0)
             addBox:SetNumeric(true)
 
-            local addBtn = OneWoW_GUI:CreateFitTextButton(catBody, { text = L["ADD_ITEM"], height = 22 })
+            local addBtn = CreateBtn(catBody, L["ADD_ITEM"], 100, 22)
             addBtn:SetPoint("LEFT", addBox, "RIGHT", 4, 0)
             addBtn:SetScript("OnClick", function()
                 local text = addBox.GetSearchText and addBox:GetSearchText() or addBox:GetText()
@@ -439,22 +508,21 @@ function CatMgrUI:Refresh()
                     itemRow:SetPoint("RIGHT", catBody, "RIGHT", 0, 0)
                     itemRow:SetHeight(22)
 
-                    local iconFrame = OneWoW_GUI:CreateSkinnedIcon(itemRow, {
-                        size = 18,
-                        preset = "clean",
-                        iconTexture = C_Item.GetItemIconByID(itemID),
-                    })
-                    iconFrame:SetPoint("LEFT", itemRow, "LEFT", 0, 0)
+                    local icon = itemRow:CreateTexture(nil, "ARTWORK")
+                    icon:SetSize(18, 18)
+                    icon:SetPoint("LEFT", itemRow, "LEFT", 0, 0)
+                    local iconTex = C_Item.GetItemIconByID(itemID)
+                    if iconTex then icon:SetTexture(iconTex) end
 
                     local nameText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    nameText:SetPoint("LEFT", iconFrame, "RIGHT", 4, 0)
+                    nameText:SetPoint("LEFT", icon, "RIGHT", 4, 0)
                     local itemName = C_Item.GetItemNameByID(itemID)
                     nameText:SetText(itemName or ("Item " .. itemID))
                     nameText:SetTextColor(T("TEXT_PRIMARY"))
 
                     local capturedItemID = itemID
                     local capturedCatID = capturedID
-                    local removeBtn = OneWoW_GUI:CreateFitTextButton(itemRow, { text = L["REMOVE_ITEM"], height = 18 })
+                    local removeBtn = CreateBtn(itemRow, L["REMOVE_ITEM"], 100, 18)
                     removeBtn:SetPoint("RIGHT", itemRow, "RIGHT", 0, 0)
                     removeBtn:SetScript("OnClick", function()
                         local cat = db.global.customCategoriesV2[capturedCatID]
@@ -493,38 +561,132 @@ function CatMgrUI:Show()
         return
     end
 
-    local dialog = OneWoW_GUI:CreateDialog({
-        name = "OneWoW_BagsCatManager",
-        title = L["CATEGORY_MANAGER_TITLE"],
-        width = 580,
-        height = 560,
-        strata = "DIALOG",
-        movable = true,
-        escClose = true,
-    })
+    if OneWoW_GUI then
+        local dialog = OneWoW_GUI:CreateDialog({
+            name = "OneWoW_BagsCatManager",
+            title = L["CATEGORY_MANAGER_TITLE"],
+            width = 580,
+            height = 560,
+            strata = "DIALOG",
+            movable = true,
+            escClose = true,
+        })
 
-    managerFrame = dialog.frame
+        managerFrame = dialog.frame
 
-    local createBtn = OneWoW_GUI:CreateFitTextButton(managerFrame, { text = L["CATEGORY_CREATE"], height = 26 })
-    createBtn:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", S("SM"), -(S("XS") + 28 + S("SM")))
-    createBtn:SetScript("OnClick", function()
-        StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY")
-    end)
+        local createBtn = OneWoW_GUI:CreateFitTextButton(managerFrame, { text = L["CATEGORY_CREATE"], height = 26 })
+        createBtn:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", S("SM"), -(S("XS") + 28 + S("SM")))
+        createBtn:SetScript("OnClick", function()
+            StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY")
+        end)
 
-    local infoText = managerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    infoText:SetPoint("LEFT", createBtn, "RIGHT", S("SM"), 0)
-    infoText:SetPoint("RIGHT", managerFrame, "RIGHT", -S("SM"), 0)
-    infoText:SetJustifyH("LEFT")
-    infoText:SetWordWrap(true)
-    infoText:SetText(L["CATEGORY_MANAGER_INFO"])
-    infoText:SetTextColor(T("TEXT_SECONDARY"))
+        local infoText = managerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        infoText:SetPoint("LEFT", createBtn, "RIGHT", S("SM"), 0)
+        infoText:SetPoint("RIGHT", managerFrame, "RIGHT", -S("SM"), 0)
+        infoText:SetJustifyH("LEFT")
+        infoText:SetWordWrap(true)
+        infoText:SetText(L["CATEGORY_MANAGER_INFO"])
+        infoText:SetTextColor(T("TEXT_SECONDARY"))
 
-    local contentArea = CreateFrame("Frame", nil, managerFrame)
-    contentArea:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", S("XS"), -(S("XS") + 28 + 34 + S("XS")))
-    contentArea:SetPoint("BOTTOMRIGHT", managerFrame, "BOTTOMRIGHT", -S("XS"), S("XS"))
+        local contentArea = CreateFrame("Frame", nil, managerFrame)
+        contentArea:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", S("XS"), -(S("XS") + 28 + 34 + S("XS")))
+        contentArea:SetPoint("BOTTOMRIGHT", managerFrame, "BOTTOMRIGHT", -S("XS"), S("XS"))
 
-    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(contentArea, { name = "OneWoW_BagsCatMgrScroll" })
-    managerFrame.scrollContent = scrollContent
+        local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(contentArea, { name = "OneWoW_BagsCatMgrScroll" })
+        managerFrame.scrollContent = scrollContent
+    else
+        managerFrame = CreateFrame("Frame", "OneWoW_BagsCatManager", UIParent, "BackdropTemplate")
+        managerFrame:SetSize(580, 560)
+        managerFrame:SetPoint("CENTER")
+        managerFrame:SetBackdrop(GetBackdrop())
+        managerFrame:SetBackdropColor(T("BG_PRIMARY"))
+        managerFrame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        managerFrame:SetFrameStrata("DIALOG")
+        managerFrame:SetMovable(true)
+        managerFrame:EnableMouse(true)
+        managerFrame:RegisterForDrag("LeftButton")
+        managerFrame:SetScript("OnDragStart", managerFrame.StartMoving)
+        managerFrame:SetScript("OnDragStop", managerFrame.StopMovingOrSizing)
+        managerFrame:SetClampedToScreen(true)
+        tinsert(UISpecialFrames, "OneWoW_BagsCatManager")
+
+        local titleBar = CreateFrame("Frame", nil, managerFrame, "BackdropTemplate")
+        titleBar:SetHeight(S("LG") + S("XS"))
+        titleBar:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", S("XS"), -S("XS"))
+        titleBar:SetPoint("TOPRIGHT", managerFrame, "TOPRIGHT", -S("XS"), -S("XS"))
+        titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        titleBar:SetBackdropColor(T("TITLEBAR_BG"))
+
+        local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
+        titleText:SetText(L["CATEGORY_MANAGER_TITLE"])
+        titleText:SetTextColor(T("ACCENT_PRIMARY"))
+
+        local closeBtn = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
+        closeBtn:SetSize(20, 20)
+        closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -S("XS") / 2, 0)
+        closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        closeBtn.text:SetPoint("CENTER")
+        closeBtn.text:SetText("X")
+        closeBtn:SetScript("OnClick", function() managerFrame:Hide() end)
+
+        local createBtn = CreateBtn(managerFrame, L["CATEGORY_CREATE"], 100, 26)
+        createBtn:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", S("SM"), -(S("XS") + S("LG") + S("XS") + S("SM")))
+        createBtn:SetScript("OnClick", function()
+            StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY")
+        end)
+
+        local infoText = managerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        infoText:SetPoint("LEFT", createBtn, "RIGHT", S("SM"), 0)
+        infoText:SetPoint("RIGHT", managerFrame, "RIGHT", -S("SM"), 0)
+        infoText:SetJustifyH("LEFT")
+        infoText:SetWordWrap(true)
+        infoText:SetText(L["CATEGORY_MANAGER_INFO"])
+        infoText:SetTextColor(T("TEXT_SECONDARY"))
+
+        local contentArea = CreateFrame("Frame", nil, managerFrame)
+        contentArea:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", S("XS"), -(S("XS") + S("LG") + S("XS") + 34 + S("XS")))
+        contentArea:SetPoint("BOTTOMRIGHT", managerFrame, "BOTTOMRIGHT", -S("XS"), S("XS"))
+
+        local scrollFrame = CreateFrame("ScrollFrame", "OneWoW_BagsCatMgrScroll", contentArea, "UIPanelScrollFrameTemplate")
+        scrollFrame:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
+        scrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", -14, 0)
+
+        local scrollBar = scrollFrame.ScrollBar
+        if scrollBar then
+            scrollBar:ClearAllPoints()
+            scrollBar:SetPoint("TOPRIGHT", contentArea, "TOPRIGHT", -2, 0)
+            scrollBar:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", -2, 0)
+            scrollBar:SetWidth(10)
+            if scrollBar.ScrollUpButton then
+                scrollBar.ScrollUpButton:Hide()
+                scrollBar.ScrollUpButton:SetAlpha(0)
+                scrollBar.ScrollUpButton:EnableMouse(false)
+            end
+            if scrollBar.ScrollDownButton then
+                scrollBar.ScrollDownButton:Hide()
+                scrollBar.ScrollDownButton:SetAlpha(0)
+                scrollBar.ScrollDownButton:EnableMouse(false)
+            end
+            if scrollBar.Background then scrollBar.Background:SetColorTexture(T("BG_TERTIARY")) end
+            if scrollBar.ThumbTexture then
+                scrollBar.ThumbTexture:SetWidth(8)
+                scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
+            end
+        end
+
+        local scrollContent = CreateFrame("Frame", "OneWoW_BagsCatMgrContent", scrollFrame)
+        scrollContent:SetHeight(1)
+        scrollFrame:SetScrollChild(scrollContent)
+        scrollFrame:HookScript("OnSizeChanged", function(self, w)
+            scrollContent:SetWidth(w)
+        end)
+        C_Timer.After(0, function()
+            if scrollFrame then scrollContent:SetWidth(scrollFrame:GetWidth()) end
+        end)
+
+        managerFrame.scrollContent = scrollContent
+    end
 
     CatMgrUI:Refresh()
     managerFrame:Show()

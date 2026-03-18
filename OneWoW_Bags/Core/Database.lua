@@ -27,26 +27,27 @@ local defaults = {
         collapsedSections = {},
         collapsedBagSections = {},
         categorySort = "priority",
-        itemSort = "name",
         categoryOrder = {},
         trackedCurrencies = {},
         selectedBag = nil,
         disabledCategories = {},
-        windowHeight = nil,
         showEmptySlots = true,
+        mainFramePosition = {},
+        bagColumns = 15,
+        bankColumns = 14,
+        itemSort = "name",
+        hideScrollBar = false,
         enableBankUI = true,
-        bankViewMode = "tabs",
-        bankWindowHeight = nil,
-        bankWindowPosition = nil,
-        bankShowWarband = false,
-        collapsedBankSections = {},
-        guildBankViewMode = "tabs",
-        guildBankWindowHeight = nil,
-        guildBankWindowPosition = nil,
-        guildBankSelectedTab = nil,
-        collapsedGuildBankSections = {},
-        hideScrollBar = true,
         enableBankOverlays = true,
+        bankShowWarband = false,
+        bankViewMode = "list",
+        guildBankViewMode = "list",
+        bankFramePosition = {},
+        guildBankFramePosition = {},
+        bankSelectedTab = nil,
+        guildBankSelectedTab = nil,
+        collapsedBankSections = {},
+        collapsedGuildBankSections = {},
     },
     char = {}
 }
@@ -158,10 +159,6 @@ function OneWoW_Bags:InitializeDatabase()
         self.db.global.categorySort = "priority"
     end
 
-    if not self.db.global.itemSort then
-        self.db.global.itemSort = "name"
-    end
-
     if not self.db.global.categoryOrder then
         self.db.global.categoryOrder = {}
     end
@@ -178,27 +175,55 @@ function OneWoW_Bags:InitializeDatabase()
         self.db.global.showEmptySlots = true
     end
 
+    if not self.db.global.mainFramePosition then
+        self.db.global.mainFramePosition = {}
+    end
+
+    if self.db.global.bagColumns == nil then
+        self.db.global.bagColumns = 15
+    end
+
+    if self.db.global.bankColumns == nil then
+        self.db.global.bankColumns = 14
+    end
+
+    if not self.db.global.itemSort then
+        self.db.global.itemSort = "name"
+    end
+
+    if self.db.global.hideScrollBar == nil then
+        self.db.global.hideScrollBar = false
+    end
+
     if self.db.global.enableBankUI == nil then
         self.db.global.enableBankUI = true
     end
 
-    if not self.db.global.bankViewMode then
-        self.db.global.bankViewMode = "tabs"
+    if self.db.global.enableBankOverlays == nil then
+        self.db.global.enableBankOverlays = true
     end
 
-    if self.db.global.bankShowWarband == nil then
-        self.db.global.bankShowWarband = false
+    if not self.db.global.bankViewMode then
+        self.db.global.bankViewMode = "list"
+    end
+
+    if not self.db.global.guildBankViewMode then
+        self.db.global.guildBankViewMode = "list"
+    end
+
+    if not self.db.global.bankFramePosition then
+        self.db.global.bankFramePosition = {}
+    end
+
+    if not self.db.global.guildBankFramePosition then
+        self.db.global.guildBankFramePosition = {}
     end
 
     if not self.db.global.collapsedBankSections then
         self.db.global.collapsedBankSections = {}
     end
 
-    if self.db.global.hideScrollBar == nil then
-        self.db.global.hideScrollBar = true
-    end
-
-    if self.db.global.enableBankOverlays == nil then
-        self.db.global.enableBankOverlays = true
+    if not self.db.global.collapsedGuildBankSections then
+        self.db.global.collapsedGuildBankSections = {}
     end
 end

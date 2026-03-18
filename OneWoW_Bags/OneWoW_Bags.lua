@@ -65,18 +65,7 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
         if owner.GUI then
             owner.GUI:FullReset()
             if wasShown then
-                C_Timer.After(0.1, function()
-                    owner.GUI:Show()
-                end)
-            end
-        end
-        local bankWasShown = owner.BankGUI and owner.BankGUI:IsShown()
-        if owner.BankGUI then
-            owner.BankGUI:FullReset()
-            if bankWasShown and owner.bankOpen then
-                C_Timer.After(0.1, function()
-                    owner.BankGUI:Show()
-                end)
+                C_Timer.After(0.1, function() owner.GUI:Show() end)
             end
         end
     end)
@@ -87,9 +76,7 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
         if owner.GUI then
             owner.GUI:FullReset()
             if wasShown then
-                C_Timer.After(0.1, function()
-                    owner.GUI:Show()
-                end)
+                C_Timer.After(0.1, function() owner.GUI:Show() end)
             end
         end
     end)
@@ -99,27 +86,7 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
         if owner.GUI then
             owner.GUI:FullReset()
             if wasShown then
-                C_Timer.After(0.1, function()
-                    owner.GUI:Show()
-                end)
-            end
-        end
-        local bankWasShown = owner.BankGUI and owner.BankGUI:IsShown()
-        if owner.BankGUI then
-            owner.BankGUI:FullReset()
-            if bankWasShown and owner.bankOpen then
-                C_Timer.After(0.1, function()
-                    owner.BankGUI:Show()
-                end)
-            end
-        end
-        local gbWasShown = owner.GuildBankGUI and owner.GuildBankGUI:IsShown()
-        if owner.GuildBankGUI then
-            owner.GuildBankGUI:FullReset()
-            if gbWasShown and owner.guildBankOpen then
-                C_Timer.After(0.1, function()
-                    owner.GuildBankGUI:Show()
-                end)
+                C_Timer.After(0.1, function() owner.GUI:Show() end)
             end
         end
     end)
@@ -132,9 +99,7 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
         if owner.GUI then
             owner.GUI:FullReset()
             if wasShown then
-                C_Timer.After(0.1, function()
-                    owner.GUI:Show()
-                end)
+                C_Timer.After(0.1, function() owner.GUI:Show() end)
             end
         end
     end)
@@ -179,46 +144,93 @@ function OneWoW_Bags:OnPlayerLogin()
     self:HookBlizzardBags()
 end
 
-function OneWoW_Bags:ProcessBagUpdate(dirtyBags)
-    local BagSet = self.BagSet
-    if BagSet and BagSet.isBuilt then
-        BagSet:UpdateDirtyBags(dirtyBags)
-        if self.GUI and self.GUI.RefreshLayout then
-            self.GUI:RefreshLayout()
-        end
+function OneWoW_Bags:OnBankOpened()
+    self.bankOpen = true
+    local db = self.db
+    if not db or not db.global or not db.global.enableBankUI then return end
+
+    self:SuppressBankFrame()
+
+    local showWarband = db.global.bankShowWarband
+    local activeBankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
+    if BankFrame and BankFrame.BankPanel then
+        BankFrame.BankPanel:SetBankType(activeBankType)
     end
 
-    if self.bankOpen then
-        local BankSet = self.BankSet
-        if BankSet and BankSet.isBuilt then
-            local bankDirty = {}
-            local hasBankDirty = false
-            for bagID in pairs(dirtyBags) do
-                if self.BagTypes:IsBankBag(bagID) or self.BagTypes:IsWarbandBag(bagID) then
-                    bankDirty[bagID] = true
-                    hasBankDirty = true
-                end
-            end
-            if hasBankDirty then
-                BankSet:UpdateDirtyBags(bankDirty)
-                if self.BankGUI and self.BankGUI.RefreshLayout then
-                    self.BankGUI:RefreshLayout()
-                end
-            end
+    C_Bank.FetchPurchasedBankTabData(Enum.BankType.Character)
+    C_Bank.FetchNumPurchasedBankTabs(Enum.BankType.Character)
+    C_Bank.FetchPurchasedBankTabData(Enum.BankType.Account)
+    C_Bank.FetchNumPurchasedBankTabs(Enum.BankType.Account)
+
+    if self.BankGUI then
+        self.BankGUI:Show()
+    end
+end
+
+function OneWoW_Bags:OnBankClosed()
+    if not self.bankOpen then return end
+    self.bankOpen = false
+    if self.BankGUI then
+        self.BankGUI:Hide()
+    end
+    if self.BankSet then
+        self.BankSet:ReleaseAll()
+    end
+end
+
+function OneWoW_Bags:SuppressGuildBankFrame()
+    if not GuildBankFrame then return end
+    if self._guildBankSuppressed then return end
+    self._guildBankSuppressed = true
+
+    self._gbHiddenParent = CreateFrame("Frame")
+    self._gbHiddenParent:Hide()
+
+    self._gbOrigOnHide = GuildBankFrame:GetScript("OnHide")
+    GuildBankFrame:SetScript("OnHide", nil)
+    GuildBankFrame:SetParent(self._gbHiddenParent)
+end
+
+function OneWoW_Bags:OnGuildBankOpened()
+    self.guildBankOpen = true
+
+    self:SuppressGuildBankFrame()
+
+    if self.GuildBankGUI then
+        self.GuildBankGUI:Show()
+    end
+end
+
+function OneWoW_Bags:OnGuildBankClosed()
+    self.guildBankOpen = false
+    if self.GuildBankGUI then
+        self.GuildBankGUI:Hide()
+    end
+    if self.GuildBankSet then
+        self.GuildBankSet:ReleaseAll()
+    end
+end
+
+function OneWoW_Bags:OnGuildBankSlotsChanged()
+    local GuildBankSet = self.GuildBankSet
+    if GuildBankSet and GuildBankSet.isBuilt then
+        GuildBankSet:UpdateAllSlots()
+        if self.GuildBankGUI then
+            self.GuildBankGUI:RefreshLayout()
         end
     end
 end
 
-function OneWoW_Bags:OnItemLockChanged(bagID, slotID)
-    local BagSet = self.BagSet
-    if BagSet and BagSet.isBuilt and BagSet.slots[bagID] and BagSet.slots[bagID][slotID] then
-        BagSet.slots[bagID][slotID]:OWB_RefreshLock()
-    end
-
-    if self.bankOpen then
-        local BankSet = self.BankSet
-        if BankSet and BankSet.isBuilt and BankSet.slots[bagID] and BankSet.slots[bagID][slotID] then
-            BankSet.slots[bagID][slotID]:OWB_RefreshLock()
+function OneWoW_Bags:OnGuildBankTabsUpdated()
+    if self.guildBankOpen then
+        if self.GuildBankSet then
+            self.GuildBankSet:Build()
+        end
+        if self.GuildBankBar then
+            self.GuildBankBar:BuildTabButtons()
+        end
+        if self.GuildBankGUI then
+            self.GuildBankGUI:RefreshLayout()
         end
     end
 end
@@ -278,115 +290,37 @@ function OneWoW_Bags:RestoreBankFrame()
     self._bankHiddenParent = nil
 end
 
-function OneWoW_Bags:RestoreGuildBankFrame()
-    if not self._guildBankSuppressed then return end
-    self._guildBankSuppressed = false
-
-    if GuildBankFrame then
-        GuildBankFrame:SetParent(UIParent)
-        if self._gbOrigOnHide then
-            GuildBankFrame:SetScript("OnHide", self._gbOrigOnHide)
+function OneWoW_Bags:ProcessBagUpdate(dirtyBags)
+    local BagSet = self.BagSet
+    if BagSet and BagSet.isBuilt then
+        BagSet:UpdateDirtyBags(dirtyBags)
+        if self.GUI and self.GUI.RefreshLayout then
+            self.GUI:RefreshLayout()
         end
     end
 
-    self._gbOrigOnHide = nil
-    self._gbHiddenParent = nil
-end
-
-function OneWoW_Bags:OnBankOpened()
-    self.bankOpen = true
-    local db = self.db
-    if not db or not db.global or not db.global.enableBankUI then return end
-
-    self:SuppressBankFrame()
-
-    local db = self.db
-    local showWarband = db and db.global and db.global.bankShowWarband
-    local activeBankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
-
-    if BankFrame and BankFrame.BankPanel then
-        BankFrame.BankPanel:SetBankType(activeBankType)
-    end
-
-    C_Bank.FetchPurchasedBankTabData(Enum.BankType.Character)
-    C_Bank.FetchNumPurchasedBankTabs(Enum.BankType.Character)
-    C_Bank.FetchPurchasedBankTabData(Enum.BankType.Account)
-    C_Bank.FetchNumPurchasedBankTabs(Enum.BankType.Account)
-
-    if self.BankGUI then
-        self.BankGUI:Show()
-    end
-end
-
-function OneWoW_Bags:OnBankClosed()
-    if not self.bankOpen then return end
-    self.bankOpen = false
-    if self.BankGUI then
-        self.BankGUI:Hide()
-    end
-    if self.BankSet then
-        self.BankSet:ReleaseAll()
-    end
-end
-
-function OneWoW_Bags:SuppressGuildBankFrame()
-    if not GuildBankFrame then return end
-    if self._guildBankSuppressed then return end
-    self._guildBankSuppressed = true
-
-    self._gbHiddenParent = CreateFrame("Frame")
-    self._gbHiddenParent:Hide()
-
-    self._gbOrigOnHide = GuildBankFrame:GetScript("OnHide")
-    GuildBankFrame:SetScript("OnHide", nil)
-    GuildBankFrame:SetParent(self._gbHiddenParent)
-end
-
-function OneWoW_Bags:OnGuildBankOpened()
-    self.guildBankOpen = true
-    local db = self.db
-    if not db or not db.global or not db.global.enableBankUI then return end
-
-    self:SuppressGuildBankFrame()
-
-    local numTabs = GetNumGuildBankTabs() or 0
-    for tabID = 1, numTabs do
-        QueryGuildBankTab(tabID)
-    end
-
-    C_Timer.After(0.3, function()
-        if not self.guildBankOpen then return end
-        if self.GuildBankGUI then
-            self.GuildBankGUI:Show()
+    if self.bankOpen then
+        local BankSet = self.BankSet
+        if BankSet and BankSet.isBuilt then
+            BankSet:UpdateDirtyBags(dirtyBags)
+            if self.BankGUI and self.BankGUI.RefreshLayout then
+                self.BankGUI:RefreshLayout()
+            end
         end
-    end)
-end
-
-function OneWoW_Bags:OnGuildBankClosed()
-    if not self.guildBankOpen then return end
-    self.guildBankOpen = false
-    if self.GuildBankGUI then
-        self.GuildBankGUI:Hide()
-    end
-    if self.GuildBankSet then
-        self.GuildBankSet:ReleaseAll()
     end
 end
 
-function OneWoW_Bags:OnGuildBankSlotsChanged()
-    if not self.guildBankOpen then return end
-    local GBSet = self.GuildBankSet
-    if not GBSet or not GBSet.isBuilt then return end
-    GBSet:UpdateAllSlots()
-    if self.GuildBankGUI and self.GuildBankGUI.RefreshLayout then
-        self.GuildBankGUI:RefreshLayout()
+function OneWoW_Bags:OnItemLockChanged(bagID, slotID)
+    local BagSet = self.BagSet
+    if BagSet and BagSet.isBuilt and BagSet.slots[bagID] and BagSet.slots[bagID][slotID] then
+        BagSet.slots[bagID][slotID]:OWB_RefreshLock()
     end
-end
 
-function OneWoW_Bags:OnGuildBankTabsUpdated()
-    if not self.guildBankOpen then return end
-    if self.GuildBankBagsBar then
-        self.GuildBankBagsBar:BuildTabButtons()
+    if self.bankOpen then
+        local BankSet = self.BankSet
+        if BankSet and BankSet.isBuilt and BankSet.slots[bagID] and BankSet.slots[bagID][slotID] then
+            BankSet.slots[bagID][slotID]:OWB_RefreshLock()
+        end
     end
 end
 
@@ -507,23 +441,6 @@ function OneWoW_Bags:HookBlizzardBags()
 
 end
 
-_G["1WoW_Bags_OnAddonCompartmentClick"] = function(addonName, buttonName)
-    if OneWoW_Bags.GUI then
-        OneWoW_Bags.GUI:Toggle()
-    end
-end
-
-_G["1WoW_Bags_OnAddonCompartmentEnter"] = function(addonName, button)
-    GameTooltip:SetOwner(button, "ANCHOR_LEFT")
-    GameTooltip:SetText("|cFFFFD100OneWoW|r - |cFF00FF00Bags|r", 1, 1, 1)
-    GameTooltip:AddLine("Click to toggle bags", 0.7, 0.7, 0.7)
-    GameTooltip:Show()
-end
-
-_G["1WoW_Bags_OnAddonCompartmentLeave"] = function(addonName, button)
-    GameTooltip:Hide()
-end
-
 local moneyDialog = nil
 
 function OneWoW_Bags:GetMoneyDialog()
@@ -582,7 +499,6 @@ function OneWoW_Bags:GetMoneyDialog()
     end
 
     moneyDialog._layoutButtons = LayoutButtons
-
     return moneyDialog
 end
 
@@ -636,6 +552,23 @@ function OneWoW_Bags:ShowMoneyDialog(config)
 
     dialog:Show()
     dialog.moneyBox.gold:SetFocus()
+end
+
+_G["1WoW_Bags_OnAddonCompartmentClick"] = function(addonName, buttonName)
+    if OneWoW_Bags.GUI then
+        OneWoW_Bags.GUI:Toggle()
+    end
+end
+
+_G["1WoW_Bags_OnAddonCompartmentEnter"] = function(addonName, button)
+    GameTooltip:SetOwner(button, "ANCHOR_LEFT")
+    GameTooltip:SetText("|cFFFFD100OneWoW|r - |cFF00FF00Bags|r", 1, 1, 1)
+    GameTooltip:AddLine("Click to toggle bags", 0.7, 0.7, 0.7)
+    GameTooltip:Show()
+end
+
+_G["1WoW_Bags_OnAddonCompartmentLeave"] = function(addonName, button)
+    GameTooltip:Hide()
 end
 
 local eventFrame = CreateFrame("Frame")

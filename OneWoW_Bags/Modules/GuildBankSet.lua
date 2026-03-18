@@ -1,4 +1,5 @@
 local ADDON_NAME, OneWoW_Bags = ...
+
 OneWoW_Bags.GuildBankSet = {}
 local GBSet = OneWoW_Bags.GuildBankSet
 
@@ -6,9 +7,12 @@ GBSet.slots = {}
 GBSet.totalSlots = 0
 GBSet.freeSlots = 0
 GBSet.isBuilt = false
+GBSet.bagContainerFrames = {}
 GBSet.numTabs = 0
 
-local function GetOrCreateGBFrame(tabID)
+local SLOTS_PER_TAB = 98
+
+local function GetOrCreateGuildBankFrame(tabID)
     local name = "OneWoW_GuildBankFrame" .. tabID
     local frame = _G[name]
     if not frame then
@@ -24,7 +28,6 @@ function GBSet:Build()
 
     self:ReleaseAll()
     self.totalSlots = 0
-    self.freeSlots = 0
     self.numTabs = GetNumGuildBankTabs() or 0
 
     for tabID = 1, self.numTabs do
@@ -32,9 +35,10 @@ function GBSet:Build()
         self.slots[tabID] = {}
 
         if isViewable then
-            local gbFrame = GetOrCreateGBFrame(tabID)
+            local gbFrame = GetOrCreateGuildBankFrame(tabID)
+            self.bagContainerFrames[tabID] = gbFrame
 
-            for slotID = 1, 98 do
+            for slotID = 1, SLOTS_PER_TAB do
                 local button = Pool:Acquire()
                 button:SetParent(gbFrame)
                 OneWoW_Bags:ApplyItemButtonMixin(button)
@@ -74,9 +78,7 @@ function GBSet:ApplyGuildBankScripts(button)
         if not tabID or not slotID then return end
 
         if self.owb_itemInfo and self.owb_itemInfo.hyperlink then
-            if HandleModifiedItemClick(self.owb_itemInfo.hyperlink) then
-                return
-            end
+            if HandleModifiedItemClick(self.owb_itemInfo.hyperlink) then return end
         end
 
         if IsModifiedClick("SPLITSTACK") and self.owb_hasItem then
@@ -150,19 +152,19 @@ function GBSet:ApplyGuildBankScripts(button)
 end
 
 function GBSet:RestoreButtonScripts(button)
-    if button._gbOrigOnClick then
+    if button._gbOrigOnClick ~= nil then
         button:SetScript("OnClick", button._gbOrigOnClick)
     end
-    if button._gbOrigOnEnter then
+    if button._gbOrigOnEnter ~= nil then
         button:SetScript("OnEnter", button._gbOrigOnEnter)
     end
-    if button._gbOrigOnLeave then
+    if button._gbOrigOnLeave ~= nil then
         button:SetScript("OnLeave", button._gbOrigOnLeave)
     end
-    if button._gbOrigOnDragStart then
+    if button._gbOrigOnDragStart ~= nil then
         button:SetScript("OnDragStart", button._gbOrigOnDragStart)
     end
-    if button._gbOrigOnReceiveDrag then
+    if button._gbOrigOnReceiveDrag ~= nil then
         button:SetScript("OnReceiveDrag", button._gbOrigOnReceiveDrag)
     end
     button._gbOrigOnClick = nil
@@ -183,19 +185,11 @@ function GBSet:ReleaseAll()
         end
     end
     self.slots = {}
+    self.bagContainerFrames = {}
     self.totalSlots = 0
     self.freeSlots = 0
-    self.isBuilt = false
     self.numTabs = 0
-end
-
-function GBSet:UpdateTab(tabID)
-    if not self.isBuilt then return end
-    if not self.slots[tabID] then return end
-
-    for slotID, button in pairs(self.slots[tabID]) do
-        self:UpdateSlot(tabID, slotID, button)
-    end
+    self.isBuilt = false
 end
 
 function GBSet:UpdateSlot(tabID, slotID, button)
@@ -238,6 +232,14 @@ function GBSet:UpdateSlot(tabID, slotID, button)
     end
 end
 
+function GBSet:UpdateTab(tabID)
+    if not self.isBuilt then return end
+    if not self.slots[tabID] then return end
+    for slotID, button in pairs(self.slots[tabID]) do
+        self:UpdateSlot(tabID, slotID, button)
+    end
+end
+
 function GBSet:UpdateAllSlots()
     self.freeSlots = 0
     for tabID, tabSlots in pairs(self.slots) do
@@ -254,7 +256,7 @@ function GBSet:GetAllButtons()
     local buttons = {}
     for tabID = 1, self.numTabs do
         if self.slots[tabID] then
-            for slotID = 1, 98 do
+            for slotID = 1, SLOTS_PER_TAB do
                 local button = self.slots[tabID][slotID]
                 if button then
                     table.insert(buttons, button)
@@ -268,7 +270,7 @@ end
 function GBSet:GetButtonsByTab(tabID)
     local buttons = {}
     if self.slots[tabID] then
-        for slotID = 1, 98 do
+        for slotID = 1, SLOTS_PER_TAB do
             if self.slots[tabID][slotID] then
                 table.insert(buttons, self.slots[tabID][slotID])
             end

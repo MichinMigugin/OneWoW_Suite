@@ -15,10 +15,9 @@ function View:Layout(contentFrame, buttons, width)
     local showEmpty = db.global.showEmptySlots
     if showEmpty == nil then showEmpty = true end
 
-    local cols = math.floor((width - padding * 2) / (iconSize + spacing))
+    local cols = math.floor((width + spacing) / (iconSize + spacing))
     cols = math.max(cols, 1)
 
-    local totalGridWidth = cols * (iconSize + spacing) - spacing
     local leftPadding = padding
 
     local normalButtons = {}

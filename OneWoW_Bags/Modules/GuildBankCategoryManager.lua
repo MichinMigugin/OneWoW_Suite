@@ -19,6 +19,14 @@ function CM:AcquireSection(parent)
     return section
 end
 
+function CM:ReleaseSection(section)
+    if not section then return end
+    section:Hide()
+    section:ClearAllPoints()
+    activeSections[section] = nil
+    table.insert(sectionPool, section)
+end
+
 function CM:ReleaseAllSections()
     for section in pairs(activeSections) do
         section:Hide()

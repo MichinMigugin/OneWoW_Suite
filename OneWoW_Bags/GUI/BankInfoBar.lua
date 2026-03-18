@@ -5,10 +5,11 @@ local BankInfoBar = OneWoW_Bags.BankInfoBar
 
 local infoBarFrame = nil
 local OneWoW_GUI = OneWoW_Bags.GUILib
-
 local T = OneWoW_Bags.T
 local S = OneWoW_Bags.S
-local CreateViewBtn = OneWoW_Bags.CreateViewBtn
+
+local ROW1_H = 28
+local ROW2_H = 28
 
 function BankInfoBar:Create(parent)
     if infoBarFrame then return infoBarFrame end
@@ -25,8 +26,11 @@ function BankInfoBar:Create(parent)
     infoBarFrame:SetBackdropColor(T("BG_TERTIARY"))
     infoBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local viewList = CreateViewBtn(infoBarFrame, L["BANK_VIEW_LIST"])
-    viewList:SetPoint("RIGHT", infoBarFrame, "RIGHT", -S("SM"), 0)
+    local btnY   = -math.floor((ROW1_H - 22) / 2)
+    local searchY = -(ROW1_H + math.floor((ROW2_H - 22) / 2))
+
+    local viewList = BankInfoBar:CreateViewBtn(infoBarFrame, L["VIEW_LIST"])
+    viewList:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", S("SM"), btnY)
     viewList:SetScript("OnClick", function()
         OneWoW_Bags.db.global.bankViewMode = "list"
         BankInfoBar:UpdateViewButtons()
@@ -36,43 +40,57 @@ function BankInfoBar:Create(parent)
     end)
     infoBarFrame.viewList = viewList
 
-    local viewTabs = CreateViewBtn(infoBarFrame, L["BANK_VIEW_TABS"])
-    viewTabs:SetPoint("RIGHT", viewList, "LEFT", -3, 0)
-    viewTabs:SetScript("OnClick", function()
-        OneWoW_Bags.db.global.bankViewMode = "tabs"
+    local viewTab = BankInfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"] or "Tab")
+    viewTab:SetPoint("TOPLEFT", viewList, "TOPRIGHT", 3, 0)
+    viewTab:SetScript("OnClick", function()
+        OneWoW_Bags.db.global.bankViewMode = "tab"
         BankInfoBar:UpdateViewButtons()
         if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
             OneWoW_Bags.BankGUI:RefreshLayout()
         end
     end)
-    infoBarFrame.viewTabs = viewTabs
+    infoBarFrame.viewTab = viewTab
 
-    local cleanupBtn = CreateViewBtn(infoBarFrame, L["BANK_SORT_DEFAULT"])
-    cleanupBtn:SetPoint("RIGHT", viewTabs, "LEFT", -3, 0)
-    cleanupBtn:SetScript("OnClick", function()
-        local db = OneWoW_Bags.db
-        if db.global.bankShowWarband then
-            C_Container.SortAccountBankBags()
-        else
-            C_Container.SortBankBags()
+    local emptyToggleBtn = CreateFrame("Button", nil, infoBarFrame)
+    emptyToggleBtn:SetSize(22, 22)
+    emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -S("SM"), searchY)
+    local emptyIcon = emptyToggleBtn:CreateTexture(nil, "ARTWORK")
+    emptyIcon:SetAllPoints()
+    emptyIcon:SetTexture("Interface\\COMMON\\FavoritesIcon")
+    emptyToggleBtn:SetScript("OnClick", function()
+        local db = OneWoW_Bags.db.global
+        db.showEmptySlots = not db.showEmptySlots
+        BankInfoBar:UpdateViewButtons()
+        if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
+            OneWoW_Bags.BankGUI:RefreshLayout()
         end
     end)
-    infoBarFrame.cleanupBtn = cleanupBtn
+    emptyToggleBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        local showing = OneWoW_Bags.db.global.showEmptySlots
+        if showing == nil then showing = true end
+        if showing then
+            GameTooltip:SetText(L["EMPTY_SLOTS_HIDE"], 1, 1, 1)
+        else
+            GameTooltip:SetText(L["EMPTY_SLOTS_SHOW"], 1, 1, 1)
+        end
+        GameTooltip:Show()
+    end)
+    emptyToggleBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    infoBarFrame.emptyToggleBtn = emptyToggleBtn
 
     local searchBox = OneWoW_GUI:CreateEditBox(infoBarFrame, {
         name = "OneWoW_BankSearch",
-        width = 160,
         height = 22,
-        placeholderText = L["BANK_SEARCH_PLACEHOLDER"],
+        placeholderText = L["SEARCH_PLACEHOLDER"],
         onTextChanged = function(text)
             if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.OnSearchChanged then
                 OneWoW_Bags.BankGUI:OnSearchChanged(text)
             end
         end,
     })
-    searchBox:ClearAllPoints()
-    searchBox:SetPoint("LEFT", infoBarFrame, "LEFT", S("SM"), 0)
-    searchBox:SetPoint("RIGHT", cleanupBtn, "LEFT", -S("SM"), 0)
+    searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", S("SM"), searchY)
+    searchBox:SetPoint("TOPRIGHT", emptyToggleBtn, "TOPLEFT", -3, 0)
     infoBarFrame.searchBox = searchBox
 
     BankInfoBar:UpdateViewButtons()
@@ -80,13 +98,34 @@ function BankInfoBar:Create(parent)
     return infoBarFrame
 end
 
+function BankInfoBar:CreateViewBtn(parent, label)
+    local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = label, height = 22, minWidth = 36 })
+    btn.isActive = false
+
+    btn._defaultEnter = btn:GetScript("OnEnter")
+    btn._defaultLeave = btn:GetScript("OnLeave")
+
+    btn:SetScript("OnEnter", function(self)
+        if not self.isActive and self._defaultEnter then
+            self._defaultEnter(self)
+        end
+    end)
+    btn:SetScript("OnLeave", function(self)
+        if not self.isActive and self._defaultLeave then
+            self._defaultLeave(self)
+        end
+    end)
+
+    return btn
+end
+
 function BankInfoBar:UpdateViewButtons()
     if not infoBarFrame then return end
-    local mode = OneWoW_Bags.db and OneWoW_Bags.db.global.bankViewMode or "tabs"
+    local mode = OneWoW_Bags.db and OneWoW_Bags.db.global.bankViewMode or "list"
 
     local buttons = {
-        { btn = infoBarFrame.viewTabs, mode = "tabs" },
         { btn = infoBarFrame.viewList, mode = "list" },
+        { btn = infoBarFrame.viewTab,  mode = "tab" },
     }
 
     for _, entry in ipairs(buttons) do
@@ -96,14 +135,21 @@ function BankInfoBar:UpdateViewButtons()
                 btn.isActive = true
                 btn:SetBackdropColor(T("BG_ACTIVE"))
                 btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-                if btn.text then btn.text:SetTextColor(T("TEXT_ACCENT")) end
+                btn.text:SetTextColor(T("TEXT_ACCENT"))
             else
                 btn.isActive = false
                 btn:SetBackdropColor(T("BTN_NORMAL"))
                 btn:SetBackdropBorderColor(T("BTN_BORDER"))
-                if btn.text then btn.text:SetTextColor(T("TEXT_PRIMARY")) end
+                btn.text:SetTextColor(T("TEXT_PRIMARY"))
             end
         end
+    end
+
+    if infoBarFrame.emptyToggleBtn then
+        local showing = OneWoW_Bags.db and OneWoW_Bags.db.global.showEmptySlots
+        if showing == nil then showing = true end
+        infoBarFrame.emptyToggleBtn:SetAlpha(showing and 1.0 or 0.35)
+        infoBarFrame.emptyToggleBtn:SetShown(mode == "list" or mode == "tab")
     end
 end
 

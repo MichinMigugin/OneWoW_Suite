@@ -5,9 +5,11 @@ local InfoBar = OneWoW_Bags.InfoBar
 
 local infoBarFrame = nil
 local OneWoW_GUI = OneWoW_Bags.GUILib
-
 local T = OneWoW_Bags.T
 local S = OneWoW_Bags.S
+
+local ROW1_H = 28
+local ROW2_H = 28
 
 function InfoBar:Create(parent)
     if infoBarFrame then return infoBarFrame end
@@ -24,23 +26,12 @@ function InfoBar:Create(parent)
     infoBarFrame:SetBackdropColor(T("BG_TERTIARY"))
     infoBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    local searchBox = OneWoW_GUI:CreateEditBox(infoBarFrame, {
-        name = "OneWoW_BagsSearch",
-        width = 160,
-        height = 22,
-        placeholderText = L["SEARCH_PLACEHOLDER"],
-        onTextChanged = function(text)
-            if OneWoW_Bags.GUI.OnSearchChanged then
-                OneWoW_Bags.GUI:OnSearchChanged(text)
-            end
-        end,
-    })
-    searchBox:SetPoint("LEFT", infoBarFrame, "LEFT", S("SM"), 0)
+    local btnY   = -math.floor((ROW1_H - 22) / 2)
+    local searchY = -(ROW1_H + math.floor((ROW2_H - 22) / 2))
 
-    infoBarFrame.searchBox = searchBox
-
+    -- Row 1 right: Category Manager button
     local catMgrBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CATEGORY_MANAGER_BTN"])
-    catMgrBtn:SetPoint("RIGHT", infoBarFrame, "RIGHT", -S("SM"), 0)
+    catMgrBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -S("SM"), btnY)
     catMgrBtn:SetScript("OnClick", function()
         if OneWoW_Bags.CategoryManagerUI then
             OneWoW_Bags.CategoryManagerUI:Toggle()
@@ -48,30 +39,9 @@ function InfoBar:Create(parent)
     end)
     infoBarFrame.catMgrBtn = catMgrBtn
 
-    local viewBag = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"])
-    viewBag:SetPoint("RIGHT", catMgrBtn, "LEFT", -3, 0)
-    viewBag:SetScript("OnClick", function()
-        OneWoW_Bags.db.global.viewMode = "bag"
-        InfoBar:UpdateViewButtons()
-        if OneWoW_Bags.GUI.RefreshLayout then
-            OneWoW_Bags.GUI:RefreshLayout()
-        end
-    end)
-    infoBarFrame.viewBag = viewBag
-
-    local viewCat = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_CATEGORY"])
-    viewCat:SetPoint("RIGHT", viewBag, "LEFT", -3, 0)
-    viewCat:SetScript("OnClick", function()
-        OneWoW_Bags.db.global.viewMode = "category"
-        InfoBar:UpdateViewButtons()
-        if OneWoW_Bags.GUI.RefreshLayout then
-            OneWoW_Bags.GUI:RefreshLayout()
-        end
-    end)
-    infoBarFrame.viewCat = viewCat
-
+    -- Row 1 left: view buttons
     local viewList = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_LIST"])
-    viewList:SetPoint("RIGHT", viewCat, "LEFT", -3, 0)
+    viewList:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", S("SM"), btnY)
     viewList:SetScript("OnClick", function()
         OneWoW_Bags.db.global.viewMode = "list"
         InfoBar:UpdateViewButtons()
@@ -81,9 +51,32 @@ function InfoBar:Create(parent)
     end)
     infoBarFrame.viewList = viewList
 
+    local viewCat = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_CATEGORY"])
+    viewCat:SetPoint("TOPLEFT", viewList, "TOPRIGHT", 3, 0)
+    viewCat:SetScript("OnClick", function()
+        OneWoW_Bags.db.global.viewMode = "category"
+        InfoBar:UpdateViewButtons()
+        if OneWoW_Bags.GUI.RefreshLayout then
+            OneWoW_Bags.GUI:RefreshLayout()
+        end
+    end)
+    infoBarFrame.viewCat = viewCat
+
+    local viewBag = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"])
+    viewBag:SetPoint("TOPLEFT", viewCat, "TOPRIGHT", 3, 0)
+    viewBag:SetScript("OnClick", function()
+        OneWoW_Bags.db.global.viewMode = "bag"
+        InfoBar:UpdateViewButtons()
+        if OneWoW_Bags.GUI.RefreshLayout then
+            OneWoW_Bags.GUI:RefreshLayout()
+        end
+    end)
+    infoBarFrame.viewBag = viewBag
+
+    -- Row 2 right: empty slots toggle (created before searchBox so search can anchor to it)
     local emptyToggleBtn = CreateFrame("Button", nil, infoBarFrame)
     emptyToggleBtn:SetSize(22, 22)
-    emptyToggleBtn:SetPoint("RIGHT", viewList, "LEFT", -3, 0)
+    emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -S("SM"), searchY)
     local emptyIcon = emptyToggleBtn:CreateTexture(nil, "ARTWORK")
     emptyIcon:SetAllPoints()
     emptyIcon:SetTexture("Interface\\COMMON\\FavoritesIcon")
@@ -109,13 +102,29 @@ function InfoBar:Create(parent)
     emptyToggleBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     infoBarFrame.emptyToggleBtn = emptyToggleBtn
 
+    -- Row 2: search bar fills left to just before the empty slots toggle
+    local searchBox = OneWoW_GUI:CreateEditBox(infoBarFrame, {
+        name = "OneWoW_BagsSearch",
+        height = 22,
+        placeholderText = L["SEARCH_PLACEHOLDER"],
+        onTextChanged = function(text)
+            if OneWoW_Bags.GUI.OnSearchChanged then
+                OneWoW_Bags.GUI:OnSearchChanged(text)
+            end
+        end,
+    })
+    searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", S("SM"), searchY)
+    searchBox:SetPoint("TOPRIGHT", emptyToggleBtn, "TOPLEFT", -3, 0)
+    infoBarFrame.searchBox = searchBox
+
     InfoBar:UpdateViewButtons()
 
+    -- Shopping cart button (optional, created when ShoppingList loads)
     local function CreateShoppingCartButton()
         if infoBarFrame.shoppingCartBtn then return end
         local cartBtn = CreateFrame("Button", nil, infoBarFrame)
         cartBtn:SetSize(22, 22)
-        cartBtn:SetPoint("LEFT", searchBox, "RIGHT", S("SM"), 0)
+        cartBtn:SetPoint("TOPRIGHT", catMgrBtn, "TOPLEFT", -3, 0)
         cartBtn:SetNormalAtlas("Perks-ShoppingCart")
         cartBtn:SetPushedAtlas("Perks-ShoppingCart")
         cartBtn:SetHighlightAtlas("Perks-ShoppingCart")
@@ -152,7 +161,25 @@ function InfoBar:Create(parent)
 end
 
 function InfoBar:CreateViewBtn(parent, label)
-    return OneWoW_Bags.CreateViewBtn(parent, label)
+    local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = label, height = 22, minWidth = 36 })
+    btn.isActive = false
+
+    btn._defaultEnter = btn:GetScript("OnEnter")
+    btn._defaultLeave = btn:GetScript("OnLeave")
+
+    btn:SetScript("OnEnter", function(self)
+        if not self.isActive and self._defaultEnter then
+            self._defaultEnter(self)
+        end
+    end)
+
+    btn:SetScript("OnLeave", function(self)
+        if not self.isActive and self._defaultLeave then
+            self._defaultLeave(self)
+        end
+    end)
+
+    return btn
 end
 
 function InfoBar:UpdateViewButtons()

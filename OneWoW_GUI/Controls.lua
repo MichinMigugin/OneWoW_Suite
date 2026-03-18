@@ -231,7 +231,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
         scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", 0, 0)
         scrollFrame:EnableMouseWheel(true)
 
-        self:ApplyScrollBarStyle(scrollFrame.ScrollBar, scrollContainer, -2)
+        OneWoW_GUI:StyleScrollBar(scrollFrame, { container = scrollContainer, offset = -2 })
 
         local scrollChild = CreateFrame("Frame", "OneWoWGUI_DropMenuContent_" .. uid, scrollFrame)
         scrollChild:SetHeight(1)

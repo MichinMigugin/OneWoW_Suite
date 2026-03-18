@@ -170,25 +170,39 @@ OneWoW_Bags.Locales["koKR"] = {
     ["GUI_NOT_INSTALLED"] = "TEST",
     ["SORT"] = "TEST",
 
-    ["SECTION_BANK"] = "TEST",
-    ["SECTION_DISPLAY"] = "TEST",
-    ["SECTION_BEHAVIOR"] = "TEST",
-    ["SECTION_INTEGRATION"] = "TEST",
-
     ["TOGGLE_ON"] = "TEST",
     ["TOGGLE_OFF"] = "TEST",
 
+    ["SECTION_BANK"] = "TEST",
+    ["SETTING_ENABLE_BANK"] = "TEST",
     ["DESC_ENABLE_BANK"] = "TEST",
-    ["DESC_RARITY_COLOR"] = "TEST",
-    ["DESC_SHOW_NEW"] = "TEST",
-    ["DESC_SHOW_SCROLLBAR"] = "TEST",
-    ["DESC_SHOW_BAGS_BAR"] = "TEST",
-    ["DESC_AUTO_OPEN"] = "TEST",
-    ["DESC_AUTO_CLOSE"] = "TEST",
-    ["DESC_LOCK"] = "TEST",
-    ["DESC_OVERLAY"] = "TEST",
     ["SETTING_BANK_OVERLAYS"] = "TEST",
     ["DESC_BANK_OVERLAYS"] = "TEST",
 
+    ["SECTION_DISPLAY"] = "TEST",
+    ["DESC_RARITY_COLOR"] = "TEST",
+    ["DESC_SHOW_NEW"] = "TEST",
     ["SETTING_SHOW_SCROLLBAR"] = "TEST",
+    ["DESC_SHOW_SCROLLBAR"] = "TEST",
+    ["DESC_SHOW_BAGS_BAR"] = "TEST",
+    ["SETTING_BAG_COLUMNS"] = "TEST",
+    ["SETTING_BANK_COLUMNS"] = "TEST",
+
+    ["SETTING_ITEM_SORT"] = "TEST",
+    ["SORT_NAME"] = "TEST",
+    ["SORT_RARITY"] = "TEST",
+    ["SORT_ITEM_LEVEL"] = "TEST",
+    ["SORT_RECENT"] = "TEST",
+    ["SORT_TYPE"] = "TEST",
+
+    ["SECTION_BEHAVIOR"] = "TEST",
+    ["DESC_AUTO_OPEN"] = "TEST",
+    ["DESC_AUTO_CLOSE"] = "TEST",
+    ["DESC_LOCK"] = "TEST",
+
+    ["SECTION_INTEGRATION"] = "TEST",
+    ["DESC_OVERLAY"] = "TEST",
+
+    ["CLEANUP"] = "TEST",
+
 }

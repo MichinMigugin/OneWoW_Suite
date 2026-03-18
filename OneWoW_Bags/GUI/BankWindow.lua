@@ -5,8 +5,10 @@ local BankGUI = OneWoW_Bags.BankGUI
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
 local OneWoW_GUI = OneWoW_Bags.GUILib
+local T = OneWoW_Bags.T
+local S = OneWoW_Bags.S
 
-local BankWindow = nil
+local MainWindow = nil
 local isInitialized = false
 local contentScrollFrame = nil
 local contentFrame = nil
@@ -14,79 +16,61 @@ local titleBar = nil
 local contentArea = nil
 local needsCleanupAfterCombat = false
 
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
-
-function BankGUI:InitBankWindow()
+function BankGUI:InitMainWindow()
     if isInitialized then return end
     if not Constants or not Constants.GUI then return end
 
     local C = Constants.GUI
     local db = OneWoW_Bags.db
-    local savedHeight = db and db.global and db.global.bankWindowHeight
+    local savedHeight = db and db.global and db.global.bankFramePosition and db.global.bankFramePosition.height
     local windowHeight = savedHeight or C.WINDOW_HEIGHT
-    local savedWidth = db and db.global and db.global.bankWindowWidth
-    local windowWidth = savedWidth or C.WINDOW_WIDTH
 
-    BankWindow = CreateFrame("Frame", "OneWoW_BankMainWindow", UIParent, "BackdropTemplate")
-    BankWindow:SetSize(windowWidth, windowHeight)
-    BankWindow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
+    MainWindow = OneWoW_GUI:CreateFrame(UIParent, {
+        name = "OneWoW_BankMainWindow",
+        width = C.WINDOW_WIDTH,
+        height = windowHeight,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
 
-    if not BankWindow then return end
+    if not MainWindow then return end
 
-    BankWindow:SetBackdropColor(T("BG_PRIMARY"))
-    BankWindow:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    BankWindow:SetPoint("CENTER")
-    BankWindow:SetMovable(true)
-    BankWindow:SetResizable(true)
-    BankWindow:SetResizeBounds(300, 300, 1400, 1200)
-    BankWindow:EnableMouse(true)
-    BankWindow:RegisterForDrag("LeftButton")
-    BankWindow:SetScript("OnDragStart", BankWindow.StartMoving)
-    BankWindow:SetScript("OnDragStop", function(self)
+    MainWindow:SetMovable(true)
+    MainWindow:SetResizable(true)
+    MainWindow:SetResizeBounds(C.WINDOW_WIDTH, 300, C.WINDOW_WIDTH, 1200)
+    MainWindow:EnableMouse(true)
+    MainWindow:RegisterForDrag("LeftButton")
+    MainWindow:SetScript("OnDragStart", MainWindow.StartMoving)
+    MainWindow:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
-        if db and db.global then
-            local point, _, relPoint, x, y = self:GetPoint()
-            db.global.bankWindowPosition = {
-                point = point,
-                relPoint = relPoint,
-                x = x,
-                y = y,
-            }
+        local d = OneWoW_Bags.db
+        if d and d.global then
+            d.global.bankFramePosition = d.global.bankFramePosition or {}
+            OneWoW_GUI:SaveWindowPosition(self, d.global.bankFramePosition)
         end
     end)
-    BankWindow:SetClampedToScreen(true)
-    BankWindow:SetFrameStrata("MEDIUM")
-    BankWindow:SetToplevel(true)
-    BankWindow._ready = false
-    BankWindow:SetScript("OnHide", function()
-        if not BankWindow._ready then return end
+    MainWindow:SetClampedToScreen(true)
+    MainWindow:SetFrameStrata("MEDIUM")
+    MainWindow:SetToplevel(true)
+    MainWindow:SetScript("OnHide", function()
         BankGUI:CleanupAllViews()
-        if OneWoW_Bags.bankOpen then
-            OneWoW_Bags.bankOpen = false
-            if OneWoW_Bags.BankSet then
-                OneWoW_Bags.BankSet:ReleaseAll()
-            end
-            C_Bank.CloseBankFrame()
+        local d = OneWoW_Bags.db
+        if d and d.global then
+            d.global.bankFramePosition = d.global.bankFramePosition or {}
+            OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.bankFramePosition)
         end
     end)
-    BankWindow:Hide()
-
-    local titleText = L["BANK_TITLE"]
-    if db and db.global and db.global.bankShowWarband then
-        titleText = L["BANK_WARBAND_TITLE"]
-    end
+    MainWindow:Hide()
 
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
-    titleBar = OneWoW_GUI:CreateTitleBar(BankWindow, {
-        title = titleText,
+    titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, {
+        title = L["BANK_TITLE"] or "Bank",
         height = C.TITLEBAR_HEIGHT,
         showBrand = true,
         factionTheme = factionTheme,
-        onClose = function() BankWindow:Hide() end,
+        onClose = function() MainWindow:Hide() end,
     })
 
-    local settingsBtn = OneWoW_GUI:CreateButton(titleBar, { text = "S", width = 20, height = 20 })
+    local settingsBtn = OneWoW_GUI:CreateFitTextButton(titleBar, { text = L["SETTINGS"], height = 20, minWidth = 30 })
     settingsBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -2, 0)
     settingsBtn:SetScript("OnClick", function()
         if OneWoW_Bags.Settings and OneWoW_Bags.Settings.Toggle then
@@ -94,74 +78,68 @@ function BankGUI:InitBankWindow()
         end
     end)
 
-    contentArea = CreateFrame("Frame", nil, BankWindow)
-    contentArea:SetPoint("TOPLEFT", BankWindow, "TOPLEFT", S("XS"), -(S("XS") + C.TITLEBAR_HEIGHT + S("XS")))
-    contentArea:SetPoint("BOTTOMRIGHT", BankWindow, "BOTTOMRIGHT", -S("XS"), S("XS"))
-    BankWindow.contentArea = contentArea
+    contentArea = CreateFrame("Frame", nil, MainWindow)
+    contentArea:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", S("XS"), -(S("XS") + C.TITLEBAR_HEIGHT + S("XS")))
+    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -S("XS"), S("XS"))
+    MainWindow.contentArea = contentArea
 
     local infoBar = OneWoW_Bags.BankInfoBar:Create(contentArea)
-    local bagsBar = OneWoW_Bags.BankBagsBar:Create(contentArea)
+    local bankBar = OneWoW_Bags.BankBar:Create(contentArea)
+    OneWoW_Bags.BankBar:SetShown(true)
+
+    local hideScrollBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
+    local scrollbarOffset = hideScrollBar and 0 or -12
 
     local scrollName = "OneWoW_BankContentScroll"
     contentScrollFrame = CreateFrame("ScrollFrame", scrollName, contentArea, "UIPanelScrollFrameTemplate")
     contentScrollFrame:SetPoint("TOPLEFT", infoBar, "BOTTOMLEFT", 0, -2)
-    local hideScroll = db and db.global and db.global.hideScrollBar
-    local scrollRightOffset = hideScroll and 0 or -16
-    contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBar, "TOPRIGHT", scrollRightOffset, 2)
+    contentScrollFrame:SetPoint("BOTTOMRIGHT", bankBar, "TOPRIGHT", scrollbarOffset, 2)
 
     OneWoW_GUI:StyleScrollBar(contentScrollFrame, { container = contentArea, offset = 0 })
-    if hideScroll and contentScrollFrame.ScrollBar then
-        contentScrollFrame.ScrollBar:SetAlpha(0)
-        contentScrollFrame.ScrollBar:EnableMouse(false)
+    if hideScrollBar and contentScrollFrame.ScrollBar then
+        contentScrollFrame.ScrollBar:Hide()
     end
 
     contentFrame = CreateFrame("Frame", scrollName .. "Content", contentScrollFrame)
     contentFrame:SetHeight(1)
     contentScrollFrame:SetScrollChild(contentFrame)
-
-    C_Timer.After(0, function()
-        if contentScrollFrame then
-            contentFrame:SetWidth(contentScrollFrame:GetWidth())
-        end
+    contentScrollFrame:HookScript("OnSizeChanged", function(self, w)
+        contentFrame:SetWidth(w)
     end)
 
-    local resizeBtn = CreateFrame("Button", nil, BankWindow)
+    local resizeBtn = CreateFrame("Button", nil, MainWindow)
     resizeBtn:SetSize(16, 16)
-    resizeBtn:SetPoint("BOTTOMRIGHT", BankWindow, "BOTTOMRIGHT", -2, 2)
+    resizeBtn:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -2, 2)
     resizeBtn:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
     resizeBtn:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
     resizeBtn:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-    resizeBtn:SetFrameLevel(BankWindow:GetFrameLevel() + 10)
+    resizeBtn:SetFrameLevel(MainWindow:GetFrameLevel() + 10)
     resizeBtn:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
-            BankWindow:StartSizing("BOTTOMRIGHT")
+            MainWindow:StartSizing("BOTTOM")
         end
     end)
     resizeBtn:SetScript("OnMouseUp", function(self)
-        BankWindow:StopMovingOrSizing()
-        if db and db.global then
-            db.global.bankWindowHeight = BankWindow:GetHeight()
-            db.global.bankWindowWidth = BankWindow:GetWidth()
-        end
-        if contentScrollFrame and contentFrame then
-            contentFrame:SetWidth(contentScrollFrame:GetWidth())
+        MainWindow:StopMovingOrSizing()
+        local d = OneWoW_Bags.db
+        if d and d.global then
+            d.global.bankFramePosition = d.global.bankFramePosition or {}
+            OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.bankFramePosition)
         end
         if BankGUI.RefreshLayout then BankGUI:RefreshLayout() end
     end)
 
-    local alreadyInSpecial = false
-    for _, name in ipairs(UISpecialFrames) do
-        if name == "OneWoW_BankMainWindow" then alreadyInSpecial = true; break end
-    end
-    if not alreadyInSpecial then
-        tinsert(UISpecialFrames, "OneWoW_BankMainWindow")
-    end
+    tinsert(UISpecialFrames, "OneWoW_BankMainWindow")
     isInitialized = true
 
-    if db and db.global and db.global.bankWindowPosition then
-        local pos = db.global.bankWindowPosition
-        BankWindow:ClearAllPoints()
-        BankWindow:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
+    local d = OneWoW_Bags.db
+    if d and d.global then
+        d.global.bankFramePosition = d.global.bankFramePosition or {}
+        if not OneWoW_GUI:RestoreWindowPosition(MainWindow, d.global.bankFramePosition) then
+            MainWindow:SetPoint("CENTER")
+        end
+    else
+        MainWindow:SetPoint("CENTER")
     end
 end
 
@@ -188,17 +166,32 @@ end
 local cleanupEventFrame = CreateFrame("Frame")
 cleanupEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 cleanupEventFrame:SetScript("OnEvent", function()
-    if needsCleanupAfterCombat and BankWindow and not BankWindow:IsShown() then
+    if needsCleanupAfterCombat and MainWindow and not MainWindow:IsShown() then
         BankGUI:CleanupAllViews()
     end
 end)
 
+function BankGUI:UpdateWindowWidth()
+    if not MainWindow then return end
+    local db = OneWoW_Bags.db
+    if not db or not db.global then return end
+    local cols = db.global.bankColumns or 14
+    local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
+    local spacing = Constants.GUI.ITEM_BUTTON_SPACING
+    local scrollbarSpace = db.global.hideScrollBar and 0 or 12
+    local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * S("XS"))
+    MainWindow:SetWidth(newWidth)
+    MainWindow:SetResizeBounds(newWidth, 300, newWidth, 1200)
+end
+
 function BankGUI:RefreshLayout()
-    if not isInitialized or not BankWindow then return end
-    if not BankWindow:IsShown() then return end
+    if not isInitialized or not MainWindow then return end
+    if not MainWindow:IsShown() then return end
 
     local BankSet = OneWoW_Bags.BankSet
     if not BankSet or not BankSet.isBuilt then return end
+
+    BankGUI:UpdateWindowWidth()
 
     if contentFrame and BankSet.bagContainerFrames then
         for _, bagFrame in pairs(BankSet.bagContainerFrames) do
@@ -209,7 +202,6 @@ function BankGUI:RefreshLayout()
     BankGUI:CleanupAllViews()
 
     local allButtons = BankSet:GetAllButtons()
-
     local searchText = OneWoW_Bags.BankInfoBar:GetSearchText()
     local filteredButtons = {}
 
@@ -232,29 +224,27 @@ function BankGUI:RefreshLayout()
         end
     end
 
-    local viewMode = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.bankViewMode or "tabs"
+    local viewMode = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.bankViewMode or "list"
 
-    local contentWidth = contentFrame:GetWidth()
-    if contentWidth < 10 then
-        contentWidth = Constants.GUI.WINDOW_WIDTH - 40
-    end
+    local db = OneWoW_Bags.db
+    local cols = db and db.global.bankColumns or 14
+    local iconSize = Constants.ICON_SIZES[(db and db.global.iconSize) or 3] or 37
+    local spacing = Constants.GUI.ITEM_BUTTON_SPACING
+    local contentWidth = cols * (iconSize + spacing) - spacing + 4
 
     local layoutHeight = 100
 
-    if viewMode == "tabs" then
+    if viewMode == "tab" then
         layoutHeight = OneWoW_Bags.BankTabView:Layout(contentFrame, contentWidth, filteredButtons)
-    elseif viewMode == "list" then
-        layoutHeight = OneWoW_Bags.BankListView:Layout(contentFrame, filteredButtons, contentWidth)
+    else
+        layoutHeight = OneWoW_Bags.ListView:Layout(contentFrame, filteredButtons, contentWidth)
     end
 
     contentFrame:SetHeight(layoutHeight)
 
-    OneWoW_Bags.ApplyFontToFrame(contentFrame)
-
     local freeSlots = BankSet:GetFreeSlotCount()
     local totalSlots = BankSet:GetSlotCount()
-    OneWoW_Bags.BankBagsBar:UpdateFreeSlots(freeSlots, totalSlots)
-    OneWoW_Bags.BankBagsBar:UpdateGold()
+    OneWoW_Bags.BankBar:UpdateFreeSlots(freeSlots, totalSlots)
 end
 
 function BankGUI:OnSearchChanged(text)
@@ -266,6 +256,7 @@ function BankGUI:OnBankTypeChanged()
     db.global.bankSelectedTab = nil
 
     local showWarband = db.global.bankShowWarband
+
     local newBankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
     if BankFrame and BankFrame.BankPanel then
         BankFrame.BankPanel:SetBankType(newBankType)
@@ -277,12 +268,10 @@ function BankGUI:OnBankTypeChanged()
         BankSet:Build()
     end
 
-    if OneWoW_Bags.BankBagsBar then
-        OneWoW_Bags.BankBagsBar:BuildTabButtons()
-        OneWoW_Bags.BankBagsBar:UpdateTabHighlights()
+    if OneWoW_Bags.BankBar then
+        OneWoW_Bags.BankBar:BuildTabButtons()
+        OneWoW_Bags.BankBar:UpdateModeButtons()
     end
-
-    BankGUI:UpdateTitle()
 
     C_Timer.After(0, function()
         if contentScrollFrame and contentFrame then
@@ -293,47 +282,30 @@ function BankGUI:OnBankTypeChanged()
         end
         BankGUI:RefreshLayout()
     end)
-end
-
-function BankGUI:UpdateTitle()
-    if not titleBar then return end
-    local db = OneWoW_Bags.db
-    local showWarband = db and db.global and db.global.bankShowWarband
-    local titleText = showWarband and L["BANK_WARBAND_TITLE"] or L["BANK_TITLE"]
-
-    if titleBar._titleText then
-        titleBar._titleText:SetText(titleText)
-    elseif titleBar.title then
-        titleBar.title:SetText(titleText)
-    end
 end
 
 function BankGUI:Show()
     if not isInitialized then
-        local ok, err = pcall(function() BankGUI:InitBankWindow() end)
+        local ok, err = pcall(function() BankGUI:InitMainWindow() end)
         if not ok then return end
     end
 
-    if not BankWindow then return end
+    if not MainWindow then return end
 
-    BankWindow._ready = true
-    BankWindow:Show()
+    MainWindow:Show()
 
     local BankSet = OneWoW_Bags.BankSet
-    if BankSet then
-        if not BankSet.isBuilt then
-            BankSet:Build()
-        end
+    if BankSet and not BankSet.isBuilt then
+        BankSet:Build()
     end
 
-    if OneWoW_Bags.BankBagsBar then
-        OneWoW_Bags.BankBagsBar:BuildTabButtons()
-        OneWoW_Bags.BankBagsBar:UpdateTabHighlights()
-        OneWoW_Bags.BankBagsBar:UpdateWarbandButton()
+    if OneWoW_Bags.BankBar then
+        OneWoW_Bags.BankBar:UpdateModeButtons()
+        OneWoW_Bags.BankBar:BuildTabButtons()
+        OneWoW_Bags.BankBar:UpdateGold()
     end
 
     C_Timer.After(0, function()
-        if not BankWindow or not BankWindow:IsShown() then return end
         if contentScrollFrame and contentFrame then
             local w = contentScrollFrame:GetWidth()
             if w and w > 10 then
@@ -341,20 +313,17 @@ function BankGUI:Show()
             end
         end
         BankGUI:RefreshLayout()
-        if BankWindow then
-            OneWoW_Bags.ApplyFontToFrame(BankWindow)
-        end
     end)
 end
 
 function BankGUI:Hide()
-    if BankWindow then
-        BankWindow:Hide()
+    if MainWindow then
+        MainWindow:Hide()
     end
 end
 
 function BankGUI:Toggle()
-    if BankWindow and BankWindow:IsShown() then
+    if MainWindow and MainWindow:IsShown() then
         self:Hide()
     else
         self:Show()
@@ -362,7 +331,7 @@ function BankGUI:Toggle()
 end
 
 function BankGUI:IsShown()
-    return BankWindow and BankWindow:IsShown()
+    return MainWindow and MainWindow:IsShown()
 end
 
 function BankGUI:FullReset()
@@ -374,13 +343,13 @@ function BankGUI:FullReset()
         OneWoW_Bags.BankInfoBar:Reset()
     end
 
-    if OneWoW_Bags.BankBagsBar and OneWoW_Bags.BankBagsBar.Reset then
-        OneWoW_Bags.BankBagsBar:Reset()
+    if OneWoW_Bags.BankBar and OneWoW_Bags.BankBar.Reset then
+        OneWoW_Bags.BankBar:Reset()
     end
 
-    if BankWindow then
-        BankWindow:Hide()
-        BankWindow = nil
+    if MainWindow then
+        MainWindow:Hide()
+        MainWindow = nil
     end
 
     titleBar = nil
@@ -391,10 +360,10 @@ function BankGUI:FullReset()
 end
 
 function BankGUI:ApplyTheme()
-    if not BankWindow then return end
+    if not MainWindow then return end
 
-    BankWindow:SetBackdropColor(T("BG_PRIMARY"))
-    BankWindow:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    MainWindow:SetBackdropColor(T("BG_PRIMARY"))
+    MainWindow:SetBackdropBorderColor(T("BORDER_DEFAULT"))
 
     if titleBar then
         titleBar:SetBackdropColor(T("TITLEBAR_BG"))
@@ -406,10 +375,10 @@ function BankGUI:ApplyTheme()
         infoBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
     end
 
-    local bagsBarFrame = OneWoW_Bags.BankBagsBar:GetFrame()
-    if bagsBarFrame then
-        bagsBarFrame:SetBackdropColor(T("BG_TERTIARY"))
-        bagsBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    local bankBarFrame = OneWoW_Bags.BankBar:GetFrame()
+    if bankBarFrame then
+        bankBarFrame:SetBackdropColor(T("BG_TERTIARY"))
+        bankBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
     end
 
     OneWoW_Bags.BankInfoBar:UpdateViewButtons()
@@ -418,5 +387,5 @@ function BankGUI:ApplyTheme()
 end
 
 function BankGUI:GetMainWindow()
-    return BankWindow
+    return MainWindow
 end

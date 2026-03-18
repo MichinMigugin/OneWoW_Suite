@@ -171,25 +171,39 @@ OneWoW_Bags.Locales["deDE"] = {
     ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
     ["SORT"] = "Sort",
 
-    ["SECTION_BANK"] = "Bank",
-    ["SECTION_DISPLAY"] = "Anzeige",
-    ["SECTION_BEHAVIOR"] = "Verhalten",
-    ["SECTION_INTEGRATION"] = "Integration",
-
     ["TOGGLE_ON"] = "An",
     ["TOGGLE_OFF"] = "Aus",
 
-    ["DESC_ENABLE_BANK"] = "Das Standard-Bankfenster durch die Bags-Bank-Oberflache ersetzen.",
-    ["DESC_RARITY_COLOR"] = "Gegenstandsrander nach Seltenheitsqualitat farben.",
-    ["DESC_SHOW_NEW"] = "Leuchteffekt auf neu erhaltene Gegenstande.",
-    ["DESC_SHOW_SCROLLBAR"] = "Die Bildlaufleiste im Taschenfenster anzeigen.",
-    ["DESC_SHOW_BAGS_BAR"] = "Einzelne Taschenplatze unten im Fenster anzeigen.",
-    ["DESC_AUTO_OPEN"] = "Taschen automatisch bei Handlern offnen.",
-    ["DESC_AUTO_CLOSE"] = "Taschen beim Verlassen von NPCs schliessen.",
-    ["DESC_LOCK"] = "Verschieben des Taschenfensters verhindern.",
-    ["DESC_OVERLAY"] = "OneWoW Gegenstands-Overlays umschalten.",
-    ["SETTING_BANK_OVERLAYS"] = "Bank-Overlays",
-    ["DESC_BANK_OVERLAYS"] = "Gegenstands-Overlays in Bank und Gildenbank anzeigen.",
+    ["SECTION_BANK"] = "Bank",
+    ["SETTING_ENABLE_BANK"] = "Bank-UI aktivieren",
+    ["DESC_ENABLE_BANK"] = "Ersetzt das Standard-Bankfenster durch die OneWoW-Bags-Oberflache.",
+    ["SETTING_BANK_OVERLAYS"] = "Bank-Gegenstand-Overlays",
+    ["DESC_BANK_OVERLAYS"] = "Overlays auf Standard-Bank-Gegenstanden anzeigen.",
 
-    ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
+    ["SECTION_DISPLAY"] = "Anzeige",
+    ["DESC_RARITY_COLOR"] = "Gegenstandsrahmen nach Seltenheit einfarben.",
+    ["DESC_SHOW_NEW"] = "Neu erhaltene Gegenstande hervorheben.",
+    ["SETTING_SHOW_SCROLLBAR"] = "Scrollleiste anzeigen",
+    ["DESC_SHOW_SCROLLBAR"] = "Scrollleiste des Taschenfensters anzeigen oder ausblenden.",
+    ["DESC_SHOW_BAGS_BAR"] = "Taschenleiste mit Taschenicons und Gold unten anzeigen.",
+    ["SETTING_BAG_COLUMNS"] = "Taschenspalten",
+    ["SETTING_BANK_COLUMNS"] = "Bankspalten",
+
+    ["SETTING_ITEM_SORT"] = "Gegenstandssortierung",
+    ["SORT_NAME"] = "Name",
+    ["SORT_RARITY"] = "Seltenheit",
+    ["SORT_ITEM_LEVEL"] = "Gegenstandsstufe",
+    ["SORT_RECENT"] = "Kurzlich",
+    ["SORT_TYPE"] = "Typ",
+
+    ["SECTION_BEHAVIOR"] = "Verhalten",
+    ["DESC_AUTO_OPEN"] = "Taschenfenster automatisch beim Handler offnen.",
+    ["DESC_AUTO_CLOSE"] = "Taschenfenster automatisch beim Verlassen schliessen.",
+    ["DESC_LOCK"] = "Taschenfenster am Bewegen hindern.",
+
+    ["SECTION_INTEGRATION"] = "OneWoW-Integration",
+    ["DESC_OVERLAY"] = "OneWoW-Overlays auf Taschengegenstandern ein-/ausschalten.",
+
+    ["CLEANUP"] = "Aufraumen",
+
 }

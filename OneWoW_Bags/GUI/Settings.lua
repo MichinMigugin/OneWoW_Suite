@@ -7,7 +7,6 @@ local isCreated = false
 local OneWoW_GUI = OneWoW_Bags.GUILib
 
 local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
 
 function Settings:Create()
     if isCreated then return settingsFrame end
@@ -56,8 +55,8 @@ function Settings:Create()
         onValueChange = function(newVal)
             db.global.enableBankUI = newVal
             if not newVal then
-                OneWoW_Bags:RestoreBankFrame()
-                OneWoW_Bags:RestoreGuildBankFrame()
+                if OneWoW_Bags.RestoreBankFrame then OneWoW_Bags:RestoreBankFrame() end
+                if OneWoW_Bags.RestoreGuildBankFrame then OneWoW_Bags:RestoreGuildBankFrame() end
                 if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI:IsShown() then
                     OneWoW_Bags.BankGUI:Hide()
                 end
@@ -78,9 +77,9 @@ function Settings:Create()
         onValueChange = function(newVal)
             db.global.enableBankOverlays = newVal
             if newVal then
-                OneWoW_Bags:FireCallbacksOnBankButtons()
+                if OneWoW_Bags.FireCallbacksOnBankButtons then OneWoW_Bags:FireCallbacksOnBankButtons() end
             else
-                OneWoW_Bags:ClearBankOverlays()
+                if OneWoW_Bags.ClearBankOverlays then OneWoW_Bags:ClearBankOverlays() end
             end
         end,
     })
@@ -190,6 +189,46 @@ function Settings:Create()
             end
         end,
     })
+    dispY = dispY - 6
+    local bagColLabel = displayContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bagColLabel:SetPoint("TOPLEFT", displayContainer, "TOPLEFT", 15, dispY)
+    bagColLabel:SetText(L["SETTING_BAG_COLUMNS"])
+    bagColLabel:SetTextColor(T("TEXT_PRIMARY"))
+    dispY = dispY - bagColLabel:GetStringHeight() - 4
+
+    local bagColSlider = OneWoW_GUI:CreateSlider(displayContainer, {
+        minVal = 2, maxVal = 30, step = 1, currentVal = db.global.bagColumns or 15,
+        onChange = function(val)
+            db.global.bagColumns = val
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+        end,
+        width = 240, fmt = "%d",
+    })
+    bagColSlider:SetPoint("TOPLEFT", displayContainer, "TOPLEFT", 15, dispY)
+    dispY = dispY - 40
+
+    local bankColLabel = displayContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bankColLabel:SetPoint("TOPLEFT", displayContainer, "TOPLEFT", 15, dispY)
+    bankColLabel:SetText(L["SETTING_BANK_COLUMNS"])
+    bankColLabel:SetTextColor(T("TEXT_PRIMARY"))
+    dispY = dispY - bankColLabel:GetStringHeight() - 4
+
+    local bankColSlider = OneWoW_GUI:CreateSlider(displayContainer, {
+        minVal = 2, maxVal = 30, step = 1, currentVal = db.global.bankColumns or 14,
+        onChange = function(val)
+            db.global.bankColumns = val
+            if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
+                OneWoW_Bags.BankGUI:RefreshLayout()
+            end
+            if OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI.RefreshLayout then
+                OneWoW_Bags.GuildBankGUI:RefreshLayout()
+            end
+        end,
+        width = 240, fmt = "%d",
+    })
+    bankColSlider:SetPoint("TOPLEFT", displayContainer, "TOPLEFT", 15, dispY)
+    dispY = dispY - 40
+
     displayContainer:SetHeight(math.abs(dispY) + 4)
     yOffset = yOffset - math.abs(dispY) - 4 - 15
 
@@ -247,7 +286,6 @@ function Settings:Create()
         { text = L["SORT_NAME"], value = "name", isActive = (db.global.itemSort == "name") },
         { text = L["SORT_RARITY"], value = "rarity", isActive = (db.global.itemSort == "rarity") },
         { text = L["SORT_ITEM_LEVEL"], value = "ilvl", isActive = (db.global.itemSort == "ilvl") },
-        { text = L["SORT_RECENT"], value = "recent", isActive = (db.global.itemSort == "recent") },
         { text = L["SORT_TYPE"], value = "type", isActive = (db.global.itemSort == "type") },
     }
 

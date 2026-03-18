@@ -5,6 +5,8 @@ local GUI = OneWoW_Bags.GUI
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
 local OneWoW_GUI = OneWoW_Bags.GUILib
+local T = OneWoW_Bags.T
+local S = OneWoW_Bags.S
 
 local MainWindow = nil
 local isInitialized = false
@@ -15,45 +17,36 @@ local contentArea = nil
 local settingsBtn = nil
 local needsCleanupAfterCombat = false
 
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
-
 function GUI:InitMainWindow()
     if isInitialized then return end
     if not Constants or not Constants.GUI then return end
 
     local C = Constants.GUI
-    local savedHeight = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.windowHeight
+    local db = OneWoW_Bags.db
+    local savedHeight = db and db.global and db.global.mainFramePosition and db.global.mainFramePosition.height
     local windowHeight = savedHeight or C.WINDOW_HEIGHT
 
-    local savedWidth = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.windowWidth
-    local windowWidth = savedWidth or C.WINDOW_WIDTH
-
-    MainWindow = CreateFrame("Frame", "OneWoW_BagsMainWindow", UIParent, "BackdropTemplate")
-    MainWindow:SetSize(windowWidth, windowHeight)
-    MainWindow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
+    MainWindow = OneWoW_GUI:CreateFrame(UIParent, {
+        name = "OneWoW_BagsMainWindow",
+        width = C.WINDOW_WIDTH,
+        height = windowHeight,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
 
     if not MainWindow then return end
 
-    MainWindow:SetBackdropColor(T("BG_PRIMARY"))
-    MainWindow:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-    MainWindow:SetPoint("CENTER")
     MainWindow:SetMovable(true)
     MainWindow:SetResizable(true)
-    MainWindow:SetResizeBounds(300, 300, 1400, 1200)
+    MainWindow:SetResizeBounds(C.WINDOW_WIDTH, 300, C.WINDOW_WIDTH, 1200)
     MainWindow:EnableMouse(true)
     MainWindow:RegisterForDrag("LeftButton")
     MainWindow:SetScript("OnDragStart", MainWindow.StartMoving)
     MainWindow:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
-        if OneWoW_Bags.db and OneWoW_Bags.db.global then
-            local point, _, relPoint, x, y = self:GetPoint()
-            OneWoW_Bags.db.global.windowPosition = {
-                point = point,
-                relPoint = relPoint,
-                x = x,
-                y = y,
-            }
+        local d = OneWoW_Bags.db
+        if d and d.global then
+            d.global.mainFramePosition = d.global.mainFramePosition or {}
+            OneWoW_GUI:SaveWindowPosition(self, d.global.mainFramePosition)
         end
     end)
     MainWindow:SetClampedToScreen(true)
@@ -61,6 +54,11 @@ function GUI:InitMainWindow()
     MainWindow:SetToplevel(true)
     MainWindow:SetScript("OnHide", function()
         GUI:CleanupAllViews()
+        local d = OneWoW_Bags.db
+        if d and d.global then
+            d.global.mainFramePosition = d.global.mainFramePosition or {}
+            OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.mainFramePosition)
+        end
     end)
     MainWindow:Hide()
 
@@ -73,7 +71,7 @@ function GUI:InitMainWindow()
         onClose = function() MainWindow:Hide() end,
     })
 
-    settingsBtn = OneWoW_GUI:CreateButton(titleBar, { text = "S", width = 20, height = 20 })
+    settingsBtn = OneWoW_GUI:CreateFitTextButton(titleBar, { text = L["SETTINGS"], height = 20, minWidth = 30 })
     settingsBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -2, 0)
     settingsBtn:SetScript("OnClick", function()
         if OneWoW_Bags.Settings and OneWoW_Bags.Settings.Toggle then
@@ -93,36 +91,29 @@ function GUI:InitMainWindow()
     if showBagsBar == nil then showBagsBar = true end
     OneWoW_Bags.BagsBar:SetShown(showBagsBar)
 
+    local hideScrollBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
+    local scrollbarOffset = hideScrollBar and 0 or -12
+
     local scrollName = "OneWoW_BagsContentScroll"
     contentScrollFrame = CreateFrame("ScrollFrame", scrollName, contentArea, "UIPanelScrollFrameTemplate")
     contentScrollFrame:SetPoint("TOPLEFT", infoBar, "BOTTOMLEFT", 0, -2)
-    local hideScroll = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
-    local scrollRightOffset = hideScroll and 0 or -16
     if showBagsBar then
-        contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBar, "TOPRIGHT", scrollRightOffset, 2)
+        contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBar, "TOPRIGHT", scrollbarOffset, 2)
     else
-        contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", scrollRightOffset, 0)
+        contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", scrollbarOffset, 0)
     end
 
     OneWoW_GUI:StyleScrollBar(contentScrollFrame, { container = contentArea, offset = 0 })
-    if hideScroll and contentScrollFrame.ScrollBar then
-        contentScrollFrame.ScrollBar:SetAlpha(0)
-        contentScrollFrame.ScrollBar:EnableMouse(false)
+    if hideScrollBar and contentScrollFrame.ScrollBar then
+        contentScrollFrame.ScrollBar:Hide()
     end
 
     contentFrame = CreateFrame("Frame", scrollName .. "Content", contentScrollFrame)
     contentFrame:SetHeight(1)
     contentScrollFrame:SetScrollChild(contentFrame)
-
-    C_Timer.After(0, function()
-        if contentScrollFrame then
-            contentFrame:SetWidth(contentScrollFrame:GetWidth())
-        end
+    contentScrollFrame:HookScript("OnSizeChanged", function(self, w)
+        contentFrame:SetWidth(w)
     end)
-
-    if OneWoW_Bags.Settings then
-        OneWoW_Bags.Settings:Create()
-    end
 
     local resizeBtn = CreateFrame("Button", nil, MainWindow)
     resizeBtn:SetSize(16, 16)
@@ -133,34 +124,30 @@ function GUI:InitMainWindow()
     resizeBtn:SetFrameLevel(MainWindow:GetFrameLevel() + 10)
     resizeBtn:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
-            MainWindow:StartSizing("BOTTOMRIGHT")
+            MainWindow:StartSizing("BOTTOM")
         end
     end)
     resizeBtn:SetScript("OnMouseUp", function(self)
         MainWindow:StopMovingOrSizing()
-        if OneWoW_Bags.db and OneWoW_Bags.db.global then
-            OneWoW_Bags.db.global.windowHeight = MainWindow:GetHeight()
-            OneWoW_Bags.db.global.windowWidth = MainWindow:GetWidth()
-        end
-        if contentScrollFrame and contentFrame then
-            contentFrame:SetWidth(contentScrollFrame:GetWidth())
+        local d = OneWoW_Bags.db
+        if d and d.global then
+            d.global.mainFramePosition = d.global.mainFramePosition or {}
+            OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.mainFramePosition)
         end
         if GUI.RefreshLayout then GUI:RefreshLayout() end
     end)
 
-    local alreadyInSpecial = false
-    for _, name in ipairs(UISpecialFrames) do
-        if name == "OneWoW_BagsMainWindow" then alreadyInSpecial = true; break end
-    end
-    if not alreadyInSpecial then
-        tinsert(UISpecialFrames, "OneWoW_BagsMainWindow")
-    end
+    tinsert(UISpecialFrames, "OneWoW_BagsMainWindow")
     isInitialized = true
 
-    if OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.windowPosition then
-        local pos = OneWoW_Bags.db.global.windowPosition
-        MainWindow:ClearAllPoints()
-        MainWindow:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
+    local d = OneWoW_Bags.db
+    if d and d.global then
+        d.global.mainFramePosition = d.global.mainFramePosition or {}
+        if not OneWoW_GUI:RestoreWindowPosition(MainWindow, d.global.mainFramePosition) then
+            MainWindow:SetPoint("CENTER")
+        end
+    else
+        MainWindow:SetPoint("CENTER")
     end
 end
 
@@ -192,12 +179,27 @@ cleanupEventFrame:SetScript("OnEvent", function()
     end
 end)
 
+function GUI:UpdateWindowWidth()
+    if not MainWindow then return end
+    local db = OneWoW_Bags.db
+    if not db or not db.global then return end
+    local cols = db.global.bagColumns or 15
+    local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
+    local spacing = Constants.GUI.ITEM_BUTTON_SPACING
+    local scrollbarSpace = db.global.hideScrollBar and 0 or 12
+    local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * S("XS"))
+    MainWindow:SetWidth(newWidth)
+    MainWindow:SetResizeBounds(newWidth, 300, newWidth, 1200)
+end
+
 function GUI:RefreshLayout()
     if not isInitialized or not MainWindow then return end
     if not MainWindow:IsShown() then return end
 
     local BagSet = OneWoW_Bags.BagSet
     if not BagSet or not BagSet.isBuilt then return end
+
+    GUI:UpdateWindowWidth()
 
     if contentFrame and BagSet.bagContainerFrames then
         for _, bagFrame in pairs(BagSet.bagContainerFrames) do
@@ -233,10 +235,11 @@ function GUI:RefreshLayout()
 
     local viewMode = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.viewMode or "list"
 
-    local contentWidth = contentFrame:GetWidth()
-    if contentWidth < 10 then
-        contentWidth = Constants.GUI.WINDOW_WIDTH - 40
-    end
+    local db = OneWoW_Bags.db
+    local cols = db and db.global.bagColumns or 15
+    local iconSize = Constants.ICON_SIZES[(db and db.global.iconSize) or 3] or 37
+    local spacing = Constants.GUI.ITEM_BUTTON_SPACING
+    local contentWidth = cols * (iconSize + spacing) - spacing + 4
 
     local layoutHeight = 100
 
@@ -249,8 +252,6 @@ function GUI:RefreshLayout()
     end
 
     contentFrame:SetHeight(layoutHeight)
-
-    OneWoW_Bags.ApplyFontToFrame(contentFrame)
 
     local freeSlots = BagSet:GetFreeSlotCount()
     local totalSlots = BagSet:GetSlotCount()
@@ -284,9 +285,6 @@ function GUI:Show()
             end
         end
         GUI:RefreshLayout()
-        if MainWindow then
-            OneWoW_Bags.ApplyFontToFrame(MainWindow)
-        end
     end)
 end
 
@@ -375,6 +373,16 @@ function GUI:ApplyTheme()
         bagsBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
     end
 
+    if contentScrollFrame and contentScrollFrame.ScrollBar then
+        local scrollBar = contentScrollFrame.ScrollBar
+        if scrollBar.Background then
+            scrollBar.Background:SetColorTexture(T("BG_TERTIARY"))
+        end
+        if scrollBar.ThumbTexture then
+            scrollBar.ThumbTexture:SetColorTexture(T("ACCENT_PRIMARY"))
+        end
+    end
+
     OneWoW_Bags.InfoBar:UpdateViewButtons()
 
     self:RefreshLayout()
@@ -393,16 +401,16 @@ function GUI:UpdateBagsBarVisibility()
     OneWoW_Bags.BagsBar:SetShown(showBagsBar)
 
     local bagsBarFrame = OneWoW_Bags.BagsBar:GetFrame()
-    local hideScroll = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
-    local scrollRightOffset = hideScroll and 0 or -16
     if contentScrollFrame then
+        local hideScrollBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
+        local scrollbarOffset = hideScrollBar and 0 or -12
         contentScrollFrame:ClearAllPoints()
         local infoBarFrame = OneWoW_Bags.InfoBar:GetFrame()
         contentScrollFrame:SetPoint("TOPLEFT", infoBarFrame, "BOTTOMLEFT", 0, -2)
         if showBagsBar and bagsBarFrame then
-            contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "TOPRIGHT", scrollRightOffset, 2)
+            contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "TOPRIGHT", scrollbarOffset, 2)
         else
-            contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", scrollRightOffset, 0)
+            contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", scrollbarOffset, 0)
         end
     end
 
