@@ -565,6 +565,26 @@ function TE:EvaluateObjective(obj)
             end
         end
 
+    elseif ot == "campaign" then
+        local campaignID = tonumber(op.campaignID)
+        if campaignID and C_CampaignInfo then
+            local info = C_CampaignInfo.GetCampaignInfo(campaignID)
+            if info then
+                if info.complete then return 1, 1 end
+                local chapters = C_CampaignInfo.GetChapterIDs(campaignID)
+                if chapters then
+                    local done = 0
+                    for _, chapterID in ipairs(chapters) do
+                        local chapterInfo = C_CampaignInfo.GetCampaignChapterInfo(chapterID)
+                        if chapterInfo and chapterInfo.completed then
+                            done = done + 1
+                        end
+                    end
+                    return done, #chapters
+                end
+            end
+        end
+
     elseif ot == "custom_timer" then
         return nil
     end
@@ -620,22 +640,26 @@ function TE:FullScan()
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
         for _, sec in ipairs(list.sections) do
-            for _, step in ipairs(sec.steps or {}) do
-                if step.trackType ~= "manual" and step.trackType ~= "spell_cast" and
-                   step.trackType ~= "kill_count" and step.trackType ~= "npc_interact" and
-                   step.trackType ~= "loot_item" then
-                    self:EvaluateStep(listID, sec.key, step)
-                end
+            if self:IsSectionVisible(sec) then
+                for _, step in ipairs(sec.steps or {}) do
+                    if self:IsStepVisible(step, sec) then
+                        if step.trackType ~= "manual" and step.trackType ~= "spell_cast" and
+                           step.trackType ~= "kill_count" and step.trackType ~= "npc_interact" and
+                           step.trackType ~= "loot_item" then
+                            self:EvaluateStep(listID, sec.key, step)
+                        end
 
-                if step.objectives then
-                    for _, obj in ipairs(step.objectives) do
-                        if obj.type ~= "manual" and obj.type ~= "spell_cast" and
-                           obj.type ~= "kill_count" and obj.type ~= "npc_interact" and
-                           obj.type ~= "loot_item" then
-                            local current, max = self:EvaluateObjective(obj)
-                            if current ~= nil then
-                                local complete = max and max > 0 and current >= max
-                                TD:SetObjectiveComplete(listID, sec.key, step.key, obj.key, complete)
+                        if step.objectives then
+                            for _, obj in ipairs(step.objectives) do
+                                if obj.type ~= "manual" and obj.type ~= "spell_cast" and
+                                   obj.type ~= "kill_count" and obj.type ~= "npc_interact" and
+                                   obj.type ~= "loot_item" then
+                                    local current, max = self:EvaluateObjective(obj)
+                                    if current ~= nil then
+                                        local complete = max and max > 0 and current >= max
+                                        TD:SetObjectiveComplete(listID, sec.key, step.key, obj.key, complete)
+                                    end
+                                end
                             end
                         end
                     end
@@ -723,6 +747,11 @@ local function OnEvent(self, event, ...)
         TD:CheckCustomTimerResets()
         BuildIndices()
         C_Timer.After(2, function() TE:FullScan() end)
+        C_Timer.After(3, function()
+            if C_Calendar and C_Calendar.OpenCalendar then
+                C_Calendar.OpenCalendar()
+            end
+        end)
         TE:RestorePinnedWindows()
 
     elseif event == "QUEST_LOG_UPDATE" or event == "QUEST_TURNED_IN" then
@@ -796,6 +825,10 @@ local function OnEvent(self, event, ...)
         if unit == "player" then
             C_Timer.After(0.2, function() TE:FullScan() end)
         end
+
+    elseif event == "CALENDAR_UPDATE_EVENT_LIST" then
+        lastEventCheck = 0
+        C_Timer.After(1, function() TE:FullScan() end)
     end
 end
 
@@ -840,6 +873,7 @@ function TE:Initialize()
     frame:RegisterEvent("TRANSMOG_COLLECTION_UPDATED")
     frame:RegisterEvent("UNIT_AURA")
     frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    frame:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
 
     frame:SetScript("OnEvent", OnEvent)
 
@@ -912,6 +946,9 @@ function TE:GetTrackTypeDisplayName(trackType)
         manual          = L["TRACKER_TYPE_MANUAL"] or "Manual",
         quest           = L["TRACKER_TYPE_QUEST"] or "Quest",
         quest_account   = L["TRACKER_TYPE_QUEST_ACCOUNT"] or "Quest (Account)",
+        quest_pool      = L["TRACKER_TYPE_QUEST_POOL"] or "Quest Pool",
+        quest_pool_account = L["TRACKER_TYPE_QUEST_POOL_ACCOUNT"] or "Quest Pool (Account)",
+        quest_progress  = L["TRACKER_TYPE_QUEST_PROGRESS"] or "Quest Progress",
         quest_active    = L["TRACKER_TYPE_QUEST_ACTIVE"] or "Quest Active",
         quest_world     = L["TRACKER_TYPE_QUEST_WORLD"] or "World Quest",
         level           = L["TRACKER_TYPE_LEVEL"] or "Level",
@@ -944,6 +981,7 @@ function TE:GetTrackTypeDisplayName(trackType)
         prof_catchup    = L["TRACKER_TYPE_PROF_CATCHUP"] or "Catchup Currency",
         rare_quest      = L["TRACKER_TYPE_RARE_QUEST"] or "Rare Quest",
         custom_timer    = L["TRACKER_TYPE_CUSTOM_TIMER"] or "Custom Timer",
+        campaign        = L["TRACKER_TYPE_CAMPAIGN"] or "Campaign",
     }
     return names[trackType] or trackType
 end

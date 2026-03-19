@@ -45,6 +45,7 @@ local SEASON_CURRENCIES = {
     {key = "cur_3379", currencyID = 3379, name = "Brimming Arcana",      width = 45},
     {key = "cur_3385", currencyID = 3385, name = "Luminous Dust",        width = 45},
     {key = "cur_3316", currencyID = 3316, name = "Voidlight Marl",       width = 45},
+    {key = "cur_3310", currencyID = 3310, name = "Coffer Key Shards",   width = 45},
 }
 
 local subTabState = {
@@ -175,7 +176,12 @@ local function GetDiffAbbr(difficultyName)
     return ""
 end
 
-local KNOWN_BOSS_NAMES = {}
+local KNOWN_BOSS_NAMES = {
+    [92123] = "Cragpine",
+    [92560] = "Lu'ashal",
+    [92636] = "Predaxas",
+    [92034] = "Thorm'belan",
+}
 
 local function GetRaidProgString(endgameData)
     if not endgameData or not endgameData.raids or not endgameData.raids.lockouts then return "--" end

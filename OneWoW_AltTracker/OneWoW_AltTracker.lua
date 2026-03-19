@@ -172,18 +172,18 @@ function OneWoWAltTracker:InitializeDatabase()
     end
 
     if not self.db.global.overrides then
-        self.db.global.overrides = { progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316}, worldBossQuestID = 0 } }
+        self.db.global.overrides = { progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310}, worldBossQuestID = 0 } }
     end
     if not self.db.global.overrides.progress then
-        self.db.global.overrides.progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316}, worldBossQuestID = 0 }
+        self.db.global.overrides.progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310}, worldBossQuestID = 0 }
     end
     if not self.db.global.overrides.progress.trackedCurrencyIDs then
-        self.db.global.overrides.progress.trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316}
+        self.db.global.overrides.progress.trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310}
         self.db.global.overrides.progress.currency1ID = nil
         self.db.global.overrides.progress.currency2ID = nil
     end
-    if not self.db.global.overrides.progress.worldBossQuestIDs then
-        self.db.global.overrides.progress.worldBossQuestIDs = {}
+    if not self.db.global.overrides.progress.worldBossQuestIDs or #self.db.global.overrides.progress.worldBossQuestIDs == 0 then
+        self.db.global.overrides.progress.worldBossQuestIDs = {92123, 92560, 92636, 92034}
         self.db.global.overrides.progress.worldBossQuestID = nil
     end
     self.db.global.overrides.progress.primaryRaidName = nil

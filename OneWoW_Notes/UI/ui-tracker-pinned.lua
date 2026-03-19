@@ -109,6 +109,7 @@ function TP:Create(listID)
         local yOffset = 0
 
         for _, sec in ipairs(currentList.sections) do
+          if TE:IsSectionVisible(sec) then
             local secDone, secTotal = TD:GetSectionCompletion(listID, sec.key)
 
             local secHeader = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
@@ -145,6 +146,7 @@ function TP:Create(listID)
             yOffset = yOffset - 22
 
             for _, step in ipairs(sec.steps or {}) do
+              if TE:IsStepVisible(step, sec) then
                 local sp = TD:GetStepProgress(listID, sec.key, step.key)
                 local isComplete = sp.completed or false
 
@@ -273,9 +275,11 @@ function TP:Create(listID)
                         yOffset = yOffset - 18
                     end
                 end
+              end
             end
 
             yOffset = yOffset - 4
+          end
         end
 
         scrollChild:SetHeight(math_max(1, math.abs(yOffset)))

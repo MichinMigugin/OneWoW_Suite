@@ -6,9 +6,19 @@ local addonName, ns = ...
 ns.WorldBoss = {}
 local Module = ns.WorldBoss
 
-local DEFAULT_BOSS_QUEST_IDS = {}
+local DEFAULT_BOSS_QUEST_IDS = {
+    92123,
+    92560,
+    92636,
+    92034,
+}
 
-local KNOWN_BOSS_NAMES = {}
+local KNOWN_BOSS_NAMES = {
+    [92123] = "Cragpine",
+    [92560] = "Lu'ashal",
+    [92636] = "Predaxas",
+    [92034] = "Thorm'belan",
+}
 
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end

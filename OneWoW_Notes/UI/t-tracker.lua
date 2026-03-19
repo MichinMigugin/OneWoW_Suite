@@ -480,6 +480,7 @@ function ns.UI.CreateTrackerTab(parent)
         end
 
         for secIdx, sec in ipairs(list.sections) do
+          if TE:IsSectionVisible(sec) then
             yOffset = yOffset - 8
 
             local secHeader = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
@@ -560,6 +561,7 @@ function ns.UI.CreateTrackerTab(parent)
             yOffset = yOffset - 36
 
             for stepIdx, step in ipairs(sec.steps or {}) do
+              if TE:IsStepVisible(step, sec) then
                 local sp = TD:GetStepProgress(list.id, sec.key, step.key)
                 local isComplete = sp.completed or false
 
@@ -788,7 +790,9 @@ function ns.UI.CreateTrackerTab(parent)
                 end
 
                 yOffset = yOffset - (math.max(30, rowHeight) + 4)
+              end
             end
+          end
         end
 
         detailScrollChild:SetHeight(math.max(1, math.abs(yOffset) + 20))

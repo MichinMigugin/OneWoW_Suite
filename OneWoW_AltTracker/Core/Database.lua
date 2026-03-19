@@ -35,8 +35,8 @@ ns.DatabaseDefaults = {
 
         overrides = {
             progress = {
-                trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316},
-                worldBossQuestIDs = {},
+                trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310},
+                worldBossQuestIDs = {92123, 92560, 92636, 92034},
             }
         },
 
