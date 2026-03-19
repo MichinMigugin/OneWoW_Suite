@@ -88,7 +88,7 @@ local function BuildIndex()
                     if slotData.itemID and slotData.itemID ~= 0 then
                         AddToIndex(slotData.itemID, {
                             locationType = "warband",
-                            count        = slotData.count or 1,
+                            count        = slotData.stackCount or 1,
                             itemLink     = slotData.itemLink,
                             quality      = slotData.quality,
                         })

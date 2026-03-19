@@ -484,11 +484,11 @@ function ns.UI.RefreshItemsTab(itemsTab)
                                 locations = {},
                             }
                         end
-                        items[itemID].totalQty = items[itemID].totalQty + (itemData.count or 1)
+                        items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
                         table.insert(items[itemID].locations, {
                             charName = "Account",
                             location = L["BANK_WARBAND"],
-                            qty = itemData.count or 1,
+                            qty = itemData.stackCount or 1,
                         })
                     end
                 end
