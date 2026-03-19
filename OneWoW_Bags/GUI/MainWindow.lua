@@ -54,6 +54,9 @@ function GUI:InitMainWindow()
     MainWindow:SetToplevel(true)
     MainWindow:SetScript("OnHide", function()
         GUI:CleanupAllViews()
+        if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.ClearSearch then
+            OneWoW_Bags.InfoBar:ClearSearch()
+        end
         local d = OneWoW_Bags.db
         if d and d.global then
             d.global.mainFramePosition = d.global.mainFramePosition or {}
@@ -137,7 +140,14 @@ function GUI:InitMainWindow()
         if GUI.RefreshLayout then GUI:RefreshLayout() end
     end)
 
-    tinsert(UISpecialFrames, "OneWoW_BagsMainWindow")
+    _G["OneWoW_BagsMainWindow"] = MainWindow
+    local alreadyRegistered = false
+    for _, name in ipairs(UISpecialFrames) do
+        if name == "OneWoW_BagsMainWindow" then alreadyRegistered = true; break end
+    end
+    if not alreadyRegistered then
+        tinsert(UISpecialFrames, "OneWoW_BagsMainWindow")
+    end
     isInitialized = true
 
     local d = OneWoW_Bags.db

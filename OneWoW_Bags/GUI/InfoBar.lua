@@ -229,6 +229,13 @@ function InfoBar:GetSearchText()
     return ""
 end
 
+function InfoBar:ClearSearch()
+    if infoBarFrame and infoBarFrame.searchBox then
+        infoBarFrame.searchBox:SetText("")
+        infoBarFrame.searchBox:ClearFocus()
+    end
+end
+
 function InfoBar:GetFrame()
     return infoBarFrame
 end
