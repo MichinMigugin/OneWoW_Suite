@@ -1,7 +1,7 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
 OneWoW_Bags.GuildBankBar = {}
-local GBBar = OneWoW_Bags.GuildBankBar
+local GuildBankBar = OneWoW_Bags.GuildBankBar
 
 local bagsBarFrame = nil
 local tabButtons = {}
@@ -9,11 +9,10 @@ local OneWoW_GUI = OneWoW_Bags.GUILib
 local T = OneWoW_Bags.T
 local S = OneWoW_Bags.S
 
-local ROW1_Y = 12
-local ROW2_Y = -14
-local BAR_HEIGHT = 58
+local ROW1_Y = 0
+local BAR_HEIGHT = 38
 
-function GBBar:Create(parent)
+function GuildBankBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
 
     local L = OneWoW_Bags.L
@@ -26,19 +25,21 @@ function GBBar:Create(parent)
     bagsBarFrame:SetBackdropColor(T("BG_TERTIARY"))
     bagsBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-    GBBar:BuildTabButtons()
+    GuildBankBar:BuildTabButtons()
 
     local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_WITHDRAW"] or "Withdraw", height = 22 })
     withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -S("SM"), ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
         if not OneWoW_Bags.guildBankOpen then return end
         if not CanWithdrawGuildBankMoney() then return end
+        local limit = GetGuildBankWithdrawMoney()
         OneWoW_Bags:ShowMoneyDialog({
             title = L["GUILD_BANK_TITLE"] or "Guild Bank",
             anchorFrame = self,
             onWithdraw = function(copper)
-                WithdrawGuildBankMoney(copper)
-                C_Timer.After(0.3, function() GBBar:UpdateGold() end)
+                local max = (limit == -1) and copper or math.min(copper, limit)
+                WithdrawGuildBankMoney(max)
+                C_Timer.After(0.3, function() GuildBankBar:UpdateGold() end)
             end,
         })
     end)
@@ -53,7 +54,7 @@ function GBBar:Create(parent)
             anchorFrame = self,
             onDeposit = function(copper)
                 DepositGuildBankMoney(copper)
-                C_Timer.After(0.3, function() GBBar:UpdateGold() end)
+                C_Timer.After(0.3, function() GuildBankBar:UpdateGold() end)
             end,
         })
     end)
@@ -68,12 +69,12 @@ function GBBar:Create(parent)
     freeSlots:SetTextColor(T("TEXT_SECONDARY"))
     bagsBarFrame.freeSlots = freeSlots
 
-    GBBar:UpdateGold()
+    GuildBankBar:UpdateGold()
 
     return bagsBarFrame
 end
 
-function GBBar:BuildTabButtons()
+function GuildBankBar:BuildTabButtons()
     if not bagsBarFrame then return end
 
     for _, btn in pairs(tabButtons) do
@@ -83,19 +84,33 @@ function GBBar:BuildTabButtons()
     end
     tabButtons = {}
 
-    local xOffset = S("SM")
     local numTabs = GetNumGuildBankTabs() or 0
+    local xOffset = S("SM")
 
     for tabID = 1, numTabs do
         local name, icon, isViewable = GetGuildBankTabInfo(tabID)
-        local btn = GBBar:CreateTabButton(bagsBarFrame, tabID, name, icon, isViewable)
+        local btn = GuildBankBar:CreateTabButton(bagsBarFrame, tabID, name, icon, isViewable)
         btn:SetPoint("LEFT", bagsBarFrame, "LEFT", xOffset, ROW1_Y)
         tabButtons[tabID] = btn
         xOffset = xOffset + 30
     end
+
+    if OneWoW_Bags.guildBankOpen and numTabs > 0 then
+        local originalTab = GetCurrentGuildBankTab()
+        for tabID = 1, numTabs do
+            local _, _, isViewable = GetGuildBankTabInfo(tabID)
+            if isViewable and tabID ~= originalTab then
+                QueryGuildBankTab(tabID)
+            end
+        end
+        local _, _, origViewable = GetGuildBankTabInfo(originalTab)
+        if origViewable then
+            QueryGuildBankTab(originalTab)
+        end
+    end
 end
 
-function GBBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewable)
+function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewable)
     local L = OneWoW_Bags.L
 
     local btn = CreateFrame("Button", "OneWoW_GuildBankTab" .. tabID, parent)
@@ -106,26 +121,41 @@ function GBBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewable)
     icon:SetAllPoints()
     btn.icon = icon
     btn.tabID = tabID
+    btn.tabName = tabName
     btn.isViewable = isViewable
 
-    if tabIcon then icon:SetTexture(tabIcon) else icon:SetAtlas("Banker") end
-    if not isViewable then icon:SetDesaturated(true) end
+    if tabIcon then
+        icon:SetTexture(tabIcon)
+    else
+        icon:SetAtlas("Banker")
+    end
+    if not isViewable then
+        icon:SetDesaturated(true)
+    end
 
     btn._skinnedIcon = icon
     OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
 
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        local tName = tabName or (L["GUILD_BANK_TAB"] and L["GUILD_BANK_TAB"]:format(self.tabID) or ("Tab " .. self.tabID))
+        local tName = self.tabName or (L["GUILD_BANK_TAB"] and L["GUILD_BANK_TAB"]:format(self.tabID) or ("Tab " .. self.tabID))
         GameTooltip:SetText(tName, 1, 1, 1)
         if self.isViewable then
+            local _, _, _, _, _, remainingWithdrawals = GetGuildBankTabInfo(self.tabID)
+            if remainingWithdrawals == -1 then
+                GameTooltip:AddLine("Withdrawals: Unlimited", 0.4, 1, 0.4)
+            elseif remainingWithdrawals and remainingWithdrawals > 0 then
+                GameTooltip:AddLine(string.format("Withdrawals: %d", remainingWithdrawals), 0.4, 1, 0.4)
+            elseif remainingWithdrawals == 0 then
+                GameTooltip:AddLine("Withdrawals: None", 1, 0.4, 0.4)
+            end
             local GBSet = OneWoW_Bags.GuildBankSet
             if GBSet and GBSet.slots[self.tabID] then
-                local itemCount = 0
+                local usedSlots = 0
                 for _, button in pairs(GBSet.slots[self.tabID]) do
-                    if button.owb_hasItem then itemCount = itemCount + 1 end
+                    if button.owb_hasItem then usedSlots = usedSlots + 1 end
                 end
-                GameTooltip:AddLine(string.format("%d/98", itemCount), 0.7, 0.7, 0.7)
+                GameTooltip:AddLine(string.format("%d/98", usedSlots), 0.7, 0.7, 0.7)
             end
         end
         GameTooltip:Show()
@@ -137,31 +167,29 @@ function GBBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewable)
 
         if mouseButton == "RightButton" and OneWoW_Bags.guildBankOpen then
             SetCurrentGuildBankTab(self.tabID)
-            GBBar:OpenTabEditor(self.tabID)
+            GuildBankBar:OpenTabEditor(self.tabID)
             return
         end
 
         local db = OneWoW_Bags.db
-        db.global.guildBankSelectedTab = (db.global.guildBankSelectedTab == self.tabID) and nil or self.tabID
+        if db.global.guildBankSelectedTab == self.tabID then
+            db.global.guildBankSelectedTab = nil
+        else
+            db.global.guildBankSelectedTab = self.tabID
+        end
 
         SetCurrentGuildBankTab(self.tabID)
         QueryGuildBankTab(self.tabID)
-
-        GBBar:UpdateTabHighlights()
+        GuildBankBar:UpdateTabHighlights()
         if OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI.RefreshLayout then
-            C_Timer.After(0.1, function()
-                if OneWoW_Bags.GuildBankSet then
-                    OneWoW_Bags.GuildBankSet:UpdateTab(self.tabID)
-                end
-                OneWoW_Bags.GuildBankGUI:RefreshLayout()
-            end)
+            OneWoW_Bags.GuildBankGUI:RefreshLayout()
         end
     end)
 
     return btn
 end
 
-function GBBar:OpenTabEditor(tabID)
+function GuildBankBar:OpenTabEditor(tabID)
     if not GuildBankPopupFrame then return end
     if not CanEditGuildBankTabInfo(tabID) then return end
     GuildBankPopupFrame:Hide()
@@ -179,7 +207,7 @@ function GBBar:OpenTabEditor(tabID)
     end
 end
 
-function GBBar:UpdateTabHighlights()
+function GuildBankBar:UpdateTabHighlights()
     local db = OneWoW_Bags.db
     local selected = db and db.global.guildBankSelectedTab
     for tabID, btn in pairs(tabButtons) do
@@ -193,28 +221,45 @@ function GBBar:UpdateTabHighlights()
     end
 end
 
-function GBBar:UpdateGold()
+function GuildBankBar:UpdateWithdrawButton()
+    if not bagsBarFrame or not bagsBarFrame.withdrawBtn then return end
+    if not OneWoW_Bags.guildBankOpen then
+        bagsBarFrame.withdrawBtn:Disable()
+        return
+    end
+    local canWithdraw = CanWithdrawGuildBankMoney()
+    local limit = GetGuildBankWithdrawMoney()
+    local guildMoney = GetGuildBankMoney()
+    if canWithdraw and limit ~= 0 and guildMoney > 0 then
+        bagsBarFrame.withdrawBtn:Enable()
+    else
+        bagsBarFrame.withdrawBtn:Disable()
+    end
+end
+
+function GuildBankBar:UpdateGold()
     if not bagsBarFrame or not bagsBarFrame.goldText then return end
     local money = GetGuildBankMoney and GetGuildBankMoney() or 0
     bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(money))
+    GuildBankBar:UpdateWithdrawButton()
 end
 
-function GBBar:UpdateFreeSlots(free, total)
+function GuildBankBar:UpdateFreeSlots(free, total)
     if not bagsBarFrame or not bagsBarFrame.freeSlots then return end
     bagsBarFrame.freeSlots:SetText(string.format("%d/%d", free, total))
 end
 
-function GBBar:GetFrame()
+function GuildBankBar:GetFrame()
     return bagsBarFrame
 end
 
-function GBBar:SetShown(show)
+function GuildBankBar:SetShown(show)
     if bagsBarFrame then
         bagsBarFrame:SetShown(show)
     end
 end
 
-function GBBar:Reset()
+function GuildBankBar:Reset()
     if bagsBarFrame then
         bagsBarFrame:Hide()
         bagsBarFrame:SetParent(UIParent)

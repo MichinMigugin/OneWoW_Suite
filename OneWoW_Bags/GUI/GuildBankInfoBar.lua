@@ -40,19 +40,8 @@ function GuildBankInfoBar:Create(parent)
     end)
     infoBarFrame.viewList = viewList
 
-    local viewCat = GuildBankInfoBar:CreateViewBtn(infoBarFrame, L["VIEW_CATEGORY"])
-    viewCat:SetPoint("TOPLEFT", viewList, "TOPRIGHT", 3, 0)
-    viewCat:SetScript("OnClick", function()
-        OneWoW_Bags.db.global.guildBankViewMode = "category"
-        GuildBankInfoBar:UpdateViewButtons()
-        if OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI.RefreshLayout then
-            OneWoW_Bags.GuildBankGUI:RefreshLayout()
-        end
-    end)
-    infoBarFrame.viewCat = viewCat
-
     local viewTab = GuildBankInfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"] or "Tab")
-    viewTab:SetPoint("TOPLEFT", viewCat, "TOPRIGHT", 3, 0)
+    viewTab:SetPoint("TOPLEFT", viewList, "TOPRIGHT", 3, 0)
     viewTab:SetScript("OnClick", function()
         OneWoW_Bags.db.global.guildBankViewMode = "tab"
         GuildBankInfoBar:UpdateViewButtons()
@@ -136,7 +125,6 @@ function GuildBankInfoBar:UpdateViewButtons()
 
     local buttons = {
         { btn = infoBarFrame.viewList, mode = "list" },
-        { btn = infoBarFrame.viewCat,  mode = "category" },
         { btn = infoBarFrame.viewTab,  mode = "tab" },
     }
 
@@ -161,7 +149,7 @@ function GuildBankInfoBar:UpdateViewButtons()
         local showing = OneWoW_Bags.db and OneWoW_Bags.db.global.showEmptySlots
         if showing == nil then showing = true end
         infoBarFrame.emptyToggleBtn:SetAlpha(showing and 1.0 or 0.35)
-        infoBarFrame.emptyToggleBtn:SetShown(mode == "list")
+        infoBarFrame.emptyToggleBtn:SetShown(mode == "list" or mode == "tab")
     end
 end
 
@@ -173,6 +161,13 @@ function GuildBankInfoBar:GetSearchText()
         return infoBarFrame.searchBox:GetText() or ""
     end
     return ""
+end
+
+function GuildBankInfoBar:ClearSearch()
+    if infoBarFrame and infoBarFrame.searchBox then
+        infoBarFrame.searchBox:SetText("")
+        infoBarFrame.searchBox:ClearFocus()
+    end
 end
 
 function GuildBankInfoBar:GetFrame()

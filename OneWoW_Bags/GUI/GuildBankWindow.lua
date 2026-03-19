@@ -52,11 +52,28 @@ function GuildBankGUI:InitMainWindow()
     MainWindow:SetFrameStrata("MEDIUM")
     MainWindow:SetToplevel(true)
     MainWindow:SetScript("OnHide", function()
+        if not isInitialized then return end
         GuildBankGUI:CleanupAllViews()
+        if OneWoW_Bags.GuildBankInfoBar and OneWoW_Bags.GuildBankInfoBar.ClearSearch then
+            OneWoW_Bags.GuildBankInfoBar:ClearSearch()
+        end
         local d = OneWoW_Bags.db
         if d and d.global then
             d.global.guildBankFramePosition = d.global.guildBankFramePosition or {}
             OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.guildBankFramePosition)
+        end
+        if OneWoW_Bags.guildBankOpen then
+            OneWoW_Bags.guildBankOpen = false
+            if OneWoW_Bags.GuildBankSet then
+                OneWoW_Bags.GuildBankSet:ReleaseAll()
+                OneWoW_Bags.GuildBankSet:ClearCache()
+            end
+            if OneWoW_Bags.RestoreGuildBankFrame then
+                OneWoW_Bags:RestoreGuildBankFrame()
+            end
+            C_Timer.After(0, function()
+                C_PlayerInteractionManager.ClearInteraction(Enum.PlayerInteractionType.GuildBanker)
+            end)
         end
     end)
     MainWindow:Hide()
@@ -129,7 +146,14 @@ function GuildBankGUI:InitMainWindow()
         if GuildBankGUI.RefreshLayout then GuildBankGUI:RefreshLayout() end
     end)
 
-    tinsert(UISpecialFrames, "OneWoW_GuildBankMainWindow")
+    _G["OneWoW_GuildBankMainWindow"] = MainWindow
+    local alreadyRegistered = false
+    for _, name in ipairs(UISpecialFrames) do
+        if name == "OneWoW_GuildBankMainWindow" then alreadyRegistered = true; break end
+    end
+    if not alreadyRegistered then
+        tinsert(UISpecialFrames, "OneWoW_GuildBankMainWindow")
+    end
     isInitialized = true
 
     local d = OneWoW_Bags.db
@@ -201,9 +225,46 @@ function GuildBankGUI:RefreshLayout()
 
     GuildBankGUI:CleanupAllViews()
 
-    local viewMode = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.guildBankViewMode or "list"
-
     local db = OneWoW_Bags.db
+    local selectedTab = db and db.global.guildBankSelectedTab
+
+    local allButtons = GuildBankSet:GetAllButtons()
+
+    local visibleButtons = {}
+    if selectedTab then
+        for _, btn in ipairs(allButtons) do
+            if btn.owb_bagID == selectedTab then
+                table.insert(visibleButtons, btn)
+            end
+        end
+    else
+        visibleButtons = allButtons
+    end
+
+    local searchText = OneWoW_Bags.GuildBankInfoBar:GetSearchText()
+    local filteredButtons = {}
+
+    if searchText and searchText ~= "" then
+        local searchLower = string.lower(searchText)
+        for _, button in ipairs(visibleButtons) do
+            if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
+                local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
+                if itemName then
+                    local nameLower = string.lower(itemName)
+                    if string.find(nameLower, searchLower, 1, true) then
+                        table.insert(filteredButtons, button)
+                    end
+                end
+            end
+        end
+    else
+        for _, button in ipairs(visibleButtons) do
+            table.insert(filteredButtons, button)
+        end
+    end
+
+    local viewMode = db and db.global and db.global.guildBankViewMode or "list"
+
     local cols = db and db.global.bankColumns or 14
     local iconSize = Constants.ICON_SIZES[(db and db.global.iconSize) or 3] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
@@ -212,61 +273,18 @@ function GuildBankGUI:RefreshLayout()
     local layoutHeight = 100
 
     if viewMode == "tab" then
-        local allButtons = GuildBankSet:GetAllButtons()
-        local searchText = OneWoW_Bags.GuildBankInfoBar:GetSearchText()
-        local filteredButtons = {}
-        if searchText and searchText ~= "" then
-            local searchLower = string.lower(searchText)
-            for _, button in ipairs(allButtons) do
-                if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                    local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
-                    if itemName and string.find(string.lower(itemName), searchLower, 1, true) then
-                        table.insert(filteredButtons, button)
-                    end
-                end
-            end
-        else
-            filteredButtons = allButtons
-        end
         layoutHeight = OneWoW_Bags.GuildBankTabView:Layout(contentFrame, contentWidth, filteredButtons)
     else
-        local allButtons = GuildBankSet:GetAllButtons()
-        local selectedTab = db and db.global.guildBankSelectedTab
-        local visibleButtons = {}
-        if selectedTab then
-            for _, btn in ipairs(allButtons) do
-                if btn.owb_bagID == selectedTab then
-                    table.insert(visibleButtons, btn)
-                end
-            end
-        else
-            visibleButtons = allButtons
-        end
-
-        local searchText = OneWoW_Bags.GuildBankInfoBar:GetSearchText()
-        local filteredButtons = {}
-        if searchText and searchText ~= "" then
-            local searchLower = string.lower(searchText)
-            for _, button in ipairs(visibleButtons) do
-                if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                    local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
-                    if itemName and string.find(string.lower(itemName), searchLower, 1, true) then
-                        table.insert(filteredButtons, button)
-                    end
-                end
-            end
-        else
-            filteredButtons = visibleButtons
-        end
-
-        if viewMode == "category" then
-            layoutHeight = OneWoW_Bags.CategoryView:Layout(contentFrame, contentWidth, filteredButtons)
-        else
-            layoutHeight = OneWoW_Bags.ListView:Layout(contentFrame, filteredButtons, contentWidth)
-        end
+        layoutHeight = OneWoW_Bags.ListView:Layout(contentFrame, filteredButtons, contentWidth)
     end
 
     contentFrame:SetHeight(layoutHeight)
+
+    local freeSlots = GuildBankSet:GetFreeSlotCount()
+    local totalSlots = GuildBankSet:GetSlotCount()
+    if OneWoW_Bags.GuildBankBar and OneWoW_Bags.GuildBankBar.UpdateFreeSlots then
+        OneWoW_Bags.GuildBankBar:UpdateFreeSlots(freeSlots, totalSlots)
+    end
 end
 
 function GuildBankGUI:OnSearchChanged(text)
@@ -281,6 +299,11 @@ function GuildBankGUI:Show()
 
     if not MainWindow then return end
 
+    local db = OneWoW_Bags.db
+    if db and db.global then
+        db.global.guildBankSelectedTab = nil
+    end
+
     MainWindow:Show()
 
     local GuildBankSet = OneWoW_Bags.GuildBankSet
@@ -290,7 +313,12 @@ function GuildBankGUI:Show()
 
     if OneWoW_Bags.GuildBankBar then
         OneWoW_Bags.GuildBankBar:BuildTabButtons()
+        OneWoW_Bags.GuildBankBar:UpdateTabHighlights()
         OneWoW_Bags.GuildBankBar:UpdateGold()
+    end
+
+    if OneWoW_Bags.GuildBankInfoBar then
+        OneWoW_Bags.GuildBankInfoBar:UpdateViewButtons()
     end
 
     C_Timer.After(0, function()

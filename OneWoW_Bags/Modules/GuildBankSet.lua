@@ -9,6 +9,7 @@ GBSet.freeSlots = 0
 GBSet.isBuilt = false
 GBSet.bagContainerFrames = {}
 GBSet.numTabs = 0
+GBSet.cache = {}
 
 local SLOTS_PER_TAB = 98
 
@@ -55,7 +56,111 @@ function GBSet:Build()
     end
 
     self.isBuilt = true
-    self:UpdateAllSlots()
+
+    local currentTab = GetCurrentGuildBankTab() or 1
+    self:CacheTab(currentTab)
+    self:ApplyCacheToButtons()
+end
+
+function GBSet:CacheTab(tabID)
+    if not self.cache[tabID] then
+        self.cache[tabID] = {}
+    end
+
+    for slotID = 1, SLOTS_PER_TAB do
+        local texture, itemCount, locked, isFiltered, quality = GetGuildBankItemInfo(tabID, slotID)
+        local itemLink = GetGuildBankItemLink(tabID, slotID)
+
+        if texture then
+            local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
+            self.cache[tabID][slotID] = {
+                texture = texture,
+                itemCount = itemCount,
+                locked = locked,
+                quality = quality,
+                itemLink = itemLink,
+                itemID = itemID,
+            }
+        else
+            self.cache[tabID][slotID] = nil
+        end
+    end
+end
+
+function GBSet:ApplyCacheToButtons()
+    local GUILib = OneWoW_Bags.GUILib
+    local db = OneWoW_Bags.db
+
+    self.freeSlots = 0
+
+    for tabID, tabSlots in pairs(self.slots) do
+        for slotID, button in pairs(tabSlots) do
+            OneWoW_Bags.ItemPool:ClearNewItemGlow(button)
+
+            local cached = self.cache[tabID] and self.cache[tabID][slotID]
+
+            if cached and cached.itemLink then
+                SetItemButtonTexture(button, cached.texture)
+                SetItemButtonCount(button, cached.itemCount)
+                SetItemButtonDesaturated(button, cached.locked)
+
+                button.owb_itemInfo = {
+                    itemID = cached.itemID,
+                    hyperlink = cached.itemLink,
+                    stackCount = cached.itemCount,
+                    isLocked = cached.locked,
+                    quality = cached.quality,
+                    iconFileID = cached.texture,
+                }
+
+                if cached.quality and cached.quality >= 1 and db and db.global and db.global.rarityColor then
+                    GUILib:UpdateIconQuality(button, cached.quality)
+                else
+                    GUILib:UpdateIconQuality(button, nil)
+                end
+
+                button.owb_hasItem = true
+            else
+                SetItemButtonTexture(button, nil)
+                SetItemButtonCount(button, 0)
+                GUILib:UpdateIconQuality(button, nil)
+                button.owb_itemInfo = nil
+                button.owb_hasItem = false
+                if button.IconOverlay then button.IconOverlay:Hide() end
+                if button.ItemContextOverlay then button.ItemContextOverlay:Hide() end
+                if button.ExtendedSlot then button.ExtendedSlot:Hide() end
+                if button.IconQuestTexture then button.IconQuestTexture:Hide() end
+                self.freeSlots = self.freeSlots + 1
+            end
+        end
+    end
+end
+
+function GBSet:UpdateTab(tabID)
+    if not self.isBuilt then return end
+    self:CacheTab(tabID)
+    self:ApplyCacheToButtons()
+end
+
+function GBSet:UpdateAllSlots()
+    local currentTab = GetCurrentGuildBankTab() or 1
+    self:CacheTab(currentTab)
+    self:ApplyCacheToButtons()
+end
+
+function GBSet:UpdateQualityColors()
+    local GUILib = OneWoW_Bags.GUILib
+    local db = OneWoW_Bags.db
+    local useRarity = db and db.global and db.global.rarityColor
+    for tabID, tabSlots in pairs(self.slots) do
+        for slotID, button in pairs(tabSlots) do
+            if button.owb_itemInfo and button.owb_itemInfo.quality and button.owb_itemInfo.quality >= 1 and useRarity then
+                GUILib:UpdateIconQuality(button, button.owb_itemInfo.quality)
+            else
+                GUILib:UpdateIconQuality(button, nil)
+            end
+        end
+    end
 end
 
 function GBSet:ApplyGuildBankScripts(button)
@@ -116,12 +221,13 @@ function GBSet:ApplyGuildBankScripts(button)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         local tabID = self.owb_bagID
         local slotID = self.owb_slotID
-        if tabID and slotID then
-            local texture = GetGuildBankItemInfo(tabID, slotID)
-            if texture then
+        if tabID and slotID and self.owb_hasItem then
+            if tabID == GetCurrentGuildBankTab() then
                 GameTooltip:SetGuildBankItem(tabID, slotID)
-                GameTooltip:Show()
+            elseif self.owb_itemInfo and self.owb_itemInfo.hyperlink then
+                GameTooltip:SetHyperlink(self.owb_itemInfo.hyperlink)
             end
+            GameTooltip:Show()
         end
     end)
 
@@ -192,64 +298,8 @@ function GBSet:ReleaseAll()
     self.isBuilt = false
 end
 
-function GBSet:UpdateSlot(tabID, slotID, button)
-    local GUILib = OneWoW_Bags.GUILib
-    local db = OneWoW_Bags.db
-
-    OneWoW_Bags.ItemPool:ClearNewItemGlow(button)
-
-    local texture, itemCount, locked, isFiltered, quality = GetGuildBankItemInfo(tabID, slotID)
-    local itemLink = GetGuildBankItemLink(tabID, slotID)
-
-    if texture and itemLink then
-        SetItemButtonTexture(button, texture)
-        SetItemButtonCount(button, itemCount)
-        SetItemButtonDesaturated(button, locked)
-
-        local itemID = tonumber(itemLink:match("item:(%d+)"))
-        button.owb_itemInfo = {
-            itemID = itemID,
-            hyperlink = itemLink,
-            stackCount = itemCount,
-            isLocked = locked,
-            quality = quality,
-            iconFileID = texture,
-        }
-
-        if quality and quality >= 1 and db and db.global and db.global.rarityColor then
-            GUILib:UpdateIconQuality(button, quality)
-        else
-            GUILib:UpdateIconQuality(button, nil)
-        end
-
-        button.owb_hasItem = true
-    else
-        SetItemButtonTexture(button, nil)
-        SetItemButtonCount(button, 0)
-        GUILib:UpdateIconQuality(button, nil)
-        button.owb_itemInfo = nil
-        button.owb_hasItem = false
-    end
-end
-
-function GBSet:UpdateTab(tabID)
-    if not self.isBuilt then return end
-    if not self.slots[tabID] then return end
-    for slotID, button in pairs(self.slots[tabID]) do
-        self:UpdateSlot(tabID, slotID, button)
-    end
-end
-
-function GBSet:UpdateAllSlots()
-    self.freeSlots = 0
-    for tabID, tabSlots in pairs(self.slots) do
-        for slotID, button in pairs(tabSlots) do
-            self:UpdateSlot(tabID, slotID, button)
-            if not button.owb_hasItem then
-                self.freeSlots = self.freeSlots + 1
-            end
-        end
-    end
+function GBSet:ClearCache()
+    self.cache = {}
 end
 
 function GBSet:GetAllButtons()
@@ -277,6 +327,17 @@ function GBSet:GetButtonsByTab(tabID)
         end
     end
     return buttons
+end
+
+function GBSet:RecountFreeSlots()
+    self.freeSlots = 0
+    for tabID, tabSlots in pairs(self.slots) do
+        for slotID, button in pairs(tabSlots) do
+            if not button.owb_hasItem then
+                self.freeSlots = self.freeSlots + 1
+            end
+        end
+    end
 end
 
 function GBSet:GetSlotCount()
