@@ -13,6 +13,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["VIEW_LIST"] = "List View",
     ["VIEW_CATEGORY"] = "Category View",
     ["VIEW_BAG"] = "Bag View",
+    ["CLEANUP"] = "Cleanup",
 
     ["SEARCH_PLACEHOLDER"] = "Search items...",
     ["FREE_SLOTS"] = "Free Slots",

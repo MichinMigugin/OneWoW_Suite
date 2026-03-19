@@ -27,11 +27,6 @@ local appName, app = ...
                         button.TLHOverlay:SetFrameLevel(button:GetFrameLevel() + 1)
 
                         debugCount = debugCount + 1
-                        if debugCount <= 3 then
-                                local bw, bh = button:GetSize()
-                                local ow, oh = button.TLHOverlay:GetSize()
-                                print(string.format("TLH: Button=%fx%f, Overlay=%fx%f", bw, bh, ow, oh))
-                        end
                 end
 
                 local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)

@@ -68,6 +68,11 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
             OneWoW_Bags.GuildBankBar:UpdateGold()
         end
 
+    elseif event == "GUILDBANK_UPDATE_WITHDRAWMONEY" then
+        if OneWoW_Bags.GuildBankBar then
+            OneWoW_Bags.GuildBankBar:UpdateWithdrawButton()
+        end
+
     elseif event == "PLAYER_MONEY" then
         if OneWoW_Bags.bankOpen and OneWoW_Bags.BankBar then
             OneWoW_Bags.BankBar:UpdateGold()
@@ -95,6 +100,7 @@ function OneWoW_Bags.Events:RegisterBagEvents()
     eventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
     eventFrame:RegisterEvent("GUILDBANK_UPDATE_TABS")
     eventFrame:RegisterEvent("GUILDBANK_UPDATE_MONEY")
+    eventFrame:RegisterEvent("GUILDBANK_UPDATE_WITHDRAWMONEY")
     eventFrame:RegisterEvent("PLAYER_MONEY")
     eventFrame:RegisterEvent("ACCOUNT_MONEY")
 end
