@@ -6,6 +6,14 @@ local L    = OneWoW.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local activePlayermountsRow = nil
+
+function GUI:RefreshTooltipsFeatureDot(featureId, value)
+    if featureId == "playermounts" and activePlayermountsRow and activePlayermountsRow.dot then
+        activePlayermountsRow.dot:SetStatus(value)
+    end
+end
+
 local function ShowGeneralDetail(split, dsc, selectedRow)
     local yOffset = -10
 
@@ -1132,6 +1140,12 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
         local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
         OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
         nowEnabled = not nowEnabled
+        if feature.id == "playermounts" and _G.OneWoW_QoL and _G.OneWoW_QoL.ModuleRegistry then
+            _G.OneWoW_QoL.ModuleRegistry:SetEnabled("playmounts", nowEnabled)
+            if _G.OneWoW_QoL.UI and _G.OneWoW_QoL.UI.RefreshModuleDot then
+                _G.OneWoW_QoL.UI.RefreshModuleDot("playmounts", nowEnabled)
+            end
+        end
         if nowEnabled then
             statusValue:SetText(L["FEATURE_ENABLED"])
             statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
@@ -1950,6 +1964,9 @@ local function BuildFeatureList(split, tabName)
                             selectedRow:SetActive(false)
                         end
                         selectedRow = self
+                        if capturedFeature.id == "playermounts" then
+                            activePlayermountsRow = self
+                        end
                         self:SetActive(true)
                         ShowFeatureDetail(split, capturedFeature, tabName, self)
                         if split.rightStatusText then

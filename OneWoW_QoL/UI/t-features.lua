@@ -247,6 +247,12 @@ local function ShowModuleDetail(split, module)
         isEnabled = true,
         onValueChange = function(newVal)
             ns.ModuleRegistry:SetEnabled(module.id, newVal)
+            if module.id == "playmounts" and _G.OneWoW and _G.OneWoW.SettingsFeatureRegistry then
+                _G.OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", "playermounts", newVal)
+                if _G.OneWoW.GUI and _G.OneWoW.GUI.RefreshTooltipsFeatureDot then
+                    _G.OneWoW.GUI:RefreshTooltipsFeatureDot("playermounts", newVal)
+                end
+            end
             isEnabled = newVal
             if selectedRow and selectedRow.dot then
                 selectedRow.dot:SetStatus(newVal)
@@ -446,6 +452,12 @@ local function BuildFeaturesList(split, filterText)
 
     if not selectedModuleId then
         ShowDetailPlaceholder(split.detailScrollChild, L["FEATURES_NO_SELECTION"])
+    end
+end
+
+function ns.UI.RefreshModuleDot(moduleId, value)
+    if selectedModuleId == moduleId and selectedRow and selectedRow.dot then
+        selectedRow.dot:SetStatus(value)
     end
 end
 

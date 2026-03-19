@@ -114,6 +114,8 @@ function addon:OnEnable()
     end
 
     self.PlayMountsModule = ns.PlayMountsModule
+    self.ModuleRegistry = ns.ModuleRegistry
+    self.UI = ns.UI
 end
 
 function addon:SlashCommandHandler(input)
