@@ -462,6 +462,10 @@ function ns.UI.CreateSettingsTab(parent)
 
     local yOffset = -10
 
+    if not _G.OneWoW then
+        yOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = yOffset, addonName = "OneWoW_AltTracker" })
+    end
+
     local manageSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = "Manage Characters", yOffset = yOffset })
     yOffset = manageSection.bottomY - 8
 

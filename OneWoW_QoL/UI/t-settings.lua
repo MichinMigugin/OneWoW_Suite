@@ -262,7 +262,7 @@ function ns.UI.CreateSettingsTab(parent)
     local yOffset = -20
 
     if not _G.OneWoW then
-        yOffset = OneWoW_GUI:CreateSettingsPanel(scrollChild, { yOffset = yOffset })
+        yOffset = OneWoW_GUI:CreateSettingsPanel(scrollChild, { yOffset = yOffset, addonName = "OneWoW_QoL" })
     end
 
     yOffset = yOffset - 20

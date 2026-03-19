@@ -10,7 +10,6 @@ Addon.frames = {}
 Addon.selectedFrame = nil
 Addon.pickerActive = false
 
-local format = string.format
 local pcall = pcall
 local type = type
 local tostring = tostring
@@ -395,10 +394,6 @@ end
 function Addon:OnInitialize()
     self:InitializeDatabase()
 
-    if self.db and self.db.minimap and not self.db.minimap.theme then
-        self.db.minimap.theme = "horde"
-    end
-
     OneWoW_GUI:MigrateSettings({
         theme = self.db.theme,
         language = self.db.language,
@@ -419,6 +414,13 @@ function Addon:OnInitialize()
                 end)
             end
         end
+    end)
+
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
+        if owner.Minimap then owner.Minimap:SetShown(not hidden) end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner)
+        if owner.Minimap then owner.Minimap:UpdateIcon() end
     end)
 
     if self.ErrorLogger then
@@ -476,12 +478,46 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         end
     elseif event == "PLAYER_LOGIN" then
         if _G.OneWoW == nil then
-            if Addon.Minimap then
-                Addon.Minimap:Initialize()
-            end
+            Addon.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_UtilityDevTool", {
+                label = "DevTool",
+                onClick = function()
+                    if Addon.UI then
+                        if Addon.UI.mainFrame and Addon.UI.mainFrame:IsShown() then
+                            Addon.UI:Hide()
+                        else
+                            Addon.UI:Show()
+                        end
+                    end
+                end,
+                onRightClick = function()
+                    if Addon.UI then
+                        Addon.UI:Show()
+                        Addon.UI:SelectTab(8)
+                    end
+                end,
+                onTooltip = function(frame)
+                    GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
+                    GameTooltip:AddLine("|cFFFFD100OneWoW|r - Utility: DevTool", 1, 0.82, 0, 1)
+                    if Addon.L and Addon.L["MINIMAP_TOOLTIP_HINT"] then
+                        GameTooltip:AddLine(Addon.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
+                    end
+                    GameTooltip:Show()
+                end,
+            })
             if Addon._pendingLoadVer then
                 print("|cFF00FF00OneWoW|r: |cFFFFFFFFDev Tools|r |cFF888888\226\128\147 v." .. Addon._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wdt")
             end
+        end
+        if _G.OneWoW then
+            _G.OneWoW:RegisterMinimap("OneWoW_UtilityDevTool", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_DEVTOOLS"]) or "Open DevTools", nil, function()
+                if Addon.UI then
+                    if Addon.UI.mainFrame and Addon.UI.mainFrame:IsShown() then
+                        Addon.UI:Hide()
+                    else
+                        Addon.UI:Show()
+                    end
+                end
+            end)
         end
         if Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad then
             C_Timer.After(0.5, function()

@@ -11,7 +11,7 @@
 ## AddonCompartmentFunc: 1WoW_DirectDeposit_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: 1WoW_DirectDeposit_OnAddonCompartmentEnter
 ## AddonCompartmentFuncOnLeave: 1WoW_DirectDeposit_OnAddonCompartmentLeave
-## IconTexture: Interface\AddOns\OneWoW_DirectDeposit\Media\neutral-mini.png
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
 ## RequiredDeps: OneWoW_GUI
 ## OptionalDeps: OneWoW
 ## Category: OneWoW
@@ -22,9 +22,6 @@
 
 # Libraries
 Libs\LibStub\LibStub.lua
-Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
-Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 
 # Locales
 Locales\enUS.lua
@@ -46,7 +43,6 @@ Modules\DirectDeposit.lua
 
 # GUI
 GUI\MainWindow.lua
-GUI\Minimap.lua
 
 # Main
 OneWoW_DirectDeposit.lua

@@ -122,9 +122,30 @@ function OneWoW_Bags:OnPlayerLogin()
     DetectOneWoW()
 
     if not self.oneWoWHubActive then
-        if self.Minimap then
-            self.Minimap:Initialize()
-        end
+        self.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_Bags", {
+            label = "OneWoW Bags",
+            onClick = function()
+                if self.GUI then self.GUI:Toggle() end
+            end,
+            onRightClick = function()
+                if self.Settings then
+                    if self.GUI then self.GUI:Show() end
+                    self.Settings:Toggle()
+                end
+            end,
+            onTooltip = function(frame)
+                GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
+                GameTooltip:SetText("|cFFFFD100OneWoW|r - |cFF00FF00" .. L["ADDON_TITLE"] .. "|r")
+                GameTooltip:AddLine(L["MINIMAP_SECTION_DESC"], 0.7, 0.7, 0.7)
+                GameTooltip:Show()
+            end,
+        })
+    end
+
+    if _G.OneWoW then
+        _G.OneWoW:RegisterMinimap("OneWoW_Bags", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_BAGS"]) or "Open Bags", nil, function()
+            if self.GUI then self.GUI:Toggle() end
+        end)
     end
 
     local Pool = self.ItemPool

@@ -10,15 +10,13 @@
 ## AddonCompartmentFunc: 1WoW_UtilityDevTool_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: 1WoW_UtilityDevTool_OnAddonCompartmentEnter
 ## AddonCompartmentFuncOnLeave: 1WoW_UtilityDevTool_OnAddonCompartmentLeave
-## IconTexture: Interface\AddOns\OneWoW_Utility_DevTool\Media\neutral-mini.png
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
 ## RequiredDeps: OneWoW_GUI
 ## Category: OneWoW
 ## Group: OneWoW
 
 # Libraries
 Libs\LibStub\LibStub.lua
-Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\LibCopyPaste-1.0\LibCopyPaste-1.0.lua
 
 # Locales
@@ -52,4 +50,3 @@ Modules\MonitorTab.lua
 
 # Main UI
 GUI\MainWindow.lua
-GUI\Minimap.lua

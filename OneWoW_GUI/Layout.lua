@@ -176,6 +176,13 @@ function OneWoW_GUI:CreateTitleBar(parent, options)
         brandIcon:SetTexture(self:GetBrandIcon(factionTheme))
         titleBg.brandIcon = brandIcon
 
+        self:RegisterSettingsCallback("OnIconThemeChanged", titleBg, function(owner)
+            if owner.brandIcon and owner:IsVisible() then
+                owner.brandIcon:SetTexture(OneWoW_GUI:GetBrandIcon(
+                    (OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"))
+            end
+        end)
+
         local brandText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
         brandText:SetText("OneWoW")

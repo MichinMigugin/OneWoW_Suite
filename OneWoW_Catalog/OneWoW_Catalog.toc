@@ -7,8 +7,9 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 ## SavedVariables: OneWoW_Catalog_DB
-## IconTexture: Interface\AddOns\OneWoW_Catalog\Media\neutral-mini.png
-## RequiredDeps: OneWoW, OneWoW_QoL, OneWoW_GUI
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+## RequiredDeps: OneWoW_QoL, OneWoW_GUI
+## OptionalDeps: OneWoW
 ## Category: OneWoW
 ## Group: OneWoW_Catalog
 

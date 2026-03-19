@@ -245,6 +245,50 @@ Order stored in `Constants.THEMES_ORDER`.
 local texture = OneWoW_GUI:GetBrandIcon("horde")  -- or "alliance" or "neutral"
 ```
 
+### Minimap launcher (standalone addons)
+
+When OneWoW hub is **not** loaded, addons can create their own minimap button via `CreateMinimapLauncher`:
+
+```lua
+local launcher = OneWoW_GUI:CreateMinimapLauncher("OneWoW_MyAddon", {
+    label = "My Addon",
+    onClick = function(_, button)
+        if button == "LeftButton" then MyAddon.GUI:Toggle() end
+    end,
+    onTooltip = function(frame)
+        GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
+        GameTooltip:SetText("My Addon", 1, 0.82, 0)
+        GameTooltip:Show()
+    end,
+})
+-- launcher: { Initialize, Show, Hide, Toggle, IsShown, UpdateIcon, SetShown }
+-- Register OnMinimapChanged to call launcher:SetShown(not hidden)
+-- Register OnIconThemeChanged to call launcher:UpdateIcon()
+```
+
+When OneWoW hub **is** loaded, `CreateMinimapLauncher` returns a stub (no-ops); addons instead call `OneWoW:RegisterMinimap(addon, label, tabKey, callback)` to add an entry to the hub's context menu.
+
+### Get minimap button frame
+
+```lua
+local btn = OneWoW_GUI:GetMinimapButton("OneWoW_MyAddon")
+-- When OneWoW loaded: returns OneWoW_MinimapButton (hub button)
+-- When standalone: returns LibDBIcon's button for addons that registered via CreateMinimapLauncher
+-- Use case: attach UI (e.g. error badge) to the minimap button
+```
+
+### RegisterMinimap (OneWoW hub)
+
+Addons that load with OneWoW call `OneWoW:RegisterMinimap(addon, label, tabKey, callback)` to add an entry to the hub minimap's right-click context menu:
+
+```lua
+if _G.OneWoW then
+    _G.OneWoW:RegisterMinimap("OneWoW_MyAddon", "Open My Addon", "myaddon", nil)  -- tabKey opens hub tab
+    -- or
+    _G.OneWoW:RegisterMinimap("OneWoW_MyAddon", "Open My Addon", nil, function() MyAddon.GUI:Toggle() end)
+end
+```
+
 ### Register GUI constants with fallback
 
 Addons can override or add GUI constants (especially window sizes). Missing keys fall back to `Constants.GUI`, then to `0`. The returned table is read-only.

@@ -2,6 +2,7 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local Constants = OneWoW_GUI.Constants
+local DEFAULT_THEME_ICON = Constants.DEFAULT_THEME_ICON
 local DEFAULT_THEME_KEY = Constants.DEFAULT_THEME_KEY
 local DEFAULT_THEME_NAME = Constants.DEFAULT_THEME_NAME
 local CreateFrame = CreateFrame
@@ -32,7 +33,8 @@ local function InitSettingsDB()
     if not db.font then db.font = "default" end
     if not db.minimap then db.minimap = {} end
     if db.minimap.hide == nil then db.minimap.hide = false end
-    if db.minimap.theme == nil then db.minimap.theme = "horde" end
+    if db.minimap.theme == nil then db.minimap.theme = DEFAULT_THEME_ICON end
+    if not db.minimapLaunchers then db.minimapLaunchers = {} end
     OneWoW_GUI._settingsDB = db
 end
 
@@ -320,8 +322,17 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local currentLang = self:GetSetting("language") or "enUS"
     local currentThemeKey = self:GetSetting("theme") or DEFAULT_THEME_KEY
-    local currentIconTheme = self:GetSetting("minimap.theme") or "horde"
-    local isMinimapHidden = self:GetSetting("minimap.hide")
+    local currentIconTheme = self:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
+
+    local settingsAddonName = options.addonName
+    local isPerAddonMinimap = not _G.OneWoW and settingsAddonName
+    local isMinimapHidden
+    if isPerAddonMinimap then
+        local launcherDB = self._settingsDB and self._settingsDB.minimapLaunchers
+        isMinimapHidden = launcherDB and launcherDB[settingsAddonName] and launcherDB[settingsAddonName].hide
+    else
+        isMinimapHidden = self:GetSetting("minimap.hide")
+    end
 
     local splitContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     splitContainer:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
@@ -722,7 +733,13 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     mmCheckbox:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 12, -80)
     mmCheckbox:SetChecked(not isMinimapHidden)
     mmCheckbox:SetScript("OnClick", function(cb)
-        OneWoW_GUI:SetSetting("minimap.hide", not cb:GetChecked())
+        local show = cb:GetChecked()
+        if isPerAddonMinimap then
+            local launcher = OneWoW_GUI._launchers and OneWoW_GUI._launchers[settingsAddonName]
+            if launcher then launcher:SetShown(show) end
+        else
+            OneWoW_GUI:SetSetting("minimap.hide", not show)
+        end
     end)
 
     local mmIconTitle = mmRightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -775,7 +792,10 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         for _, ic in ipairs(ICON_THEMES) do
             tinsert(items, { label = ic.label, value = ic.key, icon = ICON_TEXTURES[ic.key] })
         end
-        iconMenu = CreateDropdownMenu(btn, items, function(value)
+        iconMenu = CreateDropdownMenu(btn, items, function(value, label)
+            iconDropIcon:SetTexture(ICON_TEXTURES[value] or ICON_TEXTURES.horde)
+            iconDropText:SetText(label or ICON_LOOKUP[value] or "Horde")
+            mmCurrentLabel:SetText("Current: " .. (label or ICON_LOOKUP[value] or "Horde"))
             OneWoW_GUI:SetSetting("minimap.theme", value)
         end)
         iconMenu:Show()

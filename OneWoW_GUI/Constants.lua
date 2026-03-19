@@ -95,6 +95,7 @@ OneWoW_GUI.Constants = {
 
     -- themes
     ACTIVE_THEME = nil,
+    DEFAULT_THEME_ICON = "horde",
     DEFAULT_THEME_COLOR = { 0.5, 0.5, 0.5, 1.0 },
     DEFAULT_THEME_SPACING = 8,
     DEFAULT_THEME_KEY = "green",

@@ -17,6 +17,7 @@ function ns.UI:Show(tabName)
     if not MainWindow then
         local savedTab = _G.OneWoW_Notes.db.global.lastTab
         self:CreateMainFrame(tabName or savedTab or "notes")
+        if MainWindow then MainWindow:Show() end
     else
         MainWindow:Show()
         if tabName and MainWindow.SelectTab then
@@ -225,7 +226,7 @@ function ns.UI:CreateMainFrame(defaultTab)
 
     frame.tabs = tabs
     frame.tabButtons = tabButtons
-    frame.SelectTab = SelectTab
+    frame.SelectTab = function(_, tab) SelectTab(tab) end
 
     MainWindow = frame
     addon.mainFrame = frame

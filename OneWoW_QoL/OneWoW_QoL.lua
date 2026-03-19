@@ -61,6 +61,12 @@ function addon:OnInitialize()
         OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
             if ns.ApplyLanguage then ns.ApplyLanguage() end
         end)
+        OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
+            if owner.Minimap then owner.Minimap:SetShown(not hidden) end
+        end)
+        OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner)
+            if owner.Minimap then owner.Minimap:UpdateIcon() end
+        end)
     end
 
     local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ""
@@ -85,6 +91,27 @@ function addon:OnEnable()
     end
 
     RegisterWithOneWoW()
+
+    if not ns.oneWoWHubActive then
+        self.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_QoL", {
+            label = "QoL",
+            onClick = function()
+                if ns.UI and ns.UI.Toggle then ns.UI:Toggle() end
+            end,
+            onRightClick = function()
+                if ns.UI and ns.UI.Show then ns.UI:Show("settings") end
+            end,
+            onTooltip = function(frame)
+                GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
+                GameTooltip:AddLine(ns.L["ADDON_TITLE_FRAME"], 1, 0.82, 0, 1)
+                GameTooltip:AddLine(ns.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
+                GameTooltip:Show()
+            end,
+        })
+    end
+    if _G.OneWoW then
+        _G.OneWoW:RegisterMinimap("OneWoW_QoL", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_QOL"]) or "Open QoL", "qol", nil)
+    end
 
     self.PlayMountsModule = ns.PlayMountsModule
 end

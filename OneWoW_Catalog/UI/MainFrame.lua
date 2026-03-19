@@ -221,7 +221,7 @@ function ns.UI:CreateMainFrame(defaultTab)
 
     frame.tabs       = tabs
     frame.tabButtons = tabButtons
-    frame.SelectTab  = SelectTab
+    frame.SelectTab  = function(_, tab) SelectTab(tab) end
 
     MainWindow      = frame
     addon.mainFrame = frame

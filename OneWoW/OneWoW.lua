@@ -9,6 +9,15 @@ if not OneWoW_GUI then return end
 
 OneWoW._loadedComponents = {}
 OneWoW._registeredAddons = {}
+OneWoW._minimapEntries = {}
+
+function OneWoW:RegisterMinimap(addon, label, tabKey, callback)
+    -- addon: global name (e.g. "OneWoW_AltTracker")
+    -- label: display string for context menu
+    -- tabKey: for OneWoW.GUI:Show(tabKey) or nil if callback used
+    -- callback: optional function() for custom open logic
+    tinsert(self._minimapEntries, { addon = addon, label = label, tabKey = tabKey, callback = callback })
+end
 
 local KNOWN_COMPANIONS = {
     { addon = "OneWoW_GUI",             display = "GUI",          cmd = nil },
@@ -158,6 +167,10 @@ function OneWoW:OnAddonLoaded(loadedAddon)
 
     local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
     self:RegisterLoadComponent("Core", _ver, "/1w")
+
+    self:RegisterMinimap("OneWoW", L["CTX_OPEN_ONEWOW"] or "Open OneWoW", nil, function()
+        if self.GUI then self.GUI:Show() end
+    end)
 end
 
 local eventFrame = CreateFrame("Frame")

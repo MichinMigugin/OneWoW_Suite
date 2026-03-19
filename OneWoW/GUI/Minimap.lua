@@ -3,10 +3,6 @@ local ADDON_NAME, OneWoW = ...
 OneWoW.Minimap = {}
 local MinimapMod = OneWoW.Minimap
 
-local ICON_HORDE    = "Interface\\AddOns\\OneWoW\\Media\\horde-mini.png"
-local ICON_ALLIANCE = "Interface\\AddOns\\OneWoW\\Media\\alliance-mini.png"
-local ICON_NEUTRAL  = "Interface\\AddOns\\OneWoW\\Media\\neutral-mini.png"
-
 local contextMenu
 local minimapBtn
 local position
@@ -21,59 +17,29 @@ local function ShowContextMenu(anchorFrame)
         contextMenu = nil
     end
 
-    local L = OneWoW.L or {}
-
-    local menuItems = {
-        { label = L["CTX_OPEN_ONEWOW"] or "Open OneWoW", always = true, action = function()
-            if OneWoW.GUI then OneWoW.GUI:Show() end
-        end },
-        { label = L["CTX_OPEN_ALTTRACKER"] or "Open AltTracker", global = "OneWoW_AltTracker", action = function()
-            if OneWoW.GUI then OneWoW.GUI:Show("alttracker") end
-        end },
-        { label = L["CTX_OPEN_NOTES"] or "Open Notes", global = "OneWoW_Notes", action = function()
-            if OneWoW.GUI then OneWoW.GUI:Show("notes") end
-        end },
-        { label = L["CTX_OPEN_DD"] or "Open Direct Deposit", global = "OneWoW_DirectDeposit", action = function()
-            local dd = _G.OneWoW_DirectDeposit
-            if dd and dd.GUI then dd.GUI:Toggle() end
-        end },
-        { label = L["CTX_OPEN_BAGS"] or "Open Bags", global = "OneWoW_Bags", action = function()
-            local bags = _G.OneWoW_Bags
-            if bags and bags.GUI then bags.GUI:Toggle() end
-        end },
-        { label = L["CTX_OPEN_QOL"] or "Open QoL", global = "OneWoW_QoL", action = function()
-            if OneWoW.GUI then OneWoW.GUI:Show("qol") end
-        end },
-        { label = L["CTX_OPEN_SL"] or "Open Shopping List", global = "OneWoW_ShoppingList", action = function()
-            local sl = _G.OneWoW_ShoppingList
-            if sl and sl.MainWindow then sl.MainWindow:Toggle() end
-        end },
-        { label = L["CTX_OPEN_DEVTOOLS"] or "Open DevTools", global = "OneWoW_UtilityDevTool", action = function()
-            local dt = _G.OneWoW_UtilityDevTool
-            if dt and dt.UI then
-                if dt.UI.mainFrame and dt.UI.mainFrame:IsShown() then
-                    dt.UI:Hide()
-                else
-                    dt.UI:Show()
-                end
-            end
-        end },
-        { label = L["CTX_OPEN_EXTRACTOR"] or "Open Extractor", global = "OneWoW_UtilityExtractor", action = function()
-            local ext = _G.OneWoW_UtilityExtractor
-            if ext and ext.UI then
-                if ext.UI.mainFrame and ext.UI.mainFrame:IsShown() then
-                    ext.UI:Hide()
-                else
-                    ext.UI:Show()
-                end
-            end
-        end },
-    }
+    local entries = OneWoW._minimapEntries or {}
+    local oneWoWEntry
+    local otherEntries = {}
+    for _, item in ipairs(entries) do
+        if item.addon == "OneWoW" then
+            oneWoWEntry = item
+        elseif _G[item.addon] ~= nil then
+            tinsert(otherEntries, item)
+        end
+    end
+    sort(otherEntries, function(a, b) return (a.label or "") < (b.label or "") end)
 
     local visibleItems = {}
-    for _, item in ipairs(menuItems) do
-        if item.always or (_G[item.global] ~= nil) then
-            table.insert(visibleItems, item)
+    if oneWoWEntry then
+        tinsert(visibleItems, { label = oneWoWEntry.label, global = "OneWoW", always = true, action = oneWoWEntry.callback or (function() if OneWoW.GUI then OneWoW.GUI:Show() end end) })
+    end
+    for _, item in ipairs(otherEntries) do
+        local action = item.callback
+        if not action and item.tabKey then
+            action = function() if OneWoW.GUI then OneWoW.GUI:Show(item.tabKey) end end
+        end
+        if action then
+            tinsert(visibleItems, { label = item.label, global = item.addon, action = action })
         end
     end
 
@@ -319,16 +285,12 @@ function MinimapMod:Initialize()
         MinimapMod._ldbPlugin = plugin
     end
 
-    local db = OneWoW.db
-    if db and db.global and db.global.minimap and db.global.minimap.hide then return end
+    if OneWoW_GUI:GetSetting("minimap.hide") then return end
 
     CreateMinimapButton()
 end
 
 function MinimapMod:Show()
-    if OneWoW.db and OneWoW.db.global and OneWoW.db.global.minimap then
-        OneWoW.db.global.minimap.hide = false
-    end
     if not minimapBtn then
         CreateMinimapButton()
     else
@@ -337,15 +299,11 @@ function MinimapMod:Show()
 end
 
 function MinimapMod:Hide()
-    if OneWoW.db and OneWoW.db.global and OneWoW.db.global.minimap then
-        OneWoW.db.global.minimap.hide = true
-    end
     if minimapBtn then minimapBtn:Hide() end
 end
 
 function MinimapMod:Toggle()
-    local hidden = OneWoW.db and OneWoW.db.global and OneWoW.db.global.minimap and OneWoW.db.global.minimap.hide
-    if hidden then self:Show() else self:Hide() end
+    OneWoW_GUI:SetSetting("minimap.hide", not OneWoW_GUI:GetSetting("minimap.hide"))
 end
 
 function MinimapMod:IsShown()

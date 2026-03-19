@@ -92,6 +92,7 @@ OneWoW.Locales["enUS"] = {
     ["CTX_OPEN_SL"] = "Open Shopping List",
     ["CTX_OPEN_BAGS"] = "Open Bags",
     ["CTX_OPEN_DEVTOOLS"] = "Open DevTools",
+    ["CTX_OPEN_CATALOG"] = "Open Catalog",
 
     ["HOME_COMMANDS"] = "Available Commands",
     ["CMD_TOGGLE_ONEWOW"] = "Toggle OneWoW",

@@ -19,6 +19,12 @@ function ns.UI.CreateSettingsTab(parent)
 
     local yOffset = -10
 
+    if not _G.OneWoW then
+        yOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, {
+            yOffset = yOffset, addonName = "OneWoW_Catalog"
+        })
+    end
+
     local dbSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["DATA_MANAGER_TITLE"], yOffset = yOffset })
     yOffset = dbSection.bottomY - 8
 

@@ -10,7 +10,7 @@
 ## AddonCompartmentFunc: 1WoW_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: 1WoW_OnAddonCompartmentEnter
 ## AddonCompartmentFuncOnLeave: 1WoW_OnAddonCompartmentLeave
-## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
 ## RequiredDeps: OneWoW_GUI
 ## OptionalDeps: OneWoW_AltTracker, OneWoW_Catalog, OneWoW_Notes, OneWoW_QoL, OneWoW_DirectDeposit, OneWoW_ShoppingList, OneWoW_Bags, OneWoW_Utility_Extractor, OneWoW_Utility_DevTool
 ## Category: OneWoW
@@ -22,7 +22,6 @@
 # Libraries
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
-Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 
 # Media

@@ -68,12 +68,32 @@ local function OnPlayerLogin()
     DetectOneWoW()
 
     if not ns.oneWoWHubActive then
-        if ns.Minimap then
-            ns.Minimap:Initialize()
-        end
+        ns.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_ShoppingList", {
+            label = "Shopping List",
+            onClick = function()
+                if ns.MainWindow then ns.MainWindow:Toggle() end
+            end,
+            onRightClick = function()
+                if ns.MainWindow and ns.MainWindow.ShowSettings then
+                    ns.MainWindow:ShowSettings()
+                end
+            end,
+            onTooltip = function(frame)
+                GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
+                GameTooltip:AddLine("|cFFFFD100OneWoW|r - " .. L["OWSL_WINDOW_TITLE"], 1, 0.82, 0, 1)
+                GameTooltip:AddLine(L["OWSL_MM_CLICK_TO_OPEN"], 0.7, 0.7, 0.8, 1)
+                GameTooltip:Show()
+            end,
+        })
         if ns._pendingLoadVer then
             print("|cFF00FF00OneWoW|r: |cFFFFFFFFShopping List|r |cFF888888\226\128\147 v." .. ns._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wsl")
         end
+    end
+
+    if _G.OneWoW then
+        _G.OneWoW:RegisterMinimap("OneWoW_ShoppingList", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_SL"]) or "Open Shopping List", nil, function()
+            if ns.MainWindow then ns.MainWindow:Toggle() end
+        end)
     end
 end
 
@@ -109,6 +129,13 @@ local function OnAddonLoaded(loadedAddon)
                 end)
             end
         end
+    end)
+
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", ns, function(owner, hidden)
+        if owner.Minimap then owner.Minimap:SetShown(not hidden) end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", ns, function(owner)
+        if owner.Minimap then owner.Minimap:UpdateIcon() end
     end)
 
     InitializeModules()

@@ -15,6 +15,7 @@ function ns.UI:Show(tabName)
         local savedTab = OneWoWAltTracker.db.global.lastTab
         local tabToSelect = tabName or savedTab or "summary"
         self:CreateMainFrame(tabToSelect)
+        if MainWindow then MainWindow:Show() end
     else
         MainWindow:Show()
         if tabName and type(tabName) == "string" and MainWindow.SelectTab then
@@ -113,7 +114,8 @@ function ns.UI:CreateMainFrame(defaultTab)
         OneWoWAltTracker.db.global.mainFrameSize = {width = width, height = height}
     end)
 
-    local titleBg = OneWoW_GUI:CreateTitleBar(frame, L["ADDON_TITLE_FRAME"], {
+    local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
+        title = L["ADDON_TITLE_FRAME"],
         height = 20,
         showBrand = true,
         onClose = function() frame:Hide() end,
@@ -293,7 +295,7 @@ function ns.UI:CreateMainFrame(defaultTab)
 
     frame.tabs = tabs
     frame.tabButtons = tabButtons
-    frame.SelectTab = SelectTab
+    frame.SelectTab = function(_, tab) SelectTab(tab) end
 
     MainWindow = frame
     isInitialized = true

@@ -30,7 +30,7 @@ function Settings:Create()
     settingsFrame = dialog.frame
     local scrollContent = dialog.scrollContent
 
-    local yOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = -15 })
+    local yOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = -15, addonName = "OneWoW_Bags" })
 
     yOffset = yOffset - 10
 

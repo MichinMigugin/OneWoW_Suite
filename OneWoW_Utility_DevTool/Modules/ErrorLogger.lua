@@ -74,12 +74,9 @@ function ErrorLogger:PlayAlertSound()
 end
 
 function ErrorLogger:GetMinimapButton()
-    if _G["OneWoW_MinimapButton"] then
-        return _G["OneWoW_MinimapButton"]
-    end
-    local libDBIcon = LibStub and LibStub:GetLibrary("LibDBIcon-1.0", true)
-    if libDBIcon then
-        return libDBIcon:GetMinimapButton("OneWoW_UtilityDevTool")
+    local OneWoW_GUI = LibStub and LibStub("OneWoW_GUI-1.0", true)
+    if OneWoW_GUI then
+        return OneWoW_GUI:GetMinimapButton("OneWoW_UtilityDevTool")
     end
     return nil
 end

@@ -11,6 +11,7 @@ local addon = OneWoW_Catalog
 
 ns.addon = addon
 ns.oneWoWHubActive = false
+local L = ns.L
 
 local function RegisterWithOneWoW()
     if not _G.OneWoW then return false end
@@ -63,6 +64,12 @@ function addon:OnInitialize()
             ns.UI.ApplyFontToFrame(mainFrame)
         end
     end)
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
+        if owner.Minimap then owner.Minimap:SetShown(not hidden) end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner)
+        if owner.Minimap then owner.Minimap:UpdateIcon() end
+    end)
 
     local _ver = OneWoW_GUI:GetAddonVersion(addonName)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
@@ -77,6 +84,29 @@ function addon:OnEnable()
 
     RegisterWithOneWoW()
 
+    if not ns.oneWoWHubActive then
+        self.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_Catalog", {
+            label = "Catalog",
+            onClick = function()
+                if ns.UI and ns.UI.Toggle then ns.UI:Toggle() end
+            end,
+            onRightClick = function()
+                if ns.UI and ns.UI.Show then ns.UI:Show("settings") end
+            end,
+            onTooltip = function(frame)
+                GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
+                GameTooltip:AddLine(L["MINIMAP_TOOLTIP_TITLE"], 1, 0.82, 0, 1)
+                GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
+                GameTooltip:Show()
+            end,
+        })
+    end
+
+    if _G.OneWoW then
+        _G.OneWoW:RegisterMinimap("OneWoW_Catalog",
+            (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_CATALOG"]) or "Open Catalog",
+            "catalog", nil)
+    end
 end
 
 function addon:ApplyTheme()

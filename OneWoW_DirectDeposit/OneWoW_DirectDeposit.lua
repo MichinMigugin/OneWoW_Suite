@@ -180,6 +180,20 @@ function OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
         end
     end)
 
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
+        if owner.Minimap then owner.Minimap:SetShown(not hidden) end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner)
+        if owner.Minimap then owner.Minimap:UpdateIcon() end
+        if owner.GUI and owner.GUI.GetMainWindow then
+            local mw = owner.GUI:GetMainWindow()
+            if mw and mw.brandIcon then
+                mw.brandIcon:SetTexture(OneWoW_GUI:GetBrandIcon(
+                    OneWoW_GUI:GetSetting("minimap.theme") or "horde"))
+            end
+        end
+    end)
+
     local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
@@ -282,12 +296,35 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         CheckForWoWNotes()
         DetectOneWoW()
         if not OneWoW_DirectDeposit.oneWoWHubActive then
-            if OneWoW_DirectDeposit.Minimap then
-                OneWoW_DirectDeposit.Minimap:Initialize()
-            end
+            OneWoW_DirectDeposit.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_DirectDeposit", {
+                label = "Direct Deposit",
+                onClick = function()
+                    if OneWoW_DirectDeposit.GUI then OneWoW_DirectDeposit.GUI:Toggle() end
+                end,
+                onRightClick = function()
+                    if OneWoW_DirectDeposit.GUI then
+                        OneWoW_DirectDeposit.GUI:Show()
+                        OneWoW_DirectDeposit.GUI:SelectTab(3)
+                    end
+                end,
+                onTooltip = function(frame)
+                    GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
+                    GameTooltip:AddLine("|cFFFFD100OneWoW|r - Direct Deposit", 1, 0.82, 0, 1)
+                    local L = OneWoW_DirectDeposit.L
+                    if L and L["MINIMAP_TOOLTIP_HINT"] then
+                        GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
+                    end
+                    GameTooltip:Show()
+                end,
+            })
             if OneWoW_DirectDeposit._pendingLoadVer then
                 print("|cFF00FF00OneWoW|r: |cFFFFFFFFDirect Deposit|r |cFF888888\226\128\147 v." .. OneWoW_DirectDeposit._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wdd")
             end
+        end
+        if _G.OneWoW then
+            _G.OneWoW:RegisterMinimap("OneWoW_DirectDeposit", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_DD"]) or "Open Direct Deposit", nil, function()
+                if OneWoW_DirectDeposit.GUI then OneWoW_DirectDeposit.GUI:Toggle() end
+            end)
         end
     end
 end)
