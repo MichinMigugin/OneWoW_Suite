@@ -52,11 +52,24 @@ function BankGUI:InitMainWindow()
     MainWindow:SetFrameStrata("MEDIUM")
     MainWindow:SetToplevel(true)
     MainWindow:SetScript("OnHide", function()
+        if not isInitialized then return end
         BankGUI:CleanupAllViews()
+        if OneWoW_Bags.BankInfoBar and OneWoW_Bags.BankInfoBar.ClearSearch then
+            OneWoW_Bags.BankInfoBar:ClearSearch()
+        end
         local d = OneWoW_Bags.db
         if d and d.global then
             d.global.bankFramePosition = d.global.bankFramePosition or {}
             OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.bankFramePosition)
+        end
+        if OneWoW_Bags.bankOpen then
+            OneWoW_Bags.bankOpen = false
+            if OneWoW_Bags.BankSet then
+                OneWoW_Bags.BankSet:ReleaseAll()
+            end
+            C_Timer.After(0, function()
+                C_PlayerInteractionManager.ClearInteraction(Enum.PlayerInteractionType.Banker)
+            end)
         end
     end)
     MainWindow:Hide()
@@ -129,7 +142,14 @@ function BankGUI:InitMainWindow()
         if BankGUI.RefreshLayout then BankGUI:RefreshLayout() end
     end)
 
-    tinsert(UISpecialFrames, "OneWoW_BankMainWindow")
+    _G["OneWoW_BankMainWindow"] = MainWindow
+    local alreadyRegistered = false
+    for _, name in ipairs(UISpecialFrames) do
+        if name == "OneWoW_BankMainWindow" then alreadyRegistered = true; break end
+    end
+    if not alreadyRegistered then
+        tinsert(UISpecialFrames, "OneWoW_BankMainWindow")
+    end
     isInitialized = true
 
     local d = OneWoW_Bags.db
@@ -201,13 +221,28 @@ function BankGUI:RefreshLayout()
 
     BankGUI:CleanupAllViews()
 
+    local db = OneWoW_Bags.db
+    local selectedTab = db and db.global.bankSelectedTab
+
     local allButtons = BankSet:GetAllButtons()
+
+    local visibleButtons = {}
+    if selectedTab then
+        for _, btn in ipairs(allButtons) do
+            if btn.owb_bagID == selectedTab then
+                table.insert(visibleButtons, btn)
+            end
+        end
+    else
+        visibleButtons = allButtons
+    end
+
     local searchText = OneWoW_Bags.BankInfoBar:GetSearchText()
     local filteredButtons = {}
 
     if searchText and searchText ~= "" then
         local searchLower = string.lower(searchText)
-        for _, button in ipairs(allButtons) do
+        for _, button in ipairs(visibleButtons) do
             if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
                 local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
                 if itemName then
@@ -219,14 +254,13 @@ function BankGUI:RefreshLayout()
             end
         end
     else
-        for _, button in ipairs(allButtons) do
+        for _, button in ipairs(visibleButtons) do
             table.insert(filteredButtons, button)
         end
     end
 
-    local viewMode = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.bankViewMode or "list"
+    local viewMode = db and db.global and db.global.bankViewMode or "list"
 
-    local db = OneWoW_Bags.db
     local cols = db and db.global.bankColumns or 14
     local iconSize = Constants.ICON_SIZES[(db and db.global.iconSize) or 3] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING

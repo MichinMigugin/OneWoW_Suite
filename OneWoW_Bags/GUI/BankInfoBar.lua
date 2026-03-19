@@ -51,6 +51,20 @@ function BankInfoBar:Create(parent)
     end)
     infoBarFrame.viewTab = viewTab
 
+    local cleanupBtn = BankInfoBar:CreateViewBtn(infoBarFrame, L["CLEANUP"] or "Cleanup")
+    cleanupBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -S("SM"), btnY)
+    cleanupBtn:SetScript("OnClick", function()
+        if not OneWoW_Bags.bankOpen then return end
+        local db = OneWoW_Bags.db
+        local showWarband = db and db.global and db.global.bankShowWarband
+        if showWarband then
+            C_Container.SortBank(Enum.BankType.Account)
+        else
+            C_Container.SortBank(Enum.BankType.Character)
+        end
+    end)
+    infoBarFrame.cleanupBtn = cleanupBtn
+
     local emptyToggleBtn = CreateFrame("Button", nil, infoBarFrame)
     emptyToggleBtn:SetSize(22, 22)
     emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -S("SM"), searchY)
@@ -161,6 +175,13 @@ function BankInfoBar:GetSearchText()
         return infoBarFrame.searchBox:GetText() or ""
     end
     return ""
+end
+
+function BankInfoBar:ClearSearch()
+    if infoBarFrame and infoBarFrame.searchBox then
+        infoBarFrame.searchBox:SetText("")
+        infoBarFrame.searchBox:ClearFocus()
+    end
 end
 
 function BankInfoBar:GetFrame()

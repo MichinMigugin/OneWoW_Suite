@@ -344,13 +344,14 @@ function BankBar:UpdateGold()
     if not bagsBarFrame or not bagsBarFrame.goldText then return end
     local db = OneWoW_Bags.db
     local showWarband = db and db.global and db.global.bankShowWarband
-    local money
     if showWarband then
-        money = C_Bank.FetchDepositedMoney(Enum.BankType.Account) or 0
+        local money = C_Bank.FetchDepositedMoney(Enum.BankType.Account) or 0
+        bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(money))
+        bagsBarFrame.goldText:Show()
     else
-        money = GetMoney() or 0
+        bagsBarFrame.goldText:SetText("")
+        bagsBarFrame.goldText:Hide()
     end
-    bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(money))
 end
 
 function BankBar:UpdateFreeSlots(free, total)
