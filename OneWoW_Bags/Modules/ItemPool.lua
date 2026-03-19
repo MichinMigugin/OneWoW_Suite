@@ -89,6 +89,8 @@ function Pool:CreateButton()
     OneWoW_Bags.GUILib:SkinIconFrame(button, { preset = "clean" })
     button.icon:SetDrawLayer("ARTWORK")
 
+    button._owb_baseChildCount = select("#", button:GetChildren())
+
     return button
 end
 
@@ -109,6 +111,15 @@ function Pool:ResetButton(button)
     button:ClearAllPoints()
     OneWoW_Bags.GUILib:UpdateIconQuality(button, nil)
     if button.IconBorder then button.IconBorder:Hide() end
+    if button.IconOverlay then button.IconOverlay:Hide() end
+    if button.ItemContextOverlay then button.ItemContextOverlay:Hide() end
+    if button.ExtendedSlot then button.ExtendedSlot:Hide() end
+    if button.IconQuestTexture then button.IconQuestTexture:Hide() end
+    local baseCount = button._owb_baseChildCount or 0
+    local children = {button:GetChildren()}
+    for i = baseCount + 1, #children do
+        children[i]:Hide()
+    end
     Pool:ClearNewItemGlow(button)
     SetItemButtonTexture(button, nil)
     SetItemButtonCount(button, 0)

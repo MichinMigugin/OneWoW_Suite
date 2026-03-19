@@ -129,6 +129,21 @@ function BagSet:UpdateAllSlots()
     self:ProcessDirtySlots()
 end
 
+function BagSet:UpdateQualityColors()
+    local GUILib = OneWoW_Bags.GUILib
+    local db = OneWoW_Bags.db
+    local useRarity = db and db.global and db.global.rarityColor
+    for bagID, bagSlots in pairs(self.slots) do
+        for slotID, button in pairs(bagSlots) do
+            if button.owb_itemInfo and button.owb_itemInfo.quality and button.owb_itemInfo.quality >= 1 and useRarity then
+                GUILib:UpdateIconQuality(button, button.owb_itemInfo.quality)
+            else
+                GUILib:UpdateIconQuality(button, nil)
+            end
+        end
+    end
+end
+
 function BagSet:GetAllButtons()
     local buttons = {}
     local BagTypes = OneWoW_Bags.BagTypes
