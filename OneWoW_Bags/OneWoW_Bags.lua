@@ -142,7 +142,7 @@ function OneWoW_Bags:OnPlayerLogin()
         })
     end
 
-    if _G.OneWoW then
+    if _G.OneWoW and _G.OneWoW.RegisterMinimap then
         _G.OneWoW:RegisterMinimap("OneWoW_Bags", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_BAGS"]) or "Open Bags", nil, function()
             if self.GUI then self.GUI:Toggle() end
         end)
@@ -204,12 +204,22 @@ function OneWoW_Bags:SuppressGuildBankFrame()
     if self._guildBankSuppressed then return end
     self._guildBankSuppressed = true
 
-    self._gbHiddenParent = CreateFrame("Frame")
-    self._gbHiddenParent:Hide()
-
     self._gbOrigOnHide = GuildBankFrame:GetScript("OnHide")
     GuildBankFrame:SetScript("OnHide", nil)
-    GuildBankFrame:SetParent(self._gbHiddenParent)
+    GuildBankFrame:ClearAllPoints()
+    GuildBankFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", 0, -10000)
+    GuildBankFrame:SetAlpha(0)
+end
+
+function OneWoW_Bags:RestoreGuildBankFrame()
+    if not self._guildBankSuppressed then return end
+    if not GuildBankFrame then return end
+    self._guildBankSuppressed = false
+    if self._gbOrigOnHide then
+        GuildBankFrame:SetScript("OnHide", self._gbOrigOnHide)
+    end
+    self._gbOrigOnHide = nil
+    GuildBankFrame:SetAlpha(1)
 end
 
 function OneWoW_Bags:OnGuildBankOpened()
@@ -223,23 +233,38 @@ function OneWoW_Bags:OnGuildBankOpened()
 end
 
 function OneWoW_Bags:OnGuildBankClosed()
+    if not self.guildBankOpen then return end
     self.guildBankOpen = false
     if self.GuildBankGUI then
         self.GuildBankGUI:Hide()
     end
     if self.GuildBankSet then
         self.GuildBankSet:ReleaseAll()
+        self.GuildBankSet:ClearCache()
     end
+    self:RestoreGuildBankFrame()
 end
 
 function OneWoW_Bags:OnGuildBankSlotsChanged()
     local GuildBankSet = self.GuildBankSet
-    if GuildBankSet and GuildBankSet.isBuilt then
-        GuildBankSet:UpdateAllSlots()
+    if not GuildBankSet or not GuildBankSet.isBuilt then return end
+
+    if self._guildBankUpdatePending then return end
+    self._guildBankUpdatePending = true
+
+    C_Timer.After(0, function()
+        self._guildBankUpdatePending = false
+        if not GuildBankSet.isBuilt then return end
+        for tabID = 1, GuildBankSet.numTabs do
+            if GuildBankSet.slots[tabID] then
+                GuildBankSet:CacheTab(tabID)
+            end
+        end
+        GuildBankSet:ApplyCacheToButtons()
         if self.GuildBankGUI then
             self.GuildBankGUI:RefreshLayout()
         end
-    end
+    end)
 end
 
 function OneWoW_Bags:OnGuildBankTabsUpdated()
