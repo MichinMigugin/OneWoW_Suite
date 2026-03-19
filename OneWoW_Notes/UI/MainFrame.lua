@@ -212,17 +212,16 @@ function ns.UI:CreateMainFrame(defaultTab)
     local itemsTab = CreateTab("items", L["TAB_ITEMS"])
     ns.UI.CreateItemsTab(itemsTab)
 
-    local guidesTab = CreateTab("guides", L["TAB_GUIDES"])
-    ns.UI.CreateGuidesTab(guidesTab)
-
-    local routinesTab = CreateTab("routines", L["TAB_ROUTINES"])
-    ns.UI.CreateRoutinesTab(routinesTab)
+    local trackerTab = CreateTab("tracker", L["TAB_TRACKER"] or "Tracker")
+    ns.UI.CreateTrackerTab(trackerTab)
 
     local settingsTab = CreateTab("settings", L["TAB_SETTINGS"])
     ns.UI.CreateSettingsTab(settingsTab)
 
     C_Timer.After(0.1, function() UpdateTabLayout() end)
-    SelectTab(defaultTab or "notes")
+    local startTab = defaultTab or "notes"
+    if not tabs[startTab] then startTab = "notes" end
+    SelectTab(startTab)
 
     frame.tabs = tabs
     frame.tabButtons = tabButtons

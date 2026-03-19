@@ -1,6 +1,6 @@
 ## Interface: 120001, 120005
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Notes|r
-## Version: R6.2603.1319
+## Version: R6.2603.1521
 ## Notes: OneWoW Addon that: provides note-taking for characters, NPCs, zones, and items.
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
@@ -43,10 +43,11 @@ Core\ItemsData.lua
 Core\ZonesData.lua
 Core\PlayersData.lua
 Core\NPCsData.lua
-Core\GuidesData.lua
-Core\GuidesTracker.lua
-Core\RoutinesData.lua
-Core\RoutinesEngine.lua
+Core\TrackerData.lua
+Core\TrackerEngine.lua
+Core\TrackerPresets.lua
+Core\TrackerMap.lua
+Core\TrackerMigration.lua
 Core\ImportFromWoWNotes.lua
 
 # Main
@@ -63,12 +64,12 @@ UI\t-players.lua
 UI\t-npcs.lua
 UI\t-zones.lua
 UI\t-items.lua
-UI\t-guides.lua
-UI\t-routines.lua
+UI\t-tracker.lua
 UI\t-settings.lua
 
 # UI - Dialogs
 UI\ui-notes-dialogs.lua
 UI\ui-category-manager.lua
-UI\ui-guides-editor.lua
-UI\ui-routines-pinned.lua
+UI\ui-tracker-editor.lua
+UI\ui-tracker-pinned.lua
+UI\ui-tracker-map.lua

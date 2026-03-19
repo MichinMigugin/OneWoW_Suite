@@ -27,8 +27,7 @@ local function RegisterWithOneWoW()
             { name = "npcs",    displayName = function() return ns.L["TAB_NPCS"]    or "NPCs"    end, create = function(p) ns.UI.CreateNPCsTab(p) end },
             { name = "zones",   displayName = function() return ns.L["TAB_ZONES"]   or "Zones"   end, create = function(p) ns.UI.CreateZonesTab(p) end },
             { name = "items",   displayName = function() return ns.L["TAB_ITEMS"]   or "Items"   end, create = function(p) ns.UI.CreateItemsTab(p) end },
-            { name = "guides", displayName = function() return ns.L["TAB_GUIDES"] or "Guides" end, create = function(p) ns.UI.CreateGuidesTab(p) end },
-            { name = "routines", displayName = function() return ns.L["TAB_ROUTINES"] or "Routines" end, create = function(p) ns.UI.CreateRoutinesTab(p) end },
+            { name = "tracker", displayName = function() return ns.L["TAB_TRACKER"] or "Tracker" end, create = function(p) ns.UI.CreateTrackerTab(p) end },
         },
     })
     _G.OneWoW:RegisterSettingsPanel({
@@ -60,8 +59,8 @@ function addon:OnInitialize()
         if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
             ns.ZonePins:RefreshSyncPins()
         end
-        if ns.RoutinesEngine and ns.RoutinesEngine.RefreshAllPinnedWindows then
-            ns.RoutinesEngine:RefreshAllPinnedWindows()
+        if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
+            ns.TrackerEngine:RefreshAllPinnedWindows()
         end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
@@ -74,8 +73,8 @@ function addon:OnInitialize()
         if ns.ZonePins and ns.ZonePins.RefreshAllPinFonts then
             ns.ZonePins:RefreshAllPinFonts()
         end
-        if ns.RoutinesEngine and ns.RoutinesEngine.RefreshAllPinnedWindows then
-            ns.RoutinesEngine:RefreshAllPinnedWindows()
+        if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
+            ns.TrackerEngine:RefreshAllPinnedWindows()
         end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
@@ -99,15 +98,15 @@ end
 
 function addon:ApplyTheme()
     OneWoW_GUI:ApplyTheme(self)
-    
+
     if ns.NotesPins and ns.NotesPins.RefreshSyncPins then
         ns.NotesPins:RefreshSyncPins()
     end
     if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
         ns.ZonePins:RefreshSyncPins()
     end
-    if ns.RoutinesEngine and ns.RoutinesEngine.RefreshAllPinnedWindows then
-        ns.RoutinesEngine:RefreshAllPinnedWindows()
+    if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
+        ns.TrackerEngine:RefreshAllPinnedWindows()
     end
 end
 
@@ -187,16 +186,20 @@ function addon:OnEnable()
         self.NotesData = ns.NotesData
     end
 
-    if ns.GuidesData and ns.GuidesData.LoadBundledGuides then
-        ns.GuidesData:LoadBundledGuides()
+    if ns.TrackerEngine and ns.TrackerEngine.Initialize then
+        ns.TrackerEngine:Initialize()
     end
 
-    if ns.RoutinesData and ns.RoutinesData.LoadBundledRoutines then
-        ns.RoutinesData:LoadBundledRoutines()
+    if ns.TrackerMigration and ns.TrackerMigration.MigrateAll then
+        ns.TrackerMigration:MigrateAll()
     end
 
-    if ns.RoutinesEngine and ns.RoutinesEngine.Initialize then
-        ns.RoutinesEngine:Initialize()
+    if ns.TrackerPresets and ns.TrackerPresets.LoadBundledContent then
+        ns.TrackerPresets:LoadBundledContent()
+    end
+
+    if ns.TrackerMapUI and ns.TrackerMapUI.Initialize then
+        ns.TrackerMapUI:Initialize()
     end
 
     self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnPlayerEnteringWorld")
