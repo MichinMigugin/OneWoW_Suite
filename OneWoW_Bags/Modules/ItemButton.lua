@@ -37,11 +37,22 @@ function Mixin:OWB_FullUpdate()
             GUILib:UpdateIconQuality(self, nil)
         end
 
+        if self.SetItemButtonQuality then
+            self:SetItemButtonQuality(quality, info.hyperlink, false)
+            if self.IconBorder then self.IconBorder:Hide() end
+            if self.ProfessionQualityOverlay then
+                self.ProfessionQualityOverlay:SetDrawLayer("OVERLAY", 7)
+            end
+        end
+
         self.owb_hasItem = true
     else
         SetItemButtonTexture(self, nil)
         SetItemButtonCount(self, 0)
         GUILib:UpdateIconQuality(self, nil)
+        if self.SetItemButtonQuality then
+            self:SetItemButtonQuality(nil, nil, true)
+        end
         self.owb_hasItem = false
     end
 

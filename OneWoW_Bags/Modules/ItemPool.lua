@@ -115,10 +115,15 @@ function Pool:ResetButton(button)
     if button.ItemContextOverlay then button.ItemContextOverlay:Hide() end
     if button.ExtendedSlot then button.ExtendedSlot:Hide() end
     if button.IconQuestTexture then button.IconQuestTexture:Hide() end
+    if button.SetItemButtonQuality then
+        button:SetItemButtonQuality(nil, nil, true)
+    end
     local baseCount = button._owb_baseChildCount or 0
     local children = {button:GetChildren()}
     for i = baseCount + 1, #children do
-        children[i]:Hide()
+        if children[i] ~= button.ProfessionQualityOverlay then
+            children[i]:Hide()
+        end
     end
     Pool:ClearNewItemGlow(button)
     SetItemButtonTexture(button, nil)
