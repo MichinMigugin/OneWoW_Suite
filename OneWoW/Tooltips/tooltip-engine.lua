@@ -266,7 +266,7 @@ function TooltipEngine:ProcessProviders(tooltip, context)
         end
     end
 
-    tooltip:Show()
+    pcall(tooltip.Show, tooltip)
 end
 
 function TooltipEngine:ProviderMatchesType(provider, tooltipType)
