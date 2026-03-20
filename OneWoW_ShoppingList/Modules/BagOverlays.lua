@@ -49,11 +49,24 @@ local function PositionTexture(tex, overlay, settings)
         RIGHT       = { -1,  0 },
         CENTER      = {  0,  0 },
     }
-    local off = offsets[pos] or offsets["BOTTOMRIGHT"]
+    local outerData = {
+        ["Outer-Top-Left"]      = { "TOPLEFT",     4, -4 },
+        ["Outer-Top-Middle"]    = { "TOP",         0, -4 },
+        ["Outer-Top-Right"]     = { "TOPRIGHT",   -4, -4 },
+        ["Outer-Bottom-Left"]   = { "BOTTOMLEFT",  4,  4 },
+        ["Outer-Bottom-Middle"] = { "BOTTOM",      0,  4 },
+        ["Outer-Bottom-Right"]  = { "BOTTOMRIGHT",-4,  4 },
+    }
 
     tex:ClearAllPoints()
     tex:SetSize(size, size)
-    tex:SetPoint(pos, overlay, pos, off[1], off[2])
+    local outer = outerData[pos]
+    if outer then
+        tex:SetPoint("CENTER", overlay, outer[1], outer[2], outer[3])
+    else
+        local off = offsets[pos] or offsets["BOTTOMRIGHT"]
+        tex:SetPoint(pos, overlay, pos, off[1], off[2])
+    end
     tex:SetAlpha(alpha)
 end
 
