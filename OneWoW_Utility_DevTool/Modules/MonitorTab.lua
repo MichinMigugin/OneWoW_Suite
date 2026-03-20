@@ -268,7 +268,7 @@ local function CreateRow(parent, labelText, yOffset, guiLib)
     value:SetText("--")
     value:SetTextColor(guiLib:GetThemeColor("TEXT_PRIMARY"))
 
-    return label, value, yOffset - 16
+    return label, value, yOffset - 18
 end
 
 function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
@@ -296,8 +296,8 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     pinnedMinMemory = pinnedBaselineMemory
     pinnedLastMemory = pinnedBaselineMemory
 
-    local popup = CreateFrame("Frame", "OneWoW_DevTool_PinnedMonitor", UIParent, "BackdropTemplate")
-    popup:SetSize(280, 200)
+    local popup = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    popup:SetSize(280, 280)
     popup:SetFrameStrata("HIGH")
     popup:SetToplevel(true)
     popup:SetMovable(true)
@@ -309,8 +309,8 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
         self:SetClampedToScreen(true)
         local db = Addon.db and Addon.db.monitor
         if db then
-            db.pinnedPosition = db.pinnedPosition or {}
-            OneWoW_GUI:SaveWindowPosition(self, db.pinnedPosition)
+            local point, _, relPoint, x, y = self:GetPoint(1)
+            db.pinnedPosition = { point = point, relPoint = relPoint, x = x, y = y }
         end
     end)
     popup:SetClampedToScreen(true)
@@ -360,7 +360,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     local samplesLabel, samplesValue
     samplesLabel, samplesValue, yPos = CreateRow(popup, "Samples:", yPos, OneWoW_GUI)
 
-    yPos = yPos - 6
+    yPos = yPos - 10
     local reopenCheck = CreateFrame("CheckButton", nil, popup, "UICheckButtonTemplate")
     reopenCheck:SetSize(20, 20)
     reopenCheck:SetPoint("TOPLEFT", popup, "TOPLEFT", 6, yPos)
@@ -369,7 +369,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     reopenLabel:SetText("Reopen on /reload")
     reopenLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local totalHeight = math.abs(yPos) + 30
+    local totalHeight = math.abs(yPos) + 32
     popup:SetHeight(totalHeight)
 
     local db = Addon.db and Addon.db.monitor
@@ -390,11 +390,12 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     popup.samplesValue = samplesValue
     popup.addonIndex = addonIndex
 
+    popup:SetSize(300, totalHeight)
+
     local savedPos = db and db.pinnedPosition
     if savedPos and savedPos.point then
-        if not OneWoW_GUI:RestoreWindowPosition(popup, savedPos) then
-            popup:SetPoint("CENTER")
-        end
+        popup:ClearAllPoints()
+        popup:SetPoint(savedPos.point, UIParent, savedPos.relPoint, savedPos.x, savedPos.y)
     else
         popup:SetPoint("CENTER")
     end
