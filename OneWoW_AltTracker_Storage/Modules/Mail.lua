@@ -73,9 +73,8 @@ function private.RecordMail(index)
     local quantity = count or 1
 
     if invoiceType == "seller" or invoiceType == "seller_temp_invoice" then
-        if not bid or bid == 0 then return true end
-        local netAmount = bid - (deposit or 0)
-        return AccountingAddon.Transactions:RecordIncome("auction_sale", netAmount, buyer or "Auction House", nil, itemName, quantity, "Auction sold")
+        if not money or money == 0 then return true end
+        return AccountingAddon.Transactions:RecordIncome("auction_sale", money, buyer or "Auction House", nil, itemName, quantity, "Auction sold")
 
     elseif invoiceType == "buyer" then
         return true
