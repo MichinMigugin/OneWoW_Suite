@@ -19,3 +19,4 @@ reg:Register("overlays", { id = "soulbound",  title = "OVR_SOULBOUND_TITLE",  de
 reg:Register("overlays", { id = "toys",       title = "OVR_TOYS_TITLE",       description = "OVR_TOYS_DESC" })
 reg:Register("overlays", { id = "upgrade",    title = "OVR_UPGRADE_TITLE",    description = "OVR_UPGRADE_DESC" })
 reg:Register("overlays", { id = "warbound",   title = "OVR_WARBOUND_TITLE",   description = "OVR_WARBOUND_DESC" })
+reg:Register("overlays", { id = "transmog",       title = "OVR_TRANSMOG_TITLE",       description = "OVR_TRANSMOG_DESC" })

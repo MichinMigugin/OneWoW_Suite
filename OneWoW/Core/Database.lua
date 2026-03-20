@@ -79,6 +79,37 @@ function OneWoW:InitializeDatabase()
         self.db.global.settings.overlays = {}
     end
     local ov = self.db.global.settings.overlays
+
+    local outerRename = {
+        TOPLEFT_OUTER     = "Outer-Top-Left",
+        TOPRIGHT_OUTER    = "Outer-Top-Right",
+        BOTTOMLEFT_OUTER  = "Outer-Bottom-Left",
+        BOTTOMRIGHT_OUTER = "Outer-Bottom-Right",
+    }
+    for _, cfg in pairs(ov) do
+        if type(cfg) == "table" then
+            if cfg.position and outerRename[cfg.position] then
+                cfg.position = outerRename[cfg.position]
+            end
+            if cfg.effectColor and cfg.effectColor ~= "none" and not cfg.bgEnabled then
+                cfg.bgEnabled = true
+                cfg.bgStyle = cfg.effectAtlas or "Solid-Circle"
+                if cfg.bgStyle ~= "Solid-Circle" and cfg.bgStyle ~= "Solid-Square" and cfg.bgStyle ~= "Spinning Orbs" then
+                    cfg.bgStyle = "Spinning Orbs"
+                end
+                cfg.bgScale = cfg.effectScale or 1.0
+                cfg.bgColor = cfg.effectSolidColor or {1, 1, 1}
+                if not cfg.effect then
+                    cfg.effect = "both"
+                end
+            end
+            cfg.effectColor = nil
+            cfg.effectAtlas = nil
+            cfg.effectScale = nil
+            cfg.effectSolidColor = nil
+        end
+    end
+
     if not ov.general then
         ov.general = { enabled = true }
     end
@@ -191,6 +222,12 @@ function OneWoW:InitializeDatabase()
     end
     if ov.protected.applyToAuctionHouse == nil then
         ov.protected.applyToAuctionHouse = false
+    end
+    if not ov.transmog then
+        ov.transmog = { enabled = false, icon = "Warfronts-BaseMapIcons-Horde-Workshop-Minimap", position = "TOPLEFT", scale = 1.0, alpha = 1.0, applyToVendorItems = false, applyToAuctionHouse = false }
+    end
+    if ov.transmog.applyToAuctionHouse == nil then
+        ov.transmog.applyToAuctionHouse = false
     end
     if not ov.integrations then
         ov.integrations = {}

@@ -26,9 +26,14 @@ local OVERLAY_SETTINGS_IDS = {
     unknownitems = true,
     upgrade      = true,
     warbound     = true,
+    transmog       = true,
 }
 
-local POSITIONS = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT" }
+local POSITIONS = {
+    "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT",
+    "Outer-Top-Left", "Outer-Top-Middle", "Outer-Top-Right",
+    "Outer-Bottom-Left", "Outer-Bottom-Middle", "Outer-Bottom-Right",
+}
 
 local PositionOffsets = {
     TOPLEFT     = { 1, -1},
@@ -42,12 +47,28 @@ local PositionOffsets = {
     CENTER      = { 0,  0},
 }
 
+local OuterPositionData = {
+    ["Outer-Top-Left"]      = { "TOPLEFT",     4, -4 },
+    ["Outer-Top-Middle"]    = { "TOP",         0, -4 },
+    ["Outer-Top-Right"]     = { "TOPRIGHT",   -4, -4 },
+    ["Outer-Bottom-Left"]   = { "BOTTOMLEFT",  4,  4 },
+    ["Outer-Bottom-Middle"] = { "BOTTOM",      0,  4 },
+    ["Outer-Bottom-Right"]  = { "BOTTOMRIGHT",-4,  4 },
+}
+
+local ICON_EFFECT_OPTIONS = { "None", "Spinning", "Zooming", "Both" }
+local ICON_EFFECT_VALUE_MAP  = { ["None"] = "none", ["Spinning"] = "spinning", ["Zooming"] = "zooming", ["Both"] = "both" }
+local ICON_EFFECT_DISPLAY_MAP = { ["none"] = "None", ["spinning"] = "Spinning", ["zooming"] = "Zooming", ["both"] = "Both" }
+
+local BG_STYLE_OPTIONS = { "Solid-Circle", "Solid-Square", "Spinning Orbs", "Glow Pulse", "Portal Spiral" }
+
 local PREVIEW_SLOT_SIZE = 74
 
 local ICON_CATEGORIES = {
     {
         nameKey = "OVR_ICON_CAT_CUSTOM",
         icons   = {
+            "BLANK",
             "icon-add", "icon-alert", "icon-alliance", "icon-compass", "icon-fav",
             "icon-flag", "icon-gears", "icon-horde", "icon-minus", "icon-mount",
             "icon-pet", "icon-pin", "icon-recipe", "icon-toy", "icon-trash",
@@ -110,6 +131,14 @@ local ICON_CATEGORIES = {
             "bags-glow-white", "bags-glow-purple", "bags-glow-blue",
             "bags-glow-green", "bags-glow-orange", "bags-glow-artifact",
             "bags-glow-heirloom",
+        },
+    },
+    {
+        nameKey = "OVR_ICON_CAT_MISC",
+        icons   = {
+            "Battlenet-ClientIcon-WoW", "BfAMission-Icon-HUB",
+            "BfAMission-Icon-Normal", "midnight-beta-access",
+            "checkmark-minimal-disabled",
         },
     },
 }
@@ -342,21 +371,124 @@ local function CreateSlotPreview(parent, featureId, reg)
     local overlayTex = overlayFrame:CreateTexture(nil, "OVERLAY", nil, 3)
     overlayTex:SetAllPoints(overlayFrame)
 
+    local iconAnim = overlayFrame:CreateAnimationGroup()
+    local iSpin1 = iconAnim:CreateAnimation("Rotation")
+    iSpin1:SetDuration(1.5); iSpin1:SetDegrees(-360); iSpin1:SetOrder(1)
+    local iScaleUp = iconAnim:CreateAnimation("Scale")
+    iScaleUp:SetDuration(0.75); iScaleUp:SetScale(1.5, 1.5); iScaleUp:SetOrder(1)
+    local iSpin2 = iconAnim:CreateAnimation("Rotation")
+    iSpin2:SetDuration(1.5); iSpin2:SetDegrees(-360); iSpin2:SetOrder(2)
+    local iScaleDown = iconAnim:CreateAnimation("Scale")
+    iScaleDown:SetDuration(0.75); iScaleDown:SetScale(1/1.5, 1/1.5); iScaleDown:SetOrder(2)
+    iconAnim:SetLooping("REPEAT")
+
+    local bgFrame = CreateFrame("Frame", nil, overlayFrame)
+    bgFrame:SetPoint("CENTER", overlayFrame, "CENTER", 0, 0)
+    bgFrame:SetFrameLevel(overlayFrame:GetFrameLevel() - 1)
+    bgFrame:EnableMouse(false)
+    local bgTex = bgFrame:CreateTexture(nil, "ARTWORK")
+
+    local bgAnim = bgTex:CreateAnimationGroup()
+    local bSpin1 = bgAnim:CreateAnimation("Rotation")
+    bSpin1:SetDuration(1.5); bSpin1:SetDegrees(-360); bSpin1:SetOrder(1)
+    local bScaleUp = bgAnim:CreateAnimation("Scale")
+    bScaleUp:SetDuration(0.75); bScaleUp:SetScale(1.8, 1.8); bScaleUp:SetOrder(1)
+    local bSpin2 = bgAnim:CreateAnimation("Rotation")
+    bSpin2:SetDuration(1.5); bSpin2:SetDegrees(-360); bSpin2:SetOrder(2)
+    local bScaleDown = bgAnim:CreateAnimation("Scale")
+    bScaleDown:SetDuration(0.75); bScaleDown:SetScale(1/1.8, 1/1.8); bScaleDown:SetOrder(2)
+    bgAnim:SetLooping("REPEAT")
+    bgFrame:Hide()
+
+    local bgMask = bgFrame:CreateMaskTexture()
+    bgMask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+    bgMask:SetAllPoints(bgFrame)
+    bgMask:Hide()
+    local previewMaskActive = false
+
     local function Refresh()
         local icon     = reg:GetOverlaySetting(featureId, "icon")     or "VignetteEvent-SuperTracked"
         local position = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
         local scale    = reg:GetOverlaySetting(featureId, "scale")    or 1.0
         local alpha    = reg:GetOverlaySetting(featureId, "alpha")    or 1.0
-        local offsets  = PositionOffsets[position] or {0, 0}
         local baseSize = SLOT_SIZE * 0.54
         local finalSize = baseSize * scale
 
         overlayFrame:ClearAllPoints()
-        overlayFrame:SetPoint(position, slotFrame, position, offsets[1], offsets[2])
+        local outerData = OuterPositionData[position]
+        if outerData then
+            overlayFrame:SetPoint("CENTER", slotFrame, outerData[1], outerData[2], outerData[3])
+        else
+            local offsets = PositionOffsets[position] or {0, 0}
+            overlayFrame:SetPoint(position, slotFrame, position, offsets[1], offsets[2])
+        end
         overlayFrame:SetSize(finalSize, finalSize)
-        OneWoW.OverlayIcons:ApplyToTexture(overlayTex, icon)
-        overlayTex:SetAlpha(alpha)
+        if icon == "BLANK" then
+            overlayTex:SetTexture(nil)
+            overlayTex:SetAtlas("")
+            overlayTex:SetAlpha(0)
+        else
+            OneWoW.OverlayIcons:ApplyToTexture(overlayTex, icon)
+            overlayTex:SetAlpha(alpha)
+        end
         overlayFrame:Show()
+
+        local effect = reg:GetOverlaySetting(featureId, "effect") or "none"
+        iconAnim:Stop()
+        if effect ~= "none" then
+            local hasSpin = (effect == "spinning" or effect == "both")
+            local hasZoom = (effect == "zooming" or effect == "both")
+            iSpin1:SetDegrees(hasSpin and -360 or 0)
+            iSpin2:SetDegrees(hasSpin and -360 or 0)
+            iScaleUp:SetScale(hasZoom and 1.5 or 1, hasZoom and 1.5 or 1)
+            iScaleDown:SetScale(hasZoom and (1/1.5) or 1, hasZoom and (1/1.5) or 1)
+            iconAnim:Play()
+        end
+
+        local bgEnabled = reg:GetOverlaySetting(featureId, "bgEnabled")
+        if bgEnabled then
+            local bgStyle = reg:GetOverlaySetting(featureId, "bgStyle") or "Solid-Circle"
+            local bgScale = reg:GetOverlaySetting(featureId, "bgScale") or 1.0
+            local bgColor = reg:GetOverlaySetting(featureId, "bgColor") or {1, 1, 1}
+            local baseBgSize = finalSize * 1.6
+            local finalBgSize = baseBgSize * bgScale
+            bgFrame:SetSize(finalBgSize, finalBgSize)
+            bgTex:ClearAllPoints()
+            bgTex:SetAllPoints(bgFrame)
+            bgTex:SetVertexColor(bgColor[1], bgColor[2], bgColor[3])
+
+            if bgStyle == "Spinning Orbs" then
+                if previewMaskActive then
+                    bgTex:RemoveMaskTexture(bgMask)
+                    previewMaskActive = false
+                end
+                bgMask:Hide()
+                bgTex:SetTexture(nil)
+                bgTex:SetAtlas("ArtifactsFX-SpinningGlowys-Purple", false)
+                bgAnim:Play()
+            else
+                bgAnim:Stop()
+                bgTex:SetAtlas("")
+                bgTex:SetTexture("Interface\\Buttons\\WHITE8x8")
+                if bgStyle == "Solid-Circle" then
+                    if not previewMaskActive then
+                        bgTex:AddMaskTexture(bgMask)
+                        previewMaskActive = true
+                    end
+                    bgMask:Show()
+                else
+                    if previewMaskActive then
+                        bgTex:RemoveMaskTexture(bgMask)
+                        previewMaskActive = false
+                    end
+                    bgMask:Hide()
+                end
+            end
+            bgFrame:Show()
+        else
+            bgAnim:Stop()
+            bgFrame:Hide()
+        end
     end
 
     Refresh()
@@ -794,6 +926,29 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
 
     yOffset = yOffset - 34
 
+    local resetAllDiv = dsc:CreateTexture(nil, "ARTWORK")
+    resetAllDiv:SetHeight(1)
+    resetAllDiv:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
+    resetAllDiv:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    resetAllDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    yOffset = yOffset - 14
+
+    local resetAllBtn = OneWoW_GUI:CreateButton(dsc, { text = L["OVR_RESET_ALL_DEFAULTS_BTN"], width = 180, height = 26 })
+    resetAllBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    resetAllBtn:SetScript("OnClick", function()
+        local db = OneWoW.db.global.settings.overlays
+        local generalEnabled = db.general and db.general.enabled
+        local integrations = db.integrations
+        wipe(db)
+        db.integrations = integrations
+        OneWoW:InitializeDatabase()
+        if generalEnabled ~= nil then
+            db.general.enabled = generalEnabled
+        end
+        ShowGeneralDetail(split, dsc, selectedRow)
+    end)
+    yOffset = yOffset - 30 - 10
+
     dsc:SetHeight(math.abs(yOffset) + 20)
     GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
@@ -1168,7 +1323,153 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     })
     alphaSlider:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
     alphaSlider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-    rightY = rightY - 36 - 16
+    rightY = rightY - 36 - 10
+
+    local effectLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    effectLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
+    effectLabel:SetText(L["OVR_EFFECT_LABEL"])
+    effectLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    rightY = rightY - effectLabel:GetStringHeight() - 6
+
+    local currentEffect = reg:GetOverlaySetting(featureId, "effect") or "none"
+    local effectDD, effectDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 160, text = ICON_EFFECT_DISPLAY_MAP[currentEffect] or "None" })
+    OneWoW_GUI:AttachFilterMenu(effectDD, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for _, opt in ipairs(ICON_EFFECT_OPTIONS) do
+                table.insert(items, { text = opt, value = opt })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            effectDDText:SetText(text)
+            reg:SetOverlaySetting(featureId, "effect", ICON_EFFECT_VALUE_MAP[value])
+            RefreshPreview()
+        end,
+        getActiveValue = function()
+            local cur = reg:GetOverlaySetting(featureId, "effect") or "none"
+            return ICON_EFFECT_DISPLAY_MAP[cur] or "None"
+        end,
+    })
+    effectDD:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
+    effectDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
+    rightY = rightY - 26 - 16
+
+    local bgDiv = dsc:CreateTexture(nil, "ARTWORK")
+    bgDiv:SetHeight(1)
+    bgDiv:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
+    bgDiv:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
+    bgDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    rightY = rightY - 10
+
+    local bgCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_BG_ENABLE_LABEL"] })
+    bgCb:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
+    bgCb:SetChecked(reg:GetOverlaySetting(featureId, "bgEnabled") or false)
+    bgCb:SetScript("OnClick", function(self)
+        reg:SetOverlaySetting(featureId, "bgEnabled", self:GetChecked())
+        RefreshPreview()
+    end)
+    rightY = rightY - 30
+
+    local bgStyleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    bgStyleLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
+    bgStyleLabel:SetText(L["OVR_BG_STYLE_LABEL"])
+    bgStyleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    rightY = rightY - bgStyleLabel:GetStringHeight() - 6
+
+    local currentBgStyle = reg:GetOverlaySetting(featureId, "bgStyle") or "Solid-Circle"
+    local bgStyleDD, bgStyleDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 180, text = currentBgStyle })
+    OneWoW_GUI:AttachFilterMenu(bgStyleDD, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for _, opt in ipairs(BG_STYLE_OPTIONS) do
+                table.insert(items, { text = opt, value = opt })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            bgStyleDDText:SetText(text)
+            reg:SetOverlaySetting(featureId, "bgStyle", value)
+            RefreshPreview()
+        end,
+        getActiveValue = function() return reg:GetOverlaySetting(featureId, "bgStyle") or "Solid-Circle" end,
+    })
+    bgStyleDD:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
+    bgStyleDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
+    rightY = rightY - 26 - 10
+
+    local bgScaleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    bgScaleLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
+    bgScaleLabel:SetText(L["OVR_BG_SCALE_LABEL"])
+    bgScaleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    rightY = rightY - bgScaleLabel:GetStringHeight() - 6
+
+    local currentBgScale = reg:GetOverlaySetting(featureId, "bgScale") or 1.0
+    local bgScaleSlider = OneWoW_GUI:CreateSlider(dsc, {
+        minVal = 0.1, maxVal = 3.0, step = 0.1, currentVal = currentBgScale,
+        onChange = function(val)
+            reg:SetOverlaySetting(featureId, "bgScale", val)
+            RefreshPreview()
+        end,
+        width = 160,
+    })
+    bgScaleSlider:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
+    bgScaleSlider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
+    rightY = rightY - 36 - 10
+
+    local bgColorLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    bgColorLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
+    bgColorLabel:SetText(L["OVR_BG_COLOR_LABEL"])
+    bgColorLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local bgSwatch = CreateFrame("Button", nil, dsc, "BackdropTemplate")
+    bgSwatch:SetSize(24, 24)
+    bgSwatch:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    bgSwatch:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+    bgSwatch:SetPoint("LEFT", bgColorLabel, "RIGHT", 8, 0)
+
+    local function UpdateBgSwatchColor()
+        local sc = reg:GetOverlaySetting(featureId, "bgColor") or {1, 1, 1}
+        bgSwatch:SetBackdropColor(sc[1], sc[2], sc[3], 1)
+    end
+    UpdateBgSwatchColor()
+
+    bgSwatch:SetScript("OnClick", function()
+        local sc = reg:GetOverlaySetting(featureId, "bgColor") or {1, 1, 1}
+        ColorPickerFrame:SetupColorPickerAndShow({
+            r = sc[1], g = sc[2], b = sc[3],
+            opacity = 1,
+            swatchFunc = function()
+                local r, g, b = ColorPickerFrame:GetColorRGB()
+                reg:SetOverlaySetting(featureId, "bgColor", {r, g, b})
+                UpdateBgSwatchColor()
+                RefreshPreview()
+            end,
+            opacityFunc = function()
+                local r, g, b = ColorPickerFrame:GetColorRGB()
+                reg:SetOverlaySetting(featureId, "bgColor", {r, g, b})
+                UpdateBgSwatchColor()
+                RefreshPreview()
+            end,
+            cancelFunc = function() end,
+        })
+    end)
+    rightY = rightY - 28 - 10
+
+    local bgRarityCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_BG_RARITY_LABEL"] })
+    bgRarityCb:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
+    bgRarityCb:SetChecked(reg:GetOverlaySetting(featureId, "bgUseRarityColor") or false)
+    bgRarityCb:SetScript("OnClick", function(self)
+        reg:SetOverlaySetting(featureId, "bgUseRarityColor", self:GetChecked())
+        RefreshPreview()
+    end)
+    rightY = rightY - 30 - 16
 
     local iconLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     iconLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -1195,6 +1496,18 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     vendorCb:SetScript("OnClick", function(self)
         reg:SetOverlaySetting(featureId, "applyToVendorItems", self:GetChecked())
     end)
+
+    local vendorApplyAll = OneWoW_GUI:CreateButton(dsc, { text = L["OVR_APPLY_TO_ALL_BTN"], width = 90, height = 20 })
+    vendorApplyAll:SetPoint("LEFT", vendorCb, "RIGHT", 160, 0)
+    vendorApplyAll:SetScript("OnClick", function()
+        local val = vendorCb:GetChecked()
+        local db = OneWoW.db.global.settings.overlays
+        for id in pairs(OVERLAY_SETTINGS_IDS) do
+            if db[id] then
+                db[id].applyToVendorItems = val
+            end
+        end
+    end)
     yOffset = yOffset - 30
 
     local ahCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_AH_LABEL"] })
@@ -1203,6 +1516,18 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     ahCb:SetChecked(ahEnabled)
     ahCb:SetScript("OnClick", function(self)
         reg:SetOverlaySetting(featureId, "applyToAuctionHouse", self:GetChecked())
+    end)
+
+    local ahApplyAll = OneWoW_GUI:CreateButton(dsc, { text = L["OVR_APPLY_TO_ALL_BTN"], width = 90, height = 20 })
+    ahApplyAll:SetPoint("LEFT", ahCb, "RIGHT", 160, 0)
+    ahApplyAll:SetScript("OnClick", function()
+        local val = ahCb:GetChecked()
+        local db = OneWoW.db.global.settings.overlays
+        for id in pairs(OVERLAY_SETTINGS_IDS) do
+            if db[id] then
+                db[id].applyToAuctionHouse = val
+            end
+        end
     end)
     yOffset = yOffset - 30 - 10
 
@@ -1225,6 +1550,27 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             yOffset = yOffset - 30 - 10
         end
     end
+
+    local resetDiv = dsc:CreateTexture(nil, "ARTWORK")
+    resetDiv:SetHeight(1)
+    resetDiv:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
+    resetDiv:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    resetDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    yOffset = yOffset - 14
+
+    local resetBtn = OneWoW_GUI:CreateButton(dsc, { text = L["OVR_RESET_DEFAULTS_BTN"], width = 140, height = 26 })
+    resetBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    resetBtn:SetScript("OnClick", function()
+        local db = OneWoW.db.global.settings.overlays
+        if db[featureId] then
+            local wasEnabled = db[featureId].enabled
+            db[featureId] = nil
+            OneWoW:InitializeDatabase()
+            db[featureId].enabled = wasEnabled
+            ShowOverlayDetail(split, feature, selectedRow)
+        end
+    end)
+    yOffset = yOffset - 30 - 10
 
     dsc:SetHeight(math.abs(yOffset) + 20)
     GUI:ApplyFontToFrame(dsc)

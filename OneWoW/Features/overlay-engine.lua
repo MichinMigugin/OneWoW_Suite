@@ -15,6 +15,15 @@ local PositionOffsets = {
     CENTER      = {0,  0},
 }
 
+local OuterPositionData = {
+    ["Outer-Top-Left"]      = { "TOPLEFT",     4, -4 },
+    ["Outer-Top-Middle"]    = { "TOP",         0, -4 },
+    ["Outer-Top-Right"]     = { "TOPRIGHT",   -4, -4 },
+    ["Outer-Bottom-Left"]   = { "BOTTOMLEFT",  4,  4 },
+    ["Outer-Bottom-Middle"] = { "BOTTOM",      0,  4 },
+    ["Outer-Bottom-Right"]  = { "BOTTOMRIGHT",-4,  4 },
+}
+
 local OVERLAY_ORDER = {
     "protected",
     "junk",
@@ -22,6 +31,7 @@ local OVERLAY_ORDER = {
     "housingdecor",
     "knownitems",
     "unknownitems",
+    "transmog",
     "mounts",
     "pets",
     "quest",
@@ -29,7 +39,31 @@ local OVERLAY_ORDER = {
     "recipe",
     "soulbound",
     "toys",
+    "upgrade",
     "warbound",
+}
+
+local INVTYPE_TO_SLOT = {
+    [Enum.InventoryType.IndexHeadType] = 1,
+    [Enum.InventoryType.IndexNeckType] = 2,
+    [Enum.InventoryType.IndexShoulderType] = 3,
+    [Enum.InventoryType.IndexBodyType] = 4,
+    [Enum.InventoryType.IndexChestType] = 5,
+    [Enum.InventoryType.IndexWaistType] = 6,
+    [Enum.InventoryType.IndexLegsType] = 7,
+    [Enum.InventoryType.IndexFeetType] = 8,
+    [Enum.InventoryType.IndexWristType] = 9,
+    [Enum.InventoryType.IndexHandType] = 10,
+    [Enum.InventoryType.IndexFingerType] = 11,
+    [Enum.InventoryType.IndexTrinketType] = 13,
+    [Enum.InventoryType.IndexWeaponType] = 16,
+    [Enum.InventoryType.IndexShieldType] = 17,
+    [Enum.InventoryType.IndexCloakType] = 15,
+    [Enum.InventoryType.Index2HweaponType] = 16,
+    [Enum.InventoryType.IndexRobeType] = 5,
+    [Enum.InventoryType.IndexWeaponmainhandType] = 16,
+    [Enum.InventoryType.IndexWeaponoffhandType] = 17,
+    [Enum.InventoryType.IndexHoldableType] = 17,
 }
 
 local bagThrottle        = {}
@@ -116,6 +150,18 @@ local function CleanButton(button)
                 entry.frame:ClearAllPoints()
                 entry.frame:Hide()
             end
+            if entry.iconAnim then
+                entry.iconAnim:Stop()
+            end
+            if entry.bgAnim then
+                entry.bgAnim:Stop()
+            end
+            if entry.bgPulseAnim then
+                entry.bgPulseAnim:Stop()
+            end
+            if entry.bgFrame then
+                entry.bgFrame:Hide()
+            end
         end
     end
     if button.onewow_ilvl then
@@ -127,6 +173,202 @@ local function PreparePool(button)
     if not button.onewow_overlayPool then
         button.onewow_overlayPool = {}
     end
+end
+
+local BG_SOLID_STYLES = { ["Solid-Circle"] = true, ["Solid-Square"] = true }
+
+local function SetupIconAnimation(entry)
+    if entry.iconAnim then return end
+    local ag = entry.frame:CreateAnimationGroup()
+
+    local spin1 = ag:CreateAnimation("Rotation")
+    spin1:SetDuration(1.5)
+    spin1:SetDegrees(-360)
+    spin1:SetOrder(1)
+
+    local scaleUp = ag:CreateAnimation("Scale")
+    scaleUp:SetDuration(0.75)
+    scaleUp:SetScale(1.5, 1.5)
+    scaleUp:SetOrder(1)
+
+    local spin2 = ag:CreateAnimation("Rotation")
+    spin2:SetDuration(1.5)
+    spin2:SetDegrees(-360)
+    spin2:SetOrder(2)
+
+    local scaleDown = ag:CreateAnimation("Scale")
+    scaleDown:SetDuration(0.75)
+    scaleDown:SetScale(1 / 1.5, 1 / 1.5)
+    scaleDown:SetOrder(2)
+
+    ag:SetLooping("REPEAT")
+
+    entry.iconAnim = ag
+    entry.iconSpin1 = spin1
+    entry.iconSpin2 = spin2
+    entry.iconScaleUp = scaleUp
+    entry.iconScaleDown = scaleDown
+end
+
+local function ApplyIconEffect(entry, effect)
+    if not effect or effect == "none" then
+        if entry.iconAnim then
+            entry.iconAnim:Stop()
+        end
+        return
+    end
+
+    SetupIconAnimation(entry)
+    entry.iconAnim:Stop()
+
+    local hasSpin = (effect == "spinning" or effect == "both")
+    local hasZoom = (effect == "zooming" or effect == "both")
+
+    entry.iconSpin1:SetDegrees(hasSpin and -360 or 0)
+    entry.iconSpin2:SetDegrees(hasSpin and -360 or 0)
+    entry.iconScaleUp:SetScale(hasZoom and 1.5 or 1, hasZoom and 1.5 or 1)
+    entry.iconScaleDown:SetScale(hasZoom and (1/1.5) or 1, hasZoom and (1/1.5) or 1)
+
+    entry.iconAnim:Play()
+end
+
+local function SetupBackground(entry)
+    if entry.bgFrame then return end
+    local bf = CreateFrame("Frame", nil, entry.frame)
+    bf:SetPoint("CENTER", entry.frame, "CENTER", 0, 0)
+    bf:SetFrameLevel(entry.frame:GetFrameLevel() - 1)
+    bf:EnableMouse(false)
+
+    local tex = bf:CreateTexture(nil, "ARTWORK")
+
+    local ag = tex:CreateAnimationGroup()
+    local spin1 = ag:CreateAnimation("Rotation")
+    spin1:SetDuration(1.5)
+    spin1:SetDegrees(-360)
+    spin1:SetOrder(1)
+    local scaleUp = ag:CreateAnimation("Scale")
+    scaleUp:SetDuration(0.75)
+    scaleUp:SetScale(1.8, 1.8)
+    scaleUp:SetOrder(1)
+    local spin2 = ag:CreateAnimation("Rotation")
+    spin2:SetDuration(1.5)
+    spin2:SetDegrees(-360)
+    spin2:SetOrder(2)
+    local scaleDown = ag:CreateAnimation("Scale")
+    scaleDown:SetDuration(0.75)
+    scaleDown:SetScale(1 / 1.8, 1 / 1.8)
+    scaleDown:SetOrder(2)
+    ag:SetLooping("REPEAT")
+
+    local pulseAg = tex:CreateAnimationGroup()
+    local fadeOut = pulseAg:CreateAnimation("Alpha")
+    fadeOut:SetFromAlpha(1.0)
+    fadeOut:SetToAlpha(0.3)
+    fadeOut:SetDuration(0.75)
+    fadeOut:SetOrder(1)
+    local fadeIn = pulseAg:CreateAnimation("Alpha")
+    fadeIn:SetFromAlpha(0.3)
+    fadeIn:SetToAlpha(1.0)
+    fadeIn:SetDuration(0.75)
+    fadeIn:SetOrder(2)
+    pulseAg:SetLooping("REPEAT")
+
+    entry.bgFrame = bf
+    entry.bgTexture = tex
+    entry.bgAnim = ag
+    entry.bgPulseAnim = pulseAg
+    entry.bgMask = nil
+    entry.bgMaskApplied = false
+    bf:Hide()
+end
+
+local function ApplyBackground(entry, cfg, iconSize, itemLink)
+    if not cfg.bgEnabled then
+        if entry.bgFrame then
+            entry.bgAnim:Stop()
+            if entry.bgPulseAnim then entry.bgPulseAnim:Stop() end
+            entry.bgFrame:Hide()
+        end
+        return
+    end
+
+    SetupBackground(entry)
+    entry.bgFrame:SetFrameLevel(entry.frame:GetFrameLevel() - 1)
+
+    local style = cfg.bgStyle or "Solid-Circle"
+    local bgScale = cfg.bgScale or 1.0
+    local bgColor = cfg.bgColor or {1, 1, 1}
+
+    if cfg.bgUseRarityColor and itemLink then
+        local quality = select(3, C_Item.GetItemInfo(itemLink))
+        if quality then
+            local r, g, b = C_Item.GetItemQualityColor(quality)
+            bgColor = {r, g, b}
+        end
+    end
+
+    local baseSize = (iconSize or 20) * 1.6
+    local finalSize = baseSize * bgScale
+
+    entry.bgFrame:SetSize(finalSize, finalSize)
+    entry.bgTexture:ClearAllPoints()
+    entry.bgTexture:SetAllPoints(entry.bgFrame)
+    entry.bgTexture:SetVertexColor(bgColor[1], bgColor[2], bgColor[3])
+
+    local function ApplyCircleMask()
+        if not entry.bgMask then
+            local mask = entry.bgFrame:CreateMaskTexture()
+            mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+            mask:SetAllPoints(entry.bgFrame)
+            entry.bgMask = mask
+        end
+        if not entry.bgMaskApplied then
+            entry.bgTexture:AddMaskTexture(entry.bgMask)
+            entry.bgMaskApplied = true
+        end
+        entry.bgMask:Show()
+    end
+
+    local function RemoveCircleMask()
+        if entry.bgMask and entry.bgMaskApplied then
+            entry.bgTexture:RemoveMaskTexture(entry.bgMask)
+            entry.bgMaskApplied = false
+            entry.bgMask:Hide()
+        end
+    end
+
+    if style == "Spinning Orbs" then
+        RemoveCircleMask()
+        entry.bgTexture:SetTexture(nil)
+        entry.bgTexture:SetAtlas("ArtifactsFX-SpinningGlowys-Purple", false)
+        if entry.bgPulseAnim then entry.bgPulseAnim:Stop() end
+        entry.bgAnim:Play()
+    elseif style == "Portal Spiral" then
+        RemoveCircleMask()
+        entry.bgTexture:SetTexture(nil)
+        entry.bgTexture:SetAtlas("UI-Frame-jailerstower-Portrait-QualityEpic", false)
+        if entry.bgPulseAnim then entry.bgPulseAnim:Stop() end
+        entry.bgAnim:Play()
+    elseif style == "Glow Pulse" then
+        entry.bgAnim:Stop()
+        entry.bgTexture:SetAtlas("")
+        entry.bgTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
+        ApplyCircleMask()
+        if entry.bgPulseAnim then entry.bgPulseAnim:Play() end
+    else
+        entry.bgAnim:Stop()
+        if entry.bgPulseAnim then entry.bgPulseAnim:Stop() end
+        entry.bgTexture:SetAtlas("")
+        entry.bgTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
+
+        if style == "Solid-Circle" then
+            ApplyCircleMask()
+        else
+            RemoveCircleMask()
+        end
+    end
+
+    entry.bgFrame:Show()
 end
 
 local function GetOrCreatePoolEntry(button, index)
@@ -184,10 +426,15 @@ local function ApplyItemLevelToButton(button, item, itemLink, classID, itemLocat
     button.onewow_ilvl:SetFont(fontPath, cfg.fontSize or 10, cfg.fontOutline or "OUTLINE")
 
     local position  = cfg.position or "TOPRIGHT"
-    local offsets   = PositionOffsets[position] or {0, 0}
     local container = GetOrCreateContainer(button)
     button.onewow_ilvl:ClearAllPoints()
-    button.onewow_ilvl:SetPoint(position, container, position, offsets[1], offsets[2])
+    local outerData = OuterPositionData[position]
+    if outerData then
+        button.onewow_ilvl:SetPoint("CENTER", container, outerData[1], outerData[2], outerData[3])
+    else
+        local offsets = PositionOffsets[position] or {0, 0}
+        button.onewow_ilvl:SetPoint(position, container, position, offsets[1], offsets[2])
+    end
 
     if cfg.useQualityColors then
         local quality = item and item:GetItemQuality() or select(3, C_Item.GetItemInfo(itemLink)) or 1
@@ -256,8 +503,10 @@ local function SyncSearchDim(button)
             if entry.frame and entry.frame:IsShown() then
                 if isDimmed then
                     entry.texture:SetAlpha(0.2)
+                    if entry.bgFrame then entry.bgFrame:SetAlpha(0.2) end
                 else
                     entry.texture:SetAlpha(entry.configAlpha or 1.0)
+                    if entry.bgFrame then entry.bgFrame:SetAlpha(1.0) end
                 end
             end
         end
@@ -296,18 +545,32 @@ local function ApplyOverlayToButton(button, overlayId, positionIndex)
     local position  = cfg.position or "TOPRIGHT"
     local scale     = cfg.scale or 1.0
     local alpha     = math.min(cfg.alpha or 1.0, 1.0)
-    local offsets   = PositionOffsets[position] or {0, 0}
     local bw, bh    = GetButtonVisualSize(button)
     local baseSize  = math.min(bw or 37, bh or 37) * 0.54
     local finalSize = baseSize * scale
 
     entry.frame:ClearAllPoints()
-    entry.frame:SetPoint(position, container, position, offsets[1], offsets[2])
+    local outerData = OuterPositionData[position]
+    if outerData then
+        entry.frame:SetPoint("CENTER", container, outerData[1], outerData[2], outerData[3])
+        entry.frame:SetFrameStrata("HIGH")
+        entry.frame:SetFrameLevel(button:GetFrameLevel() + 10)
+    else
+        local offsets = PositionOffsets[position] or {0, 0}
+        entry.frame:SetPoint(position, container, position, offsets[1], offsets[2])
+        entry.frame:SetFrameStrata(container:GetFrameStrata())
+        entry.frame:SetFrameLevel(button:GetFrameLevel() + 3)
+    end
     entry.frame:SetSize(finalSize, finalSize)
     OneWoW.OverlayIcons:ApplyToTexture(entry.texture, iconName)
-    entry.texture:SetAlpha(alpha)
-    entry.configAlpha = alpha
+    if iconName ~= "BLANK" then
+        entry.texture:SetAlpha(alpha)
+    end
+    entry.configAlpha = (iconName == "BLANK") and 0 or alpha
     entry.frame:Show()
+
+    ApplyIconEffect(entry, cfg.effect)
+    ApplyBackground(entry, cfg, finalSize, button.onewow_itemLink)
 end
 
 -- Returns: true = collectible AND already known/collected
@@ -473,6 +736,29 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
         end
     end
 
+    if IsOverlayEnabled("transmog") then
+        if classID == Enum.ItemClass.Weapon or classID == Enum.ItemClass.Armor then
+            local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
+            if equipLoc and equipLoc ~= "" and equipLoc ~= "INVTYPE_NON_EQUIP"
+                and equipLoc ~= "INVTYPE_TRINKET" and equipLoc ~= "INVTYPE_FINGER"
+                and equipLoc ~= "INVTYPE_NECK" then
+                if C_TransmogCollection then
+                    local sourceID = select(2, C_TransmogCollection.GetItemInfo(itemLink))
+                    if sourceID then
+                        local known = C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID)
+                        if not known then
+                            local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
+                            if sourceInfo and sourceInfo.isCollected then known = true end
+                        end
+                        if not known then
+                            hits[#hits + 1] = "transmog"
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     if IsOverlayEnabled("mounts") then
         if isMisc and subclassID == Enum.ItemMiscellaneousSubclass.Mount then
             hits[#hits + 1] = "mounts"
@@ -500,6 +786,7 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
             hits[#hits + 1] = "reagents"
         end
     end
+
 
     if IsOverlayEnabled("recipe") then
         if classID == Enum.ItemClass.Recipe then
@@ -554,6 +841,30 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
         end
     end
 
+    if IsOverlayEnabled("upgrade") then
+        if itemLocation and C_Item.DoesItemExist(itemLocation) then
+            local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
+            if equipLoc and equipLoc ~= "" and equipLoc ~= "INVTYPE_NON_EQUIP" then
+                local ilvl = C_Item.GetCurrentItemLevel(itemLocation)
+                if ilvl then
+                    local invType = C_Item.GetItemInventoryTypeByID(itemID)
+                    local slot = invType and INVTYPE_TO_SLOT[invType]
+                    if slot and slot > 0 then
+                        local equippedLink = GetInventoryItemLink("player", slot)
+                        if equippedLink then
+                            local equippedIlvl = C_Item.GetDetailedItemLevelInfo(equippedLink)
+                            if equippedIlvl and ilvl > equippedIlvl then
+                                hits[#hits + 1] = "upgrade"
+                            end
+                        else
+                            hits[#hits + 1] = "upgrade"
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     return hits
 end
 
@@ -587,6 +898,7 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
     end
 
     CleanButton(button)
+    button.onewow_itemLink = itemLink
 
     local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemLink)
     if classID then

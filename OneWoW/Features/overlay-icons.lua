@@ -4,6 +4,7 @@ OneWoW.OverlayIcons = {}
 local OverlayIcons = OneWoW.OverlayIcons
 
 local iconDisplayNames = {
+    ["BLANK"]        = "Blank (No Icon)",
     ["icon-add"]     = "Add Icon",
     ["icon-alert"]   = "Alert Icon",
     ["icon-alliance"]= "Alliance Icon",
@@ -59,11 +60,17 @@ local iconDisplayNames = {
     ["shop-icon-housing-mounts-up"]        = "Housing Mount",
     ["shop-icon-housing-pets-selected"]    = "Housing Pet",
     ["Perks-ShoppingCart"]                 = "Shopping Cart",
-    ["ui-achievement-shield-2"]            = "Achievement Shield",
+    ["ui-achievement-shield-2"]             = "Achievement Shield",
+    ["Battlenet-ClientIcon-WoW"]            = "Battle.net WoW",
+    ["BfAMission-Icon-HUB"]                 = "BfA Hub",
+    ["BfAMission-Icon-Normal"]              = "BfA Mission",
+    ["midnight-beta-access"]                = "Midnight Beta",
+    ["checkmark-minimal-disabled"]          = "Checkmark Disabled",
 }
 
 function OverlayIcons:GetIconList()
     return {
+        "BLANK",
         "icon-add",
         "icon-alert",
         "icon-alliance",
@@ -118,6 +125,11 @@ function OverlayIcons:GetIconList()
         "shop-icon-housing-pets-selected",
         "Perks-ShoppingCart",
         "ui-achievement-shield-2",
+        "Battlenet-ClientIcon-WoW",
+        "BfAMission-Icon-HUB",
+        "BfAMission-Icon-Normal",
+        "midnight-beta-access",
+        "checkmark-minimal-disabled",
     }
 end
 
@@ -145,6 +157,11 @@ end
 
 function OverlayIcons:ApplyToTexture(texture, iconName)
     if not texture or not iconName then return end
+    if iconName == "BLANK" then
+        texture:SetTexture(nil)
+        texture:SetAlpha(0)
+        return
+    end
     if self:IsCustomTexture(iconName) then
         local path = self:GetTexturePath(iconName)
         if path then texture:SetTexture(path) end
