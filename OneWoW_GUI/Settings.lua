@@ -246,12 +246,28 @@ local dropdownBackdrop = {
 }
 
 local function CreateDropdownMenu(parent, items, onSelect)
-    local menu = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local overlay = CreateFrame("Button", nil, UIParent)
+    overlay:SetAllPoints(UIParent)
+    overlay:SetFrameStrata("FULLSCREEN_DIALOG")
+    overlay:SetFrameLevel(0)
+    overlay:EnableMouse(true)
+    overlay:RegisterForClicks("AnyDown", "AnyUp")
+
+    local menu = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
     menu:SetFrameStrata("FULLSCREEN_DIALOG")
+    menu:SetFrameLevel(10)
+    menu:SetClampedToScreen(true)
     menu:SetBackdrop(dropdownBackdrop)
     menu:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     menu:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     menu:EnableMouse(true)
+
+    overlay:SetScript("OnClick", function()
+        menu:Hide()
+    end)
+    menu:SetScript("OnHide", function()
+        overlay:Hide()
+    end)
 
     local yOff = -4
     local maxWidth = 180
@@ -296,22 +312,17 @@ local function CreateDropdownMenu(parent, items, onSelect)
     end
 
     menu:SetSize(maxWidth + 16, math.abs(yOff) + 8)
-    menu:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", 0, -2)
 
-    menu:SetScript("OnShow", function(self)
-        local timeOutside = 0
-        self:SetScript("OnUpdate", function(self2, elapsed)
-            if not MouseIsOver(menu) and not MouseIsOver(parent) then
-                timeOutside = timeOutside + elapsed
-                if timeOutside > 1.0 then
-                    self2:Hide()
-                    self2:SetScript("OnUpdate", nil)
-                end
-            else
-                timeOutside = 0
-            end
-        end)
-    end)
+    local screenH = UIParent:GetHeight()
+    local parentBottom = parent:GetBottom() or 0
+    local menuH = math.abs(yOff) + 8
+    local openUpward = parentBottom < menuH and (screenH - (parent:GetTop() or screenH)) < parentBottom
+
+    if openUpward then
+        menu:SetPoint("BOTTOMLEFT", parent, "TOPLEFT", 0, 2)
+    else
+        menu:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", 0, -2)
+    end
 
     return menu
 end
@@ -451,21 +462,42 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     themeArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
 
     local themeMenuRef = nil
+    local themeOverlayRef = nil
     themeDropdown:SetScript("OnClick", function(btn)
         if themeMenuRef and themeMenuRef:IsShown() then
             themeMenuRef:Hide()
             return
         end
 
-        local menu = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+        local overlay = CreateFrame("Button", nil, UIParent)
+        overlay:SetAllPoints(UIParent)
+        overlay:SetFrameStrata("FULLSCREEN_DIALOG")
+        overlay:SetFrameLevel(0)
+        overlay:EnableMouse(true)
+        overlay:RegisterForClicks("AnyDown", "AnyUp")
+        themeOverlayRef = overlay
+
+        local menu = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
         themeMenuRef = menu
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
+        menu:SetFrameLevel(10)
+        menu:SetClampedToScreen(true)
         menu:SetSize(240, 318)
-        menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
         menu:SetBackdrop(dropdownBackdrop)
         menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
         menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         menu:EnableMouse(true)
+
+        local screenH = UIParent:GetHeight()
+        local btnBottom = btn:GetBottom() or 0
+        if btnBottom < 318 and (screenH - (btn:GetTop() or screenH)) < btnBottom then
+            menu:SetPoint("BOTTOMLEFT", btn, "TOPLEFT", 0, 2)
+        else
+            menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
+        end
+
+        overlay:SetScript("OnClick", function() menu:Hide() end)
+        menu:SetScript("OnHide", function() overlay:Hide() end)
 
         local scrollFrame = CreateFrame("ScrollFrame", nil, menu)
         scrollFrame:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
@@ -528,15 +560,6 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
         scrollBar:SetMinMaxValues(0, maxScroll)
         scrollFrame:SetVerticalScroll(0)
-        menu:SetScript("OnShow", function(self)
-            local timeOutside = 0
-            self:SetScript("OnUpdate", function(self2, elapsed)
-                if not MouseIsOver(menu) and not MouseIsOver(btn) then
-                    timeOutside = timeOutside + elapsed
-                    if timeOutside > 1.0 then self2:Hide() self2:SetScript("OnUpdate", nil) end
-                else timeOutside = 0 end
-            end)
-        end)
 
         menu:Show()
     end)
@@ -592,21 +615,42 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     fontArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
 
     local fontMenuRef = nil
+    local fontOverlayRef = nil
     fontDropdown:SetScript("OnClick", function(btn)
         if fontMenuRef and fontMenuRef:IsShown() then
             fontMenuRef:Hide()
             return
         end
 
-        local menu = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+        local overlay = CreateFrame("Button", nil, UIParent)
+        overlay:SetAllPoints(UIParent)
+        overlay:SetFrameStrata("FULLSCREEN_DIALOG")
+        overlay:SetFrameLevel(0)
+        overlay:EnableMouse(true)
+        overlay:RegisterForClicks("AnyDown", "AnyUp")
+        fontOverlayRef = overlay
+
+        local menu = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
         fontMenuRef = menu
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
+        menu:SetFrameLevel(10)
+        menu:SetClampedToScreen(true)
         menu:SetSize(260, 318)
-        menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
         menu:SetBackdrop(dropdownBackdrop)
         menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
         menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         menu:EnableMouse(true)
+
+        local screenH = UIParent:GetHeight()
+        local btnBottom = btn:GetBottom() or 0
+        if btnBottom < 318 and (screenH - (btn:GetTop() or screenH)) < btnBottom then
+            menu:SetPoint("BOTTOMLEFT", btn, "TOPLEFT", 0, 2)
+        else
+            menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
+        end
+
+        overlay:SetScript("OnClick", function() menu:Hide() end)
+        menu:SetScript("OnHide", function() overlay:Hide() end)
 
         local scrollFrame = CreateFrame("ScrollFrame", nil, menu)
         scrollFrame:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
@@ -678,16 +722,6 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
         scrollBar:SetMinMaxValues(0, maxScroll)
         scrollFrame:SetVerticalScroll(0)
-
-        menu:SetScript("OnShow", function(self)
-            local timeOutside = 0
-            self:SetScript("OnUpdate", function(self2, elapsed)
-                if not MouseIsOver(menu) and not MouseIsOver(btn) then
-                    timeOutside = timeOutside + elapsed
-                    if timeOutside > 1.0 then self2:Hide() self2:SetScript("OnUpdate", nil) end
-                else timeOutside = 0 end
-            end)
-        end)
 
         menu:Show()
     end)

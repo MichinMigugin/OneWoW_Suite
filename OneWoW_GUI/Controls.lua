@@ -9,6 +9,8 @@ local Constants = OneWoW_GUI.Constants
 local noop = OneWoW_GUI.noop
 
 local _dropdownMenuCount = 0
+local _activeDropdownMenu = nil
+local _activeDropdownOverlay = nil
 
 function OneWoW_GUI:CreateToggleRow(parent, options)
     options = options or {}
@@ -177,20 +179,57 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
             return
         end
 
+        if _activeDropdownMenu and _activeDropdownMenu:IsShown() then
+            _activeDropdownMenu:Hide()
+        end
+        if _activeDropdownOverlay and _activeDropdownOverlay:IsShown() then
+            _activeDropdownOverlay:Hide()
+        end
+
         local items = buildItems and buildItems() or {}
 
         _dropdownMenuCount = _dropdownMenuCount + 1
         local uid = _dropdownMenuCount
 
-        local menu = CreateFrame("Frame", nil, self, "BackdropTemplate")
+        local overlay = CreateFrame("Button", nil, UIParent)
+        overlay:SetAllPoints(UIParent)
+        overlay:SetFrameStrata("FULLSCREEN_DIALOG")
+        overlay:SetFrameLevel(0)
+        overlay:EnableMouse(true)
+        overlay:RegisterForClicks("AnyDown", "AnyUp")
+
+        local menu = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
         self._menu = menu
+        _activeDropdownMenu = menu
+        _activeDropdownOverlay = overlay
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
+        menu:SetFrameLevel(10)
+        menu:SetClampedToScreen(true)
         menu:SetSize(self:GetWidth() + 20, menuHeight)
-        menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
+
+        local screenH = UIParent:GetHeight()
+        local dropdownBottom = self:GetBottom() or 0
+        local spaceBelow = dropdownBottom
+        local spaceAbove = screenH - (self:GetTop() or screenH)
+        local openUpward = spaceBelow < menuHeight and spaceAbove > spaceBelow
+
+        if openUpward then
+            menu:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 2)
+        else
+            menu:SetPoint("TOPLEFT", self, "BOTTOMLEFT", 0, -2)
+        end
+
         menu:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
         menu:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         menu:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         menu:EnableMouse(true)
+
+        overlay:SetScript("OnClick", function()
+            menu:Hide()
+        end)
+        menu:SetScript("OnHide", function()
+            overlay:Hide()
+        end)
 
         local searchBox
         local contentTopY = -2
@@ -388,6 +427,13 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
 
         renderList("")
 
+        local contentHeight = scrollChild:GetHeight() or 28
+        local searchHeight = searchable and 36 or 0
+        local dynamicHeight = contentHeight + searchHeight + 6
+        local finalHeight = math.min(dynamicHeight, menuHeight)
+        finalHeight = math.max(finalHeight, 40)
+        menu:SetHeight(finalHeight)
+
         if searchBox then
             searchBox:SetScript("OnTextChanged", function(s)
                 renderList(s:GetText():lower())
@@ -401,21 +447,6 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                 end
             end)
         end
-
-        menu:SetScript("OnShow", function(m)
-            local timeOutside = 0
-            m:SetScript("OnUpdate", function(m2, elapsed)
-                if not MouseIsOver(menu) and not MouseIsOver(self) and (not searchBox or not searchBox:HasFocus()) then
-                    timeOutside = timeOutside + elapsed
-                    if timeOutside > 0.5 then
-                        m2:Hide()
-                        m2:SetScript("OnUpdate", nil)
-                    end
-                else
-                    timeOutside = 0
-                end
-            end)
-        end)
 
         menu:Show()
         if searchBox then
