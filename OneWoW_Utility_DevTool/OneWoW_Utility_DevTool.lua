@@ -391,6 +391,20 @@ function Addon:CopyToClipboard(text)
     self:Print("Press Ctrl+C to copy, then close the window.")
 end
 
+function Addon:ToggleMainWindow()
+    if not self.UI then return end
+    if self.UI.mainFrame and self.UI.mainFrame:IsShown() then
+        self.UI:Hide()
+    else
+        self.UI:Show()
+        local DU = self.Constants and self.Constants.DEVTOOL_UI
+        local luaTab = (DU and DU.TAB_INDEX_LUA) or 3
+        if self.ErrorLogger and self.ErrorLogger.HasCurrentSessionErrors and self.ErrorLogger:HasCurrentSessionErrors() then
+            self.UI:SelectTab(luaTab)
+        end
+    end
+end
+
 function Addon:OnInitialize()
     self:InitializeDatabase()
 
@@ -481,18 +495,13 @@ frame:SetScript("OnEvent", function(self, event, arg1)
             Addon.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_UtilityDevTool", {
                 label = "DevTool",
                 onClick = function()
-                    if Addon.UI then
-                        if Addon.UI.mainFrame and Addon.UI.mainFrame:IsShown() then
-                            Addon.UI:Hide()
-                        else
-                            Addon.UI:Show()
-                        end
-                    end
+                    Addon:ToggleMainWindow()
                 end,
                 onRightClick = function()
                     if Addon.UI then
+                        local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI
                         Addon.UI:Show()
-                        Addon.UI:SelectTab(8)
+                        Addon.UI:SelectTab((DU and DU.TAB_INDEX_SETTINGS) or 8)
                     end
                 end,
                 onTooltip = function(frame)
@@ -510,20 +519,15 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         end
         if _G.OneWoW then
             _G.OneWoW:RegisterMinimap("OneWoW_UtilityDevTool", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_DEVTOOLS"]) or "Open DevTools", nil, function()
-                if Addon.UI then
-                    if Addon.UI.mainFrame and Addon.UI.mainFrame:IsShown() then
-                        Addon.UI:Hide()
-                    else
-                        Addon.UI:Show()
-                    end
-                end
+                Addon:ToggleMainWindow()
             end)
         end
         if Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad then
             C_Timer.After(0.5, function()
                 if Addon.UI then
+                    local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI
                     Addon.UI:Show()
-                    Addon.UI:SelectTab(7)
+                    Addon.UI:SelectTab((DU and DU.TAB_INDEX_MONITOR) or 7)
                 end
             end)
         end
@@ -545,20 +549,11 @@ SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
         return
     end
 
-    if Addon.UI.mainFrame and Addon.UI.mainFrame:IsShown() then
-        Addon.UI:Hide()
-    else
-        Addon.UI:Show()
-    end
+    Addon:ToggleMainWindow()
 end
 
 _G["1WoW_UtilityDevTool_OnAddonCompartmentClick"] = function(addonName, buttonName)
-    if not Addon.UI then return end
-    if Addon.UI.mainFrame and Addon.UI.mainFrame:IsShown() then
-        Addon.UI:Hide()
-    else
-        Addon.UI:Show()
-    end
+    Addon:ToggleMainWindow()
 end
 
 _G["1WoW_UtilityDevTool_OnAddonCompartmentEnter"] = function(addonName, button)

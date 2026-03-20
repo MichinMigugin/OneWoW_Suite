@@ -28,7 +28,14 @@ function UI:Initialize()
     local TAB_GAP = DU.TAB_GAP or 4
     local TAB_HEIGHT = DU.TAB_HEIGHT or 28
     local NUM_TABS = DU.NUM_TABS or 8
-    local tabTexturesDisabled = DU.TAB_INDEX_TEXTURES_DISABLED or 4
+    local TAB_FRAME = DU.TAB_INDEX_FRAME or 1
+    local TAB_EVENTS = DU.TAB_INDEX_EVENTS or 2
+    local TAB_LUA = DU.TAB_INDEX_LUA or 3
+    local TAB_TEXTURES = DU.TAB_INDEX_TEXTURES or 4
+    local TAB_COLORS = DU.TAB_INDEX_COLORS or 5
+    local TAB_LAYOUT = DU.TAB_INDEX_LAYOUT or 6
+    local TAB_MONITOR = DU.TAB_INDEX_MONITOR or 7
+    local TAB_SETTINGS = DU.TAB_INDEX_SETTINGS or 8
 
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
     local frame = OneWoW_GUI:CreateFrame(UIParent, {
@@ -101,7 +108,7 @@ function UI:Initialize()
         local btn = OneWoW_GUI:CreateButton(frame, { text = tabLabels[i], width = 90, height = TAB_HEIGHT })
         btn:SetID(i)
         btn.isSelected = false
-        if i == 1 then
+        if i == TAB_FRAME then
             btn:SetPoint("TOPLEFT", frame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), tabY)
         else
             btn:SetPoint("LEFT", tabButtons[i - 1], "RIGHT", TAB_GAP, 0)
@@ -161,14 +168,14 @@ function UI:Initialize()
     contentFrame:SetPoint("TOPLEFT",     frame, "TOPLEFT",     OneWoW_GUI:GetSpacing("SM"), -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS") + TAB_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
     contentFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), OneWoW_GUI:GetSpacing("SM"))
 
-    self.tabs[1] = {button = tab1, content = self:CreateFrameInspectorTab(contentFrame)}
-    self.tabs[2] = {button = tab2, content = self:CreateEventMonitorTab(contentFrame)}
-    self.tabs[3] = {button = tab3, content = self:CreateLuaConsoleTab(contentFrame)}
+    self.tabs[TAB_FRAME] = {button = tab1, content = self:CreateFrameInspectorTab(contentFrame)}
+    self.tabs[TAB_EVENTS] = {button = tab2, content = self:CreateEventMonitorTab(contentFrame)}
+    self.tabs[TAB_LUA] = {button = tab3, content = self:CreateLuaConsoleTab(contentFrame)}
 
     local disabledTab = CreateFrame("Frame", nil, contentFrame)
     disabledTab:SetAllPoints(contentFrame)
     disabledTab:Hide()
-    self.tabs[tabTexturesDisabled] = {button = tab4, content = disabledTab}
+    self.tabs[TAB_TEXTURES] = {button = tab4, content = disabledTab}
     tab4:Disable()
     tab4.text:SetTextColor(0.4, 0.4, 0.4)
     tab4:SetScript("OnClick", nil)
@@ -177,10 +184,10 @@ function UI:Initialize()
     tab4:SetScript("OnMouseDown", nil)
     tab4:SetScript("OnMouseUp", nil)
 
-    self.tabs[5] = {button = tab5, content = self:CreateColorToolsTab(contentFrame)}
-    self.tabs[6] = {button = tab6, content = self:CreateLayoutTab(contentFrame)}
-    self.tabs[7] = {button = tab7, content = self:CreateMonitorTab(contentFrame)}
-    self.tabs[8] = {button = tab8, content = self:CreateSettingsTab(contentFrame)}
+    self.tabs[TAB_COLORS] = {button = tab5, content = self:CreateColorToolsTab(contentFrame)}
+    self.tabs[TAB_LAYOUT] = {button = tab6, content = self:CreateLayoutTab(contentFrame)}
+    self.tabs[TAB_MONITOR] = {button = tab7, content = self:CreateMonitorTab(contentFrame)}
+    self.tabs[TAB_SETTINGS] = {button = tab8, content = self:CreateSettingsTab(contentFrame)}
 
     self.mainFrame = frame
     self.contentFrame = contentFrame
@@ -197,23 +204,23 @@ function UI:Initialize()
         end
     end)
 
-    self:SelectTab(1)
+    self:SelectTab(TAB_FRAME)
 end
 
 function UI:SelectTab(tabID)
     local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
-    local tabTexturesDisabled = DU.TAB_INDEX_TEXTURES_DISABLED or 4
-    local tabEvents = DU.TAB_INDEX_EVENTS or 2
+    local TAB_TEXTURES = DU.TAB_INDEX_TEXTURES or 4
+    local TAB_EVENTS = DU.TAB_INDEX_EVENTS or 2
 
-    if tabID == tabTexturesDisabled then return end
+    if tabID == TAB_TEXTURES then return end
     self.currentTab = tabID
 
     for id, tab in pairs(self.tabs) do
-        if id == tabTexturesDisabled then
+        if id == TAB_TEXTURES then
             tab.content:Hide()
         elseif id == tabID then
             tab.content:Show()
-            if id == tabEvents and Addon.EventMonitor then
+            if id == TAB_EVENTS and Addon.EventMonitor then
                 Addon.EventMonitor:UpdateUI()
             end
             tab.button.isSelected = true
