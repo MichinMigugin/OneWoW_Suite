@@ -3,12 +3,8 @@ local AddonName, Addon = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local issecretvalue = issecretvalue
-local issecrettable = issecrettable
-
 local function formatArgForDisplay(arg)
-    if issecretvalue(arg) then return "[secret]" end
-    if type(arg) == "table" and issecrettable(arg) then return "[secret]" end
+    if OneWoW_GUI:IsSecret(arg) then return "[secret]" end
     local s = tostring(arg)
     if #s > 30 then
         return s:sub(1, 27) .. "..."

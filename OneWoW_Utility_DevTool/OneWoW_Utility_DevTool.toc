@@ -5,7 +5,6 @@
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
 ## X-Category: |cFFFFD100OneWoW|r
-## X-BugGrabber-Display: OneWow
 ## SavedVariables: OneWoW_UtilityDevTool_DB
 ## AddonCompartmentFunc: 1WoW_UtilityDevTool_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: 1WoW_UtilityDevTool_OnAddonCompartmentEnter
@@ -41,6 +40,7 @@ OneWoW_Utility_DevTool.lua
 Modules\FrameInspector.lua
 Modules\FrameTree.lua
 Modules\FramePicker.lua
+Modules\ErrorExport.lua
 Modules\ErrorLogger.lua
 Modules\EventMonitor.lua
 Modules\ColorTools.lua

@@ -384,10 +384,10 @@ function Addon:SearchFramesByName(searchText)
     return results
 end
 
-function Addon:CopyToClipboard(text)
+function Addon:CopyToClipboard(text, title)
     local lib = LibStub("LibCopyPaste-1.0")
     -- Omit readOnly: when true, SetReadOnly captures GetText() from a hidden EditBox (which can return ""), then OnTextChanged overwrites with that empty value
-    lib:Copy("Copy", text)
+    lib:Copy(title or "Copy", text)
     self:Print("Press Ctrl+C to copy, then close the window.")
 end
 

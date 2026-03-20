@@ -46,6 +46,8 @@ function UI:Initialize()
     })
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("MEDIUM")
+    -- Explicit level so OneWoW_GUI AttachFilterMenu can place overlay below and menu above this frame (same strata).
+    frame:SetFrameLevel(10)
     frame:SetToplevel(true)
     frame:SetMovable(true)
     frame:EnableMouse(true)

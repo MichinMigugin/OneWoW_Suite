@@ -24,6 +24,11 @@ function Addon:InitializeDatabase()
             session = 0,
             errors = {},
             playSound = false,
+            clearOnReload = false,
+            keepLastSessions = 10,
+            maxErrors = 100,
+            soundChoice = "off",
+            copyFormat = "plain",
         },
     }
 
@@ -33,6 +38,12 @@ function Addon:InitializeDatabase()
         for key, value in pairs(defaults) do
             if OneWoW_UtilityDevTool_DB[key] == nil then
                 OneWoW_UtilityDevTool_DB[key] = value
+            elseif key == "errorDB" and type(OneWoW_UtilityDevTool_DB.errorDB) == "table" then
+                for ek, ev in pairs(value) do
+                    if OneWoW_UtilityDevTool_DB.errorDB[ek] == nil then
+                        OneWoW_UtilityDevTool_DB.errorDB[ek] = ev
+                    end
+                end
             end
         end
     end

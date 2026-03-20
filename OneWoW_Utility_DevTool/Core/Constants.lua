@@ -8,6 +8,11 @@ local unitSpellCastCommonArgs = { "unit", "castGUID", "spellID", "castBarID" }
 local itemLockCommonArgs = { "bagOrSlotIdx", "slotIdx" }
 
 Addon.Constants = {
+    -- Error logger: EventRegistry name for internal subscribers (e.g. future EventMonitor correlation)
+    ERROR_CAPTURE_EVENT = "OneWoW_DevTool.ErrorCaptured",
+    -- Token-bucket refill rate (errors per second) before throttling capture
+    ERROR_LOGGER_ERRORS_PER_SEC = 10,
+
     EVENT_SELECTOR_CUSTOM_BUFFER = 100,
 
     -- Event viewer color keys; string = OneWoW_GUI theme key, table = {r,g,b,a} for colors not in theme
