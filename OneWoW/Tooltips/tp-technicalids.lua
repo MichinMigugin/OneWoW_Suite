@@ -435,7 +435,6 @@ local function AddHookIDBlock(tooltip, idPairs)
             )
         end
     end
-    tooltip:Show()
 end
 
 local function hook(tableOrGlobal, fn, cb)
