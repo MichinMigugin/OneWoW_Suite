@@ -1,9 +1,23 @@
-local MAJOR, MINOR = "OneWoW_GUI-1.0", 1
+local MAJOR, MINOR = "OneWoW_GUI-1.0", 2
 local OneWoW_GUI, oldMinor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not OneWoW_GUI then return end
 
 OneWoW_GUI.noop = function() end
+
+local issecretvalue_fn = issecretvalue or function() return false end
+local issecrettable_fn = issecrettable or function() return false end
+
+--- True if value must not be used in addon logic or persisted (Midnight secret system).
+function OneWoW_GUI:IsSecret(value)
+    if issecretvalue_fn(value) then
+        return true
+    end
+    if type(value) == "table" and issecrettable_fn(value) then
+        return true
+    end
+    return false
+end
 
 function OneWoW_GUI:GetAddonVersion(addonName)
     if not C_AddOns.DoesAddOnExist(addonName) then return nil end

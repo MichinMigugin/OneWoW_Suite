@@ -789,9 +789,21 @@ OneWoW_GUI:AttachFilterMenu(dropdown, {
 - Hover: BG_HOVER + TEXT_ACCENT
 - Auto-closes after 0.5s when mouse leaves both menu and trigger button
 - ESC: clears search text first, closes menu on second press (searchable only)
-- Menu opens at FULLSCREEN_DIALOG strata
+- Menu opens at DIALOG strata (above the host window)
 - buildItems() called fresh each click (supports dynamic lists)
 - Scroll uses UIPanelScrollFrameTemplate (Lesson 3 compliant)
+
+### Dismiss architecture (OnUpdate hybrid)
+
+`AttachFilterMenu` uses a two-layer dismiss system to close the menu when the user clicks outside it, without consuming the click:
+
+1. **OnUpdate watcher** — The menu runs an `OnUpdate` script that detects mouse-button-down transitions (via `IsMouseButtonDown`) while `IsMouseOver()` is false. Because WoW processes input (delivering `OnClick` to the topmost control) **before** running `OnUpdate`, the clicked control fires first and then the menu hides — both in the same frame. This gives single-click tab switching, sidebar navigation, etc. while a menu is open.
+
+2. **Game-world overlay** — A fullscreen `UIParent` Button sits **below** the host window (`hostLevel - 2`, same strata). It only catches clicks in areas not covered by the host — primarily the 3D game world — preventing unintended NPC targeting or spell casts while a dropdown is open.
+
+Callers do **not** need to add `CloseAttachFilterMenu()` at navigation boundaries (tab switches, list selection, etc.) — the OnUpdate handles dismiss automatically.
+
+`OneWoW_GUI:CloseAttachFilterMenu()` remains available for programmatic teardown (e.g. before reparenting a host frame) but is not required for normal use.
 
 ### Reset dropdown text externally
 ```lua

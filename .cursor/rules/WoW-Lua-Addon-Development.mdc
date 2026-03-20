@@ -355,6 +355,47 @@ divider:ClearAllPoints()
 divider:SetPoint("TOPLEFT", parent, "TOPLEFT", 1, -29)
 ```
 
+### 4.7 Popup / Dropdown Dismiss — OnUpdate Hybrid Pattern
+
+WoW has no click-through or event-bubbling for sibling frames. A fullscreen
+overlay **above** the host catches all clicks but **consumes** them (two-click
+to activate a control). An overlay **below** the host lets controls receive
+clicks but never fires for in-host dismiss.
+
+**Solution — OnUpdate watcher:** WoW processes input (OnClick, OnMouseDown)
+**before** running OnUpdate scripts in the same frame. Use an `OnUpdate` on
+the popup that detects `IsMouseButtonDown` transitions while `IsMouseOver()`
+is false: the clicked control fires first, then OnUpdate hides the popup.
+
+```lua
+-- On the popup/menu frame, after creation:
+local wasDown = IsMouseButtonDown("LeftButton") or IsMouseButtonDown("RightButton")
+menu:SetScript("OnUpdate", function(self)
+    local isDown = IsMouseButtonDown("LeftButton") or IsMouseButtonDown("RightButton")
+    if isDown and not wasDown then
+        if not self:IsMouseOver() then
+            self:Hide()
+        end
+    end
+    wasDown = isDown
+end)
+```
+
+Pair with a **game-world overlay** (fullscreen `UIParent` Button) at
+`hostLevel - 2` (below the host, same strata) to block 3D viewport
+interaction while the popup is open. The overlay only catches clicks in areas
+not covered by the host window.
+
+**Key rules:**
+- Initialize `wasDown` from current button state so a popup opened mid-click
+  doesn't immediately self-close.
+- `IsMouseOver()` checks the frame's bounding rect; all children within
+  those bounds (search box, scroll frame, items) are covered.
+- Do **not** use a fullscreen overlay above the host for dismiss — it
+  consumes the click and forces a second click to activate controls.
+- Do **not** sprinkle explicit close calls at every navigation boundary
+  (tab switches, list selections). The OnUpdate handles this automatically.
+
 ---
 
 ## 5. Secure Execution & Taint
@@ -723,6 +764,13 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 14. **Static strings in UI code.** Never hardcode user-facing strings. Use
     `Addon.Constants` (in `Core/Constants.lua`) or locale tables in
     `Addon/Locales/` (e.g. `L.SAVE`). See section 2.5.
+15. **Fullscreen overlay above host for popup dismiss.** A `UIParent`-parented
+    overlay above the host window catches clicks but **consumes** them —
+    forcing a second click to activate the control underneath. Use the
+    OnUpdate hybrid pattern instead (section 4.7): OnUpdate detects
+    `IsMouseButtonDown` transitions while `IsMouseOver()` is false. Input
+    fires before OnUpdate in the same frame, so both the control action and
+    the dismiss happen on a single click.
 
 ---
 

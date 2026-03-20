@@ -2,6 +2,7 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local CreateFrame = CreateFrame
+local IsMouseButtonDown = IsMouseButtonDown
 local unpack = unpack
 local tinsert = tinsert
 
@@ -11,6 +12,18 @@ local noop = OneWoW_GUI.noop
 local _dropdownMenuCount = 0
 local _activeDropdownMenu = nil
 local _activeDropdownOverlay = nil
+
+--- Dismiss the open AttachFilterMenu popup (menu + overlay). Menus auto-dismiss via OnUpdate when the user
+--- clicks outside their bounds; call this for programmatic teardown (e.g. before reparenting).
+function OneWoW_GUI:CloseAttachFilterMenu()
+    if _activeDropdownMenu then
+        _activeDropdownMenu:Hide()
+    elseif _activeDropdownOverlay then
+        _activeDropdownOverlay:Hide()
+    end
+    _activeDropdownMenu = nil
+    _activeDropdownOverlay = nil
+end
 
 function OneWoW_GUI:CreateToggleRow(parent, options)
     options = options or {}
@@ -179,31 +192,59 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
             return
         end
 
-        if _activeDropdownMenu and _activeDropdownMenu:IsShown() then
+        -- Only one AttachFilterMenu may be open: hide previous menu+overlay and clear globals (avoids orphan overlays if strata/order prevented a clean hide).
+        if _activeDropdownMenu then
             _activeDropdownMenu:Hide()
         end
-        if _activeDropdownOverlay and _activeDropdownOverlay:IsShown() then
+        if _activeDropdownOverlay then
             _activeDropdownOverlay:Hide()
         end
+        _activeDropdownMenu = nil
+        _activeDropdownOverlay = nil
 
         local items = buildItems and buildItems() or {}
 
         _dropdownMenuCount = _dropdownMenuCount + 1
         local uid = _dropdownMenuCount
 
-        local overlay = CreateFrame("Button", nil, UIParent)
+        -- Walk up to the top-level frame under UIParent (e.g. DevTool window). The overlay sits BELOW
+        -- the host so it only blocks game-world clicks; in-host dismiss is handled by the menu's OnUpdate.
+        -- Host OnHide hook handles ESC key close (menu is a UIParent child, won't hide with host).
+        local host = self
+        while host:GetParent() and host:GetParent() ~= UIParent do
+            host = host:GetParent()
+        end
+        if not host._oneWoWFilterMenuOnHide then
+            host._oneWoWFilterMenuOnHide = true
+            host:HookScript("OnHide", function()
+                OneWoW_GUI:CloseAttachFilterMenu()
+            end)
+        end
+        local hostStrata = host:GetFrameStrata()
+        local hostLevel = host:GetFrameLevel() or 0
+
+        -- Use a higher stratum for the menu so it stays visible above toplevel host windows.
+        local menuStrata = hostStrata
+        if hostStrata == "BACKGROUND" or hostStrata == "LOW" or hostStrata == "MEDIUM" or hostStrata == "HIGH" then
+            menuStrata = "DIALOG"
+        end
+        local menuLevel = (menuStrata ~= hostStrata) and 100 or math.max(100, hostLevel + 40)
+
+        local overlay = CreateFrame("Button", "OneWoWGUI_DropOverlay_" .. uid, UIParent)
         overlay:SetAllPoints(UIParent)
-        overlay:SetFrameStrata("FULLSCREEN_DIALOG")
-        overlay:SetFrameLevel(0)
+        overlay:SetFrameStrata(hostStrata)
+        overlay:SetFrameLevel(math.max(0, hostLevel - 2))
         overlay:EnableMouse(true)
         overlay:RegisterForClicks("AnyDown", "AnyUp")
 
-        local menu = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+        local menu = CreateFrame("Frame", "OneWoWGUI_DropMenuFrame_" .. uid, UIParent, "BackdropTemplate")
         self._menu = menu
         _activeDropdownMenu = menu
         _activeDropdownOverlay = overlay
-        menu:SetFrameStrata("FULLSCREEN_DIALOG")
-        menu:SetFrameLevel(10)
+        menu._ownerDropdown = self
+        menu._boundOverlay = overlay
+        menu:SetFrameStrata(menuStrata)
+        menu:SetFrameLevel(menuLevel)
         menu:SetClampedToScreen(true)
         menu:SetSize(self:GetWidth() + 20, menuHeight)
 
@@ -224,18 +265,44 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
         menu:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         menu:EnableMouse(true)
 
+        -- Dismiss on any mouse-down outside the menu's bounds. Input (OnClick on controls)
+        -- is processed before OnUpdate, so the clicked control fires first, then the menu
+        -- closes in the same frame — single click, no consumed events.
+        local wasDown = IsMouseButtonDown("LeftButton") or IsMouseButtonDown("RightButton")
+        menu:SetScript("OnUpdate", function(self)
+            local isDown = IsMouseButtonDown("LeftButton") or IsMouseButtonDown("RightButton")
+            if isDown and not wasDown then
+                if not self:IsMouseOver() then
+                    self:Hide()
+                end
+            end
+            wasDown = isDown
+        end)
+
         overlay:SetScript("OnClick", function()
             menu:Hide()
         end)
-        menu:SetScript("OnHide", function()
-            overlay:Hide()
+        menu:SetScript("OnHide", function(m)
+            local ov = m._boundOverlay
+            if ov then
+                ov:Hide()
+            end
+            if m._ownerDropdown and m._ownerDropdown._menu == m then
+                m._ownerDropdown._menu = nil
+            end
+            if _activeDropdownMenu == m then
+                _activeDropdownMenu = nil
+            end
+            if ov and _activeDropdownOverlay == ov then
+                _activeDropdownOverlay = nil
+            end
         end)
 
         local searchBox
         local contentTopY = -2
 
         if searchable then
-            searchBox = CreateFrame("EditBox", nil, menu, "BackdropTemplate")
+            searchBox = CreateFrame("EditBox", "OneWoWGUI_DropSearchBox_" .. uid, menu, "BackdropTemplate")
             searchBox:SetSize(menu:GetWidth() - 15, 28)
             searchBox:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
             searchBox:SetBackdrop(Constants.BACKDROP_INNER)
@@ -261,7 +328,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
             contentTopY = -36
         end
 
-        local scrollContainer = CreateFrame("Frame", nil, menu)
+        local scrollContainer = CreateFrame("Frame", "OneWoWGUI_DropScrollContainer_" .. uid, menu)
         scrollContainer:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, contentTopY)
         scrollContainer:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -2, 2)
 
@@ -281,8 +348,10 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
 
         local elements = {}
         local activeValue = getActiveValue and getActiveValue() or dropdown._activeValue
+        local elemIdx = 0
 
         for _, item in ipairs(items) do
+            elemIdx = elemIdx + 1
             local itemType = item.type or "item"
 
             if itemType == "header" then
@@ -298,7 +367,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                 tinsert(elements, { frame = divider, type = "divider", height = 10 })
 
             elseif itemType == "checkbox" then
-                local row = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+                local row = CreateFrame("Button", "OneWoWGUI_DropItem_" .. uid .. "_" .. elemIdx, scrollChild, "BackdropTemplate")
                 row:SetHeight(26)
                 row:SetBackdrop(Constants.BACKDROP_SIMPLE)
                 row:SetBackdropColor(0, 0, 0, 0)
@@ -335,7 +404,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                 tinsert(elements, { frame = row, type = "checkbox", height = 26 })
 
             else
-                local btn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+                local btn = CreateFrame("Button", "OneWoWGUI_DropItem_" .. uid .. "_" .. elemIdx, scrollChild, "BackdropTemplate")
                 btn:SetSize(scrollChild:GetWidth() or (menu:GetWidth() - 20), 26)
                 btn:SetBackdrop(Constants.BACKDROP_SIMPLE)
 
@@ -421,15 +490,13 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     yPos = yPos - elem.height
                 end
             end
-            local totalH = math.max(28, math.abs(yPos) + 2)
-            scrollChild:SetHeight(totalH)
+            local actualHeight = math.max(1, math.abs(yPos))
+            scrollChild:SetHeight(actualHeight)
+            return actualHeight
         end
 
-        renderList("")
-
-        local contentHeight = scrollChild:GetHeight() or 28
-        local searchHeight = searchable and 36 or 0
-        local dynamicHeight = contentHeight + searchHeight + 6
+        local contentHeight = renderList("")
+        local dynamicHeight = contentHeight + math.abs(contentTopY) + 2
         local finalHeight = math.min(dynamicHeight, menuHeight)
         finalHeight = math.max(finalHeight, 40)
         menu:SetHeight(finalHeight)
@@ -449,6 +516,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
         end
 
         menu:Show()
+        menu:Raise()
         if searchBox then
             searchBox:SetFocus()
         end
