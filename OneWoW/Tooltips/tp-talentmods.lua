@@ -213,9 +213,6 @@ local function OnSpellTooltip(tooltip, data)
         end
     end
 
-    if tooltip and type(tooltip.Show) == "function" then
-        pcall(tooltip.Show, tooltip)
-    end
 end
 
 C_Timer.After(2, function()
