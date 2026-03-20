@@ -779,7 +779,7 @@ local function OnEvent(self, event, ...)
 
     elseif event == "CHAT_MSG_LOOT" then
         local msg = ...
-        if msg then
+        if msg and not issecretvalue(msg) then
             local itemID = msg:match("item:(%d+)")
             if itemID then
                 OnItemLooted(itemID)
@@ -788,7 +788,7 @@ local function OnEvent(self, event, ...)
 
     elseif event == "PLAYER_TARGET_CHANGED" then
         local targetGUID = UnitGUID("target")
-        if targetGUID and UnitIsDead("target") then
+        if targetGUID and not issecretvalue(targetGUID) and UnitIsDead("target") then
             local npcType, _, _, _, _, npcID = strsplit("-", targetGUID)
             if npcType == "Creature" then
                 OnCreatureKill(npcID)
@@ -797,7 +797,7 @@ local function OnEvent(self, event, ...)
 
     elseif event == "GOSSIP_SHOW" then
         local npcGUID = UnitGUID("npc")
-        if npcGUID then
+        if npcGUID and not issecretvalue(npcGUID) then
             local npcType, _, _, _, _, npcID = strsplit("-", npcGUID)
             if npcType == "Creature" then
                 OnNPCInteract(npcID)
