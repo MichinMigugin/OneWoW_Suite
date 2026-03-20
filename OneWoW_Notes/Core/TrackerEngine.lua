@@ -109,6 +109,7 @@ local function BuildIndices()
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
+        if list.pinned then
         for _, sec in ipairs(list.sections) do
             for _, step in ipairs(sec.steps or {}) do
                 local tt = step.trackType
@@ -186,6 +187,7 @@ local function BuildIndices()
                     end
                 end
             end
+        end
         end
     end
 end
@@ -639,26 +641,38 @@ function TE:FullScan()
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
-        for _, sec in ipairs(list.sections) do
-            if self:IsSectionVisible(sec) then
-                for _, step in ipairs(sec.steps or {}) do
-                    if self:IsStepVisible(step, sec) then
-                        if step.trackType ~= "manual" and step.trackType ~= "spell_cast" and
-                           step.trackType ~= "kill_count" and step.trackType ~= "npc_interact" and
-                           step.trackType ~= "loot_item" then
-                            self:EvaluateStep(listID, sec.key, step)
-                        end
+        if list.pinned then
+            self:EvaluateList(listID)
+        end
+    end
 
-                        if step.objectives then
-                            for _, obj in ipairs(step.objectives) do
-                                if obj.type ~= "manual" and obj.type ~= "spell_cast" and
-                                   obj.type ~= "kill_count" and obj.type ~= "npc_interact" and
-                                   obj.type ~= "loot_item" then
-                                    local current, max = self:EvaluateObjective(obj)
-                                    if current ~= nil then
-                                        local complete = max and max > 0 and current >= max
-                                        TD:SetObjectiveComplete(listID, sec.key, step.key, obj.key, complete)
-                                    end
+    FireCallbacks("OnScanComplete")
+    self:RefreshAllPinnedWindows()
+end
+
+function TE:EvaluateList(listID)
+    local list = TD:GetList(listID)
+    if not list then return end
+
+    for _, sec in ipairs(list.sections) do
+        if self:IsSectionVisible(sec) then
+            for _, step in ipairs(sec.steps or {}) do
+                if self:IsStepVisible(step, sec) then
+                    if step.trackType ~= "manual" and step.trackType ~= "spell_cast" and
+                       step.trackType ~= "kill_count" and step.trackType ~= "npc_interact" and
+                       step.trackType ~= "loot_item" then
+                        self:EvaluateStep(listID, sec.key, step)
+                    end
+
+                    if step.objectives then
+                        for _, obj in ipairs(step.objectives) do
+                            if obj.type ~= "manual" and obj.type ~= "spell_cast" and
+                               obj.type ~= "kill_count" and obj.type ~= "npc_interact" and
+                               obj.type ~= "loot_item" then
+                                local current, max = self:EvaluateObjective(obj)
+                                if current ~= nil then
+                                    local complete = max and max > 0 and current >= max
+                                    TD:SetObjectiveComplete(listID, sec.key, step.key, obj.key, complete)
                                 end
                             end
                         end
@@ -667,9 +681,6 @@ function TE:FullScan()
             end
         end
     end
-
-    FireCallbacks("OnScanComplete")
-    self:RefreshAllPinnedWindows()
 end
 
 local function OnSpellCast(spellID)
@@ -902,6 +913,8 @@ function TE:CreatePinnedWindow(listID)
     if win then
         pinnedWindows[listID] = win
         list.pinned = true
+        BuildIndices()
+        self:EvaluateList(listID)
     end
     return win
 end
@@ -915,6 +928,7 @@ function TE:DestroyPinnedWindow(listID)
     if list then
         list.pinned = false
     end
+    BuildIndices()
 end
 
 function TE:GetPinnedWindow(listID)

@@ -328,6 +328,10 @@ function ns.UI.CreateTrackerTab(parent)
         local list = TD:GetList(listID)
         if not list then return end
 
+        if not list.pinned then
+            TE:EvaluateList(listID)
+        end
+
         emptyLabel:Hide()
         detailTitle:SetText(list.title or "Untitled")
 
@@ -439,6 +443,9 @@ function ns.UI.CreateTrackerTab(parent)
         local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_DELETE"] or "Delete", height = 22 })
         deleteBtn:SetPoint("LEFT", resetBtn, "RIGHT", 4, 0)
         deleteBtn:SetScript("OnClick", function()
+            if list._bundledID and TP then
+                TP:OnBundledDeleted(list._bundledID)
+            end
             TE:DestroyPinnedWindow(list.id)
             TD:RemoveList(list.id)
             selectedListID = nil

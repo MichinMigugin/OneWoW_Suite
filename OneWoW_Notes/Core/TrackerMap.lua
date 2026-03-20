@@ -118,6 +118,7 @@ function TrackerDataProviderMixin:RefreshAllData(fromOnShow)
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
+        if list.pinned then
         for _, sec in ipairs(list.sections) do
             for _, step in ipairs(sec.steps or {}) do
                 if step.mapID and tonumber(step.mapID) == mapID and step.coordX and step.coordY then
@@ -170,6 +171,7 @@ function TrackerDataProviderMixin:RefreshAllData(fromOnShow)
                     end
                 end
             end
+        end
         end
     end
 end
@@ -232,6 +234,7 @@ function TM:UpdateMinimapPins()
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
+        if list.pinned then
         for _, sec in ipairs(list.sections) do
             for _, step in ipairs(sec.steps or {}) do
                 if step.mapID and tonumber(step.mapID) == currentMap and step.coordX and step.coordY then
@@ -254,6 +257,7 @@ function TM:UpdateMinimapPins()
                     end
                 end
             end
+        end
         end
     end
 end
