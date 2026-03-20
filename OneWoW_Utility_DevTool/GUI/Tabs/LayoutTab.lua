@@ -15,14 +15,19 @@ function Addon.UI:CreateLayoutTab(parent)
     gridLabel:SetText(Addon.L and Addon.L["LABEL_GRID_OVERLAY"] or "Grid Overlay")
     gridLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local toggleBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_TOGGLE_GRID"] or "Toggle Grid", width = 120, height = 25 })
-    toggleBtn:SetPoint("TOPLEFT", gridLabel, "BOTTOMLEFT", 0, -10)
+    local colGap = 16
+    local toggleBtn = OneWoW_GUI:CreateFitTextButton(tab, {
+        text = Addon.L and Addon.L["BTN_TOGGLE_GRID"] or "Toggle Grid",
+        height = 25,
+        minWidth = 120,
+    })
     toggleBtn:SetScript("OnClick", function()
         Addon.UI:ToggleGrid()
     end)
 
     local sizeLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    sizeLabel:SetPoint("TOPLEFT", toggleBtn, "BOTTOMLEFT", 0, -15)
+    -- Sliders anchor from grid title; horizontal inset = toggle width + gap (same as post-align toggle edge).
+    sizeLabel:SetPoint("TOPLEFT", gridLabel, "BOTTOMLEFT", toggleBtn:GetWidth() + colGap, -10)
     sizeLabel:SetText((Addon.L and Addon.L["LABEL_GRID_SIZE"] or "Grid Size:") .. " 50")
     sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
@@ -43,8 +48,9 @@ function Addon.UI:CreateLayoutTab(parent)
     })
     sizeContainer:SetPoint("TOPLEFT", sizeLabel, "BOTTOMLEFT", 0, -5)
 
+    -- Opacity slider must anchor to the grid slider's right edge, not to the size label's
+    -- right edge (the label is narrower than the 200px track, which stacked both sliders).
     local opacityLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    opacityLabel:SetPoint("TOPLEFT", sizeContainer, "BOTTOMLEFT", 0, -15)
     opacityLabel:SetText((Addon.L and Addon.L["LABEL_OPACITY"] or "Opacity:") .. " 0.3")
     opacityLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
@@ -63,10 +69,24 @@ function Addon.UI:CreateLayoutTab(parent)
             end
         end,
     })
-    opacityContainer:SetPoint("TOPLEFT", opacityLabel, "BOTTOMLEFT", 0, -5)
+    opacityContainer:SetPoint("TOPLEFT", sizeContainer, "TOPRIGHT", 16, 0)
+    opacityLabel:SetPoint("BOTTOMLEFT", opacityContainer, "TOPLEFT", 0, 5)
 
-    local centerBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_TOGGLE_CENTER"] or "Toggle Center Lines", width = 150, height = 25 })
-    centerBtn:SetPoint("TOPLEFT", opacityContainer, "BOTTOMLEFT", 0, -20)
+    -- Zero-width strip: top of grid label through bottom of grid slider (36px control; Low/High text draws below).
+    local sliderStackAlign = CreateFrame("Frame", nil, tab)
+    sliderStackAlign:SetPoint("TOPLEFT", sizeLabel, "TOPLEFT", 0, 0)
+    sliderStackAlign:SetPoint("BOTTOMLEFT", sizeContainer, "BOTTOMLEFT", 0, 0)
+    sliderStackAlign:SetWidth(1)
+    toggleBtn:SetPoint("CENTER", sliderStackAlign, "LEFT", -colGap - toggleBtn:GetWidth() / 2, 0)
+
+    local centerBtn = OneWoW_GUI:CreateFitTextButton(tab, {
+        text = Addon.L and Addon.L["BTN_TOGGLE_CENTER"] or "Toggle Center Lines",
+        height = 25,
+        minWidth = 150,
+    })
+    -- Anchor below the slider track; Low/High labels sit outside the 36px container rect.
+    centerBtn:SetPoint("LEFT", toggleBtn, "LEFT", 0, 0)
+    centerBtn:SetPoint("TOP", sizeContainer, "BOTTOM", 0, -24)
     centerBtn:SetScript("OnClick", function()
         Addon.UI:ToggleCenterLines()
     end)
