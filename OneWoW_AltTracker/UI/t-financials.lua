@@ -10,6 +10,209 @@ local transactionRows = {}
 local currentSortColumn = "date"
 local currentSortAscending = false
 local loginServerTime = 0
+local activeFinancialsTab = nil
+
+local amountDialog
+local itemDialog
+
+local function GetAmountDialog()
+    if amountDialog then return amountDialog end
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_FinEditAmount",
+        title = L["FIN_EDIT_AMOUNT"],
+        width = 300,
+        height = 120,
+        strata = "DIALOG",
+        movable = true,
+        escClose = true,
+    })
+
+    amountDialog = result.frame
+    amountDialog:SetFrameLevel(500)
+    amountDialog._titleBar = result.titleBar
+    amountDialog._contentFrame = result.contentFrame
+
+    local moneyBox = CreateFrame("Frame", "OneWoW_FinAmountInput", result.contentFrame, "MoneyInputFrameTemplate")
+    moneyBox:SetPoint("TOP", result.contentFrame, "TOP", 0, -10)
+    amountDialog.moneyBox = moneyBox
+
+    local saveBtn = OneWoW_GUI:CreateFitTextButton(result.contentFrame, { text = ACCEPT, height = 26 })
+    saveBtn:SetPoint("BOTTOM", result.contentFrame, "BOTTOM", 0, 10)
+    amountDialog.saveBtn = saveBtn
+
+    return amountDialog
+end
+
+local function ShowEditAmountDialog(tx)
+    if not tx or not tx.id then return end
+    local dialog = GetAmountDialog()
+    dialog:Hide()
+    MoneyInputFrame_ResetMoney(dialog.moneyBox)
+
+    local currentGold = math.floor((tx.amount or 0) / 10000)
+    local currentSilver = math.floor(((tx.amount or 0) % 10000) / 100)
+    local currentCopper = (tx.amount or 0) % 100
+    MoneyInputFrame_SetCopper(dialog.moneyBox, currentGold * 10000 + currentSilver * 100 + currentCopper)
+
+    local function doSave()
+        local copper = MoneyInputFrame_GetCopper(dialog.moneyBox)
+        if copper >= 0 then
+            local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+            if AccountingAddon and AccountingAddon.Transactions then
+                AccountingAddon.Transactions:UpdateTransaction(tx.id, { amount = copper })
+                if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                    ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                end
+            end
+        end
+        dialog:Hide()
+    end
+
+    dialog.saveBtn:SetScript("OnClick", doSave)
+    dialog.moneyBox.gold:SetScript("OnEnterPressed", doSave)
+    dialog.moneyBox.silver:SetScript("OnEnterPressed", doSave)
+    dialog.moneyBox.copper:SetScript("OnEnterPressed", doSave)
+
+    dialog:ClearAllPoints()
+    dialog:SetPoint("CENTER")
+    dialog:Show()
+    dialog.moneyBox.gold:SetFocus()
+end
+
+local function GetItemDialog()
+    if itemDialog then return itemDialog end
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_FinEditItem",
+        title = L["FIN_EDIT_ITEM"],
+        width = 350,
+        height = 110,
+        strata = "DIALOG",
+        movable = true,
+        escClose = true,
+    })
+
+    itemDialog = result.frame
+    itemDialog:SetFrameLevel(500)
+    itemDialog._contentFrame = result.contentFrame
+
+    local editBox = CreateFrame("EditBox", nil, result.contentFrame, "InputBoxTemplate")
+    editBox:SetSize(300, 22)
+    editBox:SetPoint("TOP", result.contentFrame, "TOP", 0, -10)
+    editBox:SetAutoFocus(false)
+    itemDialog.editBox = editBox
+
+    local saveBtn = OneWoW_GUI:CreateFitTextButton(result.contentFrame, { text = ACCEPT, height = 26 })
+    saveBtn:SetPoint("BOTTOM", result.contentFrame, "BOTTOM", 0, 10)
+    itemDialog.saveBtn = saveBtn
+
+    return itemDialog
+end
+
+local function ShowEditItemNameDialog(tx)
+    if not tx or not tx.id then return end
+    local dialog = GetItemDialog()
+    dialog:Hide()
+
+    dialog.editBox:SetText(tx.itemName or tx.source or "")
+    dialog.editBox:HighlightText()
+
+    local function doSave()
+        local newName = strtrim(dialog.editBox:GetText())
+        if newName ~= "" then
+            local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+            if AccountingAddon and AccountingAddon.Transactions then
+                AccountingAddon.Transactions:UpdateTransaction(tx.id, { itemName = newName })
+                if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                    ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                end
+            end
+        end
+        dialog:Hide()
+    end
+
+    dialog.saveBtn:SetScript("OnClick", doSave)
+    dialog.editBox:SetScript("OnEnterPressed", doSave)
+    dialog.editBox:SetScript("OnEscapePressed", function() dialog:Hide() end)
+
+    dialog:ClearAllPoints()
+    dialog:SetPoint("CENTER")
+    dialog:Show()
+    dialog.editBox:SetFocus()
+end
+
+local function ShowChangeCategoryMenu(tx)
+    if not tx or not tx.id then return end
+    MenuUtil.CreateContextMenu(UIParent, function(ownerRegion, rootDescription)
+        rootDescription:CreateTitle(L["FIN_EDIT_CATEGORY"])
+        for catKey, catLocaleKey in pairs(categoryNames) do
+            rootDescription:CreateButton(L[catLocaleKey], function()
+                local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+                if AccountingAddon and AccountingAddon.Transactions then
+                    AccountingAddon.Transactions:UpdateTransaction(tx.id, { category = catKey })
+                    if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                        ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                    end
+                end
+            end)
+        end
+    end)
+end
+
+local function ShowDeleteConfirmation(tx)
+    if not tx or not tx.id then return end
+    StaticPopupDialogs["ONEWOW_DELETE_TX"] = {
+        text = L["FIN_DELETE_CONFIRM"],
+        button1 = L["FIN_DELETE_ACCEPT"],
+        button2 = CANCEL,
+        OnAccept = function()
+            local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+            if AccountingAddon and AccountingAddon.Transactions then
+                AccountingAddon.Transactions:DeleteTransaction(tx.id)
+                if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                    ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                end
+            end
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        preferredIndex = 3,
+    }
+    StaticPopup_Show("ONEWOW_DELETE_TX")
+end
+
+local function ShowTransactionContextMenu(tx)
+    if not tx then return end
+    MenuUtil.CreateContextMenu(UIParent, function(ownerRegion, rootDescription)
+        rootDescription:CreateTitle(L["FIN_CONTEXT_TITLE"])
+
+        rootDescription:CreateButton(L["FIN_EDIT_AMOUNT"], function()
+            ShowEditAmountDialog(tx)
+        end)
+
+        rootDescription:CreateButton(L["FIN_EDIT_ITEM"], function()
+            ShowEditItemNameDialog(tx)
+        end)
+
+        rootDescription:CreateButton(L["FIN_EDIT_CATEGORY"], function()
+            ShowChangeCategoryMenu(tx)
+        end)
+
+        rootDescription:CreateDivider()
+
+        local deleteBtn = rootDescription:CreateButton(L["FIN_DELETE_TX"], function()
+            ShowDeleteConfirmation(tx)
+        end)
+        deleteBtn:AddInitializer(function(button)
+            local fontString = button.fontString
+            if fontString then
+                fontString:SetTextColor(1, 0.3, 0.3)
+            end
+        end)
+    end)
+end
 
 local loginFrame = CreateFrame("Frame")
 loginFrame:RegisterEvent("PLAYER_LOGIN")
@@ -364,6 +567,7 @@ function ns.UI.CreateFinancialsTab(parent)
     end)
 
     parent.financialsDirty = false
+    activeFinancialsTab = parent
 
     local function SetupRefreshCallback()
         if not _G.OneWoW_AltTracker_Accounting then return false end
@@ -669,6 +873,20 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
                 end
             end
         end
+
+        txRow:HookScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(L["FIN_ROW_TT"], 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        txRow:HookScript("OnLeave", function(self)
+            GameTooltip:Hide()
+        end)
+        txRow:HookScript("OnMouseDown", function(self, button)
+            if button == "RightButton" then
+                ShowTransactionContextMenu(tx)
+            end
+        end)
 
         table.insert(transactionRows, txRow)
         if dt then dt:RegisterRow(txRow) end

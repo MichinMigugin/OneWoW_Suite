@@ -135,6 +135,45 @@ function Transactions:RecordExpense(category, amount, source, item, itemName, qu
     })
 end
 
+function Transactions:DeleteTransaction(txId)
+    if not OneWoW_AltTracker_Accounting_DB or not OneWoW_AltTracker_Accounting_DB.transactions then
+        return false
+    end
+    for i, tx in ipairs(OneWoW_AltTracker_Accounting_DB.transactions) do
+        if tx.id == txId then
+            table.remove(OneWoW_AltTracker_Accounting_DB.transactions, i)
+            ns:InvalidateStatistics()
+            if ns.onNewTransaction then
+                ns.onNewTransaction()
+            end
+            return true
+        end
+    end
+    return false
+end
+
+function Transactions:UpdateTransaction(txId, newData)
+    if not OneWoW_AltTracker_Accounting_DB or not OneWoW_AltTracker_Accounting_DB.transactions then
+        return false
+    end
+    for _, tx in ipairs(OneWoW_AltTracker_Accounting_DB.transactions) do
+        if tx.id == txId then
+            if newData.amount ~= nil then tx.amount = newData.amount end
+            if newData.itemName ~= nil then tx.itemName = newData.itemName end
+            if newData.category ~= nil then tx.category = newData.category end
+            if newData.source ~= nil then tx.source = newData.source end
+            if newData.notes ~= nil then tx.notes = newData.notes end
+            if newData.quantity ~= nil then tx.quantity = newData.quantity end
+            ns:InvalidateStatistics()
+            if ns.onNewTransaction then
+                ns.onNewTransaction()
+            end
+            return true
+        end
+    end
+    return false
+end
+
 function Transactions:RecordTransfer(category, amount, source, item, itemName, quantity, notes)
     return self:RecordTransaction({
         type = "transfer",
