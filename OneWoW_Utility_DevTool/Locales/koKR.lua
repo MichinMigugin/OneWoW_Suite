@@ -88,6 +88,7 @@ Addon.Locales["koKR"] = {
 
     -- Lua Console / Error Logger
     ["LABEL_ERRORS"] = "오류:",
+    ["LUA_TAB_BUGGRABBER_NOTICE"] = "!BugGrabber is handling Lua errors. DevTool mirrors those errors here. Disable !BugGrabber if you only want DevTool's capture.",
     ["BTN_COPY_ERROR"] = "오류 복사",
     ["LABEL_NO_ERROR"] = "선택된 오류 없음",
     ["ERR_SESSION_CURRENT"] = "현재",

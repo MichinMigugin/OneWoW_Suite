@@ -12,6 +12,8 @@ Addon.Constants = {
     ERROR_CAPTURE_EVENT = "OneWoW_DevTool.ErrorCaptured",
     -- Token-bucket refill rate (errors per second) before throttling capture
     ERROR_LOGGER_ERRORS_PER_SEC = 10,
+    -- Standalone !BugGrabber addon folder name (ADDON_LOADED arg); not embedded in DevTool
+    BUGGRABBER_STANDALONE_ADDON = "!BugGrabber",
 
     EVENT_SELECTOR_CUSTOM_BUFFER = 100,
 

@@ -13,6 +13,7 @@ local format = string.format
 local ipairs, type, tostring = ipairs, type, tostring
 local time = time
 local GetTime = GetTime
+local CreateFrame = CreateFrame
 
 local ROW_HEIGHT = 20
 
@@ -136,6 +137,248 @@ ErrorLogger._lastSoundTime = nil
 ErrorLogger._uiRefreshPending = nil
 ErrorLogger._eventFrame = nil
 ErrorLogger._badAddonBlocked = nil
+ErrorLogger._bugGrabberBridgeRegistered = nil
+ErrorLogger._bugGrabberBridgeActive = nil
+ErrorLogger._bugGrabberLoadFrame = nil
+ErrorLogger._bugGrabberCallbackOwner = nil
+
+function ErrorLogger:IsBugGrabberAvailable()
+    local bg = rawget(_G, "BugGrabber")
+    return type(bg) == "table" and type(bg.GetErrorByID) == "function"
+end
+
+function ErrorLogger:IsBugGrabberBridgeActive()
+    return self._bugGrabberBridgeActive and true or false
+end
+
+function ErrorLogger:UpdateLuaTabBugGrabberNotice()
+    local tab = Addon.LuaConsoleTab
+    local notice = tab and tab.bugGrabberNotice
+    local clearBtn = tab and tab.luaClearBtn
+    if not tab or not notice or not clearBtn then
+        return
+    end
+    if self:IsBugGrabberBridgeActive() then
+        local L = Addon.L or {}
+        notice:SetText(L["LUA_TAB_BUGGRABBER_NOTICE"] or "")
+        notice:ClearAllPoints()
+        notice:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
+        notice:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -5, -5)
+        notice:Show()
+        clearBtn:ClearAllPoints()
+        clearBtn:SetPoint("TOPLEFT", notice, "BOTTOMLEFT", 0, -10)
+    else
+        notice:SetText("")
+        notice:Hide()
+        notice:ClearAllPoints()
+        clearBtn:ClearAllPoints()
+        clearBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
+    end
+end
+
+function ErrorLogger:_unregisterAuxEvents()
+    if self._eventFrame then
+        self._eventFrame:UnregisterAllEvents()
+        self._eventFrame:SetScript("OnEvent", nil)
+        self._eventFrame = nil
+    end
+    self._badAddonBlocked = {}
+end
+
+function ErrorLogger:_ensureBugGrabberLateLoadListener()
+    if self._bugGrabberLoadFrame then
+        return
+    end
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("ADDON_LOADED")
+    f:SetScript("OnEvent", function(_, _, addonName)
+        local c = Addon.Constants
+        local want = (c and c.BUGGRABBER_STANDALONE_ADDON) or "!BugGrabber"
+        if addonName ~= want then
+            return
+        end
+        if not ErrorLogger:IsBugGrabberAvailable() then
+            return
+        end
+        ErrorLogger:_registerBugGrabberBridgeOnce()
+        ErrorLogger:_unregisterAuxEvents()
+        ErrorLogger:UpdateLuaTabBugGrabberNotice()
+        f:UnregisterEvent("ADDON_LOADED")
+    end)
+    self._bugGrabberLoadFrame = f
+end
+
+function ErrorLogger:_registerBugGrabberBridgeOnce()
+    if self._bugGrabberBridgeRegistered then
+        return
+    end
+    if not self:IsBugGrabberAvailable() then
+        return
+    end
+    self._bugGrabberBridgeRegistered = true
+    self._bugGrabberBridgeActive = true
+    local owner = {}
+    self._bugGrabberCallbackOwner = owner
+    EventRegistry:RegisterCallback("BugGrabber.BugGrabbed", function(_, tableID)
+        local ok = pcall(function()
+            ErrorLogger:_onBugGrabberBugGrabbed(tableID)
+        end)
+        if not ok then
+            -- keep BugGrabber's callback chain healthy
+        end
+    end, owner)
+    self:UpdateLuaTabBugGrabberNotice()
+end
+
+function ErrorLogger:_onBugGrabberBugGrabbed(tableID)
+    if type(tableID) ~= "string" then
+        return
+    end
+    local bg = rawget(_G, "BugGrabber")
+    if not bg or type(bg.GetErrorByID) ~= "function" then
+        return
+    end
+    local bgErr = bg:GetErrorByID(tableID)
+    if type(bgErr) ~= "table" then
+        return
+    end
+    self:_importFromBugGrabber(bgErr)
+end
+
+function ErrorLogger:_importFromBugGrabber(bgErr)
+    local db = getErrorDB()
+    if not db then
+        return
+    end
+
+    local rawMsg = bgErr.message
+    local msgStr
+    if OneWoW_GUI:IsSecret(rawMsg) then
+        local L = Addon.L or {}
+        msgStr = L["ERR_MSG_SECRET"] or "[Secret error — details withheld by the client]"
+    else
+        msgStr = tostring(rawMsg)
+        if OneWoW_GUI:IsSecret(msgStr) then
+            local L = Addon.L or {}
+            msgStr = L["ERR_MSG_SECRET"] or "[Secret error — details withheld by the client]"
+        end
+    end
+    if msgStr:find("ErrorLogger", 1, true) or msgStr:find("OneWoW_Utility_DevTool", 1, true) then
+        return
+    end
+
+    local isSimple = not (type(bgErr.stack) == "string" and bgErr.stack ~= "")
+    local stackStr = type(bgErr.stack) == "string" and bgErr.stack or ""
+    local localsStr
+    if bgErr.locals == nil then
+        localsStr = ""
+    else
+        localsStr = tostring(bgErr.locals)
+    end
+
+    self:_mergeErrorIntoDB(msgStr, isSimple, stackStr, localsStr)
+end
+
+--- Dedup, trim, notify. Optional stack/locals from BugGrabber (nil = compute from live context when not isSimple).
+function ErrorLogger:_mergeErrorIntoDB(msgStr, isSimple, stackOverride, localsOverride)
+    local db = getErrorDB()
+    if not db then
+        return
+    end
+
+    local errors = db.errors
+    local session = db.session
+    local now = time()
+    local existing, pos = fetchErrorByMessage(errors, msgStr, session)
+
+    local function stackLocalsForNew()
+        if stackOverride ~= nil then
+            return stackOverride, localsOverride or ""
+        end
+        if not isSimple then
+            local stack, level = GetErrorStack()
+            local loc = GetErrorLocals(level)
+            return stack or "", loc and tostring(loc) or ""
+        end
+        return "", ""
+    end
+
+    local function stackLocalsForUpdate()
+        if stackOverride ~= nil then
+            return stackOverride, localsOverride or ""
+        end
+        if not isSimple then
+            local stack, level = GetErrorStack()
+            local loc = GetErrorLocals(level)
+            return stack or "", loc and tostring(loc) or ""
+        end
+        return "", ""
+    end
+
+    if not existing then
+        local errObj = {
+            message = msgStr,
+            session = session,
+            time = now,
+            counter = 1,
+            stack = "",
+            locals = "",
+        }
+        if not isSimple then
+            local st, loc = stackLocalsForNew()
+            errObj.stack = st
+            errObj.locals = loc
+        end
+        tinsert(errors, errObj)
+        trimOldest(errors, maxErrorsCap())
+        self:_afterNewOrUpdated(errObj)
+        return
+    end
+
+    existing.counter = (existing.counter or 1) + 1
+    local prevTime = existing.time
+    if type(prevTime) ~= "number" then
+        prevTime = now
+    end
+    existing.time = now
+
+    if now - prevTime > 10 then
+        tremove(errors, pos)
+        tinsert(errors, existing)
+    end
+
+    if not isSimple and now - prevTime > 120 then
+        local st, loc = stackLocalsForUpdate()
+        existing.stack = st
+        existing.locals = loc
+    end
+
+    trimOldest(errors, maxErrorsCap())
+    self:_afterNewOrUpdated(existing)
+end
+
+function ErrorLogger:_applyErrorThrottle()
+    local rate = throttlePerSec()
+    self._msgsAllowed = self._msgsAllowed + (GetTime() - self._msgsAllowedLastTime) * rate
+    self._msgsAllowedLastTime = GetTime()
+    if self._msgsAllowed < 1 then
+        if not self._paused then
+            if GetTime() > (self._lastThrottleWarn or 0) + 10 then
+                local L = Addon.L or {}
+                Addon:Print(L["ERR_THROTTLE_PAUSED"] or "Too many errors; capture throttled until the flood stops.")
+                self._lastThrottleWarn = GetTime()
+            end
+            self._paused = true
+        end
+        return false
+    end
+    self._paused = false
+    if self._msgsAllowed > rate then
+        self._msgsAllowed = rate
+    end
+    self._msgsAllowed = self._msgsAllowed - 1
+    return true
+end
 
 function ErrorLogger:Initialize()
     local db = getErrorDB()
@@ -177,12 +420,17 @@ function ErrorLogger:Initialize()
     self._msgsAllowedLastTime = GetTime()
     self._paused = false
 
-    self.originalErrorHandler = geterrorhandler()
-    seterrorhandler(function(msg)
-        return ErrorLogger:_onLuaError(msg)
-    end)
-
-    self:_registerAuxEvents()
+    if self:IsBugGrabberAvailable() then
+        self.originalErrorHandler = nil
+        self:_registerBugGrabberBridgeOnce()
+    else
+        self.originalErrorHandler = geterrorhandler()
+        seterrorhandler(function(msg)
+            return ErrorLogger:_onLuaError(msg)
+        end)
+        self:_registerAuxEvents()
+        self:_ensureBugGrabberLateLoadListener()
+    end
 
     C_Timer.After(2, function()
         ErrorLogger:UpdateErrorBadge()
@@ -258,25 +506,9 @@ function ErrorLogger:_captureFromHandler(msg, isSimple)
         return
     end
 
-    local rate = throttlePerSec()
-    self._msgsAllowed = self._msgsAllowed + (GetTime() - self._msgsAllowedLastTime) * rate
-    self._msgsAllowedLastTime = GetTime()
-    if self._msgsAllowed < 1 then
-        if not self._paused then
-            if GetTime() > (self._lastThrottleWarn or 0) + 10 then
-                local L = Addon.L or {}
-                Addon:Print(L["ERR_THROTTLE_PAUSED"] or "Too many errors; capture throttled until the flood stops.")
-                self._lastThrottleWarn = GetTime()
-            end
-            self._paused = true
-        end
+    if not self:_applyErrorThrottle() then
         return
     end
-    self._paused = false
-    if self._msgsAllowed > rate then
-        self._msgsAllowed = rate
-    end
-    self._msgsAllowed = self._msgsAllowed - 1
 
     local msgStr
     if OneWoW_GUI:IsSecret(msg) then
@@ -293,53 +525,7 @@ function ErrorLogger:_captureFromHandler(msg, isSimple)
         return
     end
 
-    local errors = db.errors
-    local session = db.session
-    local now = time()
-    local existing, pos = fetchErrorByMessage(errors, msgStr, session)
-
-    if not existing then
-        local errObj = {
-            message = msgStr,
-            session = session,
-            time = now,
-            counter = 1,
-            stack = "",
-            locals = "",
-        }
-        if not isSimple then
-            local stack, level = GetErrorStack()
-            errObj.stack = stack or ""
-            local loc = GetErrorLocals(level)
-            errObj.locals = loc and tostring(loc) or ""
-        end
-        tinsert(errors, errObj)
-        trimOldest(errors, maxErrorsCap())
-        self:_afterNewOrUpdated(errObj)
-        return
-    end
-
-    existing.counter = (existing.counter or 1) + 1
-    local prevTime = existing.time
-    if type(prevTime) ~= "number" then
-        prevTime = now
-    end
-    existing.time = now
-
-    if now - prevTime > 10 then
-        tremove(errors, pos)
-        tinsert(errors, existing)
-    end
-
-    if not isSimple and now - prevTime > 120 then
-        local stack, level = GetErrorStack()
-        existing.stack = stack or ""
-        local loc = GetErrorLocals(level)
-        existing.locals = loc and tostring(loc) or ""
-    end
-
-    trimOldest(errors, maxErrorsCap())
-    self:_afterNewOrUpdated(existing)
+    self:_mergeErrorIntoDB(msgStr, isSimple, nil, nil)
 end
 
 function ErrorLogger:_afterNewOrUpdated(errObj)
@@ -452,6 +638,8 @@ function ErrorLogger:UpdateUI()
     if not Addon.LuaConsoleTab then
         return
     end
+
+    self:UpdateLuaTabBugGrabberNotice()
 
     local tab = Addon.LuaConsoleTab
     local L = Addon.L or {}

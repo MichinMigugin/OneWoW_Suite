@@ -88,6 +88,7 @@ Addon.Locales["frFR"] = {
 
     -- Lua Console / Error Logger
     ["LABEL_ERRORS"] = "Erreurs:",
+    ["LUA_TAB_BUGGRABBER_NOTICE"] = "!BugGrabber is handling Lua errors. DevTool mirrors those errors here. Disable !BugGrabber if you only want DevTool's capture.",
     ["BTN_COPY_ERROR"] = "Copier l'erreur",
     ["LABEL_NO_ERROR"] = "Aucune erreur sélectionnée",
     ["ERR_SESSION_CURRENT"] = "Actuel",

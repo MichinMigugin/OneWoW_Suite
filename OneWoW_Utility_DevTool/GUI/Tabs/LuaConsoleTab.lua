@@ -55,12 +55,21 @@ function Addon.UI:CreateLuaConsoleTab(parent)
 
     local L = Addon.L or {}
 
+    local bugGrabberNotice = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    bugGrabberNotice:SetWordWrap(true)
+    bugGrabberNotice:SetJustifyH("LEFT")
+    bugGrabberNotice:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+    bugGrabberNotice:Hide()
+
+    tab.bugGrabberNotice = bugGrabberNotice
+
     local clearBtn = OneWoW_GUI:CreateFitTextButton(tab, {
         text = Addon.L and Addon.L["BTN_CLEAR"] or "Clear",
         height = 22,
         minWidth = 72,
     })
     clearBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
+    tab.luaClearBtn = clearBtn
     clearBtn:SetScript("OnClick", function()
         if Addon.ErrorLogger then
             Addon.ErrorLogger:ClearErrors()
@@ -262,11 +271,15 @@ function Addon.UI:CreateLuaConsoleTab(parent)
         end
         refreshDropdownLabels(tab)
         if Addon.ErrorLogger then
+            Addon.ErrorLogger:UpdateLuaTabBugGrabberNotice()
             Addon.ErrorLogger:UpdateUI()
         end
     end)
 
     Addon.LuaConsoleTab = tab
     refreshDropdownLabels(tab)
+    if Addon.ErrorLogger and Addon.ErrorLogger.UpdateLuaTabBugGrabberNotice then
+        Addon.ErrorLogger:UpdateLuaTabBugGrabberNotice()
+    end
     return tab
 end
