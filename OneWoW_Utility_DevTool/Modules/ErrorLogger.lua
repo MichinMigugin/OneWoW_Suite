@@ -105,10 +105,10 @@ local function GetErrorLocals(level)
     return debuglocals(level)
 end
 
-local function fetchErrorByMessage(errors, targetMsg)
+local function fetchErrorByMessage(errors, targetMsg, targetSession)
     for i = #errors, 1, -1 do
         local err = errors[i]
-        if err.message == targetMsg then
+        if err.message == targetMsg and err.session == targetSession then
             return err, i
         end
     end
@@ -296,7 +296,7 @@ function ErrorLogger:_captureFromHandler(msg, isSimple)
     local errors = db.errors
     local session = db.session
     local now = time()
-    local existing, pos = fetchErrorByMessage(errors, msgStr)
+    local existing, pos = fetchErrorByMessage(errors, msgStr, session)
 
     if not existing then
         local errObj = {
@@ -319,40 +319,23 @@ function ErrorLogger:_captureFromHandler(msg, isSimple)
         return
     end
 
-    local oldSession = existing.session
     existing.counter = (existing.counter or 1) + 1
-    existing.session = session
     local prevTime = existing.time
     if type(prevTime) ~= "number" then
         prevTime = now
     end
     existing.time = now
 
-    if not isSimple then
-        if oldSession ~= session then
-            tremove(errors, pos)
-            local stack, level = GetErrorStack()
-            existing.stack = stack or ""
-            local loc = GetErrorLocals(level)
-            existing.locals = loc and tostring(loc) or ""
-            tinsert(errors, existing)
-        else
-            if now - prevTime > 10 then
-                tremove(errors, pos)
-                tinsert(errors, existing)
-            end
-            if now - prevTime > 120 then
-                local stack, level = GetErrorStack()
-                existing.stack = stack or ""
-                local loc = GetErrorLocals(level)
-                existing.locals = loc and tostring(loc) or ""
-            end
-        end
-    else
-        if now - prevTime > 10 then
-            tremove(errors, pos)
-            tinsert(errors, existing)
-        end
+    if now - prevTime > 10 then
+        tremove(errors, pos)
+        tinsert(errors, existing)
+    end
+
+    if not isSimple and now - prevTime > 120 then
+        local stack, level = GetErrorStack()
+        existing.stack = stack or ""
+        local loc = GetErrorLocals(level)
+        existing.locals = loc and tostring(loc) or ""
     end
 
     trimOldest(errors, maxErrorsCap())
