@@ -1,12 +1,12 @@
 ## Interface: 120001, 120005
 ## Title: OneWoW - Data: |cFFFFFFFFQuests|r
-## Version: R6.2603.1622
+## Version: R6.2603.2019
 ## Notes: OneWoW Data Addon that: provides quest data for the Catalog.
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
 ## X-Category: |cFFFFD100OneWoW|r
 ## SavedVariables: OneWoW_CatalogData_Quests_DB
-## RequiredDeps: OneWoW_GUI, OneWoW_Catalog
+## RequiredDeps: OneWoW_Catalog
 ## Category: OneWoW
 ## Group: OneWoW_Catalog
 

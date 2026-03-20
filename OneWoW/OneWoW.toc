@@ -1,6 +1,6 @@
 ## Interface: 120001, 120005
 ## Title: |cFF00FF00OneWoW|r
-## Version: R6.2603.1622
+## Version: R6.2603.2019
 ## Notes: OneWoW - Central Hub for all OneWoW addons
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
@@ -12,7 +12,6 @@
 ## AddonCompartmentFuncOnLeave: 1WoW_OnAddonCompartmentLeave
 ## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
 ## RequiredDeps: OneWoW_GUI
-## OptionalDeps: OneWoW_AltTracker, OneWoW_Catalog, OneWoW_Notes, OneWoW_QoL, OneWoW_DirectDeposit, OneWoW_ShoppingList, OneWoW_Bags, OneWoW_Utility_Extractor, OneWoW_Utility_DevTool
 ## Category: OneWoW
 ## Group: OneWoW
 
