@@ -7,13 +7,12 @@ local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local DEFAULT_THEME_ICON = OneWoW_GUI.Constants.DEFAULT_THEME_ICON
 
-local UI = {}
-Addon.UI = UI
-
-UI.tabs = {}
-UI.currentTab = nil
-
 local L = Addon.L or {}
+local UI = {
+    tabs = {},
+    currentTab = nil,
+}
+Addon.UI = UI
 
 local function StyleContentPanel(panel)
     panel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
@@ -81,14 +80,14 @@ function UI:Initialize()
     local TAB_HEIGHT = 28
     local NUM_TABS = 8
     local tabLabels = {
-        Addon.L and Addon.L["TAB_FRAME"] or "Frame",
-        Addon.L and Addon.L["TAB_EVENTS"] or "Events",
-        Addon.L and Addon.L["TAB_LUA"] or "Lua",
-        Addon.L and Addon.L["TAB_TEXTURES"] or "Textures",
-        Addon.L and Addon.L["TAB_COLORS"] or "Colors",
-        Addon.L and Addon.L["TAB_LAYOUT"] or "Layout",
-        Addon.L and Addon.L["TAB_MONITOR"] or "Monitor",
-        "Settings",
+        Addon.L["TAB_FRAME"],
+        Addon.L["TAB_EVENTS"],
+        Addon.L["TAB_LUA"],
+        Addon.L["TAB_TEXTURES"],
+        Addon.L["TAB_COLORS"],
+        Addon.L["TAB_LAYOUT"],
+        Addon.L["TAB_MONITOR"],
+        Addon.L["TAB_SETTINGS"],
     }
 
     local tabButtons = {}

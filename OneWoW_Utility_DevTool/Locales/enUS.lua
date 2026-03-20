@@ -128,6 +128,7 @@ Addon.Locales["enUS"] = {
     ["DIALOG_TITLE_SEARCH_RESULTS"] = "Search Results",
 
     -- Settings
+    ["TAB_SETTINGS"] = "Settings",
     ["SETTINGS_LANGUAGE_SELECTION"] = "Language",
     ["SETTINGS_LANGUAGE_DESC"] = "Choose your preferred language. Changes apply instantly.",
     ["SETTINGS_THEME_SELECTION"] = "Theme Selection",
