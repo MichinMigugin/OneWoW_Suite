@@ -255,9 +255,9 @@ local function FindAddonIndexByName(name)
     return nil
 end
 
-local function CreateRow(parent, labelText, prevLabel, yOffset, guiLib)
+local function CreateRow(parent, labelText, yOffset, guiLib)
     local label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    label:SetPoint("TOPLEFT", prevLabel, "BOTTOMLEFT", 0, yOffset)
+    label:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     label:SetText(labelText)
     label:SetTextColor(guiLib:GetThemeColor("TEXT_MUTED"))
     label:SetWidth(90)
@@ -268,7 +268,7 @@ local function CreateRow(parent, labelText, prevLabel, yOffset, guiLib)
     value:SetText("--")
     value:SetTextColor(guiLib:GetThemeColor("TEXT_PRIMARY"))
 
-    return label, value
+    return label, value, yOffset - 16
 end
 
 function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
@@ -296,9 +296,8 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     pinnedMinMemory = pinnedBaselineMemory
     pinnedLastMemory = pinnedBaselineMemory
 
-    local ROW_SPACING = -4
     local popup = CreateFrame("Frame", "OneWoW_DevTool_PinnedMonitor", UIParent, "BackdropTemplate")
-    popup:SetSize(280, 270)
+    popup:SetSize(280, 200)
     popup:SetFrameStrata("HIGH")
     popup:SetToplevel(true)
     popup:SetMovable(true)
@@ -343,27 +342,35 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
         MonitorTab:ClosePinnedPopup()
     end)
 
-    local firstAnchor = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    firstAnchor:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 8, 0)
-    firstAnchor:SetText("")
-    firstAnchor:SetHeight(1)
+    local yPos = -30
+    local memLabel, memValue
+    memLabel, memValue, yPos = CreateRow(popup, "Memory:", yPos, OneWoW_GUI)
+    local deltaLabel, deltaValue
+    deltaLabel, deltaValue, yPos = CreateRow(popup, "Delta:", yPos, OneWoW_GUI)
+    local rateLabel, rateValue
+    rateLabel, rateValue, yPos = CreateRow(popup, "Rate:", yPos, OneWoW_GUI)
+    local peakLabel, peakValue
+    peakLabel, peakValue, yPos = CreateRow(popup, "Peak:", yPos, OneWoW_GUI)
+    local minLabel, minValue
+    minLabel, minValue, yPos = CreateRow(popup, "Min:", yPos, OneWoW_GUI)
+    local pctLabel, pctValue
+    pctLabel, pctValue, yPos = CreateRow(popup, "% of Total:", yPos, OneWoW_GUI)
+    local elapsedLabel, elapsedValue
+    elapsedLabel, elapsedValue, yPos = CreateRow(popup, "Elapsed:", yPos, OneWoW_GUI)
+    local samplesLabel, samplesValue
+    samplesLabel, samplesValue, yPos = CreateRow(popup, "Samples:", yPos, OneWoW_GUI)
 
-    local memLabel, memValue = CreateRow(popup, "Memory:", firstAnchor, ROW_SPACING, OneWoW_GUI)
-    local deltaLabel, deltaValue = CreateRow(popup, "Delta:", memLabel, ROW_SPACING, OneWoW_GUI)
-    local rateLabel, rateValue = CreateRow(popup, "Rate:", deltaLabel, ROW_SPACING, OneWoW_GUI)
-    local peakLabel, peakValue = CreateRow(popup, "Peak:", rateLabel, ROW_SPACING, OneWoW_GUI)
-    local minLabel, minValue = CreateRow(popup, "Min:", peakLabel, ROW_SPACING, OneWoW_GUI)
-    local pctLabel, pctValue = CreateRow(popup, "% of Total:", minLabel, ROW_SPACING, OneWoW_GUI)
-    local elapsedLabel, elapsedValue = CreateRow(popup, "Elapsed:", pctLabel, ROW_SPACING, OneWoW_GUI)
-    local samplesLabel, samplesValue = CreateRow(popup, "Samples:", elapsedLabel, ROW_SPACING, OneWoW_GUI)
-
+    yPos = yPos - 6
     local reopenCheck = CreateFrame("CheckButton", nil, popup, "UICheckButtonTemplate")
     reopenCheck:SetSize(20, 20)
-    reopenCheck:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 6, 4)
+    reopenCheck:SetPoint("TOPLEFT", popup, "TOPLEFT", 6, yPos)
     local reopenLabel = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     reopenLabel:SetPoint("LEFT", reopenCheck, "RIGHT", 2, 0)
     reopenLabel:SetText("Reopen on /reload")
     reopenLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local totalHeight = math.abs(yPos) + 30
+    popup:SetHeight(totalHeight)
 
     local db = Addon.db and Addon.db.monitor
     reopenCheck:SetChecked(db and db.pinnedReopenOnReload or false)

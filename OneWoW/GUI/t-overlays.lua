@@ -945,6 +945,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
         if generalEnabled ~= nil then
             db.general.enabled = generalEnabled
         end
+        OneWoW_GUI:ClearFrame(dsc)
         ShowGeneralDetail(split, dsc, selectedRow)
     end)
     yOffset = yOffset - 30 - 10
