@@ -527,6 +527,11 @@ frame:SetScript("OnEvent", function(self, event, arg1)
                 end
             end)
         end
+        C_Timer.After(1.0, function()
+            if Addon.MonitorTab then
+                Addon.MonitorTab:RestorePinnedAddon()
+            end
+        end)
     end
 end)
 

@@ -16,6 +16,9 @@ function Addon:InitializeDatabase()
             showOnLoad = false,
             sortOrder = 2,
             continuousUpdate = false,
+            pinnedAddon = nil,
+            pinnedReopenOnReload = false,
+            pinnedPosition = {},
         },
         errorDB = {
             session = 0,

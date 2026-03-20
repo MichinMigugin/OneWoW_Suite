@@ -1968,6 +1968,23 @@ function UI:CreateMonitorTab(parent)
         row:SetHeight(ROW_HEIGHT)
         row:SetPoint("TOPLEFT", listContent, "TOPLEFT", 0, -(i - 1) * ROW_HEIGHT)
         row:SetPoint("RIGHT", listContent, "RIGHT", 0, 0)
+        row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+        row:SetScript("OnClick", function(self, button)
+            if button == "RightButton" and self.addonInfo and Monitor then
+                local info = self.addonInfo
+                MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
+                    rootDescription:CreateTitle("Pin: " .. info.title)
+                    rootDescription:CreateButton("Monitor This Addon", function()
+                        Monitor:CreatePinnedPopup(info.name, info.title)
+                        if Monitor:IsMonitoring() then
+                            Monitor:ToggleMonitoring()
+                            playBtn.text:SetText(L["MON_BTN_PLAY"] or "Play")
+                        end
+                    end)
+                end)
+            end
+        end)
 
         row.stripe = row:CreateTexture(nil, "BACKGROUND")
         row.stripe:SetAllPoints()
@@ -2058,6 +2075,7 @@ function UI:CreateMonitorTab(parent)
             local row = tab.rows[i]
             local info = list[i]
             if info then
+                row.addonInfo = info
                 row.nameText:SetText(info.title)
                 row.memText:SetText(Monitor:FormatMemory(info.memory))
                 row.memPctText:SetText(Monitor:FormatPercent(info.memPercent))
@@ -2067,6 +2085,7 @@ function UI:CreateMonitorTab(parent)
                 end
                 row:Show()
             else
+                row.addonInfo = nil
                 row:Hide()
             end
         end

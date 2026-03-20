@@ -161,6 +161,8 @@ Addon.Locales["enUS"] = {
     ["MON_MSG_CPU_ENABLED"] = "CPU profiling enabled - reloading UI",
     ["MON_MSG_CPU_DISABLED"] = "CPU profiling disabled - reloading UI",
     ["MON_MSG_NO_DATA"] = "Click 'Update' or 'Play' to begin monitoring",
+    ["MON_PIN_MONITOR"] = "Monitor This Addon",
+    ["MON_PIN_REOPEN"] = "Reopen on /reload",
 
     -- Minimap
     ["MINIMAP_TOOLTIP_HINT"] = "Left-Click to toggle DevTool",
