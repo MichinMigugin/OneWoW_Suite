@@ -62,8 +62,19 @@ end
 
 function OneWoW_Bags:SortButtons(buttons)
     local db = self.db
-    local sortMode = db and db.global and db.global.itemSort or "name"
-    if sortMode == "name" then
+    local sortMode = db and db.global and db.global.itemSort or "default"
+    if sortMode == "default" then
+        table.sort(buttons, function(a, b)
+            if not a.owb_hasItem then return false end
+            if not b.owb_hasItem then return true end
+            local aBag = a.owb_bagID or 0
+            local bBag = b.owb_bagID or 0
+            if aBag ~= bBag then return aBag < bBag end
+            local aSlot = a.owb_slotID or 0
+            local bSlot = b.owb_slotID or 0
+            return aSlot < bSlot
+        end)
+    elseif sortMode == "name" then
         table.sort(buttons, function(a, b)
             if not a.owb_hasItem then return false end
             if not b.owb_hasItem then return true end

@@ -283,6 +283,7 @@ function Settings:Create()
 
     local sortY = -12
     local itemSortItems = {
+        { text = L["SORT_DEFAULT"], value = "default", isActive = (db.global.itemSort == "default") },
         { text = L["SORT_NAME"], value = "name", isActive = (db.global.itemSort == "name") },
         { text = L["SORT_RARITY"], value = "rarity", isActive = (db.global.itemSort == "rarity") },
         { text = L["SORT_ITEM_LEVEL"], value = "ilvl", isActive = (db.global.itemSort == "ilvl") },
@@ -416,7 +417,7 @@ function Settings:UpdateItemSortButtons(btns)
     if not btns then btns = Settings.itemSortBtns end
     if not btns then return end
     if btns.SetActiveByValue then
-        local sortMode = OneWoW_Bags.db and OneWoW_Bags.db.global.itemSort or "name"
+        local sortMode = OneWoW_Bags.db and OneWoW_Bags.db.global.itemSort or "default"
         btns.SetActiveByValue(sortMode)
     end
 end

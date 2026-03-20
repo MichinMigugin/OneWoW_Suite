@@ -190,6 +190,7 @@ OneWoW_Bags.Locales["frFR"] = {
     ["SETTING_BANK_COLUMNS"] = "Colonnes de banque",
 
     ["SETTING_ITEM_SORT"] = "Tri des objets",
+    ["SORT_DEFAULT"] = "Par défaut",
     ["SORT_NAME"] = "Nom",
     ["SORT_RARITY"] = "Rarete",
     ["SORT_ITEM_LEVEL"] = "Niveau d'objet",

@@ -189,6 +189,7 @@ OneWoW_Bags.Locales["koKR"] = {
     ["SETTING_BANK_COLUMNS"] = "TEST",
 
     ["SETTING_ITEM_SORT"] = "TEST",
+    ["SORT_DEFAULT"] = "TEST",
     ["SORT_NAME"] = "TEST",
     ["SORT_RARITY"] = "TEST",
     ["SORT_ITEM_LEVEL"] = "TEST",

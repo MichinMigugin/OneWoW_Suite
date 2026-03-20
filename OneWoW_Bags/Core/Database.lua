@@ -35,7 +35,7 @@ local defaults = {
         mainFramePosition = {},
         bagColumns = 15,
         bankColumns = 14,
-        itemSort = "name",
+        itemSort = "default",
         hideScrollBar = false,
         enableBankUI = true,
         enableBankOverlays = true,
@@ -188,7 +188,12 @@ function OneWoW_Bags:InitializeDatabase()
     end
 
     if not self.db.global.itemSort then
-        self.db.global.itemSort = "name"
+        self.db.global.itemSort = "default"
+    end
+
+    if not self.db.global.itemSortMigratedToDefault then
+        self.db.global.itemSort = "default"
+        self.db.global.itemSortMigratedToDefault = true
     end
 
     if self.db.global.hideScrollBar == nil then
