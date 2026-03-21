@@ -297,8 +297,89 @@ function ns.UI:CreateMainFrame(defaultTab)
     frame.tabButtons = tabButtons
     frame.SelectTab = function(_, tab) SelectTab(tab) end
 
+    for name, tabFrame in pairs(tabs) do
+        if ns.UI.RegisterRosterTabFrame then
+            ns.UI.RegisterRosterTabFrame(name, tabFrame)
+        end
+    end
+
     MainWindow = frame
     isInitialized = true
 
     return frame
+end
+
+function ns.UI.RegisterRosterTabFrame(tabName, frame)
+    local addon = _G.OneWoW_AltTracker
+    if not addon or not tabName or not frame then return end
+    addon.rosterTabFrames = addon.rosterTabFrames or {}
+    addon.rosterTabFrames[tabName] = frame
+end
+
+function ns.UI.RefreshAllFavoriteRosters()
+    local mf = _G.OneWoWAltTrackerMainFrame
+    local addon = _G.OneWoW_AltTracker
+    local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
+    if not t then return end
+    if ns.UI.RefreshSummaryTab and t.summary then
+        ns.UI.RefreshSummaryTab(t.summary)
+    end
+    if t.progress and t.progress.subTabFrames then
+        for _, key in ipairs({ "mythicplus", "raids", "currencies" }) do
+            local f = t.progress.subTabFrames[key]
+            if f and f.refreshFunc then
+                f.refreshFunc(f)
+            end
+        end
+        if ns.UI.RefreshProgressStats and t.progress then
+            ns.UI.RefreshProgressStats(t.progress)
+        end
+    end
+    if ns.UI.RefreshEquipmentTab and t.equipment then
+        ns.UI.RefreshEquipmentTab(t.equipment)
+    end
+    if ns.UI.RefreshProfessionsTab and t.professions then
+        ns.UI.RefreshProfessionsTab(t.professions)
+    end
+    if ns.UI.RefreshLockoutsTab and t.lockouts then
+        ns.UI.RefreshLockoutsTab(t.lockouts)
+    end
+end
+
+function ns.UI.CreateFavoriteStarButton(charRow, charKey)
+    local L = ns.L
+    local starBtn = CreateFrame("Button", nil, charRow)
+    starBtn:SetSize(30, 32)
+    starBtn:EnableMouse(true)
+    starBtn:RegisterForClicks("LeftButtonUp")
+    local starIcon = starBtn:CreateTexture(nil, "ARTWORK")
+    starIcon:SetSize(14, 14)
+    starIcon:SetPoint("CENTER")
+    starIcon:SetTexture("Interface/Common/FavoritesIcon")
+    local function applyStarColor()
+        if ns.IsFavoriteChar(charKey) then
+            starIcon:SetVertexColor(1, 0.82, 0, 1)
+        else
+            starIcon:SetVertexColor(0.4, 0.4, 0.4, 0.6)
+        end
+    end
+    applyStarColor()
+    starBtn:SetFrameLevel((charRow:GetFrameLevel() or 0) + 10)
+    starBtn:SetScript("OnClick", function()
+        ns.SetFavoriteChar(charKey, not ns.IsFavoriteChar(charKey))
+        applyStarColor()
+        if ns.UI.RefreshAllFavoriteRosters then
+            ns.UI.RefreshAllFavoriteRosters()
+        end
+    end)
+    starBtn:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(starBtn, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["TT_COL_STAR"], 1, 1, 1)
+        GameTooltip:AddLine(L["TT_COL_STAR_DESC"], nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    starBtn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    return starBtn
 end

@@ -63,3 +63,17 @@ function ns.UI.ApplyFontToFrame(frame)
         ns.UI.ApplyFontToFrame(child)
     end
 end
+
+function ns.IsFavoriteChar(charKey)
+    local db = _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global
+    return db and db.favorites and db.favorites[charKey] == true
+end
+
+function ns.SetFavoriteChar(charKey, value)
+    local addon = _G.OneWoW_AltTracker
+    if not addon or not addon.db then return end
+    if not addon.db.global.favorites then
+        addon.db.global.favorites = {}
+    end
+    addon.db.global.favorites[charKey] = value and true or nil
+end

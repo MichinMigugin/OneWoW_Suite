@@ -164,10 +164,7 @@ function OneWoWAltTracker:InitializeDatabase()
 
     if self.db.global.migrationStatus == nil then
         self.db.global.migrationStatus = {
-            checkedForWoWNotesData = false,
-            lastMigrationCheck = 0,
-            migratedCharacterCount = 0,
-            migrationComplete = false
+            cleanupPerformed = false,
         }
     end
 
