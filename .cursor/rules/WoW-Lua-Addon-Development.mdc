@@ -416,6 +416,53 @@ not covered by the host window.
 - Do **not** sprinkle explicit close calls at every navigation boundary
   (tab switches, list selections). The OnUpdate handles this automatically.
 
+### 4.8 FontString Local Overrides & SetFontObject
+
+`SetFontObject(fontObj)` on a FontString sets the inheritance source but does
+**NOT** clear local property overrides created by explicit setter calls. Once
+you call `SetJustifyH("RIGHT")` (or `SetTextColor`, `SetFont`, etc.) directly
+on a FontString, that local override **persists across all subsequent
+`SetFontObject()` calls** — the font object's inherited value is shadowed.
+
+```lua
+-- BAD: local override from SetJustifyH persists across SetFontObject changes
+fs:SetFontObject(RightAlignedFont)   -- justify = RIGHT (from font object)
+fs:SetJustifyH("RIGHT")             -- creates local override "RIGHT"
+fs:SetFontObject(CenterAlignedFont)  -- font object says CENTER, but...
+print(fs:GetJustifyH())              -- "RIGHT" — stale local override!
+```
+
+**Key rules:**
+- `GetJustifyH()` on a FontString returns the **local override** if one
+  exists, otherwise the font object's inherited value. You cannot distinguish
+  which source provided the value.
+- `GetJustifyH()` on a **Font object** always returns the correct effective
+  value (including values inherited from parent fonts in the XML chain).
+- **Reusing a FontString** to display different font objects over time will
+  accumulate stale local overrides from previous selections. This causes
+  properties from a previous font to "stick" to the next one.
+- **Preferred pattern:** When a FontString must cycle through different font
+  objects (e.g. a font preview/browser), **recreate the FontString** each
+  time rather than reusing it. This guarantees a clean slate with no local
+  overrides:
+
+  ```lua
+  -- Recreate to ensure no stale overrides from previous font
+  if tab.previewFS then tab.previewFS:Hide() end
+  tab.previewFS = parent:CreateFontString(nil, "ARTWORK")
+  tab.previewFS:SetFontObject(newFontObj)  -- sole authority for all properties
+  ```
+
+- If recreating is not feasible, read property values from the **Font object**
+  (not the FontString) and re-apply them explicitly every time:
+
+  ```lua
+  fs:SetFontObject(fontObj)
+  -- Read from Font object — always returns correct inherited value
+  fs:SetJustifyH(fontObj:GetJustifyH())
+  -- Do NOT read from fs:GetJustifyH() — may return stale local override
+  ```
+
 ---
 
 ## 5. Secure Execution & Taint
@@ -797,6 +844,11 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
     `IsMouseButtonDown` transitions while `IsMouseOver()` is false. Input
     fires before OnUpdate in the same frame, so both the control action and
     the dismiss happen on a single click.
+16. **Reusing FontStrings across different FontObjects.** `SetFontObject()`
+    does not clear local overrides from explicit setter calls
+    (`SetJustifyH`, `SetTextColor`, `SetFont`, etc.). Properties from a
+    previous font "stick" to subsequent selections. Recreate the FontString
+    or read values from the Font object directly. See section 4.8.
 
 ---
 
