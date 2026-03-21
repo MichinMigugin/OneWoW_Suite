@@ -34,8 +34,9 @@ Core\Database.lua
 # Main Addon File
 OneWoW_Utility_DevTool.lua
 
-# Data (disabled - texture viewer not active)
-#Data\Data_Mainline.lua
+# Texture Atlas Data
+Data\AtlasInfo-12.0.1.66527.lua [AllowLoadGameType mainline]
+Data\AtlasInfo-12.0.5.66529.lua [AllowLoadGameType mainline-test]
 
 # Modules
 Modules\FrameInspector.lua
@@ -45,7 +46,7 @@ Modules\ErrorExport.lua
 Modules\ErrorLogger.lua
 Modules\EventMonitor.lua
 Modules\ColorTools.lua
-#Modules\TextureAtlasData.lua
+Modules\TextureAtlasData.lua
 #Modules\FontBrowserTab.lua
 Modules\MonitorTab.lua
 
