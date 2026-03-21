@@ -1,6 +1,7 @@
 local AddonName, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local L = Addon.L or {}
 if not OneWoW_GUI then return end
 
 local function formatArgForDisplay(arg)
@@ -64,13 +65,13 @@ end
 
 function EventMonitor:Start()
     if self.monitoring then
-        Addon:Print("Event monitor already running")
+        Addon:Print(L["MSG_MONITOR_ALREADY_RUNNING"] or "Event monitor already running")
         return
     end
 
     if self:GetEventCount() == 0 then
         self:RegisterCommonEvents()
-        Addon:Print("Auto-selected common events (first time)")
+        Addon:Print(L["MSG_AUTO_SELECTED_FIRST"] or "Auto-selected common events (first time)")
     end
 
     self:Initialize()
@@ -81,13 +82,13 @@ function EventMonitor:Start()
     self.monitoring = true
 
     local count = self:GetEventCount()
-    Addon:Print("Event monitoring started (" .. count .. " events selected)")
+    Addon:Print((L["MSG_MONITOR_STARTED"] or "Event monitoring started (%d events selected)"):format(count))
     self:UpdateUI()
 end
 
 function EventMonitor:Stop()
     if not self.monitoring then
-        Addon:Print("Event monitor not running")
+        Addon:Print(L["MSG_MONITOR_NOT_RUNNING"] or "Event monitor not running")
         return
     end
 
@@ -100,14 +101,14 @@ function EventMonitor:Stop()
         self.frame:UnregisterAllEvents()
         self.allEventsRegistered = false
     end
-    Addon:Print("Event monitoring stopped")
+    Addon:Print(L["MSG_MONITOR_STOPPED"] or "Event monitoring stopped")
     self:UpdateUI()
 end
 
 function EventMonitor:Clear()
     self.events = {}
     self:UpdateUI()
-    Addon:Print("Event log cleared")
+    Addon:Print(L["MSG_EVENT_LOG_CLEARED"] or "Event log cleared")
 end
 
 function EventMonitor:SetPaused(paused)
@@ -121,7 +122,7 @@ end
 
 function EventMonitor:TogglePause()
     self.paused = not self.paused
-    Addon:Print(self.paused and "Event display paused" or "Event display resumed")
+    Addon:Print(self.paused and (L["MSG_EVENT_DISPLAY_PAUSED"] or "Event display paused") or (L["MSG_EVENT_DISPLAY_RESUMED"] or "Event display resumed"))
     self:UpdateUI()
 end
 
@@ -257,8 +258,8 @@ function EventMonitor:UpdateUI()
         tab.maxRowWidth = 0
         if emptyStateText then
             emptyStateText:Show()
-            emptyStateText:SetText(self.monitoring and "Monitoring events... (0 captured)" or
-                (Addon.L and Addon.L["MSG_CLICK_START"] or "Click 'Start' to begin monitoring (auto-selects common events)\nOr click 'Select Events' to customize"))
+            emptyStateText:SetText(self.monitoring and (L["MSG_MONITORING_EVENTS"] or "Monitoring events... (%d captured)"):format(0) or
+                (L["MSG_CLICK_START"] or "Click 'Start' to begin monitoring (auto-selects common events)\nOr click 'Select Events' to customize"))
         end
         for i = 1, #rowPool do
             rowPool[i]:Hide()
@@ -321,7 +322,7 @@ function EventMonitor:UpdateUI()
                     local row = rowPool[displayCount]
                     if row then
                         row.eventCol:SetText(WrapEventViewerColor("...", "TIMESTAMP"))
-                        row.argsCol:SetText("(showing first 200 events)")
+                        row.argsCol:SetText(L["MSG_SHOWING_FIRST_200_EVENTS"] or "(showing first 200 events)")
                         row.countCol:SetText("")
                         row:SetHeight(ROW_HEIGHT)
                         row:ClearAllPoints()
@@ -337,7 +338,7 @@ function EventMonitor:UpdateUI()
         if emptyStateText then
             if filter and displayCount == 0 then
                 emptyStateText:Show()
-                emptyStateText:SetText(string.format("No events matching '%s' (total: %d)", filterText, #self.events))
+                emptyStateText:SetText((L["MSG_NO_EVENTS_MATCHING"] or "No events matching '%s' (total: %d)"):format(filterText, #self.events))
             else
                 emptyStateText:Hide()
             end
@@ -427,7 +428,7 @@ function EventMonitor:FirehoseStart()
     self.frame:RegisterAllEvents()
     self.firehose = true
     self.monitoring = true
-    Addon:Print("Firehose mode ON - capturing ALL events")
+    Addon:Print(L["MSG_FIREHOSE_ON"] or "Firehose mode ON - capturing ALL events")
     self:UpdateUI()
 end
 
@@ -439,7 +440,7 @@ function EventMonitor:FirehoseStop()
     for event in pairs(self.selectedEvents) do
         pcall(function() self.frame:RegisterEvent(event) end)
     end
-    Addon:Print("Firehose mode OFF")
+    Addon:Print(L["MSG_FIREHOSE_OFF"] or "Firehose mode OFF")
     self:UpdateUI()
 end
 

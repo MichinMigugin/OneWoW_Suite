@@ -1193,12 +1193,19 @@ function Addon.UI:CreateTextureTab(parent)
         Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     end)
 
+    -- Copy row: LibCopyPaste-style label + short buttons (matches Fonts tab)
+    local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"] or "Copy:")
+    copyRowLabel:SetTextColor(1, 0.82, 0)
+    copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
+
     local copyNameBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["BTN_COPY_NAME"] or "Copy Name",
+        text = L["FONT_BTN_COPY_NAME"] or "Name",
         height = 22,
-        minWidth = 72,
+        minWidth = 44,
     })
-    copyNameBtn:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 6)
+    copyNameBtn:SetPoint("LEFT", copyRowLabel, "RIGHT", 6, -5)
+    copyNameBtn:SetPoint("BOTTOM", rightPanel, "BOTTOM", 0, 6)
     copyNameBtn:SetScript("OnClick", function()
         local s = tab.selectedAtlasName or tab.selectedTextureKey
         if s then
@@ -1207,11 +1214,11 @@ function Addon.UI:CreateTextureTab(parent)
     end)
 
     local copySnippetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["TEXTURE_BTN_COPY_SNIPPET"] or "Copy Snippet",
+        text = L["TEXTURE_BTN_COPY_SNIPPET"] or "Snippet",
         height = 22,
-        minWidth = 88,
+        minWidth = 52,
     })
-    copySnippetBtn:SetPoint("LEFT", copyNameBtn, "RIGHT", 6, 0)
+    copySnippetBtn:SetPoint("LEFT", copyNameBtn, "RIGHT", 4, 0)
     copySnippetBtn:SetScript("OnClick", function()
         if tab.selectedAtlasName then
             Addon:CopyToClipboard(BR:GetSetAtlasSnippet(tab.selectedAtlasName))
@@ -1219,11 +1226,11 @@ function Addon.UI:CreateTextureTab(parent)
     end)
 
     local copyCoordBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["TEXTURE_BTN_COPY_COORDS"] or "Copy UVs",
+        text = L["TEXTURE_BTN_COPY_COORDS"] or "UVs",
         height = 22,
-        minWidth = 72,
+        minWidth = 44,
     })
-    copyCoordBtn:SetPoint("LEFT", copySnippetBtn, "RIGHT", 6, 0)
+    copyCoordBtn:SetPoint("LEFT", copySnippetBtn, "RIGHT", 4, 0)
     copyCoordBtn:SetScript("OnClick", function()
         if not tab.selectedAtlasName then return end
         local info = BR:ResolveAtlasInfo(tab.selectedAtlasName, tab.selectedTextureKey)

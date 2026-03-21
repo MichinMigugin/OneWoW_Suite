@@ -1,234 +1,331 @@
-local AddonName, Addon = ...
+local ADDON_NAME, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local FontBrowserTab = {}
-Addon.FontBrowserTab = FontBrowserTab
+local format = format
+local tinsert = tinsert
+local sort = sort
+local ipairs = ipairs
+local type = type
+local pcall = pcall
 
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local FB = {}
+Addon.FontBrowser = FB
 
-FontBrowserTab.fonts = {
-    {name = "GameFontNormal", object = GameFontNormal},
-    {name = "GameFontNormalLarge", object = GameFontNormalLarge},
-    {name = "GameFontNormalSmall", object = GameFontNormalSmall},
-    {name = "GameFontHighlight", object = GameFontHighlight},
-    {name = "GameFontHighlightLarge", object = GameFontHighlightLarge},
-    {name = "GameFontHighlightSmall", object = GameFontHighlightSmall},
-    {name = "GameFontDisable", object = GameFontDisable},
-    {name = "GameFontGreen", object = GameFontGreen},
-    {name = "GameFontRed", object = GameFontRed},
-    {name = "GameFontWhite", object = GameFontWhite},
-    {name = "QuestFont", object = QuestFont},
-    {name = "QuestFontNormalSmall", object = QuestFontNormalSmall},
-    {name = "NumberFontNormal", object = NumberFontNormal},
-    {name = "NumberFontNormalLarge", object = NumberFontNormalLarge},
-    {name = "NumberFontNormalSmall", object = NumberFontNormalSmall},
-    {name = "SystemFont_Large", object = SystemFont_Large},
-    {name = "SystemFont_Med1", object = SystemFont_Med1},
-    {name = "SystemFont_Med2", object = SystemFont_Med2},
-    {name = "SystemFont_Small", object = SystemFont_Small},
-    {name = "Tooltip_Med", object = Tooltip_Med},
-    {name = "Tooltip_Small", object = Tooltip_Small},
+FB.masterList = {}
+FB.filteredList = {}
+FB.filterText = ""
+FB.favoritesOnly = false
+FB.catalogBuilt = false
+
+local WIDGET_SIZE_PT = {
+    [0] = 10,
+    [1] = 14,
+    [2] = 18,
+    [3] = 24,
+    [4] = 12,
 }
 
-function FontBrowserTab:Initialize(parent)
-    self.parent = parent
+FB.WIDGET_SIZE_PT = WIDGET_SIZE_PT
 
-    local searchBox = OneWoW_GUI:CreateEditBox(parent, {
-        width = 300,
-        height = 25,
-        placeholderText = "Search fonts...",
-        onTextChanged = function(text)
-            FontBrowserTab:FilterFonts(text)
-        end,
-    })
-    searchBox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10)
+local WIDGET_SIZE_LABELS = {
+    [0] = "Small (0)",
+    [1] = "Medium (1)",
+    [2] = "Large (2)",
+    [3] = "Huge (3)",
+    [4] = "Standard (4)",
+}
 
-    local bookmarkButton = OneWoW_GUI:CreateFitTextButton(parent, { text = "Bookmark", height = 25 })
-    bookmarkButton:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
-    bookmarkButton:SetScript("OnClick", function()
-        FontBrowserTab:ToggleBookmark()
+FB.WIDGET_SIZE_LABELS = WIDGET_SIZE_LABELS
+
+local function isFontObject(obj)
+    if not obj then return false end
+    local ok, result = pcall(function()
+        if type(obj) == "table" and obj.GetFont then
+            local f = obj:GetFont()
+            return f ~= nil
+        end
+        return false
     end)
-
-    local listPanel = OneWoW_GUI:CreateFrame(parent, { backdrop = BACKDROP_INNER_NO_INSETS, width = 350, height = 200 })
-    listPanel:ClearAllPoints()
-    listPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -45)
-    listPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 10, 10)
-    listPanel:SetWidth(350)
-    listPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    listPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(listPanel, { name = "FontBrowserListScroll" })
-    listScroll:ClearAllPoints()
-    listScroll:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 4, -4)
-    listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -14, 4)
-
-    listScroll:HookScript("OnSizeChanged", function(self, w)
-        listContent:SetWidth(w)
-    end)
-
-    self.listButtons = {}
-    for i = 1, 25 do
-        local btn = OneWoW_GUI:CreateListRowBasic(listContent, {
-            height = 25,
-            label = "",
-            onClick = function(self)
-                FontBrowserTab:SelectFont(self.fontData)
-            end,
-        })
-        btn:ClearAllPoints()
-        btn:SetPoint("TOPLEFT", listContent, "TOPLEFT", 5, -(i-1) * 25 - 5)
-        btn:SetPoint("RIGHT", listContent, "RIGHT", -5, 0)
-        btn.label:SetFontObject(GameFontNormalSmall)
-
-        self.listButtons[i] = btn
-    end
-
-    local previewPanel = OneWoW_GUI:CreateFrame(parent, { backdrop = BACKDROP_INNER_NO_INSETS, width = 200, height = 200 })
-    previewPanel:ClearAllPoints()
-    previewPanel:SetPoint("TOPLEFT", listPanel, "TOPRIGHT", 10, 0)
-    previewPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -10, 10)
-    previewPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    previewPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    previewPanel.title = previewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    previewPanel.title:SetPoint("TOP", 0, -10)
-    previewPanel.title:SetText("Select a font to preview")
-    previewPanel.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    self.previewSmall = previewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    self.previewSmall:SetPoint("TOP", previewPanel.title, "BOTTOM", 0, -30)
-    self.previewSmall:SetWidth(previewPanel:GetWidth() - 40)
-    self.previewSmall:SetText("The quick brown fox jumps over the lazy dog\n0123456789")
-
-    self.previewMedium = previewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    self.previewMedium:SetPoint("TOP", self.previewSmall, "BOTTOM", 0, -30)
-    self.previewMedium:SetWidth(previewPanel:GetWidth() - 40)
-    self.previewMedium:SetText("The quick brown fox jumps over the lazy dog\n0123456789")
-
-    self.previewLarge = previewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    self.previewLarge:SetPoint("TOP", self.previewMedium, "BOTTOM", 0, -30)
-    self.previewLarge:SetWidth(previewPanel:GetWidth() - 40)
-    self.previewLarge:SetText("The quick brown fox jumps over the lazy dog\n0123456789")
-
-    self.infoText = previewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    self.infoText:SetPoint("TOP", self.previewLarge, "BOTTOM", 0, -30)
-    self.infoText:SetWidth(previewPanel:GetWidth() - 40)
-    self.infoText:SetJustifyH("LEFT")
-    self.infoText:SetText("")
-    self.infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local copyButton = OneWoW_GUI:CreateFitTextButton(previewPanel, { text = "Copy Font Name", height = 25 })
-    copyButton:SetPoint("TOP", self.infoText, "BOTTOM", 0, -20)
-    copyButton:SetScript("OnClick", function()
-        FontBrowserTab:CopyFontName()
-    end)
-
-    self.searchBox = searchBox
-    self.listScroll = listScroll
-    self.listContent = listContent
-    self.previewPanel = previewPanel
-
-    self:FilterFonts("")
+    return ok and result
 end
 
-function FontBrowserTab:FilterFonts(filter)
-    self.filteredFonts = {}
-    filter = filter:upper()
+function FB:BuildCatalog()
+    if self.catalogBuilt then return end
+    self.catalogBuilt = true
 
-    for _, fontData in ipairs(self.fonts) do
-        if filter == "" or string.find(fontData.name:upper(), filter, 1, true) then
-            tinsert(self.filteredFonts, fontData)
+    local seen = {}
+    local list = {}
+
+    local staticNames = Addon.FontObjectNames or {}
+    for _, name in ipairs(staticNames) do
+        if not seen[name] then
+            seen[name] = true
+            tinsert(list, name)
         end
     end
 
-    self:UpdateList()
-end
-
-function FontBrowserTab:UpdateList()
-    for i, btn in ipairs(self.listButtons) do
-        local fontData = self.filteredFonts[i]
-
-        if fontData then
-            btn.label:SetText(fontData.name)
-            btn.fontData = fontData
-            btn:SetActive(fontData == self.currentFont)
-            btn:Show()
-        else
-            btn:Hide()
+    local ok, runtimeFonts = pcall(GetFonts)
+    if ok and type(runtimeFonts) == "table" then
+        for _, fontObj in ipairs(runtimeFonts) do
+            if type(fontObj) == "table" then
+                local nameOk, fontName = pcall(function() return fontObj:GetName() end)
+                if nameOk and fontName and not seen[fontName] then
+                    seen[fontName] = true
+                    tinsert(list, fontName)
+                end
+            end
         end
     end
 
-    self.listContent:SetHeight(math.max(#self.filteredFonts * 25 + 10, self.listScroll:GetHeight()))
+    local valid = {}
+    for _, name in ipairs(list) do
+        local obj = _G[name]
+        if isFontObject(obj) then
+            tinsert(valid, name)
+        end
+    end
+
+    sort(valid)
+    self.masterList = valid
+    self:RebuildFiltered()
 end
 
-function FontBrowserTab:SelectFont(fontData)
-    if not fontData then return end
+function FB:RebuildFiltered()
+    local result = {}
+    local filter = self.filterText:upper()
+    local bookmarks = Addon.db and Addon.db.fontBookmarks
 
-    self.currentFont = fontData
+    for _, name in ipairs(self.masterList) do
+        local pass = true
 
-    self.previewSmall:SetFontObject(fontData.object)
-    self.previewMedium:SetFontObject(fontData.object)
-    self.previewLarge:SetFontObject(fontData.object)
+        if self.favoritesOnly then
+            if not (bookmarks and bookmarks[name]) then
+                pass = false
+            end
+        end
 
-    local font, size, flags = fontData.object:GetFont()
+        if pass and filter ~= "" then
+            if not name:upper():find(filter, 1, true) then
+                pass = false
+            end
+        end
 
-    local infoLines = {
-        "Font: " .. fontData.name,
-        "File: " .. (font or "Unknown"),
-        "Size: " .. (size or "Unknown"),
-        "Flags: " .. (flags or "None"),
-    }
-
-    if self:IsBookmarked(fontData.name) then
-        tinsert(infoLines, "|cff00ff00[Bookmarked]|r")
+        if pass then
+            tinsert(result, name)
+        end
     end
 
-    self.infoText:SetText(table.concat(infoLines, "\n"))
-    self.previewPanel.title:SetText("Preview: " .. fontData.name)
-
-    self:UpdateList()
+    self.filteredList = result
 end
 
-function FontBrowserTab:ToggleBookmark()
-    if not self.currentFont then
-        Addon:Print("Select a font first")
-        return
-    end
+function FB:SetFilterText(text)
+    self.filterText = text or ""
+    self:RebuildFiltered()
+end
 
-    if not Addon.db.fontBookmarks then
-        Addon.db.fontBookmarks = {}
-    end
+function FB:SetFavoritesOnly(on)
+    self.favoritesOnly = on
+    self:RebuildFiltered()
+end
 
-    local name = self.currentFont.name
+function FB:GetFilteredCount()
+    return #self.filteredList
+end
 
-    if self:IsBookmarked(name) then
+function FB:GetFilteredEntry(idx)
+    return self.filteredList[idx]
+end
+
+function FB:IsBookmarked(name)
+    return Addon.db and Addon.db.fontBookmarks and Addon.db.fontBookmarks[name] or false
+end
+
+function FB:ToggleBookmark(name)
+    if not name then return end
+    if not Addon.db then return end
+    Addon.db.fontBookmarks = Addon.db.fontBookmarks or {}
+    if Addon.db.fontBookmarks[name] then
         Addon.db.fontBookmarks[name] = nil
-        Addon:Print("Removed font bookmark: " .. name)
+        return false
     else
         Addon.db.fontBookmarks[name] = true
-        Addon:Print("Bookmarked font: " .. name)
+        return true
+    end
+end
+
+function FB:GetFontInfo(name)
+    local obj = _G[name]
+    if not obj then return nil end
+
+    local info = { name = name }
+
+    local ok, path, height, flags = pcall(obj.GetFont, obj)
+    if ok then
+        info.path = path
+        info.height = height
+        info.flags = flags or ""
     end
 
-    self:SelectFont(self.currentFont)
+    ok = pcall(function()
+        local r, g, b, a = obj:GetTextColor()
+        info.textColor = { r = r, g = g, b = b, a = a }
+    end)
+
+    pcall(function()
+        local r, g, b, a = obj:GetShadowColor()
+        info.shadowColor = { r = r, g = g, b = b, a = a }
+    end)
+
+    pcall(function()
+        local x, y = obj:GetShadowOffset()
+        info.shadowOffset = { x = x, y = y }
+    end)
+
+    pcall(function() info.justifyH = obj:GetJustifyH() end)
+    pcall(function() info.justifyV = obj:GetJustifyV() end)
+    pcall(function() info.spacing = obj:GetSpacing() end)
+    pcall(function() info.indentedWordWrap = obj:GetIndentedWordWrap() end)
+    pcall(function() info.alpha = obj:GetAlpha() end)
+
+    return info
 end
 
-function FontBrowserTab:IsBookmarked(fontName)
-    return Addon.db.fontBookmarks and Addon.db.fontBookmarks[fontName]
-end
+function FB:GetInheritanceChain(name)
+    local chain = {}
+    local obj = _G[name]
+    if not obj then return chain end
 
-function FontBrowserTab:CopyFontName()
-    if not self.currentFont then
-        Addon:Print("Select a font first")
-        return
+    local visited = { [name] = true }
+    local current = obj
+    local limit = 20
+
+    while limit > 0 do
+        limit = limit - 1
+        local ok, parent = pcall(function() return current:GetFontObject() end)
+        if not ok or not parent then break end
+        local parentName
+        pcall(function() parentName = parent:GetName() end)
+        if not parentName then break end
+        if visited[parentName] then break end
+        visited[parentName] = true
+        tinsert(chain, parentName)
+        current = parent
     end
 
-    Addon:CopyToClipboard(self.currentFont.name)
+    return chain
 end
 
-function FontBrowserTab:OnShow()
+function FB:FormatRGBA(c)
+    if not c then return "?" end
+    return format("%.2f, %.2f, %.2f, %.2f", c.r or 0, c.g or 0, c.b or 0, c.a or 1)
 end
 
-function FontBrowserTab:OnHide()
+function FB:GenerateCopyName(name)
+    return name or ""
+end
+
+function FB:GenerateSetFontObject(name)
+    if not name then return "" end
+    return format("fs:SetFontObject(%s)", name)
+end
+
+function FB:GenerateSetFont(name, overrides)
+    local info = self:GetFontInfo(name)
+    if not info then return "" end
+
+    local path = (overrides and overrides.path) or info.path or "Fonts\\FRIZQT__.TTF"
+    local height = (overrides and overrides.height) or info.height or 12
+    local flags = (overrides and overrides.flags) or info.flags or ""
+
+    if flags == "" then
+        return format('fs:SetFont("%s", %s)', path, tostring(height))
+    end
+    return format('fs:SetFont("%s", %s, "%s")', path, tostring(height), flags)
+end
+
+function FB:GenerateSnippet(name, overrides)
+    if not name then return "" end
+    local info = self:GetFontInfo(name)
+    if not info then return "" end
+
+    local lines = {}
+    tinsert(lines, format('local fs = parent:CreateFontString(nil, "OVERLAY")'))
+    tinsert(lines, format("fs:SetFontObject(%s)", name))
+
+    if overrides then
+        if overrides.height or overrides.flags then
+            local path = overrides.path or info.path or "Fonts\\FRIZQT__.TTF"
+            local h = overrides.height or info.height or 12
+            local f = overrides.flags or info.flags or ""
+            if f == "" then
+                tinsert(lines, format('fs:SetFont("%s", %s)', path, tostring(h)))
+            else
+                tinsert(lines, format('fs:SetFont("%s", %s, "%s")', path, tostring(h), f))
+            end
+        end
+
+        if overrides.textColor then
+            local c = overrides.textColor
+            tinsert(lines, format("fs:SetTextColor(%.2f, %.2f, %.2f, %.2f)", c.r, c.g, c.b, c.a))
+        end
+        if overrides.shadowColor then
+            local c = overrides.shadowColor
+            tinsert(lines, format("fs:SetShadowColor(%.2f, %.2f, %.2f, %.2f)", c.r, c.g, c.b, c.a))
+        end
+        if overrides.shadowOffset then
+            tinsert(lines, format("fs:SetShadowOffset(%s, %s)", tostring(overrides.shadowOffset.x), tostring(overrides.shadowOffset.y)))
+        end
+        if overrides.justifyH then
+            tinsert(lines, format('fs:SetJustifyH("%s")', overrides.justifyH))
+        end
+        if overrides.justifyV then
+            tinsert(lines, format('fs:SetJustifyV("%s")', overrides.justifyV))
+        end
+        if overrides.spacing then
+            tinsert(lines, format("fs:SetSpacing(%s)", tostring(overrides.spacing)))
+        end
+        if overrides.alpha then
+            tinsert(lines, format("fs:SetAlpha(%.2f)", overrides.alpha))
+        end
+    end
+
+    return table.concat(lines, "\n")
+end
+
+function FB:GenerateCreateFont(name, overrides)
+    if not name then return "" end
+    local info = self:GetFontInfo(name)
+    if not info then return "" end
+
+    local lines = {}
+    tinsert(lines, format('local myFont = CreateFont("MyAddon_%s")', name))
+    tinsert(lines, format("myFont:CopyFontObject(%s)", name))
+
+    if overrides then
+        if overrides.height or overrides.flags then
+            local path = overrides.path or info.path or "Fonts\\FRIZQT__.TTF"
+            local h = overrides.height or info.height or 12
+            local f = overrides.flags or info.flags or ""
+            if f == "" then
+                tinsert(lines, format('myFont:SetFont("%s", %s)', path, tostring(h)))
+            else
+                tinsert(lines, format('myFont:SetFont("%s", %s, "%s")', path, tostring(h), f))
+            end
+        end
+        if overrides.textColor then
+            local c = overrides.textColor
+            tinsert(lines, format("myFont:SetTextColor(%.2f, %.2f, %.2f, %.2f)", c.r, c.g, c.b, c.a))
+        end
+        if overrides.shadowColor then
+            local c = overrides.shadowColor
+            tinsert(lines, format("myFont:SetShadowColor(%.2f, %.2f, %.2f, %.2f)", c.r, c.g, c.b, c.a))
+        end
+        if overrides.shadowOffset then
+            tinsert(lines, format("myFont:SetShadowOffset(%s, %s)", tostring(overrides.shadowOffset.x), tostring(overrides.shadowOffset.y)))
+        end
+    end
+
+    return table.concat(lines, "\n")
 end

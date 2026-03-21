@@ -383,7 +383,7 @@ function Addon:CopyToClipboard(text, title)
     local lib = LibStub("LibCopyPaste-1.0")
     -- Omit readOnly: when true, SetReadOnly captures GetText() from a hidden EditBox (which can return ""), then OnTextChanged overwrites with that empty value
     lib:Copy(title or "Copy", text)
-    self:Print("Press Ctrl+C to copy, then close the window.")
+    self:Print(self.L and self.L["MSG_PRESS_CTRL_C"] or "Press Ctrl+C to copy, then close the window.")
 end
 
 function Addon:ToggleMainWindow()
@@ -488,7 +488,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
                 end,
                 onTooltip = function(frame)
                     GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
-                    GameTooltip:AddLine("|cFFFFD100OneWoW|r - Utility: DevTool", 1, 0.82, 0, 1)
+                    GameTooltip:AddLine(Addon.L and Addon.L["ADDON_TOOLTIP_TITLE"] or "|cFFFFD100OneWoW|r - Utility: DevTool", 1, 0.82, 0, 1)
                     if Addon.L and Addon.L["MINIMAP_TOOLTIP_HINT"] then
                         GameTooltip:AddLine(Addon.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
                     end
@@ -527,7 +527,7 @@ SLASH_ONEWOW_DEVTOOL3 = "/devtools"
 SLASH_ONEWOW_DEVTOOL4 = "/1wdt"
 SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
     if not Addon.UI then
-        Addon:Print("UI not loaded yet")
+        Addon:Print(Addon.L and Addon.L["MSG_UI_NOT_LOADED"] or "UI not loaded yet")
         return
     end
 
@@ -540,8 +540,8 @@ end
 
 _G["1WoW_UtilityDevTool_OnAddonCompartmentEnter"] = function(addonName, button)
     GameTooltip:SetOwner(button, "ANCHOR_LEFT")
-    GameTooltip:SetText("|cFFFFD100OneWoW|r - Utility: DevTool", 1, 1, 1)
-    GameTooltip:AddLine("Click to toggle window", 0.7, 0.7, 0.7)
+    GameTooltip:SetText(Addon.L and Addon.L["ADDON_TOOLTIP_TITLE"] or "|cFFFFD100OneWoW|r - Utility: DevTool", 1, 1, 1)
+    GameTooltip:AddLine(Addon.L and Addon.L["ADDON_COMPARTMENT_HINT"] or "Click to toggle window", 0.7, 0.7, 0.7)
     GameTooltip:Show()
 end
 

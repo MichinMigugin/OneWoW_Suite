@@ -40,11 +40,11 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         if not text or text == "" then return end
         local results = Addon:SearchFramesByName(text)
         if #results == 0 then
-            Addon:Print("No frames found matching: " .. text)
+            Addon:Print((L["MSG_NO_FRAMES_MATCHING"] or "No frames found matching: %s"):format(text))
         else
             Addon.FrameInspector:InspectFrame(results[1])
             if #results > 1 then
-                Addon:Print(string.format("Found %d frames, showing first: %s", #results, results[1].GetName and results[1]:GetName() or "Anonymous"))
+                Addon:Print((L["MSG_FOUND_FRAMES_FIRST"] or "Found %d frames, showing first: %s"):format(#results, results[1].GetName and results[1]:GetName() or "Anonymous"))
             end
         end
     end

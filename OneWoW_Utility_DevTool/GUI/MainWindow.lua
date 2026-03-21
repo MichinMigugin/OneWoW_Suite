@@ -27,15 +27,16 @@ function UI:Initialize()
     local resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95
     local TAB_GAP = DU.TAB_GAP or 4
     local TAB_HEIGHT = DU.TAB_HEIGHT or 28
-    local NUM_TABS = DU.NUM_TABS or 8
+    local NUM_TABS = DU.NUM_TABS or 9
     local TAB_FRAME = DU.TAB_INDEX_FRAME or 1
     local TAB_EVENTS = DU.TAB_INDEX_EVENTS or 2
     local TAB_LUA = DU.TAB_INDEX_LUA or 3
     local TAB_TEXTURES = DU.TAB_INDEX_TEXTURES or 4
-    local TAB_COLORS = DU.TAB_INDEX_COLORS or 5
-    local TAB_LAYOUT = DU.TAB_INDEX_LAYOUT or 6
-    local TAB_MONITOR = DU.TAB_INDEX_MONITOR or 7
-    local TAB_SETTINGS = DU.TAB_INDEX_SETTINGS or 8
+    local TAB_FONTS = DU.TAB_INDEX_FONTS or 5
+    local TAB_COLORS = DU.TAB_INDEX_COLORS or 6
+    local TAB_LAYOUT = DU.TAB_INDEX_LAYOUT or 7
+    local TAB_MONITOR = DU.TAB_INDEX_MONITOR or 8
+    local TAB_SETTINGS = DU.TAB_INDEX_SETTINGS or 9
 
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
     local frame = OneWoW_GUI:CreateFrame(UIParent, {
@@ -97,6 +98,7 @@ function UI:Initialize()
         Addon.L["TAB_EVENTS"],
         Addon.L["TAB_LUA"],
         Addon.L["TAB_TEXTURES"],
+        Addon.L["TAB_FONTS"],
         Addon.L["TAB_COLORS"],
         Addon.L["TAB_LAYOUT"],
         Addon.L["TAB_MONITOR"],
@@ -148,9 +150,9 @@ function UI:Initialize()
         tabButtons[i] = btn
     end
 
-    local tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 =
+    local tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 =
         tabButtons[1], tabButtons[2], tabButtons[3], tabButtons[4],
-        tabButtons[5], tabButtons[6], tabButtons[7], tabButtons[8]
+        tabButtons[5], tabButtons[6], tabButtons[7], tabButtons[8], tabButtons[9]
 
     local function ResizeTabButtons()
         local frameWidth = frame:GetWidth()
@@ -177,11 +179,11 @@ function UI:Initialize()
     self.tabs[TAB_EVENTS] = {button = tab2, content = self:CreateEventMonitorTab(contentFrame)}
     self.tabs[TAB_LUA] = {button = tab3, content = self:CreateLuaConsoleTab(contentFrame)}
     self.tabs[TAB_TEXTURES] = {button = tab4, content = self:CreateTextureTab(contentFrame)}
-
-    self.tabs[TAB_COLORS] = {button = tab5, content = self:CreateColorToolsTab(contentFrame)}
-    self.tabs[TAB_LAYOUT] = {button = tab6, content = self:CreateLayoutTab(contentFrame)}
-    self.tabs[TAB_MONITOR] = {button = tab7, content = self:CreateMonitorTab(contentFrame)}
-    self.tabs[TAB_SETTINGS] = {button = tab8, content = self:CreateSettingsTab(contentFrame)}
+    self.tabs[TAB_FONTS] = {button = tab5, content = self:CreateFontBrowserTab(contentFrame)}
+    self.tabs[TAB_COLORS] = {button = tab6, content = self:CreateColorToolsTab(contentFrame)}
+    self.tabs[TAB_LAYOUT] = {button = tab7, content = self:CreateLayoutTab(contentFrame)}
+    self.tabs[TAB_MONITOR] = {button = tab8, content = self:CreateMonitorTab(contentFrame)}
+    self.tabs[TAB_SETTINGS] = {button = tab9, content = self:CreateSettingsTab(contentFrame)}
 
     local combatHide = CreateFrame("Frame", nil, frame)
     combatHide:SetScript("OnEvent", function()

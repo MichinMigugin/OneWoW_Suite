@@ -366,7 +366,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     reopenCheck:SetPoint("TOPLEFT", popup, "TOPLEFT", 6, yPos)
     local reopenLabel = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     reopenLabel:SetPoint("LEFT", reopenCheck, "RIGHT", 2, 0)
-    reopenLabel:SetText("Reopen on /reload")
+    reopenLabel:SetText((Addon.L and Addon.L["MSG_REOPEN_ON_RELOAD"]) or "Reopen on /reload")
     reopenLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local totalHeight = math.abs(yPos) + 32

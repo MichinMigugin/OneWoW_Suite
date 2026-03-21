@@ -1,6 +1,7 @@
 local AddonName, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local L = Addon.L or {}
 if not OneWoW_GUI then return end
 
 local FramePicker = {}
@@ -40,7 +41,7 @@ function FramePicker:Initialize()
 
     local dialogResult = OneWoW_GUI:CreateDialog({
         name = "WoWNotesDevToolsPickerInfo",
-        title = "ENTER/Click: Select | TAB: Cycle | ESC: Cancel | SHIFT: Move This",
+        title = L["FRAME_PICKER_TITLE"] or "ENTER/Click: Select | TAB: Cycle | ESC: Cancel | SHIFT: Move This",
         width = 450,
         height = 350,
         strata = "TOOLTIP",
@@ -59,7 +60,7 @@ function FramePicker:Initialize()
     infoWindow.details:SetJustifyH("LEFT")
     infoWindow.details:SetJustifyV("TOP")
     infoWindow.details:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    infoWindow.details:SetText("Hover over a frame to see details...")
+    infoWindow.details:SetText(L["FRAME_PICKER_HOVER"] or "Hover over a frame to see details...")
 
     self.infoWindow = infoWindow
 end
@@ -78,17 +79,17 @@ function FramePicker:Start()
     self.overlay:SetFrameStrata("FULLSCREEN_DIALOG")
     self.infoWindow:Show()
 
-    Addon:Print("Frame picker active - Click on a frame to inspect it")
+    Addon:Print(L["FRAME_PICKER_MSG_ACTIVE"] or "Frame picker active - Click on a frame to inspect it")
 end
 
 function FramePicker:CycleFrame()
     if #self.allFrames <= 1 then
-        Addon:Print("Only one frame at cursor")
+        Addon:Print(L["FRAME_PICKER_MSG_ONE"] or "Only one frame at cursor")
         return
     end
 
     self.frameIndex = (self.frameIndex % #self.allFrames) + 1
-    Addon:Print(string.format("Cycling to frame %d of %d", self.frameIndex, #self.allFrames))
+    Addon:Print((L["FRAME_PICKER_MSG_CYCLING"] or "Cycling to frame %d of %d"):format(self.frameIndex, #self.allFrames))
 end
 
 function FramePicker:Cancel()
@@ -102,7 +103,7 @@ function FramePicker:Cancel()
         Addon.UI.mainFrame:Show()
     end
 
-    Addon:Print("Frame picker cancelled")
+    Addon:Print(L["FRAME_PICKER_MSG_CANCELLED"] or "Frame picker cancelled")
 end
 
 function FramePicker:GetGeometricFramesAtCursor()
@@ -172,7 +173,7 @@ end
 
 function FramePicker:OnUpdate(elapsed)
     if not self.checkedAPI then
-        Addon:Print("Using geometric frame detection (like fstack)")
+        Addon:Print(L["FRAME_PICKER_MSG_GEOMETRIC"] or "Using geometric frame detection (like fstack)")
         self.checkedAPI = true
     end
 
@@ -260,7 +261,7 @@ function FramePicker:OnUpdate(elapsed)
 
         local details = {}
         if #validFrames > 1 then
-            tinsert(details, string.format("FRAME %d of %d (TAB to cycle)", self.frameIndex, #validFrames))
+            tinsert(details, (L["FRAME_PICKER_FRAME_OF"] or "FRAME %d of %d (TAB to cycle)"):format(self.frameIndex, #validFrames))
             tinsert(details, "")
         end
         tinsert(details, "NAME: " .. name)
@@ -324,7 +325,7 @@ function FramePicker:OnUpdate(elapsed)
         Addon.FrameInspector:HighlightFrame(targetFrame)
     else
         self.currentFrame = nil
-        self.infoWindow.details:SetText("All frames filtered out\n(Forbidden or picker UI)")
+        self.infoWindow.details:SetText(L["FRAME_PICKER_ALL_FILTERED"] or "All frames filtered out\n(Forbidden or picker UI)")
         Addon.FrameInspector:ClearHighlight()
     end
 
@@ -341,7 +342,7 @@ end
 
 function FramePicker:OnClick()
     if not self.currentFrame then
-        Addon:Print("No frame under cursor")
+        Addon:Print(L["FRAME_PICKER_MSG_NO_FRAME"] or "No frame under cursor")
         return
     end
 
@@ -349,7 +350,7 @@ function FramePicker:OnClick()
     self:Cancel()
 
     Addon.FrameInspector:InspectFrame(frame)
-    Addon:Print("Selected: " .. (frame.GetName and frame:GetName() or "Anonymous"))
+    Addon:Print((L["FRAME_PICKER_MSG_SELECTED"] or "Selected: %s"):format(frame.GetName and frame:GetName() or "Anonymous"))
 
     if Addon.UI then
         Addon.UI:Show()
