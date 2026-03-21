@@ -190,7 +190,8 @@ OneWoW_Bags.Locales["deDE"] = {
     ["SETTING_BANK_COLUMNS"] = "Bankspalten",
 
     ["SETTING_ITEM_SORT"] = "Gegenstandssortierung",
-    ["SORT_DEFAULT"] = "Standard",
+    ["SORT_OFF"] = "Aus",
+    ["SORT_DEFAULT"] = "Slot#",
     ["SORT_NAME"] = "Name",
     ["SORT_RARITY"] = "Seltenheit",
     ["SORT_ITEM_LEVEL"] = "Gegenstandsstufe",

@@ -283,6 +283,7 @@ function Settings:Create()
 
     local sortY = -12
     local itemSortItems = {
+        { text = L["SORT_OFF"], value = "none", isActive = (db.global.itemSort == "none") },
         { text = L["SORT_DEFAULT"], value = "default", isActive = (db.global.itemSort == "default") },
         { text = L["SORT_NAME"], value = "name", isActive = (db.global.itemSort == "name") },
         { text = L["SORT_RARITY"], value = "rarity", isActive = (db.global.itemSort == "rarity") },

@@ -190,7 +190,8 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["SETTING_BANK_COLUMNS"] = "Столбцы банка",
 
     ["SETTING_ITEM_SORT"] = "Сортировка предметов",
-    ["SORT_DEFAULT"] = "По умолчанию",
+    ["SORT_OFF"] = "Выкл",
+    ["SORT_DEFAULT"] = "Slot#",
     ["SORT_NAME"] = "Название",
     ["SORT_RARITY"] = "Редкость",
     ["SORT_ITEM_LEVEL"] = "Уровень предмета",
