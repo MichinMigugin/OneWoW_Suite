@@ -3,3 +3,8 @@ OneWoW_UI/
 .releases/
 .gitignore
 .git/
+
+# Local Cursor rules (user-specific)
+.cursor/rules/1W-Ricky-*.mdc
+
+

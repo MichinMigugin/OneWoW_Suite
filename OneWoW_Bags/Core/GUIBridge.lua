@@ -63,7 +63,9 @@ end
 function OneWoW_Bags:SortButtons(buttons)
     local db = self.db
     local sortMode = db and db.global and db.global.itemSort or "default"
-    if sortMode == "default" then
+    if sortMode == "none" then
+        return buttons
+    elseif sortMode == "default" then
         table.sort(buttons, function(a, b)
             if not a.owb_hasItem then return false end
             if not b.owb_hasItem then return true end

@@ -191,7 +191,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SETTING_BANK_COLUMNS"] = "Bank Columns",
 
     ["SETTING_ITEM_SORT"] = "Item Sort",
-    ["SORT_DEFAULT"] = "Default",
+    ["SORT_OFF"] = "Off",
+    ["SORT_DEFAULT"] = "Slot#",
     ["SORT_NAME"] = "Name",
     ["SORT_RARITY"] = "Rarity",
     ["SORT_ITEM_LEVEL"] = "Item Level",
@@ -204,8 +205,6 @@ OneWoW_Bags.Locales["enUS"] = {
 
     ["SECTION_INTEGRATION"] = "OneWoW Integration",
     ["DESC_OVERLAY"] = "Toggle OneWoW item overlay displays on bag items.",
-
-    ["CLEANUP"] = "Cleanup",
 
     ["GOLD_TOOLTIP_PERSONAL"] = "Personal",
     ["GOLD_TOOLTIP_TOTAL"] = "Total Gold",

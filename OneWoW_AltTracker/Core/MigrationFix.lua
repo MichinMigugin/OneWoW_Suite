@@ -3,6 +3,51 @@ local addonName, ns = ...
 ns.MigrationFix = {}
 local MigrationFix = ns.MigrationFix
 
+local function RemoveNonStringKeysFromTable(t)
+    if not t then
+        return 0
+    end
+    local remove = {}
+    for k in pairs(t) do
+        if type(k) ~= "string" then
+            remove[#remove + 1] = k
+        end
+    end
+    local n = #remove
+    for i = 1, n do
+        t[remove[i]] = nil
+    end
+    return n
+end
+
+function MigrationFix:RemoveInvalidCharacterKeys()
+    local removed = 0
+    local dbNames = {
+        "OneWoW_AltTracker_Character_DB",
+        "OneWoW_AltTracker_Professions_DB",
+        "OneWoW_AltTracker_Endgame_DB",
+        "OneWoW_AltTracker_Storage_DB",
+        "OneWoW_AltTracker_Auctions_DB",
+        "OneWoW_AltTracker_Collections_DB",
+    }
+    for _, name in ipairs(dbNames) do
+        local db = _G[name]
+        if db and db.characters then
+            removed = removed + RemoveNonStringKeysFromTable(db.characters)
+        end
+    end
+    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global then
+        local fav = _G.OneWoW_AltTracker.db.global.favorites
+        if fav then
+            removed = removed + RemoveNonStringKeysFromTable(fav)
+        end
+    end
+    if _G.OneWoW_CatalogData_Quests_DB and _G.OneWoW_CatalogData_Quests_DB.completion then
+        removed = removed + RemoveNonStringKeysFromTable(_G.OneWoW_CatalogData_Quests_DB.completion)
+    end
+    return removed
+end
+
 function MigrationFix:FixImportedData()
     if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then
         return false

@@ -12,19 +12,21 @@ local function CollectAllCharacterKeys()
 
     if _G.OneWoW_AltTracker_Character_DB and _G.OneWoW_AltTracker_Character_DB.characters then
         for charKey, data in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
-            if not charMap[charKey] then
-                charMap[charKey] = {
-                    key = charKey,
-                    name = data.name or charKey:match("^(.+)-"),
-                    realm = data.realm or charKey:match("-(.+)$"),
-                    class = data.class,
-                    className = data.className,
-                    level = data.level,
-                    lastLogin = data.lastLogin,
-                    sources = {},
-                }
+            if type(charKey) == "string" then
+                if not charMap[charKey] then
+                    charMap[charKey] = {
+                        key = charKey,
+                        name = data.name or charKey:match("^(.+)-"),
+                        realm = data.realm or charKey:match("-(.+)$"),
+                        class = data.class,
+                        className = data.className,
+                        level = data.level,
+                        lastLogin = data.lastLogin,
+                        sources = {},
+                    }
+                end
+                charMap[charKey].sources["Character"] = true
             end
-            charMap[charKey].sources["Character"] = true
         end
     end
 
@@ -40,15 +42,17 @@ local function CollectAllCharacterKeys()
         local db = _G[dbInfo.global]
         if db and db.characters then
             for charKey, _ in pairs(db.characters) do
-                if not charMap[charKey] then
-                    charMap[charKey] = {
-                        key = charKey,
-                        name = charKey:match("^(.+)-"),
-                        realm = charKey:match("-(.+)$"),
-                        sources = {},
-                    }
+                if type(charKey) == "string" then
+                    if not charMap[charKey] then
+                        charMap[charKey] = {
+                            key = charKey,
+                            name = charKey:match("^(.+)-"),
+                            realm = charKey:match("-(.+)$"),
+                            sources = {},
+                        }
+                    end
+                    charMap[charKey].sources[dbInfo.label] = true
                 end
-                charMap[charKey].sources[dbInfo.label] = true
             end
         end
     end
@@ -75,6 +79,24 @@ local function CollectAllCharacterKeys()
         local favorites = _G.OneWoW_AltTracker.db.global.favorites
         if favorites then
             for charKey, _ in pairs(favorites) do
+                if type(charKey) == "string" then
+                    if not charMap[charKey] then
+                        charMap[charKey] = {
+                            key = charKey,
+                            name = charKey:match("^(.+)-"),
+                            realm = charKey:match("-(.+)$"),
+                            sources = {},
+                        }
+                    end
+                    charMap[charKey].sources["Favorites"] = true
+                end
+            end
+        end
+    end
+
+    if _G.OneWoW_CatalogData_Quests_DB and _G.OneWoW_CatalogData_Quests_DB.completion then
+        for charKey, _ in pairs(_G.OneWoW_CatalogData_Quests_DB.completion) do
+            if type(charKey) == "string" then
                 if not charMap[charKey] then
                     charMap[charKey] = {
                         key = charKey,
@@ -83,22 +105,8 @@ local function CollectAllCharacterKeys()
                         sources = {},
                     }
                 end
-                charMap[charKey].sources["Favorites"] = true
+                charMap[charKey].sources["Quest Completion"] = true
             end
-        end
-    end
-
-    if _G.OneWoW_CatalogData_Quests_DB and _G.OneWoW_CatalogData_Quests_DB.completion then
-        for charKey, _ in pairs(_G.OneWoW_CatalogData_Quests_DB.completion) do
-            if not charMap[charKey] then
-                charMap[charKey] = {
-                    key = charKey,
-                    name = charKey:match("^(.+)-"),
-                    realm = charKey:match("-(.+)$"),
-                    sources = {},
-                }
-            end
-            charMap[charKey].sources["Quest Completion"] = true
         end
     end
 
@@ -185,7 +193,7 @@ local function PurgeCharacter(charKey, tradeskillKey)
     end
 
     local tsKey = tradeskillKey
-    if not tsKey then
+    if not tsKey and type(charKey) == "string" then
         local name, realm = charKey:match("^(.+)-(.+)$")
         if name and realm then
             tsKey = realm .. "-" .. name
@@ -491,50 +499,6 @@ function ns.UI.CreateSettingsTab(parent)
     end)
 
     yOffset = yOffset - 50
-
-    local importSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["IMPORT_FROM_WOWNOTES"] or "Import Data", yOffset = yOffset })
-    yOffset = importSection.bottomY - 8
-
-    local importDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    importDesc:SetPoint("TOPLEFT", 15, yOffset)
-    importDesc:SetPoint("TOPRIGHT", -15, yOffset)
-    importDesc:SetJustifyH("LEFT")
-    importDesc:SetWordWrap(true)
-    importDesc:SetText("Import character data from WoWNotes. Imports character info, professions, endgame progression, and action bars. Bag and bank item data is not imported - log in on each character to collect that data.")
-    importDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    importDesc:SetSpacing(3)
-
-    C_Timer.After(0.01, function()
-        local textHeight = importDesc:GetStringHeight()
-        yOffset = yOffset - textHeight - 12
-    end)
-    yOffset = yOffset - 20
-
-    local importBtn = OneWoW_GUI:CreateButton(scrollContent, { text = "Import from WoWNotes", width = 280, height = 35 })
-    importBtn:SetPoint("TOPLEFT", 25, yOffset)
-
-    importBtn:SetScript("OnClick", function()
-        if not (_G.WoWNotes and _G.WoWNotes.db and _G.WoWNotes.db.global and _G.WoWNotes.db.global.altTracker) then
-            print("|cFFFFD100OneWoW - AltTracker:|r No WoWNotes data found to import.")
-            return
-        end
-        local wownotes = _G.WoWNotes.db.global
-        if not wownotes.altTracker or not wownotes.altTracker.characters then
-            print("|cFFFFD100OneWoW - AltTracker:|r No WoWNotes character data found.")
-            return
-        end
-        local charCount = 0
-        for _ in pairs(wownotes.altTracker.characters) do
-            charCount = charCount + 1
-        end
-        if charCount == 0 then
-            print("|cFFFFD100OneWoW - AltTracker:|r No characters found to import.")
-            return
-        end
-        ns.Core:ShowMigrationDialog(charCount)
-    end)
-
-    yOffset = yOffset - 45
 
     local dbSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = "Database Manager", yOffset = yOffset })
     yOffset = dbSection.bottomY - 8

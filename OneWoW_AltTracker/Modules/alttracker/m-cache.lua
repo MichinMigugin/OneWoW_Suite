@@ -1,5 +1,4 @@
 local addonName, ns = ...
-local WoWNotes = _G.WoWNotes
 
 ns.AltTrackerCache = ns.AltTrackerCache or {}
 local Cache = ns.AltTrackerCache

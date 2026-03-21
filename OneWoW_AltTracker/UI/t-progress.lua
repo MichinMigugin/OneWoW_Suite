@@ -215,19 +215,6 @@ local function GetWorldBossKilled(endgameData)
     return false, nil
 end
 
-local function IsFavorite(charKey)
-    if not OneWoW_AltTracker or not OneWoW_AltTracker.db then return false end
-    return OneWoW_AltTracker.db.global.favorites and OneWoW_AltTracker.db.global.favorites[charKey] == true
-end
-
-local function SetFavorite(charKey, value)
-    if not OneWoW_AltTracker or not OneWoW_AltTracker.db then return end
-    if not OneWoW_AltTracker.db.global.favorites then
-        OneWoW_AltTracker.db.global.favorites = {}
-    end
-    OneWoW_AltTracker.db.global.favorites[charKey] = value or nil
-end
-
 local function GetSortedCharacters(subTabKey)
     if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return {} end
     if not _G.OneWoW_AltTracker_Endgame_DB then return {} end
@@ -244,8 +231,8 @@ local function GetSortedCharacters(subTabKey)
     local state = subTabState[subTabKey]
 
     table.sort(allChars, function(a, b)
-        local aFav = IsFavorite(a.key)
-        local bFav = IsFavorite(b.key)
+        local aFav = ns.IsFavoriteChar(a.key)
+        local bFav = ns.IsFavoriteChar(b.key)
         if aFav and not bFav then return true end
         if bFav and not aFav then return false end
 
@@ -713,6 +700,10 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
         })
         charRow.charKey = charKey
 
+        if ns.UI.CreateFavoriteStarButton then
+            table.insert(charRow.cells, 2, ns.UI.CreateFavoriteStarButton(charRow, charKey))
+        end
+
         CreateCommonCells(charRow, charData, charKey, endgameData, rowHeight)
 
         buildCellsFunc(charRow, charData, charKey, endgameData, progressTab)
@@ -756,6 +747,7 @@ end
 local function CreateMythicPlusColumns()
     local cols = {
         {key = "expand",    label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],      ttDesc = L["TT_COL_EXPAND_DESC"]},
+        {key = "star",      label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],        ttDesc = L["TT_COL_STAR_DESC"]},
         {key = "faction",   label = "F",                         width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],     ttDesc = L["TT_COL_FACTION_DESC"]},
         {key = "mail",      label = "",                          width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],        ttDesc = L["TT_COL_MAIL_DESC"]},
         {key = "name",      label = L["COL_CHARACTER"],          width = 135, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],   ttDesc = L["TT_COL_CHARACTER_DESC"]},
@@ -764,7 +756,6 @@ local function CreateMythicPlusColumns()
         {key = "ilvl",      label = L["PROGRESS_COL_ILVL"],      width = 55,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ILVL"],        ttDesc = L["TT_COL_ILVL_DESC"]},
         {key = "rating",    label = L["PROGRESS_COL_RATING"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_RATING"],      ttDesc = L["TT_COL_RATING_DESC"]},
         {key = "bestTime",  label = L["PROGRESS_COL_BEST_RUN"] or "Best Run", width = 55, fixed = true, align = "left",         ttTitle = L["TT_COL_BEST_TIME"],   ttDesc = L["TT_COL_BEST_TIME_DESC"]},
-        {key = "star",      label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],        ttDesc = L["TT_COL_STAR_DESC"]},
         {key = "keystone",  label = L["PROGRESS_COL_KEYSTONE"],  width = 65,  fixed = true,  align = "left",                     ttTitle = L["TT_COL_KEYSTONE"],    ttDesc = L["TT_COL_KEYSTONE_DESC"]},
     }
     for _, dung in ipairs(SEASON_DUNGEONS) do
@@ -785,6 +776,7 @@ end
 local function CreateRaidsColumns()
     local cols = {
         {key = "expand",      label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],      ttDesc = L["TT_COL_EXPAND_DESC"]},
+        {key = "star",        label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],        ttDesc = L["TT_COL_STAR_DESC"]},
         {key = "faction",     label = "F",                         width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],     ttDesc = L["TT_COL_FACTION_DESC"]},
         {key = "mail",        label = "",                          width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],        ttDesc = L["TT_COL_MAIL_DESC"]},
         {key = "name",        label = L["COL_CHARACTER"],          width = 135, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],   ttDesc = L["TT_COL_CHARACTER_DESC"]},
@@ -815,6 +807,7 @@ end
 local function CreateCurrenciesColumns()
     local cols = {
         {key = "expand",    label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],      ttDesc = L["TT_COL_EXPAND_DESC"]},
+        {key = "star",      label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],        ttDesc = L["TT_COL_STAR_DESC"]},
         {key = "faction",   label = "F",                         width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],     ttDesc = L["TT_COL_FACTION_DESC"]},
         {key = "mail",      label = "",                          width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],        ttDesc = L["TT_COL_MAIL_DESC"]},
         {key = "name",      label = L["COL_CHARACTER"],          width = 135, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],   ttDesc = L["TT_COL_CHARACTER_DESC"]},
@@ -842,34 +835,6 @@ local function BuildMythicPlusCells(charRow, charData, charKey, endgameData, pro
     bestTimeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     bestTimeText:SetJustifyH("LEFT")
     table.insert(charRow.cells, bestTimeText)
-
-    local starBtn = CreateFrame("Button", nil, charRow)
-    starBtn:SetSize(30, 32)
-    local starIcon = starBtn:CreateTexture(nil, "ARTWORK")
-    starIcon:SetSize(14, 14)
-    starIcon:SetPoint("CENTER")
-    starIcon:SetTexture("Interface/Common/FavoritesIcon")
-    if IsFavorite(charKey) then
-        starIcon:SetVertexColor(1, 0.82, 0, 1)
-    else
-        starIcon:SetVertexColor(0.4, 0.4, 0.4, 0.6)
-    end
-    starBtn:SetScript("OnClick", function()
-        local nowFav = IsFavorite(charKey)
-        SetFavorite(charKey, not nowFav)
-        if progressTab and progressTab.subTabFrames then
-            local f = progressTab.subTabFrames["mythicplus"]
-            if f and f.refreshFunc then f.refreshFunc(f) end
-        end
-    end)
-    starBtn:SetScript("OnEnter", function()
-        GameTooltip:SetOwner(starBtn, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["TT_COL_STAR"], 1, 1, 1)
-        GameTooltip:AddLine(L["TT_COL_STAR_DESC"], nil, nil, nil, true)
-        GameTooltip:Show()
-    end)
-    starBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    table.insert(charRow.cells, starBtn)
 
     local keystoneText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     local keystoneLevel = (endgameData and endgameData.mythicPlus and endgameData.mythicPlus.currentKeystone and endgameData.mythicPlus.currentKeystone.level) or 0
@@ -1080,7 +1045,7 @@ local function BuildRaidsTooltip(self, edg, chd, chk, contentFrame)
             end
         end
     end
-    if not colKey or colKey == "expand" or colKey == "faction" or colKey == "mail" then
+    if not colKey or colKey == "expand" or colKey == "star" or colKey == "faction" or colKey == "mail" then
         GameTooltip:Hide()
         return
     end
@@ -1198,7 +1163,7 @@ local function BuildCurrenciesTooltip(self, edg, chd, chk, contentFrame)
             end
         end
     end
-    if not colKey or colKey == "expand" or colKey == "faction" or colKey == "mail" then
+    if not colKey or colKey == "expand" or colKey == "star" or colKey == "faction" or colKey == "mail" then
         GameTooltip:Hide()
         return
     end
@@ -1401,6 +1366,10 @@ function ns.UI.CreateProgressTab(parent)
             ns.UI.RefreshProgressStats(parent)
         end
     end)
+
+    if ns.UI.RegisterRosterTabFrame then
+        ns.UI.RegisterRosterTabFrame("progress", parent)
+    end
 end
 
 function ns.UI.RefreshProgressTab(progressTab)

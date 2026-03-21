@@ -108,6 +108,26 @@ guards like `if OneWoW_GUI and OneWoW_GUI.SomeMethod then`. Call
 `OneWoW_GUI.SomeMethod(...)` directly. When something fails (e.g. missing method),
 it errors and gets fixed, not silently ignored.
 
+### 2.3.2 OneWoW_GUI-First UI Policy (Mandatory)
+
+All addon UI must be created via the OneWoW GUI addon whenever a matching
+component/helper exists.
+
+- **Do not build raw UI widgets first** (`CreateFrame`, `CreateFontString`,
+  manual backdrops/buttons/scrollbars) when OneWoW_GUI already provides an
+  equivalent helper/component.
+- **Before adding or changing UI code**, check whether OneWoW_GUI already has a
+  function for it and prefer that function.
+- **Reduce custom UI code whenever possible**. Refactors should bias toward
+  replacing custom UI construction with OneWoW_GUI calls to reduce duplicate
+  code and improve consistency.
+- If behavior requires changing a OneWoW_GUI function, **stop and discuss it
+  first** before implementing local workarounds.
+- If the needed UI function does not exist in OneWoW_GUI, **stop and discuss
+  adding it** before introducing new custom UI patterns.
+- If no OneWoW_GUI equivalent exists and work must proceed, clearly document
+  why a temporary direct WoW UI call is required.
+
 ### 2.3.1 OneWoW_GUI Component API
 
 OneWoW_GUI uses a consistent `CreateComponent(parent, options)` pattern: parent
@@ -531,6 +551,12 @@ Prefer WoW's global table helpers over Lua's `table.*` functions:
 - For COMBAT_LOG_EVENT_UNFILTERED, always call `CombatLogGetCurrentEventInfo()`
   inside the handler — do NOT pass args via `...` (they don't exist for CLEU).
 
+### 7.2.1 Compliance Baseline
+
+- All code must comply with **WoW Retail Midnight 12.0.0.1** API behavior.
+- Account for modern API changes (including **secret values** restrictions)
+  when implementing or reviewing features.
+
 ### 7.3 Error Handling
 
 ```lua
@@ -793,3 +819,13 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 - **Lua 5.1 manual:** https://www.lua.org/manual/5.1/
 - **Lua functions in WoW:** https://warcraft.wiki.gg/wiki/Lua_functions (what's available/removed)
 - **Secret values:** https://warcraft.wiki.gg/wiki/API_issecretvalue, https://warcraft.wiki.gg/wiki/API_issecrettable
+
+### 10.1 Allowed External Sources Policy
+
+When checking API/game information, use only the sources below unless explicit
+permission is provided for others.
+
+- **API information:** `warcraft.wiki.gg` only (authoritative).
+- **General game information:** `warcraft.wiki.gg` and `wowhead.com`.
+- `google.com` may be used as a search engine to reach allowed sources.
+- No other websites are authorized without explicit user permission.

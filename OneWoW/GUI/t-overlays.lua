@@ -63,6 +63,8 @@ local ICON_EFFECT_DISPLAY_MAP = { ["none"] = "None", ["spinning"] = "Spinning", 
 local BG_STYLE_OPTIONS = { "Solid-Circle", "Solid-Square", "Spinning Orbs", "Glow Pulse", "Portal Spiral" }
 
 local PREVIEW_SLOT_SIZE = 74
+-- Item link used only for overlay settings preview when "rarity-colored background" is enabled (matches engine: C_Item.GetItemQualityColor).
+local PREVIEW_BG_RARITY_ITEM_LINK = "|cff0070dd|Hitem:19019::::::::60:::::::::|h[]|h|r"
 
 local ICON_CATEGORIES = {
     {
@@ -398,6 +400,20 @@ local function CreateSlotPreview(parent, featureId, reg)
     local bScaleDown = bgAnim:CreateAnimation("Scale")
     bScaleDown:SetDuration(0.75); bScaleDown:SetScale(1/1.8, 1/1.8); bScaleDown:SetOrder(2)
     bgAnim:SetLooping("REPEAT")
+
+    local bgPulseAnim = bgTex:CreateAnimationGroup()
+    local bgFadeOut = bgPulseAnim:CreateAnimation("Alpha")
+    bgFadeOut:SetFromAlpha(1.0)
+    bgFadeOut:SetToAlpha(0.3)
+    bgFadeOut:SetDuration(0.75)
+    bgFadeOut:SetOrder(1)
+    local bgFadeIn = bgPulseAnim:CreateAnimation("Alpha")
+    bgFadeIn:SetFromAlpha(0.3)
+    bgFadeIn:SetToAlpha(1.0)
+    bgFadeIn:SetDuration(0.75)
+    bgFadeIn:SetOrder(2)
+    bgPulseAnim:SetLooping("REPEAT")
+
     bgFrame:Hide()
 
     local bgMask = bgFrame:CreateMaskTexture()
@@ -447,9 +463,19 @@ local function CreateSlotPreview(parent, featureId, reg)
 
         local bgEnabled = reg:GetOverlaySetting(featureId, "bgEnabled")
         if bgEnabled then
+            bgFrame:SetFrameLevel(overlayFrame:GetFrameLevel() - 1)
+
             local bgStyle = reg:GetOverlaySetting(featureId, "bgStyle") or "Solid-Circle"
             local bgScale = reg:GetOverlaySetting(featureId, "bgScale") or 1.0
             local bgColor = reg:GetOverlaySetting(featureId, "bgColor") or {1, 1, 1}
+            if reg:GetOverlaySetting(featureId, "bgUseRarityColor") and PREVIEW_BG_RARITY_ITEM_LINK and C_Item and C_Item.GetItemInfo then
+                local quality = select(3, C_Item.GetItemInfo(PREVIEW_BG_RARITY_ITEM_LINK))
+                if quality then
+                    local r, g, b = C_Item.GetItemQualityColor(quality)
+                    bgColor = {r, g, b}
+                end
+            end
+
             local baseBgSize = finalSize * 1.6
             local finalBgSize = baseBgSize * bgScale
             bgFrame:SetSize(finalBgSize, finalBgSize)
@@ -457,36 +483,55 @@ local function CreateSlotPreview(parent, featureId, reg)
             bgTex:SetAllPoints(bgFrame)
             bgTex:SetVertexColor(bgColor[1], bgColor[2], bgColor[3])
 
-            if bgStyle == "Spinning Orbs" then
+            local function applyCircleMask()
+                if not previewMaskActive then
+                    bgTex:AddMaskTexture(bgMask)
+                    previewMaskActive = true
+                end
+                bgMask:Show()
+            end
+
+            local function removeCircleMask()
                 if previewMaskActive then
                     bgTex:RemoveMaskTexture(bgMask)
                     previewMaskActive = false
                 end
                 bgMask:Hide()
+            end
+
+            if bgStyle == "Spinning Orbs" then
+                removeCircleMask()
                 bgTex:SetTexture(nil)
                 bgTex:SetAtlas("ArtifactsFX-SpinningGlowys-Purple", false)
+                bgPulseAnim:Stop()
                 bgAnim:Play()
-            else
+            elseif bgStyle == "Portal Spiral" then
+                removeCircleMask()
+                bgTex:SetTexture(nil)
+                bgTex:SetAtlas("UI-Frame-jailerstower-Portrait-QualityEpic", false)
+                bgPulseAnim:Stop()
+                bgAnim:Play()
+            elseif bgStyle == "Glow Pulse" then
                 bgAnim:Stop()
                 bgTex:SetAtlas("")
                 bgTex:SetTexture("Interface\\Buttons\\WHITE8x8")
+                applyCircleMask()
+                bgPulseAnim:Play()
+            else
+                bgAnim:Stop()
+                bgPulseAnim:Stop()
+                bgTex:SetAtlas("")
+                bgTex:SetTexture("Interface\\Buttons\\WHITE8x8")
                 if bgStyle == "Solid-Circle" then
-                    if not previewMaskActive then
-                        bgTex:AddMaskTexture(bgMask)
-                        previewMaskActive = true
-                    end
-                    bgMask:Show()
+                    applyCircleMask()
                 else
-                    if previewMaskActive then
-                        bgTex:RemoveMaskTexture(bgMask)
-                        previewMaskActive = false
-                    end
-                    bgMask:Hide()
+                    removeCircleMask()
                 end
             end
             bgFrame:Show()
         else
             bgAnim:Stop()
+            bgPulseAnim:Stop()
             bgFrame:Hide()
         end
     end

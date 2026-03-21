@@ -53,6 +53,7 @@ function GUI:InitMainWindow()
     MainWindow:SetFrameStrata("MEDIUM")
     MainWindow:SetToplevel(true)
     MainWindow:SetScript("OnHide", function()
+        if not isInitialized then return end
         GUI:CleanupAllViews()
         if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.ClearSearch then
             OneWoW_Bags.InfoBar:ClearSearch()

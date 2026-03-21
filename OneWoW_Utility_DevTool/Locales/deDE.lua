@@ -88,7 +88,7 @@ Addon.Locales["deDE"] = {
 
     -- Lua Console / Error Logger
     ["LABEL_ERRORS"] = "Fehler:",
-    ["LUA_TAB_BUGGRABBER_NOTICE"] = "!BugGrabber is handling Lua errors. DevTool mirrors those errors here. Disable !BugGrabber if you only want DevTool's capture.",
+    ["LUA_TAB_BUGGRABBER_NOTICE"] = "!BugGrabber verarbeitet Lua-Fehler. DevTool zeigt sie hier an. Deaktiviere !BugGrabber, wenn nur DevTool aufzeichnen soll.",
     ["BTN_COPY_ERROR"] = "Fehler kopieren",
     ["LABEL_NO_ERROR"] = "Kein Fehler ausgewählt",
     ["ERR_SESSION_CURRENT"] = "Aktuell",
@@ -171,6 +171,7 @@ Addon.Locales["deDE"] = {
     ["DIALOG_TITLE_SEARCH_RESULTS"] = "Suchergebnisse",
 
     -- Settings
+    ["TAB_SETTINGS"] = "Einstellungen",
     ["SETTINGS_LANGUAGE_SELECTION"] = "Sprache",
     ["SETTINGS_LANGUAGE_DESC"] = "Wähle deine bevorzugte Sprache. Änderungen werden sofort angewendet.",
     ["SETTINGS_THEME_SELECTION"] = "Theme-Auswahl",

@@ -75,6 +75,7 @@ function ns.UI.CreateEquipmentTab(parent)
 
     local columnsConfig = {
         {key = "expand",    label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],            ttDesc = L["TT_COL_EXPAND_DESC"]},
+        {key = "star",      label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],              ttDesc = L["TT_COL_STAR_DESC"]},
         {key = "faction",   label = L["COL_FACTION"],            width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],           ttDesc = L["TT_COL_FACTION_DESC"]},
         {key = "mail",      label = L["COL_MAIL"],               width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],              ttDesc = L["TT_COL_MAIL_DESC"]},
         {key = "name",      label = L["COL_CHARACTER"],          width = 135, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],         ttDesc = L["TT_COL_CHARACTER_DESC"]},
@@ -110,6 +111,13 @@ function ns.UI.CreateEquipmentTab(parent)
             icon:SetSize(12, 12)
             icon:SetPoint("CENTER")
             icon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
+            btn.icon = icon
+            if btn.text then btn.text:SetText("") end
+        elseif col.key == "star" then
+            local icon = btn:CreateTexture(nil, "ARTWORK")
+            icon:SetSize(12, 12)
+            icon:SetPoint("CENTER")
+            icon:SetTexture("Interface/Common/FavoritesIcon")
             btn.icon = icon
             if btn.text then btn.text:SetText("") end
         end
@@ -152,6 +160,10 @@ function ns.UI.CreateEquipmentTab(parent)
             ns.UI.RefreshEquipmentTab(parent)
         end
     end)
+
+    if ns.UI.RegisterRosterTabFrame then
+        ns.UI.RegisterRosterTabFrame("equipment", parent)
+    end
 end
 
 local function GetEquipmentStats(charKey, charData)
@@ -221,6 +233,11 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
     local currentRealm = GetRealmName()
     local currentCharKey = currentChar .. "-" .. currentRealm
     table.sort(allChars, function(a, b)
+        local aFav = ns.IsFavoriteChar(a.key)
+        local bFav = ns.IsFavoriteChar(b.key)
+        if aFav and not bFav then return true end
+        if bFav and not aFav then return false end
+
         local aIsCurrent = (a.key == currentCharKey)
         local bIsCurrent = (b.key == currentCharKey)
         if aIsCurrent and not bIsCurrent then return true end
@@ -450,6 +467,10 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
             end,
         })
         charRow.charKey = charKey
+
+        if ns.UI.CreateFavoriteStarButton then
+            table.insert(charRow.cells, 2, ns.UI.CreateFavoriteStarButton(charRow, charKey))
+        end
 
         local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
         table.insert(charRow.cells, factionCell)

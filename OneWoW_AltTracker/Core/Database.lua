@@ -24,13 +24,7 @@ ns.DatabaseDefaults = {
         },
 
         migrationStatus = {
-            checkedForWoWNotesData = false,
-            lastMigrationCheck = 0,
-            migratedCharacterCount = 0,
-            migrationComplete = false,
             cleanupPerformed = false,
-            migratedToDistributed = false,
-            subAddonsAvailable = {}
         },
 
         overrides = {

@@ -1,5 +1,4 @@
 local addonName, ns = ...
-local WoWNotes = _G.WoWNotes
 local L = ns.L
 
 ns.AltTrackerFormatters = ns.AltTrackerFormatters or {}
@@ -951,9 +950,9 @@ function Formatters:GetMailIcon(mailCount, oldestExpiry, lastCheck, charKey)
         end
     end
 
-    if charKey and _G.WoWNotes and _G.WoWNotes.db and _G.WoWNotes.db.global and _G.WoWNotes.db.global.altTracker then
-        local charData = _G.WoWNotes.db.global.altTracker.characters[charKey]
-        if charData and charData.hasNewMail then
+    if charKey and _G.OneWoW_AltTracker_Storage_DB and _G.OneWoW_AltTracker_Storage_DB.characters then
+        local storageData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
+        if storageData and storageData.mail and storageData.mail.hasNewMail then
             hasNewMailFlag = true
         end
     end
