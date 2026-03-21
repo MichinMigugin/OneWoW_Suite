@@ -206,8 +206,6 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SECTION_INTEGRATION"] = "OneWoW Integration",
     ["DESC_OVERLAY"] = "Toggle OneWoW item overlay displays on bag items.",
 
-    ["CLEANUP"] = "Cleanup",
-
     ["GOLD_TOOLTIP_PERSONAL"] = "Personal",
     ["GOLD_TOOLTIP_TOTAL"] = "Total Gold",
     ["GOLD_TOOLTIP_WARBAND"] = "Warband Bank",
