@@ -228,3 +228,159 @@ function OneWoW_GUI:CreateSectionHeader(parent, options)
 
     return section
 end
+
+--- Draggable vertical splitter between a fixed left pane and a flexible right pane.
+--- Caller positions |leftPanel| (TOP/BOTTOM/LEFT); only width is driven by this helper.
+--- |rightPanel| is re-anchored from the divider to the parent's bottom-right.
+---
+--- options.parent, options.leftPanel, options.rightPanel (required)
+--- options.dividerWidth (default 6)
+--- options.leftMinWidth, options.rightMinWidth
+--- options.splitPadding — horizontal chrome for max-width math (default dividerWidth + 10)
+--- options.bottomOuterInset, options.rightOuterInset — parent BOTTOMRIGHT inset (default 5)
+--- options.resizeCap — screen width cap when growing mainFrame (default 0.95)
+--- options.mainFrame — optional; widened when drag would leave less than dynamic right reserve
+--- options.getMinRightWidth — optional fun() -> number; used only to grow mainFrame (e.g. unbounded text width)
+---   Max left width / resize clamp use rightMinWidth only (matches legacy Frame tab behavior).
+--- options.onWidthChanged — optional fun(leftWidth) after mouse release (persist)
+--- options.maxAutoGrowSteps — max mainFrame widen attempts per drag tick (default 12); handles deferred layout width
+---
+--- @return Frame divider button
+function OneWoW_GUI:CreateVerticalPaneResizer(options)
+    options = options or {}
+    local parent = options.parent
+    local leftPanel = options.leftPanel
+    local rightPanel = options.rightPanel
+    if not parent or not leftPanel or not rightPanel then
+        error("OneWoW_GUI:CreateVerticalPaneResizer requires parent, leftPanel, and rightPanel")
+    end
+
+    local floor = math.floor
+    local ceil = math.ceil
+    local min = math.min
+    local max = math.max
+
+    local dividerWidth = options.dividerWidth or 6
+    local leftMinWidth = options.leftMinWidth or 200
+    local rightMinWidth = options.rightMinWidth or 280
+    local splitPadding = options.splitPadding
+    if splitPadding == nil then
+        splitPadding = dividerWidth + 10
+    end
+    local bottomOuterInset = options.bottomOuterInset or 5
+    local rightOuterInset = options.rightOuterInset or 5
+    local resizeCap = options.resizeCap or 0.95
+    local mainFrame = options.mainFrame
+    local getMinRightWidth = options.getMinRightWidth
+    local onWidthChanged = options.onWidthChanged
+    local maxAutoGrowSteps = options.maxAutoGrowSteps or 12
+
+    --- For auto-grow only: max(rightMinWidth, getMinRightWidth()).
+    local function effectiveRightReserveForGrow()
+        local r = rightMinWidth
+        if getMinRightWidth then
+            local n = getMinRightWidth()
+            if type(n) == "number" and n > r then
+                r = n
+            end
+        end
+        return r
+    end
+
+    local divider = CreateFrame("Button", nil, parent)
+    divider:SetWidth(dividerWidth)
+    divider:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 0, 0)
+    divider:SetPoint("BOTTOM", parent, "BOTTOM", 0, bottomOuterInset)
+    divider:EnableMouse(true)
+
+    local dividerTex = divider:CreateTexture(nil, "OVERLAY")
+    dividerTex:SetWidth(2)
+    dividerTex:SetPoint("TOP", divider, "TOP", 0, 0)
+    dividerTex:SetPoint("BOTTOM", divider, "BOTTOM", 0, 0)
+    dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+
+    divider:SetScript("OnEnter", function(self)
+        dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        SetCursor("UI_RESIZE_CURSOR")
+    end)
+    divider:SetScript("OnLeave", function(self)
+        if not self._owPaneDragActive then
+            dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+            SetCursor(nil)
+        end
+    end)
+
+    divider:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" then
+            self._owPaneDragActive = true
+            local x = GetCursorPosition()
+            self._owPaneStartCursorX = x / self:GetEffectiveScale()
+            self._owPaneStartLeftW = leftPanel:GetWidth()
+        end
+    end)
+
+    divider:SetScript("OnMouseUp", function(self, button)
+        if button == "LeftButton" and self._owPaneDragActive then
+            self._owPaneDragActive = false
+            dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+            SetCursor(nil)
+            if onWidthChanged then
+                onWidthChanged(leftPanel:GetWidth())
+            end
+        end
+    end)
+
+    divider:SetScript("OnUpdate", function(self)
+        if not self._owPaneDragActive then return end
+        local cursorX = GetCursorPosition() / self:GetEffectiveScale()
+        local delta = cursorX - self._owPaneStartCursorX
+        local desiredLeftWidth = max(leftMinWidth, self._owPaneStartLeftW + delta)
+
+        local neededRightGrow = effectiveRightReserveForGrow()
+        local screenMax = floor(GetScreenWidth() * resizeCap)
+        -- Grow host until the tab can fit desiredLeft + dynamic right reserve (handles layout lag with multiple steps).
+        if mainFrame then
+            for _ = 1, maxAutoGrowSteps do
+                local tabW = parent:GetWidth()
+                local minTabW = desiredLeftWidth + neededRightGrow + splitPadding
+                if tabW >= minTabW then
+                    break
+                end
+                local gap = minTabW - tabW
+                local shortage = max(1, ceil(gap - 1e-6))
+                local currentMainW = mainFrame:GetWidth()
+                local newMainW = min(currentMainW + shortage, screenMax)
+                if newMainW <= currentMainW then
+                    break
+                end
+                mainFrame:SetWidth(newMainW)
+            end
+        end
+
+        local tabWidth = parent:GetWidth()
+        -- Clamp uses fixed rightMinWidth only (same as legacy tabWidth - RIGHT_MIN_WIDTH - PADDING).
+        local maxLeftWidth = tabWidth - rightMinWidth - splitPadding
+        if maxLeftWidth < leftMinWidth then
+            maxLeftWidth = leftMinWidth
+        end
+        local newLeftWidth = max(leftMinWidth, min(desiredLeftWidth, maxLeftWidth))
+        leftPanel:SetWidth(newLeftWidth)
+    end)
+
+    rightPanel:ClearAllPoints()
+    rightPanel:SetPoint("TOPLEFT", divider, "TOPRIGHT", 0, 0)
+    rightPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -rightOuterInset, bottomOuterInset)
+
+    parent:HookScript("OnSizeChanged", function(_, w)
+        local maxLeftWidth = w - rightMinWidth - splitPadding
+        if maxLeftWidth < leftMinWidth then
+            maxLeftWidth = leftMinWidth
+        end
+        local currentLeftWidth = leftPanel:GetWidth()
+        if currentLeftWidth > maxLeftWidth then
+            leftPanel:SetWidth(maxLeftWidth)
+        end
+    end)
+
+    return divider
+end

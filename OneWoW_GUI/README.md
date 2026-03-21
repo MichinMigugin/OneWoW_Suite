@@ -632,6 +632,29 @@ local newYOffset = OneWoW_GUI:CreateSection(parent, {
 -- Returns updated yOffset to continue laying out below
 ```
 
+### Vertical pane resizer (list + detail columns)
+```lua
+local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+-- Apply your addon’s backdrop styling to left/right panels before calling.
+OneWoW_GUI:CreateVerticalPaneResizer({
+    parent = tab,
+    leftPanel = leftPanel,
+    rightPanel = rightPanel,
+    dividerWidth = 6,
+    leftMinWidth = 200,
+    rightMinWidth = 280,
+    splitPadding = 16,              -- optional; default dividerWidth + 10
+    bottomOuterInset = 5,
+    rightOuterInset = 5,
+    resizeCap = 0.95,
+    mainFrame = hostWindow,         -- optional: iteratively widen until the tab fits desired left + min right
+    getMinRightWidth = function() return 320 end,  -- optional dynamic minimum (e.g. unwrapped text width)
+    maxAutoGrowSteps = 12,          -- optional; extra SetWidth passes if child width lags the host
+    onWidthChanged = function(leftW) db.listPaneWidth = leftW end,
+})
+```
+Caller anchors the left panel; only `SetWidth` on the left is updated. The right panel is re-anchored from the divider. **Clamp** (max left width and host resize) uses `rightMinWidth` only: `maxLeft = parentWidth - rightMinWidth - splitPadding`. With `mainFrame` and optionally `getMinRightWidth`, each drag tick **grows** the host (up to `resizeCap`) until `parent:GetWidth()` can satisfy `desiredLeft + max(rightMinWidth, getMinRightWidth()) + splitPadding`, so the window widens when the dynamic right column would be too narrow, without locking the divider when `getMinRightWidth()` is very large.
+
 ---
 
 ## Section Headers
