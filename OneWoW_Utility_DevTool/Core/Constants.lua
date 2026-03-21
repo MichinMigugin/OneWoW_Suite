@@ -299,6 +299,12 @@ Addon.Constants = {
         TEXTURE_PREVIEW_BOTTOM_RESERVE = 235,
         TEXTURE_BROWSER_LIST_ROW_HEIGHT = 22,
         TEXTURE_BROWSER_LIST_VISIBLE_ROWS = 40,
+        -- Resizable list / preview split (CreateVerticalPaneResizer).
+        TEXTURE_BROWSER_LEFT_PANE_DEFAULT_WIDTH = 300,
+        TEXTURE_BROWSER_LEFT_PANE_MIN_WIDTH = 200,
+        TEXTURE_BROWSER_RIGHT_PANE_MIN_WIDTH = 260,
+        -- Optional override for CreateVerticalPaneResizer splitPadding (default: divider width + 10).
+        -- TEXTURE_BROWSER_SPLIT_PADDING = 18,
         -- Bookmark icon on list rows (texture layer, right-aligned).
         TEXTURE_BROWSER_BOOKMARK_ICON_SIZE = 14,
         TEXTURE_BROWSER_BOOKMARK_ICON_RIGHT_PAD = 8,

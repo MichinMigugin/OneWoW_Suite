@@ -99,6 +99,9 @@ local function styleListButtonText(btn)
     local rightPad = DU.TEXTURE_BROWSER_BOOKMARK_ICON_RIGHT_PAD or 8
     fs:SetJustifyH("LEFT")
     fs:SetJustifyV("MIDDLE")
+    if fs.SetWordWrap then
+        fs:SetWordWrap(false)
+    end
     fs:ClearAllPoints()
     fs:SetPoint("LEFT", btn, "LEFT", 4, 0)
     if btn.bookmarkIcon and btn.bookmarkIcon:IsShown() then
@@ -154,6 +157,7 @@ function Addon.UI.TextureTab_UpdateListRows(tab)
             else
                 btn:SetNormalFontObject(GameFontNormalSmall)
             end
+            btn._tooltipFullText = label
             styleListButtonText(btn)
             btn:Show()
         else
@@ -162,6 +166,7 @@ function Addon.UI.TextureTab_UpdateListRows(tab)
             end
             btn:Hide()
             btn.entryIndex = nil
+            btn._tooltipFullText = nil
         end
     end
 end
@@ -347,6 +352,7 @@ local function layoutSheetPreview(tab)
         refreshSheetOverlays(tab)
     end
     refreshZoomPercentDisplay(tab)
+    tab._lastFitZoom = computeFitZoom(tab)
 end
 
 local function showTextureSheet(tab, textureKey)
@@ -734,11 +740,26 @@ function Addon.UI:CreateTextureTab(parent)
     tab.bookmarkBtn = bookmarkBtn
     tab.manualToggle = manualToggle
 
+    local LEFT_DEFAULT = DU.TEXTURE_BROWSER_LEFT_PANE_DEFAULT_WIDTH or 300
+    local LEFT_MIN = DU.TEXTURE_BROWSER_LEFT_PANE_MIN_WIDTH or 200
+    local RIGHT_MIN = DU.TEXTURE_BROWSER_RIGHT_PANE_MIN_WIDTH or 260
+    local DIV_W = DU.FRAME_INSPECTOR_DIVIDER_WIDTH or 6
+    local SPLIT_PAD = DU.TEXTURE_BROWSER_SPLIT_PADDING
+    if SPLIT_PAD == nil then
+        SPLIT_PAD = DIV_W + 10
+    end
+
+    local savedListW = Addon.db and Addon.db.textureBrowserLeftPaneWidth
+    local initListW = LEFT_DEFAULT
+    if type(savedListW) == "number" and savedListW >= LEFT_MIN then
+        initListW = savedListW
+    end
+
     local leftPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 320, height = 100 })
     leftPanel:ClearAllPoints()
     leftPanel:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -5)
     leftPanel:SetPoint("BOTTOM", tab, "BOTTOM", 0, 5)
-    leftPanel:SetWidth(300)
+    leftPanel:SetWidth(initListW)
     self:StyleContentPanel(leftPanel)
 
     local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "TextureTabListScroll" })
@@ -769,15 +790,41 @@ function Addon.UI:CreateTextureTab(parent)
                 applyListSelection(tab, b.entryIndex)
             end
         end)
+        btn:SetScript("OnEnter", function(b)
+            local t = b._tooltipFullText
+            if t and t ~= "" then
+                GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
+                local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
+                GameTooltip:SetText(t, tr, tg, tb, nil, true)
+                GameTooltip:Show()
+            end
+        end)
+        btn:SetScript("OnLeave", GameTooltip_Hide)
         styleListButtonText(btn)
         tab.listButtons[i] = btn
     end
 
     local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
-    rightPanel:ClearAllPoints()
-    rightPanel:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 5, 0)
-    rightPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
     self:StyleContentPanel(rightPanel)
+
+    OneWoW_GUI:CreateVerticalPaneResizer({
+        parent = tab,
+        leftPanel = leftPanel,
+        rightPanel = rightPanel,
+        dividerWidth = DIV_W,
+        leftMinWidth = LEFT_MIN,
+        rightMinWidth = RIGHT_MIN,
+        splitPadding = SPLIT_PAD,
+        bottomOuterInset = 5,
+        rightOuterInset = 5,
+        resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95,
+        mainFrame = Addon.UI and Addon.UI.mainFrame,
+        onWidthChanged = function(w)
+            if Addon.db then
+                Addon.db.textureBrowserLeftPaneWidth = w
+            end
+        end,
+    })
 
     local zoomInBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = L["BTN_ZOOM_IN"] or "+", height = 22, minWidth = 36 })
     zoomInBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -6, -4)
@@ -860,17 +907,18 @@ function Addon.UI:CreateTextureTab(parent)
     previewClip:SetFrameLevel((rightPanel:GetFrameLevel() or 0) + 5)
     tab.previewClip = previewClip
     previewClip:HookScript("OnSizeChanged", function()
-        if BR:GetViewMode() ~= BR.VIEW_TEXTURE then
-            return
+        if BR:GetViewMode() ~= BR.VIEW_TEXTURE then return end
+        if not tab.selectedTextureKey then return end
+        local oldFit = tab._lastFitZoom
+        local newFit = computeFitZoom(tab)
+        if oldFit and newFit and oldFit > 0 and tab.zoomLevel then
+            tab.zoomLevel = tab.zoomLevel * (newFit / oldFit)
+        elseif newFit then
+            local DU = getDU()
+            local mult = DU.TEXTURE_SHEET_INITIAL_ZOOM_MULTIPLIER or 0.8
+            tab.zoomLevel = newFit * mult
         end
-        if not tab.selectedTextureKey then
-            return
-        end
-        if tab.textureUserZoomed then
-            return
-        end
-        tab.sheetPanX, tab.sheetPanY = 0, 0
-        applyDefaultSheetZoom(tab)
+        tab._lastFitZoom = newFit
         layoutSheetPreview(tab)
     end)
 

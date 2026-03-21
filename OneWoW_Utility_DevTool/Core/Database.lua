@@ -5,6 +5,8 @@ function Addon:InitializeDatabase()
         position = {},
         recentFrames = {},
         textureBookmarks = {},
+        --- Saved width of the texture browser list column (nil = use default from Constants).
+        textureBrowserLeftPaneWidth = nil,
         theme = "green",
         language = GetLocale(),
         minimap = {

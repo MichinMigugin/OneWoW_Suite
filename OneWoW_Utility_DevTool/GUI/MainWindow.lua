@@ -170,6 +170,9 @@ function UI:Initialize()
     contentFrame:SetPoint("TOPLEFT",     frame, "TOPLEFT",     OneWoW_GUI:GetSpacing("SM"), -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS") + TAB_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
     contentFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), OneWoW_GUI:GetSpacing("SM"))
 
+    self.mainFrame = frame
+    self.contentFrame = contentFrame
+
     self.tabs[TAB_FRAME] = {button = tab1, content = self:CreateFrameInspectorTab(contentFrame)}
     self.tabs[TAB_EVENTS] = {button = tab2, content = self:CreateEventMonitorTab(contentFrame)}
     self.tabs[TAB_LUA] = {button = tab3, content = self:CreateLuaConsoleTab(contentFrame)}
@@ -179,9 +182,6 @@ function UI:Initialize()
     self.tabs[TAB_LAYOUT] = {button = tab6, content = self:CreateLayoutTab(contentFrame)}
     self.tabs[TAB_MONITOR] = {button = tab7, content = self:CreateMonitorTab(contentFrame)}
     self.tabs[TAB_SETTINGS] = {button = tab8, content = self:CreateSettingsTab(contentFrame)}
-
-    self.mainFrame = frame
-    self.contentFrame = contentFrame
 
     local combatHide = CreateFrame("Frame", nil, frame)
     combatHide:SetScript("OnEvent", function()

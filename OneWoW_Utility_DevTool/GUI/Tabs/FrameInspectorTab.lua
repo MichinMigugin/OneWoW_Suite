@@ -92,45 +92,8 @@ function Addon.UI:CreateFrameInspectorTab(parent)
 
     tab.frameTree = Addon.FrameTree:Create(leftContent, leftScroll)
 
-    -- Divider handle between left and right panels
-    local divider = CreateFrame("Button", nil, tab)
-    divider:SetWidth(DIVIDER_WIDTH)
-    divider:SetPoint("TOPLEFT", leftPanel, "TOPRIGHT", 0, 0)
-    divider:SetPoint("BOTTOM", tab, "BOTTOM", 0, 5)
-    divider:EnableMouse(true)
-
-    local dividerTex = divider:CreateTexture(nil, "OVERLAY")
-    dividerTex:SetWidth(2)
-    dividerTex:SetPoint("TOP", divider, "TOP", 0, 0)
-    dividerTex:SetPoint("BOTTOM", divider, "BOTTOM", 0, 0)
-    dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-
-    divider:SetScript("OnEnter", function(self)
-        dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        SetCursor("UI_RESIZE_CURSOR")
-    end)
-    divider:SetScript("OnLeave", function(self)
-        if not self.isDragging then
-            dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-            SetCursor(nil)
-        end
-    end)
-
-    divider:SetScript("OnMouseDown", function(self, button)
-        if button == "LeftButton" then
-            self.isDragging = true
-            self.startX = GetCursorPosition() / self:GetEffectiveScale()
-            self.startWidth = leftPanel:GetWidth()
-        end
-    end)
-
-    divider:SetScript("OnMouseUp", function(self, button)
-        if button == "LeftButton" then
-            self.isDragging = false
-            dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-            SetCursor(nil)
-        end
-    end)
+    local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+    self:StyleContentPanel(rightPanel)
 
     local function getNeededRightWidth()
         local dt = tab.detailsText
@@ -142,49 +105,22 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         return RIGHT_MIN_WIDTH
     end
 
-    divider:SetScript("OnUpdate", function(self)
-        if not self.isDragging then return end
-        local cursorX = GetCursorPosition() / self:GetEffectiveScale()
-        local delta = cursorX - self.startX
-        local desiredLeftWidth = math.max(LEFT_MIN_WIDTH, self.startWidth + delta)
-
-        local mainFrame = Addon.UI and Addon.UI.mainFrame
-        local tabWidth = tab:GetWidth()
-        local neededRight = getNeededRightWidth()
-        local rightAvailable = tabWidth - desiredLeftWidth - PADDING
-
-        if rightAvailable < neededRight and mainFrame then
-            local shortage = neededRight - rightAvailable
-            local currentMainW = mainFrame:GetWidth()
-            local screenMax = math.floor(GetScreenWidth() * resizeCap)
-            local newMainW = math.min(currentMainW + shortage, screenMax)
-            if newMainW > currentMainW then
-                mainFrame:SetWidth(newMainW)
-                tabWidth = tab:GetWidth()
-            end
-        end
-
-        local maxLeftWidth = tabWidth - RIGHT_MIN_WIDTH - PADDING
-        local newLeftWidth = math.max(LEFT_MIN_WIDTH, math.min(desiredLeftWidth, maxLeftWidth))
-        leftPanel:SetWidth(newLeftWidth)
-    end)
-
-    -- Clamp left panel when main window is resized smaller
-    tab:HookScript("OnSizeChanged", function(self, w)
-        local maxLeftWidth = w - RIGHT_MIN_WIDTH - PADDING
-        if maxLeftWidth < LEFT_MIN_WIDTH then maxLeftWidth = LEFT_MIN_WIDTH end
-        local currentLeftWidth = leftPanel:GetWidth()
-        if currentLeftWidth > maxLeftWidth then
-            leftPanel:SetWidth(maxLeftWidth)
-        end
-    end)
+    OneWoW_GUI:CreateVerticalPaneResizer({
+        parent = tab,
+        leftPanel = leftPanel,
+        rightPanel = rightPanel,
+        dividerWidth = DIVIDER_WIDTH,
+        leftMinWidth = LEFT_MIN_WIDTH,
+        rightMinWidth = RIGHT_MIN_WIDTH,
+        splitPadding = PADDING,
+        bottomOuterInset = 5,
+        rightOuterInset = 5,
+        resizeCap = resizeCap,
+        mainFrame = Addon.UI and Addon.UI.mainFrame,
+        getMinRightWidth = getNeededRightWidth,
+    })
 
     -- Right panel: Frame Details
-    local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
-    rightPanel:ClearAllPoints()
-    rightPanel:SetPoint("TOPLEFT", divider, "TOPRIGHT", 0, 0)
-    rightPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
-    self:StyleContentPanel(rightPanel)
 
     local rightTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     rightTitle:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 5, -5)
