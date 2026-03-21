@@ -825,7 +825,15 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 When checking API/game information, use only the sources below unless explicit
 permission is provided for others.
 
-- **API information:** `warcraft.wiki.gg` only (authoritative).
+- **API information:** `warcraft.wiki.gg` is authoritative for API behavior,
+  signatures, and events. Use it first.
+- **Blizzard client UI / FrameXML / generated API tables:** When the wiki is
+  incomplete or silent (e.g. structure field meanings, `Enum.*` values shipped
+  with the client, or how default UI uses an API), treat the extracted Blizzard
+  tree as authoritative:
+  [Gethe/wow-ui-source — Interface/AddOns (live)](https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns).
+  Prefer paths such as `Blizzard_APIDocumentationGenerated/*Documentation.lua`
+  for `C_*` structs and enums, and `Blizzard_*` addon folders for UI behavior.
 - **General game information:** `warcraft.wiki.gg` and `wowhead.com`.
 - `google.com` may be used as a search engine to reach allowed sources.
 - No other websites are authorized without explicit user permission.
