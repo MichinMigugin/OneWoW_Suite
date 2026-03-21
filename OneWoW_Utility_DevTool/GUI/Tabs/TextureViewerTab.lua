@@ -22,10 +22,7 @@ local function getDU()
     return Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
 end
 
-local function textureBookmarkIconPath()
-    -- Explicit .png helps the client resolve addon media (same pattern as ## IconTexture in .toc files).
-    return format("Interface\\AddOns\\%s\\Media\\icon-fav.png", ADDON_NAME)
-end
+local BOOKMARK_ICON_PATH = format("Interface\\AddOns\\%s\\Media\\icon-fav.png", ADDON_NAME)
 
 --- Solo atlas preview: fit atlas pixel aspect ratio inside a max square of (base * zoom).
 local function layoutAtlasSoloFrame(tab, atlasName, textureKey)
@@ -34,11 +31,16 @@ local function layoutAtlasSoloFrame(tab, atlasName, textureKey)
     textureKey = textureKey or tab.selectedTextureKey
     local DU = getDU()
     local base = DU.TEXTURE_PREVIEW_BASE_SIZE or 256
-    local z = tab.zoomLevel or 1
+    local zmin = DU.TEXTURE_ZOOM_MIN or 0.03
+    local zmax = DU.TEXTURE_ZOOM_MAX or 4
+    local z = max(zmin, min(zmax, tab.zoomLevel or 1))
+    tab.zoomLevel = z
     local maxDim = base * z
     local iw, ih = base, base
     if atlasName then
-        local info = select(1, BR:ResolveAtlasInfo(atlasName, textureKey))
+        local info = BR:ResolveAtlasInfo(atlasName, textureKey)
+        tab._cachedAtlasInfo = info
+        tab._cachedAtlasName = atlasName
         if info and info.width and info.height and info.width > 0 and info.height > 0 then
             iw, ih = info.width, info.height
         end
@@ -144,7 +146,7 @@ function Addon.UI.TextureTab_UpdateListRows(tab)
                 end
             end
             if showBm then
-                btn.bookmarkIcon:SetTexture(textureBookmarkIconPath())
+                btn.bookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
                 btn.bookmarkIcon:Show()
             else
                 btn.bookmarkIcon:Hide()
@@ -200,26 +202,69 @@ local function ensureSheetOverlayBookmarkIcon(overlay)
     return tex
 end
 
-local function refreshSheetOverlays(tab)
-    releaseOverlays(tab)
-    if not tab.sheetFrame or not tab.selectedTextureKey then return end
-    if BR:GetViewMode() ~= BR.VIEW_TEXTURE then return end
+--- Apply selection/bookmark visual state to a single overlay without rebuilding geometry.
+local function styleSheetOverlay(tab, overlay, DU)
+    local highlightVisible = not tab.sheetSelectionHighlightSuppressed
+    local isSel = highlightVisible and tab.selectedAtlasName == overlay.atlasName
 
-    local DU = getDU()
     local edgeNormal = DU.TEXTURE_SHEET_OVERLAY_EDGE_NORMAL or 1
     local edgeSelected = DU.TEXTURE_SHEET_OVERLAY_EDGE_SELECTED or 3
     local fillAlpha = DU.TEXTURE_SHEET_OVERLAY_SELECTED_FILL_ALPHA or 0.26
     local borderMutedA = DU.TEXTURE_SHEET_OVERLAY_UNSELECTED_BORDER_ALPHA or 0.55
     local levelBoostSel = DU.TEXTURE_SHEET_OVERLAY_SELECTED_LEVEL_OFFSET or 10
     local levelBoostNorm = DU.TEXTURE_SHEET_OVERLAY_NORMAL_LEVEL_OFFSET or 1
+
+    local baseLevel = tab.sheetFrame:GetFrameLevel() or 0
+    overlay:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8X8",
+        edgeFile = "Interface\\Buttons\\WHITE8X8",
+        tile = false,
+        edgeSize = isSel and edgeSelected or edgeNormal,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 },
+    })
+    overlay:SetFrameLevel(baseLevel + (isSel and levelBoostSel or levelBoostNorm))
+    if isSel then
+        local fr, fg, fb = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
+        overlay:SetBackdropColor(fr, fg, fb, fillAlpha)
+        overlay:SetBackdropBorderColor(fr, fg, fb, 0.98)
+    else
+        overlay:SetBackdropColor(0, 0, 0, 0)
+        local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
+        overlay:SetBackdropBorderColor(r, g, b, borderMutedA)
+    end
+
+    local bookmarks = Addon.db and Addon.db.textureBookmarks
+    local bmTex = ensureSheetOverlayBookmarkIcon(overlay)
+    if bookmarks and bookmarks[overlay.atlasName] then
+        bmTex:SetTexture(BOOKMARK_ICON_PATH)
+        bmTex:Show()
+    else
+        bmTex:Hide()
+    end
+end
+
+--- Light-weight restyle: update selection highlight and bookmark icons on existing overlays.
+local function updateSheetOverlayStyles(tab)
+    if not tab.sheetFrame or not tab.overlayPool then return end
+    local DU = getDU()
+    for overlay in tab.overlayPool:EnumerateActive() do
+        styleSheetOverlay(tab, overlay, DU)
+    end
+end
+
+--- Full rebuild: releases all overlays and re-creates them from atlas data.
+--- Call only when the texture key or sheet geometry changes.
+local function refreshSheetOverlays(tab)
+    releaseOverlays(tab)
+    if not tab.sheetFrame or not tab.selectedTextureKey then return end
+    if BR:GetViewMode() ~= BR.VIEW_TEXTURE then return end
+
+    local DU = getDU()
     local bmSize = DU.TEXTURE_SHEET_PREVIEW_BOOKMARK_ICON_SIZE or 12
     local bmInset = DU.TEXTURE_SHEET_PREVIEW_BOOKMARK_ICON_INSET or 2
 
     local w, h = tab.sheetFrame:GetWidth(), tab.sheetFrame:GetHeight()
     if not w or not h or w <= 0 or h <= 0 then return end
-
-    local baseLevel = tab.sheetFrame:GetFrameLevel() or 0
-    local bookmarks = Addon.db and Addon.db.textureBookmarks
 
     local atlases = BR:GetAtlasesForTexture(tab.selectedTextureKey)
     for _, row in ipairs(atlases) do
@@ -230,39 +275,20 @@ local function refreshSheetOverlays(tab)
             if du > 0 and dv > 0 then
                 local overlay = tab.overlayPool:Acquire()
                 overlay:ClearAllPoints()
-                local highlightVisible = not tab.sheetSelectionHighlightSuppressed
-                local isSel = highlightVisible and tab.selectedAtlasName == row.atlasName
-                overlay:SetBackdrop({
-                    bgFile = "Interface\\Buttons\\WHITE8X8",
-                    edgeFile = "Interface\\Buttons\\WHITE8X8",
-                    tile = false,
-                    edgeSize = isSel and edgeSelected or edgeNormal,
-                    insets = { left = 0, right = 0, top = 0, bottom = 0 },
-                })
+                overlay.atlasName = row.atlasName
                 overlay:SetPoint("TOPLEFT", tab.sheetFrame, (info.leftTexCoord or 0) * w, -(info.topTexCoord or 0) * h)
                 overlay:SetPoint("BOTTOMRIGHT", tab.sheetFrame, -(1 - (info.rightTexCoord or 1)) * w, (1 - (info.bottomTexCoord or 1)) * h)
-                overlay.atlasName = row.atlasName
-                overlay:SetFrameLevel(baseLevel + (isSel and levelBoostSel or levelBoostNorm))
-                if isSel then
-                    local fr, fg, fb = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
-                    overlay:SetBackdropColor(fr, fg, fb, fillAlpha)
-                    overlay:SetBackdropBorderColor(fr, fg, fb, 0.98)
-                else
-                    overlay:SetBackdropColor(0, 0, 0, 0)
-                    local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
-                    overlay:SetBackdropBorderColor(r, g, b, borderMutedA)
+
+                styleSheetOverlay(tab, overlay, DU)
+
+                local bmTex = overlay._sheetBookmarkTex
+                if bmTex then
+                    bmTex:ClearAllPoints()
+                    bmTex:SetSize(bmSize, bmSize)
+                    bmTex:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", -bmInset, -bmInset)
+                    bmTex:SetTexCoord(0, 1, 0, 1)
                 end
-                local bmTex = ensureSheetOverlayBookmarkIcon(overlay)
-                bmTex:ClearAllPoints()
-                bmTex:SetSize(bmSize, bmSize)
-                bmTex:SetPoint("TOPRIGHT", overlay, "TOPRIGHT", -bmInset, -bmInset)
-                bmTex:SetTexCoord(0, 1, 0, 1)
-                if bookmarks and bookmarks[row.atlasName] then
-                    bmTex:SetTexture(textureBookmarkIconPath())
-                    bmTex:Show()
-                else
-                    bmTex:Hide()
-                end
+
                 overlay:SetScript("OnMouseDown", function(_, btn)
                     beginSheetPanDrag(tab, btn)
                 end)
@@ -379,7 +405,7 @@ local function showTextureSheet(tab, textureKey)
         end
         layoutSheetPreview(tab)
     end
-    fitLayoutAndOverlays()
+    -- Deferred: frames may not have valid sizes until the next layout pass.
     C_Timer.After(0, fitLayoutAndOverlays)
 
     tab.nameText:SetText(tostring(textureKey))
@@ -415,7 +441,12 @@ local function updateDetailPanel(tab)
         local w, h = BR:ComputeSheetPixelSize(texKey)
         tinsert(lines, (L["TEXTURE_LABEL_SHEET_SIZE"] or "Sheet (est. px):") .. " " .. format("%.0f x %.0f", w, h))
     elseif atlasName then
-        local info, _src = BR:ResolveAtlasInfo(atlasName, texKey)
+        local info = tab._cachedAtlasInfo
+        if not info or tab._cachedAtlasName ~= atlasName then
+            info = BR:ResolveAtlasInfo(atlasName, texKey)
+            tab._cachedAtlasInfo = info
+            tab._cachedAtlasName = atlasName
+        end
         for _, line in ipairs(BR:FormatDetailLines(atlasName, info, texKey, L)) do
             tinsert(lines, line)
         end
@@ -479,6 +510,7 @@ local function textureTabAfterBookmarkToggle(tab)
             if tab.nameText then tab.nameText:SetText("") end
             updateDetailPanel(tab)
             Addon.UI.TextureTab_UpdateListRows(tab)
+            Addon.UI.TextureTab_RefreshToolbarButtons(tab)
         else
             local pick = nil
             for i = 1, n do
@@ -492,15 +524,16 @@ local function textureTabAfterBookmarkToggle(tab)
                     break
                 end
             end
+            -- applyListSelection already calls UpdateListRows + RefreshToolbarButtons.
             applyListSelection(tab, pick or 1)
         end
     else
         updateDetailPanel(tab)
         Addon.UI.TextureTab_UpdateListRows(tab)
+        Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     end
-    Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     if BR:GetViewMode() == BR.VIEW_TEXTURE and tab.selectedTextureKey and tab.previewSheetHost and tab.previewSheetHost:IsShown() then
-        refreshSheetOverlays(tab)
+        updateSheetOverlayStyles(tab)
     end
 end
 
@@ -512,7 +545,7 @@ selectAtlasFromOverlay = function(tab, atlasName)
         tab.selectedAtlasName = atlasName
         tab.sheetSelectionHighlightSuppressed = false
     end
-    refreshSheetOverlays(tab)
+    updateSheetOverlayStyles(tab)
     updateDetailPanel(tab)
     Addon.UI.TextureTab_RefreshToolbarButtons(tab)
 end
@@ -559,6 +592,24 @@ local function bindTextureBarButtonMouse(btn)
     end)
 end
 
+local function setCopyButtonEnabled(btn, enabled)
+    if not btn then return end
+    btn:EnableMouse(enabled)
+    if enabled then
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        if btn.text then
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    else
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        if btn.text then
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    end
+end
+
 function Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     if not tab or not tab.btnByTexture then return end
     tab.btnByTexture._textureBarActive = (BR:GetViewMode() == BR.VIEW_TEXTURE)
@@ -583,6 +634,12 @@ function Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     end
     paintTextureBarButton(tab.bookmarkBtn)
     paintTextureBarButton(tab.manualToggle)
+
+    local hasSelection = tab.selectedAtlasName or tab.selectedTextureKey
+    local hasAtlas = tab.selectedAtlasName ~= nil
+    setCopyButtonEnabled(tab.copyNameBtn, hasSelection)
+    setCopyButtonEnabled(tab.copySnippetBtn, hasAtlas)
+    setCopyButtonEnabled(tab.copyCoordBtn, hasAtlas)
 end
 
 function Addon.UI:CreateTextureTab(parent)
@@ -914,7 +971,6 @@ function Addon.UI:CreateTextureTab(parent)
         if oldFit and newFit and oldFit > 0 and tab.zoomLevel then
             tab.zoomLevel = tab.zoomLevel * (newFit / oldFit)
         elseif newFit then
-            local DU = getDU()
             local mult = DU.TEXTURE_SHEET_INITIAL_ZOOM_MULTIPLIER or 0.8
             tab.zoomLevel = newFit * mult
         end
@@ -988,7 +1044,7 @@ function Addon.UI:CreateTextureTab(parent)
     tab.zoomPctLabel:SetText("")
 
     previewClip:SetScript("OnUpdate", function(self)
-        local DU = getDU()
+        if not tab:IsShown() then return end
         local panThresh = DU.TEXTURE_SHEET_PAN_CLICK_THRESHOLD or 4
 
         if tab._sheetPanActive then
@@ -1170,11 +1226,15 @@ function Addon.UI:CreateTextureTab(parent)
     copyCoordBtn:SetPoint("LEFT", copySnippetBtn, "RIGHT", 6, 0)
     copyCoordBtn:SetScript("OnClick", function()
         if not tab.selectedAtlasName then return end
-        local info = select(1, BR:ResolveAtlasInfo(tab.selectedAtlasName, tab.selectedTextureKey))
+        local info = BR:ResolveAtlasInfo(tab.selectedAtlasName, tab.selectedTextureKey)
         if info then
             Addon:CopyToClipboard(BR:GetCoordsCopyLine(info))
         end
     end)
+
+    tab.copyNameBtn = copyNameBtn
+    tab.copySnippetBtn = copySnippetBtn
+    tab.copyCoordBtn = copyCoordBtn
 
     Addon.TextureBrowserTab = tab
 

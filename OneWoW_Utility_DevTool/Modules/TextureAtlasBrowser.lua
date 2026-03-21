@@ -176,21 +176,21 @@ function TextureAtlasBrowser:ComputeSheetPixelSize(textureKey)
     return 256, 256
 end
 
+--- filter is already lowercased by SetFilterText.
 local function textureMatchesFilter(texKey, displayName, filter)
     if filter == "" then
         return true
     end
-    local fl = filter:lower()
-    if displayName:lower():find(fl, 1, true) then
+    if displayName:lower():find(filter, 1, true) then
         return true
     end
-    if tostring(texKey):lower():find(fl, 1, true) then
+    if tostring(texKey):lower():find(filter, 1, true) then
         return true
     end
     local t = Addon._AtlasInfo[texKey]
     if t then
         for k in pairs(t) do
-            if type(k) == "string" and k:lower():find(fl, 1, true) then
+            if type(k) == "string" and k:lower():find(filter, 1, true) then
                 return true
             end
         end
@@ -198,15 +198,15 @@ local function textureMatchesFilter(texKey, displayName, filter)
     return false
 end
 
+--- filter is already lowercased by SetFilterText.
 local function atlasMatchesFilter(atlasName, texKey, filter)
     if filter == "" then
         return true
     end
-    local fl = filter:lower()
-    if atlasName:lower():find(fl, 1, true) then
+    if atlasName:lower():find(filter, 1, true) then
         return true
     end
-    if tostring(texKey):lower():find(fl, 1, true) then
+    if tostring(texKey):lower():find(filter, 1, true) then
         return true
     end
     return false
@@ -251,8 +251,11 @@ function TextureAtlasBrowser:SetFavoritesOnly(on)
 end
 
 function TextureAtlasBrowser:RebuildFiltered()
-    wipe(self.filtered or {})
-    self.filtered = self.filtered or {}
+    if not self.filtered then
+        self.filtered = {}
+    else
+        wipe(self.filtered)
+    end
 
     if not self:IsDataAvailable() then
         return
@@ -307,27 +310,6 @@ function TextureAtlasBrowser:GetSetAtlasSnippet(atlasName)
     local L = Addon.L or {}
     local fmt = L["TEXTURE_SNIPPET_SETATLAS"] or 'tex:SetAtlas("%s")'
     return format(fmt, atlasName)
-end
-
-function TextureAtlasBrowser:GetGetAtlasInfoSnippet(atlasName)
-    local L = Addon.L or {}
-    local fmt = L["TEXTURE_SNIPPET_GETATLASINFO"] or 'local info = C_Texture.GetAtlasInfo("%s")'
-    return format(fmt, atlasName)
-end
-
-function TextureAtlasBrowser:GetTexCoordSnippet(info)
-    if not info then
-        return ""
-    end
-    local L = Addon.L or {}
-    local fmt = L["TEXTURE_SNIPPET_TEXCOORD"] or "tex:SetTexCoord(%.6f, %.6f, %.6f, %.6f)"
-    return format(
-        fmt,
-        info.leftTexCoord or 0,
-        info.rightTexCoord or 1,
-        info.topTexCoord or 0,
-        info.bottomTexCoord or 1
-    )
 end
 
 function TextureAtlasBrowser:GetCoordsCopyLine(info)
