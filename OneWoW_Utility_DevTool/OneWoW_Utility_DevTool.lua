@@ -5,11 +5,6 @@ OneWoW_UtilityDevTool = Addon
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-Addon.version = "R6.2602.1920"
-Addon.frames = {}
-Addon.selectedFrame = nil
-Addon.pickerActive = false
-
 local pcall = pcall
 local type = type
 local tostring = tostring
@@ -484,7 +479,7 @@ frame:RegisterEvent("PLAYER_LOGIN")
 frame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == AddonName then
         Addon:OnInitialize()
-        local _ver = C_AddOns.GetAddOnMetadata(AddonName, "Version") or Addon.version
+        local _ver = OneWoW_GUI:GetAddonVersion(AddonName)
         if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
             _G.OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt")
         else

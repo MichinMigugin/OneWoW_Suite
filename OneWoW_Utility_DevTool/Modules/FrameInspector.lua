@@ -6,8 +6,6 @@ Addon.FrameInspector = FrameInspector
 function FrameInspector:InspectFrame(frame)
     if not frame then return end
 
-    Addon.selectedFrame = frame
-
     local info = Addon:GetFrameInfo(frame)
     if not info then return end
 

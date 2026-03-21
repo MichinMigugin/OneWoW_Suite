@@ -67,7 +67,6 @@ end
 function FramePicker:Start()
     self:Initialize()
 
-    Addon.pickerActive = true
     self.wasMainFrameShown = false
 
     if Addon.UI and Addon.UI.mainFrame and Addon.UI.mainFrame:IsShown() then
@@ -95,7 +94,6 @@ end
 function FramePicker:Cancel()
     if not self.overlay then return end
 
-    Addon.pickerActive = false
     self.overlay:Hide()
     self.infoWindow:Hide()
     Addon.FrameInspector:ClearHighlight()
