@@ -289,8 +289,30 @@ Addon.Constants = {
         TEXTURE_PREVIEW_BASE_SIZE = 256,
         TEXTURE_ZOOM_IN_FACTOR = 1.2,
         TEXTURE_ZOOM_OUT_FACTOR = 0.8,
-        TEXTURE_ZOOM_MIN = 0.25,
+        TEXTURE_ZOOM_MIN = 0.03,
         TEXTURE_ZOOM_MAX = 4.0,
+        -- After fitting the sheet in the clip, multiply zoom by this; 0.8 => 80% in the UI (100% = full fit after Reset).
+        TEXTURE_SHEET_INITIAL_ZOOM_MULTIPLIER = 0.8,
+        -- Manhattan distance (UI units) before a left-drag counts as pan (overlay clicks use shorter drags to select).
+        TEXTURE_SHEET_PAN_CLICK_THRESHOLD = 4,
+        -- Space reserved below texture preview for details panel + copy row (pixels from bottom of right panel).
+        TEXTURE_PREVIEW_BOTTOM_RESERVE = 235,
+        TEXTURE_BROWSER_LIST_ROW_HEIGHT = 22,
+        TEXTURE_BROWSER_LIST_VISIBLE_ROWS = 40,
+        -- Bookmark icon on list rows (texture layer, right-aligned).
+        TEXTURE_BROWSER_BOOKMARK_ICON_SIZE = 14,
+        TEXTURE_BROWSER_BOOKMARK_ICON_RIGHT_PAD = 8,
+        TEXTURE_BROWSER_BOOKMARK_ICON_TEXT_GAP = 4,
+        -- Sheet grid: cell borders; selected cell gets thicker edge + tint (see TextureViewerTab refreshSheetOverlays).
+        TEXTURE_SHEET_OVERLAY_EDGE_NORMAL = 1,
+        TEXTURE_SHEET_OVERLAY_EDGE_SELECTED = 3,
+        TEXTURE_SHEET_OVERLAY_SELECTED_FILL_ALPHA = 0.26,
+        TEXTURE_SHEET_OVERLAY_UNSELECTED_BORDER_ALPHA = 0.55,
+        TEXTURE_SHEET_OVERLAY_SELECTED_LEVEL_OFFSET = 10,
+        TEXTURE_SHEET_OVERLAY_NORMAL_LEVEL_OFFSET = 1,
+        -- Star on bookmarked cells in sheet preview (clicks still hit parent overlay button).
+        TEXTURE_SHEET_PREVIEW_BOOKMARK_ICON_SIZE = 12,
+        TEXTURE_SHEET_PREVIEW_BOOKMARK_ICON_INSET = 2,
         COLOR_PICKER_PANEL_WIDTH = 280,
         COLOR_PICKER_PANEL_HEIGHT = 297,
         COLOR_CLASS_PANEL_MIN_WIDTH = 200,

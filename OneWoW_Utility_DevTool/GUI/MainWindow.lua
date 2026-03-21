@@ -173,18 +173,7 @@ function UI:Initialize()
     self.tabs[TAB_FRAME] = {button = tab1, content = self:CreateFrameInspectorTab(contentFrame)}
     self.tabs[TAB_EVENTS] = {button = tab2, content = self:CreateEventMonitorTab(contentFrame)}
     self.tabs[TAB_LUA] = {button = tab3, content = self:CreateLuaConsoleTab(contentFrame)}
-
-    local disabledTab = CreateFrame("Frame", nil, contentFrame)
-    disabledTab:SetAllPoints(contentFrame)
-    disabledTab:Hide()
-    self.tabs[TAB_TEXTURES] = {button = tab4, content = disabledTab}
-    tab4:Disable()
-    tab4.text:SetTextColor(0.4, 0.4, 0.4)
-    tab4:SetScript("OnClick", nil)
-    tab4:SetScript("OnEnter", nil)
-    tab4:SetScript("OnLeave", nil)
-    tab4:SetScript("OnMouseDown", nil)
-    tab4:SetScript("OnMouseUp", nil)
+    self.tabs[TAB_TEXTURES] = {button = tab4, content = self:CreateTextureTab(contentFrame)}
 
     self.tabs[TAB_COLORS] = {button = tab5, content = self:CreateColorToolsTab(contentFrame)}
     self.tabs[TAB_LAYOUT] = {button = tab6, content = self:CreateLayoutTab(contentFrame)}
@@ -193,6 +182,14 @@ function UI:Initialize()
 
     self.mainFrame = frame
     self.contentFrame = contentFrame
+
+    local combatHide = CreateFrame("Frame", nil, frame)
+    combatHide:SetScript("OnEvent", function()
+        if frame:IsShown() then
+            UI:Hide()
+        end
+    end)
+    combatHide:RegisterEvent("PLAYER_REGEN_DISABLED")
 
     if not OneWoW_GUI:RestoreWindowPosition(frame, Addon.db.position or {}) then
         frame:SetPoint("CENTER")
@@ -211,16 +208,12 @@ end
 
 function UI:SelectTab(tabID)
     local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
-    local TAB_TEXTURES = DU.TAB_INDEX_TEXTURES or 4
     local TAB_EVENTS = DU.TAB_INDEX_EVENTS or 2
 
-    if tabID == TAB_TEXTURES then return end
     self.currentTab = tabID
 
     for id, tab in pairs(self.tabs) do
-        if id == TAB_TEXTURES then
-            tab.content:Hide()
-        elseif id == tabID then
+        if id == tabID then
             tab.content:Show()
             if id == TAB_EVENTS and Addon.EventMonitor then
                 Addon.EventMonitor:UpdateUI()

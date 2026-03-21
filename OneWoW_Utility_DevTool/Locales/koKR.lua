@@ -121,6 +121,7 @@ Addon.Locales["koKR"] = {
     -- Texture Browser
     ["BTN_FAVORITES"] = "즐겨찾기",
     ["BTN_BOOKMARK"] = "북마크",
+    ["BTN_REMOVE_BOOKMARK"] = "북마크 제거",
     ["BTN_ZOOM_IN"] = "+",
     ["BTN_ZOOM_OUT"] = "-",
     ["BTN_RESET_ZOOM"] = "초기화",

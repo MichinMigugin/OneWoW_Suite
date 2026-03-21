@@ -47,7 +47,7 @@ Modules\ErrorExport.lua
 Modules\ErrorLogger.lua
 Modules\EventMonitor.lua
 Modules\ColorTools.lua
-Modules\TextureAtlasData.lua
+Modules\TextureAtlasBrowser.lua
 #Modules\FontBrowserTab.lua
 Modules\MonitorTab.lua
 

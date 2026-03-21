@@ -121,6 +121,7 @@ Addon.Locales["frFR"] = {
     -- Texture Browser
     ["BTN_FAVORITES"] = "Favoris",
     ["BTN_BOOKMARK"] = "Marque-page",
+    ["BTN_REMOVE_BOOKMARK"] = "Retirer le marque-page",
     ["BTN_ZOOM_IN"] = "+",
     ["BTN_ZOOM_OUT"] = "-",
     ["BTN_RESET_ZOOM"] = "Réinitialiser",

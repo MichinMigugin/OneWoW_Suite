@@ -121,6 +121,7 @@ Addon.Locales["deDE"] = {
     -- Texture Browser
     ["BTN_FAVORITES"] = "Favoriten",
     ["BTN_BOOKMARK"] = "Lesezeichen",
+    ["BTN_REMOVE_BOOKMARK"] = "Lesezeichen entfernen",
     ["BTN_ZOOM_IN"] = "+",
     ["BTN_ZOOM_OUT"] = "-",
     ["BTN_RESET_ZOOM"] = "Zurücksetzen",

@@ -121,6 +121,7 @@ Addon.Locales["ruRU"] = {
     -- Texture Browser
     ["BTN_FAVORITES"] = "Избранное",
     ["BTN_BOOKMARK"] = "Закладка",
+    ["BTN_REMOVE_BOOKMARK"] = "Удалить закладку",
     ["BTN_ZOOM_IN"] = "+",
     ["BTN_ZOOM_OUT"] = "-",
     ["BTN_RESET_ZOOM"] = "Сброс",

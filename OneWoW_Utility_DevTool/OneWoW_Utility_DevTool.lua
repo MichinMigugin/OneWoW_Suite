@@ -460,19 +460,6 @@ function Addon:ApplyLanguage()
     end
 end
 
-function Addon:LoadBuiltInAtlases()
-    local list = {}
-    local count = C_Texture.GetAtlasCount()
-    for i = 0, count - 1 do
-        local atlasName = C_Texture.GetAtlasByIndex(i)
-        if atlasName then
-            tinsert(list, atlasName)
-        end
-    end
-    sort(list)
-    return list
-end
-
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
