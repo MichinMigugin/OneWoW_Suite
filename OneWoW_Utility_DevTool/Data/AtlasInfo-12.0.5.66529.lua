@@ -1,8 +1,14 @@
 -- AUTOMATICALLY GENERATED -- 12.0.5.66529
+local _, Addon = ...
 
+local atlasVersion = "12.0.5.66529"
+if not Addon.ValidateAtlasInfoGameBuild(atlasVersion) then
+	return
+end
 
+Addon._AtlasInfoVersion = atlasVersion
 
-local AtlasInfo = {
+Addon._AtlasInfo = {
 	["5426612"]={
 		["kiosk-BG"]={1920, 1080, 0.000488281, 0.937988, 0.000488281, 0.527832, false, false, "1x"},
 		["kiosk-button"]={468, 128, 0.000488281, 0.229004, 0.528809, 0.591309, false, false, "1x"},
@@ -21103,5 +21109,3 @@ local AtlasInfo = {
 		["worldstate-capturebar-framebar-bastionarmor"]={162, 37, 0.00390625, 0.636719, 0.411133, 0.447266, false, false, "1x"},
 	}, -- Interface/WorldStateFrame/WorldStateCaptureBar
 }
-
-return AtlasInfo

@@ -1,13 +1,8 @@
 -- AUTOMATICALLY GENERATED -- 12.0.1.66527
-local AddonName, Addon = ...
+local _, Addon = ...
 
--- Check game version
 local atlasVersion = "12.0.1.66527"
-local buildVersion, buildNumber, _, _, _, _ = GetBuildInfo()
-local version = buildVersion .. '.' .. buildNumber
-
-if version ~= atlasVersion then
-	print(format("Game version %s doesn't match AtlasInfo version %s", version, atlasVersion))
+if not Addon.ValidateAtlasInfoGameBuild(atlasVersion) then
 	return
 end
 

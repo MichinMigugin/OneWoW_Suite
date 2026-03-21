@@ -35,6 +35,7 @@ Core\Database.lua
 OneWoW_Utility_DevTool.lua
 
 # Texture Atlas Data
+Data\AtlasInfoCommon.lua
 Data\AtlasInfo-12.0.1.66527.lua [AllowLoadGameType mainline]
 Data\AtlasInfo-12.0.5.66529.lua [AllowLoadGameType mainline-test]
 
