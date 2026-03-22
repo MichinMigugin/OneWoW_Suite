@@ -1,65 +1,21 @@
--- AUTOMATICALLY GENERATED -- 12.0.1.66527
-local _, Addon = ...
+local _, _addon = ...
 
-local atlasVersion = "12.0.1.66527"
-if not Addon.ValidateAtlasInfoGameBuild(atlasVersion) then
-	return
-end
+-- \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 
-Addon._AtlasInfoVersion = atlasVersion
-
-Addon._AtlasInfo = {
+local AtlasInfo = {
 	["5426612"]={
 		["kiosk-BG"]={1920, 1080, 0.000488281, 0.937988, 0.000488281, 0.527832, false, false, "1x"},
 		["kiosk-button"]={468, 128, 0.000488281, 0.229004, 0.528809, 0.591309, false, false, "1x"},
 	}, -- 5426612
+	["7259256"]={
+		["dragonriding-barbershop-icon-panthera"]={128, 128, 0.00390625, 0.503906, 0.00390625, 0.503906, false, false, "1x"},
+	}, -- 7259256
+	["7259716"]={
+		["dragonriding-barbershop-icon-PantheraIronHorde"]={128, 128, 0.00390625, 0.503906, 0.00390625, 0.503906, false, false, "1x"},
+	}, -- 7259716
 	["7525967"]={
 		["dragonriding-barbershop-icon-companionroc"]={128, 128, 0.00390625, 0.503906, 0.00390625, 0.503906, false, false, "1x"},
 	}, -- 7525967
-	["7745995"]={
-		["shop-fg-bundle-hearthsteel-100"]={1612, 914, 0.000488281, 0.787598, 0.000976562, 0.893555, false, false, "1x"},
-	}, -- 7745995
-	["7745997"]={
-		["shop-fg-bundle-hearthsteel-500"]={1612, 914, 0.000488281, 0.787598, 0.000976562, 0.893555, false, false, "1x"},
-	}, -- 7745997
-	["7745999"]={
-		["shop-fg-bundle-hearthsteel-1000"]={1612, 914, 0.000488281, 0.787598, 0.000976562, 0.893555, false, false, "1x"},
-	}, -- 7745999
-	["7746001"]={
-		["shop-fg-bundle-hearthsteel-1500"]={1612, 914, 0.000488281, 0.787598, 0.000976562, 0.893555, false, false, "1x"},
-	}, -- 7746001
-	["7746003"]={
-		["shop-fg-bundle-hearthsteel-2000"]={1612, 914, 0.000488281, 0.787598, 0.000976562, 0.893555, false, false, "1x"},
-	}, -- 7746003
-	["7746005"]={
-		["shop-fg-bundle-hearthsteel-2500"]={1612, 914, 0.000488281, 0.787598, 0.000976562, 0.893555, false, false, "1x"},
-	}, -- 7746005
-	["7746007"]={
-		["shop-fg-bundle-hearthsteel-5000"]={1612, 914, 0.000488281, 0.787598, 0.000976562, 0.893555, false, false, "1x"},
-	}, -- 7746007
-	["7746009"]={
-		["shop-fg-bundle-hearthsteel-10000"]={1612, 914, 0.000488281, 0.787598, 0.000976562, 0.893555, false, false, "1x"},
-	}, -- 7746009
-	["7746247"]={
-		["hearthsteel-100"]={320, 320, 0.000976562, 0.313477, 0.000976562, 0.313477, false, false, "1x"},
-		["hearthsteel-1000"]={320, 320, 0.31543, 0.62793, 0.000976562, 0.313477, false, false, "1x"},
-		["hearthsteel-10000"]={320, 320, 0.629883, 0.942383, 0.000976562, 0.313477, false, false, "1x"},
-		["hearthsteel-1500"]={320, 320, 0.000976562, 0.313477, 0.31543, 0.62793, false, false, "1x"},
-		["hearthsteel-2000"]={320, 320, 0.000976562, 0.313477, 0.629883, 0.942383, false, false, "1x"},
-		["hearthsteel-2500"]={320, 320, 0.31543, 0.62793, 0.31543, 0.62793, false, false, "1x"},
-		["hearthsteel-500"]={320, 320, 0.629883, 0.942383, 0.31543, 0.62793, false, false, "1x"},
-		["hearthsteel-5000"]={320, 320, 0.31543, 0.62793, 0.629883, 0.942383, false, false, "1x"},
-	}, -- 7746247
-	["7746249"]={
-		["hearthsteel-100-2x"]={320, 320, 0.000488281, 0.312988, 0.000488281, 0.312988, false, false, "2x"},
-		["hearthsteel-1000-2x"]={320, 320, 0.313965, 0.626465, 0.000488281, 0.312988, false, false, "2x"},
-		["hearthsteel-10000-2x"]={320, 320, 0.627441, 0.939941, 0.000488281, 0.312988, false, false, "2x"},
-		["hearthsteel-1500-2x"]={320, 320, 0.000488281, 0.312988, 0.313965, 0.626465, false, false, "2x"},
-		["hearthsteel-2000-2x"]={320, 320, 0.000488281, 0.312988, 0.627441, 0.939941, false, false, "2x"},
-		["hearthsteel-2500-2x"]={320, 320, 0.313965, 0.626465, 0.313965, 0.626465, false, false, "2x"},
-		["hearthsteel-500-2x"]={320, 320, 0.627441, 0.939941, 0.313965, 0.626465, false, false, "2x"},
-		["hearthsteel-5000-2x"]={320, 320, 0.313965, 0.626465, 0.627441, 0.939941, false, false, "2x"},
-	}, -- 7746249
 	["Interface/ Garrison/DragonflightLandingPage"]={
 		["dragonflight-landingpage-talentbutton-hover"]={400, 476, 0.000488281, 0.195801, 0.467773, 0.932617, false, false, "1x"},
 		["dragonflight-landingpage-talentbutton"]={400, 476, 0.000488281, 0.195801, 0.000976562, 0.46582, false, false, "1x"},
@@ -969,12 +925,6 @@ Addon._AtlasInfo = {
 		["dragonriding-barbershop-icon-delvesairshipgoblin"]={128, 128, 0.30957, 0.43457, 0.255859, 0.505859, false, false, "1x"},
 		["dragonriding-barbershop-icon-EtherealAirship"]={128, 128, 0.436523, 0.561523, 0.00195312, 0.251953, false, false, "1x"},
 	}, -- Interface/BarberShop/DragonRidingCustomization
-	["Interface/BarberShop/DragonRidingCustomizationpanthera"]={
-		["dragonriding-barbershop-icon-panthera"]={128, 128, 0.00390625, 0.503906, 0.00390625, 0.503906, false, false, "1x"},
-	}, -- Interface/BarberShop/DragonRidingCustomizationpanthera
-	["Interface/BarberShop/DragonRidingCustomizationpantheraIronHorde"]={
-		["dragonriding-barbershop-icon-PantheraIronHorde"]={128, 128, 0.00390625, 0.503906, 0.00390625, 0.503906, false, false, "1x"},
-	}, -- Interface/BarberShop/DragonRidingCustomizationpantheraIronHorde
 	["Interface/BarberShop/DragonRidingSGIcon"]={
 		["dragonriding-barbershop-icon-sg"]={128, 128, 0.00390625, 0.503906, 0.00390625, 0.503906, false, false, "1x"},
 	}, -- Interface/BarberShop/DragonRidingSGIcon
@@ -13533,9 +13483,9 @@ Addon._AtlasInfo = {
 		["Vehicle-TempleofKotmogu-GreenBall"]={32, 32, 0.774414, 0.805664, 0.639648, 0.670898, false, false, "1x"},
 		["Vehicle-TempleofKotmogu-OrangeBall"]={32, 32, 0.807617, 0.838867, 0.639648, 0.670898, false, false, "1x"},
 		["Vehicle-TempleofKotmogu-PurpleBall"]={32, 32, 0.84082, 0.87207, 0.639648, 0.670898, false, false, "1x"},
-		["Vehicle-Trap-Gold"]={24, 24, 0.874023, 0.905273, 0.639648, 0.670898, false, false, "1x"},
-		["Vehicle-Trap-Grey"]={24, 24, 0.907227, 0.938477, 0.639648, 0.670898, false, false, "1x"},
-		["Vehicle-Trap-Red"]={24, 24, 0.94043, 0.97168, 0.639648, 0.670898, false, false, "1x"},
+		["Vehicle-Trap-Gold"]={32, 32, 0.874023, 0.905273, 0.639648, 0.670898, false, false, "1x"},
+		["Vehicle-Trap-Grey"]={32, 32, 0.907227, 0.938477, 0.639648, 0.670898, false, false, "1x"},
+		["Vehicle-Trap-Red"]={32, 32, 0.94043, 0.97168, 0.639648, 0.670898, false, false, "1x"},
 		["QuestSkull"]={32, 32, 0.541992, 0.573242, 0.739258, 0.770508, false, false, "1x"},
 		["Focus-Tracker"]={32, 32, 0.40918, 0.44043, 0.606445, 0.637695, false, false, "1x"},
 		["MagePortalAlliance"]={32, 32, 0.94043, 0.97168, 0.44043, 0.47168, false, false, "1x"},
@@ -20975,3 +20925,13 @@ Addon._AtlasInfo = {
 		["worldstate-capturebar-framebar-bastionarmor"]={162, 37, 0.00390625, 0.636719, 0.411133, 0.447266, false, false, "1x"},
 	}, -- Interface/WorldStateFrame/WorldStateCaptureBar
 }
+
+-- /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+-- Replace content in this area
+-- Make sure the 'return AtlasInfo' at the end is not included
+--------------------------------------------
+
+-- Don't remove this!
+_addon.data = AtlasInfo
+_addon.dataBuild = 65459
+_addon.dataExpansion = nil
