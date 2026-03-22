@@ -11,6 +11,10 @@ OneWoW_UI/
 .env
 .env.*
 
+# Local Discord automation (tokens, channel IDs; keep out of repo)
+scripts/Load-DiscordEnv.ps1
+scripts/Send-ChangelogToDiscord.ps1
+
 # Ephemeral Discord API payloads (Send-ChangelogToDiscord.ps1)
 .discord-changelog-send.json*
 
