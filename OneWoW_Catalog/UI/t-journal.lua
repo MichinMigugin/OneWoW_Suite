@@ -522,7 +522,11 @@ local function RefreshDetailView(isSecondRefresh)
                 itemName:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT - 10, 0)
                 itemName:SetJustifyH("LEFT")
                 itemName:SetWordWrap(false)
-                itemName:SetText(item.name)
+                local displayName = item.name
+                if item.fromLiveEJ then
+                    displayName = displayName .. " |cff888888(" .. L["JOURNAL_LIVE_EJ_TAG"] .. ")|r"
+                end
+                itemName:SetText(displayName)
                 itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(item.quality))
 
                 local diffText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

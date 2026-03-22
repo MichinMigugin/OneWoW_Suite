@@ -82,6 +82,7 @@ Core\Core.lua
 # Modules
 Modules\DataLoader.lua
 Modules\JournalData.lua
+Modules\EJLiveLoot.lua
 Modules\JournalScanner.lua
 
 # Main

@@ -111,6 +111,7 @@ L["JOURNAL_LABEL_ITEM_TYPE"]       = "Item Type"
 L["JOURNAL_LABEL_COLLECTION"]      = "Collection"
 L["JOURNAL_HIDE_NON_COLLECTABLE"]  = "Hide Non-Collectable"
 L["JOURNAL_FILTER_CLEAR"]          = "Clear"
+L["JOURNAL_LIVE_EJ_TAG"]           = "Guide"
 
 L["VENDORS_LIST_TITLE"]      = "Vendors"
 L["VENDORS_DETAIL_TITLE"]    = "Vendor Details"

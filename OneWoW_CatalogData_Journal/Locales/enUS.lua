@@ -19,6 +19,7 @@ ns.Locales["enUS"] = {
     ["JOURNAL_UNKNOWN_ITEM"]  = "Unknown Item",
     ["JOURNAL_UNKNOWN_INST"]  = "Unknown Instance",
     ["JOURNAL_LOADING"]       = "Loading...",
+    ["JOURNAL_LIVE_EJ_TAG"]   = "Guide",
 }
 
 ns.L = {}

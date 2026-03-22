@@ -24,6 +24,10 @@ OneWoW_CatalogData_Journal_API = {
     ClearCache = function()
         ns.JournalData:ClearCache()
     end,
+    RefreshLiveJournalLoot = function()
+        ns.JournalData:ClearCache()
+        ns.JournalData:BuildJournalCache()
+    end,
     RegisterScanCallback = function(fn)
         ns:RegisterScanCallback(fn)
     end,

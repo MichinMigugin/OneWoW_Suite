@@ -291,6 +291,47 @@ function JournalData:BuildJournalCache()
     end
 
     collectgarbage("collect")
+
+    if ns.EJLiveLoot and ns.EJLiveLoot.ScheduleAfterStaticBuild then
+        ns.EJLiveLoot:ScheduleAfterStaticBuild()
+    end
+end
+
+function JournalData:SortEncountersInPlace(inst)
+    if not inst or not inst.encounters then return end
+    table.sort(inst.encounters, function(a, b)
+        if a.encounterID == 0 then return false end
+        if b.encounterID == 0 then return true end
+        local ai = a.bossIndex or 999
+        local bi = b.bossIndex or 999
+        if ai ~= bi then return ai < bi end
+        return (a.name or "") < (b.name or "")
+    end)
+end
+
+function JournalData:RecalculateInstanceTotals(inst)
+    if not inst or not inst.encounters then return end
+    local L = ns.L
+    local hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing = false, false, false, false, false, false
+    local totalItems = 0
+    for _, enc in ipairs(inst.encounters) do
+        for _, item in ipairs(enc.items) do
+            totalItems = totalItems + 1
+            if item.special == "Mount"   then hasMounts  = true end
+            if item.special == "Pet"     then hasPets    = true end
+            if item.special == "Toy"     then hasToys    = true end
+            if item.special == "Recipe"  then hasRecipes = true end
+            if item.special == "Quest"   then hasQuest   = true end
+            if item.special == "Housing" then hasHousing = true end
+        end
+    end
+    inst.hasMounts     = hasMounts
+    inst.hasPets       = hasPets
+    inst.hasToys       = hasToys
+    inst.hasRecipes    = hasRecipes
+    inst.hasQuest      = hasQuest
+    inst.hasHousing    = hasHousing
+    inst.totalItems    = totalItems
 end
 
 function JournalData:GetAllInstances()
@@ -346,6 +387,9 @@ end
 
 function JournalData:ClearCache()
     self.journalCache = nil
+    if ns.EJLiveLoot and ns.EJLiveLoot.OnJournalCacheCleared then
+        ns.EJLiveLoot:OnJournalCacheCleared()
+    end
 end
 
 function JournalData:Initialize()
