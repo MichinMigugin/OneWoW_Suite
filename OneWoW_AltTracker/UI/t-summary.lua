@@ -1004,18 +1004,19 @@ function ns.UI.RefreshSummaryStats(summaryTab)
     end
 
     if _G.OneWoW_AltTracker_Professions_DB and _G.OneWoW_AltTracker_Professions_DB.characters then
-        local profCount = {}
-        for charKey, profData in pairs(_G.OneWoW_AltTracker_Professions_DB.characters) do
-            if profData.professions then
-                if profData.professions.Primary1 and profData.professions.Primary1.name then
-                    profCount.Primary1 = true
+        local uniquePrimaryProfs = {}
+        for _, profData in pairs(_G.OneWoW_AltTracker_Professions_DB.characters) do
+            local profs = profData.professions
+            if profs then
+                if profs.Primary1 and profs.Primary1.name then
+                    uniquePrimaryProfs[profs.Primary1.name] = true
                 end
-                if profData.professions.Primary2 and profData.professions.Primary2.name then
-                    profCount.Primary2 = true
+                if profs.Primary2 and profs.Primary2.name then
+                    uniquePrimaryProfs[profs.Primary2.name] = true
                 end
             end
         end
-        for _ in pairs(profCount) do
+        for _ in pairs(uniquePrimaryProfs) do
             stats.professions = stats.professions + 1
         end
     end
@@ -1080,7 +1081,10 @@ function ns.UI.RefreshSummaryStats(summaryTab)
         end
         if statBoxes[7] then statBoxes[7].value:SetText(tostring(stats.mounts)) end
         if statBoxes[8] then statBoxes[8].value:SetText(tostring(stats.pets)) end
-        if statBoxes[9] then statBoxes[9].value:SetText(tostring(stats.professions)) end
+        if statBoxes[9] then
+            local primaryTotal = (ns.ProfessionData and ns.ProfessionData.PRIMARY_PROFESSIONS and #ns.ProfessionData.PRIMARY_PROFESSIONS) or 11
+            statBoxes[9].value:SetText(stats.professions .. "/" .. primaryTotal)
+        end
         if statBoxes[10] then statBoxes[10].value:SetText(tostring(stats.achievements)) end
     end
 end
