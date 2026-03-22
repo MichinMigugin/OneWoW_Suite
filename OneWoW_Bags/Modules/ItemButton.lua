@@ -17,6 +17,62 @@ function Mixin:OWB_IsDirty()
     return self.owb_dirty
 end
 
+--- New-item glow for player inventory bags only (not bank / guild bank). Uses Blizzard
+--- C_NewItems plus ContainerFrameItemButtonTemplate overlays (see default ContainerFrame).
+function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
+    local BagTypes = OneWoW_Bags.BagTypes
+    local bagID, slotID = self.owb_bagID, self.owb_slotID
+
+    if not hasItem or not bagID or not slotID or not BagTypes:IsPlayerBag(bagID) then
+        OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
+        return
+    end
+
+    local db = OneWoW_Bags.db
+    if not db or not db.global or not db.global.showNewItems then
+        OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
+        return
+    end
+
+    if not C_NewItems or not C_NewItems.IsNewItem or not C_NewItems.IsNewItem(bagID, slotID) then
+        OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
+        return
+    end
+
+    local newItemTexture = self.NewItemTexture
+    if not newItemTexture then
+        return
+    end
+
+    local isBattlePay = C_Container.IsBattlePayItem and C_Container.IsBattlePayItem(bagID, slotID)
+    if isBattlePay and self.BattlepayItemTexture then
+        if self.flashAnim and self.flashAnim:IsPlaying() then self.flashAnim:Stop() end
+        if self.newitemglowAnim and self.newitemglowAnim:IsPlaying() then self.newitemglowAnim:Stop() end
+        newItemTexture:Hide()
+        self.BattlepayItemTexture:Show()
+        return
+    end
+
+    if self.BattlepayItemTexture then
+        self.BattlepayItemTexture:Hide()
+    end
+
+    local atlasByQuality = _G.NEW_ITEM_ATLAS_BY_QUALITY
+    local atlas = "bags-glow-white"
+    if atlasByQuality and quality ~= nil and atlasByQuality[quality] then
+        atlas = atlasByQuality[quality]
+    end
+    newItemTexture:SetAtlas(atlas)
+    newItemTexture:Show()
+
+    if self.flashAnim and self.newitemglowAnim then
+        if not self.flashAnim:IsPlaying() and not self.newitemglowAnim:IsPlaying() then
+            self.flashAnim:Play()
+            self.newitemglowAnim:Play()
+        end
+    end
+end
+
 function Mixin:OWB_FullUpdate()
     self.owb_dirty = false
     local db = OneWoW_Bags.db
@@ -58,13 +114,9 @@ function Mixin:OWB_FullUpdate()
 
     self:OWB_RefreshCooldown()
 
-    local isNew = false
-    if db and db.global and db.global.showNewItems and info and info.hyperlink then
-        isNew = C_NewItems.IsNewItem(self.owb_bagID, self.owb_slotID)
-    end
-    if not isNew then
-        OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
-    end
+    local quality = info and info.quality
+    local hasItem = info and info.hyperlink
+    self:OWB_UpdateNewItemGlow(quality, hasItem)
 end
 
 function Mixin:OWB_RefreshCooldown()
