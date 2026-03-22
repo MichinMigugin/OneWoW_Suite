@@ -1,5 +1,3 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/bagbar/bagbar.lua
 local addonName, ns = ...
 
 local BagBarModule = {
@@ -31,7 +29,7 @@ local function SyncKeybindings()
     for i = 1, 4 do
         local key = GetBindingKey("BAGITEM_" .. i)
         if key then
-            SetOverrideBindingClick(barFrame, false, key, "OneWoW_QoL_BagBarBtn" .. i, "RightButton")
+            SetOverrideBindingClick(barFrame, false, key, "OneWoW_QoL_BagBarBtn" .. i)
         end
     end
 end
@@ -43,7 +41,6 @@ local function GetSettings()
     if not mods["bagbar"] then mods["bagbar"] = {} end
     local s = mods["bagbar"]
     if s.locked          == nil then s.locked          = false end
-    if s.showUsableItems == nil then s.showUsableItems = false end
     if s.maxButtons      == nil then s.maxButtons      = 12   end
     if s.buttonSize      == nil then s.buttonSize      = 36   end
     if s.columns         == nil then s.columns         = 12   end
@@ -90,10 +87,13 @@ function BagBarModule:OnDisable()
         ClearOverrideBindings(barFrame)
     end
     for i = 1, 12 do
-        if holders[i] then holders[i]:SetID(0) end
-        if buttons[i] then
-            buttons[i]:SetID(0)
-            buttons[i].owb_itemID = nil
+        local b = buttons[i]
+        if b then
+            b.owb_itemID = nil
+            b.owb_bag = nil
+            b.owb_slot = nil
+            b:SetAttribute("type*", nil)
+            b:SetAttribute("item*", nil)
         end
     end
     if barFrame then
@@ -105,6 +105,21 @@ function BagBarModule:OnDisable()
 end
 
 function BagBarModule:OnToggle(toggleId, value)
+end
+
+local function ClearBagBarButton(button)
+    if not button then return end
+    button.owb_itemID = nil
+    button.owb_bag = nil
+    button.owb_slot = nil
+    button:SetAttribute("type*", nil)
+    button:SetAttribute("item*", nil)
+    if button.icon then button.icon:SetTexture(nil) end
+    if button.count then button.count:SetText("") end
+    if button.cooldown then
+        button.cooldown:Hide()
+        button.cooldown:Clear()
+    end
 end
 
 function BagBarModule:CreateBar()
@@ -182,44 +197,64 @@ function BagBarModule:CreateButton(index)
 
     local holder = CreateFrame("Frame", holderName, barFrame)
     holder:SetSize(36, 36)
-    holder:SetID(0)
     holder:Hide()
 
-    local button = CreateFrame("ItemButton", btnName, holder, "ContainerFrameItemButtonTemplate")
+    local button = CreateFrame("Button", btnName, holder, "SecureActionButtonTemplate")
     button:SetAllPoints(holder)
-    button:SetID(0)
-    button:Show()
+    button:RegisterForClicks("AnyDown", "AnyUp")
+    button:SetAttribute("useOnKeyDown", true)
 
-    local normalTexture = button:GetNormalTexture()
-    if normalTexture then
-        normalTexture:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-        normalTexture:SetSize(64, 64)
-        normalTexture:ClearAllPoints()
-        normalTexture:SetPoint("CENTER", 0, -1)
+    button.icon = button:CreateTexture(nil, "ARTWORK")
+    button.icon:SetSize(34, 34)
+    button.icon:SetPoint("CENTER")
+    button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+    button.normalTex = button:CreateTexture(nil, "BACKGROUND")
+    button.normalTex:SetTexture("Interface\\Buttons\\UI-Quickslot2")
+    button.normalTex:SetSize(64, 64)
+    button.normalTex:SetPoint("CENTER", 0, -1)
+
+    button.count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+    button.count:SetPoint("BOTTOMRIGHT", -2, 2)
+
+    button.cooldown = CreateFrame("Cooldown", btnName .. "CD", button, "CooldownFrameTemplate")
+    button.cooldown:SetSize(34, 34)
+    button.cooldown:SetPoint("CENTER")
+    button.cooldown:SetDrawEdge(false)
+    button.cooldown:SetHideCountdownNumbers(false)
+
+    button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    local ht = button:GetHighlightTexture()
+    if ht then
+        ht:SetAlpha(0.4)
+        ht:SetSize(36, 36)
+        ht:SetPoint("CENTER")
     end
 
-    if button.IconBorder         then button.IconBorder:Hide()         end
-    if button.IconOverlay        then button.IconOverlay:Hide()        end
-    if button.ItemContextOverlay then button.ItemContextOverlay:Hide() end
-    if button.ExtendedSlot       then button.ExtendedSlot:Hide()       end
-    if button.IconQuestTexture   then button.IconQuestTexture:Hide()   end
+    button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+    local pt = button:GetPushedTexture()
+    if pt then
+        pt:SetSize(36, 36)
+        pt:SetPoint("CENTER")
+    end
 
-    button.owb_itemID = nil
-
-    button:HookScript("OnEnter", function(self)
-        if GameTooltip:IsShown() then
-            GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(ns.L["BAGBAR_LEFT_CLICK_TO_USE"], 1, 1, 1)
-            GameTooltip:AddLine(ns.L["BAGBAR_SHIFT_RIGHT_CLICK_TO_SKIP"], 0.7, 0.7, 0.7)
-            GameTooltip:AddLine(ns.L["BAGBAR_ALT_RIGHT_CLICK_TO_BLACKLIST"], 0.7, 0.7, 0.7)
-            GameTooltip:Show()
-        end
+    button:SetScript("OnEnter", function(self)
+        if not self.owb_itemID or not self.owb_bag or not self.owb_slot then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetBagItem(self.owb_bag, self.owb_slot)
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(ns.L["BAGBAR_LEFT_CLICK_TO_USE"], 1, 1, 1)
+        GameTooltip:AddLine(ns.L["BAGBAR_SHIFT_RIGHT_CLICK_TO_SKIP"], 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(ns.L["BAGBAR_ALT_RIGHT_CLICK_TO_BLACKLIST"], 0.7, 0.7, 0.7)
+        GameTooltip:Show()
     end)
 
-    button:HookScript("OnClick", function(self, mouseButton)
-        if mouseButton == "LeftButton" and self.owb_itemID then
-            C_Container.UseContainerItem(self:GetParent():GetID(), self:GetID())
-        elseif mouseButton == "RightButton" and self.owb_itemID and (IsShiftKeyDown() or IsAltKeyDown()) then
+    button:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
+    button:SetScript("PostClick", function(self, mouseButton)
+        if mouseButton == "RightButton" and self.owb_itemID and (IsShiftKeyDown() or IsAltKeyDown()) then
             BagBarModule:AddToBlacklist(self.owb_itemID, IsAltKeyDown())
             BagBarModule:ScheduleUpdate()
         end
@@ -326,81 +361,30 @@ function BagBarModule:ScheduleUpdate()
     end)
 end
 
+function BagBarModule:IsItemUsableForBar(bag, slot, itemID)
+    if not itemID then return false end
+    local info = C_Container.GetContainerItemInfo(bag, slot)
+    if info then
+        if info.isUsable == false then return false end
+    end
+    if C_Item.IsUsableItem then
+        local u = C_Item.IsUsableItem(itemID)
+        if u ~= nil then return u end
+    end
+    if info and info.isUsable == true then return true end
+    local spellName = C_Item.GetItemSpell(itemID)
+    return spellName ~= nil and spellName ~= ""
+end
+
 function BagBarModule:ShouldShowItem(bag, slot, itemID)
     if self:IsBlacklisted(itemID) then return false end
-
-    local s = GetSettings()
-    if s.manualItems and s.manualItems[itemID] then return true end
-
-    local itemName, _, _, _, _, _, _, _, _, _, classID, subclassID = C_Item.GetItemInfo(itemID)
-    if not itemName then return false end
-
-    if classID == Enum.ItemClass.Recipe then return true end
-
-    if classID == Enum.ItemClass.Battlepet then
-        local itemLink = C_Container.GetContainerItemLink(bag, slot)
-        if itemLink then
-            local linkID = tonumber(itemLink:match("|Hbattlepet:(%d+)"))
-            if linkID then
-                local numCollected, limit = C_PetJournal.GetNumCollectedInfo(linkID)
-                if numCollected and limit and numCollected >= limit then return false end
-            end
-        end
-        return true
-    end
-
-    if classID == Enum.ItemClass.Miscellaneous then
-        if subclassID == Enum.ItemMiscellaneousSubclass.Mount then return true end
-        if subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet then return true end
-    end
-
-    if classID == Enum.ItemClass.Consumable then
-        if subclassID == Enum.ItemConsumableSubclass.UtilityCurio
-        or subclassID == Enum.ItemConsumableSubclass.CombatCurio then
-            return true
-        end
-    end
-
-    local tooltipData = C_TooltipInfo.GetBagItem(bag, slot)
-    if tooltipData and tooltipData.lines then
-        for _, line in ipairs(tooltipData.lines) do
-            if line.leftText then
-                local text = line.leftText
-
-                if text == TOY then
-                    return not PlayerHasToy(itemID)
-                end
-
-                if text == ITEM_COSMETIC then
-                    local itemLink = C_Container.GetContainerItemLink(bag, slot)
-                    if itemLink then
-                        local _, sourceID = C_TransmogCollection.GetItemInfo(itemLink)
-                        if sourceID then
-                            local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
-                            if sourceInfo and not sourceInfo.isCollected then return true end
-                        end
-                    end
-                    return false
-                end
-            end
-        end
-    end
-
-    if s.showUsableItems then
-        if itemName and itemName:find("Hearth") then return false end
-        if classID == Enum.ItemClass.Consumable then return true end
-        if classID == Enum.ItemClass.ItemEnhancement then return true end
-        if classID == Enum.ItemClass.Miscellaneous then
-            local spellName = C_Item.GetItemSpell(itemID)
-            if spellName then return true end
-        end
-    end
-
-    return false
+    return self:IsItemUsableForBar(bag, slot, itemID)
 end
 
 function BagBarModule:GetUsableItems()
     local items = {}
+    local s = GetSettings()
+    local manual = s.manualItems or {}
     for bag = 0, 4 do
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
             local itemID = C_Container.GetContainerItemID(bag, slot)
@@ -415,11 +399,18 @@ function BagBarModule:GetUsableItems()
                         itemLink   = itemLink,
                         stackCount = info.stackCount or 1,
                         iconFileID = info.iconFileID,
+                        manualPin  = manual[itemID] and 1 or 0,
                     })
                 end
             end
         end
     end
+    table.sort(items, function(a, b)
+        if a.manualPin ~= b.manualPin then
+            return a.manualPin > b.manualPin
+        end
+        return (a.bag * 1000 + a.slot) < (b.bag * 1000 + b.slot)
+    end)
     return items
 end
 
@@ -450,6 +441,9 @@ function BagBarModule:UpdateBar()
     local itemCount = #items
 
     if itemCount == 0 and not previewMode then
+        for i = 1, 12 do
+            ClearBagBarButton(buttons[i])
+        end
         barFrame:Hide()
         if barFrame.dragHandle then barFrame.dragHandle:Hide() end
         return
@@ -463,22 +457,20 @@ function BagBarModule:UpdateBar()
     for i = 1, 12 do
         if i <= itemCount and i <= maxBtns then
             local item = items[i]
-            holders[i]:SetID(item.bag)
-            buttons[i]:SetID(item.slot)
-            buttons[i].owb_itemID = item.itemID
-            SetItemButtonTexture(buttons[i], item.iconFileID)
-            SetItemButtonCount(buttons[i], item.stackCount)
+            local b = buttons[i]
+            b.owb_itemID = item.itemID
+            b.owb_bag = item.bag
+            b.owb_slot = item.slot
+            b:SetAttribute("type*", "item")
+            b:SetAttribute("item*", "item:" .. item.itemID)
+            b.icon:SetTexture(item.iconFileID)
+            b.count:SetText((item.stackCount and item.stackCount > 1) and item.stackCount or "")
             local start, duration, enable = C_Container.GetContainerItemCooldown(item.bag, item.slot)
-            if buttons[i].Cooldown then
-                CooldownFrame_Set(buttons[i].Cooldown, start or 0, duration or 0, enable or 0)
+            if b.cooldown then
+                CooldownFrame_Set(b.cooldown, start or 0, duration or 0, enable or 0)
             end
         else
-            holders[i]:SetID(0)
-            buttons[i]:SetID(0)
-            buttons[i].owb_itemID = nil
-            SetItemButtonTexture(buttons[i], nil)
-            SetItemButtonCount(buttons[i], 0)
-            if buttons[i].Cooldown then buttons[i].Cooldown:Clear() end
+            ClearBagBarButton(buttons[i])
         end
     end
 
@@ -503,17 +495,23 @@ function BagBarModule:LayoutButtons(count)
             col * (btnSize + padding),
             -(row * (btnSize + padding)))
 
-        local normalTexture = buttons[i]:GetNormalTexture()
-        if normalTexture then
-            local borderSize = math.floor(btnSize * 1.7)
-            normalTexture:SetSize(borderSize, borderSize)
-        end
+        local b = buttons[i]
+        b:SetSize(btnSize, btnSize)
+        local iconSize = btnSize - 2
+        b.icon:SetSize(iconSize, iconSize)
+        b.normalTex:SetSize(math.floor(btnSize * 1.7), math.floor(btnSize * 1.7))
+        b.cooldown:SetSize(iconSize, iconSize)
+        local ht = b:GetHighlightTexture()
+        if ht then ht:SetSize(btnSize, btnSize) end
+        local pt = b:GetPushedTexture()
+        if pt then pt:SetSize(btnSize, btnSize) end
 
         holders[i]:Show()
     end
 
     for i = count + 1, 12 do
         holders[i]:Hide()
+        ClearBagBarButton(buttons[i])
     end
 
     if actualCols > 0 then
@@ -537,10 +535,11 @@ end
 
 function BagBarModule:UpdateCooldowns()
     for i = 1, 12 do
-        if holders[i] and holders[i]:IsShown() and buttons[i]:GetID() > 0 then
-            local start, duration, enable = C_Container.GetContainerItemCooldown(holders[i]:GetID(), buttons[i]:GetID())
-            if buttons[i].Cooldown then
-                CooldownFrame_Set(buttons[i].Cooldown, start or 0, duration or 0, enable or 0)
+        local b = buttons[i]
+        if holders[i] and holders[i]:IsShown() and b and b.owb_bag and b.owb_slot then
+            local start, duration, enable = C_Container.GetContainerItemCooldown(b.owb_bag, b.owb_slot)
+            if b.cooldown then
+                CooldownFrame_Set(b.cooldown, start or 0, duration or 0, enable or 0)
             end
         end
     end

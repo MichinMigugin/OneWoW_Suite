@@ -53,6 +53,7 @@ local state = {
     activeSellTicker = nil,
     activeSellConfirmTicker = nil,
     activeSellErrFrame = nil,
+    vendorSellSeq = 0,
 }
 ns.VPState = state
 
@@ -423,6 +424,17 @@ function VendorPanel:GetOneTimeItems()
 end
 
 function VendorPanel:SellJunkItems()
+    if state.activeSellTicker then
+        state.activeSellTicker:Cancel()
+        state.activeSellTicker = nil
+    end
+    if state.activeSellConfirmTicker then
+        state.activeSellConfirmTicker:Cancel()
+        state.activeSellConfirmTicker = nil
+    end
+    state.vendorSellSeq = (state.vendorSellSeq or 0) + 1
+    local sellSeq = state.vendorSellSeq
+
     local oneTime = state.oneTimeItems
     local itemsToSell = {}
 
@@ -473,6 +485,8 @@ function VendorPanel:SellJunkItems()
     local actualSoldCount = 0
     local actualGold = 0
     local grayCount, markedCount, ilvlGearCount, reagentsCount = 0, 0, 0, 0
+    local confirmTicker, sellTicker
+    local summaryPrinted = false
 
     if not state.activeSellErrFrame then
         state.activeSellErrFrame = CreateFrame("Frame")
@@ -484,22 +498,24 @@ function VendorPanel:SellJunkItems()
             vendorRefused = true
             errFrame:UnregisterEvent("UI_ERROR_MESSAGE")
             wipe(pendingSells)
-            if state.activeSellTicker then
-                state.activeSellTicker:Cancel()
+            if sellTicker then sellTicker:Cancel() end
+            if confirmTicker then confirmTicker:Cancel() end
+            if state.vendorSellSeq == sellSeq then
                 state.activeSellTicker = nil
-            end
-            if state.activeSellConfirmTicker then
-                state.activeSellConfirmTicker:Cancel()
                 state.activeSellConfirmTicker = nil
             end
             print("OneWoW QoL: " .. ns.L["VENDOR_DOES_NOT_BUY"])
         end
     end)
 
-    state.activeSellConfirmTicker = C_Timer.NewTicker(0, function()
+    confirmTicker = C_Timer.NewTicker(0, function()
+        if state.vendorSellSeq ~= sellSeq then
+            if confirmTicker then confirmTicker:Cancel() end
+            return
+        end
         if vendorRefused then
-            if state.activeSellConfirmTicker then
-                state.activeSellConfirmTicker:Cancel()
+            if confirmTicker then confirmTicker:Cancel() end
+            if state.vendorSellSeq == sellSeq then
                 state.activeSellConfirmTicker = nil
             end
             return
@@ -520,11 +536,13 @@ function VendorPanel:SellJunkItems()
         end
 
         if sellDone and #pendingSells == 0 then
-            if state.activeSellConfirmTicker then
-                state.activeSellConfirmTicker:Cancel()
+            if summaryPrinted then return end
+            summaryPrinted = true
+            errFrame:UnregisterEvent("UI_ERROR_MESSAGE")
+            if confirmTicker then confirmTicker:Cancel() end
+            if state.vendorSellSeq == sellSeq then
                 state.activeSellConfirmTicker = nil
             end
-            errFrame:UnregisterEvent("UI_ERROR_MESSAGE")
             if actualSoldCount > 0 then
                 local moneyStr = VPFilters.FormatMoney(actualGold)
                 local categoryParts = {}
@@ -537,19 +555,24 @@ function VendorPanel:SellJunkItems()
             end
         end
     end)
+    state.activeSellConfirmTicker = confirmTicker
 
     local currentIndex = 1
-    state.activeSellTicker = C_Timer.NewTicker(0.3, function()
+    sellTicker = C_Timer.NewTicker(0.3, function()
+        if state.vendorSellSeq ~= sellSeq then
+            if sellTicker then sellTicker:Cancel() end
+            return
+        end
         if vendorRefused then
-            if state.activeSellTicker then
-                state.activeSellTicker:Cancel()
+            if sellTicker then sellTicker:Cancel() end
+            if state.vendorSellSeq == sellSeq then
                 state.activeSellTicker = nil
             end
             return
         end
         if currentIndex > #itemsToSell then
-            if state.activeSellTicker then
-                state.activeSellTicker:Cancel()
+            if sellTicker then sellTicker:Cancel() end
+            if state.vendorSellSeq == sellSeq then
                 state.activeSellTicker = nil
             end
             sellDone = true
@@ -562,6 +585,7 @@ function VendorPanel:SellJunkItems()
         SellCursorItem()
         currentIndex = currentIndex + 1
     end)
+    state.activeSellTicker = sellTicker
 end
 
 function VendorPanel:GetJunkItemCount()
@@ -1075,6 +1099,7 @@ function VendorPanel:OnMerchantClosed()
     self:StopUpdates()
     if state.activeSellTicker then state.activeSellTicker:Cancel(); state.activeSellTicker = nil end
     if state.activeSellConfirmTicker then state.activeSellConfirmTicker:Cancel(); state.activeSellConfirmTicker = nil end
+    state.vendorSellSeq = (state.vendorSellSeq or 0) + 1
     if state.activeSellErrFrame then state.activeSellErrFrame:UnregisterEvent("UI_ERROR_MESSAGE") end
     if state.vendorButton then state.vendorButton:Hide() end
     if state.panelToggleButton then state.panelToggleButton:Hide() end

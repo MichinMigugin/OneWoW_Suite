@@ -1,5 +1,3 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/bagbar/bagbar-ui.lua
 local addonName, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
@@ -175,17 +173,6 @@ local function BuildContent(container, isEnabled)
         ns.BagBarModule._refreshCustomDetail()
     end)
     cy = cy - 32
-
-    local usableCheck = CreateFrame("CheckButton", nil, container, "InterfaceOptionsCheckButtonTemplate")
-    usableCheck:SetPoint("TOPLEFT", container, "TOPLEFT", 8, cy)
-    usableCheck.Text:SetText(L["BAGBAR_SHOW_USABLE_ITEMS"])
-    usableCheck.Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    usableCheck:SetChecked(s.showUsableItems)
-    usableCheck:SetScript("OnClick", function(self)
-        GetSettings().showUsableItems = self:GetChecked()
-        ns.BagBarModule:ScheduleUpdate()
-    end)
-    cy = cy - 28
 
     local maxLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     maxLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
