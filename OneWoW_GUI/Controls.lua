@@ -235,6 +235,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
         overlay:SetAllPoints(UIParent)
         overlay:SetFrameStrata(hostStrata)
         overlay:SetFrameLevel(math.max(0, hostLevel - 2))
+        overlay:SetToplevel(true)
         overlay:EnableMouse(true)
         overlay:RegisterForClicks("AnyDown", "AnyUp")
 
@@ -246,6 +247,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
         menu._boundOverlay = overlay
         menu:SetFrameStrata(menuStrata)
         menu:SetFrameLevel(menuLevel)
+        menu:SetToplevel(true)
         menu:SetClampedToScreen(true)
         menu:SetSize(self:GetWidth() + 20, menuHeight)
 
