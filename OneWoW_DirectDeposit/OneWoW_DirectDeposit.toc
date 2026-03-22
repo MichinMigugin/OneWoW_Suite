@@ -34,9 +34,6 @@ Locales\deDE.lua
 Core\Constants.lua
 Core\Database.lua
 
-# GUI Framework
-GUI\Framework.lua
-
 # Modules
 Modules\DirectDeposit.lua
 
