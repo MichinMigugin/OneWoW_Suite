@@ -229,23 +229,6 @@ function OneWoW_GUI:CreateSectionHeader(parent, options)
     return section
 end
 
---- Draggable vertical splitter between a fixed left pane and a flexible right pane.
---- Caller positions |leftPanel| (TOP/BOTTOM/LEFT); only width is driven by this helper.
---- |rightPanel| is re-anchored from the divider to the parent's bottom-right.
----
---- options.parent, options.leftPanel, options.rightPanel (required)
---- options.dividerWidth (default 6)
---- options.leftMinWidth, options.rightMinWidth
---- options.splitPadding — horizontal chrome for max-width math (default dividerWidth + 10)
---- options.bottomOuterInset, options.rightOuterInset — parent BOTTOMRIGHT inset (default 5)
---- options.resizeCap — screen width cap when growing mainFrame (default 0.95)
---- options.mainFrame — optional; widened when drag would leave less than dynamic right reserve
---- options.getMinRightWidth — optional fun() -> number; used only to grow mainFrame (e.g. unbounded text width)
----   Max left width / resize clamp use rightMinWidth only (matches legacy Frame tab behavior).
---- options.onWidthChanged — optional fun(leftWidth) after mouse release (persist)
---- options.maxAutoGrowSteps — max mainFrame widen attempts per drag tick (default 12); handles deferred layout width
----
---- @return Frame divider button
 function OneWoW_GUI:CreateVerticalPaneResizer(options)
     options = options or {}
     local parent = options.parent
@@ -270,12 +253,11 @@ function OneWoW_GUI:CreateVerticalPaneResizer(options)
     local bottomOuterInset = options.bottomOuterInset or 5
     local rightOuterInset = options.rightOuterInset or 5
     local resizeCap = options.resizeCap or 0.95
-    local mainFrame = options.mainFrame
-    local getMinRightWidth = options.getMinRightWidth
-    local onWidthChanged = options.onWidthChanged
-    local maxAutoGrowSteps = options.maxAutoGrowSteps or 12
+    local mainFrame = options.mainFrame -- widened when drag would leave less than dynamic right reserve
+    local getMinRightWidth = options.getMinRightWidth -- fun() -> number; used only to grow mainFrame (e.g. unbounded text width)
+    local onWidthChanged = options.onWidthChanged -- fun(leftWidth) after mouse release (persist)
+    local maxAutoGrowSteps = options.maxAutoGrowSteps or 12 -- max mainFrame widen attempts per drag tick; handles deferred layout width
 
-    --- For auto-grow only: max(rightMinWidth, getMinRightWidth()).
     local function effectiveRightReserveForGrow()
         local r = rightMinWidth
         if getMinRightWidth then
@@ -338,7 +320,7 @@ function OneWoW_GUI:CreateVerticalPaneResizer(options)
 
         local neededRightGrow = effectiveRightReserveForGrow()
         local screenMax = floor(GetScreenWidth() * resizeCap)
-        -- Grow host until the tab can fit desiredLeft + dynamic right reserve (handles layout lag with multiple steps).
+        -- Grow host until tab can fit desiredLeft + dynamic right reserve (handles layout lag with multiple steps).
         if mainFrame then
             for _ = 1, maxAutoGrowSteps do
                 local tabW = parent:GetWidth()
@@ -358,7 +340,7 @@ function OneWoW_GUI:CreateVerticalPaneResizer(options)
         end
 
         local tabWidth = parent:GetWidth()
-        -- Clamp uses fixed rightMinWidth only (same as legacy tabWidth - RIGHT_MIN_WIDTH - PADDING).
+        -- Clamp uses fixed rightMinWidth only
         local maxLeftWidth = tabWidth - rightMinWidth - splitPadding
         if maxLeftWidth < leftMinWidth then
             maxLeftWidth = leftMinWidth
