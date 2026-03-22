@@ -16,15 +16,259 @@ local QuestToolsModule = {
         { id = "auto_accept",  label = "QUESTTOOLS_TOGGLE_ACCEPT",  description = "QUESTTOOLS_TOGGLE_ACCEPT_DESC",  default = true  },
         { id = "auto_turnin",  label = "QUESTTOOLS_TOGGLE_TURNIN",  description = "QUESTTOOLS_TOGGLE_TURNIN_DESC",  default = true  },
         { id = "reward_picker",label = "QUESTTOOLS_TOGGLE_REWARDS", description = "QUESTTOOLS_TOGGLE_REWARDS_DESC", default = true  },
+        { id = "auto_gossip",  label = "QUESTTOOLS_TOGGLE_GOSSIP",  description = "QUESTTOOLS_TOGGLE_GOSSIP_DESC",  default = false },
     },
     preview       = true,
     _acceptFrame  = nil,
     _turninFrame  = nil,
+    _gossipFrame  = nil,
+    _gossipHooked = false,
+    _gossipRetryToken = 0,
     _goldIcon     = nil,
 }
 
 local function GetToggle(id)
     return ns.ModuleRegistry:GetToggleValue("questtools", id)
+end
+
+local function GetDisplayedTextFromGossipButton(btn)
+    if not btn then return nil end
+    if btn.GetText then
+        local t = btn:GetText()
+        if type(t) == "string" and t ~= "" then return t end
+    end
+    local regions = { btn:GetRegions() }
+    for _, rr in ipairs(regions) do
+        if rr.GetText and rr:GetObjectType() == "FontString" then
+            local t = rr:GetText()
+            if type(t) == "string" and t ~= "" then return t end
+        end
+    end
+    return nil
+end
+
+function QuestToolsModule:GetGossipDisplayedButtonTexts()
+    local out = {}
+    local gf = _G.GossipFrame
+    if not gf or not gf:IsShown() then return out end
+    local scrollTarget = gf.GreetingPanel and gf.GreetingPanel.ScrollBox and gf.GreetingPanel.ScrollBox.ScrollTarget
+    if not scrollTarget then return out end
+    local children = { scrollTarget:GetChildren() }
+    for _, child in ipairs(children) do
+        if child and child.GetObjectType and child:GetObjectType() == "Button" then
+            local t = GetDisplayedTextFromGossipButton(child)
+            if t then
+                out[#out + 1] = t
+            end
+        end
+    end
+    return out
+end
+
+function QuestToolsModule:DebugPrintGossipApiVsUi()
+    print("|cff00ff00[OneWoW_QoL QuestTools]|r Gossip: API name vs. UI button text")
+    if C_GossipInfo and C_GossipInfo.GetOptions then
+        local opts = C_GossipInfo.GetOptions()
+        if opts then
+            for _, o in pairs(opts) do
+                print("  API", "order", tostring(o.orderIndex), "name", tostring(o.name), "icon", tostring(o.icon))
+            end
+        else
+            print("  API: (nil)")
+        end
+    else
+        print("  API: C_GossipInfo not available")
+    end
+    print("  UI (GossipFrame scroll buttons):")
+    local lines = self:GetGossipDisplayedButtonTexts()
+    if #lines == 0 then
+        print("    (none — is GossipFrame open?)")
+    else
+        for i, line in ipairs(lines) do
+            print("   ", i, line)
+        end
+    end
+end
+
+local function NormalizeGossipTextForMatch(text)
+    if not text then return "" end
+    local s = text
+    s = s:gsub("|H[^|]+|h([^|]*)|h", "%1")
+    for _ = 1, 12 do
+        local before = s
+        s = s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+        if s == before then break end
+    end
+    s = s:gsub("|T[^|]+|t", "")
+    s = s:gsub("^%s+", "")
+    return s
+end
+
+local function HasQuestGossipMarker(name)
+    if not name or name == "" then return false end
+    local plain = "(quest)"
+    if string.find(name:lower(), plain, 1, true) then return true end
+    local s = NormalizeGossipTextForMatch(name)
+    return string.find(s:lower(), plain, 1, true) ~= nil
+end
+
+function QuestToolsModule:IsGossipOptionChoosable(opt)
+    if not opt then return false end
+    if Enum and Enum.GossipOptionStatus and opt.status ~= nil then
+        local S = Enum.GossipOptionStatus
+        if S then
+            if opt.status == S.Locked or opt.status == S.Unavailable then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+local function HasQuestLabelPrependFlag(opt)
+    if not opt or opt.flags == nil then return false end
+    if FlagsUtil and FlagsUtil.IsSet and Enum and Enum.GossipOptionRecFlags and Enum.GossipOptionRecFlags.QuestLabelPrepend then
+        return FlagsUtil.IsSet(opt.flags, Enum.GossipOptionRecFlags.QuestLabelPrepend)
+    end
+    return false
+end
+
+local function ResolveIndexedGossipHits(hits, texts, byOrder)
+    if #hits == 0 then return nil end
+    if #hits == 1 then return hits[1].opt end
+    local withDisplayQuest = {}
+    for _, hit in ipairs(hits) do
+        local t = texts[hit.index]
+        if t and HasQuestGossipMarker(t) then
+            withDisplayQuest[#withDisplayQuest + 1] = hit.opt
+        end
+    end
+    if #withDisplayQuest == 1 then return withDisplayQuest[1] end
+    if #withDisplayQuest > 1 then
+        table.sort(withDisplayQuest, byOrder)
+        return withDisplayQuest[1]
+    end
+    table.sort(hits, function(a, b)
+        return (a.opt.orderIndex or math.huge) < (b.opt.orderIndex or math.huge)
+    end)
+    return hits[1].opt
+end
+
+function QuestToolsModule:PickQuestGossipOption()
+    local options = C_GossipInfo.GetOptions()
+    if not options then return nil end
+    local list = {}
+    for _, o in pairs(options) do
+        list[#list + 1] = o
+    end
+    table.sort(list, function(a, b)
+        return (a.orderIndex or math.huge) < (b.orderIndex or math.huge)
+    end)
+    local texts = self:GetGossipDisplayedButtonTexts()
+    local byOrder = function(a, b)
+        return (a.orderIndex or math.huge) < (b.orderIndex or math.huge)
+    end
+    local flagHits = {}
+    for i, opt in ipairs(list) do
+        if self:IsGossipOptionChoosable(opt) and HasQuestLabelPrependFlag(opt) then
+            flagHits[#flagHits + 1] = { index = i, opt = opt }
+        end
+    end
+    if #flagHits == 0 then return nil end
+    return ResolveIndexedGossipHits(flagHits, texts, byOrder)
+end
+
+function QuestToolsModule:TryAutoGossip()
+    if not ns.ModuleRegistry:IsEnabled("questtools") or not GetToggle("auto_gossip") then return false end
+    if IsShiftKeyDown() then return false end
+    if not C_GossipInfo or not C_GossipInfo.GetOptions then return false end
+    local gf = _G.GossipFrame
+    if gf and not gf:IsShown() then return false end
+
+    local opt = self:PickQuestGossipOption()
+    if not opt then return false end
+    local name = opt.name or opt.title
+    if opt.gossipOptionID ~= nil then
+        local id = opt.gossipOptionID
+        local ok = pcall(C_GossipInfo.SelectOption, id, name)
+        if not ok then
+            ok = pcall(C_GossipInfo.SelectOption, id)
+        end
+        return ok
+    elseif opt.orderIndex ~= nil and C_GossipInfo.SelectOptionByIndex then
+        local idx = opt.orderIndex
+        local ok = pcall(C_GossipInfo.SelectOptionByIndex, idx, name)
+        if not ok then
+            ok = pcall(C_GossipInfo.SelectOptionByIndex, idx)
+        end
+        return ok
+    end
+    return false
+end
+
+function QuestToolsModule:ScheduleGossipRetries()
+    if not ns.ModuleRegistry:IsEnabled("questtools") or not GetToggle("auto_gossip") then return end
+    if IsShiftKeyDown() then return end
+    if not C_GossipInfo or not C_GossipInfo.GetOptions then return end
+
+    self._gossipRetryToken = (self._gossipRetryToken or 0) + 1
+    local token = self._gossipRetryToken
+    local attempt = 0
+    local maxAttempts = 24
+
+    local function step()
+        if token ~= self._gossipRetryToken then return end
+        if not GetToggle("auto_gossip") then return end
+        if IsShiftKeyDown() then return end
+        local gf = _G.GossipFrame
+        if gf and not gf:IsShown() then return end
+        attempt = attempt + 1
+        if self:TryAutoGossip() then return end
+        if attempt < maxAttempts then
+            C_Timer.After(0.05, step)
+        end
+    end
+
+    C_Timer.After(0, step)
+end
+
+function QuestToolsModule:OnGossipOpen()
+    if not ns.ModuleRegistry:IsEnabled("questtools") or not GetToggle("auto_gossip") then return end
+    if IsShiftKeyDown() then return end
+    if not C_GossipInfo or not C_GossipInfo.GetOptions then return end
+    self:HookGossipFrameShow()
+    self:ScheduleGossipRetries()
+end
+
+function QuestToolsModule:HookGossipFrameShow()
+    if self._gossipHooked then return end
+    local gf = _G.GossipFrame
+    if not gf or not gf.HookScript then return end
+    self._gossipHooked = true
+    gf:HookScript("OnShow", function()
+        QuestToolsModule:OnGossipOpen()
+    end)
+end
+
+function QuestToolsModule:InitGossip()
+    if self._gossipFrame then return end
+    self._gossipFrame = CreateFrame("Frame", "OneWoW_QoL_QuestGossip")
+    self._gossipFrame:SetScript("OnEvent", function(_, event)
+        if event == "GOSSIP_SHOW" then
+            self:OnGossipOpen()
+        end
+    end)
+    self:HookGossipFrameShow()
+end
+
+function QuestToolsModule:RegisterGossipEvents()
+    if not self._gossipFrame then return end
+    self._gossipFrame:RegisterEvent("GOSSIP_SHOW")
+end
+
+function QuestToolsModule:UnregisterGossipEvents()
+    if not self._gossipFrame then return end
+    self._gossipFrame:UnregisterEvent("GOSSIP_SHOW")
 end
 
 function QuestToolsModule:InitAccept()
@@ -170,17 +414,26 @@ end
 function QuestToolsModule:OnEnable()
     self:InitAccept()
     self:InitTurnin()
+    self:InitGossip()
     self:InitRewardPicker()
+
+    C_Timer.After(0, function()
+        QuestToolsModule:HookGossipFrameShow()
+    end)
 
     self._acceptFrame:RegisterEvent("QUEST_DETAIL")
     self._acceptFrame:RegisterEvent("QUEST_GREETING")
     self._turninFrame:RegisterEvent("QUEST_PROGRESS")
     self._turninFrame:RegisterEvent("QUEST_COMPLETE")
+    if GetToggle("auto_gossip") then
+        self:RegisterGossipEvents()
+    end
 end
 
 function QuestToolsModule:OnDisable()
     if self._acceptFrame then self._acceptFrame:UnregisterAllEvents() end
     if self._turninFrame then self._turninFrame:UnregisterAllEvents() end
+    self:UnregisterGossipEvents()
     if self._goldIcon then self._goldIcon:Hide() end
 end
 
@@ -207,7 +460,17 @@ function QuestToolsModule:OnToggle(toggleId, value)
         if not value and self._goldIcon then
             self._goldIcon:Hide()
         end
+    elseif toggleId == "auto_gossip" then
+        if value then
+            self:RegisterGossipEvents()
+        else
+            self:UnregisterGossipEvents()
+        end
     end
 end
 
 ns.QuestToolsModule = QuestToolsModule
+
+_G.OneWoW_QoL_DebugGossipDisplayed = function()
+    QuestToolsModule:DebugPrintGossipApiVsUi()
+end

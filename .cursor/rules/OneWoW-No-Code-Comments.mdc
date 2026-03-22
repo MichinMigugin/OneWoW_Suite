@@ -1,0 +1,9 @@
+---
+description: Do not add code comments unless the user explicitly asks for them.
+alwaysApply: true
+---
+
+# No unsolicited code comments
+
+- Do not add comments to source code (including `--`, `---`, `//`, `/* */`, block docs, or inline explanations) unless the user clearly asks for comments in that request.
+- Explanations, rationale, and documentation belong in chat or project docs the user requests—not in the codebase by default.

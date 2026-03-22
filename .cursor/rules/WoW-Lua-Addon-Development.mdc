@@ -866,6 +866,7 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 - **C_TooltipInfo functions:** https://warcraft.wiki.gg/wiki/Category:API_systems/TooltipInfo
 - **Widget API (frames):** https://warcraft.wiki.gg/wiki/Widget_API
 - **Blizzard tooltip source:** https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_SharedXMLGame/Tooltip
+- **Blizzard generated API docs (constants, enums, C_ namespaces):** https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_APIDocumentationGenerated
 - **Blizzard UI source:** https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns
 - **Ace3:** https://github.com/WoWUIDev/Ace3
 - **Lua 5.1 manual:** https://www.lua.org/manual/5.1/

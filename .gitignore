@@ -7,4 +7,10 @@ OneWoW_UI/
 # Local Cursor rules (user-specific)
 .cursor/rules/1W-Ricky-*.mdc
 
+# Local secrets (never commit)
+.env
+.env.*
+
+# Ephemeral Discord API payloads (Send-ChangelogToDiscord.ps1)
+.discord-changelog-send.json*
 
