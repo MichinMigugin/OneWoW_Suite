@@ -123,10 +123,10 @@ function Module:CollectData(charKey, charData)
 
             if hasItem then
                 for attachmentIndex = 1, ATTACHMENTS_MAX_RECEIVE do
-                    local name, itemTexture, count, quality, canUse = GetInboxItem(mailID, attachmentIndex)
+                    local name, mailItemID, itemTexture, count, quality, canUse = GetInboxItem(mailID, attachmentIndex)
                     if name then
                         local itemLink = GetInboxItemLink(mailID, attachmentIndex)
-                        local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
+                        local itemID = mailItemID or (itemLink and tonumber(itemLink:match("item:(%d+)")))
                         local itemName, sellPrice = nil, 0
                         if itemLink then
                             itemName, _, _, _, _, _, _, _, _, _, sellPrice = GetItemInfo(itemLink)
@@ -149,10 +149,21 @@ function Module:CollectData(charKey, charData)
         end
     end
 
-    for oldMailID, oldMail in pairs(existingMail.mails or {}) do
-        if not mailbox.mails[oldMailID] then
-            mailbox.mails[oldMailID] = oldMail
-            mailbox.mails[oldMailID].isAwaitingCollection = true
+    if numItems >= 20 then
+        for oldMailID, oldMail in pairs(existingMail.mails or {}) do
+            if not mailbox.mails[oldMailID] then
+                local expired = false
+                if oldMail.collectedAt and oldMail.daysLeft then
+                    local expireTime = oldMail.collectedAt + (oldMail.daysLeft * 86400)
+                    if time() > expireTime then
+                        expired = true
+                    end
+                end
+                if not expired then
+                    mailbox.mails[oldMailID] = oldMail
+                    mailbox.mails[oldMailID].isAwaitingCollection = true
+                end
+            end
         end
     end
 

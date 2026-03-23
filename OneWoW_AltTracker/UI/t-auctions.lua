@@ -642,6 +642,51 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         table.insert(auctionRow.cells, statusText)
 
         local deleteBtn = OneWoW_GUI:CreateButton(auctionRow, { text = L["PLACEHOLDER_DELETE"], width = 40, height = 22 })
+        deleteBtn:SetScript("OnClick", function()
+            if not _G.OneWoW_AltTracker_Auctions_DB or not _G.OneWoW_AltTracker_Auctions_DB.characters then return end
+            local charAuctionData = _G.OneWoW_AltTracker_Auctions_DB.characters[charKey]
+            if not charAuctionData then return end
+
+            if isHistory and history then
+                if charAuctionData.auctionHistory then
+                    for idx, event in ipairs(charAuctionData.auctionHistory) do
+                        if event.auctionID == history.auctionID and event.timestamp == history.timestamp then
+                            table.remove(charAuctionData.auctionHistory, idx)
+                            break
+                        end
+                    end
+                end
+            elseif entry.type == "bid" and bid then
+                if charAuctionData.activeBids then
+                    for idx, b in ipairs(charAuctionData.activeBids) do
+                        if b.auctionID == bid.auctionID then
+                            table.remove(charAuctionData.activeBids, idx)
+                            charAuctionData.numActiveBids = #charAuctionData.activeBids
+                            break
+                        end
+                    end
+                end
+            elseif auction then
+                if charAuctionData.activeAuctions then
+                    for idx, a in ipairs(charAuctionData.activeAuctions) do
+                        if a.auctionID == auction.auctionID then
+                            table.remove(charAuctionData.activeAuctions, idx)
+                            charAuctionData.numActiveAuctions = #charAuctionData.activeAuctions
+                            local totalValue = 0
+                            for _, remaining in ipairs(charAuctionData.activeAuctions) do
+                                totalValue = totalValue + (remaining.buyoutAmount or 0)
+                            end
+                            charAuctionData.totalAuctionValue = totalValue
+                            break
+                        end
+                    end
+                end
+            end
+
+            if ns.UI.RefreshAuctionsTab then
+                ns.UI.RefreshAuctionsTab(auctionsTab)
+            end
+        end)
         table.insert(auctionRow.cells, deleteBtn)
 
         if dt and dt.headerRow and dt.headerRow.columnButtons and columnsConfig then

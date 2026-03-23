@@ -37,7 +37,9 @@ ns.VPGetShowPanel = GetShowPanel
 local state = {
     vendorButton = nil,
     junkPreviewPanel = nil,
-    panelToggleButton = nil,
+    panelToggleTab = nil,
+    _merchantSidebarIndex = nil,
+    _merchantToggleHandler = nil,
     replacementSellButton = nil,
     filtersDialog = nil,
     neverSellDialog = nil,
@@ -972,14 +974,15 @@ function VendorPanel:UpdateButton()
 end
 
 function VendorPanel:UpdatePanelToggleButton()
-    if not state.panelToggleButton then return end
-    if state.junkPreviewPanel and state.junkPreviewPanel:IsShown() then
-        state.panelToggleButton:Hide()
-    else
-        if MerchantFrame and MerchantFrame:IsShown() then
-            state.panelToggleButton:Show()
-        end
+    if not state.panelToggleTab then return end
+    local panelShown = state.junkPreviewPanel and state.junkPreviewPanel:IsShown()
+    state.panelToggleTab:SetChecked(panelShown)
+    local gui = LibStub("OneWoW_GUI-1.0", true)
+    if gui then
+        local theme = (gui.GetSetting and gui:GetSetting("minimap.theme")) or "horde"
+        state.panelToggleTab.Icon:SetTexture(gui:GetBrandIcon(theme))
     end
+    state.panelToggleTab.Icon:SetSize(24, 24)
 end
 
 function VendorPanel:ManageBlizzardSellButton(hideIt)
@@ -997,6 +1000,11 @@ function VendorPanel:ManageBlizzardSellButton(hideIt)
 end
 
 function VendorPanel:TogglePreviewPanel()
+    if state._merchantToggleHandler then
+        state._merchantToggleHandler()
+        return
+    end
+
     if not state.junkPreviewPanel then self:CreatePreviewPanel() end
     if state.junkPreviewPanel:IsShown() then
         state.junkPreviewPanel.manuallyHidden = true
@@ -1076,7 +1084,7 @@ function VendorPanel:OnMerchantShow()
     state.vendorButton:Show()
     self:UpdateButton()
 
-    if not state.panelToggleButton then self:CreatePanelToggleButton() end
+    if not state.panelToggleTab then self:CreatePanelToggleButton() end
 
     if GetShowPanel() then
         if not state.junkPreviewPanel then self:CreatePreviewPanel() end
@@ -1089,6 +1097,21 @@ function VendorPanel:OnMerchantShow()
         self:UpdatePreviewPanel()
         if state.junkPreviewPanel and state.junkPreviewPanel:IsShown() then
             self:ManageBlizzardSellButton(true)
+            if state.panelToggleTab then
+                state.panelToggleTab:SetChecked(true)
+                local gui = LibStub("OneWoW_GUI-1.0", true)
+                if gui then
+                    local theme = (gui.GetSetting and gui:GetSetting("minimap.theme")) or "horde"
+                    state.panelToggleTab.Icon:SetTexture(gui:GetBrandIcon(theme))
+                end
+                state.panelToggleTab.Icon:SetSize(24, 24)
+                if MerchantFrameTabSideBar then
+                    MerchantFrameTabSideBar.selTab = state._merchantSidebarIndex or 0
+                end
+            end
+            if VendorPanel.RepositionMerchantSidebar then
+                VendorPanel:RepositionMerchantSidebar()
+            end
         end
     end
 
@@ -1102,7 +1125,7 @@ function VendorPanel:OnMerchantClosed()
     state.vendorSellSeq = (state.vendorSellSeq or 0) + 1
     if state.activeSellErrFrame then state.activeSellErrFrame:UnregisterEvent("UI_ERROR_MESSAGE") end
     if state.vendorButton then state.vendorButton:Hide() end
-    if state.panelToggleButton then state.panelToggleButton:Hide() end
+    if state.panelToggleTab then state.panelToggleTab:SetChecked(false) end
     if state.junkPreviewPanel then state.junkPreviewPanel:Hide() end
     self:ManageBlizzardSellButton(false)
     if state.filtersDialog then state.filtersDialog:Hide() end
@@ -1211,7 +1234,9 @@ function VendorPanelModule:OnEnable()
         local function onSettingsChanged()
             VendorPanel:OnMerchantClosed()
             state.vendorButton = nil
-            state.panelToggleButton = nil
+            state.panelToggleTab = nil
+            state._merchantSidebarIndex = nil
+            state._merchantToggleHandler = nil
             state.junkPreviewPanel = nil
             state.replacementSellButton = nil
             state.filtersDialog = nil

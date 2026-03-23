@@ -2,7 +2,7 @@
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00GUI|r
 ## Version: R6.2603.2301
 ## Notes: Shared UI library for all OneWoW addons. Provides themed frames, buttons, scroll bars, and layout helpers.
-## Author: OneWow Dev Team
+## Author: OneWow Dev Team (ricky, kellewic)
 ## X-Website: https://wow2.xyz/
 ## X-Category: |cFFFFD100OneWoW|r
 ## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png

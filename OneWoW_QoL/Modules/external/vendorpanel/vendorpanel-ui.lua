@@ -77,35 +77,125 @@ function VendorPanel:CreateVendorButton()
     state.vendorButton:Hide()
 end
 
-function VendorPanel:CreatePanelToggleButton()
-    if state.panelToggleButton then return end
+function VendorPanel:EnsureMerchantSidebar()
+    if not MerchantFrame then return nil end
 
-    state.panelToggleButton = CreateFrame("Button", "OneWoW_QoL_PanelToggle", MerchantFrame)
-    state.panelToggleButton:SetSize(26, 26)
-    state.panelToggleButton:SetPoint("TOPRIGHT", MerchantFrame, "TOPRIGHT", 32, -30)
-    state.panelToggleButton:SetFrameLevel(MerchantFrame:GetFrameLevel() + 10)
+    if not MerchantFrameTabSideBar then
+        MerchantFrameTabSideBar = CreateFrame("Frame", nil, MerchantFrame, "")
+        MerchantFrameTabSideBar:SetWidth(1)
+        MerchantFrameTabSideBar:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT")
+        MerchantFrameTabSideBar:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMRIGHT")
+        MerchantFrameTabSideBar.Tabs = {}
+        MerchantFrameTabSideBar.selTab = 0
+    end
 
-    local icon = state.panelToggleButton:CreateTexture(nil, "ARTWORK")
-    icon:SetAllPoints()
-    icon:SetTexture(GetBrandIcon())
-    state.panelToggleButton.icon = icon
-    state.panelToggleButton:SetScript("OnShow", function() icon:SetTexture(GetBrandIcon()) end)
+    return MerchantFrameTabSideBar
+end
 
-    state.panelToggleButton:SetScript("OnClick", function() VendorPanel:TogglePreviewPanel() end)
+function VendorPanel:RepositionMerchantSidebar()
+    local sidebar = MerchantFrameTabSideBar
+    if not sidebar then return end
 
-    state.panelToggleButton:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText(ns.L["VENDOR_TOGGLE_PANEL_TOOLTIP"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        if state.junkPreviewPanel and state.junkPreviewPanel:IsShown() then
-            GameTooltip:AddLine(ns.L["VENDOR_HIDE_PANEL"], 1, 1, 1, true)
-        else
-            GameTooltip:AddLine(ns.L["VENDOR_SHOW_PANEL"], 1, 1, 1, true)
+    sidebar:ClearAllPoints()
+    if state.junkPreviewPanel and state.junkPreviewPanel:IsShown() then
+        sidebar:SetPoint("TOPLEFT", state.junkPreviewPanel, "TOPRIGHT")
+        sidebar:SetPoint("BOTTOMLEFT", state.junkPreviewPanel, "BOTTOMRIGHT")
+    else
+        local anchoredToOther = false
+        if sidebar.selTab and sidebar.selTab > 0 then
+            for i, tab in ipairs(sidebar.Tabs) do
+                if i == sidebar.selTab and tab ~= state.panelToggleTab then
+                    anchoredToOther = true
+                    break
+                end
+            end
         end
-        GameTooltip:Show()
-    end)
+        if not anchoredToOther then
+            sidebar:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT")
+            sidebar:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMRIGHT")
+        end
+    end
+end
 
-    state.panelToggleButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    state.panelToggleButton:Hide()
+function VendorPanel:CreatePanelToggleButton()
+    if state.panelToggleTab then return end
+    if not MerchantFrame then return end
+
+    local sidebar = self:EnsureMerchantSidebar()
+    if not sidebar then return end
+
+    local tab = CreateFrame("Frame", nil, sidebar, "QuestLogTabButtonTemplate")
+    tab.displayMode = QuestLogDisplayMode and QuestLogDisplayMode.Quests or nil
+    tab.tooltipText = "|cff00ccffOneWoW Vendor"
+
+    local existingTab = nil
+    for _, t in ipairs(sidebar.Tabs) do
+        if t ~= tab then
+            existingTab = t
+            break
+        end
+    end
+
+    if existingTab then
+        tab:SetPoint("BOTTOMLEFT", existingTab, "TOPLEFT", 0, -4)
+    else
+        tab:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", -2, -52)
+    end
+
+    local tabIndex = #sidebar.Tabs + 1
+    sidebar.Tabs[tabIndex] = tab
+
+    tab:SetChecked(false)
+    tab.Icon:SetTexture(GetBrandIcon())
+    tab.Icon:SetSize(24, 24)
+
+    state.panelToggleTab = tab
+    state._merchantSidebarIndex = tabIndex
+
+    local function toggleVendorTab()
+        local panelShown = state.junkPreviewPanel and state.junkPreviewPanel:IsShown()
+        local newState = not panelShown
+        tab:SetChecked(newState)
+        tab.Icon:SetTexture(GetBrandIcon())
+        tab.Icon:SetSize(24, 24)
+
+        if newState then
+            for i, otherTab in ipairs(sidebar.Tabs) do
+                if sidebar.selTab == i and i ~= tabIndex then
+                    if otherTab.GetScript and otherTab:GetScript("OnMouseUp") then
+                        otherTab:GetScript("OnMouseUp")(otherTab)
+                    elseif otherTab.customOnMouseUpHandler then
+                        otherTab.customOnMouseUpHandler()
+                    end
+                end
+            end
+            sidebar.selTab = tabIndex
+
+            if not state.junkPreviewPanel then VendorPanel:CreatePreviewPanel() end
+            state.junkPreviewPanel.manuallyHidden = false
+            state.junkPreviewPanel:Show()
+            VendorPanel:UpdatePreviewPanel()
+            VendorPanel:ManageBlizzardSellButton(true)
+
+            VendorPanel:RepositionMerchantSidebar()
+        else
+            sidebar.selTab = 0
+            if state.junkPreviewPanel then
+                state.junkPreviewPanel.manuallyHidden = true
+                state.junkPreviewPanel:Hide()
+            end
+            if state.filtersDialog then state.filtersDialog:Hide() end
+            VendorPanel:ManageBlizzardSellButton(false)
+
+            sidebar:ClearAllPoints()
+            sidebar:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT")
+            sidebar:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMRIGHT")
+        end
+        VendorPanel:UpdatePanelToggleButton()
+    end
+
+    tab:SetCustomOnMouseUpHandler(toggleVendorTab)
+    state._merchantToggleHandler = toggleVendorTab
 end
 
 function VendorPanel:CreateReplacementSellButton()
@@ -158,8 +248,8 @@ function VendorPanel:CreatePreviewPanel()
 
     state.junkPreviewPanel = CreateFrame("Frame", "OneWoW_QoL_JunkPreviewPanel", MerchantFrame, "BackdropTemplate")
     state.junkPreviewPanel:SetWidth(panelWidth)
-    state.junkPreviewPanel:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT", 5, 0)
-    state.junkPreviewPanel:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMRIGHT", 5, 0)
+    state.junkPreviewPanel:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT", 0, 0)
+    state.junkPreviewPanel:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMRIGHT", 0, 0)
     state.junkPreviewPanel:SetFrameStrata("MEDIUM")
     state.junkPreviewPanel:SetToplevel(true)
     state.junkPreviewPanel:SetFrameLevel(MerchantFrame:GetFrameLevel() + 5)
@@ -179,7 +269,21 @@ function VendorPanel:CreatePreviewPanel()
             state.junkPreviewPanel:Hide()
             if state.filtersDialog then state.filtersDialog:Hide() end
             VendorPanel:ManageBlizzardSellButton(false)
-            VendorPanel:UpdatePanelToggleButton()
+            if state.panelToggleTab then
+                state.panelToggleTab:SetChecked(false)
+                local gui = LibStub("OneWoW_GUI-1.0", true)
+                if gui then
+                    local theme = (gui.GetSetting and gui:GetSetting("minimap.theme")) or "horde"
+                    state.panelToggleTab.Icon:SetTexture(gui:GetBrandIcon(theme))
+                end
+                state.panelToggleTab.Icon:SetSize(24, 24)
+            end
+            if MerchantFrameTabSideBar then
+                MerchantFrameTabSideBar.selTab = 0
+                MerchantFrameTabSideBar:ClearAllPoints()
+                MerchantFrameTabSideBar:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT")
+                MerchantFrameTabSideBar:SetPoint("BOTTOMLEFT", MerchantFrame, "BOTTOMRIGHT")
+            end
         end,
     })
     state.junkPreviewPanel:SetScript("OnShow", function()

@@ -13,6 +13,7 @@
 ## AddonCompartmentFuncOnLeave: 1WoW_Bags_OnAddonCompartmentLeave
 ## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
 ## RequiredDeps: OneWoW_GUI
+## Group: OneWoW
 
 # Libraries
 Libs\LibStub\LibStub.lua

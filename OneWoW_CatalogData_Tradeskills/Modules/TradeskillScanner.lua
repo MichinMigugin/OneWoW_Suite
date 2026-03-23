@@ -8,11 +8,41 @@ local Scanner = ns.TradeskillScanner
 
 local scannedThisSession = {}
 
+local EXPANSION_KEYWORDS = {
+    { pattern = "Midnight",        order = 12, label = "Midnight" },
+    { pattern = "Khaz Algar",      order = 11, label = "Khaz Algar" },
+    { pattern = "War Within",      order = 11, label = "War Within" },
+    { pattern = "Dragon",          order = 10, label = "Dragonflight" },
+    { pattern = "Shadowlands",     order = 9,  label = "Shadowlands" },
+    { pattern = "Kul Tiran",       order = 8,  label = "BfA" },
+    { pattern = "Zandalari",       order = 8,  label = "BfA" },
+    { pattern = "Battle",          order = 8,  label = "BfA" },
+    { pattern = "Legion",          order = 7,  label = "Legion" },
+    { pattern = "Draenor",         order = 6,  label = "Draenor" },
+    { pattern = "Pandaria",        order = 5,  label = "Pandaria" },
+    { pattern = "Cataclysm",       order = 4,  label = "Cataclysm" },
+    { pattern = "Northrend",       order = 3,  label = "Northrend" },
+    { pattern = "Lich King",       order = 3,  label = "Northrend" },
+    { pattern = "Outland",         order = 2,  label = "Outland" },
+    { pattern = "Burning Crusade", order = 2,  label = "Outland" },
+    { pattern = "Classic",         order = 1,  label = "Classic" },
+}
+
+local function GetExpansionLabel(catName)
+    if not catName then return nil, 0 end
+    for _, entry in ipairs(EXPANSION_KEYWORDS) do
+        if catName:find(entry.pattern) then
+            return entry.label, entry.order
+        end
+    end
+    return nil, 0
+end
+
 local function GetCharKey()
     local name = UnitName("player")
     local realm = GetRealmName()
     if name and realm then
-        return realm .. "-" .. name
+        return name .. "-" .. realm
     end
     return nil
 end
@@ -20,13 +50,56 @@ end
 function Scanner:Initialize()
     local frame = CreateFrame("Frame")
     frame:RegisterEvent("TRADE_SKILL_SHOW")
+    frame:RegisterEvent("PLAYER_LOGIN")
     frame:SetScript("OnEvent", function(_, event)
         if event == "TRADE_SKILL_SHOW" then
             C_Timer.After(0.5, function()
                 Scanner:ScanCurrentProfession()
             end)
+        elseif event == "PLAYER_LOGIN" then
+            C_Timer.After(3, function()
+                local charKey = GetCharKey()
+                if charKey then
+                    Scanner:CleanupStaleProfessions(charKey)
+                end
+            end)
         end
     end)
+end
+
+function Scanner:ScanExpansionSkills()
+    local expansions = {}
+    local categories = { C_TradeSkillUI.GetCategories() }
+    if not categories or #categories == 0 then return expansions end
+
+    local bestOrder = 0
+    local bestLabel = nil
+    local bestSkill = 0
+
+    for _, categoryID in ipairs(categories) do
+        local catInfo = C_TradeSkillUI.GetCategoryInfo(categoryID)
+        if catInfo and catInfo.name and catInfo.hasProgressBar and (catInfo.skillLineMaxLevel or 0) > 0 then
+            local currentSkill = catInfo.skillLineCurrentLevel or 0
+            if currentSkill > 0 then
+                local label, order = GetExpansionLabel(catInfo.name)
+                if label then
+                    table.insert(expansions, {
+                        label = label,
+                        order = order,
+                        skillLevel = currentSkill,
+                        maxSkill = catInfo.skillLineMaxLevel or 0,
+                    })
+                    if order > bestOrder then
+                        bestOrder = order
+                        bestLabel = label
+                        bestSkill = currentSkill
+                    end
+                end
+            end
+        end
+    end
+
+    return expansions, bestLabel, bestSkill
 end
 
 function Scanner:ScanCurrentProfession()
@@ -46,7 +119,6 @@ function Scanner:ScanCurrentProfession()
     local db = ns:GetDB()
     if not db.scanCache then db.scanCache = {} end
     if not db.scanCache[charKey] then db.scanCache[charKey] = {} end
-    if not db.scanCache[charKey][profName] then db.scanCache[charKey][profName] = {} end
 
     local knownRecipes = {}
     local recipeIDs = C_TradeSkillUI.GetAllRecipeIDs()
@@ -59,18 +131,48 @@ function Scanner:ScanCurrentProfession()
         end
     end
 
+    local expansions, bestExpansion, bestSkill = self:ScanExpansionSkills()
+
     db.scanCache[charKey][profName] = {
         known = knownRecipes,
         lastScan = time(),
         skillLevel = profInfo.skillLevel or 0,
         maxSkillLevel = profInfo.maxSkillLevel or 0,
+        expansions = expansions,
+        bestExpansion = bestExpansion,
+        bestSkill = bestSkill,
     }
+
+    self:CleanupStaleProfessions(charKey)
 
     ns:FireScanCallbacks({
         charKey = charKey,
         professionName = profName,
         recipeCount = #(recipeIDs or {}),
     })
+end
+
+function Scanner:CleanupStaleProfessions(charKey)
+    local db = ns:GetDB()
+    if not db.scanCache or not db.scanCache[charKey] then return end
+
+    local currentProfNames = {}
+    local prof1, prof2, archaeology, fishing, cooking = GetProfessions()
+    local slots = { prof1, prof2, archaeology, fishing, cooking }
+    for _, index in ipairs(slots) do
+        if index then
+            local name = GetProfessionInfo(index)
+            if name then
+                currentProfNames[name] = true
+            end
+        end
+    end
+
+    for profName, _ in pairs(db.scanCache[charKey]) do
+        if not currentProfNames[profName] then
+            db.scanCache[charKey][profName] = nil
+        end
+    end
 end
 
 function Scanner:GetKnownRecipes(charKey, professionName)

@@ -21,7 +21,7 @@ local function PositionPanel(panel)
     local profFrame = ProfessionsFrame or TradeSkillFrame
     if profFrame and profFrame:IsVisible() then
         panel:ClearAllPoints()
-        panel:SetPoint("TOPLEFT", profFrame, "TOPRIGHT", 5, 0)
+        panel:SetPoint("TOPLEFT", profFrame, "TOPRIGHT", 0, 0)
     else
         panel:ClearAllPoints()
         panel:SetPoint("RIGHT", UIParent, "RIGHT", -50, 0)
@@ -56,7 +56,17 @@ function ProfPanelUI:CreatePanel()
             if ns.ProfPanelModule then
                 ns.ProfPanelModule._panel.manuallyHidden = true
                 ns.ProfPanelModule._panel:Hide()
-                ns.ProfPanelModule:UpdateToggleButton()
+                if ns.ProfPanelModule._toggleTab then
+                    ns.ProfPanelModule._toggleTab:SetChecked(false)
+                    ns.ProfPanelModule._toggleTab.Icon:SetTexture(ns.ProfPanelModule:GetCurrentIcon())
+                    ns.ProfPanelModule._toggleTab.Icon:SetSize(24, 24)
+                end
+                if ProfessionsFrameTabSideBar then
+                    ProfessionsFrameTabSideBar.selTab = 0
+                    ProfessionsFrameTabSideBar:ClearAllPoints()
+                    ProfessionsFrameTabSideBar:SetPoint("TOPLEFT", ProfessionsFrame, "TOPRIGHT")
+                    ProfessionsFrameTabSideBar:SetPoint("BOTTOMLEFT", ProfessionsFrame, "BOTTOMRIGHT")
+                end
             end
         end,
     })
@@ -367,6 +377,7 @@ end
 
 function ProfPanelUI:CreateAltEntry(parent, alt, xOffset, yOffset)
     local mutedR, mutedG, mutedB = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
+    local accentR, accentG, accentB = OneWoW_GUI:GetThemeColor("TEXT_ACCENT")
 
     local frame = CreateFrame("Button", nil, parent)
     frame:SetHeight(16)
@@ -381,23 +392,32 @@ function ProfPanelUI:CreateAltEntry(parent, alt, xOffset, yOffset)
         end
     end
 
-    local skillStr = ""
-    if alt.skillLevel and alt.maxSkill and alt.maxSkill > 0 then
-        skillStr = string.format(" |cff%02x%02x%02x%d/%d|r", mutedR * 255, mutedG * 255, mutedB * 255, alt.skillLevel, alt.maxSkill)
-    elseif alt.skillLevel and alt.skillLevel > 0 then
-        skillStr = string.format(" |cff%02x%02x%02x%d|r", mutedR * 255, mutedG * 255, mutedB * 255, alt.skillLevel)
+    local expansionStr = ""
+    if alt.bestExpansion and alt.bestSkill and alt.bestSkill > 0 then
+        expansionStr = string.format(" |cff%02x%02x%02x%d %s|r", mutedR * 255, mutedG * 255, mutedB * 255, alt.bestSkill, alt.bestExpansion)
+    elseif alt.skillLevel and alt.maxSkill and alt.maxSkill > 0 then
+        expansionStr = string.format(" |cff%02x%02x%02x%d/%d|r", mutedR * 255, mutedG * 255, mutedB * 255, alt.skillLevel, alt.maxSkill)
     end
 
     local fs = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     fs:SetPoint("LEFT", frame, "LEFT", 0, 0)
     fs:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
     fs:SetJustifyH("LEFT")
-    fs:SetText(classColor .. alt.name .. "|r" .. skillStr)
+    fs:SetText(classColor .. alt.name .. "|r" .. expansionStr)
 
     frame:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(alt.name .. " - " .. (alt.realm or ""), 1, 1, 1)
-        if alt.skillLevel and alt.maxSkill then
+        if alt.expansions and #alt.expansions > 0 then
+            local sorted = {}
+            for _, exp in ipairs(alt.expansions) do
+                table.insert(sorted, exp)
+            end
+            table.sort(sorted, function(a, b) return a.order > b.order end)
+            for _, exp in ipairs(sorted) do
+                GameTooltip:AddLine(string.format("%s: %d/%d", exp.label, exp.skillLevel, exp.maxSkill), 0.8, 0.8, 0.8)
+            end
+        elseif alt.skillLevel and alt.maxSkill then
             GameTooltip:AddLine(string.format("Skill: %d/%d", alt.skillLevel, alt.maxSkill), 0.8, 0.8, 0.8)
         end
         if alt.lastScan and alt.lastScan > 0 then

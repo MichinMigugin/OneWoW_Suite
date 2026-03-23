@@ -468,6 +468,10 @@ ShowRecipeDetail = function(recipe)
             local reagentQty = rg[2]
             local reagentType = rg[3]
 
+            if reagentType == 0 then
+                -- skip, displayed in slots section below
+            else
+
             local rgRow = CreateFrame("Frame", nil, child, "BackdropTemplate")
             rgRow:SetHeight(REAGENT_ROW_HEIGHT)
             rgRow:SetPoint("TOPLEFT", child, "TOPLEFT", 8, yOffset)
@@ -538,6 +542,8 @@ ShowRecipeDetail = function(recipe)
             end)
 
             yOffset = yOffset - REAGENT_ROW_HEIGHT
+
+            end
         end
 
         if slots and #slots > 0 then
@@ -647,8 +653,17 @@ ShowRecipeDetail = function(recipe)
     yOffset = yOffset - 10
     child:SetHeight(math.abs(yOffset) + 20)
 
+    local requiredReagents = {}
+    if reagents then
+        for _, rg in ipairs(reagents) do
+            if rg[3] ~= 0 then
+                table.insert(requiredReagents, rg)
+            end
+        end
+    end
+
     for _, cb in ipairs(recipeDetailCallbacks) do
-        cb(recipe, reagents, panels)
+        cb(recipe, requiredReagents, panels)
     end
 end
 
@@ -717,12 +732,6 @@ local function RefreshRecipeListGrouped(recipes, addon)
     end
 
     table.sort(orderedGroups, function(a, b) return a.order > b.order end)
-
-    if next(expandedExpansions) == nil then
-        if #orderedGroups > 0 then
-            expandedExpansions[orderedGroups[1].key] = true
-        end
-    end
 
     local yOffset = -4
     local totalRecipes = 0
@@ -1015,19 +1024,6 @@ function ns.UI.CreateTradeskillsTab(parent)
                 RefreshRecipeList()
             end
         end)
-
-        if professions and #professions > 0 then
-            for _, prof in ipairs(professions) do
-                if prof.hasData then
-                    selectedProfession = prof
-                    break
-                end
-            end
-            UpdateProfButtonStates()
-            C_Timer.After(0.1, function()
-                if RefreshRecipeList then RefreshRecipeList() end
-            end)
-        end
     else
         emptyList:SetText(L["TRADESKILLS_NO_DATA"])
         panels.listScrollChild:SetHeight(100)
@@ -1038,18 +1034,30 @@ function ns.UI.CreateTradeskillsTab(parent)
                 retryAddon:RegisterScanCallback(function()
                     if selectedProfession and RefreshRecipeList then RefreshRecipeList() end
                 end)
-                local profs = retryAddon.TradeskillData:GetProfessions()
-                if profs and #profs > 0 then
-                    for _, prof in ipairs(profs) do
-                        if prof.hasData then
-                            selectedProfession = prof
-                            break
-                        end
-                    end
-                    UpdateProfButtonStates()
-                    if RefreshRecipeList then RefreshRecipeList() end
-                end
             end
         end)
     end
+
+    parent:SetScript("OnShow", function()
+        selectedProfession = nil
+        selectedRecipe = nil
+        currentSearch = ""
+        filterKnownByMe = false
+        filterKnownByAlts = false
+        filterExpansion = nil
+        wipe(expandedExpansions)
+
+        if searchBox then searchBox:SetText("") end
+        if knownMeCheck then knownMeCheck:SetChecked(false) end
+        if knownAltsCheck then knownAltsCheck:SetChecked(false) end
+        if expDropText then expDropText:SetText(L["TRADESKILLS_ALL_EXPANSIONS"]) end
+
+        UpdateProfButtonStates()
+        ClearDetailElements()
+        if emptyDetail then
+            emptyDetail:SetText(L["TRADESKILLS_SELECT"])
+            emptyDetail:Show()
+        end
+        if RefreshRecipeList then RefreshRecipeList() end
+    end)
 end

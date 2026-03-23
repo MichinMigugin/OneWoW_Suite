@@ -15,7 +15,9 @@ local ProfPanelModule = {
     preview        = true,
     defaultEnabled = true,
     _panel           = nil,
-    _toggleButton    = nil,
+    _toggleTab       = nil,
+    _sidebarIndex    = nil,
+    _toggleHandler   = nil,
     _eventFrame      = nil,
     _currentProf     = nil,
     _cachedData      = nil,
@@ -199,29 +201,36 @@ function ProfPanelModule:GetOtherAlts()
     if catDB and catDB.scanCache then
         for charKey, professions in pairs(catDB.scanCache) do
             if charKey ~= currentChar and professions[currentProf] then
+                local profData = professions[currentProf]
                 local already = false
                 for _, a in ipairs(alts) do
                     if (a.name .. "-" .. a.realm) == charKey then
                         already = true
-                        if professions[currentProf].skillLevel then
-                            a.skillLevel = math.max(a.skillLevel or 0, professions[currentProf].skillLevel)
+                        if profData.skillLevel then
+                            a.skillLevel = math.max(a.skillLevel or 0, profData.skillLevel)
                         end
-                        if professions[currentProf].maxSkillLevel then
-                            a.maxSkill = math.max(a.maxSkill or 0, professions[currentProf].maxSkillLevel)
+                        if profData.maxSkillLevel then
+                            a.maxSkill = math.max(a.maxSkill or 0, profData.maxSkillLevel)
                         end
-                        a.lastScan = professions[currentProf].lastScan
+                        a.lastScan = profData.lastScan
+                        a.bestExpansion = profData.bestExpansion
+                        a.bestSkill = profData.bestSkill
+                        a.expansions = profData.expansions
                         break
                     end
                 end
                 if not already then
                     local name, realm = strsplit("-", charKey)
                     table.insert(alts, {
-                        name       = name or charKey,
-                        realm      = realm or "",
-                        class      = nil,
-                        skillLevel = professions[currentProf].skillLevel or 0,
-                        maxSkill   = professions[currentProf].maxSkillLevel or 0,
-                        lastScan   = professions[currentProf].lastScan or 0,
+                        name          = name or charKey,
+                        realm         = realm or "",
+                        class         = nil,
+                        skillLevel    = profData.skillLevel or 0,
+                        maxSkill      = profData.maxSkillLevel or 0,
+                        lastScan      = profData.lastScan or 0,
+                        bestExpansion = profData.bestExpansion,
+                        bestSkill     = profData.bestSkill,
+                        expansions    = profData.expansions,
                     })
                 end
             end
@@ -262,65 +271,160 @@ function ProfPanelModule:UpdatePanelData()
     end
 end
 
-function ProfPanelModule:UpdateToggleButton()
-    if not self._toggleButton or not self._toggleButton.icon then return end
+function ProfPanelModule:GetCurrentIcon()
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    if OneWoW_GUI then
+        local theme = (OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
+        return OneWoW_GUI:GetBrandIcon(theme)
+    end
+    return "Interface\\AddOns\\OneWoW_GUI\\Media\\horde-mini.png"
+end
+
+function ProfPanelModule:UpdateToggleIcon()
+    if not self._toggleTab then return end
+    local icon = self:GetCurrentIcon()
+    self._toggleTab.Icon:SetTexture(icon)
+    self._toggleTab.Icon:SetSize(24, 24)
+end
+
+function ProfPanelModule:EnsureSidebar()
+    local profFrame = ProfessionsFrame
+    if not profFrame then return nil end
+
+    if not ProfessionsFrameTabSideBar then
+        ProfessionsFrameTabSideBar = CreateFrame("Frame", nil, profFrame, "")
+        ProfessionsFrameTabSideBar:SetWidth(1)
+        ProfessionsFrameTabSideBar:SetPoint("TOPLEFT", profFrame, "TOPRIGHT")
+        ProfessionsFrameTabSideBar:SetPoint("BOTTOMLEFT", profFrame, "BOTTOMRIGHT")
+        ProfessionsFrameTabSideBar.Tabs = {}
+        ProfessionsFrameTabSideBar.selTab = 0
+    end
+
+    return ProfessionsFrameTabSideBar
+end
+
+function ProfPanelModule:GetOurTabIndex()
+    local sidebar = ProfessionsFrameTabSideBar
+    if not sidebar or not sidebar.Tabs then return nil end
+    for i, tab in ipairs(sidebar.Tabs) do
+        if tab == self._toggleTab then return i end
+    end
+    return nil
+end
+
+function ProfPanelModule:RepositionSidebar()
+    local sidebar = ProfessionsFrameTabSideBar
+    if not sidebar then return end
+
+    sidebar:ClearAllPoints()
     if self._panel and self._panel:IsShown() then
-        self._toggleButton.icon:SetVertexColor(1, 0.82, 0, 1)
+        sidebar:SetPoint("TOPLEFT", self._panel, "TOPRIGHT")
+        sidebar:SetPoint("BOTTOMLEFT", self._panel, "BOTTOMRIGHT")
     else
-        self._toggleButton.icon:SetVertexColor(1, 1, 1, 1)
+        local anchoredToOther = false
+        if sidebar.selTab and sidebar.selTab > 0 then
+            for i, tab in ipairs(sidebar.Tabs) do
+                if i == sidebar.selTab and tab ~= self._toggleTab then
+                    anchoredToOther = true
+                    break
+                end
+            end
+        end
+        if not anchoredToOther then
+            sidebar:SetPoint("TOPLEFT", ProfessionsFrame, "TOPRIGHT")
+            sidebar:SetPoint("BOTTOMLEFT", ProfessionsFrame, "BOTTOMRIGHT")
+        end
     end
 end
 
 function ProfPanelModule:CreateToggleButton()
-    if self._toggleButton then return end
+    if self._toggleTab then return end
 
-    local profFrame = ProfessionsFrame or TradeSkillFrame
+    local profFrame = ProfessionsFrame
     if not profFrame then return end
 
-    local btn = CreateFrame("Button", "OneWoW_QoL_ProfessionToggleButton", profFrame)
-    btn:SetSize(28, 28)
-    btn:SetPoint("TOPRIGHT", profFrame, "TOPRIGHT", 32, -30)
-    btn:SetFrameLevel(profFrame:GetFrameLevel() + 10)
+    local sidebar = self:EnsureSidebar()
+    if not sidebar then return end
 
-    local glow = btn:CreateTexture(nil, "BACKGROUND")
-    glow:SetSize(42, 42)
-    glow:SetPoint("CENTER")
-    glow:SetAtlas("QuestLog-Tab-side-Glow-Select")
-    glow:SetAlpha(0.8)
-    btn.glow = glow
+    local tab = CreateFrame("Frame", nil, sidebar, "QuestLogTabButtonTemplate")
+    tab.displayMode = QuestLogDisplayMode and QuestLogDisplayMode.Quests or nil
+    tab.tooltipText = "|cff00ccffOneWoW Professions"
 
-    local icon = btn:CreateTexture(nil, "ARTWORK")
-    icon:SetAllPoints()
-    icon:SetAtlas("newplayertutorial-icon-mouse-leftbutton")
-    btn.icon = icon
-
-    local highlight = btn:CreateTexture(nil, "HIGHLIGHT")
-    highlight:SetAllPoints()
-    highlight:SetTexture("Interface\\Buttons\\UI-Common-MouseHilight")
-    highlight:SetBlendMode("ADD")
-
-    btn:SetScript("OnClick", function()
-        ProfPanelModule:TogglePanel()
-    end)
-    btn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText(L["PROFPANEL_TOGGLE_TIP"], 1, 0.82, 0)
-        if ProfPanelModule._panel and ProfPanelModule._panel:IsShown() then
-            GameTooltip:AddLine(L["PROFPANEL_HIDE_TIP"], 1, 1, 1, true)
-        else
-            GameTooltip:AddLine(L["PROFPANEL_SHOW_TIP"], 1, 1, 1, true)
+    local existingTab = nil
+    for _, t in ipairs(sidebar.Tabs) do
+        if t ~= tab then
+            existingTab = t
+            break
         end
-        GameTooltip:Show()
-    end)
-    btn:SetScript("OnLeave", function(self)
-        GameTooltip:Hide()
-    end)
+    end
 
-    btn:Hide()
-    self._toggleButton = btn
+    if existingTab then
+        tab:SetPoint("BOTTOMLEFT", existingTab, "TOPLEFT", 0, -4)
+    else
+        tab:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", -2, -52)
+    end
+
+    local tabIndex = #sidebar.Tabs + 1
+    sidebar.Tabs[tabIndex] = tab
+
+    self._toggleTab = tab
+    self._sidebarIndex = tabIndex
+
+    tab:SetChecked(false)
+    tab.Icon:SetTexture(self:GetCurrentIcon())
+    tab.Icon:SetSize(24, 24)
+
+    local function toggleOurTab()
+        local newState = not (self._panel and self._panel:IsShown())
+        tab:SetChecked(newState)
+        tab.Icon:SetTexture(self:GetCurrentIcon())
+        tab.Icon:SetSize(24, 24)
+
+        if newState then
+            for i, otherTab in ipairs(sidebar.Tabs) do
+                if sidebar.selTab == i and i ~= tabIndex then
+                    if otherTab.GetScript and otherTab:GetScript("OnMouseUp") then
+                        otherTab:GetScript("OnMouseUp")(otherTab)
+                    elseif otherTab.customOnMouseUpHandler then
+                        otherTab.customOnMouseUpHandler()
+                    end
+                end
+            end
+            sidebar.selTab = tabIndex
+
+            if not self._panel and ns.ProfPanelUI then
+                self._panel = ns.ProfPanelUI:CreatePanel()
+            end
+            if self._panel then
+                self._panel.manuallyHidden = false
+                self:UpdatePanelData()
+                self._panel:Show()
+            end
+
+            self:RepositionSidebar()
+        else
+            sidebar.selTab = 0
+            if self._panel then
+                self._panel.manuallyHidden = true
+                self._panel:Hide()
+            end
+
+            sidebar:ClearAllPoints()
+            sidebar:SetPoint("TOPLEFT", ProfessionsFrame, "TOPRIGHT")
+            sidebar:SetPoint("BOTTOMLEFT", ProfessionsFrame, "BOTTOMRIGHT")
+        end
+    end
+
+    tab:SetCustomOnMouseUpHandler(toggleOurTab)
+    self._toggleHandler = toggleOurTab
 end
 
 function ProfPanelModule:TogglePanel()
+    if self._toggleHandler then
+        self._toggleHandler()
+        return
+    end
+
     if not self._panel then
         if ns.ProfPanelUI then
             self._panel = ns.ProfPanelUI:CreatePanel()
@@ -337,19 +441,18 @@ function ProfPanelModule:TogglePanel()
         self._panel:Show()
     end
 
-    self:UpdateToggleButton()
+    self:RepositionSidebar()
 end
 
 function ProfPanelModule:OnProfessionWindowOpened()
     C_Timer.After(0.1, function()
         if not ns.ModuleRegistry:GetToggleValue("professionspanel", "auto_show") then return end
 
-        if not self._toggleButton then
+        if not self._toggleTab then
             self:CreateToggleButton()
         end
-        if self._toggleButton then
-            self._toggleButton:Show()
-            self:UpdateToggleButton()
+        if self._toggleTab then
+            self:UpdateToggleIcon()
         end
 
         if C_TradeSkillUI and C_TradeSkillUI.IsTradeSkillReady() then
@@ -366,19 +469,27 @@ function ProfPanelModule:OnProfessionWindowOpened()
                 if self._panel and not self._panel.manuallyHidden then
                     self:UpdatePanelData()
                     self._panel:Show()
+                    self:RepositionSidebar()
+                    if self._toggleTab then
+                        self._toggleTab:SetChecked(true)
+                        self._toggleTab.Icon:SetTexture(self:GetCurrentIcon())
+                        self._toggleTab.Icon:SetSize(24, 24)
+                        if ProfessionsFrameTabSideBar then
+                            ProfessionsFrameTabSideBar.selTab = self._sidebarIndex or 0
+                        end
+                    end
                 end
-                self:UpdateToggleButton()
             end
         end
     end)
 end
 
 function ProfPanelModule:OnProfessionWindowClosed()
-    if self._toggleButton then
-        self._toggleButton:Hide()
-    end
     if self._panel then
         self._panel:Hide()
+    end
+    if self._toggleTab then
+        self._toggleTab:SetChecked(false)
     end
     self._currentProf = nil
     self._cachedData = nil
@@ -431,7 +542,10 @@ function ProfPanelModule:OnEnable()
         end
         OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, onSettingsChanged)
         OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, onSettingsChanged)
-        OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, onSettingsChanged)
+        OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function()
+            ProfPanelModule:UpdateToggleIcon()
+            ProfPanelModule:RebuildPanel()
+        end)
     end
 end
 
@@ -439,11 +553,11 @@ function ProfPanelModule:OnDisable()
     if self._eventFrame then
         self._eventFrame:UnregisterAllEvents()
     end
-    if self._toggleButton then
-        self._toggleButton:Hide()
-    end
     if self._panel then
         self._panel:Hide()
+    end
+    if self._toggleTab then
+        self._toggleTab:SetChecked(false)
     end
 end
 
@@ -452,8 +566,8 @@ function ProfPanelModule:OnToggle(toggleId, value)
         if self._panel then
             self._panel:Hide()
         end
-        if self._toggleButton then
-            self._toggleButton:Hide()
+        if self._toggleTab then
+            self._toggleTab:SetChecked(false)
         end
     end
 end

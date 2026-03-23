@@ -111,20 +111,18 @@ local function CollectAllCharacterKeys()
     end
 
     if _G.OneWoW_CatalogData_Tradeskills_DB and _G.OneWoW_CatalogData_Tradeskills_DB.scanCache then
-        for realmDashName, _ in pairs(_G.OneWoW_CatalogData_Tradeskills_DB.scanCache) do
-            local realm, name = realmDashName:match("^(.+)-(.+)$")
-            if realm and name then
-                local normalKey = name .. "-" .. realm
-                if not charMap[normalKey] then
-                    charMap[normalKey] = {
-                        key = normalKey,
+        for charKey, _ in pairs(_G.OneWoW_CatalogData_Tradeskills_DB.scanCache) do
+            local name, realm = strsplit("-", charKey)
+            if name and realm then
+                if not charMap[charKey] then
+                    charMap[charKey] = {
+                        key = charKey,
                         name = name,
                         realm = realm,
                         sources = {},
                     }
                 end
-                charMap[normalKey].sources["Tradeskill Scans"] = true
-                charMap[normalKey]._tradeskillKey = realmDashName
+                charMap[charKey].sources["Tradeskill Scans"] = true
             end
         end
     end
@@ -143,7 +141,7 @@ local function CollectAllCharacterKeys()
     return sorted
 end
 
-local function PurgeCharacter(charKey, tradeskillKey)
+local function PurgeCharacter(charKey)
     local purgedFrom = {}
 
     local simpleDBs = {
@@ -192,16 +190,9 @@ local function PurgeCharacter(charKey, tradeskillKey)
         end
     end
 
-    local tsKey = tradeskillKey
-    if not tsKey and type(charKey) == "string" then
-        local name, realm = charKey:match("^(.+)-(.+)$")
-        if name and realm then
-            tsKey = realm .. "-" .. name
-        end
-    end
-    if tsKey and _G.OneWoW_CatalogData_Tradeskills_DB and _G.OneWoW_CatalogData_Tradeskills_DB.scanCache then
-        if _G.OneWoW_CatalogData_Tradeskills_DB.scanCache[tsKey] then
-            _G.OneWoW_CatalogData_Tradeskills_DB.scanCache[tsKey] = nil
+    if _G.OneWoW_CatalogData_Tradeskills_DB and _G.OneWoW_CatalogData_Tradeskills_DB.scanCache then
+        if _G.OneWoW_CatalogData_Tradeskills_DB.scanCache[charKey] then
+            _G.OneWoW_CatalogData_Tradeskills_DB.scanCache[charKey] = nil
             table.insert(purgedFrom, "Tradeskill Scans")
         end
     end
@@ -444,7 +435,7 @@ local function ShowManageAltsDialog()
             OnAccept = function()
                 local totalPurged = 0
                 for _, charInfo in ipairs(selected) do
-                    local purgedFrom = PurgeCharacter(charInfo.key, charInfo._tradeskillKey)
+                    local purgedFrom = PurgeCharacter(charInfo.key)
                     if #purgedFrom > 0 then
                         totalPurged = totalPurged + 1
                     end
