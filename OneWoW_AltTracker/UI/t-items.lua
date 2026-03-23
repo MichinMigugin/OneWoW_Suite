@@ -317,11 +317,16 @@ end
 
 local function FormatLastSeen(timestamp)
     if not timestamp or timestamp == 0 then return L["FMT_NEVER"] or "Never" end
-    local hoursSince = (time() - timestamp) / 3600
-    if hoursSince < 245 then
-        return date("%H:%M", timestamp)
+    local hours = (time() - timestamp) / 3600
+    if hours < 24 then
+        return math.max(1, math.floor(hours)) .. " hr"
     else
-        return date("%Y%m%d", timestamp)
+        local days = math.floor(hours / 24)
+        if days <= 365 then
+            return days .. "d"
+        else
+            return "Over 1yr"
+        end
     end
 end
 
@@ -344,6 +349,18 @@ local function ResolveItemData(itemData)
     return itemName, texture, itemLink, vendorPrice
 end
 
+local function AddToLocation(item, charName, location, qty)
+    local locKey = charName .. "|" .. location
+    if not item.locationIndex then item.locationIndex = {} end
+    if item.locationIndex[locKey] then
+        item.locationIndex[locKey].qty = item.locationIndex[locKey].qty + qty
+    else
+        local entry = { charName = charName, location = location, qty = qty }
+        table.insert(item.locations, entry)
+        item.locationIndex[locKey] = entry
+    end
+end
+
 function ns.UI.RefreshItemsTab(itemsTab)
     if not itemsTab then return end
     if not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.characters then return end
@@ -364,6 +381,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         local charName = charKey:match("^([^%-]+)")
 
         if charData.bags then
+            local ts = charData.bagsLastUpdate or 0
             for bagID, bagInfo in pairs(charData.bags) do
                 if bagInfo.slots then
                     for slotID, itemData in pairs(bagInfo.slots) do
@@ -381,15 +399,13 @@ function ns.UI.RefreshItemsTab(itemsTab)
                                     totalQty = 0,
                                     isBound = false,
                                     locations = {},
+                                    lastSeenTime = 0,
                                 }
                             end
                             items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
+                            if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
                             if itemData.isBound then items[itemID].isBound = true end
-                            table.insert(items[itemID].locations, {
-                                charName = charName,
-                                location = L["BANK_BAGS"],
-                                qty = itemData.stackCount or 1,
-                            })
+                            AddToLocation(items[itemID], charName, L["BANK_BAGS"], itemData.stackCount or 1)
                         end
                     end
                 end
@@ -397,6 +413,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
 
         if charData.personalBank and charData.personalBank.tabs then
+            local ts = charData.personalBankLastUpdate or 0
             for tabIndex, tabInfo in pairs(charData.personalBank.tabs) do
                 if tabInfo.items then
                     for slotID, itemData in pairs(tabInfo.items) do
@@ -414,15 +431,13 @@ function ns.UI.RefreshItemsTab(itemsTab)
                                     totalQty = 0,
                                     isBound = false,
                                     locations = {},
+                                    lastSeenTime = 0,
                                 }
                             end
                             items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
+                            if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
                             if itemData.isBound then items[itemID].isBound = true end
-                            table.insert(items[itemID].locations, {
-                                charName = charName,
-                                location = L["BANK_PERSONAL"],
-                                qty = itemData.stackCount or 1,
-                            })
+                            AddToLocation(items[itemID], charName, L["BANK_PERSONAL"], itemData.stackCount or 1)
                         end
                     end
                 end
@@ -430,6 +445,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
 
         if charData.mail and charData.mail.mails then
+            local ts = charData.mailLastUpdate or 0
             for mailID, mailData in pairs(charData.mail.mails) do
                 if mailData.items then
                     for attachmentIndex, itemData in pairs(mailData.items) do
@@ -446,17 +462,15 @@ function ns.UI.RefreshItemsTab(itemsTab)
                                     totalQty = 0,
                                     isBound = false,
                                     locations = {},
+                                    lastSeenTime = 0,
                                 }
                             end
                             items[itemID].totalQty = items[itemID].totalQty + (itemData.count or 1)
+                            if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
                             if itemData.canUse == false then
                                 items[itemID].isBound = true
                             end
-                            table.insert(items[itemID].locations, {
-                                charName = charName,
-                                location = L["ITEMS_LOCATION_MAIL"],
-                                qty = itemData.count or 1,
-                            })
+                            AddToLocation(items[itemID], charName, L["ITEMS_LOCATION_MAIL"], itemData.count or 1)
                         end
                     end
                 end
@@ -465,6 +479,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
     end
 
     if _G.OneWoW_AltTracker_Storage_DB.warbandBank and _G.OneWoW_AltTracker_Storage_DB.warbandBank.tabs then
+        local ts = _G.OneWoW_AltTracker_Storage_DB.warbandBank.lastUpdateTime or 0
         for tabIndex, tabInfo in pairs(_G.OneWoW_AltTracker_Storage_DB.warbandBank.tabs) do
             if tabInfo.items then
                 for slotIndex, itemData in pairs(tabInfo.items) do
@@ -482,14 +497,12 @@ function ns.UI.RefreshItemsTab(itemsTab)
                                 totalQty = 0,
                                 isBound = false,
                                 locations = {},
+                                lastSeenTime = 0,
                             }
                         end
                         items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
-                        table.insert(items[itemID].locations, {
-                            charName = "Account",
-                            location = L["BANK_WARBAND"],
-                            qty = itemData.stackCount or 1,
-                        })
+                        if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
+                        AddToLocation(items[itemID], "Account", L["BANK_WARBAND"], itemData.stackCount or 1)
                     end
                 end
             end
@@ -498,6 +511,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
 
     if _G.OneWoW_AltTracker_Storage_DB.guildBanks then
         for guildName, guildBank in pairs(_G.OneWoW_AltTracker_Storage_DB.guildBanks) do
+            local ts = guildBank.lastUpdateTime or 0
             if guildBank.tabs then
                 for tabIndex, tabInfo in pairs(guildBank.tabs) do
                     if tabInfo.slots then
@@ -516,14 +530,12 @@ function ns.UI.RefreshItemsTab(itemsTab)
                                         totalQty = 0,
                                         isBound = false,
                                         locations = {},
+                                        lastSeenTime = 0,
                                     }
                                 end
                                 items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
-                                table.insert(items[itemID].locations, {
-                                    charName = guildName,
-                                    location = L["BANK_GUILD"],
-                                    qty = itemData.stackCount or 1,
-                                })
+                                if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
+                                AddToLocation(items[itemID], guildName, L["BANK_GUILD"], itemData.stackCount or 1)
                             end
                         end
                     end
@@ -535,6 +547,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
     if _G.OneWoW_AltTracker_Auctions_DB and _G.OneWoW_AltTracker_Auctions_DB.characters then
         for charKey, charData in pairs(_G.OneWoW_AltTracker_Auctions_DB.characters) do
             local charName = charKey:match("^([^%-]+)")
+            local ts = charData.lastAuctionUpdate or 0
             if charData.activeAuctions then
                 for _, auction in ipairs(charData.activeAuctions) do
                     local itemID = auction.itemID
@@ -550,14 +563,12 @@ function ns.UI.RefreshItemsTab(itemsTab)
                                 totalQty = 0,
                                 isBound = false,
                                 locations = {},
+                                lastSeenTime = 0,
                             }
                         end
                         items[itemID].totalQty = items[itemID].totalQty + (auction.quantity or 1)
-                        table.insert(items[itemID].locations, {
-                            charName = charName,
-                            location = L["ITEMS_LOCATION_AH"],
-                            qty = auction.quantity or 1,
-                        })
+                        if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
+                        AddToLocation(items[itemID], charName, L["ITEMS_LOCATION_AH"], auction.quantity or 1)
                     end
                 end
             end

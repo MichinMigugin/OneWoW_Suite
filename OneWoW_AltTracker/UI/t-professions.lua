@@ -256,7 +256,7 @@ local function GetTotalSkill(profData)
 end
 
 local function BuildExpandedPanels(ef, data)
-    local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef, T)
+    local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
 
     local professions = data.professions
     local professionEquipment = data.professionEquipment
@@ -274,7 +274,7 @@ local function BuildExpandedPanels(ef, data)
 
     if not hasProfessions then
         local p1 = grid:AddPanel(L["PROF_EXPANDED_PROFESSIONS"])
-        grid:AddLine(p1, L["PROF_NO_PROFESSIONS_LEARNED"], {T("TEXT_SECONDARY")})
+        grid:AddLine(p1, L["PROF_NO_PROFESSIONS_LEARNED"], {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
         grid:Finish()
         return
     end
@@ -294,6 +294,21 @@ local function BuildExpandedPanels(ef, data)
         grid:AddLine(pSkills, " ")
     end
 
+    local function AddEquipLink(panel, label, itemData)
+        local display = itemData.itemLink or itemData.itemName or L["PROF_VALUE_UNKNOWN"]
+        local fs = grid:AddLine(panel, "  " .. label .. " " .. display)
+        if itemData.itemLink then
+            local btn = CreateFrame("Button", nil, panel)
+            btn:SetAllPoints(fs)
+            btn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetHyperlink(itemData.itemLink)
+                GameTooltip:Show()
+            end)
+            btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        end
+    end
+
     local function AddEquipmentLines(profData)
         if not profData or not profData.name then return end
         local iconPath = ns.ProfessionData:GetIcon(profData.name)
@@ -303,11 +318,7 @@ local function BuildExpandedPanels(ef, data)
         local profEquipData = professionEquipment and professionEquipment[profData.name]
 
         if profEquipData and profEquipData.tool then
-            local tool = profEquipData.tool
-            local qualityColor = ITEM_QUALITY_COLORS[tool.itemQuality or 1]
-            local r, g, b = 1, 1, 1
-            if qualityColor then r, g, b = qualityColor.r, qualityColor.g, qualityColor.b end
-            grid:AddLine(pEquip, "  " .. L["PROF_LABEL_TOOL"] .. " " .. (tool.itemName or L["PROF_VALUE_UNKNOWN"]), {r, g, b})
+            AddEquipLink(pEquip, L["PROF_LABEL_TOOL"], profEquipData.tool)
         else
             grid:AddLine(pEquip, "  " .. L["PROF_LABEL_TOOL"] .. " " .. L["PROF_VALUE_NONE"], {1, 0.34, 0.13})
         end
@@ -315,22 +326,14 @@ local function BuildExpandedPanels(ef, data)
         if profData.name ~= "Fishing" and profData.name ~= "Archaeology" then
             local accLabelText = (profData.name == "Cooking") and L["PROF_LABEL_ACC"] or L["PROF_LABEL_ACC_1"]
             if profEquipData and profEquipData.accessory1 then
-                local acc = profEquipData.accessory1
-                local qualityColor = ITEM_QUALITY_COLORS[acc.itemQuality or 1]
-                local r, g, b = 1, 1, 1
-                if qualityColor then r, g, b = qualityColor.r, qualityColor.g, qualityColor.b end
-                grid:AddLine(pEquip, "  " .. accLabelText .. " " .. (acc.itemName or L["PROF_VALUE_UNKNOWN"]), {r, g, b})
+                AddEquipLink(pEquip, accLabelText, profEquipData.accessory1)
             else
                 grid:AddLine(pEquip, "  " .. accLabelText .. " " .. L["PROF_VALUE_NONE"], {1, 0.34, 0.13})
             end
 
             if profData.name ~= "Cooking" then
                 if profEquipData and profEquipData.accessory2 then
-                    local acc = profEquipData.accessory2
-                    local qualityColor = ITEM_QUALITY_COLORS[acc.itemQuality or 1]
-                    local r, g, b = 1, 1, 1
-                    if qualityColor then r, g, b = qualityColor.r, qualityColor.g, qualityColor.b end
-                    grid:AddLine(pEquip, "  " .. L["PROF_LABEL_ACC_2"] .. " " .. (acc.itemName or L["PROF_VALUE_UNKNOWN"]), {r, g, b})
+                    AddEquipLink(pEquip, L["PROF_LABEL_ACC_2"], profEquipData.accessory2)
                 else
                     grid:AddLine(pEquip, "  " .. L["PROF_LABEL_ACC_2"] .. " " .. L["PROF_VALUE_NONE"], {1, 0.34, 0.13})
                 end
