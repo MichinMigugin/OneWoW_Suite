@@ -13,7 +13,7 @@ Addon.Locales["frFR"] = {
     -- Tab titles
     ["TAB_FRAME"] = "Cadre",
     ["TAB_EVENTS"] = "Événements",
-    ["TAB_LUA"] = "Lua",
+    ["TAB_ERRORS"] = "Erreurs",
     ["TAB_TEXTURES"] = "Textures",
     ["TAB_COLORS"] = "Couleurs",
     ["COLOR_TOOLS_CLICK_TO_COPY"] = "Cliquez pour copier le code hexadécimal",

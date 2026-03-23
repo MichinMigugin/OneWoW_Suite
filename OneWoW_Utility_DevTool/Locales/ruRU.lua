@@ -13,7 +13,7 @@ Addon.Locales["ruRU"] = {
     -- Tab titles
     ["TAB_FRAME"] = "Фрейм",
     ["TAB_EVENTS"] = "События",
-    ["TAB_LUA"] = "Lua",
+    ["TAB_ERRORS"] = "Ошибки",
     ["TAB_TEXTURES"] = "Текстуры",
     ["TAB_COLORS"] = "Цвета",
     ["COLOR_TOOLS_CLICK_TO_COPY"] = "Нажмите, чтобы скопировать шестнадцатеричный код",

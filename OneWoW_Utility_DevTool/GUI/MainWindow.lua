@@ -30,7 +30,7 @@ function UI:Initialize()
     local NUM_TABS = DU.NUM_TABS or 9
     local TAB_FRAME = DU.TAB_INDEX_FRAME or 1
     local TAB_EVENTS = DU.TAB_INDEX_EVENTS or 2
-    local TAB_LUA = DU.TAB_INDEX_LUA or 3
+    local TAB_ERRORS = DU.TAB_INDEX_ERRORS or 3
     local TAB_TEXTURES = DU.TAB_INDEX_TEXTURES or 4
     local TAB_FONTS = DU.TAB_INDEX_FONTS or 5
     local TAB_COLORS = DU.TAB_INDEX_COLORS or 6
@@ -96,7 +96,7 @@ function UI:Initialize()
     local tabLabels = {
         Addon.L["TAB_FRAME"],
         Addon.L["TAB_EVENTS"],
-        Addon.L["TAB_LUA"],
+        Addon.L["TAB_ERRORS"],
         Addon.L["TAB_TEXTURES"],
         Addon.L["TAB_FONTS"],
         Addon.L["TAB_COLORS"],
@@ -177,7 +177,7 @@ function UI:Initialize()
 
     self.tabs[TAB_FRAME] = {button = tab1, content = self:CreateFrameInspectorTab(contentFrame)}
     self.tabs[TAB_EVENTS] = {button = tab2, content = self:CreateEventMonitorTab(contentFrame)}
-    self.tabs[TAB_LUA] = {button = tab3, content = self:CreateLuaConsoleTab(contentFrame)}
+    self.tabs[TAB_ERRORS] = {button = tab3, content = self:CreateLuaConsoleTab(contentFrame)}
     self.tabs[TAB_TEXTURES] = {button = tab4, content = self:CreateTextureTab(contentFrame)}
     self.tabs[TAB_FONTS] = {button = tab5, content = self:CreateFontBrowserTab(contentFrame)}
     self.tabs[TAB_COLORS] = {button = tab6, content = self:CreateColorToolsTab(contentFrame)}

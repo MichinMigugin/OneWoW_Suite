@@ -393,7 +393,7 @@ function Addon:ToggleMainWindow()
     else
         self.UI:Show()
         local DU = self.Constants and self.Constants.DEVTOOL_UI
-        local luaTab = (DU and DU.TAB_INDEX_LUA) or 3
+        local luaTab = (DU and DU.TAB_INDEX_ERRORS) or 3
         if self.ErrorLogger and self.ErrorLogger.HasCurrentSessionErrors and self.ErrorLogger:HasCurrentSessionErrors() then
             self.UI:SelectTab(luaTab)
         end

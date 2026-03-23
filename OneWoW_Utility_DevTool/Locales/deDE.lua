@@ -13,7 +13,7 @@ Addon.Locales["deDE"] = {
     -- Tab titles
     ["TAB_FRAME"] = "Frame",
     ["TAB_EVENTS"] = "Ereignisse",
-    ["TAB_LUA"] = "Lua",
+    ["TAB_ERRORS"] = "Fehler",
     ["TAB_TEXTURES"] = "Texturen",
     ["TAB_COLORS"] = "Farben",
     ["COLOR_TOOLS_CLICK_TO_COPY"] = "Klicken, um Hex-Code zu kopieren",
