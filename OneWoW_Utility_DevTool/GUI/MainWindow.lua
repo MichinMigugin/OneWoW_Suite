@@ -27,7 +27,7 @@ function UI:Initialize()
     local resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95
     local TAB_GAP = DU.TAB_GAP or 4
     local TAB_HEIGHT = DU.TAB_HEIGHT or 28
-    local NUM_TABS = DU.NUM_TABS or 9
+    local NUM_TABS = DU.NUM_TABS or 10
     local TAB_FRAME = DU.TAB_INDEX_FRAME or 1
     local TAB_EVENTS = DU.TAB_INDEX_EVENTS or 2
     local TAB_ERRORS = DU.TAB_INDEX_ERRORS or 3

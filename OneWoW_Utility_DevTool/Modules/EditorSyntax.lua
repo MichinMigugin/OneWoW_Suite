@@ -276,7 +276,7 @@ function ES.colorCodeText(code, caretPos)
     local prevColored = false
     local prevWidth = 0
     local pos = 1
-    local prevWasCNamespace = false
+    local prevCNamespaceName = nil
     local prevWasDot = false
 
     while true do
@@ -310,24 +310,30 @@ function ES.colorCodeText(code, caretPos)
             prevWidth = nxt - pos
 
             local colorHex
-            local afterCNamespaceDot = prevWasDot and prevWasCNamespace
+            local afterCNamespaceDot = prevWasDot and prevCNamespaceName
             if tt == TOKEN_IDENTIFIER and afterCNamespaceDot then
-                colorHex = M.WOW_C
-                prevWasCNamespace = false
+                if D.DYNAMIC_API_NAMES[prevCNamespaceName .. "." .. s] then
+                    colorHex = M.WOW_API
+                else
+                    colorHex = M.WOW_C
+                end
+                prevCNamespaceName = nil
                 prevWasDot = false
             elseif tt == TOKEN_COMMENT_SHORT or tt == TOKEN_COMMENT_LONG then
                 colorHex = M.COMMENT
-                prevWasCNamespace = false
+                prevCNamespaceName = nil
                 prevWasDot = false
             elseif tt == TOKEN_STRING then
                 colorHex = M.STRING
-                prevWasCNamespace = false
+                prevCNamespaceName = nil
                 prevWasDot = false
             elseif tt == TOKEN_NUMBER then
                 colorHex = M.NUMBER
-                prevWasCNamespace = false
+                prevCNamespaceName = nil
                 prevWasDot = false
             elseif tt == TOKEN_IDENTIFIER then
+                prevCNamespaceName = nil
+                prevWasDot = false
                 if D.LUA_KEYWORDS[s] then
                     colorHex = M.KEYWORD
                 elseif D.LUA_CONSTANTS[s] then
@@ -340,8 +346,7 @@ function ES.colorCodeText(code, caretPos)
                     colorHex = M.NAMESPACE
                 elseif D.WOW_C_NAMESPACES[s] then
                     colorHex = M.WOW_C
-                    prevWasCNamespace = true
-                    prevWasDot = false
+                    prevCNamespaceName = s
                 elseif D.WOW_GLOBALS[s] or D.DYNAMIC_API_NAMES[s] then
                     colorHex = M.WOW_API
                 else
@@ -349,10 +354,10 @@ function ES.colorCodeText(code, caretPos)
                 end
             elseif tt == TOKEN_OPERATOR then
                 colorHex = M.OPERATOR
-                if s == "." and prevWasCNamespace then
+                if s == "." and prevCNamespaceName then
                     prevWasDot = true
                 else
-                    prevWasCNamespace = false
+                    prevCNamespaceName = nil
                     prevWasDot = false
                 end
             end

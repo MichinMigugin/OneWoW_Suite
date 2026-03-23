@@ -18,6 +18,16 @@ local function getDB()
     return Addon.db and Addon.db.editor
 end
 
+local function getDefaultCategory()
+    local db = getDB()
+    local L = Addon.L or {}
+    return (db and db.defaultCategory) or L["EDITOR_CATEGORY_DEFAULT"] or "Uncategorized"
+end
+
+local function normalizeSnippetName(name)
+    return strtrim(name or "")
+end
+
 local function nextSnippetId()
     local db = getDB()
     if not db then return tostring(GetTime()) end
@@ -35,13 +45,17 @@ function EE:CreateSnippet(name, category)
     local L = Addon.L
 
     local untitled = false
-    if not name or name == "" then
+    name = normalizeSnippetName(name)
+    if name == "" then
         name = format(L["EDITOR_DEFAULT_SNIPPET_NAME"], db.untitledCounter)
         db.untitledCounter = db.untitledCounter + 1
         untitled = true
     end
 
-    category = category or db.categories[1] or L["EDITOR_CATEGORY_DEFAULT"]
+    category = category or getDefaultCategory()
+    if not untitled and self:IsSnippetNameTakenInCategory(category, name) then
+        return nil
+    end
 
     local id = nextSnippetId()
     local snippet = {
@@ -81,9 +95,27 @@ function EE:GetSnippetsByCategory(cat)
     return result
 end
 
+function EE:IsSnippetNameTakenInCategory(category, name, excludeId)
+    local db = getDB()
+    if not db then return false end
+
+    name = normalizeSnippetName(name)
+    if name == "" then return false end
+
+    for id, snippet in pairs(db.snippets) do
+        if id ~= excludeId and snippet.category == category and snippet.name == name then
+            return true
+        end
+    end
+
+    return false
+end
+
 function EE:RenameSnippet(id, newName)
     local snippet = self:GetSnippet(id)
-    if not snippet or not newName or newName == "" then return false end
+    newName = normalizeSnippetName(newName)
+    if not snippet or newName == "" then return false end
+    if self:IsSnippetNameTakenInCategory(snippet.category, newName, id) then return false end
     snippet.name = newName
     snippet.untitled = nil
     snippet.modified = GetTime()
@@ -126,6 +158,7 @@ end
 function EE:MoveSnippet(id, newCategory)
     local snippet = self:GetSnippet(id)
     if not snippet or not newCategory then return false end
+    if self:IsSnippetNameTakenInCategory(newCategory, snippet.name, id) then return false end
     snippet.category = newCategory
     snippet.modified = GetTime()
     return true
@@ -133,7 +166,9 @@ end
 
 function EE:CreateCategory(name)
     local db = getDB()
-    if not db or not name or name == "" then return false end
+    if not db then return false end
+    name = strtrim(name or "")
+    if name == "" then return false end
     for _, cat in ipairs(db.categories) do
         if cat == name then return false end
     end
@@ -143,9 +178,15 @@ end
 
 function EE:RenameCategory(oldName, newName)
     local db = getDB()
-    if not db or not newName or newName == "" then return false end
-    local L = Addon.L
-    if oldName == L["EDITOR_CATEGORY_DEFAULT"] then return false end
+    if not db then return false end
+    newName = strtrim(newName or "")
+    if newName == "" then return false end
+    if oldName == getDefaultCategory() then return false end
+    for _, cat in ipairs(db.categories) do
+        if cat == newName and cat ~= oldName then
+            return false
+        end
+    end
     for i, cat in ipairs(db.categories) do
         if cat == oldName then
             db.categories[i] = newName
@@ -167,8 +208,7 @@ end
 function EE:DeleteCategory(name)
     local db = getDB()
     if not db then return false end
-    local L = Addon.L
-    local defaultCat = L["EDITOR_CATEGORY_DEFAULT"]
+    local defaultCat = getDefaultCategory()
     if name == defaultCat then return false end
     for i, cat in ipairs(db.categories) do
         if cat == name then
@@ -188,6 +228,10 @@ end
 function EE:GetCategories()
     local db = getDB()
     return db and db.categories or {}
+end
+
+function EE:GetDefaultCategory()
+    return getDefaultCategory()
 end
 
 function EE:GetSnippetIndent(id)
@@ -253,7 +297,7 @@ function EE:Redo(snippetId)
         undoPositions[snippetId] = pos
         return queue[pos]
     end
-    return queue[pos]
+    return nil
 end
 
 function EE:ClearUndo(snippetId)
@@ -348,6 +392,10 @@ end
 
 function EE:FindPrevious(text, pattern, startPos, wrapAround)
     if not text or not pattern or pattern == "" then return nil end
+    startPos = startPos or 1
+    if startPos < 1 then
+        startPos = 1
+    end
     local lastS, lastE
     local s, e = string.find(text, pattern, 1, true)
     while s do

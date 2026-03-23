@@ -1,5 +1,96 @@
 local ADDON_NAME, Addon = ...
 
+local GetLocale = GetLocale
+local type = type
+local pairs = pairs
+local ipairs = ipairs
+local tinsert = tinsert
+
+local function getEditorLanguage(db)
+    local hub = _G.OneWoW
+    local lang
+    if hub and hub.db and hub.db.global then
+        lang = hub.db.global.language
+    end
+    if not lang then
+        lang = db and db.language or GetLocale()
+    end
+    if lang == "esMX" then
+        lang = "esES"
+    end
+    return lang or "enUS"
+end
+
+local function getLocalizedDefaultCategory(language)
+    local locales = Addon.Locales or {}
+    local localeData = locales[language] or locales["enUS"] or {}
+    return localeData["EDITOR_CATEGORY_DEFAULT"] or "Uncategorized"
+end
+
+local function getDefaultCategoryAliases()
+    local aliases = { ["Uncategorized"] = true }
+    local locales = Addon.Locales or {}
+    for _, localeData in pairs(locales) do
+        local defaultCategory = localeData and localeData["EDITOR_CATEGORY_DEFAULT"]
+        if defaultCategory and defaultCategory ~= "" then
+            aliases[defaultCategory] = true
+        end
+    end
+    return aliases
+end
+
+local function normalizeEditorDB(db)
+    local editor = db.editor
+    if type(editor) ~= "table" then return end
+
+    local currentDefault = getLocalizedDefaultCategory(getEditorLanguage(db))
+    local aliases = getDefaultCategoryAliases()
+    local normalizedCategories = { currentDefault }
+    local seenCategories = { [currentDefault] = true }
+
+    editor.defaultCategory = currentDefault
+    editor.categories = type(editor.categories) == "table" and editor.categories or {}
+    editor.snippets = type(editor.snippets) == "table" and editor.snippets or {}
+    editor.categoryCollapsed = type(editor.categoryCollapsed) == "table" and editor.categoryCollapsed or {}
+
+    for _, category in ipairs(editor.categories) do
+        local normalized = aliases[category] and currentDefault or category
+        if normalized and normalized ~= "" and not seenCategories[normalized] then
+            seenCategories[normalized] = true
+            tinsert(normalizedCategories, normalized)
+        end
+    end
+
+    for _, snippet in pairs(editor.snippets) do
+        local category = snippet and snippet.category
+        if not category or category == "" or aliases[category] then
+            category = currentDefault
+        end
+        snippet.category = category
+        if not seenCategories[category] then
+            seenCategories[category] = true
+            tinsert(normalizedCategories, category)
+        end
+    end
+
+    local normalizedCollapsed = {}
+    for category, collapsed in pairs(editor.categoryCollapsed) do
+        local normalized = aliases[category] and currentDefault or category
+        if normalizedCollapsed[normalized] == nil then
+            normalizedCollapsed[normalized] = collapsed
+        end
+    end
+
+    editor.categories = normalizedCategories
+    editor.categoryCollapsed = normalizedCollapsed
+end
+
+function Addon:NormalizeEditorDatabase()
+    if self.db then
+        normalizeEditorDB(self.db)
+    end
+end
+
 function Addon:InitializeDatabase()
     local defaults = {
         position = {},
@@ -36,6 +127,7 @@ function Addon:InitializeDatabase()
         editor = {
             snippets = {},
             categories = { "Uncategorized" },
+            defaultCategory = nil,
             indentSize = 3,
             fontSize = 12,
             autoSaveInterval = nil,
@@ -69,4 +161,5 @@ function Addon:InitializeDatabase()
     end
 
     self.db = OneWoW_UtilityDevTool_DB
+    self:NormalizeEditorDatabase()
 end

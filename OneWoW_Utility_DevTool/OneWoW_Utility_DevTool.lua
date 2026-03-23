@@ -411,6 +411,7 @@ function Addon:OnInitialize()
 
     self:ApplyTheme()
     self:ApplyLanguage()
+    self:NormalizeEditorDatabase()
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
         self:ApplyTheme()
@@ -483,7 +484,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
                     if Addon.UI then
                         local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI
                         Addon.UI:Show()
-                        Addon.UI:SelectTab((DU and DU.TAB_INDEX_SETTINGS) or 8)
+                        Addon.UI:SelectTab((DU and DU.TAB_INDEX_SETTINGS) or 10)
                     end
                 end,
                 onTooltip = function(frame)
