@@ -229,6 +229,182 @@ function OneWoW_GUI:CreateScrollFrame(parent, options)
     return scrollFrame, content
 end
 
+function OneWoW_GUI:CreateVirtualizedList(parent, options)
+    options = options or {}
+    local name = options.name
+    local rowHeight = options.rowHeight or 22
+    local numVisibleRows = options.numVisibleRows or 40
+    local getCount = options.getCount
+    local getEntry = options.getEntry
+    local onSelect = options.onSelect
+    local renderRow = options.renderRow
+    local enableKeyboardNav = options.enableKeyboardNav
+    local focusCompetitor = options.focusCompetitor
+
+    if not getCount or not getEntry or not onSelect then
+        return nil
+    end
+
+    local scrollFrame = CreateFrame("ScrollFrame", name, parent, "UIPanelScrollFrameTemplate")
+    scrollFrame:SetPoint("TOPLEFT", 4, -4)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -14, 4)
+    self:ApplyScrollBarStyle(scrollFrame.ScrollBar, parent, -2)
+
+    local contentName = name and (name .. "Content") or nil
+    local content = CreateFrame("Frame", contentName, scrollFrame)
+    content:SetHeight(1)
+    scrollFrame:SetScrollChild(content)
+
+    local state = { selectedIndex = nil }
+    local listButtons = {}
+
+    local function ensureIndexVisible(idx)
+        local n = getCount()
+        if n <= 0 or idx < 1 or idx > n then return end
+        local scroll = scrollFrame:GetVerticalScroll()
+        local viewH = scrollFrame:GetHeight()
+        local topOfRow = (idx - 1) * rowHeight
+        local bottomOfRow = topOfRow + rowHeight
+        if topOfRow < scroll then
+            scrollFrame:SetVerticalScroll(topOfRow)
+        elseif bottomOfRow > scroll + viewH then
+            scrollFrame:SetVerticalScroll(bottomOfRow - viewH)
+        end
+    end
+
+    local function updateVisibleRows()
+        local n = getCount()
+        local scroll = scrollFrame:GetVerticalScroll()
+        local startIdx = math.floor(scroll / rowHeight) + 1
+        for i, btn in ipairs(listButtons) do
+            local idx = startIdx + i - 1
+            local entry = getEntry(idx)
+            if entry and idx <= n then
+                btn:ClearAllPoints()
+                btn:SetHeight(rowHeight)
+                btn:SetPoint("TOPLEFT", content, "TOPLEFT", 2, -(idx - 1) * rowHeight)
+                btn:SetPoint("RIGHT", content, "RIGHT", -2, 0)
+                btn:SetNormalFontObject((state.selectedIndex == idx) and GameFontHighlightSmall or GameFontNormalSmall)
+                if renderRow then
+                    renderRow(btn, idx, entry, state.selectedIndex == idx)
+                else
+                    btn:SetText(entry.displayName or tostring(entry))
+                end
+                btn.entryIndex = idx
+                btn:Show()
+            else
+                btn:Hide()
+                btn.entryIndex = nil
+            end
+        end
+    end
+
+    local function Refresh()
+        if not scrollFrame or not content then return end
+        local n = getCount()
+        content:SetHeight(math.max(n * rowHeight, 1))
+        local scrollMax = math.max(content:GetHeight() - scrollFrame:GetHeight(), 0)
+        local vs = scrollFrame:GetVerticalScroll()
+        if vs > scrollMax then
+            scrollFrame:SetVerticalScroll(scrollMax)
+        end
+        updateVisibleRows()
+    end
+
+    local function SetSelectedIndex(idx)
+        local n = getCount()
+        if idx == nil or n <= 0 then
+            state.selectedIndex = nil
+            Refresh()
+            return
+        end
+        local clamped = math.max(1, math.min(idx, n))
+        state.selectedIndex = clamped
+        ensureIndexVisible(clamped)
+        Refresh()
+        local entry = getEntry(clamped)
+        if entry then
+            onSelect(clamped, entry)
+        end
+    end
+
+    local function GetSelectedIndex()
+        return state.selectedIndex
+    end
+
+    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+        content:SetWidth(w)
+        Refresh()
+    end)
+
+    for i = 1, numVisibleRows do
+        local btn = CreateFrame("Button", nil, content)
+        btn:SetHeight(rowHeight)
+        btn:SetNormalFontObject(GameFontNormalSmall)
+        btn:SetHighlightFontObject(GameFontHighlightSmall)
+        btn:SetScript("OnClick", function(b)
+            if b.entryIndex then
+                SetSelectedIndex(b.entryIndex)
+            end
+        end)
+        btn:SetScript("OnEnter", function(self)
+            local t = self._tooltipFullText
+            if t and t ~= "" then
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
+                GameTooltip:SetText(t, r, g, b, nil, true)
+                GameTooltip:Show()
+            end
+        end)
+        btn:SetScript("OnLeave", GameTooltip_Hide)
+        tinsert(listButtons, btn)
+    end
+
+    scrollFrame:SetScript("OnVerticalScroll", updateVisibleRows)
+
+    if enableKeyboardNav and focusCompetitor then
+        focusCompetitor:HookScript("OnEditFocusGained", function()
+            if parent.EnableKeyboard then
+                parent:EnableKeyboard(false)
+            end
+        end)
+        focusCompetitor:HookScript("OnEditFocusLost", function()
+            if parent.EnableKeyboard then
+                parent:EnableKeyboard(true)
+            end
+        end)
+    end
+
+    if enableKeyboardNav then
+        parent:EnableKeyboard(true)
+        parent:SetScript("OnKeyDown", function(self, key)
+            if key == "UP" or key == "DOWN" then
+                self:SetPropagateKeyboardInput(false)
+                local n = getCount()
+                if n <= 0 then return end
+                local cur = state.selectedIndex or 0
+                if key == "UP" then
+                    SetSelectedIndex(cur > 1 and cur - 1 or 1)
+                else
+                    SetSelectedIndex(cur < n and cur + 1 or n)
+                end
+            else
+                self:SetPropagateKeyboardInput(true)
+            end
+        end)
+    end
+
+    local result = {
+        listPanel = parent,
+        listScroll = scrollFrame,
+        listContent = content,
+        Refresh = Refresh,
+        SetSelectedIndex = SetSelectedIndex,
+        GetSelectedIndex = GetSelectedIndex,
+    }
+    return result
+end
+
 function OneWoW_GUI:CreateSplitPanel(parent, options)
     local panelGap = Constants.GUI.PANEL_GAP or 10
 

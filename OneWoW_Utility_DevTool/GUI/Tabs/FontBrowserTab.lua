@@ -84,57 +84,8 @@ local function styleListButtonText(btn)
 end
 
 function Addon.UI.FontTab_RefreshList(tab)
-    if not tab or not tab.listScroll then return end
-    local DU = getDU()
-    local rowH = DU.FONT_BROWSER_LIST_ROW_HEIGHT or 20
-    local n = FB:GetFilteredCount()
-    local content = tab.listScroll:GetScrollChild()
-    content:SetHeight(max(n * rowH, 1))
-    local scrollMax = max(content:GetHeight() - tab.listScroll:GetHeight(), 0)
-    local vs = tab.listScroll:GetVerticalScroll()
-    if vs > scrollMax then
-        tab.listScroll:SetVerticalScroll(scrollMax)
-    end
-    Addon.UI.FontTab_UpdateListRows(tab)
-end
-
-function Addon.UI.FontTab_UpdateListRows(tab)
-    if not tab or not tab.listButtons then return end
-    local DU = getDU()
-    local rowH = DU.FONT_BROWSER_LIST_ROW_HEIGHT or 20
-    local scroll = tab.listScroll:GetVerticalScroll()
-    local startIdx = floor(scroll / rowH) + 1
-    local listContent = tab.listScroll:GetScrollChild()
-
-    for i, btn in ipairs(tab.listButtons) do
-        local idx = startIdx + i - 1
-        local name = FB:GetFilteredEntry(idx)
-        if name then
-            btn:ClearAllPoints()
-            btn:SetHeight(rowH)
-            btn:SetPoint("TOPLEFT", listContent, "TOPLEFT", 2, -(idx - 1) * rowH)
-            btn:SetPoint("RIGHT", listContent, "RIGHT", -2, 0)
-
-            ensureListRowBookmarkIcon(btn, rowH)
-            if FB:IsBookmarked(name) then
-                btn._fontBookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
-                btn._fontBookmarkIcon:Show()
-            else
-                btn._fontBookmarkIcon:Hide()
-            end
-
-            btn:SetText(name)
-            btn._entryIndex = idx
-            local sel = (tab.selectedFontName == name)
-            btn:SetNormalFontObject(sel and GameFontHighlightSmall or GameFontNormalSmall)
-            styleListButtonText(btn)
-            btn:Show()
-        else
-            if btn._fontBookmarkIcon then btn._fontBookmarkIcon:Hide() end
-            btn:Hide()
-            btn._entryIndex = nil
-        end
-    end
+    if not tab or not tab.virtualizedList then return end
+    tab.virtualizedList.Refresh()
 end
 
 local function refreshWidgetSizeDropdownLabel(tab)
@@ -164,7 +115,6 @@ local function applyFontSelection(tab, idx)
 
     Addon.UI.FontTab_UpdatePreview(tab)
     Addon.UI.FontTab_UpdateDetails(tab)
-    Addon.UI.FontTab_UpdateListRows(tab)
     Addon.UI.FontTab_UpdateCopyButtons(tab)
     Addon.UI.FontTab_UpdateWorkspaceFromFont(tab)
     refreshWidgetSizeDropdownLabel(tab)
@@ -682,7 +632,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
         tab.selectedListIndex = nil
         Addon.UI.FontTab_RefreshList(tab)
         if FB:GetFilteredCount() > 0 then
-            applyFontSelection(tab, 1)
+            if tab.virtualizedList then tab.virtualizedList.SetSelectedIndex(1) end
         else
             Addon.UI.FontTab_UpdatePreview(tab)
             Addon.UI.FontTab_UpdateDetails(tab)
@@ -712,14 +662,14 @@ function Addon.UI:CreateFontBrowserTab(parent)
             FB:RebuildFiltered()
             Addon.UI.FontTab_RefreshList(tab)
             if FB:GetFilteredCount() > 0 then
-                applyFontSelection(tab, 1)
+                if tab.virtualizedList then tab.virtualizedList.SetSelectedIndex(1) end
             else
                 tab.selectedFontName = nil
                 Addon.UI.FontTab_UpdatePreview(tab)
                 Addon.UI.FontTab_UpdateDetails(tab)
             end
         else
-            Addon.UI.FontTab_UpdateListRows(tab)
+            if tab.virtualizedList then tab.virtualizedList.Refresh() end
             Addon.UI.FontTab_UpdateDetails(tab)
         end
         refreshToolbarState(tab)
@@ -755,36 +705,33 @@ function Addon.UI:CreateFontBrowserTab(parent)
     leftPanel:SetWidth(initW)
     self:StyleContentPanel(leftPanel)
 
-    local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "FontBrowserListScroll" })
-    listScroll:ClearAllPoints()
-    listScroll:SetPoint("TOPLEFT", 4, -4)
-    listScroll:SetPoint("BOTTOMRIGHT", -14, 4)
-    listScroll:HookScript("OnSizeChanged", function(_, w)
-        listContent:SetWidth(w)
-        Addon.UI.FontTab_RefreshList(tab)
-    end)
-    listScroll:SetScript("OnVerticalScroll", function()
-        Addon.UI.FontTab_UpdateListRows(tab)
-    end)
-    tab.listScroll = listScroll
-
-    tab.listButtons = {}
-    for i = 1, NUM_ROWS do
-        local btn = CreateFrame("Button", nil, listContent)
-        btn:SetHeight(ROW_H)
-        btn:SetPoint("TOPLEFT", listContent, "TOPLEFT", 2, -(i - 1) * ROW_H)
-        btn:SetPoint("RIGHT", listContent, "RIGHT", -2, 0)
-        btn:SetNormalFontObject(GameFontNormalSmall)
-        btn:SetHighlightFontObject(GameFontHighlightSmall)
-        btn:SetScript("OnClick", function(b)
-            if b._entryIndex then
-                applyFontSelection(tab, b._entryIndex)
-                refreshToolbarState(tab)
+    local listAPI = OneWoW_GUI:CreateVirtualizedList(leftPanel, {
+        name = "FontBrowserListScroll",
+        rowHeight = ROW_H,
+        numVisibleRows = NUM_ROWS,
+        getCount = function() return FB:GetFilteredCount() end,
+        getEntry = function(idx) return FB:GetFilteredEntry(idx) end,
+        onSelect = function(idx)
+            applyFontSelection(tab, idx)
+            refreshToolbarState(tab)
+        end,
+        renderRow = function(btn, idx, name, isSelected)
+            ensureListRowBookmarkIcon(btn, ROW_H)
+            if FB:IsBookmarked(name) then
+                btn._fontBookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
+                btn._fontBookmarkIcon:Show()
+            else
+                btn._fontBookmarkIcon:Hide()
             end
-        end)
-        styleListButtonText(btn)
-        tab.listButtons[i] = btn
-    end
+            btn:SetText(name)
+            btn._tooltipFullText = name
+            styleListButtonText(btn)
+        end,
+        enableKeyboardNav = true,
+        focusCompetitor = searchBox,
+    })
+    tab.virtualizedList = listAPI
+    tab.listScroll = listAPI.listScroll
 
     -- Right panel
     local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
@@ -1368,7 +1315,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     -- Initial state
     Addon.UI.FontTab_RefreshList(tab)
     if FB:GetFilteredCount() > 0 then
-        applyFontSelection(tab, 1)
+        tab.virtualizedList.SetSelectedIndex(1)
     else
         Addon.UI.FontTab_UpdatePreview(tab)
         Addon.UI.FontTab_UpdateDetails(tab)

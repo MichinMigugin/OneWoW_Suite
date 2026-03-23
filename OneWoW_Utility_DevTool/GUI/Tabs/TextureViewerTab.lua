@@ -65,18 +65,8 @@ local function scheduleFilterRefresh(tab)
 end
 
 function Addon.UI.TextureTab_RefreshList(tab)
-    if not tab or not tab.listScroll then return end
-    local DU = getDU()
-    local rowH = tab.listRowH or DU.TEXTURE_LIST_ROW_HEIGHT or 22
-    local n = BR:GetFilteredCount()
-    local content = tab.listScroll:GetScrollChild()
-    content:SetHeight(max(n * rowH, 1))
-    local scrollMax = max(content:GetHeight() - tab.listScroll:GetHeight(), 0)
-    local vs = tab.listScroll:GetVerticalScroll()
-    if vs > scrollMax then
-        tab.listScroll:SetVerticalScroll(scrollMax)
-    end
-    Addon.UI.TextureTab_UpdateListRows(tab)
+    if not tab or not tab.virtualizedList then return end
+    tab.virtualizedList.Refresh()
 end
 
 local function ensureListRowBookmarkIcon(btn, rowH)
@@ -110,66 +100,6 @@ local function styleListButtonText(btn)
         fs:SetPoint("RIGHT", btn.bookmarkIcon, "LEFT", -gap, 0)
     else
         fs:SetPoint("RIGHT", btn, "RIGHT", -rightPad, 0)
-    end
-end
-
-function Addon.UI.TextureTab_UpdateListRows(tab)
-    if not tab or not tab.listButtons then return end
-    local rowH = tab.listRowH
-    local scroll = tab.listScroll:GetVerticalScroll()
-    local startIdx = floor(scroll / rowH) + 1
-    local listContent = tab.listScroll:GetScrollChild()
-
-    for i, btn in ipairs(tab.listButtons) do
-        local idx = startIdx + i - 1
-        local entry = BR:GetFilteredEntry(idx)
-        if entry then
-            -- Pool of row frames must sit at each entry's Y on the scroll child, not fixed at 0..NUM_ROWS,
-            -- or scrolling leaves the buttons above the viewport and shows empty space.
-            btn:ClearAllPoints()
-            btn:SetHeight(rowH)
-            btn:SetPoint("TOPLEFT", listContent, "TOPLEFT", 2, -(idx - 1) * rowH)
-            btn:SetPoint("RIGHT", listContent, "RIGHT", -2, 0)
-
-            local label = entry.displayName or entry.atlasName or "?"
-            if entry.kind == "atlas" and entry.textureKey then
-                label = entry.atlasName
-            end
-            ensureListRowBookmarkIcon(btn, rowH)
-            local bookmarks = Addon.db and Addon.db.textureBookmarks
-            local showBm = false
-            if bookmarks then
-                if entry.kind == "atlas" and entry.atlasName and bookmarks[entry.atlasName] then
-                    showBm = true
-                elseif entry.kind == "texture" and entry.textureKey and BR:TextureHasBookmarkedAtlas(entry.textureKey, bookmarks) then
-                    showBm = true
-                end
-            end
-            if showBm then
-                btn.bookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
-                btn.bookmarkIcon:Show()
-            else
-                btn.bookmarkIcon:Hide()
-            end
-            btn:SetText(label)
-            btn.entryIndex = idx
-            local sel = (tab.selectedListIndex == idx)
-            if sel then
-                btn:SetNormalFontObject(GameFontHighlightSmall)
-            else
-                btn:SetNormalFontObject(GameFontNormalSmall)
-            end
-            btn._tooltipFullText = label
-            styleListButtonText(btn)
-            btn:Show()
-        else
-            if btn.bookmarkIcon then
-                btn.bookmarkIcon:Hide()
-            end
-            btn:Hide()
-            btn.entryIndex = nil
-            btn._tooltipFullText = nil
-        end
     end
 end
 
@@ -489,7 +419,6 @@ local function applyListSelection(tab, entryIndex)
     end
 
     updateDetailPanel(tab)
-    Addon.UI.TextureTab_UpdateListRows(tab)
     Addon.UI.TextureTab_RefreshToolbarButtons(tab)
 end
 
@@ -509,7 +438,7 @@ local function textureTabAfterBookmarkToggle(tab)
             releaseOverlays(tab)
             if tab.nameText then tab.nameText:SetText("") end
             updateDetailPanel(tab)
-            Addon.UI.TextureTab_UpdateListRows(tab)
+            if tab.virtualizedList then tab.virtualizedList.SetSelectedIndex(nil) end
             Addon.UI.TextureTab_RefreshToolbarButtons(tab)
         else
             local pick = nil
@@ -524,12 +453,11 @@ local function textureTabAfterBookmarkToggle(tab)
                     break
                 end
             end
-            -- applyListSelection already calls UpdateListRows + RefreshToolbarButtons.
-            applyListSelection(tab, pick or 1)
+            if tab.virtualizedList then tab.virtualizedList.SetSelectedIndex(pick or 1) end
         end
     else
         updateDetailPanel(tab)
-        Addon.UI.TextureTab_UpdateListRows(tab)
+        if tab.virtualizedList then tab.virtualizedList.Refresh() end
         Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     end
     if BR:GetViewMode() == BR.VIEW_TEXTURE and tab.selectedTextureKey and tab.previewSheetHost and tab.previewSheetHost:IsShown() then
@@ -695,7 +623,7 @@ function Addon.UI:CreateTextureTab(parent)
         tab.sheetSelectionHighlightSuppressed = false
         Addon.UI.TextureTab_RefreshList(tab)
         if BR:GetFilteredCount() > 0 then
-            applyListSelection(tab, 1)
+            tab.virtualizedList.SetSelectedIndex(1)
         else
             tab.previewSheetHost:Hide()
             tab.previewAtlasHost:Hide()
@@ -721,7 +649,7 @@ function Addon.UI:CreateTextureTab(parent)
         tab.sheetSelectionHighlightSuppressed = false
         Addon.UI.TextureTab_RefreshList(tab)
         if BR:GetFilteredCount() > 0 then
-            applyListSelection(tab, 1)
+            tab.virtualizedList.SetSelectedIndex(1)
         else
             tab.previewSheetHost:Hide()
             tab.previewAtlasHost:Hide()
@@ -747,7 +675,7 @@ function Addon.UI:CreateTextureTab(parent)
         tab.sheetSelectionHighlightSuppressed = false
         Addon.UI.TextureTab_RefreshList(tab)
         if BR:GetFilteredCount() > 0 then
-            applyListSelection(tab, 1)
+            tab.virtualizedList.SetSelectedIndex(1)
         else
             tab.previewSheetHost:Hide()
             tab.previewAtlasHost:Hide()
@@ -819,47 +747,44 @@ function Addon.UI:CreateTextureTab(parent)
     leftPanel:SetWidth(initListW)
     self:StyleContentPanel(leftPanel)
 
-    local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "TextureTabListScroll" })
-    listScroll:ClearAllPoints()
-    listScroll:SetPoint("TOPLEFT", 4, -4)
-    listScroll:SetPoint("BOTTOMRIGHT", -14, 4)
-    listScroll:HookScript("OnSizeChanged", function(self, w)
-        listContent:SetWidth(w)
-        Addon.UI.TextureTab_RefreshList(tab)
-    end)
-    listScroll:SetScript("OnVerticalScroll", function()
-        Addon.UI.TextureTab_UpdateListRows(tab)
-    end)
-
-    tab.listScroll = listScroll
+    local listAPI = OneWoW_GUI:CreateVirtualizedList(leftPanel, {
+        name = "TextureTabListScroll",
+        rowHeight = TEX_ROW_H,
+        numVisibleRows = NUM_ROWS,
+        getCount = function() return BR:GetFilteredCount() end,
+        getEntry = function(idx) return BR:GetFilteredEntry(idx) end,
+        onSelect = function(idx) applyListSelection(tab, idx) end,
+        renderRow = function(btn, idx, entry, isSelected)
+            local label = entry.displayName or entry.atlasName or "?"
+            if entry.kind == "atlas" and entry.textureKey then
+                label = entry.atlasName
+            end
+            ensureListRowBookmarkIcon(btn, TEX_ROW_H)
+            local bookmarks = Addon.db and Addon.db.textureBookmarks
+            local showBm = false
+            if bookmarks then
+                if entry.kind == "atlas" and entry.atlasName and bookmarks[entry.atlasName] then
+                    showBm = true
+                elseif entry.kind == "texture" and entry.textureKey and BR:TextureHasBookmarkedAtlas(entry.textureKey, bookmarks) then
+                    showBm = true
+                end
+            end
+            if showBm then
+                btn.bookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
+                btn.bookmarkIcon:Show()
+            else
+                btn.bookmarkIcon:Hide()
+            end
+            btn:SetText(label)
+            btn._tooltipFullText = label
+            styleListButtonText(btn)
+        end,
+        enableKeyboardNav = true,
+        focusCompetitor = searchBox,
+    })
+    tab.virtualizedList = listAPI
+    tab.listScroll = listAPI.listScroll
     tab.searchBox = searchBox
-
-    tab.listButtons = {}
-    for i = 1, NUM_ROWS do
-        local btn = CreateFrame("Button", nil, listContent)
-        btn:SetHeight(TEX_ROW_H)
-        btn:SetPoint("TOPLEFT", listContent, "TOPLEFT", 2, -(i - 1) * TEX_ROW_H)
-        btn:SetPoint("RIGHT", listContent, "RIGHT", -2, 0)
-        btn:SetNormalFontObject(GameFontNormalSmall)
-        btn:SetHighlightFontObject(GameFontHighlightSmall)
-        btn:SetScript("OnClick", function(b)
-            if b.entryIndex then
-                applyListSelection(tab, b.entryIndex)
-            end
-        end)
-        btn:SetScript("OnEnter", function(b)
-            local t = b._tooltipFullText
-            if t and t ~= "" then
-                GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
-                local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
-                GameTooltip:SetText(t, tr, tg, tb, nil, true)
-                GameTooltip:Show()
-            end
-        end)
-        btn:SetScript("OnLeave", GameTooltip_Hide)
-        styleListButtonText(btn)
-        tab.listButtons[i] = btn
-    end
 
     local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
     self:StyleContentPanel(rightPanel)
@@ -1136,7 +1061,7 @@ function Addon.UI:CreateTextureTab(parent)
             tab.selectedListIndex = nil
             tab.zoomLevel = tab.zoomLevel or 1
             layoutAtlasSoloFrame(tab)
-            Addon.UI.TextureTab_UpdateListRows(tab)
+            if tab.virtualizedList then tab.virtualizedList.SetSelectedIndex(nil) end
             updateDetailPanel(tab)
             return
         end
@@ -1148,7 +1073,7 @@ function Addon.UI:CreateTextureTab(parent)
         tab.selectedListIndex = nil
         local texKey = path:gsub("\\", "/")
         showTextureSheet(tab, texKey)
-        Addon.UI.TextureTab_UpdateListRows(tab)
+        if tab.virtualizedList then tab.virtualizedList.SetSelectedIndex(nil) end
         updateDetailPanel(tab)
     end)
 
@@ -1247,7 +1172,7 @@ function Addon.UI:CreateTextureTab(parent)
 
     Addon.UI.TextureTab_RefreshList(tab)
     if BR:GetFilteredCount() > 0 then
-        applyListSelection(tab, 1)
+        tab.virtualizedList.SetSelectedIndex(1)
     else
         updateDetailPanel(tab)
     end
