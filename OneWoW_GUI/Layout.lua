@@ -366,3 +366,95 @@ function OneWoW_GUI:CreateVerticalPaneResizer(options)
 
     return divider
 end
+
+function OneWoW_GUI:CreateHorizontalPaneResizer(options)
+    options = options or {}
+    local parent = options.parent
+    local topPanel = options.topPanel
+    local bottomPanel = options.bottomPanel
+    if not parent or not topPanel or not bottomPanel then
+        error("OneWoW_GUI:CreateHorizontalPaneResizer requires parent, topPanel, and bottomPanel")
+    end
+
+    local floor = math.floor
+    local max = math.max
+    local min = math.min
+
+    local dividerHeight = options.dividerHeight or 6
+    local topMinHeight = options.topMinHeight or 100
+    local bottomMinHeight = options.bottomMinHeight or 60
+    local onHeightChanged = options.onHeightChanged
+
+    local divider = CreateFrame("Button", nil, parent)
+    divider:SetHeight(dividerHeight)
+    divider:SetPoint("TOPLEFT", topPanel, "BOTTOMLEFT", 0, 0)
+    divider:SetPoint("RIGHT", parent, "RIGHT", 0, 0)
+    divider:EnableMouse(true)
+
+    local dividerTex = divider:CreateTexture(nil, "OVERLAY")
+    dividerTex:SetHeight(2)
+    dividerTex:SetPoint("LEFT", divider, "LEFT", 0, 0)
+    dividerTex:SetPoint("RIGHT", divider, "RIGHT", 0, 0)
+    dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+
+    divider:SetScript("OnEnter", function(self)
+        dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        SetCursor("UI_RESIZE_CURSOR")
+    end)
+    divider:SetScript("OnLeave", function(self)
+        if not self._owPaneDragActive then
+            dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+            SetCursor(nil)
+        end
+    end)
+
+    divider:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" then
+            self._owPaneDragActive = true
+            local _, y = GetCursorPosition()
+            self._owPaneStartCursorY = y / self:GetEffectiveScale()
+            self._owPaneStartTopH = topPanel:GetHeight()
+        end
+    end)
+
+    divider:SetScript("OnMouseUp", function(self, button)
+        if button == "LeftButton" and self._owPaneDragActive then
+            self._owPaneDragActive = false
+            dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+            SetCursor(nil)
+            if onHeightChanged then
+                onHeightChanged(bottomPanel:GetHeight())
+            end
+        end
+    end)
+
+    divider:SetScript("OnUpdate", function(self)
+        if not self._owPaneDragActive then return end
+        local _, cursorY = GetCursorPosition()
+        cursorY = cursorY / self:GetEffectiveScale()
+        local delta = self._owPaneStartCursorY - cursorY
+        local desiredTopH = max(topMinHeight, self._owPaneStartTopH + delta)
+
+        local totalH = parent:GetHeight()
+        local maxTopH = totalH - bottomMinHeight - dividerHeight
+        if maxTopH < topMinHeight then maxTopH = topMinHeight end
+        local newTopH = max(topMinHeight, min(desiredTopH, maxTopH))
+        topPanel:SetHeight(newTopH)
+    end)
+
+    bottomPanel:ClearAllPoints()
+    bottomPanel:SetPoint("TOPLEFT", divider, "BOTTOMLEFT", 0, 0)
+    bottomPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+
+    parent:HookScript("OnSizeChanged", function(_, _, h)
+        if not h then return end
+        local maxTopH = h - bottomMinHeight - dividerHeight
+        if maxTopH < topMinHeight then maxTopH = topMinHeight end
+        local currentTopH = topPanel:GetHeight()
+        if currentTopH > maxTopH then
+            topPanel:SetHeight(maxTopH)
+        end
+    end)
+
+    return divider
+end

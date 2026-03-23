@@ -2,7 +2,8 @@
 
 - **Library:** `LibStub("OneWoW_GUI-1.0")`
 - **Location:** `/OneWoW_GUI/`
-- **Loaded by:** All addons (via RequiredDeps)
+- **Loaded by:** Suite addons (via `## RequiredDeps: OneWoW_GUI`)
+- **Interface:** `120001, 120005` (see `OneWoW_GUI.toc` for the authoritative list)
 
 ---
 
@@ -215,6 +216,12 @@ local r, g, b, a = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
 frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
 ```
 
+### Wrap text in a theme color (color codes)
+```lua
+local s = OneWoW_GUI:WrapThemeColor("Hello", "ACCENT_PRIMARY")
+-- Uses CreateColor(...):WrapTextInColorCode; suitable for chat or mixed-color strings
+```
+
 ### Available color keys
 BG_PRIMARY, BG_SECONDARY, BG_TERTIARY, BG_HOVER, BG_ACTIVE,
 ACCENT_PRIMARY, ACCENT_SECONDARY, ACCENT_HIGHLIGHT, ACCENT_MUTED,
@@ -314,7 +321,8 @@ OneWoW_MyAddon.Constants = {
 **Base GUI keys** (override any; add custom keys as needed):
 WINDOW_WIDTH, WINDOW_HEIGHT, MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT,
 PADDING, BUTTON_HEIGHT, BUTTON_WIDTH, SEARCH_HEIGHT, SEARCH_WIDTH,
-CHECKBOX_SIZE, ROW1_HEIGHT, ROW2_HEIGHT, LEFT_PANEL_WIDTH, PANEL_GAP, TAB_BUTTON_HEIGHT
+CHECKBOX_SIZE, ROW1_HEIGHT, ROW2_HEIGHT, LEFT_PANEL_WIDTH, PANEL_GAP, TAB_BUTTON_HEIGHT,
+TOGGLE_BUTTON_WIDTH, TOGGLE_BUTTON_HEIGHT
 
 **Common overrides:** WINDOW_WIDTH, WINDOW_HEIGHT, MIN_WIDTH, MIN_HEIGHT, LEFT_PANEL_WIDTH, SIDEBAR_WIDTH, SEARCH_HEIGHT, ROW_HEIGHT, SUBTAB_BUTTON_HEIGHT. Use WINDOW_WIDTH and WINDOW_HEIGHT for main window dimensions.
 
@@ -411,6 +419,26 @@ local filterBar = OneWoW_GUI:CreateFilterBar(parent, {
 ```
 Creates a themed container bar (BG_SECONDARY + BORDER_DEFAULT) anchored across the top of parent.
 Add your own controls inside (dropdowns, search boxes, buttons) using existing library functions.
+
+### Sort controls (field dropdown + ascending/descending)
+```lua
+local sort = OneWoW_GUI:CreateSortControls(parent, {
+    sortFields = {
+        { key = "name", label = "Name" },
+        { key = "level", label = "Level" },
+    },
+    defaultField = "name",
+    defaultAsc = true,
+    dropdownWidth = 110,
+    onChange = function(field, ascending)
+        -- refresh list using field / ascending
+    end,
+})
+sort.dirBtn:SetPoint("LEFT", sort.dropdown, "RIGHT", 4, 0)
+local field, asc = sort:GetSort()
+sort:SetSort("level", false)
+```
+Returns a handle: `dropdown`, `dirBtn`, `GetSort()`, `SetSort(field, ascending)`. The direction button toggles ascending vs descending and uses collapse/expand atlases for the icon.
 
 ### Title bar
 ```lua
@@ -655,6 +683,22 @@ OneWoW_GUI:CreateVerticalPaneResizer({
 ```
 Caller anchors the left panel; only `SetWidth` on the left is updated. The right panel is re-anchored from the divider. **Clamp** (max left width and host resize) uses `rightMinWidth` only: `maxLeft = parentWidth - rightMinWidth - splitPadding`. With `mainFrame` and optionally `getMinRightWidth`, each drag tick **grows** the host (up to `resizeCap`) until `parent:GetWidth()` can satisfy `desiredLeft + max(rightMinWidth, getMinRightWidth()) + splitPadding`, so the window widens when the dynamic right column would be too narrow, without locking the divider when `getMinRightWidth()` is very large.
 
+### Horizontal pane resizer (top + bottom stacks)
+```lua
+OneWoW_GUI:CreateHorizontalPaneResizer({
+    parent = tab,
+    topPanel = topPanel,
+    bottomPanel = bottomPanel,
+    dividerHeight = 6,
+    topMinHeight = 100,
+    bottomMinHeight = 60,
+    onHeightChanged = function(bottomHeight)
+        -- optional: persist after mouse release (callback receives bottom panel height)
+    end,
+})
+```
+Caller anchors the top panel from the parent top; only `SetHeight` on the top panel is updated during drag. The bottom panel is re-anchored from the divider to the parent bottom.
+
 ---
 
 ## Section Headers
@@ -717,6 +761,30 @@ Correct pattern for multiline text entry areas. Fixes the focus dead-zone bug in
 Use this instead of manually creating `ScrollFrame + EditBox` pairs. Migrate existing scroll+editbox
 combos to this function to get the focus fix for free.
 
+### Virtualized list (large row counts)
+```lua
+local list = OneWoW_GUI:CreateVirtualizedList(listHostFrame, {
+    name = "MyList",
+    rowHeight = 22,
+    numVisibleRows = 40,
+    getCount = function() return #myData end,
+    getEntry = function(index) return myData[index] end,
+    onSelect = function(index, entry) end,
+    renderRow = function(btn, index, entry, isSelected)
+        btn:SetText(entry.displayName or tostring(entry))
+        btn._tooltipFullText = entry.tooltipText
+    end,
+    enableKeyboardNav = true,
+    focusCompetitor = searchEditBox,
+})
+list.Refresh()
+list.SetSelectedIndex(1)
+local idx = list.GetSelectedIndex()
+```
+Requires `getCount`, `getEntry`, and `onSelect`. Reuses a fixed pool of row buttons (`numVisibleRows`) and reparents them while scrolling. Optional `renderRow(btn, index, entry, isSelected)`; default row text uses `entry.displayName`. Set `btn._tooltipFullText` on a row button to show a simple `GameTooltip` on hover. With `enableKeyboardNav`, UP/DOWN moves selection; `focusCompetitor` should be an edit box that hooks focus so keyboard nav yields while typing.
+
+Returns: `listPanel` (the parent passed in), `listScroll`, `listContent`, `Refresh`, `SetSelectedIndex`, `GetSelectedIndex`.
+
 ### Style an existing scroll bar
 ```lua
 OneWoW_GUI:StyleScrollBar(scrollFrame, {
@@ -724,6 +792,8 @@ OneWoW_GUI:StyleScrollBar(scrollFrame, {
     offset = -2,              -- optional, right offset
 })
 ```
+
+Lower-level (same styling as above): `OneWoW_GUI:ApplyScrollBarStyle(scrollFrame.ScrollBar, containerFrame, -2)`
 
 ---
 
@@ -953,10 +1023,26 @@ These components exist in the library but are not fully documented here. See sou
 - `GetAddonVersion(addonName)` — returns addon version via C_AddOns
 - `GetProgressColor(current, max)` — returns color from PROGRESS_COLORS (NONE/LOW/MID/FULL)
 - `GetItemQualityColor(quality)` — returns r, g, b, a for item rarity (respects accessibility settings)
+- `IsSecret(value)` — true if the value is a secret value or secret table (Midnight restrictions)
+- `FormatNumber(n)` — thousands separators for integers (string digits)
+- `FormatGold(copper)` — colored gold/silver/copper string
 
 ---
 
 ## Utility
+
+### Secret values (Midnight)
+```lua
+if OneWoW_GUI:IsSecret(nameOrGuid) then
+    -- do not branch, persist, or stringify for addon logic
+end
+```
+
+### Formatting helpers
+```lua
+local s = OneWoW_GUI:FormatNumber(1234567)  -- "1,234,567"
+local goldStr = OneWoW_GUI:FormatGold(copperAmount)
+```
 
 ### Clear all children from a frame
 ```lua
@@ -986,18 +1072,22 @@ PADDING = 12            BUTTON_HEIGHT = 28    BUTTON_WIDTH = 100
 SEARCH_HEIGHT = 22      SEARCH_WIDTH = 200    CHECKBOX_SIZE = 24
 ROW1_HEIGHT = 35        ROW2_HEIGHT = 30
 LEFT_PANEL_WIDTH = 320  PANEL_GAP = 10        TAB_BUTTON_HEIGHT = 30
+TOGGLE_BUTTON_WIDTH = 50  TOGGLE_BUTTON_HEIGHT = 22
 ```
 
 ### Adding OneWoW_GUI to a new addon
 
 **Standard (recommended):** Add `## RequiredDeps: OneWoW_GUI` to your TOC. No need to add `OneWoW_GUI_DB` — OneWoW_GUI declares it. All suite addons use this approach.
 
-**Embedding (legacy):** Only if embedding the library files into your addon. Add `OneWoW_GUI_DB` to SavedVariables and all library files to load order (after LibStub, before any UI code). Embedding is uncommon in this suite.
+**Embedding (legacy):** Only if embedding the library files into your addon. Add `OneWoW_GUI_DB` to SavedVariables and mirror `OneWoW_GUI.toc` load order (embedded Libs first, then Core → Constants → `OneWoW_GUI.lua`, then widget files in TOC order, then Settings and Minimap last). Do not modify vendored files under `Libs\`. Embedding is uncommon in this suite.
 
 ```
 ## SavedVariables: MyAddon_DB, OneWoW_GUI_DB
 
 Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Libs\OneWoW_GUI\Core.lua
 Libs\OneWoW_GUI\Constants.lua
 Libs\OneWoW_GUI\OneWoW_GUI.lua
@@ -1009,4 +1099,5 @@ Libs\OneWoW_GUI\Layout.lua
 Libs\OneWoW_GUI\Panels.lua
 Libs\OneWoW_GUI\Icons.lua
 Libs\OneWoW_GUI\Settings.lua
+Libs\OneWoW_GUI\Minimap.lua
 ```
