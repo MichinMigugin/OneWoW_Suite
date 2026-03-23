@@ -1,13 +1,14 @@
 # OneWoW - Utility: DevTool
 
-**Developer tools for World of Warcraft addon development.** Inspect frames, debug events, monitor performance, and explore the game's UI structure. Part of the OneWoW Suite.
+**Developer tools for World of Warcraft addon development.** Inspect frames, debug events, monitor performance, browse textures and fonts, edit Lua snippets, and explore the game's UI structure. Part of the OneWoW Suite.
 
 ---
 
 ## Requirements
 
-- **World of Warcraft Retail 12.0+** (Midnight)
+- **World of Warcraft Retail** with an interface version supported by the addon TOC (currently **120001** and **120005**; Midnight-era retail)
 - **OneWoW_GUI** (required dependency)
+- **!BugGrabber** (optional) — if present, DevTool can mirror captured Lua errors into the Errors tab
 
 ---
 
@@ -22,18 +23,20 @@
 
 ## Slash Commands
 
-| Command   | Description              |
-|-----------|--------------------------|
-| `/dt`     | Toggle DevTool window    |
-| `/devtool`| Toggle DevTool window    |
-| `/devtools`| Toggle DevTool window   |
-| `/1wdt`   | Toggle DevTool window    |
+| Command    | Description              |
+|------------|--------------------------|
+| `/dt`      | Toggle DevTool window    |
+| `/devtool` | Toggle DevTool window    |
+| `/devtools`| Toggle DevTool window    |
+| `/1wdt`    | Toggle DevTool window    |
 
 The addon also registers in the **Addon Compartment** (game menu) for quick access.
 
 ---
 
 ## Features
+
+Tabs appear in this order: **Frame**, **Events**, **Errors**, **Textures**, **Fonts**, **Colors**, **Layout**, **Monitor**, **Editor**, **Settings**. The main window is **resizable**; size and position are restored between sessions. The window **closes automatically when you enter combat** (`PLAYER_REGEN_DISABLED`).
 
 ### Frame Tab
 
@@ -59,7 +62,7 @@ Monitor game events in real time:
 - **Filter** — Filter displayed events by name
 - **Event arguments** — Named parameters for known events (see [warcraft.wiki.gg/wiki/Events](https://warcraft.wiki.gg/wiki/Events))
 
-### Lua Tab (Error Logger)
+### Errors Tab (Lua / error logger)
 
 Track and debug addon errors:
 
@@ -67,6 +70,29 @@ Track and debug addon errors:
 - **Stack traces** — Full error details and stack traces
 - **Copy Error** — Copy selected error to clipboard
 - **Play Alert** — Optional sound on new errors
+- **!BugGrabber** — When the standalone !BugGrabber addon is loaded, DevTool subscribes to its capture pipeline and shows the same errors here (with an in-tab notice). Disable !BugGrabber if you only want DevTool's own capture.
+
+### Textures Tab
+
+Browse atlas and texture data shipped with DevTool for the current client flavor:
+
+- **By sheet / By atlas** — Switch between listing texture sheets and individual atlas names
+- **Search** — Filter the list
+- **Preview** — Zoom and pan sheet views; pick cells on multi-atlas sheets
+- **Bookmarks** — Favorite atlases (stored in SavedVariables)
+- **Copy helpers** — Copy atlas/texture names, snippets, and coordinates for paste into addon code
+
+Atlas catalog files are selected by game type via the addon TOC (e.g. mainline vs mainline-test); ensure your installed DevTool build matches how you launch the game.
+
+### Fonts Tab
+
+Explore **FrameXML font objects** and how they render:
+
+- **Searchable list** — Virtualized list of font object names
+- **Live preview** — Sample text with adjustable preview background color (saved when changed)
+- **Widget size presets** — Preview fonts in common UI control heights
+- **Bookmarks** — Mark favorite font objects
+- **Copy helpers** — Copy names and usage-oriented snippets
 
 ### Colors Tab
 
@@ -95,6 +121,20 @@ Real-time addon performance monitoring:
 - **Play/Pause** — Continuous or manual updates
 - **Show on Load** — Option to open Monitor tab automatically on login
 - **Filter** — Filter addons by name
+- **Pinned addon** — Optional focus window for a single addon (position and reopen behavior are saved)
+
+### Editor Tab
+
+In-game **Lua snippet workspace** for experiments and small scripts:
+
+- **Snippets** — Create, rename, duplicate, save, and delete snippets; organize with categories
+- **Syntax coloring** — WoW-oriented Lua highlighting and periodic syntax checks
+- **Find / replace** — Plain-text find with optional replace
+- **Undo / redo** — Per-snippet history (keyboard shortcuts shown in the tab tooltip)
+- **Run** — Executes the current snippet with `loadstring` in the normal addon environment; `print` output goes to the output panel below the editor
+- **Autosave** — Optional interval (minutes) for saving the active snippet
+
+**Security note:** Run executes arbitrary Lua with the same power as other addon code. Only run snippets you understand. This is a developer tool, not a sandbox.
 
 ### Settings Tab
 
@@ -119,8 +159,8 @@ Real-time addon performance monitoring:
 
 ## Who Should Use This
 
-- **Addon developers** — Debug and develop addons with frame inspection and error logging
-- **UI modders** — Inspect and understand the game's UI structure
+- **Addon developers** — Debug and develop addons with frame inspection, snippets, and error logging
+- **UI modders** — Inspect the game's UI structure and reference textures, fonts, and colors
 - **Troubleshooters** — Diagnose addon conflicts and errors
 - **Testers** — Monitor events and performance during QA
 
@@ -129,8 +169,9 @@ Real-time addon performance monitoring:
 ## Technical Notes
 
 - **Secret values** — Frame properties that return secret values (e.g., in instanced content) are safely masked
-- **SavedVariables** — `OneWoW_UtilityDevTool_DB` stores position, theme, language, minimap, monitor, and error settings
-- **Textures tab** — Currently disabled in the UI
+- **SavedVariables** — `OneWoW_UtilityDevTool_DB` stores window position, theme, language, minimap, monitor (including pinned addon), error logger settings, texture bookmarks and list column width, font preview background and bookmarks, editor snippets and layout options, and related UI preferences
+- **Clipboard** — Copy actions use the embedded **LibCopyPaste** library where applicable
+- **Embedded libraries** — LibStub, LibCopyPaste (vendored under `Libs/`; do not modify vendored libs when contributing)
 
 ---
 
@@ -147,5 +188,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for translation and code contribution gui
 
 ---
 
-**Author:** MichinMuggin / Ricky  
+**Authors:** OneWoW Dev Team (ricky, kellewic)  
 **Part of the OneWoW Suite**

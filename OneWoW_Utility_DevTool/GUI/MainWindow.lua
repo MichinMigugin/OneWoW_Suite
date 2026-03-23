@@ -36,7 +36,8 @@ function UI:Initialize()
     local TAB_COLORS = DU.TAB_INDEX_COLORS or 6
     local TAB_LAYOUT = DU.TAB_INDEX_LAYOUT or 7
     local TAB_MONITOR = DU.TAB_INDEX_MONITOR or 8
-    local TAB_SETTINGS = DU.TAB_INDEX_SETTINGS or 9
+    local TAB_EDITOR = DU.TAB_INDEX_EDITOR or 9
+    local TAB_SETTINGS = DU.TAB_INDEX_SETTINGS or 10
 
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
     local frame = OneWoW_GUI:CreateFrame(UIParent, {
@@ -102,6 +103,7 @@ function UI:Initialize()
         Addon.L["TAB_COLORS"],
         Addon.L["TAB_LAYOUT"],
         Addon.L["TAB_MONITOR"],
+        Addon.L["TAB_EDITOR"],
         Addon.L["TAB_SETTINGS"],
     }
 
@@ -150,9 +152,9 @@ function UI:Initialize()
         tabButtons[i] = btn
     end
 
-    local tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 =
+    local tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 =
         tabButtons[1], tabButtons[2], tabButtons[3], tabButtons[4],
-        tabButtons[5], tabButtons[6], tabButtons[7], tabButtons[8], tabButtons[9]
+        tabButtons[5], tabButtons[6], tabButtons[7], tabButtons[8], tabButtons[9], tabButtons[10]
 
     local function ResizeTabButtons()
         local frameWidth = frame:GetWidth()
@@ -183,7 +185,8 @@ function UI:Initialize()
     self.tabs[TAB_COLORS] = {button = tab6, content = self:CreateColorToolsTab(contentFrame)}
     self.tabs[TAB_LAYOUT] = {button = tab7, content = self:CreateLayoutTab(contentFrame)}
     self.tabs[TAB_MONITOR] = {button = tab8, content = self:CreateMonitorTab(contentFrame)}
-    self.tabs[TAB_SETTINGS] = {button = tab9, content = self:CreateSettingsTab(contentFrame)}
+    self.tabs[TAB_EDITOR] = {button = tab9, content = self:CreateEditorTab(contentFrame)}
+    self.tabs[TAB_SETTINGS] = {button = tab10, content = self:CreateSettingsTab(contentFrame)}
 
     local combatHide = CreateFrame("Frame", nil, frame)
     combatHide:SetScript("OnEvent", function()

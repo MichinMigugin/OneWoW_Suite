@@ -33,7 +33,27 @@ function Addon:InitializeDatabase()
             soundChoice = "off",
             copyFormat = "plain",
         },
+        editor = {
+            snippets = {},
+            categories = { "Uncategorized" },
+            indentSize = 3,
+            fontSize = 12,
+            autoSaveInterval = nil,
+            outputHeight = nil,
+            leftPaneWidth = nil,
+            lastOpenSnippet = nil,
+            untitledCounter = 1,
+            categoryCollapsed = {},
+        },
     }
+
+    local function mergeSubTable(dbSub, defaultSub)
+        for k, v in pairs(defaultSub) do
+            if dbSub[k] == nil then
+                dbSub[k] = v
+            end
+        end
+    end
 
     if not OneWoW_UtilityDevTool_DB then
         OneWoW_UtilityDevTool_DB = defaults
@@ -41,12 +61,9 @@ function Addon:InitializeDatabase()
         for key, value in pairs(defaults) do
             if OneWoW_UtilityDevTool_DB[key] == nil then
                 OneWoW_UtilityDevTool_DB[key] = value
-            elseif key == "errorDB" and type(OneWoW_UtilityDevTool_DB.errorDB) == "table" then
-                for ek, ev in pairs(value) do
-                    if OneWoW_UtilityDevTool_DB.errorDB[ek] == nil then
-                        OneWoW_UtilityDevTool_DB.errorDB[ek] = ev
-                    end
-                end
+            elseif type(value) == "table" and type(OneWoW_UtilityDevTool_DB[key]) == "table"
+                   and (key == "errorDB" or key == "editor" or key == "monitor") then
+                mergeSubTable(OneWoW_UtilityDevTool_DB[key], value)
             end
         end
     end

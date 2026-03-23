@@ -1,0 +1,1395 @@
+local ADDON_NAME, Addon = ...
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local L = Addon.L or {}
+local format = string.format
+local max, floor = math.max, math.floor
+local tinsert, wipe = tinsert, wipe
+local GetTime = GetTime
+
+function Addon.UI:CreateEditorTab(parent)
+    local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
+    local ES = Addon.EditorSyntax
+    local EE = Addon.EditorEngine
+    local D = Addon.EditorSyntaxData
+
+    local LEFT_DEFAULT = DU.EDITOR_LEFT_PANE_DEFAULT_WIDTH or 220
+    local LEFT_MIN = DU.EDITOR_LEFT_PANE_MIN_WIDTH or 160
+    local RIGHT_MIN = DU.EDITOR_RIGHT_PANE_MIN_WIDTH or 400
+    local DIVIDER_W = DU.EDITOR_DIVIDER_WIDTH or 6
+    local OUTPUT_DEFAULT_H = DU.EDITOR_OUTPUT_DEFAULT_HEIGHT or 120
+    local OUTPUT_MIN_H = DU.EDITOR_OUTPUT_MIN_HEIGHT or 60
+    local EDITOR_MIN_H = DU.EDITOR_EDITOR_MIN_HEIGHT or 100
+    local GUTTER_MIN_W = DU.EDITOR_GUTTER_MIN_WIDTH or 36
+    local DEFAULT_FONT_SIZE = DU.EDITOR_DEFAULT_FONT_SIZE or 12
+    local DEFAULT_INDENT = DU.EDITOR_DEFAULT_INDENT or 3
+    local SNIPPET_ROW_H = DU.EDITOR_SNIPPET_ROW_HEIGHT or 20
+    local CATEGORY_ROW_H = DU.EDITOR_CATEGORY_ROW_HEIGHT or 22
+    local COLORIZE_DEBOUNCE = DU.EDITOR_COLORIZE_DEBOUNCE or 0.2
+    local UNDO_DEBOUNCE = DU.EDITOR_UNDO_DEBOUNCE or 0.5
+    local STATUS_BAR_H = DU.EDITOR_STATUS_BAR_HEIGHT or 18
+    local SYNTAX_CHECK_DEBOUNCE = DU.EDITOR_SYNTAX_CHECK_DEBOUNCE or 5
+    local STATUS_CLEAR_DELAY = DU.EDITOR_STATUS_CLEAR_DELAY or 5
+
+    local MONOKAI_BG = D and D.MONOKAI and D.MONOKAI.BACKGROUND or {39/255, 40/255, 34/255, 1}
+    local GUTTER_BG = D and D.MONOKAI and D.MONOKAI.GUTTER_BG or {30/255, 31/255, 27/255, 1}
+
+    local tab = CreateFrame("Frame", nil, parent)
+    tab:SetAllPoints(parent)
+    tab:Hide()
+
+    local activeSnippetId = nil
+    local activeDialog = nil
+    local snippetRows = {}
+    local categoryHeaders = {}
+    local findBarVisible = false
+    local lastUndoTime = 0
+    local apiDocLoaded = false
+    local statusClearTimer = nil
+    local syntaxCheckTimer = nil
+    local syntaxCheckDirty = false
+    local lastCheckedText = nil
+    local refreshListTimer = nil
+
+    local function getDB()
+        return Addon.db and Addon.db.editor
+    end
+
+    local function getFont()
+        return OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
+    end
+
+    local function getFontSize()
+        local db = getDB()
+        return db and db.fontSize or DEFAULT_FONT_SIZE
+    end
+
+    local function getIndentSize()
+        local db = getDB()
+        return db and db.indentSize or DEFAULT_INDENT
+    end
+
+    local function loadAPIDocs()
+        if apiDocLoaded then return end
+        apiDocLoaded = true
+        if D and D.LoadAPIDocumentation then
+            D:LoadAPIDocumentation()
+        end
+    end
+
+    local updateGutter
+    local updateFontSize
+    local updateStatusMessage
+    local refreshSnippetList
+    local autoSaveTicker = nil
+
+    local btnHeight = 22
+    local btnGap = 4
+    local sectionGap = 14
+
+    local newBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_NEW"] or "New", height = btnHeight })
+    newBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
+
+    local renameBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_RENAME"] or "Rename", height = btnHeight })
+    renameBtn:SetPoint("LEFT", newBtn, "RIGHT", btnGap, 0)
+
+    local dupBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_DUPLICATE"] or "Duplicate", height = btnHeight })
+    dupBtn:SetPoint("LEFT", renameBtn, "RIGHT", btnGap, 0)
+
+    local saveBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_SAVE"] or "Save", height = btnHeight })
+    saveBtn:SetPoint("LEFT", dupBtn, "RIGHT", btnGap, 0)
+
+    local deleteBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_DELETE"] or "Delete", height = btnHeight })
+    deleteBtn:SetPoint("LEFT", saveBtn, "RIGHT", btnGap, 0)
+
+
+    local runBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_RUN"] or "Run", height = btnHeight })
+    runBtn:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -5, -5)
+
+    local autoSaveBox = OneWoW_GUI:CreateEditBox(tab, { width = 30, height = btnHeight })
+    autoSaveBox:SetNumeric(true)
+    autoSaveBox:SetMaxLetters(2)
+    autoSaveBox:Hide()
+
+    local autoSaveBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_AUTOSAVE"] or "Autosave", height = btnHeight })
+    autoSaveBtn:SetPoint("RIGHT", runBtn, "LEFT", -sectionGap, 0)
+
+    local function refreshAutoSaveLayout()
+        local edb = getDB()
+        local interval = edb and edb.autoSaveInterval
+        autoSaveBtn:ClearAllPoints()
+        if interval then
+            autoSaveBox:ClearAllPoints()
+            autoSaveBox:SetPoint("RIGHT", runBtn, "LEFT", -sectionGap, 0)
+            autoSaveBox:SetText(tostring(interval))
+            autoSaveBox:Show()
+            autoSaveBtn:SetPoint("RIGHT", autoSaveBox, "LEFT", -2, 0)
+            autoSaveBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            autoSaveBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            autoSaveBtn.text:SetTextColor(1, 1, 1)
+        else
+            autoSaveBox:Hide()
+            autoSaveBtn:SetPoint("RIGHT", runBtn, "LEFT", -sectionGap, 0)
+            autoSaveBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            autoSaveBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            autoSaveBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+
+    local function startAutoSaveTicker()
+        if autoSaveTicker then autoSaveTicker:Cancel(); autoSaveTicker = nil end
+        local edb = getDB()
+        local interval = edb and edb.autoSaveInterval
+        if not interval then return end
+        autoSaveTicker = C_Timer.NewTicker(interval * 60, function()
+            if activeSnippetId and tab.editBox then
+                local snippet = EE:GetSnippet(activeSnippetId)
+                if snippet and not snippet.untitled and EE:IsModified(activeSnippetId, tab.editBox:GetText()) then
+                    tab:SaveCurrentSnippet()
+                end
+            end
+        end)
+    end
+
+    local function stopAutoSaveTicker()
+        if autoSaveTicker then autoSaveTicker:Cancel(); autoSaveTicker = nil end
+    end
+
+    autoSaveBtn:SetScript("OnClick", function()
+        local edb = getDB()
+        if not edb then return end
+        if edb.autoSaveInterval then
+            edb.autoSaveInterval = nil
+            stopAutoSaveTicker()
+        else
+            edb.autoSaveInterval = 5
+            startAutoSaveTicker()
+        end
+        refreshAutoSaveLayout()
+    end)
+    autoSaveBtn:HookScript("OnLeave", function() refreshAutoSaveLayout() end)
+    autoSaveBtn:HookScript("OnEnter", function(self)
+        local edb = getDB()
+        if edb and edb.autoSaveInterval then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            self.text:SetTextColor(1, 1, 1)
+        end
+    end)
+
+    local function clampAutoSaveInterval()
+        local edb = getDB()
+        if not edb or not edb.autoSaveInterval then return end
+        local val = tonumber(autoSaveBox:GetText()) or 5
+        if val < 1 then val = 1 end
+        if val > 60 then val = 60 end
+        edb.autoSaveInterval = val
+        autoSaveBox:SetText(tostring(val))
+        stopAutoSaveTicker()
+        startAutoSaveTicker()
+    end
+
+    autoSaveBox:SetScript("OnEnterPressed", function(self) self:ClearFocus(); clampAutoSaveInterval() end)
+    autoSaveBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    autoSaveBox:HookScript("OnEditFocusLost", clampAutoSaveInterval)
+
+    local codeOptsBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_CODE_OPTIONS"] or "Code Options", height = btnHeight })
+    codeOptsBtn:SetPoint("RIGHT", autoSaveBtn, "LEFT", -sectionGap, 0)
+    codeOptsBtn:SetScript("OnClick", function(self, button)
+        if button ~= "LeftButton" then return end
+        MenuUtil.CreateContextMenu(self, function(_, root)
+            local indentSub = root:CreateButton(L["EDITOR_LABEL_INDENT"] or "Indent")
+            for _, size in ipairs({2, 3, 4}) do
+                indentSub:CreateRadio(tostring(size),
+                    function() return getIndentSize() == size end,
+                    function()
+                        local edb = getDB()
+                        if edb then edb.indentSize = size end
+                        if ES and tab.editBox then
+                            ES.setTabWidth(tab.editBox, size)
+                            if activeSnippetId then
+                                local code = tab.editBox:GetText()
+                                if code and code ~= "" then
+                                    local reformatted = ES.indentCode(code, size)
+                                    tab.editBox:SetText(reformatted)
+                                    if ES then ES.forceDirty(tab.editBox) end
+                                    updateGutter()
+                                end
+                                EE:SetSnippetIndent(activeSnippetId, size)
+                            end
+                        end
+                    end)
+            end
+            local sizeSub = root:CreateButton(L["EDITOR_LABEL_FONT_SIZE"] or "Font Size")
+            for _, sz in ipairs({10, 12, 14, 16, 18}) do
+                sizeSub:CreateRadio(tostring(sz),
+                    function() return getFontSize() == sz end,
+                    function()
+                        local edb = getDB()
+                        if edb then edb.fontSize = sz end
+                        if updateFontSize then updateFontSize(sz) end
+                    end)
+            end
+        end)
+    end)
+
+    local statusBar = CreateFrame("Frame", nil, tab, "BackdropTemplate")
+    statusBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    statusBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    statusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    statusBar:SetHeight(STATUS_BAR_H)
+    statusBar:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 5, 5)
+    statusBar:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
+
+    local statusMsgFS = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    statusMsgFS:SetPoint("LEFT", statusBar, "LEFT", 6, 0)
+    statusMsgFS:SetJustifyH("LEFT")
+    statusMsgFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local lnColFS = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    lnColFS:SetPoint("RIGHT", statusBar, "RIGHT", -6, 0)
+    lnColFS:SetJustifyH("RIGHT")
+    lnColFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local syntaxErrFS = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    syntaxErrFS:SetPoint("LEFT", statusMsgFS, "RIGHT", 12, 0)
+    syntaxErrFS:SetPoint("RIGHT", lnColFS, "LEFT", -12, 0)
+    syntaxErrFS:SetJustifyH("LEFT")
+    syntaxErrFS:SetWordWrap(false)
+    syntaxErrFS:SetTextColor(1, 0.3, 0.3, 1)
+
+    local leftPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = LEFT_DEFAULT, height = 100 })
+    leftPanel:ClearAllPoints()
+    leftPanel:SetPoint("TOPLEFT", newBtn, "BOTTOMLEFT", 0, -4)
+    leftPanel:SetPoint("BOTTOM", statusBar, "TOP", 0, 0)
+    local db = getDB()
+    leftPanel:SetWidth(db and db.leftPaneWidth or LEFT_DEFAULT)
+    self:StyleContentPanel(leftPanel)
+
+    local newCatBtn = OneWoW_GUI:CreateFitTextButton(leftPanel, { text = L["EDITOR_BTN_NEW_CATEGORY"] or "New Category", height = 18 })
+    newCatBtn:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -3)
+
+    local helpBtn = OneWoW_GUI:CreateFitTextButton(leftPanel, { text = "?", height = 18, minWidth = 24 })
+    helpBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -22, -3)
+    helpBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(L["EDITOR_SHORTCUTS_TITLE"] or "Keyboard Shortcuts", 1, 1, 1)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_SAVE"] or "Ctrl+S — Save", nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_UNDO"] or "Ctrl+Z — Undo", nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_REDO"] or "Ctrl+Y — Redo", nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_FIND"] or "Ctrl+F — Find / Replace", nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_RUN"] or "Ctrl+Enter — Run", nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_INDENT"] or "Tab — Indent", nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_CLOSE_FIND"] or "Escape — Close find bar", nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    helpBtn:SetScript("OnLeave", GameTooltip_Hide)
+
+    local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "DevToolEditorLeftScroll" })
+    leftScroll:ClearAllPoints()
+    leftScroll:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -24)
+    leftScroll:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -20, 4)
+    leftScroll:HookScript("OnSizeChanged", function(self, w) leftContent:SetWidth(w) end)
+
+    local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
+    self:StyleContentPanel(rightPanel)
+
+    OneWoW_GUI:CreateVerticalPaneResizer({
+        parent = tab,
+        leftPanel = leftPanel,
+        rightPanel = rightPanel,
+        dividerWidth = DIVIDER_W,
+        leftMinWidth = LEFT_MIN,
+        rightMinWidth = RIGHT_MIN,
+        bottomOuterInset = STATUS_BAR_H + 5,
+        rightOuterInset = 5,
+        onWidthChanged = function(w)
+            local edb = getDB()
+            if edb then edb.leftPaneWidth = w end
+        end,
+    })
+
+    local editorPanel = CreateFrame("Frame", nil, rightPanel)
+    editorPanel:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
+    editorPanel:SetPoint("RIGHT", rightPanel, "RIGHT", 0, 0)
+    local savedOutputH = db and db.outputHeight
+    editorPanel:SetHeight(EDITOR_MIN_H)
+
+    local initialLayoutDone = false
+    rightPanel:HookScript("OnSizeChanged", function(self, w, h)
+        if initialLayoutDone or not h or h < 1 then return end
+        initialLayoutDone = true
+        local outputH
+        if savedOutputH then
+            outputH = savedOutputH
+        else
+            outputH = floor(h / 4)
+        end
+        local topH = max(EDITOR_MIN_H, h - outputH - 6)
+        editorPanel:SetHeight(topH)
+    end)
+
+    local outputPanel = CreateFrame("Frame", nil, rightPanel, "BackdropTemplate")
+    outputPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    outputPanel:SetBackdropColor(unpack(MONOKAI_BG))
+    outputPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+    OneWoW_GUI:CreateHorizontalPaneResizer({
+        parent = rightPanel,
+        topPanel = editorPanel,
+        bottomPanel = outputPanel,
+        dividerHeight = 6,
+        topMinHeight = EDITOR_MIN_H,
+        bottomMinHeight = OUTPUT_MIN_H,
+        onHeightChanged = function(h)
+            local edb = getDB()
+            if edb then edb.outputHeight = h end
+        end,
+    })
+
+    local findBar = CreateFrame("Frame", nil, editorPanel, "BackdropTemplate")
+    findBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    findBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    findBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    findBar:SetHeight(28)
+    findBar:SetPoint("TOPLEFT", editorPanel, "TOPLEFT", 0, 0)
+    findBar:SetPoint("RIGHT", editorPanel, "RIGHT", 0, 0)
+    findBar:Hide()
+
+    local findBox = OneWoW_GUI:CreateEditBox(findBar, { width = 150, height = 22, placeholderText = L["EDITOR_FIND_PLACEHOLDER"] or "Find..." })
+    findBox:SetPoint("LEFT", findBar, "LEFT", 4, 0)
+
+    local findNextBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_NEXT"] or "Next", height = 22 })
+    findNextBtn:SetPoint("LEFT", findBox, "RIGHT", 2, 0)
+
+    local findPrevBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_PREV"] or "Prev", height = 22 })
+    findPrevBtn:SetPoint("LEFT", findNextBtn, "RIGHT", 2, 0)
+
+    local replaceBox = OneWoW_GUI:CreateEditBox(findBar, { width = 120, height = 22, placeholderText = L["EDITOR_REPLACE_PLACEHOLDER"] or "Replace..." })
+    replaceBox:SetPoint("LEFT", findPrevBtn, "RIGHT", 6, 0)
+
+    local replaceBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_REPLACE"] or "Replace", height = 22 })
+    replaceBtn:SetPoint("LEFT", replaceBox, "RIGHT", 2, 0)
+
+    local replaceAllBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_REPLACE_ALL"] or "All", height = 22 })
+    replaceAllBtn:SetPoint("LEFT", replaceBtn, "RIGHT", 2, 0)
+
+    local findCloseBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = "X", height = 22, minWidth = 22 })
+    findCloseBtn:SetPoint("RIGHT", findBar, "RIGHT", -2, 0)
+
+    local gutterFrame = CreateFrame("Frame", nil, editorPanel, "BackdropTemplate")
+    gutterFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    gutterFrame:SetBackdropColor(unpack(GUTTER_BG))
+    gutterFrame:SetBackdropBorderColor(unpack(GUTTER_BG))
+    gutterFrame:SetClipsChildren(true)
+    gutterFrame:SetWidth(GUTTER_MIN_W)
+    gutterFrame:SetPoint("TOPLEFT", editorPanel, "TOPLEFT", 0, 0)
+    gutterFrame:SetPoint("BOTTOM", editorPanel, "BOTTOM", 0, 0)
+
+    local gutterFS = gutterFrame:CreateFontString(nil, "OVERLAY")
+    local monoFont = getFont()
+    local fontSize = getFontSize()
+    gutterFS:SetFont(monoFont, fontSize, "")
+    gutterFS:SetJustifyH("LEFT")
+    gutterFS:SetJustifyV("TOP")
+    gutterFS:SetTextColor(0.52, 0.52, 0.46, 1)
+    gutterFS:SetPoint("TOPRIGHT", gutterFrame, "TOPRIGHT", -4, -8)
+    gutterFS:SetPoint("BOTTOMLEFT", gutterFrame, "BOTTOMLEFT", 2, 4)
+
+    local editorBg = CreateFrame("Frame", nil, editorPanel, "BackdropTemplate")
+    editorBg:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    editorBg:SetBackdropColor(unpack(MONOKAI_BG))
+    editorBg:SetBackdropBorderColor(unpack(MONOKAI_BG))
+    editorBg:SetPoint("TOPLEFT", gutterFrame, "TOPRIGHT", 0, 0)
+    editorBg:SetPoint("BOTTOMRIGHT", editorPanel, "BOTTOMRIGHT", 0, 0)
+
+    local scrollFrame = CreateFrame("ScrollFrame", "DevToolEditorScrollFrame", editorBg, "UIPanelScrollFrameTemplate")
+    scrollFrame:SetPoint("TOPLEFT", editorBg, "TOPLEFT", 4, -4)
+    scrollFrame:SetPoint("BOTTOMRIGHT", editorBg, "BOTTOMRIGHT", -22, 4)
+    scrollFrame:EnableMouse(true)
+    scrollFrame:EnableMouseWheel(true)
+    OneWoW_GUI:ApplyScrollBarStyle(scrollFrame.ScrollBar, editorBg, -2)
+
+    local editBox = CreateFrame("EditBox", "DevToolEditorEditBox", scrollFrame)
+    editBox:SetMultiLine(true)
+    editBox:SetAutoFocus(false)
+    editBox:SetMaxLetters(0)
+    editBox:SetHeight(1)
+    editBox:SetTextInsets(4, 4, 4, 4)
+    editBox:SetFont(monoFont, fontSize, "")
+    editBox:SetTextColor(0.97, 0.97, 0.95, 1)
+    scrollFrame:SetScrollChild(editBox)
+    tab.editBox = editBox
+
+    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+        editBox:SetWidth(max(1, w))
+    end)
+    scrollFrame:HookScript("OnMouseDown", function()
+        editBox:SetFocus()
+    end)
+
+    local function updateFindBarLayout()
+        gutterFrame:ClearAllPoints()
+        gutterFrame:SetPoint("BOTTOM", editorPanel, "BOTTOM", 0, 0)
+        if findBarVisible then
+            findBar:Show()
+            gutterFrame:SetPoint("TOPLEFT", findBar, "BOTTOMLEFT", 0, 0)
+        else
+            findBar:Hide()
+            gutterFrame:SetPoint("TOPLEFT", editorPanel, "TOPLEFT", 0, 0)
+        end
+        editorBg:ClearAllPoints()
+        editorBg:SetPoint("TOPLEFT", gutterFrame, "TOPRIGHT", 0, 0)
+        editorBg:SetPoint("BOTTOMRIGHT", editorPanel, "BOTTOMRIGHT", 0, 0)
+    end
+
+    local noSnippetMsg = editorPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    noSnippetMsg:SetPoint("CENTER", editorBg, "CENTER", 0, 0)
+    noSnippetMsg:SetText(L["EDITOR_MSG_NO_SNIPPET"] or "Create or select a snippet to begin editing.")
+    noSnippetMsg:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local clearOutputBtn = OneWoW_GUI:CreateFitTextButton(outputPanel, { text = L["EDITOR_BTN_CLEAR_OUTPUT"] or "Clear", height = 18 })
+    clearOutputBtn:SetPoint("TOPRIGHT", outputPanel, "TOPRIGHT", -4, -2)
+
+    local copyOutputBtn = OneWoW_GUI:CreateFitTextButton(outputPanel, { text = L["EDITOR_BTN_COPY_OUTPUT"] or "Copy", height = 18 })
+    copyOutputBtn:SetPoint("RIGHT", clearOutputBtn, "LEFT", -4, 0)
+
+    local outputLabel = outputPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    outputLabel:SetPoint("TOPLEFT", outputPanel, "TOPLEFT", 6, -4)
+    outputLabel:SetText(L["EDITOR_LABEL_OUTPUT"] or "Output")
+    outputLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local outputScroll = CreateFrame("ScrollingMessageFrame", nil, outputPanel)
+    outputScroll:SetPoint("TOPLEFT", outputPanel, "TOPLEFT", 6, -22)
+    outputScroll:SetPoint("BOTTOMRIGHT", outputPanel, "BOTTOMRIGHT", -6, 24)
+    outputScroll:SetFont(monoFont, fontSize, "")
+    outputScroll:SetTextColor(0.6, 0.6, 0.6, 1)
+    outputScroll:SetJustifyH("LEFT")
+    outputScroll:SetMaxLines(500)
+    outputScroll:SetFading(false)
+    outputScroll:SetInsertMode(SCROLLING_MESSAGE_FRAME_INSERT_MODE_BOTTOM)
+    outputScroll:EnableMouseWheel(true)
+    outputScroll:SetScript("OnMouseWheel", function(self, delta)
+        if delta > 0 then self:ScrollUp()
+        else self:ScrollDown() end
+    end)
+
+    local commandBox = OneWoW_GUI:CreateEditBox(outputPanel, {
+        width = 100,
+        height = 20,
+        placeholderText = L["EDITOR_PROMPT_COMMAND"] or "> ",
+    })
+    commandBox:SetPoint("BOTTOMLEFT", outputPanel, "BOTTOMLEFT", 4, 2)
+    commandBox:SetPoint("BOTTOMRIGHT", outputPanel, "BOTTOMRIGHT", -4, 2)
+
+    local outputBuffer = {}
+
+    clearOutputBtn:SetScript("OnClick", function()
+        outputScroll:Clear()
+        wipe(outputBuffer)
+    end)
+
+    copyOutputBtn:SetScript("OnClick", function()
+        if #outputBuffer == 0 then return end
+        Addon:CopyToClipboard(table.concat(outputBuffer, "\n"), L["EDITOR_LABEL_OUTPUT"] or "Output")
+    end)
+
+    local function addOutput(msg, msgType)
+        if not msg then return end
+        tinsert(outputBuffer, tostring(msg))
+        local color
+        if msgType == "error" then
+            color = "|cFFFF0000"
+        elseif msgType == "success" then
+            color = "|cFF00FF00"
+        else
+            color = "|cFF999999"
+        end
+        outputScroll:AddMessage(color .. tostring(msg) .. "|r")
+    end
+
+    EE:SetOutputHandler(addOutput)
+
+    updateFontSize = function(sz)
+        local font = getFont()
+        editBox:SetFont(font, sz, "")
+        gutterFS:SetFont(font, sz, "")
+        outputScroll:SetFont(font, sz, "")
+    end
+
+    updateStatusMessage = function(msg)
+        if statusClearTimer then
+            statusClearTimer:Cancel()
+            statusClearTimer = nil
+        end
+        statusMsgFS:SetText(msg or "")
+        if msg and msg ~= "" then
+            statusClearTimer = C_Timer.NewTimer(STATUS_CLEAR_DELAY, function()
+                statusMsgFS:SetText("")
+                statusClearTimer = nil
+            end)
+        end
+    end
+
+    local function updateLnCol()
+        if not activeSnippetId then
+            lnColFS:SetText("")
+            return
+        end
+        local plainPos = ES and ES.getPlainCursorPos(editBox) or editBox:GetCursorPosition()
+        local text = editBox:GetText()
+        local line = 1
+        local col = plainPos + 1
+        local pos = 0
+        for lineText in text:gmatch("([^\n]*)\n") do
+            local lineEnd = pos + #lineText + 1
+            if plainPos < lineEnd then
+                col = plainPos - pos + 1
+                break
+            end
+            pos = lineEnd
+            line = line + 1
+        end
+        if pos <= plainPos then
+            col = plainPos - pos + 1
+        end
+        lnColFS:SetText(format(L["EDITOR_STATUS_LN_COL"] or "Ln %d, Col %d", line, col))
+    end
+
+    local function doSyntaxCheck()
+        if not activeSnippetId then
+            syntaxErrFS:SetText("")
+            return
+        end
+        local text = editBox:GetText()
+        if text == lastCheckedText then return end
+        lastCheckedText = text
+        local fn, err = loadstring(text, "syntax_check")
+        if fn then
+            syntaxErrFS:SetText("")
+            if errorLine then
+                errorLine = nil
+                updateGutter()
+            end
+        else
+            local msg = err or ""
+            msg = msg:gsub("^%[string \"syntax_check\"%]:", "")
+            syntaxErrFS:SetText(msg)
+        end
+    end
+
+    local function resetSyntaxCheck()
+        syntaxErrFS:SetText("")
+        lastCheckedText = nil
+        syntaxCheckDirty = false
+        if syntaxCheckTimer then
+            syntaxCheckTimer:Cancel()
+            syntaxCheckTimer = nil
+        end
+    end
+
+    local function scheduleSyntaxCheck()
+        syntaxCheckDirty = true
+        if syntaxCheckTimer then
+            syntaxCheckTimer:Cancel()
+        end
+        syntaxCheckTimer = C_Timer.NewTimer(SYNTAX_CHECK_DEBOUNCE, function()
+            syntaxCheckTimer = nil
+            if syntaxCheckDirty then
+                syntaxCheckDirty = false
+                doSyntaxCheck()
+            end
+        end)
+    end
+
+    local errorLine = nil
+
+    updateGutter = function()
+        if not tab.editBox then return end
+        local text = editBox:GetText(true)
+        local lines = {}
+        local count = 1
+        local gutterColor = D and D.MONOKAI and D.MONOKAI.GUTTER_TEXT or "858575"
+        local errColor = D and D.MONOKAI and D.MONOKAI.ERROR_LINE or "FF1111"
+
+        for line in text:gmatch("([^\n]*)\n") do
+            if count == errorLine then
+                tinsert(lines, "|cFF" .. errColor .. count .. "|r")
+            else
+                tinsert(lines, "|cFF" .. gutterColor .. count .. "|r")
+            end
+            count = count + 1
+        end
+
+        local lastLine = text:match("[^\n]*$") or ""
+        if count == errorLine then
+            tinsert(lines, "|cFF" .. errColor .. count .. "|r")
+        else
+            tinsert(lines, "|cFF" .. gutterColor .. count .. "|r")
+        end
+
+        gutterFS:SetText(table.concat(lines, "\n"))
+
+        local numDigits = max(2, #tostring(count))
+        local gutterW = max(GUTTER_MIN_W, numDigits * 8 + 12)
+        gutterFrame:SetWidth(gutterW)
+    end
+
+    local function syncGutterScroll()
+        local offset = scrollFrame:GetVerticalScroll()
+        gutterFS:ClearAllPoints()
+        gutterFS:SetPoint("TOPRIGHT", gutterFrame, "TOPRIGHT", -4, -8 + offset)
+        gutterFS:SetPoint("LEFT", gutterFrame, "LEFT", 2, 0)
+    end
+
+    scrollFrame:HookScript("OnVerticalScroll", function()
+        syncGutterScroll()
+    end)
+
+    editBox:SetScript("OnCursorChanged", function(self, x, y, w, h)
+        ScrollingEdit_OnCursorChanged(self, x, y, w, h)
+        updateGutter()
+        updateLnCol()
+    end)
+
+    editBox:HookScript("OnUpdate", function(self, elapsed)
+        ScrollingEdit_OnUpdate(self, elapsed, scrollFrame)
+    end)
+
+    editBox:SetScript("OnTextSet", function()
+        updateGutter()
+    end)
+
+    refreshSnippetList = function()
+        for _, row in pairs(snippetRows) do row:Hide() end
+        for _, hdr in pairs(categoryHeaders) do hdr:Hide() end
+        wipe(snippetRows)
+        wipe(categoryHeaders)
+
+        local edb = getDB()
+        if not edb then return end
+        local categories = EE:GetCategories()
+        local yOff = 0
+
+        for _, catName in ipairs(categories) do
+            local collapsed = edb.categoryCollapsed[catName]
+
+            local header = CreateFrame("Button", nil, leftContent, "BackdropTemplate")
+            header:SetHeight(CATEGORY_ROW_H)
+            header:SetPoint("TOPLEFT", leftContent, "TOPLEFT", 0, -yOff)
+            header:SetPoint("RIGHT", leftContent, "RIGHT", 0, 0)
+            header:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+            header:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            header:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+            local arrow = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            arrow:SetPoint("LEFT", header, "LEFT", 4, 0)
+            arrow:SetText(collapsed and "+" or "-")
+            arrow:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+            local catLabel = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            catLabel:SetPoint("LEFT", arrow, "RIGHT", 4, 0)
+            catLabel:SetText(catName)
+            catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+            local snippets = EE:GetSnippetsByCategory(catName)
+            local snippetCount = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            snippetCount:SetPoint("RIGHT", header, "RIGHT", -6, 0)
+            snippetCount:SetText("(" .. #snippets .. ")")
+            snippetCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+            header:SetScript("OnClick", function()
+                edb.categoryCollapsed[catName] = not edb.categoryCollapsed[catName]
+                refreshSnippetList()
+            end)
+
+            header:SetScript("OnMouseDown", function(self, button)
+                if button == "RightButton" then
+                    local defaultCat = L["EDITOR_CATEGORY_DEFAULT"] or "Uncategorized"
+                    if catName == defaultCat then return end
+                    MenuUtil.CreateContextMenu(self, function(_, root)
+                        root:CreateButton(L["EDITOR_CTX_RENAME_CATEGORY"] or "Rename Category", function()
+                            tab:ShowCategoryRenameDialog(catName)
+                        end)
+                        root:CreateButton(L["EDITOR_CTX_DELETE_CATEGORY"] or "Delete Category", function()
+                            tab:ShowCategoryDeleteConfirm(catName)
+                        end)
+                    end)
+                end
+            end)
+
+            tinsert(categoryHeaders, header)
+            yOff = yOff + CATEGORY_ROW_H
+
+            if not collapsed then
+                for _, snippet in ipairs(snippets) do
+                    local row = CreateFrame("Button", nil, leftContent, "BackdropTemplate")
+                    row:SetHeight(SNIPPET_ROW_H)
+                    row:SetPoint("TOPLEFT", leftContent, "TOPLEFT", 0, -yOff)
+                    row:SetPoint("RIGHT", leftContent, "RIGHT", 0, 0)
+                    row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+
+                    local isActive = snippet.id == activeSnippetId
+                    local isModified = EE:IsModified(snippet.id, snippet.id == activeSnippetId and editBox:GetText() or snippet.code)
+                    if isActive then
+                        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                    else
+                        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                    end
+
+                    local indicator = row:CreateTexture(nil, "ARTWORK")
+                    indicator:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+                    indicator:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
+                    indicator:SetWidth(12)
+                    if isModified then
+                        indicator:SetColorTexture(0.8, 0.2, 0.2, 0.9)
+                    else
+                        local r, g, b, a = OneWoW_GUI:GetThemeColor(isActive and "ACCENT_PRIMARY" or "BG_SECONDARY")
+                        indicator:SetColorTexture(r, g, b, a)
+                    end
+
+                    local rowLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    rowLabel:SetPoint("LEFT", row, "LEFT", 18, 0)
+                    rowLabel:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+                    rowLabel:SetJustifyH("LEFT")
+                    rowLabel:SetWordWrap(false)
+
+                    rowLabel:SetText(snippet.name or "?")
+
+                    if isActive then
+                        rowLabel:SetTextColor(1, 1, 1, 1)
+                    else
+                        rowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                    end
+
+                    row:SetScript("OnClick", function()
+                        tab:SwitchToSnippet(snippet.id)
+                    end)
+
+                    row:SetScript("OnMouseDown", function(self, button)
+                        if button == "RightButton" then
+                            MenuUtil.CreateContextMenu(self, function(_, root)
+                                root:CreateButton(L["EDITOR_CTX_RENAME"] or "Rename", function()
+                                    tab:ShowRenameDialog(snippet.id)
+                                end)
+                                root:CreateButton(L["EDITOR_CTX_DUPLICATE"] or "Duplicate", function()
+                                    local newId = EE:DuplicateSnippet(snippet.id)
+                                    if newId then
+                                        local s = EE:GetSnippet(newId)
+                                        updateStatusMessage(format(L["EDITOR_STATUS_SNIPPET_DUPLICATED"] or "Duplicated: %s", s and s.name or ""))
+                                        refreshSnippetList()
+                                        tab:SwitchToSnippet(newId, true)
+                                    end
+                                end)
+                                local moveSub = root:CreateButton(L["EDITOR_CTX_MOVE_TO"] or "Move to")
+                                for _, cat in ipairs(EE:GetCategories()) do
+                                    if cat ~= snippet.category then
+                                        moveSub:CreateButton(cat, function()
+                                            EE:MoveSnippet(snippet.id, cat)
+                                            refreshSnippetList()
+                                        end)
+                                    end
+                                end
+                                root:CreateButton(L["EDITOR_CTX_DELETE"] or "Delete", function()
+                                    tab:ShowDeleteConfirm(snippet.id)
+                                end)
+                            end)
+                        end
+                    end)
+
+                    row:SetScript("OnEnter", function(self)
+                        if snippet.id ~= activeSnippetId then
+                            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                        end
+                    end)
+                    row:SetScript("OnLeave", function(self)
+                        if snippet.id ~= activeSnippetId then
+                            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                        end
+                    end)
+
+                    tinsert(snippetRows, row)
+                    yOff = yOff + SNIPPET_ROW_H
+                end
+            end
+        end
+
+        leftContent:SetHeight(max(1, yOff))
+    end
+
+    local function loadSnippetIntoEditor(id, skipUnsavedCheck)
+        local snippet = EE:GetSnippet(id)
+        if not snippet then return end
+
+        activeSnippetId = id
+        EE:InitSavedSnapshot(id)
+
+        local code = snippet.code or ""
+        local currentIndent = getIndentSize()
+        local snippetIndent = snippet.indentSize
+        if snippetIndent and snippetIndent ~= currentIndent and code ~= "" and ES then
+            code = ES.indentCode(code, currentIndent)
+            EE:SetSnippetIndent(id, currentIndent)
+            snippet.code = code
+            EE:MarkSaved(id, code)
+        end
+
+        editBox:SetText(code)
+        EE:ClearUndo(id)
+        EE:QueueUndo(id, code)
+        errorLine = nil
+        resetSyntaxCheck()
+
+        noSnippetMsg:Hide()
+        editBox:Show()
+        scrollFrame:Show()
+        gutterFrame:Show()
+
+        if ES and ES.isEnabled and not ES.isEnabled(editBox) then
+            ES.enable(editBox, currentIndent)
+        end
+        if ES then
+            ES.setTabWidth(editBox, currentIndent)
+            ES.forceDirty(editBox)
+        end
+
+        updateGutter()
+        refreshSnippetList()
+        editBox:SetFocus()
+
+        local edb = getDB()
+        if edb then edb.lastOpenSnippet = id end
+    end
+
+    function tab:SwitchToSnippet(id, skipUnsavedCheck)
+        if id == activeSnippetId then return end
+
+        if not skipUnsavedCheck and activeSnippetId then
+            local currentText = editBox:GetText()
+            if EE:IsModified(activeSnippetId, currentText) then
+                self:ShowUnsavedDialog(function()
+                    EE:SaveSnippet(activeSnippetId, currentText)
+                    loadSnippetIntoEditor(id)
+                end, function()
+                    loadSnippetIntoEditor(id)
+                end)
+                return
+            end
+        end
+
+        loadSnippetIntoEditor(id)
+    end
+
+    function tab:SaveCurrentSnippet()
+        if not activeSnippetId then return end
+        local snippet = EE:GetSnippet(activeSnippetId)
+        if not snippet then return end
+
+        if snippet.untitled then
+            self:ShowRenameDialog(activeSnippetId, function()
+                local s = EE:GetSnippet(activeSnippetId)
+                local text = editBox:GetText()
+                local trimmed = (text or ""):gsub("\n+$", "\n")
+                if text ~= trimmed then
+                    editBox:SetText(trimmed)
+                    if ES then ES.forceDirty(editBox) end
+                    updateGutter()
+                end
+                EE:SaveSnippet(activeSnippetId, trimmed)
+                doSyntaxCheck()
+                updateStatusMessage(format(L["EDITOR_STATUS_SAVED"] or "Saved: %s", s and s.name or ""))
+                refreshSnippetList()
+            end)
+            return
+        end
+
+        local text = editBox:GetText()
+        local trimmed = (text or ""):gsub("\n+$", "\n")
+        if text ~= trimmed then
+            editBox:SetText(trimmed)
+            if ES then ES.forceDirty(editBox) end
+            updateGutter()
+        end
+        EE:SaveSnippet(activeSnippetId, trimmed)
+        doSyntaxCheck()
+        updateStatusMessage(format(L["EDITOR_STATUS_SAVED"] or "Saved: %s", snippet.name))
+        refreshSnippetList()
+    end
+
+    function tab:RunCurrentSnippet()
+        if not activeSnippetId then return end
+        errorLine = nil
+        local text = editBox:GetText()
+        local snippet = EE:GetSnippet(activeSnippetId)
+        local name = snippet and snippet.name or "editor"
+        local ok, err, errLineNum = EE:RunSnippet(text, name)
+        if ok then
+            updateStatusMessage(format(L["EDITOR_STATUS_RUN_COMPLETED"] or "%s run: Completed successfully.", name))
+        else
+            errorLine = errLineNum
+        end
+        updateGutter()
+    end
+
+    local function trackDialog(dialog)
+        activeDialog = dialog.frame
+        dialog.frame:HookScript("OnHide", function()
+            if activeDialog == dialog.frame then activeDialog = nil end
+        end)
+    end
+
+    local function dismissActiveDialog()
+        if activeDialog then activeDialog:Hide(); activeDialog = nil end
+    end
+
+    function tab:ShowUnsavedDialog(onSave, onDiscard)
+        local dialog = OneWoW_GUI:CreateConfirmDialog({
+            title = L["EDITOR_UNSAVED_TITLE"] or "Unsaved Changes",
+            message = L["EDITOR_UNSAVED_MESSAGE"] or "Current snippet has unsaved changes.",
+            buttons = {
+                { text = L["EDITOR_BTN_SAVE_CHANGES"] or "Save", onClick = function(d) d:Hide(); if onSave then onSave() end end },
+                { text = L["EDITOR_BTN_DISCARD"] or "Discard", onClick = function(d) d:Hide(); if onDiscard then onDiscard() end end },
+                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+            },
+        })
+        trackDialog(dialog)
+        dialog.frame:Show()
+    end
+
+    function tab:ShowRenameDialog(snippetId, afterRename)
+        local snippet = EE:GetSnippet(snippetId)
+        if not snippet then return end
+
+        local dialog
+        dialog = OneWoW_GUI:CreateConfirmDialog({
+            title = L["EDITOR_RENAME_TITLE"] or "Rename Snippet",
+            message = "",
+            buttons = {
+                { text = L["EDITOR_BTN_SAVE"] or "Save", onClick = function(d)
+                    local box = dialog and dialog.renameBox
+                    local newName = box and box:GetText()
+                    if newName and newName ~= "" and newName ~= (box.placeholderText or "") then
+                        d:Hide()
+                        EE:RenameSnippet(snippetId, newName)
+                        updateStatusMessage(format(L["EDITOR_STATUS_RENAMED"] or "Renamed: %s", newName))
+                        refreshSnippetList()
+                        if afterRename then afterRename() end
+                    end
+                end },
+                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+            },
+        })
+
+        local renameBox = OneWoW_GUI:CreateEditBox(dialog.contentFrame, {
+            width = 250,
+            height = 24,
+            placeholderText = L["EDITOR_RENAME_PLACEHOLDER"] or "Enter snippet name...",
+        })
+        renameBox:SetPoint("TOP", dialog.titleLabel, "BOTTOM", 0, -16)
+        renameBox:SetText(snippet.name or "")
+        renameBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        renameBox:SetFocus()
+        dialog.renameBox = renameBox
+
+        renameBox:SetScript("OnEnterPressed", function(self)
+            local newName = self:GetText()
+            if newName and newName ~= "" and newName ~= (self.placeholderText or "") then
+                EE:RenameSnippet(snippetId, newName)
+                updateStatusMessage(format(L["EDITOR_STATUS_RENAMED"] or "Renamed: %s", newName))
+                refreshSnippetList()
+                if afterRename then afterRename() end
+                dialog.frame:Hide()
+            end
+        end)
+
+        trackDialog(dialog)
+        dialog.frame:Show()
+    end
+
+    function tab:ShowCategoryRenameDialog(catName)
+        local dialog
+        dialog = OneWoW_GUI:CreateConfirmDialog({
+            title = L["EDITOR_CATEGORY_RENAME_TITLE"] or "Rename Category",
+            message = "",
+            buttons = {
+                { text = L["EDITOR_BTN_SAVE"] or "Save", onClick = function(d)
+                    local box = dialog and dialog.renameBox
+                    local newName = box and box:GetText()
+                    if newName and newName ~= "" and newName ~= (box.placeholderText or "") then
+                        d:Hide()
+                        EE:RenameCategory(catName, newName)
+                        updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_RENAMED"] or "Category renamed: %s", newName))
+                        refreshSnippetList()
+                    end
+                end },
+                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+            },
+        })
+
+        local renameBox = OneWoW_GUI:CreateEditBox(dialog.contentFrame, {
+            width = 250,
+            height = 24,
+            placeholderText = L["EDITOR_CATEGORY_RENAME_PLACEHOLDER"] or "Enter category name...",
+        })
+        renameBox:SetPoint("TOP", dialog.titleLabel, "BOTTOM", 0, -16)
+        renameBox:SetText(catName or "")
+        renameBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        renameBox:SetFocus()
+        dialog.renameBox = renameBox
+        trackDialog(dialog)
+        dialog.frame:Show()
+    end
+
+    function tab:ShowNewCategoryDialog()
+        local dialog
+        dialog = OneWoW_GUI:CreateConfirmDialog({
+            title = L["EDITOR_NEW_CATEGORY_TITLE"] or "New Category",
+            message = "",
+            buttons = {
+                { text = L["EDITOR_BTN_SAVE"] or "Save", onClick = function(d)
+                    local box = dialog and dialog.renameBox
+                    local newName = box and box:GetText()
+                    if newName and newName ~= "" and newName ~= (box.placeholderText or "") then
+                        d:Hide()
+                        EE:CreateCategory(newName)
+                        updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_CREATED"] or "Category created: %s", newName))
+                        refreshSnippetList()
+                    end
+                end },
+                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+            },
+        })
+
+        local renameBox = OneWoW_GUI:CreateEditBox(dialog.contentFrame, {
+            width = 250,
+            height = 24,
+            placeholderText = L["EDITOR_NEW_CATEGORY_PLACEHOLDER"] or "Enter category name...",
+        })
+        renameBox:SetPoint("TOP", dialog.titleLabel, "BOTTOM", 0, -16)
+        renameBox:SetFocus()
+        dialog.renameBox = renameBox
+        trackDialog(dialog)
+        dialog.frame:Show()
+    end
+
+    function tab:ShowDeleteConfirm(snippetId)
+        local snippet = EE:GetSnippet(snippetId)
+        if not snippet then return end
+        local deleteName = snippet.name
+        local dialog = OneWoW_GUI:CreateConfirmDialog({
+            title = L["EDITOR_BTN_DELETE"] or "Delete",
+            message = format(L["EDITOR_SNIPPET_DELETE_CONFIRM"] or "Delete snippet '%s'?", deleteName),
+            buttons = {
+                { text = L["EDITOR_BTN_DELETE"] or "Delete", onClick = function(d)
+                    d:Hide()
+                    EE:DeleteSnippet(snippetId)
+                    if activeSnippetId == snippetId then
+                        activeSnippetId = nil
+                        editBox:SetText("")
+                        editBox:Hide()
+                        scrollFrame:Hide()
+                        gutterFrame:Hide()
+                        noSnippetMsg:Show()
+                        resetSyntaxCheck()
+                        lnColFS:SetText("")
+                        local edb = getDB()
+                        if edb then edb.lastOpenSnippet = nil end
+                    end
+                    updateStatusMessage(format(L["EDITOR_STATUS_DELETED"] or "Deleted: %s", deleteName))
+                    refreshSnippetList()
+                end },
+                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+            },
+        })
+        trackDialog(dialog)
+        dialog.frame:Show()
+    end
+
+    function tab:ShowCategoryDeleteConfirm(catName)
+        local dialog = OneWoW_GUI:CreateConfirmDialog({
+            title = L["EDITOR_CTX_DELETE_CATEGORY"] or "Delete Category",
+            message = format(L["EDITOR_CATEGORY_DELETE_CONFIRM"] or "Delete category '%s'? Snippets will move to Uncategorized.", catName),
+            buttons = {
+                { text = L["EDITOR_BTN_DELETE"] or "Delete", onClick = function(d)
+                    d:Hide()
+                    EE:DeleteCategory(catName)
+                    updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_DELETED"] or "Category deleted: %s", catName))
+                    refreshSnippetList()
+                end },
+                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+            },
+        })
+        trackDialog(dialog)
+        dialog.frame:Show()
+    end
+
+    runBtn:SetScript("OnClick", function() tab:RunCurrentSnippet() end)
+
+    saveBtn:SetScript("OnClick", function() tab:SaveCurrentSnippet() end)
+
+    newBtn:SetScript("OnClick", function()
+        local id = EE:CreateSnippet()
+        if id then
+            updateStatusMessage(L["EDITOR_STATUS_SNIPPET_CREATED"] or "Snippet created")
+            refreshSnippetList()
+            tab:SwitchToSnippet(id, true)
+        end
+    end)
+
+    deleteBtn:SetScript("OnClick", function()
+        if activeSnippetId then tab:ShowDeleteConfirm(activeSnippetId) end
+    end)
+
+    dupBtn:SetScript("OnClick", function()
+        if not activeSnippetId then return end
+        local newId = EE:DuplicateSnippet(activeSnippetId)
+        if newId then
+            local s = EE:GetSnippet(newId)
+            updateStatusMessage(format(L["EDITOR_STATUS_SNIPPET_DUPLICATED"] or "Duplicated: %s", s and s.name or ""))
+            refreshSnippetList()
+            tab:SwitchToSnippet(newId, true)
+        end
+    end)
+
+    renameBtn:SetScript("OnClick", function()
+        if activeSnippetId then tab:ShowRenameDialog(activeSnippetId) end
+    end)
+
+    local function toggleFindBar()
+        findBarVisible = not findBarVisible
+        updateFindBarLayout()
+        if findBarVisible then
+            findBox:SetFocus()
+        end
+    end
+
+    findCloseBtn:SetScript("OnClick", function()
+        findBarVisible = false
+        updateFindBarLayout()
+    end)
+
+    findBox:SetScript("OnEscapePressed", function()
+        editBox:SetFocus()
+    end)
+    replaceBox:SetScript("OnEscapePressed", function()
+        editBox:SetFocus()
+    end)
+
+    local function getFindPattern()
+        return findBox:GetSearchText()
+    end
+
+    local function getReplacePattern()
+        return replaceBox:GetSearchText()
+    end
+
+    local function doFindNext()
+        local pattern = getFindPattern()
+        if not pattern or pattern == "" then return end
+        if ES then ES.colorCodeEditbox(editBox) end
+        local text = ES and ES.getPlainTextForSearch(editBox) or editBox:GetText()
+        local cursorPos = ES and ES.getPlainCursorPos(editBox) or editBox:GetCursorPosition()
+        local s, e = EE:FindNext(text, pattern, cursorPos + 1, true)
+        if s then
+            editBox:SetFocus()
+            local rawStart, rawEnd
+            if ES then
+                rawStart, rawEnd = ES.plainRangeToRaw(editBox, s - 1, e)
+            else
+                rawStart, rawEnd = s - 1, e
+            end
+            editBox:SetCursorPosition(rawEnd)
+            editBox:HighlightText(rawStart, rawEnd)
+        else
+            updateStatusMessage(L["EDITOR_NO_MATCH"] or "No match found")
+        end
+    end
+
+    local function doFindPrev()
+        local pattern = getFindPattern()
+        if not pattern or pattern == "" then return end
+        if ES then ES.colorCodeEditbox(editBox) end
+        local text = ES and ES.getPlainTextForSearch(editBox) or editBox:GetText()
+        local cursorPos = (ES and ES.getPlainCursorPos(editBox) or editBox:GetCursorPosition()) + 1
+        local searchFrom = cursorPos - #pattern
+        if searchFrom < 1 then searchFrom = 1 end
+        local s, e = EE:FindPrevious(text, pattern, searchFrom, true)
+        if s then
+            editBox:SetFocus()
+            local rawStart, rawEnd
+            if ES then
+                rawStart, rawEnd = ES.plainRangeToRaw(editBox, s - 1, e)
+            else
+                rawStart, rawEnd = s - 1, e
+            end
+            editBox:SetCursorPosition(rawEnd)
+            editBox:HighlightText(rawStart, rawEnd)
+        else
+            updateStatusMessage(L["EDITOR_NO_MATCH"] or "No match found")
+        end
+    end
+
+    findNextBtn:SetScript("OnClick", doFindNext)
+    findPrevBtn:SetScript("OnClick", doFindPrev)
+    findBox:SetScript("OnEnterPressed", function() doFindNext() end)
+
+    replaceBtn:SetScript("OnClick", function()
+        if not activeSnippetId then return end
+        local pattern = getFindPattern()
+        local replacement = getReplacePattern()
+        if not pattern or pattern == "" then return end
+        local text = ES and ES.getPlainTextForSearch(editBox) or editBox:GetText()
+        local cursorPos = (ES and ES.getPlainCursorPos(editBox) or editBox:GetCursorPosition()) + 1
+        local searchFrom = cursorPos - #pattern
+        if searchFrom < 1 then searchFrom = 1 end
+        local newText, replaced = EE:ReplaceNext(text, pattern, replacement or "", searchFrom)
+        if replaced then
+            editBox:SetText(newText)
+            doFindNext()
+        end
+    end)
+
+    replaceAllBtn:SetScript("OnClick", function()
+        if not activeSnippetId then return end
+        local pattern = getFindPattern()
+        local replacement = getReplacePattern()
+        if not pattern or pattern == "" then return end
+        local text = editBox:GetText()
+        local newText, count = EE:ReplaceAll(text, pattern, replacement or "")
+        editBox:SetText(newText)
+        if ES then ES.forceDirty(editBox) end
+        addOutput(format(L["EDITOR_REPLACE_COUNT"] or "Replaced %d occurrence(s)", count), "print")
+    end)
+
+    newCatBtn:SetScript("OnClick", function()
+        tab:ShowNewCategoryDialog()
+    end)
+
+    commandBox:SetScript("OnEnterPressed", function(self)
+        local text = self:GetSearchText()
+        if not text or text == "" then self:ClearFocus(); return end
+        addOutput("> " .. text, "print")
+        EE:RunCommand(text)
+        self:SetText("")
+        self:ClearFocus()
+    end)
+
+    editBox:HookScript("OnTextChanged", function(self, userInput)
+        if not userInput then return end
+        updateGutter()
+        updateLnCol()
+        scheduleSyntaxCheck()
+        if activeSnippetId then
+            local now = GetTime()
+            if now - lastUndoTime > UNDO_DEBOUNCE then
+                EE:QueueUndo(activeSnippetId, self:GetText())
+                lastUndoTime = now
+            end
+            if refreshListTimer then refreshListTimer:Cancel() end
+            refreshListTimer = C_Timer.NewTimer(COLORIZE_DEBOUNCE, function()
+                refreshListTimer = nil
+                if refreshSnippetList then refreshSnippetList() end
+            end)
+        end
+    end)
+
+    editBox:SetScript("OnKeyDown", function(self, key)
+        if IsControlKeyDown() then
+            if key == "S" then
+                self:SetPropagateKeyboardInput(false)
+                tab:SaveCurrentSnippet()
+                return
+            elseif key == "Z" then
+                self:SetPropagateKeyboardInput(false)
+                if activeSnippetId then
+                    local plainCursor = ES and ES.getPlainCursorPos(self) or 0
+                    local text = EE:Undo(activeSnippetId, self:GetText())
+                    if text then
+                        self:SetText(text)
+                        if plainCursor > #text then plainCursor = #text end
+                        self:SetCursorPosition(plainCursor)
+                        if ES then ES.forceDirty(self) end
+                        updateGutter()
+                        refreshSnippetList()
+                    end
+                end
+                return
+            elseif key == "Y" then
+                self:SetPropagateKeyboardInput(false)
+                if activeSnippetId then
+                    local plainCursor = ES and ES.getPlainCursorPos(self) or 0
+                    local text = EE:Redo(activeSnippetId)
+                    if text then
+                        self:SetText(text)
+                        if plainCursor > #text then plainCursor = #text end
+                        self:SetCursorPosition(plainCursor)
+                        if ES then ES.forceDirty(self) end
+                        updateGutter()
+                        refreshSnippetList()
+                    end
+                end
+                return
+            elseif key == "F" then
+                self:SetPropagateKeyboardInput(false)
+                if not findBarVisible then
+                    findBarVisible = true
+                    updateFindBarLayout()
+                end
+                findBox:SetFocus()
+                return
+            elseif key == "ENTER" then
+                self:SetPropagateKeyboardInput(false)
+                local savedText = self:GetText()
+                local savedPos = self:GetCursorPosition()
+                C_Timer.After(0, function()
+                    editBox:SetText(savedText)
+                    editBox:SetCursorPosition(savedPos)
+                    if ES then ES.forceDirty(editBox) end
+                    updateGutter()
+                end)
+                tab:RunCurrentSnippet()
+                return
+            end
+        end
+    end)
+
+    editBox:HookScript("OnEscapePressed", function()
+        if findBarVisible then
+            findBarVisible = false
+            updateFindBarLayout()
+        end
+    end)
+
+    tab:SetScript("OnShow", function()
+        loadAPIDocs()
+        refreshAutoSaveLayout()
+        local edb = getDB()
+        if edb and edb.autoSaveInterval then startAutoSaveTicker() end
+        refreshSnippetList()
+
+        if not activeSnippetId then
+            local lastId = edb and edb.lastOpenSnippet
+            if lastId and EE:GetSnippet(lastId) then
+                loadSnippetIntoEditor(lastId)
+            else
+                noSnippetMsg:Show()
+                editBox:Hide()
+                scrollFrame:Hide()
+                gutterFrame:Hide()
+                lnColFS:SetText("")
+                syntaxErrFS:SetText("")
+            end
+        end
+    end)
+
+    tab:SetScript("OnHide", function()
+        dismissActiveDialog()
+        stopAutoSaveTicker()
+    end)
+
+    return tab
+end

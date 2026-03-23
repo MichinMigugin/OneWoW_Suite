@@ -39,6 +39,7 @@ Data\AtlasInfoCommon.lua
 Data\AtlasInfo-12.0.1.66527.lua [AllowLoadGameType mainline]
 Data\AtlasInfo-12.0.5.66529.lua [AllowLoadGameType mainline-test]
 Data\FontObjectNames.lua
+Data\LuaSyntax.lua
 
 # Modules
 Modules\FrameInspector.lua
@@ -51,6 +52,8 @@ Modules\ColorTools.lua
 Modules\TextureAtlasBrowser.lua
 Modules\FontBrowserTab.lua
 Modules\MonitorTab.lua
+Modules\EditorSyntax.lua
+Modules\EditorEngine.lua
 
 # Main UI shell (defines Addon.UI, StyleContentPanel, Initialize)
 GUI\MainWindow.lua
@@ -64,4 +67,5 @@ GUI\Tabs\ColorToolsTab.lua
 GUI\Tabs\LayoutTab.lua
 GUI\Tabs\MonitorTab.lua
 GUI\Tabs\SettingsTab.lua
+GUI\Tabs\EditorTab.lua
 GUI\Tabs\FontBrowserTab.lua
