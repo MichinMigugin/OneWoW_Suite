@@ -355,6 +355,28 @@ Addon.Constants = {
         EDITOR_STATUS_CLEAR_DELAY = 5,
     },
 
+    MONITOR_PRESET = {
+        BALANCED = "balanced",
+        MEMORY_DIG = "memory_dig",
+        CPU_SPIKES = "cpu_spikes",
+        MINIMAL = "minimal",
+    },
+    MONITOR_SORT_NAME = 1,
+    MONITOR_SORT_MEMORY = 2,
+    MONITOR_SORT_CPU_SESSION = 3,
+    MONITOR_SORT_MEM_DELTA = 4,
+    MONITOR_SORT_MEM_PEAK = 5,
+    MONITOR_SORT_CPU_RECENT = 6,
+    MONITOR_SORT_CPU_MS = 7,
+    MONITOR_SORT_MEM_PCT = 8,
+    MONITOR_SORT_CPU_PCT = 9,
+    MONITOR_PRESET_DEFAULT_SORT = {
+        balanced = -2,
+        memory_dig = -4,
+        cpu_spikes = -6,
+        minimal = -2,
+    },
+
     -- Reference: https://warcraft.wiki.gg/wiki/Widget_script_handlers
     COMMON_SCRIPTS = {
         "OnAnimFinished", "OnAnimStarted", "OnArrowPressed", "OnAttributeChanged",

@@ -114,6 +114,7 @@ function Addon:InitializeDatabase()
         monitor = {
             showOnLoad = false,
             sortOrder = 2,
+            viewPreset = "balanced",
             continuousUpdate = false,
             pinnedAddon = nil,
             pinnedReopenOnReload = false,

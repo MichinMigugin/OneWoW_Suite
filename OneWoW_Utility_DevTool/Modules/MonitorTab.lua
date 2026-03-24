@@ -1,16 +1,26 @@
 local ADDON_NAME, Addon = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+
 local MonitorTab = {}
 Addon.MonitorTab = MonitorTab
 
 local addonInfo = {}
 local displayedList = {}
-local totals = { memory = 0, cpu = 0, count = 0, startTime = 0, duration = 0 }
+local totals = { memory = 0, cpu = 0, count = 0, startTime = 0, duration = 0, sumMemDelta = 0, luaHeapKb = 0 }
 local profilingCPU = false
 local updateTimer = 0
 local updateFrequency = 1.0
 local monitoring = false
 local filterText = ""
+
+local prevAddonMemory = {}
+local prevAddonCpu = {}
+local memoryPeakByIndex = {}
+local lastGatherTime = 0
 
 local function StripColorCodes(text)
     if not text then return "" end
@@ -40,12 +50,17 @@ end
 
 function MonitorTab:GatherUsage()
     local numAddons = C_AddOns.GetNumAddOns()
+    local now = GetTime()
+    local wallDelta = (lastGatherTime > 0) and (now - lastGatherTime) or 0
+    lastGatherTime = now
 
     addonInfo = {}
     totals.memory = 0
     totals.cpu = 0
     totals.count = 0
-    totals.duration = GetTime() - totals.startTime
+    totals.sumMemDelta = 0
+    totals.duration = now - totals.startTime
+    totals.luaHeapKb = collectgarbage("count")
 
     UpdateAddOnMemoryUsage()
     if profilingCPU then
@@ -62,15 +77,32 @@ function MonitorTab:GatherUsage()
             local ok, result = pcall(GetAddOnMemoryUsage, i)
             if ok then mem = result or 0 end
 
+            local prevMem = prevAddonMemory[i]
+            local memDelta = (prevMem ~= nil) and (mem - prevMem) or 0
+            totals.sumMemDelta = totals.sumMemDelta + memDelta
+
+            local peak = memoryPeakByIndex[i]
+            if not peak or mem > peak then
+                peak = mem
+                memoryPeakByIndex[i] = mem
+            end
+
             local cpu = 0
             if profilingCPU then
                 local cpuOk, cpuResult = pcall(GetAddOnCPUUsage, i)
                 if cpuOk then cpu = cpuResult or 0 end
             end
 
+            local prevCpu = prevAddonCpu[i]
             local cpuPerSec = 0
-            if profilingCPU and totals.duration > 0 then
-                cpuPerSec = cpu / totals.duration
+            local cpuPerSecRecent = 0
+            if profilingCPU then
+                if totals.duration > 0 then
+                    cpuPerSec = cpu / totals.duration
+                end
+                if wallDelta > 0 and prevCpu ~= nil then
+                    cpuPerSecRecent = (cpu - prevCpu) / wallDelta
+                end
             end
 
             tinsert(addonInfo, {
@@ -78,13 +110,21 @@ function MonitorTab:GatherUsage()
                 name = name,
                 title = displayTitle,
                 memory = mem,
+                memoryDelta = memDelta,
+                memoryPeak = peak,
                 cpu = cpu,
                 cpuPerSec = cpuPerSec,
+                cpuPerSecRecent = cpuPerSecRecent,
             })
 
             totals.memory = totals.memory + mem
             totals.cpu = totals.cpu + cpu
             totals.count = totals.count + 1
+
+            prevAddonMemory[i] = mem
+            if profilingCPU then
+                prevAddonCpu[i] = cpu
+            end
         end
     end
 
@@ -117,6 +157,18 @@ function MonitorTab:GetSortedList()
             valA, valB = a.memory, b.memory
         elseif absOrder == 3 then
             valA, valB = a.cpuPerSec, b.cpuPerSec
+        elseif absOrder == 4 then
+            valA, valB = a.memoryDelta, b.memoryDelta
+        elseif absOrder == 5 then
+            valA, valB = a.memoryPeak, b.memoryPeak
+        elseif absOrder == 6 then
+            valA, valB = a.cpuPerSecRecent, b.cpuPerSecRecent
+        elseif absOrder == 7 then
+            valA, valB = a.cpu, b.cpu
+        elseif absOrder == 8 then
+            valA, valB = a.memPercent, b.memPercent
+        elseif absOrder == 9 then
+            valA, valB = a.cpuPercent, b.cpuPercent
         else
             valA, valB = a.memory, b.memory
         end
@@ -165,6 +217,10 @@ function MonitorTab:Reset()
     end
     totals.startTime = GetTime()
     totals.duration = 0
+    wipe(prevAddonMemory)
+    wipe(prevAddonCpu)
+    wipe(memoryPeakByIndex)
+    lastGatherTime = 0
 end
 
 function MonitorTab:IsMonitoring()
@@ -228,6 +284,48 @@ function MonitorTab:FormatPercent(value)
     return FormatNumber(value, 1) .. "%"
 end
 
+function MonitorTab:FormatMemoryDelta(value)
+    if not value or value == 0 then
+        return "0"
+    end
+    local sign = value > 0 and "+" or "-"
+    return sign .. FormatNumber(math.abs(value), 1)
+end
+
+function MonitorTab:FormatCPUMs(value)
+    return FormatNumber(value or 0, 0)
+end
+
+function MonitorTab:GetViewPreset()
+    local C = Addon.Constants and Addon.Constants.MONITOR_PRESET
+    local defaultId = C and C.BALANCED or "balanced"
+    local db = Addon.db and Addon.db.monitor
+    local id = db and db.viewPreset or defaultId
+    if not C then return id end
+    if id ~= C.BALANCED and id ~= C.MEMORY_DIG and id ~= C.CPU_SPIKES and id ~= C.MINIMAL then
+        return defaultId
+    end
+    return id
+end
+
+function MonitorTab:SetViewPreset(presetId)
+    local db = Addon.db and Addon.db.monitor
+    local C = Addon.Constants and Addon.Constants.MONITOR_PRESET
+    local DS = Addon.Constants and Addon.Constants.MONITOR_PRESET_DEFAULT_SORT
+    if not db or not C then return end
+    if presetId ~= C.BALANCED and presetId ~= C.MEMORY_DIG and presetId ~= C.CPU_SPIKES and presetId ~= C.MINIMAL then
+        return
+    end
+    db.viewPreset = presetId
+    if not DS then
+        DS = { balanced = -2, memory_dig = -4, cpu_spikes = -6, minimal = -2 }
+    end
+    local so = DS[presetId]
+    if so then
+        db.sortOrder = so
+    end
+end
+
 function MonitorTab:UpdateUI()
     local tab = Addon.MonitorTabUI
     if not tab then return end
@@ -244,6 +342,8 @@ local pinnedStartTime = 0
 local pinnedSampleCount = 0
 local pinnedLastMemory = 0
 local pinnedGrowthSamples = {}
+local pinnedPrevCpu = nil
+local pinnedLastCpuWallTime = 0
 local GROWTH_SAMPLE_MAX = 30
 
 local function FormatKB(value)
@@ -265,13 +365,15 @@ local function CreateRow(parent, labelText, yOffset, guiLib)
     label:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     label:SetText(labelText)
     label:SetTextColor(guiLib:GetThemeColor("TEXT_MUTED"))
-    label:SetWidth(90)
+    label:SetWidth(118)
     label:SetJustifyH("LEFT")
 
     local value = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     value:SetPoint("LEFT", label, "RIGHT", 4, 0)
     value:SetText("--")
     value:SetTextColor(guiLib:GetThemeColor("TEXT_PRIMARY"))
+    value:SetWidth(150)
+    value:SetJustifyH("LEFT")
 
     return label, value, yOffset - 18
 end
@@ -281,10 +383,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
         self:ClosePinnedPopup()
     end
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-    if not OneWoW_GUI then return end
-
-    local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+    profilingCPU = GetCVar("scriptProfile") == "1"
 
     local addonIndex = FindAddonIndexByName(addonName)
     if not addonIndex then return end
@@ -300,6 +399,8 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     pinnedPeakMemory = pinnedBaselineMemory
     pinnedMinMemory = pinnedBaselineMemory
     pinnedLastMemory = pinnedBaselineMemory
+    pinnedPrevCpu = nil
+    pinnedLastCpuWallTime = 0
 
     local popup = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
     popup:SetSize(280, 280)
@@ -347,23 +448,44 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
         MonitorTab:ClosePinnedPopup()
     end)
 
+    local LL = Addon.L or {}
     local yPos = -30
     local memLabel, memValue
-    memLabel, memValue, yPos = CreateRow(popup, "Memory:", yPos, OneWoW_GUI)
+    memLabel, memValue, yPos = CreateRow(popup, LL["MON_PIN_MEMORY"] or "Memory", yPos, OneWoW_GUI)
+    local memTickLabel, memTickValue
+    memTickLabel, memTickValue, yPos = CreateRow(popup, LL["MON_PIN_MEM_TICK"] or "Mem d (sample)", yPos, OneWoW_GUI)
     local deltaLabel, deltaValue
-    deltaLabel, deltaValue, yPos = CreateRow(popup, "Delta:", yPos, OneWoW_GUI)
+    deltaLabel, deltaValue, yPos = CreateRow(popup, LL["MON_PIN_DELTA_OPEN"] or "Mem d (opened)", yPos, OneWoW_GUI)
     local rateLabel, rateValue
-    rateLabel, rateValue, yPos = CreateRow(popup, "Rate:", yPos, OneWoW_GUI)
+    rateLabel, rateValue, yPos = CreateRow(popup, LL["MON_PIN_RATE"] or "Avg rate", yPos, OneWoW_GUI)
     local peakLabel, peakValue
-    peakLabel, peakValue, yPos = CreateRow(popup, "Peak:", yPos, OneWoW_GUI)
+    peakLabel, peakValue, yPos = CreateRow(popup, LL["MON_PIN_PEAK"] or "Peak", yPos, OneWoW_GUI)
     local minLabel, minValue
-    minLabel, minValue, yPos = CreateRow(popup, "Min:", yPos, OneWoW_GUI)
+    minLabel, minValue, yPos = CreateRow(popup, LL["MON_PIN_MIN"] or "Min", yPos, OneWoW_GUI)
     local pctLabel, pctValue
-    pctLabel, pctValue, yPos = CreateRow(popup, "% of Total:", yPos, OneWoW_GUI)
+    pctLabel, pctValue, yPos = CreateRow(popup, LL["MON_PIN_PCT_MEM"] or "Mem %", yPos, OneWoW_GUI)
+
+    local cpuMsValue, cpuSessionValue, cpuRecentValue, cpuPctValue
+    if profilingCPU then
+        yPos = yPos - 4
+        local memCpuDiv = popup:CreateTexture(nil, "ARTWORK")
+        memCpuDiv:SetHeight(1)
+        memCpuDiv:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, yPos)
+        memCpuDiv:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -12, yPos)
+        local dr, dg, db, da = OneWoW_GUI:GetThemeColor("BORDER_DEFAULT")
+        memCpuDiv:SetColorTexture(dr, dg, db, (da or 1) * 0.4)
+        yPos = yPos - 6
+        local cpuMsLabel, cpuSessionLabel, cpuRecentLabel, cpuPctLabel
+        cpuMsLabel, cpuMsValue, yPos = CreateRow(popup, LL["MON_PIN_CPU_MS"] or "CPU (ms)", yPos, OneWoW_GUI)
+        cpuSessionLabel, cpuSessionValue, yPos = CreateRow(popup, LL["MON_PIN_CPU_SESSION"] or "CPU/s (session)", yPos, OneWoW_GUI)
+        cpuRecentLabel, cpuRecentValue, yPos = CreateRow(popup, LL["MON_PIN_CPU_RECENT"] or "CPU/s (recent)", yPos, OneWoW_GUI)
+        cpuPctLabel, cpuPctValue, yPos = CreateRow(popup, LL["MON_PIN_PCT_CPU"] or "CPU %", yPos, OneWoW_GUI)
+    end
+
     local elapsedLabel, elapsedValue
-    elapsedLabel, elapsedValue, yPos = CreateRow(popup, "Elapsed:", yPos, OneWoW_GUI)
+    elapsedLabel, elapsedValue, yPos = CreateRow(popup, LL["MON_PIN_ELAPSED"] or "Elapsed", yPos, OneWoW_GUI)
     local samplesLabel, samplesValue
-    samplesLabel, samplesValue, yPos = CreateRow(popup, "Samples:", yPos, OneWoW_GUI)
+    samplesLabel, samplesValue, yPos = CreateRow(popup, LL["MON_PIN_SAMPLES"] or "Samples", yPos, OneWoW_GUI)
 
     yPos = yPos - 10
     local reopenCheck = CreateFrame("CheckButton", nil, popup, "UICheckButtonTemplate")
@@ -371,7 +493,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     reopenCheck:SetPoint("TOPLEFT", popup, "TOPLEFT", 6, yPos)
     local reopenLabel = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     reopenLabel:SetPoint("LEFT", reopenCheck, "RIGHT", 2, 0)
-    reopenLabel:SetText((Addon.L and Addon.L["MSG_REOPEN_ON_RELOAD"]) or "Reopen on /reload")
+    reopenLabel:SetText(LL["MON_PIN_REOPEN"] or (Addon.L and Addon.L["MSG_REOPEN_ON_RELOAD"]) or "Reopen on /reload")
     reopenLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local totalHeight = math.abs(yPos) + 32
@@ -386,6 +508,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     end)
 
     popup.memValue = memValue
+    popup.memTickValue = memTickValue
     popup.deltaValue = deltaValue
     popup.rateValue = rateValue
     popup.peakValue = peakValue
@@ -394,8 +517,12 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     popup.elapsedValue = elapsedValue
     popup.samplesValue = samplesValue
     popup.addonIndex = addonIndex
+    popup.cpuMsValue = cpuMsValue
+    popup.cpuSessionValue = cpuSessionValue
+    popup.cpuRecentValue = cpuRecentValue
+    popup.cpuPctValue = cpuPctValue
 
-    popup:SetSize(300, totalHeight)
+    popup:SetSize(322, totalHeight)
 
     local savedPos = db and db.pinnedPosition
     if savedPos and savedPos.point then
@@ -415,6 +542,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     pinnedTicker = C_Timer.NewTicker(1.0, function()
         MonitorTab:UpdatePinnedPopup()
     end)
+    self:UpdatePinnedPopup()
 end
 
 function MonitorTab:UpdatePinnedPopup()
@@ -428,12 +556,14 @@ function MonitorTab:UpdatePinnedPopup()
     if not ok then return end
     mem = mem or 0
 
+    local tickMemDelta = mem - pinnedLastMemory
+
     pinnedSampleCount = pinnedSampleCount + 1
 
     if mem > pinnedPeakMemory then pinnedPeakMemory = mem end
     if mem < pinnedMinMemory then pinnedMinMemory = mem end
 
-    local perSecondDelta = mem - pinnedLastMemory
+    local perSecondDelta = tickMemDelta
     pinnedLastMemory = mem
     tinsert(pinnedGrowthSamples, perSecondDelta)
     if #pinnedGrowthSamples > GROWTH_SAMPLE_MAX then
@@ -450,6 +580,20 @@ function MonitorTab:UpdatePinnedPopup()
     end
 
     pinnedPopup.memValue:SetText(FormatKB(mem))
+
+    pinnedPopup.memTickValue:SetText(self:FormatMemoryDelta(tickMemDelta))
+    do
+        local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
+        
+        if tickMemDelta > 10 then
+            r, g, b = 1, 0.4, 0.4
+        elseif tickMemDelta > 2 then
+            r, g, b = 1, 0.8, 0.2
+        elseif tickMemDelta < -2 then
+            r, g, b = 0.4, 1, 0.4
+        end
+        pinnedPopup.memTickValue:SetTextColor(r, g, b, 1)
+    end
 
     local delta = mem - pinnedBaselineMemory
     local deltaStr = FormatKB(math.abs(delta))
@@ -495,6 +639,33 @@ function MonitorTab:UpdatePinnedPopup()
     local pct = totalMem > 0 and (mem / totalMem * 100) or 0
     pinnedPopup.pctValue:SetText(FormatNumber(pct, 1) .. "%")
 
+    if profilingCPU and pinnedPopup.cpuMsValue then
+        UpdateAddOnCPUUsage()
+        local cpuOk, cpuVal = pcall(GetAddOnCPUUsage, addonIndex)
+        cpuVal = (cpuOk and cpuVal) or 0
+        local totalCpu = 0
+        for i = 1, numAddons do
+            if C_AddOns.IsAddOnLoaded(i) then
+                local cok, c = pcall(GetAddOnCPUUsage, i)
+                if cok and c then totalCpu = totalCpu + c end
+            end
+        end
+        local sessDur = GetTime() - totals.startTime
+        local cpuSess = sessDur > 0 and (cpuVal / sessDur) or 0
+        local nowT = GetTime()
+        local wall = (pinnedLastCpuWallTime > 0) and (nowT - pinnedLastCpuWallTime) or 0
+        local cpuRec = 0
+        if wall > 0 and pinnedPrevCpu ~= nil then
+            cpuRec = (cpuVal - pinnedPrevCpu) / wall
+        end
+        pinnedPopup.cpuMsValue:SetText(self:FormatCPUMs(cpuVal))
+        pinnedPopup.cpuSessionValue:SetText(self:FormatCPU(cpuSess))
+        pinnedPopup.cpuRecentValue:SetText(self:FormatCPU(cpuRec))
+        pinnedPopup.cpuPctValue:SetText(FormatNumber(totalCpu > 0 and (cpuVal / totalCpu * 100) or 0, 1) .. "%")
+        pinnedPrevCpu = cpuVal
+        pinnedLastCpuWallTime = nowT
+    end
+
     local elapsed = GetTime() - pinnedStartTime
     local mins = math.floor(elapsed / 60)
     local secs = math.floor(elapsed % 60)
@@ -520,6 +691,8 @@ function MonitorTab:ClosePinnedPopup()
     pinnedSampleCount = 0
     pinnedLastMemory = 0
     pinnedGrowthSamples = {}
+    pinnedPrevCpu = nil
+    pinnedLastCpuWallTime = 0
     if Addon.db and Addon.db.monitor then
         Addon.db.monitor.pinnedAddon = nil
     end
