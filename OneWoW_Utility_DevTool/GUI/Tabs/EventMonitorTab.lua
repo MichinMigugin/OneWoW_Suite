@@ -60,7 +60,7 @@ function Addon.UI:CreateEventMonitorTab(parent)
     end)
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    filterLabel:SetPoint("TOPLEFT", startStopBtn, "BOTTOMLEFT", 0, -8)
+    filterLabel:SetPoint("TOPLEFT", startStopBtn, "BOTTOMLEFT", 0, -14)
     filterLabel:SetText(Addon.L and Addon.L["LABEL_FILTER"] or "Filter:")
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
@@ -78,7 +78,7 @@ function Addon.UI:CreateEventMonitorTab(parent)
 
     local panel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
     panel:ClearAllPoints()
-    panel:SetPoint("TOPLEFT", startStopBtn, "BOTTOMLEFT", 0, -35)
+    panel:SetPoint("TOPLEFT", startStopBtn, "BOTTOMLEFT", 0, -41)
     panel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
     self:StyleContentPanel(panel)
 
