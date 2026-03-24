@@ -206,14 +206,39 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
                 end
             end
         else
-            GameTooltip:SetText(L["BANK_TAB_LOCKED"] or "Locked", 0.5, 0.5, 0.5)
+            local db = OneWoW_Bags.db
+            local showWarband = db and db.global and db.global.bankShowWarband
+            local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
+            if OneWoW_Bags.bankOpen and C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
+                local tabData = C_Bank.FetchNextPurchasableBankTabData(bType)
+                if tabData and tabData.tabCost then
+                    GameTooltip:SetText(L["BANK_TAB_PURCHASE"] or "Purchase Tab", 1, 0.82, 0)
+                    GameTooltip:AddLine(OneWoW_GUI:FormatGold(tabData.tabCost), 1, 1, 1)
+                else
+                    GameTooltip:SetText(L["BANK_TAB_LOCKED"] or "Locked", 0.5, 0.5, 0.5)
+                end
+            else
+                GameTooltip:SetText(L["BANK_TAB_LOCKED"] or "Locked", 0.5, 0.5, 0.5)
+            end
         end
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     btn:SetScript("OnClick", function(self, mouseButton)
-        if not self.isPurchased then return end
+        if not self.isPurchased then
+            if not OneWoW_Bags.bankOpen then return end
+            local db = OneWoW_Bags.db
+            local showWarband = db and db.global and db.global.bankShowWarband
+            local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
+            if C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
+                local tabData = C_Bank.FetchNextPurchasableBankTabData(bType)
+                if tabData and tabData.tabCost then
+                    StaticPopup_Show("CONFIRM_BUY_BANK_TAB", tabData.tabCost, nil, { bankType = bType })
+                end
+            end
+            return
+        end
 
         if mouseButton == "RightButton" and OneWoW_Bags.bankOpen then
             local db = OneWoW_Bags.db

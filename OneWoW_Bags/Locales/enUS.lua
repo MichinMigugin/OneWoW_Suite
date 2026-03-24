@@ -19,21 +19,31 @@ OneWoW_Bags.Locales["enUS"] = {
     ["FREE_SLOTS"] = "Free Slots",
     ["FREE_SLOTS_FORMAT"] = "%d Free Slots",
 
-    ["CAT_RECENT"] = "Recent Items",
-    ["CAT_EQUIPMENT"] = "Equipment",
+    ["CAT_RECENT_ITEMS"] = "Recent Items",
+    ["CAT_HEARTHSTONE"] = "Hearthstone",
+    ["CAT_KEYSTONE"] = "Keystone",
+    ["CAT_POTIONS"] = "Potions",
+    ["CAT_FOOD"] = "Food",
     ["CAT_CONSUMABLES"] = "Consumables",
+    ["CAT_QUEST_ITEMS"] = "Quest Items",
+    ["CAT_EQUIPMENT_SETS"] = "Equipment Sets",
+    ["CAT_WEAPONS"] = "Weapons",
+    ["CAT_ARMOR"] = "Armor",
     ["CAT_REAGENTS"] = "Reagents",
     ["CAT_TRADE_GOODS"] = "Trade Goods",
     ["CAT_TRADESKILL"] = "Tradeskill",
     ["CAT_RECIPES"] = "Recipes",
+    ["CAT_HOUSING"] = "Housing",
     ["CAT_GEMS"] = "Gems",
-    ["CAT_QUEST"] = "Quest Items",
-    ["CAT_COSMETICS"] = "Cosmetics",
-    ["CAT_TOYS"] = "Toys",
-    ["CAT_PETS_MOUNTS"] = "Pets and Mounts",
+    ["CAT_ITEM_ENHANCEMENT"] = "Item Enhancement",
+    ["CAT_CONTAINERS"] = "Containers",
     ["CAT_KEYS"] = "Keys",
-    ["CAT_JUNK"] = "Junk",
+    ["CAT_MISCELLANEOUS"] = "Miscellaneous",
+    ["CAT_PETS_AND_MOUNTS"] = "Pets and Mounts",
+    ["CAT_TOYS"] = "Toys",
+    ["CAT_COSMETICS"] = "Cosmetics",
     ["CAT_OTHER"] = "Other",
+    ["CAT_JUNK"] = "Junk",
     ["CAT_EMPTY"] = "Empty",
 
     ["SORT_PRIORITY"] = "Priority",
@@ -198,9 +208,15 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SORT_ITEM_LEVEL"] = "Item Level",
     ["SORT_TYPE"] = "Type",
 
+    ["SECTION_CATEGORIES"] = "Categories",
+    ["SETTING_INVENTORY_SLOTS"] = "Split by Equipment Slot",
+    ["DESC_INVENTORY_SLOTS"] = "Split Weapons and Armor into individual equipment slots (Head, Chest, Hands, etc.)",
+
     ["SECTION_BEHAVIOR"] = "Behavior",
     ["DESC_AUTO_OPEN"] = "Automatically open the bags window when visiting a vendor.",
     ["DESC_AUTO_CLOSE"] = "Automatically close the bags window when leaving a vendor.",
+    ["SETTING_AUTO_OPEN_WITH_BANK"] = "Auto Open Bags with Bank",
+    ["DESC_AUTO_OPEN_WITH_BANK"] = "Automatically open the bags window when the bank or guild bank is opened.",
     ["DESC_LOCK"] = "Prevent the bags window from being moved.",
 
     ["SECTION_INTEGRATION"] = "OneWoW Integration",
@@ -213,6 +229,26 @@ OneWoW_Bags.Locales["enUS"] = {
     ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "Install AltTracker for alt gold details",
 
     ["BANK_BTN"] = "Bank",
+
+    ["GUILD_BANK_LOG"] = "Log",
+    ["GUILD_BANK_ITEMS_LOG"] = "Items",
+    ["GUILD_BANK_MONEY_LOG"] = "Gold",
+    ["GUILD_BANK_NO_LOG"] = "No transactions available.",
+
+    ["CATEGORY_SELECT_PROMPT"] = "Select a category from the list to manage its items.",
+    ["CATEGORY_BUILTIN_DESC"] = "This is an automatic category. Items are sorted here based on item type. Use the checkbox in the list to enable or disable it.",
+    ["CATEGORY_BUILTIN_HEADER"] = "Built-in Categories",
+    ["CATEGORY_CUSTOM_HEADER"] = "Custom Categories",
+
+    ["BAGANATOR_IMPORT"] = "Import from Baganator",
+    ["BAGANATOR_IMPORT_SUCCESS"] = "Imported %d |4category:categories; from Baganator.",
+    ["BAGANATOR_IMPORT_NONE"] = "No importable custom categories found in Baganator.",
+
+    ["SECTION_CREATE"] = "New Section",
+    ["SECTION_CREATE_ENTER"] = "Enter section name:",
+    ["SECTION_RENAME_ENTER"] = "Enter new section name:",
+    ["SECTION_DELETE_CONFIRM"] = "Delete this section? Categories will return to the main list.",
+    ["CATEGORY_IN_SECTION"] = "Toggle categories to include in this section:",
 
 }
 

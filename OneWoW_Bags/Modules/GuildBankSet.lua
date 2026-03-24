@@ -100,6 +100,11 @@ function GBSet:ApplyCacheToButtons()
             local cached = self.cache[tabID] and self.cache[tabID][slotID]
 
             if cached and cached.itemLink then
+                if button.IconOverlay then button.IconOverlay:Hide() end
+                if button.ItemContextOverlay then button.ItemContextOverlay:Hide() end
+                if button.ExtendedSlot then button.ExtendedSlot:Hide() end
+                if button.IconQuestTexture then button.IconQuestTexture:Hide() end
+
                 SetItemButtonTexture(button, cached.texture)
                 SetItemButtonCount(button, cached.itemCount)
                 SetItemButtonDesaturated(button, cached.locked)
@@ -213,7 +218,14 @@ function GBSet:ApplyGuildBankScripts(button)
             if tabID ~= GetCurrentGuildBankTab() then
                 SetCurrentGuildBankTab(tabID)
             end
+            local hadItem = self.owb_hasItem
             PickupGuildBankItem(tabID, slotID)
+            if hadItem and GetCursorInfo() then
+                SetItemButtonTexture(self, nil)
+                SetItemButtonCount(self, 0)
+                self.owb_hasItem = false
+                self.owb_itemInfo = nil
+            end
         end
     end)
 
@@ -242,7 +254,14 @@ function GBSet:ApplyGuildBankScripts(button)
         if tabID ~= GetCurrentGuildBankTab() then
             SetCurrentGuildBankTab(tabID)
         end
+        local hadItem = self.owb_hasItem
         PickupGuildBankItem(tabID, slotID)
+        if hadItem and GetCursorInfo() then
+            SetItemButtonTexture(self, nil)
+            SetItemButtonCount(self, 0)
+            self.owb_hasItem = false
+            self.owb_itemInfo = nil
+        end
     end)
 
     button:SetScript("OnReceiveDrag", function(self)

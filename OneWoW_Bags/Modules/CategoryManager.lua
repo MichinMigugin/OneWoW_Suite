@@ -5,6 +5,8 @@ local CM = OneWoW_Bags.CategoryManager
 
 local sectionPool = {}
 local activeSections = {}
+local dividerPool = {}
+local activeDividers = {}
 
 function CM:AssignCategories()
     local BagSet = OneWoW_Bags.BagSet
@@ -65,6 +67,79 @@ function CM:GetSortedCategoryNames(itemsByCategory)
     return names
 end
 
+function CM:GetSectionedLayout(itemsByCategory)
+    local db = OneWoW_Bags.db
+    if not db then return self:GetSortedCategoryNames(itemsByCategory) end
+
+    local sections    = db.global.categorySections or {}
+    local sectOrder   = db.global.sectionOrder or {}
+    local catOrder    = db.global.categoryOrder or {}
+
+    if #sectOrder == 0 then
+        return self:GetSortedCategoryNames(itemsByCategory)
+    end
+
+    local inSection = {}
+    for _, sec in pairs(sections) do
+        for _, catName in ipairs(sec.categories or {}) do
+            inSection[catName] = true
+        end
+    end
+
+    local layout = {}
+
+    local rootCats = {}
+    for name in pairs(itemsByCategory) do
+        if not inSection[name] then
+            table.insert(rootCats, name)
+        end
+    end
+
+    if #catOrder > 0 then
+        local orderMap = {}
+        for i, name in ipairs(catOrder) do orderMap[name] = i end
+        table.sort(rootCats, function(a, b)
+            local aP = orderMap[a] or 999
+            local bP = orderMap[b] or 999
+            if aP ~= bP then return aP < bP end
+            return a < b
+        end)
+    else
+        local Categories = OneWoW_Bags.Categories
+        Categories:SortCategories(rootCats, db.global.categorySort or "priority")
+    end
+
+    for _, name in ipairs(rootCats) do
+        table.insert(layout, { type = "category", name = name })
+    end
+
+    for _, sectionID in ipairs(sectOrder) do
+        local sec = sections[sectionID]
+        if sec and sec.categories then
+            local hasItems = false
+            for _, catName in ipairs(sec.categories) do
+                if itemsByCategory[catName] and #itemsByCategory[catName] > 0 then
+                    hasItems = true
+                    break
+                end
+            end
+            if hasItems then
+                table.insert(layout, { type = "separator" })
+                table.insert(layout, { type = "section_header", name = sec.name, sectionID = sectionID, collapsed = sec.collapsed })
+                if not sec.collapsed then
+                    for _, catName in ipairs(sec.categories) do
+                        if itemsByCategory[catName] and #itemsByCategory[catName] > 0 then
+                            table.insert(layout, { type = "category", name = catName })
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return layout
+end
+
 function CM:AcquireSection(parent)
     local section
     if #sectionPool > 0 then
@@ -93,6 +168,12 @@ function CM:ReleaseAllSections()
         table.insert(sectionPool, section)
     end
     activeSections = {}
+    for divider in pairs(activeDividers) do
+        divider:Hide()
+        divider:ClearAllPoints()
+        table.insert(dividerPool, divider)
+    end
+    activeDividers = {}
 end
 
 function CM:CreateSection(parent)
@@ -129,5 +210,32 @@ function CM:CreateSection(parent)
         end
     end)
 
+    return section
+end
+
+function CM:AcquireDivider(parent)
+    local divider
+    if #dividerPool > 0 then
+        divider = table.remove(dividerPool)
+        divider:SetParent(parent)
+        divider:Show()
+    else
+        divider = parent:CreateTexture(nil, "ARTWORK")
+        divider:SetHeight(1)
+    end
+    activeDividers[divider] = true
+    return divider
+end
+
+function CM:AcquireSectionHeader(parent)
+    local section
+    if #sectionPool > 0 then
+        section = table.remove(sectionPool)
+        section:SetParent(parent)
+        section:Show()
+    else
+        section = CM:CreateSection(parent)
+    end
+    activeSections[section] = true
     return section
 end

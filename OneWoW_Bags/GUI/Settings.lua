@@ -5,6 +5,8 @@ local Settings = OneWoW_Bags.Settings
 local settingsFrame = nil
 local isCreated = false
 local OneWoW_GUI = OneWoW_Bags.GUILib
+local bagColTimer = nil
+local bankColTimer = nil
 
 local T = OneWoW_Bags.T
 
@@ -200,7 +202,11 @@ function Settings:Create()
         minVal = 2, maxVal = 30, step = 1, currentVal = db.global.bagColumns or 15,
         onChange = function(val)
             db.global.bagColumns = val
-            if GUI.RefreshLayout then GUI:RefreshLayout() end
+            if bagColTimer then bagColTimer:Cancel() end
+            bagColTimer = C_Timer.NewTimer(0.15, function()
+                bagColTimer = nil
+                if GUI.RefreshLayout then GUI:RefreshLayout() end
+            end)
         end,
         width = 240, fmt = "%d",
     })
@@ -217,12 +223,16 @@ function Settings:Create()
         minVal = 2, maxVal = 30, step = 1, currentVal = db.global.bankColumns or 14,
         onChange = function(val)
             db.global.bankColumns = val
-            if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
-                OneWoW_Bags.BankGUI:RefreshLayout()
-            end
-            if OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI.RefreshLayout then
-                OneWoW_Bags.GuildBankGUI:RefreshLayout()
-            end
+            if bankColTimer then bankColTimer:Cancel() end
+            bankColTimer = C_Timer.NewTimer(0.15, function()
+                bankColTimer = nil
+                if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
+                    OneWoW_Bags.BankGUI:RefreshLayout()
+                end
+                if OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI.RefreshLayout then
+                    OneWoW_Bags.GuildBankGUI:RefreshLayout()
+                end
+            end)
         end,
         width = 240, fmt = "%d",
     })
@@ -314,6 +324,33 @@ function Settings:Create()
     sortContainer:SetHeight(math.abs(sortY) + 4)
     yOffset = yOffset - math.abs(sortY) - 4 - 15
 
+    yOffset = OneWoW_GUI:CreateSection(scrollContent, { title = L["SECTION_CATEGORIES"] or "Categories", yOffset = yOffset })
+
+    local catContainer = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
+    catContainer:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 10, yOffset)
+    catContainer:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -10, yOffset)
+    catContainer:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    catContainer:SetBackdropColor(T("BG_SECONDARY"))
+    catContainer:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+
+    local catY = -10
+    catY, _, _ = OneWoW_GUI:CreateToggleRow(catContainer, {
+        yOffset = catY,
+        label = L["SETTING_INVENTORY_SLOTS"] or "Split by Equipment Slot",
+        description = L["DESC_INVENTORY_SLOTS"] or "Split Weapons and Armor into individual equipment slots (Head, Chest, Hands, etc.)",
+        isEnabled = true,
+        value = db.global.enableInventorySlots,
+        onLabel = L["TOGGLE_ON"],
+        offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.enableInventorySlots = newVal
+            if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+        end,
+    })
+    catContainer:SetHeight(math.abs(catY) + 4)
+    yOffset = yOffset - math.abs(catY) - 4 - 15
+
     yOffset = OneWoW_GUI:CreateSection(scrollContent, { title = L["SECTION_BEHAVIOR"], yOffset = yOffset })
 
     local behaviorContainer = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
@@ -347,6 +384,19 @@ function Settings:Create()
         offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
             db.global.autoClose = newVal
+        end,
+    })
+
+    behY, _, _ = OneWoW_GUI:CreateToggleRow(behaviorContainer, {
+        yOffset = behY,
+        label = L["SETTING_AUTO_OPEN_WITH_BANK"],
+        description = L["DESC_AUTO_OPEN_WITH_BANK"],
+        isEnabled = true,
+        value = db.global.autoOpenWithBank,
+        onLabel = L["TOGGLE_ON"],
+        offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.autoOpenWithBank = newVal
         end,
     })
 

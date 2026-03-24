@@ -60,8 +60,17 @@ function GuildBankBar:Create(parent)
     end)
     bagsBarFrame.depositBtn = depositBtn
 
+    local logBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_LOG"] or "Log", height = 22, minWidth = 30 })
+    logBtn:SetPoint("RIGHT", depositBtn, "LEFT", -4, 0)
+    logBtn:SetScript("OnClick", function()
+        if OneWoW_Bags.GuildBankLog then
+            OneWoW_Bags.GuildBankLog:Toggle()
+        end
+    end)
+    bagsBarFrame.logBtn = logBtn
+
     local goldText = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    goldText:SetPoint("RIGHT", depositBtn, "LEFT", -S("SM"), 0)
+    goldText:SetPoint("RIGHT", logBtn, "LEFT", -S("SM"), 0)
     bagsBarFrame.goldText = goldText
 
     local freeSlots = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -183,6 +192,9 @@ function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewabl
         GuildBankBar:UpdateTabHighlights()
         if OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI.RefreshLayout then
             OneWoW_Bags.GuildBankGUI:RefreshLayout()
+        end
+        if OneWoW_Bags.GuildBankLog then
+            OneWoW_Bags.GuildBankLog:OnTabChanged()
         end
     end)
 

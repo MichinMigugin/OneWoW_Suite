@@ -186,6 +186,10 @@ function OneWoW_Bags:OnBankOpened()
     if self.BankGUI then
         self.BankGUI:Show()
     end
+
+    if db.global.autoOpenWithBank and self.GUI then
+        self.GUI:Show()
+    end
 end
 
 function OneWoW_Bags:OnBankClosed()
@@ -229,6 +233,11 @@ function OneWoW_Bags:OnGuildBankOpened()
 
     if self.GuildBankGUI then
         self.GuildBankGUI:Show()
+    end
+
+    local db = self.db
+    if db and db.global.autoOpenWithBank and self.GUI then
+        self.GUI:Show()
     end
 end
 

@@ -15,6 +15,7 @@ local defaults = {
         iconSize = 3,
         autoOpen = true,
         autoClose = false,
+        autoOpenWithBank = true,
         locked = false,
         showBagsBar = true,
         rarityColor = true,
@@ -28,6 +29,8 @@ local defaults = {
         collapsedBagSections = {},
         categorySort = "priority",
         categoryOrder = {},
+        categorySections = {},
+        sectionOrder = {},
         trackedCurrencies = {},
         selectedBag = nil,
         disabledCategories = {},
@@ -35,6 +38,7 @@ local defaults = {
         mainFramePosition = {},
         bagColumns = 15,
         bankColumns = 14,
+        enableInventorySlots = false,
         itemSort = "none",
         hideScrollBar = false,
         enableBankUI = true,
@@ -111,6 +115,10 @@ function OneWoW_Bags:InitializeDatabase()
         self.db.global.autoClose = false
     end
 
+    if self.db.global.autoOpenWithBank == nil then
+        self.db.global.autoOpenWithBank = true
+    end
+
     if self.db.global.locked == nil then
         self.db.global.locked = false
     end
@@ -163,6 +171,14 @@ function OneWoW_Bags:InitializeDatabase()
         self.db.global.categoryOrder = {}
     end
 
+    if not self.db.global.categorySections then
+        self.db.global.categorySections = {}
+    end
+
+    if not self.db.global.sectionOrder then
+        self.db.global.sectionOrder = {}
+    end
+
     if not self.db.global.trackedCurrencies then
         self.db.global.trackedCurrencies = {}
     end
@@ -194,6 +210,10 @@ function OneWoW_Bags:InitializeDatabase()
     if not self.db.global.itemSortMigratedToNone then
         self.db.global.itemSort = "none"
         self.db.global.itemSortMigratedToNone = true
+    end
+
+    if self.db.global.enableInventorySlots == nil then
+        self.db.global.enableInventorySlots = false
     end
 
     if self.db.global.hideScrollBar == nil then
@@ -231,4 +251,59 @@ function OneWoW_Bags:InitializeDatabase()
     if not self.db.global.collapsedGuildBankSections then
         self.db.global.collapsedGuildBankSections = {}
     end
+
+    if not self.db.global.categoriesV2Migrated then
+        self:MigrateCategorySystemV2()
+        self.db.global.categoriesV2Migrated = true
+    end
+end
+
+function OneWoW_Bags:MigrateCategorySystemV2()
+    local g = self.db.global
+
+    local OLD_TO_NEW = {
+        ["Equipment"] = { "Weapons", "Armor" },
+        ["Consumables"] = { "Potions", "Food", "Consumables" },
+    }
+
+    if g.disabledCategories then
+        for oldName, newNames in pairs(OLD_TO_NEW) do
+            if g.disabledCategories[oldName] then
+                for _, newName in ipairs(newNames) do
+                    g.disabledCategories[newName] = true
+                end
+                g.disabledCategories[oldName] = nil
+            end
+        end
+    end
+
+    if g.collapsedSections then
+        for oldName, newNames in pairs(OLD_TO_NEW) do
+            if g.collapsedSections[oldName] then
+                for _, newName in ipairs(newNames) do
+                    g.collapsedSections[newName] = true
+                end
+                g.collapsedSections[oldName] = nil
+            end
+        end
+    end
+
+    g.categoryOrder = { "Recent Items" }
+
+    local secDefault = "sec_default_general"
+    local secEquip   = "sec_default_equipment"
+    local secCraft   = "sec_default_crafting"
+    local secHouse   = "sec_default_housing"
+
+    g.categorySections = {
+        [secDefault] = { name = "DEFAULT", categories = {
+            "Hearthstone", "Keystone", "Potions", "Food", "Consumables", "Quest Items",
+            "Gems", "Item Enhancement", "Containers", "Keys",
+            "Miscellaneous", "Pets and Mounts", "Toys", "Cosmetics", "Other", "Junk",
+        }, collapsed = false },
+        [secEquip] = { name = "EQUIPMENT", categories = { "Equipment Sets", "Weapons", "Armor" }, collapsed = false },
+        [secCraft] = { name = "CRAFTING",  categories = { "Reagents", "Trade Goods", "Tradeskill", "Recipes" }, collapsed = false },
+        [secHouse] = { name = "HOUSING",   categories = { "Housing" }, collapsed = false },
+    }
+    g.sectionOrder = { secDefault, secEquip, secCraft, secHouse }
 end

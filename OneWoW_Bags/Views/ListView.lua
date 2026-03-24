@@ -24,7 +24,7 @@ function View:Layout(contentFrame, buttons, width)
     local reagentButtons = {}
 
     for _, button in ipairs(buttons) do
-        if BagTypes:IsReagentBag(button.owb_bagID) then
+        if not button.owb_isGuildBank and BagTypes:IsReagentBag(button.owb_bagID) then
             table.insert(reagentButtons, button)
         else
             table.insert(normalButtons, button)

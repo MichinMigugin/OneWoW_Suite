@@ -5,22 +5,32 @@ OneWoW_Bags.Categories = {}
 local Categories = OneWoW_Bags.Categories
 
 local CATEGORY_DEFINITIONS = {
-    { name = "Recent Items",   priority = 1 },
-    { name = "Equipment",      priority = 2 },
-    { name = "Consumables",    priority = 3 },
-    { name = "Reagents",       priority = 4 },
-    { name = "Trade Goods",    priority = 5 },
-    { name = "Tradeskill",     priority = 6 },
-    { name = "Recipes",        priority = 7 },
-    { name = "Gems",           priority = 8 },
-    { name = "Quest Items",    priority = 9 },
-    { name = "Cosmetics",      priority = 10 },
-    { name = "Toys",           priority = 11 },
-    { name = "Pets and Mounts", priority = 12 },
-    { name = "Keys",           priority = 13 },
-    { name = "Junk",           priority = 14 },
-    { name = "Other",          priority = 15 },
-    { name = "Empty",          priority = 99 },
+    { name = "Recent Items",      priority = 1 },
+    { name = "Hearthstone",       priority = 2 },
+    { name = "Keystone",          priority = 3 },
+    { name = "Potions",           priority = 4 },
+    { name = "Food",              priority = 5 },
+    { name = "Consumables",       priority = 6 },
+    { name = "Quest Items",       priority = 7 },
+    { name = "Equipment Sets",    priority = 8 },
+    { name = "Weapons",           priority = 9 },
+    { name = "Armor",             priority = 10 },
+    { name = "Reagents",          priority = 11 },
+    { name = "Trade Goods",       priority = 12 },
+    { name = "Tradeskill",        priority = 13 },
+    { name = "Recipes",           priority = 14 },
+    { name = "Housing",           priority = 15 },
+    { name = "Gems",              priority = 16 },
+    { name = "Item Enhancement",  priority = 17 },
+    { name = "Containers",        priority = 18 },
+    { name = "Keys",              priority = 19 },
+    { name = "Miscellaneous",     priority = 20 },
+    { name = "Pets and Mounts",   priority = 21 },
+    { name = "Toys",              priority = 22 },
+    { name = "Cosmetics",         priority = 23 },
+    { name = "Other",             priority = 24 },
+    { name = "Junk",              priority = 25 },
+    { name = "Empty",             priority = 99 },
 }
 
 local CATEGORY_PRIORITY = {}
@@ -35,6 +45,56 @@ local customCategoriesV2 = {}
 
 local categoryCache = {}
 local itemInfoCache = {}
+local equipSetCache = nil
+local equipSetCacheTime = 0
+
+local HEARTHSTONE_IDS = {
+    [6948] = true,
+    [64488] = true,
+    [54452] = true,
+    [93672] = true,
+    [110560] = true,
+    [140192] = true,
+    [141605] = true,
+    [162973] = true,
+    [163045] = true,
+    [165669] = true,
+    [165670] = true,
+    [165802] = true,
+    [166746] = true,
+    [166747] = true,
+    [168907] = true,
+    [172179] = true,
+    [180290] = true,
+    [182773] = true,
+    [183716] = true,
+    [184353] = true,
+    [188952] = true,
+    [190196] = true,
+    [193588] = true,
+    [200630] = true,
+    [206195] = true,
+    [208704] = true,
+    [209035] = true,
+    [210455] = true,
+    [212337] = true,
+    [228940] = true,
+}
+
+local SLOT_NORMALIZE = {
+    ["INVTYPE_ROBE"] = "INVTYPE_CHEST",
+    ["INVTYPE_RANGEDRIGHT"] = "INVTYPE_RANGED",
+}
+
+local function GetSlotCategoryName(equipLoc)
+    if not equipLoc or equipLoc == "" then return nil end
+    local normalized = SLOT_NORMALIZE[equipLoc] or equipLoc
+    local displayName = _G[normalized]
+    if displayName and displayName ~= "" then
+        return displayName
+    end
+    return nil
+end
 
 local function InvalidateCache()
     wipe(categoryCache)
@@ -45,29 +105,70 @@ local function GetCachedItemInfo(itemID, hyperlink)
 
     local cached = itemInfoCache[itemID]
     if cached then
-        return cached.classID, cached.subClassID, cached.quality
+        return cached.classID, cached.subClassID, cached.quality, cached.invType
     end
 
     if not hyperlink then return nil end
 
-    local _, _, quality, _, _, _, _, _, _, _, _, classID, subClassID = C_Item.GetItemInfo(hyperlink)
+    local _, _, quality, _, _, _, _, _, equipLoc, _, _, classID, subClassID = C_Item.GetItemInfo(hyperlink)
 
     if classID then
         itemInfoCache[itemID] = {
             classID = classID,
             subClassID = subClassID,
             quality = quality,
+            invType = equipLoc,
         }
     end
 
-    return classID, subClassID, quality
+    return classID, subClassID, quality, equipLoc
+end
+
+local function BuildEquipSetCache()
+    local now = GetTime()
+    if equipSetCache and (now - equipSetCacheTime) < 5 then return end
+    equipSetCache = {}
+    equipSetCacheTime = now
+    if not C_EquipmentSet or not C_EquipmentSet.GetEquipmentSetIDs then return end
+    local setIDs = C_EquipmentSet.GetEquipmentSetIDs()
+    if not setIDs then return end
+    for _, setID in ipairs(setIDs) do
+        local itemIDs = C_EquipmentSet.GetItemIDs(setID)
+        if itemIDs then
+            for _, id in pairs(itemIDs) do
+                if id and id > 0 then
+                    equipSetCache[id] = true
+                end
+            end
+        end
+    end
+end
+
+local function IsInEquipmentSet(itemID)
+    if not itemID then return false end
+    BuildEquipSetCache()
+    return equipSetCache and equipSetCache[itemID] or false
+end
+
+local function IsHearthstone(itemID)
+    if not itemID then return false end
+    if HEARTHSTONE_IDS[itemID] then return true end
+    if C_ToyBox and C_ToyBox.GetToyInfo then
+        local toyInfo = C_ToyBox.GetToyInfo(itemID)
+        if toyInfo then
+            local itemName = C_Item.GetItemNameByID(itemID)
+            if itemName and itemName:lower():find("hearthstone") then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 function Categories:GetItemCategory(bagID, slotID, itemInfo)
     if not itemInfo then return "Other" end
 
     local itemID = itemInfo.itemID
-    local itemGUID = itemInfo.itemGUID
     local hyperlink = itemInfo.hyperlink
 
     local disabled = (OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.disabledCategories) or {}
@@ -97,7 +198,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         return "Other"
     end
 
-    local classID, subClassID, quality = GetCachedItemInfo(itemID, hyperlink)
+    local classID, subClassID, quality, equipLoc = GetCachedItemInfo(itemID, hyperlink)
 
     if not classID then
         return "Other"
@@ -105,7 +206,9 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
 
     local category = "Other"
 
-    if quality == Enum.ItemQuality.Poor then
+    if not disabled["Hearthstone"] and IsHearthstone(itemID) then
+        category = "Hearthstone"
+    elseif quality == Enum.ItemQuality.Poor then
         category = "Junk"
     elseif itemID and C_ToyBox and C_ToyBox.GetToyInfo then
         local toyInfo = C_ToyBox.GetToyInfo(itemID)
@@ -115,12 +218,42 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     end
 
     if category == "Other" then
-        if classID == Enum.ItemClass.Armor and subClassID == 5 then
+        if not disabled["Equipment Sets"] and IsInEquipmentSet(itemID) then
+            category = "Equipment Sets"
+        elseif classID == Enum.ItemClass.Armor and subClassID == 5 then
             category = "Cosmetics"
-        elseif classID == Enum.ItemClass.Weapon or classID == Enum.ItemClass.Armor then
-            category = "Equipment"
+        elseif classID == Enum.ItemClass.Weapon then
+            local db = OneWoW_Bags.db
+            if db and db.global.enableInventorySlots then
+                local slotName = GetSlotCategoryName(equipLoc)
+                if slotName then
+                    category = slotName
+                else
+                    category = "Weapons"
+                end
+            else
+                category = "Weapons"
+            end
+        elseif classID == Enum.ItemClass.Armor then
+            local db = OneWoW_Bags.db
+            if db and db.global.enableInventorySlots then
+                local slotName = GetSlotCategoryName(equipLoc)
+                if slotName then
+                    category = slotName
+                else
+                    category = "Armor"
+                end
+            else
+                category = "Armor"
+            end
         elseif classID == Enum.ItemClass.Consumable then
-            category = "Consumables"
+            if subClassID == 1 or subClassID == 2 or subClassID == 3 then
+                category = "Potions"
+            elseif subClassID == 5 then
+                category = "Food"
+            else
+                category = "Consumables"
+            end
         elseif classID == Enum.ItemClass.Reagent then
             category = "Reagents"
         elseif classID == Enum.ItemClass.Tradegoods then
@@ -131,6 +264,10 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
             category = "Recipes"
         elseif classID == Enum.ItemClass.Gem then
             category = "Gems"
+        elseif classID == Enum.ItemClass.ItemEnhancement then
+            category = "Item Enhancement"
+        elseif classID == Enum.ItemClass.Container then
+            category = "Containers"
         elseif classID == Enum.ItemClass.Questitem or classID == Enum.ItemClass.Quest then
             category = "Quest Items"
         elseif classID == Enum.ItemClass.Battlepet then
@@ -138,6 +275,8 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         elseif classID == Enum.ItemClass.Miscellaneous then
             if subClassID == Enum.ItemMiscellaneousSubclass.Mount or subClassID == Enum.ItemMiscellaneousSubclass.CompanionPet then
                 category = "Pets and Mounts"
+            else
+                category = "Miscellaneous"
             end
         elseif classID == Enum.ItemClass.Key then
             category = "Keys"
@@ -202,6 +341,12 @@ function Categories:SortCategories(categoryList, sortMode)
             return aName < bName
         end)
     end
+end
+
+function Categories:InvalidateEquipSetCache()
+    equipSetCache = nil
+    equipSetCacheTime = 0
+    InvalidateCache()
 end
 
 function Categories:IsItemRecent(bagID, slotID)
@@ -358,4 +503,8 @@ function Categories:GetAllCategoryNames()
         table.insert(names, def.name)
     end
     return names
+end
+
+function Categories:GetCategoryDefinitions()
+    return CATEGORY_DEFINITIONS
 end

@@ -57,6 +57,9 @@ function GuildBankGUI:InitMainWindow()
         if OneWoW_Bags.GuildBankInfoBar and OneWoW_Bags.GuildBankInfoBar.ClearSearch then
             OneWoW_Bags.GuildBankInfoBar:ClearSearch()
         end
+        if OneWoW_Bags.GuildBankLog then
+            OneWoW_Bags.GuildBankLog:Hide()
+        end
         local d = OneWoW_Bags.db
         if d and d.global then
             d.global.guildBankFramePosition = d.global.guildBankFramePosition or {}
@@ -351,6 +354,10 @@ function GuildBankGUI:IsShown()
 end
 
 function GuildBankGUI:FullReset()
+    if OneWoW_Bags.GuildBankLog then
+        OneWoW_Bags.GuildBankLog:Reset()
+    end
+
     if OneWoW_Bags.GuildBankSet then
         OneWoW_Bags.GuildBankSet:ReleaseAll()
     end
@@ -398,6 +405,10 @@ function GuildBankGUI:ApplyTheme()
     end
 
     OneWoW_Bags.GuildBankInfoBar:UpdateViewButtons()
+
+    if OneWoW_Bags.GuildBankLog then
+        OneWoW_Bags.GuildBankLog:ApplyTheme()
+    end
 
     self:RefreshLayout()
 end
