@@ -81,7 +81,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         end
     end)
 
-    local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "FrameInspectorLeftScroll" })
+    local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, {})
     leftScroll:ClearAllPoints()
     leftScroll:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -25)
     leftScroll:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -14, 4)
@@ -146,7 +146,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         end
     end)
 
-    local rightScroll, rightContent = OneWoW_GUI:CreateScrollFrame(rightPanel, { name = "FrameInspectorRightScroll" })
+    local rightScroll, rightContent = OneWoW_GUI:CreateScrollFrame(rightPanel, {})
     rightScroll:ClearAllPoints()
     rightScroll:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 4, -25)
     rightScroll:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -14, 4)

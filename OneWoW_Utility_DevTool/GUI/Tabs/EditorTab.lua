@@ -357,7 +357,7 @@ function Addon.UI:CreateEditorTab(parent)
     end)
     helpBtn:SetScript("OnLeave", GameTooltip_Hide)
 
-    local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "DevToolEditorLeftScroll" })
+    local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, {})
     leftScroll:ClearAllPoints()
     leftScroll:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -24)
     leftScroll:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -20, 4)
@@ -471,14 +471,14 @@ function Addon.UI:CreateEditorTab(parent)
     editorBg:SetPoint("TOPLEFT", gutterFrame, "TOPRIGHT", 0, 0)
     editorBg:SetPoint("BOTTOMRIGHT", editorPanel, "BOTTOMRIGHT", 0, 0)
 
-    local scrollFrame = CreateFrame("ScrollFrame", "DevToolEditorScrollFrame", editorBg, "UIPanelScrollFrameTemplate")
+    local scrollFrame = CreateFrame("ScrollFrame", nil, editorBg, "UIPanelScrollFrameTemplate")
     scrollFrame:SetPoint("TOPLEFT", editorBg, "TOPLEFT", 4, -4)
     scrollFrame:SetPoint("BOTTOMRIGHT", editorBg, "BOTTOMRIGHT", -22, 4)
     scrollFrame:EnableMouse(true)
     scrollFrame:EnableMouseWheel(true)
     OneWoW_GUI:ApplyScrollBarStyle(scrollFrame.ScrollBar, editorBg, -2)
 
-    local editBox = CreateFrame("EditBox", "DevToolEditorEditBox", scrollFrame)
+    local editBox = CreateFrame("EditBox", nil, scrollFrame)
     editBox:SetMultiLine(true)
     editBox:SetAutoFocus(false)
     editBox:SetMaxLetters(0)
@@ -1598,14 +1598,30 @@ function Addon.UI:CreateEditorTab(parent)
         end
     end)
 
-    tab:SetScript("OnHide", function()
+    local function cleanupTab()
         dismissActiveDialog()
         clearPendingUndo()
+        if statusClearTimer then
+            statusClearTimer:Cancel()
+            statusClearTimer = nil
+        end
+        if syntaxCheckTimer then
+            syntaxCheckTimer:Cancel()
+            syntaxCheckTimer = nil
+        end
         if refreshListTimer then
             refreshListTimer:Cancel()
             refreshListTimer = nil
         end
         stopAutoSaveTicker()
+    end
+
+    function tab:Teardown()
+        cleanupTab()
+    end
+
+    tab:SetScript("OnHide", function()
+        cleanupTab()
     end)
 
     return tab

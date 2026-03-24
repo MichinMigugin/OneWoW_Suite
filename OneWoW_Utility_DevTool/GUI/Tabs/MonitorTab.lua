@@ -138,7 +138,7 @@ function Addon.UI:CreateMonitorTab(parent)
     listPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 35)
     self:StyleContentPanel(listPanel)
 
-    local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(listPanel, { name = "MonitorTabListScroll" })
+    local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(listPanel, {})
     listScroll:ClearAllPoints()
     listScroll:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 0, 0)
     listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -14, 0)
@@ -360,6 +360,17 @@ function Addon.UI:CreateMonitorTab(parent)
             end
         end
     end)
+
+    function tab:Teardown()
+        self:SetScript("OnUpdate", nil)
+        if Monitor then
+            Monitor:StopMonitoring()
+            Monitor:ClosePinnedPopup()
+        end
+        if Addon.MonitorTabUI == self then
+            Addon.MonitorTabUI = nil
+        end
+    end
 
     Addon.MonitorTabUI = tab
     return tab

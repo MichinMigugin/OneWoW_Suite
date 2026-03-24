@@ -92,6 +92,11 @@ function Addon:NormalizeEditorDatabase()
 end
 
 function Addon:InitializeDatabase()
+    local tabDefaults = {}
+    if self.UI and self.UI.GetTabSettingsDefaults then
+        tabDefaults = self.UI:GetTabSettingsDefaults()
+    end
+
     local defaults = {
         position = {},
         recentFrames = {},
@@ -137,6 +142,7 @@ function Addon:InitializeDatabase()
             untitledCounter = 1,
             categoryCollapsed = {},
         },
+        tabs = tabDefaults,
     }
 
     local function mergeSubTable(dbSub, defaultSub)
@@ -145,6 +151,20 @@ function Addon:InitializeDatabase()
                 dbSub[k] = v
             end
         end
+    end
+
+    local function mergeTabSettings(dbTabs, defaultTabs)
+        for key, value in pairs(defaultTabs) do
+            if dbTabs[key] == nil then
+                dbTabs[key] = value
+            elseif type(value) == "table" and type(dbTabs[key]) == "table" then
+                mergeSubTable(dbTabs[key], value)
+            end
+        end
+        if dbTabs.settings == nil then
+            dbTabs.settings = { enabled = true }
+        end
+        dbTabs.settings.enabled = true
     end
 
     if not OneWoW_UtilityDevTool_DB then
@@ -156,10 +176,16 @@ function Addon:InitializeDatabase()
             elseif type(value) == "table" and type(OneWoW_UtilityDevTool_DB[key]) == "table"
                    and (key == "errorDB" or key == "editor" or key == "monitor") then
                 mergeSubTable(OneWoW_UtilityDevTool_DB[key], value)
+            elseif key == "tabs" and type(value) == "table" and type(OneWoW_UtilityDevTool_DB[key]) == "table" then
+                mergeTabSettings(OneWoW_UtilityDevTool_DB[key], value)
             end
         end
     end
 
     self.db = OneWoW_UtilityDevTool_DB
+    if type(self.db.tabs) ~= "table" then
+        self.db.tabs = tabDefaults
+    end
+    mergeTabSettings(self.db.tabs, tabDefaults)
     self:NormalizeEditorDatabase()
 end

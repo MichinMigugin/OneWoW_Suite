@@ -5,10 +5,16 @@ if not OneWoW_GUI then return end
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local DEFAULT_THEME_ICON = OneWoW_GUI.Constants.DEFAULT_THEME_ICON
+local floor = math.floor
+local max = math.max
+local ipairs = ipairs
+local pairs = pairs
+local sort = sort
+local tinsert = tinsert
 
 local UI = {
     tabs = {},
-    currentTab = nil,
+    currentTabKey = nil,
 }
 Addon.UI = UI
 
@@ -18,6 +24,402 @@ function UI:StyleContentPanel(panel)
     panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 end
 
+local function destroyFrame(frame)
+    if not frame then return end
+    frame:Hide()
+    frame:ClearAllPoints()
+    frame:SetParent(nil)
+end
+
+function UI:GetTabDefinitions()
+    if self.tabDefinitions and self.orderedTabKeys then
+        return self.tabDefinitions, self.orderedTabKeys
+    end
+
+    self.tabDefinitions = {
+        frame = {
+            key = "frame",
+            order = 1,
+            labelKey = "TAB_FRAME",
+            create = function(parent) return self:CreateFrameInspectorTab(parent) end,
+            teardown = function(tab)
+                if Addon.FrameInspectorTab == tab then
+                    Addon.FrameInspectorTab = nil
+                end
+            end,
+        },
+        events = {
+            key = "events",
+            order = 2,
+            labelKey = "TAB_EVENTS",
+            create = function(parent) return self:CreateEventMonitorTab(parent) end,
+            teardown = function(tab)
+                if tab and tab.Teardown then
+                    tab:Teardown()
+                elseif Addon.EventMonitorTab == tab then
+                    Addon.EventMonitorTab = nil
+                end
+            end,
+        },
+        errors = {
+            key = "errors",
+            order = 3,
+            labelKey = "TAB_ERRORS",
+            create = function(parent) return self:CreateLuaConsoleTab(parent) end,
+            teardown = function(tab)
+                if Addon.LuaConsoleTab == tab then
+                    Addon.LuaConsoleTab = nil
+                end
+            end,
+        },
+        textures = {
+            key = "textures",
+            order = 4,
+            labelKey = "TAB_TEXTURES",
+            create = function(parent) return self:CreateTextureTab(parent) end,
+            teardown = function(tab)
+                if tab and tab._filterTicker then
+                    tab._filterTicker:Cancel()
+                    tab._filterTicker = nil
+                end
+                if tab and tab.Teardown then
+                    tab:Teardown()
+                elseif Addon.TextureBrowserTab == tab then
+                    Addon.TextureBrowserTab = nil
+                end
+            end,
+        },
+        fonts = {
+            key = "fonts",
+            order = 5,
+            labelKey = "TAB_FONTS",
+            create = function(parent) return self:CreateFontBrowserTab(parent) end,
+            teardown = function(tab)
+                if tab and tab._filterTicker then
+                    tab._filterTicker:Cancel()
+                    tab._filterTicker = nil
+                end
+            end,
+        },
+        colors = {
+            key = "colors",
+            order = 6,
+            labelKey = "TAB_COLORS",
+            create = function(parent) return self:CreateColorToolsTab(parent) end,
+        },
+        layout = {
+            key = "layout",
+            order = 7,
+            labelKey = "TAB_LAYOUT",
+            create = function(parent) return self:CreateLayoutTab(parent) end,
+            teardown = function(tab)
+                if Addon.LayoutToolsTab == tab then
+                    Addon.LayoutToolsTab = nil
+                end
+            end,
+        },
+        monitor = {
+            key = "monitor",
+            order = 8,
+            labelKey = "TAB_MONITOR",
+            create = function(parent) return self:CreateMonitorTab(parent) end,
+            teardown = function(tab)
+                if tab and tab.Teardown then
+                    tab:Teardown()
+                elseif Addon.MonitorTabUI == tab then
+                    Addon.MonitorTabUI = nil
+                end
+            end,
+        },
+        editor = {
+            key = "editor",
+            order = 9,
+            labelKey = "TAB_EDITOR",
+            create = function(parent) return self:CreateEditorTab(parent) end,
+            teardown = function(tab)
+                if tab and tab.Teardown then
+                    tab:Teardown()
+                end
+            end,
+        },
+        settings = {
+            key = "settings",
+            order = 10,
+            labelKey = "TAB_SETTINGS",
+            create = function(parent) return self:CreateSettingsTab(parent) end,
+            alwaysEnabled = true,
+        },
+    }
+
+    self.orderedTabKeys = {}
+    for key in pairs(self.tabDefinitions) do
+        tinsert(self.orderedTabKeys, key)
+    end
+    sort(self.orderedTabKeys, function(a, b)
+        return self.tabDefinitions[a].order < self.tabDefinitions[b].order
+    end)
+
+    return self.tabDefinitions, self.orderedTabKeys
+end
+
+function UI:GetOrderedTabKeys()
+    local _, orderedKeys = self:GetTabDefinitions()
+    return orderedKeys
+end
+
+function UI:GetTabDefinition(tabKey)
+    local definitions = self:GetTabDefinitions()
+    return definitions[tabKey]
+end
+
+function UI:GetTabSettingsDefaults()
+    local defaults = {}
+    for _, tabKey in ipairs(self:GetOrderedTabKeys()) do
+        defaults[tabKey] = { enabled = true }
+    end
+    defaults.settings.enabled = true
+    return defaults
+end
+
+function UI:GetTabLabel(tabKey)
+    local definition = self:GetTabDefinition(tabKey)
+    if not definition then
+        return tabKey
+    end
+    return (Addon.L and Addon.L[definition.labelKey]) or tabKey
+end
+
+function UI:IsTabEnabled(tabKey)
+    local definition = self:GetTabDefinition(tabKey)
+    if not definition then
+        return false
+    end
+    if definition.alwaysEnabled then
+        return true
+    end
+    local dbTabs = Addon.db and Addon.db.tabs
+    local tabSettings = dbTabs and dbTabs[tabKey]
+    if type(tabSettings) == "table" and tabSettings.enabled ~= nil then
+        return tabSettings.enabled and true or false
+    end
+    return true
+end
+
+function UI:SetTabEnabled(tabKey, enabled)
+    local definition = self:GetTabDefinition(tabKey)
+    if not definition or not Addon.db then
+        return
+    end
+
+    Addon.db.tabs = Addon.db.tabs or {}
+    Addon.db.tabs[tabKey] = Addon.db.tabs[tabKey] or {}
+    if definition.alwaysEnabled then
+        Addon.db.tabs[tabKey].enabled = true
+    else
+        Addon.db.tabs[tabKey].enabled = enabled and true or false
+    end
+end
+
+function UI:GetDefaultTabKey()
+    for _, tabKey in ipairs(self:GetOrderedTabKeys()) do
+        if tabKey ~= "settings" and self:IsTabEnabled(tabKey) then
+            return tabKey
+        end
+    end
+
+    for _, tabKey in ipairs(self:GetOrderedTabKeys()) do
+        if self:IsTabEnabled(tabKey) then
+            return tabKey
+        end
+    end
+
+    return nil
+end
+
+function UI:StyleTabButton(button, isSelected)
+    button.isSelected = isSelected and true or false
+    if isSelected then
+        button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    else
+        button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+end
+
+function UI:CreateTabButton(tabKey)
+    local button = OneWoW_GUI:CreateButton(self.mainFrame, {
+        text = self:GetTabLabel(tabKey),
+        width = 90,
+        height = self.tabHeight,
+    })
+
+    button.isSelected = false
+    button.tabKey = tabKey
+    button:SetScript("OnClick", function()
+        UI:SelectTab(tabKey)
+    end)
+    button:SetScript("OnEnter", function(self)
+        if not self.isSelected then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        end
+    end)
+    button:SetScript("OnLeave", function(self)
+        if not self.isSelected then
+            UI:StyleTabButton(self, false)
+        end
+    end)
+    button:SetScript("OnMouseDown", function(self)
+        if not self.isSelected then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+        end
+    end)
+    button:SetScript("OnMouseUp", function(self)
+        if not self.isSelected then
+            if self:IsMouseOver() then
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            else
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            end
+        end
+    end)
+
+    return button
+end
+
+function UI:EnsureTabBuilt(tabKey)
+    local definition = self:GetTabDefinition(tabKey)
+    if not definition or not self.mainFrame or not self.contentFrame then
+        return nil
+    end
+
+    local tab = self.tabs[tabKey]
+    if tab then
+        if tab.button and tab.button.text then
+            tab.button.text:SetText(self:GetTabLabel(tabKey))
+        end
+        return tab
+    end
+
+    local button = self:CreateTabButton(tabKey)
+    local content = definition.create(self.contentFrame)
+    if content then
+        content:Hide()
+    end
+
+    tab = {
+        key = tabKey,
+        button = button,
+        content = content,
+    }
+    self.tabs[tabKey] = tab
+    return tab
+end
+
+function UI:DestroyTab(tabKey)
+    local tab = self.tabs[tabKey]
+    if not tab then
+        return
+    end
+
+    local definition = self:GetTabDefinition(tabKey)
+    if definition and definition.teardown and tab.content then
+        definition.teardown(tab.content)
+    end
+
+    if tab.button then
+        tab.button:SetScript("OnClick", nil)
+        tab.button:SetScript("OnEnter", nil)
+        tab.button:SetScript("OnLeave", nil)
+        tab.button:SetScript("OnMouseDown", nil)
+        tab.button:SetScript("OnMouseUp", nil)
+        destroyFrame(tab.button)
+    end
+
+    if tab.content then
+        destroyFrame(tab.content)
+    end
+
+    self.tabs[tabKey] = nil
+    if self.currentTabKey == tabKey then
+        self.currentTabKey = nil
+    end
+end
+
+function UI:LayoutTabButtons()
+    if not self.mainFrame then
+        return
+    end
+
+    local visibleTabKeys = {}
+    for _, tabKey in ipairs(self:GetOrderedTabKeys()) do
+        if self:IsTabEnabled(tabKey) then
+            tinsert(visibleTabKeys, tabKey)
+        end
+    end
+
+    self.visibleTabKeys = visibleTabKeys
+    local count = #visibleTabKeys
+    if count == 0 then
+        return
+    end
+
+    local availWidth = self.mainFrame:GetWidth() - OneWoW_GUI:GetSpacing("SM") * 2 - (count - 1) * self.tabGap
+    local tabWidth = max(1, floor(availWidth / count))
+
+    for index, tabKey in ipairs(visibleTabKeys) do
+        local tab = self.tabs[tabKey]
+        if tab and tab.button then
+            tab.button:ClearAllPoints()
+            tab.button:SetWidth(tabWidth)
+            tab.button:SetHeight(self.tabHeight)
+            tab.button.text:SetText(self:GetTabLabel(tabKey))
+            if index == 1 then
+                tab.button:SetPoint("TOPLEFT", self.mainFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), self.tabY)
+            else
+                local previousTab = self.tabs[visibleTabKeys[index - 1]]
+                if previousTab and previousTab.button then
+                    tab.button:SetPoint("LEFT", previousTab.button, "RIGHT", self.tabGap, 0)
+                end
+            end
+            tab.button:Show()
+        end
+    end
+end
+
+function UI:RefreshTabs(preferredTabKey)
+    if not self.mainFrame or not self.contentFrame then
+        return
+    end
+
+    for _, tabKey in ipairs(self:GetOrderedTabKeys()) do
+        if self:IsTabEnabled(tabKey) then
+            self:EnsureTabBuilt(tabKey)
+        else
+            self:DestroyTab(tabKey)
+        end
+    end
+
+    self:LayoutTabButtons()
+
+    local targetTabKey = preferredTabKey
+    if not targetTabKey or not self.tabs[targetTabKey] or not self:IsTabEnabled(targetTabKey) then
+        if self.currentTabKey and self.tabs[self.currentTabKey] and self:IsTabEnabled(self.currentTabKey) then
+            targetTabKey = self.currentTabKey
+        else
+            targetTabKey = self:GetDefaultTabKey()
+        end
+    end
+
+    if targetTabKey then
+        self:SelectTab(targetTabKey)
+    end
+end
+
 function UI:Initialize()
     if self.mainFrame then return end
 
@@ -25,19 +427,8 @@ function UI:Initialize()
     local defaultW = DU.MAIN_FRAME_DEFAULT_WIDTH or 750
     local defaultH = DU.MAIN_FRAME_DEFAULT_HEIGHT or 450
     local resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95
-    local TAB_GAP = DU.TAB_GAP or 4
-    local TAB_HEIGHT = DU.TAB_HEIGHT or 28
-    local NUM_TABS = DU.NUM_TABS or 10
-    local TAB_FRAME = DU.TAB_INDEX_FRAME or 1
-    local TAB_EVENTS = DU.TAB_INDEX_EVENTS or 2
-    local TAB_ERRORS = DU.TAB_INDEX_ERRORS or 3
-    local TAB_TEXTURES = DU.TAB_INDEX_TEXTURES or 4
-    local TAB_FONTS = DU.TAB_INDEX_FONTS or 5
-    local TAB_COLORS = DU.TAB_INDEX_COLORS or 6
-    local TAB_LAYOUT = DU.TAB_INDEX_LAYOUT or 7
-    local TAB_MONITOR = DU.TAB_INDEX_MONITOR or 8
-    local TAB_EDITOR = DU.TAB_INDEX_EDITOR or 9
-    local TAB_SETTINGS = DU.TAB_INDEX_SETTINGS or 10
+    self.tabGap = DU.TAB_GAP or 4
+    self.tabHeight = DU.TAB_HEIGHT or 28
 
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
     local frame = OneWoW_GUI:CreateFrame(UIParent, {
@@ -94,99 +485,19 @@ function UI:Initialize()
 
     tinsert(UISpecialFrames, "OneWoW_UtilityDevToolFrame")
 
-    local tabLabels = {
-        Addon.L["TAB_FRAME"],
-        Addon.L["TAB_EVENTS"],
-        Addon.L["TAB_ERRORS"],
-        Addon.L["TAB_TEXTURES"],
-        Addon.L["TAB_FONTS"],
-        Addon.L["TAB_COLORS"],
-        Addon.L["TAB_LAYOUT"],
-        Addon.L["TAB_MONITOR"],
-        Addon.L["TAB_EDITOR"],
-        Addon.L["TAB_SETTINGS"],
-    }
-
-    local tabButtons = {}
-    local tabY = -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS"))
-
-    for i = 1, NUM_TABS do
-        local btn = OneWoW_GUI:CreateButton(frame, { text = tabLabels[i], width = 90, height = TAB_HEIGHT })
-        btn:SetID(i)
-        btn.isSelected = false
-        if i == TAB_FRAME then
-            btn:SetPoint("TOPLEFT", frame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), tabY)
-        else
-            btn:SetPoint("LEFT", tabButtons[i - 1], "RIGHT", TAB_GAP, 0)
-        end
-        local tabID = i
-        btn:SetScript("OnClick", function() UI:SelectTab(tabID) end)
-        btn:SetScript("OnEnter", function(self)
-            if not self.isSelected then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            end
-        end)
-        btn:SetScript("OnLeave", function(self)
-            if not self.isSelected then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-        end)
-        btn:SetScript("OnMouseDown", function(self)
-            if not self.isSelected then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
-            end
-        end)
-        btn:SetScript("OnMouseUp", function(self)
-            if not self.isSelected then
-                if self:IsMouseOver() then
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-                else
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                end
-            end
-        end)
-        tabButtons[i] = btn
-    end
-
-    local tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 =
-        tabButtons[1], tabButtons[2], tabButtons[3], tabButtons[4],
-        tabButtons[5], tabButtons[6], tabButtons[7], tabButtons[8], tabButtons[9], tabButtons[10]
-
-    local function ResizeTabButtons()
-        local frameWidth = frame:GetWidth()
-        local availWidth = frameWidth - OneWoW_GUI:GetSpacing("SM") * 2 - (NUM_TABS - 1) * TAB_GAP
-        local tabWidth = math.floor(availWidth / NUM_TABS)
-        for i = 1, NUM_TABS do
-            tabButtons[i]:SetWidth(tabWidth)
-        end
-    end
+    self.tabY = -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS"))
 
     frame:HookScript("OnSizeChanged", function()
-        ResizeTabButtons()
+        UI:LayoutTabButtons()
     end)
-    ResizeTabButtons()
 
     local contentFrame = CreateFrame("Frame", nil, frame)
-    contentFrame:SetPoint("TOPLEFT",     frame, "TOPLEFT",     OneWoW_GUI:GetSpacing("SM"), -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS") + TAB_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
+    contentFrame:SetPoint("TOPLEFT",     frame, "TOPLEFT",     OneWoW_GUI:GetSpacing("SM"), -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS") + self.tabHeight + OneWoW_GUI:GetSpacing("XS")))
     contentFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), OneWoW_GUI:GetSpacing("SM"))
 
     self.mainFrame = frame
     self.contentFrame = contentFrame
-
-    self.tabs[TAB_FRAME] = {button = tab1, content = self:CreateFrameInspectorTab(contentFrame)}
-    self.tabs[TAB_EVENTS] = {button = tab2, content = self:CreateEventMonitorTab(contentFrame)}
-    self.tabs[TAB_ERRORS] = {button = tab3, content = self:CreateLuaConsoleTab(contentFrame)}
-    self.tabs[TAB_TEXTURES] = {button = tab4, content = self:CreateTextureTab(contentFrame)}
-    self.tabs[TAB_FONTS] = {button = tab5, content = self:CreateFontBrowserTab(contentFrame)}
-    self.tabs[TAB_COLORS] = {button = tab6, content = self:CreateColorToolsTab(contentFrame)}
-    self.tabs[TAB_LAYOUT] = {button = tab7, content = self:CreateLayoutTab(contentFrame)}
-    self.tabs[TAB_MONITOR] = {button = tab8, content = self:CreateMonitorTab(contentFrame)}
-    self.tabs[TAB_EDITOR] = {button = tab9, content = self:CreateEditorTab(contentFrame)}
-    self.tabs[TAB_SETTINGS] = {button = tab10, content = self:CreateSettingsTab(contentFrame)}
+    self.tabs = {}
 
     local combatHide = CreateFrame("Frame", nil, frame)
     combatHide:SetScript("OnEvent", function()
@@ -208,31 +519,29 @@ function UI:Initialize()
         end
     end)
 
-    self:SelectTab(TAB_FRAME)
+    self:RefreshTabs(self:GetDefaultTabKey())
 end
 
-function UI:SelectTab(tabID)
-    local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
-    local TAB_EVENTS = DU.TAB_INDEX_EVENTS or 2
+function UI:SelectTab(tabKey)
+    if not tabKey or not self:IsTabEnabled(tabKey) or not self.tabs[tabKey] then
+        tabKey = self:GetDefaultTabKey()
+    end
+    if not tabKey then
+        return
+    end
 
-    self.currentTab = tabID
+    self.currentTabKey = tabKey
 
-    for id, tab in pairs(self.tabs) do
-        if id == tabID then
+    for key, tab in pairs(self.tabs) do
+        if key == tabKey then
             tab.content:Show()
-            if id == TAB_EVENTS and Addon.EventMonitor then
+            if key == "events" and Addon.EventMonitor then
                 Addon.EventMonitor:UpdateUI()
             end
-            tab.button.isSelected = true
-            tab.button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            tab.button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            tab.button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            self:StyleTabButton(tab.button, true)
         else
             tab.content:Hide()
-            tab.button.isSelected = false
-            tab.button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            tab.button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            tab.button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            self:StyleTabButton(tab.button, false)
         end
     end
 end
@@ -240,6 +549,11 @@ end
 function UI:Show()
     self:Initialize()
     self.mainFrame:Show()
+    if self.currentTabKey and self:IsTabEnabled(self.currentTabKey) then
+        self:SelectTab(self.currentTabKey)
+    else
+        self:SelectTab(self:GetDefaultTabKey())
+    end
 end
 
 function UI:Hide()
@@ -250,7 +564,15 @@ end
 
 function UI:FullReset()
     if self.mainFrame then
+        local selectedTabKey = self.currentTabKey
+        for _, tabKey in ipairs(self:GetOrderedTabKeys()) do
+            self:DestroyTab(tabKey)
+        end
         self.mainFrame:Hide()
+        self.mainFrame:SetParent(nil)
         self.mainFrame = nil
+        self.contentFrame = nil
+        self.tabs = {}
+        self.currentTabKey = selectedTabKey
     end
 end

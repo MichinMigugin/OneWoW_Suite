@@ -265,17 +265,6 @@ Addon.Constants = {
         MAIN_FRAME_RESIZE_CAP = 0.95,
         TAB_GAP = 4,
         TAB_HEIGHT = 28,
-        NUM_TABS = 10,
-        TAB_INDEX_FRAME = 1,
-        TAB_INDEX_EVENTS = 2,
-        TAB_INDEX_ERRORS = 3,
-        TAB_INDEX_TEXTURES = 4,
-        TAB_INDEX_FONTS = 5,
-        TAB_INDEX_COLORS = 6,
-        TAB_INDEX_LAYOUT = 7,
-        TAB_INDEX_MONITOR = 8,
-        TAB_INDEX_EDITOR = 9,
-        TAB_INDEX_SETTINGS = 10,
         -- Fonts / Textures copy toolbar: FONT_COPY_ROW_LABEL + short action buttons (no "Copy" per button).
         -- Textures: FONT_BTN_COPY_NAME + TEXTURE_BTN_COPY_SNIPPET + TEXTURE_BTN_COPY_COORDS.
         FONT_BROWSER_LEFT_PANE_DEFAULT_WIDTH = 280,

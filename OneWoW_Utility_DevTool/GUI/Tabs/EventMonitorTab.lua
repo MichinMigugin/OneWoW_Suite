@@ -82,7 +82,7 @@ function Addon.UI:CreateEventMonitorTab(parent)
     panel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
     self:StyleContentPanel(panel)
 
-    local scroll, content = OneWoW_GUI:CreateScrollFrame(panel, { name = "EventMonitorScroll" })
+    local scroll, content = OneWoW_GUI:CreateScrollFrame(panel, {})
     scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -4)
     scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 4)
@@ -172,6 +172,15 @@ function Addon.UI:CreateEventMonitorTab(parent)
         end
     end)
 
+    function tab:Teardown()
+        if Addon.EventMonitor and Addon.EventMonitor.monitoring then
+            Addon.EventMonitor:Stop()
+        end
+        if Addon.EventMonitorTab == self then
+            Addon.EventMonitorTab = nil
+        end
+    end
+
     Addon.EventMonitorTab = tab
     return tab
 end
@@ -251,7 +260,7 @@ function Addon.UI:ShowEventSelector()
         leftTitle:SetText(Addon.L and Addon.L["LABEL_EVENT_LIST"] or "Event List")
         leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, { name = "EventSelectorLeftScroll" })
+        local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, {})
         leftScroll:ClearAllPoints()
         leftScroll:SetPoint("TOPLEFT", 4, -25)
         leftScroll:SetPoint("BOTTOMRIGHT", -14, 4)

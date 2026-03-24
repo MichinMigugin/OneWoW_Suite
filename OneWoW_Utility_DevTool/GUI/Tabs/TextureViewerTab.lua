@@ -56,7 +56,7 @@ local function scheduleFilterRefresh(tab)
         tab._filterTicker:Cancel()
         tab._filterTicker = nil
     end
-    tab._filterTicker = C_Timer.After(0.12, function()
+    tab._filterTicker = C_Timer.NewTimer(0.12, function()
         tab._filterTicker = nil
         if not tab.searchBox then return end
         BR:SetFilterText(tab.searchBox:GetSearchText())
@@ -1084,7 +1084,7 @@ function Addon.UI:CreateTextureTab(parent)
     infoPanel:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -6, 42)
     self:StyleContentPanel(infoPanel)
 
-    local infoScroll, infoContent = OneWoW_GUI:CreateScrollFrame(infoPanel, { name = "TextureTabInfoScroll" })
+    local infoScroll, infoContent = OneWoW_GUI:CreateScrollFrame(infoPanel, {})
     infoScroll:ClearAllPoints()
     infoScroll:SetPoint("TOPLEFT", 4, -4)
     infoScroll:SetPoint("BOTTOMRIGHT", -14, 4)

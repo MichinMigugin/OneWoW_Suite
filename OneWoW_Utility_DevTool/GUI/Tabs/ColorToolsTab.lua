@@ -157,7 +157,7 @@ function Addon.UI:CreateColorToolsTab(parent)
     classColorsPanel.title:SetText(L["COLOR_TOOLS_TITLE_CLASS"] or "Class Colors")
     classColorsPanel.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(classColorsPanel, { name = "ColorToolsScroll" })
+    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(classColorsPanel, {})
     scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", classColorsPanel.title, "BOTTOMLEFT", 0, -10)
     scrollFrame:SetPoint("BOTTOMRIGHT", classColorsPanel, "BOTTOMRIGHT", -25, 10)

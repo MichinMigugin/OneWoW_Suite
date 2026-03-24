@@ -24,14 +24,16 @@ end
 local function safeGetMulti(frame, method, ...)
     local fn = frame[method]
     if not fn then return nil end
-    local results = { pcall(fn, frame, ...) }
-    if not results[1] then return nil end
-    for i = 2, #results do
-        if issecretvalue(results[i]) then
-            results[i] = "[secret]"
+    local callResults = { pcall(fn, frame, ...) }
+    if not callResults[1] then return nil end
+    local results = {}
+    for i = 2, #callResults do
+        if issecretvalue(callResults[i]) then
+            tinsert(results, "[secret]")
+        else
+            tinsert(results, callResults[i])
         end
     end
-    tremove(results, 1)
     return results
 end
 
@@ -392,10 +394,8 @@ function Addon:ToggleMainWindow()
         self.UI:Hide()
     else
         self.UI:Show()
-        local DU = self.Constants and self.Constants.DEVTOOL_UI
-        local luaTab = (DU and DU.TAB_INDEX_ERRORS) or 3
         if self.ErrorLogger and self.ErrorLogger.HasCurrentSessionErrors and self.ErrorLogger:HasCurrentSessionErrors() then
-            self.UI:SelectTab(luaTab)
+            self.UI:SelectTab("errors")
         end
     end
 end
@@ -482,16 +482,15 @@ frame:SetScript("OnEvent", function(self, event, arg1)
                 end,
                 onRightClick = function()
                     if Addon.UI then
-                        local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI
                         Addon.UI:Show()
-                        Addon.UI:SelectTab((DU and DU.TAB_INDEX_SETTINGS) or 10)
+                        Addon.UI:SelectTab("settings")
                     end
                 end,
                 onTooltip = function(frame)
                     GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
-                    GameTooltip:AddLine(Addon.L and Addon.L["ADDON_TOOLTIP_TITLE"] or "|cFFFFD100OneWoW|r - Utility: DevTool", 1, 0.82, 0, 1)
+                    GameTooltip:AddLine(Addon.L and Addon.L["ADDON_TOOLTIP_TITLE"] or "|cFFFFD100OneWoW|r - Utility: DevTool", 1, 0.82, 0, true)
                     if Addon.L and Addon.L["MINIMAP_TOOLTIP_HINT"] then
-                        GameTooltip:AddLine(Addon.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
+                        GameTooltip:AddLine(Addon.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, true)
                     end
                     GameTooltip:Show()
                 end,
@@ -508,9 +507,8 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         if Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad then
             C_Timer.After(0.5, function()
                 if Addon.UI then
-                    local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI
                     Addon.UI:Show()
-                    Addon.UI:SelectTab((DU and DU.TAB_INDEX_MONITOR) or 7)
+                    Addon.UI:SelectTab("monitor")
                 end
             end)
         end
