@@ -1,4 +1,5 @@
 -- AUTOMATICALLY GENERATED -- 12.0.5.66529
+-- https://www.townlong-yak.com/framexml/live/Helix/AtlasInfo.lua
 local _, Addon = ...
 
 local atlasVersion = "12.0.5.66529"
