@@ -51,8 +51,7 @@ function Addon.UI:CreateMonitorTab(parent)
         onTextChanged = function(text)
             if Monitor then
                 Monitor:SetFilter(text)
-                Monitor:GetSortedList()
-                tab:RefreshList()
+                Monitor:RefreshDisplayedList()
             end
         end,
     })
@@ -117,19 +116,19 @@ function Addon.UI:CreateMonitorTab(parent)
     nameHeader:SetPoint("RIGHT", memHeader, "LEFT", -5, 0)
 
     nameHeader:SetScript("OnClick", function()
-        if Monitor then Monitor:ToggleSort(1); Monitor:GetSortedList(); tab:RefreshList() end
+        if Monitor then Monitor:ToggleSort(1); Monitor:RefreshDisplayedList() end
     end)
     memHeader:SetScript("OnClick", function()
-        if Monitor then Monitor:ToggleSort(2); Monitor:GetSortedList(); tab:RefreshList() end
+        if Monitor then Monitor:ToggleSort(2); Monitor:RefreshDisplayedList() end
     end)
     memPctHeader:SetScript("OnClick", function()
-        if Monitor then Monitor:ToggleSort(2); Monitor:GetSortedList(); tab:RefreshList() end
+        if Monitor then Monitor:ToggleSort(2); Monitor:RefreshDisplayedList() end
     end)
     cpuHeader:SetScript("OnClick", function()
-        if Monitor then Monitor:ToggleSort(3); Monitor:GetSortedList(); tab:RefreshList() end
+        if Monitor then Monitor:ToggleSort(3); Monitor:RefreshDisplayedList() end
     end)
     cpuPctHeader:SetScript("OnClick", function()
-        if Monitor then Monitor:ToggleSort(3); Monitor:GetSortedList(); tab:RefreshList() end
+        if Monitor then Monitor:ToggleSort(3); Monitor:RefreshDisplayedList() end
     end)
 
     local listPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
@@ -296,8 +295,7 @@ function Addon.UI:CreateMonitorTab(parent)
     local function DoUpdate()
         if Monitor then
             Monitor:GatherUsage()
-            Monitor:GetSortedList()
-            tab:RefreshList()
+            Monitor:RefreshDisplayedList()
         end
     end
 
@@ -353,11 +351,7 @@ function Addon.UI:CreateMonitorTab(parent)
 
     tab:SetScript("OnUpdate", function(self, elapsed)
         if Monitor then
-            local wasMonitoring = Monitor:IsMonitoring()
             Monitor:OnUpdate(elapsed)
-            if wasMonitoring then
-                Monitor:GetSortedList()
-            end
         end
     end)
 

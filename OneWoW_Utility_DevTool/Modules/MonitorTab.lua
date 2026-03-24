@@ -130,6 +130,11 @@ function MonitorTab:GetSortedList()
     return displayedList
 end
 
+function MonitorTab:RefreshDisplayedList()
+    self:GetSortedList()
+    self:UpdateUI()
+end
+
 function MonitorTab:SetFilter(text)
     filterText = text or ""
 end
@@ -184,7 +189,7 @@ function MonitorTab:OnUpdate(elapsed)
     if updateTimer >= updateFrequency then
         updateTimer = 0
         self:GatherUsage()
-        self:UpdateUI()
+        self:RefreshDisplayedList()
     end
 end
 

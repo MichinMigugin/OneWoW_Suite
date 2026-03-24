@@ -17,6 +17,7 @@ local BR = Addon.TextureAtlasBrowser
 
 -- Forward declaration: refreshSheetOverlays (above) calls this from overlay OnClick.
 local selectAtlasFromOverlay
+local applySheetFrameLayout
 
 local function getDU()
     return Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
@@ -107,6 +108,79 @@ local function releaseOverlays(tab)
     if tab.overlayPool then
         tab.overlayPool:ReleaseAll()
     end
+end
+
+local function stopPreviewInteraction(tab)
+    if not tab or not tab.previewClip then
+        return
+    end
+    tab._sheetPanActive = false
+    tab.previewClip:SetScript("OnUpdate", nil)
+    if tab.uvCursorLabel then
+        tab.uvCursorLabel:SetText("")
+    end
+end
+
+local function syncPreviewInteraction(tab)
+    if not tab or not tab.previewClip then
+        return
+    end
+    if not tab:IsShown() or not tab.selectedTextureKey or not tab.previewSheetHost or not tab.previewSheetHost:IsShown() then
+        stopPreviewInteraction(tab)
+        return
+    end
+    if tab.previewAtlasHost and tab.previewAtlasHost:IsShown() then
+        stopPreviewInteraction(tab)
+        return
+    end
+    if tab.previewClip:GetScript("OnUpdate") then
+        return
+    end
+
+    local uvLabel = tab.uvCursorLabel
+    tab.previewClip:SetScript("OnUpdate", function(self)
+        local DU = getDU()
+        local panThresh = DU.TEXTURE_SHEET_PAN_CLICK_THRESHOLD or 4
+
+        if tab._sheetPanActive then
+            if IsMouseButtonDown("LeftButton") then
+                local x, y = GetCursorPosition()
+                local sc = UIParent:GetEffectiveScale()
+                local cx, cy = x / sc, y / sc
+                if abs(cx - tab._sheetPanStartCX) + abs(cy - tab._sheetPanStartCY) > panThresh then
+                    tab._sheetPanDragged = true
+                end
+                local dx = cx - tab._sheetPanLastCX
+                local dy = cy - tab._sheetPanLastCY
+                tab._sheetPanLastCX = cx
+                tab._sheetPanLastCY = cy
+                if dx ~= 0 or dy ~= 0 then
+                    tab.sheetPanX = (tab.sheetPanX or 0) + dx
+                    tab.sheetPanY = (tab.sheetPanY or 0) + dy
+                    applySheetFrameLayout(tab)
+                end
+            else
+                tab._sheetPanActive = false
+            end
+        end
+
+        if not self:IsMouseOver() then
+            uvLabel:SetText("")
+            return
+        end
+        local x, y = GetCursorPosition()
+        local sc = UIParent:GetEffectiveScale()
+        x = x / sc
+        y = y / sc
+        local l, t = self:GetLeft(), self:GetTop()
+        local w, h = self:GetWidth(), self:GetHeight()
+        if not w or w <= 0 or not h or h <= 0 then return end
+        local nx = (x - l) / w
+        local ny = (t - y) / h
+        nx = max(0, min(1, nx))
+        ny = max(0, min(1, ny))
+        uvLabel:SetText(format(L["TEXTURE_UV_CURSOR"] or "UV X: %.4f  Y: %.4f", nx, ny))
+    end)
 end
 
 local function beginSheetPanDrag(tab, button)
@@ -286,7 +360,7 @@ local function refreshZoomPercentDisplay(tab)
     end
 end
 
-local function applySheetFrameLayout(tab)
+applySheetFrameLayout = function(tab)
     local DU = getDU()
     local z = tab.zoomLevel or 1
     local zmin = DU.TEXTURE_ZOOM_MIN or 0.03
@@ -339,6 +413,7 @@ local function showTextureSheet(tab, textureKey)
     C_Timer.After(0, fitLayoutAndOverlays)
 
     tab.nameText:SetText(tostring(textureKey))
+    syncPreviewInteraction(tab)
 end
 
 local function showAtlasSolo(tab, atlasName, textureKey)
@@ -355,6 +430,7 @@ local function showAtlasSolo(tab, atlasName, textureKey)
 
     layoutAtlasSoloFrame(tab, atlasName, textureKey)
     refreshZoomPercentDisplay(tab)
+    syncPreviewInteraction(tab)
 end
 
 local function updateDetailPanel(tab)
@@ -435,6 +511,7 @@ local function textureTabAfterBookmarkToggle(tab)
             tab.sheetSelectionHighlightSuppressed = false
             tab.previewSheetHost:Hide()
             tab.previewAtlasHost:Hide()
+            syncPreviewInteraction(tab)
             releaseOverlays(tab)
             if tab.nameText then tab.nameText:SetText("") end
             updateDetailPanel(tab)
@@ -627,6 +704,7 @@ function Addon.UI:CreateTextureTab(parent)
         else
             tab.previewSheetHost:Hide()
             tab.previewAtlasHost:Hide()
+            syncPreviewInteraction(tab)
             tab.nameText:SetText("")
             updateDetailPanel(tab)
         end
@@ -653,6 +731,7 @@ function Addon.UI:CreateTextureTab(parent)
         else
             tab.previewSheetHost:Hide()
             tab.previewAtlasHost:Hide()
+            syncPreviewInteraction(tab)
             tab.nameText:SetText("")
             updateDetailPanel(tab)
         end
@@ -679,6 +758,7 @@ function Addon.UI:CreateTextureTab(parent)
         else
             tab.previewSheetHost:Hide()
             tab.previewAtlasHost:Hide()
+            syncPreviewInteraction(tab)
             updateDetailPanel(tab)
         end
         Addon.UI.TextureTab_RefreshToolbarButtons(tab)
@@ -968,50 +1048,6 @@ function Addon.UI:CreateTextureTab(parent)
     tab.zoomPctLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     tab.zoomPctLabel:SetText("")
 
-    previewClip:SetScript("OnUpdate", function(self)
-        if not tab:IsShown() then return end
-        local panThresh = DU.TEXTURE_SHEET_PAN_CLICK_THRESHOLD or 4
-
-        if tab._sheetPanActive then
-            if IsMouseButtonDown("LeftButton") then
-                local x, y = GetCursorPosition()
-                local sc = UIParent:GetEffectiveScale()
-                local cx, cy = x / sc, y / sc
-                if abs(cx - tab._sheetPanStartCX) + abs(cy - tab._sheetPanStartCY) > panThresh then
-                    tab._sheetPanDragged = true
-                end
-                local dx = cx - tab._sheetPanLastCX
-                local dy = cy - tab._sheetPanLastCY
-                tab._sheetPanLastCX = cx
-                tab._sheetPanLastCY = cy
-                if dx ~= 0 or dy ~= 0 then
-                    tab.sheetPanX = (tab.sheetPanX or 0) + dx
-                    tab.sheetPanY = (tab.sheetPanY or 0) + dy
-                    applySheetFrameLayout(tab)
-                end
-            else
-                tab._sheetPanActive = false
-            end
-        end
-
-        if not self:IsMouseOver() then
-            uvLabel:SetText("")
-            return
-        end
-        local x, y = GetCursorPosition()
-        local sc = UIParent:GetEffectiveScale()
-        x = x / sc
-        y = y / sc
-        local l, t = previewClip:GetLeft(), previewClip:GetTop()
-        local w, h = previewClip:GetWidth(), previewClip:GetHeight()
-        if not w or w <= 0 or not h or h <= 0 then return end
-        local nx = (x - l) / w
-        local ny = (t - y) / h
-        nx = max(0, min(1, nx))
-        ny = max(0, min(1, ny))
-        uvLabel:SetText(format(L["TEXTURE_UV_CURSOR"] or "UV X: %.4f  Y: %.4f", nx, ny))
-    end)
-
     -- Decorative outline only: a filled backdrop here is created after previewClip and would
     -- paint on top of the texture (looked like the image was "under" the window).
     local border = CreateFrame("Frame", nil, rightPanel, "BackdropTemplate")
@@ -1053,6 +1089,7 @@ function Addon.UI:CreateTextureTab(parent)
         if tab.atlasSoloTexture:SetAtlas(path, true) then
             tab.previewSheetHost:Hide()
             tab.previewAtlasHost:Show()
+            syncPreviewInteraction(tab)
             releaseOverlays(tab)
             tab.nameText:SetText(path)
             tab.selectedAtlasName = path
@@ -1168,6 +1205,29 @@ function Addon.UI:CreateTextureTab(parent)
     tab.copySnippetBtn = copySnippetBtn
     tab.copyCoordBtn = copyCoordBtn
 
+    tab:SetScript("OnShow", function()
+        syncPreviewInteraction(tab)
+    end)
+
+    tab:SetScript("OnHide", function()
+        stopPreviewInteraction(tab)
+        if tab._filterTicker then
+            tab._filterTicker:Cancel()
+            tab._filterTicker = nil
+        end
+    end)
+
+    function tab:Teardown()
+        stopPreviewInteraction(self)
+        if self._filterTicker then
+            self._filterTicker:Cancel()
+            self._filterTicker = nil
+        end
+        if Addon.TextureBrowserTab == self then
+            Addon.TextureBrowserTab = nil
+        end
+    end
+
     Addon.TextureBrowserTab = tab
 
     Addon.UI.TextureTab_RefreshList(tab)
@@ -1176,6 +1236,7 @@ function Addon.UI:CreateTextureTab(parent)
     else
         updateDetailPanel(tab)
     end
+    syncPreviewInteraction(tab)
     Addon.UI.TextureTab_RefreshToolbarButtons(tab)
 
     return tab

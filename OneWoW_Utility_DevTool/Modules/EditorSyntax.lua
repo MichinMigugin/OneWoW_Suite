@@ -554,9 +554,10 @@ end
 local editboxSetText
 local editboxGetText
 local enabled = {}
-local dirty = {}
+local recolorTimers = {}
 local editboxStringCache = {}
 local decodeCache = {}
+local RECOLOR_DELAY = 0.2
 
 local function hookHandler(editbox, handler, newFn)
     local oldFn = editbox:GetScript(handler)
@@ -565,8 +566,31 @@ local function hookHandler(editbox, handler, newFn)
     editbox:SetScript(handler, newFn)
 end
 
+local function cancelRecolor(editbox)
+    local timer = recolorTimers[editbox]
+    if timer then
+        timer:Cancel()
+        recolorTimers[editbox] = nil
+    end
+end
+
+local function scheduleRecolor(editbox, delay)
+    if not enabled[editbox] then
+        return
+    end
+    cancelRecolor(editbox)
+    recolorTimers[editbox] = C_Timer.NewTimer(delay or RECOLOR_DELAY, function()
+        recolorTimers[editbox] = nil
+        if not enabled[editbox] then
+            return
+        end
+        decodeCache[editbox] = nil
+        ES.colorCodeEditbox(editbox)
+    end)
+end
+
 function ES.colorCodeEditbox(editbox)
-    dirty[editbox] = nil
+    cancelRecolor(editbox)
 
     local orgCode = editboxGetText(editbox)
     if editboxStringCache[editbox] == orgCode then return end
@@ -580,7 +604,9 @@ function ES.colorCodeEditbox(editbox)
     if orgCode ~= newCode then
         decodeCache[editbox] = nil
         local codeLen = stringlen(newCode)
+        editbox.es_internalColorizing = true
         editboxSetText(editbox, newCode)
+        editbox.es_internalColorizing = nil
         if newCaret then
             if newCaret < 0 then newCaret = 0 end
             if newCaret > codeLen then newCaret = codeLen end
@@ -594,7 +620,9 @@ local function textChangedHook(editbox, ...)
     if oldFn then oldFn(editbox, ...) end
     if enabled[editbox] then
         decodeCache[editbox] = nil
-        dirty[editbox] = GetTime()
+        if not editbox.es_internalColorizing then
+            scheduleRecolor(editbox)
+        end
     end
 end
 
@@ -606,19 +634,6 @@ local function tabPressedHook(editbox, ...)
     local indentSize = editbox.es_tabWidth or 3
     local spaces = stringrep(" ", indentSize)
     editbox:Insert(spaces)
-end
-
-local function onUpdateHook(editbox, ...)
-    local oldFn = editbox["es_old_OnUpdate"]
-    if oldFn then oldFn(editbox, ...) end
-    if not enabled[editbox] then return end
-
-    local now = GetTime()
-    local lastDirty = dirty[editbox]
-    if lastDirty and (now - lastDirty) > 0.2 then
-        decodeCache[editbox] = nil
-        ES.colorCodeEditbox(editbox)
-    end
 end
 
 local function newGetText(editbox, raw)
@@ -662,7 +677,6 @@ function ES.enable(editbox, tabWidth)
 
     hookHandler(editbox, "OnTextChanged", textChangedHook)
     hookHandler(editbox, "OnTabPressed", tabPressedHook)
-    hookHandler(editbox, "OnUpdate", onUpdateHook)
 
     ES.colorCodeEditbox(editbox)
 end
@@ -670,6 +684,7 @@ end
 function ES.disable(editbox)
     if not enabled[editbox] then return end
     enabled[editbox] = nil
+    cancelRecolor(editbox)
 
     editbox:SetMaxBytes(editbox.oldMaxBytes or 0)
     editbox:SetMaxLetters(editbox.oldMaxLetters or 0)
@@ -679,9 +694,6 @@ function ES.disable(editbox)
     end
     if editbox:GetScript("OnTabPressed") == tabPressedHook then
         editbox:SetScript("OnTabPressed", editbox["es_old_OnTabPressed"])
-    end
-    if editbox:GetScript("OnUpdate") == onUpdateHook then
-        editbox:SetScript("OnUpdate", editbox["es_old_OnUpdate"])
     end
 
     editbox.GetText = nil
@@ -703,7 +715,8 @@ end
 
 function ES.forceDirty(editbox)
     if enabled[editbox] then
-        dirty[editbox] = GetTime() - 1
+        decodeCache[editbox] = nil
+        scheduleRecolor(editbox, 0)
     end
 end
 
