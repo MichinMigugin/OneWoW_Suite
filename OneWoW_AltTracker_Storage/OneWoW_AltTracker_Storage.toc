@@ -26,9 +26,6 @@ Modules\WarbandBank.lua
 Modules\GuildBank.lua
 Modules\Mail.lua
 
-# AH Scanner Module
-Modules\AHScanner.lua
-
 # Item Index (inverted item lookup for tooltips)
 Modules\ItemIndex.lua
 

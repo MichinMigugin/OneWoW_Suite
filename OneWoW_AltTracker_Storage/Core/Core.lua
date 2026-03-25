@@ -26,10 +26,6 @@ function ns:OnPlayerLogin()
         ns.Mail:Initialize()
     end
 
-    if ns.AHScanner then
-        ns.AHScanner:Initialize()
-    end
-
     if ns.DataManager then
         ns.DataManager:Initialize()
         ns.DataManager:RegisterEvents()
