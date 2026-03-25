@@ -302,6 +302,11 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
     local function Refresh()
         if not scrollFrame or not content then return end
         local n = getCount()
+        if n <= 0 then
+            state.selectedIndex = nil
+        elseif state.selectedIndex and state.selectedIndex > n then
+            state.selectedIndex = n
+        end
         content:SetHeight(math.max(n * rowHeight, 1))
         local scrollMax = math.max(content:GetHeight() - scrollFrame:GetHeight(), 0)
         local vs = scrollFrame:GetVerticalScroll()
