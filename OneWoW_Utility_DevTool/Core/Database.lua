@@ -103,6 +103,9 @@ function Addon:InitializeDatabase()
         textureBookmarks = {},
         --- Saved width of the texture browser list column (nil = use default from Constants).
         textureBrowserLeftPaneWidth = nil,
+        soundBrowserLeftPaneWidth = nil,
+        soundBrowserChannel = "SFX",
+        soundBookmarks = {},
         fontBrowserPreviewBg = nil,  -- nil = use FONT_BROWSER_PREVIEW_BG; else {r,g,b,a}
         theme = "green",
         language = GetLocale(),

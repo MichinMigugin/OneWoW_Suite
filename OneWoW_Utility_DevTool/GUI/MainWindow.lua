@@ -101,15 +101,32 @@ function UI:GetTabDefinitions()
                 end
             end,
         },
+        sounds = {
+            key = "sounds",
+            order = 6,
+            labelKey = "TAB_SOUNDS",
+            create = function(parent) return self:CreateSoundBrowserTab(parent) end,
+            teardown = function(tab)
+                if tab and tab._filterTicker then
+                    tab._filterTicker:Cancel()
+                    tab._filterTicker = nil
+                end
+                if tab and tab.Teardown then
+                    tab:Teardown()
+                elseif Addon.SoundBrowserTab == tab then
+                    Addon.SoundBrowserTab = nil
+                end
+            end,
+        },
         colors = {
             key = "colors",
-            order = 6,
+            order = 7,
             labelKey = "TAB_COLORS",
             create = function(parent) return self:CreateColorToolsTab(parent) end,
         },
         layout = {
             key = "layout",
-            order = 7,
+            order = 8,
             labelKey = "TAB_LAYOUT",
             create = function(parent) return self:CreateLayoutTab(parent) end,
             teardown = function(tab)
@@ -120,7 +137,7 @@ function UI:GetTabDefinitions()
         },
         monitor = {
             key = "monitor",
-            order = 8,
+            order = 9,
             labelKey = "TAB_MONITOR",
             create = function(parent) return self:CreateMonitorTab(parent) end,
             teardown = function(tab)
@@ -133,7 +150,7 @@ function UI:GetTabDefinitions()
         },
         editor = {
             key = "editor",
-            order = 9,
+            order = 10,
             labelKey = "TAB_EDITOR",
             create = function(parent) return self:CreateEditorTab(parent) end,
             teardown = function(tab)
@@ -144,7 +161,7 @@ function UI:GetTabDefinitions()
         },
         settings = {
             key = "settings",
-            order = 10,
+            order = 11,
             labelKey = "TAB_SETTINGS",
             create = function(parent) return self:CreateSettingsTab(parent) end,
             alwaysEnabled = true,
@@ -537,6 +554,8 @@ function UI:SelectTab(tabKey)
             tab.content:Show()
             if key == "events" and Addon.EventMonitor then
                 Addon.EventMonitor:UpdateUI()
+            elseif key == "sounds" and Addon.UI.SoundTab_RefreshSoundCvarCheckboxes then
+                Addon.UI.SoundTab_RefreshSoundCvarCheckboxes()
             end
             self:StyleTabButton(tab.button, true)
         else
@@ -557,6 +576,9 @@ function UI:Show()
 end
 
 function UI:Hide()
+    if Addon.UI.SoundTab_GlobalStopPlayback then
+        Addon.UI.SoundTab_GlobalStopPlayback()
+    end
     if self.mainFrame then
         self.mainFrame:Hide()
     end

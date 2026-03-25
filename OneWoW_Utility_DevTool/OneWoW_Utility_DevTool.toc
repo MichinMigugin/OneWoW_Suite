@@ -34,10 +34,21 @@ Core\Database.lua
 # Main Addon File
 OneWoW_Utility_DevTool.lua
 
-# Texture Atlas Data & Font Catalog
-Data\AtlasInfoCommon.lua
+# Texture Atlas Data, Font Catalog, SoundFile Paths
+Data\Core.lua
+
 Data\AtlasInfo-12.0.1.66527.lua [AllowLoadGameType mainline]
 Data\AtlasInfo-12.0.5.66529.lua [AllowLoadGameType mainline-test]
+
+Data\SoundFiles-12.0.1.66562-Init.lua [AllowLoadGameType mainline]
+Data\SoundFiles-12.0.1.66562-S0001.lua [AllowLoadGameType mainline]
+Data\SoundFiles-12.0.1.66562-S0002.lua [AllowLoadGameType mainline]
+Data\SoundFiles-12.0.1.66562-S0003.lua [AllowLoadGameType mainline]
+Data\SoundFiles-12.0.5.66529-Init.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-12.0.5.66529-S0001.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-12.0.5.66529-S0002.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-12.0.5.66529-S0003.lua [AllowLoadGameType mainline-test]
+
 Data\FontObjectNames.lua
 Data\LuaSyntax.lua
 
@@ -51,6 +62,7 @@ Modules\EventMonitor.lua
 Modules\ColorTools.lua
 Modules\TextureAtlasBrowser.lua
 Modules\FontBrowserTab.lua
+Modules\SoundBrowser.lua
 Modules\MonitorTab.lua
 Modules\EditorSyntax.lua
 Modules\EditorEngine.lua
@@ -69,3 +81,4 @@ GUI\Tabs\MonitorTab.lua
 GUI\Tabs\SettingsTab.lua
 GUI\Tabs\EditorTab.lua
 GUI\Tabs\FontBrowserTab.lua
+GUI\Tabs\SoundBrowserTab.lua

@@ -312,6 +312,13 @@ Addon.Constants = {
         TEXTURE_BROWSER_LEFT_PANE_DEFAULT_WIDTH = 300,
         TEXTURE_BROWSER_LEFT_PANE_MIN_WIDTH = 200,
         TEXTURE_BROWSER_RIGHT_PANE_MIN_WIDTH = 260,
+        SOUND_BROWSER_LIST_ROW_HEIGHT = 22,
+        SOUND_BROWSER_LIST_VISIBLE_ROWS = 40,
+        SOUND_BROWSER_LEFT_PANE_DEFAULT_WIDTH = 300,
+        SOUND_BROWSER_LEFT_PANE_MIN_WIDTH = 200,
+        SOUND_BROWSER_RIGHT_PANE_MIN_WIDTH = 260,
+        SOUND_BROWSER_BOTTOM_COPY_STRIP_HEIGHT = 42,
+        SOUND_BROWSER_MANUAL_PANEL_HEIGHT = 92,
         -- Optional override for CreateVerticalPaneResizer splitPadding (default: divider width + 10).
         -- TEXTURE_BROWSER_SPLIT_PADDING = 18,
         -- Bookmark icon on list rows (texture layer, right-aligned).
@@ -354,6 +361,10 @@ Addon.Constants = {
         EDITOR_SYNTAX_CHECK_DEBOUNCE = 5,
         EDITOR_STATUS_CLEAR_DELAY = 5,
     },
+
+    SOUND_CVAR_ENABLE_MUSIC = "Sound_EnableMusic",
+    SOUND_CVAR_ENABLE_AMBIENCE = "Sound_EnableAmbience",
+    SOUND_PATH_PREFIX = "sound/",
 
     MONITOR_PRESET = {
         BALANCED = "balanced",
