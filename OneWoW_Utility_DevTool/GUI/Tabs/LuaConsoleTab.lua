@@ -10,6 +10,9 @@ local function getErrorDB()
 end
 
 local function soundChoiceLabel(L, value)
+    if value == "devtools_error" then
+        return L["ERR_SOUND_DEVTOOL"] or "DevTool alert"
+    end
     if value == "raid_warning" then
         return L["ERR_SOUND_RAID_WARNING"] or "Raid warning"
     end
@@ -89,7 +92,7 @@ function Addon.UI:CreateLuaConsoleTab(parent)
 
     OneWoW_GUI:AttachFilterMenu(soundDrop, {
         searchable = false,
-        menuHeight = 160,
+        menuHeight = 200,
         getActiveValue = function()
             return getErrorDB() and getErrorDB().soundChoice or "off"
         end,
@@ -97,6 +100,7 @@ function Addon.UI:CreateLuaConsoleTab(parent)
             local loc = Addon.L or {}
             return {
                 { value = "off", text = loc["ERR_SOUND_OFF"] or "Off" },
+                { value = "devtools_error", text = loc["ERR_SOUND_DEVTOOL"] or "DevTool alert" },
                 { value = "raid_warning", text = loc["ERR_SOUND_RAID_WARNING"] or "Raid warning" },
                 { value = "tell_message", text = loc["ERR_SOUND_TELL"] or "Tell message" },
                 { value = "map_ping", text = loc["ERR_SOUND_MAP_PING"] or "Map ping" },

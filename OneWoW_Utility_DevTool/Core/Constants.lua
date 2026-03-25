@@ -1,5 +1,7 @@
 local ADDON_NAME, Addon = ...
 
+local format = string.format
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
@@ -12,6 +14,7 @@ Addon.Constants = {
     ERROR_CAPTURE_EVENT = "OneWoW_DevTool.ErrorCaptured",
     -- Token-bucket refill rate (errors per second) before throttling capture
     ERROR_LOGGER_ERRORS_PER_SEC = 10,
+    ERROR_LOGGER_ALERT_SOUND_FILE = format("Interface/AddOns/%s/Media/devtools-error.ogg", ADDON_NAME),
     -- Standalone !BugGrabber addon folder name (ADDON_LOADED arg); not embedded in DevTool
     BUGGRABBER_STANDALONE_ADDON = "!BugGrabber",
 
@@ -312,6 +315,11 @@ Addon.Constants = {
         TEXTURE_BROWSER_LEFT_PANE_DEFAULT_WIDTH = 300,
         TEXTURE_BROWSER_LEFT_PANE_MIN_WIDTH = 200,
         TEXTURE_BROWSER_RIGHT_PANE_MIN_WIDTH = 260,
+        GLOBALS_BROWSER_LIST_ROW_HEIGHT = 20,
+        GLOBALS_BROWSER_LIST_VISIBLE_ROWS = 40,
+        GLOBALS_BROWSER_LEFT_PANE_DEFAULT_WIDTH = 300,
+        GLOBALS_BROWSER_LEFT_PANE_MIN_WIDTH = 200,
+        GLOBALS_BROWSER_RIGHT_PANE_MIN_WIDTH = 320,
         SOUND_BROWSER_LIST_ROW_HEIGHT = 22,
         SOUND_BROWSER_LIST_VISIBLE_ROWS = 40,
         SOUND_BROWSER_LEFT_PANE_DEFAULT_WIDTH = 300,

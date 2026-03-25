@@ -103,6 +103,9 @@ function Addon:InitializeDatabase()
         textureBookmarks = {},
         --- Saved width of the texture browser list column (nil = use default from Constants).
         textureBrowserLeftPaneWidth = nil,
+        globalsBrowserLeftPaneWidth = nil,
+        globalsBookmarks = {},
+        globalsIncludeNoisyRoots = false,
         soundBrowserLeftPaneWidth = nil,
         soundBrowserChannel = "SFX",
         soundBookmarks = {},
@@ -130,7 +133,7 @@ function Addon:InitializeDatabase()
             clearOnReload = false,
             keepLastSessions = 10,
             maxErrors = 100,
-            soundChoice = "off",
+            soundChoice = "devtools_error",
             copyFormat = "plain",
         },
         editor = {

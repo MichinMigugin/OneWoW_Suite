@@ -1,6 +1,6 @@
 # OneWoW - Utility: DevTool
 
-**Developer tools for World of Warcraft addon development.** Inspect frames, debug events, monitor performance, browse textures and fonts, edit Lua snippets, and explore the game's UI structure. Part of the OneWoW Suite.
+**Developer tools for World of Warcraft addon development.** Inspect frames, debug events, monitor performance, browse globals and enums, browse textures and fonts, edit Lua snippets, and explore the game's UI structure. Part of the OneWoW Suite.
 
 ---
 
@@ -36,7 +36,7 @@ The addon also registers in the **Addon Compartment** (game menu) for quick acce
 
 ## Features
 
-Tabs appear in this order: **Frame**, **Events**, **Errors**, **Textures**, **Fonts**, **Colors**, **Layout**, **Monitor**, **Editor**, **Settings**. The main window is **resizable**; size and position are restored between sessions. The window **closes automatically when you enter combat** (`PLAYER_REGEN_DISABLED`).
+Tabs appear in this order: **Frame**, **Events**, **Errors**, **Monitor**, **Globals**, **Textures**, **Fonts**, **Sounds**, **Colors**, **Layout**, **Editor**, **Settings**. The main window is **resizable**; size and position are restored between sessions. The window **closes automatically when you enter combat** (`PLAYER_REGEN_DISABLED`).
 
 ### Frame Tab
 
@@ -123,6 +123,23 @@ Real-time addon performance monitoring:
 - **Filter** — Filter addons by name
 - **Pinned addon** — Optional focus window for a single addon (position and reopen behavior are saved)
 
+### Globals Tab
+
+Browse and inspect the Lua global environment, `Enum` tables, and addon data tables:
+
+- **Category filter** — Switch between All, Globals, Enum, and Addon Data to narrow the root list
+- **Search** — Filter root entries by name, reference, type, or addon owner
+- **Noisy roots** — Toggle inclusion of normally hidden globals (C_* namespaces, widget frames, mixin-style tables)
+- **Bookmarks** — Favorite root entries for quick access; filter the list to bookmarks only
+- **Refresh** — Rebuild the index to pick up globals created since the last scan
+- **Value tree** — Expandable tree view of the selected entry's contents with lazy child loading, circular reference detection, and depth limits
+- **Tree search** — Filter the value tree to matching keys, values, or references; matching subtrees auto-expand
+- **Navigation** — Up (parent node) and Home (back to root) buttons; Expand All / Collapse All for the tree
+- **Copy helpers** — Copy the Lua reference path or the serialized value of the selected root or tree node to clipboard; right-click any tree node to copy its reference
+- **Secret values** — Secret values and secret tables (12.0+ restriction system) are safely masked throughout
+
+The left pane (root list) is resizable and its width is persisted between sessions.
+
 ### Editor Tab
 
 In-game **Lua snippet workspace** for experiments and small scripts:
@@ -169,7 +186,7 @@ In-game **Lua snippet workspace** for experiments and small scripts:
 ## Technical Notes
 
 - **Secret values** — Frame properties that return secret values (e.g., in instanced content) are safely masked
-- **SavedVariables** — `OneWoW_UtilityDevTool_DB` stores window position, theme, language, minimap, monitor (including pinned addon), error logger settings, texture bookmarks and list column width, font preview background and bookmarks, editor snippets and layout options, and related UI preferences
+- **SavedVariables** — `OneWoW_UtilityDevTool_DB` stores window position, theme, language, minimap, monitor (including pinned addon), error logger settings, globals browser bookmarks and pane width, texture bookmarks and list column width, font preview background and bookmarks, editor snippets and layout options, and related UI preferences
 - **Clipboard** — Copy actions use the embedded **LibCopyPaste** library where applicable
 - **Embedded libraries** — LibStub, LibCopyPaste (vendored under `Libs/`; do not modify vendored libs when contributing)
 

@@ -72,9 +72,39 @@ function UI:GetTabDefinitions()
                 end
             end,
         },
+        monitor = {
+            key = "monitor",
+            order = 4,
+            labelKey = "TAB_MONITOR",
+            create = function(parent) return self:CreateMonitorTab(parent) end,
+            teardown = function(tab)
+                if tab and tab.Teardown then
+                    tab:Teardown()
+                elseif Addon.MonitorTabUI == tab then
+                    Addon.MonitorTabUI = nil
+                end
+            end,
+        },
+        globals = {
+            key = "globals",
+            order = 5,
+            labelKey = "TAB_GLOBALS",
+            create = function(parent) return self:CreateGlobalsBrowserTab(parent) end,
+            teardown = function(tab)
+                if tab and tab._filterTicker then
+                    tab._filterTicker:Cancel()
+                    tab._filterTicker = nil
+                end
+                if tab and tab.Teardown then
+                    tab:Teardown()
+                elseif Addon.GlobalsBrowserTab == tab then
+                    Addon.GlobalsBrowserTab = nil
+                end
+            end,
+        },
         textures = {
             key = "textures",
-            order = 4,
+            order = 6,
             labelKey = "TAB_TEXTURES",
             create = function(parent) return self:CreateTextureTab(parent) end,
             teardown = function(tab)
@@ -91,7 +121,7 @@ function UI:GetTabDefinitions()
         },
         fonts = {
             key = "fonts",
-            order = 5,
+            order = 7,
             labelKey = "TAB_FONTS",
             create = function(parent) return self:CreateFontBrowserTab(parent) end,
             teardown = function(tab)
@@ -103,7 +133,7 @@ function UI:GetTabDefinitions()
         },
         sounds = {
             key = "sounds",
-            order = 6,
+            order = 8,
             labelKey = "TAB_SOUNDS",
             create = function(parent) return self:CreateSoundBrowserTab(parent) end,
             teardown = function(tab)
@@ -120,13 +150,13 @@ function UI:GetTabDefinitions()
         },
         colors = {
             key = "colors",
-            order = 7,
+            order = 9,
             labelKey = "TAB_COLORS",
             create = function(parent) return self:CreateColorToolsTab(parent) end,
         },
         layout = {
             key = "layout",
-            order = 8,
+            order = 10,
             labelKey = "TAB_LAYOUT",
             create = function(parent) return self:CreateLayoutTab(parent) end,
             teardown = function(tab)
@@ -135,22 +165,9 @@ function UI:GetTabDefinitions()
                 end
             end,
         },
-        monitor = {
-            key = "monitor",
-            order = 9,
-            labelKey = "TAB_MONITOR",
-            create = function(parent) return self:CreateMonitorTab(parent) end,
-            teardown = function(tab)
-                if tab and tab.Teardown then
-                    tab:Teardown()
-                elseif Addon.MonitorTabUI == tab then
-                    Addon.MonitorTabUI = nil
-                end
-            end,
-        },
         editor = {
             key = "editor",
-            order = 10,
+            order = 11,
             labelKey = "TAB_EDITOR",
             create = function(parent) return self:CreateEditorTab(parent) end,
             teardown = function(tab)
@@ -161,7 +178,7 @@ function UI:GetTabDefinitions()
         },
         settings = {
             key = "settings",
-            order = 11,
+            order = 12,
             labelKey = "TAB_SETTINGS",
             create = function(parent) return self:CreateSettingsTab(parent) end,
             alwaysEnabled = true,
