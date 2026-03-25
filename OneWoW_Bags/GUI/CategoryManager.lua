@@ -105,6 +105,25 @@ local function GetDB()
     return db
 end
 
+local function EnsureDefaultSection()
+    local db = GetDB()
+    local sections = db.global.categorySections
+    local sectOrder = db.global.sectionOrder
+
+    if #sectOrder > 0 then return end
+
+    local defaultCats = {}
+    for _, name in ipairs(BUILTIN_NAMES) do
+        table.insert(defaultCats, name)
+    end
+
+    if #defaultCats == 0 then return end
+
+    local id = "sec_default"
+    sections[id] = { name = "Default", categories = defaultCats, collapsed = false }
+    table.insert(sectOrder, 1, id)
+end
+
 local function ReleaseWrapper(w)
     if w then w:Hide(); w:SetParent(UIParent) end
     return nil
@@ -461,7 +480,7 @@ function CatMgrUI:RefreshRight()
         local section   = db.global.categorySections[sectionID]
         if not section then selectedCatKey = nil; self:RefreshRight(); return end
 
-        rightTopArea:SetHeight(60)
+        rightTopArea:SetHeight(84)
         rightItemArea:Show()
 
         rightTopWrapper = CreateFrame("Frame", nil, rightTopArea)
@@ -490,8 +509,22 @@ function CatMgrUI:RefreshRight()
         div:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, -36)
         div:SetColorTexture(T("BORDER_SUBTLE"))
 
+        local showHeaderCB = CreateFrame("CheckButton", nil, rightTopWrapper, "UICheckButtonTemplate")
+        showHeaderCB:SetSize(18, 18)
+        showHeaderCB:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 8, -42)
+        showHeaderCB:SetChecked(section.showHeader or false)
+        local captSection = section
+        showHeaderCB:SetScript("OnClick", function(self)
+            captSection.showHeader = self:GetChecked() or false
+            RefreshBagLayout()
+        end)
+        local showHeaderLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        showHeaderLbl:SetPoint("LEFT", showHeaderCB, "RIGHT", 4, 0)
+        showHeaderLbl:SetText(L["SECTION_SHOW_HEADER"] or "Show section header in bags")
+        showHeaderLbl:SetTextColor(T("TEXT_PRIMARY"))
+
         local infoLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        infoLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -44)
+        infoLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -66)
         infoLbl:SetText(L["CATEGORY_IN_SECTION"] or "Toggle categories to include in this section:")
         infoLbl:SetTextColor(T("TEXT_SECONDARY"))
 
@@ -1086,6 +1119,8 @@ end
 
 function CatMgrUI:Show()
     local L = OneWoW_Bags.L
+
+    EnsureDefaultSection()
 
     if managerFrame then
         CatMgrUI:Refresh()

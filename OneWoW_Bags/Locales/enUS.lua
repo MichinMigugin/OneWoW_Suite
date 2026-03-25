@@ -249,6 +249,9 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SECTION_RENAME_ENTER"] = "Enter new section name:",
     ["SECTION_DELETE_CONFIRM"] = "Delete this section? Categories will return to the main list.",
     ["CATEGORY_IN_SECTION"] = "Toggle categories to include in this section:",
+    ["SECTION_SHOW_HEADER"] = "Show section header in bags",
+    ["SETTING_COMPACT_CATEGORIES"] = "Compact Categories",
+    ["DESC_COMPACT_CATEGORIES"] = "Place small categories side by side to save vertical space.",
 
 }
 

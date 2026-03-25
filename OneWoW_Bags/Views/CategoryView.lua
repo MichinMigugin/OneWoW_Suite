@@ -3,6 +3,34 @@ local ADDON_NAME, OneWoW_Bags = ...
 OneWoW_Bags.CategoryView = {}
 local View = OneWoW_Bags.CategoryView
 
+local labelPool = {}
+local activeLabels = {}
+
+local function AcquireLabel(parent)
+    local label
+    if #labelPool > 0 then
+        label = table.remove(labelPool)
+        label:SetParent(parent)
+    else
+        label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        label:SetJustifyH("LEFT")
+        label:SetWordWrap(false)
+    end
+    label:ClearAllPoints()
+    label:Show()
+    activeLabels[label] = true
+    return label
+end
+
+local function ReleaseAllLabels()
+    for label in pairs(activeLabels) do
+        label:Hide()
+        label:ClearAllPoints()
+        table.insert(labelPool, label)
+    end
+    wipe(activeLabels)
+end
+
 function View:Layout(contentFrame, width, filteredButtons)
     local Constants = OneWoW_Bags.Constants
     local db = OneWoW_Bags.db
@@ -12,6 +40,7 @@ function View:Layout(contentFrame, width, filteredButtons)
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
+    local compact = db.global.compactCategories
 
     local filterSet
     if filteredButtons then
@@ -23,9 +52,16 @@ function View:Layout(contentFrame, width, filteredButtons)
 
     CM:AssignCategories()
     CM:ReleaseAllSections()
+    ReleaseAllLabels()
 
     local itemsByCategory = CM:GetItemsByCategory()
     local layout = CM:GetSectionedLayout(itemsByCategory)
+
+    local cols = db.global.bagColumns or math.floor((width - padding * 2) / (iconSize + spacing))
+    cols = math.max(cols, 1)
+    local cellSize = iconSize + spacing
+    local totalGridWidth = cols * cellSize - spacing
+    local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
 
     local yOffset = 0
 
@@ -36,9 +72,10 @@ function View:Layout(contentFrame, width, filteredButtons)
         return 0.5, 0.5, 0.5, 1.0
     end
 
-    local function RenderCategory(categoryName)
+    local function FilterItems(categoryName)
         local items = itemsByCategory[categoryName]
-        if items and filterSet then
+        if not items then return nil end
+        if filterSet then
             local filtered = {}
             for _, btn in ipairs(items) do
                 if filterSet[btn] then
@@ -47,9 +84,15 @@ function View:Layout(contentFrame, width, filteredButtons)
             end
             items = filtered
         end
-        if not items or #items == 0 then return end
-
+        if #items == 0 then return nil end
         OneWoW_Bags:SortButtons(items)
+        return items
+    end
+
+    local function RenderCategoryStacked(categoryName)
+        local items = FilterItems(categoryName)
+        if not items then return end
+
         local section = CM:AcquireSection(contentFrame)
         section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
         section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
@@ -69,20 +112,14 @@ function View:Layout(contentFrame, width, filteredButtons)
         local sectionHeight = 26
 
         if not section.isCollapsed then
-            local cols = db.global.bagColumns or math.floor((width - padding * 2) / (iconSize + spacing))
-            cols = math.max(cols, 1)
-
-            local totalGridWidth = cols * (iconSize + spacing) - spacing
-            local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
-
             local itemRow = 0
             local itemCol = 0
 
             section.content:SetHeight(1)
 
             for _, button in ipairs(items) do
-                local x = leftPadding + (itemCol * (iconSize + spacing))
-                local y = -(itemRow * (iconSize + spacing))
+                local x = leftPadding + (itemCol * cellSize)
+                local y = -(itemRow * cellSize)
 
                 button:ClearAllPoints()
                 button:SetPoint("TOPLEFT", section.content, "TOPLEFT", x, y)
@@ -97,7 +134,7 @@ function View:Layout(contentFrame, width, filteredButtons)
             end
 
             local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
-            local contentHeight = totalRows * (iconSize + spacing)
+            local contentHeight = totalRows * cellSize
             section.content:SetHeight(contentHeight)
             section.content:Show()
 
@@ -120,6 +157,100 @@ function View:Layout(contentFrame, width, filteredButtons)
                 OneWoW_Bags.GUI:RefreshLayout()
             end
         end)
+    end
+
+    local gapSlots = 1
+    local labelHeight = 16
+
+    local function FlushGroupCompact(group)
+        if #group == 0 then return end
+
+        local lines = {}
+        local currentLine = {}
+        local curCol = 0
+
+        for _, catInfo in ipairs(group) do
+            local count = #catInfo.items
+            local startCol = curCol > 0 and (curCol + gapSlots) or 0
+            local avail = cols - startCol
+
+            if avail < 1 then
+                table.insert(lines, currentLine)
+                currentLine = {}
+                curCol = 0
+                startCol = 0
+                avail = cols
+            end
+
+            local blockWidth = math.min(count, avail)
+            local blockRows = math.ceil(count / blockWidth)
+
+            if blockRows > 2 and (curCol > 0 or blockWidth < cols) then
+                if #currentLine > 0 then
+                    table.insert(lines, currentLine)
+                    currentLine = {}
+                end
+                curCol = 0
+                startCol = 0
+                blockWidth = math.min(count, cols)
+                blockRows = math.ceil(count / blockWidth)
+            end
+
+            table.insert(currentLine, {
+                name = catInfo.name,
+                displayName = catInfo.displayName,
+                items = catInfo.items,
+                startCol = startCol,
+                blockWidth = blockWidth,
+                blockRows = blockRows,
+            })
+
+            if blockRows > 2 then
+                table.insert(lines, currentLine)
+                currentLine = {}
+                curCol = 0
+            else
+                curCol = startCol + blockWidth
+            end
+        end
+        if #currentLine > 0 then
+            table.insert(lines, currentLine)
+        end
+
+        for _, line in ipairs(lines) do
+            for _, cat in ipairs(line) do
+                local label = AcquireLabel(contentFrame)
+                label:SetPoint("TOPLEFT", contentFrame, "TOPLEFT",
+                    leftPadding + cat.startCol * cellSize, -yOffset)
+                label:SetWidth(cat.blockWidth * cellSize)
+                label:SetText(cat.displayName)
+                label:SetTextColor(T("ACCENT_PRIMARY"))
+            end
+            yOffset = yOffset + labelHeight
+
+            local maxRows = 0
+            for _, cat in ipairs(line) do
+                if cat.blockRows > maxRows then maxRows = cat.blockRows end
+                local itemCol = 0
+                local itemRow = 0
+                for _, button in ipairs(cat.items) do
+                    local x = leftPadding + (cat.startCol + itemCol) * cellSize
+                    local y = -(yOffset + itemRow * cellSize)
+
+                    button:ClearAllPoints()
+                    button:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", x, y)
+                    button:OWB_SetIconSize(iconSize)
+                    button:Show()
+
+                    itemCol = itemCol + 1
+                    if itemCol >= cat.blockWidth then
+                        itemCol = 0
+                        itemRow = itemRow + 1
+                    end
+                end
+            end
+            yOffset = yOffset + maxRows * cellSize
+        end
     end
 
     local function RenderSeparator()
@@ -163,19 +294,67 @@ function View:Layout(contentFrame, width, filteredButtons)
         end)
     end
 
+    local function BuildCatInfo(categoryName)
+        local items = FilterItems(categoryName)
+        if not items then return nil end
+        local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
+        local displayName = L[localeKey] or categoryName
+        return { name = categoryName, displayName = displayName, items = items }
+    end
+
     if type(layout) == "table" and layout[1] and type(layout[1]) == "table" then
-        for _, entry in ipairs(layout) do
-            if entry.type == "category" then
-                RenderCategory(entry.name)
-            elseif entry.type == "separator" then
-                RenderSeparator()
-            elseif entry.type == "section_header" then
-                RenderSectionHeader(entry)
+        if compact then
+            local currentGroup = {}
+            for _, entry in ipairs(layout) do
+                if entry.type == "category" then
+                    local catInfo = BuildCatInfo(entry.name)
+                    if catInfo then
+                        table.insert(currentGroup, catInfo)
+                    end
+                elseif entry.type == "separator" then
+                    FlushGroupCompact(currentGroup)
+                    currentGroup = {}
+                    if entry.showHeader then
+                        RenderSeparator()
+                    end
+                elseif entry.type == "section_header" then
+                    FlushGroupCompact(currentGroup)
+                    currentGroup = {}
+                    if entry.showHeader then
+                        RenderSectionHeader(entry)
+                    end
+                end
+            end
+            FlushGroupCompact(currentGroup)
+        else
+            for _, entry in ipairs(layout) do
+                if entry.type == "category" then
+                    RenderCategoryStacked(entry.name)
+                elseif entry.type == "separator" then
+                    if entry.showHeader then
+                        RenderSeparator()
+                    end
+                elseif entry.type == "section_header" then
+                    if entry.showHeader then
+                        RenderSectionHeader(entry)
+                    end
+                end
             end
         end
     else
-        for _, categoryName in ipairs(layout) do
-            RenderCategory(categoryName)
+        if compact then
+            local currentGroup = {}
+            for _, categoryName in ipairs(layout) do
+                local catInfo = BuildCatInfo(categoryName)
+                if catInfo then
+                    table.insert(currentGroup, catInfo)
+                end
+            end
+            FlushGroupCompact(currentGroup)
+        else
+            for _, categoryName in ipairs(layout) do
+                RenderCategoryStacked(categoryName)
+            end
         end
     end
 

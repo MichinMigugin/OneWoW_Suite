@@ -124,9 +124,12 @@ function CM:GetSectionedLayout(itemsByCategory)
                 end
             end
             if hasItems then
-                table.insert(layout, { type = "separator" })
-                table.insert(layout, { type = "section_header", name = sec.name, sectionID = sectionID, collapsed = sec.collapsed })
-                if not sec.collapsed then
+                local showHeader = sec.showHeader or false
+                local effectiveCollapsed = showHeader and sec.collapsed
+
+                table.insert(layout, { type = "separator", showHeader = showHeader })
+                table.insert(layout, { type = "section_header", name = sec.name, sectionID = sectionID, collapsed = effectiveCollapsed, showHeader = showHeader })
+                if not effectiveCollapsed then
                     for _, catName in ipairs(sec.categories) do
                         if itemsByCategory[catName] and #itemsByCategory[catName] > 0 then
                             table.insert(layout, { type = "category", name = catName })

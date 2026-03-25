@@ -348,6 +348,20 @@ function Settings:Create()
             if GUI.RefreshLayout then GUI:RefreshLayout() end
         end,
     })
+
+    catY, _, _ = OneWoW_GUI:CreateToggleRow(catContainer, {
+        yOffset = catY,
+        label = L["SETTING_COMPACT_CATEGORIES"] or "Compact Categories",
+        description = L["DESC_COMPACT_CATEGORIES"] or "Place small categories side by side to save vertical space.",
+        isEnabled = true,
+        value = db.global.compactCategories,
+        onLabel = L["TOGGLE_ON"],
+        offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.compactCategories = newVal
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+        end,
+    })
     catContainer:SetHeight(math.abs(catY) + 4)
     yOffset = yOffset - math.abs(catY) - 4 - 15
 

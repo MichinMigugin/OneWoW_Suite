@@ -38,6 +38,7 @@ local defaults = {
         mainFramePosition = {},
         bagColumns = 15,
         bankColumns = 14,
+        compactCategories = false,
         enableInventorySlots = false,
         itemSort = "none",
         hideScrollBar = false,
@@ -210,6 +211,10 @@ function OneWoW_Bags:InitializeDatabase()
     if not self.db.global.itemSortMigratedToNone then
         self.db.global.itemSort = "none"
         self.db.global.itemSortMigratedToNone = true
+    end
+
+    if self.db.global.compactCategories == nil then
+        self.db.global.compactCategories = false
     end
 
     if self.db.global.enableInventorySlots == nil then
