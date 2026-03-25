@@ -9,6 +9,8 @@ Addon.Locales["frFR"] = {
     -- Commands
     ["COMMAND_DEVTOOLS"] = "/devtools",
     ["COMMAND_DT"] = "/dt",
+    ["BINDING_HEADER_ONEWOW_DEVTOOL"] = "|cFF00FF00OneWoW|r DevTool",
+    ["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = "Ouvrir DevTools (onglet Erreurs)",
 
     -- Tab titles
     ["TAB_FRAME"] = "Cadre",
@@ -421,6 +423,7 @@ Addon.Locales["frFR"] = {
     ["MON_PIN_ELAPSED"] = "Écoulé",
     ["MON_PIN_SAMPLES"] = "Échantillons",
     ["MON_PIN_REOPEN"] = "Rouvrir après /reload",
+    ["MON_MSG_PIN_MAX"] = "Vous pouvez épingler jusqu’à %d moniteurs d’addons à la fois.",
 
     -- Minimap
     ["MINIMAP_TOOLTIP_HINT"] = "Clic gauche pour basculer DevTool",

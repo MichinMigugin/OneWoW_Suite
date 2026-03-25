@@ -9,6 +9,8 @@ Addon.Locales["koKR"] = {
     -- Commands
     ["COMMAND_DEVTOOLS"] = "/devtools",
     ["COMMAND_DT"] = "/dt",
+    ["BINDING_HEADER_ONEWOW_DEVTOOL"] = "|cFF00FF00OneWoW|r DevTool",
+    ["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = "DevTools 열기 (오류 탭)",
 
     -- Tab titles
     ["TAB_FRAME"] = "프레임",
@@ -421,6 +423,7 @@ Addon.Locales["koKR"] = {
     ["MON_PIN_ELAPSED"] = "경과",
     ["MON_PIN_SAMPLES"] = "샘플",
     ["MON_PIN_REOPEN"] = "/reload 후 다시 열기",
+    ["MON_MSG_PIN_MAX"] = "애드온 모니터는 최대 %d개까지 고정할 수 있습니다.",
 
     -- Minimap
     ["MINIMAP_TOOLTIP_HINT"] = "좌클릭으로 DevTool 토글",

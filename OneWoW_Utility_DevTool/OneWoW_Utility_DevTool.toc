@@ -27,6 +27,8 @@ Locales\frFR.lua
 Locales\ruRU.lua
 Locales\deDE.lua
 
+Bindings.xml
+
 Media\devtools-error.ogg
 
 # Core

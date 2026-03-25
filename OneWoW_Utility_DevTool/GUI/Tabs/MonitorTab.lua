@@ -597,7 +597,7 @@ function Addon.UI:CreateMonitorTab(parent)
         self:SetScript("OnUpdate", nil)
         if Monitor then
             Monitor:StopMonitoring()
-            Monitor:ClosePinnedPopup()
+            Monitor:CloseAllPinnedPopouts()
         end
         if Addon.MonitorTabUI == self then
             Addon.MonitorTabUI = nil

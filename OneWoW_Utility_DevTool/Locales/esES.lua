@@ -9,6 +9,8 @@ Addon.Locales["esES"] = {
     -- Commands
     ["COMMAND_DEVTOOLS"] = "/devtools",
     ["COMMAND_DT"] = "/dt",
+    ["BINDING_HEADER_ONEWOW_DEVTOOL"] = "|cFF00FF00OneWoW|r DevTool",
+    ["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = "Abrir DevTools (pestaña Errores)",
 
     -- Tab titles
     ["TAB_FRAME"] = "Marco",
@@ -421,6 +423,7 @@ Addon.Locales["esES"] = {
     ["MON_PIN_ELAPSED"] = "Transcurrido",
     ["MON_PIN_SAMPLES"] = "Muestras",
     ["MON_PIN_REOPEN"] = "Reabrir tras /reload",
+    ["MON_MSG_PIN_MAX"] = "Puedes fijar hasta %d monitores de addons a la vez.",
 
     -- Minimap
     ["MINIMAP_TOOLTIP_HINT"] = "Clic izquierdo para alternar DevTool",
@@ -511,4 +514,5 @@ Addon.Locales["esES"] = {
     ["EDITOR_STATUS_RUN_COMPLETED"] = "%s: completado correctamente.",
     ["EDITOR_BTN_CODE_OPTIONS"] = "Opciones de código",
 }
+
 Addon.Locales["esMX"] = Addon.Locales["esES"]

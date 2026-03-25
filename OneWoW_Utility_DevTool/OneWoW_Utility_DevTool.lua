@@ -400,6 +400,12 @@ function Addon:ToggleMainWindow()
     end
 end
 
+function Addon:OpenDevToolErrorsTab()
+    if not self.UI then return end
+    self.UI:Show()
+    self.UI:SelectTab("errors")
+end
+
 function Addon:OnInitialize()
     self:InitializeDatabase()
 
@@ -459,6 +465,11 @@ function Addon:ApplyLanguage()
             self.L[k] = localeData[k] or v
         end
     end
+    local L = self.L
+    if L then
+        _G["BINDING_HEADER_ONEWOW_DEVTOOL"] = L["BINDING_HEADER_ONEWOW_DEVTOOL"] or "|cFF00FF00OneWoW|r DevTool"
+        _G["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = L["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] or "Open DevTools (Errors tab)"
+    end
 end
 
 local frame = CreateFrame("Frame")
@@ -514,7 +525,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         end
         C_Timer.After(1.0, function()
             if Addon.MonitorTab then
-                Addon.MonitorTab:RestorePinnedAddon()
+                Addon.MonitorTab:RestorePinnedMonitors()
             end
         end)
     end

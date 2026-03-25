@@ -9,6 +9,8 @@ Addon.Locales["deDE"] = {
     -- Commands
     ["COMMAND_DEVTOOLS"] = "/devtools",
     ["COMMAND_DT"] = "/dt",
+    ["BINDING_HEADER_ONEWOW_DEVTOOL"] = "|cFF00FF00OneWoW|r DevTool",
+    ["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = "DevTools öffnen (Fehler-Tab)",
 
     -- Tab titles
     ["TAB_FRAME"] = "Frame",
@@ -421,6 +423,7 @@ Addon.Locales["deDE"] = {
     ["MON_PIN_ELAPSED"] = "Verstrichen",
     ["MON_PIN_SAMPLES"] = "Samples",
     ["MON_PIN_REOPEN"] = "Nach /reload wieder öffnen",
+    ["MON_MSG_PIN_MAX"] = "Du kannst höchstens %d Add-on-Monitore gleichzeitig anheften.",
 
     -- Minimap
     ["MINIMAP_TOOLTIP_HINT"] = "Linksklick zum Umschalten des DevTools",

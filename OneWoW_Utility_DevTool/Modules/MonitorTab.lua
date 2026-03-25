@@ -332,19 +332,14 @@ function MonitorTab:UpdateUI()
     tab:RefreshList()
 end
 
-local pinnedPopup = nil
-local pinnedTicker = nil
-local pinnedAddonName = nil
-local pinnedBaselineMemory = 0
-local pinnedPeakMemory = 0
-local pinnedMinMemory = 0
-local pinnedStartTime = 0
-local pinnedSampleCount = 0
-local pinnedLastMemory = 0
-local pinnedGrowthSamples = {}
-local pinnedPrevCpu = nil
-local pinnedLastCpuWallTime = 0
+local pinnedSlots = {}
+local pinnedMasterTicker = nil
 local GROWTH_SAMPLE_MAX = 30
+
+local function getMaxPinnedPopouts()
+    local c = Addon.Constants and Addon.Constants.MONITOR_MAX_PINNED_POPOUTS
+    return (type(c) == "number" and c > 0) and c or 4
+end
 
 local function FormatKB(value)
     if not value then return "0 k" end
@@ -358,6 +353,59 @@ local function FindAddonIndexByName(name)
         if addonName == name then return i end
     end
     return nil
+end
+
+local function ensurePinnedMonitorsArray(db)
+    if type(db.pinnedMonitors) ~= "table" then
+        db.pinnedMonitors = {}
+    end
+end
+
+local function findPinnedDbEntry(monitors, addonName)
+    for _, e in ipairs(monitors) do
+        if e.addon == addonName then
+            return e
+        end
+    end
+    return nil
+end
+
+local function removePinnedDbEntryByAddon(db, addonName)
+    local arr = db.pinnedMonitors
+    if type(arr) ~= "table" then return end
+    for i = #arr, 1, -1 do
+        if arr[i].addon == addonName then
+            tremove(arr, i)
+            return
+        end
+    end
+end
+
+local function findPinnedSlotByAddon(addonName)
+    for i = 1, #pinnedSlots do
+        local s = pinnedSlots[i]
+        if s.addonName == addonName then
+            return s, i
+        end
+    end
+    return nil, nil
+end
+
+local function cancelPinnedMasterTickerIfEmpty()
+    if #pinnedSlots == 0 and pinnedMasterTicker then
+        pinnedMasterTicker:Cancel()
+        pinnedMasterTicker = nil
+    end
+end
+
+local function ensurePinnedMasterTicker()
+    if #pinnedSlots == 0 then return end
+    if pinnedMasterTicker then return end
+    pinnedMasterTicker = C_Timer.NewTicker(1.0, function()
+        for i = 1, #pinnedSlots do
+            MonitorTab:UpdatePinnedSlot(pinnedSlots[i])
+        end
+    end)
 end
 
 local function CreateRow(parent, labelText, yOffset, guiLib)
@@ -378,29 +426,11 @@ local function CreateRow(parent, labelText, yOffset, guiLib)
     return label, value, yOffset - 18
 end
 
-function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
-    if pinnedPopup then
-        self:ClosePinnedPopup()
-    end
-
-    profilingCPU = GetCVar("scriptProfile") == "1"
-
-    local addonIndex = FindAddonIndexByName(addonName)
-    if not addonIndex then return end
-
-    pinnedAddonName = addonName
-    pinnedStartTime = GetTime()
-    pinnedSampleCount = 0
-    pinnedGrowthSamples = {}
-
-    UpdateAddOnMemoryUsage()
-    local ok, mem = pcall(GetAddOnMemoryUsage, addonIndex)
-    pinnedBaselineMemory = (ok and mem) or 0
-    pinnedPeakMemory = pinnedBaselineMemory
-    pinnedMinMemory = pinnedBaselineMemory
-    pinnedLastMemory = pinnedBaselineMemory
-    pinnedPrevCpu = nil
-    pinnedLastCpuWallTime = 0
+function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
+    local addonName = slot.addonName
+    local addonIndex = slot.addonIndex
+    local dbEntry = slot.dbEntry
+    local useCPU = GetCVar("scriptProfile") == "1"
 
     local popup = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
     popup:SetSize(280, 280)
@@ -413,10 +443,9 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     popup:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         self:SetClampedToScreen(true)
-        local db = Addon.db and Addon.db.monitor
-        if db then
+        if dbEntry then
             local point, _, relPoint, x, y = self:GetPoint(1)
-            db.pinnedPosition = { point = point, relPoint = relPoint, x = x, y = y }
+            dbEntry.position = { point = point, relPoint = relPoint, x = x, y = y }
         end
     end)
     popup:SetClampedToScreen(true)
@@ -445,7 +474,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
     closeBtn:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
     closeBtn:SetScript("OnClick", function()
-        MonitorTab:ClosePinnedPopup()
+        MonitorTab:ClosePinnedPopupByAddon(addonName)
     end)
 
     local LL = Addon.L or {}
@@ -466,7 +495,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     pctLabel, pctValue, yPos = CreateRow(popup, LL["MON_PIN_PCT_MEM"] or "Mem %", yPos, OneWoW_GUI)
 
     local cpuMsValue, cpuSessionValue, cpuRecentValue, cpuPctValue
-    if profilingCPU then
+    if useCPU then
         yPos = yPos - 4
         local memCpuDiv = popup:CreateTexture(nil, "ARTWORK")
         memCpuDiv:SetHeight(1)
@@ -499,12 +528,9 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     local totalHeight = math.abs(yPos) + 32
     popup:SetHeight(totalHeight)
 
-    local db = Addon.db and Addon.db.monitor
-    reopenCheck:SetChecked(db and db.pinnedReopenOnReload or false)
+    reopenCheck:SetChecked(dbEntry.reopenOnReload and true or false)
     reopenCheck:SetScript("OnClick", function(self)
-        if Addon.db and Addon.db.monitor then
-            Addon.db.monitor.pinnedReopenOnReload = self:GetChecked() and true or false
-        end
+        dbEntry.reopenOnReload = self:GetChecked() and true or false
     end)
 
     popup.memValue = memValue
@@ -524,8 +550,8 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
 
     popup:SetSize(322, totalHeight)
 
-    local savedPos = db and db.pinnedPosition
-    if savedPos and savedPos.point then
+    local savedPos = dbEntry.position
+    if type(savedPos) == "table" and savedPos.point then
         popup:ClearAllPoints()
         popup:SetPoint(savedPos.point, UIParent, savedPos.relPoint, savedPos.x, savedPos.y)
     else
@@ -533,41 +559,108 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle)
     end
 
     popup:Show()
-    pinnedPopup = popup
-
-    if db then
-        db.pinnedAddon = addonName
-    end
-
-    pinnedTicker = C_Timer.NewTicker(1.0, function()
-        MonitorTab:UpdatePinnedPopup()
-    end)
-    self:UpdatePinnedPopup()
+    slot.popup = popup
 end
 
-function MonitorTab:UpdatePinnedPopup()
-    if not pinnedPopup or not pinnedPopup:IsShown() then return end
+function MonitorTab:CreatePinnedPopup(addonName, addonTitle, existingDbEntry)
+    local maxPins = getMaxPinnedPopouts()
+    local existingSlot = findPinnedSlotByAddon(addonName)
+    if existingSlot and existingSlot.popup then
+        existingSlot.popup:Show()
+        pcall(function()
+            if existingSlot.popup.Raise then
+                existingSlot.popup:Raise()
+            end
+        end)
+        return
+    end
 
-    local addonIndex = pinnedPopup.addonIndex
+    if #pinnedSlots >= maxPins then
+        local L = Addon.L
+        local msg = L and L["MON_MSG_PIN_MAX"]
+        Addon:Print(msg and string.format(msg, maxPins) or ("You can pin up to " .. tostring(maxPins) .. " addon monitors at once."))
+        return
+    end
+
+    local addonIndex = FindAddonIndexByName(addonName)
     if not addonIndex then return end
+
+    local db = Addon.db and Addon.db.monitor
+    if not db then return end
+    ensurePinnedMonitorsArray(db)
+
+    local dbEntry
+    if existingDbEntry then
+        if existingDbEntry.addon ~= addonName then return end
+        dbEntry = existingDbEntry
+    else
+        dbEntry = findPinnedDbEntry(db.pinnedMonitors, addonName)
+        if not dbEntry then
+            if #db.pinnedMonitors >= maxPins then
+                local L = Addon.L
+                local msg = L and L["MON_MSG_PIN_MAX"]
+                Addon:Print(msg and string.format(msg, maxPins) or ("You can pin up to " .. tostring(maxPins) .. " addon monitors at once."))
+                return
+            end
+            dbEntry = { addon = addonName, reopenOnReload = false, position = {} }
+            tinsert(db.pinnedMonitors, dbEntry)
+        end
+    end
+
+    if type(dbEntry.position) ~= "table" then
+        dbEntry.position = {}
+    end
+
+    UpdateAddOnMemoryUsage()
+    local ok, mem = pcall(GetAddOnMemoryUsage, addonIndex)
+    mem = (ok and mem) or 0
+
+    local slot = {
+        addonName = addonName,
+        addonIndex = addonIndex,
+        dbEntry = dbEntry,
+        baselineMemory = mem,
+        peakMemory = mem,
+        minMemory = mem,
+        startTime = GetTime(),
+        sampleCount = 0,
+        lastMemory = mem,
+        growthSamples = {},
+        prevCpu = nil,
+        lastCpuWallTime = 0,
+        popup = nil,
+    }
+
+    self:CreatePinnedPopupFrame(slot, addonTitle)
+    tinsert(pinnedSlots, slot)
+    ensurePinnedMasterTicker()
+    self:UpdatePinnedSlot(slot)
+end
+
+function MonitorTab:UpdatePinnedSlot(slot)
+    local popup = slot.popup
+    if not popup or not popup:IsShown() then return end
+
+    local addonIndex = slot.addonIndex
+    if not addonIndex then return end
+
+    local profilingNow = GetCVar("scriptProfile") == "1"
 
     UpdateAddOnMemoryUsage()
     local ok, mem = pcall(GetAddOnMemoryUsage, addonIndex)
     if not ok then return end
     mem = mem or 0
 
-    local tickMemDelta = mem - pinnedLastMemory
+    local tickMemDelta = mem - slot.lastMemory
+    slot.sampleCount = slot.sampleCount + 1
 
-    pinnedSampleCount = pinnedSampleCount + 1
+    if mem > slot.peakMemory then slot.peakMemory = mem end
+    if mem < slot.minMemory then slot.minMemory = mem end
 
-    if mem > pinnedPeakMemory then pinnedPeakMemory = mem end
-    if mem < pinnedMinMemory then pinnedMinMemory = mem end
-
-    local perSecondDelta = tickMemDelta
-    pinnedLastMemory = mem
-    tinsert(pinnedGrowthSamples, perSecondDelta)
-    if #pinnedGrowthSamples > GROWTH_SAMPLE_MAX then
-        tremove(pinnedGrowthSamples, 1)
+    slot.lastMemory = mem
+    tinsert(slot.growthSamples, tickMemDelta)
+    if #slot.growthSamples > GROWTH_SAMPLE_MAX then
+        tremove(slot.growthSamples, 1)
     end
 
     local totalMem = 0
@@ -579,12 +672,11 @@ function MonitorTab:UpdatePinnedPopup()
         end
     end
 
-    pinnedPopup.memValue:SetText(FormatKB(mem))
+    popup.memValue:SetText(FormatKB(mem))
 
-    pinnedPopup.memTickValue:SetText(self:FormatMemoryDelta(tickMemDelta))
+    popup.memTickValue:SetText(self:FormatMemoryDelta(tickMemDelta))
     do
         local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
-        
         if tickMemDelta > 10 then
             r, g, b = 1, 0.4, 0.4
         elseif tickMemDelta > 2 then
@@ -592,31 +684,31 @@ function MonitorTab:UpdatePinnedPopup()
         elseif tickMemDelta < -2 then
             r, g, b = 0.4, 1, 0.4
         end
-        pinnedPopup.memTickValue:SetTextColor(r, g, b, 1)
+        popup.memTickValue:SetTextColor(r, g, b, 1)
     end
 
-    local delta = mem - pinnedBaselineMemory
+    local delta = mem - slot.baselineMemory
     local deltaStr = FormatKB(math.abs(delta))
     if delta >= 0 then
         deltaStr = "+" .. deltaStr
         if delta > 100 then
-            pinnedPopup.deltaValue:SetTextColor(1, 0.4, 0.4, 1)
+            popup.deltaValue:SetTextColor(1, 0.4, 0.4, 1)
         elseif delta > 50 then
-            pinnedPopup.deltaValue:SetTextColor(1, 0.8, 0.2, 1)
+            popup.deltaValue:SetTextColor(1, 0.8, 0.2, 1)
         else
-            pinnedPopup.deltaValue:SetTextColor(0.4, 1, 0.4, 1)
+            popup.deltaValue:SetTextColor(0.4, 1, 0.4, 1)
         end
     else
         deltaStr = "-" .. deltaStr
-        pinnedPopup.deltaValue:SetTextColor(0.4, 1, 0.4, 1)
+        popup.deltaValue:SetTextColor(0.4, 1, 0.4, 1)
     end
-    pinnedPopup.deltaValue:SetText(deltaStr)
+    popup.deltaValue:SetText(deltaStr)
 
     local avgRate = 0
-    if #pinnedGrowthSamples > 0 then
+    if #slot.growthSamples > 0 then
         local sum = 0
-        for _, v in ipairs(pinnedGrowthSamples) do sum = sum + v end
-        avgRate = sum / #pinnedGrowthSamples
+        for _, v in ipairs(slot.growthSamples) do sum = sum + v end
+        avgRate = sum / #slot.growthSamples
     end
     local rateStr = FormatNumber(math.abs(avgRate), 1) .. " k/s"
     if avgRate >= 0 then
@@ -625,21 +717,21 @@ function MonitorTab:UpdatePinnedPopup()
         rateStr = "-" .. rateStr
     end
     if avgRate > 5 then
-        pinnedPopup.rateValue:SetTextColor(1, 0.4, 0.4, 1)
+        popup.rateValue:SetTextColor(1, 0.4, 0.4, 1)
     elseif avgRate > 1 then
-        pinnedPopup.rateValue:SetTextColor(1, 0.8, 0.2, 1)
+        popup.rateValue:SetTextColor(1, 0.8, 0.2, 1)
     else
-        pinnedPopup.rateValue:SetTextColor(0.4, 1, 0.4, 1)
+        popup.rateValue:SetTextColor(0.4, 1, 0.4, 1)
     end
-    pinnedPopup.rateValue:SetText(rateStr)
+    popup.rateValue:SetText(rateStr)
 
-    pinnedPopup.peakValue:SetText(FormatKB(pinnedPeakMemory))
-    pinnedPopup.minValue:SetText(FormatKB(pinnedMinMemory))
+    popup.peakValue:SetText(FormatKB(slot.peakMemory))
+    popup.minValue:SetText(FormatKB(slot.minMemory))
 
     local pct = totalMem > 0 and (mem / totalMem * 100) or 0
-    pinnedPopup.pctValue:SetText(FormatNumber(pct, 1) .. "%")
+    popup.pctValue:SetText(FormatNumber(pct, 1) .. "%")
 
-    if profilingCPU and pinnedPopup.cpuMsValue then
+    if profilingNow and popup.cpuMsValue then
         UpdateAddOnCPUUsage()
         local cpuOk, cpuVal = pcall(GetAddOnCPUUsage, addonIndex)
         cpuVal = (cpuOk and cpuVal) or 0
@@ -653,73 +745,80 @@ function MonitorTab:UpdatePinnedPopup()
         local sessDur = GetTime() - totals.startTime
         local cpuSess = sessDur > 0 and (cpuVal / sessDur) or 0
         local nowT = GetTime()
-        local wall = (pinnedLastCpuWallTime > 0) and (nowT - pinnedLastCpuWallTime) or 0
+        local wall = (slot.lastCpuWallTime > 0) and (nowT - slot.lastCpuWallTime) or 0
         local cpuRec = 0
-        if wall > 0 and pinnedPrevCpu ~= nil then
-            cpuRec = (cpuVal - pinnedPrevCpu) / wall
+        if wall > 0 and slot.prevCpu ~= nil then
+            cpuRec = (cpuVal - slot.prevCpu) / wall
         end
-        pinnedPopup.cpuMsValue:SetText(self:FormatCPUMs(cpuVal))
-        pinnedPopup.cpuSessionValue:SetText(self:FormatCPU(cpuSess))
-        pinnedPopup.cpuRecentValue:SetText(self:FormatCPU(cpuRec))
-        pinnedPopup.cpuPctValue:SetText(FormatNumber(totalCpu > 0 and (cpuVal / totalCpu * 100) or 0, 1) .. "%")
-        pinnedPrevCpu = cpuVal
-        pinnedLastCpuWallTime = nowT
+        popup.cpuMsValue:SetText(self:FormatCPUMs(cpuVal))
+        popup.cpuSessionValue:SetText(self:FormatCPU(cpuSess))
+        popup.cpuRecentValue:SetText(self:FormatCPU(cpuRec))
+        popup.cpuPctValue:SetText(FormatNumber(totalCpu > 0 and (cpuVal / totalCpu * 100) or 0, 1) .. "%")
+        slot.prevCpu = cpuVal
+        slot.lastCpuWallTime = nowT
     end
 
-    local elapsed = GetTime() - pinnedStartTime
+    local elapsed = GetTime() - slot.startTime
     local mins = math.floor(elapsed / 60)
     local secs = math.floor(elapsed % 60)
-    pinnedPopup.elapsedValue:SetText(string.format("%dm %02ds", mins, secs))
+    popup.elapsedValue:SetText(string.format("%dm %02ds", mins, secs))
 
-    pinnedPopup.samplesValue:SetText(tostring(pinnedSampleCount))
+    popup.samplesValue:SetText(tostring(slot.sampleCount))
 end
 
-function MonitorTab:ClosePinnedPopup()
-    if pinnedTicker then
-        pinnedTicker:Cancel()
-        pinnedTicker = nil
+function MonitorTab:ClosePinnedPopupByAddon(addonName)
+    local _, idx = findPinnedSlotByAddon(addonName)
+    if not idx then return end
+
+    local slot = pinnedSlots[idx]
+    tremove(pinnedSlots, idx)
+
+    local db = Addon.db and Addon.db.monitor
+    if db and slot.dbEntry and not slot.dbEntry.reopenOnReload then
+        removePinnedDbEntryByAddon(db, addonName)
     end
-    if pinnedPopup then
-        pinnedPopup:Hide()
-        pinnedPopup = nil
+
+    if slot.popup then
+        slot.popup:Hide()
+        slot.popup:SetParent(nil)
+        slot.popup = nil
     end
-    pinnedAddonName = nil
-    pinnedBaselineMemory = 0
-    pinnedPeakMemory = 0
-    pinnedMinMemory = 0
-    pinnedStartTime = 0
-    pinnedSampleCount = 0
-    pinnedLastMemory = 0
-    pinnedGrowthSamples = {}
-    pinnedPrevCpu = nil
-    pinnedLastCpuWallTime = 0
-    if Addon.db and Addon.db.monitor then
-        Addon.db.monitor.pinnedAddon = nil
+
+    cancelPinnedMasterTickerIfEmpty()
+end
+
+function MonitorTab:CloseAllPinnedPopouts()
+    local names = {}
+    for i = 1, #pinnedSlots do
+        names[#names + 1] = pinnedSlots[i].addonName
+    end
+    for i = 1, #names do
+        self:ClosePinnedPopupByAddon(names[i])
     end
 end
 
 function MonitorTab:GetPinnedPopup()
-    return pinnedPopup
+    local s = pinnedSlots[1]
+    return s and s.popup or nil
 end
 
 function MonitorTab:GetPinnedAddonName()
-    return pinnedAddonName
+    local s = pinnedSlots[1]
+    return s and s.addonName or nil
 end
 
-function MonitorTab:RestorePinnedAddon()
+function MonitorTab:RestorePinnedMonitors()
     local db = Addon.db and Addon.db.monitor
-    if not db then return end
-    if not db.pinnedReopenOnReload then return end
-    if not db.pinnedAddon then return end
+    if not db or type(db.pinnedMonitors) ~= "table" then return end
 
-    local addonName = db.pinnedAddon
-    local addonIndex = FindAddonIndexByName(addonName)
-    if not addonIndex or not C_AddOns.IsAddOnLoaded(addonIndex) then
-        db.pinnedAddon = nil
-        return
+    for _, entry in ipairs(db.pinnedMonitors) do
+        if entry.reopenOnReload and type(entry.addon) == "string" and entry.addon ~= "" then
+            local addonIndex = FindAddonIndexByName(entry.addon)
+            if addonIndex and C_AddOns.IsAddOnLoaded(addonIndex) then
+                local _, title = C_AddOns.GetAddOnInfo(addonIndex)
+                local displayTitle = StripColorCodes(title or entry.addon)
+                self:CreatePinnedPopup(entry.addon, displayTitle, entry)
+            end
+        end
     end
-
-    local _, title = C_AddOns.GetAddOnInfo(addonIndex)
-    local displayTitle = StripColorCodes(title or addonName)
-    self:CreatePinnedPopup(addonName, displayTitle)
 end

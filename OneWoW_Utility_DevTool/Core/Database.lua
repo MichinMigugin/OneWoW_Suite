@@ -5,6 +5,8 @@ local type = type
 local pairs = pairs
 local ipairs = ipairs
 local tinsert = tinsert
+local tremove = tremove
+local CopyTable = CopyTable
 
 local function getEditorLanguage(db)
     local hub = _G.OneWoW
@@ -91,6 +93,36 @@ function Addon:NormalizeEditorDatabase()
     end
 end
 
+local function migrateMonitorPinned(mon)
+    if type(mon) ~= "table" then return end
+    if type(mon.pinnedMonitors) ~= "table" then
+        mon.pinnedMonitors = {}
+    end
+    if #mon.pinnedMonitors == 0 and type(mon.pinnedAddon) == "string" and mon.pinnedAddon ~= "" then
+        local pos = mon.pinnedPosition
+        if type(pos) ~= "table" then pos = {} end
+        tinsert(mon.pinnedMonitors, {
+            addon = mon.pinnedAddon,
+            reopenOnReload = mon.pinnedReopenOnReload and true or false,
+            position = CopyTable(pos),
+        })
+    end
+    local arr = mon.pinnedMonitors
+    local seen = {}
+    local out = {}
+    for i = 1, #arr do
+        local e = arr[i]
+        if type(e) == "table" and type(e.addon) == "string" and e.addon ~= "" and not seen[e.addon] then
+            seen[e.addon] = true
+            if type(e.position) ~= "table" then e.position = {} end
+            if e.reopenOnReload == nil then e.reopenOnReload = false end
+            tinsert(out, e)
+            if #out >= 4 then break end
+        end
+    end
+    mon.pinnedMonitors = out
+end
+
 function Addon:InitializeDatabase()
     local tabDefaults = {}
     if self.UI and self.UI.GetTabSettingsDefaults then
@@ -122,6 +154,7 @@ function Addon:InitializeDatabase()
             sortOrder = 2,
             viewPreset = "balanced",
             continuousUpdate = false,
+            pinnedMonitors = {},
             pinnedAddon = nil,
             pinnedReopenOnReload = false,
             pinnedPosition = {},
@@ -194,5 +227,8 @@ function Addon:InitializeDatabase()
         self.db.tabs = tabDefaults
     end
     mergeTabSettings(self.db.tabs, tabDefaults)
+    if type(self.db.monitor) == "table" then
+        migrateMonitorPinned(self.db.monitor)
+    end
     self:NormalizeEditorDatabase()
 end

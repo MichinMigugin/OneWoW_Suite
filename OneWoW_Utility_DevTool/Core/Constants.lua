@@ -389,6 +389,7 @@ Addon.Constants = {
     MONITOR_SORT_CPU_MS = 7,
     MONITOR_SORT_MEM_PCT = 8,
     MONITOR_SORT_CPU_PCT = 9,
+    MONITOR_MAX_PINNED_POPOUTS = 4,
     MONITOR_PRESET_DEFAULT_SORT = {
         balanced = -2,
         memory_dig = -4,

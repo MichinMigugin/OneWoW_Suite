@@ -9,6 +9,8 @@ Addon.Locales["ruRU"] = {
     -- Commands
     ["COMMAND_DEVTOOLS"] = "/devtools",
     ["COMMAND_DT"] = "/dt",
+    ["BINDING_HEADER_ONEWOW_DEVTOOL"] = "|cFF00FF00OneWoW|r DevTool",
+    ["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = "Открыть DevTools (вкладка «Ошибки»)",
 
     -- Tab titles
     ["TAB_FRAME"] = "Фрейм",
@@ -421,6 +423,7 @@ Addon.Locales["ruRU"] = {
     ["MON_PIN_ELAPSED"] = "Прошло",
     ["MON_PIN_SAMPLES"] = "Замеры",
     ["MON_PIN_REOPEN"] = "Открыть снова после /reload",
+    ["MON_MSG_PIN_MAX"] = "Можно закрепить не более %d мониторов аддонов одновременно.",
 
     -- Minimap
     ["MINIMAP_TOOLTIP_HINT"] = "ЛКМ для переключения DevTool",
