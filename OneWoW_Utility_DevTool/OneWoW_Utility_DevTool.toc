@@ -27,6 +27,8 @@ Locales\frFR.lua
 Locales\ruRU.lua
 Locales\deDE.lua
 
+Media\devtools-error.ogg
+
 # Core
 Core\Constants.lua
 Core\Database.lua
@@ -60,6 +62,7 @@ Modules\ErrorExport.lua
 Modules\ErrorLogger.lua
 Modules\EventMonitor.lua
 Modules\ColorTools.lua
+Modules\GlobalsBrowser.lua
 Modules\TextureAtlasBrowser.lua
 Modules\FontBrowserTab.lua
 Modules\SoundBrowser.lua
@@ -74,6 +77,7 @@ GUI\MainWindow.lua
 GUI\Tabs\FrameInspectorTab.lua
 GUI\Tabs\EventMonitorTab.lua
 GUI\Tabs\LuaConsoleTab.lua
+GUI\Tabs\GlobalsBrowserTab.lua
 GUI\Tabs\TextureViewerTab.lua
 GUI\Tabs\ColorToolsTab.lua
 GUI\Tabs\LayoutTab.lua

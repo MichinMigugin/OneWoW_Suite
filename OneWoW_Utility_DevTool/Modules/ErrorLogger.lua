@@ -74,7 +74,7 @@ end
 
 local function normalizeSoundChoice(db)
     local sc = db.soundChoice
-    if sc == "raid_warning" or sc == "tell_message" or sc == "map_ping" or sc == "off" then
+    if sc == "devtools_error" or sc == "raid_warning" or sc == "tell_message" or sc == "map_ping" or sc == "off" then
         return
     end
     if db.playSound then
@@ -560,8 +560,8 @@ function ErrorLogger:PlayAlertSound()
         return
     end
     normalizeSoundChoice(db)
-    local kit = soundKitForChoice(db.soundChoice)
-    if not kit then
+    local choice = db.soundChoice
+    if choice == "off" or not choice then
         return
     end
     local t = GetTime()
@@ -569,14 +569,35 @@ function ErrorLogger:PlayAlertSound()
         return
     end
     self._lastSoundTime = t
+    if choice == "devtools_error" then
+        local path = getConstants().ERROR_LOGGER_ALERT_SOUND_FILE
+        if path then
+            pcall(function()
+                PlaySoundFile(path, "Master")
+            end)
+        end
+        return
+    end
+    local kit = soundKitForChoice(choice)
+    if not kit then
+        return
+    end
     pcall(function()
         PlaySound(kit, "Master")
     end)
 end
 
---- Play the kit for a soundChoice key (Lua tab preview). No throttle; skips "off".
 function ErrorLogger:PreviewSoundChoice(key)
     if key == "off" or not key then
+        return
+    end
+    if key == "devtools_error" then
+        local path = getConstants().ERROR_LOGGER_ALERT_SOUND_FILE
+        if path then
+            pcall(function()
+                PlaySoundFile(path, "Master")
+            end)
+        end
         return
     end
     local kit = soundKitForChoice(key)
