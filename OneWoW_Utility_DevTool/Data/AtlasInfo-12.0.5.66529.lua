@@ -1,9 +1,9 @@
 -- AUTOMATICALLY GENERATED -- 12.0.5.66529
--- https://www.townlong-yak.com/framexml/live/Helix/AtlasInfo.lua
+-- https://www.townlong-yak.com/framexml/ptr/Helix/AtlasInfo.lua
 local _, Addon = ...
 
 local atlasVersion = "12.0.5.66529"
-if not Addon.ValidateAtlasInfoGameBuild(atlasVersion) then
+if not Addon.ValidateDataBuildGameBuild(atlasVersion) then
 	return
 end
 

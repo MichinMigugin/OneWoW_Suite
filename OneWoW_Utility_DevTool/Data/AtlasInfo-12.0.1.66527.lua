@@ -2,12 +2,12 @@
 -- https://www.townlong-yak.com/framexml/live/Helix/AtlasInfo.lua
 local _, Addon = ...
 
-local atlasVersion = "12.0.1.66527"
-if not Addon.ValidateAtlasInfoGameBuild(atlasVersion) then
+local dataVersion = "12.0.1.66527"
+if not Addon.ValidateDataBuildGameBuild(dataVersion) then
 	return
 end
 
-Addon._AtlasInfoVersion = atlasVersion
+Addon._AtlasInfoVersion = dataVersion
 
 Addon._AtlasInfo = {
 	["5426612"]={
