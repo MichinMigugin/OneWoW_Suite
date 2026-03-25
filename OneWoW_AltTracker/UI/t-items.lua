@@ -90,33 +90,45 @@ function ns.UI.CreateItemsTab(parent)
 
     local scanAHButton = OneWoW_GUI:CreateButton(filterBar, { text = L["ITEMS_SCAN_AH"], width = 100, height = 20 })
     scanAHButton:SetPoint("RIGHT", filterBar, "RIGHT", -8, 0)
-    scanAHButton:SetEnabled(false)
     scanAHButton.isAHScanning = false
     scanAHButton:SetScript("OnClick", function(self)
-        if not self.isAHScanning then
-            ns.UI:StartAHScan(parent, scanAHButton)
+        if self.isAHScanning then
+            local Auctions = _G.OneWoW_AltTracker_Auctions
+            if Auctions and Auctions.AHScanner then
+                Auctions.AHScanner:StopScan()
+            end
+            return
         end
-    end)
-
-    parent.ahCheckFrame = CreateFrame("Frame")
-    parent.ahCheckFrame:RegisterEvent("AUCTION_HOUSE_SHOW")
-    parent.ahCheckFrame:RegisterEvent("AUCTION_HOUSE_CLOSED")
-    parent.ahCheckFrame:SetScript("OnEvent", function(self, event)
-        if event == "AUCTION_HOUSE_SHOW" then
-            C_Timer.After(0.1, function()
-                scanAHButton:SetEnabled(true)
-            end)
-        elseif event == "AUCTION_HOUSE_CLOSED" then
-            scanAHButton:SetEnabled(false)
+        if not AuctionHouseFrame or not AuctionHouseFrame:IsShown() then
+            print("|cFFFFD100OneWoW:|r " .. (L["ITEMS_AH_NOT_OPEN"] or "Open the Auction House first to scan prices."))
+            return
         end
+        ns.UI:StartAHScan(parent, scanAHButton)
     end)
 
     parent.scanAHButton = scanAHButton
+
+    local scanBarContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    scanBarContainer:SetPoint("TOPLEFT", filterBar, "BOTTOMLEFT", 0, -3)
+    scanBarContainer:SetPoint("TOPRIGHT", filterBar, "BOTTOMRIGHT", 0, -3)
+    scanBarContainer:SetHeight(20)
+    scanBarContainer:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    scanBarContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    scanBarContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    scanBarContainer:Hide()
+
+    local scanProgressBar = OneWoW_GUI:CreateProgressBar(scanBarContainer, { height = 14, min = 0, max = 1, value = 0 })
+    scanProgressBar:SetPoint("TOPLEFT", scanBarContainer, "TOPLEFT", 4, -3)
+    scanProgressBar:SetPoint("TOPRIGHT", scanBarContainer, "TOPRIGHT", -4, -3)
+
+    parent.scanBarContainer = scanBarContainer
+    parent.scanProgressBar = scanProgressBar
 
     local noticeBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     noticeBar:SetPoint("TOPLEFT", filterBar, "BOTTOMLEFT", 0, -5)
     noticeBar:SetPoint("TOPRIGHT", filterBar, "BOTTOMRIGHT", 0, -5)
     noticeBar:SetHeight(28)
+    parent.noticeBar = noticeBar
     noticeBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     noticeBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     noticeBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -172,8 +184,8 @@ function ns.UI.CreateItemsTab(parent)
 end
 
 function ns.UI:StartAHScan(itemsTab, scanButton)
-    local Storage = _G.OneWoW_AltTracker_Storage
-    if not Storage or not Storage.AHScanner then
+    local Auctions = _G.OneWoW_AltTracker_Auctions
+    if not Auctions or not Auctions.AHScanner then
         return
     end
 
@@ -288,28 +300,73 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
     end
 
     scanButton.isAHScanning = true
-    scanButton:SetEnabled(false)
+    scanButton:SetText(L["ITEMS_SCAN_STOPPED"] or "Stop")
 
-    Storage.AHScanner:StartScan(itemsToScan, function(status, current, total, itemName)
-        if status == "scanStarted" then
-            print("|cFFFFD100Items Tab:|r Starting AH price scan for " .. total .. " items...")
-        elseif status == "itemScanning" then
-            scanButton:SetText(current .. "/" .. total)
-        elseif status == "scanCompleted" then
-            print("|cFFFFD100Items Tab:|r AH scan complete!")
-            scanButton.isAHScanning = false
-            scanButton:SetText(L["ITEMS_SCAN_AH"])
-            scanButton:SetEnabled(true)
-            if ns.UI.RefreshItemsTab then
-                ns.UI.RefreshItemsTab(itemsTab)
+    local progressBar = itemsTab.scanProgressBar
+    local progressContainer = itemsTab.scanBarContainer
+    local noticeBar = itemsTab.noticeBar
+
+    local function ShowProgress(show)
+        if show then
+            progressContainer:Show()
+            if noticeBar then
+                noticeBar:SetPoint("TOPLEFT", progressContainer, "BOTTOMLEFT", 0, -3)
+                noticeBar:SetPoint("TOPRIGHT", progressContainer, "BOTTOMRIGHT", 0, -3)
             end
+        else
+            progressContainer:Hide()
+            if noticeBar then
+                noticeBar:SetPoint("TOPLEFT", itemsTab.filterBar, "BOTTOMLEFT", 0, -5)
+                noticeBar:SetPoint("TOPRIGHT", itemsTab.filterBar, "BOTTOMRIGHT", 0, -5)
+            end
+        end
+    end
+
+    local function ScanDone(pricesFound)
+        scanButton.isAHScanning = false
+        scanButton:SetText(L["ITEMS_SCAN_AH"])
+        scanButton:SetEnabled(true)
+        ShowProgress(false)
+        if ns.UI.RefreshItemsTab then
+            ns.UI.RefreshItemsTab(itemsTab)
+        end
+    end
+
+    local lastRefreshIndex = 0
+
+    Auctions.AHScanner:StartScan(itemsToScan, function(status, current, total, extra)
+        if status == "scanStarted" then
+            ShowProgress(true)
+            if progressBar then
+                progressBar:UpdateProgress(0, total)
+                progressBar._text:SetText("0/" .. total .. " - " .. (L["ITEMS_SCANNING_STATUS"] or "Scanning..."))
+            end
+        elseif status == "itemScanned" then
+            if progressBar then
+                progressBar:UpdateProgress(current, total)
+                local pricesFound = extra or 0
+                progressBar._text:SetText(current .. "/" .. total .. "  (" .. pricesFound .. " " .. (L["ITEMS_PRICES_FOUND"] or "prices found") .. ")")
+            end
+            if current - lastRefreshIndex >= 25 then
+                lastRefreshIndex = current
+                if ns.UI.RefreshItemsTab then
+                    ns.UI.RefreshItemsTab(itemsTab)
+                end
+            end
+        elseif status == "scanCompleted" then
+            local pricesFound = extra or 0
+            if progressBar then
+                progressBar:UpdateProgress(total, total)
+                progressBar._text:SetText(L["ITEMS_SCAN_COMPLETE"] .. "  (" .. pricesFound .. " " .. (L["ITEMS_PRICES_FOUND"] or "prices found") .. ")")
+            end
+            C_Timer.After(3, function()
+                ScanDone(pricesFound)
+            end)
         elseif status == "scanStopped" then
-            scanButton.isAHScanning = false
-            scanButton:SetText(L["ITEMS_SCAN_AH"])
-            scanButton:SetEnabled(true)
+            ScanDone(0)
         elseif status == "ahClosed" then
             if scanButton.isAHScanning then
-                Storage.AHScanner:StopScan()
+                Auctions.AHScanner:StopScan()
             end
         end
     end)
@@ -610,16 +667,10 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
 
         if shouldInclude then
-            local Storage = _G.OneWoW_AltTracker_Storage
-            if Storage and Storage.AHScanner then
-                local ahPrice, ahTime = Storage.AHScanner:GetAHPrice(itemID)
-                if ahPrice then
-                    itemData.ahPrice = ahPrice
-                    itemData.ahTime = ahTime or 0
-                else
-                    itemData.ahPrice = 0
-                    itemData.ahTime = 0
-                end
+            local priceDB = _G.OneWoW_AHPrices
+            if priceDB and priceDB[itemID] then
+                itemData.ahPrice = priceDB[itemID].price or 0
+                itemData.ahTime = priceDB[itemID].timestamp or 0
             else
                 itemData.ahPrice = 0
                 itemData.ahTime = 0

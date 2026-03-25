@@ -9,6 +9,7 @@ ns.UI = ns.UI or {}
 local currentSortColumn = nil
 local currentSortAscending = true
 local characterRows = {}
+local selectedAltKey = nil
 
 local columnsConfig = {
     {key = "expand", label = "", width = 25, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_EXPAND"], ttDesc = L["TT_COL_EXPAND_DESC"]},
@@ -158,6 +159,11 @@ function ns.UI.CreateAuctionsTab(parent)
     parent.mailIconButton = mailIconButton
     parent.UpdateMailIcon = UpdateMailIcon
 
+    local altDropdown, altDropdownText = OneWoW_GUI:CreateDropdown(filterPanel, {
+        width = 150, height = 28, text = L["AUCTIONS_ALL_ALTS"] or "All Alts"
+    })
+    altDropdown:SetPoint("LEFT", mailIconButton, "RIGHT", 4, 0)
+
     local filterButtons = {}
     local filterOptions = {
         {key = "all", label = L["AUCTIONS_FILTER_ALL"] or "All", tooltip = L["AUCTIONS_FILTER_ALL_DESC"] or "Show all auctions and bids"},
@@ -169,7 +175,11 @@ function ns.UI.CreateAuctionsTab(parent)
 
     for i, option in ipairs(filterOptions) do
         local btn = OneWoW_GUI:CreateButton(filterPanel, { text = option.label, width = 120, height = 24 })
-        btn:SetPoint("LEFT", filterPanel, "LEFT", 48 + (i - 1) * 124, 0)
+        if i == 1 then
+            btn:SetPoint("LEFT", altDropdown, "RIGHT", 4, 0)
+        else
+            btn:SetPoint("LEFT", filterButtons[i - 1], "RIGHT", 4, 0)
+        end
 
         btn.filterKey = option.key
 
@@ -218,6 +228,80 @@ function ns.UI.CreateAuctionsTab(parent)
         btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         table.insert(filterButtons, btn)
     end
+
+    local function InitializeAltDropdown()
+        if not _G.OneWoW_AltTracker_Auctions_DB or not _G.OneWoW_AltTracker_Auctions_DB.characters then
+            altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"] or "All Alts")
+            return
+        end
+
+        local altList = {}
+        for charKey, auctionData in pairs(_G.OneWoW_AltTracker_Auctions_DB.characters) do
+            local hasData = false
+            if auctionData.activeAuctions and #auctionData.activeAuctions > 0 then hasData = true end
+            if auctionData.activeBids and #auctionData.activeBids > 0 then hasData = true end
+            if auctionData.auctionHistory and #auctionData.auctionHistory > 0 then hasData = true end
+            if hasData then
+                local charInfo = _G.OneWoW_AltTracker_Character_DB and
+                                 _G.OneWoW_AltTracker_Character_DB.characters and
+                                 _G.OneWoW_AltTracker_Character_DB.characters[charKey]
+                local charName = (charInfo and charInfo.name) or charKey:match("^([^%-]+)") or charKey
+                table.insert(altList, { key = charKey, name = charName })
+            end
+        end
+
+        table.sort(altList, function(a, b) return a.name < b.name end)
+
+        if not selectedAltKey then
+            altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"] or "All Alts")
+        else
+            local found = false
+            for _, alt in ipairs(altList) do
+                if alt.key == selectedAltKey then
+                    altDropdownText:SetText(alt.name)
+                    found = true
+                    break
+                end
+            end
+            if not found then
+                selectedAltKey = nil
+                altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"] or "All Alts")
+            end
+        end
+
+        OneWoW_GUI:AttachFilterMenu(altDropdown, {
+            searchable = (#altList > 5),
+            menuHeight = 314,
+            buildItems = function()
+                local items = {}
+                table.insert(items, {
+                    text = L["AUCTIONS_ALL_ALTS"] or "All Alts",
+                    value = nil,
+                })
+                for _, alt in ipairs(altList) do
+                    table.insert(items, {
+                        text = alt.name,
+                        value = alt.key,
+                    })
+                end
+                return items
+            end,
+            getActiveValue = function()
+                return selectedAltKey
+            end,
+            onSelect = function(value, text)
+                selectedAltKey = value
+                altDropdown._text:SetText(text)
+                if ns.UI.RefreshAuctionsTab then
+                    ns.UI.RefreshAuctionsTab(parent)
+                end
+            end,
+        })
+    end
+
+    InitializeAltDropdown()
+    parent.RebuildAltDropdown = InitializeAltDropdown
+    parent.altDropdown = altDropdown
 
     local rosterPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     rosterPanel:SetPoint("TOPLEFT", filterPanel, "BOTTOMLEFT", 0, -5)
@@ -276,10 +360,15 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
     wipe(auctionRows)
     if dt then dt:ClearRows() end
 
+    if auctionsTab.RebuildAltDropdown then
+        auctionsTab.RebuildAltDropdown()
+    end
+
     local currentFilter = auctionsTab.auctionFilter or "all"
     local allAuctions = {}
 
     for charKey, auctionData in pairs(_G.OneWoW_AltTracker_Auctions_DB.characters) do
+        if not selectedAltKey or charKey == selectedAltKey then
         local charInfo = _G.OneWoW_AltTracker_Character_DB and
                          _G.OneWoW_AltTracker_Character_DB.characters and
                          _G.OneWoW_AltTracker_Character_DB.characters[charKey]
@@ -342,6 +431,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                     })
                 end
             end
+        end
         end
     end
 
