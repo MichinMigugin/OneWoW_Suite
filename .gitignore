@@ -18,3 +18,7 @@ scripts/Send-ChangelogToDiscord.ps1
 # Ephemeral Discord API payloads (Send-ChangelogToDiscord.ps1)
 .discord-changelog-send.json*
 
+# Pythnon
+__pycache__/
+*.pyc
+*.pyo
