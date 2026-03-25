@@ -128,13 +128,20 @@ function OneWoW_GUI:CreateCheckbox(parent, options)
     options = options or {}
     local name = options.name
     local label = options.label or ""
+    local checked = options.checked
+    local onClick = options.onClick
     local cb = CreateFrame("CheckButton", name, parent, "UICheckButtonTemplate")
     cb:SetSize(Constants.GUI.CHECKBOX_SIZE, Constants.GUI.CHECKBOX_SIZE)
+    cb:SetChecked(checked and true or false)
 
     cb.label = cb:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     cb.label:SetPoint("LEFT", cb, "RIGHT", OneWoW_GUI:GetSpacing("XS"), 0)
     cb.label:SetText(label)
     cb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    if type(onClick) == "function" then
+        cb:SetScript("OnClick", onClick)
+    end
 
     return cb
 end

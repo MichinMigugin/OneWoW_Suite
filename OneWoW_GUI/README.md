@@ -571,11 +571,16 @@ local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, {
 ### Checkbox
 ```lua
 local cb = OneWoW_GUI:CreateCheckbox(parent, {
-    name = "MyCheckbox",
-    label = "Label text",
+    name = "MyCheckbox",        -- optional, global frame name
+    label = "Label text",       -- optional, default ""
+    checked = true,             -- optional, initial checked state
+    onClick = function(self)    -- optional, fires on click
+        local isChecked = self:GetChecked()
+    end,
 })
 ```
 Uses UICheckButtonTemplate. Access label via `cb.label`.
+Call `cb:GetChecked()` / `cb:SetChecked(bool)` for state.
 
 ### Edit box
 ```lua

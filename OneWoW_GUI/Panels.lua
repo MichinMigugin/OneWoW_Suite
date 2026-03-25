@@ -257,6 +257,15 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
 
     local state = { selectedIndex = nil }
     local listButtons = {}
+    local scrollBar = scrollFrame.ScrollBar
+
+    local function setScrollPosition(pos)
+        if scrollBar then
+            scrollBar:SetValue(pos)
+        else
+            scrollFrame:SetVerticalScroll(pos)
+        end
+    end
 
     local function ensureIndexVisible(idx)
         local n = getCount()
@@ -266,9 +275,9 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
         local topOfRow = (idx - 1) * rowHeight
         local bottomOfRow = topOfRow + rowHeight
         if topOfRow < scroll then
-            scrollFrame:SetVerticalScroll(topOfRow)
+            setScrollPosition(topOfRow)
         elseif bottomOfRow > scroll + viewH then
-            scrollFrame:SetVerticalScroll(bottomOfRow - viewH)
+            setScrollPosition(bottomOfRow - viewH)
         end
     end
 
@@ -311,7 +320,7 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
         local scrollMax = math.max(content:GetHeight() - scrollFrame:GetHeight(), 0)
         local vs = scrollFrame:GetVerticalScroll()
         if vs > scrollMax then
-            scrollFrame:SetVerticalScroll(scrollMax)
+            setScrollPosition(scrollMax)
         end
         updateVisibleRows()
     end
@@ -325,8 +334,8 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
         end
         local clamped = math.max(1, math.min(idx, n))
         state.selectedIndex = clamped
-        ensureIndexVisible(clamped)
         Refresh()
+        ensureIndexVisible(clamped)
         local entry = getEntry(clamped)
         if entry then
             onSelect(clamped, entry)
@@ -337,12 +346,7 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
         return state.selectedIndex
     end
 
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
-        content:SetWidth(w)
-        Refresh()
-    end)
-
-    for i = 1, numVisibleRows do
+    local function createRowButton()
         local btn = CreateFrame("Button", nil, content)
         btn:SetHeight(rowHeight)
         btn:SetNormalFontObject(GameFontNormalSmall)
@@ -357,12 +361,43 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
             if t and t ~= "" then
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
-                GameTooltip:SetText(t, r, g, b, nil, true)
+                local firstLine
+                for line in tostring(t):gmatch("([^\n]+)") do
+                    if not firstLine then
+                        firstLine = line
+                        GameTooltip:SetText(line, r, g, b)
+                    else
+                        GameTooltip:AddLine(line, r, g, b, true)
+                    end
+                end
+                if not firstLine then
+                    GameTooltip:SetText(tostring(t), r, g, b)
+                end
                 GameTooltip:Show()
             end
         end)
         btn:SetScript("OnLeave", GameTooltip_Hide)
         tinsert(listButtons, btn)
+        return btn
+    end
+
+    local function ensureButtonPool()
+        local viewH = scrollFrame:GetHeight()
+        if viewH <= 0 then return end
+        local needed = math.ceil(viewH / rowHeight) + 2
+        for i = #listButtons + 1, needed do
+            createRowButton()
+        end
+    end
+
+    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+        content:SetWidth(w)
+        ensureButtonPool()
+        Refresh()
+    end)
+
+    for i = 1, numVisibleRows do
+        createRowButton()
     end
 
     scrollFrame:SetScript("OnVerticalScroll", updateVisibleRows)
