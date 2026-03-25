@@ -577,8 +577,12 @@ function AFKPanelModule:CheckAFK()
     if CinematicFrame and CinematicFrame:IsShown() then return end
     if MovieFrame and MovieFrame:IsShown() then return end
     if UnitCastingInfo("player") then return end
-    local isPetBattle = C_PetBattles and C_PetBattles.IsInBattle and C_PetBattles.IsInBattle()
-    self:SetAFK(UnitIsAFK("player") and not isPetBattle)
+    C_Timer.After(0, function()
+        local _, instanceType = IsInInstance()
+        if instanceType == "pvp" or instanceType == "arena" then return end
+        local isPetBattle = C_PetBattles and C_PetBattles.IsInBattle and C_PetBattles.IsInBattle()
+        self:SetAFK(UnitIsAFK("player") and not isPetBattle)
+    end)
 end
 
 function AFKPanelModule:LoopAnimations()
@@ -652,8 +656,12 @@ function AFKPanelModule:OnEvent(event, arg1)
         return
     end
 
-    local isPetBattle = C_PetBattles and C_PetBattles.IsInBattle and C_PetBattles.IsInBattle()
-    self:SetAFK(UnitIsAFK("player") and not isPetBattle)
+    C_Timer.After(0, function()
+        local _, instanceType = IsInInstance()
+        if instanceType == "pvp" or instanceType == "arena" then return end
+        local isPetBattle = C_PetBattles and C_PetBattles.IsInBattle and C_PetBattles.IsInBattle()
+        self:SetAFK(UnitIsAFK("player") and not isPetBattle)
+    end)
 end
 
 function AFKPanelModule:OnDisable()
