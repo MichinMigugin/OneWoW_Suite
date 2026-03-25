@@ -366,6 +366,49 @@ ShowItemDetail = function(result)
         AddTextRow(L["ITEMSEARCH_NO_INVENTORY"], 12, "TEXT_MUTED")
     end
 
+    yOffset = yOffset - 6
+
+    AddSectionHeader("ITEMSEARCH_SECTION_VALUE")
+
+    local vendorSellPrice = 0
+    local itemName, itemLink, itemQuality, _, _, _, _, _, _, _, sellPrice = GetItemInfo(result.itemID)
+    if sellPrice and sellPrice > 0 then
+        vendorSellPrice = sellPrice
+    end
+
+    local isVendorItem = #detail.vendors > 0
+    local hasCurrencyCost = false
+    if isVendorItem then
+        for _, v in ipairs(detail.vendors) do
+            if v.cost and v.cost > 0 then
+                break
+            end
+        end
+    end
+
+    if vendorSellPrice > 0 then
+        AddTextRow(L["ITEMSEARCH_VENDOR_PRICE"] .. ":  " .. OneWoW_GUI:FormatGold(vendorSellPrice), 12, "TEXT_PRIMARY")
+    else
+        AddTextRow(L["ITEMSEARCH_NOT_SELLABLE"], 12, "TEXT_MUTED")
+    end
+
+    local priceDB = _G.OneWoW_AHPrices
+    local ahData = priceDB and priceDB[result.itemID]
+    if ahData and ahData.price and ahData.price > 0 then
+        local ageSeconds = GetServerTime() - (ahData.timestamp or 0)
+        local ageText
+        if ageSeconds < 3600 then
+            ageText = math.max(1, math.floor(ageSeconds / 60)) .. "m " .. L["ITEMSEARCH_AH_AGO"]
+        elseif ageSeconds < 86400 then
+            ageText = math.floor(ageSeconds / 3600) .. "h " .. L["ITEMSEARCH_AH_AGO"]
+        else
+            ageText = math.floor(ageSeconds / 86400) .. "d " .. L["ITEMSEARCH_AH_AGO"]
+        end
+        AddTextRow(L["ITEMSEARCH_AH_PRICE"] .. ":  " .. OneWoW_GUI:FormatGold(ahData.price) .. "  |cFF888888(" .. ageText .. ")|r", 12, "TEXT_PRIMARY")
+    else
+        AddTextRow(L["ITEMSEARCH_NO_AH_DATA"], 12, "TEXT_MUTED")
+    end
+
     yOffset = yOffset - 10
     child:SetHeight(math.abs(yOffset) + 20)
 end
@@ -516,7 +559,103 @@ function ns.UI.CreateItemSearchTab(parent)
         end,
     })
     searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
-    searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
+    searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -118, -8)
+
+    local scanAHButton = OneWoW_GUI:CreateButton(searchHeader, { text = L["ITEMSEARCH_SCAN_AH"], width = 100, height = 26 })
+    scanAHButton:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
+    scanAHButton.isScanning = false
+
+    local scanBarContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    scanBarContainer:SetPoint("TOPLEFT", noticeBar, "BOTTOMLEFT", 0, -2)
+    scanBarContainer:SetPoint("TOPRIGHT", noticeBar, "BOTTOMRIGHT", 0, -2)
+    scanBarContainer:SetHeight(20)
+    scanBarContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    scanBarContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    scanBarContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    scanBarContainer:Hide()
+
+    local scanProgressBar = OneWoW_GUI:CreateProgressBar(scanBarContainer, { height = 14, min = 0, max = 1, value = 0 })
+    scanProgressBar:SetPoint("TOPLEFT", scanBarContainer, "TOPLEFT", 4, -3)
+    scanProgressBar:SetPoint("TOPRIGHT", scanBarContainer, "TOPRIGHT", -4, -3)
+
+    local function UpdateContentAnchor()
+        if scanBarContainer:IsShown() then
+            contentArea:SetPoint("TOPLEFT", scanBarContainer, "BOTTOMLEFT", 0, -2)
+        else
+            contentArea:SetPoint("TOPLEFT", noticeBar, "BOTTOMLEFT", 0, -2)
+        end
+    end
+
+    scanAHButton:SetScript("OnClick", function(self)
+        if self.isScanning then
+            local Auctions = _G.OneWoW_AltTracker_Auctions
+            if Auctions and Auctions.FullAHScanner then
+                Auctions.FullAHScanner:StopScan()
+            end
+            return
+        end
+
+        if not AuctionHouseFrame or not AuctionHouseFrame:IsShown() then
+            print("|cFFFFD100OneWoW:|r " .. L["ITEMSEARCH_AH_NOT_OPEN"])
+            return
+        end
+
+        local Auctions = _G.OneWoW_AltTracker_Auctions
+        if not Auctions or not Auctions.FullAHScanner then
+            print("|cFFFFD100OneWoW:|r AltTracker Auctions addon required for AH scanning.")
+            return
+        end
+
+        local canScan, minutesLeft = Auctions.FullAHScanner:CanScan()
+        if not canScan then
+            print("|cFFFFD100OneWoW:|r AH full scan available in " .. minutesLeft .. " minutes.")
+            return
+        end
+
+        self.isScanning = true
+        self:SetText(L["ITEMSEARCH_SCAN_STOP"])
+
+        scanBarContainer:Show()
+        UpdateContentAnchor()
+
+        Auctions.FullAHScanner:StartScan(function(status, progress, extra)
+            if status == "scanStarted" then
+                scanProgressBar:UpdateProgress(0, 1)
+                scanProgressBar._text:SetText(L["ITEMSEARCH_SCAN_WAITING"])
+            elseif status == "scanProgress" then
+                local pct = progress or 0
+                scanProgressBar:UpdateProgress(pct, 1)
+                scanProgressBar._text:SetText(string.format(L["ITEMSEARCH_SCAN_PROCESSING"], math.floor(pct * 100)))
+            elseif status == "scanCompleted" then
+                local found = extra or 0
+                scanProgressBar:UpdateProgress(1, 1)
+                scanProgressBar._text:SetText(L["ITEMSEARCH_SCAN_COMPLETE"] .. "  (" .. found .. " " .. L["ITEMSEARCH_PRICES_FOUND"] .. ")")
+                self.isScanning = false
+                self:SetText(L["ITEMSEARCH_SCAN_AH"])
+                if selectedItem then
+                    ShowItemDetail(selectedItem)
+                end
+                C_Timer.After(3, function()
+                    scanBarContainer:Hide()
+                    UpdateContentAnchor()
+                end)
+            elseif status == "scanStopped" then
+                self.isScanning = false
+                self:SetText(L["ITEMSEARCH_SCAN_AH"])
+                scanBarContainer:Hide()
+                UpdateContentAnchor()
+                if selectedItem then
+                    ShowItemDetail(selectedItem)
+                end
+            elseif status == "scanFailed" then
+                self.isScanning = false
+                self:SetText(L["ITEMSEARCH_SCAN_AH"])
+                scanBarContainer:Hide()
+                UpdateContentAnchor()
+                print("|cFFFFD100OneWoW:|r AH scan did not get a response. You can try again.")
+            end
+        end)
+    end)
 
     emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
