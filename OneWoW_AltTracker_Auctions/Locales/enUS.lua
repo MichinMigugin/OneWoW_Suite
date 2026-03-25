@@ -7,4 +7,6 @@ ns.L = {
     ["AUCTION_HOUSE_OPENED"] = "Auction house opened, collecting data...",
     ["NO_AUCTIONS"] = "No active auctions",
     ["NO_BIDS"] = "No active bids",
+    ["AH_SCAN_COOLDOWN"] = "AH full scan available in %d minutes.",
+    ["AH_SCAN_REQUIRED"] = "AltTracker Auctions addon required for AH scanning.",
 }

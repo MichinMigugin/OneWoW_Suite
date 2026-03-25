@@ -6,7 +6,7 @@
 ## X-Website: https://wow2.xyz/
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
-## SavedVariables: OneWoW_AltTracker_Auctions_DB
+## SavedVariables: OneWoW_AltTracker_Auctions_DB, OneWoW_AHPrices
 ## RequiredDeps: OneWoW_AltTracker
 ## Category: OneWoW
 ## Group: OneWoW_AltTracker
@@ -21,6 +21,10 @@ Core\Core.lua
 # Data Collection Modules
 Modules\ActiveAuctions.lua
 Modules\ActiveBids.lua
+
+# AH Scanner Modules
+Modules\AHScanner.lua
+Modules\FullAHScanner.lua
 
 # Data Manager (orchestrates all modules)
 Modules\DataManager.lua

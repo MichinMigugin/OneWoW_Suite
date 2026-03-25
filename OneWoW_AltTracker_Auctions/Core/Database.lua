@@ -14,6 +14,8 @@ ns.DatabaseDefaults = {
     version = 1,
 }
 
+local AH_PRICE_MAX_AGE_DAYS = 14
+
 function ns:InitializeDatabase()
     if not OneWoW_AltTracker_Auctions_DB.characters then
         OneWoW_AltTracker_Auctions_DB.characters = {}
@@ -25,6 +27,24 @@ function ns:InitializeDatabase()
 
     if not OneWoW_AltTracker_Auctions_DB.version then
         OneWoW_AltTracker_Auctions_DB.version = ns.DatabaseDefaults.version
+    end
+
+    if not _G.OneWoW_AHPrices then
+        _G.OneWoW_AHPrices = {}
+    end
+
+    local cutoff = GetServerTime() - (AH_PRICE_MAX_AGE_DAYS * 86400)
+    local purged = 0
+    for itemID, data in pairs(_G.OneWoW_AHPrices) do
+        if not data.timestamp or data.timestamp < cutoff then
+            _G.OneWoW_AHPrices[itemID] = nil
+            purged = purged + 1
+        end
+    end
+    if purged > 0 then
+        C_Timer.After(5, function()
+            print("|cFFFFD100OneWoW:|r Cleaned " .. purged .. " expired AH price entries (>" .. AH_PRICE_MAX_AGE_DAYS .. " days old).")
+        end)
     end
 end
 

@@ -22,6 +22,14 @@ end)
 function ns:OnPlayerLogin()
     self.AddonInitialized = true
 
+    if ns.AHScanner then
+        ns.AHScanner:Initialize()
+    end
+
+    if ns.FullAHScanner then
+        ns.FullAHScanner:Initialize()
+    end
+
     if ns.DataManager then
         ns.DataManager:Initialize()
         ns.DataManager:RegisterEvents()
