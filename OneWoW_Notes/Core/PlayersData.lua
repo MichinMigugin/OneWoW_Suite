@@ -167,17 +167,21 @@ function Players:Initialize()
     Players._scanFrame = CreateFrame("Frame")
     Players._scanFrame:SetScript("OnEvent", function(_, event)
         if event ~= "PLAYER_TARGET_CHANGED" then return end
-        if not Players._scanningActive then return end
-        if not UnitExists("target") or not UnitIsPlayer("target") then return end
-        local name, realm = UnitName("target")
-        if not name or name == UnitName("player") then return end
-        if not realm or realm == "" then realm = GetRealmName() or "Unknown" end
-        local fullName = name .. "-" .. realm
-        local existing = Players:GetPlayer(fullName)
-        if existing and existing.soundEnabled then
-            print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["NOTES_PLAYER_ALERT_FOUND"] or "Targeted player with note: %s", fullName))
-            PlaySound(SOUNDKIT.RAID_WARNING)
-        end
+        C_Timer.After(0, function()
+            if not Players._scanningActive then return end
+            if not UnitExists("target") or not UnitIsPlayer("target") then return end
+            pcall(function()
+                local name, realm = UnitName("target")
+                if not name or name == UnitName("player") then return end
+                if not realm or realm == "" then realm = GetRealmName() or "Unknown" end
+                local fullName = name .. "-" .. realm
+                local existing = Players:GetPlayer(fullName)
+                if existing and existing.soundEnabled then
+                    print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["NOTES_PLAYER_ALERT_FOUND"] or "Targeted player with note: %s", fullName))
+                    PlaySound(SOUNDKIT.RAID_WARNING)
+                end
+            end)
+        end)
     end)
 
     if Players._scanningActive then

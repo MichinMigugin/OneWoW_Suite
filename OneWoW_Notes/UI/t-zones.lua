@@ -306,7 +306,7 @@ function ns.UI.CreateZonesTab(parent)
                                 text = L["BUTTON_DELETE"] or "Delete",
                                 color = {0.8, 0.2, 0.2},
                                 onClick = function(dlg)
-                                    if ns.ZonePins then ns.ZonePins:RemovePin(zName) end
+                                    if ns.ZonePins then ns.ZonePins:HideZonePin(zName) end
                                     if ns.Zones then ns.Zones:RemoveZone(zName) end
                                     selectedZone = nil
                                     if detailPanel.editorContent then
