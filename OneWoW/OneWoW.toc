@@ -68,6 +68,7 @@ Tooltips\tp-enhancements.lua
 Tooltips\tp-talentmods.lua
 Tooltips\tp-notewarning.lua
 Tooltips\tp-itemstatus.lua
+Tooltips\tp-value.lua
 
 # Portal Hub - Data
 Portals\Data\Hearthstones.lua

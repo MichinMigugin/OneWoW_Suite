@@ -98,6 +98,13 @@ OneWoW.SearchData = {
         navType = "module", module = "qol", subtab = "tooltips",
         keywords = {"item status", "soulbound", "warbound", "bind on equip", "boe", "bop", "bou", "bound status"},
     },
+    {
+        path     = function() return L("SRCH_PATH_OW_TOOLTIPS_VALUE") end,
+        desc     = function() return L("SRCH_DESC_OW_TOOLTIPS_VALUE") end,
+        addonKey = nil, addonLabel = "OneWoW",
+        navType = "module", module = "qol", subtab = "tooltips",
+        keywords = {"value", "item value", "vendor price", "vendor sell", "vendor cost", "ah price", "auction price", "gold value", "sell price", "buy price", "coin", "money"},
+    },
 
     -- OneWoW Core: Overlays
     {

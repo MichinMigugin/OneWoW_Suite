@@ -1822,6 +1822,151 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     split.UpdateDetailThumb()
 end
 
+local function ShowValueDetail(split, dsc, feature, selectedRow)
+    local yOffset = -10
+
+    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    titleLabel:SetJustifyH("LEFT")
+    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+
+    local div = dsc:CreateTexture(nil, "ARTWORK")
+    div:SetHeight(1)
+    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    yOffset = yOffset - 12
+
+    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    descLabel:SetJustifyH("LEFT")
+    descLabel:SetWordWrap(true)
+    descLabel:SetSpacing(3)
+    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - descLabel:GetStringHeight() - 16
+
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local allRefreshFuncs = {}
+
+    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
+    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
+    if isEnabled then
+        statusValue:SetText(L["FEATURE_ENABLED"])
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    else
+        statusValue:SetText(L["FEATURE_DISABLED"])
+        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+    end
+
+    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
+    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
+    toggleBtn:SetScript("OnClick", function(self)
+        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
+        nowEnabled = not nowEnabled
+        if nowEnabled then
+            statusValue:SetText(L["FEATURE_ENABLED"])
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            statusValue:SetText(L["FEATURE_DISABLED"])
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
+        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
+        if selectedRow and selectedRow.dot then
+            selectedRow.dot:SetStatus(nowEnabled)
+        end
+        for _, refreshFn in ipairs(allRefreshFuncs) do
+            refreshFn(nowEnabled)
+        end
+    end)
+
+    yOffset = yOffset - 30 - 14
+
+    if not OneWoW.db.global.settings.tooltips.value then
+        OneWoW.db.global.settings.tooltips.value = {}
+    end
+    local valSettings = OneWoW.db.global.settings.tooltips.value
+
+    local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_VALUE_OPTIONS_SECTION"],
+        yOffset = yOffset,
+    })
+    yOffset = section1.bottomY - 6
+
+    local sec1Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sec1Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    sec1Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    sec1Desc:SetJustifyH("LEFT")
+    sec1Desc:SetWordWrap(true)
+    sec1Desc:SetSpacing(2)
+    sec1Desc:SetText(L["TIPS_VALUE_OPTIONS_DESC"])
+    sec1Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - sec1Desc:GetStringHeight() - 6
+
+    local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_VALUE_SHOW_VENDOR_PRICE"],
+        description = L["TIPS_VALUE_SHOW_VENDOR_PRICE_DESC"],
+        value = valSettings.showVendorPrice ~= false,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            valSettings.showVendorPrice = newVal
+        end,
+    })
+    yOffset = newY1
+    table.insert(allRefreshFuncs, function(enabled) refresh1(enabled, valSettings.showVendorPrice ~= false) end)
+
+    local newY2, refresh2 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_VALUE_SHOW_AH_VALUE"],
+        description = L["TIPS_VALUE_SHOW_AH_VALUE_DESC"],
+        value = valSettings.showAHValue ~= false,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            valSettings.showAHValue = newVal
+        end,
+    })
+    yOffset = newY2
+    table.insert(allRefreshFuncs, function(enabled) refresh2(enabled, valSettings.showAHValue ~= false) end)
+
+    local reqSection = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_VALUE_REQUIRES_SECTION"],
+        yOffset = yOffset,
+    })
+    yOffset = reqSection.bottomY - 12
+
+    local auctionsReqLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    auctionsReqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    auctionsReqLabel:SetText(L["TIPS_VALUE_AUCTIONS_REQUIRES"])
+    auctionsReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local auctionsDetected = C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Auctions")
+    local auctionsDetVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    auctionsDetVal:SetPoint("LEFT", auctionsReqLabel, "RIGHT", 8, 0)
+    if auctionsDetected then
+        auctionsDetVal:SetText(L["TIPS_VALUE_AUCTIONS_DETECTED"])
+        auctionsDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    else
+        auctionsDetVal:SetText(L["TIPS_VALUE_AUCTIONS_NOT_DETECTED"])
+        auctionsDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+    end
+    yOffset = yOffset - 24
+
+    dsc:SetHeight(math.abs(yOffset) + 20)
+    GUI:ApplyFontToFrame(dsc)
+    split.UpdateDetailThumb()
+end
+
 local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     local dsc = split.detailScrollChild
     OneWoW_GUI:ClearFrame(dsc)
@@ -1858,6 +2003,11 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     if feature.id == "playermounts" then
         ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
+        return
+    end
+
+    if feature.id == "value" then
+        ShowValueDetail(split, dsc, feature, selectedRow)
         return
     end
 

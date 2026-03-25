@@ -217,6 +217,7 @@ function PortalHub:GetCategories()
 			{id = "wod", name = L["Warlords of Draenor"]},
 			{id = "mop", name = L["Mists of Pandaria"]},
 			{id = "cata", name = L["Cataclysm"]},
+			{id = "wotlk", name = L["Wrath of the Lich King"]},
 		}
 	})
 
@@ -296,7 +297,7 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		return allAbilities
 	elseif categoryID == "instances" then
 		local allPortals = {}
-		local expansions = {"tww", "df", "sl", "bfa", "legion", "wod", "mop", "cata"}
+		local expansions = {"tww", "df", "sl", "bfa", "legion", "wod", "mop", "cata", "wotlk"}
 		for _, exp in ipairs(expansions) do
 			local dungeons = OneWoW.PortalHubDetection:GetDungeonPortals(exp, showAll)
 			for _, d in ipairs(dungeons) do
@@ -310,7 +311,7 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		return allPortals
 	elseif categoryID == "tww" or categoryID == "df" or categoryID == "sl" or
 		   categoryID == "bfa" or categoryID == "legion" or categoryID == "wod" or
-		   categoryID == "mop" or categoryID == "cata" then
+		   categoryID == "mop" or categoryID == "cata" or categoryID == "wotlk" then
 		local allPortals = {}
 		local dungeons = OneWoW.PortalHubDetection:GetDungeonPortals(categoryID, showAll)
 		local raids = OneWoW.PortalHubDetection:GetRaidPortals(categoryID, showAll)

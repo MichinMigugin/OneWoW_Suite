@@ -886,6 +886,11 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
         return
     end
 
+    local objType = button.GetObjectType and button:GetObjectType()
+    if objType == "Texture" or objType == "FontString" then
+        return
+    end
+
     if not IsGlobalEnabled() then
         CleanButton(button)
         return
@@ -1281,14 +1286,11 @@ local function RefreshGreatVault()
     local children = { WeeklyRewardsFrame:GetChildren() }
     for _, v in pairs(children) do
         if v and v.hasRewards and v.ItemFrame and v.info and v.info.rewards and v.info.rewards[1] then
-            local icon = v.ItemFrame.Icon
-            if icon then
-                local link = C_WeeklyRewards.GetItemHyperlink(v.info.rewards[1].itemDBID)
-                if link then
-                    BuildOverlaysForButton(icon, link, nil)
-                else
-                    CleanButton(icon)
-                end
+            local link = C_WeeklyRewards.GetItemHyperlink(v.info.rewards[1].itemDBID)
+            if link then
+                BuildOverlaysForButton(v.ItemFrame, link, nil)
+            else
+                CleanButton(v.ItemFrame)
             end
         end
     end
