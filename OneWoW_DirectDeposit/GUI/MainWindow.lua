@@ -736,12 +736,6 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
         warbandRadio:SetPoint("RIGHT", itemRow, "RIGHT", -230, 0)
         warbandRadio:SetChecked(item.data.bankType == "warband")
         warbandRadio:SetEnabled(canWarband)
-        warbandRadio:SetScript("OnClick", function()
-            if canWarband then
-                OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "warband")
-                GUI:RefreshItemList(panel, true)
-            end
-        end)
 
         local warbandLabel = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         warbandLabel:SetPoint("LEFT", warbandRadio, "RIGHT", 3, 0)
@@ -752,12 +746,6 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
         personalRadio:SetPoint("RIGHT", itemRow, "RIGHT", -135, 0)
         personalRadio:SetChecked(item.data.bankType == "personal")
         personalRadio:SetEnabled(canPersonal)
-        personalRadio:SetScript("OnClick", function()
-            if canPersonal then
-                OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "personal")
-                GUI:RefreshItemList(panel, true)
-            end
-        end)
 
         local personalLabel = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         personalLabel:SetPoint("LEFT", personalRadio, "RIGHT", 3, 0)
@@ -768,17 +756,47 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
         guildRadio:SetPoint("RIGHT", itemRow, "RIGHT", -55, 0)
         guildRadio:SetChecked(item.data.bankType == "guild")
         guildRadio:SetEnabled(canGuild)
-        guildRadio:SetScript("OnClick", function()
-            if canGuild then
-                OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "guild")
-                GUI:RefreshItemList(panel, true)
-            end
-        end)
 
         local guildLabel = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         guildLabel:SetPoint("LEFT", guildRadio, "RIGHT", 3, 0)
         guildLabel:SetText(L["ITEM_DEPOSIT_GUILD"])
         guildLabel:SetTextColor(canGuild and 1.0 or 0.3, canGuild and 0.5 or 0.3, canGuild and 0.0 or 0.3)
+
+        warbandRadio:SetScript("OnClick", function()
+            if canWarband then
+                warbandRadio:SetChecked(true)
+                personalRadio:SetChecked(false)
+                guildRadio:SetChecked(false)
+                OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "warband")
+                GUI:RefreshItemList(panel, true)
+            else
+                warbandRadio:SetChecked(false)
+            end
+        end)
+
+        personalRadio:SetScript("OnClick", function()
+            if canPersonal then
+                personalRadio:SetChecked(true)
+                warbandRadio:SetChecked(false)
+                guildRadio:SetChecked(false)
+                OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "personal")
+                GUI:RefreshItemList(panel, true)
+            else
+                personalRadio:SetChecked(false)
+            end
+        end)
+
+        guildRadio:SetScript("OnClick", function()
+            if canGuild then
+                guildRadio:SetChecked(true)
+                warbandRadio:SetChecked(false)
+                personalRadio:SetChecked(false)
+                OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "guild")
+                GUI:RefreshItemList(panel, true)
+            else
+                guildRadio:SetChecked(false)
+            end
+        end)
 
         itemRow:Show()
         yOffset = yOffset - 35

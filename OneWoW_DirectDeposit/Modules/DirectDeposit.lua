@@ -4,6 +4,7 @@ OneWoW_DirectDeposit.DirectDeposit = {}
 local DirectDeposit = OneWoW_DirectDeposit.DirectDeposit
 
 DirectDeposit.guildBankOpen = false
+DirectDeposit.currentOpenBankType = nil
 DirectDeposit.isDepositing = false
 DirectDeposit.isPaused = false
 DirectDeposit.currentDepositIndex = 0
@@ -15,30 +16,57 @@ DirectDeposit.progressCallback = nil
 
 function DirectDeposit:Initialize()
     self:RegisterEvents()
+    self:MigrateItemBankTypes()
     self.initialized = true
+end
+
+function DirectDeposit:MigrateItemBankTypes()
+    local itemList = OneWoW_DirectDeposit.db.global.directDeposit.itemList
+    if not itemList then return end
+    for _, itemData in pairs(itemList) do
+        if itemData and not itemData.bankType then
+            itemData.bankType = "personal"
+        end
+    end
 end
 
 function DirectDeposit:RegisterEvents()
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("BANKFRAME_OPENED")
+    eventFrame:RegisterEvent("BANKFRAME_CLOSED")
     eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
     eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
 
     eventFrame:SetScript("OnEvent", function(self, event, ...)
         if event == "BANKFRAME_OPENED" then
             if not DirectDeposit.guildBankOpen then
+                DirectDeposit.currentOpenBankType = "personal"
                 DirectDeposit:OnBankOpened()
+            end
+        elseif event == "BANKFRAME_CLOSED" then
+            if DirectDeposit.currentOpenBankType == "personal" then
+                DirectDeposit.currentOpenBankType = nil
             end
         elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
             local interactionType = ...
             if interactionType == Enum.PlayerInteractionType.GuildBanker then
                 DirectDeposit.guildBankOpen = true
+                DirectDeposit.currentOpenBankType = "guild"
+                DirectDeposit:OnBankOpened()
+            elseif interactionType == 68 then
+                DirectDeposit.currentOpenBankType = "warband"
+                DirectDeposit:OnBankOpened()
+            elseif interactionType == 67 then
+                DirectDeposit.currentOpenBankType = "personal"
                 DirectDeposit:OnBankOpened()
             end
         elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
             local interactionType = ...
             if interactionType == Enum.PlayerInteractionType.GuildBanker then
                 DirectDeposit.guildBankOpen = false
+                DirectDeposit.currentOpenBankType = nil
+            elseif interactionType == 68 or interactionType == 67 then
+                DirectDeposit.currentOpenBankType = nil
             end
         end
     end)
@@ -142,17 +170,30 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
         return
     end
 
+    local activeType = self.currentOpenBankType
+    if not activeType then
+        if manualTrigger then
+            print("|cFFFFD100Direct Deposit:|r |cFFFF0000No bank is currently open.|r")
+        end
+        return
+    end
+
     local itemsToDeposit = {}
     for itemID, itemData in pairs(itemList) do
         if itemData and itemData.bankType then
-            table.insert(itemsToDeposit, {itemID = tonumber(itemID), bankType = itemData.bankType, itemName = itemData.itemName})
+            local shouldDeposit = false
+            if activeType == "guild" then
+                shouldDeposit = itemData.bankType == "guild"
+            else
+                shouldDeposit = itemData.bankType == "personal" or itemData.bankType == "warband"
+            end
+            if shouldDeposit then
+                table.insert(itemsToDeposit, {itemID = tonumber(itemID), bankType = itemData.bankType, itemName = itemData.itemName})
+            end
         end
     end
 
     if #itemsToDeposit == 0 then
-        if manualTrigger then
-            print("|cFFFFD100Direct Deposit:|r |cFFFF0000No valid items to deposit.|r")
-        end
         return
     end
 
@@ -457,10 +498,9 @@ function DirectDeposit:FinishDeposit()
     local checkmark = "|TInterface\\Buttons\\UI-CheckBox-Check:16|t"
     local errorIcon = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:16|t"
 
-    print("|cFFFFD100Direct Deposit:|r " .. checkmark .. " |cFF00FF00Deposit Complete!|r")
-    print("|cFFFFD100Direct Deposit:|r " .. checkmark .. " |cFFFFFFFFSuccessfully deposited " .. successCount .. " item type(s)|r")
-
     if successCount > 0 then
+        print("|cFFFFD100Direct Deposit:|r " .. checkmark .. " |cFF00FF00Deposit Complete!|r")
+        print("|cFFFFD100Direct Deposit:|r " .. checkmark .. " |cFFFFFFFFSuccessfully deposited " .. successCount .. " item type(s)|r")
         for _, item in ipairs(self.depositedItems) do
             local bankTypeText = item.bankType == "warband" and "|cFF50C878Warband|r"
                               or item.bankType == "personal" and "|cFF4A90E2Personal|r"
