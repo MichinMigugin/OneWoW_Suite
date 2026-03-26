@@ -14,6 +14,14 @@ function TextureAtlasBrowser:IsDataAvailable()
     return Addon._AtlasInfo ~= nil and type(Addon._AtlasInfo) == "table"
 end
 
+function TextureAtlasBrowser:ResetAfterAssetUnload()
+    self._indicesBuilt = false
+    self.textureEntries = nil
+    self.atlasEntries = nil
+    self.atlasPrimaryTexture = nil
+    self:ResetFilterState()
+end
+
 function TextureAtlasBrowser:EnsureIndices()
     if self._indicesBuilt then
         return

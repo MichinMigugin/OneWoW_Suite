@@ -2,9 +2,42 @@ local _, Addon = ...
 
 local format = format
 local table_concat = table.concat
+local type = type
 
 local SOUND_UNCAT = "uncategorized"
 local SOUND_PATH_PREFIX = (Addon.Constants and Addon.Constants.SOUND_PATH_PREFIX) or "sound/"
+
+function Addon.DevTool_WipeTextureAssetData()
+	local UI = Addon.UI
+	if UI and UI.IsTabEnabled and UI:IsTabEnabled("textures") then
+		return
+	end
+	Addon._AtlasInfo = nil
+	Addon._AtlasInfoVersion = nil
+	Addon._DevToolTextureAssetsPurgedSession = true
+	local BR = Addon.TextureAtlasBrowser
+	if BR and BR.ResetAfterAssetUnload then
+		BR:ResetAfterAssetUnload()
+	end
+	collectgarbage("collect")
+end
+
+function Addon.DevTool_WipeSoundAssetData()
+	local UI = Addon.UI
+	if UI and UI.IsTabEnabled and UI:IsTabEnabled("sounds") then
+		return
+	end
+	Addon._SoundEntries = nil
+	Addon._SoundSlices = nil
+	Addon._SoundFilesVersion = nil
+	Addon._SoundEntryDelimiter = nil
+	Addon._DevToolSoundAssetsPurgedSession = true
+	local SB = Addon.SoundBrowser
+	if SB and SB.ResetAfterAssetUnload then
+		SB:ResetAfterAssetUnload()
+	end
+	collectgarbage("collect")
+end
 
 function Addon.ValidateDataBuildGameBuild(expectedVersion)
 	local buildVersion, buildNumber = GetBuildInfo()

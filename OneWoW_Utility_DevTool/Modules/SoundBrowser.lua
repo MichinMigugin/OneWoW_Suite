@@ -84,6 +84,21 @@ function SB:IsDataAvailable()
     return type(Addon._SoundEntries) == "table" and type(Addon._SoundSlices) == "table"
 end
 
+function SB:ResetAfterAssetUnload()
+    self:CancelSearch()
+    self._topKeysCache = nil
+    self._subKeysCache = nil
+    self._subKeysCacheTop = nil
+    self._isRebuilding = false
+    self.selectedTop = nil
+    self.selectedSub = nil
+    self.filterText = ""
+    self.favoritesOnly = false
+    self.searchScope = "current"
+    wipe(self.filtered)
+    self._filteredReadyCallback = nil
+end
+
 function SB:SetFilteredReadyCallback(callback)
     self._filteredReadyCallback = callback
 end

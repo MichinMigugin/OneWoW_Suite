@@ -7,8 +7,8 @@ if not Addon.ValidateDataBuildGameBuild(atlasVersion) then
 	return
 end
 
+function Addon.DevTool_LoadTextureAssetData()
 Addon._AtlasInfoVersion = atlasVersion
-
 Addon._AtlasInfo = {
 	["5426612"]={
 		["kiosk-BG"]={1920, 1080, 0.000488281, 0.937988, 0.000488281, 0.527832, false, false, "1x"},
@@ -21110,3 +21110,5 @@ Addon._AtlasInfo = {
 		["worldstate-capturebar-framebar-bastionarmor"]={162, 37, 0.00390625, 0.636719, 0.411133, 0.447266, false, false, "1x"},
 	}, -- Interface/WorldStateFrame/WorldStateCaptureBar
 }
+Addon.DevTool_LoadTextureAssetData = nil
+end

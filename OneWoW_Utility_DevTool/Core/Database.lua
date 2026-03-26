@@ -200,6 +200,8 @@ function Addon:InitializeDatabase()
             untitledCounter = 1,
             categoryCollapsed = {},
         },
+        deferTextureBrowserData = false,
+        deferSoundBrowserData = false,
         tabs = tabDefaults,
     }
 
