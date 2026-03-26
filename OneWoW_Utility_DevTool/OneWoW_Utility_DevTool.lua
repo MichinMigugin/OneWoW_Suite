@@ -409,6 +409,10 @@ end
 function Addon:OnInitialize()
     self:InitializeDatabase()
 
+    if self.MonitorTab and self.MonitorTab.RegisterPinnedRestoreEvents then
+        self.MonitorTab:RegisterPinnedRestoreEvents()
+    end
+
     OneWoW_GUI:MigrateSettings({
         theme = self.db.theme,
         language = self.db.language,
@@ -525,7 +529,12 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         end
         C_Timer.After(1.0, function()
             if Addon.MonitorTab then
-                Addon.MonitorTab:RestorePinnedMonitors()
+                Addon.MonitorTab:RestorePinnedMonitorsPending()
+            end
+        end)
+        C_Timer.After(3.0, function()
+            if Addon.MonitorTab then
+                Addon.MonitorTab:RestorePinnedMonitorsPending()
             end
         end)
     end

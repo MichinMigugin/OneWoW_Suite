@@ -6,6 +6,7 @@ local pairs = pairs
 local ipairs = ipairs
 local tinsert = tinsert
 local tremove = tremove
+local sort = sort
 local CopyTable = CopyTable
 
 local function getEditorLanguage(db)
@@ -93,12 +94,32 @@ function Addon:NormalizeEditorDatabase()
     end
 end
 
+function Addon:GetPinnedMonitorEntriesInOrder(arr)
+    if type(arr) ~= "table" then return {} end
+    local keys = {}
+    for k in pairs(arr) do
+        if type(k) == "number" then tinsert(keys, k) end
+    end
+    sort(keys)
+    local out = {}
+    for _, k in ipairs(keys) do
+        local e = arr[k]
+        if type(e) == "table" then tinsert(out, e) end
+    end
+    if #out == 0 then
+        for _, e in pairs(arr) do
+            if type(e) == "table" then tinsert(out, e) end
+        end
+    end
+    return out
+end
+
 local function migrateMonitorPinned(mon)
     if type(mon) ~= "table" then return end
     if type(mon.pinnedMonitors) ~= "table" then
         mon.pinnedMonitors = {}
     end
-    if #mon.pinnedMonitors == 0 and type(mon.pinnedAddon) == "string" and mon.pinnedAddon ~= "" then
+    if #Addon:GetPinnedMonitorEntriesInOrder(mon.pinnedMonitors) == 0 and type(mon.pinnedAddon) == "string" and mon.pinnedAddon ~= "" then
         local pos = mon.pinnedPosition
         if type(pos) ~= "table" then pos = {} end
         tinsert(mon.pinnedMonitors, {
@@ -107,17 +128,14 @@ local function migrateMonitorPinned(mon)
             position = CopyTable(pos),
         })
     end
-    local arr = mon.pinnedMonitors
+    local arr = Addon:GetPinnedMonitorEntriesInOrder(mon.pinnedMonitors)
     local seen = {}
     local out = {}
-    for i = 1, #arr do
-        local e = arr[i]
-        if type(e) == "table" and type(e.addon) == "string" and e.addon ~= "" and not seen[e.addon] then
+    for _, e in ipairs(arr) do
+        if type(e) == "table" and type(e.addon) == "string" and e.addon ~= "" and not seen[e.addon] and e.reopenOnReload then
             seen[e.addon] = true
             if type(e.position) ~= "table" then e.position = {} end
-            if e.reopenOnReload == nil then e.reopenOnReload = false end
             tinsert(out, e)
-            if #out >= 4 then break end
         end
     end
     mon.pinnedMonitors = out

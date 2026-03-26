@@ -66,7 +66,10 @@ function Addon.UI:CreateMonitorTab(parent)
     local Const = Addon.Constants or {}
     local MP = Const.MONITOR_PRESET
     if not MP or not MP.BALANCED then
-        MP = { BALANCED = "balanced", MEMORY_DIG = "memory_dig", CPU_SPIKES = "cpu_spikes", MINIMAL = "minimal" }
+        MP = {
+            BALANCED = "balanced", MEMORY_DIG = "memory_dig", CPU_SPIKES = "cpu_spikes",
+            MINIMAL = "minimal", ENGINE_PROFILER = "engine_profiler",
+        }
     end
     local MS = {
         NAME = Const.MONITOR_SORT_NAME or 1,
@@ -78,6 +81,17 @@ function Addon.UI:CreateMonitorTab(parent)
         CPU_MS = Const.MONITOR_SORT_CPU_MS or 7,
         MEM_PCT = Const.MONITOR_SORT_MEM_PCT or 8,
         CPU_PCT = Const.MONITOR_SORT_CPU_PCT or 9,
+        AP_SESSION = Const.MONITOR_SORT_AP_SESSION or 10,
+        AP_RECENT = Const.MONITOR_SORT_AP_RECENT or 11,
+        AP_PEAK = Const.MONITOR_SORT_AP_PEAK or 12,
+        AP_OVER1 = Const.MONITOR_SORT_AP_OVER1 or 13,
+        AP_OVER5 = Const.MONITOR_SORT_AP_OVER5 or 14,
+        AP_OVER10 = Const.MONITOR_SORT_AP_OVER10 or 15,
+        AP_OVER50 = Const.MONITOR_SORT_AP_OVER50 or 16,
+        AP_OVER100 = Const.MONITOR_SORT_AP_OVER100 or 17,
+        AP_OVER500 = Const.MONITOR_SORT_AP_OVER500 or 18,
+        AP_OVER1000 = Const.MONITOR_SORT_AP_OVER1000 or 19,
+        AP_SPIKE = Const.MONITOR_SORT_AP_SPIKE or 20,
     }
 
     if Monitor then
@@ -94,6 +108,10 @@ function Addon.UI:CreateMonitorTab(parent)
     local W_PCT = 50
     local W_CPU = 78
     local W_CPUMS = 56
+    local W_AP_N = DUm.MONITOR_COL_AP_NARROW or 40
+    local W_AP_M = DUm.MONITOR_COL_AP_MED or 48
+    local W_AP_S = 52
+    local LIST_RIGHT_GUTTER = DUm.MONITOR_LIST_RIGHT_GUTTER or 14
 
     local playBtn = OneWoW_GUI:CreateButton(tab, { text = L["MON_BTN_PLAY"] or "Play", width = 80, height = 22 })
     playBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
@@ -135,6 +153,7 @@ function Addon.UI:CreateMonitorTab(parent)
         if id == MP.MEMORY_DIG then return L["MON_PRESET_MEMORY_DIG"] or "Memory dig" end
         if id == MP.CPU_SPIKES then return L["MON_PRESET_CPU_SPIKES"] or "CPU spikes" end
         if id == MP.MINIMAL then return L["MON_PRESET_MINIMAL"] or "Minimal" end
+        if id == MP.ENGINE_PROFILER then return L["MON_PRESET_ENGINE_PROFILER"] or "Engine profiler" end
         return L["MON_PRESET_BALANCED"] or "Balanced"
     end
 
@@ -181,15 +200,18 @@ function Addon.UI:CreateMonitorTab(parent)
                 tab:ApplyMonitorColumnLayout()
                 Monitor:RefreshDisplayedList()
             end)
+            rootDescription:CreateButton(L["MON_PRESET_ENGINE_PROFILER"] or "Engine profiler", function()
+                Monitor:SetViewPreset(MP.ENGINE_PROFILER or "engine_profiler")
+                UpdateViewButtonLabel()
+                tab:ApplyMonitorColumnLayout()
+                Monitor:RefreshDisplayedList()
+            end)
         end)
     end)
-
-    local hasCPU = Monitor and Monitor:IsCPUProfilingEnabled() or false
 
     local headerFrame = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_SIMPLE, width = 100, height = 22 })
     headerFrame:ClearAllPoints()
     headerFrame:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -41)
-    headerFrame:SetPoint("RIGHT", tab, "RIGHT", -5, 0)
     headerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
     local function MakeHeader(parent, text, sortCol, titleKey, bodyKey, justifyH)
@@ -215,22 +237,39 @@ function Addon.UI:CreateMonitorTab(parent)
 
     local nameHeader = MakeHeader(headerFrame, L["MON_HEADER_NAME"] or "Addon", MS.NAME, "MON_TT_NAME_TITLE", "MON_TT_NAME_BODY", "LEFT")
 
-    local memHeader = MakeHeader(headerFrame, L["MON_HEADER_MEMORY"] or "Mem (k)", MS.MEMORY, "MON_TT_MEMORY_TITLE", "MON_TT_MEMORY_BODY")
-    local memDeltaHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_DELTA"] or "Mem d", MS.MEM_DELTA, "MON_TT_MEM_DELTA_TITLE", "MON_TT_MEM_DELTA_BODY")
-    local memPeakHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_PEAK"] or "Peak", MS.MEM_PEAK, "MON_TT_MEM_PEAK_TITLE", "MON_TT_MEM_PEAK_BODY")
-    local memPctHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_PCT"] or "Mem %", MS.MEM_PCT, "MON_TT_MEM_PCT_TITLE", "MON_TT_MEM_PCT_BODY")
-    local cpuSessionHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_SESSION"] or "CPU/s s", MS.CPU_SESSION, "MON_TT_CPU_SESSION_TITLE", "MON_TT_CPU_SESSION_BODY")
-    local cpuRecentHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_RECENT"] or "CPU/s r", MS.CPU_RECENT, "MON_TT_CPU_RECENT_TITLE", "MON_TT_CPU_RECENT_BODY")
-    local cpuMsHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_MS"] or "CPU ms", MS.CPU_MS, "MON_TT_CPU_MS_TITLE", "MON_TT_CPU_MS_BODY")
-    local cpuPctHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_PCT"] or "CPU %", MS.CPU_PCT, "MON_TT_CPU_PCT_TITLE", "MON_TT_CPU_PCT_BODY")
+    local memHeader = MakeHeader(headerFrame, L["MON_HEADER_MEMORY"] or "Mem (k)", MS.MEMORY, "MON_TT_MEMORY_TITLE", "MON_TT_MEMORY_BODY", "RIGHT")
+    local memDeltaHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_DELTA"] or "Mem d", MS.MEM_DELTA, "MON_TT_MEM_DELTA_TITLE", "MON_TT_MEM_DELTA_BODY", "RIGHT")
+    local memPeakHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_PEAK"] or "Peak", MS.MEM_PEAK, "MON_TT_MEM_PEAK_TITLE", "MON_TT_MEM_PEAK_BODY", "RIGHT")
+    local memPctHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_PCT"] or "Mem %", MS.MEM_PCT, "MON_TT_MEM_PCT_TITLE", "MON_TT_MEM_PCT_BODY", "RIGHT")
+    local cpuSessionHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_SESSION"] or "CPU/s s", MS.CPU_SESSION, "MON_TT_CPU_SESSION_TITLE", "MON_TT_CPU_SESSION_BODY", "RIGHT")
+    local cpuRecentHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_RECENT"] or "CPU/s r", MS.CPU_RECENT, "MON_TT_CPU_RECENT_TITLE", "MON_TT_CPU_RECENT_BODY", "RIGHT")
+    local cpuMsHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_MS"] or "CPU ms", MS.CPU_MS, "MON_TT_CPU_MS_TITLE", "MON_TT_CPU_MS_BODY", "RIGHT")
+    local cpuPctHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_PCT"] or "CPU %", MS.CPU_PCT, "MON_TT_CPU_PCT_TITLE", "MON_TT_CPU_PCT_BODY", "RIGHT")
+
+    local apSessionHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_SESSION"] or "AP sess", MS.AP_SESSION, "MON_TT_AP_SESSION_TITLE", "MON_TT_AP_SESSION_BODY", "RIGHT")
+    local apRecentHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_RECENT"] or "AP 60t", MS.AP_RECENT, "MON_TT_AP_RECENT_TITLE", "MON_TT_AP_RECENT_BODY", "RIGHT")
+    local apPeakHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_PEAK"] or "AP peak", MS.AP_PEAK, "MON_TT_AP_PEAK_TITLE", "MON_TT_AP_PEAK_BODY", "RIGHT")
+    local apOver1Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER1"] or ">1", MS.AP_OVER1, "MON_TT_AP_OVER1_TITLE", "MON_TT_AP_OVER1_BODY", "RIGHT")
+    local apOver5Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER5"] or ">5", MS.AP_OVER5, "MON_TT_AP_OVER5_TITLE", "MON_TT_AP_OVER5_BODY", "RIGHT")
+    local apOver10Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER10"] or ">10", MS.AP_OVER10, "MON_TT_AP_OVER10_TITLE", "MON_TT_AP_OVER10_BODY", "RIGHT")
+    local apOver50Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER50"] or ">50", MS.AP_OVER50, "MON_TT_AP_OVER50_TITLE", "MON_TT_AP_OVER50_BODY", "RIGHT")
+    local apOver100Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER100"] or ">100", MS.AP_OVER100, "MON_TT_AP_OVER100_TITLE", "MON_TT_AP_OVER100_BODY", "RIGHT")
+    local apOver500Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER500"] or ">500", MS.AP_OVER500, "MON_TT_AP_OVER500_TITLE", "MON_TT_AP_OVER500_BODY", "RIGHT")
+    local apOver1000Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER1000"] or ">1k", MS.AP_OVER1000, "MON_TT_AP_OVER1000_TITLE", "MON_TT_AP_OVER1000_BODY", "RIGHT")
+    local apSpikeHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_SPIKE"] or "Spk", MS.AP_SPIKE, "MON_TT_AP_SPIKE_TITLE", "MON_TT_AP_SPIKE_BODY", "RIGHT")
 
     local allHeaders = {
         memHeader, memDeltaHeader, memPeakHeader, memPctHeader,
         cpuSessionHeader, cpuRecentHeader, cpuMsHeader, cpuPctHeader,
+        apSessionHeader, apRecentHeader, apPeakHeader,
+        apOver1Header, apOver5Header, apOver10Header, apOver50Header, apOver100Header, apOver500Header, apOver1000Header,
+        apSpikeHeader,
     }
 
     function tab:ApplyMonitorColumnLayout()
         if not Monitor then return end
+        local hasCPU = Monitor:IsCPUProfilingEnabled()
+        local hasProfiler = Monitor:ProfilerEnabled()
         local preset = Monitor:GetViewPreset()
         for _, h in ipairs(allHeaders) do
             h:Hide()
@@ -244,34 +283,71 @@ function Addon.UI:CreateMonitorTab(parent)
         local showCpuR = false
         local showCpuMs = false
         local showCpuPct = false
+        local showApSession = false
+        local showApRecent = false
+        local showApPeak = false
+        local showAp1 = false
+        local showAp5 = false
+        local showAp10 = false
+        local showAp50 = false
+        local showAp100 = false
+        local showAp500 = false
+        local showAp1000 = false
+        local showApSpike = false
 
-        if preset == MP.MINIMAL or (preset == MP.CPU_SPIKES and not hasCPU) then
-            showMemD = false
-            showMemP = false
-            showMemPct = true
-            showCpuS = false
-            showCpuR = false
-            showCpuMs = false
-            showCpuPct = false
+        if preset == MP.ENGINE_PROFILER then
+            showMem = false
+            showMemPct = false
+            showApSession = true
+            showApRecent = true
+            showApPeak = true
+            showAp1 = true
+            showAp5 = true
+            showAp10 = true
+            showAp50 = true
+            showAp100 = true
+            showAp500 = true
+            showAp1000 = true
+            showApSpike = true
+        elseif preset == MP.CPU_SPIKES then
+            if hasCPU then
+                showMem = false
+                showMemPct = false
+                showCpuS = true
+                showCpuR = true
+                showCpuMs = true
+                showCpuPct = true
+                if hasProfiler then
+                    showApPeak = true
+                    showAp50 = true
+                    showApSpike = true
+                end
+            elseif hasProfiler then
+                showMem = false
+                showMemPct = false
+                showApPeak = true
+                showAp50 = true
+                showApSpike = true
+            else
+                showMemD = false
+                showMemP = false
+                showMemPct = true
+            end
         elseif preset == MP.MEMORY_DIG then
             showMemD = true
             showMemP = true
             showMemPct = true
-        elseif preset == MP.CPU_SPIKES and hasCPU then
-            showMem = false
-            showMemPct = false
-            showCpuS = true
-            showCpuR = true
-            showCpuMs = true
-            showCpuPct = true
+        elseif preset == MP.MINIMAL then
+            showMemD = false
+            showMemP = false
+            showMemPct = true
         else
             showCpuS = hasCPU
             showCpuPct = hasCPU
         end
 
         local chain = headerFrame
-        local from = "RIGHT"
-        local ox = -6
+        local ox = -LIST_RIGHT_GUTTER
 
         local function attach(h, w)
             h:SetWidth(w)
@@ -285,6 +361,17 @@ function Addon.UI:CreateMonitorTab(parent)
             h:Show()
         end
 
+        if showApSpike then attach(apSpikeHeader, W_AP_S) end
+        if showAp1000 then attach(apOver1000Header, W_AP_N) end
+        if showAp500 then attach(apOver500Header, W_AP_N) end
+        if showAp100 then attach(apOver100Header, W_AP_N) end
+        if showAp50 then attach(apOver50Header, W_AP_N) end
+        if showAp10 then attach(apOver10Header, W_AP_N) end
+        if showAp5 then attach(apOver5Header, W_AP_N) end
+        if showAp1 then attach(apOver1Header, W_AP_N) end
+        if showApPeak then attach(apPeakHeader, W_AP_M) end
+        if showApRecent then attach(apRecentHeader, W_AP_M) end
+        if showApSession then attach(apSessionHeader, W_AP_M) end
         if showCpuPct then attach(cpuPctHeader, W_PCT) end
         if showCpuMs then attach(cpuMsHeader, W_CPUMS) end
         if showCpuR then attach(cpuRecentHeader, W_CPU) end
@@ -311,18 +398,40 @@ function Addon.UI:CreateMonitorTab(parent)
             row.cpuRecentText:Hide()
             row.cpuMsText:Hide()
             row.cpuPctText:Hide()
+            row.apSessionText:Hide()
+            row.apRecentText:Hide()
+            row.apPeakText:Hide()
+            row.apOver1Text:Hide()
+            row.apOver5Text:Hide()
+            row.apOver10Text:Hide()
+            row.apOver50Text:Hide()
+            row.apOver100Text:Hide()
+            row.apOver500Text:Hide()
+            row.apOver1000Text:Hide()
+            row.apSpikeText:Hide()
             local rchain = row
             local function rattach(fs, w)
                 fs:SetWidth(w)
                 fs:ClearAllPoints()
                 if rchain == row then
-                    fs:SetPoint("RIGHT", row, "RIGHT", -14, 0)
+                    fs:SetPoint("RIGHT", row, "RIGHT", -LIST_RIGHT_GUTTER, 0)
                 else
                     fs:SetPoint("RIGHT", rchain, "LEFT", -5, 0)
                 end
                 rchain = fs
                 fs:Show()
             end
+            if showApSpike then rattach(row.apSpikeText, W_AP_S) end
+            if showAp1000 then rattach(row.apOver1000Text, W_AP_N) end
+            if showAp500 then rattach(row.apOver500Text, W_AP_N) end
+            if showAp100 then rattach(row.apOver100Text, W_AP_N) end
+            if showAp50 then rattach(row.apOver50Text, W_AP_N) end
+            if showAp10 then rattach(row.apOver10Text, W_AP_N) end
+            if showAp5 then rattach(row.apOver5Text, W_AP_N) end
+            if showAp1 then rattach(row.apOver1Text, W_AP_N) end
+            if showApPeak then rattach(row.apPeakText, W_AP_M) end
+            if showApRecent then rattach(row.apRecentText, W_AP_M) end
+            if showApSession then rattach(row.apSessionText, W_AP_M) end
             if showCpuPct then rattach(row.cpuPctText, W_PCT) end
             if showCpuMs then rattach(row.cpuMsText, W_CPUMS) end
             if showCpuR then rattach(row.cpuRecentText, W_CPU) end
@@ -346,11 +455,22 @@ function Addon.UI:CreateMonitorTab(parent)
     local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(listPanel, {})
     listScroll:ClearAllPoints()
     listScroll:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 0, 0)
-    listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -14, 0)
+    listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -LIST_RIGHT_GUTTER, 0)
+
+    local TAB_PANEL_RIGHT_INSET = 5
+
+    local function SyncMonitorHeaderToList()
+        headerFrame:ClearAllPoints()
+        headerFrame:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -41)
+        headerFrame:SetPoint("RIGHT", tab, "RIGHT", -TAB_PANEL_RIGHT_INSET - LIST_RIGHT_GUTTER, 0)
+    end
 
     listScroll:HookScript("OnSizeChanged", function(self, w)
         listContent:SetWidth(w)
+        tab:ApplyMonitorColumnLayout()
     end)
+
+    SyncMonitorHeaderToList()
 
     tab.rows = {}
     for i = 1, MAX_ROWS do
@@ -426,6 +546,40 @@ function Addon.UI:CreateMonitorTab(parent)
         row.cpuPctText:SetJustifyH("RIGHT")
         row.cpuPctText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
+        row.apSessionText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apSessionText:SetJustifyH("RIGHT")
+        row.apSessionText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apRecentText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apRecentText:SetJustifyH("RIGHT")
+        row.apRecentText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apPeakText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apPeakText:SetJustifyH("RIGHT")
+        row.apPeakText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apOver1Text = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apOver1Text:SetJustifyH("RIGHT")
+        row.apOver1Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apOver5Text = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apOver5Text:SetJustifyH("RIGHT")
+        row.apOver5Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apOver10Text = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apOver10Text:SetJustifyH("RIGHT")
+        row.apOver10Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apOver50Text = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apOver50Text:SetJustifyH("RIGHT")
+        row.apOver50Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apOver100Text = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apOver100Text:SetJustifyH("RIGHT")
+        row.apOver100Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apOver500Text = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apOver500Text:SetJustifyH("RIGHT")
+        row.apOver500Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apOver1000Text = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apOver1000Text:SetJustifyH("RIGHT")
+        row.apOver1000Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.apSpikeText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        row.apSpikeText:SetJustifyH("RIGHT")
+        row.apSpikeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
         row.memText:Hide()
         row.memDeltaText:Hide()
         row.memPeakText:Hide()
@@ -434,6 +588,17 @@ function Addon.UI:CreateMonitorTab(parent)
         row.cpuRecentText:Hide()
         row.cpuMsText:Hide()
         row.cpuPctText:Hide()
+        row.apSessionText:Hide()
+        row.apRecentText:Hide()
+        row.apPeakText:Hide()
+        row.apOver1Text:Hide()
+        row.apOver5Text:Hide()
+        row.apOver10Text:Hide()
+        row.apOver50Text:Hide()
+        row.apOver100Text:Hide()
+        row.apOver500Text:Hide()
+        row.apOver1000Text:Hide()
+        row.apSpikeText:Hide()
 
         row:Hide()
         tab.rows[i] = row
@@ -463,9 +628,12 @@ function Addon.UI:CreateMonitorTab(parent)
 
     function tab:RefreshList()
         if not Monitor then return end
+        tab:ApplyMonitorColumnLayout()
         local list = Monitor:GetDisplayedList()
         local t = Monitor:GetTotals()
         local preset = Monitor:GetViewPreset()
+        local hasCPU = Monitor:IsCPUProfilingEnabled()
+        local profOk = Monitor:ProfilerEnabled()
 
         if t.count == 0 then
             tab.noDataText:Show()
@@ -487,6 +655,31 @@ function Addon.UI:CreateMonitorTab(parent)
                 row.cpuRecentText:SetText(Monitor:FormatCPU(info.cpuPerSecRecent))
                 row.cpuMsText:SetText(Monitor:FormatCPUMs(info.cpu))
                 row.cpuPctText:SetText(Monitor:FormatPercent(info.cpuPercent))
+                if profOk then
+                    row.apSessionText:SetText(Monitor:FormatAPMs(info.apSessionAvgMs))
+                    row.apRecentText:SetText(Monitor:FormatAPMs(info.apRecentAvgMs))
+                    row.apPeakText:SetText(Monitor:FormatAPMs(info.apPeakMs))
+                    row.apOver1Text:SetText(Monitor:FormatAPCount(info.apOver1))
+                    row.apOver5Text:SetText(Monitor:FormatAPCount(info.apOver5))
+                    row.apOver10Text:SetText(Monitor:FormatAPCount(info.apOver10))
+                    row.apOver50Text:SetText(Monitor:FormatAPCount(info.apOver50))
+                    row.apOver100Text:SetText(Monitor:FormatAPCount(info.apOver100))
+                    row.apOver500Text:SetText(Monitor:FormatAPCount(info.apOver500))
+                    row.apOver1000Text:SetText(Monitor:FormatAPCount(info.apOver1000))
+                    row.apSpikeText:SetText(Monitor:FormatAPCount(info.apSpikeScore))
+                else
+                    row.apSessionText:SetText("--")
+                    row.apRecentText:SetText("--")
+                    row.apPeakText:SetText("--")
+                    row.apOver1Text:SetText("--")
+                    row.apOver5Text:SetText("--")
+                    row.apOver10Text:SetText("--")
+                    row.apOver50Text:SetText("--")
+                    row.apOver100Text:SetText("--")
+                    row.apOver500Text:SetText("--")
+                    row.apOver1000Text:SetText("--")
+                    row.apSpikeText:SetText("--")
+                end
                 row:Show()
             else
                 row.addonInfo = nil

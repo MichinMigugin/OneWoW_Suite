@@ -22,6 +22,54 @@ local prevAddonCpu = {}
 local memoryPeakByIndex = {}
 local lastGatherTime = 0
 
+local function ProfilerNamespaceAvailable()
+    return C_AddOnProfiler and C_AddOnProfiler.GetAddOnMetric and Enum and Enum.AddOnProfilerMetric
+end
+
+function MonitorTab:ProfilerEnabled()
+    if not ProfilerNamespaceAvailable() then return false end
+    local ok, enabled = pcall(function()
+        return C_AddOnProfiler.IsEnabled()
+    end)
+    return ok and enabled == true
+end
+
+local function safeGetAddOnMetric(addonName, metric)
+    local ok, v = pcall(C_AddOnProfiler.GetAddOnMetric, addonName, metric)
+    if ok and type(v) == "number" then return v end
+    return 0
+end
+
+local function gatherAddOnProfilerFields(addonName)
+    local E = Enum.AddOnProfilerMetric
+    local o1 = safeGetAddOnMetric(addonName, E.CountTimeOver1Ms)
+    local o5 = safeGetAddOnMetric(addonName, E.CountTimeOver5Ms)
+    local o10 = safeGetAddOnMetric(addonName, E.CountTimeOver10Ms)
+    local o50 = safeGetAddOnMetric(addonName, E.CountTimeOver50Ms)
+    local o100 = safeGetAddOnMetric(addonName, E.CountTimeOver100Ms)
+    local weights = (Addon.Constants and Addon.Constants.MONITOR_AP_SPIKE_WEIGHTS) or { 1, 5, 10, 50, 100 }
+    local spikeScore = (weights[1] or 0) * o1 + (weights[2] or 0) * o5 + (weights[3] or 0) * o10
+        + (weights[4] or 0) * o50 + (weights[5] or 0) * o100
+    return {
+        apSessionAvgMs = safeGetAddOnMetric(addonName, E.SessionAverageTime),
+        apRecentAvgMs = safeGetAddOnMetric(addonName, E.RecentAverageTime),
+        apPeakMs = safeGetAddOnMetric(addonName, E.PeakTime),
+        apOver1 = o1,
+        apOver5 = o5,
+        apOver10 = o10,
+        apOver50 = o50,
+        apOver100 = o100,
+        apOver500 = safeGetAddOnMetric(addonName, E.CountTimeOver500Ms),
+        apOver1000 = safeGetAddOnMetric(addonName, E.CountTimeOver1000Ms),
+        apSpikeScore = spikeScore,
+    }
+end
+
+function MonitorTab:GetProfilerMetricsForAddon(addonName)
+    if not self:ProfilerEnabled() then return nil end
+    return gatherAddOnProfilerFields(addonName)
+end
+
 local function StripColorCodes(text)
     if not text then return "" end
     text = text:gsub("|c%x%x%x%x%x%x%x%x", "")
@@ -42,10 +90,21 @@ local function FormatNumber(number, decimals)
     return formatted
 end
 
+function MonitorTab:RegisterPinnedRestoreEvents()
+    if self._pinnedRestoreFrame then return end
+    local f = CreateFrame("Frame")
+    self._pinnedRestoreFrame = f
+    f:RegisterEvent("ADDON_LOADED")
+    f:SetScript("OnEvent", function()
+        MonitorTab:RestorePinnedMonitorsPending()
+    end)
+end
+
 function MonitorTab:Initialize()
     profilingCPU = GetCVar("scriptProfile") == "1"
     totals.startTime = GetTime()
     totals.duration = 0
+    self:RegisterPinnedRestoreEvents()
 end
 
 function MonitorTab:GatherUsage()
@@ -66,6 +125,8 @@ function MonitorTab:GatherUsage()
     if profilingCPU then
         UpdateAddOnCPUUsage()
     end
+
+    local profEnabled = self:ProfilerEnabled()
 
     for i = 1, numAddons do
         local loaded = C_AddOns.IsAddOnLoaded(i)
@@ -105,7 +166,7 @@ function MonitorTab:GatherUsage()
                 end
             end
 
-            tinsert(addonInfo, {
+            local row = {
                 index = i,
                 name = name,
                 title = displayTitle,
@@ -115,7 +176,34 @@ function MonitorTab:GatherUsage()
                 cpu = cpu,
                 cpuPerSec = cpuPerSec,
                 cpuPerSecRecent = cpuPerSecRecent,
-            })
+            }
+            if profEnabled then
+                local ap = gatherAddOnProfilerFields(name)
+                row.apSessionAvgMs = ap.apSessionAvgMs
+                row.apRecentAvgMs = ap.apRecentAvgMs
+                row.apPeakMs = ap.apPeakMs
+                row.apOver1 = ap.apOver1
+                row.apOver5 = ap.apOver5
+                row.apOver10 = ap.apOver10
+                row.apOver50 = ap.apOver50
+                row.apOver100 = ap.apOver100
+                row.apOver500 = ap.apOver500
+                row.apOver1000 = ap.apOver1000
+                row.apSpikeScore = ap.apSpikeScore
+            else
+                row.apSessionAvgMs = 0
+                row.apRecentAvgMs = 0
+                row.apPeakMs = 0
+                row.apOver1 = 0
+                row.apOver5 = 0
+                row.apOver10 = 0
+                row.apOver50 = 0
+                row.apOver100 = 0
+                row.apOver500 = 0
+                row.apOver1000 = 0
+                row.apSpikeScore = 0
+            end
+            tinsert(addonInfo, row)
 
             totals.memory = totals.memory + mem
             totals.cpu = totals.cpu + cpu
@@ -169,6 +257,28 @@ function MonitorTab:GetSortedList()
             valA, valB = a.memPercent, b.memPercent
         elseif absOrder == 9 then
             valA, valB = a.cpuPercent, b.cpuPercent
+        elseif absOrder == 10 then
+            valA, valB = a.apSessionAvgMs or 0, b.apSessionAvgMs or 0
+        elseif absOrder == 11 then
+            valA, valB = a.apRecentAvgMs or 0, b.apRecentAvgMs or 0
+        elseif absOrder == 12 then
+            valA, valB = a.apPeakMs or 0, b.apPeakMs or 0
+        elseif absOrder == 13 then
+            valA, valB = a.apOver1 or 0, b.apOver1 or 0
+        elseif absOrder == 14 then
+            valA, valB = a.apOver5 or 0, b.apOver5 or 0
+        elseif absOrder == 15 then
+            valA, valB = a.apOver10 or 0, b.apOver10 or 0
+        elseif absOrder == 16 then
+            valA, valB = a.apOver50 or 0, b.apOver50 or 0
+        elseif absOrder == 17 then
+            valA, valB = a.apOver100 or 0, b.apOver100 or 0
+        elseif absOrder == 18 then
+            valA, valB = a.apOver500 or 0, b.apOver500 or 0
+        elseif absOrder == 19 then
+            valA, valB = a.apOver1000 or 0, b.apOver1000 or 0
+        elseif absOrder == 20 then
+            valA, valB = a.apSpikeScore or 0, b.apSpikeScore or 0
         else
             valA, valB = a.memory, b.memory
         end
@@ -296,13 +406,21 @@ function MonitorTab:FormatCPUMs(value)
     return FormatNumber(value or 0, 0)
 end
 
+function MonitorTab:FormatAPMs(value)
+    return FormatNumber(value or 0, 2)
+end
+
+function MonitorTab:FormatAPCount(value)
+    return FormatNumber(value or 0, 0)
+end
+
 function MonitorTab:GetViewPreset()
     local C = Addon.Constants and Addon.Constants.MONITOR_PRESET
     local defaultId = C and C.BALANCED or "balanced"
     local db = Addon.db and Addon.db.monitor
     local id = db and db.viewPreset or defaultId
     if not C then return id end
-    if id ~= C.BALANCED and id ~= C.MEMORY_DIG and id ~= C.CPU_SPIKES and id ~= C.MINIMAL then
+    if id ~= C.BALANCED and id ~= C.MEMORY_DIG and id ~= C.CPU_SPIKES and id ~= C.MINIMAL and id ~= C.ENGINE_PROFILER then
         return defaultId
     end
     return id
@@ -310,17 +428,23 @@ end
 
 function MonitorTab:SetViewPreset(presetId)
     local db = Addon.db and Addon.db.monitor
-    local C = Addon.Constants and Addon.Constants.MONITOR_PRESET
-    local DS = Addon.Constants and Addon.Constants.MONITOR_PRESET_DEFAULT_SORT
+    local Const = Addon.Constants
+    local C = Const and Const.MONITOR_PRESET
+    local DS = Const and Const.MONITOR_PRESET_DEFAULT_SORT
     if not db or not C then return end
-    if presetId ~= C.BALANCED and presetId ~= C.MEMORY_DIG and presetId ~= C.CPU_SPIKES and presetId ~= C.MINIMAL then
+    if presetId ~= C.BALANCED and presetId ~= C.MEMORY_DIG and presetId ~= C.CPU_SPIKES and presetId ~= C.MINIMAL and presetId ~= C.ENGINE_PROFILER then
         return
     end
     db.viewPreset = presetId
     if not DS then
-        DS = { balanced = -2, memory_dig = -4, cpu_spikes = -6, minimal = -2 }
+        DS = { balanced = -2, memory_dig = -4, cpu_spikes = -6, minimal = -2, engine_profiler = -20 }
     end
     local so = DS[presetId]
+    if presetId == C.CPU_SPIKES then
+        if GetCVar("scriptProfile") ~= "1" then
+            so = -(Const.MONITOR_SORT_AP_SPIKE or 20)
+        end
+    end
     if so then
         db.sortOrder = so
     end
@@ -362,7 +486,9 @@ local function ensurePinnedMonitorsArray(db)
 end
 
 local function findPinnedDbEntry(monitors, addonName)
-    for _, e in ipairs(monitors) do
+    if type(monitors) ~= "table" then return nil end
+    local list = Addon.GetPinnedMonitorEntriesInOrder and Addon:GetPinnedMonitorEntriesInOrder(monitors) or {}
+    for _, e in ipairs(list) do
         if e.addon == addonName then
             return e
         end
@@ -373,12 +499,12 @@ end
 local function removePinnedDbEntryByAddon(db, addonName)
     local arr = db.pinnedMonitors
     if type(arr) ~= "table" then return end
-    for i = #arr, 1, -1 do
-        if arr[i].addon == addonName then
-            tremove(arr, i)
-            return
-        end
+    local list = Addon.GetPinnedMonitorEntriesInOrder and Addon:GetPinnedMonitorEntriesInOrder(arr) or {}
+    local newArr = {}
+    for _, e in ipairs(list) do
+        if e.addon ~= addonName then tinsert(newArr, e) end
     end
+    db.pinnedMonitors = newArr
 end
 
 local function findPinnedSlotByAddon(addonName)
@@ -511,6 +637,23 @@ function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
         cpuPctLabel, cpuPctValue, yPos = CreateRow(popup, LL["MON_PIN_PCT_CPU"] or "CPU %", yPos, OneWoW_GUI)
     end
 
+    yPos = yPos - 4
+    local apDiv = popup:CreateTexture(nil, "ARTWORK")
+    apDiv:SetHeight(1)
+    apDiv:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, yPos)
+    apDiv:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -12, yPos)
+    local adr, adg, adb, ada = OneWoW_GUI:GetThemeColor("BORDER_DEFAULT")
+    apDiv:SetColorTexture(adr, adg, adb, (ada or 1) * 0.4)
+    yPos = yPos - 6
+    local apPeakLabel, apPeakValue
+    apPeakLabel, apPeakValue, yPos = CreateRow(popup, LL["MON_PIN_AP_PEAK"] or "AP peak (ms)", yPos, OneWoW_GUI)
+    local apSessionLabel, apSessionValue
+    apSessionLabel, apSessionValue, yPos = CreateRow(popup, LL["MON_PIN_AP_SESSION"] or "AP session avg", yPos, OneWoW_GUI)
+    local apOver50Label, apOver50Value
+    apOver50Label, apOver50Value, yPos = CreateRow(popup, LL["MON_PIN_AP_OVER50"] or "AP >50ms", yPos, OneWoW_GUI)
+    local apSpikeLabel, apSpikeValue
+    apSpikeLabel, apSpikeValue, yPos = CreateRow(popup, LL["MON_PIN_AP_SPIKE"] or "AP spike score", yPos, OneWoW_GUI)
+
     local elapsedLabel, elapsedValue
     elapsedLabel, elapsedValue, yPos = CreateRow(popup, LL["MON_PIN_ELAPSED"] or "Elapsed", yPos, OneWoW_GUI)
     local samplesLabel, samplesValue
@@ -547,6 +690,11 @@ function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
     popup.cpuSessionValue = cpuSessionValue
     popup.cpuRecentValue = cpuRecentValue
     popup.cpuPctValue = cpuPctValue
+    popup.apDiv = apDiv
+    popup.apPeakValue = apPeakValue
+    popup.apSessionValue = apSessionValue
+    popup.apOver50Value = apOver50Value
+    popup.apSpikeValue = apSpikeValue
 
     popup:SetSize(322, totalHeight)
 
@@ -596,12 +744,6 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle, existingDbEntry)
     else
         dbEntry = findPinnedDbEntry(db.pinnedMonitors, addonName)
         if not dbEntry then
-            if #db.pinnedMonitors >= maxPins then
-                local L = Addon.L
-                local msg = L and L["MON_MSG_PIN_MAX"]
-                Addon:Print(msg and string.format(msg, maxPins) or ("You can pin up to " .. tostring(maxPins) .. " addon monitors at once."))
-                return
-            end
             dbEntry = { addon = addonName, reopenOnReload = false, position = {} }
             tinsert(db.pinnedMonitors, dbEntry)
         end
@@ -758,6 +900,21 @@ function MonitorTab:UpdatePinnedSlot(slot)
         slot.lastCpuWallTime = nowT
     end
 
+    do
+        local apm = self:GetProfilerMetricsForAddon(slot.addonName)
+        if apm then
+            popup.apPeakValue:SetText(self:FormatAPMs(apm.apPeakMs))
+            popup.apSessionValue:SetText(self:FormatAPMs(apm.apSessionAvgMs))
+            popup.apOver50Value:SetText(self:FormatAPCount(apm.apOver50))
+            popup.apSpikeValue:SetText(self:FormatAPCount(apm.apSpikeScore))
+        else
+            popup.apPeakValue:SetText("--")
+            popup.apSessionValue:SetText("--")
+            popup.apOver50Value:SetText("--")
+            popup.apSpikeValue:SetText("--")
+        end
+    end
+
     local elapsed = GetTime() - slot.startTime
     local mins = math.floor(elapsed / 60)
     local secs = math.floor(elapsed % 60)
@@ -807,18 +964,25 @@ function MonitorTab:GetPinnedAddonName()
     return s and s.addonName or nil
 end
 
-function MonitorTab:RestorePinnedMonitors()
+function MonitorTab:RestorePinnedMonitorsPending()
     local db = Addon.db and Addon.db.monitor
     if not db or type(db.pinnedMonitors) ~= "table" then return end
-
-    for _, entry in ipairs(db.pinnedMonitors) do
+    local list = Addon.GetPinnedMonitorEntriesInOrder and Addon:GetPinnedMonitorEntriesInOrder(db.pinnedMonitors) or {}
+    for _, entry in ipairs(list) do
         if entry.reopenOnReload and type(entry.addon) == "string" and entry.addon ~= "" then
-            local addonIndex = FindAddonIndexByName(entry.addon)
-            if addonIndex and C_AddOns.IsAddOnLoaded(addonIndex) then
-                local _, title = C_AddOns.GetAddOnInfo(addonIndex)
-                local displayTitle = StripColorCodes(title or entry.addon)
-                self:CreatePinnedPopup(entry.addon, displayTitle, entry)
+            local existing = select(1, findPinnedSlotByAddon(entry.addon))
+            if not (existing and existing.popup) then
+                local addonIndex = FindAddonIndexByName(entry.addon)
+                if addonIndex and C_AddOns.IsAddOnLoaded(addonIndex) then
+                    local _, title = C_AddOns.GetAddOnInfo(addonIndex)
+                    local displayTitle = StripColorCodes(title or entry.addon)
+                    self:CreatePinnedPopup(entry.addon, displayTitle, entry)
+                end
             end
         end
     end
+end
+
+function MonitorTab:RestorePinnedMonitors()
+    self:RestorePinnedMonitorsPending()
 end

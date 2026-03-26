@@ -117,11 +117,13 @@ Layout and alignment aids:
 Real-time addon performance monitoring:
 
 - **Memory** — Per-addon memory usage (kB)
-- **CPU** — Per-addon CPU usage (requires `scriptProfile` CVar; triggers UI reload)
+- **CPU** — Per-addon cumulative script CPU (requires `scriptProfile` CVar; toggling triggers UI reload). Distinct from AddOn profiler metrics below.
+- **C_AddOnProfiler** — Optional columns from `C_AddOnProfiler.GetAddOnMetric` / `Enum.AddOnProfilerMetric` (session average, recent 60-tick average, peak, tick counts over ms thresholds, weighted spike score). Does not require `scriptProfile`. Values reset on UI reload, not on Monitor Reset. See [warcraft.wiki.gg — System: AddOnProfiler](https://warcraft.wiki.gg/wiki/Category:API_systems/AddOnProfiler) and Blizzard `AddOnProfilerDocumentation.lua` / `AddOnProfilerConstantsDocumentation.lua` in [wow-ui-source](https://github.com/Gethe/wow-ui-source).
+- **Views** — Balanced, Memory dig, CPU spikes (adds profiler peak / >50ms / spike score when the engine profiler is available; default sort follows script CPU or spike score), Minimal, and **Engine profiler** (full threshold grid). Encounter-average metric is intentionally not shown (boss-encounter scoped).
 - **Play/Pause** — Continuous or manual updates
 - **Show on Load** — Option to open Monitor tab automatically on login
 - **Filter** — Filter addons by name
-- **Pinned addon** — Optional focus window for a single addon (position and reopen behavior are saved)
+- **Pinned addon** — Optional focus window for a single addon (memory, optional script CPU, optional AddOn profiler summary; position and reopen behavior are saved)
 
 ### Globals Tab
 
