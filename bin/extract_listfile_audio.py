@@ -5,12 +5,18 @@ Generate compact Lua sound data files for OneWoW DevTool.
 The script only emits WoW addon Lua output:
 - one Init file with build metadata and category slices
 - one or more shard files with packed sound entries
-- one TOC fragment listing those files
 
 Packed entry format:
     category;subcategory;tail;fdid
 
 The redundant "sound/" prefix is omitted from stored entries and rebuilt in Lua.
+
+python bin/extract_listfile_audio.py \
+  --from-wago --product wowt \
+  --version 12.0.5.66591 \
+  --compare-version 12.0.5.66529 \
+  --shared-when-identical \
+  --outfile "OneWoW_Utility_DevTool/Data/SoundFiles-{product}.lua" -v
 """
 
 from __future__ import annotations
@@ -70,7 +76,7 @@ def parse_args() -> argparse.Namespace:
         "--outfile",
         type=str,
         required=True,
-        help="Output path template. Use {version} for the primary build (e.g. SoundFiles-{version}.lua).",
+        help="Output path template. Supports {version} and {product} placeholders (e.g. SoundFiles-{product}.lua).",
     )
     parser.add_argument(
         "--data-version",
@@ -264,12 +270,12 @@ def fetch_wago_latest_version(
     return version
 
 
-def resolve_outfile_path(template: str, data_version: str) -> Path:
+def resolve_outfile_path(template: str, data_version: str, product: str) -> Path:
     try:
-        return Path(template.format(version=data_version))
+        return Path(template.format(version=data_version, product=product))
     except KeyError as err:
         print(
-            f"Error: outfile template contains unknown placeholder {err}. Only {{version}} is supported.",
+            f"Error: outfile template contains unknown placeholder {err}. Supported: {{version}}, {{product}}.",
             file=sys.stderr,
         )
         raise SystemExit(1) from err
@@ -405,25 +411,13 @@ def render_slice_table(
     return lines
 
 
-def path_for_toc(path: Path) -> str:
-    try:
-        parts = path.resolve().parts
-        if "Data" in parts:
-            index = parts.index("Data")
-            return str(Path(*parts[index:])).replace("/", "\\")
-    except (OSError, ValueError):
-        pass
-    return path.name.replace("/", "\\")
-
-
 def write_init_file(
     init_path: Path,
     data_versions: list[str],
     slices: dict[str, dict[str, tuple[int, int]]],
 ) -> None:
     lines = [
-        f"-- AUTOMATICALLY GENERATED -- {primary_data_version(data_versions)}",
-        "-- https://wago.tools/",
+        "-- AUTOMATICALLY GENERATED -- https://wago.tools/",
         "local _, Addon = ...",
         "",
         f"local dataVersion = {lua_data_version_literal(data_versions)}",
@@ -443,13 +437,12 @@ def write_init_file(
 
 def write_shard_file(
     shard_path: Path,
-    data_version: str,
     shard_idx: int,
     total_shards: int,
     entries: list[str],
 ) -> None:
     lines = [
-        f"-- AUTOMATICALLY GENERATED -- {data_version} shard {shard_idx}/{total_shards}",
+        f"-- AUTOMATICALLY GENERATED -- shard {shard_idx}/{total_shards}",
         "local _, Addon = ...",
         'if type(Addon._SoundEntries) ~= "table" then',
         "\treturn",
@@ -487,7 +480,6 @@ def write_dataset(
 
     init_path = parent / f"{stem}-Init.lua"
     shard_glob = f"{stem}-S*.lua"
-    toc_path = parent / f"{stem}.toc.inc"
 
     for old_path in parent.glob(shard_glob):
         old_path.unlink()
@@ -502,15 +494,12 @@ def write_dataset(
         shard_path = parent / f"{stem}-S{shard_idx:04d}.lua"
         write_shard_file(
             shard_path,
-            primary_data_version(data_versions),
             shard_idx,
             total_shards,
             entries[offset : offset + entries_per_shard],
         )
         shard_paths.append(shard_path)
 
-    toc_lines = [path_for_toc(path) for path in shard_paths]
-    toc_path.write_text("\n".join(toc_lines) + "\n", encoding="utf-8")
     return shard_paths
 
 
@@ -596,7 +585,7 @@ def main() -> int:
             return 1
         primary_version = primary_data_version(data_versions)
 
-    out_path = resolve_outfile_path(args.outfile, primary_version)
+    out_path = resolve_outfile_path(args.outfile, primary_version, args.product)
     vprint(verbose, f"Resolved output path: {out_path}")
 
     if args.from_wago:

@@ -41,17 +41,17 @@ OneWoW_Utility_DevTool.lua
 # Texture Atlas Data, Font Catalog, SoundFile Paths
 Data\Core.lua
 
-Data\AtlasInfo-12.0.1.66527.lua [AllowLoadGameType mainline]
-Data\AtlasInfo-12.0.5.66529.lua [AllowLoadGameType mainline-test]
+Data\AtlasInfo-wow.lua [AllowLoadGameType mainline]
+Data\AtlasInfo-wowt.lua [AllowLoadGameType mainline-test]
 
-Data\SoundFiles-12.0.1.66562-Init.lua [AllowLoadGameType mainline]
-Data\SoundFiles-12.0.1.66562-S0001.lua [AllowLoadGameType mainline]
-Data\SoundFiles-12.0.1.66562-S0002.lua [AllowLoadGameType mainline]
-Data\SoundFiles-12.0.1.66562-S0003.lua [AllowLoadGameType mainline]
-Data\SoundFiles-12.0.5.66529-Init.lua [AllowLoadGameType mainline-test]
-Data\SoundFiles-12.0.5.66529-S0001.lua [AllowLoadGameType mainline-test]
-Data\SoundFiles-12.0.5.66529-S0002.lua [AllowLoadGameType mainline-test]
-Data\SoundFiles-12.0.5.66529-S0003.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-wow-Init.lua [AllowLoadGameType mainline]
+Data\SoundFiles-wow-S0001.lua [AllowLoadGameType mainline]
+Data\SoundFiles-wow-S0002.lua [AllowLoadGameType mainline]
+Data\SoundFiles-wow-S0003.lua [AllowLoadGameType mainline]
+Data\SoundFiles-wowt-Init.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-wowt-S0001.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-wowt-S0002.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-wowt-S0003.lua [AllowLoadGameType mainline-test]
 
 Data\FontObjectNames.lua
 Data\LuaSyntax.lua
