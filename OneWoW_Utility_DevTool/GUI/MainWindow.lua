@@ -15,6 +15,7 @@ local tinsert = tinsert
 local UI = {
     tabs = {},
     currentTabKey = nil,
+    settingsUnloadCheckboxes = {},
 }
 Addon.UI = UI
 
@@ -213,6 +214,60 @@ function UI:GetTabSettingsDefaults()
     end
     defaults.settings.enabled = true
     return defaults
+end
+
+function UI:GetUnloadOnDisable(tabKey)
+    local db = Addon.db
+    if type(db) ~= "table" then return false end
+    if tabKey == "textures" then return db.deferTextureBrowserData == true end
+    if tabKey == "sounds" then return db.deferSoundBrowserData == true end
+    return false
+end
+
+function UI:UpdateUnloadCheckboxEnableState(tabKey)
+    if tabKey ~= "textures" and tabKey ~= "sounds" then
+        return
+    end
+    local cb = self.settingsUnloadCheckboxes and self.settingsUnloadCheckboxes[tabKey]
+    if not cb then
+        return
+    end
+    local parentOn = self:IsTabEnabled(tabKey)
+    if parentOn then
+        cb:Disable()
+        if cb.label then
+            cb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    else
+        cb:Enable()
+        if cb.label then
+            cb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+end
+
+function UI:ApplyUnloadAssetSetting(tabKey, wantUnload)
+    if tabKey ~= "textures" and tabKey ~= "sounds" then return end
+    if not Addon.db then return end
+    local old = self:GetUnloadOnDisable(tabKey)
+    wantUnload = wantUnload and true or false
+    if tabKey == "textures" then
+        Addon.db.deferTextureBrowserData = wantUnload
+    elseif tabKey == "sounds" then
+        Addon.db.deferSoundBrowserData = wantUnload
+    end
+    local cb = self.settingsUnloadCheckboxes and self.settingsUnloadCheckboxes[tabKey]
+    if cb then
+        cb:SetChecked(wantUnload)
+        self:UpdateUnloadCheckboxEnableState(tabKey)
+    end
+    if wantUnload and not old then
+        if tabKey == "textures" and Addon.DevTool_WipeTextureAssetData then
+            Addon.DevTool_WipeTextureAssetData()
+        elseif tabKey == "sounds" and Addon.DevTool_WipeSoundAssetData then
+            Addon.DevTool_WipeSoundAssetData()
+        end
+    end
 end
 
 function UI:GetTabLabel(tabKey)
@@ -612,6 +667,7 @@ function UI:FullReset()
         self.mainFrame = nil
         self.contentFrame = nil
         self.tabs = {}
+        self.settingsUnloadCheckboxes = {}
         self.currentTabKey = selectedTabKey
     end
 end

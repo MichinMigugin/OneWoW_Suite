@@ -679,7 +679,16 @@ function Addon.UI:CreateTextureTab(parent)
         warn:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -16, -16)
         warn:SetJustifyH("LEFT")
         warn:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        warn:SetText(L["TEXTURE_MSG_NO_DATA"] or "Atlas data is not loaded for this client build. Update Data/AtlasInfo-*.lua to match GetBuildInfo().")
+        local unloadOn = Addon.UI and Addon.UI.GetUnloadOnDisable and Addon.UI:GetUnloadOnDisable("textures")
+        local msg
+        if unloadOn then
+            msg = L["TEXTURE_MSG_UNLOADED"] or L["TEXTURE_MSG_NO_DATA"]
+        elseif Addon._DevToolTextureAssetsPurgedSession then
+            msg = L["TEXTURE_MSG_RELOAD_RESTORE"] or L["TEXTURE_MSG_NO_DATA"]
+        else
+            msg = L["TEXTURE_MSG_NO_DATA"]
+        end
+        warn:SetText(msg)
         Addon.TextureBrowserTab = tab
         return tab
     end

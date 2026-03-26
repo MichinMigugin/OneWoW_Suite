@@ -409,6 +409,28 @@ end
 function Addon:OnInitialize()
     self:InitializeDatabase()
 
+    if not self.db.deferTextureBrowserData and self.DevTool_LoadTextureAssetData then
+        self.DevTool_LoadTextureAssetData()
+    end
+    self.DevTool_LoadTextureAssetData = nil
+    if self.db.deferTextureBrowserData then
+        self._DevToolTextureAssetsPurgedSession = true
+    end
+
+    if not self.db.deferSoundBrowserData and self._SoundDataLoaders then
+        for _, loader in ipairs(self._SoundDataLoaders) do
+            loader()
+        end
+    end
+    self._SoundDataLoaders = nil
+    if self.db.deferSoundBrowserData then
+        self._DevToolSoundAssetsPurgedSession = true
+    end
+
+    if self.db.deferTextureBrowserData or self.db.deferSoundBrowserData then
+        collectgarbage("collect")
+    end
+
     if self.MonitorTab and self.MonitorTab.RegisterPinnedRestoreEvents then
         self.MonitorTab:RegisterPinnedRestoreEvents()
     end

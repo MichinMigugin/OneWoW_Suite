@@ -490,7 +490,16 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         warn:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -12, -12)
         warn:SetJustifyH("LEFT")
         warn:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        warn:SetText(L["SOUND_MSG_NO_DATA"] or "Sound file data is not loaded for this client build. Update Data/SoundFiles-*.lua to match GetBuildInfo(), then /reload.")
+        local unloadOn = Addon.UI and Addon.UI.GetUnloadOnDisable and Addon.UI:GetUnloadOnDisable("sounds")
+        local msg
+        if unloadOn then
+            msg = L["SOUND_MSG_UNLOADED"] or L["SOUND_MSG_NO_DATA"]
+        elseif Addon._DevToolSoundAssetsPurgedSession then
+            msg = L["SOUND_MSG_RELOAD_RESTORE"] or L["SOUND_MSG_NO_DATA"]
+        else
+            msg = L["SOUND_MSG_NO_DATA"]
+        end
+        warn:SetText(msg)
         function tab:StopPlayback() end
         function tab:Teardown()
             if Addon.SoundBrowserTab == self then
