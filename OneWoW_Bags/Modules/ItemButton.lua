@@ -87,7 +87,8 @@ function Mixin:OWB_FullUpdate()
         SetItemButtonDesaturated(self, info.isLocked)
 
         local quality = info.quality
-        if quality and quality >= 1 and db and db.global and db.global.rarityColor then
+        local useRarity = db and db.global and (self.owb_isBank and db.global.bankRarityColor or db.global.rarityColor)
+        if quality and quality >= 1 and useRarity then
             GUILib:UpdateIconQuality(self, quality)
         else
             GUILib:UpdateIconQuality(self, nil)

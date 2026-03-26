@@ -406,19 +406,34 @@ end
 function GUI:UpdateBagsBarVisibility()
     if not isInitialized or not MainWindow then return end
 
-    local showBagsBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.showBagsBar
-    if showBagsBar == nil then showBagsBar = true end
+    local db = OneWoW_Bags.db
+    local showBags = db and db.global and db.global.showBagsBar
+    local showMoney = db and db.global and db.global.showMoneyBar
+    if showBags == nil then showBags = true end
+    if showMoney == nil then showMoney = true end
 
-    OneWoW_Bags.BagsBar:SetShown(showBagsBar)
+    local showAnyBar = showBags or showMoney
+    OneWoW_Bags.BagsBar:SetShown(showAnyBar)
+    if OneWoW_Bags.BagsBar.UpdateRowVisibility then
+        OneWoW_Bags.BagsBar:UpdateRowVisibility()
+    end
+
+    if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.UpdateVisibility then
+        OneWoW_Bags.InfoBar:UpdateVisibility()
+    end
 
     local bagsBarFrame = OneWoW_Bags.BagsBar:GetFrame()
+    local infoBarFrame = OneWoW_Bags.InfoBar:GetFrame()
     if contentScrollFrame then
-        local hideScrollBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
+        local hideScrollBar = db and db.global and db.global.hideScrollBar
         local scrollbarOffset = hideScrollBar and 0 or -12
         contentScrollFrame:ClearAllPoints()
-        local infoBarFrame = OneWoW_Bags.InfoBar:GetFrame()
-        contentScrollFrame:SetPoint("TOPLEFT", infoBarFrame, "BOTTOMLEFT", 0, -2)
-        if showBagsBar and bagsBarFrame then
+        if infoBarFrame and infoBarFrame:IsShown() then
+            contentScrollFrame:SetPoint("TOPLEFT", infoBarFrame, "BOTTOMLEFT", 0, -2)
+        else
+            contentScrollFrame:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
+        end
+        if showAnyBar and bagsBarFrame and bagsBarFrame:IsShown() then
             contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "TOPRIGHT", scrollbarOffset, 2)
         else
             contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", scrollbarOffset, 0)

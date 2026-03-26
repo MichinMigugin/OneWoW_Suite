@@ -154,7 +154,7 @@ end
 function BankSet:UpdateQualityColors()
     local GUILib = OneWoW_Bags.GUILib
     local db = OneWoW_Bags.db
-    local useRarity = db and db.global and db.global.rarityColor
+    local useRarity = db and db.global and db.global.bankRarityColor
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do
             if button.owb_itemInfo and button.owb_itemInfo.quality and button.owb_itemInfo.quality >= 1 and useRarity then
@@ -204,6 +204,7 @@ end
 function BankSet:ApplyBankScripts(button)
     if button._bankScriptsApplied then return end
     button._bankScriptsApplied = true
+    button.owb_isBank = true
 
     button._bankOrigOnClick = button:GetScript("OnClick")
     button._bankOrigOnEnter = button:GetScript("OnEnter")

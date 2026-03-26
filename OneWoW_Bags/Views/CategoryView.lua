@@ -41,6 +41,9 @@ function View:Layout(contentFrame, width, filteredButtons)
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
     local compact = db.global.compactCategories
+    local showHeaders = db.global.showCategoryHeaders ~= false
+    local verticalSpacing = (db.global.categorySpacing or 1.0)
+    local compactGapSlots = db.global.compactGap or 1
 
     local filterSet
     if filteredButtons then
@@ -93,36 +96,80 @@ function View:Layout(contentFrame, width, filteredButtons)
         local items = FilterItems(categoryName)
         if not items then return end
 
-        local section = CM:AcquireSection(contentFrame)
-        section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
-        section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
-        section:SetBackdropColor(T("BG_SECONDARY"))
-        section:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        if showHeaders then
+            local section = CM:AcquireSection(contentFrame)
+            section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
+            section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
+            section:SetBackdropColor(T("BG_SECONDARY"))
+            section:SetBackdropBorderColor(T("BORDER_SUBTLE"))
 
-        local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
-        local displayName = L[localeKey] or categoryName
-        section.title:SetText(displayName)
-        section.title:SetTextColor(T("ACCENT_PRIMARY"))
-        section.count:SetText(tostring(#items))
-        section.count:SetTextColor(T("TEXT_MUTED"))
+            local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
+            local displayName = L[localeKey] or categoryName
+            section.title:SetText(displayName)
+            section.title:SetTextColor(T("ACCENT_PRIMARY"))
+            section.count:SetText(tostring(#items))
+            section.count:SetTextColor(T("TEXT_MUTED"))
 
-        local collapsed = db.global.collapsedSections[categoryName]
-        section.isCollapsed = collapsed or false
+            local collapsed = db.global.collapsedSections[categoryName]
+            section.isCollapsed = collapsed or false
 
-        local sectionHeight = 26
+            local sectionHeight = 26
 
-        if not section.isCollapsed then
+            if not section.isCollapsed then
+                local itemRow = 0
+                local itemCol = 0
+
+                section.content:SetHeight(1)
+
+                for _, button in ipairs(items) do
+                    local x = leftPadding + (itemCol * cellSize)
+                    local y = -(itemRow * cellSize)
+
+                    button:ClearAllPoints()
+                    button:SetPoint("TOPLEFT", section.content, "TOPLEFT", x, y)
+                    button:OWB_SetIconSize(iconSize)
+                    button:Show()
+
+                    itemCol = itemCol + 1
+                    if itemCol >= cols then
+                        itemCol = 0
+                        itemRow = itemRow + 1
+                    end
+                end
+
+                local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
+                local contentHeight = totalRows * cellSize
+                section.content:SetHeight(contentHeight)
+                section.content:Show()
+
+                sectionHeight = sectionHeight + contentHeight + 4
+            else
+                section.content:Hide()
+                for _, button in ipairs(items) do
+                    button:Hide()
+                end
+            end
+
+            section:SetHeight(sectionHeight)
+            yOffset = yOffset + sectionHeight + math.floor(cellSize * verticalSpacing * 0.25 + 0.5)
+
+            local capturedName = categoryName
+            section.header:SetScript("OnClick", function()
+                section.isCollapsed = not section.isCollapsed
+                db.global.collapsedSections[capturedName] = section.isCollapsed or nil
+                if OneWoW_Bags.GUI and OneWoW_Bags.GUI.RefreshLayout then
+                    OneWoW_Bags.GUI:RefreshLayout()
+                end
+            end)
+        else
             local itemRow = 0
             local itemCol = 0
-
-            section.content:SetHeight(1)
-
             for _, button in ipairs(items) do
                 local x = leftPadding + (itemCol * cellSize)
-                local y = -(itemRow * cellSize)
+                local y = -(yOffset + itemRow * cellSize)
 
                 button:ClearAllPoints()
-                button:SetPoint("TOPLEFT", section.content, "TOPLEFT", x, y)
+                button:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", x, y)
                 button:OWB_SetIconSize(iconSize)
                 button:Show()
 
@@ -132,35 +179,13 @@ function View:Layout(contentFrame, width, filteredButtons)
                     itemRow = itemRow + 1
                 end
             end
-
             local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
-            local contentHeight = totalRows * cellSize
-            section.content:SetHeight(contentHeight)
-            section.content:Show()
-
-            sectionHeight = sectionHeight + contentHeight + 4
-        else
-            section.content:Hide()
-            for _, button in ipairs(items) do
-                button:Hide()
-            end
+            yOffset = yOffset + totalRows * cellSize + math.floor(cellSize * verticalSpacing * 0.25 + 0.5)
         end
-
-        section:SetHeight(sectionHeight)
-        yOffset = yOffset + sectionHeight + 4
-
-        local capturedName = categoryName
-        section.header:SetScript("OnClick", function()
-            section.isCollapsed = not section.isCollapsed
-            db.global.collapsedSections[capturedName] = section.isCollapsed or nil
-            if OneWoW_Bags.GUI and OneWoW_Bags.GUI.RefreshLayout then
-                OneWoW_Bags.GUI:RefreshLayout()
-            end
-        end)
     end
 
-    local gapSlots = 1
-    local labelHeight = 16
+    local gapSlots = compactGapSlots
+    local labelHeight = showHeaders and 16 or 0
 
     local function FlushGroupCompact(group)
         if #group == 0 then return end
@@ -172,7 +197,7 @@ function View:Layout(contentFrame, width, filteredButtons)
         for _, catInfo in ipairs(group) do
             local count = #catInfo.items
             local startCol = curCol > 0 and (curCol + gapSlots) or 0
-            local avail = cols - startCol
+            local avail = math.floor(cols - startCol)
 
             if avail < 1 then
                 table.insert(lines, currentLine)
@@ -218,13 +243,15 @@ function View:Layout(contentFrame, width, filteredButtons)
         end
 
         for _, line in ipairs(lines) do
-            for _, cat in ipairs(line) do
-                local label = AcquireLabel(contentFrame)
-                label:SetPoint("TOPLEFT", contentFrame, "TOPLEFT",
-                    leftPadding + cat.startCol * cellSize, -yOffset)
-                label:SetWidth(cat.blockWidth * cellSize)
-                label:SetText(cat.displayName)
-                label:SetTextColor(T("ACCENT_PRIMARY"))
+            if showHeaders then
+                for _, cat in ipairs(line) do
+                    local label = AcquireLabel(contentFrame)
+                    label:SetPoint("TOPLEFT", contentFrame, "TOPLEFT",
+                        leftPadding + cat.startCol * cellSize, -yOffset)
+                    label:SetWidth(cat.blockWidth * cellSize)
+                    label:SetText(cat.displayName)
+                    label:SetTextColor(T("ACCENT_PRIMARY"))
+                end
             end
             yOffset = yOffset + labelHeight
 
@@ -250,6 +277,9 @@ function View:Layout(contentFrame, width, filteredButtons)
                 end
             end
             yOffset = yOffset + maxRows * cellSize
+        end
+        if #lines > 0 then
+            yOffset = yOffset + math.floor(cellSize * verticalSpacing * 0.25 + 0.5)
         end
     end
 

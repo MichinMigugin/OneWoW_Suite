@@ -100,7 +100,7 @@ function BankGUI:InitMainWindow()
     local bankBar = OneWoW_Bags.BankBar:Create(contentArea)
     OneWoW_Bags.BankBar:SetShown(true)
 
-    local hideScrollBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
+    local hideScrollBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.bankHideScrollBar
     local scrollbarOffset = hideScrollBar and 0 or -12
 
     local scrollName = "OneWoW_BankContentScroll"
@@ -198,7 +198,7 @@ function BankGUI:UpdateWindowWidth()
     local cols = db.global.bankColumns or 14
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
-    local scrollbarSpace = db.global.hideScrollBar and 0 or 12
+    local scrollbarSpace = db.global.bankHideScrollBar and 0 or 12
     local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * S("XS"))
     MainWindow:SetWidth(newWidth)
     MainWindow:SetResizeBounds(newWidth, 300, newWidth, 1200)

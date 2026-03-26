@@ -253,6 +253,51 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SETTING_COMPACT_CATEGORIES"] = "Compact Categories",
     ["DESC_COMPACT_CATEGORIES"] = "Place small categories side by side to save vertical space.",
 
+    ["TAB_GENERAL"] = "General",
+    ["TAB_BAGS"] = "Bags",
+    ["TAB_BANK"] = "Bank",
+
+    ["SETTING_SHOW_SEARCH_BAR"] = "Show Search Bar",
+    ["DESC_SHOW_SEARCH_BAR"] = "Show or hide the search bar on the bags window.",
+    ["DESC_SHOW_BANK_SEARCH_BAR"] = "Show or hide the search bar on the bank window.",
+
+    ["SETTING_SHOW_HEADER_BAR"] = "Show Header Bar",
+    ["DESC_SHOW_HEADER_BAR"] = "Show or hide the top bar with view mode buttons, categories button, and shopping cart.",
+    ["DESC_SHOW_BANK_HEADER_BAR"] = "Show or hide the top bar with view mode buttons in the bank window.",
+
+    ["SETTING_SHOW_CAT_HEADERS"] = "Show Category Headers",
+    ["DESC_SHOW_CAT_HEADERS"] = "Show or hide category name labels in Category view. Categories still group items, but the header text and collapse bar are hidden.",
+    ["DESC_SHOW_BANK_CAT_HEADERS"] = "Show or hide category name labels in the bank window.",
+
+    ["SETTING_CATEGORY_SPACING"] = "Category Vertical Spacing",
+    ["DESC_CATEGORY_SPACING"] = "Controls the vertical gap between categories. 1.0 is the default single-slot gap.",
+
+    ["SETTING_COMPACT_GAP"] = "Compact Category Gap",
+    ["DESC_COMPACT_GAP"] = "Controls the horizontal gap between side-by-side compact categories, measured in slot widths.",
+
+    ["SETTING_SHOW_MONEY_BAR"] = "Show Money Bar",
+    ["DESC_SHOW_MONEY_BAR"] = "Show the bottom bar with gold, trackers, and bank button.",
+    ["DESC_SHOW_BANK_MONEY_BAR"] = "Show the bottom bar with gold display in the bank window.",
+
+    ["SETTING_SHOW_BANK_BAGS_BAR"] = "Show Bag Bar",
+    ["DESC_SHOW_BANK_BAGS_BAR"] = "Show the bag selection bar at the bottom of the bank window.",
+    ["DESC_SHOW_BANK_SCROLLBAR"] = "Show or hide the scroll bar on the bank window.",
+
+    ["DESC_BANK_RARITY_COLOR"] = "Color item slot borders based on item rarity in the bank.",
+
+    ["SETTING_BANK_AUTO_CLOSE"] = "Auto Close When Leaving",
+    ["DESC_BANK_AUTO_CLOSE"] = "Automatically close the bank window when leaving the bank.",
+    ["SETTING_BANK_LOCK"] = "Lock Window Position",
+    ["DESC_BANK_LOCK"] = "Prevent the bank window from being moved.",
+
+    ["CAT_ONEWOW_JUNK"] = "OneWoW Junk",
+    ["CAT_ONEWOW_UPGRADES"] = "OneWoW Upgrades",
+
+    ["SETTING_ENABLE_JUNK_CAT"] = "OneWoW Junk Category",
+    ["DESC_ENABLE_JUNK_CAT"] = "Group items marked as Junk by OneWoW into a dedicated category at the top.",
+    ["SETTING_ENABLE_UPGRADE_CAT"] = "OneWoW Upgrades Category",
+    ["DESC_ENABLE_UPGRADE_CAT"] = "Group items that are gear upgrades for your character into a dedicated category.",
+
 }
 
 OneWoW_Bags.L = {}

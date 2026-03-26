@@ -53,6 +53,24 @@ local defaults = {
         guildBankSelectedTab = nil,
         collapsedBankSections = {},
         collapsedGuildBankSections = {},
+        showSearchBar = true,
+        showCategoryHeaders = true,
+        categorySpacing = 1.0,
+        bankHideScrollBar = false,
+        showBankBagsBar = true,
+        showBankSearchBar = true,
+        showBankCategoryHeaders = true,
+        bankCategorySpacing = 1.0,
+        bankAutoClose = false,
+        bankLocked = false,
+        bankRarityColor = true,
+        enableJunkCategory = true,
+        enableUpgradeCategory = true,
+        showHeaderBar = true,
+        showBankHeaderBar = true,
+        compactGap = 1,
+        bankCompactGap = 1,
+        showMoneyBar = true,
     },
     char = {}
 }
@@ -260,6 +278,81 @@ function OneWoW_Bags:InitializeDatabase()
     if not self.db.global.categoriesV2Migrated then
         self:MigrateCategorySystemV2()
         self.db.global.categoriesV2Migrated = true
+    end
+
+    if self.db.global.showSearchBar == nil then
+        self.db.global.showSearchBar = true
+    end
+
+    if self.db.global.showCategoryHeaders == nil then
+        self.db.global.showCategoryHeaders = true
+    end
+
+    if self.db.global.categorySpacing == nil then
+        self.db.global.categorySpacing = 1.0
+    end
+
+    if self.db.global.bankHideScrollBar == nil then
+        self.db.global.bankHideScrollBar = false
+    end
+
+    if self.db.global.showBankBagsBar == nil then
+        self.db.global.showBankBagsBar = true
+    end
+
+    if self.db.global.showBankSearchBar == nil then
+        self.db.global.showBankSearchBar = true
+    end
+
+    if self.db.global.showBankCategoryHeaders == nil then
+        self.db.global.showBankCategoryHeaders = true
+    end
+
+    if self.db.global.bankCategorySpacing == nil then
+        self.db.global.bankCategorySpacing = 1.0
+    end
+
+    if self.db.global.bankAutoClose == nil then
+        self.db.global.bankAutoClose = false
+    end
+
+    if self.db.global.bankLocked == nil then
+        self.db.global.bankLocked = false
+    end
+
+    if self.db.global.bankRarityColor == nil then
+        self.db.global.bankRarityColor = self.db.global.rarityColor
+        if self.db.global.bankRarityColor == nil then
+            self.db.global.bankRarityColor = true
+        end
+    end
+
+    if self.db.global.enableJunkCategory == nil then
+        self.db.global.enableJunkCategory = true
+    end
+
+    if self.db.global.enableUpgradeCategory == nil then
+        self.db.global.enableUpgradeCategory = true
+    end
+
+    if self.db.global.showHeaderBar == nil then
+        self.db.global.showHeaderBar = true
+    end
+
+    if self.db.global.showBankHeaderBar == nil then
+        self.db.global.showBankHeaderBar = true
+    end
+
+    if self.db.global.compactGap == nil then
+        self.db.global.compactGap = 1
+    end
+
+    if self.db.global.bankCompactGap == nil then
+        self.db.global.bankCompactGap = 1
+    end
+
+    if self.db.global.showMoneyBar == nil then
+        self.db.global.showMoneyBar = true
     end
 end
 

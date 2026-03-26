@@ -540,6 +540,67 @@ function BagsBar:SetShown(show)
     end
 end
 
+function BagsBar:UpdateRowVisibility()
+    if not bagsBarFrame then return end
+    local db = OneWoW_Bags.db
+    if not db or not db.global then return end
+
+    local showBags = db.global.showBagsBar ~= false
+    local showMoney = db.global.showMoneyBar ~= false
+
+    if bagsBarFrame.row1Frame then
+        bagsBarFrame.row1Frame:SetShown(showBags)
+    end
+
+    if bagsBarFrame.row2Frame then
+        bagsBarFrame.row2Frame:SetShown(showMoney)
+    end
+
+    if bagsBarFrame.extraRow then
+        bagsBarFrame.extraRow:SetShown(showMoney)
+    end
+
+    if not showBags and not showMoney then
+        bagsBarFrame:Hide()
+        return
+    end
+
+    bagsBarFrame:Show()
+
+    local C = OneWoW_Bags.Constants.GUI
+    local baseHeight = 0
+    if showBags then baseHeight = baseHeight + ROW1_HEIGHT end
+    if showMoney then baseHeight = baseHeight + ROW2_HEIGHT end
+
+    local trackers = db.global.trackedCurrencies or {}
+    local needExtraRow = showMoney and #trackers > ROW1_TRACKER_MAX
+    if needExtraRow then baseHeight = baseHeight + ROW2_HEIGHT end
+
+    bagsBarFrame:SetHeight(baseHeight)
+
+    if showMoney then
+        bagsBarFrame.row2Frame:ClearAllPoints()
+        if needExtraRow and bagsBarFrame.extraRow then
+            bagsBarFrame.row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame.extraRow, "TOPLEFT", 0, 0)
+            bagsBarFrame.row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame.extraRow, "TOPRIGHT", 0, 0)
+        else
+            bagsBarFrame.row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
+            bagsBarFrame.row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
+        end
+    end
+
+    if showBags then
+        bagsBarFrame.row1Frame:ClearAllPoints()
+        if showMoney then
+            bagsBarFrame.row1Frame:SetPoint("TOPLEFT", bagsBarFrame, "TOPLEFT", 0, 0)
+            bagsBarFrame.row1Frame:SetPoint("TOPRIGHT", bagsBarFrame, "TOPRIGHT", 0, 0)
+        else
+            bagsBarFrame.row1Frame:SetPoint("TOPLEFT", bagsBarFrame, "TOPLEFT", 0, 0)
+            bagsBarFrame.row1Frame:SetPoint("TOPRIGHT", bagsBarFrame, "TOPRIGHT", 0, 0)
+        end
+    end
+end
+
 function BagsBar:Reset()
     if trackerDialog then
         trackerDialog.frame:Hide()
