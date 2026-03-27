@@ -781,6 +781,57 @@ function ErrorLogger:ShowErrorDetails(errorData)
 
     local height = tab.detailsText:GetStringHeight()
     tab.detailsScroll:GetScrollChild():SetHeight(math.max(height + 10, tab.detailsScroll:GetHeight()))
+
+    local analysis = errorData._analysis
+    if not analysis and Addon.ErrorAnalyzer then
+        analysis = Addon.ErrorAnalyzer:Analyze(errorData)
+        errorData._analysis = analysis
+    end
+
+    if analysis and tab.analysisText then
+        local lines = {}
+        if SC then
+            tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_ERROR_TYPE"] or "ERROR TYPE:", analysis.errorType or ""))
+            tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_ROOT_CAUSE"] or "ROOT CAUSE:", analysis.rootCauseLabel or ""))
+            if analysis.reportedAddon then
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_REPORTED_ADDON"] or "REPORTED ADDON:", analysis.reportedAddon))
+            end
+            if analysis.offendingAddon and analysis.offendingAddon ~= analysis.reportedAddon then
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_OFFENDING_ADDON"] or "OFFENDING ADDON:", analysis.offendingAddon))
+            end
+            if analysis.protectedAction then
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_PROTECTED"] or "PROTECTED:", analysis.protectedAction))
+            end
+            if analysis.triggerLocation then
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_TRIGGER"] or "TRIGGER:", analysis.triggerLocation))
+            end
+            tinsert(lines, "")
+            tinsert(lines, SC:ColorizeHeader(L["ERR_ANALYSIS_RECOMMENDATION"] or "RECOMMENDATION:"))
+            tinsert(lines, SC:ColorizeMessage(analysis.recommendation or ""))
+        else
+            tinsert(lines, (L["ERR_ANALYSIS_ERROR_TYPE"] or "ERROR TYPE:") .. " " .. (analysis.errorType or ""))
+            tinsert(lines, (L["ERR_ANALYSIS_ROOT_CAUSE"] or "ROOT CAUSE:") .. " " .. (analysis.rootCauseLabel or ""))
+            if analysis.reportedAddon then
+                tinsert(lines, (L["ERR_ANALYSIS_REPORTED_ADDON"] or "REPORTED ADDON:") .. " " .. analysis.reportedAddon)
+            end
+            if analysis.offendingAddon and analysis.offendingAddon ~= analysis.reportedAddon then
+                tinsert(lines, (L["ERR_ANALYSIS_OFFENDING_ADDON"] or "OFFENDING ADDON:") .. " " .. analysis.offendingAddon)
+            end
+            if analysis.protectedAction then
+                tinsert(lines, (L["ERR_ANALYSIS_PROTECTED"] or "PROTECTED:") .. " " .. analysis.protectedAction)
+            end
+            if analysis.triggerLocation then
+                tinsert(lines, (L["ERR_ANALYSIS_TRIGGER"] or "TRIGGER:") .. " " .. analysis.triggerLocation)
+            end
+            tinsert(lines, "")
+            tinsert(lines, (L["ERR_ANALYSIS_RECOMMENDATION"] or "RECOMMENDATION:"))
+            tinsert(lines, analysis.recommendation or "")
+        end
+
+        tab.analysisText:SetText(table.concat(lines, "\n"))
+        local aHeight = tab.analysisText:GetStringHeight()
+        tab.analysisScroll:GetScrollChild():SetHeight(math.max(aHeight + 10, tab.analysisScroll:GetHeight()))
+    end
 end
 
 function ErrorLogger:CopyCurrentError()
@@ -814,6 +865,9 @@ function ErrorLogger:ClearErrors()
 
     if Addon.LuaConsoleTab then
         Addon.LuaConsoleTab.detailsText:SetText(Addon.L and Addon.L["LABEL_NO_ERROR"] or "No error selected")
+        if Addon.LuaConsoleTab.analysisText then
+            Addon.LuaConsoleTab.analysisText:SetText(Addon.L and Addon.L["ERR_ANALYSIS_NONE"] or "Select an error to see analysis")
+        end
     end
 
     Addon:Print(Addon.L and Addon.L["ERR_MSG_CLEARED"] or "Error log cleared")

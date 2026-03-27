@@ -62,6 +62,7 @@ Modules\FrameTree.lua
 Modules\FramePicker.lua
 Modules\ErrorExport.lua
 Modules\StackColorizer.lua
+Modules\ErrorAnalyzer.lua
 Modules\ErrorLogger.lua
 Modules\EventMonitor.lua
 Modules\ColorTools.lua

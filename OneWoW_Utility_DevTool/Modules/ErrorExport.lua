@@ -25,6 +25,28 @@ function Addon.ErrorExport.StripWoWColorCodes(s)
     return t
 end
 
+local function appendAnalysisLines(lines, analysis, L, prefix, suffix)
+    prefix = prefix or ""
+    suffix = suffix or ""
+    if not analysis then return end
+    tinsert(lines, "")
+    tinsert(lines, prefix .. (L["ERR_EXPORT_ANALYSIS"] or "ANALYSIS:") .. suffix)
+    tinsert(lines, (L["ERR_ANALYSIS_ERROR_TYPE"] or "ERROR TYPE:") .. " " .. (analysis.errorType or ""))
+    tinsert(lines, (L["ERR_ANALYSIS_ROOT_CAUSE"] or "ROOT CAUSE:") .. " " .. (analysis.rootCauseLabel or ""))
+    if analysis.reportedAddon then
+        tinsert(lines, (L["ERR_ANALYSIS_REPORTED_ADDON"] or "REPORTED ADDON:") .. " " .. analysis.reportedAddon)
+    end
+    if analysis.offendingAddon and analysis.offendingAddon ~= analysis.reportedAddon then
+        tinsert(lines, (L["ERR_ANALYSIS_OFFENDING_ADDON"] or "OFFENDING ADDON:") .. " " .. analysis.offendingAddon)
+    end
+    if analysis.triggerLocation then
+        tinsert(lines, (L["ERR_ANALYSIS_TRIGGER"] or "TRIGGER:") .. " " .. analysis.triggerLocation)
+    end
+    if analysis.recommendation then
+        tinsert(lines, (L["ERR_ANALYSIS_RECOMMENDATION"] or "RECOMMENDATION:") .. " " .. analysis.recommendation)
+    end
+end
+
 function Addon.ErrorExport.BuildPlainText(err, L)
     L = L or {}
     local lines = {}
@@ -44,6 +66,7 @@ function Addon.ErrorExport.BuildPlainText(err, L)
         tinsert(lines, (L["ERR_DETAIL_LOCALS"] or "LOCALS:"))
         tinsert(lines, err.locals)
     end
+    appendAnalysisLines(lines, err._analysis, L)
     return table.concat(lines, "\n")
 end
 
@@ -75,6 +98,7 @@ function Addon.ErrorExport.BuildCurseForgeText(err, L)
         tinsert(lines, Addon.ErrorExport.StripWoWColorCodes(tostring(err.locals)))
     end
     tinsert(lines, "```")
+    appendAnalysisLines(lines, err._analysis, L)
     tinsert(lines, "")
     tinsert(lines, format("Session: %s  |  Count: %s  |  Time: %s",
         tostring(err.session or "?"),
@@ -105,6 +129,7 @@ function Addon.ErrorExport.BuildDiscordText(err, L)
         tinsert(lines, Addon.ErrorExport.StripWoWColorCodes(tostring(err.locals)))
         tinsert(lines, "```")
     end
+    appendAnalysisLines(lines, err._analysis, L, "**", "**")
     tinsert(lines, "")
     tinsert(lines, format("*session %s · x%s · %s*",
         tostring(err.session or "?"),

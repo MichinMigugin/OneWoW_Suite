@@ -235,11 +235,11 @@ function Addon.UI:CreateErrorsTab(parent)
     belowRetention:SetPoint("TOP", soundDrop, "BOTTOM", 0, 0)
     belowRetention:SetHeight(1)
 
-    local listPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 250 })
+    local listPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 150 })
     listPanel:ClearAllPoints()
     listPanel:SetPoint("TOPLEFT", belowRetention, "BOTTOMLEFT", 0, -12)
     listPanel:SetPoint("TOPRIGHT", belowRetention, "BOTTOMRIGHT", 0, -12)
-    listPanel:SetHeight(210)
+    listPanel:SetHeight(130)
     self:StyleContentPanel(listPanel)
 
     local listScroll, listContent = OneWoW_GUI:CreateScrollFrame(listPanel, {})
@@ -270,10 +270,39 @@ function Addon.UI:CreateErrorsTab(parent)
         tab.errorButtons[i] = btn
     end
 
+    local analysisPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 150 })
+    analysisPanel:ClearAllPoints()
+    analysisPanel:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 5, 35)
+    analysisPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 35)
+    analysisPanel:SetHeight(150)
+    self:StyleContentPanel(analysisPanel)
+
+    local analysisScroll, analysisContent = OneWoW_GUI:CreateScrollFrame(analysisPanel, {})
+    analysisScroll:ClearAllPoints()
+    analysisScroll:SetPoint("TOPLEFT", analysisPanel, "TOPLEFT", 4, -4)
+    analysisScroll:SetPoint("BOTTOMRIGHT", analysisPanel, "BOTTOMRIGHT", -14, 4)
+
+    analysisScroll:HookScript("OnSizeChanged", function(self, w)
+        analysisContent:SetWidth(w)
+    end)
+
+    tab.analysisText = analysisContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    tab.analysisText:SetPoint("TOPLEFT", 2, -2)
+    tab.analysisText:SetPoint("RIGHT", analysisContent, "RIGHT", -2, 0)
+    tab.analysisText:SetJustifyH("LEFT")
+    tab.analysisText:SetWordWrap(true)
+    tab.analysisText:SetText(L["ERR_ANALYSIS_NONE"] or "Select an error to see analysis")
+    tab.analysisText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    tab.analysisPanel = analysisPanel
+    tab.analysisScroll = analysisScroll
+
     local detailsPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
     detailsPanel:ClearAllPoints()
     detailsPanel:SetPoint("TOPLEFT", listPanel, "BOTTOMLEFT", 0, -5)
-    detailsPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 35)
+    detailsPanel:SetPoint("TOPRIGHT", listPanel, "BOTTOMRIGHT", 0, -5)
+    detailsPanel:SetPoint("BOTTOMLEFT", analysisPanel, "TOPLEFT", 0, -5)
+    detailsPanel:SetPoint("BOTTOMRIGHT", analysisPanel, "TOPRIGHT", 0, -5)
     self:StyleContentPanel(detailsPanel)
 
     local detailsScroll, detailsContent = OneWoW_GUI:CreateScrollFrame(detailsPanel, {})
@@ -289,11 +318,29 @@ function Addon.UI:CreateErrorsTab(parent)
     tab.detailsText:SetPoint("TOPLEFT", 2, -2)
     tab.detailsText:SetPoint("RIGHT", detailsContent, "RIGHT", -2, 0)
     tab.detailsText:SetJustifyH("LEFT")
-    tab.detailsText:SetText(Addon.L and Addon.L["LABEL_NO_ERROR"] or "No error selected")
+    tab.detailsText:SetText(L["LABEL_NO_ERROR"] or "No error selected")
     tab.detailsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
+    tab.detailsPanel = detailsPanel
+
+    local function setAnalysisVisible(visible)
+        if visible then
+            analysisPanel:Show()
+            detailsPanel:ClearAllPoints()
+            detailsPanel:SetPoint("TOPLEFT", listPanel, "BOTTOMLEFT", 0, -5)
+            detailsPanel:SetPoint("TOPRIGHT", listPanel, "BOTTOMRIGHT", 0, -5)
+            detailsPanel:SetPoint("BOTTOMLEFT", analysisPanel, "TOPLEFT", 0, -5)
+            detailsPanel:SetPoint("BOTTOMRIGHT", analysisPanel, "TOPRIGHT", 0, -5)
+        else
+            analysisPanel:Hide()
+            detailsPanel:ClearAllPoints()
+            detailsPanel:SetPoint("TOPLEFT", listPanel, "BOTTOMLEFT", 0, -5)
+            detailsPanel:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 35)
+        end
+    end
+
     local copyBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = Addon.L and Addon.L["BTN_COPY_ERROR"] or "Copy Error",
+        text = L["BTN_COPY_ERROR"] or "Copy Error",
         height = 25,
         minWidth = 96,
     })
@@ -306,17 +353,40 @@ function Addon.UI:CreateErrorsTab(parent)
 
     copyDrop:SetPoint("BOTTOMLEFT", copyBtn, "BOTTOMRIGHT", 10, 0)
 
+    local analysisToggleBtn = OneWoW_GUI:CreateFitTextButton(tab, {
+        text = L["BTN_TOGGLE_ANALYSIS"] or "Analysis",
+        height = 25,
+        minWidth = 80,
+    })
+    analysisToggleBtn:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -5, 5)
+    analysisToggleBtn:SetScript("OnClick", function()
+        local db = getErrorDB()
+        local newState = not analysisPanel:IsShown()
+        if db then
+            db.showAnalysis = newState
+        end
+        setAnalysisVisible(newState)
+    end)
+
+    tab.analysisToggleBtn = analysisToggleBtn
+
+    local db = getErrorDB()
+    local showAnalysis = (db and db.showAnalysis ~= false) and true or false
+    setAnalysisVisible(showAnalysis)
+
     tab.listScroll = listScroll
     tab.detailsScroll = detailsScroll
     tab.countLabel = countLabel
     tab.clearReloadCheck = clearReloadCheck
 
     tab:SetScript("OnShow", function()
-        local db = getErrorDB()
-        if tab.clearReloadCheck and db then
-            tab.clearReloadCheck:SetChecked(db.clearOnReload and true or false)
+        local showDB = getErrorDB()
+        if tab.clearReloadCheck and showDB then
+            tab.clearReloadCheck:SetChecked(showDB.clearOnReload and true or false)
         end
         refreshDropdownLabels(tab)
+        local vis = (showDB and showDB.showAnalysis ~= false) and true or false
+        setAnalysisVisible(vis)
         if Addon.ErrorLogger then
             Addon.ErrorLogger:UpdateLuaTabBugGrabberNotice()
             Addon.ErrorLogger:UpdateUI()
