@@ -679,13 +679,15 @@ function ErrorLogger:UpdateUI()
         tab.LayoutErrorRowAnchors()
     end
 
+    local SC = Addon.StackColorizer
     for i, btn in ipairs(tab.errorButtons) do
         local errorIdx = #errors - (i - 1)
         local err = errors[errorIdx]
 
         if err then
+            local isCurrentSession = (err.session == currentSession)
             local sessionLabel
-            if err.session == currentSession then
+            if isCurrentSession then
                 sessionLabel = L["ERR_SESSION_CURRENT"] or "Current"
             else
                 sessionLabel = (L["ERR_SESSION_PREFIX"] or "Session") .. " " .. (err.session or "?")
@@ -701,7 +703,11 @@ function ErrorLogger:UpdateUI()
                 shortMsg = shortMsg:sub(1, 57) .. "..."
             end
 
-            btn.label:SetText(format("[%s] %s - %s%s", formatTimeDisplay(err), sessionLabel, shortMsg, countStr))
+            if SC then
+                btn.label:SetText(SC:ColorizeListRow(formatTimeDisplay(err), sessionLabel, isCurrentSession, shortMsg, countStr))
+            else
+                btn.label:SetText(format("[%s] %s - %s%s", formatTimeDisplay(err), sessionLabel, shortMsg, countStr))
+            end
             btn.errorData = err
             btn:Show()
         else
@@ -723,6 +729,7 @@ function ErrorLogger:ShowErrorDetails(errorData)
     local tab = Addon.LuaConsoleTab
     local L = Addon.L or {}
     local currentSession = self:GetSessionId()
+    local SC = Addon.StackColorizer
 
     local sessionLabel
     if errorData.session == currentSession then
@@ -732,22 +739,42 @@ function ErrorLogger:ShowErrorDetails(errorData)
     end
 
     local details = {}
-    tinsert(details, (L["ERR_DETAIL_TIME"] or "TIME:") .. " " .. formatTimeDisplay(errorData))
-    tinsert(details, (L["ERR_DETAIL_SESSION"] or "SESSION:") .. " " .. sessionLabel)
-    if errorData.counter and errorData.counter > 1 then
-        tinsert(details, (L["ERR_DETAIL_COUNT"] or "COUNT:") .. " " .. errorData.counter)
-    end
-    tinsert(details, "")
-    tinsert(details, (L["ERR_DETAIL_MESSAGE"] or "MESSAGE:"))
-    tinsert(details, errorData.message or "")
-    tinsert(details, "")
-    tinsert(details, (L["ERR_DETAIL_STACK"] or "STACK TRACE:"))
-    tinsert(details, errorData.stack or "")
-
-    if errorData.locals and errorData.locals ~= "" then
+    if SC then
+        tinsert(details, SC:ColorizeMetaLine(L["ERR_DETAIL_TIME"] or "TIME:", formatTimeDisplay(errorData)))
+        tinsert(details, SC:ColorizeMetaLine(L["ERR_DETAIL_SESSION"] or "SESSION:", sessionLabel))
+        if errorData.counter and errorData.counter > 1 then
+            tinsert(details, SC:ColorizeMetaLine(L["ERR_DETAIL_COUNT"] or "COUNT:", errorData.counter))
+        end
         tinsert(details, "")
-        tinsert(details, (L["ERR_DETAIL_LOCALS"] or "LOCALS:"))
-        tinsert(details, errorData.locals)
+        tinsert(details, SC:ColorizeHeader(L["ERR_DETAIL_MESSAGE"] or "MESSAGE:"))
+        tinsert(details, SC:ColorizeMessage(errorData.message or ""))
+        tinsert(details, "")
+        tinsert(details, SC:ColorizeHeader(L["ERR_DETAIL_STACK"] or "STACK TRACE:"))
+        tinsert(details, SC:ColorizeStack(errorData.stack or ""))
+
+        if errorData.locals and errorData.locals ~= "" then
+            tinsert(details, "")
+            tinsert(details, SC:ColorizeHeader(L["ERR_DETAIL_LOCALS"] or "LOCALS:"))
+            tinsert(details, SC:ColorizeLocals(errorData.locals))
+        end
+    else
+        tinsert(details, (L["ERR_DETAIL_TIME"] or "TIME:") .. " " .. formatTimeDisplay(errorData))
+        tinsert(details, (L["ERR_DETAIL_SESSION"] or "SESSION:") .. " " .. sessionLabel)
+        if errorData.counter and errorData.counter > 1 then
+            tinsert(details, (L["ERR_DETAIL_COUNT"] or "COUNT:") .. " " .. errorData.counter)
+        end
+        tinsert(details, "")
+        tinsert(details, (L["ERR_DETAIL_MESSAGE"] or "MESSAGE:"))
+        tinsert(details, errorData.message or "")
+        tinsert(details, "")
+        tinsert(details, (L["ERR_DETAIL_STACK"] or "STACK TRACE:"))
+        tinsert(details, errorData.stack or "")
+
+        if errorData.locals and errorData.locals ~= "" then
+            tinsert(details, "")
+            tinsert(details, (L["ERR_DETAIL_LOCALS"] or "LOCALS:"))
+            tinsert(details, errorData.locals)
+        end
     end
 
     tab.detailsText:SetText(table.concat(details, "\n"))
