@@ -174,6 +174,13 @@ function ErrorLogger:UpdateLuaTabBugGrabberNotice()
         clearBtn:ClearAllPoints()
         clearBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
     end
+    if tab.LayoutErrorRowAnchors then
+        C_Timer.After(0, function()
+            if Addon.LuaConsoleTab and Addon.LuaConsoleTab.LayoutErrorRowAnchors then
+                Addon.LuaConsoleTab.LayoutErrorRowAnchors()
+            end
+        end)
+    end
 end
 
 function ErrorLogger:_unregisterAuxEvents()
@@ -668,6 +675,9 @@ function ErrorLogger:UpdateUI()
     local currentSession = self:GetSessionId()
 
     tab.countLabel:SetText((L["LABEL_ERRORS"] or "Errors:") .. " " .. #errors)
+    if tab.LayoutErrorRowAnchors then
+        tab.LayoutErrorRowAnchors()
+    end
 
     for i, btn in ipairs(tab.errorButtons) do
         local errorIdx = #errors - (i - 1)

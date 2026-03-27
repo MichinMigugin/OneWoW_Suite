@@ -78,7 +78,7 @@ GUI\MainWindow.lua
 # Tab implementations (extend Addon.UI)
 GUI\Tabs\FrameInspectorTab.lua
 GUI\Tabs\EventMonitorTab.lua
-GUI\Tabs\LuaConsoleTab.lua
+GUI\Tabs\ErrorsTab.lua
 GUI\Tabs\GlobalsBrowserTab.lua
 GUI\Tabs\TextureViewerTab.lua
 GUI\Tabs\ColorToolsTab.lua

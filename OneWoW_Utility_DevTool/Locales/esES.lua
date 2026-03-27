@@ -276,6 +276,7 @@ Addon.Locales["esES"] = {
     ["ERR_COPY_FMT_DISCORD"] = "Discord",
     ["ERR_CLEAR_ON_RELOAD"] = "Borrar errores al hacer /reload",
     ["ERR_KEEP_SESSIONS_LABEL"] = "Mantener sesiones:",
+    ["ERR_KEEP_SESSIONS_VALUE"] = "%d",
     ["ERR_EXPORT_CF_STACK"] = "Pila / locales (markdown para CurseForge):",
 
     -- Texture Browser

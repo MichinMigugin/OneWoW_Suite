@@ -276,6 +276,7 @@ Addon.Locales["koKR"] = {
     ["ERR_COPY_FMT_DISCORD"] = "Discord",
     ["ERR_CLEAR_ON_RELOAD"] = "/reload 시 오류 지우기",
     ["ERR_KEEP_SESSIONS_LABEL"] = "세션 유지:",
+    ["ERR_KEEP_SESSIONS_VALUE"] = "%d",
     ["ERR_EXPORT_CF_STACK"] = "스택 / 지역 변수 (CurseForge용 마크다운):",
 
     -- Texture Browser

@@ -276,6 +276,7 @@ Addon.Locales["ruRU"] = {
     ["ERR_COPY_FMT_DISCORD"] = "Discord",
     ["ERR_CLEAR_ON_RELOAD"] = "Очищать ошибки при /reload",
     ["ERR_KEEP_SESSIONS_LABEL"] = "Хранить сессий:",
+    ["ERR_KEEP_SESSIONS_VALUE"] = "%d",
     ["ERR_EXPORT_CF_STACK"] = "Стек / локальные (markdown для CurseForge):",
 
     -- Texture Browser

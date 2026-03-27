@@ -66,7 +66,7 @@ function UI:GetTabDefinitions()
             key = "errors",
             order = 3,
             labelKey = "TAB_ERRORS",
-            create = function(parent) return self:CreateLuaConsoleTab(parent) end,
+            create = function(parent) return self:CreateErrorsTab(parent) end,
             teardown = function(tab)
                 if Addon.LuaConsoleTab == tab then
                     Addon.LuaConsoleTab = nil
