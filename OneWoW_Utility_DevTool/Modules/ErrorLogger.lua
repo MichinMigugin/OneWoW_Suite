@@ -799,6 +799,9 @@ function ErrorLogger:ShowErrorDetails(errorData)
             if analysis.offendingAddon and analysis.offendingAddon ~= analysis.reportedAddon then
                 tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_OFFENDING_ADDON"] or "OFFENDING ADDON:", analysis.offendingAddon))
             end
+            if analysis.taintSource then
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_TAINT_SOURCE"] or "TAINT SOURCE:", analysis.taintSource))
+            end
             if analysis.protectedAction then
                 tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_PROTECTED"] or "PROTECTED:", analysis.protectedAction))
             end
@@ -816,6 +819,9 @@ function ErrorLogger:ShowErrorDetails(errorData)
             end
             if analysis.offendingAddon and analysis.offendingAddon ~= analysis.reportedAddon then
                 tinsert(lines, (L["ERR_ANALYSIS_OFFENDING_ADDON"] or "OFFENDING ADDON:") .. " " .. analysis.offendingAddon)
+            end
+            if analysis.taintSource then
+                tinsert(lines, (L["ERR_ANALYSIS_TAINT_SOURCE"] or "TAINT SOURCE:") .. " " .. analysis.taintSource)
             end
             if analysis.protectedAction then
                 tinsert(lines, (L["ERR_ANALYSIS_PROTECTED"] or "PROTECTED:") .. " " .. analysis.protectedAction)

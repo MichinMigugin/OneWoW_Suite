@@ -111,6 +111,18 @@ local function extractDetail(message)
     return message
 end
 
+local function extractTaintSource(text)
+    if not text or text == "" then return nil end
+    return strmatch(text, "tainted by '([^']+)'")
+        or strmatch(text, 'tainted by "([^"]+)"')
+        or strmatch(text, "tainted by (%S+)%)")
+end
+
+local function isBlizzardAddon(name)
+    if not name then return false end
+    return strfind(name, "^Blizzard_") ~= nil
+end
+
 local function detectRootCause(detail, errorType)
     if not detail or detail == "" then
         if errorType == "ADDON_ACTION_FORBIDDEN" or errorType == "ADDON_ACTION_BLOCKED" then
@@ -128,11 +140,18 @@ local function detectRootCause(detail, errorType)
         return ROOT_CAUSES.STACK_OVERFLOW
     end
 
-    if strfind(lower, "tainted", 1, true) then
+    local hasSecret = strfind(lower, "secret", 1, true)
+    local hasTainted = strfind(lower, "tainted", 1, true)
+
+    if hasSecret and hasTainted then
+        return ROOT_CAUSES.SECRET_VALUE
+    end
+
+    if hasTainted then
         return ROOT_CAUSES.TAINT
     end
 
-    if strfind(lower, "secret", 1, true) then
+    if hasSecret then
         return ROOT_CAUSES.SECRET_VALUE
     end
 
@@ -220,7 +239,7 @@ local function parseStackFrames(stackStr)
     return frames
 end
 
-local function attributeAddons(frames, messageReportedAddon)
+local function attributeAddons(frames, messageReportedAddon, taintSource)
     local reportedAddon = messageReportedAddon
     local offendingAddon = nil
     local triggerLocation = nil
@@ -234,36 +253,55 @@ local function attributeAddons(frames, messageReportedAddon)
         end
     end
 
-    if #frames > 0 and not frames[1].isC and frames[1].path then
-        local f = frames[1]
-        local loc = f.path
-        if f.line then
-            loc = loc .. ":" .. f.line
+    for i = 1, #frames do
+        local f = frames[i]
+        if not f.isC and f.path then
+            local loc = f.path
+            if f.line then
+                loc = loc .. ":" .. f.line
+            end
+            if f.funcName then
+                loc = loc .. " in '" .. f.funcName .. "'"
+            end
+            triggerLocation = loc
+            break
         end
-        if f.funcName then
-            loc = loc .. " in '" .. f.funcName .. "'"
-        end
-        triggerLocation = loc
     end
 
-    for i = #frames, 1, -1 do
-        local f = frames[i]
-        if f.addon and not f.isC and not f.isLib then
-            if f.addon ~= reportedAddon then
-                offendingAddon = f.addon
-                break
+    if taintSource then
+        offendingAddon = taintSource
+    else
+        for i = #frames, 1, -1 do
+            local f = frames[i]
+            if f.addon and not f.isC and not f.isLib and not isBlizzardAddon(f.addon) then
+                if f.addon ~= reportedAddon then
+                    offendingAddon = f.addon
+                    break
+                end
             end
         end
-    end
 
-    if not offendingAddon then
-        offendingAddon = reportedAddon
+        if not offendingAddon then
+            for i = #frames, 1, -1 do
+                local f = frames[i]
+                if f.addon and not f.isC and not f.isLib then
+                    if f.addon ~= reportedAddon then
+                        offendingAddon = f.addon
+                        break
+                    end
+                end
+            end
+        end
+
+        if not offendingAddon then
+            offendingAddon = reportedAddon
+        end
     end
 
     return reportedAddon, offendingAddon, triggerLocation
 end
 
-local function buildRecommendation(rootCause, detail, errorType, protectedAction, offendingAddon, triggerLocation)
+local function buildRecommendation(rootCause, detail, errorType, protectedAction, offendingAddon, taintSource)
     local L = getL()
 
     if rootCause == ROOT_CAUSES.NIL_REFERENCE then
@@ -295,13 +333,19 @@ local function buildRecommendation(rootCause, detail, errorType, protectedAction
         return format(L["ERR_REC_SECURE"] or "%s is blocked in a restricted state. Move the call to a safe point outside combat or secure flows.", action)
     end
 
-    if rootCause == ROOT_CAUSES.TAINT then
-        local source = offendingAddon or "addon code"
-        return format(L["ERR_REC_TAINT"] or "Insecure code from %s touched a secure path. Avoid writing to Blizzard-owned frames or state from addon code.", source)
+    if rootCause == ROOT_CAUSES.SECRET_VALUE then
+        if taintSource then
+            return format(L["ERR_REC_SECRET_TAINTED"] or "%s tainted a value that Blizzard code later used as a secret. Update or disable %s, or report this to its author.", taintSource, taintSource)
+        end
+        return L["ERR_REC_SECRET"] or "A secret value was used in an unsupported way. Do not concatenate, compare, or coerce secret values directly."
     end
 
-    if rootCause == ROOT_CAUSES.SECRET_VALUE then
-        return L["ERR_REC_SECRET"] or "A secret value was used in an unsupported way. Do not concatenate, compare, or coerce secret values directly."
+    if rootCause == ROOT_CAUSES.TAINT then
+        if taintSource then
+            return format(L["ERR_REC_TAINT_SOURCE"] or "%s tainted a secure path. Update or disable %s, or report this to its author.", taintSource, taintSource)
+        end
+        local source = offendingAddon or "addon code"
+        return format(L["ERR_REC_TAINT"] or "Insecure code from %s touched a secure path. Avoid writing to Blizzard-owned frames or state from addon code.", source)
     end
 
     if rootCause == ROOT_CAUSES.STACK_OVERFLOW then
@@ -324,9 +368,10 @@ function ErrorAnalyzer:Analyze(errorData)
     local errorType, messageAddon, protectedAction = detectErrorType(message)
     local detail = extractDetail(message)
     local rootCause = detectRootCause(detail, errorType)
+    local taintSource = extractTaintSource(message) or extractTaintSource(detail)
     local frames = parseStackFrames(errorData.stack)
-    local reportedAddon, offendingAddon, triggerLocation = attributeAddons(frames, messageAddon)
-    local recommendation = buildRecommendation(rootCause, detail, errorType, protectedAction, offendingAddon, triggerLocation)
+    local reportedAddon, offendingAddon, triggerLocation = attributeAddons(frames, messageAddon, taintSource)
+    local recommendation = buildRecommendation(rootCause, detail, errorType, protectedAction, offendingAddon, taintSource)
 
     return {
         errorType = errorType,
@@ -335,6 +380,7 @@ function ErrorAnalyzer:Analyze(errorData)
         detail = detail,
         reportedAddon = reportedAddon,
         offendingAddon = offendingAddon,
+        taintSource = taintSource,
         protectedAction = protectedAction,
         triggerLocation = triggerLocation,
         recommendation = recommendation,

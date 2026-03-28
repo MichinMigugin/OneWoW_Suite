@@ -39,6 +39,9 @@ local function appendAnalysisLines(lines, analysis, L, prefix, suffix)
     if analysis.offendingAddon and analysis.offendingAddon ~= analysis.reportedAddon then
         tinsert(lines, (L["ERR_ANALYSIS_OFFENDING_ADDON"] or "OFFENDING ADDON:") .. " " .. analysis.offendingAddon)
     end
+    if analysis.taintSource then
+        tinsert(lines, (L["ERR_ANALYSIS_TAINT_SOURCE"] or "TAINT SOURCE:") .. " " .. analysis.taintSource)
+    end
     if analysis.triggerLocation then
         tinsert(lines, (L["ERR_ANALYSIS_TRIGGER"] or "TRIGGER:") .. " " .. analysis.triggerLocation)
     end
