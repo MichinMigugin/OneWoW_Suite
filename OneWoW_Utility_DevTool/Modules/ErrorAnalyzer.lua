@@ -307,56 +307,56 @@ local function buildRecommendation(rootCause, detail, errorType, protectedAction
     if rootCause == ROOT_CAUSES.NIL_REFERENCE then
         local fieldName = strmatch(detail or "", "%(global '([^']+)'%)") or strmatch(detail or "", "%(field '([^']+)'%)")
         if fieldName then
-            return format(L["ERR_REC_NIL_REF"] or "'%s' is nil when indexed. Ensure the object exists before this line runs.", fieldName)
+            return format(L["ERR_REC_NIL_REF"], fieldName)
         end
-        return L["ERR_REC_NIL_REF_GENERIC"] or "A nil value is being indexed. Check that the object exists before accessing its fields."
+        return L["ERR_REC_NIL_REF_GENERIC"]
     end
 
     if rootCause == ROOT_CAUSES.NIL_CALL then
         local methodName = strmatch(detail or "", "call method '([^']+)'") or strmatch(detail or "", "call global '([^']+)'")
         if methodName then
-            return format(L["ERR_REC_NIL_CALL"] or "'%s' is nil when called. Verify the function exists and its source file loaded.", methodName)
+            return format(L["ERR_REC_NIL_CALL"], methodName)
         end
-        return L["ERR_REC_NIL_CALL_GENERIC"] or "A nil value is being called as a function. Verify it is defined and its file loaded."
+        return L["ERR_REC_NIL_CALL_GENERIC"]
     end
 
     if rootCause == ROOT_CAUSES.TYPE_MISMATCH then
         local argNum, funcName = strmatch(detail or "", "bad argument #(%d+) to '([^']+)'")
         if argNum and funcName then
-            return format(L["ERR_REC_TYPE_MISMATCH"] or "Argument #%s to '%s' has the wrong type. Check inputs to this call.", argNum, funcName)
+            return format(L["ERR_REC_TYPE_MISMATCH"], argNum, funcName)
         end
-        return L["ERR_REC_TYPE_MISMATCH_GENERIC"] or "A value has an unexpected type. Check the inputs to this operation."
+        return L["ERR_REC_TYPE_MISMATCH_GENERIC"]
     end
 
     if rootCause == ROOT_CAUSES.SECURE_ACTION then
         local action = protectedAction or "the protected action"
-        return format(L["ERR_REC_SECURE"] or "%s is blocked in a restricted state. Move the call to a safe point outside combat or secure flows.", action)
+        return format(L["ERR_REC_SECURE"], action)
     end
 
     if rootCause == ROOT_CAUSES.SECRET_VALUE then
         if taintSource then
-            return format(L["ERR_REC_SECRET_TAINTED"] or "%s tainted a value that Blizzard code later used as a secret. Update or disable %s, or report this to its author.", taintSource, taintSource)
+            return format(L["ERR_REC_SECRET_TAINTED"], taintSource, taintSource)
         end
-        return L["ERR_REC_SECRET"] or "A secret value was used in an unsupported way. Do not concatenate, compare, or coerce secret values directly."
+        return L["ERR_REC_SECRET"]
     end
 
     if rootCause == ROOT_CAUSES.TAINT then
         if taintSource then
-            return format(L["ERR_REC_TAINT_SOURCE"] or "%s tainted a secure path. Update or disable %s, or report this to its author.", taintSource, taintSource)
+            return format(L["ERR_REC_TAINT_SOURCE"], taintSource, taintSource)
         end
         local source = offendingAddon or "addon code"
-        return format(L["ERR_REC_TAINT"] or "Insecure code from %s touched a secure path. Avoid writing to Blizzard-owned frames or state from addon code.", source)
+        return format(L["ERR_REC_TAINT"], source)
     end
 
     if rootCause == ROOT_CAUSES.STACK_OVERFLOW then
-        return L["ERR_REC_STACK_OVERFLOW"] or "Infinite recursion detected. Check for circular function calls in this code path."
+        return L["ERR_REC_STACK_OVERFLOW"]
     end
 
     if rootCause == ROOT_CAUSES.LUA_WARNING then
-        return L["ERR_REC_LUA_WARNING"] or "WoW flagged suspicious content. Review the warned file for unsupported attributes or syntax."
+        return L["ERR_REC_LUA_WARNING"]
     end
 
-    return L["ERR_REC_GENERIC"] or "Check the values feeding this line. An input is invalid when this code path runs."
+    return L["ERR_REC_GENERIC"]
 end
 
 function ErrorAnalyzer:Analyze(errorData)

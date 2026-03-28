@@ -141,6 +141,11 @@ Addon.Locales["enUS"] = {
     ["FONT_LABEL_WIDGET_SIZE"] = "Size preset:",
     ["FONT_WIDGET_SIZE_NONE"] = "None",
     ["FONT_WIDGET_SIZE_DISCLAIMER"] = "Approximate point sizes; not Blizzard's official mapping.",
+    ["FONT_WIDGET_SIZE_0"] = "Small (0)",
+    ["FONT_WIDGET_SIZE_1"] = "Medium (1)",
+    ["FONT_WIDGET_SIZE_2"] = "Large (2)",
+    ["FONT_WIDGET_SIZE_3"] = "Huge (3)",
+    ["FONT_WIDGET_SIZE_4"] = "Standard (4)",
     ["FONT_COPY_ROW_LABEL"] = "Copy:",
     ["FONT_BTN_COPY_NAME"] = "Name",
     ["FONT_BTN_COPY_SET_FONT"] = "SetFont",
@@ -361,6 +366,8 @@ Addon.Locales["enUS"] = {
     ["BTN_TOGGLE_CENTER"] = "Toggle Center Lines",
 
     -- Messages
+    ["COPY_DEFAULT_TITLE"] = "Copy",
+    ["MINIMAP_CTX_FALLBACK"] = "Open DevTools",
     ["MSG_PRESS_CTRL_C"] = "Press Ctrl+C to copy, then close the window.",
     ["MSG_UI_NOT_LOADED"] = "UI not loaded yet",
     ["ADDON_COMPARTMENT_HINT"] = "Click to toggle window",

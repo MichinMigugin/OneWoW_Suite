@@ -113,32 +113,32 @@ function Addon.UI:CreateMonitorTab(parent)
     local W_AP_S = 52
     local LIST_RIGHT_GUTTER = DUm.MONITOR_LIST_RIGHT_GUTTER or 14
 
-    local playBtn = OneWoW_GUI:CreateButton(tab, { text = L["MON_BTN_PLAY"] or "Play", width = 80, height = 22 })
+    local playBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["MON_BTN_PLAY"], height = 22, minWidth = 64 })
     playBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
 
-    local updateBtn = OneWoW_GUI:CreateButton(tab, { text = L["MON_BTN_UPDATE"] or "Update", width = 80, height = 22 })
+    local updateBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["MON_BTN_UPDATE"], height = 22, minWidth = 64 })
     updateBtn:SetPoint("LEFT", playBtn, "RIGHT", 5, 0)
 
-    local resetBtn = OneWoW_GUI:CreateButton(tab, { text = L["MON_BTN_RESET"] or "Reset", width = 80, height = 22 })
+    local resetBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["MON_BTN_RESET"], height = 22, minWidth = 64 })
     resetBtn:SetPoint("LEFT", updateBtn, "RIGHT", 5, 0)
 
-    local cpuCheck = OneWoW_GUI:CreateCheckbox(tab, { label = L["MON_LABEL_CPU_PROFILING"] or "CPU Profiling" })
+    local cpuCheck = OneWoW_GUI:CreateCheckbox(tab, { label = L["MON_LABEL_CPU_PROFILING"] })
     cpuCheck:SetPoint("LEFT", resetBtn, "RIGHT", 10, 0)
     cpuCheck:SetChecked(Monitor and Monitor:IsCPUProfilingEnabled() or false)
 
-    local showOnLoadCheck = OneWoW_GUI:CreateCheckbox(tab, { label = L["MON_LABEL_SHOW_ON_LOAD"] or "Show on Load" })
+    local showOnLoadCheck = OneWoW_GUI:CreateCheckbox(tab, { label = L["MON_LABEL_SHOW_ON_LOAD"] })
     showOnLoadCheck:SetPoint("LEFT", cpuCheck.label, "RIGHT", 15, 0)
     showOnLoadCheck:SetChecked(Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad or false)
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     filterLabel:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -14)
-    filterLabel:SetText(L["MON_LABEL_FILTER"] or "Filter:")
+    filterLabel:SetText(L["MON_LABEL_FILTER"])
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local filterBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 150,
         height = 22,
-        placeholderText = L["MON_LABEL_FILTER"] or "Filter...",
+        placeholderText = L["MON_LABEL_FILTER"],
         onTextChanged = function(text)
             if Monitor then
                 Monitor:SetFilter(text)
@@ -149,12 +149,12 @@ function Addon.UI:CreateMonitorTab(parent)
     filterBox:SetPoint("LEFT", filterLabel, "RIGHT", 5, 0)
 
     local function PresetDisplayName(id)
-        if id == MP.BALANCED then return L["MON_PRESET_BALANCED"] or "Balanced" end
-        if id == MP.MEMORY_DIG then return L["MON_PRESET_MEMORY_DIG"] or "Memory dig" end
-        if id == MP.CPU_SPIKES then return L["MON_PRESET_CPU_SPIKES"] or "CPU spikes" end
-        if id == MP.MINIMAL then return L["MON_PRESET_MINIMAL"] or "Minimal" end
-        if id == MP.ENGINE_PROFILER then return L["MON_PRESET_ENGINE_PROFILER"] or "Engine profiler" end
-        return L["MON_PRESET_BALANCED"] or "Balanced"
+        if id == MP.BALANCED then return L["MON_PRESET_BALANCED"] end
+        if id == MP.MEMORY_DIG then return L["MON_PRESET_MEMORY_DIG"] end
+        if id == MP.CPU_SPIKES then return L["MON_PRESET_CPU_SPIKES"] end
+        if id == MP.MINIMAL then return L["MON_PRESET_MINIMAL"] end
+        if id == MP.ENGINE_PROFILER then return L["MON_PRESET_ENGINE_PROFILER"] end
+        return L["MON_PRESET_BALANCED"]
     end
 
     local viewBtn = OneWoW_GUI:CreateFitTextButton(tab, {
@@ -167,7 +167,7 @@ function Addon.UI:CreateMonitorTab(parent)
     local function UpdateViewButtonLabel()
         if not Monitor then return end
         local id = Monitor:GetViewPreset()
-        local fmt = L["MON_VIEW_BUTTON"] or "View: %s"
+        local fmt = L["MON_VIEW_BUTTON"]
         viewBtn:SetFitText((fmt):gsub("%%s", PresetDisplayName(id)))
     end
     UpdateViewButtonLabel()
@@ -175,32 +175,32 @@ function Addon.UI:CreateMonitorTab(parent)
     viewBtn:SetScript("OnClick", function()
         if not Monitor then return end
         MenuUtil.CreateContextMenu(viewBtn, function(_, rootDescription)
-            rootDescription:CreateTitle(L["MON_VIEW_MENU_TITLE"] or "Monitor view")
-            rootDescription:CreateButton(L["MON_PRESET_BALANCED"] or "Balanced", function()
+            rootDescription:CreateTitle(L["MON_VIEW_MENU_TITLE"])
+            rootDescription:CreateButton(L["MON_PRESET_BALANCED"], function()
                 Monitor:SetViewPreset(MP.BALANCED or "balanced")
                 UpdateViewButtonLabel()
                 tab:ApplyMonitorColumnLayout()
                 Monitor:RefreshDisplayedList()
             end)
-            rootDescription:CreateButton(L["MON_PRESET_MEMORY_DIG"] or "Memory dig", function()
+            rootDescription:CreateButton(L["MON_PRESET_MEMORY_DIG"], function()
                 Monitor:SetViewPreset(MP.MEMORY_DIG or "memory_dig")
                 UpdateViewButtonLabel()
                 tab:ApplyMonitorColumnLayout()
                 Monitor:RefreshDisplayedList()
             end)
-            rootDescription:CreateButton(L["MON_PRESET_CPU_SPIKES"] or "CPU spikes", function()
+            rootDescription:CreateButton(L["MON_PRESET_CPU_SPIKES"], function()
                 Monitor:SetViewPreset(MP.CPU_SPIKES or "cpu_spikes")
                 UpdateViewButtonLabel()
                 tab:ApplyMonitorColumnLayout()
                 Monitor:RefreshDisplayedList()
             end)
-            rootDescription:CreateButton(L["MON_PRESET_MINIMAL"] or "Minimal", function()
+            rootDescription:CreateButton(L["MON_PRESET_MINIMAL"], function()
                 Monitor:SetViewPreset(MP.MINIMAL or "minimal")
                 UpdateViewButtonLabel()
                 tab:ApplyMonitorColumnLayout()
                 Monitor:RefreshDisplayedList()
             end)
-            rootDescription:CreateButton(L["MON_PRESET_ENGINE_PROFILER"] or "Engine profiler", function()
+            rootDescription:CreateButton(L["MON_PRESET_ENGINE_PROFILER"], function()
                 Monitor:SetViewPreset(MP.ENGINE_PROFILER or "engine_profiler")
                 UpdateViewButtonLabel()
                 tab:ApplyMonitorColumnLayout()
@@ -235,28 +235,28 @@ function Addon.UI:CreateMonitorTab(parent)
         return h
     end
 
-    local nameHeader = MakeHeader(headerFrame, L["MON_HEADER_NAME"] or "Addon", MS.NAME, "MON_TT_NAME_TITLE", "MON_TT_NAME_BODY", "LEFT")
+    local nameHeader = MakeHeader(headerFrame, L["MON_HEADER_NAME"], MS.NAME, "MON_TT_NAME_TITLE", "MON_TT_NAME_BODY", "LEFT")
 
-    local memHeader = MakeHeader(headerFrame, L["MON_HEADER_MEMORY"] or "Mem (k)", MS.MEMORY, "MON_TT_MEMORY_TITLE", "MON_TT_MEMORY_BODY", "RIGHT")
-    local memDeltaHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_DELTA"] or "Mem d", MS.MEM_DELTA, "MON_TT_MEM_DELTA_TITLE", "MON_TT_MEM_DELTA_BODY", "RIGHT")
-    local memPeakHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_PEAK"] or "Peak", MS.MEM_PEAK, "MON_TT_MEM_PEAK_TITLE", "MON_TT_MEM_PEAK_BODY", "RIGHT")
-    local memPctHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_PCT"] or "Mem %", MS.MEM_PCT, "MON_TT_MEM_PCT_TITLE", "MON_TT_MEM_PCT_BODY", "RIGHT")
-    local cpuSessionHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_SESSION"] or "CPU/s s", MS.CPU_SESSION, "MON_TT_CPU_SESSION_TITLE", "MON_TT_CPU_SESSION_BODY", "RIGHT")
-    local cpuRecentHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_RECENT"] or "CPU/s r", MS.CPU_RECENT, "MON_TT_CPU_RECENT_TITLE", "MON_TT_CPU_RECENT_BODY", "RIGHT")
-    local cpuMsHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_MS"] or "CPU ms", MS.CPU_MS, "MON_TT_CPU_MS_TITLE", "MON_TT_CPU_MS_BODY", "RIGHT")
-    local cpuPctHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_PCT"] or "CPU %", MS.CPU_PCT, "MON_TT_CPU_PCT_TITLE", "MON_TT_CPU_PCT_BODY", "RIGHT")
+    local memHeader = MakeHeader(headerFrame, L["MON_HEADER_MEMORY"], MS.MEMORY, "MON_TT_MEMORY_TITLE", "MON_TT_MEMORY_BODY", "RIGHT")
+    local memDeltaHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_DELTA"], MS.MEM_DELTA, "MON_TT_MEM_DELTA_TITLE", "MON_TT_MEM_DELTA_BODY", "RIGHT")
+    local memPeakHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_PEAK"], MS.MEM_PEAK, "MON_TT_MEM_PEAK_TITLE", "MON_TT_MEM_PEAK_BODY", "RIGHT")
+    local memPctHeader = MakeHeader(headerFrame, L["MON_HEADER_MEM_PCT"], MS.MEM_PCT, "MON_TT_MEM_PCT_TITLE", "MON_TT_MEM_PCT_BODY", "RIGHT")
+    local cpuSessionHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_SESSION"], MS.CPU_SESSION, "MON_TT_CPU_SESSION_TITLE", "MON_TT_CPU_SESSION_BODY", "RIGHT")
+    local cpuRecentHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_RECENT"], MS.CPU_RECENT, "MON_TT_CPU_RECENT_TITLE", "MON_TT_CPU_RECENT_BODY", "RIGHT")
+    local cpuMsHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_MS"], MS.CPU_MS, "MON_TT_CPU_MS_TITLE", "MON_TT_CPU_MS_BODY", "RIGHT")
+    local cpuPctHeader = MakeHeader(headerFrame, L["MON_HEADER_CPU_PCT"], MS.CPU_PCT, "MON_TT_CPU_PCT_TITLE", "MON_TT_CPU_PCT_BODY", "RIGHT")
 
-    local apSessionHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_SESSION"] or "AP sess", MS.AP_SESSION, "MON_TT_AP_SESSION_TITLE", "MON_TT_AP_SESSION_BODY", "RIGHT")
-    local apRecentHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_RECENT"] or "AP 60t", MS.AP_RECENT, "MON_TT_AP_RECENT_TITLE", "MON_TT_AP_RECENT_BODY", "RIGHT")
-    local apPeakHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_PEAK"] or "AP peak", MS.AP_PEAK, "MON_TT_AP_PEAK_TITLE", "MON_TT_AP_PEAK_BODY", "RIGHT")
-    local apOver1Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER1"] or ">1", MS.AP_OVER1, "MON_TT_AP_OVER1_TITLE", "MON_TT_AP_OVER1_BODY", "RIGHT")
-    local apOver5Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER5"] or ">5", MS.AP_OVER5, "MON_TT_AP_OVER5_TITLE", "MON_TT_AP_OVER5_BODY", "RIGHT")
-    local apOver10Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER10"] or ">10", MS.AP_OVER10, "MON_TT_AP_OVER10_TITLE", "MON_TT_AP_OVER10_BODY", "RIGHT")
-    local apOver50Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER50"] or ">50", MS.AP_OVER50, "MON_TT_AP_OVER50_TITLE", "MON_TT_AP_OVER50_BODY", "RIGHT")
-    local apOver100Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER100"] or ">100", MS.AP_OVER100, "MON_TT_AP_OVER100_TITLE", "MON_TT_AP_OVER100_BODY", "RIGHT")
-    local apOver500Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER500"] or ">500", MS.AP_OVER500, "MON_TT_AP_OVER500_TITLE", "MON_TT_AP_OVER500_BODY", "RIGHT")
-    local apOver1000Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER1000"] or ">1k", MS.AP_OVER1000, "MON_TT_AP_OVER1000_TITLE", "MON_TT_AP_OVER1000_BODY", "RIGHT")
-    local apSpikeHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_SPIKE"] or "Spk", MS.AP_SPIKE, "MON_TT_AP_SPIKE_TITLE", "MON_TT_AP_SPIKE_BODY", "RIGHT")
+    local apSessionHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_SESSION"], MS.AP_SESSION, "MON_TT_AP_SESSION_TITLE", "MON_TT_AP_SESSION_BODY", "RIGHT")
+    local apRecentHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_RECENT"], MS.AP_RECENT, "MON_TT_AP_RECENT_TITLE", "MON_TT_AP_RECENT_BODY", "RIGHT")
+    local apPeakHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_PEAK"], MS.AP_PEAK, "MON_TT_AP_PEAK_TITLE", "MON_TT_AP_PEAK_BODY", "RIGHT")
+    local apOver1Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER1"], MS.AP_OVER1, "MON_TT_AP_OVER1_TITLE", "MON_TT_AP_OVER1_BODY", "RIGHT")
+    local apOver5Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER5"], MS.AP_OVER5, "MON_TT_AP_OVER5_TITLE", "MON_TT_AP_OVER5_BODY", "RIGHT")
+    local apOver10Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER10"], MS.AP_OVER10, "MON_TT_AP_OVER10_TITLE", "MON_TT_AP_OVER10_BODY", "RIGHT")
+    local apOver50Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER50"], MS.AP_OVER50, "MON_TT_AP_OVER50_TITLE", "MON_TT_AP_OVER50_BODY", "RIGHT")
+    local apOver100Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER100"], MS.AP_OVER100, "MON_TT_AP_OVER100_TITLE", "MON_TT_AP_OVER100_BODY", "RIGHT")
+    local apOver500Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER500"], MS.AP_OVER500, "MON_TT_AP_OVER500_TITLE", "MON_TT_AP_OVER500_BODY", "RIGHT")
+    local apOver1000Header = MakeHeader(headerFrame, L["MON_HEADER_AP_OVER1000"], MS.AP_OVER1000, "MON_TT_AP_OVER1000_TITLE", "MON_TT_AP_OVER1000_BODY", "RIGHT")
+    local apSpikeHeader = MakeHeader(headerFrame, L["MON_HEADER_AP_SPIKE"], MS.AP_SPIKE, "MON_TT_AP_SPIKE_TITLE", "MON_TT_AP_SPIKE_BODY", "RIGHT")
 
     local allHeaders = {
         memHeader, memDeltaHeader, memPeakHeader, memPctHeader,
@@ -484,13 +484,13 @@ function Addon.UI:CreateMonitorTab(parent)
             if button == "RightButton" and self.addonInfo and Monitor then
                 local info = self.addonInfo
                 MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
-                    local pinTitle = (L["MON_CTX_PIN_TITLE"] or "Pin: {title}"):gsub("{title}", tostring(info.title or ""))
+                    local pinTitle = (L["MON_CTX_PIN_TITLE"]):gsub("{title}", tostring(info.title or ""))
                     rootDescription:CreateTitle(pinTitle)
-                    rootDescription:CreateButton(L["MON_CTX_MONITOR_THIS"] or "Monitor This Addon", function()
+                    rootDescription:CreateButton(L["MON_CTX_MONITOR_THIS"], function()
                         Monitor:CreatePinnedPopup(info.name, info.title)
                         if Monitor:IsMonitoring() then
                             Monitor:ToggleMonitoring()
-                            playBtn.text:SetText(L["MON_BTN_PLAY"] or "Play")
+                            playBtn.text:SetText(L["MON_BTN_PLAY"])
                         end
                     end)
                 end)
@@ -623,7 +623,7 @@ function Addon.UI:CreateMonitorTab(parent)
 
     tab.noDataText = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     tab.noDataText:SetPoint("CENTER", listPanel, "CENTER", 0, 0)
-    tab.noDataText:SetText(L["MON_MSG_NO_DATA"] or "Click 'Update' or 'Play' to begin monitoring")
+    tab.noDataText:SetText(L["MON_MSG_NO_DATA"])
     tab.noDataText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     function tab:RefreshList()
@@ -697,24 +697,24 @@ function Addon.UI:CreateMonitorTab(parent)
 
         local fps = GetFramerate()
         local luaKb = t.luaHeapKb or 0
-        tab.totalsSegAddons.fs:SetText((L["MON_TOTALS_ADDONS"] or "Addons:") .. " " .. tostring(t.count))
-        tab.totalsSegMem.fs:SetText((L["MON_TOTALS_MEMORY"] or "Mem:") .. " " .. Monitor:FormatMemory(t.memory) .. " " .. (L["MON_UNIT_K"] or "k"))
-        tab.totalsSegFps.fs:SetText((L["MON_TOTALS_FPS"] or "FPS:") .. " " .. format("%.1f", fps))
-        tab.totalsSegLua.fs:SetText((L["MON_TOTALS_LUA_HEAP"] or "Lua:") .. " " .. Monitor:FormatMemory(luaKb) .. " " .. (L["MON_UNIT_K"] or "k"))
+        tab.totalsSegAddons.fs:SetText((L["MON_TOTALS_ADDONS"]) .. " " .. tostring(t.count))
+        tab.totalsSegMem.fs:SetText((L["MON_TOTALS_MEMORY"]) .. " " .. Monitor:FormatMemory(t.memory) .. " " .. (L["MON_UNIT_K"]))
+        tab.totalsSegFps.fs:SetText((L["MON_TOTALS_FPS"]) .. " " .. format("%.1f", fps))
+        tab.totalsSegLua.fs:SetText((L["MON_TOTALS_LUA_HEAP"]) .. " " .. Monitor:FormatMemory(luaKb) .. " " .. (L["MON_UNIT_K"]))
         tab.totalsSegAddons:Show()
         tab.totalsSegMem:Show()
         tab.totalsSegFps:Show()
         tab.totalsSegLua:Show()
         local vis = { tab.totalsSegAddons, tab.totalsSegMem, tab.totalsSegFps, tab.totalsSegLua }
         if hasCPU then
-            tab.totalsSegCpu.fs:SetText((L["MON_TOTALS_CPU"] or "CPU:") .. " " .. Monitor:FormatCPU(cpuTotalPerSec) .. " " .. (L["MON_TOTALS_CPU_UNIT"] or "ms/s"))
+            tab.totalsSegCpu.fs:SetText((L["MON_TOTALS_CPU"]) .. " " .. Monitor:FormatCPU(cpuTotalPerSec) .. " " .. (L["MON_TOTALS_CPU_UNIT"]))
             tab.totalsSegCpu:Show()
             vis[#vis + 1] = tab.totalsSegCpu
         else
             tab.totalsSegCpu:Hide()
         end
         if preset == MP.MEMORY_DIG then
-            tab.totalsSegDmem.fs:SetText((L["MON_TOTALS_MEM_DELTA_SUM"] or "dMem:") .. " " .. Monitor:FormatMemoryDelta(t.sumMemDelta or 0) .. " " .. (L["MON_UNIT_K"] or "k"))
+            tab.totalsSegDmem.fs:SetText((L["MON_TOTALS_MEM_DELTA_SUM"]) .. " " .. Monitor:FormatMemoryDelta(t.sumMemDelta or 0) .. " " .. (L["MON_UNIT_K"]))
             tab.totalsSegDmem:Show()
             vis[#vis + 1] = tab.totalsSegDmem
         else
@@ -734,10 +734,10 @@ function Addon.UI:CreateMonitorTab(parent)
         if not Monitor then return end
         Monitor:ToggleMonitoring()
         if Monitor:IsMonitoring() then
-            playBtn.text:SetText(L["MON_BTN_PAUSE"] or "Pause")
+            playBtn.text:SetText(L["MON_BTN_PAUSE"])
             DoUpdate()
         else
-            playBtn.text:SetText(L["MON_BTN_PLAY"] or "Play")
+            playBtn.text:SetText(L["MON_BTN_PLAY"])
         end
     end)
 
@@ -749,14 +749,14 @@ function Addon.UI:CreateMonitorTab(parent)
         if Monitor then
             Monitor:Reset()
             DoUpdate()
-            Addon:Print(L["MON_MSG_RESET"] or "Memory collected and CPU usage reset")
+            Addon:Print(L["MON_MSG_RESET"])
         end
     end)
 
     cpuCheck:SetScript("OnClick", function()
         if Monitor then
             StaticPopupDialogs["ONEWOW_DEVTOOL_CPU_RELOAD"] = {
-                text = L["MON_CPU_RELOAD_CONFIRM"] or "Changing CPU profiling requires a UI reload. Reload now?",
+                text = L["MON_CPU_RELOAD_CONFIRM"],
                 button1 = YES,
                 button2 = NO,
                 OnAccept = function()

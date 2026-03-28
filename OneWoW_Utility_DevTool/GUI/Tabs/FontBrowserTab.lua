@@ -94,10 +94,10 @@ local function refreshWidgetSizeDropdownLabel(tab)
     local v = tab.widgetPresetActiveValue or "none"
     dd._activeValue = v
     if v == "none" then
-        dd._text:SetText(L["FONT_WIDGET_SIZE_NONE"] or "None")
+        dd._text:SetText(L["FONT_WIDGET_SIZE_NONE"])
     else
         local n = tonumber(v)
-        local label = (FB and FB.WIDGET_SIZE_LABELS and n ~= nil) and FB.WIDGET_SIZE_LABELS[n] or tostring(v)
+        local label = (n ~= nil) and L["FONT_WIDGET_SIZE_" .. tostring(n)] or tostring(v)
         dd._text:SetText(label)
     end
 end
@@ -224,7 +224,7 @@ end
 
 function Addon.UI.FontTab_UpdatePreview(tab)
     if not tab.selectedFontName then
-        if tab.previewFS then tab.previewFS:SetText(L["FONT_MSG_SELECT_FONT"] or "Select a font to preview") end
+        if tab.previewFS then tab.previewFS:SetText(L["FONT_MSG_SELECT_FONT"]) end
         if tab.templateFS then tab.templateFS:Hide() end
         if tab.templateLabel then tab.templateLabel:Hide() end
         if tab.previewLabel then tab.previewLabel:Hide() end
@@ -278,7 +278,7 @@ function Addon.UI.FontTab_UpdateDetails(tab)
     local name = tab.selectedFontName
 
     if not name then
-        tab.infoText:SetText(L["FONT_MSG_SELECT_FONT"] or "Select a font to preview")
+        tab.infoText:SetText(L["FONT_MSG_SELECT_FONT"])
         local h = tab.infoText:GetStringHeight()
         tab.infoScroll:GetScrollChild():SetHeight(max(h + 16, tab.infoScroll:GetHeight()))
         return
@@ -287,46 +287,46 @@ function Addon.UI.FontTab_UpdateDetails(tab)
     local info = FB:GetFontInfo(name)
 
     -- Summary section
-    tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_SUMMARY"] or "Summary") .. "|r")
-    tinsert(lines, (L["FONT_LABEL_FONT_NAME"] or "Font:") .. " " .. name)
+    tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_SUMMARY"]) .. "|r")
+    tinsert(lines, (L["FONT_LABEL_FONT_NAME"]) .. " " .. name)
     if info then
-        tinsert(lines, (L["LABEL_FILE"] or "File:") .. " " .. (info.path or "?"))
-        tinsert(lines, (L["FONT_LABEL_FONT_HEIGHT"] or "Height:") .. " " .. tostring(info.height or "?"))
-        tinsert(lines, (L["FONT_LABEL_FONT_FLAGS"] or "Flags:") .. " " .. (info.flags ~= "" and info.flags or (L["FONT_LABEL_NONE"] or "None")))
+        tinsert(lines, (L["LABEL_FILE"]) .. " " .. (info.path or "?"))
+        tinsert(lines, (L["FONT_LABEL_FONT_HEIGHT"]) .. " " .. tostring(info.height or "?"))
+        tinsert(lines, (L["FONT_LABEL_FONT_FLAGS"]) .. " " .. (info.flags ~= "" and info.flags or (L["FONT_LABEL_NONE"])))
     end
 
     -- Inheritance chain
     local chain = FB:GetInheritanceChain(name)
     if #chain > 0 then
         tinsert(lines, "")
-        tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_INHERITANCE"] or "Inheritance") .. "|r")
+        tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_INHERITANCE"]) .. "|r")
         tinsert(lines, name .. " -> " .. table.concat(chain, " -> "))
     end
 
     -- Colors & Shadow
     if info then
         tinsert(lines, "")
-        tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_COLORS"] or "Colors & Shadow") .. "|r")
+        tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_COLORS"]) .. "|r")
         if info.textColor then
-            tinsert(lines, (L["FONT_LABEL_TEXT_COLOR"] or "Text Color:") .. " " .. FB:FormatRGBA(info.textColor))
+            tinsert(lines, (L["FONT_LABEL_TEXT_COLOR"]) .. " " .. FB:FormatRGBA(info.textColor))
         end
         if info.shadowColor then
-            tinsert(lines, (L["FONT_LABEL_SHADOW_COLOR"] or "Shadow Color:") .. " " .. FB:FormatRGBA(info.shadowColor))
+            tinsert(lines, (L["FONT_LABEL_SHADOW_COLOR"]) .. " " .. FB:FormatRGBA(info.shadowColor))
         end
         if info.shadowOffset then
-            tinsert(lines, (L["FONT_LABEL_SHADOW_OFFSET"] or "Shadow Offset:") .. " " .. format("%.1f, %.1f", info.shadowOffset.x or 0, info.shadowOffset.y or 0))
+            tinsert(lines, (L["FONT_LABEL_SHADOW_OFFSET"]) .. " " .. format("%.1f, %.1f", info.shadowOffset.x or 0, info.shadowOffset.y or 0))
         end
 
         -- Layout
         tinsert(lines, "")
-        tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_LAYOUT"] or "Layout") .. "|r")
-        tinsert(lines, (L["FONT_LABEL_JUSTIFY_H"] or "Justify H:") .. " " .. (info.justifyH or "?"))
-        tinsert(lines, (L["FONT_LABEL_JUSTIFY_V"] or "Justify V:") .. " " .. (info.justifyV or "?"))
+        tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_LAYOUT"]) .. "|r")
+        tinsert(lines, (L["FONT_LABEL_JUSTIFY_H"]) .. " " .. (info.justifyH or "?"))
+        tinsert(lines, (L["FONT_LABEL_JUSTIFY_V"]) .. " " .. (info.justifyV or "?"))
         if info.spacing and info.spacing ~= 0 then
-            tinsert(lines, (L["FONT_LABEL_SPACING"] or "Spacing:") .. " " .. tostring(info.spacing))
+            tinsert(lines, (L["FONT_LABEL_SPACING"]) .. " " .. tostring(info.spacing))
         end
         if info.alpha and info.alpha < 1 then
-            tinsert(lines, (L["FONT_LABEL_ALPHA"] or "Alpha:") .. " " .. format("%.2f", info.alpha))
+            tinsert(lines, (L["FONT_LABEL_ALPHA"]) .. " " .. format("%.2f", info.alpha))
         end
     end
 
@@ -336,7 +336,7 @@ function Addon.UI.FontTab_UpdateDetails(tab)
     for _ in pairs(ov) do hasOv = true; break end
     if hasOv then
         tinsert(lines, "")
-        tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_OVERRIDES"] or "Active Overrides") .. "|r")
+        tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_OVERRIDES"]) .. "|r")
         if ov.height then tinsert(lines, "  height = " .. tostring(ov.height)) end
         if ov.flags then tinsert(lines, "  flags = " .. ov.flags) end
         if ov.textColor then tinsert(lines, "  textColor = " .. FB:FormatRGBA(ov.textColor)) end
@@ -351,7 +351,7 @@ function Addon.UI.FontTab_UpdateDetails(tab)
     -- Bookmark status
     if FB:IsBookmarked(name) then
         tinsert(lines, "")
-        tinsert(lines, "|cff00ff00" .. (L["LABEL_BOOKMARKED"] or "[Bookmarked]") .. "|r")
+        tinsert(lines, "|cff00ff00" .. (L["LABEL_BOOKMARKED"]) .. "|r")
     end
 
     tab.infoText:SetText(table.concat(lines, "\n"))
@@ -381,55 +381,24 @@ function Addon.UI.FontTab_UpdateCopyButtons(tab)
     setCopyButtonEnabled(tab.copyCreateFontBtn, hasSel)
 end
 
-local function paintBarButton(btn)
-    if not btn or not btn.text then return end
-    local active = btn._barActive
-    local over = btn:IsMouseOver()
-    if active then
-        if over then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-        end
-        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    else
-        if over then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-    end
-end
-
-local function bindBarButtonMouse(btn)
-    btn:SetScript("OnEnter", function(self) paintBarButton(self) end)
-    btn:SetScript("OnLeave", function(self) paintBarButton(self) end)
-    btn:SetScript("OnMouseDown", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED")) end)
-    btn:SetScript("OnMouseUp", function(self) paintBarButton(self) end)
-end
+local FONT_BAR_ACTIVE_KEY = "_barActive"
 
 local function refreshToolbarState(tab)
     if tab.favsBtn then
         tab.favsBtn._barActive = FB.favoritesOnly
-        paintBarButton(tab.favsBtn)
+        Addon.UI:PaintToolbarBarButton(tab.favsBtn, FONT_BAR_ACTIVE_KEY)
     end
     if tab.bookmarkBtn then
         local bookmarked = tab.selectedFontName and FB:IsBookmarked(tab.selectedFontName)
         tab.bookmarkBtn._barActive = bookmarked and true or false
         if tab.bookmarkBtn.SetFitText then
-            tab.bookmarkBtn:SetFitText(bookmarked and (L["BTN_REMOVE_BOOKMARK"] or "Remove bookmark") or (L["BTN_BOOKMARK"] or "Bookmark"))
+            tab.bookmarkBtn:SetFitText(bookmarked and (L["BTN_REMOVE_BOOKMARK"]) or (L["BTN_BOOKMARK"]))
         end
-        paintBarButton(tab.bookmarkBtn)
+        Addon.UI:PaintToolbarBarButton(tab.bookmarkBtn, FONT_BAR_ACTIVE_KEY)
     end
     if tab.compareBtn then
         tab.compareBtn._barActive = tab.compareMode or false
-        paintBarButton(tab.compareBtn)
+        Addon.UI:PaintToolbarBarButton(tab.compareBtn, FONT_BAR_ACTIVE_KEY)
     end
 end
 
@@ -443,15 +412,15 @@ function Addon.UI.FontTab_UpdateWorkspaceFromFont(tab)
     local flags = parseFlagsString(info.flags)
     if tab.outlineBtn then
         tab.outlineBtn._barActive = flags.outline
-        paintBarButton(tab.outlineBtn)
+        Addon.UI:PaintToolbarBarButton(tab.outlineBtn, FONT_BAR_ACTIVE_KEY)
     end
     if tab.thickBtn then
         tab.thickBtn._barActive = flags.thickOutline
-        paintBarButton(tab.thickBtn)
+        Addon.UI:PaintToolbarBarButton(tab.thickBtn, FONT_BAR_ACTIVE_KEY)
     end
     if tab.monoBtn then
         tab.monoBtn._barActive = flags.monochrome
-        paintBarButton(tab.monoBtn)
+        Addon.UI:PaintToolbarBarButton(tab.monoBtn, FONT_BAR_ACTIVE_KEY)
     end
 
     if info.textColor and tab.textREdit then
@@ -611,7 +580,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 160,
         height = 22,
-        placeholderText = L["FONT_SEARCH_PLACEHOLDER"] or "Search fonts...",
+        placeholderText = L["FONT_SEARCH_PLACEHOLDER"],
         onTextChanged = function()
             scheduleFilterRefresh(tab)
         end,
@@ -620,12 +589,12 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.searchBox = searchBox
 
     local favsBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_FAVORITES"] or "Favorites",
+        text = L["BTN_FAVORITES"],
         height = 22,
         minWidth = 64,
     })
     favsBtn:SetPoint("LEFT", searchBox, "RIGHT", 6, 0)
-    bindBarButtonMouse(favsBtn)
+    Addon.UI:BindToolbarBarButtonMouse(favsBtn, FONT_BAR_ACTIVE_KEY)
     favsBtn:SetScript("OnClick", function()
         FB:SetFavoritesOnly(not FB.favoritesOnly)
         tab.selectedFontName = nil
@@ -643,20 +612,20 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.favsBtn = favsBtn
 
     local bookmarkBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_BOOKMARK"] or "Bookmark",
+        text = L["BTN_BOOKMARK"],
         height = 22,
         minWidth = 64,
     })
     bookmarkBtn:SetPoint("LEFT", favsBtn, "RIGHT", 4, 0)
-    bindBarButtonMouse(bookmarkBtn)
+    Addon.UI:BindToolbarBarButtonMouse(bookmarkBtn, FONT_BAR_ACTIVE_KEY)
     bookmarkBtn:SetScript("OnClick", function()
         if not tab.selectedFontName then return end
         local added = FB:ToggleBookmark(tab.selectedFontName)
         local name = tab.selectedFontName
         if added then
-            Addon:Print((L["MSG_BOOKMARKED"] or "Bookmarked: {name}"):gsub("{name}", name))
+            Addon:Print((L["MSG_BOOKMARKED"]):gsub("{name}", name))
         else
-            Addon:Print((L["MSG_REMOVED_BOOKMARK"] or "Removed: {name}"):gsub("{name}", name))
+            Addon:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", name))
         end
         if FB.favoritesOnly then
             FB:RebuildFiltered()
@@ -677,12 +646,12 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.bookmarkBtn = bookmarkBtn
 
     local compareBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["FONT_BTN_COMPARE"] or "Compare",
+        text = L["FONT_BTN_COMPARE"],
         height = 22,
         minWidth = 64,
     })
     compareBtn:SetPoint("LEFT", bookmarkBtn, "RIGHT", 4, 0)
-    bindBarButtonMouse(compareBtn)
+    Addon.UI:BindToolbarBarButtonMouse(compareBtn, FONT_BAR_ACTIVE_KEY)
     compareBtn:SetScript("OnClick", function()
         tab.compareMode = not tab.compareMode
         Addon.UI.FontTab_LayoutPreview(tab)
@@ -833,7 +802,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     end)
     previewBgSwatch:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["FONT_PREVIEW_BG_SWATCH"] or "Preview background (click to change, right-click to reset)", 1, 1, 1, nil, true)
+        GameTooltip:SetText(L["FONT_PREVIEW_BG_SWATCH"], 1, 1, 1, nil, true)
         GameTooltip:Show()
     end)
     previewBgSwatch:SetScript("OnLeave", function() GameTooltip_Hide() end)
@@ -842,7 +811,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     -- Template preview (compare mode left half)
     tab.templateLabel = previewClip:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     tab.templateLabel:SetPoint("TOPLEFT", previewClip, "TOPLEFT", 4, -2)
-    tab.templateLabel:SetText(L["FONT_COMPARE_TEMPLATE"] or "Template")
+    tab.templateLabel:SetText(L["FONT_COMPARE_TEMPLATE"])
     tab.templateLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     tab.templateLabel:Hide()
 
@@ -851,14 +820,14 @@ function Addon.UI:CreateFontBrowserTab(parent)
 
     -- Preview label (compare mode right half)
     tab.previewLabel = previewClip:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    tab.previewLabel:SetText(L["FONT_COMPARE_PREVIEW"] or "Preview")
+    tab.previewLabel:SetText(L["FONT_COMPARE_PREVIEW"])
     tab.previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     tab.previewLabel:Hide()
 
     -- Main preview font string
     tab.previewFS = previewClip:CreateFontString(nil, "ARTWORK")
     tab.previewFS:SetFontObject(GameFontNormal)
-    tab.previewFS:SetText(L["FONT_MSG_SELECT_FONT"] or "Select a font to preview")
+    tab.previewFS:SetText(L["FONT_MSG_SELECT_FONT"])
     tab.previewFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     tab.previewFS:SetWordWrap(true)
 
@@ -916,10 +885,10 @@ function Addon.UI:CreateFontBrowserTab(parent)
 
     -- Sample text row: presets anchored to wsFrame right so edit uses remaining width
     local sampleEdit
-    local sampleLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SAMPLE_TEXT"] or "Sample:", 0, WS_LABEL_COL)
+    local sampleLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SAMPLE_TEXT"], 0, WS_LABEL_COL)
 
     local presetNum = OneWoW_GUI:CreateFitTextButton(wsFrame, {
-        text = L["FONT_SAMPLE_NUMBERS"] or "0-9",
+        text = L["FONT_SAMPLE_NUMBERS"],
         height = 20,
         minWidth = 36,
     })
@@ -931,7 +900,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     end)
 
     local presetLong = OneWoW_GUI:CreateFitTextButton(wsFrame, {
-        text = L["FONT_SAMPLE_LONG"] or "Pangram",
+        text = L["FONT_SAMPLE_LONG"],
         height = 20,
         minWidth = 48,
     })
@@ -944,7 +913,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     end)
 
     local presetLatin = OneWoW_GUI:CreateFitTextButton(wsFrame, {
-        text = L["FONT_SAMPLE_LATIN"] or "Abc 123",
+        text = L["FONT_SAMPLE_LATIN"],
         height = 20,
         minWidth = 48,
     })
@@ -981,14 +950,14 @@ function Addon.UI:CreateFontBrowserTab(parent)
     end)
 
     -- Spacing + Alpha row
-    local spacingAlphaLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SPACING"] or "Spacing:", ySpacingAlpha, WS_LABEL_COL)
+    local spacingAlphaLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SPACING"], ySpacingAlpha, WS_LABEL_COL)
     local spacingEdit = createMiniEdit(wsFrame, 32)
     spacingEdit:SetPoint("LEFT", spacingAlphaLabel, "RIGHT", WS_LABEL_GAP, 0)
     spacingEdit:SetText("0")
     spacingEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.spacingEdit = spacingEdit
 
-    local alphaLabel = createMiniLabel(wsFrame, L["FONT_LABEL_ALPHA"] or "Alpha:")
+    local alphaLabel = createMiniLabel(wsFrame, L["FONT_LABEL_ALPHA"])
     alphaLabel:SetPoint("LEFT", spacingEdit, "RIGHT", 12, 0)
     local alphaEdit = createMiniEdit(wsFrame, 36)
     alphaEdit:SetPoint("LEFT", alphaLabel, "RIGHT", 4, 0)
@@ -997,7 +966,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.alphaEdit = alphaEdit
 
     -- Size + Flags row
-    local sizeLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SIZE"] or "Size:", ySize, WS_LABEL_COL)
+    local sizeLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SIZE"], ySize, WS_LABEL_COL)
 
     local sizeEdit = createMiniEdit(wsFrame, 40)
     sizeEdit:SetPoint("LEFT", sizeLabel, "RIGHT", WS_LABEL_GAP, 0)
@@ -1008,52 +977,52 @@ function Addon.UI:CreateFontBrowserTab(parent)
     end)
     tab.sizeEdit = sizeEdit
 
-    local flagsLabel = createMiniLabel(wsFrame, L["FONT_LABEL_FLAGS"] or "Flags:")
+    local flagsLabel = createMiniLabel(wsFrame, L["FONT_LABEL_FLAGS"])
     flagsLabel:SetPoint("LEFT", sizeEdit, "RIGHT", 12, 0)
 
-    local outlineBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, { text = L["FONT_FLAG_OUTLINE"] or "OUTLINE", height = 18, minWidth = 54 })
+    local outlineBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, { text = L["FONT_FLAG_OUTLINE"], height = 18, minWidth = 54 })
     outlineBtn:SetPoint("LEFT", flagsLabel, "RIGHT", 4, 0)
     outlineBtn._barActive = false
-    bindBarButtonMouse(outlineBtn)
+    Addon.UI:BindToolbarBarButtonMouse(outlineBtn, FONT_BAR_ACTIVE_KEY)
     outlineBtn:SetScript("OnClick", function(self)
         self._barActive = not self._barActive
         if self._barActive and tab.thickBtn then
             tab.thickBtn._barActive = false
-            paintBarButton(tab.thickBtn)
+            Addon.UI:PaintToolbarBarButton(tab.thickBtn, FONT_BAR_ACTIVE_KEY)
         end
-        paintBarButton(self)
+        Addon.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
         applyWorkspaceOverrides(tab)
     end)
     tab.outlineBtn = outlineBtn
 
-    local thickBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, { text = L["FONT_FLAG_THICK"] or "THICK", height = 18, minWidth = 42 })
+    local thickBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, { text = L["FONT_FLAG_THICK"], height = 18, minWidth = 42 })
     thickBtn:SetPoint("LEFT", outlineBtn, "RIGHT", 3, 0)
     thickBtn._barActive = false
-    bindBarButtonMouse(thickBtn)
+    Addon.UI:BindToolbarBarButtonMouse(thickBtn, FONT_BAR_ACTIVE_KEY)
     thickBtn:SetScript("OnClick", function(self)
         self._barActive = not self._barActive
         if self._barActive and tab.outlineBtn then
             tab.outlineBtn._barActive = false
-            paintBarButton(tab.outlineBtn)
+            Addon.UI:PaintToolbarBarButton(tab.outlineBtn, FONT_BAR_ACTIVE_KEY)
         end
-        paintBarButton(self)
+        Addon.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
         applyWorkspaceOverrides(tab)
     end)
     tab.thickBtn = thickBtn
 
-    local monoBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, { text = L["FONT_FLAG_MONO"] or "MONO", height = 18, minWidth = 40 })
+    local monoBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, { text = L["FONT_FLAG_MONO"], height = 18, minWidth = 40 })
     monoBtn:SetPoint("LEFT", thickBtn, "RIGHT", 3, 0)
     monoBtn._barActive = false
-    bindBarButtonMouse(monoBtn)
+    Addon.UI:BindToolbarBarButtonMouse(monoBtn, FONT_BAR_ACTIVE_KEY)
     monoBtn:SetScript("OnClick", function(self)
         self._barActive = not self._barActive
-        paintBarButton(self)
+        Addon.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
         applyWorkspaceOverrides(tab)
     end)
     tab.monoBtn = monoBtn
 
     -- Text Color row: R G B A
-    local textColorLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_TEXT_COLOR"] or "Text:", yText, WS_LABEL_COL)
+    local textColorLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_TEXT_COLOR"], yText, WS_LABEL_COL)
 
     local textRLabel = createMiniLabel(wsFrame, "R")
     textRLabel:SetPoint("LEFT", textColorLabel, "RIGHT", WS_LABEL_GAP, 0)
@@ -1088,7 +1057,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.textAEdit = textAEdit
 
     -- Shadow Color row: R G B A
-    local shadColorLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SHADOW_COLOR"] or "Shadow:", yShad, WS_LABEL_COL)
+    local shadColorLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SHADOW_COLOR"], yShad, WS_LABEL_COL)
 
     local shadRLabel = createMiniLabel(wsFrame, "R")
     shadRLabel:SetPoint("LEFT", shadColorLabel, "RIGHT", WS_LABEL_GAP, 0)
@@ -1123,7 +1092,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.shadAEdit = shadAEdit
 
     -- Shadow Offset row (X, Y)
-    local shadOffLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SHADOW_OFFSET"] or "Shadow Offset:", yShadOff, WS_LABEL_COL)
+    local shadOffLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SHADOW_OFFSET"], yShadOff, WS_LABEL_COL)
 
     local xLabel = createMiniLabel(wsFrame, "X")
     xLabel:SetPoint("LEFT", shadOffLabel, "RIGHT", WS_LABEL_GAP, 0)
@@ -1144,14 +1113,14 @@ function Addon.UI:CreateFontBrowserTab(parent)
     -- Size preset (bottom row) + Reset right-aligned. Label in fixed column, BOTTOM-anchored to match dropdown.
     local resetBtnH = 18
     local rowMidAboveBottom = WS_BOTTOM_PAD + hWidgetRow / 2
-    local widgetLabel = createMiniLabel(wsFrame, L["FONT_LABEL_WIDGET_SIZE"] or "Size preset:")
+    local widgetLabel = createMiniLabel(wsFrame, L["FONT_LABEL_WIDGET_SIZE"])
     widgetLabel:SetJustifyH("RIGHT")
     widgetLabel:SetJustifyV("MIDDLE")
     widgetLabel:SetPoint("TOPLEFT", wsFrame, "BOTTOMLEFT", 0, WS_BOTTOM_PAD + hWidgetRow)
     widgetLabel:SetPoint("BOTTOMRIGHT", wsFrame, "BOTTOMLEFT", WS_LABEL_COL, WS_BOTTOM_PAD)
 
     local resetBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, {
-        text = L["FONT_BTN_RESET"] or "Reset All",
+        text = L["FONT_BTN_RESET"],
         height = resetBtnH,
         minWidth = 48,
     })
@@ -1164,7 +1133,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     widgetSizeDrop:SetPoint("RIGHT", resetBtn, "LEFT", -8, 0)
     widgetSizeDrop:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["FONT_WIDGET_SIZE_DISCLAIMER"] or "Approximate point sizes; not Blizzard's official mapping.", 1, 1, 1, nil, true)
+        GameTooltip:SetText(L["FONT_WIDGET_SIZE_DISCLAIMER"], 1, 1, 1, nil, true)
         GameTooltip:Show()
     end)
     widgetSizeDrop:SetScript("OnLeave", GameTooltip_Hide)
@@ -1180,10 +1149,10 @@ function Addon.UI:CreateFontBrowserTab(parent)
             for enumVal = 0, 4 do
                 tinsert(items, {
                     value = tostring(enumVal),
-                    text = FB.WIDGET_SIZE_LABELS[enumVal] or tostring(enumVal),
+                    text = L["FONT_WIDGET_SIZE_" .. tostring(enumVal)],
                 })
             end
-            tinsert(items, { value = "none", text = L["FONT_WIDGET_SIZE_NONE"] or "None" })
+            tinsert(items, { value = "none", text = L["FONT_WIDGET_SIZE_NONE"] })
             return items
         end,
         onSelect = function(value)
@@ -1241,12 +1210,12 @@ function Addon.UI:CreateFontBrowserTab(parent)
 
     -- Copy row: shared label + action buttons (match LibCopyPaste title: GameFontNormalLarge + gold)
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"] or "Copy:")
+    copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
     copyRowLabel:SetTextColor(1, 0.82, 0)
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyNameBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["FONT_BTN_COPY_NAME"] or "Name",
+        text = L["FONT_BTN_COPY_NAME"],
         height = 22,
         minWidth = 44,
     })
@@ -1260,7 +1229,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.copyNameBtn = copyNameBtn
 
     local copySetFontBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["FONT_BTN_COPY_SET_FONT"] or "SetFont",
+        text = L["FONT_BTN_COPY_SET_FONT"],
         height = 22,
         minWidth = 52,
     })
@@ -1273,7 +1242,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.copySetFontBtn = copySetFontBtn
 
     local copySnippetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["FONT_BTN_COPY_SNIPPET"] or "Snippet",
+        text = L["FONT_BTN_COPY_SNIPPET"],
         height = 22,
         minWidth = 52,
     })
@@ -1286,7 +1255,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.copySnippetBtn = copySnippetBtn
 
     local copyCreateFontBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["FONT_BTN_COPY_CREATE_FONT"] or "CreateFont",
+        text = L["FONT_BTN_COPY_CREATE_FONT"],
         height = 22,
         minWidth = 64,
     })

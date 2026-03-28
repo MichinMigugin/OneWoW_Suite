@@ -69,7 +69,7 @@ function Addon.UI:CreateColorToolsTab(parent)
 
     pickerPanel.title = pickerPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     pickerPanel.title:SetPoint("TOP", 0, -PICKER_TOP)
-    pickerPanel.title:SetText(L["COLOR_TOOLS_TITLE_PICKER"] or "Custom Color Picker")
+    pickerPanel.title:SetText(L["COLOR_TOOLS_TITLE_PICKER"])
     pickerPanel.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     tab.colorPreview = OneWoW_GUI:CreateFrame(pickerPanel, {
@@ -91,7 +91,7 @@ function Addon.UI:CreateColorToolsTab(parent)
 
     local rLabel = sliderContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rLabel:SetPoint("TOPLEFT", sliderContainer, "TOPLEFT", 0, 0)
-    rLabel:SetText(L["COLOR_TOOLS_LABEL_R"] or "R:")
+    rLabel:SetText(L["COLOR_TOOLS_LABEL_R"])
     rLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local rContainer = OneWoW_GUI:CreateSlider(sliderContainer, {
@@ -104,7 +104,7 @@ function Addon.UI:CreateColorToolsTab(parent)
 
     local gLabel = sliderContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     gLabel:SetPoint("TOPLEFT", rLabel, "BOTTOMLEFT", 0, -25)
-    gLabel:SetText(L["COLOR_TOOLS_LABEL_G"] or "G:")
+    gLabel:SetText(L["COLOR_TOOLS_LABEL_G"])
     gLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local gContainer = OneWoW_GUI:CreateSlider(sliderContainer, {
@@ -117,7 +117,7 @@ function Addon.UI:CreateColorToolsTab(parent)
 
     local bLabel = sliderContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bLabel:SetPoint("TOPLEFT", gLabel, "BOTTOMLEFT", 0, -25)
-    bLabel:SetText(L["COLOR_TOOLS_LABEL_B"] or "B:")
+    bLabel:SetText(L["COLOR_TOOLS_LABEL_B"])
     bLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local bContainer = OneWoW_GUI:CreateSlider(sliderContainer, {
@@ -135,7 +135,7 @@ function Addon.UI:CreateColorToolsTab(parent)
     end)
     tab.copyHexBtn:HookScript("OnEnter", function(btn)
         GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["COLOR_TOOLS_CLICK_TO_COPY"] or "Click to copy hex code", 1, 1, 1)
+        GameTooltip:SetText(L["COLOR_TOOLS_CLICK_TO_COPY"], 1, 1, 1)
         GameTooltip:Show()
     end)
     tab.copyHexBtn:HookScript("OnLeave", GameTooltip_Hide)
@@ -154,7 +154,7 @@ function Addon.UI:CreateColorToolsTab(parent)
     local ROW_LEFT_PADDING = OneWoW_GUI:GetSpacing("SM")
     classColorsPanel.title = classColorsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     classColorsPanel.title:SetPoint("TOPLEFT", ROW_LEFT_PADDING, -10)
-    classColorsPanel.title:SetText(L["COLOR_TOOLS_TITLE_CLASS"] or "Class Colors")
+    classColorsPanel.title:SetText(L["COLOR_TOOLS_TITLE_CLASS"])
     classColorsPanel.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(classColorsPanel, {})
@@ -197,7 +197,7 @@ function Addon.UI:CreateColorToolsTab(parent)
         end)
         row.copyBtn:HookScript("OnEnter", function(btn)
             GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
-            GameTooltip:SetText(L["COLOR_TOOLS_CLICK_TO_COPY"] or "Click to copy hex code", 1, 1, 1)
+            GameTooltip:SetText(L["COLOR_TOOLS_CLICK_TO_COPY"], 1, 1, 1)
             GameTooltip:Show()
         end)
         row.copyBtn:HookScript("OnLeave", GameTooltip_Hide)
@@ -214,7 +214,7 @@ function Addon.UI:CreateColorToolsTab(parent)
 
     local commonTitle = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     commonTitle:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset - 10)
-    commonTitle:SetText(L["COLOR_TOOLS_TITLE_COMMON"] or "Common Colors")
+    commonTitle:SetText(L["COLOR_TOOLS_TITLE_COMMON"])
     commonTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     yOffset = yOffset - 40
@@ -248,7 +248,7 @@ function Addon.UI:CreateColorToolsTab(parent)
         end)
         row.copyBtn:HookScript("OnEnter", function(btn)
             GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
-            GameTooltip:SetText(L["COLOR_TOOLS_CLICK_TO_COPY"] or "Click to copy hex code", 1, 1, 1)
+            GameTooltip:SetText(L["COLOR_TOOLS_CLICK_TO_COPY"], 1, 1, 1)
             GameTooltip:Show()
         end)
         row.copyBtn:HookScript("OnLeave", GameTooltip_Hide)

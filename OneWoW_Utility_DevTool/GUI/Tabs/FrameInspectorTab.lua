@@ -14,17 +14,17 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local pickBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_PICK_FRAME"] or "Pick Frame", width = 100, height = 22 })
+    local pickBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L["BTN_PICK_FRAME"], width = 100, height = 22 })
     pickBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
 
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 150,
         height = 22,
-        placeholderText = Addon.L and Addon.L["LABEL_FRAME_NAME"] or "Frame name...",
+        placeholderText = Addon.L["LABEL_FRAME_NAME"],
     })
     searchBox:SetPoint("LEFT", pickBtn, "RIGHT", 10, 0)
 
-    local searchBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L and Addon.L["BTN_SEARCH"] or "Search", width = 70, height = 22 })
+    local searchBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L["BTN_SEARCH"], width = 70, height = 22 })
     searchBtn:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
 
     pickBtn:SetScript("OnClick", function()
@@ -40,11 +40,11 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         if not text or text == "" then return end
         local results = Addon:SearchFramesByName(text)
         if #results == 0 then
-            Addon:Print((L["MSG_NO_FRAMES_MATCHING"] or "No frames found matching: %s"):format(text))
+            Addon:Print((L["MSG_NO_FRAMES_MATCHING"]):format(text))
         else
             Addon.FrameInspector:InspectFrame(results[1])
             if #results > 1 then
-                Addon:Print((L["MSG_FOUND_FRAMES_FIRST"] or "Found %d frames, showing first: %s"):format(#results, results[1].GetName and results[1]:GetName() or "Anonymous"))
+                Addon:Print((L["MSG_FOUND_FRAMES_FIRST"]):format(#results, results[1].GetName and results[1]:GetName() or "Anonymous"))
             end
         end
     end
@@ -70,10 +70,10 @@ function Addon.UI:CreateFrameInspectorTab(parent)
 
     local leftTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     leftTitle:SetPoint("TOP", leftPanel, "TOP", 0, -5)
-    leftTitle:SetText(Addon.L and Addon.L["LABEL_FRAME_HIERARCHY"] or "Frame Hierarchy")
+    leftTitle:SetText(Addon.L["LABEL_FRAME_HIERARCHY"])
     leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local copyHierarchyBtn = OneWoW_GUI:CreateButton(leftPanel, { text = Addon.L and Addon.L["BTN_COPY_HIERARCHY"] or "Copy All", width = 70, height = 18 })
+    local copyHierarchyBtn = OneWoW_GUI:CreateButton(leftPanel, { text = Addon.L["BTN_COPY_HIERARCHY"], width = 70, height = 18 })
     copyHierarchyBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -25, -3)
     copyHierarchyBtn:SetScript("OnClick", function()
         if tab.frameTree then
@@ -124,13 +124,13 @@ function Addon.UI:CreateFrameInspectorTab(parent)
 
     local rightTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     rightTitle:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 5, -5)
-    rightTitle:SetText(Addon.L and Addon.L["LABEL_FRAME_DETAILS"] or "Frame Details")
+    rightTitle:SetText(Addon.L["LABEL_FRAME_DETAILS"])
     rightTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local copyDetailsBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L and Addon.L["BTN_COPY_DETAILS"] or "Copy All", width = 70, height = 18 })
+    local copyDetailsBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L["BTN_COPY_DETAILS"], width = 70, height = 18 })
     copyDetailsBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -25, -3)
 
-    local parentGoBtn = OneWoW_GUI:CreateButton(rightPanel, { text = (L["FRAME_INSPECTOR_PARENT_PREFIX"] or "-> ") .. (L["FRAME_INSPECTOR_PARENT_TARGET"] or "Parent"), height = 18 })
+    local parentGoBtn = OneWoW_GUI:CreateButton(rightPanel, { text = (L["FRAME_INSPECTOR_PARENT_PREFIX"]) .. (L["FRAME_INSPECTOR_PARENT_TARGET"]), height = 18 })
     parentGoBtn:SetPoint("LEFT", rightTitle, "RIGHT", 8, 0)
     parentGoBtn:SetPoint("RIGHT", copyDetailsBtn, "LEFT", -4, 0)
     parentGoBtn:SetScript("OnClick", function()
@@ -159,7 +159,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     tab.detailsText:SetPoint("TOPLEFT", 2, -2)
     tab.detailsText:SetPoint("RIGHT", rightContent, "RIGHT", -2, 0)
     tab.detailsText:SetJustifyH("LEFT")
-    tab.detailsText:SetText(Addon.L and Addon.L["LABEL_NO_FRAME"] or "No frame selected")
+    tab.detailsText:SetText(Addon.L["LABEL_NO_FRAME"])
     tab.detailsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     tab.leftScroll = leftScroll
@@ -213,7 +213,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         -- Parent [Go] button
         if info.parent then
             self.currentParentRef = info.parent
-            self.parentGoBtn:SetText((L["FRAME_INSPECTOR_PARENT_PREFIX"] or "-> ") .. (info.parentName or (L["FRAME_INSPECTOR_PARENT_TARGET"] or "Parent")))
+            self.parentGoBtn:SetText((L["FRAME_INSPECTOR_PARENT_PREFIX"]) .. (info.parentName or (L["FRAME_INSPECTOR_PARENT_TARGET"])))
             self.parentGoBtn:Show()
         else
             self.currentParentRef = nil

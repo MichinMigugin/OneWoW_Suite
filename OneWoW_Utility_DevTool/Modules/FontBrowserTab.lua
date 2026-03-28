@@ -29,16 +29,6 @@ local WIDGET_SIZE_PT = {
 
 FB.WIDGET_SIZE_PT = WIDGET_SIZE_PT
 
-local WIDGET_SIZE_LABELS = {
-    [0] = "Small (0)",
-    [1] = "Medium (1)",
-    [2] = "Large (2)",
-    [3] = "Huge (3)",
-    [4] = "Standard (4)",
-}
-
-FB.WIDGET_SIZE_LABELS = WIDGET_SIZE_LABELS
-
 local function isFontObject(obj)
     if not obj then return false end
     local ok, result = pcall(function()

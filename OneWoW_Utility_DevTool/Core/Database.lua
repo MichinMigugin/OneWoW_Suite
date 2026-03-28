@@ -27,7 +27,7 @@ end
 local function getLocalizedDefaultCategory(language)
     local locales = Addon.Locales or {}
     local localeData = locales[language] or locales["enUS"] or {}
-    return localeData["EDITOR_CATEGORY_DEFAULT"] or "Uncategorized"
+    return localeData["EDITOR_CATEGORY_DEFAULT"]
 end
 
 local function getDefaultCategoryAliases()

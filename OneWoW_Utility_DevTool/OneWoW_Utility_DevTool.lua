@@ -384,8 +384,8 @@ end
 function Addon:CopyToClipboard(text, title)
     local lib = LibStub("LibCopyPaste-1.0")
     -- Omit readOnly: when true, SetReadOnly captures GetText() from a hidden EditBox (which can return ""), then OnTextChanged overwrites with that empty value
-    lib:Copy(title or "Copy", text)
-    self:Print(self.L and self.L["MSG_PRESS_CTRL_C"] or "Press Ctrl+C to copy, then close the window.")
+    lib:Copy(title or self.L["COPY_DEFAULT_TITLE"], text)
+    self:Print(self.L["MSG_PRESS_CTRL_C"])
 end
 
 function Addon:ToggleMainWindow()
@@ -493,8 +493,8 @@ function Addon:ApplyLanguage()
     end
     local L = self.L
     if L then
-        _G["BINDING_HEADER_ONEWOW_DEVTOOL"] = L["BINDING_HEADER_ONEWOW_DEVTOOL"] or "|cFF00FF00OneWoW|r DevTool"
-        _G["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = L["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] or "Open DevTools (Errors tab)"
+        _G["BINDING_HEADER_ONEWOW_DEVTOOL"] = L["BINDING_HEADER_ONEWOW_DEVTOOL"]
+        _G["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = L["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"]
     end
 end
 
@@ -525,7 +525,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
                 end,
                 onTooltip = function(frame)
                     GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
-                    GameTooltip:AddLine(Addon.L and Addon.L["ADDON_TOOLTIP_TITLE"] or "|cFFFFD100OneWoW|r - Utility: DevTool", 1, 0.82, 0, true)
+                    GameTooltip:AddLine(Addon.L["ADDON_TOOLTIP_TITLE"], 1, 0.82, 0, true)
                     if Addon.L and Addon.L["MINIMAP_TOOLTIP_HINT"] then
                         GameTooltip:AddLine(Addon.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, true)
                     end
@@ -537,7 +537,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
             end
         end
         if _G.OneWoW then
-            _G.OneWoW:RegisterMinimap("OneWoW_UtilityDevTool", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_DEVTOOLS"]) or "Open DevTools", nil, function()
+            _G.OneWoW:RegisterMinimap("OneWoW_UtilityDevTool", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_DEVTOOLS"]) or Addon.L["MINIMAP_CTX_FALLBACK"], nil, function()
                 Addon:ToggleMainWindow()
             end)
         end
@@ -568,7 +568,7 @@ SLASH_ONEWOW_DEVTOOL3 = "/devtools"
 SLASH_ONEWOW_DEVTOOL4 = "/1wdt"
 SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
     if not Addon.UI then
-        Addon:Print(Addon.L and Addon.L["MSG_UI_NOT_LOADED"] or "UI not loaded yet")
+        Addon:Print(Addon.L["MSG_UI_NOT_LOADED"])
         return
     end
 
@@ -581,8 +581,8 @@ end
 
 _G["1WoW_UtilityDevTool_OnAddonCompartmentEnter"] = function(addonName, button)
     GameTooltip:SetOwner(button, "ANCHOR_LEFT")
-    GameTooltip:SetText(Addon.L and Addon.L["ADDON_TOOLTIP_TITLE"] or "|cFFFFD100OneWoW|r - Utility: DevTool", 1, 1, 1)
-    GameTooltip:AddLine(Addon.L and Addon.L["ADDON_COMPARTMENT_HINT"] or "Click to toggle window", 0.7, 0.7, 0.7)
+    GameTooltip:SetText(Addon.L["ADDON_TOOLTIP_TITLE"], 1, 1, 1)
+    GameTooltip:AddLine(Addon.L["ADDON_COMPARTMENT_HINT"], 0.7, 0.7, 0.7)
     GameTooltip:Show()
 end
 

@@ -106,62 +106,30 @@ function Addon.UI.SoundTab_RefreshList(tab)
     end
 end
 
-local function paintBarButton(btn)
-    if not btn or not btn.text then return end
-    local active = btn._barActive
-    local over = btn:IsMouseOver()
-    if active then
-        if over then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        end
-    else
-        if over then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-    end
-end
-
-local function bindBarButtonMouse(btn)
-    btn:SetScript("OnEnter", function(self) paintBarButton(self) end)
-    btn:SetScript("OnLeave", function(self) paintBarButton(self) end)
-    btn:SetScript("OnMouseDown", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED")) end)
-    btn:SetScript("OnMouseUp", function(self) paintBarButton(self) end)
-end
+local SOUND_BAR_ACTIVE_KEY = "_barActive"
 
 local function refreshSoundToolbar(tab)
     if tab.favsBtn then
         tab.favsBtn._barActive = SB.favoritesOnly
-        paintBarButton(tab.favsBtn)
+        Addon.UI:PaintToolbarBarButton(tab.favsBtn, SOUND_BAR_ACTIVE_KEY)
     end
     if tab.bookmarkBtn and tab.selectedEntry then
         local bm = SB:IsBookmarked(tab.selectedEntry)
         tab.bookmarkBtn._barActive = bm and true or false
         if tab.bookmarkBtn.SetFitText then
-            tab.bookmarkBtn:SetFitText(bm and (L["BTN_REMOVE_BOOKMARK"] or "Remove bookmark") or (L["BTN_BOOKMARK"] or "Bookmark"))
+            tab.bookmarkBtn:SetFitText(bm and (L["BTN_REMOVE_BOOKMARK"]) or (L["BTN_BOOKMARK"]))
         end
-        paintBarButton(tab.bookmarkBtn)
+        Addon.UI:PaintToolbarBarButton(tab.bookmarkBtn, SOUND_BAR_ACTIVE_KEY)
     elseif tab.bookmarkBtn then
         tab.bookmarkBtn._barActive = false
         if tab.bookmarkBtn.SetFitText then
-            tab.bookmarkBtn:SetFitText(L["BTN_BOOKMARK"] or "Bookmark")
+            tab.bookmarkBtn:SetFitText(L["BTN_BOOKMARK"])
         end
-        paintBarButton(tab.bookmarkBtn)
+        Addon.UI:PaintToolbarBarButton(tab.bookmarkBtn, SOUND_BAR_ACTIVE_KEY)
     end
     if tab.manualToggle then
         tab.manualToggle._barActive = tab.manualPanel and tab.manualPanel:IsShown() or false
-        paintBarButton(tab.manualToggle)
+        Addon.UI:PaintToolbarBarButton(tab.manualToggle, SOUND_BAR_ACTIVE_KEY)
     end
 end
 
@@ -254,35 +222,35 @@ function Addon.UI.SoundTab_UpdateDetails(tab)
     local e = tab.selectedEntry
     if not e then
         if SB:IsRebuilding() then
-            tab.infoText:SetText(L["SOUND_MSG_SEARCHING"] or "Searching all sounds...")
+            tab.infoText:SetText(L["SOUND_MSG_SEARCHING"])
         elseif SB:IsSearchingAll() and SB:NeedsSearchTerm() then
-            tab.infoText:SetText(format(L["SOUND_MSG_SEARCH_ALL_MIN"] or "Type at least %d characters to search all sounds.", SB:GetAllSearchMinLength()))
+            tab.infoText:SetText(format(L["SOUND_MSG_SEARCH_ALL_MIN"], SB:GetAllSearchMinLength()))
         else
-            tab.infoText:SetText(L["SOUND_MSG_SELECT"] or "Select a sound from the list.")
+            tab.infoText:SetText(L["SOUND_MSG_SELECT"])
         end
         local h = tab.infoText:GetStringHeight()
         tab.infoScroll:GetScrollChild():SetHeight(max(h + 16, tab.infoScroll:GetHeight()))
         return
     end
     local top, sub, fileName, fdidStr = SB:GetEntryInfo(e)
-    tinsert(lines, "|cffffd100" .. (L["SOUND_SECTION_FILE"] or "File") .. "|r")
-    tinsert(lines, (L["LABEL_NAME"] or "NAME:") .. " " .. tostring(fileName))
+    tinsert(lines, "|cffffd100" .. (L["SOUND_SECTION_FILE"]) .. "|r")
+    tinsert(lines, (L["LABEL_NAME"]) .. " " .. tostring(fileName))
     tinsert(lines, "FDID: " .. tostring(fdidStr))
-    tinsert(lines, (L["SOUND_LABEL_CATEGORY"] or "Category:") .. " " .. tostring(top) .. " / " .. tostring(sub))
-    tinsert(lines, (L["SOUND_LABEL_PATH"] or "Path:") .. " " .. SB:GetFullPath(e))
+    tinsert(lines, (L["SOUND_LABEL_CATEGORY"]) .. " " .. tostring(top) .. " / " .. tostring(sub))
+    tinsert(lines, (L["SOUND_LABEL_PATH"]) .. " " .. SB:GetFullPath(e))
     tinsert(lines, "")
-    tinsert(lines, (L["SOUND_LABEL_CHANNEL"] or "Channel:") .. " " .. getSoundChannel(tab))
+    tinsert(lines, (L["SOUND_LABEL_CHANNEL"]) .. " " .. getSoundChannel(tab))
     if tab.lastPlayRef ~= nil then
         tinsert(lines, "")
         if tab.lastPlayOk then
-            tinsert(lines, (L["SOUND_MSG_PLAY_OK"] or "Last play: OK.") .. " (" .. tostring(tab.lastPlayRef) .. ")")
+            tinsert(lines, (L["SOUND_MSG_PLAY_OK"]) .. " (" .. tostring(tab.lastPlayRef) .. ")")
         else
-            tinsert(lines, (L["SOUND_MSG_PLAY_FAIL"] or "Last play: failed or muted.") .. " (" .. tostring(tab.lastPlayRef) .. ")")
+            tinsert(lines, (L["SOUND_MSG_PLAY_FAIL"]) .. " (" .. tostring(tab.lastPlayRef) .. ")")
         end
     end
     if SB:IsBookmarked(e) then
         tinsert(lines, "")
-        tinsert(lines, "|cff00ff00" .. (L["LABEL_BOOKMARKED"] or "[Bookmarked]") .. "|r")
+        tinsert(lines, "|cff00ff00" .. (L["LABEL_BOOKMARKED"]) .. "|r")
     end
     tab.infoText:SetText(table.concat(lines, "\n"))
     local h = tab.infoText:GetStringHeight()
@@ -385,14 +353,14 @@ end
 local function refreshTopDropdownLabel(tab)
     local dd = tab.topDropdown
     if not dd or not dd._text then return end
-    local t = SB.selectedTop or (L["SOUND_DD_PICK_CATEGORY"] or "Category")
+    local t = SB.selectedTop or (L["SOUND_DD_PICK_CATEGORY"])
     dd._text:SetText(t)
 end
 
 local function refreshSubDropdownLabel(tab)
     local dd = tab.subDropdown
     if not dd or not dd._text then return end
-    local t = SB.selectedSub or (L["SOUND_DD_PICK_SUB"] or "Subfolder")
+    local t = SB.selectedSub or (L["SOUND_DD_PICK_SUB"])
     dd._text:SetText(t)
 end
 
@@ -406,9 +374,9 @@ local function refreshSearchScopeDropdownLabel(tab)
     local dd = tab.searchScopeDropdown
     if not dd or not dd._text then return end
     if SB:IsSearchingAll() then
-        dd._text:SetText(L["SOUND_SEARCH_SCOPE_ALL"] or "All sounds")
+        dd._text:SetText(L["SOUND_SEARCH_SCOPE_ALL"])
     else
-        dd._text:SetText(L["SOUND_SEARCH_SCOPE_CURRENT"] or "Current")
+        dd._text:SetText(L["SOUND_SEARCH_SCOPE_CURRENT"])
     end
 end
 
@@ -440,11 +408,11 @@ local function refreshManualModeDropdownLabel(tab)
     if not dd or not dd._text then return end
     local v = tab.manualModeValue or MANUAL_FDID
     if v == MANUAL_KIT then
-        dd._text:SetText(L["SOUND_MANUAL_MODE_KIT"] or "Sound kit ID")
+        dd._text:SetText(L["SOUND_MANUAL_MODE_KIT"])
     elseif v == MANUAL_KEY then
-        dd._text:SetText(L["SOUND_MANUAL_MODE_KEY"] or "SOUNDKIT key")
+        dd._text:SetText(L["SOUND_MANUAL_MODE_KEY"])
     else
-        dd._text:SetText(L["SOUND_MANUAL_MODE_FDID"] or "FileData ID")
+        dd._text:SetText(L["SOUND_MANUAL_MODE_FDID"])
     end
 end
 
@@ -493,9 +461,9 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         local unloadOn = Addon.UI and Addon.UI.GetUnloadOnDisable and Addon.UI:GetUnloadOnDisable("sounds")
         local msg
         if unloadOn then
-            msg = L["SOUND_MSG_UNLOADED"] or L["SOUND_MSG_NO_DATA"]
+            msg = L["SOUND_MSG_UNLOADED"]
         elseif Addon._DevToolSoundAssetsPurgedSession then
-            msg = L["SOUND_MSG_RELOAD_RESTORE"] or L["SOUND_MSG_NO_DATA"]
+            msg = L["SOUND_MSG_RELOAD_RESTORE"]
         else
             msg = L["SOUND_MSG_NO_DATA"]
         end
@@ -586,7 +554,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 132,
         height = 22,
-        placeholderText = L["LABEL_FILTER"] or "Filter...",
+        placeholderText = L["LABEL_FILTER"],
         onTextChanged = function()
             scheduleFilterRefresh(tab)
         end,
@@ -602,8 +570,8 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         getActiveValue = function() return SB.searchScope end,
         buildItems = function()
             return {
-                { value = SEARCH_SCOPE_CURRENT, text = L["SOUND_SEARCH_SCOPE_CURRENT"] or "Current" },
-                { value = SEARCH_SCOPE_ALL, text = L["SOUND_SEARCH_SCOPE_ALL"] or "All sounds" },
+                { value = SEARCH_SCOPE_CURRENT, text = L["SOUND_SEARCH_SCOPE_CURRENT"] },
+                { value = SEARCH_SCOPE_ALL, text = L["SOUND_SEARCH_SCOPE_ALL"] },
             }
         end,
         onSelect = function(value)
@@ -693,7 +661,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
 
     local channelLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     channelLabel:SetPoint("TOPLEFT", tab.nameText, "BOTTOMLEFT", 0, -18)
-    channelLabel:SetText(L["SOUND_LABEL_CHANNEL"] or "Channel:")
+    channelLabel:SetText(L["SOUND_LABEL_CHANNEL"])
     channelLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local channelDropdown = OneWoW_GUI:CreateDropdown(rightPanel, { width = 120, height = 22, text = "" })
@@ -721,19 +689,19 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     })
     refreshChannelDropdownLabel(tab)
 
-    local musicCb = OneWoW_GUI:CreateCheckbox(rightPanel, { label = L["SOUND_CVAR_MUSIC_LABEL"] or "Music" })
+    local musicCb = OneWoW_GUI:CreateCheckbox(rightPanel, { label = L["SOUND_CVAR_MUSIC_LABEL"] })
     musicCb:SetPoint("LEFT", channelDropdown, "RIGHT", 14, 0)
     tab.soundCvarMusicCb = musicCb
-    bindSoundCvarCheckboxTooltip(musicCb, L["SOUND_CVAR_MUSIC_TIP"] or "")
+    bindSoundCvarCheckboxTooltip(musicCb, L["SOUND_CVAR_MUSIC_TIP"])
     musicCb:SetScript("OnClick", function(self)
         if tab._syncingSoundCvars then return end
         C_CVar.SetCVar(Addon.Constants.SOUND_CVAR_ENABLE_MUSIC, self:GetChecked() and "1" or "0")
     end)
 
-    local ambienceCb = OneWoW_GUI:CreateCheckbox(rightPanel, { label = L["SOUND_CVAR_AMBIENCE_LABEL"] or "Ambience" })
+    local ambienceCb = OneWoW_GUI:CreateCheckbox(rightPanel, { label = L["SOUND_CVAR_AMBIENCE_LABEL"] })
     ambienceCb:SetPoint("LEFT", musicCb.label, "RIGHT", 10, 0)
     tab.soundCvarAmbienceCb = ambienceCb
-    bindSoundCvarCheckboxTooltip(ambienceCb, L["SOUND_CVAR_AMBIENCE_TIP"] or "")
+    bindSoundCvarCheckboxTooltip(ambienceCb, L["SOUND_CVAR_AMBIENCE_TIP"])
     ambienceCb:SetScript("OnClick", function(self)
         if tab._syncingSoundCvars then return end
         C_CVar.SetCVar(Addon.Constants.SOUND_CVAR_ENABLE_AMBIENCE, self:GetChecked() and "1" or "0")
@@ -750,7 +718,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.soundCvarListener:RegisterEvent("CVAR_UPDATE")
 
     local playBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["SOUND_BTN_PLAY"] or "Play",
+        text = L["SOUND_BTN_PLAY"],
         height = 22,
         minWidth = 48,
     })
@@ -761,7 +729,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     end)
 
     local stopBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["BTN_STOP"] or "Stop",
+        text = L["BTN_STOP"],
         height = 22,
         minWidth = 48,
     })
@@ -792,9 +760,9 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         getActiveValue = function() return tab.manualModeValue end,
         buildItems = function()
             return {
-                { value = MANUAL_FDID, text = L["SOUND_MANUAL_MODE_FDID"] or "FileData ID" },
-                { value = MANUAL_KIT, text = L["SOUND_MANUAL_MODE_KIT"] or "Sound kit ID" },
-                { value = MANUAL_KEY, text = L["SOUND_MANUAL_MODE_KEY"] or "SOUNDKIT key" },
+                { value = MANUAL_FDID, text = L["SOUND_MANUAL_MODE_FDID"] },
+                { value = MANUAL_KIT, text = L["SOUND_MANUAL_MODE_KIT"] },
+                { value = MANUAL_KEY, text = L["SOUND_MANUAL_MODE_KEY"] },
             }
         end,
         onSelect = function(value)
@@ -807,13 +775,13 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     local manualEdit = OneWoW_GUI:CreateEditBox(tab.manualPanel, {
         width = 200,
         height = 22,
-        placeholderText = L["SOUND_MANUAL_PLACEHOLDER"] or "ID or SOUNDKIT name...",
+        placeholderText = L["SOUND_MANUAL_PLACEHOLDER"],
     })
     manualEdit:SetPoint("LEFT", manualModeDrop, "RIGHT", 6, 0)
     tab.manualEdit = manualEdit
 
     local manualPlayBtn = OneWoW_GUI:CreateFitTextButton(tab.manualPanel, {
-        text = L["SOUND_BTN_PLAY"] or "Play",
+        text = L["SOUND_BTN_PLAY"],
         height = 22,
         minWidth = 48,
     })
@@ -824,7 +792,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         if mode == MANUAL_FDID then
             local n = tonumber(raw)
             if not n then
-                Addon:Print(L["SOUND_ERR_BAD_FDID"] or "Enter a numeric FileData ID.")
+                Addon:Print(L["SOUND_ERR_BAD_FDID"])
                 return
             end
             local ok, handle = startPlaySoundFile(tab, n)
@@ -836,7 +804,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         if mode == MANUAL_KIT then
             local n = tonumber(raw)
             if not n then
-                Addon:Print(L["SOUND_ERR_BAD_KIT"] or "Enter a numeric sound kit ID.")
+                Addon:Print(L["SOUND_ERR_BAD_KIT"])
                 return
             end
             local ok, handle = startPlaySoundKit(tab, n)
@@ -848,11 +816,11 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         local kitId, err = SB:ParseSoundKitKeyInput(raw)
         if not kitId then
             if err == "empty" then
-                Addon:Print(L["SOUND_ERR_EMPTY_KEY"] or "Enter a SOUNDKIT key.")
+                Addon:Print(L["SOUND_ERR_EMPTY_KEY"])
             elseif err == "nosoundkit" then
-                Addon:Print(L["SOUND_ERR_NO_SOUNDKIT"] or "SOUNDKIT table is not available.")
+                Addon:Print(L["SOUND_ERR_NO_SOUNDKIT"])
             else
-                Addon:Print(L["SOUND_ERR_UNKNOWN_KEY"] or "Unknown SOUNDKIT key.")
+                Addon:Print(L["SOUND_ERR_UNKNOWN_KEY"])
             end
             return
         end
@@ -863,7 +831,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     end)
 
     local manualCopyKit = OneWoW_GUI:CreateFitTextButton(tab.manualPanel, {
-        text = L["SOUND_BTN_COPY_KIT"] or "Copy kit",
+        text = L["SOUND_BTN_COPY_KIT"],
         height = 22,
         minWidth = 56,
     })
@@ -877,7 +845,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.copyKitBtn = manualCopyKit
 
     local manualCopyPS = OneWoW_GUI:CreateFitTextButton(tab.manualPanel, {
-        text = L["SOUND_BTN_COPY_PLAY_SOUND"] or "PlaySound",
+        text = L["SOUND_BTN_COPY_PLAY_SOUND"],
         height = 22,
         minWidth = 72,
     })
@@ -911,12 +879,12 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    copyRowLabel:SetText(L["SOUND_COPY_ROW_LABEL"] or L["FONT_COPY_ROW_LABEL"] or "Copy:")
+    copyRowLabel:SetText(L["SOUND_COPY_ROW_LABEL"])
     copyRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyFdidBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["SOUND_BTN_COPY_FDID"] or "FDID",
+        text = L["SOUND_BTN_COPY_FDID"],
         height = 22,
         minWidth = 44,
     })
@@ -931,7 +899,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.copyFdidBtn = copyFdidBtn
 
     local copyPathBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["SOUND_BTN_COPY_PATH"] or "Path",
+        text = L["SOUND_BTN_COPY_PATH"],
         height = 22,
         minWidth = 44,
     })
@@ -945,7 +913,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.copyPathBtn = copyPathBtn
 
     local copySnippetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["SOUND_BTN_COPY_SNIPPET"] or L["TEXTURE_BTN_COPY_SNIPPET"] or "Snippet",
+        text = L["SOUND_BTN_COPY_SNIPPET"],
         height = 22,
         minWidth = 52,
     })
@@ -959,12 +927,12 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.copySnippetBtn = copySnippetBtn
 
     local favsBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_FAVORITES"] or "Favorites",
+        text = L["BTN_FAVORITES"],
         height = 22,
         minWidth = 64,
     })
     favsBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -32)
-    bindBarButtonMouse(favsBtn)
+    Addon.UI:BindToolbarBarButtonMouse(favsBtn, SOUND_BAR_ACTIVE_KEY)
     favsBtn:SetScript("OnClick", function()
         SB:SetFavoritesOnly(not SB.favoritesOnly)
         tab.selectedListIndex = nil
@@ -974,12 +942,12 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.favsBtn = favsBtn
 
     local bookmarkBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_BOOKMARK"] or "Bookmark",
+        text = L["BTN_BOOKMARK"],
         height = 22,
         minWidth = 64,
     })
     bookmarkBtn:SetPoint("LEFT", favsBtn, "RIGHT", 4, 0)
-    bindBarButtonMouse(bookmarkBtn)
+    Addon.UI:BindToolbarBarButtonMouse(bookmarkBtn, SOUND_BAR_ACTIVE_KEY)
     bookmarkBtn:SetScript("OnClick", function()
         if not tab.selectedEntry then return end
         local added = SB:ToggleBookmark(tab.selectedEntry)
@@ -988,21 +956,21 @@ function Addon.UI:CreateSoundBrowserTab(parent)
             label = SB:GetFileDataIdString(tab.selectedEntry)
         end
         if added then
-            Addon:Print((L["MSG_BOOKMARKED"] or "Bookmarked: {name}"):gsub("{name}", tostring(label)))
+            Addon:Print((L["MSG_BOOKMARKED"]):gsub("{name}", tostring(label)))
         else
-            Addon:Print((L["MSG_REMOVED_BOOKMARK"] or "Removed: {name}"):gsub("{name}", tostring(label)))
+            Addon:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", tostring(label)))
         end
         afterBookmarkToggle(tab)
     end)
     tab.bookmarkBtn = bookmarkBtn
 
     local manualToggle = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["SOUND_BTN_MANUAL"] or "Manual",
+        text = L["SOUND_BTN_MANUAL"],
         height = 22,
         minWidth = 56,
     })
     manualToggle:SetPoint("LEFT", bookmarkBtn, "RIGHT", 6, 0)
-    bindBarButtonMouse(manualToggle)
+    Addon.UI:BindToolbarBarButtonMouse(manualToggle, SOUND_BAR_ACTIVE_KEY)
     manualToggle:SetScript("OnClick", function()
         if tab.manualPanel:IsShown() then
             tab.manualPanel:SetHeight(0)

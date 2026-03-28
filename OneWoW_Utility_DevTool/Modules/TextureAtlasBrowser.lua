@@ -316,7 +316,7 @@ end
 
 function TextureAtlasBrowser:GetSetAtlasSnippet(atlasName)
     local L = Addon.L or {}
-    local fmt = L["TEXTURE_SNIPPET_SETATLAS"] or 'tex:SetAtlas("%s")'
+    local fmt = L["TEXTURE_SNIPPET_SETATLAS"]
     return format(fmt, atlasName)
 end
 
@@ -337,25 +337,25 @@ function TextureAtlasBrowser:FormatDetailLines(atlasName, info, textureKey, L)
     L = L or Addon.L or {}
     local lines = {}
     if not info then
-        tinsert(lines, L["TEXTURE_MSG_NO_INFO"] or "No atlas info available.")
+        tinsert(lines, L["TEXTURE_MSG_NO_INFO"])
         return lines
     end
 
-    tinsert(lines, (L["LABEL_NAME"] or "NAME:") .. " " .. tostring(atlasName))
-    tinsert(lines, (L["LABEL_WIDTH"] or "Width:") .. " " .. tostring(info.width or 0))
-    tinsert(lines, (L["LABEL_HEIGHT"] or "Height:") .. " " .. tostring(info.height or 0))
-    tinsert(lines, (L["LABEL_FILE"] or "File:") .. " " .. tostring(info.file or textureKey or L["LABEL_UNKNOWN"] or "Unknown"))
+    tinsert(lines, (L["LABEL_NAME"]) .. " " .. tostring(atlasName))
+    tinsert(lines, (L["LABEL_WIDTH"]) .. " " .. tostring(info.width or 0))
+    tinsert(lines, (L["LABEL_HEIGHT"]) .. " " .. tostring(info.height or 0))
+    tinsert(lines, (L["LABEL_FILE"]) .. " " .. tostring(info.file or textureKey or L["LABEL_UNKNOWN"]))
     tinsert(lines, "")
-    tinsert(lines, L["LABEL_TEX_COORDS"] or "Texture Coordinates:")
-    tinsert(lines, format((L["LABEL_LEFT"] or "Left:") .. " %.6f", info.leftTexCoord or 0))
-    tinsert(lines, format((L["LABEL_RIGHT"] or "Right:") .. " %.6f", info.rightTexCoord or 1))
-    tinsert(lines, format((L["LABEL_TOP"] or "Top:") .. " %.6f", info.topTexCoord or 0))
-    tinsert(lines, format((L["LABEL_BOTTOM"] or "Bottom:") .. " %.6f", info.bottomTexCoord or 1))
+    tinsert(lines, L["LABEL_TEX_COORDS"])
+    tinsert(lines, format((L["LABEL_LEFT"]) .. " %.6f", info.leftTexCoord or 0))
+    tinsert(lines, format((L["LABEL_RIGHT"]) .. " %.6f", info.rightTexCoord or 1))
+    tinsert(lines, format((L["LABEL_TOP"]) .. " %.6f", info.topTexCoord or 0))
+    tinsert(lines, format((L["LABEL_BOTTOM"]) .. " %.6f", info.bottomTexCoord or 1))
 
     if info.tilesHorizontally or info.tilesVertically then
         tinsert(lines, "")
         tinsert(lines, format(
-            L["LABEL_TILES"] or "Tiles: %s x %s",
+            L["LABEL_TILES"],
             tostring(info.tilesHorizontally or false),
             tostring(info.tilesVertically or false)
         ))
@@ -363,7 +363,7 @@ function TextureAtlasBrowser:FormatDetailLines(atlasName, info, textureKey, L)
 
     if info.missing then
         tinsert(lines, "")
-        tinsert(lines, L["TEXTURE_MSG_FALLBACK_DATA"] or "(Using shipped atlas data; API entry missing or incomplete.)")
+        tinsert(lines, L["TEXTURE_MSG_FALLBACK_DATA"])
     end
 
     return lines

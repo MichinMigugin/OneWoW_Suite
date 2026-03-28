@@ -11,7 +11,7 @@ function Addon.UI:CreateEventMonitorTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local startStopBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_START"] or "Start", height = 22, minWidth = 60 })
+    local startStopBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_START"], height = 22, minWidth = 60 })
     startStopBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
     startStopBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -23,7 +23,7 @@ function Addon.UI:CreateEventMonitorTab(parent)
         end
     end)
 
-    local pauseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_PAUSE"] or "Pause", height = 22, minWidth = 70 })
+    local pauseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_PAUSE"], height = 22, minWidth = 70 })
     pauseBtn:SetPoint("LEFT", startStopBtn, "RIGHT", 5, 0)
     pauseBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -31,7 +31,7 @@ function Addon.UI:CreateEventMonitorTab(parent)
         end
     end)
 
-    local clearBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_CLEAR"] or "Clear", height = 22, minWidth = 50 })
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_CLEAR"], height = 22, minWidth = 50 })
     clearBtn:SetPoint("LEFT", pauseBtn, "RIGHT", 5, 0)
     clearBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -39,19 +39,19 @@ function Addon.UI:CreateEventMonitorTab(parent)
         end
     end)
 
-    local configBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_SELECT_EVENTS"] or "Select Events", height = 22, minWidth = 80 })
+    local configBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_SELECT_EVENTS"], height = 22, minWidth = 80 })
     configBtn:SetPoint("LEFT", clearBtn, "RIGHT", 5, 0)
     configBtn:SetScript("OnClick", function()
         Addon.UI:ShowEventSelector()
     end)
 
-    local importBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_IMPORT_EVENTS"] or "Import Events", height = 22, minWidth = 80 })
+    local importBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_IMPORT_EVENTS"], height = 22, minWidth = 80 })
     importBtn:SetPoint("LEFT", configBtn, "RIGHT", 5, 0)
     importBtn:SetScript("OnClick", function()
         Addon.UI:ShowEventImportDialog()
     end)
 
-    local firehoseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_FIREHOSE"] or "Firehose", height = 22, minWidth = 60 })
+    local firehoseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_FIREHOSE"], height = 22, minWidth = 60 })
     firehoseBtn:SetPoint("LEFT", importBtn, "RIGHT", 5, 0)
     firehoseBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -61,13 +61,13 @@ function Addon.UI:CreateEventMonitorTab(parent)
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     filterLabel:SetPoint("TOPLEFT", startStopBtn, "BOTTOMLEFT", 0, -14)
-    filterLabel:SetText(Addon.L and Addon.L["LABEL_FILTER"] or "Filter:")
+    filterLabel:SetText(Addon.L["LABEL_FILTER"])
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local filterBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 150,
         height = 22,
-        placeholderText = Addon.L and Addon.L["LABEL_FILTER"] or "Filter...",
+        placeholderText = Addon.L["LABEL_FILTER"],
         onTextChanged = function()
             if Addon.EventMonitor then
                 Addon.EventMonitor:UpdateUI()
@@ -100,7 +100,7 @@ function Addon.UI:CreateEventMonitorTab(parent)
     tab.emptyStateText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     tab.emptyStateText:SetPoint("CENTER", content, "CENTER", 0, 0)
     tab.emptyStateText:SetJustifyH("CENTER")
-    tab.emptyStateText:SetText(L["MSG_CLICK_START"] or "Click 'Start' to begin monitoring (auto-selects common events)\nOr click 'Select Events' to customize")
+    tab.emptyStateText:SetText(L["MSG_CLICK_START"])
     tab.emptyStateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     tab.rowPool = {}
@@ -202,41 +202,41 @@ function Addon.UI:ShowEventSelector()
 
         frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         frame.title:SetPoint("TOP", 0, -5)
-        frame.title:SetText(Addon.L and Addon.L["DIALOG_TITLE_SELECT_EVENTS"] or "Event Monitor - Select Events")
+        frame.title:SetText(Addon.L["DIALOG_TITLE_SELECT_EVENTS"])
         frame.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local commonBtn = OneWoW_GUI:CreateButton(frame, { text = Addon.L and Addon.L["BTN_COMMON_EVENTS"] or "Common Events", width = 110, height = 25 })
+        local commonBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = Addon.L["BTN_COMMON_EVENTS"], height = 25, minWidth = 96 })
         commonBtn:SetPoint("TOPLEFT", 10, -30)
         commonBtn:SetScript("OnClick", function()
             Addon.EventMonitor:RegisterCommonEvents()
             Addon.UI:UpdateEventSelector()
-            Addon:Print((Addon.L and Addon.L["MSG_ADDED_COMMON_EVENTS"] or "Added common events ({count} total)"):gsub("{count}", Addon.EventMonitor:GetEventCount()))
+            Addon:Print((Addon.L["MSG_ADDED_COMMON_EVENTS"]):gsub("{count}", Addon.EventMonitor:GetEventCount()))
         end)
 
-        local selectAllBtn = OneWoW_GUI:CreateButton(frame, { text = Addon.L and Addon.L["BTN_SELECT_ALL"] or "Select All", width = 80, height = 25 })
+        local selectAllBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = Addon.L["BTN_SELECT_ALL"], height = 25, minWidth = 72 })
         selectAllBtn:SetPoint("LEFT", commonBtn, "RIGHT", 5, 0)
         selectAllBtn:SetScript("OnClick", function()
             Addon.UI:SelectAllEvents()
-            Addon:Print((Addon.L and Addon.L["MSG_SELECTED_ALL_EVENTS"] or "Selected all events ({count} total)"):gsub("{count}", Addon.EventMonitor:GetEventCount()))
+            Addon:Print((Addon.L["MSG_SELECTED_ALL_EVENTS"]):gsub("{count}", Addon.EventMonitor:GetEventCount()))
         end)
 
-        local clearAllBtn = OneWoW_GUI:CreateButton(frame, { text = Addon.L and Addon.L["BTN_CLEAR_ALL"] or "Clear All", width = 80, height = 25 })
+        local clearAllBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = Addon.L["BTN_CLEAR_ALL"], height = 25, minWidth = 72 })
         clearAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 5, 0)
         clearAllBtn:SetScript("OnClick", function()
             Addon.EventMonitor.selectedEvents = {}
             Addon.UI:UpdateEventSelector()
-            Addon:Print(Addon.L and Addon.L["MSG_CLEARED_ALL_EVENTS"] or "Cleared all events")
+            Addon:Print(Addon.L["MSG_CLEARED_ALL_EVENTS"])
         end)
 
         local searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         searchLabel:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -215, -37)
-        searchLabel:SetText((Addon.L and Addon.L["LABEL_FILTER"] or "Search:"))
+        searchLabel:SetText((Addon.L["LABEL_FILTER"]))
         searchLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local searchBox = OneWoW_GUI:CreateEditBox(frame, {
             width = 180,
             height = 25,
-            placeholderText = Addon.L and Addon.L["LABEL_FILTER"] or "Filter...",
+            placeholderText = Addon.L["LABEL_FILTER"],
             onTextChanged = function()
                 Addon.UI:UpdateEventSelector()
             end,
@@ -245,7 +245,7 @@ function Addon.UI:ShowEventSelector()
 
         local eventCount = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         eventCount:SetPoint("TOPLEFT", commonBtn, "BOTTOMLEFT", 0, -8)
-        eventCount:SetText((Addon.L and Addon.L["LABEL_SELECTED"] or "Selected:") .. " 0")
+        eventCount:SetText((Addon.L["LABEL_SELECTED"]) .. " 0")
         eventCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local leftPanel = OneWoW_GUI:CreateFrame(frame, { backdrop = BACKDROP_INNER_NO_INSETS, width = 280, height = 100 })
@@ -257,7 +257,7 @@ function Addon.UI:ShowEventSelector()
 
         local leftTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         leftTitle:SetPoint("TOP", 0, -5)
-        leftTitle:SetText(Addon.L and Addon.L["LABEL_EVENT_LIST"] or "Event List")
+        leftTitle:SetText(Addon.L["LABEL_EVENT_LIST"])
         leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local leftScroll, leftContent = OneWoW_GUI:CreateScrollFrame(leftPanel, {})
@@ -295,22 +295,22 @@ function Addon.UI:ShowEventSelector()
 
         local rightTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         rightTitle:SetPoint("TOP", 0, -5)
-        rightTitle:SetText(Addon.L and Addon.L["LABEL_CUSTOM_ATLAS"] or "Custom Event")
+        rightTitle:SetText(Addon.L["LABEL_CUSTOM_ATLAS"])
         rightTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local customLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         customLabel:SetPoint("TOPLEFT", 10, -30)
-        customLabel:SetText(Addon.L and Addon.L["LABEL_ENTER_EVENT"] or "Enter event name:")
+        customLabel:SetText(Addon.L["LABEL_ENTER_EVENT"])
         customLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local customBox = OneWoW_GUI:CreateEditBox(rightPanel, {
             width = 180,
             height = 25,
-            placeholderText = Addon.L and Addon.L["LABEL_ENTER_EVENT"] or "Event name...",
+            placeholderText = Addon.L["LABEL_ENTER_EVENT"],
         })
         customBox:SetPoint("TOPLEFT", customLabel, "BOTTOMLEFT", 0, -5)
 
-        local addBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = Addon.L and Addon.L["BTN_ADD_EVENT"] or "Add", height = 25 })
+        local addBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = Addon.L["BTN_ADD_EVENT"], height = 25 })
         addBtn:SetPoint("LEFT", customBox, "RIGHT", 5, 0)
         addBtn:SetScript("OnClick", function()
             local eventName = customBox:GetSearchText()
@@ -319,7 +319,7 @@ function Addon.UI:ShowEventSelector()
                 customBox:SetText(customBox.placeholderText or "")
                 customBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 Addon.UI:UpdateEventSelector()
-                Addon:Print((Addon.L and Addon.L["MSG_ADDED_EVENT"] or "Added event: {event}"):gsub("{event}", eventName:upper()))
+                Addon:Print((Addon.L["MSG_ADDED_EVENT"]):gsub("{event}", eventName:upper()))
             end
         end)
 
@@ -327,10 +327,10 @@ function Addon.UI:ShowEventSelector()
         helpText:SetPoint("TOPLEFT", customLabel, "BOTTOMLEFT", 0, -40)
         helpText:SetPoint("RIGHT", rightPanel, "RIGHT", -10, 0)
         helpText:SetJustifyH("LEFT")
-        helpText:SetText(Addon.L and Addon.L["HELP_TEXT_EVENTS"] or "Enter any WoW event name to monitor.\n\nCommon events:\nPLAYER_ENTERING_WORLD\nZONE_CHANGED\nPLAYER_REGEN_DISABLED\nPLAYER_REGEN_ENABLED\nBAG_UPDATE\nUNIT_HEALTH\nCHAT_MSG_SAY\nADDON_LOADED\n\nYou can find more events on:\nwarcraft.wiki.gg")
+        helpText:SetText(Addon.L["HELP_TEXT_EVENTS"])
         helpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-        local closeBtn = OneWoW_GUI:CreateButton(frame, { text = Addon.L and Addon.L["BTN_CLOSE"] or "Close", width = 80, height = 25 })
+        local closeBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = Addon.L["BTN_CLOSE"], height = 25, minWidth = 72 })
         closeBtn:SetPoint("BOTTOM", 0, 10)
         closeBtn:SetScript("OnClick", function()
             frame:Hide()
@@ -406,7 +406,7 @@ function Addon.UI:UpdateEventSelector()
     local height = math.max(#filteredEvents * rowHeight + 10, frame.leftScroll:GetHeight())
     frame.leftScroll:GetScrollChild():SetHeight(height)
 
-    frame.eventCount:SetText((Addon.L and Addon.L["LABEL_SELECTED"] or "Selected:") .. " " .. Addon.EventMonitor:GetEventCount())
+    frame.eventCount:SetText((Addon.L["LABEL_SELECTED"]) .. " " .. Addon.EventMonitor:GetEventCount())
 end
 
 function Addon.UI:ShowEventImportDialog()
@@ -427,12 +427,12 @@ function Addon.UI:ShowEventImportDialog()
 
         local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         title:SetPoint("TOP", 0, -8)
-        title:SetText(L["EVENT_IMPORT_TITLE"] or "Import Events to Monitor")
+        title:SetText(L["EVENT_IMPORT_TITLE"])
         title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local instrLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         instrLabel:SetPoint("TOPLEFT", 10, -28)
-        instrLabel:SetText(L["EVENT_IMPORT_INSTRUCTIONS"] or "Paste event search output below, then click Import:")
+        instrLabel:SetText(L["EVENT_IMPORT_INSTRUCTIONS"])
         instrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local panel = CreateFrame("Frame", nil, frame, "BackdropTemplate")
@@ -464,26 +464,26 @@ function Addon.UI:ShowEventImportDialog()
         statusLabel:SetText("")
         statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
-        local importBtn = OneWoW_GUI:CreateButton(frame, { text = L["EVENT_IMPORT_BTN_IMPORT"] or "Import Events", width = 120, height = 26 })
+        local importBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = L["EVENT_IMPORT_BTN_IMPORT"], height = 26, minWidth = 100 })
         importBtn:SetPoint("BOTTOMRIGHT", -100, 8)
         importBtn:SetScript("OnClick", function()
             local text = editBox:GetText()
             if not text or text == "" then
-                statusLabel:SetText(L["EVENT_IMPORT_NOTHING"] or "Nothing to import - paste event output first")
+                statusLabel:SetText(L["EVENT_IMPORT_NOTHING"])
                 return
             end
             local count = Addon.EventMonitor:ImportEvents(text)
             if count == 0 then
-                statusLabel:SetText(L["EVENT_IMPORT_NONE_FOUND"] or "No events found in pasted text")
+                statusLabel:SetText(L["EVENT_IMPORT_NONE_FOUND"])
             else
-                statusLabel:SetText((L["EVENT_IMPORT_SUCCESS"] or "Imported {count} event(s) - now monitoring"):gsub("{count}", tostring(count)))
+                statusLabel:SetText((L["EVENT_IMPORT_SUCCESS"]):gsub("{count}", tostring(count)))
                 if not Addon.EventMonitor.monitoring then
                     Addon.EventMonitor:Start()
                 end
             end
         end)
 
-        local cancelBtn = OneWoW_GUI:CreateButton(frame, { text = L["BTN_CLOSE"] or "Close", width = 80, height = 26 })
+        local cancelBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = L["BTN_CLOSE"], height = 26, minWidth = 72 })
         cancelBtn:SetPoint("BOTTOMRIGHT", -10, 8)
         cancelBtn:SetScript("OnClick", function()
             frame:Hide()

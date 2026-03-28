@@ -220,7 +220,7 @@ end
 local function formatRootCountText()
     local count = GB and GB:GetFilteredCount() or 0
     local countText = BreakUpLargeNumbers and BreakUpLargeNumbers(count) or tostring(count)
-    return format("%s %s", countText, L["GLOBALS_COUNT_ENTRIES"] or "entries")
+    return format("%s %s", countText, L["GLOBALS_COUNT_ENTRIES"])
 end
 
 local function updateRootCountLabel(tab)
@@ -233,7 +233,7 @@ local function updateHeader(tab)
     local rootTarget = tab.selectedRootEntry
     local pathTarget = tab.selectedTreeNode or rootTarget
     if not rootTarget then
-        tab.nameText:SetText(L["GLOBALS_MSG_SELECT"] or "Select a global or enum from the list.")
+        tab.nameText:SetText(L["GLOBALS_MSG_SELECT"])
         tab.metaText:SetText(" ")
         tab.pathText:SetText(" ")
         return
@@ -256,7 +256,7 @@ local function updateActionButtons(tab)
     refreshToolbarButton(tab.bookmarkBtn, hasRoot, isBookmarked)
     refreshToolbarButton(tab.favoritesBtn, true, GB.favoritesOnly)
     if tab.bookmarkBtn then
-        local bookmarkText = (isBookmarked and (L["BTN_REMOVE_BOOKMARK"] or "Unbookmark")) or (L["BTN_BOOKMARK"] or "Bookmark")
+        local bookmarkText = (isBookmarked and (L["BTN_REMOVE_BOOKMARK"])) or (L["BTN_BOOKMARK"])
         if tab.bookmarkBtn.SetFitText then
             tab.bookmarkBtn:SetFitText(bookmarkText)
         elseif tab.bookmarkBtn.text then
@@ -624,7 +624,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 180,
         height = 22,
-        placeholderText = L["LABEL_FILTER"] or "Filter...",
+        placeholderText = L["LABEL_FILTER"],
         onTextChanged = function()
             scheduleFilterRefresh(tab)
         end,
@@ -642,19 +642,19 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
         end,
         buildItems = function()
             return {
-                { value = GB.CATEGORY_ALL, text = L["GLOBALS_FILTER_ALL"] or "All" },
-                { value = GB.CATEGORY_GLOBALS, text = L["GLOBALS_FILTER_GLOBALS"] or "Globals" },
-                { value = GB.CATEGORY_ENUM, text = L["GLOBALS_FILTER_ENUM"] or "Enum" },
-                { value = GB.CATEGORY_ADDON_DATA, text = L["GLOBALS_FILTER_ADDON_DATA"] or "Addon Data" },
+                { value = GB.CATEGORY_ALL, text = L["GLOBALS_FILTER_ALL"] },
+                { value = GB.CATEGORY_GLOBALS, text = L["GLOBALS_FILTER_GLOBALS"] },
+                { value = GB.CATEGORY_ENUM, text = L["GLOBALS_FILTER_ENUM"] },
+                { value = GB.CATEGORY_ADDON_DATA, text = L["GLOBALS_FILTER_ADDON_DATA"] },
             }
         end,
         onSelect = function(value)
             GB:SetCategoryFilter(value)
             if categoryDropdown._text then
-                categoryDropdown._text:SetText((value == GB.CATEGORY_GLOBALS and (L["GLOBALS_FILTER_GLOBALS"] or "Globals"))
-                    or (value == GB.CATEGORY_ENUM and (L["GLOBALS_FILTER_ENUM"] or "Enum"))
-                    or (value == GB.CATEGORY_ADDON_DATA and (L["GLOBALS_FILTER_ADDON_DATA"] or "Addon Data"))
-                    or (L["GLOBALS_FILTER_ALL"] or "All"))
+                categoryDropdown._text:SetText((value == GB.CATEGORY_GLOBALS and (L["GLOBALS_FILTER_GLOBALS"]))
+                    or (value == GB.CATEGORY_ENUM and (L["GLOBALS_FILTER_ENUM"]))
+                    or (value == GB.CATEGORY_ADDON_DATA and (L["GLOBALS_FILTER_ADDON_DATA"]))
+                    or (L["GLOBALS_FILTER_ALL"]))
             end
             local noisyRelevant = (value == GB.CATEGORY_ALL or value == GB.CATEGORY_GLOBALS)
             if tab.noisyRootsCheck then
@@ -677,11 +677,11 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     })
     tab.categoryDropdown = categoryDropdown
     if categoryDropdown._text then
-        categoryDropdown._text:SetText(L["GLOBALS_FILTER_ALL"] or "All")
+        categoryDropdown._text:SetText(L["GLOBALS_FILTER_ALL"])
     end
 
     local refreshBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["GLOBALS_BTN_REFRESH"] or "Refresh",
+        text = L["GLOBALS_BTN_REFRESH"],
         height = 22,
         minWidth = 60,
     })
@@ -695,7 +695,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     end)
 
     local favoritesBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_FAVORITES"] or "Favorites",
+        text = L["BTN_FAVORITES"],
         height = 22,
         minWidth = 70,
     })
@@ -709,7 +709,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.favoritesBtn = favoritesBtn
 
     local bookmarkBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_BOOKMARK"] or "Bookmark",
+        text = L["BTN_BOOKMARK"],
         height = 22,
         minWidth = 82,
     })
@@ -726,7 +726,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.bookmarkBtn = bookmarkBtn
 
     local noisyRootsCheck = OneWoW_GUI:CreateCheckbox(tab, {
-        label = L["GLOBALS_TOGGLE_NOISY_ROOTS"] or "Noisy roots",
+        label = L["GLOBALS_TOGGLE_NOISY_ROOTS"],
         checked = GB.includeNoisyRoots,
         onClick = function(self)
             local currentIdentity = saveCurrentRootIdentity(tab)
@@ -738,8 +738,8 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     })
     noisyRootsCheck:SetPoint("LEFT", bookmarkBtn, "RIGHT", 10, 0)
     tab.noisyRootsCheck = noisyRootsCheck
-    attachTooltip(noisyRootsCheck, L["GLOBALS_TOGGLE_NOISY_ROOTS_TIP"] or "Include noisy globals like C_* namespaces, widgets, and mixin-style tables.")
-    attachTooltip(noisyRootsCheck.label, L["GLOBALS_TOGGLE_NOISY_ROOTS_TIP"] or "Include noisy globals like C_* namespaces, widgets, and mixin-style tables.")
+    attachTooltip(noisyRootsCheck, L["GLOBALS_TOGGLE_NOISY_ROOTS_TIP"])
+    attachTooltip(noisyRootsCheck.label, L["GLOBALS_TOGGLE_NOISY_ROOTS_TIP"])
 
     local rootCountText = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rootCountText:SetPoint("LEFT", noisyRootsCheck.label, "RIGHT", 8, 0)
@@ -827,7 +827,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.rightToolbar = rightToolbar
 
     local homeBtn = OneWoW_GUI:CreateFitTextButton(rightToolbar, {
-        text = L["GLOBALS_NAV_HOME"] or "Home",
+        text = L["GLOBALS_NAV_HOME"],
         height = 22,
         minWidth = 44,
     })
@@ -841,7 +841,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.homeBtn = homeBtn
 
     local upBtn = OneWoW_GUI:CreateFitTextButton(rightToolbar, {
-        text = L["GLOBALS_NAV_UP"] or "Up",
+        text = L["GLOBALS_NAV_UP"],
         height = 22,
         minWidth = 36,
     })
@@ -861,7 +861,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.upBtn = upBtn
 
     local collapseAllBtn = OneWoW_GUI:CreateFitTextButton(rightToolbar, {
-        text = L["GLOBALS_BTN_COLLAPSE_ALL"] or "Collapse All",
+        text = L["GLOBALS_BTN_COLLAPSE_ALL"],
         height = 22,
         minWidth = 82,
     })
@@ -876,7 +876,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.collapseAllBtn = collapseAllBtn
 
     local expandAllBtn = OneWoW_GUI:CreateFitTextButton(rightToolbar, {
-        text = L["GLOBALS_BTN_EXPAND_ALL"] or "Expand All",
+        text = L["GLOBALS_BTN_EXPAND_ALL"],
         height = 22,
         minWidth = 78,
     })
@@ -890,7 +890,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     local treeSearchBox = OneWoW_GUI:CreateEditBox(rightToolbar, {
         width = 120,
         height = 22,
-        placeholderText = L["GLOBALS_SEARCH_TREE_PLACEHOLDER"] or "Search tree...",
+        placeholderText = L["GLOBALS_SEARCH_TREE_PLACEHOLDER"],
         onTextChanged = function()
             scheduleTreeFilterRefresh(tab)
         end,
@@ -944,12 +944,12 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.tree = createGlobalsTree(treeContent, treeScroll, tab)
 
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    copyRowLabel:SetText(L["GLOBALS_COPY_ROW_LABEL"] or L["FONT_COPY_ROW_LABEL"] or "Copy:")
+    copyRowLabel:SetText(L["GLOBALS_COPY_ROW_LABEL"])
     copyRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyReferenceBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["GLOBALS_BTN_COPY_REFERENCE"] or "Reference",
+        text = L["GLOBALS_BTN_COPY_REFERENCE"],
         height = 22,
         minWidth = 68,
     })
@@ -965,7 +965,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.copyReferenceBtn = copyReferenceBtn
 
     local copyValueBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["GLOBALS_BTN_COPY_VALUE"] or "Value",
+        text = L["GLOBALS_BTN_COPY_VALUE"],
         height = 22,
         minWidth = 52,
     })
@@ -1017,7 +1017,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
 
     GB:ResetFilterState()
     if categoryDropdown._text then
-        categoryDropdown._text:SetText(L["GLOBALS_FILTER_ALL"] or "All")
+        categoryDropdown._text:SetText(L["GLOBALS_FILTER_ALL"])
     end
     if noisyRootsCheck then
         noisyRootsCheck:SetChecked(GB.includeNoisyRoots and true or false)

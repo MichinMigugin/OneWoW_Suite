@@ -636,8 +636,8 @@ function GB:RebuildRootIndex()
                 entry.ownerTitle = (type(addOnTitle) == "string" and addOnTitle ~= "" and addOnTitle) or addOnName
                 entry.sourceKind = sourceKind
                 entry.sourceLabel = (sourceKind == "local")
-                    and (L["GLOBALS_ADDON_SOURCE_LOCAL"] or "Local table")
-                    or (L["GLOBALS_ADDON_SOURCE_GLOBAL"] or "Global table")
+                    and (L["GLOBALS_ADDON_SOURCE_LOCAL"])
+                    or (L["GLOBALS_ADDON_SOURCE_GLOBAL"])
                 tinsert(roots, entry)
                 self.addonDataCount = self.addonDataCount + 1
             end
@@ -884,7 +884,7 @@ function GB:BuildValueTree(target)
         nodes = self:BuildFilteredTableChildren(value, target.reference, 0, seen, nil, filterText, budget)
         if #nodes == 0 then
             return {
-                makeInfoNode("root.nomatch", L["GLOBALS_MSG_NO_MATCHES"] or "No matches.", nil),
+                makeInfoNode("root.nomatch", L["GLOBALS_MSG_NO_MATCHES"], nil),
             }
         end
     else

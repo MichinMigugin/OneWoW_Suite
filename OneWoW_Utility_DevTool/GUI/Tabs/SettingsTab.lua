@@ -100,7 +100,7 @@ function Addon.UI:CreateSettingsTab(parent)
             parentCb:SetChecked(self:IsTabEnabled(tabKey))
 
             local unloadCb = OneWoW_GUI:CreateCheckbox(section, {
-                label = L["SETTINGS_TAB_UNLOAD_ASSETS"] or "",
+                label = L["SETTINGS_TAB_UNLOAD_ASSETS"],
             })
             unloadCb:SetPoint("TOPLEFT", section, "TOPLEFT", 15 + UNLOAD_COL_OFFSET, y)
             if unloadCb.label then

@@ -21,7 +21,7 @@ end
 local function getDefaultCategory()
     local db = getDB()
     local L = Addon.L or {}
-    return (db and db.defaultCategory) or L["EDITOR_CATEGORY_DEFAULT"] or "Uncategorized"
+    return (db and db.defaultCategory) or L["EDITOR_CATEGORY_DEFAULT"]
 end
 
 local function normalizeSnippetName(name)

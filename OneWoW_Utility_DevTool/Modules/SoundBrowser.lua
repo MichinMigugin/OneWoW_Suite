@@ -385,7 +385,7 @@ function SB:GetPlaySoundFileSnippet(entryRef, channel)
         return ""
     end
     local L = Addon.L or {}
-    local fmt = L["SOUND_SNIPPET_PLAY_SOUND_FILE"] or 'PlaySoundFile(%d, "%s")'
+    local fmt = L["SOUND_SNIPPET_PLAY_SOUND_FILE"]
     return format(fmt, id, channel)
 end
 
@@ -395,7 +395,7 @@ function SB:GetPlaySoundSnippet(soundKitId, channel)
         return ""
     end
     local L = Addon.L or {}
-    local fmt = L["SOUND_SNIPPET_PLAY_SOUND"] or 'PlaySound(%d, "%s")'
+    local fmt = L["SOUND_SNIPPET_PLAY_SOUND"]
     return format(fmt, soundKitId, channel)
 end
 

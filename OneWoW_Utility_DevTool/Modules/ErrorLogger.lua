@@ -160,7 +160,7 @@ function ErrorLogger:UpdateLuaTabBugGrabberNotice()
     end
     if self:IsBugGrabberBridgeActive() then
         local L = Addon.L or {}
-        notice:SetText(L["LUA_TAB_BUGGRABBER_NOTICE"] or "")
+        notice:SetText(L["LUA_TAB_BUGGRABBER_NOTICE"])
         notice:ClearAllPoints()
         notice:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
         notice:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -5, -5)
@@ -262,12 +262,12 @@ function ErrorLogger:_importFromBugGrabber(bgErr)
     local msgStr
     if OneWoW_GUI:IsSecret(rawMsg) then
         local L = Addon.L or {}
-        msgStr = L["ERR_MSG_SECRET"] or "[Secret error — details withheld by the client]"
+        msgStr = L["ERR_MSG_SECRET"]
     else
         msgStr = tostring(rawMsg)
         if OneWoW_GUI:IsSecret(msgStr) then
             local L = Addon.L or {}
-            msgStr = L["ERR_MSG_SECRET"] or "[Secret error — details withheld by the client]"
+            msgStr = L["ERR_MSG_SECRET"]
         end
     end
     if msgStr:find("ErrorLogger", 1, true) or msgStr:find("OneWoW_Utility_DevTool", 1, true) then
@@ -372,7 +372,7 @@ function ErrorLogger:_applyErrorThrottle()
         if not self._paused then
             if GetTime() > (self._lastThrottleWarn or 0) + 10 then
                 local L = Addon.L or {}
-                Addon:Print(L["ERR_THROTTLE_PAUSED"] or "Too many errors; capture throttled until the flood stops.")
+                Addon:Print(L["ERR_THROTTLE_PAUSED"])
                 self._lastThrottleWarn = GetTime()
             end
             self._paused = true
@@ -479,7 +479,7 @@ function ErrorLogger:_onAuxEvent(event, a1, a2)
         local fn = a2 or "<func>"
         if not self._badAddonBlocked[addonName] then
             self._badAddonBlocked[addonName] = true
-            local template = L["ERR_ADDON_CALL_PROTECTED"] or "[%s] AddOn '%s' tried to call the protected function '%s'."
+            local template = L["ERR_ADDON_CALL_PROTECTED"]
             self:StoreErrorSimple(format(template, event, addonName, fn))
         end
     elseif event == "LUA_WARNING" then
@@ -520,12 +520,12 @@ function ErrorLogger:_captureFromHandler(msg, isSimple)
     local msgStr
     if OneWoW_GUI:IsSecret(msg) then
         local L = Addon.L or {}
-        msgStr = L["ERR_MSG_SECRET"] or "[Secret error — details withheld by the client]"
+        msgStr = L["ERR_MSG_SECRET"]
     else
         msgStr = tostring(msg)
         if OneWoW_GUI:IsSecret(msgStr) then
             local L = Addon.L or {}
-            msgStr = L["ERR_MSG_SECRET"] or "[Secret error — details withheld by the client]"
+            msgStr = L["ERR_MSG_SECRET"]
         end
     end
     if msgStr:find("ErrorLogger", 1, true) or msgStr:find("OneWoW_Utility_DevTool", 1, true) then
@@ -674,7 +674,7 @@ function ErrorLogger:UpdateUI()
     local errors = self:GetErrors()
     local currentSession = self:GetSessionId()
 
-    tab.countLabel:SetText((L["LABEL_ERRORS"] or "Errors:") .. " " .. #errors)
+    tab.countLabel:SetText((L["LABEL_ERRORS"]) .. " " .. #errors)
     if tab.LayoutErrorRowAnchors then
         tab.LayoutErrorRowAnchors()
     end
@@ -688,9 +688,9 @@ function ErrorLogger:UpdateUI()
             local isCurrentSession = (err.session == currentSession)
             local sessionLabel
             if isCurrentSession then
-                sessionLabel = L["ERR_SESSION_CURRENT"] or "Current"
+                sessionLabel = L["ERR_SESSION_CURRENT"]
             else
-                sessionLabel = (L["ERR_SESSION_PREFIX"] or "Session") .. " " .. (err.session or "?")
+                sessionLabel = (L["ERR_SESSION_PREFIX"]) .. " " .. (err.session or "?")
             end
 
             local countStr = ""
@@ -733,46 +733,46 @@ function ErrorLogger:ShowErrorDetails(errorData)
 
     local sessionLabel
     if errorData.session == currentSession then
-        sessionLabel = L["ERR_SESSION_CURRENT_FULL"] or "Current Session"
+        sessionLabel = L["ERR_SESSION_CURRENT_FULL"]
     else
-        sessionLabel = (L["ERR_SESSION_PREFIX"] or "Session") .. " " .. (errorData.session or "?")
+        sessionLabel = (L["ERR_SESSION_PREFIX"]) .. " " .. (errorData.session or "?")
     end
 
     local details = {}
     if SC then
-        tinsert(details, SC:ColorizeMetaLine(L["ERR_DETAIL_TIME"] or "TIME:", formatTimeDisplay(errorData)))
-        tinsert(details, SC:ColorizeMetaLine(L["ERR_DETAIL_SESSION"] or "SESSION:", sessionLabel))
+        tinsert(details, SC:ColorizeMetaLine(L["ERR_DETAIL_TIME"], formatTimeDisplay(errorData)))
+        tinsert(details, SC:ColorizeMetaLine(L["ERR_DETAIL_SESSION"], sessionLabel))
         if errorData.counter and errorData.counter > 1 then
-            tinsert(details, SC:ColorizeMetaLine(L["ERR_DETAIL_COUNT"] or "COUNT:", errorData.counter))
+            tinsert(details, SC:ColorizeMetaLine(L["ERR_DETAIL_COUNT"], errorData.counter))
         end
         tinsert(details, "")
-        tinsert(details, SC:ColorizeHeader(L["ERR_DETAIL_MESSAGE"] or "MESSAGE:"))
+        tinsert(details, SC:ColorizeHeader(L["ERR_DETAIL_MESSAGE"]))
         tinsert(details, SC:ColorizeMessage(errorData.message or ""))
         tinsert(details, "")
-        tinsert(details, SC:ColorizeHeader(L["ERR_DETAIL_STACK"] or "STACK TRACE:"))
+        tinsert(details, SC:ColorizeHeader(L["ERR_DETAIL_STACK"]))
         tinsert(details, SC:ColorizeStack(errorData.stack or ""))
 
         if errorData.locals and errorData.locals ~= "" then
             tinsert(details, "")
-            tinsert(details, SC:ColorizeHeader(L["ERR_DETAIL_LOCALS"] or "LOCALS:"))
+            tinsert(details, SC:ColorizeHeader(L["ERR_DETAIL_LOCALS"]))
             tinsert(details, SC:ColorizeLocals(errorData.locals))
         end
     else
-        tinsert(details, (L["ERR_DETAIL_TIME"] or "TIME:") .. " " .. formatTimeDisplay(errorData))
-        tinsert(details, (L["ERR_DETAIL_SESSION"] or "SESSION:") .. " " .. sessionLabel)
+        tinsert(details, (L["ERR_DETAIL_TIME"]) .. " " .. formatTimeDisplay(errorData))
+        tinsert(details, (L["ERR_DETAIL_SESSION"]) .. " " .. sessionLabel)
         if errorData.counter and errorData.counter > 1 then
-            tinsert(details, (L["ERR_DETAIL_COUNT"] or "COUNT:") .. " " .. errorData.counter)
+            tinsert(details, (L["ERR_DETAIL_COUNT"]) .. " " .. errorData.counter)
         end
         tinsert(details, "")
-        tinsert(details, (L["ERR_DETAIL_MESSAGE"] or "MESSAGE:"))
+        tinsert(details, (L["ERR_DETAIL_MESSAGE"]))
         tinsert(details, errorData.message or "")
         tinsert(details, "")
-        tinsert(details, (L["ERR_DETAIL_STACK"] or "STACK TRACE:"))
+        tinsert(details, (L["ERR_DETAIL_STACK"]))
         tinsert(details, errorData.stack or "")
 
         if errorData.locals and errorData.locals ~= "" then
             tinsert(details, "")
-            tinsert(details, (L["ERR_DETAIL_LOCALS"] or "LOCALS:"))
+            tinsert(details, (L["ERR_DETAIL_LOCALS"]))
             tinsert(details, errorData.locals)
         end
     end
@@ -791,46 +791,46 @@ function ErrorLogger:ShowErrorDetails(errorData)
     if analysis and tab.analysisText then
         local lines = {}
         if SC then
-            tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_ERROR_TYPE"] or "ERROR TYPE:", analysis.errorType or ""))
-            tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_ROOT_CAUSE"] or "ROOT CAUSE:", analysis.rootCauseLabel or ""))
+            tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_ERROR_TYPE"], analysis.errorType or ""))
+            tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_ROOT_CAUSE"], analysis.rootCauseLabel or ""))
             if analysis.reportedAddon then
-                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_REPORTED_ADDON"] or "REPORTED ADDON:", analysis.reportedAddon))
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_REPORTED_ADDON"], analysis.reportedAddon))
             end
             if analysis.offendingAddon and analysis.offendingAddon ~= analysis.reportedAddon then
-                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_OFFENDING_ADDON"] or "OFFENDING ADDON:", analysis.offendingAddon))
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_OFFENDING_ADDON"], analysis.offendingAddon))
             end
             if analysis.taintSource then
-                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_TAINT_SOURCE"] or "TAINT SOURCE:", analysis.taintSource))
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_TAINT_SOURCE"], analysis.taintSource))
             end
             if analysis.protectedAction then
-                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_PROTECTED"] or "PROTECTED:", analysis.protectedAction))
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_PROTECTED"], analysis.protectedAction))
             end
             if analysis.triggerLocation then
-                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_TRIGGER"] or "TRIGGER:", analysis.triggerLocation))
+                tinsert(lines, SC:ColorizeMetaLine(L["ERR_ANALYSIS_TRIGGER"], analysis.triggerLocation))
             end
             tinsert(lines, "")
-            tinsert(lines, SC:ColorizeHeader(L["ERR_ANALYSIS_RECOMMENDATION"] or "RECOMMENDATION:"))
+            tinsert(lines, SC:ColorizeHeader(L["ERR_ANALYSIS_RECOMMENDATION"]))
             tinsert(lines, SC:ColorizeMessage(analysis.recommendation or ""))
         else
-            tinsert(lines, (L["ERR_ANALYSIS_ERROR_TYPE"] or "ERROR TYPE:") .. " " .. (analysis.errorType or ""))
-            tinsert(lines, (L["ERR_ANALYSIS_ROOT_CAUSE"] or "ROOT CAUSE:") .. " " .. (analysis.rootCauseLabel or ""))
+            tinsert(lines, (L["ERR_ANALYSIS_ERROR_TYPE"]) .. " " .. (analysis.errorType or ""))
+            tinsert(lines, (L["ERR_ANALYSIS_ROOT_CAUSE"]) .. " " .. (analysis.rootCauseLabel or ""))
             if analysis.reportedAddon then
-                tinsert(lines, (L["ERR_ANALYSIS_REPORTED_ADDON"] or "REPORTED ADDON:") .. " " .. analysis.reportedAddon)
+                tinsert(lines, (L["ERR_ANALYSIS_REPORTED_ADDON"]) .. " " .. analysis.reportedAddon)
             end
             if analysis.offendingAddon and analysis.offendingAddon ~= analysis.reportedAddon then
-                tinsert(lines, (L["ERR_ANALYSIS_OFFENDING_ADDON"] or "OFFENDING ADDON:") .. " " .. analysis.offendingAddon)
+                tinsert(lines, (L["ERR_ANALYSIS_OFFENDING_ADDON"]) .. " " .. analysis.offendingAddon)
             end
             if analysis.taintSource then
-                tinsert(lines, (L["ERR_ANALYSIS_TAINT_SOURCE"] or "TAINT SOURCE:") .. " " .. analysis.taintSource)
+                tinsert(lines, (L["ERR_ANALYSIS_TAINT_SOURCE"]) .. " " .. analysis.taintSource)
             end
             if analysis.protectedAction then
-                tinsert(lines, (L["ERR_ANALYSIS_PROTECTED"] or "PROTECTED:") .. " " .. analysis.protectedAction)
+                tinsert(lines, (L["ERR_ANALYSIS_PROTECTED"]) .. " " .. analysis.protectedAction)
             end
             if analysis.triggerLocation then
-                tinsert(lines, (L["ERR_ANALYSIS_TRIGGER"] or "TRIGGER:") .. " " .. analysis.triggerLocation)
+                tinsert(lines, (L["ERR_ANALYSIS_TRIGGER"]) .. " " .. analysis.triggerLocation)
             end
             tinsert(lines, "")
-            tinsert(lines, (L["ERR_ANALYSIS_RECOMMENDATION"] or "RECOMMENDATION:"))
+            tinsert(lines, (L["ERR_ANALYSIS_RECOMMENDATION"]))
             tinsert(lines, analysis.recommendation or "")
         end
 
@@ -842,7 +842,7 @@ end
 
 function ErrorLogger:CopyCurrentError()
     if not self.currentError then
-        Addon:Print(Addon.L and Addon.L["ERR_MSG_NONE_SELECTED"] or "No error selected")
+        Addon:Print(Addon.L["ERR_MSG_NONE_SELECTED"])
         return
     end
 
@@ -856,7 +856,7 @@ function ErrorLogger:CopyCurrentError()
         text = tostring(self.currentError.message)
     end
 
-    Addon:CopyToClipboard(text, L["ERR_COPY_TITLE"] or "Copy error")
+    Addon:CopyToClipboard(text, L["ERR_COPY_TITLE"])
 end
 
 function ErrorLogger:ClearErrors()
@@ -870,11 +870,11 @@ function ErrorLogger:ClearErrors()
     self:UpdateErrorBadge()
 
     if Addon.LuaConsoleTab then
-        Addon.LuaConsoleTab.detailsText:SetText(Addon.L and Addon.L["LABEL_NO_ERROR"] or "No error selected")
+        Addon.LuaConsoleTab.detailsText:SetText(Addon.L["LABEL_NO_ERROR"])
         if Addon.LuaConsoleTab.analysisText then
-            Addon.LuaConsoleTab.analysisText:SetText(Addon.L and Addon.L["ERR_ANALYSIS_NONE"] or "Select an error to see analysis")
+            Addon.LuaConsoleTab.analysisText:SetText(Addon.L["ERR_ANALYSIS_NONE"])
         end
     end
 
-    Addon:Print(Addon.L and Addon.L["ERR_MSG_CLEARED"] or "Error log cleared")
+    Addon:Print(Addon.L["ERR_MSG_CLEARED"])
 end

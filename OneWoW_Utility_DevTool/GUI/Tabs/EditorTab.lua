@@ -84,7 +84,7 @@ function Addon.UI:CreateEditorTab(parent)
         if EE and EE.GetDefaultCategory then
             return EE:GetDefaultCategory()
         end
-        return L["EDITOR_CATEGORY_DEFAULT"] or "Uncategorized"
+        return L["EDITOR_CATEGORY_DEFAULT"]
     end
 
     local function createDialogErrorLabel(dialog, anchor)
@@ -109,10 +109,10 @@ function Addon.UI:CreateEditorTab(parent)
         local snippet = EE:GetSnippet(snippetId)
         newName = strtrim(newName or "")
         if not snippet or newName == "" then
-            return L["EDITOR_MSG_NAME_REQUIRED"] or "Snippet name is required before saving."
+            return L["EDITOR_MSG_NAME_REQUIRED"]
         end
         if EE:IsSnippetNameTakenInCategory(snippet.category, newName, snippetId) then
-            return L["EDITOR_ERROR_SNIPPET_NAME_EXISTS"] or "That snippet name already exists in this category."
+            return L["EDITOR_ERROR_SNIPPET_NAME_EXISTS"]
         end
         return nil, newName
     end
@@ -120,14 +120,14 @@ function Addon.UI:CreateEditorTab(parent)
     local function getCategoryNameError(oldName, newName)
         newName = strtrim(newName or "")
         if newName == "" then
-            return L["EDITOR_ERROR_CATEGORY_NAME_REQUIRED"] or "Category name is required."
+            return L["EDITOR_ERROR_CATEGORY_NAME_REQUIRED"]
         end
         if oldName and oldName == getDefaultCategoryName() and newName ~= oldName then
-            return L["EDITOR_ERROR_CATEGORY_DEFAULT_RENAME"] or "The default category cannot be renamed."
+            return L["EDITOR_ERROR_CATEGORY_DEFAULT_RENAME"]
         end
         for _, cat in ipairs(EE:GetCategories()) do
             if cat == newName and cat ~= oldName then
-                return L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"] or "That category name already exists."
+                return L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"]
             end
         end
         return nil, newName
@@ -160,23 +160,23 @@ function Addon.UI:CreateEditorTab(parent)
     local btnGap = 4
     local sectionGap = 14
 
-    local newBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_NEW"] or "New", height = btnHeight })
+    local newBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_NEW"], height = btnHeight })
     newBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
 
-    local renameBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_RENAME"] or "Rename", height = btnHeight })
+    local renameBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_RENAME"], height = btnHeight })
     renameBtn:SetPoint("LEFT", newBtn, "RIGHT", btnGap, 0)
 
-    local dupBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_DUPLICATE"] or "Duplicate", height = btnHeight })
+    local dupBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_DUPLICATE"], height = btnHeight })
     dupBtn:SetPoint("LEFT", renameBtn, "RIGHT", btnGap, 0)
 
-    local saveBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_SAVE"] or "Save", height = btnHeight })
+    local saveBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_SAVE"], height = btnHeight })
     saveBtn:SetPoint("LEFT", dupBtn, "RIGHT", btnGap, 0)
 
-    local deleteBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_DELETE"] or "Delete", height = btnHeight })
+    local deleteBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_DELETE"], height = btnHeight })
     deleteBtn:SetPoint("LEFT", saveBtn, "RIGHT", btnGap, 0)
 
 
-    local runBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_RUN"] or "Run", height = btnHeight })
+    local runBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_RUN"], height = btnHeight })
     runBtn:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -5, -5)
 
     local autoSaveBox = OneWoW_GUI:CreateEditBox(tab, { width = 30, height = btnHeight })
@@ -184,7 +184,7 @@ function Addon.UI:CreateEditorTab(parent)
     autoSaveBox:SetMaxLetters(2)
     autoSaveBox:Hide()
 
-    local autoSaveBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_AUTOSAVE"] or "Autosave", height = btnHeight })
+    local autoSaveBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_AUTOSAVE"], height = btnHeight })
     autoSaveBtn:SetPoint("RIGHT", runBtn, "LEFT", -sectionGap, 0)
 
     local function refreshAutoSaveLayout()
@@ -265,12 +265,12 @@ function Addon.UI:CreateEditorTab(parent)
     autoSaveBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     autoSaveBox:HookScript("OnEditFocusLost", clampAutoSaveInterval)
 
-    local codeOptsBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_CODE_OPTIONS"] or "Code Options", height = btnHeight })
+    local codeOptsBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_CODE_OPTIONS"], height = btnHeight })
     codeOptsBtn:SetPoint("RIGHT", autoSaveBtn, "LEFT", -sectionGap, 0)
     codeOptsBtn:SetScript("OnClick", function(self, button)
         if button ~= "LeftButton" then return end
         MenuUtil.CreateContextMenu(self, function(_, root)
-            local indentSub = root:CreateButton(L["EDITOR_LABEL_INDENT"] or "Indent", noop)
+            local indentSub = root:CreateButton(L["EDITOR_LABEL_INDENT"], noop)
             for _, size in ipairs({2, 3, 4}) do
                 indentSub:CreateRadio(tostring(size),
                     function() return getIndentSize() == size end,
@@ -292,7 +292,7 @@ function Addon.UI:CreateEditorTab(parent)
                         end
                     end)
             end
-            local sizeSub = root:CreateButton(L["EDITOR_LABEL_FONT_SIZE"] or "Font Size", noop)
+            local sizeSub = root:CreateButton(L["EDITOR_LABEL_FONT_SIZE"], noop)
             for _, sz in ipairs({10, 12, 14, 16, 18}) do
                 sizeSub:CreateRadio(tostring(sz),
                     function() return getFontSize() == sz end,
@@ -338,21 +338,21 @@ function Addon.UI:CreateEditorTab(parent)
     leftPanel:SetWidth(db and db.leftPaneWidth or LEFT_DEFAULT)
     self:StyleContentPanel(leftPanel)
 
-    local newCatBtn = OneWoW_GUI:CreateFitTextButton(leftPanel, { text = L["EDITOR_BTN_NEW_CATEGORY"] or "New Category", height = 18 })
+    local newCatBtn = OneWoW_GUI:CreateFitTextButton(leftPanel, { text = L["EDITOR_BTN_NEW_CATEGORY"], height = 18 })
     newCatBtn:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -3)
 
     local helpBtn = OneWoW_GUI:CreateFitTextButton(leftPanel, { text = "?", height = 18, minWidth = 24 })
     helpBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -22, -3)
     helpBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(L["EDITOR_SHORTCUTS_TITLE"] or "Keyboard Shortcuts", 1, 1, 1)
-        GameTooltip:AddLine(L["EDITOR_SHORTCUT_SAVE"] or "Ctrl+S — Save", nil, nil, nil, true)
-        GameTooltip:AddLine(L["EDITOR_SHORTCUT_UNDO"] or "Ctrl+Z — Undo", nil, nil, nil, true)
-        GameTooltip:AddLine(L["EDITOR_SHORTCUT_REDO"] or "Ctrl+Y — Redo", nil, nil, nil, true)
-        GameTooltip:AddLine(L["EDITOR_SHORTCUT_FIND"] or "Ctrl+F — Find / Replace", nil, nil, nil, true)
-        GameTooltip:AddLine(L["EDITOR_SHORTCUT_RUN"] or "Ctrl+Enter — Run", nil, nil, nil, true)
-        GameTooltip:AddLine(L["EDITOR_SHORTCUT_INDENT"] or "Tab — Indent", nil, nil, nil, true)
-        GameTooltip:AddLine(L["EDITOR_SHORTCUT_CLOSE_FIND"] or "Escape — Close find bar", nil, nil, nil, true)
+        GameTooltip:SetText(L["EDITOR_SHORTCUTS_TITLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_SAVE"], nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_UNDO"], nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_REDO"], nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_FIND"], nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_RUN"], nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_INDENT"], nil, nil, nil, true)
+        GameTooltip:AddLine(L["EDITOR_SHORTCUT_CLOSE_FIND"], nil, nil, nil, true)
         GameTooltip:Show()
     end)
     helpBtn:SetScript("OnLeave", GameTooltip_Hide)
@@ -424,22 +424,22 @@ function Addon.UI:CreateEditorTab(parent)
     findBar:SetPoint("RIGHT", editorPanel, "RIGHT", 0, 0)
     findBar:Hide()
 
-    local findBox = OneWoW_GUI:CreateEditBox(findBar, { width = 150, height = 22, placeholderText = L["EDITOR_FIND_PLACEHOLDER"] or "Find..." })
+    local findBox = OneWoW_GUI:CreateEditBox(findBar, { width = 150, height = 22, placeholderText = L["EDITOR_FIND_PLACEHOLDER"] })
     findBox:SetPoint("LEFT", findBar, "LEFT", 4, 0)
 
-    local findNextBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_NEXT"] or "Next", height = 22 })
+    local findNextBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_NEXT"], height = 22 })
     findNextBtn:SetPoint("LEFT", findBox, "RIGHT", 2, 0)
 
-    local findPrevBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_PREV"] or "Prev", height = 22 })
+    local findPrevBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_PREV"], height = 22 })
     findPrevBtn:SetPoint("LEFT", findNextBtn, "RIGHT", 2, 0)
 
-    local replaceBox = OneWoW_GUI:CreateEditBox(findBar, { width = 120, height = 22, placeholderText = L["EDITOR_REPLACE_PLACEHOLDER"] or "Replace..." })
+    local replaceBox = OneWoW_GUI:CreateEditBox(findBar, { width = 120, height = 22, placeholderText = L["EDITOR_REPLACE_PLACEHOLDER"] })
     replaceBox:SetPoint("LEFT", findPrevBtn, "RIGHT", 6, 0)
 
-    local replaceBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_REPLACE"] or "Replace", height = 22 })
+    local replaceBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_REPLACE"], height = 22 })
     replaceBtn:SetPoint("LEFT", replaceBox, "RIGHT", 2, 0)
 
-    local replaceAllBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_REPLACE_ALL"] or "All", height = 22 })
+    local replaceAllBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_REPLACE_ALL"], height = 22 })
     replaceAllBtn:SetPoint("LEFT", replaceBtn, "RIGHT", 2, 0)
 
     local findCloseBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = "X", height = 22, minWidth = 22 })
@@ -513,18 +513,18 @@ function Addon.UI:CreateEditorTab(parent)
 
     local noSnippetMsg = editorPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     noSnippetMsg:SetPoint("CENTER", editorBg, "CENTER", 0, 0)
-    noSnippetMsg:SetText(L["EDITOR_MSG_NO_SNIPPET"] or "Create or select a snippet to begin editing.")
+    noSnippetMsg:SetText(L["EDITOR_MSG_NO_SNIPPET"])
     noSnippetMsg:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local clearOutputBtn = OneWoW_GUI:CreateFitTextButton(outputPanel, { text = L["EDITOR_BTN_CLEAR_OUTPUT"] or "Clear", height = 18 })
+    local clearOutputBtn = OneWoW_GUI:CreateFitTextButton(outputPanel, { text = L["EDITOR_BTN_CLEAR_OUTPUT"], height = 18 })
     clearOutputBtn:SetPoint("TOPRIGHT", outputPanel, "TOPRIGHT", -4, -2)
 
-    local copyOutputBtn = OneWoW_GUI:CreateFitTextButton(outputPanel, { text = L["EDITOR_BTN_COPY_OUTPUT"] or "Copy", height = 18 })
+    local copyOutputBtn = OneWoW_GUI:CreateFitTextButton(outputPanel, { text = L["EDITOR_BTN_COPY_OUTPUT"], height = 18 })
     copyOutputBtn:SetPoint("RIGHT", clearOutputBtn, "LEFT", -4, 0)
 
     local outputLabel = outputPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     outputLabel:SetPoint("TOPLEFT", outputPanel, "TOPLEFT", 6, -4)
-    outputLabel:SetText(L["EDITOR_LABEL_OUTPUT"] or "Output")
+    outputLabel:SetText(L["EDITOR_LABEL_OUTPUT"])
     outputLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local outputScroll = CreateFrame("ScrollingMessageFrame", nil, outputPanel)
@@ -545,7 +545,7 @@ function Addon.UI:CreateEditorTab(parent)
     local commandBox = OneWoW_GUI:CreateEditBox(outputPanel, {
         width = 100,
         height = 20,
-        placeholderText = L["EDITOR_PROMPT_COMMAND"] or "> ",
+        placeholderText = L["EDITOR_PROMPT_COMMAND"],
     })
     commandBox:SetPoint("BOTTOMLEFT", outputPanel, "BOTTOMLEFT", 4, 2)
     commandBox:SetPoint("BOTTOMRIGHT", outputPanel, "BOTTOMRIGHT", -4, 2)
@@ -559,7 +559,7 @@ function Addon.UI:CreateEditorTab(parent)
 
     copyOutputBtn:SetScript("OnClick", function()
         if #outputBuffer == 0 then return end
-        Addon:CopyToClipboard(table.concat(outputBuffer, "\n"), L["EDITOR_LABEL_OUTPUT"] or "Output")
+        Addon:CopyToClipboard(table.concat(outputBuffer, "\n"), L["EDITOR_LABEL_OUTPUT"])
     end)
 
     local function addOutput(msg, msgType)
@@ -683,7 +683,7 @@ function Addon.UI:CreateEditorTab(parent)
         if pos <= plainPos then
             col = plainPos - pos + 1
         end
-        lnColFS:SetText(format(L["EDITOR_STATUS_LN_COL"] or "Ln %d, Col %d", line, col))
+        lnColFS:SetText(format(L["EDITOR_STATUS_LN_COL"], line, col))
     end
 
     local function doSyntaxCheck()
@@ -825,10 +825,10 @@ function Addon.UI:CreateEditorTab(parent)
         header:SetScript("OnMouseDown", function(self, button)
             if button ~= "RightButton" or self.catName == getDefaultCategoryName() then return end
             MenuUtil.CreateContextMenu(self, function(_, root)
-                root:CreateButton(L["EDITOR_CTX_RENAME_CATEGORY"] or "Rename Category", function()
+                root:CreateButton(L["EDITOR_CTX_RENAME_CATEGORY"], function()
                     tab:ShowCategoryRenameDialog(self.catName)
                 end)
-                root:CreateButton(L["EDITOR_CTX_DELETE_CATEGORY"] or "Delete Category", function()
+                root:CreateButton(L["EDITOR_CTX_DELETE_CATEGORY"], function()
                     tab:ShowCategoryDeleteConfirm(self.catName)
                 end)
             end)
@@ -870,31 +870,31 @@ function Addon.UI:CreateEditorTab(parent)
             local snippet = EE:GetSnippet(self.snippetId)
             if not snippet then return end
             MenuUtil.CreateContextMenu(self, function(_, root)
-                root:CreateButton(L["EDITOR_CTX_RENAME"] or "Rename", function()
+                root:CreateButton(L["EDITOR_CTX_RENAME"], function()
                     tab:ShowRenameDialog(self.snippetId)
                 end)
-                root:CreateButton(L["EDITOR_CTX_DUPLICATE"] or "Duplicate", function()
+                root:CreateButton(L["EDITOR_CTX_DUPLICATE"], function()
                     local newId = EE:DuplicateSnippet(self.snippetId)
                     if newId then
                         local duplicatedSnippet = EE:GetSnippet(newId)
-                        updateStatusMessage(format(L["EDITOR_STATUS_SNIPPET_DUPLICATED"] or "Duplicated: %s", duplicatedSnippet and duplicatedSnippet.name or ""))
+                        updateStatusMessage(format(L["EDITOR_STATUS_SNIPPET_DUPLICATED"], duplicatedSnippet and duplicatedSnippet.name or ""))
                         refreshSnippetList()
                         tab:SwitchToSnippet(newId, true)
                     end
                 end)
-                local moveSub = root:CreateButton(L["EDITOR_CTX_MOVE_TO"] or "Move to", noop)
+                local moveSub = root:CreateButton(L["EDITOR_CTX_MOVE_TO"], noop)
                 for _, cat in ipairs(EE:GetCategories()) do
                     if cat ~= snippet.category then
                         moveSub:CreateButton(cat, function()
                             if EE:MoveSnippet(self.snippetId, cat) then
                                 refreshSnippetList()
                             else
-                                updateStatusMessage(format(L["EDITOR_ERROR_SNIPPET_MOVE_EXISTS"] or "A snippet with that name already exists in %s.", cat))
+                                updateStatusMessage(format(L["EDITOR_ERROR_SNIPPET_MOVE_EXISTS"], cat))
                             end
                         end)
                     end
                 end
-                root:CreateButton(L["EDITOR_CTX_DELETE"] or "Delete", function()
+                root:CreateButton(L["EDITOR_CTX_DELETE"], function()
                     tab:ShowDeleteConfirm(self.snippetId)
                 end)
             end)
@@ -1060,7 +1060,7 @@ function Addon.UI:CreateEditorTab(parent)
                 end
                 EE:SaveSnippet(activeSnippetId, trimmed)
                 doSyntaxCheck()
-                updateStatusMessage(format(L["EDITOR_STATUS_SAVED"] or "Saved: %s", s and s.name or ""))
+                updateStatusMessage(format(L["EDITOR_STATUS_SAVED"], s and s.name or ""))
                 refreshSnippetList()
             end)
             return
@@ -1075,7 +1075,7 @@ function Addon.UI:CreateEditorTab(parent)
         end
         EE:SaveSnippet(activeSnippetId, trimmed)
         doSyntaxCheck()
-        updateStatusMessage(format(L["EDITOR_STATUS_SAVED"] or "Saved: %s", snippet.name))
+        updateStatusMessage(format(L["EDITOR_STATUS_SAVED"], snippet.name))
         refreshSnippetList()
     end
 
@@ -1087,7 +1087,7 @@ function Addon.UI:CreateEditorTab(parent)
         local name = snippet and snippet.name or "editor"
         local ok, _, errLineNum = EE:RunSnippet(text, name)
         if ok then
-            updateStatusMessage(format(L["EDITOR_STATUS_RUN_COMPLETED"] or "%s run: Completed successfully.", name))
+            updateStatusMessage(format(L["EDITOR_STATUS_RUN_COMPLETED"], name))
         else
             errorLine = errLineNum
         end
@@ -1107,12 +1107,12 @@ function Addon.UI:CreateEditorTab(parent)
 
     function tab:ShowUnsavedDialog(onSave, onDiscard)
         local dialog = OneWoW_GUI:CreateConfirmDialog({
-            title = L["EDITOR_UNSAVED_TITLE"] or "Unsaved Changes",
-            message = L["EDITOR_UNSAVED_MESSAGE"] or "Current snippet has unsaved changes.",
+            title = L["EDITOR_UNSAVED_TITLE"],
+            message = L["EDITOR_UNSAVED_MESSAGE"],
             buttons = {
-                { text = L["EDITOR_BTN_SAVE_CHANGES"] or "Save", onClick = function(d) d:Hide(); if onSave then onSave() end end },
-                { text = L["EDITOR_BTN_DISCARD"] or "Discard", onClick = function(d) d:Hide(); if onDiscard then onDiscard() end end },
-                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+                { text = L["EDITOR_BTN_SAVE_CHANGES"], onClick = function(d) d:Hide(); if onSave then onSave() end end },
+                { text = L["EDITOR_BTN_DISCARD"], onClick = function(d) d:Hide(); if onDiscard then onDiscard() end end },
+                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
             },
         })
         trackDialog(dialog)
@@ -1125,17 +1125,17 @@ function Addon.UI:CreateEditorTab(parent)
 
         local dialog
         dialog = OneWoW_GUI:CreateConfirmDialog({
-            title = L["EDITOR_RENAME_TITLE"] or "Rename Snippet",
+            title = L["EDITOR_RENAME_TITLE"],
             message = "",
             buttons = {
-                { text = L["EDITOR_BTN_SAVE"] or "Save", onClick = function(d)
+                { text = L["EDITOR_BTN_SAVE"], onClick = function(d)
                     local box = dialog and dialog.renameBox
                     local err, newName = getSnippetRenameError(snippetId, box and box:GetText())
                     if not err and newName ~= (box and box.placeholderText or "") then
                         setDialogError(dialog, "")
                         d:Hide()
                         EE:RenameSnippet(snippetId, newName)
-                        updateStatusMessage(format(L["EDITOR_STATUS_RENAMED"] or "Renamed: %s", newName))
+                        updateStatusMessage(format(L["EDITOR_STATUS_RENAMED"], newName))
                         refreshSnippetList()
                         if afterRename then afterRename() end
                     elseif box then
@@ -1143,14 +1143,14 @@ function Addon.UI:CreateEditorTab(parent)
                         box:SetFocus()
                     end
                 end },
-                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
             },
         })
 
         local renameBox = OneWoW_GUI:CreateEditBox(dialog.contentFrame, {
             width = 250,
             height = 24,
-            placeholderText = L["EDITOR_RENAME_PLACEHOLDER"] or "Enter snippet name...",
+            placeholderText = L["EDITOR_RENAME_PLACEHOLDER"],
         })
         renameBox:SetPoint("TOP", dialog.titleLabel, "BOTTOM", 0, -16)
         renameBox:SetText(snippet.name or "")
@@ -1168,7 +1168,7 @@ function Addon.UI:CreateEditorTab(parent)
             if not err and newName ~= (self.placeholderText or "") then
                 setDialogError(dialog, "")
                 EE:RenameSnippet(snippetId, newName)
-                updateStatusMessage(format(L["EDITOR_STATUS_RENAMED"] or "Renamed: %s", newName))
+                updateStatusMessage(format(L["EDITOR_STATUS_RENAMED"], newName))
                 refreshSnippetList()
                 if afterRename then afterRename() end
                 dialog.frame:Hide()
@@ -1185,30 +1185,30 @@ function Addon.UI:CreateEditorTab(parent)
     function tab:ShowCategoryRenameDialog(catName)
         local dialog
         dialog = OneWoW_GUI:CreateConfirmDialog({
-            title = L["EDITOR_CATEGORY_RENAME_TITLE"] or "Rename Category",
+            title = L["EDITOR_CATEGORY_RENAME_TITLE"],
             message = "",
             buttons = {
-                { text = L["EDITOR_BTN_SAVE"] or "Save", onClick = function(d)
+                { text = L["EDITOR_BTN_SAVE"], onClick = function(d)
                     local box = dialog and dialog.renameBox
                     local err, newName = getCategoryNameError(catName, box and box:GetText())
                     if not err and newName ~= (box and box.placeholderText or "") and EE:RenameCategory(catName, newName) then
                         setDialogError(dialog, "")
                         d:Hide()
-                        updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_RENAMED"] or "Category renamed: %s", newName))
+                        updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_RENAMED"], newName))
                         refreshSnippetList()
                     elseif box then
-                        setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"] or "That category name already exists."))
+                        setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"]))
                         box:SetFocus()
                     end
                 end },
-                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
             },
         })
 
         local renameBox = OneWoW_GUI:CreateEditBox(dialog.contentFrame, {
             width = 250,
             height = 24,
-            placeholderText = L["EDITOR_CATEGORY_RENAME_PLACEHOLDER"] or "Enter category name...",
+            placeholderText = L["EDITOR_CATEGORY_RENAME_PLACEHOLDER"],
         })
         renameBox:SetPoint("TOP", dialog.titleLabel, "BOTTOM", 0, -16)
         renameBox:SetText(catName or "")
@@ -1222,11 +1222,11 @@ function Addon.UI:CreateEditorTab(parent)
             local err, newName = getCategoryNameError(catName, self:GetText())
             if not err and newName ~= (self.placeholderText or "") and EE:RenameCategory(catName, newName) then
                 setDialogError(dialog, "")
-                updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_RENAMED"] or "Category renamed: %s", newName))
+                updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_RENAMED"], newName))
                 refreshSnippetList()
                 dialog.frame:Hide()
             else
-                setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"] or "That category name already exists."))
+                setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"]))
                 self:SetFocus()
             end
         end)
@@ -1238,30 +1238,30 @@ function Addon.UI:CreateEditorTab(parent)
     function tab:ShowNewCategoryDialog()
         local dialog
         dialog = OneWoW_GUI:CreateConfirmDialog({
-            title = L["EDITOR_NEW_CATEGORY_TITLE"] or "New Category",
+            title = L["EDITOR_NEW_CATEGORY_TITLE"],
             message = "",
             buttons = {
-                { text = L["EDITOR_BTN_SAVE"] or "Save", onClick = function(d)
+                { text = L["EDITOR_BTN_SAVE"], onClick = function(d)
                     local box = dialog and dialog.renameBox
                     local err, newName = getCategoryNameError(nil, box and box:GetText())
                     if not err and newName ~= (box and box.placeholderText or "") and EE:CreateCategory(newName) then
                         setDialogError(dialog, "")
                         d:Hide()
-                        updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_CREATED"] or "Category created: %s", newName))
+                        updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_CREATED"], newName))
                         refreshSnippetList()
                     elseif box then
-                        setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"] or "That category name already exists."))
+                        setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"]))
                         box:SetFocus()
                     end
                 end },
-                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
             },
         })
 
         local renameBox = OneWoW_GUI:CreateEditBox(dialog.contentFrame, {
             width = 250,
             height = 24,
-            placeholderText = L["EDITOR_NEW_CATEGORY_PLACEHOLDER"] or "Enter category name...",
+            placeholderText = L["EDITOR_NEW_CATEGORY_PLACEHOLDER"],
         })
         renameBox:SetPoint("TOP", dialog.titleLabel, "BOTTOM", 0, -16)
         renameBox:SetFocus()
@@ -1273,11 +1273,11 @@ function Addon.UI:CreateEditorTab(parent)
             local err, newName = getCategoryNameError(nil, self:GetText())
             if not err and newName ~= (self.placeholderText or "") and EE:CreateCategory(newName) then
                 setDialogError(dialog, "")
-                updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_CREATED"] or "Category created: %s", newName))
+                updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_CREATED"], newName))
                 refreshSnippetList()
                 dialog.frame:Hide()
             else
-                setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"] or "That category name already exists."))
+                setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"]))
                 self:SetFocus()
             end
         end)
@@ -1291,10 +1291,10 @@ function Addon.UI:CreateEditorTab(parent)
         if not snippet then return end
         local deleteName = snippet.name
         local dialog = OneWoW_GUI:CreateConfirmDialog({
-            title = L["EDITOR_BTN_DELETE"] or "Delete",
-            message = format(L["EDITOR_SNIPPET_DELETE_CONFIRM"] or "Delete snippet '%s'?", deleteName),
+            title = L["EDITOR_BTN_DELETE"],
+            message = format(L["EDITOR_SNIPPET_DELETE_CONFIRM"], deleteName),
             buttons = {
-                { text = L["EDITOR_BTN_DELETE"] or "Delete", onClick = function(d)
+                { text = L["EDITOR_BTN_DELETE"], onClick = function(d)
                     d:Hide()
                     EE:DeleteSnippet(snippetId)
                     if activeSnippetId == snippetId then
@@ -1310,10 +1310,10 @@ function Addon.UI:CreateEditorTab(parent)
                         local edb = getDB()
                         if edb then edb.lastOpenSnippet = nil end
                     end
-                    updateStatusMessage(format(L["EDITOR_STATUS_DELETED"] or "Deleted: %s", deleteName))
+                    updateStatusMessage(format(L["EDITOR_STATUS_DELETED"], deleteName))
                     refreshSnippetList()
                 end },
-                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
             },
         })
         trackDialog(dialog)
@@ -1322,16 +1322,16 @@ function Addon.UI:CreateEditorTab(parent)
 
     function tab:ShowCategoryDeleteConfirm(catName)
         local dialog = OneWoW_GUI:CreateConfirmDialog({
-            title = L["EDITOR_CTX_DELETE_CATEGORY"] or "Delete Category",
-            message = format(L["EDITOR_CATEGORY_DELETE_CONFIRM"] or "Delete category '%s'? Snippets will move to Uncategorized.", catName),
+            title = L["EDITOR_CTX_DELETE_CATEGORY"],
+            message = format(L["EDITOR_CATEGORY_DELETE_CONFIRM"], catName),
             buttons = {
-                { text = L["EDITOR_BTN_DELETE"] or "Delete", onClick = function(d)
+                { text = L["EDITOR_BTN_DELETE"], onClick = function(d)
                     d:Hide()
                     EE:DeleteCategory(catName)
-                    updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_DELETED"] or "Category deleted: %s", catName))
+                    updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_DELETED"], catName))
                     refreshSnippetList()
                 end },
-                { text = L["EDITOR_BTN_CANCEL"] or "Cancel", onClick = function(d) d:Hide() end },
+                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
             },
         })
         trackDialog(dialog)
@@ -1345,7 +1345,7 @@ function Addon.UI:CreateEditorTab(parent)
     newBtn:SetScript("OnClick", function()
         local id = EE:CreateSnippet()
         if id then
-            updateStatusMessage(L["EDITOR_STATUS_SNIPPET_CREATED"] or "Snippet created")
+            updateStatusMessage(L["EDITOR_STATUS_SNIPPET_CREATED"])
             refreshSnippetList()
             tab:SwitchToSnippet(id, true)
         end
@@ -1360,7 +1360,7 @@ function Addon.UI:CreateEditorTab(parent)
         local newId = EE:DuplicateSnippet(activeSnippetId)
         if newId then
             local s = EE:GetSnippet(newId)
-            updateStatusMessage(format(L["EDITOR_STATUS_SNIPPET_DUPLICATED"] or "Duplicated: %s", s and s.name or ""))
+            updateStatusMessage(format(L["EDITOR_STATUS_SNIPPET_DUPLICATED"], s and s.name or ""))
             refreshSnippetList()
             tab:SwitchToSnippet(newId, true)
         end
@@ -1404,7 +1404,7 @@ function Addon.UI:CreateEditorTab(parent)
         if s then
             highlightPlainRange(s, e)
         else
-            updateStatusMessage(L["EDITOR_NO_MATCH"] or "No match found")
+            updateStatusMessage(L["EDITOR_NO_MATCH"])
         end
     end
 
@@ -1422,7 +1422,7 @@ function Addon.UI:CreateEditorTab(parent)
         if s then
             highlightPlainRange(s, e)
         else
-            updateStatusMessage(L["EDITOR_NO_MATCH"] or "No match found")
+            updateStatusMessage(L["EDITOR_NO_MATCH"])
         end
     end
 
@@ -1454,10 +1454,10 @@ function Addon.UI:CreateEditorTab(parent)
             if nextS then
                 highlightPlainRange(nextS, nextE)
             else
-                updateStatusMessage(L["EDITOR_NO_MATCH"] or "No match found")
+                updateStatusMessage(L["EDITOR_NO_MATCH"])
             end
         else
-            updateStatusMessage(L["EDITOR_NO_MATCH"] or "No match found")
+            updateStatusMessage(L["EDITOR_NO_MATCH"])
         end
     end)
 
@@ -1474,7 +1474,7 @@ function Addon.UI:CreateEditorTab(parent)
         updateLnCol()
         scheduleSyntaxCheck()
         refreshSnippetList()
-        addOutput(format(L["EDITOR_REPLACE_COUNT"] or "Replaced %d occurrence(s)", count), "print")
+        addOutput(format(L["EDITOR_REPLACE_COUNT"], count), "print")
     end)
 
     newCatBtn:SetScript("OnClick", function()

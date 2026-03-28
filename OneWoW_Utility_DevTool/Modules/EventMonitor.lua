@@ -65,13 +65,13 @@ end
 
 function EventMonitor:Start()
     if self.monitoring then
-        Addon:Print(L["MSG_MONITOR_ALREADY_RUNNING"] or "Event monitor already running")
+        Addon:Print(L["MSG_MONITOR_ALREADY_RUNNING"])
         return
     end
 
     if self:GetEventCount() == 0 then
         self:RegisterCommonEvents()
-        Addon:Print(L["MSG_AUTO_SELECTED_FIRST"] or "Auto-selected common events (first time)")
+        Addon:Print(L["MSG_AUTO_SELECTED_FIRST"])
     end
 
     self:Initialize()
@@ -82,13 +82,13 @@ function EventMonitor:Start()
     self.monitoring = true
 
     local count = self:GetEventCount()
-    Addon:Print((L["MSG_MONITOR_STARTED"] or "Event monitoring started (%d events selected)"):format(count))
+    Addon:Print((L["MSG_MONITOR_STARTED"]):format(count))
     self:UpdateUI()
 end
 
 function EventMonitor:Stop()
     if not self.monitoring then
-        Addon:Print(L["MSG_MONITOR_NOT_RUNNING"] or "Event monitor not running")
+        Addon:Print(L["MSG_MONITOR_NOT_RUNNING"])
         return
     end
 
@@ -101,14 +101,14 @@ function EventMonitor:Stop()
         self.frame:UnregisterAllEvents()
         self.allEventsRegistered = false
     end
-    Addon:Print(L["MSG_MONITOR_STOPPED"] or "Event monitoring stopped")
+    Addon:Print(L["MSG_MONITOR_STOPPED"])
     self:UpdateUI()
 end
 
 function EventMonitor:Clear()
     self.events = {}
     self:UpdateUI()
-    Addon:Print(L["MSG_EVENT_LOG_CLEARED"] or "Event log cleared")
+    Addon:Print(L["MSG_EVENT_LOG_CLEARED"])
 end
 
 function EventMonitor:SetPaused(paused)
@@ -122,7 +122,7 @@ end
 
 function EventMonitor:TogglePause()
     self.paused = not self.paused
-    Addon:Print(self.paused and (L["MSG_EVENT_DISPLAY_PAUSED"] or "Event display paused") or (L["MSG_EVENT_DISPLAY_RESUMED"] or "Event display resumed"))
+    Addon:Print(self.paused and (L["MSG_EVENT_DISPLAY_PAUSED"]) or (L["MSG_EVENT_DISPLAY_RESUMED"]))
     self:UpdateUI()
 end
 
@@ -200,12 +200,12 @@ function EventMonitor:UpdateUI()
 
     if tab.startStopBtn then
         if self.monitoring then
-            tab.startStopBtn.text:SetText(Addon.L and Addon.L["BTN_STOP"] or "Stop")
+            tab.startStopBtn.text:SetText(Addon.L["BTN_STOP"])
             tab.startStopBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             tab.startStopBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
             tab.startStopBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            tab.startStopBtn.text:SetText(Addon.L and Addon.L["BTN_START"] or "Start")
+            tab.startStopBtn.text:SetText(Addon.L["BTN_START"])
             tab.startStopBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
             tab.startStopBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
             tab.startStopBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -216,18 +216,18 @@ function EventMonitor:UpdateUI()
         if self.monitoring then
             tab.pauseBtn:Enable()
             if self.paused then
-                tab.pauseBtn.text:SetText(Addon.L and Addon.L["BTN_UNPAUSE"] or "Unpause")
+                tab.pauseBtn.text:SetText(Addon.L["BTN_UNPAUSE"])
                 tab.pauseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 tab.pauseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
                 tab.pauseBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                tab.pauseBtn.text:SetText(Addon.L and Addon.L["BTN_PAUSE"] or "Pause")
+                tab.pauseBtn.text:SetText(Addon.L["BTN_PAUSE"])
                 tab.pauseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
                 tab.pauseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
                 tab.pauseBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         else
-            tab.pauseBtn.text:SetText(Addon.L and Addon.L["BTN_PAUSE"] or "Pause")
+            tab.pauseBtn.text:SetText(Addon.L["BTN_PAUSE"])
             tab.pauseBtn:Disable()
             tab.pauseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
             tab.pauseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
@@ -258,8 +258,8 @@ function EventMonitor:UpdateUI()
         tab.maxRowWidth = 0
         if emptyStateText then
             emptyStateText:Show()
-            emptyStateText:SetText(self.monitoring and (L["MSG_MONITORING_EVENTS"] or "Monitoring events... (%d captured)"):format(0) or
-                (L["MSG_CLICK_START"] or "Click 'Start' to begin monitoring (auto-selects common events)\nOr click 'Select Events' to customize"))
+            emptyStateText:SetText(self.monitoring and (L["MSG_MONITORING_EVENTS"]):format(0) or
+                (L["MSG_CLICK_START"]))
         end
         for i = 1, #rowPool do
             rowPool[i]:Hide()
@@ -322,7 +322,7 @@ function EventMonitor:UpdateUI()
                     local row = rowPool[displayCount]
                     if row then
                         row.eventCol:SetText(WrapEventViewerColor("...", "TIMESTAMP"))
-                        row.argsCol:SetText(L["MSG_SHOWING_FIRST_200_EVENTS"] or "(showing first 200 events)")
+                        row.argsCol:SetText(L["MSG_SHOWING_FIRST_200_EVENTS"])
                         row.countCol:SetText("")
                         row:SetHeight(ROW_HEIGHT)
                         row:ClearAllPoints()
@@ -338,7 +338,7 @@ function EventMonitor:UpdateUI()
         if emptyStateText then
             if filter and displayCount == 0 then
                 emptyStateText:Show()
-                emptyStateText:SetText((L["MSG_NO_EVENTS_MATCHING"] or "No events matching '%s' (total: %d)"):format(filterText, #self.events))
+                emptyStateText:SetText((L["MSG_NO_EVENTS_MATCHING"]):format(filterText, #self.events))
             else
                 emptyStateText:Hide()
             end
@@ -428,7 +428,7 @@ function EventMonitor:FirehoseStart()
     self.frame:RegisterAllEvents()
     self.firehose = true
     self.monitoring = true
-    Addon:Print(L["MSG_FIREHOSE_ON"] or "Firehose mode ON - capturing ALL events")
+    Addon:Print(L["MSG_FIREHOSE_ON"])
     self:UpdateUI()
 end
 
@@ -440,7 +440,7 @@ function EventMonitor:FirehoseStop()
     for event in pairs(self.selectedEvents) do
         pcall(function() self.frame:RegisterEvent(event) end)
     end
-    Addon:Print(L["MSG_FIREHOSE_OFF"] or "Firehose mode OFF")
+    Addon:Print(L["MSG_FIREHOSE_OFF"])
     self:UpdateUI()
 end
 

@@ -12,12 +12,12 @@ function Addon.UI:CreateLayoutTab(parent)
 
     local gridLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     gridLabel:SetPoint("TOPLEFT", tab, "TOPLEFT", 10, -10)
-    gridLabel:SetText(Addon.L and Addon.L["LABEL_GRID_OVERLAY"] or "Grid Overlay")
+    gridLabel:SetText(Addon.L["LABEL_GRID_OVERLAY"])
     gridLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local colGap = 16
     local toggleBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = Addon.L and Addon.L["BTN_TOGGLE_GRID"] or "Toggle Grid",
+        text = Addon.L["BTN_TOGGLE_GRID"],
         height = 25,
         minWidth = 120,
     })
@@ -28,7 +28,7 @@ function Addon.UI:CreateLayoutTab(parent)
     local sizeLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     -- Sliders anchor from grid title; horizontal inset = toggle width + gap (same as post-align toggle edge).
     sizeLabel:SetPoint("TOPLEFT", gridLabel, "BOTTOMLEFT", toggleBtn:GetWidth() + colGap, -10)
-    sizeLabel:SetText((Addon.L and Addon.L["LABEL_GRID_SIZE"] or "Grid Size:") .. " 50")
+    sizeLabel:SetText((Addon.L["LABEL_GRID_SIZE"]) .. " 50")
     sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local sizeContainer = OneWoW_GUI:CreateSlider(tab, {
@@ -39,7 +39,7 @@ function Addon.UI:CreateLayoutTab(parent)
         width = 200,
         fmt = "%.0f",
         onChange = function(value)
-            sizeLabel:SetText((Addon.L and Addon.L["LABEL_GRID_SIZE"] or "Grid Size:") .. " " .. value)
+            sizeLabel:SetText((Addon.L["LABEL_GRID_SIZE"]) .. " " .. value)
             tab.gridSize = value
             if tab.gridActive then
                 Addon.UI:UpdateGridOverlay()
@@ -51,7 +51,7 @@ function Addon.UI:CreateLayoutTab(parent)
     -- Opacity slider must anchor to the grid slider's right edge, not to the size label's
     -- right edge (the label is narrower than the 200px track, which stacked both sliders).
     local opacityLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    opacityLabel:SetText((Addon.L and Addon.L["LABEL_OPACITY"] or "Opacity:") .. " 0.3")
+    opacityLabel:SetText((Addon.L["LABEL_OPACITY"]) .. " 0.3")
     opacityLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local opacityContainer = OneWoW_GUI:CreateSlider(tab, {
@@ -62,7 +62,7 @@ function Addon.UI:CreateLayoutTab(parent)
         width = 200,
         fmt = "%.1f",
         onChange = function(value)
-            opacityLabel:SetText((Addon.L and Addon.L["LABEL_OPACITY"] or "Opacity:") .. " " .. string.format("%.1f", value))
+            opacityLabel:SetText((Addon.L["LABEL_OPACITY"]) .. " " .. string.format("%.1f", value))
             tab.gridOpacity = value
             if tab.gridActive then
                 Addon.UI:UpdateGridOverlay()
@@ -80,7 +80,7 @@ function Addon.UI:CreateLayoutTab(parent)
     toggleBtn:SetPoint("CENTER", sliderStackAlign, "LEFT", -colGap - toggleBtn:GetWidth() / 2, 0)
 
     local centerBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = Addon.L and Addon.L["BTN_TOGGLE_CENTER"] or "Toggle Center Lines",
+        text = Addon.L["BTN_TOGGLE_CENTER"],
         height = 25,
         minWidth = 150,
     })
@@ -115,7 +115,7 @@ function Addon.UI:ToggleGrid()
         self:UpdateGridOverlay()
         self.gridFrame:Show()
         tab.gridActive = true
-        Addon:Print(Addon.L and Addon.L["MSG_GRID_ENABLED"] or "Grid enabled")
+        Addon:Print(Addon.L["MSG_GRID_ENABLED"])
     else
         if self.gridFrame then
             for _, line in ipairs(self.gridFrame.lines) do
@@ -124,7 +124,7 @@ function Addon.UI:ToggleGrid()
             self.gridFrame:Hide()
         end
         tab.gridActive = false
-        Addon:Print(Addon.L and Addon.L["MSG_GRID_DISABLED"] or "Grid disabled")
+        Addon:Print(Addon.L["MSG_GRID_DISABLED"])
     end
 end
 
@@ -198,13 +198,13 @@ function Addon.UI:ToggleCenterLines()
 
         self.centerFrame:Show()
         tab.centerActive = true
-        Addon:Print(Addon.L and Addon.L["MSG_CENTER_LINES_ENABLED"] or "Center lines enabled")
+        Addon:Print(Addon.L["MSG_CENTER_LINES_ENABLED"])
     else
         if self.centerFrame then
             self.centerFrame:Hide()
         end
         tab.centerActive = false
-        Addon:Print(Addon.L and Addon.L["MSG_CENTER_LINES_DISABLED"] or "Center lines disabled")
+        Addon:Print(Addon.L["MSG_CENTER_LINES_DISABLED"])
     end
 end
 

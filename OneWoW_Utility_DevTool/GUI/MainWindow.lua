@@ -25,6 +25,49 @@ function UI:StyleContentPanel(panel)
     panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 end
 
+function UI:PaintToolbarBarButton(btn, activeKey)
+    if not btn or not btn.text or not activeKey then return end
+    local active = btn[activeKey]
+    local over = btn:IsMouseOver()
+    if active then
+        if over then
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        else
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        end
+    else
+        if over then
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        else
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+end
+
+function UI:BindToolbarBarButtonMouse(btn, activeKey)
+    if not btn or not activeKey then return end
+    btn:SetScript("OnEnter", function(self)
+        UI:PaintToolbarBarButton(self, activeKey)
+    end)
+    btn:SetScript("OnLeave", function(self)
+        UI:PaintToolbarBarButton(self, activeKey)
+    end)
+    btn:SetScript("OnMouseDown", function(self)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+    end)
+    btn:SetScript("OnMouseUp", function(self)
+        UI:PaintToolbarBarButton(self, activeKey)
+    end)
+end
+
 local function destroyFrame(frame)
     if not frame then return end
     frame:Hide()
@@ -563,7 +606,7 @@ function UI:Initialize()
     frame:Hide()
 
     local titleBar = OneWoW_GUI:CreateTitleBar(frame, {
-        title = Addon.L and Addon.L["ADDON_TITLE"] or "DevTool",
+        title = Addon.L["ADDON_TITLE"],
         height = 20,
         showBrand = true,
         factionTheme = factionTheme,
@@ -595,6 +638,7 @@ function UI:Initialize()
         end
     end)
     combatHide:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self.combatHideFrame = combatHide
 
     if not OneWoW_GUI:RestoreWindowPosition(frame, Addon.db.position or {}) then
         frame:SetPoint("CENTER")
@@ -661,6 +705,11 @@ function UI:FullReset()
         local selectedTabKey = self.currentTabKey
         for _, tabKey in ipairs(self:GetOrderedTabKeys()) do
             self:DestroyTab(tabKey)
+        end
+        if self.combatHideFrame then
+            self.combatHideFrame:UnregisterAllEvents()
+            self.combatHideFrame:SetScript("OnEvent", nil)
+            self.combatHideFrame = nil
         end
         self.mainFrame:Hide()
         self.mainFrame:SetParent(nil)

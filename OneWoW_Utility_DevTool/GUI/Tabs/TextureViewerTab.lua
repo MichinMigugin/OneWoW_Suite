@@ -179,7 +179,7 @@ local function syncPreviewInteraction(tab)
         local ny = (t - y) / h
         nx = max(0, min(1, nx))
         ny = max(0, min(1, ny))
-        uvLabel:SetText(format(L["TEXTURE_UV_CURSOR"] or "UV X: %.4f  Y: %.4f", nx, ny))
+        uvLabel:SetText(format(L["TEXTURE_UV_CURSOR"], nx, ny))
     end)
 end
 
@@ -349,11 +349,11 @@ local function refreshZoomPercentDisplay(tab)
         else
             pct = floor(z * 100 + 0.5)
         end
-        tab.zoomPctLabel:SetText(format(L["TEXTURE_ZOOM_PERCENT"] or "%d%%", pct))
+        tab.zoomPctLabel:SetText(format(L["TEXTURE_ZOOM_PERCENT"], pct))
         tab.zoomPctLabel:Show()
     elseif BR:GetViewMode() == BR.VIEW_ATLAS then
         local z = tab.zoomLevel or 1
-        tab.zoomPctLabel:SetText(format(L["TEXTURE_ZOOM_PERCENT"] or "%d%%", floor(z * 100 + 0.5)))
+        tab.zoomPctLabel:SetText(format(L["TEXTURE_ZOOM_PERCENT"], floor(z * 100 + 0.5)))
         tab.zoomPctLabel:Show()
     else
         tab.zoomPctLabel:Hide()
@@ -441,11 +441,11 @@ local function updateDetailPanel(tab)
     local texKey = tab.selectedTextureKey
 
     if BR:GetViewMode() == BR.VIEW_TEXTURE and texKey and not atlasName then
-        tinsert(lines, L["TEXTURE_MSG_CLICK_REGION"] or "Click a highlighted region on the sheet to inspect that atlas entry. Drag to pan when zoomed.")
+        tinsert(lines, L["TEXTURE_MSG_CLICK_REGION"])
         tinsert(lines, "")
-        tinsert(lines, (L["LABEL_FILE"] or "File:") .. " " .. tostring(texKey))
+        tinsert(lines, (L["LABEL_FILE"]) .. " " .. tostring(texKey))
         local w, h = BR:ComputeSheetPixelSize(texKey)
-        tinsert(lines, (L["TEXTURE_LABEL_SHEET_SIZE"] or "Sheet (est. px):") .. " " .. format("%.0f x %.0f", w, h))
+        tinsert(lines, (L["TEXTURE_LABEL_SHEET_SIZE"]) .. " " .. format("%.0f x %.0f", w, h))
     elseif atlasName then
         local info = tab._cachedAtlasInfo
         if not info or tab._cachedAtlasName ~= atlasName then
@@ -460,10 +460,10 @@ local function updateDetailPanel(tab)
         local bm = Addon.db.textureBookmarks and Addon.db.textureBookmarks[atlasName]
         if bm then
             tinsert(lines, "")
-            tinsert(lines, "|cff00ff00[" .. (L["LABEL_BOOKMARKED"] or "Bookmarked") .. "]|r")
+            tinsert(lines, "|cff00ff00[" .. (L["LABEL_BOOKMARKED"]) .. "]|r")
         end
     else
-        tinsert(lines, L["TEXTURE_MSG_SELECT_ITEM"] or "Select a texture or atlas from the list.")
+        tinsert(lines, L["TEXTURE_MSG_SELECT_ITEM"])
     end
 
     tab.infoText:SetText(table.concat(lines, "\n"))
@@ -555,47 +555,7 @@ selectAtlasFromOverlay = function(tab, atlasName)
     Addon.UI.TextureTab_RefreshToolbarButtons(tab)
 end
 
-local function paintTextureBarButton(btn)
-    if not btn or not btn.text then return end
-    local active = btn._textureBarActive
-    local over = btn:IsMouseOver()
-    if active then
-        if over then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        end
-    else
-        if over then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-    end
-end
-
-local function bindTextureBarButtonMouse(btn)
-    btn:SetScript("OnEnter", function(self)
-        paintTextureBarButton(self)
-    end)
-    btn:SetScript("OnLeave", function(self)
-        paintTextureBarButton(self)
-    end)
-    btn:SetScript("OnMouseDown", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
-    end)
-    btn:SetScript("OnMouseUp", function(self)
-        paintTextureBarButton(self)
-    end)
-end
+local TEXTURE_BAR_ACTIVE_KEY = "_textureBarActive"
 
 local function setCopyButtonEnabled(btn, enabled)
     if not btn then return end
@@ -623,22 +583,22 @@ function Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     local bookmarked = tab.selectedAtlasName and Addon.db.textureBookmarks and Addon.db.textureBookmarks[tab.selectedAtlasName]
     tab.bookmarkBtn._textureBarActive = bookmarked and true or false
     tab.manualToggle._textureBarActive = tab.manualPanel and tab.manualPanel:IsShown() or false
-    paintTextureBarButton(tab.btnByTexture)
-    paintTextureBarButton(tab.btnByAtlas)
-    paintTextureBarButton(tab.favsBtn)
+    Addon.UI:PaintToolbarBarButton(tab.btnByTexture, TEXTURE_BAR_ACTIVE_KEY)
+    Addon.UI:PaintToolbarBarButton(tab.btnByAtlas, TEXTURE_BAR_ACTIVE_KEY)
+    Addon.UI:PaintToolbarBarButton(tab.favsBtn, TEXTURE_BAR_ACTIVE_KEY)
     if tab.bookmarkBtn.SetFitText then
         if tab.selectedAtlasName then
             if bookmarked then
-                tab.bookmarkBtn:SetFitText(L["BTN_REMOVE_BOOKMARK"] or "Remove bookmark")
+                tab.bookmarkBtn:SetFitText(L["BTN_REMOVE_BOOKMARK"])
             else
-                tab.bookmarkBtn:SetFitText(L["BTN_BOOKMARK"] or "Bookmark")
+                tab.bookmarkBtn:SetFitText(L["BTN_BOOKMARK"])
             end
         else
-            tab.bookmarkBtn:SetFitText(L["BTN_BOOKMARK"] or "Bookmark")
+            tab.bookmarkBtn:SetFitText(L["BTN_BOOKMARK"])
         end
     end
-    paintTextureBarButton(tab.bookmarkBtn)
-    paintTextureBarButton(tab.manualToggle)
+    Addon.UI:PaintToolbarBarButton(tab.bookmarkBtn, TEXTURE_BAR_ACTIVE_KEY)
+    Addon.UI:PaintToolbarBarButton(tab.manualToggle, TEXTURE_BAR_ACTIVE_KEY)
 
     local hasSelection = tab.selectedAtlasName or tab.selectedTextureKey
     local hasAtlas = tab.selectedAtlasName ~= nil
@@ -666,7 +626,7 @@ function Addon.UI:CreateTextureTab(parent)
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 160,
         height = 22,
-        placeholderText = L["LABEL_FILTER"] or "Filter...",
+        placeholderText = L["LABEL_FILTER"],
         onTextChanged = function()
             scheduleFilterRefresh(tab)
         end,
@@ -682,9 +642,9 @@ function Addon.UI:CreateTextureTab(parent)
         local unloadOn = Addon.UI and Addon.UI.GetUnloadOnDisable and Addon.UI:GetUnloadOnDisable("textures")
         local msg
         if unloadOn then
-            msg = L["TEXTURE_MSG_UNLOADED"] or L["TEXTURE_MSG_NO_DATA"]
+            msg = L["TEXTURE_MSG_UNLOADED"]
         elseif Addon._DevToolTextureAssetsPurgedSession then
-            msg = L["TEXTURE_MSG_RELOAD_RESTORE"] or L["TEXTURE_MSG_NO_DATA"]
+            msg = L["TEXTURE_MSG_RELOAD_RESTORE"]
         else
             msg = L["TEXTURE_MSG_NO_DATA"]
         end
@@ -694,12 +654,12 @@ function Addon.UI:CreateTextureTab(parent)
     end
 
     local btnByTexture = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["TEXTURE_VIEW_BY_SHEET"] or "By sheet",
+        text = L["TEXTURE_VIEW_BY_SHEET"],
         height = 22,
         minWidth = 72,
     })
     btnByTexture:SetPoint("LEFT", searchBox, "RIGHT", 6, 0)
-    bindTextureBarButtonMouse(btnByTexture)
+    Addon.UI:BindToolbarBarButtonMouse(btnByTexture, TEXTURE_BAR_ACTIVE_KEY)
     btnByTexture:SetScript("OnClick", function()
         BR:SetViewMode(BR.VIEW_TEXTURE)
         BR:SetFilterText(searchBox:GetSearchText())
@@ -721,12 +681,12 @@ function Addon.UI:CreateTextureTab(parent)
     end)
 
     local btnByAtlas = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["TEXTURE_VIEW_BY_ATLAS"] or "By atlas",
+        text = L["TEXTURE_VIEW_BY_ATLAS"],
         height = 22,
         minWidth = 72,
     })
     btnByAtlas:SetPoint("LEFT", btnByTexture, "RIGHT", 4, 0)
-    bindTextureBarButtonMouse(btnByAtlas)
+    Addon.UI:BindToolbarBarButtonMouse(btnByAtlas, TEXTURE_BAR_ACTIVE_KEY)
     btnByAtlas:SetScript("OnClick", function()
         BR:SetViewMode(BR.VIEW_ATLAS)
         BR:SetFilterText(searchBox:GetSearchText())
@@ -748,12 +708,12 @@ function Addon.UI:CreateTextureTab(parent)
     end)
 
     local favsBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_FAVORITES"] or "Favorites",
+        text = L["BTN_FAVORITES"],
         height = 22,
         minWidth = 72,
     })
     favsBtn:SetPoint("LEFT", btnByAtlas, "RIGHT", 6, 0)
-    bindTextureBarButtonMouse(favsBtn)
+    Addon.UI:BindToolbarBarButtonMouse(favsBtn, TEXTURE_BAR_ACTIVE_KEY)
     favsBtn:SetScript("OnClick", function()
         BR:SetFavoritesOnly(not BR.favoritesOnly)
         BR:SetFilterText(searchBox:GetSearchText())
@@ -774,15 +734,15 @@ function Addon.UI:CreateTextureTab(parent)
     end)
 
     local bookmarkBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_BOOKMARK"] or "Bookmark",
+        text = L["BTN_BOOKMARK"],
         height = 22,
         minWidth = 72,
     })
     bookmarkBtn:SetPoint("LEFT", favsBtn, "RIGHT", 4, 0)
-    bindTextureBarButtonMouse(bookmarkBtn)
+    Addon.UI:BindToolbarBarButtonMouse(bookmarkBtn, TEXTURE_BAR_ACTIVE_KEY)
     bookmarkBtn:SetScript("OnClick", function()
         if not tab.selectedAtlasName then
-            Addon:Print(L["MSG_SELECT_ATLAS"] or "Select an atlas first")
+            Addon:Print(L["MSG_SELECT_ATLAS"])
             Addon.UI.TextureTab_RefreshToolbarButtons(tab)
             return
         end
@@ -792,21 +752,21 @@ function Addon.UI:CreateTextureTab(parent)
         local name = tab.selectedAtlasName
         if Addon.db.textureBookmarks[name] then
             Addon.db.textureBookmarks[name] = nil
-            Addon:Print((L["MSG_REMOVED_BOOKMARK"] or "Removed: {name}"):gsub("{name}", name))
+            Addon:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", name))
         else
             Addon.db.textureBookmarks[name] = true
-            Addon:Print((L["MSG_BOOKMARKED"] or "Bookmarked: {name}"):gsub("{name}", name))
+            Addon:Print((L["MSG_BOOKMARKED"]):gsub("{name}", name))
         end
         textureTabAfterBookmarkToggle(tab)
     end)
 
     local manualToggle = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["TEXTURE_BTN_MANUAL"] or "Manual",
+        text = L["TEXTURE_BTN_MANUAL"],
         height = 22,
         minWidth = 56,
     })
     manualToggle:SetPoint("LEFT", bookmarkBtn, "RIGHT", 6, 0)
-    bindTextureBarButtonMouse(manualToggle)
+    Addon.UI:BindToolbarBarButtonMouse(manualToggle, TEXTURE_BAR_ACTIVE_KEY)
 
     tab.btnByTexture = btnByTexture
     tab.btnByAtlas = btnByAtlas
@@ -897,7 +857,7 @@ function Addon.UI:CreateTextureTab(parent)
         end,
     })
 
-    local zoomInBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = L["BTN_ZOOM_IN"] or "+", height = 22, minWidth = 36 })
+    local zoomInBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = L["BTN_ZOOM_IN"], height = 22, minWidth = 36 })
     zoomInBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -6, -4)
     zoomInBtn:SetScript("OnClick", function()
         if BR:GetViewMode() == BR.VIEW_TEXTURE then
@@ -912,7 +872,7 @@ function Addon.UI:CreateTextureTab(parent)
         end
     end)
 
-    local zoomOutBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = L["BTN_ZOOM_OUT"] or "-", height = 22, minWidth = 36 })
+    local zoomOutBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = L["BTN_ZOOM_OUT"], height = 22, minWidth = 36 })
     zoomOutBtn:SetPoint("RIGHT", zoomInBtn, "LEFT", -4, 0)
     zoomOutBtn:SetScript("OnClick", function()
         if BR:GetViewMode() == BR.VIEW_TEXTURE then
@@ -929,7 +889,7 @@ function Addon.UI:CreateTextureTab(parent)
         end
     end)
 
-    local resetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = L["BTN_RESET_ZOOM"] or "Reset", height = 22, minWidth = 56 })
+    local resetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = L["BTN_RESET_ZOOM"], height = 22, minWidth = 56 })
     resetBtn:SetPoint("RIGHT", zoomOutBtn, "LEFT", -4, 0)
     resetBtn:SetScript("OnClick", function()
         if BR:GetViewMode() == BR.VIEW_TEXTURE then
@@ -1076,13 +1036,13 @@ function Addon.UI:CreateTextureTab(parent)
     local manualEdit = OneWoW_GUI:CreateEditBox(tab.manualPanel, {
         width = 200,
         height = 22,
-        placeholderText = L["TEXTURE_MANUAL_PLACEHOLDER"] or "Atlas name or texture path...",
+        placeholderText = L["TEXTURE_MANUAL_PLACEHOLDER"],
     })
     manualEdit:SetPoint("TOPLEFT", tab.manualPanel, "TOPLEFT", 0, 0)
     manualEdit:SetPoint("RIGHT", tab.manualPanel, "RIGHT", -90, 0)
 
     local manualApply = OneWoW_GUI:CreateFitTextButton(tab.manualPanel, {
-        text = L["TEXTURE_MANUAL_APPLY"] or "Apply",
+        text = L["TEXTURE_MANUAL_APPLY"],
         height = 22,
         minWidth = 72,
     })
@@ -1166,12 +1126,12 @@ function Addon.UI:CreateTextureTab(parent)
 
     -- Copy row: LibCopyPaste-style label + short buttons (matches Fonts tab)
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"] or "Copy:")
+    copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
     copyRowLabel:SetTextColor(1, 0.82, 0)
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyNameBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["FONT_BTN_COPY_NAME"] or "Name",
+        text = L["FONT_BTN_COPY_NAME"],
         height = 22,
         minWidth = 44,
     })
@@ -1185,7 +1145,7 @@ function Addon.UI:CreateTextureTab(parent)
     end)
 
     local copySnippetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["TEXTURE_BTN_COPY_SNIPPET"] or "Snippet",
+        text = L["TEXTURE_BTN_COPY_SNIPPET"],
         height = 22,
         minWidth = 52,
     })
@@ -1197,7 +1157,7 @@ function Addon.UI:CreateTextureTab(parent)
     end)
 
     local copyCoordBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["TEXTURE_BTN_COPY_COORDS"] or "UVs",
+        text = L["TEXTURE_BTN_COPY_COORDS"],
         height = 22,
         minWidth = 44,
     })

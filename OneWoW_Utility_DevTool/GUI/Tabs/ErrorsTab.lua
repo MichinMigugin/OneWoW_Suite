@@ -13,28 +13,28 @@ end
 
 local function soundChoiceLabel(L, value)
     if value == "devtools_error" then
-        return L["ERR_SOUND_DEVTOOL"] or "DevTool alert"
+        return L["ERR_SOUND_DEVTOOL"]
     end
     if value == "raid_warning" then
-        return L["ERR_SOUND_RAID_WARNING"] or "Raid warning"
+        return L["ERR_SOUND_RAID_WARNING"]
     end
     if value == "tell_message" then
-        return L["ERR_SOUND_TELL"] or "Tell message"
+        return L["ERR_SOUND_TELL"]
     end
     if value == "map_ping" then
-        return L["ERR_SOUND_MAP_PING"] or "Map ping"
+        return L["ERR_SOUND_MAP_PING"]
     end
-    return L["ERR_SOUND_OFF"] or "Off"
+    return L["ERR_SOUND_OFF"]
 end
 
 local function copyFormatLabel(L, value)
     if value == "curseforge" then
-        return L["ERR_COPY_FMT_CURSEFORGE"] or "CurseForge"
+        return L["ERR_COPY_FMT_CURSEFORGE"]
     end
     if value == "discord" then
-        return L["ERR_COPY_FMT_DISCORD"] or "Discord"
+        return L["ERR_COPY_FMT_DISCORD"]
     end
-    return L["ERR_COPY_FMT_PLAIN"] or "Plain text"
+    return L["ERR_COPY_FMT_PLAIN"]
 end
 
 local function normalizeKeepSessions(n)
@@ -50,7 +50,7 @@ end
 
 local function keepSessionsDropdownText(L, n)
     n = normalizeKeepSessions(n)
-    local fmt = L["ERR_KEEP_SESSIONS_VALUE"] or "%d"
+    local fmt = L["ERR_KEEP_SESSIONS_VALUE"]
     return format(fmt, n)
 end
 
@@ -90,7 +90,7 @@ function Addon.UI:CreateErrorsTab(parent)
     tab.bugGrabberNotice = bugGrabberNotice
 
     local clearBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = Addon.L and Addon.L["BTN_CLEAR"] or "Clear",
+        text = Addon.L["BTN_CLEAR"],
         height = 22,
         minWidth = 72,
     })
@@ -104,12 +104,12 @@ function Addon.UI:CreateErrorsTab(parent)
 
     local countLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     countLabel:SetPoint("LEFT", clearBtn, "RIGHT", 12, 0)
-    countLabel:SetText((Addon.L and Addon.L["LABEL_ERRORS"] or "Errors:") .. " 0")
+    countLabel:SetText((Addon.L["LABEL_ERRORS"]) .. " 0")
     countLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     -- Checkbox hit box is only CHECKBOX_SIZE wide; label is cb.label — do not anchor siblings to cb:RIGHT or they overlap the label text.
     local clearReloadCheck = OneWoW_GUI:CreateCheckbox(tab, {
-        label = L["ERR_CLEAR_ON_RELOAD"] or "Clear errors on /reload",
+        label = L["ERR_CLEAR_ON_RELOAD"],
     })
     clearReloadCheck:SetChecked(getErrorDB() and getErrorDB().clearOnReload or false)
     clearReloadCheck:SetScript("OnClick", function(self)
@@ -133,11 +133,11 @@ function Addon.UI:CreateErrorsTab(parent)
         buildItems = function()
             local loc = Addon.L or {}
             return {
-                { value = "off", text = loc["ERR_SOUND_OFF"] or "Off" },
-                { value = "devtools_error", text = loc["ERR_SOUND_DEVTOOL"] or "DevTool alert" },
-                { value = "raid_warning", text = loc["ERR_SOUND_RAID_WARNING"] or "Raid warning" },
-                { value = "tell_message", text = loc["ERR_SOUND_TELL"] or "Tell message" },
-                { value = "map_ping", text = loc["ERR_SOUND_MAP_PING"] or "Map ping" },
+                { value = "off", text = loc["ERR_SOUND_OFF"] },
+                { value = "devtools_error", text = loc["ERR_SOUND_DEVTOOL"] },
+                { value = "raid_warning", text = loc["ERR_SOUND_RAID_WARNING"] },
+                { value = "tell_message", text = loc["ERR_SOUND_TELL"] },
+                { value = "map_ping", text = loc["ERR_SOUND_MAP_PING"] },
             }
         end,
         onSelect = function(value)
@@ -161,9 +161,9 @@ function Addon.UI:CreateErrorsTab(parent)
         buildItems = function()
             local loc = Addon.L or {}
             return {
-                { value = "plain", text = loc["ERR_COPY_FMT_PLAIN"] or "Plain text" },
-                { value = "curseforge", text = loc["ERR_COPY_FMT_CURSEFORGE"] or "CurseForge" },
-                { value = "discord", text = loc["ERR_COPY_FMT_DISCORD"] or "Discord" },
+                { value = "plain", text = loc["ERR_COPY_FMT_PLAIN"] },
+                { value = "curseforge", text = loc["ERR_COPY_FMT_CURSEFORGE"] },
+                { value = "discord", text = loc["ERR_COPY_FMT_DISCORD"] },
             }
         end,
         onSelect = function(value)
@@ -179,7 +179,7 @@ function Addon.UI:CreateErrorsTab(parent)
     tab.copyFormatDropdown = copyDrop
 
     local keepLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    keepLabel:SetText(L["ERR_KEEP_SESSIONS_LABEL"] or "Keep sessions:")
+    keepLabel:SetText(L["ERR_KEEP_SESSIONS_LABEL"])
     keepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local keepSessionsDrop = OneWoW_GUI:CreateDropdown(tab, { width = 56, height = 24, text = "" })
@@ -192,7 +192,7 @@ function Addon.UI:CreateErrorsTab(parent)
         end,
         buildItems = function()
             local loc = Addon.L or {}
-            local fmt = loc["ERR_KEEP_SESSIONS_VALUE"] or "%d"
+            local fmt = loc["ERR_KEEP_SESSIONS_VALUE"]
             local items = {}
             for i = 1, 20 do
                 tinsert(items, { value = i, text = format(fmt, i) })
@@ -291,7 +291,7 @@ function Addon.UI:CreateErrorsTab(parent)
     tab.analysisText:SetPoint("RIGHT", analysisContent, "RIGHT", -2, 0)
     tab.analysisText:SetJustifyH("LEFT")
     tab.analysisText:SetWordWrap(true)
-    tab.analysisText:SetText(L["ERR_ANALYSIS_NONE"] or "Select an error to see analysis")
+    tab.analysisText:SetText(L["ERR_ANALYSIS_NONE"])
     tab.analysisText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     tab.analysisPanel = analysisPanel
@@ -318,7 +318,7 @@ function Addon.UI:CreateErrorsTab(parent)
     tab.detailsText:SetPoint("TOPLEFT", 2, -2)
     tab.detailsText:SetPoint("RIGHT", detailsContent, "RIGHT", -2, 0)
     tab.detailsText:SetJustifyH("LEFT")
-    tab.detailsText:SetText(L["LABEL_NO_ERROR"] or "No error selected")
+    tab.detailsText:SetText(L["LABEL_NO_ERROR"])
     tab.detailsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     tab.detailsPanel = detailsPanel
@@ -340,7 +340,7 @@ function Addon.UI:CreateErrorsTab(parent)
     end
 
     local copyBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_COPY_ERROR"] or "Copy Error",
+        text = L["BTN_COPY_ERROR"],
         height = 25,
         minWidth = 96,
     })
@@ -354,7 +354,7 @@ function Addon.UI:CreateErrorsTab(parent)
     copyDrop:SetPoint("BOTTOMLEFT", copyBtn, "BOTTOMRIGHT", 10, 0)
 
     local analysisToggleBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_TOGGLE_ANALYSIS"] or "Analysis",
+        text = L["BTN_TOGGLE_ANALYSIS"],
         height = 25,
         minWidth = 80,
     })
