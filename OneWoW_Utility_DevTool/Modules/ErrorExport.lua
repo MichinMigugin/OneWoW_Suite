@@ -50,8 +50,9 @@ local function appendAnalysisLines(lines, analysis, L, prefix, suffix)
     end
 end
 
-function Addon.ErrorExport.BuildPlainText(err, L)
+function Addon.ErrorExport.BuildPlainText(err, L, includeAnalysis)
     L = L or {}
+    if includeAnalysis == nil then includeAnalysis = true end
     local lines = {}
     tinsert(lines, (L["ERR_DETAIL_TIME"]) .. " " .. formatTime(err))
     tinsert(lines, (L["ERR_DETAIL_SESSION"]) .. " " .. tostring(err.session or "?"))
@@ -69,7 +70,9 @@ function Addon.ErrorExport.BuildPlainText(err, L)
         tinsert(lines, (L["ERR_DETAIL_LOCALS"]))
         tinsert(lines, err.locals)
     end
-    appendAnalysisLines(lines, err._analysis, L)
+    if includeAnalysis then
+        appendAnalysisLines(lines, err._analysis, L)
+    end
     return table.concat(lines, "\n")
 end
 

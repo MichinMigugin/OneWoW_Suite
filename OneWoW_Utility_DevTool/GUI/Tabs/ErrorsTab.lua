@@ -305,21 +305,68 @@ function Addon.UI:CreateErrorsTab(parent)
     detailsPanel:SetPoint("BOTTOMRIGHT", analysisPanel, "TOPRIGHT", 0, -5)
     self:StyleContentPanel(detailsPanel)
 
-    local detailsScroll, detailsContent = OneWoW_GUI:CreateScrollFrame(detailsPanel, {})
+    local detailsScroll = CreateFrame("ScrollFrame", nil, detailsPanel, "UIPanelScrollFrameTemplate")
     detailsScroll:ClearAllPoints()
     detailsScroll:SetPoint("TOPLEFT", detailsPanel, "TOPLEFT", 4, -4)
     detailsScroll:SetPoint("BOTTOMRIGHT", detailsPanel, "BOTTOMRIGHT", -14, 4)
+    detailsScroll:EnableMouse(true)
+    detailsScroll:EnableMouseWheel(true)
+    OneWoW_GUI:ApplyScrollBarStyle(detailsScroll.ScrollBar, detailsPanel, -2)
+
+    local detailsEditBox = CreateFrame("EditBox", nil, detailsScroll)
+    detailsEditBox:SetMultiLine(true)
+    detailsEditBox:SetAutoFocus(false)
+    detailsEditBox:SetFontObject(GameFontNormalSmall)
+    detailsEditBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    detailsEditBox:SetHeight(1)
+    detailsEditBox:SetTextInsets(2, 2, 2, 2)
+    detailsEditBox:SetText(L["LABEL_NO_ERROR"])
+    detailsScroll:SetScrollChild(detailsEditBox)
 
     detailsScroll:HookScript("OnSizeChanged", function(self, w)
-        detailsContent:SetWidth(w)
+        detailsEditBox:SetWidth(math.max(1, w))
+    end)
+    detailsScroll:HookScript("OnMouseDown", function()
+        detailsEditBox:SetFocus()
     end)
 
-    tab.detailsText = detailsContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    tab.detailsText:SetPoint("TOPLEFT", 2, -2)
-    tab.detailsText:SetPoint("RIGHT", detailsContent, "RIGHT", -2, 0)
-    tab.detailsText:SetJustifyH("LEFT")
-    tab.detailsText:SetText(L["LABEL_NO_ERROR"])
-    tab.detailsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    detailsEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    detailsEditBox:SetScript("OnTextChanged", function(self, userInput)
+        if userInput and not self._swappingForCopy then
+            self:SetText(self._lastSetText or "")
+        end
+    end)
+    detailsEditBox:SetScript("OnKeyDown", function(self, key)
+        if IsControlKeyDown() and key == "C" then
+            local err = Addon.ErrorLogger and Addon.ErrorLogger.currentError
+            if err then
+                local plainText = Addon.ErrorExport.BuildPlainText(err, L, false)
+                local colorized = self._lastSetText
+                self._swappingForCopy = true
+                self:SetText(plainText)
+                self:HighlightText()
+                self:SetPropagateKeyboardInput(false)
+                C_Timer.After(0, function()
+                    self._swappingForCopy = nil
+                    if colorized then
+                        self:SetText(colorized)
+                    end
+                end)
+            else
+                self:SetPropagateKeyboardInput(true)
+            end
+            return
+        end
+        if IsControlKeyDown() and key == "A" then
+            self:SetPropagateKeyboardInput(false)
+            self:HighlightText()
+            return
+        end
+        self:SetPropagateKeyboardInput(true)
+    end)
+
+    detailsEditBox._lastSetText = L["LABEL_NO_ERROR"]
+    tab.detailsText = detailsEditBox
 
     tab.detailsPanel = detailsPanel
 

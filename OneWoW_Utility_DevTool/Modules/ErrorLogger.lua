@@ -777,10 +777,17 @@ function ErrorLogger:ShowErrorDetails(errorData)
         end
     end
 
-    tab.detailsText:SetText(table.concat(details, "\n"))
+    local displayText = table.concat(details, "\n")
+    tab.detailsText._lastSetText = displayText
+    tab.detailsText:SetText(displayText)
 
-    local height = tab.detailsText:GetStringHeight()
-    tab.detailsScroll:GetScrollChild():SetHeight(math.max(height + 10, tab.detailsScroll:GetHeight()))
+    C_Timer.After(0, function()
+        if not tab.detailsText or not tab.detailsScroll then return end
+        local _, fontHeight = tab.detailsText:GetFont()
+        local lineCount = select(2, displayText:gsub("\n", "\n")) + 1
+        local contentHeight = lineCount * (fontHeight + 2) + 10
+        tab.detailsText:SetHeight(math.max(contentHeight, tab.detailsScroll:GetHeight()))
+    end)
 
     local analysis = errorData._analysis
     if not analysis and Addon.ErrorAnalyzer then
@@ -870,7 +877,9 @@ function ErrorLogger:ClearErrors()
     self:UpdateErrorBadge()
 
     if Addon.LuaConsoleTab then
-        Addon.LuaConsoleTab.detailsText:SetText(Addon.L["LABEL_NO_ERROR"])
+        local noErr = Addon.L["LABEL_NO_ERROR"]
+        Addon.LuaConsoleTab.detailsText._lastSetText = noErr
+        Addon.LuaConsoleTab.detailsText:SetText(noErr)
         if Addon.LuaConsoleTab.analysisText then
             Addon.LuaConsoleTab.analysisText:SetText(Addon.L["ERR_ANALYSIS_NONE"])
         end
