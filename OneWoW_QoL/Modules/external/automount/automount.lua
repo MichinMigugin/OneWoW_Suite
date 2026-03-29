@@ -343,15 +343,15 @@ local function CanMount(opts)
         if updateMountFailedReason("MapUpdate", (now - lastMapUpdate) <= 1) then blocked = true end
         if updateMountFailedReason("MountedCooldown", (now - lastMountedTime) <= 1) then blocked = true end
         if updateMountFailedReason("MovingCooldown", (now - lastMovingTime) <= 0.4) then blocked = true end
-        if prefs.dismountDisabled then
-            if updateMountFailedReason("DismountDisabled", lastDismountTime > 0) then blocked = true end
-        else
-            if updateMountFailedReason("DismountDelay", (now - lastDismountTime) <= prefs.dismountDelay) then blocked = true end
-        end
-        if prefs.fishingDisabled then
-            if updateMountFailedReason("FishingDisabled", lastFishingTime > 0) then blocked = true end
-        else
+        if lastFishingTime > lastDismountTime and not prefs.fishingDisabled then
             if updateMountFailedReason("FishingCooldown", (now - lastFishingTime) <= prefs.fishingDelay) then blocked = true end
+        else
+            if prefs.dismountDisabled then
+                if updateMountFailedReason("DismountDisabled", true) then blocked = true end
+            else
+                local delayStart = prefs.fishingDisabled and math.max(lastDismountTime, lastFishingTime) or lastDismountTime
+                if updateMountFailedReason("DismountDelay", (now - delayStart) <= prefs.dismountDelay) then blocked = true end
+            end
         end
     end
 
@@ -439,34 +439,30 @@ function AutoMountModule:UpdatePollingState()
         end
         return
     end
-    if ShouldAutoMountPoll() then
-        if not self._ticker then
-            self._ticker = C_Timer.NewTicker(TICK_INTERVAL, function()
-                if not ns.ModuleRegistry:IsEnabled(AM.id) then return end
-                if not ShouldAutoMountPoll() then return end
-                local mountedNow = IsMounted()
-                if wasMounted and not mountedNow then
-                    lastDismountTime = GetTime()
-                end
-                wasMounted = mountedNow
+    if not self._ticker then
+        self._ticker = C_Timer.NewTicker(TICK_INTERVAL, function()
+            if not ns.ModuleRegistry:IsEnabled(AM.id) then return end
+            local mountedNow = IsMounted()
+            if wasMounted and not mountedNow then
+                lastDismountTime = GetTime()
+            end
+            wasMounted = mountedNow
 
-                if IsCastingNonMountSpell() then lastCastingNonMountTime = GetTime() end
-                if IsMounted()              then lastMountedTime         = GetTime() end
-                if IsPlayerMoving()         then lastMovingTime          = GetTime() end
-                if IsCastingMountSpell()    then lastCastingMountTime    = GetTime() end
-                if UnitAffectingCombat("player") then lastCombatTime     = GetTime() end
+            if IsCastingNonMountSpell() then lastCastingNonMountTime = GetTime() end
+            if IsMounted()              then lastMountedTime         = GetTime() end
+            if IsPlayerMoving()         then lastMovingTime          = GetTime() end
+            if IsCastingMountSpell()    then lastCastingMountTime    = GetTime() end
+            if UnitAffectingCombat("player") then lastCombatTime     = GetTime() end
 
-                CancelAutoMountingIfNeeded()
-                if not mountedNow then
+            CancelAutoMountingIfNeeded()
+            if not mountedNow then
+                if ShouldAutoMountPoll() then
                     TryMount(false)
+                else
+                    CanMount()
                 end
-            end)
-        end
-    else
-        if self._ticker then
-            self._ticker:Cancel()
-            self._ticker = nil
-        end
+            end
+        end)
     end
 end
 
