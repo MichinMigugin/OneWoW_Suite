@@ -350,7 +350,7 @@ local function ShowModuleDetail(split, module)
     end
 
     if module.CreateCustomDetail then
-        yOffset = module:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh) or yOffset
+        yOffset = module:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh, split.rightStatusBar) or yOffset
     end
 
     detailScrollChild:SetHeight(math.abs(yOffset) + 20)

@@ -5,6 +5,12 @@ local addonName, ns = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
+local sort = sort
+local tinsert = tinsert
+
 local AutoMountModule = {
     id          = "automount",
     title       = "AUTOMOUNT_TITLE",
@@ -28,11 +34,13 @@ local lastMountedTime         = 0
 local lastMovingTime          = 0
 local lastMapUpdate           = 0
 local lastDismountTime        = 0
+local lastFishingTime         = 0
 local dismountRemountDelay    = 15
 local wasMounted              = false
 local mountIdToSpellId        = {}
 local isGathering             = false
 local druidFlightPending      = nil
+local mountFailedReason       = nil
 
 local SPEED_ADVFLYING = { advflying = 5, flying = 4, ground = 3, aquatic = 2, other = 1 }
 local SPEED_FLYING    = { advflying = 4, flying = 5, ground = 3, aquatic = 2, other = 1 }
@@ -54,10 +62,15 @@ for _, id in ipairs(GATHERING_SPELL_IDS) do
     gatheringSpellSet[id] = true
 end
 
-local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
--- Preferences
+local FISHING_SPELL_IDS = {
+    131474, 131490, 131476, 7620, 7731, 7732,
+    18248, 33095, 51294, 88868, 110410,
+    158743, 377895, 1224771,
+}
+local fishingSpellSet = {}
+for _, id in ipairs(FISHING_SPELL_IDS) do
+    fishingSpellSet[id] = true
+end
 
 local function GetPreferences()
     local addon = _G.OneWoW_QoL
@@ -95,8 +108,6 @@ local function SavePreference(key, value)
     mods["automount"].preferences[key] = value
 end
 
--- Mount helpers
-
 local function InitializeMountData()
     cachedMountIDs = C_MountJournal.GetMountIDs()
     for _, mountId in pairs(cachedMountIDs) do
@@ -111,6 +122,17 @@ local function IsMountSpell(spellID)
     return spellID and mountIdToSpellId[spellID]
 end
 
+local function updateMountFailedReason(reason, ret)
+    if ret then
+        if mountFailedReason == nil then
+            mountFailedReason = reason
+        else
+            mountFailedReason = mountFailedReason .. "|" .. reason
+        end
+    end
+    return ret
+end
+
 local function IsCastingNonMountSpell()
     local spellID = select(10, UnitCastingInfo("player"))
     return spellID and not IsMountSpell(spellID)
@@ -118,11 +140,14 @@ end
 
 local function IsCastingMountSpell()
     local spellID = select(10, UnitCastingInfo("player"))
-    return spellID and IsMountSpell(spellID)
+    return IsMountSpell(spellID)
 end
 
 local function IsCasting()
     local name = UnitCastingInfo("player")
+    if name == nil then
+        name = UnitChannelInfo("player")
+    end
     return name ~= nil
 end
 
@@ -146,10 +171,13 @@ local function IsUsingSpecialBuff()
         local buffData = C_UnitAuras.GetBuffDataByIndex("player", i)
         if not buffData then break end
         local icon = buffData.icon
-        if icon == 774121 or icon == 134062 or icon == 132293 or
-           icon == 132320 or icon == 266311 or icon == 132805 then
-            lastBuffCheckResult = true
-            return true
+        if not OneWoW_GUI:IsSecret(icon) then
+            if icon == 774121 or icon == 134062 or icon == 132293 or
+               icon == 132320 or icon == 266311 or icon == 132805 or
+               icon == 136074 then
+                lastBuffCheckResult = true
+                return true
+            end
         end
     end
     return false
@@ -266,7 +294,7 @@ local function GetFastestMount()
                 if highestSpeed and speed > highestSpeed then
                     wipe(fastestMountIds)
                 end
-                table.insert(fastestMountIds, mountId)
+                tinsert(fastestMountIds, mountId)
                 highestSpeed = speed
             end
         end
@@ -275,61 +303,58 @@ local function GetFastestMount()
     return fastestMountIds
 end
 
-local function RemountAfterGather()
-    if not ns.ModuleRegistry:IsEnabled(AM.id) then return end
-    if IsFlying() or IsMounted() or UnitIsDead("player")
-       or UnitIsGhost("player") or C_PetBattles.IsInBattle()
-       or UnitOnTaxi("player") or UnitAffectingCombat("player")
-       or UnitInVehicle("player") or UnitUsingVehicle("player")
-       or IsFalling() then
-        return
+local function CanMount(opts)
+    mountFailedReason = nil
+    opts = opts or {}
+    local blocked = false
+    local now = GetTime()
+
+    if updateMountFailedReason("IsFlying", IsFlying()) then blocked = true end
+    if updateMountFailedReason("IsIndoors", IsIndoors()) then blocked = true end
+    if updateMountFailedReason("IsMounted", IsMounted()) then blocked = true end
+    if updateMountFailedReason("IsDead", UnitIsDead("player")) then blocked = true end
+    if updateMountFailedReason("IsGhost", UnitIsGhost("player")) then blocked = true end
+    if updateMountFailedReason("PetBattle", C_PetBattles.IsInBattle()) then blocked = true end
+    if updateMountFailedReason("OnTaxi", UnitOnTaxi("player")) then blocked = true end
+    if updateMountFailedReason("IsCasting", IsCasting()) then blocked = true end
+    if updateMountFailedReason("InVehicle", UnitInVehicle("player")) then blocked = true end
+    if updateMountFailedReason("UsingVehicle", UnitUsingVehicle("player")) then blocked = true end
+    if updateMountFailedReason("InCombat", UnitAffectingCombat("player")) then blocked = true end
+    if updateMountFailedReason("SpecialBuff", IsUsingSpecialBuff()) then blocked = true end
+    if updateMountFailedReason("FeignDeath", IsFeignDeath()) then blocked = true end
+    if updateMountFailedReason("IsFalling", IsFalling()) then blocked = true end
+    if updateMountFailedReason("FishingCooldown", (now - lastFishingTime) <= dismountRemountDelay) then blocked = true end
+
+    if not opts.isGather then
+        if updateMountFailedReason("IsMoving", IsPlayerMoving()) then blocked = true end
+        if updateMountFailedReason("ShapeShifted", IsShapeShifted()) then blocked = true end
+        if updateMountFailedReason("LootVisible", LootFrame and LootFrame:IsVisible()) then blocked = true end
+        if updateMountFailedReason("LootOpen", IsLootFrameOpened()) then blocked = true end
+        if updateMountFailedReason("CombatCooldown", (now - lastCombatTime) <= 1) then blocked = true end
+        if updateMountFailedReason("CastingNonMount", WasCastingNonMount()) then blocked = true end
+        if updateMountFailedReason("MountCastCooldown", (now - lastCastingMountTime) <= 4) then blocked = true end
+        if updateMountFailedReason("CastBarVisible", CastingBarFrame and CastingBarFrame:IsVisible()) then blocked = true end
+        if updateMountFailedReason("MapUpdate", (now - lastMapUpdate) <= 1) then blocked = true end
+        if updateMountFailedReason("MountedCooldown", (now - lastMountedTime) <= 1) then blocked = true end
+        if updateMountFailedReason("MovingCooldown", (now - lastMovingTime) <= 0.4) then blocked = true end
+        if updateMountFailedReason("DismountDelay", (now - lastDismountTime) <= dismountRemountDelay) then blocked = true end
     end
 
-    local prefs = GetPreferences()
     local _, class = UnitClass("player")
-
-    if class == "DRUID" and prefs.druidEnabled then
-        return
+    if class == "DRUID" then
+        local prefs = GetPreferences()
+        if updateMountFailedReason("DruidEnabled", prefs.druidEnabled) then blocked = true end
+        if not opts.isGather then
+            if updateMountFailedReason("DruidForm", GetShapeshiftForm() > 0) then blocked = true end
+        end
     end
 
-    local mounts = GetFastestMount()
-    if #mounts > 0 then
-        C_MountJournal.SummonByID(mounts[math.random(1, #mounts)])
-    end
+    return not blocked
 end
 
-local function MountTheFastestMount()
-    if IsFlying() or IsPlayerMoving() or IsIndoors()
-       or IsMounted()
-       or UnitIsDead("player") or UnitIsGhost("player")
-       or C_PetBattles.IsInBattle() or UnitOnTaxi("player")
-       or IsShapeShifted()
-       or (LootFrame and LootFrame:IsVisible())
-       or IsCasting() or IsLootFrameOpened()
-       or (GetTime() - lastCombatTime) <= 1
-       or UnitInVehicle("player") or UnitUsingVehicle("player")
-       or WasCastingNonMount()
-       or (GetTime() - lastCastingMountTime) <= 4
-       or (CastingBarFrame and CastingBarFrame:IsVisible())
-       or (GetTime() - lastMapUpdate) <= 1
-       or UnitAffectingCombat("player")
-       or (GetTime() - lastMountedTime) <= 1
-       or (GetTime() - lastMovingTime) <= 0.4
-       or IsUsingSpecialBuff()
-       or IsFeignDeath()
-       or IsFalling()
-       or (GetTime() - lastDismountTime) <= dismountRemountDelay then
-        return
-    end
-
-    local prefs = GetPreferences()
-    local _, class = UnitClass("player")
-
-    if class == "DRUID" then
-        if GetShapeshiftForm() > 0 then return end
-        if prefs.druidEnabled then return end
-    end
-
+local function TryMount(isGather)
+    if not ns.ModuleRegistry:IsEnabled(AM.id) then return end
+    if not CanMount(isGather and { isGather = true } or nil) then return end
     local mounts = GetFastestMount()
     if #mounts > 0 then
         C_MountJournal.SummonByID(mounts[math.random(1, #mounts)])
@@ -419,7 +444,7 @@ function AutoMountModule:UpdatePollingState()
 
                 CancelAutoMountingIfNeeded()
                 if not mountedNow then
-                    MountTheFastestMount()
+                    TryMount(false)
                 end
             end)
         end
@@ -448,7 +473,12 @@ function AutoMountModule:OnEnable()
             elseif event == "LOOT_CLOSED" then
                 if isGathering then
                     isGathering = false
-                    C_Timer.After(0.5, RemountAfterGather)
+                    C_Timer.After(0.5, function() TryMount(true) end)
+                end
+            elseif event == "UNIT_SPELLCAST_CHANNEL_STOP" then
+                local unit, _, spellID = ...
+                if unit == "player" and fishingSpellSet[spellID] then
+                    lastFishingTime = GetTime()
                 end
             elseif event == "MOUNT_JOURNAL_USABILITY_CHANGED" then
                 EvaluateDruidFlightForm()
@@ -460,7 +490,12 @@ function AutoMountModule:OnEnable()
 
     self._eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     self._eventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+    self._eventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
     self._eventFrame:RegisterEvent("LOOT_CLOSED")
+
+    if self._mountStatusLabel then
+        self._mountStatusLabel:Show()
+    end
 
     self:UpdateDruidFlightWatcher()
     self:UpdatePollingState()
@@ -474,16 +509,60 @@ function AutoMountModule:OnDisable()
     if self._eventFrame then
         self._eventFrame:UnregisterAllEvents()
     end
+    if self._mountStatusLabel then
+        self._mountStatusLabel:Hide()
+    end
     druidFlightPending = nil
 end
 
 function AutoMountModule:OnToggle(toggleId, value)
 end
 
-function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh)
+function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh, rightStatusBar)
     local L = ns.L
 
-    -- Mount Preferences section header
+    if rightStatusBar then
+        if not AM._mountStatusLabel then
+            local statusBtn = CreateFrame("Button", nil, rightStatusBar)
+            statusBtn:SetHeight(25)
+            statusBtn:SetPoint("RIGHT", rightStatusBar, "RIGHT", -10, 0)
+
+            local statusText = statusBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            statusText:SetPoint("RIGHT", statusBtn, "RIGHT", 0, 0)
+            statusText:SetText(L["AUTOMOUNT_STATUS_LABEL"])
+            statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            statusBtn:SetWidth(statusText:GetStringWidth() + 4)
+
+            statusBtn:SetScript("OnEnter", function(self)
+                statusText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetText(L["AUTOMOUNT_STATUS_LABEL"], 1, 1, 1)
+                if not ns.ModuleRegistry:IsEnabled(AM.id) then
+                    GameTooltip:AddLine(L["AUTOMOUNT_STATUS_DISABLED"], 0.6, 0.6, 0.6, true)
+                elseif mountFailedReason then
+                    local reasons = { strsplit("|", mountFailedReason) }
+                    for _, reason in ipairs(reasons) do
+                        GameTooltip:AddLine(reason, 1, 0.5, 0.5)
+                    end
+                elseif IsMounted() then
+                    GameTooltip:AddLine(L["AUTOMOUNT_STATUS_MOUNTED"], 0.5, 1, 0.5)
+                else
+                    GameTooltip:AddLine(L["AUTOMOUNT_STATUS_READY"], 0.5, 1, 0.5)
+                end
+                GameTooltip:Show()
+            end)
+            statusBtn:SetScript("OnLeave", function()
+                statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                GameTooltip:Hide()
+            end)
+
+            AM._mountStatusLabel = statusBtn
+        end
+        AM._mountStatusLabel:SetParent(rightStatusBar)
+        AM._mountStatusLabel:ClearAllPoints()
+        AM._mountStatusLabel:SetPoint("RIGHT", rightStatusBar, "RIGHT", -10, 0)
+        AM._mountStatusLabel:Show()
+    end
 
     local prefsHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     prefsHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
@@ -499,7 +578,6 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     yOffset = yOffset - 10
 
     -- Ground / Flying / Aquatic rows
-
     local mountTypes = {
         { key = "ground",  label = L["AUTOMOUNT_GROUND_LABEL"]  },
         { key = "flying",  label = L["AUTOMOUNT_FLYING_LABEL"]  },
@@ -622,7 +700,6 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     end
 
     -- Druid section: only shown when player is a druid
-
     local _, playerClass = UnitClass("player")
     if playerClass ~= "DRUID" then
         return yOffset
@@ -731,16 +808,16 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
                 local mountCategory = GetMountCategory(mountId)
                 local mountData = { name = name, icon = icon, mountId = mountId, category = mountCategory }
                 if mountCategory == mountType then
-                    table.insert(matchingMounts, mountData)
+                    tinsert(matchingMounts, mountData)
                 else
-                    table.insert(otherMounts, mountData)
+                    tinsert(otherMounts, mountData)
                 end
             end
         end
     end
 
-    table.sort(matchingMounts, function(a, b) return a.name < b.name end)
-    table.sort(otherMounts,    function(a, b) return a.name < b.name end)
+    sort(matchingMounts, function(a, b) return a.name < b.name end)
+    sort(otherMounts,    function(a, b) return a.name < b.name end)
 
     local popup = AM._mountPickerFrame
     local isNew = not popup
@@ -929,7 +1006,7 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
         }, true)
         autoBtn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 5, listY)
         autoBtn:Show()
-        table.insert(mountButtons, autoBtn)
+        tinsert(mountButtons, autoBtn)
         listY = listY - 34
 
         local function AddIfMatches(mountData)
@@ -937,7 +1014,7 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
                 local btn = CreateMountRow(mountData, false)
                 btn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 5, listY)
                 btn:Show()
-                table.insert(mountButtons, btn)
+                tinsert(mountButtons, btn)
                 listY = listY - 34
             end
         end
