@@ -35,7 +35,6 @@ local lastMovingTime          = 0
 local lastMapUpdate           = 0
 local lastDismountTime        = 0
 local lastFishingTime         = 0
-local dismountRemountDelay    = 15
 local wasMounted              = false
 local mountIdToSpellId        = {}
 local isGathering             = false
@@ -78,6 +77,8 @@ local function GetPreferences()
         return {
             ground = "auto", flying = "auto", aquatic = "auto",
             groundEnabled = true, flyingEnabled = true, aquaticEnabled = true, druidEnabled = true, druidCancelTravelForm = false,
+            dismountDelay = 15, fishingDelay = 15, gatherRemountDelay = 0.5,
+            dismountDisabled = false, fishingDisabled = false,
         }
     end
     local mods = addon.db.global.modules
@@ -94,6 +95,11 @@ local function GetPreferences()
     if prefs.aquaticEnabled == nil then prefs.aquaticEnabled = true   end
     if prefs.druidEnabled   == nil then prefs.druidEnabled   = true   end
     if prefs.druidCancelTravelForm == nil then prefs.druidCancelTravelForm = false end
+    if prefs.dismountDelay      == nil then prefs.dismountDelay      = 15  end
+    if prefs.fishingDelay       == nil then prefs.fishingDelay       = 15  end
+    if prefs.gatherRemountDelay == nil then prefs.gatherRemountDelay = 0.5 end
+    if prefs.dismountDisabled   == nil then prefs.dismountDisabled   = false end
+    if prefs.fishingDisabled    == nil then prefs.fishingDisabled    = false end
     return prefs
 end
 
@@ -308,6 +314,7 @@ local function CanMount(opts)
     opts = opts or {}
     local blocked = false
     local now = GetTime()
+    local prefs = GetPreferences()
 
     if updateMountFailedReason("IsFlying", IsFlying()) then blocked = true end
     if updateMountFailedReason("IsIndoors", IsIndoors()) then blocked = true end
@@ -323,7 +330,6 @@ local function CanMount(opts)
     if updateMountFailedReason("SpecialBuff", IsUsingSpecialBuff()) then blocked = true end
     if updateMountFailedReason("FeignDeath", IsFeignDeath()) then blocked = true end
     if updateMountFailedReason("IsFalling", IsFalling()) then blocked = true end
-    if updateMountFailedReason("FishingCooldown", (now - lastFishingTime) <= dismountRemountDelay) then blocked = true end
 
     if not opts.isGather then
         if updateMountFailedReason("IsMoving", IsPlayerMoving()) then blocked = true end
@@ -337,12 +343,20 @@ local function CanMount(opts)
         if updateMountFailedReason("MapUpdate", (now - lastMapUpdate) <= 1) then blocked = true end
         if updateMountFailedReason("MountedCooldown", (now - lastMountedTime) <= 1) then blocked = true end
         if updateMountFailedReason("MovingCooldown", (now - lastMovingTime) <= 0.4) then blocked = true end
-        if updateMountFailedReason("DismountDelay", (now - lastDismountTime) <= dismountRemountDelay) then blocked = true end
+        if prefs.dismountDisabled then
+            if updateMountFailedReason("DismountDisabled", lastDismountTime > 0) then blocked = true end
+        else
+            if updateMountFailedReason("DismountDelay", (now - lastDismountTime) <= prefs.dismountDelay) then blocked = true end
+        end
+        if prefs.fishingDisabled then
+            if updateMountFailedReason("FishingDisabled", lastFishingTime > 0) then blocked = true end
+        else
+            if updateMountFailedReason("FishingCooldown", (now - lastFishingTime) <= prefs.fishingDelay) then blocked = true end
+        end
     end
 
     local _, class = UnitClass("player")
     if class == "DRUID" then
-        local prefs = GetPreferences()
         if updateMountFailedReason("DruidEnabled", prefs.druidEnabled) then blocked = true end
         if not opts.isGather then
             if updateMountFailedReason("DruidForm", GetShapeshiftForm() > 0) then blocked = true end
@@ -473,7 +487,7 @@ function AutoMountModule:OnEnable()
             elseif event == "LOOT_CLOSED" then
                 if isGathering then
                     isGathering = false
-                    C_Timer.After(0.5, function() TryMount(true) end)
+                    C_Timer.After(GetPreferences().gatherRemountDelay, function() TryMount(true) end)
                 end
             elseif event == "UNIT_SPELLCAST_CHANNEL_STOP" then
                 local unit, _, spellID = ...
@@ -698,6 +712,117 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
         if registerRefresh then registerRefresh(UpdateRow) end
         UpdateRow()
     end
+
+    yOffset = yOffset - 4
+
+    local timingDivider = detailScrollChild:CreateTexture(nil, "ARTWORK")
+    timingDivider:SetHeight(1)
+    timingDivider:SetPoint("TOPLEFT",  detailScrollChild, "TOPLEFT",  12, yOffset)
+    timingDivider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+    timingDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    yOffset = yOffset - 10
+
+    local timingHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    timingHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+    timingHeader:SetText(L["AUTOMOUNT_TIMING_SECTION"])
+    timingHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+    yOffset = yOffset - timingHeader:GetStringHeight() - 8
+
+    local timingSectionDiv = detailScrollChild:CreateTexture(nil, "ARTWORK")
+    timingSectionDiv:SetHeight(1)
+    timingSectionDiv:SetPoint("TOPLEFT",  detailScrollChild, "TOPLEFT",  12, yOffset)
+    timingSectionDiv:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+    timingSectionDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    yOffset = yOffset - 10
+
+    local timingPrefs = GetPreferences()
+    local timingSliders = {}
+    local UpdateTimingSliders
+
+    local sliderDefs = {
+        { key = "dismountDelay",      disableKey = "dismountDisabled", label = L["AUTOMOUNT_DISMOUNT_DELAY"],  desc = L["AUTOMOUNT_DISMOUNT_DELAY_DESC"],  minVal = 0,   maxVal = 30, step = 0.5 },
+        { key = "fishingDelay",       disableKey = "fishingDisabled",  label = L["AUTOMOUNT_FISHING_DELAY"],   desc = L["AUTOMOUNT_FISHING_DELAY_DESC"],   minVal = 0,   maxVal = 30, step = 0.5 },
+        { key = "gatherRemountDelay", label = L["AUTOMOUNT_GATHER_DELAY"],    desc = L["AUTOMOUNT_GATHER_DELAY_DESC"],    minVal = 0,   maxVal = 5,  step = 0.5 },
+    }
+
+    for _, def in ipairs(sliderDefs) do
+        local sliderLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        sliderLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+        sliderLabel:SetText(def.label)
+        sliderLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        yOffset = yOffset - sliderLabel:GetStringHeight() - 2
+
+        local sliderDesc = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        sliderDesc:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+        sliderDesc:SetText(def.desc)
+        sliderDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        yOffset = yOffset - sliderDesc:GetStringHeight() - 6
+
+        local sliderContainer = OneWoW_GUI:CreateSlider(detailScrollChild, {
+            minVal = def.minVal,
+            maxVal = def.maxVal,
+            step = def.step,
+            currentVal = timingPrefs[def.key],
+            onChange = function(val) SavePreference(def.key, val) end,
+            width = 200,
+            fmt = "%.1fs",
+        })
+        sliderContainer:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+
+        local disableCheck = nil
+        if def.disableKey then
+            disableCheck = CreateFrame("CheckButton", nil, detailScrollChild, "UICheckButtonTemplate")
+            disableCheck:SetSize(26, 26)
+            disableCheck:SetPoint("LEFT", sliderContainer, "RIGHT", 8, 10)
+            disableCheck:SetChecked(timingPrefs[def.disableKey])
+
+            local disableLabel = disableCheck:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            disableLabel:SetPoint("LEFT", disableCheck, "RIGHT", 2, 0)
+            disableLabel:SetText(L["AUTOMOUNT_DISABLE"])
+            disableLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+            local capturedDisableKey = def.disableKey
+            disableCheck:SetScript("OnClick", function(self)
+                local checked = self:GetChecked()
+                SavePreference(capturedDisableKey, checked)
+                UpdateTimingSliders()
+            end)
+        end
+
+        yOffset = yOffset - 36 - 8
+
+        tinsert(timingSliders, { container = sliderContainer, label = sliderLabel, desc = sliderDesc, disableCheck = disableCheck, disableKey = def.disableKey })
+    end
+
+    UpdateTimingSliders = function()
+        local active = ns.ModuleRegistry:IsEnabled(AM.id)
+        local currentPrefs = GetPreferences()
+        for _, s in ipairs(timingSliders) do
+            local sliderChild = select(1, s.container:GetChildren())
+            local disabled = s.disableKey and currentPrefs[s.disableKey]
+            local sliderActive = active and not disabled
+            if sliderChild then sliderChild:EnableMouse(sliderActive) end
+            if s.disableCheck then s.disableCheck:EnableMouse(active) end
+            if active then
+                if disabled then
+                    s.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                    s.desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                    s.container:SetAlpha(0.5)
+                else
+                    s.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                    s.desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                    s.container:SetAlpha(1.0)
+                end
+            else
+                s.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                s.desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                s.container:SetAlpha(0.5)
+            end
+        end
+    end
+
+    if registerRefresh then registerRefresh(UpdateTimingSliders) end
+    UpdateTimingSliders()
 
     -- Druid section: only shown when player is a druid
     local _, playerClass = UnitClass("player")
