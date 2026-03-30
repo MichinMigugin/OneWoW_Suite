@@ -160,55 +160,5 @@ function ns.UI.CreateSettingsTab(parent)
     )
     yOffset = yOffset - 70
 
-    yOffset = yOffset - 20
-    local importSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["SETTINGS_IMPORT_SECTION"] or "Import From WoWNotes", yOffset = yOffset })
-    yOffset = importSection.bottomY - 16
-
-    local importContainer = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-    importContainer:SetPoint("TOPLEFT",  scrollChild, "TOPLEFT",  16, yOffset)
-    importContainer:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -16, yOffset)
-    importContainer:SetHeight(160)
-    importContainer:SetBackdrop(backdrop)
-    importContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    importContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local importDesc = importContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    importDesc:SetPoint("TOPLEFT",  importContainer, "TOPLEFT",  16, -14)
-    importDesc:SetPoint("TOPRIGHT", importContainer, "TOPRIGHT", -16, -14)
-    importDesc:SetJustifyH("LEFT")
-    importDesc:SetWordWrap(true)
-    importDesc:SetText(L["SETTINGS_IMPORT_DESC"] or "")
-    importDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-    local importBtn = OneWoW_GUI:CreateButton(importContainer, { text = L["SETTINGS_IMPORT_BUTTON"] or "Import From WoWNotes", width = 200, height = 28 })
-    importBtn:SetPoint("BOTTOMLEFT", importContainer, "BOTTOMLEFT", 16, 14)
-
-    local importStatus = importContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    importStatus:SetPoint("LEFT",  importBtn,       "RIGHT", 12,   0)
-    importStatus:SetPoint("RIGHT", importContainer, "RIGHT", -16,  0)
-    importStatus:SetJustifyH("LEFT")
-    importStatus:SetWordWrap(true)
-    importStatus:SetText("")
-
-    importBtn:SetScript("OnClick", function()
-        if not ns.ImportFromWoWNotes then return end
-        local success, result = ns.ImportFromWoWNotes:Run()
-        if not success then
-            importStatus:SetText(L["SETTINGS_IMPORT_NO_DATA"] or "WoWNotes data not found.")
-            importStatus:SetTextColor(1, 0.3, 0.3)
-        else
-            importStatus:SetText(string.format(
-                L["SETTINGS_IMPORT_SUCCESS"] or "Done! Notes: %d, Players: %d, NPCs: %d, Zones: %d, Items: %d",
-                result.notes, result.players, result.npcs, result.zones, result.items))
-            importStatus:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            if ns.UI.Reset then ns.UI:Reset() end
-            C_Timer.After(0.05, function()
-                if ns.UI.Show then ns.UI:Show("settings") end
-            end)
-        end
-    end)
-
-    yOffset = yOffset - 175
-
     scrollChild:SetHeight(math.abs(yOffset) + 20)
 end

@@ -453,13 +453,6 @@ L["NPC_LABEL_ZONE"]                        = "Zone:"
 L["NPC_LABEL_LOCATION"]                    = "Location:"
 L["NPC_ERROR_NAME_REQUIRED"]               = "NPC name is required."
 
--- Settings - Import
-L["SETTINGS_IMPORT_SECTION"] = "Import From WoWNotes"
-L["SETTINGS_IMPORT_DESC"]    = "Imports all notes, players, NPCs, zones, and items from WoWNotes. Existing entries are never overwritten. Only account-wide data and this character's data will be imported. For character-specific notes on other alts, log in on each alt and repeat. Tip: In WoWNotes, switch all entries to Account Wide storage first, then /reload to save, then import here."
-L["SETTINGS_IMPORT_BUTTON"]  = "Import From WoWNotes"
-L["SETTINGS_IMPORT_NO_DATA"] = "WoWNotes data not found. Make sure WoWNotes is loaded."
-L["SETTINGS_IMPORT_SUCCESS"] = "Done! Notes: %d, Players: %d, NPCs: %d, Zones: %d, Items: %d"
-
 -- Settings - Detection
 L["SETTINGS_DETECTION"]              = "Detection & Alerts"
 L["SETTINGS_ENABLED"]                = "On"

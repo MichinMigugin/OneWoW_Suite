@@ -47,7 +47,6 @@ Core\TrackerEngine.lua
 Core\TrackerPresets.lua
 Core\TrackerMap.lua
 Core\TrackerMigration.lua
-Core\ImportFromWoWNotes.lua
 
 # Main
 OneWoW_Notes.lua
