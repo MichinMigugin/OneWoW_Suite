@@ -10,7 +10,7 @@ Addon.FramePicker = FramePicker
 function FramePicker:Initialize()
     if self.overlay then return end
 
-    self.overlay = CreateFrame("Frame", "WoWNotesDevToolsPickerOverlay", UIParent)
+    self.overlay = CreateFrame("Frame", "OneWoWDevToolsPickerOverlay", UIParent)
     self.overlay:SetFrameStrata("TOOLTIP")
     self.overlay:SetAllPoints(UIParent)
     self.overlay:EnableMouse(false)
@@ -40,7 +40,7 @@ function FramePicker:Initialize()
     self.overlay:SetPropagateKeyboardInput(false)
 
     local dialogResult = OneWoW_GUI:CreateDialog({
-        name = "WoWNotesDevToolsPickerInfo",
+        name = "OneWoWDevToolsPickerInfo",
         title = L["FRAME_PICKER_TITLE"],
         width = 450,
         height = 350,

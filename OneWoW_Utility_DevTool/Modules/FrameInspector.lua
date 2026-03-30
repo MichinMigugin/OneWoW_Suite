@@ -56,7 +56,7 @@ function FrameInspector:HighlightFrame(frame)
     if not frame or not frame.GetRect then return end
 
     if not self.highlightFrame then
-        self.highlightFrame = CreateFrame("Frame", "WoWNotesDevToolsHighlight", UIParent)
+        self.highlightFrame = CreateFrame("Frame", "OneWoWDevToolsHighlight", UIParent)
         self.highlightFrame:SetFrameStrata("TOOLTIP")
         self.highlightFrame:EnableMouse(false)
 
