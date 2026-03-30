@@ -362,6 +362,81 @@ function UpgradeDetection:CheckItemUpgradeDetailed(itemLink, itemLocation)
     }
 end
 
+function UpgradeDetection:GetItemComparison(itemLink, itemLocation)
+    if not itemLink then return nil end
+
+    local _, _, _, equipLoc, _, classID = C_Item.GetItemInfoInstant(itemLink)
+    if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_NON_EQUIP" then return nil end
+    if classID ~= Enum.ItemClass.Armor and classID ~= Enum.ItemClass.Weapon then return nil end
+
+    if not CanPlayerUseItem(itemLink) then
+        return { unusable = true }
+    end
+
+    local ilvl
+    if itemLocation and C_Item.DoesItemExist(itemLocation) then
+        ilvl = C_Item.GetCurrentItemLevel(itemLocation)
+    end
+    if not ilvl or ilvl == 0 then
+        ilvl = C_Item.GetDetailedItemLevelInfo(itemLink)
+    end
+    if not ilvl or ilvl == 0 then return nil end
+
+    local slots = EQUIPLOC_TO_SLOTS[equipLoc]
+    if not slots then return nil end
+
+    local mode = GetMode()
+    local pawnScore, pawnScale, equippedPawnScore
+    if self.hasPawn and (mode == "PAWN" or mode == "PAWN>ILVL") then
+        pawnScore, pawnScale = self:GetBestPawnScore(itemLink)
+    end
+
+    local bestSlot, bestEquippedIlvl, bestDiff
+    for _, slotIndex in ipairs(slots) do
+        local equippedLink = GetInventoryItemLink("player", slotIndex)
+        if equippedLink then
+            local equippedIlvl = C_Item.GetDetailedItemLevelInfo(equippedLink)
+            if equippedIlvl then
+                local diff = ilvl - equippedIlvl
+                if not bestDiff or diff > bestDiff then
+                    bestSlot = slotIndex
+                    bestEquippedIlvl = equippedIlvl
+                    bestDiff = diff
+                    if pawnScore and equippedLink then
+                        equippedPawnScore = self:GetBestPawnScore(equippedLink)
+                    end
+                end
+            end
+        else
+            if slotIndex == 17 and HasTwoHanderEquipped() then
+                -- skip
+            else
+                bestSlot = slotIndex
+                bestEquippedIlvl = 0
+                bestDiff = ilvl
+                break
+            end
+        end
+    end
+
+    if not bestSlot then return nil end
+
+    return {
+        isUpgrade       = bestDiff > 0,
+        isDowngrade     = bestDiff < 0,
+        isEqual         = bestDiff == 0,
+        slot            = bestSlot,
+        slotName        = SLOT_NAMES[bestSlot] or "Unknown",
+        itemIlvl        = ilvl,
+        equippedIlvl    = bestEquippedIlvl,
+        diff            = bestDiff,
+        mode            = mode,
+        pawnScore       = pawnScore,
+        pawnScale       = pawnScale,
+        equippedPawnScore = equippedPawnScore,
+    }
+end
+
 function UpgradeDetection:IsItemUpgradeForAlt(itemID, itemLink, altData)
     if not itemID or not altData or not altData.class then return nil end
 
