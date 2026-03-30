@@ -1296,7 +1296,18 @@ local function PickupActionTable(actionData, flyouts, mountCache)
 
     elseif actionData.actionType == "equipmentset" then
         if C_EquipmentSet and C_EquipmentSet.PickupEquipmentSet then
-            C_EquipmentSet.PickupEquipmentSet(actionData.id)
+            local setName = actionData.equipmentSetName or actionData.id
+            local setID
+            for _, checkID in ipairs(C_EquipmentSet.GetEquipmentSetIDs() or {}) do
+                local setInfo = C_EquipmentSet.GetEquipmentSetInfo(checkID)
+                if setInfo and setInfo.name == setName then
+                    setID = checkID
+                    break
+                end
+            end
+            if setID then
+                C_EquipmentSet.PickupEquipmentSet(setID)
+            end
         end
         if not GetCursorInfo() then
             success = false
