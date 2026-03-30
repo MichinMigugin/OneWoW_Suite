@@ -2,7 +2,7 @@
 -- https://www.townlong-yak.com/framexml/live/Helix/AtlasInfo.lua
 local _, Addon = ...
 
-local dataVersion = {"12.0.1.66527", "12.0.1.66562"}
+local dataVersion = {"12.0.1.66527", "12.0.1.66562", "12.0.1.66709"}
 if not Addon.ValidateDataBuildGameBuild(dataVersion) then
 	return
 end

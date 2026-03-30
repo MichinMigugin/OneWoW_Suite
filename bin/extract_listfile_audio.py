@@ -11,12 +11,9 @@ Packed entry format:
 
 The redundant "sound/" prefix is omitted from stored entries and rebuilt in Lua.
 
-python bin/extract_listfile_audio.py \
-  --from-wago --product wowt \
-  --version 12.0.5.66591 \
-  --compare-version 12.0.5.66529 \
-  --shared-when-identical \
-  --outfile "OneWoW_Utility_DevTool/Data/SoundFiles-{product}.lua" -v
+python bin/extract_listfile_audio.py -v --from-wago --product wowt --shared-when-identical --version 12.0.1.66709 --compare-version 12.0.1.66527 --outfile "temp/SoundFiles-{product}.lua"
+    
+  --outfile "OneWoW_Utility_DevTool/Data/SoundFiles-{product}.lua"
 """
 
 from __future__ import annotations
