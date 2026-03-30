@@ -5,10 +5,6 @@ OneWoW_DirectDeposit.Locales["frFR"] = {
     ["ADDON_TITLE"] = "Dépôt Direct",
     ["ADDON_SUBTITLE"] = "Gestion Automatique de l'Or de la Banque de Groupe de Guerre",
 
-    ["WOWNOTES_DETECTED_TITLE"] = "WoWNotes Détecté",
-    ["WOWNOTES_DETECTED_MESSAGE"] = "Cet addon fait également partie de WoWNotes. Vous n'avez pas besoin d'installer une version autonome de cet addon. Veuillez désinstaller OneWoW_DirectDeposit car il sera désactivé tant que WoWNotes est activé.",
-    ["WOWNOTES_DETECTED_DISABLED"] = "Cet addon a été désactivé car WoWNotes est installé.",
-
     ["SETTINGS"] = "Paramètres",
     ["STATUS"] = "Statut",
     ["ENABLED"] = "Activé",
@@ -70,7 +66,7 @@ OneWoW_DirectDeposit.Locales["frFR"] = {
     ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "À propos de Dépôt Direct",
-    ["ABOUT_TEXT"] = "Dépôt Direct est un addon de qualité de vie de la suite WoWNotes. Cet addon est également disponible dans le cadre de la suite complète WoWNotes Suite, qui comprend de nombreux autres addons utiles pour améliorer votre expérience World of Warcraft. Découvrez d'autres addons qui peuvent vous aider à organiser vos aventures et à améliorer votre gameplay !",
+    ["ABOUT_TEXT"] = "Dépôt Direct est un addon de qualité de vie de la suite OneWoW. Cet addon est également disponible dans le cadre de la suite complète OneWoW Suite, qui comprend de nombreux autres addons utiles pour améliorer votre expérience World of Warcraft. Découvrez d'autres addons qui peuvent vous aider à organiser vos aventures et à améliorer votre gameplay !",
 
     ["LINKS_SECTION"] = "Support et Communauté",
     ["DISCORD_LABEL"] = "Rejoignez notre communauté Discord",
@@ -94,10 +90,4 @@ OneWoW_DirectDeposit.Locales["frFR"] = {
     ["THEME_DARK"] = "Sombre Minuit",
     ["THEME_AMBER"] = "Feu Ambre",
 
-    ["IMPORT_SECTION"] = "Importer depuis WoWNotes",
-    ["IMPORT_DESC"] = "Importez votre liste d'objets Dépôt Direct et les paramètres de WoWNotes. Les objets importés seront ajoutés à votre liste existante sans remplacer aucun objet actuel.",
-    ["IMPORT_BUTTON"] = "Importer depuis WoWNotes",
-    ["IMPORT_SUCCESS"] = "Importation réussie! {count} objets importés de WoWNotes",
-    ["IMPORT_NO_DATA"] = "Aucune donnée Dépôt Direct trouvée dans WoWNotes",
-    ["IMPORT_NOT_INSTALLED"] = "WoWNotes n'est pas installé",
 }

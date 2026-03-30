@@ -5,10 +5,6 @@ OneWoW_DirectDeposit.Locales["esES"] = {
     ["ADDON_TITLE"] = "Depósito Directo",
     ["ADDON_SUBTITLE"] = "Gestión Automática de Oro del Banco de Grupo de Guerra",
 
-    ["WOWNOTES_DETECTED_TITLE"] = "WoWNotes Detectado",
-    ["WOWNOTES_DETECTED_MESSAGE"] = "Este addon también es parte de WoWNotes. No necesitas instalar una versión independiente de este addon. Por favor desinstala OneWoW_DirectDeposit ya que será deshabilitado mientras WoWNotes esté habilitado.",
-    ["WOWNOTES_DETECTED_DISABLED"] = "Este addon ha sido deshabilitado porque WoWNotes está instalado.",
-
     ["SETTINGS"] = "Configuración",
     ["STATUS"] = "Estado",
     ["ENABLED"] = "Habilitado",
@@ -70,7 +66,7 @@ OneWoW_DirectDeposit.Locales["esES"] = {
     ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "Acerca de Depósito Directo",
-    ["ABOUT_TEXT"] = "Depósito Directo es un addon de calidad de vida del conjunto WoWNotes. Este addon también está disponible como parte del conjunto completo WoWNotes Suite, que incluye muchos otros addons útiles para mejorar tu experiencia en World of Warcraft. ¡Descubre más addons que pueden ayudarte a organizar tus aventuras y mejorar tu juego!",
+    ["ABOUT_TEXT"] = "Depósito Directo es un addon de calidad de vida del conjunto OneWoW. Este addon también está disponible como parte del conjunto completo OneWoW Suite, que incluye muchos otros addons útiles para mejorar tu experiencia en World of Warcraft. ¡Descubre más addons que pueden ayudarte a organizar tus aventuras y mejorar tu juego!",
 
     ["LINKS_SECTION"] = "Soporte y Comunidad",
     ["DISCORD_LABEL"] = "Únete a nuestra comunidad de Discord",
@@ -94,12 +90,6 @@ OneWoW_DirectDeposit.Locales["esES"] = {
     ["THEME_DARK"] = "Oscuro Medianoche",
     ["THEME_AMBER"] = "Fuego Ámbar",
 
-    ["IMPORT_SECTION"] = "Importar desde WoWNotes",
-    ["IMPORT_DESC"] = "Importa tu lista de objetos de Depósito Directo y configuración desde WoWNotes. Los objetos importados se añadirán a tu lista existente sin reemplazar ningún objeto actual.",
-    ["IMPORT_BUTTON"] = "Importar desde WoWNotes",
-    ["IMPORT_SUCCESS"] = "Importación exitosa! {count} objetos importados desde WoWNotes",
-    ["IMPORT_NO_DATA"] = "No se encontraron datos de Depósito Directo en WoWNotes",
-    ["IMPORT_NOT_INSTALLED"] = "WoWNotes no está instalado",
 }
 
 OneWoW_DirectDeposit.Locales["esMX"] = OneWoW_DirectDeposit.Locales["esES"]

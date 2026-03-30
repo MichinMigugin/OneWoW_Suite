@@ -4,7 +4,6 @@ _G.OneWoW_DirectDeposit = OneWoW_DirectDeposit
 
 local L = OneWoW_DirectDeposit.L
 
-OneWoW_DirectDeposit.wownotesDetected = false
 OneWoW_DirectDeposit.oneWoWHubActive = false
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
@@ -51,62 +50,6 @@ function OneWoW_DirectDeposit:ReinitForLanguage(langCode)
     end
 end
 
-function OneWoW_DirectDeposit:ImportFromWoWNotes()
-    if not _G.WoWNotes then
-        return false, L["IMPORT_NOT_INSTALLED"]
-    end
-
-    local wn_db = _G.WoWNotes.db
-    if not wn_db or not wn_db.global or not wn_db.global.directDeposit then
-        return false, L["IMPORT_NO_DATA"]
-    end
-
-    local wn_global = wn_db.global.directDeposit
-    local ow_global = self.db.global.directDeposit
-
-    local importCount = 0
-    local newItemList = {}
-
-    print("|cFFFFD100DirectDeposit:|r Starting import from WoWNotes")
-
-    if wn_global.itemList then
-        print("|cFFFFD100DirectDeposit:|r WoWNotes itemList found, processing...")
-        for itemIDStr, itemData in pairs(wn_global.itemList) do
-            if itemData and itemData.itemID and itemData.itemID > 0 then
-                local itemIDKey = tostring(itemData.itemID)
-                newItemList[itemIDKey] = {
-                    itemID = itemData.itemID,
-                    bankType = itemData.bankType,
-                    itemName = itemData.itemName,
-                    bindingInfo = itemData.bindingInfo,
-                    addedTime = itemData.addedTime
-                }
-                importCount = importCount + 1
-                print("|cFFFFD100DirectDeposit:|r Imported item: " .. itemIDKey .. " (" .. (itemData.itemName or "Unknown") .. ")")
-            elseif itemData and not itemData.itemID then
-                print("|cFFFF0000DirectDeposit:|r Skipping entry with missing itemID")
-            end
-        end
-    end
-
-    print("|cFFFFD100DirectDeposit:|r Import complete. Clearing old itemList and setting new one...")
-    ow_global.itemList = nil
-    ow_global.itemList = newItemList
-
-    print("|cFFFFD100DirectDeposit:|r Final itemList keys:")
-    local finalKeys = {}
-    for key, _ in pairs(ow_global.itemList) do
-        table.insert(finalKeys, tostring(key))
-    end
-    print("|cFFFFD100DirectDeposit:|r " .. table.concat(finalKeys, ", "))
-
-    if wn_global.itemDepositEnabled then
-        ow_global.itemDepositEnabled = true
-    end
-
-    return true, importCount
-end
-
 function OneWoW_DirectDeposit:ValidateAndCleanItemList()
     local itemList = self.db.global.directDeposit.itemList
     if not itemList then return true end
@@ -140,18 +83,8 @@ function OneWoW_DirectDeposit:ValidateAndCleanItemList()
     return true
 end
 
-local function CheckForWoWNotes()
-    if _G.WoWNotes then
-        OneWoW_DirectDeposit.wownotesDetected = true
-        return true
-    end
-    return false
-end
-
 function OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
     if loadedAddon ~= ADDON_NAME then return end
-
-    CheckForWoWNotes()
 
     self:InitializeDatabase()
 
@@ -235,8 +168,8 @@ function OneWoW_DirectDeposit:RegisterSlashCommands()
         end
     end
 
-    SLASH_WOWNOTES_DDEPOSIT1 = "/ddeposit"
-    SlashCmdList["WOWNOTES_DDEPOSIT"] = function(msg)
+    SLASH_ONEWOW_DDEPOSIT1 = "/ddeposit"
+    SlashCmdList["ONEWOW_DDEPOSIT"] = function(msg)
         local lowerMsg = strlower(strtrim(msg or ""))
 
         if lowerMsg == "pause" or lowerMsg == "stop" then
@@ -293,7 +226,6 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         local loadedAddon = ...
         OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
     elseif event == "PLAYER_LOGIN" then
-        CheckForWoWNotes()
         DetectOneWoW()
         if not OneWoW_DirectDeposit.oneWoWHubActive then
             OneWoW_DirectDeposit.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_DirectDeposit", {

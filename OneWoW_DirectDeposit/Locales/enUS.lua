@@ -5,10 +5,6 @@ OneWoW_DirectDeposit.Locales["enUS"] = {
     ["ADDON_TITLE"] = "Direct Deposit",
     ["ADDON_SUBTITLE"] = "Automatic Warband Bank Gold Management",
 
-    ["WOWNOTES_DETECTED_TITLE"] = "WoWNotes Detected",
-    ["WOWNOTES_DETECTED_MESSAGE"] = "This addon is also part of WoWNotes. You do not need to install a standalone version of this addon. Please uninstall OneWoW_DirectDeposit as it will be disabled while WoWNotes is enabled.",
-    ["WOWNOTES_DETECTED_DISABLED"] = "This addon has been disabled because WoWNotes is installed.",
-
     ["SETTINGS"] = "Settings",
     ["STATUS"] = "Status",
     ["ENABLED"] = "Enabled",
@@ -70,7 +66,7 @@ OneWoW_DirectDeposit.Locales["enUS"] = {
     ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "About Direct Deposit",
-    ["ABOUT_TEXT"] = "Direct Deposit is a quality-of-life addon from the WoWNotes Suite. This addon is also available as part of the complete WoWNotes Suite, which includes many other useful addons to enhance your World of Warcraft experience. Discover more addons that can help you organize your adventures and improve your gameplay!",
+    ["ABOUT_TEXT"] = "Direct Deposit is a quality-of-life addon from the OneWoW Suite. This addon is also available as part of the complete OneWoW Suite, which includes many other useful addons to enhance your World of Warcraft experience. Discover more addons that can help you organize your adventures and improve your gameplay!",
 
     ["LINKS_SECTION"] = "Support & Community",
     ["DISCORD_LABEL"] = "Join our Discord Community",
@@ -118,12 +114,6 @@ OneWoW_DirectDeposit.Locales["enUS"] = {
     ["MINIMAP_ICON_NEUTRAL"] = "Neutral",
     ["MINIMAP_TOOLTIP_HINT"] = "Click to toggle settings",
 
-    ["IMPORT_SECTION"] = "Import from WoWNotes",
-    ["IMPORT_DESC"] = "Import your DirectDeposit item list and settings from WoWNotes. Imported items will be added to your existing list without replacing any current items.",
-    ["IMPORT_BUTTON"] = "Import from WoWNotes",
-    ["IMPORT_SUCCESS"] = "Imported {count} items from WoWNotes",
-    ["IMPORT_NO_DATA"] = "No DirectDeposit data found in WoWNotes",
-    ["IMPORT_NOT_INSTALLED"] = "WoWNotes not installed",
 }
 
 OneWoW_DirectDeposit.L = {}

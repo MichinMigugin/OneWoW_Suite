@@ -5,10 +5,6 @@ OneWoW_DirectDeposit.Locales["deDE"] = {
     ["ADDON_TITLE"] = "Direkte Einzahlung",
     ["ADDON_SUBTITLE"] = "Automatische Warband-Bank Gold-Verwaltung",
 
-    ["WOWNOTES_DETECTED_TITLE"] = "WoWNotes Erkannt",
-    ["WOWNOTES_DETECTED_MESSAGE"] = "Dieses Addon ist auch Teil von WoWNotes. Sie müssen keine eigenständige Version dieses Addons installieren. Bitte deinstallieren Sie OneWoW_DirectDeposit, da es deaktiviert wird, während WoWNotes aktiviert ist.",
-    ["WOWNOTES_DETECTED_DISABLED"] = "Dieses Addon wurde deaktiviert, weil WoWNotes installiert ist.",
-
     ["SETTINGS"] = "Einstellungen",
     ["STATUS"] = "Status",
     ["ENABLED"] = "Aktiviert",
@@ -70,7 +66,7 @@ OneWoW_DirectDeposit.Locales["deDE"] = {
     ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "Über Direkte Einzahlung",
-    ["ABOUT_TEXT"] = "Direkte Einzahlung ist ein Quality-of-Life-Addon aus der WoWNotes Suite. Dieses Addon ist auch als Teil der vollständigen WoWNotes Suite erhältlich, die viele andere nützliche Addons enthält, um Ihr World of Warcraft-Erlebnis zu verbessern. Entdecken Sie weitere Addons, die Ihnen helfen können, Ihre Abenteuer zu organisieren und Ihr Gameplay zu verbessern!",
+    ["ABOUT_TEXT"] = "Direkte Einzahlung ist ein Quality-of-Life-Addon aus der OneWoW Suite. Dieses Addon ist auch als Teil der vollständigen OneWoW Suite erhältlich, die viele andere nützliche Addons enthält, um Ihr World of Warcraft-Erlebnis zu verbessern. Entdecken Sie weitere Addons, die Ihnen helfen können, Ihre Abenteuer zu organisieren und Ihr Gameplay zu verbessern!",
 
     ["LINKS_SECTION"] = "Unterstützung und Gemeinschaft",
     ["DISCORD_LABEL"] = "Treten Sie unserer Discord-Community bei",
@@ -94,10 +90,4 @@ OneWoW_DirectDeposit.Locales["deDE"] = {
     ["THEME_DARK"] = "Mitternacht Dunkel",
     ["THEME_AMBER"] = "Bernstein Feuer",
 
-    ["IMPORT_SECTION"] = "Aus WoWNotes Importieren",
-    ["IMPORT_DESC"] = "Importieren Sie Ihre Direkte Einzahlung Gegenstandsliste und Einstellungen von WoWNotes. Importierte Gegenstände werden zu Ihrer vorhandenen Liste hinzugefügt, ohne aktuelle Gegenstände zu ersetzen.",
-    ["IMPORT_BUTTON"] = "Aus WoWNotes Importieren",
-    ["IMPORT_SUCCESS"] = "Erfolgreicher Import! {count} Gegenstände von WoWNotes importiert",
-    ["IMPORT_NO_DATA"] = "Keine Direkte Einzahlung Daten in WoWNotes gefunden",
-    ["IMPORT_NOT_INSTALLED"] = "WoWNotes nicht installiert",
 }

@@ -5,10 +5,6 @@ OneWoW_DirectDeposit.Locales["koKR"] = {
     ["ADDON_TITLE"] = "자동 입금",
     ["ADDON_SUBTITLE"] = "워밴드 은행 골드 자동 관리",
 
-    ["WOWNOTES_DETECTED_TITLE"] = "WoWNotes 감지됨",
-    ["WOWNOTES_DETECTED_MESSAGE"] = "이 애드온은 WoWNotes의 일부입니다. 이 애드온의 독립 실행형 버전을 설치할 필요가 없습니다. WoWNotes가 활성화되어 있는 동안 비활성화되므로 OneWoW_DirectDeposit를 제거하십시오.",
-    ["WOWNOTES_DETECTED_DISABLED"] = "WoWNotes가 설치되어 있어 이 애드온이 비활성화되었습니다.",
-
     ["SETTINGS"] = "설정",
     ["STATUS"] = "상태",
     ["ENABLED"] = "활성화됨",
@@ -70,7 +66,7 @@ OneWoW_DirectDeposit.Locales["koKR"] = {
     ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "자동 입금 정보",
-    ["ABOUT_TEXT"] = "자동 입금은 WoWNotes Suite의 편의성 애드온입니다. 이 애드온은 또한 World of Warcraft 경험을 향상시키는 많은 다른 유용한 애드온을 포함하는 완전한 WoWNotes Suite의 일부로 제공됩니다. 모험을 정리하고 게임 플레이를 개선하는 데 도움이 되는 더 많은 애드온을 찾아보세요!",
+    ["ABOUT_TEXT"] = "자동 입금은 OneWoW Suite의 편의성 애드온입니다. 이 애드온은 또한 World of Warcraft 경험을 향상시키는 많은 다른 유용한 애드온을 포함하는 완전한 OneWoW Suite의 일부로 제공됩니다. 모험을 정리하고 게임 플레이를 개선하는 데 도움이 되는 더 많은 애드온을 찾아보세요!",
 
     ["LINKS_SECTION"] = "지원 및 커뮤니티",
     ["DISCORD_LABEL"] = "Discord 커뮤니티에 가입하세요",
@@ -105,10 +101,4 @@ OneWoW_DirectDeposit.Locales["koKR"] = {
     ["MINIMAP_ICON_NEUTRAL"] = "중립",
     ["MINIMAP_TOOLTIP_HINT"] = "클릭하여 설정 전환",
 
-    ["IMPORT_SECTION"] = "WoWNotes에서 가져오기",
-    ["IMPORT_DESC"] = "WoWNotes에서 자동 입금 아이템 목록 및 설정을 가져옵니다. 가져온 아이템은 기존 목록에 추가되며 현재 아이템을 바꾸지 않습니다.",
-    ["IMPORT_BUTTON"] = "WoWNotes에서 가져오기",
-    ["IMPORT_SUCCESS"] = "가져오기 성공! WoWNotes에서 {count}개의 아이템을 가져왔습니다",
-    ["IMPORT_NO_DATA"] = "WoWNotes에서 자동 입금 데이터를 찾을 수 없습니다",
-    ["IMPORT_NOT_INSTALLED"] = "WoWNotes가 설치되지 않았습니다",
 }

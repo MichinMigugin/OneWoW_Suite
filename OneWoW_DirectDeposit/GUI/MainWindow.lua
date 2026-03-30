@@ -34,24 +34,6 @@ StaticPopupDialogs["DIRECTDEPOSIT_RELOAD_THEME"] = {
     preferredIndex = 3,
 }
 
-StaticPopupDialogs["DIRECTDEPOSIT_IMPORT_SUCCESS"] = {
-    text = "Import successful! %s items imported from WoWNotes.",
-    button1 = "OK",
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3,
-}
-
-StaticPopupDialogs["DIRECTDEPOSIT_IMPORT_FAILED"] = {
-    text = "Import failed: %s",
-    button1 = "OK",
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3,
-}
-
 local MainWindow = nil
 local isInitialized = false
 local currentTab = 1
@@ -132,44 +114,6 @@ function GUI:InitMainWindow()
 
     tinsert(UISpecialFrames, "OneWoW_DirectDepositMainWindow")
     isInitialized = true
-end
-
-function GUI:CreateWoWNotesDetectedPanel(parent)
-    local panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    panel:SetAllPoints()
-
-    local warningFrame = OneWoW_GUI:CreateFrame(panel, {
-        width = 500,
-        height = 200,
-        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
-    })
-    warningFrame:SetPoint("CENTER", 0, 50)
-    warningFrame:SetBackdropColor(0.15, 0.05, 0.05, 0.95)
-    warningFrame:SetBackdropBorderColor(0.8, 0.2, 0.2, 1)
-
-    local icon = warningFrame:CreateTexture(nil, "ARTWORK")
-    icon:SetSize(48, 48)
-    icon:SetPoint("TOP", 0, -20)
-    icon:SetTexture("Interface\\DialogFrame\\UI-Dialog-Icon-AlertNew")
-
-    local titleText = warningFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
-    titleText:SetPoint("TOP", icon, "BOTTOM", 0, -15)
-    titleText:SetText(L["WOWNOTES_DETECTED_TITLE"])
-    titleText:SetTextColor(1, 0.8, 0)
-
-    local messageText = warningFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    messageText:SetPoint("TOP", titleText, "BOTTOM", 0, -15)
-    messageText:SetPoint("LEFT", warningFrame, "LEFT", 20, 0)
-    messageText:SetPoint("RIGHT", warningFrame, "RIGHT", -20, 0)
-    messageText:SetJustifyH("CENTER")
-    messageText:SetWordWrap(true)
-    messageText:SetText(L["WOWNOTES_DETECTED_MESSAGE"])
-    messageText:SetTextColor(0.9, 0.9, 0.9)
-    messageText:SetSpacing(2)
-
-    local okBtn = OneWoW_GUI:CreateButton(warningFrame, { text = L["OK"], width = 120, height = 30 })
-    okBtn:SetPoint("BOTTOM", 0, 15)
-    okBtn:SetScript("OnClick", function() MainWindow:Hide() end)
 end
 
 function GUI:CreateTabSystem(parent)
@@ -951,41 +895,6 @@ function GUI:CreateSettingsPanel(parent)
 
     websiteContainer:SetHeight(85)
     yOffset = yOffset - 95
-
-    local importSection = GUI:CreateSettingsSection(scrollContent, L["IMPORT_SECTION"], yOffset)
-    yOffset = importSection.bottomY - 15
-
-    local importDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    importDesc:SetPoint("TOPLEFT", 20, yOffset)
-    importDesc:SetPoint("TOPRIGHT", -20, yOffset)
-    importDesc:SetJustifyH("LEFT")
-    importDesc:SetWordWrap(true)
-    importDesc:SetText(L["IMPORT_DESC"])
-    importDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    local importDescHeight = importDesc:GetStringHeight()
-    yOffset = yOffset - importDescHeight - 20
-
-    local importBtn = OneWoW_GUI:CreateButton(scrollContent, { text = L["IMPORT_BUTTON"], width = 240, height = 30 })
-    importBtn:SetPoint("TOPLEFT", 40, yOffset)
-    importBtn:SetScript("OnClick", function()
-        local success, result = OneWoW_DirectDeposit:ImportFromWoWNotes()
-        if success then
-            OneWoW_DirectDeposit:ValidateAndCleanItemList()
-            StaticPopup_Show("DIRECTDEPOSIT_IMPORT_SUCCESS", tostring(result))
-            if MainWindow then
-                MainWindow:Hide()
-            end
-            isInitialized = false
-            MainWindow = nil
-            C_Timer.After(0.1, function()
-                GUI:Show()
-            end)
-        else
-            StaticPopup_Show("DIRECTDEPOSIT_IMPORT_FAILED", result)
-        end
-    end)
-
-    yOffset = yOffset - 50
 
     scrollContent:SetHeight(math.abs(yOffset) + 40)
     panel.scrollContent = scrollContent
