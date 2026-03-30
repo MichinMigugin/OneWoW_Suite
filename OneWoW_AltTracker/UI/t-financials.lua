@@ -142,22 +142,103 @@ local function ShowEditItemNameDialog(tx)
     dialog.editBox:SetFocus()
 end
 
+local function BuildCategoryMenuItems(includeAll)
+    local items = {}
+    if includeAll then
+        table.insert(items, { value = "all", text = L["FIN_CAT_ALL"] })
+        table.insert(items, { type = "divider" })
+    end
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_VENDOR"] })
+    table.insert(items, { value = "vendor_purchase", text = L["FIN_CAT_VENDOR_PURCHASE"] })
+    table.insert(items, { value = "vendor_sale", text = L["FIN_CAT_VENDOR_SALE"] })
+    table.insert(items, { value = "vendor_buyback", text = L["FIN_CAT_VENDOR_BUYBACK"] })
+    table.insert(items, { value = "repair", text = L["FIN_CAT_REPAIR"] })
+    table.insert(items, { value = "trainer_purchase", text = L["FIN_CAT_TRAINER"] })
+    table.insert(items, { value = "transmog", text = L["FIN_CAT_TRANSMOG"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_AUCTION"] })
+    table.insert(items, { value = "auction_sale", text = L["FIN_CAT_AUCTION_SALE"] })
+    table.insert(items, { value = "auction_purchase", text = L["FIN_CAT_AUCTION_PURCHASE"] })
+    table.insert(items, { value = "auction_deposit", text = L["FIN_CAT_AUCTION_DEPOSIT"] })
+    table.insert(items, { value = "bmah_purchase", text = L["FIN_CAT_BMAH"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_TRADE"] })
+    table.insert(items, { value = "trade_buy", text = L["FIN_CAT_TRADE_BUY"] })
+    table.insert(items, { value = "trade_sale", text = L["FIN_CAT_TRADE_SALE"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_MAIL"] })
+    table.insert(items, { value = "mail_send", text = L["FIN_CAT_MAIL_SEND"] })
+    table.insert(items, { value = "mail_cod_send", text = L["FIN_CAT_MAIL_COD"] })
+    table.insert(items, { value = "mail_postage", text = L["FIN_CAT_POSTAGE"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_BANK"] })
+    table.insert(items, { value = "guild_bank_deposit", text = L["FIN_CAT_GUILD_DEPOSIT"] })
+    table.insert(items, { value = "guild_bank_withdraw", text = L["FIN_CAT_GUILD_WITHDRAW"] })
+    table.insert(items, { value = "warband_bank_deposit", text = L["FIN_CAT_WARBAND_DEPOSIT"] })
+    table.insert(items, { value = "warband_bank_withdraw", text = L["FIN_CAT_WARBAND_WITHDRAW"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_TRANSFER"] })
+    table.insert(items, { value = "money_transfer_in", text = L["FIN_CAT_MONEY_IN"] })
+    table.insert(items, { value = "money_transfer_out", text = L["FIN_CAT_MONEY_OUT"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_REWARD"] })
+    table.insert(items, { value = "quest_reward", text = L["FIN_CAT_QUEST_REWARD"] })
+    table.insert(items, { value = "loot_money", text = L["FIN_CAT_LOOT_MONEY"] })
+    table.insert(items, { value = "mythicplus_reward", text = L["FIN_CAT_MYTHICPLUS"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_CRAFTING"] })
+    table.insert(items, { value = "crafting_order", text = L["FIN_CAT_CRAFTING_ORDER"] })
+    table.insert(items, { value = "crafting_order_placed", text = L["FIN_CAT_ORDER_PLACED"] })
+    table.insert(items, { value = "crafting_order_refund", text = L["FIN_CAT_ORDER_REFUND"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_OTHER"] })
+    table.insert(items, { value = "death_cost", text = L["FIN_CAT_DEATH_COST"] })
+    table.insert(items, { value = "uncategorized", text = L["FIN_CAT_UNCATEGORIZED"] })
+    return items
+end
+
+local categoryChangeTx
+local categoryChangeDropdown
+
 local function ShowChangeCategoryMenu(tx)
     if not tx or not tx.id then return end
-    MenuUtil.CreateContextMenu(UIParent, function(ownerRegion, rootDescription)
-        rootDescription:CreateTitle(L["FIN_EDIT_CATEGORY"])
-        for catKey, catLocaleKey in pairs(categoryNames) do
-            rootDescription:CreateButton(L[catLocaleKey], function()
-                local AccountingAddon = _G.OneWoW_AltTracker_Accounting
-                if AccountingAddon and AccountingAddon.Transactions then
-                    AccountingAddon.Transactions:UpdateTransaction(tx.id, { category = catKey })
-                    if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
-                        ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+    categoryChangeTx = tx
+
+    if not categoryChangeDropdown then
+        categoryChangeDropdown = OneWoW_GUI:CreateDropdown(UIParent, { width = 220, height = 1 })
+        categoryChangeDropdown:SetAlpha(0)
+        categoryChangeDropdown:EnableMouse(false)
+        categoryChangeDropdown:SetFrameStrata("HIGH")
+
+        OneWoW_GUI:AttachFilterMenu(categoryChangeDropdown, {
+            searchable = true,
+            menuHeight = 400,
+            getActiveValue = function()
+                return categoryChangeTx and categoryChangeTx.category or nil
+            end,
+            buildItems = function()
+                return BuildCategoryMenuItems(false)
+            end,
+            onSelect = function(value)
+                if categoryChangeTx and categoryChangeTx.id then
+                    local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+                    if AccountingAddon and AccountingAddon.Transactions then
+                        AccountingAddon.Transactions:UpdateTransaction(categoryChangeTx.id, { category = value })
+                        if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                            ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                        end
                     end
                 end
-            end)
-        end
-    end)
+            end,
+        })
+    end
+
+    local x, y = GetCursorPosition()
+    local scale = UIParent:GetEffectiveScale()
+    categoryChangeDropdown:ClearAllPoints()
+    categoryChangeDropdown:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+    categoryChangeDropdown:Show()
+    categoryChangeDropdown:GetScript("OnClick")(categoryChangeDropdown)
 end
 
 local function ShowDeleteConfirmation(tx)
@@ -441,24 +522,34 @@ function ns.UI.CreateFinancialsTab(parent)
     catLabel:SetText(L["FIN_CAT_LABEL"])
     catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local catBtn = OneWoW_GUI:CreateButton(filterPanel, { text = L["FIN_CAT_ALL"], width = 70, height = 24 })
-    catBtn:SetPoint("LEFT", catLabel, "RIGHT", 2, 0)
+    local catDropdown = OneWoW_GUI:CreateDropdown(filterPanel, { width = 140, height = 24, text = L["FIN_CAT_ALL"] })
+    catDropdown:SetPoint("LEFT", catLabel, "RIGHT", 2, 0)
 
-    catBtn:SetScript("OnClick", function(self)
-        if parent.categoryFilter then
-            parent.categoryFilter = nil
-            self.text:SetText(L["FIN_CAT_ALL"])
-        else
-            parent.categoryFilter = "auction_sale"
-            self.text:SetText(L["FIN_CAT_AUCTIONS"])
-        end
-        if ns.UI.RefreshFinancialsTab then
-            ns.UI.RefreshFinancialsTab(parent)
-        end
-    end)
+    OneWoW_GUI:AttachFilterMenu(catDropdown, {
+        searchable = true,
+        menuHeight = 400,
+        getActiveValue = function()
+            return parent.categoryFilter or "all"
+        end,
+        buildItems = function()
+            return BuildCategoryMenuItems(true)
+        end,
+        onSelect = function(value, text)
+            if value == "all" then
+                parent.categoryFilter = nil
+                catDropdown._text:SetText(L["FIN_CAT_ALL"])
+            else
+                parent.categoryFilter = value
+                catDropdown._text:SetText(text)
+            end
+            if ns.UI.RefreshFinancialsTab then
+                ns.UI.RefreshFinancialsTab(parent)
+            end
+        end,
+    })
 
     local resetBtn = OneWoW_GUI:CreateButton(filterPanel, { text = L["FIN_RESET_DATA"], width = 80, height = 24 })
-    resetBtn:SetPoint("LEFT", catBtn, "RIGHT", 25, 0)
+    resetBtn:SetPoint("LEFT", catDropdown, "RIGHT", 25, 0)
     resetBtn:SetBackdropColor(0.3, 0.1, 0.1, 1)
     resetBtn:SetBackdropBorderColor(0.6, 0.2, 0.2, 1)
     resetBtn.text:SetTextColor(1, 0.7, 0.7)
