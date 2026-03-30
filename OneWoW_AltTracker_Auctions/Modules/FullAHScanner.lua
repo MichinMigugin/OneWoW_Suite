@@ -5,7 +5,6 @@ local FullAHScanner = ns.FullAHScanner
 
 local SCAN_COOLDOWN_SECONDS = 15 * 60
 local BATCH_SIZE = 250
-local REPLICATE_TIMEOUT = 30
 
 local scanState = nil
 local scanFrame = nil
@@ -22,23 +21,21 @@ local function GetOrCreateScanFrame()
 end
 
 function FullAHScanner:Initialize()
-    local ahWatcher = CreateFrame("Frame")
-    ahWatcher:RegisterEvent("AUCTION_HOUSE_CLOSED")
-    ahWatcher:SetScript("OnEvent", function(self, event)
-        if scanState and scanState.isScanning then
-            FullAHScanner:AbortScan()
-        end
-    end)
 end
 
 function FullAHScanner:HandleEvent(event, ...)
     if event == "REPLICATE_ITEM_LIST_UPDATE" then
         if scanFrame then scanFrame:UnregisterEvent("REPLICATE_ITEM_LIST_UPDATE") end
-        if scanState and scanState.timeoutHandle then
-            scanState.timeoutHandle:Cancel()
-            scanState.timeoutHandle = nil
+        if scanState and scanState.waitingTicker then
+            scanState.waitingTicker:Cancel()
+            scanState.waitingTicker = nil
         end
         self:CacheScanData()
+    elseif event == "AUCTION_HOUSE_CLOSED" then
+        if scanFrame then scanFrame:UnregisterEvent("AUCTION_HOUSE_CLOSED") end
+        if scanState and scanState.isScanning then
+            FullAHScanner:AbortScan()
+        end
     end
 end
 
@@ -67,24 +64,28 @@ function FullAHScanner:StartScan(callback)
         _G.OneWoW_AHPrices = {}
     end
 
-    local timeoutHandle = C_Timer.NewTimer(REPLICATE_TIMEOUT, function()
-        if scanState and scanState.isScanning then
-            if scanFrame then scanFrame:UnregisterEvent("REPLICATE_ITEM_LIST_UPDATE") end
-            print("|cFFFFD100OneWoW:|r AH full scan timed out - the AH did not respond. You can try again.")
-            FullAHScanner:AbortScan()
-        end
-    end)
-
     scanState = {
         isScanning = true,
         callback = callback,
         minPrices = {},
-        timeoutHandle = timeoutHandle,
+        waitingTicker = nil,
+        waitStartTime = GetTime(),
     }
 
     if callback then callback("scanStarted", 0) end
 
+    scanState.waitingTicker = C_Timer.NewTicker(1, function()
+        if not scanState or not scanState.isScanning then return end
+        local elapsed = math.floor(GetTime() - scanState.waitStartTime)
+        if scanState.callback then
+            scanState.callback("scanWaiting", 0.1, elapsed)
+        end
+    end)
+
+    if callback then callback("scanWaiting", 0.1, 0) end
+
     frame:RegisterEvent("REPLICATE_ITEM_LIST_UPDATE")
+    frame:RegisterEvent("AUCTION_HOUSE_CLOSED")
     C_AuctionHouse.ReplicateItems()
 
     return true
@@ -93,9 +94,12 @@ end
 function FullAHScanner:StopScan()
     if not scanState then return end
     local cb = scanState.callback
-    if scanFrame then scanFrame:UnregisterEvent("REPLICATE_ITEM_LIST_UPDATE") end
-    if scanState.timeoutHandle then
-        scanState.timeoutHandle:Cancel()
+    if scanFrame then
+        scanFrame:UnregisterEvent("REPLICATE_ITEM_LIST_UPDATE")
+        scanFrame:UnregisterEvent("AUCTION_HOUSE_CLOSED")
+    end
+    if scanState.waitingTicker then
+        scanState.waitingTicker:Cancel()
     end
     scanState.isScanning = false
     scanState = nil
@@ -105,9 +109,12 @@ end
 function FullAHScanner:AbortScan()
     if not scanState then return end
     local cb = scanState.callback
-    if scanFrame then scanFrame:UnregisterEvent("REPLICATE_ITEM_LIST_UPDATE") end
-    if scanState.timeoutHandle then
-        scanState.timeoutHandle:Cancel()
+    if scanFrame then
+        scanFrame:UnregisterEvent("REPLICATE_ITEM_LIST_UPDATE")
+        scanFrame:UnregisterEvent("AUCTION_HOUSE_CLOSED")
+    end
+    if scanState.waitingTicker then
+        scanState.waitingTicker:Cancel()
     end
     scanState.isScanning = false
     scanState = nil
@@ -122,7 +129,7 @@ function FullAHScanner:CacheScanData()
     if not scanState or not scanState.isScanning then return end
 
     local callback = scanState.callback
-    if callback then callback("scanProgress", 0.1) end
+    if callback then callback("scanProgress", 0.2) end
 
     local totalItems = C_AuctionHouse.GetNumReplicateItems()
     if not totalItems or totalItems == 0 then
@@ -156,8 +163,8 @@ function FullAHScanner:CacheScanData()
             processed = processed + 1
         end
 
-        local progress = 0.1 + (processed / limit) * 0.9
-        if callback then callback("scanProgress", progress) end
+        local progress = 0.2 + (processed / limit) * 0.8
+        if callback then callback("scanProgress", progress, limit) end
 
         if processed >= limit then
             local pricesFound = 0
@@ -182,8 +189,11 @@ end
 function FullAHScanner:CompleteScan(pricesFound)
     if not scanState then return end
     local cb = scanState.callback
-    if scanState.timeoutHandle then
-        scanState.timeoutHandle:Cancel()
+    if scanState.waitingTicker then
+        scanState.waitingTicker:Cancel()
+    end
+    if scanFrame then
+        scanFrame:UnregisterEvent("AUCTION_HOUSE_CLOSED")
     end
     scanState.isScanning = false
     scanState = nil
