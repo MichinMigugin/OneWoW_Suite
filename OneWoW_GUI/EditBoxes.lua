@@ -50,10 +50,7 @@ function OneWoW_GUI:CreateEditBox(parent, options)
 
     box:SetScript("OnEditFocusLost", function(self)
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        if self:GetText() == "" then
-            self:SetText(self.placeholderText)
-            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
+        self:RestorePlaceholder()
     end)
 
     if onTextChanged then
@@ -62,6 +59,13 @@ function OneWoW_GUI:CreateEditBox(parent, options)
             if text == self.placeholderText then text = "" end
             onTextChanged(text)
         end)
+    end
+
+    function box:RestorePlaceholder()
+        if self:GetText() == "" and self.placeholderText and self.placeholderText ~= "" then
+            self:SetText(self.placeholderText)
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
     end
 
     function box:GetSearchText()

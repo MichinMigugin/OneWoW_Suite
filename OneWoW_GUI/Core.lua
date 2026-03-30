@@ -57,6 +57,24 @@ function OneWoW_GUI:RestoreWindowPosition(frame, storage)
     if storage.width and storage.height and frame.SetSize then
         frame:SetSize(storage.width, storage.height)
     end
+    frame._owgNeedsBoundsCheck = true
+    if not frame._owgBoundsHooked then
+        frame._owgBoundsHooked = true
+        frame:HookScript("OnShow", function(self)
+            if not self._owgNeedsBoundsCheck then return end
+            self._owgNeedsBoundsCheck = false
+            C_Timer.After(0, function()
+                if not self:IsShown() then return end
+                local l, b, r, t = self:GetLeft(), self:GetBottom(), self:GetRight(), self:GetTop()
+                if not l or not b or not r or not t then return end
+                local sw, sh = GetScreenWidth(), GetScreenHeight()
+                if l < 0 or b < 0 or r > sw or t > sh then
+                    self:ClearAllPoints()
+                    self:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+                end
+            end)
+        end)
+    end
     return true
 end
 
