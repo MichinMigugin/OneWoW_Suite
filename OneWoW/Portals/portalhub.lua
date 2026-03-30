@@ -20,6 +20,10 @@ function PortalHub:InitializeDatabase()
 		escIconSize = 40,
 		showHearthstone = true,
 		randomHearthstone = true,
+		showDalaranHearth = true,
+		showGarrisonHearth = true,
+		showFlightWhistle = true,
+		showHousingPortal = true,
 		escFavorites = {},
 		allFavorites = {},
 		iconSize = 40,
@@ -76,7 +80,7 @@ local function CategorizePortal(portalData)
 	if portalData.type == "toy" then
 		local professionToys = {
 			18984, 18986, 30542, 30544, 48933, 87215, 112059, 151652, 168807, 168808,
-			168807, 251662, 412555, 212337, 198156
+			168807, 251662, 412555, 212337, 198156, 221966, 248485
 		}
 		for _, toyID in ipairs(professionToys) do
 			if portalData.id == toyID then

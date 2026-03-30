@@ -86,6 +86,7 @@ Portals.Items = {
 			{id = 172924, name = "Wormhole Generator: Shadowlands", type = "toy"},
 			{id = 198156, name = "Wyrmhole Generator: Dragon Isles", type = "toy"},
 			{id = 221966, name = "Wormhole Generator: Khaz Algar", type = "toy"},
+			{id = 248485, name = "Wormhole Generator: Quel'Thalas", type = "toy"},
 		},
 		rippers = {
 			{id = 30542, name = "Dimensional Ripper - Area 52", type = "toy"},

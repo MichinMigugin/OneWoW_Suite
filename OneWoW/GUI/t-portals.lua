@@ -19,7 +19,7 @@ function GUI:CreatePortalsTab(parent)
 	local controlPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
 	controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
 	controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-	controlPanel:SetHeight(45)
+	controlPanel:SetHeight(70)
 	controlPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
 	controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 	controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -33,10 +33,13 @@ function GUI:CreatePortalsTab(parent)
 	if ph.showAll == nil then ph.showAll = true end
 	if ph.showAllOnEsc == nil then ph.showAllOnEsc = false end
 	if ph.showSeasonal == nil then ph.showSeasonal = true end
-
+	if ph.showDalaranHearth == nil then ph.showDalaranHearth = true end
+	if ph.showGarrisonHearth == nil then ph.showGarrisonHearth = true end
+	if ph.showFlightWhistle == nil then ph.showFlightWhistle = true end
+	if ph.showHousingPortal == nil then ph.showHousingPortal = true end
 
 	local escCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show Portals on ESC"] })
-	escCheckbox:SetPoint("LEFT", controlPanel, "LEFT", 10, 0)
+	escCheckbox:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -5)
 	escCheckbox:SetChecked(OneWoW.db.global.portalHub.escPortalsEnabled)
 	escCheckbox:SetScript("OnClick", function(self)
 		OneWoW.db.global.portalHub.escPortalsEnabled = self:GetChecked()
@@ -88,6 +91,57 @@ function GUI:CreatePortalsTab(parent)
 	end)
 
 	local showSeasonalLabel = showSeasonalCheckbox.label
+
+	local topRowLabel = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	topRowLabel:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 12, -32)
+	topRowLabel:SetText(L["PORTAL_ESC_TOP_ROW"])
+	topRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+	local showDalaranCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_DALARAN_HEARTH"] })
+	showDalaranCheckbox:SetPoint("LEFT", topRowLabel, "RIGHT", 10, 0)
+	showDalaranCheckbox:SetChecked(ph.showDalaranHearth ~= false)
+	showDalaranCheckbox:SetScript("OnClick", function(self)
+		OneWoW.db.global.portalHub.showDalaranHearth = self:GetChecked()
+		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
+			OneWoW.PortalHubEsc:Reload()
+		end
+	end)
+
+	local showDalaranLabel = showDalaranCheckbox.label
+
+	local showGarrisonCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_GARRISON_HEARTH"] })
+	showGarrisonCheckbox:SetPoint("LEFT", showDalaranLabel, "RIGHT", 15, 0)
+	showGarrisonCheckbox:SetChecked(ph.showGarrisonHearth ~= false)
+	showGarrisonCheckbox:SetScript("OnClick", function(self)
+		OneWoW.db.global.portalHub.showGarrisonHearth = self:GetChecked()
+		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
+			OneWoW.PortalHubEsc:Reload()
+		end
+	end)
+
+	local showGarrisonLabel = showGarrisonCheckbox.label
+
+	local showWhistleCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_FLIGHT_WHISTLE"] })
+	showWhistleCheckbox:SetPoint("LEFT", showGarrisonLabel, "RIGHT", 15, 0)
+	showWhistleCheckbox:SetChecked(ph.showFlightWhistle ~= false)
+	showWhistleCheckbox:SetScript("OnClick", function(self)
+		OneWoW.db.global.portalHub.showFlightWhistle = self:GetChecked()
+		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
+			OneWoW.PortalHubEsc:Reload()
+		end
+	end)
+
+	local showWhistleLabel = showWhistleCheckbox.label
+
+	local showHousingCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_HOUSING_PORTAL"] })
+	showHousingCheckbox:SetPoint("LEFT", showWhistleLabel, "RIGHT", 15, 0)
+	showHousingCheckbox:SetChecked(ph.showHousingPortal ~= false)
+	showHousingCheckbox:SetScript("OnClick", function(self)
+		OneWoW.db.global.portalHub.showHousingPortal = self:GetChecked()
+		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
+			OneWoW.PortalHubEsc:Reload()
+		end
+	end)
 
 	local categoryPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
 	categoryPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -10)
@@ -272,8 +326,8 @@ function GUI:CreatePortalsTab(parent)
 
 		if portal.type == "toy" then
 			if isAvailable then
-				button:SetAttribute("type", "toy")
-				button:SetAttribute("toy", portal.id)
+				button:SetAttribute("type1", "toy")
+				button:SetAttribute("toy1", portal.id)
 			end
 			local _, name, icon = C_ToyBox.GetToyInfo(portal.id)
 			if icon then
@@ -289,8 +343,8 @@ function GUI:CreatePortalsTab(parent)
 			end
 		elseif portal.type == "item" then
 			if isAvailable then
-				button:SetAttribute("type", "item")
-				button:SetAttribute("item", "item:" .. portal.id)
+				button:SetAttribute("type1", "item")
+				button:SetAttribute("item1", "item:" .. portal.id)
 			end
 			local item = Item:CreateFromItemID(portal.id)
 			item:ContinueOnItemLoad(function()
@@ -301,8 +355,8 @@ function GUI:CreatePortalsTab(parent)
 			end)
 		elseif portal.type == "spell" then
 			if isAvailable then
-				button:SetAttribute("type", "spell")
-				button:SetAttribute("spell", portal.id)
+				button:SetAttribute("type1", "spell")
+				button:SetAttribute("spell1", portal.id)
 			end
 			local icon = C_Spell.GetSpellTexture(portal.id)
 			if icon then
@@ -310,8 +364,8 @@ function GUI:CreatePortalsTab(parent)
 			end
 		elseif portal.type == "housing" then
 			if isAvailable then
-				button:SetAttribute("type", "macro")
-				button:SetAttribute("macrotext", "/run local h=C_Housing.GetCurrentHouseInfo();if h and h.houseGUID then C_Housing.TeleportHome(h.neighborhoodGUID,h.houseGUID,h.plotID)else print('No house')end")
+				button:SetAttribute("type1", "macro")
+				button:SetAttribute("macrotext1", "/run local h=C_Housing.GetCurrentHouseInfo();if h and h.houseGUID then C_Housing.TeleportHome(h.neighborhoodGUID,h.houseGUID,h.plotID)else print('No house')end")
 			end
 			local icon = C_Spell.GetSpellTexture(1263273)
 			if icon then

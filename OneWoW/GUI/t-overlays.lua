@@ -1597,6 +1597,59 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end
     end
 
+    if featureId == "upgrade" then
+        local modeLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        modeLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        modeLabel:SetText(L["OVR_UPGRADE_MODE_LABEL"])
+        modeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        yOffset = yOffset - modeLabel:GetStringHeight() - 6
+
+        local MODE_OPTIONS = {
+            { text = L["OVR_UPGRADE_MODE_ILVL"],      value = "ILVL" },
+            { text = L["OVR_UPGRADE_MODE_PAWN"],       value = "PAWN" },
+            { text = L["OVR_UPGRADE_MODE_PAWN_ILVL"],  value = "PAWN>ILVL" },
+        }
+        local MODE_DISPLAY = { ["ILVL"] = L["OVR_UPGRADE_MODE_ILVL"], ["PAWN"] = L["OVR_UPGRADE_MODE_PAWN"], ["PAWN>ILVL"] = L["OVR_UPGRADE_MODE_PAWN_ILVL"] }
+
+        local currentMode = reg:GetOverlaySetting(featureId, "mode") or "ILVL"
+        local modeDD, modeDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 200, text = MODE_DISPLAY[currentMode] or currentMode })
+        OneWoW_GUI:AttachFilterMenu(modeDD, {
+            searchable = false,
+            buildItems = function()
+                local items = {}
+                for _, opt in ipairs(MODE_OPTIONS) do
+                    table.insert(items, { text = opt.text, value = opt.value })
+                end
+                return items
+            end,
+            onSelect = function(value, text)
+                modeDDText:SetText(text)
+                reg:SetOverlaySetting(featureId, "mode", value)
+                OneWoW.OverlayEngine:Refresh()
+            end,
+            getActiveValue = function() return reg:GetOverlaySetting(featureId, "mode") or "ILVL" end,
+        })
+        modeDD:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        yOffset = yOffset - 26 - 10
+
+        local hasPawn = _G.PawnShouldItemLinkHaveUpgradeArrow ~= nil
+        if not hasPawn then
+            local pawnNote = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            pawnNote:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+            pawnNote:SetText(L["OVR_UPGRADE_PAWN_NOT_INSTALLED"])
+            pawnNote:SetTextColor(0.6, 0.6, 0.6)
+            yOffset = yOffset - pawnNote:GetStringHeight() - 10
+        end
+
+        local upgTooltipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_LABEL"] })
+        upgTooltipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        upgTooltipCb:SetChecked(reg:GetOverlaySetting(featureId, "showInTooltip") or false)
+        upgTooltipCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "showInTooltip", self:GetChecked())
+        end)
+        yOffset = yOffset - 30 - 10
+    end
+
     local resetDiv = dsc:CreateTexture(nil, "ARTWORK")
     resetDiv:SetHeight(1)
     resetDiv:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)

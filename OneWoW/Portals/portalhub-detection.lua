@@ -287,7 +287,7 @@ end
 
 function Detection:GetWormholes(showAll)
 	local portals = {}
-	local wormholes = {48933, 87215, 112059, 151652, 168807, 168808, 172924, 198156, 221966}
+	local wormholes = {48933, 87215, 112059, 151652, 168807, 168808, 172924, 198156, 221966, 248485}
 
 	if not self:HasProfession("Engineering") and not showAll then
 		return portals

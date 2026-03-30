@@ -224,10 +224,19 @@ function OneWoW:InitializeDatabase()
         ov.protected.applyToAuctionHouse = false
     end
     if not ov.upgrade then
-        ov.upgrade = { enabled = false, icon = "Professions-Icon-Quality-Tier3-Small", position = "TOPLEFT", scale = 1.0, alpha = 1.0, applyToVendorItems = false, applyToAuctionHouse = false }
+        ov.upgrade = { enabled = false, icon = "Professions-Icon-Quality-Tier3-Small", position = "TOPLEFT", scale = 1.0, alpha = 1.0, applyToVendorItems = false, applyToAuctionHouse = false, mode = "ILVL", showInTooltip = false, showPawnPrompt = true }
     end
     if ov.upgrade.applyToAuctionHouse == nil then
         ov.upgrade.applyToAuctionHouse = false
+    end
+    if ov.upgrade.mode == nil then
+        ov.upgrade.mode = "ILVL"
+    end
+    if ov.upgrade.showInTooltip == nil then
+        ov.upgrade.showInTooltip = false
+    end
+    if ov.upgrade.showPawnPrompt == nil then
+        ov.upgrade.showPawnPrompt = true
     end
     if not ov.transmog then
         ov.transmog = { enabled = false, icon = "Warfronts-BaseMapIcons-Horde-Workshop-Minimap", position = "TOPLEFT", scale = 1.0, alpha = 1.0, applyToVendorItems = false, applyToAuctionHouse = false }

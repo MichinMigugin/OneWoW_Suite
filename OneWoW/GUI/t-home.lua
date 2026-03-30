@@ -272,6 +272,7 @@ function GUI:CreateHomeTab(parent)
 
     local leftPanel  = CreateFrame("Frame", nil, splitContainer)
     local rightPanel = CreateFrame("Frame", nil, splitContainer)
+    local modVDivBottomY = nil
 
     local function LayoutColumns()
         local w = splitContainer:GetWidth()
@@ -289,29 +290,47 @@ function GUI:CreateHomeTab(parent)
 
         modVDiv:ClearAllPoints()
         modVDiv:SetPoint("TOPLEFT",    splitContainer, "TOPLEFT",    col, -40)
-        modVDiv:SetPoint("BOTTOMLEFT", splitContainer, "BOTTOMLEFT", col,   8)
+        if modVDivBottomY then
+            modVDiv:SetPoint("BOTTOMLEFT", splitContainer, "TOPLEFT", col, modVDivBottomY + 4)
+        else
+            modVDiv:SetPoint("BOTTOMLEFT", splitContainer, "BOTTOMLEFT", col, 8)
+        end
     end
 
     splitContainer:HookScript("OnSizeChanged", LayoutColumns)
     C_Timer.After(0, LayoutColumns)
 
-    -- === LEFT: Detected Modules ===
-    local detectedTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    detectedTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -12)
-    detectedTitle:SetText(L["HOME_DETECTED_MODULES"])
-    detectedTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    -- === LEFT: Required Addons ===
+    local requiredTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    requiredTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -12)
+    requiredTitle:SetText(L["HOME_REQUIRED_ADDONS"])
+    requiredTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local modY = -38
     CreateModuleRow(leftPanel, "MODULE_ONEWOW", "OneWoW", "OneWoW", modY, nil, true)
     modY = modY - 28
+    CreateModuleRow(leftPanel, "MODULE_GUI", "OneWoW GUI", "OneWoW_GUI", modY, nil, true)
+    modY = modY - 28
 
+    local leftDiv1Y = modY - 4
+    local leftDiv1 = leftPanel:CreateTexture(nil, "ARTWORK")
+    leftDiv1:SetHeight(1)
+    leftDiv1:SetPoint("TOPLEFT",  leftPanel, "TOPLEFT",  8, leftDiv1Y)
+    leftDiv1:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -8, leftDiv1Y)
+    leftDiv1:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+    local detectedTitleY = leftDiv1Y - 18
+    local detectedTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    detectedTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, detectedTitleY)
+    detectedTitle:SetText(L["HOME_DETECTED_MODULES"])
+    detectedTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    modY = detectedTitleY - 24
     local moduleChecks = {
         { key = "MODULE_ALTTRACKER",    displayName = "AltTracker",      addonName = "OneWoW_AltTracker",    cascade = { "OneWoW_AltTracker_Accounting", "OneWoW_AltTracker_Auctions", "OneWoW_AltTracker_Character", "OneWoW_AltTracker_Collections", "OneWoW_AltTracker_Endgame", "OneWoW_AltTracker_Professions", "OneWoW_AltTracker_Storage" } },
-        { key = "MODULE_CATALOG",       displayName = "Catalog",         addonName = "OneWoW_Catalog",       cascade = { "OneWoW_CatalogData_Journal", "OneWoW_CatalogData_Tradeskills", "OneWoW_CatalogData_Vendors" } },
-        { key = "MODULE_DIRECTDEPOSIT", displayName = "Direct Deposit",  addonName = "OneWoW_DirectDeposit" },
+        { key = "MODULE_CATALOG",       displayName = "Catalog",         addonName = "OneWoW_Catalog",       cascade = { "OneWoW_CatalogData_Journal", "OneWoW_CatalogData_Quests", "OneWoW_CatalogData_Tradeskills", "OneWoW_CatalogData_Vendors" } },
         { key = "MODULE_NOTES",         displayName = "Notes",           addonName = "OneWoW_Notes" },
         { key = "MODULE_QOL",           displayName = "Quality of Life", addonName = "OneWoW_QoL" },
-        { key = "MODULE_SHOPPINGLIST",  displayName = "Shopping List",   addonName = "OneWoW_ShoppingList" },
     }
 
     for _, mod in ipairs(moduleChecks) do
@@ -319,30 +338,32 @@ function GUI:CreateHomeTab(parent)
         modY = modY - 28
     end
 
-    local leftSectDivY = modY - 4
-    local leftSectDiv = leftPanel:CreateTexture(nil, "ARTWORK")
-    leftSectDiv:SetHeight(1)
-    leftSectDiv:SetPoint("TOPLEFT",  leftPanel, "TOPLEFT",  8, leftSectDivY)
-    leftSectDiv:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -8, leftSectDivY)
-    leftSectDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local leftDiv2Y = modY - 4
+    local leftDiv2 = leftPanel:CreateTexture(nil, "ARTWORK")
+    leftDiv2:SetHeight(1)
+    leftDiv2:SetPoint("TOPLEFT",  leftPanel, "TOPLEFT",  8, leftDiv2Y)
+    leftDiv2:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -8, leftDiv2Y)
+    leftDiv2:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local utilTitleY = leftSectDivY - 18
-    local utilTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    utilTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, utilTitleY)
-    utilTitle:SetText(L["HOME_UTILITIES"])
-    utilTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    local standaloneTitleY = leftDiv2Y - 18
+    local standaloneTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    standaloneTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, standaloneTitleY)
+    standaloneTitle:SetText(L["HOME_STANDALONE_ADDONS"])
+    standaloneTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local utilitiesChecks = {
-        { key = "MODULE_DEVTOOLS",  displayName = "DevTools",  addonName = "OneWoW_Utility_DevTool" },
-        { key = "MODULE_EXTRACTOR", displayName = "Extractor", addonName = "OneWoW_Utility_Extractor" },
-        { key = "MODULE_ITEMS",     displayName = "Items",     addonName = "OneWoW_Utility_Items" },
+    modY = standaloneTitleY - 24
+    local standaloneChecks = {
+        { key = "MODULE_BAGS",         displayName = "Bags",           addonName = "OneWoW_Bags" },
+        { key = "MODULE_DIRECTDEPOSIT", displayName = "Direct Deposit", addonName = "OneWoW_DirectDeposit" },
+        { key = "MODULE_SHOPPINGLIST",  displayName = "Shopping List",  addonName = "OneWoW_ShoppingList" },
     }
 
-    local utilY = utilTitleY - 24
-    for _, mod in ipairs(utilitiesChecks) do
-        CreateModuleRow(leftPanel, mod.key, mod.displayName, mod.addonName, utilY)
-        utilY = utilY - 28
+    for _, mod in ipairs(standaloneChecks) do
+        CreateModuleRow(leftPanel, mod.key, mod.displayName, mod.addonName, modY, mod.cascade)
+        modY = modY - 28
     end
+
+    local leftEndModY = modY
 
     -- === RIGHT: Detected Data Modules ===
     local dataTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -389,6 +410,7 @@ function GUI:CreateHomeTab(parent)
 
     local catalogDataChecks = {
         { key = "CAT_MOD_JOURNAL",     displayName = "Journal",     addonName = "OneWoW_CatalogData_Journal" },
+        { key = "CAT_MOD_QUESTS",      displayName = "Quests",      addonName = "OneWoW_CatalogData_Quests" },
         { key = "CAT_MOD_TRADESKILLS", displayName = "Tradeskills", addonName = "OneWoW_CatalogData_Tradeskills" },
         { key = "CAT_MOD_VENDORS",     displayName = "Vendors",     addonName = "OneWoW_CatalogData_Vendors" },
     }
@@ -398,9 +420,51 @@ function GUI:CreateHomeTab(parent)
         rightY = rightY - 28
     end
 
-    local leftDepth  = math.abs(utilY) + 4
+    local leftDepth  = math.abs(leftEndModY) + 4
     local rightDepth = math.abs(rightY) + 4
-    local containerH = 40 + math.max(leftDepth, rightDepth) + 20
+    local columnsDepth = 40 + math.max(leftDepth, rightDepth)
+
+    local utilFullDivY = -(columnsDepth + 4)
+    modVDivBottomY = utilFullDivY
+    local utilFullDiv = splitContainer:CreateTexture(nil, "ARTWORK")
+    utilFullDiv:SetHeight(1)
+    utilFullDiv:SetPoint("TOPLEFT",  splitContainer, "TOPLEFT",  8, utilFullDivY)
+    utilFullDiv:SetPoint("TOPRIGHT", splitContainer, "TOPRIGHT", -8, utilFullDivY)
+    utilFullDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+    local utilTitleY = utilFullDivY - 18
+    local utilTitle = splitContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    utilTitle:SetPoint("TOPLEFT", splitContainer, "TOPLEFT", 15, utilTitleY)
+    utilTitle:SetText(L["HOME_UTILITIES"])
+    utilTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    local utilLeftPanel = CreateFrame("Frame", nil, splitContainer)
+    local utilRightPanel = CreateFrame("Frame", nil, splitContainer)
+
+    local function LayoutUtilColumns()
+        local w = splitContainer:GetWidth()
+        if not w or w <= 0 then return end
+        local col = math.floor(w / 2)
+        local utilRowY = utilTitleY - 24
+
+        utilLeftPanel:ClearAllPoints()
+        utilLeftPanel:SetPoint("TOPLEFT", splitContainer, "TOPLEFT", 0, utilRowY)
+        utilLeftPanel:SetWidth(col)
+        utilLeftPanel:SetHeight(32)
+
+        utilRightPanel:ClearAllPoints()
+        utilRightPanel:SetPoint("TOPLEFT", splitContainer, "TOPLEFT", col, utilRowY)
+        utilRightPanel:SetWidth(col)
+        utilRightPanel:SetHeight(32)
+    end
+
+    splitContainer:HookScript("OnSizeChanged", LayoutUtilColumns)
+    C_Timer.After(0, LayoutUtilColumns)
+
+    CreateModuleRow(utilLeftPanel,  "MODULE_DEVTOOLS",  "DevTools",  "OneWoW_Utility_DevTool",  -4)
+    CreateModuleRow(utilRightPanel, "MODULE_EXTRACTOR", "Extractor", "OneWoW_Utility_Extractor", -4)
+
+    local containerH = columnsDepth + 8 + 18 + 24 + 32 + 20
     splitContainer:SetHeight(containerH)
 
     yOffset = yOffset - containerH - 20

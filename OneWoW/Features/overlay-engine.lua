@@ -843,24 +843,9 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
 
     if IsOverlayEnabled("upgrade") then
         if itemLocation and C_Item.DoesItemExist(itemLocation) then
-            local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
-            if equipLoc and equipLoc ~= "" and equipLoc ~= "INVTYPE_NON_EQUIP" then
-                local ilvl = C_Item.GetCurrentItemLevel(itemLocation)
-                if ilvl then
-                    local invType = C_Item.GetItemInventoryTypeByID(itemID)
-                    local slot = invType and INVTYPE_TO_SLOT[invType]
-                    if slot and slot > 0 then
-                        local equippedLink = GetInventoryItemLink("player", slot)
-                        if equippedLink then
-                            local equippedIlvl = C_Item.GetDetailedItemLevelInfo(equippedLink)
-                            if equippedIlvl and ilvl > equippedIlvl then
-                                hits[#hits + 1] = "upgrade"
-                            end
-                        else
-                            hits[#hits + 1] = "upgrade"
-                        end
-                    end
-                end
+            local UD = OneWoW.UpgradeDetection
+            if UD and UD:CheckItemUpgrade(itemLink, itemLocation) then
+                hits[#hits + 1] = "upgrade"
             end
         end
     end

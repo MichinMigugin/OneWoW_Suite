@@ -154,22 +154,30 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 	if not OneWoW.PortalHubFlyouts then return end
 
 	local hearthButtons = {}
-	if OneWoW.db.global.portalHub.showHearthstone or showAll then
-		local hsType = OneWoW.db.global.portalHub.randomHearthstone and "randomhearth" or "item"
+	if ph.showHearthstone ~= false or showAll then
+		local hsType = ph.randomHearthstone and "randomhearth" or "item"
 		table.insert(hearthButtons, {type = hsType, id = 6948})
 	end
-	if showAll or (PlayerHasToy(140192) and C_QuestLog.IsQuestFlaggedCompleted(44663)) then
-		table.insert(hearthButtons, {type = "toy", id = 140192})
+	if ph.showDalaranHearth ~= false then
+		if showAll or (PlayerHasToy(140192) and C_QuestLog.IsQuestFlaggedCompleted(44663)) then
+			table.insert(hearthButtons, {type = "toy", id = 140192})
+		end
 	end
-	if showAll or (PlayerHasToy(110560) and C_QuestLog.IsQuestFlaggedCompleted(34378)) then
-		table.insert(hearthButtons, {type = "toy", id = 110560})
+	if ph.showGarrisonHearth ~= false then
+		if showAll or (PlayerHasToy(110560) and C_QuestLog.IsQuestFlaggedCompleted(34378)) then
+			table.insert(hearthButtons, {type = "toy", id = 110560})
+		end
 	end
-	if showAll or C_Item.GetItemCount(141605) > 0 or PlayerHasToy(141605) then
-		table.insert(hearthButtons, {type = "item", id = 141605})
+	if ph.showFlightWhistle ~= false then
+		if showAll or C_Item.GetItemCount(141605) > 0 or PlayerHasToy(141605) then
+			table.insert(hearthButtons, {type = "item", id = 141605})
+		end
 	end
-	local housingPortal = OneWoW.PortalHubDetection:GetHousingPortal(showAll)
-	if housingPortal then
-		table.insert(hearthButtons, housingPortal)
+	if ph.showHousingPortal ~= false then
+		local housingPortal = OneWoW.PortalHubDetection:GetHousingPortal(showAll)
+		if housingPortal then
+			table.insert(hearthButtons, housingPortal)
+		end
 	end
 
 	xOffset = 0
@@ -547,10 +555,17 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize)
 		HideUIPanel(GameMenuFrame)
 		C_Timer.After(0.15, function()
 			if OneWoW.GUI then
-				OneWoW.GUI:Show("settings")
-				C_Timer.After(0.1, function()
-					OneWoW.GUI:SelectSubTab("settings", "portals")
-				end)
+				local moduleKey = "settings"
+				if OneWoW.ModuleRegistry and OneWoW.ModuleRegistry:IsRegistered("qol") then
+					moduleKey = "qol"
+				end
+				if OneWoW.db and OneWoW.db.global then
+					if not OneWoW.db.global.lastSubTabs then
+						OneWoW.db.global.lastSubTabs = {}
+					end
+					OneWoW.db.global.lastSubTabs[moduleKey] = "portals"
+				end
+				OneWoW.GUI:Show(moduleKey)
 			end
 		end)
 	end)

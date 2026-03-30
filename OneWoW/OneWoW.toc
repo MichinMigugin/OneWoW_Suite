@@ -39,6 +39,7 @@ Core\SettingsFeatureRegistry.lua
 # Features
 Features\overlays.lua
 Features\overlay-icons.lua
+Features\upgrade-detection.lua
 Features\overlay-engine.lua
 Features\itemstatus.lua
 Features\toastalerts.lua
@@ -68,6 +69,7 @@ Tooltips\tp-enhancements.lua
 Tooltips\tp-talentmods.lua
 Tooltips\tp-notewarning.lua
 Tooltips\tp-itemstatus.lua
+Tooltips\tp-gearupgrades.lua
 Tooltips\tp-value.lua
 
 # Portal Hub - Data

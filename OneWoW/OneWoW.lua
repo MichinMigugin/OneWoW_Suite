@@ -188,6 +188,9 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         if OneWoW.ItemStatus then
             OneWoW.ItemStatus:Initialize()
         end
+        if OneWoW.UpgradeDetection then
+            OneWoW.UpgradeDetection:Initialize()
+        end
         if OneWoW.OverlayEngine then
             OneWoW.OverlayEngine:Initialize()
         end
