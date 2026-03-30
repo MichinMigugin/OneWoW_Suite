@@ -39,9 +39,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["CAT_CONTAINERS"] = "Containers",
     ["CAT_KEYS"] = "Keys",
     ["CAT_MISCELLANEOUS"] = "Miscellaneous",
-    ["CAT_PETS_AND_MOUNTS"] = "Pets and Mounts",
+    ["CAT_BATTLE_PETS"] = "Battle Pets",
     ["CAT_TOYS"] = "Toys",
-    ["CAT_COSMETICS"] = "Cosmetics",
     ["CAT_OTHER"] = "Other",
     ["CAT_JUNK"] = "Junk",
     ["CAT_EMPTY"] = "Empty",
@@ -290,13 +289,109 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SETTING_BANK_LOCK"] = "Lock Window Position",
     ["DESC_BANK_LOCK"] = "Prevent the bank window from being moved.",
 
-    ["CAT_ONEWOW_JUNK"] = "OneWoW Junk",
-    ["CAT_ONEWOW_UPGRADES"] = "OneWoW Upgrades",
+    ["CAT_ONEWOW_JUNK"] = "1W Junk",
+    ["CAT_ONEWOW_UPGRADES"] = "1W Upgrades",
+    ["CAT_1W_JUNK"] = "1W Junk",
+    ["CAT_1W_UPGRADES"] = "1W Upgrades",
 
-    ["SETTING_ENABLE_JUNK_CAT"] = "OneWoW Junk Category",
-    ["DESC_ENABLE_JUNK_CAT"] = "Group items marked as Junk by OneWoW into a dedicated category at the top.",
-    ["SETTING_ENABLE_UPGRADE_CAT"] = "OneWoW Upgrades Category",
+    ["SETTING_ENABLE_JUNK_CAT"] = "1W Junk Category",
+    ["DESC_ENABLE_JUNK_CAT"] = "Combine all junk items (grey quality and 1W-marked) into a single dedicated category at the top.",
+    ["SETTING_ENABLE_UPGRADE_CAT"] = "1W Upgrades Category",
     ["DESC_ENABLE_UPGRADE_CAT"] = "Group items that are gear upgrades for your character into a dedicated category.",
+
+    ["SETTING_UNUSABLE_OVERLAY"] = "Red Overlay on Unusable Items",
+    ["DESC_UNUSABLE_OVERLAY"] = "Show a semi-transparent red overlay on items your character cannot use.",
+    ["SETTING_DIM_JUNK"] = "Dim Junk Items",
+    ["DESC_DIM_JUNK"] = "Reduce the opacity of items marked as junk or grey quality items.",
+    ["SETTING_STRIP_JUNK_OVERLAYS"] = "Remove Junk Item Overlays",
+    ["DESC_STRIP_JUNK_OVERLAYS"] = "Remove glow effects and overlay icons from items that are marked as junk.",
+    ["SETTING_ALT_TO_SHOW"] = "Hold Alt to Reveal Hidden",
+    ["DESC_ALT_TO_SHOW"] = "When enabled, holding Alt will temporarily show hidden UI elements like the search bar, header bar, and money bar.",
+
+    ["CATEGORY_SEARCH_EXPR"] = "Search Expression:",
+    ["CATEGORY_SEARCH_EXPR_DESC"] = "Use keywords like #pet, #mount, #toy, #collected, #soulbound with operators & (and), | (or), ! (not). Example: (#pet|#mount)&!#collected",
+
+    ["SORT_EXPANSION"] = "Expansion",
+    ["GROUP_BY"] = "Group By",
+    ["GROUP_NONE"] = "None",
+    ["GROUP_EXPANSION"] = "Expansion",
+    ["GROUP_TYPE"] = "Type",
+    ["GROUP_SLOT"] = "Slot",
+    ["GROUP_QUALITY"] = "Quality",
+    ["CAT_SORT"] = "Sort",
+
+    ["SECTION_ITEM_DISPLAY"] = "Item Display",
+
+    ["PRIORITY"] = "Priority",
+    ["PRIORITY_LOWEST"] = "Lowest",
+    ["PRIORITY_LOW"] = "Low",
+    ["PRIORITY_NORMAL"] = "Normal",
+    ["PRIORITY_HIGH"] = "High",
+    ["PRIORITY_HIGHEST"] = "Highest",
+
+    ["COLOR"] = "Color",
+    ["COLOR_PICK"] = "Pick Color",
+    ["COLOR_CLEAR"] = "Clear",
+    ["COLOR_HEX"] = "Hex Color:",
+
+    ["HIDE_IN"] = "Hide In",
+    ["HIDE_BACKPACK"] = "Backpack",
+    ["HIDE_CHAR_BANK"] = "Character Bank",
+    ["HIDE_WARBAND_BANK"] = "Warband Bank",
+
+    ["ADDED_ITEMS"] = "Added Items",
+    ["ADDED_ITEMS_DESC"] = "Items manually assigned to this category override normal classification.",
+    ["ADDED_ITEMS_NONE"] = "No items manually added.",
+
+    ["CATEGORY_TYPE_AUTO"] = "Automatic",
+    ["CATEGORY_TYPE_BUILTIN"] = "Built-in",
+    ["CATEGORY_TYPE_CUSTOM"] = "Custom",
+    ["CATEGORY_TYPE_TSM"] = "TSM",
+
+    ["CATEGORY_RULE"] = "Rule:",
+    ["CATEGORY_ITEMS_MANUAL"] = "Manual Items:",
+
+    ["SETTING_STACK_ITEMS"] = "Stack Identical Items",
+    ["DESC_STACK_ITEMS"] = "Group identical items into a single slot showing combined count in category view.",
+
+    ["SEARCH_HELP_TITLE"] = "Search Expression Help",
+    ["SEARCH_HELP_KEYWORDS"] = "Keywords: #pet #mount #toy #collected #soulbound #boe #boa #junk #gear #weapon #armor #consumable #potion #food #reagent #recipe #gem #quest #hearthstone #keystone #locked #charges",
+    ["SEARCH_HELP_QUALITY"] = "Quality: #poor #common #uncommon #rare #epic #legendary",
+    ["SEARCH_HELP_SLOTS"] = "Slots: #head #shoulder #chest #waist #legs #feet #wrist #hands #ring #trinket #back #shield",
+    ["SEARCH_HELP_ARMOR"] = "Armor: #cloth #leather #mail #plate",
+    ["SEARCH_HELP_EXPANSION"] = "Expansion: #classic #tbc #wrath #cata #mists #wod #legion #bfa #shadowlands #dragonflight #warwithin #midnight",
+    ["SEARCH_HELP_OPERATORS"] = "Operators: & (and), | (or), ! (not), () grouping",
+    ["SEARCH_HELP_ILVL"] = "Item Level: >400, <200, 200-300, >=350",
+    ["SEARCH_HELP_EXAMPLE"] = "Example: (#pet|#mount|#toy)&!#collected",
+
+    ["TSM_IMPORT"] = "Import from TSM",
+    ["TSM_IMPORT_SUCCESS"] = "Imported %d categories from TradeSkillMaster.",
+    ["TSM_IMPORT_NONE"] = "No TSM data found. Is TradeSkillMaster installed?",
+    ["TSM_NOT_INSTALLED"] = "TradeSkillMaster is not installed.",
+
+    ["DIVIDER_ADD"] = "Add Divider",
+    ["DISPLAY_ORDER"] = "Display Order",
+
+    ["SETTING_MOVE_UPGRADES_TOP"] = "Move Upgrades to Top",
+    ["DESC_MOVE_UPGRADES_TOP"] = "Pin the 1W Upgrades category near the top, just below Recent Items.",
+    ["SETTING_MOVE_OTHER_BOTTOM"] = "Move Other to Bottom",
+    ["DESC_MOVE_OTHER_BOTTOM"] = "Always pin the Other category to the very bottom of the list, below all sections.",
+
+    ["SECTION_CAT_PLACEMENT"] = "Category Placement",
+    ["DESC_RECENT_DURATION"] = "How long (in seconds) a newly looted item stays in the Recent Items category.",
+
+    ["CAT_ITEM_TYPE"] = "Item Type:",
+    ["CAT_ITEM_SUBTYPE"] = "Item Sub-Type:",
+    ["CAT_TYPE_MATCH_MODE"] = "Match Mode:",
+    ["CAT_TYPE_MATCH_AND"] = "AND",
+    ["CAT_TYPE_MATCH_OR"] = "OR",
+    ["CAT_TYPE_FILTER_DESC"] = "Match items by their game item type/sub-type name (case insensitive). Only one field is required.",
+
+    ["EXPAC_FILTER_BTN"] = "Expac",
+    ["EXPAC_FILTER_ALL"] = "All Expansions",
+    ["SETTING_ENABLE_EXPAC_FILTER"] = "Enable Expansion Filter",
+    ["DESC_ENABLE_EXPAC_FILTER"] = "Adds a dropdown to the header bar to filter items by expansion. Useful when farming old content.",
+    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Adds a dropdown to the bank header bar to filter items by expansion.",
 
 }
 

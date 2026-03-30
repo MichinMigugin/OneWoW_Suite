@@ -67,7 +67,7 @@ function CM:GetSortedCategoryNames(itemsByCategory)
     return names
 end
 
-function CM:GetSectionedLayout(itemsByCategory)
+function CM:GetSectionedLayout(itemsByCategory, containerType)
     local db = OneWoW_Bags.db
     if not db then return self:GetSortedCategoryNames(itemsByCategory) end
 
@@ -77,6 +77,139 @@ function CM:GetSectionedLayout(itemsByCategory)
 
     if #sectOrder == 0 then
         return self:GetSortedCategoryNames(itemsByCategory)
+    end
+
+    local catMods = db.global.categoryModifications or {}
+    local function IsCategoryVisible(catName)
+        local mod = catMods[catName]
+        if mod and mod.hideIn and containerType then
+            if mod.hideIn[containerType] then
+                return false
+            end
+        end
+        return true
+    end
+
+    local displayOrder = db.global.displayOrder or {}
+
+    if #displayOrder > 0 then
+        local layout = {}
+
+        local inOrder = {}
+        for _, entry in ipairs(displayOrder) do
+            if entry ~= "----" and entry ~= "section_end" and not entry:find("^section:") then
+                inOrder[entry] = true
+            end
+        end
+
+        local equipSlotNames = {}
+        if db.global.enableInventorySlots then
+            local slotKeys = {
+                "INVTYPE_HEAD", "INVTYPE_NECK", "INVTYPE_SHOULDER", "INVTYPE_BODY",
+                "INVTYPE_CHEST", "INVTYPE_WAIST", "INVTYPE_LEGS", "INVTYPE_FEET",
+                "INVTYPE_WRIST", "INVTYPE_HAND", "INVTYPE_FINGER", "INVTYPE_TRINKET",
+                "INVTYPE_WEAPON", "INVTYPE_2HWEAPON", "INVTYPE_WEAPONMAINHAND",
+                "INVTYPE_WEAPONOFFHAND", "INVTYPE_SHIELD", "INVTYPE_HOLDABLE",
+                "INVTYPE_CLOAK", "INVTYPE_RANGED",
+            }
+            for _, key in ipairs(slotKeys) do
+                local displayName = _G[key]
+                if displayName and displayName ~= "" then
+                    equipSlotNames[displayName] = true
+                end
+            end
+        end
+
+        local i = 1
+        while i <= #displayOrder do
+            local entry = displayOrder[i]
+
+            if entry == "----" then
+                table.insert(layout, { type = "separator", showHeader = true })
+            elseif entry:sub(1, 8) == "section:" then
+                local sectionID = entry:sub(9)
+                local sec = sections[sectionID]
+
+                local sectionCatNames = {}
+                i = i + 1
+                while i <= #displayOrder and displayOrder[i] ~= "section_end" do
+                    local catEntry = displayOrder[i]
+                    if catEntry ~= "----" and not catEntry:find("^section:") then
+                        table.insert(sectionCatNames, catEntry)
+                    end
+                    i = i + 1
+                end
+
+                if sec then
+                    local visibleCats = {}
+                    local hasEquipBase = false
+                    for _, catName in ipairs(sectionCatNames) do
+                        if itemsByCategory[catName] and #itemsByCategory[catName] > 0 and IsCategoryVisible(catName) then
+                            table.insert(visibleCats, catName)
+                        end
+                        if catName == "Weapons" or catName == "Armor" then
+                            hasEquipBase = true
+                        end
+                    end
+
+                    local sectionSlotCats = {}
+                    if hasEquipBase and db.global.enableInventorySlots then
+                        for name in pairs(itemsByCategory) do
+                            if not inOrder[name] and equipSlotNames[name] and #itemsByCategory[name] > 0 and IsCategoryVisible(name) then
+                                table.insert(sectionSlotCats, name)
+                            end
+                        end
+                        table.sort(sectionSlotCats)
+                    end
+
+                    local hasContent = #visibleCats > 0 or #sectionSlotCats > 0
+
+                    if hasContent then
+                        local showHeader = sec.showHeader or false
+                        local effectiveCollapsed = showHeader and sec.collapsed
+                        table.insert(layout, { type = "section_header", name = sec.name, sectionID = sectionID, collapsed = effectiveCollapsed, showHeader = showHeader })
+
+                        if not effectiveCollapsed then
+                            for _, catName in ipairs(visibleCats) do
+                                table.insert(layout, { type = "category", name = catName })
+                            end
+                            for _, catName in ipairs(sectionSlotCats) do
+                                table.insert(layout, { type = "category", name = catName })
+                            end
+                        end
+                    end
+                end
+            elseif entry ~= "section_end" then
+                if itemsByCategory[entry] and #itemsByCategory[entry] > 0 and IsCategoryVisible(entry) then
+                    table.insert(layout, { type = "category", name = entry })
+                end
+            end
+
+            i = i + 1
+        end
+
+        local claimedSlots = {}
+        if db.global.enableInventorySlots then
+            for name in pairs(itemsByCategory) do
+                if equipSlotNames[name] then
+                    claimedSlots[name] = true
+                end
+            end
+        end
+
+        local leftover = {}
+        for name in pairs(itemsByCategory) do
+            if not inOrder[name] and not claimedSlots[name] and #itemsByCategory[name] > 0 and IsCategoryVisible(name) then
+                table.insert(leftover, name)
+            end
+        end
+        local Categories = OneWoW_Bags.Categories
+        Categories:SortCategories(leftover, db.global.categorySort or "priority")
+        for _, name in ipairs(leftover) do
+            table.insert(layout, { type = "category", name = name })
+        end
+
+        return layout
     end
 
     local inSection = {}
@@ -90,7 +223,7 @@ function CM:GetSectionedLayout(itemsByCategory)
 
     local rootCats = {}
     for name in pairs(itemsByCategory) do
-        if not inSection[name] then
+        if not inSection[name] and IsCategoryVisible(name) then
             table.insert(rootCats, name)
         end
     end
@@ -118,7 +251,7 @@ function CM:GetSectionedLayout(itemsByCategory)
         if sec and sec.categories then
             local hasItems = false
             for _, catName in ipairs(sec.categories) do
-                if itemsByCategory[catName] and #itemsByCategory[catName] > 0 then
+                if itemsByCategory[catName] and #itemsByCategory[catName] > 0 and IsCategoryVisible(catName) then
                     hasItems = true
                     break
                 end
@@ -131,7 +264,7 @@ function CM:GetSectionedLayout(itemsByCategory)
                 table.insert(layout, { type = "section_header", name = sec.name, sectionID = sectionID, collapsed = effectiveCollapsed, showHeader = showHeader })
                 if not effectiveCollapsed then
                     for _, catName in ipairs(sec.categories) do
-                        if itemsByCategory[catName] and #itemsByCategory[catName] > 0 then
+                        if itemsByCategory[catName] and #itemsByCategory[catName] > 0 and IsCategoryVisible(catName) then
                             table.insert(layout, { type = "category", name = catName })
                         end
                     end

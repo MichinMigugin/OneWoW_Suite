@@ -40,8 +40,19 @@ function BankInfoBar:Create(parent)
     end)
     infoBarFrame.viewList = viewList
 
+    local viewCat = BankInfoBar:CreateViewBtn(infoBarFrame, L["VIEW_CATEGORY"])
+    viewCat:SetPoint("TOPLEFT", viewList, "TOPRIGHT", 3, 0)
+    viewCat:SetScript("OnClick", function()
+        OneWoW_Bags.db.global.bankViewMode = "category"
+        BankInfoBar:UpdateViewButtons()
+        if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
+            OneWoW_Bags.BankGUI:RefreshLayout()
+        end
+    end)
+    infoBarFrame.viewCat = viewCat
+
     local viewTab = BankInfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"] or "Tab")
-    viewTab:SetPoint("TOPLEFT", viewList, "TOPRIGHT", 3, 0)
+    viewTab:SetPoint("TOPLEFT", viewCat, "TOPRIGHT", 3, 0)
     viewTab:SetScript("OnClick", function()
         OneWoW_Bags.db.global.bankViewMode = "tab"
         BankInfoBar:UpdateViewButtons()
@@ -50,6 +61,54 @@ function BankInfoBar:Create(parent)
         end
     end)
     infoBarFrame.viewTab = viewTab
+
+    local expacDropdown, expacText = OneWoW_GUI:CreateDropdown(infoBarFrame, {
+        width = 130, height = 22, text = L["EXPAC_FILTER_BTN"],
+    })
+    expacDropdown:SetPoint("TOPLEFT", viewTab, "TOPRIGHT", 8, 0)
+    OneWoW_GUI:AttachFilterMenu(expacDropdown, {
+        searchable = false,
+        buildItems = function()
+            local SE = OneWoW_Bags.SearchEngine
+            local BankSet = OneWoW_Bags.BankSet
+            local items = { { text = L["EXPAC_FILTER_ALL"], value = "ALL" } }
+            if not BankSet or not BankSet.isBuilt then return items end
+            local found = {}
+            for _, btn in ipairs(BankSet:GetAllButtons()) do
+                if btn.owb_hasItem and btn.owb_itemInfo and btn.owb_itemInfo.itemID then
+                    local enriched = SE:EnrichItemInfo(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
+                    if enriched._expansionID ~= nil then
+                        found[enriched._expansionID] = true
+                    end
+                end
+            end
+            local ids = {}
+            for id in pairs(found) do table.insert(ids, id) end
+            table.sort(ids)
+            for _, id in ipairs(ids) do
+                table.insert(items, { text = SE:GetExpansionName(id) or ("Expansion " .. id), value = id })
+            end
+            return items
+        end,
+        getActiveValue = function()
+            local v = OneWoW_Bags.activeBankExpansionFilter
+            return (v == nil) and "ALL" or v
+        end,
+        onSelect = function(value, text)
+            if value == "ALL" then
+                OneWoW_Bags.activeBankExpansionFilter = nil
+                expacText:SetText(OneWoW_Bags.L["EXPAC_FILTER_BTN"])
+            else
+                OneWoW_Bags.activeBankExpansionFilter = value
+                expacText:SetText(text)
+            end
+            if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
+                OneWoW_Bags.BankGUI:RefreshLayout()
+            end
+        end,
+    })
+    infoBarFrame.expacDropdown = expacDropdown
+    infoBarFrame.expacText = expacText
 
     local cleanupBtn = BankInfoBar:CreateViewBtn(infoBarFrame, L["CLEANUP"] or "Cleanup")
     cleanupBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -S("SM"), btnY)
@@ -139,6 +198,7 @@ function BankInfoBar:UpdateViewButtons()
 
     local buttons = {
         { btn = infoBarFrame.viewList, mode = "list" },
+        { btn = infoBarFrame.viewCat,  mode = "category" },
         { btn = infoBarFrame.viewTab,  mode = "tab" },
     }
 
@@ -165,6 +225,24 @@ function BankInfoBar:UpdateViewButtons()
         infoBarFrame.emptyToggleBtn:SetAlpha(showing and 1.0 or 0.35)
         infoBarFrame.emptyToggleBtn:SetShown(mode == "list" or mode == "tab")
     end
+
+    if infoBarFrame.expacDropdown then
+        local db = OneWoW_Bags.db
+        local showExpac = db and db.global.enableBankExpansionFilter == true
+        infoBarFrame.expacDropdown:SetShown(showExpac == true)
+        if not showExpac then
+            OneWoW_Bags.activeBankExpansionFilter = nil
+        elseif infoBarFrame.expacText then
+            local activeFilter = OneWoW_Bags.activeBankExpansionFilter
+            if activeFilter == nil then
+                infoBarFrame.expacText:SetText(OneWoW_Bags.L["EXPAC_FILTER_BTN"])
+            else
+                local SE = OneWoW_Bags.SearchEngine
+                local expName = SE and SE:GetExpansionName(activeFilter) or tostring(activeFilter)
+                infoBarFrame.expacText:SetText(expName)
+            end
+        end
+    end
 end
 
 function BankInfoBar:GetSearchText()
@@ -181,6 +259,12 @@ function BankInfoBar:ClearSearch()
     if infoBarFrame and infoBarFrame.searchBox then
         infoBarFrame.searchBox:SetText("")
         infoBarFrame.searchBox:ClearFocus()
+        if infoBarFrame.searchBox.RestorePlaceholder then
+            infoBarFrame.searchBox:RestorePlaceholder()
+        elseif infoBarFrame.searchBox.placeholderText and infoBarFrame.searchBox.placeholderText ~= "" then
+            infoBarFrame.searchBox:SetText(infoBarFrame.searchBox.placeholderText)
+            infoBarFrame.searchBox:SetTextColor(OneWoW_Bags.GUILib:GetThemeColor("TEXT_MUTED"))
+        end
     end
 end
 

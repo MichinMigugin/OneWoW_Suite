@@ -73,10 +73,19 @@ function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
     end
 end
 
+function Mixin:OWB_IsJunkItem(quality, info)
+    if quality == Enum.ItemQuality.Poor then return true end
+    if info and info.itemID and _G.OneWoW and _G.OneWoW.ItemStatus then
+        if _G.OneWoW.ItemStatus:IsItemJunk(info.itemID) then return true end
+    end
+    return false
+end
+
 function Mixin:OWB_FullUpdate()
     self.owb_dirty = false
     local db = OneWoW_Bags.db
     local GUILib = OneWoW_Bags.GUILib
+    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
 
     local info = C_Container.GetContainerItemInfo(self.owb_bagID, self.owb_slotID)
     self.owb_itemInfo = info
@@ -88,7 +97,7 @@ function Mixin:OWB_FullUpdate()
 
         local quality = info.quality
         local useRarity = db and db.global and (self.owb_isBank and db.global.bankRarityColor or db.global.rarityColor)
-        if quality and quality >= 1 and useRarity then
+        if altShow or (quality and quality >= 1 and useRarity) then
             GUILib:UpdateIconQuality(self, quality)
         else
             GUILib:UpdateIconQuality(self, nil)
@@ -118,6 +127,101 @@ function Mixin:OWB_FullUpdate()
     local quality = info and info.quality
     local hasItem = info and info.hyperlink
     self:OWB_UpdateNewItemGlow(quality, hasItem)
+    self:OWB_UpdateJunkDim(quality, hasItem, info)
+    self:OWB_UpdateUnusableOverlay(hasItem, info)
+
+    self._owb_isJunk = hasItem and self:OWB_IsJunkItem(quality, info) or false
+end
+
+function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
+    local db = OneWoW_Bags.db
+    if not db or not db.global then return end
+    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
+
+    if not hasItem then
+        self:SetAlpha(1.0)
+        return
+    end
+
+    local isJunk = self:OWB_IsJunkItem(quality, info)
+
+    if isJunk and db.global.dimJunkItems and not altShow then
+        self:SetAlpha(0.4)
+    else
+        self:SetAlpha(1.0)
+    end
+
+    if isJunk and db.global.stripJunkOverlays and not altShow then
+        if self.NewItemTexture then self.NewItemTexture:Hide() end
+        if self.BattlepayItemTexture then self.BattlepayItemTexture:Hide() end
+        if self.ProfessionQualityOverlay then self.ProfessionQualityOverlay:Hide() end
+        if self.flashAnim and self.flashAnim:IsPlaying() then self.flashAnim:Stop() end
+        if self.newitemglowAnim and self.newitemglowAnim:IsPlaying() then self.newitemglowAnim:Stop() end
+        local GUILib = OneWoW_Bags.GUILib
+        GUILib:UpdateIconQuality(self, nil)
+        self._owb_junkStripped = true
+    elseif self._owb_junkStripped then
+        self._owb_junkStripped = false
+    end
+end
+
+function Mixin:OWB_UpdateUnusableOverlay(hasItem, info)
+    local db = OneWoW_Bags.db
+    if not db or not db.global or not db.global.showUnusableOverlay then
+        if self._owbUnusableOverlay then self._owbUnusableOverlay:Hide() end
+        return
+    end
+
+    if not hasItem or not info or not info.itemID then
+        if self._owbUnusableOverlay then self._owbUnusableOverlay:Hide() end
+        return
+    end
+
+    local isEquippable = IsEquippableItem and IsEquippableItem(info.itemID)
+    if not isEquippable then
+        if self._owbUnusableOverlay then self._owbUnusableOverlay:Hide() end
+        return
+    end
+
+    local canEquip = true
+    if info.hyperlink then
+        local _, _, _, _, _, _, _, _, equipLoc, _, _, classID, subClassID = C_Item.GetItemInfo(info.hyperlink)
+        if classID == Enum.ItemClass.Armor and subClassID then
+            local playerClass = select(2, UnitClass("player"))
+            local armorProf = {
+                WARRIOR = 4, PALADIN = 4, DEATHKNIGHT = 4,
+                HUNTER = 3, SHAMAN = 3, EVOKER = 3,
+                DRUID = 2, ROGUE = 2, MONK = 2, DEMONHUNTER = 2,
+                MAGE = 1, WARLOCK = 1, PRIEST = 1,
+            }
+            local maxArmor = armorProf[playerClass] or 4
+            if subClassID >= 1 and subClassID <= 4 and subClassID > maxArmor then
+                canEquip = false
+            end
+        end
+
+        if canEquip and info.hyperlink then
+            local itemLevel = C_Item.GetDetailedItemLevelInfo and C_Item.GetDetailedItemLevelInfo(info.hyperlink)
+            local reqLevel = select(5, C_Item.GetItemInfo(info.hyperlink))
+            if reqLevel and reqLevel > 0 then
+                local playerLevel = UnitLevel("player")
+                if playerLevel < reqLevel then
+                    canEquip = false
+                end
+            end
+        end
+    end
+
+    if not canEquip then
+        if not self._owbUnusableOverlay then
+            self._owbUnusableOverlay = self:CreateTexture(nil, "OVERLAY", nil, 2)
+            self._owbUnusableOverlay:SetAllPoints()
+            self._owbUnusableOverlay:SetColorTexture(1, 0, 0, 0.3)
+        end
+        self._owbUnusableOverlay:Show()
+    else
+        if self._owbUnusableOverlay then self._owbUnusableOverlay:Hide() end
+    end
 end
 
 function Mixin:OWB_RefreshCooldown()

@@ -13,6 +13,9 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
     elseif event == "BAG_UPDATE_DELAYED" then
         local dirty = OneWoW_Bags.Events.dirtyBags
         OneWoW_Bags.Events.dirtyBags = {}
+        if OneWoW_Bags.SearchEngine then
+            OneWoW_Bags.SearchEngine:ClearTooltipCache()
+        end
         OneWoW_Bags:ProcessBagUpdate(dirty)
 
     elseif event == "ITEM_LOCK_CHANGED" then

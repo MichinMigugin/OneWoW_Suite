@@ -167,6 +167,12 @@ function GuildBankInfoBar:ClearSearch()
     if infoBarFrame and infoBarFrame.searchBox then
         infoBarFrame.searchBox:SetText("")
         infoBarFrame.searchBox:ClearFocus()
+        if infoBarFrame.searchBox.RestorePlaceholder then
+            infoBarFrame.searchBox:RestorePlaceholder()
+        elseif infoBarFrame.searchBox.placeholderText and infoBarFrame.searchBox.placeholderText ~= "" then
+            infoBarFrame.searchBox:SetText(infoBarFrame.searchBox.placeholderText)
+            infoBarFrame.searchBox:SetTextColor(OneWoW_Bags.GUILib:GetThemeColor("TEXT_MUTED"))
+        end
     end
 end
 

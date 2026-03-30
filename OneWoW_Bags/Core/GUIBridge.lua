@@ -60,9 +60,9 @@ function OneWoW_Bags.S(key)
     return OneWoW_GUI:GetSpacing(key)
 end
 
-function OneWoW_Bags:SortButtons(buttons)
+function OneWoW_Bags:SortButtons(buttons, overrideSortMode)
     local db = self.db
-    local sortMode = db and db.global and db.global.itemSort or "default"
+    local sortMode = overrideSortMode or (db and db.global and db.global.itemSort) or "default"
     if sortMode == "none" then
         return buttons
     elseif sortMode == "default" then
@@ -130,6 +130,20 @@ function OneWoW_Bags:SortButtons(buttons)
             local aName = C_Item.GetItemNameByID(aID) or ""
             local bName = C_Item.GetItemNameByID(bID) or ""
             return aName < bName
+        end)
+    elseif sortMode == "expansion" then
+        local SE = OneWoW_Bags.SearchEngine
+        table.sort(buttons, function(a, b)
+            if not a.owb_hasItem then return false end
+            if not b.owb_hasItem then return true end
+            local aLink = a.owb_itemInfo and a.owb_itemInfo.hyperlink
+            local bLink = b.owb_itemInfo and b.owb_itemInfo.hyperlink
+            local aExp = SE and aLink and SE:GetExpansionID(a.owb_itemInfo.itemID, aLink) or -1
+            local bExp = SE and bLink and SE:GetExpansionID(b.owb_itemInfo.itemID, bLink) or -1
+            if aExp ~= bExp then return aExp > bExp end
+            local aQ = a.owb_itemInfo and a.owb_itemInfo.quality or 0
+            local bQ = b.owb_itemInfo and b.owb_itemInfo.quality or 0
+            return aQ > bQ
         end)
     end
     return buttons

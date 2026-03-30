@@ -175,6 +175,57 @@ local function BuildGeneralTab(sc, L, db, GUI)
         yOffset = FinalizeContainer(intContainer, intY, yOffset)
     end
 
+    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_CAT_PLACEMENT"] or "Category Placement", yOffset = yOffset })
+    local placeContainer = BuildContainer(sc, yOffset)
+    local placeY = -10
+
+    placeY, _, _ = OneWoW_GUI:CreateToggleRow(placeContainer, {
+        yOffset = placeY,
+        label = L["SETTING_MOVE_UPGRADES_TOP"],
+        description = L["DESC_MOVE_UPGRADES_TOP"],
+        isEnabled = true,
+        value = db.global.moveUpgradesToTop,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.moveUpgradesToTop = newVal
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+            if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
+                OneWoW_Bags.BankGUI:RefreshLayout()
+            end
+        end,
+    })
+
+    placeY, _, _ = OneWoW_GUI:CreateToggleRow(placeContainer, {
+        yOffset = placeY,
+        label = L["SETTING_MOVE_OTHER_BOTTOM"],
+        description = L["DESC_MOVE_OTHER_BOTTOM"],
+        isEnabled = true,
+        value = db.global.moveOtherToBottom,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.moveOtherToBottom = newVal
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+            if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
+                OneWoW_Bags.BankGUI:RefreshLayout()
+            end
+        end,
+    })
+
+    placeY = placeY - 6
+
+    placeY = BuildSliderRow(placeContainer, L["SETTING_RECENT_DURATION"] or "Recent Item Duration (seconds)", placeY, {
+        minVal = 15, maxVal = 600, step = 15, currentVal = db.global.recentItemDuration or 120,
+        onChange = function(val)
+            db.global.recentItemDuration = val
+            if OneWoW_Bags.Categories then
+                OneWoW_Bags.Categories:SetRecentItemDuration(val)
+            end
+        end,
+        width = 240, fmt = "%d",
+    })
+
+    yOffset = FinalizeContainer(placeContainer, placeY, yOffset)
+
     sc:SetHeight(math.abs(yOffset) + 40)
 end
 
@@ -308,6 +359,23 @@ local function BuildBagsTab(sc, L, db, GUI)
 
     dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
+        label = L["SETTING_ENABLE_EXPAC_FILTER"],
+        description = L["DESC_ENABLE_EXPAC_FILTER"],
+        isEnabled = true,
+        value = db.global.enableExpansionFilter,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.enableExpansionFilter = newVal
+            if not newVal then OneWoW_Bags.activeExpansionFilter = nil end
+            if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.UpdateVisibility then
+                OneWoW_Bags.InfoBar:UpdateVisibility()
+            end
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+        end,
+    })
+
+    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+        yOffset = dispY,
         label = L["SETTING_SHOW_CAT_HEADERS"],
         description = L["DESC_SHOW_CAT_HEADERS"],
         isEnabled = true,
@@ -431,7 +499,78 @@ local function BuildBagsTab(sc, L, db, GUI)
         end,
     })
 
+    catY, _, _ = OneWoW_GUI:CreateToggleRow(catContainer, {
+        yOffset = catY,
+        label = L["SETTING_STACK_ITEMS"],
+        description = L["DESC_STACK_ITEMS"],
+        isEnabled = true,
+        value = db.global.stackItems,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.stackItems = newVal
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+        end,
+    })
+
     yOffset = FinalizeContainer(catContainer, catY, yOffset)
+
+    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_ITEM_DISPLAY"] or "Item Display", yOffset = yOffset })
+    local itemDispContainer = BuildContainer(sc, yOffset)
+    local itemDispY = -10
+
+    itemDispY, _, _ = OneWoW_GUI:CreateToggleRow(itemDispContainer, {
+        yOffset = itemDispY,
+        label = L["SETTING_UNUSABLE_OVERLAY"],
+        description = L["DESC_UNUSABLE_OVERLAY"],
+        isEnabled = true,
+        value = db.global.showUnusableOverlay,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.showUnusableOverlay = newVal
+            if OneWoW_Bags.BagSet then OneWoW_Bags.BagSet:RefreshAllVisuals() end
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+        end,
+    })
+
+    itemDispY, _, _ = OneWoW_GUI:CreateToggleRow(itemDispContainer, {
+        yOffset = itemDispY,
+        label = L["SETTING_DIM_JUNK"],
+        description = L["DESC_DIM_JUNK"],
+        isEnabled = true,
+        value = db.global.dimJunkItems,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.dimJunkItems = newVal
+            if OneWoW_Bags.BagSet then OneWoW_Bags.BagSet:RefreshAllVisuals() end
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+        end,
+    })
+
+    itemDispY, _, _ = OneWoW_GUI:CreateToggleRow(itemDispContainer, {
+        yOffset = itemDispY,
+        label = L["SETTING_STRIP_JUNK_OVERLAYS"],
+        description = L["DESC_STRIP_JUNK_OVERLAYS"],
+        isEnabled = true,
+        value = db.global.stripJunkOverlays,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.stripJunkOverlays = newVal
+            if OneWoW_Bags.BagSet then OneWoW_Bags.BagSet:RefreshAllVisuals() end
+            if GUI.RefreshLayout then GUI:RefreshLayout() end
+        end,
+    })
+
+    itemDispY, _, _ = OneWoW_GUI:CreateToggleRow(itemDispContainer, {
+        yOffset = itemDispY,
+        label = L["SETTING_ALT_TO_SHOW"],
+        description = L["DESC_ALT_TO_SHOW"],
+        isEnabled = true,
+        value = db.global.altToShow,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal) db.global.altToShow = newVal end,
+    })
+
+    yOffset = FinalizeContainer(itemDispContainer, itemDispY, yOffset)
 
     yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_BEHAVIOR"], yOffset = yOffset })
     local behContainer = BuildContainer(sc, yOffset)
@@ -631,6 +770,25 @@ local function BuildBankTab(sc, L, db, GUI)
 
     dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
+        label = L["SETTING_ENABLE_EXPAC_FILTER"],
+        description = L["DESC_ENABLE_BANK_EXPAC_FILTER"],
+        isEnabled = true,
+        value = db.global.enableBankExpansionFilter,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.enableBankExpansionFilter = newVal
+            if not newVal then OneWoW_Bags.activeBankExpansionFilter = nil end
+            if OneWoW_Bags.BankInfoBar and OneWoW_Bags.BankInfoBar.UpdateViewButtons then
+                OneWoW_Bags.BankInfoBar:UpdateViewButtons()
+            end
+            if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
+                OneWoW_Bags.BankGUI:RefreshLayout()
+            end
+        end,
+    })
+
+    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+        yOffset = dispY,
         label = L["SETTING_SHOW_CAT_HEADERS"],
         description = L["DESC_SHOW_BANK_CAT_HEADERS"],
         isEnabled = true,
@@ -677,6 +835,21 @@ local function BuildBankTab(sc, L, db, GUI)
             end)
         end,
         width = 240, fmt = "%.1f",
+    })
+
+    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+        yOffset = dispY,
+        label = L["SETTING_COMPACT_CATEGORIES"],
+        description = L["DESC_COMPACT_CATEGORIES"],
+        isEnabled = true,
+        value = db.global.bankCompactCategories,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            db.global.bankCompactCategories = newVal
+            if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
+                OneWoW_Bags.BankGUI:RefreshLayout()
+            end
+        end,
     })
 
     do

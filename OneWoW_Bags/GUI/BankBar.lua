@@ -292,6 +292,7 @@ function BankBar:GetTabSettingsMenu()
         local parent = bankWindow or UIParent
         bagsBarFrame._tabSettingsMenu = CreateFrame("Frame", "OneWoW_BankTabSettingsMenu", parent, "BankPanelTabSettingsMenuTemplate")
         bagsBarFrame._tabSettingsMenu:SetClampedToScreen(true)
+        bagsBarFrame._tabSettingsMenu:SetClampRectInsets(0, 0, 0, 0)
         bagsBarFrame._tabSettingsMenu:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, 0)
         bagsBarFrame._tabSettingsMenu:Hide()
     end

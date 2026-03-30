@@ -179,3 +179,16 @@ end
 function BagSet:GetFreeSlotCount()
     return self.freeSlots
 end
+
+function BagSet:RefreshAllVisuals()
+    for bagID, bagSlots in pairs(self.slots) do
+        for slotID, button in pairs(bagSlots) do
+            if button.owb_hasItem and button.owb_itemInfo then
+                local quality = button.owb_itemInfo.quality
+                local hasItem = button.owb_itemInfo.hyperlink
+                button:OWB_UpdateJunkDim(quality, hasItem, button.owb_itemInfo)
+                button:OWB_UpdateUnusableOverlay(hasItem, button.owb_itemInfo)
+            end
+        end
+    end
+end

@@ -49,6 +49,7 @@ function BankGUI:InitMainWindow()
         end
     end)
     MainWindow:SetClampedToScreen(true)
+    MainWindow:SetClampRectInsets(0, 0, 0, 0)
     MainWindow:SetFrameStrata("MEDIUM")
     MainWindow:SetToplevel(true)
     MainWindow:SetScript("OnHide", function()
@@ -57,6 +58,7 @@ function BankGUI:InitMainWindow()
         if OneWoW_Bags.BankInfoBar and OneWoW_Bags.BankInfoBar.ClearSearch then
             OneWoW_Bags.BankInfoBar:ClearSearch()
         end
+        OneWoW_Bags.activeBankExpansionFilter = nil
         local d = OneWoW_Bags.db
         if d and d.global then
             d.global.bankFramePosition = d.global.bankFramePosition or {}
@@ -64,6 +66,9 @@ function BankGUI:InitMainWindow()
         end
         if OneWoW_Bags.bankOpen then
             OneWoW_Bags.bankOpen = false
+            if BankFrame and BankFrame.BankPanel then
+                BankFrame.BankPanel:Hide()
+            end
             if OneWoW_Bags.BankSet then
                 OneWoW_Bags.BankSet:ReleaseAll()
             end
@@ -241,14 +246,27 @@ function BankGUI:RefreshLayout()
     local filteredButtons = {}
 
     if searchText and searchText ~= "" then
-        local searchLower = string.lower(searchText)
-        for _, button in ipairs(visibleButtons) do
-            if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
-                if itemName then
-                    local nameLower = string.lower(itemName)
-                    if string.find(nameLower, searchLower, 1, true) then
+        local SE = OneWoW_Bags.SearchEngine
+        local hasKeyword = searchText:find("#") or searchText:find("[&|!~()]")
+        if hasKeyword and SE then
+            for _, button in ipairs(visibleButtons) do
+                if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
+                    local enriched = SE:EnrichItemInfo(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
+                    if SE:CheckItem(searchText, button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, enriched) then
                         table.insert(filteredButtons, button)
+                    end
+                end
+            end
+        else
+            local searchLower = string.lower(searchText)
+            for _, button in ipairs(visibleButtons) do
+                if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
+                    local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
+                    if itemName then
+                        local nameLower = string.lower(itemName)
+                        if string.find(nameLower, searchLower, 1, true) then
+                            table.insert(filteredButtons, button)
+                        end
                     end
                 end
             end
@@ -257,6 +275,22 @@ function BankGUI:RefreshLayout()
         for _, button in ipairs(visibleButtons) do
             table.insert(filteredButtons, button)
         end
+    end
+
+    local expacFilter = OneWoW_Bags.activeBankExpansionFilter
+    if expacFilter ~= nil then
+        local SE = OneWoW_Bags.SearchEngine
+        local expacFiltered = {}
+        for _, button in ipairs(filteredButtons) do
+            if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
+                local enriched = button.owb_itemInfo._enriched and button.owb_itemInfo
+                    or SE:EnrichItemInfo(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
+                if enriched._expansionID == expacFilter then
+                    table.insert(expacFiltered, button)
+                end
+            end
+        end
+        filteredButtons = expacFiltered
     end
 
     local viewMode = db and db.global and db.global.bankViewMode or "list"
@@ -268,7 +302,9 @@ function BankGUI:RefreshLayout()
 
     local layoutHeight = 100
 
-    if viewMode == "tab" then
+    if viewMode == "category" then
+        layoutHeight = OneWoW_Bags.BankCategoryView:Layout(contentFrame, contentWidth, filteredButtons)
+    elseif viewMode == "tab" then
         layoutHeight = OneWoW_Bags.BankTabView:Layout(contentFrame, contentWidth, filteredButtons)
     else
         layoutHeight = OneWoW_Bags.ListView:Layout(contentFrame, filteredButtons, contentWidth)
@@ -293,6 +329,7 @@ function BankGUI:OnBankTypeChanged()
 
     local newBankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
     if BankFrame and BankFrame.BankPanel then
+        BankFrame.BankPanel:Show()
         BankFrame.BankPanel:SetBankType(newBankType)
     end
 
@@ -347,6 +384,12 @@ function BankGUI:Show()
             end
         end
         BankGUI:RefreshLayout()
+    end)
+
+    C_Timer.After(0.5, function()
+        if MainWindow and MainWindow:IsShown() then
+            BankGUI:RefreshLayout()
+        end
     end)
 end
 

@@ -35,6 +35,7 @@ Core\Events.lua
 # Data
 Data\BagTypes.lua
 Data\BankTypes.lua
+Data\SearchEngine.lua
 Data\Categories.lua
 
 # Modules
@@ -49,11 +50,13 @@ Modules\GuildBankCategoryManager.lua
 
 # Integrations
 Integrations\OneWoWBagsIntegration.lua
+Integrations\TSMIntegration.lua
 
 # Views
 Views\ListView.lua
 Views\CategoryView.lua
 Views\BagView.lua
+Views\BankCategoryView.lua
 Views\BankTabView.lua
 Views\GuildBankTabView.lua
 

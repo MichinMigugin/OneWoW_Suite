@@ -16,6 +16,13 @@ function OneWoW_Bags:UnregisterItemButtonCallback(name)
 end
 
 function OneWoW_Bags:FireItemButtonCallback(button, bagID, slotID)
+	local db = self.db
+	local altShow = self.GUI and self.GUI.IsAltShowActive and self.GUI:IsAltShowActive()
+	if not altShow and db and db.global and db.global.stripJunkOverlays and button._owb_isJunk then
+		local engine = _G.OneWoW and _G.OneWoW.OverlayEngine
+		if engine then engine:CleanButton(button) end
+		return
+	end
 	for name, callback in pairs(callbacks) do
 		pcall(callback, button, bagID, slotID)
 	end

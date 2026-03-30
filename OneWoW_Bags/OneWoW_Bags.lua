@@ -163,6 +163,39 @@ function OneWoW_Bags:OnPlayerLogin()
     end
 
     self:HookBlizzardBags()
+    self:HookPetCageTooltip()
+end
+
+function OneWoW_Bags:HookPetCageTooltip()
+    local CAGE_ID = 82800
+    if not TooltipDataProcessor or not TooltipDataProcessor.AddTooltipPostCall then return end
+    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
+        if not data or not data.id or data.id ~= CAGE_ID then return end
+        local _, itemLink = tooltip:GetItem()
+        if not itemLink then return end
+        local petID = itemLink:match("battlepet:(%d+)")
+        if not petID then return end
+        local speciesID = tonumber(petID)
+        if not speciesID or not C_PetJournal then return end
+        local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
+        if petName then
+            tooltip:AddLine(" ")
+            tooltip:AddLine(petName, 1, 0.82, 0)
+            if petType then
+                local petTypeName = _G["BATTLE_PET_NAME_" .. petType] or ("Type " .. petType)
+                tooltip:AddLine(petTypeName, 0.7, 0.7, 0.7)
+            end
+            local numCollected, limit = C_PetJournal.GetNumCollectedInfo(speciesID)
+            if numCollected then
+                if numCollected > 0 then
+                    tooltip:AddLine(COLLECTED .. ": " .. numCollected .. "/" .. (limit or "?"), 0.2, 1, 0.2)
+                else
+                    tooltip:AddLine(COLLECTED .. ": 0/" .. (limit or "?"), 1, 0.2, 0.2)
+                end
+            end
+            tooltip:Show()
+        end
+    end)
 end
 
 function OneWoW_Bags:OnBankOpened()
@@ -176,6 +209,7 @@ function OneWoW_Bags:OnBankOpened()
     local activeBankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
     if BankFrame and BankFrame.BankPanel then
         BankFrame.BankPanel:SetBankType(activeBankType)
+        BankFrame.BankPanel:Show()
     end
 
     C_Bank.FetchPurchasedBankTabData(Enum.BankType.Character)
@@ -195,6 +229,9 @@ end
 function OneWoW_Bags:OnBankClosed()
     if not self.bankOpen then return end
     self.bankOpen = false
+    if BankFrame and BankFrame.BankPanel then
+        BankFrame.BankPanel:Hide()
+    end
     if self.BankGUI then
         self.BankGUI:Hide()
     end
@@ -302,10 +339,15 @@ function OneWoW_Bags:SuppressBankFrame()
     self._bankOrigOnHide = BankFrame:GetScript("OnHide")
     self._bankOrigOnEvent = BankFrame:GetScript("OnEvent")
 
-    BankFrame:SetParent(self._bankHiddenParent)
     BankFrame:SetScript("OnShow", nil)
     BankFrame:SetScript("OnHide", nil)
     BankFrame:SetScript("OnEvent", nil)
+
+    BankFrame:ClearAllPoints()
+    BankFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", 0, -10000)
+    BankFrame:SetAlpha(0)
+    BankFrame:EnableMouse(false)
+    BankFrame:Show()
 
     for i = 7, 13 do
         local cf = _G["ContainerFrame" .. i]
@@ -320,7 +362,6 @@ function OneWoW_Bags:RestoreBankFrame()
     self._bankFrameSuppressed = false
 
     if BankFrame then
-        BankFrame:SetParent(UIParent)
         if self._bankOrigOnShow then
             BankFrame:SetScript("OnShow", self._bankOrigOnShow)
         end
@@ -329,6 +370,13 @@ function OneWoW_Bags:RestoreBankFrame()
         end
         if self._bankOrigOnEvent then
             BankFrame:SetScript("OnEvent", self._bankOrigOnEvent)
+        end
+
+        BankFrame:EnableMouse(true)
+        BankFrame:SetAlpha(1)
+
+        if BankFrame.BankPanel then
+            BankFrame.BankPanel:Hide()
         end
 
         for i = 7, 13 do

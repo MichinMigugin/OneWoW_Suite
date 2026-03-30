@@ -108,6 +108,8 @@ function Pool:ResetButton(button)
     button.owb_itemInfo = nil
     button.owb_categoryName = nil
     button.owb_hasItem = false
+    button:SetAlpha(1.0)
+    if button._owbUnusableOverlay then button._owbUnusableOverlay:Hide() end
     button:ClearAllPoints()
     OneWoW_Bags.GUILib:UpdateIconQuality(button, nil)
     if button.IconBorder then button.IconBorder:Hide() end

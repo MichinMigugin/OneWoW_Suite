@@ -73,6 +73,54 @@ function InfoBar:Create(parent)
     end)
     infoBarFrame.viewBag = viewBag
 
+    local expacDropdown, expacText = OneWoW_GUI:CreateDropdown(infoBarFrame, {
+        width = 130, height = 22, text = L["EXPAC_FILTER_BTN"],
+    })
+    expacDropdown:SetPoint("TOPLEFT", viewBag, "TOPRIGHT", 8, 0)
+    OneWoW_GUI:AttachFilterMenu(expacDropdown, {
+        searchable = false,
+        buildItems = function()
+            local SE = OneWoW_Bags.SearchEngine
+            local BagSet = OneWoW_Bags.BagSet
+            local items = { { text = L["EXPAC_FILTER_ALL"], value = "ALL" } }
+            if not BagSet or not BagSet.isBuilt then return items end
+            local found = {}
+            for _, btn in ipairs(BagSet:GetAllButtons()) do
+                if btn.owb_hasItem and btn.owb_itemInfo and btn.owb_itemInfo.itemID then
+                    local enriched = SE:EnrichItemInfo(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
+                    if enriched._expansionID ~= nil then
+                        found[enriched._expansionID] = true
+                    end
+                end
+            end
+            local ids = {}
+            for id in pairs(found) do table.insert(ids, id) end
+            table.sort(ids)
+            for _, id in ipairs(ids) do
+                table.insert(items, { text = SE:GetExpansionName(id) or ("Expansion " .. id), value = id })
+            end
+            return items
+        end,
+        getActiveValue = function()
+            local v = OneWoW_Bags.activeExpansionFilter
+            return (v == nil) and "ALL" or v
+        end,
+        onSelect = function(value, text)
+            if value == "ALL" then
+                OneWoW_Bags.activeExpansionFilter = nil
+                expacText:SetText(OneWoW_Bags.L["EXPAC_FILTER_BTN"])
+            else
+                OneWoW_Bags.activeExpansionFilter = value
+                expacText:SetText(text)
+            end
+            if OneWoW_Bags.GUI and OneWoW_Bags.GUI.RefreshLayout then
+                OneWoW_Bags.GUI:RefreshLayout()
+            end
+        end,
+    })
+    infoBarFrame.expacDropdown = expacDropdown
+    infoBarFrame.expacText = expacText
+
     -- Row 2 right: empty slots toggle (created before searchBox so search can anchor to it)
     local emptyToggleBtn = CreateFrame("Button", nil, infoBarFrame)
     emptyToggleBtn:SetSize(22, 22)
@@ -184,7 +232,12 @@ end
 
 function InfoBar:UpdateViewButtons()
     if not infoBarFrame then return end
-    local mode = OneWoW_Bags.db and OneWoW_Bags.db.global.viewMode or "list"
+    local db = OneWoW_Bags.db
+    local mode = db and db.global.viewMode or "list"
+
+    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
+    local showHeader = (db and db.global.showHeaderBar ~= false) or altShow
+    local showSearch = (db and db.global.showSearchBar ~= false) or altShow
 
     local buttons = {
         { btn = infoBarFrame.viewList, mode = "list" },
@@ -194,28 +247,89 @@ function InfoBar:UpdateViewButtons()
 
     for _, entry in ipairs(buttons) do
         local btn = entry.btn
-        if entry.mode == mode then
-            btn.isActive = true
-            btn:SetBackdropColor(T("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-            btn.text:SetTextColor(T("TEXT_ACCENT"))
+        if not showHeader then
+            btn:Hide()
         else
-            btn.isActive = false
-            btn:SetBackdropColor(T("BTN_NORMAL"))
-            btn:SetBackdropBorderColor(T("BTN_BORDER"))
-            btn.text:SetTextColor(T("TEXT_PRIMARY"))
+            btn:Show()
+            if entry.mode == mode then
+                btn.isActive = true
+                btn:SetBackdropColor(T("BG_ACTIVE"))
+                btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+                btn.text:SetTextColor(T("TEXT_ACCENT"))
+            else
+                btn.isActive = false
+                btn:SetBackdropColor(T("BTN_NORMAL"))
+                btn:SetBackdropBorderColor(T("BTN_BORDER"))
+                btn.text:SetTextColor(T("TEXT_PRIMARY"))
+            end
+        end
+    end
+
+    if infoBarFrame.catMgrBtn then infoBarFrame.catMgrBtn:SetShown(showHeader) end
+    if infoBarFrame.shoppingCartBtn then infoBarFrame.shoppingCartBtn:SetShown(showHeader) end
+    if infoBarFrame.searchBox then infoBarFrame.searchBox:SetShown(showSearch) end
+
+    if infoBarFrame.expacDropdown then
+        local showExpac = showHeader and (db and db.global.enableExpansionFilter == true)
+        infoBarFrame.expacDropdown:SetShown(showExpac == true)
+        if not showExpac then
+            OneWoW_Bags.activeExpansionFilter = nil
+        elseif infoBarFrame.expacText then
+            local activeFilter = OneWoW_Bags.activeExpansionFilter
+            if activeFilter == nil then
+                infoBarFrame.expacText:SetText(OneWoW_Bags.L["EXPAC_FILTER_BTN"])
+            else
+                local SE = OneWoW_Bags.SearchEngine
+                local expName = SE and SE:GetExpansionName(activeFilter) or tostring(activeFilter)
+                infoBarFrame.expacText:SetText(expName)
+            end
         end
     end
 
     if infoBarFrame.emptyToggleBtn then
-        local showing = OneWoW_Bags.db and OneWoW_Bags.db.global.showEmptySlots
+        local showing = db and db.global.showEmptySlots
         if showing == nil then showing = true end
         if showing then
             infoBarFrame.emptyToggleBtn:SetAlpha(1.0)
         else
             infoBarFrame.emptyToggleBtn:SetAlpha(0.35)
         end
-        infoBarFrame.emptyToggleBtn:SetShown(mode == "list")
+        infoBarFrame.emptyToggleBtn:SetShown(showSearch and mode == "list")
+    end
+
+    local newHeight = 0
+    if showHeader then newHeight = newHeight + ROW1_H end
+    if showSearch then newHeight = newHeight + ROW2_H end
+
+    if newHeight == 0 then
+        infoBarFrame:Hide()
+    else
+        infoBarFrame:SetHeight(newHeight)
+        infoBarFrame:Show()
+    end
+end
+
+function InfoBar:UpdateVisibility()
+    if not infoBarFrame then return end
+    local db = OneWoW_Bags.db
+    if not db or not db.global then return end
+
+    self:UpdateViewButtons()
+
+    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
+    local showHeader = (db.global.showHeaderBar ~= false) or altShow
+    local showSearch = (db.global.showSearchBar ~= false) or altShow
+
+    if showSearch and infoBarFrame.searchBox then
+        local searchY = showHeader and -(ROW1_H + math.floor((ROW2_H - 22) / 2)) or -math.floor((ROW2_H - 22) / 2)
+        infoBarFrame.searchBox:ClearAllPoints()
+        infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_Bags.S("SM"), searchY)
+        infoBarFrame.searchBox:SetPoint("TOPRIGHT", infoBarFrame.emptyToggleBtn, "TOPLEFT", -3, 0)
+
+        if infoBarFrame.emptyToggleBtn then
+            infoBarFrame.emptyToggleBtn:ClearAllPoints()
+            infoBarFrame.emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_Bags.S("SM"), searchY)
+        end
     end
 end
 
@@ -274,6 +388,12 @@ function InfoBar:ClearSearch()
     if infoBarFrame and infoBarFrame.searchBox then
         infoBarFrame.searchBox:SetText("")
         infoBarFrame.searchBox:ClearFocus()
+        if infoBarFrame.searchBox.RestorePlaceholder then
+            infoBarFrame.searchBox:RestorePlaceholder()
+        elseif infoBarFrame.searchBox.placeholderText and infoBarFrame.searchBox.placeholderText ~= "" then
+            infoBarFrame.searchBox:SetText(infoBarFrame.searchBox.placeholderText)
+            infoBarFrame.searchBox:SetTextColor(OneWoW_Bags.GUILib:GetThemeColor("TEXT_MUTED"))
+        end
     end
 end
 

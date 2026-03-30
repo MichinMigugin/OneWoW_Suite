@@ -196,21 +196,6 @@ function BagsBar:Create(parent)
     goldBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     bagsBarFrame.goldBtn = goldBtn
 
-    local bankBtn = OneWoW_GUI:CreateFitTextButton(row2Frame, { text = L["BANK_BTN"] or "Bank", height = 20, minWidth = 40 })
-    bankBtn:SetPoint("RIGHT", goldBtn, "LEFT", -S("SM"), 0)
-    bankBtn:SetScript("OnClick", function()
-        if OneWoW_Bags.BankGUI then
-            OneWoW_Bags.BankGUI:Toggle()
-        end
-    end)
-    bankBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["BANK_BTN"] or "Bank", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    bankBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    bagsBarFrame.bankBtn = bankBtn
-
     bagsBarFrame.trackerFrames = {}
     BagsBar:UpdateTrackers()
 
@@ -318,8 +303,10 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
     tf.countText = countText
 
     local capturedIdx = index
-    local removeBtn = OneWoW_GUI:CreateButton(tf, { text = "X", width = 10, height = 10 })
-    removeBtn:SetPoint("TOPRIGHT", tf, "TOPRIGHT", 0, 0)
+    local removeBtn = OneWoW_GUI:CreateButton(tf, { text = "X", width = 14, height = 14 })
+    removeBtn:SetPoint("CENTER", tf.iconFrame, "CENTER", 0, 0)
+    removeBtn:SetFrameLevel(tf:GetFrameLevel() + 5)
+    removeBtn:Hide()
     removeBtn:SetScript("OnClick", function()
         table.remove(db.global.trackedCurrencies, capturedIdx)
         BagsBar:UpdateTrackers()
@@ -329,22 +316,38 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
         GameTooltip:SetText(L["TRACKER_REMOVE"], 1, 1, 1)
         GameTooltip:Show()
     end)
-    removeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    removeBtn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+        removeBtn:Hide()
+    end)
+    tf.removeBtn = removeBtn
 
     if entry.type == "item" then
         tf:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetItemByID(entry.id)
             GameTooltip:Show()
+            if self.removeBtn then self.removeBtn:Show() end
         end)
-        tf:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        tf:SetScript("OnLeave", function(self)
+            GameTooltip:Hide()
+            if self.removeBtn and not self.removeBtn:IsMouseOver() then
+                self.removeBtn:Hide()
+            end
+        end)
     elseif entry.type == "currency" then
         tf:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetCurrencyByID(entry.id)
             GameTooltip:Show()
+            if self.removeBtn then self.removeBtn:Show() end
         end)
-        tf:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        tf:SetScript("OnLeave", function(self)
+            GameTooltip:Hide()
+            if self.removeBtn and not self.removeBtn:IsMouseOver() then
+                self.removeBtn:Hide()
+            end
+        end)
     end
 
     return tf
@@ -545,8 +548,10 @@ function BagsBar:UpdateRowVisibility()
     local db = OneWoW_Bags.db
     if not db or not db.global then return end
 
+    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
     local showBags = db.global.showBagsBar ~= false
     local showMoney = db.global.showMoneyBar ~= false
+    if altShow then showBags = true; showMoney = true end
 
     if bagsBarFrame.row1Frame then
         bagsBarFrame.row1Frame:SetShown(showBags)

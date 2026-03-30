@@ -49,6 +49,7 @@ function GuildBankGUI:InitMainWindow()
         end
     end)
     MainWindow:SetClampedToScreen(true)
+    MainWindow:SetClampRectInsets(0, 0, 0, 0)
     MainWindow:SetFrameStrata("MEDIUM")
     MainWindow:SetToplevel(true)
     MainWindow:SetScript("OnHide", function()

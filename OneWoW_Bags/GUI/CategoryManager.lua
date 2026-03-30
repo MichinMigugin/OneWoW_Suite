@@ -21,7 +21,7 @@ local BUILTIN_NAMES = {
     "Consumables", "Quest Items", "Equipment Sets", "Weapons", "Armor",
     "Reagents", "Trade Goods", "Tradeskill", "Recipes", "Housing",
     "Gems", "Item Enhancement", "Containers", "Keys", "Miscellaneous",
-    "Pets and Mounts", "Toys", "Cosmetics", "Other", "Junk",
+    "Battle Pets", "Toys", "Other", "Junk",
 }
 
 local BUILTIN_LOCALE_KEYS = {
@@ -45,9 +45,8 @@ local BUILTIN_LOCALE_KEYS = {
     ["Containers"]       = "CAT_CONTAINERS",
     ["Keys"]             = "CAT_KEYS",
     ["Miscellaneous"]    = "CAT_MISCELLANEOUS",
-    ["Pets and Mounts"]  = "CAT_PETS_AND_MOUNTS",
+    ["Battle Pets"]      = "CAT_BATTLE_PETS",
     ["Toys"]             = "CAT_TOYS",
-    ["Cosmetics"]        = "CAT_COSMETICS",
     ["Other"]            = "CAT_OTHER",
     ["Junk"]             = "CAT_JUNK",
 }
@@ -59,9 +58,9 @@ local BUILTIN_PRIORITY = {
     ["Armor"]=10,           ["Reagents"]=11,        ["Trade Goods"]=12,
     ["Tradeskill"]=13,      ["Recipes"]=14,         ["Housing"]=15,
     ["Gems"]=16,            ["Item Enhancement"]=17,["Containers"]=18,
-    ["Keys"]=19,            ["Miscellaneous"]=20,   ["Pets and Mounts"]=21,
-    ["Toys"]=22,            ["Cosmetics"]=23,       ["Other"]=24,
-    ["Junk"]=25,
+    ["Keys"]=19,            ["Miscellaneous"]=20,   ["Battle Pets"]=21,
+    ["Toys"]=22,            ["Junk"]=90,
+    ["Other"]=98,
 }
 
 local BAGANATOR_CAT_MAP = {
@@ -79,7 +78,7 @@ local BAGANATOR_CAT_MAP = {
     ["default_gem"]               = "Gems",
     ["default_questitem"]         = "Quest Items",
     ["default_toy"]               = "Toys",
-    ["default_battlepet"]         = "Pets and Mounts",
+    ["default_battlepet"]         = "Battle Pets",
     ["default_miscellaneous"]     = "Miscellaneous",
     ["default_key"]               = "Keys",
     ["default_keystone"]          = "Keystone",
@@ -112,16 +111,17 @@ local function EnsureDefaultSection()
 
     if #sectOrder > 0 then return end
 
-    local defaultCats = {}
-    for _, name in ipairs(BUILTIN_NAMES) do
-        table.insert(defaultCats, name)
-    end
+    local secEquip = "sec_equipment"
+    local secCraft = "sec_crafting"
+    local secHouse = "sec_housing"
 
-    if #defaultCats == 0 then return end
+    sections[secEquip] = { name = "EQUIPMENT", categories = { "Equipment Sets", "Weapons", "Armor" }, collapsed = false, showHeader = true }
+    sections[secCraft] = { name = "CRAFTING",  categories = { "Reagents", "Trade Goods", "Tradeskill", "Recipes" }, collapsed = false, showHeader = true }
+    sections[secHouse] = { name = "HOUSING",   categories = { "Housing" }, collapsed = false, showHeader = true }
 
-    local id = "sec_default"
-    sections[id] = { name = "Default", categories = defaultCats, collapsed = false }
-    table.insert(sectOrder, 1, id)
+    sectOrder[1] = secEquip
+    sectOrder[2] = secCraft
+    sectOrder[3] = secHouse
 end
 
 local function ReleaseWrapper(w)
@@ -453,38 +453,86 @@ end
 -- Right Panel
 -- ============================================================
 
+local function SetEditBoxValue(box, value)
+    if value and value ~= "" then
+        box:SetText(value)
+        box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    else
+        box:SetText(box.placeholderText or "")
+        box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    end
+end
+
+local function MakeEditBoxWithSave(parent, opts, getValue, setValue)
+    local box = OneWoW_GUI:CreateEditBox(parent, opts)
+    SetEditBoxValue(box, getValue())
+    local function Save(self)
+        local val = self.GetSearchText and self:GetSearchText() or self:GetText()
+        if val == self.placeholderText then val = "" end
+        setValue((val ~= "") and val or nil)
+        if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+        if OneWoW_Bags.SearchEngine then OneWoW_Bags.SearchEngine:InvalidateCache() end
+        RefreshBagLayout()
+    end
+    box:SetScript("OnEnterPressed", function(self) Save(self); self:ClearFocus() end)
+    box:SetScript("OnEscapePressed", function(self) SetEditBoxValue(self, getValue()); self:ClearFocus() end)
+    box:HookScript("OnEditFocusLost", function(self)
+        local val = self.GetSearchText and self:GetSearchText() or self:GetText()
+        if val == self.placeholderText then val = "" end
+        if val ~= (getValue() or "") then Save(self) end
+    end)
+    box:HookScript("OnEditFocusGained", function(self)
+        local cur = getValue()
+        if cur and cur ~= "" then
+            self:SetText(cur)
+            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            self:HighlightText()
+        end
+    end)
+    return box
+end
+
+local function StyleToggleBtn(btn, active)
+    if active then
+        btn:SetBackdropColor(T("BG_ACTIVE"))
+        btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+        if btn.text then btn.text:SetTextColor(T("TEXT_ACCENT")) end
+    else
+        btn:SetBackdropColor(T("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(T("BTN_BORDER"))
+        if btn.text then btn.text:SetTextColor(T("TEXT_PRIMARY")) end
+    end
+end
+
 function CatMgrUI:RefreshRight()
     rightTopWrapper  = ReleaseWrapper(rightTopWrapper)
     rightItemWrapper = ReleaseWrapper(rightItemWrapper)
-    if not rightTopArea or not rightItemArea then return end
+    if not rightItemArea then return end
 
     local L = OneWoW_Bags.L
     local db = GetDB()
 
-    -- ---- Nothing selected ----
     if not selectedCatKey then
-        rightTopArea:SetHeight(80)
-        rightItemArea:Hide()
-        rightTopWrapper = CreateFrame("Frame", nil, rightTopArea)
-        rightTopWrapper:SetAllPoints()
+        rightTopWrapper = CreateFrame("Frame", nil, rightItemScrollContent)
+        rightTopWrapper:SetPoint("TOPLEFT", rightItemScrollContent, "TOPLEFT", 0, 0)
+        rightTopWrapper:SetPoint("RIGHT", rightItemScrollContent, "RIGHT", 0, 0)
+        rightTopWrapper:SetHeight(80)
         local hint = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         hint:SetPoint("CENTER")
         hint:SetText(L["CATEGORY_SELECT_PROMPT"])
         hint:SetTextColor(T("TEXT_MUTED"))
+        rightItemScrollContent:SetHeight(80)
         return
     end
 
-    -- ---- Section selected ----
     if selectedCatKey:sub(1, 8) == "section:" then
         local sectionID = selectedCatKey:sub(9)
         local section   = db.global.categorySections[sectionID]
         if not section then selectedCatKey = nil; self:RefreshRight(); return end
 
-        rightTopArea:SetHeight(84)
-        rightItemArea:Show()
-
-        rightTopWrapper = CreateFrame("Frame", nil, rightTopArea)
-        rightTopWrapper:SetAllPoints()
+        rightTopWrapper = CreateFrame("Frame", nil, rightItemScrollContent)
+        rightTopWrapper:SetPoint("TOPLEFT", rightItemScrollContent, "TOPLEFT", 0, 0)
+        rightTopWrapper:SetPoint("RIGHT", rightItemScrollContent, "RIGHT", 0, 0)
 
         local header = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
         header:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -10)
@@ -535,20 +583,16 @@ function CatMgrUI:RefreshRight()
         local memberSet = {}
         for _, n in ipairs(section.categories) do memberSet[n] = true end
 
-        rightItemWrapper = CreateFrame("Frame", nil, rightItemScrollContent)
-        rightItemWrapper:SetPoint("TOPLEFT", rightItemScrollContent, "TOPLEFT", 2, 0)
-        rightItemWrapper:SetPoint("RIGHT",   rightItemScrollContent, "RIGHT", -2, 0)
-
-        local checkY = 0
+        local checkY = -84
         for _, catName in ipairs(allCatNames) do
             local locKey   = BUILTIN_LOCALE_KEYS[catName]
             local dispName = (locKey and L[locKey]) or catName
             local isMember = memberSet[catName]
 
-            local row = CreateFrame("Frame", nil, rightItemWrapper)
+            local row = CreateFrame("Frame", nil, rightTopWrapper)
             row:SetHeight(22)
-            row:SetPoint("TOPLEFT", rightItemWrapper, "TOPLEFT", 0, checkY)
-            row:SetPoint("RIGHT",   rightItemWrapper, "RIGHT",   0, 0)
+            row:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 0, checkY)
+            row:SetPoint("RIGHT",   rightTopWrapper, "RIGHT",   0, 0)
 
             local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
             cb:SetSize(18, 18)
@@ -580,86 +624,425 @@ function CatMgrUI:RefreshRight()
             checkY = checkY - 24
         end
 
-        local totalH = math.max(math.abs(checkY) + 4, 40)
-        rightItemWrapper:SetHeight(totalH)
+        local totalH = math.max(math.abs(checkY) + 4, 100)
+        rightTopWrapper:SetHeight(totalH)
         rightItemScrollContent:SetHeight(totalH)
         return
     end
 
-    -- ---- Built-in category selected ----
-    if selectedCatKey:sub(1, 8) == "builtin:" then
-        local catName  = selectedCatKey:sub(9)
-        local locKey   = BUILTIN_LOCALE_KEYS[catName]
-        local dispName = (locKey and L[locKey]) or catName
+    local isBuiltin = selectedCatKey:sub(1, 8) == "builtin:"
+    local isCustom = not isBuiltin
 
-        rightTopArea:SetHeight(120)
-        rightItemArea:Hide()
-        rightTopWrapper = CreateFrame("Frame", nil, rightTopArea)
-        rightTopWrapper:SetAllPoints()
-
-        local header = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        header:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -10)
-        header:SetText(dispName)
-        header:SetTextColor(T("ACCENT_PRIMARY"))
-
-        local div = rightTopWrapper:CreateTexture(nil, "ARTWORK")
-        div:SetHeight(1)
-        div:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, -36)
-        div:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, -36)
-        div:SetColorTexture(T("BORDER_SUBTLE"))
-
-        local desc = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        desc:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -44)
-        desc:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -10, -44)
-        desc:SetJustifyH("LEFT")
-        desc:SetWordWrap(true)
-        desc:SetText(L["CATEGORY_BUILTIN_DESC"])
-        desc:SetTextColor(T("TEXT_SECONDARY"))
-        return
+    local catName, catData, catID, capturedID
+    if isBuiltin then
+        catName = selectedCatKey:sub(9)
+    else
+        catID = selectedCatKey
+        local customCats = db.global.customCategoriesV2 or {}
+        catData = customCats[catID]
+        if not catData then selectedCatKey = nil; self:RefreshRight(); return end
+        catName = catData.name
+        capturedID = catID
     end
 
-    -- ---- Custom category selected ----
-    local catID   = selectedCatKey
-    local customCats = db.global.customCategoriesV2 or {}
-    local catData = customCats[catID]
-    if not catData then selectedCatKey = nil; self:RefreshRight(); return end
+    local locKey = BUILTIN_LOCALE_KEYS[catName]
+    local dispName = (locKey and L[locKey]) or catName
 
-    local capturedID = catID
-    rightTopArea:SetHeight(158)
-    rightItemArea:Show()
+    if not db.global.categoryModifications then db.global.categoryModifications = {} end
+    if not db.global.categoryModifications[catName] then db.global.categoryModifications[catName] = {} end
+    local catMod = db.global.categoryModifications[catName]
 
-    rightTopWrapper = CreateFrame("Frame", nil, rightTopArea)
-    rightTopWrapper:SetAllPoints()
+    local SORT_OPTIONS = { "none", "default", "name", "rarity", "ilvl", "type", "expansion" }
+    local SORT_LABELS = { L["SORT_OFF"], L["SORT_DEFAULT"], L["SORT_NAME"], L["SORT_RARITY"], L["SORT_ITEM_LEVEL"], L["SORT_TYPE"], L["SORT_EXPANSION"] or "Expansion" }
+    local GROUP_OPTIONS = { "none", "expansion", "type", "slot", "quality" }
+    local GROUP_LABELS = { L["GROUP_NONE"] or "None", L["GROUP_EXPANSION"] or "Expansion", L["GROUP_TYPE"] or "Type", L["GROUP_SLOT"] or "Slot", L["GROUP_QUALITY"] or "Quality" }
+    local PRIORITY_OPTIONS = { -2, -1, 0, 1, 2, 3 }
+    local PRIORITY_LABELS = { L["PRIORITY_LOWEST"] or "Lowest", L["PRIORITY_LOW"] or "Low", L["PRIORITY_NORMAL"] or "Normal", L["PRIORITY_HIGH"] or "High", L["PRIORITY_HIGHEST"] or "Highest", "Max" }
+
+    rightTopWrapper = CreateFrame("Frame", nil, rightItemScrollContent)
+    rightTopWrapper:SetPoint("TOPLEFT", rightItemScrollContent, "TOPLEFT", 0, 0)
+    rightTopWrapper:SetPoint("RIGHT", rightItemScrollContent, "RIGHT", 0, 0)
+
+    local capCatName = catName
+    local yPos = -10
 
     local header = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    header:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -10)
-    header:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -160, -10)
-    header:SetJustifyH("LEFT")
-    header:SetText(catData.name)
+    header:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+    header:SetText(dispName)
     header:SetTextColor(T("ACCENT_PRIMARY"))
 
-    local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_DELETE"], height=22 })
-    delBtn:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -6, -10)
-    delBtn:SetScript("OnClick", function()
-        StaticPopup_Show("ONEWOW_BAGS_DELETE_CATEGORY", catData.name, nil, capturedID)
-    end)
-    local renBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_RENAME"], height=22 })
-    renBtn:SetPoint("RIGHT", delBtn, "LEFT", -4, 0)
-    renBtn:SetScript("OnClick", function()
-        StaticPopup_Show("ONEWOW_BAGS_RENAME_CATEGORY", catData.name, nil, capturedID)
-    end)
+    if catMod.color then
+        local cr = tonumber(catMod.color:sub(1,2), 16) / 255
+        local cg = tonumber(catMod.color:sub(3,4), 16) / 255
+        local cb = tonumber(catMod.color:sub(5,6), 16) / 255
+        header:SetTextColor(cr, cg, cb, 1.0)
+    end
 
+    local typeLabel = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    typeLabel:SetPoint("LEFT", header, "RIGHT", 8, 0)
+    if isBuiltin then
+        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_BUILTIN"] or "Built-in") .. "]")
+    elseif catData and catData.isTSM then
+        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_TSM"] or "TSM") .. "]")
+    else
+        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_CUSTOM"] or "Custom") .. "]")
+    end
+    typeLabel:SetTextColor(T("TEXT_MUTED"))
+
+    if isCustom then
+        local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_DELETE"], height=22 })
+        delBtn:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -6, yPos)
+        delBtn:SetScript("OnClick", function()
+            StaticPopup_Show("ONEWOW_BAGS_DELETE_CATEGORY", catData.name, nil, capturedID)
+        end)
+        local renBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_RENAME"], height=22 })
+        renBtn:SetPoint("RIGHT", delBtn, "LEFT", -4, 0)
+        renBtn:SetScript("OnClick", function()
+            StaticPopup_Show("ONEWOW_BAGS_RENAME_CATEGORY", catData.name, nil, capturedID)
+        end)
+    end
+
+    yPos = yPos - 28
     local div1 = rightTopWrapper:CreateTexture(nil, "ARTWORK")
     div1:SetHeight(1)
-    div1:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, -36)
-    div1:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, -36)
+    div1:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
+    div1:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
     div1:SetColorTexture(T("BORDER_SUBTLE"))
+    yPos = yPos - 8
 
-    -- Drop zone
+    if isBuiltin then
+        local Categories = OneWoW_Bags.Categories
+        local descText = Categories and Categories.GetCategoryDescription and Categories:GetCategoryDescription(catName)
+        if descText then
+            local ruleLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            ruleLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+            ruleLbl:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -10, yPos)
+            ruleLbl:SetJustifyH("LEFT")
+            ruleLbl:SetWordWrap(true)
+            ruleLbl:SetText((L["CATEGORY_RULE"] or "Rule:") .. " " .. descText)
+            ruleLbl:SetTextColor(T("TEXT_SECONDARY"))
+            yPos = yPos - ruleLbl:GetStringHeight() - 6
+        end
+    end
+
+    if isCustom and catData then
+        local filterMode = catData.filterMode
+        if not filterMode then
+            if catData.searchExpression and catData.searchExpression ~= "" then
+                filterMode = "search"
+            elseif (catData.itemType and catData.itemType ~= "") or (catData.itemSubType and catData.itemSubType ~= "") then
+                filterMode = "type"
+            else
+                filterMode = "type"
+            end
+        end
+
+        local filterLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        filterLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+        filterLbl:SetText("Auto-Match Mode:")
+        filterLbl:SetTextColor(T("TEXT_PRIMARY"))
+
+        local typeFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = "By Type", height = 20, minWidth = 70 })
+        typeFilterBtn:SetPoint("LEFT", filterLbl, "RIGHT", 8, 0)
+        local advFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = "Advanced", height = 20, minWidth = 70 })
+        advFilterBtn:SetPoint("LEFT", typeFilterBtn, "RIGHT", 4, 0)
+
+        local filterContent = CreateFrame("Frame", nil, rightTopWrapper)
+        filterContent:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 0, yPos - 26)
+        filterContent:SetPoint("RIGHT", rightTopWrapper, "RIGHT", 0, 0)
+
+        local function BuildTypeFilter(parent)
+            local fY = -4
+            local desc = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            desc:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            desc:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, fY)
+            desc:SetJustifyH("LEFT")
+            desc:SetWordWrap(true)
+            desc:SetText(L["CAT_TYPE_FILTER_DESC"])
+            desc:SetTextColor(T("TEXT_MUTED"))
+            fY = fY - desc:GetStringHeight() - 6
+
+            local tLbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            tLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            tLbl:SetText(L["CAT_ITEM_TYPE"])
+            tLbl:SetTextColor(T("TEXT_PRIMARY"))
+            local tBox = MakeEditBoxWithSave(parent,
+                { width=160, height=22, placeholderText = "Housing" },
+                function() return catData.itemType end,
+                function(v) catData.itemType = v end)
+            tBox:SetPoint("LEFT", tLbl, "RIGHT", 8, 0)
+            tBox:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
+            fY = fY - 28
+
+            local sLbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            sLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            sLbl:SetText(L["CAT_ITEM_SUBTYPE"])
+            sLbl:SetTextColor(T("TEXT_PRIMARY"))
+            local sBox = MakeEditBoxWithSave(parent,
+                { width=160, height=22, placeholderText = "Decor" },
+                function() return catData.itemSubType end,
+                function(v) catData.itemSubType = v end)
+            sBox:SetPoint("LEFT", sLbl, "RIGHT", 8, 0)
+            sBox:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
+            fY = fY - 28
+
+            local mLbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            mLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            mLbl:SetText(L["CAT_TYPE_MATCH_MODE"])
+            mLbl:SetTextColor(T("TEXT_PRIMARY"))
+            local curMode = catData.typeMatchMode or "and"
+            local andB = OneWoW_GUI:CreateFitTextButton(parent, { text = L["CAT_TYPE_MATCH_AND"], height = 20, minWidth = 40 })
+            andB:SetPoint("LEFT", mLbl, "RIGHT", 8, 0)
+            local orB = OneWoW_GUI:CreateFitTextButton(parent, { text = L["CAT_TYPE_MATCH_OR"], height = 20, minWidth = 40 })
+            orB:SetPoint("LEFT", andB, "RIGHT", 4, 0)
+            StyleToggleBtn(andB, curMode ~= "or")
+            StyleToggleBtn(orB, curMode == "or")
+            andB:SetScript("OnClick", function()
+                catData.typeMatchMode = "and"
+                StyleToggleBtn(andB, true); StyleToggleBtn(orB, false)
+                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+                RefreshBagLayout()
+            end)
+            orB:SetScript("OnClick", function()
+                catData.typeMatchMode = "or"
+                StyleToggleBtn(andB, false); StyleToggleBtn(orB, true)
+                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+                RefreshBagLayout()
+            end)
+            fY = fY - 26
+            return math.abs(fY)
+        end
+
+        local function BuildSearchFilter(parent)
+            local fY = -4
+            local desc = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            desc:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            desc:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, fY)
+            desc:SetJustifyH("LEFT")
+            desc:SetWordWrap(true)
+            desc:SetText("Use search keywords with operators to match items automatically.")
+            desc:SetTextColor(T("TEXT_MUTED"))
+            fY = fY - desc:GetStringHeight() - 6
+
+            local sBox = MakeEditBoxWithSave(parent,
+                { width=200, height=22, placeholderText = "#battlepet&!#collected" },
+                function() return catData.searchExpression end,
+                function(v) catData.searchExpression = v end)
+            sBox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            sBox:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
+            fY = fY - 28
+
+            local helpLines = {
+                L["SEARCH_HELP_KEYWORDS"] or "",
+                L["SEARCH_HELP_QUALITY"] or "",
+                L["SEARCH_HELP_OPERATORS"] or "",
+                L["SEARCH_HELP_ILVL"] or "",
+                L["SEARCH_HELP_EXAMPLE"] or "",
+            }
+            for _, line in ipairs(helpLines) do
+                if line ~= "" then
+                    local hl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    hl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+                    hl:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, fY)
+                    hl:SetJustifyH("LEFT")
+                    hl:SetWordWrap(true)
+                    hl:SetText(line)
+                    hl:SetTextColor(T("TEXT_MUTED"))
+                    fY = fY - hl:GetStringHeight() - 2
+                end
+            end
+            return math.abs(fY)
+        end
+
+        local filterH = 0
+        local function ShowFilter(mode)
+            for _, child in pairs({filterContent:GetChildren()}) do child:Hide(); child:SetParent(UIParent) end
+            for _, region in pairs({filterContent:GetRegions()}) do region:Hide(); region:SetParent(UIParent) end
+            catData.filterMode = mode
+            StyleToggleBtn(typeFilterBtn, mode == "type")
+            StyleToggleBtn(advFilterBtn, mode == "search")
+            if mode == "type" then
+                filterH = BuildTypeFilter(filterContent)
+            else
+                filterH = BuildSearchFilter(filterContent)
+            end
+            filterContent:SetHeight(filterH)
+            if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+        end
+        typeFilterBtn:SetScript("OnClick", function() ShowFilter("type"); CatMgrUI:RefreshRight() end)
+        advFilterBtn:SetScript("OnClick", function() ShowFilter("search"); CatMgrUI:RefreshRight() end)
+        ShowFilter(filterMode)
+        yPos = yPos - 26 - filterH - 4
+    end
+
+    local div2 = rightTopWrapper:CreateTexture(nil, "ARTWORK")
+    div2:SetHeight(1)
+    div2:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
+    div2:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
+    div2:SetColorTexture(T("BORDER_SUBTLE"))
+    yPos = yPos - 8
+
+    local sortLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sortLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+    sortLbl:SetText(L["CAT_SORT"] or "Sort")
+    sortLbl:SetTextColor(T("TEXT_PRIMARY"))
+    local currentSort = catMod.sortMode or "none"
+    local sortIdx = 1
+    for i, v in ipairs(SORT_OPTIONS) do if v == currentSort then sortIdx = i; break end end
+    local sortBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = SORT_LABELS[sortIdx], height = 20, minWidth = 60 })
+    sortBtn:SetPoint("LEFT", sortLbl, "RIGHT", 8, 0)
+    sortBtn:SetScript("OnClick", function()
+        sortIdx = (sortIdx % #SORT_OPTIONS) + 1
+        sortBtn.text:SetText(SORT_LABELS[sortIdx])
+        db.global.categoryModifications[capCatName].sortMode = SORT_OPTIONS[sortIdx]
+        RefreshBagLayout()
+    end)
+
+    local groupLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    groupLbl:SetPoint("LEFT", sortBtn, "RIGHT", 16, 0)
+    groupLbl:SetText(L["GROUP_BY"] or "Group By")
+    groupLbl:SetTextColor(T("TEXT_PRIMARY"))
+    local currentGroup = catMod.groupBy or "none"
+    local groupIdx = 1
+    for i, v in ipairs(GROUP_OPTIONS) do if v == currentGroup then groupIdx = i; break end end
+    local groupBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = GROUP_LABELS[groupIdx], height = 20, minWidth = 60 })
+    groupBtn:SetPoint("LEFT", groupLbl, "RIGHT", 8, 0)
+    groupBtn:SetScript("OnClick", function()
+        groupIdx = (groupIdx % #GROUP_OPTIONS) + 1
+        groupBtn.text:SetText(GROUP_LABELS[groupIdx])
+        db.global.categoryModifications[capCatName].groupBy = GROUP_OPTIONS[groupIdx]
+        RefreshBagLayout()
+    end)
+    yPos = yPos - 28
+
+    local prioLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    prioLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+    prioLbl:SetText(L["PRIORITY"] or "Priority")
+    prioLbl:SetTextColor(T("TEXT_PRIMARY"))
+    local currentPrio = catMod.priority or 0
+    local prioIdx = 3
+    for i, v in ipairs(PRIORITY_OPTIONS) do if v == currentPrio then prioIdx = i; break end end
+    local prioBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = PRIORITY_LABELS[prioIdx], height = 20, minWidth = 60 })
+    prioBtn:SetPoint("LEFT", prioLbl, "RIGHT", 8, 0)
+    prioBtn:SetScript("OnClick", function()
+        prioIdx = (prioIdx % #PRIORITY_OPTIONS) + 1
+        prioBtn.text:SetText(PRIORITY_LABELS[prioIdx])
+        db.global.categoryModifications[capCatName].priority = PRIORITY_OPTIONS[prioIdx]
+        if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+        RefreshBagLayout()
+    end)
+
+    local colorLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    colorLbl:SetPoint("LEFT", prioBtn, "RIGHT", 16, 0)
+    colorLbl:SetText(L["COLOR"] or "Color")
+    colorLbl:SetTextColor(T("TEXT_PRIMARY"))
+
+    local colorSwatch = CreateFrame("Button", nil, rightTopWrapper, "BackdropTemplate")
+    colorSwatch:SetSize(20, 20)
+    colorSwatch:SetPoint("LEFT", colorLbl, "RIGHT", 6, 0)
+    colorSwatch:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
+    colorSwatch:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    if catMod.color then
+        local cr = tonumber(catMod.color:sub(1,2), 16) / 255
+        local cg = tonumber(catMod.color:sub(3,4), 16) / 255
+        local cb = tonumber(catMod.color:sub(5,6), 16) / 255
+        colorSwatch:SetBackdropColor(cr, cg, cb, 1.0)
+    else
+        colorSwatch:SetBackdropColor(T("ACCENT_PRIMARY"))
+    end
+    colorSwatch:SetScript("OnClick", function()
+        local r, g, b = 1, 0.82, 0
+        if catMod.color then
+            r = tonumber(catMod.color:sub(1,2), 16) / 255
+            g = tonumber(catMod.color:sub(3,4), 16) / 255
+            b = tonumber(catMod.color:sub(5,6), 16) / 255
+        end
+        local info = {}
+        info.r, info.g, info.b = r, g, b
+        info.swatchFunc = function()
+            local nr, ng, nb = ColorPickerFrame:GetColorRGB()
+            local hex = string.format("%02X%02X%02X", math.floor(nr*255+0.5), math.floor(ng*255+0.5), math.floor(nb*255+0.5))
+            db.global.categoryModifications[capCatName].color = hex
+            colorSwatch:SetBackdropColor(nr, ng, nb, 1.0)
+            CatMgrUI:RefreshLeft()
+            RefreshBagLayout()
+        end
+        info.cancelFunc = function(prev)
+            db.global.categoryModifications[capCatName].color = catMod.color
+            CatMgrUI:RefreshLeft()
+            RefreshBagLayout()
+        end
+        info.hasOpacity = false
+        ColorPickerFrame:SetupColorPickerAndShow(info)
+    end)
+
+    local clearColorBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["COLOR_CLEAR"] or "Clear", height = 20 })
+    clearColorBtn:SetPoint("LEFT", colorSwatch, "RIGHT", 4, 0)
+    clearColorBtn:SetScript("OnClick", function()
+        db.global.categoryModifications[capCatName].color = nil
+        colorSwatch:SetBackdropColor(T("ACCENT_PRIMARY"))
+        CatMgrUI:RefreshLeft()
+        RefreshBagLayout()
+    end)
+    yPos = yPos - 28
+
+    local hideLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hideLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+    hideLbl:SetText(L["HIDE_IN"] or "Hide In")
+    hideLbl:SetTextColor(T("TEXT_PRIMARY"))
+
+    if not catMod.hideIn then catMod.hideIn = {} end
+    local hideContainers = {
+        { key = "backpack", label = L["HIDE_BACKPACK"] or "Backpack" },
+        { key = "character_bank", label = L["HIDE_CHAR_BANK"] or "Character Bank" },
+        { key = "warband_bank", label = L["HIDE_WARBAND_BANK"] or "Warband Bank" },
+    }
+    local hideX = 60
+    for _, hc in ipairs(hideContainers) do
+        local cb = CreateFrame("CheckButton", nil, rightTopWrapper, "UICheckButtonTemplate")
+        cb:SetSize(18, 18)
+        cb:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", hideX, yPos + 2)
+        cb:SetChecked(catMod.hideIn[hc.key] or false)
+        local capKey = hc.key
+        cb:SetScript("OnClick", function(self)
+            catMod.hideIn[capKey] = self:GetChecked() or false
+            if not self:GetChecked() then catMod.hideIn[capKey] = nil end
+            RefreshBagLayout()
+        end)
+        local cbLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        cbLbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
+        cbLbl:SetText(hc.label)
+        cbLbl:SetTextColor(T("TEXT_PRIMARY"))
+        hideX = hideX + cbLbl:GetStringWidth() + 28
+    end
+    yPos = yPos - 26
+
+    local div3 = rightTopWrapper:CreateTexture(nil, "ARTWORK")
+    div3:SetHeight(1)
+    div3:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
+    div3:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
+    div3:SetColorTexture(T("BORDER_SUBTLE"))
+    yPos = yPos - 8
+
+    local addItemsLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    addItemsLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+    addItemsLbl:SetText(L["ADDED_ITEMS"] or "Added Items")
+    addItemsLbl:SetTextColor(T("ACCENT_SECONDARY"))
+    yPos = yPos - 16
+
+    local addDescLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    addDescLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+    addDescLbl:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -10, yPos)
+    addDescLbl:SetJustifyH("LEFT")
+    addDescLbl:SetWordWrap(true)
+    addDescLbl:SetText(L["ADDED_ITEMS_DESC"] or "Items manually assigned override normal classification.")
+    addDescLbl:SetTextColor(T("TEXT_MUTED"))
+    yPos = yPos - addDescLbl:GetStringHeight() - 6
+
     local dropZone = CreateFrame("Button", nil, rightTopWrapper, "BackdropTemplate")
-    dropZone:SetHeight(32)
-    dropZone:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, -44)
-    dropZone:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, -44)
+    dropZone:SetHeight(28)
+    dropZone:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
+    dropZone:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
     dropZone:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
     dropZone:SetBackdropColor(T("BG_TERTIARY"))
     dropZone:SetBackdropBorderColor(T("BORDER_SUBTLE"))
@@ -683,61 +1066,84 @@ function CatMgrUI:RefreshRight()
     end)
     local function handleDrop()
         local cType, itemID = GetCursorInfo()
-        if cType == "item" and itemID then ClearCursor(); MoveItemToCategory(itemID, capturedID) end
+        if cType == "item" and itemID then
+            ClearCursor()
+            if isCustom and capturedID then
+                MoveItemToCategory(itemID, capturedID)
+            elseif isBuiltin then
+                if OneWoW_Bags.Categories then
+                    OneWoW_Bags.Categories:AddItemToBuiltinCategory(capCatName, itemID)
+                end
+                CatMgrUI:Refresh()
+                RefreshBagLayout()
+            end
+        end
     end
     dropZone:SetScript("OnReceiveDrag", handleDrop)
     dropZone:SetScript("OnMouseUp", function(_, btn) if btn == "LeftButton" then handleDrop() end end)
+    yPos = yPos - 32
 
-    -- Add by ID
     local addLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    addLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 8, -84)
+    addLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
     addLbl:SetText(L["CATEGORY_ADD_BY_ID"])
     addLbl:SetTextColor(T("TEXT_PRIMARY"))
-
-    local addBox = OneWoW_GUI:CreateEditBox(rightTopWrapper, { width=100, height=22 })
+    local addBox = OneWoW_GUI:CreateEditBox(rightTopWrapper, { width=120, height=22 })
     addBox:SetPoint("LEFT", addLbl, "RIGHT", 8, 0)
-    addBox:SetNumeric(true)
-
     local addBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["ADD_ITEM"], height=22 })
     addBtn:SetPoint("LEFT", addBox, "RIGHT", 6, 0)
     addBtn:SetScript("OnClick", function()
         local text = addBox.GetSearchText and addBox:GetSearchText() or addBox:GetText()
-        local id = tonumber(text)
-        if id and id > 0 then addBox:SetText(""); MoveItemToCategory(id, capturedID) end
+        if not text or text == "" then return end
+        local added = 0
+        for idStr in text:gmatch("[^%s,;]+") do
+            local id = tonumber(idStr)
+            if id and id > 0 then
+                if isCustom and capturedID then
+                    MoveItemToCategory(id, capturedID)
+                elseif isBuiltin then
+                    if OneWoW_Bags.Categories then
+                        OneWoW_Bags.Categories:AddItemToBuiltinCategory(capCatName, id)
+                    end
+                end
+                added = added + 1
+            end
+        end
+        if added > 0 then
+            addBox:SetText("")
+            CatMgrUI:Refresh()
+            RefreshBagLayout()
+        end
     end)
+    yPos = yPos - 28
 
-    -- Item count label
-    local items = catData.items or {}
-    local itemCount = 0
-    for _ in pairs(items) do itemCount = itemCount + 1 end
+    local allItems = {}
+    if isCustom and catData and catData.items then
+        for idStr in pairs(catData.items) do
+            local id = tonumber(idStr)
+            if id then table.insert(allItems, { id = id, isCustom = true }) end
+        end
+    end
+    if catMod.addedItems then
+        for idStr in pairs(catMod.addedItems) do
+            local id = tonumber(idStr)
+            if id then table.insert(allItems, { id = id, isCustom = false }) end
+        end
+    end
+    table.sort(allItems, function(a, b) return a.id < b.id end)
 
-    local countLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    countLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 8, -120)
-    countLbl:SetText(string.format(L["CATEGORY_ITEMS_COUNT"], itemCount))
-    countLbl:SetTextColor(T("TEXT_SECONDARY"))
-
-    -- Item list
-    local itemsList = {}
-    for idStr in pairs(items) do table.insert(itemsList, tonumber(idStr)) end
-    table.sort(itemsList)
-
-    rightItemWrapper = CreateFrame("Frame", nil, rightItemScrollContent)
-    rightItemWrapper:SetPoint("TOPLEFT", rightItemScrollContent, "TOPLEFT", 2, 0)
-    rightItemWrapper:SetPoint("RIGHT",   rightItemScrollContent, "RIGHT", -2, 0)
-
-    local itemY = 0
-    if #itemsList == 0 then
-        local emptyLbl = rightItemWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        emptyLbl:SetPoint("TOPLEFT", rightItemWrapper, "TOPLEFT", 8, -8)
-        emptyLbl:SetText(L["CATEGORY_NO_ITEMS"])
+    if #allItems == 0 then
+        local emptyLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        emptyLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 8, yPos - 8)
+        emptyLbl:SetText(L["ADDED_ITEMS_NONE"] or "No items manually added.")
         emptyLbl:SetTextColor(T("TEXT_MUTED"))
-        itemY = -28
+        yPos = yPos - 28
     else
-        for _, itemID in ipairs(itemsList) do
-            local row = CreateFrame("Frame", nil, rightItemWrapper, "BackdropTemplate")
+        for _, itemEntry in ipairs(allItems) do
+            local itemID = itemEntry.id
+            local row = CreateFrame("Frame", nil, rightTopWrapper, "BackdropTemplate")
             row:SetHeight(26)
-            row:SetPoint("TOPLEFT", rightItemWrapper, "TOPLEFT", 0, itemY)
-            row:SetPoint("RIGHT",   rightItemWrapper, "RIGHT",   0, 0)
+            row:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 0, yPos)
+            row:SetPoint("RIGHT", rightTopWrapper, "RIGHT", 0, 0)
             row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
             row:SetBackdropColor(T("BG_SECONDARY"))
             row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
@@ -749,32 +1155,36 @@ function CatMgrUI:RefreshRight()
             if tex then icon:SetTexture(tex) end
 
             local nameTxt = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            nameTxt:SetPoint("LEFT",  icon, "RIGHT", 6, 0)
-            nameTxt:SetPoint("RIGHT", row,  "RIGHT", -72, 0)
+            nameTxt:SetPoint("LEFT", icon, "RIGHT", 6, 0)
+            nameTxt:SetPoint("RIGHT", row, "RIGHT", -72, 0)
             nameTxt:SetJustifyH("LEFT")
             nameTxt:SetText(C_Item.GetItemNameByID(itemID) or ("Item " .. itemID))
             nameTxt:SetTextColor(T("TEXT_PRIMARY"))
 
             local captItemID = itemID
-            local captCatID  = capturedID
+            local captIsCustom = itemEntry.isCustom
             local remBtn = OneWoW_GUI:CreateFitTextButton(row, { text=L["REMOVE_ITEM"], height=18 })
             remBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
             remBtn:SetScript("OnClick", function()
-                local cat = db.global.customCategoriesV2[captCatID]
-                if cat and cat.items then
-                    cat.items[tostring(captItemID)] = nil
-                    if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
-                    CatMgrUI:Refresh()
-                    RefreshBagLayout()
+                if captIsCustom and capturedID then
+                    local cat = db.global.customCategoriesV2[capturedID]
+                    if cat and cat.items then cat.items[tostring(captItemID)] = nil end
+                else
+                    if OneWoW_Bags.Categories then
+                        OneWoW_Bags.Categories:RemoveItemFromBuiltinCategory(capCatName, captItemID)
+                    end
                 end
+                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+                CatMgrUI:Refresh()
+                RefreshBagLayout()
             end)
-            itemY = itemY - 28
+            yPos = yPos - 28
         end
     end
 
-    local itemsH = math.max(math.abs(itemY) + 4, 40)
-    rightItemWrapper:SetHeight(itemsH)
-    rightItemScrollContent:SetHeight(itemsH)
+    local totalH = math.max(math.abs(yPos) + 8, 100)
+    rightTopWrapper:SetHeight(totalH)
+    rightItemScrollContent:SetHeight(totalH)
 end
 
 -- ============================================================
@@ -883,10 +1293,42 @@ function CatMgrUI:RefreshLeft()
                 CatMgrUI:Refresh(); RefreshBagLayout()
             end
         end
+        local catMods = db.global.categoryModifications or {}
+        local mod = catMods[entry.name] or {}
+
         local dnB = MakeSmallBtn(row, "v", doDown, idxInGroup < totalInGroup)
         dnB:SetPoint("RIGHT", row, "RIGHT", -2, 0)
         local upB = MakeSmallBtn(row, "^", doUp, idxInGroup > 1)
         upB:SetPoint("RIGHT", dnB, "LEFT", -2, 0)
+
+        local badges = ""
+        if mod.sortMode and mod.sortMode ~= "none" then badges = badges .. "S" end
+        if mod.groupBy and mod.groupBy ~= "none" then badges = badges .. "G" end
+        if mod.addedItems and next(mod.addedItems) then badges = badges .. "+" end
+        if mod.hideIn and next(mod.hideIn) then badges = badges .. "H" end
+        if mod.priority and mod.priority ~= 0 then badges = badges .. "P" end
+        if not entry.isBuiltin and entry.data and entry.data.searchExpression then badges = badges .. "E" end
+
+        local badgeAnchor = upB
+        if badges ~= "" then
+            local badgeTxt = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            badgeTxt:SetPoint("RIGHT", upB, "LEFT", -4, 0)
+            badgeTxt:SetText(badges)
+            badgeTxt:SetTextColor(T("ACCENT_SECONDARY"))
+            badgeAnchor = badgeTxt
+        end
+
+        local colorAnchor = badgeAnchor
+        if mod.color then
+            local swatch = row:CreateTexture(nil, "ARTWORK")
+            swatch:SetSize(8, 8)
+            swatch:SetPoint("RIGHT", badgeAnchor, "LEFT", -4, 0)
+            local cr = tonumber(mod.color:sub(1,2), 16) / 255
+            local cg = tonumber(mod.color:sub(3,4), 16) / 255
+            local cb = tonumber(mod.color:sub(5,6), 16) / 255
+            swatch:SetColorTexture(cr, cg, cb, 1.0)
+            colorAnchor = swatch
+        end
 
         if entry.isBuiltin then
             local catName   = entry.name
@@ -908,7 +1350,7 @@ function CatMgrUI:RefreshLeft()
             local locKey   = BUILTIN_LOCALE_KEYS[catName]
             local nameTxt  = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             nameTxt:SetPoint("LEFT",  cb,  "RIGHT", 3, 0)
-            nameTxt:SetPoint("RIGHT", upB, "LEFT",  -4, 0)
+            nameTxt:SetPoint("RIGHT", colorAnchor, "LEFT", -4, 0)
             nameTxt:SetJustifyH("LEFT")
             nameTxt:SetText((locKey and L[locKey]) or catName)
             if isDisabled then
@@ -921,7 +1363,7 @@ function CatMgrUI:RefreshLeft()
         else
             local nameTxt = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             nameTxt:SetPoint("LEFT",  row, "LEFT",  8, 0)
-            nameTxt:SetPoint("RIGHT", upB, "LEFT", -4, 0)
+            nameTxt:SetPoint("RIGHT", colorAnchor, "LEFT", -4, 0)
             nameTxt:SetJustifyH("LEFT")
             nameTxt:SetText(entry.data.name)
             if isSelected then
@@ -1186,7 +1628,26 @@ function CatMgrUI:Show()
         bagLbl:SetTextColor(T("TEXT_MUTED"))
     end
 
-    -- ---- Split area ----
+    local TSM = OneWoW_Bags.TSMIntegration
+    if TSM and TSM:IsAvailable() then
+        local tsmBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["TSM_IMPORT"] or "Import TSM", height=24 })
+        if _G.BAGANATOR_CONFIG then
+            tsmBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
+        else
+            tsmBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
+        end
+        tsmBtn:SetScript("OnClick", function()
+            local count = TSM:Import()
+            if count > 0 then
+                CatMgrUI:Refresh()
+                RefreshBagLayout()
+                print(string.format("|cFFFFD100OneWoW Bags:|r " .. (L["TSM_IMPORT_SUCCESS"] or "Imported %d categories from TSM."), count))
+            else
+                print("|cFFFFD100OneWoW Bags:|r " .. (L["TSM_IMPORT_NONE"] or "No TSM data found."))
+            end
+        end)
+    end
+
     local splitArea = CreateFrame("Frame", nil, dialogContentFrame)
     splitArea:SetPoint("TOPLEFT",     actionBar,         "BOTTOMLEFT",  0, -4)
     splitArea:SetPoint("BOTTOMRIGHT", dialogContentFrame, "BOTTOMRIGHT", -4, 4)
@@ -1229,16 +1690,11 @@ function CatMgrUI:Show()
         rightOuterInset  = 0,
     })
 
-    -- Right panel fixed top area
-    rightTopArea = CreateFrame("Frame", nil, rightPanel)
-    rightTopArea:SetPoint("TOPLEFT",  rightPanel, "TOPLEFT",  8, -8)
-    rightTopArea:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -8, -8)
-    rightTopArea:SetHeight(80)
+    rightTopArea = nil
 
-    -- Right panel item scroll area (anchored below rightTopArea, fills to bottom)
     rightItemArea = CreateFrame("Frame", nil, rightPanel)
-    rightItemArea:SetPoint("TOPLEFT",     rightTopArea, "BOTTOMLEFT",  0, -4)
-    rightItemArea:SetPoint("BOTTOMRIGHT", rightPanel,   "BOTTOMRIGHT", -8, 8)
+    rightItemArea:SetPoint("TOPLEFT",     rightPanel, "TOPLEFT",      8, -8)
+    rightItemArea:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -8,  8)
 
     local _, rContent = OneWoW_GUI:CreateScrollFrame(rightItemArea, { name="OneWoW_BagsCatMgrItems" })
     rightItemScrollContent = rContent

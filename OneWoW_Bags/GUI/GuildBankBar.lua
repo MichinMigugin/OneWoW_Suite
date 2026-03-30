@@ -210,6 +210,7 @@ function GuildBankBar:OpenTabEditor(tabID)
     GuildBankPopupFrame:SetParent(UIParent)
     GuildBankPopupFrame:ClearAllPoints()
     GuildBankPopupFrame:SetClampedToScreen(true)
+    GuildBankPopupFrame:SetClampRectInsets(0, 0, 0, 0)
     GuildBankPopupFrame:SetFrameLevel(999)
     local gbWindow = OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI:GetMainWindow()
     if gbWindow then

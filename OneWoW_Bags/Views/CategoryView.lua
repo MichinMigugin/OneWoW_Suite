@@ -31,7 +31,7 @@ local function ReleaseAllLabels()
     wipe(activeLabels)
 end
 
-function View:Layout(contentFrame, width, filteredButtons)
+function View:Layout(contentFrame, width, filteredButtons, containerType)
     local Constants = OneWoW_Bags.Constants
     local db = OneWoW_Bags.db
     local CM = OneWoW_Bags.CategoryManager
@@ -58,7 +58,43 @@ function View:Layout(contentFrame, width, filteredButtons)
     ReleaseAllLabels()
 
     local itemsByCategory = CM:GetItemsByCategory()
-    local layout = CM:GetSectionedLayout(itemsByCategory)
+    local layout = CM:GetSectionedLayout(itemsByCategory, containerType)
+
+    local moveUpgradesToTop = db.global.moveUpgradesToTop
+    local moveOtherToBottom = db.global.moveOtherToBottom
+    if moveUpgradesToTop or moveOtherToBottom then
+        local pinRecent, pinUpgrades, pinBottom, rest = {}, {}, {}, {}
+        if type(layout[1]) == "table" then
+            for _, entry in ipairs(layout) do
+                if entry.type == "category" and entry.name == "Recent Items" and moveUpgradesToTop then
+                    table.insert(pinRecent, entry)
+                elseif entry.type == "category" and entry.name == "1W Upgrades" and moveUpgradesToTop then
+                    table.insert(pinUpgrades, entry)
+                elseif entry.type == "category" and entry.name == "Other" and moveOtherToBottom then
+                    table.insert(pinBottom, entry)
+                else
+                    table.insert(rest, entry)
+                end
+            end
+        else
+            for _, name in ipairs(layout) do
+                if name == "Recent Items" and moveUpgradesToTop then
+                    table.insert(pinRecent, name)
+                elseif name == "1W Upgrades" and moveUpgradesToTop then
+                    table.insert(pinUpgrades, name)
+                elseif name == "Other" and moveOtherToBottom then
+                    table.insert(pinBottom, name)
+                else
+                    table.insert(rest, name)
+                end
+            end
+        end
+        layout = {}
+        for _, e in ipairs(pinRecent)   do table.insert(layout, e) end
+        for _, e in ipairs(pinUpgrades) do table.insert(layout, e) end
+        for _, e in ipairs(rest)        do table.insert(layout, e) end
+        for _, e in ipairs(pinBottom)   do table.insert(layout, e) end
+    end
 
     local cols = db.global.bagColumns or math.floor((width - padding * 2) / (iconSize + spacing))
     cols = math.max(cols, 1)
@@ -75,6 +111,55 @@ function View:Layout(contentFrame, width, filteredButtons)
         return 0.5, 0.5, 0.5, 1.0
     end
 
+    local catMods = db.global.categoryModifications or {}
+    local SE = OneWoW_Bags.SearchEngine
+
+    local function GetCategorySortMode(categoryName)
+        local mod = catMods[categoryName]
+        if mod and mod.sortMode then return mod.sortMode end
+        return nil
+    end
+
+    local function GetCategoryGrouping(categoryName)
+        local mod = catMods[categoryName]
+        if mod and mod.groupBy then return mod.groupBy end
+        return nil
+    end
+
+    local function StackItems(items)
+        if not db.global.stackItems then return items end
+        local stacks = {}
+        local stackOrder = {}
+        for _, btn in ipairs(items) do
+            local itemID = btn.owb_itemInfo and btn.owb_itemInfo.itemID
+            if not itemID then
+                table.insert(stackOrder, { buttons = {btn}, count = 1 })
+            else
+                local key = tostring(itemID)
+                if not stacks[key] then
+                    stacks[key] = { buttons = {}, count = 0, representative = btn }
+                    table.insert(stackOrder, stacks[key])
+                end
+                table.insert(stacks[key].buttons, btn)
+                stacks[key].count = stacks[key].count + (btn.owb_itemInfo.stackCount or 1)
+            end
+        end
+        local result = {}
+        for _, stack in ipairs(stackOrder) do
+            local rep = stack.representative or stack.buttons[1]
+            if stack.count > 1 and rep then
+                rep._owb_stackCount = stack.count
+            end
+            table.insert(result, rep)
+            for _, btn in ipairs(stack.buttons) do
+                if btn ~= rep then
+                    btn:Hide()
+                end
+            end
+        end
+        return result
+    end
+
     local function FilterItems(categoryName)
         local items = itemsByCategory[categoryName]
         if not items then return nil end
@@ -88,13 +173,112 @@ function View:Layout(contentFrame, width, filteredButtons)
             items = filtered
         end
         if #items == 0 then return nil end
-        OneWoW_Bags:SortButtons(items)
+        local catSort = GetCategorySortMode(categoryName)
+        OneWoW_Bags:SortButtons(items, catSort)
+        items = StackItems(items)
         return items
+    end
+
+    local function GroupItemsByExpansion(items)
+        local groups = {}
+        local groupOrder = {}
+        for _, btn in ipairs(items) do
+            local expID = -1
+            if SE and btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
+                expID = SE:GetExpansionID(btn.owb_itemInfo.itemID, btn.owb_itemInfo.hyperlink) or -1
+            end
+            local expName = (SE and SE:GetExpansionName(expID)) or "Unknown"
+            if not groups[expName] then
+                groups[expName] = {}
+                table.insert(groupOrder, { name = expName, sortKey = expID })
+            end
+            table.insert(groups[expName], btn)
+        end
+        table.sort(groupOrder, function(a, b) return a.sortKey > b.sortKey end)
+        return groups, groupOrder
+    end
+
+    local function GroupItemsByType(items)
+        local groups = {}
+        local groupOrder = {}
+        for _, btn in ipairs(items) do
+            local typeName = "Other"
+            if btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
+                local _, _, _, _, _, itemType = C_Item.GetItemInfo(btn.owb_itemInfo.hyperlink)
+                typeName = itemType or "Other"
+            end
+            if not groups[typeName] then
+                groups[typeName] = {}
+                table.insert(groupOrder, { name = typeName, sortKey = typeName })
+            end
+            table.insert(groups[typeName], btn)
+        end
+        table.sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
+        return groups, groupOrder
+    end
+
+    local function GroupItemsBySlot(items)
+        local groups = {}
+        local groupOrder = {}
+        for _, btn in ipairs(items) do
+            local slotName = "Other"
+            if btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
+                local _, _, _, _, _, _, _, _, equipLoc = C_Item.GetItemInfo(btn.owb_itemInfo.hyperlink)
+                if equipLoc and equipLoc ~= "" then
+                    slotName = _G[equipLoc] or equipLoc
+                end
+            end
+            if not groups[slotName] then
+                groups[slotName] = {}
+                table.insert(groupOrder, { name = slotName, sortKey = slotName })
+            end
+            table.insert(groups[slotName], btn)
+        end
+        table.sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
+        return groups, groupOrder
+    end
+
+    local function GroupItemsByQuality(items)
+        local groups = {}
+        local groupOrder = {}
+        for _, btn in ipairs(items) do
+            local q = (btn.owb_itemInfo and btn.owb_itemInfo.quality) or 0
+            local qName = _G["ITEM_QUALITY" .. q .. "_DESC"] or ("Quality " .. q)
+            if not groups[qName] then
+                groups[qName] = {}
+                table.insert(groupOrder, { name = qName, sortKey = q })
+            end
+            table.insert(groups[qName], btn)
+        end
+        table.sort(groupOrder, function(a, b) return a.sortKey > b.sortKey end)
+        return groups, groupOrder
+    end
+
+    local function RenderItemGrid(parentFrame, items, startY)
+        local itemRow = 0
+        local itemCol = 0
+        for _, button in ipairs(items) do
+            local x = leftPadding + (itemCol * cellSize)
+            local y = -(startY + itemRow * cellSize)
+            button:ClearAllPoints()
+            button:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", x, y)
+            button:OWB_SetIconSize(iconSize)
+            button:Show()
+            itemCol = itemCol + 1
+            if itemCol >= cols then
+                itemCol = 0
+                itemRow = itemRow + 1
+            end
+        end
+        local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
+        return totalRows * cellSize
     end
 
     local function RenderCategoryStacked(categoryName)
         local items = FilterItems(categoryName)
         if not items then return end
+
+        local groupBy = GetCategoryGrouping(categoryName)
 
         if showHeaders then
             local section = CM:AcquireSection(contentFrame)
@@ -106,7 +290,16 @@ function View:Layout(contentFrame, width, filteredButtons)
             local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
             local displayName = L[localeKey] or categoryName
             section.title:SetText(displayName)
-            section.title:SetTextColor(T("ACCENT_PRIMARY"))
+            local catMods = db.global.categoryModifications or {}
+            local catMod = catMods[categoryName]
+            if catMod and catMod.color then
+                local cr = tonumber(catMod.color:sub(1,2), 16) / 255
+                local cg = tonumber(catMod.color:sub(3,4), 16) / 255
+                local cb = tonumber(catMod.color:sub(5,6), 16) / 255
+                section.title:SetTextColor(cr, cg, cb, 1.0)
+            else
+                section.title:SetTextColor(T("ACCENT_PRIMARY"))
+            end
             section.count:SetText(tostring(#items))
             section.count:SetTextColor(T("TEXT_MUTED"))
 
@@ -116,33 +309,64 @@ function View:Layout(contentFrame, width, filteredButtons)
             local sectionHeight = 26
 
             if not section.isCollapsed then
-                local itemRow = 0
-                local itemCol = 0
-
                 section.content:SetHeight(1)
 
-                for _, button in ipairs(items) do
-                    local x = leftPadding + (itemCol * cellSize)
-                    local y = -(itemRow * cellSize)
-
-                    button:ClearAllPoints()
-                    button:SetPoint("TOPLEFT", section.content, "TOPLEFT", x, y)
-                    button:OWB_SetIconSize(iconSize)
-                    button:Show()
-
-                    itemCol = itemCol + 1
-                    if itemCol >= cols then
-                        itemCol = 0
-                        itemRow = itemRow + 1
+                if groupBy and groupBy ~= "none" then
+                    local groups, groupOrder
+                    if groupBy == "expansion" then
+                        groups, groupOrder = GroupItemsByExpansion(items)
+                    elseif groupBy == "type" then
+                        groups, groupOrder = GroupItemsByType(items)
+                    elseif groupBy == "slot" then
+                        groups, groupOrder = GroupItemsBySlot(items)
+                    elseif groupBy == "quality" then
+                        groups, groupOrder = GroupItemsByQuality(items)
                     end
+
+                    if groups and groupOrder then
+                        local subY = 0
+                        for _, groupInfo in ipairs(groupOrder) do
+                            local groupItems = groups[groupInfo.name]
+                            if groupItems and #groupItems > 0 then
+                                local subLabel = AcquireLabel(section.content)
+                                subLabel:SetPoint("TOPLEFT", section.content, "TOPLEFT", leftPadding, -subY)
+                                subLabel:SetWidth(cols * cellSize)
+                                subLabel:SetText(groupInfo.name)
+                                subLabel:SetTextColor(T("TEXT_SECONDARY"))
+                                subY = subY + 14
+
+                                local gridH = RenderItemGrid(section.content, groupItems, subY)
+                                subY = subY + gridH + 4
+                            end
+                        end
+                        section.content:SetHeight(subY)
+                        section.content:Show()
+                        sectionHeight = sectionHeight + subY + 4
+                    end
+                else
+                    local itemRow = 0
+                    local itemCol = 0
+
+                    for _, button in ipairs(items) do
+                        local x = leftPadding + (itemCol * cellSize)
+                        local y = -(itemRow * cellSize)
+                        button:ClearAllPoints()
+                        button:SetPoint("TOPLEFT", section.content, "TOPLEFT", x, y)
+                        button:OWB_SetIconSize(iconSize)
+                        button:Show()
+                        itemCol = itemCol + 1
+                        if itemCol >= cols then
+                            itemCol = 0
+                            itemRow = itemRow + 1
+                        end
+                    end
+
+                    local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
+                    local contentHeight = totalRows * cellSize
+                    section.content:SetHeight(contentHeight)
+                    section.content:Show()
+                    sectionHeight = sectionHeight + contentHeight + 4
                 end
-
-                local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
-                local contentHeight = totalRows * cellSize
-                section.content:SetHeight(contentHeight)
-                section.content:Show()
-
-                sectionHeight = sectionHeight + contentHeight + 4
             else
                 section.content:Hide()
                 for _, button in ipairs(items) do
@@ -167,12 +391,10 @@ function View:Layout(contentFrame, width, filteredButtons)
             for _, button in ipairs(items) do
                 local x = leftPadding + (itemCol * cellSize)
                 local y = -(yOffset + itemRow * cellSize)
-
                 button:ClearAllPoints()
                 button:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", x, y)
                 button:OWB_SetIconSize(iconSize)
                 button:Show()
-
                 itemCol = itemCol + 1
                 if itemCol >= cols then
                     itemCol = 0
@@ -207,10 +429,11 @@ function View:Layout(contentFrame, width, filteredButtons)
                 avail = cols
             end
 
-            local blockWidth = math.min(count, avail)
+            local optimalWidth = count <= cols and count or math.max(2, math.floor(math.sqrt(count / 1.618)))
+            local blockWidth = math.min(optimalWidth, avail)
             local blockRows = math.ceil(count / blockWidth)
 
-            if blockRows > 2 and (curCol > 0 or blockWidth < cols) then
+            if blockRows > 1 and (curCol > 0 or blockWidth < cols) then
                 if #currentLine > 0 then
                     table.insert(lines, currentLine)
                     currentLine = {}
@@ -230,7 +453,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                 blockRows = blockRows,
             })
 
-            if blockRows > 2 then
+            if blockRows > 1 then
                 table.insert(lines, currentLine)
                 currentLine = {}
                 curCol = 0
@@ -250,7 +473,16 @@ function View:Layout(contentFrame, width, filteredButtons)
                         leftPadding + cat.startCol * cellSize, -yOffset)
                     label:SetWidth(cat.blockWidth * cellSize)
                     label:SetText(cat.displayName)
-                    label:SetTextColor(T("ACCENT_PRIMARY"))
+                    local catMods2 = db.global.categoryModifications or {}
+                    local catMod2 = catMods2[cat.name]
+                    if catMod2 and catMod2.color then
+                        local cr = tonumber(catMod2.color:sub(1,2), 16) / 255
+                        local cg = tonumber(catMod2.color:sub(3,4), 16) / 255
+                        local cb = tonumber(catMod2.color:sub(5,6), 16) / 255
+                        label:SetTextColor(cr, cg, cb, 1.0)
+                    else
+                        label:SetTextColor(T("ACCENT_PRIMARY"))
+                    end
                 end
             end
             yOffset = yOffset + labelHeight

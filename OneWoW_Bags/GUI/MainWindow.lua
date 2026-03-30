@@ -50,6 +50,7 @@ function GUI:InitMainWindow()
         end
     end)
     MainWindow:SetClampedToScreen(true)
+    MainWindow:SetClampRectInsets(0, 0, 0, 0)
     MainWindow:SetFrameStrata("MEDIUM")
     MainWindow:SetToplevel(true)
     MainWindow:SetScript("OnHide", function()
@@ -58,6 +59,7 @@ function GUI:InitMainWindow()
         if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.ClearSearch then
             OneWoW_Bags.InfoBar:ClearSearch()
         end
+        OneWoW_Bags.activeExpansionFilter = nil
         local d = OneWoW_Bags.db
         if d and d.global then
             d.global.mainFramePosition = d.global.mainFramePosition or {}
@@ -212,6 +214,41 @@ function GUI:RefreshLayout()
 
     GUI:UpdateWindowWidth()
 
+    if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.UpdateVisibility then
+        OneWoW_Bags.InfoBar:UpdateVisibility()
+    end
+    if OneWoW_Bags.BagsBar and OneWoW_Bags.BagsBar.UpdateRowVisibility then
+        OneWoW_Bags.BagsBar:UpdateRowVisibility()
+    end
+
+    local bagsBarFrame = OneWoW_Bags.BagsBar:GetFrame()
+    local infoBarFrame = OneWoW_Bags.InfoBar:GetFrame()
+    if contentScrollFrame then
+        local hideScrollBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
+        local scrollbarOffset = hideScrollBar and 0 or -12
+        if contentScrollFrame.ScrollBar then
+            if hideScrollBar then
+                contentScrollFrame.ScrollBar:Hide()
+                contentScrollFrame.ScrollBar:SetAlpha(0)
+            else
+                contentScrollFrame.ScrollBar:Show()
+                contentScrollFrame.ScrollBar:SetAlpha(1)
+            end
+        end
+        contentScrollFrame:ClearAllPoints()
+        if infoBarFrame and infoBarFrame:IsShown() then
+            contentScrollFrame:SetPoint("TOPLEFT", infoBarFrame, "BOTTOMLEFT", 0, -2)
+        else
+            contentScrollFrame:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
+        end
+        local showAnyBar = bagsBarFrame and bagsBarFrame:IsShown()
+        if showAnyBar then
+            contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "TOPRIGHT", scrollbarOffset, 2)
+        else
+            contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", scrollbarOffset, 0)
+        end
+    end
+
     if contentFrame and BagSet.bagContainerFrames then
         for _, bagFrame in pairs(BagSet.bagContainerFrames) do
             bagFrame:SetParent(contentFrame)
@@ -226,14 +263,27 @@ function GUI:RefreshLayout()
     local filteredButtons = {}
 
     if searchText and searchText ~= "" then
-        local searchLower = string.lower(searchText)
-        for _, button in ipairs(allButtons) do
-            if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
-                if itemName then
-                    local nameLower = string.lower(itemName)
-                    if string.find(nameLower, searchLower, 1, true) then
+        local SE = OneWoW_Bags.SearchEngine
+        local hasKeyword = searchText:find("#") or searchText:find("[&|!~()]")
+        if hasKeyword and SE then
+            for _, button in ipairs(allButtons) do
+                if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
+                    local enriched = SE:EnrichItemInfo(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
+                    if SE:CheckItem(searchText, button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, enriched) then
                         table.insert(filteredButtons, button)
+                    end
+                end
+            end
+        else
+            local searchLower = string.lower(searchText)
+            for _, button in ipairs(allButtons) do
+                if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
+                    local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
+                    if itemName then
+                        local nameLower = string.lower(itemName)
+                        if string.find(nameLower, searchLower, 1, true) then
+                            table.insert(filteredButtons, button)
+                        end
                     end
                 end
             end
@@ -242,6 +292,22 @@ function GUI:RefreshLayout()
         for _, button in ipairs(allButtons) do
             table.insert(filteredButtons, button)
         end
+    end
+
+    local expacFilter = OneWoW_Bags.activeExpansionFilter
+    if expacFilter ~= nil then
+        local SE = OneWoW_Bags.SearchEngine
+        local expacFiltered = {}
+        for _, button in ipairs(filteredButtons) do
+            if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
+                local enriched = button.owb_itemInfo._enriched and button.owb_itemInfo
+                    or SE:EnrichItemInfo(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
+                if enriched._expansionID == expacFilter then
+                    table.insert(expacFiltered, button)
+                end
+            end
+        end
+        filteredButtons = expacFiltered
     end
 
     local viewMode = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.viewMode or "list"
@@ -257,7 +323,7 @@ function GUI:RefreshLayout()
     if viewMode == "list" then
         layoutHeight = OneWoW_Bags.ListView:Layout(contentFrame, filteredButtons, contentWidth)
     elseif viewMode == "category" then
-        layoutHeight = OneWoW_Bags.CategoryView:Layout(contentFrame, contentWidth, filteredButtons)
+        layoutHeight = OneWoW_Bags.CategoryView:Layout(contentFrame, contentWidth, filteredButtons, "backpack")
     elseif viewMode == "bag" then
         layoutHeight = OneWoW_Bags.BagView:Layout(contentFrame, contentWidth, filteredButtons)
     end
@@ -403,42 +469,32 @@ function GUI:GetMainWindow()
     return MainWindow
 end
 
+local altShowFrame = CreateFrame("Frame")
+local altIsDown = false
+altShowFrame:SetScript("OnUpdate", function()
+    if not MainWindow or not MainWindow:IsShown() then return end
+    local db = OneWoW_Bags.db
+    if not db or not db.global or not db.global.altToShow then return end
+
+    local nowDown = IsAltKeyDown()
+    if nowDown and not altIsDown then
+        altIsDown = true
+        if OneWoW_Bags.BagSet then OneWoW_Bags.BagSet:UpdateAllSlots() end
+        GUI:RefreshLayout()
+    elseif not nowDown and altIsDown then
+        altIsDown = false
+        if OneWoW_Bags.BagSet then OneWoW_Bags.BagSet:UpdateAllSlots() end
+        GUI:RefreshLayout()
+    end
+end)
+
+function GUI:IsAltShowActive()
+    local db = OneWoW_Bags.db
+    if not db or not db.global or not db.global.altToShow then return false end
+    return altIsDown
+end
+
 function GUI:UpdateBagsBarVisibility()
     if not isInitialized or not MainWindow then return end
-
-    local db = OneWoW_Bags.db
-    local showBags = db and db.global and db.global.showBagsBar
-    local showMoney = db and db.global and db.global.showMoneyBar
-    if showBags == nil then showBags = true end
-    if showMoney == nil then showMoney = true end
-
-    local showAnyBar = showBags or showMoney
-    OneWoW_Bags.BagsBar:SetShown(showAnyBar)
-    if OneWoW_Bags.BagsBar.UpdateRowVisibility then
-        OneWoW_Bags.BagsBar:UpdateRowVisibility()
-    end
-
-    if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.UpdateVisibility then
-        OneWoW_Bags.InfoBar:UpdateVisibility()
-    end
-
-    local bagsBarFrame = OneWoW_Bags.BagsBar:GetFrame()
-    local infoBarFrame = OneWoW_Bags.InfoBar:GetFrame()
-    if contentScrollFrame then
-        local hideScrollBar = db and db.global and db.global.hideScrollBar
-        local scrollbarOffset = hideScrollBar and 0 or -12
-        contentScrollFrame:ClearAllPoints()
-        if infoBarFrame and infoBarFrame:IsShown() then
-            contentScrollFrame:SetPoint("TOPLEFT", infoBarFrame, "BOTTOMLEFT", 0, -2)
-        else
-            contentScrollFrame:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
-        end
-        if showAnyBar and bagsBarFrame and bagsBarFrame:IsShown() then
-            contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "TOPRIGHT", scrollbarOffset, 2)
-        else
-            contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", scrollbarOffset, 0)
-        end
-    end
-
     self:RefreshLayout()
 end
