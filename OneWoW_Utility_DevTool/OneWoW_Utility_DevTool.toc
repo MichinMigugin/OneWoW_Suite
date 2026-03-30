@@ -27,9 +27,9 @@ Locales\frFR.lua
 Locales\ruRU.lua
 Locales\deDE.lua
 
-Bindings.xml
-
-Media\devtools-error.ogg
+# Just listed for inventory, they remain # out
+# Bindings.xml
+# Media\devtools-error.ogg
 
 # Core
 Core\Constants.lua

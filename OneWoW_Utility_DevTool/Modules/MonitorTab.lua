@@ -696,7 +696,7 @@ function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
     popup.apOver50Value = apOver50Value
     popup.apSpikeValue = apSpikeValue
 
-    popup:SetSize(322, totalHeight)
+    popup:SetSize(230, totalHeight)
 
     local savedPos = dbEntry.position
     if type(savedPos) == "table" and savedPos.point then
