@@ -820,7 +820,7 @@ function MainWindow:BuildSettingsPanel()
 
     AddStatusRow(L["OWSL_SETTINGS_ALT_ACCESS"],    ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
     AddStatusRow(L["OWSL_SETTINGS_WARBAND_ACCESS"], ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
-    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    _G.WoWNotesData_Professions ~= nil, yOff); yOff = yOff - 20
+    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    _G.OneWoW_CatalogData_Tradeskills ~= nil, yOff); yOff = yOff - 20
 
     AddSectionHeader(L["OWSL_SETTINGS_KEYBINDS"], yOff)
     yOff = yOff - 22

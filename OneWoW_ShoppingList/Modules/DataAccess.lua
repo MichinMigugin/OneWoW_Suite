@@ -18,7 +18,7 @@ end
 function DataAccess:GetQualityVariants(itemID)
     if qvCache[itemID] then return qvCache[itemID] end
     local variants = { itemID }
-    local profAddon = _G.WoWNotesData_Professions
+    local profAddon = _G.OneWoW_CatalogData_Tradeskills
     if profAddon and profAddon.db and profAddon.db.global.recipeIndex then
         for _, recipeData in pairs(profAddon.db.global.recipeIndex) do
             if recipeData.reagentSlots then
