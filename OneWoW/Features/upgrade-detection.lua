@@ -386,12 +386,13 @@ function UpgradeDetection:GetItemComparison(itemLink, itemLocation)
     if not slots then return nil end
 
     local mode = GetMode()
-    local pawnScore, pawnScale, equippedPawnScore
-    if self.hasPawn and (mode == "PAWN" or mode == "PAWN>ILVL") then
-        pawnScore, pawnScale = self:GetBestPawnScore(itemLink)
+    local usePawn = self.hasPawn and (mode == "PAWN" or mode == "PAWN>ILVL")
+    local pawnScore
+    if usePawn then
+        pawnScore = self:GetBestPawnScore(itemLink)
     end
 
-    local bestSlot, bestEquippedIlvl, bestDiff
+    local bestSlot, bestEquippedIlvl, bestDiff, bestEquippedLink
     for _, slotIndex in ipairs(slots) do
         local equippedLink = GetInventoryItemLink("player", slotIndex)
         if equippedLink then
@@ -402,9 +403,7 @@ function UpgradeDetection:GetItemComparison(itemLink, itemLocation)
                     bestSlot = slotIndex
                     bestEquippedIlvl = equippedIlvl
                     bestDiff = diff
-                    if pawnScore and equippedLink then
-                        equippedPawnScore = self:GetBestPawnScore(equippedLink)
-                    end
+                    bestEquippedLink = equippedLink
                 end
             end
         else
@@ -414,6 +413,7 @@ function UpgradeDetection:GetItemComparison(itemLink, itemLocation)
                 bestSlot = slotIndex
                 bestEquippedIlvl = 0
                 bestDiff = ilvl
+                bestEquippedLink = nil
                 break
             end
         end
@@ -421,19 +421,45 @@ function UpgradeDetection:GetItemComparison(itemLink, itemLocation)
 
     if not bestSlot then return nil end
 
+    local equippedPawnScore
+    if usePawn and pawnScore and bestEquippedLink then
+        equippedPawnScore = self:GetBestPawnScore(bestEquippedLink)
+    end
+
+    local usedMode = mode
+    local thisValue, equipValue, compDiff, isDecimal
+
+    if usePawn and pawnScore and equippedPawnScore and equippedPawnScore > 0 then
+        usedMode = "PAWN"
+        thisValue = pawnScore
+        equipValue = equippedPawnScore
+        compDiff = pawnScore - equippedPawnScore
+        isDecimal = true
+    else
+        if mode == "PAWN" and not (pawnScore and equippedPawnScore) then
+            usedMode = "PAWN"
+        else
+            usedMode = "ILVL"
+        end
+        thisValue = ilvl
+        equipValue = bestEquippedIlvl
+        compDiff = bestDiff
+        isDecimal = false
+    end
+
     return {
-        isUpgrade       = bestDiff > 0,
-        isDowngrade     = bestDiff < 0,
-        isEqual         = bestDiff == 0,
+        isUpgrade       = compDiff > 0,
+        isDowngrade     = compDiff < 0,
+        isEqual         = compDiff == 0,
         slot            = bestSlot,
         slotName        = SLOT_NAMES[bestSlot] or "Unknown",
+        thisValue       = thisValue,
+        equipValue      = equipValue,
+        diff            = compDiff,
+        isDecimal       = isDecimal,
         itemIlvl        = ilvl,
         equippedIlvl    = bestEquippedIlvl,
-        diff            = bestDiff,
-        mode            = mode,
-        pawnScore       = pawnScore,
-        pawnScale       = pawnScale,
-        equippedPawnScore = equippedPawnScore,
+        mode            = usedMode,
     }
 end
 
@@ -518,7 +544,7 @@ function UpgradeDetection:GetAltsWhoNeedItem(itemID, itemLink)
     local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
 
     for charKey, charData in pairs(charDB) do
-        if charKey ~= currentKey and charData and charData.class and charData.name then
+        if charKey ~= currentKey and type(charData) == "table" and charData.class and charData.name then
             local altResult = self:IsItemUpgradeForAlt(itemID, itemLink, charData)
             if altResult then
                 altResult.character = charData.name

@@ -1166,7 +1166,10 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         tooltipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         tooltipCb:SetChecked(reg:GetOverlaySetting(featureId, "showInTooltip") or false)
         tooltipCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "showInTooltip", self:GetChecked())
+            local odb = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
+            if odb and odb.overlays and odb.overlays.upgrade then
+                odb.overlays.upgrade.showInTooltip = self:GetChecked()
+            end
         end)
         yOffset = yOffset - 30 - 10
     end
@@ -1614,8 +1617,6 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     picker:SetPoint("TOPRIGHT", dsc, "TOP",     -20, yOffset)
     yOffset = yOffset - picker:GetHeight() - 16
 
-    yOffset = math.min(yOffset, rightY)
-
     local vendorCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_VENDOR_LABEL"] })
     vendorCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     local vendorEnabled = reg:GetOverlaySetting(featureId, "applyToVendorItems") or false
@@ -1657,6 +1658,8 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end
     end)
     yOffset = yOffset - 30 - 10
+
+    yOffset = math.min(yOffset, rightY)
 
     if featureId == "junk" or featureId == "protected" then
         local tooltipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_TOOLTIP_LABEL"] })
