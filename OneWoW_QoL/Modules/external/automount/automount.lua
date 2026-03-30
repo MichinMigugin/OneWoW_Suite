@@ -38,7 +38,6 @@ local lastFishingTime         = 0
 local wasMounted              = false
 local mountIdToSpellId        = {}
 local isGathering             = false
-local druidFlightPending      = nil
 local mountFailedReason       = nil
 
 local SPEED_ADVFLYING = { advflying = 5, flying = 4, ground = 3, aquatic = 2, other = 1 }
@@ -76,7 +75,7 @@ local function GetPreferences()
     if not addon or not addon.db then
         return {
             ground = "auto", flying = "auto", aquatic = "auto",
-            groundEnabled = true, flyingEnabled = true, aquaticEnabled = true, druidEnabled = true, druidCancelTravelForm = false,
+            groundEnabled = true, flyingEnabled = true, aquaticEnabled = true, druidEnabled = true,
             dismountDelay = 15, fishingDelay = 15, gatherRemountDelay = 0.5,
             dismountDisabled = false, fishingDisabled = false,
         }
@@ -94,7 +93,6 @@ local function GetPreferences()
     if prefs.flyingEnabled  == nil then prefs.flyingEnabled  = true   end
     if prefs.aquaticEnabled == nil then prefs.aquaticEnabled = true   end
     if prefs.druidEnabled   == nil then prefs.druidEnabled   = true   end
-    if prefs.druidCancelTravelForm == nil then prefs.druidCancelTravelForm = false end
     if prefs.dismountDelay      == nil then prefs.dismountDelay      = 15  end
     if prefs.fishingDelay       == nil then prefs.fishingDelay       = 15  end
     if prefs.gatherRemountDelay == nil then prefs.gatherRemountDelay = 0.5 end
@@ -381,45 +379,6 @@ local function CancelAutoMountingIfNeeded()
     end
 end
 
-local function EvaluateDruidFlightForm()
-    local prefs = GetPreferences()
-    if not prefs.druidCancelTravelForm then
-        druidFlightPending = nil
-        return
-    end
-    local _, class = UnitClass("player")
-    if class ~= "DRUID" then
-        druidFlightPending = nil
-        return
-    end
-    if not GetShapeshiftFormID or not IsFlyableArea or not CancelShapeshiftForm then return end
-    local formID = GetShapeshiftFormID()
-    if formID == 3 and IsFlyableArea() then
-        if InCombatLockdown and InCombatLockdown() then
-            druidFlightPending = true
-            return
-        end
-        druidFlightPending = nil
-        CancelShapeshiftForm()
-    else
-        druidFlightPending = nil
-    end
-end
-
-function AutoMountModule:UpdateDruidFlightWatcher()
-    if not self._eventFrame then return end
-    self._eventFrame:UnregisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED")
-    self._eventFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
-    druidFlightPending = nil
-    local prefs = GetPreferences()
-    local _, class = UnitClass("player")
-    if prefs.druidCancelTravelForm and class == "DRUID" then
-        self._eventFrame:RegisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED")
-        self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-        EvaluateDruidFlightForm()
-    end
-end
-
 local TICK_INTERVAL = 0.5
 
 local function ShouldAutoMountPoll()
@@ -490,10 +449,6 @@ function AutoMountModule:OnEnable()
                 if unit == "player" and fishingSpellSet[spellID] then
                     lastFishingTime = GetTime()
                 end
-            elseif event == "MOUNT_JOURNAL_USABILITY_CHANGED" then
-                EvaluateDruidFlightForm()
-            elseif event == "PLAYER_REGEN_ENABLED" then
-                if druidFlightPending then EvaluateDruidFlightForm() end
             end
         end)
     end
@@ -507,7 +462,6 @@ function AutoMountModule:OnEnable()
         self._mountStatusLabel:Show()
     end
 
-    self:UpdateDruidFlightWatcher()
     self:UpdatePollingState()
 end
 
@@ -522,7 +476,6 @@ function AutoMountModule:OnDisable()
     if self._mountStatusLabel then
         self._mountStatusLabel:Hide()
     end
-    druidFlightPending = nil
 end
 
 function AutoMountModule:OnToggle(toggleId, value)
@@ -820,12 +773,6 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     if registerRefresh then registerRefresh(UpdateTimingSliders) end
     UpdateTimingSliders()
 
-    -- Druid section: only shown when player is a druid
-    local _, playerClass = UnitClass("player")
-    if playerClass ~= "DRUID" then
-        return yOffset
-    end
-
     yOffset = yOffset - 4
 
     local druidDivider = detailScrollChild:CreateTexture(nil, "ARTWORK")
@@ -875,36 +822,6 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
 
     if registerRefresh then registerRefresh(UpdateDruidRow) end
     UpdateDruidRow()
-
-    yOffset = yOffset - 4
-
-    local cancelPrefs = GetPreferences()
-    local cancelRowRefresh
-    local UpdateCancelRow
-    yOffset, cancelRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
-        yOffset = yOffset,
-        label = L["AUTOMOUNT_DRUID_CANCEL_LABEL"],
-        description = L["AUTOMOUNT_DRUID_CANCEL_DESC"],
-        value = cancelPrefs.druidCancelTravelForm,
-        isEnabled = isEnabled,
-        onValueChange = function(val)
-            SavePreference("druidCancelTravelForm", val)
-            UpdateCancelRow()
-            AM:UpdateDruidFlightWatcher()
-        end,
-        onLabel = L["AUTOMOUNT_CAT_ON"],
-        offLabel = L["AUTOMOUNT_CAT_OFF"],
-    })
-
-    UpdateCancelRow = function()
-        local isEnabledNow = ns.ModuleRegistry:IsEnabled(AM.id)
-        local prefs        = GetPreferences()
-        local cancelEnabled = prefs.druidCancelTravelForm
-        cancelRowRefresh(isEnabledNow, cancelEnabled)
-    end
-
-    if registerRefresh then registerRefresh(UpdateCancelRow) end
-    UpdateCancelRow()
 
     return yOffset
 end

@@ -44,8 +44,14 @@ local function GetSettings()
     if s.maxButtons      == nil then s.maxButtons      = 12   end
     if s.buttonSize      == nil then s.buttonSize      = 36   end
     if s.columns         == nil then s.columns         = 12   end
-    if not s.manualItems  then s.manualItems  = {} end
-    if not s.blacklist    then s.blacklist    = {} end
+    if not s.manualItems    then s.manualItems    = {} end
+    if not s.blacklist      then s.blacklist      = {} end
+    if s.showRecipes     == nil then s.showRecipes     = true end
+    if s.showMounts      == nil then s.showMounts      = true end
+    if s.showPets        == nil then s.showPets        = true end
+    if s.showUsableItems == nil then s.showUsableItems = true end
+    if s.showContainers  == nil then s.showContainers  = true end
+    if s.showDecor       == nil then s.showDecor       = true end
     return s
 end
 
@@ -55,6 +61,41 @@ function BagBarModule:IsBlacklisted(itemID)
     if tempBlacklist[itemID] then return true end
     local s = GetSettings()
     return s.blacklist and s.blacklist[itemID] == true
+end
+
+local CLASSID_CONSUMABLE = 0
+local CLASSID_CONTAINER  = 1
+local CLASSID_RECIPE     = 9
+local CLASSID_MISC       = 15
+local CLASSID_BATTLEPET  = 17
+local CLASSID_PROFESSION = 19
+
+local MISC_SUB_COMPANION = 2
+local MISC_SUB_MOUNT     = 5
+
+function BagBarModule:PassesCategoryFilter(itemID)
+    local s = GetSettings()
+    local _, _, _, _, _, classID, subClassID = C_Item.GetItemInfoInstant(itemID)
+    if not classID then return true end
+
+    if classID == CLASSID_RECIPE or classID == CLASSID_PROFESSION then
+        return s.showRecipes
+    end
+    if classID == CLASSID_CONTAINER then
+        return s.showContainers
+    end
+    if classID == CLASSID_CONSUMABLE then
+        return s.showUsableItems
+    end
+    if classID == CLASSID_BATTLEPET then
+        return s.showPets
+    end
+    if classID == CLASSID_MISC then
+        if subClassID == MISC_SUB_MOUNT then return s.showMounts end
+        if subClassID == MISC_SUB_COMPANION then return s.showPets end
+        return s.showDecor
+    end
+    return true
 end
 
 function BagBarModule:AddToBlacklist(itemID, permanent)
@@ -92,8 +133,8 @@ function BagBarModule:OnDisable()
             b.owb_itemID = nil
             b.owb_bag = nil
             b.owb_slot = nil
-            b:SetAttribute("type*", nil)
-            b:SetAttribute("item*", nil)
+            b:SetAttribute("type1", nil)
+            b:SetAttribute("item1", nil)
         end
     end
     if barFrame then
@@ -112,8 +153,8 @@ local function ClearBagBarButton(button)
     button.owb_itemID = nil
     button.owb_bag = nil
     button.owb_slot = nil
-    button:SetAttribute("type*", nil)
-    button:SetAttribute("item*", nil)
+    button:SetAttribute("type1", nil)
+    button:SetAttribute("item1", nil)
     if button.icon then button.icon:SetTexture(nil) end
     if button.count then button.count:SetText("") end
     if button.cooldown then
@@ -378,6 +419,7 @@ end
 
 function BagBarModule:ShouldShowItem(bag, slot, itemID)
     if self:IsBlacklisted(itemID) then return false end
+    if not self:PassesCategoryFilter(itemID) then return false end
     return self:IsItemUsableForBar(bag, slot, itemID)
 end
 
@@ -461,8 +503,8 @@ function BagBarModule:UpdateBar()
             b.owb_itemID = item.itemID
             b.owb_bag = item.bag
             b.owb_slot = item.slot
-            b:SetAttribute("type*", "item")
-            b:SetAttribute("item*", "item:" .. item.itemID)
+            b:SetAttribute("type1", "item")
+            b:SetAttribute("item1", "item:" .. item.itemID)
             b.icon:SetTexture(item.iconFileID)
             b.count:SetText((item.stackCount and item.stackCount > 1) and item.stackCount or "")
             local start, duration, enable = C_Container.GetContainerItemCooldown(item.bag, item.slot)

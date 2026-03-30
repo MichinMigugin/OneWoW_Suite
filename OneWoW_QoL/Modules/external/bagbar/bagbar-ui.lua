@@ -4,6 +4,28 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
+StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"] = {
+    text = "",
+    button1 = YES,
+    button2 = NO,
+    OnAccept = function()
+        local addon = _G.OneWoW_QoL
+        if addon and addon.db and addon.db.global.modules and addon.db.global.modules["bagbar"] then
+            wipe(addon.db.global.modules["bagbar"].blacklist)
+        end
+        ns.BagBarModule:ClearTempBlacklist()
+        ns.BagBarModule:ScheduleUpdate()
+        print("|cFF00FF00" .. (ns.L["BAGBAR_BLACKLIST_CLEARED"] or "Bag Bar blacklist cleared.") .. "|r")
+        if ns.BagBarModule._refreshCustomDetail then
+            ns.BagBarModule._refreshCustomDetail()
+        end
+    end,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
 local function GetSettings()
     return ns.BagBarModule.GetSettings()
 end
@@ -230,6 +252,46 @@ local function BuildContent(container, isEnabled)
     descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     cy = cy - 14
 
+    cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_CATEGORY_FILTERS_HEADER"], yOffset = cy })
+
+    local filterDesc = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    filterDesc:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    filterDesc:SetPoint("TOPRIGHT", container, "TOPRIGHT", -12, cy)
+    filterDesc:SetJustifyH("LEFT")
+    filterDesc:SetWordWrap(true)
+    filterDesc:SetSpacing(2)
+    filterDesc:SetText(L["BAGBAR_CATEGORY_FILTERS_DESC"])
+    filterDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    cy = cy - filterDesc:GetStringHeight() - 8
+
+    local filterToggles = {
+        { key = "showRecipes",      label = L["BAGBAR_SHOW_RECIPES"] },
+        { key = "showMounts",       label = L["BAGBAR_SHOW_MOUNTS"] },
+        { key = "showPets",         label = L["BAGBAR_SHOW_PETS"] },
+        { key = "showUsableItems",  label = L["BAGBAR_SHOW_CONSUMABLES"] },
+        { key = "showContainers",   label = L["BAGBAR_SHOW_CONTAINERS"] },
+        { key = "showDecor",        label = L["BAGBAR_SHOW_DECOR"] },
+    }
+
+    local colWidth = 180
+    for i, toggle in ipairs(filterToggles) do
+        local col = (i - 1) % 2
+        local row = math.floor((i - 1) / 2)
+        local xOff = 12 + (col * colWidth)
+        local yOff = cy - (row * 26)
+
+        local cb = OneWoW_GUI:CreateCheckbox(container, {
+            label = toggle.label,
+            checked = s[toggle.key],
+            onClick = function(self)
+                GetSettings()[toggle.key] = self:GetChecked()
+                ns.BagBarModule:ScheduleUpdate()
+            end,
+        })
+        cb:SetPoint("TOPLEFT", container, "TOPLEFT", xOff, yOff)
+    end
+    cy = cy - (math.ceil(#filterToggles / 2) * 26) - 6
+
     cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_MANUAL_ITEMS_HEADER"], yOffset = cy })
 
     cy = MakeItemDropZone(container, L["BAGBAR_ITEM_ID_LABEL"], cy,
@@ -279,12 +341,8 @@ local function BuildContent(container, isEnabled)
     local clearBtn = OneWoW_GUI:CreateFitTextButton(container, { text = L["BAGBAR_CLEAR_BLACKLIST"], height = 26 })
     clearBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     clearBtn:SetScript("OnClick", function()
-        local cur = GetSettings()
-        wipe(cur.blacklist)
-        ns.BagBarModule:ClearTempBlacklist()
-        ns.BagBarModule:ScheduleUpdate()
-        print("|cFF00FF00" .. L["BAGBAR_BLACKLIST_CLEARED"] .. "|r")
-        ns.BagBarModule._refreshCustomDetail()
+        StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"].text = L["BAGBAR_CLEAR_BLACKLIST_CONFIRM"]
+        StaticPopup_Show("ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST")
     end)
     cy = cy - 34
 
