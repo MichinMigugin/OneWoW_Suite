@@ -280,6 +280,7 @@ L["ITEMSEARCH_SCAN_PROCESSING"]   = "Processing %d%% ..."
 L["ITEMSEARCH_PRICES_FOUND"]      = "prices found"
 L["ITEMSEARCH_AH_NOT_OPEN"]       = "Open the Auction House first to scan prices."
 L["ITEMSEARCH_AH_AGO"]            = "ago"
+L["ITEMSEARCH_AH_AUCTIONS"]      = "auctions"
 
 L["LANGUAGE_SELECTION"] = "Language Selection"
 L["LANGUAGE_DESC"]      = "Select your preferred language for the addon interface. Changes apply instantly."

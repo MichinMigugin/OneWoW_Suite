@@ -622,10 +622,20 @@ function ns.UI.CreateItemSearchTab(parent)
             if status == "scanStarted" then
                 scanProgressBar:UpdateProgress(0, 1)
                 scanProgressBar._text:SetText(L["ITEMSEARCH_SCAN_WAITING"])
+            elseif status == "scanWaiting" then
+                local elapsed = extra or 0
+                scanProgressBar:UpdateProgress(0.1, 1)
+                scanProgressBar._text:SetText(L["ITEMSEARCH_SCAN_WAITING"] .. " (" .. elapsed .. "s)")
             elseif status == "scanProgress" then
                 local pct = progress or 0
+                local totalItems = extra
+                local pctDisplay = math.floor(pct * 100)
+                local text = string.format(L["ITEMSEARCH_SCAN_PROCESSING"], pctDisplay)
+                if totalItems and totalItems > 0 then
+                    text = text .. "  (" .. totalItems .. " " .. L["ITEMSEARCH_AH_AUCTIONS"] .. ")"
+                end
                 scanProgressBar:UpdateProgress(pct, 1)
-                scanProgressBar._text:SetText(string.format(L["ITEMSEARCH_SCAN_PROCESSING"], math.floor(pct * 100)))
+                scanProgressBar._text:SetText(text)
             elseif status == "scanCompleted" then
                 local found = extra or 0
                 scanProgressBar:UpdateProgress(1, 1)
@@ -652,7 +662,7 @@ function ns.UI.CreateItemSearchTab(parent)
                 self:SetText(L["ITEMSEARCH_SCAN_AH"])
                 scanBarContainer:Hide()
                 UpdateContentAnchor()
-                print("|cFFFFD100OneWoW:|r AH scan did not get a response. You can try again.")
+                print("|cFFFFD100OneWoW:|r AH closed during scan.")
             end
         end)
     end)

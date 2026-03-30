@@ -75,7 +75,7 @@ local function GetCurrentCharKey()
     local name = UnitName("player")
     local realm = GetRealmName()
     if name and realm then
-        return realm .. "-" .. name
+        return name .. "-" .. realm
     end
     return nil
 end
