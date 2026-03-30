@@ -61,7 +61,6 @@ local defaults = {
         showBankSearchBar = true,
         showBankCategoryHeaders = true,
         bankCategorySpacing = 1.0,
-        bankAutoClose = false,
         bankLocked = false,
         bankRarityColor = true,
         enableJunkCategory = true,

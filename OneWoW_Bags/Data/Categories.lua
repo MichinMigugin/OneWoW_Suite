@@ -97,7 +97,17 @@ local function InvalidateCache()
 end
 
 local function IsItemUpgrade(bagID, slotID, itemID, hyperlink)
-    if not itemID or not bagID or not slotID then return false end
+    if not itemID or not bagID or not slotID or not hyperlink then return false end
+
+    local UD = _G.OneWoW and _G.OneWoW.UpgradeDetection
+    if UD then
+        local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+        if itemLocation and C_Item.DoesItemExist(itemLocation) then
+            return UD:CheckItemUpgrade(hyperlink, itemLocation)
+        end
+        return false
+    end
+
     if not C_Item or not C_Item.GetItemInventoryTypeByID then return false end
 
     local invType = C_Item.GetItemInventoryTypeByID(itemID)

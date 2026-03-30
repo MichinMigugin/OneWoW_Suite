@@ -40,10 +40,19 @@ local function SwitchTab(n)
             btn:SetBackdropColor(T("BG_ACTIVE"))
             btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
             btn.text:SetTextColor(T("TEXT_ACCENT"))
+            if not btn._activeBar then
+                btn._activeBar = btn:CreateTexture(nil, "OVERLAY")
+                btn._activeBar:SetHeight(2)
+                btn._activeBar:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 1, 1)
+                btn._activeBar:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -1, 1)
+            end
+            btn._activeBar:SetColorTexture(T("ACCENT_PRIMARY"))
+            btn._activeBar:Show()
         else
             btn:SetBackdropColor(T("BTN_NORMAL"))
             btn:SetBackdropBorderColor(T("BTN_BORDER"))
             btn.text:SetTextColor(T("TEXT_PRIMARY"))
+            if btn._activeBar then btn._activeBar:Hide() end
         end
     end
 end
@@ -907,16 +916,6 @@ local function BuildBankTab(sc, L, db, GUI)
     yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_BEHAVIOR"], yOffset = yOffset })
     local behContainer = BuildContainer(sc, yOffset)
     local behY = -10
-
-    behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
-        yOffset = behY,
-        label = L["SETTING_BANK_AUTO_CLOSE"],
-        description = L["DESC_BANK_AUTO_CLOSE"],
-        isEnabled = true,
-        value = db.global.bankAutoClose,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) db.global.bankAutoClose = newVal end,
-    })
 
     behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
         yOffset = behY,

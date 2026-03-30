@@ -284,8 +284,6 @@ OneWoW_Bags.Locales["enUS"] = {
 
     ["DESC_BANK_RARITY_COLOR"] = "Color item slot borders based on item rarity in the bank.",
 
-    ["SETTING_BANK_AUTO_CLOSE"] = "Auto Close When Leaving",
-    ["DESC_BANK_AUTO_CLOSE"] = "Automatically close the bank window when leaving the bank.",
     ["SETTING_BANK_LOCK"] = "Lock Window Position",
     ["DESC_BANK_LOCK"] = "Prevent the bank window from being moved.",
 

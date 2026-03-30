@@ -268,10 +268,12 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
         if name and name ~= "" then
             local db = GetDB()
             local id = "sec_" .. time() .. "_" .. math.random(1000, 9999)
-            db.global.categorySections[id] = { name=name, categories={}, collapsed=false }
+            db.global.categorySections[id] = { name=name, categories={}, collapsed=false, showHeader=true }
             table.insert(db.global.sectionOrder, id)
+            if db.global.displayOrder and #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
             selectedCatKey = "section:" .. id
             if CatMgrUI.Refresh then CatMgrUI:Refresh() end
+            RefreshBagLayout()
         end
     end,
     EditBoxOnEnterPressed = function(self)
@@ -301,6 +303,7 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
             if sec then
                 sec.name = name
                 if CatMgrUI.Refresh then CatMgrUI:Refresh() end
+                RefreshBagLayout()
             end
         end
     end,
@@ -325,8 +328,11 @@ StaticPopupDialogs["ONEWOW_BAGS_DELETE_SECTION"] = {
             for i, sid in ipairs(db.global.sectionOrder) do
                 if sid == data then table.remove(db.global.sectionOrder, i); break end
             end
+            if db.global.displayOrder and #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
             if selectedCatKey == ("section:" .. data) then selectedCatKey = nil end
+            if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
             if CatMgrUI.Refresh then CatMgrUI:Refresh() end
+            RefreshBagLayout()
         end
     end,
     timeout=0, whileDead=true, hideOnEscape=true, preferredIndex=3,
@@ -618,7 +624,11 @@ function CatMgrUI:RefreshRight()
                     end
                     memberSet[captCat] = nil
                 end
+                local ddb = GetDB()
+                if ddb.global.displayOrder and #ddb.global.displayOrder > 0 then wipe(ddb.global.displayOrder) end
+                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
                 CatMgrUI:RefreshLeft()
+                RefreshBagLayout()
             end)
 
             checkY = checkY - 24
@@ -1411,6 +1421,7 @@ function CatMgrUI:RefreshLeft()
                 if captSecIdx < totalSections then
                     local t = sectOrder[captSecIdx]; sectOrder[captSecIdx] = sectOrder[captSecIdx+1]; sectOrder[captSecIdx+1] = t
                     CatMgrUI:Refresh()
+                    RefreshBagLayout()
                 end
             end, secIdx < totalSections)
             dnSec:SetPoint("RIGHT", secRow, "RIGHT", -2, 0)
@@ -1419,6 +1430,7 @@ function CatMgrUI:RefreshLeft()
                 if captSecIdx > 1 then
                     local t = sectOrder[captSecIdx]; sectOrder[captSecIdx] = sectOrder[captSecIdx-1]; sectOrder[captSecIdx-1] = t
                     CatMgrUI:Refresh()
+                    RefreshBagLayout()
                 end
             end, secIdx > 1)
             upSec:SetPoint("RIGHT", dnSec, "LEFT", -2, 0)
@@ -1498,6 +1510,7 @@ function CatMgrUI:RefreshLeft()
                             if captIdx < #captCats then
                                 local t = captCats[captIdx]; captCats[captIdx] = captCats[captIdx+1]; captCats[captIdx+1] = t
                                 CatMgrUI:Refresh()
+                                RefreshBagLayout()
                             end
                         end, catIdx < #cats)
                         dnB2:SetPoint("RIGHT", row, "RIGHT", -2, 0)
@@ -1505,6 +1518,7 @@ function CatMgrUI:RefreshLeft()
                             if captIdx > 1 then
                                 local t = captCats[captIdx]; captCats[captIdx] = captCats[captIdx-1]; captCats[captIdx-1] = t
                                 CatMgrUI:Refresh()
+                                RefreshBagLayout()
                             end
                         end, catIdx > 1)
                         upB2:SetPoint("RIGHT", dnB2, "LEFT", -2, 0)

@@ -39,6 +39,13 @@ function InfoBar:Create(parent)
     end)
     infoBarFrame.catMgrBtn = catMgrBtn
 
+    local sortBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CLEANUP"] or "Sort")
+    sortBtn:SetPoint("TOPRIGHT", catMgrBtn, "TOPLEFT", -3, 0)
+    sortBtn:SetScript("OnClick", function()
+        C_Container.SortBags()
+    end)
+    infoBarFrame.sortBtn = sortBtn
+
     -- Row 1 left: view buttons
     local viewList = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_LIST"])
     viewList:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", S("SM"), btnY)
@@ -172,7 +179,7 @@ function InfoBar:Create(parent)
         if infoBarFrame.shoppingCartBtn then return end
         local cartBtn = CreateFrame("Button", nil, infoBarFrame)
         cartBtn:SetSize(22, 22)
-        cartBtn:SetPoint("TOPRIGHT", catMgrBtn, "TOPLEFT", -3, 0)
+        cartBtn:SetPoint("TOPRIGHT", infoBarFrame.sortBtn or catMgrBtn, "TOPLEFT", -3, 0)
         cartBtn:SetNormalAtlas("Perks-ShoppingCart")
         cartBtn:SetPushedAtlas("Perks-ShoppingCart")
         cartBtn:SetHighlightAtlas("Perks-ShoppingCart")
@@ -266,6 +273,7 @@ function InfoBar:UpdateViewButtons()
     end
 
     if infoBarFrame.catMgrBtn then infoBarFrame.catMgrBtn:SetShown(showHeader) end
+    if infoBarFrame.sortBtn then infoBarFrame.sortBtn:SetShown(showHeader) end
     if infoBarFrame.shoppingCartBtn then infoBarFrame.shoppingCartBtn:SetShown(showHeader) end
     if infoBarFrame.searchBox then infoBarFrame.searchBox:SetShown(showSearch) end
 
@@ -316,50 +324,8 @@ function InfoBar:UpdateVisibility()
 
     self:UpdateViewButtons()
 
-    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
-    local showHeader = (db.global.showHeaderBar ~= false) or altShow
-    local showSearch = (db.global.showSearchBar ~= false) or altShow
-
-    if showSearch and infoBarFrame.searchBox then
-        local searchY = showHeader and -(ROW1_H + math.floor((ROW2_H - 22) / 2)) or -math.floor((ROW2_H - 22) / 2)
-        infoBarFrame.searchBox:ClearAllPoints()
-        infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_Bags.S("SM"), searchY)
-        infoBarFrame.searchBox:SetPoint("TOPRIGHT", infoBarFrame.emptyToggleBtn, "TOPLEFT", -3, 0)
-
-        if infoBarFrame.emptyToggleBtn then
-            infoBarFrame.emptyToggleBtn:ClearAllPoints()
-            infoBarFrame.emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_Bags.S("SM"), searchY)
-        end
-    end
-end
-
-function InfoBar:UpdateVisibility()
-    if not infoBarFrame then return end
-    local db = OneWoW_Bags.db
-    if not db or not db.global then return end
-
     local showHeader = db.global.showHeaderBar ~= false
     local showSearch = db.global.showSearchBar ~= false
-
-    if infoBarFrame.viewList then infoBarFrame.viewList:SetShown(showHeader) end
-    if infoBarFrame.viewCat then infoBarFrame.viewCat:SetShown(showHeader) end
-    if infoBarFrame.viewBag then infoBarFrame.viewBag:SetShown(showHeader) end
-    if infoBarFrame.catMgrBtn then infoBarFrame.catMgrBtn:SetShown(showHeader) end
-    if infoBarFrame.shoppingCartBtn then infoBarFrame.shoppingCartBtn:SetShown(showHeader) end
-
-    if infoBarFrame.searchBox then infoBarFrame.searchBox:SetShown(showSearch) end
-    if infoBarFrame.emptyToggleBtn then infoBarFrame.emptyToggleBtn:SetShown(showSearch and (db.global.viewMode == "list")) end
-
-    local newHeight = 0
-    if showHeader then newHeight = newHeight + ROW1_H end
-    if showSearch then newHeight = newHeight + ROW2_H end
-
-    if newHeight == 0 then
-        infoBarFrame:Hide()
-    else
-        infoBarFrame:SetHeight(newHeight)
-        infoBarFrame:Show()
-    end
 
     if showSearch and infoBarFrame.searchBox then
         local searchY = showHeader and -(ROW1_H + math.floor((ROW2_H - 22) / 2)) or -math.floor((ROW2_H - 22) / 2)

@@ -553,37 +553,42 @@ function BagsBar:UpdateRowVisibility()
     local showMoney = db.global.showMoneyBar ~= false
     if altShow then showBags = true; showMoney = true end
 
+    local trackers = db.global.trackedCurrencies or {}
+    local hasTrackers = #trackers > 0
+    local showRow2 = showMoney or hasTrackers
+    local needExtraRow = showRow2 and #trackers > ROW1_TRACKER_MAX
+
     if bagsBarFrame.row1Frame then
         bagsBarFrame.row1Frame:SetShown(showBags)
     end
 
+    if bagsBarFrame.goldBtn then
+        bagsBarFrame.goldBtn:SetShown(showMoney)
+    end
+
     if bagsBarFrame.row2Frame then
-        bagsBarFrame.row2Frame:SetShown(showMoney)
+        bagsBarFrame.row2Frame:SetShown(showRow2)
     end
 
     if bagsBarFrame.extraRow then
-        bagsBarFrame.extraRow:SetShown(showMoney)
+        bagsBarFrame.extraRow:SetShown(needExtraRow)
     end
 
-    if not showBags and not showMoney then
+    if not showBags and not showRow2 then
         bagsBarFrame:Hide()
         return
     end
 
     bagsBarFrame:Show()
 
-    local C = OneWoW_Bags.Constants.GUI
     local baseHeight = 0
     if showBags then baseHeight = baseHeight + ROW1_HEIGHT end
-    if showMoney then baseHeight = baseHeight + ROW2_HEIGHT end
-
-    local trackers = db.global.trackedCurrencies or {}
-    local needExtraRow = showMoney and #trackers > ROW1_TRACKER_MAX
+    if showRow2 then baseHeight = baseHeight + ROW2_HEIGHT end
     if needExtraRow then baseHeight = baseHeight + ROW2_HEIGHT end
 
     bagsBarFrame:SetHeight(baseHeight)
 
-    if showMoney then
+    if showRow2 then
         bagsBarFrame.row2Frame:ClearAllPoints()
         if needExtraRow and bagsBarFrame.extraRow then
             bagsBarFrame.row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame.extraRow, "TOPLEFT", 0, 0)
@@ -596,13 +601,8 @@ function BagsBar:UpdateRowVisibility()
 
     if showBags then
         bagsBarFrame.row1Frame:ClearAllPoints()
-        if showMoney then
-            bagsBarFrame.row1Frame:SetPoint("TOPLEFT", bagsBarFrame, "TOPLEFT", 0, 0)
-            bagsBarFrame.row1Frame:SetPoint("TOPRIGHT", bagsBarFrame, "TOPRIGHT", 0, 0)
-        else
-            bagsBarFrame.row1Frame:SetPoint("TOPLEFT", bagsBarFrame, "TOPLEFT", 0, 0)
-            bagsBarFrame.row1Frame:SetPoint("TOPRIGHT", bagsBarFrame, "TOPRIGHT", 0, 0)
-        end
+        bagsBarFrame.row1Frame:SetPoint("TOPLEFT", bagsBarFrame, "TOPLEFT", 0, 0)
+        bagsBarFrame.row1Frame:SetPoint("TOPRIGHT", bagsBarFrame, "TOPRIGHT", 0, 0)
     end
 end
 
