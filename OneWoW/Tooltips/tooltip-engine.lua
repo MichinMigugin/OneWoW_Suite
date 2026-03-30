@@ -73,9 +73,34 @@ end
 
 function TooltipEngine:HookTooltips()
     if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
-        TooltipDataProcessor.AddTooltipPostCall(TooltipDataProcessor.AllTypes, function(tooltip, data)
+        local HANDLED_TYPES = {
+            Enum.TooltipDataType.Unit,
+            Enum.TooltipDataType.Item,
+            Enum.TooltipDataType.Spell,
+            Enum.TooltipDataType.Mount,
+            Enum.TooltipDataType.Currency,
+            Enum.TooltipDataType.BattlePet,
+            Enum.TooltipDataType.Achievement,
+            Enum.TooltipDataType.Quest,
+            Enum.TooltipDataType.Toy,
+            Enum.TooltipDataType.UnitAura,
+        }
+        local optionalTypes = {
+            "CompanionPet", "Totem", "QuestPartyProgress", "RecipeRankInfo",
+            "EquipmentSet", "AzeriteEssence", "EnhancedConduit", "Outfit",
+            "Macro", "Object",
+        }
+        for _, typeName in ipairs(optionalTypes) do
+            if Enum.TooltipDataType[typeName] then
+                table.insert(HANDLED_TYPES, Enum.TooltipDataType[typeName])
+            end
+        end
+        local callback = function(tooltip, data)
             self:ProcessTooltipData(tooltip, data)
-        end)
+        end
+        for _, dataType in ipairs(HANDLED_TYPES) do
+            TooltipDataProcessor.AddTooltipPostCall(dataType, callback)
+        end
     else
         if GameTooltip:HasScript("OnTooltipSetUnit") then
             GameTooltip:HookScript("OnTooltipSetUnit", function(tooltip)
