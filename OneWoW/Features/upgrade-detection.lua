@@ -122,7 +122,6 @@ end
 
 local function CanClassUseArmor(class, armorType)
     if not class or not armorType then return false end
-    if armorType == "CLOTH" then return true end
     local classes = ARMOR_CLASSES[armorType]
     return classes and classes[class] or false
 end
