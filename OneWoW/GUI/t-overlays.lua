@@ -1104,8 +1104,24 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         modeHdr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         yOffset = yOffset - modeHdr:GetStringHeight() - 10
 
-        local currentMode = reg:GetOverlaySetting(featureId, "mode") or "ILVL"
         local hasPawn = _G.PawnShouldItemLinkHaveUpgradeArrow ~= nil
+
+        local pawnStatus = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        pawnStatus:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        if hasPawn then
+            pawnStatus:SetText(L["OVR_UPGRADE_PAWN_STATUS"] .. ": " .. L["OVR_UPGRADE_PAWN_DETECTED"])
+            pawnStatus:SetTextColor(0.0, 1.0, 0.0)
+        else
+            pawnStatus:SetText(L["OVR_UPGRADE_PAWN_STATUS"] .. ": " .. L["OVR_UPGRADE_PAWN_NOT_DETECTED"])
+            pawnStatus:SetTextColor(0.6, 0.6, 0.6)
+        end
+        yOffset = yOffset - pawnStatus:GetStringHeight() - 10
+
+        local currentMode = reg:GetOverlaySetting(featureId, "mode") or "ILVL"
+        if not hasPawn and (currentMode == "PAWN" or currentMode == "PAWN>ILVL") then
+            currentMode = "ILVL"
+            reg:SetOverlaySetting(featureId, "mode", "ILVL")
+        end
 
         local MODES = {
             { value = "ILVL",     label = L["OVR_UPGRADE_MODE_ILVL"],      desc = L["OVR_UPGRADE_MODE_ILVL_DESC"] },
