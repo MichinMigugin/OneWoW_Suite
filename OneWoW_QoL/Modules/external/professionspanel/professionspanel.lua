@@ -37,14 +37,18 @@ local EXPANSION_KEYWORDS = {
     { pattern = "Zandalari",        order = 8 },
     { pattern = "Battle",           order = 8 },
     { pattern = "Legion",           order = 7 },
+    { pattern = "Broken Isles",     order = 7 },
     { pattern = "Draenor",          order = 6 },
     { pattern = "Pandaria",         order = 5 },
+    { pattern = "Pandaren",         order = 5 },
     { pattern = "Cataclysm",       order = 4 },
     { pattern = "Northrend",        order = 3 },
     { pattern = "Lich King",        order = 3 },
+    { pattern = "Cold North",       order = 3 },
     { pattern = "Outland",          order = 2 },
     { pattern = "Burning Crusade",  order = 2 },
     { pattern = "Classic",          order = 1 },
+    { pattern = "Old World",        order = 1 },
 }
 
 local function GetExpansionOrder(name)
