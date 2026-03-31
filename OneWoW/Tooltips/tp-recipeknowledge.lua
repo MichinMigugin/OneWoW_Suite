@@ -71,6 +71,9 @@ end
 local function RecipeKnowledgeProvider(tooltip, context)
     if not context.itemID then return nil end
 
+    local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(context.itemID)
+    if classID ~= Enum.ItemClass.Recipe then return nil end
+
     local _, spellID = C_Item.GetItemSpell(context.itemID)
     if not spellID then return nil end
 
