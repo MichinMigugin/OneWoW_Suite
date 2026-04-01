@@ -29,6 +29,7 @@ ns.DatabaseDefaults = {
         zonePinPositions      = {},
         trackerLists          = {},
         trackerBundledVersions = {},
+        trackerGlobalProgress = {},
         guidesRoutinesCleanedUp = false,
         sortCompletedTasks    = false,
         tabSortPrefs = {
