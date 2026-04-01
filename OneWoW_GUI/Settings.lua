@@ -67,6 +67,7 @@ function OneWoW_GUI:SetSetting(key, value)
     elseif key == "fontSizeOffset" then
         db.fontSizeOffset = value
         FireCallbacks("OnFontSizeChanged", value)
+        FireCallbacks("OnFontChanged", db.font)
     elseif key == "minimap.hide" then
         if not db.minimap then db.minimap = {} end
         db.minimap.hide = value
@@ -357,6 +358,10 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local currentLang = self:GetSetting("language") or "enUS"
     local currentThemeKey = self:GetSetting("theme") or DEFAULT_THEME_KEY
     local currentIconTheme = self:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
+    local currentFontKey = self:GetSetting("font") or "default"
+    local currentFontData = FONT_LOOKUP[currentFontKey]
+    local currentFontLabel = currentFontData and currentFontData.label or "WoW Default"
+    local currentOffset = self:GetSetting("fontSizeOffset") or 0
 
     local settingsAddonName = options.addonName
     local isPerAddonMinimap = not _G.OneWoW and settingsAddonName
@@ -368,49 +373,59 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         isMinimapHidden = self:GetSetting("minimap.hide")
     end
 
-    local splitContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    splitContainer:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    splitContainer:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    splitContainer:SetHeight(165)
-    splitContainer:SetBackdrop(panelBackdrop)
-    splitContainer:SetBackdropColor(self:GetThemeColor("BG_SECONDARY"))
-    splitContainer:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
+    local function CreateSplitRow(height)
+        height = height or 165
+        local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+        container:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        container:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        container:SetHeight(height)
+        container:SetBackdrop(panelBackdrop)
+        container:SetBackdropColor(self:GetThemeColor("BG_SECONDARY"))
+        container:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
 
-    local leftPanel = CreateFrame("Frame", nil, splitContainer)
-    leftPanel:SetPoint("TOPLEFT", splitContainer, "TOPLEFT", 0, 0)
-    leftPanel:SetPoint("BOTTOMRIGHT", splitContainer, "BOTTOM", 0, 0)
+        local lp = CreateFrame("Frame", nil, container)
+        lp:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+        lp:SetPoint("BOTTOMRIGHT", container, "BOTTOM", 0, 0)
 
-    local vertDivider = splitContainer:CreateTexture(nil, "ARTWORK")
-    vertDivider:SetWidth(1)
-    vertDivider:SetPoint("TOP", splitContainer, "TOP", 0, -8)
-    vertDivider:SetPoint("BOTTOM", splitContainer, "BOTTOM", 0, 8)
-    vertDivider:SetColorTexture(self:GetThemeColor("BORDER_SUBTLE"))
+        local div = container:CreateTexture(nil, "ARTWORK")
+        div:SetWidth(1)
+        div:SetPoint("TOP", container, "TOP", 0, -8)
+        div:SetPoint("BOTTOM", container, "BOTTOM", 0, 8)
+        div:SetColorTexture(self:GetThemeColor("BORDER_SUBTLE"))
 
-    local rightPanel = CreateFrame("Frame", nil, splitContainer)
-    rightPanel:SetPoint("TOPLEFT", splitContainer, "TOP", 0, 0)
-    rightPanel:SetPoint("BOTTOMRIGHT", splitContainer, "BOTTOMRIGHT", 0, 0)
+        local rp = CreateFrame("Frame", nil, container)
+        rp:SetPoint("TOPLEFT", container, "TOP", 0, 0)
+        rp:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", 0, 0)
 
-    local langTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    langTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -12)
+        return container, lp, rp
+    end
+
+    ----------------------------------------------------------------
+    -- ROW 1: Language | Color Theme
+    ----------------------------------------------------------------
+    local _, langPanel, themePanel = CreateSplitRow(165)
+
+    local langTitle = langPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    langTitle:SetPoint("TOPLEFT", langPanel, "TOPLEFT", 15, -12)
     langTitle:SetText("Language Selection")
     langTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
-    local langDesc = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    langDesc:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -38)
-    langDesc:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -15, -38)
+    local langDesc = langPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    langDesc:SetPoint("TOPLEFT", langPanel, "TOPLEFT", 15, -38)
+    langDesc:SetPoint("TOPRIGHT", langPanel, "TOPRIGHT", -15, -38)
     langDesc:SetText("Choose your preferred language.")
     langDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     langDesc:SetJustifyH("LEFT")
     langDesc:SetWordWrap(true)
 
-    local currentLangLabel = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    currentLangLabel:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -90)
+    local currentLangLabel = langPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    currentLangLabel:SetPoint("TOPLEFT", langPanel, "TOPLEFT", 15, -90)
     currentLangLabel:SetText("Current: " .. (LANG_LOOKUP[currentLang] or currentLang))
     currentLangLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
-    local langDropdown = CreateFrame("Button", nil, leftPanel, "BackdropTemplate")
+    local langDropdown = CreateFrame("Button", nil, langPanel, "BackdropTemplate")
     langDropdown:SetSize(190, 30)
-    langDropdown:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -115)
+    langDropdown:SetPoint("TOPLEFT", langPanel, "TOPLEFT", 15, -115)
     langDropdown:SetBackdrop(dropdownBackdrop)
     langDropdown:SetBackdropColor(self:GetThemeColor("BG_TERTIARY"))
     langDropdown:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
@@ -441,14 +456,14 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         langMenu:Show()
     end)
 
-    local themeTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    themeTitle:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -12)
+    local themeTitle = themePanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    themeTitle:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -12)
     themeTitle:SetText("Color Theme")
     themeTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
-    local themeDesc = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    themeDesc:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -38)
-    themeDesc:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -15, -38)
+    local themeDesc = themePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    themeDesc:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -38)
+    themeDesc:SetPoint("TOPRIGHT", themePanel, "TOPRIGHT", -15, -38)
     themeDesc:SetText("Choose your preferred theme.")
     themeDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     themeDesc:SetJustifyH("LEFT")
@@ -457,14 +472,14 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local currentThemeData = THEMES[currentThemeKey]
     local currentThemeName = currentThemeData and currentThemeData.name or DEFAULT_THEME_NAME
 
-    local currentThemeLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    currentThemeLabel:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -90)
+    local currentThemeLabel = themePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    currentThemeLabel:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -90)
     currentThemeLabel:SetText("Current: " .. currentThemeName)
     currentThemeLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
-    local themeDropdown = CreateFrame("Button", nil, rightPanel, "BackdropTemplate")
+    local themeDropdown = CreateFrame("Button", nil, themePanel, "BackdropTemplate")
     themeDropdown:SetSize(210, 30)
-    themeDropdown:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -115)
+    themeDropdown:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -115)
     themeDropdown:SetBackdrop(dropdownBackdrop)
     themeDropdown:SetBackdropColor(self:GetThemeColor("BG_TERTIARY"))
     themeDropdown:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
@@ -589,40 +604,32 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     yOffset = yOffset - 185
 
-    local currentFontKey = self:GetSetting("font") or "default"
-    local currentFontData = FONT_LOOKUP[currentFontKey]
-    local currentFontLabel = currentFontData and currentFontData.label or "WoW Default"
+    ----------------------------------------------------------------
+    -- ROW 2: Font | Font Size
+    ----------------------------------------------------------------
+    local _, fontPanel, fontSizePanel = CreateSplitRow(165)
 
-    local fontContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    fontContainer:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    fontContainer:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    fontContainer:SetHeight(170)
-    fontContainer:SetBackdrop(panelBackdrop)
-    fontContainer:SetBackdropColor(self:GetThemeColor("BG_SECONDARY"))
-    fontContainer:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
-
-    local fontTitle = fontContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    fontTitle:SetPoint("TOPLEFT", fontContainer, "TOPLEFT", 15, -12)
+    local fontTitle = fontPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    fontTitle:SetPoint("TOPLEFT", fontPanel, "TOPLEFT", 15, -12)
     fontTitle:SetText("Font")
     fontTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
-    local fontDesc = fontContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fontDesc:SetPoint("TOPLEFT", fontContainer, "TOPLEFT", 15, -38)
-    fontDesc:SetPoint("RIGHT", fontContainer, "RIGHT", -15, 0)
+    local fontDesc = fontPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fontDesc:SetPoint("TOPLEFT", fontPanel, "TOPLEFT", 15, -38)
+    fontDesc:SetPoint("TOPRIGHT", fontPanel, "TOPRIGHT", -15, -38)
     fontDesc:SetText("Choose the font used across all OneWoW addons.")
     fontDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     fontDesc:SetJustifyH("LEFT")
     fontDesc:SetWordWrap(true)
 
-    local fontPreview = fontContainer:CreateFontString(nil, "OVERLAY")
-    fontPreview:SetPoint("TOPRIGHT", fontContainer, "TOPRIGHT", -15, -12)
-    OneWoW_GUI:SafeSetFont(fontPreview, currentFontData and currentFontData.file, 14)
-    fontPreview:SetText("Preview: AaBbCc 123")
-    fontPreview:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+    local fontCurrentLabel = fontPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fontCurrentLabel:SetPoint("TOPLEFT", fontPanel, "TOPLEFT", 15, -90)
+    fontCurrentLabel:SetText("Current: " .. currentFontLabel)
+    fontCurrentLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
-    local fontDropdown = CreateFrame("Button", nil, fontContainer, "BackdropTemplate")
+    local fontDropdown = CreateFrame("Button", nil, fontPanel, "BackdropTemplate")
     fontDropdown:SetSize(210, 30)
-    fontDropdown:SetPoint("TOPLEFT", fontContainer, "TOPLEFT", 15, -65)
+    fontDropdown:SetPoint("TOPLEFT", fontPanel, "TOPLEFT", 15, -115)
     fontDropdown:SetBackdrop(dropdownBackdrop)
     fontDropdown:SetBackdropColor(self:GetThemeColor("BG_TERTIARY"))
     fontDropdown:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
@@ -636,6 +643,139 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     fontArrow:SetSize(16, 16)
     fontArrow:SetPoint("RIGHT", fontDropdown, "RIGHT", -5, 0)
     fontArrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
+
+    local fsTitle = fontSizePanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    fsTitle:SetPoint("TOPLEFT", fontSizePanel, "TOPLEFT", 15, -12)
+    fsTitle:SetText("Font Size")
+    fsTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
+
+    local fontPreview = fontSizePanel:CreateFontString(nil, "OVERLAY")
+    fontPreview:SetPoint("TOPRIGHT", fontSizePanel, "TOPRIGHT", -15, -12)
+    OneWoW_GUI:SafeSetFont(fontPreview, currentFontData and currentFontData.file, 14)
+    fontPreview:SetText("AaBbCc 123")
+    fontPreview:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+
+    local fsDesc = fontSizePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fsDesc:SetPoint("TOPLEFT", fontSizePanel, "TOPLEFT", 15, -38)
+    fsDesc:SetPoint("TOPRIGHT", fontSizePanel, "TOPRIGHT", -15, -38)
+    fsDesc:SetText("Adjust font size across all addons.")
+    fsDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
+    fsDesc:SetJustifyH("LEFT")
+    fsDesc:SetWordWrap(true)
+
+    local fsWarning = fontSizePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fsWarning:SetPoint("TOPLEFT", fsDesc, "BOTTOMLEFT", 0, -6)
+    fsWarning:SetPoint("TOPRIGHT", fsDesc, "BOTTOMRIGHT", 0, -6)
+    fsWarning:SetText("EXPERIMENTAL: Not all OneWoW addons are compatible or adapted for font size adjustments yet.")
+    fsWarning:SetTextColor(1.0, 0.4, 0.1)
+    fsWarning:SetJustifyH("LEFT")
+    fsWarning:SetWordWrap(true)
+
+    local function FormatOffset(v)
+        if v > 0 then return "+" .. v
+        elseif v == 0 then return "0"
+        else return tostring(v) end
+    end
+
+    local fsCurrentLabel = fontSizePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fsCurrentLabel:SetPoint("TOPLEFT", fsWarning, "BOTTOMLEFT", 0, -10)
+    fsCurrentLabel:SetText("Current: " .. FormatOffset(currentOffset))
+    fsCurrentLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
+
+    local stepperMinusBtn = CreateFrame("Button", nil, fontSizePanel, "BackdropTemplate")
+    stepperMinusBtn:SetSize(28, 28)
+    stepperMinusBtn:SetPoint("TOPLEFT", fsCurrentLabel, "BOTTOMLEFT", 0, -6)
+    stepperMinusBtn:SetBackdrop(dropdownBackdrop)
+    stepperMinusBtn:SetBackdropColor(self:GetThemeColor("BTN_NORMAL"))
+    stepperMinusBtn:SetBackdropBorderColor(self:GetThemeColor("BTN_BORDER"))
+    stepperMinusBtn:RegisterForClicks("AnyDown", "AnyUp")
+
+    local minusText = stepperMinusBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    minusText:SetPoint("CENTER")
+    minusText:SetText("-")
+    minusText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+
+    local stepperPlusBtn = CreateFrame("Button", nil, fontSizePanel, "BackdropTemplate")
+    stepperPlusBtn:SetSize(28, 28)
+    stepperPlusBtn:SetPoint("LEFT", stepperMinusBtn, "RIGHT", 44, 0)
+    stepperPlusBtn:SetBackdrop(dropdownBackdrop)
+    stepperPlusBtn:SetBackdropColor(self:GetThemeColor("BTN_NORMAL"))
+    stepperPlusBtn:SetBackdropBorderColor(self:GetThemeColor("BTN_BORDER"))
+    stepperPlusBtn:RegisterForClicks("AnyDown", "AnyUp")
+
+    local plusText = stepperPlusBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    plusText:SetPoint("CENTER")
+    plusText:SetText("+")
+    plusText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+
+    local stepperValueText = fontSizePanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    stepperValueText:SetPoint("LEFT", stepperMinusBtn, "RIGHT", 6, 0)
+    stepperValueText:SetPoint("RIGHT", stepperPlusBtn, "LEFT", -6, 0)
+    stepperValueText:SetJustifyH("CENTER")
+    stepperValueText:SetText(FormatOffset(currentOffset))
+    stepperValueText:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
+
+    local function UpdateStepperState(val)
+        stepperValueText:SetText(FormatOffset(val))
+        fsCurrentLabel:SetText("Current: " .. FormatOffset(val))
+        if val <= -3 then
+            stepperMinusBtn:Disable()
+            minusText:SetTextColor(self:GetThemeColor("TEXT_MUTED"))
+        else
+            stepperMinusBtn:Enable()
+            minusText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+        end
+        if val >= 5 then
+            stepperPlusBtn:Disable()
+            plusText:SetTextColor(self:GetThemeColor("TEXT_MUTED"))
+        else
+            stepperPlusBtn:Enable()
+            plusText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+        end
+        local curFontData = FONT_LOOKUP[OneWoW_GUI:GetSetting("font") or "default"]
+        OneWoW_GUI:SafeSetFont(fontPreview, curFontData and curFontData.file, 14)
+        fontPreview:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+
+    stepperMinusBtn:SetScript("OnEnter", function(s)
+        if s:IsEnabled() then
+            s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+        end
+    end)
+    stepperMinusBtn:SetScript("OnLeave", function(s)
+        s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+    end)
+    stepperMinusBtn:SetScript("OnClick", function()
+        local cur = OneWoW_GUI:GetSetting("fontSizeOffset") or 0
+        local newVal = math.max(-3, cur - 1)
+        if newVal ~= cur then
+            OneWoW_GUI:SetSetting("fontSizeOffset", newVal)
+            UpdateStepperState(newVal)
+        end
+    end)
+
+    stepperPlusBtn:SetScript("OnEnter", function(s)
+        if s:IsEnabled() then
+            s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+        end
+    end)
+    stepperPlusBtn:SetScript("OnLeave", function(s)
+        s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+    end)
+    stepperPlusBtn:SetScript("OnClick", function()
+        local cur = OneWoW_GUI:GetSetting("fontSizeOffset") or 0
+        local newVal = math.min(5, cur + 1)
+        if newVal ~= cur then
+            OneWoW_GUI:SetSetting("fontSizeOffset", newVal)
+            UpdateStepperState(newVal)
+        end
+    end)
+
+    UpdateStepperState(currentOffset)
 
     local fontMenuRef = nil
     local fontOverlayRef = nil
@@ -735,6 +875,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             fbtn:SetScript("OnClick", function()
                 menu:Hide()
                 fontDropText:SetText(capturedLabel)
+                fontCurrentLabel:SetText("Current: " .. capturedLabel)
                 OneWoW_GUI:SafeSetFont(fontPreview, capturedFile, 14)
                 fontPreview:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 OneWoW_GUI:SetSetting("font", capturedKey)
@@ -749,136 +890,12 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         menu:Show()
     end)
 
-    local currentOffset = self:GetSetting("fontSizeOffset") or 0
-
-    local stepperLabel = fontContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    stepperLabel:SetPoint("TOPLEFT", fontContainer, "TOPLEFT", 15, -105)
-    stepperLabel:SetText("Font Size Adjustment")
-    stepperLabel:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
-
-    local function FormatOffset(v)
-        if v > 0 then return "+" .. v
-        elseif v == 0 then return "0"
-        else return tostring(v) end
-    end
-
-    local stepperMinusBtn = CreateFrame("Button", nil, fontContainer, "BackdropTemplate")
-    stepperMinusBtn:SetSize(28, 28)
-    stepperMinusBtn:SetPoint("TOPLEFT", fontContainer, "TOPLEFT", 15, -125)
-    stepperMinusBtn:SetBackdrop(dropdownBackdrop)
-    stepperMinusBtn:SetBackdropColor(self:GetThemeColor("BTN_NORMAL"))
-    stepperMinusBtn:SetBackdropBorderColor(self:GetThemeColor("BTN_BORDER"))
-    stepperMinusBtn:RegisterForClicks("AnyDown", "AnyUp")
-
-    local minusText = stepperMinusBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    minusText:SetPoint("CENTER")
-    minusText:SetText("-")
-    minusText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
-
-    local stepperPlusBtn = CreateFrame("Button", nil, fontContainer, "BackdropTemplate")
-    stepperPlusBtn:SetSize(28, 28)
-    stepperPlusBtn:SetPoint("LEFT", stepperMinusBtn, "RIGHT", 44, 0)
-    stepperPlusBtn:SetBackdrop(dropdownBackdrop)
-    stepperPlusBtn:SetBackdropColor(self:GetThemeColor("BTN_NORMAL"))
-    stepperPlusBtn:SetBackdropBorderColor(self:GetThemeColor("BTN_BORDER"))
-    stepperPlusBtn:RegisterForClicks("AnyDown", "AnyUp")
-
-    local plusText = stepperPlusBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    plusText:SetPoint("CENTER")
-    plusText:SetText("+")
-    plusText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
-
-    local stepperValueText = fontContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    stepperValueText:SetPoint("LEFT", stepperMinusBtn, "RIGHT", 6, 0)
-    stepperValueText:SetPoint("RIGHT", stepperPlusBtn, "LEFT", -6, 0)
-    stepperValueText:SetJustifyH("CENTER")
-    stepperValueText:SetText(FormatOffset(currentOffset))
-    stepperValueText:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
-
-    local function UpdateStepperState(val)
-        stepperValueText:SetText(FormatOffset(val))
-        if val <= -3 then
-            stepperMinusBtn:Disable()
-            minusText:SetTextColor(self:GetThemeColor("TEXT_MUTED"))
-        else
-            stepperMinusBtn:Enable()
-            minusText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
-        end
-        if val >= 5 then
-            stepperPlusBtn:Disable()
-            plusText:SetTextColor(self:GetThemeColor("TEXT_MUTED"))
-        else
-            stepperPlusBtn:Enable()
-            plusText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
-        end
-        local curFontData = FONT_LOOKUP[OneWoW_GUI:GetSetting("font") or "default"]
-        OneWoW_GUI:SafeSetFont(fontPreview, curFontData and curFontData.file, 14)
-        fontPreview:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    end
-
-    stepperMinusBtn:SetScript("OnEnter", function(s)
-        if s:IsEnabled() then
-            s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        end
-    end)
-    stepperMinusBtn:SetScript("OnLeave", function(s)
-        s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    end)
-    stepperMinusBtn:SetScript("OnClick", function()
-        local cur = OneWoW_GUI:GetSetting("fontSizeOffset") or 0
-        local newVal = math.max(-3, cur - 1)
-        if newVal ~= cur then
-            OneWoW_GUI:SetSetting("fontSizeOffset", newVal)
-            UpdateStepperState(newVal)
-        end
-    end)
-
-    stepperPlusBtn:SetScript("OnEnter", function(s)
-        if s:IsEnabled() then
-            s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        end
-    end)
-    stepperPlusBtn:SetScript("OnLeave", function(s)
-        s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    end)
-    stepperPlusBtn:SetScript("OnClick", function()
-        local cur = OneWoW_GUI:GetSetting("fontSizeOffset") or 0
-        local newVal = math.min(5, cur + 1)
-        if newVal ~= cur then
-            OneWoW_GUI:SetSetting("fontSizeOffset", newVal)
-            UpdateStepperState(newVal)
-        end
-    end)
-
-    UpdateStepperState(currentOffset)
-
     yOffset = yOffset - 185
 
-    local minimapContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    minimapContainer:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    minimapContainer:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    minimapContainer:SetHeight(165)
-    minimapContainer:SetBackdrop(panelBackdrop)
-    minimapContainer:SetBackdropColor(self:GetThemeColor("BG_SECONDARY"))
-    minimapContainer:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
-
-    local mmLeftPanel = CreateFrame("Frame", nil, minimapContainer)
-    mmLeftPanel:SetPoint("TOPLEFT", minimapContainer, "TOPLEFT", 0, 0)
-    mmLeftPanel:SetPoint("BOTTOMRIGHT", minimapContainer, "BOTTOM", 0, 0)
-
-    local mmVertDiv = minimapContainer:CreateTexture(nil, "ARTWORK")
-    mmVertDiv:SetWidth(1)
-    mmVertDiv:SetPoint("TOP", minimapContainer, "TOP", 0, -8)
-    mmVertDiv:SetPoint("BOTTOM", minimapContainer, "BOTTOM", 0, 8)
-    mmVertDiv:SetColorTexture(self:GetThemeColor("BORDER_SUBTLE"))
-
-    local mmRightPanel = CreateFrame("Frame", nil, minimapContainer)
-    mmRightPanel:SetPoint("TOPLEFT", minimapContainer, "TOP", 0, 0)
-    mmRightPanel:SetPoint("BOTTOMRIGHT", minimapContainer, "BOTTOMRIGHT", 0, 0)
+    ----------------------------------------------------------------
+    -- ROW 3: Minimap Button | Icon Theme
+    ----------------------------------------------------------------
+    local _, mmLeftPanel, mmRightPanel = CreateSplitRow(165)
 
     local mmTitle = mmLeftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     mmTitle:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 15, -12)
@@ -966,6 +983,59 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     end)
 
     yOffset = yOffset - 185
+
+    ----------------------------------------------------------------
+    -- ROW 4: Discord | Buy Me A Coffee
+    ----------------------------------------------------------------
+    local _, discordPanel, coffeePanel = CreateSplitRow(120)
+
+    local discordTitle = discordPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    discordTitle:SetPoint("TOPLEFT", discordPanel, "TOPLEFT", 15, -12)
+    discordTitle:SetText("Discord")
+    discordTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
+
+    local discordDesc = discordPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    discordDesc:SetPoint("TOPLEFT", discordPanel, "TOPLEFT", 15, -38)
+    discordDesc:SetPoint("TOPRIGHT", discordPanel, "TOPRIGHT", -15, -38)
+    discordDesc:SetText("Join our community for support and updates.")
+    discordDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
+    discordDesc:SetJustifyH("LEFT")
+    discordDesc:SetWordWrap(true)
+
+    local discordBox = self:CreateEditBox(discordPanel, { width = 250, height = 24 })
+    discordBox:SetPoint("TOPLEFT", discordPanel, "TOPLEFT", 15, -75)
+    discordBox:SetText("https://discord.gg/6vnabDVnDu")
+    discordBox:SetAutoFocus(false)
+    discordBox:SetScript("OnEditFocusGained", function(s) s:HighlightText() end)
+    discordBox:SetScript("OnEditFocusLost", function(s)
+        s:HighlightText(0, 0)
+        s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    end)
+
+    local coffeeTitle = coffeePanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    coffeeTitle:SetPoint("TOPLEFT", coffeePanel, "TOPLEFT", 15, -12)
+    coffeeTitle:SetText("Buy Me A Coffee")
+    coffeeTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
+
+    local coffeeDesc = coffeePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    coffeeDesc:SetPoint("TOPLEFT", coffeePanel, "TOPLEFT", 15, -38)
+    coffeeDesc:SetPoint("TOPRIGHT", coffeePanel, "TOPRIGHT", -15, -38)
+    coffeeDesc:SetText("Support OneWoW development.")
+    coffeeDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
+    coffeeDesc:SetJustifyH("LEFT")
+    coffeeDesc:SetWordWrap(true)
+
+    local coffeeBox = self:CreateEditBox(coffeePanel, { width = 250, height = 24 })
+    coffeeBox:SetPoint("TOPLEFT", coffeePanel, "TOPLEFT", 15, -75)
+    coffeeBox:SetText("https://buymeacoffee.com/migugin")
+    coffeeBox:SetAutoFocus(false)
+    coffeeBox:SetScript("OnEditFocusGained", function(s) s:HighlightText() end)
+    coffeeBox:SetScript("OnEditFocusLost", function(s)
+        s:HighlightText(0, 0)
+        s:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    end)
+
+    yOffset = yOffset - 140
 
     return yOffset
 end

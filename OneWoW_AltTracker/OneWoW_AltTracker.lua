@@ -66,6 +66,15 @@ function OneWoWAltTracker:OnInitialize()
             ns.UI.ApplyFontToFrame(mainFrame)
         end
     end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function(self2)
+        local mainFrame = _G["OneWoWAltTrackerMainFrame"]
+        if mainFrame then
+            ns.UI.ApplyFontToFrame(mainFrame)
+        end
+        if ns.UI.ResizeOverviewPanels then
+            ns.UI.ResizeOverviewPanels()
+        end
+    end)
     OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
         if owner.Minimap then owner.Minimap:SetShown(not hidden) end
     end)

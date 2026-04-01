@@ -34,31 +34,62 @@ function ns.UI.CreateFilterBar(parent, config)
 end
 
 function ns.UI.ApplyFont(fs, size)
-    local fontPath = OneWoW_GUI:GetFont()
-    if not fontPath or not fs then return end
-    if not size and fs.GetFont then
+    if not fs then return end
+    if size then
+        fs._owBaseSize = size
+    elseif not fs._owBaseSize and fs.GetFont then
         local _, currentSize = fs:GetFont()
-        size = currentSize or 13
+        fs._owBaseSize = currentSize or 13
     end
-    if size and size > 0 then
-        fs:SetFont(fontPath, size)
+    OneWoW_GUI:SafeSetFont(fs, OneWoW_GUI:GetFont(), fs._owBaseSize or 13)
+end
+
+function ns.UI.ApplyFontCapped(fs, size, maxOffset)
+    if not fs then return end
+    fs._owBaseSize = size
+    fs._owMaxOffset = maxOffset
+    local fontPath = OneWoW_GUI:GetFont()
+    local offset = OneWoW_GUI:GetFontSizeOffset() or 0
+    local cappedSize = math.max(6, size + math.min(offset, maxOffset))
+    if fontPath then
+        local ok = pcall(fs.SetFont, fs, fontPath, cappedSize, "")
+        if not ok then fs:SetFontObject(GameFontNormal) end
+    else
+        fs:SetFontObject(GameFontNormal)
     end
 end
 
 function ns.UI.ApplyFontToFrame(frame)
     if not frame then return end
-    local fontPath = OneWoW_GUI:GetFont()
-    if not fontPath then return end
     for _, region in ipairs({frame:GetRegions()}) do
         if region.GetFont and region.SetFont then
-            local _, sz = region:GetFont()
-            if sz and sz > 0 then region:SetFont(fontPath, sz) end
+            if not region._owBaseSize then
+                local _, sz = region:GetFont()
+                if sz and sz > 0 then
+                    region._owBaseSize = sz
+                end
+            end
+            if region._owBaseSize then
+                if region._owMaxOffset then
+                    ns.UI.ApplyFontCapped(region, region._owBaseSize, region._owMaxOffset)
+                else
+                    OneWoW_GUI:SafeSetFont(region, OneWoW_GUI:GetFont(), region._owBaseSize)
+                end
+            end
         end
     end
     for _, child in ipairs({frame:GetChildren()}) do
         if child:GetObjectType() == "EditBox" and child.GetFont then
-            local _, sz, flags = child:GetFont()
-            if sz and sz > 0 then child:SetFont(fontPath, sz, flags or "") end
+            if not child._owBaseSize then
+                local _, sz = child:GetFont()
+                if sz and sz > 0 then
+                    child._owBaseSize = sz
+                end
+            end
+            if child._owBaseSize then
+                local _, _, flags = child:GetFont()
+                OneWoW_GUI:SafeSetFont(child, OneWoW_GUI:GetFont(), child._owBaseSize, flags)
+            end
         end
         ns.UI.ApplyFontToFrame(child)
     end

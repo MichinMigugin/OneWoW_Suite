@@ -49,7 +49,7 @@ local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
         height = 220,
         movable = false,
         buttons = {
-            { text = L["AB_LABEL_RESTORE"], color = {0.2, 0.6, 0.2}, onClick = function(dialog)
+            { text = L["AB_LABEL_RESTORE"], color = {OneWoW_GUI:GetThemeColor("BTN_NORMAL")}, onClick = function(dialog)
                 if ns.ActionBarsModule and ns.ActionBarsModule.RestoreSingleBarFromSet then
                     ns.ActionBarsModule:RestoreSingleBarFromSet(setName, sourceBarNumber, selectedTargetBar)
                 end
@@ -91,6 +91,7 @@ local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
         getActiveValue = function() return selectedTargetBar end,
     })
 
+    ns.UI.ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -100,7 +101,7 @@ local function ShowRestoreAllDialog(setName)
         title = L["AB_DIALOG_RESTORE_ALL_TITLE"],
         message = string.format(L["AB_DIALOG_RESTORE_ALL"], setName),
         buttons = {
-            { text = L["AB_BUTTON_RESTORE_ALL"], color = {0.6, 0.2, 0.2}, onClick = function(dialog)
+            { text = L["AB_BUTTON_RESTORE_ALL"], color = {OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")}, onClick = function(dialog)
                 if ns.ActionBarsModule and ns.ActionBarsModule.RestoreAllBarsFromSet then
                     ns.ActionBarsModule:RestoreAllBarsFromSet(setName)
                 end
@@ -143,11 +144,11 @@ local function ShowRestoreMacrosDialog(setName, setData)
 
     local accountBtn = OneWoW_GUI:CreateButton(cf, { text = string.format(L["AB_BUTTON_ACCOUNT_ONLY"], accountCount), width = 180, height = 30 })
     accountBtn:SetPoint("TOP", infoText, "BOTTOM", -95, -20)
-    accountBtn:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
-    accountBtn:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
-    accountBtn.text:SetTextColor(1, 1, 1)
-    accountBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.3, 0.6, 1.0) end)
-    accountBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.5, 1.0) end)
+    accountBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    accountBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+    accountBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    accountBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER")) end)
+    accountBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL")) end)
     accountBtn:SetScript("OnClick", function()
         if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacrosFromSet(setName, "account") end
         result.frame:Hide()
@@ -155,11 +156,11 @@ local function ShowRestoreMacrosDialog(setName, setData)
 
     local charBtn = OneWoW_GUI:CreateButton(cf, { text = string.format(L["AB_BUTTON_CHARACTER_ONLY"], charCount), width = 180, height = 30 })
     charBtn:SetPoint("TOP", infoText, "BOTTOM", 95, -20)
-    charBtn:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
-    charBtn:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
-    charBtn.text:SetTextColor(1, 1, 1)
-    charBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.3, 0.6, 1.0) end)
-    charBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.5, 1.0) end)
+    charBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    charBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+    charBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    charBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER")) end)
+    charBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL")) end)
     charBtn:SetScript("OnClick", function()
         if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacrosFromSet(setName, "character") end
         result.frame:Hide()
@@ -167,11 +168,11 @@ local function ShowRestoreMacrosDialog(setName, setData)
 
     local bothBtn = OneWoW_GUI:CreateButton(cf, { text = L["AB_BUTTON_BOTH"], width = 180, height = 30 })
     bothBtn:SetPoint("TOP", accountBtn, "BOTTOM", 0, -8)
-    bothBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
-    bothBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
-    bothBtn.text:SetTextColor(1, 1, 1)
-    bothBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.3, 0.7, 0.3, 1.0) end)
-    bothBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.6, 0.2, 1.0) end)
+    bothBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    bothBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+    bothBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    bothBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER")) end)
+    bothBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL")) end)
     bothBtn:SetScript("OnClick", function()
         if ns.ActionBarsModule then ns.ActionBarsModule:RestoreMacrosFromSet(setName, "both") end
         result.frame:Hide()
@@ -186,6 +187,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
     cancelBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY")) end)
     cancelBtn:SetScript("OnClick", function() result.frame:Hide() end)
 
+    ns.UI.ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -202,7 +204,7 @@ local function ShowBackupDialog(split)
         height = 200,
         movable = false,
         buttons = {
-            { text = L["AB_BACKUP_SET_SAVE"], color = {0.2, 0.6, 0.2}, onClick = function(dialog)
+            { text = L["AB_BACKUP_SET_SAVE"], color = {OneWoW_GUI:GetThemeColor("BTN_NORMAL")}, onClick = function(dialog)
                 local nameBox = dialog.nameEditBox
                 if nameBox then
                     local setName = strtrim(nameBox:GetText())
@@ -247,6 +249,7 @@ local function ShowBackupDialog(split)
 
     result.frame.nameEditBox = nameBox
 
+    ns.UI.ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -258,7 +261,7 @@ local function ShowRenameDialog(split, oldName)
         height = 200,
         movable = false,
         buttons = {
-            { text = L["AB_RENAME_SET_CONFIRM"], color = {0.2, 0.6, 0.2}, onClick = function(dialog)
+            { text = L["AB_RENAME_SET_CONFIRM"], color = {OneWoW_GUI:GetThemeColor("BTN_NORMAL")}, onClick = function(dialog)
                 local nameBox = dialog.nameEditBox
                 if nameBox then
                     local newName = strtrim(nameBox:GetText())
@@ -312,6 +315,7 @@ local function ShowRenameDialog(split, oldName)
 
     result.frame.nameEditBox = nameBox
 
+    ns.UI.ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -321,7 +325,7 @@ local function ShowDeleteDialog(split, setName)
         title = L["AB_DELETE_SET_TITLE"],
         message = string.format(L["AB_DELETE_SET_MESSAGE"], setName),
         buttons = {
-            { text = L["AB_DELETE_SET_CONFIRM"], color = {0.6, 0.2, 0.2}, onClick = function(dialog)
+            { text = L["AB_DELETE_SET_CONFIRM"], color = {OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")}, onClick = function(dialog)
                 if ns.ActionBarsModule then
                     ns.ActionBarsModule:DeleteActionBarSet(setName)
                     selectedSetName = nil
@@ -341,6 +345,7 @@ local function ShowDeleteDialog(split, setName)
             { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
         },
     })
+    ns.UI.ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -421,32 +426,31 @@ function ns.UI.ShowSetDetails(split, setName)
 
     local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_DELETE_SET"], height = 24 })
     deleteBtn:SetPoint("RIGHT", renameBtn, "LEFT", -6, 0)
-    deleteBtn:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
-    deleteBtn:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
-    deleteBtn.text:SetTextColor(1, 1, 1)
+    deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+    deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+    deleteBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     deleteBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.7, 0.3, 0.3, 1.0)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
     end)
     deleteBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
     end)
     deleteBtn:SetScript("OnClick", function()
         ShowDeleteDialog(split, setName)
     end)
 
-    local restoreAllBtn = OneWoW_GUI:CreateButton(headerBox, { text = L["AB_RESTORE_ALL_BARS"], width = 110, height = 24 })
+    local restoreAllBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_RESTORE_ALL_BARS"], height = 24 })
     restoreAllBtn:SetPoint("BOTTOMLEFT", headerBox, "BOTTOMLEFT", 10, 6)
-    restoreAllBtn:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
-    restoreAllBtn:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
-    restoreAllBtn.text:SetFontObject("GameFontNormalSmall")
-    restoreAllBtn.text:SetTextColor(1, 1, 1)
+    restoreAllBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+    restoreAllBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+    restoreAllBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     restoreAllBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.7, 0.3, 0.3, 1.0)
-        self:SetBackdropBorderColor(0.9, 0.4, 0.4, 1.0)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER_HOVER"))
     end)
     restoreAllBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.6, 0.2, 0.2, 1.0)
-        self:SetBackdropBorderColor(0.8, 0.3, 0.3, 1.0)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
     end)
     restoreAllBtn:SetScript("OnClick", function()
         ShowRestoreAllDialog(setName)
@@ -459,21 +463,20 @@ function ns.UI.ShowSetDetails(split, setName)
         end
     end
 
-    local restoreKeybindsBtn = OneWoW_GUI:CreateButton(headerBox, { text = L["AB_RESTORE_KEYBINDS"], width = 110, height = 24 })
+    local restoreKeybindsBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_RESTORE_KEYBINDS"], height = 24 })
     restoreKeybindsBtn:SetPoint("LEFT", restoreAllBtn, "RIGHT", 8, 0)
-    restoreKeybindsBtn.text:SetFontObject("GameFontNormalSmall")
 
     if keybindCount > 0 then
-        restoreKeybindsBtn:SetBackdropColor(0.2, 0.3, 0.5, 1.0)
-        restoreKeybindsBtn:SetBackdropBorderColor(0.4, 0.5, 0.7, 1.0)
-        restoreKeybindsBtn.text:SetTextColor(1, 1, 1)
+        restoreKeybindsBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        restoreKeybindsBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        restoreKeybindsBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         restoreKeybindsBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(0.3, 0.4, 0.6, 1.0)
-            self:SetBackdropBorderColor(0.5, 0.6, 0.8, 1.0)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
         end)
         restoreKeybindsBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.2, 0.3, 0.5, 1.0)
-            self:SetBackdropBorderColor(0.4, 0.5, 0.7, 1.0)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
         end)
         restoreKeybindsBtn:SetScript("OnClick", function()
             if ns.ActionBarsModule then
@@ -499,21 +502,20 @@ function ns.UI.ShowSetDetails(split, setName)
     end
     local macroCount = accountMacros + charMacros
 
-    local restoreMacrosBtn = OneWoW_GUI:CreateButton(headerBox, { text = L["AB_RESTORE_MACROS"], width = 110, height = 24 })
+    local restoreMacrosBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_RESTORE_MACROS"], height = 24 })
     restoreMacrosBtn:SetPoint("LEFT", restoreKeybindsBtn, "RIGHT", 8, 0)
-    restoreMacrosBtn.text:SetFontObject("GameFontNormalSmall")
 
     if macroCount > 0 then
-        restoreMacrosBtn:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
-        restoreMacrosBtn:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
-        restoreMacrosBtn.text:SetTextColor(1, 1, 1)
+        restoreMacrosBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        restoreMacrosBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        restoreMacrosBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         restoreMacrosBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(0.5, 0.3, 0.6, 1.0)
-            self:SetBackdropBorderColor(0.7, 0.5, 0.8, 1.0)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
         end)
         restoreMacrosBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.4, 0.2, 0.5, 1.0)
-            self:SetBackdropBorderColor(0.6, 0.4, 0.7, 1.0)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
         end)
         restoreMacrosBtn:SetScript("OnClick", function()
             ShowRestoreMacrosDialog(setName, setData)
@@ -578,7 +580,7 @@ function ns.UI.ShowSetDetails(split, setName)
                         local assistOverlay = slotFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                         assistOverlay:SetAllPoints()
                         assistOverlay:SetText("AC")
-                        assistOverlay:SetTextColor(1, 1, 0)
+                        assistOverlay:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                         assistOverlay:SetJustifyH("CENTER")
                         assistOverlay:SetJustifyV("MIDDLE")
                     end
@@ -619,20 +621,19 @@ function ns.UI.ShowSetDetails(split, setName)
             end
 
             if barData and barData.slots then
-                local restoreBarBtn = OneWoW_GUI:CreateButton(detailScrollChild, { text = L["AB_LABEL_RESTORE"], width = 70, height = 26 })
+                local restoreBarBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, { text = L["AB_LABEL_RESTORE"], height = 26 })
                 restoreBarBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", slotXStart + (12 * 36) + 10, slotYOffset + 3)
-                restoreBarBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
-                restoreBarBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
-                restoreBarBtn.text:SetFontObject("GameFontNormalSmall")
-                restoreBarBtn.text:SetTextColor(1, 1, 1)
+                restoreBarBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                restoreBarBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                restoreBarBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
                 restoreBarBtn:SetScript("OnEnter", function(self)
-                    self:SetBackdropColor(0.3, 0.7, 0.3, 1.0)
-                    self:SetBackdropBorderColor(0.4, 0.9, 0.4, 1.0)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
                 end)
                 restoreBarBtn:SetScript("OnLeave", function(self)
-                    self:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
-                    self:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
                 end)
                 local capturedBarNumber = barNumber
                 restoreBarBtn:SetScript("OnClick", function()
@@ -716,7 +717,7 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
                 catLabel:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 8, yOffset)
                 catLabel:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -8, yOffset)
                 catLabel:SetJustifyH("LEFT")
-                catLabel:SetText(CLASS_DISPLAY_NAMES[className] or className)
+                catLabel:SetText(ns.AltTrackerFormatters and ns.AltTrackerFormatters:GetCompactClassName(className) or CLASS_DISPLAY_NAMES[className] or className)
                 if classColor then
                     catLabel:SetTextColor(classColor.r, classColor.g, classColor.b)
                 else
@@ -817,14 +818,14 @@ function ns.UI.CreateActionBarsTab(parent)
 
     local backupBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["AB_BACKUP_SET"], height = 28 })
     backupBtn:SetPoint("RIGHT", controlPanel, "RIGHT", -10, 0)
-    backupBtn:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
-    backupBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1.0)
-    backupBtn.text:SetTextColor(1, 1, 1)
+    backupBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    backupBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+    backupBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     backupBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.3, 0.7, 0.3, 1.0)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
     end)
     backupBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.2, 0.6, 0.2, 1.0)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
     end)
     backupBtn:SetScript("OnClick", function()
         ShowBackupDialog(split)
@@ -849,7 +850,7 @@ function ns.UI.CreateActionBarsTab(parent)
                     classesFound[cls] = true
                     table.insert(items, {
                         value = cls,
-                        text = CLASS_DISPLAY_NAMES[cls] or cls,
+                        text = ns.AltTrackerFormatters and ns.AltTrackerFormatters:GetCompactClassName(cls) or CLASS_DISPLAY_NAMES[cls] or cls,
                     })
                 end
             end

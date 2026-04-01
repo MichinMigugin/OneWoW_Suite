@@ -448,7 +448,7 @@ local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHei
     if classColor then
         nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
     else
-        nameText:SetTextColor(1, 1, 1)
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
     nameText:SetJustifyH("LEFT")
     table.insert(charRow.cells, nameText)
@@ -526,12 +526,12 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
                 if ksName ~= "" then ksStr = ksStr .. " " .. ksName end
                 grid:AddLine(p2, L["PROGRESS_CURRENT_KEY"] .. " " .. ksStr)
             else
-                grid:AddLine(p2, L["PROGRESS_CURRENT_KEY"] .. " --", {0.6, 0.6, 0.6})
+                grid:AddLine(p2, L["PROGRESS_CURRENT_KEY"] .. " --", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
             end
         else
-            grid:AddLine(p2, L["PROGRESS_BEST_RUN"] .. " --", {0.6, 0.6, 0.6})
-            grid:AddLine(p2, L["PROGRESS_SCORE"] .. " --", {0.6, 0.6, 0.6})
-            grid:AddLine(p2, L["PROGRESS_CURRENT_KEY"] .. " --", {0.6, 0.6, 0.6})
+            grid:AddLine(p2, L["PROGRESS_BEST_RUN"] .. " --", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
+            grid:AddLine(p2, L["PROGRESS_SCORE"] .. " --", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
+            grid:AddLine(p2, L["PROGRESS_CURRENT_KEY"] .. " --", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
         end
 
         local p3 = grid:AddPanel(L["PROGRESS_CURRENCY_TRACKER"])
@@ -539,14 +539,14 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         if #currLines > 0 then
             for _, cl in ipairs(currLines) do
                 local capPct = (cl.cap and cl.cap > 0) and (cl.qty / cl.cap) or nil
-                local color = {0.9, 0.9, 0.9}
-                if capPct and capPct >= 1 then color = {0.2, 0.9, 0.2}
-                elseif capPct and capPct >= 0.7 then color = {1, 0.8, 0.2}
+                local color = {OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")}
+                if capPct and capPct >= 1 then color = {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")}
+                elseif capPct and capPct >= 0.7 then color = {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")}
                 end
                 grid:AddLine(p3, cl.name .. ": " .. cl.text, color)
             end
         else
-            grid:AddLine(p3, "--", {0.5, 0.5, 0.5})
+            grid:AddLine(p3, "--", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
         end
 
     elseif subTabKey == "raids" then
@@ -555,7 +555,7 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             local acts = endgameData.greatVault.activities
             local function VaultTypeStr(list, label)
                 if not list or #list == 0 then
-                    grid:AddLine(p1, label .. ": --", {T("TEXT_SECONDARY")})
+                    grid:AddLine(p1, label .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                     return
                 end
                 local parts = {}
@@ -574,9 +574,9 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             VaultTypeStr(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
             VaultTypeStr(acts.world, L["PROGRESS_VAULT_WORLD"])
         else
-            grid:AddLine(p1, L["PROGRESS_VAULT_RAID"] .. ": --", {T("TEXT_SECONDARY")})
-            grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {T("TEXT_SECONDARY")})
-            grid:AddLine(p1, L["PROGRESS_VAULT_WORLD"] .. ": --", {T("TEXT_SECONDARY")})
+            grid:AddLine(p1, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p1, L["PROGRESS_VAULT_WORLD"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
         end
 
         local p2 = grid:AddPanel(L["PROGRESS_WEEKLY_ACTIVITIES"])
@@ -584,9 +584,9 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         if bossKilled then
             local bossStr = L["PROGRESS_BOSS_KILLED"]
             if bossName then bossStr = bossStr .. ": " .. bossName end
-            grid:AddLine(p2, "Boss: " .. bossStr, {0.2, 0.9, 0.2})
+            grid:AddLine(p2, "Boss: " .. bossStr, {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")})
         else
-            grid:AddLine(p2, "Boss: " .. L["PROGRESS_BOSS_NONE"], {0.6, 0.6, 0.6})
+            grid:AddLine(p2, "Boss: " .. L["PROGRESS_BOSS_NONE"], {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
         end
         local capStr = GetCurrencyCapString(endgameData)
         grid:AddLine(p2, L["PROGRESS_CURRENCY_CAP"] .. " " .. capStr)
@@ -602,10 +602,10 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
                     grid:AddLine(p3, (lockout.name or "Unknown") .. " " .. d .. ": " .. prog .. "/" .. total)
                 end
             else
-                grid:AddLine(p3, "--", {0.6, 0.6, 0.6})
+                grid:AddLine(p3, "--", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
             end
         else
-            grid:AddLine(p3, "--", {0.6, 0.6, 0.6})
+            grid:AddLine(p3, "--", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
         end
 
     elseif subTabKey == "currencies" then
@@ -614,14 +614,14 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         if #currLines > 0 then
             for _, cl in ipairs(currLines) do
                 local capPct = (cl.cap and cl.cap > 0) and (cl.qty / cl.cap) or nil
-                local color = {0.9, 0.9, 0.9}
-                if capPct and capPct >= 1 then color = {0.2, 0.9, 0.2}
-                elseif capPct and capPct >= 0.7 then color = {1, 0.8, 0.2}
+                local color = {OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")}
+                if capPct and capPct >= 1 then color = {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")}
+                elseif capPct and capPct >= 0.7 then color = {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")}
                 end
                 grid:AddLine(p1, cl.name .. ": " .. cl.text, color)
             end
         else
-            grid:AddLine(p1, "--", {0.5, 0.5, 0.5})
+            grid:AddLine(p1, "--", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
         end
 
         local p2 = grid:AddPanel(L["PROGRESS_GREAT_VAULT_DETAIL"])
@@ -823,6 +823,8 @@ local function CreateCurrenciesColumns()
             width        = cur.width,
             fixed        = true,
             align        = "center",
+            ttTitle      = cur.name,
+            ttDesc       = cur.name,
             currencyData = cur,
         })
     end
@@ -986,9 +988,9 @@ local function BuildRaidsCells(charRow, charData, charKey, endgameData, progress
         end
         raidText:SetText(progress .. "/" .. total)
         if progress > 0 and progress >= total then
-            raidText:SetTextColor(0.2, 0.9, 0.2)
+            raidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         elseif progress > 0 then
-            raidText:SetTextColor(1, 0.8, 0.2)
+            raidText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
             raidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
@@ -1000,10 +1002,10 @@ local function BuildRaidsCells(charRow, charData, charKey, endgameData, progress
     local wbKilled, wbName = GetWorldBossKilled(endgameData)
     if wbKilled then
         worldBossText:SetText(ns.ShortNames:GetShortName(wbName or L["PROGRESS_BOSS_KILLED"], 9))
-        worldBossText:SetTextColor(0.2, 0.9, 0.2)
+        worldBossText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     else
         worldBossText:SetText("--")
-        worldBossText:SetTextColor(0.4, 0.4, 0.4)
+        worldBossText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
     worldBossText:SetJustifyH("LEFT")
     table.insert(charRow.cells, worldBossText)
@@ -1126,19 +1128,16 @@ local function BuildCurrenciesCells(charRow, charData, charKey, endgameData, pro
                 maxQty = cData.maxQuantity or 0
             end
         end
-        if maxQty > 0 then
-            curText:SetText(qty .. "/" .. maxQty)
-            if qty >= maxQty then
-                curText:SetTextColor(0.2, 0.9, 0.2)
+        if qty > 0 then
+            curText:SetText(tostring(qty))
+            if maxQty > 0 and qty >= maxQty then
+                curText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
                 curText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
-        elseif qty > 0 then
-            curText:SetText(tostring(qty))
-            curText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         else
             curText:SetText("--")
-            curText:SetTextColor(0.4, 0.4, 0.4)
+            curText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
         curText:SetJustifyH("CENTER")
         table.insert(charRow.cells, curText)
@@ -1186,13 +1185,12 @@ local function BuildCurrenciesTooltip(self, edg, chd, chk, contentFrame)
                 local maxQty = cData.maxQuantity or 0
                 local weeklyEarned = cData.quantityEarnedThisWeek
                 local weeklyCap = cData.maxWeeklyQuantity
+                GameTooltip:AddLine("Total: " .. qty, 0.9, 0.9, 0.9)
                 if maxQty > 0 then
-                    GameTooltip:AddLine("Total: " .. qty .. "/" .. maxQty, 0.9, 0.9, 0.9)
-                else
-                    GameTooltip:AddLine("Total: " .. qty, 0.9, 0.9, 0.9)
+                    GameTooltip:AddLine("Cap: " .. maxQty, 0.8, 0.8, 0.8)
                 end
                 if weeklyCap and weeklyCap > 0 then
-                    GameTooltip:AddLine("This Week: " .. (weeklyEarned or 0) .. "/" .. weeklyCap, 0.8, 0.8, 0.8)
+                    GameTooltip:AddLine("Weekly: " .. (weeklyEarned or 0) .. "/" .. weeklyCap, 0.8, 0.8, 0.8)
                 end
             else
                 GameTooltip:AddLine("--", 0.5, 0.5, 0.5)
@@ -1225,17 +1223,26 @@ function ns.UI.CreateProgressTab(parent)
     local trackingBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     trackingBar:SetPoint("TOPLEFT", overview.panel, "BOTTOMLEFT", 0, -4)
     trackingBar:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -4)
-    trackingBar:SetHeight(22)
     trackingBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     trackingBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     trackingBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local trackingText = trackingBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    trackingText:SetPoint("LEFT", trackingBar, "LEFT", 10, 0)
-    trackingText:SetPoint("RIGHT", trackingBar, "RIGHT", -10, 0)
+    trackingText:SetPoint("TOPLEFT", trackingBar, "TOPLEFT", 10, -4)
+    trackingText:SetPoint("TOPRIGHT", trackingBar, "TOPRIGHT", -10, -4)
     trackingText:SetJustifyH("LEFT")
+    trackingText:SetWordWrap(true)
     trackingText:SetText("")
     trackingText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    trackingBar:SetScript("OnShow", function(self)
+        C_Timer.After(0.05, function()
+            if trackingText and trackingText:GetStringHeight() then
+                self:SetHeight(trackingText:GetStringHeight() + 8)
+            end
+        end)
+    end)
+    trackingBar:SetHeight(22)
 
     local subTabBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     subTabBar:SetPoint("TOPLEFT", trackingBar, "BOTTOMLEFT", 0, -4)
@@ -1384,6 +1391,8 @@ function ns.UI.RefreshProgressTab(progressTab)
             frame.refreshFunc(frame)
         end
     end
+
+    ns.UI.ApplyFontToFrame(progressTab)
 end
 
 function ns.UI.RefreshProgressStats(progressTab)
@@ -1596,9 +1605,21 @@ function ns.UI.RefreshTrackingBar(progressTab)
     local bossStr = bossName ~= "" and (bossName .. (bossAuto and " " .. L["TRACKING_BAR_AUTO"] or "")) or L["TRACKING_BAR_NOT_SET"]
     local currStr = #currencyNames > 0 and table.concat(currencyNames, "  |  ") or L["TRACKING_BAR_NOT_SET"]
 
+    local offset = OneWoW_GUI:GetFontSizeOffset() or 0
+    local sep = offset >= 2 and "\n" or "     "
     progressTab.trackingText:SetText(
-        L["TRACKING_BAR_RAID"] .. " " .. raidStr .. "     " ..
-        L["TRACKING_BAR_BOSS"] .. " " .. bossStr .. "     " ..
+        L["TRACKING_BAR_RAID"] .. " " .. raidStr .. sep ..
+        L["TRACKING_BAR_BOSS"] .. " " .. bossStr .. sep ..
         L["TRACKING_BAR_CURRENCIES"] .. " " .. currStr
     )
+
+    local bar = progressTab.trackingBar
+    if bar and progressTab.trackingText then
+        C_Timer.After(0.05, function()
+            local h = progressTab.trackingText:GetStringHeight()
+            if h and h > 0 then
+                bar:SetHeight(h + 8)
+            end
+        end)
+    end
 end

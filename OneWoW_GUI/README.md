@@ -158,13 +158,14 @@ local yOffset = OneWoW_GUI:CreateSettingsPanel(parentFrame, {
 })
 -- yOffset is now updated; continue adding addon-specific content below
 ```
-This creates three themed containers:
+This creates four themed split containers:
 1. Language Selection (left) | Color Theme (right) - with dropdowns
-2. Font (full width) - dropdown with live preview text
+2. Font (left) - dropdown | Font Size (right) - stepper with live preview
 3. Minimap Button checkbox (left) | Icon Theme dropdown (right)
+4. Discord link (left) | Buy Me A Coffee link (right) - copy-paste edit boxes
 
 All dropdowns read/write directly to `OneWoW_GUI_DB` and fire callbacks.
-The panel consumes ~480px of vertical space.
+The panel consumes ~695px of vertical space.
 
 ### Migrate existing settings (call once at addon init)
 ```lua

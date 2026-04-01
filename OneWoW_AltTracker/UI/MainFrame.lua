@@ -346,6 +346,20 @@ function ns.UI.RefreshAllFavoriteRosters()
     end
 end
 
+function ns.UI.ResizeOverviewPanels()
+    local mf = _G.OneWoWAltTrackerMainFrame
+    local addon = _G.OneWoW_AltTracker
+    local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
+    if not t then return end
+    local offset = OneWoW_GUI:GetFontSizeOffset() or 0
+    local extraHeight = math.max(0, offset) * 8
+    for _, tabFrame in pairs(t) do
+        if tabFrame.overviewPanel and tabFrame.overviewPanel._baseHeight then
+            tabFrame.overviewPanel:SetHeight(tabFrame.overviewPanel._baseHeight + extraHeight)
+        end
+    end
+end
+
 function ns.UI.CreateFavoriteStarButton(charRow, charKey)
     local L = ns.L
     local starBtn = CreateFrame("Button", nil, charRow)

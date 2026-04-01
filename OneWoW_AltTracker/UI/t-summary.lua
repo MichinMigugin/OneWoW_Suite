@@ -302,7 +302,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 local totalTime = (cData.playTime and cData.playTime.total) or 0
                 local days = math.floor(totalTime / 86400)
                 local hours = math.floor((totalTime % 86400) / 3600)
-                grid:AddLine(p1, L["EXPANDED_TOTAL_PLAYTIME"], string.format("%dd %dh", days, hours), {1, 0.82, 0})
+                grid:AddLine(p1, L["EXPANDED_TOTAL_PLAYTIME"], string.format("%dd %dh", days, hours), {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")})
 
                 local restedPercent = 0
                 local eFmt = ns.AltTrackerFormatters
@@ -313,10 +313,10 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                     local maxPercent = (race == "Pandaren") and 300 or 150
                     restedPercent = math.min(restedPercent, maxPercent)
                 end
-                local restedColor = {1, 0.3, 0.3}
-                if restedPercent >= 150 then restedColor = {0.3, 1, 0.3}
-                elseif restedPercent >= 60 then restedColor = {0, 0.74, 0.83}
-                elseif restedPercent >= 30 then restedColor = {1, 1, 0}
+                local restedColor = {OneWoW_GUI:GetThemeColor("TEXT_WARNING")}
+                if restedPercent >= 150 then restedColor = {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")}
+                elseif restedPercent >= 60 then restedColor = {OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY")}
+                elseif restedPercent >= 30 then restedColor = {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")}
                 end
                 grid:AddLine(p1, L["EXPANDED_RESTED_XP"], restedPercent .. "%", restedColor)
 
@@ -335,7 +335,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                     guildName = cData.guild.name
                     guildRank = cData.guild.rank or ""
                 end
-                grid:AddLine(p2, L["EXPANDED_GUILD"], guildName, {0.3, 1, 0.3})
+                grid:AddLine(p2, L["EXPANDED_GUILD"], guildName, {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")})
                 if guildRank ~= "" then
                     grid:AddLine(p2, L["EXPANDED_GUILD_RANK"], guildRank, {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                 end
@@ -371,7 +371,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         if classColor then
             nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
         else
-            nameText:SetTextColor(1, 1, 1)
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
         nameText:SetJustifyH("LEFT")
 
@@ -425,7 +425,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
             local levelText = levelContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
             levelText:SetPoint("CENTER")
             levelText:SetText(L["LEVEL_MAX"])
-            levelText:SetTextColor(1, 0.82, 0)
+            levelText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
             local iconTexture = levelContainer:CreateTexture(nil, "ARTWORK")
             iconTexture:SetSize(10, 10)
@@ -433,10 +433,10 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
             if xpDisabled then
                 iconTexture:SetAtlas("transmog-icon-invalid")
-                iconTexture:SetVertexColor(1, 0.2, 0.2)
+                iconTexture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             else
                 iconTexture:SetAtlas("common-icon-checkmark")
-                iconTexture:SetVertexColor(0.3, 1, 0.3)
+                iconTexture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             end
 
             local levelText = levelContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -467,7 +467,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         table.insert(charRow.cells, levelContainer)
 
         local classText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        classText:SetText(charData.className or charData.class or "")
+        classText:SetText(ns.AltTrackerFormatters:GetCompactClassName(charData.class or charData.className or ""))
         classText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         classText:SetJustifyH("LEFT")
         table.insert(charRow.cells, classText)
@@ -522,13 +522,13 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         end
         restedText:SetText(restedPercent .. "%")
         if restedPercent >= 150 then
-            restedText:SetTextColor(0.3, 1, 0.3)
+            restedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         elseif restedPercent >= 60 then
-            restedText:SetTextColor(0, 0.74, 0.83)
+            restedText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
         elseif restedPercent >= 30 then
-            restedText:SetTextColor(1, 1, 0)
+            restedText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
-            restedText:SetTextColor(1, 0.3, 0.3)
+            restedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
         end
 
         local restedFrame = CreateFrame("Frame", nil, charRow)
@@ -638,14 +638,15 @@ function ns.UI.RefreshSummaryTab(summaryTab)
             end
         end
         bagsText:SetText(bagsFree)
-        bagsText:SetTextColor(0.3, 1, 0.3)
+        bagsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         table.insert(charRow.cells, bagsText)
 
         local goldText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        ns.UI.ApplyFontCapped(goldText, 12, 2)
         local money = charData.money or 0
         local goldFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(money)
         goldText:SetText(goldFormatted)
-        goldText:SetTextColor(1, 0.82, 0)
+        goldText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         goldText:SetJustifyH("RIGHT")
         table.insert(charRow.cells, goldText)
 
@@ -670,14 +671,14 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         local currentCharKey = UnitName("player") .. "-" .. GetRealmName()
         if charKey == currentCharKey then
             lastSeenFormatted = L["FMT_NOW"]
-            lastSeenText:SetTextColor(0.3, 1, 0.3)
+            lastSeenText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         elseif timeDiff < 60 then
             lastSeenFormatted = "1" .. L["FMT_MINUTE_SHORT"]
-            lastSeenText:SetTextColor(0.5, 1, 0.5)
+            lastSeenText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         elseif timeDiff < 3600 then
             local minutes = math.floor(timeDiff / 60)
             lastSeenFormatted = tostring(minutes) .. L["FMT_MINUTE_SHORT"]
-            lastSeenText:SetTextColor(0.7, 1, 0.7)
+            lastSeenText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             local years = math.floor(timeDiff / 31536000)
             local days = math.floor((timeDiff % 31536000) / 86400)
@@ -689,7 +690,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
             else
                 lastSeenFormatted = tostring(days) .. L["FMT_DAY_SHORT"] .. " " .. tostring(hours) .. L["FMT_HOUR_SHORT"] .. " " .. tostring(minutes) .. L["FMT_MINUTE_SHORT"]
             end
-            lastSeenText:SetTextColor(1, 1, 0.5)
+            lastSeenText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         end
 
         lastSeenText:SetText(lastSeenFormatted)
@@ -846,7 +847,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
         local classText = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         classText:SetPoint("LEFT", 0, 0)
         classText:SetWidth(100)
-        classText:SetText(LOCALIZED_CLASS_NAMES_MALE[classInfo.class] or classInfo.class)
+        classText:SetText(ns.AltTrackerFormatters:GetCompactClassName(classInfo.class))
         classText:SetTextColor(classColor.r, classColor.g, classColor.b)
         classText:SetJustifyH("LEFT")
 
@@ -906,6 +907,8 @@ function ns.UI.ShowPlaytimeDialog(stats)
     totalText:SetPoint("BOTTOMLEFT", cf, "BOTTOMLEFT", 10, 8)
     totalText:SetText(L["TOTAL"] .. ": " .. ns.UI.FormatPlaytimeCompact(accountTotal))
     totalText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    ns.UI.ApplyFontToFrame(result.frame)
 
     result.frame:Show()
 end

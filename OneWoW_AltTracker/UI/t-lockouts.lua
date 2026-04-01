@@ -278,7 +278,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                         local timeLeftText = daysLeft > 0 and string.format("%dd %dh", daysLeft, hoursLeft) or string.format("%dh", hoursLeft)
                         local progressText = string.format("(%d/%d)", lockout.encounterProgress, lockout.totalEncounters)
                         grid:AddLine(pRaids, string.format("%s %s", lockout.difficulty or "", lockout.name or ""))
-                        grid:AddLine(pRaids, "  " .. progressText .. " - " .. timeLeftText, {0.5, 0.9, 1})
+                        grid:AddLine(pRaids, "  " .. progressText .. " - " .. timeLeftText, {OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY")})
                     end
                 else
                     grid:AddLine(pRaids, L["LOCKOUTS_NO_RAID"], {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
@@ -291,7 +291,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                         local hoursLeft = math.floor((timeLeft % 86400) / 3600)
                         local timeLeftText = daysLeft > 0 and string.format("%dd %dh", daysLeft, hoursLeft) or string.format("%dh", hoursLeft)
                         grid:AddLine(pDungeons, string.format("%s %s", lockout.difficulty or "", lockout.name or ""))
-                        grid:AddLine(pDungeons, "  " .. timeLeftText, {0.5, 0.9, 1})
+                        grid:AddLine(pDungeons, "  " .. timeLeftText, {OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY")})
                     end
                 else
                     grid:AddLine(pDungeons, L["LOCKOUTS_NO_DUNGEON"], {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
@@ -324,7 +324,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
         if classColor then
             nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
         else
-            nameText:SetTextColor(1, 1, 1)
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
         nameText:SetJustifyH("LEFT")
         table.insert(charRow.cells, nameText)
@@ -399,7 +399,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                 else
                     expiresText:SetText(string.format("%dh", hoursLeft))
                 end
-                expiresText:SetTextColor(0.5, 0.9, 1)
+                expiresText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
             else
                 expiresText:SetText("-")
                 expiresText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))

@@ -289,7 +289,7 @@ local function ShowTransactionContextMenu(tx)
         deleteBtn:AddInitializer(function(button)
             local fontString = button.fontString
             if fontString then
-                fontString:SetTextColor(1, 0.3, 0.3)
+                fontString:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             end
         end)
     end)
@@ -550,9 +550,9 @@ function ns.UI.CreateFinancialsTab(parent)
 
     local resetBtn = OneWoW_GUI:CreateButton(filterPanel, { text = L["FIN_RESET_DATA"], width = 80, height = 24 })
     resetBtn:SetPoint("LEFT", catDropdown, "RIGHT", 25, 0)
-    resetBtn:SetBackdropColor(0.3, 0.1, 0.1, 1)
-    resetBtn:SetBackdropBorderColor(0.6, 0.2, 0.2, 1)
-    resetBtn.text:SetTextColor(1, 0.7, 0.7)
+    resetBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+    resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+    resetBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
     resetBtn:SetScript("OnClick", function(self)
         StaticPopupDialogs["ONEWOW_RESET_FINANCIAL_DATA"] = {
@@ -586,7 +586,7 @@ function ns.UI.CreateFinancialsTab(parent)
     end)
 
     resetBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.4, 0.15, 0.15, 1)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(L["FIN_RESET_TT"], 1, 0.3, 0.3)
         GameTooltip:AddLine(L["FIN_RESET_TT_DESC"], 0.7, 0.7, 0.7, true)
@@ -594,7 +594,7 @@ function ns.UI.CreateFinancialsTab(parent)
     end)
 
     resetBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.3, 0.1, 0.1, 1)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
         GameTooltip:Hide()
     end)
 
@@ -768,7 +768,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
 
         if financialsTab.statBoxes[1] then
             financialsTab.statBoxes[1].value:SetText(ns.AltTrackerFormatters:FormatGold(stats.income))
-            financialsTab.statBoxes[1].value:SetTextColor(0, 1, 0)
+            financialsTab.statBoxes[1].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
 
             local topIncome = {}
             for category, amount in pairs(stats.categories or {}) do
@@ -792,7 +792,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
 
         if financialsTab.statBoxes[2] then
             financialsTab.statBoxes[2].value:SetText(ns.AltTrackerFormatters:FormatGold(stats.expense))
-            financialsTab.statBoxes[2].value:SetTextColor(1, 0.5, 0.5)
+            financialsTab.statBoxes[2].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
             local topExpense = {}
             for category, amount in pairs(stats.categories or {}) do
@@ -817,9 +817,9 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
         if financialsTab.statBoxes[3] then
             financialsTab.statBoxes[3].value:SetText(ns.AltTrackerFormatters:FormatGold(stats.profit))
             if stats.profit >= 0 then
-                financialsTab.statBoxes[3].value:SetTextColor(0, 1, 0)
+                financialsTab.statBoxes[3].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
-                financialsTab.statBoxes[3].value:SetTextColor(1, 0, 0)
+                financialsTab.statBoxes[3].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             end
         end
 
@@ -929,13 +929,13 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
         local amountFormatted = ns.AltTrackerFormatters:FormatGold(tx.amount or 0)
         if tx.type == "income" then
             amountText:SetText("+" .. amountFormatted)
-            amountText:SetTextColor(0, 1, 0)
+            amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         elseif tx.type == "transfer" then
             amountText:SetText(amountFormatted)
-            amountText:SetTextColor(1, 0.82, 0)
+            amountText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
             amountText:SetText("-" .. amountFormatted)
-            amountText:SetTextColor(1, 0.5, 0.5)
+            amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
         end
         amountText:SetJustifyH("RIGHT")
         table.insert(txRow.cells, amountText)
