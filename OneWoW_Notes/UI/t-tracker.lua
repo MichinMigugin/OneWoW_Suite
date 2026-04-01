@@ -38,6 +38,7 @@ function ns.UI.CreateTrackerTab(parent)
     local filterType = "all"
     local filterCategory = "All"
     local searchFilter = ""
+    local hideCompleted = false
     local listRows = {}
 
     local controlPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
@@ -133,6 +134,16 @@ function ns.UI.CreateTrackerTab(parent)
     searchBox:SetScript("OnTextChanged", function(self)
         searchFilter = self:GetSearchText() or ""
         parent.RefreshList()
+    end)
+
+    local hideCompletedCheck = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["TRACKER_HIDE_DONE"] or "Hide Done" })
+    hideCompletedCheck:SetPoint("LEFT", searchBox, "RIGHT", 10, 0)
+    hideCompletedCheck:SetScript("OnClick", function(self)
+        hideCompleted = self:GetChecked()
+        parent.RefreshList()
+        if selectedListID then
+            parent.ShowDetail(selectedListID)
+        end
     end)
 
     local LEFT_PANEL_WIDTH = ns.Constants.GUI.LEFT_PANEL_WIDTH or 350
@@ -312,12 +323,115 @@ function ns.UI.CreateTrackerTab(parent)
 
     local detailRows = {}
 
+    local dragState = nil
+    local dragRows = {}
+    local ghostFrame, dropIndicator
+
+    local function EnsureDragUI()
+        if not ghostFrame then
+            ghostFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            ghostFrame:SetSize(220, 22)
+            ghostFrame:SetFrameStrata("TOOLTIP")
+            ghostFrame:SetBackdrop(BACKDROP_SIMPLE)
+            ghostFrame:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
+            ghostFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            ghostFrame.label = ghostFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            ghostFrame.label:SetPoint("LEFT", 6, 0)
+            ghostFrame.label:SetPoint("RIGHT", ghostFrame, "RIGHT", -6, 0)
+            ghostFrame.label:SetTextColor(1, 1, 1)
+            ghostFrame:Hide()
+        end
+        if not dropIndicator then
+            dropIndicator = detailPanel:CreateTexture(nil, "OVERLAY")
+            dropIndicator:SetHeight(2)
+            dropIndicator:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            dropIndicator:Hide()
+        end
+    end
+
+    local function DragUpdate()
+        if not dragState then return end
+        local cx, cy = GetCursorPosition()
+        local scale = UIParent:GetEffectiveScale()
+        cx, cy = cx / scale, cy / scale
+
+        ghostFrame:ClearAllPoints()
+        ghostFrame:SetPoint("LEFT", UIParent, "BOTTOMLEFT", cx + 15, cy)
+
+        local bestRow, bestDist, above = nil, math.huge, true
+        for _, row in ipairs(dragRows) do
+            if row.type == dragState.type and (dragState.type == "section" or row.sectionKey == dragState.sectionKey) then
+                if row.frame and row.frame:IsVisible() then
+                    local top = row.frame:GetTop()
+                    local bottom = row.frame:GetBottom()
+                    if top and bottom then
+                        local center = (top + bottom) / 2
+                        local dist = math.abs(cy - center)
+                        if dist < bestDist then
+                            bestDist = dist
+                            bestRow = row
+                            above = cy > center
+                        end
+                    end
+                end
+            end
+        end
+
+        if bestRow and bestRow.frame:IsVisible() then
+            dropIndicator:ClearAllPoints()
+            if above then
+                dropIndicator:SetPoint("TOPLEFT", bestRow.frame, "TOPLEFT", 0, 1)
+                dropIndicator:SetPoint("TOPRIGHT", bestRow.frame, "TOPRIGHT", 0, 1)
+            else
+                dropIndicator:SetPoint("TOPLEFT", bestRow.frame, "BOTTOMLEFT", 0, -1)
+                dropIndicator:SetPoint("TOPRIGHT", bestRow.frame, "BOTTOMRIGHT", 0, -1)
+            end
+            dropIndicator:Show()
+            dragState.targetRow = bestRow
+            dragState.above = above
+        else
+            dropIndicator:Hide()
+            dragState.targetRow = nil
+        end
+    end
+
+    local function DragStop()
+        if not dragState then return end
+        local ds = dragState
+        dragState = nil
+        if ghostFrame then ghostFrame:Hide() end
+        if dropIndicator then dropIndicator:Hide() end
+        detailPanel:SetScript("OnUpdate", nil)
+
+        if not ds.targetRow or ds.targetRow.index == ds.fromIndex then return end
+
+        local targetIdx
+        if ds.above then
+            targetIdx = (ds.fromIndex < ds.targetRow.index) and (ds.targetRow.index - 1) or ds.targetRow.index
+        else
+            targetIdx = (ds.fromIndex <= ds.targetRow.index) and ds.targetRow.index or (ds.targetRow.index + 1)
+        end
+        if targetIdx == ds.fromIndex then return end
+
+        if ds.type == "section" then
+            TD:ReorderSection(ds.listID, ds.key, targetIdx)
+        elseif ds.type == "step" then
+            TD:ReorderStep(ds.listID, ds.sectionKey, ds.key, targetIdx)
+        end
+
+        TE:RebuildIndices()
+        parent.RefreshList()
+        parent.ShowDetail(ds.listID)
+        TE:RefreshAllPinnedWindows()
+    end
+
     local function ClearDetail()
         for _, row in ipairs(detailRows) do
             if row.Hide then row:Hide() end
             if row.SetParent then row:SetParent(nil) end
         end
         wipe(detailRows)
+        wipe(dragRows)
         emptyLabel:Show()
         detailTitle:SetText(L["TRACKER_DETAIL_TITLE"] or "Details")
     end
@@ -349,12 +463,16 @@ function ns.UI.CreateTrackerTab(parent)
         local authorText = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         authorText:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 10, -8)
         local typeColor = LIST_TYPE_COLORS[list.listType] or { 0.7, 0.7, 0.7 }
-        authorText:SetText(format("|cFF%02x%02x%02x%s|r  |  %s  |  %s",
+        local metaParts = format("|cFF%02x%02x%02x%s|r  |  %s  |  %s",
             typeColor[1] * 255, typeColor[2] * 255, typeColor[3] * 255,
             TE:GetListTypeDisplayName(list.listType),
             list.category or "General",
             (list.author or "")
-        ))
+        )
+        if list.accountWide then
+            metaParts = metaParts .. "  |  |cFF66CCFFAccount-wide|r"
+        end
+        authorText:SetText(metaParts)
         authorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local done, total = TD:GetListCompletion(list.id)
@@ -490,7 +608,7 @@ function ns.UI.CreateTrackerTab(parent)
           if TE:IsSectionVisible(sec) then
             yOffset = yOffset - 8
 
-            local secHeader = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
+            local secHeader = CreateFrame("Button", nil, detailScrollChild, "BackdropTemplate")
             secHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 4, yOffset)
             secHeader:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -4, yOffset)
             secHeader:SetHeight(32)
@@ -504,8 +622,13 @@ function ns.UI.CreateTrackerTab(parent)
             accentLine:SetPoint("TOPLEFT", secHeader, "TOPLEFT", 0, 0)
             accentLine:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
+            local collapseIcon = secHeader:CreateTexture(nil, "ARTWORK")
+            collapseIcon:SetSize(12, 12)
+            collapseIcon:SetPoint("LEFT", accentLine, "RIGHT", 6, 0)
+            collapseIcon:SetTexture(sec.collapsed and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP")
+
             local secLabel = secHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            secLabel:SetPoint("LEFT", accentLine, "RIGHT", 8, 0)
+            secLabel:SetPoint("LEFT", collapseIcon, "RIGHT", 4, 0)
             secLabel:SetText(sec.label or "Section")
             secLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
@@ -565,10 +688,30 @@ function ns.UI.CreateTrackerTab(parent)
                 end
             end)
 
+            secHeader:SetScript("OnClick", function()
+                sec.collapsed = not sec.collapsed
+                parent.ShowDetail(list.id)
+            end)
+
+            secHeader:RegisterForDrag("LeftButton")
+            secHeader:SetScript("OnDragStart", function()
+                EnsureDragUI()
+                dragState = {
+                    type = "section", key = sec.key, fromIndex = secIdx,
+                    label = sec.label or "Section", listID = list.id,
+                }
+                ghostFrame.label:SetText(sec.label or "Section")
+                ghostFrame:Show()
+                detailPanel:SetScript("OnUpdate", DragUpdate)
+            end)
+            secHeader:SetScript("OnDragStop", DragStop)
+            tinsert(dragRows, {type = "section", frame = secHeader, key = sec.key, index = secIdx})
+
             yOffset = yOffset - 36
 
+          if not sec.collapsed then
             for stepIdx, step in ipairs(sec.steps or {}) do
-              if TE:IsStepVisible(step, sec) then
+              if TE:IsStepVisible(step, sec) and not (hideCompleted and TD:IsStepComplete(list.id, sec.key, step.key)) then
                 local sp = TD:GetStepProgress(list.id, sec.key, step.key)
                 local isComplete = sp.completed or false
 
@@ -592,32 +735,44 @@ function ns.UI.CreateTrackerTab(parent)
                 end
 
                 local checkSize = 16
-                local checkBtn = CreateFrame("CheckButton", nil, stepRow)
-                checkBtn:SetSize(checkSize, checkSize)
-                checkBtn:SetPoint("LEFT", stepRow, "LEFT", 6, 0)
-                checkBtn:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
-                checkBtn:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
-                checkBtn:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight", "ADD")
-                checkBtn:SetChecked(isComplete)
-
-                if step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
-                    checkBtn:SetScript("OnClick", function(self)
-                        TD:ToggleStepComplete(list.id, sec.key, step.key)
-                        parent.RefreshList()
-                        parent.ShowDetail(list.id)
-                        TE:RefreshAllPinnedWindows()
-                    end)
+                local checkBtn
+                if step.optional then
+                    checkBtn = CreateFrame("Frame", nil, stepRow)
+                    checkBtn:SetSize(checkSize, checkSize)
+                    checkBtn:SetPoint("LEFT", stepRow, "LEFT", 6, 0)
+                    local infoTex = checkBtn:CreateTexture(nil, "ARTWORK")
+                    infoTex:SetAllPoints()
+                    infoTex:SetTexture("Interface\\FriendsFrame\\InformationIcon")
                 else
-                    checkBtn:EnableMouse(false)
+                    checkBtn = CreateFrame("CheckButton", nil, stepRow)
+                    checkBtn:SetSize(checkSize, checkSize)
+                    checkBtn:SetPoint("LEFT", stepRow, "LEFT", 6, 0)
+                    checkBtn:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
+                    checkBtn:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
+                    checkBtn:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight", "ADD")
+                    checkBtn:SetChecked(isComplete)
+
+                    if step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
+                        checkBtn:SetScript("OnClick", function(self)
+                            TD:ToggleStepComplete(list.id, sec.key, step.key)
+                            parent.RefreshList()
+                            parent.ShowDetail(list.id)
+                            TE:RefreshAllPinnedWindows()
+                        end)
+                    else
+                        checkBtn:EnableMouse(false)
+                    end
                 end
 
                 local stepLabel = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 stepLabel:SetPoint("LEFT", checkBtn, "RIGHT", 6, 0)
-                stepLabel:SetPoint("RIGHT", stepRow, "RIGHT", -160, 0)
+                stepLabel:SetPoint("RIGHT", stepRow, "RIGHT", -100, 0)
                 stepLabel:SetJustifyH("LEFT")
                 stepLabel:SetText(step.label or "Step")
 
-                if isComplete then
+                if step.optional then
+                    stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                elseif isComplete then
                     stepLabel:SetTextColor(0.4, 0.8, 0.4)
                 elseif not depsMet then
                     stepLabel:SetTextColor(0.5, 0.5, 0.5)
@@ -637,7 +792,7 @@ function ns.UI.CreateTrackerTab(parent)
                 end
 
                 local stepProgress = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                stepProgress:SetPoint("RIGHT", stepRow, "RIGHT", -130, 0)
+                stepProgress:SetPoint("RIGHT", stepRow, "RIGHT", -60, 0)
                 stepProgress:SetText(progressStr)
                 stepProgress:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
@@ -709,22 +864,8 @@ function ns.UI.CreateTrackerTab(parent)
 
                 stepRow:SetHeight(math.max(30, rowHeight))
 
-                local stepBtnFrame = CreateFrame("Frame", nil, stepRow)
-                stepBtnFrame:SetSize(1, 18)
-                stepBtnFrame:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -4, -4)
-
-                local stepDelBtn = OneWoW_GUI:CreateFitTextButton(stepBtnFrame, { text = "X", height = 18 })
-                stepDelBtn:SetPoint("RIGHT", stepBtnFrame, "RIGHT", 0, 0)
-                stepDelBtn:SetScript("OnClick", function()
-                    TD:RemoveStep(list.id, sec.key, step.key)
-                    TE:RebuildIndices()
-                    parent.RefreshList()
-                    parent.ShowDetail(list.id)
-                    TE:RefreshAllPinnedWindows()
-                end)
-
-                local stepEditBtn = OneWoW_GUI:CreateFitTextButton(stepBtnFrame, { text = "Edit", height = 18 })
-                stepEditBtn:SetPoint("RIGHT", stepDelBtn, "LEFT", -2, 0)
+                local stepEditBtn = OneWoW_GUI:CreateFitTextButton(stepRow, { text = L["TRACKER_EDIT"] or "Edit", height = 18 })
+                stepEditBtn:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -4, -4)
                 stepEditBtn:SetScript("OnClick", function()
                     if ns.TrackerEditor then
                         ns.TrackerEditor:ShowStepEditor(list.id, sec.key, step.key, function()
@@ -736,23 +877,6 @@ function ns.UI.CreateTrackerTab(parent)
                     end
                 end)
 
-                local stepDownBtn = OneWoW_GUI:CreateFitTextButton(stepBtnFrame, { text = "v", height = 18 })
-                stepDownBtn:SetPoint("RIGHT", stepEditBtn, "LEFT", -2, 0)
-
-                local stepUpBtn = OneWoW_GUI:CreateFitTextButton(stepBtnFrame, { text = "^", height = 18 })
-                stepUpBtn:SetPoint("RIGHT", stepDownBtn, "LEFT", -2, 0)
-
-                stepUpBtn:SetScript("OnClick", function()
-                    TD:MoveStep(list.id, sec.key, step.key, "up")
-                    parent.RefreshList()
-                    parent.ShowDetail(list.id)
-                end)
-                stepDownBtn:SetScript("OnClick", function()
-                    TD:MoveStep(list.id, sec.key, step.key, "down")
-                    parent.RefreshList()
-                    parent.ShowDetail(list.id)
-                end)
-
                 stepRow:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     TE:BuildStepTooltip(GameTooltip, list.id, sec.key, step)
@@ -760,45 +884,87 @@ function ns.UI.CreateTrackerTab(parent)
                 end)
                 stepRow:SetScript("OnLeave", GameTooltip_Hide)
 
-                local hasCoords = step.mapID and step.coordX and step.coordY and tonumber(step.mapID) and tonumber(step.coordX) and tonumber(step.coordY)
-                if hasCoords then
-                    stepRow:SetScript("OnClick", function()
-                        local mid = tonumber(step.mapID)
-                        local cx = tonumber(step.coordX) / 100
-                        local cy = tonumber(step.coordY) / 100
-                        local mapPoint = UiMapPoint.CreateFromCoordinates(mid, cx, cy)
-                        C_Map.SetUserWaypoint(mapPoint)
-                        C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                        print(format("|cFFFFD100OneWoW Notes:|r Waypoint set for %s (%.1f, %.1f)", step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
-                    end)
-                else
-                    stepRow:RegisterForClicks("AnyDown", "AnyUp")
-                    stepRow:SetScript("OnClick", function(_, button)
-                        if button == "LeftButton" then
-                            if step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
-                                TD:ToggleStepComplete(list.id, sec.key, step.key)
-                                parent.RefreshList()
-                                parent.ShowDetail(list.id)
-                                TE:RefreshAllPinnedWindows()
-                            end
-                        elseif button == "RightButton" then
-                            if step.trackType == "manual" and sp.current and sp.current > 0 then
-                                local newVal = sp.current - 1
-                                TD:SetStepProgress(list.id, sec.key, step.key, newVal, step.max)
-                                if newVal < (step.max or 1) then
-                                    sp.completed = false
-                                end
-                                parent.RefreshList()
-                                parent.ShowDetail(list.id)
-                                TE:RefreshAllPinnedWindows()
-                            end
+                stepRow:RegisterForClicks("AnyUp")
+                stepRow:SetScript("OnClick", function(_, button)
+                    if button == "LeftButton" then
+                        local hasCoords = step.mapID and step.coordX and step.coordY and tonumber(step.mapID) and tonumber(step.coordX) and tonumber(step.coordY)
+                        if hasCoords then
+                            local mid = tonumber(step.mapID)
+                            local cx = tonumber(step.coordX) / 100
+                            local cy = tonumber(step.coordY) / 100
+                            local mapPoint = UiMapPoint.CreateFromCoordinates(mid, cx, cy)
+                            C_Map.SetUserWaypoint(mapPoint)
+                            C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+                            print(format("|cFFFFD100OneWoW Notes:|r Waypoint set for %s (%.1f, %.1f)", step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
+                        elseif not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
+                            TD:ToggleStepComplete(list.id, sec.key, step.key)
+                            parent.RefreshList()
+                            parent.ShowDetail(list.id)
+                            TE:RefreshAllPinnedWindows()
                         end
-                    end)
-                end
+                    elseif button == "RightButton" then
+                        MenuUtil.CreateContextMenu(stepRow, function(ownerRegion, rootDescription)
+                            rootDescription:CreateTitle(step.label or "Step")
+                            rootDescription:CreateButton(L["TRACKER_EDIT"] or "Edit", function()
+                                if ns.TrackerEditor then
+                                    ns.TrackerEditor:ShowStepEditor(list.id, sec.key, step.key, function()
+                                        TE:RebuildIndices()
+                                        parent.RefreshList()
+                                        parent.ShowDetail(list.id)
+                                        TE:RefreshAllPinnedWindows()
+                                    end)
+                                end
+                            end)
+                            rootDescription:CreateDivider()
+                            rootDescription:CreateButton(L["TRACKER_MOVE_UP"] or "Move Up", function()
+                                TD:MoveStep(list.id, sec.key, step.key, "up")
+                                parent.RefreshList()
+                                parent.ShowDetail(list.id)
+                            end)
+                            rootDescription:CreateButton(L["TRACKER_MOVE_DOWN"] or "Move Down", function()
+                                TD:MoveStep(list.id, sec.key, step.key, "down")
+                                parent.RefreshList()
+                                parent.ShowDetail(list.id)
+                            end)
+                            if not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
+                                rootDescription:CreateDivider()
+                                rootDescription:CreateButton(isComplete and (L["TRACKER_MARK_INCOMPLETE"] or "Mark Incomplete") or (L["TRACKER_MARK_COMPLETE"] or "Mark Complete"), function()
+                                    TD:ToggleStepComplete(list.id, sec.key, step.key)
+                                    parent.RefreshList()
+                                    parent.ShowDetail(list.id)
+                                    TE:RefreshAllPinnedWindows()
+                                end)
+                            end
+                            rootDescription:CreateDivider()
+                            rootDescription:CreateButton("|cFFFF4444" .. (L["TRACKER_DELETE"] or "Delete") .. "|r", function()
+                                TD:RemoveStep(list.id, sec.key, step.key)
+                                TE:RebuildIndices()
+                                parent.RefreshList()
+                                parent.ShowDetail(list.id)
+                                TE:RefreshAllPinnedWindows()
+                            end)
+                        end)
+                    end
+                end)
+
+                stepRow:RegisterForDrag("LeftButton")
+                stepRow:SetScript("OnDragStart", function()
+                    EnsureDragUI()
+                    dragState = {
+                        type = "step", key = step.key, sectionKey = sec.key,
+                        fromIndex = stepIdx, label = step.label or "Step", listID = list.id,
+                    }
+                    ghostFrame.label:SetText(step.label or "Step")
+                    ghostFrame:Show()
+                    detailPanel:SetScript("OnUpdate", DragUpdate)
+                end)
+                stepRow:SetScript("OnDragStop", DragStop)
+                tinsert(dragRows, {type = "step", frame = stepRow, key = step.key, sectionKey = sec.key, index = stepIdx})
 
                 yOffset = yOffset - (math.max(30, rowHeight) + 4)
               end
             end
+          end
           end
         end
 
