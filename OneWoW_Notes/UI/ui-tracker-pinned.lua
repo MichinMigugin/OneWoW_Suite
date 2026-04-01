@@ -112,7 +112,7 @@ function TP:Create(listID)
           if TE:IsSectionVisible(sec) then
             local secDone, secTotal = TD:GetSectionCompletion(listID, sec.key)
 
-            local secHeader = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
+            local secHeader = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
             secHeader:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
             secHeader:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yOffset)
             secHeader:SetHeight(20)
@@ -131,8 +131,13 @@ function TP:Create(listID)
             accent:SetPoint("TOPLEFT", secHeader, "TOPLEFT", 0, 0)
             accent:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
+            local collapseIcon = secHeader:CreateTexture(nil, "ARTWORK")
+            collapseIcon:SetSize(10, 10)
+            collapseIcon:SetPoint("LEFT", accent, "RIGHT", 4, 0)
+            collapseIcon:SetTexture(sec.collapsed and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP")
+
             local secLabel = secHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            secLabel:SetPoint("LEFT", accent, "RIGHT", 6, 0)
+            secLabel:SetPoint("LEFT", collapseIcon, "RIGHT", 3, 0)
             secLabel:SetText(sec.label or "Section")
             secLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
@@ -143,8 +148,14 @@ function TP:Create(listID)
                 secCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
 
+            secHeader:SetScript("OnClick", function()
+                sec.collapsed = not sec.collapsed
+                frame:Refresh()
+            end)
+
             yOffset = yOffset - 22
 
+          if not sec.collapsed then
             for _, step in ipairs(sec.steps or {}) do
               if TE:IsStepVisible(step, sec) then
                 local sp = TD:GetStepProgress(listID, sec.key, step.key)
@@ -156,11 +167,19 @@ function TP:Create(listID)
                 stepRow:SetHeight(18)
                 tinsert(contentRows, stepRow)
 
-                local dot = OneWoW_GUI:CreateStatusDot(stepRow, {
-                    size = 6,
-                    enabled = isComplete,
-                })
-                dot:SetPoint("LEFT", stepRow, "LEFT", 4, 0)
+                local dot
+                if step.optional then
+                    dot = stepRow:CreateTexture(nil, "ARTWORK")
+                    dot:SetSize(6, 6)
+                    dot:SetPoint("LEFT", stepRow, "LEFT", 4, 0)
+                    dot:SetColorTexture(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                else
+                    dot = OneWoW_GUI:CreateStatusDot(stepRow, {
+                        size = 6,
+                        enabled = isComplete,
+                    })
+                    dot:SetPoint("LEFT", stepRow, "LEFT", 4, 0)
+                end
 
                 local stepLabel = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 stepLabel:SetPoint("LEFT", dot, "RIGHT", 6, 0)
@@ -169,7 +188,9 @@ function TP:Create(listID)
                 stepLabel:SetWordWrap(false)
                 stepLabel:SetText(step.label or "Step")
 
-                if isComplete then
+                if step.optional then
+                    stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                elseif isComplete then
                     stepLabel:SetTextColor(0.5, 0.5, 0.5)
                 else
                     stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -277,6 +298,7 @@ function TP:Create(listID)
                 end
               end
             end
+          end
 
             yOffset = yOffset - 4
           end
