@@ -88,7 +88,7 @@ function ns.UI.CreateItemsTab(parent)
         end
     end)
 
-    local scanAHButton = OneWoW_GUI:CreateButton(filterBar, { text = L["ITEMS_SCAN_AH"], width = 100, height = 20 })
+    local scanAHButton = OneWoW_GUI:CreateFitTextButton(filterBar, { text = L["ITEMS_SCAN_AH"], height = 20 })
     scanAHButton:SetPoint("RIGHT", filterBar, "RIGHT", -8, 0)
     scanAHButton.isAHScanning = false
     scanAHButton:SetScript("OnClick", function(self)

@@ -24,7 +24,7 @@ function OneWoW_GUI:CreateDialog(config)
     local escClose = config.escClose ~= false
     local showBrand = config.showBrand
     local titleIcon = config.titleIcon
-    local titleHeight = config.titleHeight or 28
+    local titleHeight = config.titleHeight or Constants.GUI.TITLEBAR_HEIGHT
     local onClose = config.onClose
     local buttonDefs = config.buttons
     local showScrollFrame = config.showScrollFrame

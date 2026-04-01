@@ -153,7 +153,7 @@ end
 function OneWoW_GUI:CreateTitleBar(parent, options)
     options = options or {}
     local title = options.title or ""
-    local height = options.height or 20
+    local height = options.height or Constants.GUI.TITLEBAR_HEIGHT
     local onClose = options.onClose
     local showBrand = options.showBrand
 

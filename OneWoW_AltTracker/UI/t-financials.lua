@@ -20,6 +20,7 @@ local function GetAmountDialog()
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_FinEditAmount",
+        showBrand = true,
         title = L["FIN_EDIT_AMOUNT"],
         width = 300,
         height = 120,
@@ -85,6 +86,7 @@ local function GetItemDialog()
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_FinEditItem",
+        showBrand = true,
         title = L["FIN_EDIT_ITEM"],
         width = 350,
         height = 110,
@@ -456,7 +458,7 @@ function ns.UI.CreateFinancialsTab(parent)
 
     local typeButtons = {}
     for i, filter in ipairs(typeFilters) do
-        local btn = OneWoW_GUI:CreateButton(filterPanel, { text = filter.label, width = 60, height = 24 })
+        local btn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = filter.label, height = 24 })
 
         if i == 1 then
             btn:SetPoint("LEFT", periodDropdown, "RIGHT", 25, 0)
@@ -499,7 +501,7 @@ function ns.UI.CreateFinancialsTab(parent)
     charLabel:SetText(L["FIN_CHAR_LABEL"])
     charLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local charBtn = OneWoW_GUI:CreateButton(filterPanel, { text = L["FIN_CHAR_ALL"], width = 60, height = 24 })
+    local charBtn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = L["FIN_CHAR_ALL"], height = 24 })
     charBtn:SetPoint("LEFT", charLabel, "RIGHT", 2, 0)
 
     charBtn:SetScript("OnClick", function(self)
@@ -548,7 +550,7 @@ function ns.UI.CreateFinancialsTab(parent)
         end,
     })
 
-    local resetBtn = OneWoW_GUI:CreateButton(filterPanel, { text = L["FIN_RESET_DATA"], width = 80, height = 24 })
+    local resetBtn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = L["FIN_RESET_DATA"], height = 24 })
     resetBtn:SetPoint("LEFT", catDropdown, "RIGHT", 25, 0)
     resetBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
     resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))

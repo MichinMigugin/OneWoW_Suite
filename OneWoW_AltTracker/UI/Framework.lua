@@ -91,6 +91,12 @@ function ns.UI.ApplyFontToFrame(frame)
                 OneWoW_GUI:SafeSetFont(child, OneWoW_GUI:GetFont(), child._owBaseSize, flags)
             end
         end
+        if child.GetObjectType and child:GetObjectType() == "ScrollFrame" and child.GetScrollChild then
+            local scrollChild = child:GetScrollChild()
+            if scrollChild then
+                ns.UI.ApplyFontToFrame(scrollChild)
+            end
+        end
         ns.UI.ApplyFontToFrame(child)
     end
 end

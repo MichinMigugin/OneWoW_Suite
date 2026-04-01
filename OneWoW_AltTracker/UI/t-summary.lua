@@ -782,6 +782,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
     end
 
     if existingFrame then
+        ns.UI.ApplyFontToFrame(existingFrame)
         existingFrame:Show()
         return
     end
@@ -805,6 +806,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoWPlaytimeDialog",
+        showBrand = true,
         title = L["PLAYTIME_BY_CLASS"],
         width = 500,
         height = 400,
@@ -812,24 +814,15 @@ function ns.UI.ShowPlaytimeDialog(stats)
 
     local cf = result.contentFrame
 
-    local scrollFrame = CreateFrame("ScrollFrame", nil, cf)
-    scrollFrame:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -4)
-    scrollFrame:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 30)
-    scrollFrame:EnableMouseWheel(true)
+    local totalFrame = CreateFrame("Frame", nil, cf)
+    totalFrame:SetPoint("BOTTOMLEFT", cf, "BOTTOMLEFT", 0, 0)
+    totalFrame:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", 0, 0)
+    totalFrame:SetHeight(30)
 
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local current = self:GetVerticalScroll()
-        local maxScroll = self:GetVerticalScrollRange()
-        if delta > 0 then
-            self:SetVerticalScroll(math.max(0, current - 30))
-        else
-            self:SetVerticalScroll(math.min(maxScroll, current + 30))
-        end
-    end)
-
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetWidth(480)
-    scrollFrame:SetScrollChild(scrollContent)
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(cf, { width = 480 })
+    scrollFrame:ClearAllPoints()
+    scrollFrame:SetPoint("TOPLEFT", cf, "TOPLEFT", 4, -4)
+    scrollFrame:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -4, 30)
 
     local rowHeight = 24
     local highestTime = sortedClasses[1] and sortedClasses[1].time or 1
@@ -903,8 +896,8 @@ function ns.UI.ShowPlaytimeDialog(stats)
     local totalHeight = math.abs(yOffset) + 10
     scrollContent:SetHeight(totalHeight)
 
-    local totalText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    totalText:SetPoint("BOTTOMLEFT", cf, "BOTTOMLEFT", 10, 8)
+    local totalText = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    totalText:SetPoint("LEFT", totalFrame, "LEFT", 10, 0)
     totalText:SetText(L["TOTAL"] .. ": " .. ns.UI.FormatPlaytimeCompact(accountTotal))
     totalText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 

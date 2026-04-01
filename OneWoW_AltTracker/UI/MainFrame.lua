@@ -116,7 +116,6 @@ function ns.UI:CreateMainFrame(defaultTab)
 
     local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
         title = L["ADDON_TITLE_FRAME"],
-        height = 20,
         showBrand = true,
         onClose = function() frame:Hide() end,
     })

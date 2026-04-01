@@ -45,7 +45,7 @@ function ns.UI.CreateBankTab(parent)
     buttonContainer:SetHeight(30)
 
     local function CreateBankTypeButton(btnText, bankTypeKey, index)
-        local btn = OneWoW_GUI:CreateButton(buttonContainer, { text = btnText, width = 80, height = 28 })
+        local btn = OneWoW_GUI:CreateFitTextButton(buttonContainer, { text = btnText, height = 28 })
         btn.label = btn.text
         btn.bankType = bankTypeKey
         btn.index = index

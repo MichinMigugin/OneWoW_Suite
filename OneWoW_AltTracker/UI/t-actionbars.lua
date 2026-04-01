@@ -44,6 +44,7 @@ local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_AT_RestoreBarDialog",
+        showBrand = true,
         title = string.format(L["AB_RESTORE_SINGLE"], barName),
         width = 400,
         height = 220,
@@ -98,6 +99,7 @@ end
 local function ShowRestoreAllDialog(setName)
     local result = OneWoW_GUI:CreateConfirmDialog({
         name = "OneWoW_AT_RestoreAllDialog",
+        showBrand = true,
         title = L["AB_DIALOG_RESTORE_ALL_TITLE"],
         message = string.format(L["AB_DIALOG_RESTORE_ALL"], setName),
         buttons = {
@@ -127,6 +129,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_AT_RestoreMacrosDialog",
+        showBrand = true,
         title = L["AB_DIALOG_RESTORE_MACROS_TITLE"],
         width = 420,
         height = 240,
@@ -142,7 +145,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
     infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     infoText:SetJustifyH("CENTER")
 
-    local accountBtn = OneWoW_GUI:CreateButton(cf, { text = string.format(L["AB_BUTTON_ACCOUNT_ONLY"], accountCount), width = 180, height = 30 })
+    local accountBtn = OneWoW_GUI:CreateFitTextButton(cf, { text = string.format(L["AB_BUTTON_ACCOUNT_ONLY"], accountCount), height = 30 })
     accountBtn:SetPoint("TOP", infoText, "BOTTOM", -95, -20)
     accountBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
     accountBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
@@ -154,7 +157,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
         result.frame:Hide()
     end)
 
-    local charBtn = OneWoW_GUI:CreateButton(cf, { text = string.format(L["AB_BUTTON_CHARACTER_ONLY"], charCount), width = 180, height = 30 })
+    local charBtn = OneWoW_GUI:CreateFitTextButton(cf, { text = string.format(L["AB_BUTTON_CHARACTER_ONLY"], charCount), height = 30 })
     charBtn:SetPoint("TOP", infoText, "BOTTOM", 95, -20)
     charBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
     charBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
@@ -166,7 +169,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
         result.frame:Hide()
     end)
 
-    local bothBtn = OneWoW_GUI:CreateButton(cf, { text = L["AB_BUTTON_BOTH"], width = 180, height = 30 })
+    local bothBtn = OneWoW_GUI:CreateFitTextButton(cf, { text = L["AB_BUTTON_BOTH"], height = 30 })
     bothBtn:SetPoint("TOP", accountBtn, "BOTTOM", 0, -8)
     bothBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
     bothBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
@@ -178,7 +181,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
         result.frame:Hide()
     end)
 
-    local cancelBtn = OneWoW_GUI:CreateButton(cf, { text = L["AB_LABEL_CANCEL"], width = 180, height = 30 })
+    local cancelBtn = OneWoW_GUI:CreateFitTextButton(cf, { text = L["AB_LABEL_CANCEL"], height = 30 })
     cancelBtn:SetPoint("TOP", charBtn, "BOTTOM", 0, -8)
     cancelBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     cancelBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
@@ -199,6 +202,7 @@ local function ShowBackupDialog(split)
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_AT_BackupDialog",
+        showBrand = true,
         title = L["AB_BACKUP_SET_TITLE"],
         width = 420,
         height = 200,
@@ -256,6 +260,7 @@ end
 local function ShowRenameDialog(split, oldName)
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_AT_RenameDialog",
+        showBrand = true,
         title = L["AB_RENAME_SET_TITLE"],
         width = 420,
         height = 200,
@@ -322,6 +327,7 @@ end
 local function ShowDeleteDialog(split, setName)
     local result = OneWoW_GUI:CreateConfirmDialog({
         name = "OneWoW_AT_DeleteSetDialog",
+        showBrand = true,
         title = L["AB_DELETE_SET_TITLE"],
         message = string.format(L["AB_DELETE_SET_MESSAGE"], setName),
         buttons = {

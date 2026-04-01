@@ -176,7 +176,7 @@ function ns.UI.CreateAuctionsTab(parent)
     }
 
     for i, option in ipairs(filterOptions) do
-        local btn = OneWoW_GUI:CreateButton(filterPanel, { text = option.label, width = 120, height = 24 })
+        local btn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = option.label, height = 24 })
         if i == 1 then
             btn:SetPoint("LEFT", altDropdown, "RIGHT", 4, 0)
         else
@@ -527,7 +527,6 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         if itemData.itemLevel and itemData.itemLevel > 0 then
             itemLevelText:SetText(tostring(itemData.itemLevel))
             itemLevelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            ns.UI.ApplyFont(itemLevelText, 10)
         end
 
         local itemLinkFrame = CreateFrame("Button", nil, itemContainer)
@@ -735,7 +734,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         statusText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, statusText)
 
-        local deleteBtn = OneWoW_GUI:CreateButton(auctionRow, { text = L["PLACEHOLDER_DELETE"], width = 40, height = 22 })
+        local deleteBtn = OneWoW_GUI:CreateFitTextButton(auctionRow, { text = L["PLACEHOLDER_DELETE"], height = 22 })
         deleteBtn:SetScript("OnClick", function()
             if not _G.OneWoW_AltTracker_Auctions_DB or not _G.OneWoW_AltTracker_Auctions_DB.characters then return end
             local charAuctionData = _G.OneWoW_AltTracker_Auctions_DB.characters[charKey]
