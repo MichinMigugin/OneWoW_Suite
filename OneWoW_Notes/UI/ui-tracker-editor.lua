@@ -26,7 +26,7 @@ local QUICK_START = {
     {
         key = "weekly",
         title = "Weekly Checklist",
-        desc = "Track weekly tasks like Great Vault, world bosses, and weekly quests. Resets every Tuesday.",
+        desc = "Track weekly tasks like Great Vault, world bosses, and weekly quests. Resets on your region's weekly reset day.",
         icon = "Interface\\Icons\\Achievement_General_100kQuests",
         listType = "weekly",
         category = "Weeklies",
@@ -401,7 +401,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
         name = "TrackerCustomListForm",
         title = "Create Custom List",
         width = 480,
-        height = 300,
+        height = 340,
         destroyOnClose = true,
         buttons = {
             {
@@ -414,6 +414,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
                         description = strtrim(frame._descBox:GetText() or ""),
                         listType = frame._typeDD:GetValue() or defaultType or "todo",
                         category = frame._catDD:GetValue() or defaultCategory or "General",
+                        accountWide = frame._accountWideCheck:GetChecked(),
                     })
                     TD:AddSection(list.id, { label = "Tasks" })
                     frame:Hide(); frame:SetParent(nil)
@@ -470,6 +471,16 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     catDD:SetOptions(catOpts)
     catDD:SetSelected(defaultCategory or "General")
     dialog._catDD = catDD
+    yOfs = yOfs - 36
+
+    local accountWideCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ACCOUNT_WIDE"] or "Account-wide progress" })
+    accountWideCheck:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
+    dialog._accountWideCheck = accountWideCheck
+
+    local accountWideHint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    accountWideHint:SetPoint("TOPLEFT", accountWideCheck, "BOTTOMLEFT", 18, -2)
+    accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"] or "Checked tasks are shared across all characters")
+    accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     dialog:Show()
 end
@@ -550,7 +561,7 @@ function TE_UI:ShowListEditor(listID, callback)
         name = "TrackerEditListDialog",
         title = "Edit List",
         width = 480,
-        height = 300,
+        height = 340,
         destroyOnClose = true,
         buttons = {
             {
@@ -561,6 +572,7 @@ function TE_UI:ShowListEditor(listID, callback)
                         description = strtrim(frame._descBox:GetText() or ""),
                         listType = frame._typeDD:GetValue() or "todo",
                         category = frame._catDD:GetValue() or "General",
+                        accountWide = frame._accountWideCheck:GetChecked(),
                     })
                     frame:Hide(); frame:SetParent(nil)
                     if callback then callback() end
@@ -618,6 +630,17 @@ function TE_UI:ShowListEditor(listID, callback)
     catDD:SetOptions(catOpts)
     catDD:SetSelected(list.category or "General")
     dialog._catDD = catDD
+    yOfs = yOfs - 36
+
+    local accountWideCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ACCOUNT_WIDE"] or "Account-wide progress" })
+    accountWideCheck:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
+    accountWideCheck:SetChecked(list.accountWide or false)
+    dialog._accountWideCheck = accountWideCheck
+
+    local accountWideHint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    accountWideHint:SetPoint("TOPLEFT", accountWideCheck, "BOTTOMLEFT", 18, -2)
+    accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"] or "Checked tasks are shared across all characters")
+    accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     dialog:Show()
 end
@@ -675,10 +698,10 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
     local resetDD = ns.UI.CreateThemedDropdown(content, "", 220, 26)
     resetDD:SetPoint("TOPLEFT", content, "TOPLEFT", 60, yOfs)
     resetDD:SetOptions({
-        { text = "Same as list (default)", value = "none" },
-        { text = "Daily - resets every day", value = "daily" },
-        { text = "Weekly - resets Tuesday", value = "weekly" },
-        { text = "Never - manual only", value = "todo" },
+        { text = L["TRACKER_RESET_DEFAULT"] or "Same as list (default)", value = "none" },
+        { text = L["TRACKER_RESET_DAILY"] or "Daily - resets every day", value = "daily" },
+        { text = L["TRACKER_RESET_WEEKLY"] or "Weekly - resets on region reset day", value = "weekly" },
+        { text = L["TRACKER_RESET_NEVER"] or "Never - manual only", value = "todo" },
     })
     resetDD:SetSelected(existing and existing.resetOverride or "none")
     dialog._resetDD = resetDD
@@ -698,9 +721,33 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         name = "TrackerStepWizard",
         title = isEdit and "Edit Step" or "Add Step",
         width = 650,
-        height = 580,
+        height = 720,
         destroyOnClose = true,
         buttons = {
+            {
+                text = L["NOTES_SAVE"] or "Save",
+                onClick = function(frame)
+                    local stepName = strtrim(frame._nameBox:GetText() or "")
+                    if stepName == "" then stepName = existing and existing.label or "New Step" end
+                    local resetVal3 = frame._resetDD:GetValue()
+                    local changes = {
+                        label = stepName,
+                        optional = not frame._trackCheck:GetChecked(),
+                        resetOverride = (resetVal3 and resetVal3 ~= "none") and resetVal3 or false,
+                        userNote = strtrim(frame._notesBox:GetText() or ""),
+                    }
+                    if isEdit then
+                        TD:UpdateStep(listID, sectionKey, stepKey, changes)
+                    else
+                        changes.trackType = "manual"
+                        changes.trackParams = {}
+                        changes.max = 1
+                        TD:AddStep(listID, sectionKey, changes)
+                    end
+                    frame:Hide(); frame:SetParent(nil)
+                    if callback then callback() end
+                end,
+            },
             { text = L["BUTTON_CANCEL"] or "Cancel", onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
         },
     })
@@ -715,9 +762,51 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     local nameBox = OneWoW_GUI:CreateEditBox(content, { width = 610, height = 26, placeholderText = "e.g. Kill 10 Spiders, Visit the Tavern, Complete quest..." })
     nameBox:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -2)
     if existing then nameBox:SetText(existing.label or "") end
+    dialog._nameBox = nameBox
+
+    local trackCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_TRACK_AS_TASK"] or "Track as task" })
+    trackCheck:SetPoint("TOPLEFT", nameBox, "BOTTOMLEFT", 0, -8)
+    trackCheck:SetChecked(not existing or not existing.optional)
+    dialog._trackCheck = trackCheck
+
+    local trackHint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    trackHint:SetPoint("TOPLEFT", trackCheck, "BOTTOMLEFT", 18, -2)
+    trackHint:SetText(L["TRACKER_TRACK_HINT"] or "Uncheck for info-only (no checkbox, won't count toward completion)")
+    trackHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local resetLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    resetLabel:SetPoint("TOPLEFT", trackHint, "BOTTOMLEFT", -18, -8)
+    resetLabel:SetText(L["TRACKER_RESET_LABEL"] or "Reset:")
+    resetLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local resetDD = ns.UI.CreateThemedDropdown(content, "", 220, 26)
+    resetDD:SetPoint("LEFT", resetLabel, "RIGHT", 8, 0)
+    resetDD:SetOptions({
+        { text = L["TRACKER_RESET_DEFAULT"] or "Same as list (default)", value = "none" },
+        { text = L["TRACKER_RESET_DAILY"] or "Daily - resets every day", value = "daily" },
+        { text = L["TRACKER_RESET_WEEKLY"] or "Weekly - resets on region reset day", value = "weekly" },
+        { text = L["TRACKER_RESET_NEVER"] or "Never - manual only", value = "todo" },
+    })
+    resetDD:SetSelected(existing and existing.resetOverride or "none")
+    dialog._resetDD = resetDD
+
+    local notesLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    notesLabel:SetPoint("TOPLEFT", resetLabel, "TOPLEFT", 0, -36)
+    notesLabel:SetText(L["TRACKER_NOTES_LABEL"] or "Notes (shown on hover):")
+    notesLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local notesContainer = OneWoW_GUI:CreateFrame(content, { width = 1, height = 1, backdrop = BACKDROP_SOFT })
+    notesContainer:ClearAllPoints()
+    notesContainer:SetPoint("TOPLEFT", notesLabel, "BOTTOMLEFT", 0, -2)
+    notesContainer:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    notesContainer:SetHeight(50)
+    local notesScroll, notesBox = OneWoW_GUI:CreateScrollEditBox(notesContainer, { name = "TrackerStepNotes", maxLetters = 500 })
+    notesScroll:SetAllPoints(notesContainer)
+    if existing and existing.userNote and existing.userNote ~= "" then notesBox:SetText(existing.userNote) end
+    dialog._notesBox = notesBox
 
     local typeHeader = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    typeHeader:SetPoint("TOPLEFT", nameBox, "BOTTOMLEFT", 0, -12)
+    typeHeader:SetPoint("TOPLEFT", notesContainer, "BOTTOMLEFT", 0, -10)
     typeHeader:SetText("How should this step be tracked?")
     typeHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
@@ -873,11 +962,15 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                     max = tonumber(trackParams.count) or 1
                 end
 
+                local resetVal = dialog._resetDD:GetValue()
                 local changes = {
                     label = stepName,
                     trackType = cat.trackType,
                     trackParams = trackParams,
                     max = max,
+                    optional = not dialog._trackCheck:GetChecked(),
+                    resetOverride = (resetVal and resetVal ~= "none") and resetVal or false,
+                    userNote = strtrim(dialog._notesBox:GetText() or ""),
                 }
 
                 if cat.trackType == "coordinates" then
@@ -906,11 +999,15 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 local stepName = strtrim(nameBox:GetText() or "")
                 if stepName == "" then stepName = cat.title end
 
+                local resetVal2 = dialog._resetDD:GetValue()
                 local changes = {
                     label = stepName,
                     trackType = cat.trackType,
                     trackParams = {},
                     max = 1,
+                    optional = not dialog._trackCheck:GetChecked(),
+                    resetOverride = (resetVal2 and resetVal2 ~= "none") and resetVal2 or false,
+                    userNote = strtrim(dialog._notesBox:GetText() or ""),
                 }
 
                 if isEdit then
