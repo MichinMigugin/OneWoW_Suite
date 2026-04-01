@@ -238,6 +238,12 @@ local function BuildRow2ForModule(moduleName)
 end
 
 function GUI:SelectModuleTab(moduleName)
+    if currentModuleTab == "home" and moduleName ~= "home" and GUI.HasPendingHomeChanges and GUI:HasPendingHomeChanges() then
+        GUI._pendingAction = function() GUI:SelectModuleTab(moduleName) end
+        StaticPopup_Show("ONEWOW_UNSAVED_CHANGES")
+        return
+    end
+
     currentModuleTab = moduleName
     currentSubTab = nil
 
@@ -436,11 +442,28 @@ function GUI:InitMainWindow()
     local maxW = math.min(C.MAX_WIDTH, screenW)
     local maxH = math.min(C.MAX_HEIGHT, screenH)
     MainWindow:SetResizeBounds(C.MIN_WIDTH, C.MIN_HEIGHT, maxW, maxH)
-    MainWindow:SetScript("OnHide", function()
+    MainWindow:SetScript("OnHide", function(self)
         local g = OneWoW.db and OneWoW.db.global
         if g then
             g.mainFramePosition = g.mainFramePosition or {}
             OneWoW_GUI:SaveWindowPosition(MainWindow, g.mainFramePosition)
+        end
+        if GUI.HasPendingHomeChanges and GUI:HasPendingHomeChanges() and not GUI._forceHide then
+            C_Timer.After(0, function()
+                if not self:IsShown() and not GUI._forceHide then
+                    if GameMenuFrame and GameMenuFrame:IsShown() then
+                        HideUIPanel(GameMenuFrame)
+                    end
+                    self:Show()
+                    self:Raise()
+                    GUI._pendingAction = function()
+                        GUI._forceHide = true
+                        GUI:Hide()
+                        GUI._forceHide = nil
+                    end
+                    StaticPopup_Show("ONEWOW_UNSAVED_CHANGES")
+                end
+            end)
         end
     end)
     MainWindow:Hide()
@@ -574,6 +597,15 @@ function GUI:Show(moduleName)
 end
 
 function GUI:Hide()
+    if GUI.HasPendingHomeChanges and GUI:HasPendingHomeChanges() and not GUI._forceHide then
+        GUI._pendingAction = function()
+            GUI._forceHide = true
+            GUI:Hide()
+            GUI._forceHide = nil
+        end
+        StaticPopup_Show("ONEWOW_UNSAVED_CHANGES")
+        return
+    end
     if MainWindow then
         MainWindow:Hide()
     end
