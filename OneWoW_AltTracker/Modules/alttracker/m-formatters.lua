@@ -249,6 +249,24 @@ function Formatters:FormatClassName(className)
     return upperClassName:sub(1,1) .. upperClassName:sub(2):lower()
 end
 
+local COMPACT_CLASS_NAMES = {
+    WARRIOR = "War", PALADIN = "Pal", HUNTER = "Hunt",
+    ROGUE = "Rog", PRIEST = "Pri", DEATHKNIGHT = "DK",
+    SHAMAN = "Sham", MAGE = "Mage", WARLOCK = "Lock",
+    MONK = "Mnk", DRUID = "Dru", DEMONHUNTER = "DH",
+    EVOKER = "Evo",
+}
+
+function Formatters:GetCompactClassName(className)
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local offset = OneWoW_GUI and OneWoW_GUI:GetFontSizeOffset() or 0
+    if offset >= 2 then
+        local upper = string.upper(className or "")
+        return COMPACT_CLASS_NAMES[upper] or self:FormatClassName(className)
+    end
+    return self:FormatClassName(className)
+end
+
 function Formatters:GetFactionIcon(faction)
     if faction == "Alliance" then
         return "Interface\\FriendsFrame\\PlusManz-Alliance"

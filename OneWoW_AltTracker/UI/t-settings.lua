@@ -211,6 +211,7 @@ local function ShowManageAltsDialog()
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_AT_ManageAltsDialog",
+        showBrand = true,
         title = "Manage Characters",
         width = 620,
         height = 560,
@@ -232,10 +233,10 @@ local function ShowManageAltsDialog()
     descText:SetText("Select characters to permanently remove from all OneWoW databases. This is for characters you have deleted or renamed in-game. A UI reload is required after removal.")
     descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local selectAllBtn = OneWoW_GUI:CreateButton(content, { text = "Select All", width = 90, height = 25 })
+    local selectAllBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Select All", height = 25 })
     selectAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -52)
 
-    local deselectAllBtn = OneWoW_GUI:CreateButton(content, { text = "Deselect All", width = 90, height = 25 })
+    local deselectAllBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Deselect All", height = 25 })
     deselectAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 6, 0)
 
     local countText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -383,7 +384,7 @@ local function ShowManageAltsDialog()
     btnDivider:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -1, 50)
     btnDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local deleteBtn = OneWoW_GUI:CreateButton(content, { text = "Delete Selected", width = 160, height = 32 })
+    local deleteBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Delete Selected", height = 32 })
     deleteBtn:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 14, 10)
     deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
     deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
@@ -400,7 +401,7 @@ local function ShowManageAltsDialog()
         self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
 
-    local cancelBtn = OneWoW_GUI:CreateButton(content, { text = "Cancel", width = 120, height = 32 })
+    local cancelBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Cancel", height = 32 })
     cancelBtn:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -14, 10)
     cancelBtn:SetScript("OnClick", function() dialog:Hide() end)
 
@@ -451,6 +452,7 @@ local function ShowManageAltsDialog()
         StaticPopup_Show("ONEWOW_AT_DELETE_CHARACTERS")
     end)
 
+    ns.UI.ApplyFontToFrame(result.frame)
     dialog:Show()
 end
 
@@ -483,7 +485,7 @@ function ns.UI.CreateSettingsTab(parent)
     end)
     yOffset = yOffset - 20
 
-    local manageBtn = OneWoW_GUI:CreateButton(scrollContent, { text = "Manage Characters", width = 200, height = 35 })
+    local manageBtn = OneWoW_GUI:CreateFitTextButton(scrollContent, { text = "Manage Characters", height = 35 })
     manageBtn:SetPoint("TOPLEFT", 25, yOffset)
     manageBtn:SetScript("OnClick", function()
         ShowManageAltsDialog()
@@ -565,25 +567,25 @@ function ns.UI.CreateSettingsTab(parent)
                 sizeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             else
                 sizeText:SetText("Not Loaded")
-                sizeText:SetTextColor(1, 0.5, 0.5)
+                sizeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             end
         end
         UpdateSize()
 
-        local resetBtn = OneWoW_GUI:CreateButton(container, { text = "Reset", width = 75, height = 28 })
+        local resetBtn = OneWoW_GUI:CreateFitTextButton(container, { text = "Reset", height = 28 })
         resetBtn:SetPoint("TOPRIGHT", -12, -16)
-        resetBtn:SetBackdropColor(1, 0.3, 0.3)
-        resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-        if resetBtn.text then resetBtn.text:SetTextColor(1, 1, 1) end
+        resetBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+        resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+        if resetBtn.text then resetBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
 
         resetBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(1, 0.1, 0.1)
-            if self.text then self.text:SetTextColor(1, 1, 1) end
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+            if self.text then self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
         end)
 
         resetBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(1, 0.3, 0.3)
-            if self.text then self.text:SetTextColor(1, 1, 1) end
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+            if self.text then self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
         end)
 
         resetBtn:SetScript("OnClick", function()
@@ -631,7 +633,7 @@ function ns.UI.CreateSettingsTab(parent)
     end)
     yOffset = yOffset - 50
 
-    local overrideBtn = OneWoW_GUI:CreateButton(scrollContent, { text = L["OVERRIDE_BTN"], width = 280, height = 35 })
+    local overrideBtn = OneWoW_GUI:CreateFitTextButton(scrollContent, { text = L["OVERRIDE_BTN"], height = 35 })
     overrideBtn:SetPoint("TOPLEFT", 25, yOffset)
     overrideBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     if overrideBtn.text then overrideBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")) end
@@ -665,6 +667,7 @@ function ns.UI.CreateSettingsTab(parent)
         end
 
         if overrideDialog then
+            ns.UI.ApplyFontToFrame(overrideDialog)
             overrideDialog:Show()
             overrideDialog:Raise()
             return
@@ -672,6 +675,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         local result = OneWoW_GUI:CreateDialog({
             name = "OneWoWOverrideDialog",
+            showBrand = true,
             title = L["OVERRIDE_SYSTEM_TITLE"],
             width = 600,
             height = 660,
@@ -721,13 +725,13 @@ function ns.UI.CreateSettingsTab(parent)
         end
 
         local function MakeRemoveBtn(parent, row, onClick)
-            local btn = OneWoW_GUI:CreateButton(row, { text = L["OVERRIDE_REMOVE"] .. " Remove", width = 60, height = 20 })
+            local btn = OneWoW_GUI:CreateFitTextButton(row, { text = L["OVERRIDE_REMOVE"] .. " Remove", height = 20 })
             btn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-            btn:SetBackdropColor(0.5, 0.15, 0.15)
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-            if btn.text then btn.text:SetTextColor(1, 0.7, 0.7) end
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.7, 0.1, 0.1) end)
-            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.5, 0.15, 0.15) end)
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+            if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
+            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER")) end)
+            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")) end)
             btn:SetScript("OnClick", onClick)
             return btn
         end
@@ -777,13 +781,18 @@ function ns.UI.CreateSettingsTab(parent)
             for i, id in ipairs(ids) do
                 local nm = KNOWN_BOSS_NAMES[id] or C_QuestLog.GetTitleForQuestID(id) or ("Quest ID: " .. id)
                 local done = C_QuestLog.IsQuestFlaggedCompleted(id)
-                local r, g, b = done and 0.2 or 0.8, done and 0.9 or 0.8, done and 0.2 or 0.8
+                local r, g, b
+                if done then
+                    r, g, b = OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")
+                else
+                    r, g, b = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
+                end
                 local row = MakeListRow(sc, "Quest: " .. id, nm, ldY, r, g, b)
                 if done then
                     local doneTag = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                     doneTag:SetPoint("RIGHT", row, "RIGHT", -70, 0)
                     doneTag:SetText("Done")
-                    doneTag:SetTextColor(0.2, 0.9, 0.2)
+                    doneTag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
                 end
                 MakeRemoveBtn(sc, row, function()
                     table.remove(ids, i)
@@ -832,7 +841,7 @@ function ns.UI.CreateSettingsTab(parent)
         addCurrBox:SetPoint("LEFT", addCurrLabel, "RIGHT", 8, 0)
         addCurrBox:SetNumeric(true)
         addCurrBox:SetMaxLetters(8)
-        local addCurrBtn = OneWoW_GUI:CreateButton(addCurrRow, { text = "Add", width = 50, height = 22 })
+        local addCurrBtn = OneWoW_GUI:CreateFitTextButton(addCurrRow, { text = "Add", height = 22 })
         addCurrBtn:SetPoint("LEFT", addCurrBox, "RIGHT", 6, 0)
         addCurrBtn:SetScript("OnClick", function()
             local val = tonumber(addCurrBox:GetText()) or 0
@@ -871,7 +880,7 @@ function ns.UI.CreateSettingsTab(parent)
         addBossBox:SetPoint("LEFT", addBossLabel, "RIGHT", 8, 0)
         addBossBox:SetNumeric(true)
         addBossBox:SetMaxLetters(8)
-        local addBossBtn = OneWoW_GUI:CreateButton(addBossRow, { text = "Add", width = 50, height = 22 })
+        local addBossBtn = OneWoW_GUI:CreateFitTextButton(addBossRow, { text = "Add", height = 22 })
         addBossBtn:SetPoint("LEFT", addBossBox, "RIGHT", 6, 0)
         addBossBtn:SetScript("OnClick", function()
             local val = tonumber(addBossBox:GetText()) or 0
@@ -899,7 +908,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         RebuildBossList()
 
-        local resetBtn = OneWoW_GUI:CreateButton(overrideDialog, { text = L["OVERRIDE_RESET_DEFAULTS"], width = 160, height = 30 })
+        local resetBtn = OneWoW_GUI:CreateFitTextButton(overrideDialog, { text = L["OVERRIDE_RESET_DEFAULTS"], height = 30 })
         resetBtn:ClearAllPoints()
         resetBtn:SetPoint("BOTTOMLEFT", overrideDialog, "BOTTOMLEFT", 10, 10)
         resetBtn:SetScript("OnClick", function()
@@ -909,11 +918,12 @@ function ns.UI.CreateSettingsTab(parent)
             RebuildBossList()
         end)
 
-        local closeBtn2 = OneWoW_GUI:CreateButton(overrideDialog, { text = L["OVERRIDE_CLOSE"], width = 100, height = 30 })
+        local closeBtn2 = OneWoW_GUI:CreateFitTextButton(overrideDialog, { text = L["OVERRIDE_CLOSE"], height = 30 })
         closeBtn2:ClearAllPoints()
         closeBtn2:SetPoint("BOTTOMRIGHT", overrideDialog, "BOTTOMRIGHT", -10, 10)
         closeBtn2:SetScript("OnClick", function() overrideDialog:Hide() end)
 
+        ns.UI.ApplyFontToFrame(overrideDialog)
         overrideDialog:Show()
         overrideDialog:Raise()
     end
@@ -935,7 +945,7 @@ function ns.UI.CreateSettingsTab(parent)
     checklistDescText:SetSpacing(3)
     yOffset = yOffset - 50
 
-    local checklistBtn = OneWoW_GUI:CreateButton(scrollContent, { text = L["SEASON_CHECKLIST_BTN"], width = 280, height = 35 })
+    local checklistBtn = OneWoW_GUI:CreateFitTextButton(scrollContent, { text = L["SEASON_CHECKLIST_BTN"], height = 35 })
     checklistBtn:ClearAllPoints()
     checklistBtn:SetPoint("TOPLEFT", 25, yOffset)
     checklistBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -1024,6 +1034,7 @@ function ns.UI.CreateSettingsTab(parent)
             return
         end
         if checklistDialog then
+            ns.UI.ApplyFontToFrame(checklistDialog)
             checklistDialog:Show()
             checklistDialog:Raise()
             return
@@ -1031,6 +1042,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         local clResult = OneWoW_GUI:CreateDialog({
             name = "OneWoWSeasonChecklist",
+            showBrand = true,
             title = L["SEASON_CHECKLIST_TITLE"],
             width = 780,
             height = 700,
@@ -1061,10 +1073,11 @@ function ns.UI.CreateSettingsTab(parent)
 
                 if isChecked then
                     row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                    row:SetBackdropBorderColor(0.2, 0.5, 0.2)
+                    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
                 elseif isAuto then
                     row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-                    row:SetBackdropBorderColor(0.2, 0.5, 0.2, 0.5)
+                    local br, bg, bb = OneWoW_GUI:GetThemeColor("BTN_BORDER")
+                    row:SetBackdropBorderColor(br, bg, bb, 0.5)
                 else
                     row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                     row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -1075,11 +1088,12 @@ function ns.UI.CreateSettingsTab(parent)
                 checkBtn:SetPoint("LEFT", row, "LEFT", 6, 0)
                 checkBtn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
                 if isChecked then
-                    checkBtn:SetBackdropColor(0.2, 0.7, 0.2)
-                    checkBtn:SetBackdropBorderColor(0.2, 0.9, 0.2)
+                    checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                    checkBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
                 elseif isAuto then
-                    checkBtn:SetBackdropColor(0.15, 0.4, 0.15)
-                    checkBtn:SetBackdropBorderColor(0.2, 0.5, 0.2, 0.5)
+                    checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+                    local br, bg, bb = OneWoW_GUI:GetThemeColor("BTN_BORDER")
+                    checkBtn:SetBackdropBorderColor(br, bg, bb, 0.5)
                 else
                     checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                     checkBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
@@ -1087,7 +1101,13 @@ function ns.UI.CreateSettingsTab(parent)
                 local checkMark = checkBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 checkMark:SetPoint("CENTER")
                 checkMark:SetText(isChecked and "X" or (isAuto and "A" or " "))
-                checkMark:SetTextColor(isChecked and 0.2 or (isAuto and 0.4 or 0.5), isChecked and 0.9 or (isAuto and 0.8 or 0.5), isChecked and 0.2 or (isAuto and 0.2 or 0.5))
+                if isChecked then
+                    checkMark:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+                elseif isAuto then
+                    checkMark:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+                else
+                    checkMark:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                end
 
                 local labelText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 labelText:SetPoint("TOPLEFT", row, "TOPLEFT", 34, -6)
@@ -1107,7 +1127,11 @@ function ns.UI.CreateSettingsTab(parent)
                 valueText:SetJustifyH("LEFT")
                 valueText:SetWordWrap(true)
                 valueText:SetText(L["SEASON_CURRENT"] .. " " .. valStr)
-                valueText:SetTextColor(isAuto and 0.3 or 0.7, isAuto and 0.7 or 0.7, isAuto and 0.3 or 0.4)
+                if isAuto then
+                    valueText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+                else
+                    valueText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                end
 
                 local fileText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 fileText:SetPoint("TOPLEFT", row, "TOPLEFT", 34, -37)
@@ -1122,11 +1146,11 @@ function ns.UI.CreateSettingsTab(parent)
                         local nowChecked = not (OneWoWAltTracker.db.global.seasonChecklist[item.key] == true)
                         OneWoWAltTracker.db.global.seasonChecklist[item.key] = nowChecked
                         if nowChecked then
-                            checkBtn:SetBackdropColor(0.2, 0.7, 0.2)
-                            checkBtn:SetBackdropBorderColor(0.2, 0.9, 0.2)
+                            checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                            checkBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
                             checkMark:SetText("X")
-                            checkMark:SetTextColor(0.2, 0.9, 0.2)
-                            row:SetBackdropBorderColor(0.2, 0.5, 0.2)
+                            checkMark:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+                            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
                             labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                         else
                             checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -1139,7 +1163,11 @@ function ns.UI.CreateSettingsTab(parent)
                     checkBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) end)
                     checkBtn:SetScript("OnLeave", function(self)
                         local c = OneWoWAltTracker.db.global.seasonChecklist[item.key]
-                        self:SetBackdropColor(c and {0.2, 0.7, 0.2} or {OneWoW_GUI:GetThemeColor("BG_SECONDARY")})
+                        if c then
+                            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                        else
+                            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                        end
                     end)
                 end
 
@@ -1150,7 +1178,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         sc2:SetHeight(math.abs(cdy) + 20)
 
-        local clearBtn = OneWoW_GUI:CreateButton(checklistDialog, { text = L["SEASON_CHECKLIST_CLEAR"], width = 130, height = 30 })
+        local clearBtn = OneWoW_GUI:CreateFitTextButton(checklistDialog, { text = L["SEASON_CHECKLIST_CLEAR"], height = 30 })
         clearBtn:ClearAllPoints()
         clearBtn:SetPoint("BOTTOMLEFT", checklistDialog, "BOTTOMLEFT", 10, 10)
         clearBtn:SetScript("OnClick", function()
@@ -1166,7 +1194,7 @@ function ns.UI.CreateSettingsTab(parent)
             end
         end)
 
-        local closeBtnCL = OneWoW_GUI:CreateButton(checklistDialog, { text = L["OVERRIDE_CLOSE"], width = 100, height = 30 })
+        local closeBtnCL = OneWoW_GUI:CreateFitTextButton(checklistDialog, { text = L["OVERRIDE_CLOSE"], height = 30 })
         closeBtnCL:ClearAllPoints()
         closeBtnCL:SetPoint("BOTTOMRIGHT", checklistDialog, "BOTTOMRIGHT", -10, 10)
         closeBtnCL:SetScript("OnClick", function() checklistDialog:Hide() end)
@@ -1176,6 +1204,7 @@ function ns.UI.CreateSettingsTab(parent)
         legendText:SetText("[X] = Verified this season    [A] = Auto-detected, no action needed    [ ] = Needs manual verification")
         legendText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
+        ns.UI.ApplyFontToFrame(checklistDialog)
         checklistDialog:Show()
         checklistDialog:Raise()
     end
@@ -1186,6 +1215,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     scrollContent:SetHeight(math.abs(yOffset) + 20)
 
+    ns.UI.ApplyFontToFrame(parent)
     parent.scrollFrame = scrollFrame
     parent.scrollContent = scrollContent
 end

@@ -116,7 +116,6 @@ function ns.UI:CreateMainFrame(defaultTab)
 
     local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
         title = L["ADDON_TITLE_FRAME"],
-        height = 20,
         showBrand = true,
         onClose = function() frame:Hide() end,
     })
@@ -343,6 +342,20 @@ function ns.UI.RefreshAllFavoriteRosters()
     end
     if ns.UI.RefreshLockoutsTab and t.lockouts then
         ns.UI.RefreshLockoutsTab(t.lockouts)
+    end
+end
+
+function ns.UI.ResizeOverviewPanels()
+    local mf = _G.OneWoWAltTrackerMainFrame
+    local addon = _G.OneWoW_AltTracker
+    local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
+    if not t then return end
+    local offset = OneWoW_GUI:GetFontSizeOffset() or 0
+    local extraHeight = math.max(0, offset) * 8
+    for _, tabFrame in pairs(t) do
+        if tabFrame.overviewPanel and tabFrame.overviewPanel._baseHeight then
+            tabFrame.overviewPanel:SetHeight(tabFrame.overviewPanel._baseHeight + extraHeight)
+        end
     end
 end
 

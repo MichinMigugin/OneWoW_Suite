@@ -45,7 +45,7 @@ function ns.UI.CreateBankTab(parent)
     buttonContainer:SetHeight(30)
 
     local function CreateBankTypeButton(btnText, bankTypeKey, index)
-        local btn = OneWoW_GUI:CreateButton(buttonContainer, { text = btnText, width = 80, height = 28 })
+        local btn = OneWoW_GUI:CreateFitTextButton(buttonContainer, { text = btnText, height = 28 })
         btn.label = btn.text
         btn.bankType = bankTypeKey
         btn.index = index
@@ -71,7 +71,7 @@ function ns.UI.CreateBankTab(parent)
                 if button.bankType == currentBankType then
                     button:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                    button.label:SetTextColor(1, 1, 1)
+                    button.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 else
                     button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                     button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
@@ -128,7 +128,7 @@ function ns.UI.CreateBankTab(parent)
 
     personalBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     personalBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    personalBtn.label:SetTextColor(1, 1, 1)
+    personalBtn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(controlPanel, {
         placeholderText = L["BANK_SEARCH"] or "Search...",

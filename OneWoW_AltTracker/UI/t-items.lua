@@ -88,7 +88,7 @@ function ns.UI.CreateItemsTab(parent)
         end
     end)
 
-    local scanAHButton = OneWoW_GUI:CreateButton(filterBar, { text = L["ITEMS_SCAN_AH"], width = 100, height = 20 })
+    local scanAHButton = OneWoW_GUI:CreateFitTextButton(filterBar, { text = L["ITEMS_SCAN_AH"], height = 20 })
     scanAHButton:SetPoint("RIGHT", filterBar, "RIGHT", -8, 0)
     scanAHButton.isAHScanning = false
     scanAHButton:SetScript("OnClick", function(self)
@@ -139,7 +139,7 @@ function ns.UI.CreateItemsTab(parent)
     noticeText:SetJustifyH("LEFT")
     noticeText:SetWordWrap(true)
     noticeText:SetText(L["ITEMS_NOTICE"])
-    noticeText:SetTextColor(1, 0.2, 0.2)
+    noticeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
     local rosterPanel = OneWoW_GUI:CreateRosterPanel(parent, noticeBar)
 
@@ -810,7 +810,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         if itemData.itemLink then
             itemLinkFrame:EnableMouse(true)
             itemLinkFrame:SetScript("OnEnter", function(self)
-                itemNameText:SetTextColor(1, 1, 0)
+                itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 GameTooltip:SetHyperlink(itemData.itemLink)
                 GameTooltip:Show()

@@ -24,7 +24,7 @@ function OneWoW_GUI:CreateDialog(config)
     local escClose = config.escClose ~= false
     local showBrand = config.showBrand
     local titleIcon = config.titleIcon
-    local titleHeight = config.titleHeight or 28
+    local titleHeight = config.titleHeight or Constants.GUI.TITLEBAR_HEIGHT
     local onClose = config.onClose
     local buttonDefs = config.buttons
     local showScrollFrame = config.showScrollFrame
@@ -188,12 +188,14 @@ function OneWoW_GUI:CreateConfirmDialog(config)
     result.titleBar:SetHeight(1)
 
     local titleLabel = result.contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    OneWoW_GUI:SafeSetFont(titleLabel, OneWoW_GUI:GetFont(), 16)
     titleLabel:SetPoint("TOP", result.contentFrame, "TOP", 0, -titlePad)
     titleLabel:SetText(titleText)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     result.titleLabel = titleLabel
 
     local msgLabel = result.contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    OneWoW_GUI:SafeSetFont(msgLabel, OneWoW_GUI:GetFont(), 12)
     msgLabel:SetPoint("TOP", titleLabel, "BOTTOM", 0, -msgPad)
     msgLabel:SetWidth(dialogWidth - 40)
     msgLabel:SetText(messageText)
@@ -465,6 +467,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     listPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local listTitle = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    OneWoW_GUI:SafeSetFont(listTitle, OneWoW_GUI:GetFont(), 12)
     listTitle:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 10, -10)
     listTitle:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -10, -10)
     listTitle:SetJustifyH("LEFT")
@@ -506,6 +509,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local detailTitle = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    OneWoW_GUI:SafeSetFont(detailTitle, OneWoW_GUI:GetFont(), 12)
     detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -10)
     detailTitle:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
     detailTitle:SetJustifyH("LEFT")
@@ -538,6 +542,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     leftStatusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(leftStatusText, OneWoW_GUI:GetFont(), 10)
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText("")
@@ -551,6 +556,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     rightStatusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(rightStatusText, OneWoW_GUI:GetFont(), 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightStatusText:SetText("")
@@ -653,11 +659,19 @@ function OneWoW_GUI:CreateDataTable(parent, options)
         local availableWidth = headerRow:GetWidth() - 10
         if availableWidth <= 0 then return end
 
+        local resolvedWidths = {}
         local fixedWidth = 0
         local flexCount = 0
-        for _, col in ipairs(columns) do
+        for i, col in ipairs(columns) do
             if col.fixed then
-                fixedWidth = fixedWidth + col.width
+                local w = col.width
+                local btn = headerRow.columnButtons[i]
+                if btn and btn.text and btn.text.GetStringWidth then
+                    local textW = btn.text:GetStringWidth() + 14
+                    if textW > w then w = math.ceil(textW) end
+                end
+                resolvedWidths[i] = w
+                fixedWidth = fixedWidth + w
             else
                 flexCount = flexCount + 1
             end
@@ -671,7 +685,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
         for i, col in ipairs(columns) do
             local btn = headerRow.columnButtons[i]
             if btn then
-                local width = col.fixed and col.width or math.max(minFlexWidth, flexWidth)
+                local width = col.fixed and resolvedWidths[i] or math.max(minFlexWidth, flexWidth)
                 btn:SetWidth(width)
                 btn:ClearAllPoints()
                 btn:SetPoint("BOTTOMLEFT", headerRow, "BOTTOMLEFT", xOffset, 2)
@@ -725,6 +739,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
             btn.icon = icon
         else
             local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            OneWoW_GUI:SafeSetFont(text, OneWoW_GUI:GetFont(), 10)
             text:SetPoint("CENTER")
             text:SetText(col.label or "")
             text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -1061,15 +1076,21 @@ function OneWoW_GUI:CreateOverviewPanel(parent, options)
 
     local numRows = math.ceil(#stats / numCols)
 
+    local fontOffset = OneWoW_GUI:GetFontSizeOffset() or 0
+    local extraHeight = math.max(0, fontOffset) * 8
+    local totalHeight = height + extraHeight
+
     local panel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     panel:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -5)
     panel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -5, -5)
-    panel:SetHeight(height)
+    panel:SetHeight(totalHeight)
+    panel._baseHeight = height
     panel:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     panel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local titleFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    OneWoW_GUI:SafeSetFont(titleFS, OneWoW_GUI:GetFont(), 12)
     titleFS:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -6)
     titleFS:SetText(title)
     titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -1089,12 +1110,14 @@ function OneWoW_GUI:CreateOverviewPanel(parent, options)
         statBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
         local label = statBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        label:SetPoint("TOP", statBox, "TOP", 0, -5)
+        OneWoW_GUI:SafeSetFont(label, OneWoW_GUI:GetFont(), 10)
+        label:SetPoint("BOTTOM", statBox, "CENTER", 0, 2)
         label:SetText(stat.label or "")
         label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local value = statBox:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        value:SetPoint("BOTTOM", statBox, "BOTTOM", 0, 6)
+        OneWoW_GUI:SafeSetFont(value, OneWoW_GUI:GetFont(), 12)
+        value:SetPoint("TOP", statBox, "CENTER", 0, -2)
         value:SetText(stat.value or "0")
         value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
@@ -1167,6 +1190,7 @@ function OneWoW_GUI:CreateStatusBar(parent, anchorFrame, options)
     statusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local statusText = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(statusText, OneWoW_GUI:GetFont(), 10)
     statusText:SetPoint("LEFT", statusBar, "LEFT", 10, 0)
     statusText:SetText(initialText)
     statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -1212,6 +1236,7 @@ function OneWoW_GUI:CreateExpandedPanelGrid(ef, options)
         p:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         p:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         local titleFS = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        OneWoW_GUI:SafeSetFont(titleFS, OneWoW_GUI:GetFont(), 10)
         titleFS:SetPoint("TOPLEFT", p, "TOPLEFT", 6, -5)
         titleFS:SetText(title)
         titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -1232,6 +1257,7 @@ function OneWoW_GUI:CreateExpandedPanelGrid(ef, options)
         end
 
         local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        OneWoW_GUI:SafeSetFont(fs, OneWoW_GUI:GetFont(), 10)
         fs:SetPoint("TOPLEFT", panel, "TOPLEFT", 6, panel.dy)
         fs:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, panel.dy)
         fs:SetJustifyH("LEFT")

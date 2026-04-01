@@ -92,9 +92,11 @@ function ns.UI.CreateAuctionsTab(parent)
         end
 
         if totalGold > 0 then
-            mailIcon:SetVertexColor(1, 0.84, 0, 1)
+            local mr, mg, mb = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
+            mailIcon:SetVertexColor(mr, mg, mb, 1)
         else
-            mailIcon:SetVertexColor(0.5, 0.5, 0.5, 0.5)
+            local mr, mg, mb = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
+            mailIcon:SetVertexColor(mr, mg, mb, 0.5)
         end
     end
 
@@ -174,7 +176,7 @@ function ns.UI.CreateAuctionsTab(parent)
     }
 
     for i, option in ipairs(filterOptions) do
-        local btn = OneWoW_GUI:CreateButton(filterPanel, { text = option.label, width = 120, height = 24 })
+        local btn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = option.label, height = 24 })
         if i == 1 then
             btn:SetPoint("LEFT", altDropdown, "RIGHT", 4, 0)
         else
@@ -472,11 +474,13 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         if not isHistory and auction and auction.endsAt then
             local timeLeft = auction.endsAt - GetServerTime()
             if timeLeft > 0 and timeLeft < 1800 then
-                auctionRow.bg:SetColorTexture(0.3, 0.1, 0.1, 1)
-                auctionRow.normalBgColor = {0.3, 0.1, 0.1, 1}
+                local dr, dg, db = OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")
+                auctionRow.bg:SetColorTexture(dr, dg, db, 1)
+                auctionRow.normalBgColor = {dr, dg, db, 1}
             elseif timeLeft > 0 and timeLeft < 3600 then
-                auctionRow.bg:SetColorTexture(0.3, 0.2, 0.1, 1)
-                auctionRow.normalBgColor = {0.3, 0.2, 0.1, 1}
+                local wr, wg, wb = OneWoW_GUI:GetThemeColor("BG_TERTIARY")
+                auctionRow.bg:SetColorTexture(wr, wg, wb, 1)
+                auctionRow.normalBgColor = {wr, wg, wb, 1}
             end
         end
 
@@ -513,7 +517,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
             local color = ITEM_QUALITY_COLORS[itemData.itemRarity]
             qualityBorder:SetVertexColor(color.r, color.g, color.b, 0.8)
         else
-            qualityBorder:SetVertexColor(0.5, 0.5, 0.5, 0.8)
+            qualityBorder:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
         qualityBorder:SetDrawLayer("BORDER", 1)
 
@@ -522,8 +526,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         itemLevelText:SetDrawLayer("OVERLAY", 2)
         if itemData.itemLevel and itemData.itemLevel > 0 then
             itemLevelText:SetText(tostring(itemData.itemLevel))
-            itemLevelText:SetTextColor(1, 1, 1)
-            ns.UI.ApplyFont(itemLevelText, 10)
+            itemLevelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
         local itemLinkFrame = CreateFrame("Button", nil, itemContainer)
@@ -547,7 +550,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         if itemData.itemLink then
             itemLinkFrame:EnableMouse(true)
             itemLinkFrame:SetScript("OnEnter", function(self)
-                itemNameText:SetTextColor(1, 1, 0)
+                itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 GameTooltip:SetHyperlink(itemData.itemLink)
                 GameTooltip:Show()
@@ -606,7 +609,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         if isHistory then
             if history.salePrice and history.salePrice > 0 then
                 bidText:SetText(ns.AltTrackerFormatters:FormatGold(history.salePrice))
-                bidText:SetTextColor(0, 1, 0)
+                bidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
                 bidText:SetText("-")
                 bidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -614,14 +617,14 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         elseif auction then
             if auction.bidAmount > 0 then
                 bidText:SetText(ns.AltTrackerFormatters:FormatGold(auction.bidAmount))
-                bidText:SetTextColor(1, 1, 0)
+                bidText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
                 bidText:SetText("-")
                 bidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
         else
             bidText:SetText(ns.AltTrackerFormatters:FormatGold(bid.bidAmount))
-            bidText:SetTextColor(1, 1, 0)
+            bidText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
         bidText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, bidText)
@@ -648,29 +651,29 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                 if timeLeft < 1800 then
                     local mins = math.floor(timeLeft / 60)
                     timeText:SetText(mins .. "m")
-                    timeText:SetTextColor(1, 0, 0)
+                    timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
 
                     local warningIcon = timeContainer:CreateTexture(nil, "OVERLAY")
                     warningIcon:SetSize(12, 12)
                     warningIcon:SetPoint("LEFT", timeText, "RIGHT", 2, 0)
                     warningIcon:SetAtlas("Raid-Icon-Evoker")
-                    warningIcon:SetVertexColor(1, 0, 0)
+                    warningIcon:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
                 elseif timeLeft < 3600 then
                     local mins = math.floor(timeLeft / 60)
                     timeText:SetText(mins .. "m")
-                    timeText:SetTextColor(1, 0, 0)
+                    timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
                 elseif timeLeft < 7200 then
                     local hours = math.floor(timeLeft / 3600)
                     timeText:SetText(hours .. "h")
-                    timeText:SetTextColor(1, 0.5, 0)
+                    timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
                 else
                     local hours = math.floor(timeLeft / 3600)
                     timeText:SetText(hours .. "h")
-                    timeText:SetTextColor(0, 1, 0)
+                    timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
                 end
             else
                 timeText:SetText(L["AUCTION_TIME_ENDED"])
-                timeText:SetTextColor(0.5, 0.5, 0.5)
+                timeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
 
             timeContainer:EnableMouse(true)
@@ -701,7 +704,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         if classColor then
             charNameText:SetTextColor(classColor.r, classColor.g, classColor.b)
         else
-            charNameText:SetTextColor(1, 1, 1)
+            charNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
         charNameText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, charNameText)
@@ -713,25 +716,25 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         if isHistory then
             if history.outcome == "sold" then
                 statusText:SetText(L["OUTCOME_SOLD"])
-                statusText:SetTextColor(0, 1, 0)
+                statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             elseif history.outcome == "expired" then
                 statusText:SetText(L["OUTCOME_EXPIRED"])
-                statusText:SetTextColor(1, 0.5, 0)
+                statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             elseif history.outcome == "canceled" then
                 statusText:SetText(L["OUTCOME_CANCELED"])
-                statusText:SetTextColor(0.7, 0.7, 0.7)
+                statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
         elseif auction then
             statusText:SetText(L["STATUS_ACTIVE"])
-            statusText:SetTextColor(0, 1, 0)
+            statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             statusText:SetText(L["STATUS_BIDDING"])
-            statusText:SetTextColor(1, 1, 0)
+            statusText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
         statusText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, statusText)
 
-        local deleteBtn = OneWoW_GUI:CreateButton(auctionRow, { text = L["PLACEHOLDER_DELETE"], width = 40, height = 22 })
+        local deleteBtn = OneWoW_GUI:CreateFitTextButton(auctionRow, { text = L["PLACEHOLDER_DELETE"], height = 22 })
         deleteBtn:SetScript("OnClick", function()
             if not _G.OneWoW_AltTracker_Auctions_DB or not _G.OneWoW_AltTracker_Auctions_DB.characters then return end
             local charAuctionData = _G.OneWoW_AltTracker_Auctions_DB.characters[charKey]
@@ -946,7 +949,7 @@ function ns.UI.RefreshAuctionsStats(auctionsTab)
             local goldWaitingFormatted = ns.AltTrackerFormatters:FormatGold(stats.goldWaiting)
             statBoxes[9].value:SetText(goldWaitingFormatted)
             if stats.goldWaiting > 0 then
-                statBoxes[9].value:SetTextColor(1, 0.84, 0)
+                statBoxes[9].value:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
                 statBoxes[9].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end

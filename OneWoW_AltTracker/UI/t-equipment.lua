@@ -489,7 +489,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         if classColor then
             nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
         else
-            nameText:SetTextColor(1, 1, 1)
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
         nameText:SetJustifyH("LEFT")
         table.insert(charRow.cells, nameText)
@@ -507,11 +507,11 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local durabilityText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         durabilityText:SetText(durabilityPct .. "%")
         if durabilityPct < 30 then
-            durabilityText:SetTextColor(1, 0.34, 0.13)
+            durabilityText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
         elseif durabilityPct < 70 then
-            durabilityText:SetTextColor(1, 1, 0)
+            durabilityText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
-            durabilityText:SetTextColor(0.30, 0.69, 0.31)
+            durabilityText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         end
         durabilityText:SetJustifyH("CENTER")
         table.insert(charRow.cells, durabilityText)
@@ -538,13 +538,13 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         if missingEnchants > 0 then
             enchantsText:SetText(tostring(missingEnchants))
             if missingEnchants >= 5 then
-                enchantsText:SetTextColor(1, 0.34, 0.13)
+                enchantsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             else
-                enchantsText:SetTextColor(1, 1, 0)
+                enchantsText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             end
         else
             enchantsText:SetText("0")
-            enchantsText:SetTextColor(0.30, 0.69, 0.31)
+            enchantsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         end
         table.insert(charRow.cells, enchantsCell)
 
@@ -568,13 +568,13 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         if missingGems > 0 then
             gemsText:SetText(tostring(missingGems))
             if missingGems >= 5 then
-                gemsText:SetTextColor(1, 0.34, 0.13)
+                gemsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             else
-                gemsText:SetTextColor(1, 1, 0)
+                gemsText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             end
         else
             gemsText:SetText("0")
-            gemsText:SetTextColor(0.30, 0.69, 0.31)
+            gemsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         end
         table.insert(charRow.cells, gemsCell)
 
@@ -606,11 +606,11 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         tierSetText:SetPoint("CENTER", tierCell, "CENTER", 0, 0)
         tierSetText:SetText(tierCount .. "/5")
         if tierCount == 0 then
-            tierSetText:SetTextColor(1, 0.34, 0.13)
+            tierSetText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
         elseif tierCount < 5 then
-            tierSetText:SetTextColor(1, 1, 0)
+            tierSetText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
-            tierSetText:SetTextColor(0.30, 0.69, 0.31)
+            tierSetText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         end
         table.insert(charRow.cells, tierCell)
 

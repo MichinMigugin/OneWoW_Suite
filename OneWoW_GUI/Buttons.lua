@@ -19,6 +19,7 @@ function OneWoW_GUI:CreateButton(parent, options)
     btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
     btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    OneWoW_GUI:SafeSetFont(btn.text, OneWoW_GUI:GetFont(), 12)
     btn.text:SetPoint("CENTER")
     btn.text:SetText(text)
     btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -172,11 +173,13 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, options)
     offBtn:SetWidth(maxW)
 
     local statusPfx = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(statusPfx, OneWoW_GUI:GetFont(), 10)
     statusPfx:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
     statusPfx:SetText("Status:")
     statusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local statusVal = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(statusVal, OneWoW_GUI:GetFont(), 10)
     statusVal:SetPoint("LEFT", statusPfx, "RIGHT", 4, 0)
 
     onBtn:SetPoint("LEFT", statusVal, "RIGHT", 10, 0)

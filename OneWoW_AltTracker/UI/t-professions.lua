@@ -572,7 +572,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         if classColor then
             nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
         else
-            nameText:SetTextColor(1, 1, 1)
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
         nameText:SetJustifyH("LEFT")
         table.insert(charRow.cells, nameText)
@@ -738,9 +738,9 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         if gearTotal > 0 then
             gearText:SetText(string.format("%d/%d", gearEquipped, gearTotal))
             if gearEquipped == gearTotal then
-                gearText:SetTextColor(0.30, 0.69, 0.31)
+                gearText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
-                gearText:SetTextColor(1, 0.84, 0)
+                gearText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             end
         else
             gearText:SetText("--")
