@@ -126,6 +126,25 @@ function TD:GetProgressDB()
     return db.char.trackerProgress or {}
 end
 
+function TD:GetGlobalProgressDB()
+    local db = GetDB()
+    if not db then return {} end
+    db.global.trackerGlobalProgress = db.global.trackerGlobalProgress or {}
+    return db.global.trackerGlobalProgress
+end
+
+function TD:IsListAccountWide(listID)
+    local list = self:GetList(listID)
+    return list and list.accountWide or false
+end
+
+function TD:GetProgressDBForList(listID)
+    if self:IsListAccountWide(listID) then
+        return self:GetGlobalProgressDB()
+    end
+    return self:GetProgressDB()
+end
+
 function TD:GetDashboardDB()
     local db = GetDB()
     if not db then return {} end
@@ -195,6 +214,9 @@ function TD:RemoveList(listID)
 
     if db.char.trackerProgress then
         db.char.trackerProgress[listID] = nil
+    end
+    if db.global.trackerGlobalProgress then
+        db.global.trackerGlobalProgress[listID] = nil
     end
     return true
 end
@@ -321,6 +343,7 @@ function TD:AddStep(listID, sectionKey, opts)
         noMax         = opts.noMax or false,
         resetOverride = opts.resetOverride or nil,
         optional      = opts.optional or false,
+        userNote      = opts.userNote or "",
         faction       = opts.faction or "both",
         mapID         = tonumber(opts.mapID) or nil,
         coordX        = tonumber(opts.coordX) or nil,
@@ -396,6 +419,37 @@ function TD:MoveStep(listID, sectionKey, stepKey, direction)
     return false
 end
 
+function TD:ReorderSection(listID, sectionKey, targetIndex)
+    local list = self:GetList(listID)
+    if not list then return false end
+    for i, sec in ipairs(list.sections) do
+        if sec.key == sectionKey then
+            if i == targetIndex then return false end
+            tremove(list.sections, i)
+            tinsert(list.sections, targetIndex, sec)
+            list.modified = time()
+            return true
+        end
+    end
+    return false
+end
+
+function TD:ReorderStep(listID, sectionKey, stepKey, targetIndex)
+    local sec = self:GetSection(listID, sectionKey)
+    if not sec or not sec.steps then return false end
+    for i, step in ipairs(sec.steps) do
+        if step.key == stepKey then
+            if i == targetIndex then return false end
+            tremove(sec.steps, i)
+            tinsert(sec.steps, targetIndex, step)
+            local list = self:GetList(listID)
+            if list then list.modified = time() end
+            return true
+        end
+    end
+    return false
+end
+
 function TD:AddObjective(listID, sectionKey, stepKey, opts)
     local step = self:GetStep(listID, sectionKey, stepKey)
     if not step then return nil end
@@ -451,7 +505,7 @@ function TD:RemoveObjective(listID, sectionKey, stepKey, objKey)
 end
 
 function TD:GetProgress(listID)
-    local progress = self:GetProgressDB()
+    local progress = self:GetProgressDBForList(listID)
     if not progress[listID] then
         progress[listID] = {
             currentStep = 1,
@@ -483,6 +537,7 @@ function TD:SetStepProgress(listID, sectionKey, stepKey, current, max)
     local sp = self:GetStepProgress(listID, sectionKey, stepKey)
     sp.current = current or sp.current
     if max and current and current >= max then
+        if not sp.completed then sp.lastCompleted = time() end
         sp.completed = true
     end
     return sp
@@ -493,6 +548,7 @@ function TD:BumpStepProgress(listID, sectionKey, stepKey, amount, max)
     amount = amount or 1
     sp.current = (sp.current or 0) + amount
     if max and sp.current >= max then
+        if not sp.completed then sp.lastCompleted = time() end
         sp.completed = true
         sp.current = max
     end
@@ -503,6 +559,7 @@ function TD:ToggleStepComplete(listID, sectionKey, stepKey)
     local sp = self:GetStepProgress(listID, sectionKey, stepKey)
     sp.completed = not sp.completed
     sp.current = sp.completed and 1 or 0
+    if sp.completed then sp.lastCompleted = time() end
     return sp
 end
 
@@ -548,27 +605,27 @@ function TD:GetSectionCompletion(listID, sectionKey)
 
     local total, done = 0, 0
     for _, step in ipairs(sec.steps or {}) do
-        total = total + 1
-        if self:IsStepComplete(listID, sec.key, step.key) then
-            done = done + 1
+        if not step.optional then
+            total = total + 1
+            if self:IsStepComplete(listID, sec.key, step.key) then
+                done = done + 1
+            end
         end
     end
     return done, total
 end
 
 function TD:ResetProgress(listID, sectionKey)
-    local db = GetDB()
-    if not db then return end
-    db.char.trackerProgress = db.char.trackerProgress or {}
+    local progressDB = self:GetProgressDBForList(listID)
 
     if sectionKey then
-        local prog = db.char.trackerProgress[listID]
+        local prog = progressDB[listID]
         if prog and prog.sections and prog.sections[sectionKey] then
             wipe(prog.sections[sectionKey])
             prog.sections[sectionKey] = { steps = {} }
         end
     else
-        db.char.trackerProgress[listID] = {
+        progressDB[listID] = {
             currentStep = 1,
             completed = false,
             lastReset = time(),
@@ -588,36 +645,25 @@ function TD:CheckResets()
     local db = GetDB()
     if not db then return end
 
-    local now = time()
-    local serverResetDay = 3
-    local serverResetHour = 15
+    local now = GetServerTime()
 
     local lastWeekly = db.char.trackerLastWeeklyReset or 0
     local lastDaily  = db.char.trackerLastDailyReset or 0
 
-    local currentDate = date("*t", now)
-    local todayReset = time({
-        year = currentDate.year,
-        month = currentDate.month,
-        day = currentDate.day,
-        hour = serverResetHour,
-        min = 0,
-        sec = 0,
-    })
+    local secondsUntilDaily = C_DateAndTime.GetSecondsUntilDailyReset()
+    local lastDailyReset = now + secondsUntilDaily - 86400
 
     local needsDailyReset = false
-    if lastDaily < todayReset and now >= todayReset then
+    if lastDaily < lastDailyReset then
         needsDailyReset = true
         db.char.trackerLastDailyReset = now
     end
 
+    local secondsUntilWeekly = C_DateAndTime.GetSecondsUntilWeeklyReset()
+    local lastWeeklyReset = now + secondsUntilWeekly - 604800
+
     local needsWeeklyReset = false
-    local daysSinceTuesday = (currentDate.wday - serverResetDay) % 7
-    local lastTuesdayReset = todayReset - (daysSinceTuesday * 86400)
-    if daysSinceTuesday == 0 and now < todayReset then
-        lastTuesdayReset = lastTuesdayReset - (7 * 86400)
-    end
-    if lastWeekly < lastTuesdayReset then
+    if lastWeekly < lastWeeklyReset then
         needsWeeklyReset = true
         db.char.trackerLastWeeklyReset = now
     end
@@ -625,9 +671,9 @@ function TD:CheckResets()
     if not needsDailyReset and not needsWeeklyReset then return end
 
     local lists = self:GetListsDB()
-    local progress = db.char.trackerProgress or {}
 
     for listID, list in pairs(lists) do
+        local progress = self:GetProgressDBForList(listID)
         if progress[listID] then
             for _, sec in ipairs(list.sections) do
                 for _, step in ipairs(sec.steps or {}) do
@@ -672,9 +718,9 @@ function TD:CheckCustomTimerResets()
     local now = time()
 
     local lists = self:GetListsDB()
-    local progress = db.char.trackerProgress or {}
 
     for listID, list in pairs(lists) do
+        local progress = self:GetProgressDBForList(listID)
         if list.listType == "repeating" and list.resetInterval and progress[listID] then
             local prog = progress[listID]
             local lastReset = prog.lastReset or 0
@@ -712,6 +758,8 @@ local SERIALIZE_KEYS = {
     pick = "pk", objectiveIndex = "oi",
     professionRequired = "pr", eventRequired = "er",
     campaignID = "ci", questIDs = "qi",
+    userNote = "un",
+    accountWide = "aw",
 }
 
 local DESERIALIZE_KEYS = {}
