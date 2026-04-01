@@ -2,14 +2,14 @@ local ADDON_NAME, OneWoW_Bags = ...
 
 OneWoW_Bags.GuildBankLog = {}
 local GuildBankLog = OneWoW_Bags.GuildBankLog
-local OneWoW_GUI = OneWoW_Bags.GUILib
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 local logFrame = nil
 local scrollFrame = nil
 local textContent = nil
 local logText = nil
+local eventFrame = nil
 local isInitialized = false
 local currentMode = "items"
 
@@ -50,8 +50,8 @@ function GuildBankLog:Init()
 
     local filterArea = CreateFrame("Frame", nil, logFrame)
     filterArea:SetHeight(26)
-    filterArea:SetPoint("TOPLEFT", logFrame, "TOPLEFT", S("XS"), -(S("XS") + TITLEBAR_HEIGHT + S("XS")))
-    filterArea:SetPoint("TOPRIGHT", logFrame, "TOPRIGHT", -S("XS"), -(S("XS") + TITLEBAR_HEIGHT + S("XS")))
+    filterArea:SetPoint("TOPLEFT", logFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
+    filterArea:SetPoint("TOPRIGHT", logFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
 
     local itemsBtn = OneWoW_GUI:CreateFitTextButton(filterArea, { text = L["GUILD_BANK_ITEMS_LOG"] or "Items", height = 22, minWidth = 50 })
     itemsBtn:SetPoint("TOPLEFT", filterArea, "TOPLEFT", 0, 0)
@@ -70,8 +70,8 @@ function GuildBankLog:Init()
 
     local scrollName = "OneWoW_GuildBankLogScroll"
     scrollFrame = CreateFrame("ScrollFrame", scrollName, logFrame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", filterArea, "BOTTOMLEFT", 0, -S("XS"))
-    scrollFrame:SetPoint("BOTTOMRIGHT", logFrame, "BOTTOMRIGHT", -S("XS") - 16, S("XS"))
+    scrollFrame:SetPoint("TOPLEFT", filterArea, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
+    scrollFrame:SetPoint("BOTTOMRIGHT", logFrame, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS") - 16, OneWoW_GUI:GetSpacing("XS"))
 
     OneWoW_GUI:StyleScrollBar(scrollFrame, { container = logFrame, offset = 0 })
 
@@ -87,12 +87,14 @@ function GuildBankLog:Init()
 
     logText = textContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     logText:SetPoint("TOPLEFT", textContent, "TOPLEFT", 4, -4)
-    logText:SetWidth(PANEL_WIDTH - S("XS") - 16 - 8)
+    logText:SetWidth(PANEL_WIDTH - OneWoW_GUI:GetSpacing("XS") - 16 - 8)
     logText:SetJustifyH("LEFT")
     logText:SetJustifyV("TOP")
     logText:SetNonSpaceWrap(true)
 
-    local eventFrame = CreateFrame("Frame")
+    if not eventFrame then
+        eventFrame = CreateFrame("Frame")
+    end
     eventFrame:RegisterEvent("GUILDBANKLOG_UPDATE")
     eventFrame:SetScript("OnEvent", function(self, event)
         if logFrame and logFrame:IsShown() then
@@ -112,19 +114,19 @@ function GuildBankLog:UpdateFilterButtons()
     if not itemsBtn or not goldBtn then return end
 
     if currentMode == "items" then
-        itemsBtn:SetBackdropColor(T("BG_ACTIVE"))
-        itemsBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-        itemsBtn.text:SetTextColor(T("TEXT_ACCENT"))
-        goldBtn:SetBackdropColor(T("BTN_NORMAL"))
-        goldBtn:SetBackdropBorderColor(T("BTN_BORDER"))
-        goldBtn.text:SetTextColor(T("TEXT_PRIMARY"))
+        itemsBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        itemsBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        itemsBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        goldBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        goldBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        goldBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     else
-        goldBtn:SetBackdropColor(T("BG_ACTIVE"))
-        goldBtn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-        goldBtn.text:SetTextColor(T("TEXT_ACCENT"))
-        itemsBtn:SetBackdropColor(T("BTN_NORMAL"))
-        itemsBtn:SetBackdropBorderColor(T("BTN_BORDER"))
-        itemsBtn.text:SetTextColor(T("TEXT_PRIMARY"))
+        goldBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        goldBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        goldBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        itemsBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        itemsBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        itemsBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
 end
 
@@ -292,6 +294,10 @@ function GuildBankLog:Hide()
 end
 
 function GuildBankLog:Reset()
+    if eventFrame then
+        eventFrame:UnregisterAllEvents()
+        eventFrame:SetScript("OnEvent", nil)
+    end
     if logFrame then
         logFrame:Hide()
         logFrame:SetParent(UIParent)
@@ -300,13 +306,14 @@ function GuildBankLog:Reset()
     scrollFrame = nil
     textContent = nil
     logText = nil
+    eventFrame = nil
     isInitialized = false
     currentMode = "items"
 end
 
 function GuildBankLog:ApplyTheme()
     if not logFrame then return end
-    logFrame:SetBackdropColor(T("BG_PRIMARY"))
-    logFrame:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    logFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    logFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     GuildBankLog:UpdateFilterButtons()
 end

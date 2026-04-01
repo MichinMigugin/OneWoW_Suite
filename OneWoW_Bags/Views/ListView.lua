@@ -1,4 +1,4 @@
-﻿local ADDON_NAME, OneWoW_Bags = ...
+local ADDON_NAME, OneWoW_Bags = ...
 
 OneWoW_Bags.ListView = {}
 local View = OneWoW_Bags.ListView
@@ -25,9 +25,9 @@ function View:Layout(contentFrame, buttons, width)
 
     for _, button in ipairs(buttons) do
         if not button.owb_isGuildBank and BagTypes:IsReagentBag(button.owb_bagID) then
-            table.insert(reagentButtons, button)
+            tinsert(reagentButtons, button)
         else
-            table.insert(normalButtons, button)
+            tinsert(normalButtons, button)
         end
     end
 

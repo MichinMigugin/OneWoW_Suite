@@ -28,7 +28,7 @@ function TSM:Import()
             if _G.TSMAPI_FOUR and _G.TSMAPI_FOUR.Groups then
                 local paths = {}
                 for path in _G.TSMAPI_FOUR.Groups:GroupIterator() do
-                    table.insert(paths, path)
+                    tinsert(paths, path)
                 end
                 return paths
             end

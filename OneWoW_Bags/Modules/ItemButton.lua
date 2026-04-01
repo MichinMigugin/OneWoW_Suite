@@ -1,4 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.ItemButtonMixin = {}
 local Mixin = OneWoW_Bags.ItemButtonMixin
 
@@ -84,7 +88,6 @@ end
 function Mixin:OWB_FullUpdate()
     self.owb_dirty = false
     local db = OneWoW_Bags.db
-    local GUILib = OneWoW_Bags.GUILib
     local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
 
     local info = C_Container.GetContainerItemInfo(self.owb_bagID, self.owb_slotID)
@@ -98,9 +101,9 @@ function Mixin:OWB_FullUpdate()
         local quality = info.quality
         local useRarity = db and db.global and (self.owb_isBank and db.global.bankRarityColor or db.global.rarityColor)
         if altShow or (quality and quality >= 1 and useRarity) then
-            GUILib:UpdateIconQuality(self, quality)
+            OneWoW_GUI:UpdateIconQuality(self, quality)
         else
-            GUILib:UpdateIconQuality(self, nil)
+            OneWoW_GUI:UpdateIconQuality(self, nil)
         end
 
         if self.SetItemButtonQuality then
@@ -115,7 +118,7 @@ function Mixin:OWB_FullUpdate()
     else
         SetItemButtonTexture(self, nil)
         SetItemButtonCount(self, 0)
-        GUILib:UpdateIconQuality(self, nil)
+        OneWoW_GUI:UpdateIconQuality(self, nil)
         if self.SetItemButtonQuality then
             self:SetItemButtonQuality(nil, nil, true)
         end
@@ -157,8 +160,7 @@ function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
         if self.ProfessionQualityOverlay then self.ProfessionQualityOverlay:Hide() end
         if self.flashAnim and self.flashAnim:IsPlaying() then self.flashAnim:Stop() end
         if self.newitemglowAnim and self.newitemglowAnim:IsPlaying() then self.newitemglowAnim:Stop() end
-        local GUILib = OneWoW_Bags.GUILib
-        GUILib:UpdateIconQuality(self, nil)
+        OneWoW_GUI:UpdateIconQuality(self, nil)
         self._owb_junkStripped = true
     elseif self._owb_junkStripped then
         self._owb_junkStripped = false

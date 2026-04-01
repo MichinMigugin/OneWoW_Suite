@@ -83,207 +83,36 @@ local defaults = {
         moveOtherToBottom = false,
         moveUpgradesToTop = false,
     },
-    char = {}
 }
+
+local function ApplyDefaults(target, source)
+    for key, value in pairs(source) do
+        if target[key] == nil then
+            if type(value) == "table" then
+                target[key] = CopyTable(value)
+            else
+                target[key] = value
+            end
+        elseif type(value) == "table" and type(target[key]) == "table" then
+            ApplyDefaults(target[key], value)
+        end
+    end
+end
 
 function OneWoW_Bags:InitializeDatabase()
     if not OneWoW_Bags_DB then
         OneWoW_Bags_DB = CopyTable(defaults.global)
     end
 
-    if not OneWoW_Bags_CharDB then
-        OneWoW_Bags_CharDB = CopyTable(defaults.char)
-    end
-
     self.db = {
         global = OneWoW_Bags_DB,
-        char = OneWoW_Bags_CharDB
     }
 
-    if not self.db.global.language then
-        self.db.global.language = GetLocale()
-    end
-
-    if not self.db.global.theme then
-        self.db.global.theme = "green"
-    end
-
-    if not self.db.global.minimap then
-        self.db.global.minimap = {}
-    end
-    if self.db.global.minimap.hide == nil then
-        self.db.global.minimap.hide = false
-    end
-    if self.db.global.minimap.minimapPos == nil then
-        self.db.global.minimap.minimapPos = 220
-    end
-    if not self.db.global.minimap.theme then
-        self.db.global.minimap.theme = "horde"
-    end
-
-    if not self.db.global.viewMode then
-        self.db.global.viewMode = "list"
-    end
-
-    if self.db.global.columns == nil then
-        self.db.global.columns = 10
-    end
-
-    if self.db.global.scale == nil then
-        self.db.global.scale = 100
-    end
-
-    if self.db.global.iconSize == nil then
-        self.db.global.iconSize = 3
-    end
-
-    if self.db.global.autoOpen == nil then
-        self.db.global.autoOpen = true
-    end
-
-    if self.db.global.autoClose == nil then
-        self.db.global.autoClose = false
-    end
-
-    if self.db.global.autoOpenWithBank == nil then
-        self.db.global.autoOpenWithBank = true
-    end
-
-    if self.db.global.locked == nil then
-        self.db.global.locked = false
-    end
-
-    if self.db.global.showBagsBar == nil then
-        self.db.global.showBagsBar = true
-    end
-
-    if self.db.global.rarityColor == nil then
-        self.db.global.rarityColor = true
-    end
-
-    if self.db.global.rarityIntensity == nil then
-        self.db.global.rarityIntensity = 1.0
-    end
-
-    if self.db.global.showNewItems == nil then
-        self.db.global.showNewItems = true
-    end
-
-    if self.db.global.recentItemDuration == nil then
-        self.db.global.recentItemDuration = 600
-    end
-
-    if not self.db.global.customCategoriesV2 then
-        self.db.global.customCategoriesV2 = {}
-    end
-
-    if not self.db.global.recentItems then
-        self.db.global.recentItems = {}
-    end
-
-    if not self.db.global.pinnedCategories then
-        self.db.global.pinnedCategories = {}
-    end
-
-    if not self.db.global.collapsedSections then
-        self.db.global.collapsedSections = {}
-    end
-
-    if not self.db.global.collapsedBagSections then
-        self.db.global.collapsedBagSections = {}
-    end
-
-    if not self.db.global.categorySort then
-        self.db.global.categorySort = "priority"
-    end
-
-    if not self.db.global.categoryOrder then
-        self.db.global.categoryOrder = {}
-    end
-
-    if not self.db.global.categorySections then
-        self.db.global.categorySections = {}
-    end
-
-    if not self.db.global.sectionOrder then
-        self.db.global.sectionOrder = {}
-    end
-
-    if not self.db.global.trackedCurrencies then
-        self.db.global.trackedCurrencies = {}
-    end
-
-    if not self.db.global.disabledCategories then
-        self.db.global.disabledCategories = {}
-    end
-
-    if self.db.global.showEmptySlots == nil then
-        self.db.global.showEmptySlots = true
-    end
-
-    if not self.db.global.mainFramePosition then
-        self.db.global.mainFramePosition = {}
-    end
-
-    if self.db.global.bagColumns == nil then
-        self.db.global.bagColumns = 15
-    end
-
-    if self.db.global.bankColumns == nil then
-        self.db.global.bankColumns = 14
-    end
-
-    if not self.db.global.itemSort then
-        self.db.global.itemSort = "default"
-    end
+    ApplyDefaults(self.db.global, defaults.global)
 
     if not self.db.global.itemSortMigratedToNone then
         self.db.global.itemSort = "none"
         self.db.global.itemSortMigratedToNone = true
-    end
-
-    if self.db.global.compactCategories == nil then
-        self.db.global.compactCategories = false
-    end
-
-    if self.db.global.enableInventorySlots == nil then
-        self.db.global.enableInventorySlots = false
-    end
-
-    if self.db.global.hideScrollBar == nil then
-        self.db.global.hideScrollBar = false
-    end
-
-    if self.db.global.enableBankUI == nil then
-        self.db.global.enableBankUI = true
-    end
-
-    if self.db.global.enableBankOverlays == nil then
-        self.db.global.enableBankOverlays = true
-    end
-
-    if not self.db.global.bankViewMode then
-        self.db.global.bankViewMode = "list"
-    end
-
-    if not self.db.global.guildBankViewMode then
-        self.db.global.guildBankViewMode = "list"
-    end
-
-    if not self.db.global.bankFramePosition then
-        self.db.global.bankFramePosition = {}
-    end
-
-    if not self.db.global.guildBankFramePosition then
-        self.db.global.guildBankFramePosition = {}
-    end
-
-    if not self.db.global.collapsedBankSections then
-        self.db.global.collapsedBankSections = {}
-    end
-
-    if not self.db.global.collapsedGuildBankSections then
-        self.db.global.collapsedGuildBankSections = {}
     end
 
     if not self.db.global.categoriesV2Migrated then
@@ -324,128 +153,6 @@ function OneWoW_Bags:InitializeDatabase()
     if not self.db.global.categoriesV3Migrated then
         self:MigrateCategorySystemV3()
         self.db.global.categoriesV3Migrated = true
-    end
-
-    if self.db.global.showSearchBar == nil then
-        self.db.global.showSearchBar = true
-    end
-
-    if self.db.global.showCategoryHeaders == nil then
-        self.db.global.showCategoryHeaders = true
-    end
-
-    if self.db.global.categorySpacing == nil then
-        self.db.global.categorySpacing = 1.0
-    end
-
-    if self.db.global.bankHideScrollBar == nil then
-        self.db.global.bankHideScrollBar = false
-    end
-
-    if self.db.global.showBankBagsBar == nil then
-        self.db.global.showBankBagsBar = true
-    end
-
-    if self.db.global.showBankSearchBar == nil then
-        self.db.global.showBankSearchBar = true
-    end
-
-    if self.db.global.showBankCategoryHeaders == nil then
-        self.db.global.showBankCategoryHeaders = true
-    end
-
-    if self.db.global.bankCategorySpacing == nil then
-        self.db.global.bankCategorySpacing = 1.0
-    end
-
-    if self.db.global.bankAutoClose == nil then
-        self.db.global.bankAutoClose = false
-    end
-
-    if self.db.global.bankLocked == nil then
-        self.db.global.bankLocked = false
-    end
-
-    if self.db.global.bankRarityColor == nil then
-        self.db.global.bankRarityColor = self.db.global.rarityColor
-        if self.db.global.bankRarityColor == nil then
-            self.db.global.bankRarityColor = true
-        end
-    end
-
-    if self.db.global.enableJunkCategory == nil then
-        self.db.global.enableJunkCategory = true
-    end
-
-    if self.db.global.enableUpgradeCategory == nil then
-        self.db.global.enableUpgradeCategory = true
-    end
-
-    if self.db.global.showHeaderBar == nil then
-        self.db.global.showHeaderBar = true
-    end
-
-    if self.db.global.showBankHeaderBar == nil then
-        self.db.global.showBankHeaderBar = true
-    end
-
-    if self.db.global.compactGap == nil then
-        self.db.global.compactGap = 1
-    end
-
-    if self.db.global.bankCompactGap == nil then
-        self.db.global.bankCompactGap = 1
-    end
-
-    if self.db.global.bankCompactCategories == nil then
-        self.db.global.bankCompactCategories = false
-    end
-
-    if self.db.global.showMoneyBar == nil then
-        self.db.global.showMoneyBar = true
-    end
-
-    if self.db.global.showUnusableOverlay == nil then
-        self.db.global.showUnusableOverlay = false
-    end
-
-    if self.db.global.dimJunkItems == nil then
-        self.db.global.dimJunkItems = false
-    end
-
-    if self.db.global.stripJunkOverlays == nil then
-        self.db.global.stripJunkOverlays = false
-    end
-
-    if not self.db.global.categoryModifications then
-        self.db.global.categoryModifications = {}
-    end
-
-    if self.db.global.altToShow == nil then
-        self.db.global.altToShow = false
-    end
-
-    if not self.db.global.displayOrder then
-        self.db.global.displayOrder = {}
-    end
-    if self.db.global.stackItems == nil then
-        self.db.global.stackItems = false
-    end
-
-    if self.db.global.enableExpansionFilter == nil then
-        self.db.global.enableExpansionFilter = false
-    end
-
-    if self.db.global.enableBankExpansionFilter == nil then
-        self.db.global.enableBankExpansionFilter = false
-    end
-
-    if self.db.global.moveOtherToBottom == nil then
-        self.db.global.moveOtherToBottom = false
-    end
-
-    if self.db.global.moveUpgradesToTop == nil then
-        self.db.global.moveUpgradesToTop = false
     end
 end
 
@@ -604,19 +311,19 @@ function OneWoW_Bags:MigrateToDisplayOrder()
     local catOrder = g.categoryOrder or {}
     for _, name in ipairs(catOrder) do
         if not inSection[name] then
-            table.insert(order, name)
+            tinsert(order, name)
         end
     end
 
     for _, sectionID in ipairs(g.sectionOrder) do
         local sec = g.categorySections[sectionID]
         if sec and sec.categories then
-            table.insert(order, "----")
-            table.insert(order, "section:" .. sectionID)
+            tinsert(order, "----")
+            tinsert(order, "section:" .. sectionID)
             for _, catName in ipairs(sec.categories) do
-                table.insert(order, catName)
+                tinsert(order, catName)
             end
-            table.insert(order, "section_end")
+            tinsert(order, "section_end")
         end
     end
 

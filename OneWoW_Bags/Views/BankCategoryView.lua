@@ -1,5 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.BankCategoryView = {}
 local View = OneWoW_Bags.BankCategoryView
 
@@ -9,7 +12,7 @@ local activeLabels = {}
 local function AcquireLabel(parent)
     local label
     if #labelPool > 0 then
-        label = table.remove(labelPool)
+        label = tremove(labelPool)
         label:SetParent(parent)
     else
         label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -26,7 +29,7 @@ local function ReleaseAllLabels()
     for label in pairs(activeLabels) do
         label:Hide()
         label:ClearAllPoints()
-        table.insert(labelPool, label)
+        tinsert(labelPool, label)
     end
     wipe(activeLabels)
 end
@@ -72,14 +75,14 @@ function View:Layout(contentFrame, width, filteredButtons)
                 if not itemsByCategory[catName] then
                     itemsByCategory[catName] = {}
                 end
-                table.insert(itemsByCategory[catName], button)
+                tinsert(itemsByCategory[catName], button)
             end
         end
     end
 
     local categoryNames = {}
     for name in pairs(itemsByCategory) do
-        table.insert(categoryNames, name)
+        tinsert(categoryNames, name)
     end
 
     local sortMode = db.global.categorySort or "priority"
@@ -91,20 +94,20 @@ function View:Layout(contentFrame, width, filteredButtons)
         local pinRecent, pinUpgrades, pinBottom, rest = {}, {}, {}, {}
         for _, name in ipairs(categoryNames) do
             if name == "Recent Items" and moveUpgradesToTop then
-                table.insert(pinRecent, name)
+                tinsert(pinRecent, name)
             elseif name == "1W Upgrades" and moveUpgradesToTop then
-                table.insert(pinUpgrades, name)
+                tinsert(pinUpgrades, name)
             elseif name == "Other" and moveOtherToBottom then
-                table.insert(pinBottom, name)
+                tinsert(pinBottom, name)
             else
-                table.insert(rest, name)
+                tinsert(rest, name)
             end
         end
         categoryNames = {}
-        for _, n in ipairs(pinRecent)   do table.insert(categoryNames, n) end
-        for _, n in ipairs(pinUpgrades) do table.insert(categoryNames, n) end
-        for _, n in ipairs(rest)        do table.insert(categoryNames, n) end
-        for _, n in ipairs(pinBottom)   do table.insert(categoryNames, n) end
+        for _, n in ipairs(pinRecent)   do tinsert(categoryNames, n) end
+        for _, n in ipairs(pinUpgrades) do tinsert(categoryNames, n) end
+        for _, n in ipairs(rest)        do tinsert(categoryNames, n) end
+        for _, n in ipairs(pinBottom)   do tinsert(categoryNames, n) end
     end
 
     local cols = db.global.bankColumns or math.floor((width - padding * 2) / (iconSize + spacing))
@@ -114,13 +117,6 @@ function View:Layout(contentFrame, width, filteredButtons)
     local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
 
     local yOffset = 0
-
-    local function T(key)
-        if Constants and Constants.THEME and Constants.THEME[key] then
-            return unpack(Constants.THEME[key])
-        end
-        return 0.5, 0.5, 0.5, 1.0
-    end
 
     if compact then
         local gapSlots = compactGapSlots
@@ -133,7 +129,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                 OneWoW_Bags:SortButtons(items)
                 local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
                 local displayName = L[localeKey] or categoryName
-                table.insert(catInfoList, { name = categoryName, displayName = displayName, items = items })
+                tinsert(catInfoList, { name = categoryName, displayName = displayName, items = items })
             end
         end
 
@@ -147,7 +143,7 @@ function View:Layout(contentFrame, width, filteredButtons)
             local avail = math.floor(cols - startCol)
 
             if avail < 1 then
-                table.insert(lines, currentLine)
+                tinsert(lines, currentLine)
                 currentLine = {}
                 curCol = 0
                 startCol = 0
@@ -160,7 +156,7 @@ function View:Layout(contentFrame, width, filteredButtons)
 
             if blockRows > 1 and (curCol > 0 or blockWidth < cols) then
                 if #currentLine > 0 then
-                    table.insert(lines, currentLine)
+                    tinsert(lines, currentLine)
                     currentLine = {}
                 end
                 curCol = 0
@@ -169,7 +165,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                 blockRows = math.ceil(count / blockWidth)
             end
 
-            table.insert(currentLine, {
+            tinsert(currentLine, {
                 name = catInfo.name,
                 displayName = catInfo.displayName,
                 items = catInfo.items,
@@ -179,7 +175,7 @@ function View:Layout(contentFrame, width, filteredButtons)
             })
 
             if blockRows > 1 then
-                table.insert(lines, currentLine)
+                tinsert(lines, currentLine)
                 currentLine = {}
                 curCol = 0
             else
@@ -187,7 +183,7 @@ function View:Layout(contentFrame, width, filteredButtons)
             end
         end
         if #currentLine > 0 then
-            table.insert(lines, currentLine)
+            tinsert(lines, currentLine)
         end
 
         for _, line in ipairs(lines) do
@@ -206,7 +202,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                         local cb = tonumber(catMod2.color:sub(5,6), 16) / 255
                         label:SetTextColor(cr, cg, cb, 1.0)
                     else
-                        label:SetTextColor(T("ACCENT_PRIMARY"))
+                        label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     end
                 end
             end
@@ -246,8 +242,8 @@ function View:Layout(contentFrame, width, filteredButtons)
                     local section = BCM:AcquireSection(contentFrame)
                     section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
                     section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
-                    section:SetBackdropColor(T("BG_SECONDARY"))
-                    section:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                    section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                    section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
                     local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
                     local displayName = L[localeKey] or categoryName
@@ -260,10 +256,10 @@ function View:Layout(contentFrame, width, filteredButtons)
                         local cb = tonumber(catMod.color:sub(5,6), 16) / 255
                         section.title:SetTextColor(cr, cg, cb, 1.0)
                     else
-                        section.title:SetTextColor(T("ACCENT_PRIMARY"))
+                        section.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     end
                     section.count:SetText(tostring(#items))
-                    section.count:SetTextColor(T("TEXT_MUTED"))
+                    section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
                     local collapsed = db.global.collapsedBankSections[categoryName]
                     section.isCollapsed = collapsed or false

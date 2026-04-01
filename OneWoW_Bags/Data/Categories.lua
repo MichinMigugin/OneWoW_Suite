@@ -42,13 +42,13 @@ end
 local SEARCH_CATEGORIES = {}
 for _, def in ipairs(CATEGORY_DEFINITIONS) do
     if def.search and def.searchOrder then
-        table.insert(SEARCH_CATEGORIES, def)
+        tinsert(SEARCH_CATEGORIES, def)
     end
 end
-table.sort(SEARCH_CATEGORIES, function(a, b) return a.searchOrder < b.searchOrder end)
+sort(SEARCH_CATEGORIES, function(a, b) return a.searchOrder < b.searchOrder end)
 
 local recentItems = {}
-local recentItemDuration = 600
+local recentItemDuration = 120
 
 local customCategoriesV2 = {}
 
@@ -277,7 +277,7 @@ end
 
 function Categories:SortCategories(categoryList, sortMode)
     if sortMode == "alphabetical" then
-        table.sort(categoryList, function(a, b)
+        sort(categoryList, function(a, b)
             local aName = type(a) == "table" and a.name or a
             local bName = type(b) == "table" and b.name or b
 
@@ -303,7 +303,7 @@ function Categories:SortCategories(categoryList, sortMode)
             end
         end
         local catMods = (OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.categoryModifications) or {}
-        table.sort(categoryList, function(a, b)
+        sort(categoryList, function(a, b)
             local aName = type(a) == "table" and a.name or a
             local bName = type(b) == "table" and b.name or b
 
@@ -379,7 +379,7 @@ function Categories:CleanExpiredRecent()
 end
 
 function Categories:SetRecentItemDuration(duration)
-    recentItemDuration = duration or 600
+    recentItemDuration = duration or 120
 end
 
 function Categories:GetRecentItems()
@@ -540,7 +540,7 @@ end
 function Categories:GetAllCategoryNames()
     local names = {}
     for _, def in ipairs(CATEGORY_DEFINITIONS) do
-        table.insert(names, def.name)
+        tinsert(names, def.name)
     end
     return names
 end
@@ -610,33 +610,35 @@ function Categories:RemoveItemFromBuiltinCategory(categoryName, itemID)
 end
 
 function Categories:GetCategoryDescription(categoryName)
-    local descriptions = {
-        ["1W Junk"] = "Items marked as junk by 1W or grey quality items",
-        ["1W Upgrades"] = "Equippable items with higher item level than currently equipped",
-        ["Recent Items"] = "Recently acquired items (tracked by GUID)",
-        ["Hearthstone"] = "Hearthstone and hearthstone toy variants (#hearthstone)",
-        ["Keystone"] = "Mythic+ Keystones (#keystone)",
-        ["Potions"] = "Consumable: Potions, Elixirs, Flasks (#potion)",
-        ["Food"] = "Consumable: Food and Drink (#food)",
-        ["Consumables"] = "Other consumables not classified as Potions or Food (#consumable)",
-        ["Quest Items"] = "Items related to quests (#quest)",
-        ["Equipment Sets"] = "Items belonging to saved equipment sets (#set)",
-        ["Weapons"] = "All weapon-class items (#weapon)",
-        ["Armor"] = "Equippable armor items (#armor & #gear)",
-        ["Reagents"] = "Crafting reagents (#reagent)",
-        ["Trade Goods"] = "Trade goods and vendor materials (#tradegoods)",
-        ["Tradeskill"] = "Profession-related items (#tradeskill)",
-        ["Recipes"] = "Recipes, plans, patterns, and schematics (#recipe)",
-        ["Housing"] = "Player housing decoration items (#housing)",
-        ["Gems"] = "Gemstones and socketable items (#gem)",
-        ["Item Enhancement"] = "Enchantments, augments, and item modifications (#enhancement)",
-        ["Containers"] = "Bags and containers (#container)",
-        ["Keys"] = "Physical keys (#key)",
-        ["Miscellaneous"] = "Miscellaneous non-gear items (#misc & !#gear)",
-        ["Battle Pets"] = "Battle pets and pet cages (#battlepet)",
-        ["Toys"] = "Toy box items (#toy)",
-        ["Other"] = "Fallback for items that don't match any other category",
-        ["Junk"] = "Grey quality (Poor) items (#poor)",
+    local L = OneWoW_Bags.L
+    local descKeys = {
+        ["1W Junk"] = "CAT_DESC_1W_JUNK",
+        ["1W Upgrades"] = "CAT_DESC_1W_UPGRADES",
+        ["Recent Items"] = "CAT_DESC_RECENT_ITEMS",
+        ["Hearthstone"] = "CAT_DESC_HEARTHSTONE",
+        ["Keystone"] = "CAT_DESC_KEYSTONE",
+        ["Potions"] = "CAT_DESC_POTIONS",
+        ["Food"] = "CAT_DESC_FOOD",
+        ["Consumables"] = "CAT_DESC_CONSUMABLES",
+        ["Quest Items"] = "CAT_DESC_QUEST_ITEMS",
+        ["Equipment Sets"] = "CAT_DESC_EQUIPMENT_SETS",
+        ["Weapons"] = "CAT_DESC_WEAPONS",
+        ["Armor"] = "CAT_DESC_ARMOR",
+        ["Reagents"] = "CAT_DESC_REAGENTS",
+        ["Trade Goods"] = "CAT_DESC_TRADE_GOODS",
+        ["Tradeskill"] = "CAT_DESC_TRADESKILL",
+        ["Recipes"] = "CAT_DESC_RECIPES",
+        ["Housing"] = "CAT_DESC_HOUSING",
+        ["Gems"] = "CAT_DESC_GEMS",
+        ["Item Enhancement"] = "CAT_DESC_ITEM_ENHANCEMENT",
+        ["Containers"] = "CAT_DESC_CONTAINERS",
+        ["Keys"] = "CAT_DESC_KEYS",
+        ["Miscellaneous"] = "CAT_DESC_MISCELLANEOUS",
+        ["Battle Pets"] = "CAT_DESC_BATTLE_PETS",
+        ["Toys"] = "CAT_DESC_TOYS",
+        ["Other"] = "CAT_DESC_OTHER",
+        ["Junk"] = "CAT_DESC_JUNK",
     }
-    return descriptions[categoryName]
+    local key = descKeys[categoryName]
+    return key and L[key] or nil
 end

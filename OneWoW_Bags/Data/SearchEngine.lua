@@ -66,26 +66,22 @@ local ARMOR_SUBCLASS_MAP = {
 }
 
 local tooltipCache = {}
-local tooltipFrame
 
 local function GetTooltipText(bagID, slotID)
     local cacheKey = bagID .. ":" .. slotID
     if tooltipCache[cacheKey] then return tooltipCache[cacheKey] end
 
-    if not tooltipFrame then
-        tooltipFrame = CreateFrame("GameTooltip", "OWB_SearchTooltip", nil, "GameTooltipTemplate")
-        tooltipFrame:SetOwner(WorldFrame, "ANCHOR_NONE")
+    local tooltipData = C_TooltipInfo.GetBagItem(bagID, slotID)
+    if not tooltipData then
+        tooltipCache[cacheKey] = ""
+        return ""
     end
 
-    tooltipFrame:ClearLines()
-    tooltipFrame:SetBagItem(bagID, slotID)
-
+    TooltipUtil.SurfaceArgs(tooltipData)
     local text = ""
-    for i = 1, tooltipFrame:NumLines() do
-        local line = _G["OWB_SearchTooltipTextLeft" .. i]
-        if line then
-            text = text .. (line:GetText() or "") .. "\n"
-        end
+    for _, line in ipairs(tooltipData.lines) do
+        TooltipUtil.SurfaceArgs(line)
+        text = text .. (line.leftText or "") .. "\n"
     end
     tooltipCache[cacheKey] = text
     return text
@@ -150,7 +146,7 @@ local function CheckKeyword(keyword, itemID, bagID, slotID, itemInfo)
             local mountIDs = C_MountJournal and C_MountJournal.GetMountIDs and C_MountJournal.GetMountIDs()
             if mountIDs then
                 for _, mountID in ipairs(mountIDs) do
-                    local name, spellID, icon, isActive, isUsable, sourceType, isFavorite, isFactionSpecific, faction, shouldHideOnChar, isCollected, mountIDOut, itemIDMount = C_MountJournal.GetMountInfoByID(mountID)
+                    local _, _, _, _, _, _, _, _, _, _, isCollected, _, itemIDMount = C_MountJournal.GetMountInfoByID(mountID)
                     if itemIDMount == itemID and isCollected then return true end
                 end
             end
@@ -401,7 +397,7 @@ local function Tokenize(searchStr)
         local c = searchStr:sub(i, i)
 
         if c == "(" or c == ")" or c == "&" or c == "|" or c == "!" or c == "~" then
-            table.insert(tokens, { type = "op", value = c })
+            tinsert(tokens, { type = "op", value = c })
             i = i + 1
         elseif c == "#" then
             local j = i + 1
@@ -414,7 +410,7 @@ local function Tokenize(searchStr)
             end
             local keyword = searchStr:sub(i + 1, j - 1)
             if keyword ~= "" then
-                table.insert(tokens, { type = "keyword", value = keyword })
+                tinsert(tokens, { type = "keyword", value = keyword })
             end
             i = j
         elseif c == " " or c == "\t" then
@@ -423,7 +419,7 @@ local function Tokenize(searchStr)
             local j = i + 1
             if j <= len and searchStr:sub(j, j) == "=" then j = j + 1 end
             while j <= len and searchStr:sub(j, j):match("%d") do j = j + 1 end
-            table.insert(tokens, { type = "ilvl_compare", value = searchStr:sub(i, j - 1) })
+            tinsert(tokens, { type = "ilvl_compare", value = searchStr:sub(i, j - 1) })
             i = j
         elseif c:match("%d") then
             local j = i
@@ -431,10 +427,10 @@ local function Tokenize(searchStr)
             if j <= len and searchStr:sub(j, j) == "-" then
                 local k = j + 1
                 while k <= len and searchStr:sub(k, k):match("%d") do k = k + 1 end
-                table.insert(tokens, { type = "ilvl_range", value = searchStr:sub(i, k - 1) })
+                tinsert(tokens, { type = "ilvl_range", value = searchStr:sub(i, k - 1) })
                 i = k
             else
-                table.insert(tokens, { type = "ilvl_compare", value = searchStr:sub(i, j - 1) })
+                tinsert(tokens, { type = "ilvl_compare", value = searchStr:sub(i, j - 1) })
                 i = j
             end
         else
@@ -448,7 +444,7 @@ local function Tokenize(searchStr)
             end
             local text = searchStr:sub(i, j - 1)
             if text ~= "" then
-                table.insert(tokens, { type = "text", value = text })
+                tinsert(tokens, { type = "text", value = text })
             end
             i = j
         end
@@ -457,7 +453,9 @@ local function Tokenize(searchStr)
     return tokens
 end
 
-local function ParseExpression(tokens, pos)
+local ParseExpression, ParseAnd, ParseNot, ParsePrimary
+
+ParseExpression = function(tokens, pos)
     local left, newPos = ParseAnd(tokens, pos)
     while newPos <= #tokens and tokens[newPos].type == "op" and tokens[newPos].value == "|" do
         newPos = newPos + 1
@@ -471,7 +469,7 @@ local function ParseExpression(tokens, pos)
     return left, newPos
 end
 
-function ParseAnd(tokens, pos)
+ParseAnd = function(tokens, pos)
     local left, newPos = ParseNot(tokens, pos)
     while newPos <= #tokens and tokens[newPos].type == "op" and tokens[newPos].value == "&" do
         newPos = newPos + 1
@@ -485,7 +483,7 @@ function ParseAnd(tokens, pos)
     return left, newPos
 end
 
-function ParseNot(tokens, pos)
+ParseNot = function(tokens, pos)
     if pos <= #tokens and tokens[pos].type == "op" and (tokens[pos].value == "!" or tokens[pos].value == "~") then
         local inner, newPos = ParseNot(tokens, pos + 1)
         local captInner = inner
@@ -496,7 +494,7 @@ function ParseNot(tokens, pos)
     return ParsePrimary(tokens, pos)
 end
 
-function ParsePrimary(tokens, pos)
+ParsePrimary = function(tokens, pos)
     if pos > #tokens then
         return function() return false end, pos
     end
@@ -658,21 +656,7 @@ end
 
 function SE:GetExpansionName(expID)
     if not expID then return nil end
-    local names = {
-        [0] = "Classic",
-        [1] = "The Burning Crusade",
-        [2] = "Wrath of the Lich King",
-        [3] = "Cataclysm",
-        [4] = "Mists of Pandaria",
-        [5] = "Warlords of Draenor",
-        [6] = "Legion",
-        [7] = "Battle for Azeroth",
-        [8] = "Shadowlands",
-        [9] = "Dragonflight",
-        [10] = "The War Within",
-        [11] = "Midnight",
-    }
-    return names[expID]
+    return _G["EXPANSION_NAME" .. expID]
 end
 
 SE.BATTLE_PET_CAGE_ID = BATTLE_PET_CAGE_ID

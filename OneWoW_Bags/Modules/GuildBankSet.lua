@@ -1,5 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.GuildBankSet = {}
 local GBSet = OneWoW_Bags.GuildBankSet
 
@@ -68,7 +71,7 @@ function GBSet:CacheTab(tabID)
     end
 
     for slotID = 1, SLOTS_PER_TAB do
-        local texture, itemCount, locked, isFiltered, quality = GetGuildBankItemInfo(tabID, slotID)
+        local texture, itemCount, locked, _, quality = GetGuildBankItemInfo(tabID, slotID)
         local itemLink = GetGuildBankItemLink(tabID, slotID)
 
         if texture then
@@ -88,7 +91,6 @@ function GBSet:CacheTab(tabID)
 end
 
 function GBSet:ApplyCacheToButtons()
-    local GUILib = OneWoW_Bags.GUILib
     local db = OneWoW_Bags.db
 
     self.freeSlots = 0
@@ -119,16 +121,16 @@ function GBSet:ApplyCacheToButtons()
                 }
 
                 if cached.quality and cached.quality >= 1 and db and db.global and db.global.bankRarityColor then
-                    GUILib:UpdateIconQuality(button, cached.quality)
+                    OneWoW_GUI:UpdateIconQuality(button, cached.quality)
                 else
-                    GUILib:UpdateIconQuality(button, nil)
+                    OneWoW_GUI:UpdateIconQuality(button, nil)
                 end
 
                 button.owb_hasItem = true
             else
                 SetItemButtonTexture(button, nil)
                 SetItemButtonCount(button, 0)
-                GUILib:UpdateIconQuality(button, nil)
+                OneWoW_GUI:UpdateIconQuality(button, nil)
                 button.owb_itemInfo = nil
                 button.owb_hasItem = false
                 if button.IconOverlay then button.IconOverlay:Hide() end
@@ -154,15 +156,14 @@ function GBSet:UpdateAllSlots()
 end
 
 function GBSet:UpdateQualityColors()
-    local GUILib = OneWoW_Bags.GUILib
     local db = OneWoW_Bags.db
     local useRarity = db and db.global and db.global.bankRarityColor
     for tabID, tabSlots in pairs(self.slots) do
         for slotID, button in pairs(tabSlots) do
             if button.owb_itemInfo and button.owb_itemInfo.quality and button.owb_itemInfo.quality >= 1 and useRarity then
-                GUILib:UpdateIconQuality(button, button.owb_itemInfo.quality)
+                OneWoW_GUI:UpdateIconQuality(button, button.owb_itemInfo.quality)
             else
-                GUILib:UpdateIconQuality(button, nil)
+                OneWoW_GUI:UpdateIconQuality(button, nil)
             end
         end
     end
@@ -328,7 +329,7 @@ function GBSet:GetAllButtons()
             for slotID = 1, SLOTS_PER_TAB do
                 local button = self.slots[tabID][slotID]
                 if button then
-                    table.insert(buttons, button)
+                    tinsert(buttons, button)
                 end
             end
         end
@@ -341,7 +342,7 @@ function GBSet:GetButtonsByTab(tabID)
     if self.slots[tabID] then
         for slotID = 1, SLOTS_PER_TAB do
             if self.slots[tabID][slotID] then
-                table.insert(buttons, self.slots[tabID][slotID])
+                tinsert(buttons, self.slots[tabID][slotID])
             end
         end
     end

@@ -1,13 +1,13 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.BankBar = {}
 local BankBar = OneWoW_Bags.BankBar
 
 local bagsBarFrame = nil
 local tabButtons = {}
-local OneWoW_GUI = OneWoW_Bags.GUILib
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
 
 local ROW1_Y = 12
 local ROW2_Y = -14
@@ -23,13 +23,13 @@ function BankBar:Create(parent)
     bagsBarFrame:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
     bagsBarFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
     bagsBarFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    bagsBarFrame:SetBackdropColor(T("BG_TERTIARY"))
-    bagsBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    bagsBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    bagsBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     BankBar:BuildTabButtons()
 
     local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_WITHDRAW_GOLD"] or "Withdraw", height = 22 })
-    withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -S("SM"), ROW1_Y)
+    withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
         if not OneWoW_Bags.bankOpen then return end
         local db = OneWoW_Bags.db
@@ -67,16 +67,16 @@ function BankBar:Create(parent)
     bagsBarFrame.depositGoldBtn = depositGoldBtn
 
     local goldText = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    goldText:SetPoint("RIGHT", depositGoldBtn, "LEFT", -S("SM"), 0)
+    goldText:SetPoint("RIGHT", depositGoldBtn, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
     bagsBarFrame.goldText = goldText
 
     local freeSlots = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    freeSlots:SetPoint("RIGHT", goldText, "LEFT", -S("SM"), 0)
-    freeSlots:SetTextColor(T("TEXT_SECONDARY"))
+    freeSlots:SetPoint("RIGHT", goldText, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    freeSlots:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     bagsBarFrame.freeSlots = freeSlots
 
     local depositReagentsBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_DEPOSIT_REAGENTS"] or "Deposit Reagents", height = 22 })
-    depositReagentsBtn:SetPoint("LEFT", bagsBarFrame, "LEFT", S("SM"), ROW2_Y)
+    depositReagentsBtn:SetPoint("LEFT", bagsBarFrame, "LEFT", OneWoW_GUI:GetSpacing("SM"), ROW2_Y)
     depositReagentsBtn:SetScript("OnClick", function()
         local db = OneWoW_Bags.db
         local bankType = db.global.bankShowWarband and Enum.BankType.Account or Enum.BankType.Character
@@ -85,7 +85,7 @@ function BankBar:Create(parent)
     bagsBarFrame.depositReagentsBtn = depositReagentsBtn
 
     local warbandBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_WARBAND"] or "Warband", height = 22 })
-    warbandBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -S("SM"), ROW2_Y)
+    warbandBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), ROW2_Y)
     warbandBtn._defaultEnter = warbandBtn:GetScript("OnEnter")
     warbandBtn._defaultLeave = warbandBtn:GetScript("OnLeave")
     warbandBtn:SetScript("OnEnter", function(self)
@@ -142,7 +142,7 @@ function BankBar:BuildTabButtons()
     tabButtons = {}
 
     local bagList = showWarband and BankTypes.ALL_WARBAND_TABS or BankTypes.ALL_BANK_TABS
-    local xOffset = S("SM")
+    local xOffset = OneWoW_GUI:GetSpacing("SM")
 
     local numPurchased = 0
     if OneWoW_Bags.bankOpen then
@@ -314,9 +314,9 @@ function BankBar:UpdateTabHighlights()
     for bagID, btn in pairs(tabButtons) do
         if btn._skinBorder then
             if selected ~= nil and selected == bagID then
-                btn._skinBorder:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                btn._skinBorder:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             end
         end
     end
@@ -330,17 +330,17 @@ function BankBar:UpdateBankTypeButtons()
     local function setActive(btn)
         if not btn then return end
         btn._isActive = true
-        btn:SetBackdropColor(T("BG_ACTIVE"))
-        btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-        if btn.text then btn.text:SetTextColor(T("TEXT_ACCENT")) end
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
     end
 
     local function setInactive(btn)
         if not btn then return end
         btn._isActive = false
-        btn:SetBackdropColor(T("BTN_NORMAL"))
-        btn:SetBackdropBorderColor(T("BTN_BORDER"))
-        if btn.text then btn.text:SetTextColor(T("TEXT_PRIMARY")) end
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
     end
 
     if showWarband then

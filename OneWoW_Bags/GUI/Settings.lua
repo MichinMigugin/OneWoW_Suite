@@ -1,18 +1,18 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.Settings = {}
 local Settings = OneWoW_Bags.Settings
 local settingsFrame = nil
 local isCreated = false
-local OneWoW_GUI = OneWoW_Bags.GUILib
 local bagColTimer = nil
 local bankColTimer = nil
 local catSpaceTimer = nil
 local bankCatSpaceTimer = nil
 local compactGapTimer = nil
 local bankCompactGapTimer = nil
-local T = OneWoW_Bags.T
-
 local COMPACT_GAP_STEPS = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 2.5, 3 }
 
 local function CompactGapToIndex(val)
@@ -37,21 +37,21 @@ local function SwitchTab(n)
     end
     for i, btn in ipairs(tabBtns) do
         if i == n then
-            btn:SetBackdropColor(T("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-            btn.text:SetTextColor(T("TEXT_ACCENT"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             if not btn._activeBar then
                 btn._activeBar = btn:CreateTexture(nil, "OVERLAY")
                 btn._activeBar:SetHeight(2)
                 btn._activeBar:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 1, 1)
                 btn._activeBar:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -1, 1)
             end
-            btn._activeBar:SetColorTexture(T("ACCENT_PRIMARY"))
+            btn._activeBar:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             btn._activeBar:Show()
         else
-            btn:SetBackdropColor(T("BTN_NORMAL"))
-            btn:SetBackdropBorderColor(T("BTN_BORDER"))
-            btn.text:SetTextColor(T("TEXT_PRIMARY"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             if btn._activeBar then btn._activeBar:Hide() end
         end
     end
@@ -62,8 +62,8 @@ local function BuildContainer(parent, yOffset)
     container:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     container:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     container:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    container:SetBackdropColor(T("BG_SECONDARY"))
-    container:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     return container
 end
 
@@ -76,7 +76,7 @@ local function BuildSliderRow(container, label, yOffset, options)
     local lbl = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     lbl:SetPoint("TOPLEFT", container, "TOPLEFT", 15, yOffset)
     lbl:SetText(label)
-    lbl:SetTextColor(T("TEXT_PRIMARY"))
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - lbl:GetStringHeight() - 4
 
     local slider = OneWoW_GUI:CreateSlider(container, options)
@@ -428,7 +428,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         local gapLbl = dispContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         gapLbl:SetPoint("TOPLEFT", dispContainer, "TOPLEFT", 15, dispY)
         gapLbl:SetText(L["SETTING_COMPACT_GAP"])
-        gapLbl:SetTextColor(T("TEXT_PRIMARY"))
+        gapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         dispY = dispY - gapLbl:GetStringHeight() - 4
 
         local curIdx = CompactGapToIndex(db.global.compactGap or 1)
@@ -865,7 +865,7 @@ local function BuildBankTab(sc, L, db, GUI)
         local gapLbl = dispContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         gapLbl:SetPoint("TOPLEFT", dispContainer, "TOPLEFT", 15, dispY)
         gapLbl:SetText(L["SETTING_COMPACT_GAP"])
-        gapLbl:SetTextColor(T("TEXT_PRIMARY"))
+        gapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         dispY = dispY - gapLbl:GetStringHeight() - 4
 
         local curIdx = CompactGapToIndex(db.global.bankCompactGap or 1)
@@ -958,8 +958,8 @@ function Settings:Create()
     tabRow:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, 0)
     tabRow:SetHeight(34)
     tabRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    tabRow:SetBackdropColor(T("BG_TERTIARY"))
-    tabRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    tabRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    tabRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local tabLabels = { L["TAB_GENERAL"], L["TAB_BAGS"], L["TAB_BANK"] }
     local prevBtn = nil

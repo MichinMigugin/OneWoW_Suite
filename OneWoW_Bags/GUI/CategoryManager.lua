@@ -1,5 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.CategoryManagerUI = {}
 local CatMgrUI = OneWoW_Bags.CategoryManagerUI
 
@@ -13,8 +16,6 @@ local rightTopWrapper    = nil
 local rightItemWrapper   = nil
 local leftWrapper        = nil
 local selectedCatKey     = nil  -- nil | "builtin:Name" | "section:ID" | customID
-
-local OneWoW_GUI = OneWoW_Bags.GUILib
 
 local BUILTIN_NAMES = {
     "Recent Items", "Hearthstone", "Keystone", "Potions", "Food",
@@ -95,8 +96,6 @@ local BAGANATOR_CAT_MAP = {
 -- Helpers
 -- ============================================================
 
-local function T(key) return OneWoW_GUI:GetThemeColor(key) end
-
 local function GetDB()
     local db = OneWoW_Bags.db
     if not db.global.categorySections then db.global.categorySections = {} end
@@ -134,20 +133,20 @@ local function MakeSmallBtn(parent, label, onClick, active)
     btn:SetSize(20, 20)
     btn:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
     if active then
-        btn:SetBackdropColor(T("BTN_NORMAL"))
-        btn:SetBackdropBorderColor(T("BTN_BORDER"))
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
         btn:SetScript("OnClick", onClick)
     else
-        btn:SetBackdropColor(T("BG_TERTIARY"))
-        btn:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end
     local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     lbl:SetPoint("CENTER")
     lbl:SetText(label)
     if active then
-        lbl:SetTextColor(T("TEXT_PRIMARY"))
+        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     else
-        lbl:SetTextColor(T("TEXT_MUTED"))
+        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
     return btn
 end
@@ -269,7 +268,7 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
             local db = GetDB()
             local id = "sec_" .. time() .. "_" .. math.random(1000, 9999)
             db.global.categorySections[id] = { name=name, categories={}, collapsed=false, showHeader=true }
-            table.insert(db.global.sectionOrder, id)
+            tinsert(db.global.sectionOrder, id)
             if db.global.displayOrder and #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
             selectedCatKey = "section:" .. id
             if CatMgrUI.Refresh then CatMgrUI:Refresh() end
@@ -326,7 +325,7 @@ StaticPopupDialogs["ONEWOW_BAGS_DELETE_SECTION"] = {
             local db = GetDB()
             db.global.categorySections[data] = nil
             for i, sid in ipairs(db.global.sectionOrder) do
-                if sid == data then table.remove(db.global.sectionOrder, i); break end
+                if sid == data then tremove(db.global.sectionOrder, i); break end
             end
             if db.global.displayOrder and #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
             if selectedCatKey == ("section:" .. data) then selectedCatKey = nil end
@@ -418,7 +417,7 @@ local function ImportFromBaganator()
                 if not exists then
                     local newID = "sec_" .. time() .. "_" .. math.random(1000, 9999)
                     db.global.categorySections[newID] = { name=secName, categories={}, collapsed=false }
-                    table.insert(db.global.sectionOrder, newID)
+                    tinsert(db.global.sectionOrder, newID)
                     sectionIDMap[bagIdx] = newID
                     importedSecs = importedSecs + 1
                 end
@@ -444,7 +443,7 @@ local function ImportFromBaganator()
                 if ourCatName and not addedToSection[ourCatName] then
                     local sec = db.global.categorySections[currentSectionID]
                     if sec then
-                        table.insert(sec.categories, ourCatName)
+                        tinsert(sec.categories, ourCatName)
                         addedToSection[ourCatName] = true
                     end
                 end
@@ -500,13 +499,13 @@ end
 
 local function StyleToggleBtn(btn, active)
     if active then
-        btn:SetBackdropColor(T("BG_ACTIVE"))
-        btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-        if btn.text then btn.text:SetTextColor(T("TEXT_ACCENT")) end
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
     else
-        btn:SetBackdropColor(T("BTN_NORMAL"))
-        btn:SetBackdropBorderColor(T("BTN_BORDER"))
-        if btn.text then btn.text:SetTextColor(T("TEXT_PRIMARY")) end
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
     end
 end
 
@@ -526,7 +525,7 @@ function CatMgrUI:RefreshRight()
         local hint = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         hint:SetPoint("CENTER")
         hint:SetText(L["CATEGORY_SELECT_PROMPT"])
-        hint:SetTextColor(T("TEXT_MUTED"))
+        hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         rightItemScrollContent:SetHeight(80)
         return
     end
@@ -543,7 +542,7 @@ function CatMgrUI:RefreshRight()
         local header = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
         header:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -10)
         header:SetText(section.name)
-        header:SetTextColor(T("ACCENT_PRIMARY"))
+        header:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local captID = sectionID
         local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_DELETE"], height=22 })
@@ -561,7 +560,7 @@ function CatMgrUI:RefreshRight()
         div:SetHeight(1)
         div:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, -36)
         div:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, -36)
-        div:SetColorTexture(T("BORDER_SUBTLE"))
+        div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
         local showHeaderCB = CreateFrame("CheckButton", nil, rightTopWrapper, "UICheckButtonTemplate")
         showHeaderCB:SetSize(18, 18)
@@ -575,16 +574,16 @@ function CatMgrUI:RefreshRight()
         local showHeaderLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         showHeaderLbl:SetPoint("LEFT", showHeaderCB, "RIGHT", 4, 0)
         showHeaderLbl:SetText(L["SECTION_SHOW_HEADER"] or "Show section header in bags")
-        showHeaderLbl:SetTextColor(T("TEXT_PRIMARY"))
+        showHeaderLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local infoLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         infoLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -66)
         infoLbl:SetText(L["CATEGORY_IN_SECTION"] or "Toggle categories to include in this section:")
-        infoLbl:SetTextColor(T("TEXT_SECONDARY"))
+        infoLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local allCatNames = {}
-        for _, n in ipairs(BUILTIN_NAMES) do table.insert(allCatNames, n) end
-        for _, cd in pairs(db.global.customCategoriesV2 or {}) do table.insert(allCatNames, cd.name) end
+        for _, n in ipairs(BUILTIN_NAMES) do tinsert(allCatNames, n) end
+        for _, cd in pairs(db.global.customCategoriesV2 or {}) do tinsert(allCatNames, cd.name) end
 
         local memberSet = {}
         for _, n in ipairs(section.categories) do memberSet[n] = true end
@@ -608,19 +607,19 @@ function CatMgrUI:RefreshRight()
             local cbLbl = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             cbLbl:SetPoint("LEFT", cb, "RIGHT", 4, 0)
             cbLbl:SetText(dispName)
-            cbLbl:SetTextColor(T("TEXT_PRIMARY"))
+            cbLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local captCat = catName
             local captSec = section
             cb:SetScript("OnClick", function(self)
                 if self:GetChecked() then
                     if not memberSet[captCat] then
-                        table.insert(captSec.categories, captCat)
+                        tinsert(captSec.categories, captCat)
                         memberSet[captCat] = true
                     end
                 else
                     for i, n in ipairs(captSec.categories) do
-                        if n == captCat then table.remove(captSec.categories, i); break end
+                        if n == captCat then tremove(captSec.categories, i); break end
                     end
                     memberSet[captCat] = nil
                 end
@@ -679,7 +678,7 @@ function CatMgrUI:RefreshRight()
     local header = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     header:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
     header:SetText(dispName)
-    header:SetTextColor(T("ACCENT_PRIMARY"))
+    header:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     if catMod.color then
         local cr = tonumber(catMod.color:sub(1,2), 16) / 255
@@ -697,7 +696,7 @@ function CatMgrUI:RefreshRight()
     else
         typeLabel:SetText("[" .. (L["CATEGORY_TYPE_CUSTOM"] or "Custom") .. "]")
     end
-    typeLabel:SetTextColor(T("TEXT_MUTED"))
+    typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     if isCustom then
         local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_DELETE"], height=22 })
@@ -717,7 +716,7 @@ function CatMgrUI:RefreshRight()
     div1:SetHeight(1)
     div1:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
     div1:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
-    div1:SetColorTexture(T("BORDER_SUBTLE"))
+    div1:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yPos = yPos - 8
 
     if isBuiltin then
@@ -730,7 +729,7 @@ function CatMgrUI:RefreshRight()
             ruleLbl:SetJustifyH("LEFT")
             ruleLbl:SetWordWrap(true)
             ruleLbl:SetText((L["CATEGORY_RULE"] or "Rule:") .. " " .. descText)
-            ruleLbl:SetTextColor(T("TEXT_SECONDARY"))
+            ruleLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             yPos = yPos - ruleLbl:GetStringHeight() - 6
         end
     end
@@ -749,12 +748,12 @@ function CatMgrUI:RefreshRight()
 
         local filterLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         filterLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
-        filterLbl:SetText("Auto-Match Mode:")
-        filterLbl:SetTextColor(T("TEXT_PRIMARY"))
+        filterLbl:SetText(L["CAT_MATCH_MODE"])
+        filterLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local typeFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = "By Type", height = 20, minWidth = 70 })
+        local typeFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["CAT_MATCH_BY_TYPE"], height = 20, minWidth = 70 })
         typeFilterBtn:SetPoint("LEFT", filterLbl, "RIGHT", 8, 0)
-        local advFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = "Advanced", height = 20, minWidth = 70 })
+        local advFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["CAT_MATCH_ADVANCED"], height = 20, minWidth = 70 })
         advFilterBtn:SetPoint("LEFT", typeFilterBtn, "RIGHT", 4, 0)
 
         local filterContent = CreateFrame("Frame", nil, rightTopWrapper)
@@ -769,13 +768,13 @@ function CatMgrUI:RefreshRight()
             desc:SetJustifyH("LEFT")
             desc:SetWordWrap(true)
             desc:SetText(L["CAT_TYPE_FILTER_DESC"])
-            desc:SetTextColor(T("TEXT_MUTED"))
+            desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             fY = fY - desc:GetStringHeight() - 6
 
             local tLbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             tLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
             tLbl:SetText(L["CAT_ITEM_TYPE"])
-            tLbl:SetTextColor(T("TEXT_PRIMARY"))
+            tLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             local tBox = MakeEditBoxWithSave(parent,
                 { width=160, height=22, placeholderText = "Housing" },
                 function() return catData.itemType end,
@@ -787,7 +786,7 @@ function CatMgrUI:RefreshRight()
             local sLbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             sLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
             sLbl:SetText(L["CAT_ITEM_SUBTYPE"])
-            sLbl:SetTextColor(T("TEXT_PRIMARY"))
+            sLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             local sBox = MakeEditBoxWithSave(parent,
                 { width=160, height=22, placeholderText = "Decor" },
                 function() return catData.itemSubType end,
@@ -799,7 +798,7 @@ function CatMgrUI:RefreshRight()
             local mLbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             mLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
             mLbl:SetText(L["CAT_TYPE_MATCH_MODE"])
-            mLbl:SetTextColor(T("TEXT_PRIMARY"))
+            mLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             local curMode = catData.typeMatchMode or "and"
             local andB = OneWoW_GUI:CreateFitTextButton(parent, { text = L["CAT_TYPE_MATCH_AND"], height = 20, minWidth = 40 })
             andB:SetPoint("LEFT", mLbl, "RIGHT", 8, 0)
@@ -831,7 +830,7 @@ function CatMgrUI:RefreshRight()
             desc:SetJustifyH("LEFT")
             desc:SetWordWrap(true)
             desc:SetText("Use search keywords with operators to match items automatically.")
-            desc:SetTextColor(T("TEXT_MUTED"))
+            desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             fY = fY - desc:GetStringHeight() - 6
 
             local sBox = MakeEditBoxWithSave(parent,
@@ -857,7 +856,7 @@ function CatMgrUI:RefreshRight()
                     hl:SetJustifyH("LEFT")
                     hl:SetWordWrap(true)
                     hl:SetText(line)
-                    hl:SetTextColor(T("TEXT_MUTED"))
+                    hl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                     fY = fY - hl:GetStringHeight() - 2
                 end
             end
@@ -889,13 +888,13 @@ function CatMgrUI:RefreshRight()
     div2:SetHeight(1)
     div2:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
     div2:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
-    div2:SetColorTexture(T("BORDER_SUBTLE"))
+    div2:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yPos = yPos - 8
 
     local sortLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sortLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
     sortLbl:SetText(L["CAT_SORT"] or "Sort")
-    sortLbl:SetTextColor(T("TEXT_PRIMARY"))
+    sortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     local currentSort = catMod.sortMode or "none"
     local sortIdx = 1
     for i, v in ipairs(SORT_OPTIONS) do if v == currentSort then sortIdx = i; break end end
@@ -911,7 +910,7 @@ function CatMgrUI:RefreshRight()
     local groupLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     groupLbl:SetPoint("LEFT", sortBtn, "RIGHT", 16, 0)
     groupLbl:SetText(L["GROUP_BY"] or "Group By")
-    groupLbl:SetTextColor(T("TEXT_PRIMARY"))
+    groupLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     local currentGroup = catMod.groupBy or "none"
     local groupIdx = 1
     for i, v in ipairs(GROUP_OPTIONS) do if v == currentGroup then groupIdx = i; break end end
@@ -928,7 +927,7 @@ function CatMgrUI:RefreshRight()
     local prioLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     prioLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
     prioLbl:SetText(L["PRIORITY"] or "Priority")
-    prioLbl:SetTextColor(T("TEXT_PRIMARY"))
+    prioLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     local currentPrio = catMod.priority or 0
     local prioIdx = 3
     for i, v in ipairs(PRIORITY_OPTIONS) do if v == currentPrio then prioIdx = i; break end end
@@ -945,20 +944,20 @@ function CatMgrUI:RefreshRight()
     local colorLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     colorLbl:SetPoint("LEFT", prioBtn, "RIGHT", 16, 0)
     colorLbl:SetText(L["COLOR"] or "Color")
-    colorLbl:SetTextColor(T("TEXT_PRIMARY"))
+    colorLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local colorSwatch = CreateFrame("Button", nil, rightTopWrapper, "BackdropTemplate")
     colorSwatch:SetSize(20, 20)
     colorSwatch:SetPoint("LEFT", colorLbl, "RIGHT", 6, 0)
     colorSwatch:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
-    colorSwatch:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    colorSwatch:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     if catMod.color then
         local cr = tonumber(catMod.color:sub(1,2), 16) / 255
         local cg = tonumber(catMod.color:sub(3,4), 16) / 255
         local cb = tonumber(catMod.color:sub(5,6), 16) / 255
         colorSwatch:SetBackdropColor(cr, cg, cb, 1.0)
     else
-        colorSwatch:SetBackdropColor(T("ACCENT_PRIMARY"))
+        colorSwatch:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     end
     colorSwatch:SetScript("OnClick", function()
         local r, g, b = 1, 0.82, 0
@@ -990,7 +989,7 @@ function CatMgrUI:RefreshRight()
     clearColorBtn:SetPoint("LEFT", colorSwatch, "RIGHT", 4, 0)
     clearColorBtn:SetScript("OnClick", function()
         db.global.categoryModifications[capCatName].color = nil
-        colorSwatch:SetBackdropColor(T("ACCENT_PRIMARY"))
+        colorSwatch:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         CatMgrUI:RefreshLeft()
         RefreshBagLayout()
     end)
@@ -999,7 +998,7 @@ function CatMgrUI:RefreshRight()
     local hideLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hideLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
     hideLbl:SetText(L["HIDE_IN"] or "Hide In")
-    hideLbl:SetTextColor(T("TEXT_PRIMARY"))
+    hideLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     if not catMod.hideIn then catMod.hideIn = {} end
     local hideContainers = {
@@ -1022,7 +1021,7 @@ function CatMgrUI:RefreshRight()
         local cbLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         cbLbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
         cbLbl:SetText(hc.label)
-        cbLbl:SetTextColor(T("TEXT_PRIMARY"))
+        cbLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         hideX = hideX + cbLbl:GetStringWidth() + 28
     end
     yPos = yPos - 26
@@ -1031,13 +1030,13 @@ function CatMgrUI:RefreshRight()
     div3:SetHeight(1)
     div3:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
     div3:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
-    div3:SetColorTexture(T("BORDER_SUBTLE"))
+    div3:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     yPos = yPos - 8
 
     local addItemsLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     addItemsLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
     addItemsLbl:SetText(L["ADDED_ITEMS"] or "Added Items")
-    addItemsLbl:SetTextColor(T("ACCENT_SECONDARY"))
+    addItemsLbl:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yPos = yPos - 16
 
     local addDescLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1046,7 +1045,7 @@ function CatMgrUI:RefreshRight()
     addDescLbl:SetJustifyH("LEFT")
     addDescLbl:SetWordWrap(true)
     addDescLbl:SetText(L["ADDED_ITEMS_DESC"] or "Items manually assigned override normal classification.")
-    addDescLbl:SetTextColor(T("TEXT_MUTED"))
+    addDescLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     yPos = yPos - addDescLbl:GetStringHeight() - 6
 
     local dropZone = CreateFrame("Button", nil, rightTopWrapper, "BackdropTemplate")
@@ -1054,25 +1053,25 @@ function CatMgrUI:RefreshRight()
     dropZone:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
     dropZone:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
     dropZone:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
-    dropZone:SetBackdropColor(T("BG_TERTIARY"))
-    dropZone:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    dropZone:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    dropZone:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     dropZone:EnableMouse(true)
     dropZone:RegisterForDrag("LeftButton")
 
     local dropTxt = dropZone:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     dropTxt:SetPoint("CENTER")
     dropTxt:SetText(L["CATEGORY_DRAG_HINT"])
-    dropTxt:SetTextColor(T("TEXT_MUTED"))
+    dropTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     dropZone:SetScript("OnEnter", function()
         if GetCursorInfo() == "item" then
-            dropZone:SetBackdropColor(T("BG_ACTIVE"))
-            dropTxt:SetTextColor(T("ACCENT_PRIMARY"))
+            dropZone:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            dropTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
     end)
     dropZone:SetScript("OnLeave", function()
-        dropZone:SetBackdropColor(T("BG_TERTIARY"))
-        dropTxt:SetTextColor(T("TEXT_MUTED"))
+        dropZone:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        dropTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end)
     local function handleDrop()
         local cType, itemID = GetCursorInfo()
@@ -1096,7 +1095,7 @@ function CatMgrUI:RefreshRight()
     local addLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     addLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
     addLbl:SetText(L["CATEGORY_ADD_BY_ID"])
-    addLbl:SetTextColor(T("TEXT_PRIMARY"))
+    addLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     local addBox = OneWoW_GUI:CreateEditBox(rightTopWrapper, { width=120, height=22 })
     addBox:SetPoint("LEFT", addLbl, "RIGHT", 8, 0)
     local addBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["ADD_ITEM"], height=22 })
@@ -1130,22 +1129,22 @@ function CatMgrUI:RefreshRight()
     if isCustom and catData and catData.items then
         for idStr in pairs(catData.items) do
             local id = tonumber(idStr)
-            if id then table.insert(allItems, { id = id, isCustom = true }) end
+            if id then tinsert(allItems, { id = id, isCustom = true }) end
         end
     end
     if catMod.addedItems then
         for idStr in pairs(catMod.addedItems) do
             local id = tonumber(idStr)
-            if id then table.insert(allItems, { id = id, isCustom = false }) end
+            if id then tinsert(allItems, { id = id, isCustom = false }) end
         end
     end
-    table.sort(allItems, function(a, b) return a.id < b.id end)
+    sort(allItems, function(a, b) return a.id < b.id end)
 
     if #allItems == 0 then
         local emptyLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         emptyLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 8, yPos - 8)
         emptyLbl:SetText(L["ADDED_ITEMS_NONE"] or "No items manually added.")
-        emptyLbl:SetTextColor(T("TEXT_MUTED"))
+        emptyLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         yPos = yPos - 28
     else
         for _, itemEntry in ipairs(allItems) do
@@ -1155,8 +1154,8 @@ function CatMgrUI:RefreshRight()
             row:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 0, yPos)
             row:SetPoint("RIGHT", rightTopWrapper, "RIGHT", 0, 0)
             row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
-            row:SetBackdropColor(T("BG_SECONDARY"))
-            row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local icon = row:CreateTexture(nil, "ARTWORK")
             icon:SetSize(20, 20)
@@ -1169,7 +1168,7 @@ function CatMgrUI:RefreshRight()
             nameTxt:SetPoint("RIGHT", row, "RIGHT", -72, 0)
             nameTxt:SetJustifyH("LEFT")
             nameTxt:SetText(C_Item.GetItemNameByID(itemID) or ("Item " .. itemID))
-            nameTxt:SetTextColor(T("TEXT_PRIMARY"))
+            nameTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local captItemID = itemID
             local captIsCustom = itemEntry.isCustom
@@ -1228,12 +1227,12 @@ function CatMgrUI:RefreshLeft()
     local rootCats = {}
     for _, name in ipairs(BUILTIN_NAMES) do
         if not inSection[name] then
-            table.insert(rootCats, { name=name, isBuiltin=true, key="builtin:"..name })
+            tinsert(rootCats, { name=name, isBuiltin=true, key="builtin:"..name })
         end
     end
     for catID, catData in pairs(customCats) do
         if not inSection[catData.name] then
-            table.insert(rootCats, { name=catData.name, isBuiltin=false, id=catID, data=catData, key=catID })
+            tinsert(rootCats, { name=catData.name, isBuiltin=false, id=catID, data=catData, key=catID })
         end
     end
 
@@ -1241,14 +1240,14 @@ function CatMgrUI:RefreshLeft()
     if #savedOrder > 0 then
         local orderMap = {}
         for i, name in ipairs(savedOrder) do orderMap[name] = i end
-        table.sort(rootCats, function(a, b)
+        sort(rootCats, function(a, b)
             local aP = orderMap[a.name] or 999
             local bP = orderMap[b.name] or 999
             if aP ~= bP then return aP < bP end
             return a.name < b.name
         end)
     else
-        table.sort(rootCats, function(a, b)
+        sort(rootCats, function(a, b)
             local aP = BUILTIN_PRIORITY[a.name] or 50
             local bP = BUILTIN_PRIORITY[b.name] or 50
             if aP ~= bP then return aP < bP end
@@ -1272,14 +1271,14 @@ function CatMgrUI:RefreshLeft()
         row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
 
         if isSelected then
-            row:SetBackdropColor(T("BG_ACTIVE"))
-            row:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         elseif entry.isBuiltin then
-            row:SetBackdropColor(T("BG_TERTIARY"))
-            row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         else
-            row:SetBackdropColor(T("BG_SECONDARY"))
-            row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         end
 
         local captKey = entry.key
@@ -1324,7 +1323,7 @@ function CatMgrUI:RefreshLeft()
             local badgeTxt = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             badgeTxt:SetPoint("RIGHT", upB, "LEFT", -4, 0)
             badgeTxt:SetText(badges)
-            badgeTxt:SetTextColor(T("ACCENT_SECONDARY"))
+            badgeTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
             badgeAnchor = badgeTxt
         end
 
@@ -1364,11 +1363,11 @@ function CatMgrUI:RefreshLeft()
             nameTxt:SetJustifyH("LEFT")
             nameTxt:SetText((locKey and L[locKey]) or catName)
             if isDisabled then
-                nameTxt:SetTextColor(T("TEXT_MUTED"))
+                nameTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             elseif isSelected then
-                nameTxt:SetTextColor(T("ACCENT_PRIMARY"))
+                nameTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                nameTxt:SetTextColor(T("TEXT_PRIMARY"))
+                nameTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         else
             local nameTxt = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1377,9 +1376,9 @@ function CatMgrUI:RefreshLeft()
             nameTxt:SetJustifyH("LEFT")
             nameTxt:SetText(entry.data.name)
             if isSelected then
-                nameTxt:SetTextColor(T("ACCENT_PRIMARY"))
+                nameTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                nameTxt:SetTextColor(T("TEXT_PRIMARY"))
+                nameTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end
 
@@ -1408,11 +1407,11 @@ function CatMgrUI:RefreshLeft()
             secRow:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
 
             if isSelSec then
-                secRow:SetBackdropColor(T("BG_ACTIVE"))
-                secRow:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+                secRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                secRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                secRow:SetBackdropColor(T("BG_PRIMARY"))
-                secRow:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+                secRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+                secRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             end
 
             -- Section up/down (reorders among sections only)
@@ -1442,7 +1441,7 @@ function CatMgrUI:RefreshLeft()
             else
                 arrow:SetText("v")
             end
-            arrow:SetTextColor(T("ACCENT_SECONDARY"))
+            arrow:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
 
             local secName = secRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             secName:SetPoint("LEFT",  secRow, "LEFT",  18, 0)
@@ -1450,9 +1449,9 @@ function CatMgrUI:RefreshLeft()
             secName:SetJustifyH("LEFT")
             secName:SetText(section.name)
             if isSelSec then
-                secName:SetTextColor(T("ACCENT_PRIMARY"))
+                secName:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                secName:SetTextColor(T("TEXT_PRIMARY"))
+                secName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
 
             local captSKey = sKey
@@ -1491,14 +1490,14 @@ function CatMgrUI:RefreshLeft()
                         row:SetPoint("RIGHT",   leftWrapper, "RIGHT",    0, 0)
                         row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
                         if isSelCat then
-                            row:SetBackdropColor(T("BG_ACTIVE"))
-                            row:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+                            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                         elseif isBuiltin then
-                            row:SetBackdropColor(T("BG_TERTIARY"))
-                            row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
                         else
-                            row:SetBackdropColor(T("BG_SECONDARY"))
-                            row:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
                         end
                         local captEKey = entry.key
                         row:SetScript("OnClick", function()
@@ -1547,9 +1546,9 @@ function CatMgrUI:RefreshLeft()
                         nTxt:SetJustifyH("LEFT")
                         nTxt:SetText((locKey2 and L[locKey2]) or catName)
                         if isSelCat then
-                            nTxt:SetTextColor(T("ACCENT_PRIMARY"))
+                            nTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                         else
-                            nTxt:SetTextColor(T("TEXT_PRIMARY"))
+                            nTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                         end
 
                         yOffset = yOffset + 28
@@ -1603,8 +1602,8 @@ function CatMgrUI:Show()
     actionBar:SetPoint("TOPRIGHT", dialogContentFrame, "TOPRIGHT", -4, -4)
     actionBar:SetHeight(32)
     actionBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    actionBar:SetBackdropColor(T("BG_SECONDARY"))
-    actionBar:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    actionBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    actionBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local createBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["CATEGORY_CREATE"], height=24 })
     createBtn:SetPoint("LEFT", actionBar, "LEFT", 6, 0)
@@ -1638,8 +1637,8 @@ function CatMgrUI:Show()
 
         local bagLbl = actionBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         bagLbl:SetPoint("RIGHT", bagBtn, "LEFT", -6, 0)
-        bagLbl:SetText("Baganator |")
-        bagLbl:SetTextColor(T("TEXT_MUTED"))
+        bagLbl:SetText(L["BAGANATOR_LABEL"])
+        bagLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
     local TSM = OneWoW_Bags.TSMIntegration
@@ -1672,13 +1671,13 @@ function CatMgrUI:Show()
     leftPanel:SetPoint("BOTTOMLEFT", splitArea, "BOTTOMLEFT", 0, 0)
     leftPanel:SetWidth(235)
     leftPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    leftPanel:SetBackdropColor(T("BG_PRIMARY"))
-    leftPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    leftPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    leftPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local leftTitleLbl = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     leftTitleLbl:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 10, -8)
     leftTitleLbl:SetText(L["CUSTOM_CATEGORIES"] or "Categories")
-    leftTitleLbl:SetTextColor(T("ACCENT_PRIMARY"))
+    leftTitleLbl:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local leftInner = CreateFrame("Frame", nil, leftPanel)
     leftInner:SetPoint("TOPLEFT",     leftPanel, "TOPLEFT",     4, -26)
@@ -1690,8 +1689,8 @@ function CatMgrUI:Show()
     -- Right panel (resizer will reanchor it)
     local rightPanel = CreateFrame("Frame", nil, splitArea, "BackdropTemplate")
     rightPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    rightPanel:SetBackdropColor(T("BG_PRIMARY"))
-    rightPanel:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+    rightPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    rightPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     -- Vertical pane resizer
     OneWoW_GUI:CreateVerticalPaneResizer({

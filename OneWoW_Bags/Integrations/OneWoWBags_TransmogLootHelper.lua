@@ -1,4 +1,4 @@
-﻿--[[
+--[[
 OneWoW Bags Integration for TransmogLootHelper
 ================================================
 
@@ -10,7 +10,7 @@ Then add it to TransmogLootHelper.toc as:
 Integrations\OneWoWBags.lua
 ]]
 
-local appName, app = ...                                                                                                   
+local _, app = ...                                                                                                   
    
   if _G.OneWoW_Bags then                                                                                                     
                                                                   

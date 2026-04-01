@@ -1,13 +1,13 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.GuildBankBar = {}
 local GuildBankBar = OneWoW_Bags.GuildBankBar
 
 local bagsBarFrame = nil
 local tabButtons = {}
-local OneWoW_GUI = OneWoW_Bags.GUILib
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
 
 local ROW1_Y = 0
 local BAR_HEIGHT = 38
@@ -22,13 +22,13 @@ function GuildBankBar:Create(parent)
     bagsBarFrame:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
     bagsBarFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
     bagsBarFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    bagsBarFrame:SetBackdropColor(T("BG_TERTIARY"))
-    bagsBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    bagsBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    bagsBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     GuildBankBar:BuildTabButtons()
 
     local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_WITHDRAW"] or "Withdraw", height = 22 })
-    withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -S("SM"), ROW1_Y)
+    withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
         if not OneWoW_Bags.guildBankOpen then return end
         if not CanWithdrawGuildBankMoney() then return end
@@ -70,12 +70,12 @@ function GuildBankBar:Create(parent)
     bagsBarFrame.logBtn = logBtn
 
     local goldText = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    goldText:SetPoint("RIGHT", logBtn, "LEFT", -S("SM"), 0)
+    goldText:SetPoint("RIGHT", logBtn, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
     bagsBarFrame.goldText = goldText
 
     local freeSlots = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    freeSlots:SetPoint("RIGHT", goldText, "LEFT", -S("SM"), 0)
-    freeSlots:SetTextColor(T("TEXT_SECONDARY"))
+    freeSlots:SetPoint("RIGHT", goldText, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    freeSlots:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     bagsBarFrame.freeSlots = freeSlots
 
     GuildBankBar:UpdateGold()
@@ -94,7 +94,7 @@ function GuildBankBar:BuildTabButtons()
     tabButtons = {}
 
     local numTabs = GetNumGuildBankTabs() or 0
-    local xOffset = S("SM")
+    local xOffset = OneWoW_GUI:GetSpacing("SM")
 
     for tabID = 1, numTabs do
         local name, icon, isViewable = GetGuildBankTabInfo(tabID)
@@ -147,24 +147,25 @@ function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewabl
 
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        local tName = self.tabName or (L["GUILD_BANK_TAB"] and L["GUILD_BANK_TAB"]:format(self.tabID) or ("Tab " .. self.tabID))
+        local tName = self.tabName or format(L["GUILD_BANK_TAB"], self.tabID)
         GameTooltip:SetText(tName, 1, 1, 1)
         if self.isViewable then
             local _, _, _, _, _, remainingWithdrawals = GetGuildBankTabInfo(self.tabID)
             if remainingWithdrawals == -1 then
-                GameTooltip:AddLine("Withdrawals: Unlimited", 0.4, 1, 0.4)
+                GameTooltip:AddLine(L["GUILD_BANK_WITHDRAWALS_UNLIMITED"], 0.4, 1, 0.4)
             elseif remainingWithdrawals and remainingWithdrawals > 0 then
-                GameTooltip:AddLine(string.format("Withdrawals: %d", remainingWithdrawals), 0.4, 1, 0.4)
+                GameTooltip:AddLine(format(L["GUILD_BANK_WITHDRAWALS_FORMAT"], remainingWithdrawals), 0.4, 1, 0.4)
             elseif remainingWithdrawals == 0 then
-                GameTooltip:AddLine("Withdrawals: None", 1, 0.4, 0.4)
+                GameTooltip:AddLine(L["GUILD_BANK_WITHDRAWALS_NONE"], 1, 0.4, 0.4)
             end
             local GBSet = OneWoW_Bags.GuildBankSet
             if GBSet and GBSet.slots[self.tabID] then
                 local usedSlots = 0
+                local totalSlots = #GBSet.slots[self.tabID]
                 for _, button in pairs(GBSet.slots[self.tabID]) do
                     if button.owb_hasItem then usedSlots = usedSlots + 1 end
                 end
-                GameTooltip:AddLine(string.format("%d/98", usedSlots), 0.7, 0.7, 0.7)
+                GameTooltip:AddLine(format(L["GUILD_BANK_SLOTS_FORMAT"], usedSlots, totalSlots), 0.7, 0.7, 0.7)
             end
         end
         GameTooltip:Show()
@@ -226,9 +227,9 @@ function GuildBankBar:UpdateTabHighlights()
     for tabID, btn in pairs(tabButtons) do
         if btn._skinBorder then
             if selected ~= nil and selected == tabID then
-                btn._skinBorder:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                btn._skinBorder:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             end
         end
     end

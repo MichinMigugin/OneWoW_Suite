@@ -1,5 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.CategoryView = {}
 local View = OneWoW_Bags.CategoryView
 
@@ -9,7 +12,7 @@ local activeLabels = {}
 local function AcquireLabel(parent)
     local label
     if #labelPool > 0 then
-        label = table.remove(labelPool)
+        label = tremove(labelPool)
         label:SetParent(parent)
     else
         label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -26,7 +29,7 @@ local function ReleaseAllLabels()
     for label in pairs(activeLabels) do
         label:Hide()
         label:ClearAllPoints()
-        table.insert(labelPool, label)
+        tinsert(labelPool, label)
     end
     wipe(activeLabels)
 end
@@ -67,33 +70,33 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         if type(layout[1]) == "table" then
             for _, entry in ipairs(layout) do
                 if entry.type == "category" and entry.name == "Recent Items" and moveUpgradesToTop then
-                    table.insert(pinRecent, entry)
+                    tinsert(pinRecent, entry)
                 elseif entry.type == "category" and entry.name == "1W Upgrades" and moveUpgradesToTop then
-                    table.insert(pinUpgrades, entry)
+                    tinsert(pinUpgrades, entry)
                 elseif entry.type == "category" and entry.name == "Other" and moveOtherToBottom then
-                    table.insert(pinBottom, entry)
+                    tinsert(pinBottom, entry)
                 else
-                    table.insert(rest, entry)
+                    tinsert(rest, entry)
                 end
             end
         else
             for _, name in ipairs(layout) do
                 if name == "Recent Items" and moveUpgradesToTop then
-                    table.insert(pinRecent, name)
+                    tinsert(pinRecent, name)
                 elseif name == "1W Upgrades" and moveUpgradesToTop then
-                    table.insert(pinUpgrades, name)
+                    tinsert(pinUpgrades, name)
                 elseif name == "Other" and moveOtherToBottom then
-                    table.insert(pinBottom, name)
+                    tinsert(pinBottom, name)
                 else
-                    table.insert(rest, name)
+                    tinsert(rest, name)
                 end
             end
         end
         layout = {}
-        for _, e in ipairs(pinRecent)   do table.insert(layout, e) end
-        for _, e in ipairs(pinUpgrades) do table.insert(layout, e) end
-        for _, e in ipairs(rest)        do table.insert(layout, e) end
-        for _, e in ipairs(pinBottom)   do table.insert(layout, e) end
+        for _, e in ipairs(pinRecent)   do tinsert(layout, e) end
+        for _, e in ipairs(pinUpgrades) do tinsert(layout, e) end
+        for _, e in ipairs(rest)        do tinsert(layout, e) end
+        for _, e in ipairs(pinBottom)   do tinsert(layout, e) end
     end
 
     local cols = db.global.bagColumns or math.floor((width - padding * 2) / (iconSize + spacing))
@@ -103,13 +106,6 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
     local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
 
     local yOffset = 0
-
-    local function T(key)
-        if Constants and Constants.THEME and Constants.THEME[key] then
-            return unpack(Constants.THEME[key])
-        end
-        return 0.5, 0.5, 0.5, 1.0
-    end
 
     local catMods = db.global.categoryModifications or {}
     local SE = OneWoW_Bags.SearchEngine
@@ -133,14 +129,14 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         for _, btn in ipairs(items) do
             local itemID = btn.owb_itemInfo and btn.owb_itemInfo.itemID
             if not itemID then
-                table.insert(stackOrder, { buttons = {btn}, count = 1 })
+                tinsert(stackOrder, { buttons = {btn}, count = 1 })
             else
                 local key = tostring(itemID)
                 if not stacks[key] then
                     stacks[key] = { buttons = {}, count = 0, representative = btn }
-                    table.insert(stackOrder, stacks[key])
+                    tinsert(stackOrder, stacks[key])
                 end
-                table.insert(stacks[key].buttons, btn)
+                tinsert(stacks[key].buttons, btn)
                 stacks[key].count = stacks[key].count + (btn.owb_itemInfo.stackCount or 1)
             end
         end
@@ -150,7 +146,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             if stack.count > 1 and rep then
                 rep._owb_stackCount = stack.count
             end
-            table.insert(result, rep)
+            tinsert(result, rep)
             for _, btn in ipairs(stack.buttons) do
                 if btn ~= rep then
                     btn:Hide()
@@ -167,7 +163,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             local filtered = {}
             for _, btn in ipairs(items) do
                 if filterSet[btn] then
-                    table.insert(filtered, btn)
+                    tinsert(filtered, btn)
                 end
             end
             items = filtered
@@ -190,11 +186,11 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             local expName = (SE and SE:GetExpansionName(expID)) or "Unknown"
             if not groups[expName] then
                 groups[expName] = {}
-                table.insert(groupOrder, { name = expName, sortKey = expID })
+                tinsert(groupOrder, { name = expName, sortKey = expID })
             end
-            table.insert(groups[expName], btn)
+            tinsert(groups[expName], btn)
         end
-        table.sort(groupOrder, function(a, b) return a.sortKey > b.sortKey end)
+        sort(groupOrder, function(a, b) return a.sortKey > b.sortKey end)
         return groups, groupOrder
     end
 
@@ -209,11 +205,11 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             end
             if not groups[typeName] then
                 groups[typeName] = {}
-                table.insert(groupOrder, { name = typeName, sortKey = typeName })
+                tinsert(groupOrder, { name = typeName, sortKey = typeName })
             end
-            table.insert(groups[typeName], btn)
+            tinsert(groups[typeName], btn)
         end
-        table.sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
+        sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
         return groups, groupOrder
     end
 
@@ -230,11 +226,11 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             end
             if not groups[slotName] then
                 groups[slotName] = {}
-                table.insert(groupOrder, { name = slotName, sortKey = slotName })
+                tinsert(groupOrder, { name = slotName, sortKey = slotName })
             end
-            table.insert(groups[slotName], btn)
+            tinsert(groups[slotName], btn)
         end
-        table.sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
+        sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
         return groups, groupOrder
     end
 
@@ -246,11 +242,11 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             local qName = _G["ITEM_QUALITY" .. q .. "_DESC"] or ("Quality " .. q)
             if not groups[qName] then
                 groups[qName] = {}
-                table.insert(groupOrder, { name = qName, sortKey = q })
+                tinsert(groupOrder, { name = qName, sortKey = q })
             end
-            table.insert(groups[qName], btn)
+            tinsert(groups[qName], btn)
         end
-        table.sort(groupOrder, function(a, b) return a.sortKey > b.sortKey end)
+        sort(groupOrder, function(a, b) return a.sortKey > b.sortKey end)
         return groups, groupOrder
     end
 
@@ -284,8 +280,8 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             local section = CM:AcquireSection(contentFrame)
             section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
             section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
-            section:SetBackdropColor(T("BG_SECONDARY"))
-            section:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
             local displayName = L[localeKey] or categoryName
@@ -298,10 +294,10 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
                 local cb = tonumber(catMod.color:sub(5,6), 16) / 255
                 section.title:SetTextColor(cr, cg, cb, 1.0)
             else
-                section.title:SetTextColor(T("ACCENT_PRIMARY"))
+                section.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             end
             section.count:SetText(tostring(#items))
-            section.count:SetTextColor(T("TEXT_MUTED"))
+            section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local collapsed = db.global.collapsedSections[categoryName]
             section.isCollapsed = collapsed or false
@@ -332,7 +328,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
                                 subLabel:SetPoint("TOPLEFT", section.content, "TOPLEFT", leftPadding, -subY)
                                 subLabel:SetWidth(cols * cellSize)
                                 subLabel:SetText(groupInfo.name)
-                                subLabel:SetTextColor(T("TEXT_SECONDARY"))
+                                subLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                                 subY = subY + 14
 
                                 local gridH = RenderItemGrid(section.content, groupItems, subY)
@@ -422,7 +418,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             local avail = math.floor(cols - startCol)
 
             if avail < 1 then
-                table.insert(lines, currentLine)
+                tinsert(lines, currentLine)
                 currentLine = {}
                 curCol = 0
                 startCol = 0
@@ -435,7 +431,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
 
             if blockRows > 1 and (curCol > 0 or blockWidth < cols) then
                 if #currentLine > 0 then
-                    table.insert(lines, currentLine)
+                    tinsert(lines, currentLine)
                     currentLine = {}
                 end
                 curCol = 0
@@ -444,7 +440,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
                 blockRows = math.ceil(count / blockWidth)
             end
 
-            table.insert(currentLine, {
+            tinsert(currentLine, {
                 name = catInfo.name,
                 displayName = catInfo.displayName,
                 items = catInfo.items,
@@ -454,7 +450,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             })
 
             if blockRows > 1 then
-                table.insert(lines, currentLine)
+                tinsert(lines, currentLine)
                 currentLine = {}
                 curCol = 0
             else
@@ -462,7 +458,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             end
         end
         if #currentLine > 0 then
-            table.insert(lines, currentLine)
+            tinsert(lines, currentLine)
         end
 
         for _, line in ipairs(lines) do
@@ -481,7 +477,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
                         local cb = tonumber(catMod2.color:sub(5,6), 16) / 255
                         label:SetTextColor(cr, cg, cb, 1.0)
                     else
-                        label:SetTextColor(T("ACCENT_PRIMARY"))
+                        label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     end
                 end
             end
@@ -519,7 +515,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         local divider = CM:AcquireDivider(contentFrame)
         divider:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 8, -(yOffset + 4))
         divider:SetPoint("RIGHT", contentFrame, "RIGHT", -8, 0)
-        divider:SetColorTexture(T("BORDER_SUBTLE"))
+        divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         divider:Show()
         yOffset = yOffset + 10
     end
@@ -532,13 +528,13 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         local section = CM:AcquireSectionHeader(contentFrame)
         section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
         section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
-        section:SetBackdropColor(T("BG_PRIMARY"))
-        section:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+        section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         section.title:SetText(sectionName)
-        section.title:SetTextColor(T("ACCENT_SECONDARY"))
+        section.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
         section.count:SetText(isCollapsed and ">" or "")
-        section.count:SetTextColor(T("TEXT_MUTED"))
+        section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         section.content:Hide()
         section:SetHeight(24)
@@ -571,7 +567,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
                 if entry.type == "category" then
                     local catInfo = BuildCatInfo(entry.name)
                     if catInfo then
-                        table.insert(currentGroup, catInfo)
+                        tinsert(currentGroup, catInfo)
                     end
                 elseif entry.type == "separator" then
                     FlushGroupCompact(currentGroup)
@@ -609,7 +605,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             for _, categoryName in ipairs(layout) do
                 local catInfo = BuildCatInfo(categoryName)
                 if catInfo then
-                    table.insert(currentGroup, catInfo)
+                    tinsert(currentGroup, catInfo)
                 end
             end
             FlushGroupCompact(currentGroup)

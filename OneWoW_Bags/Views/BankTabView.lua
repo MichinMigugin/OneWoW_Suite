@@ -1,5 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.BankTabView = {}
 local View = OneWoW_Bags.BankTabView
 
@@ -31,7 +34,6 @@ function View:Layout(contentFrame, width, filteredButtons)
     local bankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
     local tabDataList = C_Bank.FetchPurchasedBankTabData(bankType)
 
-    local T = OneWoW_Bags.T
     local yOffset = 0
 
     for tabIdx, bagID in ipairs(bagList) do
@@ -50,7 +52,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                 local filtered = {}
                 for _, btn in ipairs(buttons) do
                     if filterSet[btn] then
-                        table.insert(filtered, btn)
+                        tinsert(filtered, btn)
                     end
                 end
                 buttons = filtered
@@ -61,8 +63,8 @@ function View:Layout(contentFrame, width, filteredButtons)
                 local section = CM:AcquireSection(contentFrame)
                 section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
                 section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
-                section:SetBackdropColor(T("BG_SECONDARY"))
-                section:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
                 local tabName = L["BANK_TAB"] and L["BANK_TAB"]:format(tabIdx) or ("Tab " .. tabIdx)
                 if tabDataList and tabDataList[tabIdx] and tabDataList[tabIdx].name and tabDataList[tabIdx].name ~= "" then
@@ -70,9 +72,9 @@ function View:Layout(contentFrame, width, filteredButtons)
                 end
 
                 section.title:SetText(tabName)
-                section.title:SetTextColor(T("ACCENT_PRIMARY"))
+                section.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                 section.count:SetText(tostring(#buttons))
-                section.count:SetTextColor(T("TEXT_MUTED"))
+                section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
                 local collapsed = db.global.collapsedBankSections and db.global.collapsedBankSections[bagID]
                 section.isCollapsed = collapsed or false

@@ -1,5 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.BagsBar = {}
 local BagsBar = OneWoW_Bags.BagsBar
 
@@ -7,9 +10,6 @@ local bagsBarFrame = nil
 local bagButtons = {}
 local eventFrame = nil
 local trackerDialog = nil
-local OneWoW_GUI = OneWoW_Bags.GUILib
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
 
 local ROW1_HEIGHT = 32
 local ROW2_HEIGHT = 26
@@ -32,7 +32,7 @@ local function ShowTrackerDialog()
                 if currencyInfo and currencyInfo.name and currencyInfo.name ~= "" then
                     trackType = "currency"
                 end
-                table.insert(db.global.trackedCurrencies, { type = trackType, id = id })
+                tinsert(db.global.trackedCurrencies, { type = trackType, id = id })
                 BagsBar:UpdateTrackers()
             end
             trackerDialog.editBox:SetText("")
@@ -61,7 +61,7 @@ local function ShowTrackerDialog()
         label:SetJustifyH("LEFT")
         label:SetWordWrap(true)
         label:SetText(L["TRACKER_ADD_ID"])
-        label:SetTextColor(T("TEXT_SECONDARY"))
+        label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local editBox = OneWoW_GUI:CreateEditBox(content, {
             name = "OneWoW_BagsTrackerInput",
@@ -98,8 +98,8 @@ function BagsBar:Create(parent)
     bagsBarFrame:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
     bagsBarFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
     bagsBarFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    bagsBarFrame:SetBackdropColor(T("BG_TERTIARY"))
-    bagsBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    bagsBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    bagsBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     -- Row 1: bag icons | cleanup button + slots right
     local row1Frame = CreateFrame("Frame", nil, bagsBarFrame)
@@ -114,13 +114,13 @@ function BagsBar:Create(parent)
     row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
     row2Frame:SetHeight(ROW2_HEIGHT)
     row2Frame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    row2Frame:SetBackdropColor(T("BG_SECONDARY"))
-    row2Frame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    row2Frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    row2Frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     bagsBarFrame.row2Frame = row2Frame
 
     -- Bag icon buttons (row 1, left)
     local BagTypes = OneWoW_Bags.BagTypes
-    local xOffset = S("SM")
+    local xOffset = OneWoW_GUI:GetSpacing("SM")
 
     for i = 0, 4 do
         local bagSlot = BagsBar:CreateBagButton(row1Frame, i, xOffset)
@@ -132,7 +132,7 @@ function BagsBar:Create(parent)
         local sep = row1Frame:CreateTexture(nil, "ARTWORK")
         sep:SetSize(1, 20)
         sep:SetPoint("LEFT", row1Frame, "LEFT", xOffset + 2, 0)
-        sep:SetColorTexture(T("BORDER_SUBTLE"))
+        sep:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         xOffset = xOffset + 6
 
         local reagentSlot = BagsBar:CreateBagButton(row1Frame, 5, xOffset)
@@ -141,12 +141,12 @@ function BagsBar:Create(parent)
 
     -- Row 1 right: free slots then cleanup button
     local freeSlots = row1Frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    freeSlots:SetPoint("RIGHT", row1Frame, "RIGHT", -S("SM"), 0)
-    freeSlots:SetTextColor(T("TEXT_SECONDARY"))
+    freeSlots:SetPoint("RIGHT", row1Frame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    freeSlots:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     bagsBarFrame.freeSlots = freeSlots
 
     local cleanupBtn = OneWoW_GUI:CreateFitTextButton(row1Frame, { text = L["CLEANUP"], height = 22 })
-    cleanupBtn:SetPoint("RIGHT", freeSlots, "LEFT", -S("SM"), 0)
+    cleanupBtn:SetPoint("RIGHT", freeSlots, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
     cleanupBtn:SetScript("OnClick", function()
         C_Container.SortBags()
     end)
@@ -154,7 +154,7 @@ function BagsBar:Create(parent)
 
     -- Row 2 left: add tracker button
     local addTrackerBtn = OneWoW_GUI:CreateButton(row2Frame, { text = "+", width = 20, height = 20 })
-    addTrackerBtn:SetPoint("LEFT", row2Frame, "LEFT", S("SM"), 0)
+    addTrackerBtn:SetPoint("LEFT", row2Frame, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
     addTrackerBtn:SetScript("OnClick", function()
         ShowTrackerDialog()
     end)
@@ -171,7 +171,7 @@ function BagsBar:Create(parent)
         if cursorType == "item" and itemID then
             local db = OneWoW_Bags.db
             if not db.global.trackedCurrencies then db.global.trackedCurrencies = {} end
-            table.insert(db.global.trackedCurrencies, { type = "item", id = itemID })
+            tinsert(db.global.trackedCurrencies, { type = "item", id = itemID })
             ClearCursor()
             BagsBar:UpdateTrackers()
         end
@@ -180,7 +180,7 @@ function BagsBar:Create(parent)
 
     local goldBtn = CreateFrame("Button", nil, row2Frame)
     goldBtn:SetHeight(20)
-    goldBtn:SetPoint("RIGHT", row2Frame, "RIGHT", -S("SM"), 0)
+    goldBtn:SetPoint("RIGHT", row2Frame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
 
     local goldText = goldBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     goldText:SetPoint("RIGHT", goldBtn, "RIGHT", 0, 0)
@@ -235,12 +235,12 @@ function BagsBar:ShowGoldTooltip()
         local money = entry.data.money or 0
         totalGold = totalGold + money
         if entry.key ~= currentKey then
-            table.insert(altList, { name = entry.key:match("^([^%-]+)") or entry.key, money = money })
+            tinsert(altList, { name = entry.key:match("^([^%-]+)") or entry.key, money = money })
         end
     end
     totalGold = totalGold + warbandGold
 
-    table.sort(altList, function(a, b) return a.money > b.money end)
+    sort(altList, function(a, b) return a.money > b.money end)
 
     GameTooltip:SetText(L["GOLD_TOOLTIP_PERSONAL"] .. " - " .. OneWoW_GUI:FormatGold(personalCopper), 1, 0.82, 0)
     GameTooltip:AddLine(" ")
@@ -298,7 +298,7 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
 
     local countText = tf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     countText:SetPoint("LEFT", iconFrame, "RIGHT", 3, 0)
-    countText:SetTextColor(T("TEXT_PRIMARY"))
+    countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     countText:SetText("x" .. countValue)
     tf.countText = countText
 
@@ -308,7 +308,7 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
     removeBtn:SetFrameLevel(tf:GetFrameLevel() + 5)
     removeBtn:Hide()
     removeBtn:SetScript("OnClick", function()
-        table.remove(db.global.trackedCurrencies, capturedIdx)
+        tremove(db.global.trackedCurrencies, capturedIdx)
         BagsBar:UpdateTrackers()
     end)
     removeBtn:SetScript("OnEnter", function(self)
@@ -387,7 +387,7 @@ function BagsBar:UpdateTrackers()
         local tf = BagsBar:CreateTrackerFrame(row2Frame, i, trackers[i])
         tf:SetPoint("LEFT", anchorLeft, "RIGHT", 4, 0)
         anchorLeft = tf
-        table.insert(bagsBarFrame.trackerFrames, tf)
+        tinsert(bagsBarFrame.trackerFrames, tf)
         tf:Show()
     end
 
@@ -399,8 +399,8 @@ function BagsBar:UpdateTrackers()
             extraRow:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
             extraRow:SetHeight(ROW2_HEIGHT)
             extraRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-            extraRow:SetBackdropColor(T("BG_SECONDARY"))
-            extraRow:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            extraRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            extraRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
             bagsBarFrame.extraRow = extraRow
         end
         extraRow:Show()
@@ -413,7 +413,7 @@ function BagsBar:UpdateTrackers()
             local tf = BagsBar:CreateTrackerFrame(extraRow, i, trackers[i])
             tf:SetPoint("LEFT", extraRow, "LEFT", xOff, 0)
             xOff = xOff + 69
-            table.insert(bagsBarFrame.trackerFrames, tf)
+            tinsert(bagsBarFrame.trackerFrames, tf)
             tf:Show()
         end
     else
@@ -502,15 +502,15 @@ function BagsBar:UpdateBagHighlights()
     for idx, btn in pairs(bagButtons) do
         if btn._skinBorder then
             if selected ~= nil and selected == idx then
-                btn._skinBorder:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
+                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                btn._skinBorder:SetBackdropBorderColor(T("BORDER_DEFAULT"))
+                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             end
         elseif btn.border then
             if selected ~= nil and selected == idx then
-                btn.border:SetVertexColor(T("ACCENT_PRIMARY"))
+                btn.border:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                btn.border:SetVertexColor(T("ACCENT_MUTED"))
+                btn.border:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_MUTED"))
             end
         end
     end

@@ -1,12 +1,13 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.BankGUI = OneWoW_Bags.BankGUI or {}
 local BankGUI = OneWoW_Bags.BankGUI
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
-local OneWoW_GUI = OneWoW_Bags.GUILib
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
+local WH = OneWoW_Bags.WindowHelpers
 
 local MainWindow = nil
 local isInitialized = false
@@ -97,8 +98,8 @@ function BankGUI:InitMainWindow()
     end)
 
     contentArea = CreateFrame("Frame", nil, MainWindow)
-    contentArea:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", S("XS"), -(S("XS") + C.TITLEBAR_HEIGHT + S("XS")))
-    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -S("XS"), S("XS"))
+    contentArea:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + C.TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
+    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS"), OneWoW_GUI:GetSpacing("XS"))
     MainWindow.contentArea = contentArea
 
     local infoBar = OneWoW_Bags.BankInfoBar:Create(contentArea)
@@ -125,47 +126,12 @@ function BankGUI:InitMainWindow()
         contentFrame:SetWidth(w)
     end)
 
-    local resizeBtn = CreateFrame("Button", nil, MainWindow)
-    resizeBtn:SetSize(16, 16)
-    resizeBtn:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -2, 2)
-    resizeBtn:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-    resizeBtn:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-    resizeBtn:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-    resizeBtn:SetFrameLevel(MainWindow:GetFrameLevel() + 10)
-    resizeBtn:SetScript("OnMouseDown", function(self, button)
-        if button == "LeftButton" then
-            MainWindow:StartSizing("BOTTOM")
-        end
-    end)
-    resizeBtn:SetScript("OnMouseUp", function(self)
-        MainWindow:StopMovingOrSizing()
-        local d = OneWoW_Bags.db
-        if d and d.global then
-            d.global.bankFramePosition = d.global.bankFramePosition or {}
-            OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.bankFramePosition)
-        end
-        if BankGUI.RefreshLayout then BankGUI:RefreshLayout() end
-    end)
+    WH:SetupResizeButton(MainWindow, BankGUI, "bankFramePosition")
 
-    _G["OneWoW_BankMainWindow"] = MainWindow
-    local alreadyRegistered = false
-    for _, name in ipairs(UISpecialFrames) do
-        if name == "OneWoW_BankMainWindow" then alreadyRegistered = true; break end
-    end
-    if not alreadyRegistered then
-        tinsert(UISpecialFrames, "OneWoW_BankMainWindow")
-    end
+    WH:RegisterSpecialFrame("OneWoW_BankMainWindow", MainWindow)
     isInitialized = true
 
-    local d = OneWoW_Bags.db
-    if d and d.global then
-        d.global.bankFramePosition = d.global.bankFramePosition or {}
-        if not OneWoW_GUI:RestoreWindowPosition(MainWindow, d.global.bankFramePosition) then
-            MainWindow:SetPoint("CENTER")
-        end
-    else
-        MainWindow:SetPoint("CENTER")
-    end
+    WH:SaveAndRestorePosition(MainWindow, "bankFramePosition")
 end
 
 function BankGUI:CleanupAllViews()
@@ -204,7 +170,7 @@ function BankGUI:UpdateWindowWidth()
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local scrollbarSpace = db.global.bankHideScrollBar and 0 or 12
-    local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * S("XS"))
+    local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * OneWoW_GUI:GetSpacing("XS"))
     MainWindow:SetWidth(newWidth)
     MainWindow:SetResizeBounds(newWidth, 300, newWidth, 1200)
 end
@@ -227,78 +193,15 @@ function BankGUI:RefreshLayout()
     BankGUI:CleanupAllViews()
 
     local db = OneWoW_Bags.db
-    local selectedTab = db and db.global.bankSelectedTab
 
     local allButtons = BankSet:GetAllButtons()
-
-    local visibleButtons = {}
-    if selectedTab then
-        for _, btn in ipairs(allButtons) do
-            if btn.owb_bagID == selectedTab then
-                table.insert(visibleButtons, btn)
-            end
-        end
-    else
-        visibleButtons = allButtons
-    end
-
+    local visibleButtons = WH:FilterByTab(allButtons, db and db.global.bankSelectedTab)
     local searchText = OneWoW_Bags.BankInfoBar:GetSearchText()
-    local filteredButtons = {}
-
-    if searchText and searchText ~= "" then
-        local SE = OneWoW_Bags.SearchEngine
-        local hasKeyword = searchText:find("#") or searchText:find("[&|!~()]")
-        if hasKeyword and SE then
-            for _, button in ipairs(visibleButtons) do
-                if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                    local enriched = SE:EnrichItemInfo(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
-                    if SE:CheckItem(searchText, button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, enriched) then
-                        table.insert(filteredButtons, button)
-                    end
-                end
-            end
-        else
-            local searchLower = string.lower(searchText)
-            for _, button in ipairs(visibleButtons) do
-                if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                    local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
-                    if itemName then
-                        local nameLower = string.lower(itemName)
-                        if string.find(nameLower, searchLower, 1, true) then
-                            table.insert(filteredButtons, button)
-                        end
-                    end
-                end
-            end
-        end
-    else
-        for _, button in ipairs(visibleButtons) do
-            table.insert(filteredButtons, button)
-        end
-    end
-
-    local expacFilter = OneWoW_Bags.activeBankExpansionFilter
-    if expacFilter ~= nil then
-        local SE = OneWoW_Bags.SearchEngine
-        local expacFiltered = {}
-        for _, button in ipairs(filteredButtons) do
-            if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                local enriched = button.owb_itemInfo._enriched and button.owb_itemInfo
-                    or SE:EnrichItemInfo(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
-                if enriched._expansionID == expacFilter then
-                    table.insert(expacFiltered, button)
-                end
-            end
-        end
-        filteredButtons = expacFiltered
-    end
+    local filteredButtons = WH:FilterBySearch(visibleButtons, searchText)
+    filteredButtons = WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeBankExpansionFilter)
 
     local viewMode = db and db.global and db.global.bankViewMode or "list"
-
-    local cols = db and db.global.bankColumns or 14
-    local iconSize = Constants.ICON_SIZES[(db and db.global.iconSize) or 3] or 37
-    local spacing = Constants.GUI.ITEM_BUTTON_SPACING
-    local contentWidth = cols * (iconSize + spacing) - spacing + 4
+    local cols, iconSize, spacing, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
 
     local layoutHeight = 100
 
@@ -357,8 +260,11 @@ end
 
 function BankGUI:Show()
     if not isInitialized then
-        local ok, err = pcall(function() BankGUI:InitMainWindow() end)
-        if not ok then return end
+        local ok, initErr = pcall(function() BankGUI:InitMainWindow() end)
+        if not ok then
+            print("|cffff4444OneWoW_Bags:|r BankWindow init failed:", initErr)
+            return
+        end
     end
 
     if not MainWindow then return end
@@ -439,24 +345,7 @@ end
 function BankGUI:ApplyTheme()
     if not MainWindow then return end
 
-    MainWindow:SetBackdropColor(T("BG_PRIMARY"))
-    MainWindow:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    if titleBar then
-        titleBar:SetBackdropColor(T("TITLEBAR_BG"))
-    end
-
-    local infoBarFrame = OneWoW_Bags.BankInfoBar:GetFrame()
-    if infoBarFrame then
-        infoBarFrame:SetBackdropColor(T("BG_TERTIARY"))
-        infoBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end
-
-    local bankBarFrame = OneWoW_Bags.BankBar:GetFrame()
-    if bankBarFrame then
-        bankBarFrame:SetBackdropColor(T("BG_TERTIARY"))
-        bankBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end
+    WH:ApplyBaseTheme(MainWindow, titleBar, OneWoW_Bags.BankInfoBar, OneWoW_Bags.BankBar)
 
     OneWoW_Bags.BankInfoBar:UpdateViewButtons()
 

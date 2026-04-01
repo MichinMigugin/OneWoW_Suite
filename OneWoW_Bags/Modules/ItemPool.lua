@@ -1,4 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.ItemPool = {}
 local Pool = OneWoW_Bags.ItemPool
 
@@ -10,14 +14,14 @@ function Pool:Preallocate(count)
     for i = 1, count do
         local button = Pool:CreateButton()
         button:Hide()
-        table.insert(available, button)
+        tinsert(available, button)
     end
 end
 
 function Pool:Acquire()
     local button
     if #available > 0 then
-        button = table.remove(available)
+        button = tremove(available)
     else
         button = Pool:CreateButton()
     end
@@ -32,7 +36,7 @@ function Pool:Release(button)
     button.inUse = false
     active[button] = nil
     button:Hide()
-    table.insert(available, button)
+    tinsert(available, button)
 end
 
 function Pool:ReleaseAll()
@@ -86,7 +90,7 @@ function Pool:CreateButton()
     if button.IconQuestTexture then button.IconQuestTexture:Hide() end
 
     button._skinnedIcon = button.icon
-    OneWoW_Bags.GUILib:SkinIconFrame(button, { preset = "clean" })
+    OneWoW_GUI:SkinIconFrame(button, { preset = "clean" })
     button.icon:SetDrawLayer("ARTWORK")
 
     button._owb_baseChildCount = select("#", button:GetChildren())
@@ -111,7 +115,7 @@ function Pool:ResetButton(button)
     button:SetAlpha(1.0)
     if button._owbUnusableOverlay then button._owbUnusableOverlay:Hide() end
     button:ClearAllPoints()
-    OneWoW_Bags.GUILib:UpdateIconQuality(button, nil)
+    OneWoW_GUI:UpdateIconQuality(button, nil)
     if button.IconBorder then button.IconBorder:Hide() end
     if button.IconOverlay then button.IconOverlay:Hide() end
     if button.ItemContextOverlay then button.ItemContextOverlay:Hide() end

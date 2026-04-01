@@ -1,5 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.GuildBankTabView = {}
 local View = OneWoW_Bags.GuildBankTabView
 
@@ -25,7 +28,6 @@ function View:Layout(contentFrame, width, filteredButtons)
     CM:ReleaseAllSections()
 
     local selectedTab = db.global.guildBankSelectedTab
-    local T = OneWoW_Bags.T
     local yOffset = 0
 
     for tabID = 1, GBSet.numTabs do
@@ -44,7 +46,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                 local filtered = {}
                 for _, btn in ipairs(buttons) do
                     if filterSet[btn] then
-                        table.insert(filtered, btn)
+                        tinsert(filtered, btn)
                     end
                 end
                 buttons = filtered
@@ -55,8 +57,8 @@ function View:Layout(contentFrame, width, filteredButtons)
                 local section = CM:AcquireSection(contentFrame)
                 section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
                 section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
-                section:SetBackdropColor(T("BG_SECONDARY"))
-                section:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+                section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
                 local tabName = GetGuildBankTabInfo(tabID)
                 if not tabName or tabName == "" then
@@ -64,9 +66,9 @@ function View:Layout(contentFrame, width, filteredButtons)
                 end
 
                 section.title:SetText(tabName)
-                section.title:SetTextColor(T("ACCENT_PRIMARY"))
+                section.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                 section.count:SetText(tostring(#buttons))
-                section.count:SetTextColor(T("TEXT_MUTED"))
+                section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
                 local collapsed = db.global.collapsedGuildBankSections and db.global.collapsedGuildBankSections[tabID]
                 section.isCollapsed = collapsed or false

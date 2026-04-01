@@ -1,12 +1,12 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.InfoBar = {}
 local InfoBar = OneWoW_Bags.InfoBar
 
 local infoBarFrame = nil
-local OneWoW_GUI = OneWoW_Bags.GUILib
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
 
 local ROW1_H = 28
 local ROW2_H = 28
@@ -23,15 +23,15 @@ function InfoBar:Create(parent)
     infoBarFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     infoBarFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     infoBarFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    infoBarFrame:SetBackdropColor(T("BG_TERTIARY"))
-    infoBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+    infoBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    infoBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local btnY   = -math.floor((ROW1_H - 22) / 2)
     local searchY = -(ROW1_H + math.floor((ROW2_H - 22) / 2))
 
     -- Row 1 right: Category Manager button
     local catMgrBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CATEGORY_MANAGER_BTN"])
-    catMgrBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -S("SM"), btnY)
+    catMgrBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), btnY)
     catMgrBtn:SetScript("OnClick", function()
         if OneWoW_Bags.CategoryManagerUI then
             OneWoW_Bags.CategoryManagerUI:Toggle()
@@ -48,7 +48,7 @@ function InfoBar:Create(parent)
 
     -- Row 1 left: view buttons
     local viewList = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_LIST"])
-    viewList:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", S("SM"), btnY)
+    viewList:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), btnY)
     viewList:SetScript("OnClick", function()
         OneWoW_Bags.db.global.viewMode = "list"
         InfoBar:UpdateViewButtons()
@@ -101,10 +101,10 @@ function InfoBar:Create(parent)
                 end
             end
             local ids = {}
-            for id in pairs(found) do table.insert(ids, id) end
-            table.sort(ids)
+            for id in pairs(found) do tinsert(ids, id) end
+            sort(ids)
             for _, id in ipairs(ids) do
-                table.insert(items, { text = SE:GetExpansionName(id) or ("Expansion " .. id), value = id })
+                tinsert(items, { text = SE:GetExpansionName(id) or ("Expansion " .. id), value = id })
             end
             return items
         end,
@@ -131,7 +131,7 @@ function InfoBar:Create(parent)
     -- Row 2 right: empty slots toggle (created before searchBox so search can anchor to it)
     local emptyToggleBtn = CreateFrame("Button", nil, infoBarFrame)
     emptyToggleBtn:SetSize(22, 22)
-    emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -S("SM"), searchY)
+    emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), searchY)
     local emptyIcon = emptyToggleBtn:CreateTexture(nil, "ARTWORK")
     emptyIcon:SetAllPoints()
     emptyIcon:SetTexture("Interface\\COMMON\\FavoritesIcon")
@@ -168,7 +168,7 @@ function InfoBar:Create(parent)
             end
         end,
     })
-    searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", S("SM"), searchY)
+    searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), searchY)
     searchBox:SetPoint("TOPRIGHT", emptyToggleBtn, "TOPLEFT", -3, 0)
     infoBarFrame.searchBox = searchBox
 
@@ -260,14 +260,14 @@ function InfoBar:UpdateViewButtons()
             btn:Show()
             if entry.mode == mode then
                 btn.isActive = true
-                btn:SetBackdropColor(T("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(T("ACCENT_PRIMARY"))
-                btn.text:SetTextColor(T("TEXT_ACCENT"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
                 btn.isActive = false
-                btn:SetBackdropColor(T("BTN_NORMAL"))
-                btn:SetBackdropBorderColor(T("BTN_BORDER"))
-                btn.text:SetTextColor(T("TEXT_PRIMARY"))
+                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end
     end
@@ -330,12 +330,12 @@ function InfoBar:UpdateVisibility()
     if showSearch and infoBarFrame.searchBox then
         local searchY = showHeader and -(ROW1_H + math.floor((ROW2_H - 22) / 2)) or -math.floor((ROW2_H - 22) / 2)
         infoBarFrame.searchBox:ClearAllPoints()
-        infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_Bags.S("SM"), searchY)
+        infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), searchY)
         infoBarFrame.searchBox:SetPoint("TOPRIGHT", infoBarFrame.emptyToggleBtn, "TOPLEFT", -3, 0)
 
         if infoBarFrame.emptyToggleBtn then
             infoBarFrame.emptyToggleBtn:ClearAllPoints()
-            infoBarFrame.emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_Bags.S("SM"), searchY)
+            infoBarFrame.emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), searchY)
         end
     end
 end
@@ -358,7 +358,7 @@ function InfoBar:ClearSearch()
             infoBarFrame.searchBox:RestorePlaceholder()
         elseif infoBarFrame.searchBox.placeholderText and infoBarFrame.searchBox.placeholderText ~= "" then
             infoBarFrame.searchBox:SetText(infoBarFrame.searchBox.placeholderText)
-            infoBarFrame.searchBox:SetTextColor(OneWoW_Bags.GUILib:GetThemeColor("TEXT_MUTED"))
+            infoBarFrame.searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
     end
 end

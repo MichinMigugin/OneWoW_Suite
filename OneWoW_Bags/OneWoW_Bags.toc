@@ -8,12 +8,12 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWoW
 ## SavedVariables: OneWoW_Bags_DB
-## SavedVariablesPerCharacter: OneWoW_Bags_CharDB
 ## AddonCompartmentFunc: 1WoW_Bags_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: 1WoW_Bags_OnAddonCompartmentEnter
 ## AddonCompartmentFuncOnLeave: 1WoW_Bags_OnAddonCompartmentLeave
 ## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
 ## RequiredDeps: OneWoW_GUI
+## OptionalDeps: OneWoW, OneWoW_AltTracker, OneWoW_ShoppingList, TradeSkillMaster
 ## Group: OneWoW
 
 # Libraries
@@ -28,7 +28,7 @@ Locales\ruRU.lua
 Locales\deDE.lua
 
 # Core
-Core\GUIBridge.lua
+Core\Constants.lua
 Core\Database.lua
 Core\Events.lua
 
@@ -36,6 +36,7 @@ Core\Events.lua
 Data\BagTypes.lua
 Data\BankTypes.lua
 Data\SearchEngine.lua
+Data\Sorting.lua
 Data\Categories.lua
 
 # Modules
@@ -44,6 +45,7 @@ Modules\ItemButton.lua
 Modules\BagSet.lua
 Modules\BankSet.lua
 Modules\GuildBankSet.lua
+Modules\CategoryManagerBase.lua
 Modules\CategoryManager.lua
 Modules\BankCategoryManager.lua
 Modules\GuildBankCategoryManager.lua
@@ -61,6 +63,8 @@ Views\BankTabView.lua
 Views\GuildBankTabView.lua
 
 # GUI
+GUI\WindowHelpers.lua
+GUI\InfoBarFactory.lua
 GUI\InfoBar.lua
 GUI\BagsBar.lua
 GUI\BankInfoBar.lua

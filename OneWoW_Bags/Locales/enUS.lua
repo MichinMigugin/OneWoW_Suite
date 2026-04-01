@@ -391,6 +391,46 @@ OneWoW_Bags.Locales["enUS"] = {
     ["DESC_ENABLE_EXPAC_FILTER"] = "Adds a dropdown to the header bar to filter items by expansion. Useful when farming old content.",
     ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Adds a dropdown to the bank header bar to filter items by expansion.",
 
+    ["COMPARTMENT_TOGGLE"] = "Click to toggle bags",
+
+    ["GUILD_BANK_TAB"] = "Tab %d",
+    ["GUILD_BANK_WITHDRAWALS_UNLIMITED"] = "Withdrawals: Unlimited",
+    ["GUILD_BANK_WITHDRAWALS_FORMAT"] = "Withdrawals: %d",
+    ["GUILD_BANK_WITHDRAWALS_NONE"] = "Withdrawals: None",
+    ["GUILD_BANK_SLOTS_FORMAT"] = "%d/%d",
+
+    ["CAT_MATCH_MODE"] = "Auto-Match Mode:",
+    ["CAT_MATCH_BY_TYPE"] = "By Type",
+    ["CAT_MATCH_ADVANCED"] = "Advanced",
+    ["BAGANATOR_LABEL"] = "Baganator |",
+
+    ["CAT_DESC_1W_JUNK"] = "Items marked as junk by 1W or grey quality items",
+    ["CAT_DESC_1W_UPGRADES"] = "Equippable items with higher item level than currently equipped",
+    ["CAT_DESC_RECENT_ITEMS"] = "Recently acquired items (tracked by GUID)",
+    ["CAT_DESC_HEARTHSTONE"] = "Hearthstone and hearthstone toy variants (#hearthstone)",
+    ["CAT_DESC_KEYSTONE"] = "Mythic+ Keystones (#keystone)",
+    ["CAT_DESC_POTIONS"] = "Consumable: Potions, Elixirs, Flasks (#potion)",
+    ["CAT_DESC_FOOD"] = "Consumable: Food and Drink (#food)",
+    ["CAT_DESC_CONSUMABLES"] = "Other consumables not classified as Potions or Food (#consumable)",
+    ["CAT_DESC_QUEST_ITEMS"] = "Items related to quests (#quest)",
+    ["CAT_DESC_EQUIPMENT_SETS"] = "Items belonging to saved equipment sets (#set)",
+    ["CAT_DESC_WEAPONS"] = "All weapon-class items (#weapon)",
+    ["CAT_DESC_ARMOR"] = "Equippable armor items (#armor & #gear)",
+    ["CAT_DESC_REAGENTS"] = "Crafting reagents (#reagent)",
+    ["CAT_DESC_TRADE_GOODS"] = "Trade goods and vendor materials (#tradegoods)",
+    ["CAT_DESC_TRADESKILL"] = "Profession-related items (#tradeskill)",
+    ["CAT_DESC_RECIPES"] = "Recipes, plans, patterns, and schematics (#recipe)",
+    ["CAT_DESC_HOUSING"] = "Player housing decoration items (#housing)",
+    ["CAT_DESC_GEMS"] = "Gemstones and socketable items (#gem)",
+    ["CAT_DESC_ITEM_ENHANCEMENT"] = "Enchantments, augments, and item modifications (#enhancement)",
+    ["CAT_DESC_CONTAINERS"] = "Bags and containers (#container)",
+    ["CAT_DESC_KEYS"] = "Physical keys (#key)",
+    ["CAT_DESC_MISCELLANEOUS"] = "Miscellaneous non-gear items (#misc & !#gear)",
+    ["CAT_DESC_BATTLE_PETS"] = "Battle pets and pet cages (#battlepet)",
+    ["CAT_DESC_TOYS"] = "Toy box items (#toy)",
+    ["CAT_DESC_OTHER"] = "Fallback for items that don't match any other category",
+    ["CAT_DESC_JUNK"] = "Grey quality (Poor) items (#poor)",
+
 }
 
 OneWoW_Bags.L = {}

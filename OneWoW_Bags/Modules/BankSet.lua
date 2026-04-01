@@ -1,5 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.BankSet = {}
 local BankSet = OneWoW_Bags.BankSet
 
@@ -152,15 +155,14 @@ function BankSet:UpdateAllSlots()
 end
 
 function BankSet:UpdateQualityColors()
-    local GUILib = OneWoW_Bags.GUILib
     local db = OneWoW_Bags.db
     local useRarity = db and db.global and db.global.bankRarityColor
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do
             if button.owb_itemInfo and button.owb_itemInfo.quality and button.owb_itemInfo.quality >= 1 and useRarity then
-                GUILib:UpdateIconQuality(button, button.owb_itemInfo.quality)
+                OneWoW_GUI:UpdateIconQuality(button, button.owb_itemInfo.quality)
             else
-                GUILib:UpdateIconQuality(button, nil)
+                OneWoW_GUI:UpdateIconQuality(button, nil)
             end
         end
     end
@@ -177,7 +179,7 @@ function BankSet:GetAllButtons()
             for slotID = 1, maxSlot do
                 local button = self.slots[bagID][slotID]
                 if button then
-                    table.insert(buttons, button)
+                    tinsert(buttons, button)
                 end
             end
         end
@@ -194,7 +196,7 @@ function BankSet:GetButtonsByBag(bagID)
         end
         for slotID = 1, maxSlot do
             if self.slots[bagID][slotID] then
-                table.insert(buttons, self.slots[bagID][slotID])
+                tinsert(buttons, self.slots[bagID][slotID])
             end
         end
     end

@@ -1,12 +1,13 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.GuildBankGUI = OneWoW_Bags.GuildBankGUI or {}
 local GuildBankGUI = OneWoW_Bags.GuildBankGUI
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
-local OneWoW_GUI = OneWoW_Bags.GUILib
-local T = OneWoW_Bags.T
-local S = OneWoW_Bags.S
+local WH = OneWoW_Bags.WindowHelpers
 
 local MainWindow = nil
 local isInitialized = false
@@ -100,8 +101,8 @@ function GuildBankGUI:InitMainWindow()
     end)
 
     contentArea = CreateFrame("Frame", nil, MainWindow)
-    contentArea:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", S("XS"), -(S("XS") + C.TITLEBAR_HEIGHT + S("XS")))
-    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -S("XS"), S("XS"))
+    contentArea:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + C.TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
+    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS"), OneWoW_GUI:GetSpacing("XS"))
     MainWindow.contentArea = contentArea
 
     local infoBar = OneWoW_Bags.GuildBankInfoBar:Create(contentArea)
@@ -128,47 +129,12 @@ function GuildBankGUI:InitMainWindow()
         contentFrame:SetWidth(w)
     end)
 
-    local resizeBtn = CreateFrame("Button", nil, MainWindow)
-    resizeBtn:SetSize(16, 16)
-    resizeBtn:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -2, 2)
-    resizeBtn:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-    resizeBtn:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-    resizeBtn:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-    resizeBtn:SetFrameLevel(MainWindow:GetFrameLevel() + 10)
-    resizeBtn:SetScript("OnMouseDown", function(self, button)
-        if button == "LeftButton" then
-            MainWindow:StartSizing("BOTTOM")
-        end
-    end)
-    resizeBtn:SetScript("OnMouseUp", function(self)
-        MainWindow:StopMovingOrSizing()
-        local d = OneWoW_Bags.db
-        if d and d.global then
-            d.global.guildBankFramePosition = d.global.guildBankFramePosition or {}
-            OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.guildBankFramePosition)
-        end
-        if GuildBankGUI.RefreshLayout then GuildBankGUI:RefreshLayout() end
-    end)
+    WH:SetupResizeButton(MainWindow, GuildBankGUI, "guildBankFramePosition")
 
-    _G["OneWoW_GuildBankMainWindow"] = MainWindow
-    local alreadyRegistered = false
-    for _, name in ipairs(UISpecialFrames) do
-        if name == "OneWoW_GuildBankMainWindow" then alreadyRegistered = true; break end
-    end
-    if not alreadyRegistered then
-        tinsert(UISpecialFrames, "OneWoW_GuildBankMainWindow")
-    end
+    WH:RegisterSpecialFrame("OneWoW_GuildBankMainWindow", MainWindow)
     isInitialized = true
 
-    local d = OneWoW_Bags.db
-    if d and d.global then
-        d.global.guildBankFramePosition = d.global.guildBankFramePosition or {}
-        if not OneWoW_GUI:RestoreWindowPosition(MainWindow, d.global.guildBankFramePosition) then
-            MainWindow:SetPoint("CENTER")
-        end
-    else
-        MainWindow:SetPoint("CENTER")
-    end
+    WH:SaveAndRestorePosition(MainWindow, "guildBankFramePosition")
 end
 
 function GuildBankGUI:CleanupAllViews()
@@ -207,7 +173,7 @@ function GuildBankGUI:UpdateWindowWidth()
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local scrollbarSpace = db.global.bankHideScrollBar and 0 or 12
-    local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * S("XS"))
+    local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * OneWoW_GUI:GetSpacing("XS"))
     MainWindow:SetWidth(newWidth)
     MainWindow:SetResizeBounds(newWidth, 300, newWidth, 1200)
 end
@@ -230,49 +196,14 @@ function GuildBankGUI:RefreshLayout()
     GuildBankGUI:CleanupAllViews()
 
     local db = OneWoW_Bags.db
-    local selectedTab = db and db.global.guildBankSelectedTab
 
     local allButtons = GuildBankSet:GetAllButtons()
-
-    local visibleButtons = {}
-    if selectedTab then
-        for _, btn in ipairs(allButtons) do
-            if btn.owb_bagID == selectedTab then
-                table.insert(visibleButtons, btn)
-            end
-        end
-    else
-        visibleButtons = allButtons
-    end
-
+    local visibleButtons = WH:FilterByTab(allButtons, db and db.global.guildBankSelectedTab)
     local searchText = OneWoW_Bags.GuildBankInfoBar:GetSearchText()
-    local filteredButtons = {}
-
-    if searchText and searchText ~= "" then
-        local searchLower = string.lower(searchText)
-        for _, button in ipairs(visibleButtons) do
-            if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
-                if itemName then
-                    local nameLower = string.lower(itemName)
-                    if string.find(nameLower, searchLower, 1, true) then
-                        table.insert(filteredButtons, button)
-                    end
-                end
-            end
-        end
-    else
-        for _, button in ipairs(visibleButtons) do
-            table.insert(filteredButtons, button)
-        end
-    end
+    local filteredButtons = WH:FilterBySearch(visibleButtons, searchText)
 
     local viewMode = db and db.global and db.global.guildBankViewMode or "list"
-
-    local cols = db and db.global.bankColumns or 14
-    local iconSize = Constants.ICON_SIZES[(db and db.global.iconSize) or 3] or 37
-    local spacing = Constants.GUI.ITEM_BUTTON_SPACING
-    local contentWidth = cols * (iconSize + spacing) - spacing + 4
+    local cols, iconSize, spacing, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
 
     local layoutHeight = 100
 
@@ -297,8 +228,11 @@ end
 
 function GuildBankGUI:Show()
     if not isInitialized then
-        local ok, err = pcall(function() GuildBankGUI:InitMainWindow() end)
-        if not ok then return end
+        local ok, initErr = pcall(function() GuildBankGUI:InitMainWindow() end)
+        if not ok then
+            print("|cffff4444OneWoW_Bags:|r GuildBankWindow init failed:", initErr)
+            return
+        end
     end
 
     if not MainWindow then return end
@@ -386,24 +320,7 @@ end
 function GuildBankGUI:ApplyTheme()
     if not MainWindow then return end
 
-    MainWindow:SetBackdropColor(T("BG_PRIMARY"))
-    MainWindow:SetBackdropBorderColor(T("BORDER_DEFAULT"))
-
-    if titleBar then
-        titleBar:SetBackdropColor(T("TITLEBAR_BG"))
-    end
-
-    local infoBarFrame = OneWoW_Bags.GuildBankInfoBar:GetFrame()
-    if infoBarFrame then
-        infoBarFrame:SetBackdropColor(T("BG_TERTIARY"))
-        infoBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end
-
-    local guildBankBarFrame = OneWoW_Bags.GuildBankBar:GetFrame()
-    if guildBankBarFrame then
-        guildBankBarFrame:SetBackdropColor(T("BG_TERTIARY"))
-        guildBankBarFrame:SetBackdropBorderColor(T("BORDER_SUBTLE"))
-    end
+    WH:ApplyBaseTheme(MainWindow, titleBar, OneWoW_Bags.GuildBankInfoBar, OneWoW_Bags.GuildBankBar)
 
     OneWoW_Bags.GuildBankInfoBar:UpdateViewButtons()
 

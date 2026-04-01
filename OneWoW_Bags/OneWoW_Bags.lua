@@ -1,9 +1,11 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 _G.OneWoW_Bags = OneWoW_Bags
 
 local L = OneWoW_Bags.L
-local OneWoW_GUI = OneWoW_Bags.GUILib
 
 OneWoW_Bags.oneWoWHubActive = false
 OneWoW_Bags.bankOpen = false
@@ -55,6 +57,7 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
 
     if self.Categories then
         self.Categories:SetCustomCategories(self.db.global.customCategoriesV2)
+        self.Categories:SetRecentItemDuration(self.db.global.recentItemDuration)
     end
 
     self:RegisterSlashCommands()
@@ -110,7 +113,7 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
         end
     end)
 
-    local _ver = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or self.Constants.VERSION
+    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("Bags", _ver, "/1wb")
     else
@@ -666,7 +669,7 @@ end
 _G["1WoW_Bags_OnAddonCompartmentEnter"] = function(addonName, button)
     GameTooltip:SetOwner(button, "ANCHOR_LEFT")
     GameTooltip:SetText("|cFFFFD100OneWoW|r - |cFF00FF00Bags|r", 1, 1, 1)
-    GameTooltip:AddLine("Click to toggle bags", 0.7, 0.7, 0.7)
+    GameTooltip:AddLine(OneWoW_Bags.L["COMPARTMENT_TOGGLE"], 0.7, 0.7, 0.7)
     GameTooltip:Show()
 end
 

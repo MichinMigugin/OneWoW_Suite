@@ -1,5 +1,8 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 OneWoW_Bags.BagView = {}
 local View = OneWoW_Bags.BagView
 
@@ -28,13 +31,6 @@ function View:Layout(contentFrame, width, filteredButtons)
     local selectedBag = db.global.selectedBag
     local yOffset = 0
 
-    local function T(key)
-        if Constants and Constants.THEME and Constants.THEME[key] then
-            return unpack(Constants.THEME[key])
-        end
-        return 0.5, 0.5, 0.5, 1.0
-    end
-
     for _, bagID in ipairs(BagTypes.ALL_PLAYER_BAGS) do
         local buttons = BagSet:GetButtonsByBag(bagID)
         if selectedBag ~= nil and bagID ~= selectedBag then
@@ -44,7 +40,7 @@ function View:Layout(contentFrame, width, filteredButtons)
             local filtered = {}
             for _, btn in ipairs(buttons) do
                 if filterSet[btn] then
-                    table.insert(filtered, btn)
+                    tinsert(filtered, btn)
                 end
             end
             buttons = filtered
@@ -54,15 +50,15 @@ function View:Layout(contentFrame, width, filteredButtons)
             local section = CM:AcquireSection(contentFrame)
             section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
             section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
-            section:SetBackdropColor(T("BG_SECONDARY"))
-            section:SetBackdropBorderColor(T("BORDER_SUBTLE"))
+            section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local bagName = BagTypes:GetBagName(bagID)
             local displayName = L[bagName] or bagName
             section.title:SetText(displayName)
-            section.title:SetTextColor(T("ACCENT_PRIMARY"))
+            section.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             section.count:SetText(tostring(#buttons))
-            section.count:SetTextColor(T("TEXT_MUTED"))
+            section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local collapsed = db.global.collapsedBagSections[bagID]
             section.isCollapsed = collapsed or false

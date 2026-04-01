@@ -134,6 +134,7 @@ integrationEventFrame:RegisterEvent("ADDON_LOADED")
 integrationEventFrame:RegisterEvent("BANKFRAME_OPENED")
 integrationEventFrame:SetScript("OnEvent", function(self, event, ...)
 	if event == "ADDON_LOADED" and ... == ADDON_NAME then
+		self:UnregisterEvent("ADDON_LOADED")
 		C_Timer.After(0.5, function()
 			if OneWoW_Bags.GUI then
 				HookGUIRefresh()
