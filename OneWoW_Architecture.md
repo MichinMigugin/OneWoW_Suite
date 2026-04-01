@@ -164,6 +164,47 @@ flowchart TB
 
 ---
 
+## 4b. Font Size Offset System
+
+All suite addons funnel font application through `OneWoW_GUI:SafeSetFont()`. The font size offset adds a global step (-3 to +5) to every font size passed through this function, letting users scale all text up or down without changing individual element sizes.
+
+```mermaid
+flowchart TB
+    subgraph SettingsChange [User Changes Font Size Offset]
+        SetOffset[OneWoW_GUI:SetSetting fontSizeOffset]
+        SetOffset --> FireCB[FireCallbacks OnFontSizeChanged]
+    end
+
+    subgraph SafeSetFont [SafeSetFont - Central Funnel]
+        ReadOffset[Read fontSizeOffset from DB]
+        ReadOffset --> CalcSize[adjustedSize = max 6, size + offset]
+        CalcSize --> ApplyFont[pcall SetFont with adjustedSize]
+    end
+
+    subgraph AddonCallbacks [Per-Addon Callbacks]
+        Notes2[Notes: reapply fonts]
+        Catalog2[Catalog: rebuild UI]
+        AltTracker2[AltTracker: reapply fonts]
+        Bags2[Bags: full GUI reset]
+    end
+
+    FireCB --> Notes2
+    FireCB --> Catalog2
+    FireCB --> AltTracker2
+    FireCB --> Bags2
+```
+
+**Key details:**
+- Stored in `OneWoW_GUI_DB.fontSizeOffset` (default: `0`)
+- Range: `-3` to `+5` (enforced in settings UI stepper)
+- Minimum final font size: `6px` (floor in `SafeSetFont`)
+- Callback event: `OnFontSizeChanged`
+- API: `OneWoW_GUI:GetFontSizeOffset()` returns the current offset
+- Addons respond to the callback the same way they respond to `OnFontChanged` — reapply fonts and rebuild UI
+- The offset preserves design hierarchy: a header at 16px and body at 12px with offset +2 become 18px and 14px
+
+---
+
 ## 5. Assumption Verification
 
 | Addon | User Claim | Verified |
