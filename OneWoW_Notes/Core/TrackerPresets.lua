@@ -304,7 +304,7 @@ local BUNDLED_GUIDES = {
                     steps = {
                         {
                             label = "Understanding List Types",
-                            description = "The Tracker supports five list types:\n- Guide: Step-by-step walkthroughs\n- Daily: Resets every day\n- Weekly: Resets every Tuesday\n- To-Do: Never resets, check off manually\n- Repeating: Custom interval reset",
+                            description = "The Tracker supports five list types:\n- Guide: Step-by-step walkthroughs\n- Daily: Resets every day\n- Weekly: Resets on your region's weekly reset day\n- To-Do: Never resets, check off manually\n- Repeating: Custom interval reset",
                             trackType = "manual",
                             max = 1,
                             objectives = {},
