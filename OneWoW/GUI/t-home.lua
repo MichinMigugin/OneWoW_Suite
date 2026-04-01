@@ -11,6 +11,135 @@ local STATUS_TEX_OK   = "Interface\\RaidFrame\\ReadyCheck-Ready"
 local STATUS_TEX_WARN = "Interface\\RaidFrame\\ReadyCheck-Waiting"
 local STATUS_TEX_BAD  = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 
+local originalStates = {}
+local pendingStates = {}
+local rowElements = {}
+local saveReloadBtn = nil
+local pendingCountText = nil
+local pendingBar = nil
+
+local function IsAddonPendingEnabled(addonName)
+    if pendingStates[addonName] ~= nil then
+        return pendingStates[addonName]
+    end
+    return originalStates[addonName] or false
+end
+
+local function GetPendingCount()
+    local count = 0
+    for addonName, newState in pairs(pendingStates) do
+        if originalStates[addonName] ~= nil and originalStates[addonName] ~= newState then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+local function UpdateSaveButton()
+    if not pendingBar then return end
+    local L = OneWoW.L
+    local count = GetPendingCount()
+    if count > 0 then
+        pendingBar:Show()
+        if pendingCountText then
+            pendingCountText:SetText(string.format(L["HOME_PENDING_CHANGES"], count))
+        end
+    else
+        pendingBar:Hide()
+    end
+end
+
+local function UpdateRowVisual(addonName)
+    local row = rowElements[addonName]
+    if not row then return end
+    local L = OneWoW.L
+    local isPending = (pendingStates[addonName] ~= nil and pendingStates[addonName] ~= originalStates[addonName])
+
+    if isPending then
+        local willBeEnabled = pendingStates[addonName]
+        if willBeEnabled then
+            row.light:SetTexture(STATUS_TEX_OK)
+        else
+            row.light:SetTexture(STATUS_TEX_BAD)
+        end
+        row.light:SetVertexColor(1, 1, 1, 1)
+        if row.btn then
+            row.btn.text:SetText(willBeEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
+        end
+    else
+        if row.originalStatus == "enabled" then
+            row.light:SetTexture(STATUS_TEX_OK)
+            row.light:SetVertexColor(1, 1, 1, 1)
+        elseif row.originalStatus == "warning" then
+            row.light:SetTexture(STATUS_TEX_WARN)
+            row.light:SetVertexColor(1, 1, 1, 1)
+        elseif row.originalStatus == "disabled" then
+            row.light:SetTexture(STATUS_TEX_BAD)
+            row.light:SetVertexColor(1, 1, 1, 1)
+        end
+        if row.btn then
+            local isActive = (row.originalStatus == "enabled" or row.originalStatus == "warning")
+            row.btn.text:SetText(isActive and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
+        end
+    end
+end
+
+local function ToggleAddon(addonName, cascadeAddons)
+    local currentlyEnabled = IsAddonPendingEnabled(addonName)
+    local newState = not currentlyEnabled
+
+    if newState then
+        C_AddOns.EnableAddOn(addonName)
+    else
+        C_AddOns.DisableAddOn(addonName)
+    end
+    pendingStates[addonName] = newState
+    UpdateRowVisual(addonName)
+
+    if cascadeAddons then
+        for _, name in ipairs(cascadeAddons) do
+            if C_AddOns.DoesAddOnExist(name) then
+                if newState then
+                    C_AddOns.EnableAddOn(name)
+                else
+                    C_AddOns.DisableAddOn(name)
+                end
+                pendingStates[name] = newState
+                UpdateRowVisual(name)
+            end
+        end
+    end
+
+    UpdateSaveButton()
+end
+
+function GUI:HasPendingHomeChanges()
+    return GetPendingCount() > 0
+end
+
+function GUI:SaveAndReloadHome()
+    C_AddOns.SaveAddOns()
+    C_UI.Reload()
+end
+
+function GUI:DiscardHomeChanges()
+    for addonName, _ in pairs(pendingStates) do
+        local orig = originalStates[addonName]
+        if orig ~= nil then
+            if orig then
+                C_AddOns.EnableAddOn(addonName)
+            else
+                C_AddOns.DisableAddOn(addonName)
+            end
+        end
+    end
+    pendingStates = {}
+    for addonName, _ in pairs(rowElements) do
+        UpdateRowVisual(addonName)
+    end
+    UpdateSaveButton()
+end
+
 local function GetAddonStatus(addonName)
     if not C_AddOns.DoesAddOnExist(addonName) then
         return "not_found", nil
@@ -42,45 +171,27 @@ function GUI:CreateHomeTab(parent)
     local L = OneWoW.L
     local Constants = OneWoW.Constants
 
-    if not StaticPopupDialogs["ONEWOW_CONFIRM_DISABLE_ADDON"] then
-        StaticPopupDialogs["ONEWOW_CONFIRM_DISABLE_ADDON"] = {
-            text         = "%s",
-            button1      = L["FEATURE_DISABLE_BTN"],
-            button2      = L["CANCEL"],
-            OnAccept     = function(self, data)
-                if data and data.addonName then
-                    C_AddOns.DisableAddOn(data.addonName)
-                    if data.cascade then
-                        for _, name in ipairs(data.cascade) do
-                            C_AddOns.DisableAddOn(name)
-                        end
-                    end
-                    C_AddOns.SaveAddOns()
-                    C_UI.Reload()
-                end
-            end,
-            timeout      = 0,
-            whileDead    = true,
-            hideOnEscape = true,
-            preferredIndex = 3,
-        }
-    end
+    originalStates = {}
+    pendingStates = {}
+    rowElements = {}
 
-    if not StaticPopupDialogs["ONEWOW_CONFIRM_ENABLE_ADDON"] then
-        StaticPopupDialogs["ONEWOW_CONFIRM_ENABLE_ADDON"] = {
-            text         = "%s",
-            button1      = L["FEATURE_ENABLE_BTN"],
+    if not StaticPopupDialogs["ONEWOW_UNSAVED_CHANGES"] then
+        StaticPopupDialogs["ONEWOW_UNSAVED_CHANGES"] = {
+            text         = L["HOME_UNSAVED_CONFIRM"],
+            button1      = L["HOME_SAVE_RELOAD"],
             button2      = L["CANCEL"],
-            OnAccept     = function(self, data)
-                if data and data.addonName then
-                    C_AddOns.EnableAddOn(data.addonName)
-                    if data.cascade then
-                        for _, name in ipairs(data.cascade) do
-                            C_AddOns.EnableAddOn(name)
-                        end
-                    end
-                    C_AddOns.SaveAddOns()
-                    C_UI.Reload()
+            button3      = L["HOME_DISCARD"],
+            OnAccept     = function()
+                GUI:SaveAndReloadHome()
+            end,
+            OnCancel     = function()
+                GUI._pendingAction = nil
+            end,
+            OnAlt        = function()
+                GUI:DiscardHomeChanges()
+                if GUI._pendingAction then
+                    GUI._pendingAction()
+                    GUI._pendingAction = nil
                 end
             end,
             timeout      = 0,
@@ -94,6 +205,11 @@ function GUI:CreateHomeTab(parent)
         local status, reason = GetAddonStatus(addonName)
         local localizedName  = L[localeKey] or displayName
         local version        = OneWoW_GUI:GetAddonVersion(addonName)
+
+        if status ~= "not_found" then
+            local enableState = C_AddOns.GetAddOnEnableState(addonName)
+            originalStates[addonName] = (enableState ~= 0)
+        end
 
         local light = panel:CreateTexture(nil, "ARTWORK")
         light:SetSize(14, 14)
@@ -148,28 +264,54 @@ function GUI:CreateHomeTab(parent)
             verText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
+        local toggleBtn = nil
         if not noButton then
             local isActive   = (status == "enabled" or status == "warning")
             local btnLabel   = isActive and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"]
-            local dialogKey  = isActive and "ONEWOW_CONFIRM_DISABLE_ADDON" or "ONEWOW_CONFIRM_ENABLE_ADDON"
-            local confirmKey = isActive and "HOME_ADDON_DISABLE_CONFIRM" or "HOME_ADDON_ENABLE_CONFIRM"
 
-            local toggleBtn = OneWoW_GUI:CreateButton(panel, { text = btnLabel, width = 90, height = 20 })
+            toggleBtn = OneWoW_GUI:CreateButton(panel, { text = btnLabel, width = 90, height = 20 })
             toggleBtn:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, rowY - 2)
 
             if status == "not_found" then
                 toggleBtn:Disable()
             else
                 toggleBtn:SetScript("OnClick", function()
-                    local msg = string.format(L[confirmKey], localizedName)
-                    StaticPopup_Show(dialogKey, msg, nil, { addonName = addonName, cascade = cascadeAddons })
+                    ToggleAddon(addonName, cascadeAddons)
                 end)
             end
+        end
+
+        if status ~= "not_found" then
+            rowElements[addonName] = {
+                light = light,
+                btn = toggleBtn,
+                originalStatus = status,
+            }
         end
     end
 
     local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_HomeScroll" })
     content:SetHeight(1200)
+
+    pendingBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    pendingBar:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 10, 10)
+    pendingBar:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -10, 10)
+    pendingBar:SetHeight(34)
+    pendingBar:SetFrameLevel(parent:GetFrameLevel() + 10)
+    pendingBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    pendingBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    pendingBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    pendingBar:Hide()
+
+    pendingCountText = pendingBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    pendingCountText:SetPoint("LEFT", pendingBar, "LEFT", 15, 0)
+    pendingCountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    saveReloadBtn = OneWoW_GUI:CreateButton(pendingBar, { text = L["HOME_SAVE_RELOAD"], width = 130, height = 22 })
+    saveReloadBtn:SetPoint("RIGHT", pendingBar, "RIGHT", -10, 0)
+    saveReloadBtn:SetScript("OnClick", function()
+        GUI:SaveAndReloadHome()
+    end)
 
     local yOffset = -30
 
