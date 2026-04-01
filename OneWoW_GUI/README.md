@@ -25,16 +25,18 @@ All ecosystem addons read/write through GUI. No more duplicate theme/language/mi
 - `theme` - color theme key (default: "green")
 - `language` - locale key (default: GetLocale())
 - `font` - font key (default: "default")
+- `fontSizeOffset` - global font size adjustment, -3 to +5 (default: 0)
 - `minimap.hide` - minimap button visibility (default: false)
 - `minimap.theme` - faction icon: "horde", "alliance", or "neutral" (default: "horde")
 
 ### Get a setting
 ```lua
-local theme = OneWoW_GUI:GetSetting("theme")         -- "green", "blue", etc.
-local lang  = OneWoW_GUI:GetSetting("language")       -- "enUS", "koKR", etc.
-local font  = OneWoW_GUI:GetSetting("font")           -- "default", "expressway", etc.
-local hide  = OneWoW_GUI:GetSetting("minimap.hide")   -- true/false
-local icon  = OneWoW_GUI:GetSetting("minimap.theme")  -- "horde"/"alliance"/"neutral"
+local theme  = OneWoW_GUI:GetSetting("theme")          -- "green", "blue", etc.
+local lang   = OneWoW_GUI:GetSetting("language")        -- "enUS", "koKR", etc.
+local font   = OneWoW_GUI:GetSetting("font")            -- "default", "expressway", etc.
+local offset = OneWoW_GUI:GetSetting("fontSizeOffset")  -- -3 to +5 (default 0)
+local hide   = OneWoW_GUI:GetSetting("minimap.hide")    -- true/false
+local icon   = OneWoW_GUI:GetSetting("minimap.theme")   -- "horde"/"alliance"/"neutral"
 ```
 
 ### Set a setting (fires callbacks to all registered addons)
@@ -42,6 +44,7 @@ local icon  = OneWoW_GUI:GetSetting("minimap.theme")  -- "horde"/"alliance"/"neu
 OneWoW_GUI:SetSetting("theme", "blue")
 OneWoW_GUI:SetSetting("language", "koKR")
 OneWoW_GUI:SetSetting("font", "expressway")
+OneWoW_GUI:SetSetting("fontSizeOffset", 2)       -- range: -3 to +5
 OneWoW_GUI:SetSetting("minimap.hide", true)
 OneWoW_GUI:SetSetting("minimap.theme", "alliance")
 ```
@@ -67,6 +70,11 @@ end)
 
 OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", myAddon, function(self, newFontKey)
     -- refresh your UI text with the new font
+end)
+
+OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", myAddon, function(self, newOffset)
+    -- reapply fonts / rebuild UI to pick up new size offset
+    -- SafeSetFont automatically applies the offset, so just re-call your font application
 end)
 ```
 
@@ -122,8 +130,25 @@ Use `OneWoW_GUI:GetFontList()` for the complete list. Sample:
 ```lua
 local fontList = OneWoW_GUI:GetFontList()           -- full list of { key, label, file }
 local path = OneWoW_GUI:GetFontByKey("expressway") -- path or nil for default
-OneWoW_GUI:SafeSetFont(fontString, path, 12, "")  -- applies font with fallback to GameFontNormal
+OneWoW_GUI:SafeSetFont(fontString, path, 12, "")  -- applies font with offset, fallback to GameFontNormal
+local offset = OneWoW_GUI:GetFontSizeOffset()      -- current offset (-3 to +5, default 0)
 local key = OneWoW_GUI:MigrateLSMFontName("Expressway")  -- maps LibSharedMedia names to GUI keys
+```
+
+### Font Size Offset (global size adjustment)
+
+`SafeSetFont` automatically adds the user's font size offset to every size it receives.
+Addons do NOT need to manually add the offset - just pass your base size to `SafeSetFont`.
+
+- Range: `-3` to `+5` (default `0`)
+- Minimum final size: `6px` (enforced in `SafeSetFont`)
+- Callback: `OnFontSizeChanged` fires when the user changes the offset
+- The offset preserves design hierarchy: a 16px header and 12px body with +2 become 18px and 14px
+
+```lua
+OneWoW_GUI:SafeSetFont(myFontString, fontPath, 12)
+-- If user set offset to +3, actual size applied = 15
+-- If user set offset to -2, actual size applied = 10
 ```
 
 ### Stamp out the standard 4-part settings panel
@@ -190,6 +215,9 @@ function addon:OnInitialize()
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2, newFontKey)
         -- refresh UI text with OneWoW_GUI:GetFont()
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function(self2, newOffset)
+        -- reapply fonts to pick up new size offset (SafeSetFont handles it automatically)
     end)
 end
 
