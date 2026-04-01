@@ -613,6 +613,7 @@ function TE:EvaluateStep(listID, sectionKey, step)
         end
 
         local sp = TD:GetStepProgress(listID, sectionKey, step.key)
+        if allComplete and not sp.completed then sp.lastCompleted = time() end
         sp.completed = allComplete
         sp.current = allComplete and 1 or 0
     else
@@ -626,6 +627,7 @@ function TE:EvaluateStep(listID, sectionKey, step)
             sp.current = current
             local effectiveMax = step.noMax and 0 or (step.max or 1)
             if effectiveMax > 0 and current >= effectiveMax then
+                if not sp.completed then sp.lastCompleted = time() end
                 sp.completed = true
             elseif effectiveMax > 0 then
                 sp.completed = false
@@ -1021,6 +1023,12 @@ function TE:BuildStepTooltip(tooltip, listID, sectionKey, step)
         tooltip:AddLine(step.description, 0.7, 0.7, 0.7, true)
     end
 
+    if step.userNote and step.userNote ~= "" then
+        tooltip:AddLine(" ")
+        tooltip:AddLine("Notes:", 0.5, 0.7, 1.0)
+        tooltip:AddLine(step.userNote, 0.6, 0.8, 1.0, true)
+    end
+
     local tt = step.trackType or "manual"
     tooltip:AddLine(" ")
     tooltip:AddDoubleLine("Track Type:", self:GetTrackTypeDisplayName(tt), 0.5, 0.5, 0.5, 1, 0.82, 0)
@@ -1040,6 +1048,17 @@ function TE:BuildStepTooltip(tooltip, listID, sectionKey, step)
         tooltip:AddLine("Status: Complete", 0.4, 0.8, 0.4)
     else
         tooltip:AddLine("Status: In Progress", 1, 0.82, 0)
+    end
+
+    if sp.lastCompleted and sp.lastCompleted > 0 then
+        local diff = time() - sp.lastCompleted
+        local timeStr
+        if diff < 60 then timeStr = "Just now"
+        elseif diff < 3600 then timeStr = format("%d min ago", math.floor(diff / 60))
+        elseif diff < 86400 then timeStr = format("%d hr ago", math.floor(diff / 3600))
+        else timeStr = format("%d days ago", math.floor(diff / 86400))
+        end
+        tooltip:AddDoubleLine("Last Done:", timeStr, 0.5, 0.5, 0.5, 0.7, 0.7, 0.7)
     end
 
     local list = TD:GetList(listID)
