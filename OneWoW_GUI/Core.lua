@@ -102,6 +102,13 @@ function OneWoW_GUI:FormatGold(copper)
     end
 end
 
+function OneWoW_GUI:GetCharacterKey(name, realm)
+    name = name or UnitName("player")
+    realm = realm or GetRealmName()
+    if not name or not realm then return nil end
+    return name .. "-" .. realm
+end
+
 function OneWoW_GUI:ClearFrame(frame)
     if not frame then return end
     for _, child in ipairs({ frame:GetChildren() }) do

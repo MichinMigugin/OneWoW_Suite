@@ -48,12 +48,12 @@ end
 
 function ns.UI:CreateMainFrame(defaultTab)
     if not OneWoWAltTracker or not OneWoWAltTracker.db or not OneWoWAltTracker.db.global then
-        print("|cFFFFD100OneWoW - AltTracker:|r Database not ready. Please wait a moment and try again.")
+        print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW - AltTracker:|r") .. " " .. (L and L["ADDON_MSG_DB_NOT_READY"] or "Database not ready."))
         return nil
     end
 
     if not L then
-        print("|cFFFFD100OneWoW - AltTracker:|r Localization not ready. Please wait a moment and try again.")
+        print("|cFFFFD100OneWoW - AltTracker:|r Localization not ready.")
         return nil
     end
 
@@ -279,7 +279,7 @@ function ns.UI:CreateMainFrame(defaultTab)
         end
     end)
 
-    local profilesTab = CreateTab("actionbars", "Action Bars")
+    local profilesTab = CreateTab("actionbars", L["SUBTAB_ACTIONBARS"] or "Action Bars")
     ns.UI.CreateActionBarsTab(profilesTab)
 
     local lockoutsTab = CreateTab("lockouts", L["SUBTAB_LOCKOUTS"] or "Lockouts")
@@ -371,9 +371,9 @@ function ns.UI.CreateFavoriteStarButton(charRow, charKey)
     starIcon:SetTexture("Interface/Common/FavoritesIcon")
     local function applyStarColor()
         if ns.IsFavoriteChar(charKey) then
-            starIcon:SetVertexColor(1, 0.82, 0, 1)
+            starIcon:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
-            starIcon:SetVertexColor(0.4, 0.4, 0.4, 0.6)
+            starIcon:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
     end
     applyStarColor()

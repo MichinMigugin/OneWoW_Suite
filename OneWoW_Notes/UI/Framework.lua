@@ -240,6 +240,7 @@ function ns.UI.CreateThemedDialog(config)
         title      = config.title or "",
         width      = config.width or 500,
         height     = config.height or 400,
+        showBrand  = true,
         buttons    = config.buttons,
         onClose    = function()
             if config.onClose then config.onClose() end

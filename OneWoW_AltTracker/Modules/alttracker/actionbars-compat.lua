@@ -5,7 +5,8 @@ local function SetupActionBarsCompat()
         ns.ActionBarsModule = _G.OneWoW_AltTracker_Character.ActionBars or nil
     else
         ns.ActionBarsModule = nil
-        print("|cFFFFD100OneWoW|r AltTracker: Warning - OneWoW_AltTracker_Character addon not loaded. Action Bars functionality will be unavailable.")
+        local L = ns.L
+        print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW - AltTracker:|r") .. " " .. (L and L["MSG_CHAR_ADDON_NOT_LOADED"] or "Character data addon not loaded."))
     end
 end
 

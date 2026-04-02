@@ -219,117 +219,52 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
     if not equipmentTab then return end
     if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
 
-    local allChars = {}
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
-        table.insert(allChars, {
-            key = charKey,
-            data = charData
-        })
-    end
-
-    if #allChars == 0 then return end
-
-    local currentChar = UnitName("player")
-    local currentRealm = GetRealmName()
-    local currentCharKey = currentChar .. "-" .. currentRealm
-    table.sort(allChars, function(a, b)
-        local aFav = ns.IsFavoriteChar(a.key)
-        local bFav = ns.IsFavoriteChar(b.key)
-        if aFav and not bFav then return true end
-        if bFav and not aFav then return false end
-
-        local aIsCurrent = (a.key == currentCharKey)
-        local bIsCurrent = (b.key == currentCharKey)
-        if aIsCurrent and not bIsCurrent then return true end
-        if bIsCurrent and not aIsCurrent then return false end
-
-        if currentSortColumn then
-            local aVal, bVal
-
-            if currentSortColumn == "name" then
-                aVal = a.data.name or ""
-                bVal = b.data.name or ""
-            elseif currentSortColumn == "level" then
-                aVal = a.data.level or 0
-                bVal = b.data.level or 0
-            elseif currentSortColumn == "itemLevel" then
-                aVal = a.data.itemLevel or 0
-                bVal = b.data.itemLevel or 0
-            elseif currentSortColumn == "durability" then
-                aVal = GetEquipmentStats(a.key, a.data)
-                bVal = GetEquipmentStats(b.key, b.data)
-            elseif currentSortColumn == "enchants" then
-                local _, aEnch = GetEquipmentStats(a.key, a.data)
-                local _, bEnch = GetEquipmentStats(b.key, b.data)
-                aVal = aEnch
-                bVal = bEnch
-            elseif currentSortColumn == "gems" then
-                local _, _, aGems = GetEquipmentStats(a.key, a.data)
-                local _, _, bGems = GetEquipmentStats(b.key, b.data)
-                aVal = aGems
-                bVal = bGems
-            elseif currentSortColumn == "tierSet" then
-                local _, _, _, aTier = GetEquipmentStats(a.key, a.data)
-                local _, _, _, bTier = GetEquipmentStats(b.key, b.data)
-                aVal = aTier
-                bVal = bTier
-            elseif currentSortColumn == "status" then
-                local _, _, _, _, aStatus = GetEquipmentStats(a.key, a.data)
-                local _, _, _, _, bStatus = GetEquipmentStats(b.key, b.data)
-                aVal = aStatus
-                bVal = bStatus
-            elseif currentSortColumn == "str" then
-                aVal = (a.data.stats and a.data.stats.strength) or 0
-                bVal = (b.data.stats and b.data.stats.strength) or 0
-            elseif currentSortColumn == "agi" then
-                aVal = (a.data.stats and a.data.stats.agility) or 0
-                bVal = (b.data.stats and b.data.stats.agility) or 0
-            elseif currentSortColumn == "sta" then
-                aVal = (a.data.stats and a.data.stats.stamina) or 0
-                bVal = (b.data.stats and b.data.stats.stamina) or 0
-            elseif currentSortColumn == "int" then
-                aVal = (a.data.stats and a.data.stats.intellect) or 0
-                bVal = (b.data.stats and b.data.stats.intellect) or 0
-            elseif currentSortColumn == "armor" then
-                aVal = (a.data.stats and a.data.stats.armor) or 0
-                bVal = (b.data.stats and b.data.stats.armor) or 0
-            elseif currentSortColumn == "ap" then
-                aVal = (a.data.stats and a.data.stats.attackPower) or 0
-                bVal = (b.data.stats and b.data.stats.attackPower) or 0
-            elseif currentSortColumn == "crit" then
-                aVal = (a.data.stats and a.data.stats.critChance) or 0
-                bVal = (b.data.stats and b.data.stats.critChance) or 0
-            elseif currentSortColumn == "haste" then
-                aVal = (a.data.stats and a.data.stats.haste) or 0
-                bVal = (b.data.stats and b.data.stats.haste) or 0
-            elseif currentSortColumn == "mastery" then
-                aVal = (a.data.stats and a.data.stats.mastery) or 0
-                bVal = (b.data.stats and b.data.stats.mastery) or 0
-            elseif currentSortColumn == "vers" then
-                aVal = (a.data.stats and a.data.stats.versatility) or 0
-                bVal = (b.data.stats and b.data.stats.versatility) or 0
-            else
-                aVal = a.data.name or ""
-                bVal = b.data.name or ""
-            end
-
-            if type(aVal) == "number" then
-                if currentSortAscending then
-                    return aVal < bVal
-                else
-                    return aVal > bVal
-                end
-            else
-                if currentSortAscending then
-                    return aVal < bVal
-                else
-                    return aVal > bVal
-                end
-            end
+    local allChars = ns.UI.GetSortedCharacters(function(charKey, charData, col)
+        if col == "name" then
+            return charData.name or ""
+        elseif col == "level" then
+            return charData.level or 0
+        elseif col == "itemLevel" then
+            return charData.itemLevel or 0
+        elseif col == "durability" then
+            return GetEquipmentStats(charKey, charData)
+        elseif col == "enchants" then
+            local _, enchants = GetEquipmentStats(charKey, charData)
+            return enchants
+        elseif col == "gems" then
+            local _, _, gems = GetEquipmentStats(charKey, charData)
+            return gems
+        elseif col == "tierSet" then
+            local _, _, _, tier = GetEquipmentStats(charKey, charData)
+            return tier
+        elseif col == "status" then
+            local _, _, _, _, status = GetEquipmentStats(charKey, charData)
+            return status
+        elseif col == "str" then
+            return (charData.stats and charData.stats.strength) or 0
+        elseif col == "agi" then
+            return (charData.stats and charData.stats.agility) or 0
+        elseif col == "sta" then
+            return (charData.stats and charData.stats.stamina) or 0
+        elseif col == "int" then
+            return (charData.stats and charData.stats.intellect) or 0
+        elseif col == "armor" then
+            return (charData.stats and charData.stats.armor) or 0
+        elseif col == "ap" then
+            return (charData.stats and charData.stats.attackPower) or 0
+        elseif col == "crit" then
+            return (charData.stats and charData.stats.critChance) or 0
+        elseif col == "haste" then
+            return (charData.stats and charData.stats.haste) or 0
+        elseif col == "mastery" then
+            return (charData.stats and charData.stats.mastery) or 0
+        elseif col == "vers" then
+            return (charData.stats and charData.stats.versatility) or 0
+        else
+            return charData.name or ""
         end
-
-        return (a.data.name or "") < (b.data.name or "")
-    end)
+    end, currentSortColumn, currentSortAscending)
+    if #allChars == 0 then return end
 
     local scrollContent = equipmentTab.scrollContent
     if not scrollContent then return end
@@ -468,43 +403,15 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         })
         charRow.charKey = charKey
 
-        if ns.UI.CreateFavoriteStarButton then
-            table.insert(charRow.cells, 2, ns.UI.CreateFavoriteStarButton(charRow, charKey))
-        end
+        ns.UI.AddCommonCells(charRow, charKey, charData)
+        ns.UI.AddLevelCell(charRow, charData)
 
-        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
-        table.insert(charRow.cells, factionCell)
-
-        local hasMail = false
-        if StorageAPI then
-            local mailData = StorageAPI.GetMail(charKey)
-            hasMail = mailData and mailData.hasNewMail
-        end
-        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
-        table.insert(charRow.cells, mailCell)
-
-        local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        nameText:SetText(charData.name or charKey)
-        local classColor = RAID_CLASS_COLORS[charData.class]
-        if classColor then
-            nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
-        else
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-        nameText:SetJustifyH("LEFT")
-        table.insert(charRow.cells, nameText)
-
-        local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        levelText:SetText(tostring(charData.level or 0))
-        levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        table.insert(charRow.cells, levelText)
-
-        local ilvlText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local ilvlText = OneWoW_GUI:CreateFS(charRow, 12)
         ilvlText:SetText(tostring(ilvl))
         ilvlText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, ilvlText)
 
-        local durabilityText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local durabilityText = OneWoW_GUI:CreateFS(charRow, 12)
         durabilityText:SetText(durabilityPct .. "%")
         if durabilityPct < 30 then
             durabilityText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
@@ -533,7 +440,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         enchantsCell:SetScript("OnLeave", function(self)
             GameTooltip:Hide()
         end)
-        local enchantsText = enchantsCell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local enchantsText = OneWoW_GUI:CreateFS(enchantsCell, 12)
         enchantsText:SetPoint("CENTER", enchantsCell, "CENTER", 0, 0)
         if missingEnchants > 0 then
             enchantsText:SetText(tostring(missingEnchants))
@@ -563,7 +470,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         gemsCell:SetScript("OnLeave", function(self)
             GameTooltip:Hide()
         end)
-        local gemsText = gemsCell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local gemsText = OneWoW_GUI:CreateFS(gemsCell, 12)
         gemsText:SetPoint("CENTER", gemsCell, "CENTER", 0, 0)
         if missingGems > 0 then
             gemsText:SetText(tostring(missingGems))
@@ -602,7 +509,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         tierCell:SetScript("OnLeave", function(self)
             GameTooltip:Hide()
         end)
-        local tierSetText = tierCell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local tierSetText = OneWoW_GUI:CreateFS(tierCell, 12)
         tierSetText:SetPoint("CENTER", tierCell, "CENTER", 0, 0)
         tierSetText:SetText(tierCount .. "/5")
         if tierCount == 0 then
@@ -614,56 +521,56 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         end
         table.insert(charRow.cells, tierCell)
 
-        local strText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local strText = OneWoW_GUI:CreateFS(charRow, 12)
         strText:SetText(tostring((charData.stats and charData.stats.strength) or 0))
         strText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, strText)
 
-        local agiText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local agiText = OneWoW_GUI:CreateFS(charRow, 12)
         agiText:SetText(tostring((charData.stats and charData.stats.agility) or 0))
         agiText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, agiText)
 
-        local staText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local staText = OneWoW_GUI:CreateFS(charRow, 12)
         staText:SetText(tostring((charData.stats and charData.stats.stamina) or 0))
         staText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, staText)
 
-        local intText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local intText = OneWoW_GUI:CreateFS(charRow, 12)
         intText:SetText(tostring((charData.stats and charData.stats.intellect) or 0))
         intText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, intText)
 
-        local armorText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local armorText = OneWoW_GUI:CreateFS(charRow, 12)
         armorText:SetText(tostring((charData.stats and charData.stats.armor) or 0))
         armorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, armorText)
 
-        local apText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local apText = OneWoW_GUI:CreateFS(charRow, 12)
         apText:SetText(tostring((charData.stats and charData.stats.attackPower) or 0))
         apText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, apText)
 
-        local critText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local critText = OneWoW_GUI:CreateFS(charRow, 12)
         local critValue = (charData.stats and charData.stats.critChance) or 0
         critText:SetText(string.format("%.1f%%", critValue))
         critText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, critText)
 
-        local hasteText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local hasteText = OneWoW_GUI:CreateFS(charRow, 12)
         local hasteValue = (charData.stats and charData.stats.haste) or 0
         hasteText:SetText(string.format("%.1f%%", hasteValue))
         hasteText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, hasteText)
 
-        local masteryText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local masteryText = OneWoW_GUI:CreateFS(charRow, 12)
         local masteryValue = (charData.stats and charData.stats.mastery) or 0
         masteryText:SetText(string.format("%.1f%%", masteryValue))
         masteryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         masteryText:SetJustifyH("CENTER")
         table.insert(charRow.cells, masteryText)
 
-        local versText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local versText = OneWoW_GUI:CreateFS(charRow, 12)
         local versValue = (charData.stats and charData.stats.versatility) or 0
         versText:SetText(string.format("%.1f%%", versValue))
         versText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))

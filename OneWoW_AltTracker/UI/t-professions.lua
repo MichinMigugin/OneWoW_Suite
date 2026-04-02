@@ -413,113 +413,46 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
     local ProfModule = GetProfessionsModule()
     if not ProfModule then return end
 
-    local allChars = {}
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
-        table.insert(allChars, {
-            key = charKey,
-            data = charData
-        })
-    end
-
-    if #allChars == 0 then return end
-
-    local currentChar = UnitName("player")
-    local currentRealm = GetRealmName()
-    local currentCharKey = currentChar .. "-" .. currentRealm
-    table.sort(allChars, function(a, b)
-        local aFav = ns.IsFavoriteChar(a.key)
-        local bFav = ns.IsFavoriteChar(b.key)
-        if aFav and not bFav then return true end
-        if bFav and not aFav then return false end
-
-        local aIsCurrent = (a.key == currentCharKey)
-        local bIsCurrent = (b.key == currentCharKey)
-        if aIsCurrent and not bIsCurrent then return true end
-        if bIsCurrent and not aIsCurrent then return false end
-
-        if currentSortColumn then
-            local aVal, bVal
-
-            if currentSortColumn == "name" then
-                aVal = a.data.name or ""
-                bVal = b.data.name or ""
-            elseif currentSortColumn == "level" then
-                aVal = a.data.level or 0
-                bVal = b.data.level or 0
-            elseif currentSortColumn == "primary1" then
-                local aProfData = ProfModule:GetCharacterProfessions(a.key)
-                local bProfData = ProfModule:GetCharacterProfessions(b.key)
-                local aProf = aProfData.professions and aProfData.professions.Primary1
-                local bProf = bProfData.professions and bProfData.professions.Primary1
-                aVal = (aProf and aProf.currentSkill) or 0
-                bVal = (bProf and bProf.currentSkill) or 0
-            elseif currentSortColumn == "primary2" then
-                local aProfData = ProfModule:GetCharacterProfessions(a.key)
-                local bProfData = ProfModule:GetCharacterProfessions(b.key)
-                local aProf = aProfData.professions and aProfData.professions.Primary2
-                local bProf = bProfData.professions and bProfData.professions.Primary2
-                aVal = (aProf and aProf.currentSkill) or 0
-                bVal = (bProf and bProf.currentSkill) or 0
-            elseif currentSortColumn == "cooking" then
-                local aProfData = ProfModule:GetCharacterProfessions(a.key)
-                local bProfData = ProfModule:GetCharacterProfessions(b.key)
-                local aProf = aProfData.professions and aProfData.professions.Cooking
-                local bProf = bProfData.professions and bProfData.professions.Cooking
-                aVal = (aProf and aProf.currentSkill) or 0
-                bVal = (bProf and bProf.currentSkill) or 0
-            elseif currentSortColumn == "fishing" then
-                local aProfData = ProfModule:GetCharacterProfessions(a.key)
-                local bProfData = ProfModule:GetCharacterProfessions(b.key)
-                local aProf = aProfData.professions and aProfData.professions.Fishing
-                local bProf = bProfData.professions and bProfData.professions.Fishing
-                aVal = (aProf and aProf.currentSkill) or 0
-                bVal = (bProf and bProf.currentSkill) or 0
-            elseif currentSortColumn == "archeology" then
-                local aProfData = ProfModule:GetCharacterProfessions(a.key)
-                local bProfData = ProfModule:GetCharacterProfessions(b.key)
-                local aProf = aProfData.professions and aProfData.professions.Archaeology
-                local bProf = bProfData.professions and bProfData.professions.Archaeology
-                aVal = (aProf and aProf.currentSkill) or 0
-                bVal = (bProf and bProf.currentSkill) or 0
-            elseif currentSortColumn == "conc1" then
-                local aProfData = ProfModule:GetCharacterProfessions(a.key)
-                local bProfData = ProfModule:GetCharacterProfessions(b.key)
-                local aConc = aProfData.concentration and aProfData.concentration.Primary1
-                local bConc = bProfData.concentration and bProfData.concentration.Primary1
-                aVal = (aConc and aConc.value) or 0
-                bVal = (bConc and bConc.value) or 0
-            elseif currentSortColumn == "conc2" then
-                local aProfData = ProfModule:GetCharacterProfessions(a.key)
-                local bProfData = ProfModule:GetCharacterProfessions(b.key)
-                local aConc = aProfData.concentration and aProfData.concentration.Primary2
-                local bConc = bProfData.concentration and bProfData.concentration.Primary2
-                aVal = (aConc and aConc.value) or 0
-                bVal = (bConc and bConc.value) or 0
-            elseif currentSortColumn == "gear" then
-                aVal = 0
-                bVal = 0
-            else
-                aVal = a.data.name or ""
-                bVal = b.data.name or ""
-            end
-
-            if type(aVal) == "number" then
-                if currentSortAscending then
-                    return aVal < bVal
-                else
-                    return aVal > bVal
-                end
-            else
-                if currentSortAscending then
-                    return aVal < bVal
-                else
-                    return aVal > bVal
-                end
-            end
+    local allChars = ns.UI.GetSortedCharacters(function(charKey, charData, col)
+        if col == "name" then
+            return charData.name or ""
+        elseif col == "level" then
+            return charData.level or 0
+        elseif col == "primary1" then
+            local profData = ProfModule:GetCharacterProfessions(charKey)
+            local prof = profData.professions and profData.professions.Primary1
+            return (prof and prof.currentSkill) or 0
+        elseif col == "primary2" then
+            local profData = ProfModule:GetCharacterProfessions(charKey)
+            local prof = profData.professions and profData.professions.Primary2
+            return (prof and prof.currentSkill) or 0
+        elseif col == "cooking" then
+            local profData = ProfModule:GetCharacterProfessions(charKey)
+            local prof = profData.professions and profData.professions.Cooking
+            return (prof and prof.currentSkill) or 0
+        elseif col == "fishing" then
+            local profData = ProfModule:GetCharacterProfessions(charKey)
+            local prof = profData.professions and profData.professions.Fishing
+            return (prof and prof.currentSkill) or 0
+        elseif col == "archeology" then
+            local profData = ProfModule:GetCharacterProfessions(charKey)
+            local prof = profData.professions and profData.professions.Archaeology
+            return (prof and prof.currentSkill) or 0
+        elseif col == "conc1" then
+            local profData = ProfModule:GetCharacterProfessions(charKey)
+            local conc = profData.concentration and profData.concentration.Primary1
+            return (conc and conc.value) or 0
+        elseif col == "conc2" then
+            local profData = ProfModule:GetCharacterProfessions(charKey)
+            local conc = profData.concentration and profData.concentration.Primary2
+            return (conc and conc.value) or 0
+        elseif col == "gear" then
+            return 0
+        else
+            return charData.name or ""
         end
-
-        return (a.data.name or "") < (b.data.name or "")
-    end)
+    end, currentSortColumn, currentSortAscending)
+    if #allChars == 0 then return end
 
     local scrollContent = professionsTab.scrollContent
     local dt = professionsTab.dataTable
@@ -555,37 +488,13 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         charRow.charKey = charKey
         charRow.professionData = professionData
 
-        if ns.UI.CreateFavoriteStarButton then
-            table.insert(charRow.cells, 2, ns.UI.CreateFavoriteStarButton(charRow, charKey))
-        end
-
-        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
-        table.insert(charRow.cells, factionCell)
-
-        local hasMail = charData.hasNewMail or false
-        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
-        table.insert(charRow.cells, mailCell)
-
-        local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        nameText:SetText(charData.name or charKey)
-        local classColor = RAID_CLASS_COLORS[charData.class]
-        if classColor then
-            nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
-        else
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-        nameText:SetJustifyH("LEFT")
-        table.insert(charRow.cells, nameText)
-
-        local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        levelText:SetText(tostring(charData.level or 0))
-        levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        table.insert(charRow.cells, levelText)
+        ns.UI.AddCommonCells(charRow, charKey, charData)
+        ns.UI.AddLevelCell(charRow, charData)
 
         local prof1 = professions.Primary1
         local primary1Frame = CreateFrame("Frame", nil, charRow)
         primary1Frame:SetSize(90, 32)
-        local primary1Text = primary1Frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local primary1Text = OneWoW_GUI:CreateFS(primary1Frame, 12)
         primary1Text:SetPoint("LEFT", primary1Frame, "LEFT", 0, 0)
         primary1Text:SetJustifyH("LEFT")
         if prof1 and prof1.name then
@@ -602,7 +511,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
 
         local conc1Frame = CreateFrame("Frame", nil, charRow)
         conc1Frame:SetSize(40, 32)
-        local conc1Text = conc1Frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local conc1Text = OneWoW_GUI:CreateFS(conc1Frame, 12)
         conc1Text:SetPoint("CENTER", conc1Frame, "CENTER", 0, 0)
         conc1Text:SetJustifyH("CENTER")
         local conc1Data = concentration.Primary1
@@ -621,7 +530,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         local prof2 = professions.Primary2
         local primary2Frame = CreateFrame("Frame", nil, charRow)
         primary2Frame:SetSize(90, 32)
-        local primary2Text = primary2Frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local primary2Text = OneWoW_GUI:CreateFS(primary2Frame, 12)
         primary2Text:SetPoint("LEFT", primary2Frame, "LEFT", 0, 0)
         primary2Text:SetJustifyH("LEFT")
         if prof2 and prof2.name then
@@ -638,7 +547,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
 
         local conc2Frame = CreateFrame("Frame", nil, charRow)
         conc2Frame:SetSize(40, 32)
-        local conc2Text = conc2Frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local conc2Text = OneWoW_GUI:CreateFS(conc2Frame, 12)
         conc2Text:SetPoint("CENTER", conc2Frame, "CENTER", 0, 0)
         conc2Text:SetJustifyH("CENTER")
         local conc2Data = concentration.Primary2
@@ -656,7 +565,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
 
         local cookingFrame = CreateFrame("Frame", nil, charRow)
         cookingFrame:SetSize(60, 32)
-        local cookingText = cookingFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local cookingText = OneWoW_GUI:CreateFS(cookingFrame, 12)
         cookingText:SetPoint("CENTER", cookingFrame, "CENTER", 0, 0)
         cookingText:SetJustifyH("CENTER")
         local cooking = professions.Cooking
@@ -674,7 +583,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
 
         local fishingFrame = CreateFrame("Frame", nil, charRow)
         fishingFrame:SetSize(60, 32)
-        local fishingText = fishingFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local fishingText = OneWoW_GUI:CreateFS(fishingFrame, 12)
         fishingText:SetPoint("CENTER", fishingFrame, "CENTER", 0, 0)
         fishingText:SetJustifyH("CENTER")
         local fishing = professions.Fishing
@@ -692,7 +601,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
 
         local archeologyFrame = CreateFrame("Frame", nil, charRow)
         archeologyFrame:SetSize(80, 32)
-        local archeologyText = archeologyFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local archeologyText = OneWoW_GUI:CreateFS(archeologyFrame, 12)
         archeologyText:SetPoint("CENTER", archeologyFrame, "CENTER", 0, 0)
         archeologyText:SetJustifyH("CENTER")
         local archaeology = professions.Archaeology
@@ -708,7 +617,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         archeologyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(charRow.cells, archeologyFrame)
 
-        local gearText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local gearText = OneWoW_GUI:CreateFS(charRow, 12)
         local gearEquipped = 0
         local gearTotal = 0
 

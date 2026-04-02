@@ -1,37 +1,23 @@
 local addonName, ns = ...
-local L = ns.L
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+local DB = OneWoW_GUI.DB
 
-ns.AddonInitialized = false
-
-local eventFrame = CreateFrame("Frame")
-
-eventFrame:RegisterEvent("ADDON_LOADED")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-
-eventFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "ADDON_LOADED" then
-        local loadedAddon = ...
-        if loadedAddon == addonName then
-            ns:InitializeDatabase()
+DB:BootSubModule(ns, {
+    addonName = addonName,
+    savedVar = "OneWoW_AltTracker_Auctions_DB",
+    sortField = "lastUpdate",
+    onLogin = function()
+        if ns.AHScanner then
+            ns.AHScanner:Initialize()
         end
-    elseif event == "PLAYER_LOGIN" then
-        ns:OnPlayerLogin()
-    end
-end)
 
-function ns:OnPlayerLogin()
-    self.AddonInitialized = true
+        if ns.FullAHScanner then
+            ns.FullAHScanner:Initialize()
+        end
 
-    if ns.AHScanner then
-        ns.AHScanner:Initialize()
-    end
-
-    if ns.FullAHScanner then
-        ns.FullAHScanner:Initialize()
-    end
-
-    if ns.DataManager then
-        ns.DataManager:Initialize()
-        ns.DataManager:RegisterEvents()
-    end
-end
+        if ns.DataManager then
+            ns.DataManager:Initialize()
+            ns.DataManager:RegisterEvents()
+        end
+    end,
+})

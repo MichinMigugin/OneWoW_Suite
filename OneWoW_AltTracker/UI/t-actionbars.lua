@@ -61,7 +61,7 @@ local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
     })
 
     local cf = result.contentFrame
-    local instructionText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local instructionText = OneWoW_GUI:CreateFS(cf, 12)
     instructionText:SetPoint("TOP", cf, "TOP", 0, -10)
     instructionText:SetText(L["AB_SELECT_TARGET_BAR"])
     instructionText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -138,7 +138,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
     })
 
     local cf = result.contentFrame
-    local infoText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local infoText = OneWoW_GUI:CreateFS(cf, 12)
     infoText:SetPoint("TOP", cf, "TOP", 0, -10)
     infoText:SetWidth(380)
     infoText:SetText(string.format(L["AB_DIALOG_RESTORE_MACROS"], setName))
@@ -213,7 +213,7 @@ local function ShowBackupDialog(split)
                 if nameBox then
                     local setName = strtrim(nameBox:GetText())
                     if setName == "" then
-                        print("|cFFFFD100OneWoW|r AltTracker: " .. L["AB_SET_NAME_EMPTY"])
+                        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["AB_SET_NAME_EMPTY"])
                         return
                     end
                     if ns.ActionBarsModule then
@@ -234,7 +234,7 @@ local function ShowBackupDialog(split)
     })
 
     local cf = result.contentFrame
-    local msgText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local msgText = OneWoW_GUI:CreateFS(cf, 12)
     msgText:SetPoint("TOP", cf, "TOP", 0, -10)
     msgText:SetWidth(380)
     msgText:SetText(L["AB_BACKUP_SET_MESSAGE"])
@@ -271,7 +271,7 @@ local function ShowRenameDialog(split, oldName)
                 if nameBox then
                     local newName = strtrim(nameBox:GetText())
                     if newName == "" then
-                        print("|cFFFFD100OneWoW|r AltTracker: " .. L["AB_SET_NAME_EMPTY"])
+                        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["AB_SET_NAME_EMPTY"])
                         return
                     end
                     if newName == oldName then
@@ -280,7 +280,7 @@ local function ShowRenameDialog(split, oldName)
                     end
                     local sets = ns.ActionBarsModule and ns.ActionBarsModule:GetActionBarSets()
                     if sets and sets[newName] then
-                        print("|cFFFFD100OneWoW|r AltTracker: " .. L["AB_SET_NAME_EXISTS"])
+                        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["AB_SET_NAME_EXISTS"])
                         return
                     end
                     if ns.ActionBarsModule then
@@ -301,7 +301,7 @@ local function ShowRenameDialog(split, oldName)
     })
 
     local cf = result.contentFrame
-    local msgText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local msgText = OneWoW_GUI:CreateFS(cf, 12)
     msgText:SetPoint("TOP", cf, "TOP", 0, -10)
     msgText:SetWidth(380)
     msgText:SetText(string.format(L["AB_RENAME_SET_MESSAGE"], oldName))
@@ -357,7 +357,7 @@ end
 
 local function ShowDetailPlaceholder(detailScrollChild, message)
     OneWoW_GUI:ClearFrame(detailScrollChild)
-    local placeholder = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local placeholder = OneWoW_GUI:CreateFS(detailScrollChild, 12)
     placeholder:SetPoint("TOP", detailScrollChild, "TOP", 0, -40)
     placeholder:SetWidth(detailScrollChild:GetWidth() - 20)
     placeholder:SetText(message)
@@ -398,27 +398,23 @@ function ns.UI.ShowSetDetails(split, setName)
 
     local yOffset = -10
 
-    local headerBox = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
+    local headerBox = OneWoW_GUI:CreateFrame(detailScrollChild, { height = 80, bgColor = "BG_SECONDARY" })
     headerBox:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
     headerBox:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
-    headerBox:SetHeight(80)
-    headerBox:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    headerBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    headerBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local headerTitle = headerBox:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local headerTitle = OneWoW_GUI:CreateFS(headerBox, 16)
     headerTitle:SetPoint("TOPLEFT", headerBox, "TOPLEFT", 10, -8)
     headerTitle:SetText(setName)
     headerTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local sourceText = headerBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sourceText = OneWoW_GUI:CreateFS(headerBox, 10)
     sourceText:SetPoint("TOPLEFT", headerTitle, "BOTTOMLEFT", 0, -4)
     local charName = setData.sourceChar and setData.sourceChar:match("^([^%-]+)") or "?"
     sourceText:SetText(string.format(L["AB_SET_SOURCE"], charName, setData.sourceSpec or "?"))
     sourceText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     if setData.lastUpdate then
-        local updatedText = headerBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local updatedText = OneWoW_GUI:CreateFS(headerBox, 10)
         updatedText:SetPoint("TOPLEFT", sourceText, "BOTTOMLEFT", 0, -2)
         updatedText:SetText(string.format(L["AB_SET_UPDATED"], date("%Y-%m-%d %H:%M", setData.lastUpdate)))
         updatedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -555,7 +551,7 @@ function ns.UI.ShowSetDetails(split, setName)
             local barLabelFrame = CreateFrame("Frame", nil, detailScrollChild)
             barLabelFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yOffset)
             barLabelFrame:SetSize(70, 20)
-            local barLabel = barLabelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local barLabel = OneWoW_GUI:CreateFS(barLabelFrame, 12)
             barLabel:SetAllPoints()
             barLabel:SetText(L[BAR_NAMES[barNumber]] or string.format(L["AB_LABEL_BAR"], barNumber))
             barLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -567,10 +563,8 @@ function ns.UI.ShowSetDetails(split, setName)
                 local slotData = barData and barData.slots and barData.slots[slotIndex]
                 local xPos = slotXStart + ((slotIndex - 1) * 36)
 
-                local slotFrame = CreateFrame("Button", nil, detailScrollChild, "BackdropTemplate")
-                slotFrame:SetSize(32, 32)
+                local slotFrame = OneWoW_GUI:CreateButton(detailScrollChild, { width = 32, height = 32 })
                 slotFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", xPos, slotYOffset)
-                slotFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
 
                 if slotData then
                     local r, g, b = unpack(ns.ActionBarsModule:GetActionColor(slotData))
@@ -583,7 +577,7 @@ function ns.UI.ShowSetDetails(split, setName)
                     slotIcon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
 
                     if slotData.actionType == "spell" and slotData.spellID == 1229376 then
-                        local assistOverlay = slotFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                        local assistOverlay = OneWoW_GUI:CreateFS(slotFrame, 10)
                         assistOverlay:SetAllPoints()
                         assistOverlay:SetText("AC")
                         assistOverlay:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -719,7 +713,7 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
 
             if #filteredEntries > 0 then
                 local classColor = RAID_CLASS_COLORS[className]
-                local catLabel = listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local catLabel = OneWoW_GUI:CreateFS(listScrollChild, 10)
                 catLabel:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 8, yOffset)
                 catLabel:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -8, yOffset)
                 catLabel:SetJustifyH("LEFT")
@@ -787,24 +781,15 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
 end
 
 function ns.UI.CreateActionBarsTab(parent)
-    local contentPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local contentPanel = OneWoW_GUI:CreateFrame(parent, {})
     contentPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     contentPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    contentPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    contentPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    contentPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     parent.contentPanel = contentPanel
 
-    local controlPanel = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
-    controlPanel:SetPoint("TOPLEFT", contentPanel, "TOPLEFT", 5, -5)
-    controlPanel:SetPoint("TOPRIGHT", contentPanel, "TOPRIGHT", -5, -5)
-    controlPanel:SetHeight(50)
-    controlPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    local controlPanel = OneWoW_GUI:CreateFilterBar(contentPanel, { height = 50 })
 
-    local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 12)
     controlTitle:SetPoint("LEFT", controlPanel, "LEFT", 10, 0)
     local currentSpec = select(2, GetSpecializationInfo(GetSpecialization())) or L["AB_UNKNOWN_SPEC"]
     controlTitle:SetText(UnitName("player") .. " - " .. currentSpec)

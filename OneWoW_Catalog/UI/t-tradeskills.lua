@@ -236,7 +236,7 @@ local function CreateRecipeRow(parent, recipe, yOffset, rowIdx, onClick)
     iconFrame:SetSize(24, 24)
     iconFrame:SetPoint("LEFT", 4, 0)
     iconFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    iconFrame:SetBackdropColor(0, 0, 0, 1)
+    iconFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local icon = iconFrame:CreateTexture(nil, "ARTWORK")
@@ -342,7 +342,7 @@ ShowRecipeDetail = function(recipe)
     hIconFrame:SetSize(40, 40)
     hIconFrame:SetPoint("LEFT", 8, 0)
     hIconFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    hIconFrame:SetBackdropColor(0, 0, 0, 1)
+    hIconFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     hIconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local hIcon = hIconFrame:CreateTexture(nil, "ARTWORK")
@@ -484,7 +484,7 @@ ShowRecipeDetail = function(recipe)
             rgIcon:SetSize(22, 22)
             rgIcon:SetPoint("LEFT", 4, 0)
             rgIcon:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-            rgIcon:SetBackdropColor(0, 0, 0, 1)
+            rgIcon:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
             rgIcon:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local rgIconTex = rgIcon:CreateTexture(nil, "ARTWORK")
@@ -872,12 +872,12 @@ function ns.UI.CreateTradeskillsTab(parent)
 
     local SEARCH_HEADER_H = PROF_HEADER_H + 46
 
-    local searchHeader = ns.UI.CreateFilterBar(parent, { height = SEARCH_HEADER_H, offset = 0 })
+    local searchHeader = OneWoW_GUI:CreateFilterBar(parent, { height = SEARCH_HEADER_H, offset = 0 })
     searchHeader:ClearAllPoints()
     searchHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     searchHeader:SetWidth(LEFT_W)
 
-    local profHeader = ns.UI.CreateFilterBar(parent, { height = SEARCH_HEADER_H, offset = 0 })
+    local profHeader = OneWoW_GUI:CreateFilterBar(parent, { height = SEARCH_HEADER_H, offset = 0 })
     profHeader:ClearAllPoints()
     profHeader:SetPoint("TOPLEFT", searchHeader, "TOPRIGHT", GAP, 0)
     profHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
@@ -886,7 +886,7 @@ function ns.UI.CreateTradeskillsTab(parent)
     contentArea:SetPoint("TOPLEFT", searchHeader, "BOTTOMLEFT", 0, -2)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    panels = ns.UI.CreateSplitPanel(contentArea)
+    panels = OneWoW_GUI:CreateSplitPanel(contentArea)
     panels.listTitle:SetText(L["TRADESKILLS_LIST_TITLE"])
     panels.detailTitle:SetText(L["TRADESKILLS_DETAIL_TITLE"])
 
@@ -979,7 +979,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         {key = "Classic",           label = EXPANSION_DISPLAY["Classic"]},
     }
 
-    local expDropdown, expDropText = ns.UI.CreateDropdown(searchHeader, {
+    local expDropdown, expDropText = OneWoW_GUI:CreateDropdown(searchHeader, {
         width = 10,
         height = 22,
         text = L["TRADESKILLS_ALL_EXPANSIONS"],

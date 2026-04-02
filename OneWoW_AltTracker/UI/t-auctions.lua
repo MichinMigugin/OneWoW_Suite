@@ -59,13 +59,7 @@ function ns.UI.CreateAuctionsTab(parent)
         },
     })
 
-    local filterPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    filterPanel:SetPoint("TOPLEFT", overview.panel, "BOTTOMLEFT", 0, -8)
-    filterPanel:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -8)
-    filterPanel:SetHeight(32)
-    filterPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    filterPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    filterPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    local filterPanel = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = overview.panel, offset = -8 })
 
     parent.auctionFilter = "all"
 
@@ -305,12 +299,9 @@ function ns.UI.CreateAuctionsTab(parent)
     parent.RebuildAltDropdown = InitializeAltDropdown
     parent.altDropdown = altDropdown
 
-    local rosterPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local rosterPanel = OneWoW_GUI:CreateFrame(parent, {})
     rosterPanel:SetPoint("TOPLEFT", filterPanel, "BOTTOMLEFT", 0, -5)
     rosterPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
-    rosterPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    rosterPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    rosterPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local dt
     dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
@@ -462,7 +453,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
             rowGap = rowGap,
             data = { charKey = charKey, charData = charData, itemData = itemData, isHistory = isHistory },
             createDetails = function(ef, d)
-                local text = ef:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                local text = OneWoW_GUI:CreateFS(ef, 12)
                 text:SetPoint("CENTER")
                 text:SetText(L["EXPANDED_DETAILS_SOON"])
                 text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -500,41 +491,22 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         local itemContainer = CreateFrame("Frame", nil, auctionRow)
         itemContainer:SetHeight(rowHeight - 4)
 
-        local itemIcon = itemContainer:CreateTexture(nil, "ARTWORK")
-        itemIcon:SetSize(rowHeight - 6, rowHeight - 6)
-        itemIcon:SetPoint("LEFT", itemContainer, "LEFT", 2, 0)
-        if itemData.itemIcon then
-            itemIcon:SetTexture(itemData.itemIcon)
-        else
-            itemIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        end
-
-        local qualityBorder = itemContainer:CreateTexture(nil, "BORDER")
-        qualityBorder:SetSize(rowHeight - 4, rowHeight - 4)
-        qualityBorder:SetPoint("CENTER", itemIcon, "CENTER", 0, 0)
-        qualityBorder:SetTexture("Interface\\Buttons\\WHITE8x8")
-        if itemData.itemRarity and ITEM_QUALITY_COLORS[itemData.itemRarity] then
-            local color = ITEM_QUALITY_COLORS[itemData.itemRarity]
-            qualityBorder:SetVertexColor(color.r, color.g, color.b, 0.8)
-        else
-            qualityBorder:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
-        qualityBorder:SetDrawLayer("BORDER", 1)
-
-        local itemLevelText = itemContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        itemLevelText:SetPoint("BOTTOMRIGHT", itemIcon, "BOTTOMRIGHT", 0, 1)
-        itemLevelText:SetDrawLayer("OVERLAY", 2)
-        if itemData.itemLevel and itemData.itemLevel > 0 then
-            itemLevelText:SetText(tostring(itemData.itemLevel))
-            itemLevelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
+        local iconFrame = OneWoW_GUI:CreateSkinnedIcon(itemContainer, {
+            size = rowHeight - 4,
+            preset = "clean",
+            iconTexture = itemData.itemIcon,
+            quality = itemData.itemRarity,
+            showIlvl = (itemData.itemLevel and itemData.itemLevel > 0),
+            itemLevel = itemData.itemLevel,
+        })
+        iconFrame:SetPoint("LEFT", itemContainer, "LEFT", 2, 0)
 
         local itemLinkFrame = CreateFrame("Button", nil, itemContainer)
-        itemLinkFrame:SetPoint("LEFT", itemIcon, "RIGHT", 4, 0)
+        itemLinkFrame:SetPoint("LEFT", iconFrame, "RIGHT", 4, 0)
         itemLinkFrame:SetPoint("RIGHT", itemContainer, "RIGHT", -4, 0)
         itemLinkFrame:SetHeight(rowHeight - 4)
 
-        local itemNameText = itemLinkFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local itemNameText = OneWoW_GUI:CreateFS(itemLinkFrame, 12)
         itemNameText:SetPoint("LEFT", itemLinkFrame, "LEFT", 0, 0)
         itemNameText:SetPoint("RIGHT", itemLinkFrame, "RIGHT", 0, 0)
         itemNameText:SetJustifyH("LEFT")
@@ -573,13 +545,13 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
 
         table.insert(auctionRow.cells, itemContainer)
 
-        local qtyText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local qtyText = OneWoW_GUI:CreateFS(auctionRow, 12)
         local quantity = itemData.quantity or 1
         qtyText:SetText(tostring(quantity))
         qtyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(auctionRow.cells, qtyText)
 
-        local eachText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local eachText = OneWoW_GUI:CreateFS(auctionRow, 12)
         if isHistory then
             local each = history.quantity > 0 and math.floor(history.listPrice / history.quantity) or 0
             eachText:SetText(ns.AltTrackerFormatters:FormatGold(each))
@@ -594,7 +566,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         eachText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, eachText)
 
-        local totalText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local totalText = OneWoW_GUI:CreateFS(auctionRow, 12)
         if isHistory then
             totalText:SetText(ns.AltTrackerFormatters:FormatGold(history.listPrice or 0))
         else
@@ -605,7 +577,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         totalText:SetJustifyH("LEFT")
         table.insert(auctionRow.cells, totalText)
 
-        local bidText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local bidText = OneWoW_GUI:CreateFS(auctionRow, 12)
         if isHistory then
             if history.salePrice and history.salePrice > 0 then
                 bidText:SetText(ns.AltTrackerFormatters:FormatGold(history.salePrice))
@@ -632,7 +604,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         local timeContainer = CreateFrame("Frame", nil, auctionRow)
         timeContainer:SetHeight(rowHeight)
 
-        local timeText = timeContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local timeText = OneWoW_GUI:CreateFS(timeContainer, 12)
         timeText:SetPoint("CENTER")
 
         if isHistory then
@@ -698,7 +670,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         end
         table.insert(auctionRow.cells, timeContainer)
 
-        local charNameText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local charNameText = OneWoW_GUI:CreateFS(auctionRow, 12)
         charNameText:SetText(charData.name or charKey)
         local classColor = RAID_CLASS_COLORS[charData.class]
         if classColor then
@@ -712,7 +684,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         local factionCell = OneWoW_GUI:CreateFactionIcon(auctionRow, { faction = charData.faction })
         table.insert(auctionRow.cells, factionCell)
 
-        local statusText = auctionRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local statusText = OneWoW_GUI:CreateFS(auctionRow, 12)
         if isHistory then
             if history.outcome == "sold" then
                 statusText:SetText(L["OUTCOME_SOLD"])

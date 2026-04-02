@@ -4,8 +4,38 @@
 local addonName, ns = ...
 local L = ns.L
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
 local NotesPins = {}
 ns.NotesPins = NotesPins
+
+local todoFramePool = {}
+
+local function AcquireTodoFrame(parent)
+    local f = table.remove(todoFramePool)
+    if f then
+        f:SetParent(parent)
+        f:ClearAllPoints()
+        f:Show()
+        return f
+    end
+    f = CreateFrame("Frame", nil, parent)
+    f:SetHeight(22)
+    f._checkbox = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
+    f._checkbox:SetSize(16, 16)
+    f._checkbox:SetPoint("TOPLEFT", f, "TOPLEFT", 2, -3)
+    f._text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f._text:SetPoint("TOPLEFT", f._checkbox, "TOPRIGHT", 5, 0)
+    f._text:SetJustifyH("LEFT")
+    return f
+end
+
+local function ReleaseTodoFrame(f)
+    f:Hide()
+    f._checkbox:SetScript("OnClick", nil)
+    f._checkbox:SetChecked(false)
+    table.insert(todoFramePool, f)
+end
 
 function NotesPins:Initialize()
     local addon = _G.OneWoW_Notes
@@ -211,7 +241,7 @@ function NotesPins:CreateNotePin(noteID, note)
         titleColor = fontConfig and fontConfig.border or borderColor
     end
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local titleText = OneWoW_GUI:CreateFS(titleBar, 10)
     titleText:SetPoint("LEFT", titleBar, "LEFT", 5, 0)
     titleText:SetPoint("RIGHT", titleBar, "RIGHT", -25, 0)
     titleText:SetText(L["CORE_PIN_NOTE_PREFIX"] .. " " .. (note.title or L["CORE_PIN_UNTITLED"]))
@@ -220,7 +250,7 @@ function NotesPins:CreateNotePin(noteID, note)
     pin.titleText = titleText
     pin.titleBar = titleBar
 
-    local timerText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local timerText = OneWoW_GUI:CreateFS(titleBar, 10)
     timerText:SetPoint("RIGHT", titleBar, "RIGHT", -25, 0)
     timerText:SetTextColor(titleColor[1], titleColor[2], titleColor[3], 0.8)
     timerText:Hide()
@@ -431,10 +461,9 @@ function NotesPins:CreateNotePin(noteID, note)
     pin.RefreshTodos = function(self)
         if not self.todoContainer or not noteID then return end
 
-        for _, item in ipairs(self.todoItems) do
-            if item and item.Hide then item:Hide() end
+        for i = #self.todoItems, 1, -1 do
+            ReleaseTodoFrame(table.remove(self.todoItems, i))
         end
-        wipe(self.todoItems)
 
         local allNotes = ns.NotesData:GetAllNotes()
         local currentNote = allNotes[noteID]
@@ -466,16 +495,12 @@ function NotesPins:CreateNotePin(noteID, note)
 
         local yOffset = 0
         for _, todo in ipairs(sortedTodos) do
-            local todoFrame = CreateFrame("Frame", nil, self.todoContainer)
+            local todoFrame = AcquireTodoFrame(self.todoContainer)
             todoFrame:SetPoint("TOPLEFT", self.todoContainer, "TOPLEFT", 0, yOffset)
             todoFrame:SetPoint("RIGHT", self.todoContainer, "RIGHT", 0, 0)
-            todoFrame:SetHeight(22)
 
-            local checkbox = CreateFrame("CheckButton", nil, todoFrame, "UICheckButtonTemplate")
-            checkbox:SetSize(16, 16)
-            checkbox:SetPoint("TOPLEFT", todoFrame, "TOPLEFT", 2, -3)
-            checkbox:SetChecked(todo.completed)
-            checkbox:SetScript("OnClick", function(checkSelf)
+            todoFrame._checkbox:SetChecked(todo.completed)
+            todoFrame._checkbox:SetScript("OnClick", function(checkSelf)
                 todo.completed = checkSelf:GetChecked()
                 if currentNote then currentNote.modified = GetServerTime() end
                 self:RefreshTodos()
@@ -493,18 +518,15 @@ function NotesPins:CreateNotePin(noteID, note)
                 end
             end)
 
-            local todoText = todoFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             local fs = currentNote.fontSize or 12
             local todoFontPath = ns.Config:ResolveFontPath(currentNote.fontFamily)
-            todoText:SetFont(todoFontPath, fs, currentNote.fontOutline or "")
+            todoFrame._text:SetFont(todoFontPath, fs, currentNote.fontOutline or "")
             local textWidth = math.max(50, containerWidth - 28)
-            todoText:SetWidth(textWidth)
-            todoText:SetPoint("TOPLEFT", checkbox, "TOPRIGHT", 5, 0)
-            todoText:SetJustifyH("LEFT")
-            todoText:SetText(todo.text or "")
+            todoFrame._text:SetWidth(textWidth)
+            todoFrame._text:SetText(todo.text or "")
 
             if todo.completed then
-                todoText:SetTextColor(0.5, 0.5, 0.5)
+                todoFrame._text:SetTextColor(0.5, 0.5, 0.5)
             else
                 local fc = currentNote.fontColor or "match"
                 local todoColor
@@ -518,13 +540,12 @@ function NotesPins:CreateNotePin(noteID, note)
                     local fontConfig = ns.Config.PIN_COLORS[fc]
                     todoColor = fontConfig and fontConfig.border or borderColor
                 end
-                todoText:SetTextColor(todoColor[1], todoColor[2], todoColor[3], 1)
+                todoFrame._text:SetTextColor(todoColor[1], todoColor[2], todoColor[3], 1)
             end
 
-            local rowHeight = math.max(22, todoText:GetStringHeight() + 6)
+            local rowHeight = math.max(22, todoFrame._text:GetStringHeight() + 6)
             todoFrame:SetHeight(rowHeight)
 
-            todoFrame:Show()
             table.insert(self.todoItems, todoFrame)
             yOffset = yOffset - (rowHeight + 3)
         end
@@ -569,97 +590,76 @@ function NotesPins:CreateNotePin(noteID, note)
     hoverControlsPanel:Hide()
     pin.hoverControlsPanel = hoverControlsPanel
 
-    local sliderName = "OneWoW_NotesPin_" .. noteID .. "_AlphaSlider"
-    local alphaSlider = CreateFrame("Slider", sliderName, hoverControlsPanel, "OptionsSliderTemplate")
-    alphaSlider:SetHeight(15)
-    alphaSlider:SetMinMaxValues(0.1, 1.0)
-    alphaSlider:SetValueStep(0.05)
-    alphaSlider:SetObeyStepOnDrag(true)
-    alphaSlider:SetValue(pinAlpha)
-
-    local alphaLow = _G[sliderName .. "Low"]
-    local alphaHigh = _G[sliderName .. "High"]
-    local alphaText = _G[sliderName .. "Text"]
-    if alphaLow then alphaLow:Hide() end
-    if alphaHigh then alphaHigh:Hide() end
-    if alphaText then
-        alphaText:ClearAllPoints()
-        alphaText:SetPoint("TOPRIGHT", hoverControlsPanel, "TOPRIGHT", -10, -12)
-        alphaText:SetText(L["CORE_PIN_OPACITY"])
-        alphaText:SetFontObject("GameFontNormalTiny")
-    end
-
+    local alphaSlider = OneWoW_GUI:CreateSlider(hoverControlsPanel, {
+        minVal = 0.1,
+        maxVal = 1.0,
+        step = 0.05,
+        currentVal = pinAlpha,
+        onChange = function(val)
+            note.opacity = val
+            if val >= 1.0 then
+                pin:SetBackdrop({
+                    bgFile = "Interface\\Buttons\\WHITE8X8",
+                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                    tile = false, tileSize = 16, edgeSize = 16,
+                    insets = { left = 4, right = 4, top = 4, bottom = 4 }
+                })
+                pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], 1.0)
+            else
+                pin:SetBackdrop({
+                    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+                    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                    tile = true, tileSize = 16, edgeSize = 16,
+                    insets = { left = 4, right = 4, top = 4, bottom = 4 }
+                })
+                pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], val)
+            end
+            pin:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+        end,
+    })
     alphaSlider:SetPoint("TOPLEFT", hoverControlsPanel, "TOPLEFT", 10, -5)
-    alphaSlider:SetPoint("TOPRIGHT", hoverControlsPanel, "TOPRIGHT", -80, -5)
-
-    alphaSlider:SetScript("OnValueChanged", function(self, val)
-        note.opacity = val
-        if val >= 1.0 then
-            pin:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8X8",
-                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                tile = false, tileSize = 16, edgeSize = 16,
-                insets = { left = 4, right = 4, top = 4, bottom = 4 }
-            })
-            pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], 1.0)
-        else
-            pin:SetBackdrop({
-                bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-                tile = true, tileSize = 16, edgeSize = 16,
-                insets = { left = 4, right = 4, top = 4, bottom = 4 }
-            })
-            pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], val)
-        end
-        pin:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
-    end)
+    alphaSlider:SetPoint("TOPRIGHT", hoverControlsPanel, "TOPRIGHT", -10, -5)
     pin.alphaSlider = alphaSlider
 
-    local lockMoveCB = CreateFrame("CheckButton", nil, hoverControlsPanel, "ChatConfigCheckButtonTemplate")
+    local lockMoveCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
+        label = L["CORE_PIN_LOCK_MOVE"],
+        checked = note.lockMove,
+        onClick = function(self)
+            note.lockMove = self:GetChecked()
+            if note.lockMove then
+                pin:SetMovable(false)
+                pin:RegisterForDrag()
+            else
+                pin:SetMovable(true)
+                pin:RegisterForDrag("LeftButton")
+            end
+        end,
+    })
     lockMoveCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 5)
-    lockMoveCB:SetSize(20, 20)
-    lockMoveCB.Text:SetText(L["CORE_PIN_LOCK_MOVE"])
-    lockMoveCB.Text:SetFontObject("GameFontNormalTiny")
-    lockMoveCB:SetHitRectInsets(0, 0, 0, 0)
-    lockMoveCB.Text:EnableMouse(false)
-    lockMoveCB:SetScript("OnClick", function(self)
-        note.lockMove = self:GetChecked()
-        if note.lockMove then
-            pin:SetMovable(false)
-            pin:RegisterForDrag()
-        else
-            pin:SetMovable(true)
-            pin:RegisterForDrag("LeftButton")
-        end
-    end)
     if note.lockMove then
-        lockMoveCB:SetChecked(true)
         pin:SetMovable(false)
         pin:RegisterForDrag()
     end
     pin.lockMoveCB = lockMoveCB
 
-    local lockResizeCB = CreateFrame("CheckButton", nil, hoverControlsPanel, "ChatConfigCheckButtonTemplate")
+    local lockResizeCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
+        label = L["CORE_PIN_LOCK_RESIZE"],
+        checked = note.lockResize,
+        onClick = function(self)
+            note.lockResize = self:GetChecked()
+            if note.lockResize then
+                resizeBtn:Hide()
+                resizeBtn:Disable()
+                pin:SetResizable(false)
+            else
+                resizeBtn:Show()
+                resizeBtn:Enable()
+                pin:SetResizable(true)
+            end
+        end,
+    })
     lockResizeCB:SetPoint("LEFT", lockMoveCB, "RIGHT", 80, 0)
-    lockResizeCB:SetSize(20, 20)
-    lockResizeCB.Text:SetText(L["CORE_PIN_LOCK_RESIZE"])
-    lockResizeCB.Text:SetFontObject("GameFontNormalTiny")
-    lockResizeCB:SetHitRectInsets(0, 0, 0, 0)
-    lockResizeCB.Text:EnableMouse(false)
-    lockResizeCB:SetScript("OnClick", function(self)
-        note.lockResize = self:GetChecked()
-        if note.lockResize then
-            resizeBtn:Hide()
-            resizeBtn:Disable()
-            pin:SetResizable(false)
-        else
-            resizeBtn:Show()
-            resizeBtn:Enable()
-            pin:SetResizable(true)
-        end
-    end)
     if note.lockResize then
-        lockResizeCB:SetChecked(true)
         resizeBtn:Hide()
         resizeBtn:Disable()
         pin:SetResizable(false)
@@ -707,18 +707,7 @@ function NotesPins:CreateNotePin(noteID, note)
     pin:SetScript("OnEnter", ShowHoverControls)
     pin:SetScript("OnLeave", function()
         C_Timer.After(0.05, function()
-            local foci = GetMouseFoci and GetMouseFoci() or GetMouseFocus and {GetMouseFocus()} or {}
-            local overAny = false
-            if foci then
-                for _, frame in ipairs(foci) do
-                    if frame == pin or frame == hoverControlsPanel or frame == alphaSlider
-                    or frame == lockMoveCB or frame == lockResizeCB or frame == resetTodosBtn
-                    or frame == resizeBtn or frame == pin.closeBtn then
-                        overAny = true
-                        break
-                    end
-                end
-            end
+            local overAny = pin:IsMouseOver() or hoverControlsPanel:IsMouseOver()
             if not overAny then HideHoverControls() end
         end)
     end)

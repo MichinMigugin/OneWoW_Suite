@@ -38,13 +38,9 @@ local function GetExpansionLabel(catName)
     return nil, 0
 end
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 local function GetCharKey()
-    local name = UnitName("player")
-    local realm = GetRealmName()
-    if name and realm then
-        return name .. "-" .. realm
-    end
-    return nil
+    return OneWoW_GUI and OneWoW_GUI:GetCharacterKey() or nil
 end
 
 function Scanner:Initialize()

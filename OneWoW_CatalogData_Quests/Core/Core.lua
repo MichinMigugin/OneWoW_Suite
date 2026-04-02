@@ -3,35 +3,24 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 
-ns.AddonInitialized = false
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-
-eventFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "ADDON_LOADED" then
-        local loadedAddon = ...
-        if loadedAddon == addonName then
-            ns:InitializeDatabase()
+OneWoW_GUI.DB:BootSubModule(ns, {
+    addonName = addonName,
+    savedVar = "OneWoW_CatalogData_Quests_DB",
+    defaults = ns.DatabaseDefaults,
+    onLogin = function()
+        if ns.CompletionTracker then
+            ns.CompletionTracker:Initialize()
         end
-    elseif event == "PLAYER_LOGIN" then
-        ns:OnPlayerLogin()
-    end
-end)
+        if ns.QuestScanner then
+            ns.QuestScanner:Initialize()
+        end
 
-function ns:OnPlayerLogin()
-    self.AddonInitialized = true
-
-    if ns.CompletionTracker then
-        ns.CompletionTracker:Initialize()
-    end
-    if ns.QuestScanner then
-        ns.QuestScanner:Initialize()
-    end
-
-    local catalog = _G.OneWoW_Catalog
-    if catalog and catalog.Catalog then
-        catalog.Catalog:RegisterDataAddon("quests", ns)
-    end
-end
+        local catalog = _G.OneWoW_Catalog
+        if catalog and catalog.Catalog then
+            catalog.Catalog:RegisterDataAddon("quests", ns)
+        end
+    end,
+})

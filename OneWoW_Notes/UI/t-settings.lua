@@ -29,7 +29,7 @@ local function CreateDetectionRow(parent, labelKey, descKey, isEnabled, onToggle
     toggleBtn:SetPoint("LEFT", rowFrame, "LEFT", 10, 0)
     toggleBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
 
-    local toggleLabel = toggleBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local toggleLabel = OneWoW_GUI:CreateFS(toggleBtn, 12)
     toggleLabel:SetPoint("CENTER")
 
     local function RefreshToggle(enabled)
@@ -59,14 +59,14 @@ local function CreateDetectionRow(parent, labelKey, descKey, isEnabled, onToggle
         RefreshToggle(isEnabled())
     end)
 
-    local label = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local label = OneWoW_GUI:CreateFS(rowFrame, 12)
     label:SetPoint("TOPLEFT",  rowFrame, "TOPLEFT", 90, -12)
     label:SetPoint("TOPRIGHT", rowFrame, "TOPRIGHT", -10, -12)
     label:SetJustifyH("LEFT")
     label:SetText(L[labelKey] or labelKey)
     label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local desc = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local desc = OneWoW_GUI:CreateFS(rowFrame, 10)
     desc:SetPoint("TOPLEFT",  label, "BOTTOMLEFT", 0, -4)
     desc:SetPoint("TOPRIGHT", rowFrame, "TOPRIGHT", -10, 0)
     desc:SetJustifyH("LEFT")
@@ -96,48 +96,6 @@ function ns.UI.CreateSettingsTab(parent)
     yOffset = yOffset - 20
     local detectionSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["SETTINGS_DETECTION"] or "Detection & Alerts", yOffset = yOffset })
     yOffset = detectionSection.bottomY - 16
-
-    local npcRow = CreateDetectionRow(
-        scrollChild,
-        "SETTINGS_NPC_DETECTION",
-        "SETTINGS_NPC_DETECTION_DESC",
-        function() return ns.NPCs and ns.NPCs:IsScanning() end,
-        function()
-            if ns.NPCs then
-                if ns.NPCs:IsScanning() then
-                    ns.NPCs:DisableScanning()
-                    return false
-                else
-                    ns.NPCs:EnableScanning()
-                    return true
-                end
-            end
-            return false
-        end,
-        yOffset
-    )
-    yOffset = yOffset - 70
-
-    local playerRow = CreateDetectionRow(
-        scrollChild,
-        "SETTINGS_PLAYER_DETECTION",
-        "SETTINGS_PLAYER_DETECTION_DESC",
-        function() return ns.Players and ns.Players:IsScanning() end,
-        function()
-            if ns.Players then
-                if ns.Players:IsScanning() then
-                    ns.Players:DisableScanning()
-                    return false
-                else
-                    ns.Players:EnableScanning()
-                    return true
-                end
-            end
-            return false
-        end,
-        yOffset
-    )
-    yOffset = yOffset - 70
 
     local zoneRow = CreateDetectionRow(
         scrollChild,

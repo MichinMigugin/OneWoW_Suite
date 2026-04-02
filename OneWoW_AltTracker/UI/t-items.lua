@@ -4,8 +4,6 @@ local L = ns.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
-
 ns.UI = ns.UI or {}
 
 local itemRows = {}
@@ -49,13 +47,7 @@ function ns.UI.CreateItemsTab(parent)
         },
     })
 
-    local filterBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    filterBar:SetPoint("TOPLEFT", overview.panel, "BOTTOMLEFT", 0, -8)
-    filterBar:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -8)
-    filterBar:SetHeight(32)
-    filterBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    filterBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    filterBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    local filterBar = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = overview.panel, offset = -8 })
 
     local searchBox = OneWoW_GUI:CreateEditBox(filterBar, {
         height = 20,
@@ -100,7 +92,7 @@ function ns.UI.CreateItemsTab(parent)
             return
         end
         if not AuctionHouseFrame or not AuctionHouseFrame:IsShown() then
-            print("|cFFFFD100OneWoW:|r " .. (L["ITEMS_AH_NOT_OPEN"] or "Open the Auction House first to scan prices."))
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ITEMS_AH_NOT_OPEN"])
             return
         end
         ns.UI:StartAHScan(parent, scanAHButton)
@@ -108,13 +100,9 @@ function ns.UI.CreateItemsTab(parent)
 
     parent.scanAHButton = scanAHButton
 
-    local scanBarContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local scanBarContainer = OneWoW_GUI:CreateFrame(parent, { height = 20, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
     scanBarContainer:SetPoint("TOPLEFT", filterBar, "BOTTOMLEFT", 0, -3)
     scanBarContainer:SetPoint("TOPRIGHT", filterBar, "BOTTOMRIGHT", 0, -3)
-    scanBarContainer:SetHeight(20)
-    scanBarContainer:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    scanBarContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    scanBarContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     scanBarContainer:Hide()
 
     local scanProgressBar = OneWoW_GUI:CreateProgressBar(scanBarContainer, { height = 14, min = 0, max = 1, value = 0 })
@@ -124,16 +112,12 @@ function ns.UI.CreateItemsTab(parent)
     parent.scanBarContainer = scanBarContainer
     parent.scanProgressBar = scanProgressBar
 
-    local noticeBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local noticeBar = OneWoW_GUI:CreateFrame(parent, { height = 28, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
     noticeBar:SetPoint("TOPLEFT", filterBar, "BOTTOMLEFT", 0, -5)
     noticeBar:SetPoint("TOPRIGHT", filterBar, "BOTTOMRIGHT", 0, -5)
-    noticeBar:SetHeight(28)
     parent.noticeBar = noticeBar
-    noticeBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    noticeBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    noticeBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local noticeText = noticeBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local noticeText = OneWoW_GUI:CreateFS(noticeBar, 12)
     noticeText:SetPoint("LEFT", noticeBar, "LEFT", 12, 0)
     noticeText:SetPoint("RIGHT", noticeBar, "RIGHT", -12, 0)
     noticeText:SetJustifyH("LEFT")
@@ -295,7 +279,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
     end
 
     if #itemsToScan == 0 then
-        print("|cFFFFD100Items Tab:|r No non-bound items to scan.")
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ITEMS_NONE_TO_SCAN"])
         return
     end
 
@@ -768,33 +752,20 @@ function ns.UI.RefreshItemsTab(itemsTab)
         local itemContainer = CreateFrame("Frame", nil, itemRow)
         itemContainer:SetHeight(rowHeight - 4)
 
-        local itemIcon = itemContainer:CreateTexture(nil, "ARTWORK")
-        itemIcon:SetSize(rowHeight - 6, rowHeight - 6)
-        itemIcon:SetPoint("LEFT", itemContainer, "LEFT", 2, 0)
-        if itemData.texture then
-            itemIcon:SetTexture(itemData.texture)
-        else
-            itemIcon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        end
-
-        local qualityBorder = itemContainer:CreateTexture(nil, "BORDER")
-        qualityBorder:SetSize(rowHeight - 4, rowHeight - 4)
-        qualityBorder:SetPoint("CENTER", itemIcon, "CENTER", 0, 0)
-        qualityBorder:SetTexture(BACKDROP_SIMPLE.bgFile)
-        if itemData.quality and ITEM_QUALITY_COLORS[itemData.quality] then
-            local color = ITEM_QUALITY_COLORS[itemData.quality]
-            qualityBorder:SetVertexColor(color.r, color.g, color.b, 0.3)
-        else
-            qualityBorder:SetVertexColor(0.5, 0.5, 0.5, 0.3)
-        end
-        qualityBorder:SetDrawLayer("BORDER", 0)
+        local iconFrame = OneWoW_GUI:CreateSkinnedIcon(itemContainer, {
+            size = rowHeight - 4,
+            preset = "clean",
+            iconTexture = itemData.texture,
+            quality = itemData.quality,
+        })
+        iconFrame:SetPoint("LEFT", itemContainer, "LEFT", 2, 0)
 
         local itemLinkFrame = CreateFrame("Button", nil, itemContainer)
-        itemLinkFrame:SetPoint("LEFT", itemIcon, "RIGHT", 4, 0)
+        itemLinkFrame:SetPoint("LEFT", iconFrame, "RIGHT", 4, 0)
         itemLinkFrame:SetPoint("RIGHT", itemContainer, "RIGHT", -4, 0)
         itemLinkFrame:SetHeight(rowHeight - 4)
 
-        local itemNameText = itemLinkFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local itemNameText = OneWoW_GUI:CreateFS(itemLinkFrame, 12)
         itemNameText:SetPoint("LEFT", itemLinkFrame, "LEFT", 0, 0)
         itemNameText:SetPoint("RIGHT", itemLinkFrame, "RIGHT", 0, 0)
         itemNameText:SetJustifyH("LEFT")
@@ -833,12 +804,12 @@ function ns.UI.RefreshItemsTab(itemsTab)
 
         table.insert(itemRow.cells, itemContainer)
 
-        local totalText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local totalText = OneWoW_GUI:CreateFS(itemRow, 12)
         totalText:SetText(tostring(itemData.totalQty))
         totalText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(itemRow.cells, totalText)
 
-        local vendorText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local vendorText = OneWoW_GUI:CreateFS(itemRow, 12)
         if itemData.vendorPrice and itemData.vendorPrice > 0 then
             vendorText:SetText(ns.AltTrackerFormatters:FormatGold(itemData.vendorPrice))
             vendorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -848,7 +819,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
         table.insert(itemRow.cells, vendorText)
 
-        local ahText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local ahText = OneWoW_GUI:CreateFS(itemRow, 12)
         if itemData.ahPrice and itemData.ahPrice > 0 then
             ahText:SetText(ns.AltTrackerFormatters:FormatGold(itemData.ahPrice))
             ahText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -858,7 +829,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
         table.insert(itemRow.cells, ahText)
 
-        local lastSeenText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local lastSeenText = OneWoW_GUI:CreateFS(itemRow, 12)
         lastSeenText:SetText(FormatLastSeen(itemData.lastSeenTime))
         lastSeenText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         table.insert(itemRow.cells, lastSeenText)

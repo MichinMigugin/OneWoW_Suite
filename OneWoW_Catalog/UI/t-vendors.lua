@@ -350,7 +350,7 @@ local function ShowVendorDetail(panels, vendor)
             locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             table.insert(detailElements, locLine)
 
-            local wpBtn = OneWoW_GUI:CreateButton(parent, { text = L["VENDORS_WAYPOINT"], width = 50, height = 16 })
+            local wpBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["VENDORS_WAYPOINT"], height = 16, minWidth = 50 })
             wpBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
             table.insert(detailElements, wpBtn)
 
@@ -366,11 +366,7 @@ local function ShowVendorDetail(panels, vendor)
     end
 
     yOffset = yOffset - 4
-    local divider = parent:CreateTexture(nil, "ARTWORK")
-    divider:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    divider:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    divider:SetHeight(1)
-    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local divider = OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
     table.insert(detailElements, divider)
     yOffset = yOffset - 8
 
@@ -616,7 +612,7 @@ function ns.UI.CreateVendorsTab(parent)
     local GAP    = ns.Constants.GUI.PANEL_GAP
     local HDR_H  = 42
 
-    local headerBar = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    local headerBar = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
     headerBar:ClearAllPoints()
     headerBar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     headerBar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
@@ -625,7 +621,7 @@ function ns.UI.CreateVendorsTab(parent)
     contentArea:SetPoint("TOPLEFT", headerBar, "BOTTOMLEFT", 0, -GAP)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    local panels = ns.UI.CreateSplitPanel(contentArea)
+    local panels = OneWoW_GUI:CreateSplitPanel(contentArea)
     panels.listTitle:SetText(L["VENDORS_LIST_TITLE"])
     panels.detailTitle:SetText(L["VENDORS_DETAIL_TITLE"])
 

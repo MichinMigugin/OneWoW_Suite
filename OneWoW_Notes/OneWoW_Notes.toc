@@ -29,7 +29,7 @@ Locales\koKR.lua
 # Core
 Core\Constants.lua
 Core\Database.lua
-Core\Core.lua
+Core\DataModule.lua
 Core\NotesConfig.lua
 Core\NotesData.lua
 Core\NotesCategories.lua

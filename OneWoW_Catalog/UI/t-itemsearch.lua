@@ -142,7 +142,7 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
     iconFrame:SetSize(22, 22)
     iconFrame:SetPoint("LEFT", 4, 0)
     iconFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    iconFrame:SetBackdropColor(0, 0, 0, 1)
+    iconFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local icon = iconFrame:CreateTexture(nil, "ARTWORK")
@@ -230,7 +230,7 @@ ShowItemDetail = function(result)
     hIconFrame:SetSize(40, 40)
     hIconFrame:SetPoint("LEFT", 8, 0)
     hIconFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    hIconFrame:SetBackdropColor(0, 0, 0, 1)
+    hIconFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     hIconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local hIcon = hIconFrame:CreateTexture(nil, "ARTWORK")
@@ -377,14 +377,6 @@ ShowItemDetail = function(result)
     end
 
     local isVendorItem = #detail.vendors > 0
-    local hasCurrencyCost = false
-    if isVendorItem then
-        for _, v in ipairs(detail.vendors) do
-            if v.cost and v.cost > 0 then
-                break
-            end
-        end
-    end
 
     if vendorSellPrice > 0 then
         AddTextRow(L["ITEMSEARCH_VENDOR_PRICE"] .. ":  " .. OneWoW_GUI:FormatGold(vendorSellPrice), 12, "TEXT_PRIMARY")
@@ -487,17 +479,17 @@ function ns.UI.CreateItemSearchTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP    = ns.Constants.GUI.PANEL_GAP
 
-    local searchHeader = ns.UI.CreateFilterBar(parent, { height = HEADER_H, offset = 0 })
+    local searchHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HEADER_H, offset = 0 })
     searchHeader:ClearAllPoints()
     searchHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     searchHeader:SetWidth(LEFT_W)
 
-    local filterHeader = ns.UI.CreateFilterBar(parent, { height = HEADER_H, offset = 0 })
+    local filterHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HEADER_H, offset = 0 })
     filterHeader:ClearAllPoints()
     filterHeader:SetPoint("TOPLEFT", searchHeader, "TOPRIGHT", GAP, 0)
     filterHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 
-    local noticeBar = ns.UI.CreateFilterBar(parent, { height = 28, offset = 0 })
+    local noticeBar = OneWoW_GUI:CreateFilterBar(parent, { height = 28, offset = 0 })
     noticeBar:ClearAllPoints()
     noticeBar:SetPoint("TOPLEFT", searchHeader, "BOTTOMLEFT", 0, -2)
     noticeBar:SetPoint("TOPRIGHT", filterHeader, "BOTTOMRIGHT", 0, -2)
@@ -514,7 +506,7 @@ function ns.UI.CreateItemSearchTab(parent)
     contentArea:SetPoint("TOPLEFT", noticeBar, "BOTTOMLEFT", 0, -2)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    panels = ns.UI.CreateSplitPanel(contentArea)
+    panels = OneWoW_GUI:CreateSplitPanel(contentArea)
     panels.listTitle:SetText(L["ITEMSEARCH_LIST_TITLE"])
     panels.detailTitle:SetText(L["ITEMSEARCH_DETAIL_TITLE"])
 
@@ -561,7 +553,7 @@ function ns.UI.CreateItemSearchTab(parent)
     searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -118, -8)
 
-    local scanAHButton = OneWoW_GUI:CreateButton(searchHeader, { text = L["ITEMSEARCH_SCAN_AH"], width = 100, height = 26 })
+    local scanAHButton = OneWoW_GUI:CreateFitTextButton(searchHeader, { text = L["ITEMSEARCH_SCAN_AH"], height = 26, minWidth = 100 })
     scanAHButton:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
     scanAHButton.isScanning = false
 

@@ -110,95 +110,35 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
     if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
     if not _G.OneWoW_AltTracker_Endgame_DB or not _G.OneWoW_AltTracker_Endgame_DB.characters then return end
 
-    local allChars = {}
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
-        table.insert(allChars, {
-            key = charKey,
-            data = charData
-        })
-    end
-
-    if #allChars == 0 then return end
-
-    local currentChar = UnitName("player")
-    local currentRealm = GetRealmName()
-    local currentCharKey = currentChar .. "-" .. currentRealm
-    table.sort(allChars, function(a, b)
-        local aFav = ns.IsFavoriteChar(a.key)
-        local bFav = ns.IsFavoriteChar(b.key)
-        if aFav and not bFav then return true end
-        if bFav and not aFav then return false end
-
-        local aIsCurrent = (a.key == currentCharKey)
-        local bIsCurrent = (b.key == currentCharKey)
-        if aIsCurrent and not bIsCurrent then return true end
-        if bIsCurrent and not aIsCurrent then return false end
-
-        if currentSortColumn then
-            local aVal, bVal
-
-            if currentSortColumn == "name" then
-                aVal = a.data.name or ""
-                bVal = b.data.name or ""
-            elseif currentSortColumn == "level" then
-                aVal = a.data.level or 0
-                bVal = b.data.level or 0
-            elseif currentSortColumn == "lockout1" or currentSortColumn == "lockout2" or currentSortColumn == "lockout3" or currentSortColumn == "lockout4" then
-                local lockoutIndex = tonumber(string.match(currentSortColumn, "%d+"))
-                local aEndgame = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters and _G.OneWoW_AltTracker_Endgame_DB.characters[a.key]
-                local bEndgame = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters and _G.OneWoW_AltTracker_Endgame_DB.characters[b.key]
-                aVal = (aEndgame and aEndgame.raids and aEndgame.raids.lockouts and aEndgame.raids.lockouts[lockoutIndex] and aEndgame.raids.lockouts[lockoutIndex].name) or ""
-                bVal = (bEndgame and bEndgame.raids and bEndgame.raids.lockouts and bEndgame.raids.lockouts[lockoutIndex] and bEndgame.raids.lockouts[lockoutIndex].name) or ""
-            elseif currentSortColumn == "expires" then
-                local aEndgame = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters and _G.OneWoW_AltTracker_Endgame_DB.characters[a.key]
-                local bEndgame = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters and _G.OneWoW_AltTracker_Endgame_DB.characters[b.key]
-                local currentTime = time()
-                local aSoonest = 999999999
-                local bSoonest = 999999999
-                if aEndgame and aEndgame.raids and aEndgame.raids.lockouts then
-                    for _, lockout in ipairs(aEndgame.raids.lockouts) do
-                        if lockout.reset and lockout.reset > 0 then
-                            local expiresAt = currentTime + lockout.reset
-                            if expiresAt < aSoonest then
-                                aSoonest = expiresAt
-                            end
+    local allChars = ns.UI.GetSortedCharacters(function(charKey, charData, col)
+        if col == "name" then
+            return charData.name or ""
+        elseif col == "level" then
+            return charData.level or 0
+        elseif col == "lockout1" or col == "lockout2" or col == "lockout3" or col == "lockout4" then
+            local lockoutIndex = tonumber(string.match(col, "%d+"))
+            local endgame = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters and _G.OneWoW_AltTracker_Endgame_DB.characters[charKey]
+            return (endgame and endgame.raids and endgame.raids.lockouts and endgame.raids.lockouts[lockoutIndex] and endgame.raids.lockouts[lockoutIndex].name) or ""
+        elseif col == "expires" then
+            local endgame = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters and _G.OneWoW_AltTracker_Endgame_DB.characters[charKey]
+            local currentTime = time()
+            local soonest = 999999999
+            if endgame and endgame.raids and endgame.raids.lockouts then
+                for _, lockout in ipairs(endgame.raids.lockouts) do
+                    if lockout.reset and lockout.reset > 0 then
+                        local expiresAt = currentTime + lockout.reset
+                        if expiresAt < soonest then
+                            soonest = expiresAt
                         end
                     end
                 end
-                if bEndgame and bEndgame.raids and bEndgame.raids.lockouts then
-                    for _, lockout in ipairs(bEndgame.raids.lockouts) do
-                        if lockout.reset and lockout.reset > 0 then
-                            local expiresAt = currentTime + lockout.reset
-                            if expiresAt < bSoonest then
-                                bSoonest = expiresAt
-                            end
-                        end
-                    end
-                end
-                aVal = aSoonest
-                bVal = bSoonest
-            else
-                aVal = a.data.name or ""
-                bVal = b.data.name or ""
             end
-
-            if type(aVal) == "number" then
-                if currentSortAscending then
-                    return aVal < bVal
-                else
-                    return aVal > bVal
-                end
-            else
-                if currentSortAscending then
-                    return aVal < bVal
-                else
-                    return aVal > bVal
-                end
-            end
+            return soonest
+        else
+            return charData.name or ""
         end
-
-        return (a.data.name or "") < (b.data.name or "")
-    end)
+    end, currentSortColumn, currentSortAscending)
+    if #allChars == 0 then return end
 
     local scrollContent = lockoutsTab.scrollContent
     local dt = lockoutsTab.dataTable
@@ -303,41 +243,13 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
         })
         charRow.charKey = charKey
 
-        if ns.UI.CreateFavoriteStarButton then
-            table.insert(charRow.cells, 2, ns.UI.CreateFavoriteStarButton(charRow, charKey))
-        end
-
-        local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
-        table.insert(charRow.cells, factionCell)
-
-        local hasMail = false
-        if _G.OneWoW_AltTracker_Storage_DB and _G.OneWoW_AltTracker_Storage_DB.characters then
-            local storageData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
-            hasMail = storageData and storageData.mail and storageData.mail.hasNewMail
-        end
-        local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
-        table.insert(charRow.cells, mailCell)
-
-        local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        nameText:SetText(charData.name or charKey)
-        local classColor = RAID_CLASS_COLORS[charData.class]
-        if classColor then
-            nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
-        else
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-        nameText:SetJustifyH("LEFT")
-        table.insert(charRow.cells, nameText)
-
-        local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        levelText:SetText(tostring(charData.level or 0))
-        levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        table.insert(charRow.cells, levelText)
+        ns.UI.AddCommonCells(charRow, charKey, charData)
+        ns.UI.AddLevelCell(charRow, charData)
 
         local lockoutTexts = {}
         for i = 1, 4 do
             local lockout = lockouts[i]
-            local lockoutText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local lockoutText = OneWoW_GUI:CreateFS(charRow, 10)
             lockoutText:SetJustifyH("LEFT")
 
             if lockout then
@@ -386,7 +298,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
             table.insert(lockoutTexts, lockoutText)
         end
 
-        local expiresText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local expiresText = OneWoW_GUI:CreateFS(charRow, 10)
         expiresText:SetJustifyH("LEFT")
         if #lockouts > 0 then
             local soonestLockout = lockouts[1]

@@ -86,14 +86,21 @@ function OneWoW_GUI:CreateFrame(parent, options)
     local name = options.name
     local width = options.width
     local height = options.height
-    local backdrop = options.backdrop
-    assert(backdrop, "CreateFrame requires options.backdrop")
+    local backdrop = options.backdrop or Constants.BACKDROP_INNER_NO_INSETS
+    local bgColor = options.bgColor or "BG_PRIMARY"
+    local borderColor = options.borderColor or "BORDER_DEFAULT"
     parent = parent or UIParent
     local frame = CreateFrame("Frame", name, parent, "BackdropTemplate")
-    frame:SetSize(width or 100, height or 100)
+    if width and height then
+        frame:SetSize(width, height)
+    elseif width then
+        frame:SetWidth(width)
+    elseif height then
+        frame:SetHeight(height)
+    end
     frame:SetBackdrop(backdrop)
-    frame:SetBackdropColor(GetThemeColor("BG_PRIMARY"))
-    frame:SetBackdropBorderColor(GetThemeColor("BORDER_DEFAULT"))
+    frame:SetBackdropColor(GetThemeColor(bgColor))
+    frame:SetBackdropBorderColor(GetThemeColor(borderColor))
     return frame
 end
 

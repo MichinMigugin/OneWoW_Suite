@@ -260,18 +260,27 @@ function ns.UI.CreateNotesHelpPanel()
     helpPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     helpPanel:Hide()
 
-    helpPanel:SetScript("OnShow", function()
+    helpPanel._visibilityTicker = nil
+    helpPanel:SetScript("OnShow", function(self)
         local mf = _G.OneWoW_NotesMainFrame or _G.OneWoWMainWindow
         if mf and mf:IsShown() then
-            helpPanel:ClearAllPoints()
-            helpPanel:SetPoint("TOPLEFT", mf, "TOPRIGHT", 5, 0)
+            self:ClearAllPoints()
+            self:SetPoint("TOPLEFT", mf, "TOPRIGHT", 5, 0)
+        end
+        if not self._visibilityTicker then
+            self._visibilityTicker = C_Timer.NewTicker(0.5, function()
+                local mainFrame = _G.OneWoW_NotesMainFrame or _G.OneWoWMainWindow
+                if not mainFrame or not mainFrame:IsShown() then
+                    self:Hide()
+                end
+            end)
         end
     end)
 
-    helpPanel:SetScript("OnUpdate", function(self)
-        local mf = _G.OneWoW_NotesMainFrame or _G.OneWoWMainWindow
-        if not mf or not mf:IsShown() then
-            self:Hide()
+    helpPanel:SetScript("OnHide", function(self)
+        if self._visibilityTicker then
+            self._visibilityTicker:Cancel()
+            self._visibilityTicker = nil
         end
     end)
 
@@ -286,7 +295,7 @@ function ns.UI.CreateNotesHelpPanel()
     titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
     titleBar:SetFrameLevel(helpPanel:GetFrameLevel() + 1)
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local titleText = OneWoW_GUI:CreateFS(titleBar, 12)
     titleText:SetPoint("LEFT", titleBar, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
     titleText:SetText(L["UI_HELP_PANEL_TITLE"])
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -330,7 +339,7 @@ function ns.UI.CreateNotesHelpPanel()
     -- =============================================
     -- LINKS TAB
     -- =============================================
-    local hintText = linksContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hintText = OneWoW_GUI:CreateFS(linksContent, 10)
     hintText:SetPoint("TOPLEFT",  linksContent, "TOPLEFT",  0, -2)
     hintText:SetPoint("TOPRIGHT", linksContent, "TOPRIGHT", 0, -2)
     hintText:SetJustifyH("LEFT")
@@ -359,12 +368,12 @@ function ns.UI.CreateNotesHelpPanel()
     local allRows        = {}
     local allDetailFrames = {}
 
-    local fromGameLabel = linksScrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local fromGameLabel = OneWoW_GUI:CreateFS(linksScrollContent, 12)
     fromGameLabel:SetJustifyH("LEFT")
     fromGameLabel:SetText(L["UI_HELP_FROM_GAME"])
     fromGameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local fromGameDesc = linksScrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local fromGameDesc = OneWoW_GUI:CreateFS(linksScrollContent, 10)
     fromGameDesc:SetJustifyH("LEFT")
     fromGameDesc:SetWordWrap(true)
     fromGameDesc:SetText(L["UI_HELP_FROM_GAME_DESC"])
@@ -413,7 +422,7 @@ function ns.UI.CreateNotesHelpPanel()
         icon:SetPoint("LEFT", row, "LEFT", 4, 0)
         icon:SetTexture(linkType.icon)
 
-        local rowText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local rowText = OneWoW_GUI:CreateFS(row, 10)
         rowText:SetPoint("LEFT", icon, "RIGHT", 5, 0)
         rowText:SetText(linkType.name .. "  " .. linkType.syntax)
         rowText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -432,7 +441,7 @@ function ns.UI.CreateNotesHelpPanel()
         detailFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         detailFrame:Hide()
 
-        local instrText = detailFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalTiny")
+        local instrText = OneWoW_GUI:CreateFS(detailFrame, 10)
         instrText:SetPoint("TOPLEFT",  detailFrame, "TOPLEFT",  8, -6)
         instrText:SetPoint("TOPRIGHT", detailFrame, "TOPRIGHT", -8, -6)
         instrText:SetJustifyH("LEFT")
@@ -440,7 +449,7 @@ function ns.UI.CreateNotesHelpPanel()
         instrText:SetText(L["UI_HELP_DETAIL_INSTRUCTION"])
         instrText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-        local exampleText = detailFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalTiny")
+        local exampleText = OneWoW_GUI:CreateFS(detailFrame, 10)
         exampleText:SetPoint("TOPLEFT",  instrText, "BOTTOMLEFT",  0, -3)
         exampleText:SetPoint("TOPRIGHT", instrText, "BOTTOMRIGHT", 0, -3)
         exampleText:SetJustifyH("LEFT")
@@ -499,7 +508,7 @@ function ns.UI.CreateNotesHelpPanel()
         card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-        local cardTitle = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local cardTitle = OneWoW_GUI:CreateFS(card, 12)
         cardTitle:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -8)
         cardTitle:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -8)
         cardTitle:SetJustifyH("LEFT")
@@ -508,7 +517,7 @@ function ns.UI.CreateNotesHelpPanel()
 
         local currentY = -26
         for _, line in ipairs(lines) do
-            local lineText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local lineText = OneWoW_GUI:CreateFS(card, 10)
             lineText:SetPoint("TOPLEFT",  card, "TOPLEFT",  10, currentY)
             lineText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, currentY)
             lineText:SetJustifyH("LEFT")

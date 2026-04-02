@@ -55,12 +55,13 @@ function ns.UI.CreateSettingsTab(parent)
     end
 
     local function CreateDatabaseEntry(parent, dbData, yPos)
-        local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+        local container = OneWoW_GUI:CreateFrame(parent, {
+            width = 770, height = 60,
+            backdrop = BACKDROP_INNER_NO_INSETS,
+            bgColor = "BG_TERTIARY",
+            borderColor = "BORDER_DEFAULT",
+        })
         container:SetPoint("TOPLEFT", parent, "TOPLEFT", 15, yPos)
-        container:SetSize(770, 60)
-        container:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         local nameText = OneWoW_GUI:CreateFS(container, 12)
         nameText:SetPoint("TOPLEFT", 12, -10)
@@ -96,20 +97,17 @@ function ns.UI.CreateSettingsTab(parent)
         resetBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")) end)
 
         resetBtn:SetScript("OnClick", function()
-            StaticPopupDialogs["OWCAT_RESET_DB_CONFIRM"] = {
+            OneWoW_GUI:CreateConfirmDialog({
+                title = "Reset " .. dbData.name,
                 text = "Are you sure you want to reset " .. dbData.name .. "?\n\nThis will permanently delete all data in this database.",
-                button1 = "Reset",
-                button2 = "Cancel",
-                OnAccept = function()
+                confirmText = "Reset",
+                cancelText = "Cancel",
+                showBrand = true,
+                onConfirm = function()
                     _G[dbData.key .. "_DB"] = nil
                     C_UI.Reload()
                 end,
-                timeout = 0,
-                whileDead = true,
-                hideOnEscape = true,
-                preferredIndex = 3,
-            }
-            StaticPopup_Show("OWCAT_RESET_DB_CONFIRM")
+            })
         end)
 
         return 65

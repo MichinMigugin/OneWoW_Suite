@@ -44,7 +44,7 @@ function TrackerWorldMapPinMixin:UpdateAppearance()
     end
 
     if not self.label then
-        self.label = self:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        self.label = OneWoW_GUI:CreateFS(self, 10)
         self.label:SetPoint("TOP", self, "BOTTOM", 0, -2)
         self.label:SetJustifyH("CENTER")
     end

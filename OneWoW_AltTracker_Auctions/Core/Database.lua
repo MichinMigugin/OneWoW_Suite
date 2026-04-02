@@ -1,8 +1,8 @@
 local addonName, ns = ...
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+local DB = OneWoW_GUI.DB
 
-if not OneWoW_AltTracker_Auctions_DB then
-    OneWoW_AltTracker_Auctions_DB = {}
-end
+DB:InitSubModule("OneWoW_AltTracker_Auctions_DB")
 
 ns.DatabaseDefaults = {
     characters = {},
@@ -46,60 +46,4 @@ function ns:InitializeDatabase()
             print("|cFFFFD100OneWoW:|r Cleaned " .. purged .. " expired AH price entries (>" .. AH_PRICE_MAX_AGE_DAYS .. " days old).")
         end)
     end
-end
-
-function ns:GetCharacterKey()
-    local name = UnitName("player")
-    local realm = GetRealmName()
-    if not name or not realm then return nil end
-    return name .. "-" .. realm
-end
-
-function ns:GetCharacterData(charKey)
-    if not charKey then
-        charKey = self:GetCharacterKey()
-    end
-
-    if not charKey then return nil end
-
-    if not OneWoW_AltTracker_Auctions_DB.characters[charKey] then
-        OneWoW_AltTracker_Auctions_DB.characters[charKey] = {
-            activeAuctions = {},
-            activeBids = {},
-            auctionHistory = {},
-            numActiveAuctions = 0,
-            numActiveBids = 0,
-            totalAuctionValue = 0,
-            totalBidAmount = 0,
-            lastUpdate = GetServerTime(),
-        }
-    end
-
-    if not OneWoW_AltTracker_Auctions_DB.characters[charKey].auctionHistory then
-        OneWoW_AltTracker_Auctions_DB.characters[charKey].auctionHistory = {}
-    end
-
-    return OneWoW_AltTracker_Auctions_DB.characters[charKey]
-end
-
-function ns:GetAllCharacters()
-    local chars = {}
-    for charKey, data in pairs(OneWoW_AltTracker_Auctions_DB.characters) do
-        table.insert(chars, {
-            key = charKey,
-            data = data
-        })
-    end
-
-    table.sort(chars, function(a, b)
-        return (a.data.lastUpdate or 0) > (b.data.lastUpdate or 0)
-    end)
-
-    return chars
-end
-
-function ns:DeleteCharacter(charKey)
-    if not charKey then return false end
-    OneWoW_AltTracker_Auctions_DB.characters[charKey] = nil
-    return true
 end

@@ -24,7 +24,7 @@ local function CreateDialogTitleBar(parent, titleText)
     titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
     titleBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BORDER"))
 
-    local titleLabel = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local titleLabel = OneWoW_GUI:CreateFS(titleBar, 12)
     titleLabel:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
     titleLabel:SetText(titleText)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -55,10 +55,12 @@ local function CreateDialogTitleBar(parent, titleText)
 end
 
 local function CreateDialogEditBox(parent, width, height, numeric)
-    local eb = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
-    eb:SetSize(width, height or 26)
+    local eb = OneWoW_GUI:CreateEditBox(parent, {
+        width = width,
+        height = height or 26,
+        placeholderText = "",
+    })
     if numeric then eb:SetNumeric(true) end
-    eb:SetAutoFocus(false)
     return eb
 end
 
@@ -77,7 +79,7 @@ local function GetHyperlinkDialog()
 
     CreateDialogTitleBar(dlg, L["CTX_INSERT_HYPERLINK"])
 
-    local typeLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local typeLbl = OneWoW_GUI:CreateFS(dlg, 12)
     typeLbl:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12, -40)
     typeLbl:SetText(L["CTX_LINK_TYPE_LABEL"])
     typeLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -110,7 +112,7 @@ local function GetHyperlinkDialog()
         btn.typeKey = data.key
         btn.helpText = data.help
 
-        local btnLabel = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local btnLabel = OneWoW_GUI:CreateFS(btn, 10)
         btnLabel:SetPoint("CENTER")
         btnLabel:SetText(data.label)
         btn.labelText = btnLabel
@@ -161,7 +163,7 @@ local function GetHyperlinkDialog()
         end
     end
 
-    local valueLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local valueLbl = OneWoW_GUI:CreateFS(dlg, 12)
     valueLbl:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12, -58 - 2 * (btnH + btnGap) - 14)
     valueLbl:SetText(L["CTX_ID_OR_VALUE"])
     valueLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -170,7 +172,7 @@ local function GetHyperlinkDialog()
     valueEditBox:SetPoint("TOPLEFT", valueLbl, "BOTTOMLEFT", 0, -6)
     dlg.valueEditBox = valueEditBox
 
-    local helpLabel = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local helpLabel = OneWoW_GUI:CreateFS(dlg, 10)
     helpLabel:SetPoint("TOPLEFT", valueEditBox, "BOTTOMLEFT", 0, -8)
     helpLabel:SetPoint("TOPRIGHT", dlg, "TOPRIGHT", -12, 0)
     helpLabel:SetJustifyH("LEFT")
@@ -221,7 +223,7 @@ local function GetWaypointDialog()
 
     CreateDialogTitleBar(dlg, L["CTX_INSERT_WAYPOINT"])
 
-    local mapLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local mapLbl = OneWoW_GUI:CreateFS(dlg, 12)
     mapLbl:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12, -42)
     mapLbl:SetText(L["CTX_MAP_ID"])
     mapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -230,12 +232,12 @@ local function GetWaypointDialog()
     mapEditBox:SetPoint("TOPLEFT", mapLbl, "BOTTOMLEFT", 0, -6)
     dlg.mapEditBox = mapEditBox
 
-    local mapHelp = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local mapHelp = OneWoW_GUI:CreateFS(dlg, 10)
     mapHelp:SetPoint("TOPLEFT", mapEditBox, "BOTTOMLEFT", 0, -4)
     mapHelp:SetText(L["CTX_MAP_HELP"])
     mapHelp:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local xLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local xLbl = OneWoW_GUI:CreateFS(dlg, 12)
     xLbl:SetPoint("TOPLEFT", mapHelp, "BOTTOMLEFT", 0, -10)
     xLbl:SetText(L["CTX_X_COORDINATE"])
     xLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -244,7 +246,7 @@ local function GetWaypointDialog()
     xEditBox:SetPoint("TOPLEFT", xLbl, "BOTTOMLEFT", 0, -6)
     dlg.xEditBox = xEditBox
 
-    local yLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local yLbl = OneWoW_GUI:CreateFS(dlg, 12)
     yLbl:SetPoint("TOPLEFT", xEditBox, "BOTTOMLEFT", 0, -10)
     yLbl:SetText(L["CTX_Y_COORDINATE"])
     yLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -253,7 +255,7 @@ local function GetWaypointDialog()
     yEditBox:SetPoint("TOPLEFT", yLbl, "BOTTOMLEFT", 0, -6)
     dlg.yEditBox = yEditBox
 
-    local descLbl = dlg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLbl = OneWoW_GUI:CreateFS(dlg, 12)
     descLbl:SetPoint("TOPLEFT", yEditBox, "BOTTOMLEFT", 0, -10)
     descLbl:SetText(L["CTX_DESCRIPTION"])
     descLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))

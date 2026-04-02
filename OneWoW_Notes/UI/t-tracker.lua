@@ -157,7 +157,7 @@ function ns.UI.CreateTrackerTab(parent)
     listPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     listPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local listTitle = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local listTitle = OneWoW_GUI:CreateFS(listPanel, 12)
     listTitle:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 10, -8)
     listTitle:SetText(L["TRACKER_LIST_TITLE"] or "Lists")
     listTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -173,7 +173,7 @@ function ns.UI.CreateTrackerTab(parent)
     detailPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local detailTitle = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local detailTitle = OneWoW_GUI:CreateFS(detailPanel, 12)
     detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -8)
     detailTitle:SetText(L["TRACKER_DETAIL_TITLE"] or "Details")
     detailTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -182,7 +182,7 @@ function ns.UI.CreateTrackerTab(parent)
     detailScrollFrame:SetPoint("TOPLEFT", detailTitle, "BOTTOMLEFT", 0, -6)
     detailScrollFrame:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -6, 4)
 
-    local emptyLabel = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local emptyLabel = OneWoW_GUI:CreateFS(detailPanel, 12)
     emptyLabel:SetPoint("CENTER", detailPanel, "CENTER", 0, 0)
     emptyLabel:SetText(L["TRACKER_SELECT"] or "Select a list to view its details.")
     emptyLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -201,14 +201,14 @@ function ns.UI.CreateTrackerTab(parent)
         typeIcon:SetPoint("LEFT", row, "LEFT", 8, 0)
         typeIcon:SetTexture(LIST_TYPE_ICONS[listData.listType] or LIST_TYPE_ICONS.todo)
 
-        local titleLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local titleLabel = OneWoW_GUI:CreateFS(row, 12)
         titleLabel:SetPoint("TOPLEFT", typeIcon, "TOPRIGHT", 8, -2)
         titleLabel:SetPoint("RIGHT", row, "RIGHT", -60, 0)
         titleLabel:SetJustifyH("LEFT")
         titleLabel:SetText(listData.title or "Untitled")
         titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local metaLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local metaLabel = OneWoW_GUI:CreateFS(row, 10)
         metaLabel:SetPoint("TOPLEFT", titleLabel, "BOTTOMLEFT", 0, -2)
         metaLabel:SetPoint("RIGHT", row, "RIGHT", -60, 0)
         metaLabel:SetJustifyH("LEFT")
@@ -221,7 +221,7 @@ function ns.UI.CreateTrackerTab(parent)
 
         local done, total = TD:GetListCompletion(listData.id)
 
-        local progressLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local progressLabel = OneWoW_GUI:CreateFS(row, 10)
         progressLabel:SetPoint("RIGHT", row, "RIGHT", -8, 0)
         progressLabel:SetText(total > 0 and format("%d/%d", done, total) or "")
         progressLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -287,7 +287,6 @@ function ns.UI.CreateTrackerTab(parent)
     function parent.RefreshList()
         for _, row in ipairs(listRows) do
             row:Hide()
-            row:SetParent(nil)
         end
         wipe(listRows)
 
@@ -308,7 +307,7 @@ function ns.UI.CreateTrackerTab(parent)
 
         if #lists == 0 then
             if not listPanel.emptyText then
-                listPanel.emptyText = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                listPanel.emptyText = OneWoW_GUI:CreateFS(listPanel, 12)
                 listPanel.emptyText:SetPoint("CENTER", listPanel, "CENTER", 0, -20)
                 listPanel.emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 listPanel.emptyText:SetWidth(LEFT_PANEL_WIDTH - 40)
@@ -335,7 +334,7 @@ function ns.UI.CreateTrackerTab(parent)
             ghostFrame:SetBackdrop(BACKDROP_SIMPLE)
             ghostFrame:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
             ghostFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            ghostFrame.label = ghostFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            ghostFrame.label = OneWoW_GUI:CreateFS(ghostFrame, 10)
             ghostFrame.label:SetPoint("LEFT", 6, 0)
             ghostFrame.label:SetPoint("RIGHT", ghostFrame, "RIGHT", -6, 0)
             ghostFrame.label:SetTextColor(1, 1, 1)
@@ -428,7 +427,6 @@ function ns.UI.CreateTrackerTab(parent)
     local function ClearDetail()
         for _, row in ipairs(detailRows) do
             if row.Hide then row:Hide() end
-            if row.SetParent then row:SetParent(nil) end
         end
         wipe(detailRows)
         wipe(dragRows)
@@ -460,7 +458,7 @@ function ns.UI.CreateTrackerTab(parent)
         headerFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         tinsert(detailRows, headerFrame)
 
-        local authorText = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local authorText = OneWoW_GUI:CreateFS(headerFrame, 10)
         authorText:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 10, -8)
         local typeColor = LIST_TYPE_COLORS[list.listType] or { 0.7, 0.7, 0.7 }
         local metaParts = format("|cFF%02x%02x%02x%s|r  |  %s  |  %s",
@@ -485,7 +483,7 @@ function ns.UI.CreateTrackerTab(parent)
         progressBar:SetPoint("TOPLEFT", authorText, "BOTTOMLEFT", 0, -6)
         progressBar:SetPoint("RIGHT", headerFrame, "RIGHT", -10, 0)
 
-        local progressText = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local progressText = OneWoW_GUI:CreateFS(headerFrame, 10)
         progressText:SetPoint("CENTER", progressBar, "CENTER", 0, 0)
         progressText:SetText(total > 0 and format("%d / %d", done, total) or "")
         progressText:SetTextColor(1, 1, 1)
@@ -591,7 +589,7 @@ function ns.UI.CreateTrackerTab(parent)
             descFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -4, yOffset)
             tinsert(detailRows, descFrame)
 
-            local descText = descFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local descText = OneWoW_GUI:CreateFS(descFrame, 12)
             descText:SetPoint("TOPLEFT", descFrame, "TOPLEFT", 10, -4)
             descText:SetPoint("RIGHT", descFrame, "RIGHT", -10, 0)
             descText:SetJustifyH("LEFT")
@@ -627,13 +625,13 @@ function ns.UI.CreateTrackerTab(parent)
             collapseIcon:SetPoint("LEFT", accentLine, "RIGHT", 6, 0)
             collapseIcon:SetTexture(sec.collapsed and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP")
 
-            local secLabel = secHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local secLabel = OneWoW_GUI:CreateFS(secHeader, 12)
             secLabel:SetPoint("LEFT", collapseIcon, "RIGHT", 4, 0)
             secLabel:SetText(sec.label or "Section")
             secLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local secDone, secTotal = TD:GetSectionCompletion(list.id, sec.key)
-            local secCount = secHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local secCount = OneWoW_GUI:CreateFS(secHeader, 10)
             secCount:SetPoint("RIGHT", secHeader, "RIGHT", -8, 0)
             secCount:SetText(secTotal > 0 and format("%d/%d", secDone, secTotal) or "")
             secCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -764,7 +762,7 @@ function ns.UI.CreateTrackerTab(parent)
                     end
                 end
 
-                local stepLabel = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                local stepLabel = OneWoW_GUI:CreateFS(stepRow, 12)
                 stepLabel:SetPoint("LEFT", checkBtn, "RIGHT", 6, 0)
                 stepLabel:SetPoint("RIGHT", stepRow, "RIGHT", -100, 0)
                 stepLabel:SetJustifyH("LEFT")
@@ -791,7 +789,7 @@ function ns.UI.CreateTrackerTab(parent)
                     end
                 end
 
-                local stepProgress = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local stepProgress = OneWoW_GUI:CreateFS(stepRow, 10)
                 stepProgress:SetPoint("RIGHT", stepRow, "RIGHT", -60, 0)
                 stepProgress:SetText(progressStr)
                 stepProgress:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -799,7 +797,7 @@ function ns.UI.CreateTrackerTab(parent)
                 local rowHeight = 30
 
                 if step.description and step.description ~= "" then
-                    local descFS = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    local descFS = OneWoW_GUI:CreateFS(stepRow, 10)
                     descFS:SetPoint("TOPLEFT", stepLabel, "BOTTOMLEFT", 0, -2)
                     descFS:SetPoint("RIGHT", stepRow, "RIGHT", -80, 0)
                     descFS:SetJustifyH("LEFT")
@@ -833,7 +831,7 @@ function ns.UI.CreateTrackerTab(parent)
                             objCheck:EnableMouse(false)
                         end
 
-                        local objLabel = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                        local objLabel = OneWoW_GUI:CreateFS(stepRow, 10)
                         objLabel:SetPoint("LEFT", objCheck, "RIGHT", 4, 0)
                         objLabel:SetPoint("RIGHT", stepRow, "RIGHT", -80, 0)
                         objLabel:SetJustifyH("LEFT")
@@ -853,7 +851,7 @@ function ns.UI.CreateTrackerTab(parent)
                 end
 
                 if step.mapID and step.coordX and step.coordY then
-                    local coordFS = stepRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    local coordFS = OneWoW_GUI:CreateFS(stepRow, 10)
                     coordFS:SetPoint("BOTTOMLEFT", stepRow, "BOTTOMLEFT", 30, 4)
                     local mapInfo = C_Map.GetMapInfo(tonumber(step.mapID))
                     local mapName = mapInfo and mapInfo.name or tostring(step.mapID)

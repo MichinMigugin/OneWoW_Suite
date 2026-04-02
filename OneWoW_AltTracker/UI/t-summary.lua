@@ -128,22 +128,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         return
     end
 
-    local allChars = {}
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
-        table.insert(allChars, {
-            key = charKey,
-            data = charData
-        })
-    end
-
-    if #allChars == 0 then
-        return
-    end
-
-    local currentChar = UnitName("player")
-    local currentRealm = GetRealmName()
-    local currentCharKey = currentChar .. "-" .. currentRealm
-
+    local currentCharKey = OneWoW_GUI:GetCharacterKey()
     local liveChar = _G.OneWoW_AltTracker_Character_DB.characters[currentCharKey]
     if liveChar then
         if not liveChar.xp then liveChar.xp = {} end
@@ -156,118 +141,59 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         liveChar.xp.lastUpdate = time()
     end
 
-    table.sort(allChars, function(a, b)
-        local aFav = ns.IsFavoriteChar(a.key)
-        local bFav = ns.IsFavoriteChar(b.key)
-        if aFav and not bFav then return true end
-        if bFav and not aFav then return false end
-
-        local aIsCurrent = (a.key == currentCharKey)
-        local bIsCurrent = (b.key == currentCharKey)
-        if aIsCurrent and not bIsCurrent then return true end
-        if bIsCurrent and not aIsCurrent then return false end
-
-        if currentSortColumn then
-            local aVal, bVal
-
-            if currentSortColumn == "name" then
-                aVal = a.data.name or ""
-                bVal = b.data.name or ""
-            elseif currentSortColumn == "server" then
-                aVal = a.data.realm or ""
-                bVal = b.data.realm or ""
-            elseif currentSortColumn == "level" then
-                aVal = a.data.level or 0
-                bVal = b.data.level or 0
-            elseif currentSortColumn == "class" then
-                aVal = a.data.className or ""
-                bVal = b.data.className or ""
-            elseif currentSortColumn == "spec" then
-                local aSpec = a.data.stats and a.data.stats.specName
-                local bSpec = b.data.stats and b.data.stats.specName
-                aVal = type(aSpec) == "string" and aSpec or (type(aSpec) == "table" and (aSpec.name or "") or "")
-                bVal = type(bSpec) == "string" and bSpec or (type(bSpec) == "table" and (bSpec.name or "") or "")
-            elseif currentSortColumn == "rested" then
-                local Fmt = ns.AltTrackerFormatters
-                local aRested = 0
-                if Fmt and a.data.xp and a.data.xp.maxXP and a.data.xp.maxXP > 0 then
-                    aRested = (Fmt:EstimateRestedXP(a.data, a.key) / a.data.xp.maxXP) * 100
-                end
-                local bRested = 0
-                if Fmt and b.data.xp and b.data.xp.maxXP and b.data.xp.maxXP > 0 then
-                    bRested = (Fmt:EstimateRestedXP(b.data, b.key) / b.data.xp.maxXP) * 100
-                end
-                aVal = aRested
-                bVal = bRested
-            elseif currentSortColumn == "itemLevel" then
-                aVal = a.data.itemLevel or 0
-                bVal = b.data.itemLevel or 0
-            elseif currentSortColumn == "bags" then
-                aVal = 0
-                bVal = 0
-                if StorageAPI then
-                    local aBags = StorageAPI.GetBags(a.key)
-                    if aBags then
-                        for bagID = 0, 4 do
-                            if aBags[bagID] then
-                                local numSlots = aBags[bagID].numSlots or 0
-                                local usedSlots = 0
-                                if aBags[bagID].slots then
-                                    for _, itemData in pairs(aBags[bagID].slots) do
-                                        if itemData then usedSlots = usedSlots + 1 end
-                                    end
+    local allChars = ns.UI.GetSortedCharacters(function(charKey, charData, col)
+        if col == "name" then
+            return charData.name or ""
+        elseif col == "server" then
+            return charData.realm or ""
+        elseif col == "level" then
+            return charData.level or 0
+        elseif col == "class" then
+            return charData.className or ""
+        elseif col == "spec" then
+            local spec = charData.stats and charData.stats.specName
+            return type(spec) == "string" and spec or (type(spec) == "table" and (spec.name or "") or "")
+        elseif col == "rested" then
+            local Fmt = ns.AltTrackerFormatters
+            if Fmt and charData.xp and charData.xp.maxXP and charData.xp.maxXP > 0 then
+                return (Fmt:EstimateRestedXP(charData, charKey) / charData.xp.maxXP) * 100
+            end
+            return 0
+        elseif col == "itemLevel" then
+            return charData.itemLevel or 0
+        elseif col == "bags" then
+            local free = 0
+            if StorageAPI then
+                local bags = StorageAPI.GetBags(charKey)
+                if bags then
+                    for bagID = 0, 4 do
+                        if bags[bagID] then
+                            local numSlots = bags[bagID].numSlots or 0
+                            local usedSlots = 0
+                            if bags[bagID].slots then
+                                for _, itemData in pairs(bags[bagID].slots) do
+                                    if itemData then usedSlots = usedSlots + 1 end
                                 end
-                                aVal = aVal + (numSlots - usedSlots)
                             end
-                        end
-                    end
-                    local bBags = StorageAPI.GetBags(b.key)
-                    if bBags then
-                        for bagID = 0, 4 do
-                            if bBags[bagID] then
-                                local numSlots = bBags[bagID].numSlots or 0
-                                local usedSlots = 0
-                                if bBags[bagID].slots then
-                                    for _, itemData in pairs(bBags[bagID].slots) do
-                                        if itemData then usedSlots = usedSlots + 1 end
-                                    end
-                                end
-                                bVal = bVal + (numSlots - usedSlots)
-                            end
+                            free = free + (numSlots - usedSlots)
                         end
                     end
                 end
-            elseif currentSortColumn == "money" then
-                aVal = a.data.money or 0
-                bVal = b.data.money or 0
-            elseif currentSortColumn == "hearth" then
-                aVal = (a.data.location and a.data.location.bindLocation) or ""
-                bVal = (b.data.location and b.data.location.bindLocation) or ""
-            elseif currentSortColumn == "lastSeen" then
-                aVal = a.data.lastLogin or 0
-                bVal = b.data.lastLogin or 0
-            else
-                aVal = a.data.name or ""
-                bVal = b.data.name or ""
             end
-
-            if type(aVal) == "number" then
-                if currentSortAscending then
-                    return aVal < bVal
-                else
-                    return aVal > bVal
-                end
-            else
-                if currentSortAscending then
-                    return aVal < bVal
-                else
-                    return aVal > bVal
-                end
-            end
+            return free
+        elseif col == "money" then
+            return charData.money or 0
+        elseif col == "hearth" then
+            return (charData.location and charData.location.bindLocation) or ""
+        elseif col == "lastSeen" then
+            return charData.lastLogin or 0
         end
+        return charData.name or ""
+    end, currentSortColumn, currentSortAscending)
 
-        return (a.data.name or "") < (b.data.name or "")
-    end)
+    if #allChars == 0 then
+        return
+    end
 
     local scrollContent = summaryTab.scrollContent
     if not scrollContent then return end
@@ -365,7 +291,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
         table.insert(charRow.cells, mailCell)
 
-        local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local nameText = OneWoW_GUI:CreateFS(charRow, 12)
         nameText:SetText(charData.name or charKey)
         local classColor = RAID_CLASS_COLORS[charData.class]
         if classColor then
@@ -408,7 +334,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
         table.insert(charRow.cells, nameText)
 
-        local realmText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local realmText = OneWoW_GUI:CreateFS(charRow, 12)
         realmText:SetText(charData.realm or "")
         realmText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         realmText:SetJustifyH("LEFT")
@@ -422,7 +348,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         local xpDisabled = charData.xp and charData.xp.isXPDisabled
 
         if isMaxLevel then
-            local levelText = levelContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+            local levelText = OneWoW_GUI:CreateFS(levelContainer, 16)
             levelText:SetPoint("CENTER")
             levelText:SetText(L["LEVEL_MAX"])
             levelText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -439,7 +365,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 iconTexture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             end
 
-            local levelText = levelContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local levelText = OneWoW_GUI:CreateFS(levelContainer, 12)
             levelText:SetPoint("LEFT", iconTexture, "RIGHT", 2, 0)
             levelText:SetText(tostring(level))
             levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -466,13 +392,13 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
         table.insert(charRow.cells, levelContainer)
 
-        local classText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local classText = OneWoW_GUI:CreateFS(charRow, 12)
         classText:SetText(ns.AltTrackerFormatters:GetCompactClassName(charData.class or charData.className or ""))
         classText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         classText:SetJustifyH("LEFT")
         table.insert(charRow.cells, classText)
 
-        local specText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local specText = OneWoW_GUI:CreateFS(charRow, 12)
         local specName = (charData.stats and charData.stats.specName) or ""
         specText:SetText(tostring(specName or ""))
         specText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -510,7 +436,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
         table.insert(charRow.cells, specText)
 
-        local restedText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local restedText = OneWoW_GUI:CreateFS(charRow, 12)
         local restedPercent = 0
         local Fmt = ns.AltTrackerFormatters
         if Fmt and charData.xp and charData.xp.maxXP and charData.xp.maxXP > 0 then
@@ -604,7 +530,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
         table.insert(charRow.cells, restedText)
 
-        local ilvlText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local ilvlText = OneWoW_GUI:CreateFS(charRow, 12)
         local ilvl = charData.itemLevel or 0
         ilvlText:SetText(tostring(ilvl))
         if charData.itemLevelColor then
@@ -614,7 +540,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         end
         table.insert(charRow.cells, ilvlText)
 
-        local bagsText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local bagsText = OneWoW_GUI:CreateFS(charRow, 12)
         local bagsFree, bagsTotal = 0, 0
         if StorageAPI then
             local bagsData = StorageAPI.GetBags(charKey)
@@ -641,7 +567,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         bagsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         table.insert(charRow.cells, bagsText)
 
-        local goldText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local goldText = OneWoW_GUI:CreateFS(charRow, 12)
         OneWoW_GUI:ApplyFontCapped(goldText, 12, 2)
         local money = charData.money or 0
         local goldFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(money)
@@ -650,7 +576,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         goldText:SetJustifyH("RIGHT")
         table.insert(charRow.cells, goldText)
 
-        local hearthText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local hearthText = OneWoW_GUI:CreateFS(charRow, 12)
         local hearthLocation = (charData.location and charData.location.bindLocation) or ""
         hearthText:SetText(hearthLocation)
         hearthText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -660,7 +586,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         local lastSeenContainer = CreateFrame("Frame", nil, charRow)
         lastSeenContainer:SetSize(80, rowHeight)
 
-        local lastSeenText = lastSeenContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local lastSeenText = OneWoW_GUI:CreateFS(lastSeenContainer, 12)
         lastSeenText:SetPoint("CENTER")
 
         local lastLogin = charData.lastLogin or 0
@@ -668,7 +594,6 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         local timeDiff = currentTime - lastLogin
         local lastSeenFormatted = ""
 
-        local currentCharKey = UnitName("player") .. "-" .. GetRealmName()
         if charKey == currentCharKey then
             lastSeenFormatted = L["FMT_NOW"]
             lastSeenText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
@@ -837,7 +762,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
         rowFrame:SetSize(scrollContent:GetWidth() - 20, rowHeight)
         rowFrame:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 10, yOffset)
 
-        local classText = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local classText = OneWoW_GUI:CreateFS(rowFrame, 12)
         classText:SetPoint("LEFT", 0, 0)
         classText:SetWidth(100)
         classText:SetText(ns.AltTrackerFormatters:GetCompactClassName(classInfo.class))
@@ -855,7 +780,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
         bar:SetStatusBarColor(classColor.r, classColor.g, classColor.b)
         bar._text:SetText("")
 
-        local timeText = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local timeText = OneWoW_GUI:CreateFS(rowFrame, 12)
         timeText:SetPoint("LEFT", bar, "RIGHT", 8, 0)
         timeText:SetWidth(150)
         timeText:SetText(string.format("%5.1f%% - %s", accountPercent * 100, ns.UI.FormatPlaytimeCompact(classInfo.time)))
@@ -896,7 +821,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
     local totalHeight = math.abs(yOffset) + 10
     scrollContent:SetHeight(totalHeight)
 
-    local totalText = totalFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local totalText = OneWoW_GUI:CreateFS(totalFrame, 16)
     totalText:SetPoint("LEFT", totalFrame, "LEFT", 10, 0)
     totalText:SetText(L["TOTAL"] .. ": " .. ns.UI.FormatPlaytimeCompact(accountTotal))
     totalText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))

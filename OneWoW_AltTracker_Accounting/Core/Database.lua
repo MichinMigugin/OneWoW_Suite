@@ -1,8 +1,8 @@
 local addonName, ns = ...
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+local DB = OneWoW_GUI.DB
 
-if not OneWoW_AltTracker_Accounting_DB then
-    OneWoW_AltTracker_Accounting_DB = {}
-end
+DB:InitSubModule("OneWoW_AltTracker_Accounting_DB")
 
 ns.DatabaseDefaults = {
     transactions = {},
@@ -47,13 +47,6 @@ function ns:InitializeDatabase()
     if not OneWoW_AltTracker_Accounting_DB.version then
         OneWoW_AltTracker_Accounting_DB.version = ns.DatabaseDefaults.version
     end
-end
-
-function ns:GetCharacterKey()
-    local name = UnitName("player")
-    local realm = GetRealmName()
-    if not name or not realm then return nil end
-    return name .. "-" .. realm
 end
 
 function ns:GetNextTransactionID()
