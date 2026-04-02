@@ -3,6 +3,8 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local DB = OneWoW_GUI.DB
+
 OneWoW_Bags.GuildBankGUI = OneWoW_Bags.GuildBankGUI or {}
 local GuildBankGUI = OneWoW_Bags.GuildBankGUI
 local Constants = OneWoW_Bags.Constants
@@ -23,7 +25,7 @@ function GuildBankGUI:InitMainWindow()
 
     local C = Constants.GUI
     local db = OneWoW_Bags.db
-    local savedHeight = db and db.global and db.global.guildBankFramePosition and db.global.guildBankFramePosition.height
+    local savedHeight = db.global.guildBankFramePosition.height
     local windowHeight = savedHeight or C.WINDOW_HEIGHT
 
     MainWindow = OneWoW_GUI:CreateFrame(UIParent, {
@@ -43,11 +45,8 @@ function GuildBankGUI:InitMainWindow()
     MainWindow:SetScript("OnDragStart", MainWindow.StartMoving)
     MainWindow:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
-        local d = OneWoW_Bags.db
-        if d and d.global then
-            d.global.guildBankFramePosition = d.global.guildBankFramePosition or {}
-            OneWoW_GUI:SaveWindowPosition(self, d.global.guildBankFramePosition)
-        end
+        local pos = DB:Ensure(OneWoW_Bags.db, "global", "guildBankFramePosition")
+        OneWoW_GUI:SaveWindowPosition(self, pos)
     end)
     MainWindow:SetClampedToScreen(true)
     MainWindow:SetClampRectInsets(0, 0, 0, 0)
@@ -62,11 +61,8 @@ function GuildBankGUI:InitMainWindow()
         if OneWoW_Bags.GuildBankLog then
             OneWoW_Bags.GuildBankLog:Hide()
         end
-        local d = OneWoW_Bags.db
-        if d and d.global then
-            d.global.guildBankFramePosition = d.global.guildBankFramePosition or {}
-            OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.guildBankFramePosition)
-        end
+        local pos = DB:Ensure(OneWoW_Bags.db, "global", "guildBankFramePosition")
+        OneWoW_GUI:SaveWindowPosition(MainWindow, pos)
         if OneWoW_Bags.guildBankOpen then
             OneWoW_Bags.guildBankOpen = false
             if OneWoW_Bags.GuildBankSet then
@@ -168,7 +164,6 @@ end)
 function GuildBankGUI:UpdateWindowWidth()
     if not MainWindow then return end
     local db = OneWoW_Bags.db
-    if not db or not db.global then return end
     local cols = db.global.bankColumns or 14
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
@@ -198,11 +193,11 @@ function GuildBankGUI:RefreshLayout()
     local db = OneWoW_Bags.db
 
     local allButtons = GuildBankSet:GetAllButtons()
-    local visibleButtons = WH:FilterByTab(allButtons, db and db.global.guildBankSelectedTab)
+    local visibleButtons = WH:FilterByTab(allButtons, db.global.guildBankSelectedTab)
     local searchText = OneWoW_Bags.GuildBankInfoBar:GetSearchText()
     local filteredButtons = WH:FilterBySearch(visibleButtons, searchText)
 
-    local viewMode = db and db.global and db.global.guildBankViewMode or "list"
+    local viewMode = db.global.guildBankViewMode or "list"
     local cols, iconSize, spacing, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
 
     local layoutHeight = 100
@@ -238,9 +233,7 @@ function GuildBankGUI:Show()
     if not MainWindow then return end
 
     local db = OneWoW_Bags.db
-    if db and db.global then
-        db.global.guildBankSelectedTab = nil
-    end
+    db.global.guildBankSelectedTab = nil
 
     MainWindow:Show()
 

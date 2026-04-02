@@ -3,6 +3,8 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local DB = OneWoW_GUI.DB
+
 OneWoW_Bags.CategoryManagerUI = {}
 local CatMgrUI = OneWoW_Bags.CategoryManagerUI
 
@@ -98,8 +100,8 @@ local BAGANATOR_CAT_MAP = {
 
 local function GetDB()
     local db = OneWoW_Bags.db
-    if not db.global.categorySections then db.global.categorySections = {} end
-    if not db.global.sectionOrder     then db.global.sectionOrder = {} end
+    DB:Ensure(db, "global", "categorySections")
+    DB:Ensure(db, "global", "sectionOrder")
     return db
 end
 
@@ -153,7 +155,7 @@ end
 
 local function MoveItemToCategory(itemID, destCatID)
     local db = GetDB()
-    local customCats = db.global.customCategoriesV2 or {}
+    local customCats = db.global.customCategoriesV2
     for id, cat in pairs(customCats) do
         if id ~= destCatID and cat.items then cat.items[tostring(itemID)] = nil end
     end
@@ -187,7 +189,7 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
         local name = self.EditBox:GetText()
         if name and name ~= "" then
             local db = GetDB()
-            if not db.global.customCategoriesV2 then db.global.customCategoriesV2 = {} end
+            DB:Ensure(db, "global", "customCategoriesV2")
             local id = "custom_" .. time() .. "_" .. math.random(1000, 9999)
             local order = 1
             for _, c in pairs(db.global.customCategoriesV2) do
@@ -344,7 +346,7 @@ StaticPopupDialogs["ONEWOW_BAGS_DELETE_SECTION"] = {
 local function ImportFromBaganator()
     if not _G.BAGANATOR_CONFIG then return 0, 0 end
     local db = GetDB()
-    if not db.global.customCategoriesV2 then db.global.customCategoriesV2 = {} end
+    DB:Ensure(db, "global", "customCategoriesV2")
 
     local importedCats = 0
     local importedSecs = 0
@@ -583,7 +585,7 @@ function CatMgrUI:RefreshRight()
 
         local allCatNames = {}
         for _, n in ipairs(BUILTIN_NAMES) do tinsert(allCatNames, n) end
-        for _, cd in pairs(db.global.customCategoriesV2 or {}) do tinsert(allCatNames, cd.name) end
+        for _, cd in pairs(db.global.customCategoriesV2) do tinsert(allCatNames, cd.name) end
 
         local memberSet = {}
         for _, n in ipairs(section.categories) do memberSet[n] = true end
@@ -647,7 +649,7 @@ function CatMgrUI:RefreshRight()
         catName = selectedCatKey:sub(9)
     else
         catID = selectedCatKey
-        local customCats = db.global.customCategoriesV2 or {}
+        local customCats = db.global.customCategoriesV2
         catData = customCats[catID]
         if not catData then selectedCatKey = nil; self:RefreshRight(); return end
         catName = catData.name
@@ -657,9 +659,7 @@ function CatMgrUI:RefreshRight()
     local locKey = BUILTIN_LOCALE_KEYS[catName]
     local dispName = (locKey and L[locKey]) or catName
 
-    if not db.global.categoryModifications then db.global.categoryModifications = {} end
-    if not db.global.categoryModifications[catName] then db.global.categoryModifications[catName] = {} end
-    local catMod = db.global.categoryModifications[catName]
+    local catMod = DB:Ensure(db, "global", "categoryModifications", catName)
 
     local SORT_OPTIONS = { "none", "default", "name", "rarity", "ilvl", "type", "expansion" }
     local SORT_LABELS = { L["SORT_OFF"], L["SORT_DEFAULT"], L["SORT_NAME"], L["SORT_RARITY"], L["SORT_ITEM_LEVEL"], L["SORT_TYPE"], L["SORT_EXPANSION"] or "Expansion" }
@@ -1206,10 +1206,10 @@ function CatMgrUI:RefreshLeft()
 
     local L  = OneWoW_Bags.L
     local db = GetDB()
-    local disabled   = db.global.disabledCategories or {}
+    local disabled   = db.global.disabledCategories
     local sections   = db.global.categorySections
     local sectOrder  = db.global.sectionOrder
-    local customCats = db.global.customCategoriesV2 or {}
+    local customCats = db.global.customCategoriesV2
 
     leftWrapper = CreateFrame("Frame", nil, leftScrollContent)
     leftWrapper:SetPoint("TOPLEFT", leftScrollContent, "TOPLEFT", 0, 0)
@@ -1236,7 +1236,7 @@ function CatMgrUI:RefreshLeft()
         end
     end
 
-    local savedOrder = db.global.categoryOrder or {}
+    local savedOrder = db.global.categoryOrder
     if #savedOrder > 0 then
         local orderMap = {}
         for i, name in ipairs(savedOrder) do orderMap[name] = i end
@@ -1302,7 +1302,7 @@ function CatMgrUI:RefreshLeft()
                 CatMgrUI:Refresh(); RefreshBagLayout()
             end
         end
-        local catMods = db.global.categoryModifications or {}
+        local catMods = db.global.categoryModifications
         local mod = catMods[entry.name] or {}
 
         local dnB = MakeSmallBtn(row, "v", doDown, idxInGroup < totalInGroup)

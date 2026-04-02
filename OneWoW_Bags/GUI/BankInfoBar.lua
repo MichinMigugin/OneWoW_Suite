@@ -17,7 +17,7 @@ OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
     cleanupCallback = function()
         if not OneWoW_Bags.bankOpen then return end
         local db = OneWoW_Bags.db
-        local showWarband = db and db.global and db.global.bankShowWarband
+        local showWarband = db.global.bankShowWarband
         if showWarband then
             C_Container.SortBank(Enum.BankType.Account)
         else

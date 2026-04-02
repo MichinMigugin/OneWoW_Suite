@@ -33,7 +33,7 @@ function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
     end
 
     local db = OneWoW_Bags.db
-    if not db or not db.global or not db.global.showNewItems then
+    if not db.global.showNewItems then
         OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
         return
     end
@@ -99,7 +99,7 @@ function Mixin:OWB_FullUpdate()
         SetItemButtonDesaturated(self, info.isLocked)
 
         local quality = info.quality
-        local useRarity = db and db.global and (self.owb_isBank and db.global.bankRarityColor or db.global.rarityColor)
+        local useRarity = self.owb_isBank and db.global.bankRarityColor or db.global.rarityColor
         if altShow or (quality and quality >= 1 and useRarity) then
             OneWoW_GUI:UpdateIconQuality(self, quality)
         else
@@ -138,7 +138,6 @@ end
 
 function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
     local db = OneWoW_Bags.db
-    if not db or not db.global then return end
     local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
 
     if not hasItem then
@@ -169,7 +168,7 @@ end
 
 function Mixin:OWB_UpdateUnusableOverlay(hasItem, info)
     local db = OneWoW_Bags.db
-    if not db or not db.global or not db.global.showUnusableOverlay then
+    if not db.global.showUnusableOverlay then
         if self._owbUnusableOverlay then self._owbUnusableOverlay:Hide() end
         return
     end

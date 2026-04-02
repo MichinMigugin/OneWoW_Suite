@@ -1,5 +1,10 @@
 local _, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local DB = OneWoW_GUI.DB
+
 OneWoW_Bags.TSMIntegration = {}
 local TSM = OneWoW_Bags.TSMIntegration
 
@@ -11,8 +16,7 @@ function TSM:Import()
     if not self:IsAvailable() then return 0 end
 
     local db = OneWoW_Bags.db
-    if not db or not db.global then return 0 end
-    if not db.global.customCategoriesV2 then db.global.customCategoriesV2 = {} end
+    DB:Ensure(db, "global", "customCategoriesV2")
 
     local imported = 0
 

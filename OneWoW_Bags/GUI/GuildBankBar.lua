@@ -223,7 +223,7 @@ end
 
 function GuildBankBar:UpdateTabHighlights()
     local db = OneWoW_Bags.db
-    local selected = db and db.global.guildBankSelectedTab
+    local selected = db.global.guildBankSelectedTab
     for tabID, btn in pairs(tabButtons) do
         if btn._skinBorder then
             if selected ~= nil and selected == tabID then

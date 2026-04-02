@@ -1,5 +1,10 @@
 local _, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local DB = OneWoW_GUI.DB
+
 OneWoW_Bags.Categories = {}
 
 local Categories = OneWoW_Bags.Categories
@@ -161,9 +166,9 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     local hyperlink = itemInfo.hyperlink
 
     local db = OneWoW_Bags.db
-    local disabled = (db and db.global and db.global.disabledCategories) or {}
+    local disabled = db.global.disabledCategories
 
-    local junkCatEnabled = db and db.global and db.global.enableJunkCategory and not disabled["1W Junk"]
+    local junkCatEnabled = db.global.enableJunkCategory and not disabled["1W Junk"]
     if junkCatEnabled and itemID then
         local isJunk = false
         if _G.OneWoW and _G.OneWoW.ItemStatus and _G.OneWoW.ItemStatus:IsItemJunk(itemID) then
@@ -185,7 +190,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     end
 
     if itemID and hyperlink and _G.OneWoW then
-        if db and db.global and db.global.enableUpgradeCategory and not disabled["1W Upgrades"] then
+        if db.global.enableUpgradeCategory and not disabled["1W Upgrades"] then
             if IsItemUpgrade(bagID, slotID, itemID, hyperlink) then
                 return "1W Upgrades"
             end
@@ -200,7 +205,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     end
 
     if itemID then
-        local catMods = (db and db.global and db.global.categoryModifications) or {}
+        local catMods = db.global.categoryModifications
         for catName, mod in pairs(catMods) do
             if mod.addedItems and mod.addedItems[tostring(itemID)] and not disabled[catName] then
                 return catName
@@ -248,7 +253,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         end
     end
 
-    if db and db.global.enableInventorySlots then
+    if db.global.enableInventorySlots then
         if category == "Weapons" or category == "Armor" then
             local equipLoc = enriched._equipLoc
             if equipLoc and equipLoc ~= "" then
@@ -302,7 +307,7 @@ function Categories:SortCategories(categoryList, sortMode)
                 customOrderMap[catData.name] = catData.sortOrder
             end
         end
-        local catMods = (OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.categoryModifications) or {}
+        local catMods = OneWoW_Bags.db.global.categoryModifications
         sort(categoryList, function(a, b)
             local aName = type(a) == "table" and a.name or a
             local bName = type(b) == "table" and b.name or b
@@ -585,15 +590,8 @@ end
 function Categories:AddItemToBuiltinCategory(categoryName, itemID)
     if not categoryName or not itemID then return false end
     local db = OneWoW_Bags.db
-    if not db or not db.global then return false end
-    if not db.global.categoryModifications then db.global.categoryModifications = {} end
-    if not db.global.categoryModifications[categoryName] then
-        db.global.categoryModifications[categoryName] = {}
-    end
-    if not db.global.categoryModifications[categoryName].addedItems then
-        db.global.categoryModifications[categoryName].addedItems = {}
-    end
-    db.global.categoryModifications[categoryName].addedItems[tostring(itemID)] = true
+    local addedItems = DB:Ensure(db, "global", "categoryModifications", categoryName, "addedItems")
+    addedItems[tostring(itemID)] = true
     InvalidateCache()
     return true
 end
@@ -601,7 +599,7 @@ end
 function Categories:RemoveItemFromBuiltinCategory(categoryName, itemID)
     if not categoryName or not itemID then return false end
     local db = OneWoW_Bags.db
-    if not db or not db.global or not db.global.categoryModifications then return false end
+    if not db.global.categoryModifications then return false end
     local mod = db.global.categoryModifications[categoryName]
     if not mod or not mod.addedItems then return false end
     mod.addedItems[tostring(itemID)] = nil

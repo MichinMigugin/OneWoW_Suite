@@ -33,7 +33,7 @@ function BankBar:Create(parent)
     withdrawBtn:SetScript("OnClick", function(self)
         if not OneWoW_Bags.bankOpen then return end
         local db = OneWoW_Bags.db
-        if not (db and db.global and db.global.bankShowWarband) then return end
+        if not db.global.bankShowWarband then return end
         OneWoW_Bags:ShowMoneyDialog({
             title = L["BANK_WARBAND_TITLE"] or "Warband Bank",
             anchorFrame = self,
@@ -52,7 +52,7 @@ function BankBar:Create(parent)
     depositGoldBtn:SetScript("OnClick", function(self)
         if not OneWoW_Bags.bankOpen then return end
         local db = OneWoW_Bags.db
-        if not (db and db.global and db.global.bankShowWarband) then return end
+        if not db.global.bankShowWarband then return end
         OneWoW_Bags:ShowMoneyDialog({
             title = L["BANK_WARBAND_TITLE"] or "Warband Bank",
             anchorFrame = self,
@@ -132,7 +132,7 @@ function BankBar:BuildTabButtons()
     if not bagsBarFrame then return end
     local db = OneWoW_Bags.db
     local BankTypes = OneWoW_Bags.BankTypes
-    local showWarband = db and db.global and db.global.bankShowWarband
+    local showWarband = db.global.bankShowWarband
 
     for _, btn in pairs(tabButtons) do
         btn:Hide()
@@ -207,7 +207,7 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
             end
         else
             local db = OneWoW_Bags.db
-            local showWarband = db and db.global and db.global.bankShowWarband
+            local showWarband = db.global.bankShowWarband
             local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
             if OneWoW_Bags.bankOpen and C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
                 local tabData = C_Bank.FetchNextPurchasableBankTabData(bType)
@@ -229,7 +229,7 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
         if not self.isPurchased then
             if not OneWoW_Bags.bankOpen then return end
             local db = OneWoW_Bags.db
-            local showWarband = db and db.global and db.global.bankShowWarband
+            local showWarband = db.global.bankShowWarband
             local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
             if C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
                 local tabData = C_Bank.FetchNextPurchasableBankTabData(bType)
@@ -242,7 +242,7 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
 
         if mouseButton == "RightButton" and OneWoW_Bags.bankOpen then
             local db = OneWoW_Bags.db
-            local showWarband = db and db.global and db.global.bankShowWarband
+            local showWarband = db.global.bankShowWarband
             local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
             local tabData = BankBar:GetTabData(self.bagID, self.tabIndex)
             if BankFrame and BankFrame.BankPanel then BankFrame.BankPanel:SetBankType(bType) end
@@ -301,7 +301,7 @@ end
 
 function BankBar:GetTabData(bagID, tabIndex)
     local db = OneWoW_Bags.db
-    local showWarband = db and db.global and db.global.bankShowWarband
+    local showWarband = db.global.bankShowWarband
     local bankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
     local tabDataList = C_Bank.FetchPurchasedBankTabData(bankType)
     if tabDataList and tabDataList[tabIndex] then return tabDataList[tabIndex] end
@@ -310,7 +310,7 @@ end
 
 function BankBar:UpdateTabHighlights()
     local db = OneWoW_Bags.db
-    local selected = db and db.global.bankSelectedTab
+    local selected = db.global.bankSelectedTab
     for bagID, btn in pairs(tabButtons) do
         if btn._skinBorder then
             if selected ~= nil and selected == bagID then
@@ -325,7 +325,7 @@ end
 function BankBar:UpdateBankTypeButtons()
     if not bagsBarFrame then return end
     local db = OneWoW_Bags.db
-    local showWarband = db and db.global and db.global.bankShowWarband
+    local showWarband = db.global.bankShowWarband
 
     local function setActive(btn)
         if not btn then return end
@@ -361,7 +361,7 @@ end
 function BankBar:UpdateDepositWithdrawVisibility()
     if not bagsBarFrame then return end
     local db = OneWoW_Bags.db
-    local showWarband = db and db.global and db.global.bankShowWarband
+    local showWarband = db.global.bankShowWarband
     if bagsBarFrame.depositGoldBtn then bagsBarFrame.depositGoldBtn:SetShown(showWarband == true) end
     if bagsBarFrame.withdrawBtn then bagsBarFrame.withdrawBtn:SetShown(showWarband == true) end
 end
@@ -369,7 +369,7 @@ end
 function BankBar:UpdateGold()
     if not bagsBarFrame or not bagsBarFrame.goldText then return end
     local db = OneWoW_Bags.db
-    local showWarband = db and db.global and db.global.bankShowWarband
+    local showWarband = db.global.bankShowWarband
     if showWarband then
         local money = C_Bank.FetchDepositedMoney(Enum.BankType.Account) or 0
         bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(money))

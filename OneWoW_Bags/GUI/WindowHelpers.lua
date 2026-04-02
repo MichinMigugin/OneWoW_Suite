@@ -3,6 +3,8 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local DB = OneWoW_GUI.DB
+
 OneWoW_Bags.WindowHelpers = {}
 local WH = OneWoW_Bags.WindowHelpers
 
@@ -73,8 +75,8 @@ end
 function WH:GetLayoutMetrics(columnsDBKey, defaultCols)
     local db = OneWoW_Bags.db
     local Constants = OneWoW_Bags.Constants
-    local cols = db and db.global[columnsDBKey] or defaultCols
-    local iconSize = Constants.ICON_SIZES[(db and db.global.iconSize) or 3] or 37
+    local cols = db.global[columnsDBKey] or defaultCols
+    local iconSize = Constants.ICON_SIZES[db.global.iconSize or 3] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local contentWidth = cols * (iconSize + spacing) - spacing + 4
     return cols, iconSize, spacing, contentWidth
@@ -95,11 +97,8 @@ function WH:SetupResizeButton(mainWindow, gui, positionDBKey)
     end)
     resizeBtn:SetScript("OnMouseUp", function(self)
         mainWindow:StopMovingOrSizing()
-        local d = OneWoW_Bags.db
-        if d and d.global then
-            d.global[positionDBKey] = d.global[positionDBKey] or {}
-            OneWoW_GUI:SaveWindowPosition(mainWindow, d.global[positionDBKey])
-        end
+        local pos = DB:Ensure(OneWoW_Bags.db, "global", positionDBKey)
+        OneWoW_GUI:SaveWindowPosition(mainWindow, pos)
         if gui.RefreshLayout then gui:RefreshLayout() end
     end)
     return resizeBtn
@@ -117,13 +116,8 @@ function WH:RegisterSpecialFrame(globalName, mainWindow)
 end
 
 function WH:SaveAndRestorePosition(mainWindow, positionDBKey)
-    local d = OneWoW_Bags.db
-    if d and d.global then
-        d.global[positionDBKey] = d.global[positionDBKey] or {}
-        if not OneWoW_GUI:RestoreWindowPosition(mainWindow, d.global[positionDBKey]) then
-            mainWindow:SetPoint("CENTER")
-        end
-    else
+    local pos = DB:Ensure(OneWoW_Bags.db, "global", positionDBKey)
+    if not OneWoW_GUI:RestoreWindowPosition(mainWindow, pos) then
         mainWindow:SetPoint("CENTER")
     end
 end

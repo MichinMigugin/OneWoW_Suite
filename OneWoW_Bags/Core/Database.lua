@@ -1,5 +1,11 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local DB = OneWoW_GUI.DB
+local pairs, ipairs, next, wipe, tinsert, CopyTable = pairs, ipairs, next, wipe, tinsert, CopyTable
+
 local defaults = {
     global = {
         language = GetLocale(),
@@ -85,79 +91,55 @@ local defaults = {
     },
 }
 
-local function ApplyDefaults(target, source)
-    for key, value in pairs(source) do
-        if target[key] == nil then
-            if type(value) == "table" then
-                target[key] = CopyTable(value)
-            else
-                target[key] = value
-            end
-        elseif type(value) == "table" and type(target[key]) == "table" then
-            ApplyDefaults(target[key], value)
-        end
-    end
-end
-
 function OneWoW_Bags:InitializeDatabase()
-    if not OneWoW_Bags_DB then
-        OneWoW_Bags_DB = CopyTable(defaults.global)
-    end
-
-    self.db = {
-        global = OneWoW_Bags_DB,
-    }
-
-    ApplyDefaults(self.db.global, defaults.global)
-
-    if not self.db.global.itemSortMigratedToNone then
-        self.db.global.itemSort = "none"
-        self.db.global.itemSortMigratedToNone = true
-    end
-
-    if not self.db.global.categoriesV2Migrated then
-        self:MigrateCategorySystemV2()
-        self.db.global.categoriesV2Migrated = true
-    end
-
-    if not self.db.global.junkRenameMigrated then
-        local g = self.db.global
-        if g.disabledCategories then
-            if g.disabledCategories["OneWoW Junk"] then
-                g.disabledCategories["1W Junk"] = true
-                g.disabledCategories["OneWoW Junk"] = nil
-            end
-            if g.disabledCategories["OneWoW Upgrades"] then
-                g.disabledCategories["1W Upgrades"] = true
-                g.disabledCategories["OneWoW Upgrades"] = nil
-            end
+    local sv = OneWoW_Bags_DB
+    if sv and not sv.global and next(sv) ~= nil then
+        local oldData = {}
+        for k, v in pairs(sv) do
+            oldData[k] = v
         end
-        if g.collapsedSections then
-            if g.collapsedSections["OneWoW Junk"] then
-                g.collapsedSections["1W Junk"] = g.collapsedSections["OneWoW Junk"]
-                g.collapsedSections["OneWoW Junk"] = nil
-            end
-            if g.collapsedSections["OneWoW Upgrades"] then
-                g.collapsedSections["1W Upgrades"] = g.collapsedSections["OneWoW Upgrades"]
-                g.collapsedSections["OneWoW Upgrades"] = nil
-            end
+        wipe(sv)
+        sv.global = oldData
+    end
+
+    local db = DB:Init({
+        addonName = "OneWoW_Bags",
+        savedVar = "OneWoW_Bags_DB",
+        defaults = defaults,
+    })
+    self.db = db
+
+    if db.global._migrationVersion == nil then
+        local v = 0
+        if db.global.categoriesV2Migrated    then v = 1 end
+        if db.global.junkRenameMigrated      then v = 2 end
+        if db.global.displayOrderMigrated    then v = 3 end
+        if db.global.categoriesV3Migrated    then v = 4 end
+        if db.global.itemSortMigratedToNone  then v = 5 end
+        if v > 0 then
+            db.global._migrationVersion = v
         end
-        self.db.global.junkRenameMigrated = true
     end
 
-    if not self.db.global.displayOrderMigrated then
-        self:MigrateToDisplayOrder()
-        self.db.global.displayOrderMigrated = true
-    end
-
-    if not self.db.global.categoriesV3Migrated then
-        self:MigrateCategorySystemV3()
-        self.db.global.categoriesV3Migrated = true
-    end
+    DB:RunMigrations(db, {
+        { version = 1, name = "category_system_v2", run = function(d) self:MigrateCategorySystemV2(d) end },
+        { version = 2, name = "junk_rename",        run = function(d) self:MigrateJunkRename(d) end },
+        { version = 3, name = "display_order",      run = function(d) self:MigrateToDisplayOrder(d) end },
+        { version = 4, name = "category_system_v3", run = function(d) self:MigrateCategorySystemV3(d) end },
+        { version = 5, name = "item_sort_to_none",  run = function(d) self:MigrateItemSortToNone(d) end },
+        { version = 6, name = "cleanup_old_flags",  run = function(d)
+            local g = d.global
+            g.categoriesV2Migrated = nil
+            g.junkRenameMigrated = nil
+            g.displayOrderMigrated = nil
+            g.categoriesV3Migrated = nil
+            g.itemSortMigratedToNone = nil
+        end },
+    })
 end
 
-function OneWoW_Bags:MigrateCategorySystemV2()
-    local g = self.db.global
+function OneWoW_Bags:MigrateCategorySystemV2(db)
+    local g = db.global
 
     local OLD_TO_NEW = {
         ["Equipment"] = { "Weapons", "Armor" },
@@ -206,8 +188,68 @@ function OneWoW_Bags:MigrateCategorySystemV2()
     g.sectionOrder = { secDefault, secEquip, secCraft, secHouse }
 end
 
-function OneWoW_Bags:MigrateCategorySystemV3()
-    local g = self.db.global
+function OneWoW_Bags:MigrateJunkRename(db)
+    local g = db.global
+
+    if g.disabledCategories then
+        if g.disabledCategories["OneWoW Junk"] then
+            g.disabledCategories["1W Junk"] = true
+            g.disabledCategories["OneWoW Junk"] = nil
+        end
+        if g.disabledCategories["OneWoW Upgrades"] then
+            g.disabledCategories["1W Upgrades"] = true
+            g.disabledCategories["OneWoW Upgrades"] = nil
+        end
+    end
+
+    if g.collapsedSections then
+        if g.collapsedSections["OneWoW Junk"] then
+            g.collapsedSections["1W Junk"] = g.collapsedSections["OneWoW Junk"]
+            g.collapsedSections["OneWoW Junk"] = nil
+        end
+        if g.collapsedSections["OneWoW Upgrades"] then
+            g.collapsedSections["1W Upgrades"] = g.collapsedSections["OneWoW Upgrades"]
+            g.collapsedSections["OneWoW Upgrades"] = nil
+        end
+    end
+end
+
+function OneWoW_Bags:MigrateToDisplayOrder(db)
+    local g = db.global
+    if not g.categorySections or not g.sectionOrder then return end
+
+    local inSection = {}
+    for _, sec in pairs(g.categorySections) do
+        for _, catName in ipairs(sec.categories or {}) do
+            inSection[catName] = true
+        end
+    end
+
+    local order = {}
+    local catOrder = g.categoryOrder
+    for _, name in ipairs(catOrder) do
+        if not inSection[name] then
+            tinsert(order, name)
+        end
+    end
+
+    for _, sectionID in ipairs(g.sectionOrder) do
+        local sec = g.categorySections[sectionID]
+        if sec and sec.categories then
+            tinsert(order, "----")
+            tinsert(order, "section:" .. sectionID)
+            for _, catName in ipairs(sec.categories) do
+                tinsert(order, catName)
+            end
+            tinsert(order, "section_end")
+        end
+    end
+
+    g.displayOrder = order
+end
+
+function OneWoW_Bags:MigrateCategorySystemV3(db)
+    local g = db.global
 
     if g.recentItemDuration == 600 then
         g.recentItemDuration = 120
@@ -296,36 +338,6 @@ function OneWoW_Bags:MigrateCategorySystemV3()
     g.categoryOrder = {}
 end
 
-function OneWoW_Bags:MigrateToDisplayOrder()
-    local g = self.db.global
-    if not g.categorySections or not g.sectionOrder then return end
-
-    local inSection = {}
-    for _, sec in pairs(g.categorySections) do
-        for _, catName in ipairs(sec.categories or {}) do
-            inSection[catName] = true
-        end
-    end
-
-    local order = {}
-    local catOrder = g.categoryOrder or {}
-    for _, name in ipairs(catOrder) do
-        if not inSection[name] then
-            tinsert(order, name)
-        end
-    end
-
-    for _, sectionID in ipairs(g.sectionOrder) do
-        local sec = g.categorySections[sectionID]
-        if sec and sec.categories then
-            tinsert(order, "----")
-            tinsert(order, "section:" .. sectionID)
-            for _, catName in ipairs(sec.categories) do
-                tinsert(order, catName)
-            end
-            tinsert(order, "section_end")
-        end
-    end
-
-    g.displayOrder = order
+function OneWoW_Bags:MigrateItemSortToNone(db)
+    db.global.itemSort = "none"
 end

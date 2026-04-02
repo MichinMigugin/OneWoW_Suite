@@ -120,7 +120,7 @@ function GBSet:ApplyCacheToButtons()
                     iconFileID = cached.texture,
                 }
 
-                if cached.quality and cached.quality >= 1 and db and db.global and db.global.bankRarityColor then
+                if cached.quality and cached.quality >= 1 and db.global.bankRarityColor then
                     OneWoW_GUI:UpdateIconQuality(button, cached.quality)
                 else
                     OneWoW_GUI:UpdateIconQuality(button, nil)
@@ -157,7 +157,7 @@ end
 
 function GBSet:UpdateQualityColors()
     local db = OneWoW_Bags.db
-    local useRarity = db and db.global and db.global.bankRarityColor
+    local useRarity = db.global.bankRarityColor
     for tabID, tabSlots in pairs(self.slots) do
         for slotID, button in pairs(tabSlots) do
             if button.owb_itemInfo and button.owb_itemInfo.quality and button.owb_itemInfo.quality >= 1 and useRarity then

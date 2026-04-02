@@ -194,7 +194,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                         leftPadding + cat.startCol * cellSize, -yOffset)
                     label:SetWidth(cat.blockWidth * cellSize)
                     label:SetText(cat.displayName)
-                    local catMods2 = db.global.categoryModifications or {}
+                    local catMods2 = db.global.categoryModifications
                     local catMod2 = catMods2[cat.name]
                     if catMod2 and catMod2.color then
                         local cr = tonumber(catMod2.color:sub(1,2), 16) / 255
@@ -248,7 +248,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                     local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
                     local displayName = L[localeKey] or categoryName
                     section.title:SetText(displayName)
-                    local catMods = db.global.categoryModifications or {}
+                    local catMods = db.global.categoryModifications
                     local catMod = catMods[categoryName]
                     if catMod and catMod.color then
                         local cr = tonumber(catMod.color:sub(1,2), 16) / 255

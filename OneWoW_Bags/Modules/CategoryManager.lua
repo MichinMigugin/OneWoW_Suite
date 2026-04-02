@@ -43,7 +43,7 @@ function CM:GetSortedCategoryNames(itemsByCategory)
     end
 
     local db = OneWoW_Bags.db
-    local categoryOrder = db and db.global.categoryOrder
+    local categoryOrder = db.global.categoryOrder
     if categoryOrder and #categoryOrder > 0 then
         local orderMap = {}
         for i, name in ipairs(categoryOrder) do
@@ -56,7 +56,7 @@ function CM:GetSortedCategoryNames(itemsByCategory)
             return a < b
         end)
     else
-        local sortMode = db and db.global.categorySort or "priority"
+        local sortMode = db.global.categorySort or "priority"
         Categories:SortCategories(names, sortMode)
     end
 
@@ -67,15 +67,15 @@ function CM:GetSectionedLayout(itemsByCategory, containerType)
     local db = OneWoW_Bags.db
     if not db then return self:GetSortedCategoryNames(itemsByCategory) end
 
-    local sections    = db.global.categorySections or {}
-    local sectOrder   = db.global.sectionOrder or {}
-    local catOrder    = db.global.categoryOrder or {}
+    local sections    = db.global.categorySections
+    local sectOrder   = db.global.sectionOrder
+    local catOrder    = db.global.categoryOrder
 
     if #sectOrder == 0 then
         return self:GetSortedCategoryNames(itemsByCategory)
     end
 
-    local catMods = db.global.categoryModifications or {}
+    local catMods = db.global.categoryModifications
     local function IsCategoryVisible(catName)
         local mod = catMods[catName]
         if mod and mod.hideIn and containerType then
@@ -86,7 +86,7 @@ function CM:GetSectionedLayout(itemsByCategory, containerType)
         return true
     end
 
-    local displayOrder = db.global.displayOrder or {}
+    local displayOrder = db.global.displayOrder
 
     if #displayOrder > 0 then
         local layout = {}

@@ -204,7 +204,7 @@ end
 function OneWoW_Bags:OnBankOpened()
     self.bankOpen = true
     local db = self.db
-    if not db or not db.global or not db.global.enableBankUI then return end
+    if not db.global.enableBankUI then return end
 
     self:SuppressBankFrame()
 
@@ -276,7 +276,7 @@ function OneWoW_Bags:OnGuildBankOpened()
     end
 
     local db = self.db
-    if db and db.global.autoOpenWithBank and self.GUI then
+    if db.global.autoOpenWithBank and self.GUI then
         self.GUI:Show()
     end
 end

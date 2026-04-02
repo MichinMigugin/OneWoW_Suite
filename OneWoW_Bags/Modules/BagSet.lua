@@ -135,7 +135,7 @@ end
 
 function BagSet:UpdateQualityColors()
     local db = OneWoW_Bags.db
-    local useRarity = db and db.global and db.global.rarityColor
+    local useRarity = db.global.rarityColor
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do
             if button.owb_itemInfo and button.owb_itemInfo.quality and button.owb_itemInfo.quality >= 1 and useRarity then

@@ -3,6 +3,8 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local DB = OneWoW_GUI.DB
+
 OneWoW_Bags.GUI = OneWoW_Bags.GUI or {}
 local GUI = OneWoW_Bags.GUI
 local Constants = OneWoW_Bags.Constants
@@ -24,7 +26,7 @@ function GUI:InitMainWindow()
 
     local C = Constants.GUI
     local db = OneWoW_Bags.db
-    local savedHeight = db and db.global and db.global.mainFramePosition and db.global.mainFramePosition.height
+    local savedHeight = db.global.mainFramePosition.height
     local windowHeight = savedHeight or C.WINDOW_HEIGHT
 
     MainWindow = OneWoW_GUI:CreateFrame(UIParent, {
@@ -44,11 +46,8 @@ function GUI:InitMainWindow()
     MainWindow:SetScript("OnDragStart", MainWindow.StartMoving)
     MainWindow:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
-        local d = OneWoW_Bags.db
-        if d and d.global then
-            d.global.mainFramePosition = d.global.mainFramePosition or {}
-            OneWoW_GUI:SaveWindowPosition(self, d.global.mainFramePosition)
-        end
+        local pos = DB:Ensure(OneWoW_Bags.db, "global", "mainFramePosition")
+        OneWoW_GUI:SaveWindowPosition(self, pos)
     end)
     MainWindow:SetClampedToScreen(true)
     MainWindow:SetClampRectInsets(0, 0, 0, 0)
@@ -61,11 +60,8 @@ function GUI:InitMainWindow()
             OneWoW_Bags.InfoBar:ClearSearch()
         end
         OneWoW_Bags.activeExpansionFilter = nil
-        local d = OneWoW_Bags.db
-        if d and d.global then
-            d.global.mainFramePosition = d.global.mainFramePosition or {}
-            OneWoW_GUI:SaveWindowPosition(MainWindow, d.global.mainFramePosition)
-        end
+        local pos = DB:Ensure(OneWoW_Bags.db, "global", "mainFramePosition")
+        OneWoW_GUI:SaveWindowPosition(MainWindow, pos)
     end)
     MainWindow:Hide()
 
@@ -161,7 +157,6 @@ end)
 function GUI:UpdateWindowWidth()
     if not MainWindow then return end
     local db = OneWoW_Bags.db
-    if not db or not db.global then return end
     local cols = db.global.bagColumns or 15
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
@@ -374,7 +369,7 @@ altShowFrame:RegisterEvent("MODIFIER_STATE_CHANGED")
 altShowFrame:SetScript("OnEvent", function(self, event, key, down)
     if not MainWindow or not MainWindow:IsShown() then return end
     local db = OneWoW_Bags.db
-    if not db or not db.global or not db.global.altToShow then return end
+    if not db.global.altToShow then return end
 
     if key == "LALT" or key == "RALT" then
         local nowDown = down == 1
@@ -388,7 +383,7 @@ end)
 
 function GUI:IsAltShowActive()
     local db = OneWoW_Bags.db
-    if not db or not db.global or not db.global.altToShow then return false end
+    if not db.global.altToShow then return false end
     return altIsDown
 end
 

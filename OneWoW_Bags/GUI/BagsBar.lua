@@ -3,6 +3,8 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local DB = OneWoW_GUI.DB
+
 OneWoW_Bags.BagsBar = {}
 local BagsBar = OneWoW_Bags.BagsBar
 
@@ -170,7 +172,7 @@ function BagsBar:Create(parent)
         local cursorType, itemID = GetCursorInfo()
         if cursorType == "item" and itemID then
             local db = OneWoW_Bags.db
-            if not db.global.trackedCurrencies then db.global.trackedCurrencies = {} end
+            DB:Ensure(db, "global", "trackedCurrencies")
             tinsert(db.global.trackedCurrencies, { type = "item", id = itemID })
             ClearCursor()
             BagsBar:UpdateTrackers()
@@ -457,7 +459,7 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         local db = OneWoW_Bags.db
-        local selected = db and db.global.selectedBag
+        local selected = db.global.selectedBag
         if self.bagIndex == 0 then
             GameTooltip:SetText(BACKPACK_TOOLTIP or "Backpack")
         else
@@ -498,7 +500,7 @@ end
 
 function BagsBar:UpdateBagHighlights()
     local db = OneWoW_Bags.db
-    local selected = db and db.global.selectedBag
+    local selected = db.global.selectedBag
     for idx, btn in pairs(bagButtons) do
         if btn._skinBorder then
             if selected ~= nil and selected == idx then
@@ -546,14 +548,13 @@ end
 function BagsBar:UpdateRowVisibility()
     if not bagsBarFrame then return end
     local db = OneWoW_Bags.db
-    if not db or not db.global then return end
 
     local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
     local showBags = db.global.showBagsBar ~= false
     local showMoney = db.global.showMoneyBar ~= false
     if altShow then showBags = true; showMoney = true end
 
-    local trackers = db.global.trackedCurrencies or {}
+    local trackers = db.global.trackedCurrencies
     local hasTrackers = #trackers > 0
     local showRow2 = showMoney or hasTrackers
     local needExtraRow = showRow2 and #trackers > ROW1_TRACKER_MAX

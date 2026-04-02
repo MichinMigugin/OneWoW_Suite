@@ -240,11 +240,11 @@ end
 function InfoBar:UpdateViewButtons()
     if not infoBarFrame then return end
     local db = OneWoW_Bags.db
-    local mode = db and db.global.viewMode or "list"
+    local mode = db.global.viewMode or "list"
 
     local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
-    local showHeader = (db and db.global.showHeaderBar ~= false) or altShow
-    local showSearch = (db and db.global.showSearchBar ~= false) or altShow
+    local showHeader = (db.global.showHeaderBar ~= false) or altShow
+    local showSearch = (db.global.showSearchBar ~= false) or altShow
 
     local buttons = {
         { btn = infoBarFrame.viewList, mode = "list" },
@@ -278,7 +278,7 @@ function InfoBar:UpdateViewButtons()
     if infoBarFrame.searchBox then infoBarFrame.searchBox:SetShown(showSearch) end
 
     if infoBarFrame.expacDropdown then
-        local showExpac = showHeader and (db and db.global.enableExpansionFilter == true)
+        local showExpac = showHeader and (db.global.enableExpansionFilter == true)
         infoBarFrame.expacDropdown:SetShown(showExpac == true)
         if not showExpac then
             OneWoW_Bags.activeExpansionFilter = nil
@@ -295,7 +295,7 @@ function InfoBar:UpdateViewButtons()
     end
 
     if infoBarFrame.emptyToggleBtn then
-        local showing = db and db.global.showEmptySlots
+        local showing = db.global.showEmptySlots
         if showing == nil then showing = true end
         if showing then
             infoBarFrame.emptyToggleBtn:SetAlpha(1.0)
@@ -320,7 +320,6 @@ end
 function InfoBar:UpdateVisibility()
     if not infoBarFrame then return end
     local db = OneWoW_Bags.db
-    if not db or not db.global then return end
 
     self:UpdateViewButtons()
 
