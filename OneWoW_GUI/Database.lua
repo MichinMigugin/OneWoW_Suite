@@ -1,3 +1,9 @@
+-- OneWoW_GUI Database API
+-- Stateless utility module. db handles are plain tables, not objects.
+-- Design rationale: Docs/DATABASE.md
+-- Comments in this file are for LLMs and humans and are to aid understanding without needing to read the full design document.
+-- Do not remove comments.
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
@@ -50,6 +56,10 @@ local function GetIdentityKeys()
     return charKey, realm, faction, classToken, specID and tostring(specID) or nil
 end
 
+-- Fill-only semantics: only nil keys receive default values. Existing user data
+-- is never overwritten. This replaces every addon's custom ApplyDefaults,
+-- mergeSubTable, and nil-check chains. Blizzard's MergeTable overwrites and
+-- SetTablePairsToTable wipes — both are wrong for SavedVariable initialization.
 function DB:MergeMissing(target, defaults)
     if type(target) ~= "table" or type(defaults) ~= "table" then return end
     for key, defaultValue in pairs(defaults) do
@@ -132,6 +142,12 @@ local function EnsureScopeTable(storage, storageKey, identityKey)
     return storage[storageKey][identityKey]
 end
 
+-- Three storage modes for compatibility during incremental migration:
+--   acedb  — wraps an existing AceDB handle (global/char come from AceDB)
+--   split  — separate SavedVariables globals for global and per-char data
+--   single — preferred: one shared root, char data at root.chars["Name-Realm"]
+-- All three return the same normalized db shape. global and char are always
+-- pre-created; other scopes (realm, faction, class, spec) are lazy-initialized.
 function DB:Init(config)
     if type(config) ~= "table" then
         error("DB:Init requires a config table", 2)
@@ -322,6 +338,11 @@ local function WalkPath(root, ...)
     return current
 end
 
+-- Scope resolution: Global -> Realm -> Faction -> Class -> Spec -> Char.
+-- Later scopes override earlier ones, so Char is the most specific identity
+-- override. Presets overlay last because they represent mode (gathering, travel)
+-- not identity. Resolved values are read-only snapshots; writes go through
+-- SetScopeValue or SetPresetValue.
 function DB:GetResolvedValue(db, ...)
     TryResolveSpec(db)
 
