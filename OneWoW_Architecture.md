@@ -122,6 +122,19 @@ Fail fast. No defensive `if OneWoW_GUI and OneWoW_GUI.SomeMethod then` guards �
 
 **Component API Conventions:** All component creation uses `(parent, options)` — parent first, all other parameters in an options table. Example: `OneWoW_GUI:CreateFrame(parent, { name = "MyFrame", width = 400, height = 300, backdrop = Constants.BACKDROP_SOFT })`. See `OneWoW_GUI/GUI.md` for full API reference.
 
+**Database API:** `OneWoW_GUI.DB` provides stateless utility functions for SavedVariable management:
+- `DB:MergeMissing(target, defaults)` — deep-merge defaults into saved data without overwriting existing values. Replaces all `if not X then X = default end` chains.
+- `DB:Ensure(db, ...)` — ensures a nested table path exists, creating intermediate tables as needed. Returns the final table.
+- `DB:Read(db, ...)` — safe nested read that returns nil if any key in the path is missing.
+- `DB:Set(db, ...)` — safe nested write.
+- `DB:Init(config)` — initializes a scoped DB handle (global/realm/faction/class/spec/char + presets).
+- `DB:RunMigrations(db, migrations)` — versioned one-time migration runner.
+
+**Composite Components (added during OneWoW cleanup):**
+- `OneWoW_GUI:CreateFeatureStatusBlock(parent, opts)` — status label + enabled/disabled text + toggle button. Used for feature detail panels. Options: `yOffset`, `isEnabled` (function), `onToggle(newState)`.
+- `OneWoW_GUI:CreateIntegrationRow(parent, opts)` — addon detection + status + toggle row. Options: `addonName`, `displayName`, `isEnabled` (function), `onToggle(newState)`, `notCompatible`.
+- `OneWoW_GUI:CreateColorSwatch(parent, opts)` — color picker button that opens ColorPickerFrame. Options: `getColor()`, `onColorChanged(r,g,b)`, `hasOpacity`, `size`.
+
 ---
 
 ## 4. Theme Flow
