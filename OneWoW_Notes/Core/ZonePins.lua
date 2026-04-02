@@ -16,11 +16,15 @@ function ZonePins:Initialize()
         C_Timer.After(0.5, function()
             local zoneText    = GetZoneText()    or ""
             local subZoneText = GetSubZoneText() or ""
-            local allZones    = ns.Zones:GetAllZones()
+            local fullZone    = zoneText
+            if subZoneText ~= "" and subZoneText ~= zoneText then
+                fullZone = zoneText .. " - " .. subZoneText
+            end
+            local allZones = ns.Zones:GetAllZones()
             if allZones then
                 for zoneName, zoneData in pairs(allZones) do
                     if zoneData and type(zoneData) == "table" and zoneData.pinEnabled then
-                        if zoneName == zoneText or zoneName == subZoneText then
+                        if zoneName == fullZone or zoneName == zoneText or zoneName == subZoneText then
                             local dismissed = zoneData.dismissedUntil and GetTime() < zoneData.dismissedUntil
                             if not dismissed then
                                 self:ShowZonePin(zoneName, zoneData)
@@ -39,11 +43,17 @@ function ZonePins:ShowZonePin(zoneName, zoneData)
     if not addon.zonePins then addon.zonePins = {} end
 
     if addon.zonePins[zoneName] then
-        addon.zonePins[zoneName]:Show()
-        if addon.BringWindowToFront then
-            addon:BringWindowToFront(addon.zonePins[zoneName])
+        local pin = addon.zonePins[zoneName]
+        if pin.contentText then
+            pin.contentText:SetText(zoneData.content or "")
         end
-        return addon.zonePins[zoneName]
+        pin:Show()
+        if pin.RefreshTodos then pin:RefreshTodos() end
+        if pin.RefreshLayout then pin:RefreshLayout() end
+        if addon.BringWindowToFront then
+            addon:BringWindowToFront(pin)
+        end
+        return pin
     end
 
     return self:CreateZonePin(zoneName, zoneData)
@@ -56,7 +66,19 @@ function ZonePins:HideZonePin(zoneName)
     local pinFrame = addon.zonePins[zoneName]
     if pinFrame then
         pinFrame:Hide()
-        addon.zonePins[zoneName] = nil
+    end
+end
+
+function ZonePins:DestroyZonePin(zoneName)
+    local addon = _G.OneWoW_Notes
+    if not addon.zonePins or not addon.zonePins[zoneName] then return end
+
+    local pinFrame = addon.zonePins[zoneName]
+    addon.zonePins[zoneName] = nil
+    if pinFrame then
+        pinFrame._destroying = true
+        pinFrame:Hide()
+        pinFrame:SetParent(nil)
     end
 end
 
@@ -64,7 +86,10 @@ function ZonePins:HideAllPins()
     local addon = _G.OneWoW_Notes
     if not addon.zonePins then return end
     for zoneName, pinFrame in pairs(addon.zonePins) do
-        if pinFrame then pinFrame:Hide() end
+        if pinFrame then
+            pinFrame._destroying = true
+            pinFrame:Hide()
+        end
     end
     addon.zonePins = {}
 end
@@ -231,7 +256,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
 
     contentText:SetScript("OnHyperlinkClick", function(self, linkData, link, button)
         if button == "LeftButton" then
-            ChatFrame_OnHyperlinkShow(ChatFrame1, linkData, link, button)
+            SetItemRef(linkData, link, button)
         end
     end)
 
@@ -545,11 +570,14 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     end
 
     pin:SetScript("OnHide", function(self)
-        if addon.zonePins and addon.zonePins[zoneName] == self then
-            addon.zonePins[zoneName] = nil
+        if self._destroying then
+            if addon.zonePins and addon.zonePins[zoneName] == self then
+                addon.zonePins[zoneName] = nil
+            end
         end
         if self.windowInfo and addon.UnregisterWindow then
             addon:UnregisterWindow(self)
+            self.windowInfo = nil
         end
     end)
 

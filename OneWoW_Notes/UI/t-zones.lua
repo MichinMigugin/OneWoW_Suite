@@ -71,46 +71,76 @@ function ns.UI.CreateZonesTab(parent)
     controlTitle:SetText(L["ZONES_CONTROLS"] or "Zones Controls")
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addZoneBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_ZONE"] or "Add Zone", height = 25, minWidth = 80 })
+    local addZoneBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"] or "Manual Add", height = 25, minWidth = 80 })
     addZoneBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addZoneBtn:SetScript("OnClick", function()
         ns.UI.ShowManualZoneEntryDialog(parent)
     end)
 
-    local detectBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_DETECT_ZONE"] or "Detect Zone", height = 25, minWidth = 80 })
+    local detectBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_CURRENT_ZONE"] or "Add Sub", height = 25, minWidth = 80 })
     detectBtn:SetPoint("LEFT", addZoneBtn, "RIGHT", 6, 0)
     detectBtn:SetScript("OnClick", function()
-        local mapID = C_Map.GetBestMapForUnit("player")
-        if not mapID then
+        if not ns.Zones then return end
+        local zoneName = ns.Zones:GetCurrentZoneName()
+        if not zoneName or zoneName == "" then
             print("|cFFFFD100OneWoW - Zones:|r " .. (L["ZONE_DETECT_FAIL"] or "Could not detect zone."))
             return
         end
-        local mapInfo = C_Map.GetMapInfo(mapID)
-        if not mapInfo or not mapInfo.name then
-            print("|cFFFFD100OneWoW - Zones:|r " .. (L["ZONE_DETECT_FAIL"] or "Could not detect zone."))
-            return
-        end
-
-        local zoneName = mapInfo.name
-        if ns.Zones and ns.Zones:GetZone(zoneName) then
+        if ns.Zones:GetZone(zoneName) then
             selectedZone = zoneName
-            parent.RefreshZonesList()
             if parent.SelectZone then parent.SelectZone(zoneName) end
             print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"] or "Zone exists: %s", zoneName))
             return
         end
-
-        if ns.Zones then
-            ns.Zones:AddZone(zoneName, { content = "", category = "General", storage = "account", pinColor = "sync", fontColor = "match", mapID = mapID })
-            selectedZone = zoneName
-            parent.RefreshZonesList()
-            if parent.SelectZone then parent.SelectZone(zoneName) end
-            print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"] or "Added: %s", zoneName))
+        local mapInfo = ns.Zones:GetCurrentMapInfo()
+        local zoneData = { content = "", category = "General", storage = "account", pinColor = "sync", fontColor = "match" }
+        if mapInfo then
+            zoneData.mapID = mapInfo.mapID
+            zoneData.parentMapID = mapInfo.parentMapID
         end
+        ns.Zones:AddZone(zoneName, zoneData)
+        selectedZone = zoneName
+        parent.RefreshZonesList()
+        if parent.SelectZone then parent.SelectZone(zoneName) end
+        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"] or "Added: %s", zoneName))
+    end)
+
+    local addParentBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ZONE_ADD_PARENT"] or "Add Parent", height = 25, minWidth = 80 })
+    addParentBtn:SetPoint("LEFT", detectBtn, "RIGHT", 6, 0)
+    addParentBtn:SetScript("OnClick", function()
+        if not ns.Zones then return end
+        local parentZoneName = ns.Zones:GetParentZoneName()
+        if not parentZoneName or parentZoneName == "" then
+            print("|cFFFFD100OneWoW - Zones:|r " .. (L["MSG_NO_PARENT_ZONE"] or "Could not detect parent zone."))
+            return
+        end
+        if ns.Zones:GetZone(parentZoneName) then
+            selectedZone = parentZoneName
+            if parent.SelectZone then parent.SelectZone(parentZoneName) end
+            print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"] or "Zone exists: %s", parentZoneName))
+            return
+        end
+        local mapInfo = ns.Zones:GetCurrentMapInfo()
+        local zoneData = { content = "", category = "General", storage = "account", pinColor = "sync", fontColor = "match" }
+        if mapInfo and mapInfo.parentMapID and mapInfo.parentMapID > 0 then
+            local parentMapInfo = C_Map.GetMapInfo(mapInfo.parentMapID)
+            if parentMapInfo then
+                zoneData.mapID = mapInfo.parentMapID
+                zoneData.parentMapID = parentMapInfo.parentMapID
+            end
+        elseif mapInfo then
+            zoneData.mapID = mapInfo.mapID
+            zoneData.parentMapID = mapInfo.parentMapID
+        end
+        ns.Zones:AddZone(parentZoneName, zoneData)
+        selectedZone = parentZoneName
+        parent.RefreshZonesList()
+        if parent.SelectZone then parent.SelectZone(parentZoneName) end
+        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"] or "Added: %s", parentZoneName))
     end)
 
     local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
-    categoryDropdown:SetPoint("LEFT", detectBtn, "RIGHT", 8, 0)
+    categoryDropdown:SetPoint("LEFT", addParentBtn, "RIGHT", 8, 0)
     local function RefreshCatOpts()
         local catOpts = {{text = L["UI_ALL"] or "All", value = "All"}}
         if ns.Zones then
@@ -306,7 +336,7 @@ function ns.UI.CreateZonesTab(parent)
                                 text = L["BUTTON_DELETE"] or "Delete",
                                 color = {0.8, 0.2, 0.2},
                                 onClick = function(dlg)
-                                    if ns.ZonePins then ns.ZonePins:HideZonePin(zName) end
+                                    if ns.ZonePins then ns.ZonePins:DestroyZonePin(zName) end
                                     if ns.Zones then ns.Zones:RemoveZone(zName) end
                                     selectedZone = nil
                                     if detailPanel.editorContent then
@@ -401,9 +431,55 @@ function ns.UI.CreateZonesTab(parent)
             pinBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
             editorHeader.pinBtn = pinBtn
 
+            local alertHeaderBtn = CreateFrame("CheckButton", nil, editorHeader)
+            alertHeaderBtn:SetSize(22, 22)
+            alertHeaderBtn:SetPoint("RIGHT", pinBtn, "LEFT", -2, 0)
+
+            local alertHNormalTex = alertHeaderBtn:CreateTexture(nil, "BACKGROUND")
+            alertHNormalTex:SetAllPoints()
+            alertHNormalTex:SetTexture(MEDIA .. "icon-alert.png")
+            alertHNormalTex:SetDesaturated(true)
+            alertHNormalTex:SetAlpha(0.3)
+            alertHeaderBtn:SetNormalTexture(alertHNormalTex)
+
+            local alertHHighlightTex = alertHeaderBtn:CreateTexture(nil, "HIGHLIGHT")
+            alertHHighlightTex:SetAllPoints()
+            alertHHighlightTex:SetTexture(MEDIA .. "icon-alert.png")
+            alertHHighlightTex:SetAlpha(0.5)
+            alertHeaderBtn:SetHighlightTexture(alertHHighlightTex)
+
+            alertHeaderBtn:SetScript("OnClick", function(self)
+                if selectedZone and ns.Zones then
+                    local zoneData = ns.Zones:GetZone(selectedZone)
+                    if zoneData then
+                        local wasEnabled = zoneData.alertEnabled ~= false
+                        zoneData.alertEnabled = not wasEnabled
+                        if zoneData.alertEnabled then
+                            self:GetNormalTexture():SetDesaturated(false)
+                            self:GetNormalTexture():SetAlpha(1.0)
+                            self:SetChecked(true)
+                        else
+                            self:GetNormalTexture():SetDesaturated(true)
+                            self:GetNormalTexture():SetAlpha(0.3)
+                            self:SetChecked(false)
+                        end
+                        ns.Zones:SaveZone(selectedZone, zoneData)
+                        parent.RefreshZonesList()
+                    end
+                end
+            end)
+            alertHeaderBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["TOOLTIP_ZONE_ALERT"] or "Zone Alert", 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_ZONE_ALERT_DESC"] or "Toggle zone entry alert.", 0.8, 0.8, 0.8, true)
+                GameTooltip:Show()
+            end)
+            alertHeaderBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
+            editorHeader.alertBtn = alertHeaderBtn
+
             local favoriteBtn = CreateFrame("CheckButton", nil, editorHeader)
             favoriteBtn:SetSize(22, 22)
-            favoriteBtn:SetPoint("RIGHT", pinBtn, "LEFT", -2, 0)
+            favoriteBtn:SetPoint("RIGHT", alertHeaderBtn, "LEFT", -2, 0)
 
             local favNormalTex = favoriteBtn:CreateTexture(nil, "BACKGROUND")
             favNormalTex:SetAllPoints()
@@ -749,6 +825,13 @@ function ns.UI.CreateZonesTab(parent)
                         header.pinBtn:GetNormalTexture():SetAlpha(pinEnabled and 1.0 or 0.3)
                         header.pinBtn:SetChecked(pinEnabled and true or false)
                     end
+
+                    if header.alertBtn then
+                        local alertEnabled = zoneData.alertEnabled ~= false
+                        header.alertBtn:GetNormalTexture():SetDesaturated(not alertEnabled)
+                        header.alertBtn:GetNormalTexture():SetAlpha(alertEnabled and 1.0 or 0.3)
+                        header.alertBtn:SetChecked(alertEnabled)
+                    end
                 end
 
                 if parent.RefreshZoneTodos then parent.RefreshZoneTodos() end
@@ -965,25 +1048,70 @@ function ns.UI.CreateZonesTab(parent)
             local aN = alertBtn:CreateTexture(nil, "BACKGROUND")
             aN:SetAllPoints()
             aN:SetTexture(MEDIA .. "icon-alert.png")
-            aN:SetDesaturated(not zone.data.isNew)
-            aN:SetAlpha(zone.data.isNew and 1.0 or 0.3)
+            local alertOn = zone.data.alertEnabled ~= false
+            aN:SetDesaturated(not alertOn)
+            aN:SetAlpha(alertOn and 1.0 or 0.3)
             alertBtn:SetNormalTexture(aN)
             alertBtn:SetScript("OnClick", function(self)
                 if ns.Zones then
                     local zoneData = ns.Zones:GetZone(zone.name)
                     if zoneData then
-                        zoneData.isNew = not zoneData.isNew
-                        aN:SetDesaturated(not zoneData.isNew)
-                        aN:SetAlpha(zoneData.isNew and 1.0 or 0.3)
+                        local wasEnabled = zoneData.alertEnabled ~= false
+                        zoneData.alertEnabled = not wasEnabled
+                        aN:SetDesaturated(wasEnabled)
+                        aN:SetAlpha(wasEnabled and 0.3 or 1.0)
                         ns.Zones:SaveZone(zone.name, zoneData)
-                        parent.RefreshZonesList()
                     end
                 end
             end)
+            alertBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["TOOLTIP_ZONE_ALERT"] or "Zone Alert", 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_ZONE_ALERT_DESC"] or "Toggle zone entry alert.", 0.8, 0.8, 0.8, true)
+                GameTooltip:Show()
+            end)
+            alertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+            local pinListBtn = CreateFrame("Button", nil, row)
+            pinListBtn:SetSize(18, 18)
+            pinListBtn:SetPoint("RIGHT", alertBtn, "LEFT", -2, 0)
+            local pN = pinListBtn:CreateTexture(nil, "BACKGROUND")
+            pN:SetAllPoints()
+            pN:SetTexture(MEDIA .. "icon-pin.png")
+            pN:SetDesaturated(not zone.data.pinEnabled)
+            pN:SetAlpha(zone.data.pinEnabled and 1.0 or 0.3)
+            pinListBtn:SetNormalTexture(pN)
+            pinListBtn:SetScript("OnClick", function(self)
+                if ns.Zones and ns.ZonePins then
+                    local zoneData = ns.Zones:GetZone(zone.name)
+                    if zoneData then
+                        if zoneData.pinEnabled then
+                            ns.ZonePins:HideZonePin(zone.name)
+                            zoneData.pinEnabled = false
+                        else
+                            zoneData.pinEnabled = true
+                            ns.ZonePins:ShowZonePin(zone.name, zoneData)
+                        end
+                        pN:SetDesaturated(not zoneData.pinEnabled)
+                        pN:SetAlpha(zoneData.pinEnabled and 1.0 or 0.3)
+                        ns.Zones:SaveZone(zone.name, zoneData)
+                        if selectedZone == zone.name then
+                            ShowEditor()
+                        end
+                    end
+                end
+            end)
+            pinListBtn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["TOOLTIP_NOTE_PIN"] or "Pin", 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_PIN_DESC"] or "Pin this zone.", 0.8, 0.8, 0.8, true)
+                GameTooltip:Show()
+            end)
+            pinListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
             local favBtn = CreateFrame("Button", nil, row)
             favBtn:SetSize(18, 18)
-            favBtn:SetPoint("RIGHT", alertBtn, "LEFT", -2, 0)
+            favBtn:SetPoint("RIGHT", pinListBtn, "LEFT", -2, 0)
             local fN2 = favBtn:CreateTexture(nil, "BACKGROUND")
             fN2:SetAllPoints()
             fN2:SetTexture(MEDIA .. "icon-fav.png")
@@ -1058,6 +1186,11 @@ function ns.UI.CreateZonesTab(parent)
 
             row:EnableMouse(true)
             row:SetScript("OnMouseDown", function()
+                if zone.data.isNew then
+                    zone.data.isNew = false
+                    zone.data.newTimestamp = nil
+                    if ns.Zones then ns.Zones:SaveZone(zone.name, zone.data) end
+                end
                 selectedZone = zone.name
                 ShowEditor()
                 parent.RefreshZonesList()

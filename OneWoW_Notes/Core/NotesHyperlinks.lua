@@ -304,10 +304,12 @@ function ns.UI.CreateNotesHelpPanel()
     local pinsContent  = CreateFrame("Frame", nil, helpPanel)
     pinsContent:Hide()
 
-    local tabBtns, tabsBottomY = OneWoW_GUI:CreateFitFrameButtons(helpPanel, tabAreaTop, {
-        { text = L["UI_HELP_TAB_LINKS"], value = "links", isActive = true },
-        { text = L["UI_HELP_TAB_PINS"],  value = "pins"                   },
-    }, {
+    local tabBtns, tabsBottomY = OneWoW_GUI:CreateFitFrameButtons(helpPanel, {
+        yOffset  = tabAreaTop,
+        items    = {
+            { text = L["UI_HELP_TAB_LINKS"], value = "links", isActive = true },
+            { text = L["UI_HELP_TAB_PINS"],  value = "pins"                   },
+        },
         height   = 28,
         gap      = 4,
         marginX  = EDGE,

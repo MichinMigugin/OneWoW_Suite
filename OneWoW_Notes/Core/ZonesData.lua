@@ -16,6 +16,7 @@ local lastAlertedZone = nil
 local lastAlertTime   = 0
 local currentZone     = ""
 local currentSubZone  = ""
+local currentInstanceID = nil
 
 function Zones:Initialize()
     local addon = _G.OneWoW_Notes
@@ -42,6 +43,18 @@ function Zones:EnableScanning()
     addon:RegisterEvent("ZONE_CHANGED",          onZone)
     addon:RegisterEvent("ZONE_CHANGED_INDOORS",  onZone)
     addon:RegisterEvent("PLAYER_ENTERING_WORLD", onZone)
+
+    if not self.periodicTimer then
+        self.periodicTimer = C_Timer.NewTicker(2, function()
+            if not scanningEnabled then return end
+            local newZone = GetZoneText()
+            local newSubZone = GetSubZoneText()
+            local _, _, _, _, _, _, _, newInstanceID = GetInstanceInfo()
+            if newZone ~= currentZone or newSubZone ~= currentSubZone or newInstanceID ~= currentInstanceID then
+                Zones:CheckZoneAlerts()
+            end
+        end)
+    end
 end
 
 function Zones:IsScanning()
@@ -57,30 +70,58 @@ function Zones:DisableScanning()
     pcall(function() addon:UnregisterEvent("ZONE_CHANGED") end)
     pcall(function() addon:UnregisterEvent("ZONE_CHANGED_INDOORS") end)
     pcall(function() addon:UnregisterEvent("PLAYER_ENTERING_WORLD") end)
+    if self.periodicTimer then
+        self.periodicTimer:Cancel()
+        self.periodicTimer = nil
+    end
 end
 
 function Zones:CheckZoneAlerts()
     if not scanningEnabled then return end
     local now = GetTime()
+    if (now - lastAlertTime) < 5 then return end
 
     local zoneText    = GetZoneText()    or ""
     local subZoneText = GetSubZoneText() or ""
+    local _, instanceType, _, _, _, _, _, instanceID = GetInstanceInfo()
 
-    local mainZoneChanged = (zoneText    ~= currentZone)
-    local subZoneChanged  = (subZoneText ~= currentSubZone)
+    local previousZone       = currentZone
+    local previousSubZone    = currentSubZone
+    local previousInstanceID = currentInstanceID
 
-    if not mainZoneChanged and not subZoneChanged then return end
+    currentZone       = zoneText
+    currentSubZone    = subZoneText
+    currentInstanceID = instanceID
 
-    currentZone    = zoneText
-    currentSubZone = subZoneText
+    local fullZone = zoneText
+    if subZoneText ~= "" and subZoneText ~= zoneText then
+        fullZone = zoneText .. " - " .. subZoneText
+    end
 
-    -- Hide zone pins that no longer match where the player is
-    if ns.ZonePins then
+    local previousFullZone = previousZone or ""
+    if previousSubZone and previousSubZone ~= "" and previousSubZone ~= previousZone then
+        previousFullZone = previousZone .. " - " .. previousSubZone
+    end
+
+    local mainZoneChanged = (previousZone ~= zoneText)
+    local subZoneChanged  = (previousSubZone ~= subZoneText)
+    local instanceChanged = (previousInstanceID ~= instanceID)
+
+    if not mainZoneChanged and not subZoneChanged and not instanceChanged then return end
+
+    local shouldHidePins = false
+    if instanceType == "party" or instanceType == "raid" or instanceType == "scenario" then
+        shouldHidePins = instanceChanged
+    else
+        shouldHidePins = (mainZoneChanged or subZoneChanged or fullZone ~= previousFullZone)
+    end
+
+    if shouldHidePins and ns.ZonePins then
         local addon = _G.OneWoW_Notes
         if addon.zonePins then
             local toHide = {}
             for zoneName in pairs(addon.zonePins) do
-                if zoneName ~= zoneText and zoneName ~= subZoneText then
+                if zoneName ~= fullZone and zoneName ~= zoneText and zoneName ~= subZoneText then
                     table.insert(toHide, zoneName)
                 end
             end
@@ -107,31 +148,37 @@ function Zones:CheckZoneAlerts()
             local dismissed = zoneData.dismissedUntil and GetTime() < zoneData.dismissedUntil
             if not dismissed then
                 if not (lastAlertedZone == key and (now - lastAlertTime) < 30) then
-                    if (now - lastAlertTime) >= 5 then
-                        lastAlertTime   = now
-                        lastAlertedZone = key
-                        print("|cFFFFD100OneWoW - Zones:|r " .. (L["NOTES_ZONE_ALERT_ARRIVED"] or "Zone:") .. " " .. key)
-                        PlaySound(SOUNDKIT.RAID_WARNING)
-                        if _G.OneWoW and _G.OneWoW.Toasts and _G.OneWoW.Toasts.FireZoneAlert then
-                            local preview = (zoneData.content and zoneData.content ~= "") and zoneData.content:sub(1, 60) or nil
-                            _G.OneWoW.Toasts.FireZoneAlert(key, preview)
-                        end
+                    lastAlertTime   = now
+                    lastAlertedZone = key
+                    print("|cFFFFD100OneWoW - Zones:|r " .. (L["NOTES_ZONE_ALERT_ARRIVED"] or "Zone:") .. " " .. key)
+                    PlaySound(SOUNDKIT.RAID_WARNING)
+                    if _G.OneWoW and _G.OneWoW.Toasts and _G.OneWoW.Toasts.FireZoneAlert then
+                        local preview = (zoneData.content and zoneData.content ~= "") and zoneData.content:sub(1, 60) or nil
+                        _G.OneWoW.Toasts.FireZoneAlert(key, preview)
                     end
                 end
             end
         end
     end
 
-    if mainZoneChanged and zoneText ~= "" and allZones[zoneText] then
-        tryZone(zoneText)
+    if allZones[fullZone] then
+        tryZone(fullZone)
     end
-    if subZoneChanged and subZoneText ~= "" and subZoneText ~= zoneText and allZones[subZoneText] then
+    if subZoneText ~= "" and subZoneText ~= zoneText and allZones[subZoneText] then
         tryZone(subZoneText)
+    end
+    if allZones[zoneText] then
+        tryZone(zoneText)
     end
 end
 
 function Zones:GetCurrentZoneName()
-    return GetZoneText() or ""
+    local zoneText = GetZoneText() or ""
+    local subZoneText = GetSubZoneText() or ""
+    if subZoneText ~= "" and subZoneText ~= zoneText then
+        return zoneText .. " - " .. subZoneText
+    end
+    return zoneText
 end
 
 function Zones:GetParentZoneName()
