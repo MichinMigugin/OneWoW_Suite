@@ -81,7 +81,7 @@ local function ShowResults(results)
         local pathStr = type(entry.path) == "function" and entry.path() or entry.path
         local descStr = type(entry.desc) == "function" and entry.desc() or entry.desc
 
-        local pathText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local pathText = OneWoW_GUI:CreateFS(row, 10)
         pathText:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -8)
         pathText:SetPoint("RIGHT", row, "RIGHT", installed and -8 or -90, 0)
         pathText:SetJustifyH("LEFT")
@@ -89,17 +89,17 @@ local function ShowResults(results)
         if installed then
             pathText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
-            pathText:SetTextColor(0.42, 0.42, 0.42, 1)
+            pathText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
         if not installed then
-            local badge = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local badge = OneWoW_GUI:CreateFS(row, 10)
             badge:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -8)
             badge:SetText("Not Installed")
-            badge:SetTextColor(0.38, 0.38, 0.38, 1)
+            badge:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
-        local descText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local descText = OneWoW_GUI:CreateFS(row, 10)
         descText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 8, 8)
         descText:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -8, 8)
         descText:SetJustifyH("LEFT")
@@ -107,7 +107,7 @@ local function ShowResults(results)
         if installed then
             descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         else
-            descText:SetTextColor(0.32, 0.32, 0.32, 1)
+            descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
         if i < #results then
@@ -115,13 +115,13 @@ local function ShowResults(results)
             sep:SetHeight(1)
             sep:SetPoint("TOPLEFT", resultsFrame, "TOPLEFT", 4, -(pad + i * rowH))
             sep:SetPoint("TOPRIGHT", resultsFrame, "TOPRIGHT", -4, -(pad + i * rowH))
-            sep:SetColorTexture(0.15, 0.18, 0.15, 1)
+            sep:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         end
 
         if installed then
             row:EnableMouse(true)
             row:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(0.10, 0.18, 0.10, 1)
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
             end)
             row:SetScript("OnLeave", function(self)
                 self:SetBackdropColor(0, 0, 0, 0)
@@ -219,9 +219,9 @@ function Search:Init(titleBar, closeBtn)
     box:SetSize(200, 14)
     box:SetPoint("RIGHT", closeBtn, "LEFT", -6, 0)
     box:SetBackdrop(BACKDROP_INNER)
-    box:SetBackdropColor(0.04, 0.05, 0.04, 1)
+    box:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     box:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    box:SetFontObject(GameFontHighlightSmall)
+    OneWoW_GUI:ApplyFont(box, 10)
     box:SetTextInsets(6, 6, 0, 0)
     box:SetAutoFocus(false)
     box:EnableMouse(true)
@@ -283,7 +283,7 @@ function Search:Init(titleBar, closeBtn)
     drop:SetFrameStrata("FULLSCREEN_DIALOG")
     drop:SetFrameLevel(100)
     drop:SetBackdrop(BACKDROP_INNER)
-    drop:SetBackdropColor(0.04, 0.05, 0.04, 0.98)
+    drop:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     drop:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     drop:SetPoint("TOPRIGHT", box, "BOTTOMRIGHT", 0, -2)
 

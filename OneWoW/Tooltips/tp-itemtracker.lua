@@ -60,6 +60,8 @@ local function GetClassColor(class)
     return 0.9, 0.9, 0.9
 end
 
+OneWoW.GetClassColor = GetClassColor
+
 local function AggregateLocations(locations, cfg)
     local chars   = {}
     local warband = 0

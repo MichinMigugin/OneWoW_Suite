@@ -53,7 +53,7 @@ local function CreateSoundDropdown(dsc, dbSection, yOffset)
         getActiveValue = function() return section.sound end,
     })
 
-    local playBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TOAST_SOUND_PLAY_BTN"] or "Play", width = 48, height = 26 })
+    local playBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["TOAST_SOUND_PLAY_BTN"] or "Play", height = 26 })
     playBtn:SetPoint("LEFT", dropBtn, "RIGHT", 6, 0)
     playBtn:SetScript("OnClick", function()
         local soundId = section.sound or 0
@@ -68,7 +68,7 @@ end
 local function AddGeneralExtras(dsc, yOffset)
     yOffset = OneWoW_GUI:CreateSection(dsc, { title = "Anchor Position", yOffset = yOffset })
 
-    local infoText = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local infoText = OneWoW_GUI:CreateFS(dsc, 12)
     infoText:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     infoText:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     infoText:SetJustifyH("LEFT")
@@ -77,7 +77,7 @@ local function AddGeneralExtras(dsc, yOffset)
     infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - infoText:GetStringHeight() - 10
 
-    local showAnchorBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TOAST_ANCHOR_SHOW_BTN"] or "Show Anchor", width = 120, height = 28 })
+    local showAnchorBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["TOAST_ANCHOR_SHOW_BTN"] or "Show Anchor", height = 28 })
     showAnchorBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     showAnchorBtn:SetScript("OnClick", function(self)
         local Toasts = OneWoW.Toasts
@@ -131,14 +131,10 @@ local function AddDetectionExtras(dsc, yOffset)
 end
 
 local function AddInstanceExtras(dsc, yOffset)
-    local div = dsc:CreateTexture(nil, "ARTWORK")
-    div:SetHeight(1)
-    div:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local infoText = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local infoText = OneWoW_GUI:CreateFS(dsc, 12)
     infoText:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     infoText:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     infoText:SetJustifyH("LEFT")
@@ -190,7 +186,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -198,14 +194,10 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local divider = dsc:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    divider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -215,57 +207,35 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
-
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
-        OneWoW.SettingsFeatureRegistry:SetEnabled(tabName, feature.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-
-        local tdb = GetToastsDB()
-        if tdb then
-            if feature.id == "general" then
-                tdb.enabled = nowEnabled
-            elseif feature.id == "detectiontypes" and tdb.loot then
-                tdb.loot.enabled = nowEnabled
-            elseif feature.id == "notealerts" and tdb.notes then
-                tdb.notes.enabled = nowEnabled
-            elseif feature.id == "instances" and tdb.instance then
-                tdb.instance.enabled = nowEnabled
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled(tabName, feature.id, newState)
+            local tdb = GetToastsDB()
+            if tdb then
+                if feature.id == "general" then
+                    tdb.enabled = newState
+                elseif feature.id == "detectiontypes" and tdb.loot then
+                    tdb.loot.enabled = newState
+                elseif feature.id == "notealerts" and tdb.notes then
+                    tdb.notes.enabled = newState
+                elseif feature.id == "instances" and tdb.instance then
+                    tdb.instance.enabled = newState
+                end
             end
-        end
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
+            end
+        end,
+    })
 
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            selectedRow.dot:SetStatus(nowEnabled)
-        end
-    end)
-
-    yOffset = yOffset - 30 - 14
+    yOffset = statusBlock.getBottomY() - 14
 
     if feature.id == "general" then
         yOffset = AddGeneralExtras(dsc, yOffset)
@@ -279,7 +249,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     dsc:SetHeight(math.abs(yOffset) + 40)
     split.UpdateDetailThumb()
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
 end
 
 local function BuildFeatureList(split, tabName)
@@ -362,6 +332,6 @@ function GUI:CreateToastAlertsTab(parent)
 
     C_Timer.After(0.1, function()
         BuildFeatureList(split, "toastalerts")
-        GUI:ApplyFontToFrame(parent)
+        OneWoW_GUI:ApplyFontToFrame(parent)
     end)
 end

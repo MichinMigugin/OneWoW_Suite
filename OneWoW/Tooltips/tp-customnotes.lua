@@ -1,7 +1,34 @@
 local ADDON_NAME, OneWoW = ...
 
-local function GetNotesAddon()
+OneWoW.NoteLookup = {}
+
+function OneWoW.NoteLookup.GetNotesAddon()
     return _G.OneWoW_Notes
+end
+
+function OneWoW.NoteLookup.GetPlayerFullName(unit)
+    if not unit then return nil end
+    local name, realm = UnitName(unit)
+    if not name then return nil end
+    if not realm or realm == "" then realm = GetRealmName() or "Unknown" end
+    return name .. "-" .. realm
+end
+
+function OneWoW.NoteLookup.FindNoteData(category, key)
+    local notesAddon = OneWoW.NoteLookup.GetNotesAddon()
+    if not notesAddon or not notesAddon.db then return nil end
+
+    local charData = notesAddon.db.char and notesAddon.db.char[category]
+    if charData and charData[key] and type(charData[key]) == "table" then
+        return charData[key]
+    end
+
+    local globalData = notesAddon.db.global and notesAddon.db.global[category]
+    if globalData and globalData[key] and type(globalData[key]) == "table" then
+        return globalData[key]
+    end
+
+    return nil
 end
 
 local function IsSubToggleEnabled(key)
@@ -29,70 +56,24 @@ local function GetTooltipLines(noteData)
 end
 
 local function LookupItemNote(itemID)
-    local notesAddon = GetNotesAddon()
-    if not notesAddon or not notesAddon.db then return nil end
-
-    local charItems = notesAddon.db.char and notesAddon.db.char.items
-    if charItems and charItems[itemID] and type(charItems[itemID]) == "table" then
-        local lines = GetTooltipLines(charItems[itemID])
-        if lines then return lines end
-    end
-
-    local globalItems = notesAddon.db.global and notesAddon.db.global.items
-    if globalItems and globalItems[itemID] and type(globalItems[itemID]) == "table" then
-        local lines = GetTooltipLines(globalItems[itemID])
-        if lines then return lines end
-    end
-
-    return nil
+    local noteData = OneWoW.NoteLookup.FindNoteData("items", itemID)
+    return noteData and GetTooltipLines(noteData) or nil
 end
 
 local function LookupPlayerNote(unit)
-    if not unit then return nil end
-    local notesAddon = GetNotesAddon()
-    if not notesAddon or not notesAddon.db then return nil end
-
-    local name, realm = UnitName(unit)
-    if not name then return nil end
-    if not realm or realm == "" then realm = GetRealmName() or "Unknown" end
-    local fullName = name .. "-" .. realm
-
-    local charPlayers = notesAddon.db.char and notesAddon.db.char.players
-    if charPlayers and charPlayers[fullName] and type(charPlayers[fullName]) == "table" then
-        local lines = GetTooltipLines(charPlayers[fullName])
-        if lines then return lines end
-    end
-
-    local globalPlayers = notesAddon.db.global and notesAddon.db.global.players
-    if globalPlayers and globalPlayers[fullName] and type(globalPlayers[fullName]) == "table" then
-        local lines = GetTooltipLines(globalPlayers[fullName])
-        if lines then return lines end
-    end
-
-    return nil
+    local fullName = OneWoW.NoteLookup.GetPlayerFullName(unit)
+    if not fullName then return nil end
+    local noteData = OneWoW.NoteLookup.FindNoteData("players", fullName)
+    return noteData and GetTooltipLines(noteData) or nil
 end
 
 local function LookupNPCNote(npcID)
-    local notesAddon = GetNotesAddon()
-    if not notesAddon or not notesAddon.db then return nil end
-
-    local charNPCs = notesAddon.db.char and notesAddon.db.char.npcs
-    if charNPCs and charNPCs[npcID] and type(charNPCs[npcID]) == "table" then
-        local lines = GetTooltipLines(charNPCs[npcID])
-        if lines then return lines end
-    end
-
-    local globalNPCs = notesAddon.db.global and notesAddon.db.global.npcs
-    if globalNPCs and globalNPCs[npcID] and type(globalNPCs[npcID]) == "table" then
-        local lines = GetTooltipLines(globalNPCs[npcID])
-        if lines then return lines end
-    end
-
-    return nil
+    local noteData = OneWoW.NoteLookup.FindNoteData("npcs", npcID)
+    return noteData and GetTooltipLines(noteData) or nil
 end
 
 local function CustomNotesProvider(tooltip, context)
-    if not GetNotesAddon() then return nil end
+    if not OneWoW.NoteLookup.GetNotesAddon() then return nil end
 
     local config = OneWoW.TooltipEngine.TOOLTIP_CONFIG
     local noteLines = nil

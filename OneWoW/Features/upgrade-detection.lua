@@ -136,11 +136,15 @@ local function CanClassUseShield(class)
     return SHIELD_CLASSES[class] == true
 end
 
+local function CanClassUseOffhand(class)
+    return OFFHAND_CLASSES[class] == true
+end
+
 local function HasTwoHanderEquipped()
     local mainHandLink = GetInventoryItemLink("player", 16)
     if not mainHandLink then return false end
     local _, _, _, equipLoc = C_Item.GetItemInfoInstant(mainHandLink)
-    return equipLoc == "INVTYPE_2HWEAPON"
+    return equipLoc == "INVTYPE_2HWEAPON" or equipLoc == "INVTYPE_RANGEDRIGHT" or equipLoc == "INVTYPE_RANGED"
 end
 
 local function CanPlayerUseItem(itemLink)
@@ -153,6 +157,10 @@ local function CanPlayerUseItem(itemLink)
 
     if equipLoc == "INVTYPE_SHIELD" then
         if not CanClassUseShield(playerClass) then return false end
+    end
+
+    if equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND" then
+        if not CanClassUseOffhand(playerClass) then return false end
     end
 
     if equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND" or equipLoc == "INVTYPE_SHIELD" then
@@ -473,6 +481,10 @@ function UpgradeDetection:IsItemUpgradeForAlt(itemID, itemLink, altData)
 
     if equipLoc == "INVTYPE_SHIELD" then
         if not CanClassUseShield(altClass) then return nil end
+    end
+
+    if equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND" then
+        if not CanClassUseOffhand(altClass) then return nil end
     end
 
     if classID == Enum.ItemClass.Armor then

@@ -24,19 +24,7 @@ function GUI:CreatePortalsTab(parent)
 	controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 	controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-	if not OneWoW.db.global.portalHub then
-		OneWoW.db.global.portalHub = {}
-	end
 	local ph = OneWoW.db.global.portalHub
-	if ph.escPortalsEnabled == nil then ph.escPortalsEnabled = true end
-	if ph.randomHearthstone == nil then ph.randomHearthstone = true end
-	if ph.showAll == nil then ph.showAll = true end
-	if ph.showAllOnEsc == nil then ph.showAllOnEsc = false end
-	if ph.showSeasonal == nil then ph.showSeasonal = true end
-	if ph.showDalaranHearth == nil then ph.showDalaranHearth = true end
-	if ph.showGarrisonHearth == nil then ph.showGarrisonHearth = true end
-	if ph.showFlightWhistle == nil then ph.showFlightWhistle = true end
-	if ph.showHousingPortal == nil then ph.showHousingPortal = true end
 
 	local escCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show Portals on ESC"] })
 	escCheckbox:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -5)
@@ -92,7 +80,7 @@ function GUI:CreatePortalsTab(parent)
 
 	local showSeasonalLabel = showSeasonalCheckbox.label
 
-	local topRowLabel = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	local topRowLabel = OneWoW_GUI:CreateFS(controlPanel, 10)
 	topRowLabel:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 12, -32)
 	topRowLabel:SetText(L["PORTAL_ESC_TOP_ROW"])
 	topRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -151,18 +139,15 @@ function GUI:CreatePortalsTab(parent)
 	categoryPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
 	categoryPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-	local categoryTitle = categoryPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	local categoryTitle = OneWoW_GUI:CreateFS(categoryPanel, 16)
 	categoryTitle:SetPoint("TOP", categoryPanel, "TOP", 0, -10)
 	categoryTitle:SetText(L["Categories"])
 	categoryTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-	local categoryScrollFrame = CreateFrame("ScrollFrame", nil, categoryPanel, "UIPanelScrollFrameTemplate")
+	local categoryScrollFrame, categoryScrollChild = OneWoW_GUI:CreateScrollFrame(categoryPanel, {})
+	categoryScrollFrame:ClearAllPoints()
 	categoryScrollFrame:SetPoint("TOPLEFT", categoryPanel, "TOPLEFT", 10, -40)
 	categoryScrollFrame:SetPoint("BOTTOMRIGHT", categoryPanel, "BOTTOMRIGHT", -30, 10)
-
-	local categoryScrollChild = CreateFrame("Frame", nil, categoryScrollFrame)
-	categoryScrollChild:SetSize(categoryScrollFrame:GetWidth(), 1)
-	categoryScrollFrame:SetScrollChild(categoryScrollChild)
 
 	local portalPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
 	portalPanel:SetPoint("TOPLEFT", categoryPanel, "TOPRIGHT", 10, 0)
@@ -171,19 +156,16 @@ function GUI:CreatePortalsTab(parent)
 	portalPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
 	portalPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-	local portalTitle = portalPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	local portalTitle = OneWoW_GUI:CreateFS(portalPanel, 16)
 	portalTitle:SetPoint("TOP", portalPanel, "TOP", 0, -10)
 	portalTitle:SetText(L["Select a Category"])
 	portalTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 	portalPanel.title = portalTitle
 
-	local portalScrollFrame = CreateFrame("ScrollFrame", nil, portalPanel, "UIPanelScrollFrameTemplate")
+	local portalScrollFrame, portalScrollChild = OneWoW_GUI:CreateScrollFrame(portalPanel, {})
+	portalScrollFrame:ClearAllPoints()
 	portalScrollFrame:SetPoint("TOPLEFT", portalPanel, "TOPLEFT", 10, -40)
 	portalScrollFrame:SetPoint("BOTTOMRIGHT", portalPanel, "BOTTOMRIGHT", -30, 10)
-
-	local portalScrollChild = CreateFrame("Frame", nil, portalScrollFrame)
-	portalScrollChild:SetSize(portalScrollFrame:GetWidth(), 1)
-	portalScrollFrame:SetScrollChild(portalScrollChild)
 	portalPanel.scrollChild = portalScrollChild
 
 	local secureOverlay = CreateFrame("ScrollFrame", nil, UIParent)
@@ -239,7 +221,7 @@ function GUI:CreatePortalsTab(parent)
 	leftStatusBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 	leftStatusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-	local leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	local leftStatusText = OneWoW_GUI:CreateFS(leftStatusBar, 10)
 	leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
 	leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 	leftStatusText:SetText("")
@@ -252,7 +234,7 @@ function GUI:CreatePortalsTab(parent)
 	rightStatusBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 	rightStatusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-	local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	local rightStatusText = OneWoW_GUI:CreateFS(rightStatusBar, 10)
 	rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
 	rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 	rightStatusText:SetText("")
@@ -533,7 +515,7 @@ function GUI:CreatePortalsTab(parent)
 				header:SetPoint("TOPLEFT", portalScrollChild, "TOPLEFT", 0, yOffset - 10)
 				header:SetSize(portalScrollChild:GetWidth(), 30)
 
-				local headerText = header:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+				local headerText = OneWoW_GUI:CreateFS(header, 16)
 				headerText:SetPoint("LEFT", header, "LEFT", 5, 0)
 				headerText:SetText(portal.name)
 				headerText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -664,7 +646,7 @@ function GUI:CreatePortalsTab(parent)
 				icon:SetPoint("LEFT", categoryFrame, "LEFT", 8, 0)
 				icon:SetTexture(category.icon)
 
-				local nameText = categoryFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+				local nameText = OneWoW_GUI:CreateFS(categoryFrame, 12)
 				nameText:SetPoint("LEFT", icon, "RIGHT", 8, 0)
 				nameText:SetText(category.name)
 				nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -727,7 +709,7 @@ function GUI:CreatePortalsTab(parent)
 							subcatFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
 							subcatFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-							local subcatText = subcatFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+							local subcatText = OneWoW_GUI:CreateFS(subcatFrame, 10)
 							subcatText:SetPoint("LEFT", subcatFrame, "LEFT", 10, 0)
 							subcatText:SetText(subcat.name)
 							subcatText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))

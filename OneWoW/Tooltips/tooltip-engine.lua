@@ -47,22 +47,11 @@ function TooltipEngine:Initialize()
 end
 
 function TooltipEngine:EnsureDefaults()
-    local db = OneWoW.db and OneWoW.db.global
-    if not db then return end
-    if not db.settings then db.settings = {} end
-    if not db.settings.tooltips then db.settings.tooltips = {} end
-    if not db.settings.tooltips.general then
-        db.settings.tooltips.general = { enabled = true }
-    end
-    if db.settings.tooltips.general.enabled == nil then
-        db.settings.tooltips.general.enabled = true
-    end
 end
 
 function TooltipEngine:IsEnabled()
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    if not db or not db.tooltips then return false end
-    if not db.tooltips.general then return false end
+    if not db or not db.tooltips or not db.tooltips.general then return false end
     return db.tooltips.general.enabled == true
 end
 

@@ -1,5 +1,7 @@
 local ADDON_NAME, OneWoW = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
 OneWoW.OverlayEngine = {}
 local Engine = OneWoW.OverlayEngine
 
@@ -409,10 +411,9 @@ local function ApplyItemLevelToButton(button, item, itemLink, classID, itemLocat
 
     if not button.onewow_ilvl then
         local container = GetOrCreateContainer(button)
-        button.onewow_ilvl = container:CreateFontString(nil, "OVERLAY")
+        button.onewow_ilvl = OneWoW_GUI:CreateFS(container, 10)
     end
-    local _guiLib = LibStub("OneWoW_GUI-1.0", true)
-    local fontPath = (_guiLib and _guiLib.GetFont and _guiLib:GetFont()) or "Fonts\\FRIZQT__.TTF"
+    local fontPath = (OneWoW_GUI and OneWoW_GUI.GetFont and OneWoW_GUI:GetFont()) or "Fonts\\FRIZQT__.TTF"
     local fontName = cfg.fontFamily
     if fontName then
         local LSM = LibStub("LibSharedMedia-3.0", true)
@@ -423,7 +424,7 @@ local function ApplyItemLevelToButton(button, item, itemLink, classID, itemLocat
             end
         end
     end
-    button.onewow_ilvl:SetFont(fontPath, cfg.fontSize or 10, cfg.fontOutline or "OUTLINE")
+    OneWoW_GUI:SafeSetFont(button.onewow_ilvl, fontPath, cfg.fontSize or 10, cfg.fontOutline or "OUTLINE")
 
     local position  = cfg.position or "TOPRIGHT"
     local container = GetOrCreateContainer(button)
@@ -441,7 +442,7 @@ local function ApplyItemLevelToButton(button, item, itemLink, classID, itemLocat
         local r, g, b = C_Item.GetItemQualityColor(quality)
         button.onewow_ilvl:SetTextColor(r, g, b)
     else
-        button.onewow_ilvl:SetTextColor(1, 0.82, 0)
+        button.onewow_ilvl:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     end
 
     button.onewow_ilvl:SetText(tostring(ilvl))

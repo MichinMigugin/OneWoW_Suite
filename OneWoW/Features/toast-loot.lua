@@ -80,8 +80,8 @@ local function OnNewToy(itemID)
     if not itemID or itemID <= 0 then return end
     if not PlayerHasToy or not PlayerHasToy(itemID) then return end
 
-    local name = (C_ToyBox and C_ToyBox.GetToyInfo and C_ToyBox.GetToyInfo(itemID)) or GetItemInfo(itemID)
-    local icon = (C_Item and C_Item.GetItemIconByID and C_Item.GetItemIconByID(itemID)) or select(10, GetItemInfo(itemID))
+    local name = (C_ToyBox and C_ToyBox.GetToyInfo and C_ToyBox.GetToyInfo(itemID)) or C_Item.GetItemInfo(itemID)
+    local icon = (C_Item and C_Item.GetItemIconByID and C_Item.GetItemIconByID(itemID)) or select(10, C_Item.GetItemInfo(itemID))
     if not name then return end
 
     FireLootToast("toy", name, icon, nil)

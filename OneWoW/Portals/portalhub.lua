@@ -10,38 +10,6 @@ function PortalHub:Initialize()
 end
 
 function PortalHub:InitializeDatabase()
-	if not OneWoW.db.global.portalHub then
-		OneWoW.db.global.portalHub = {}
-	end
-
-	local defaults = {
-		escEnabled = true,
-		escPosition = "RIGHT",
-		escIconSize = 40,
-		showHearthstone = true,
-		randomHearthstone = true,
-		showDalaranHearth = true,
-		showGarrisonHearth = true,
-		showFlightWhistle = true,
-		showHousingPortal = true,
-		escFavorites = {},
-		allFavorites = {},
-		iconSize = 40,
-		showAll = false,
-		showAllOnEsc = false,
-		gridColumns = 12,
-		lastCategory = "favorites",
-		cache = {
-			available = {},
-			lastUpdate = 0,
-		},
-	}
-
-	for key, value in pairs(defaults) do
-		if OneWoW.db.global.portalHub[key] == nil then
-			OneWoW.db.global.portalHub[key] = value
-		end
-	end
 end
 
 local function CategorizePortal(portalData)

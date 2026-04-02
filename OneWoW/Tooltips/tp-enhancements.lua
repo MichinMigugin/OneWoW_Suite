@@ -3,9 +3,6 @@ local ADDON_NAME, OneWoW = ...
 local function GetSettings()
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
     if not db or not db.tooltips then return nil end
-    if not db.tooltips.enhancements then
-        db.tooltips.enhancements = {}
-    end
     return db.tooltips.enhancements
 end
 

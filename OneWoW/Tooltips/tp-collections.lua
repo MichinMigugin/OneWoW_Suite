@@ -18,6 +18,8 @@ local ITEM_TYPE_COLORS = {
     [19] = {0.32, 0.73, 0.91},
 }
 
+OneWoW.ITEM_TYPE_COLORS = ITEM_TYPE_COLORS
+
 local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
     if not itemID or not itemLink or not classID then return nil end
 

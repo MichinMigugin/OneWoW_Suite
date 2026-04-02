@@ -1,5 +1,6 @@
 local ADDON_NAME, OneWoW = ...
 local L = OneWoW.L
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 OneWoW.EscPanels = OneWoW.EscPanels or {}
 local EscPanels = OneWoW.EscPanels
@@ -10,17 +11,18 @@ local PANEL_PADDING = 12
 local SCREEN_PAD = 10
 local CHARINFO_HEIGHT = 160
 local ALERTS_HEIGHT = 100
-local HEADER_COLOR = {1, 0.82, 0, 1}
-local TEXT_COLOR = {0.9, 0.9, 0.9, 1}
-local DIM_COLOR = {0.5, 0.5, 0.5, 1}
-local BG_COLOR = {0.1, 0.1, 0.12, 0.95}
-local BORDER_COLOR = {0.5, 0.5, 0.55, 1}
+local function HEADER_COLOR() return {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")} end
+local function TEXT_COLOR() return {OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")} end
+local function DIM_COLOR() return {OneWoW_GUI:GetThemeColor("TEXT_MUTED")} end
+local function BG_COLOR() return {OneWoW_GUI:GetThemeColor("BG_PRIMARY")} end
+local function BORDER_COLOR() return {OneWoW_GUI:GetThemeColor("BORDER_DEFAULT")} end
 
 local function GetNoteTextColor(fontColorKey, pinColorKey)
 	local notesAddon = _G.OneWoW_Notes
 	local PIN_COLORS = notesAddon and notesAddon.Config and notesAddon.Config.PIN_COLORS
 	if not PIN_COLORS then
-		return TEXT_COLOR[1], TEXT_COLOR[2], TEXT_COLOR[3]
+		local tc = TEXT_COLOR()
+		return tc[1], tc[2], tc[3]
 	end
 	local pinConfig = PIN_COLORS[pinColorKey] or PIN_COLORS["hunter"]
 	if fontColorKey == "match" then
@@ -46,14 +48,7 @@ local panelFrames = {}
 local dimOverlay = nil
 local panelsContainer = nil
 
-local BACKDROP_INFO = {
-	bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
-	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-	tile     = true,
-	tileSize = 16,
-	edgeSize = 16,
-	insets   = {left = 4, right = 4, top = 4, bottom = 4},
-}
+local BACKDROP_INFO = OneWoW_GUI.Constants.BACKDROP_SOFT
 
 local function GetCharacterInfo()
 	local name    = UnitName("player")
@@ -200,16 +195,16 @@ local function CreatePanel(parent, name, height)
 	local panel = CreateFrame("Frame", name, parent, "BackdropTemplate")
 	panel:SetSize(PANEL_WIDTH, height)
 	panel:SetBackdrop(BACKDROP_INFO)
-	panel:SetBackdropColor(unpack(BG_COLOR))
-	panel:SetBackdropBorderColor(unpack(BORDER_COLOR))
+	panel:SetBackdropColor(unpack(BG_COLOR()))
+	panel:SetBackdropBorderColor(unpack(BORDER_COLOR()))
 	return panel
 end
 
 local function CreateHeader(panel, textKey)
-	local header = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	local header = OneWoW_GUI:CreateFS(panel, 16)
 	header:SetPoint("TOP", panel, "TOP", 0, -PANEL_PADDING)
 	header:SetText(L[textKey])
-	header:SetTextColor(unpack(HEADER_COLOR))
+	header:SetTextColor(unpack(HEADER_COLOR()))
 	return header
 end
 
@@ -302,29 +297,29 @@ local function BuildCharacterInfoPanel(container, yOffset)
 		factionIcon:SetPoint("TOPLEFT", panel, "TOPLEFT", 15, -38)
 		panel.factionIcon = factionIcon
 
-		local nameText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+		local nameText = OneWoW_GUI:CreateFS(panel, 16)
 		nameText:SetPoint("LEFT", factionIcon, "RIGHT", 12, 8)
-		nameText:SetTextColor(1, 1, 1, 1)
+		nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 		panel.nameText = nameText
 
-		local guildText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		local guildText = OneWoW_GUI:CreateFS(panel, 12)
 		guildText:SetPoint("LEFT", factionIcon, "RIGHT", 12, -10)
-		guildText:SetTextColor(0.7, 0.7, 0.7, 1)
+		guildText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 		panel.guildText = guildText
 
-		local iLevelText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		local iLevelText = OneWoW_GUI:CreateFS(panel, 12)
 		iLevelText:SetPoint("TOPLEFT", factionIcon, "BOTTOMLEFT", 0, -12)
-		iLevelText:SetTextColor(1, 1, 1, 1)
+		iLevelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 		panel.iLevelText = iLevelText
 
-		local mplusText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		local mplusText = OneWoW_GUI:CreateFS(panel, 12)
 		mplusText:SetPoint("TOPLEFT", iLevelText, "BOTTOMLEFT", 0, -6)
-		mplusText:SetTextColor(1, 1, 1, 1)
+		mplusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 		panel.mplusText = mplusText
 
-		local goldText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		local goldText = OneWoW_GUI:CreateFS(panel, 12)
 		goldText:SetPoint("TOPLEFT", mplusText, "BOTTOMLEFT", 0, -6)
-		goldText:SetTextColor(1, 1, 1, 1)
+		goldText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 		panel.goldText = goldText
 
 		panelFrames.charInfo = panel
@@ -376,10 +371,10 @@ local function BuildAlertsPanel(container, yOffset, anchorPanel)
 		local panel = CreatePanel(container, "OneWoWEscPanelAlerts", ALERTS_HEIGHT)
 		CreateHeader(panel, "ESCPANEL_ALERTS")
 
-		local noAlertsText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		local noAlertsText = OneWoW_GUI:CreateFS(panel, 12)
 		noAlertsText:SetPoint("CENTER", panel, "CENTER", 0, -5)
 		noAlertsText:SetText(L["ESCPANEL_NO_ALERTS"])
-		noAlertsText:SetTextColor(unpack(DIM_COLOR))
+		noAlertsText:SetTextColor(unpack(DIM_COLOR()))
 		panel.noAlertsText = noAlertsText
 
 		panel.alertTexts = {}
@@ -391,9 +386,9 @@ local function BuildAlertsPanel(container, yOffset, anchorPanel)
 			icon:Hide()
 			panel.alertIcons[i] = icon
 
-			local text = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+			local text = OneWoW_GUI:CreateFS(panel, 12)
 			text:SetPoint("LEFT", icon, "RIGHT", 12, 0)
-			text:SetTextColor(1, 1, 1, 1)
+			text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 			text:Hide()
 			panel.alertTexts[i] = text
 		end
@@ -438,21 +433,19 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 	if not panelFrames.zoneNotes then
 		local panel = CreatePanel(container, "OneWoWEscPanelZoneNotes", flexHeight)
 
-		local header = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+		local header = OneWoW_GUI:CreateFS(panel, 16)
 		header:SetPoint("TOP", panel, "TOP", 0, -PANEL_PADDING)
-		header:SetTextColor(unpack(HEADER_COLOR))
+		header:SetTextColor(unpack(HEADER_COLOR()))
 		panel.header = header
 
 		panel.contentTexts = {}
 
-		local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
+		local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(panel, {})
+		scrollFrame:ClearAllPoints()
 		scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -35)
 		scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -30, 35)
+		scrollChild:SetWidth(PANEL_WIDTH - 40)
 		panel.scrollFrame = scrollFrame
-
-		local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-		scrollChild:SetSize(PANEL_WIDTH - 40, 1)
-		scrollFrame:SetScrollChild(scrollChild)
 		panel.scrollChild = scrollChild
 
 		local actionBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
@@ -507,7 +500,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 
 		if zoneData.content and zoneData.content ~= "" then
 			if not panel.contentTexts[fsIndex] then
-				local fs = panel.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+				local fs = OneWoW_GUI:CreateFS(panel.scrollChild, 12)
 				panel.contentTexts[fsIndex] = fs
 			end
 			local fs = panel.contentTexts[fsIndex]
@@ -517,7 +510,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 			fs:SetJustifyH("LEFT")
 			fs:SetWordWrap(true)
 			fs:SetText(zoneData.content)
-			fs:SetTextColor(unpack(TEXT_COLOR))
+			fs:SetTextColor(unpack(TEXT_COLOR()))
 			fs:Show()
 			contentY = contentY - fs:GetStringHeight() - 8
 			fsIndex = fsIndex + 1
@@ -534,14 +527,14 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 
 			if hasIncompleteTodos then
 				if not panel.contentTexts[fsIndex] then
-					local fs = panel.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+					local fs = OneWoW_GUI:CreateFS(panel.scrollChild, 12)
 					panel.contentTexts[fsIndex] = fs
 				end
 				local todosHeader = panel.contentTexts[fsIndex]
 				todosHeader:ClearAllPoints()
 				todosHeader:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 5, contentY)
 				todosHeader:SetText(L["ESCPANEL_ZONE_TODOS"])
-				todosHeader:SetTextColor(unpack(HEADER_COLOR))
+				todosHeader:SetTextColor(unpack(HEADER_COLOR()))
 				todosHeader:Show()
 				contentY = contentY - 18
 				fsIndex = fsIndex + 1
@@ -549,7 +542,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 				for _, todo in ipairs(zoneData.todos) do
 					if not todo.completed then
 						if not panel.contentTexts[fsIndex] then
-							local fs = panel.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+							local fs = OneWoW_GUI:CreateFS(panel.scrollChild, 10)
 							panel.contentTexts[fsIndex] = fs
 						end
 						local fs = panel.contentTexts[fsIndex]
@@ -558,7 +551,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 						fs:SetWidth(PANEL_WIDTH - 60)
 						fs:SetJustifyH("LEFT")
 						fs:SetText("  - " .. todo.text)
-						fs:SetTextColor(unpack(TEXT_COLOR))
+						fs:SetTextColor(unpack(TEXT_COLOR()))
 						fs:Show()
 						contentY = contentY - 16
 						fsIndex = fsIndex + 1
@@ -570,7 +563,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 		panel.actionBtn:SetText(L["ESCPANEL_ADD_ZONE_NOTE"])
 
 		if not panel.contentTexts[1] then
-			local fs = panel.scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+			local fs = OneWoW_GUI:CreateFS(panel.scrollChild, 10)
 			panel.contentTexts[1] = fs
 		end
 		local emptyText = panel.contentTexts[1]
@@ -579,7 +572,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 		emptyText:SetWidth(PANEL_WIDTH - 50)
 		emptyText:SetJustifyH("LEFT")
 		emptyText:SetText(L["ESCPANEL_NO_ZONE_NOTES"])
-		emptyText:SetTextColor(unpack(DIM_COLOR))
+		emptyText:SetTextColor(unpack(DIM_COLOR()))
 		emptyText:Show()
 	end
 
@@ -588,14 +581,14 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 	return panel, yOffset - flexHeight - PANEL_GAP
 end
 
-local function GetOrCreateFontString(panel, index, fontObject)
+local function GetOrCreateFontString(panel, index, fontSize)
 	if panel.contentTexts[index] then
 		local fs = panel.contentTexts[index]
 		fs:ClearAllPoints()
 		fs:Show()
 		return fs
 	end
-	local fs = panel.scrollChild:CreateFontString(nil, "OVERLAY", fontObject)
+	local fs = OneWoW_GUI:CreateFS(panel.scrollChild, fontSize)
 	panel.contentTexts[index] = fs
 	return fs
 end
@@ -609,10 +602,10 @@ local function UpdateNotesContent(panel, notesData, emptyKey)
 	local fsIndex = 1
 
 	if not notesData or #notesData == 0 then
-		local emptyText = GetOrCreateFontString(panel, fsIndex, "GameFontNormalSmall")
+		local emptyText = GetOrCreateFontString(panel, fsIndex, 10)
 		emptyText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 10, yOff)
 		emptyText:SetText(L[emptyKey])
-		emptyText:SetTextColor(unpack(DIM_COLOR))
+		emptyText:SetTextColor(unpack(DIM_COLOR()))
 		emptyText:SetJustifyH("LEFT")
 		emptyText:SetWidth(PANEL_WIDTH - 50)
 		panel.scrollChild:SetHeight(30)
@@ -626,11 +619,13 @@ local function UpdateNotesContent(panel, notesData, emptyKey)
 			tr, tg, tb = GetNoteTextColor("match", noteData.pinColor)
 			cr, cg, cb = GetNoteTextColor(noteData.fontColor or "match", noteData.pinColor)
 		else
-			tr, tg, tb = HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3]
-			cr, cg, cb = TEXT_COLOR[1], TEXT_COLOR[2], TEXT_COLOR[3]
+			local hc = HEADER_COLOR()
+			tr, tg, tb = hc[1], hc[2], hc[3]
+			local txc = TEXT_COLOR()
+			cr, cg, cb = txc[1], txc[2], txc[3]
 		end
 
-		local titleText = GetOrCreateFontString(panel, fsIndex, "GameFontNormal")
+		local titleText = GetOrCreateFontString(panel, fsIndex, 12)
 		fsIndex = fsIndex + 1
 		titleText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 10, yOff)
 		titleText:SetText(noteData.title)
@@ -640,13 +635,13 @@ local function UpdateNotesContent(panel, notesData, emptyKey)
 		yOff = yOff - 20
 
 		if noteData.content then
-			local contentText = GetOrCreateFontString(panel, fsIndex, "GameFontNormalSmall")
+			local contentText = GetOrCreateFontString(panel, fsIndex, 10)
 			fsIndex = fsIndex + 1
 			contentText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 15, yOff)
 			contentText:SetText(noteData.content)
 			contentText:SetTextColor(cr, cg, cb, 1)
 			if noteData.fontSize then
-				contentText:SetFont("Fonts\\FRIZQT__.TTF", noteData.fontSize, "")
+				OneWoW_GUI:SafeSetFont(contentText, OneWoW_GUI:GetFont(), noteData.fontSize)
 			end
 			contentText:SetJustifyH("LEFT")
 			contentText:SetWordWrap(true)
@@ -656,13 +651,13 @@ local function UpdateNotesContent(panel, notesData, emptyKey)
 
 		if noteData.tasks then
 			for _, task in ipairs(noteData.tasks) do
-				local taskText = GetOrCreateFontString(panel, fsIndex, "GameFontNormalSmall")
+				local taskText = GetOrCreateFontString(panel, fsIndex, 10)
 				fsIndex = fsIndex + 1
 				taskText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 25, yOff)
 				taskText:SetText("  - " .. task)
 				taskText:SetTextColor(cr, cg, cb, 1)
 				if noteData.fontSize then
-					taskText:SetFont("Fonts\\FRIZQT__.TTF", noteData.fontSize, "")
+					OneWoW_GUI:SafeSetFont(taskText, OneWoW_GUI:GetFont(), noteData.fontSize)
 				end
 				taskText:SetJustifyH("LEFT")
 				taskText:SetWidth(PANEL_WIDTH - 65)
@@ -681,14 +676,12 @@ local function BuildNotesPanel(container, yOffset, anchorPanel, panelKey, header
 		local panel = CreatePanel(container, "OneWoWEscPanel_" .. panelKey, flexHeight)
 		CreateHeader(panel, headerKey)
 
-		local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
+		local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(panel, {})
+		scrollFrame:ClearAllPoints()
 		scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -35)
 		scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -30, 10)
+		scrollChild:SetWidth(PANEL_WIDTH - 40)
 		panel.scrollFrame = scrollFrame
-
-		local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-		scrollChild:SetSize(PANEL_WIDTH - 40, 1)
-		scrollFrame:SetScrollChild(scrollChild)
 		panel.scrollChild = scrollChild
 
 		panel.contentTexts = {}
@@ -722,18 +715,18 @@ local function BuildInstanceToastPanel(container, yOffset, anchorPanel)
 		local header = CreateHeader(panel, "ESCPANEL_INSTANCE")
 		panel.headerText = header
 
-		local subtitle = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		local subtitle = OneWoW_GUI:CreateFS(panel, 12)
 		subtitle:SetPoint("TOP", panel, "TOP", 0, -32)
-		subtitle:SetTextColor(0.8, 0.9, 1, 1)
+		subtitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 		panel.subtitle = subtitle
 
-		local statsText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		local statsText = OneWoW_GUI:CreateFS(panel, 12)
 		statsText:SetPoint("TOP", subtitle, "BOTTOM", 0, -10)
 		statsText:SetWidth(PANEL_WIDTH - 30)
 		statsText:SetJustifyH("CENTER")
 		statsText:SetWordWrap(true)
 		statsText:SetSpacing(3)
-		statsText:SetTextColor(1, 1, 0.5, 1)
+		statsText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 		panel.statsText = statsText
 
 		panelFrames.instanceToast = panel

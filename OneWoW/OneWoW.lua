@@ -59,20 +59,16 @@ local function ApplyLanguage()
     L = OneWoW.L
 end
 
---[[ function OneWoW:ReinitForLanguage(langCode)
-    if OneWoW_GUI and OneWoW_GUI.SetSetting then
-        OneWoW_GUI:SetSetting("language", langCode)
-    else
-        self.db.global.language = langCode
-    end
-    ApplyLanguage()
-    if self.GUI then
-        self.GUI:FullReset()
+local function ResetGUIOnSettingChange(self2)
+    if not self2.GUI then return end
+    local wasShown = self2.GUI:GetMainWindow() and self2.GUI:GetMainWindow():IsShown()
+    self2.GUI:FullReset()
+    if wasShown then
         C_Timer.After(0.1, function()
-            self.GUI:Show()
+            if self2.GUI then self2.GUI:Show() end
         end)
     end
-end ]]
+end
 
 local function RegisterSlashCommands()
     SLASH_ONEWOW1 = "/ow"
@@ -91,79 +87,47 @@ function OneWoW:OnAddonLoaded(loadedAddon)
 
     self:InitializeDatabase()
 
-    --if OneWoW_GUI and OneWoW_GUI.MigrateSettings then
-        OneWoW_GUI:MigrateSettings(self.db.global)
-    --end
+    OneWoW_GUI:MigrateSettings(self.db.global)
 
     OneWoW_GUI:ApplyTheme(_G.OneWoW)
     ApplyLanguage()
     RegisterSlashCommands()
 
-    --if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
-        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
-            OneWoW_GUI:ApplyTheme(_G.OneWoW)
-            ScheduleDefaultSave()
-            if self2.GUI then
-                local wasShown = self2.GUI:GetMainWindow() and self2.GUI:GetMainWindow():IsShown()
-                self2.GUI:FullReset()
-                if wasShown then
-                    C_Timer.After(0.1, function()
-                        if self2.GUI then self2.GUI:Show() end
-                    end)
-                end
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+        OneWoW_GUI:ApplyTheme(_G.OneWoW)
+        ScheduleDefaultSave()
+        ResetGUIOnSettingChange(self2)
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+        ApplyLanguage()
+        ScheduleDefaultSave()
+        ResetGUIOnSettingChange(self2)
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(self2, hidden)
+        ScheduleDefaultSave()
+        if self2.Minimap then
+            if hidden then
+                self2.Minimap:Hide()
+            else
+                self2.Minimap:Show()
             end
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
-            ApplyLanguage()
-            ScheduleDefaultSave()
-            if self2.GUI then
-                local wasShown = self2.GUI:GetMainWindow() and self2.GUI:GetMainWindow():IsShown()
-                self2.GUI:FullReset()
-                if wasShown then
-                    C_Timer.After(0.1, function()
-                        if self2.GUI then self2.GUI:Show() end
-                    end)
-                end
-            end
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(self2, hidden)
-            ScheduleDefaultSave()
-            if self2.Minimap then
-                if hidden then
-                    self2.Minimap:Hide()
-                else
-                    self2.Minimap:Show()
-                end
-            end
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(self2)
-            ScheduleDefaultSave()
-            if self2.Minimap then
-                self2.Minimap:UpdateIcon()
-            end
-            if self2.GUI then
-                local wasShown = self2.GUI:GetMainWindow() and self2.GUI:GetMainWindow():IsShown()
-                self2.GUI:FullReset()
-                if wasShown then
-                    C_Timer.After(0.1, function()
-                        if self2.GUI then self2.GUI:Show() end
-                    end)
-                end
-            end
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
-            ScheduleDefaultSave()
-            if self2.GUI then
-                local wasShown = self2.GUI:GetMainWindow() and self2.GUI:GetMainWindow():IsShown()
-                self2.GUI:FullReset()
-                if wasShown then
-                    C_Timer.After(0.1, function()
-                        if self2.GUI then self2.GUI:Show() end
-                    end)
-                end
-            end
-        end)
-    --end
+        end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(self2)
+        ScheduleDefaultSave()
+        if self2.Minimap then
+            self2.Minimap:UpdateIcon()
+        end
+        ResetGUIOnSettingChange(self2)
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+        ScheduleDefaultSave()
+        ResetGUIOnSettingChange(self2)
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function(self2)
+        ScheduleDefaultSave()
+        ResetGUIOnSettingChange(self2)
+    end)
 
     local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
     self:RegisterLoadComponent("Core", _ver, "/1w")

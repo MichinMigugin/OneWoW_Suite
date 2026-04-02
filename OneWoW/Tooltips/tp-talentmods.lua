@@ -52,9 +52,6 @@ local modifierInheritance = {
 local function GetSettings()
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
     if not db or not db.tooltips then return nil end
-    if not db.tooltips.talentmods then
-        db.tooltips.talentmods = {}
-    end
     return db.tooltips.talentmods
 end
 

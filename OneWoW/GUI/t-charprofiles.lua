@@ -439,38 +439,8 @@ function Module:GetCurrentCounts()
     return counts
 end
 
-local function SerializeVal(val, depth)
-    local t = type(val)
-    if t == "string" then
-        return string.format("%q", val)
-    elseif t == "number" or t == "boolean" then
-        return tostring(val)
-    elseif t == "table" then
-        local parts = {}
-        local inner = string.rep("  ", depth + 1)
-        local outer = string.rep("  ", depth)
-        for k, v in pairs(val) do
-            local vStr = SerializeVal(v, depth + 1)
-            if vStr ~= nil then
-                local keyStr
-                if type(k) == "string" and k:match("^[%a_][%a%d_]*$") then
-                    keyStr = k
-                elseif type(k) == "number" then
-                    keyStr = "[" .. tostring(k) .. "]"
-                else
-                    keyStr = "[" .. string.format("%q", tostring(k)) .. "]"
-                end
-                table.insert(parts, inner .. keyStr .. " = " .. vStr)
-            end
-        end
-        if #parts == 0 then return "{}" end
-        return "{\n" .. table.concat(parts, ",\n") .. "\n" .. outer .. "}"
-    end
-    return nil
-end
-
 function Module:SerializeProfile(profile)
-    local body = SerializeVal(profile, 0)
+    local body = GUI.SerializeVal(profile, 0)
     if not body then return nil end
     return "-- OneWoW Character Profile\n-- Version: 1\n" .. body
 end
@@ -507,33 +477,6 @@ function Module:ImportProfile(str)
 end
 
 -- ============================================================
--- Scrollable EditBox helper
--- ============================================================
-
-local function CreateScrollableEditBox(parent, onEscape)
-    local sf = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
-    sf:SetPoint("TOPLEFT",     parent, "TOPLEFT",     4,  -4)
-    sf:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -20, 4)
-    sf:EnableMouseWheel(true)
-    OneWoW_GUI:StyleScrollBar(sf, { container = parent, offset = -4 })
-
-    local eb = CreateFrame("EditBox", nil, sf)
-    eb:SetMultiLine(true)
-    eb:SetAutoFocus(false)
-    eb:SetMaxLetters(0)
-    local fontPath = OneWoW_GUI and OneWoW_GUI.GetFont and OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
-    eb:SetFont(fontPath, 12, "")
-    eb:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    eb:SetScript("OnEscapePressed", onEscape or function() end)
-    eb:SetScript("OnTextChanged", function() sf:UpdateScrollChildRect() end)
-
-    sf:SetScrollChild(eb)
-    sf:HookScript("OnSizeChanged", function(self, w) eb:SetWidth(w) end)
-
-    return eb, sf
-end
-
--- ============================================================
 -- Dialogs
 -- ============================================================
 
@@ -547,6 +490,7 @@ function GUI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
         width = 480,
         height = 360,
         strata = "FULLSCREEN_DIALOG",
+        showBrand = true,
         buttons = {
             { text = "Restore Profile", onClick = function(dialog)
                 local M = OneWoW.CharProfiles
@@ -622,21 +566,21 @@ function GUI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
 
     local cf = result.contentFrame
 
-    local savedDate = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local savedDate = OneWoW_GUI:CreateFS(cf, 10)
     savedDate:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, yOff)
     savedDate:SetText("Saved: " .. date("%Y-%m-%d %H:%M", profile.timestamp or 0))
     savedDate:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOff = yOff - 18
 
     if profile.savedBy then
-        local savedByFS = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local savedByFS = OneWoW_GUI:CreateFS(cf, 10)
         savedByFS:SetPoint("TOPLEFT", savedDate, "BOTTOMLEFT", 0, -4)
         savedByFS:SetText("Saved by: |cFFFFD100" .. profile.savedBy .. "|r")
         savedByFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         yOff = yOff - 18
     end
 
-    local selectLabel = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local selectLabel = OneWoW_GUI:CreateFS(cf, 12)
     selectLabel:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, yOff - 10)
     selectLabel:SetText("Select what to restore:")
     selectLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -698,6 +642,7 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
         width = 620,
         height = 500,
         strata = "FULLSCREEN_DIALOG",
+        showBrand = true,
         buttons = {
             { text = "Select All", onClick = function(dialog)
                 eb:SetFocus()
@@ -709,7 +654,7 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
 
     local cf = result.contentFrame
 
-    local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hint = OneWoW_GUI:CreateFS(cf, 10)
     hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText("Select all text and copy (Ctrl+A, Ctrl+C) to share this profile:")
     hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -719,7 +664,7 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
     textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
 
-    eb = CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
+    eb = GUI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
     eb:SetAutoFocus(true)
 
     result.frame:Show()
@@ -738,6 +683,7 @@ function GUI:ShowCharProfileImportDialog(onImported)
         width = 620,
         height = 460,
         strata = "FULLSCREEN_DIALOG",
+        showBrand = true,
         buttons = {
             { text = "Import", onClick = function(dialog)
                 local text = eb:GetText()
@@ -756,7 +702,7 @@ function GUI:ShowCharProfileImportDialog(onImported)
 
     local cf = result.contentFrame
 
-    local hint = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hint = OneWoW_GUI:CreateFS(cf, 10)
     hint:SetPoint("TOPLEFT", cf, "TOPLEFT", 10, -8)
     hint:SetText("Paste exported profile data below, then click Import:")
     hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -766,7 +712,7 @@ function GUI:ShowCharProfileImportDialog(onImported)
     textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
 
-    eb = CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
+    eb = GUI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
     eb:SetAutoFocus(true)
 
     result.frame:Show()
@@ -782,7 +728,7 @@ function GUI:CreateCharProfilesPanel(parent)
     local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_CharProfilesScroll" })
     local yOffset = -10
 
-    local descText = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descText = OneWoW_GUI:CreateFS(content, 12)
     descText:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
     descText:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
     descText:SetJustifyH("LEFT")
@@ -801,12 +747,12 @@ function GUI:CreateCharProfilesPanel(parent)
     newProfileContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     newProfileContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local newTitle = newProfileContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local newTitle = OneWoW_GUI:CreateFS(newProfileContainer, 16)
     newTitle:SetPoint("TOPLEFT", newProfileContainer, "TOPLEFT", 15, -12)
     newTitle:SetText("New Character Profile")
     newTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local nameLabel = newProfileContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local nameLabel = OneWoW_GUI:CreateFS(newProfileContainer, 10)
     nameLabel:SetPoint("TOPLEFT", newProfileContainer, "TOPLEFT", 15, -40)
     nameLabel:SetText("Profile Name:")
     nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -838,7 +784,7 @@ function GUI:CreateCharProfilesPanel(parent)
     local cbCharMacro  = MakeCheckbox("Character Macros", counts.characterMacros, COL2_X, -124)
     local cbAddonSett  = MakeCheckbox("Addon Settings",   nil,                    COL3_X, -124)
 
-    local saveBtn = OneWoW_GUI:CreateButton(newProfileContainer, { text = "Save Profile", width = 130, height = 28 })
+    local saveBtn = OneWoW_GUI:CreateFitTextButton(newProfileContainer, { text = "Save Profile", height = 28 })
     saveBtn:SetPoint("TOPRIGHT", newProfileContainer, "TOPRIGHT", -15, -55)
 
     local listContainer = CreateFrame("Frame", nil, content)
@@ -856,7 +802,7 @@ function GUI:CreateCharProfilesPanel(parent)
         local profilesList = M:GetProfilesList()
 
         if #profilesList == 0 then
-            local empty = listContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local empty = OneWoW_GUI:CreateFS(listContainer, 12)
             empty:SetPoint("TOPLEFT", 15, -14)
             empty:SetText("No character profiles saved yet")
             empty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -880,12 +826,12 @@ function GUI:CreateCharProfilesPanel(parent)
             card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
             card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-            local nameText = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local nameText = OneWoW_GUI:CreateFS(card, 12)
             nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -8)
             nameText:SetText(name)
             nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-            local dateText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local dateText = OneWoW_GUI:CreateFS(card, 10)
             dateText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -26)
             local dateStr = "Saved: " .. date("%Y-%m-%d %H:%M", data.timestamp or 0)
             if data.savedBy then
@@ -914,14 +860,14 @@ function GUI:CreateCharProfilesPanel(parent)
                 table.insert(tags, string.format("Addon Settings (%d)", data.addonSettings.count or 0))
             end
 
-            local tagsText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local tagsText = OneWoW_GUI:CreateFS(card, 10)
             tagsText:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -44)
             tagsText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -278, -44)
             tagsText:SetText(#tags > 0 and table.concat(tags, "  |cFF444444/|r  ") or "")
             tagsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             tagsText:SetJustifyH("LEFT")
 
-            local exportBtn = OneWoW_GUI:CreateButton(card, { text = "Export", width = 80, height = 26 })
+            local exportBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Export", height = 26 })
             exportBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -192, 6)
             exportBtn:SetScript("OnClick", function()
                 local exportData = {}
@@ -936,24 +882,24 @@ function GUI:CreateCharProfilesPanel(parent)
                 end
             end)
 
-            local restoreBtn = OneWoW_GUI:CreateButton(card, { text = "Restore", width = 90, height = 26 })
+            local restoreBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Restore", height = 26 })
             restoreBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -96, 6)
             restoreBtn:SetScript("OnClick", function()
                 GUI:ShowCharProfileRestoreDialog(name, data, RefreshListing)
             end)
 
             local capturedName = name
-            local deleteBtn = OneWoW_GUI:CreateButton(card, { text = "Delete", width = 82, height = 26 })
+            local deleteBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Delete", height = 26 })
             deleteBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 6)
-            deleteBtn:SetBackdropColor(0.45, 0.12, 0.12)
-            deleteBtn:SetBackdropBorderColor(0.65, 0.25, 0.25)
+            deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+            deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
             deleteBtn:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(0.65, 0.18, 0.18)
-                self:SetBackdropBorderColor(0.8, 0.3, 0.3)
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
             end)
             deleteBtn:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(0.45, 0.12, 0.12)
-                self:SetBackdropBorderColor(0.65, 0.25, 0.25)
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
             end)
             deleteBtn:SetScript("OnClick", function()
                 local dlg = OneWoW_GUI:CreateConfirmDialog({
@@ -1001,12 +947,12 @@ function GUI:CreateCharProfilesPanel(parent)
         end
     end)
 
-    local savedProfilesHeader = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local savedProfilesHeader = OneWoW_GUI:CreateFS(content, 16)
     savedProfilesHeader:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset - 190)
     savedProfilesHeader:SetText("Saved Character Profiles")
     savedProfilesHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local importBtn = OneWoW_GUI:CreateButton(content, { text = "Import Profile", width = 130, height = 24 })
+    local importBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Import Profile", height = 24 })
     importBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset - 187)
     importBtn:SetScript("OnClick", function()
         GUI:ShowCharProfileImportDialog(RefreshListing)
@@ -1019,7 +965,7 @@ function GUI:CreateCharProfilesPanel(parent)
 
     C_Timer.After(0.05, function()
         RefreshListing()
-        GUI:ApplyFontToFrame(parent)
+        OneWoW_GUI:ApplyFontToFrame(parent)
         content:SetHeight(math.abs(yOffset) + listContainer:GetHeight() + 40)
     end)
 end

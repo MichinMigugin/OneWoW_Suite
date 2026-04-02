@@ -47,13 +47,7 @@ local function ShowContextMenu(anchorFrame)
 
     contextMenu = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
     contextMenu:SetFrameStrata("FULLSCREEN_DIALOG")
-    contextMenu:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false,
-        edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 },
-    })
+    contextMenu:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
     contextMenu:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     contextMenu:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
@@ -64,7 +58,7 @@ local function ShowContextMenu(anchorFrame)
         btn:SetHeight(22)
         btn:SetPoint("TOPLEFT", contextMenu, "TOPLEFT", 4, yOff)
         btn:SetPoint("TOPRIGHT", contextMenu, "TOPRIGHT", -4, yOff)
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+        btn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
         btn:SetBackdropColor(0, 0, 0, 0)
 
         local textLeftOffset = 8
@@ -77,7 +71,7 @@ local function ShowContextMenu(anchorFrame)
             end
         end
 
-        btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        btn.text = OneWoW_GUI:CreateFS(btn, 12)
         btn.text:SetPoint("LEFT", textLeftOffset, 0)
         btn.text:SetText(item.label)
         btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))

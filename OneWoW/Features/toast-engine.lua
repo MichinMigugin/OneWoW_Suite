@@ -33,8 +33,6 @@ Toasts.anchorVisible = false
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
-local function T(key) return OneWoW_GUI:GetThemeColor(key) end
-
 local function GetDB()
     return OneWoW.db and OneWoW.db.global and OneWoW.db.global.toasts
 end
@@ -167,13 +165,9 @@ local function CreateSmallToast()
     f:SetSize(TOAST_WIDTH, TOAST_H_SM)
     f:SetFrameStrata("HIGH")
     f:EnableMouse(true)
-    f:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    f:SetBackdropColor(0.10, 0.10, 0.12, 0.97)
-    f:SetBackdropBorderColor(0.25, 0.25, 0.28, 1.0)
+    f:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
+    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local stripe = f:CreateTexture(nil, "ARTWORK")
     stripe:SetSize(4, TOAST_H_SM)
@@ -184,13 +178,9 @@ local function CreateSmallToast()
     local iconBg = CreateFrame("Frame", nil, f, "BackdropTemplate")
     iconBg:SetSize(44, 44)
     iconBg:SetPoint("RIGHT", f, "RIGHT", -10, 0)
-    iconBg:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    iconBg:SetBackdropColor(0.06, 0.06, 0.08, 1.0)
-    iconBg:SetBackdropBorderColor(0.30, 0.30, 0.33, 1.0)
+    iconBg:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
+    iconBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    iconBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     f._iconBg = iconBg
 
     local icon = iconBg:CreateTexture(nil, "ARTWORK")
@@ -198,7 +188,7 @@ local function CreateSmallToast()
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     f._icon = icon
 
-    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = OneWoW_GUI:CreateFS(f, 16)
     title:SetPoint("LEFT", f, "LEFT", 14, 0)
     title:SetPoint("RIGHT", iconBg, "LEFT", -8, 0)
     title:SetJustifyH("LEFT")
@@ -206,7 +196,7 @@ local function CreateSmallToast()
     title:SetWordWrap(false)
     f._title = title
 
-    local subtitle = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local subtitle = OneWoW_GUI:CreateFS(f, 12)
     subtitle:SetJustifyH("LEFT")
     subtitle:SetWordWrap(false)
     subtitle:Hide()
@@ -227,20 +217,20 @@ local function CreateLargeToast()
     bg:SetAtlas("GarrMissionLocation-Maw-bg-01", true)
     f._bg = bg
 
-    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    local title = OneWoW_GUI:CreateFS(f, 18)
     title:SetPoint("TOP", f, "TOP", 0, -10)
     title:SetWidth(INST_WIDTH - 16)
     title:SetJustifyH("CENTER")
-    title:SetTextColor(1.0, 1.0, 1.0, 1.0)
+    title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     title:SetShadowColor(0, 0, 0, 1)
     title:SetShadowOffset(2, -2)
     f._title = title
 
-    local subtitle = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local subtitle = OneWoW_GUI:CreateFS(f, 12)
     subtitle:SetPoint("TOP", title, "BOTTOM", 0, -4)
     subtitle:SetWidth(INST_WIDTH - 16)
     subtitle:SetJustifyH("CENTER")
-    subtitle:SetTextColor(0.80, 0.90, 1.0, 1.0)
+    subtitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     subtitle:SetShadowColor(0, 0, 0, 1)
     subtitle:SetShadowOffset(1, -1)
     f._subtitle = subtitle
@@ -249,7 +239,7 @@ local function CreateLargeToast()
     for i = 1, 7 do
         local col  = ((i - 1) % STAT_COLS) + 1
         local row  = math.floor((i - 1) / STAT_COLS)
-        local cell = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local cell = OneWoW_GUI:CreateFS(f, 10)
         cell:SetPoint("TOPLEFT", f, "TOPLEFT", STAT_COL_X[col], STAT_TOP_Y - (row * STAT_ROW_H))
         cell:SetWidth(STAT_COL_W - 2)
         cell:SetJustifyH("LEFT")
@@ -282,7 +272,7 @@ local function ShowSmallToast(data)
     toast._icon:SetTexture(data.icon)
 
     toast._title:SetText(data.title or "")
-    toast._title:SetTextColor(0.95, 0.95, 0.95, 1.0)
+    toast._title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     if data.subtitle and data.subtitle ~= "" then
         toast:SetHeight(TOAST_H_LG)
@@ -295,7 +285,7 @@ local function ShowSmallToast(data)
         toast._subtitle:SetPoint("TOPLEFT", toast._title, "BOTTOMLEFT", 0, -4)
         toast._subtitle:SetPoint("RIGHT",   toast._iconBg, "LEFT", -8, 0)
         toast._subtitle:SetText(data.subtitle)
-        toast._subtitle:SetTextColor(0.70, 0.70, 0.72, 1.0)
+        toast._subtitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         toast._subtitle:Show()
     else
         toast:SetHeight(TOAST_H_SM)
@@ -409,15 +399,15 @@ local function ShowLargeToast(data)
             local text, r, g, b
             if entry.totalOnly then
                 text = entry.label .. ": " .. total
-                r, g, b = 0.60, 0.60, 0.60
+                r, g, b = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
             else
                 text = entry.label .. " " .. current .. "/" .. total
                 if total > 0 and current >= total then
-                    r, g, b = 0.25, 0.85, 0.25
+                    r, g, b = OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")
                 elseif current > 0 then
-                    r, g, b = 0.90, 0.75, 0.15
+                    r, g, b = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
                 else
-                    r, g, b = 0.55, 0.55, 0.55
+                    r, g, b = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
                 end
             end
             cell:SetText(text)
@@ -473,12 +463,12 @@ local function UpdateAnchorDisplay(anchor)
     local locked = db and db.anchor and db.anchor.locked
     if locked then
         anchor._titleText:SetText("Toast Anchor  [LOCKED]")
-        anchor._titleText:SetTextColor(0.90, 0.40, 0.40, 1.0)
-        anchor:SetBackdropBorderColor(0.90, 0.40, 0.40, 1.0)
+        anchor._titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        anchor:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
     else
         anchor._titleText:SetText("Toast Anchor")
-        anchor._titleText:SetTextColor(0.85, 0.70, 0.20, 1.0)
-        anchor:SetBackdropBorderColor(0.85, 0.70, 0.20, 1.0)
+        anchor._titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        anchor:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     end
 end
 
@@ -490,20 +480,16 @@ local function BuildAnchor()
     anchor:SetFrameStrata("HIGH")
     anchor:EnableMouse(true)
     anchor:SetMovable(true)
-    anchor:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    anchor:SetBackdropColor(0.10, 0.10, 0.12, 0.90)
-    anchor:SetBackdropBorderColor(0.85, 0.70, 0.20, 1.0)
+    anchor:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
+    anchor:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    anchor:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local titleText = anchor:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local titleText = OneWoW_GUI:CreateFS(anchor, 12)
     titleText:SetPoint("TOPLEFT",  anchor, "TOPLEFT",  10, -10)
     titleText:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", -10, -10)
     titleText:SetJustifyH("CENTER")
     titleText:SetText("Toast Anchor")
-    titleText:SetTextColor(0.85, 0.70, 0.20, 1.0)
+    titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     anchor._titleText = titleText
 
     local divider = anchor:CreateTexture(nil, "ARTWORK")
@@ -513,13 +499,13 @@ local function BuildAnchor()
     divider:SetTexture("Interface\\Buttons\\WHITE8x8")
     divider:SetVertexColor(0.85, 0.70, 0.20, 0.4)
 
-    local controlsText = anchor:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local controlsText = OneWoW_GUI:CreateFS(anchor, 10)
     controlsText:SetPoint("TOPLEFT",  anchor, "TOPLEFT",  10, -38)
     controlsText:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", -10, -38)
     controlsText:SetJustifyH("CENTER")
     controlsText:SetWordWrap(true)
     controlsText:SetText("Alt+Drag: Move  |  Shift+Click: Lock  |  Ctrl+Alt+Click: Hide")
-    controlsText:SetTextColor(0.65, 0.65, 0.65, 1.0)
+    controlsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     anchor:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 20, -20)
 

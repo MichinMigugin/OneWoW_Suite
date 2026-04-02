@@ -3,26 +3,6 @@ local ADDON_NAME, OneWoW = ...
 OneWoW.PortalHubItems = OneWoW.PortalHubItems or {}
 local ItemDetection = OneWoW.PortalHubItems
 
-function ItemDetection:HasProfession(professionName)
-	local prof1, prof2 = GetProfessions()
-
-	if prof1 then
-		local name = GetProfessionInfo(prof1)
-		if name == professionName then
-			return true
-		end
-	end
-
-	if prof2 then
-		local name = GetProfessionInfo(prof2)
-		if name == professionName then
-			return true
-		end
-	end
-
-	return false
-end
-
 function ItemDetection:GetRings(showAll)
 	local portals = {}
 	if not OneWoW.PortalData then return portals end
@@ -69,7 +49,7 @@ function ItemDetection:GetEngineeringItems(showAll)
 	local portals = {}
 	if not OneWoW.PortalData then return portals end
 
-	if not self:HasProfession("Engineering") and not showAll then
+	if not OneWoW.PortalHubDetection:HasProfession("Engineering") and not showAll then
 		return portals
 	end
 

@@ -60,7 +60,7 @@ local function CreateRow1TabButton(parent, text, moduleName)
     btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    btn.text = OneWoW_GUI:CreateFS(btn, 12)
     btn.text:SetPoint("CENTER")
     btn.text:SetText(text)
     btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -90,14 +90,14 @@ local function CreateRow2TabButton(parent, text, subTabName, disabled)
     btn.subTabName = subTabName
     btn.disabled = disabled or false
 
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    btn.text = OneWoW_GUI:CreateFS(btn, 12)
     btn.text:SetPoint("CENTER")
     btn.text:SetText(text)
 
     if disabled then
         btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        btn:SetBackdropBorderColor(0.15, 0.15, 0.15, 0.6)
-        btn.text:SetTextColor(0.32, 0.32, 0.32, 1)
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         return btn
     end
 
@@ -231,7 +231,7 @@ local function BuildRow2ForModule(moduleName)
     end
 
     LayoutRow2Buttons()
-    GUI:ApplyFontToFrame(row2Container)
+    OneWoW_GUI:ApplyFontToFrame(row2Container)
 
     row2Container:Show()
     UpdateContentAreaAnchors()
@@ -265,7 +265,7 @@ function GUI:SelectModuleTab(moduleName)
             homePanel = CreateFrame("Frame", nil, contentArea)
             homePanel:SetAllPoints()
             GUI:CreateHomeTab(homePanel)
-            GUI:ApplyFontToFrame(homePanel)
+            OneWoW_GUI:ApplyFontToFrame(homePanel)
         end
         homePanel:Show()
         return
@@ -286,7 +286,7 @@ function GUI:SelectModuleTab(moduleName)
             end
 
             LayoutRow2Buttons()
-            GUI:ApplyFontToFrame(row2Container)
+            OneWoW_GUI:ApplyFontToFrame(row2Container)
             row2Container:Show()
             UpdateContentAreaAnchors()
 
@@ -326,7 +326,7 @@ function GUI:SelectModuleTab(moduleName)
             frame:SetAllPoints()
             GUI:CreateAddonPlaceholderFrame(frame, placeholderData[moduleName])
             moduleContentFrames[key] = frame
-            GUI:ApplyFontToFrame(frame)
+            OneWoW_GUI:ApplyFontToFrame(frame)
         end
         moduleContentFrames[key]:Show()
         return
@@ -376,7 +376,7 @@ function GUI:SelectSubTab(moduleName, subTabName)
                     frame:SetAllPoints()
                     tabInfo.create(frame)
                     moduleContentFrames[key] = frame
-                    GUI:ApplyFontToFrame(frame)
+                    OneWoW_GUI:ApplyFontToFrame(frame)
                     break
                 end
             end
@@ -389,7 +389,7 @@ function GUI:SelectSubTab(moduleName, subTabName)
                         frame:SetAllPoints()
                         tabInfo.create(frame)
                         moduleContentFrames[key] = frame
-                        GUI:ApplyFontToFrame(frame)
+                        OneWoW_GUI:ApplyFontToFrame(frame)
                         break
                     end
                 end
@@ -568,7 +568,7 @@ function GUI:InitMainWindow()
     EnsureInUISpecialFrames(FRAME_NAME)
     isInitialized = true
 
-    GUI:ApplyFontToFrame(MainWindow)
+    OneWoW_GUI:ApplyFontToFrame(MainWindow)
 
     local lastTab = OneWoW.db and OneWoW.db.global and OneWoW.db.global.lastModuleTab or "home"
     local validTab = false
@@ -629,17 +629,17 @@ function GUI:CreateAddonPlaceholderFrame(parent, info)
     icon:SetPoint("CENTER", parent, "CENTER", 0, 60)
     icon:SetTexture("Interface\\AddOns\\OneWoW\\Media\\neutral-large.png")
 
-    local nameText = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local nameText = OneWoW_GUI:CreateFS(parent, 16)
     nameText:SetPoint("TOP", icon, "BOTTOM", 0, -16)
     nameText:SetText(L[info.localeKey] or info.name)
     nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local statusText = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local statusText = OneWoW_GUI:CreateFS(parent, 12)
     statusText:SetPoint("TOP", nameText, "BOTTOM", 0, -8)
     statusText:SetText(L["HOME_NOT_DETECTED"])
     statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local installLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local installLabel = OneWoW_GUI:CreateFS(parent, 12)
     installLabel:SetPoint("TOP", statusText, "BOTTOM", 0, -24)
     installLabel:SetText(L["HOME_INSTALL_FROM_CURSE"])
     installLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))

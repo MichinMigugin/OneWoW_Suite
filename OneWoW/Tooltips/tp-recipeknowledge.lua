@@ -40,13 +40,7 @@ local function FindRecipes(charData, profName)
     return nil
 end
 
-local function GetClassColor(class)
-    if class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] then
-        local c = RAID_CLASS_COLORS[class]
-        return c.r, c.g, c.b
-    end
-    return 0.9, 0.9, 0.9
-end
+local GetClassColor = OneWoW.GetClassColor
 
 local function DetectProfession(itemID)
     local td = C_TooltipInfo.GetItemByID(itemID)

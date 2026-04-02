@@ -17,7 +17,7 @@ end
 local function ShowGeneralDetail(split, dsc, selectedRow)
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -25,14 +25,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local div = dsc:CreateTexture(nil, "ARTWORK")
-    div:SetHeight(1)
-    div:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -42,49 +38,25 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general")
-
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general")
-        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", "general", not nowEnabled)
-        nowEnabled = not nowEnabled
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            if nowEnabled then
-                selectedRow.dot:SetStatus(true)
-            else
-                selectedRow.dot:SetStatus(false)
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general") end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", "general", newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
             end
-        end
-    end)
+        end,
+    })
 
-    yOffset = yOffset - 30 - 20
+    yOffset = statusBlock.getBottomY() - 20
 
-    local noteLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local noteLabel = OneWoW_GUI:CreateFS(dsc, 12)
     noteLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     noteLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     noteLabel:SetJustifyH("LEFT")
@@ -95,7 +67,7 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     yOffset = yOffset - noteLabel:GetStringHeight() - 10
 
     dsc:SetHeight(math.abs(yOffset) + 20)
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -109,134 +81,49 @@ local CUSTOMNOTES_WARNING_TOGGLES = {
     { key = "showNoteWarning", localeKey = "TIPS_CUSTOMNOTES_SHOW_NOTEWARNING" },
 }
 
-local function CreateNoteToggleRows(dsc, toggleList, toggleBtnSets, isEnabled, cnSettings, yOffset)
+local function CreateSettingToggleRows(dsc, toggleList, toggleBtnSets, isEnabled, settingsTable, dbPath, yOffset)
     for _, toggle in ipairs(toggleList) do
         local capturedKey = toggle.key
-        local currentVal = cnSettings[capturedKey] ~= false
+        local currentVal = settingsTable[capturedKey] ~= false
 
-        local onBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_ON"], width = 50, height = 22 })
-        onBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+        local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(dsc, {
+            yOffset = yOffset,
+            onLabel = L["TIPS_TOGGLE_ON"],
+            offLabel = L["TIPS_TOGGLE_OFF"],
+            width = 50,
+            height = 22,
+            isEnabled = isEnabled,
+            value = currentVal,
+            onValueChange = function(newVal)
+                if not OneWoW.db.global.settings.tooltips[dbPath] then
+                    OneWoW.db.global.settings.tooltips[dbPath] = {}
+                end
+                OneWoW.db.global.settings.tooltips[dbPath][capturedKey] = newVal
+            end,
+        })
 
-        local offBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_OFF"], width = 50, height = 22 })
-        offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
+        offBtn:ClearAllPoints()
+        offBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+        onBtn:ClearAllPoints()
+        onBtn:SetPoint("RIGHT", offBtn, "LEFT", -4, 0)
+        statusVal:ClearAllPoints()
+        statusVal:SetPoint("RIGHT", onBtn, "LEFT", -6, 0)
+        statusPfx:ClearAllPoints()
+        statusPfx:SetPoint("RIGHT", statusVal, "LEFT", -2, 0)
 
-        local rowStatusVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        rowStatusVal:SetPoint("RIGHT", offBtn, "LEFT", -6, 0)
-
-        local rowStatusPfx = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        rowStatusPfx:SetPoint("RIGHT", rowStatusVal, "LEFT", -2, 0)
-        rowStatusPfx:SetText(L["FEATURE_STATUS_LABEL"])
-
-        local toggleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local toggleLabel = OneWoW_GUI:CreateFS(dsc, 12)
         toggleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset - 3)
-        toggleLabel:SetPoint("RIGHT", rowStatusPfx, "LEFT", -8, 0)
+        toggleLabel:SetPoint("RIGHT", statusPfx, "LEFT", -8, 0)
         toggleLabel:SetJustifyH("LEFT")
         toggleLabel:SetText(L[toggle.localeKey] or toggle.localeKey)
 
         if isEnabled then
             toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            rowStatusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            if currentVal then
-                onBtn.isActive = true
-                offBtn.isActive = false
-                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                rowStatusVal:SetText(L["FEATURE_ENABLED"])
-                rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            else
-                offBtn.isActive = true
-                onBtn.isActive = false
-                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                rowStatusVal:SetText(L["FEATURE_DISABLED"])
-                rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-            end
         else
-            onBtn.isActive = false
-            offBtn.isActive = false
             toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusVal:SetText(L["FEATURE_DISABLED"])
-            rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            onBtn:EnableMouse(false)
-            offBtn:EnableMouse(false)
-            onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
-        local function applyToggleHover(btn)
-            if btn.isActive then
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-            else
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            end
-        end
-        local function applyToggleNormal(btn)
-            if btn.isActive then
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            else
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            end
-        end
-        onBtn:HookScript("OnEnter",   function(self) applyToggleHover(self)  end)
-        onBtn:HookScript("OnLeave",   function(self) applyToggleNormal(self) end)
-        onBtn:HookScript("OnMouseUp", function(self) applyToggleNormal(self) end)
-        offBtn:HookScript("OnEnter",   function(self) applyToggleHover(self)  end)
-        offBtn:HookScript("OnLeave",   function(self) applyToggleNormal(self) end)
-        offBtn:HookScript("OnMouseUp", function(self) applyToggleNormal(self) end)
-
-        tinsert(toggleBtnSets, { onBtn = onBtn, offBtn = offBtn, label = toggleLabel, statusPrefix = rowStatusPfx, statusVal = rowStatusVal, key = capturedKey })
-
-        onBtn:SetScript("OnClick", function(self)
-            if not OneWoW.db.global.settings.tooltips.customnotes then
-                OneWoW.db.global.settings.tooltips.customnotes = {}
-            end
-            OneWoW.db.global.settings.tooltips.customnotes[capturedKey] = true
-            onBtn.isActive = true
-            offBtn.isActive = false
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusVal:SetText(L["FEATURE_ENABLED"])
-            rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        end)
-        offBtn:SetScript("OnClick", function(self)
-            if not OneWoW.db.global.settings.tooltips.customnotes then
-                OneWoW.db.global.settings.tooltips.customnotes = {}
-            end
-            OneWoW.db.global.settings.tooltips.customnotes[capturedKey] = false
-            offBtn.isActive = true
-            onBtn.isActive = false
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusVal:SetText(L["FEATURE_DISABLED"])
-            rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end)
+        tinsert(toggleBtnSets, { onBtn = onBtn, offBtn = offBtn, label = toggleLabel, statusPrefix = statusPfx, statusVal = statusVal, key = capturedKey, refresh = refresh })
 
         yOffset = yOffset - 22 - 10
     end
@@ -247,7 +134,7 @@ end
 local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -255,14 +142,10 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local div = dsc:CreateTexture(nil, "ARTWORK")
-    div:SetHeight(1)
-    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -275,107 +158,39 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
     local toggleBtnSets = {}
 
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            if nowEnabled then
-                selectedRow.dot:SetStatus(true)
-            else
-                selectedRow.dot:SetStatus(false)
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
             end
-        end
-        for _, tbs in ipairs(toggleBtnSets) do
-            if nowEnabled then
-                tbs.onBtn:EnableMouse(true)
-                tbs.offBtn:EnableMouse(true)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                tbs.statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            for _, tbs in ipairs(toggleBtnSets) do
                 local val = OneWoW.db.global.settings.tooltips.customnotes[tbs.key]
-                if val ~= false then
-                    tbs.onBtn.isActive = true
-                    tbs.offBtn.isActive = false
-                    tbs.onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    tbs.onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                    tbs.onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    tbs.offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                    tbs.offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                    tbs.offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                    tbs.statusVal:SetText(L["FEATURE_ENABLED"])
-                    tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-                else
-                    tbs.offBtn.isActive = true
-                    tbs.onBtn.isActive = false
-                    tbs.offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    tbs.offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                    tbs.offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    tbs.onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                    tbs.onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                    tbs.onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                    tbs.statusVal:SetText(L["FEATURE_DISABLED"])
-                    tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-                end
-            else
-                tbs.onBtn.isActive = false
-                tbs.offBtn.isActive = false
-                tbs.onBtn:EnableMouse(false)
-                tbs.offBtn:EnableMouse(false)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.statusVal:SetText(L["FEATURE_DISABLED"])
-                tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                tbs.onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                tbs.onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                tbs.offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                tbs.offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                tbs.refresh(newState, val ~= false)
+                tbs.label:SetTextColor(newState and OneWoW_GUI:GetThemeColor("TEXT_PRIMARY") or OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
-        end
-    end)
+        end,
+    })
 
-    yOffset = yOffset - 30 - 14
+    yOffset = statusBlock.getBottomY() - 14
 
-    local reqDiv = dsc:CreateTexture(nil, "ARTWORK")
-    reqDiv:SetHeight(1)
-    reqDiv:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    reqDiv:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    reqDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local reqLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local reqLabel = OneWoW_GUI:CreateFS(dsc, 12)
     reqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     reqLabel:SetText(L["TIPS_CUSTOMNOTES_REQUIRES"])
     reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local notesLoaded = (_G.OneWoW_Notes ~= nil)
-    local detectedValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local detectedValue = OneWoW_GUI:CreateFS(dsc, 12)
     detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
     if notesLoaded then
         detectedValue:SetText(L["TIPS_CUSTOMNOTES_DETECTED"])
@@ -390,13 +205,13 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
     local cnSettings = db and db.tooltips and db.tooltips.customnotes or {}
 
-    local linesHeader = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local linesHeader = OneWoW_GUI:CreateFS(dsc, 12)
     linesHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     linesHeader:SetText(L["TIPS_CUSTOMNOTES_SECTION_LINES"])
     linesHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - linesHeader:GetStringHeight() - 4
 
-    local linesDesc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local linesDesc = OneWoW_GUI:CreateFS(dsc, 10)
     linesDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     linesDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     linesDesc:SetJustifyH("LEFT")
@@ -406,24 +221,20 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     linesDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - linesDesc:GetStringHeight() - 6
 
-    local linesDivider = dsc:CreateTexture(nil, "ARTWORK")
-    linesDivider:SetHeight(1)
-    linesDivider:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    linesDivider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    linesDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 10
 
-    yOffset = CreateNoteToggleRows(dsc, CUSTOMNOTES_LINE_TOGGLES, toggleBtnSets, isEnabled, cnSettings, yOffset)
+    yOffset = CreateSettingToggleRows(dsc, CUSTOMNOTES_LINE_TOGGLES, toggleBtnSets, isEnabled, cnSettings, "customnotes", yOffset)
 
     yOffset = yOffset - 6
 
-    local warnHeader = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local warnHeader = OneWoW_GUI:CreateFS(dsc, 12)
     warnHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     warnHeader:SetText(L["TIPS_CUSTOMNOTES_SECTION_WARNING"])
     warnHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - warnHeader:GetStringHeight() - 4
 
-    local warnDesc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local warnDesc = OneWoW_GUI:CreateFS(dsc, 10)
     warnDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     warnDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     warnDesc:SetJustifyH("LEFT")
@@ -433,17 +244,13 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     warnDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - warnDesc:GetStringHeight() - 6
 
-    local warnDivider = dsc:CreateTexture(nil, "ARTWORK")
-    warnDivider:SetHeight(1)
-    warnDivider:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    warnDivider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    warnDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 10
 
-    yOffset = CreateNoteToggleRows(dsc, CUSTOMNOTES_WARNING_TOGGLES, toggleBtnSets, isEnabled, cnSettings, yOffset)
+    yOffset = CreateSettingToggleRows(dsc, CUSTOMNOTES_WARNING_TOGGLES, toggleBtnSets, isEnabled, cnSettings, "customnotes", yOffset)
 
     dsc:SetHeight(math.abs(yOffset) + 20)
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -487,7 +294,7 @@ local TECHID_TOGGLES = {
 local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -495,14 +302,10 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local div = dsc:CreateTexture(nil, "ARTWORK")
-    div:SetHeight(1)
-    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -515,236 +318,45 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
     local toggleBtnSets = {}
 
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            if nowEnabled then
-                selectedRow.dot:SetStatus(true)
-            else
-                selectedRow.dot:SetStatus(false)
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
             end
-        end
-        for _, tbs in ipairs(toggleBtnSets) do
-            if nowEnabled then
-                tbs.onBtn:EnableMouse(true)
-                tbs.offBtn:EnableMouse(true)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                tbs.statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            for _, tbs in ipairs(toggleBtnSets) do
                 local val = OneWoW.db.global.settings.tooltips.technicalids[tbs.key]
-                if val ~= false then
-                    tbs.onBtn.isActive = true
-                    tbs.offBtn.isActive = false
-                    tbs.onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    tbs.onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                    tbs.onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    tbs.offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                    tbs.offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                    tbs.offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                    tbs.statusVal:SetText(L["FEATURE_ENABLED"])
-                    tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-                else
-                    tbs.offBtn.isActive = true
-                    tbs.onBtn.isActive = false
-                    tbs.offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    tbs.offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                    tbs.offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    tbs.onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                    tbs.onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                    tbs.onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                    tbs.statusVal:SetText(L["FEATURE_DISABLED"])
-                    tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-                end
-            else
-                tbs.onBtn.isActive = false
-                tbs.offBtn.isActive = false
-                tbs.onBtn:EnableMouse(false)
-                tbs.offBtn:EnableMouse(false)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.statusVal:SetText(L["FEATURE_DISABLED"])
-                tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                tbs.onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                tbs.onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                tbs.offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                tbs.offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                tbs.refresh(newState, val ~= false)
+                tbs.label:SetTextColor(newState and OneWoW_GUI:GetThemeColor("TEXT_PRIMARY") or OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
-        end
-    end)
+        end,
+    })
 
-    yOffset = yOffset - 30 - 14
+    yOffset = statusBlock.getBottomY() - 14
 
-    local toggleHeader = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
     toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     toggleHeader:SetText(L["TIPS_MODULE_TOGGLES"])
     toggleHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - toggleHeader:GetStringHeight() - 8
 
-    local toggleDivider = dsc:CreateTexture(nil, "ARTWORK")
-    toggleDivider:SetHeight(1)
-    toggleDivider:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    toggleDivider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    toggleDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 10
 
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
     local tidSettings = db and db.tooltips and db.tooltips.technicalids or {}
 
-    for _, toggle in ipairs(TECHID_TOGGLES) do
-        local capturedKey = toggle.key
-        local currentVal = tidSettings[capturedKey] ~= false
-
-        local onBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_ON"], width = 50, height = 22 })
-        onBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-
-        local offBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_OFF"], width = 50, height = 22 })
-        offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
-
-        local rowStatusVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        rowStatusVal:SetPoint("RIGHT", offBtn, "LEFT", -6, 0)
-
-        local rowStatusPfx = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        rowStatusPfx:SetPoint("RIGHT", rowStatusVal, "LEFT", -2, 0)
-        rowStatusPfx:SetText(L["FEATURE_STATUS_LABEL"])
-
-        local toggleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        toggleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset - 3)
-        toggleLabel:SetPoint("RIGHT", rowStatusPfx, "LEFT", -8, 0)
-        toggleLabel:SetJustifyH("LEFT")
-        toggleLabel:SetText(L[toggle.localeKey] or toggle.localeKey)
-
-        if isEnabled then
-            toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            rowStatusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            if currentVal then
-                onBtn.isActive = true
-                offBtn.isActive = false
-                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                rowStatusVal:SetText(L["FEATURE_ENABLED"])
-                rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            else
-                offBtn.isActive = true
-                onBtn.isActive = false
-                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                rowStatusVal:SetText(L["FEATURE_DISABLED"])
-                rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-            end
-        else
-            onBtn.isActive = false
-            offBtn.isActive = false
-            toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusVal:SetText(L["FEATURE_DISABLED"])
-            rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            onBtn:EnableMouse(false)
-            offBtn:EnableMouse(false)
-            onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
-
-        local function applyToggleHover(btn)
-            if btn.isActive then
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-            else
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            end
-        end
-        local function applyToggleNormal(btn)
-            if btn.isActive then
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            else
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            end
-        end
-        onBtn:HookScript("OnEnter",   function(self) applyToggleHover(self)  end)
-        onBtn:HookScript("OnLeave",   function(self) applyToggleNormal(self) end)
-        onBtn:HookScript("OnMouseUp", function(self) applyToggleNormal(self) end)
-        offBtn:HookScript("OnEnter",   function(self) applyToggleHover(self)  end)
-        offBtn:HookScript("OnLeave",   function(self) applyToggleNormal(self) end)
-        offBtn:HookScript("OnMouseUp", function(self) applyToggleNormal(self) end)
-
-        tinsert(toggleBtnSets, { onBtn = onBtn, offBtn = offBtn, label = toggleLabel, statusPrefix = rowStatusPfx, statusVal = rowStatusVal, key = capturedKey })
-
-        onBtn:SetScript("OnClick", function(self)
-            OneWoW.db.global.settings.tooltips.technicalids[capturedKey] = true
-            onBtn.isActive = true
-            offBtn.isActive = false
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusVal:SetText(L["FEATURE_ENABLED"])
-            rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        end)
-        offBtn:SetScript("OnClick", function(self)
-            OneWoW.db.global.settings.tooltips.technicalids[capturedKey] = false
-            offBtn.isActive = true
-            onBtn.isActive = false
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusVal:SetText(L["FEATURE_DISABLED"])
-            rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end)
-
-        yOffset = yOffset - 22 - 10
-    end
+    yOffset = CreateSettingToggleRows(dsc, TECHID_TOGGLES, toggleBtnSets, isEnabled, tidSettings, "technicalids", yOffset)
 
     dsc:SetHeight(math.abs(yOffset) + 20)
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -763,7 +375,7 @@ local ITEMTRACKER_TOGGLES = {
 local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -771,14 +383,10 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local div = dsc:CreateTexture(nil, "ARTWORK")
-    div:SetHeight(1)
-    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -791,100 +399,36 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
     local toggleBtnSets = {}
 
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            if nowEnabled then
-                selectedRow.dot:SetStatus(true)
-            else
-                selectedRow.dot:SetStatus(false)
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
             end
-        end
-        for _, tbs in ipairs(toggleBtnSets) do
-            if nowEnabled then
-                tbs.onBtn:EnableMouse(true)
-                tbs.offBtn:EnableMouse(true)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                tbs.statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            for _, tbs in ipairs(toggleBtnSets) do
                 local val = OneWoW.db.global.settings.tooltips.itemtracker[tbs.key]
-                if val ~= false then
-                    tbs.onBtn.isActive = true
-                    tbs.offBtn.isActive = false
-                    tbs.onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    tbs.onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                    tbs.onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    tbs.offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                    tbs.offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                    tbs.offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                    tbs.statusVal:SetText(L["FEATURE_ENABLED"])
-                    tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-                else
-                    tbs.offBtn.isActive = true
-                    tbs.onBtn.isActive = false
-                    tbs.offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    tbs.offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                    tbs.offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    tbs.onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                    tbs.onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                    tbs.onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                    tbs.statusVal:SetText(L["FEATURE_DISABLED"])
-                    tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-                end
-            else
-                tbs.onBtn.isActive = false
-                tbs.offBtn.isActive = false
-                tbs.onBtn:EnableMouse(false)
-                tbs.offBtn:EnableMouse(false)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.statusVal:SetText(L["FEATURE_DISABLED"])
-                tbs.statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                tbs.onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                tbs.onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                tbs.offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                tbs.offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                tbs.offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                tbs.refresh(newState, val ~= false)
+                tbs.label:SetTextColor(newState and OneWoW_GUI:GetThemeColor("TEXT_PRIMARY") or OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
-        end
-    end)
+        end,
+    })
 
-    yOffset = yOffset - 30 - 14
+    yOffset = statusBlock.getBottomY() - 14
 
-    local toggleHeader = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
     toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     toggleHeader:SetText(L["TIPS_ITEMTRACKER_TRACK_SECTION"])
     toggleHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - toggleHeader:GetStringHeight() - 4
 
-    local trackDesc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local trackDesc = OneWoW_GUI:CreateFS(dsc, 10)
     trackDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     trackDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     trackDesc:SetJustifyH("LEFT")
@@ -894,169 +438,32 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     trackDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - trackDesc:GetStringHeight() - 6
 
-    local toggleDivider = dsc:CreateTexture(nil, "ARTWORK")
-    toggleDivider:SetHeight(1)
-    toggleDivider:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    toggleDivider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    toggleDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 10
 
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
     local itSettings = db and db.tooltips and db.tooltips.itemtracker or {}
 
-    for _, toggle in ipairs(ITEMTRACKER_TOGGLES) do
-        local capturedKey = toggle.key
-        local currentVal = itSettings[capturedKey] ~= false
-
-        local onBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_ON"], width = 50, height = 22 })
-        onBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-
-        local offBtn = OneWoW_GUI:CreateButton(dsc, { text = L["TIPS_TOGGLE_OFF"], width = 50, height = 22 })
-        offBtn:SetPoint("RIGHT", onBtn, "LEFT", -4, 0)
-
-        local rowStatusVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        rowStatusVal:SetPoint("RIGHT", offBtn, "LEFT", -6, 0)
-
-        local rowStatusPfx = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        rowStatusPfx:SetPoint("RIGHT", rowStatusVal, "LEFT", -2, 0)
-        rowStatusPfx:SetText(L["FEATURE_STATUS_LABEL"])
-
-        local toggleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        toggleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset - 3)
-        toggleLabel:SetPoint("RIGHT", rowStatusPfx, "LEFT", -8, 0)
-        toggleLabel:SetJustifyH("LEFT")
-        toggleLabel:SetText(L[toggle.localeKey] or toggle.localeKey)
-
-        if isEnabled then
-            toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            rowStatusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            if currentVal then
-                onBtn.isActive = true
-                offBtn.isActive = false
-                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                rowStatusVal:SetText(L["FEATURE_ENABLED"])
-                rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            else
-                offBtn.isActive = true
-                onBtn.isActive = false
-                offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                rowStatusVal:SetText(L["FEATURE_DISABLED"])
-                rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-            end
-        else
-            onBtn.isActive = false
-            offBtn.isActive = false
-            toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusVal:SetText(L["FEATURE_DISABLED"])
-            rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            onBtn:EnableMouse(false)
-            offBtn:EnableMouse(false)
-            onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
-
-        local function applyToggleHover(btn)
-            if btn.isActive then
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-            else
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            end
-        end
-        local function applyToggleNormal(btn)
-            if btn.isActive then
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            else
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            end
-        end
-        onBtn:HookScript("OnEnter",   function(self) applyToggleHover(self)  end)
-        onBtn:HookScript("OnLeave",   function(self) applyToggleNormal(self) end)
-        onBtn:HookScript("OnMouseUp", function(self) applyToggleNormal(self) end)
-        offBtn:HookScript("OnEnter",   function(self) applyToggleHover(self)  end)
-        offBtn:HookScript("OnLeave",   function(self) applyToggleNormal(self) end)
-        offBtn:HookScript("OnMouseUp", function(self) applyToggleNormal(self) end)
-
-        tinsert(toggleBtnSets, { onBtn = onBtn, offBtn = offBtn, label = toggleLabel, statusPrefix = rowStatusPfx, statusVal = rowStatusVal, key = capturedKey })
-
-        onBtn:SetScript("OnClick", function(self)
-            if not OneWoW.db.global.settings.tooltips.itemtracker then
-                OneWoW.db.global.settings.tooltips.itemtracker = {}
-            end
-            OneWoW.db.global.settings.tooltips.itemtracker[capturedKey] = true
-            onBtn.isActive = true
-            offBtn.isActive = false
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusVal:SetText(L["FEATURE_ENABLED"])
-            rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        end)
-        offBtn:SetScript("OnClick", function(self)
-            if not OneWoW.db.global.settings.tooltips.itemtracker then
-                OneWoW.db.global.settings.tooltips.itemtracker = {}
-            end
-            OneWoW.db.global.settings.tooltips.itemtracker[capturedKey] = false
-            offBtn.isActive = true
-            onBtn.isActive = false
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            rowStatusVal:SetText(L["FEATURE_DISABLED"])
-            rowStatusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end)
-
-        yOffset = yOffset - 22 - 10
-    end
+    yOffset = CreateSettingToggleRows(dsc, ITEMTRACKER_TOGGLES, toggleBtnSets, isEnabled, itSettings, "itemtracker", yOffset)
 
     yOffset = yOffset - 6
 
-    local reqDiv = dsc:CreateTexture(nil, "ARTWORK")
-    reqDiv:SetHeight(1)
-    reqDiv:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    reqDiv:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    reqDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local reqHeader = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local reqHeader = OneWoW_GUI:CreateFS(dsc, 12)
     reqHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     reqHeader:SetText(L["TIPS_ITEMTRACKER_REQUIRES_SECTION"])
     reqHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - reqHeader:GetStringHeight() - 8
 
-    local vendorReqLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local vendorReqLabel = OneWoW_GUI:CreateFS(dsc, 12)
     vendorReqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     vendorReqLabel:SetText(L["TIPS_ITEMTRACKER_VENDORS_REQUIRES"])
     vendorReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local vendorDetected = (_G.OneWoW_CatalogData_Vendors_API ~= nil)
-    local vendorDetVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local vendorDetVal = OneWoW_GUI:CreateFS(dsc, 12)
     vendorDetVal:SetPoint("LEFT", vendorReqLabel, "RIGHT", 8, 0)
     if vendorDetected then
         vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_DETECTED"])
@@ -1067,13 +474,13 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     end
     yOffset = yOffset - 24
 
-    local instReqLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local instReqLabel = OneWoW_GUI:CreateFS(dsc, 12)
     instReqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     instReqLabel:SetText(L["TIPS_ITEMTRACKER_INSTANCES_REQUIRES"])
     instReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local instDetected = (_G.OneWoW_CatalogData_Journal ~= nil)
-    local instDetVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local instDetVal = OneWoW_GUI:CreateFS(dsc, 12)
     instDetVal:SetPoint("LEFT", instReqLabel, "RIGHT", 8, 0)
     if instDetected then
         instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_DETECTED"])
@@ -1085,14 +492,14 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     yOffset = yOffset - 24
 
     dsc:SetHeight(math.abs(yOffset) + 20)
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
 local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -1100,14 +507,10 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local div = dsc:CreateTexture(nil, "ARTWORK")
-    div:SetHeight(1)
-    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -1117,68 +520,40 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-        if feature.id == "playermounts" and _G.OneWoW_QoL and _G.OneWoW_QoL.ModuleRegistry then
-            _G.OneWoW_QoL.ModuleRegistry:SetEnabled("playmounts", nowEnabled)
-            if _G.OneWoW_QoL.UI and _G.OneWoW_QoL.UI.RefreshModuleDot then
-                _G.OneWoW_QoL.UI.RefreshModuleDot("playmounts", nowEnabled)
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if feature.id == "playermounts" and _G.OneWoW_QoL and _G.OneWoW_QoL.ModuleRegistry then
+                _G.OneWoW_QoL.ModuleRegistry:SetEnabled("playmounts", newState)
+                if _G.OneWoW_QoL.UI and _G.OneWoW_QoL.UI.RefreshModuleDot then
+                    _G.OneWoW_QoL.UI.RefreshModuleDot("playmounts", newState)
+                end
             end
-        end
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            if nowEnabled then
-                selectedRow.dot:SetStatus(true)
-            else
-                selectedRow.dot:SetStatus(false)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
             end
-        end
-    end)
+        end,
+    })
 
-    yOffset = yOffset - 30 - 14
+    yOffset = statusBlock.getBottomY() - 14
 
-    local reqDiv = dsc:CreateTexture(nil, "ARTWORK")
-    reqDiv:SetHeight(1)
-    reqDiv:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    reqDiv:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    reqDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local reqLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local reqLabel = OneWoW_GUI:CreateFS(dsc, 12)
     reqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     reqLabel:SetText(L["TIPS_PLAYERMOUNTS_REQUIRES"])
     reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local qolLoaded = (_G.OneWoW_QoL ~= nil)
-    local detectedValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local detectedValue = OneWoW_GUI:CreateFS(dsc, 12)
     detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
     if qolLoaded then
         detectedValue:SetText(L["TIPS_PLAYERMOUNTS_DETECTED"])
@@ -1189,7 +564,7 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     end
     yOffset = yOffset - 24
 
-    local noteLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local noteLabel = OneWoW_GUI:CreateFS(dsc, 10)
     noteLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     noteLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     noteLabel:SetJustifyH("LEFT")
@@ -1200,14 +575,14 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     yOffset = yOffset - noteLabel:GetStringHeight() - 10
 
     dsc:SetHeight(math.abs(yOffset) + 20)
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
 local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -1215,14 +590,10 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local div = dsc:CreateTexture(nil, "ARTWORK")
-    div:SetHeight(1)
-    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -1235,48 +606,27 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
     local allRefreshFuncs = {}
 
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
+            end
+            for _, refreshFn in ipairs(allRefreshFuncs) do
+                refreshFn(newState)
+            end
+        end,
+    })
 
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
+    yOffset = statusBlock.getBottomY() - 14
 
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            selectedRow.dot:SetStatus(nowEnabled)
-        end
-        for _, refreshFn in ipairs(allRefreshFuncs) do
-            refreshFn(nowEnabled)
-        end
-    end)
-
-    yOffset = yOffset - 30 - 14
-
-    if not OneWoW.db.global.settings.tooltips.talentmods then
-        OneWoW.db.global.settings.tooltips.talentmods = {}
-    end
     local tmSettings = OneWoW.db.global.settings.tooltips.talentmods
 
     local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
@@ -1285,7 +635,7 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     })
     yOffset = section1.bottomY - 6
 
-    local sec1Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sec1Desc = OneWoW_GUI:CreateFS(dsc, 10)
     sec1Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     sec1Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     sec1Desc:SetJustifyH("LEFT")
@@ -1322,14 +672,14 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     table.insert(allRefreshFuncs, function(enabled) refresh2(enabled, tmSettings.hideInCombat == true) end)
 
     dsc:SetHeight(math.abs(yOffset) + 20)
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
 local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -1337,14 +687,10 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local div = dsc:CreateTexture(nil, "ARTWORK")
-    div:SetHeight(1)
-    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -1357,48 +703,27 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
     local allRefreshFuncs = {}
 
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
+            end
+            for _, refreshFn in ipairs(allRefreshFuncs) do
+                refreshFn(newState)
+            end
+        end,
+    })
 
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
+    yOffset = statusBlock.getBottomY() - 14
 
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            selectedRow.dot:SetStatus(nowEnabled)
-        end
-        for _, refreshFn in ipairs(allRefreshFuncs) do
-            refreshFn(nowEnabled)
-        end
-    end)
-
-    yOffset = yOffset - 30 - 14
-
-    if not OneWoW.db.global.settings.tooltips.enhancements then
-        OneWoW.db.global.settings.tooltips.enhancements = {}
-    end
     local enhSettings = OneWoW.db.global.settings.tooltips.enhancements
 
     local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
@@ -1407,7 +732,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     })
     yOffset = section1.bottomY - 6
 
-    local sec1Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sec1Desc = OneWoW_GUI:CreateFS(dsc, 10)
     sec1Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     sec1Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     sec1Desc:SetJustifyH("LEFT")
@@ -1519,7 +844,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     })
     yOffset = section2.bottomY - 6
 
-    local sec2Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sec2Desc = OneWoW_GUI:CreateFS(dsc, 10)
     sec2Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     sec2Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     sec2Desc:SetJustifyH("LEFT")
@@ -1626,7 +951,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     })
     yOffset = section3.bottomY - 6
 
-    local sec3Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sec3Desc = OneWoW_GUI:CreateFS(dsc, 10)
     sec3Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     sec3Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     sec3Desc:SetJustifyH("LEFT")
@@ -1698,7 +1023,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     })
     yOffset = section4.bottomY - 6
 
-    local sec4Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sec4Desc = OneWoW_GUI:CreateFS(dsc, 10)
     sec4Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     sec4Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     sec4Desc:SetJustifyH("LEFT")
@@ -1708,50 +1033,32 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     sec4Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - sec4Desc:GetStringHeight() - 10
 
-    local function CreateColorSwatch(parent, colorKey, defaultR, defaultG, defaultB)
-        local c = enhSettings[colorKey] or { r = defaultR, g = defaultG, b = defaultB }
-        if not enhSettings[colorKey] then enhSettings[colorKey] = c end
-
-        local swatch = CreateFrame("Button", nil, parent, "BackdropTemplate")
-        swatch:SetSize(24, 24)
-        swatch:SetBackdrop({ bgFile = "Interface\\ChatFrame\\ChatFrameBackground", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 8, insets = { left = 1, right = 1, top = 1, bottom = 1 } })
-        swatch:SetBackdropColor(c.r, c.g, c.b, 1)
-        swatch:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-
-        swatch:SetScript("OnClick", function()
-            ColorPickerFrame:SetupColorPickerAndShow({
-                r = c.r, g = c.g, b = c.b,
-                swatchFunc = function()
-                    local r, g, b = ColorPickerFrame:GetColorRGB()
-                    c.r, c.g, c.b = r, g, b
-                    enhSettings[colorKey] = c
-                    swatch:SetBackdropColor(r, g, b, 1)
-                end,
-                cancelFunc = function(prev)
-                    if prev then
-                        c.r, c.g, c.b = prev.r, prev.g, prev.b
-                        enhSettings[colorKey] = c
-                        swatch:SetBackdropColor(prev.r, prev.g, prev.b, 1)
-                    end
-                end,
-            })
-        end)
-
-        return swatch
+    local function ensureColor(colorKey, defaultR, defaultG, defaultB)
+        if not enhSettings[colorKey] then
+            enhSettings[colorKey] = { r = defaultR, g = defaultG, b = defaultB }
+        end
     end
+
+    ensureColor("partyColor", 0.5, 0.2, 0.65)
+    ensureColor("guildColor", 0.2, 0.6, 0.6)
+    ensureColor("factionFriendlyColor", 0.15, 0.15, 0.5)
+    ensureColor("factionEnemyColor", 0.5, 0.15, 0.12)
 
     local newY14, refresh14 = OneWoW_GUI:CreateToggleRow(dsc, {
         yOffset = yOffset,
         label = L["TIPS_ENHANCEMENTS_COLOR_PARTY"],
         createContent = function(container)
-            local descFs = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local descFs = OneWoW_GUI:CreateFS(container, 10)
             descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
             descFs:SetPoint("RIGHT", container, "RIGHT", -34, 0)
             descFs:SetJustifyH("LEFT")
             descFs:SetWordWrap(true)
             descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_PARTY_DESC"])
             descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            local swatch = CreateColorSwatch(container, "partyColor", 0.5, 0.2, 0.65)
+            local swatch = OneWoW_GUI:CreateColorSwatch(container, {
+                getColor = function() return enhSettings.partyColor.r, enhSettings.partyColor.g, enhSettings.partyColor.b end,
+                onColorChanged = function(r, g, b) enhSettings.partyColor.r, enhSettings.partyColor.g, enhSettings.partyColor.b = r, g, b end,
+            })
             swatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
             local h = math.max(descFs:GetStringHeight(), 24)
             return descFs, h
@@ -1769,14 +1076,17 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         yOffset = yOffset,
         label = L["TIPS_ENHANCEMENTS_COLOR_GUILD"],
         createContent = function(container)
-            local descFs = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local descFs = OneWoW_GUI:CreateFS(container, 10)
             descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
             descFs:SetPoint("RIGHT", container, "RIGHT", -34, 0)
             descFs:SetJustifyH("LEFT")
             descFs:SetWordWrap(true)
             descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_GUILD_DESC"])
             descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            local swatch = CreateColorSwatch(container, "guildColor", 0.2, 0.6, 0.6)
+            local swatch = OneWoW_GUI:CreateColorSwatch(container, {
+                getColor = function() return enhSettings.guildColor.r, enhSettings.guildColor.g, enhSettings.guildColor.b end,
+                onColorChanged = function(r, g, b) enhSettings.guildColor.r, enhSettings.guildColor.g, enhSettings.guildColor.b = r, g, b end,
+            })
             swatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
             local h = math.max(descFs:GetStringHeight(), 24)
             return descFs, h
@@ -1794,16 +1104,22 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         yOffset = yOffset,
         label = L["TIPS_ENHANCEMENTS_COLOR_FACTION"],
         createContent = function(container)
-            local descFs = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local descFs = OneWoW_GUI:CreateFS(container, 10)
             descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
             descFs:SetPoint("RIGHT", container, "RIGHT", -60, 0)
             descFs:SetJustifyH("LEFT")
             descFs:SetWordWrap(true)
             descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_FACTION_DESC"])
             descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            local friendSwatch = CreateColorSwatch(container, "factionFriendlyColor", 0.15, 0.15, 0.5)
+            local friendSwatch = OneWoW_GUI:CreateColorSwatch(container, {
+                getColor = function() return enhSettings.factionFriendlyColor.r, enhSettings.factionFriendlyColor.g, enhSettings.factionFriendlyColor.b end,
+                onColorChanged = function(r, g, b) enhSettings.factionFriendlyColor.r, enhSettings.factionFriendlyColor.g, enhSettings.factionFriendlyColor.b = r, g, b end,
+            })
             friendSwatch:SetPoint("RIGHT", container, "RIGHT", -30, 0)
-            local enemySwatch = CreateColorSwatch(container, "factionEnemyColor", 0.5, 0.15, 0.12)
+            local enemySwatch = OneWoW_GUI:CreateColorSwatch(container, {
+                getColor = function() return enhSettings.factionEnemyColor.r, enhSettings.factionEnemyColor.g, enhSettings.factionEnemyColor.b end,
+                onColorChanged = function(r, g, b) enhSettings.factionEnemyColor.r, enhSettings.factionEnemyColor.g, enhSettings.factionEnemyColor.b = r, g, b end,
+            })
             enemySwatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
             local h = math.max(descFs:GetStringHeight(), 24)
             return descFs, h
@@ -1818,14 +1134,14 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     table.insert(allRefreshFuncs, function(enabled) refresh16(enabled, enhSettings.colorFaction == true) end)
 
     dsc:SetHeight(math.abs(yOffset) + 20)
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
 local function ShowValueDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -1833,14 +1149,10 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local div = dsc:CreateTexture(nil, "ARTWORK")
-    div:SetHeight(1)
-    div:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    div:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -1853,48 +1165,27 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
     local allRefreshFuncs = {}
 
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
+            end
+            for _, refreshFn in ipairs(allRefreshFuncs) do
+                refreshFn(newState)
+            end
+        end,
+    })
 
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
+    yOffset = statusBlock.getBottomY() - 14
 
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-        OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            selectedRow.dot:SetStatus(nowEnabled)
-        end
-        for _, refreshFn in ipairs(allRefreshFuncs) do
-            refreshFn(nowEnabled)
-        end
-    end)
-
-    yOffset = yOffset - 30 - 14
-
-    if not OneWoW.db.global.settings.tooltips.value then
-        OneWoW.db.global.settings.tooltips.value = {}
-    end
     local valSettings = OneWoW.db.global.settings.tooltips.value
 
     local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
@@ -1903,7 +1194,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     })
     yOffset = section1.bottomY - 6
 
-    local sec1Desc = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sec1Desc = OneWoW_GUI:CreateFS(dsc, 10)
     sec1Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     sec1Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     sec1Desc:SetJustifyH("LEFT")
@@ -1945,13 +1236,13 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     })
     yOffset = reqSection.bottomY - 12
 
-    local auctionsReqLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local auctionsReqLabel = OneWoW_GUI:CreateFS(dsc, 12)
     auctionsReqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     auctionsReqLabel:SetText(L["TIPS_VALUE_AUCTIONS_REQUIRES"])
     auctionsReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local auctionsDetected = C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Auctions")
-    local auctionsDetVal = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local auctionsDetVal = OneWoW_GUI:CreateFS(dsc, 12)
     auctionsDetVal:SetPoint("LEFT", auctionsReqLabel, "RIGHT", 8, 0)
     if auctionsDetected then
         auctionsDetVal:SetText(L["TIPS_VALUE_AUCTIONS_DETECTED"])
@@ -1963,7 +1254,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     yOffset = yOffset - 24
 
     dsc:SetHeight(math.abs(yOffset) + 20)
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -2013,7 +1304,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     local yOffset = -10
 
-    local titleLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
@@ -2021,14 +1312,10 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
-    local divider = dsc:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    divider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
-    local descLabel = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
     descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     descLabel:SetJustifyH("LEFT")
@@ -2038,50 +1325,26 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
-
-    local statusPrefix = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusPrefix:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    statusPrefix:SetText(L["FEATURE_STATUS_LABEL"])
-    statusPrefix:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local statusValue = dsc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-    if isEnabled then
-        statusValue:SetText(L["FEATURE_ENABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        statusValue:SetText(L["FEATURE_DISABLED"])
-        statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-
-    local toggleBtn = OneWoW_GUI:CreateButton(dsc, { text = isEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"], width = 90, height = 24 })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
-    toggleBtn:SetScript("OnClick", function(self)
-        local nowEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
-        OneWoW.SettingsFeatureRegistry:SetEnabled(tabName, feature.id, not nowEnabled)
-        nowEnabled = not nowEnabled
-        if nowEnabled then
-            statusValue:SetText(L["FEATURE_ENABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            statusValue:SetText(L["FEATURE_DISABLED"])
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        self.text:SetText(nowEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        if selectedRow and selectedRow.dot then
-            if nowEnabled then
-                selectedRow.dot:SetStatus(true)
-            else
-                selectedRow.dot:SetStatus(false)
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled(tabName, feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
             end
-        end
-    end)
+        end,
+    })
 
-    yOffset = yOffset - 30 - 14
+    yOffset = statusBlock.getBottomY() - 14
 
     dsc:SetHeight(math.abs(yOffset) + 20)
-    GUI:ApplyFontToFrame(dsc)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
     split.UpdateDetailThumb()
 end
 
@@ -2163,6 +1426,6 @@ function GUI:CreateTooltipsTab(parent)
 
     C_Timer.After(0.1, function()
         BuildFeatureList(split, "tooltips")
-        GUI:ApplyFontToFrame(parent)
+        OneWoW_GUI:ApplyFontToFrame(parent)
     end)
 end

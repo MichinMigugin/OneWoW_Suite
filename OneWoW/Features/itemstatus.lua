@@ -20,9 +20,6 @@ end
 
 function IS:Initialize()
     if not OneWoW.db or not OneWoW.db.global then return end
-    if not OneWoW.db.global.itemStatus then
-        OneWoW.db.global.itemStatus = {}
-    end
 end
 
 function IS:GetAllStatuses()

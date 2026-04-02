@@ -1,5 +1,6 @@
 local ADDON_NAME, OneWoW = ...
 local L = OneWoW.L
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 OneWoW.PortalHubEsc = OneWoW.PortalHubEsc or {}
 local EscMenu = OneWoW.PortalHubEsc
@@ -18,12 +19,6 @@ local function IsSecret(value)
 end
 
 function EscMenu:Initialize()
-	if not OneWoW.db.global.instanceStatsEsc then
-		OneWoW.db.global.instanceStatsEsc = {enabled = false}
-	end
-	if not OneWoW.db.global.portalHub then
-		OneWoW.db.global.portalHub = {}
-	end
 	self:HookGameMenu()
 	self:RegisterAutoUpdateEvents()
 end
@@ -361,10 +356,9 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 	button.cooldownFrame = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
 	button.cooldownFrame:SetAllPoints()
 
-	button.text = button:CreateFontString(nil, "OVERLAY")
+	button.text = OneWoW_GUI:CreateFS(button, 8)
 	button.text:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
-	button.text:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
-	button.text:SetTextColor(1, 1, 1, 1)
+	button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 	button.text:SetShadowColor(0, 0, 0, 1)
 	button.text:SetShadowOffset(1, -1)
 
@@ -560,9 +554,6 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize)
 					moduleKey = "qol"
 				end
 				if OneWoW.db and OneWoW.db.global then
-					if not OneWoW.db.global.lastSubTabs then
-						OneWoW.db.global.lastSubTabs = {}
-					end
 					OneWoW.db.global.lastSubTabs[moduleKey] = "portals"
 				end
 				OneWoW.GUI:Show(moduleKey)
@@ -668,28 +659,28 @@ function EscMenu:CreateOrUpdateInstanceStatsFrame(instanceName, instanceType, di
 		instanceStatsFrame.bgTexture:SetAllPoints(instanceStatsFrame)
 		instanceStatsFrame.bgTexture:SetAtlas("GarrMissionLocation-Maw-bg-01", true)
 
-		local title = instanceStatsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalHuge")
+		local title = OneWoW_GUI:CreateFS(instanceStatsFrame, 18, "ARTWORK")
 		title:SetPoint("TOP", instanceStatsFrame, "TOP", 0, -15)
 		title:SetJustifyH("CENTER")
-		title:SetTextColor(1, 1, 1)
+		title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 		title:SetShadowColor(0, 0, 0, 1)
 		title:SetShadowOffset(2, -2)
 		instanceStatsFrame.title = title
 
-		local subtitle = instanceStatsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+		local subtitle = OneWoW_GUI:CreateFS(instanceStatsFrame, 12, "ARTWORK")
 		subtitle:SetPoint("TOP", title, "BOTTOM", 0, -10)
 		subtitle:SetJustifyH("CENTER")
-		subtitle:SetTextColor(0.8, 0.9, 1)
+		subtitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 		subtitle:SetShadowColor(0, 0, 0, 1)
 		subtitle:SetShadowOffset(1, -1)
 		instanceStatsFrame.subtitle = subtitle
 
-		local statsTextObj = instanceStatsFrame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+		local statsTextObj = OneWoW_GUI:CreateFS(instanceStatsFrame, 12, "ARTWORK")
 		statsTextObj:SetPoint("TOP", subtitle, "BOTTOM", 0, -10)
 		statsTextObj:SetWidth(350)
 		statsTextObj:SetJustifyH("CENTER")
 		statsTextObj:SetWordWrap(true)
-		statsTextObj:SetTextColor(1, 1, 0.5)
+		statsTextObj:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 		statsTextObj:SetShadowColor(0, 0, 0, 1)
 		statsTextObj:SetShadowOffset(1, -1)
 		statsTextObj:SetSpacing(3)
@@ -755,9 +746,6 @@ end
 function EscMenu:SaveInstanceStatsPosition()
 	if not instanceStatsFrame then return end
 	local point, _, relativePoint, x, y = instanceStatsFrame:GetPoint()
-	if not OneWoW.db.global.instanceStatsPosition then
-		OneWoW.db.global.instanceStatsPosition = {}
-	end
 	OneWoW.db.global.instanceStatsPosition.point = point
 	OneWoW.db.global.instanceStatsPosition.relativePoint = relativePoint
 	OneWoW.db.global.instanceStatsPosition.x = x

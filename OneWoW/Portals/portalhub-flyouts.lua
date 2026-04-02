@@ -1,5 +1,6 @@
 local ADDON_NAME, OneWoW = ...
 local L = OneWoW.L
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 OneWoW.PortalHubFlyouts = OneWoW.PortalHubFlyouts or {}
 local Flyouts = OneWoW.PortalHubFlyouts
@@ -55,10 +56,9 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 		button.icon = button:CreateTexture(nil, "BACKGROUND")
 		button.icon:SetAllPoints()
 
-		button.text = button:CreateFontString(nil, "OVERLAY")
+		button.text = OneWoW_GUI:CreateFS(button, 9)
 		button.text:SetPoint("BOTTOM", button, "BOTTOM", 0, 3)
-		button.text:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
-		button.text:SetTextColor(1, 1, 1, 1)
+		button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 		button.text:SetShadowColor(0, 0, 0, 1)
 		button.text:SetShadowOffset(1, -1)
 
@@ -188,10 +188,9 @@ function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset
 	button.icon:SetAllPoints()
 	button.icon:SetTexture(iconTexture)
 
-	button.text = button:CreateFontString(nil, "OVERLAY")
+	button.text = OneWoW_GUI:CreateFS(button, 8)
 	button.text:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
-	button.text:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
-	button.text:SetTextColor(1, 1, 1, 1)
+	button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 	button.text:SetShadowColor(0, 0, 0, 1)
 	button.text:SetShadowOffset(1, -1)
 	if label then
@@ -271,10 +270,9 @@ function Flyouts:CreateNestedFlyoutButton(parent, iconTexture, iconSize, xOffset
 	button.icon:SetAllPoints()
 	button.icon:SetTexture(iconTexture)
 
-	button.text = button:CreateFontString(nil, "OVERLAY")
+	button.text = OneWoW_GUI:CreateFS(button, 8)
 	button.text:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
-	button.text:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
-	button.text:SetTextColor(1, 1, 1, 1)
+	button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 	button.text:SetShadowColor(0, 0, 0, 1)
 	button.text:SetShadowOffset(1, -1)
 	if label then
@@ -326,10 +324,9 @@ function Flyouts:CreateExpansionFlyout(parent, iconTexture, iconSize, xOffset, y
 	button.icon:SetAllPoints()
 	button.icon:SetTexture(iconTexture)
 
-	button.text = button:CreateFontString(nil, "OVERLAY")
+	button.text = OneWoW_GUI:CreateFS(button, 8)
 	button.text:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
-	button.text:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
-	button.text:SetTextColor(1, 1, 1, 1)
+	button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 	button.text:SetShadowColor(0, 0, 0, 1)
 	button.text:SetShadowOffset(1, -1)
 	if label then
