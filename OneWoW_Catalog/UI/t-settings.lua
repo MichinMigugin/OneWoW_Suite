@@ -28,7 +28,7 @@ function ns.UI.CreateSettingsTab(parent)
     local dbSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["DATA_MANAGER_TITLE"], yOffset = yOffset })
     yOffset = dbSection.bottomY - 8
 
-    local dbDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local dbDesc = OneWoW_GUI:CreateFS(scrollContent, 12)
     dbDesc:SetPoint("TOPLEFT", 15, yOffset)
     dbDesc:SetPoint("TOPRIGHT", -15, yOffset)
     dbDesc:SetJustifyH("LEFT")
@@ -62,18 +62,18 @@ function ns.UI.CreateSettingsTab(parent)
         container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-        local nameText = container:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local nameText = OneWoW_GUI:CreateFS(container, 12)
         nameText:SetPoint("TOPLEFT", 12, -10)
         nameText:SetText(dbData.name)
         nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local descText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local descText = OneWoW_GUI:CreateFS(container, 10)
         descText:SetPoint("TOPLEFT", 12, -28)
         descText:SetText(dbData.desc)
         descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         descText:SetWidth(400)
 
-        local sizeText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local sizeText = OneWoW_GUI:CreateFS(container, 10)
         sizeText:SetPoint("TOPLEFT", 450, -18)
 
         local function UpdateSize()
@@ -84,16 +84,16 @@ function ns.UI.CreateSettingsTab(parent)
                 sizeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             else
                 sizeText:SetText("Not Loaded")
-                sizeText:SetTextColor(1, 0.5, 0.5)
+                sizeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             end
         end
         UpdateSize()
 
         local resetBtn = OneWoW_GUI:CreateFitTextButton(container, { text = "Reset", height = 28, minWidth = 75 })
         resetBtn:SetPoint("TOPRIGHT", -12, -16)
-        resetBtn:SetBackdropColor(1, 0.3, 0.3)
-        resetBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(1, 0.1, 0.1) end)
-        resetBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(1, 0.3, 0.3) end)
+        resetBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+        resetBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER")) end)
+        resetBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")) end)
 
         resetBtn:SetScript("OnClick", function()
             StaticPopupDialogs["OWCAT_RESET_DB_CONFIRM"] = {

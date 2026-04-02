@@ -177,7 +177,7 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
         card.bgTex = bgTex
     end
 
-    local nameText = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local nameText = OneWoW_GUI:CreateFS(card, 12)
     nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -6)
     nameText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -6)
     nameText:SetJustifyH("LEFT")
@@ -188,7 +188,7 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     local typeStr = instData.instanceType == "raid" and L["JOURNAL_CARD_RAID"]
                  or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
                  or ""
-    local infoText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local infoText = OneWoW_GUI:CreateFS(card, 10)
     infoText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -2)
     infoText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, 0)
     infoText:SetJustifyH("LEFT")
@@ -196,12 +196,12 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local encCount = #instData.encounters
-    local countText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local countText = OneWoW_GUI:CreateFS(card, 10)
     countText:SetPoint("TOPLEFT", infoText, "BOTTOMLEFT", 0, -2)
     countText:SetJustifyH("LEFT")
     countText:SetText(string.format(L["JOURNAL_CARD_ENCOUNTERS"], encCount)
                       .. "  |  " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems))
-    countText:SetTextColor(0.6, 0.8, 1.0, 1.0)
+    countText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
 
     local row1 = {
         { flag = instData.hasMounts,  label = L["JOURNAL_CARD_MOUNTS"],  color = SPECIAL_COLORS.Mount },
@@ -216,23 +216,23 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
 
     local colWidth = 80
     for i, cat in ipairs(row1) do
-        local catText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local catText = OneWoW_GUI:CreateFS(card, 10)
         catText:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 8 + ((i - 1) * colWidth), 18)
         catText:SetText(cat.label)
         if cat.flag then
             catText:SetTextColor(cat.color[1], cat.color[2], cat.color[3], 1.0)
         else
-            catText:SetTextColor(0.35, 0.35, 0.35, 1.0)
+            catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
     end
     for i, cat in ipairs(row2) do
-        local catText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local catText = OneWoW_GUI:CreateFS(card, 10)
         catText:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 8 + ((i - 1) * colWidth), 6)
         catText:SetText(cat.label)
         if cat.flag then
             catText:SetTextColor(cat.color[1], cat.color[2], cat.color[3], 1.0)
         else
-            catText:SetTextColor(0.35, 0.35, 0.35, 1.0)
+            catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
     end
 
@@ -281,7 +281,7 @@ local function BuildCollectionsSummary(parent, instData, yOffset, addon)
         end
     end
 
-    local headerText = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local headerText = OneWoW_GUI:CreateFS(parent, 12)
     headerText:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     headerText:SetText(L["JOURNAL_COLLECTIONS"])
     headerText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -301,15 +301,15 @@ local function BuildCollectionsSummary(parent, instData, yOffset, addon)
     local xPos = 10
     for _, def in ipairs(catDefs) do
         local c = counts[def.key]
-        local catLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local catLabel = OneWoW_GUI:CreateFS(parent, 10)
         catLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", xPos, yOffset)
         catLabel:SetJustifyH("LEFT")
         catLabel:SetText(string.format(L[def.fmt], c.collected, c.total))
 
         if c.total == 0 then
-            catLabel:SetTextColor(0.35, 0.35, 0.35, 1.0)
+            catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         elseif c.collected >= c.total then
-            catLabel:SetTextColor(0.2, 1.0, 0.2, 1.0)
+            catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             catLabel:SetTextColor(def.color[1], def.color[2], def.color[3], 1.0)
         end
@@ -356,7 +356,7 @@ local function RefreshDetailView(isSecondRefresh)
     local parent = panels.detailScrollChild
     local yOffset = -8
 
-    local nameHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local nameHeader = OneWoW_GUI:CreateFS(parent, 16)
     nameHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     nameHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     nameHeader:SetJustifyH("LEFT")
@@ -368,7 +368,7 @@ local function RefreshDetailView(isSecondRefresh)
     local typeStr = instData.instanceType == "raid" and L["JOURNAL_CARD_RAID"]
                  or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
                  or ""
-    local infoLine = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local infoLine = OneWoW_GUI:CreateFS(parent, 12)
     infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     infoLine:SetJustifyH("LEFT")
@@ -414,24 +414,24 @@ local function RefreshDetailView(isSecondRefresh)
     local COL_SPECIAL_RIGHT = -130
     local COL_STATUS_RIGHT  = -8
 
-    local hdrItem = colHdrFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hdrItem = OneWoW_GUI:CreateFS(colHdrFrame, 10)
     hdrItem:SetPoint("LEFT", colHdrFrame, "LEFT", 8, 0)
     hdrItem:SetText(L["JOURNAL_COL_HDR_ITEM"])
     hdrItem:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local hdrDiff = colHdrFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hdrDiff = OneWoW_GUI:CreateFS(colHdrFrame, 10)
     hdrDiff:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_DIFF_RIGHT, 0)
     hdrDiff:SetText(L["JOURNAL_COL_HDR_DIFFICULTY"])
     hdrDiff:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hdrDiff:SetJustifyH("RIGHT")
 
-    local hdrSpecial = colHdrFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hdrSpecial = OneWoW_GUI:CreateFS(colHdrFrame, 10)
     hdrSpecial:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_SPECIAL_RIGHT, 0)
     hdrSpecial:SetText(L["JOURNAL_COL_HDR_SPECIAL"])
     hdrSpecial:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hdrSpecial:SetJustifyH("RIGHT")
 
-    local hdrStatus = colHdrFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hdrStatus = OneWoW_GUI:CreateFS(colHdrFrame, 10)
     hdrStatus:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_STATUS_RIGHT, 0)
     hdrStatus:SetText(L["JOURNAL_COL_HDR_STATUS"])
     hdrStatus:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -461,12 +461,12 @@ local function RefreshDetailView(isSecondRefresh)
         encBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         table.insert(detailElements, encBtn)
 
-        local arrowText = encBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local arrowText = OneWoW_GUI:CreateFS(encBtn, 12)
         arrowText:SetPoint("LEFT", encBtn, "LEFT", 8, 0)
         arrowText:SetText(isExpanded and "v" or ">")
         arrowText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-        local encName = encBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local encName = OneWoW_GUI:CreateFS(encBtn, 12)
         encName:SetPoint("LEFT", arrowText, "RIGHT", 6, 0)
         encName:SetText(encounter.name)
         encName:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -475,7 +475,7 @@ local function RefreshDetailView(isSecondRefresh)
         if #filteredItems ~= #encounter.items then
             itemCountStr = string.format(L["JOURNAL_ITEMS_FILTERED"], #filteredItems, #encounter.items)
         end
-        local encCount = encBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local encCount = OneWoW_GUI:CreateFS(encBtn, 10)
         encCount:SetPoint("RIGHT", encBtn, "RIGHT", -8, 0)
         encCount:SetText(itemCountStr)
         encCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -517,7 +517,7 @@ local function RefreshDetailView(isSecondRefresh)
                 iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
                 iconTex:SetTexture(item.icon or 134400)
 
-                local itemName = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                local itemName = OneWoW_GUI:CreateFS(itemRow, 12)
                 itemName:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
                 itemName:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT - 10, 0)
                 itemName:SetJustifyH("LEFT")
@@ -529,13 +529,13 @@ local function RefreshDetailView(isSecondRefresh)
                 itemName:SetText(displayName)
                 itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(item.quality))
 
-                local diffText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local diffText = OneWoW_GUI:CreateFS(itemRow, 10)
                 diffText:SetPoint("RIGHT", itemRow, "RIGHT", COL_DIFF_RIGHT, 0)
                 diffText:SetJustifyH("RIGHT")
                 diffText:SetText(FormatDifficulties(item.difficulties))
                 diffText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-                local specialText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local specialText = OneWoW_GUI:CreateFS(itemRow, 10)
                 specialText:SetPoint("RIGHT", itemRow, "RIGHT", COL_SPECIAL_RIGHT, 0)
                 specialText:SetJustifyH("RIGHT")
                 if item.special then
@@ -549,7 +549,7 @@ local function RefreshDetailView(isSecondRefresh)
                     specialText:SetText("")
                 end
 
-                local statusText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local statusText = OneWoW_GUI:CreateFS(itemRow, 10)
                 statusText:SetPoint("RIGHT", itemRow, "RIGHT", COL_STATUS_RIGHT, 0)
                 statusText:SetJustifyH("RIGHT")
                 if item.special and addon and addon.JournalData then
@@ -558,9 +558,9 @@ local function RefreshDetailView(isSecondRefresh)
                         statusText:SetText(status)
                         local isCollected = addon.JournalData:IsItemCollected(item.itemID, item.itemData, item.special)
                         if isCollected then
-                            statusText:SetTextColor(0.2, 1.0, 0.2, 1.0)
+                            statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
                         else
-                            statusText:SetTextColor(0.8, 0.3, 0.3, 1.0)
+                            statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
                         end
                     else
                         statusText:SetText("")
@@ -827,7 +827,7 @@ function ns.UI.CreateJournalTab(parent)
     searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
 
     -- LEFT HEADER: Row 2 - Expansion label + dropdown
-    local expLabel = leftHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local expLabel = OneWoW_GUI:CreateFS(leftHeader, 10)
     expLabel:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -38)
     expLabel:SetText(L["JOURNAL_LABEL_EXPANSION"])
     expLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -836,7 +836,7 @@ function ns.UI.CreateJournalTab(parent)
     expDropdown:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -54)
 
     -- RIGHT HEADER: Row 1 left - Instance Type label + [All][Raids][Dungeons] buttons
-    local typeLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local typeLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
     typeLabel:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", 8, -8)
     typeLabel:SetText(L["JOURNAL_LABEL_INST_TYPE"])
     typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -858,7 +858,7 @@ function ns.UI.CreateJournalTab(parent)
         btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local lbl = OneWoW_GUI:CreateFS(btn, 10)
         lbl:SetPoint("CENTER", 0, 0)
         lbl:SetText(def.text)
         lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -917,7 +917,7 @@ function ns.UI.CreateJournalTab(parent)
     local collectionFilterDropdown, collectionFilterText = ns.UI.CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
     collectionFilterDropdown:SetPoint("TOPRIGHT", rightHeader, "TOPRIGHT", -8, -22)
 
-    local collLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local collLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
     collLabel:SetPoint("BOTTOMLEFT", collectionFilterDropdown, "TOPLEFT", 0, 2)
     collLabel:SetText(L["JOURNAL_LABEL_COLLECTION"])
     collLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -925,7 +925,7 @@ function ns.UI.CreateJournalTab(parent)
     local itemFilterDropdown, itemFilterText = ns.UI.CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
     itemFilterDropdown:SetPoint("TOPRIGHT", collectionFilterDropdown, "TOPLEFT", -6, 0)
 
-    local itemTypeLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local itemTypeLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
     itemTypeLabel:SetPoint("BOTTOMLEFT", itemFilterDropdown, "TOPLEFT", 0, 2)
     itemTypeLabel:SetText(L["JOURNAL_LABEL_ITEM_TYPE"])
     itemTypeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -944,7 +944,7 @@ function ns.UI.CreateJournalTab(parent)
     chkMark:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
     chkMark:Hide()
 
-    local chkLabel = rightHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local chkLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
     chkLabel:SetPoint("LEFT", chkBox, "RIGHT", 6, 0)
     chkLabel:SetText(L["JOURNAL_HIDE_NON_COLLECTABLE"])
     chkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -996,12 +996,12 @@ function ns.UI.CreateJournalTab(parent)
     end)
 
     -- Empty state labels
-    local emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local emptyList = OneWoW_GUI:CreateFS(panels.listScrollChild, 12)
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
     emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyList = emptyList
 
-    local emptyDetail = panels.detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local emptyDetail = OneWoW_GUI:CreateFS(panels.detailPanel, 12)
     emptyDetail:SetPoint("CENTER", panels.detailPanel, "CENTER", 0, 0)
     emptyDetail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyDetail = emptyDetail

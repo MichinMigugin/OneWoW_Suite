@@ -60,8 +60,14 @@ function addon:OnInitialize()
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
         local mainFrame = _G["OneWoW_CatalogMainFrame"]
-        if mainFrame and ns.UI and ns.UI.ApplyFontToFrame then
-            ns.UI.ApplyFontToFrame(mainFrame)
+        if mainFrame then
+            OneWoW_GUI:ApplyFontToFrame(mainFrame)
+        end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function(self2)
+        local mainFrame = _G["OneWoW_CatalogMainFrame"]
+        if mainFrame then
+            OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)

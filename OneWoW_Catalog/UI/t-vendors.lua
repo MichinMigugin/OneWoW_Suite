@@ -228,7 +228,7 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
     btn:SetBackdrop(BACKDROP_SIMPLE)
     btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
-    local nameText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local nameText = OneWoW_GUI:CreateFS(btn, 12)
     nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", 8, -6)
     nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -8, -6)
     nameText:SetJustifyH("LEFT")
@@ -249,7 +249,7 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
         end
     end
 
-    local infoText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local infoText = OneWoW_GUI:CreateFS(btn, 10)
     infoText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -2)
     infoText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -8, 0)
     infoText:SetJustifyH("LEFT")
@@ -262,7 +262,7 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
     infoText:SetText(zone .. "  |  " .. itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
     infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local scanText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local scanText = OneWoW_GUI:CreateFS(btn, 10)
     scanText:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 8, 5)
     scanText:SetJustifyH("LEFT")
     if vendor.lastScanned then
@@ -302,7 +302,7 @@ local function ShowVendorDetail(panels, vendor)
 
     local addon = GetDataAddon()
 
-    local nameHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local nameHeader = OneWoW_GUI:CreateFS(parent, 16)
     nameHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     nameHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     nameHeader:SetJustifyH("LEFT")
@@ -316,7 +316,7 @@ local function ShowVendorDetail(panels, vendor)
     table.insert(detailElements, nameHeader)
     yOffset = yOffset - 22
 
-    local infoLine = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local infoLine = OneWoW_GUI:CreateFS(parent, 12)
     infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     infoLine:SetJustifyH("LEFT")
@@ -338,7 +338,7 @@ local function ShowVendorDetail(panels, vendor)
         for _ in pairs(vendor.locations) do locCount = locCount + 1 end
 
         for mapID, loc in pairs(vendor.locations) do
-            local locLine = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local locLine = OneWoW_GUI:CreateFS(parent, 12)
             locLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
             locLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -60, yOffset)
             locLine:SetJustifyH("LEFT")
@@ -374,7 +374,7 @@ local function ShowVendorDetail(panels, vendor)
     table.insert(detailElements, divider)
     yOffset = yOffset - 8
 
-    local scanInfo = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local scanInfo = OneWoW_GUI:CreateFS(parent, 10)
     scanInfo:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     scanInfo:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     scanInfo:SetJustifyH("LEFT")
@@ -393,7 +393,7 @@ local function ShowVendorDetail(panels, vendor)
     table.insert(detailElements, scanInfo)
     yOffset = yOffset - 20
 
-    local itemsHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local itemsHeader = OneWoW_GUI:CreateFS(parent, 12)
     itemsHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     itemsHeader:SetJustifyH("LEFT")
     local itemCount = 0
@@ -434,7 +434,7 @@ local function ShowVendorDetail(panels, vendor)
             iconFrame:SetSize(26, 26)
             iconFrame:SetPoint("LEFT", itemRow, "LEFT", 6, 0)
             iconFrame:SetBackdrop(BACKDROP_EDGE)
-            iconFrame:SetBackdropBorderColor(1, 1, 1, 0.3)
+            iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
             table.insert(detailElements, iconFrame)
 
             local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
@@ -443,14 +443,14 @@ local function ShowVendorDetail(panels, vendor)
             iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
             table.insert(detailElements, iconTex)
 
-            local itemName = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local itemName = OneWoW_GUI:CreateFS(itemRow, 12)
             itemName:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
             itemName:SetPoint("RIGHT", itemRow, "RIGHT", -150, 0)
             itemName:SetJustifyH("LEFT")
             itemName:SetWordWrap(false)
             table.insert(detailElements, itemName)
 
-            local costText = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local costText = OneWoW_GUI:CreateFS(itemRow, 10)
             costText:SetPoint("RIGHT", itemRow, "RIGHT", -8, 0)
             costText:SetJustifyH("RIGHT")
             costText:SetText(FormatCost(itemData))
@@ -458,10 +458,10 @@ local function ShowVendorDetail(panels, vendor)
             table.insert(detailElements, costText)
 
             if itemData.limited then
-                local limitTag = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local limitTag = OneWoW_GUI:CreateFS(itemRow, 10)
                 limitTag:SetPoint("RIGHT", costText, "LEFT", -6, 0)
                 limitTag:SetText("[" .. L["VENDORS_LIMITED"] .. "]")
-                limitTag:SetTextColor(0.9, 0.4, 0.4, 1.0)
+                limitTag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
                 table.insert(detailElements, limitTag)
             end
 
@@ -742,12 +742,12 @@ function ns.UI.CreateVendorsTab(parent)
         RefreshVendorList(panels)
     end)
 
-    local emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local emptyList = OneWoW_GUI:CreateFS(panels.listScrollChild, 12)
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
     emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyList = emptyList
 
-    local emptyDetail = panels.detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local emptyDetail = OneWoW_GUI:CreateFS(panels.detailPanel, 12)
     emptyDetail:SetPoint("CENTER", panels.detailPanel, "CENTER", 0, 0)
     emptyDetail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyDetail = emptyDetail

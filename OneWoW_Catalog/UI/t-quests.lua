@@ -77,8 +77,8 @@ local function CreateSeparatorLine(parent, yOffset, padLeft, padRight)
     return sep
 end
 
-local function CreateLabel(parent, text, font, yOffset, xLeft, textColor)
-    local fs = parent:CreateFontString(nil, "OVERLAY", font or "GameFontNormalSmall")
+local function CreateLabel(parent, text, fontSize, yOffset, xLeft, textColor)
+    local fs = OneWoW_GUI:CreateFS(parent, fontSize or 10)
     fs:SetPoint("TOPLEFT", parent, "TOPLEFT", xLeft or 10, yOffset)
     fs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     fs:SetJustifyH("LEFT")
@@ -167,8 +167,8 @@ local function ShowQuestDetail(panels, questData)
         yOffset = yOffset - (h or 8)
     end
 
-    local function addWrappedText(text, font, color)
-        local fs = track(parent:CreateFontString(nil, "OVERLAY", font or "GameFontNormal"))
+    local function addWrappedText(text, fontSize, color)
+        local fs = track(OneWoW_GUI:CreateFS(parent, fontSize or 12))
         fs:SetPoint("TOPLEFT",  parent, "TOPLEFT",  PAD, yOffset)
         fs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -PAD, yOffset)
         fs:SetJustifyH("LEFT")
@@ -182,7 +182,7 @@ local function ShowQuestDetail(panels, questData)
 
     addWrappedText(
         questData.name or string.format(L["QUESTS_UNNAMED"], questData.id or 0),
-        "GameFontNormalLarge",
+        16,
         { OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT") }
     )
 
@@ -203,21 +203,21 @@ local function ShowQuestDetail(panels, questData)
         L["QUESTS_MAPID"], mapID
     )
     yOffset = yOffset + 8
-    addWrappedText(metaStr, "GameFontNormalSmall", { OneWoW_GUI:GetThemeColor("TEXT_SECONDARY") })
+    addWrappedText(metaStr, 10, { OneWoW_GUI:GetThemeColor("TEXT_SECONDARY") })
 
     addSep()
 
     if questData.description and questData.description ~= "" then
-        addWrappedText(questData.description, "GameFontNormal")
+        addWrappedText(questData.description, 12)
 
         if questData.objectivesText and questData.objectivesText ~= "" then
-            local objLabel = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall"))
+            local objLabel = track(OneWoW_GUI:CreateFS(parent, 10))
             objLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
             objLabel:SetText(L["QUESTS_OBJECTIVES"])
             objLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             yOffset = yOffset - 16
 
-            local objFs = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormal"))
+            local objFs = track(OneWoW_GUI:CreateFS(parent, 12))
             objFs:SetPoint("TOPLEFT",  parent, "TOPLEFT",  PAD + 8, yOffset)
             objFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -PAD, yOffset)
             objFs:SetJustifyH("LEFT")
@@ -228,7 +228,7 @@ local function ShowQuestDetail(panels, questData)
             yOffset = yOffset - objFs:GetStringHeight() - 8
         end
     else
-        local noDescFs = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormal"))
+        local noDescFs = track(OneWoW_GUI:CreateFS(parent, 12))
         noDescFs:SetPoint("TOPLEFT",  parent, "TOPLEFT",  PAD, yOffset)
         noDescFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -PAD, yOffset)
         noDescFs:SetJustifyH("LEFT")
@@ -246,22 +246,22 @@ local function ShowQuestDetail(panels, questData)
     if hasRewards then
         addSep()
 
-        local rwdLabel = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall"))
+        local rwdLabel = track(OneWoW_GUI:CreateFS(parent, 10))
         rwdLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
         rwdLabel:SetText(L["QUESTS_REWARDS"])
         rwdLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         yOffset = yOffset - 18
 
         if questData.rewardGold and questData.rewardGold > 0 then
-            local goldText = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormal"))
+            local goldText = track(OneWoW_GUI:CreateFS(parent, 12))
             goldText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
             goldText:SetText(L["QUESTS_GOLD"] .. ": " .. addon.QuestData:FormatGold(questData.rewardGold))
-            goldText:SetTextColor(1, 0.82, 0, 1)
+            goldText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             yOffset = yOffset - 18
         end
 
         if questData.rewardXP and questData.rewardXP > 0 then
-            local xpText = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormal"))
+            local xpText = track(OneWoW_GUI:CreateFS(parent, 12))
             xpText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
             xpText:SetText(L["QUESTS_XP"] .. ": " .. addon.QuestData:FormatNumber(questData.rewardXP))
             xpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -269,7 +269,7 @@ local function ShowQuestDetail(panels, questData)
         end
 
         if questData.rewardItems and #questData.rewardItems > 0 then
-            local itemHdr = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall"))
+            local itemHdr = track(OneWoW_GUI:CreateFS(parent, 10))
             itemHdr:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
             itemHdr:SetText(L["QUESTS_ITEMS"] .. ":")
             itemHdr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -278,7 +278,7 @@ local function ShowQuestDetail(panels, questData)
             for _, item in ipairs(questData.rewardItems) do
                 local itemName = item.name or string.format(L["QUESTS_ITEM_UNNAMED"], item.itemID or 0)
                 local countStr = (item.count and item.count > 1) and (" x" .. item.count) or ""
-                local itemLine = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormal"))
+                local itemLine = track(OneWoW_GUI:CreateFS(parent, 12))
                 itemLine:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 16, yOffset)
                 itemLine:SetText(itemName .. countStr)
                 itemLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -291,7 +291,7 @@ local function ShowQuestDetail(panels, questData)
 
     addSep()
 
-    local compLabel = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall"))
+    local compLabel = track(OneWoW_GUI:CreateFS(parent, 10))
     compLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
     compLabel:SetText(L["QUESTS_COMPLETION"])
     compLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -300,7 +300,7 @@ local function ShowQuestDetail(panels, questData)
     local completedChars = tracker and tracker:GetCompletedCharacters(questData.id) or {}
 
     if #completedChars == 0 then
-        local noCharText = track(parent:CreateFontString(nil, "OVERLAY", "GameFontNormal"))
+        local noCharText = track(OneWoW_GUI:CreateFS(parent, 12))
         noCharText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
         noCharText:SetText(L["QUESTS_NOT_COMPLETED"])
         noCharText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -316,12 +316,12 @@ local function ShowQuestDetail(panels, questData)
             checkTex:SetSize(14, 14)
             checkTex:SetPoint("LEFT", rowFrame, "LEFT", 0, 0)
             checkTex:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-            checkTex:SetVertexColor(0.2, 1, 0.2, 1)
+            checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
 
-            local charText = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local charText = OneWoW_GUI:CreateFS(rowFrame, 12)
             charText:SetPoint("LEFT", checkTex, "RIGHT", 4, 0)
             charText:SetText(charInfo.name)
-            charText:SetTextColor(0.2, 1, 0.2, 1)
+            charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
 
             yOffset = yOffset - 20
         end
@@ -344,7 +344,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, onClick)
     btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     btn.quest = quest
 
-    local nameText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local nameText = OneWoW_GUI:CreateFS(btn, 12)
     nameText:SetPoint("TOPLEFT",  btn, "TOPLEFT",  8, -6)
     nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -26, -6)
     nameText:SetJustifyH("LEFT")
@@ -358,7 +358,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, onClick)
         expShort = addon.QuestData:GetExpansionShortName(quest.expansion) or ""
     end
 
-    local subText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local subText = OneWoW_GUI:CreateFS(btn, 10)
     subText:SetPoint("BOTTOMLEFT",  btn, "BOTTOMLEFT",  8, 6)
     subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -26, 6)
     subText:SetJustifyH("LEFT")
@@ -372,7 +372,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, onClick)
         checkTex:SetSize(14, 14)
         checkTex:SetPoint("RIGHT", btn, "RIGHT", -6, 0)
         checkTex:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-        checkTex:SetVertexColor(0.2, 1, 0.2, 1)
+        checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     end
 
     btn:SetScript("OnEnter", function(self)
@@ -676,12 +676,12 @@ function ns.UI.CreateQuestsTab(parent)
         if w and w > 0 then LayoutFilterDropdowns(w) end
     end)
 
-    local emptyList = panels.listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local emptyList = OneWoW_GUI:CreateFS(panels.listScrollChild, 12)
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
     emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyList = emptyList
 
-    local emptyDetail = panels.detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local emptyDetail = OneWoW_GUI:CreateFS(panels.detailPanel, 12)
     emptyDetail:SetPoint("CENTER", panels.detailPanel, "CENTER", 0, 0)
     emptyDetail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyDetail = emptyDetail

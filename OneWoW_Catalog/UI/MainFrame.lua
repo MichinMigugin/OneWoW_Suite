@@ -94,7 +94,6 @@ function ns.UI:CreateMainFrame(defaultTab)
 
     local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
         title = L["ADDON_TITLE_FRAME"],
-        height = 20,
         showBrand = true,
         onClose = function() frame:Hide() end,
     })
@@ -168,7 +167,7 @@ function ns.UI:CreateMainFrame(defaultTab)
         btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        btn.text = OneWoW_GUI:CreateFS(btn, 12)
         btn.text:SetPoint("CENTER")
         btn.text:SetText(displayName)
         btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
