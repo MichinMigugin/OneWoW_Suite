@@ -74,7 +74,7 @@ function ns.UI.CreateNotesTab(parent)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(75)
 
-    local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 10)
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["NOTES_CONTROLS"])
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -203,7 +203,7 @@ function ns.UI.CreateNotesTab(parent)
     listingPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 35)
     listingPanel:SetWidth(258)
 
-    local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local listingTitle = OneWoW_GUI:CreateFS(listingPanel, 16)
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
     listingTitle:SetText(L["NOTES_LIST"])
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -231,7 +231,7 @@ function ns.UI.CreateNotesTab(parent)
     editorPanel = detailPanel
     ns.UI.notesDetailPanel = detailPanel
 
-    emptyMessage = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["MESSAGE_SELECT_NOTE"])
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
@@ -241,7 +241,7 @@ function ns.UI.CreateNotesTab(parent)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
 
-    leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    leftStatusText = OneWoW_GUI:CreateFS(leftStatusBar, 10)
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NOTES"], 0))
@@ -251,7 +251,7 @@ function ns.UI.CreateNotesTab(parent)
     rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
 
-    rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    rightStatusText = OneWoW_GUI:CreateFS(rightStatusBar, 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
@@ -448,14 +448,14 @@ function ns.UI.CreateNotesTab(parent)
             favoriteBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
             editorHeader.favoriteBtn = favoriteBtn
 
-            local noteTypeLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local noteTypeLine = OneWoW_GUI:CreateFS(editorHeader, 10)
             noteTypeLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 24)
             noteTypeLine:SetText(string.format(L["UI_TYPE_FORMAT"], L["NOTE_TYPE_STANDARD"]))
             noteTypeLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             noteTypeLine:SetJustifyH("RIGHT")
             editorHeader.noteTypeLine = noteTypeLine
 
-            local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local categoryLine = OneWoW_GUI:CreateFS(editorHeader, 10)
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
             categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
             categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -489,7 +489,7 @@ function ns.UI.CreateNotesTab(parent)
             contentBg:SetHeight(190)
             contentBg:EnableMouse(true)
 
-            local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
+            local contentScroll, contentScrollChild = OneWoW_GUI:CreateScrollFrame(contentBg, {})
             contentScroll:SetPoint("TOPLEFT", contentBg, "TOPLEFT", 4, -4)
             contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
             contentBg:SetFrameLevel(contentScroll:GetFrameLevel() - 1)
@@ -620,7 +620,7 @@ function ns.UI.CreateNotesTab(parent)
             todoHeader:SetPoint("TOPRIGHT", todoSection, "TOPRIGHT", -22, 0)
             todoHeader:SetHeight(30)
 
-            local todoLabel = todoHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local todoLabel = OneWoW_GUI:CreateFS(todoHeader, 12)
             todoLabel:SetPoint("LEFT", todoHeader, "LEFT", 5, 0)
             todoLabel:SetText(L["UI_TASKS"])
             todoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -656,11 +656,12 @@ function ns.UI.CreateNotesTab(parent)
             addTaskBtn:SetSize(24, 24)
             addTaskBtn:SetPoint("RIGHT", todoHeader, "RIGHT", 0, 0)
 
-            local taskInputBox = CreateFrame("EditBox", nil, todoHeader, "InputBoxTemplate")
+            local taskInputBox = OneWoW_GUI:CreateEditBox(todoHeader, {
+                height = 25,
+                placeholderText = "",
+            })
             taskInputBox:SetPoint("LEFT", resetTasksBtn, "RIGHT", 5, 0)
             taskInputBox:SetPoint("RIGHT", addTaskBtn, "LEFT", -5, 0)
-            taskInputBox:SetHeight(25)
-            taskInputBox:SetAutoFocus(false)
             taskInputBox:SetScript("OnEnterPressed", function(self)
                 local text = self:GetText()
                 if text and text ~= "" and selectedNote and ns.NotesTodos then
@@ -683,13 +684,11 @@ function ns.UI.CreateNotesTab(parent)
                 end
             end)
 
-            local todoScroll = CreateFrame("ScrollFrame", nil, todoSection, "UIPanelScrollFrameTemplate")
+            local todoScroll, todoScrollChild = OneWoW_GUI:CreateScrollFrame(todoSection, {})
             todoScroll:SetPoint("TOPLEFT", todoHeader, "BOTTOMLEFT", 0, -5)
             todoScroll:SetPoint("BOTTOMRIGHT", todoSection, "BOTTOMRIGHT", -22, 0)
 
-            todoContainer = CreateFrame("Frame", nil, todoScroll)
-            todoContainer:SetSize(todoScroll:GetWidth() - 20, 1)
-            todoScroll:SetScrollChild(todoContainer)
+            todoContainer = todoScrollChild
             detailPanel.todoContainer = todoContainer
 
             todoScroll:SetScript("OnSizeChanged", function(self, width)
@@ -884,7 +883,6 @@ function ns.UI.CreateNotesTab(parent)
 
         for _, child in ipairs({todoContainer:GetChildren()}) do
             child:Hide()
-            child:SetParent(nil)
         end
 
         if not ns.NotesData then return end
@@ -977,7 +975,6 @@ function ns.UI.CreateNotesTab(parent)
     function parent.RefreshNotesList()
         for _, item in pairs(noteListItems) do
             item:Hide()
-            item:SetParent(nil)
         end
         noteListItems = {}
 
@@ -1295,14 +1292,14 @@ function ns.UI.CreateNotesTab(parent)
                 newFlagBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
             end
 
-            local titleText = noteFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local titleText = OneWoW_GUI:CreateFS(noteFrame, 12)
             titleText:SetPoint("TOPLEFT", noteFrame, "TOPLEFT", 12, -6)
             titleText:SetPoint("TOPRIGHT", noteFrame, "TOPRIGHT", -80, -6)
             titleText:SetJustifyH("LEFT")
             titleText:SetText(note.data.title or L["NOTE_UNTITLED"])
             titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-            local storageFS = noteFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local storageFS = OneWoW_GUI:CreateFS(noteFrame, 10)
             storageFS:SetPoint("BOTTOMLEFT", noteFrame, "BOTTOMLEFT", 12, 6)
             local stText = note.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Char") or (L["STORAGE_ACCOUNT_WIDE"] or "Acct")
             storageFS:SetText(stText)

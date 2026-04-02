@@ -66,7 +66,7 @@ function ns.UI.CreateZonesTab(parent)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(75)
 
-    local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 10)
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["ZONES_CONTROLS"] or "Zones Controls")
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -246,7 +246,7 @@ function ns.UI.CreateZonesTab(parent)
     listingPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 35)
     listingPanel:SetWidth(258)
 
-    local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local listingTitle = OneWoW_GUI:CreateFS(listingPanel, 16)
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
     listingTitle:SetText(L["TAB_ZONES"] or "Zones")
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -271,7 +271,7 @@ function ns.UI.CreateZonesTab(parent)
     detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 35)
 
-    emptyMessage = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["ZONES_SELECT_PROMPT"] or "Select a zone to view its content")
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
@@ -281,7 +281,7 @@ function ns.UI.CreateZonesTab(parent)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
 
-    leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    leftStatusText = OneWoW_GUI:CreateFS(leftStatusBar, 10)
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ZONES"], 0))
@@ -291,7 +291,7 @@ function ns.UI.CreateZonesTab(parent)
     rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
 
-    rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    rightStatusText = OneWoW_GUI:CreateFS(rightStatusBar, 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
@@ -309,7 +309,7 @@ function ns.UI.CreateZonesTab(parent)
             editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
             editorHeader:SetHeight(85)
 
-            local zoneTitleFS = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+            local zoneTitleFS = OneWoW_GUI:CreateFS(editorHeader, 16)
             zoneTitleFS:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 12, -8)
             zoneTitleFS:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -110, -8)
             zoneTitleFS:SetJustifyH("LEFT")
@@ -527,13 +527,13 @@ function ns.UI.CreateZonesTab(parent)
             favoriteBtn:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
             editorHeader.favoriteBtn = favoriteBtn
 
-            local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local categoryLine = OneWoW_GUI:CreateFS(editorHeader, 10)
             categoryLine:SetPoint("BOTTOMLEFT", editorHeader, "BOTTOMLEFT", 12, 8)
             categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("LEFT")
             editorHeader.categoryLine = categoryLine
 
-            local mapLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local mapLine = OneWoW_GUI:CreateFS(editorHeader, 10)
             mapLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
             mapLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             mapLine:SetJustifyH("RIGHT")
@@ -545,7 +545,7 @@ function ns.UI.CreateZonesTab(parent)
             contentBg:SetHeight(190)
             contentBg:EnableMouse(true)
 
-            local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
+            local contentScroll, contentScrollChild = OneWoW_GUI:CreateScrollFrame(contentBg, {})
             contentScroll:SetPoint("TOPLEFT", contentBg, "TOPLEFT", 4, -4)
             contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
             contentBg:SetFrameLevel(contentScroll:GetFrameLevel() - 1)
@@ -642,7 +642,7 @@ function ns.UI.CreateZonesTab(parent)
             todoHeader:SetPoint("TOPRIGHT", todoSection, "TOPRIGHT", -22, 0)
             todoHeader:SetHeight(30)
 
-            local todoLabel = todoHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local todoLabel = OneWoW_GUI:CreateFS(todoHeader, 12)
             todoLabel:SetPoint("LEFT", todoHeader, "LEFT", 5, 0)
             todoLabel:SetText(L["ZONE_TODO_HEADER"] or "Checklist")
             todoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -678,11 +678,12 @@ function ns.UI.CreateZonesTab(parent)
             addTaskBtn:SetSize(24, 24)
             addTaskBtn:SetPoint("RIGHT", todoHeader, "RIGHT", 0, 0)
 
-            local taskInputBox = CreateFrame("EditBox", nil, todoHeader, "InputBoxTemplate")
+            local taskInputBox = OneWoW_GUI:CreateEditBox(todoHeader, {
+                height = 25,
+                placeholderText = "",
+            })
             taskInputBox:SetPoint("LEFT", resetTasksBtn, "RIGHT", 5, 0)
             taskInputBox:SetPoint("RIGHT", addTaskBtn, "LEFT", -5, 0)
-            taskInputBox:SetHeight(25)
-            taskInputBox:SetAutoFocus(false)
             taskInputBox:SetScript("OnEnterPressed", function(self)
                 local text = self:GetText()
                 if text and text ~= "" and selectedZone and ns.Zones then
@@ -715,13 +716,11 @@ function ns.UI.CreateZonesTab(parent)
                 end
             end)
 
-            local todoScroll = CreateFrame("ScrollFrame", nil, todoSection, "UIPanelScrollFrameTemplate")
+            local todoScroll, todoScrollChild = OneWoW_GUI:CreateScrollFrame(todoSection, {})
             todoScroll:SetPoint("TOPLEFT", todoHeader, "BOTTOMLEFT", 0, -5)
             todoScroll:SetPoint("BOTTOMRIGHT", todoSection, "BOTTOMRIGHT", -22, 0)
 
-            todoContainer = CreateFrame("Frame", nil, todoScroll)
-            todoContainer:SetSize(todoScroll:GetWidth() - 20, 1)
-            todoScroll:SetScrollChild(todoContainer)
+            todoContainer = todoScrollChild
             detailPanel.todoContainer = todoContainer
 
             todoScroll:SetScript("OnSizeChanged", function(self, width)
@@ -850,7 +849,6 @@ function ns.UI.CreateZonesTab(parent)
 
         for _, child in ipairs({todoContainer:GetChildren()}) do
             child:Hide()
-            child:SetParent(nil)
         end
 
         if not ns.Zones then return end
@@ -939,14 +937,13 @@ function ns.UI.CreateZonesTab(parent)
     parent.RefreshZonesList = function()
         for _, item in ipairs(zoneListItems) do
             item:Hide()
-            item:SetParent(nil)
         end
         wipe(zoneListItems)
 
         local regions = { scrollChild:GetRegions() }
         for _, r in ipairs(regions) do r:Hide() end
         local children = { scrollChild:GetChildren() }
-        for _, c in ipairs(children) do c:Hide() c:SetParent(nil) end
+        for _, c in ipairs(children) do c:Hide() end
 
         if not ns.Zones then return end
 
@@ -1029,14 +1026,14 @@ function ns.UI.CreateZonesTab(parent)
             colorStrip:SetPoint("LEFT", row, "LEFT", 2, 0)
             colorStrip:SetColorTexture(cR, cG, cB, 1)
 
-            local titleFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local titleFS = OneWoW_GUI:CreateFS(row, 12)
             titleFS:SetPoint("TOPLEFT", row, "TOPLEFT", 12, -6)
             titleFS:SetPoint("TOPRIGHT", row, "TOPRIGHT", -80, -6)
             titleFS:SetJustifyH("LEFT")
             titleFS:SetText(zone.name)
             titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-            local storageFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local storageFS = OneWoW_GUI:CreateFS(row, 10)
             storageFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 12, 6)
             local stText = zone.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Char") or (L["STORAGE_ACCOUNT_WIDE"] or "Acct")
             storageFS:SetText(stText)
@@ -1244,7 +1241,7 @@ function ns.UI.CreateZonesTab(parent)
 end
 
 local function MakeZoneLabel(parent, text, x, y)
-    local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local lbl = OneWoW_GUI:CreateFS(parent, 12)
     lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     lbl:SetText(text)
     lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -1367,7 +1364,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", height = 26, minWidth = 70 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
 
-    local validationFS = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local validationFS = OneWoW_GUI:CreateFS(content, 10)
     validationFS:SetPoint("LEFT", validateBtn, "RIGHT", 8, 0)
     validationFS:SetText(L["ZONE_VALIDATE_HINT"] or "Enter ID & click Validate")
     validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -1530,7 +1527,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     noteBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     noteBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
+    local noteScroll, noteScrollChild = OneWoW_GUI:CreateScrollFrame(noteBg, {})
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
     noteScroll:SetPoint("BOTTOMRIGHT", noteBg, "BOTTOMRIGHT", -26, 4)
 
@@ -1623,7 +1620,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", height = 26, minWidth = 70 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
 
-    local validationFS = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local validationFS = OneWoW_GUI:CreateFS(content, 10)
     validationFS:SetPoint("LEFT", validateBtn, "RIGHT", 8, 0)
     if zoneData.mapID then
         local mapInfo = C_Map.GetMapInfo(zoneData.mapID)
@@ -1814,7 +1811,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     noteBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     noteBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
+    local noteScroll, noteScrollChild = OneWoW_GUI:CreateScrollFrame(noteBg, {})
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
     noteScroll:SetPoint("BOTTOMRIGHT", noteBg, "BOTTOMRIGHT", -26, 4)
 

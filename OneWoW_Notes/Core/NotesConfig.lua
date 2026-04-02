@@ -143,32 +143,7 @@ ns.NotesConfig.THEME_TO_COLOR = {
 }
 
 -- Font color mapping for theme sync
-ns.NotesConfig.THEME_TO_FONT_COLOR = {
-    ["green"] = "hunter",
-    ["blue"] = "mage",
-    ["purple"] = "warlock",
-    ["red"] = "deathknight",
-    ["orange"] = "druid",
-    ["teal"] = "evoker",
-    ["gold"] = "warrior",
-    ["pink"] = "paladin",
-    ["dark"] = "priest",
-    ["amber"] = "warrior",
-    ["cyan"] = "shaman",
-    ["slate"] = "priest",
-    ["voidblack"] = "priest",
-    ["charcoal"] = "warrior",
-    ["forestnight"] = "druid",
-    ["obsidian"] = "priest",
-    ["monochrome"] = "priest",
-    ["twilight"] = "mage",
-    ["neon"] = "warlock",
-    ["glassmorphic"] = "mage",
-    ["lightmode"] = "mage",
-    ["retro"] = "warrior",
-    ["fantasy"] = "paladin",
-    ["nightfae"] = "druid",
-}
+ns.NotesConfig.THEME_TO_FONT_COLOR = ns.NotesConfig.THEME_TO_COLOR
 
 function ns.NotesConfig:GetResolvedColorConfig(pinColorKey)
     if pinColorKey == "sync" then

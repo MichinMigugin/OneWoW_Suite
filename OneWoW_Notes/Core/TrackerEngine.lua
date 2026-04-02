@@ -22,6 +22,8 @@ local SCAN_THROTTLE = 1.0
 local initialized = false
 local pinnedWindows = {}
 local callbacks = {}
+local scanPending = false
+local refreshPending = false
 
 function TE:RegisterCallback(event, fn)
     callbacks[event] = callbacks[event] or {}
@@ -637,6 +639,7 @@ function TE:EvaluateStep(listID, sectionKey, step)
 end
 
 function TE:FullScan()
+    scanPending = false
     local now = time()
     if (now - lastScanTime) < SCAN_THROTTLE then return end
     lastScanTime = now
@@ -650,6 +653,23 @@ function TE:FullScan()
 
     FireCallbacks("OnScanComplete")
     self:RefreshAllPinnedWindows()
+end
+
+local function DeferScan(delay)
+    if scanPending then return end
+    scanPending = true
+    C_Timer.After(delay or 0.5, function()
+        TE:FullScan()
+    end)
+end
+
+local function DeferRefresh()
+    if refreshPending then return end
+    refreshPending = true
+    C_Timer.After(0.1, function()
+        refreshPending = false
+        TE:RefreshAllPinnedWindows()
+    end)
 end
 
 function TE:EvaluateList(listID)
@@ -703,7 +723,7 @@ local function OnSpellCast(spellID)
     end
 
     FireCallbacks("OnProgressChanged")
-    TE:RefreshAllPinnedWindows()
+    DeferRefresh()
 end
 
 local function OnCreatureKill(creatureID)
@@ -719,7 +739,7 @@ local function OnCreatureKill(creatureID)
     end
 
     FireCallbacks("OnProgressChanged")
-    TE:RefreshAllPinnedWindows()
+    DeferRefresh()
 end
 
 local function OnItemLooted(itemID)
@@ -735,7 +755,7 @@ local function OnItemLooted(itemID)
     end
 
     FireCallbacks("OnProgressChanged")
-    TE:RefreshAllPinnedWindows()
+    DeferRefresh()
 end
 
 local function OnNPCInteract(npcID)
@@ -751,7 +771,7 @@ local function OnNPCInteract(npcID)
     end
 
     FireCallbacks("OnProgressChanged")
-    TE:RefreshAllPinnedWindows()
+    DeferRefresh()
 end
 
 local function OnEvent(self, event, ...)
@@ -759,6 +779,7 @@ local function OnEvent(self, event, ...)
         TD:CheckResets()
         TD:CheckCustomTimerResets()
         BuildIndices()
+        scanPending = true
         C_Timer.After(2, function() TE:FullScan() end)
         C_Timer.After(3, function()
             if C_Calendar and C_Calendar.OpenCalendar then
@@ -766,12 +787,6 @@ local function OnEvent(self, event, ...)
             end
         end)
         TE:RestorePinnedWindows()
-
-    elseif event == "QUEST_LOG_UPDATE" or event == "QUEST_TURNED_IN" then
-        C_Timer.After(0.5, function() TE:FullScan() end)
-
-    elseif event == "CURRENCY_DISPLAY_UPDATE" then
-        C_Timer.After(0.5, function() TE:FullScan() end)
 
     elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
         local unit, castGUID, spellID = ...
@@ -806,42 +821,18 @@ local function OnEvent(self, event, ...)
             end
         end
 
-    elseif event == "WEEKLY_REWARDS_UPDATE" or event == "CHALLENGE_MODE_COMPLETED" or event == "ENCOUNTER_END" then
-        C_Timer.After(1, function() TE:FullScan() end)
-
-    elseif event == "MAJOR_FACTION_RENOWN_LEVEL_CHANGED" or event == "UPDATE_FACTION" then
-        C_Timer.After(0.5, function() TE:FullScan() end)
-
-    elseif event == "BAG_UPDATE_DELAYED" then
-        C_Timer.After(0.5, function() TE:FullScan() end)
-
-    elseif event == "PLAYER_LEVEL_UP" then
-        C_Timer.After(0.5, function() TE:FullScan() end)
-
-    elseif event == "ZONE_CHANGED_NEW_AREA" or event == "ZONE_CHANGED" then
-        C_Timer.After(1, function() TE:FullScan() end)
-
-    elseif event == "SKILL_LINES_CHANGED" or event == "TRAIT_TREE_CURRENCY_INFO_UPDATED" then
-        C_Timer.After(0.5, function() TE:FullScan() end)
-
-    elseif event == "TRADE_SKILL_SHOW" or event == "TRADE_SKILL_LIST_UPDATE" then
-        C_Timer.After(0.5, function() TE:FullScan() end)
-
-    elseif event == "NEW_TOY_ADDED" or event == "NEW_MOUNT_ADDED" or event == "NEW_PET_ADDED" then
-        C_Timer.After(0.5, function() TE:FullScan() end)
-
-    elseif event == "TRANSMOG_COLLECTION_UPDATED" then
-        C_Timer.After(0.5, function() TE:FullScan() end)
-
     elseif event == "UNIT_AURA" then
         local unit = ...
         if unit == "player" then
-            C_Timer.After(0.2, function() TE:FullScan() end)
+            DeferScan(1.0)
         end
 
     elseif event == "CALENDAR_UPDATE_EVENT_LIST" then
         lastEventCheck = 0
-        C_Timer.After(1, function() TE:FullScan() end)
+        DeferScan(1.0)
+
+    else
+        DeferScan(0.5)
     end
 end
 

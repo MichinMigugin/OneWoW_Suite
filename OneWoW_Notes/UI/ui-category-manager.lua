@@ -182,7 +182,7 @@ function ns.UI.ShowCategoryManager(initialSection)
     local addBtn = OneWoW_GUI:CreateButton(addContainer, { text = L["CATMGR_ADD"], width = 76, height = 24 })
     addBtn:SetPoint("RIGHT", addContainer, "RIGHT", -3, 0)
 
-    local statusLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local statusLabel = OneWoW_GUI:CreateFS(content, 10)
     statusLabel:SetPoint("TOPLEFT", addContainer, "BOTTOMLEFT", 2, -4)
     statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     statusLabel:SetText("")
@@ -196,7 +196,6 @@ function ns.UI.ShowCategoryManager(initialSection)
     local function RefreshCategoryList()
         for _, row in ipairs(categoryRows) do
             row:Hide()
-            row:SetParent(nil)
         end
         wipe(categoryRows)
 
@@ -226,7 +225,7 @@ function ns.UI.ShowCategoryManager(initialSection)
                 row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
             end
 
-            local nameFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local nameFS = OneWoW_GUI:CreateFS(row, 10)
             nameFS:SetPoint("LEFT", row, "LEFT", 8, 0)
             nameFS:SetPoint("RIGHT", row, "RIGHT", -32, 0)
             nameFS:SetJustifyH("LEFT")
@@ -246,7 +245,7 @@ function ns.UI.ShowCategoryManager(initialSection)
                 delBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
                 delBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
-                local delX = delBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local delX = OneWoW_GUI:CreateFS(delBtn, 10)
                 delX:SetPoint("CENTER")
                 delX:SetText("X")
                 delX:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))

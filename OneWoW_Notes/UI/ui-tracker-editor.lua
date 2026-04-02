@@ -15,7 +15,7 @@ local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 local function MakeLabel(parent, text, x, y)
-    local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local fs = OneWoW_GUI:CreateFS(parent, 10)
     fs:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     fs:SetText(text)
     fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -265,12 +265,12 @@ function TE_UI:ShowNewListDialog(callback)
     if not dialog then return end
     local content = dialog.content
 
-    local headerLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local headerLabel = OneWoW_GUI:CreateFS(content, 12)
     headerLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
     headerLabel:SetText("What do you want to track?")
     headerLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
-    local descLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local descLabel = OneWoW_GUI:CreateFS(content, 10)
     descLabel:SetPoint("TOPLEFT", headerLabel, "BOTTOMLEFT", 0, -4)
     descLabel:SetText("Pick a template to get started quickly, or create a blank list.")
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -297,12 +297,12 @@ function TE_UI:ShowNewListDialog(callback)
         icon:SetPoint("LEFT", card, "LEFT", 12, 0)
         icon:SetTexture(qs.icon)
 
-        local titleFS = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local titleFS = OneWoW_GUI:CreateFS(card, 12)
         titleFS:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, -4)
         titleFS:SetText(qs.title)
         titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local descFS = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local descFS = OneWoW_GUI:CreateFS(card, 10)
         descFS:SetPoint("TOPLEFT", titleFS, "BOTTOMLEFT", 0, -2)
         descFS:SetPoint("RIGHT", card, "RIGHT", -12, 0)
         descFS:SetJustifyH("LEFT")
@@ -363,12 +363,12 @@ function TE_UI:ShowNewListDialog(callback)
     impIcon:SetPoint("LEFT", importCard, "LEFT", 12, 0)
     impIcon:SetTexture("Interface\\Icons\\INV_Letter_15")
 
-    local impTitle = importCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local impTitle = OneWoW_GUI:CreateFS(importCard, 12)
     impTitle:SetPoint("TOPLEFT", impIcon, "TOPRIGHT", 10, -4)
     impTitle:SetText("Import from Text")
     impTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local impDesc = importCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local impDesc = OneWoW_GUI:CreateFS(importCard, 10)
     impDesc:SetPoint("TOPLEFT", impTitle, "BOTTOMLEFT", 0, -2)
     impDesc:SetText("Paste an exported list or guide markup shared by another player.")
     impDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -477,7 +477,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     accountWideCheck:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
     dialog._accountWideCheck = accountWideCheck
 
-    local accountWideHint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local accountWideHint = OneWoW_GUI:CreateFS(content, 10)
     accountWideHint:SetPoint("TOPLEFT", accountWideCheck, "BOTTOMLEFT", 18, -2)
     accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"] or "Checked tasks are shared across all characters")
     accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -522,7 +522,7 @@ function TE_UI:ShowProfessionPicker(callback)
     local content = dialog.content
     dialog._selectedProfs = {}
 
-    local hintLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hintLabel = OneWoW_GUI:CreateFS(content, 10)
     hintLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
     hintLabel:SetText("Select the professions you want to track. Each will get its own section with skill, concentration, knowledge, and weekly tasks.")
     hintLabel:SetPoint("RIGHT", content, "RIGHT", -10, 0)
@@ -637,7 +637,7 @@ function TE_UI:ShowListEditor(listID, callback)
     accountWideCheck:SetChecked(list.accountWide or false)
     dialog._accountWideCheck = accountWideCheck
 
-    local accountWideHint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local accountWideHint = OneWoW_GUI:CreateFS(content, 10)
     accountWideHint:SetPoint("TOPLEFT", accountWideCheck, "BOTTOMLEFT", 18, -2)
     accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"] or "Checked tasks are shared across all characters")
     accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -754,7 +754,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     if not dialog then return end
     local content = dialog.content
 
-    local nameLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local nameLabel = OneWoW_GUI:CreateFS(content, 10)
     nameLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
     nameLabel:SetText("Step Name:")
     nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -769,12 +769,12 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     trackCheck:SetChecked(not existing or not existing.optional)
     dialog._trackCheck = trackCheck
 
-    local trackHint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local trackHint = OneWoW_GUI:CreateFS(content, 10)
     trackHint:SetPoint("TOPLEFT", trackCheck, "BOTTOMLEFT", 18, -2)
     trackHint:SetText(L["TRACKER_TRACK_HINT"] or "Uncheck for info-only (no checkbox, won't count toward completion)")
     trackHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local resetLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local resetLabel = OneWoW_GUI:CreateFS(content, 10)
     resetLabel:SetPoint("TOPLEFT", trackHint, "BOTTOMLEFT", -18, -8)
     resetLabel:SetText(L["TRACKER_RESET_LABEL"] or "Reset:")
     resetLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -790,7 +790,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     resetDD:SetSelected(existing and existing.resetOverride or "none")
     dialog._resetDD = resetDD
 
-    local notesLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local notesLabel = OneWoW_GUI:CreateFS(content, 10)
     notesLabel:SetPoint("TOPLEFT", resetLabel, "TOPLEFT", 0, -36)
     notesLabel:SetText(L["TRACKER_NOTES_LABEL"] or "Notes (shown on hover):")
     notesLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -805,7 +805,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     if existing and existing.userNote and existing.userNote ~= "" then notesBox:SetText(existing.userNote) end
     dialog._notesBox = notesBox
 
-    local typeHeader = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local typeHeader = OneWoW_GUI:CreateFS(content, 12)
     typeHeader:SetPoint("TOPLEFT", notesContainer, "BOTTOMLEFT", 0, -10)
     typeHeader:SetText("How should this step be tracked?")
     typeHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -856,7 +856,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         end
 
-        local titleFS = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local titleFS = OneWoW_GUI:CreateFS(card, 12)
         titleFS:SetPoint("TOPLEFT", card, "TOPLEFT", 10, -6)
         titleFS:SetText(cat.title)
         if isActive then
@@ -865,7 +865,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
-        local descFS = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local descFS = OneWoW_GUI:CreateFS(card, 10)
         descFS:SetPoint("TOPLEFT", titleFS, "BOTTOMLEFT", 0, -2)
         descFS:SetPoint("RIGHT", card, "RIGHT", -10, 0)
         descFS:SetJustifyH("LEFT")
@@ -893,7 +893,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
             local fx = 0
             for _, field in ipairs(cat.fields) do
-                local flbl = fieldRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local flbl = OneWoW_GUI:CreateFS(fieldRow, 10)
                 flbl:SetPoint("TOPLEFT", fieldRow, "TOPLEFT", fx, 0)
                 flbl:SetText(field.label .. ":")
                 flbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -1076,7 +1076,7 @@ function TE_UI:ShowExportDialog(listID)
     if not dialog then return end
     local content = dialog.content
 
-    local hintLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hintLabel = OneWoW_GUI:CreateFS(content, 10)
     hintLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
     hintLabel:SetText("Copy the text below and share it with others. They can import it using the Import option.")
     hintLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -1135,7 +1135,7 @@ function TE_UI:ShowImportDialog(callback)
     if not dialog then return end
     local content = dialog.content
 
-    local hintLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hintLabel = OneWoW_GUI:CreateFS(content, 10)
     hintLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -6)
     hintLabel:SetPoint("RIGHT", content, "RIGHT", -10, 0)
     hintLabel:SetJustifyH("LEFT")

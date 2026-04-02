@@ -4,12 +4,12 @@
 local addonName, ns = ...
 local L = ns.L
 
-local Zones = {}
+local Zones = ns.DataModule:New("zones", "zoneCustomCategories", {
+    "General", "Quest", "Farming", "Rare", "Treasure", "Dungeon", "Raid", "PvP", "Event"
+})
 ns.Zones = Zones
 
-local BUILT_IN_ZONE_CATEGORIES = {
-    "General", "Quest", "Farming", "Rare", "Treasure", "Dungeon", "Raid", "PvP", "Event"
-}
+Zones.GetAllZones = Zones.GetAll
 
 local scanningEnabled = false
 local lastAlertedZone = nil
@@ -20,8 +20,7 @@ local currentInstanceID = nil
 
 function Zones:Initialize()
     local addon = _G.OneWoW_Notes
-    if not addon.db.global.zones     then addon.db.global.zones     = {} end
-    if not addon.db.char.zones       then addon.db.char.zones       = {} end
+    self:EnsureDB()
     if addon.db.global.zoneAlertsEnabled == nil then
         addon.db.global.zoneAlertsEnabled = true
     end
@@ -131,7 +130,7 @@ function Zones:CheckZoneAlerts()
         end
     end
 
-    local allZones = self:GetAllZones()
+    local allZones = self:GetAll()
 
     local function tryZone(key)
         local zoneData = allZones[key]
@@ -202,30 +201,9 @@ function Zones:GetCurrentMapInfo()
     }
 end
 
-function Zones:GetAllZones()
-    local addon = _G.OneWoW_Notes
-    local all = {}
-
-    if addon.db.global.zones then
-        for name, data in pairs(addon.db.global.zones) do
-            all[name] = data
-            if type(data) == "table" then data.storage = "account" end
-        end
-    end
-
-    if addon.db.char.zones then
-        for name, data in pairs(addon.db.char.zones) do
-            all[name] = data
-            if type(data) == "table" then data.storage = "character" end
-        end
-    end
-
-    return all
-end
-
 function Zones:GetZone(zoneName)
     if not zoneName then return nil end
-    return self:GetAllZones()[zoneName]
+    return self:GetAll()[zoneName]
 end
 
 function Zones:AddZone(zoneName, zoneData)
@@ -256,6 +234,7 @@ function Zones:AddZone(zoneName, zoneData)
 
     local targetDB = (zoneData.storage == "character") and addon.db.char.zones or addon.db.global.zones
     targetDB[zoneName] = zoneData
+    self:InvalidateCache()
     return true
 end
 
@@ -265,13 +244,12 @@ function Zones:SaveZone(zoneName, zoneData)
     zoneData.modified = GetServerTime()
     local targetDB = (zoneData.storage == "character") and addon.db.char.zones or addon.db.global.zones
     targetDB[zoneName] = zoneData
+    self:InvalidateCache()
 end
 
 function Zones:RemoveZone(zoneName)
     if not zoneName then return end
-    local addon = _G.OneWoW_Notes
-    if addon.db.global.zones then addon.db.global.zones[zoneName] = nil end
-    if addon.db.char.zones   then addon.db.char.zones[zoneName]   = nil end
+    self:Remove(zoneName)
 end
 
 function Zones:AddTodo(zoneName, todoText)
@@ -320,78 +298,10 @@ function Zones:RemoveTodo(zoneName, todoId)
     return false
 end
 
-function Zones:GetCategories()
-    local addon = _G.OneWoW_Notes
-    local all = {}
-    for _, c in ipairs(BUILT_IN_ZONE_CATEGORIES) do table.insert(all, c) end
-    if addon.db.global.zoneCustomCategories then
-        for _, c in ipairs(addon.db.global.zoneCustomCategories) do table.insert(all, c) end
-    end
-    return all
-end
-
 function Zones:MigrateDefaultColors()
-    local addon = _G.OneWoW_Notes
-    if not addon.db or not addon.db.global then return end
-
-    if addon.db.global.zoneColorsMigrated then return end
-
-    local migratedCount = 0
-    if addon.db.global.zones then
-        for zoneName, zoneData in pairs(addon.db.global.zones) do
-            if zoneData and type(zoneData) == "table" then
-                if zoneData.pinColor == "hunter" and zoneData.fontColor == "match" then
-                    zoneData.pinColor = "sync"
-                    migratedCount = migratedCount + 1
-                end
-            end
-        end
-    end
-
-    addon.db.global.zoneColorsMigrated = true
-    if migratedCount > 0 then
-        print("|cFF00FF00OneWoW_Notes|r: Migrated " .. migratedCount .. " zone(s) to OneWoW Sync theme")
-    end
+    self:MigrateColors("zoneColorsMigrated")
 end
 
 function Zones:MigrateFontFamily()
-    local addon = _G.OneWoW_Notes
-    if not addon.db or not addon.db.global then return end
-    if addon.db.global.zoneFontFamilyMigrated then return end
-
-    local GUI = LibStub("OneWoW_GUI-1.0", true)
-    if not GUI or not GUI.MigrateLSMFontName then
-        addon.db.global.zoneFontFamilyMigrated = true
-        return
-    end
-
-    local migratedCount = 0
-    if addon.db.global.zones then
-        for _, zoneData in pairs(addon.db.global.zones) do
-            if zoneData and type(zoneData) == "table" and zoneData.fontFamily then
-                local newKey = GUI:MigrateLSMFontName(zoneData.fontFamily)
-                if newKey then
-                    zoneData.fontFamily = newKey
-                    migratedCount = migratedCount + 1
-                end
-            end
-        end
-    end
-
-    if addon.db.char and addon.db.char.zones then
-        for _, zoneData in pairs(addon.db.char.zones) do
-            if zoneData and type(zoneData) == "table" and zoneData.fontFamily then
-                local newKey = GUI:MigrateLSMFontName(zoneData.fontFamily)
-                if newKey then
-                    zoneData.fontFamily = newKey
-                    migratedCount = migratedCount + 1
-                end
-            end
-        end
-    end
-
-    addon.db.global.zoneFontFamilyMigrated = true
-    if migratedCount > 0 then
-        print("|cFF00FF00OneWoW_Notes|r: Migrated " .. migratedCount .. " zone font(s) to new font system")
-    end
+    self:MigrateFonts("zoneFontFamilyMigrated")
 end

@@ -58,7 +58,7 @@ function ns.UI.CreatePlayersTab(parent)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(75)
 
-    local controlTitle = controlPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 10)
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
     controlTitle:SetText(L["PLAYERS_CONTROLS"] or "Players Controls")
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -257,7 +257,7 @@ function ns.UI.CreatePlayersTab(parent)
     listingPanel:SetPoint("BOTTOMLEFT", parent,     "BOTTOMLEFT",  0, 35)
     listingPanel:SetWidth(258)
 
-    local listingTitle = listingPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local listingTitle = OneWoW_GUI:CreateFS(listingPanel, 16)
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
     listingTitle:SetText(L["PLAYERS_LIST"] or "Players")
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -283,7 +283,7 @@ function ns.UI.CreatePlayersTab(parent)
     detailPanel:SetPoint("BOTTOMRIGHT", parent,       "BOTTOMRIGHT",  0, 35)
     detailPanel:SetClipsChildren(true)
 
-    emptyMessage = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["PLAYERS_SELECT"] or "Select a player to view their note.")
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
@@ -293,7 +293,7 @@ function ns.UI.CreatePlayersTab(parent)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
 
-    leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    leftStatusText = OneWoW_GUI:CreateFS(leftStatusBar, 10)
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_PLAYERS"], 0))
@@ -303,7 +303,7 @@ function ns.UI.CreatePlayersTab(parent)
     rightStatusBar:SetPoint("TOPRIGHT",    detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
 
-    local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local rightStatusText = OneWoW_GUI:CreateFS(rightStatusBar, 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightStatusText:SetText(L["STATUS_READY"])
@@ -320,7 +320,7 @@ function ns.UI.CreatePlayersTab(parent)
             editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
             editorHeader:SetHeight(95)
 
-            local nameServerLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+            local nameServerLine = OneWoW_GUI:CreateFS(editorHeader, 16)
             nameServerLine:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 12, -12)
             nameServerLine:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -100, -12)
             nameServerLine:SetJustifyH("LEFT")
@@ -328,19 +328,19 @@ function ns.UI.CreatePlayersTab(parent)
             nameServerLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             editorHeader.nameServerLine = nameServerLine
 
-            local levelClassRaceLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local levelClassRaceLine = OneWoW_GUI:CreateFS(editorHeader, 12)
             levelClassRaceLine:SetPoint("TOPLEFT", nameServerLine, "BOTTOMLEFT", 0, -4)
             levelClassRaceLine:SetText("")
             levelClassRaceLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             editorHeader.levelClassRaceLine = levelClassRaceLine
 
-            local guildLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local guildLine = OneWoW_GUI:CreateFS(editorHeader, 12)
             guildLine:SetPoint("TOPLEFT", levelClassRaceLine, "BOTTOMLEFT", 0, -2)
             guildLine:SetText("")
             guildLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             editorHeader.guildLine = guildLine
 
-            local categoryLine = editorHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local categoryLine = OneWoW_GUI:CreateFS(editorHeader, 10)
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
             categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
             categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -489,7 +489,7 @@ function ns.UI.CreatePlayersTab(parent)
             contentBg:SetHeight(160)
             contentBg:EnableMouse(true)
 
-            local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
+            local contentScroll, contentScrollChild = OneWoW_GUI:CreateScrollFrame(contentBg, {})
             contentScroll:SetPoint("TOPLEFT",     contentBg, "TOPLEFT",     4, -4)
             contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
             contentBg:SetFrameLevel(contentScroll:GetFrameLevel() - 1)
@@ -537,7 +537,7 @@ function ns.UI.CreatePlayersTab(parent)
             tooltipSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
             tooltipSection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -10)
 
-            local ttLabel = tooltipSection:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local ttLabel = OneWoW_GUI:CreateFS(tooltipSection, 12)
             ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
             ttLabel:SetText(L["UI_TOOLTIP_LINES"] or "Tooltip Lines:")
             ttLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -678,7 +678,7 @@ function ns.UI.CreatePlayersTab(parent)
     end
 
     function parent.RefreshPlayersList()
-        for _, item in pairs(playerListItems) do item:Hide() item:SetParent(nil) end
+        for _, item in pairs(playerListItems) do item:Hide() end
         playerListItems = {}
 
         if not ns.Players then
@@ -764,14 +764,14 @@ function ns.UI.CreatePlayersTab(parent)
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-            local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local nameText = OneWoW_GUI:CreateFS(row, 12)
             nameText:SetPoint("TOPLEFT",  row, "TOPLEFT",  10, -10)
             nameText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -27, -10)
             nameText:SetJustifyH("LEFT")
             nameText:SetText(player.data.name or player.fullName)
             nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-            local subText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local subText = OneWoW_GUI:CreateFS(row, 10)
             subText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 10, 8)
             local sub = ""
             if player.data.realm and player.data.realm ~= "" then sub = player.data.realm .. " " end
@@ -1000,7 +1000,7 @@ local PLAYER_PROFESSIONS = {
 }
 
 local function MakeDialogLabel(parentFrame, text, x, y)
-    local lbl = parentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local lbl = OneWoW_GUI:CreateFS(parentFrame, 12)
     lbl:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", x, y)
     lbl:SetText(text)
     lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -1183,7 +1183,7 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     noteBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X, yPos)
     noteBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
 
-    local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
+    local noteScroll, noteScrollChild = OneWoW_GUI:CreateScrollFrame(noteBg, {})
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
     noteScroll:SetPoint("BOTTOMRIGHT", noteBg, "BOTTOMRIGHT", -26, 4)
 
@@ -1379,7 +1379,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     noteBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X, yPos)
     noteBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
 
-    local noteScroll = CreateFrame("ScrollFrame", nil, noteBg, "UIPanelScrollFrameTemplate")
+    local noteScroll, noteScrollChild = OneWoW_GUI:CreateScrollFrame(noteBg, {})
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
     noteScroll:SetPoint("BOTTOMRIGHT", noteBg, "BOTTOMRIGHT", -26, 4)
 
@@ -1524,12 +1524,12 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
         cb:SetScript("OnClick", function(self) alt.checked = self:GetChecked() end)
         allCheckboxes[#allCheckboxes + 1] = cb
 
-        local nameFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local nameFS = OneWoW_GUI:CreateFS(row, 12)
         nameFS:SetPoint("LEFT", cb, "RIGHT", 4, 0)
         nameFS:SetText(alt.name)
         nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local infoFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local infoFS = OneWoW_GUI:CreateFS(row, 10)
         infoFS:SetPoint("RIGHT", row, "RIGHT", -8, 0)
         local infoText = ""
         if alt.level and alt.level > 0 then infoText = "Lv" .. alt.level .. " " end
@@ -1668,7 +1668,7 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
         cb:SetScript("OnClick", function(self) member.checked = self:GetChecked() end)
         allCheckboxes[#allCheckboxes + 1] = cb
 
-        local nameFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local nameFS = OneWoW_GUI:CreateFS(row, 12)
         nameFS:SetPoint("LEFT", cb, "RIGHT", 4, 0)
         nameFS:SetText(member.name)
         if member.isOnline then
@@ -1677,7 +1677,7 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
             nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
-        local rankFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local rankFS = OneWoW_GUI:CreateFS(row, 10)
         rankFS:SetPoint("RIGHT", row, "RIGHT", -8, 0)
         local infoText = ""
         if member.level and member.level > 0 then infoText = "Lv" .. member.level .. " " end

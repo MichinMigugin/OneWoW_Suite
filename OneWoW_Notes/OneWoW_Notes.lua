@@ -117,10 +117,6 @@ function addon:ApplyLanguage()
 end
 
 function addon:OnEnable()
-    if ns.Core and ns.Core.Initialize then
-        ns.Core:Initialize()
-    end
-
     if ns.NotesData and ns.NotesData.MigrateDefaultColors then
         ns.NotesData:MigrateDefaultColors()
     end

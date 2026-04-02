@@ -40,8 +40,6 @@ ns.DatabaseDefaults = {
             items   = { by = "name",     ascending = true  },
         },
         zoneAlertsEnabled     = true,
-        npcScanEnabled        = true,
-        playerScanEnabled     = true,
     },
     char = {
         notes         = {},

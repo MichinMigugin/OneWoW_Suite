@@ -1,25 +1,18 @@
--- OneWoW_Notes Addon File
--- OneWoW_Notes/Core/NotesData.lua
--- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
+local NotesData = ns.DataModule:New("notes", "notesCustomCategories", {})
+ns.NotesData = NotesData
 
-ns.NotesData = {}
-local NotesData = ns.NotesData
+function NotesData:GetNotesDB(storageType) return self:GetDataDB(storageType) end
+function NotesData:GetAllNotes() return self:GetAll() end
+
+function NotesData:MigrateDefaultColors() self:MigrateColors("colorsMigrated") end
+function NotesData:MigrateFontFamily() self:MigrateFonts("fontFamilyMigrated") end
 
 function NotesData:GenerateUniqueID()
     return string.format("%08x-%04x-%04x",
         GetServerTime(),
         math.random(0, 65535),
         math.random(0, 65535))
-end
-
-function NotesData:GetNotesDB(storageType)
-    local addon = _G.OneWoW_Notes
-    if storageType == "character" then
-        return addon.db.char.notes
-    else
-        return addon.db.global.notes
-    end
 end
 
 function NotesData:AddNote(noteTitle, noteData)
@@ -84,30 +77,21 @@ function NotesData:AddNote(noteTitle, noteData)
         noteData.newTimestamp = GetServerTime()
     end
 
-    local targetDB = self:GetNotesDB(storageType)
+    local targetDB = self:GetDataDB(storageType)
     if not targetDB then
-        if storageType == "character" then
-            addon.db.char.notes = {}
-            targetDB = addon.db.char.notes
-        else
-            addon.db.global.notes = {}
-            targetDB = addon.db.global.notes
-        end
+        self:EnsureDB()
+        targetDB = self:GetDataDB(storageType)
     end
 
     targetDB[noteID] = noteData
+    self:InvalidateCache()
     return noteID
 end
 
 function NotesData:RemoveNote(noteID)
-    local addon = _G.OneWoW_Notes
-    if addon.db.global.notes then
-        addon.db.global.notes[noteID] = nil
-    end
-    if addon.db.char.notes then
-        addon.db.char.notes[noteID] = nil
-    end
+    self:Remove(noteID)
 
+    local addon = _G.OneWoW_Notes
     if addon.notePins and addon.notePins[noteID] then
         local pinFrame = addon.notePins[noteID]
         if pinFrame and pinFrame.Hide then
@@ -166,7 +150,7 @@ function NotesData:ToggleFavorite(noteID)
 
     note.favorite = not (note.favorite or false)
 
-    local targetDB = self:GetNotesDB(note.storage or "account")
+    local targetDB = self:GetDataDB(note.storage or "account")
     if targetDB then
         targetDB[noteID] = note
     end
@@ -192,97 +176,4 @@ function NotesData:FindNote(noteID)
         return addon.db.char.notes[noteID], addon.db.char.notes
     end
     return nil, nil
-end
-
-function NotesData:GetAllNotes()
-    local addon = _G.OneWoW_Notes
-    local allNotes = {}
-
-    if addon.db.global.notes then
-        for noteID, noteData in pairs(addon.db.global.notes) do
-            allNotes[noteID] = noteData
-        end
-    end
-
-    if addon.db.char.notes then
-        for noteID, noteData in pairs(addon.db.char.notes) do
-            allNotes[noteID] = noteData
-        end
-    end
-
-    return allNotes
-end
-
--- Legacy GetNotes kept for backward compatibility
-function NotesData:GetNotes()
-    return self:GetAllNotes()
-end
-
-function NotesData:MigrateDefaultColors()
-    local addon = _G.OneWoW_Notes
-    if not addon.db or not addon.db.global then return end
-
-    if addon.db.global.colorsMigrated then return end
-
-    local migratedCount = 0
-    if addon.db.global.notes then
-        for noteID, noteData in pairs(addon.db.global.notes) do
-            if noteData and type(noteData) == "table" then
-                if noteData.pinColor == "hunter" and noteData.fontColor == "match" then
-                    noteData.pinColor = "sync"
-                    migratedCount = migratedCount + 1
-                end
-            end
-        end
-    end
-
-    if addon.db.char and addon.db.char.notes then
-        for noteID, noteData in pairs(addon.db.char.notes) do
-            if noteData and type(noteData) == "table" then
-                if noteData.pinColor == "hunter" and noteData.fontColor == "match" then
-                    noteData.pinColor = "sync"
-                    migratedCount = migratedCount + 1
-                end
-            end
-        end
-    end
-
-    addon.db.global.colorsMigrated = true
-    if migratedCount > 0 then
-        print("|cFF00FF00OneWoW_Notes|r: Migrated " .. migratedCount .. " note(s) to OneWoW Sync theme")
-    end
-end
-
-function NotesData:MigrateFontFamily()
-    local addon = _G.OneWoW_Notes
-    if not addon.db or not addon.db.global then return end
-    if addon.db.global.fontFamilyMigrated then return end
-
-    local GUI = LibStub("OneWoW_GUI-1.0", true)
-    if not GUI or not GUI.MigrateLSMFontName then
-        addon.db.global.fontFamilyMigrated = true
-        return
-    end
-
-    local migratedCount = 0
-    local function migrateDB(notesDB)
-        if not notesDB then return end
-        for _, noteData in pairs(notesDB) do
-            if noteData and type(noteData) == "table" and noteData.fontFamily then
-                local newKey = GUI:MigrateLSMFontName(noteData.fontFamily)
-                if newKey then
-                    noteData.fontFamily = newKey
-                    migratedCount = migratedCount + 1
-                end
-            end
-        end
-    end
-
-    migrateDB(addon.db.global.notes)
-    if addon.db.char then migrateDB(addon.db.char.notes) end
-
-    addon.db.global.fontFamilyMigrated = true
-    if migratedCount > 0 then
-        print("|cFF00FF00OneWoW_Notes|r: Migrated " .. migratedCount .. " note font(s) to new font system")
-    end
 end

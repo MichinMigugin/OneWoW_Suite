@@ -11,7 +11,7 @@ local function GetFontColorFromKey(fontColorKey, pinColorKey)
 end
 
 local function MakeLabel(parent, text, x, y)
-    local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local lbl = OneWoW_GUI:CreateFS(parent, 12)
     lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
     lbl:SetText(text)
     lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -284,7 +284,7 @@ function ns.UI.ShowAddNoteDialog()
     end
     yPos = yPos - ROW_H + 4
 
-    local previewLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local previewLabel = OneWoW_GUI:CreateFS(content, 10)
     previewLabel:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     previewLabel:SetText(L["LABEL_NOTE_CONTENT"])
     previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -302,7 +302,7 @@ function ns.UI.ShowAddNoteDialog()
     contentBg:SetBackdropColor(initCC.background[1], initCC.background[2], initCC.background[3], 0.9)
     contentBg:SetBackdropBorderColor(initCC.border[1], initCC.border[2], initCC.border[3], 0.8)
 
-    local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
+    local contentScroll, contentScrollChild = OneWoW_GUI:CreateScrollFrame(contentBg, {})
     contentScroll:SetPoint("TOPLEFT",     contentBg, "TOPLEFT",     4, -4)
     contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
 
@@ -659,7 +659,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     end
     yPos = yPos - ROW_H + 4
 
-    local previewLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local previewLabel = OneWoW_GUI:CreateFS(content, 10)
     previewLabel:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     previewLabel:SetText(L["LABEL_NOTE_PREVIEW"])
     previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -674,7 +674,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     contentBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X,  yPos)
     contentBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
 
-    local contentScroll = CreateFrame("ScrollFrame", nil, contentBg, "UIPanelScrollFrameTemplate")
+    local contentScroll, contentScrollChild = OneWoW_GUI:CreateScrollFrame(contentBg, {})
     contentScroll:SetPoint("TOPLEFT",     contentBg, "TOPLEFT",     4, -4)
     contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
 

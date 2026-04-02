@@ -4,48 +4,19 @@
 local addonName, ns = ...
 local L = ns.L
 
-local Items = {}
+local Items = ns.DataModule:New("items", "itemCustomCategories", {
+    "General", "Transmog", "Crafting", "Quest", "Rare", "Collectible"
+})
 ns.Items = Items
 
-local BUILT_IN_ITEM_CATEGORIES = {
-    "General", "Transmog", "Crafting", "Quest", "Rare", "Collectible"
-}
-
-function Items:GetNotesDB(storageType)
-    local addon = _G.OneWoW_Notes
-    if storageType == "character" then
-        return addon.db.char.items
-    else
-        return addon.db.global.items
-    end
-end
-
-function Items:GetAllItems()
-    local addon = _G.OneWoW_Notes
-    local allItems = {}
-
-    if addon.db.global.items then
-        for itemID, itemData in pairs(addon.db.global.items) do
-            allItems[itemID] = itemData
-            if type(itemData) == "table" then itemData.storage = "account" end
-        end
-    end
-
-    if addon.db.char.items then
-        for itemID, itemData in pairs(addon.db.char.items) do
-            allItems[itemID] = itemData
-            if type(itemData) == "table" then itemData.storage = "character" end
-        end
-    end
-
-    return allItems
-end
+Items.GetNotesDB = Items.GetDataDB
+Items.GetAllItems = Items.GetAll
 
 function Items:GetItem(itemID)
     if not itemID then return nil end
     itemID = tonumber(itemID)
     if not itemID then return nil end
-    return self:GetAllItems()[itemID]
+    return self:GetAll()[itemID]
 end
 
 function Items:AddItem(itemID, itemData)
@@ -100,6 +71,7 @@ function Items:AddItem(itemID, itemData)
     end
 
     self:SaveItem(itemID, newItemData)
+    self:InvalidateCache()
     return true
 end
 
@@ -119,24 +91,13 @@ function Items:SaveItem(itemID, itemData)
         if not addon.db.global.items then addon.db.global.items = {} end
         addon.db.global.items[itemID] = itemData
     end
+
+    self:InvalidateCache()
 end
 
 function Items:RemoveItem(itemID)
     if not itemID then return end
     itemID = tonumber(itemID)
     if not itemID then return end
-
-    local addon = _G.OneWoW_Notes
-    if addon.db.global.items then addon.db.global.items[itemID] = nil end
-    if addon.db.char.items   then addon.db.char.items[itemID]   = nil end
-end
-
-function Items:GetCategories()
-    local addon = _G.OneWoW_Notes
-    local all = {}
-    for _, c in ipairs(BUILT_IN_ITEM_CATEGORIES) do table.insert(all, c) end
-    if addon.db.global.itemCustomCategories then
-        for _, c in ipairs(addon.db.global.itemCustomCategories) do table.insert(all, c) end
-    end
-    return all
+    self:Remove(itemID)
 end
