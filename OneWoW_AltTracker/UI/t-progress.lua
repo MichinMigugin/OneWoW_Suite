@@ -87,6 +87,43 @@ local function GetBestRunFullString(endgameData)
     return "+" .. level
 end
 
+local function VaultTypeStr(grid, panel, list, label)
+    if not list or #list == 0 then
+        grid:AddLine(panel, label .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+        return
+    end
+    local parts = {}
+    for _, act in ipairs(list) do
+        local prog = act.progress or 0
+        local thresh = act.threshold or 0
+        if prog >= thresh and thresh > 0 then
+            table.insert(parts, "|cFF00FF00" .. prog .. "/" .. thresh .. "|r")
+        else
+            table.insert(parts, prog .. "/" .. thresh)
+        end
+    end
+    grid:AddLine(panel, label .. ": " .. table.concat(parts, "  "))
+end
+
+local function GetHoveredColumnKey(self, columns, contentFrame)
+    local x = GetCursorPosition() / UIParent:GetEffectiveScale()
+    local rowLeft = self:GetLeft()
+    if not rowLeft then return nil end
+    local relX = x - rowLeft
+    local hdrRow = contentFrame.headerRow
+    if hdrRow and hdrRow.columnButtons then
+        for i, btn in ipairs(hdrRow.columnButtons) do
+            if btn.columnX and btn.columnWidth then
+                if relX >= btn.columnX and relX <= btn.columnX + btn.columnWidth then
+                    if columns[i] then return columns[i].key end
+                    return nil
+                end
+            end
+        end
+    end
+    return nil
+end
+
 local function GetTrackedCurrencyData(endgameData)
     local lines = {}
     if endgameData and endgameData.currencies and endgameData.currencies.tracked then
@@ -215,134 +252,65 @@ local function GetWorldBossKilled(endgameData)
     return false, nil
 end
 
-local function GetSortedCharacters(subTabKey)
-    if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return {} end
-    if not _G.OneWoW_AltTracker_Endgame_DB then return {} end
+local function GetProgressSortValue(charKey, charData, sortColumn)
+    local endgameDB = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters
+    local edg = endgameDB and endgameDB[charKey]
 
-    local allChars = {}
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
-        table.insert(allChars, { key = charKey, data = charData })
-    end
-    if #allChars == 0 then return {} end
-
-    local currentChar = UnitName("player")
-    local currentRealm = GetRealmName()
-    local currentCharKey = currentChar .. "-" .. currentRealm
-    local state = subTabState[subTabKey]
-
-    table.sort(allChars, function(a, b)
-        local aFav = ns.IsFavoriteChar(a.key)
-        local bFav = ns.IsFavoriteChar(b.key)
-        if aFav and not bFav then return true end
-        if bFav and not aFav then return false end
-
-        local aIsCurrent = (a.key == currentCharKey)
-        local bIsCurrent = (b.key == currentCharKey)
-        if aIsCurrent and not bIsCurrent then return true end
-        if bIsCurrent and not aIsCurrent then return false end
-
-        if state.sortColumn then
-            local aVal, bVal
-            local aEndgame = _G.OneWoW_AltTracker_Endgame_DB.characters and _G.OneWoW_AltTracker_Endgame_DB.characters[a.key]
-            local bEndgame = _G.OneWoW_AltTracker_Endgame_DB.characters and _G.OneWoW_AltTracker_Endgame_DB.characters[b.key]
-
-            if state.sortColumn == "name" then
-                aVal = a.data.name or ""
-                bVal = b.data.name or ""
-            elseif state.sortColumn == "server" then
-                aVal = a.data.realm or ""
-                bVal = b.data.realm or ""
-            elseif state.sortColumn == "level" then
-                aVal = a.data.level or 0
-                bVal = b.data.level or 0
-            elseif state.sortColumn == "ilvl" then
-                aVal = a.data.itemLevel or 0
-                bVal = b.data.itemLevel or 0
-            elseif state.sortColumn == "rating" then
-                aVal = (aEndgame and aEndgame.mythicPlus and aEndgame.mythicPlus.overallScore) or 0
-                bVal = (bEndgame and bEndgame.mythicPlus and bEndgame.mythicPlus.overallScore) or 0
-            elseif state.sortColumn == "bestTime" then
-                local aLevel = GetBestTimedRun(aEndgame)
-                local bLevel = GetBestTimedRun(bEndgame)
-                aVal = aLevel or 0
-                bVal = bLevel or 0
-            elseif state.sortColumn == "keystone" then
-                aVal = (aEndgame and aEndgame.mythicPlus and aEndgame.mythicPlus.currentKeystone and aEndgame.mythicPlus.currentKeystone.level) or 0
-                bVal = (bEndgame and bEndgame.mythicPlus and bEndgame.mythicPlus.currentKeystone and bEndgame.mythicPlus.currentKeystone.level) or 0
-            elseif state.sortColumn == "worldBoss" then
-                local aKilled = GetWorldBossKilled(aEndgame)
-                local bKilled = GetWorldBossKilled(bEndgame)
-                aVal = aKilled and 1 or 0
-                bVal = bKilled and 1 or 0
-            elseif state.sortColumn:sub(1, 4) == "cur_" then
-                local cid = tonumber(state.sortColumn:sub(5))
-                local function getCurrQty(edg, id)
-                    if not edg or not edg.currencies or not edg.currencies.tracked then return 0 end
-                    local c = edg.currencies.tracked[id]
-                    return c and (c.quantity or 0) or 0
-                end
-                aVal = getCurrQty(aEndgame, cid)
-                bVal = getCurrQty(bEndgame, cid)
-            elseif state.sortColumn == "vaultRaid" then
-                aVal = GetVaultTypeString(aEndgame, "raid")
-                bVal = GetVaultTypeString(bEndgame, "raid")
-            elseif state.sortColumn == "vaultDungeon" then
-                aVal = GetVaultTypeString(aEndgame, "dungeon")
-                bVal = GetVaultTypeString(bEndgame, "dungeon")
-            elseif state.sortColumn == "vaultWorld" then
-                aVal = GetVaultTypeString(aEndgame, "world")
-                bVal = GetVaultTypeString(bEndgame, "world")
-            else
-                local isDungKey = false
-                for _, dung in ipairs(SEASON_DUNGEONS) do
-                    if dung.key == state.sortColumn then
-                        isDungKey = true
-                        local function getDungLevel(edg)
-                            if not edg or not edg.mythicPlus or not edg.mythicPlus.seasonBest then return 0 end
-                            local best = edg.mythicPlus.seasonBest[dung.mapID]
-                            if best and best.intime then return best.intime.level or 0 end
-                            return 0
-                        end
-                        aVal = getDungLevel(aEndgame)
-                        bVal = getDungLevel(bEndgame)
-                        break
-                    end
-                end
-                if not isDungKey then
-                    for _, diff in ipairs(SEASON_RAID_DIFFS) do
-                        if diff.key == state.sortColumn then
-                            local function getRaidProg(edg)
-                                if not edg or not edg.raids or not edg.raids.lockouts then return 0 end
-                                for _, lockout in ipairs(edg.raids.lockouts) do
-                                    if (lockout.difficultyName or ""):find(diff.diffFind) then
-                                        return lockout.encounterProgress or 0
-                                    end
-                                end
-                                return 0
-                            end
-                            aVal = getRaidProg(aEndgame)
-                            bVal = getRaidProg(bEndgame)
-                            break
-                        end
-                    end
-                end
-                if aVal == nil then
-                    aVal = a.data.name or ""
-                    bVal = b.data.name or ""
-                end
-            end
-
-            if type(aVal) == "number" then
-                if state.sortAscending then return aVal < bVal else return aVal > bVal end
-            else
-                if state.sortAscending then return aVal < bVal else return aVal > bVal end
+    if sortColumn == "name" then
+        return charData.name or ""
+    elseif sortColumn == "server" then
+        return charData.realm or ""
+    elseif sortColumn == "level" then
+        return charData.level or 0
+    elseif sortColumn == "ilvl" then
+        return charData.itemLevel or 0
+    elseif sortColumn == "rating" then
+        return (edg and edg.mythicPlus and edg.mythicPlus.overallScore) or 0
+    elseif sortColumn == "bestTime" then
+        return GetBestTimedRun(edg) or 0
+    elseif sortColumn == "keystone" then
+        return (edg and edg.mythicPlus and edg.mythicPlus.currentKeystone and edg.mythicPlus.currentKeystone.level) or 0
+    elseif sortColumn == "worldBoss" then
+        return GetWorldBossKilled(edg) and 1 or 0
+    elseif sortColumn:sub(1, 4) == "cur_" then
+        local cid = tonumber(sortColumn:sub(5))
+        if not edg or not edg.currencies or not edg.currencies.tracked then return 0 end
+        local c = edg.currencies.tracked[cid]
+        return c and (c.quantity or 0) or 0
+    elseif sortColumn == "vaultRaid" then
+        return GetVaultTypeString(edg, "raid")
+    elseif sortColumn == "vaultDungeon" then
+        return GetVaultTypeString(edg, "dungeon")
+    elseif sortColumn == "vaultWorld" then
+        return GetVaultTypeString(edg, "world")
+    else
+        for _, dung in ipairs(SEASON_DUNGEONS) do
+            if dung.key == sortColumn then
+                if not edg or not edg.mythicPlus or not edg.mythicPlus.seasonBest then return 0 end
+                local best = edg.mythicPlus.seasonBest[dung.mapID]
+                if best and best.intime then return best.intime.level or 0 end
+                return 0
             end
         end
+        for _, diff in ipairs(SEASON_RAID_DIFFS) do
+            if diff.key == sortColumn then
+                if not edg or not edg.raids or not edg.raids.lockouts then return 0 end
+                for _, lockout in ipairs(edg.raids.lockouts) do
+                    if (lockout.difficultyName or ""):find(diff.diffFind) then
+                        return lockout.encounterProgress or 0
+                    end
+                end
+                return 0
+            end
+        end
+    end
+    return charData.name or ""
+end
 
-        return (a.data.name or "") < (b.data.name or "")
-    end)
-
-    return allChars
+local function GetSortedCharacters(subTabKey)
+    if not _G.OneWoW_AltTracker_Endgame_DB then return {} end
+    local state = subTabState[subTabKey]
+    return ns.UI.GetSortedCharacters(GetProgressSortValue, state.sortColumn, state.sortAscending)
 end
 
 local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
@@ -429,42 +397,17 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
 end
 
 local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHeight)
-    local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
-    table.insert(charRow.cells, factionCell)
+    ns.UI.AddCommonCells(charRow, charKey, charData)
 
-    local hasMail = false
-    if StorageAPI then
-        local mailData = StorageAPI.GetMail(charKey)
-        hasMail = mailData and mailData.hasNewMail
-    end
-    local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
-    table.insert(charRow.cells, mailCell)
-
-    local nameText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    nameText:SetText(charData.name or charKey)
-    local className = charData.class or charData.className
-    if className then className = string.upper(className) end
-    local classColor = className and RAID_CLASS_COLORS[className]
-    if classColor then
-        nameText:SetTextColor(classColor.r, classColor.g, classColor.b)
-    else
-        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    end
-    nameText:SetJustifyH("LEFT")
-    table.insert(charRow.cells, nameText)
-
-    local realmText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local realmText = OneWoW_GUI:CreateFS(charRow, 12)
     realmText:SetText(charData.realm or "")
     realmText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     realmText:SetJustifyH("LEFT")
     table.insert(charRow.cells, realmText)
 
-    local levelText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    levelText:SetText(tostring(charData.level or 0))
-    levelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    table.insert(charRow.cells, levelText)
+    ns.UI.AddLevelCell(charRow, charData)
 
-    local ilvlText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local ilvlText = OneWoW_GUI:CreateFS(charRow, 12)
     local ilvl = charData.itemLevel or 0
     ilvlText:SetText(ilvl > 0 and tostring(ilvl) or "--")
     ilvlText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -473,7 +416,7 @@ local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHei
     end
     table.insert(charRow.cells, ilvlText)
 
-    local ratingText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local ratingText = OneWoW_GUI:CreateFS(charRow, 12)
     local rating = (endgameData and endgameData.mythicPlus and endgameData.mythicPlus.overallScore) or 0
     ratingText:SetText(tostring(rating))
     ratingText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -487,26 +430,9 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         local p1 = grid:AddPanel(L["PROGRESS_GREAT_VAULT_DETAIL"])
         if endgameData and endgameData.greatVault and endgameData.greatVault.activities then
             local acts = endgameData.greatVault.activities
-            local function VaultTypeStr(list, label)
-                if not list or #list == 0 then
-                    grid:AddLine(p1, label .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
-                    return
-                end
-                local parts = {}
-                for _, act in ipairs(list) do
-                    local prog = act.progress or 0
-                    local thresh = act.threshold or 0
-                    if prog >= thresh and thresh > 0 then
-                        table.insert(parts, "|cFF00FF00" .. prog .. "/" .. thresh .. "|r")
-                    else
-                        table.insert(parts, prog .. "/" .. thresh)
-                    end
-                end
-                grid:AddLine(p1, label .. ": " .. table.concat(parts, "  "))
-            end
-            VaultTypeStr(acts.raid, L["PROGRESS_VAULT_RAID"])
-            VaultTypeStr(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
-            VaultTypeStr(acts.world, L["PROGRESS_VAULT_WORLD"])
+            VaultTypeStr(grid, p1, acts.raid, L["PROGRESS_VAULT_RAID"])
+            VaultTypeStr(grid, p1, acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
+            VaultTypeStr(grid, p1, acts.world, L["PROGRESS_VAULT_WORLD"])
         else
             grid:AddLine(p1, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
             grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
@@ -553,26 +479,9 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         local p1 = grid:AddPanel(L["PROGRESS_GREAT_VAULT_DETAIL"])
         if endgameData and endgameData.greatVault and endgameData.greatVault.activities then
             local acts = endgameData.greatVault.activities
-            local function VaultTypeStr(list, label)
-                if not list or #list == 0 then
-                    grid:AddLine(p1, label .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
-                    return
-                end
-                local parts = {}
-                for _, act in ipairs(list) do
-                    local prog = act.progress or 0
-                    local thresh = act.threshold or 0
-                    if prog >= thresh and thresh > 0 then
-                        table.insert(parts, "|cFF00FF00" .. prog .. "/" .. thresh .. "|r")
-                    else
-                        table.insert(parts, prog .. "/" .. thresh)
-                    end
-                end
-                grid:AddLine(p1, label .. ": " .. table.concat(parts, "  "))
-            end
-            VaultTypeStr(acts.raid, L["PROGRESS_VAULT_RAID"])
-            VaultTypeStr(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
-            VaultTypeStr(acts.world, L["PROGRESS_VAULT_WORLD"])
+            VaultTypeStr(grid, p1, acts.raid, L["PROGRESS_VAULT_RAID"])
+            VaultTypeStr(grid, p1, acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
+            VaultTypeStr(grid, p1, acts.world, L["PROGRESS_VAULT_WORLD"])
         else
             grid:AddLine(p1, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
             grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
@@ -627,26 +536,9 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         local p2 = grid:AddPanel(L["PROGRESS_GREAT_VAULT_DETAIL"])
         if endgameData and endgameData.greatVault and endgameData.greatVault.activities then
             local acts = endgameData.greatVault.activities
-            local function VaultTypeStr(list, label)
-                if not list or #list == 0 then
-                    grid:AddLine(p2, label .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
-                    return
-                end
-                local parts = {}
-                for _, act in ipairs(list) do
-                    local prog = act.progress or 0
-                    local thresh = act.threshold or 0
-                    if prog >= thresh and thresh > 0 then
-                        table.insert(parts, "|cFF00FF00" .. prog .. "/" .. thresh .. "|r")
-                    else
-                        table.insert(parts, prog .. "/" .. thresh)
-                    end
-                end
-                grid:AddLine(p2, label .. ": " .. table.concat(parts, "  "))
-            end
-            VaultTypeStr(acts.raid, L["PROGRESS_VAULT_RAID"])
-            VaultTypeStr(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
-            VaultTypeStr(acts.world, L["PROGRESS_VAULT_WORLD"])
+            VaultTypeStr(grid, p2, acts.raid, L["PROGRESS_VAULT_RAID"])
+            VaultTypeStr(grid, p2, acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
+            VaultTypeStr(grid, p2, acts.world, L["PROGRESS_VAULT_WORLD"])
         else
             grid:AddLine(p2, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
             grid:AddLine(p2, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
@@ -699,10 +591,6 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
             end,
         })
         charRow.charKey = charKey
-
-        if ns.UI.CreateFavoriteStarButton then
-            table.insert(charRow.cells, 2, ns.UI.CreateFavoriteStarButton(charRow, charKey))
-        end
 
         CreateCommonCells(charRow, charData, charKey, endgameData, rowHeight)
 
@@ -832,13 +720,13 @@ local function CreateCurrenciesColumns()
 end
 
 local function BuildMythicPlusCells(charRow, charData, charKey, endgameData, progressTab)
-    local bestTimeText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local bestTimeText = OneWoW_GUI:CreateFS(charRow, 12)
     bestTimeText:SetText(GetBestRunString(endgameData))
     bestTimeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     bestTimeText:SetJustifyH("LEFT")
     table.insert(charRow.cells, bestTimeText)
 
-    local keystoneText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local keystoneText = OneWoW_GUI:CreateFS(charRow, 12)
     local keystoneLevel = (endgameData and endgameData.mythicPlus and endgameData.mythicPlus.currentKeystone and endgameData.mythicPlus.currentKeystone.level) or 0
     local keystoneName = (endgameData and endgameData.mythicPlus and endgameData.mythicPlus.currentKeystone and endgameData.mythicPlus.currentKeystone.mapName) or ""
     if keystoneLevel > 0 and keystoneName ~= "" then
@@ -853,7 +741,7 @@ local function BuildMythicPlusCells(charRow, charData, charKey, endgameData, pro
     table.insert(charRow.cells, keystoneText)
 
     for _, dung in ipairs(SEASON_DUNGEONS) do
-        local dungText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local dungText = OneWoW_GUI:CreateFS(charRow, 12)
         local dungLevel = nil
         if dung.mapID and dung.mapID > 0 and endgameData and endgameData.mythicPlus and endgameData.mythicPlus.seasonBest then
             local best = endgameData.mythicPlus.seasonBest[dung.mapID]
@@ -867,23 +755,8 @@ local function BuildMythicPlusCells(charRow, charData, charKey, endgameData, pro
 end
 
 local function BuildMythicPlusTooltip(self, edg, chd, chk, contentFrame)
-    local x = GetCursorPosition() / UIParent:GetEffectiveScale()
-    local rowLeft = self:GetLeft()
-    if not rowLeft then GameTooltip:Hide(); return end
-    local relX = x - rowLeft
-    local colKey = nil
-    local hdrRow = contentFrame.headerRow
     local cols = subTabState["mythicplus"].columns
-    if hdrRow and hdrRow.columnButtons then
-        for i, btn in ipairs(hdrRow.columnButtons) do
-            if btn.columnX and btn.columnWidth then
-                if relX >= btn.columnX and relX <= btn.columnX + btn.columnWidth then
-                    if cols[i] then colKey = cols[i].key end
-                    break
-                end
-            end
-        end
-    end
+    local colKey = GetHoveredColumnKey(self, cols, contentFrame)
     if not colKey or colKey == "expand" or colKey == "faction" or colKey == "mail" or colKey == "star" then
         GameTooltip:Hide()
         return
@@ -975,7 +848,7 @@ end
 
 local function BuildRaidsCells(charRow, charData, charKey, endgameData, progressTab)
     for _, diff in ipairs(SEASON_RAID_DIFFS) do
-        local raidText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local raidText = OneWoW_GUI:CreateFS(charRow, 12)
         local progress, total = 0, SEASON_RAID_TOTAL
         if endgameData and endgameData.raids and endgameData.raids.lockouts then
             for _, lockout in ipairs(endgameData.raids.lockouts) do
@@ -998,7 +871,7 @@ local function BuildRaidsCells(charRow, charData, charKey, endgameData, progress
         table.insert(charRow.cells, raidText)
     end
 
-    local worldBossText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local worldBossText = OneWoW_GUI:CreateFS(charRow, 10)
     local wbKilled, wbName = GetWorldBossKilled(endgameData)
     if wbKilled then
         worldBossText:SetText(ns.ShortNames:GetShortName(wbName or L["PROGRESS_BOSS_KILLED"], 9))
@@ -1010,19 +883,19 @@ local function BuildRaidsCells(charRow, charData, charKey, endgameData, progress
     worldBossText:SetJustifyH("LEFT")
     table.insert(charRow.cells, worldBossText)
 
-    local vaultRaidText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local vaultRaidText = OneWoW_GUI:CreateFS(charRow, 12)
     vaultRaidText:SetText(GetVaultTypeString(endgameData, "raid"))
     vaultRaidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     vaultRaidText:SetJustifyH("CENTER")
     table.insert(charRow.cells, vaultRaidText)
 
-    local vaultDungeonText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local vaultDungeonText = OneWoW_GUI:CreateFS(charRow, 12)
     vaultDungeonText:SetText(GetVaultTypeString(endgameData, "dungeon"))
     vaultDungeonText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     vaultDungeonText:SetJustifyH("CENTER")
     table.insert(charRow.cells, vaultDungeonText)
 
-    local vaultWorldText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local vaultWorldText = OneWoW_GUI:CreateFS(charRow, 12)
     vaultWorldText:SetText(GetVaultTypeString(endgameData, "world"))
     vaultWorldText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     vaultWorldText:SetJustifyH("CENTER")
@@ -1030,23 +903,8 @@ local function BuildRaidsCells(charRow, charData, charKey, endgameData, progress
 end
 
 local function BuildRaidsTooltip(self, edg, chd, chk, contentFrame)
-    local x = GetCursorPosition() / UIParent:GetEffectiveScale()
-    local rowLeft = self:GetLeft()
-    if not rowLeft then GameTooltip:Hide(); return end
-    local relX = x - rowLeft
-    local colKey = nil
-    local hdrRow = contentFrame.headerRow
     local cols = subTabState["raids"].columns
-    if hdrRow and hdrRow.columnButtons then
-        for i, btn in ipairs(hdrRow.columnButtons) do
-            if btn.columnX and btn.columnWidth then
-                if relX >= btn.columnX and relX <= btn.columnX + btn.columnWidth then
-                    if cols[i] then colKey = cols[i].key end
-                    break
-                end
-            end
-        end
-    end
+    local colKey = GetHoveredColumnKey(self, cols, contentFrame)
     if not colKey or colKey == "expand" or colKey == "star" or colKey == "faction" or colKey == "mail" then
         GameTooltip:Hide()
         return
@@ -1118,7 +976,7 @@ end
 
 local function BuildCurrenciesCells(charRow, charData, charKey, endgameData, progressTab)
     for _, cur in ipairs(SEASON_CURRENCIES) do
-        local curText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local curText = OneWoW_GUI:CreateFS(charRow, 12)
         local qty = 0
         local maxQty = 0
         if endgameData and endgameData.currencies and endgameData.currencies.tracked then
@@ -1145,23 +1003,8 @@ local function BuildCurrenciesCells(charRow, charData, charKey, endgameData, pro
 end
 
 local function BuildCurrenciesTooltip(self, edg, chd, chk, contentFrame)
-    local x = GetCursorPosition() / UIParent:GetEffectiveScale()
-    local rowLeft = self:GetLeft()
-    if not rowLeft then GameTooltip:Hide(); return end
-    local relX = x - rowLeft
-    local colKey = nil
-    local hdrRow = contentFrame.headerRow
     local cols = subTabState["currencies"].columns
-    if hdrRow and hdrRow.columnButtons then
-        for i, btn in ipairs(hdrRow.columnButtons) do
-            if btn.columnX and btn.columnWidth then
-                if relX >= btn.columnX and relX <= btn.columnX + btn.columnWidth then
-                    if cols[i] then colKey = cols[i].key end
-                    break
-                end
-            end
-        end
-    end
+    local colKey = GetHoveredColumnKey(self, cols, contentFrame)
     if not colKey or colKey == "expand" or colKey == "star" or colKey == "faction" or colKey == "mail" then
         GameTooltip:Hide()
         return
@@ -1220,14 +1063,11 @@ function ns.UI.CreateProgressTab(parent)
         },
     })
 
-    local trackingBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local trackingBar = OneWoW_GUI:CreateFrame(parent, { bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
     trackingBar:SetPoint("TOPLEFT", overview.panel, "BOTTOMLEFT", 0, -4)
     trackingBar:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -4)
-    trackingBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    trackingBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    trackingBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local trackingText = trackingBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local trackingText = OneWoW_GUI:CreateFS(trackingBar, 10)
     trackingText:SetPoint("TOPLEFT", trackingBar, "TOPLEFT", 10, -4)
     trackingText:SetPoint("TOPRIGHT", trackingBar, "TOPRIGHT", -10, -4)
     trackingText:SetJustifyH("LEFT")
@@ -1244,13 +1084,9 @@ function ns.UI.CreateProgressTab(parent)
     end)
     trackingBar:SetHeight(22)
 
-    local subTabBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local subTabBar = OneWoW_GUI:CreateFrame(parent, { height = 28, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
     subTabBar:SetPoint("TOPLEFT", trackingBar, "BOTTOMLEFT", 0, -4)
     subTabBar:SetPoint("TOPRIGHT", trackingBar, "BOTTOMRIGHT", 0, -4)
-    subTabBar:SetHeight(28)
-    subTabBar:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    subTabBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    subTabBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local subTabButtons = {}
     local subTabFrames = {}

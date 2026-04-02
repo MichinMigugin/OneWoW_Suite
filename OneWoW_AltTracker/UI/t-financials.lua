@@ -99,10 +99,8 @@ local function GetItemDialog()
     itemDialog:SetFrameLevel(500)
     itemDialog._contentFrame = result.contentFrame
 
-    local editBox = CreateFrame("EditBox", nil, result.contentFrame, "InputBoxTemplate")
-    editBox:SetSize(300, 22)
+    local editBox = OneWoW_GUI:CreateEditBox(result.contentFrame, { width = 300, height = 22 })
     editBox:SetPoint("TOP", result.contentFrame, "TOP", 0, -10)
-    editBox:SetAutoFocus(false)
     itemDialog.editBox = editBox
 
     local saveBtn = OneWoW_GUI:CreateFitTextButton(result.contentFrame, { text = ACCEPT, height = 26 })
@@ -245,25 +243,32 @@ end
 
 local function ShowDeleteConfirmation(tx)
     if not tx or not tx.id then return end
-    StaticPopupDialogs["ONEWOW_DELETE_TX"] = {
-        text = L["FIN_DELETE_CONFIRM"],
-        button1 = L["FIN_DELETE_ACCEPT"],
-        button2 = CANCEL,
-        OnAccept = function()
-            local AccountingAddon = _G.OneWoW_AltTracker_Accounting
-            if AccountingAddon and AccountingAddon.Transactions then
-                AccountingAddon.Transactions:DeleteTransaction(tx.id)
-                if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
-                    ns.UI.RefreshFinancialsTab(activeFinancialsTab)
-                end
-            end
-        end,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        preferredIndex = 3,
-    }
-    StaticPopup_Show("ONEWOW_DELETE_TX")
+    local result = OneWoW_GUI:CreateConfirmDialog({
+        title = L["FIN_DELETE_CONFIRM"],
+        message = L["FIN_DELETE_CONFIRM"],
+        buttons = {
+            {
+                text = L["FIN_DELETE_ACCEPT"],
+                onClick = function(dialog)
+                    local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+                    if AccountingAddon and AccountingAddon.Transactions then
+                        AccountingAddon.Transactions:DeleteTransaction(tx.id)
+                        if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                            ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                        end
+                    end
+                    dialog:Hide()
+                end,
+            },
+            {
+                text = CANCEL,
+                onClick = function(dialog)
+                    dialog:Hide()
+                end,
+            },
+        },
+    })
+    result.frame:Show()
 end
 
 local function ShowTransactionContextMenu(tx)
@@ -395,13 +400,7 @@ function ns.UI.CreateFinancialsTab(parent)
         },
     })
 
-    local filterPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    filterPanel:SetPoint("TOPLEFT", overview.panel, "BOTTOMLEFT", 0, -8)
-    filterPanel:SetPoint("TOPRIGHT", overview.panel, "BOTTOMRIGHT", 0, -8)
-    filterPanel:SetHeight(32)
-    filterPanel:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    filterPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    filterPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    local filterPanel = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = overview.panel, offset = -8 })
 
     parent.timePeriod = "week"
     parent.typeFilter = "all"
@@ -496,7 +495,7 @@ function ns.UI.CreateFinancialsTab(parent)
         table.insert(typeButtons, btn)
     end
 
-    local charLabel = filterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local charLabel = OneWoW_GUI:CreateFS(filterPanel, 10)
     charLabel:SetPoint("LEFT", typeButtons[#typeButtons], "RIGHT", 25, 0)
     charLabel:SetText(L["FIN_CHAR_LABEL"])
     charLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -519,7 +518,7 @@ function ns.UI.CreateFinancialsTab(parent)
         end
     end)
 
-    local catLabel = filterPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local catLabel = OneWoW_GUI:CreateFS(filterPanel, 10)
     catLabel:SetPoint("LEFT", charBtn, "RIGHT", 25, 0)
     catLabel:SetText(L["FIN_CAT_LABEL"])
     catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -557,34 +556,41 @@ function ns.UI.CreateFinancialsTab(parent)
     resetBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
     resetBtn:SetScript("OnClick", function(self)
-        StaticPopupDialogs["ONEWOW_RESET_FINANCIAL_DATA"] = {
-            text = L["FIN_RESET_CONFIRM"],
-            button1 = L["FIN_RESET_ACCEPT"],
-            button2 = CANCEL,
-            OnAccept = function()
-                if _G.OneWoW_AltTracker_Accounting_DB then
-                    _G.OneWoW_AltTracker_Accounting_DB.transactions = {}
-                    if _G.OneWoW_AltTracker_Accounting_DB.statistics then
-                        _G.OneWoW_AltTracker_Accounting_DB.statistics.totalIncome = 0
-                        _G.OneWoW_AltTracker_Accounting_DB.statistics.totalExpense = 0
-                        _G.OneWoW_AltTracker_Accounting_DB.statistics.netProfit = 0
-                        _G.OneWoW_AltTracker_Accounting_DB.statistics.lastCalculated = 0
-                    end
-                    if _G.OneWoW_AltTracker_Accounting_DB.settings then
-                        _G.OneWoW_AltTracker_Accounting_DB.settings.resetDate = GetServerTime()
-                    end
-                end
-                parent.timePeriod = "week"
-                if ns.UI.RefreshFinancialsTab then
-                    ns.UI.RefreshFinancialsTab(parent)
-                end
-            end,
-            timeout = 0,
-            whileDead = true,
-            hideOnEscape = true,
-            preferredIndex = 3,
-        }
-        StaticPopup_Show("ONEWOW_RESET_FINANCIAL_DATA")
+        local result = OneWoW_GUI:CreateConfirmDialog({
+            title = L["FIN_RESET_CONFIRM"],
+            message = L["FIN_RESET_CONFIRM"],
+            buttons = {
+                {
+                    text = L["FIN_RESET_ACCEPT"],
+                    onClick = function(dialog)
+                        if _G.OneWoW_AltTracker_Accounting_DB then
+                            _G.OneWoW_AltTracker_Accounting_DB.transactions = {}
+                            if _G.OneWoW_AltTracker_Accounting_DB.statistics then
+                                _G.OneWoW_AltTracker_Accounting_DB.statistics.totalIncome = 0
+                                _G.OneWoW_AltTracker_Accounting_DB.statistics.totalExpense = 0
+                                _G.OneWoW_AltTracker_Accounting_DB.statistics.netProfit = 0
+                                _G.OneWoW_AltTracker_Accounting_DB.statistics.lastCalculated = 0
+                            end
+                            if _G.OneWoW_AltTracker_Accounting_DB.settings then
+                                _G.OneWoW_AltTracker_Accounting_DB.settings.resetDate = GetServerTime()
+                            end
+                        end
+                        parent.timePeriod = "week"
+                        if ns.UI.RefreshFinancialsTab then
+                            ns.UI.RefreshFinancialsTab(parent)
+                        end
+                        dialog:Hide()
+                    end,
+                },
+                {
+                    text = CANCEL,
+                    onClick = function(dialog)
+                        dialog:Hide()
+                    end,
+                },
+            },
+        })
+        result.frame:Show()
     end)
 
     resetBtn:SetScript("OnEnter", function(self)
@@ -902,32 +908,32 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
             end,
         })
 
-        local dateText = txRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local dateText = OneWoW_GUI:CreateFS(txRow, 10)
         dateText:SetText(date("%m/%d %H:%M", tx.timestamp or 0))
         dateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         dateText:SetJustifyH("LEFT")
         table.insert(txRow.cells, dateText)
 
-        local charText = txRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local charText = OneWoW_GUI:CreateFS(txRow, 10)
         local charName = (tx.character or ""):match("^([^%-]+)")
         charText:SetText(charName or "?")
         charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         charText:SetJustifyH("LEFT")
         table.insert(txRow.cells, charText)
 
-        local categoryText = txRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local categoryText = OneWoW_GUI:CreateFS(txRow, 10)
         categoryText:SetText(ns.UI.GetCategoryDisplayName(tx.category))
         categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         categoryText:SetJustifyH("LEFT")
         table.insert(txRow.cells, categoryText)
 
-        local itemText = txRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local itemText = OneWoW_GUI:CreateFS(txRow, 10)
         itemText:SetText(tx.itemName or tx.source or "")
         itemText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         itemText:SetJustifyH("LEFT")
         table.insert(txRow.cells, itemText)
 
-        local amountText = txRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local amountText = OneWoW_GUI:CreateFS(txRow, 12)
         local amountFormatted = ns.AltTrackerFormatters:FormatGold(tx.amount or 0)
         if tx.type == "income" then
             amountText:SetText("+" .. amountFormatted)

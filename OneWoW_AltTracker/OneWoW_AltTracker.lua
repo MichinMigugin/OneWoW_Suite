@@ -220,10 +220,11 @@ end
 
 _G["1WoW_AltTracker_OnAddonCompartmentEnter"] = function(addonName, menuButtonFrame)
     GameTooltip:SetOwner(menuButtonFrame, "ANCHOR_LEFT")
-    GameTooltip:SetText("|cFFFFD100OneWoW - AltTracker|r")
+    local L = _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.L
+    GameTooltip:SetText(L and L["ADDON_TITLE_FRAME"] or "|cFFFFD100OneWoW|r - AltTracker")
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine("|cFFFFFFFFLeft Click:|r Toggle window", 1, 1, 1)
-    GameTooltip:AddLine("|cFFFFFFFFRight Click:|r Open settings", 1, 1, 1)
+    GameTooltip:AddLine(L and L["UI_MINIMAP_LEFT_CLICK"] or "Left-Click to open AltTracker", 1, 1, 1)
+    GameTooltip:AddLine(L and L["UI_MINIMAP_RIGHT_CLICK"] or "Right-Click for options", 1, 1, 1)
     GameTooltip:Show()
 end
 

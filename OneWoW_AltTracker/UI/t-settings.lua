@@ -224,7 +224,7 @@ local function ShowManageAltsDialog()
 
     local content = result.contentFrame
 
-    local descText = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local descText = OneWoW_GUI:CreateFS(content, 12)
     descText:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -10)
     descText:SetPoint("TOPRIGHT", content, "TOPRIGHT", -14, -10)
     descText:SetJustifyH("LEFT")
@@ -239,38 +239,26 @@ local function ShowManageAltsDialog()
     local deselectAllBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Deselect All", height = 25 })
     deselectAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 6, 0)
 
-    local countText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local countText = OneWoW_GUI:CreateFS(content, 10)
     countText:SetPoint("RIGHT", content, "TOPRIGHT", -14, -64)
     countText:SetText(#characters .. " characters found across all databases")
     countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local listBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    local listBg = OneWoW_GUI:CreateFrame(content, { bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
     listBg:SetPoint("TOPLEFT", content, "TOPLEFT", 10, -80)
     listBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -10, 56)
-    listBg:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    listBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    listBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local scrollFrame = CreateFrame("ScrollFrame", "OneWoW_AT_ManageAltsScroll", listBg, "UIPanelScrollFrameTemplate")
+    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(listBg, { name = "OneWoW_AT_ManageAltsScroll" })
+    scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", listBg, "TOPLEFT", 4, -4)
     scrollFrame:SetPoint("BOTTOMRIGHT", listBg, "BOTTOMRIGHT", -4, 4)
-
-    OneWoW_GUI:StyleScrollBar(scrollFrame, { container = listBg })
-
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetWidth(scrollFrame:GetWidth() - 16)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
-        scrollChild:SetWidth(w - 16)
-    end)
 
     local ROW_H = 30
     local allCheckboxes = {}
     local yPos = 0
 
     if #characters == 0 then
-        local emptyText = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local emptyText = OneWoW_GUI:CreateFS(scrollChild, 12)
         emptyText:SetPoint("TOP", scrollChild, "TOP", 0, -40)
         emptyText:SetText("No characters found in any database.")
         emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -279,16 +267,9 @@ local function ShowManageAltsDialog()
     for i, charInfo in ipairs(characters) do
         charInfo.checked = false
 
-        local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
+        local row = OneWoW_GUI:CreateFrame(scrollChild, { height = ROW_H, backdrop = OneWoW_GUI.Constants.BACKDROP_SIMPLE, bgColor = (i % 2 == 0) and "BG_TERTIARY" or "BG_PRIMARY", borderColor = "BORDER_DEFAULT" })
         row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -yPos)
         row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, -yPos)
-        row:SetHeight(ROW_H)
-        row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
-        if i % 2 == 0 then
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        else
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        end
 
         local cb = OneWoW_GUI:CreateCheckbox(row, { label = "" })
         cb:SetSize(20, 20)
@@ -297,7 +278,7 @@ local function ShowManageAltsDialog()
         cb:SetScript("OnClick", function(self) charInfo.checked = self:GetChecked() end)
         allCheckboxes[#allCheckboxes + 1] = { cb = cb, info = charInfo }
 
-        local nameFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local nameFS = OneWoW_GUI:CreateFS(row, 12)
         nameFS:SetPoint("LEFT", cb, "RIGHT", 4, 0)
         local displayName = charInfo.name or charInfo.key
         nameFS:SetText(displayName)
@@ -308,7 +289,7 @@ local function ShowManageAltsDialog()
             nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
 
-        local realmFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local realmFS = OneWoW_GUI:CreateFS(row, 10)
         realmFS:SetPoint("LEFT", nameFS, "RIGHT", 6, 0)
         realmFS:SetText(charInfo.realm or "")
         realmFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -327,7 +308,7 @@ local function ShowManageAltsDialog()
         if infoStr ~= "" then infoStr = infoStr .. "  " end
         infoStr = infoStr .. "(" .. sourceCount .. " db" .. (sourceCount > 1 and "s" or "") .. ")"
 
-        local infoFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local infoFS = OneWoW_GUI:CreateFS(row, 10)
         infoFS:SetPoint("RIGHT", row, "RIGHT", -8, 0)
         infoFS:SetText(infoStr)
         infoFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -378,11 +359,10 @@ local function ShowManageAltsDialog()
         end
     end)
 
-    local btnDivider = content:CreateTexture(nil, "ARTWORK")
-    btnDivider:SetHeight(1)
+    local btnDivider = OneWoW_GUI:CreateDivider(content, { yOffset = 0 })
+    btnDivider:ClearAllPoints()
     btnDivider:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 1, 50)
     btnDivider:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -1, 50)
-    btnDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local deleteBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Delete Selected", height = 32 })
     deleteBtn:SetPoint("BOTTOMLEFT", content, "BOTTOMLEFT", 14, 10)
@@ -414,7 +394,7 @@ local function ShowManageAltsDialog()
         end
 
         if #selected == 0 then
-            print("|cFFFFD100OneWoW - AltTracker:|r No characters selected.")
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. L["MSG_NO_CHARS_SELECTED"])
             return
         end
 
@@ -429,27 +409,28 @@ local function ShowManageAltsDialog()
             displayNames = displayNames .. " (+" .. (#selected - 5) .. " more)"
         end
 
-        StaticPopupDialogs["ONEWOW_AT_DELETE_CHARACTERS"] = {
-            text = "Permanently delete " .. #selected .. " character(s) from ALL OneWoW databases?\n\n|cFFFF6666" .. displayNames .. "|r\n\nThis cannot be undone. A UI reload will follow.",
-            button1 = "Delete",
-            button2 = "Cancel",
-            OnAccept = function()
-                local totalPurged = 0
-                for _, charInfo in ipairs(selected) do
-                    local purgedFrom = PurgeCharacter(charInfo.key)
-                    if #purgedFrom > 0 then
-                        totalPurged = totalPurged + 1
+        local confirmResult = OneWoW_GUI:CreateConfirmDialog({
+            title = "Confirm Deletion",
+            message = "Permanently delete " .. #selected .. " character(s) from ALL OneWoW databases?\n\n|cFFFF6666" .. displayNames .. "|r\n\nThis cannot be undone. A UI reload will follow.",
+            width = 420,
+            buttons = {
+                { text = "Delete", onClick = function(f)
+                    local totalPurged = 0
+                    for _, charInfo in ipairs(selected) do
+                        local purgedFrom = PurgeCharacter(charInfo.key)
+                        if #purgedFrom > 0 then
+                            totalPurged = totalPurged + 1
+                        end
                     end
-                end
-                print("|cFFFFD100OneWoW - AltTracker:|r Removed " .. totalPurged .. " character(s). Reloading...")
-                ReloadUI()
-            end,
-            timeout = 0,
-            whileDead = true,
-            hideOnEscape = true,
-            preferredIndex = 3,
-        }
-        StaticPopup_Show("ONEWOW_AT_DELETE_CHARACTERS")
+                    print(L["ADDON_CHAT_PREFIX"] .. " " .. string.format(L["MSG_CHARS_REMOVED"], totalPurged))
+                    f:Hide()
+                    ReloadUI()
+                end },
+                { text = "Cancel", onClick = function(f) f:Hide() end },
+            },
+        })
+        OneWoW_GUI:ApplyFontToFrame(confirmResult.frame)
+        confirmResult.frame:Show()
     end)
 
     OneWoW_GUI:ApplyFontToFrame(result.frame)
@@ -470,7 +451,7 @@ function ns.UI.CreateSettingsTab(parent)
     local manageSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = "Manage Characters", yOffset = yOffset })
     yOffset = manageSection.bottomY - 8
 
-    local manageDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local manageDesc = OneWoW_GUI:CreateFS(scrollContent, 12)
     manageDesc:SetPoint("TOPLEFT", 15, yOffset)
     manageDesc:SetPoint("TOPRIGHT", -15, yOffset)
     manageDesc:SetJustifyH("LEFT")
@@ -496,7 +477,7 @@ function ns.UI.CreateSettingsTab(parent)
     local dbSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = "Database Manager", yOffset = yOffset })
     yOffset = dbSection.bottomY - 8
 
-    local dbDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local dbDesc = OneWoW_GUI:CreateFS(scrollContent, 12)
     dbDesc:SetPoint("TOPLEFT", 15, yOffset)
     dbDesc:SetPoint("TOPRIGHT", -15, yOffset)
     dbDesc:SetJustifyH("LEFT")
@@ -538,25 +519,21 @@ function ns.UI.CreateSettingsTab(parent)
     end
 
     local function CreateDatabaseEntry(parent, dbData, yPos)
-        local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+        local container = OneWoW_GUI:CreateFrame(parent, { width = 770, height = 60, bgColor = "BG_TERTIARY" })
         container:SetPoint("TOPLEFT", parent, "TOPLEFT", 15, yPos)
-        container:SetSize(770, 60)
-        container:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-        container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-        local nameText = container:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local nameText = OneWoW_GUI:CreateFS(container, 12)
         nameText:SetPoint("TOPLEFT", 12, -10)
         nameText:SetText(dbData.name)
         nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local descText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local descText = OneWoW_GUI:CreateFS(container, 10)
         descText:SetPoint("TOPLEFT", 12, -28)
         descText:SetText(dbData.desc)
         descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         descText:SetWidth(400)
 
-        local sizeText = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local sizeText = OneWoW_GUI:CreateFS(container, 10)
         sizeText:SetPoint("TOPLEFT", 450, -18)
 
         local function UpdateSize()
@@ -589,20 +566,21 @@ function ns.UI.CreateSettingsTab(parent)
         end)
 
         resetBtn:SetScript("OnClick", function()
-            StaticPopupDialogs["WNAT_RESET_DB_CONFIRM"] = {
-                text = "Are you sure you want to reset " .. dbData.name .. "?\n\nThis will permanently delete all data in this database.",
-                button1 = "Reset",
-                button2 = "Cancel",
-                OnAccept = function()
-                    _G[dbData.key .. "_DB"] = nil
-                    C_UI.Reload()
-                end,
-                timeout = 0,
-                whileDead = true,
-                hideOnEscape = true,
-                preferredIndex = 3,
-            }
-            StaticPopup_Show("WNAT_RESET_DB_CONFIRM")
+            local confirmResult = OneWoW_GUI:CreateConfirmDialog({
+                title = "Reset Database",
+                message = "Are you sure you want to reset " .. dbData.name .. "?\n\nThis will permanently delete all data in this database.",
+                width = 420,
+                buttons = {
+                    { text = "Reset", onClick = function(f)
+                        _G[dbData.key .. "_DB"] = nil
+                        f:Hide()
+                        C_UI.Reload()
+                    end },
+                    { text = "Cancel", onClick = function(f) f:Hide() end },
+                },
+            })
+            OneWoW_GUI:ApplyFontToFrame(confirmResult.frame)
+            confirmResult.frame:Show()
         end)
 
         return 65
@@ -618,7 +596,7 @@ function ns.UI.CreateSettingsTab(parent)
     local overrideSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["OVERRIDE_BTN"], yOffset = yOffset })
     yOffset = overrideSection.bottomY - 8
 
-    local overrideDesc = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local overrideDesc = OneWoW_GUI:CreateFS(scrollContent, 12)
     overrideDesc:SetPoint("TOPLEFT", 15, yOffset)
     overrideDesc:SetPoint("TOPRIGHT", -15, yOffset)
     overrideDesc:SetJustifyH("LEFT")
@@ -688,7 +666,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         local dy = -8
 
-        local descText = sc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local descText = OneWoW_GUI:CreateFS(sc, 12)
         descText:SetPoint("TOPLEFT", 10, dy)
         descText:SetPoint("TOPRIGHT", -10, dy)
         descText:SetJustifyH("LEFT")
@@ -699,21 +677,17 @@ function ns.UI.CreateSettingsTab(parent)
         dy = dy - 55
 
         local function MakeListRow(parent, col1, col2, yPos, r, g, b)
-            local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+            local row = OneWoW_GUI:CreateFrame(parent, { height = 28, bgColor = "BG_TERTIARY", borderColor = "BORDER_SUBTLE" })
             row:SetPoint("TOPLEFT", 8, yPos)
             row:SetPoint("TOPRIGHT", -8, yPos)
-            row:SetHeight(28)
-            row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-            local t1 = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local t1 = OneWoW_GUI:CreateFS(row, 10)
             t1:SetPoint("LEFT", row, "LEFT", 8, 0)
             t1:SetWidth(80)
             t1:SetText(col1)
             t1:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-            local t2 = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local t2 = OneWoW_GUI:CreateFS(row, 12)
             t2:SetPoint("LEFT", row, "LEFT", 92, 0)
             t2:SetPoint("RIGHT", row, "RIGHT", -90, 0)
             t2:SetJustifyH("LEFT")
@@ -789,7 +763,7 @@ function ns.UI.CreateSettingsTab(parent)
                 end
                 local row = MakeListRow(sc, "Quest: " .. id, nm, ldY, r, g, b)
                 if done then
-                    local doneTag = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    local doneTag = OneWoW_GUI:CreateFS(row, 10)
                     doneTag:SetPoint("RIGHT", row, "RIGHT", -70, 0)
                     doneTag:SetText("Done")
                     doneTag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
@@ -818,7 +792,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         local sec1 = OneWoW_GUI:CreateSectionHeader(sc, { title = L["OVERRIDE_SECTION_SUMMARY"], yOffset = dy })
         dy = sec1.bottomY - 6
-        local noneText = sc:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local noneText = OneWoW_GUI:CreateFS(sc, 12)
         noneText:SetPoint("TOPLEFT", 15, dy)
         noneText:SetText(L["OVERRIDE_NO_SETTINGS"])
         noneText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -828,12 +802,8 @@ function ns.UI.CreateSettingsTab(parent)
         dy = sec2.bottomY - 6
         sc.currencyListStartDY = dy
 
-        local addCurrRow = CreateFrame("Frame", nil, sc, "BackdropTemplate")
-        addCurrRow:SetHeight(28)
-        addCurrRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-        addCurrRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        addCurrRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        local addCurrLabel = addCurrRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local addCurrRow = OneWoW_GUI:CreateFrame(sc, { height = 28, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
+        local addCurrLabel = OneWoW_GUI:CreateFS(addCurrRow, 10)
         addCurrLabel:SetPoint("LEFT", 8, 0)
         addCurrLabel:SetText("Add Currency ID:")
         addCurrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -867,12 +837,8 @@ function ns.UI.CreateSettingsTab(parent)
         sc.bossListStartDY = sec3.bottomY - 6
         sc.bossSecHeader = sec3
 
-        local addBossRow = CreateFrame("Frame", nil, sc, "BackdropTemplate")
-        addBossRow:SetHeight(28)
-        addBossRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-        addBossRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        addBossRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        local addBossLabel = addBossRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local addBossRow = OneWoW_GUI:CreateFrame(sc, { height = 28, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
+        local addBossLabel = OneWoW_GUI:CreateFS(addBossRow, 10)
         addBossLabel:SetPoint("LEFT", 8, 0)
         addBossLabel:SetText("Add Quest ID:")
         addBossLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -898,7 +864,7 @@ function ns.UI.CreateSettingsTab(parent)
         addBossBox:SetScript("OnEnterPressed", function(self) addBossBtn:Click() end)
         sc.bossAddRow = addBossRow
 
-        local noteText = sc:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local noteText = OneWoW_GUI:CreateFS(sc, 10)
         noteText:SetWidth(540)
         noteText:SetJustifyH("LEFT")
         noteText:SetWordWrap(true)
@@ -935,7 +901,7 @@ function ns.UI.CreateSettingsTab(parent)
     local checklistSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["SEASON_CHECKLIST_BTN"], yOffset = yOffset })
     yOffset = checklistSection.bottomY - 8
 
-    local checklistDescText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local checklistDescText = OneWoW_GUI:CreateFS(scrollContent, 12)
     checklistDescText:SetPoint("TOPLEFT", 15, yOffset)
     checklistDescText:SetPoint("TOPRIGHT", -15, yOffset)
     checklistDescText:SetJustifyH("LEFT")
@@ -1062,11 +1028,9 @@ function ns.UI.CreateSettingsTab(parent)
                 local sh = OneWoW_GUI:CreateSectionHeader(sc2, { title = item.section, yOffset = cdy })
                 cdy = sh.bottomY - 6
             else
-                local row = CreateFrame("Frame", nil, sc2, "BackdropTemplate")
+                local row = OneWoW_GUI:CreateFrame(sc2, { height = ROW_H })
                 row:SetPoint("TOPLEFT", 8, cdy)
                 row:SetPoint("TOPRIGHT", -8, cdy)
-                row:SetHeight(ROW_H)
-                row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
 
                 local isChecked = OneWoWAltTracker.db.global.seasonChecklist[item.key] == true
                 local isAuto = item.auto == true
@@ -1083,10 +1047,8 @@ function ns.UI.CreateSettingsTab(parent)
                     row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
                 end
 
-                local checkBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
-                checkBtn:SetSize(22, 22)
+                local checkBtn = OneWoW_GUI:CreateButton(row, { width = 22, height = 22 })
                 checkBtn:SetPoint("LEFT", row, "LEFT", 6, 0)
-                checkBtn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
                 if isChecked then
                     checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
                     checkBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
@@ -1098,7 +1060,7 @@ function ns.UI.CreateSettingsTab(parent)
                     checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                     checkBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
                 end
-                local checkMark = checkBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                local checkMark = OneWoW_GUI:CreateFS(checkBtn, 12)
                 checkMark:SetPoint("CENTER")
                 checkMark:SetText(isChecked and "X" or (isAuto and "A" or " "))
                 if isChecked then
@@ -1109,7 +1071,7 @@ function ns.UI.CreateSettingsTab(parent)
                     checkMark:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 end
 
-                local labelText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                local labelText = OneWoW_GUI:CreateFS(row, 12)
                 labelText:SetPoint("TOPLEFT", row, "TOPLEFT", 34, -6)
                 labelText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -6, -6)
                 labelText:SetJustifyH("LEFT")
@@ -1121,7 +1083,7 @@ function ns.UI.CreateSettingsTab(parent)
                 end
 
                 local valStr = item.value and item.value() or ""
-                local valueText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local valueText = OneWoW_GUI:CreateFS(row, 10)
                 valueText:SetPoint("TOPLEFT", row, "TOPLEFT", 34, -22)
                 valueText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -6, -22)
                 valueText:SetJustifyH("LEFT")
@@ -1133,7 +1095,7 @@ function ns.UI.CreateSettingsTab(parent)
                     valueText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                 end
 
-                local fileText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local fileText = OneWoW_GUI:CreateFS(row, 10)
                 fileText:SetPoint("TOPLEFT", row, "TOPLEFT", 34, -37)
                 fileText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -6, -37)
                 fileText:SetJustifyH("LEFT")
@@ -1199,7 +1161,7 @@ function ns.UI.CreateSettingsTab(parent)
         closeBtnCL:SetPoint("BOTTOMRIGHT", checklistDialog, "BOTTOMRIGHT", -10, 10)
         closeBtnCL:SetScript("OnClick", function() checklistDialog:Hide() end)
 
-        local legendText = checklistDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local legendText = OneWoW_GUI:CreateFS(checklistDialog, 10)
         legendText:SetPoint("BOTTOM", checklistDialog, "BOTTOM", 0, 14)
         legendText:SetText("[X] = Verified this season    [A] = Auto-detected, no action needed    [ ] = Needs manual verification")
         legendText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
