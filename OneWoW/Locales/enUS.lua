@@ -894,6 +894,7 @@ OneWoW.Locales["enUS"] = {
     ["ESCPANEL_ZONE_TODOS"]       = "Tasks:",
     ["ESCPANEL_ESC_NOTES"]        = "ESC PANEL NOTES",
     ["ESCPANEL_NO_ESC_NOTES"]     = "No ESC panel notes",
+    ["ESCPANEL_QUICK_NOTE"]       = "Quick Note:",
 }
 
 OneWoW.L = {}

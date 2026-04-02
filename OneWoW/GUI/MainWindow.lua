@@ -402,6 +402,11 @@ function GUI:SelectSubTab(moduleName, subTabName)
     end
 end
 
+function GUI:GetContentFrame(moduleName, subTabName)
+    local key = moduleName .. ":" .. subTabName
+    return moduleContentFrames[key]
+end
+
 function GUI:InitMainWindow()
     if isInitialized then return end
     if not OneWoW.Constants or not OneWoW.Constants.GUI then return end
