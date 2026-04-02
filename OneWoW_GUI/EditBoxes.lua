@@ -93,7 +93,7 @@ function OneWoW_GUI:CreateScrollEditBox(parent, options)
     scrollFrame:EnableMouse(true)
     scrollFrame:EnableMouseWheel(true)
 
-    self:ApplyScrollBarStyle(scrollFrame.ScrollBar, parent, -2)
+    self:ApplyScrollBarStyle(scrollFrame.ScrollBar, scrollFrame, -2)
 
     local editBox = CreateFrame("EditBox", name, scrollFrame)
     editBox:SetMultiLine(true)

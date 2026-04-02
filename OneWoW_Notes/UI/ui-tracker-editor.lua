@@ -159,16 +159,6 @@ local STEP_CATEGORIES = {
         fields = { { key = "npcID", label = "NPC ID", hint = "e.g. 224561", width = 160 } },
     },
     {
-        key = "kill",
-        title = "Kill Creatures",
-        desc = "Tracks kills of a specific creature type. Uses target detection.",
-        trackType = "kill_count",
-        fields = {
-            { key = "creatureID", label = "Creature ID", hint = "e.g. 218237", width = 160 },
-            { key = "count", label = "How Many?", hint = "e.g. 10", width = 80 },
-        },
-    },
-    {
         key = "mount",
         title = "Collect a Mount",
         desc = "Auto-completes when you own a specific mount.",
@@ -236,13 +226,6 @@ local STEP_CATEGORIES = {
         desc = "Auto-completes when you know a specific spell or ability.",
         trackType = "spell_known",
         fields = { { key = "spellID", label = "Spell ID", hint = "e.g. 1459", width = 160 } },
-    },
-    {
-        key = "buff",
-        title = "Have a Buff",
-        desc = "Tracks whether you currently have a specific buff or debuff.",
-        trackType = "buff",
-        fields = { { key = "spellID", label = "Buff Spell ID", hint = "e.g. 1459", width = 160 } },
     },
 }
 
@@ -958,7 +941,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 if not hasRequired then return end
 
                 local max = 1
-                if cat.trackType == "kill_count" or cat.trackType == "item" then
+                if cat.trackType == "item" then
                     max = tonumber(trackParams.count) or 1
                 end
 

@@ -213,7 +213,7 @@ function OneWoW_GUI:CreateScrollFrame(parent, options)
     scrollFrame:SetPoint("TOPLEFT", 8, -8)
     scrollFrame:SetPoint("BOTTOMRIGHT", -8, 8)
 
-    self:ApplyScrollBarStyle(scrollFrame.ScrollBar, parent, -2)
+    self:ApplyScrollBarStyle(scrollFrame.ScrollBar, scrollFrame, -2)
 
     local contentName = name and (name .. "Content") or nil
     local content = CreateFrame("Frame", contentName, scrollFrame)

@@ -62,18 +62,15 @@ local TRACK_TYPES = {
     "reputation",
     "renown",
     "spell_known",
-    "spell_cast",
     "ilvl",
     "location",
     "coordinates",
     "npc_interact",
-    "kill_count",
     "loot_item",
     "toy",
     "mount",
     "pet",
     "transmog",
-    "buff",
     "exploration",
     "vault_raid",
     "vault_dungeon",
@@ -1022,9 +1019,6 @@ function TD:ParseMarkup(text, opts)
                         obj.params.radius = tonumber(parts[4]) or 15
                     elseif objType == "npc_interact" then
                         obj.params.npcID = tonumber(parts[1])
-                    elseif objType == "kill_count" then
-                        obj.params.creatureID = tonumber(parts[1])
-                        obj.params.count = tonumber(parts[2]) or 1
                     elseif objType == "toy" then
                         obj.params.itemID = tonumber(parts[1])
                     elseif objType == "mount" then
@@ -1033,15 +1027,10 @@ function TD:ParseMarkup(text, opts)
                         obj.params.speciesID = tonumber(parts[1])
                     elseif objType == "transmog" then
                         obj.params.itemModifiedAppearanceID = tonumber(parts[1])
-                    elseif objType == "buff" then
-                        obj.params.spellID = tonumber(parts[1])
                     elseif objType == "exploration" then
                         obj.params.areaID = tonumber(parts[1])
                     elseif objType == "loot_item" then
                         obj.params.itemID = tonumber(parts[1])
-                    elseif objType == "spell_cast" then
-                        obj.params.spellID = tonumber(parts[1])
-                        obj.params.count = tonumber(parts[2]) or 1
                     elseif objType == "vault_raid" then
                         obj.params = {}
                     elseif objType == "vault_dungeon" then
