@@ -6,12 +6,12 @@ local addonName, ns = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-OneWoW_Catalog = LibStub("AceAddon-3.0"):NewAddon("OneWoW_Catalog", "AceEvent-3.0", "AceConsole-3.0")
-local addon = OneWoW_Catalog
+local DB = OneWoW_GUI.DB
+local addon = {}
+_G.OneWoW_Catalog = addon
 
 ns.addon = addon
 ns.oneWoWHubActive = false
-local L = ns.L
 
 local function RegisterWithOneWoW()
     if not _G.OneWoW then return false end
@@ -40,40 +40,43 @@ local function RegisterWithOneWoW()
     return true
 end
 
-function addon:OnInitialize()
-    self:InitializeDatabase()
+local function OnInitialize()
+    ns:InitializeDatabase()
 
-    OneWoW_GUI:MigrateSettings(self.db.global)
+    OneWoW_GUI:MigrateSettings(addon.db.global)
 
-    self:ApplyTheme()
+    addon:ApplyTheme()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
     addon.Catalog = ns.Catalog
     addon.UI = ns.UI
-    self:RegisterChatCommand("owcat", "SlashCommandHandler")
-    self:RegisterChatCommand("onewowcatalog", "SlashCommandHandler")
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+    local L = ns.L
+
+    DB:RegisterSlashCommand("owcat", function(msg) addon:SlashCommandHandler(msg) end)
+    DB:RegisterSlashCommand("onewowcatalog", function(msg) addon:SlashCommandHandler(msg) end)
+
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", addon, function(self2)
         self2:ApplyTheme()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", addon, function(self2)
         if ns.ApplyLanguage then ns.ApplyLanguage() end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", addon, function(self2)
         local mainFrame = _G["OneWoW_CatalogMainFrame"]
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", addon, function(self2)
         local mainFrame = _G["OneWoW_CatalogMainFrame"]
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", addon, function(owner, hidden)
         if owner.Minimap then owner.Minimap:SetShown(not hidden) end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", addon, function(owner)
         if owner.Minimap then owner.Minimap:UpdateIcon() end
     end)
 
@@ -83,15 +86,12 @@ function addon:OnInitialize()
     end
 end
 
-function addon:OnEnable()
-    if ns.Core and ns.Core.Initialize then
-        ns.Core:Initialize()
-    end
-
+local function OnEnable()
+    local L = ns.L
     RegisterWithOneWoW()
 
     if not ns.oneWoWHubActive then
-        self.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_Catalog", {
+        addon.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_Catalog", {
             label = "Catalog",
             onClick = function()
                 if ns.UI and ns.UI.Toggle then ns.UI:Toggle() end
@@ -133,7 +133,16 @@ function addon:SlashCommandHandler(input)
     end
 end
 
-function addon:InitializeDatabase()
-    local defaults = ns.DatabaseDefaults or {}
-    self.db = LibStub("AceDB-3.0"):New("OneWoW_Catalog_DB", defaults, true)
-end
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ADDON_LOADED" then
+        local loaded = ...
+        if loaded == addonName then
+            OnInitialize()
+        end
+    elseif event == "PLAYER_LOGIN" then
+        OnEnable()
+    end
+end)

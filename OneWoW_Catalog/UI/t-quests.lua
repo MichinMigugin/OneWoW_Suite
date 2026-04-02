@@ -68,13 +68,8 @@ local function GetGroupTypeLabel(quest)
     return L["QUESTS_TYPE_SOLO"]
 end
 
-local function CreateSeparatorLine(parent, yOffset, padLeft, padRight)
-    local sep = parent:CreateTexture(nil, "ARTWORK")
-    sep:SetHeight(1)
-    sep:SetPoint("TOPLEFT",  parent, "TOPLEFT",  padLeft or 8,   yOffset)
-    sep:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -(padRight or 8), yOffset)
-    sep:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    return sep
+local function CreateSeparatorLine(parent, yOffset)
+    return OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
 end
 
 local function CreateLabel(parent, text, fontSize, yOffset, xLeft, textColor)
@@ -600,12 +595,12 @@ function ns.UI.CreateQuestsTab(parent)
     local GAP    = ns.Constants.GUI.PANEL_GAP
     local HDR_H  = 42
 
-    local leftHeader = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    local leftHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
     leftHeader:ClearAllPoints()
     leftHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     leftHeader:SetWidth(LEFT_W)
 
-    local rightHeader = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    local rightHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
     rightHeader:ClearAllPoints()
     rightHeader:SetPoint("TOPLEFT", leftHeader, "TOPRIGHT", GAP, 0)
     rightHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
@@ -614,7 +609,7 @@ function ns.UI.CreateQuestsTab(parent)
     contentArea:SetPoint("TOPLEFT",     leftHeader, "BOTTOMLEFT",  0, -GAP)
     contentArea:SetPoint("BOTTOMRIGHT", parent,     "BOTTOMRIGHT", 0, 0)
 
-    local panels = ns.UI.CreateSplitPanel(contentArea)
+    local panels = OneWoW_GUI:CreateSplitPanel(contentArea)
     panels.listTitle:SetText(L["QUESTS_LIST_TITLE"])
     panels.detailTitle:SetText(L["QUESTS_DETAIL_TITLE"])
 

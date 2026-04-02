@@ -13,13 +13,9 @@ local function GetDB()
     return OneWoW_CatalogData_Quests_DB
 end
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 local function GetCharacterKey()
-    local name  = UnitName("player")
-    local realm = GetRealmName()
-    if name and realm then
-        return name .. "-" .. realm
-    end
-    return nil
+    return OneWoW_GUI and OneWoW_GUI:GetCharacterKey() or nil
 end
 
 local function BuildAltTrackerCache()

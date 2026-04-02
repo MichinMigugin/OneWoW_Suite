@@ -30,15 +30,7 @@ local hideNonCollectable = false
 local CARD_HEIGHT = 85
 local ITEM_ROW_HEIGHT = 32
 
-local SPECIAL_COLORS = {
-    TMog    = { 0.8, 0.4, 1.0 },
-    Recipe  = { 1.0, 0.8, 0.2 },
-    Mount   = { 0.4, 0.8, 1.0 },
-    Pet     = { 1.0, 0.5, 0.5 },
-    Quest   = { 1.0, 1.0, 0.2 },
-    Toy     = { 1.0, 0.6, 0.8 },
-    Housing = { 0.5, 1.0, 0.5 },
-}
+local SPECIAL_COLORS = ns.Constants.SPECIAL_COLORS
 
 local SPECIAL_LABELS = {
     TMog    = "JOURNAL_SPECIAL_TMOG",
@@ -384,21 +376,13 @@ local function RefreshDetailView(isSecondRefresh)
     table.insert(detailElements, infoLine)
     yOffset = yOffset - 20
 
-    local divider1 = parent:CreateTexture(nil, "ARTWORK")
-    divider1:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    divider1:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    divider1:SetHeight(1)
-    divider1:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local divider1 = OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
     table.insert(detailElements, divider1)
     yOffset = yOffset - 8
 
     yOffset = BuildCollectionsSummary(parent, instData, yOffset, addon)
 
-    local divider2 = parent:CreateTexture(nil, "ARTWORK")
-    divider2:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    divider2:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    divider2:SetHeight(1)
-    divider2:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local divider2 = OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
     table.insert(detailElements, divider2)
     yOffset = yOffset - 10
 
@@ -791,12 +775,12 @@ function ns.UI.CreateJournalTab(parent)
     local GAP    = ns.Constants.GUI.PANEL_GAP
     local HDR_H  = 86  -- was 80; adds bottom padding for expansion dropdown
 
-    local leftHeader = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    local leftHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
     leftHeader:ClearAllPoints()
     leftHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     leftHeader:SetWidth(LEFT_W)
 
-    local rightHeader = ns.UI.CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    local rightHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
     rightHeader:ClearAllPoints()
     rightHeader:SetPoint("TOPLEFT", leftHeader, "TOPRIGHT", GAP, 0)
     rightHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
@@ -805,7 +789,7 @@ function ns.UI.CreateJournalTab(parent)
     contentArea:SetPoint("TOPLEFT", leftHeader, "BOTTOMLEFT", 0, -GAP)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    local panels = ns.UI.CreateSplitPanel(contentArea)
+    local panels = OneWoW_GUI:CreateSplitPanel(contentArea)
     panels.listTitle:SetText(L["JOURNAL_LIST_TITLE"])
     panels.detailTitle:SetText(L["JOURNAL_DETAIL_TITLE"])
 
@@ -832,7 +816,7 @@ function ns.UI.CreateJournalTab(parent)
     expLabel:SetText(L["JOURNAL_LABEL_EXPANSION"])
     expLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local expDropdown, expText = ns.UI.CreateDropdown(leftHeader, { width = LEFT_W - 16, text = L["JOURNAL_EXPANSION_ALL"] })
+    local expDropdown, expText = OneWoW_GUI:CreateDropdown(leftHeader, { width = LEFT_W - 16, text = L["JOURNAL_EXPANSION_ALL"] })
     expDropdown:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -54)
 
     -- RIGHT HEADER: Row 1 left - Instance Type label + [All][Raids][Dungeons] buttons
@@ -914,7 +898,7 @@ function ns.UI.CreateJournalTab(parent)
     end
 
     -- RIGHT HEADER: Row 1 right - Collection + Item Type dropdowns with labels
-    local collectionFilterDropdown, collectionFilterText = ns.UI.CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
+    local collectionFilterDropdown, collectionFilterText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
     collectionFilterDropdown:SetPoint("TOPRIGHT", rightHeader, "TOPRIGHT", -8, -22)
 
     local collLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
@@ -922,7 +906,7 @@ function ns.UI.CreateJournalTab(parent)
     collLabel:SetText(L["JOURNAL_LABEL_COLLECTION"])
     collLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local itemFilterDropdown, itemFilterText = ns.UI.CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
+    local itemFilterDropdown, itemFilterText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
     itemFilterDropdown:SetPoint("TOPRIGHT", collectionFilterDropdown, "TOPLEFT", -6, 0)
 
     local itemTypeLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
@@ -930,38 +914,17 @@ function ns.UI.CreateJournalTab(parent)
     itemTypeLabel:SetText(L["JOURNAL_LABEL_ITEM_TYPE"])
     itemTypeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    -- RIGHT HEADER: Row 2 - Hide Non-Collectable checkbox
-    local chkBox = CreateFrame("Button", nil, rightHeader, "BackdropTemplate")
-    chkBox:SetSize(16, 16)
+    local chkBox = OneWoW_GUI:CreateCheckbox(rightHeader, {
+        label = L["JOURNAL_HIDE_NON_COLLECTABLE"],
+        checked = false,
+        onClick = function(self)
+            hideNonCollectable = not hideNonCollectable
+            if selectedInstance then
+                RefreshDetailView(false)
+            end
+        end,
+    })
     chkBox:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", 8, -54)
-    chkBox:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    chkBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    chkBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local chkMark = chkBox:CreateTexture(nil, "OVERLAY")
-    chkMark:SetPoint("TOPLEFT", chkBox, "TOPLEFT", 2, -2)
-    chkMark:SetPoint("BOTTOMRIGHT", chkBox, "BOTTOMRIGHT", -2, 2)
-    chkMark:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-    chkMark:Hide()
-
-    local chkLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
-    chkLabel:SetPoint("LEFT", chkBox, "RIGHT", 6, 0)
-    chkLabel:SetText(L["JOURNAL_HIDE_NON_COLLECTABLE"])
-    chkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    chkBox:SetScript("OnClick", function(self)
-        hideNonCollectable = not hideNonCollectable
-        if hideNonCollectable then
-            chkMark:Show()
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-        else
-            chkMark:Hide()
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        end
-        if selectedInstance then
-            RefreshDetailView(false)
-        end
-    end)
 
     -- Clear button resets all filters
     clearBtn:SetScript("OnClick", function()
@@ -976,8 +939,7 @@ function ns.UI.CreateJournalTab(parent)
         expText:SetText(L["JOURNAL_EXPANSION_ALL"])
         itemFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
         collectionFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
-        chkMark:Hide()
-        chkBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        chkBox:SetChecked(false)
         for _, b in ipairs(typeButtons) do
             if b.value == "all" then
                 b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -1007,7 +969,7 @@ function ns.UI.CreateJournalTab(parent)
     panels.emptyDetail = emptyDetail
 
     -- Difficulty dropdown stays in detail panel
-    local diffDropdown, diffText = ns.UI.CreateDropdown(panels.detailPanel, { width = 180, text = L["JOURNAL_DIFF_ALL"] })
+    local diffDropdown, diffText = OneWoW_GUI:CreateDropdown(panels.detailPanel, { width = 180, text = L["JOURNAL_DIFF_ALL"] })
     diffDropdown:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 8, -28)
     diffDropdown:Hide()
     panels.diffDropdown = diffDropdown

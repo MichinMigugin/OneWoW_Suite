@@ -3,10 +3,6 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 
-if not OneWoW_CatalogData_Tradeskills_DB then
-    OneWoW_CatalogData_Tradeskills_DB = {}
-end
-
 ns.DatabaseDefaults = {
     settings = {
         enabled = true,
@@ -17,22 +13,9 @@ ns.DatabaseDefaults = {
     scanCache = {},
 }
 
-function ns:InitializeDatabase()
-    local db = OneWoW_CatalogData_Tradeskills_DB
-    if not db.settings then db.settings = { enabled = true, autoScan = true } end
-    if not db.version then db.version = 1 end
-    if not db.itemCache then db.itemCache = {} end
-    if not db.scanCache then db.scanCache = {} end
-
-    if db.version < 2 then
-        self:MigrateScanCacheKeys()
-        db.version = 2
-    end
-end
-
 function ns:MigrateScanCacheKeys()
-    local db = OneWoW_CatalogData_Tradeskills_DB
-    if not db.scanCache then return end
+    local db = _G.OneWoW_CatalogData_Tradeskills_DB
+    if not db or not db.scanCache then return end
 
     local newCache = {}
     for oldKey, data in pairs(db.scanCache) do
@@ -48,9 +31,9 @@ function ns:MigrateScanCacheKeys()
 end
 
 function ns:GetSettings()
-    return OneWoW_CatalogData_Tradeskills_DB.settings or {}
+    return _G.OneWoW_CatalogData_Tradeskills_DB and _G.OneWoW_CatalogData_Tradeskills_DB.settings or {}
 end
 
 function ns:GetDB()
-    return OneWoW_CatalogData_Tradeskills_DB
+    return _G.OneWoW_CatalogData_Tradeskills_DB
 end
