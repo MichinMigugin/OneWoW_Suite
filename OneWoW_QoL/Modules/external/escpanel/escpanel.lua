@@ -14,7 +14,7 @@ local ESCPanelModule = {
         { id = "esc_show_alerts",            label = "ESCPANEL_TOGGLE_ALERTS",           default = true },
         { id = "esc_show_zone_notes",        label = "ESCPANEL_TOGGLE_ZONE_NOTES",       default = true },
         { id = "esc_hide_zone_when_empty",   label = "ESCPANEL_TOGGLE_HIDE_ZONE_EMPTY",  default = true },
-        { id = "esc_show_tasks",             label = "ESCPANEL_TOGGLE_SHOW_TASKS",       default = false },
+        { id = "esc_show_tasks",             label = "ESCPANEL_TOGGLE_SHOW_TASKS",       default = true },
         { id = "esc_show_esc_notes",         label = "ESCPANEL_TOGGLE_SHOW_ESC_NOTES",   default = true },
         { id = "esc_show_portals",           label = "ESCPANEL_TOGGLE_SHOW_PORTALS",     default = true },
     },
