@@ -252,6 +252,81 @@ function OneWoW_GUI:SafeSetFont(fontString, fontPath, size, flags)
     end
 end
 
+function OneWoW_GUI:CreateFS(parent, size, layer)
+    local fs = parent:CreateFontString(nil, layer or "OVERLAY")
+    self:SafeSetFont(fs, self:GetFont(), size or 12)
+    return fs
+end
+
+function OneWoW_GUI:ApplyFont(fs, size)
+    if not fs then return end
+    if size then
+        fs._owBaseSize = size
+    elseif not fs._owBaseSize and fs.GetFont then
+        local _, currentSize = fs:GetFont()
+        fs._owBaseSize = currentSize or 13
+    end
+    self:SafeSetFont(fs, self:GetFont(), fs._owBaseSize or 13)
+end
+
+function OneWoW_GUI:ApplyFontCapped(fs, size, maxOffset)
+    if not fs then return end
+    fs._owBaseSize = size
+    fs._owMaxOffset = maxOffset
+    local fontPath = self:GetFont()
+    local offset = self:GetFontSizeOffset() or 0
+    local cappedSize = math.max(6, size + math.min(offset, maxOffset))
+    if fontPath then
+        local ok = pcall(fs.SetFont, fs, fontPath, cappedSize, "")
+        if not ok then fs:SetFontObject(GameFontNormal) end
+    else
+        fs:SetFontObject(GameFontNormal)
+    end
+end
+
+function OneWoW_GUI:ApplyFontToFrame(frame)
+    if not frame then return end
+    local fontPath = self:GetFont()
+    for _, region in ipairs({frame:GetRegions()}) do
+        if region.GetFont and region.SetFont then
+            if not region._owBaseSize then
+                local _, sz = region:GetFont()
+                if sz and sz > 0 then
+                    region._owBaseSize = sz
+                end
+            end
+            if region._owBaseSize then
+                if region._owMaxOffset then
+                    self:ApplyFontCapped(region, region._owBaseSize, region._owMaxOffset)
+                else
+                    self:SafeSetFont(region, fontPath, region._owBaseSize)
+                end
+            end
+        end
+    end
+    for _, child in ipairs({frame:GetChildren()}) do
+        if child:GetObjectType() == "EditBox" and child.GetFont then
+            if not child._owBaseSize then
+                local _, sz = child:GetFont()
+                if sz and sz > 0 then
+                    child._owBaseSize = sz
+                end
+            end
+            if child._owBaseSize then
+                local _, _, flags = child:GetFont()
+                self:SafeSetFont(child, fontPath, child._owBaseSize, flags)
+            end
+        end
+        if child.GetObjectType and child:GetObjectType() == "ScrollFrame" and child.GetScrollChild then
+            local scrollChild = child:GetScrollChild()
+            if scrollChild then
+                self:ApplyFontToFrame(scrollChild)
+            end
+        end
+        self:ApplyFontToFrame(child)
+    end
+end
+
 function OneWoW_GUI:MigrateLSMFontName(lsmName)
     if not lsmName then return nil end
     return LSM_NAME_TO_KEY[lsmName]

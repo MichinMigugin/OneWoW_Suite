@@ -590,6 +590,68 @@ function OneWoW_GUI:GetProgressColor(current, max)
     else return unpack(colors.LOW) end
 end
 
+function OneWoW_GUI:CreateColorSwatch(parent, options)
+    options = options or {}
+    local size = options.size or 24
+    local getColor = options.getColor
+    local onColorChanged = options.onColorChanged
+    local hasOpacity = options.hasOpacity or false
+    local getOpacity = options.getOpacity
+    local onOpacityChanged = options.onOpacityChanged
+
+    local swatch = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    swatch:SetSize(size, size)
+    swatch:SetBackdrop(Constants.BACKDROP_SOFT)
+    swatch:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+
+    local function refresh()
+        if getColor then
+            local r, g, b = getColor()
+            swatch:SetBackdropColor(r, g, b, 1)
+        end
+    end
+    refresh()
+
+    swatch:SetScript("OnClick", function()
+        local r, g, b = 1, 1, 1
+        if getColor then
+            r, g, b = getColor()
+        end
+        local info = {
+            r = r, g = g, b = b,
+            swatchFunc = function()
+                local nr, ng, nb = ColorPickerFrame:GetColorRGB()
+                if onColorChanged then
+                    onColorChanged(nr, ng, nb)
+                end
+                refresh()
+            end,
+            cancelFunc = function(prev)
+                if prev and onColorChanged then
+                    onColorChanged(prev.r, prev.g, prev.b)
+                    refresh()
+                end
+            end,
+        }
+        if hasOpacity then
+            info.hasOpacity = true
+            if getOpacity then
+                info.opacity = getOpacity()
+            end
+            info.opacityFunc = function()
+                local a = ColorPickerFrame:GetColorAlpha()
+                if onOpacityChanged then
+                    onOpacityChanged(a)
+                end
+            end
+        end
+        ColorPickerFrame:SetupColorPickerAndShow(info)
+    end)
+
+    swatch.refresh = refresh
+    return swatch
+end
+
 function OneWoW_GUI:CreateProgressBar(parent, options)
     options = options or {}
     local height = options.height or Constants.PROGRESS_BAR.HEIGHT
@@ -631,4 +693,157 @@ function OneWoW_GUI:CreateProgressBar(parent, options)
     end
 
     return bar
+end
+
+function OneWoW_GUI:CreateIntegrationRow(parent, options)
+    options = options or {}
+    local addonName = options.addonName
+    local displayName = options.displayName or addonName
+    local height = options.height or 30
+    local isEnabled = options.isEnabled
+    local onToggle = options.onToggle
+    local statusLabel = options.statusLabel or "Status:"
+    local detectedText = options.detectedText or "Detected"
+    local notDetectedText = options.notDetectedText or "Not Detected"
+    local enabledText = options.enabledText or "Enabled"
+    local disabledText = options.disabledText or "Disabled"
+    local enableBtnText = options.enableBtnText or "Enable"
+    local disableBtnText = options.disableBtnText or "Disable"
+    local notCompatible = options.notCompatible
+    local notCompatibleText = options.notCompatibleText or "Not Compatible"
+
+    local detected = C_AddOns.IsAddOnLoaded(addonName)
+
+    local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    row:SetHeight(height)
+    row:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
+    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+    local nameFs = OneWoW_GUI:CreateFS(row, 12)
+    nameFs:SetPoint("LEFT", row, "LEFT", 10, 0)
+    nameFs:SetText(displayName)
+    nameFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local statusLabelFs = OneWoW_GUI:CreateFS(row, 12)
+    statusLabelFs:SetPoint("LEFT", nameFs, "RIGHT", 16, 0)
+    statusLabelFs:SetText(statusLabel)
+    statusLabelFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local statusValueFs = OneWoW_GUI:CreateFS(row, 12)
+    statusValueFs:SetPoint("LEFT", statusLabelFs, "RIGHT", 4, 0)
+
+    local toggleBtn
+
+    local function refresh()
+        detected = C_AddOns.IsAddOnLoaded(addonName)
+        if not detected then
+            statusValueFs:SetText(notDetectedText)
+            statusValueFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            if toggleBtn then toggleBtn:Hide() end
+        elseif notCompatible then
+            statusValueFs:SetText(detectedText .. " (" .. notCompatibleText .. ")")
+            statusValueFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+            if toggleBtn then toggleBtn:Hide() end
+        else
+            local enabled = isEnabled and isEnabled() or false
+            if enabled then
+                statusValueFs:SetText(detectedText .. " (" .. enabledText .. ")")
+                statusValueFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            else
+                statusValueFs:SetText(detectedText .. " (" .. disabledText .. ")")
+                statusValueFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+            end
+            if toggleBtn then
+                toggleBtn.text:SetText(enabled and disableBtnText or enableBtnText)
+                toggleBtn:Show()
+            end
+        end
+    end
+
+    if detected and not notCompatible then
+        local enabled = isEnabled and isEnabled() or false
+        toggleBtn = OneWoW_GUI:CreateFitTextButton(row, { text = enabled and disableBtnText or enableBtnText, height = 22 })
+        toggleBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+        toggleBtn:SetScript("OnClick", function()
+            local currentEnabled = isEnabled and isEnabled() or false
+            local newState = not currentEnabled
+            if onToggle then onToggle(newState) end
+            refresh()
+        end)
+    end
+
+    refresh()
+
+    row.refresh = refresh
+    return row
+end
+
+function OneWoW_GUI:CreateFeatureStatusBlock(parent, options)
+    options = options or {}
+    local yOff       = options.yOffset or 0
+    local xOff       = options.xOffset or 12
+    local isEnabled  = options.isEnabled
+    local onToggle   = options.onToggle
+    local statusLbl  = options.statusLabel
+    local enText     = options.enabledText
+    local disText    = options.disabledText
+    local enBtnTxt   = options.enableBtnText
+    local disBtnTxt  = options.disableBtnText
+
+    local statusPrefix = self:CreateFS(parent, 12)
+    statusPrefix:SetPoint("TOPLEFT", parent, "TOPLEFT", xOff, yOff)
+    if statusLbl then statusPrefix:SetText(statusLbl) end
+    statusPrefix:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+
+    local statusValue = self:CreateFS(parent, 12)
+    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
+
+    local currentState = isEnabled and isEnabled() or false
+    if currentState then
+        if enText then statusValue:SetText(enText) end
+        statusValue:SetTextColor(self:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    else
+        if disText then statusValue:SetText(disText) end
+        statusValue:SetTextColor(self:GetThemeColor("TEXT_FEATURES_DISABLED"))
+    end
+
+    local toggleBtn = self:CreateFitTextButton(parent, {
+        text = currentState and (disBtnTxt or "") or (enBtnTxt or ""),
+        height = 24,
+    })
+    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
+
+    local block = {
+        statusPrefix = statusPrefix,
+        statusValue  = statusValue,
+        toggleBtn    = toggleBtn,
+    }
+
+    function block.refresh()
+        local enabled = isEnabled and isEnabled() or false
+        if enabled then
+            if enText then statusValue:SetText(enText) end
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            if disText then statusValue:SetText(disText) end
+            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
+        toggleBtn.text:SetText(enabled and (disBtnTxt or "") or (enBtnTxt or ""))
+    end
+
+    function block.getBottomY()
+        return yOff - 30
+    end
+
+    toggleBtn:SetScript("OnClick", function()
+        local nowEnabled = isEnabled and isEnabled() or false
+        local newState = not nowEnabled
+        if onToggle then
+            onToggle(newState)
+        end
+        block.refresh()
+    end)
+
+    return block
 end
