@@ -2,7 +2,7 @@
 -- https://www.townlong-yak.com/framexml/ptr/Helix/AtlasInfo.lua
 local _, Addon = ...
 
-local atlasVersion = "12.0.5.66591"
+local atlasVersion = "12.0.5.66741"
 if not Addon.ValidateDataBuildGameBuild(atlasVersion) then
 	return
 end
@@ -17418,6 +17418,12 @@ Addon._AtlasInfo = {
 	["Interface/Shop/CatalogShopHearthsteelFXFlipbook2x"]={
 		["hearthsteel-icon-xxl-fx-flipbook-2x"]={614, 1023, 0.000488281, 0.600098, 0.000488281, 0.999512, false, false, "2x"},
 	}, -- Interface/Shop/CatalogShopHearthsteelFXFlipbook2x
+	["Interface/Shop/CatalogShopHearthsteelFXFlipbookLG"]={
+		["hearthsteel-icon-lg-fx-flipbook"]={720, 800, 0.000976562, 0.704102, 0.000976562, 0.782227, false, false, "1x"},
+	}, -- Interface/Shop/CatalogShopHearthsteelFXFlipbookLG
+	["Interface/Shop/CatalogShopHearthsteelFXFlipbookLG2x"]={
+		["hearthsteel-icon-lg-fx-flipbook-2x"]={720, 800, 0.000488281, 0.703613, 0.000488281, 0.781738, false, false, "2x"},
+	}, -- Interface/Shop/CatalogShopHearthsteelFXFlipbookLG2x
 	["Interface/Shop/CatalogShopHearthsteelFXXLMask01"]={
 		["hearthsteel-icon-xl-fx-mask01"]={128, 128, 0, 1, 0, 1, false, false, "1x"},
 	}, -- Interface/Shop/CatalogShopHearthsteelFXXLMask01
@@ -17921,21 +17927,22 @@ Addon._AtlasInfo = {
 		["spellbook-background-evergreen-header"]={1614, 58, 0.000488281, 0.788574, 0.000976562, 0.0576172, false, false, "1x"},
 	}, -- Interface/SpellBook/SpellbookBackgroundEvergreen
 	["Interface/SpellBook/SpellbookElements"]={
-		["spellbook-divider"]={657, 11, 0.24707, 0.888672, 0.411133, 0.421875, false, false, "1x"},
+		["spellbook-divider"]={657, 11, 0.249023, 0.890625, 0.411133, 0.421875, false, false, "1x"},
 		["spellbook-list-backplate"]={316, 106, 0.000976562, 0.30957, 0.305664, 0.40918, false, false, "1x"},
 		["spellbook-corner-flipbook-evergreen"]={600, 310, 0.000976562, 0.586914, 0.000976562, 0.303711, false, false, "1x"},
 		["spellbook-item-backplate"]={256, 64, 0.311523, 0.561523, 0.305664, 0.368164, false, false, "1x"},
-		["spellbook-item-iconframe-hover"]={132, 125, 0.000976562, 0.129883, 0.537109, 0.65918, false, false, "1x"},
-		["spellbook-item-iconframe-inactive"]={136, 127, 0.000976562, 0.133789, 0.411133, 0.535156, false, false, "1x"},
-		["spellbook-item-iconframe-passive-inactive"]={112, 112, 0.135742, 0.245117, 0.411133, 0.520508, false, false, "1x"},
-		["spellbook-item-iconframe"]={138, 131, 0.854492, 0.989258, 0.000976562, 0.128906, false, false, "1x"},
-		["spellbook-item-unassigned-glow"]={127, 127, 0.000976562, 0.125, 0.661133, 0.785156, false, false, "1x"},
-		["spellbook-item-iconframe-passive-hover"]={108, 108, 0.135742, 0.241211, 0.522461, 0.62793, false, false, "1x"},
-		["spellbook-item-needtrainer-iconframe-backplate"]={137, 131, 0.854492, 0.988281, 0.130859, 0.258789, false, false, "1x"},
-		["spellbook-item-needtrainer-passive-backplate"]={113, 115, 0.000976562, 0.111328, 0.787109, 0.899414, false, false, "1x"},
+		["spellbook-item-iconframe-hover"]={132, 125, 0.000976562, 0.129883, 0.666992, 0.789062, false, false, "1x"},
+		["spellbook-item-iconframe-inactive"]={136, 127, 0.000976562, 0.133789, 0.541016, 0.665039, false, false, "1x"},
+		["spellbook-item-iconframe-passive-inactive"]={112, 112, 0.136719, 0.246094, 0.525391, 0.634766, false, false, "1x"},
+		["spellbook-item-iconframe"]={138, 131, 0.854492, 0.989258, 0.136719, 0.264648, false, false, "1x"},
+		["spellbook-item-unassigned-glow"]={127, 127, 0.000976562, 0.125, 0.791016, 0.915039, false, false, "1x"},
+		["spellbook-item-iconframe-passive-hover"]={108, 108, 0.136719, 0.242188, 0.636719, 0.742188, false, false, "1x"},
+		["spellbook-item-needtrainer-iconframe-backplate"]={137, 131, 0.000976562, 0.134766, 0.411133, 0.539062, false, false, "1x"},
+		["spellbook-item-needtrainer-passive-backplate"]={113, 115, 0.136719, 0.24707, 0.411133, 0.523438, false, false, "1x"},
 		["spellbook-item-needtrainer-shadow"]={270, 270, 0.588867, 0.852539, 0.000976562, 0.264648, false, false, "1x"},
 		["spellbook-item-petautocast-corners"]={90, 90, 0.563477, 0.651367, 0.305664, 0.393555, false, false, "1x"},
 		["spellbook-rotationhelper-iconframe"]={66, 66, 0.65332, 0.717773, 0.305664, 0.370117, false, false, "1x"},
+		["spellbook-item-iconframe-shadow"]={144, 137, 0.854492, 0.995117, 0.000976562, 0.134766, false, false, "1x"},
 	}, -- Interface/SpellBook/SpellbookElements
 	["Interface/SpellBook/SpellbookElementsAutoCastMask"]={
 		["spellbook-item-petautocast-mask"]={64, 64, 0, 1, 0, 1, false, false, "1x"},
@@ -21110,5 +21117,6 @@ Addon._AtlasInfo = {
 		["worldstate-capturebar-framebar-bastionarmor"]={162, 37, 0.00390625, 0.636719, 0.411133, 0.447266, false, false, "1x"},
 	}, -- Interface/WorldStateFrame/WorldStateCaptureBar
 }
+
 Addon.DevTool_LoadTextureAssetData = nil
 end
