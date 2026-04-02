@@ -409,25 +409,27 @@ end
 function Addon:OnInitialize()
     self:InitializeDatabase()
 
-    if not self.db.deferTextureBrowserData and self.DevTool_LoadTextureAssetData then
+    local g = self.db.global
+
+    if not g.deferTextureBrowserData and self.DevTool_LoadTextureAssetData then
         self.DevTool_LoadTextureAssetData()
     end
     self.DevTool_LoadTextureAssetData = nil
-    if self.db.deferTextureBrowserData then
+    if g.deferTextureBrowserData then
         self._DevToolTextureAssetsPurgedSession = true
     end
 
-    if not self.db.deferSoundBrowserData and self._SoundDataLoaders then
+    if not g.deferSoundBrowserData and self._SoundDataLoaders then
         for _, loader in ipairs(self._SoundDataLoaders) do
             loader()
         end
     end
     self._SoundDataLoaders = nil
-    if self.db.deferSoundBrowserData then
+    if g.deferSoundBrowserData then
         self._DevToolSoundAssetsPurgedSession = true
     end
 
-    if self.db.deferTextureBrowserData or self.db.deferSoundBrowserData then
+    if g.deferTextureBrowserData or g.deferSoundBrowserData then
         collectgarbage("collect")
     end
 
@@ -435,11 +437,7 @@ function Addon:OnInitialize()
         self.MonitorTab:RegisterPinnedRestoreEvents()
     end
 
-    OneWoW_GUI:MigrateSettings({
-        theme = self.db.theme,
-        language = self.db.language,
-        minimap = self.db.minimap,
-    })
+    OneWoW_GUI:MigrateSettings(self.db.global)
 
     self:ApplyTheme()
     self:ApplyLanguage()
@@ -476,13 +474,7 @@ function Addon:ApplyTheme()
 end
 
 function Addon:ApplyLanguage()
-    local lang
-    local hub = _G.OneWoW
-    if hub and hub.db and hub.db.global then
-        lang = hub.db.global.language or "enUS"
-    else
-        lang = self.db and self.db.language or "enUS"
-    end
+    local lang = OneWoW_GUI:GetSetting("language") or "enUS"
     if lang == "esMX" then lang = "esES" end
     local localeData = self.Locales and (self.Locales[lang] or self.Locales["enUS"])
     local fallback = self.Locales and self.Locales["enUS"]
@@ -541,7 +533,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
                 Addon:ToggleMainWindow()
             end)
         end
-        if Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad then
+        if Addon.db.global.monitor.showOnLoad then
             C_Timer.After(0.5, function()
                 if Addon.UI then
                     Addon.UI:Show()

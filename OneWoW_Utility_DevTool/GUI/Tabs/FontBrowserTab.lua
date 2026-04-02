@@ -23,7 +23,7 @@ local function getDU()
 end
 
 local function getEffectivePreviewBg()
-    local dbColor = Addon.db and Addon.db.fontBrowserPreviewBg
+    local dbColor = Addon.db.global.fontBrowserPreviewBg
     if type(dbColor) == "table" and type(dbColor[1]) == "number" and type(dbColor[2]) == "number" and type(dbColor[3]) == "number" then
         return dbColor[1], dbColor[2], dbColor[3], (dbColor[4] or 1)
     end
@@ -661,7 +661,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.compareBtn = compareBtn
 
     -- Left panel: virtualized font list
-    local savedW = Addon.db and Addon.db.fontBrowserLeftPaneWidth
+    local savedW = Addon.db.global.fontBrowserLeftPaneWidth
     local initW = LEFT_DEFAULT
     if type(savedW) == "number" and savedW >= LEFT_MIN then
         initW = savedW
@@ -719,7 +719,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
         resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95,
         mainFrame = Addon.UI and Addon.UI.mainFrame,
         onWidthChanged = function(w)
-            if Addon.db then Addon.db.fontBrowserLeftPaneWidth = w end
+            Addon.db.global.fontBrowserLeftPaneWidth = w
         end,
     })
 
@@ -771,32 +771,30 @@ function Addon.UI:CreateFontBrowserTab(parent)
     end
     previewBgSwatch:SetScript("OnClick", function()
         local r, g, b, a = getEffectivePreviewBg()
-        local prev = Addon.db and Addon.db.fontBrowserPreviewBg
+        local prev = Addon.db.global.fontBrowserPreviewBg
         ColorPickerFrame:SetupColorPickerAndShow({
             r = r, g = g, b = b, opacity = a, hasOpacity = true,
             swatchFunc = function()
-                if not Addon.db then return end
                 local rr, gg, bb = ColorPickerFrame:GetColorRGB()
                 local oo = (ColorPickerFrame.GetColorAlpha and ColorPickerFrame:GetColorAlpha()) or ColorPickerFrame.opacity or 1
-                Addon.db.fontBrowserPreviewBg = { rr, gg, bb, oo }
+                Addon.db.global.fontBrowserPreviewBg = { rr, gg, bb, oo }
                 previewBgSwatch:UpdateColor()
             end,
             opacityFunc = function()
-                if not Addon.db then return end
                 local rr, gg, bb = ColorPickerFrame:GetColorRGB()
                 local oo = (ColorPickerFrame.GetColorAlpha and ColorPickerFrame:GetColorAlpha()) or ColorPickerFrame.opacity or 1
-                Addon.db.fontBrowserPreviewBg = { rr, gg, bb, oo }
+                Addon.db.global.fontBrowserPreviewBg = { rr, gg, bb, oo }
                 previewBgSwatch:UpdateColor()
             end,
             cancelFunc = function()
-                if Addon.db then Addon.db.fontBrowserPreviewBg = prev end
+                Addon.db.global.fontBrowserPreviewBg = prev
                 previewBgSwatch:UpdateColor()
             end,
         })
     end)
     previewBgSwatch:SetScript("OnMouseDown", function(_, button)
         if button == "RightButton" then
-            if Addon.db then Addon.db.fontBrowserPreviewBg = nil end
+            Addon.db.global.fontBrowserPreviewBg = nil
             previewBgSwatch:UpdateColor()
         end
     end)

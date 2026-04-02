@@ -222,7 +222,7 @@ function SB:RebuildFiltered()
 
     local filter = self.filterText or ""
     local entries = Addon._SoundEntries
-    local bookmarks = Addon.db and Addon.db.soundBookmarks
+    local bookmarks = Addon.db.global.soundBookmarks
     local favoritesOnly = self.favoritesOnly
     local searchingAll = self:IsSearchingAll()
 
@@ -401,23 +401,24 @@ end
 
 function SB:IsBookmarked(entryRef)
     local key = self:GetBookmarkKey(entryRef)
-    if not key or not Addon.db or not Addon.db.soundBookmarks then
+    if not key then
         return false
     end
-    return Addon.db.soundBookmarks[key] and true or false
+    return Addon.db.global.soundBookmarks[key] and true or false
 end
 
 function SB:ToggleBookmark(entryRef)
     local key = self:GetBookmarkKey(entryRef)
-    if not key or not Addon.db then
+    if not key then
         return false
     end
-    Addon.db.soundBookmarks = Addon.db.soundBookmarks or {}
-    if Addon.db.soundBookmarks[key] then
-        Addon.db.soundBookmarks[key] = nil
+
+    local g = Addon.db.global
+    if g.soundBookmarks[key] then
+        g.soundBookmarks[key] = nil
         return false
     end
-    Addon.db.soundBookmarks[key] = true
+    g.soundBookmarks[key] = true
     return true
 end
 

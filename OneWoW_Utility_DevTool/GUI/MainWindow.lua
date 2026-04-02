@@ -260,10 +260,9 @@ function UI:GetTabSettingsDefaults()
 end
 
 function UI:GetUnloadOnDisable(tabKey)
-    local db = Addon.db
-    if type(db) ~= "table" then return false end
-    if tabKey == "textures" then return db.deferTextureBrowserData == true end
-    if tabKey == "sounds" then return db.deferSoundBrowserData == true end
+    local g = Addon.db.global
+    if tabKey == "textures" then return g.deferTextureBrowserData == true end
+    if tabKey == "sounds" then return g.deferSoundBrowserData == true end
     return false
 end
 
@@ -291,13 +290,13 @@ end
 
 function UI:ApplyUnloadAssetSetting(tabKey, wantUnload)
     if tabKey ~= "textures" and tabKey ~= "sounds" then return end
-    if not Addon.db then return end
+    local g = Addon.db.global
     local old = self:GetUnloadOnDisable(tabKey)
     wantUnload = wantUnload and true or false
     if tabKey == "textures" then
-        Addon.db.deferTextureBrowserData = wantUnload
+        g.deferTextureBrowserData = wantUnload
     elseif tabKey == "sounds" then
-        Addon.db.deferSoundBrowserData = wantUnload
+        g.deferSoundBrowserData = wantUnload
     end
     local cb = self.settingsUnloadCheckboxes and self.settingsUnloadCheckboxes[tabKey]
     if cb then
@@ -329,8 +328,8 @@ function UI:IsTabEnabled(tabKey)
     if definition.alwaysEnabled then
         return true
     end
-    local dbTabs = Addon.db and Addon.db.tabs
-    local tabSettings = dbTabs and dbTabs[tabKey]
+    local dbTabs = Addon.db.global.tabs
+    local tabSettings = dbTabs[tabKey]
     if type(tabSettings) == "table" and tabSettings.enabled ~= nil then
         return tabSettings.enabled and true or false
     end
@@ -339,16 +338,17 @@ end
 
 function UI:SetTabEnabled(tabKey, enabled)
     local definition = self:GetTabDefinition(tabKey)
-    if not definition or not Addon.db then
+    
+    if not definition then
         return
     end
 
-    Addon.db.tabs = Addon.db.tabs or {}
-    Addon.db.tabs[tabKey] = Addon.db.tabs[tabKey] or {}
+    local g = Addon.db.global
+    g.tabs[tabKey] = g.tabs[tabKey] or {}
     if definition.alwaysEnabled then
-        Addon.db.tabs[tabKey].enabled = true
+        g.tabs[tabKey].enabled = true
     else
-        Addon.db.tabs[tabKey].enabled = enabled and true or false
+        g.tabs[tabKey].enabled = enabled and true or false
     end
 end
 
@@ -640,13 +640,13 @@ function UI:Initialize()
     combatHide:RegisterEvent("PLAYER_REGEN_DISABLED")
     self.combatHideFrame = combatHide
 
-    if not OneWoW_GUI:RestoreWindowPosition(frame, Addon.db.position or {}) then
+    if not OneWoW_GUI:RestoreWindowPosition(frame, Addon.db.global.position or {}) then
         frame:SetPoint("CENTER")
     end
 
     frame:SetScript("OnHide", function()
-        Addon.db.position = Addon.db.position or {}
-        OneWoW_GUI:SaveWindowPosition(frame, Addon.db.position)
+        Addon.db.global.position = Addon.db.global.position or {}
+        OneWoW_GUI:SaveWindowPosition(frame, Addon.db.global.position)
         if Addon.FrameInspector then
             Addon.FrameInspector:ClearHighlight()
         end

@@ -15,7 +15,7 @@ local undoPositions = {}
 local savedSnapshots = {}
 
 local function getDB()
-    return Addon.db and Addon.db.editor
+    return Addon.db.global.editor
 end
 
 local function getDefaultCategory()

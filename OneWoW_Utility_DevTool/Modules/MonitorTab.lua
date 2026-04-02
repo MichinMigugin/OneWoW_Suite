@@ -223,7 +223,7 @@ function MonitorTab:GatherUsage()
 end
 
 function MonitorTab:GetSortedList()
-    local sortOrder = Addon.db and Addon.db.monitor and Addon.db.monitor.sortOrder or 2
+    local sortOrder = Addon.db.global.monitor.sortOrder
     local absOrder = math.abs(sortOrder)
     local ascending = sortOrder > 0
 
@@ -306,10 +306,9 @@ function MonitorTab:GetFilter()
 end
 
 function MonitorTab:ToggleSort(column)
-    local db = Addon.db and Addon.db.monitor
-    if not db then return end
+    local db = Addon.db.global.monitor
 
-    local current = db.sortOrder or 2
+    local current = db.sortOrder
     local absOrder = math.abs(current)
 
     if absOrder == column then
@@ -417,8 +416,8 @@ end
 function MonitorTab:GetViewPreset()
     local C = Addon.Constants and Addon.Constants.MONITOR_PRESET
     local defaultId = C and C.BALANCED or "balanced"
-    local db = Addon.db and Addon.db.monitor
-    local id = db and db.viewPreset or defaultId
+    local db = Addon.db.global.monitor
+    local id = db.viewPreset or defaultId
     if not C then return id end
     if id ~= C.BALANCED and id ~= C.MEMORY_DIG and id ~= C.CPU_SPIKES and id ~= C.MINIMAL and id ~= C.ENGINE_PROFILER then
         return defaultId
@@ -427,11 +426,11 @@ function MonitorTab:GetViewPreset()
 end
 
 function MonitorTab:SetViewPreset(presetId)
-    local db = Addon.db and Addon.db.monitor
+    local db = Addon.db.global.monitor
     local Const = Addon.Constants
     local C = Const and Const.MONITOR_PRESET
     local DS = Const and Const.MONITOR_PRESET_DEFAULT_SORT
-    if not db or not C then return end
+    if not C then return end
     if presetId ~= C.BALANCED and presetId ~= C.MEMORY_DIG and presetId ~= C.CPU_SPIKES and presetId ~= C.MINIMAL and presetId ~= C.ENGINE_PROFILER then
         return
     end
@@ -733,8 +732,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle, existingDbEntry)
     local addonIndex = FindAddonIndexByName(addonName)
     if not addonIndex then return end
 
-    local db = Addon.db and Addon.db.monitor
-    if not db then return end
+    local db = Addon.db.global.monitor
     ensurePinnedMonitorsArray(db)
 
     local dbEntry
@@ -930,8 +928,8 @@ function MonitorTab:ClosePinnedPopupByAddon(addonName)
     local slot = pinnedSlots[idx]
     tremove(pinnedSlots, idx)
 
-    local db = Addon.db and Addon.db.monitor
-    if db and slot.dbEntry and not slot.dbEntry.reopenOnReload then
+    local db = Addon.db.global.monitor
+    if slot.dbEntry and not slot.dbEntry.reopenOnReload then
         removePinnedDbEntryByAddon(db, addonName)
     end
 
@@ -965,8 +963,8 @@ function MonitorTab:GetPinnedAddonName()
 end
 
 function MonitorTab:RestorePinnedMonitorsPending()
-    local db = Addon.db and Addon.db.monitor
-    if not db or type(db.pinnedMonitors) ~= "table" then return end
+    local db = Addon.db.global.monitor
+    if type(db.pinnedMonitors) ~= "table" then return end
     local list = Addon.GetPinnedMonitorEntriesInOrder and Addon:GetPinnedMonitorEntriesInOrder(db.pinnedMonitors) or {}
     for _, entry in ipairs(list) do
         if entry.reopenOnReload and type(entry.addon) == "string" and entry.addon ~= "" then
