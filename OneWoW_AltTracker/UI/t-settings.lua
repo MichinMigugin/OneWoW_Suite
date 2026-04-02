@@ -452,7 +452,7 @@ local function ShowManageAltsDialog()
         StaticPopup_Show("ONEWOW_AT_DELETE_CHARACTERS")
     end)
 
-    ns.UI.ApplyFontToFrame(result.frame)
+    OneWoW_GUI:ApplyFontToFrame(result.frame)
     dialog:Show()
 end
 
@@ -667,7 +667,7 @@ function ns.UI.CreateSettingsTab(parent)
         end
 
         if overrideDialog then
-            ns.UI.ApplyFontToFrame(overrideDialog)
+            OneWoW_GUI:ApplyFontToFrame(overrideDialog)
             overrideDialog:Show()
             overrideDialog:Raise()
             return
@@ -923,7 +923,7 @@ function ns.UI.CreateSettingsTab(parent)
         closeBtn2:SetPoint("BOTTOMRIGHT", overrideDialog, "BOTTOMRIGHT", -10, 10)
         closeBtn2:SetScript("OnClick", function() overrideDialog:Hide() end)
 
-        ns.UI.ApplyFontToFrame(overrideDialog)
+        OneWoW_GUI:ApplyFontToFrame(overrideDialog)
         overrideDialog:Show()
         overrideDialog:Raise()
     end
@@ -1034,7 +1034,7 @@ function ns.UI.CreateSettingsTab(parent)
             return
         end
         if checklistDialog then
-            ns.UI.ApplyFontToFrame(checklistDialog)
+            OneWoW_GUI:ApplyFontToFrame(checklistDialog)
             checklistDialog:Show()
             checklistDialog:Raise()
             return
@@ -1204,7 +1204,7 @@ function ns.UI.CreateSettingsTab(parent)
         legendText:SetText("[X] = Verified this season    [A] = Auto-detected, no action needed    [ ] = Needs manual verification")
         legendText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-        ns.UI.ApplyFontToFrame(checklistDialog)
+        OneWoW_GUI:ApplyFontToFrame(checklistDialog)
         checklistDialog:Show()
         checklistDialog:Raise()
     end
@@ -1215,7 +1215,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     scrollContent:SetHeight(math.abs(yOffset) + 20)
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
     parent.scrollFrame = scrollFrame
     parent.scrollContent = scrollContent
 end

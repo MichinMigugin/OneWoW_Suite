@@ -63,13 +63,13 @@ function OneWoWAltTracker:OnInitialize()
     OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
         local mainFrame = _G["OneWoWAltTrackerMainFrame"]
         if mainFrame then
-            ns.UI.ApplyFontToFrame(mainFrame)
+            OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function(self2)
         local mainFrame = _G["OneWoWAltTrackerMainFrame"]
         if mainFrame then
-            ns.UI.ApplyFontToFrame(mainFrame)
+            OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
         if ns.UI.ResizeOverviewPanels then
             ns.UI.ResizeOverviewPanels()

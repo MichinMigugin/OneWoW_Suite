@@ -695,7 +695,7 @@ function ns.UI.CreateFinancialsTab(parent)
         end
     end)
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
 end
 
 function ns.UI.RefreshFinancialsTab(financialsTab)
@@ -898,7 +898,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
                     grid:AddLine(p1, d.tx.notes)
                 end
                 grid:Finish()
-                ns.UI.ApplyFontToFrame(ef)
+                OneWoW_GUI:ApplyFontToFrame(ef)
             end,
         })
 
@@ -987,7 +987,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
 
     OneWoW_GUI:LayoutDataRows(scrollContent, { rowHeight = rowHeight, rowGap = rowGap })
 
-    ns.UI.ApplyFontToFrame(financialsTab)
+    OneWoW_GUI:ApplyFontToFrame(financialsTab)
 
     if financialsTab.statusText then
         financialsTab.statusText:SetText(string.format(L["FIN_STATUS_COUNT"], #transactions))

@@ -92,7 +92,7 @@ function ns.UI.CreateLockoutsTab(parent)
     parent.statusText = statusBar.text
     parent.statusBar = statusBar.bar
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         if ns.UI.RefreshLockoutsTab then
@@ -298,7 +298,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                 end
 
                 grid:Finish()
-                ns.UI.ApplyFontToFrame(ef)
+                OneWoW_GUI:ApplyFontToFrame(ef)
             end,
         })
         charRow.charKey = charKey
@@ -447,7 +447,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
 
     ns.UI.RefreshLockoutsStats(lockoutsTab)
 
-    ns.UI.ApplyFontToFrame(lockoutsTab)
+    OneWoW_GUI:ApplyFontToFrame(lockoutsTab)
 
     C_Timer.After(0.1, function()
         if lockoutsTab.headerRow then

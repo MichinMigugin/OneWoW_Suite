@@ -92,7 +92,7 @@ local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
         getActiveValue = function() return selectedTargetBar end,
     })
 
-    ns.UI.ApplyFontToFrame(result.frame)
+    OneWoW_GUI:ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -190,7 +190,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
     cancelBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY")) end)
     cancelBtn:SetScript("OnClick", function() result.frame:Hide() end)
 
-    ns.UI.ApplyFontToFrame(result.frame)
+    OneWoW_GUI:ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -253,7 +253,7 @@ local function ShowBackupDialog(split)
 
     result.frame.nameEditBox = nameBox
 
-    ns.UI.ApplyFontToFrame(result.frame)
+    OneWoW_GUI:ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -320,7 +320,7 @@ local function ShowRenameDialog(split, oldName)
 
     result.frame.nameEditBox = nameBox
 
-    ns.UI.ApplyFontToFrame(result.frame)
+    OneWoW_GUI:ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -351,7 +351,7 @@ local function ShowDeleteDialog(split, setName)
             { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
         },
     })
-    ns.UI.ApplyFontToFrame(result.frame)
+    OneWoW_GUI:ApplyFontToFrame(result.frame)
     result.frame:Show()
 end
 
@@ -659,7 +659,7 @@ function ns.UI.ShowSetDetails(split, setName)
         split.rightStatusText:SetText(setName)
     end
 
-    ns.UI.ApplyFontToFrame(split.detailScrollChild)
+    OneWoW_GUI:ApplyFontToFrame(split.detailScrollChild)
 end
 
 function ns.UI.BuildActionBarSetsList(split, filterText)
@@ -783,7 +783,7 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
         end
     end
 
-    ns.UI.ApplyFontToFrame(listScrollChild)
+    OneWoW_GUI:ApplyFontToFrame(listScrollChild)
 end
 
 function ns.UI.CreateActionBarsTab(parent)
@@ -886,7 +886,7 @@ function ns.UI.CreateActionBarsTab(parent)
     parent.controlPanel = controlPanel
     parent.controlTitle = controlTitle
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         ns.UI.BuildActionBarSetsList(split, "")

@@ -100,7 +100,7 @@ function ns.UI.CreateProfessionsTab(parent)
     parent.statusText = statusBar.text
     parent.statusBar = statusBar.bar
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         if ns.UI.RefreshProfessionsTab then
@@ -549,7 +549,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
             },
             createDetails = function(ef, d)
                 BuildExpandedPanels(ef, d)
-                ns.UI.ApplyFontToFrame(ef)
+                OneWoW_GUI:ApplyFontToFrame(ef)
             end,
         })
         charRow.charKey = charKey
@@ -786,7 +786,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
 
     ns.UI.RefreshProfessionsStats(professionsTab)
 
-    ns.UI.ApplyFontToFrame(professionsTab)
+    OneWoW_GUI:ApplyFontToFrame(professionsTab)
 
     C_Timer.After(0.1, function()
         if professionsTab.headerRow then

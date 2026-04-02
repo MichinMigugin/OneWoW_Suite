@@ -174,7 +174,7 @@ function ns.UI.CreateItemsTab(parent)
     parent.statusBar = status.bar
     parent.statusText = status.text
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
 
     C_Timer.After(0.2, function()
         if ns.UI.RefreshItemsTab then
@@ -761,7 +761,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
                     grid:AddLine(p1, locData.charName .. " - " .. locData.location .. " x" .. locData.qty)
                 end
                 grid:Finish()
-                ns.UI.ApplyFontToFrame(ef)
+                OneWoW_GUI:ApplyFontToFrame(ef)
             end,
         })
 
@@ -894,7 +894,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
 
     OneWoW_GUI:LayoutDataRows(scrollContent, { rowHeight = rowHeight, rowGap = rowGap })
 
-    ns.UI.ApplyFontToFrame(itemsTab)
+    OneWoW_GUI:ApplyFontToFrame(itemsTab)
 
     if itemsTab.statusText then
         local filterState = ""

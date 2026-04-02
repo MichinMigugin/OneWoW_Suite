@@ -106,7 +106,7 @@ function ns.UI.CreateSummaryTab(parent)
     parent.statusBar = status.bar
     parent.statusText = status.text
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         if ns.UI.RefreshSummaryTab then
@@ -345,7 +345,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 end
 
                 grid:Finish()
-                ns.UI.ApplyFontToFrame(ef)
+                OneWoW_GUI:ApplyFontToFrame(ef)
             end,
         })
         charRow.charKey = charKey
@@ -642,7 +642,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         table.insert(charRow.cells, bagsText)
 
         local goldText = charRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        ns.UI.ApplyFontCapped(goldText, 12, 2)
+        OneWoW_GUI:ApplyFontCapped(goldText, 12, 2)
         local money = charData.money or 0
         local goldFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(money)
         goldText:SetText(goldFormatted)
@@ -746,7 +746,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
     ns.UI.RefreshSummaryStats(summaryTab)
 
-    ns.UI.ApplyFontToFrame(summaryTab)
+    OneWoW_GUI:ApplyFontToFrame(summaryTab)
 
     C_Timer.After(0.1, function()
         if dt then dt.UpdateColumnLayout() end
@@ -782,7 +782,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
     end
 
     if existingFrame then
-        ns.UI.ApplyFontToFrame(existingFrame)
+        OneWoW_GUI:ApplyFontToFrame(existingFrame)
         existingFrame:Show()
         return
     end
@@ -901,7 +901,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
     totalText:SetText(L["TOTAL"] .. ": " .. ns.UI.FormatPlaytimeCompact(accountTotal))
     totalText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    ns.UI.ApplyFontToFrame(result.frame)
+    OneWoW_GUI:ApplyFontToFrame(result.frame)
 
     result.frame:Show()
 end

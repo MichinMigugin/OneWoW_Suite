@@ -687,7 +687,7 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
             data = { charKey = charKey, charData = charData, endgameData = endgameData, subTabKey = subTabKey },
             createDetails = function(ef, d)
                 BuildExpandedPanels(ef, d.endgameData, d.charData, d.subTabKey)
-                ns.UI.ApplyFontToFrame(ef)
+                OneWoW_GUI:ApplyFontToFrame(ef)
             end,
             onEnter = function(self)
                 if buildTooltipFunc then
@@ -741,7 +741,7 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
         progressTab.statusText:SetText(string.format(L["CHARACTERS_TRACKED"], #allChars, ""))
     end
 
-    ns.UI.ApplyFontToFrame(contentFrame)
+    OneWoW_GUI:ApplyFontToFrame(contentFrame)
 end
 
 local function CreateMythicPlusColumns()
@@ -1365,7 +1365,7 @@ function ns.UI.CreateProgressTab(parent)
     parent.statusBar = status.bar
     parent.statusText = status.text
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         SelectSubTab("mythicplus")
@@ -1392,7 +1392,7 @@ function ns.UI.RefreshProgressTab(progressTab)
         end
     end
 
-    ns.UI.ApplyFontToFrame(progressTab)
+    OneWoW_GUI:ApplyFontToFrame(progressTab)
 end
 
 function ns.UI.RefreshProgressStats(progressTab)

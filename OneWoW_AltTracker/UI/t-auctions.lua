@@ -338,7 +338,7 @@ function ns.UI.CreateAuctionsTab(parent)
     parent.statusBar = statusBar.bar
     parent.filterPanel = filterPanel
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         if ns.UI.RefreshAuctionsTab then
@@ -466,7 +466,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                 text:SetPoint("CENTER")
                 text:SetText(L["EXPANDED_DETAILS_SOON"])
                 text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-                ns.UI.ApplyFontToFrame(ef)
+                OneWoW_GUI:ApplyFontToFrame(ef)
             end,
         })
         auctionRow.charKey = charKey
@@ -824,7 +824,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
         auctionsTab.UpdateMailIcon()
     end
 
-    ns.UI.ApplyFontToFrame(auctionsTab)
+    OneWoW_GUI:ApplyFontToFrame(auctionsTab)
 
     C_Timer.After(0.1, function()
         if auctionsTab.headerRow then

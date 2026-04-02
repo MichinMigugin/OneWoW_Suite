@@ -153,7 +153,7 @@ function ns.UI.CreateEquipmentTab(parent)
     parent.statusBar = status.bar
     parent.statusText = status.text
 
-    ns.UI.ApplyFontToFrame(parent)
+    OneWoW_GUI:ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
         if ns.UI.RefreshEquipmentTab then
@@ -463,7 +463,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
                         iconFrame:SetPoint("TOPLEFT", ef, "TOPLEFT", xPos, startY)
                     end
                 end
-                ns.UI.ApplyFontToFrame(ef)
+                OneWoW_GUI:ApplyFontToFrame(ef)
             end,
         })
         charRow.charKey = charKey
@@ -747,7 +747,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
 
     ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILevel)
 
-    ns.UI.ApplyFontToFrame(equipmentTab)
+    OneWoW_GUI:ApplyFontToFrame(equipmentTab)
 end
 
 function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILevel)
