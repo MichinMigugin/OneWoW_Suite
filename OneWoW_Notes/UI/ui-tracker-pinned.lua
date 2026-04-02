@@ -188,10 +188,11 @@ function TP:Create(listID)
         resizeBtn:Hide()
     end
 
-    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(frame, {})
-    scrollFrame:ClearAllPoints()
-    scrollFrame:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 2, -2)
-    scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 16)
+    local scrollContainer = CreateFrame("Frame", nil, frame)
+    scrollContainer:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, -2)
+    scrollContainer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 14)
+
+    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(scrollContainer, {})
 
     local activeSections = {}
     local activeSteps = {}

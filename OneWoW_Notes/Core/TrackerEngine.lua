@@ -13,8 +13,6 @@ local format = format
 local time = time
 
 local eventFrame = nil
-local spellIndex = {}
-local killIndex = {}
 local lootIndex = {}
 local npcIndex = {}
 local lastScanTime = 0
@@ -104,8 +102,6 @@ function TE:IsSectionVisible(section)
 end
 
 local function BuildIndices()
-    wipe(spellIndex)
-    wipe(killIndex)
     wipe(lootIndex)
     wipe(npcIndex)
 
@@ -116,22 +112,6 @@ local function BuildIndices()
             for _, step in ipairs(sec.steps or {}) do
                 local tt = step.trackType
                 local tp = step.trackParams or {}
-
-                if tt == "spell_cast" and tp.spellID then
-                    local sid = tonumber(tp.spellID)
-                    if sid then
-                        spellIndex[sid] = spellIndex[sid] or {}
-                        tinsert(spellIndex[sid], { listID = listID, sectionKey = sec.key, stepKey = step.key, max = step.max })
-                    end
-                end
-
-                if tt == "kill_count" and tp.creatureID then
-                    local cid = tonumber(tp.creatureID)
-                    if cid then
-                        killIndex[cid] = killIndex[cid] or {}
-                        tinsert(killIndex[cid], { listID = listID, sectionKey = sec.key, stepKey = step.key, max = step.max })
-                    end
-                end
 
                 if tt == "loot_item" and tp.itemID then
                     local iid = tonumber(tp.itemID)
@@ -152,30 +132,6 @@ local function BuildIndices()
                 for _, obj in ipairs(step.objectives or {}) do
                     local ot = obj.type
                     local op = obj.params or {}
-
-                    if ot == "spell_cast" and op.spellID then
-                        local sid = tonumber(op.spellID)
-                        if sid then
-                            spellIndex[sid] = spellIndex[sid] or {}
-                            tinsert(spellIndex[sid], {
-                                listID = listID, sectionKey = sec.key,
-                                stepKey = step.key, objKey = obj.key,
-                                max = tonumber(op.count) or 1,
-                            })
-                        end
-                    end
-
-                    if ot == "kill_count" and op.creatureID then
-                        local cid = tonumber(op.creatureID)
-                        if cid then
-                            killIndex[cid] = killIndex[cid] or {}
-                            tinsert(killIndex[cid], {
-                                listID = listID, sectionKey = sec.key,
-                                stepKey = step.key, objKey = obj.key,
-                                max = tonumber(op.count) or 1,
-                            })
-                        end
-                    end
 
                     if ot == "npc_interact" and op.npcID then
                         local nid = tonumber(op.npcID)
@@ -361,9 +317,6 @@ function TE:EvaluateObjective(obj)
             return IsSpellKnown(spellID) and 1 or 0, 1
         end
 
-    elseif ot == "spell_cast" then
-        return nil
-
     elseif ot == "ilvl" then
         local req = tonumber(op.ilvl) or 1
         local current = select(2, GetAverageItemLevel()) or 0
@@ -401,9 +354,6 @@ function TE:EvaluateObjective(obj)
     elseif ot == "npc_interact" then
         return nil
 
-    elseif ot == "kill_count" then
-        return nil
-
     elseif ot == "loot_item" then
         return nil
 
@@ -433,12 +383,6 @@ function TE:EvaluateObjective(obj)
             return C_TransmogCollection.PlayerHasTransmog(appearanceID) and 1 or 0, 1
         end
 
-    elseif ot == "buff" then
-        local spellID = tonumber(op.spellID)
-        if spellID then
-            local aura = C_UnitAuras.GetPlayerAuraBySpellID(spellID)
-            return aura and 1 or 0, 1
-        end
 
     elseif ot == "exploration" then
         local areaID = tonumber(op.areaID)
@@ -680,16 +624,14 @@ function TE:EvaluateList(listID)
         if self:IsSectionVisible(sec) then
             for _, step in ipairs(sec.steps or {}) do
                 if self:IsStepVisible(step, sec) then
-                    if step.trackType ~= "manual" and step.trackType ~= "spell_cast" and
-                       step.trackType ~= "kill_count" and step.trackType ~= "npc_interact" and
+                    if step.trackType ~= "manual" and step.trackType ~= "npc_interact" and
                        step.trackType ~= "loot_item" then
                         self:EvaluateStep(listID, sec.key, step)
                     end
 
                     if step.objectives then
                         for _, obj in ipairs(step.objectives) do
-                            if obj.type ~= "manual" and obj.type ~= "spell_cast" and
-                               obj.type ~= "kill_count" and obj.type ~= "npc_interact" and
+                            if obj.type ~= "manual" and obj.type ~= "npc_interact" and
                                obj.type ~= "loot_item" then
                                 local current, max = self:EvaluateObjective(obj)
                                 if current ~= nil then
@@ -703,43 +645,6 @@ function TE:EvaluateList(listID)
             end
         end
     end
-end
-
-local function OnSpellCast(spellID)
-    spellID = tonumber(spellID)
-    if not spellID or not spellIndex[spellID] then return end
-
-    for _, ref in ipairs(spellIndex[spellID]) do
-        if ref.objKey then
-            local sp = TD:GetStepProgress(ref.listID, ref.sectionKey, ref.stepKey)
-            sp.objectives = sp.objectives or {}
-            local prev = sp.objectives[ref.objKey]
-            if not prev then
-                TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
-            end
-        else
-            TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, ref.max)
-        end
-    end
-
-    FireCallbacks("OnProgressChanged")
-    DeferRefresh()
-end
-
-local function OnCreatureKill(creatureID)
-    creatureID = tonumber(creatureID)
-    if not creatureID or not killIndex[creatureID] then return end
-
-    for _, ref in ipairs(killIndex[creatureID]) do
-        if ref.objKey then
-            TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
-        else
-            TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, ref.max)
-        end
-    end
-
-    FireCallbacks("OnProgressChanged")
-    DeferRefresh()
 end
 
 local function OnItemLooted(itemID)
@@ -788,27 +693,12 @@ local function OnEvent(self, event, ...)
         end)
         TE:RestorePinnedWindows()
 
-    elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
-        local unit, castGUID, spellID = ...
-        if unit == "player" and spellID then
-            OnSpellCast(spellID)
-        end
-
     elseif event == "CHAT_MSG_LOOT" then
         local msg = ...
         if msg and not issecretvalue(msg) then
             local itemID = msg:match("item:(%d+)")
             if itemID then
                 OnItemLooted(itemID)
-            end
-        end
-
-    elseif event == "PLAYER_TARGET_CHANGED" then
-        local targetGUID = UnitGUID("target")
-        if targetGUID and not issecretvalue(targetGUID) and UnitIsDead("target") then
-            local npcType, _, _, _, _, npcID = strsplit("-", targetGUID)
-            if npcType == "Creature" then
-                OnCreatureKill(npcID)
             end
         end
 
@@ -819,12 +709,6 @@ local function OnEvent(self, event, ...)
             if npcType == "Creature" then
                 OnNPCInteract(npcID)
             end
-        end
-
-    elseif event == "UNIT_AURA" then
-        local unit = ...
-        if unit == "player" then
-            DeferScan(1.0)
         end
 
     elseif event == "CALENDAR_UPDATE_EVENT_LIST" then
@@ -855,7 +739,6 @@ function TE:Initialize()
     frame:RegisterEvent("QUEST_LOG_UPDATE")
     frame:RegisterEvent("QUEST_TURNED_IN")
     frame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
-    frame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     frame:RegisterEvent("CHAT_MSG_LOOT")
     frame:RegisterEvent("GOSSIP_SHOW")
     frame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
@@ -875,8 +758,6 @@ function TE:Initialize()
     frame:RegisterEvent("NEW_MOUNT_ADDED")
     frame:RegisterEvent("NEW_PET_ADDED")
     frame:RegisterEvent("TRANSMOG_COLLECTION_UPDATED")
-    frame:RegisterEvent("UNIT_AURA")
-    frame:RegisterEvent("PLAYER_TARGET_CHANGED")
     frame:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
 
     frame:SetScript("OnEvent", OnEvent)
@@ -965,18 +846,15 @@ function TE:GetTrackTypeDisplayName(trackType)
         reputation      = L["TRACKER_TYPE_REPUTATION"] or "Reputation",
         renown          = L["TRACKER_TYPE_RENOWN"] or "Renown",
         spell_known     = L["TRACKER_TYPE_SPELL_KNOWN"] or "Spell Known",
-        spell_cast      = L["TRACKER_TYPE_SPELL_CAST"] or "Spell Cast",
         ilvl            = L["TRACKER_TYPE_ILVL"] or "Item Level",
         location        = L["TRACKER_TYPE_LOCATION"] or "Zone",
         coordinates     = L["TRACKER_TYPE_COORDINATES"] or "Coordinates",
         npc_interact    = L["TRACKER_TYPE_NPC_INTERACT"] or "NPC Interact",
-        kill_count      = L["TRACKER_TYPE_KILL_COUNT"] or "Kill Count",
         loot_item       = L["TRACKER_TYPE_LOOT_ITEM"] or "Loot Item",
         toy             = L["TRACKER_TYPE_TOY"] or "Toy",
         mount           = L["TRACKER_TYPE_MOUNT"] or "Mount",
         pet             = L["TRACKER_TYPE_PET"] or "Battle Pet",
         transmog        = L["TRACKER_TYPE_TRANSMOG"] or "Transmog",
-        buff            = L["TRACKER_TYPE_BUFF"] or "Buff",
         exploration     = L["TRACKER_TYPE_EXPLORATION"] or "Exploration",
         vault_raid      = L["TRACKER_TYPE_VAULT_RAID"] or "Vault: Raid",
         vault_dungeon   = L["TRACKER_TYPE_VAULT_DUNGEON"] or "Vault: Dungeon",
