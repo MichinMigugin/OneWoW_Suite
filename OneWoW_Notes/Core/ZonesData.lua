@@ -17,6 +17,7 @@ local lastAlertTime   = 0
 local currentZone     = ""
 local currentSubZone  = ""
 local currentInstanceID = nil
+local zoneEventFrame = CreateFrame("Frame")
 
 function Zones:Initialize()
     local addon = _G.OneWoW_Notes
@@ -37,11 +38,11 @@ function Zones:EnableScanning()
     local addon = _G.OneWoW_Notes
     addon.db.global.zoneAlertsEnabled = true
 
-    local function onZone() C_Timer.After(0.1, function() Zones:CheckZoneAlerts() end) end
-    addon:RegisterEvent("ZONE_CHANGED_NEW_AREA", onZone)
-    addon:RegisterEvent("ZONE_CHANGED",          onZone)
-    addon:RegisterEvent("ZONE_CHANGED_INDOORS",  onZone)
-    addon:RegisterEvent("PLAYER_ENTERING_WORLD", onZone)
+    zoneEventFrame:SetScript("OnEvent", function() C_Timer.After(0.1, function() Zones:CheckZoneAlerts() end) end)
+    zoneEventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+    zoneEventFrame:RegisterEvent("ZONE_CHANGED")
+    zoneEventFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
+    zoneEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
     if not self.periodicTimer then
         self.periodicTimer = C_Timer.NewTicker(2, function()
@@ -65,10 +66,10 @@ function Zones:DisableScanning()
     scanningEnabled = false
     local addon = _G.OneWoW_Notes
     addon.db.global.zoneAlertsEnabled = false
-    pcall(function() addon:UnregisterEvent("ZONE_CHANGED_NEW_AREA") end)
-    pcall(function() addon:UnregisterEvent("ZONE_CHANGED") end)
-    pcall(function() addon:UnregisterEvent("ZONE_CHANGED_INDOORS") end)
-    pcall(function() addon:UnregisterEvent("PLAYER_ENTERING_WORLD") end)
+    zoneEventFrame:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
+    zoneEventFrame:UnregisterEvent("ZONE_CHANGED")
+    zoneEventFrame:UnregisterEvent("ZONE_CHANGED_INDOORS")
+    zoneEventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
     if self.periodicTimer then
         self.periodicTimer:Cancel()
         self.periodicTimer = nil

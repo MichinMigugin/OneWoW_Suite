@@ -6,7 +6,9 @@ local addonName, ns = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-OneWoW_Notes = LibStub("AceAddon-3.0"):NewAddon("OneWoW_Notes", "AceEvent-3.0", "AceConsole-3.0")
+local DB = OneWoW_GUI.DB
+
+OneWoW_Notes = {}
 local addon = OneWoW_Notes
 
 ns.addon = addon
@@ -40,18 +42,20 @@ local function RegisterWithOneWoW()
     return true
 end
 
-function addon:OnInitialize()
-    self:InitializeDatabase()
+local function OnInitialize()
+    addon:InitializeDatabase()
 
-    OneWoW_GUI:MigrateSettings(self.db.global)
+    OneWoW_GUI:MigrateSettings(addon.db.global)
 
-    self:ApplyTheme()
+    addon:ApplyTheme()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
-    self:RegisterChatCommand("own", "SlashCommandHandler")
-    self:RegisterChatCommand("onewownotes", "SlashCommandHandler")
-    self:RegisterChatCommand("1wn", "SlashCommandHandler")
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+    local function slashHandler(msg) addon:SlashCommandHandler(msg) end
+    DB:RegisterSlashCommand("own", slashHandler)
+    DB:RegisterSlashCommand("onewownotes", slashHandler)
+    DB:RegisterSlashCommand("1wn", slashHandler)
+
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", addon, function(self2)
         if ns.ApplyTheme then ns.ApplyTheme() end
         if ns.NotesPins and ns.NotesPins.RefreshSyncPins then
             ns.NotesPins:RefreshSyncPins()
@@ -63,10 +67,10 @@ function addon:OnInitialize()
             ns.TrackerEngine:RefreshAllPinnedWindows()
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", addon, function(self2)
         if ns.ApplyLanguage then ns.ApplyLanguage() end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", addon, function(self2)
         if ns.NotesPins and ns.NotesPins.RefreshAllPinFonts then
             ns.NotesPins:RefreshAllPinFonts()
         end
@@ -77,10 +81,10 @@ function addon:OnInitialize()
             ns.TrackerEngine:RefreshAllPinnedWindows()
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", addon, function(owner, hidden)
         if owner.Minimap then owner.Minimap:SetShown(not hidden) end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", addon, function(owner)
         if owner.Minimap then owner.Minimap:UpdateIcon() end
     end)
 
@@ -116,7 +120,7 @@ function addon:ApplyLanguage()
     end
 end
 
-function addon:OnEnable()
+local function OnEnable()
     if ns.NotesData and ns.NotesData.MigrateDefaultColors then
         ns.NotesData:MigrateDefaultColors()
     end
@@ -136,7 +140,7 @@ function addon:OnEnable()
     RegisterWithOneWoW()
 
     if not ns.oneWoWHubActive then
-        self.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_Notes", {
+        addon.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_Notes", {
             label = "Notes",
             onClick = function()
                 if ns.UI and ns.UI.Toggle then ns.UI:Toggle() end
@@ -171,15 +175,15 @@ function addon:OnEnable()
         ns.NPCs:Initialize()
     end
 
-    self.Players = ns.Players
-    self.NPCs    = ns.NPCs
-    self.Zones   = ns.Zones
-    self.Config  = ns.Config
-    self.notePins    = self.notePins    or {}
-    self.windowStack = self.windowStack or {}
+    addon.Players = ns.Players
+    addon.NPCs    = ns.NPCs
+    addon.Zones   = ns.Zones
+    addon.Config  = ns.Config
+    addon.notePins    = addon.notePins    or {}
+    addon.windowStack = addon.windowStack or {}
 
     if ns.NotesData then
-        self.NotesData = ns.NotesData
+        addon.NotesData = ns.NotesData
     end
 
     if ns.TrackerEngine and ns.TrackerEngine.Initialize then
@@ -197,13 +201,9 @@ function addon:OnEnable()
     if ns.TrackerMapUI and ns.TrackerMapUI.Initialize then
         ns.TrackerMapUI:Initialize()
     end
-
-    self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnPlayerEnteringWorld")
 end
 
-function addon:OnPlayerEnteringWorld(event, isInitialLogin, isReloading)
-    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-
+local function OnPlayerEnteringWorld(isInitialLogin, isReloading)
     if isInitialLogin and ns.NotesData then
         local allNotes = ns.NotesData:GetAllNotes()
         if allNotes then
@@ -304,8 +304,25 @@ end
 
 function addon:InitializeDatabase()
     local defaults = ns.DatabaseDefaults or {}
-    self.db = LibStub("AceDB-3.0"):New("OneWoW_Notes_DB", defaults, true)
+    self.db = DB:NewCompat("OneWoW_Notes_DB", defaults, true)
 end
+
+local pewFired = false
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ADDON_LOADED" and ... == addonName then
+        OnInitialize()
+    elseif event == "PLAYER_LOGIN" then
+        OnEnable()
+    elseif event == "PLAYER_ENTERING_WORLD" and not pewFired then
+        pewFired = true
+        self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+        OnPlayerEnteringWorld(...)
+    end
+end)
 
 _G["1WoW_Notes_OnAddonCompartmentClick"] = function(addonName, mouseButton)
     if ns.oneWoWHubActive and _G.OneWoW and _G.OneWoW.GUI then
