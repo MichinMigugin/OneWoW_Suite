@@ -3,13 +3,15 @@
 -- Created by MichinMuggin (Ricky)
 local addonName, ns = ...
 
-OneWoW_QoL = LibStub("AceAddon-3.0"):NewAddon("OneWoW_QoL", "AceEvent-3.0", "AceConsole-3.0")
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local DB = OneWoW_GUI.DB
+
+OneWoW_QoL = {}
 local addon = OneWoW_QoL
 
 ns.oneWoWHubActive = false
-
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
 
 local function RegisterWithOneWoW()
     if not _G.OneWoW then return false end
@@ -41,30 +43,32 @@ local function RegisterWithOneWoW()
     return true
 end
 
-function addon:OnInitialize()
-    self:InitializeDatabase()
+local function OnInitialize()
+    addon:InitializeDatabase()
 
     if OneWoW_GUI.MigrateSettings then
-        OneWoW_GUI:MigrateSettings(self.db.global)
+        OneWoW_GUI:MigrateSettings(addon.db.global)
     end
 
-    OneWoW_GUI:ApplyTheme(self)
+    OneWoW_GUI:ApplyTheme(addon)
     if ns.ApplyLanguage then ns.ApplyLanguage() end
-    self:RegisterChatCommand("owqol", "SlashCommandHandler")
-    self:RegisterChatCommand("onewowqol", "SlashCommandHandler")
-    self:RegisterChatCommand("1wqol", "SlashCommandHandler")
+
+    local function slashHandler(msg) addon:SlashCommandHandler(msg) end
+    DB:RegisterSlashCommand("owqol", slashHandler)
+    DB:RegisterSlashCommand("onewowqol", slashHandler)
+    DB:RegisterSlashCommand("1wqol", slashHandler)
 
     if OneWoW_GUI.RegisterSettingsCallback then
-        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", addon, function(self2)
             OneWoW_GUI:ApplyTheme(self2)
         end)
-        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", addon, function(self2)
             if ns.ApplyLanguage then ns.ApplyLanguage() end
         end)
-        OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
+        OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", addon, function(owner, hidden)
             if owner.Minimap then owner.Minimap:SetShown(not hidden) end
         end)
-        OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner)
+        OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", addon, function(owner)
             if owner.Minimap then owner.Minimap:UpdateIcon() end
         end)
     end
@@ -85,7 +89,7 @@ function addon:ApplyLanguage()
     end
 end
 
-function addon:OnEnable()
+local function OnEnable()
     if ns.Core and ns.Core.Initialize then
         ns.Core:Initialize()
     end
@@ -93,7 +97,7 @@ function addon:OnEnable()
     RegisterWithOneWoW()
 
     if not ns.oneWoWHubActive then
-        self.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_QoL", {
+        addon.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_QoL", {
             label = "QoL",
             onClick = function()
                 if ns.UI and ns.UI.Toggle then ns.UI:Toggle() end
@@ -113,9 +117,9 @@ function addon:OnEnable()
         _G.OneWoW:RegisterMinimap("OneWoW_QoL", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_QOL"]) or "Open QoL", "qol", nil)
     end
 
-    self.PlayMountsModule = ns.PlayMountsModule
-    self.ModuleRegistry = ns.ModuleRegistry
-    self.UI = ns.UI
+    addon.PlayMountsModule = ns.PlayMountsModule
+    addon.ModuleRegistry = ns.ModuleRegistry
+    addon.UI = ns.UI
 end
 
 function addon:SlashCommandHandler(input)
@@ -137,11 +141,22 @@ end
 
 function addon:InitializeDatabase()
     local defaults = ns.DatabaseDefaults or {}
-    self.db = LibStub("AceDB-3.0"):New("OneWoW_QoL_DB", defaults, true)
+    self.db = DB:NewCompat("OneWoW_QoL_DB", defaults, true)
     if not self.db.global.modules then
         self.db.global.modules = {}
     end
 end
+
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ADDON_LOADED" and ... == addonName then
+        OnInitialize()
+    elseif event == "PLAYER_LOGIN" then
+        OnEnable()
+    end
+end)
 
 _G["1WoW_QoL_OnAddonCompartmentClick"] = function(addonName, mouseButton)
     if ns.oneWoWHubActive and _G.OneWoW and _G.OneWoW.GUI then

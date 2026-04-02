@@ -3,7 +3,9 @@ local addonName, ns = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-OneWoW_AltTracker = LibStub("AceAddon-3.0"):NewAddon("OneWoW_AltTracker", "AceEvent-3.0", "AceConsole-3.0")
+local DB = OneWoW_GUI.DB
+
+OneWoW_AltTracker = {}
 local OneWoWAltTracker = OneWoW_AltTracker
 
 ns.OneWoWAltTracker = OneWoWAltTracker
@@ -41,32 +43,33 @@ local function RegisterWithOneWoW()
     return true
 end
 
-function OneWoWAltTracker:OnInitialize()
-    self:InitializeDatabase()
-    OneWoW_GUI:MigrateSettings(self.db.global)
-    self:ApplyTheme()
+local function OnInitialize()
+    OneWoWAltTracker:InitializeDatabase()
+    OneWoW_GUI:MigrateSettings(OneWoWAltTracker.db.global)
+    OneWoWAltTracker:ApplyTheme()
 
     if ns.ApplyLanguage then
         ns.ApplyLanguage()
     end
 
-    self:RegisterChatCommand("onewowat", "SlashCommandHandler")
-    self:RegisterChatCommand("owat", "SlashCommandHandler")
-    self:RegisterChatCommand("1wat", "SlashCommandHandler")
+    local function slashHandler(msg) OneWoWAltTracker:SlashCommandHandler(msg) end
+    DB:RegisterSlashCommand("onewowat", slashHandler)
+    DB:RegisterSlashCommand("owat", slashHandler)
+    DB:RegisterSlashCommand("1wat", slashHandler)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoWAltTracker, function(self2)
         self2:ApplyTheme()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoWAltTracker, function(self2)
         if ns.ApplyLanguage then ns.ApplyLanguage() end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoWAltTracker, function(self2)
         local mainFrame = _G["OneWoWAltTrackerMainFrame"]
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoWAltTracker, function(self2)
         local mainFrame = _G["OneWoWAltTrackerMainFrame"]
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
@@ -75,10 +78,10 @@ function OneWoWAltTracker:OnInitialize()
             ns.UI.ResizeOverviewPanels()
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", OneWoWAltTracker, function(owner, hidden)
         if owner.Minimap then owner.Minimap:SetShown(not hidden) end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", OneWoWAltTracker, function(owner)
         if owner.Minimap then owner.Minimap:UpdateIcon() end
     end)
 
@@ -98,7 +101,7 @@ function OneWoWAltTracker:ApplyLanguage()
     end
 end
 
-function OneWoWAltTracker:OnEnable()
+local function OnEnable()
     if ns.Core and ns.Core.Initialize then
         ns.Core:Initialize()
     end
@@ -106,7 +109,7 @@ function OneWoWAltTracker:OnEnable()
     RegisterWithOneWoW()
 
     if not ns.oneWoWHubActive then
-        self.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_AltTracker", {
+        OneWoWAltTracker.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_AltTracker", {
             label = "AltTracker",
             onClick = function()
                 if ns.UI and ns.UI.Toggle then ns.UI:Toggle() end
@@ -142,7 +145,7 @@ end
 function OneWoWAltTracker:InitializeDatabase()
     local defaults = ns.DatabaseDefaults or {}
 
-    self.db = LibStub("AceDB-3.0"):New("OneWoW_AltTracker_DB", defaults, true)
+    self.db = DB:NewCompat("OneWoW_AltTracker_DB", defaults, true)
 
     if not self.db.global.altTracker then
         self.db.global.altTracker = {
@@ -201,6 +204,17 @@ function OneWoWAltTracker:InitializeDatabase()
         self.db.global.seasonChecklist = {}
     end
 end
+
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ADDON_LOADED" and ... == addonName then
+        OnInitialize()
+    elseif event == "PLAYER_LOGIN" then
+        OnEnable()
+    end
+end)
 
 _G["1WoW_AltTracker_OnAddonCompartmentClick"] = function(addonName, buttonName)
     if ns.oneWoWHubActive and _G.OneWoW and _G.OneWoW.GUI then

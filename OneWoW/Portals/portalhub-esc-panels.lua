@@ -443,7 +443,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 		local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(panel, {})
 		scrollFrame:ClearAllPoints()
 		scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -35)
-		scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -30, 35)
+		scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 35)
 		scrollChild:SetWidth(PANEL_WIDTH - 40)
 		panel.scrollFrame = scrollFrame
 		panel.scrollChild = scrollChild
@@ -679,7 +679,7 @@ local function BuildNotesPanel(container, yOffset, anchorPanel, panelKey, header
 		local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(panel, {})
 		scrollFrame:ClearAllPoints()
 		scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -35)
-		scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -30, 10)
+		scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 10)
 		scrollChild:SetWidth(PANEL_WIDTH - 40)
 		panel.scrollFrame = scrollFrame
 		panel.scrollChild = scrollChild

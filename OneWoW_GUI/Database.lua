@@ -599,6 +599,41 @@ function DB:BootSubModule(ns, config)
     end)
 end
 
+-- Drop-in replacement for AceDB-3.0:New(). Reads and writes the exact same
+-- SavedVariables format so existing user data works without migration.
+-- Usage: self.db = DB:NewCompat("MyAddon_DB", defaults, true)
+-- Returns a table with .global and .char matching the AceDB handle shape.
+function DB:NewCompat(savedVarName, defaults, useDefaultProfile)
+    if not _G[savedVarName] then _G[savedVarName] = {} end
+    local sv = _G[savedVarName]
+
+    if not sv.global then sv.global = {} end
+    if not sv.char then sv.char = {} end
+    if not sv.profileKeys then sv.profileKeys = {} end
+
+    local name = UnitName("player")
+    local realm = GetRealmName()
+    local charKey = (name and realm and realm ~= "") and (name .. " - " .. realm) or nil
+
+    if charKey then
+        if not sv.char[charKey] then sv.char[charKey] = {} end
+        if useDefaultProfile then sv.profileKeys[charKey] = "Default" end
+    end
+
+    local charTable = charKey and sv.char[charKey] or {}
+
+    if defaults then
+        if defaults.global then
+            self:MergeMissing(sv.global, defaults.global)
+        end
+        if defaults.char and charKey then
+            self:MergeMissing(sv.char[charKey], defaults.char)
+        end
+    end
+
+    return { global = sv.global, char = charTable }
+end
+
 -- Simple slash command registration without AceConsole.
 -- commandName is the base name (e.g., "owcat"), handler receives the msg string.
 -- Multiple commands can be registered by calling this multiple times.

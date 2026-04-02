@@ -189,8 +189,9 @@ function TP:Create(listID)
     end
 
     local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(frame, {})
+    scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 2, -2)
-    scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 16)
+    scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 16)
 
     local activeSections = {}
     local activeSteps = {}
@@ -229,11 +230,11 @@ function TP:Create(listID)
             secHeader:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
 
             if secTotal > 0 and secDone >= secTotal then
-                secHeader:SetBackdropColor(0.15, 0.3, 0.15, 0.6)
+                secHeader:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_MUTED"))
             else
                 secHeader:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             end
-            secHeader:SetBackdropBorderColor(0, 0, 0, 0)
+            secHeader:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
             tinsert(activeSections, secHeader)
 
             secHeader._accent:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -281,7 +282,7 @@ function TP:Create(listID)
                 if step.optional then
                     stepRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 elseif isComplete then
-                    stepRow._label:SetTextColor(0.5, 0.5, 0.5)
+                    stepRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 else
                     stepRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
@@ -362,7 +363,7 @@ function TP:Create(listID)
                         objRow._label:SetText(obj.description or obj.type)
 
                         if objComplete then
-                            objRow._label:SetTextColor(0.5, 0.5, 0.5)
+                            objRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                         else
                             objRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                         end
