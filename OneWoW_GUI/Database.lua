@@ -495,3 +495,188 @@ function DB:SetActivePreset(db, presetName)
         end
     end
 end
+
+function DB:InitSubModule(savedVarName)
+    if not _G[savedVarName] then _G[savedVarName] = {} end
+    local sv = _G[savedVarName]
+    if not sv.characters then sv.characters = {} end
+    if not sv.version then sv.version = 1 end
+    return sv
+end
+
+function DB:GetCharData(savedVarName, charKey)
+    charKey = charKey or OneWoW_GUI:GetCharacterKey()
+    if not charKey then return nil end
+    local sv = _G[savedVarName]
+    if not sv or not sv.characters then return nil end
+    if not sv.characters[charKey] then sv.characters[charKey] = {} end
+    return sv.characters[charKey]
+end
+
+function DB:GetAllChars(savedVarName, sortField)
+    local sv = _G[savedVarName]
+    if not sv or not sv.characters then return {} end
+    local chars = {}
+    for charKey, data in pairs(sv.characters) do
+        chars[#chars + 1] = { key = charKey, data = data }
+    end
+    sortField = sortField or "lastUpdate"
+    table.sort(chars, function(a, b)
+        return (a.data[sortField] or 0) > (b.data[sortField] or 0)
+    end)
+    return chars
+end
+
+function DB:DeleteChar(savedVarName, charKey)
+    if not charKey then return false end
+    local sv = _G[savedVarName]
+    if not sv or not sv.characters then return false end
+    sv.characters[charKey] = nil
+    return true
+end
+
+function DB:BootSubModule(ns, config)
+    local addonName = config.addonName
+    local savedVar = config.savedVar
+    local onLogin = config.onLogin
+    local defaults = config.defaults
+    local initDB = config.initDB
+
+    ns.AddonInitialized = false
+
+    if config.withScanCallbacks then
+        local scanCallbacks = {}
+        ns.RegisterScanCallback = function(self, fn)
+            scanCallbacks[#scanCallbacks + 1] = fn
+        end
+        ns.FireScanCallbacks = function(self, data)
+            for _, fn in ipairs(scanCallbacks) do
+                pcall(fn, data)
+            end
+        end
+    end
+
+    ns.GetCharacterKey = function(self)
+        return OneWoW_GUI:GetCharacterKey()
+    end
+    ns.GetCharacterData = function(self, charKey)
+        return DB:GetCharData(savedVar, charKey)
+    end
+    ns.GetAllCharacters = function(self)
+        return DB:GetAllChars(savedVar, config.sortField)
+    end
+    ns.DeleteCharacter = function(self, charKey)
+        return DB:DeleteChar(savedVar, charKey)
+    end
+
+    ns.GetDB = function(self)
+        return _G[savedVar]
+    end
+
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("ADDON_LOADED")
+    eventFrame:RegisterEvent("PLAYER_LOGIN")
+    eventFrame:SetScript("OnEvent", function(self, event, ...)
+        if event == "ADDON_LOADED" then
+            local loaded = ...
+            if loaded == addonName then
+                if savedVar then
+                    if not _G[savedVar] then _G[savedVar] = {} end
+                    if defaults then
+                        DB:MergeMissing(_G[savedVar], defaults)
+                    end
+                end
+                if initDB then
+                    initDB()
+                elseif ns.InitializeDatabase then
+                    ns:InitializeDatabase()
+                end
+            end
+        elseif event == "PLAYER_LOGIN" then
+            ns.AddonInitialized = true
+            if onLogin then onLogin() end
+        end
+    end)
+end
+
+-- Simple slash command registration without AceConsole.
+-- commandName is the base name (e.g., "owcat"), handler receives the msg string.
+-- Multiple commands can be registered by calling this multiple times.
+function DB:RegisterSlashCommand(commandName, handler)
+    local upper = commandName:upper()
+    local key = "ONEWOW_" .. upper
+    _G["SLASH_" .. key .. "1"] = "/" .. commandName
+    SlashCmdList[key] = handler
+end
+
+-- Factory for item data loading with async callback queue.
+-- Eliminates per-addon DataLoader duplication. Pass the addon's DB table
+-- (the one with an itemCache sub-table). Returns a loader object.
+function OneWoW_GUI:CreateItemDataLoader(dbTable)
+    if not dbTable then error("CreateItemDataLoader requires a dbTable", 2) end
+
+    local loader = { _db = dbTable, _pending = {} }
+
+    function loader:GetCachedItem(itemID)
+        if self._db.itemCache and self._db.itemCache[itemID] then
+            return self._db.itemCache[itemID]
+        end
+        return nil
+    end
+
+    function loader:CacheItem(itemID, name, quality, icon, link)
+        if not self._db.itemCache then self._db.itemCache = {} end
+        self._db.itemCache[itemID] = {
+            name    = name,
+            quality = quality or 1,
+            icon    = icon or 134400,
+            link    = link,
+        }
+    end
+
+    function loader:LoadItemData(itemID, callback)
+        local cached = self:GetCachedItem(itemID)
+        if cached and cached.name then
+            if callback then callback(itemID, cached) end
+            return cached
+        end
+
+        local name, link, quality, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemID)
+        if name then
+            self:CacheItem(itemID, name, quality, icon, link)
+            local result = self:GetCachedItem(itemID)
+            if callback then callback(itemID, result) end
+            return result
+        end
+
+        C_Item.RequestLoadItemDataByID(itemID)
+        if not self._pending[itemID] then
+            self._pending[itemID] = {}
+        end
+        if callback then
+            self._pending[itemID][#self._pending[itemID] + 1] = callback
+        end
+        return nil
+    end
+
+    function loader:Initialize()
+        local frame = CreateFrame("Frame")
+        frame:RegisterEvent("ITEM_DATA_LOAD_RESULT")
+        frame:SetScript("OnEvent", function(_, _, loadedItemID, success)
+            if not success then return end
+            local callbacks = self._pending[loadedItemID]
+            if not callbacks then return end
+            local name, link, quality, _, _, _, _, _, _, icon = C_Item.GetItemInfo(loadedItemID)
+            if name then
+                self:CacheItem(loadedItemID, name, quality, icon, link)
+                local result = self:GetCachedItem(loadedItemID)
+                for _, cb in ipairs(callbacks) do
+                    pcall(cb, loadedItemID, result)
+                end
+            end
+            self._pending[loadedItemID] = nil
+        end)
+    end
+
+    return loader
+end
