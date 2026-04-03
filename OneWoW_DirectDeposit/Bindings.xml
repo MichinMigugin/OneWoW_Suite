@@ -9,4 +9,19 @@
             OneWoW_DirectDeposit.DirectDeposit:ManualDeposit()
         end
     </Binding>
+    <Binding name="ONEWOW_DIRECTDEPOSIT_ADD_PERSONAL" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
+        if OneWoW_DirectDeposit then
+            OneWoW_DirectDeposit:AddHoveredItemToList("personal")
+        end
+    </Binding>
+    <Binding name="ONEWOW_DIRECTDEPOSIT_ADD_WARBAND" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
+        if OneWoW_DirectDeposit then
+            OneWoW_DirectDeposit:AddHoveredItemToList("warband")
+        end
+    </Binding>
+    <Binding name="ONEWOW_DIRECTDEPOSIT_ADD_GUILD" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
+        if OneWoW_DirectDeposit then
+            OneWoW_DirectDeposit:AddHoveredItemToList("guild")
+        end
+    </Binding>
 </Bindings>
