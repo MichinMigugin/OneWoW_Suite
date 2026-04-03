@@ -4,6 +4,8 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local abs = math.abs
+local max = math.max
 local tinsert = tinsert
 
 local UNLOAD_COL_OFFSET = 248
@@ -41,16 +43,17 @@ function Addon.UI:CreateSettingsTab(parent)
 
     self.settingsUnloadCheckboxes = {}
 
-    local nextOffset = OneWoW_GUI:CreateSettingsPanel(tab, { yOffset = -10, addonName = "OneWoW_UtilityDevTool" }) or -195
+    local _, scrollContent = OneWoW_GUI:CreateScrollFrame(tab, {})
+    local nextOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = -10, addonName = "OneWoW_UtilityDevTool" }) or -195
 
-    local section = OneWoW_GUI:CreateFrame(tab, {
+    local section = OneWoW_GUI:CreateFrame(scrollContent, {
         backdrop = BACKDROP_INNER_NO_INSETS,
         width = 100,
         height = 100,
     })
     section:ClearAllPoints()
-    section:SetPoint("TOPLEFT", tab, "TOPLEFT", 10, nextOffset)
-    section:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -10, 10)
+    section:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 10, nextOffset)
+    section:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -10, nextOffset)
     self:StyleContentPanel(section)
 
     local title = section:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -69,6 +72,7 @@ function Addon.UI:CreateSettingsTab(parent)
     local rowHeight = 28
     local startY = -78
     local row = 0
+    local lowestY = startY
 
     local ordered = self:GetOrderedTabKeys()
     local entries = {}
@@ -90,6 +94,9 @@ function Addon.UI:CreateSettingsTab(parent)
         if e.kind == "assetPair" then
             row = row + 1
             local y = startY - row * rowHeight
+            if y < lowestY then
+                lowestY = y
+            end
             local tabKey = e.key
             local definition = self:GetTabDefinition(tabKey)
 
@@ -139,6 +146,9 @@ function Addon.UI:CreateSettingsTab(parent)
         else
             row = row + 1
             local y = startY - row * rowHeight
+            if y < lowestY then
+                lowestY = y
+            end
             local eRight = entries[i + 1]
             if eRight and eRight.kind == "single" then
                 local tabKeyL = e.key
@@ -208,6 +218,10 @@ function Addon.UI:CreateSettingsTab(parent)
             end
         end
     end
+
+    local sectionHeight = abs(lowestY) + 42
+    section:SetHeight(max(120, sectionHeight))
+    scrollContent:SetHeight(max(1, abs(nextOffset - sectionHeight) + 24))
 
     for _, assetKey in ipairs({ "textures", "sounds" }) do
         if self:IsTabEnabled(assetKey) and self:GetUnloadOnDisable(assetKey) then

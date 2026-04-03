@@ -8,7 +8,7 @@ local format = string.format
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local function getErrorDB()
-    return Addon.db and Addon.db.errorDB
+    return Addon.db.global.errorDB
 end
 
 local function soundChoiceLabel(L, value)

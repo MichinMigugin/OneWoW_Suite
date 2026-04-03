@@ -63,7 +63,7 @@ function Addon.UI:CreateEditorTab(parent)
     local pendingUndoText = nil
 
     local function getDB()
-        return Addon.db and Addon.db.editor
+        return Addon.db.global.editor
     end
 
     local function getFont()

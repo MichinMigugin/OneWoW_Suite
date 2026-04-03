@@ -748,7 +748,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     rootCountText:SetText("")
     tab.rootCountText = rootCountText
 
-    local savedListWidth = Addon.db and Addon.db.globalsBrowserLeftPaneWidth
+    local savedListWidth = Addon.db.global.globalsBrowserLeftPaneWidth
     local initialListWidth = leftDefault
     if type(savedListWidth) == "number" and savedListWidth >= leftMin then
         initialListWidth = savedListWidth
@@ -813,9 +813,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
         resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95,
         mainFrame = Addon.UI and Addon.UI.mainFrame,
         onWidthChanged = function(width)
-            if Addon.db then
-                Addon.db.globalsBrowserLeftPaneWidth = width
-            end
+            Addon.db.global.globalsBrowserLeftPaneWidth = width
         end,
     })
 

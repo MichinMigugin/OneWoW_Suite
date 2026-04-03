@@ -237,9 +237,9 @@ local function styleSheetOverlay(tab, overlay, DU)
         overlay:SetBackdropBorderColor(r, g, b, borderMutedA)
     end
 
-    local bookmarks = Addon.db and Addon.db.textureBookmarks
+    local bookmarks = Addon.db.global.textureBookmarks
     local bmTex = ensureSheetOverlayBookmarkIcon(overlay)
-    if bookmarks and bookmarks[overlay.atlasName] then
+    if bookmarks[overlay.atlasName] then
         bmTex:SetTexture(BOOKMARK_ICON_PATH)
         bmTex:Show()
     else
@@ -457,7 +457,7 @@ local function updateDetailPanel(tab)
             tinsert(lines, line)
         end
 
-        local bm = Addon.db.textureBookmarks and Addon.db.textureBookmarks[atlasName]
+        local bm = Addon.db.global and Addon.db.global.textureBookmarks and Addon.db.global.textureBookmarks[atlasName]
         if bm then
             tinsert(lines, "")
             tinsert(lines, "|cff00ff00[" .. (L["LABEL_BOOKMARKED"]) .. "]|r")
@@ -481,9 +481,9 @@ local function applyListSelection(tab, entryIndex)
         tab.selectedAtlasName = nil
         showTextureSheet(tab, entry.textureKey)
         -- Favorites + By sheet lists whole textures; pick first bookmarked atlas so detail + overlay match that slice.
-        if BR.favoritesOnly and Addon.db.textureBookmarks then
+        if BR.favoritesOnly and Addon.db.global and Addon.db.global.textureBookmarks then
             for _, row in ipairs(BR:GetAtlasesForTexture(entry.textureKey)) do
-                if Addon.db.textureBookmarks[row.atlasName] then
+                if Addon.db.global.textureBookmarks[row.atlasName] then
                     selectAtlasFromOverlay(tab, row.atlasName)
                     break
                 end
@@ -580,7 +580,7 @@ function Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     tab.btnByTexture._textureBarActive = (BR:GetViewMode() == BR.VIEW_TEXTURE)
     tab.btnByAtlas._textureBarActive = (BR:GetViewMode() == BR.VIEW_ATLAS)
     tab.favsBtn._textureBarActive = BR.favoritesOnly
-    local bookmarked = tab.selectedAtlasName and Addon.db.textureBookmarks and Addon.db.textureBookmarks[tab.selectedAtlasName]
+    local bookmarked = tab.selectedAtlasName and Addon.db.global and Addon.db.global.textureBookmarks and Addon.db.global.textureBookmarks[tab.selectedAtlasName]
     tab.bookmarkBtn._textureBarActive = bookmarked and true or false
     tab.manualToggle._textureBarActive = tab.manualPanel and tab.manualPanel:IsShown() or false
     Addon.UI:PaintToolbarBarButton(tab.btnByTexture, TEXTURE_BAR_ACTIVE_KEY)
@@ -746,15 +746,15 @@ function Addon.UI:CreateTextureTab(parent)
             Addon.UI.TextureTab_RefreshToolbarButtons(tab)
             return
         end
-        if not Addon.db.textureBookmarks then
-            Addon.db.textureBookmarks = {}
+        if not Addon.db.global.textureBookmarks then
+            Addon.db.global.textureBookmarks = {}
         end
         local name = tab.selectedAtlasName
-        if Addon.db.textureBookmarks[name] then
-            Addon.db.textureBookmarks[name] = nil
+        if Addon.db.global.textureBookmarks[name] then
+            Addon.db.global.textureBookmarks[name] = nil
             Addon:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", name))
         else
-            Addon.db.textureBookmarks[name] = true
+            Addon.db.global.textureBookmarks[name] = true
             Addon:Print((L["MSG_BOOKMARKED"]):gsub("{name}", name))
         end
         textureTabAfterBookmarkToggle(tab)
@@ -783,7 +783,7 @@ function Addon.UI:CreateTextureTab(parent)
         SPLIT_PAD = DIV_W + 10
     end
 
-    local savedListW = Addon.db and Addon.db.textureBrowserLeftPaneWidth
+    local savedListW = Addon.db.global.textureBrowserLeftPaneWidth
     local initListW = LEFT_DEFAULT
     if type(savedListW) == "number" and savedListW >= LEFT_MIN then
         initListW = savedListW
@@ -809,14 +809,12 @@ function Addon.UI:CreateTextureTab(parent)
                 label = entry.atlasName
             end
             ensureListRowBookmarkIcon(btn, TEX_ROW_H)
-            local bookmarks = Addon.db and Addon.db.textureBookmarks
+            local bookmarks = Addon.db.global.textureBookmarks
             local showBm = false
-            if bookmarks then
-                if entry.kind == "atlas" and entry.atlasName and bookmarks[entry.atlasName] then
-                    showBm = true
-                elseif entry.kind == "texture" and entry.textureKey and BR:TextureHasBookmarkedAtlas(entry.textureKey, bookmarks) then
-                    showBm = true
-                end
+            if entry.kind == "atlas" and entry.atlasName and bookmarks[entry.atlasName] then
+                showBm = true
+            elseif entry.kind == "texture" and entry.textureKey and BR:TextureHasBookmarkedAtlas(entry.textureKey, bookmarks) then
+                showBm = true
             end
             if showBm then
                 btn.bookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
@@ -851,9 +849,7 @@ function Addon.UI:CreateTextureTab(parent)
         resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95,
         mainFrame = Addon.UI and Addon.UI.mainFrame,
         onWidthChanged = function(w)
-            if Addon.db then
-                Addon.db.textureBrowserLeftPaneWidth = w
-            end
+            Addon.db.global.textureBrowserLeftPaneWidth = w
         end,
     })
 

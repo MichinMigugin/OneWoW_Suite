@@ -1,26 +1,20 @@
 local ADDON_NAME, Addon = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local DB = OneWoW_GUI.DB
+
 local GetLocale = GetLocale
 local type = type
-local pairs = pairs
-local ipairs = ipairs
-local tinsert = tinsert
-local tremove = tremove
-local sort = sort
+local pairs, ipairs, next = pairs, ipairs, next
+local sort, tinsert, wipe = sort, tinsert, wipe
 local CopyTable = CopyTable
 
-local function getEditorLanguage(db)
-    local hub = _G.OneWoW
-    local lang
-    if hub and hub.db and hub.db.global then
-        lang = hub.db.global.language
-    end
-    if not lang then
-        lang = db and db.language or GetLocale()
-    end
-    if lang == "esMX" then
-        lang = "esES"
-    end
+local function getEditorLanguage()
+    local lang = OneWoW_GUI:GetSetting("language")
+    if not lang then lang = GetLocale() end
+    if lang == "esMX" then lang = "esES" end
     return lang or "enUS"
 end
 
@@ -42,11 +36,11 @@ local function getDefaultCategoryAliases()
     return aliases
 end
 
-local function normalizeEditorDB(db)
-    local editor = db.editor
+local function normalizeEditorDB(global)
+    local editor = global.editor
     if type(editor) ~= "table" then return end
 
-    local currentDefault = getLocalizedDefaultCategory(getEditorLanguage(db))
+    local currentDefault = getLocalizedDefaultCategory(getEditorLanguage())
     local aliases = getDefaultCategoryAliases()
     local normalizedCategories = { currentDefault }
     local seenCategories = { [currentDefault] = true }
@@ -89,9 +83,7 @@ local function normalizeEditorDB(db)
 end
 
 function Addon:NormalizeEditorDatabase()
-    if self.db then
-        normalizeEditorDB(self.db)
-    end
+    normalizeEditorDB(self.db.global)
 end
 
 function Addon:GetPinnedMonitorEntriesInOrder(arr)
@@ -114,7 +106,8 @@ function Addon:GetPinnedMonitorEntriesInOrder(arr)
     return out
 end
 
-local function migrateMonitorPinned(mon)
+local function migrateMonitorPinned(d)
+    local mon = d.global and d.global.monitor
     if type(mon) ~= "table" then return end
     if type(mon.pinnedMonitors) ~= "table" then
         mon.pinnedMonitors = {}
@@ -142,113 +135,91 @@ local function migrateMonitorPinned(mon)
 end
 
 function Addon:InitializeDatabase()
+    local sv = OneWoW_UtilityDevTool_DB
+    if sv and not sv.global and next(sv) ~= nil then
+        local oldData = {}
+        for k, v in pairs(sv) do oldData[k] = v end
+        wipe(sv)
+        sv.global = oldData
+    end
+
     local tabDefaults = {}
     if self.UI and self.UI.GetTabSettingsDefaults then
         tabDefaults = self.UI:GetTabSettingsDefaults()
     end
 
     local defaults = {
-        position = {},
-        recentFrames = {},
-        textureBookmarks = {},
-        --- Saved width of the texture browser list column (nil = use default from Constants).
-        textureBrowserLeftPaneWidth = nil,
-        globalsBrowserLeftPaneWidth = nil,
-        globalsBookmarks = {},
-        globalsIncludeNoisyRoots = false,
-        soundBrowserLeftPaneWidth = nil,
-        soundBrowserChannel = "SFX",
-        soundBookmarks = {},
-        fontBrowserPreviewBg = nil,  -- nil = use FONT_BROWSER_PREVIEW_BG; else {r,g,b,a}
-        theme = "green",
-        language = GetLocale(),
-        minimap = {
-            hide = false,
-            minimapPos = 220,
-            theme = "horde",
+        global = {
+            position = {},
+            recentFrames = {},
+            textureBookmarks = {},
+            textureBrowserLeftPaneWidth = nil,
+            globalsBrowserLeftPaneWidth = nil,
+            globalsBookmarks = {},
+            globalsIncludeNoisyRoots = false,
+            soundBrowserLeftPaneWidth = nil,
+            soundBrowserChannel = "SFX",
+            soundBookmarks = {},
+            fontBrowserPreviewBg = nil,
+            monitor = {
+                showOnLoad = false,
+                sortOrder = 2,
+                viewPreset = "balanced",
+                continuousUpdate = false,
+                pinnedMonitors = {},
+                pinnedAddon = nil,
+                pinnedReopenOnReload = false,
+                pinnedPosition = {},
+            },
+            errorDB = {
+                session = 0,
+                errors = {},
+                playSound = false,
+                clearOnReload = false,
+                keepLastSessions = 10,
+                maxErrors = 100,
+                soundChoice = "devtools_error",
+                copyFormat = "plain",
+            },
+            editor = {
+                snippets = {},
+                categories = { "Uncategorized" },
+                defaultCategory = nil,
+                indentSize = 3,
+                fontSize = 12,
+                autoSaveInterval = nil,
+                outputHeight = nil,
+                leftPaneWidth = nil,
+                lastOpenSnippet = nil,
+                untitledCounter = 1,
+                categoryCollapsed = {},
+            },
+            deferTextureBrowserData = false,
+            deferSoundBrowserData = false,
+            tabs = tabDefaults,
         },
-        monitor = {
-            showOnLoad = false,
-            sortOrder = 2,
-            viewPreset = "balanced",
-            continuousUpdate = false,
-            pinnedMonitors = {},
-            pinnedAddon = nil,
-            pinnedReopenOnReload = false,
-            pinnedPosition = {},
-        },
-        errorDB = {
-            session = 0,
-            errors = {},
-            playSound = false,
-            clearOnReload = false,
-            keepLastSessions = 10,
-            maxErrors = 100,
-            soundChoice = "devtools_error",
-            copyFormat = "plain",
-        },
-        editor = {
-            snippets = {},
-            categories = { "Uncategorized" },
-            defaultCategory = nil,
-            indentSize = 3,
-            fontSize = 12,
-            autoSaveInterval = nil,
-            outputHeight = nil,
-            leftPaneWidth = nil,
-            lastOpenSnippet = nil,
-            untitledCounter = 1,
-            categoryCollapsed = {},
-        },
-        deferTextureBrowserData = false,
-        deferSoundBrowserData = false,
-        tabs = tabDefaults,
     }
 
-    local function mergeSubTable(dbSub, defaultSub)
-        for k, v in pairs(defaultSub) do
-            if dbSub[k] == nil then
-                dbSub[k] = v
-            end
-        end
-    end
+    local db = DB:Init({
+        addonName = "OneWoW_UtilityDevTool",
+        savedVar = "OneWoW_UtilityDevTool_DB",
+        defaults = defaults,
+    })
+    self.db = db
 
-    local function mergeTabSettings(dbTabs, defaultTabs)
-        for key, value in pairs(defaultTabs) do
-            if dbTabs[key] == nil then
-                dbTabs[key] = value
-            elseif type(value) == "table" and type(dbTabs[key]) == "table" then
-                mergeSubTable(dbTabs[key], value)
-            end
-        end
-        if dbTabs.settings == nil then
-            dbTabs.settings = { enabled = true }
-        end
-        dbTabs.settings.enabled = true
+    local g = db.global
+    if type(g.tabs) ~= "table" then
+        g.tabs = tabDefaults
     end
+    DB:MergeMissing(g.tabs, tabDefaults)
+    if g.tabs.settings == nil then
+        g.tabs.settings = { enabled = true }
+    end
+    g.tabs.settings.enabled = true
 
-    if not OneWoW_UtilityDevTool_DB then
-        OneWoW_UtilityDevTool_DB = defaults
-    else
-        for key, value in pairs(defaults) do
-            if OneWoW_UtilityDevTool_DB[key] == nil then
-                OneWoW_UtilityDevTool_DB[key] = value
-            elseif type(value) == "table" and type(OneWoW_UtilityDevTool_DB[key]) == "table"
-                   and (key == "errorDB" or key == "editor" or key == "monitor") then
-                mergeSubTable(OneWoW_UtilityDevTool_DB[key], value)
-            elseif key == "tabs" and type(value) == "table" and type(OneWoW_UtilityDevTool_DB[key]) == "table" then
-                mergeTabSettings(OneWoW_UtilityDevTool_DB[key], value)
-            end
-        end
-    end
+    DB:RunMigrations(db, {
+        { version = 1, name = "monitor_pinned", run = migrateMonitorPinned },
+    })
 
-    self.db = OneWoW_UtilityDevTool_DB
-    if type(self.db.tabs) ~= "table" then
-        self.db.tabs = tabDefaults
-    end
-    mergeTabSettings(self.db.tabs, tabDefaults)
-    if type(self.db.monitor) == "table" then
-        migrateMonitorPinned(self.db.monitor)
-    end
     self:NormalizeEditorDatabase()
 end

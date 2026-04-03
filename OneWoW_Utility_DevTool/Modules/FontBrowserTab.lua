@@ -85,7 +85,7 @@ end
 function FB:RebuildFiltered()
     local result = {}
     local filter = self.filterText:upper()
-    local bookmarks = Addon.db and Addon.db.fontBookmarks
+    local bookmarks = Addon.db.global.fontBookmarks
 
     for _, name in ipairs(self.masterList) do
         local pass = true
@@ -129,18 +129,17 @@ function FB:GetFilteredEntry(idx)
 end
 
 function FB:IsBookmarked(name)
-    return Addon.db and Addon.db.fontBookmarks and Addon.db.fontBookmarks[name] or false
+    return Addon.db.global.fontBookmarks[name] or false
 end
 
 function FB:ToggleBookmark(name)
     if not name then return end
-    if not Addon.db then return end
-    Addon.db.fontBookmarks = Addon.db.fontBookmarks or {}
-    if Addon.db.fontBookmarks[name] then
-        Addon.db.fontBookmarks[name] = nil
+    local g = Addon.db.global
+    if g.fontBookmarks[name] then
+        g.fontBookmarks[name] = nil
         return false
     else
-        Addon.db.fontBookmarks[name] = true
+        g.fontBookmarks[name] = true
         return true
     end
 end

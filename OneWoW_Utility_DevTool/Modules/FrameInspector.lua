@@ -25,7 +25,7 @@ function FrameInspector:AddToRecentFrames(frame)
     local name = frame.GetName and frame:GetName()
     if not name then return end
 
-    local recent = Addon.db.recentFrames
+    local recent = Addon.db.global.recentFrames
 
     for i, fname in ipairs(recent) do
         if fname == name then
@@ -43,7 +43,7 @@ end
 
 function FrameInspector:GetRecentFrames()
     local frames = {}
-    for _, name in ipairs(Addon.db.recentFrames) do
+    for _, name in ipairs(Addon.db.global.recentFrames) do
         local frame = _G[name]
         if frame then
             tinsert(frames, frame)

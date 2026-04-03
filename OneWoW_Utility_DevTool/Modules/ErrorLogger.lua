@@ -32,7 +32,7 @@ local function captureEventName()
 end
 
 local function getErrorDB()
-    return Addon.db and Addon.db.errorDB
+    return Addon.db.global.errorDB
 end
 
 local function maxErrorsCap()

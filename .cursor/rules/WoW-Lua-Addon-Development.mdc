@@ -190,6 +190,59 @@ Addon.Constants.KEY_SAVE = "SAVE"
 `MyAddon/Locales/enUS.lua`, `MyAddon/Locales/deDE.lua`). Reference them via
 the addon's locale table (e.g. `L.SAVE`, `L.BUTTON_CANCEL`).
 
+### 2.6 OneWoW Suite — Database API (Mandatory)
+
+All OneWoW addons must use the shared `OneWoW_GUI.DB` API for SavedVariable
+management. Do not hand-roll merge functions, ensure-if-nil blocks, or
+per-addon default application logic. Full design rationale:
+[OneWoW_GUI/Docs/DATABASE.md](OneWoW_GUI/Docs/DATABASE.md). For the API
+surface, read `OneWoW_GUI/Database.lua` directly.
+
+```lua
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+local DB = OneWoW_GUI.DB
+```
+
+**Key rules:**
+
+- **`DB:Init`** initializes the database. Three modes: `single` (one
+  SavedVariable root with `global`/`chars`), `split` (separate global +
+  per-char SavedVariables), or `acedb` (wraps an existing AceDB handle).
+  After `Init` returns, `db`, `db.global`, and every key in the defaults
+  table are **guaranteed to exist**.
+- **`DB:MergeMissing`** fills only `nil` keys — never overwrites user data.
+  It replaces all custom `mergeSubTable` / `ApplyDefaults` / ensure-if-nil
+  patterns.
+- **`DB:RunMigrations`** runs versioned one-time data transformations.
+  Migrations are structural changes (rename keys, move data). Defaults
+  application is a normalizer handled by `Init` + `MergeMissing`, not a
+  migration.
+- **No defensive nil-chain guards after Init.** `DB:Init` and `MergeMissing`
+  guarantee all defaulted keys exist. Do not write
+  `Addon.db and Addon.db.global and Addon.db.global.X` chains or
+  `Addon.db.global.X or defaultValue` when the default is already in the
+  defaults table. These guards are dead code that obscures intent.
+
+```lua
+-- BAD: redundant guards — DB:Init guarantees these exist
+local sortOrder = Addon.db and Addon.db.global and Addon.db.global.monitor
+    and Addon.db.global.monitor.sortOrder or 2
+if Addon.db and Addon.db.global then
+    Addon.db.global.position = pos
+end
+
+-- GOOD: trust the DB API
+local sortOrder = Addon.db.global.monitor.sortOrder
+Addon.db.global.position = pos
+```
+
+- **`or {}` / `or default` is only appropriate for dynamic keys** not defined
+  in the defaults table (e.g. `catMods[entryName] or {}`).
+- **Shared settings** (`theme`, `language`, `minimap`) are managed by
+  `OneWoW_GUI:GetSetting` / `OneWoW_GUI:SetSetting`. Addons must not store
+  these locally.
+
 ---
 
 ## 3. Modern API Patterns (12.0+)
@@ -616,16 +669,13 @@ end
 
 ### 7.4 SavedVariables
 
+- **OneWoW addons:** Use `OneWoW_GUI.DB:Init` (see section 2.6). Do not use
+  raw SavedVariable init or AceDB directly for new OneWoW addons.
 - Initialize defaults on `ADDON_LOADED` or in Ace3's `OnInitialize`.
 - Always validate / migrate saved data — the user might have data from an
-  older version.
-  ```lua
-  if not MyAddonDB or MyAddonDB.version ~= CURRENT_DB_VERSION then
-      MyAddonDB = CopyTable(defaults)
-      MyAddonDB.version = CURRENT_DB_VERSION
-  end
-  ```
-- Use AceDB when possible; it handles profile management and defaults.
+  older version. In OneWoW addons, use `DB:RunMigrations` for this.
+- Use AceDB when possible for non-OneWoW addons; it handles profile
+  management and defaults.
 
 ### 7.5 Tooltip System (Modern — 10.0.2+)
 
@@ -849,6 +899,12 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
     (`SetJustifyH`, `SetTextColor`, `SetFont`, etc.). Properties from a
     previous font "stick" to subsequent selections. Recreate the FontString
     or read values from the Font object directly. See section 4.8.
+17. **Defensive nil-chain guards on DB-initialized keys.** After
+    `DB:Init` + `MergeMissing`, all defaulted keys are guaranteed to exist.
+    Writing `Addon.db and Addon.db.global and Addon.db.global.X` or
+    `Addon.db.global.X or defaultValue` (when the default is in the
+    defaults table) is dead code that hides intent. Trust the DB API.
+    See section 2.6.
 
 ---
 

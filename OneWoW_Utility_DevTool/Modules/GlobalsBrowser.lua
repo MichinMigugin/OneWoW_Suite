@@ -681,7 +681,7 @@ function GB:ResetFilterState()
     self.treeFilterText = ""
     self.categoryFilter = CATEGORY_ALL
     self.favoritesOnly = false
-    self.includeNoisyRoots = Addon.db and Addon.db.globalsIncludeNoisyRoots and true or false
+    self.includeNoisyRoots = Addon.db.global.globalsIncludeNoisyRoots and true or false
     if self.indexBuilt then
         self:RebuildFiltered()
     else
@@ -725,9 +725,7 @@ end
 
 function GB:SetIncludeNoisyRoots(on)
     self.includeNoisyRoots = on and true or false
-    if Addon.db then
-        Addon.db.globalsIncludeNoisyRoots = self.includeNoisyRoots
-    end
+    Addon.db.global.globalsIncludeNoisyRoots = self.includeNoisyRoots
     self:RefreshIndex()
 end
 
@@ -741,23 +739,23 @@ end
 
 function GB:IsBookmarked(entry)
     local bookmarkKey = getBookmarkKey(entry)
-    if not bookmarkKey or not Addon.db or not Addon.db.globalsBookmarks then
+    if not bookmarkKey then
         return false
     end
-    return Addon.db.globalsBookmarks[bookmarkKey] and true or false
+    return Addon.db.global.globalsBookmarks[bookmarkKey] and true or false
 end
 
 function GB:ToggleBookmark(entry)
     local bookmarkKey = getBookmarkKey(entry)
-    if not bookmarkKey or not Addon.db then
+    local g = Addon.db.global
+    if not bookmarkKey then
         return nil
     end
-    Addon.db.globalsBookmarks = Addon.db.globalsBookmarks or {}
-    if Addon.db.globalsBookmarks[bookmarkKey] then
-        Addon.db.globalsBookmarks[bookmarkKey] = nil
+    if g.globalsBookmarks[bookmarkKey] then
+        g.globalsBookmarks[bookmarkKey] = nil
         return false
     end
-    Addon.db.globalsBookmarks[bookmarkKey] = true
+    g.globalsBookmarks[bookmarkKey] = true
     return true
 end
 

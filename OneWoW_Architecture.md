@@ -276,10 +276,6 @@ flowchart TB
 
 ## 9. Identified Issues
 
-### OneWoW_Bags — Off-Limits
-
-**Do not modify OneWoW_Bags.** Another developer is actively working on it. Exclude it from migration plans and theme consolidation. See `.cursor/rules/OneWoW-Bags-OffLimits.mdc`.
-
 ### TOC / Metadata
 
 - **OneWoW_Utility_Extractor** — Listed in OneWoW OptionalDeps but has no TOC in the repository. Status unknown (may exist elsewhere or be planned). Left as-is since OptionalDeps do not block loading.

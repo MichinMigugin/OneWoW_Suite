@@ -38,12 +38,17 @@ for _, v in ipairs(DB.ScopePriority) do
     VALID_SCOPES[v] = true
 end
 
+function OneWoW_GUI:GetCharacterKey(name, realm)
+    name = name or UnitName("player")
+    realm = realm or GetRealmName()
+    if not name or not realm or realm == "" then return nil end
+    return name .. "-" .. realm
+end
 
 local function BuildCharKey()
     local name = UnitName("player")
     local realm = GetRealmName()
-    if not name or not realm or realm == "" then return nil end
-    return name .. "-" .. realm
+    return OneWoW_GUI:GetCharacterKey(name, realm)
 end
 
 local function GetIdentityKeys()
@@ -611,10 +616,8 @@ function DB:NewCompat(savedVarName, defaults, useDefaultProfile)
     if not sv.char then sv.char = {} end
     if not sv.profileKeys then sv.profileKeys = {} end
 
-    local name = UnitName("player")
-    local realm = GetRealmName()
-    local charKey = (name and realm and realm ~= "") and (name .. " - " .. realm) or nil
-
+    local charKey = BuildCharKey()
+    
     if charKey then
         if not sv.char[charKey] then sv.char[charKey] = {} end
         if useDefaultProfile then sv.profileKeys[charKey] = "Default" end

@@ -272,7 +272,7 @@ function TextureAtlasBrowser:RebuildFiltered()
 
     local filter = self.filterText or ""
     local fav = self.favoritesOnly
-    local bookmarks = Addon.db and Addon.db.textureBookmarks
+    local bookmarks = Addon.db.global.textureBookmarks
 
     if self.viewMode == VIEW_TEXTURE then
         for _, e in ipairs(self.textureEntries) do

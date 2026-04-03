@@ -41,7 +41,7 @@ local function getDU()
 end
 
 local function getSavedSoundChannel()
-    local value = Addon.db and Addon.db.soundBrowserChannel
+    local value = Addon.db.global.soundBrowserChannel
     for _, channel in ipairs(SOUND_CHANNELS) do
         if value == channel then
             return channel
@@ -585,7 +585,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
 
     local toolbarBottom = -62
 
-    local savedListW = Addon.db and Addon.db.soundBrowserLeftPaneWidth
+    local savedListW = Addon.db.global.soundBrowserLeftPaneWidth
     local initListW = LEFT_DEFAULT
     if type(savedListW) == "number" and savedListW >= LEFT_MIN then
         initListW = savedListW
@@ -642,9 +642,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95,
         mainFrame = Addon.UI and Addon.UI.mainFrame,
         onWidthChanged = function(w)
-            if Addon.db then
-                Addon.db.soundBrowserLeftPaneWidth = w
-            end
+            Addon.db.global.soundBrowserLeftPaneWidth = w
         end,
     })
 
@@ -680,9 +678,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         end,
         onSelect = function(value)
             tab.soundChannelValue = value
-            if Addon.db then
-                Addon.db.soundBrowserChannel = value
-            end
+            Addon.db.global.soundBrowserChannel = value
             refreshChannelDropdownLabel(tab)
             Addon.UI.SoundTab_UpdateDetails(tab)
         end,

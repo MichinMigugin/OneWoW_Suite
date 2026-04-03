@@ -128,7 +128,7 @@ function Addon.UI:CreateMonitorTab(parent)
 
     local showOnLoadCheck = OneWoW_GUI:CreateCheckbox(tab, { label = L["MON_LABEL_SHOW_ON_LOAD"] })
     showOnLoadCheck:SetPoint("LEFT", cpuCheck.label, "RIGHT", 15, 0)
-    showOnLoadCheck:SetChecked(Addon.db and Addon.db.monitor and Addon.db.monitor.showOnLoad or false)
+    showOnLoadCheck:SetChecked(Addon.db.global.monitor.showOnLoad)
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     filterLabel:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -14)
@@ -775,9 +775,7 @@ function Addon.UI:CreateMonitorTab(parent)
     end)
 
     showOnLoadCheck:SetScript("OnClick", function(self)
-        if Addon.db and Addon.db.monitor then
-            Addon.db.monitor.showOnLoad = self:GetChecked() and true or false
-        end
+        Addon.db.global.monitor.showOnLoad = self:GetChecked() and true or false
     end)
 
     tab:SetScript("OnUpdate", function(self, elapsed)

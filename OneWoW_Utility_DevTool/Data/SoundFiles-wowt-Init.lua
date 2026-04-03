@@ -2,7 +2,7 @@
 -- https://wago.tools/
 local _, Addon = ...
 
-local dataVersion = { "12.0.5.66529", "12.0.5.66591" }
+local dataVersion = { "12.0.5.66529", "12.0.5.66591", "12.0.5.66741" }
 if not Addon.ValidateDataBuildGameBuild(dataVersion) then
 	return
 end
