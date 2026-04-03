@@ -29,6 +29,7 @@ flowchart TB
     subgraph Standalone [Standalone - OneWoW_GUI only]
         ShoppingList[OneWoW_ShoppingList]
         DirectDeposit[OneWoW_DirectDeposit]
+        Trackers[OneWoW_Trackers]
         DevTool[OneWoW_Utility_DevTool]
     end
 
@@ -48,8 +49,10 @@ flowchart TB
     QoL --> Notes
     GUI --> ShoppingList
     GUI --> DirectDeposit
+    GUI --> Trackers
     GUI --> DevTool
     GUI --> Bags
+    Notes -.-> Trackers
     Catalog --> CatalogData
     AltTracker --> AltTrackerData
 ```
@@ -66,6 +69,7 @@ flowchart TB
 | **OneWoW_Catalog** | OneWoW, OneWoW_QoL, OneWoW_GUI | (none) | No |
 | **OneWoW_Notes** | OneWoW, OneWoW_QoL, OneWoW_GUI | (none) | No |
 | **OneWoW_AltTracker** | OneWoW, OneWoW_QoL, OneWoW_GUI | (none) | No |
+| **OneWoW_Trackers** | OneWoW_GUI | OneWoW, OneWoW_Notes | Yes |
 | **OneWoW_ShoppingList** | OneWoW_GUI | OneWoW | Yes |
 | **OneWoW_DirectDeposit** | OneWoW_GUI | OneWoW | Yes |
 | **OneWoW_Bags** | (none) | OneWoW | Yes |
@@ -265,6 +269,8 @@ flowchart TB
 |------|-----|------|---------|
 | OneWoW_ShoppingList | OneWoW_Catalog | `_G.OneWoW_Catalog_TradeskillAPI` | Recipe callback when Catalog is loaded (ADDON_LOADED check) |
 | OneWoW | OneWoW_Bags | Integration | `OneWoW/Integrations/OneWoW_Bags.lua` |
+| OneWoW_Trackers | OneWoW_Notes | `_G.OneWoW_Trackers_API` | Tab injection: Trackers exposes API, Notes picks it up to add tracker sub-tab |
+| OneWoW_Trackers | OneWoW_Notes_DB | Migration | One-time data migration from Notes SavedVariables to Trackers own DB |
 
 ---
 
