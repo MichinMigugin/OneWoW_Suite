@@ -106,7 +106,7 @@ local function GenerateKey(prefix)
 end
 
 local function GetDB()
-    local addon = _G.OneWoW_Notes
+    local addon = _G.OneWoW_Trackers
     if not addon or not addon.db then return nil end
     return addon.db
 end
@@ -702,10 +702,10 @@ function TD:CheckResets()
     end
 
     if needsWeeklyReset then
-        print("|cFFFFD100OneWoW Notes:|r Tracker weekly progress has been reset.")
+        print("|cFFFFD100OneWoW Trackers:|r Tracker weekly progress has been reset.")
     end
     if needsDailyReset then
-        print("|cFFFFD100OneWoW Notes:|r Tracker daily progress has been reset.")
+        print("|cFFFFD100OneWoW Trackers:|r Tracker daily progress has been reset.")
     end
 end
 

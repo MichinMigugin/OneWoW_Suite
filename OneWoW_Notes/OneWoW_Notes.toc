@@ -38,11 +38,6 @@ Core\ItemsData.lua
 Core\ZonesData.lua
 Core\PlayersData.lua
 Core\NPCsData.lua
-Core\TrackerData.lua
-Core\TrackerEngine.lua
-Core\TrackerPresets.lua
-Core\TrackerMap.lua
-Core\TrackerMigration.lua
 
 # Main
 OneWoW_Notes.lua
@@ -58,12 +53,8 @@ UI\t-players.lua
 UI\t-npcs.lua
 UI\t-zones.lua
 UI\t-items.lua
-UI\t-tracker.lua
 UI\t-settings.lua
 
 # UI - Dialogs
 UI\ui-notes-dialogs.lua
 UI\ui-category-manager.lua
-UI\ui-tracker-editor.lua
-UI\ui-tracker-pinned.lua
-UI\ui-tracker-map.lua

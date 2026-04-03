@@ -1,0 +1,47 @@
+## Interface: 120001, 120005
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00Trackers|r
+## Version: R6.2604.0301
+## Notes: OneWoW Addon that: provides tracker lists, guides, dailies, weeklies, and todo tracking.
+## Author: MichinMuggin / Ricky
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+## SavedVariables: OneWoW_Trackers_DB
+## SavedVariablesPerCharacter: OneWoW_Trackers_CharDB
+## AddonCompartmentFunc: 1WoW_Trackers_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: 1WoW_Trackers_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: 1WoW_Trackers_OnAddonCompartmentLeave
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+## RequiredDeps: OneWoW_GUI
+## OptionalDeps: OneWoW, OneWoW_Notes
+## Category: OneWoW
+## Group: OneWoW
+
+# Libs
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+
+# Locales
+Locales\LocaleManager.lua
+Locales\enUS.lua
+Locales\koKR.lua
+
+# Core
+Core\Constants.lua
+Core\Database.lua
+Core\TrackerData.lua
+Core\TrackerEngine.lua
+Core\TrackerPresets.lua
+Core\TrackerMap.lua
+Core\TrackerMigration.lua
+
+# Main
+OneWoW_Trackers.lua
+
+# UI
+UI\MainFrame.lua
+UI\t-tracker.lua
+UI\ui-tracker-editor.lua
+UI\ui-tracker-pinned.lua
+UI\ui-tracker-map.lua

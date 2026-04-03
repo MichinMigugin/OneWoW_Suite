@@ -468,7 +468,7 @@ function TP:LoadBundledContent()
     local TD = ns.TrackerData
     if not TD then return end
 
-    local db = _G.OneWoW_Notes and _G.OneWoW_Notes.db
+    local db = _G.OneWoW_Trackers and _G.OneWoW_Trackers.db
     if not db then return end
 
     db.global.trackerBundledVersions = db.global.trackerBundledVersions or {}
@@ -509,7 +509,7 @@ function TP:LoadBundledContent()
 end
 
 function TP:OnBundledDeleted(bundledID)
-    local db = _G.OneWoW_Notes and _G.OneWoW_Notes.db
+    local db = _G.OneWoW_Trackers and _G.OneWoW_Trackers.db
     if not db then return end
 
     db.global.trackerBundledDeleted = db.global.trackerBundledDeleted or {}
@@ -517,7 +517,7 @@ function TP:OnBundledDeleted(bundledID)
 end
 
 function TP:RestoreBundledContent()
-    local db = _G.OneWoW_Notes and _G.OneWoW_Notes.db
+    local db = _G.OneWoW_Trackers and _G.OneWoW_Trackers.db
     if not db then return end
 
     db.global.trackerBundledVersions = {}

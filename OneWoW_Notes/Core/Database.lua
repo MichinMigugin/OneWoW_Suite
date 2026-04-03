@@ -27,11 +27,6 @@ ns.DatabaseDefaults = {
         npcCustomCategories   = {},
         notePinPositions      = {},
         zonePinPositions      = {},
-        trackerLists          = {},
-        trackerBundledVersions = {},
-        trackerGlobalProgress = {},
-        guidesRoutinesCleanedUp = false,
-        sortCompletedTasks    = false,
         tabSortPrefs = {
             notes   = { by = "modified", ascending = false },
             npcs    = { by = "name",     ascending = true  },
@@ -47,10 +42,5 @@ ns.DatabaseDefaults = {
         zones         = {},
         players       = {},
         npcs          = {},
-        trackerProgress = {},
-        trackerDashboard = {},
-        trackerActiveList = nil,
-        trackerLastWeeklyReset = 0,
-        trackerLastDailyReset = 0,
     },
 }

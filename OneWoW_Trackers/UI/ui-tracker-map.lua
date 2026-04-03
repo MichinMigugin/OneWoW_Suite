@@ -71,7 +71,7 @@ function TMU:ShowWaypointList(listID)
     end
 
     if #waypoints == 0 then
-        print("|cFFFFD100OneWoW Notes:|r No waypoints found in this list.")
+        print("|cFFFFD100OneWoW Trackers:|r No waypoints found in this list.")
         return
     end
 

@@ -120,7 +120,7 @@ function TM:MigrateGuide(oldGuide)
     local TD = ns.TrackerData
     if not TD then return nil end
 
-    local db = _G.OneWoW_Notes and _G.OneWoW_Notes.db
+    local db = _G.OneWoW_Trackers and _G.OneWoW_Trackers.db
     if not db then return nil end
     db.global.trackerLists = db.global.trackerLists or {}
 
@@ -213,7 +213,7 @@ function TM:MigrateRoutine(oldRoutine)
     local TD = ns.TrackerData
     if not TD then return nil end
 
-    local db = _G.OneWoW_Notes and _G.OneWoW_Notes.db
+    local db = _G.OneWoW_Trackers and _G.OneWoW_Trackers.db
     if not db then return nil end
     db.global.trackerLists = db.global.trackerLists or {}
 
@@ -322,7 +322,7 @@ function TM:MigrateRoutine(oldRoutine)
 end
 
 function TM:MigrateAll()
-    local db = _G.OneWoW_Notes and _G.OneWoW_Notes.db
+    local db = _G.OneWoW_Trackers and _G.OneWoW_Trackers.db
     if not db then return 0, 0 end
 
     if db.global.guidesRoutinesCleanedUp then
@@ -373,7 +373,7 @@ function TM:MigrateAll()
         end
 
         if guideCount > 0 or routineCount > 0 then
-            print(format("|cFFFFD100OneWoW Notes:|r Migrated %d guides and %d routines to the Tracker system.", guideCount, routineCount))
+            print(format("|cFFFFD100OneWoW Trackers:|r Migrated %d guides and %d routines to the Tracker system.", guideCount, routineCount))
         end
     end
 

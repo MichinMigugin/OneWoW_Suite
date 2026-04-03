@@ -722,7 +722,7 @@ end
 
 local function EnsureEventFrame()
     if not eventFrame then
-        eventFrame = CreateFrame("Frame", "OneWoW_Notes_TrackerEngineFrame", UIParent)
+        eventFrame = CreateFrame("Frame", "OneWoW_Trackers_EngineFrame", UIParent)
         eventFrame:Hide()
     end
     return eventFrame

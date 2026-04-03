@@ -18,19 +18,30 @@ local function RegisterWithOneWoW()
     if not _G.OneWoW then return false end
     if not _G.OneWoW.RegisterModule then return false end
 
+    local tabs = {
+        { name = "notes",   displayName = function() return ns.L["TAB_NOTES"]   or "Notes"   end, create = function(p) ns.UI.CreateNotesTab(p) end },
+        { name = "players", displayName = function() return ns.L["TAB_PLAYERS"] or "Players" end, create = function(p) ns.UI.CreatePlayersTab(p) end },
+        { name = "npcs",    displayName = function() return ns.L["TAB_NPCS"]    or "NPCs"    end, create = function(p) ns.UI.CreateNPCsTab(p) end },
+        { name = "zones",   displayName = function() return ns.L["TAB_ZONES"]   or "Zones"   end, create = function(p) ns.UI.CreateZonesTab(p) end },
+        { name = "items",   displayName = function() return ns.L["TAB_ITEMS"]   or "Items"   end, create = function(p) ns.UI.CreateItemsTab(p) end },
+    }
+
+    local trackersAPI = _G.OneWoW_Trackers_API
+    if trackersAPI then
+        local tabInfo = trackersAPI.GetTabInfo()
+        table.insert(tabs, {
+            name = tabInfo.name,
+            displayName = tabInfo.displayName,
+            create = function(p) trackersAPI.CreateTrackerTab(p) end,
+        })
+    end
+
     _G.OneWoW:RegisterModule({
         name = "notes",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "Notes" end,
         addonName = "OneWoW_Notes",
         order = 1,
-        tabs = {
-            { name = "notes",   displayName = function() return ns.L["TAB_NOTES"]   or "Notes"   end, create = function(p) ns.UI.CreateNotesTab(p) end },
-            { name = "players", displayName = function() return ns.L["TAB_PLAYERS"] or "Players" end, create = function(p) ns.UI.CreatePlayersTab(p) end },
-            { name = "npcs",    displayName = function() return ns.L["TAB_NPCS"]    or "NPCs"    end, create = function(p) ns.UI.CreateNPCsTab(p) end },
-            { name = "zones",   displayName = function() return ns.L["TAB_ZONES"]   or "Zones"   end, create = function(p) ns.UI.CreateZonesTab(p) end },
-            { name = "items",   displayName = function() return ns.L["TAB_ITEMS"]   or "Items"   end, create = function(p) ns.UI.CreateItemsTab(p) end },
-            { name = "tracker", displayName = function() return ns.L["TAB_TRACKER"] or "Tracker" end, create = function(p) ns.UI.CreateTrackerTab(p) end },
-        },
+        tabs = tabs,
     })
     _G.OneWoW:RegisterSettingsPanel({
         name        = "notes",
@@ -63,9 +74,6 @@ local function OnInitialize()
         if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
             ns.ZonePins:RefreshSyncPins()
         end
-        if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
-            ns.TrackerEngine:RefreshAllPinnedWindows()
-        end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", addon, function(self2)
         if ns.ApplyLanguage then ns.ApplyLanguage() end
@@ -76,9 +84,6 @@ local function OnInitialize()
         end
         if ns.ZonePins and ns.ZonePins.RefreshAllPinFonts then
             ns.ZonePins:RefreshAllPinFonts()
-        end
-        if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
-            ns.TrackerEngine:RefreshAllPinnedWindows()
         end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", addon, function(owner, hidden)
@@ -108,9 +113,6 @@ function addon:ApplyTheme()
     end
     if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
         ns.ZonePins:RefreshSyncPins()
-    end
-    if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
-        ns.TrackerEngine:RefreshAllPinnedWindows()
     end
 end
 
@@ -186,21 +188,6 @@ local function OnEnable()
         addon.NotesData = ns.NotesData
     end
 
-    if ns.TrackerEngine and ns.TrackerEngine.Initialize then
-        ns.TrackerEngine:Initialize()
-    end
-
-    if ns.TrackerMigration and ns.TrackerMigration.MigrateAll then
-        ns.TrackerMigration:MigrateAll()
-    end
-
-    if ns.TrackerPresets and ns.TrackerPresets.LoadBundledContent then
-        ns.TrackerPresets:LoadBundledContent()
-    end
-
-    if ns.TrackerMapUI and ns.TrackerMapUI.Initialize then
-        ns.TrackerMapUI:Initialize()
-    end
 end
 
 local function OnPlayerEnteringWorld(isInitialLogin, isReloading)
