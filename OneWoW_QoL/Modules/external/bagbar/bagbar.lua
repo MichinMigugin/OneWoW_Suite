@@ -133,6 +133,7 @@ function BagBarModule:OnDisable()
             b.owb_itemID = nil
             b.owb_bag = nil
             b.owb_slot = nil
+            b.owb_itemLink = nil
             b:SetAttribute("type1", nil)
             b:SetAttribute("item1", nil)
         end
@@ -153,6 +154,7 @@ local function ClearBagBarButton(button)
     button.owb_itemID = nil
     button.owb_bag = nil
     button.owb_slot = nil
+    button.owb_itemLink = nil
     button:SetAttribute("type1", nil)
     button:SetAttribute("item1", nil)
     if button.icon then button.icon:SetTexture(nil) end
@@ -282,7 +284,7 @@ function BagBarModule:CreateButton(index)
     button:SetScript("OnEnter", function(self)
         if not self.owb_itemID or not self.owb_bag or not self.owb_slot then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetBagItem(self.owb_bag, self.owb_slot)
+        GameTooltip:SetHyperlink(self.owb_itemLink or ("item:" .. self.owb_itemID))
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(ns.L["BAGBAR_LEFT_CLICK_TO_USE"], 1, 1, 1)
         GameTooltip:AddLine(ns.L["BAGBAR_SHIFT_RIGHT_CLICK_TO_SKIP"], 0.7, 0.7, 0.7)
@@ -503,6 +505,7 @@ function BagBarModule:UpdateBar()
             b.owb_itemID = item.itemID
             b.owb_bag = item.bag
             b.owb_slot = item.slot
+            b.owb_itemLink = item.itemLink
             b:SetAttribute("type1", "item")
             b:SetAttribute("item1", "item:" .. item.itemID)
             b.icon:SetTexture(item.iconFileID)
