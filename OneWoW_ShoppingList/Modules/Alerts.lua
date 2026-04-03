@@ -21,7 +21,7 @@ local function ShowAlert(itemID, itemName, alertType)
         end
     end
 
-    print(string.format("|cFFFFD100OneWoW Shopping List:|r %s: |cFFFFFFFF%s|r (%d/%d)", L["OWSL_ALERT_TITLE"], itemName or tostring(itemID), status.totalOwned, status.needed))
+    print(string.format("%s %s: |cFFFFFFFF%s|r (%d/%d)", L["ADDON_CHAT_PREFIX"], L["OWSL_ALERT_TITLE"], itemName or tostring(itemID), status.totalOwned, status.needed))
 end
 
 local function HandleBagUpdate()
@@ -71,7 +71,7 @@ local function HandleAHShow()
     end
 end
 
-function GetDB()
+local function GetDB()
     return OneWoW_ShoppingList_DB
 end
 

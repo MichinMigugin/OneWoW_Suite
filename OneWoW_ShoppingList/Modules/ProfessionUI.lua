@@ -27,7 +27,7 @@ local function AddIngredientsToList(listName, recipeID, quantity)
 
     local schematic = C_TradeSkillUI.GetRecipeSchematic(recipeID, false)
     if not schematic or not schematic.reagentSlotSchematics then
-        print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_NO_INGREDIENTS"])
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_NO_INGREDIENTS"])
         return false
     end
 
@@ -43,7 +43,7 @@ local function AddIngredientsToList(listName, recipeID, quantity)
     end
 
     if #ingredients == 0 then
-        print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_NO_INGREDIENTS"])
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_NO_INGREDIENTS"])
         return false
     end
 
@@ -107,15 +107,15 @@ local function CreateButtons(schematicForm)
 
         local db = GetDB()
         if db and db.global.shoppingLists.lists[listName] then
-            print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_CONFIRM_LIST_EXISTS"], listName))
-            print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_CONFIRM_LIST_EXISTS2"])
+            print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_CONFIRM_LIST_EXISTS"], listName))
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_CONFIRM_LIST_EXISTS2"])
         else
             ns.ShoppingList:CreateList(listName)
         end
 
         local ok, count = AddIngredientsToList(listName, recipeID, 1)
         if ok then
-            print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], listName, count, count ~= 1 and "s" or "", ""))
+            print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], listName, count, count ~= 1 and "s" or "", ""))
         end
     end)
 
@@ -154,7 +154,7 @@ local function CreateButtons(schematicForm)
         local activeList = db.global.shoppingLists.defaultList or db.global.shoppingLists.activeList or ns.MAIN_LIST_KEY
         local ok, count = AddIngredientsToList(activeList, recipeID, 1)
         if ok then
-            print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], activeList, count, count ~= 1 and "s" or "", ""))
+            print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], activeList, count, count ~= 1 and "s" or "", ""))
         end
     end)
 
@@ -198,7 +198,7 @@ local function CreateButtons(schematicForm)
                 rootDescription:CreateButton(listName, function()
                     local ok, count = AddIngredientsToList(capturedName, recipeID, 1)
                     if ok then
-                        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], capturedName, count, count ~= 1 and "s" or "", ""))
+                        print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], capturedName, count, count ~= 1 and "s" or "", ""))
                     end
                 end)
             end

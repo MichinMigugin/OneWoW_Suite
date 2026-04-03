@@ -4,26 +4,17 @@ local L = ns.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER
-local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
-local backdrop = {
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = false,
-    edgeSize = 12,
-    insets = { left = 2, right = 2, top = 2, bottom = 2 }
-}
 
 ns.MainWindow = {}
 local MainWindow = ns.MainWindow
 
 local C = ns.Constants
 
-local POOL_SIZE     = 32
-local listRowPool   = {}
-local itemRows      = {}
+local POOL_SIZE   = 32
+local listRowPool = {}
+local itemRows    = {}
+local expandedItems = {}
 
 local mainFrame
 local sidebarPanel
@@ -33,9 +24,9 @@ local searchBox
 local searchAltsBtn
 local currentListLabel
 local statusLabel
-local searchFilter    = ""
-local searchAltsOn    = false
-local inSettingsView  = false
+local searchFilter   = ""
+local searchAltsOn   = false
+local inSettingsView = false
 local contentHeaderFrame
 local addButtonRowFrame
 
@@ -59,7 +50,7 @@ end
 local function CreateListRow(parent)
     local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
     row:SetHeight(32)
-    row:SetBackdrop(BACKDROP_INNER)
+    row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
@@ -92,21 +83,21 @@ local function CreateListRow(parent)
     end)
     row.deleteBtn:Hide()
 
-    row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    row.nameText:SetPoint("LEFT", row, "LEFT", 24, 0)
+    row.nameText = OneWoW_GUI:CreateFS(row, 12)
+    row.nameText:SetPoint("LEFT",  row, "LEFT",  24, 0)
     row.nameText:SetPoint("RIGHT", row, "RIGHT", -48, 0)
     row.nameText:SetJustifyH("LEFT")
     row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    row.countText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.countText = OneWoW_GUI:CreateFS(row, 10)
     row.countText:SetPoint("RIGHT", row, "RIGHT", -18, 0)
     row.countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     row.selectedBar = row:CreateTexture(nil, "ARTWORK")
     row.selectedBar:SetWidth(3)
-    row.selectedBar:SetPoint("LEFT",        row, "LEFT",        0, 0)
-    row.selectedBar:SetPoint("TOP",         row, "TOP",         0, 0)
-    row.selectedBar:SetPoint("BOTTOM",      row, "BOTTOM",      0, 0)
+    row.selectedBar:SetPoint("LEFT",   row, "LEFT",   0, 0)
+    row.selectedBar:SetPoint("TOP",    row, "TOP",    0, 0)
+    row.selectedBar:SetPoint("BOTTOM", row, "BOTTOM", 0, 0)
     row.selectedBar:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     row.selectedBar:Hide()
 
@@ -125,12 +116,11 @@ local function CreateListRow(parent)
     return row
 end
 
-
 local function ConfigureListRow(row, listName, isSelected, isDefault, childCount, craftOrderCount)
     row:Show()
-    row.data.listName    = listName
-    row.data.isSelected  = isSelected
-    row.data.isDefault   = isDefault
+    row.data.listName   = listName
+    row.data.isSelected = isSelected
+    row.data.isDefault  = isDefault
 
     local list = ns.ShoppingList:GetList(listName)
     local displayName = listName
@@ -180,8 +170,14 @@ end
 function MainWindow:Create()
     if mainFrame then return end
 
-    mainFrame = CreateFrame("Frame", "OneWoW_ShoppingList_MainFrame", UIParent, "BackdropTemplate")
-    mainFrame:SetSize(C.GUI.WINDOW_WIDTH, C.GUI.WINDOW_HEIGHT)
+    mainFrame = OneWoW_GUI:CreateFrame(UIParent, {
+        name     = "OneWoW_ShoppingList_MainFrame",
+        width    = C.GUI.WINDOW_WIDTH,
+        height   = C.GUI.WINDOW_HEIGHT,
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
+    mainFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    mainFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     if not OneWoW_GUI:RestoreWindowPosition(mainFrame, GetDB().global.mainFramePosition or {}) then
         mainFrame:SetPoint("CENTER")
     end
@@ -193,14 +189,6 @@ function MainWindow:Create()
     mainFrame:RegisterForDrag("LeftButton")
     mainFrame:SetScript("OnDragStart", function(self) self:StartMoving() end)
     mainFrame:SetScript("OnDragStop",  function(self) self:StopMovingOrSizing() end)
-    mainFrame:SetBackdrop({
-        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile     = true, tileEdge = true, tileSize = 16, edgeSize = 14,
-        insets   = { left = 3, right = 3, top = 3, bottom = 3 },
-    })
-    mainFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    mainFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     mainFrame:SetScript("OnHide", function()
         local db = GetDB().global
         db.mainFramePosition = db.mainFramePosition or {}
@@ -210,117 +198,58 @@ function MainWindow:Create()
 
     tinsert(UISpecialFrames, "OneWoW_ShoppingList_MainFrame")
 
-    local titleBar = CreateFrame("Frame", nil, mainFrame, "BackdropTemplate")
-    titleBar:SetHeight(20)
-    titleBar:SetPoint("TOPLEFT",  mainFrame, "TOPLEFT",  4, -4)
-    titleBar:SetPoint("TOPRIGHT", mainFrame, "TOPRIGHT", -4, -4)
-    titleBar:SetBackdrop(BACKDROP_SIMPLE)
-    titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
-    titleBar:SetFrameLevel(mainFrame:GetFrameLevel() + 1)
+    local titleBar = OneWoW_GUI:CreateTitleBar(mainFrame, {
+        title     = L["OWSL_WINDOW_TITLE"],
+        showBrand = true,
+        onClose   = function() mainFrame:Hide() end,
+    })
     titleBar:EnableMouse(true)
     titleBar:RegisterForDrag("LeftButton")
     titleBar:SetScript("OnDragStart", function() mainFrame:StartMoving() end)
     titleBar:SetScript("OnDragStop",  function() mainFrame:StopMovingOrSizing() end)
 
-    local brandIcon = titleBar:CreateTexture(nil, "OVERLAY")
-    brandIcon:SetSize(14, 14)
-    brandIcon:SetPoint("LEFT", titleBar, "LEFT", 8, 0)
-    brandIcon:SetAtlas("Perks-ShoppingCart")
-
-    local brandText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
-    brandText:SetText("OneWoW")
-    brandText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
-    titleText:SetText(L["OWSL_WINDOW_TITLE"])
-    titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local closeBtn = OneWoW_GUI:CreateButton(titleBar, { text = "X", width = 20, height = 20 })
-    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -4, 0)
-    closeBtn:SetScript("OnClick", function() mainFrame:Hide() end)
-
-    local settingsToggleBtn = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
-    settingsToggleBtn:SetSize(70, 16)
-    settingsToggleBtn:SetPoint("RIGHT", closeBtn, "LEFT", -6, 0)
-    settingsToggleBtn:SetBackdrop(BACKDROP_INNER)
-    settingsToggleBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    settingsToggleBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    local settingsBtnLabel = settingsToggleBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    settingsBtnLabel:SetPoint("CENTER")
-    settingsBtnLabel:SetText(L["OWSL_BTN_SETTINGS"])
-    settingsBtnLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    settingsToggleBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        settingsBtnLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(L["OWSL_BTN_SETTINGS"], 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    settingsToggleBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        settingsBtnLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        GameTooltip:Hide()
-    end)
-    settingsToggleBtn:SetScript("OnClick", function()
-        MainWindow:ToggleSettings()
-    end)
+    local settingsToggleBtn = OneWoW_GUI:CreateFitTextButton(titleBar, { text = L["OWSL_BTN_SETTINGS"], height = 16 })
+    settingsToggleBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -6, 0)
+    settingsToggleBtn:SetScript("OnClick", function() MainWindow:ToggleSettings() end)
 
     local sidebarW = C.GUI.SIDEBAR_WIDTH
     local dividerX = sidebarW + 4
 
     local divider = mainFrame:CreateTexture(nil, "ARTWORK")
     divider:SetWidth(1)
-    divider:SetPoint("TOP",    mainFrame, "TOPLEFT",  dividerX, -28)
-    divider:SetPoint("BOTTOM", mainFrame, "BOTTOMLEFT", dividerX, 4)
+    divider:SetPoint("TOP",    mainFrame, "TOPLEFT",    dividerX, -28)
+    divider:SetPoint("BOTTOM", mainFrame, "BOTTOMLEFT", dividerX,   4)
     divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     sidebarPanel = CreateFrame("Frame", nil, mainFrame)
-    sidebarPanel:SetPoint("TOPLEFT",     mainFrame, "TOPLEFT",     4,  -28)
-    sidebarPanel:SetPoint("BOTTOMLEFT",  mainFrame, "BOTTOMLEFT",  4,  4)
+    sidebarPanel:SetPoint("TOPLEFT",    mainFrame, "TOPLEFT",    4,  -28)
+    sidebarPanel:SetPoint("BOTTOMLEFT", mainFrame, "BOTTOMLEFT", 4,    4)
     sidebarPanel:SetWidth(sidebarW)
 
-    local sidebarHeader = CreateFrame("Frame", nil, sidebarPanel, "BackdropTemplate")
+    local sidebarHeader = OneWoW_GUI:CreateFrame(sidebarPanel, {
+        bgColor     = "BG_SECONDARY",
+        borderColor = "BORDER_SUBTLE",
+    })
     sidebarHeader:SetHeight(30)
     sidebarHeader:SetPoint("TOPLEFT",  sidebarPanel, "TOPLEFT",  0, 0)
     sidebarHeader:SetPoint("TOPRIGHT", sidebarPanel, "TOPRIGHT", 0, 0)
-    sidebarHeader:SetBackdrop(BACKDROP_INNER)
-    sidebarHeader:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    sidebarHeader:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local sidebarTitle = sidebarHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local sidebarTitle = OneWoW_GUI:CreateFS(sidebarHeader, 12)
     sidebarTitle:SetPoint("LEFT", sidebarHeader, "LEFT", 8, 0)
     sidebarTitle:SetText(L["OWSL_SIDEBAR_TITLE"])
     sidebarTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local newListBtn = CreateFrame("Button", nil, sidebarHeader, "BackdropTemplate")
-    newListBtn:SetSize(76, 22)
+    local newListBtn = OneWoW_GUI:CreateFitTextButton(sidebarHeader, { text = L["OWSL_BTN_NEW_LIST"], height = 22 })
     newListBtn:SetPoint("RIGHT", sidebarHeader, "RIGHT", -4, 0)
-    newListBtn:SetBackdrop(BACKDROP_INNER)
-    newListBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    newListBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    newListBtn.text = newListBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    newListBtn.text:SetPoint("CENTER")
-    newListBtn.text:SetText(L["OWSL_BTN_NEW_LIST"])
-    newListBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    newListBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    end)
-    newListBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    end)
     newListBtn:SetScript("OnClick", function()
         ns.Dialogs:InputDialog(L["OWSL_DIALOG_NEW_LIST"], "", function(name)
             if name == "" then
-                print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ENTER_LIST_NAME"])
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ENTER_LIST_NAME"])
                 return
             end
             local ok, err = ns.ShoppingList:CreateList(name)
             if not ok then
-                print("|cFFFFD100OneWoW Shopping List:|r " .. (err or ""))
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. (err or ""))
             else
                 ns.ShoppingList:SetActiveList(name)
                 MainWindow:RefreshSidebar()
@@ -329,53 +258,46 @@ function MainWindow:Create()
         end, mainFrame)
     end)
 
-    local sidebarScroll = ns.GUI:CreateScrollArea(
-        sidebarPanel, "OWSL_SidebarScroll",
-        0, 0, -30, 0
-    )
-    sidebarPanel.scrollArea = sidebarScroll
+    local sidebarScrollContainer = CreateFrame("Frame", nil, sidebarPanel)
+    sidebarScrollContainer:SetPoint("TOPLEFT",     sidebarPanel, "TOPLEFT",     0, -30)
+    sidebarScrollContainer:SetPoint("BOTTOMRIGHT", sidebarPanel, "BOTTOMRIGHT", 0,   0)
+
+    local sidebarScrollFrame, sidebarScrollContent = OneWoW_GUI:CreateScrollFrame(sidebarScrollContainer, {})
+    sidebarPanel.scrollFrame   = sidebarScrollFrame
+    sidebarPanel.scrollContent = sidebarScrollContent
 
     for i = 1, POOL_SIZE do
-        listRowPool[i] = CreateListRow(sidebarScroll.scrollContent)
+        listRowPool[i] = CreateListRow(sidebarScrollContent)
     end
 
     contentPanel = CreateFrame("Frame", nil, mainFrame)
     contentPanel:SetPoint("TOPLEFT",     mainFrame, "TOPLEFT",     dividerX + 1, -28)
     contentPanel:SetPoint("BOTTOMRIGHT", mainFrame, "BOTTOMRIGHT", -4, 4)
 
-    local contentHeader = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
+    local contentHeader = OneWoW_GUI:CreateFrame(contentPanel, {
+        bgColor     = "BG_SECONDARY",
+        borderColor = "BORDER_SUBTLE",
+    })
     contentHeader:SetHeight(34)
     contentHeader:SetPoint("TOPLEFT",  contentPanel, "TOPLEFT",  0, 0)
     contentHeader:SetPoint("TOPRIGHT", contentPanel, "TOPRIGHT", 0, 0)
-    contentHeader:SetBackdrop(BACKDROP_INNER)
-    contentHeader:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    contentHeader:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    currentListLabel = contentHeader:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    currentListLabel = OneWoW_GUI:CreateFS(contentHeader, 12)
     currentListLabel:SetPoint("LEFT", contentHeader, "LEFT", 8, 0)
     currentListLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
     local btnRight = -4
-    local importBtn = CreateFrame("Button", nil, contentHeader, "BackdropTemplate")
-    importBtn:SetSize(60, 22)
+
+    local importBtn = OneWoW_GUI:CreateFitTextButton(contentHeader, { text = L["OWSL_BTN_IMPORT"], height = 22 })
     importBtn:SetPoint("RIGHT", contentHeader, "RIGHT", btnRight, 0)
-    importBtn:SetBackdrop(BACKDROP_INNER)
-    importBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    importBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    importBtn.text = importBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    importBtn.text:SetPoint("CENTER")
-    importBtn.text:SetText(L["OWSL_BTN_IMPORT"])
-    importBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    importBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER")) self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end)
-    importBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL")) self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end)
     importBtn:SetScript("OnClick", function()
         ns.Dialogs:ImportDialog(function(text)
             local activeList = ns.ShoppingList:GetActiveListName()
             local ok, count, nameOnly = ns.ShoppingList:ImportTextFormat(text, activeList)
             if ok then
-                print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_IMPORTED_SUMMARY"], count - (nameOnly or 0), nameOnly or 0))
+                print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_IMPORTED_SUMMARY"], count - (nameOnly or 0), nameOnly or 0))
                 if nameOnly and nameOnly > 0 then
-                    print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ADDED_BY_NAME_NOTE"], nameOnly))
+                    print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_BY_NAME_NOTE"], nameOnly))
                 end
                 MainWindow:RefreshItemList()
                 if nameOnly and nameOnly > 0 then
@@ -385,22 +307,14 @@ function MainWindow:Create()
                     end)
                 end
             else
-                print("|cFFFFD100OneWoW Shopping List:|r " .. (count or L["OWSL_MSG_NO_VALID_ITEMS"]))
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. (count or L["OWSL_MSG_NO_VALID_ITEMS"]))
             end
         end, mainFrame)
     end)
-    btnRight = btnRight - 64
+    btnRight = btnRight - importBtn:GetWidth() - 4
 
-    local scanBtn = CreateFrame("Button", nil, contentHeader, "BackdropTemplate")
-    scanBtn:SetSize(70, 22)
-    scanBtn:SetPoint("RIGHT", contentHeader, "RIGHT", btnRight, 0)
-    scanBtn:SetBackdrop(BACKDROP_INNER)
-    scanBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    scanBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    scanBtn.text = scanBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    scanBtn.text:SetPoint("CENTER")
-    scanBtn.text:SetText(L["OWSL_BTN_SCAN_ALL"])
-    scanBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local scanBtn = OneWoW_GUI:CreateFitTextButton(contentHeader, { text = L["OWSL_BTN_SCAN_ALL"], height = 22 })
+    scanBtn:SetPoint("RIGHT", importBtn, "LEFT", -4, 0)
     scanBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -421,12 +335,15 @@ function MainWindow:Create()
         ns.ShoppingList:ScanUnresolvedItems(activeList)
         MainWindow:RefreshItemList()
     end)
-    btnRight = btnRight - 74
 
-    searchAltsBtn = CreateFrame("CheckButton", nil, contentHeader, "UICheckButtonTemplate")
-    searchAltsBtn:SetSize(18, 18)
-    searchAltsBtn:SetPoint("RIGHT", contentHeader, "RIGHT", btnRight, 0)
+    searchAltsBtn = OneWoW_GUI:CreateCheckbox(contentHeader, {})
+    searchAltsBtn:SetPoint("RIGHT", scanBtn, "LEFT", -24, 0)
     searchAltsBtn:SetChecked(searchAltsOn)
+    if searchAltsBtn.label then
+        searchAltsBtn.label:ClearAllPoints()
+        searchAltsBtn.label:SetPoint("RIGHT", searchAltsBtn, "LEFT", -2, 0)
+        searchAltsBtn.label:SetText(L["OWSL_LABEL_SEARCH_ALTS"])
+    end
     searchAltsBtn:SetScript("OnClick", function(self)
         searchAltsOn = self:GetChecked()
         local activeList = ns.ShoppingList:GetActiveListName()
@@ -441,15 +358,9 @@ function MainWindow:Create()
         GameTooltip:Show()
     end)
     searchAltsBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    btnRight = btnRight - 22
-
-    local altLabel = contentHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    altLabel:SetPoint("RIGHT", searchAltsBtn, "LEFT", -2, 0)
-    altLabel:SetText(L["OWSL_LABEL_SEARCH_ALTS"])
-    altLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     searchBox = OneWoW_GUI:CreateEditBox(contentHeader, { name = "OWSL_SearchBox", width = 120, height = 22 })
-    searchBox:SetPoint("RIGHT", altLabel, "LEFT", -8, 0)
+    searchBox:SetPoint("RIGHT", searchAltsBtn.label or searchAltsBtn, "LEFT", -6, 0)
     searchBox:SetScript("OnTextChanged", function(self, userInput)
         if userInput then
             searchFilter = self:GetText():lower()
@@ -457,60 +368,30 @@ function MainWindow:Create()
         end
     end)
 
-    local searchLabel = contentHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local searchLabel = OneWoW_GUI:CreateFS(contentHeader, 10)
     searchLabel:SetPoint("RIGHT", searchBox, "LEFT", -4, 0)
     searchLabel:SetText(L["OWSL_LABEL_SEARCH"])
     searchLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     contentHeaderFrame = contentHeader
 
-    local addButtonRow = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
+    local addButtonRow = OneWoW_GUI:CreateFrame(contentPanel, {
+        bgColor     = "BG_SECONDARY",
+        borderColor = "BORDER_SUBTLE",
+    })
     addButtonRow:SetHeight(32)
     addButtonRow:SetPoint("BOTTOMLEFT",  contentPanel, "BOTTOMLEFT",  0, 0)
     addButtonRow:SetPoint("BOTTOMRIGHT", contentPanel, "BOTTOMRIGHT", 0, 0)
-    addButtonRow:SetBackdrop(BACKDROP_INNER)
-    addButtonRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    addButtonRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     addButtonRowFrame = addButtonRow
 
-    statusLabel = addButtonRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    statusLabel = OneWoW_GUI:CreateFS(addButtonRow, 10)
     statusLabel:SetPoint("LEFT", addButtonRow, "LEFT", 8, 0)
     statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local dragBtn = CreateFrame("Button", nil, addButtonRow, "BackdropTemplate")
-    dragBtn:SetSize(110, 24)
+    local dragBtn = OneWoW_GUI:CreateFitTextButton(addButtonRow, { text = L["OWSL_BTN_DRAG_ITEM"], height = 24 })
     dragBtn:SetPoint("RIGHT", addButtonRow, "RIGHT", -4, 0)
-    dragBtn:SetBackdrop(BACKDROP_INNER)
-    dragBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    dragBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    dragBtn.text = dragBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    dragBtn.text:SetPoint("CENTER")
-    dragBtn.text:SetText(L["OWSL_BTN_DRAG_ITEM"])
-    dragBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    dragBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    end)
-    dragBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    end)
-
-    dragBtn:SetScript("OnReceiveDrag", function()
-        local dragType, id = GetCursorInfo()
-        if dragType == "item" then
-            ClearCursor()
-            local activeList = ns.ShoppingList:GetActiveListName()
-            local ok, err = ns.ShoppingList:AddItemToList(activeList, id, 1)
-            if ok then
-                local name = C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
-                print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
-                MainWindow:RefreshItemList()
-            end
-        end
-    end)
-    dragBtn:SetScript("OnClick", function()
+    local function HandleDrop()
         local dragType, id = GetCursorInfo()
         if dragType == "item" then
             ClearCursor()
@@ -518,223 +399,94 @@ function MainWindow:Create()
             local ok = ns.ShoppingList:AddItemToList(activeList, id, 1)
             if ok then
                 local name = C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
-                print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
+                print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
                 MainWindow:RefreshItemList()
             end
         end
-    end)
+    end
 
-    local addByIdBtn = CreateFrame("Button", nil, addButtonRow, "BackdropTemplate")
-    addByIdBtn:SetSize(80, 24)
+    dragBtn:SetScript("OnReceiveDrag", HandleDrop)
+    dragBtn:SetScript("OnClick",       HandleDrop)
+
+    local addByIdBtn = OneWoW_GUI:CreateFitTextButton(addButtonRow, { text = L["OWSL_BTN_ADD_BY_ID"], height = 24 })
     addByIdBtn:SetPoint("RIGHT", dragBtn, "LEFT", -4, 0)
-    addByIdBtn:SetBackdrop(BACKDROP_INNER)
-    addByIdBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    addByIdBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    addByIdBtn.text = addByIdBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    addByIdBtn.text:SetPoint("CENTER")
-    addByIdBtn.text:SetText(L["OWSL_BTN_ADD_BY_ID"])
-    addByIdBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    addByIdBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER")) self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end)
-    addByIdBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL")) self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end)
     addByIdBtn:SetScript("OnClick", function()
         ns.Dialogs:InputDialog(L["OWSL_DIALOG_ADD_BY_ID"], "", function(val)
             local id = tonumber(val)
             if not id or id <= 0 then
-                print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ENTER_VALID_ID"])
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ENTER_VALID_ID"])
                 return
             end
             local activeList = ns.ShoppingList:GetActiveListName()
             local ok = ns.ShoppingList:AddItemToList(activeList, id, 1)
             if ok then
                 local name = C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
-                print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
+                print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
                 MainWindow:RefreshItemList()
             else
-                print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_INVALID_ID"])
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_INVALID_ID"])
             end
         end, mainFrame)
     end)
 
     local listContainer = CreateFrame("Frame", nil, contentPanel)
-    listContainer:SetPoint("TOPLEFT", contentHeader, "BOTTOMLEFT", 0, -2)
-    listContainer:SetPoint("BOTTOMRIGHT", addButtonRow, "TOPRIGHT", 0, 2)
+    listContainer:SetPoint("TOPLEFT",     contentHeader,  "BOTTOMLEFT",  0,  -2)
+    listContainer:SetPoint("BOTTOMRIGHT", addButtonRow,   "TOPRIGHT",    0,   2)
 
-    local scrollBarWidth = 10
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, listContainer)
-    scrollFrame:SetPoint("TOPLEFT", listContainer, "TOPLEFT", 0, 0)
-    scrollFrame:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -scrollBarWidth, 0)
-    scrollFrame:EnableMouseWheel(true)
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local current = self:GetVerticalScroll()
-        local maxScroll = self:GetVerticalScrollRange()
-        if delta > 0 then
-            self:SetVerticalScroll(math.max(0, current - 40))
-        else
-            self:SetVerticalScroll(math.min(maxScroll, current + 40))
-        end
-    end)
-
-    local scrollTrack = CreateFrame("Frame", nil, listContainer, "BackdropTemplate")
-    scrollTrack:SetPoint("TOPRIGHT", listContainer, "TOPRIGHT", -2, 0)
-    scrollTrack:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -2, 0)
-    scrollTrack:SetWidth(8)
-    scrollTrack:SetBackdrop(BACKDROP_SIMPLE)
-    scrollTrack:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-
-    local scrollThumb = CreateFrame("Frame", nil, scrollTrack, "BackdropTemplate")
-    scrollThumb:SetWidth(6)
-    scrollThumb:SetHeight(30)
-    scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, 0)
-    scrollThumb:SetBackdrop(BACKDROP_SIMPLE)
-    scrollThumb:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local function UpdateScrollThumb()
-        local maxScroll = scrollFrame:GetVerticalScrollRange()
-        if maxScroll <= 0 then
-            scrollThumb:Hide()
-            return
-        end
-        scrollThumb:Show()
-        local viewHeight = scrollFrame:GetHeight()
-        local trackHeight = scrollTrack:GetHeight()
-        local thumbHeight = math.max(20, trackHeight * (viewHeight / (viewHeight + maxScroll)))
-        local thumbRange = trackHeight - thumbHeight
-        local thumbPos = (scrollFrame:GetVerticalScroll() / maxScroll) * thumbRange
-        scrollThumb:SetHeight(thumbHeight)
-        scrollThumb:ClearAllPoints()
-        scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, -thumbPos)
-    end
-
-    scrollFrame:SetScript("OnVerticalScroll", function() UpdateScrollThumb() end)
-    scrollFrame:SetScript("OnScrollRangeChanged", function() UpdateScrollThumb() end)
-
-    scrollThumb:EnableMouse(true)
-    scrollThumb:RegisterForDrag("LeftButton")
-    scrollThumb:SetScript("OnDragStart", function(self)
-        self.dragging = true
-        self.dragStartY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        self.dragStartScroll = scrollFrame:GetVerticalScroll()
-    end)
-    scrollThumb:SetScript("OnDragStop", function(self) self.dragging = false end)
-    scrollThumb:SetScript("OnUpdate", function(self)
-        if not self.dragging then return end
-        local curY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        local delta = self.dragStartY - curY
-        local trackHeight = scrollTrack:GetHeight()
-        local thumbRange = trackHeight - self:GetHeight()
-        if thumbRange > 0 then
-            local maxScroll = scrollFrame:GetVerticalScrollRange()
-            local newScroll = self.dragStartScroll + (delta / thumbRange) * maxScroll
-            scrollFrame:SetVerticalScroll(math.max(0, math.min(maxScroll, newScroll)))
-        end
-    end)
-
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetWidth(scrollFrame:GetWidth())
-    scrollContent:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollContent)
-
-    scrollFrame:HookScript("OnSizeChanged", function(self, width)
-        scrollContent:SetWidth(width)
-        UpdateScrollThumb()
-    end)
-
-    contentPanel.listContainer = listContainer
-    contentPanel.scrollFrame = scrollFrame
-    contentPanel.scrollContent = scrollContent
-    contentPanel.scrollTrack = scrollTrack
-    contentPanel.scrollThumb = scrollThumb
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(listContainer, {})
+    contentPanel.listContainer  = listContainer
+    contentPanel.scrollFrame    = scrollFrame
+    contentPanel.scrollContent  = scrollContent
 
     self:BuildSettingsPanel()
-
     self:RegisterDragDrop(mainFrame)
 
     ns.ShoppingList:SetActiveList(ns.ShoppingList:GetActiveListName())
 end
 
 function MainWindow:BuildSettingsPanel()
-    settingsPanel = CreateFrame("Frame", nil, contentPanel, "BackdropTemplate")
-    settingsPanel:SetAllPoints(contentPanel)
-    settingsPanel:SetBackdrop({
-        bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile     = true, tileEdge = true, tileSize = 16, edgeSize = 14,
-        insets   = { left = 3, right = 3, top = 3, bottom = 3 },
+    settingsPanel = OneWoW_GUI:CreateFrame(contentPanel, {
+        backdrop    = OneWoW_GUI.Constants.BACKDROP_SOFT,
+        bgColor     = "BG_PRIMARY",
+        borderColor = "BORDER_DEFAULT",
     })
-    settingsPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    settingsPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    settingsPanel:SetAllPoints(contentPanel)
     settingsPanel:Hide()
 
-    local pad = C.GUI.PADDING
-    local yOff = -pad
-
-    local settingsTitle = settingsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    settingsTitle:SetPoint("TOPLEFT", settingsPanel, "TOPLEFT", pad, yOff)
+    local settingsTitle = OneWoW_GUI:CreateFS(settingsPanel, 16)
+    settingsTitle:SetPoint("TOPLEFT", settingsPanel, "TOPLEFT", 12, -12)
     settingsTitle:SetText(L["OWSL_SETTINGS_TITLE"])
     settingsTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOff = yOff - 28
 
-    local backBtn = CreateFrame("Button", nil, settingsPanel, "BackdropTemplate")
-    backBtn:SetSize(60, 24)
-    backBtn:SetPoint("TOPRIGHT", settingsPanel, "TOPRIGHT", -pad, -pad)
-    backBtn:SetBackdrop(BACKDROP_INNER)
-    backBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    backBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    backBtn.text = backBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    backBtn.text:SetPoint("CENTER")
-    backBtn.text:SetText(L["OWSL_BTN_BACK"])
-    backBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER")) self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end)
-    backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL")) self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end)
+    local backBtn = OneWoW_GUI:CreateFitTextButton(settingsPanel, { text = L["OWSL_BTN_BACK"], height = 24 })
+    backBtn:SetPoint("TOPRIGHT", settingsPanel, "TOPRIGHT", -12, -12)
     backBtn:SetScript("OnClick", function() MainWindow:ToggleSettings() end)
 
-    local settingsScroll = ns.GUI:CreateScrollArea(settingsPanel, nil, 0, 0, -40, 0)
-    local scrollContent = settingsScroll.scrollContent
-    yOff = -pad
+    local settingsScrollContainer = CreateFrame("Frame", nil, settingsPanel)
+    settingsScrollContainer:SetPoint("TOPLEFT",     settingsPanel, "TOPLEFT",     0, -40)
+    settingsScrollContainer:SetPoint("BOTTOMRIGHT", settingsPanel, "BOTTOMRIGHT", 0,   0)
 
-    local function AddSectionHeader(text, y)
-        local h = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        h:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, y)
-        h:SetText(text)
-        h:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        return h
-    end
+    local _, scrollContent = OneWoW_GUI:CreateScrollFrame(settingsScrollContainer, {})
 
-    local function AddRow(labelKey, y)
-        local lbl = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        lbl:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, y)
-        lbl:SetText(L[labelKey] or labelKey)
-        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        return lbl
-    end
+    local pad  = 12
+    local yOff = -pad
 
     yOff = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = yOff, addonName = "OneWoW_ShoppingList" })
 
-    local tooltipCb = CreateFrame("CheckButton", nil, scrollContent, "UICheckButtonTemplate")
-    tooltipCb:SetSize(20, 20)
-    tooltipCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff + 2)
-    local tooltipLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    tooltipLabel:SetPoint("LEFT", tooltipCb, "RIGHT", 4, 0)
-    tooltipLabel:SetText(L["OWSL_SETTINGS_ENABLE_TOOLTIP"])
-    tooltipLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local tooltipCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_ENABLE_TOOLTIP"] })
+    tooltipCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
     local db = GetDB()
     tooltipCb:SetChecked(db and db.global.settings.enableTooltips or true)
     tooltipCb:SetScript("OnClick", function(self)
         local dbRef = GetDB()
         if dbRef then dbRef.global.settings.enableTooltips = self:GetChecked() end
     end)
-    yOff = yOff - 28
+    yOff = yOff - 26
 
-    local overlayCb = CreateFrame("CheckButton", nil, scrollContent, "UICheckButtonTemplate")
-    overlayCb:SetSize(20, 20)
-    overlayCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff + 2)
-    local overlayLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    overlayLabel:SetPoint("LEFT", overlayCb, "RIGHT", 4, 0)
-    overlayLabel:SetText(L["OWSL_SETTINGS_ENABLE_OVERLAY"])
-    overlayLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local overlayCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_ENABLE_OVERLAY"] })
+    overlayCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
     local settings = db and db.global.settings or {}
-    local overlay = settings.overlay or {}
+    local overlay  = settings.overlay or {}
     overlayCb:SetChecked(overlay.enabled ~= false)
     overlayCb:SetScript("OnClick", function(self)
         local dbRef = GetDB()
@@ -743,17 +495,12 @@ function MainWindow:BuildSettingsPanel()
             ns.BagOverlays:UpdateAllSettings()
         end
     end)
-    yOff = yOff - 28
+    yOff = yOff - 26
 
     local curS = GetSettings()
 
-    local bagBtnCb = CreateFrame("CheckButton", nil, scrollContent, "UICheckButtonTemplate")
-    bagBtnCb:SetSize(20, 20)
-    bagBtnCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff + 2)
-    local bagBtnCbLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    bagBtnCbLabel:SetPoint("LEFT", bagBtnCb, "RIGHT", 4, 0)
-    bagBtnCbLabel:SetText(L["OWSL_SETTINGS_SHOW_BAG_BUTTONS"])
-    bagBtnCbLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local bagBtnCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_SHOW_BAG_BUTTONS"] })
+    bagBtnCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
     bagBtnCb:SetChecked(curS.showBagButtons ~= false)
     bagBtnCb:SetScript("OnClick", function(self)
         local dbRef = GetDB()
@@ -762,15 +509,10 @@ function MainWindow:BuildSettingsPanel()
             ns.BagButton:UpdateVisibility()
         end
     end)
-    yOff = yOff - 28
+    yOff = yOff - 26
 
-    local profBtnCb = CreateFrame("CheckButton", nil, scrollContent, "UICheckButtonTemplate")
-    profBtnCb:SetSize(20, 20)
-    profBtnCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff + 2)
-    local profBtnCbLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    profBtnCbLabel:SetPoint("LEFT", profBtnCb, "RIGHT", 4, 0)
-    profBtnCbLabel:SetText(L["OWSL_SETTINGS_SHOW_PROF_BUTTONS"])
-    profBtnCbLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local profBtnCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_SHOW_PROF_BUTTONS"] })
+    profBtnCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
     profBtnCb:SetChecked(curS.showProfessionButtons ~= false)
     profBtnCb:SetScript("OnClick", function(self)
         local dbRef = GetDB()
@@ -779,15 +521,10 @@ function MainWindow:BuildSettingsPanel()
             ns.ProfessionUI:UpdateVisibility()
         end
     end)
-    yOff = yOff - 28
+    yOff = yOff - 26
 
-    local ahBtnCb = CreateFrame("CheckButton", nil, scrollContent, "UICheckButtonTemplate")
-    ahBtnCb:SetSize(20, 20)
-    ahBtnCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff + 2)
-    local ahBtnCbLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    ahBtnCbLabel:SetPoint("LEFT", ahBtnCb, "RIGHT", 4, 0)
-    ahBtnCbLabel:SetText(L["OWSL_SETTINGS_SHOW_AH_BUTTON"])
-    ahBtnCbLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local ahBtnCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_SHOW_AH_BUTTON"] })
+    ahBtnCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
     ahBtnCb:SetChecked(curS.showAHButton ~= false)
     ahBtnCb:SetScript("OnClick", function(self)
         local dbRef = GetDB()
@@ -796,43 +533,51 @@ function MainWindow:BuildSettingsPanel()
             ns.BagButton:UpdateAHVisibility()
         end
     end)
-    yOff = yOff - 28
+    yOff = yOff - 30
 
-    AddSectionHeader(L["OWSL_SETTINGS_ADDON_STATUS"], yOff)
-    yOff = yOff - 22
+    local function AddSectionHeader(text, y)
+        local h = OneWoW_GUI:CreateFS(scrollContent, 11)
+        h:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, y)
+        h:SetText(text)
+        h:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        return h
+    end
 
     local function AddStatusRow(labelText, detected, y)
-        local lbl = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local lbl = OneWoW_GUI:CreateFS(scrollContent, 12)
         lbl:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, y)
         lbl:SetText(labelText)
         lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-        local status = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local status = OneWoW_GUI:CreateFS(scrollContent, 12)
         status:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 220, y)
         if detected then
             status:SetText(L["OWSL_SETTINGS_DETECTED"])
-            status:SetTextColor(0.3, 0.9, 0.3)
+            status:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             status:SetText(L["OWSL_SETTINGS_NOT_DETECTED"])
-            status:SetTextColor(0.6, 0.6, 0.6)
+            status:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
     end
 
+    AddSectionHeader(L["OWSL_SETTINGS_ADDON_STATUS"], yOff)
+    yOff = yOff - 22
+
     AddStatusRow(L["OWSL_SETTINGS_ALT_ACCESS"],    ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
     AddStatusRow(L["OWSL_SETTINGS_WARBAND_ACCESS"], ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
-    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    _G.OneWoW_CatalogData_Tradeskills ~= nil, yOff); yOff = yOff - 20
+    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    _G.OneWoW_CatalogData_Tradeskills ~= nil, yOff); yOff = yOff - 24
 
     AddSectionHeader(L["OWSL_SETTINGS_KEYBINDS"], yOff)
     yOff = yOff - 22
 
     local function AddKeybindRow(labelText, bindingName, y)
-        local lbl = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local lbl = OneWoW_GUI:CreateFS(scrollContent, 12)
         lbl:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, y)
         lbl:SetText(labelText)
         lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local binding = GetBindingKey(bindingName)
-        local bVal = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local bVal = OneWoW_GUI:CreateFS(scrollContent, 12)
         bVal:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 220, y)
         bVal:SetText(binding or L["OWSL_SETTINGS_NO_KEYBIND"])
         if binding then
@@ -845,7 +590,7 @@ function MainWindow:BuildSettingsPanel()
     AddKeybindRow(L["OWSL_SETTINGS_TOGGLE_KEY"],   "ONEWOW_SHOPPING_LIST_TOGGLE",   yOff); yOff = yOff - 20
     AddKeybindRow(L["OWSL_SETTINGS_ADD_ITEM_KEY"], "ONEWOW_SHOPPING_LIST_ADD_ITEM", yOff); yOff = yOff - 20
 
-    local bindInfoLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local bindInfoLabel = OneWoW_GUI:CreateFS(scrollContent, 10)
     bindInfoLabel:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
     bindInfoLabel:SetText(L["OWSL_SETTINGS_KEYBIND_INFO"])
     bindInfoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -855,20 +600,20 @@ end
 
 function MainWindow:Rebuild()
     if mainFrame then mainFrame:Hide() end
-    mainFrame = nil
-    sidebarPanel = nil
-    contentPanel = nil
-    settingsPanel = nil
+    mainFrame          = nil
+    sidebarPanel       = nil
+    contentPanel       = nil
+    settingsPanel      = nil
     contentHeaderFrame = nil
-    addButtonRowFrame = nil
-    searchBox = nil
-    searchAltsBtn = nil
-    currentListLabel = nil
-    statusLabel = nil
-    inSettingsView = false
-    expandedItems = {}
-    listRowPool = {}
-    itemRows = {}
+    addButtonRowFrame  = nil
+    searchBox          = nil
+    searchAltsBtn      = nil
+    currentListLabel   = nil
+    statusLabel        = nil
+    inSettingsView     = false
+    expandedItems      = {}
+    listRowPool        = {}
+    itemRows           = {}
 end
 
 function MainWindow:ShowSettings()
@@ -881,15 +626,15 @@ function MainWindow:ToggleSettings()
     if inSettingsView then
         settingsPanel:Show()
         if contentPanel.listContainer then contentPanel.listContainer:Hide() end
-        if contentPanel.scrollTrack then contentPanel.scrollTrack:Hide() end
-        if contentHeaderFrame then contentHeaderFrame:Hide() end
-        if addButtonRowFrame then addButtonRowFrame:Hide() end
+        if contentPanel.scrollFrame   then contentPanel.scrollFrame:Hide() end
+        if contentHeaderFrame         then contentHeaderFrame:Hide() end
+        if addButtonRowFrame          then addButtonRowFrame:Hide() end
     else
         settingsPanel:Hide()
         if contentPanel.listContainer then contentPanel.listContainer:Show() end
-        if contentPanel.scrollTrack then contentPanel.scrollTrack:Show() end
-        if contentHeaderFrame then contentHeaderFrame:Show() end
-        if addButtonRowFrame then addButtonRowFrame:Show() end
+        if contentPanel.scrollFrame   then contentPanel.scrollFrame:Show() end
+        if contentHeaderFrame         then contentHeaderFrame:Show() end
+        if addButtonRowFrame          then addButtonRowFrame:Show() end
     end
 end
 
@@ -902,7 +647,7 @@ function MainWindow:RegisterDragDrop(frame)
             local ok = ns.ShoppingList:AddItemToList(activeList, id, 1)
             if ok then
                 local name = C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
-                print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
+                print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
                 MainWindow:RefreshItemList()
             end
         end
@@ -914,12 +659,12 @@ function MainWindow:RefreshSidebar()
 
     HideAllRows(listRowPool)
 
-    local allLists = ns.ShoppingList:GetAllLists()
-    local activeList = ns.ShoppingList:GetActiveListName()
+    local allLists    = ns.ShoppingList:GetAllLists()
+    local activeList  = ns.ShoppingList:GetActiveListName()
     local defaultList = ns.ShoppingList:GetDefaultListName()
 
     local parentLists = {}
-    local childrenOf = {}
+    local childrenOf  = {}
 
     for listName, listData in pairs(allLists) do
         if listData.parentList then
@@ -936,9 +681,9 @@ function MainWindow:RefreshSidebar()
         return a < b
     end)
 
-    local scrollContent = sidebarPanel.scrollArea.scrollContent
-    local rowIdx = 1
-    local yOff   = 0
+    local scrollContent = sidebarPanel.scrollContent
+    local rowIdx  = 1
+    local yOff    = 0
 
     local INDENT   = { [0] = 0,  [1] = 16, [2] = 28, [3] = 40 }
     local HEIGHT   = { [0] = 32, [1] = 28, [2] = 26, [3] = 24 }
@@ -948,10 +693,10 @@ function MainWindow:RefreshSidebar()
     local function RenderListEntry(listName, depth)
         if rowIdx > POOL_SIZE then return end
 
-        local row = listRowPool[rowIdx]
-        local isSelected     = (listName == activeList)
-        local isDefault      = (depth == 0) and (listName == defaultList)
-        local childCount     = childrenOf[listName] and #childrenOf[listName] or 0
+        local row        = listRowPool[rowIdx]
+        local isSelected = (listName == activeList)
+        local isDefault  = (depth == 0) and (listName == defaultList)
+        local childCount = childrenOf[listName] and #childrenOf[listName] or 0
         ConfigureListRow(row, listName, isSelected, isDefault, childCount, 0)
 
         local indent   = INDENT[depth]   or 40
@@ -960,14 +705,10 @@ function MainWindow:RefreshSidebar()
 
         row:ClearAllPoints()
         row:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  indent, -yOff)
-        row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, -yOff)
+        row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0,      -yOff)
         row:SetHeight(height)
 
-        if depth > 0 then
-            row.starBtn:Hide()
-        else
-            row.starBtn:Show()
-        end
+        if depth > 0 then row.starBtn:Hide() else row.starBtn:Show() end
 
         local capturedName = listName
 
@@ -1029,7 +770,7 @@ function MainWindow:RefreshSidebar()
 
         row:Show()
         rowIdx = rowIdx + 1
-        yOff = yOff + yAdvance
+        yOff   = yOff + yAdvance
 
         if depth < MAX_DEPTH then
             local children = childrenOf[listName]
@@ -1047,7 +788,6 @@ function MainWindow:RefreshSidebar()
     end
 
     scrollContent:SetHeight(math.max(yOff + 4, 1))
-    sidebarPanel.scrollArea.UpdateThumb()
 end
 
 function MainWindow:RefreshItemList()
@@ -1138,7 +878,7 @@ function MainWindow:RefreshItemList()
         local y = -2
         for _, r in ipairs(itemRows) do
             r:ClearAllPoints()
-            r:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, y)
+            r:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  0, y)
             r:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, y)
             y = y - (rowHeight + rowGap)
             if r.isExpanded and r.expandedFrame and r.expandedFrame:IsShown() then
@@ -1152,18 +892,18 @@ function MainWindow:RefreshItemList()
         local capturedData  = itemData
         local capturedListN = activeList
 
-        local row = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-        row:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
+        local row = OneWoW_GUI:CreateFrame(scrollContent, {
+            bgColor     = "BG_TERTIARY",
+        })
+        row:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  0, yOffset)
         row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
         row:SetHeight(rowHeight)
-        row:SetBackdrop(BACKDROP_SIMPLE)
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         row:EnableMouse(true)
 
         local statusBar = CreateFrame("Button", nil, row)
         statusBar:SetWidth(6)
-        statusBar:SetPoint("LEFT", row, "LEFT", 0, 0)
-        statusBar:SetPoint("TOP", row, "TOP", 0, 0)
+        statusBar:SetPoint("LEFT",   row, "LEFT",   0, 0)
+        statusBar:SetPoint("TOP",    row, "TOP",    0, 0)
         statusBar:SetPoint("BOTTOM", row, "BOTTOM", 0, 0)
         local statusBarTex = statusBar:CreateTexture(nil, "ARTWORK")
         statusBarTex:SetAllPoints()
@@ -1182,32 +922,22 @@ function MainWindow:RefreshItemList()
                 GameTooltip:SetHyperlink(capturedData.itemLink)
                 GameTooltip:Show()
             end)
-            iconFrame:SetScript("OnLeave", function()
-                GameTooltip:Hide()
-            end)
+            iconFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
         end
 
-        local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local nameText = OneWoW_GUI:CreateFS(row, 12)
         nameText:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
         nameText:SetWidth(150)
         nameText:SetJustifyH("LEFT")
         nameText:SetWordWrap(false)
         nameText:SetText(itemData.displayName)
 
-        local qtyBox = CreateFrame("EditBox", nil, row, "BackdropTemplate")
-        qtyBox:SetSize(45, 20)
+        local qtyBox = OneWoW_GUI:CreateEditBox(row, { width = 45, height = 20 })
         qtyBox:SetPoint("LEFT", nameText, "RIGHT", 8, 0)
-        qtyBox:SetBackdrop(BACKDROP_INNER)
-        qtyBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        qtyBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        qtyBox:SetFontObject(GameFontHighlightSmall)
-        qtyBox:SetTextInsets(4, 4, 0, 0)
-        qtyBox:SetAutoFocus(false)
         qtyBox:SetNumeric(true)
         qtyBox:SetMaxLetters(5)
         qtyBox:SetJustifyH("CENTER")
         qtyBox:SetText(tostring(itemData.quantity or 1))
-        qtyBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 
         local removeBtn = CreateFrame("Button", nil, row)
         removeBtn:SetSize(18, 18)
@@ -1222,38 +952,30 @@ function MainWindow:RefreshItemList()
 
         if itemData.isUnresolved then
             nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            statusBarTex:SetColorTexture(0.6, 0.6, 0.6, 1)
+            statusBarTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-            local idLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local idLabel = OneWoW_GUI:CreateFS(row, 10)
             idLabel:SetPoint("LEFT", qtyBox, "RIGHT", 6, 0)
             idLabel:SetText(L["OWSL_LABEL_ID"])
             idLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-            local idBox = CreateFrame("EditBox", nil, row, "BackdropTemplate")
-            idBox:SetSize(55, 20)
+            local idBox = OneWoW_GUI:CreateEditBox(row, { width = 55, height = 20 })
             idBox:SetPoint("LEFT", idLabel, "RIGHT", 4, 0)
-            idBox:SetBackdrop(BACKDROP_INNER)
-            idBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-            idBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            idBox:SetFontObject(GameFontHighlightSmall)
-            idBox:SetTextInsets(4, 4, 0, 0)
-            idBox:SetAutoFocus(false)
             idBox:SetNumeric(true)
             idBox:SetMaxLetters(6)
-            idBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
             idBox:SetScript("OnEnterPressed", function(self)
                 local idVal = tonumber(self:GetText())
                 if idVal and idVal > 0 then
                     local ok, name = ns.ShoppingList:ConvertUnresolvedToResolved(
                         capturedListN, capturedData.key, idVal)
                     if ok then
-                        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_RESOLVED"], capturedData.displayName, name, idVal))
+                        print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_RESOLVED"], capturedData.displayName, name, idVal))
                         MainWindow:RefreshItemList()
                     else
-                        print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ENTER_VALID_ID"])
+                        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ENTER_VALID_ID"])
                     end
                 else
-                    print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ENTER_VALID_ID"])
+                    print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ENTER_VALID_ID"])
                 end
                 self:ClearFocus()
             end)
@@ -1281,16 +1003,16 @@ function MainWindow:RefreshItemList()
                 local r, g, b = unpack(status.statusColor)
                 statusBarTex:SetColorTexture(r, g, b, 1)
             else
-                statusBarTex:SetColorTexture(0.5, 0.5, 0.5, 1)
+                statusBarTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
             end
 
             local locations = status and status.locations or {}
 
             local statusBtn = CreateFrame("Button", nil, row)
             statusBtn:SetHeight(rowHeight)
-            statusBtn:SetPoint("LEFT", qtyBox, "RIGHT", 4, 0)
-            statusBtn:SetPoint("RIGHT", removeBtn, "LEFT", -60, 0)
-            local statusText = statusBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            statusBtn:SetPoint("LEFT",  qtyBox,     "RIGHT", 4,    0)
+            statusBtn:SetPoint("RIGHT", removeBtn,  "LEFT",  -60,  0)
+            local statusText = OneWoW_GUI:CreateFS(statusBtn, 10)
             statusText:SetPoint("LEFT", statusBtn, "LEFT", 4, 0)
             statusText:SetJustifyH("LEFT")
             if status then
@@ -1325,14 +1047,14 @@ function MainWindow:RefreshItemList()
                 if row.isExpanded then
                     if not row.expandedFrame then
                         row.expandedFrame = CreateFrame("Frame", nil, row, "BackdropTemplate")
-                        row.expandedFrame:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 6, -2)
+                        row.expandedFrame:SetPoint("TOPLEFT",  row, "BOTTOMLEFT",  6, -2)
                         row.expandedFrame:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -2)
-                        row.expandedFrame:SetBackdrop(BACKDROP_SIMPLE)
+                        row.expandedFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
                         row.expandedFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
 
                         local locY = -6
                         for _, locStr in ipairs(locations) do
-                            local locText = row.expandedFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                            local locText = OneWoW_GUI:CreateFS(row.expandedFrame, 10)
                             locText:SetPoint("TOPLEFT", row.expandedFrame, "TOPLEFT", 12, locY)
                             locText:SetText(locStr)
                             locText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -1342,9 +1064,7 @@ function MainWindow:RefreshItemList()
                     end
                     row.expandedFrame:Show()
                 else
-                    if row.expandedFrame then
-                        row.expandedFrame:Hide()
-                    end
+                    if row.expandedFrame then row.expandedFrame:Hide() end
                 end
                 RepositionAllRows()
             end
@@ -1355,18 +1075,8 @@ function MainWindow:RefreshItemList()
             end
 
             if itemData.isCraftable then
-                local craftBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
-                craftBtn:SetSize(48, 20)
+                local craftBtn = OneWoW_GUI:CreateFitTextButton(row, { text = L["OWSL_BTN_CRAFT"], height = 20 })
                 craftBtn:SetPoint("RIGHT", removeBtn, "LEFT", -4, 0)
-                craftBtn:SetBackdrop(BACKDROP_INNER)
-                craftBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                craftBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                local craftLabel = craftBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                craftLabel:SetPoint("CENTER")
-                craftLabel:SetText(L["OWSL_BTN_CRAFT"])
-                craftLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                craftBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER")) end)
-                craftBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL")) end)
                 craftBtn:SetScript("OnClick", function()
                     local recipes = capturedData.recipes or {}
                     if #recipes == 1 then
@@ -1413,9 +1123,9 @@ function MainWindow:RefreshItemList()
                     if AuctionHouseFrame and AuctionHouseFrame:IsVisible() then
                         AuctionHouseFrame.SearchBar:SetSearchText(capturedData.displayName)
                         AuctionHouseFrame.SearchBar:StartSearch()
-                        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ADDED_TO_AH"], capturedData.displayName))
+                        print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_AH"], capturedData.displayName))
                     else
-                        print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_OPEN_AH_FIRST"])
+                        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_OPEN_AH_FIRST"])
                     end
                 elseif btn == "LeftButton" then
                     ToggleExpanded()
@@ -1426,9 +1136,8 @@ function MainWindow:RefreshItemList()
                     if AuctionHouseFrame and AuctionHouseFrame:IsVisible() then
                         AuctionHouseFrame.SearchBar:SetSearchText(capturedData.displayName)
                         AuctionHouseFrame.SearchBar:StartSearch()
-                        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_ADDED_TO_AH"], capturedData.displayName))
                     else
-                        print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_OPEN_AH_FIRST"])
+                        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_OPEN_AH_FIRST"])
                     end
                 elseif btn == "LeftButton" then
                     ToggleExpanded()
@@ -1449,10 +1158,10 @@ function MainWindow:RefreshItemList()
     if statusLabel then
         local totalItems     = 0
         local completedItems = 0
-        for _, itemData in ipairs(items) do
-            if not itemData.isUnresolved and itemData.status then
+        for _, item in ipairs(items) do
+            if not item.isUnresolved and item.status then
                 totalItems = totalItems + 1
-                if itemData.status.status == "green" or itemData.status.status == "blue" then
+                if item.status.status == "green" or item.status.status == "blue" then
                     completedItems = completedItems + 1
                 end
             end
@@ -1466,7 +1175,7 @@ function MainWindow:StartCraftOrder(listName, itemID, quantity, recipe)
     local ingredients, _ = ns.ShoppingList:CalculateCraftIngredients(recipe.recipeID, quantity)
 
     if not ingredients or #ingredients == 0 then
-        print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_NO_INGREDIENTS"])
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_NO_INGREDIENTS"])
         return
     end
 
@@ -1474,7 +1183,7 @@ function MainWindow:StartCraftOrder(listName, itemID, quantity, recipe)
         listName, itemID, quantity, recipe.recipeID, recipe.name)
 
     if not ok then
-        print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_CRAFT_ORDER_FAILED"])
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_CRAFT_ORDER_FAILED"])
         return
     end
 
@@ -1483,7 +1192,7 @@ function MainWindow:StartCraftOrder(listName, itemID, quantity, recipe)
     end
 
     local s = #ingredients ~= 1 and "s" or ""
-    print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"],
+    print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"],
         craftOrderName, #ingredients, s, merged and " (merged)" or ""))
 
     MainWindow:RefreshSidebar()
@@ -1504,11 +1213,11 @@ function MainWindow:ShowItemContextMenu(itemID, listName)
                     local ok, err = ns.ShoppingList:MoveItem(itemID, listName, capturedOther)
                     if ok then
                         local name = C_Item.GetItemNameByID(itemID) or tostring(itemID)
-                        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_MOVED_ITEM"], name, listName, capturedOther))
+                        print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_MOVED_ITEM"], name, listName, capturedOther))
                         MainWindow:RefreshSidebar()
                         MainWindow:RefreshItemList()
                     else
-                        print("|cFFFFD100OneWoW Shopping List:|r " .. (err or L["OWSL_MSG_MOVE_FAILED"]:format("")))
+                        print(L["ADDON_CHAT_PREFIX"] .. " " .. (err or L["OWSL_MSG_MOVE_FAILED"]:format("")))
                     end
                 end)
             end
@@ -1517,12 +1226,12 @@ function MainWindow:ShowItemContextMenu(itemID, listName)
         rootDescription:CreateButton(L["OWSL_MENU_CREATE_CRAFT_ORDER"], function()
             local recipes = ns.ShoppingList:GetCraftableRecipes(itemID)
             if #recipes == 0 then
-                print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_NO_RECIPES"])
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_NO_RECIPES"])
                 return
             end
             if #recipes == 1 then
                 local status = ns.ShoppingList:GetItemStatus(itemID, listName)
-                local qty = status and status.needed or 1
+                local qty    = status and status.needed or 1
                 MainWindow:StartCraftOrder(listName, itemID, qty, recipes[1])
             else
                 local knownByData = {}
@@ -1531,7 +1240,7 @@ function MainWindow:ShowItemContextMenu(itemID, listName)
                 end
                 ns.Dialogs:RecipeSelectDialog(recipes, knownByData, function(recipe)
                     local status = ns.ShoppingList:GetItemStatus(itemID, listName)
-                    local qty = status and status.needed or 1
+                    local qty    = status and status.needed or 1
                     MainWindow:StartCraftOrder(listName, itemID, qty, recipe)
                 end, mainFrame)
             end
@@ -1540,8 +1249,6 @@ function MainWindow:ShowItemContextMenu(itemID, listName)
 end
 
 function MainWindow:ShowListContextMenu(listName)
-    local list = ns.ShoppingList:GetList(listName)
-
     MenuUtil.CreateContextMenu(UIParent, function(ownerRegion, rootDescription)
         rootDescription:CreateTitle(listName)
 
@@ -1554,7 +1261,7 @@ function MainWindow:ShowListContextMenu(listName)
                         if newName == "" then return end
                         local ok, err = ns.ShoppingList:RenameList(listName, newName)
                         if not ok then
-                            print("|cFFFFD100OneWoW Shopping List:|r " .. (err or ""))
+                            print(L["ADDON_CHAT_PREFIX"] .. " " .. (err or ""))
                         else
                             MainWindow:RefreshSidebar()
                             MainWindow:RefreshItemList()
@@ -1568,11 +1275,9 @@ function MainWindow:ShowListContextMenu(listName)
         rootDescription:CreateButton(L["OWSL_MENU_EXPORT_LIST"], function()
             local exportText = ns.ShoppingList:ExportList(listName)
             if exportText then
-                ns.Dialogs:ExportDialog(
-                    string.format(L["OWSL_EXPORT_TITLE"], listName),
-                    exportText, mainFrame)
+                ns.Dialogs:ExportDialog(string.format(L["OWSL_EXPORT_TITLE"], listName), exportText, mainFrame)
             else
-                print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_EXPORT_FAILED"])
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_EXPORT_FAILED"])
             end
         end)
 
@@ -1590,7 +1295,6 @@ function MainWindow:ShowListContextMenu(listName)
                 if childCount > 0 then
                     bodyText = string.format(L["OWSL_TT_DELETE_CRAFT_ORDERS"], childCount) .. "\n" .. bodyText
                 end
-
                 ns.Dialogs:ConfirmDialog(
                     string.format(L["OWSL_DIALOG_DELETE_CONFIRM"], listName),
                     bodyText,

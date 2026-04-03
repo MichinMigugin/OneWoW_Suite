@@ -819,7 +819,7 @@ function ShoppingList:ScanUnresolvedItems(listName)
         return 0, 0, 0
     end
 
-    print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_SCANNING_UNRESOLVED"], unresolvedCount))
+    print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_SCANNING_UNRESOLVED"], unresolvedCount))
 
     local resolved = 0
     local partial = 0
@@ -827,20 +827,20 @@ function ShoppingList:ScanUnresolvedItems(listName)
 
     for uid, unresolved in pairs(list.unresolvedItems) do
         local name = unresolved.itemName
-        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_SCANNING_FOR"], name))
+        print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_SCANNING_FOR"], name))
 
         local itemID = C_Item.GetItemInfoInstant(name)
         if itemID then
             self:AddItemToList(listName, itemID, unresolved.quantity, unresolved.notes)
             list.unresolvedItems[uid] = nil
             resolved = resolved + 1
-            print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_EXACT_MATCH"], name, itemID))
+            print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_EXACT_MATCH"], name, itemID))
         else
             notFound = notFound + 1
         end
     end
 
-    print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_SCAN_COMPLETE"], resolved, partial, notFound))
+    print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_SCAN_COMPLETE"], resolved, partial, notFound))
     ScheduleRefresh()
     return resolved, partial, notFound
 end

@@ -4,272 +4,270 @@ local L = ns.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER
-local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT
-
 ns.Dialogs = {}
 local Dialogs = ns.Dialogs
-local activeDialog = nil
+
+local activeDialogResult = nil
 
 local function CloseActive()
-    if activeDialog then
-        activeDialog:Hide()
-        activeDialog = nil
+    if activeDialogResult then
+        activeDialogResult.frame:Hide()
+        activeDialogResult = nil
     end
 end
 
-local function CreateBaseDialog(parent, width, height)
-    if activeDialog then CloseActive() end
-
-    local dlg = CreateFrame("Frame", nil, parent or UIParent, "BackdropTemplate")
-    dlg:SetSize(width or 360, height or 200)
-    dlg:SetPoint("CENTER", UIParent, "CENTER")
-    dlg:SetFrameLevel(300)
-    dlg:SetBackdrop(BACKDROP_SOFT)
-    dlg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    dlg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-    dlg:EnableMouse(true)
-    dlg:SetMovable(true)
-    dlg:RegisterForDrag("LeftButton")
-    dlg:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    dlg:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-
-    local closeBtn = CreateFrame("Button", nil, dlg)
-    closeBtn:SetSize(18, 18)
-    closeBtn:SetPoint("TOPRIGHT", dlg, "TOPRIGHT", -8, -8)
-    closeBtn:SetNormalTexture("Interface\\BUTTONS\\UI-StopButton")
-    closeBtn:SetScript("OnClick", CloseActive)
-
-    activeDialog = dlg
-    return dlg
-end
-
-local function CreateLabel(parent, text, fontObj, x, y)
-    local fs = parent:CreateFontString(nil, "OVERLAY", fontObj or "GameFontNormal")
-    fs:SetPoint("TOPLEFT", parent, "TOPLEFT", x or 16, y or -16)
-    fs:SetText(text or "")
-    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    return fs
-end
-
-local function CreateInput(parent, width, height, y)
-    local box = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
-    box:SetSize(width or 300, height or 28)
-    box:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, y or -44)
-    box:SetBackdrop(BACKDROP_INNER)
-    box:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    box:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    box:SetFontObject(GameFontHighlight)
-    box:SetTextInsets(8, 8, 0, 0)
-    box:SetAutoFocus(true)
-    box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    box:SetScript("OnEscapePressed", CloseActive)
-    return box
-end
-
-local function CreateBtn(parent, text, w, h, x, y)
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetSize(w or 100, h or 28)
-    btn:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", x or 16, y or 12)
-    btn:SetBackdrop(BACKDROP_INNER)
-    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    btn.text:SetPoint("CENTER")
-    btn.text:SetText(text or "")
-    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    end)
-    btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    end)
-    return btn
-end
-
 function Dialogs:InputDialog(labelText, defaultVal, onConfirm, parent)
-    local dlg = CreateBaseDialog(parent, 360, 130)
+    CloseActive()
 
-    CreateLabel(dlg, labelText, "GameFontNormal", 16, -16)
+    local result = OneWoW_GUI:CreateDialog({
+        title     = labelText,
+        width     = 380,
+        height    = 120,
+        showBrand = true,
+        strata    = "FULLSCREEN_DIALOG",
+        onClose   = function() activeDialogResult = nil end,
+        buttons   = {
+            { text = L["OWSL_BTN_CREATE"] },
+            { text = L["OWSL_BTN_CANCEL"], onClick = function(f)
+                f:Hide()
+                activeDialogResult = nil
+            end },
+        },
+    })
+    activeDialogResult = result
 
-    local input = CreateInput(dlg, 328, 28, -40)
-    input:SetText(defaultVal or "")
-    input:HighlightText()
+    local input = OneWoW_GUI:CreateEditBox(result.contentFrame, { height = 26 })
+    input:SetPoint("TOPLEFT",  result.contentFrame, "TOPLEFT",  16, -14)
+    input:SetPoint("TOPRIGHT", result.contentFrame, "TOPRIGHT", -16, -14)
+    if defaultVal and defaultVal ~= "" then
+        input:SetText(defaultVal)
+    end
+    C_Timer.After(0, function()
+        if input:GetParent() then
+            input:SetFocus()
+            input:HighlightText()
+        end
+    end)
 
-    local okBtn = CreateBtn(dlg, L["OWSL_BTN_CREATE"], 100, 28, 16, 12)
-    okBtn:SetScript("OnClick", function()
+    result.buttons[1]:SetScript("OnClick", function()
         local val = input:GetText()
         if val and val ~= "" then
-            CloseActive()
+            result.frame:Hide()
+            activeDialogResult = nil
             if onConfirm then onConfirm(val) end
         end
     end)
 
     input:SetScript("OnEnterPressed", function()
-        okBtn:Click()
+        result.buttons[1]:Click()
     end)
 
-    local cancelBtn = CreateBtn(dlg, L["OWSL_BTN_CANCEL"], 80, 28, 124, 12)
-    cancelBtn:SetScript("OnClick", CloseActive)
-
-    dlg:Show()
-    return dlg
+    result.frame:Show()
+    return result.frame
 end
 
 function Dialogs:ConfirmDialog(titleText, bodyText, onConfirm, confirmLabel, parent)
-    local dlg = CreateBaseDialog(parent, 360, 140)
+    CloseActive()
 
-    CreateLabel(dlg, titleText, "GameFontNormalLarge", 16, -16)
-    local bodyLabel = CreateLabel(dlg, bodyText, "GameFontNormal", 16, -44)
-    bodyLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-    local confirmBtn = CreateBtn(dlg, confirmLabel or L["OWSL_BTN_DELETE"], 100, 28, 16, 12)
-    confirmBtn.text:SetTextColor(1, 0.3, 0.3)
-    confirmBtn:SetScript("OnClick", function()
-        CloseActive()
-        if onConfirm then onConfirm() end
-    end)
-
-    local cancelBtn = CreateBtn(dlg, L["OWSL_BTN_CANCEL"], 80, 28, 124, 12)
-    cancelBtn:SetScript("OnClick", CloseActive)
-
-    dlg:Show()
-    return dlg
+    local result = OneWoW_GUI:CreateConfirmDialog({
+        title   = titleText,
+        message = bodyText,
+        width   = 420,
+        buttons = {
+            { text = confirmLabel or L["OWSL_BTN_DELETE"],
+              color = { 0.7, 0.15, 0.15 },
+              onClick = function(f)
+                  f:Hide()
+                  activeDialogResult = nil
+                  if onConfirm then onConfirm() end
+              end },
+            { text = L["OWSL_BTN_CANCEL"], onClick = function(f)
+                  f:Hide()
+                  activeDialogResult = nil
+              end },
+        },
+    })
+    activeDialogResult = result
+    result.frame:Show()
+    return result.frame
 end
 
 function Dialogs:ExportDialog(title, exportText, parent)
-    local dlg = CreateBaseDialog(parent, 480, 280)
+    CloseActive()
 
-    CreateLabel(dlg, title, "GameFontNormalLarge", 16, -16)
-    CreateLabel(dlg, L["OWSL_DIALOG_EXPORT_INSTRUCTIONS"], "GameFontNormal", 16, -44)
+    local result = OneWoW_GUI:CreateDialog({
+        title     = title,
+        width     = 480,
+        height    = 280,
+        showBrand = true,
+        strata    = "FULLSCREEN_DIALOG",
+        onClose   = function() activeDialogResult = nil end,
+        buttons   = {
+            { text = L["OWSL_BTN_CLOSE"], onClick = function(f)
+                f:Hide()
+                activeDialogResult = nil
+            end },
+        },
+    })
+    activeDialogResult = result
 
-    local scrollArea = CreateFrame("ScrollFrame", nil, dlg, "UIPanelScrollFrameTemplate")
-    scrollArea:SetPoint("TOPLEFT", dlg, "TOPLEFT", 16, -70)
-    scrollArea:SetPoint("BOTTOMRIGHT", dlg, "BOTTOMRIGHT", -34, 52)
+    local instrLabel = OneWoW_GUI:CreateFS(result.contentFrame, 12)
+    instrLabel:SetPoint("TOPLEFT", result.contentFrame, "TOPLEFT", 16, -10)
+    instrLabel:SetText(L["OWSL_DIALOG_EXPORT_INSTRUCTIONS"])
+    instrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local editBox = CreateFrame("EditBox", nil, dlg)
-    editBox:SetMultiLine(true)
-    editBox:SetMaxLetters(0)
-    editBox:SetWidth(430)
-    editBox:SetFontObject(GameFontHighlightSmall)
+    local editContainer = OneWoW_GUI:CreateFrame(result.contentFrame, {
+        bgColor     = "BG_TERTIARY",
+        borderColor = "BORDER_SUBTLE",
+    })
+    editContainer:SetPoint("TOPLEFT",     instrLabel,          "BOTTOMLEFT",  0,   -6)
+    editContainer:SetPoint("BOTTOMRIGHT", result.contentFrame, "BOTTOMRIGHT", -8,   6)
+
+    local scrollFrame, editBox = OneWoW_GUI:CreateScrollEditBox(editContainer, {
+        fontSize = 11,
+    })
     editBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     editBox:SetText(exportText or "")
-    editBox:SetScript("OnEscapePressed", CloseActive)
-    scrollArea:SetScrollChild(editBox)
-
     C_Timer.After(0.05, function()
-        editBox:SetFocus()
-        editBox:HighlightText()
-    end)
-
-    local closeBtn = CreateBtn(dlg, L["OWSL_BTN_CLOSE"], 100, 28, 190, 12)
-    closeBtn:SetScript("OnClick", CloseActive)
-
-    dlg:Show()
-    return dlg
-end
-
-function Dialogs:ImportDialog(onImport, parent)
-    local dlg = CreateBaseDialog(parent, 480, 320)
-
-    CreateLabel(dlg, L["OWSL_IMPORT_TITLE"], "GameFontNormalLarge", 16, -16)
-    CreateLabel(dlg, L["OWSL_DIALOG_IMPORT_INSTRUCTIONS"], "GameFontNormal", 16, -44)
-    local formatLabel = CreateLabel(dlg, L["OWSL_DIALOG_IMPORT_FORMAT"], "GameFontNormalSmall", 16, -66)
-    formatLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-    local scrollArea = CreateFrame("ScrollFrame", nil, dlg, "UIPanelScrollFrameTemplate")
-    scrollArea:SetPoint("TOPLEFT", dlg, "TOPLEFT", 16, -118)
-    scrollArea:SetPoint("BOTTOMRIGHT", dlg, "BOTTOMRIGHT", -34, 52)
-
-    local editBox = CreateFrame("EditBox", nil, dlg)
-    editBox:SetMultiLine(true)
-    editBox:SetMaxLetters(0)
-    editBox:SetWidth(430)
-    editBox:SetFontObject(GameFontHighlightSmall)
-    editBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    editBox:SetAutoFocus(true)
-    editBox:SetScript("OnEscapePressed", CloseActive)
-    scrollArea:SetScrollChild(editBox)
-
-    local importBtn = CreateBtn(dlg, L["OWSL_BTN_IMPORT"], 100, 28, 16, 12)
-    importBtn:SetScript("OnClick", function()
-        local text = editBox:GetText()
-        if text and text ~= "" then
-            CloseActive()
-            if onImport then onImport(text) end
-        else
-            print("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_PASTE_TEXT"])
+        if editBox:GetParent() then
+            editBox:SetFocus()
+            editBox:HighlightText()
         end
     end)
 
-    local cancelBtn = CreateBtn(dlg, L["OWSL_BTN_CANCEL"], 80, 28, 124, 12)
-    cancelBtn:SetScript("OnClick", CloseActive)
+    result.frame:Show()
+    return result.frame
+end
 
-    dlg:Show()
-    return dlg
+function Dialogs:ImportDialog(onImport, parent)
+    CloseActive()
+
+    local result = OneWoW_GUI:CreateDialog({
+        title     = L["OWSL_IMPORT_TITLE"],
+        width     = 480,
+        height    = 320,
+        showBrand = true,
+        strata    = "FULLSCREEN_DIALOG",
+        onClose   = function() activeDialogResult = nil end,
+        buttons   = {
+            { text = L["OWSL_BTN_IMPORT"] },
+            { text = L["OWSL_BTN_CANCEL"], onClick = function(f)
+                f:Hide()
+                activeDialogResult = nil
+            end },
+        },
+    })
+    activeDialogResult = result
+
+    local instrLabel = OneWoW_GUI:CreateFS(result.contentFrame, 12)
+    instrLabel:SetPoint("TOPLEFT", result.contentFrame, "TOPLEFT", 16, -10)
+    instrLabel:SetText(L["OWSL_DIALOG_IMPORT_INSTRUCTIONS"])
+    instrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local formatLabel = OneWoW_GUI:CreateFS(result.contentFrame, 10)
+    formatLabel:SetPoint("TOPLEFT",  instrLabel,          "BOTTOMLEFT", 0, -4)
+    formatLabel:SetPoint("TOPRIGHT", result.contentFrame, "TOPRIGHT",  -16, 0)
+    formatLabel:SetText(L["OWSL_DIALOG_IMPORT_FORMAT"])
+    formatLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    formatLabel:SetJustifyH("LEFT")
+    formatLabel:SetWordWrap(true)
+
+    local editContainer = OneWoW_GUI:CreateFrame(result.contentFrame, {
+        bgColor     = "BG_TERTIARY",
+        borderColor = "BORDER_SUBTLE",
+    })
+    editContainer:SetPoint("TOPLEFT",     formatLabel,         "BOTTOMLEFT",  0,  -6)
+    editContainer:SetPoint("BOTTOMRIGHT", result.contentFrame, "BOTTOMRIGHT", -8,  6)
+
+    local scrollFrame, editBox = OneWoW_GUI:CreateScrollEditBox(editContainer, {
+        fontSize = 11,
+    })
+    editBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    editBox:SetAutoFocus(true)
+
+    result.buttons[1]:SetScript("OnClick", function()
+        local text = editBox:GetText()
+        if text and text ~= "" then
+            result.frame:Hide()
+            activeDialogResult = nil
+            if onImport then onImport(text) end
+        else
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_PASTE_TEXT"])
+        end
+    end)
+
+    result.frame:Show()
+    return result.frame
 end
 
 function Dialogs:RecipeSelectDialog(recipes, knownByData, onSelect, parent)
-    local dlg = CreateBaseDialog(parent, 480, 360)
-    CreateLabel(dlg, L["OWSL_DIALOG_SELECT_RECIPE"], "GameFontNormalLarge", 16, -16)
+    CloseActive()
 
-    local listContainer = CreateFrame("Frame", nil, dlg)
-    listContainer:SetPoint("TOPLEFT", dlg, "TOPLEFT", 16, -50)
-    listContainer:SetPoint("BOTTOMRIGHT", dlg, "BOTTOMRIGHT", -16, 52)
+    local result = OneWoW_GUI:CreateDialog({
+        title     = L["OWSL_DIALOG_SELECT_RECIPE"],
+        width     = 480,
+        height    = 360,
+        showBrand = true,
+        strata    = "FULLSCREEN_DIALOG",
+        onClose   = function() activeDialogResult = nil end,
+        buttons   = {
+            { text = L["OWSL_BTN_CANCEL"], onClick = function(f)
+                f:Hide()
+                activeDialogResult = nil
+            end },
+        },
+    })
+    activeDialogResult = result
 
-    local SBW = 10
-    local scrollFrame = CreateFrame("ScrollFrame", nil, listContainer)
-    scrollFrame:SetPoint("TOPLEFT",     listContainer, "TOPLEFT",     0,    0)
-    scrollFrame:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -SBW, 0)
-    scrollFrame:EnableMouseWheel(true)
-
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollContent)
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
-        scrollContent:SetWidth(w)
-    end)
-
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local cur = self:GetVerticalScroll()
-        local mx  = self:GetVerticalScrollRange()
-        self:SetVerticalScroll(math.max(0, math.min(mx, cur - delta * 30)))
-    end)
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(result.contentFrame, {})
 
     local yOffset = 0
     for _, recipe in ipairs(recipes) do
-        local knownBy = knownByData and knownByData[recipe.recipeID] or {}
-        local knownStr = ""
+        local knownBy  = knownByData and knownByData[recipe.recipeID] or {}
+        local knownStr
         if #knownBy > 0 then
-            knownStr = string.format(L["OWSL_DIALOG_KNOWN_BY"], knownBy[1].characterName)
             if #knownBy > 1 then
                 knownStr = string.format(L["OWSL_DIALOG_KNOWN_BY_MULTI"], knownBy[1].characterName, #knownBy - 1)
+            else
+                knownStr = string.format(L["OWSL_DIALOG_KNOWN_BY"], knownBy[1].characterName)
             end
         else
             knownStr = L["OWSL_DIALOG_UNKNOWN"]
         end
 
-        local btn = CreateFrame("Button", nil, scrollContent, "BackdropTemplate")
-        btn:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
+        local btn = OneWoW_GUI:CreateFrame(scrollContent, {
+            bgColor     = "BTN_NORMAL",
+            borderColor = "BORDER_SUBTLE",
+        })
+        btn:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  0, yOffset)
         btn:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
-        btn:SetHeight(36)
-        btn:SetBackdrop(BACKDROP_INNER)
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        btn:SetHeight(40)
+        btn:EnableMouse(true)
 
-        local recipeName = recipe.name or (string.format(L["OWSL_RECIPE_UNKNOWN"], recipe.recipeID))
-        local nameText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local recipeName = recipe.name or string.format(L["OWSL_RECIPE_UNKNOWN"], recipe.recipeID)
+
+        local nameText = OneWoW_GUI:CreateFS(btn, 12)
         nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", 8, -6)
         nameText:SetText(recipeName)
         nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local knownText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local knownText = OneWoW_GUI:CreateFS(btn, 10)
         knownText:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 8, 6)
         knownText:SetText(knownStr)
         knownText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
+        local capturedRecipe = recipe
+        btn:SetScript("OnMouseDown", function(self)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+        end)
+        btn:SetScript("OnMouseUp", function(self, btnName)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            if btnName == "LeftButton" and self:IsMouseOver() then
+                result.frame:Hide()
+                activeDialogResult = nil
+                if onSelect then onSelect(capturedRecipe) end
+            end
+        end)
         btn:SetScript("OnEnter", function(self)
             self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         end)
@@ -277,109 +275,86 @@ function Dialogs:RecipeSelectDialog(recipes, knownByData, onSelect, parent)
             self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
         end)
 
-        local capturedRecipe = recipe
-        btn:SetScript("OnClick", function()
-            CloseActive()
-            if onSelect then onSelect(capturedRecipe) end
-        end)
-
-        yOffset = yOffset - 40
+        yOffset = yOffset - 44
     end
 
-    scrollContent:SetHeight(math.abs(yOffset) + 4)
+    scrollContent:SetHeight(math.max(math.abs(yOffset) + 4, 1))
 
-    local cancelBtn = CreateBtn(dlg, L["OWSL_BTN_CANCEL"], 80, 28, 16, 12)
-    cancelBtn:SetScript("OnClick", CloseActive)
-
-    dlg:Show()
-    return dlg
+    result.frame:Show()
+    return result.frame
 end
 
 function Dialogs:CraftablesDialog(craftableItems, listName, onCraft, parent)
-    local dlg = CreateBaseDialog(parent, 480, 400)
-    local title = string.format(L["OWSL_CRAFTABLES_TITLE"], listName)
-    CreateLabel(dlg, title, "GameFontNormalLarge", 16, -16)
+    CloseActive()
 
-    local countLabel = CreateLabel(dlg,
-        string.format(L["OWSL_DIALOG_FOUND_CRAFTABLES"], #craftableItems),
-        "GameFontNormal", 16, -44)
+    local result = OneWoW_GUI:CreateDialog({
+        title     = string.format(L["OWSL_CRAFTABLES_TITLE"], listName),
+        width     = 480,
+        height    = 420,
+        showBrand = true,
+        strata    = "FULLSCREEN_DIALOG",
+        onClose   = function() activeDialogResult = nil end,
+        buttons   = {
+            { text = L["OWSL_BTN_CLOSE"], onClick = function(f)
+                f:Hide()
+                activeDialogResult = nil
+            end },
+        },
+    })
+    activeDialogResult = result
+
+    local countLabel = OneWoW_GUI:CreateFS(result.contentFrame, 12)
+    countLabel:SetPoint("TOPLEFT", result.contentFrame, "TOPLEFT", 16, -10)
+    countLabel:SetText(string.format(L["OWSL_DIALOG_FOUND_CRAFTABLES"], #craftableItems))
     countLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local listContainer = CreateFrame("Frame", nil, dlg)
-    listContainer:SetPoint("TOPLEFT", dlg, "TOPLEFT", 16, -70)
-    listContainer:SetPoint("BOTTOMRIGHT", dlg, "BOTTOMRIGHT", -16, 52)
+    local listContainer = CreateFrame("Frame", nil, result.contentFrame)
+    listContainer:SetPoint("TOPLEFT",     countLabel,          "BOTTOMLEFT",  0, -6)
+    listContainer:SetPoint("BOTTOMRIGHT", result.contentFrame, "BOTTOMRIGHT", -4, 4)
 
-    local SBW = 10
-    local scrollFrame = CreateFrame("ScrollFrame", nil, listContainer)
-    scrollFrame:SetPoint("TOPLEFT", listContainer, "TOPLEFT", 0, 0)
-    scrollFrame:SetPoint("BOTTOMRIGHT", listContainer, "BOTTOMRIGHT", -SBW, 0)
-    scrollFrame:EnableMouseWheel(true)
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local cur = self:GetVerticalScroll()
-        local mx  = self:GetVerticalScrollRange()
-        self:SetVerticalScroll(math.max(0, math.min(mx, cur - delta * 30)))
-    end)
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(listContainer, {})
 
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollContent)
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
-        scrollContent:SetWidth(w)
-    end)
-
+    local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
     local yOffset = 0
+
     for _, itemInfo in ipairs(craftableItems) do
-        local row = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-        row:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
+        local row = OneWoW_GUI:CreateFrame(scrollContent, {
+            bgColor     = "BG_TERTIARY",
+            borderColor = "BORDER_SUBTLE",
+        })
+        row:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  0, yOffset)
         row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
-        row:SetHeight(36)
-        row:SetBackdrop(BACKDROP_INNER)
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        row:SetHeight(38)
 
         local icon = row:CreateTexture(nil, "ARTWORK")
         icon:SetSize(28, 28)
         icon:SetPoint("LEFT", row, "LEFT", 4, 0)
         icon:SetTexture(itemInfo.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
 
-        local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        nameText:SetPoint("LEFT", icon, "RIGHT", 6, 4)
-        nameText:SetText(itemInfo.name or (string.format(L["OWSL_ITEM_PREFIX"], itemInfo.itemID or 0)))
+        local nameText = OneWoW_GUI:CreateFS(row, 12)
+        nameText:SetPoint("TOPLEFT", icon, "TOPRIGHT", 6, -2)
+        nameText:SetText(itemInfo.name or string.format(L["OWSL_ITEM_PREFIX"], itemInfo.itemID or 0))
         nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local qtyText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        qtyText:SetPoint("LEFT", icon, "RIGHT", 6, -8)
+        local qtyText = OneWoW_GUI:CreateFS(row, 10)
+        qtyText:SetPoint("BOTTOMLEFT", icon, "BOTTOMRIGHT", 6, 2)
         qtyText:SetText(string.format(L["OWSL_DIALOG_QTY_NEEDED"], itemInfo.quantity or 1))
         qtyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-        local craftBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
-        craftBtn:SetSize(60, 24)
-        craftBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        craftBtn:SetBackdrop(BACKDROP_INNER)
-        craftBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        craftBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        craftBtn.text = craftBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        craftBtn.text:SetPoint("CENTER")
-        craftBtn.text:SetText(L["OWSL_BTN_CRAFT"])
-        craftBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        craftBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER")) end)
-        craftBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL")) end)
-
         local capturedItem = itemInfo
+        local craftBtn = OneWoW_GUI:CreateFitTextButton(row, { text = L["OWSL_BTN_CRAFT"], height = 24 })
+        craftBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         craftBtn:SetScript("OnClick", function()
             if onCraft then onCraft(capturedItem) end
         end)
 
-        yOffset = yOffset - 40
+        yOffset = yOffset - 42
     end
 
-    scrollContent:SetHeight(math.abs(yOffset) + 4)
+    scrollContent:SetHeight(math.max(math.abs(yOffset) + 4, 1))
 
-    local closeBtn = CreateBtn(dlg, L["OWSL_BTN_CLOSE"], 100, 28, 16, 12)
-    closeBtn:SetScript("OnClick", CloseActive)
-
-    dlg:Show()
-    return dlg
+    result.frame:Show()
+    return result.frame
 end
 
 function Dialogs:Close()
@@ -387,5 +362,5 @@ function Dialogs:Close()
 end
 
 function Dialogs:IsOpen()
-    return activeDialog ~= nil and activeDialog:IsShown()
+    return activeDialogResult ~= nil and activeDialogResult.frame:IsShown()
 end

@@ -35,9 +35,6 @@ Locales\deDE.lua
 # Core (continued)
 Core\Database.lua
 
-# GUI Framework
-GUI\Framework.lua
-
 # Modules
 Modules\ShoppingList.lua
 Modules\DataAccess.lua

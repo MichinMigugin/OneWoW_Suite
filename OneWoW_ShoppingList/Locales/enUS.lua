@@ -269,6 +269,7 @@ ns.RegisterLocale("enUS", {
     ["OWSL_SETTINGS_ICON_HORDE"] = "Horde",
     ["OWSL_SETTINGS_ICON_ALLIANCE"] = "Alliance",
     ["OWSL_SETTINGS_ICON_NEUTRAL"] = "Neutral",
+    ["ADDON_CHAT_PREFIX"] = "|cFFFFD100OneWoW Shopping List:|r",
 })
 
 ns.SetLocale("enUS")

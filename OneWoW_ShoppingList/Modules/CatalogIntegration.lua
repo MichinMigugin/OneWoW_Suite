@@ -164,7 +164,7 @@ function CatalogIntegration:MakeNewList()
     if not db then return end
 
     if db.global.shoppingLists.lists[listName] then
-        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_CONFIRM_LIST_EXISTS"], listName))
+        print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_CONFIRM_LIST_EXISTS"], listName))
     else
         ns.ShoppingList:CreateList(listName)
     end
@@ -180,7 +180,7 @@ function CatalogIntegration:MakeNewList()
     end
 
     if itemsAdded > 0 then
-        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], listName, itemsAdded, itemsAdded ~= 1 and "s" or "", ""))
+        print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], listName, itemsAdded, itemsAdded ~= 1 and "s" or "", ""))
     end
 
     if ns.MainWindow and ns.MainWindow.frame and ns.MainWindow.frame:IsShown() then
@@ -209,7 +209,7 @@ function CatalogIntegration:AddToActiveList()
     end
 
     if itemsAdded > 0 then
-        print(string.format("|cFFFFD100OneWoW Shopping List:|r " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], activeList, itemsAdded, itemsAdded ~= 1 and "s" or "", ""))
+        print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_CRAFT_ORDER_UNDER"], activeList, itemsAdded, itemsAdded ~= 1 and "s" or "", ""))
     end
 
     if ns.MainWindow and ns.MainWindow.frame and ns.MainWindow.frame:IsShown() then

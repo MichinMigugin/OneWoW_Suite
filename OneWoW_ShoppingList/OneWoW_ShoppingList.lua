@@ -86,7 +86,7 @@ local function OnPlayerLogin()
             end,
         })
         if ns._pendingLoadVer then
-            print("|cFF00FF00OneWoW|r: |cFFFFFFFFShopping List|r |cFF888888\226\128\147 v." .. ns._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wsl")
+            print("|cFF00FF00OneWoW|r: |cFFFFFFFFShopping List|r |cFF888888-|r v." .. ns._pendingLoadVer .. " |cFF888888-|r |cFF00FF00Loaded|r - /1wsl")
         end
     end
 
@@ -138,6 +138,43 @@ local function OnAddonLoaded(loadedAddon)
         if owner.Minimap then owner.Minimap:UpdateIcon() end
     end)
 
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", ns, function()
+        if ns.MainWindow then
+            local wasShown = ns.MainWindow:IsShown()
+            ns.MainWindow:Rebuild()
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    if ns.MainWindow then ns.MainWindow:Show() end
+                end)
+            end
+        end
+    end)
+
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", ns, function()
+        if ns.MainWindow then
+            local wasShown = ns.MainWindow:IsShown()
+            ns.MainWindow:Rebuild()
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    if ns.MainWindow then ns.MainWindow:Show() end
+                end)
+            end
+        end
+    end)
+
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", ns, function(owner, langCode)
+        ns.SetLocale(langCode)
+        if ns.MainWindow then
+            local wasShown = ns.MainWindow:IsShown()
+            ns.MainWindow:Rebuild()
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    if ns.MainWindow then ns.MainWindow:Show() end
+                end)
+            end
+        end
+    end)
+
     InitializeModules()
 
     local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
@@ -152,7 +189,7 @@ local function HandleSlashCommand(msg)
     msg = strlower(strtrim(msg or ""))
 
     if msg == "help" then
-        print("|cFFFFD100OneWoW Shopping List|r commands:")
+        print(L["ADDON_CHAT_PREFIX"] .. " commands:")
         print("  |cFFFFFFFF/owsl|r - Toggle main window")
         print("  |cFFFFFFFF/owsl show|r - Show main window")
         print("  |cFFFFFFFF/owsl hide|r - Hide main window")
@@ -179,7 +216,7 @@ local function HandleSlashCommand(msg)
                 local ok = ns.ShoppingList:AddItemToList(activeList, itemID, 1)
                 if ok then
                     local name = C_Item.GetItemNameByID(itemID) or tostring(itemID)
-                    print(string.format("|cFFFFD100OneWoW Shopping List:|r Added %s to %s.", name, activeList))
+                    print(string.format(L["ADDON_CHAT_PREFIX"] .. " Added %s to %s.", name, activeList))
                 end
             end
         end
