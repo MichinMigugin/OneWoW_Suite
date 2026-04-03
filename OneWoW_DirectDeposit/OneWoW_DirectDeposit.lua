@@ -161,6 +161,87 @@ function OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
     end
 end
 
+function OneWoW_DirectDeposit:AddHoveredItemToList(bankType)
+    local _, itemLink = GameTooltip:GetItem()
+    if not itemLink then
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["KEYBIND_NO_ITEM"])
+        return
+    end
+
+    local itemID = C_Item.GetItemIDForItemInfo(itemLink)
+    if not itemID then
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["KEYBIND_NO_ITEM"])
+        return
+    end
+
+    local success, msg = self.DirectDeposit:AddItemToList(itemID, bankType)
+    if success then
+        local bankName = bankType == "personal" and L["ITEM_DEPOSIT_PERSONAL"]
+                      or bankType == "warband"  and L["ITEM_DEPOSIT_WARBAND"]
+                      or L["ITEM_DEPOSIT_GUILD"]
+        print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Added|r " .. itemLink .. " |cFFFFFFFFto|r " .. bankName)
+        if self.GUI then self.GUI:RefreshCurrentTab() end
+    else
+        print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800" .. (msg or "Failed") .. "|r")
+    end
+end
+
+function OneWoW_DirectDeposit:InitTooltipHook()
+    if self.oneWoWHubActive and _G.OneWoW and _G.OneWoW.TooltipEngine then
+        _G.OneWoW.TooltipEngine:RegisterProvider({
+            id           = "directdeposit",
+            order        = 50,
+            tooltipTypes = { "item" },
+            callback     = function(tooltip, context)
+                if not context.itemID then return nil end
+                if not self.db or not self.db.global.directDeposit.tooltipEnabled then return nil end
+
+                local itemList = self.db.global.directDeposit.itemList
+                if not itemList then return nil end
+
+                local itemData = itemList[tostring(context.itemID)]
+                if not itemData then return nil end
+
+                local text
+                if itemData.bankType == "personal" then
+                    text = L["TOOLTIP_PERSONAL"]
+                elseif itemData.bankType == "warband" then
+                    text = L["TOOLTIP_WARBAND"]
+                elseif itemData.bankType == "guild" then
+                    text = L["TOOLTIP_GUILD"]
+                end
+
+                if not text then return nil end
+                return { { type = "text", text = text, r = 1, g = 0.82, b = 0 } }
+            end,
+        })
+    else
+        TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
+            if not self.db or not self.db.global.directDeposit.tooltipEnabled then return end
+            if not data or not data.id then return end
+
+            local itemList = self.db.global.directDeposit.itemList
+            if not itemList then return end
+
+            local itemData = itemList[tostring(data.id)]
+            if not itemData then return end
+
+            local text
+            if itemData.bankType == "personal" then
+                text = L["TOOLTIP_PERSONAL"]
+            elseif itemData.bankType == "warband" then
+                text = L["TOOLTIP_WARBAND"]
+            elseif itemData.bankType == "guild" then
+                text = L["TOOLTIP_GUILD"]
+            end
+
+            if text then
+                tooltip:AddLine(text, 1, 0.82, 0, true)
+            end
+        end)
+    end
+end
+
 function OneWoW_DirectDeposit:InitializeModules()
     if OneWoW_DirectDeposit.DirectDeposit then
         OneWoW_DirectDeposit.DirectDeposit:Initialize()
@@ -252,6 +333,9 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
     elseif event == "PLAYER_LOGIN" then
         DetectOneWoW()
+        C_Timer.After(0, function()
+            OneWoW_DirectDeposit:InitTooltipHook()
+        end)
         if not OneWoW_DirectDeposit.oneWoWHubActive then
             OneWoW_DirectDeposit.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_DirectDeposit", {
                 label = "Direct Deposit",

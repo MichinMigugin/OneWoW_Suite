@@ -85,6 +85,7 @@ function GUI:CreateTabSystem(parent)
         { text = L["TAB_GOLD"],     id = 1 },
         { text = L["TAB_ITEMS"],    id = 2 },
         { text = L["TAB_SETTINGS"], id = 3 },
+        { text = L["TAB_KEYBINDS"], id = 4 },
     }
 
     local prevTab = nil
@@ -146,6 +147,7 @@ function GUI:CreateTabSystem(parent)
     tabPanels[1] = GUI:CreateGoldPanel(contentArea)
     tabPanels[2] = GUI:CreateItemsPanel(contentArea)
     tabPanels[3] = GUI:CreateSettingsPanel(contentArea)
+    tabPanels[4] = GUI:CreateKeybindsPanel(contentArea)
 
     local bottomBar = CreateFrame("Frame", nil, parent)
     bottomBar:SetHeight(36)
@@ -157,19 +159,10 @@ function GUI:CreateTabSystem(parent)
     statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     MainWindow.statusText = statusText
 
-    local clearBtn = OneWoW_GUI:CreateFitTextButton(bottomBar, { text = L["CLEAR"], height = Constants.GUI.BUTTON_HEIGHT })
-    clearBtn:SetPoint("RIGHT", bottomBar, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
-    clearBtn:SetScript("OnClick", function()
-        local dd = OneWoW_DirectDeposit.db.global.directDeposit
-        local ch = OneWoW_DirectDeposit.db.char.directDeposit
-        dd.targetGold       = 0
-        dd.depositEnabled   = false
-        dd.withdrawEnabled  = false
-        dd.itemDepositEnabled = false
-        ch.targetGold       = 0
-        ch.depositEnabled   = false
-        ch.withdrawEnabled  = false
-        GUI:RefreshCurrentTab()
+    local closeBtn = OneWoW_GUI:CreateFitTextButton(bottomBar, { text = L["CLOSE"], height = Constants.GUI.BUTTON_HEIGHT })
+    closeBtn:SetPoint("RIGHT", bottomBar, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    closeBtn:SetScript("OnClick", function()
+        MainWindow:Hide()
     end)
 
     GUI:SelectTab(1)
@@ -772,6 +765,95 @@ function GUI:CreateSettingsPanel(parent)
 
     CreateLinkBox(scrollContent, "WEBSITE_LABEL", "WEBSITE_URL", yOffset)
     yOffset = yOffset - 95
+
+    scrollContent:SetHeight(math.abs(yOffset) + 40)
+    panel.scrollContent = scrollContent
+
+    return panel
+end
+
+function GUI:CreateKeybindsPanel(parent)
+    local panel = CreateFrame("Frame", nil, parent)
+    panel:SetAllPoints()
+    panel:Hide()
+
+    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(panel, {
+        name = "OneWoW_DirectDepositKeybinds",
+    })
+
+    local yOffset = -15
+
+    local tooltipSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
+        title   = L["TOOLTIP_SECTION"],
+        yOffset = yOffset,
+    })
+    yOffset = tooltipSection.bottomY - 10
+
+    local tooltipCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["TOOLTIP_ENABLE"] })
+    tooltipCheck:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 20, yOffset)
+    tooltipCheck:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.tooltipEnabled)
+    tooltipCheck:SetScript("OnClick", function(self)
+        OneWoW_DirectDeposit.db.global.directDeposit.tooltipEnabled = self:GetChecked()
+    end)
+    panel.tooltipCheck = tooltipCheck
+    yOffset = yOffset - 30
+
+    local tooltipDesc = OneWoW_GUI:CreateFS(scrollContent, 11)
+    tooltipDesc:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  40, yOffset)
+    tooltipDesc:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -20, yOffset)
+    tooltipDesc:SetText(L["TOOLTIP_ENABLE_DESC"])
+    tooltipDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    tooltipDesc:SetJustifyH("LEFT")
+    tooltipDesc:SetWordWrap(true)
+    yOffset = yOffset - 48
+
+    local keybindSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
+        title   = L["KEYBIND_SECTION"],
+        yOffset = yOffset,
+    })
+    yOffset = keybindSection.bottomY - 10
+
+    local keybindDesc = OneWoW_GUI:CreateFS(scrollContent, 11)
+    keybindDesc:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  20, yOffset)
+    keybindDesc:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -20, yOffset)
+    keybindDesc:SetText(L["KEYBIND_DESC"])
+    keybindDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    keybindDesc:SetJustifyH("LEFT")
+    keybindDesc:SetWordWrap(true)
+    yOffset = yOffset - 48
+
+    local bindingDefs = {
+        { nameKey = "KEYBIND_ADD_PERSONAL", binding = "ONEWOW_DIRECTDEPOSIT_ADD_PERSONAL" },
+        { nameKey = "KEYBIND_ADD_WARBAND",  binding = "ONEWOW_DIRECTDEPOSIT_ADD_WARBAND"  },
+        { nameKey = "KEYBIND_ADD_GUILD",    binding = "ONEWOW_DIRECTDEPOSIT_ADD_GUILD"    },
+    }
+
+    for _, def in ipairs(bindingDefs) do
+        local row = OneWoW_GUI:CreateFrame(scrollContent, {
+            backdrop    = BACKDROP_INNER_NO_INSETS,
+            bgColor     = "BG_SECONDARY",
+            borderColor = "BORDER_SUBTLE",
+        })
+        row:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  20, yOffset)
+        row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -20, yOffset)
+        row:SetHeight(32)
+
+        local nameText = OneWoW_GUI:CreateFS(row, 12)
+        nameText:SetPoint("LEFT", row, "LEFT", 12, 0)
+        nameText:SetText(L[def.nameKey])
+        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        local keyText = OneWoW_GUI:CreateFS(row, 12)
+        keyText:SetPoint("RIGHT", row, "RIGHT", -12, 0)
+        local key1, key2 = GetBindingKey(def.binding)
+        local keyDisplay = key1 or key2 or "|cFF888888Unbound|r"
+        if key1 and key2 then keyDisplay = key1 .. " / " .. key2 end
+        keyText:SetText(keyDisplay)
+        keyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        keyText:SetJustifyH("RIGHT")
+
+        yOffset = yOffset - 38
+    end
 
     scrollContent:SetHeight(math.abs(yOffset) + 40)
     panel.scrollContent = scrollContent

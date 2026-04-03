@@ -121,6 +121,22 @@ OneWoW_DirectDeposit.Locales["enUS"] = {
     ["ITEM_DRAG_HINT"] = "Drag items here to add",
     ["ITEM_EMPTY_LIST"] = "No items in auto-deposit list.\nDrag items here to add them.",
 
+    ["TAB_KEYBINDS"] = "Keybinds",
+
+    ["KEYBIND_SECTION"] = "Quick Add Keybinds",
+    ["KEYBIND_DESC"] = "Hover over any item and press a keybind to instantly add it to the deposit list. Assign keys in Game Menu > Key Bindings > OneWoW Direct Deposit.",
+    ["KEYBIND_ADD_PERSONAL"] = "Add Hovered Item - Personal Bank",
+    ["KEYBIND_ADD_WARBAND"] = "Add Hovered Item - Warband Bank",
+    ["KEYBIND_ADD_GUILD"] = "Add Hovered Item - Guild Bank",
+    ["KEYBIND_NO_ITEM"] = "No item found - hover over an item first.",
+
+    ["TOOLTIP_SECTION"] = "Tooltip Overlay",
+    ["TOOLTIP_ENABLE"] = "Show Deposit Status in Tooltips",
+    ["TOOLTIP_ENABLE_DESC"] = "Items queued for deposit will show their destination bank at the bottom of their tooltip.",
+    ["TOOLTIP_PERSONAL"] = "DirectDepositing - Personal",
+    ["TOOLTIP_WARBAND"] = "DirectDepositing - Warband",
+    ["TOOLTIP_GUILD"] = "DirectDepositing - Guild",
+
 }
 
 OneWoW_DirectDeposit.L = {}
@@ -131,3 +147,6 @@ end
 _G["BINDING_HEADER_ONEWOW_DIRECTDEPOSIT"] = "|cFF00FF00OneWoW|r Direct Deposit"
 _G["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_TOGGLE"] = "Toggle Direct Deposit Window"
 _G["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_DEPOSIT"] = "Deposit Items Now"
+_G["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_PERSONAL"] = "Quick Add: Personal Bank"
+_G["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_WARBAND"] = "Quick Add: Warband Bank"
+_G["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_GUILD"] = "Quick Add: Guild Bank"
