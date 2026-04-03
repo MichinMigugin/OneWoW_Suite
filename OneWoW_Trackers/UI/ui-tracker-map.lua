@@ -71,7 +71,7 @@ function TMU:ShowWaypointList(listID)
     end
 
     if #waypoints == 0 then
-        print("|cFFFFD100OneWoW Trackers:|r No waypoints found in this list.")
+        print((L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW Trackers:|r") .. " No waypoints found in this list.")
         return
     end
 
@@ -112,7 +112,7 @@ function TMU:ShowWaypointList(listID)
         label:SetText(wp.label or "Waypoint")
 
         if wp.completed then
-            label:SetTextColor(0.5, 0.5, 0.5)
+            label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             complete = complete + 1
         else
             label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -124,7 +124,7 @@ function TMU:ShowWaypointList(listID)
         local coordLabel = OneWoW_GUI:CreateFS(row, 10)
         coordLabel:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         coordLabel:SetText(coordStr)
-        coordLabel:SetTextColor(0.5, 0.7, 1.0)
+        coordLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         yOffset = yOffset - 26
     end

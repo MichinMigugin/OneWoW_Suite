@@ -148,7 +148,6 @@ function TP:Create(listID)
 
     local titleBar = OneWoW_GUI:CreateTitleBar(frame, {
         title = list.title or "Tracker",
-        height = 24,
         onClose = function()
             TE:DestroyPinnedWindow(listID)
         end,
@@ -311,7 +310,7 @@ function TP:Create(listID)
                         local mapPoint = UiMapPoint.CreateFromCoordinates(mid, cx, cy)
                         C_Map.SetUserWaypoint(mapPoint)
                         C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                        print(format("|cFFFFD100OneWoW Trackers:|r Waypoint set for %s (%.1f, %.1f)", step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
+                        print(format("%s Waypoint set for %s (%.1f, %.1f)", L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW Trackers:|r", step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
                     end)
                 elseif step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                     stepRow:RegisterForClicks("AnyDown", "AnyUp")

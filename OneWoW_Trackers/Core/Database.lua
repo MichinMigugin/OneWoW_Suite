@@ -3,6 +3,8 @@ local addonName, ns = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local CHAT_PREFIX = "|cFFFFD100OneWoW Trackers:|r"
+
 ns.Database = {}
 local Database = ns.Database
 
@@ -39,25 +41,8 @@ function Database:Initialize()
     local gdb = _G.OneWoW_Trackers_DB
     local cdb = _G.OneWoW_Trackers_CharDB
 
-    for k, v in pairs(GLOBAL_DEFAULTS) do
-        if gdb[k] == nil then
-            if type(v) == "table" then
-                gdb[k] = CopyTable(v)
-            else
-                gdb[k] = v
-            end
-        end
-    end
-
-    for k, v in pairs(CHAR_DEFAULTS) do
-        if cdb[k] == nil then
-            if type(v) == "table" then
-                cdb[k] = CopyTable(v)
-            else
-                cdb[k] = v
-            end
-        end
-    end
+    OneWoW_GUI.DB:MergeMissing(gdb, GLOBAL_DEFAULTS)
+    OneWoW_GUI.DB:MergeMissing(cdb, CHAR_DEFAULTS)
 
     return { global = gdb, char = cdb }
 end
@@ -124,6 +109,6 @@ function Database:MigrateFromNotes(db)
     end
 
     if migratedCount > 0 then
-        print("|cFFFFD100OneWoW Trackers:|r Migrated tracker data from Notes (" .. migratedCount .. " data sets).")
+        print(CHAT_PREFIX .. " Migrated tracker data from Notes (" .. migratedCount .. " data sets).")
     end
 end

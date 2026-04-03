@@ -117,4 +117,6 @@ ns.RegisterLocale("enUS", {
     ["TRACKER_MARK_INCOMPLETE"]         = "Mark Incomplete",
     ["TRACKER_ACCOUNT_WIDE"]            = "Account-wide progress",
     ["TRACKER_ACCOUNT_WIDE_HINT"]       = "Checked tasks are shared across all characters",
+    ["ADDON_CHAT_PREFIX"]               = "|cFFFFD100OneWoW Trackers:|r",
+    ["TAB_SETTINGS"]                    = "Settings",
 })

@@ -3,6 +3,8 @@ local addonName, ns = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local DB = OneWoW_GUI.DB
+
 OneWoW_Trackers = {}
 local addon = OneWoW_Trackers
 
@@ -96,14 +98,10 @@ local function OnInitialize()
     ApplyTheme()
     ApplyLanguage()
 
-    local function slashHandler(msg)
-        addon:SlashCommandHandler(msg)
-    end
-
-    SLASH_ONEWOW_TRACKERS1 = "/1wt"
-    SLASH_ONEWOW_TRACKERS2 = "/owt"
-    SLASH_ONEWOW_TRACKERS3 = "/tracker"
-    SlashCmdList["ONEWOW_TRACKERS"] = slashHandler
+    local function slashHandler(msg) addon:SlashCommandHandler(msg) end
+    DB:RegisterSlashCommand("1wt",     slashHandler)
+    DB:RegisterSlashCommand("owt",     slashHandler)
+    DB:RegisterSlashCommand("tracker", slashHandler)
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", addon, function(self2)
         ApplyTheme()
@@ -115,6 +113,13 @@ local function OnInitialize()
         if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
             ns.TrackerEngine:RefreshAllPinnedWindows()
         end
+        if ns.UI and ns.UI.RefreshTab then ns.UI.RefreshTab() end
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", addon, function(self2)
+        if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
+            ns.TrackerEngine:RefreshAllPinnedWindows()
+        end
+        if ns.UI and ns.UI.RefreshTab then ns.UI.RefreshTab() end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", addon, function(owner, hidden)
         if owner.Minimap then owner.Minimap:SetShown(not hidden) end
@@ -133,16 +138,16 @@ end
 
 local function OnEnable()
     local notesLoaded = C_AddOns.IsAddOnLoaded("OneWoW_Notes")
-    local oneWoWLoaded = _G.OneWoW ~= nil
+    local oneWoWLoaded = C_AddOns.IsAddOnLoaded("OneWoW")
 
-    if notesLoaded then
+    if oneWoWLoaded and RegisterAsOneWoWModule() then
+        -- registered as OneWoW module
+    elseif notesLoaded then
         RegisterWithNotesAsSubtab()
-    elseif oneWoWLoaded then
-        RegisterAsOneWoWModule()
     else
         SetupStandalone()
         if addon._pendingLoadVer then
-            print("|cFF00FF00OneWoW|r: |cFFFFFFFFTrackers|r |cFF888888\226\128\147 v." .. addon._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wt")
+            print("|cFFFFD100OneWoW Trackers:|r v." .. addon._pendingLoadVer .. " loaded - /1wt")
         end
     end
 

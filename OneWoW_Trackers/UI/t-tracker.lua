@@ -41,13 +41,14 @@ function ns.UI.CreateTrackerTab(parent)
     local hideCompleted = false
     local listRows = {}
 
-    local controlPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local controlPanel = OneWoW_GUI:CreateFrame(parent, {
+        height   = 75,
+        backdrop = BACKDROP_INNER_NO_INSETS,
+        bgColor  = "BG_SECONDARY",
+        borderColor = "BORDER_SUBTLE",
+    })
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    controlPanel:SetHeight(75)
-    controlPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    controlPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local newBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
         text = L["TRACKER_NEW"] or "New",
@@ -149,13 +150,13 @@ function ns.UI.CreateTrackerTab(parent)
     local LEFT_PANEL_WIDTH = ns.Constants.GUI.LEFT_PANEL_WIDTH or 350
     local GAP = 10
 
-    local listPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local listPanel = OneWoW_GUI:CreateFrame(parent, {
+        width    = LEFT_PANEL_WIDTH,
+        backdrop = BACKDROP_INNER_NO_INSETS,
+        borderColor = "BORDER_SUBTLE",
+    })
     listPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -GAP)
     listPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
-    listPanel:SetWidth(LEFT_PANEL_WIDTH)
-    listPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    listPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    listPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local listTitle = OneWoW_GUI:CreateFS(listPanel, 12)
     listTitle:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 10, -8)
@@ -166,12 +167,12 @@ function ns.UI.CreateTrackerTab(parent)
     listScrollFrame:SetPoint("TOPLEFT", listTitle, "BOTTOMLEFT", 0, -6)
     listScrollFrame:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -6, 4)
 
-    local detailPanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local detailPanel = OneWoW_GUI:CreateFrame(parent, {
+        backdrop = BACKDROP_INNER_NO_INSETS,
+        borderColor = "BORDER_SUBTLE",
+    })
     detailPanel:SetPoint("TOPLEFT", listPanel, "TOPRIGHT", GAP, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    detailPanel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    detailPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local detailTitle = OneWoW_GUI:CreateFS(detailPanel, 12)
     detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -8)
@@ -227,24 +228,15 @@ function ns.UI.CreateTrackerTab(parent)
         progressLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         if total > 0 then
-            local progressBg = row:CreateTexture(nil, "ARTWORK")
-            progressBg:SetHeight(3)
-            progressBg:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 4, 4)
-            progressBg:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 4)
-            progressBg:SetColorTexture(0.2, 0.2, 0.2, 0.5)
-
-            local progressFill = row:CreateTexture(nil, "ARTWORK", nil, 1)
-            progressFill:SetHeight(3)
-            progressFill:SetPoint("BOTTOMLEFT", progressBg, "BOTTOMLEFT", 0, 0)
-            local pct = done / total
-            progressFill:SetWidth(math.max(1, progressBg:GetWidth() * pct))
-            progressFill:SetColorTexture(OneWoW_GUI:GetProgressColor(done, total))
-
-            C_Timer.After(0.1, function()
-                if progressBg:GetWidth() > 0 then
-                    progressFill:SetWidth(math.max(1, progressBg:GetWidth() * pct))
-                end
-            end)
+            local progressBar = OneWoW_GUI:CreateProgressBar(row, {
+                height = 3,
+                min    = 0,
+                max    = total,
+                value  = done,
+            })
+            progressBar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 4, 4)
+            progressBar:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 4)
+            progressBar._text:Hide()
         end
 
         if listData.favorite then
@@ -328,12 +320,13 @@ function ns.UI.CreateTrackerTab(parent)
 
     local function EnsureDragUI()
         if not ghostFrame then
-            ghostFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            ghostFrame:SetSize(220, 22)
+            ghostFrame = OneWoW_GUI:CreateFrame(UIParent, {
+                width   = 220,
+                height  = 22,
+                backdrop = BACKDROP_SIMPLE,
+                borderColor = "ACCENT_PRIMARY",
+            })
             ghostFrame:SetFrameStrata("TOOLTIP")
-            ghostFrame:SetBackdrop(BACKDROP_SIMPLE)
-            ghostFrame:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
-            ghostFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             ghostFrame.label = OneWoW_GUI:CreateFS(ghostFrame, 10)
             ghostFrame.label:SetPoint("LEFT", 6, 0)
             ghostFrame.label:SetPoint("RIGHT", ghostFrame, "RIGHT", -6, 0)
@@ -449,13 +442,14 @@ function ns.UI.CreateTrackerTab(parent)
 
         local yOffset = 0
 
-        local headerFrame = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
+        local headerFrame = OneWoW_GUI:CreateFrame(detailScrollChild, {
+            height   = 80,
+            backdrop = BACKDROP_SIMPLE,
+            bgColor  = "BG_SECONDARY",
+            borderColor = "BORDER_SUBTLE",
+        })
         headerFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 4, yOffset)
         headerFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -4, yOffset)
-        headerFrame:SetHeight(80)
-        headerFrame:SetBackdrop(BACKDROP_SIMPLE)
-        headerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        headerFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         tinsert(detailRows, headerFrame)
 
         local authorText = OneWoW_GUI:CreateFS(headerFrame, 10)
@@ -468,7 +462,7 @@ function ns.UI.CreateTrackerTab(parent)
             (list.author or "")
         )
         if list.accountWide then
-            metaParts = metaParts .. "  |  |cFF66CCFFAccount-wide|r"
+            metaParts = metaParts .. "  |  " .. OneWoW_GUI:WrapThemeColor(L["TRACKER_ACCOUNT_WIDE"] or "Account-wide", "ACCENT_PRIMARY")
         end
         authorText:SetText(metaParts)
         authorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -722,11 +716,11 @@ function ns.UI.CreateTrackerTab(parent)
                 tinsert(detailRows, stepRow)
 
                 if isComplete then
-                    stepRow:SetBackdropColor(0.15, 0.25, 0.15, 0.3)
-                    stepRow:SetBackdropBorderColor(0.3, 0.5, 0.3, 0.5)
+                    stepRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_MUTED"))
+                    stepRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
                 elseif not depsMet then
-                    stepRow:SetBackdropColor(0.2, 0.2, 0.2, 0.3)
-                    stepRow:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.3)
+                    stepRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                    stepRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
                 else
                     stepRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                     stepRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -742,12 +736,10 @@ function ns.UI.CreateTrackerTab(parent)
                     infoTex:SetAllPoints()
                     infoTex:SetTexture("Interface\\FriendsFrame\\InformationIcon")
                 else
-                    checkBtn = CreateFrame("CheckButton", nil, stepRow)
+                    checkBtn = OneWoW_GUI:CreateCheckbox(stepRow, {})
                     checkBtn:SetSize(checkSize, checkSize)
+                    checkBtn:ClearAllPoints()
                     checkBtn:SetPoint("LEFT", stepRow, "LEFT", 6, 0)
-                    checkBtn:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
-                    checkBtn:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
-                    checkBtn:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight", "ADD")
                     checkBtn:SetChecked(isComplete)
 
                     if step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
@@ -771,9 +763,9 @@ function ns.UI.CreateTrackerTab(parent)
                 if step.optional then
                     stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 elseif isComplete then
-                    stepLabel:SetTextColor(0.4, 0.8, 0.4)
+                    stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
                 elseif not depsMet then
-                    stepLabel:SetTextColor(0.5, 0.5, 0.5)
+                    stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 else
                     stepLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end
@@ -812,12 +804,10 @@ function ns.UI.CreateTrackerTab(parent)
                     for _, obj in ipairs(step.objectives) do
                         local objComplete = TD:GetObjectiveProgress(list.id, sec.key, step.key, obj.key)
 
-                        local objCheck = CreateFrame("CheckButton", nil, stepRow)
+                        local objCheck = OneWoW_GUI:CreateCheckbox(stepRow, {})
                         objCheck:SetSize(14, 14)
+                        objCheck:ClearAllPoints()
                         objCheck:SetPoint("TOPLEFT", stepRow, "TOPLEFT", 30, objY)
-                        objCheck:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
-                        objCheck:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
-                        objCheck:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight", "ADD")
                         objCheck:SetChecked(objComplete)
 
                         if obj.type == "manual" then
@@ -839,7 +829,7 @@ function ns.UI.CreateTrackerTab(parent)
                         objLabel:SetText(format("[%s] %s", TE:GetTrackTypeDisplayName(obj.type), obj.description or ""))
 
                         if objComplete then
-                            objLabel:SetTextColor(0.4, 0.8, 0.4)
+                            objLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
                         else
                             objLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                         end
@@ -856,7 +846,7 @@ function ns.UI.CreateTrackerTab(parent)
                     local mapInfo = C_Map.GetMapInfo(tonumber(step.mapID))
                     local mapName = mapInfo and mapInfo.name or tostring(step.mapID)
                     coordFS:SetText(format("%s (%.1f, %.1f)", mapName, step.coordX, step.coordY))
-                    coordFS:SetTextColor(0.5, 0.7, 1.0)
+                    coordFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     rowHeight = rowHeight + 16
                 end
 
@@ -893,7 +883,7 @@ function ns.UI.CreateTrackerTab(parent)
                             local mapPoint = UiMapPoint.CreateFromCoordinates(mid, cx, cy)
                             C_Map.SetUserWaypoint(mapPoint)
                             C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                            print(format("|cFFFFD100OneWoW Trackers:|r Waypoint set for %s (%.1f, %.1f)", step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
+                            print(format("%s Waypoint set for %s (%.1f, %.1f)", L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW Trackers:|r", step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
                         elseif not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                             TD:ToggleStepComplete(list.id, sec.key, step.key)
                             parent.RefreshList()
@@ -1027,6 +1017,13 @@ function ns.UI.CreateTrackerTab(parent)
             parent.ShowDetail(selectedListID)
         end
     end)
+
+    ns.UI.RefreshTab = function()
+        parent.RefreshList()
+        if selectedListID then
+            parent.ShowDetail(selectedListID)
+        end
+    end
 
     parent.RefreshList()
 end

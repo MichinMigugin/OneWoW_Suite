@@ -1,6 +1,6 @@
 ## Interface: 120001, 120005
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Trackers|r
-## Version: R6.2604.0301
+## Version: R6.2604.0318
 ## Notes: OneWoW Addon that: provides tracker lists, guides, dailies, weeklies, and todo tracking.
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
@@ -22,13 +22,15 @@ Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
 Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 
+# Constants (must load before Locales)
+Core\Constants.lua
+
 # Locales
 Locales\LocaleManager.lua
 Locales\enUS.lua
 Locales\koKR.lua
 
 # Core
-Core\Constants.lua
 Core\Database.lua
 Core\TrackerData.lua
 Core\TrackerEngine.lua
@@ -40,6 +42,7 @@ Core\TrackerMigration.lua
 OneWoW_Trackers.lua
 
 # UI
+UI\Framework.lua
 UI\MainFrame.lua
 UI\t-tracker.lua
 UI\ui-tracker-editor.lua
