@@ -30,6 +30,7 @@ OneWoW.Locales["enUS"] = {
     ["MODULE_NOTES"]         = "Notes",
     ["MODULE_QOL"]           = "Quality of Life",
     ["MODULE_SHOPPINGLIST"]  = "Shopping List",
+    ["MODULE_TRACKERS"]      = "Trackers",
 
     ["MODULE_GUI"]        = "OneWoW GUI",
     ["MODULE_BAGS"]       = "Bags",

@@ -495,9 +495,10 @@ function GUI:CreateHomeTab(parent)
 
     modY = standaloneTitleY - 24
     local standaloneChecks = {
-        { key = "MODULE_BAGS",         displayName = "Bags",           addonName = "OneWoW_Bags" },
+        { key = "MODULE_BAGS",          displayName = "Bags",           addonName = "OneWoW_Bags" },
         { key = "MODULE_DIRECTDEPOSIT", displayName = "Direct Deposit", addonName = "OneWoW_DirectDeposit" },
         { key = "MODULE_SHOPPINGLIST",  displayName = "Shopping List",  addonName = "OneWoW_ShoppingList" },
+        { key = "MODULE_TRACKERS",      displayName = "Trackers",       addonName = "OneWoW_Trackers" },
     }
 
     for _, mod in ipairs(standaloneChecks) do
