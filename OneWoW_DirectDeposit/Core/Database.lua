@@ -20,6 +20,7 @@ local DEFAULTS = {
         itemDepositEnabled = false,
         itemList = {},
         tooltipEnabled = true,
+        warboundAutoDeposit = false,
     },
 }
 

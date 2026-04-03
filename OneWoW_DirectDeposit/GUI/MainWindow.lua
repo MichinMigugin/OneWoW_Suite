@@ -370,6 +370,31 @@ function GUI:CreateItemsPanel(parent)
 
     local yOffset = -15
 
+    local warboundSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
+        title   = L["WARBOUND_SECTION"],
+        yOffset = yOffset,
+    })
+    yOffset = warboundSection.bottomY - 10
+
+    local warboundCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["WARBOUND_ENABLE"] })
+    warboundCheck:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 20, yOffset)
+    warboundCheck:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.warboundAutoDeposit)
+    warboundCheck:SetScript("OnClick", function(self)
+        OneWoW_DirectDeposit.db.global.directDeposit.warboundAutoDeposit = self:GetChecked()
+    end)
+    panel.warboundCheck = warboundCheck
+    yOffset = yOffset - 30
+
+    local warboundDesc = OneWoW_GUI:CreateFS(scrollContent, 11)
+    warboundDesc:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  40, yOffset)
+    warboundDesc:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -20, yOffset)
+    warboundDesc:SetText(L["WARBOUND_ENABLE_DESC"])
+    warboundDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    warboundDesc:SetJustifyH("LEFT")
+    warboundDesc:SetWordWrap(true)
+    yOffset = yOffset - 52
+    yOffset = yOffset - 20
+
     local itemSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
         title   = L["ITEM_DEPOSIT"],
         yOffset = yOffset,

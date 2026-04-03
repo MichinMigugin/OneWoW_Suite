@@ -174,19 +174,49 @@ function OneWoW_DirectDeposit:AddHoveredItemToList(bankType)
         return
     end
 
-    local success, msg = self.DirectDeposit:AddItemToList(itemID, bankType)
-    if success then
-        local bankName = bankType == "personal" and L["ITEM_DEPOSIT_PERSONAL"]
-                      or bankType == "warband"  and L["ITEM_DEPOSIT_WARBAND"]
-                      or L["ITEM_DEPOSIT_GUILD"]
-        print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Added|r " .. itemLink .. " |cFFFFFFFFto|r " .. bankName)
+    local itemList = self.db.global.directDeposit.itemList or {}
+    local existing = itemList[tostring(itemID)]
+
+    local function bankName(bt)
+        return bt == "personal" and L["ITEM_DEPOSIT_PERSONAL"]
+            or bt == "warband"  and L["ITEM_DEPOSIT_WARBAND"]
+            or L["ITEM_DEPOSIT_GUILD"]
+    end
+
+    if existing then
+        if existing.bankType == bankType then
+            self.DirectDeposit:RemoveItemFromList(itemID)
+            print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800Removed|r " .. itemLink .. " |cFFFFFFFFfrom|r " .. bankName(bankType))
+        else
+            local oldName = bankName(existing.bankType)
+            local newName = bankName(bankType)
+            self.DirectDeposit:UpdateItemBankType(itemID, bankType)
+            print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Moved|r " .. itemLink .. " |cFFFFFFFFfrom|r " .. oldName .. " |cFFFFFFFFto|r " .. newName)
+        end
         if self.GUI then self.GUI:RefreshCurrentTab() end
     else
-        print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800" .. (msg or "Failed") .. "|r")
+        local success, msg = self.DirectDeposit:AddItemToList(itemID, bankType)
+        if success then
+            print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Added|r " .. itemLink .. " |cFFFFFFFFto|r " .. bankName(bankType))
+            if self.GUI then self.GUI:RefreshCurrentTab() end
+        else
+            print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800" .. (msg or "Failed") .. "|r")
+        end
     end
 end
 
 function OneWoW_DirectDeposit:InitTooltipHook()
+    local function GetBankTypeDisplay(bankType)
+        if bankType == "personal" then
+            return L["TOOLTIP_PERSONAL"], 1.0, 1.0, 1.0
+        elseif bankType == "warband" then
+            return L["TOOLTIP_WARBAND"], 0.4, 0.8, 1.0
+        elseif bankType == "guild" then
+            return L["TOOLTIP_GUILD"], 1.0, 0.82, 0.0
+        end
+        return nil
+    end
+
     if self.oneWoWHubActive and _G.OneWoW and _G.OneWoW.TooltipEngine then
         _G.OneWoW.TooltipEngine:RegisterProvider({
             id           = "directdeposit",
@@ -202,17 +232,18 @@ function OneWoW_DirectDeposit:InitTooltipHook()
                 local itemData = itemList[tostring(context.itemID)]
                 if not itemData then return nil end
 
-                local text
-                if itemData.bankType == "personal" then
-                    text = L["TOOLTIP_PERSONAL"]
-                elseif itemData.bankType == "warband" then
-                    text = L["TOOLTIP_WARBAND"]
-                elseif itemData.bankType == "guild" then
-                    text = L["TOOLTIP_GUILD"]
-                end
+                local bankTypeName, rr, rg, rb = GetBankTypeDisplay(itemData.bankType)
+                if not bankTypeName then return nil end
 
-                if not text then return nil end
-                return { { type = "text", text = text, r = 1, g = 0.82, b = 0 } }
+                return {
+                    {
+                        type  = "double",
+                        left  = "  " .. L["TOOLTIP_LABEL"],
+                        right = bankTypeName,
+                        lr = 0.2, lg = 1.0, lb = 0.2,
+                        rr = rr,  rg = rg,  rb = rb,
+                    }
+                }
             end,
         })
     else
@@ -226,17 +257,9 @@ function OneWoW_DirectDeposit:InitTooltipHook()
             local itemData = itemList[tostring(data.id)]
             if not itemData then return end
 
-            local text
-            if itemData.bankType == "personal" then
-                text = L["TOOLTIP_PERSONAL"]
-            elseif itemData.bankType == "warband" then
-                text = L["TOOLTIP_WARBAND"]
-            elseif itemData.bankType == "guild" then
-                text = L["TOOLTIP_GUILD"]
-            end
-
-            if text then
-                tooltip:AddLine(text, 1, 0.82, 0, true)
+            local bankTypeName, rr, rg, rb = GetBankTypeDisplay(itemData.bankType)
+            if bankTypeName then
+                tooltip:AddDoubleLine("  " .. L["TOOLTIP_LABEL"], bankTypeName, 0.2, 1.0, 0.2, rr, rg, rb)
             end
         end)
     end

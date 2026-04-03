@@ -28,52 +28,11 @@ Beyond gold, you can also auto-deposit specific items:
 - Override settings per character for special cases (bank alts, etc.)
 - Perfect flexibility for different character roles
 
----
-
-## Customization
-
-### 14+ Theme Options
-Choose from Forest Green, Ocean Blue, Royal Purple, Crimson Red, Sunset Orange, Deep Teal, Golden Amber, Rose Pink, Slate Gray, Earth Brown, Midnight Black, and more.
-
-### Instant Theme Switching
-No UI reload required for theme changes. Switch themes on the fly.
-
-### Multi-Language Support
-Complete translations in 6 languages:
-- English
-- Spanish
-- Korean
-- Russian
-- French
-- German
-
----
-
-## Installation
-
-1. Extract the `OneWoW_DirectDeposit` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
-2. Extract the `OneWoW` folder (required dependency) to the same directory
-3. Restart World of Warcraft or type `/reload` in-game
-4. Type `/dd`, `/directdeposit`, or `/ddeposit` to open the addon
-
-## Requirements
-
-- **OneWoW** - Core hub addon (required)
-
 ## Slash Commands
 
 - `/dd` - Toggle Direct Deposit (if available)
 - `/directdeposit` - Toggle Direct Deposit
 - `/ddeposit` - Toggle Direct Deposit
-
-## Localization
-
-- English (enUS)
-- Spanish (esES)
-- Korean (koKR)
-- Russian (ruRU)
-- French (frFR)
-- German (deDE)
 
 ## Support
 
@@ -83,16 +42,6 @@ Complete translations in 6 languages:
 
 ## Part of the OneWoW Suite
 
-OneWoW_DirectDeposit works with these addons:
-- **OneWoW** - Core hub (required)
-- **OneWoW_QoL** - Quality of life features
-- **OneWoW_AltTracker** - Track all your characters
-- **OneWoW_Notes** - Note-taking system
-- **OneWoW_Bags** - Inventory management
-- **OneWoW_ShoppingList** - Shopping and crafting lists
-- **OneWoW_Catalog** - Game data reference
-
----
 
 **Author:** MichinMuggin / Ricky
 

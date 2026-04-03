@@ -130,12 +130,17 @@ OneWoW_DirectDeposit.Locales["enUS"] = {
     ["KEYBIND_ADD_GUILD"] = "Add Hovered Item - Guild Bank",
     ["KEYBIND_NO_ITEM"] = "No item found - hover over an item first.",
 
+    ["WARBOUND_SECTION"] = "Warband Auto-Deposit",
+    ["WARBOUND_ENABLE"] = "Auto-Deposit All Warbound Items",
+    ["WARBOUND_ENABLE_DESC"] = "When opening any bank, automatically deposit all warbound (account-bound) items from your bags into the Warband Bank. Items already in your deposit list above are excluded.",
+
     ["TOOLTIP_SECTION"] = "Tooltip Overlay",
     ["TOOLTIP_ENABLE"] = "Show Deposit Status in Tooltips",
     ["TOOLTIP_ENABLE_DESC"] = "Items queued for deposit will show their destination bank at the bottom of their tooltip.",
-    ["TOOLTIP_PERSONAL"] = "DirectDepositing - Personal",
-    ["TOOLTIP_WARBAND"] = "DirectDepositing - Warband",
-    ["TOOLTIP_GUILD"] = "DirectDepositing - Guild",
+    ["TOOLTIP_LABEL"] = "DirectDepositing:",
+    ["TOOLTIP_PERSONAL"] = "Personal",
+    ["TOOLTIP_WARBAND"] = "Warband",
+    ["TOOLTIP_GUILD"] = "Guild",
 
 }
 

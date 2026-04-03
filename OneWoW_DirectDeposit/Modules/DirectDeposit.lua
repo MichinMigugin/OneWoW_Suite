@@ -103,12 +103,71 @@ function DirectDeposit:GetTargetGold()
 end
 
 function DirectDeposit:OnBankOpened()
+    self:SweepWarboundItems()
+
     if not self:IsEnabled() then
         return
     end
 
     self:NormalizeGold()
     self:DepositItemsToBank()
+end
+
+function DirectDeposit:SweepWarboundItems()
+    if not OneWoW_DirectDeposit.db.global.directDeposit.warboundAutoDeposit then
+        return
+    end
+
+    local itemList = OneWoW_DirectDeposit.db.global.directDeposit.itemList or {}
+    local itemsToDeposit = {}
+
+    for bagID = 0, 5 do
+        local numSlots = C_Container.GetContainerNumSlots(bagID)
+        if numSlots and numSlots > 0 then
+            for slotID = 1, numSlots do
+                local itemInfo = C_Container.GetContainerItemInfo(bagID, slotID)
+                if itemInfo and itemInfo.itemID and not itemList[tostring(itemInfo.itemID)] then
+                    local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+                    if itemLocation and itemLocation:IsValid() then
+                        if C_Item.IsBound(itemLocation) and C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, itemLocation) then
+                            table.insert(itemsToDeposit, {
+                                bagID    = bagID,
+                                slotID   = slotID,
+                                itemID   = itemInfo.itemID,
+                            })
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if #itemsToDeposit == 0 then return end
+
+    local deposited = 0
+    local delay = 0.3
+
+    for _, slot in ipairs(itemsToDeposit) do
+        C_Timer.After(delay, function()
+            if not C_Bank.CanUseBank(Enum.BankType.Account) then return end
+            local currentInfo = C_Container.GetContainerItemInfo(slot.bagID, slot.slotID)
+            if currentInfo and currentInfo.itemID == slot.itemID then
+                local loc = ItemLocation:CreateFromBagAndSlot(slot.bagID, slot.slotID)
+                if loc and loc:IsValid() and C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, loc) then
+                    C_Container.UseContainerItem(slot.bagID, slot.slotID, nil, Enum.BankType.Account)
+                    deposited = deposited + (currentInfo.stackCount or 1)
+                end
+            end
+        end)
+        delay = delay + 0.3
+    end
+
+    C_Timer.After(delay + 0.3, function()
+        if deposited > 0 then
+            local checkmark = "|TInterface\\Buttons\\UI-CheckBox-Check:16|t"
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFF00FF00Auto-deposited|r |cFFFFFFFF" .. deposited .. " warbound item(s)|r to |cFF4A90E2Warband Bank|r")
+        end
+    end)
 end
 
 function DirectDeposit:NormalizeGold()
