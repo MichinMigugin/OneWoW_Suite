@@ -19,6 +19,7 @@ local DEFAULTS = {
         withdrawEnabled = false,
         itemDepositEnabled = false,
         itemList = {},
+        tooltipEnabled = true,
     },
 }
 
