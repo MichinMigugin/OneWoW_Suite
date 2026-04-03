@@ -111,16 +111,17 @@ function Players:Initialize()
         Players._targetFrame = CreateFrame("Frame")
         Players._targetFrame:SetScript("OnEvent", function(_, event)
             if event ~= "PLAYER_TARGET_CHANGED" then return end
-            if not UnitExists("target") or not UnitIsPlayer("target") then return end
-            local name, realm = UnitName("target")
-            if not name or name == UnitName("player") then return end
-            if not realm or realm == "" then realm = GetRealmName() or "Unknown" end
-            local fullName = name .. "-" .. realm
-            local existing = Players:GetPlayer(fullName)
-            if existing and existing.soundEnabled then
-                print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["NOTES_PLAYER_ALERT_FOUND"] or "Targeted player with note: %s", fullName))
-                PlaySound(SOUNDKIT.RAID_WARNING)
-            end
+            if not UnitExists("target") or not UnitIsPlayer("target") or UnitIsUnit("target", "player") then return end
+            C_Timer.After(0, function()
+                if not UnitExists("target") or not UnitIsPlayer("target") or UnitIsUnit("target", "player") then return end
+                for fullName, playerData in pairs(Players:GetAll()) do
+                    if playerData.soundEnabled and UnitIsUnit("target", fullName) then
+                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["NOTES_PLAYER_ALERT_FOUND"] or "Targeted player with note: %s", fullName))
+                        PlaySound(SOUNDKIT.RAID_WARNING)
+                        break
+                    end
+                end
+            end)
         end)
         Players._targetFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     end
