@@ -54,7 +54,7 @@ function OneWoW_DirectDeposit:ValidateAndCleanItemList()
     local itemList = self.db.global.directDeposit.itemList
     if not itemList then return true end
 
-    print("|cFFFFD100DirectDeposit:|r Validating itemList structure...")
+    local L = OneWoW_DirectDeposit.L
     local cleanedList = {}
     local removedCount = 0
 
@@ -67,16 +67,14 @@ function OneWoW_DirectDeposit:ValidateAndCleanItemList()
             cleanedList[cleanKey] = itemData
             if not isStringKey then
                 removedCount = removedCount + 1
-                print("|cFFFF8800DirectDeposit:|r Converted numeric key " .. key .. " to string key")
             end
         else
             removedCount = removedCount + 1
-            print("|cFFFF0000DirectDeposit:|r Removed invalid entry with key: " .. tostring(key))
         end
     end
 
     if removedCount > 0 then
-        print("|cFFFF8800DirectDeposit:|r Cleaned " .. removedCount .. " invalid entries from itemList")
+        print(L["ADDON_CHAT_PREFIX"] .. " Cleaned " .. removedCount .. " invalid entries from itemList")
         self.db.global.directDeposit.itemList = cleanedList
     end
 
@@ -127,6 +125,34 @@ function OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
         end
     end)
 
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function()
+        if self.GUI then
+            local wasShown = self.GUI:GetMainWindow() and self.GUI:GetMainWindow():IsShown()
+            self.GUI:FullReset()
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    if self.GUI and self.GUI.Show then self.GUI:Show() end
+                end)
+            end
+        end
+    end)
+
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function()
+        if self.GUI then
+            local wasShown = self.GUI:GetMainWindow() and self.GUI:GetMainWindow():IsShown()
+            self.GUI:FullReset()
+            if wasShown then
+                C_Timer.After(0.1, function()
+                    if self.GUI and self.GUI.Show then self.GUI:Show() end
+                end)
+            end
+        end
+    end)
+
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(owner, langCode)
+        owner:ReinitForLanguage(langCode)
+    end)
+
     local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
         _G.OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
@@ -150,7 +176,7 @@ function OneWoW_DirectDeposit:RegisterSlashCommands()
         SLASH_ONEWOW_DIRECTDEPOSIT2 = "/directdeposit"
         SLASH_ONEWOW_DIRECTDEPOSIT3 = "/directdep"
     else
-        print("|cFFFFD100Direct Deposit:|r |cFFFF8800/dd is already in use by another addon. Use /directdeposit or /directdep instead.|r")
+        print(OneWoW_DirectDeposit.L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800/dd is already in use by another addon. Use /directdeposit or /directdep instead.|r")
         SLASH_ONEWOW_DIRECTDEPOSIT1 = "/directdeposit"
         SLASH_ONEWOW_DIRECTDEPOSIT2 = "/directdep"
     end
@@ -173,13 +199,12 @@ function OneWoW_DirectDeposit:RegisterSlashCommands()
         local lowerMsg = strlower(strtrim(msg or ""))
 
         if lowerMsg == "pause" or lowerMsg == "stop" then
-            if OneWoW_DirectDeposit.DirectDeposit:StopDeposit() then
-            else
-                print("|cFFFFD100Direct Deposit:|r |cFFFF8800No deposit in progress.|r")
+            if not OneWoW_DirectDeposit.DirectDeposit:StopDeposit() then
+                print(OneWoW_DirectDeposit.L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800No deposit in progress.|r")
             end
         elseif lowerMsg == "clean" then
             OneWoW_DirectDeposit:ValidateAndCleanItemList()
-            print("|cFFFFD100Direct Deposit:|r |cFF00FF00Item list cleaned and validated.|r")
+            print(OneWoW_DirectDeposit.L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Item list cleaned and validated.|r")
         else
             OneWoW_DirectDeposit.DirectDeposit:ManualDeposit()
         end
@@ -250,7 +275,7 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
                 end,
             })
             if OneWoW_DirectDeposit._pendingLoadVer then
-                print("|cFF00FF00OneWoW|r: |cFFFFFFFFDirect Deposit|r |cFF888888\226\128\147 v." .. OneWoW_DirectDeposit._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wdd")
+                print("|cFF00FF00OneWoW|r: |cFFFFFFFFDirect Deposit|r |cFF888888-|r v." .. OneWoW_DirectDeposit._pendingLoadVer .. " |cFF888888-|r |cFF00FF00Loaded|r - /1wdd")
             end
         end
         if _G.OneWoW then

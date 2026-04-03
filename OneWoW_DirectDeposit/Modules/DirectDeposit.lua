@@ -1,4 +1,5 @@
 local _, OneWoW_DirectDeposit = ...
+local L = OneWoW_DirectDeposit.L
 
 OneWoW_DirectDeposit.DirectDeposit = {}
 local DirectDeposit = OneWoW_DirectDeposit.DirectDeposit
@@ -131,7 +132,7 @@ function DirectDeposit:NormalizeGold()
             C_Bank.DepositMoney(bankType, excess)
 
             local checkmark = "|TInterface\\Buttons\\UI-CheckBox-Check:16|t"
-            print("|cFFFFD100Direct Deposit:|r " .. checkmark .. " |cFFE67E22Deposited|r |cFFFFFFFF" .. GetMoneyString(excess, true) .. " to |cFF50C878Warband Bank|r")
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFFE67E22Deposited|r |cFFFFFFFF" .. GetMoneyString(excess, true) .. " to |cFF50C878Warband Bank|r")
         end
     end
 
@@ -145,7 +146,7 @@ function DirectDeposit:NormalizeGold()
                 C_Bank.WithdrawMoney(bankType, toWithdraw)
 
                 local checkmark = "|TInterface\\Buttons\\UI-CheckBox-Check:16|t"
-                print("|cFFFFD100Direct Deposit:|r " .. checkmark .. " |cFF4A90E2Withdrew|r |cFFFFFFFF" .. GetMoneyString(toWithdraw, true) .. " from |cFF50C878Warband Bank|r")
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFF4A90E2Withdrew|r |cFFFFFFFF" .. GetMoneyString(toWithdraw, true) .. " from |cFF50C878Warband Bank|r")
             end
         end
     end
@@ -157,7 +158,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
     end
 
     if self.isDepositing then
-        print("|cFFFFD100Direct Deposit:|r |cFFFF8800Deposit already in progress. Use /dddeposit pause to stop.|r")
+        print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800Deposit already in progress. Use /dddeposit pause to stop.|r")
         return
     end
 
@@ -165,7 +166,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
 
     if not next(itemList) then
         if manualTrigger then
-            print("|cFFFFD100Direct Deposit:|r |cFFFF0000No items in deposit list.|r")
+            print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000No items in deposit list.|r")
         end
         return
     end
@@ -173,7 +174,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
     local activeType = self.currentOpenBankType
     if not activeType then
         if manualTrigger then
-            print("|cFFFFD100Direct Deposit:|r |cFFFF0000No bank is currently open.|r")
+            print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000No bank is currently open.|r")
         end
         return
     end
@@ -206,7 +207,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
     self.depositTimers = {}
 
     if manualTrigger then
-        print("|cFFFFD100Direct Deposit:|r |cFF00FF00Starting manual deposit of " .. #itemsToDeposit .. " item(s)...|r")
+        print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Starting manual deposit of " .. #itemsToDeposit .. " item(s)...|r")
     end
 
     local hasGuildItems = false
@@ -323,14 +324,14 @@ function DirectDeposit:DepositItemByID(itemID, targetBankType, itemName)
 
         if not self.isDepositing then
             local checkmark = "|TInterface\\Buttons\\UI-CheckBox-Check:16|t"
-            print("|cFFFFD100Direct Deposit:|r " .. checkmark .. " |cFFE67E22Deposited|r |cFFFFFFFF" .. depositedCount .. "x " .. resolvedItemName .. "|r to " .. bankTypeText)
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFFE67E22Deposited|r |cFFFFFFFF" .. depositedCount .. "x " .. resolvedItemName .. "|r to " .. bankTypeText)
         end
     elseif hadError then
         table.insert(self.failedItems, {itemID = itemID, itemName = resolvedItemName, reason = errorReason})
 
         if not self.isDepositing then
             local errorIcon = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:16|t"
-            print("|cFFFFD100Direct Deposit:|r " .. errorIcon .. " |cFFFF0000Cannot deposit|r |cFFFFFFFF" .. resolvedItemName .. "|r - " .. errorReason)
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. errorIcon .. " |cFFFF0000Cannot deposit|r |cFFFFFFFF" .. resolvedItemName .. "|r - " .. errorReason)
         end
     end
 end
@@ -420,12 +421,11 @@ end
 
 function DirectDeposit:RemoveItemFromList(itemID)
     if not itemID then
-        print("|cFFFF0000DirectDeposit:|r Delete failed - no itemID")
+        print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000Delete failed - no itemID|r")
         return false
     end
 
     local itemIDStr = tostring(itemID)
-    print("|cFFFFD100DirectDeposit:|r Attempting to delete itemID: " .. itemIDStr)
 
     if not OneWoW_DirectDeposit.db.global.directDeposit.itemList then
         return false
@@ -435,15 +435,12 @@ function DirectDeposit:RemoveItemFromList(itemID)
 
     if itemList[itemIDStr] then
         itemList[itemIDStr] = nil
-        print("|cFF00FF00DirectDeposit:|r Item deleted successfully: " .. itemIDStr)
         return true
     elseif itemList[itemID] then
         itemList[itemID] = nil
-        print("|cFF00FF00DirectDeposit:|r Item deleted successfully: " .. itemID .. " (numeric key)")
         return true
     else
-        print("|cFFFF0000DirectDeposit:|r Item not found in list: " .. itemIDStr)
-        print("|cFFFF0000DirectDeposit:|r Available items: " .. table.concat(OneWoW_DirectDeposit:GetAvailableItemIDs(), ", "))
+        print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000Item not found in list: " .. itemIDStr .. "|r")
     end
 
     return false
@@ -499,8 +496,8 @@ function DirectDeposit:FinishDeposit()
     local errorIcon = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:16|t"
 
     if successCount > 0 then
-        print("|cFFFFD100Direct Deposit:|r " .. checkmark .. " |cFF00FF00Deposit Complete!|r")
-        print("|cFFFFD100Direct Deposit:|r " .. checkmark .. " |cFFFFFFFFSuccessfully deposited " .. successCount .. " item type(s)|r")
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFF00FF00Deposit Complete!|r")
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. checkmark .. " |cFFFFFFFFSuccessfully deposited " .. successCount .. " item type(s)|r")
         for _, item in ipairs(self.depositedItems) do
             local bankTypeText = item.bankType == "warband" and "|cFF50C878Warband|r"
                               or item.bankType == "personal" and "|cFF4A90E2Personal|r"
@@ -510,7 +507,7 @@ function DirectDeposit:FinishDeposit()
     end
 
     if failedCount > 0 then
-        print("|cFFFFD100Direct Deposit:|r " .. errorIcon .. " |cFFFF0000Failed to deposit " .. failedCount .. " item type(s)|r")
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. errorIcon .. " |cFFFF0000Failed to deposit " .. failedCount .. " item type(s)|r")
         for _, item in ipairs(self.failedItems) do
             print("  " .. errorIcon .. " |cFFFF0000" .. item.itemName .. "|r - " .. item.reason)
         end
@@ -531,7 +528,7 @@ function DirectDeposit:PauseDeposit()
     end
 
     self.isPaused = true
-    print("|cFFFFD100Direct Deposit:|r |cFFFF8800Deposit paused.|r")
+    print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800Deposit paused.|r")
     return true
 end
 
@@ -551,7 +548,7 @@ function DirectDeposit:StopDeposit()
 
     self.depositTimers = {}
 
-    print("|cFFFFD100Direct Deposit:|r |cFFFF0000Deposit stopped.|r")
+    print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000Deposit stopped.|r")
 
     if self.progressCallback then
         self.progressCallback(nil, nil, nil)

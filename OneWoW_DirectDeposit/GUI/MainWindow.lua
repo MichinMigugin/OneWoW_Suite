@@ -5,53 +5,30 @@ if not OneWoW_GUI then return end
 
 OneWoW_DirectDeposit.GUI = OneWoW_DirectDeposit.GUI or {}
 
-local GUI = OneWoW_DirectDeposit.GUI
+local GUI      = OneWoW_DirectDeposit.GUI
 local Constants = OneWoW_DirectDeposit.Constants
-local L = OneWoW_DirectDeposit.L
+local L        = OneWoW_DirectDeposit.L
 
-local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local DEFAULT_THEME_ICON = OneWoW_GUI.Constants.DEFAULT_THEME_ICON
 
-local backdrop = {
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = false,
-    edgeSize = 12,
-    insets = { left = 2, right = 2, top = 2, bottom = 2 }
-}
-
-StaticPopupDialogs["DIRECTDEPOSIT_RELOAD_THEME"] = {
-    text = "Theme changed. Reload UI to apply changes?",
-    button1 = "Reload",
-    button2 = "Cancel",
-    OnAccept = function()
-        ReloadUI()
-    end,
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3,
-}
-
-local MainWindow = nil
+local MainWindow    = nil
 local isInitialized = false
-local currentTab = 1
-local tabPanels = {}
-local isRefreshing = false
+local currentTab    = 1
+local tabPanels     = {}
+local tabButtons    = {}
+local isRefreshing  = false
 local pendingRefresh = nil
 
 function GUI:InitMainWindow()
     if isInitialized then return end
-
     if not Constants or not Constants.GUI then return end
 
     local C = Constants.GUI
 
     MainWindow = OneWoW_GUI:CreateFrame(UIParent, {
-        name = "OneWoW_DirectDepositMainWindow",
-        width = C.WINDOW_WIDTH,
-        height = C.WINDOW_HEIGHT,
+        name     = "OneWoW_DirectDepositMainWindow",
+        width    = C.WINDOW_WIDTH,
+        height   = C.WINDOW_HEIGHT,
         backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
     })
     if not MainWindow then return end
@@ -65,7 +42,7 @@ function GUI:InitMainWindow()
     MainWindow:EnableMouse(true)
     MainWindow:RegisterForDrag("LeftButton")
     MainWindow:SetScript("OnDragStart", MainWindow.StartMoving)
-    MainWindow:SetScript("OnDragStop", MainWindow.StopMovingOrSizing)
+    MainWindow:SetScript("OnDragStop",  MainWindow.StopMovingOrSizing)
     MainWindow:SetClampedToScreen(true)
     MainWindow:SetFrameStrata("MEDIUM")
     MainWindow:SetToplevel(true)
@@ -76,37 +53,19 @@ function GUI:InitMainWindow()
     end)
     MainWindow:Hide()
 
-    local titleBar = CreateFrame("Frame", nil, MainWindow, "BackdropTemplate")
-    titleBar:SetHeight(20)
-    titleBar:SetPoint("TOPLEFT",  MainWindow, "TOPLEFT",  OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
-    titleBar:SetPoint("TOPRIGHT", MainWindow, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
-    titleBar:SetBackdrop(BACKDROP_SIMPLE)
-    titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
-    titleBar:SetFrameLevel(MainWindow:GetFrameLevel() + 1)
-
-    local brandIcon = titleBar:CreateTexture(nil, "OVERLAY")
-    brandIcon:SetSize(14, 14)
-    brandIcon:SetPoint("LEFT", titleBar, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-    local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
-    brandIcon:SetTexture(OneWoW_GUI:GetBrandIcon(factionTheme))
-    MainWindow.brandIcon = brandIcon
-
-    local brandText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
-    brandText:SetText("OneWoW")
-    brandText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    titleText:SetPoint("CENTER", titleBar, "CENTER", 0, 0)
-    titleText:SetText(L["ADDON_TITLE"])
-    titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local closeBtn = OneWoW_GUI:CreateButton(titleBar, { text = "X", width = 20, height = 20 })
-    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -OneWoW_GUI:GetSpacing("XS") / 2, 0)
-    closeBtn:SetScript("OnClick", function() MainWindow:Hide() end)
+    local titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, {
+        title     = L["ADDON_TITLE"],
+        showBrand = true,
+        onClose   = function() MainWindow:Hide() end,
+    })
+    titleBar:EnableMouse(true)
+    titleBar:RegisterForDrag("LeftButton")
+    titleBar:SetScript("OnDragStart", function() MainWindow:StartMoving() end)
+    titleBar:SetScript("OnDragStop",  function() MainWindow:StopMovingOrSizing() end)
+    MainWindow.titleBar = titleBar
 
     local content = CreateFrame("Frame", nil, MainWindow)
-    content:SetPoint("TOPLEFT",     MainWindow, "TOPLEFT",     OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS")))
+    content:SetPoint("TOPLEFT",     titleBar,   "BOTTOMLEFT",  OneWoW_GUI:GetSpacing("XS"), 0)
     content:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS"), OneWoW_GUI:GetSpacing("XS"))
     MainWindow.content = content
 
@@ -118,42 +77,48 @@ end
 
 function GUI:CreateTabSystem(parent)
     local tabContainer = CreateFrame("Frame", nil, parent)
-    tabContainer:SetPoint("TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
-    tabContainer:SetPoint("TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
+    tabContainer:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
+    tabContainer:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     tabContainer:SetHeight(35)
 
-    MainWindow.tabs = {}
+    local tabDefs = {
+        { text = L["TAB_GOLD"],     id = 1 },
+        { text = L["TAB_ITEMS"],    id = 2 },
+        { text = L["TAB_SETTINGS"], id = 3 },
+    }
 
-    local tab1 = GUI:CreateTabButton(tabContainer, L["TAB_GOLD"], 1)
-    tab1:SetPoint("BOTTOMLEFT", tabContainer, "BOTTOMLEFT", 5, 0)
+    local prevTab = nil
+    wipe(tabButtons)
+    for _, def in ipairs(tabDefs) do
+        local btn = OneWoW_GUI:CreateFitTextButton(tabContainer, { text = def.text, height = 26 })
+        if not prevTab then
+            btn:SetPoint("BOTTOMLEFT", tabContainer, "BOTTOMLEFT", 0, 0)
+        else
+            btn:SetPoint("LEFT", prevTab, "RIGHT", 4, 0)
+        end
+        btn.tabID = def.id
+        btn:SetScript("OnClick", function(self) GUI:SelectTab(self.tabID) end)
+        tabButtons[def.id] = btn
+        prevTab = btn
+    end
 
-    local tab2 = GUI:CreateTabButton(tabContainer, L["TAB_ITEMS"], 2)
-    tab2:SetPoint("LEFT", tab1, "RIGHT", 5, 0)
-
-    local tab3 = GUI:CreateTabButton(tabContainer, L["TAB_SETTINGS"], 3)
-    tab3:SetPoint("LEFT", tab2, "RIGHT", 5, 0)
-
-    table.insert(MainWindow.tabs, tab1)
-    table.insert(MainWindow.tabs, tab2)
-    table.insert(MainWindow.tabs, tab3)
-
-    local depositNowBtn = OneWoW_GUI:CreateButton(tabContainer, { text = "Deposit Now", width = 120, height = 30 })
-    depositNowBtn:SetPoint("BOTTOMRIGHT", tabContainer, "BOTTOMRIGHT", -5, 0)
+    local depositNowBtn = OneWoW_GUI:CreateFitTextButton(tabContainer, { text = L["DEPOSIT_NOW"], height = 26 })
+    depositNowBtn:SetPoint("BOTTOMRIGHT", tabContainer, "BOTTOMRIGHT", 0, 0)
     depositNowBtn:SetScript("OnClick", function()
         OneWoW_DirectDeposit.DirectDeposit:ManualDeposit()
     end)
     MainWindow.depositNowBtn = depositNowBtn
 
-    local pauseBtn = OneWoW_GUI:CreateButton(tabContainer, { text = "Pause", width = 80, height = 30 })
-    pauseBtn:SetPoint("RIGHT", depositNowBtn, "LEFT", -5, 0)
+    local pauseBtn = OneWoW_GUI:CreateFitTextButton(tabContainer, { text = L["PAUSE"], height = 26 })
+    pauseBtn:SetPoint("RIGHT", depositNowBtn, "LEFT", -4, 0)
     pauseBtn:Hide()
     pauseBtn:SetScript("OnClick", function()
         OneWoW_DirectDeposit.DirectDeposit:StopDeposit()
     end)
     MainWindow.pauseBtn = pauseBtn
 
-    local progressText = tabContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    progressText:SetPoint("RIGHT", depositNowBtn, "LEFT", -10, 0)
+    local progressText = OneWoW_GUI:CreateFS(tabContainer, 10)
+    progressText:SetPoint("RIGHT", pauseBtn, "LEFT", -8, 0)
     progressText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     progressText:Hide()
     MainWindow.progressText = progressText
@@ -165,10 +130,8 @@ function GUI:CreateTabSystem(parent)
             pauseBtn:Hide()
         else
             local shortName = itemName or "..."
-            if #shortName > 20 then
-                shortName = shortName:sub(1, 17) .. "..."
-            end
-            progressText:SetText("Depositing " .. current .. " of " .. total .. ": " .. shortName)
+            if #shortName > 20 then shortName = shortName:sub(1, 17) .. "..." end
+            progressText:SetText(current .. "/" .. total .. ": " .. shortName)
             progressText:Show()
             depositNowBtn:Hide()
             pauseBtn:Show()
@@ -176,8 +139,8 @@ function GUI:CreateTabSystem(parent)
     end)
 
     local contentArea = CreateFrame("Frame", nil, parent)
-    contentArea:SetPoint("TOPLEFT", tabContainer, "BOTTOMLEFT", 0, -5)
-    contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 40)
+    contentArea:SetPoint("TOPLEFT",     tabContainer, "BOTTOMLEFT",  0, -4)
+    contentArea:SetPoint("BOTTOMRIGHT", parent,       "BOTTOMRIGHT", 0, 36)
     MainWindow.contentArea = contentArea
 
     tabPanels[1] = GUI:CreateGoldPanel(contentArea)
@@ -185,25 +148,27 @@ function GUI:CreateTabSystem(parent)
     tabPanels[3] = GUI:CreateSettingsPanel(contentArea)
 
     local bottomBar = CreateFrame("Frame", nil, parent)
-    bottomBar:SetHeight(40)
-    bottomBar:SetPoint("BOTTOMLEFT", 0, 0)
-    bottomBar:SetPoint("BOTTOMRIGHT", 0, 0)
+    bottomBar:SetHeight(36)
+    bottomBar:SetPoint("BOTTOMLEFT",  parent, "BOTTOMLEFT",  0, 0)
+    bottomBar:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    local statusText = bottomBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    statusText:SetPoint("LEFT", OneWoW_GUI:GetSpacing("LG"), 0)
+    local statusText = OneWoW_GUI:CreateFS(bottomBar, 12)
+    statusText:SetPoint("LEFT", OneWoW_GUI:GetSpacing("MD"), 0)
     statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     MainWindow.statusText = statusText
 
-    local clearBtn = OneWoW_GUI:CreateButton(bottomBar, { text = L["CLEAR"], width = 100, height = Constants.GUI.BUTTON_HEIGHT })
-    clearBtn:SetPoint("RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(bottomBar, { text = L["CLEAR"], height = Constants.GUI.BUTTON_HEIGHT })
+    clearBtn:SetPoint("RIGHT", bottomBar, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
     clearBtn:SetScript("OnClick", function()
-        OneWoW_DirectDeposit.db.global.directDeposit.targetGold = 0
-        OneWoW_DirectDeposit.db.global.directDeposit.depositEnabled = false
-        OneWoW_DirectDeposit.db.global.directDeposit.withdrawEnabled = false
-        OneWoW_DirectDeposit.db.global.directDeposit.itemDepositEnabled = false
-        OneWoW_DirectDeposit.db.char.directDeposit.targetGold = 0
-        OneWoW_DirectDeposit.db.char.directDeposit.depositEnabled = false
-        OneWoW_DirectDeposit.db.char.directDeposit.withdrawEnabled = false
+        local dd = OneWoW_DirectDeposit.db.global.directDeposit
+        local ch = OneWoW_DirectDeposit.db.char.directDeposit
+        dd.targetGold       = 0
+        dd.depositEnabled   = false
+        dd.withdrawEnabled  = false
+        dd.itemDepositEnabled = false
+        ch.targetGold       = 0
+        ch.depositEnabled   = false
+        ch.withdrawEnabled  = false
         GUI:RefreshCurrentTab()
     end)
 
@@ -211,57 +176,23 @@ function GUI:CreateTabSystem(parent)
     GUI:UpdateStatusText()
 end
 
-function GUI:CreateTabButton(parent, text, tabID)
-    local tab = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    tab:SetSize(100, 30)
-    tab:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-
-    tab.text = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    tab.text:SetPoint("CENTER")
-    tab.text:SetText(text)
-
-    tab.tabID = tabID
-
-    tab:SetScript("OnClick", function(self)
-        GUI:SelectTab(self.tabID)
-    end)
-
-    tab:SetScript("OnEnter", function(self)
-        if currentTab ~= self.tabID then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        end
-    end)
-
-    tab:SetScript("OnLeave", function(self)
-        if currentTab ~= self.tabID then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        end
-    end)
-
-    return tab
-end
-
 function GUI:SelectTab(tabID)
     currentTab = tabID
 
-    for i, tab in ipairs(MainWindow.tabs) do
-        if i == tabID then
-            tab:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            tab:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            tab.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    for id, btn in pairs(tabButtons) do
+        if id == tabID then
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            tab:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            tab:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            tab.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end
 
     for i, panel in ipairs(tabPanels) do
-        if i == tabID then
-            panel:Show()
-        else
-            panel:Hide()
-        end
+        if i == tabID then panel:Show() else panel:Hide() end
     end
 
     GUI:UpdateStatusText()
@@ -274,17 +205,18 @@ function GUI:CreateGoldPanel(parent)
 
     local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(panel, {
         name = "OneWoW_DirectDepositGoldSettings",
-        width = Constants.GUI.WINDOW_WIDTH - 20,
-        height = Constants.GUI.WINDOW_HEIGHT - 135,
     })
 
     local yOffset = -15
 
-    local accountSection = GUI:CreateSettingsSection(scrollContent, L["ACCOUNT_SETTINGS"], yOffset)
-    yOffset = accountSection.bottomY - 15
+    local accountSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
+        title   = L["ACCOUNT_SETTINGS"],
+        yOffset = yOffset,
+    })
+    yOffset = accountSection.bottomY - 10
 
     local accountEnabled = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["DIRECT_DEPOSIT_ENABLE"] })
-    accountEnabled:SetPoint("TOPLEFT", 20, yOffset)
+    accountEnabled:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 20, yOffset)
     accountEnabled:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.enabled)
     accountEnabled:SetScript("OnClick", function(self)
         OneWoW_DirectDeposit.db.global.directDeposit.enabled = self:GetChecked()
@@ -293,12 +225,12 @@ function GUI:CreateGoldPanel(parent)
     panel.accountEnabled = accountEnabled
     yOffset = yOffset - 30
 
-    local targetGoldLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    targetGoldLabel:SetPoint("TOPLEFT", 40, yOffset)
+    local targetGoldLabel = OneWoW_GUI:CreateFS(scrollContent, 12)
+    targetGoldLabel:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 40, yOffset)
     targetGoldLabel:SetText(L["TARGET_GOLD"] .. ":")
     targetGoldLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local targetGoldBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 100, height = 28 })
+    local targetGoldBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 100, height = 26 })
     targetGoldBox:SetPoint("LEFT", targetGoldLabel, "RIGHT", 10, 0)
     targetGoldBox:SetText(tostring(OneWoW_DirectDeposit.db.global.directDeposit.targetGold or 0))
     targetGoldBox:SetScript("OnTextChanged", function(self)
@@ -308,43 +240,46 @@ function GUI:CreateGoldPanel(parent)
     targetGoldBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
     panel.targetGoldBox = targetGoldBox
 
-    local goldText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local goldText = OneWoW_GUI:CreateFS(scrollContent, 12)
     goldText:SetPoint("LEFT", targetGoldBox, "RIGHT", 5, 0)
     goldText:SetText(L["GOLD"])
     goldText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    yOffset = yOffset - 40
+    yOffset = yOffset - 38
 
     local depositCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["DEPOSIT_ENABLE"] })
-    depositCheck:SetPoint("TOPLEFT", 40, yOffset)
+    depositCheck:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 40, yOffset)
     depositCheck:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.depositEnabled)
     depositCheck:SetScript("OnClick", function(self)
         OneWoW_DirectDeposit.db.global.directDeposit.depositEnabled = self:GetChecked()
     end)
     panel.depositCheck = depositCheck
-    yOffset = yOffset - 30
+    yOffset = yOffset - 28
 
     local withdrawCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["WITHDRAW_ENABLE"] })
-    withdrawCheck:SetPoint("TOPLEFT", 40, yOffset)
+    withdrawCheck:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 40, yOffset)
     withdrawCheck:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.withdrawEnabled)
     withdrawCheck:SetScript("OnClick", function(self)
         OneWoW_DirectDeposit.db.global.directDeposit.withdrawEnabled = self:GetChecked()
     end)
     panel.withdrawCheck = withdrawCheck
-    yOffset = yOffset - 50
+    yOffset = yOffset - 48
 
-    local charSection = GUI:CreateSettingsSection(scrollContent, L["CHARACTER_SETTINGS"], yOffset)
-    yOffset = charSection.bottomY - 15
+    local charSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
+        title   = L["CHARACTER_SETTINGS"],
+        yOffset = yOffset,
+    })
+    yOffset = charSection.bottomY - 10
 
     local useCharSettings = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["USE_CHAR_SETTINGS"] })
-    useCharSettings:SetPoint("TOPLEFT", 20, yOffset)
+    useCharSettings:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 20, yOffset)
     useCharSettings:SetChecked(not OneWoW_DirectDeposit.db.char.directDeposit.useAccountSettings)
     useCharSettings:SetScript("OnClick", function(self)
         OneWoW_DirectDeposit.db.char.directDeposit.useAccountSettings = not self:GetChecked()
         GUI:RefreshGoldPanel()
     end)
     panel.useCharSettings = useCharSettings
-    yOffset = yOffset - 40
+    yOffset = yOffset - 38
 
     panel.charSettingsStart = yOffset
     scrollContent.charSettingsFrames = {}
@@ -360,13 +295,13 @@ function GUI:CreateGoldPanel(parent)
 end
 
 function GUI:CreateCharacterSettings(scrollContent, yOffset, framesTable, panel)
-    local charTargetGoldLabel = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    charTargetGoldLabel:SetPoint("TOPLEFT", 40, yOffset)
+    local charTargetGoldLabel = OneWoW_GUI:CreateFS(scrollContent, 12)
+    charTargetGoldLabel:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 40, yOffset)
     charTargetGoldLabel:SetText(L["TARGET_GOLD"] .. ":")
     charTargetGoldLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     table.insert(framesTable, charTargetGoldLabel)
 
-    local charTargetGoldBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 100, height = 28 })
+    local charTargetGoldBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 100, height = 26 })
     charTargetGoldBox:SetPoint("LEFT", charTargetGoldLabel, "RIGHT", 10, 0)
     charTargetGoldBox:SetText(tostring(OneWoW_DirectDeposit.db.char.directDeposit.targetGold or 0))
     charTargetGoldBox:SetScript("OnTextChanged", function(self)
@@ -377,33 +312,33 @@ function GUI:CreateCharacterSettings(scrollContent, yOffset, framesTable, panel)
     table.insert(framesTable, charTargetGoldBox)
     if panel then panel.charTargetGoldBox = charTargetGoldBox end
 
-    local charGoldText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local charGoldText = OneWoW_GUI:CreateFS(scrollContent, 12)
     charGoldText:SetPoint("LEFT", charTargetGoldBox, "RIGHT", 5, 0)
     charGoldText:SetText(L["GOLD"])
     charGoldText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     table.insert(framesTable, charGoldText)
 
-    yOffset = yOffset - 40
+    yOffset = yOffset - 38
 
     local charDepositCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["DEPOSIT_ENABLE"] })
-    charDepositCheck:SetPoint("TOPLEFT", 40, yOffset)
+    charDepositCheck:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 40, yOffset)
     charDepositCheck:SetChecked(OneWoW_DirectDeposit.db.char.directDeposit.depositEnabled)
     charDepositCheck:SetScript("OnClick", function(self)
         OneWoW_DirectDeposit.db.char.directDeposit.depositEnabled = self:GetChecked()
     end)
     table.insert(framesTable, charDepositCheck)
     if panel then panel.charDepositCheck = charDepositCheck end
-    yOffset = yOffset - 30
+    yOffset = yOffset - 28
 
     local charWithdrawCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["WITHDRAW_ENABLE"] })
-    charWithdrawCheck:SetPoint("TOPLEFT", 40, yOffset)
+    charWithdrawCheck:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 40, yOffset)
     charWithdrawCheck:SetChecked(OneWoW_DirectDeposit.db.char.directDeposit.withdrawEnabled)
     charWithdrawCheck:SetScript("OnClick", function(self)
         OneWoW_DirectDeposit.db.char.directDeposit.withdrawEnabled = self:GetChecked()
     end)
     table.insert(framesTable, charWithdrawCheck)
     if panel then panel.charWithdrawCheck = charWithdrawCheck end
-    yOffset = yOffset - 40
+    yOffset = yOffset - 38
 
     return yOffset
 end
@@ -438,139 +373,105 @@ function GUI:CreateItemsPanel(parent)
 
     local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(panel, {
         name = "OneWoW_DirectDepositItemSettings",
-        width = Constants.GUI.WINDOW_WIDTH - 20,
-        height = Constants.GUI.WINDOW_HEIGHT - 135,
     })
 
     local yOffset = -15
 
-    local itemSection = GUI:CreateSettingsSection(scrollContent, L["ITEM_DEPOSIT"], yOffset)
-    yOffset = itemSection.bottomY - 15
+    local itemSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
+        title   = L["ITEM_DEPOSIT"],
+        yOffset = yOffset,
+    })
+    yOffset = itemSection.bottomY - 10
 
     local itemDepositCheck = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["ITEM_DEPOSIT_ENABLE"] })
-    itemDepositCheck:SetPoint("TOPLEFT", 20, yOffset)
+    itemDepositCheck:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 20, yOffset)
     itemDepositCheck:SetChecked(OneWoW_DirectDeposit.db.global.directDeposit.itemDepositEnabled)
     itemDepositCheck:SetScript("OnClick", function(self)
         OneWoW_DirectDeposit.db.global.directDeposit.itemDepositEnabled = self:GetChecked()
     end)
     panel.itemDepositCheck = itemDepositCheck
-    yOffset = yOffset - 40
+    yOffset = yOffset - 38
 
-    local dropZoneFrame = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-    dropZoneFrame:SetPoint("TOPLEFT", 20, yOffset)
-    dropZoneFrame:SetPoint("TOPRIGHT", -20, yOffset)
+    local dropZoneFrame = OneWoW_GUI:CreateFrame(scrollContent, {
+        backdrop     = BACKDROP_INNER_NO_INSETS,
+        bgColor      = "BG_SECONDARY",
+        borderColor  = "BORDER_SUBTLE",
+    })
+    dropZoneFrame:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  20, yOffset)
+    dropZoneFrame:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -20, yOffset)
     dropZoneFrame:SetHeight(340)
-    dropZoneFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    dropZoneFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    dropZoneFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     dropZoneFrame:EnableMouse(true)
     dropZoneFrame:RegisterForDrag("LeftButton")
 
-    dropZoneFrame:SetScript("OnReceiveDrag", function(self)
+    local function AddItemFromCursor()
         local infoType, itemID = GetCursorInfo()
         if infoType == "item" and itemID then
             local success, msg = OneWoW_DirectDeposit.DirectDeposit:AddItemToList(itemID, "personal")
             if success then
                 GUI:RefreshItemList(panel)
             else
-                print("|cFFFFD100Direct Deposit:|r |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
+                print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
             end
             ClearCursor()
         end
-    end)
+    end
 
-    dropZoneFrame:SetScript("OnMouseUp", function(self)
-        local infoType, itemID = GetCursorInfo()
-        if infoType == "item" and itemID then
-            local success, msg = OneWoW_DirectDeposit.DirectDeposit:AddItemToList(itemID, "personal")
-            if success then
-                GUI:RefreshItemList(panel)
-            else
-                print("|cFFFFD100Direct Deposit:|r |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
-            end
-            ClearCursor()
-        end
-    end)
+    dropZoneFrame:SetScript("OnReceiveDrag", AddItemFromCursor)
+    dropZoneFrame:SetScript("OnMouseUp",     AddItemFromCursor)
 
-    local dropHintText = dropZoneFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local dropHintText = OneWoW_GUI:CreateFS(dropZoneFrame, 10)
     dropHintText:SetPoint("TOPRIGHT", dropZoneFrame, "TOPRIGHT", -10, -8)
-    dropHintText:SetText("|cFF808080Drag items here to add|r")
-    dropHintText:SetTextColor(0.5, 0.5, 0.5)
+    dropHintText:SetText(L["ITEM_DRAG_HINT"])
+    dropHintText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local addItemLabel = dropZoneFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local addItemLabel = OneWoW_GUI:CreateFS(dropZoneFrame, 12)
     addItemLabel:SetPoint("TOPLEFT", dropZoneFrame, "TOPLEFT", 10, -10)
-    addItemLabel:SetText("Item ID:")
+    addItemLabel:SetText(L["ITEM_ID_LABEL"])
     addItemLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local itemInputBox = OneWoW_GUI:CreateEditBox(dropZoneFrame, { width = 100, height = 28 })
+    local itemInputBox = OneWoW_GUI:CreateEditBox(dropZoneFrame, { width = 100, height = 26 })
     itemInputBox:SetPoint("LEFT", addItemLabel, "RIGHT", 10, 0)
     itemInputBox:SetNumeric(true)
 
-    itemInputBox:SetScript("OnEnterPressed", function(self)
-        local itemIDText = self:GetText()
+    local addBtn = OneWoW_GUI:CreateFitTextButton(dropZoneFrame, { text = L["ITEM_DEPOSIT_ADD"], height = 26 })
+    addBtn:SetPoint("LEFT", itemInputBox, "RIGHT", 10, 0)
+    addBtn:SetScript("OnClick", function()
+        local itemIDText = itemInputBox:GetText()
         if itemIDText and itemIDText ~= "" then
             local itemID = tonumber(itemIDText)
             if itemID then
                 local success, msg = OneWoW_DirectDeposit.DirectDeposit:AddItemToList(itemID, "personal")
                 if success then
-                    self:SetText("")
+                    itemInputBox:SetText("")
                     GUI:RefreshItemList(panel)
                 else
-                    print("|cFFFFD100Direct Deposit:|r |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
+                    print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
                 end
             else
-                print("|cFFFFD100Direct Deposit:|r |cFFFF0000Invalid item ID|r")
+                print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000Invalid item ID|r")
             end
         end
-        self:ClearFocus()
+        itemInputBox:ClearFocus()
     end)
 
-    local addBtn = OneWoW_GUI:CreateButton(dropZoneFrame, { text = L["ITEM_DEPOSIT_ADD"], width = 80, height = 28 })
-    addBtn:SetPoint("LEFT", itemInputBox, "RIGHT", 10, 0)
-    addBtn:SetScript("OnClick", function()
-        itemInputBox:GetScript("OnEnterPressed")(itemInputBox)
+    itemInputBox:SetScript("OnEnterPressed", function(self)
+        addBtn:Click()
     end)
 
-    local itemScrollFrame = CreateFrame("ScrollFrame", nil, dropZoneFrame, "UIPanelScrollFrameTemplate")
-    itemScrollFrame:SetPoint("TOPLEFT", dropZoneFrame, "TOPLEFT", 10, -45)
-    itemScrollFrame:SetPoint("BOTTOMRIGHT", dropZoneFrame, "BOTTOMRIGHT", -30, 10)
-    itemScrollFrame:EnableMouse(true)
-    itemScrollFrame:RegisterForDrag("LeftButton")
+    local scrollAreaFrame = CreateFrame("Frame", nil, dropZoneFrame)
+    scrollAreaFrame:SetPoint("TOPLEFT",     dropZoneFrame, "TOPLEFT",     10, -44)
+    scrollAreaFrame:SetPoint("BOTTOMRIGHT", dropZoneFrame, "BOTTOMRIGHT", -10, 10)
 
-    itemScrollFrame:SetScript("OnReceiveDrag", function(self)
-        local infoType, itemID = GetCursorInfo()
-        if infoType == "item" and itemID then
-            local success, msg = OneWoW_DirectDeposit.DirectDeposit:AddItemToList(itemID, "personal")
-            if success then
-                GUI:RefreshItemList(panel)
-            else
-                print("|cFFFFD100Direct Deposit:|r |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
-            end
-            ClearCursor()
-        end
-    end)
+    local itemScrollFrame, itemScrollChild = OneWoW_GUI:CreateScrollFrame(scrollAreaFrame, {
+        name = "OneWoW_DirectDepositItemList",
+    })
+    itemScrollFrame:SetScript("OnReceiveDrag", AddItemFromCursor)
+    itemScrollFrame:SetScript("OnMouseUp",     AddItemFromCursor)
 
-    itemScrollFrame:SetScript("OnMouseUp", function(self)
-        local infoType, itemID = GetCursorInfo()
-        if infoType == "item" and itemID then
-            local success, msg = OneWoW_DirectDeposit.DirectDeposit:AddItemToList(itemID, "personal")
-            if success then
-                GUI:RefreshItemList(panel)
-            else
-                print("|cFFFFD100Direct Deposit:|r |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
-            end
-            ClearCursor()
-        end
-    end)
-
-    local itemScrollChild = CreateFrame("Frame", nil, itemScrollFrame)
-    itemScrollChild:SetSize(1, 1)
-    itemScrollFrame:SetScrollChild(itemScrollChild)
     panel.itemScrollChild = itemScrollChild
     panel.itemScrollFrame = itemScrollFrame
-
-    panel.scrollContent = scrollContent
-    panel.dropZoneFrame = dropZoneFrame
+    panel.scrollContent   = scrollContent
+    panel.dropZoneFrame   = dropZoneFrame
 
     GUI:RefreshItemList(panel)
 
@@ -594,16 +495,14 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
     local savedScrollPos = 0
     if preserveScrollPos and panel.itemScrollFrame then
         local scrollBar = panel.itemScrollFrame.ScrollBar
-        if scrollBar then
-            savedScrollPos = scrollBar:GetValue()
-        end
+        if scrollBar then savedScrollPos = scrollBar:GetValue() end
     end
 
     local itemList = OneWoW_DirectDeposit.DirectDeposit:GetItemList()
     local sortedItems = {}
     for itemID, itemData in pairs(itemList) do
         C_Item.RequestLoadItemDataByID(tonumber(itemID))
-        table.insert(sortedItems, {id = tonumber(itemID), data = itemData})
+        table.insert(sortedItems, { id = tonumber(itemID), data = itemData })
     end
     table.sort(sortedItems, function(a, b) return (a.data.addedTime or 0) < (b.data.addedTime or 0) end)
 
@@ -622,135 +521,140 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
         local yOffset = 0
 
         for _, item in ipairs(sortedItems) do
-        local itemRow = CreateFrame("Frame", nil, itemScrollChild, "BackdropTemplate")
-        itemRow:SetPoint("TOPLEFT", itemScrollChild, "TOPLEFT", 5, yOffset)
-        itemRow:SetPoint("TOPRIGHT", itemScrollChild, "TOPRIGHT", -5, yOffset)
-        itemRow:SetHeight(32)
-        itemRow:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        itemRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        itemRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            local itemRow = OneWoW_GUI:CreateFrame(itemScrollChild, {
+                backdrop    = BACKDROP_INNER_NO_INSETS,
+                bgColor     = "BG_TERTIARY",
+                borderColor = "BORDER_SUBTLE",
+            })
+            itemRow:SetPoint("TOPLEFT",  itemScrollChild, "TOPLEFT",  5, yOffset)
+            itemRow:SetPoint("TOPRIGHT", itemScrollChild, "TOPRIGHT", -5, yOffset)
+            itemRow:SetHeight(32)
 
-        local removeBtn = OneWoW_GUI:CreateButton(itemRow, { text = "X", width = 22, height = 22 })
-        removeBtn:SetPoint("LEFT", itemRow, "LEFT", 5, 0)
-        removeBtn:SetScript("OnClick", function()
-            print("|cFFFFD100DirectDeposit:|r Delete button clicked for item ID: " .. tostring(item.id))
-            itemRow:Hide()
-            OneWoW_DirectDeposit.DirectDeposit:RemoveItemFromList(item.id)
-            GUI:RefreshItemList(panel)
-        end)
+            local removeBtn = OneWoW_GUI:CreateButton(itemRow, { text = "X", width = 22, height = 22 })
+            removeBtn:SetPoint("LEFT", itemRow, "LEFT", 5, 0)
+            removeBtn:SetScript("OnClick", function()
+                itemRow:Hide()
+                OneWoW_DirectDeposit.DirectDeposit:RemoveItemFromList(item.id)
+                GUI:RefreshItemList(panel)
+            end)
 
-        local itemNameFrame = CreateFrame("Frame", nil, itemRow)
-        itemNameFrame:SetPoint("LEFT", removeBtn, "RIGHT", 5, 0)
-        itemNameFrame:SetPoint("RIGHT", itemRow, "RIGHT", -280, 0)
-        itemNameFrame:SetHeight(32)
-        itemNameFrame:EnableMouse(true)
-        itemNameFrame:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetItemByID(item.id)
-            GameTooltip:Show()
-        end)
-        itemNameFrame:SetScript("OnLeave", function()
-            GameTooltip:Hide()
-        end)
+            local itemNameFrame = CreateFrame("Frame", nil, itemRow)
+            itemNameFrame:SetPoint("LEFT",  removeBtn, "RIGHT",  5, 0)
+            itemNameFrame:SetPoint("RIGHT", itemRow,   "RIGHT", -280, 0)
+            itemNameFrame:SetHeight(32)
+            itemNameFrame:EnableMouse(true)
+            itemNameFrame:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetItemByID(item.id)
+                GameTooltip:Show()
+            end)
+            itemNameFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-        local itemNameText = itemNameFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        itemNameText:SetPoint("LEFT", itemNameFrame, "LEFT", 0, 0)
-        itemNameText:SetPoint("RIGHT", itemNameFrame, "RIGHT", 0, 0)
-        itemNameText:SetText(item.data.itemName or ("Item " .. item.id))
-        itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        itemNameText:SetJustifyH("LEFT")
-        itemNameText:SetWordWrap(false)
+            local itemNameText = OneWoW_GUI:CreateFS(itemNameFrame, 12)
+            itemNameText:SetPoint("LEFT",  itemNameFrame, "LEFT",  0, 0)
+            itemNameText:SetPoint("RIGHT", itemNameFrame, "RIGHT", 0, 0)
+            itemNameText:SetText(item.data.itemName or ("Item " .. item.id))
+            itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            itemNameText:SetJustifyH("LEFT")
+            itemNameText:SetWordWrap(false)
 
-        local bindingInfo = item.data.bindingInfo
-        if not bindingInfo then
-            bindingInfo = OneWoW_DirectDeposit.DirectDeposit:GetItemBindingInfo(item.id)
-        end
+            local bindingInfo = item.data.bindingInfo
+            if not bindingInfo then
+                bindingInfo = OneWoW_DirectDeposit.DirectDeposit:GetItemBindingInfo(item.id)
+            end
 
-        local canWarband = true
-        local canPersonal = true
-        local canGuild = true
+            local canWarband = bindingInfo == nil or bindingInfo.canUseWarband ~= false
+            local canPersonal = bindingInfo == nil or bindingInfo.canUsePersonal ~= false
+            local canGuild    = bindingInfo == nil or bindingInfo.canUseGuild ~= false
 
-        if bindingInfo then
-            canWarband = bindingInfo.canUseWarband ~= false
-            canPersonal = bindingInfo.canUsePersonal ~= false
-            canGuild = bindingInfo.canUseGuild ~= false
-        end
+            local warbandRadio = CreateFrame("CheckButton", nil, itemRow, "UIRadioButtonTemplate")
+            warbandRadio:SetPoint("RIGHT", itemRow, "RIGHT", -230, 0)
+            warbandRadio:SetChecked(item.data.bankType == "warband")
+            warbandRadio:SetEnabled(canWarband)
 
-        local warbandRadio = CreateFrame("CheckButton", nil, itemRow, "UIRadioButtonTemplate")
-        warbandRadio:SetPoint("RIGHT", itemRow, "RIGHT", -230, 0)
-        warbandRadio:SetChecked(item.data.bankType == "warband")
-        warbandRadio:SetEnabled(canWarband)
-
-        local warbandLabel = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        warbandLabel:SetPoint("LEFT", warbandRadio, "RIGHT", 3, 0)
-        warbandLabel:SetText(L["ITEM_DEPOSIT_WARBAND"])
-        warbandLabel:SetTextColor(canWarband and 0.31 or 0.3, canWarband and 0.78 or 0.3, canWarband and 0.47 or 0.3)
-
-        local personalRadio = CreateFrame("CheckButton", nil, itemRow, "UIRadioButtonTemplate")
-        personalRadio:SetPoint("RIGHT", itemRow, "RIGHT", -135, 0)
-        personalRadio:SetChecked(item.data.bankType == "personal")
-        personalRadio:SetEnabled(canPersonal)
-
-        local personalLabel = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        personalLabel:SetPoint("LEFT", personalRadio, "RIGHT", 3, 0)
-        personalLabel:SetText(L["ITEM_DEPOSIT_PERSONAL"])
-        personalLabel:SetTextColor(canPersonal and 0.29 or 0.3, canPersonal and 0.56 or 0.3, canPersonal and 0.88 or 0.3)
-
-        local guildRadio = CreateFrame("CheckButton", nil, itemRow, "UIRadioButtonTemplate")
-        guildRadio:SetPoint("RIGHT", itemRow, "RIGHT", -55, 0)
-        guildRadio:SetChecked(item.data.bankType == "guild")
-        guildRadio:SetEnabled(canGuild)
-
-        local guildLabel = itemRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        guildLabel:SetPoint("LEFT", guildRadio, "RIGHT", 3, 0)
-        guildLabel:SetText(L["ITEM_DEPOSIT_GUILD"])
-        guildLabel:SetTextColor(canGuild and 1.0 or 0.3, canGuild and 0.5 or 0.3, canGuild and 0.0 or 0.3)
-
-        warbandRadio:SetScript("OnClick", function()
+            local warbandLabel = OneWoW_GUI:CreateFS(itemRow, 10)
+            warbandLabel:SetPoint("LEFT", warbandRadio, "RIGHT", 3, 0)
+            warbandLabel:SetText(L["ITEM_DEPOSIT_WARBAND"])
             if canWarband then
-                warbandRadio:SetChecked(true)
-                personalRadio:SetChecked(false)
-                guildRadio:SetChecked(false)
-                OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "warband")
-                GUI:RefreshItemList(panel, true)
+                warbandLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             else
-                warbandRadio:SetChecked(false)
+                warbandLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
-        end)
 
-        personalRadio:SetScript("OnClick", function()
+            local personalRadio = CreateFrame("CheckButton", nil, itemRow, "UIRadioButtonTemplate")
+            personalRadio:SetPoint("RIGHT", itemRow, "RIGHT", -135, 0)
+            personalRadio:SetChecked(item.data.bankType == "personal")
+            personalRadio:SetEnabled(canPersonal)
+
+            local personalLabel = OneWoW_GUI:CreateFS(itemRow, 10)
+            personalLabel:SetPoint("LEFT", personalRadio, "RIGHT", 3, 0)
+            personalLabel:SetText(L["ITEM_DEPOSIT_PERSONAL"])
             if canPersonal then
-                personalRadio:SetChecked(true)
-                warbandRadio:SetChecked(false)
-                guildRadio:SetChecked(false)
-                OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "personal")
-                GUI:RefreshItemList(panel, true)
+                personalLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
-                personalRadio:SetChecked(false)
+                personalLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
-        end)
 
-        guildRadio:SetScript("OnClick", function()
+            local guildRadio = CreateFrame("CheckButton", nil, itemRow, "UIRadioButtonTemplate")
+            guildRadio:SetPoint("RIGHT", itemRow, "RIGHT", -55, 0)
+            guildRadio:SetChecked(item.data.bankType == "guild")
+            guildRadio:SetEnabled(canGuild)
+
+            local guildLabel = OneWoW_GUI:CreateFS(itemRow, 10)
+            guildLabel:SetPoint("LEFT", guildRadio, "RIGHT", 3, 0)
+            guildLabel:SetText(L["ITEM_DEPOSIT_GUILD"])
             if canGuild then
-                guildRadio:SetChecked(true)
-                warbandRadio:SetChecked(false)
-                personalRadio:SetChecked(false)
-                OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "guild")
-                GUI:RefreshItemList(panel, true)
+                guildLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
             else
-                guildRadio:SetChecked(false)
+                guildLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
-        end)
 
-        itemRow:Show()
-        yOffset = yOffset - 35
-    end
+            warbandRadio:SetScript("OnClick", function()
+                if canWarband then
+                    warbandRadio:SetChecked(true)
+                    personalRadio:SetChecked(false)
+                    guildRadio:SetChecked(false)
+                    OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "warband")
+                    GUI:RefreshItemList(panel, true)
+                else
+                    warbandRadio:SetChecked(false)
+                end
+            end)
+
+            personalRadio:SetScript("OnClick", function()
+                if canPersonal then
+                    personalRadio:SetChecked(true)
+                    warbandRadio:SetChecked(false)
+                    guildRadio:SetChecked(false)
+                    OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "personal")
+                    GUI:RefreshItemList(panel, true)
+                else
+                    personalRadio:SetChecked(false)
+                end
+            end)
+
+            guildRadio:SetScript("OnClick", function()
+                if canGuild then
+                    guildRadio:SetChecked(true)
+                    warbandRadio:SetChecked(false)
+                    personalRadio:SetChecked(false)
+                    OneWoW_DirectDeposit.DirectDeposit:UpdateItemBankType(item.id, "guild")
+                    GUI:RefreshItemList(panel, true)
+                else
+                    guildRadio:SetChecked(false)
+                end
+            end)
+
+            itemRow:Show()
+            yOffset = yOffset - 35
+        end
 
         if #sortedItems == 0 then
-            local noItemsText = itemScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local noItemsText = OneWoW_GUI:CreateFS(itemScrollChild, 10)
             noItemsText:SetPoint("TOP", itemScrollChild, "TOP", 0, -10)
-            noItemsText:SetText("No items in auto-deposit list\nDrag items here to add them")
+            noItemsText:SetText(L["ITEM_EMPTY_LIST"])
             noItemsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            noItemsText:SetJustifyH("CENTER")
             yOffset = yOffset - 40
         end
 
@@ -759,9 +663,7 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
         if preserveScrollPos and panel.itemScrollFrame and savedScrollPos > 0 then
             C_Timer.After(0.05, function()
                 local scrollBar = panel.itemScrollFrame.ScrollBar
-                if scrollBar then
-                    scrollBar:SetValue(savedScrollPos)
-                end
+                if scrollBar then scrollBar:SetValue(savedScrollPos) end
             end)
         end
 
@@ -782,27 +684,30 @@ function GUI:CreateSettingsPanel(parent)
 
     local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(panel, {
         name = "OneWoW_DirectDepositSettings",
-        width = Constants.GUI.WINDOW_WIDTH - 20,
-        height = Constants.GUI.WINDOW_HEIGHT - 135,
     })
 
     local yOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = -15, addonName = "OneWoW_DirectDeposit" })
 
     yOffset = yOffset - 10
 
-    local aboutSection = GUI:CreateSettingsSection(scrollContent, L["ABOUT_SECTION"], yOffset)
-    yOffset = aboutSection.bottomY - 15
+    local aboutSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
+        title   = L["ABOUT_SECTION"],
+        yOffset = yOffset,
+    })
+    yOffset = aboutSection.bottomY - 10
 
-    local aboutContainer = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-    aboutContainer:SetPoint("TOPLEFT", 20, yOffset)
-    aboutContainer:SetPoint("TOPRIGHT", -20, yOffset)
-    aboutContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    aboutContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    aboutContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local aboutContainer = OneWoW_GUI:CreateFrame(scrollContent, {
+        backdrop    = BACKDROP_INNER_NO_INSETS,
+        bgColor     = "BG_TERTIARY",
+        borderColor = "BORDER_SUBTLE",
+    })
+    aboutContainer:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  20, yOffset)
+    aboutContainer:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -20, yOffset)
+    aboutContainer:SetHeight(120)
 
-    local aboutText = aboutContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    aboutText:SetPoint("TOPLEFT", 15, -15)
-    aboutText:SetPoint("TOPRIGHT", -15, -15)
+    local aboutText = OneWoW_GUI:CreateFS(aboutContainer, 12)
+    aboutText:SetPoint("TOPLEFT",  aboutContainer, "TOPLEFT",  15, -15)
+    aboutText:SetPoint("TOPRIGHT", aboutContainer, "TOPRIGHT", -15, -15)
     aboutText:SetJustifyH("LEFT")
     aboutText:SetWordWrap(true)
     aboutText:SetText(L["ABOUT_TEXT"])
@@ -810,115 +715,68 @@ function GUI:CreateSettingsPanel(parent)
     aboutText:SetSpacing(3)
 
     C_Timer.After(0.01, function()
-        local aboutTextHeight = aboutText:GetStringHeight()
-        aboutContainer:SetHeight(aboutTextHeight + 35)
+        aboutContainer:SetHeight(aboutText:GetStringHeight() + 35)
     end)
-    aboutContainer:SetHeight(120)
 
     yOffset = yOffset - 140
 
-    local linksSection = GUI:CreateSettingsSection(scrollContent, L["LINKS_SECTION"], yOffset)
-    yOffset = linksSection.bottomY - 15
+    local linksSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
+        title   = L["LINKS_SECTION"],
+        yOffset = yOffset,
+    })
+    yOffset = linksSection.bottomY - 10
 
-    local discordContainer = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-    discordContainer:SetPoint("TOPLEFT", 20, yOffset)
-    discordContainer:SetPoint("TOPRIGHT", -20, yOffset)
-    discordContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    discordContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    discordContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local function CreateLinkBox(parent, labelKey, urlKey, yOff)
+        local container = OneWoW_GUI:CreateFrame(parent, {
+            backdrop    = BACKDROP_INNER_NO_INSETS,
+            bgColor     = "BG_TERTIARY",
+            borderColor = "BORDER_SUBTLE",
+        })
+        container:SetPoint("TOPLEFT",  parent, "TOPLEFT",  20, yOff)
+        container:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -20, yOff)
+        container:SetHeight(85)
 
-    local discordLabel = discordContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    discordLabel:SetPoint("TOPLEFT", 15, -10)
-    discordLabel:SetText(L["DISCORD_LABEL"])
-    discordLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        local lbl = OneWoW_GUI:CreateFS(container, 12)
+        lbl:SetPoint("TOPLEFT", container, "TOPLEFT", 15, -10)
+        lbl:SetText(L[labelKey])
+        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local discordBox = OneWoW_GUI:CreateEditBox(discordContainer, { width = scrollFrame:GetWidth() - 70, height = 28 })
-    discordBox:SetPoint("TOPLEFT", 15, -35)
-    discordBox:SetPoint("TOPRIGHT", -15, -35)
-    discordBox:SetText(L["DISCORD_URL"])
-    discordBox:SetAutoFocus(false)
-    discordBox:SetScript("OnEditFocusGained", function(self)
-        self:HighlightText()
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-    end)
-    discordBox:SetScript("OnEditFocusLost", function(self)
-        self:HighlightText(0, 0)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-    discordBox:SetScript("OnMouseDown", function(self)
-        self:SetFocus()
-        self:HighlightText()
-    end)
+        local box = OneWoW_GUI:CreateEditBox(container, { height = 26 })
+        box:SetPoint("TOPLEFT",  container, "TOPLEFT",  15, -33)
+        box:SetPoint("TOPRIGHT", container, "TOPRIGHT", -15, -33)
+        box:SetText(L[urlKey])
+        box:SetAutoFocus(false)
+        box:SetScript("OnEditFocusGained", function(self)
+            self:HighlightText()
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        end)
+        box:SetScript("OnEditFocusLost", function(self)
+            self:HighlightText(0, 0)
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        end)
+        box:SetScript("OnMouseDown", function(self)
+            self:SetFocus()
+            self:HighlightText()
+        end)
 
-    local discordHint = discordContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    discordHint:SetPoint("TOPLEFT", 15, -68)
-    discordHint:SetText(L["COPY_HINT"])
-    discordHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        local hint = OneWoW_GUI:CreateFS(container, 10)
+        hint:SetPoint("TOPLEFT", container, "TOPLEFT", 15, -66)
+        hint:SetText(L["COPY_HINT"])
+        hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    discordContainer:SetHeight(85)
+        return container
+    end
+
+    CreateLinkBox(scrollContent, "DISCORD_LABEL", "DISCORD_URL", yOffset)
     yOffset = yOffset - 95
 
-    local websiteContainer = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
-    websiteContainer:SetPoint("TOPLEFT", 20, yOffset)
-    websiteContainer:SetPoint("TOPRIGHT", -20, yOffset)
-    websiteContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    websiteContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    websiteContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local websiteLabel = websiteContainer:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    websiteLabel:SetPoint("TOPLEFT", 15, -10)
-    websiteLabel:SetText(L["WEBSITE_LABEL"])
-    websiteLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local websiteBox = OneWoW_GUI:CreateEditBox(websiteContainer, { width = scrollFrame:GetWidth() - 70, height = 28 })
-    websiteBox:SetPoint("TOPLEFT", 15, -35)
-    websiteBox:SetPoint("TOPRIGHT", -15, -35)
-    websiteBox:SetText(L["WEBSITE_URL"])
-    websiteBox:SetAutoFocus(false)
-    websiteBox:SetScript("OnEditFocusGained", function(self)
-        self:HighlightText()
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-    end)
-    websiteBox:SetScript("OnEditFocusLost", function(self)
-        self:HighlightText(0, 0)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-    websiteBox:SetScript("OnMouseDown", function(self)
-        self:SetFocus()
-        self:HighlightText()
-    end)
-
-    local websiteHint = websiteContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    websiteHint:SetPoint("TOPLEFT", 15, -68)
-    websiteHint:SetText(L["COPY_HINT"])
-    websiteHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-    websiteContainer:SetHeight(85)
+    CreateLinkBox(scrollContent, "WEBSITE_LABEL", "WEBSITE_URL", yOffset)
     yOffset = yOffset - 95
 
     scrollContent:SetHeight(math.abs(yOffset) + 40)
     panel.scrollContent = scrollContent
 
     return panel
-end
-
-function GUI:CreateSettingsSection(parent, title, yOffset)
-    local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    section:SetPoint("TOPLEFT", 10, yOffset)
-    section:SetPoint("TOPRIGHT", -10, yOffset)
-    section:SetHeight(40)
-    section:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local titleText = section:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    titleText:SetPoint("LEFT", 15, 0)
-    titleText:SetText(title)
-    titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    section.bottomY = yOffset - 50
-
-    return section
 end
 
 function GUI:RefreshCurrentTab()
@@ -944,7 +802,6 @@ function GUI:Show()
             return
         end
     end
-
     if not MainWindow then return end
     MainWindow:Show()
 end
@@ -970,10 +827,11 @@ function GUI:FullReset()
         MainWindow:Hide()
         MainWindow:SetParent(nil)
     end
-    MainWindow = nil
-    isInitialized = false
-    currentTab = 1
-    tabPanels = {}
-    isRefreshing = false
+    MainWindow     = nil
+    isInitialized  = false
+    currentTab     = 1
+    tabPanels      = {}
+    tabButtons     = {}
+    isRefreshing   = false
     pendingRefresh = nil
 end

@@ -114,6 +114,13 @@ OneWoW_DirectDeposit.Locales["enUS"] = {
     ["MINIMAP_ICON_NEUTRAL"] = "Neutral",
     ["MINIMAP_TOOLTIP_HINT"] = "Click to toggle settings",
 
+    ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
+    ["DEPOSIT_NOW"] = "Deposit Now",
+    ["PAUSE"] = "Pause",
+    ["ITEM_ID_LABEL"] = "Item ID:",
+    ["ITEM_DRAG_HINT"] = "Drag items here to add",
+    ["ITEM_EMPTY_LIST"] = "No items in auto-deposit list.\nDrag items here to add them.",
+
 }
 
 OneWoW_DirectDeposit.L = {}
