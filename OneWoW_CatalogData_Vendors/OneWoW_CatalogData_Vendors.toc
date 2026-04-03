@@ -1,6 +1,6 @@
 ## Interface: 120001, 120005
 ## Title: OneWoW - Data: |cFFFFFFFFVendors|r
-## Version: R6.2603.3102
+## Version: R6.2604.0322
 ## Notes: OneWoW Data Addon that: provides vendor and item data for the Catalog.
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
