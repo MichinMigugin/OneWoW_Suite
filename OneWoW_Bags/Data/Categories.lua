@@ -337,14 +337,6 @@ function Categories:SortCategories(categoryList, sortMode)
     end
 end
 
-function Categories:InvalidateEquipSetCache()
-    InvalidateCache()
-    local SE = OneWoW_Bags.SearchEngine
-    if SE and SE.InvalidateEquipSetCache then
-        SE:InvalidateEquipSetCache()
-    end
-end
-
 function Categories:IsItemRecent(bagID, slotID)
     if C_NewItems and C_NewItems.IsNewItem and bagID and slotID then
         if C_NewItems.IsNewItem(bagID, slotID) then

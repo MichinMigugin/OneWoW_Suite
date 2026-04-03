@@ -3,38 +3,48 @@ local _, OneWoW_Bags = ...
 OneWoW_Bags.SearchEngine = {}
 local SE = OneWoW_Bags.SearchEngine
 
-local compiledCache = {}
-local itemMatchCache = {}
+local tconcat, tinsert, wipe = table.concat, table.insert, wipe
+local ipairs, tonumber = ipairs, tonumber
 
 local BATTLE_PET_CAGE_ID = 82800
 
-local equipSetItemCache = {}
-local equipSetCacheTime = 0
+-- These change every expansion, so we config them dynamically
+local EXPANSION_IDS_CONFIG = {
+    ["none"] = {"classic", "vanilla", false},
+    ["burningcrusade"] = {"tbc", true},
+    ["northrend"] = {"wrath", "wotlk", false},
+    ["cataclysm"] = {"cata", true},
+    ["mistsofpandaria"] = {"mists", "mop", "pandaria", false},
+    ["draenor"] = {"wod", "warlords", true},
+    ["legion"] = {true},
+    ["battleforazeroth"] = {"bfa", true},
+    ["shadowlands"] = {"sl", true},
+    ["dragonflight"] = {"df", true},
+    ["warwithin"] = {"tww", "thewarwithin", true},
+    ["midnight"] = {true},
+    ["lasttitan"] = {"titan", true},
+ }
+ local EXPANSION_IDS_MAP = OneWoW_Bags:ConfigEnum(Enum.ExpansionLevel, EXPANSION_IDS_CONFIG, true)
 
-local EXPANSION_IDS = {
-    ["classic"]       = 0, ["vanilla"] = 0,
-    ["tbc"]           = 1, ["burningcrusade"] = 1,
-    ["wrath"]         = 2, ["wotlk"] = 2,
-    ["cata"]          = 3, ["cataclysm"] = 3,
-    ["mists"]         = 4, ["mop"] = 4, ["pandaria"] = 4,
-    ["warlords"]      = 5, ["wod"] = 5, ["draenor"] = 5,
-    ["legion"]        = 6,
-    ["bfa"]           = 7, ["battleforazeroth"] = 7,
-    ["shadowlands"]   = 8, ["sl"] = 8,
-    ["dragonflight"]  = 9, ["df"] = 9,
-    ["warwithin"]     = 10, ["tww"] = 10, ["thewarwithin"] = 10,
-    ["midnight"]      = 11,
-}
-
+local IQ = Enum.ItemQuality
 local QUALITY_MAP = {
-    ["poor"]      = 0, ["junk"] = 0, ["grey"] = 0, ["gray"] = 0, ["trash"] = 0,
-    ["common"]    = 1, ["white"] = 1,
-    ["uncommon"]  = 2, ["green"] = 2,
-    ["rare"]      = 3, ["blue"] = 3,
-    ["epic"]      = 4, ["purple"] = 4,
-    ["legendary"] = 5, ["orange"] = 5,
-    ["artifact"]  = 6,
-    ["heirloom"]  = 7,
+    ["poor"] = IQ.Poor,
+    ["junk"] = IQ.Poor,
+    ["grey"] = IQ.Poor,
+    ["gray"] = IQ.Poor,
+    ["trash"] = IQ.Poor,
+    ["common"] = IQ.Common,
+    ["white"] = IQ.Common,
+    ["uncommon"] = IQ.Uncommon,
+    ["green"] = IQ.Uncommon,
+    ["rare"] = IQ.Rare,
+    ["blue"] = IQ.Rare,
+    ["epic"] = IQ.Epic,
+    ["purple"] = IQ.Epic,
+    ["legendary"] = IQ.Legendary,
+    ["orange"] = IQ.Legendary,
+    ["artifact"] = IQ.Artifact,
+    ["heirloom"] = IQ.Heirloom,
 }
 
 local SLOT_MAP = {
@@ -58,13 +68,23 @@ local SLOT_MAP = {
     ["shirt"] = "INVTYPE_BODY",
 }
 
+local IAS = Enum.ItemArmorSubclass
 local ARMOR_SUBCLASS_MAP = {
-    ["cloth"]   = 1,
-    ["leather"] = 2,
-    ["mail"]    = 3,
-    ["plate"]   = 4,
+    ["cloth"] = IAS.Cloth,
+    ["leather"] = IAS.Leather,
+    ["mail"] = IAS.Mail,
+    ["plate"] = IAS.Plate,
+    ["cosmetic"] = IAS.Cosmetic,
+    ["shield"] = IAS.Shield,
+    ["libram"] = IAS.Libram,
+    ["idol"] = IAS.Idol,
+    ["totem"] = IAS.Totem,
+    ["sigil"] = IAS.Sigil,
+    ["relic"] = IAS.Relic,
 }
 
+local compiledCache = {}
+local itemMatchCache = {}
 local tooltipCache = {}
 
 local function GetTooltipText(bagID, slotID)
@@ -78,11 +98,13 @@ local function GetTooltipText(bagID, slotID)
     end
 
     TooltipUtil.SurfaceArgs(tooltipData)
-    local text = ""
+
+    local parts = {}
     for _, line in ipairs(tooltipData.lines) do
         TooltipUtil.SurfaceArgs(line)
-        text = text .. (line.leftText or "") .. "\n"
+        tinsert(parts, line.leftText or "")
     end
+    local text = tconcat(parts, "\n")
     tooltipCache[cacheKey] = text
     return text
 end
@@ -201,8 +223,7 @@ local function CheckKeyword(keyword, itemID, bagID, slotID, itemInfo)
     end
 
     if kw == "equipment" or kw == "gear" or kw == "equippable" then
-        if IsEquippableItem and IsEquippableItem(itemID) then return true end
-        return false
+        return C_Item.IsEquippableItem(itemID)
     end
 
     if kw == "weapon" then
@@ -218,11 +239,16 @@ local function CheckKeyword(keyword, itemID, bagID, slotID, itemInfo)
     end
 
     if kw == "potion" then
-        return classID == Enum.ItemClass.Consumable and (subClassID == 1 or subClassID == 2 or subClassID == 3)
+        if classID == Enum.ItemClass.Consumable then
+            if subClassID == Enum.ItemConsumableSubclass.Potion then return true end
+            if subClassID == Enum.ItemConsumableSubclass.Elixir then return true end
+            if subClassID == Enum.ItemConsumableSubclass.Flasksphials then return true end
+        end
+        return false
     end
 
     if kw == "food" then
-        return classID == Enum.ItemClass.Consumable and subClassID == 5
+        return classID == Enum.ItemClass.Consumable and subClassID == Enum.ItemConsumableSubclass.Fooddrink
     end
 
     if kw == "reagent" then
@@ -242,7 +268,12 @@ local function CheckKeyword(keyword, itemID, bagID, slotID, itemInfo)
     end
 
     if kw == "questitem" or kw == "quest" then
-        return classID == Enum.ItemClass.Questitem
+        if classID == Enum.ItemClass.Questitem then return true end
+        if bagID and slotID then
+            local qInfo = C_Container.GetContainerItemQuestInfo(bagID, slotID)
+            return qInfo and (qInfo.isQuestItem or qInfo.isActive)
+        end
+        return false
     end
 
     if kw == "container" or kw == "bag" then
@@ -266,14 +297,7 @@ local function CheckKeyword(keyword, itemID, bagID, slotID, itemInfo)
     end
 
     if kw == "housing" then
-        if Enum.ItemClass.Housing then
-            return classID == Enum.ItemClass.Housing
-        end
-        return false
-    end
-
-    if kw == "cosmetic" then
-        return classID == Enum.ItemClass.Armor and subClassID == 5
+        return classID == Enum.ItemClass.Housing
     end
 
     if kw == "hearthstone" then
@@ -297,55 +321,30 @@ local function CheckKeyword(keyword, itemID, bagID, slotID, itemInfo)
     end
 
     if kw == "keystone" then
-        return itemID == 180653 or itemID == 158923 or itemID == 138019
+        return C_Item.IsItemKeystoneByID(itemID)
     end
 
     if kw == "unique" then
-        if bagID and slotID then
-            local tt = GetTooltipText(bagID, slotID)
-            if tt:find(ITEM_UNIQUE or "Unique") then return true end
-        end
-        return false
+        local isUnique = C_Item.GetItemUniquenessByID(itemID)
+        return isUnique == true
     end
 
     if kw == "usable" then
-        if IsUsableItem then
-            local usable, noMana = IsUsableItem(itemID)
-            return usable == true
-        end
-        return true
+        local usable, _ = C_Item.IsUsableItem(itemID)
+        return usable == true
     end
 
     if kw == "unusable" then
-        if IsUsableItem then
-            local usable = IsUsableItem(itemID)
-            return usable == false
-        end
-        return false
+        local usable, _ = C_Item.IsUsableItem(itemID)
+        return usable == false
     end
 
     if kw == "equipmentset" or kw == "set" then
-        local now = GetTime()
-        if now - equipSetCacheTime > 5 then
-            wipe(equipSetItemCache)
-            equipSetCacheTime = now
-            if C_EquipmentSet and C_EquipmentSet.GetEquipmentSetIDs then
-                local setIDs = C_EquipmentSet.GetEquipmentSetIDs()
-                if setIDs then
-                    for _, setID in ipairs(setIDs) do
-                        local ids = C_EquipmentSet.GetItemIDs(setID)
-                        if ids then
-                            for _, id in pairs(ids) do
-                                if id and id > 0 then
-                                    equipSetItemCache[id] = true
-                                end
-                            end
-                        end
-                    end
-                end
-            end
+        if bagID and slotID then
+            local inSet, _ = C_Container.GetContainerItemEquipmentSetInfo(bagID, slotID)
+            return inSet
         end
-        return equipSetItemCache[itemID] or false
+        return false
     end
 
     if kw == "locked" then
@@ -379,7 +378,7 @@ local function CheckKeyword(keyword, itemID, bagID, slotID, itemInfo)
         return classID == Enum.ItemClass.Armor and subClassID == armorSub
     end
 
-    local expID = EXPANSION_IDS[kw]
+    local expID = EXPANSION_IDS_MAP[kw]
     if expID ~= nil then
         local itemExpID = itemInfo._expansionID
         return itemExpID == expID
@@ -639,13 +638,6 @@ function SE:InvalidateCache()
     wipe(compiledCache)
     wipe(itemMatchCache)
     wipe(tooltipCache)
-    wipe(equipSetItemCache)
-    equipSetCacheTime = 0
-end
-
-function SE:InvalidateEquipSetCache()
-    wipe(equipSetItemCache)
-    equipSetCacheTime = 0
 end
 
 function SE:GetExpansionID(itemID, hyperlink)
