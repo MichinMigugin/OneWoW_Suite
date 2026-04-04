@@ -3,7 +3,6 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local db = OneWoW_Bags.db
 local BankTypes = OneWoW_Bags.BankTypes
 local ItemPool = OneWoW_Bags.ItemPool
 
@@ -31,6 +30,7 @@ local function GetOrCreateBankFrame(bagID)
 end
 
 function BankSet:IsWarband()
+    local db = OneWoW_Bags:GetDB()
     return db.global.bankShowWarband
 end
 

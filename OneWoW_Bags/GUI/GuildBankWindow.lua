@@ -6,7 +6,6 @@ if not OneWoW_GUI then return end
 local DB = OneWoW_GUI.DB
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 local WH = OneWoW_Bags.WindowHelpers
 local GuildBankInfoBar = OneWoW_Bags.GuildBankInfoBar
@@ -34,9 +33,18 @@ local titleBar = nil
 local contentArea = nil
 local needsCleanupAfterCombat = false
 
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
+
+local function GetLayoutController()
+    return OneWoW_Bags.WindowLayoutController
+end
+
 function GuildBankGUI:InitMainWindow()
     if isInitialized then return end
 
+    local db = GetDB()
     local savedHeight = db.global.guildBankFramePosition.height
     local windowHeight = savedHeight or Constants.GUI.WINDOW_HEIGHT
 
@@ -166,52 +174,82 @@ end)
 
 function GuildBankGUI:UpdateWindowWidth()
     if not MainWindow then return end
-
-    local cols = db.global.bankColumns
-    local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
-    local spacing = Constants.GUI.ITEM_BUTTON_SPACING
-    local scrollbarSpace = db.global.bankHideScrollBar and 0 or 12
-    local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * OneWoW_GUI:GetSpacing("XS"))
-    MainWindow:SetWidth(newWidth)
-    MainWindow:SetResizeBounds(newWidth, 300, newWidth, 1200)
+    local controller = GetLayoutController()
+    if controller and controller.UpdateFixedWidth then
+        controller:UpdateFixedWidth({
+            mainWindow = MainWindow,
+            columnsKey = "bankColumns",
+            defaultColumns = 14,
+            hideScrollKey = "bankHideScrollBar",
+            outerPadding = OneWoW_GUI:GetSpacing("XS"),
+        })
+    end
 end
 
 function GuildBankGUI:RefreshLayout()
     if not isInitialized or not MainWindow then return end
     if not MainWindow:IsShown() then return end
-    if not GuildBankSet.isBuilt then return end
+    local db = GetDB()
+    local controller = GetLayoutController()
+    if not controller or not controller.Refresh then return end
 
-    GuildBankGUI:UpdateWindowWidth()
+    controller:Refresh({
+        mainWindow = MainWindow,
+        isBuilt = function()
+            return GuildBankSet.isBuilt
+        end,
+        updateWindowWidth = function()
+            GuildBankGUI:UpdateWindowWidth()
+        end,
+        beforeLayout = function()
+            controller:BindScrollFrame({
+                scrollFrame = contentScrollFrame,
+                hideScrollBar = db.global.bankHideScrollBar,
+                topAnchor = GuildBankInfoBar:GetFrame(),
+                bottomAnchor = GuildBankBar:GetFrame(),
+                contentArea = contentArea,
+            })
+        end,
+        contentFrame = contentFrame,
+        containerFrames = GuildBankSet.bagContainerFrames,
+        cleanup = function()
+            GuildBankGUI:CleanupAllViews()
+        end,
+        getButtons = function()
+            return GuildBankSet:GetAllButtons()
+        end,
+        filterButtons = function(allButtons)
+            local visibleButtons = WH:FilterByTab(allButtons, db.global.guildBankSelectedTab)
+            return WH:FilterBySearch(visibleButtons, GuildBankInfoBar:GetSearchText())
+        end,
+        layoutButtons = function(filteredButtons)
+            local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
+            local tabViewContext = controller:CreateViewContext({
+                sectionManager = GuildBankCategoryManager,
+                getCollapsed = function(kind, key)
+                    if kind == "tab" then
+                        return db.global.collapsedGuildBankTabSections[key] or db.global.collapsedGuildBankSections[key]
+                    end
+                end,
+                setCollapsed = function(kind, key, collapsed)
+                    if kind == "tab" then
+                        db.global.collapsedGuildBankTabSections[key] = collapsed or nil
+                    end
+                end,
+                requestRelayout = function()
+                    GuildBankGUI:RefreshLayout()
+                end,
+            })
 
-    if contentFrame and GuildBankSet.bagContainerFrames then
-        for _, tabFrame in pairs(GuildBankSet.bagContainerFrames) do
-            tabFrame:SetParent(contentFrame)
-        end
-    end
-
-    GuildBankGUI:CleanupAllViews()
-
-    local allButtons = GuildBankSet:GetAllButtons()
-    local visibleButtons = WH:FilterByTab(allButtons, db.global.guildBankSelectedTab)
-    local searchText = GuildBankInfoBar:GetSearchText()
-    local filteredButtons = WH:FilterBySearch(visibleButtons, searchText)
-
-    local viewMode = db.global.guildBankViewMode
-    local cols, iconSize, spacing, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
-
-    local layoutHeight = 100
-
-    if viewMode == "tab" then
-        layoutHeight = GuildBankTabView:Layout(contentFrame, contentWidth, filteredButtons)
-    else
-        layoutHeight = ListView:Layout(contentFrame, filteredButtons, contentWidth)
-    end
-
-    contentFrame:SetHeight(layoutHeight)
-
-    local freeSlots = GuildBankSet:GetFreeSlotCount()
-    local totalSlots = GuildBankSet:GetSlotCount()
-    GuildBankBar:UpdateFreeSlots(freeSlots, totalSlots)
+            if db.global.guildBankViewMode == "tab" then
+                return GuildBankTabView:Layout(contentFrame, contentWidth, filteredButtons, tabViewContext)
+            end
+            return ListView:Layout(contentFrame, filteredButtons, contentWidth)
+        end,
+        afterLayout = function()
+            GuildBankBar:UpdateFreeSlots(GuildBankSet:GetFreeSlotCount(), GuildBankSet:GetSlotCount())
+        end,
+    })
 end
 
 function GuildBankGUI:OnSearchChanged(text)
@@ -228,6 +266,7 @@ function GuildBankGUI:Show()
     end
 
     if not MainWindow then return end
+    local db = GetDB()
     db.global.guildBankSelectedTab = nil
 
     MainWindow:Show()

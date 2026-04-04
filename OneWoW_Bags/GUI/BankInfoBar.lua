@@ -1,10 +1,7 @@
 local _, OneWoW_Bags = ...
 
-local db = OneWoW_Bags.db
-
-local C_Container = C_Container
-
 OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
+    controllerKey = "BankController",
     guiTargetKey = "BankGUI",
     viewModeDBKey = "bankViewMode",
     searchName = "OneWoW_BankSearch",
@@ -18,13 +15,9 @@ OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
         filterKey  = "activeBankExpansionFilter",
         settingKey = "enableBankExpansionFilter",
     },
-    cleanupCallback = function()
-        if not OneWoW_Bags.bankOpen then return end
-        local showWarband = db.global.bankShowWarband
-        if showWarband then
-            C_Container.SortBank(Enum.BankType.Account)
-        else
-            C_Container.SortBank(Enum.BankType.Character)
+    cleanupCallback = function(controller)
+        if controller and controller.SortBank then
+            controller:SortBank()
         end
     end,
 })

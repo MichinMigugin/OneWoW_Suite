@@ -59,6 +59,9 @@ local defaults = {
         guildBankSelectedTab = nil,
         collapsedBankSections = {},
         collapsedGuildBankSections = {},
+        collapsedBankCategorySections = {},
+        collapsedBankTabSections = {},
+        collapsedGuildBankTabSections = {},
         showSearchBar = true,
         showCategoryHeaders = true,
         categorySpacing = 1.0,
@@ -134,6 +137,9 @@ function OneWoW_Bags:InitializeDatabase()
             g.displayOrderMigrated = nil
             g.categoriesV3Migrated = nil
             g.itemSortMigratedToNone = nil
+        end },
+        { version = 7, name = "split_collapsed_bank_state", run = function(d)
+            self:MigrateCollapsedBankState(d)
         end },
     })
 end
@@ -340,4 +346,40 @@ end
 
 function OneWoW_Bags:MigrateItemSortToNone(db)
     db.global.itemSort = "none"
+end
+
+function OneWoW_Bags:MigrateCollapsedBankState(db)
+    local g = db.global
+
+    g.collapsedBankCategorySections = g.collapsedBankCategorySections or {}
+    g.collapsedBankTabSections = g.collapsedBankTabSections or {}
+    g.collapsedGuildBankTabSections = g.collapsedGuildBankTabSections or {}
+
+    if g.collapsedBankSections then
+        for key, value in pairs(g.collapsedBankSections) do
+            if type(key) == "number" then
+                g.collapsedBankTabSections[key] = value
+            else
+                local numericKey = tonumber(key)
+                if numericKey then
+                    g.collapsedBankTabSections[numericKey] = value
+                else
+                    g.collapsedBankCategorySections[key] = value
+                end
+            end
+        end
+    end
+
+    if g.collapsedGuildBankSections then
+        for key, value in pairs(g.collapsedGuildBankSections) do
+            if type(key) == "number" then
+                g.collapsedGuildBankTabSections[key] = value
+            else
+                local numericKey = tonumber(key)
+                if numericKey then
+                    g.collapsedGuildBankTabSections[numericKey] = value
+                end
+            end
+        end
+    end
 end

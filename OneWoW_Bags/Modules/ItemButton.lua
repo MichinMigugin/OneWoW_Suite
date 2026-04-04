@@ -3,7 +3,6 @@ local ADDON_NAME, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local db = OneWoW_Bags.db
 local BagTypes = OneWoW_Bags.BagTypes
 local ItemPool = OneWoW_Bags.ItemPool
 
@@ -35,6 +34,7 @@ end
 --- New-item glow for player inventory bags only (not bank / guild bank). Uses Blizzard
 --- C_NewItems plus ContainerFrameItemButtonTemplate overlays (see default ContainerFrame).
 function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
+    local db = OneWoW_Bags:GetDB()
     local bagID, slotID = self.owb_bagID, self.owb_slotID
 
     if not hasItem or not bagID or not slotID or not BagTypes:IsPlayerBag(bagID) then
@@ -97,6 +97,7 @@ end
 function Mixin:OWB_FullUpdate()
     self.owb_dirty = false
     local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI:IsAltShowActive()
+    local db = OneWoW_Bags:GetDB()
 
     local info = C_Container.GetContainerItemInfo(self.owb_bagID, self.owb_slotID)
     self.owb_itemInfo = info
@@ -146,6 +147,7 @@ end
 
 function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
     local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI:IsAltShowActive()
+    local db = OneWoW_Bags:GetDB()
 
     if not hasItem then
         self:SetAlpha(1.0)
@@ -174,6 +176,7 @@ function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
 end
 
 function Mixin:OWB_UpdateUnusableOverlay(hasItem, info)
+    local db = OneWoW_Bags:GetDB()
     if not db.global.showUnusableOverlay then
         if self._owbUnusableOverlay then self._owbUnusableOverlay:Hide() end
         return

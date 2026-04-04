@@ -10,7 +10,6 @@ local ItemStatus = OneWoW and OneWoW.ItemStatus
 
 local PE = OneWoW_Bags.PredicateEngine
 local L = OneWoW_Bags.L
-local db = OneWoW_Bags.db
 
 local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs
@@ -69,6 +68,10 @@ local recentItemDuration = 120
 local customCategoriesV2 = {}
 
 local categoryCache = {}
+
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
 
 local INVTYPE_TO_EQUIP_SLOT = {
     [Enum.InventoryType.IndexHeadType]          = 1,
@@ -170,6 +173,7 @@ end
 function Categories:GetItemCategory(bagID, slotID, itemInfo)
     if not itemInfo then return "Other" end
 
+    local db = GetDB()
     local itemID = itemInfo.itemID
     local hyperlink = itemInfo.hyperlink
     local disabled = db.global.disabledCategories
@@ -306,6 +310,7 @@ function Categories:SortCategories(categoryList, sortMode)
             return aName < bName
         end)
     else
+        local db = GetDB()
         local customOrderMap = {}
         for _, catData in pairs(customCategoriesV2) do
             if catData.name and catData.sortOrder then
@@ -577,6 +582,7 @@ end
 function Categories:AddItemToBuiltinCategory(categoryName, itemID)
     if not categoryName or not itemID then return false end
 
+    local db = GetDB()
     local addedItems = DB:Ensure(db, "global", "categoryModifications", categoryName, "addedItems")
     addedItems[tostring(itemID)] = true
     InvalidateCache()
@@ -586,6 +592,7 @@ end
 function Categories:RemoveItemFromBuiltinCategory(categoryName, itemID)
     if not categoryName or not itemID then return false end
 
+    local db = GetDB()
     if not db.global.categoryModifications then return false end
     local mod = db.global.categoryModifications[categoryName]
     if not mod or not mod.addedItems then return false end

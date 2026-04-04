@@ -1,6 +1,6 @@
 local _, OneWoW_Bags = ...
 
-local base = OneWoW_Bags.CategoryManagerBase:Create("GUI")
+local base = OneWoW_Bags.CategoryManagerBase:Create()
 OneWoW_Bags.CategoryManager = base
 local CM = base
 

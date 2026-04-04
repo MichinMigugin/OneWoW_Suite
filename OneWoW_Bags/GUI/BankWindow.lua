@@ -6,7 +6,6 @@ if not OneWoW_GUI then return end
 local DB = OneWoW_GUI.DB
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 local WH = OneWoW_Bags.WindowHelpers
 local BankInfoBar = OneWoW_Bags.BankInfoBar
@@ -35,9 +34,18 @@ local titleBar = nil
 local contentArea = nil
 local needsCleanupAfterCombat = false
 
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
+
+local function GetLayoutController()
+    return OneWoW_Bags.WindowLayoutController
+end
+
 function BankGUI:InitMainWindow()
     if isInitialized then return end
 
+    local db = GetDB()
     local savedHeight = db.global.bankFramePosition.height
     local windowHeight = savedHeight or Constants.GUI.WINDOW_HEIGHT
 
@@ -164,53 +172,103 @@ end)
 
 function BankGUI:UpdateWindowWidth()
     if not MainWindow then return end
-    local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
-    local spacing = Constants.GUI.ITEM_BUTTON_SPACING
-    local scrollbarSpace = db.global.bankHideScrollBar and 0 or 12
-    local newWidth = db.global.bankColumns * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * OneWoW_GUI:GetSpacing("XS"))
-    MainWindow:SetWidth(newWidth)
-    MainWindow:SetResizeBounds(newWidth, 300, newWidth, 1200)
+    local controller = GetLayoutController()
+    if controller and controller.UpdateFixedWidth then
+        controller:UpdateFixedWidth({
+            mainWindow = MainWindow,
+            columnsKey = "bankColumns",
+            defaultColumns = 14,
+            hideScrollKey = "bankHideScrollBar",
+            outerPadding = OneWoW_GUI:GetSpacing("XS"),
+        })
+    end
 end
 
 function BankGUI:RefreshLayout()
     if not isInitialized or not MainWindow then return end
     if not MainWindow:IsShown() then return end
-    if not BankSet.isBuilt then return end
+    local db = GetDB()
+    local controller = GetLayoutController()
+    if not controller or not controller.Refresh then return end
 
-    BankGUI:UpdateWindowWidth()
+    controller:Refresh({
+        mainWindow = MainWindow,
+        isBuilt = function()
+            return BankSet.isBuilt
+        end,
+        updateWindowWidth = function()
+            BankGUI:UpdateWindowWidth()
+        end,
+        beforeLayout = function()
+            controller:BindScrollFrame({
+                scrollFrame = contentScrollFrame,
+                hideScrollBar = db.global.bankHideScrollBar,
+                topAnchor = BankInfoBar:GetFrame(),
+                bottomAnchor = BankBar:GetFrame(),
+                contentArea = contentArea,
+            })
+        end,
+        contentFrame = contentFrame,
+        containerFrames = BankSet.bagContainerFrames,
+        cleanup = function()
+            BankGUI:CleanupAllViews()
+        end,
+        getButtons = function()
+            return BankSet:GetAllButtons()
+        end,
+        filterButtons = function(allButtons)
+            local visibleButtons = WH:FilterByTab(allButtons, db.global.bankSelectedTab)
+            local filteredButtons = WH:FilterBySearch(visibleButtons, BankInfoBar:GetSearchText())
+            return WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeBankExpansionFilter)
+        end,
+        layoutButtons = function(filteredButtons)
+            local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
+            local viewMode = db.global.bankViewMode
+            local categoryViewContext = controller:CreateViewContext({
+                sectionManager = BankCategoryManager,
+                getCollapsed = function(kind, key)
+                    if kind == "category" then
+                        return db.global.collapsedBankCategorySections[key] or db.global.collapsedBankSections[key]
+                    end
+                end,
+                setCollapsed = function(kind, key, collapsed)
+                    if kind == "category" then
+                        db.global.collapsedBankCategorySections[key] = collapsed or nil
+                    end
+                end,
+                requestRelayout = function()
+                    BankGUI:RefreshLayout()
+                end,
+            })
+            local tabViewContext = controller:CreateViewContext({
+                sectionManager = BankCategoryManager,
+                getCollapsed = function(kind, key)
+                    if kind == "tab" then
+                        return db.global.collapsedBankTabSections[key] or db.global.collapsedBankSections[key]
+                    end
+                end,
+                setCollapsed = function(kind, key, collapsed)
+                    if kind == "tab" then
+                        db.global.collapsedBankTabSections[key] = collapsed or nil
+                    end
+                end,
+                requestRelayout = function()
+                    BankGUI:RefreshLayout()
+                end,
+            })
 
-    if contentFrame and BankSet.bagContainerFrames then
-        for _, bagFrame in pairs(BankSet.bagContainerFrames) do
-            bagFrame:SetParent(contentFrame)
-        end
-    end
-
-    BankGUI:CleanupAllViews()
-
-    local allButtons = BankSet:GetAllButtons()
-    local visibleButtons = WH:FilterByTab(allButtons, db.global.bankSelectedTab)
-    local searchText = BankInfoBar:GetSearchText()
-    local filteredButtons = WH:FilterBySearch(visibleButtons, searchText)
-    filteredButtons = WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeBankExpansionFilter)
-
-    local viewMode = db.global.bankViewMode
-    local cols, iconSize, spacing, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
-
-    local layoutHeight = 100
-
-    if viewMode == "category" then
-        layoutHeight = BankCategoryView:Layout(contentFrame, contentWidth, filteredButtons)
-    elseif viewMode == "tab" then
-        layoutHeight = BankTabView:Layout(contentFrame, contentWidth, filteredButtons)
-    else
-        layoutHeight = ListView:Layout(contentFrame, filteredButtons, contentWidth)
-    end
-
-    contentFrame:SetHeight(layoutHeight)
-
-    local freeSlots = BankSet:GetFreeSlotCount()
-    local totalSlots = BankSet:GetSlotCount()
-    BankBar:UpdateFreeSlots(freeSlots, totalSlots)
+            if viewMode == "category" then
+                return BankCategoryView:Layout(contentFrame, contentWidth, filteredButtons, categoryViewContext)
+            end
+            if viewMode == "tab" then
+                return BankTabView:Layout(contentFrame, contentWidth, filteredButtons, tabViewContext)
+            end
+            return ListView:Layout(contentFrame, filteredButtons, contentWidth)
+        end,
+        afterLayout = function()
+            BankBar:UpdateFreeSlots(BankSet:GetFreeSlotCount(), BankSet:GetSlotCount())
+        end,
+    })
 end
 
 function BankGUI:OnSearchChanged(text)
@@ -218,6 +276,7 @@ function BankGUI:OnSearchChanged(text)
 end
 
 function BankGUI:OnBankTypeChanged()
+    local db = GetDB()
     db.global.bankSelectedTab = nil
 
     local showWarband = db.global.bankShowWarband

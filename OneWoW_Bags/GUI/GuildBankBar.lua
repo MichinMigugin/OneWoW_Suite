@@ -3,7 +3,6 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 
 local pairs = pairs
@@ -17,6 +16,14 @@ local tabButtons = {}
 
 local ROW1_Y = 0
 local BAR_HEIGHT = 38
+
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
+
+local function GetController()
+    return OneWoW_Bags.GuildBankController
+end
 
 function GuildBankBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
@@ -34,40 +41,30 @@ function GuildBankBar:Create(parent)
     local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_WITHDRAW"] or "Withdraw", height = 22 })
     withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
-        if not OneWoW_Bags.guildBankOpen then return end
-        if not CanWithdrawGuildBankMoney() then return end
-        local limit = GetGuildBankWithdrawMoney()
-        OneWoW_Bags:ShowMoneyDialog({
-            title = L["GUILD_BANK_TITLE"] or "Guild Bank",
-            anchorFrame = self,
-            onWithdraw = function(copper)
-                local max = (limit == -1) and copper or math.min(copper, limit)
-                WithdrawGuildBankMoney(max)
-                C_Timer.After(0.3, function() GuildBankBar:UpdateGold() end)
-            end,
-        })
+        local controller = GetController()
+        if controller and controller.ShowWithdrawMoney then
+            controller:ShowWithdrawMoney(self)
+        end
     end)
     bagsBarFrame.withdrawBtn = withdrawBtn
 
     local depositBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_DEPOSIT"] or "Deposit", height = 22 })
     depositBtn:SetPoint("RIGHT", withdrawBtn, "LEFT", -4, 0)
     depositBtn:SetScript("OnClick", function(self)
-        if not OneWoW_Bags.guildBankOpen then return end
-        OneWoW_Bags:ShowMoneyDialog({
-            title = L["GUILD_BANK_TITLE"] or "Guild Bank",
-            anchorFrame = self,
-            onDeposit = function(copper)
-                DepositGuildBankMoney(copper)
-                C_Timer.After(0.3, function() GuildBankBar:UpdateGold() end)
-            end,
-        })
+        local controller = GetController()
+        if controller and controller.ShowDepositMoney then
+            controller:ShowDepositMoney(self)
+        end
     end)
     bagsBarFrame.depositBtn = depositBtn
 
     local logBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_LOG"] or "Log", height = 22, minWidth = 30 })
     logBtn:SetPoint("RIGHT", depositBtn, "LEFT", -4, 0)
     logBtn:SetScript("OnClick", function()
-        OneWoW_Bags.GuildBankLog:Toggle()
+        local controller = GetController()
+        if controller and controller.ToggleLog then
+            controller:ToggleLog()
+        end
     end)
     bagsBarFrame.logBtn = logBtn
 
@@ -114,14 +111,17 @@ function GuildBankBar:BuildTabButtons()
                 QueryGuildBankTab(tabID)
             end
         end
-        local _, _, origViewable = GetGuildBankTabInfo(originalTab)
-        if origViewable then
-            QueryGuildBankTab(originalTab)
+        if originalTab then
+            local _, _, origViewable = GetGuildBankTabInfo(originalTab)
+            if origViewable then
+                QueryGuildBankTab(originalTab)
+            end
         end
     end
 end
 
 function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewable)
+    local db = GetDB()
     local btn = CreateFrame("Button", "OneWoW_GuildBankTab" .. tabID, parent)
     btn:SetSize(26, 26)
     btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -176,25 +176,16 @@ function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewabl
         if not self.isViewable then return end
 
         if mouseButton == "RightButton" and OneWoW_Bags.guildBankOpen then
-            SetCurrentGuildBankTab(self.tabID)
-            GuildBankBar:OpenTabEditor(self.tabID)
+            local controller = GetController()
+            if controller and controller.OpenTabEditor then
+                controller:OpenTabEditor(self.tabID)
+            end
             return
         end
 
-        if db.global.guildBankSelectedTab == self.tabID then
-            db.global.guildBankSelectedTab = nil
-        else
-            db.global.guildBankSelectedTab = self.tabID
-        end
-
-        SetCurrentGuildBankTab(self.tabID)
-        QueryGuildBankTab(self.tabID)
-        GuildBankBar:UpdateTabHighlights()
-        if OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI.RefreshLayout then
-            OneWoW_Bags.GuildBankGUI:RefreshLayout()
-        end
-        if OneWoW_Bags.GuildBankLog then
-            OneWoW_Bags.GuildBankLog:OnTabChanged()
+        local controller = GetController()
+        if controller and controller.ToggleSelectedTab then
+            controller:ToggleSelectedTab(self.tabID)
         end
     end)
 
@@ -203,7 +194,7 @@ end
 
 function GuildBankBar:OpenTabEditor(tabID)
     if not GuildBankPopupFrame then return end
-    if not CanEditGuildBankTabInfo(tabID) then return end
+    if not CanEditGuildBankTabInfo() then return end
     GuildBankPopupFrame:Hide()
     GuildBankPopupFrame.mode = IconSelectorPopupFrameModes.Edit
     GuildBankPopupFrame:Show()
@@ -221,6 +212,7 @@ function GuildBankBar:OpenTabEditor(tabID)
 end
 
 function GuildBankBar:UpdateTabHighlights()
+    local db = GetDB()
     local selected = db.global.guildBankSelectedTab
     for tabID, btn in pairs(tabButtons) do
         if btn._skinBorder then

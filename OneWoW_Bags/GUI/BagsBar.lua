@@ -7,7 +7,6 @@ local DB = OneWoW_GUI.DB
 local StorageAPI = _G.StorageAPI
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 local BagTypes = OneWoW_Bags.BagTypes
 local InfoBar = OneWoW_Bags.InfoBar
@@ -35,18 +34,23 @@ local ROW2_HEIGHT = 26
 local ROW1_TRACKER_MAX = 3
 local MAX_ALT_DISPLAY = 10
 
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
+
+local function GetController()
+    return OneWoW_Bags.BagsController
+end
+
 local function ShowTrackerDialog()
     if not trackerDialog then
         local function doAdd()
-            local id = tonumber(trackerDialog.editBox:GetText())
-            if id and id > 0 then
-                local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
-                local trackType = "item"
-                if currencyInfo and currencyInfo.name and currencyInfo.name ~= "" then
-                    trackType = "currency"
-                end
-                tinsert(db.global.trackedCurrencies, { type = trackType, id = id })
-                BagsBar:UpdateTrackers()
+            if not trackerDialog or not trackerDialog.editBox or not trackerDialog.frame then
+                return
+            end
+            local controller = GetController()
+            if controller and controller.AddTrackedEntryFromID then
+                controller:AddTrackedEntryFromID(trackerDialog.editBox:GetText())
             end
             trackerDialog.editBox:SetText("")
             trackerDialog.frame:Hide()
@@ -90,6 +94,9 @@ local function ShowTrackerDialog()
         trackerDialog = dialog
     end
 
+    if not trackerDialog or not trackerDialog.frame or not trackerDialog.editBox then
+        return
+    end
     trackerDialog.frame:Show()
     trackerDialog.editBox:SetText("")
     C_Timer.After(0, function()
@@ -177,9 +184,11 @@ function BagsBar:Create(parent)
     addTrackerBtn:SetScript("OnReceiveDrag", function(self)
         local cursorType, itemID = GetCursorInfo()
         if cursorType == "item" and itemID then
-            tinsert(db.global.trackedCurrencies, { type = "item", id = itemID })
+            local controller = GetController()
+            if controller and controller.AddTrackedItem then
+                controller:AddTrackedItem(itemID)
+            end
             ClearCursor()
-            BagsBar:UpdateTrackers()
         end
     end)
     bagsBarFrame.addTrackerBtn = addTrackerBtn
@@ -310,8 +319,10 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
     removeBtn:SetFrameLevel(tf:GetFrameLevel() + 5)
     removeBtn:Hide()
     removeBtn:SetScript("OnClick", function()
-        tremove(db.global.trackedCurrencies, capturedIdx)
-        BagsBar:UpdateTrackers()
+        local controller = GetController()
+        if controller and controller.RemoveTrackedEntry then
+            controller:RemoveTrackedEntry(capturedIdx)
+        end
     end)
     removeBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -357,6 +368,8 @@ end
 
 function BagsBar:UpdateTrackers()
     if not bagsBarFrame then return end
+
+    local db = GetDB()
 
     for _, tf in ipairs(bagsBarFrame.trackerFrames) do
         tf:Hide()
@@ -449,7 +462,8 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
 
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        local selected = db.global.selectedBag
+        local controller = GetController()
+        local selected = controller and controller.GetSelectedBag and controller:GetSelectedBag() or nil
         if self.bagIndex == 0 then
             GameTooltip:SetText(BACKPACK_TOOLTIP or "Backpack")
         else
@@ -468,21 +482,17 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     btn:SetScript("OnClick", function(self)
-        if db.global.selectedBag == self.bagIndex then
-            db.global.selectedBag = nil
-        else
-            db.global.selectedBag = self.bagIndex
-            db.global.viewMode = "bag"
-            InfoBar:UpdateViewButtons()
+        local controller = GetController()
+        if controller and controller.ToggleSelectedBag then
+            controller:ToggleSelectedBag(self.bagIndex)
         end
-        BagsBar:UpdateBagHighlights()
-        OneWoW_Bags.GUI:RefreshLayout()
     end)
 
     return btn
 end
 
 function BagsBar:UpdateBagHighlights()
+    local db = GetDB()
     local selected = db.global.selectedBag
     for idx, btn in pairs(bagButtons) do
         if btn._skinBorder then
@@ -531,6 +541,7 @@ end
 function BagsBar:UpdateRowVisibility()
     if not bagsBarFrame then return end
 
+    local db = GetDB()
     local altShow = OneWoW_Bags.GUI:IsAltShowActive()
     local showBags = db.global.showBagsBar ~= false
     local showMoney = db.global.showMoneyBar ~= false

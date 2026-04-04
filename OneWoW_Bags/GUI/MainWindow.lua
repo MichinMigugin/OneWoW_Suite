@@ -4,7 +4,6 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 local InfoBar = OneWoW_Bags.InfoBar
 local WH = OneWoW_Bags.WindowHelpers
@@ -31,9 +30,18 @@ local contentArea = nil
 local settingsBtn = nil
 local needsCleanupAfterCombat = false
 
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
+
+local function GetLayoutController()
+    return OneWoW_Bags.WindowLayoutController
+end
+
 function GUI:InitMainWindow()
     if isInitialized then return end
 
+    local db = GetDB()
     local savedHeight = db.global.mainFramePosition.height
     local windowHeight = savedHeight or Constants.GUI.WINDOW_HEIGHT
 
@@ -156,85 +164,103 @@ end)
 
 function GUI:UpdateWindowWidth()
     if not MainWindow then return end
-
-    local cols = db.global.bagColumns
-    local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
-    local spacing = Constants.GUI.ITEM_BUTTON_SPACING
-    local scrollbarSpace = db.global.hideScrollBar and 0 or 12
-    local newWidth = cols * (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 * OneWoW_GUI:GetSpacing("XS"))
-    MainWindow:SetWidth(newWidth)
-    MainWindow:SetResizeBounds(newWidth, 300, newWidth, 1200)
+    local controller = GetLayoutController()
+    if controller and controller.UpdateFixedWidth then
+        controller:UpdateFixedWidth({
+            mainWindow = MainWindow,
+            columnsKey = "bagColumns",
+            defaultColumns = 15,
+            hideScrollKey = "hideScrollBar",
+            outerPadding = OneWoW_GUI:GetSpacing("XS"),
+        })
+    end
 end
 
 function GUI:RefreshLayout()
     if not isInitialized or not MainWindow then return end
     if not MainWindow:IsShown() then return end
+    local db = GetDB()
+    local controller = GetLayoutController()
+    if not controller or not controller.Refresh then return end
 
-    if not BagSet.isBuilt then return end
+    controller:Refresh({
+        mainWindow = MainWindow,
+        isBuilt = function()
+            return BagSet.isBuilt
+        end,
+        updateWindowWidth = function()
+            GUI:UpdateWindowWidth()
+        end,
+        beforeLayout = function()
+            InfoBar:UpdateVisibility()
+            BagsBar:UpdateRowVisibility()
+            controller:BindScrollFrame({
+                scrollFrame = contentScrollFrame,
+                hideScrollBar = db.global.hideScrollBar,
+                topAnchor = InfoBar:GetFrame(),
+                bottomAnchor = BagsBar:GetFrame(),
+                contentArea = contentArea,
+            })
+        end,
+        contentFrame = contentFrame,
+        containerFrames = BagSet.bagContainerFrames,
+        cleanup = function()
+            GUI:CleanupAllViews()
+        end,
+        getButtons = function()
+            return BagSet:GetAllButtons()
+        end,
+        filterButtons = function(allButtons)
+            local filteredButtons = WH:FilterBySearch(allButtons, InfoBar:GetSearchText())
+            return WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeExpansionFilter)
+        end,
+        layoutButtons = function(filteredButtons)
+            local _, _, _, contentWidth = WH:GetLayoutMetrics("bagColumns", 15)
+            local viewMode = db.global.viewMode
+            local viewContext = controller:CreateViewContext({
+                sectionManager = CategoryManager,
+                containerType = "backpack",
+                getCollapsed = function(kind, key)
+                    if kind == "category" then
+                        return db.global.collapsedSections[key]
+                    end
+                    if kind == "bag" then
+                        return db.global.collapsedBagSections[key]
+                    end
+                    if kind == "section" then
+                        local section = db.global.categorySections and db.global.categorySections[key]
+                        return section and section.collapsed or false
+                    end
+                end,
+                setCollapsed = function(kind, key, collapsed)
+                    if kind == "category" then
+                        db.global.collapsedSections[key] = collapsed or nil
+                    elseif kind == "bag" then
+                        db.global.collapsedBagSections[key] = collapsed or nil
+                    elseif kind == "section" then
+                        local section = db.global.categorySections and db.global.categorySections[key]
+                        if section then
+                            section.collapsed = collapsed
+                        end
+                    end
+                end,
+                requestRelayout = function()
+                    GUI:RefreshLayout()
+                end,
+            })
 
-    GUI:UpdateWindowWidth()
-    InfoBar:UpdateVisibility()
-    BagsBar:UpdateRowVisibility()
-
-    local bagsBarFrame = BagsBar:GetFrame()
-    local infoBarFrame = InfoBar:GetFrame()
-    if contentScrollFrame then
-        local hideScrollBar = db.global.hideScrollBar
-        local scrollbarOffset = hideScrollBar and 0 or -12
-        if contentScrollFrame.ScrollBar then
-            if hideScrollBar then
-                contentScrollFrame.ScrollBar:Hide()
-                contentScrollFrame.ScrollBar:SetAlpha(0)
-            else
-                contentScrollFrame.ScrollBar:Show()
-                contentScrollFrame.ScrollBar:SetAlpha(1)
+            if viewMode == "list" then
+                return ListView:Layout(contentFrame, filteredButtons, contentWidth)
             end
-        end
-        contentScrollFrame:ClearAllPoints()
-        if infoBarFrame and infoBarFrame:IsShown() then
-            contentScrollFrame:SetPoint("TOPLEFT", infoBarFrame, "BOTTOMLEFT", 0, -2)
-        else
-            contentScrollFrame:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
-        end
-        local showAnyBar = bagsBarFrame and bagsBarFrame:IsShown()
-        if showAnyBar then
-            contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "TOPRIGHT", scrollbarOffset, 2)
-        else
-            contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", scrollbarOffset, 0)
-        end
-    end
-
-    if contentFrame and BagSet.bagContainerFrames then
-        for _, bagFrame in pairs(BagSet.bagContainerFrames) do
-            bagFrame:SetParent(contentFrame)
-        end
-    end
-
-    GUI:CleanupAllViews()
-
-    local allButtons = BagSet:GetAllButtons()
-    local searchText = InfoBar:GetSearchText()
-    local filteredButtons = WH:FilterBySearch(allButtons, searchText)
-    filteredButtons = WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeExpansionFilter)
-
-    local viewMode = db.global.viewMode
-    local cols, iconSize, spacing, contentWidth = WH:GetLayoutMetrics("bagColumns", 15)
-
-    local layoutHeight = 100
-
-    if viewMode == "list" then
-        layoutHeight = ListView:Layout(contentFrame, filteredButtons, contentWidth)
-    elseif viewMode == "category" then
-        layoutHeight = CategoryView:Layout(contentFrame, contentWidth, filteredButtons, "backpack")
-    elseif viewMode == "bag" then
-        layoutHeight = BagView:Layout(contentFrame, contentWidth, filteredButtons)
-    end
-
-    contentFrame:SetHeight(layoutHeight)
-
-    local freeSlots = BagSet:GetFreeSlotCount()
-    local totalSlots = BagSet:GetSlotCount()
-    BagsBar:UpdateFreeSlots(freeSlots, totalSlots)
+            if viewMode == "category" then
+                return CategoryView:Layout(contentFrame, contentWidth, filteredButtons, "backpack", viewContext)
+            end
+            return BagView:Layout(contentFrame, contentWidth, filteredButtons, viewContext)
+        end,
+        afterLayout = function()
+            BagsBar:UpdateFreeSlots(BagSet:GetFreeSlotCount(), BagSet:GetSlotCount())
+        end,
+    })
 end
 
 function GUI:OnSearchChanged(text)
@@ -344,6 +370,7 @@ local altIsDown = false
 altShowFrame:RegisterEvent("MODIFIER_STATE_CHANGED")
 altShowFrame:SetScript("OnEvent", function(self, event, key, down)
     if not MainWindow or not MainWindow:IsShown() then return end
+    local db = GetDB()
     if not db.global.altToShow then return end
 
     if key == "LALT" or key == "RALT" then
@@ -357,6 +384,7 @@ altShowFrame:SetScript("OnEvent", function(self, event, key, down)
 end)
 
 function GUI:IsAltShowActive()
+    local db = GetDB()
     if not db.global.altToShow then return false end
     return altIsDown
 end

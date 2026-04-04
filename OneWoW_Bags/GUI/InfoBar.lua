@@ -4,7 +4,6 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 local PE = OneWoW_Bags.PredicateEngine
 local BagSet = OneWoW_Bags.BagSet
@@ -21,6 +20,10 @@ local infoBarFrame = nil
 
 local ROW1_H = 28
 local ROW2_H = 28
+
+local function GetController()
+    return OneWoW_Bags.BagsController
+end
 
 function InfoBar:Create(parent)
     if infoBarFrame then return infoBarFrame end
@@ -40,14 +43,20 @@ function InfoBar:Create(parent)
     local catMgrBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CATEGORY_MANAGER_BTN"])
     catMgrBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), btnY)
     catMgrBtn:SetScript("OnClick", function()
-        OneWoW_Bags.CategoryManagerUI:Toggle()
+        local controller = GetController()
+        if controller and controller.ToggleCategoryManager then
+            controller:ToggleCategoryManager()
+        end
     end)
     infoBarFrame.catMgrBtn = catMgrBtn
 
     local sortBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CLEANUP"] or "Sort")
     sortBtn:SetPoint("TOPRIGHT", catMgrBtn, "TOPLEFT", -3, 0)
     sortBtn:SetScript("OnClick", function()
-        C_Container.SortBags()
+        local controller = GetController()
+        if controller and controller.SortBags then
+            controller:SortBags()
+        end
     end)
     infoBarFrame.sortBtn = sortBtn
 
@@ -55,27 +64,33 @@ function InfoBar:Create(parent)
     local viewList = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_LIST"])
     viewList:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), btnY)
     viewList:SetScript("OnClick", function()
-        db.global.viewMode = "list"
+        local controller = GetController()
+        if controller and controller.SetViewMode then
+            controller:SetViewMode("list")
+        end
         InfoBar:UpdateViewButtons()
-        OneWoW_Bags.GUI:RefreshLayout()
     end)
     infoBarFrame.viewList = viewList
 
     local viewCat = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_CATEGORY"])
     viewCat:SetPoint("TOPLEFT", viewList, "TOPRIGHT", 3, 0)
     viewCat:SetScript("OnClick", function()
-        db.global.viewMode = "category"
+        local controller = GetController()
+        if controller and controller.SetViewMode then
+            controller:SetViewMode("category")
+        end
         InfoBar:UpdateViewButtons()
-        OneWoW_Bags.GUI:RefreshLayout()
     end)
     infoBarFrame.viewCat = viewCat
 
     local viewBag = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"])
     viewBag:SetPoint("TOPLEFT", viewCat, "TOPRIGHT", 3, 0)
     viewBag:SetScript("OnClick", function()
-        db.global.viewMode = "bag"
+        local controller = GetController()
+        if controller and controller.SetViewMode then
+            controller:SetViewMode("bag")
+        end
         InfoBar:UpdateViewButtons()
-        OneWoW_Bags.GUI:RefreshLayout()
     end)
     infoBarFrame.viewBag = viewBag
 
@@ -106,18 +121,20 @@ function InfoBar:Create(parent)
             return items
         end,
         getActiveValue = function()
-            local v = OneWoW_Bags.activeExpansionFilter
+            local controller = GetController()
+            local v = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or nil
             return (v == nil) and "ALL" or v
         end,
         onSelect = function(value, text)
+            local controller = GetController()
+            if controller and controller.SetExpansionFilter then
+                controller:SetExpansionFilter(value)
+            end
             if value == "ALL" then
-                OneWoW_Bags.activeExpansionFilter = nil
                 expacText:SetText(L["EXPAC_FILTER_BTN"])
             else
-                OneWoW_Bags.activeExpansionFilter = value
                 expacText:SetText(text)
             end
-            OneWoW_Bags.GUI:RefreshLayout()
         end,
     })
     infoBarFrame.expacDropdown = expacDropdown
@@ -131,14 +148,16 @@ function InfoBar:Create(parent)
     emptyIcon:SetAllPoints()
     emptyIcon:SetTexture("Interface\\COMMON\\FavoritesIcon")
     emptyToggleBtn:SetScript("OnClick", function()
-        db.global.showEmptySlots = not db.global.showEmptySlots
+        local controller = GetController()
+        if controller and controller.ToggleEmptySlots then
+            controller:ToggleEmptySlots()
+        end
         InfoBar:UpdateViewButtons()
-        OneWoW_Bags.GUI:RefreshLayout()
     end)
     emptyToggleBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        local showing = db.global.showEmptySlots
-        if showing == nil then showing = true end
+        local controller = GetController()
+        local showing = controller and controller.GetShowEmptySlots and controller:GetShowEmptySlots() or true
         if showing then
             GameTooltip:SetText(L["EMPTY_SLOTS_HIDE"], 1, 1, 1)
         else
@@ -155,7 +174,10 @@ function InfoBar:Create(parent)
         height = 22,
         placeholderText = L["SEARCH_PLACEHOLDER"],
         onTextChanged = function(text)
-            OneWoW_Bags.GUI:OnSearchChanged(text)
+            local controller = GetController()
+            if controller and controller.OnSearchChanged then
+                controller:OnSearchChanged(text)
+            end
         end,
     })
     searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), searchY)
@@ -229,7 +251,9 @@ end
 
 function InfoBar:UpdateViewButtons()
     if not infoBarFrame then return end
-    local mode = db.global.viewMode
+    local db = OneWoW_Bags:GetDB()
+    local controller = GetController()
+    local mode = controller and controller.GetViewMode and controller:GetViewMode() or db.global.viewMode
 
     local altShow = OneWoW_Bags.GUI:IsAltShowActive()
     local showHeader = (db.global.showHeaderBar ~= false) or altShow
@@ -269,10 +293,8 @@ function InfoBar:UpdateViewButtons()
     if infoBarFrame.expacDropdown then
         local showExpac = showHeader and (db.global.enableExpansionFilter == true)
         infoBarFrame.expacDropdown:SetShown(showExpac == true)
-        if not showExpac then
-            OneWoW_Bags.activeExpansionFilter = nil
-        elseif infoBarFrame.expacText then
-            local activeFilter = OneWoW_Bags.activeExpansionFilter
+        if showExpac and infoBarFrame.expacText then
+            local activeFilter = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or nil
             if activeFilter == nil then
                 infoBarFrame.expacText:SetText(L["EXPAC_FILTER_BTN"])
             else
@@ -283,8 +305,7 @@ function InfoBar:UpdateViewButtons()
     end
 
     if infoBarFrame.emptyToggleBtn then
-        local showing = db.global.showEmptySlots
-        if showing == nil then showing = true end
+        local showing = controller and controller.GetShowEmptySlots and controller:GetShowEmptySlots() or true
         if showing then
             infoBarFrame.emptyToggleBtn:SetAlpha(1.0)
         else
@@ -307,6 +328,8 @@ end
 
 function InfoBar:UpdateVisibility()
     if not infoBarFrame then return end
+
+    local db = OneWoW_Bags:GetDB()
 
     self:UpdateViewButtons()
 

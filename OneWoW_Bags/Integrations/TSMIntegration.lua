@@ -15,7 +15,7 @@ end
 function TSM:Import()
     if not self:IsAvailable() then return 0 end
 
-    local db = OneWoW_Bags.db
+    local db = OneWoW_Bags:GetDB()
     DB:Ensure(db, "global", "customCategoriesV2")
 
     local imported = 0
@@ -94,7 +94,7 @@ function TSM:Import()
 
     if OneWoW_Bags.Categories then
         OneWoW_Bags.Categories:SetCustomCategories(db.global.customCategoriesV2)
-        OneWoW_Bags.Categories:InvalidateCache()
+        OneWoW_Bags:InvalidateCategorization()
     end
 
     return imported

@@ -4,10 +4,8 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 local BankSet = OneWoW_Bags.BankSet
-local BankCategoryManager = OneWoW_Bags.BankCategoryManager
 local BankTypes = OneWoW_Bags.BankTypes
 
 local tinsert, ipairs = tinsert, ipairs
@@ -16,7 +14,12 @@ local floor, max = math.floor, math.max
 OneWoW_Bags.BankTabView = {}
 local View = OneWoW_Bags.BankTabView
 
-function View:Layout(contentFrame, width, filteredButtons)
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
+
+function View:Layout(contentFrame, width, filteredButtons, viewContext)
+    local db = GetDB()
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
@@ -29,7 +32,10 @@ function View:Layout(contentFrame, width, filteredButtons)
         end
     end
 
-    BankCategoryManager:ReleaseAllSections()
+    local sortButtons = viewContext.sortButtons
+    local acquireSection = viewContext.acquireSection
+    local getCollapsed = viewContext.getCollapsed
+    local setCollapsed = viewContext.setCollapsed
 
     local selectedTab = db.global.bankSelectedTab
     local showWarband = BankSet:IsWarband()
@@ -62,8 +68,8 @@ function View:Layout(contentFrame, width, filteredButtons)
             end
 
             if #buttons > 0 then
-                OneWoW_Bags:SortButtons(buttons)
-                local section = BankCategoryManager:AcquireSection(contentFrame)
+                sortButtons(buttons)
+                local section = acquireSection(contentFrame)
                 section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
                 section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
                 section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -79,7 +85,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                 section.count:SetText(tostring(#buttons))
                 section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-                local collapsed = db.global.collapsedBankSections and db.global.collapsedBankSections[bagID]
+                local collapsed = getCollapsed("tab", bagID)
                 section.isCollapsed = collapsed or false
 
                 local sectionHeight = 26
@@ -131,11 +137,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                 local capturedBagID = bagID
                 section.header:SetScript("OnClick", function()
                     section.isCollapsed = not section.isCollapsed
-                    if not db.global.collapsedBankSections then
-                        db.global.collapsedBankSections = {}
-                    end
-                    db.global.collapsedBankSections[capturedBagID] = section.isCollapsed or nil
-                    OneWoW_Bags.BankGUI:RefreshLayout()
+                    setCollapsed("tab", capturedBagID, section.isCollapsed)
                 end)
             end
         end

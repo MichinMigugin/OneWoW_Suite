@@ -8,7 +8,6 @@ local abs, floor = math.abs, math.floor
 
 local C_Timer = C_Timer
 
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 
 local BankGUI = OneWoW_Bags.BankGUI
@@ -31,6 +30,16 @@ local bankCatSpaceTimer = nil
 local compactGapTimer = nil
 local bankCompactGapTimer = nil
 local COMPACT_GAP_STEPS = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 2.5, 3 }
+
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
+
+local function ApplySetting(settingKey, value)
+    if OneWoW_Bags.SettingsController then
+        OneWoW_Bags.SettingsController:Apply(settingKey, value)
+    end
+end
 
 local function CompactGapToIndex(val)
     for i, v in ipairs(COMPACT_GAP_STEPS) do
@@ -119,13 +128,7 @@ local function BuildGeneralTab(sc, L, db, GUI)
         items = sizeItems,
         height = 24, gap = 8, marginX = 15, width = 510,
         onSelect = function(value)
-            db.global.iconSize = value
-            GUI:RefreshLayout()
-            BankGUI:RefreshLayout()
-
-            if OneWoW_Bags.GuildBankGUI then
-                OneWoW_Bags.GuildBankGUI:RefreshLayout()
-            end
+            ApplySetting("iconSize", value)
         end,
     })
     Settings.sizeBtns = sizeBtns
@@ -148,10 +151,7 @@ local function BuildGeneralTab(sc, L, db, GUI)
         items = itemSortItems,
         height = 24, gap = 8, marginX = 15, width = 510,
         onSelect = function(value)
-            db.global.itemSort = value
-            GUI:RefreshLayout()
-            BankGUI:RefreshLayout()
-            GuildBankGUI:RefreshLayout()
+            ApplySetting("itemSort", value)
         end,
     })
     Settings.itemSortBtns = itemSortBtns
@@ -171,9 +171,7 @@ local function BuildGeneralTab(sc, L, db, GUI)
             value = db.global.enableJunkCategory,
             onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
             onValueChange = function(newVal)
-                db.global.enableJunkCategory = newVal
-                Categories:InvalidateCache()
-                GUI:RefreshLayout()
+                ApplySetting("enableJunkCategory", newVal)
             end,
         })
 
@@ -185,9 +183,7 @@ local function BuildGeneralTab(sc, L, db, GUI)
             value = db.global.enableUpgradeCategory,
             onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
             onValueChange = function(newVal)
-                db.global.enableUpgradeCategory = newVal
-                Categories:InvalidateCache()
-                GUI:RefreshLayout()
+                ApplySetting("enableUpgradeCategory", newVal)
             end,
         })
 
@@ -206,9 +202,7 @@ local function BuildGeneralTab(sc, L, db, GUI)
         value = db.global.moveUpgradesToTop,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.moveUpgradesToTop = newVal
-            GUI:RefreshLayout()
-            BankGUI:RefreshLayout()
+            ApplySetting("moveUpgradesToTop", newVal)
         end,
     })
 
@@ -220,9 +214,7 @@ local function BuildGeneralTab(sc, L, db, GUI)
         value = db.global.moveOtherToBottom,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.moveOtherToBottom = newVal
-            GUI:RefreshLayout()
-             OneWoW_Bags.BankGUI:RefreshLayout()
+            ApplySetting("moveOtherToBottom", newVal)
         end,
     })
 
@@ -231,8 +223,7 @@ local function BuildGeneralTab(sc, L, db, GUI)
     placeY = BuildSliderRow(placeContainer, L["SETTING_RECENT_DURATION"], placeY, {
         minVal = 15, maxVal = 600, step = 15, currentVal = db.global.recentItemDuration or 120,
         onChange = function(val)
-            db.global.recentItemDuration = val
-            Categories:SetRecentItemDuration(val)
+            ApplySetting("recentItemDuration", val)
         end,
         width = 240, fmt = "%d",
     })
@@ -257,11 +248,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.rarityColor,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.rarityColor = newVal
-            if BagSet.isBuilt then
-                BagSet:UpdateAllSlots()
-            end
-            GUI:RefreshLayout()
+            ApplySetting("rarityColor", newVal)
         end,
     })
 
@@ -273,11 +260,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.showNewItems,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showNewItems = newVal
-            if BagSet.isBuilt then
-                BagSet:UpdateAllSlots()
-            end
-            GUI:RefreshLayout()
+            ApplySetting("showNewItems", newVal)
         end,
     })
 
@@ -294,9 +277,7 @@ local function BuildBagsTab(sc, L, db, GUI)
             value = overlayEnabled,
             onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
             onValueChange = function(newVal)
-                if not _G.OneWoW or not _G.OneWoW.SettingsFeatureRegistry then return end
-                _G.OneWoW.SettingsFeatureRegistry:SetEnabled("overlays", "general", newVal)
-                _G.OneWoW.OverlayEngine:Refresh()
+                ApplySetting("overlaysEnabled", newVal)
             end,
         })
     end
@@ -309,12 +290,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = not db.global.hideScrollBar,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.hideScrollBar = not newVal
-            local wasShown = OneWoW_Bags.GUI and OneWoW_Bags.GUI:IsShown()
-            if OneWoW_Bags.GUI then
-                OneWoW_Bags.GUI:FullReset()
-                if wasShown then C_Timer.After(0.1, function() OneWoW_Bags.GUI:Show() end) end
-            end
+            ApplySetting("showScrollBar", newVal)
         end,
     })
 
@@ -326,8 +302,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.showBagsBar,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showBagsBar = newVal
-            GUI:UpdateBagsBarVisibility()
+            ApplySetting("showBagsBar", newVal)
         end,
     })
 
@@ -339,8 +314,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.showMoneyBar,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showMoneyBar = newVal
-            GUI:UpdateBagsBarVisibility()
+            ApplySetting("showMoneyBar", newVal)
         end,
     })
 
@@ -352,8 +326,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.showHeaderBar,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showHeaderBar = newVal
-            GUI:UpdateBagsBarVisibility()
+            ApplySetting("showHeaderBar", newVal)
         end,
     })
 
@@ -365,8 +338,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.showSearchBar,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showSearchBar = newVal
-            GUI:UpdateBagsBarVisibility()
+            ApplySetting("showSearchBar", newVal)
         end,
     })
 
@@ -378,10 +350,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.enableExpansionFilter,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.enableExpansionFilter = newVal
-            if not newVal then OneWoW_Bags.activeExpansionFilter = nil end
-            InfoBar:UpdateVisibility()
-            GUI:RefreshLayout()
+            ApplySetting("enableExpansionFilter", newVal)
         end,
     })
 
@@ -393,8 +362,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.showCategoryHeaders,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showCategoryHeaders = newVal
-            GUI:RefreshLayout()
+            ApplySetting("showCategoryHeaders", newVal)
         end,
     })
 
@@ -403,12 +371,7 @@ local function BuildBagsTab(sc, L, db, GUI)
     dispY = BuildSliderRow(dispContainer, L["SETTING_BAG_COLUMNS"], dispY, {
         minVal = 2, maxVal = 30, step = 1, currentVal = db.global.bagColumns or 15,
         onChange = function(val)
-            db.global.bagColumns = val
-            if bagColTimer then bagColTimer:Cancel() end
-            bagColTimer = C_Timer.NewTimer(0.15, function()
-                bagColTimer = nil
-                GUI:RefreshLayout()
-            end)
+            ApplySetting("bagColumns", val)
         end,
         width = 240, fmt = "%d",
     })
@@ -416,12 +379,7 @@ local function BuildBagsTab(sc, L, db, GUI)
     dispY = BuildSliderRow(dispContainer, L["SETTING_CATEGORY_SPACING"], dispY, {
         minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.categorySpacing or 1.0,
         onChange = function(val)
-            db.global.categorySpacing = val
-            if catSpaceTimer then catSpaceTimer:Cancel() end
-            catSpaceTimer = C_Timer.NewTimer(0.15, function()
-                catSpaceTimer = nil
-                GUI:RefreshLayout()
-            end)
+            ApplySetting("categorySpacing", val)
         end,
         width = 240, fmt = "%.1f",
     })
@@ -439,12 +397,7 @@ local function BuildBagsTab(sc, L, db, GUI)
             onChange = function(val)
                 local idx = floor(val + 0.5)
                 local realVal = CompactGapFromIndex(idx)
-                db.global.compactGap = realVal
-                if compactGapTimer then compactGapTimer:Cancel() end
-                compactGapTimer = C_Timer.NewTimer(0.15, function()
-                    compactGapTimer = nil
-                    GUI:RefreshLayout()
-                end)
+                ApplySetting("compactGap", realVal)
             end,
             width = 240, fmt = "%d",
         })
@@ -491,9 +444,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.enableInventorySlots,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.enableInventorySlots = newVal
-            Categories:InvalidateCache()
-            GUI:RefreshLayout()
+            ApplySetting("enableInventorySlots", newVal)
         end,
     })
 
@@ -505,8 +456,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.compactCategories,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.compactCategories = newVal
-            GUI:RefreshLayout()
+            ApplySetting("compactCategories", newVal)
         end,
     })
 
@@ -518,8 +468,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.stackItems,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.stackItems = newVal
-            GUI:RefreshLayout()
+            ApplySetting("stackItems", newVal)
         end,
     })
 
@@ -537,9 +486,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.showUnusableOverlay,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showUnusableOverlay = newVal
-            BagSet:RefreshAllVisuals()
-            GUI:RefreshLayout()
+            ApplySetting("showUnusableOverlay", newVal)
         end,
     })
 
@@ -551,9 +498,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.dimJunkItems,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.dimJunkItems = newVal
-            BagSet:RefreshAllVisuals()
-            GUI:RefreshLayout()
+            ApplySetting("dimJunkItems", newVal)
         end,
     })
 
@@ -565,9 +510,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         value = db.global.stripJunkOverlays,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.stripJunkOverlays = newVal
-            BagSet:RefreshAllVisuals()
-            GUI:RefreshLayout()
+            ApplySetting("stripJunkOverlays", newVal)
         end,
     })
 
@@ -578,7 +521,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         isEnabled = true,
         value = db.global.altToShow,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) db.global.altToShow = newVal end,
+        onValueChange = function(newVal) ApplySetting("altToShow", newVal) end,
     })
 
     yOffset = FinalizeContainer(itemDispContainer, itemDispY, yOffset)
@@ -594,7 +537,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         isEnabled = true,
         value = db.global.autoOpen,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) db.global.autoOpen = newVal end,
+        onValueChange = function(newVal) ApplySetting("autoOpen", newVal) end,
     })
 
     behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
@@ -604,7 +547,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         isEnabled = true,
         value = db.global.autoClose,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) db.global.autoClose = newVal end,
+        onValueChange = function(newVal) ApplySetting("autoClose", newVal) end,
     })
 
     behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
@@ -614,7 +557,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         isEnabled = true,
         value = db.global.autoOpenWithBank,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) db.global.autoOpenWithBank = newVal end,
+        onValueChange = function(newVal) ApplySetting("autoOpenWithBank", newVal) end,
     })
 
     behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
@@ -624,7 +567,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         isEnabled = true,
         value = db.global.locked,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) db.global.locked = newVal end,
+        onValueChange = function(newVal) ApplySetting("locked", newVal) end,
     })
 
     yOffset = FinalizeContainer(behContainer, behY, yOffset)
@@ -647,18 +590,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = db.global.enableBankUI,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.enableBankUI = newVal
-            if not newVal then
-                if OneWoW_Bags.RestoreBankFrame then OneWoW_Bags:RestoreBankFrame() end
-                if OneWoW_Bags.RestoreGuildBankFrame then OneWoW_Bags:RestoreGuildBankFrame() end
-
-                if OneWoW_Bags.BankGUI:IsShown() then
-                    OneWoW_Bags.BankGUI:Hide()
-                end
-                if OneWoW_Bags.GuildBankGUI:IsShown() then
-                    OneWoW_Bags.GuildBankGUI:Hide()
-                end
-            end
+            ApplySetting("enableBankUI", newVal)
         end,
     })
 
@@ -676,15 +608,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = db.global.bankRarityColor,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.bankRarityColor = newVal
-            if BankSet.isBuilt then
-                BankSet:UpdateAllSlots()
-            end
-            if GuildBankSet.isBuilt then
-                GuildBankSet:UpdateAllSlots()
-            end
-            BankGUI:RefreshLayout()
-            GuildBankGUI:RefreshLayout()
+            ApplySetting("bankRarityColor", newVal)
         end,
     })
 
@@ -696,12 +620,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = db.global.enableBankOverlays,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.enableBankOverlays = newVal
-            if newVal then
-                if OneWoW_Bags.FireCallbacksOnBankButtons then OneWoW_Bags:FireCallbacksOnBankButtons() end
-            else
-                if OneWoW_Bags.ClearBankOverlays then OneWoW_Bags:ClearBankOverlays() end
-            end
+            ApplySetting("enableBankOverlays", newVal)
         end,
     })
 
@@ -713,17 +632,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = not db.global.bankHideScrollBar,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.bankHideScrollBar = not newVal
-            local bankWasShown = OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI:IsShown()
-            BankGUI:FullReset()
-            if bankWasShown and OneWoW_Bags.bankOpen then
-                C_Timer.After(0.1, function() BankGUI:Show() end)
-            end
-            local gbWasShown = GuildBankGUI:IsShown()
-            GuildBankGUI:FullReset()
-            if gbWasShown and OneWoW_Bags.guildBankOpen then
-                C_Timer.After(0.1, function() GuildBankGUI:Show() end)
-            end
+            ApplySetting("showBankScrollBar", newVal)
         end,
     })
 
@@ -735,8 +644,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = db.global.showBankBagsBar,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showBankBagsBar = newVal
-            BankGUI:UpdateBagsBarVisibility()
+            ApplySetting("showBankBagsBar", newVal)
         end,
     })
 
@@ -748,8 +656,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = db.global.showBankHeaderBar,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showBankHeaderBar = newVal
-            BankGUI:RefreshLayout()
+            ApplySetting("showBankHeaderBar", newVal)
         end,
     })
 
@@ -761,8 +668,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = db.global.showBankSearchBar,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showBankSearchBar = newVal
-            BankGUI:RefreshLayout()
+            ApplySetting("showBankSearchBar", newVal)
         end,
     })
 
@@ -774,10 +680,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = db.global.enableBankExpansionFilter,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.enableBankExpansionFilter = newVal
-            if not newVal then OneWoW_Bags.activeBankExpansionFilter = nil end
-            BankInfoBar:UpdateViewButtons()
-            BankGUI:RefreshLayout()
+            ApplySetting("enableBankExpansionFilter", newVal)
         end,
     })
 
@@ -789,9 +692,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = db.global.showBankCategoryHeaders,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.showBankCategoryHeaders = newVal
-            BankGUI:RefreshLayout()
-
+            ApplySetting("showBankCategoryHeaders", newVal)
         end,
     })
 
@@ -800,13 +701,7 @@ local function BuildBankTab(sc, L, db, GUI)
     dispY = BuildSliderRow(dispContainer, L["SETTING_BANK_COLUMNS"], dispY, {
         minVal = 2, maxVal = 30, step = 1, currentVal = db.global.bankColumns or 14,
         onChange = function(val)
-            db.global.bankColumns = val
-            if bankColTimer then bankColTimer:Cancel() end
-            bankColTimer = C_Timer.NewTimer(0.15, function()
-                bankColTimer = nil
-                BankGUI:RefreshLayout()
-                GuildBankGUI:RefreshLayout()
-            end)
+            ApplySetting("bankColumns", val)
         end,
         width = 240, fmt = "%d",
     })
@@ -814,12 +709,7 @@ local function BuildBankTab(sc, L, db, GUI)
     dispY = BuildSliderRow(dispContainer, L["SETTING_CATEGORY_SPACING"], dispY, {
         minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.bankCategorySpacing or 1.0,
         onChange = function(val)
-            db.global.bankCategorySpacing = val
-            if bankCatSpaceTimer then bankCatSpaceTimer:Cancel() end
-            bankCatSpaceTimer = C_Timer.NewTimer(0.15, function()
-                bankCatSpaceTimer = nil
-                BankGUI:RefreshLayout()
-            end)
+            ApplySetting("bankCategorySpacing", val)
         end,
         width = 240, fmt = "%.1f",
     })
@@ -832,8 +722,7 @@ local function BuildBankTab(sc, L, db, GUI)
         value = db.global.bankCompactCategories,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            db.global.bankCompactCategories = newVal
-            BankGUI:RefreshLayout()
+            ApplySetting("bankCompactCategories", newVal)
         end,
     })
 
@@ -850,12 +739,7 @@ local function BuildBankTab(sc, L, db, GUI)
             onChange = function(val)
                 local idx = floor(val + 0.5)
                 local realVal = CompactGapFromIndex(idx)
-                db.global.bankCompactGap = realVal
-                if bankCompactGapTimer then bankCompactGapTimer:Cancel() end
-                bankCompactGapTimer = C_Timer.NewTimer(0.15, function()
-                    bankCompactGapTimer = nil
-                    BankGUI:RefreshLayout()
-                end)
+                ApplySetting("bankCompactGap", realVal)
             end,
             width = 240, fmt = "%d",
         })
@@ -898,7 +782,7 @@ local function BuildBankTab(sc, L, db, GUI)
         isEnabled = true,
         value = db.global.bankLocked,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) db.global.bankLocked = newVal end,
+        onValueChange = function(newVal) ApplySetting("bankLocked", newVal) end,
     })
 
     yOffset = FinalizeContainer(behContainer, behY, yOffset)
@@ -910,6 +794,7 @@ function Settings:Create()
     if isCreated then return settingsFrame end
 
     local GUI = OneWoW_Bags.GUI
+    local db = GetDB()
 
     local dialog = OneWoW_GUI:CreateDialog({
         name = "OneWoW_BagsSettingsWindow",
@@ -972,6 +857,7 @@ function Settings:UpdateSizeButtons(btns)
     if not btns then btns = Settings.sizeBtns end
     if not btns then return end
     if btns.SetActiveByValue then
+        local db = GetDB()
         btns.SetActiveByValue(db.global.iconSize)
     end
 end
@@ -980,6 +866,7 @@ function Settings:UpdateItemSortButtons(btns)
     if not btns then btns = Settings.itemSortBtns end
     if not btns then return end
     if btns.SetActiveByValue then
+        local db = GetDB()
         local sortMode = db.global.itemSort or "default"
         btns.SetActiveByValue(sortMode)
     end

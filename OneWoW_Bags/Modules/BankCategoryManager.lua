@@ -1,3 +1,3 @@
 local _, OneWoW_Bags = ...
 
-OneWoW_Bags.BankCategoryManager = OneWoW_Bags.CategoryManagerBase:Create("BankGUI")
+OneWoW_Bags.BankCategoryManager = OneWoW_Bags.CategoryManagerBase:Create()

@@ -3,7 +3,6 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local db = OneWoW_Bags.db
 local ItemPool = OneWoW_Bags.ItemPool
 
 local tonumber, pairs = tonumber, pairs
@@ -94,6 +93,7 @@ function GBSet:CacheTab(tabID)
 end
 
 function GBSet:ApplyCacheToButtons()
+    local db = OneWoW_Bags:GetDB()
     self.freeSlots = 0
 
     for tabID, tabSlots in pairs(self.slots) do
@@ -157,6 +157,7 @@ function GBSet:UpdateAllSlots()
 end
 
 function GBSet:UpdateQualityColors()
+    local db = OneWoW_Bags:GetDB()
     local useRarity = db.global.bankRarityColor
     for tabID, tabSlots in pairs(self.slots) do
         for slotID, button in pairs(tabSlots) do

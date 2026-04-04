@@ -6,7 +6,6 @@ if not OneWoW_GUI then return end
 local DB = OneWoW_GUI.DB
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local PE = OneWoW_Bags.PredicateEngine
 
 local tinsert = tinsert
@@ -62,6 +61,7 @@ function WH:FilterByTab(buttons, selectedTab)
 end
 
 function WH:GetLayoutMetrics(columnsDBKey, defaultCols)
+    local db = OneWoW_Bags:GetDB()
     local cols = db.global[columnsDBKey] or defaultCols
     local iconSize = Constants.ICON_SIZES[db.global.iconSize or 3] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
@@ -83,6 +83,7 @@ function WH:SetupResizeButton(mainWindow, gui, positionDBKey)
         end
     end)
     resizeBtn:SetScript("OnMouseUp", function(self)
+        local db = OneWoW_Bags:GetDB()
         mainWindow:StopMovingOrSizing()
         local pos = DB:Ensure(db, "global", positionDBKey)
         OneWoW_GUI:SaveWindowPosition(mainWindow, pos)
@@ -103,6 +104,7 @@ function WH:RegisterSpecialFrame(globalName, mainWindow)
 end
 
 function WH:SaveAndRestorePosition(mainWindow, positionDBKey)
+    local db = OneWoW_Bags:GetDB()
     local pos = DB:Ensure(db, "global", positionDBKey)
     if not OneWoW_GUI:RestoreWindowPosition(mainWindow, pos) then
         mainWindow:SetPoint("CENTER")

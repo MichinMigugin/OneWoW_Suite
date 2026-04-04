@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local BagTypes = OneWoW_Bags.BagTypes
 
 local floor, max = math.floor, math.max
@@ -12,6 +11,7 @@ OneWoW_Bags.ListView = {}
 local View = OneWoW_Bags.ListView
 
 function View:Layout(contentFrame, buttons, width)
+    local db = OneWoW_Bags:GetDB()
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2

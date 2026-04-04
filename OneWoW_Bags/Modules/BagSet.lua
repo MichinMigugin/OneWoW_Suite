@@ -3,7 +3,6 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local db = OneWoW_Bags.db
 local BagTypes = OneWoW_Bags.BagTypes
 local ItemPool = OneWoW_Bags.ItemPool
 
@@ -137,6 +136,7 @@ function BagSet:UpdateAllSlots()
 end
 
 function BagSet:UpdateQualityColors()
+    local db = OneWoW_Bags:GetDB()
     local useRarity = db.global.rarityColor
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do

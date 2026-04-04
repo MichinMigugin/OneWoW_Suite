@@ -55,6 +55,14 @@ Modules\GuildBankCategoryManager.lua
 Integrations\OneWoWBagsIntegration.lua
 Integrations\TSMIntegration.lua
 
+# Controllers
+Controllers\WindowLayoutController.lua
+Controllers\BagsController.lua
+Controllers\BankController.lua
+Controllers\GuildBankController.lua
+Controllers\SettingsController.lua
+Controllers\CategoryController.lua
+
 # Views
 Views\ListView.lua
 Views\CategoryView.lua

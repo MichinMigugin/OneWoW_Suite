@@ -6,7 +6,30 @@ if not OneWoW_GUI then return end
 local DB = OneWoW_GUI.DB
 
 local L = OneWoW_Bags.L
-local db = OneWoW_Bags.db
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
+
+local function GetController()
+    return OneWoW_Bags.CategoryController
+end
+
+local function HasBaganator()
+    return rawget(_G, "BAGANATOR_CONFIG") ~= nil
+end
+
+local db = setmetatable({}, {
+    __index = function(_, key)
+        local liveDB = GetDB()
+        return liveDB and liveDB[key]
+    end,
+    __newindex = function(_, key, value)
+        local liveDB = GetDB()
+        if liveDB then
+            liveDB[key] = value
+        end
+    end,
+})
 
 local PE = OneWoW_Bags.PredicateEngine
 local Categories = OneWoW_Bags.Categories
@@ -158,22 +181,10 @@ local function MakeSmallBtn(parent, label, onClick, active)
 end
 
 local function MoveItemToCategory(itemID, destCatID)
-    local customCats = db.global.customCategoriesV2
-    for id, cat in pairs(customCats) do
-        if id ~= destCatID and cat.items then cat.items[tostring(itemID)] = nil end
+    local controller = GetController()
+    if controller and controller.AddItemToCategory then
+        controller:AddItemToCategory(destCatID, itemID)
     end
-    local dest = customCats[destCatID]
-    if dest then
-        if not dest.items then dest.items = {} end
-        dest.items[tostring(itemID)] = true
-    end
-    Categories:InvalidateCache()
-    CatMgrUI:Refresh()
-    if OneWoW_Bags.GUI then OneWoW_Bags.GUI:RefreshLayout() end
-end
-
-local function RefreshBagLayout()
-    if OneWoW_Bags.GUI then OneWoW_Bags.GUI:RefreshLayout() end
 end
 
 -- ============================================================
@@ -191,15 +202,10 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
     OnAccept = function(self)
         local name = self.EditBox:GetText()
         if name and name ~= "" then
-            local id = "custom_" .. time() .. "_" .. random(1000, 9999)
-            local order = 1
-            for _, c in pairs(db.global.customCategoriesV2) do
-                if c.sortOrder and c.sortOrder >= order then order = c.sortOrder + 1 end
+            local controller = GetController()
+            if controller and controller.CreateCategory then
+                selectedCatKey = controller:CreateCategory(name)
             end
-            db.global.customCategoriesV2[id] = { name=name, items={}, enabled=true, sortOrder=order }
-            selectedCatKey = id
-            if CatMgrUI.Refresh then CatMgrUI:Refresh() end
-            RefreshBagLayout()
         end
     end,
     EditBoxOnEnterPressed = function(self)
@@ -224,11 +230,9 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
     OnAccept = function(self, data)
         local name = self.EditBox:GetText()
         if name and name ~= "" and data then
-            local cat = db.global.customCategoriesV2[data]
-            if cat then
-                cat.name = name
-                if CatMgrUI.Refresh then CatMgrUI:Refresh() end
-                RefreshBagLayout()
+            local controller = GetController()
+            if controller and controller.RenameCategory then
+                controller:RenameCategory(data, name)
             end
         end
     end,
@@ -248,10 +252,11 @@ StaticPopupDialogs["ONEWOW_BAGS_DELETE_CATEGORY"] = {
     OnShow = function(self) self.Text:SetText(L["CATEGORY_DELETE_CONFIRM"]) end,
     OnAccept = function(self, data)
         if data then
-            db.global.customCategoriesV2[data] = nil
+            local controller = GetController()
+            if controller and controller.DeleteCategory then
+                controller:DeleteCategory(data)
+            end
             if selectedCatKey == data then selectedCatKey = nil end
-            if CatMgrUI.Refresh then CatMgrUI:Refresh() end
-            RefreshBagLayout()
         end
     end,
     timeout=0, whileDead=true, hideOnEscape=true, preferredIndex=3,
@@ -268,13 +273,11 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
     OnAccept = function(self)
         local name = self.EditBox:GetText()
         if name and name ~= "" then
-            local id = "sec_" .. time() .. "_" .. random(1000, 9999)
-            db.global.categorySections[id] = { name=name, categories={}, collapsed=false, showHeader=true }
-            tinsert(db.global.sectionOrder, id)
-            if db.global.displayOrder and #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
-            selectedCatKey = "section:" .. id
-            if CatMgrUI.Refresh then CatMgrUI:Refresh() end
-            RefreshBagLayout()
+            local controller = GetController()
+            if controller and controller.CreateSection then
+                local id = controller:CreateSection(name)
+                selectedCatKey = "section:" .. id
+            end
         end
     end,
     EditBoxOnEnterPressed = function(self)
@@ -299,11 +302,9 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
     OnAccept = function(self, data)
         local name = self.EditBox:GetText()
         if name and name ~= "" and data then
-            local sec = db.global.categorySections[data]
-            if sec then
-                sec.name = name
-                if CatMgrUI.Refresh then CatMgrUI:Refresh() end
-                RefreshBagLayout()
+            local controller = GetController()
+            if controller and controller.RenameSection then
+                controller:RenameSection(data, name)
             end
         end
     end,
@@ -323,134 +324,15 @@ StaticPopupDialogs["ONEWOW_BAGS_DELETE_SECTION"] = {
     OnShow = function(self) self.Text:SetText(L["SECTION_DELETE_CONFIRM"]) end,
     OnAccept = function(self, data)
         if data then
-            db.global.categorySections[data] = nil
-            for i, sid in ipairs(db.global.sectionOrder) do
-                if sid == data then tremove(db.global.sectionOrder, i); break end
+            local controller = GetController()
+            if controller and controller.DeleteSection then
+                controller:DeleteSection(data)
             end
-            if #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
             if selectedCatKey == ("section:" .. data) then selectedCatKey = nil end
-            Categories:InvalidateCache()
-            if CatMgrUI.Refresh then CatMgrUI:Refresh() end
-            RefreshBagLayout()
         end
     end,
     timeout=0, whileDead=true, hideOnEscape=true, preferredIndex=3,
 }
-
--- ============================================================
--- Baganator Import
--- ============================================================
-
-local function ImportFromBaganator()
-    if not _G.BAGANATOR_CONFIG then return 0, 0 end
-
-    local importedCats = 0
-    local importedSecs = 0
-
-    local profiles = _G.BAGANATOR_CONFIG.Profiles
-    if not profiles then return 0, 0 end
-
-    -- Process only the first non-empty profile (DEFAULT usually)
-    local profile
-    for _, p in pairs(profiles) do profile = p; break end
-    if not profile then return 0, 0 end
-
-    -- Import custom categories (item-assignment categories)
-    local customCats = profile.custom_categories
-    if customCats then
-        for _, catData in pairs(customCats) do
-            local name = catData.name
-            if name and name ~= "" then
-                local exists = false
-                for _, ex in pairs(db.global.customCategoriesV2) do
-                    if ex.name == name then exists = true; break end
-                end
-                if not exists then
-                    local newID = "custom_" .. time() .. "_" .. random(1000, 9999)
-                    local items = {}
-                    if catData.items then
-                        if catData.items[1] ~= nil then
-                            for _, id in ipairs(catData.items) do
-                                if tonumber(id) then items[tostring(id)] = true end
-                            end
-                        else
-                            for k in pairs(catData.items) do
-                                if tonumber(k) then items[tostring(k)] = true end
-                            end
-                        end
-                    end
-                    if catData.rules then
-                        for _, rule in ipairs(catData.rules) do
-                            if rule.type == "item" and rule.itemID then
-                                items[tostring(rule.itemID)] = true
-                            end
-                        end
-                    end
-                    local order = 1
-                    for _, c in pairs(db.global.customCategoriesV2) do
-                        if c.sortOrder and c.sortOrder >= order then order = c.sortOrder + 1 end
-                    end
-                    db.global.customCategoriesV2[newID] = { name=name, items=items, enabled=true, sortOrder=order }
-                    importedCats = importedCats + 1
-                end
-            end
-        end
-    end
-
-    -- Import category sections
-    local bagSections = profile.category_sections  -- { ["1"]={name="EQUIPMENT"}, ["2"]={name="CRAFTING"}, ... }
-    local displayOrder = profile.category_display_order
-
-    if bagSections and displayOrder then
-        -- Build a map: bagSectionIndex -> our new sectionID
-        local sectionIDMap = {}
-        for bagIdx, secData in pairs(bagSections) do
-            local secName = secData.name
-            if secName and secName ~= "" then
-                -- Check not already imported
-                local exists = false
-                for _, sec in pairs(db.global.categorySections) do
-                    if sec.name == secName then exists = true; break end
-                end
-                if not exists then
-                    local newID = "sec_" .. time() .. "_" .. random(1000, 9999)
-                    db.global.categorySections[newID] = { name=secName, categories={}, collapsed=false }
-                    tinsert(db.global.sectionOrder, newID)
-                    sectionIDMap[bagIdx] = newID
-                    importedSecs = importedSecs + 1
-                end
-            end
-        end
-
-        -- Walk displayOrder and assign categories to sections
-        local currentSectionID = nil
-        local addedToSection = {}  -- prevent duplicates within a section
-
-        for _, entry in ipairs(displayOrder) do
-            if entry:sub(1, 1) == "_" and entry ~= "----" then
-                if entry == "__end" then
-                    currentSectionID = nil
-                    wipe(addedToSection)
-                else
-                    -- Section start: "_1", "_2", "_3" etc.
-                    local bagIdx = entry:sub(2)
-                    currentSectionID = sectionIDMap[bagIdx]
-                end
-            elseif entry ~= "----" and currentSectionID then
-                local ourCatName = BAGANATOR_CAT_MAP[entry]
-                if ourCatName and not addedToSection[ourCatName] then
-                    local sec = db.global.categorySections[currentSectionID]
-                    if sec then
-                        tinsert(sec.categories, ourCatName)
-                        addedToSection[ourCatName] = true
-                    end
-                end
-            end
-        end
-    end
-
-    return importedCats, importedSecs
-end
 
 -- ============================================================
 -- Right Panel
@@ -473,9 +355,6 @@ local function MakeEditBoxWithSave(parent, opts, getValue, setValue)
         local val = self.GetSearchText and self:GetSearchText() or self:GetText()
         if val == self.placeholderText then val = "" end
         setValue((val ~= "") and val or nil)
-        Categories:InvalidateCache()
-        PE:InvalidateCache()
-        RefreshBagLayout()
     end
     box:SetScript("OnEnterPressed", function(self) Save(self); self:ClearFocus() end)
     box:SetScript("OnEscapePressed", function(self) SetEditBoxValue(self, getValue()); self:ClearFocus() end)
@@ -521,7 +400,9 @@ function CatMgrUI:RefreshRight()
         hint:SetPoint("CENTER")
         hint:SetText(L["CATEGORY_SELECT_PROMPT"])
         hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        rightItemScrollContent:SetHeight(80)
+        if rightItemScrollContent then
+            rightItemScrollContent:SetHeight(80)
+        end
         return
     end
 
@@ -561,10 +442,12 @@ function CatMgrUI:RefreshRight()
         showHeaderCB:SetSize(18, 18)
         showHeaderCB:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 8, -42)
         showHeaderCB:SetChecked(section.showHeader or false)
-        local captSection = section
+        local captSectionID = sectionID
         showHeaderCB:SetScript("OnClick", function(self)
-            captSection.showHeader = self:GetChecked() or false
-            RefreshBagLayout()
+            local controller = GetController()
+            if controller and controller.SetSectionShowHeader then
+                controller:SetSectionShowHeader(captSectionID, self:GetChecked())
+            end
         end)
         local showHeaderLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         showHeaderLbl:SetPoint("LEFT", showHeaderCB, "RIGHT", 4, 0)
@@ -605,24 +488,11 @@ function CatMgrUI:RefreshRight()
             cbLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local captCat = catName
-            local captSec = section
             cb:SetScript("OnClick", function(self)
-                if self:GetChecked() then
-                    if not memberSet[captCat] then
-                        tinsert(captSec.categories, captCat)
-                        memberSet[captCat] = true
-                    end
-                else
-                    for i, n in ipairs(captSec.categories) do
-                        if n == captCat then tremove(captSec.categories, i); break end
-                    end
-                    memberSet[captCat] = nil
+                local controller = GetController()
+                if controller and controller.SetSectionMembership then
+                    controller:SetSectionMembership(sectionID, captCat, self:GetChecked())
                 end
-
-                if #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
-                Categories:InvalidateCache()
-                CatMgrUI:RefreshLeft()
-                RefreshBagLayout()
             end)
 
             checkY = checkY - 24
@@ -630,7 +500,9 @@ function CatMgrUI:RefreshRight()
 
         local totalH = max(abs(checkY) + 4, 100)
         rightTopWrapper:SetHeight(totalH)
-        rightItemScrollContent:SetHeight(totalH)
+        if rightItemScrollContent then
+            rightItemScrollContent:SetHeight(totalH)
+        end
         return
     end
 
@@ -652,7 +524,7 @@ function CatMgrUI:RefreshRight()
     local locKey = BUILTIN_LOCALE_KEYS[catName]
     local dispName = (locKey and L[locKey]) or catName
 
-    local catMod = DB:Ensure(db, "global", "categoryModifications", catName)
+    local catMod = DB:Ensure(GetDB(), "global", "categoryModifications", catName)
 
     local SORT_OPTIONS = { "none", "default", "name", "rarity", "ilvl", "type", "expansion" }
     local SORT_LABELS = { L["SORT_OFF"], L["SORT_DEFAULT"], L["SORT_NAME"], L["SORT_RARITY"], L["SORT_ITEM_LEVEL"], L["SORT_TYPE"], L["SORT_EXPANSION"] }
@@ -770,7 +642,12 @@ function CatMgrUI:RefreshRight()
             local tBox = MakeEditBoxWithSave(parent,
                 { width=160, height=22, placeholderText = "Housing" },
                 function() return catData.itemType end,
-                function(v) catData.itemType = v end)
+                function(v)
+                    local controller = GetController()
+                    if controller and controller.SetCustomCategoryValue then
+                        controller:SetCustomCategoryValue(capturedID, "itemType", v)
+                    end
+                end)
             tBox:SetPoint("LEFT", tLbl, "RIGHT", 8, 0)
             tBox:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
             fY = fY - 28
@@ -782,7 +659,12 @@ function CatMgrUI:RefreshRight()
             local sBox = MakeEditBoxWithSave(parent,
                 { width=160, height=22, placeholderText = "Decor" },
                 function() return catData.itemSubType end,
-                function(v) catData.itemSubType = v end)
+                function(v)
+                    local controller = GetController()
+                    if controller and controller.SetCustomCategoryValue then
+                        controller:SetCustomCategoryValue(capturedID, "itemSubType", v)
+                    end
+                end)
             sBox:SetPoint("LEFT", sLbl, "RIGHT", 8, 0)
             sBox:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
             fY = fY - 28
@@ -799,16 +681,18 @@ function CatMgrUI:RefreshRight()
             StyleToggleBtn(andB, curMode ~= "or")
             StyleToggleBtn(orB, curMode == "or")
             andB:SetScript("OnClick", function()
-                catData.typeMatchMode = "and"
+                local controller = GetController()
+                if controller and controller.SetCustomCategoryValue then
+                    controller:SetCustomCategoryValue(capturedID, "typeMatchMode", "and")
+                end
                 StyleToggleBtn(andB, true); StyleToggleBtn(orB, false)
-                Categories:InvalidateCache()
-                RefreshBagLayout()
             end)
             orB:SetScript("OnClick", function()
-                catData.typeMatchMode = "or"
+                local controller = GetController()
+                if controller and controller.SetCustomCategoryValue then
+                    controller:SetCustomCategoryValue(capturedID, "typeMatchMode", "or")
+                end
                 StyleToggleBtn(andB, false); StyleToggleBtn(orB, true)
-                Categories:InvalidateCache()
-                RefreshBagLayout()
             end)
             fY = fY - 26
             return abs(fY)
@@ -828,7 +712,12 @@ function CatMgrUI:RefreshRight()
             local sBox = MakeEditBoxWithSave(parent,
                 { width=200, height=22, placeholderText = L["SEARCH_HELP_PLACEHOLDER"] },
                 function() return catData.searchExpression end,
-                function(v) catData.searchExpression = v end)
+                function(v)
+                    local controller = GetController()
+                    if controller and controller.SetCustomCategoryValue then
+                        controller:SetCustomCategoryValue(capturedID, "searchExpression", v)
+                    end
+                end)
             sBox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
             sBox:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
             fY = fY - 28
@@ -859,7 +748,10 @@ function CatMgrUI:RefreshRight()
         local function ShowFilter(mode)
             for _, child in pairs({filterContent:GetChildren()}) do child:Hide(); child:SetParent(UIParent) end
             for _, region in pairs({filterContent:GetRegions()}) do region:Hide(); region:SetParent(UIParent) end
-            catData.filterMode = mode
+            local controller = GetController()
+            if controller and controller.SetCustomCategoryValue then
+                controller:SetCustomCategoryValue(capturedID, "filterMode", mode, { refreshUI = false })
+            end
             StyleToggleBtn(typeFilterBtn, mode == "type")
             StyleToggleBtn(advFilterBtn, mode == "search")
             if mode == "type" then
@@ -868,7 +760,6 @@ function CatMgrUI:RefreshRight()
                 filterH = BuildSearchFilter(filterContent)
             end
             filterContent:SetHeight(filterH)
-            Categories:InvalidateCache()
         end
         typeFilterBtn:SetScript("OnClick", function() ShowFilter("type"); CatMgrUI:RefreshRight() end)
         advFilterBtn:SetScript("OnClick", function() ShowFilter("search"); CatMgrUI:RefreshRight() end)
@@ -895,8 +786,10 @@ function CatMgrUI:RefreshRight()
     sortBtn:SetScript("OnClick", function()
         sortIdx = (sortIdx % #SORT_OPTIONS) + 1
         sortBtn.text:SetText(SORT_LABELS[sortIdx])
-        db.global.categoryModifications[capCatName].sortMode = SORT_OPTIONS[sortIdx]
-        RefreshBagLayout()
+        local controller = GetController()
+        if controller and controller.SetCategorySortMode then
+            controller:SetCategorySortMode(capCatName, SORT_OPTIONS[sortIdx])
+        end
     end)
 
     local groupLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -911,8 +804,10 @@ function CatMgrUI:RefreshRight()
     groupBtn:SetScript("OnClick", function()
         groupIdx = (groupIdx % #GROUP_OPTIONS) + 1
         groupBtn.text:SetText(GROUP_LABELS[groupIdx])
-        db.global.categoryModifications[capCatName].groupBy = GROUP_OPTIONS[groupIdx]
-        RefreshBagLayout()
+        local controller = GetController()
+        if controller and controller.SetCategoryGroupBy then
+            controller:SetCategoryGroupBy(capCatName, GROUP_OPTIONS[groupIdx])
+        end
     end)
     yPos = yPos - 28
 
@@ -928,9 +823,10 @@ function CatMgrUI:RefreshRight()
     prioBtn:SetScript("OnClick", function()
         prioIdx = (prioIdx % #PRIORITY_OPTIONS) + 1
         prioBtn.text:SetText(PRIORITY_LABELS[prioIdx])
-        db.global.categoryModifications[capCatName].priority = PRIORITY_OPTIONS[prioIdx]
-        Categories:InvalidateCache()
-        RefreshBagLayout()
+        local controller = GetController()
+        if controller and controller.SetCategoryPriority then
+            controller:SetCategoryPriority(capCatName, PRIORITY_OPTIONS[prioIdx])
+        end
     end)
 
     local colorLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -963,15 +859,17 @@ function CatMgrUI:RefreshRight()
         info.swatchFunc = function()
             local nr, ng, nb = ColorPickerFrame:GetColorRGB()
             local hex = format("%02X%02X%02X", floor(nr*255+0.5), floor(ng*255+0.5), floor(nb*255+0.5))
-            db.global.categoryModifications[capCatName].color = hex
+            local controller = GetController()
+            if controller and controller.SetCategoryColor then
+                controller:SetCategoryColor(capCatName, hex)
+            end
             colorSwatch:SetBackdropColor(nr, ng, nb, 1.0)
-            CatMgrUI:RefreshLeft()
-            RefreshBagLayout()
         end
         info.cancelFunc = function(prev)
-            db.global.categoryModifications[capCatName].color = catMod.color
-            CatMgrUI:RefreshLeft()
-            RefreshBagLayout()
+            local controller = GetController()
+            if controller and controller.SetCategoryColor then
+                controller:SetCategoryColor(capCatName, catMod.color)
+            end
         end
         info.hasOpacity = false
         ColorPickerFrame:SetupColorPickerAndShow(info)
@@ -980,10 +878,11 @@ function CatMgrUI:RefreshRight()
     local clearColorBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["COLOR_CLEAR"], height = 20 })
     clearColorBtn:SetPoint("LEFT", colorSwatch, "RIGHT", 4, 0)
     clearColorBtn:SetScript("OnClick", function()
-        db.global.categoryModifications[capCatName].color = nil
+        local controller = GetController()
+        if controller and controller.ClearCategoryColor then
+            controller:ClearCategoryColor(capCatName)
+        end
         colorSwatch:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        CatMgrUI:RefreshLeft()
-        RefreshBagLayout()
     end)
     yPos = yPos - 28
 
@@ -1006,9 +905,10 @@ function CatMgrUI:RefreshRight()
         cb:SetChecked(catMod.hideIn[hc.key] or false)
         local capKey = hc.key
         cb:SetScript("OnClick", function(self)
-            catMod.hideIn[capKey] = self:GetChecked() or false
-            if not self:GetChecked() then catMod.hideIn[capKey] = nil end
-            RefreshBagLayout()
+            local controller = GetController()
+            if controller and controller.SetCategoryHiddenIn then
+                controller:SetCategoryHiddenIn(capCatName, capKey, self:GetChecked())
+            end
         end)
         local cbLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         cbLbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
@@ -1069,12 +969,13 @@ function CatMgrUI:RefreshRight()
         local cType, itemID = GetCursorInfo()
         if cType == "item" and itemID then
             ClearCursor()
-            if isCustom and capturedID then
-                MoveItemToCategory(itemID, capturedID)
-            elseif isBuiltin then
-                Categories:AddItemToBuiltinCategory(capCatName, itemID)
-                CatMgrUI:Refresh()
-                RefreshBagLayout()
+            local controller = GetController()
+            if controller then
+                if isCustom and capturedID and controller.AddItemToCategory then
+                    controller:AddItemToCategory(capturedID, itemID)
+                elseif isBuiltin and controller.AddItemToCategory then
+                    controller:AddItemToCategory(selectedCatKey, itemID)
+                end
             end
         end
     end
@@ -1093,22 +994,19 @@ function CatMgrUI:RefreshRight()
     addBtn:SetScript("OnClick", function()
         local text = addBox.GetSearchText and addBox:GetSearchText() or addBox:GetText()
         if not text or text == "" then return end
-        local added = 0
+        local addedItems = {}
         for idStr in text:gmatch("[^%s,;]+") do
             local id = tonumber(idStr)
             if id and id > 0 then
-                if isCustom and capturedID then
-                    MoveItemToCategory(id, capturedID)
-                elseif isBuiltin then
-                    Categories:AddItemToBuiltinCategory(capCatName, id)
-                end
-                added = added + 1
+                tinsert(addedItems, id)
             end
         end
-        if added > 0 then
+        if #addedItems > 0 then
+            local controller = GetController()
+            if controller and controller.AddItemsToCategory then
+                controller:AddItemsToCategory(selectedCatKey, addedItems)
+            end
             addBox:SetText("")
-            CatMgrUI:Refresh()
-            RefreshBagLayout()
         end
     end)
     yPos = yPos - 28
@@ -1163,15 +1061,14 @@ function CatMgrUI:RefreshRight()
             local remBtn = OneWoW_GUI:CreateFitTextButton(row, { text=L["REMOVE_ITEM"], height=18 })
             remBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
             remBtn:SetScript("OnClick", function()
-                if captIsCustom and capturedID then
-                    local cat = db.global.customCategoriesV2[capturedID]
-                    if cat and cat.items then cat.items[tostring(captItemID)] = nil end
-                else
-                    Categories:RemoveItemFromBuiltinCategory(capCatName, captItemID)
+                local controller = GetController()
+                if controller and controller.RemoveItemFromCategory then
+                    if captIsCustom and capturedID then
+                        controller:RemoveItemFromCategory(capturedID, captItemID)
+                    else
+                        controller:RemoveItemFromCategory(selectedCatKey, captItemID)
+                    end
                 end
-                Categories:InvalidateCache()
-                CatMgrUI:Refresh()
-                RefreshBagLayout()
             end)
             yPos = yPos - 28
         end
@@ -1179,7 +1076,9 @@ function CatMgrUI:RefreshRight()
 
     local totalH = max(abs(yPos) + 8, 100)
     rightTopWrapper:SetHeight(totalH)
-    rightItemScrollContent:SetHeight(totalH)
+    if rightItemScrollContent then
+        rightItemScrollContent:SetHeight(totalH)
+    end
 end
 
 -- ============================================================
@@ -1239,10 +1138,6 @@ function CatMgrUI:RefreshLeft()
         end)
     end
 
-    -- Update categoryOrder from root cats
-    db.global.categoryOrder = {}
-    for i, e in ipairs(rootCats) do db.global.categoryOrder[i] = e.name end
-
     -- Helper: render one category row
     local function RenderCatRow(entry, idxInGroup, totalInGroup, indent)
         indent = indent or 0
@@ -1274,16 +1169,18 @@ function CatMgrUI:RefreshLeft()
         -- Up / Down
         local function doUp()
             if idxInGroup > 1 then
-                local ord = db.global.categoryOrder
-                local tmp = ord[idxInGroup]; ord[idxInGroup] = ord[idxInGroup-1]; ord[idxInGroup-1] = tmp
-                CatMgrUI:Refresh(); RefreshBagLayout()
+                local controller = GetController()
+                if controller and controller.MoveRootCategory then
+                    controller:MoveRootCategory(rootCats, idxInGroup, -1)
+                end
             end
         end
         local function doDown()
             if idxInGroup < totalInGroup then
-                local ord = db.global.categoryOrder
-                local tmp = ord[idxInGroup]; ord[idxInGroup] = ord[idxInGroup+1]; ord[idxInGroup+1] = tmp
-                CatMgrUI:Refresh(); RefreshBagLayout()
+                local controller = GetController()
+                if controller and controller.MoveRootCategory then
+                    controller:MoveRootCategory(rootCats, idxInGroup, 1)
+                end
             end
         end
         local catMods = db.global.categoryModifications
@@ -1332,13 +1229,10 @@ function CatMgrUI:RefreshLeft()
             cb:SetChecked(not isDisabled)
             local capN = catName
             cb:SetScript("OnClick", function(self)
-                if self:GetChecked() then
-                    db.global.disabledCategories[capN] = nil
-                else
-                    db.global.disabledCategories[capN] = true
+                local controller = GetController()
+                if controller and controller.SetBuiltinCategoryEnabled then
+                    controller:SetBuiltinCategoryEnabled(capN, self:GetChecked())
                 end
-                Categories:InvalidateCache()
-                CatMgrUI:Refresh(); RefreshBagLayout()
             end)
             local locKey   = BUILTIN_LOCALE_KEYS[catName]
             local nameTxt  = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1402,18 +1296,20 @@ function CatMgrUI:RefreshLeft()
             local captSecIdx = secIdx
             local dnSec = MakeSmallBtn(secRow, "v", function()
                 if captSecIdx < totalSections then
-                    local t = sectOrder[captSecIdx]; sectOrder[captSecIdx] = sectOrder[captSecIdx+1]; sectOrder[captSecIdx+1] = t
-                    CatMgrUI:Refresh()
-                    RefreshBagLayout()
+                    local controller = GetController()
+                    if controller and controller.MoveSection then
+                        controller:MoveSection(sectionID, 1)
+                    end
                 end
             end, secIdx < totalSections)
             dnSec:SetPoint("RIGHT", secRow, "RIGHT", -2, 0)
 
             local upSec = MakeSmallBtn(secRow, "^", function()
                 if captSecIdx > 1 then
-                    local t = sectOrder[captSecIdx]; sectOrder[captSecIdx] = sectOrder[captSecIdx-1]; sectOrder[captSecIdx-1] = t
-                    CatMgrUI:Refresh()
-                    RefreshBagLayout()
+                    local controller = GetController()
+                    if controller and controller.MoveSection then
+                        controller:MoveSection(sectionID, -1)
+                    end
                 end
             end, secIdx > 1)
             upSec:SetPoint("RIGHT", dnSec, "LEFT", -2, 0)
@@ -1440,7 +1336,10 @@ function CatMgrUI:RefreshLeft()
 
             local captSKey = sKey
             secRow:SetScript("OnClick", function()
-                section.collapsed = not section.collapsed
+                local controller = GetController()
+                if controller and controller.SetSectionCollapsed then
+                    controller:SetSectionCollapsed(sectionID, not section.collapsed)
+                end
                 selectedCatKey = captSKey
                 CatMgrUI:Refresh()
             end)
@@ -1491,17 +1390,19 @@ function CatMgrUI:RefreshLeft()
 
                         local dnB2 = MakeSmallBtn(row, "v", function()
                             if captIdx < #captCats then
-                                local t = captCats[captIdx]; captCats[captIdx] = captCats[captIdx+1]; captCats[captIdx+1] = t
-                                CatMgrUI:Refresh()
-                                RefreshBagLayout()
+                                local controller = GetController()
+                                if controller and controller.MoveSectionCategory then
+                                    controller:MoveSectionCategory(sectionID, captIdx, 1)
+                                end
                             end
                         end, catIdx < #cats)
                         dnB2:SetPoint("RIGHT", row, "RIGHT", -2, 0)
                         local upB2 = MakeSmallBtn(row, "^", function()
                             if captIdx > 1 then
-                                local t = captCats[captIdx]; captCats[captIdx] = captCats[captIdx-1]; captCats[captIdx-1] = t
-                                CatMgrUI:Refresh()
-                                RefreshBagLayout()
+                                local controller = GetController()
+                                if controller and controller.MoveSectionCategory then
+                                    controller:MoveSectionCategory(sectionID, captIdx, -1)
+                                end
                             end
                         end, catIdx > 1)
                         upB2:SetPoint("RIGHT", dnB2, "LEFT", -2, 0)
@@ -1515,10 +1416,10 @@ function CatMgrUI:RefreshLeft()
                             cb2:SetPoint("LEFT", row, "LEFT", 4, 0)
                             cb2:SetChecked(not isDisabled2)
                             cb2:SetScript("OnClick", function(self)
-                                if self:GetChecked() then db.global.disabledCategories[capN2] = nil
-                                else db.global.disabledCategories[capN2] = true end
-                                Categories:InvalidateCache()
-                                CatMgrUI:Refresh(); RefreshBagLayout()
+                                local controller = GetController()
+                                if controller and controller.SetBuiltinCategoryEnabled then
+                                    controller:SetBuiltinCategoryEnabled(capN2, self:GetChecked())
+                                end
                             end)
                             nameX = 22
                         end
@@ -1595,16 +1496,16 @@ function CatMgrUI:Show()
     sectionBtn:SetPoint("LEFT", createBtn, "RIGHT", 6, 0)
     sectionBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_SECTION") end)
 
-    if _G.BAGANATOR_CONFIG then
+    if HasBaganator() then
         local bagBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["BAGANATOR_IMPORT"], height=24 })
         bagBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
         bagBtn:SetScript("OnClick", function()
-            local cats, secs = ImportFromBaganator()
+            local controller = GetController()
+            local cats, secs = 0, 0
+            if controller and controller.ImportBaganator then
+                cats, secs = controller:ImportBaganator()
+            end
             if cats > 0 or secs > 0 then
-                Categories:SetCustomCategories(db.global.customCategoriesV2)
-                Categories:InvalidateCache()
-                CatMgrUI:Refresh()
-                RefreshBagLayout()
                 if secs > 0 then
                     print(string.format("|cFFFFD100OneWoW Bags:|r Imported %d |4category:categories; and %d |4section:sections; from Baganator.", cats, secs))
                 else
@@ -1624,16 +1525,18 @@ function CatMgrUI:Show()
     local TSM = OneWoW_Bags.TSMIntegration
     if TSM and TSM:IsAvailable() then
         local tsmBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["TSM_IMPORT"] or "Import TSM", height=24 })
-        if _G.BAGANATOR_CONFIG then
+        if HasBaganator() then
             tsmBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
         else
             tsmBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
         end
         tsmBtn:SetScript("OnClick", function()
-            local count = TSM:Import()
+            local controller = GetController()
+            local count = 0
+            if controller and controller.ImportTSM then
+                count = controller:ImportTSM()
+            end
             if count > 0 then
-                CatMgrUI:Refresh()
-                RefreshBagLayout()
                 print(string.format("|cFFFFD100OneWoW Bags:|r " .. (L["TSM_IMPORT_SUCCESS"] or "Imported %d categories from TSM."), count))
             else
                 print("|cFFFFD100OneWoW Bags:|r " .. (L["TSM_IMPORT_NONE"] or "No TSM data found."))
@@ -1691,7 +1594,9 @@ function CatMgrUI:Show()
     rightItemScrollContent = rContent
 
     CatMgrUI:Refresh()
-    managerFrame:Show()
+    if managerFrame then
+        managerFrame:Show()
+    end
 end
 
 function CatMgrUI:Toggle()

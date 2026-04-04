@@ -4,10 +4,8 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 local Categories = OneWoW_Bags.Categories
-local BankCategoryManager = OneWoW_Bags.BankCategoryManager
 local BankSet = OneWoW_Bags.BankSet
 
 local tremove, tinsert, wipe = tremove, tinsert, wipe
@@ -16,6 +14,10 @@ local floor, min, max, ceil, sqrt = math.floor, math.min, math.max, math.ceil, m
 
 OneWoW_Bags.BankCategoryView = {}
 local View = OneWoW_Bags.BankCategoryView
+
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
 
 local labelPool = {}
 local activeLabels = {}
@@ -45,7 +47,8 @@ local function ReleaseAllLabels()
     wipe(activeLabels)
 end
 
-function View:Layout(contentFrame, width, filteredButtons)
+function View:Layout(contentFrame, width, filteredButtons, viewContext)
+    local db = GetDB()
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
@@ -62,7 +65,11 @@ function View:Layout(contentFrame, width, filteredButtons)
         end
     end
 
-    BankCategoryManager:ReleaseAllSections()
+    local sortButtons = viewContext.sortButtons
+    local acquireSection = viewContext.acquireSection
+    local getCollapsed = viewContext.getCollapsed
+    local setCollapsed = viewContext.setCollapsed
+
     ReleaseAllLabels()
 
     local itemsByCategory = {}
@@ -128,7 +135,7 @@ function View:Layout(contentFrame, width, filteredButtons)
         for _, categoryName in ipairs(categoryNames) do
             local items = itemsByCategory[categoryName]
             if items and #items > 0 then
-                OneWoW_Bags:SortButtons(items)
+                sortButtons(items)
                 local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
                 local displayName = L[localeKey] or categoryName
                 tinsert(catInfoList, { name = categoryName, displayName = displayName, items = items })
@@ -238,10 +245,10 @@ function View:Layout(contentFrame, width, filteredButtons)
         for _, categoryName in ipairs(categoryNames) do
             local items = itemsByCategory[categoryName]
             if items and #items > 0 then
-                OneWoW_Bags:SortButtons(items)
+                sortButtons(items)
 
                 if showHeaders then
-                    local section = BankCategoryManager:AcquireSection(contentFrame)
+                    local section = acquireSection(contentFrame)
                     section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
                     section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
                     section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -263,7 +270,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                     section.count:SetText(tostring(#items))
                     section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-                    local collapsed = db.global.collapsedBankSections[categoryName]
+                    local collapsed = getCollapsed("category", categoryName)
                     section.isCollapsed = collapsed or false
 
                     local sectionHeight = 26
@@ -302,11 +309,9 @@ function View:Layout(contentFrame, width, filteredButtons)
                     section:SetHeight(sectionHeight)
                     yOffset = yOffset + sectionHeight + floor(cellSize * verticalSpacing * 0.25 + 0.5)
 
-                    local capturedName = categoryName
                     section.header:SetScript("OnClick", function()
                         section.isCollapsed = not section.isCollapsed
-                        db.global.collapsedBankSections[categoryName] = section.isCollapsed or nil
-                        OneWoW_Bags.BankGUI:RefreshLayout()
+                        setCollapsed("category", categoryName, section.isCollapsed)
                     end)
                 else
                     local itemRow = 0

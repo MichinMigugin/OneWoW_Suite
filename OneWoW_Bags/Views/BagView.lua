@@ -4,11 +4,9 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local Constants = OneWoW_Bags.Constants
-local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
 local BagTypes = OneWoW_Bags.BagTypes
 local BagSet = OneWoW_Bags.BagSet
-local CategoryManager = OneWoW_Bags.CategoryManager
 
 local ipairs, tinsert = ipairs, tinsert
 local floor, max = math.floor, math.max
@@ -16,7 +14,12 @@ local floor, max = math.floor, math.max
 OneWoW_Bags.BagView = {}
 local View = OneWoW_Bags.BagView
 
-function View:Layout(contentFrame, width, filteredButtons)
+local function GetDB()
+    return OneWoW_Bags:GetDB()
+end
+
+function View:Layout(contentFrame, width, filteredButtons, viewContext)
+    local db = GetDB()
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
@@ -29,7 +32,10 @@ function View:Layout(contentFrame, width, filteredButtons)
         end
     end
 
-    CategoryManager:ReleaseAllSections()
+    local sortButtons = viewContext.sortButtons
+    local acquireSection = viewContext.acquireSection
+    local getCollapsed = viewContext.getCollapsed
+    local setCollapsed = viewContext.setCollapsed
 
     local selectedBag = db.global.selectedBag
     local yOffset = 0
@@ -49,8 +55,8 @@ function View:Layout(contentFrame, width, filteredButtons)
             buttons = filtered
         end
         if #buttons > 0 and (selectedBag == nil or bagID == selectedBag) then
-            OneWoW_Bags:SortButtons(buttons)
-            local section = CategoryManager:AcquireSection(contentFrame)
+            sortButtons(buttons)
+            local section = acquireSection(contentFrame)
             section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
             section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
             section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -63,7 +69,7 @@ function View:Layout(contentFrame, width, filteredButtons)
             section.count:SetText(tostring(#buttons))
             section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-            local collapsed = db.global.collapsedBagSections[bagID]
+            local collapsed = getCollapsed("bag", bagID)
             section.isCollapsed = collapsed or false
 
             local sectionHeight = 26
@@ -114,10 +120,7 @@ function View:Layout(contentFrame, width, filteredButtons)
 
             section.header:SetScript("OnClick", function()
                 section.isCollapsed = not section.isCollapsed
-                db.global.collapsedBagSections[bagID] = section.isCollapsed or nil
-                if OneWoW_Bags.GUI then
-                    OneWoW_Bags.GUI:RefreshLayout()
-                end
+                setCollapsed("bag", bagID, section.isCollapsed)
             end)
         end
     end

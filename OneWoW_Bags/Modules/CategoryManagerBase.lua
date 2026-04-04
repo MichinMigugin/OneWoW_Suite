@@ -7,7 +7,7 @@ local tinsert, tremove = tinsert, tremove
 
 OneWoW_Bags.CategoryManagerBase = {}
 
-function OneWoW_Bags.CategoryManagerBase:Create(refreshTargetKey)
+function OneWoW_Bags.CategoryManagerBase:Create()
     local cm = {}
     local sectionPool = {}
     local activeSections = {}
@@ -74,14 +74,6 @@ function OneWoW_Bags.CategoryManagerBase:Create(refreshTargetKey)
         section.content:SetPoint("TOPRIGHT", section.header, "BOTTOMRIGHT", 0, -2)
 
         section.isCollapsed = false
-
-        section.header:SetScript("OnClick", function()
-            section.isCollapsed = not section.isCollapsed
-            local target = OneWoW_Bags[refreshTargetKey]
-            if target and target.RefreshLayout then
-                target:RefreshLayout()
-            end
-        end)
 
         return section
     end

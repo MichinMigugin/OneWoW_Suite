@@ -1,6 +1,5 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
-local db = OneWoW_Bags.db
 local BagSet = OneWoW_Bags.BagSet
 local BankSet = OneWoW_Bags.BankSet
 local GuildBankSet = OneWoW_Bags.GuildBankSet
@@ -25,6 +24,7 @@ end
 
 function OneWoW_Bags:FireItemButtonCallback(button, bagID, slotID)
 	local altShow = self.GUI and self.GUI:IsAltShowActive()
+	local db = self:GetDB()
 	if not altShow and db.global.stripJunkOverlays and button._owb_isJunk then
 		local engine = _G.OneWoW and _G.OneWoW.OverlayEngine
 		if engine then engine:CleanButton(button) end
@@ -48,6 +48,7 @@ function OneWoW_Bags:FireCallbacksOnAllButtons()
 end
 
 function OneWoW_Bags:FireCallbacksOnBankButtons()
+	local db = self:GetDB()
 	if not db.global.enableBankOverlays then return end
 
 	if BankSet.slots then
@@ -104,6 +105,7 @@ local function HookGUIRefresh()
 
 	local originalBankRefresh = OneWoW_Bags.BankGUI.RefreshLayout
 	function OneWoW_Bags.BankGUI:RefreshLayout()
+		local db = OneWoW_Bags:GetDB()
 		originalBankRefresh(self)
 		if db.global.enableBankOverlays then
 			C_Timer.After(0.05, function()
@@ -114,6 +116,7 @@ local function HookGUIRefresh()
 
 	local originalGBRefresh = OneWoW_Bags.GuildBankGUI.RefreshLayout
 	function OneWoW_Bags.GuildBankGUI:RefreshLayout()
+		local db = OneWoW_Bags:GetDB()
 		originalGBRefresh(self)
 		if db.global.enableBankOverlays then
 			C_Timer.After(0.05, function()
@@ -136,6 +139,7 @@ integrationEventFrame:SetScript("OnEvent", function(self, event, ...)
 			end
 		end)
 	elseif event == "BANKFRAME_OPENED" then
+		local db = OneWoW_Bags:GetDB()
 		if db.global.enableBankOverlays then
 			C_Timer.After(0.1, function()
 				OneWoW_Bags:FireCallbacksOnBankButtons()
