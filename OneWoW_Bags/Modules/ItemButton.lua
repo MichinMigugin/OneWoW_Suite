@@ -96,8 +96,6 @@ end
 
 function Mixin:OWB_FullUpdate()
     self.owb_dirty = false
-    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI:IsAltShowActive()
-    local db = OneWoW_Bags:GetDB()
 
     local info = C_Container.GetContainerItemInfo(self.owb_bagID, self.owb_slotID)
     self.owb_itemInfo = info
@@ -108,8 +106,7 @@ function Mixin:OWB_FullUpdate()
         SetItemButtonDesaturated(self, info.isLocked)
 
         local quality = info.quality
-        local useRarity = self.owb_isBank and db.global.bankRarityColor or db.global.rarityColor
-        if altShow or (quality and quality >= 1 and useRarity) then
+        if OneWoW_Bags:ShouldShowItemQuality(self.owb_isBank, quality) then
             OneWoW_GUI:UpdateIconQuality(self, quality)
         else
             OneWoW_GUI:UpdateIconQuality(self, nil)
@@ -146,9 +143,6 @@ function Mixin:OWB_FullUpdate()
 end
 
 function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
-    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI:IsAltShowActive()
-    local db = OneWoW_Bags:GetDB()
-
     if not hasItem then
         self:SetAlpha(1.0)
         return
@@ -156,13 +150,13 @@ function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
 
     local isJunk = self:OWB_IsJunkItem(quality, info)
 
-    if isJunk and db.global.dimJunkItems and not altShow then
+    if OneWoW_Bags:ShouldDimJunkItem(isJunk) then
         self:SetAlpha(0.4)
     else
         self:SetAlpha(1.0)
     end
 
-    if isJunk and db.global.stripJunkOverlays and not altShow then
+    if OneWoW_Bags:ShouldStripJunkOverlays(isJunk) then
         if self.NewItemTexture then self.NewItemTexture:Hide() end
         if self.BattlepayItemTexture then self.BattlepayItemTexture:Hide() end
         if self.ProfessionQualityOverlay then self.ProfessionQualityOverlay:Hide() end

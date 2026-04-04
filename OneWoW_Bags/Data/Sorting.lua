@@ -1,8 +1,7 @@
 local _, OneWoW_Bags = ...
 
 function OneWoW_Bags:SortButtons(buttons, overrideSortMode)
-    local db = self.db
-    local sortMode = overrideSortMode or db.global.itemSort or "default"
+    local sortMode = overrideSortMode or "default"
     if sortMode == "none" then
         return buttons
     elseif sortMode == "default" then

@@ -1,7 +1,5 @@
 local _, OneWoW_Bags = ...
 
-local DB = LibStub("OneWoW_GUI-1.0", true).DB
-
 local ipairs, pairs = ipairs, pairs
 local random, time = math.random, time
 local tonumber, tostring = tonumber, tostring
@@ -285,7 +283,7 @@ function CategoryController:SetBuiltinCategoryEnabled(categoryName, enabled)
 end
 
 function CategoryController:GetCategoryModification(categoryName)
-    return DB:Ensure(self:GetDB(), "global", "categoryModifications", categoryName)
+    return self.addon:EnsureCategoryModification(categoryName)
 end
 
 function CategoryController:SetCategorySortMode(categoryName, value)

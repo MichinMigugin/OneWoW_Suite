@@ -29,6 +29,7 @@ local titleBar = nil
 local contentArea = nil
 local settingsBtn = nil
 local needsCleanupAfterCombat = false
+local cleanupEventFrame = nil
 
 local function GetDB()
     return OneWoW_Bags:GetDB()
@@ -42,60 +43,33 @@ function GUI:InitMainWindow()
     if isInitialized then return end
 
     local db = GetDB()
-    local savedHeight = db.global.mainFramePosition.height
-    local windowHeight = savedHeight or Constants.GUI.WINDOW_HEIGHT
-
-    MainWindow = OneWoW_GUI:CreateFrame(UIParent, {
+    MainWindow = WH:CreateWindowShell({
         name = "OneWoW_BagsMainWindow",
-        width = Constants.GUI.WINDOW_WIDTH,
-        height = windowHeight,
-        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+        positionDBKey = "mainFramePosition",
+        defaultHeight = Constants.GUI.WINDOW_HEIGHT,
+        onHide = function()
+            if not isInitialized then return end
+            GUI:CleanupAllViews()
+            InfoBar:ClearSearch()
+            OneWoW_Bags.activeExpansionFilter = nil
+            OneWoW_GUI:SaveWindowPosition(MainWindow, db.global.mainFramePosition)
+        end,
     })
 
     if not MainWindow then return end
 
-    MainWindow:SetMovable(true)
-    MainWindow:SetResizable(true)
-    MainWindow:SetResizeBounds(Constants.GUI.WINDOW_WIDTH, 300, Constants.GUI.WINDOW_WIDTH, 1200)
-    MainWindow:EnableMouse(true)
-    MainWindow:RegisterForDrag("LeftButton")
-    MainWindow:SetScript("OnDragStart", MainWindow.StartMoving)
-    MainWindow:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        OneWoW_GUI:SaveWindowPosition(self, db.global.mainFramePosition)
-    end)
-    MainWindow:SetClampedToScreen(true)
-    MainWindow:SetClampRectInsets(0, 0, 0, 0)
-    MainWindow:SetFrameStrata("MEDIUM")
-    MainWindow:SetToplevel(true)
-    MainWindow:SetScript("OnHide", function()
-        if not isInitialized then return end
-        GUI:CleanupAllViews()
-        InfoBar:ClearSearch()
-        OneWoW_Bags.activeExpansionFilter = nil
-        OneWoW_GUI:SaveWindowPosition(MainWindow, db.global.mainFramePosition)
-    end)
-    MainWindow:Hide()
-
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
-    titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, {
+    titleBar, settingsBtn = WH:CreateWindowTitleBar(MainWindow, {
         title = L["ADDON_TITLE"],
-        height = Constants.GUI.TITLEBAR_HEIGHT,
-        showBrand = true,
         factionTheme = factionTheme,
         onClose = function() MainWindow:Hide() end,
+        settingsText = L["SETTINGS"],
+        onSettings = function()
+            Settings:Toggle()
+        end,
     })
 
-    settingsBtn = OneWoW_GUI:CreateFitTextButton(titleBar, { text = L["SETTINGS"], height = 20, minWidth = 30 })
-    settingsBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -2, 0)
-    settingsBtn:SetScript("OnClick", function()
-        Settings:Toggle()
-    end)
-
-    contentArea = CreateFrame("Frame", nil, MainWindow)
-    contentArea:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + Constants.GUI.TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
-    contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS"), OneWoW_GUI:GetSpacing("XS"))
-    MainWindow.contentArea = contentArea
+    contentArea = WH:CreateContentArea(MainWindow)
 
     local infoBar = InfoBar:Create(contentArea)
 
@@ -105,35 +79,27 @@ function GUI:InitMainWindow()
     BagsBar:SetShown(showBagsBar)
 
     local hideScrollBar = db.global.hideScrollBar
-    local scrollbarOffset = hideScrollBar and 0 or -12
-
-    local scrollName = "OneWoW_BagsContentScroll"
-    contentScrollFrame = CreateFrame("ScrollFrame", scrollName, contentArea, "UIPanelScrollFrameTemplate")
-    contentScrollFrame:SetPoint("TOPLEFT", infoBar, "BOTTOMLEFT", 0, -2)
-    if showBagsBar then
-        contentScrollFrame:SetPoint("BOTTOMRIGHT", bagsBar, "TOPRIGHT", scrollbarOffset, 2)
-    else
-        contentScrollFrame:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", scrollbarOffset, 0)
-    end
-
-    OneWoW_GUI:StyleScrollBar(contentScrollFrame, { container = contentArea, offset = 0 })
-    if hideScrollBar and contentScrollFrame.ScrollBar then
-        contentScrollFrame.ScrollBar:Hide()
-    end
-
-    contentFrame = CreateFrame("Frame", scrollName .. "Content", contentScrollFrame)
-    contentFrame:SetHeight(1)
-    contentScrollFrame:SetScrollChild(contentFrame)
-    contentScrollFrame:HookScript("OnSizeChanged", function(self, w)
-        contentFrame:SetWidth(w)
-    end)
+    contentScrollFrame, contentFrame = WH:CreateScrollScaffold({
+        contentArea = contentArea,
+        scrollName = "OneWoW_BagsContentScroll",
+        topAnchor = infoBar,
+        bottomAnchor = showBagsBar and bagsBar or nil,
+        hideScrollBar = hideScrollBar,
+    })
 
     WH:SetupResizeButton(MainWindow, GUI, "mainFramePosition")
-
-    WH:RegisterSpecialFrame("OneWoW_BagsMainWindow", MainWindow)
     isInitialized = true
 
-    WH:SaveAndRestorePosition(MainWindow, "mainFramePosition")
+    if not cleanupEventFrame then
+        cleanupEventFrame = WH:RegisterDeferredCleanup({
+            shouldCleanup = function()
+                return needsCleanupAfterCombat and MainWindow and not MainWindow:IsShown()
+            end,
+            cleanup = function()
+                GUI:CleanupAllViews()
+            end,
+        })
+    end
 end
 
 function GUI:CleanupAllViews()
@@ -153,14 +119,6 @@ function GUI:CleanupAllViews()
 
     CategoryManager:ReleaseAllSections()
 end
-
-local cleanupEventFrame = CreateFrame("Frame")
-cleanupEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-cleanupEventFrame:SetScript("OnEvent", function()
-    if needsCleanupAfterCombat and MainWindow and not MainWindow:IsShown() then
-        GUI:CleanupAllViews()
-    end
-end)
 
 function GUI:UpdateWindowWidth()
     if not MainWindow then return end
@@ -220,6 +178,7 @@ function GUI:RefreshLayout()
             local viewContext = controller:CreateViewContext({
                 sectionManager = CategoryManager,
                 containerType = "backpack",
+                sortMode = db.global.itemSort,
                 getCollapsed = function(kind, key)
                     if kind == "category" then
                         return db.global.collapsedSections[key]
@@ -250,7 +209,7 @@ function GUI:RefreshLayout()
             })
 
             if viewMode == "list" then
-                return ListView:Layout(contentFrame, filteredButtons, contentWidth)
+                return ListView:Layout(contentFrame, filteredButtons, contentWidth, viewContext)
             end
             if viewMode == "category" then
                 return CategoryView:Layout(contentFrame, contentWidth, filteredButtons, "backpack", viewContext)
@@ -284,13 +243,7 @@ function GUI:Show()
         BagSet:Build()
     end
 
-    C_Timer.After(0, function()
-        if contentScrollFrame and contentFrame then
-            local w = contentScrollFrame:GetWidth()
-            if w and w > 10 then
-                contentFrame:SetWidth(w)
-            end
-        end
+    WH:QueueContentRefresh(contentScrollFrame, contentFrame, function()
         GUI:RefreshLayout()
     end)
 end
@@ -366,7 +319,6 @@ function GUI:GetMainWindow()
 end
 
 local altShowFrame = CreateFrame("Frame")
-local altIsDown = false
 altShowFrame:RegisterEvent("MODIFIER_STATE_CHANGED")
 altShowFrame:SetScript("OnEvent", function(self, event, key, down)
     if not MainWindow or not MainWindow:IsShown() then return end
@@ -375,8 +327,8 @@ altShowFrame:SetScript("OnEvent", function(self, event, key, down)
 
     if key == "LALT" or key == "RALT" then
         local nowDown = down == 1
-        if nowDown ~= altIsDown then
-            altIsDown = nowDown
+        if nowDown ~= OneWoW_Bags.inventoryPresentationState.altShowActive then
+            OneWoW_Bags:SetAltShowActive(nowDown)
             BagSet:UpdateAllSlots()
             GUI:RefreshLayout()
         end
@@ -384,9 +336,7 @@ altShowFrame:SetScript("OnEvent", function(self, event, key, down)
 end)
 
 function GUI:IsAltShowActive()
-    local db = GetDB()
-    if not db.global.altToShow then return false end
-    return altIsDown
+    return OneWoW_Bags:IsAltShowActive()
 end
 
 function GUI:UpdateBagsBarVisibility()

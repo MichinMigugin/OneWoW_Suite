@@ -3,8 +3,6 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local DB = OneWoW_GUI.DB
-
 local L = OneWoW_Bags.L
 local function GetDB()
     return OneWoW_Bags:GetDB()
@@ -524,7 +522,7 @@ function CatMgrUI:RefreshRight()
     local locKey = BUILTIN_LOCALE_KEYS[catName]
     local dispName = (locKey and L[locKey]) or catName
 
-    local catMod = DB:Ensure(GetDB(), "global", "categoryModifications", catName)
+    local catMod = OneWoW_Bags:EnsureCategoryModification(catName)
 
     local SORT_OPTIONS = { "none", "default", "name", "rarity", "ilvl", "type", "expansion" }
     local SORT_LABELS = { L["SORT_OFF"], L["SORT_DEFAULT"], L["SORT_NAME"], L["SORT_RARITY"], L["SORT_ITEM_LEVEL"], L["SORT_TYPE"], L["SORT_EXPANSION"] }

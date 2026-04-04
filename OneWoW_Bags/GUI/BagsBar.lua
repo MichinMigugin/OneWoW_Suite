@@ -542,7 +542,7 @@ function BagsBar:UpdateRowVisibility()
     if not bagsBarFrame then return end
 
     local db = GetDB()
-    local altShow = OneWoW_Bags.GUI:IsAltShowActive()
+    local altShow = OneWoW_Bags:IsAltShowActive()
     local showBags = db.global.showBagsBar ~= false
     local showMoney = db.global.showMoneyBar ~= false
     if altShow then showBags = true; showMoney = true end

@@ -23,7 +23,7 @@ function OneWoW_Bags:UnregisterItemButtonCallback(name)
 end
 
 function OneWoW_Bags:FireItemButtonCallback(button, bagID, slotID)
-	local altShow = self.GUI and self.GUI:IsAltShowActive()
+	local altShow = self:IsAltShowActive()
 	local db = self:GetDB()
 	if not altShow and db.global.stripJunkOverlays and button._owb_isJunk then
 		local engine = _G.OneWoW and _G.OneWoW.OverlayEngine

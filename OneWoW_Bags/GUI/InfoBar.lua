@@ -255,7 +255,7 @@ function InfoBar:UpdateViewButtons()
     local controller = GetController()
     local mode = controller and controller.GetViewMode and controller:GetViewMode() or db.global.viewMode
 
-    local altShow = OneWoW_Bags.GUI:IsAltShowActive()
+    local altShow = OneWoW_Bags:IsAltShowActive()
     local showHeader = (db.global.showHeaderBar ~= false) or altShow
     local showSearch = (db.global.showSearchBar ~= false) or altShow
 

@@ -156,11 +156,10 @@ function BankSet:UpdateAllSlots()
 end
 
 function BankSet:UpdateQualityColors()
-    local db = OneWoW_Bags.db
-    local useRarity = db.global.bankRarityColor
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do
-            if button.owb_itemInfo and button.owb_itemInfo.quality and button.owb_itemInfo.quality >= 1 and useRarity then
+            local quality = button.owb_itemInfo and button.owb_itemInfo.quality
+            if OneWoW_Bags:ShouldShowItemQuality(true, quality) then
                 OneWoW_GUI:UpdateIconQuality(button, button.owb_itemInfo.quality)
             else
                 OneWoW_GUI:UpdateIconQuality(button, nil)

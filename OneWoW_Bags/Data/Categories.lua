@@ -1,9 +1,5 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
-
-local DB = OneWoW_GUI.DB
 local OneWoW = _G.OneWoW
 local UD = OneWoW and OneWoW.UpgradeDetection
 local ItemStatus = OneWoW and OneWoW.ItemStatus
@@ -582,8 +578,8 @@ end
 function Categories:AddItemToBuiltinCategory(categoryName, itemID)
     if not categoryName or not itemID then return false end
 
-    local db = GetDB()
-    local addedItems = DB:Ensure(db, "global", "categoryModifications", categoryName, "addedItems")
+    local addedItems = OneWoW_Bags:EnsureBuiltinCategoryAddedItems(categoryName)
+    if not addedItems then return false end
     addedItems[tostring(itemID)] = true
     InvalidateCache()
     return true

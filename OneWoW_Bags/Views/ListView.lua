@@ -10,11 +10,14 @@ local tinsert = tinsert
 OneWoW_Bags.ListView = {}
 local View = OneWoW_Bags.ListView
 
-function View:Layout(contentFrame, buttons, width)
+function View:Layout(contentFrame, buttons, width, viewContext)
     local db = OneWoW_Bags:GetDB()
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
+    local sortButtons = viewContext and viewContext.sortButtons or function(list)
+        OneWoW_Bags:SortButtons(list, db.global.itemSort)
+    end
 
     local showEmpty = db.global.showEmptySlots
     if showEmpty == nil then showEmpty = true end
@@ -35,8 +38,8 @@ function View:Layout(contentFrame, buttons, width)
         end
     end
 
-    OneWoW_Bags:SortButtons(normalButtons)
-    OneWoW_Bags:SortButtons(reagentButtons)
+    sortButtons(normalButtons)
+    sortButtons(reagentButtons)
 
     local row = 0
     local col = 0

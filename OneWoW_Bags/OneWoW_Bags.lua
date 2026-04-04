@@ -17,6 +17,9 @@ _G.OneWoW_Bags = OneWoW_Bags
 OneWoW_Bags.oneWoWHubActive = false
 OneWoW_Bags.bankOpen = false
 OneWoW_Bags.guildBankOpen = false
+OneWoW_Bags.inventoryPresentationState = {
+    altShowActive = false,
+}
 
 local function DetectOneWoW()
     if _G.OneWoW then
@@ -67,8 +70,85 @@ local function ForEachTarget(owner, targetKey, targetMap, callback)
     end
 end
 
+local function EnsureTable(parent, key)
+    local value = parent[key]
+    if not value then
+        value = {}
+        parent[key] = value
+    end
+    return value
+end
+
 function OneWoW_Bags:GetDB()
     return self.db
+end
+
+function OneWoW_Bags:SetAltShowActive(active)
+    self.inventoryPresentationState.altShowActive = active == true
+end
+
+function OneWoW_Bags:IsAltShowActive()
+    local db = self:GetDB()
+    if not db or not db.global.altToShow then
+        return false
+    end
+    return self.inventoryPresentationState.altShowActive == true
+end
+
+function OneWoW_Bags:GetItemSortMode()
+    local db = self:GetDB()
+    if not db then
+        return "default"
+    end
+    return db.global.itemSort or "default"
+end
+
+function OneWoW_Bags:ShouldShowItemQuality(isBank, quality)
+    if self:IsAltShowActive() then
+        return true
+    end
+    if not quality or quality < 1 then
+        return false
+    end
+
+    local db = self:GetDB()
+    if not db then
+        return false
+    end
+
+    return isBank and db.global.bankRarityColor or db.global.rarityColor
+end
+
+function OneWoW_Bags:ShouldDimJunkItem(isJunk)
+    local db = self:GetDB()
+    if not db then
+        return false
+    end
+    return isJunk and db.global.dimJunkItems and not self:IsAltShowActive()
+end
+
+function OneWoW_Bags:ShouldStripJunkOverlays(isJunk)
+    local db = self:GetDB()
+    if not db then
+        return false
+    end
+    return isJunk and db.global.stripJunkOverlays and not self:IsAltShowActive()
+end
+
+function OneWoW_Bags:EnsureCategoryModification(categoryName)
+    if not categoryName then return nil end
+
+    local db = self:GetDB()
+    if not db then return nil end
+
+    local categoryModifications = EnsureTable(db.global, "categoryModifications")
+    return EnsureTable(categoryModifications, categoryName)
+end
+
+function OneWoW_Bags:EnsureBuiltinCategoryAddedItems(categoryName)
+    local categoryModification = self:EnsureCategoryModification(categoryName)
+    if not categoryModification then return nil end
+    return EnsureTable(categoryModification, "addedItems")
 end
 
 function OneWoW_Bags:InitializeControllers()

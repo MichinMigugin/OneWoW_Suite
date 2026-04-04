@@ -14,6 +14,135 @@ local ipairs = ipairs
 OneWoW_Bags.WindowHelpers = {}
 local WH = OneWoW_Bags.WindowHelpers
 
+function WH:CreateWindowShell(config)
+    local db = OneWoW_Bags:GetDB()
+    local position = DB:Ensure(db, "global", config.positionDBKey)
+    local windowHeight = position.height or config.defaultHeight or Constants.GUI.WINDOW_HEIGHT
+
+    local mainWindow = OneWoW_GUI:CreateFrame(UIParent, {
+        name = config.name,
+        width = config.width or Constants.GUI.WINDOW_WIDTH,
+        height = windowHeight,
+        backdrop = config.backdrop or OneWoW_GUI.Constants.BACKDROP_SOFT,
+    })
+
+    if not mainWindow then return nil end
+
+    mainWindow:SetMovable(true)
+    mainWindow:SetResizable(true)
+    mainWindow:SetResizeBounds(config.minWidth or Constants.GUI.WINDOW_WIDTH, config.minHeight or 300, config.maxWidth or Constants.GUI.WINDOW_WIDTH, config.maxHeight or 1200)
+    mainWindow:EnableMouse(true)
+    mainWindow:RegisterForDrag("LeftButton")
+    mainWindow:SetScript("OnDragStart", mainWindow.StartMoving)
+    mainWindow:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        OneWoW_GUI:SaveWindowPosition(self, position)
+    end)
+    mainWindow:SetClampedToScreen(true)
+    mainWindow:SetClampRectInsets(0, 0, 0, 0)
+    mainWindow:SetFrameStrata(config.frameStrata or "MEDIUM")
+    mainWindow:SetToplevel(true)
+    mainWindow:SetScript("OnHide", config.onHide)
+    mainWindow:Hide()
+
+    self:RegisterSpecialFrame(config.name, mainWindow)
+    self:SaveAndRestorePosition(mainWindow, config.positionDBKey)
+
+    return mainWindow
+end
+
+function WH:CreateWindowTitleBar(mainWindow, config)
+    local titleBar = OneWoW_GUI:CreateTitleBar(mainWindow, {
+        title = config.title,
+        height = config.height or Constants.GUI.TITLEBAR_HEIGHT,
+        showBrand = config.showBrand ~= false,
+        factionTheme = config.factionTheme,
+        onClose = config.onClose,
+    })
+
+    local settingsBtn = nil
+    if config.settingsText and config.onSettings then
+        settingsBtn = OneWoW_GUI:CreateFitTextButton(titleBar, {
+            text = config.settingsText,
+            height = 20,
+            minWidth = 30,
+        })
+        if settingsBtn then
+            if titleBar and titleBar._closeBtn then
+                settingsBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -2, 0)
+            elseif titleBar then
+                settingsBtn:SetPoint("RIGHT", titleBar, "RIGHT", -2, 0)
+            end
+            settingsBtn:SetScript("OnClick", config.onSettings)
+        end
+    end
+
+    return titleBar, settingsBtn
+end
+
+function WH:CreateContentArea(mainWindow)
+    local spacing = OneWoW_GUI:GetSpacing("XS")
+    local contentArea = CreateFrame("Frame", nil, mainWindow)
+    contentArea:SetPoint("TOPLEFT", mainWindow, "TOPLEFT", spacing, -(spacing + Constants.GUI.TITLEBAR_HEIGHT + spacing))
+    contentArea:SetPoint("BOTTOMRIGHT", mainWindow, "BOTTOMRIGHT", -spacing, spacing)
+    mainWindow.contentArea = contentArea
+    return contentArea
+end
+
+function WH:CreateScrollScaffold(config)
+    local scrollbarOffset = config.hideScrollBar and 0 or -12
+    local scrollFrame = CreateFrame("ScrollFrame", config.scrollName, config.contentArea, "UIPanelScrollFrameTemplate")
+    if config.topAnchor and config.topAnchor:IsShown() then
+        scrollFrame:SetPoint("TOPLEFT", config.topAnchor, "BOTTOMLEFT", 0, -2)
+    else
+        scrollFrame:SetPoint("TOPLEFT", config.contentArea, "TOPLEFT", 0, 0)
+    end
+    if config.bottomAnchor and config.bottomAnchor:IsShown() then
+        scrollFrame:SetPoint("BOTTOMRIGHT", config.bottomAnchor, "TOPRIGHT", scrollbarOffset, 2)
+    else
+        scrollFrame:SetPoint("BOTTOMRIGHT", config.contentArea, "BOTTOMRIGHT", scrollbarOffset, 0)
+    end
+
+    OneWoW_GUI:StyleScrollBar(scrollFrame, { container = config.contentArea, offset = 0 })
+    if config.hideScrollBar and scrollFrame.ScrollBar then
+        scrollFrame.ScrollBar:Hide()
+    end
+
+    local contentFrame = CreateFrame("Frame", config.scrollName .. "Content", scrollFrame)
+    contentFrame:SetHeight(1)
+    scrollFrame:SetScrollChild(contentFrame)
+    scrollFrame:HookScript("OnSizeChanged", function(self, width)
+        contentFrame:SetWidth(width)
+    end)
+
+    return scrollFrame, contentFrame
+end
+
+function WH:QueueContentRefresh(scrollFrame, contentFrame, refreshCallback)
+    C_Timer.After(0, function()
+        if scrollFrame and contentFrame then
+            local width = scrollFrame:GetWidth()
+            if width and width > 10 then
+                contentFrame:SetWidth(width)
+            end
+        end
+        if refreshCallback then
+            refreshCallback()
+        end
+    end)
+end
+
+function WH:RegisterDeferredCleanup(config)
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    eventFrame:SetScript("OnEvent", function()
+        if config.shouldCleanup and config.shouldCleanup() and config.cleanup then
+            config.cleanup()
+        end
+    end)
+    return eventFrame
+end
+
 function WH:FilterBySearch(buttons, searchText)
     if not searchText or searchText == "" then
         return buttons
