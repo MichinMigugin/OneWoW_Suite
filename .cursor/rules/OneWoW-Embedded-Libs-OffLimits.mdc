@@ -3,8 +3,8 @@ description: Embedded Libs folders are off-limits — do not modify third-party 
 alwaysApply: true
 ---
 
-# Embedded Libs — Do Not Modify
+# Embedded Libs
 
-**Do not edit, refactor, or modify any files in embedded `Libs` folders.**
+**Do not edit, refactor, or modify files in embedded `Libs` folders.**
 
-These are third-party libraries (LibStub, Ace3, LibCopyPaste, LibDBIcon, etc.) that are vendored/embedded as-is. Changes to them can break compatibility, cause merge conflicts when updating, and diverge from upstream. If a task would require modifying a Lib, implement the needed behavior in addon code instead, or note that the Lib would need to be updated externally.
+These are third-party libraries (LibStub, Ace3, etc.) that are vendored/embedded as-is. Changes can break compatibility and diverge from upstream. If a task requires modifying Lib, implement needed behavior in addon code, or note the Lib needs updated manually.
