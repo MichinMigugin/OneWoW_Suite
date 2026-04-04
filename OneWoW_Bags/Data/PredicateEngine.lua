@@ -1338,3 +1338,5 @@ function PE:GetExpansionName(expID)
     if not expID then return nil end
     return _G["EXPANSION_NAME" .. expID]
 end
+
+PE.BATTLE_PET_CAGE_ID = BATTLE_PET_CAGE_ID

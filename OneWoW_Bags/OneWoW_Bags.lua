@@ -3,9 +3,29 @@ local ADDON_NAME, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-_G.OneWoW_Bags = OneWoW_Bags
-
+local db = OneWoW_Bags.db
 local L = OneWoW_Bags.L
+local PE = OneWoW_Bags.PredicateEngine
+local Categories = OneWoW_Bags.Categories
+local ItemPool = OneWoW_Bags.ItemPool
+local BagSet = OneWoW_Bags.BagSet
+local BankSet = OneWoW_Bags.BankSet
+local GuildBankSet = OneWoW_Bags.GuildBankSet
+local BagsBar = OneWoW_Bags.BagsBar
+local BankGUI = OneWoW_Bags.BankGUI
+local GuildBankGUI = OneWoW_Bags.GuildBankGUI
+local GuildBankBar = OneWoW_Bags.GuildBankBar
+local BagTypes = OneWoW_Bags.BagTypes
+
+local pairs, print, tonumber = pairs, print, tonumber
+local hooksecurefunc = hooksecurefunc
+
+local InCombatLockdown = InCombatLockdown
+local C_Timer = C_Timer
+local C_Bank = C_Bank
+local C_PetJournal = C_PetJournal
+
+_G.OneWoW_Bags = OneWoW_Bags
 
 OneWoW_Bags.oneWoWHubActive = false
 OneWoW_Bags.bankOpen = false
@@ -55,10 +75,8 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
     ApplyTheme()
     ApplyLanguage()
 
-    if self.Categories then
-        self.Categories:SetCustomCategories(self.db.global.customCategoriesV2)
-        self.Categories:SetRecentItemDuration(self.db.global.recentItemDuration)
-    end
+    Categories:SetCustomCategories(db.global.customCategoriesV2)
+    Categories:SetRecentItemDuration(db.global.recentItemDuration)
 
     self:RegisterSlashCommands()
 
@@ -124,10 +142,6 @@ end
 function OneWoW_Bags:OnPlayerLogin()
     DetectOneWoW()
 
-    if self.PredicateEngine and self.PredicateEngine.RegisterBlizzardSubclasses then
-        self.PredicateEngine:RegisterBlizzardSubclasses()
-    end
-
     if not self.oneWoWHubActive then
         self.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_Bags", {
             label = "OneWoW Bags",
@@ -150,32 +164,22 @@ function OneWoW_Bags:OnPlayerLogin()
     end
 
     if _G.OneWoW and _G.OneWoW.RegisterMinimap then
-        _G.OneWoW:RegisterMinimap("OneWoW_Bags", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_BAGS"]) or "Open Bags", nil, function()
+        _G.OneWoW:RegisterMinimap("OneWoW_Bags", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_BAGS"]), nil, function()
             if self.GUI then self.GUI:Toggle() end
         end)
     end
 
-    local Pool = self.ItemPool
-    if Pool then
-        Pool:Preallocate(220)
-    end
-
-    local BagSet = self.BagSet
-    if BagSet then
-        BagSet:Build()
-    end
-
-    if self.BagsBar then
-        self.BagsBar:UpdateIcons()
-    end
+    ItemPool:Preallocate(220)
+    BagSet:Build()
+    BagsBar:UpdateIcons()
 
     self:HookBlizzardBags()
     self:HookPetCageTooltip()
 end
 
 function OneWoW_Bags:HookPetCageTooltip()
-    local CAGE_ID = 82800
-    if not TooltipDataProcessor or not TooltipDataProcessor.AddTooltipPostCall then return end
+    local CAGE_ID = PE.BATTLE_PET_CAGE_ID
+
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
         if not data or not data.id or data.id ~= CAGE_ID then return end
         local _, itemLink = tooltip:GetItem()
@@ -183,7 +187,7 @@ function OneWoW_Bags:HookPetCageTooltip()
         local petID = itemLink:match("battlepet:(%d+)")
         if not petID then return end
         local speciesID = tonumber(petID)
-        if not speciesID or not C_PetJournal then return end
+        if not speciesID then return end
         local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
         if petName then
             tooltip:AddLine(" ")
@@ -207,13 +211,9 @@ end
 
 function OneWoW_Bags:OnBankOpened()
     self.bankOpen = true
-    local db = self.db
-    if not db.global.enableBankUI then return end
-
     self:SuppressBankFrame()
 
-    local showWarband = db.global.bankShowWarband
-    local activeBankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
+    local activeBankType = db.global.bankShowWarband and Enum.BankType.Account or Enum.BankType.Character
     if BankFrame and BankFrame.BankPanel then
         BankFrame.BankPanel:SetBankType(activeBankType)
         BankFrame.BankPanel:Show()
@@ -224,11 +224,9 @@ function OneWoW_Bags:OnBankOpened()
     C_Bank.FetchPurchasedBankTabData(Enum.BankType.Account)
     C_Bank.FetchNumPurchasedBankTabs(Enum.BankType.Account)
 
-    if self.BankGUI then
-        self.BankGUI:Show()
-    end
+    BankGUI:Show()
 
-    if db.global.autoOpenWithBank and self.GUI then
+    if db.global.autoOpenWithBank then
         self.GUI:Show()
     end
 end
@@ -239,12 +237,9 @@ function OneWoW_Bags:OnBankClosed()
     if BankFrame and BankFrame.BankPanel then
         BankFrame.BankPanel:Hide()
     end
-    if self.BankGUI then
-        self.BankGUI:Hide()
-    end
-    if self.BankSet then
-        self.BankSet:ReleaseAll()
-    end
+
+    BankGUI:Hide()
+    BankSet:ReleaseAll()
 end
 
 function OneWoW_Bags:SuppressGuildBankFrame()
@@ -274,13 +269,9 @@ function OneWoW_Bags:OnGuildBankOpened()
     self.guildBankOpen = true
 
     self:SuppressGuildBankFrame()
+    GuildBankGUI:Show()
 
-    if self.GuildBankGUI then
-        self.GuildBankGUI:Show()
-    end
-
-    local db = self.db
-    if db.global.autoOpenWithBank and self.GUI then
+    if db.global.autoOpenWithBank then
         self.GUI:Show()
     end
 end
@@ -288,20 +279,14 @@ end
 function OneWoW_Bags:OnGuildBankClosed()
     if not self.guildBankOpen then return end
     self.guildBankOpen = false
-    if self.GuildBankGUI then
-        self.GuildBankGUI:Hide()
-    end
-    if self.GuildBankSet then
-        self.GuildBankSet:ReleaseAll()
-        self.GuildBankSet:ClearCache()
-    end
+    GuildBankGUI:Hide()
+    GuildBankSet:ReleaseAll()
+    GuildBankSet:ClearCache()
     self:RestoreGuildBankFrame()
 end
 
 function OneWoW_Bags:OnGuildBankSlotsChanged()
-    local GuildBankSet = self.GuildBankSet
-    if not GuildBankSet or not GuildBankSet.isBuilt then return end
-
+    if not GuildBankSet.isBuilt then return end
     if self._guildBankUpdatePending then return end
     self._guildBankUpdatePending = true
 
@@ -314,23 +299,15 @@ function OneWoW_Bags:OnGuildBankSlotsChanged()
             end
         end
         GuildBankSet:ApplyCacheToButtons()
-        if self.GuildBankGUI then
-            self.GuildBankGUI:RefreshLayout()
-        end
+            GuildBankGUI:RefreshLayout()
     end)
 end
 
 function OneWoW_Bags:OnGuildBankTabsUpdated()
     if self.guildBankOpen then
-        if self.GuildBankSet then
-            self.GuildBankSet:Build()
-        end
-        if self.GuildBankBar then
-            self.GuildBankBar:BuildTabButtons()
-        end
-        if self.GuildBankGUI then
-            self.GuildBankGUI:RefreshLayout()
-        end
+        GuildBankSet:Build()
+        GuildBankBar:BuildTabButtons()
+        GuildBankGUI:RefreshLayout()
     end
 end
 
@@ -401,42 +378,33 @@ function OneWoW_Bags:RestoreBankFrame()
 end
 
 function OneWoW_Bags:ProcessBagUpdate(dirtyBags)
-    local BagSet = self.BagSet
-    if BagSet and BagSet.isBuilt then
+    if BagSet.isBuilt then
         BagSet:UpdateDirtyBags(dirtyBags)
-        if self.GUI and self.GUI.RefreshLayout then
-            self.GUI:RefreshLayout()
-        end
+        self.GUI:RefreshLayout()
     end
 
     if self.bankOpen then
-        local BankSet = self.BankSet
-        if BankSet and BankSet.isBuilt then
+        if BankSet.isBuilt then
             BankSet:UpdateDirtyBags(dirtyBags)
-            if self.BankGUI and self.BankGUI.RefreshLayout then
-                self.BankGUI:RefreshLayout()
-            end
+            BankGUI:RefreshLayout()
         end
     end
 end
 
 function OneWoW_Bags:OnItemLockChanged(bagID, slotID)
-    local BagSet = self.BagSet
-    if BagSet and BagSet.isBuilt and BagSet.slots[bagID] and BagSet.slots[bagID][slotID] then
+    if BagSet.isBuilt and BagSet.slots[bagID] and BagSet.slots[bagID][slotID] then
         BagSet.slots[bagID][slotID]:OWB_RefreshLock()
     end
 
     if self.bankOpen then
-        local BankSet = self.BankSet
-        if BankSet and BankSet.isBuilt and BankSet.slots[bagID] and BankSet.slots[bagID][slotID] then
+        if BankSet.isBuilt and BankSet.slots[bagID] and BankSet.slots[bagID][slotID] then
             BankSet.slots[bagID][slotID]:OWB_RefreshLock()
         end
     end
 end
 
 function OneWoW_Bags:OnCooldownUpdate()
-    local BagSet = self.BagSet
-    if not BagSet or not BagSet.isBuilt then return end
+    if not BagSet.isBuilt then return end
     for bagID, bagSlots in pairs(BagSet.slots) do
         for slotID, button in pairs(bagSlots) do
             if button.owb_hasItem then
@@ -452,9 +420,7 @@ function OneWoW_Bags:RegisterSlashCommands()
     SLASH_ONEWOW_BAGS3 = "/1wbags"
 
     SlashCmdList["ONEWOW_BAGS"] = function(msg)
-        if self.GUI then
-            self.GUI:Toggle()
-        end
+        self.GUI:Toggle()
     end
 end
 
@@ -533,13 +499,13 @@ function OneWoW_Bags:HookBlizzardBags()
     hooksecurefunc("CloseAllBags", function() CloseOurBags() end)
 
     hooksecurefunc("OpenBag", function(bagID)
-        if OneWoW_Bags.BagTypes and OneWoW_Bags.BagTypes:IsPlayerBag(bagID) then
+        if BagTypes:IsPlayerBag(bagID) then
             OpenOurBags()
         end
     end)
 
     hooksecurefunc("CloseBag", function(bagID)
-        if OneWoW_Bags.BagTypes and OneWoW_Bags.BagTypes:IsPlayerBag(bagID) then
+        if BagTypes:IsPlayerBag(bagID) then
             CloseOurBags()
         end
     end)
