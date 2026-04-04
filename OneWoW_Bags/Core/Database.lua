@@ -4,7 +4,7 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local DB = OneWoW_GUI.DB
-local pairs, ipairs, next, wipe, tinsert, CopyTable = pairs, ipairs, next, wipe, tinsert, CopyTable
+local pairs, ipairs, next, wipe, tinsert = pairs, ipairs, next, wipe, tinsert
 
 local defaults = {
     global = {

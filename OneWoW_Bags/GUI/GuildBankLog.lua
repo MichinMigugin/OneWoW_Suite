@@ -1,9 +1,12 @@
 local _, OneWoW_Bags = ...
 
-OneWoW_Bags.GuildBankLog = {}
-local GuildBankLog = OneWoW_Bags.GuildBankLog
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
+
+local L = OneWoW_Bags.L
+
+OneWoW_Bags.GuildBankLog = {}
+local GuildBankLog = OneWoW_Bags.GuildBankLog
 
 local logFrame = nil
 local scrollFrame = nil
@@ -19,7 +22,6 @@ local TITLEBAR_HEIGHT = 28
 
 function GuildBankLog:Init()
     if isInitialized then return end
-    local L = OneWoW_Bags.L
 
     logFrame = OneWoW_GUI:CreateFrame(UIParent, {
         name = "OneWoW_GuildBankLogFrame",
@@ -41,7 +43,7 @@ function GuildBankLog:Init()
     logFrame:Hide()
 
     local titleBar = OneWoW_GUI:CreateTitleBar(logFrame, {
-        title = L["GUILD_BANK_LOG"] or "Guild Bank Log",
+        title = L["GUILD_BANK_LOG"],
         height = TITLEBAR_HEIGHT,
         showBrand = false,
         onClose = function() logFrame:Hide() end,
@@ -53,13 +55,13 @@ function GuildBankLog:Init()
     filterArea:SetPoint("TOPLEFT", logFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
     filterArea:SetPoint("TOPRIGHT", logFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
 
-    local itemsBtn = OneWoW_GUI:CreateFitTextButton(filterArea, { text = L["GUILD_BANK_ITEMS_LOG"] or "Items", height = 22, minWidth = 50 })
+    local itemsBtn = OneWoW_GUI:CreateFitTextButton(filterArea, { text = L["GUILD_BANK_ITEMS_LOG"], height = 22, minWidth = 50 })
     itemsBtn:SetPoint("TOPLEFT", filterArea, "TOPLEFT", 0, 0)
     itemsBtn:SetScript("OnClick", function()
         GuildBankLog:ShowItems()
     end)
 
-    local goldBtn = OneWoW_GUI:CreateFitTextButton(filterArea, { text = L["GUILD_BANK_MONEY_LOG"] or "Gold", height = 22, minWidth = 50 })
+    local goldBtn = OneWoW_GUI:CreateFitTextButton(filterArea, { text = L["GUILD_BANK_MONEY_LOG"], height = 22, minWidth = 50 })
     goldBtn:SetPoint("TOPLEFT", itemsBtn, "TOPRIGHT", 4, 0)
     goldBtn:SetScript("OnClick", function()
         GuildBankLog:ShowGold()
@@ -142,7 +144,6 @@ function GuildBankLog:SetText(msg)
 end
 
 function GuildBankLog:RefreshItems()
-    local L = OneWoW_Bags.L
     local tab = GetCurrentGuildBankTab()
     local numTransactions = GetNumGuildBankTransactions(tab)
     local msg = ""
@@ -171,14 +172,13 @@ function GuildBankLog:RefreshItems()
     end
 
     if numTransactions == 0 then
-        msg = L["GUILD_BANK_NO_LOG"] or "No transactions available."
+        msg = L["GUILD_BANK_NO_LOG"]
     end
 
     GuildBankLog:SetText(msg)
 end
 
 function GuildBankLog:RefreshGold()
-    local L = OneWoW_Bags.L
     local numTransactions = GetNumGuildBankMoneyTransactions()
     local msg = ""
 
@@ -211,7 +211,7 @@ function GuildBankLog:RefreshGold()
     end
 
     if numTransactions == 0 then
-        msg = L["GUILD_BANK_NO_LOG"] or "No transactions available."
+        msg = L["GUILD_BANK_NO_LOG"]
     end
 
     GuildBankLog:SetText(msg)
@@ -273,7 +273,7 @@ end
 
 function GuildBankLog:PositionNearMainWindow()
     if not logFrame then return end
-    local mainWindow = OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI:GetMainWindow()
+    local mainWindow = OneWoW_Bags.GuildBankGUI:GetMainWindow()
     if mainWindow then
         logFrame:ClearAllPoints()
         logFrame:SetPoint("TOPLEFT", mainWindow, "TOPRIGHT", 4, 0)

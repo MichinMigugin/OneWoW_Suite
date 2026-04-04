@@ -326,6 +326,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["PRIORITY_NORMAL"] = "Normal",
     ["PRIORITY_HIGH"] = "High",
     ["PRIORITY_HIGHEST"] = "Highest",
+    ["PRIORITY_MAX"] = "Max",
 
     ["COLOR"] = "Color",
     ["COLOR_PICK"] = "Pick Color",
@@ -353,6 +354,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["DESC_STACK_ITEMS"] = "Group identical items into a single slot showing combined count in category view.",
 
     ["SEARCH_HELP_TITLE"] = "Search Expression Help",
+    ["SEARCH_HELP_DESC"] = "Use search keywords with operators to match items automatically.",
+    ["SEARCH_HELP_PLACEHOLDER"] = "#battlepet&!#collected",
     ["SEARCH_HELP_KEYWORDS"] = "Keywords: #pet #mount #toy #collected #soulbound #boe #boa #junk #gear #weapon #armor #consumable #potion #food #reagent #recipe #gem #quest #hearthstone #keystone #locked #charges",
     ["SEARCH_HELP_QUALITY"] = "Quality: #poor #common #uncommon #rare #epic #legendary",
     ["SEARCH_HELP_SLOTS"] = "Slots: #head #shoulder #chest #waist #legs #feet #wrist #hands #ring #trinket #back #shield",

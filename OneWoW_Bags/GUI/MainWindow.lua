@@ -3,13 +3,24 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local DB = OneWoW_GUI.DB
+local Constants = OneWoW_Bags.Constants
+local db = OneWoW_Bags.db
+local L = OneWoW_Bags.L
+local InfoBar = OneWoW_Bags.InfoBar
+local WH = OneWoW_Bags.WindowHelpers
+local Settings = OneWoW_Bags.Settings
+local BagsBar = OneWoW_Bags.BagsBar
+local BagSet = OneWoW_Bags.BagSet
+local CategoryManager = OneWoW_Bags.CategoryManager
+local ListView = OneWoW_Bags.ListView
+local BagView = OneWoW_Bags.BagView
+local CategoryView = OneWoW_Bags.CategoryView
+
+local print, pcall, pairs = print, pcall, pairs
+local InCombatLockdown = InCombatLockdown
 
 OneWoW_Bags.GUI = OneWoW_Bags.GUI or {}
 local GUI = OneWoW_Bags.GUI
-local Constants = OneWoW_Bags.Constants
-local L = OneWoW_Bags.L
-local WH = OneWoW_Bags.WindowHelpers
 
 local MainWindow = nil
 local isInitialized = false
@@ -22,16 +33,13 @@ local needsCleanupAfterCombat = false
 
 function GUI:InitMainWindow()
     if isInitialized then return end
-    if not Constants or not Constants.GUI then return end
 
-    local C = Constants.GUI
-    local db = OneWoW_Bags.db
     local savedHeight = db.global.mainFramePosition.height
-    local windowHeight = savedHeight or C.WINDOW_HEIGHT
+    local windowHeight = savedHeight or Constants.GUI.WINDOW_HEIGHT
 
     MainWindow = OneWoW_GUI:CreateFrame(UIParent, {
         name = "OneWoW_BagsMainWindow",
-        width = C.WINDOW_WIDTH,
+        width = Constants.GUI.WINDOW_WIDTH,
         height = windowHeight,
         backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
     })
@@ -40,14 +48,13 @@ function GUI:InitMainWindow()
 
     MainWindow:SetMovable(true)
     MainWindow:SetResizable(true)
-    MainWindow:SetResizeBounds(C.WINDOW_WIDTH, 300, C.WINDOW_WIDTH, 1200)
+    MainWindow:SetResizeBounds(Constants.GUI.WINDOW_WIDTH, 300, Constants.GUI.WINDOW_WIDTH, 1200)
     MainWindow:EnableMouse(true)
     MainWindow:RegisterForDrag("LeftButton")
     MainWindow:SetScript("OnDragStart", MainWindow.StartMoving)
     MainWindow:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
-        local pos = DB:Ensure(OneWoW_Bags.db, "global", "mainFramePosition")
-        OneWoW_GUI:SaveWindowPosition(self, pos)
+        OneWoW_GUI:SaveWindowPosition(self, db.global.mainFramePosition)
     end)
     MainWindow:SetClampedToScreen(true)
     MainWindow:SetClampRectInsets(0, 0, 0, 0)
@@ -56,19 +63,16 @@ function GUI:InitMainWindow()
     MainWindow:SetScript("OnHide", function()
         if not isInitialized then return end
         GUI:CleanupAllViews()
-        if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.ClearSearch then
-            OneWoW_Bags.InfoBar:ClearSearch()
-        end
+        InfoBar:ClearSearch()
         OneWoW_Bags.activeExpansionFilter = nil
-        local pos = DB:Ensure(OneWoW_Bags.db, "global", "mainFramePosition")
-        OneWoW_GUI:SaveWindowPosition(MainWindow, pos)
+        OneWoW_GUI:SaveWindowPosition(MainWindow, db.global.mainFramePosition)
     end)
     MainWindow:Hide()
 
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
     titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, {
         title = L["ADDON_TITLE"],
-        height = C.TITLEBAR_HEIGHT,
+        height = Constants.GUI.TITLEBAR_HEIGHT,
         showBrand = true,
         factionTheme = factionTheme,
         onClose = function() MainWindow:Hide() end,
@@ -77,24 +81,22 @@ function GUI:InitMainWindow()
     settingsBtn = OneWoW_GUI:CreateFitTextButton(titleBar, { text = L["SETTINGS"], height = 20, minWidth = 30 })
     settingsBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -2, 0)
     settingsBtn:SetScript("OnClick", function()
-        if OneWoW_Bags.Settings and OneWoW_Bags.Settings.Toggle then
-            OneWoW_Bags.Settings:Toggle()
-        end
+        Settings:Toggle()
     end)
 
     contentArea = CreateFrame("Frame", nil, MainWindow)
-    contentArea:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + C.TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
+    contentArea:SetPoint("TOPLEFT", MainWindow, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + Constants.GUI.TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
     contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS"), OneWoW_GUI:GetSpacing("XS"))
     MainWindow.contentArea = contentArea
 
-    local infoBar = OneWoW_Bags.InfoBar:Create(contentArea)
+    local infoBar = InfoBar:Create(contentArea)
 
-    local bagsBar = OneWoW_Bags.BagsBar:Create(contentArea)
-    local showBagsBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.showBagsBar
+    local bagsBar = BagsBar:Create(contentArea)
+    local showBagsBar = db.global.showBagsBar
     if showBagsBar == nil then showBagsBar = true end
-    OneWoW_Bags.BagsBar:SetShown(showBagsBar)
+    BagsBar:SetShown(showBagsBar)
 
-    local hideScrollBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
+    local hideScrollBar = db.global.hideScrollBar
     local scrollbarOffset = hideScrollBar and 0 or -12
 
     local scrollName = "OneWoW_BagsContentScroll"
@@ -132,8 +134,8 @@ function GUI:CleanupAllViews()
         return
     end
     needsCleanupAfterCombat = false
-    local BagSet = OneWoW_Bags.BagSet
-    if BagSet and BagSet.isBuilt then
+
+    if BagSet.isBuilt then
         local allButtons = BagSet:GetAllButtons()
         for _, button in ipairs(allButtons) do
             button:Hide()
@@ -141,9 +143,7 @@ function GUI:CleanupAllViews()
         end
     end
 
-    if OneWoW_Bags.CategoryManager then
-        OneWoW_Bags.CategoryManager:ReleaseAllSections()
-    end
+    CategoryManager:ReleaseAllSections()
 end
 
 local cleanupEventFrame = CreateFrame("Frame")
@@ -156,8 +156,8 @@ end)
 
 function GUI:UpdateWindowWidth()
     if not MainWindow then return end
-    local db = OneWoW_Bags.db
-    local cols = db.global.bagColumns or 15
+
+    local cols = db.global.bagColumns
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local scrollbarSpace = db.global.hideScrollBar and 0 or 12
@@ -170,22 +170,16 @@ function GUI:RefreshLayout()
     if not isInitialized or not MainWindow then return end
     if not MainWindow:IsShown() then return end
 
-    local BagSet = OneWoW_Bags.BagSet
-    if not BagSet or not BagSet.isBuilt then return end
+    if not BagSet.isBuilt then return end
 
     GUI:UpdateWindowWidth()
+    InfoBar:UpdateVisibility()
+    BagsBar:UpdateRowVisibility()
 
-    if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.UpdateVisibility then
-        OneWoW_Bags.InfoBar:UpdateVisibility()
-    end
-    if OneWoW_Bags.BagsBar and OneWoW_Bags.BagsBar.UpdateRowVisibility then
-        OneWoW_Bags.BagsBar:UpdateRowVisibility()
-    end
-
-    local bagsBarFrame = OneWoW_Bags.BagsBar:GetFrame()
-    local infoBarFrame = OneWoW_Bags.InfoBar:GetFrame()
+    local bagsBarFrame = BagsBar:GetFrame()
+    local infoBarFrame = InfoBar:GetFrame()
     if contentScrollFrame then
-        local hideScrollBar = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.hideScrollBar
+        local hideScrollBar = db.global.hideScrollBar
         local scrollbarOffset = hideScrollBar and 0 or -12
         if contentScrollFrame.ScrollBar then
             if hideScrollBar then
@@ -219,28 +213,28 @@ function GUI:RefreshLayout()
     GUI:CleanupAllViews()
 
     local allButtons = BagSet:GetAllButtons()
-    local searchText = OneWoW_Bags.InfoBar:GetSearchText()
+    local searchText = InfoBar:GetSearchText()
     local filteredButtons = WH:FilterBySearch(allButtons, searchText)
     filteredButtons = WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeExpansionFilter)
 
-    local viewMode = OneWoW_Bags.db and OneWoW_Bags.db.global and OneWoW_Bags.db.global.viewMode or "list"
+    local viewMode = db.global.viewMode
     local cols, iconSize, spacing, contentWidth = WH:GetLayoutMetrics("bagColumns", 15)
 
     local layoutHeight = 100
 
     if viewMode == "list" then
-        layoutHeight = OneWoW_Bags.ListView:Layout(contentFrame, filteredButtons, contentWidth)
+        layoutHeight = ListView:Layout(contentFrame, filteredButtons, contentWidth)
     elseif viewMode == "category" then
-        layoutHeight = OneWoW_Bags.CategoryView:Layout(contentFrame, contentWidth, filteredButtons, "backpack")
+        layoutHeight = CategoryView:Layout(contentFrame, contentWidth, filteredButtons, "backpack")
     elseif viewMode == "bag" then
-        layoutHeight = OneWoW_Bags.BagView:Layout(contentFrame, contentWidth, filteredButtons)
+        layoutHeight = BagView:Layout(contentFrame, contentWidth, filteredButtons)
     end
 
     contentFrame:SetHeight(layoutHeight)
 
     local freeSlots = BagSet:GetFreeSlotCount()
     local totalSlots = BagSet:GetSlotCount()
-    OneWoW_Bags.BagsBar:UpdateFreeSlots(freeSlots, totalSlots)
+    BagsBar:UpdateFreeSlots(freeSlots, totalSlots)
 end
 
 function GUI:OnSearchChanged(text)
@@ -260,8 +254,7 @@ function GUI:Show()
 
     MainWindow:Show()
 
-    local BagSet = OneWoW_Bags.BagSet
-    if BagSet and not BagSet.isBuilt then
+    if not BagSet.isBuilt then
         BagSet:Build()
     end
 
@@ -280,9 +273,7 @@ function GUI:Hide()
     if MainWindow then
         MainWindow:Hide()
     end
-    if OneWoW_Bags.Settings then
-        OneWoW_Bags.Settings:Hide()
-    end
+    Settings:Hide()
 end
 
 function GUI:Toggle()
@@ -298,25 +289,11 @@ function GUI:IsShown()
 end
 
 function GUI:FullReset()
-    if OneWoW_Bags.BagSet then
-        OneWoW_Bags.BagSet:ReleaseAll()
-    end
-
-    if OneWoW_Bags.CategoryManager and OneWoW_Bags.CategoryManager.ReleaseAllSections then
-        OneWoW_Bags.CategoryManager:ReleaseAllSections()
-    end
-
-    if OneWoW_Bags.Settings and OneWoW_Bags.Settings.Reset then
-        OneWoW_Bags.Settings:Reset()
-    end
-
-    if OneWoW_Bags.InfoBar and OneWoW_Bags.InfoBar.Reset then
-        OneWoW_Bags.InfoBar:Reset()
-    end
-
-    if OneWoW_Bags.BagsBar and OneWoW_Bags.BagsBar.Reset then
-        OneWoW_Bags.BagsBar:Reset()
-    end
+    OneWoW_Bags.BagSet:ReleaseAll()
+    CategoryManager:ReleaseAllSections()
+    Settings:Reset()
+    InfoBar:Reset()
+    BagsBar:Reset()
 
     if MainWindow then
         MainWindow:Hide()
@@ -354,8 +331,7 @@ function GUI:ApplyTheme()
         end
     end
 
-    OneWoW_Bags.InfoBar:UpdateViewButtons()
-
+    InfoBar:UpdateViewButtons()
     self:RefreshLayout()
 end
 
@@ -368,21 +344,19 @@ local altIsDown = false
 altShowFrame:RegisterEvent("MODIFIER_STATE_CHANGED")
 altShowFrame:SetScript("OnEvent", function(self, event, key, down)
     if not MainWindow or not MainWindow:IsShown() then return end
-    local db = OneWoW_Bags.db
     if not db.global.altToShow then return end
 
     if key == "LALT" or key == "RALT" then
         local nowDown = down == 1
         if nowDown ~= altIsDown then
             altIsDown = nowDown
-            if OneWoW_Bags.BagSet then OneWoW_Bags.BagSet:UpdateAllSlots() end
+            BagSet:UpdateAllSlots()
             GUI:RefreshLayout()
         end
     end
 end)
 
 function GUI:IsAltShowActive()
-    local db = OneWoW_Bags.db
     if not db.global.altToShow then return false end
     return altIsDown
 end

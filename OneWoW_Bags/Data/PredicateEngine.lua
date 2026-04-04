@@ -5,7 +5,7 @@
 --   Layer 1 (BuildProps): enriches a bag slot into a flat property table
 --   Layer 2 (Compiler):   tokenizes + parses expressions into function(props)->bool
 --
--- Design decisions baked in:
+-- Design decisions:
 --   - Hybrid bind detection: API primary, tooltip fallback when isBound is nil
 --   - Strict soulbound: character-only; account-bound does NOT match #soulbound
 --   - ~ operator is string-contains ONLY; negation uses ! or "not"
@@ -26,14 +26,12 @@ local pcall = pcall
 local C_Item = C_Item
 local C_Container = C_Container
 local C_TooltipInfo = C_TooltipInfo
-local C_ToyBox = C_ToyBox
+local C_ToyBox, PlayerHasToy = C_ToyBox, PlayerHasToy
 local C_MountJournal = C_MountJournal
 local C_PetJournal = C_PetJournal
 local C_TransmogCollection = C_TransmogCollection
-local C_ItemUpgrade = C_ItemUpgrade
 local C_TradeSkillUI = C_TradeSkillUI
 local TooltipUtil = TooltipUtil
-local ItemLocation = ItemLocation
 local Enum = Enum
 
 -- ============================================================================
@@ -273,28 +271,39 @@ RegisterKeyword("wue",                function(p) return p.isWUE end)
 RegisterKeyword("warbounduntilequip", function(p) return p.isWUE end)
 
 -- ---- 7.3  Item class keywords ----
-RegisterKeyword("weapon",           function(p) return p.classID == Enum.ItemClass.Weapon end)
-RegisterKeyword("armor",            function(p) return p.classID == Enum.ItemClass.Armor end)
+-- Same order as found in Enum.ItemClass
 RegisterKeyword("consumable",       function(p) return p.classID == Enum.ItemClass.Consumable end)
-RegisterKeyword("reagent",          function(p) return p.classID == Enum.ItemClass.Reagent end)
-RegisterKeyword("tradegoods",       function(p) return p.classID == Enum.ItemClass.Tradegoods end)
-RegisterKeyword("tradegood",        function(p) return p.classID == Enum.ItemClass.Tradegoods end)
-RegisterKeyword("recipe",           function(p) return p.classID == Enum.ItemClass.Recipe end)
-RegisterKeyword("gem",              function(p) return p.classID == Enum.ItemClass.Gem end)
 RegisterKeyword("container",        function(p) return p.classID == Enum.ItemClass.Container end)
 RegisterKeyword("bag",              function(p) return p.classID == Enum.ItemClass.Container end)
-RegisterKeyword("key",              function(p) return p.classID == Enum.ItemClass.Key end)
-RegisterKeyword("misc",             function(p) return p.classID == Enum.ItemClass.Miscellaneous end)
-RegisterKeyword("miscellaneous",    function(p) return p.classID == Enum.ItemClass.Miscellaneous end)
-RegisterKeyword("tradeskill",       function(p) return p.classID == Enum.ItemClass.Profession end)
-RegisterKeyword("profession",       function(p) return p.classID == Enum.ItemClass.Profession end)
-RegisterKeyword("enhancement",      function(p) return p.classID == Enum.ItemClass.ItemEnhancement end)
+RegisterKeyword("weapon",           function(p) return p.classID == Enum.ItemClass.Weapon end)
+RegisterKeyword("gem",              function(p) return p.classID == Enum.ItemClass.Gem end)
+RegisterKeyword("armor",            function(p) return p.classID == Enum.ItemClass.Armor end)
+RegisterKeyword("reagent",          function(p) return p.classID == Enum.ItemClass.Reagent end)
+RegisterKeyword("projectile",       function(p) return p.classID == Enum.ItemClass.Projectile end)
+RegisterKeyword("tradegoods",       function(p) return p.classID == Enum.ItemClass.Tradegoods end)
+RegisterKeyword("tradegood",        function(p) return p.classID == Enum.ItemClass.Tradegoods end)
 RegisterKeyword("itemenhancement",  function(p) return p.classID == Enum.ItemClass.ItemEnhancement end)
-RegisterKeyword("housing",          function(p) return p.classID == Enum.ItemClass.Housing end)
+RegisterKeyword("enhancement",      function(p) return p.classID == Enum.ItemClass.ItemEnhancement end)
+RegisterKeyword("recipe",           function(p) return p.classID == Enum.ItemClass.Recipe end)
+-- CurrencyTokenObsolete (skipped)
+RegisterKeyword("quiver",           function(p) return p.classID == Enum.ItemClass.Quiver end)
 
 -- Quest items: classID OR C_Container quest info (populated in BuildProps)
 RegisterKeyword("quest",     function(p) return p.isQuestItem end)
 RegisterKeyword("questitem", function(p) return p.isQuestItem end)
+
+RegisterKeyword("key",              function(p) return p.classID == Enum.ItemClass.Key end)
+-- PermanentObsolete (skipped)
+RegisterKeyword("miscellaneous",    function(p) return p.classID == Enum.ItemClass.Miscellaneous end)
+RegisterKeyword("misc",             function(p) return p.classID == Enum.ItemClass.Miscellaneous end)
+RegisterKeyword("glyph",            function(p) return p.classID == Enum.ItemClass.Glyph end)
+-- Battlepet is handled in BuildProps
+RegisterKeyword("tradeskill",       function(p) return p.classID == Enum.ItemClass.Profession end)
+RegisterKeyword("profession",       function(p) return p.classID == Enum.ItemClass.Profession end)
+RegisterKeyword("wowtoken",         function(p) return p.classID == Enum.ItemClass.WoWToken end)
+RegisterKeyword("housing",          function(p) return p.classID == Enum.ItemClass.Housing end)
+
+
 
 -- ---- 7.4  Composite consumable keywords ----
 -- #potion includes potions, elixirs, and flasks
@@ -652,6 +661,12 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
             setID, apiCraftingReagent = C_Item.GetItemInfo(hyperlink)
     end
 
+    -- Synchronous fallback for uncached items
+    if not classID then
+        -- Always returns immediately for valid itemID, even when full item data hasn't been downloaded yet
+        _, _, _, itemEquipLoc, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
+    end
+
     props.nameRaw     = itemName or (C_Item.GetItemNameByID(itemID) or "")
     props.name        = strlower(props.nameRaw)
     props.quality     = itemQuality or itemInfo.quality or 0
@@ -727,7 +742,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isUnsellable = (props.vendorPrice == 0) or (containerInfo and containerInfo.hasNoValue == true)
 
     -- ---- Collection status (toy / mount / pet) ----
-    props.isToy = C_ToyBox.GetToyInfo(itemID) ~= nil or false
+    props.isToy = C_ToyBox.GetToyInfo(itemID) ~= nil
     
     props.isPet = (itemID == BATTLE_PET_CAGE_ID)
                or (props.classID == Enum.ItemClass.Battlepet)

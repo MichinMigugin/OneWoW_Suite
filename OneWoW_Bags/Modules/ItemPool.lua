@@ -3,6 +3,9 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local tinsert, tremove = tinsert, tremove
+local pairs = pairs
+
 OneWoW_Bags.ItemPool = {}
 local Pool = OneWoW_Bags.ItemPool
 

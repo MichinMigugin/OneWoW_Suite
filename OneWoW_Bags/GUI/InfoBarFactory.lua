@@ -3,6 +3,15 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local Constants = OneWoW_Bags.Constants
+local db = OneWoW_Bags.db
+local L = OneWoW_Bags.L
+local PE = OneWoW_Bags.PredicateEngine
+
+local floor = math.floor
+local ipairs, pairs = ipairs, pairs
+local tinsert, sort = tinsert, sort
+
 OneWoW_Bags.InfoBarFactory = {}
 
 function OneWoW_Bags.InfoBarFactory:Create(config)
@@ -18,7 +27,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
 
     local function RefreshTarget()
         local gui = GetGUI()
-        if gui and gui.RefreshLayout then gui:RefreshLayout() end
+        if gui then gui:RefreshLayout() end
     end
 
     function bar:CreateViewBtn(parent, label)
@@ -41,19 +50,16 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
     function bar:Create(parent)
         if infoBarFrame then return infoBarFrame end
 
-        local L = OneWoW_Bags.L
-        local C = OneWoW_Bags.Constants.GUI
-
         infoBarFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-        infoBarFrame:SetHeight(C.INFOBAR_HEIGHT)
+        infoBarFrame:SetHeight(Constants.GUI.INFOBAR_HEIGHT)
         infoBarFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
         infoBarFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
         infoBarFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
         infoBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         infoBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        local btnY   = -math.floor((ROW1_H - 22) / 2)
-        local searchY = -(ROW1_H + math.floor((ROW2_H - 22) / 2))
+        local btnY   = -floor((ROW1_H - 22) / 2)
+        local searchY = -(ROW1_H + floor((ROW2_H - 22) / 2))
 
         local prevBtn = nil
         infoBarFrame._viewButtons = {}
@@ -65,7 +71,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 btn:SetPoint("TOPLEFT", prevBtn, "TOPRIGHT", 3, 0)
             end
             btn:SetScript("OnClick", function()
-                OneWoW_Bags.db.global[config.viewModeDBKey] = vm.mode
+                db.global[config.viewModeDBKey] = vm.mode
                 bar:UpdateViewButtons()
                 RefreshTarget()
             end)
@@ -83,7 +89,6 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             OneWoW_GUI:AttachFilterMenu(expacDropdown, {
                 searchable = false,
                 buildItems = function()
-                    local PE = OneWoW_Bags.PredicateEngine
                     local BagSet = OneWoW_Bags[ef.bagSetKey]
                     local items = { { text = L["EXPAC_FILTER_ALL"], value = "ALL" } }
                     if not BagSet or not BagSet.isBuilt then return items end
@@ -139,14 +144,13 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         emptyIcon:SetAllPoints()
         emptyIcon:SetTexture("Interface\\COMMON\\FavoritesIcon")
         emptyToggleBtn:SetScript("OnClick", function()
-            local db = OneWoW_Bags.db.global
-            db.showEmptySlots = not db.showEmptySlots
+            db.global.showEmptySlots = not db.global.showEmptySlots
             bar:UpdateViewButtons()
             RefreshTarget()
         end)
         emptyToggleBtn:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            local showing = OneWoW_Bags.db.global.showEmptySlots
+            local showing = db.global.showEmptySlots
             if showing == nil then showing = true end
             if showing then
                 GameTooltip:SetText(L["EMPTY_SLOTS_HIDE"], 1, 1, 1)
@@ -164,7 +168,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             placeholderText = L["SEARCH_PLACEHOLDER"],
             onTextChanged = function(text)
                 local gui = GetGUI()
-                if gui and gui.OnSearchChanged then gui:OnSearchChanged(text) end
+                if gui then gui:OnSearchChanged(text) end
             end,
         })
         searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), searchY)
@@ -177,7 +181,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
 
     function bar:UpdateViewButtons()
         if not infoBarFrame then return end
-        local mode = OneWoW_Bags.db and OneWoW_Bags.db.global[config.viewModeDBKey] or config.viewModes[1].mode
+        local mode = db.global[config.viewModeDBKey] or config.viewModes[1].mode
 
         for _, entry in ipairs(infoBarFrame._viewButtons) do
             local btn = entry.btn
@@ -195,7 +199,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         end
 
         if infoBarFrame.emptyToggleBtn then
-            local showing = OneWoW_Bags.db and OneWoW_Bags.db.global.showEmptySlots
+            local showing = db.global.showEmptySlots
             if showing == nil then showing = true end
             infoBarFrame.emptyToggleBtn:SetAlpha(showing and 1.0 or 0.35)
             infoBarFrame.emptyToggleBtn:SetShown(mode == "list" or mode == "tab")
@@ -203,7 +207,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
 
         if config.expacFilter and infoBarFrame.expacDropdown then
             local ef = config.expacFilter
-            local showExpac = OneWoW_Bags.db and OneWoW_Bags.db.global[ef.settingKey] == true
+            local showExpac = db.global[ef.settingKey] == true
             infoBarFrame.expacDropdown:SetShown(showExpac == true)
             if not showExpac then
                 OneWoW_Bags[ef.filterKey] = nil
@@ -212,8 +216,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 if activeFilter == nil then
                     infoBarFrame.expacText:SetText(OneWoW_Bags.L["EXPAC_FILTER_BTN"])
                 else
-                    local PE = OneWoW_Bags.PredicateEngine
-                    local expName = PE and PE:GetExpansionName(activeFilter) or tostring(activeFilter)
+                    local expName = PE:GetExpansionName(activeFilter) or tostring(activeFilter)
                     infoBarFrame.expacText:SetText(expName)
                 end
             end

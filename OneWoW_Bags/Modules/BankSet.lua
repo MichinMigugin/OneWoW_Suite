@@ -3,9 +3,16 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-OneWoW_Bags.BankSet = {}
-local BankSet = OneWoW_Bags.BankSet
+local db = OneWoW_Bags.db
+local BankTypes = OneWoW_Bags.BankTypes
 
+local BankSet = OneWoW_Bags.BankSet
+local ItemPool = OneWoW_Bags.ItemPool
+
+local ipairs, pairs, tinsert = ipairs, pairs, tinsert
+local C_Bank, C_Container = C_Bank, C_Container
+
+OneWoW_Bags.BankSet = {}
 BankSet.slots = {}
 BankSet.totalSlots = 0
 BankSet.freeSlots = 0
@@ -24,12 +31,10 @@ local function GetOrCreateBankFrame(bagID)
 end
 
 function BankSet:IsWarband()
-    local db = OneWoW_Bags.db
     return db.global.bankShowWarband
 end
 
 function BankSet:GetActiveTabs()
-    local BankTypes = OneWoW_Bags.BankTypes
     if self:IsWarband() then
         return BankTypes.ALL_WARBAND_TABS
     else
@@ -38,8 +43,6 @@ function BankSet:GetActiveTabs()
 end
 
 function BankSet:Build()
-    local Pool = OneWoW_Bags.ItemPool
-
     self:ReleaseAll()
     self.totalSlots = 0
     self.freeSlots = 0
@@ -57,7 +60,7 @@ function BankSet:Build()
         if tabIdx <= numPurchased then
             local numSlots = C_Container.GetContainerNumSlots(bagID)
             for slotID = 1, numSlots do
-                local button = Pool:Acquire()
+                local button = ItemPool:Acquire()
                 button:SetParent(bagFrame)
                 OneWoW_Bags:ApplyItemButtonMixin(button)
                 button:OWB_SetSlot(bagID, slotID)
@@ -73,11 +76,10 @@ function BankSet:Build()
 end
 
 function BankSet:ReleaseAll()
-    local Pool = OneWoW_Bags.ItemPool
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do
             self:RestoreBankScripts(button)
-            Pool:Release(button)
+            ItemPool:Release(button)
         end
     end
     self.slots = {}
@@ -107,10 +109,9 @@ function BankSet:UpdateDirtyBags(dirtyBags)
 end
 
 function BankSet:RebuildBag(bagID, numSlots)
-    local Pool = OneWoW_Bags.ItemPool
     if self.slots[bagID] then
         for slotID, button in pairs(self.slots[bagID]) do
-            Pool:Release(button)
+            ItemPool:Release(button)
             self.totalSlots = self.totalSlots - 1
         end
     end
@@ -120,7 +121,7 @@ function BankSet:RebuildBag(bagID, numSlots)
 
     self.slots[bagID] = {}
     for slotID = 1, numSlots do
-        local button = Pool:Acquire()
+        local button = ItemPool:Acquire()
         button:SetParent(bagFrame)
         OneWoW_Bags:ApplyItemButtonMixin(button)
         button:OWB_SetSlot(bagID, slotID)

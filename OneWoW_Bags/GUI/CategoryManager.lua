@@ -5,13 +5,23 @@ if not OneWoW_GUI then return end
 
 local DB = OneWoW_GUI.DB
 
+local L = OneWoW_Bags.L
+local db = OneWoW_Bags.db
+
+local PE = OneWoW_Bags.PredicateEngine
+local Categories = OneWoW_Bags.Categories
+
+local random, max, floor, time = math.random, math.max, math.floor, time
+local pairs, ipairs = pairs, ipairs
+local tostring, tonumber, format = tostring, tonumber, format
+local tinsert, tremove, wipe = tinsert, tremove, wipe
+
 OneWoW_Bags.CategoryManagerUI = {}
 local CatMgrUI = OneWoW_Bags.CategoryManagerUI
 
 local managerFrame       = nil
 local dialogContentFrame = nil
 local leftScrollContent  = nil
-local rightTopArea       = nil
 local rightItemArea      = nil
 local rightItemScrollContent = nil
 local rightTopWrapper    = nil
@@ -97,16 +107,7 @@ local BAGANATOR_CAT_MAP = {
 -- ============================================================
 -- Helpers
 -- ============================================================
-
-local function GetDB()
-    local db = OneWoW_Bags.db
-    DB:Ensure(db, "global", "categorySections")
-    DB:Ensure(db, "global", "sectionOrder")
-    return db
-end
-
 local function EnsureDefaultSection()
-    local db = GetDB()
     local sections = db.global.categorySections
     local sectOrder = db.global.sectionOrder
 
@@ -126,7 +127,10 @@ local function EnsureDefaultSection()
 end
 
 local function ReleaseWrapper(w)
-    if w then w:Hide(); w:SetParent(UIParent) end
+    if w then
+        w:Hide()
+        w:SetParent(UIParent)
+    end
     return nil
 end
 
@@ -154,7 +158,6 @@ local function MakeSmallBtn(parent, label, onClick, active)
 end
 
 local function MoveItemToCategory(itemID, destCatID)
-    local db = GetDB()
     local customCats = db.global.customCategoriesV2
     for id, cat in pairs(customCats) do
         if id ~= destCatID and cat.items then cat.items[tostring(itemID)] = nil end
@@ -164,13 +167,13 @@ local function MoveItemToCategory(itemID, destCatID)
         if not dest.items then dest.items = {} end
         dest.items[tostring(itemID)] = true
     end
-    if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+    Categories:InvalidateCache()
     CatMgrUI:Refresh()
-    if OneWoW_Bags.GUI and OneWoW_Bags.GUI.RefreshLayout then OneWoW_Bags.GUI:RefreshLayout() end
+    if OneWoW_Bags.GUI then OneWoW_Bags.GUI:RefreshLayout() end
 end
 
 local function RefreshBagLayout()
-    if OneWoW_Bags.GUI and OneWoW_Bags.GUI.RefreshLayout then OneWoW_Bags.GUI:RefreshLayout() end
+    if OneWoW_Bags.GUI then OneWoW_Bags.GUI:RefreshLayout() end
 end
 
 -- ============================================================
@@ -179,18 +182,16 @@ end
 
 StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
     text = "", hasEditBox = true,
-    button1 = OneWoW_Bags.L["POPUP_CREATE"] or "Create",
-    button2 = OneWoW_Bags.L["POPUP_CANCEL"] or "Cancel",
+    button1 = L["POPUP_CREATE"],
+    button2 = L["POPUP_CANCEL"],
     OnShow = function(self)
-        self.Text:SetText(OneWoW_Bags.L["CATEGORY_CREATE_ENTER"])
+        self.Text:SetText(L["CATEGORY_CREATE_ENTER"])
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self)
         local name = self.EditBox:GetText()
         if name and name ~= "" then
-            local db = GetDB()
-            DB:Ensure(db, "global", "customCategoriesV2")
-            local id = "custom_" .. time() .. "_" .. math.random(1000, 9999)
+            local id = "custom_" .. time() .. "_" .. random(1000, 9999)
             local order = 1
             for _, c in pairs(db.global.customCategoriesV2) do
                 if c.sortOrder and c.sortOrder >= order then order = c.sortOrder + 1 end
@@ -212,18 +213,18 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
     text = "", hasEditBox = true,
-    button1 = OneWoW_Bags.L["POPUP_RENAME"] or "Rename",
-    button2 = OneWoW_Bags.L["POPUP_CANCEL"] or "Cancel",
+    button1 = L["POPUP_RENAME"] or "Rename",
+    button2 = L["POPUP_CANCEL"] or "Cancel",
     OnShow = function(self, data)
-        self.Text:SetText(OneWoW_Bags.L["CATEGORY_RENAME_ENTER"])
-        local cat = data and OneWoW_Bags.db.global.customCategoriesV2[data]
+        self.Text:SetText(L["CATEGORY_RENAME_ENTER"])
+        local cat = data and db.global.customCategoriesV2[data]
         if cat then self.EditBox:SetText(cat.name); self.EditBox:HighlightText() end
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self, data)
         local name = self.EditBox:GetText()
         if name and name ~= "" and data then
-            local cat = OneWoW_Bags.db.global.customCategoriesV2[data]
+            local cat = db.global.customCategoriesV2[data]
             if cat then
                 cat.name = name
                 if CatMgrUI.Refresh then CatMgrUI:Refresh() end
@@ -242,12 +243,12 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_DELETE_CATEGORY"] = {
     text = "",
-    button1 = OneWoW_Bags.L["POPUP_DELETE"] or "Delete",
-    button2 = OneWoW_Bags.L["POPUP_CANCEL"] or "Cancel",
-    OnShow = function(self) self.Text:SetText(OneWoW_Bags.L["CATEGORY_DELETE_CONFIRM"]) end,
+    button1 = L["POPUP_DELETE"],
+    button2 = L["POPUP_CANCEL"],
+    OnShow = function(self) self.Text:SetText(L["CATEGORY_DELETE_CONFIRM"]) end,
     OnAccept = function(self, data)
         if data then
-            OneWoW_Bags.db.global.customCategoriesV2[data] = nil
+            db.global.customCategoriesV2[data] = nil
             if selectedCatKey == data then selectedCatKey = nil end
             if CatMgrUI.Refresh then CatMgrUI:Refresh() end
             RefreshBagLayout()
@@ -258,17 +259,16 @@ StaticPopupDialogs["ONEWOW_BAGS_DELETE_CATEGORY"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
     text = "", hasEditBox = true,
-    button1 = OneWoW_Bags.L["POPUP_CREATE"] or "Create",
-    button2 = OneWoW_Bags.L["POPUP_CANCEL"] or "Cancel",
+    button1 = L["POPUP_CREATE"],
+    button2 = L["POPUP_CANCEL"],
     OnShow = function(self)
-        self.Text:SetText(OneWoW_Bags.L["SECTION_CREATE_ENTER"] or "Enter section name:")
+        self.Text:SetText(L["SECTION_CREATE_ENTER"] or "Enter section name:")
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self)
         local name = self.EditBox:GetText()
         if name and name ~= "" then
-            local db = GetDB()
-            local id = "sec_" .. time() .. "_" .. math.random(1000, 9999)
+            local id = "sec_" .. time() .. "_" .. random(1000, 9999)
             db.global.categorySections[id] = { name=name, categories={}, collapsed=false, showHeader=true }
             tinsert(db.global.sectionOrder, id)
             if db.global.displayOrder and #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
@@ -288,11 +288,10 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
     text = "", hasEditBox = true,
-    button1 = OneWoW_Bags.L["POPUP_RENAME"] or "Rename",
-    button2 = OneWoW_Bags.L["POPUP_CANCEL"] or "Cancel",
+    button1 = L["POPUP_RENAME"] or "Rename",
+    button2 = L["POPUP_CANCEL"] or "Cancel",
     OnShow = function(self, data)
-        self.Text:SetText(OneWoW_Bags.L["SECTION_RENAME_ENTER"] or "Enter new section name:")
-        local db = GetDB()
+        self.Text:SetText(L["SECTION_RENAME_ENTER"] or "Enter new section name:")
         local sec = data and db.global.categorySections[data]
         if sec then self.EditBox:SetText(sec.name); self.EditBox:HighlightText() end
         self.EditBox:SetFocus()
@@ -300,7 +299,7 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
     OnAccept = function(self, data)
         local name = self.EditBox:GetText()
         if name and name ~= "" and data then
-            local sec = GetDB().global.categorySections[data]
+            local sec = db.global.categorySections[data]
             if sec then
                 sec.name = name
                 if CatMgrUI.Refresh then CatMgrUI:Refresh() end
@@ -319,19 +318,18 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_DELETE_SECTION"] = {
     text = "",
-    button1 = OneWoW_Bags.L["POPUP_DELETE"] or "Delete",
-    button2 = OneWoW_Bags.L["POPUP_CANCEL"] or "Cancel",
-    OnShow = function(self) self.Text:SetText(OneWoW_Bags.L["SECTION_DELETE_CONFIRM"] or "Delete this section? Categories will remain ungrouped.") end,
+    button1 = L["POPUP_DELETE"],
+    button2 = L["POPUP_CANCEL"],
+    OnShow = function(self) self.Text:SetText(L["SECTION_DELETE_CONFIRM"]) end,
     OnAccept = function(self, data)
         if data then
-            local db = GetDB()
             db.global.categorySections[data] = nil
             for i, sid in ipairs(db.global.sectionOrder) do
                 if sid == data then tremove(db.global.sectionOrder, i); break end
             end
-            if db.global.displayOrder and #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
+            if #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
             if selectedCatKey == ("section:" .. data) then selectedCatKey = nil end
-            if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+            Categories:InvalidateCache()
             if CatMgrUI.Refresh then CatMgrUI:Refresh() end
             RefreshBagLayout()
         end
@@ -345,8 +343,6 @@ StaticPopupDialogs["ONEWOW_BAGS_DELETE_SECTION"] = {
 
 local function ImportFromBaganator()
     if not _G.BAGANATOR_CONFIG then return 0, 0 end
-    local db = GetDB()
-    DB:Ensure(db, "global", "customCategoriesV2")
 
     local importedCats = 0
     local importedSecs = 0
@@ -370,7 +366,7 @@ local function ImportFromBaganator()
                     if ex.name == name then exists = true; break end
                 end
                 if not exists then
-                    local newID = "custom_" .. time() .. "_" .. math.random(1000, 9999)
+                    local newID = "custom_" .. time() .. "_" .. random(1000, 9999)
                     local items = {}
                     if catData.items then
                         if catData.items[1] ~= nil then
@@ -417,7 +413,7 @@ local function ImportFromBaganator()
                     if sec.name == secName then exists = true; break end
                 end
                 if not exists then
-                    local newID = "sec_" .. time() .. "_" .. math.random(1000, 9999)
+                    local newID = "sec_" .. time() .. "_" .. random(1000, 9999)
                     db.global.categorySections[newID] = { name=secName, categories={}, collapsed=false }
                     tinsert(db.global.sectionOrder, newID)
                     sectionIDMap[bagIdx] = newID
@@ -477,8 +473,8 @@ local function MakeEditBoxWithSave(parent, opts, getValue, setValue)
         local val = self.GetSearchText and self:GetSearchText() or self:GetText()
         if val == self.placeholderText then val = "" end
         setValue((val ~= "") and val or nil)
-        if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
-        if OneWoW_Bags.PredicateEngine then OneWoW_Bags.PredicateEngine:InvalidateCache() end
+        Categories:InvalidateCache()
+        PE:InvalidateCache()
         RefreshBagLayout()
     end
     box:SetScript("OnEnterPressed", function(self) Save(self); self:ClearFocus() end)
@@ -515,9 +511,6 @@ function CatMgrUI:RefreshRight()
     rightTopWrapper  = ReleaseWrapper(rightTopWrapper)
     rightItemWrapper = ReleaseWrapper(rightItemWrapper)
     if not rightItemArea then return end
-
-    local L = OneWoW_Bags.L
-    local db = GetDB()
 
     if not selectedCatKey then
         rightTopWrapper = CreateFrame("Frame", nil, rightItemScrollContent)
@@ -625,9 +618,9 @@ function CatMgrUI:RefreshRight()
                     end
                     memberSet[captCat] = nil
                 end
-                local ddb = GetDB()
-                if ddb.global.displayOrder and #ddb.global.displayOrder > 0 then wipe(ddb.global.displayOrder) end
-                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+
+                if #db.global.displayOrder > 0 then wipe(db.global.displayOrder) end
+                Categories:InvalidateCache()
                 CatMgrUI:RefreshLeft()
                 RefreshBagLayout()
             end)
@@ -635,7 +628,7 @@ function CatMgrUI:RefreshRight()
             checkY = checkY - 24
         end
 
-        local totalH = math.max(math.abs(checkY) + 4, 100)
+        local totalH = max(abs(checkY) + 4, 100)
         rightTopWrapper:SetHeight(totalH)
         rightItemScrollContent:SetHeight(totalH)
         return
@@ -662,11 +655,11 @@ function CatMgrUI:RefreshRight()
     local catMod = DB:Ensure(db, "global", "categoryModifications", catName)
 
     local SORT_OPTIONS = { "none", "default", "name", "rarity", "ilvl", "type", "expansion" }
-    local SORT_LABELS = { L["SORT_OFF"], L["SORT_DEFAULT"], L["SORT_NAME"], L["SORT_RARITY"], L["SORT_ITEM_LEVEL"], L["SORT_TYPE"], L["SORT_EXPANSION"] or "Expansion" }
+    local SORT_LABELS = { L["SORT_OFF"], L["SORT_DEFAULT"], L["SORT_NAME"], L["SORT_RARITY"], L["SORT_ITEM_LEVEL"], L["SORT_TYPE"], L["SORT_EXPANSION"] }
     local GROUP_OPTIONS = { "none", "expansion", "type", "slot", "quality" }
-    local GROUP_LABELS = { L["GROUP_NONE"] or "None", L["GROUP_EXPANSION"] or "Expansion", L["GROUP_TYPE"] or "Type", L["GROUP_SLOT"] or "Slot", L["GROUP_QUALITY"] or "Quality" }
+    local GROUP_LABELS = { L["GROUP_NONE"], L["GROUP_EXPANSION"], L["GROUP_TYPE"], L["GROUP_SLOT"], L["GROUP_QUALITY"] }
     local PRIORITY_OPTIONS = { -2, -1, 0, 1, 2, 3 }
-    local PRIORITY_LABELS = { L["PRIORITY_LOWEST"] or "Lowest", L["PRIORITY_LOW"] or "Low", L["PRIORITY_NORMAL"] or "Normal", L["PRIORITY_HIGH"] or "High", L["PRIORITY_HIGHEST"] or "Highest", "Max" }
+    local PRIORITY_LABELS = { L["PRIORITY_LOWEST"], L["PRIORITY_LOW"], L["PRIORITY_NORMAL"], L["PRIORITY_HIGH"], L["PRIORITY_HIGHEST"], L["PRIORITY_MAX"] }
 
     rightTopWrapper = CreateFrame("Frame", nil, rightItemScrollContent)
     rightTopWrapper:SetPoint("TOPLEFT", rightItemScrollContent, "TOPLEFT", 0, 0)
@@ -690,11 +683,11 @@ function CatMgrUI:RefreshRight()
     local typeLabel = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     typeLabel:SetPoint("LEFT", header, "RIGHT", 8, 0)
     if isBuiltin then
-        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_BUILTIN"] or "Built-in") .. "]")
+        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_BUILTIN"]) .. "]")
     elseif catData and catData.isTSM then
-        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_TSM"] or "TSM") .. "]")
+        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_TSM"]) .. "]")
     else
-        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_CUSTOM"] or "Custom") .. "]")
+        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_CUSTOM"]) .. "]")
     end
     typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
@@ -720,15 +713,14 @@ function CatMgrUI:RefreshRight()
     yPos = yPos - 8
 
     if isBuiltin then
-        local Categories = OneWoW_Bags.Categories
-        local descText = Categories and Categories.GetCategoryDescription and Categories:GetCategoryDescription(catName)
+        local descText = Categories:GetCategoryDescription(catName)
         if descText then
             local ruleLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             ruleLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
             ruleLbl:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -10, yPos)
             ruleLbl:SetJustifyH("LEFT")
             ruleLbl:SetWordWrap(true)
-            ruleLbl:SetText((L["CATEGORY_RULE"] or "Rule:") .. " " .. descText)
+            ruleLbl:SetText((L["CATEGORY_RULE"]) .. " " .. descText)
             ruleLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             yPos = yPos - ruleLbl:GetStringHeight() - 6
         end
@@ -809,17 +801,17 @@ function CatMgrUI:RefreshRight()
             andB:SetScript("OnClick", function()
                 catData.typeMatchMode = "and"
                 StyleToggleBtn(andB, true); StyleToggleBtn(orB, false)
-                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+                Categories:InvalidateCache()
                 RefreshBagLayout()
             end)
             orB:SetScript("OnClick", function()
                 catData.typeMatchMode = "or"
                 StyleToggleBtn(andB, false); StyleToggleBtn(orB, true)
-                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+                Categories:InvalidateCache()
                 RefreshBagLayout()
             end)
             fY = fY - 26
-            return math.abs(fY)
+            return abs(fY)
         end
 
         local function BuildSearchFilter(parent)
@@ -829,12 +821,12 @@ function CatMgrUI:RefreshRight()
             desc:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, fY)
             desc:SetJustifyH("LEFT")
             desc:SetWordWrap(true)
-            desc:SetText("Use search keywords with operators to match items automatically.")
+            desc:SetText(L["SEARCH_HELP_DESC"])
             desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             fY = fY - desc:GetStringHeight() - 6
 
             local sBox = MakeEditBoxWithSave(parent,
-                { width=200, height=22, placeholderText = "#battlepet&!#collected" },
+                { width=200, height=22, placeholderText = L["SEARCH_HELP_PLACEHOLDER"] },
                 function() return catData.searchExpression end,
                 function(v) catData.searchExpression = v end)
             sBox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
@@ -842,11 +834,11 @@ function CatMgrUI:RefreshRight()
             fY = fY - 28
 
             local helpLines = {
-                L["SEARCH_HELP_KEYWORDS"] or "",
-                L["SEARCH_HELP_QUALITY"] or "",
-                L["SEARCH_HELP_OPERATORS"] or "",
-                L["SEARCH_HELP_ILVL"] or "",
-                L["SEARCH_HELP_EXAMPLE"] or "",
+                L["SEARCH_HELP_KEYWORDS"],
+                L["SEARCH_HELP_QUALITY"],
+                L["SEARCH_HELP_OPERATORS"],
+                L["SEARCH_HELP_ILVL"],
+                L["SEARCH_HELP_EXAMPLE"],
             }
             for _, line in ipairs(helpLines) do
                 if line ~= "" then
@@ -860,7 +852,7 @@ function CatMgrUI:RefreshRight()
                     fY = fY - hl:GetStringHeight() - 2
                 end
             end
-            return math.abs(fY)
+            return abs(fY)
         end
 
         local filterH = 0
@@ -876,7 +868,7 @@ function CatMgrUI:RefreshRight()
                 filterH = BuildSearchFilter(filterContent)
             end
             filterContent:SetHeight(filterH)
-            if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+            Categories:InvalidateCache()
         end
         typeFilterBtn:SetScript("OnClick", function() ShowFilter("type"); CatMgrUI:RefreshRight() end)
         advFilterBtn:SetScript("OnClick", function() ShowFilter("search"); CatMgrUI:RefreshRight() end)
@@ -893,7 +885,7 @@ function CatMgrUI:RefreshRight()
 
     local sortLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sortLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
-    sortLbl:SetText(L["CAT_SORT"] or "Sort")
+    sortLbl:SetText(L["CAT_SORT"])
     sortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     local currentSort = catMod.sortMode or "none"
     local sortIdx = 1
@@ -909,7 +901,7 @@ function CatMgrUI:RefreshRight()
 
     local groupLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     groupLbl:SetPoint("LEFT", sortBtn, "RIGHT", 16, 0)
-    groupLbl:SetText(L["GROUP_BY"] or "Group By")
+    groupLbl:SetText(L["GROUP_BY"])
     groupLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     local currentGroup = catMod.groupBy or "none"
     local groupIdx = 1
@@ -926,7 +918,7 @@ function CatMgrUI:RefreshRight()
 
     local prioLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     prioLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
-    prioLbl:SetText(L["PRIORITY"] or "Priority")
+    prioLbl:SetText(L["PRIORITY"])
     prioLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     local currentPrio = catMod.priority or 0
     local prioIdx = 3
@@ -937,19 +929,19 @@ function CatMgrUI:RefreshRight()
         prioIdx = (prioIdx % #PRIORITY_OPTIONS) + 1
         prioBtn.text:SetText(PRIORITY_LABELS[prioIdx])
         db.global.categoryModifications[capCatName].priority = PRIORITY_OPTIONS[prioIdx]
-        if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+        Categories:InvalidateCache()
         RefreshBagLayout()
     end)
 
     local colorLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     colorLbl:SetPoint("LEFT", prioBtn, "RIGHT", 16, 0)
-    colorLbl:SetText(L["COLOR"] or "Color")
+    colorLbl:SetText(L["COLOR"])
     colorLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local colorSwatch = CreateFrame("Button", nil, rightTopWrapper, "BackdropTemplate")
     colorSwatch:SetSize(20, 20)
     colorSwatch:SetPoint("LEFT", colorLbl, "RIGHT", 6, 0)
-    colorSwatch:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
+    colorSwatch:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     colorSwatch:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     if catMod.color then
         local cr = tonumber(catMod.color:sub(1,2), 16) / 255
@@ -970,7 +962,7 @@ function CatMgrUI:RefreshRight()
         info.r, info.g, info.b = r, g, b
         info.swatchFunc = function()
             local nr, ng, nb = ColorPickerFrame:GetColorRGB()
-            local hex = string.format("%02X%02X%02X", math.floor(nr*255+0.5), math.floor(ng*255+0.5), math.floor(nb*255+0.5))
+            local hex = format("%02X%02X%02X", floor(nr*255+0.5), floor(ng*255+0.5), floor(nb*255+0.5))
             db.global.categoryModifications[capCatName].color = hex
             colorSwatch:SetBackdropColor(nr, ng, nb, 1.0)
             CatMgrUI:RefreshLeft()
@@ -985,7 +977,7 @@ function CatMgrUI:RefreshRight()
         ColorPickerFrame:SetupColorPickerAndShow(info)
     end)
 
-    local clearColorBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["COLOR_CLEAR"] or "Clear", height = 20 })
+    local clearColorBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["COLOR_CLEAR"], height = 20 })
     clearColorBtn:SetPoint("LEFT", colorSwatch, "RIGHT", 4, 0)
     clearColorBtn:SetScript("OnClick", function()
         db.global.categoryModifications[capCatName].color = nil
@@ -997,14 +989,14 @@ function CatMgrUI:RefreshRight()
 
     local hideLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hideLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
-    hideLbl:SetText(L["HIDE_IN"] or "Hide In")
+    hideLbl:SetText(L["HIDE_IN"])
     hideLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     if not catMod.hideIn then catMod.hideIn = {} end
     local hideContainers = {
-        { key = "backpack", label = L["HIDE_BACKPACK"] or "Backpack" },
-        { key = "character_bank", label = L["HIDE_CHAR_BANK"] or "Character Bank" },
-        { key = "warband_bank", label = L["HIDE_WARBAND_BANK"] or "Warband Bank" },
+        { key = "backpack", label = L["HIDE_BACKPACK"] },
+        { key = "character_bank", label = L["HIDE_CHAR_BANK"] },
+        { key = "warband_bank", label = L["HIDE_WARBAND_BANK"] },
     }
     local hideX = 60
     for _, hc in ipairs(hideContainers) do
@@ -1035,7 +1027,7 @@ function CatMgrUI:RefreshRight()
 
     local addItemsLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     addItemsLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
-    addItemsLbl:SetText(L["ADDED_ITEMS"] or "Added Items")
+    addItemsLbl:SetText(L["ADDED_ITEMS"])
     addItemsLbl:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yPos = yPos - 16
 
@@ -1044,7 +1036,7 @@ function CatMgrUI:RefreshRight()
     addDescLbl:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -10, yPos)
     addDescLbl:SetJustifyH("LEFT")
     addDescLbl:SetWordWrap(true)
-    addDescLbl:SetText(L["ADDED_ITEMS_DESC"] or "Items manually assigned override normal classification.")
+    addDescLbl:SetText(L["ADDED_ITEMS_DESC"])
     addDescLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     yPos = yPos - addDescLbl:GetStringHeight() - 6
 
@@ -1052,7 +1044,7 @@ function CatMgrUI:RefreshRight()
     dropZone:SetHeight(28)
     dropZone:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
     dropZone:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
-    dropZone:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
+    dropZone:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     dropZone:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     dropZone:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     dropZone:EnableMouse(true)
@@ -1080,9 +1072,7 @@ function CatMgrUI:RefreshRight()
             if isCustom and capturedID then
                 MoveItemToCategory(itemID, capturedID)
             elseif isBuiltin then
-                if OneWoW_Bags.Categories then
-                    OneWoW_Bags.Categories:AddItemToBuiltinCategory(capCatName, itemID)
-                end
+                Categories:AddItemToBuiltinCategory(capCatName, itemID)
                 CatMgrUI:Refresh()
                 RefreshBagLayout()
             end
@@ -1110,9 +1100,7 @@ function CatMgrUI:RefreshRight()
                 if isCustom and capturedID then
                     MoveItemToCategory(id, capturedID)
                 elseif isBuiltin then
-                    if OneWoW_Bags.Categories then
-                        OneWoW_Bags.Categories:AddItemToBuiltinCategory(capCatName, id)
-                    end
+                    Categories:AddItemToBuiltinCategory(capCatName, id)
                 end
                 added = added + 1
             end
@@ -1143,7 +1131,7 @@ function CatMgrUI:RefreshRight()
     if #allItems == 0 then
         local emptyLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         emptyLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 8, yPos - 8)
-        emptyLbl:SetText(L["ADDED_ITEMS_NONE"] or "No items manually added.")
+        emptyLbl:SetText(L["ADDED_ITEMS_NONE"])
         emptyLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         yPos = yPos - 28
     else
@@ -1153,7 +1141,7 @@ function CatMgrUI:RefreshRight()
             row:SetHeight(26)
             row:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 0, yPos)
             row:SetPoint("RIGHT", rightTopWrapper, "RIGHT", 0, 0)
-            row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
+            row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
@@ -1179,11 +1167,9 @@ function CatMgrUI:RefreshRight()
                     local cat = db.global.customCategoriesV2[capturedID]
                     if cat and cat.items then cat.items[tostring(captItemID)] = nil end
                 else
-                    if OneWoW_Bags.Categories then
-                        OneWoW_Bags.Categories:RemoveItemFromBuiltinCategory(capCatName, captItemID)
-                    end
+                    Categories:RemoveItemFromBuiltinCategory(capCatName, captItemID)
                 end
-                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+                Categories:InvalidateCache()
                 CatMgrUI:Refresh()
                 RefreshBagLayout()
             end)
@@ -1191,7 +1177,7 @@ function CatMgrUI:RefreshRight()
         end
     end
 
-    local totalH = math.max(math.abs(yPos) + 8, 100)
+    local totalH = max(abs(yPos) + 8, 100)
     rightTopWrapper:SetHeight(totalH)
     rightItemScrollContent:SetHeight(totalH)
 end
@@ -1204,8 +1190,6 @@ function CatMgrUI:RefreshLeft()
     leftWrapper = ReleaseWrapper(leftWrapper)
     if not leftScrollContent then return end
 
-    local L  = OneWoW_Bags.L
-    local db = GetDB()
     local disabled   = db.global.disabledCategories
     local sections   = db.global.categorySections
     local sectOrder  = db.global.sectionOrder
@@ -1268,7 +1252,7 @@ function CatMgrUI:RefreshLeft()
         row:SetHeight(28)
         row:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", indent, -yOffset)
         row:SetPoint("RIGHT",   leftWrapper, "RIGHT",   0, 0)
-        row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
+        row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
 
         if isSelected then
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
@@ -1353,7 +1337,7 @@ function CatMgrUI:RefreshLeft()
                 else
                     db.global.disabledCategories[capN] = true
                 end
-                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+                Categories:InvalidateCache()
                 CatMgrUI:Refresh(); RefreshBagLayout()
             end)
             local locKey   = BUILTIN_LOCALE_KEYS[catName]
@@ -1404,7 +1388,7 @@ function CatMgrUI:RefreshLeft()
             secRow:SetHeight(28)
             secRow:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", 0, -yOffset)
             secRow:SetPoint("RIGHT",   leftWrapper, "RIGHT",   0, 0)
-            secRow:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
+            secRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
 
             if isSelSec then
                 secRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
@@ -1488,7 +1472,7 @@ function CatMgrUI:RefreshLeft()
                         row:SetHeight(26)
                         row:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", 16, -yOffset)
                         row:SetPoint("RIGHT",   leftWrapper, "RIGHT",    0, 0)
-                        row:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
+                        row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
                         if isSelCat then
                             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -1533,7 +1517,7 @@ function CatMgrUI:RefreshLeft()
                             cb2:SetScript("OnClick", function(self)
                                 if self:GetChecked() then db.global.disabledCategories[capN2] = nil
                                 else db.global.disabledCategories[capN2] = true end
-                                if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
+                                Categories:InvalidateCache()
                                 CatMgrUI:Refresh(); RefreshBagLayout()
                             end)
                             nameX = 22
@@ -1559,8 +1543,8 @@ function CatMgrUI:RefreshLeft()
     end
 
     local totalH = yOffset + 4
-    leftWrapper:SetHeight(math.max(totalH, 40))
-    leftScrollContent:SetHeight(math.max(totalH, 40))
+    leftWrapper:SetHeight(max(totalH, 40))
+    leftScrollContent:SetHeight(max(totalH, 40))
 end
 
 -- ============================================================
@@ -1573,8 +1557,6 @@ function CatMgrUI:Refresh()
 end
 
 function CatMgrUI:Show()
-    local L = OneWoW_Bags.L
-
     EnsureDefaultSection()
 
     if managerFrame then
@@ -1609,7 +1591,7 @@ function CatMgrUI:Show()
     createBtn:SetPoint("LEFT", actionBar, "LEFT", 6, 0)
     createBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY") end)
 
-    local sectionBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["SECTION_CREATE"] or "New Section", height=24 })
+    local sectionBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["SECTION_CREATE"], height=24 })
     sectionBtn:SetPoint("LEFT", createBtn, "RIGHT", 6, 0)
     sectionBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_SECTION") end)
 
@@ -1619,10 +1601,8 @@ function CatMgrUI:Show()
         bagBtn:SetScript("OnClick", function()
             local cats, secs = ImportFromBaganator()
             if cats > 0 or secs > 0 then
-                if OneWoW_Bags.Categories then
-                    OneWoW_Bags.Categories:SetCustomCategories(OneWoW_Bags.db.global.customCategoriesV2)
-                    OneWoW_Bags.Categories:InvalidateCache()
-                end
+                Categories:SetCustomCategories(db.global.customCategoriesV2)
+                Categories:InvalidateCache()
                 CatMgrUI:Refresh()
                 RefreshBagLayout()
                 if secs > 0 then
@@ -1702,8 +1682,6 @@ function CatMgrUI:Show()
         bottomOuterInset = 0,
         rightOuterInset  = 0,
     })
-
-    rightTopArea = nil
 
     rightItemArea = CreateFrame("Frame", nil, rightPanel)
     rightItemArea:SetPoint("TOPLEFT",     rightPanel, "TOPLEFT",      8, -8)

@@ -1,5 +1,9 @@
 local _, OneWoW_Bags = ...
 
+local db = OneWoW_Bags.db
+
+local C_Container = C_Container
+
 OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
     guiTargetKey = "BankGUI",
     viewModeDBKey = "bankViewMode",
@@ -16,7 +20,6 @@ OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
     },
     cleanupCallback = function()
         if not OneWoW_Bags.bankOpen then return end
-        local db = OneWoW_Bags.db
         local showWarband = db.global.bankShowWarband
         if showWarband then
             C_Container.SortBank(Enum.BankType.Account)

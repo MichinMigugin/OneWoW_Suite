@@ -5,6 +5,13 @@ if not OneWoW_GUI then return end
 
 local DB = OneWoW_GUI.DB
 
+local Constants = OneWoW_Bags.Constants
+local db = OneWoW_Bags.db
+local PE = OneWoW_Bags.PredicateEngine
+
+local tinsert = tinsert
+local ipairs = ipairs
+
 OneWoW_Bags.WindowHelpers = {}
 local WH = OneWoW_Bags.WindowHelpers
 
@@ -12,9 +19,6 @@ function WH:FilterBySearch(buttons, searchText)
     if not searchText or searchText == "" then
         return buttons
     end
-
-    local PE = OneWoW_Bags.PredicateEngine
-    if not PE then return buttons end
 
     local filtered = {}
     for _, button in ipairs(buttons) do
@@ -33,7 +37,6 @@ function WH:FilterByExpansion(buttons, expacFilter)
         return buttons
     end
 
-    local PE = OneWoW_Bags.PredicateEngine
     local filtered = {}
     for _, button in ipairs(buttons) do
         if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
@@ -59,8 +62,6 @@ function WH:FilterByTab(buttons, selectedTab)
 end
 
 function WH:GetLayoutMetrics(columnsDBKey, defaultCols)
-    local db = OneWoW_Bags.db
-    local Constants = OneWoW_Bags.Constants
     local cols = db.global[columnsDBKey] or defaultCols
     local iconSize = Constants.ICON_SIZES[db.global.iconSize or 3] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
@@ -83,9 +84,9 @@ function WH:SetupResizeButton(mainWindow, gui, positionDBKey)
     end)
     resizeBtn:SetScript("OnMouseUp", function(self)
         mainWindow:StopMovingOrSizing()
-        local pos = DB:Ensure(OneWoW_Bags.db, "global", positionDBKey)
+        local pos = DB:Ensure(db, "global", positionDBKey)
         OneWoW_GUI:SaveWindowPosition(mainWindow, pos)
-        if gui.RefreshLayout then gui:RefreshLayout() end
+        gui:RefreshLayout()
     end)
     return resizeBtn
 end
@@ -102,7 +103,7 @@ function WH:RegisterSpecialFrame(globalName, mainWindow)
 end
 
 function WH:SaveAndRestorePosition(mainWindow, positionDBKey)
-    local pos = DB:Ensure(OneWoW_Bags.db, "global", positionDBKey)
+    local pos = DB:Ensure(db, "global", positionDBKey)
     if not OneWoW_GUI:RestoreWindowPosition(mainWindow, pos) then
         mainWindow:SetPoint("CENTER")
     end

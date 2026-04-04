@@ -3,6 +3,8 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local tinsert, tremove = tinsert, tremove
+
 OneWoW_Bags.CategoryManagerBase = {}
 
 function OneWoW_Bags.CategoryManagerBase:Create(refreshTargetKey)
@@ -50,11 +52,7 @@ function OneWoW_Bags.CategoryManagerBase:Create(refreshTargetKey)
 
     function cm:CreateSection(parent)
         local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-        section:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
+        section:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
         section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 

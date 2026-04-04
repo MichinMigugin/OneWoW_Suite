@@ -4,6 +4,23 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local DB = OneWoW_GUI.DB
+local StorageAPI = _G.StorageAPI
+
+local Constants = OneWoW_Bags.Constants
+local db = OneWoW_Bags.db
+local L = OneWoW_Bags.L
+local BagTypes = OneWoW_Bags.BagTypes
+local InfoBar = OneWoW_Bags.InfoBar
+
+
+local tinsert, tremove, sort = tinsert, tremove, sort
+local tonumber = tonumber
+local pairs, ipairs = pairs, ipairs
+local min, max = math.min, math.max
+local C_Timer = C_Timer
+local C_Item = C_Item
+local C_CurrencyInfo = C_CurrencyInfo
+local C_Container = C_Container
 
 OneWoW_Bags.BagsBar = {}
 local BagsBar = OneWoW_Bags.BagsBar
@@ -19,16 +36,10 @@ local ROW1_TRACKER_MAX = 3
 local MAX_ALT_DISPLAY = 10
 
 local function ShowTrackerDialog()
-    local L = OneWoW_Bags.L
-
     if not trackerDialog then
         local function doAdd()
             local id = tonumber(trackerDialog.editBox:GetText())
             if id and id > 0 then
-                local db = OneWoW_Bags.db
-                if not db.global.trackedCurrencies then
-                    db.global.trackedCurrencies = {}
-                end
                 local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
                 local trackType = "item"
                 if currencyInfo and currencyInfo.name and currencyInfo.name ~= "" then
@@ -91,12 +102,8 @@ end
 function BagsBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
 
-    local Constants = OneWoW_Bags.Constants
-    local L = OneWoW_Bags.L
-    local C = Constants.GUI
-
     bagsBarFrame = CreateFrame("Frame", "OneWoW_BagsBar", parent, "BackdropTemplate")
-    bagsBarFrame:SetHeight(C.BAGSBAR_HEIGHT)
+    bagsBarFrame:SetHeight(Constants.GUI.BAGSBAR_HEIGHT)
     bagsBarFrame:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
     bagsBarFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
     bagsBarFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
@@ -121,7 +128,6 @@ function BagsBar:Create(parent)
     bagsBarFrame.row2Frame = row2Frame
 
     -- Bag icon buttons (row 1, left)
-    local BagTypes = OneWoW_Bags.BagTypes
     local xOffset = OneWoW_GUI:GetSpacing("SM")
 
     for i = 0, 4 do
@@ -162,8 +168,8 @@ function BagsBar:Create(parent)
     end)
     addTrackerBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(OneWoW_Bags.L["TRACKER_ADD"], 1, 1, 1)
-        GameTooltip:AddLine(OneWoW_Bags.L["TRACKER_ADD_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["TRACKER_ADD"], 1, 1, 1)
+        GameTooltip:AddLine(L["TRACKER_ADD_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addTrackerBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -171,8 +177,6 @@ function BagsBar:Create(parent)
     addTrackerBtn:SetScript("OnReceiveDrag", function(self)
         local cursorType, itemID = GetCursorInfo()
         if cursorType == "item" and itemID then
-            local db = OneWoW_Bags.db
-            DB:Ensure(db, "global", "trackedCurrencies")
             tinsert(db.global.trackedCurrencies, { type = "item", id = itemID })
             ClearCursor()
             BagsBar:UpdateTrackers()
@@ -189,7 +193,7 @@ function BagsBar:Create(parent)
     goldText:SetText(OneWoW_GUI:FormatGold(GetMoney()))
     bagsBarFrame.goldText = goldText
 
-    goldBtn:SetWidth(math.max(goldText:GetStringWidth() + 4, 60))
+    goldBtn:SetWidth(max(goldText:GetStringWidth() + 4, 60))
     goldBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         BagsBar:ShowGoldTooltip()
@@ -207,7 +211,7 @@ function BagsBar:Create(parent)
         if event == "PLAYER_MONEY" and bagsBarFrame and bagsBarFrame.goldText then
             bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(GetMoney()))
             if bagsBarFrame.goldBtn then
-                bagsBarFrame.goldBtn:SetWidth(math.max(bagsBarFrame.goldText:GetStringWidth() + 4, 60))
+                bagsBarFrame.goldBtn:SetWidth(max(bagsBarFrame.goldText:GetStringWidth() + 4, 60))
             end
         end
     end)
@@ -216,7 +220,6 @@ function BagsBar:Create(parent)
 end
 
 function BagsBar:ShowGoldTooltip()
-    local L = OneWoW_Bags.L
     local personalCopper = GetMoney()
 
     if not _G.OneWoW_AltTracker_Character_API then
@@ -229,7 +232,7 @@ function BagsBar:ShowGoldTooltip()
 
     local allChars = OneWoW_AltTracker_Character_API.GetAllCharacters()
     local currentKey = OneWoW_AltTracker_Character_API.GetCurrentCharacterKey()
-    local warbandGold = (_G.StorageAPI and _G.StorageAPI.GetWarbandBankGold) and _G.StorageAPI.GetWarbandBankGold() or 0
+    local warbandGold = (StorageAPI and StorageAPI.GetWarbandBankGold) and StorageAPI.GetWarbandBankGold() or 0
 
     local altList = {}
     local totalGold = 0
@@ -253,7 +256,7 @@ function BagsBar:ShowGoldTooltip()
         GameTooltip:AddLine(L["GOLD_TOOLTIP_WARBAND"] .. " - " .. OneWoW_GUI:FormatGold(warbandGold), 0.6, 0.8, 1)
     end
 
-    local displayCount = math.min(#altList, MAX_ALT_DISPLAY)
+    local displayCount = min(#altList, MAX_ALT_DISPLAY)
     local othersCount = #altList - displayCount
     local othersGold = 0
 
@@ -271,9 +274,6 @@ function BagsBar:ShowGoldTooltip()
 end
 
 function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
-    local L = OneWoW_Bags.L
-    local db = OneWoW_Bags.db
-
     local tf = CreateFrame("Button", nil, parentFrame)
     tf:SetSize(65, 22)
 
@@ -358,13 +358,6 @@ end
 function BagsBar:UpdateTrackers()
     if not bagsBarFrame then return end
 
-    local db = OneWoW_Bags.db
-    local C = OneWoW_Bags.Constants.GUI
-
-    if not db.global.trackedCurrencies then
-        db.global.trackedCurrencies = {}
-    end
-
     for _, tf in ipairs(bagsBarFrame.trackerFrames) do
         tf:Hide()
         tf:ClearAllPoints()
@@ -378,12 +371,12 @@ function BagsBar:UpdateTrackers()
 
     local needExtraRow = count > ROW1_TRACKER_MAX
     if needExtraRow then
-        bagsBarFrame:SetHeight(C.BAGSBAR_HEIGHT + ROW2_HEIGHT)
+        bagsBarFrame:SetHeight(Constants.GUI.BAGSBAR_HEIGHT + ROW2_HEIGHT)
     else
-        bagsBarFrame:SetHeight(C.BAGSBAR_HEIGHT)
+        bagsBarFrame:SetHeight(Constants.GUI.BAGSBAR_HEIGHT)
     end
 
-    local row2Count = math.min(count, ROW1_TRACKER_MAX)
+    local row2Count = min(count, ROW1_TRACKER_MAX)
     local anchorLeft = bagsBarFrame.addTrackerBtn
     for i = 1, row2Count do
         local tf = BagsBar:CreateTrackerFrame(row2Frame, i, trackers[i])
@@ -429,8 +422,6 @@ function BagsBar:UpdateTrackers()
 end
 
 function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
-    local L = OneWoW_Bags.L
-
     local iconTexture
     if bagIndex == 0 then
         iconTexture = "Interface\\Buttons\\Button-Backpack-Up"
@@ -458,7 +449,6 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
 
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        local db = OneWoW_Bags.db
         local selected = db.global.selectedBag
         if self.bagIndex == 0 then
             GameTooltip:SetText(BACKPACK_TOOLTIP or "Backpack")
@@ -478,28 +468,21 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     btn:SetScript("OnClick", function(self)
-        local db = OneWoW_Bags.db
-        if not db then return end
         if db.global.selectedBag == self.bagIndex then
             db.global.selectedBag = nil
         else
             db.global.selectedBag = self.bagIndex
             db.global.viewMode = "bag"
-            if OneWoW_Bags.InfoBar then
-                OneWoW_Bags.InfoBar:UpdateViewButtons()
-            end
+            InfoBar:UpdateViewButtons()
         end
         BagsBar:UpdateBagHighlights()
-        if OneWoW_Bags.GUI and OneWoW_Bags.GUI.RefreshLayout then
-            OneWoW_Bags.GUI:RefreshLayout()
-        end
+        OneWoW_Bags.GUI:RefreshLayout()
     end)
 
     return btn
 end
 
 function BagsBar:UpdateBagHighlights()
-    local db = OneWoW_Bags.db
     local selected = db.global.selectedBag
     for idx, btn in pairs(bagButtons) do
         if btn._skinBorder then
@@ -547,9 +530,8 @@ end
 
 function BagsBar:UpdateRowVisibility()
     if not bagsBarFrame then return end
-    local db = OneWoW_Bags.db
 
-    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
+    local altShow = OneWoW_Bags.GUI:IsAltShowActive()
     local showBags = db.global.showBagsBar ~= false
     local showMoney = db.global.showMoneyBar ~= false
     if altShow then showBags = true; showMoney = true end

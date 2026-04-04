@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
 OneWoW_Bags.BagTypes = {}
-
 local BagTypes = OneWoW_Bags.BagTypes
 
 BagTypes.BACKPACK = 0

@@ -4,9 +4,20 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local DB = OneWoW_GUI.DB
+local OneWoW = _G.OneWoW
+local UD = OneWoW and OneWoW.UpgradeDetection
+local ItemStatus = OneWoW and OneWoW.ItemStatus
+
+local PE = OneWoW_Bags.PredicateEngine
+local L = OneWoW_Bags.L
+local db = OneWoW_Bags.db
+
+local tinsert, sort, wipe = tinsert, sort, wipe
+local ipairs, pairs = ipairs, pairs
+local type, time, tostring = type, time, tostring
+local C_Item, C_NewItems = C_Item, C_NewItems
 
 OneWoW_Bags.Categories = {}
-
 local Categories = OneWoW_Bags.Categories
 
 local CATEGORY_DEFINITIONS = {
@@ -104,7 +115,6 @@ end
 local function IsItemUpgrade(bagID, slotID, itemID, hyperlink)
     if not itemID or not bagID or not slotID or not hyperlink then return false end
 
-    local UD = _G.OneWoW and _G.OneWoW.UpgradeDetection
     if UD then
         local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
         if itemLocation and C_Item.DoesItemExist(itemLocation) then
@@ -112,8 +122,6 @@ local function IsItemUpgrade(bagID, slotID, itemID, hyperlink)
         end
         return false
     end
-
-    if not C_Item or not C_Item.GetItemInventoryTypeByID then return false end
 
     local invType = C_Item.GetItemInventoryTypeByID(itemID)
     if not invType then return false end
@@ -130,7 +138,7 @@ local function IsItemUpgrade(bagID, slotID, itemID, hyperlink)
 
     local equippedLink = GetInventoryItemLink("player", equipSlot)
     if equippedLink then
-        local equippedIlvl = C_Item.GetDetailedItemLevelInfo and C_Item.GetDetailedItemLevelInfo(equippedLink)
+        local equippedIlvl = C_Item.GetDetailedItemLevelInfo(equippedLink)
         if equippedIlvl and ilvl > equippedIlvl then
             return true
         end
@@ -141,7 +149,7 @@ local function IsItemUpgrade(bagID, slotID, itemID, hyperlink)
     if equipSlot == 11 then
         local equippedLink2 = GetInventoryItemLink("player", 12)
         if equippedLink2 then
-            local equippedIlvl2 = C_Item.GetDetailedItemLevelInfo and C_Item.GetDetailedItemLevelInfo(equippedLink2)
+            local equippedIlvl2 = C_Item.GetDetailedItemLevelInfo(equippedLink2)
             if equippedIlvl2 and ilvl > equippedIlvl2 then return true end
         else
             return true
@@ -149,7 +157,7 @@ local function IsItemUpgrade(bagID, slotID, itemID, hyperlink)
     elseif equipSlot == 13 then
         local equippedLink2 = GetInventoryItemLink("player", 14)
         if equippedLink2 then
-            local equippedIlvl2 = C_Item.GetDetailedItemLevelInfo and C_Item.GetDetailedItemLevelInfo(equippedLink2)
+            local equippedIlvl2 = C_Item.GetDetailedItemLevelInfo(equippedLink2)
             if equippedIlvl2 and ilvl > equippedIlvl2 then return true end
         else
             return true
@@ -164,14 +172,12 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
 
     local itemID = itemInfo.itemID
     local hyperlink = itemInfo.hyperlink
-
-    local db = OneWoW_Bags.db
     local disabled = db.global.disabledCategories
 
     local junkCatEnabled = db.global.enableJunkCategory and not disabled["1W Junk"]
     if junkCatEnabled and itemID then
         local isJunk = false
-        if _G.OneWoW and _G.OneWoW.ItemStatus and _G.OneWoW.ItemStatus:IsItemJunk(itemID) then
+        if ItemStatus and ItemStatus:IsItemJunk(itemID) then
             isJunk = true
         end
         if not isJunk then
@@ -189,7 +195,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         end
     end
 
-    if itemID and hyperlink and _G.OneWoW then
+    if itemID and hyperlink and OneWoW then
         if db.global.enableUpgradeCategory and not disabled["1W Upgrades"] then
             if IsItemUpgrade(bagID, slotID, itemID, hyperlink) then
                 return "1W Upgrades"
@@ -231,7 +237,6 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         return "Other"
     end
 
-    local PE = OneWoW_Bags.PredicateEngine
     if not PE then
         if itemID then categoryCache[itemID] = "Other" end
         return "Other"
@@ -307,7 +312,7 @@ function Categories:SortCategories(categoryList, sortMode)
                 customOrderMap[catData.name] = catData.sortOrder
             end
         end
-        local catMods = OneWoW_Bags.db.global.categoryModifications
+        local catMods = db.global.categoryModifications
         sort(categoryList, function(a, b)
             local aName = type(a) == "table" and a.name or a
             local bName = type(b) == "table" and b.name or b
@@ -338,7 +343,7 @@ function Categories:SortCategories(categoryList, sortMode)
 end
 
 function Categories:IsItemRecent(bagID, slotID)
-    if C_NewItems and C_NewItems.IsNewItem and bagID and slotID then
+    if bagID and slotID then
         if C_NewItems.IsNewItem(bagID, slotID) then
             return true
         end
@@ -391,9 +396,7 @@ end
 
 function Categories:ClearRecentItems()
     wipe(recentItems)
-    if C_NewItems and C_NewItems.ClearAll then
-        C_NewItems.ClearAll()
-    end
+    C_NewItems.ClearAll()
 end
 
 function Categories:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
@@ -407,47 +410,41 @@ function Categories:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
             local fm = categoryData.filterMode
             if (fm == "search" or (not fm and categoryData.searchExpression and categoryData.searchExpression ~= "")) then
                 if categoryData.searchExpression and categoryData.searchExpression ~= "" then
-                    local PE = OneWoW_Bags.PredicateEngine
-                    if PE then
-                        if PE:CheckItem(categoryData.searchExpression, itemID, bagID, slotID, itemInfo or {}) then
-                            return categoryData.name, categoryId
-                        end
+                    if PE:CheckItem(categoryData.searchExpression, itemID, bagID, slotID, itemInfo or {}) then
+                        return categoryData.name, categoryId
                     end
                 end
             end
             local hasType = categoryData.itemType and categoryData.itemType ~= ""
             local hasSubType = categoryData.itemSubType and categoryData.itemSubType ~= ""
             if (fm == "type" or not fm) and (hasType or hasSubType) then
-                local PE = OneWoW_Bags.PredicateEngine
-                if PE then
-                    local props = PE:BuildProps(itemID, bagID, slotID, itemInfo or {})
-                    local classID = props.classID
-                    local subClassID = props.subClassID
-                    local typeMatch = not hasType
-                    local subTypeMatch = not hasSubType
-                    if hasType and classID ~= nil then
-                        local className = C_Item.GetItemClassInfo(classID)
-                        typeMatch = className ~= nil and className:lower() == categoryData.itemType:lower()
-                    end
-                    if hasSubType and classID ~= nil and subClassID ~= nil then
-                        local subClassName = C_Item.GetItemSubClassInfo(classID, subClassID)
-                        subTypeMatch = subClassName ~= nil and subClassName:lower() == categoryData.itemSubType:lower()
-                    end
-                    local matched
-                    if hasType and hasSubType then
-                        if categoryData.typeMatchMode == "or" then
-                            matched = typeMatch or subTypeMatch
-                        else
-                            matched = typeMatch and subTypeMatch
-                        end
-                    elseif hasType then
-                        matched = typeMatch
+                local props = PE:BuildProps(itemID, bagID, slotID, itemInfo)
+                local classID = props.classID
+                local subClassID = props.subClassID
+                local typeMatch = not hasType
+                local subTypeMatch = not hasSubType
+                if hasType and classID ~= nil then
+                    local className = C_Item.GetItemClassInfo(classID)
+                    typeMatch = className ~= nil and className:lower() == categoryData.itemType:lower()
+                end
+                if hasSubType and classID ~= nil and subClassID ~= nil then
+                    local subClassName = C_Item.GetItemSubClassInfo(classID, subClassID)
+                    subTypeMatch = subClassName ~= nil and subClassName:lower() == categoryData.itemSubType:lower()
+                end
+                local matched
+                if hasType and hasSubType then
+                    if categoryData.typeMatchMode == "or" then
+                        matched = typeMatch or subTypeMatch
                     else
-                        matched = subTypeMatch
+                        matched = typeMatch and subTypeMatch
                     end
-                    if matched then
-                        return categoryData.name, categoryId
-                    end
+                elseif hasType then
+                    matched = typeMatch
+                else
+                    matched = subTypeMatch
+                end
+                if matched then
+                    return categoryData.name, categoryId
                 end
             end
         end
@@ -551,7 +548,6 @@ end
 
 function Categories:GetSubCategory(categoryName, bagID, slotID, itemInfo)
     if not bagID or not slotID then return nil end
-    local PE = OneWoW_Bags.PredicateEngine
     if not PE then return nil end
 
     if categoryName == "Containers" then
@@ -580,7 +576,7 @@ end
 
 function Categories:AddItemToBuiltinCategory(categoryName, itemID)
     if not categoryName or not itemID then return false end
-    local db = OneWoW_Bags.db
+
     local addedItems = DB:Ensure(db, "global", "categoryModifications", categoryName, "addedItems")
     addedItems[tostring(itemID)] = true
     InvalidateCache()
@@ -589,7 +585,7 @@ end
 
 function Categories:RemoveItemFromBuiltinCategory(categoryName, itemID)
     if not categoryName or not itemID then return false end
-    local db = OneWoW_Bags.db
+
     if not db.global.categoryModifications then return false end
     local mod = db.global.categoryModifications[categoryName]
     if not mod or not mod.addedItems then return false end
@@ -599,7 +595,6 @@ function Categories:RemoveItemFromBuiltinCategory(categoryName, itemID)
 end
 
 function Categories:GetCategoryDescription(categoryName)
-    local L = OneWoW_Bags.L
     local descKeys = {
         ["1W Junk"] = "CAT_DESC_1W_JUNK",
         ["1W Upgrades"] = "CAT_DESC_1W_UPGRADES",
