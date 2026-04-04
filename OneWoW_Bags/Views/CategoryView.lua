@@ -108,7 +108,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
     local yOffset = 0
 
     local catMods = db.global.categoryModifications
-    local SE = OneWoW_Bags.SearchEngine
+    local PE = OneWoW_Bags.PredicateEngine
 
     local function GetCategorySortMode(categoryName)
         local mod = catMods[categoryName]
@@ -180,10 +180,10 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         local groupOrder = {}
         for _, btn in ipairs(items) do
             local expID = -1
-            if SE and btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
-                expID = SE:GetExpansionID(btn.owb_itemInfo.itemID, btn.owb_itemInfo.hyperlink) or -1
+            if PE and btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
+                expID = PE:GetExpansionID(btn.owb_itemInfo.itemID, btn.owb_itemInfo.hyperlink) or -1
             end
-            local expName = (SE and SE:GetExpansionName(expID)) or "Unknown"
+            local expName = (PE and PE:GetExpansionName(expID)) or "Unknown"
             if not groups[expName] then
                 groups[expName] = {}
                 tinsert(groupOrder, { name = expName, sortKey = expID })

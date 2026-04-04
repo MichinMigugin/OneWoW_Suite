@@ -231,13 +231,13 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         return "Other"
     end
 
-    local SE = OneWoW_Bags.SearchEngine
-    if not SE then
+    local PE = OneWoW_Bags.PredicateEngine
+    if not PE then
         if itemID then categoryCache[itemID] = "Other" end
         return "Other"
     end
 
-    local enriched = SE:EnrichItemInfo(itemID, bagID, slotID, {
+    local props = PE:BuildProps(itemID, bagID, slotID, {
         itemID = itemID,
         hyperlink = hyperlink,
         quality = itemInfo.quality,
@@ -246,7 +246,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     local category = "Other"
     for _, def in ipairs(SEARCH_CATEGORIES) do
         if not disabled[def.name] then
-            if SE:CheckItem(def.search, itemID, bagID, slotID, enriched) then
+            if PE:CheckItem(def.search, itemID, bagID, slotID) then
                 category = def.name
                 break
             end
@@ -255,7 +255,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
 
     if db.global.enableInventorySlots then
         if category == "Weapons" or category == "Armor" then
-            local equipLoc = enriched._equipLoc
+            local equipLoc = props.equipLoc
             if equipLoc and equipLoc ~= "" then
                 local slotName = GetSlotCategoryName(equipLoc)
                 if slotName then
@@ -269,7 +269,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         category = "Other"
     end
 
-    if itemID and enriched._classID ~= nil then
+    if itemID and props.classID ~= nil then
         categoryCache[itemID] = category
     end
 
@@ -407,10 +407,9 @@ function Categories:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
             local fm = categoryData.filterMode
             if (fm == "search" or (not fm and categoryData.searchExpression and categoryData.searchExpression ~= "")) then
                 if categoryData.searchExpression and categoryData.searchExpression ~= "" then
-                    local SE = OneWoW_Bags.SearchEngine
-                    if SE then
-                        local enriched = SE:EnrichItemInfo(itemID, bagID, slotID, itemInfo or {})
-                        if SE:CheckItem(categoryData.searchExpression, itemID, bagID, slotID, enriched) then
+                    local PE = OneWoW_Bags.PredicateEngine
+                    if PE then
+                        if PE:CheckItem(categoryData.searchExpression, itemID, bagID, slotID, itemInfo or {}) then
                             return categoryData.name, categoryId
                         end
                     end
@@ -419,11 +418,11 @@ function Categories:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
             local hasType = categoryData.itemType and categoryData.itemType ~= ""
             local hasSubType = categoryData.itemSubType and categoryData.itemSubType ~= ""
             if (fm == "type" or not fm) and (hasType or hasSubType) then
-                local SE = OneWoW_Bags.SearchEngine
-                if SE then
-                    local enriched = SE:EnrichItemInfo(itemID, bagID, slotID, itemInfo or {})
-                    local classID = enriched._classID
-                    local subClassID = enriched._subClassID
+                local PE = OneWoW_Bags.PredicateEngine
+                if PE then
+                    local props = PE:BuildProps(itemID, bagID, slotID, itemInfo or {})
+                    local classID = props.classID
+                    local subClassID = props.subClassID
                     local typeMatch = not hasType
                     local subTypeMatch = not hasSubType
                     if hasType and classID ~= nil then
@@ -552,11 +551,11 @@ end
 
 function Categories:GetSubCategory(categoryName, bagID, slotID, itemInfo)
     if not bagID or not slotID then return nil end
-    local SE = OneWoW_Bags.SearchEngine
-    if not SE then return nil end
+    local PE = OneWoW_Bags.PredicateEngine
+    if not PE then return nil end
 
     if categoryName == "Containers" then
-        local tt = SE:GetTooltipText(bagID, slotID)
+        local tt = PE:GetTooltipText(bagID, slotID)
         if tt then
             if tt:find(LOCKED) then
                 return "Locked"
@@ -567,7 +566,7 @@ function Categories:GetSubCategory(categoryName, bagID, slotID, itemInfo)
     end
 
     if categoryName == "Consumables" or categoryName == "Potions" or categoryName == "Food" then
-        local tt = SE:GetTooltipText(bagID, slotID)
+        local tt = PE:GetTooltipText(bagID, slotID)
         if tt then
             local charges = tt:match("(%d+) Charges?")
             if charges then

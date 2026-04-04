@@ -124,6 +124,10 @@ end
 function OneWoW_Bags:OnPlayerLogin()
     DetectOneWoW()
 
+    if self.PredicateEngine and self.PredicateEngine.RegisterBlizzardSubclasses then
+        self.PredicateEngine:RegisterBlizzardSubclasses()
+    end
+
     if not self.oneWoWHubActive then
         self.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_Bags", {
             label = "OneWoW Bags",

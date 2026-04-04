@@ -28,6 +28,7 @@ Locales\ruRU.lua
 Locales\deDE.lua
 
 # Core
+Core\Core.lua
 Core\Constants.lua
 Core\Database.lua
 Core\Events.lua
@@ -35,7 +36,7 @@ Core\Events.lua
 # Data
 Data\BagTypes.lua
 Data\BankTypes.lua
-Data\SearchEngine.lua
+Data\PredicateEngine.lua
 Data\Sorting.lua
 Data\Categories.lua
 

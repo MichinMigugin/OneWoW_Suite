@@ -13,8 +13,8 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
     elseif event == "BAG_UPDATE_DELAYED" then
         local dirty = OneWoW_Bags.Events.dirtyBags
         OneWoW_Bags.Events.dirtyBags = {}
-        if OneWoW_Bags.SearchEngine then
-            OneWoW_Bags.SearchEngine:ClearTooltipCache()
+        if OneWoW_Bags.PredicateEngine then
+            OneWoW_Bags.PredicateEngine:InvalidatePropsCache()
         end
         OneWoW_Bags:ProcessBagUpdate(dirty)
 
@@ -85,6 +85,13 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         if OneWoW_Bags.bankOpen and OneWoW_Bags.BankBar then
             OneWoW_Bags.BankBar:UpdateGold()
         end
+
+    elseif event == "EQUIPMENT_SETS_CHANGED"
+        or event == "PLAYER_EQUIPMENT_CHANGED"
+        or event == "GET_ITEM_INFO_RECEIVED" then
+        if OneWoW_Bags.PredicateEngine then
+            OneWoW_Bags.PredicateEngine:InvalidatePropsCache()
+        end
     end
 end)
 
@@ -106,6 +113,9 @@ function OneWoW_Bags.Events:RegisterBagEvents()
     eventFrame:RegisterEvent("GUILDBANK_UPDATE_WITHDRAWMONEY")
     eventFrame:RegisterEvent("PLAYER_MONEY")
     eventFrame:RegisterEvent("ACCOUNT_MONEY")
+    eventFrame:RegisterEvent("EQUIPMENT_SETS_CHANGED")
+    eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+    eventFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 end
 
 function OneWoW_Bags.Events:UnregisterBagEvents()

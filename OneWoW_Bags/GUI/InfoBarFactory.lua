@@ -83,16 +83,16 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             OneWoW_GUI:AttachFilterMenu(expacDropdown, {
                 searchable = false,
                 buildItems = function()
-                    local SE = OneWoW_Bags.SearchEngine
+                    local PE = OneWoW_Bags.PredicateEngine
                     local BagSet = OneWoW_Bags[ef.bagSetKey]
                     local items = { { text = L["EXPAC_FILTER_ALL"], value = "ALL" } }
                     if not BagSet or not BagSet.isBuilt then return items end
                     local found = {}
                     for _, btn in ipairs(BagSet:GetAllButtons()) do
                         if btn.owb_hasItem and btn.owb_itemInfo and btn.owb_itemInfo.itemID then
-                            local enriched = SE:EnrichItemInfo(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
-                            if enriched._expansionID ~= nil then
-                                found[enriched._expansionID] = true
+                            local props = PE:BuildProps(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
+                            if props.expansionID ~= nil then
+                                found[props.expansionID] = true
                             end
                         end
                     end
@@ -100,7 +100,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                     for id in pairs(found) do tinsert(ids, id) end
                     sort(ids)
                     for _, id in ipairs(ids) do
-                        tinsert(items, { text = SE:GetExpansionName(id) or ("Expansion " .. id), value = id })
+                        tinsert(items, { text = PE:GetExpansionName(id) or ("Expansion " .. id), value = id })
                     end
                     return items
                 end,
@@ -212,8 +212,8 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 if activeFilter == nil then
                     infoBarFrame.expacText:SetText(OneWoW_Bags.L["EXPAC_FILTER_BTN"])
                 else
-                    local SE = OneWoW_Bags.SearchEngine
-                    local expName = SE and SE:GetExpansionName(activeFilter) or tostring(activeFilter)
+                    local PE = OneWoW_Bags.PredicateEngine
+                    local expName = PE and PE:GetExpansionName(activeFilter) or tostring(activeFilter)
                     infoBarFrame.expacText:SetText(expName)
                 end
             end

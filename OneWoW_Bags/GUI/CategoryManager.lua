@@ -478,7 +478,7 @@ local function MakeEditBoxWithSave(parent, opts, getValue, setValue)
         if val == self.placeholderText then val = "" end
         setValue((val ~= "") and val or nil)
         if OneWoW_Bags.Categories then OneWoW_Bags.Categories:InvalidateCache() end
-        if OneWoW_Bags.SearchEngine then OneWoW_Bags.SearchEngine:InvalidateCache() end
+        if OneWoW_Bags.PredicateEngine then OneWoW_Bags.PredicateEngine:InvalidateCache() end
         RefreshBagLayout()
     end
     box:SetScript("OnEnterPressed", function(self) Save(self); self:ClearFocus() end)

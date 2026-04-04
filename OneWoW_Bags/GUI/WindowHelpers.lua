@@ -13,27 +13,14 @@ function WH:FilterBySearch(buttons, searchText)
         return buttons
     end
 
-    local SE = OneWoW_Bags.SearchEngine
-    local hasKeyword = searchText:find("#") or searchText:find("[&|!~()]")
-    local filtered = {}
+    local PE = OneWoW_Bags.PredicateEngine
+    if not PE then return buttons end
 
-    if hasKeyword and SE then
-        for _, button in ipairs(buttons) do
-            if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                local enriched = SE:EnrichItemInfo(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
-                if SE:CheckItem(searchText, button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, enriched) then
-                    tinsert(filtered, button)
-                end
-            end
-        end
-    else
-        local searchLower = string.lower(searchText)
-        for _, button in ipairs(buttons) do
-            if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-                local itemName = C_Item.GetItemNameByID(button.owb_itemInfo.itemID)
-                if itemName and string.find(string.lower(itemName), searchLower, 1, true) then
-                    tinsert(filtered, button)
-                end
+    local filtered = {}
+    for _, button in ipairs(buttons) do
+        if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
+            if PE:CheckItem(searchText, button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo) then
+                tinsert(filtered, button)
             end
         end
     end
@@ -46,13 +33,12 @@ function WH:FilterByExpansion(buttons, expacFilter)
         return buttons
     end
 
-    local SE = OneWoW_Bags.SearchEngine
+    local PE = OneWoW_Bags.PredicateEngine
     local filtered = {}
     for _, button in ipairs(buttons) do
         if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-            local enriched = button.owb_itemInfo._enriched and button.owb_itemInfo
-                or SE:EnrichItemInfo(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
-            if enriched._expansionID == expacFilter then
+            local props = PE:BuildProps(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
+            if props.expansionID == expacFilter then
                 tinsert(filtered, button)
             end
         end

@@ -178,7 +178,7 @@ function Mixin:OWB_UpdateUnusableOverlay(hasItem, info)
         return
     end
 
-    local isEquippable = IsEquippableItem and IsEquippableItem(info.itemID)
+    local isEquippable = C_Item.IsEquippableItem(info.itemID)
     if not isEquippable then
         if self._owbUnusableOverlay then self._owbUnusableOverlay:Hide() end
         return
