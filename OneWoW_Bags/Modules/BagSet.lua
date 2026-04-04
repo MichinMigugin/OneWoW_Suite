@@ -3,6 +3,14 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local db = OneWoW_Bags.db
+local BagTypes = OneWoW_Bags.BagTypes
+local ItemPool = OneWoW_Bags.ItemPool
+
+local pairs, ipairs, tinsert = pairs, ipairs, tinsert
+
+local C_Container = C_Container
+
 OneWoW_Bags.BagSet = {}
 local BagSet = OneWoW_Bags.BagSet
 
@@ -24,9 +32,6 @@ local function GetOrCreateBagFrame(bagID)
 end
 
 function BagSet:Build()
-    local BagTypes = OneWoW_Bags.BagTypes
-    local Pool = OneWoW_Bags.ItemPool
-
     self:ReleaseAll()
     self.totalSlots = 0
     self.freeSlots = 0
@@ -38,7 +43,7 @@ function BagSet:Build()
         local numSlots = C_Container.GetContainerNumSlots(bagID)
         self.slots[bagID] = {}
         for slotID = 1, numSlots do
-            local button = Pool:Acquire()
+            local button = ItemPool:Acquire()
             button:SetParent(bagFrame)
             OneWoW_Bags:ApplyItemButtonMixin(button)
             button:OWB_SetSlot(bagID, slotID)
@@ -52,10 +57,9 @@ function BagSet:Build()
 end
 
 function BagSet:ReleaseAll()
-    local Pool = OneWoW_Bags.ItemPool
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do
-            Pool:Release(button)
+            ItemPool:Release(button)
         end
     end
     self.slots = {}
@@ -87,10 +91,9 @@ function BagSet:UpdateDirtyBags(dirtyBags)
 end
 
 function BagSet:RebuildBag(bagID, numSlots)
-    local Pool = OneWoW_Bags.ItemPool
     if self.slots[bagID] then
         for slotID, button in pairs(self.slots[bagID]) do
-            Pool:Release(button)
+            ItemPool:Release(button)
             self.totalSlots = self.totalSlots - 1
         end
     end
@@ -100,7 +103,7 @@ function BagSet:RebuildBag(bagID, numSlots)
 
     self.slots[bagID] = {}
     for slotID = 1, numSlots do
-        local button = Pool:Acquire()
+        local button = ItemPool:Acquire()
         button:SetParent(bagFrame)
         OneWoW_Bags:ApplyItemButtonMixin(button)
         button:OWB_SetSlot(bagID, slotID)
@@ -134,7 +137,6 @@ function BagSet:UpdateAllSlots()
 end
 
 function BagSet:UpdateQualityColors()
-    local db = OneWoW_Bags.db
     local useRarity = db.global.rarityColor
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do
@@ -149,7 +151,6 @@ end
 
 function BagSet:GetAllButtons()
     local buttons = {}
-    local BagTypes = OneWoW_Bags.BagTypes
     for _, bagID in ipairs(BagTypes.ALL_PLAYER_BAGS) do
         if self.slots[bagID] then
             for slotID = 1, #self.slots[bagID] do

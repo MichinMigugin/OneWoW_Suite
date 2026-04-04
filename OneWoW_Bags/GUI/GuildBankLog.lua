@@ -5,6 +5,10 @@ if not OneWoW_GUI then return end
 
 local L = OneWoW_Bags.L
 
+local format = format
+local max = math.max
+local C_Timer = C_Timer
+
 OneWoW_Bags.GuildBankLog = {}
 local GuildBankLog = OneWoW_Bags.GuildBankLog
 
@@ -136,7 +140,7 @@ function GuildBankLog:SetText(msg)
     if not logText then return end
     logText:SetText(msg)
     if textContent then
-        textContent:SetHeight(math.max(1, logText:GetStringHeight() + 8))
+        textContent:SetHeight(max(1, logText:GetStringHeight() + 8))
     end
     if scrollFrame then
         scrollFrame:SetVerticalScroll(0)
@@ -153,17 +157,17 @@ function GuildBankLog:RefreshItems()
         if not name then name = UNKNOWN end
         name = NORMAL_FONT_COLOR_CODE .. name .. FONT_COLOR_CODE_CLOSE
         if txType == "deposit" then
-            msg = msg .. string.format(GUILDBANK_DEPOSIT_FORMAT, name, itemLink)
+            msg = msg .. format(GUILDBANK_DEPOSIT_FORMAT, name, itemLink)
             if count > 1 then
-                msg = msg .. string.format(GUILDBANK_LOG_QUANTITY, count)
+                msg = msg .. format(GUILDBANK_LOG_QUANTITY, count)
             end
         elseif txType == "withdraw" then
-            msg = msg .. string.format(GUILDBANK_WITHDRAW_FORMAT, name, itemLink)
+            msg = msg .. format(GUILDBANK_WITHDRAW_FORMAT, name, itemLink)
             if count > 1 then
-                msg = msg .. string.format(GUILDBANK_LOG_QUANTITY, count)
+                msg = msg .. format(GUILDBANK_LOG_QUANTITY, count)
             end
         elseif txType == "move" then
-            msg = msg .. string.format(GUILDBANK_MOVE_FORMAT, name, itemLink, count, GetGuildBankTabInfo(tab1), GetGuildBankTabInfo(tab2))
+            msg = msg .. format(GUILDBANK_MOVE_FORMAT, name, itemLink, count, GetGuildBankTabInfo(tab1), GetGuildBankTabInfo(tab2))
         end
         if GUILD_BANK_LOG_TIME then
             msg = msg .. GUILD_BANK_LOG_TIME:format(RecentTimeDate(year, month, day, hour))
@@ -188,21 +192,21 @@ function GuildBankLog:RefreshGold()
         name = NORMAL_FONT_COLOR_CODE .. name .. FONT_COLOR_CODE_CLOSE
         local money = GetMoneyString(amount, true)
         if txType == "deposit" then
-            msg = msg .. string.format(GUILDBANK_DEPOSIT_MONEY_FORMAT, name, money)
+            msg = msg .. format(GUILDBANK_DEPOSIT_MONEY_FORMAT, name, money)
         elseif txType == "withdraw" then
-            msg = msg .. string.format(GUILDBANK_WITHDRAW_MONEY_FORMAT, name, money)
+            msg = msg .. format(GUILDBANK_WITHDRAW_MONEY_FORMAT, name, money)
         elseif txType == "repair" then
-            msg = msg .. string.format(GUILDBANK_REPAIR_MONEY_FORMAT, name, money)
+            msg = msg .. format(GUILDBANK_REPAIR_MONEY_FORMAT, name, money)
         elseif txType == "withdrawForTab" then
-            msg = msg .. string.format(GUILDBANK_WITHDRAWFORTAB_MONEY_FORMAT, name, money)
+            msg = msg .. format(GUILDBANK_WITHDRAWFORTAB_MONEY_FORMAT, name, money)
         elseif txType == "buyTab" then
             if amount > 0 then
-                msg = msg .. string.format(GUILDBANK_BUYTAB_MONEY_FORMAT, name, money)
+                msg = msg .. format(GUILDBANK_BUYTAB_MONEY_FORMAT, name, money)
             else
-                msg = msg .. string.format(GUILDBANK_UNLOCKTAB_FORMAT, name)
+                msg = msg .. format(GUILDBANK_UNLOCKTAB_FORMAT, name)
             end
         elseif txType == "depositSummary" then
-            msg = msg .. string.format(GUILDBANK_AWARD_MONEY_SUMMARY_FORMAT, money)
+            msg = msg .. format(GUILDBANK_AWARD_MONEY_SUMMARY_FORMAT, money)
         end
         if GUILD_BANK_LOG_TIME then
             msg = msg .. GUILD_BANK_LOG_TIME:format(RecentTimeDate(year, month, day, hour))

@@ -1,13 +1,17 @@
 local _, OneWoW_Bags = ...
 
+local Constants = OneWoW_Bags.Constants
+local db = OneWoW_Bags.db
+local BagTypes = OneWoW_Bags.BagTypes
+
+local floor, max = math.floor, math.max
+local ipairs = pairs
+local tinsert = tinsert
+
 OneWoW_Bags.ListView = {}
 local View = OneWoW_Bags.ListView
 
 function View:Layout(contentFrame, buttons, width)
-    local Constants = OneWoW_Bags.Constants
-    local db = OneWoW_Bags.db
-    local BagTypes = OneWoW_Bags.BagTypes
-
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
@@ -15,8 +19,8 @@ function View:Layout(contentFrame, buttons, width)
     local showEmpty = db.global.showEmptySlots
     if showEmpty == nil then showEmpty = true end
 
-    local cols = math.floor((width + spacing) / (iconSize + spacing))
-    cols = math.max(cols, 1)
+    local cols = floor((width + spacing) / (iconSize + spacing))
+    cols = max(cols, 1)
 
     local leftPadding = padding
 
@@ -38,7 +42,7 @@ function View:Layout(contentFrame, buttons, width)
     local col = 0
 
     local extraYOffset = 0
-    local reagentGapPx = math.floor((iconSize + spacing) * 0.2)
+    local reagentGapPx = floor((iconSize + spacing) * 0.2)
 
     local function placeButton(button)
         local x = leftPadding + (col * (iconSize + spacing))
@@ -85,5 +89,5 @@ function View:Layout(contentFrame, buttons, width)
 
     local totalRows = (col > 0) and (row + 1) or row
     local totalHeight = padding * 2 + totalRows * (iconSize + spacing) + extraYOffset
-    return math.max(totalHeight, 100)
+    return max(totalHeight, 100)
 end

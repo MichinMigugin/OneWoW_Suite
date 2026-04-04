@@ -3,16 +3,20 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local Constants = OneWoW_Bags.Constants
+local db = OneWoW_Bags.db
+local L = OneWoW_Bags.L
+local BankSet = OneWoW_Bags.BankSet
+local BankCategoryManager = OneWoW_Bags.BankCategoryManager
+local BankTypes = OneWoW_Bags.BankTypes
+
+local tinsert, ipairs = tinsert, ipairs
+local floor, max = math.floor, math.max
+
 OneWoW_Bags.BankTabView = {}
 local View = OneWoW_Bags.BankTabView
 
 function View:Layout(contentFrame, width, filteredButtons)
-    local Constants = OneWoW_Bags.Constants
-    local BankSet = OneWoW_Bags.BankSet
-    local db = OneWoW_Bags.db
-    local L = OneWoW_Bags.L
-    local CM = OneWoW_Bags.BankCategoryManager
-
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
@@ -25,9 +29,8 @@ function View:Layout(contentFrame, width, filteredButtons)
         end
     end
 
-    CM:ReleaseAllSections()
+    BankCategoryManager:ReleaseAllSections()
 
-    local BankTypes = OneWoW_Bags.BankTypes
     local selectedTab = db.global.bankSelectedTab
     local showWarband = BankSet:IsWarband()
     local bagList = showWarband and BankTypes.ALL_WARBAND_TABS or BankTypes.ALL_BANK_TABS
@@ -60,7 +63,7 @@ function View:Layout(contentFrame, width, filteredButtons)
 
             if #buttons > 0 then
                 OneWoW_Bags:SortButtons(buttons)
-                local section = CM:AcquireSection(contentFrame)
+                local section = BankCategoryManager:AcquireSection(contentFrame)
                 section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
                 section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
                 section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -82,11 +85,11 @@ function View:Layout(contentFrame, width, filteredButtons)
                 local sectionHeight = 26
 
                 if not section.isCollapsed then
-                    local cols = db.global.bankColumns or math.floor((width - padding * 2) / (iconSize + spacing))
-                    cols = math.max(cols, 1)
+                    local cols = db.global.bankColumns or floor((width - padding * 2) / (iconSize + spacing))
+                    cols = max(cols, 1)
 
                     local totalGridWidth = cols * (iconSize + spacing) - spacing
-                    local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
+                    local leftPadding = max(padding, floor((width - totalGridWidth) / 2))
 
                     local itemRow = 0
                     local itemCol = 0
@@ -132,13 +135,11 @@ function View:Layout(contentFrame, width, filteredButtons)
                         db.global.collapsedBankSections = {}
                     end
                     db.global.collapsedBankSections[capturedBagID] = section.isCollapsed or nil
-                    if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
-                        OneWoW_Bags.BankGUI:RefreshLayout()
-                    end
+                    OneWoW_Bags.BankGUI:RefreshLayout()
                 end)
             end
         end
     end
 
-    return math.max(yOffset, 100)
+    return max(yOffset, 100)
 end

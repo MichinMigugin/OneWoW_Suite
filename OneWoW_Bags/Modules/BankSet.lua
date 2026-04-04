@@ -5,14 +5,14 @@ if not OneWoW_GUI then return end
 
 local db = OneWoW_Bags.db
 local BankTypes = OneWoW_Bags.BankTypes
-
-local BankSet = OneWoW_Bags.BankSet
 local ItemPool = OneWoW_Bags.ItemPool
 
 local ipairs, pairs, tinsert = ipairs, pairs, tinsert
 local C_Bank, C_Container = C_Bank, C_Container
 
 OneWoW_Bags.BankSet = {}
+local BankSet = OneWoW_Bags.BankSet
+
 BankSet.slots = {}
 BankSet.totalSlots = 0
 BankSet.freeSlots = 0

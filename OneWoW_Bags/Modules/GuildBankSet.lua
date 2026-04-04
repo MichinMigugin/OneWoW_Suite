@@ -3,6 +3,11 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local db = OneWoW_Bags.db
+local ItemPool = OneWoW_Bags.ItemPool
+
+local tonumber, pairs = tonumber, pairs
+
 OneWoW_Bags.GuildBankSet = {}
 local GBSet = OneWoW_Bags.GuildBankSet
 
@@ -28,8 +33,6 @@ local function GetOrCreateGuildBankFrame(tabID)
 end
 
 function GBSet:Build()
-    local Pool = OneWoW_Bags.ItemPool
-
     self:ReleaseAll()
     self.totalSlots = 0
     self.numTabs = GetNumGuildBankTabs() or 0
@@ -43,7 +46,7 @@ function GBSet:Build()
             self.bagContainerFrames[tabID] = gbFrame
 
             for slotID = 1, SLOTS_PER_TAB do
-                local button = Pool:Acquire()
+                local button = ItemPool:Acquire()
                 button:SetParent(gbFrame)
                 OneWoW_Bags:ApplyItemButtonMixin(button)
                 button.owb_bagID = tabID
@@ -91,8 +94,6 @@ function GBSet:CacheTab(tabID)
 end
 
 function GBSet:ApplyCacheToButtons()
-    local db = OneWoW_Bags.db
-
     self.freeSlots = 0
 
     for tabID, tabSlots in pairs(self.slots) do
@@ -156,7 +157,6 @@ function GBSet:UpdateAllSlots()
 end
 
 function GBSet:UpdateQualityColors()
-    local db = OneWoW_Bags.db
     local useRarity = db.global.bankRarityColor
     for tabID, tabSlots in pairs(self.slots) do
         for slotID, button in pairs(tabSlots) do

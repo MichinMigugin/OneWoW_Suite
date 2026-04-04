@@ -3,6 +3,16 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local db = OneWoW_Bags.db
+local L = OneWoW_Bags.L
+local BankTypes = OneWoW_Bags.BankTypes
+local BankSet = OneWoW_Bags.BankSet
+
+local pairs, ipairs = pairs, ipairs
+
+local C_Timer = C_Timer
+local C_Bank = C_Bank
+
 OneWoW_Bags.BankBar = {}
 local BankBar = OneWoW_Bags.BankBar
 
@@ -15,8 +25,6 @@ local BAR_HEIGHT = 58
 
 function BankBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
-
-    local L = OneWoW_Bags.L
 
     bagsBarFrame = CreateFrame("Frame", "OneWoW_BankBagsBar", parent, "BackdropTemplate")
     bagsBarFrame:SetHeight(BAR_HEIGHT)
@@ -32,10 +40,9 @@ function BankBar:Create(parent)
     withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
         if not OneWoW_Bags.bankOpen then return end
-        local db = OneWoW_Bags.db
         if not db.global.bankShowWarband then return end
         OneWoW_Bags:ShowMoneyDialog({
-            title = L["BANK_WARBAND_TITLE"] or "Warband Bank",
+            title = L["BANK_WARBAND_TITLE"],
             anchorFrame = self,
             onWithdraw = function(copper)
                 if C_Bank.CanWithdrawMoney(Enum.BankType.Account) then
@@ -51,10 +58,9 @@ function BankBar:Create(parent)
     depositGoldBtn:SetPoint("RIGHT", withdrawBtn, "LEFT", -4, 0)
     depositGoldBtn:SetScript("OnClick", function(self)
         if not OneWoW_Bags.bankOpen then return end
-        local db = OneWoW_Bags.db
         if not db.global.bankShowWarband then return end
         OneWoW_Bags:ShowMoneyDialog({
-            title = L["BANK_WARBAND_TITLE"] or "Warband Bank",
+            title = L["BANK_WARBAND_TITLE"],
             anchorFrame = self,
             onDeposit = function(copper)
                 if C_Bank.CanDepositMoney(Enum.BankType.Account) then
@@ -78,7 +84,6 @@ function BankBar:Create(parent)
     local depositReagentsBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_DEPOSIT_REAGENTS"] or "Deposit Reagents", height = 22 })
     depositReagentsBtn:SetPoint("LEFT", bagsBarFrame, "LEFT", OneWoW_GUI:GetSpacing("SM"), ROW2_Y)
     depositReagentsBtn:SetScript("OnClick", function()
-        local db = OneWoW_Bags.db
         local bankType = db.global.bankShowWarband and Enum.BankType.Account or Enum.BankType.Character
         C_Bank.AutoDepositItemsIntoBank(bankType)
     end)
@@ -95,11 +100,10 @@ function BankBar:Create(parent)
         if not self._isActive and self._defaultLeave then self._defaultLeave(self) end
     end)
     warbandBtn:SetScript("OnClick", function()
-        local db = OneWoW_Bags.db
         if db.global.bankShowWarband then return end
         db.global.bankShowWarband = true
         BankBar:UpdateBankTypeButtons()
-        if OneWoW_Bags.BankGUI then OneWoW_Bags.BankGUI:OnBankTypeChanged() end
+        OneWoW_Bags.BankGUI:OnBankTypeChanged()
     end)
     bagsBarFrame.warbandBtn = warbandBtn
 
@@ -114,11 +118,10 @@ function BankBar:Create(parent)
         if not self._isActive and self._defaultLeave then self._defaultLeave(self) end
     end)
     personalBtn:SetScript("OnClick", function()
-        local db = OneWoW_Bags.db
         if not db.global.bankShowWarband then return end
         db.global.bankShowWarband = false
         BankBar:UpdateBankTypeButtons()
-        if OneWoW_Bags.BankGUI then OneWoW_Bags.BankGUI:OnBankTypeChanged() end
+        OneWoW_Bags.BankGUI:OnBankTypeChanged()
     end)
     bagsBarFrame.personalBtn = personalBtn
 
@@ -130,8 +133,6 @@ end
 
 function BankBar:BuildTabButtons()
     if not bagsBarFrame then return end
-    local db = OneWoW_Bags.db
-    local BankTypes = OneWoW_Bags.BankTypes
     local showWarband = db.global.bankShowWarband
 
     for _, btn in pairs(tabButtons) do
@@ -160,8 +161,6 @@ function BankBar:BuildTabButtons()
 end
 
 function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
-    local L = OneWoW_Bags.L
-
     local btn = CreateFrame("Button", "OneWoW_BankTab" .. bagID, parent)
     btn:SetSize(26, 26)
     btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -194,8 +193,7 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
             local tabData = BankBar:GetTabData(self.bagID, self.tabIndex)
             local tabName = (tabData and tabData.name and tabData.name ~= "") and tabData.name or (L["BANK_TAB"] and L["BANK_TAB"]:format(self.tabIndex) or ("Tab " .. self.tabIndex))
             GameTooltip:SetText(tabName, 1, 1, 1)
-            local BankSet = OneWoW_Bags.BankSet
-            if BankSet and BankSet.slots[self.bagID] then
+            if BankSet.slots[self.bagID] then
                 local usedSlots, totalSlots = 0, 0
                 for _, button in pairs(BankSet.slots[self.bagID]) do
                     totalSlots = totalSlots + 1
@@ -206,7 +204,6 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
                 end
             end
         else
-            local db = OneWoW_Bags.db
             local showWarband = db.global.bankShowWarband
             local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
             if OneWoW_Bags.bankOpen and C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
@@ -228,7 +225,6 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
     btn:SetScript("OnClick", function(self, mouseButton)
         if not self.isPurchased then
             if not OneWoW_Bags.bankOpen then return end
-            local db = OneWoW_Bags.db
             local showWarband = db.global.bankShowWarband
             local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
             if C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
@@ -241,7 +237,6 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
         end
 
         if mouseButton == "RightButton" and OneWoW_Bags.bankOpen then
-            local db = OneWoW_Bags.db
             local showWarband = db.global.bankShowWarband
             local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
             local tabData = BankBar:GetTabData(self.bagID, self.tabIndex)
@@ -270,16 +265,13 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
             return
         end
 
-        local db = OneWoW_Bags.db
         if db.global.bankSelectedTab == self.bagID then
             db.global.bankSelectedTab = nil
         else
             db.global.bankSelectedTab = self.bagID
         end
         BankBar:UpdateTabHighlights()
-        if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
-            OneWoW_Bags.BankGUI:RefreshLayout()
-        end
+        OneWoW_Bags.BankGUI:RefreshLayout()
     end)
 
     return btn
@@ -288,7 +280,7 @@ end
 function BankBar:GetTabSettingsMenu()
     if not bagsBarFrame then return nil end
     if not bagsBarFrame._tabSettingsMenu then
-        local bankWindow = OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI:GetMainWindow()
+        local bankWindow = OneWoW_Bags.BankGUI:GetMainWindow()
         local parent = bankWindow or UIParent
         bagsBarFrame._tabSettingsMenu = CreateFrame("Frame", "OneWoW_BankTabSettingsMenu", parent, "BankPanelTabSettingsMenuTemplate")
         bagsBarFrame._tabSettingsMenu:SetClampedToScreen(true)
@@ -300,7 +292,6 @@ function BankBar:GetTabSettingsMenu()
 end
 
 function BankBar:GetTabData(bagID, tabIndex)
-    local db = OneWoW_Bags.db
     local showWarband = db.global.bankShowWarband
     local bankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
     local tabDataList = C_Bank.FetchPurchasedBankTabData(bankType)
@@ -309,7 +300,6 @@ function BankBar:GetTabData(bagID, tabIndex)
 end
 
 function BankBar:UpdateTabHighlights()
-    local db = OneWoW_Bags.db
     local selected = db.global.bankSelectedTab
     for bagID, btn in pairs(tabButtons) do
         if btn._skinBorder then
@@ -324,7 +314,6 @@ end
 
 function BankBar:UpdateBankTypeButtons()
     if not bagsBarFrame then return end
-    local db = OneWoW_Bags.db
     local showWarband = db.global.bankShowWarband
 
     local function setActive(btn)
@@ -360,7 +349,6 @@ end
 
 function BankBar:UpdateDepositWithdrawVisibility()
     if not bagsBarFrame then return end
-    local db = OneWoW_Bags.db
     local showWarband = db.global.bankShowWarband
     if bagsBarFrame.depositGoldBtn then bagsBarFrame.depositGoldBtn:SetShown(showWarband == true) end
     if bagsBarFrame.withdrawBtn then bagsBarFrame.withdrawBtn:SetShown(showWarband == true) end
@@ -368,7 +356,6 @@ end
 
 function BankBar:UpdateGold()
     if not bagsBarFrame or not bagsBarFrame.goldText then return end
-    local db = OneWoW_Bags.db
     local showWarband = db.global.bankShowWarband
     if showWarband then
         local money = C_Bank.FetchDepositedMoney(Enum.BankType.Account) or 0

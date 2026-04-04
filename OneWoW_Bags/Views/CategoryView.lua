@@ -3,6 +3,17 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local Constants = OneWoW_Bags.Constants
+local db = OneWoW_Bags.db
+local L = OneWoW_Bags.L
+local CategoryManager = OneWoW_Bags.CategoryManager
+local PE = OneWoW_Bags.PredicateEngine
+
+local floor, max, min, sqrt, ceil = math.floor, math.max, math.min, math.sqrt, math.ceil
+local pairs, ipairs = pairs, ipairs
+local tremove, tinsert, wipe, sort = tremove, tinsert, wipe, sort
+local tostring = tostring
+
 OneWoW_Bags.CategoryView = {}
 local View = OneWoW_Bags.CategoryView
 
@@ -35,11 +46,6 @@ local function ReleaseAllLabels()
 end
 
 function View:Layout(contentFrame, width, filteredButtons, containerType)
-    local Constants = OneWoW_Bags.Constants
-    local db = OneWoW_Bags.db
-    local CM = OneWoW_Bags.CategoryManager
-    local L = OneWoW_Bags.L
-
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
@@ -56,12 +62,12 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         end
     end
 
-    CM:AssignCategories()
-    CM:ReleaseAllSections()
+    CategoryManager:AssignCategories()
+    CategoryManager:ReleaseAllSections()
     ReleaseAllLabels()
 
-    local itemsByCategory = CM:GetItemsByCategory()
-    local layout = CM:GetSectionedLayout(itemsByCategory, containerType)
+    local itemsByCategory = CategoryManager:GetItemsByCategory()
+    local layout = CategoryManager:GetSectionedLayout(itemsByCategory, containerType)
 
     local moveUpgradesToTop = db.global.moveUpgradesToTop
     local moveOtherToBottom = db.global.moveOtherToBottom
@@ -99,16 +105,15 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         for _, e in ipairs(pinBottom)   do tinsert(layout, e) end
     end
 
-    local cols = db.global.bagColumns or math.floor((width - padding * 2) / (iconSize + spacing))
-    cols = math.max(cols, 1)
+    local cols = db.global.bagColumns or floor((width - padding * 2) / (iconSize + spacing))
+    cols = max(cols, 1)
     local cellSize = iconSize + spacing
     local totalGridWidth = cols * cellSize - spacing
-    local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
+    local leftPadding = max(padding, floor((width - totalGridWidth) / 2))
 
     local yOffset = 0
 
     local catMods = db.global.categoryModifications
-    local PE = OneWoW_Bags.PredicateEngine
 
     local function GetCategorySortMode(categoryName)
         local mod = catMods[categoryName]
@@ -277,7 +282,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         local groupBy = GetCategoryGrouping(categoryName)
 
         if showHeaders then
-            local section = CM:AcquireSection(contentFrame)
+            local section = CategoryManager:AcquireSection(contentFrame)
             section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
             section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
             section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -371,13 +376,13 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             end
 
             section:SetHeight(sectionHeight)
-            yOffset = yOffset + sectionHeight + math.floor(cellSize * verticalSpacing * 0.25 + 0.5)
+            yOffset = yOffset + sectionHeight + floor(cellSize * verticalSpacing * 0.25 + 0.5)
 
             local capturedName = categoryName
             section.header:SetScript("OnClick", function()
                 section.isCollapsed = not section.isCollapsed
                 db.global.collapsedSections[capturedName] = section.isCollapsed or nil
-                if OneWoW_Bags.GUI and OneWoW_Bags.GUI.RefreshLayout then
+                if OneWoW_Bags.GUI then
                     OneWoW_Bags.GUI:RefreshLayout()
                 end
             end)
@@ -398,7 +403,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
                 end
             end
             local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
-            yOffset = yOffset + totalRows * cellSize + math.floor(cellSize * verticalSpacing * 0.25 + 0.5)
+            yOffset = yOffset + totalRows * cellSize + floor(cellSize * verticalSpacing * 0.25 + 0.5)
         end
     end
 
@@ -415,7 +420,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         for _, catInfo in ipairs(group) do
             local count = #catInfo.items
             local startCol = curCol > 0 and (curCol + gapSlots) or 0
-            local avail = math.floor(cols - startCol)
+            local avail = floor(cols - startCol)
 
             if avail < 1 then
                 tinsert(lines, currentLine)
@@ -425,9 +430,9 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
                 avail = cols
             end
 
-            local optimalWidth = count <= cols and count or math.max(2, math.floor(math.sqrt(count / 1.618)))
-            local blockWidth = math.min(optimalWidth, avail)
-            local blockRows = math.ceil(count / blockWidth)
+            local optimalWidth = count <= cols and count or max(2, floor(sqrt(count / 1.618)))
+            local blockWidth = min(optimalWidth, avail)
+            local blockRows = ceil(count / blockWidth)
 
             if blockRows > 1 and (curCol > 0 or blockWidth < cols) then
                 if #currentLine > 0 then
@@ -436,8 +441,8 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
                 end
                 curCol = 0
                 startCol = 0
-                blockWidth = math.min(count, cols)
-                blockRows = math.ceil(count / blockWidth)
+                blockWidth = min(count, cols)
+                blockRows = ceil(count / blockWidth)
             end
 
             tinsert(currentLine, {
@@ -507,12 +512,12 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             yOffset = yOffset + maxRows * cellSize
         end
         if #lines > 0 then
-            yOffset = yOffset + math.floor(cellSize * verticalSpacing * 0.25 + 0.5)
+            yOffset = yOffset + floor(cellSize * verticalSpacing * 0.25 + 0.5)
         end
     end
 
     local function RenderSeparator()
-        local divider = CM:AcquireDivider(contentFrame)
+        local divider = CategoryManager:AcquireDivider(contentFrame)
         divider:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 8, -(yOffset + 4))
         divider:SetPoint("RIGHT", contentFrame, "RIGHT", -8, 0)
         divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -525,7 +530,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         local sectionName = entry.name
         local isCollapsed = entry.collapsed
 
-        local section = CM:AcquireSectionHeader(contentFrame)
+        local section = CategoryManager:AcquireSectionHeader(contentFrame)
         section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
         section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
         section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
@@ -545,7 +550,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
             local sec = db.global.categorySections and db.global.categorySections[capturedSectionID]
             if sec then
                 sec.collapsed = not sec.collapsed
-                if OneWoW_Bags.GUI and OneWoW_Bags.GUI.RefreshLayout then
+                if OneWoW_Bags.GUI then
                     OneWoW_Bags.GUI:RefreshLayout()
                 end
             end
@@ -616,5 +621,5 @@ function View:Layout(contentFrame, width, filteredButtons, containerType)
         end
     end
 
-    return math.max(yOffset, 100)
+    return max(yOffset, 100)
 end

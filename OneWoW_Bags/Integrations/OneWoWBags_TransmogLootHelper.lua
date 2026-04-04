@@ -1,7 +1,5 @@
---[[
-OneWoW Bags Integration for TransmogLootHelper
+--[[ OneWoW Bags Integration for TransmogLootHelper
 ================================================
-
 This file allows TransmogLootHelper to add transmog loot markers/overlays to items
 displayed in OneWoW Bags.
 
@@ -9,11 +7,9 @@ Place this file in: TransmogLootHelper/integrations/OneWoWBags.lua
 Then add it to TransmogLootHelper.toc as:
 Integrations\OneWoWBags.lua
 ]]
+local _, app = ...
 
-local _, app = ...                                                                                                   
-   
-  if _G.OneWoW_Bags then                                                                                                     
-                                                                  
+  if _G.OneWoW_Bags then
         local function UpdateItemButton(button, bagID, slotID)
                 if not button then return end
 
@@ -37,5 +33,4 @@ Integrations\OneWoWBags.lua
         end
 
         _G.OneWoW_Bags:RegisterItemButtonCallback("TransmogLootHelper", UpdateItemButton)
-
   end

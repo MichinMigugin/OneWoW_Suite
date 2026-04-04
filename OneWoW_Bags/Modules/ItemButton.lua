@@ -3,6 +3,17 @@ local ADDON_NAME, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local db = OneWoW_Bags.db
+local BagTypes = OneWoW_Bags.BagTypes
+local ItemPool = OneWoW_Bags.ItemPool
+
+local pairs, select = pairs, select
+
+local UnitLevel = UnitLevel
+local C_NewItems = C_NewItems
+local C_Container = C_Container
+local C_Item = C_Item
+
 OneWoW_Bags.ItemButtonMixin = {}
 local Mixin = OneWoW_Bags.ItemButtonMixin
 
@@ -24,22 +35,20 @@ end
 --- New-item glow for player inventory bags only (not bank / guild bank). Uses Blizzard
 --- C_NewItems plus ContainerFrameItemButtonTemplate overlays (see default ContainerFrame).
 function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
-    local BagTypes = OneWoW_Bags.BagTypes
     local bagID, slotID = self.owb_bagID, self.owb_slotID
 
     if not hasItem or not bagID or not slotID or not BagTypes:IsPlayerBag(bagID) then
-        OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
+        ItemPool:ClearNewItemGlow(self)
         return
     end
 
-    local db = OneWoW_Bags.db
     if not db.global.showNewItems then
-        OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
+        ItemPool:ClearNewItemGlow(self)
         return
     end
 
-    if not C_NewItems or not C_NewItems.IsNewItem or not C_NewItems.IsNewItem(bagID, slotID) then
-        OneWoW_Bags.ItemPool:ClearNewItemGlow(self)
+    if not C_NewItems.IsNewItem(bagID, slotID) then
+        ItemPool:ClearNewItemGlow(self)
         return
     end
 
@@ -48,7 +57,7 @@ function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
         return
     end
 
-    local isBattlePay = C_Container.IsBattlePayItem and C_Container.IsBattlePayItem(bagID, slotID)
+    local isBattlePay = C_Container.IsBattlePayItem(bagID, slotID)
     if isBattlePay and self.BattlepayItemTexture then
         if self.flashAnim and self.flashAnim:IsPlaying() then self.flashAnim:Stop() end
         if self.newitemglowAnim and self.newitemglowAnim:IsPlaying() then self.newitemglowAnim:Stop() end
@@ -87,8 +96,7 @@ end
 
 function Mixin:OWB_FullUpdate()
     self.owb_dirty = false
-    local db = OneWoW_Bags.db
-    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
+    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI:IsAltShowActive()
 
     local info = C_Container.GetContainerItemInfo(self.owb_bagID, self.owb_slotID)
     self.owb_itemInfo = info
@@ -137,8 +145,7 @@ function Mixin:OWB_FullUpdate()
 end
 
 function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
-    local db = OneWoW_Bags.db
-    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsAltShowActive and OneWoW_Bags.GUI:IsAltShowActive()
+    local altShow = OneWoW_Bags.GUI and OneWoW_Bags.GUI:IsAltShowActive()
 
     if not hasItem then
         self:SetAlpha(1.0)
@@ -167,7 +174,6 @@ function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
 end
 
 function Mixin:OWB_UpdateUnusableOverlay(hasItem, info)
-    local db = OneWoW_Bags.db
     if not db.global.showUnusableOverlay then
         if self._owbUnusableOverlay then self._owbUnusableOverlay:Hide() end
         return

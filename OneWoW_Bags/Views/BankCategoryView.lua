@@ -3,6 +3,17 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local Constants = OneWoW_Bags.Constants
+local db = OneWoW_Bags.db
+local L = OneWoW_Bags.L
+local Categories = OneWoW_Bags.Categories
+local BankCategoryManager = OneWoW_Bags.BankCategoryManager
+local BankSet = OneWoW_Bags.BankSet
+
+local tremove, tinsert, wipe = tremove, tinsert, wipe
+local pairs, ipairs = pairs, ipairs
+local floor, min, max, ceil, sqrt = math.floor, math.min, math.max, math.ceil, math.sqrt
+
 OneWoW_Bags.BankCategoryView = {}
 local View = OneWoW_Bags.BankCategoryView
 
@@ -35,14 +46,6 @@ local function ReleaseAllLabels()
 end
 
 function View:Layout(contentFrame, width, filteredButtons)
-    local Constants = OneWoW_Bags.Constants
-    local db = OneWoW_Bags.db
-    local Categories = OneWoW_Bags.Categories
-    local BCM = OneWoW_Bags.BankCategoryManager
-    local L = OneWoW_Bags.L
-
-    local containerType = db.global.bankShowWarband and "warband_bank" or "character_bank"
-
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
@@ -59,11 +62,10 @@ function View:Layout(contentFrame, width, filteredButtons)
         end
     end
 
-    BCM:ReleaseAllSections()
+    BankCategoryManager:ReleaseAllSections()
     ReleaseAllLabels()
 
     local itemsByCategory = {}
-    local BankSet = OneWoW_Bags.BankSet
     if not BankSet then return 100 end
 
     local allButtons = BankSet:GetAllButtons()
@@ -85,7 +87,7 @@ function View:Layout(contentFrame, width, filteredButtons)
         tinsert(categoryNames, name)
     end
 
-    local sortMode = db.global.categorySort or "priority"
+    local sortMode = db.global.categorySort
     Categories:SortCategories(categoryNames, sortMode)
 
     local moveUpgradesToTop = db.global.moveUpgradesToTop
@@ -110,11 +112,11 @@ function View:Layout(contentFrame, width, filteredButtons)
         for _, n in ipairs(pinBottom)   do tinsert(categoryNames, n) end
     end
 
-    local cols = db.global.bankColumns or math.floor((width - padding * 2) / (iconSize + spacing))
-    cols = math.max(cols, 1)
+    local cols = db.global.bankColumns or floor((width - padding * 2) / (iconSize + spacing))
+    cols = max(cols, 1)
     local cellSize = iconSize + spacing
     local totalGridWidth = cols * cellSize - spacing
-    local leftPadding = math.max(padding, math.floor((width - totalGridWidth) / 2))
+    local leftPadding = max(padding, floor((width - totalGridWidth) / 2))
 
     local yOffset = 0
 
@@ -140,7 +142,7 @@ function View:Layout(contentFrame, width, filteredButtons)
         for _, catInfo in ipairs(catInfoList) do
             local count = #catInfo.items
             local startCol = curCol > 0 and (curCol + gapSlots) or 0
-            local avail = math.floor(cols - startCol)
+            local avail = floor(cols - startCol)
 
             if avail < 1 then
                 tinsert(lines, currentLine)
@@ -150,9 +152,9 @@ function View:Layout(contentFrame, width, filteredButtons)
                 avail = cols
             end
 
-            local optimalWidth = count <= cols and count or math.max(2, math.floor(math.sqrt(count / 1.618)))
-            local blockWidth = math.min(optimalWidth, avail)
-            local blockRows = math.ceil(count / blockWidth)
+            local optimalWidth = count <= cols and count or max(2, floor(sqrt(count / 1.618)))
+            local blockWidth = min(optimalWidth, avail)
+            local blockRows = ceil(count / blockWidth)
 
             if blockRows > 1 and (curCol > 0 or blockWidth < cols) then
                 if #currentLine > 0 then
@@ -161,8 +163,8 @@ function View:Layout(contentFrame, width, filteredButtons)
                 end
                 curCol = 0
                 startCol = 0
-                blockWidth = math.min(count, cols)
-                blockRows = math.ceil(count / blockWidth)
+                blockWidth = min(count, cols)
+                blockRows = ceil(count / blockWidth)
             end
 
             tinsert(currentLine, {
@@ -230,7 +232,7 @@ function View:Layout(contentFrame, width, filteredButtons)
             yOffset = yOffset + maxRows * cellSize
         end
         if #lines > 0 then
-            yOffset = yOffset + math.floor(cellSize * verticalSpacing * 0.25 + 0.5)
+            yOffset = yOffset + floor(cellSize * verticalSpacing * 0.25 + 0.5)
         end
     else
         for _, categoryName in ipairs(categoryNames) do
@@ -239,7 +241,7 @@ function View:Layout(contentFrame, width, filteredButtons)
                 OneWoW_Bags:SortButtons(items)
 
                 if showHeaders then
-                    local section = BCM:AcquireSection(contentFrame)
+                    local section = BankCategoryManager:AcquireSection(contentFrame)
                     section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
                     section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
                     section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -298,15 +300,13 @@ function View:Layout(contentFrame, width, filteredButtons)
                     end
 
                     section:SetHeight(sectionHeight)
-                    yOffset = yOffset + sectionHeight + math.floor(cellSize * verticalSpacing * 0.25 + 0.5)
+                    yOffset = yOffset + sectionHeight + floor(cellSize * verticalSpacing * 0.25 + 0.5)
 
                     local capturedName = categoryName
                     section.header:SetScript("OnClick", function()
                         section.isCollapsed = not section.isCollapsed
                         db.global.collapsedBankSections[categoryName] = section.isCollapsed or nil
-                        if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.RefreshLayout then
-                            OneWoW_Bags.BankGUI:RefreshLayout()
-                        end
+                        OneWoW_Bags.BankGUI:RefreshLayout()
                     end)
                 else
                     local itemRow = 0
@@ -325,11 +325,11 @@ function View:Layout(contentFrame, width, filteredButtons)
                         end
                     end
                     local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
-                    yOffset = yOffset + totalRows * cellSize + math.floor(cellSize * verticalSpacing * 0.25 + 0.5)
+                    yOffset = yOffset + totalRows * cellSize + floor(cellSize * verticalSpacing * 0.25 + 0.5)
                 end
             end
         end
     end
 
-    return math.max(yOffset, 100)
+    return max(yOffset, 100)
 end

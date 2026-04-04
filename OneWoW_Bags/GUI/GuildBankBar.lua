@@ -3,6 +3,12 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local db = OneWoW_Bags.db
+local L = OneWoW_Bags.L
+
+local pairs = pairs
+local C_Timer = C_Timer
+
 OneWoW_Bags.GuildBankBar = {}
 local GuildBankBar = OneWoW_Bags.GuildBankBar
 
@@ -14,8 +20,6 @@ local BAR_HEIGHT = 38
 
 function GuildBankBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
-
-    local L = OneWoW_Bags.L
 
     bagsBarFrame = CreateFrame("Frame", "OneWoW_GuildBankBagsBar", parent, "BackdropTemplate")
     bagsBarFrame:SetHeight(BAR_HEIGHT)
@@ -63,9 +67,7 @@ function GuildBankBar:Create(parent)
     local logBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_LOG"] or "Log", height = 22, minWidth = 30 })
     logBtn:SetPoint("RIGHT", depositBtn, "LEFT", -4, 0)
     logBtn:SetScript("OnClick", function()
-        if OneWoW_Bags.GuildBankLog then
-            OneWoW_Bags.GuildBankLog:Toggle()
-        end
+        OneWoW_Bags.GuildBankLog:Toggle()
     end)
     bagsBarFrame.logBtn = logBtn
 
@@ -120,8 +122,6 @@ function GuildBankBar:BuildTabButtons()
 end
 
 function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewable)
-    local L = OneWoW_Bags.L
-
     local btn = CreateFrame("Button", "OneWoW_GuildBankTab" .. tabID, parent)
     btn:SetSize(26, 26)
     btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -181,7 +181,6 @@ function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewabl
             return
         end
 
-        local db = OneWoW_Bags.db
         if db.global.guildBankSelectedTab == self.tabID then
             db.global.guildBankSelectedTab = nil
         else
@@ -213,7 +212,7 @@ function GuildBankBar:OpenTabEditor(tabID)
     GuildBankPopupFrame:SetClampedToScreen(true)
     GuildBankPopupFrame:SetClampRectInsets(0, 0, 0, 0)
     GuildBankPopupFrame:SetFrameLevel(999)
-    local gbWindow = OneWoW_Bags.GuildBankGUI and OneWoW_Bags.GuildBankGUI:GetMainWindow()
+    local gbWindow = OneWoW_Bags.GuildBankGUI:GetMainWindow()
     if gbWindow then
         GuildBankPopupFrame:SetPoint("TOPLEFT", gbWindow, "TOPRIGHT", 2, 0)
     else
@@ -222,7 +221,6 @@ function GuildBankBar:OpenTabEditor(tabID)
 end
 
 function GuildBankBar:UpdateTabHighlights()
-    local db = OneWoW_Bags.db
     local selected = db.global.guildBankSelectedTab
     for tabID, btn in pairs(tabButtons) do
         if btn._skinBorder then
