@@ -25,14 +25,13 @@ Locales\frFR.lua
 Locales\ruRU.lua
 Locales\deDE.lua
 
-Core\Core.lua                      ← utility: ConfigEnum
 Core\Constants.lua                 ← GUI constants, icon size table
 Core\Database.lua                  ← DB:Init, defaults, migrations
+Core\BagTypes.lua                  ← bag ID constants, classification helpers
+Core\BankTypes.lua                 ← bank/warband tab constants
 Core\Events.lua                    ← event router (dirtyBags, RuntimeEvents)
+Core\PredicateEngine.lua           ← search expression tokenizer/compiler/evaluator
 
-Data\BagTypes.lua                  ← bag ID constants, classification helpers
-Data\BankTypes.lua                 ← bank/warband tab constants
-Data\PredicateEngine.lua           ← search expression tokenizer/compiler/evaluator
 Data\Sorting.lua                   ← item sort comparators
 Data\Categories.lua                ← builtin category defs, classification engine
 
@@ -112,7 +111,7 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 │                      View Layer                              │
 │  ListView, CategoryView, BagView, BankCategoryView,          │
 │  BankTabView, GuildBankTabView                               │
-│  ─ Pure layout: receives buttons + width, returns height     │
+│  ─ Layout: receives buttons + width, returns height          │
 │  ─ Uses viewContext for sort, sections, collapse state        │
 └────────────────────────────┬─────────────────────────────────┘
                              │ reads
@@ -128,8 +127,8 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 ┌────────────────────────────▼─────────────────────────────────┐
 │                      Data Layer                              │
 │  Categories, PredicateEngine, Sorting, BagTypes, BankTypes   │
-│  ─ Stateless classification, expression evaluation,          │
-│    sort comparators, bag/bank ID helpers                     │
+│  ─ Classification, expression evaluation, sort comparators,  │
+│    bag/bank ID helpers                                       │
 │  ─ Categories uses PredicateEngine for search-based matching │
 └────────────────────────────┬─────────────────────────────────┘
                              │ reads
@@ -138,7 +137,6 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 │  Database (DB:Init, defaults, migrations)                    │
 │  Events (event routing table, dirtyBags accumulator)         │
 │  Constants (GUI metrics, icon sizes)                         │
-│  Core.lua (ConfigEnum utility)                               │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -147,12 +145,12 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 `OneWoW_Bags` (the second vararg from `local _, OneWoW_Bags = ...`) serves as the central orchestration hub. All layers attach their tables to it, and it is also exposed as `_G.OneWoW_Bags` for cross-addon access.
 
 The root object provides:
-- **State flags:** `bankOpen`, `guildBankOpen`, `inventoryPresentationState`
+- **State flags:** `bankOpen`, `guildBankOpen`, `oneWoWHubActive`, `inventoryPresentationState` (contains `altShowActive`)
 - **Lifecycle:** `OnAddonLoaded`, `OnPlayerLogin`, `InitializeControllers`, `InitializeDatabase`
 - **Refresh orchestration:** `RequestLayoutRefresh(target)`, `RequestVisualRefresh(target)`, `RequestWindowReset(target)`
 - **Cache invalidation:** `InvalidateCategorization(scope)`
-- **Blizzard hooks:** `HookBlizzardBags`, `SuppressBankFrame`, `RestoreBankFrame`
-- **Helpers:** `GetDB`, `ShouldShowItemQuality`, `ShouldDimJunkItem`, `EnsureCategoryModification`
+- **Blizzard hooks:** `HookBlizzardBags`, `SuppressBankFrame`, `RestoreBankFrame`, `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
+- **Helpers:** `GetDB`, `ShouldShowItemQuality`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`
 
 ---
 
@@ -310,6 +308,8 @@ An acquire/release object pool for `ItemButton` frames. Pre-allocates 220 frames
 Applied to each pooled button via `ApplyItemButtonMixin`. Provides:
 - `OWB_SetSlot(bagID, slotID)` — assigns the button to a bag slot
 - `OWB_FullUpdate()` — reads `C_Container.GetContainerItemInfo` and updates all visuals
+- `OWB_MarkDirty`, `OWB_IsDirty` — dirty flag management
+- `OWB_IsJunkItem` — OneWoW.ItemStatus or quality-based junk check
 - `OWB_UpdateNewItemGlow`, `OWB_UpdateJunkDim`, `OWB_UpdateUnusableOverlay`
 - `OWB_RefreshCooldown`, `OWB_RefreshLock`, `OWB_SetIconSize`, `OWB_GetLink`
 
@@ -319,6 +319,8 @@ Each button carries state on itself:
 - `owb_hasItem` — boolean
 - `owb_categoryName` — set by `CategoryManager:AssignCategories`
 - `owb_dirty` — dirty flag for deferred updates
+- `owb_isBank` — set by `BankSet:ApplyBankScripts` for bank buttons
+- `owb_isGuildBank` — set by `GuildBankSet:ApplyGuildBankScripts` for guild bank buttons
 
 ### BagSet / BankSet / GuildBankSet
 
@@ -330,6 +332,8 @@ These manage the slot-to-button mapping for each container context. They:
 
 `BagSet` holds `bagContainerFrames[bagID]` — invisible parent frames with correct `SetID(bagID)` that Blizzard's `ContainerFrameItemButtonTemplate` requires for secure pickup/use behavior.
 
+`GuildBankSet` is structurally different from `BagSet`/`BankSet`: it uses a **cache-driven** approach instead of `C_Container`. Item data is read via `GetGuildBankItemInfo`/`GetGuildBankItemLink` into `cache[tabID][slotID]`, then applied to buttons via `ApplyCacheToButtons`. Guild bank buttons get custom scripts for money cursor handling, `AutoStoreGuildBankItem`, and cross-tab pickup. Each tab has a fixed 98 slots.
+
 ### CategoryManagerBase
 
 A factory that creates pooled section/divider frames. Each `Create()` returns an independent instance with its own `sectionPool`/`activeSections` and `dividerPool`/`activeDividers`. Three instances exist:
@@ -337,27 +341,35 @@ A factory that creates pooled section/divider frames. Each `Create()` returns an
 - `OneWoW_Bags.BankCategoryManager` — for bank
 - `OneWoW_Bags.GuildBankCategoryManager` — for guild bank
 
-### CategoryManager (Data Module)
+### CategoryManager (Data Module — `Modules\CategoryManager.lua`)
 
-Extends `CategoryManagerBase` with category assignment logic:
+Extends `CategoryManagerBase` with category assignment logic. **Not to be confused with** `CategoryManagerUI` (`GUI\CategoryManager.lua`), which is the category management dialog.
+
 - `AssignCategories()` — iterates all `BagSet` buttons, calls `Categories:GetItemCategory` on each, writes `button.owb_categoryName`
 - `GetItemsByCategory()` — groups buttons by their assigned category name
-- `GetSectionedLayout(itemsByCategory, containerType)` — builds the ordered list of layout entries (categories, section headers, separators) from `displayOrder`, `categorySections`, `sectionOrder`
+- `GetSortedCategoryNames()` — orders names via `categoryOrder` or `Categories:SortCategories`
+- `GetSectionedLayout(itemsByCategory, containerType)` — builds the ordered list of layout entries (categories, section headers, separators) from `displayOrder`, `categorySections`, `sectionOrder`, `categoryModifications.hideIn[containerType]`
 
 ### Views
 
-Views are stateless layout strategies. Each has a `Layout(contentFrame, ...)` function that:
+Views are layout strategies. Each has a `Layout(contentFrame, ...)` function that:
 1. Receives the content frame, available width, filtered buttons, and a `viewContext`
 2. Positions buttons using `SetPoint` and `OWB_SetIconSize`
 3. Returns the total content height
 
-**ListView** — Simple grid. Sorts buttons, places in rows. Reagent bag items go after a gap.
+**ListView** — Simple grid. Sorts buttons, places in rows. Reagent bag items go after a gap. Stateless.
 
-**CategoryView** — The most complex view. Two rendering modes:
-- **Stacked** (default): Each category gets a collapsible section frame with header, item count, and content grid. Supports groupBy (expansion, type, slot, quality) within categories.
+**CategoryView** — The most complex view. Maintains module-level `labelPool`/`activeLabels` for compact mode headers and groupBy sublabels. Two rendering modes:
+- **Stacked** (default): Each category gets a collapsible section frame with header, item count, and content grid. Supports groupBy (expansion, type, slot, quality) within categories. Supports `stackItems` (merging duplicate items).
 - **Compact**: Categories pack horizontally like a bin-packing algorithm. Small categories share rows; large ones get full-width lines. Uses font string labels instead of section frames.
 
-**BagView** — One collapsible section per physical bag (Backpack, Bag 1–4, Reagent Bag).
+**BagView** — One collapsible section per physical bag (Backpack, Bag 1–4, Reagent Bag). Supports single-bag filtering via `selectedBag`.
+
+**BankCategoryView** — Categorizes independently from `CategoryManager`, using `Categories:GetItemCategory` directly on `BankSet` buttons. Supports stacked and compact modes like `CategoryView` but uses a flat category list with pins rather than the section/displayOrder graph. Maintains its own `labelPool`/`activeLabels`.
+
+**BankTabView** — One collapsible section per bank tab (personal or warband depending on `bankShowWarband`). Supports single-tab filtering via `bankSelectedTab`.
+
+**GuildBankTabView** — One collapsible section per guild bank tab. Supports single-tab filtering via `guildBankSelectedTab`.
 
 ### WindowLayoutController
 
@@ -374,15 +386,16 @@ Key config callbacks:
 
 A full expression language for item matching. Supports:
 - Tokenization → parsing → AST compilation → evaluation
-- Property registry: `ilvl`, `quality`, `expansion`, `classID`, `subClassID`, `equipLoc`, etc.
-- Keyword registry: `#weapon`, `#armor`, `#food`, `#hearthstone`, `#set`, etc.
-- Flag registry: `#soulbound`, `#boe`, `#bop`, etc.
+- Property registry: numeric (`ilvl`, `quality`, `expansion`, `count`, `vendorprice`, `bindtype`, `currentbind`, etc.) and string (`name`, `equiploc`)
+- Keyword registry: quality, item type, consumable subtypes, equipment, armor subclass, equipment slots, binding, expansion, collectibles, transmog, item state, vendor/value, crafting, upgrades, tooltip-driven, special
+- Flag registry: `IsEquipment`, `IsSoulbound`, `IsBOE`, `IsWarbound`, `IsUpgrade`, etc. (verbose `IsXxx` style alternatives to `#keyword` syntax)
 - Caching at three levels: compiled expressions, item properties, tooltip text
+- Lazy resolution: bind fields and tooltip fields use a metatable `__index` to defer expensive tooltip scans until first access
 - Used by: search filtering, builtin category matching, custom category search expressions
 
 ### Categories
 
-Defines 25 builtin categories with priority ordering. Classification priority:
+Defines 27 builtin categories with priority ordering (including special categories like 1W Junk, 1W Upgrades, Recent Items, Other, and Empty). Classification priority:
 1. **1W Junk** — OneWoW.ItemStatus junk flagging or Poor quality
 2. **1W Upgrades** — item level comparison against equipped gear
 3. **Custom categories** — user-defined (by item ID, search expression, or item type)
@@ -413,10 +426,21 @@ Window Shell (OneWoW_GUI:CreateFrame)
   └─ Resize handle
 ```
 
+The guild bank window additionally has a **GuildBankLog** companion panel (`GuildBankLog.lua`) that displays transaction history (items and gold) with per-tab filtering. It positions itself adjacent to the main guild bank window and updates via `GUILDBANKLOG_UPDATE`.
+
 Each window has:
 - A `RefreshLayout()` that calls `WindowLayoutController:Refresh` with its specific config
 - A `FullReset()` that destroys all frames and rebuilds from scratch (used for theme/language changes)
 - Show/Hide/Toggle methods
+- An `ApplyTheme()` for live theme switching
+
+### InfoBarFactory
+
+The bags window uses a hand-built `InfoBar` (`GUI\InfoBar.lua`), but the bank and guild bank windows use `InfoBarFactory:Create(config)` (`GUI\InfoBarFactory.lua`) to generate their info bars. The factory accepts a config table specifying the controller, view modes, expansion filter settings, and DB keys. This avoids duplicating info bar construction logic across windows while allowing per-window customization.
+
+### Sorting
+
+`OneWoW_Bags:SortButtons(buttons, overrideSortMode)` sorts item buttons in-place. Supported modes: `none` (no sort), `default` (bag/slot order), `name`, `rarity`, `ilvl`, `type` (class/subclass/equip location), `expansion`. Empty slots are always sorted last.
 
 ### Width Calculation
 
@@ -455,7 +479,8 @@ The `Events` table serves as a thin routing layer. It:
 | Guild bank | `PLAYER_INTERACTION_MANAGER_FRAME_SHOW/HIDE` with `GuildBanker` type |
 | Merchant | `MERCHANT_SHOW/CLOSED` → auto-open/close with guard timers |
 | Money | `PLAYER_MONEY`/`ACCOUNT_MONEY` → update gold display |
-| Predicate invalidation | `EQUIPMENT_SETS_CHANGED`/`PLAYER_EQUIPMENT_CHANGED`/`GET_ITEM_INFO_RECEIVED` |
+| Quest changes | `QUEST_ACCEPTED`/`QUEST_REMOVED` → `ProcessBagUpdate(BuildAllBagDirtySet())` |
+| Predicate invalidation | `EQUIPMENT_SETS_CHANGED`/`PLAYER_EQUIPMENT_CHANGED`/`GET_ITEM_INFO_RECEIVED` → coalesced `C_Timer.After(0)` refresh |
 
 ---
 
@@ -463,11 +488,14 @@ The `Events` table serves as a thin routing layer. It:
 
 All persisted state lives in `OneWoW_Bags_DB.global`. Key groups:
 
-### Display Settings
-`viewMode`, `columns`, `bagColumns`, `bankColumns`, `scale`, `iconSize`, `itemSort`, `compactCategories`, `compactGap`, `categorySpacing`, `showCategoryHeaders`, `showEmptySlots`, `hideScrollBar`, `showBagsBar`, `showMoneyBar`, `showHeaderBar`, `showSearchBar`
+### Display Settings (Bags)
+`viewMode`, `columns`, `bagColumns`, `scale`, `iconSize`, `itemSort`, `compactCategories`, `compactGap`, `categorySpacing`, `showCategoryHeaders`, `showEmptySlots`, `hideScrollBar`, `showBagsBar`, `showMoneyBar`, `showHeaderBar`, `showSearchBar`, `selectedBag`
+
+### Display Settings (Bank / Guild Bank)
+`bankViewMode`, `guildBankViewMode`, `bankColumns`, `bankCompactCategories`, `bankCompactGap`, `bankCategorySpacing`, `showBankCategoryHeaders`, `bankHideScrollBar`, `showBankBagsBar`, `showBankSearchBar`, `showBankHeaderBar`, `bankSelectedTab`, `guildBankSelectedTab`, `bankShowWarband`
 
 ### Behavior Settings
-`autoOpen`, `autoClose`, `autoOpenWithBank`, `locked`, `enableBankUI`, `enableBankOverlays`, `altToShow`, `enableExpansionFilter`, `enableInventorySlots`, `stackItems`
+`autoOpen`, `autoClose`, `autoOpenWithBank`, `locked`, `bankLocked`, `enableBankUI`, `enableBankOverlays`, `altToShow`, `enableExpansionFilter`, `enableBankExpansionFilter`, `enableInventorySlots`, `stackItems`
 
 ### Visual Settings
 `rarityColor`, `rarityIntensity`, `bankRarityColor`, `showNewItems`, `showUnusableOverlay`, `dimJunkItems`, `stripJunkOverlays`
@@ -476,7 +504,7 @@ All persisted state lives in `OneWoW_Bags_DB.global`. Key groups:
 `customCategoriesV2` (table of custom category definitions), `disabledCategories`, `categoryModifications`, `categorySort`, `categoryOrder`, `categorySections`, `sectionOrder`, `displayOrder`, `enableJunkCategory`, `enableUpgradeCategory`, `moveUpgradesToTop`, `moveOtherToBottom`, `pinnedCategories`
 
 ### Collapse State
-`collapsedSections` (bags categories), `collapsedBagSections` (bags per-bag), `collapsedBankSections`, `collapsedBankCategorySections`, `collapsedBankTabSections`, `collapsedGuildBankTabSections`
+`collapsedSections` (bags categories), `collapsedBagSections` (bags per-bag), `collapsedBankSections`, `collapsedGuildBankSections`, `collapsedBankCategorySections`, `collapsedBankTabSections`, `collapsedGuildBankTabSections`
 
 ### Positions
 `mainFramePosition`, `bankFramePosition`, `guildBankFramePosition`
@@ -487,9 +515,14 @@ All persisted state lives in `OneWoW_Bags_DB.global`. Key groups:
 ### Migrations
 `_migrationVersion` — integer, currently up to 7. Managed by `DB:RunMigrations`.
 
+Migrations: 1 = category system v2 rename, 2 = junk rename, 3 = displayOrder build, 4 = category system v3 (section IDs, duration, pet/mount rename), 5 = itemSort reset, 6 = cleanup legacy flags, 7 = split collapsed bank/guild state into tab vs category keyed tables.
+
 ---
 
 ## Integration Points
+
+### Addon Compartment
+The addon registers `AddonCompartmentFunc`, `AddonCompartmentFuncOnEnter`, and `AddonCompartmentFuncOnLeave` in the TOC for the 12.0+ addon compartment button (accessible from the minimap). Clicking toggles the bags window; hovering shows a tooltip.
 
 ### OneWoW Hub Integration
 - `RegisterLoadComponent` — registers with hub's addon loader UI
@@ -497,6 +530,7 @@ All persisted state lives in `OneWoW_Bags_DB.global`. Key groups:
 - `OneWoW.ItemStatus:IsItemJunk` — enhanced junk detection
 - `OneWoW.UpgradeDetection:CheckItemUpgrade` — enhanced upgrade detection
 - `OneWoW.OverlayEngine` — item button overlays (clean/refresh)
+- `OneWoW.SettingsFeatureRegistry` — registers feature flags for settings interop
 
 ### OneWoW_GUI Integration
 - `DB:Init` / `DB:RunMigrations` / `DB:MergeMissing` — database management

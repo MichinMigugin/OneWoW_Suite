@@ -110,6 +110,11 @@ All keywords are case-insensitive.
 | `#mail` | Mail armor |
 | `#plate` | Plate armor |
 | `#shield` | Shields |
+| `#libram` | Librams |
+| `#idol` | Idols |
+| `#totem` | Totems |
+| `#sigil` | Sigils |
+| `#relic` | Relics |
 
 ### Equipment Slot
 
@@ -146,10 +151,14 @@ All keywords are case-insensitive.
 | `#bou` | `#bindonuse` | Bind on Use items (not yet bound) |
 | `#wue` | `#warbounduntilequip` | Warbound Until Equipped items |
 
-> **Note:** Bind keywords use the game's API bind type, which may differ from
-> the tooltip display text. In WoW 12.0, many items display "Warbound Until
-> Equipped" in their tooltip but have an API bind type of "Bind on Equip".
-> These items match `#boe`, not `#wue`.
+> **Note:** Bind keywords use **tooltip-based detection** (reading the bind
+> line from `C_TooltipInfo`), not the item's API `bindType` field. This means
+> they reflect the item's *current* binding state as displayed in the tooltip.
+> For example, an item that *was* BoE but has since been equipped will match
+> `#soulbound`, not `#boe`. The separate `bindtype` numeric property (used in
+> property comparisons like `bindtype=2`) still reflects the item definition's
+> bind type from the API. Use `currentbind` to compare the tooltip-derived
+> bind enum value numerically.
 
 ### Expansion
 
@@ -161,7 +170,7 @@ Each expansion has a full name keyword and one or more short aliases.
 | `#burningcrusade` | `#tbc` |
 | `#wrath` | `#wotlk` |
 | `#cataclysm` | `#cata` |
-| `#mistsofpandaria` | `#mists`, `#mop`, `#pandaria` |
+| `#mists` | `#mop`, `#pandaria` |
 | `#draenor` | `#wod`, `#warlords` |
 | `#legion` | |
 | `#battleforazeroth` | `#bfa` |
@@ -170,6 +179,10 @@ Each expansion has a full name keyword and one or more short aliases.
 | `#warwithin` | `#tww`, `#thewarwithin` |
 | `#midnight` | |
 | `#lasttitan` | `#titan` |
+
+> **Note:** `#mistsofpandaria` is not a valid keyword — use `#mists`, `#mop`, or
+> `#pandaria` instead. Similarly, `#northrend` is not valid — use `#wrath` or
+> `#wotlk`.
 
 ### Collectibles
 
@@ -288,10 +301,11 @@ Syntax: `property>=value`, `property<=value`, `property>value`, `property<value`
 | `totalvalue` | | Vendor sell price x stack size (copper) |
 | `maxstack` | `stacksize` | Maximum stack size |
 | `reqlevel` | `minlevel` | Required player level |
-| `expansion` | `expac` | Expansion ID (0=Classic, 1=TBC, ..., 10=TWW, 11=Midnight) |
+| `expansion` | `expac` | Expansion ID (0=Classic, 1=TBC, ..., 10=TWW, 11=Midnight, 12=Last Titan) |
 | `class` | `typeid` | Item class ID |
 | `subclass` | `subtypeid` | Item subclass ID |
-| `bindtype` | | Bind type ID (0=None, 1=BoP, 2=BoE, 3=BoU, 8=Warband, 9=WUE) |
+| `bindtype` | | Bind type ID from item data (0=None, 1=BoP, 2=BoE, 3=BoU, 8=Warband, 9=WUE) |
+| `currentbind` | | Current tooltip bind state (from `Enum.TooltipDataItemBinding`). Reflects actual binding, not item definition. |
 | `craftedquality` | | Crafted quality tier (1-5, 0 if not crafted) |
 | `upgradelevel` | | Current upgrade level |
 | `upgrademax` | | Maximum upgrade level |
@@ -366,9 +380,12 @@ read more like natural conditions.
 | `IsEquipment` | `#gear` |
 | `IsSoulbound` | `#soulbound` |
 | `IsBOE` | `#boe` |
+| `IsBindOnEquip` | `#boe` |
 | `IsBOA` | `#warbound` |
 | `IsWarbound` | `#warbound` |
+| `IsAccountBound` | `#warbound` |
 | `IsBOU` | `#bou` |
+| `IsBindOnUse` | `#bou` |
 | `IsWUE` | `#wue` |
 | `IsWarboundUntilEquip` | `#wue` |
 | `IsInEquipmentSet` | `#set` |
