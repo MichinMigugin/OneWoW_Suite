@@ -4,7 +4,7 @@ local Constants = OneWoW_Bags.Constants
 local BagTypes = OneWoW_Bags.BagTypes
 
 local floor, max = math.floor, math.max
-local ipairs = pairs
+local ipairs = ipairs
 local tinsert = tinsert
 
 OneWoW_Bags.ListView = {}
