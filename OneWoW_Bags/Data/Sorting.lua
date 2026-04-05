@@ -71,14 +71,12 @@ function OneWoW_Bags:SortButtons(buttons, overrideSortMode)
             return aName < bName
         end)
     elseif sortMode == "expansion" then
-        local PE = OneWoW_Bags.PredicateEngine
+        local WH = OneWoW_Bags.WindowHelpers
         sort(buttons, function(a, b)
             if not a.owb_hasItem then return false end
             if not b.owb_hasItem then return true end
-            local aLink = a.owb_itemInfo and a.owb_itemInfo.hyperlink
-            local bLink = b.owb_itemInfo and b.owb_itemInfo.hyperlink
-            local aExp = PE and aLink and PE:GetExpansionID(a.owb_itemInfo.itemID, aLink) or -1
-            local bExp = PE and bLink and PE:GetExpansionID(b.owb_itemInfo.itemID, bLink) or -1
+            local aExp = WH and a.owb_itemInfo and WH:ResolveExpansionID(a.owb_itemInfo, a.owb_bagID, a.owb_slotID) or -1
+            local bExp = WH and b.owb_itemInfo and WH:ResolveExpansionID(b.owb_itemInfo, b.owb_bagID, b.owb_slotID) or -1
             if aExp ~= bExp then return aExp > bExp end
             local aQ = a.owb_itemInfo and a.owb_itemInfo.quality or 0
             local bQ = b.owb_itemInfo and b.owb_itemInfo.quality or 0

@@ -155,6 +155,10 @@ function BankSet:UpdateAllSlots()
     self:ProcessDirtySlots()
 end
 
+function BankSet:RefreshAllVisuals()
+    self:UpdateAllSlots()
+end
+
 function BankSet:UpdateQualityColors()
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do

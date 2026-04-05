@@ -8,8 +8,10 @@ local DB = OneWoW_GUI.DB
 local Constants = OneWoW_Bags.Constants
 local PE = OneWoW_Bags.PredicateEngine
 
-local tinsert = tinsert
-local ipairs = ipairs
+local tinsert, sort = tinsert, sort
+local ipairs, pairs = ipairs, pairs
+local type = type
+local Enum = Enum
 
 OneWoW_Bags.WindowHelpers = {}
 local WH = OneWoW_Bags.WindowHelpers
@@ -143,6 +145,45 @@ function WH:RegisterDeferredCleanup(config)
     return eventFrame
 end
 
+function WH:GetExpansionName(expansionID)
+    if expansionID == nil then
+        return nil
+    end
+    return _G["EXPANSION_NAME" .. expansionID]
+end
+
+function WH:GetKnownExpansionIDs()
+    local expansionEnum = Enum and Enum.ExpansionLevel
+    local ids = {}
+    local seen = {}
+    if type(expansionEnum) ~= "table" then
+        return ids
+    end
+
+    for _, expansionID in pairs(expansionEnum) do
+        if type(expansionID) == "number" and not seen[expansionID] then
+            seen[expansionID] = true
+            tinsert(ids, expansionID)
+        end
+    end
+
+    sort(ids)
+    return ids
+end
+
+function WH:ResolveExpansionID(itemInfo, bagID, slotID)
+    if not itemInfo or not itemInfo.itemID then
+        return nil
+    end
+
+    local props = PE:BuildProps(itemInfo.itemID, bagID, slotID, itemInfo)
+    if props and props.expansionID ~= nil then
+        return props.expansionID
+    end
+
+    return nil
+end
+
 function WH:FilterBySearch(buttons, searchText)
     if not searchText or searchText == "" then
         return buttons
@@ -168,8 +209,8 @@ function WH:FilterByExpansion(buttons, expacFilter)
     local filtered = {}
     for _, button in ipairs(buttons) do
         if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-            local props = PE:BuildProps(button.owb_itemInfo.itemID, button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
-            if props.expansionID == expacFilter then
+            local expansionID = self:ResolveExpansionID(button.owb_itemInfo, button.owb_bagID, button.owb_slotID)
+            if expansionID == expacFilter then
                 tinsert(filtered, button)
             end
         end

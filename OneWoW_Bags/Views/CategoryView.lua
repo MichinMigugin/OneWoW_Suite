@@ -6,6 +6,7 @@ if not OneWoW_GUI then return end
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
 local CategoryManager = OneWoW_Bags.CategoryManager
+
 local PE = OneWoW_Bags.PredicateEngine
 
 local floor, max, min, sqrt, ceil = math.floor, math.max, math.min, math.sqrt, math.ceil
@@ -195,10 +196,10 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
         local groupOrder = {}
         for _, btn in ipairs(items) do
             local expID = -1
-            if PE and btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
+            if btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
                 expID = PE:GetExpansionID(btn.owb_itemInfo.itemID, btn.owb_itemInfo.hyperlink) or -1
             end
-            local expName = (PE and PE:GetExpansionName(expID)) or "Unknown"
+            local expName = PE:GetExpansionName(expID) or "Unknown"
             if not groups[expName] then
                 groups[expName] = {}
                 tinsert(groupOrder, { name = expName, sortKey = expID })

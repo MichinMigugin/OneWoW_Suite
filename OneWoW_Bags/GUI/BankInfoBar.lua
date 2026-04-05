@@ -4,6 +4,8 @@ OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
     controllerKey = "BankController",
     guiTargetKey = "BankGUI",
     viewModeDBKey = "bankViewMode",
+    showHeaderKey = "showBankHeaderBar",
+    showSearchKey = "showBankSearchBar",
     searchName = "OneWoW_BankSearch",
     viewModes = {
         { mode = "list",     labelKey = "VIEW_LIST" },

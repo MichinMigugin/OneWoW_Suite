@@ -116,7 +116,11 @@ function OneWoW_Bags:ShouldShowItemQuality(isBank, quality)
         return false
     end
 
-    return isBank and db.global.bankRarityColor or db.global.rarityColor
+    if isBank then
+        return db.global.bankRarityColor == true
+    end
+
+    return db.global.rarityColor == true
 end
 
 function OneWoW_Bags:ShouldDimJunkItem(isJunk)
@@ -133,6 +137,11 @@ function OneWoW_Bags:ShouldStripJunkOverlays(isJunk)
         return false
     end
     return isJunk and db.global.stripJunkOverlays and not self:IsAltShowActive()
+end
+
+function OneWoW_Bags:IsBankUIEnabled()
+    local db = self:GetDB()
+    return db and db.global.enableBankUI ~= false
 end
 
 function OneWoW_Bags:EnsureCategoryModification(categoryName)
@@ -183,7 +192,7 @@ function OneWoW_Bags:InvalidateCategorization(scope)
     if self.Categories then
         self.Categories:SetCustomCategories(db.global.customCategoriesV2)
         self.Categories:SetRecentItemDuration(db.global.recentItemDuration)
-        if scope ~= "props" and self.Categories.InvalidateCache then
+        if self.Categories.InvalidateCache then
             self.Categories:InvalidateCache()
         end
     end
@@ -378,7 +387,9 @@ function OneWoW_Bags:OnPlayerLogin()
 end
 
 function OneWoW_Bags:HookPetCageTooltip()
-    local CAGE_ID = self.PE.BATTLE_PET_CAGE_ID
+    local predicateEngine = self.PredicateEngine
+    if not predicateEngine or not predicateEngine.BATTLE_PET_CAGE_ID then return end
+    local CAGE_ID = predicateEngine.BATTLE_PET_CAGE_ID
 
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
         if not data or not data.id or data.id ~= CAGE_ID then return end
@@ -410,7 +421,18 @@ function OneWoW_Bags:HookPetCageTooltip()
 end
 
 function OneWoW_Bags:OnBankOpened()
-    self.bankOpen = true
+    self.bankOpen = self:IsBankUIEnabled()
+    if not self:IsBankUIEnabled() then
+        self:RestoreBankFrame()
+        if self.BankGUI and self.BankGUI:IsShown() then
+            self.BankGUI:Hide()
+        end
+        if self.db.global.autoOpenWithBank then
+            self.GUI:Show()
+        end
+        return
+    end
+
     self:SuppressBankFrame()
 
     local activeBankType = self.db.global.bankShowWarband and Enum.BankType.Account or Enum.BankType.Character
@@ -432,6 +454,11 @@ function OneWoW_Bags:OnBankOpened()
 end
 
 function OneWoW_Bags:OnBankClosed()
+    if not self:IsBankUIEnabled() then
+        self.bankOpen = false
+        self:RestoreBankFrame()
+        return
+    end
     if not self.bankOpen then return end
     self.bankOpen = false
     if BankFrame and BankFrame.BankPanel then
@@ -466,7 +493,17 @@ function OneWoW_Bags:RestoreGuildBankFrame()
 end
 
 function OneWoW_Bags:OnGuildBankOpened()
-    self.guildBankOpen = true
+    self.guildBankOpen = self:IsBankUIEnabled()
+    if not self:IsBankUIEnabled() then
+        self:RestoreGuildBankFrame()
+        if self.GuildBankGUI and self.GuildBankGUI:IsShown() then
+            self.GuildBankGUI:Hide()
+        end
+        if self.db.global.autoOpenWithBank then
+            self.GUI:Show()
+        end
+        return
+    end
 
     self:SuppressGuildBankFrame()
     self.GuildBankGUI:Show()
@@ -477,6 +514,11 @@ function OneWoW_Bags:OnGuildBankOpened()
 end
 
 function OneWoW_Bags:OnGuildBankClosed()
+    if not self:IsBankUIEnabled() then
+        self.guildBankOpen = false
+        self:RestoreGuildBankFrame()
+        return
+    end
     if not self.guildBankOpen then return end
     self.guildBankOpen = false
     self.GuildBankGUI:Hide()
@@ -649,22 +691,40 @@ function OneWoW_Bags:RegisterSlashCommands()
 end
 
 function OneWoW_Bags:HookBlizzardBags()
-    local function OpenOurBags()
+    local function IsMerchantVisible()
+        return MerchantFrame and MerchantFrame:IsShown()
+    end
+
+    local function OpenOurBags(source)
+        if source == "auto" and IsMerchantVisible() then
+            return
+        end
         OneWoW_Bags.GUI:Show()
     end
 
-    local function CloseOurBags()
+    local function CloseOurBags(source)
+        if source == "auto" then
+            if IsMerchantVisible() then
+                return
+            end
+            if OneWoW_Bags.vendorInteractionActive then
+                return
+            end
+            if OneWoW_Bags.vendorCloseGuardActive then
+                return
+            end
+        end
         OneWoW_Bags.GUI:Hide()
     end
 
-    local function ToggleOurBags()
+    local function ToggleOurBags(source)
         OneWoW_Bags.GUI:Toggle()
     end
 
     local bindingFrame = CreateFrame("Button", "OneWoW_BagsBindingFrame")
     bindingFrame:RegisterForClicks("AnyDown")
     bindingFrame:SetScript("OnClick", function()
-        ToggleOurBags()
+        ToggleOurBags("explicit")
     end)
     self.bindingFrame = bindingFrame
 
@@ -716,29 +776,56 @@ function OneWoW_Bags:HookBlizzardBags()
         ContainerFrameCombinedBags:HookScript("OnShow", function(self) self:Hide() end)
     end
 
-    hooksecurefunc("OpenBackpack", OpenOurBags)
-    hooksecurefunc("CloseBackpack", CloseOurBags)
-    hooksecurefunc("ToggleAllBags", ToggleOurBags)
-    hooksecurefunc("OpenAllBags", function() OpenOurBags() end)
-    hooksecurefunc("CloseAllBags", function() CloseOurBags() end)
+    hooksecurefunc("OpenBackpack", function() OpenOurBags("auto") end)
+    hooksecurefunc("CloseBackpack", function() CloseOurBags("auto") end)
+    hooksecurefunc("ToggleAllBags", function() ToggleOurBags("auto") end)
+    hooksecurefunc("OpenAllBags", function() OpenOurBags("auto") end)
+    hooksecurefunc("CloseAllBags", function() CloseOurBags("auto") end)
 
     hooksecurefunc("OpenBag", function(bagID)
         if self.BagTypes:IsPlayerBag(bagID) then
-            OpenOurBags()
+            OpenOurBags("auto")
         end
     end)
 
     hooksecurefunc("CloseBag", function(bagID)
         if self.BagTypes:IsPlayerBag(bagID) then
-            CloseOurBags()
+            CloseOurBags("auto")
         end
     end)
 
     if EventRegistry then
-        EventRegistry:RegisterCallback("ContainerFrame.OpenAllBags", OpenOurBags, self)
-        EventRegistry:RegisterCallback("ContainerFrame.CloseAllBags", CloseOurBags, self)
+        EventRegistry:RegisterCallback("ContainerFrame.OpenAllBags", function()
+            OpenOurBags("auto")
+        end, self)
+        EventRegistry:RegisterCallback("ContainerFrame.CloseAllBags", function()
+            CloseOurBags("auto")
+        end, self)
     end
 
+end
+
+function OneWoW_Bags:OnMerchantShow()
+    self.vendorInteractionActive = true
+    self.vendorCloseGuardActive = false
+    self.vendorAutoOpenedBags = false
+    if not self.db.global.autoOpen then
+        return
+    end
+    self.vendorAutoOpenedBags = true
+    self.GUI:Show()
+end
+
+function OneWoW_Bags:OnMerchantClosed()
+    self.vendorInteractionActive = false
+    self.vendorCloseGuardActive = true
+    if self.db.global.autoClose and self.GUI and self.GUI:IsShown() then
+        self.GUI:Hide()
+    end
+    self.vendorAutoOpenedBags = false
+    C_Timer.After(0, function()
+        self.vendorCloseGuardActive = false
+    end)
 end
 
 local moneyDialog = nil
@@ -908,6 +995,12 @@ local runtimeEventHandlers = {
     end,
     BANKFRAME_CLOSED = function(...)
         Events:OnBankClosed(...)
+    end,
+    MERCHANT_SHOW = function(...)
+        Events:OnMerchantShow(...)
+    end,
+    MERCHANT_CLOSED = function(...)
+        Events:OnMerchantClosed(...)
     end,
     PLAYER_INTERACTION_MANAGER_FRAME_SHOW = function(...)
         Events:OnPlayerInteractionShow(...)

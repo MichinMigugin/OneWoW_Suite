@@ -86,7 +86,8 @@ function BankGUI:InitMainWindow()
 
     local infoBar = BankInfoBar:Create(contentArea)
     local bankBar = BankBar:Create(contentArea)
-    BankBar:SetShown(true)
+    BankInfoBar:UpdateVisibility()
+    BankBar:SetShown(db.global.showBankBagsBar ~= false)
 
     local hideScrollBar = db.global.bankHideScrollBar
     contentScrollFrame, contentFrame = WH:CreateScrollScaffold({
@@ -159,6 +160,8 @@ function BankGUI:RefreshLayout()
             BankGUI:UpdateWindowWidth()
         end,
         beforeLayout = function()
+            BankInfoBar:UpdateVisibility()
+            BankBar:SetShown(db.global.showBankBagsBar ~= false)
             controller:BindScrollFrame({
                 scrollFrame = contentScrollFrame,
                 hideScrollBar = db.global.bankHideScrollBar,

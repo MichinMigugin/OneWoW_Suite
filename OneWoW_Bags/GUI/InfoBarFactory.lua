@@ -5,7 +5,7 @@ if not OneWoW_GUI then return end
 
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
-local PE = OneWoW_Bags.PredicateEngine
+local WH = OneWoW_Bags.WindowHelpers
 
 local floor = math.floor
 local ipairs, pairs = ipairs, pairs
@@ -19,6 +19,20 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
 
     local ROW1_H = 28
     local ROW2_H = 28
+
+    local function GetShowHeader(db)
+        if not config.showHeaderKey then
+            return true
+        end
+        return db.global[config.showHeaderKey] ~= false
+    end
+
+    local function GetShowSearch(db)
+        if not config.showSearchKey then
+            return true
+        end
+        return db.global[config.showSearchKey] ~= false
+    end
 
     local function GetController()
         if config.controller then
@@ -99,21 +113,25 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 buildItems = function()
                     local BagSet = OneWoW_Bags[ef.bagSetKey]
                     local items = { { text = L["EXPAC_FILTER_ALL"], value = "ALL" } }
-                    if not BagSet or not BagSet.isBuilt then return items end
+                    if not BagSet or not BagSet.isBuilt or not WH then return items end
                     local found = {}
                     for _, btn in ipairs(BagSet:GetAllButtons()) do
                         if btn.owb_hasItem and btn.owb_itemInfo and btn.owb_itemInfo.itemID then
-                            local props = PE:BuildProps(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
-                            if props.expansionID ~= nil then
-                                found[props.expansionID] = true
+                            local expansionID = WH:ResolveExpansionID(btn.owb_itemInfo, btn.owb_bagID, btn.owb_slotID)
+                            if expansionID ~= nil then
+                                found[expansionID] = true
                             end
                         end
                     end
                     local ids = {}
                     for id in pairs(found) do tinsert(ids, id) end
-                    sort(ids)
+                    if #ids == 0 then
+                        ids = WH:GetKnownExpansionIDs()
+                    else
+                        sort(ids)
+                    end
                     for _, id in ipairs(ids) do
-                        tinsert(items, { text = PE:GetExpansionName(id) or ("Expansion " .. id), value = id })
+                        tinsert(items, { text = WH:GetExpansionName(id) or ("Expansion " .. id), value = id })
                     end
                     return items
                 end,
@@ -198,7 +216,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         searchBox:SetPoint("TOPRIGHT", emptyToggleBtn, "TOPLEFT", -3, 0)
         infoBarFrame.searchBox = searchBox
 
-        bar:UpdateViewButtons()
+        bar:UpdateVisibility()
         return infoBarFrame
     end
 
@@ -207,38 +225,53 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         local db = OneWoW_Bags:GetDB()
         local controller = GetController()
         local mode = controller and controller.GetViewMode and controller:GetViewMode() or db.global[config.viewModeDBKey] or config.viewModes[1].mode
+        local showHeader = GetShowHeader(db)
+        local showSearch = GetShowSearch(db)
 
         for _, entry in ipairs(infoBarFrame._viewButtons) do
             local btn = entry.btn
-            if entry.mode == mode then
-                btn.isActive = true
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            if not showHeader then
+                btn:Hide()
             else
-                btn.isActive = false
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                btn:Show()
+                if entry.mode == mode then
+                    btn.isActive = true
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                else
+                    btn.isActive = false
+                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                end
             end
+        end
+
+        if infoBarFrame.cleanupBtn then
+            infoBarFrame.cleanupBtn:SetShown(showHeader)
         end
 
         if infoBarFrame.emptyToggleBtn then
             local showing = controller and controller.GetShowEmptySlots and controller:GetShowEmptySlots() or true
             infoBarFrame.emptyToggleBtn:SetAlpha(showing and 1.0 or 0.35)
-            infoBarFrame.emptyToggleBtn:SetShown(mode == "list" or mode == "tab")
+            infoBarFrame.emptyToggleBtn:SetShown(showSearch and (mode == "list" or mode == "tab"))
+        end
+
+        if infoBarFrame.searchBox then
+            infoBarFrame.searchBox:SetShown(showSearch)
         end
 
         if config.expacFilter and infoBarFrame.expacDropdown then
             local ef = config.expacFilter
-            local showExpac = db.global[ef.settingKey] == true
+            local showExpac = showHeader and db.global[ef.settingKey] == true
             infoBarFrame.expacDropdown:SetShown(showExpac == true)
             if showExpac and infoBarFrame.expacText then
                 local activeFilter = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or OneWoW_Bags[ef.filterKey]
                 if activeFilter == nil then
                     infoBarFrame.expacText:SetText(OneWoW_Bags.L["EXPAC_FILTER_BTN"])
                 else
-                    local expName = PE:GetExpansionName(activeFilter) or tostring(activeFilter)
+                    local expName = WH and WH:GetExpansionName(activeFilter) or tostring(activeFilter)
                     infoBarFrame.expacText:SetText(expName)
                 end
             end
@@ -246,7 +279,35 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
     end
 
     function bar:UpdateVisibility()
+        if not infoBarFrame then return end
+
+        local db = OneWoW_Bags:GetDB()
+        local showHeader = GetShowHeader(db)
+        local showSearch = GetShowSearch(db)
+        local searchY = showHeader and -(ROW1_H + floor((ROW2_H - 22) / 2)) or -floor((ROW2_H - 22) / 2)
+
         bar:UpdateViewButtons()
+
+        if infoBarFrame.searchBox and showSearch then
+            infoBarFrame.searchBox:ClearAllPoints()
+            infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), searchY)
+            infoBarFrame.searchBox:SetPoint("TOPRIGHT", infoBarFrame.emptyToggleBtn, "TOPLEFT", -3, 0)
+        end
+
+        local newHeight = 0
+        if showHeader then
+            newHeight = newHeight + ROW1_H
+        end
+        if showSearch then
+            newHeight = newHeight + ROW2_H
+        end
+
+        if newHeight == 0 then
+            infoBarFrame:Hide()
+        else
+            infoBarFrame:SetHeight(newHeight)
+            infoBarFrame:Show()
+        end
     end
 
     function bar:GetSearchText()

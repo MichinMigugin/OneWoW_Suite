@@ -14,6 +14,8 @@ Events.RuntimeEvents = {
     "QUEST_REMOVED",
     "BANKFRAME_OPENED",
     "BANKFRAME_CLOSED",
+    "MERCHANT_SHOW",
+    "MERCHANT_CLOSED",
     "PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
     "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
     "GUILDBANKBAGSLOTS_CHANGED",
@@ -28,6 +30,11 @@ Events.RuntimeEvents = {
 }
 
 local function InvalidatePredicatePropsCache()
+    if OneWoW_Bags and OneWoW_Bags.InvalidateCategorization then
+        OneWoW_Bags:InvalidateCategorization("props")
+        return
+    end
+
     local PE = OneWoW_Bags.PredicateEngine
     if PE and PE.InvalidatePropsCache then
         PE:InvalidatePropsCache()
@@ -75,6 +82,14 @@ end
 
 function Events:OnBankClosed()
     OneWoW_Bags:OnBankClosed()
+end
+
+function Events:OnMerchantShow()
+    OneWoW_Bags:OnMerchantShow()
+end
+
+function Events:OnMerchantClosed()
+    OneWoW_Bags:OnMerchantClosed()
 end
 
 function Events:OnPlayerInteractionShow(interactType)

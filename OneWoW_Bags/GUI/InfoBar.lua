@@ -5,12 +5,12 @@ if not OneWoW_GUI then return end
 
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
-local PE = OneWoW_Bags.PredicateEngine
 local BagSet = OneWoW_Bags.BagSet
+local WH = OneWoW_Bags.WindowHelpers
 
 local floor = math.floor
 local pairs, ipairs = pairs, ipairs
-local tinsert = tinsert
+local tinsert, sort = tinsert, sort
 local C_Container = C_Container
 
 OneWoW_Bags.InfoBar = {}
@@ -102,21 +102,25 @@ function InfoBar:Create(parent)
         searchable = false,
         buildItems = function()
             local items = { { text = L["EXPAC_FILTER_ALL"], value = "ALL" } }
-            if not BagSet.isBuilt then return items end
+            if not BagSet.isBuilt or not WH then return items end
             local found = {}
             for _, btn in ipairs(BagSet:GetAllButtons()) do
                 if btn.owb_hasItem and btn.owb_itemInfo and btn.owb_itemInfo.itemID then
-                    local props = PE:BuildProps(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
-                    if props.expansionID ~= nil then
-                        found[props.expansionID] = true
+                    local expansionID = WH:ResolveExpansionID(btn.owb_itemInfo, btn.owb_bagID, btn.owb_slotID)
+                    if expansionID ~= nil then
+                        found[expansionID] = true
                     end
                 end
             end
             local ids = {}
             for id in pairs(found) do tinsert(ids, id) end
-            sort(ids)
+            if #ids == 0 then
+                ids = WH:GetKnownExpansionIDs()
+            else
+                sort(ids)
+            end
             for _, id in ipairs(ids) do
-                tinsert(items, { text = PE:GetExpansionName(id) or ("Expansion " .. id), value = id })
+                tinsert(items, { text = WH:GetExpansionName(id) or ("Expansion " .. id), value = id })
             end
             return items
         end,
@@ -298,7 +302,7 @@ function InfoBar:UpdateViewButtons()
             if activeFilter == nil then
                 infoBarFrame.expacText:SetText(L["EXPAC_FILTER_BTN"])
             else
-                local expName = PE and PE:GetExpansionName(activeFilter) or tostring(activeFilter)
+                local expName = WH and WH:GetExpansionName(activeFilter) or tostring(activeFilter)
                 infoBarFrame.expacText:SetText(expName)
             end
         end

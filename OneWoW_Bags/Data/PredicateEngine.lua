@@ -21,6 +21,7 @@ local PE = OneWoW_Bags.PredicateEngine
 local tconcat, tinsert, wipe = table.concat, tinsert, wipe
 local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
 local strlower, strfind = string.lower, string.find
+local strmatch = string.match
 local rawset, rawget, setmetatable = rawset, rawget, setmetatable
 local pcall = pcall
 local C_Item = C_Item
@@ -96,7 +97,7 @@ local EXPANSION_IDS_MAP = OneWoW_Bags:ConfigEnum(Enum.ExpansionLevel, EXPANSION_
 -- Named constants for ${...} resolution in ResolveParams.
 -- quality==${EPIC} becomes quality==4 before tokenizing.
 local IQ = Enum.ItemQuality
-local EL = Enum.ItemExpansionLevel
+local EL = Enum.ExpansionLevel
 
 local CONSTANT_MAP = {
     -- Item quality
@@ -119,7 +120,7 @@ local CONSTANT_MAP = {
     BFA         = EL.BattleForAzeroth,
     SHADOWLANDS = EL.Shadowlands,
     DRAGONFLIGHT = EL.Dragonflight,
-    WARWITHIN   = EL.Warwithin,
+    WARWITHIN   = EL.WarWithin,
     MIDNIGHT    = EL.Midnight,
     LASTTITAN   = EL.LastTitan,
 }
@@ -875,6 +876,10 @@ local function Tokenize(searchStr)
             i = i + 1
 
         -- ---- Operator characters: ( ) & | ! ----
+        -- || (WoW escape for literal pipe) is consumed as a single OR token.
+        elseif c == "|" and i + 1 <= len and searchStr:sub(i + 1, i + 1) == "|" then
+            tinsert(tokens, { type = "op", value = "|" })
+            i = i + 2
         elseif OP_CHARS[c] then
             tinsert(tokens, { type = "op", value = c })
             i = i + 1
@@ -1224,6 +1229,27 @@ function PE:Compile(expr)
         return compiledCache[expr]
     end
 
+    local singleKeyword = strmatch(expr, "^%s*#([%w_]+)%s*$")
+    if singleKeyword then
+        local fn = KEYWORD_MAP[strlower(singleKeyword)]
+        if fn then
+            compiledCache[expr] = fn
+            return fn
+        end
+    end
+
+    local negatedKeyword = strmatch(expr, "^%s*!%s*#([%w_]+)%s*$")
+    if negatedKeyword then
+        local fn = KEYWORD_MAP[strlower(negatedKeyword)]
+        if fn then
+            local compiled = function(props)
+                return not fn(props)
+            end
+            compiledCache[expr] = compiled
+            return compiled
+        end
+    end
+
     local ok, tokensOrErr = pcall(Tokenize, expr)
     if not ok then
         return nil, "Tokenize error: " .. tostring(tokensOrErr)
@@ -1328,9 +1354,23 @@ end
 
 --- Backward compat: get expansion ID for an item.
 function PE:GetExpansionID(itemID, hyperlink)
-    if not hyperlink then return nil end
-    local _, _, _, _, _, _, _, _, _, _, _, _, _, _, expacID = C_Item.GetItemInfo(hyperlink)
-    return expacID
+    local expacID = nil
+
+    if hyperlink then
+        _, _, _, _, _, _, _, _, _, _, _, _, _, _, expacID = C_Item.GetItemInfo(hyperlink)
+        if expacID ~= nil then
+            return expacID
+        end
+    end
+
+    if itemID then
+        _, _, _, _, _, _, _, _, _, _, _, _, _, _, expacID = C_Item.GetItemInfo(itemID)
+        if expacID ~= nil then
+            return expacID
+        end
+    end
+
+    return nil
 end
 
 --- Backward compat: get localized expansion name from ID.

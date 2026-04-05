@@ -4,13 +4,15 @@ local OneWoW = _G.OneWoW
 local UD = OneWoW and OneWoW.UpgradeDetection
 local ItemStatus = OneWoW and OneWoW.ItemStatus
 
-local PE = OneWoW_Bags.PredicateEngine
 local L = OneWoW_Bags.L
+
+local PE = OneWoW_Bags.PredicateEngine
 
 local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs
 local type, time, tostring = type, time, tostring
 local C_Item, C_NewItems = C_Item, C_NewItems
+local C_Container = C_Container
 
 OneWoW_Bags.Categories = {}
 local Categories = OneWoW_Bags.Categories
@@ -223,6 +225,10 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         return "Recent Items"
     end
 
+    if not hyperlink then
+        return "Other"
+    end
+
     if itemID then
         local cached = categoryCache[itemID]
         if cached then
@@ -230,28 +236,12 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         end
     end
 
-    if not hyperlink then
-        if itemID then
-            categoryCache[itemID] = "Other"
-        end
-        return "Other"
-    end
-
-    if not PE then
-        if itemID then categoryCache[itemID] = "Other" end
-        return "Other"
-    end
-
-    local props = PE:BuildProps(itemID, bagID, slotID, {
-        itemID = itemID,
-        hyperlink = hyperlink,
-        quality = itemInfo.quality,
-    })
+    local props = PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     local category = "Other"
     for _, def in ipairs(SEARCH_CATEGORIES) do
         if not disabled[def.name] then
-            if PE:CheckItem(def.search, itemID, bagID, slotID) then
+            if PE:CheckItem(def.search, itemID, bagID, slotID, itemInfo) then
                 category = def.name
                 break
             end
@@ -274,7 +264,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         category = "Other"
     end
 
-    if itemID and props.classID ~= nil then
+    if itemID and hyperlink and props.classID ~= nil then
         categoryCache[itemID] = category
     end
 
@@ -549,7 +539,6 @@ end
 
 function Categories:GetSubCategory(categoryName, bagID, slotID, itemInfo)
     if not bagID or not slotID then return nil end
-    if not PE then return nil end
 
     if categoryName == "Containers" then
         local tt = PE:GetTooltipText(bagID, slotID)

@@ -121,7 +121,7 @@ function GBSet:ApplyCacheToButtons()
                     iconFileID = cached.texture,
                 }
 
-                if cached.quality and cached.quality >= 1 and db.global.bankRarityColor then
+                if OneWoW_Bags:ShouldShowItemQuality(true, cached.quality) then
                     OneWoW_GUI:UpdateIconQuality(button, cached.quality)
                 else
                     OneWoW_GUI:UpdateIconQuality(button, nil)
@@ -154,6 +154,10 @@ function GBSet:UpdateAllSlots()
     local currentTab = GetCurrentGuildBankTab() or 1
     self:CacheTab(currentTab)
     self:ApplyCacheToButtons()
+end
+
+function GBSet:RefreshAllVisuals()
+    self:UpdateAllSlots()
 end
 
 function GBSet:UpdateQualityColors()
