@@ -33,7 +33,7 @@ local function AddIngredientsToList(listName, recipeID, quantity)
 
     local ingredients = {}
     for _, slot in ipairs(schematic.reagentSlotSchematics) do
-        if slot.reagents and #slot.reagents > 0 then
+        if slot.reagentType == Enum.CraftingReagentType.Basic and slot.reagents and #slot.reagents > 0 then
             local reagent = slot.reagents[1]
             if reagent and reagent.itemID then
                 local qty = (slot.quantityRequired or 1) * quantity
