@@ -9,7 +9,7 @@ OneWoW_Bags.TSMIntegration = {}
 local TSM = OneWoW_Bags.TSMIntegration
 
 function TSM:IsAvailable()
-    return _G.TSM_API ~= nil
+    return TSM_API ~= nil
 end
 
 function TSM:Import()
@@ -29,9 +29,9 @@ function TSM:Import()
 
     if not ok or not groups then
         ok, groups = pcall(function()
-            if _G.TSMAPI_FOUR and _G.TSMAPI_FOUR.Groups then
+            if TSMAPI_FOUR and TSMAPI_FOUR.Groups then
                 local paths = {}
-                for path in _G.TSMAPI_FOUR.Groups:GroupIterator() do
+                for path in TSMAPI_FOUR.Groups:GroupIterator() do
                     tinsert(paths, path)
                 end
                 return paths

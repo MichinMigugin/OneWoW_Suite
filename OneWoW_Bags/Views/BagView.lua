@@ -40,7 +40,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local selectedBag = db.global.selectedBag
     local yOffset = 0
 
-    for _, bagID in ipairs(BagTypes.ALL_PLAYER_BAGS) do
+    for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do
         local buttons = BagSet:GetButtonsByBag(bagID)
         if selectedBag ~= nil and bagID ~= selectedBag then
             for _, button in ipairs(buttons) do button:Hide() end

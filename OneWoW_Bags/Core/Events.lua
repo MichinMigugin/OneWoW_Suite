@@ -1,5 +1,7 @@
 local _, OneWoW_Bags = ...
 
+local BagTypes = OneWoW_Bags.BagTypes
+
 OneWoW_Bags.Events = {}
 local Events = OneWoW_Bags.Events
 
@@ -43,8 +45,8 @@ end
 
 local function BuildAllBagDirtySet()
     local dirty = {}
-    for i = 0, 5 do
-        dirty[i] = true
+    for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do
+        dirty[bagID] = true
     end
     return dirty
 end

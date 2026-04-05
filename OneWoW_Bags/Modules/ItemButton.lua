@@ -70,7 +70,7 @@ function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
         self.BattlepayItemTexture:Hide()
     end
 
-    local atlasByQuality = _G.NEW_ITEM_ATLAS_BY_QUALITY
+    local atlasByQuality = NEW_ITEM_ATLAS_BY_QUALITY
     local atlas = "bags-glow-white"
     if atlasByQuality and quality ~= nil and atlasByQuality[quality] then
         atlas = atlasByQuality[quality]

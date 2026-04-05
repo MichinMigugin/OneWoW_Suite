@@ -36,9 +36,9 @@ end
 
 function BankSet:GetActiveTabs()
     if self:IsWarband() then
-        return BankTypes.ALL_WARBAND_TABS
+        return BankTypes:GetWarbandTabIDs()
     else
-        return BankTypes.ALL_BANK_TABS
+        return BankTypes:GetBankTabIDs()
     end
 end
 

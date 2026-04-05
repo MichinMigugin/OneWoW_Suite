@@ -6,7 +6,6 @@ if not OneWoW_GUI then return end
 local L = OneWoW_Bags.L
 
 local pairs = pairs
-local C_Timer = C_Timer
 
 OneWoW_Bags.GuildBankBar = {}
 local GuildBankBar = OneWoW_Bags.GuildBankBar

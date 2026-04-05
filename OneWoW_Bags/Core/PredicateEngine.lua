@@ -35,6 +35,42 @@ local C_TradeSkillUI = C_TradeSkillUI
 local TooltipUtil = TooltipUtil
 local Enum = Enum
 
+--- Transforms an enum table into a lookup table with custom aliases and synonyms
+local function ConfigEnum(sourceEnum, config, autoRegisterMissing)
+    if type(sourceEnum) ~= "table" then
+       error("sourceEnum must be a table")
+    end
+
+    if type(config) ~= "table" then
+       error("config must be a table")
+    end
+
+    local enumTable = {}
+
+    for name, value in pairs(sourceEnum) do
+       name = name:lower()
+       local synonyms = config[name]
+
+       if synonyms then
+          local keep_key = synonyms[#synonyms]
+
+          if keep_key then
+             enumTable[name] = value
+          end
+
+          for i=1, #synonyms - 1 do
+             enumTable[synonyms[i]] = value
+          end
+       else
+          if autoRegisterMissing then
+             enumTable[name] = value
+          end
+       end
+    end
+
+    return enumTable
+ end
+
 -- ============================================================================
 -- SECTION 2: CACHES
 -- ============================================================================
@@ -89,7 +125,7 @@ local EXPANSION_IDS_CONFIG = {
     ["midnight"]          = {true},
     ["lasttitan"]         = {"titan", true},
 }
-local EXPANSION_IDS_MAP = OneWoW_Bags:ConfigEnum(Enum.ExpansionLevel, EXPANSION_IDS_CONFIG, true)
+local EXPANSION_IDS_MAP = ConfigEnum(Enum.ExpansionLevel, EXPANSION_IDS_CONFIG, true)
 
 -- ============================================================================
 -- SECTION 4: CONSTANT_MAP
@@ -213,13 +249,13 @@ local FLAG_REGISTRY = {
     isprofessionequipment = "isProfessionEquipment",
     isequipped            = "isEquipped",
     isequippable          = "isEquippable",
+    iscraftingreagent    = "isCraftingReagent",
+    hassocket            = "hasSocket",
 
     -- Tooltip-derived flags (lazy)
-    iscraftingreagent    = "isCraftingReagent",
     hasuseability        = "hasUseAbility",
     isalreadyknown       = "isAlreadyKnown",
     istradeableloot      = "isTradeableLoot",
-    hassocket            = "hasSocket",
 
     -- Aliases mapping to canonical props fields
     iswarbound            = "isBOA",
@@ -303,8 +339,6 @@ RegisterKeyword("tradeskill",       function(p) return p.classID == Enum.ItemCla
 RegisterKeyword("profession",       function(p) return p.classID == Enum.ItemClass.Profession end)
 RegisterKeyword("wowtoken",         function(p) return p.classID == Enum.ItemClass.WoWToken end)
 RegisterKeyword("housing",          function(p) return p.classID == Enum.ItemClass.Housing end)
-
-
 
 -- ---- 7.4  Composite consumable keywords ----
 -- #potion includes potions, elixirs, and flasks
@@ -1218,6 +1252,14 @@ end
 -- ============================================================================
 -- SECTION 12: PUBLIC API
 -- ============================================================================
+
+--- Transforms an enum table into a lookup table with custom aliases and synonyms.
+--- `config` table uses lowercase keys matching the sourceEnum: [synonyms..., keepOriginalBool].
+--- last element in each config array acts as a boolean toggle to include the original key in the returned table
+--- Returns a new table with mapped synonyms and/or original keys pointing to the enum values.
+function PE:ConfigEnum(sourceEnum, config, autoRegisterMissing)
+    return ConfigEnum(sourceEnum, config, autoRegisterMissing)
+end
 
 --- Compile an expression string into a predicate function.
 --- Returns the compiled function(props)->bool, cached for repeated use.

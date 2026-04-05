@@ -3,7 +3,6 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local DB = OneWoW_GUI.DB
 local StorageAPI = _G.StorageAPI
 
 local Constants = OneWoW_Bags.Constants
@@ -12,8 +11,7 @@ local BagTypes = OneWoW_Bags.BagTypes
 local InfoBar = OneWoW_Bags.InfoBar
 
 
-local tinsert, tremove, sort = tinsert, tremove, sort
-local tonumber = tonumber
+local tinsert, sort = tinsert, sort
 local pairs, ipairs = pairs, ipairs
 local min, max = math.min, math.max
 local C_Timer = C_Timer
@@ -137,21 +135,21 @@ function BagsBar:Create(parent)
     -- Bag icon buttons (row 1, left)
     local xOffset = OneWoW_GUI:GetSpacing("SM")
 
-    for i = 0, 4 do
-        local bagSlot = BagsBar:CreateBagButton(row1Frame, i, xOffset)
-        bagButtons[i] = bagSlot
-        xOffset = xOffset + 30
-    end
-
-    if BagTypes and BagTypes.REAGENT_BAG then
-        local sep = row1Frame:CreateTexture(nil, "ARTWORK")
-        sep:SetSize(1, 20)
-        sep:SetPoint("LEFT", row1Frame, "LEFT", xOffset + 2, 0)
-        sep:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        xOffset = xOffset + 6
-
-        local reagentSlot = BagsBar:CreateBagButton(row1Frame, 5, xOffset)
-        bagButtons[5] = reagentSlot
+    for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do
+        if not BagTypes:IsReagentBag(bagID) then
+            local bagSlot = BagsBar:CreateBagButton(row1Frame, bagID, xOffset)
+            bagButtons[bagID] = bagSlot
+            xOffset = xOffset + 30
+        else
+            -- This works since reagent bag is the highest index in the list
+            local sep = row1Frame:CreateTexture(nil, "ARTWORK")
+            sep:SetSize(1, 20)
+            sep:SetPoint("LEFT", row1Frame, "LEFT", xOffset + 2, 0)
+            sep:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            xOffset = xOffset + 6
+            local bagSlot = BagsBar:CreateBagButton(row1Frame, bagID, xOffset)
+            bagButtons[bagID] = bagSlot
+        end
     end
 
     -- Row 1 right: free slots then cleanup button
@@ -465,7 +463,7 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
         local controller = GetController()
         local selected = controller and controller.GetSelectedBag and controller:GetSelectedBag() or nil
         if self.bagIndex == 0 then
-            GameTooltip:SetText(BACKPACK_TOOLTIP or "Backpack")
+            GameTooltip:SetText(BACKPACK_TOOLTIP or L["BAG_BACKPACK"], 1.0, 1.0, 1.0)
         else
             local invID = C_Container.ContainerIDToInventoryID(self.bagIndex)
             if invID then

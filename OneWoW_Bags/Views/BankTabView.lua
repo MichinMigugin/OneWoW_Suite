@@ -39,7 +39,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
 
     local selectedTab = db.global.bankSelectedTab
     local showWarband = BankSet:IsWarband()
-    local bagList = showWarband and BankTypes.ALL_WARBAND_TABS or BankTypes.ALL_BANK_TABS
+    local bagList = showWarband and BankTypes:GetWarbandTabIDs() or BankTypes:GetBankTabIDs()
     local bankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
     local tabDataList = C_Bank.FetchPurchasedBankTabData(bankType)
 

@@ -35,7 +35,7 @@ function BagSet:Build()
     self.totalSlots = 0
     self.freeSlots = 0
 
-    for _, bagID in ipairs(BagTypes.ALL_PLAYER_BAGS) do
+    for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do
         local bagFrame = GetOrCreateBagFrame(bagID)
         self.bagContainerFrames[bagID] = bagFrame
 
@@ -150,7 +150,7 @@ end
 
 function BagSet:GetAllButtons()
     local buttons = {}
-    for _, bagID in ipairs(BagTypes.ALL_PLAYER_BAGS) do
+    for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do
         if self.slots[bagID] then
             for slotID = 1, #self.slots[bagID] do
                 local button = self.slots[bagID][slotID]

@@ -12,7 +12,6 @@ local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs
 local type, time, tostring = type, time, tostring
 local C_Item, C_NewItems = C_Item, C_NewItems
-local C_Container = C_Container
 
 OneWoW_Bags.Categories = {}
 local Categories = OneWoW_Bags.Categories
