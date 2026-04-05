@@ -150,7 +150,7 @@ function TooltipEngine:BuildContext(tooltip, tooltipType, data)
         end
         context.type = "unit"
     elseif tooltipType == Enum.TooltipDataType.Item then
-        if data.id and tooltip.GetItem then
+        if data.id and not issecretvalue(data.id) and tooltip.GetItem then
             local _, itemLink = tooltip:GetItem()
             context.itemID = data.id
             context.itemLink = itemLink
