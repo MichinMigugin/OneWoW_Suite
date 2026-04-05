@@ -31,6 +31,8 @@ Events.RuntimeEvents = {
     "GET_ITEM_INFO_RECEIVED",
 }
 
+local predicateRefreshPending = false
+
 local function InvalidatePredicatePropsCache()
     if OneWoW_Bags and OneWoW_Bags.InvalidateCategorization then
         OneWoW_Bags:InvalidateCategorization("props")
@@ -40,6 +42,20 @@ local function InvalidatePredicatePropsCache()
     local PE = OneWoW_Bags.PredicateEngine
     if PE and PE.InvalidatePropsCache then
         PE:InvalidatePropsCache()
+    end
+end
+
+function Events:OnPredicateInvalidation()
+    InvalidatePredicatePropsCache()
+
+    -- when game downloads item data for uncached items, stale visuals can persist - coalesce them until next frame.
+    -- similar pattern as BAG_UPDATE -> BAG_UPDATE_DELAYED
+    if not predicateRefreshPending then
+        predicateRefreshPending = true
+        C_Timer.After(0, function()
+            predicateRefreshPending = false
+            OneWoW_Bags:RequestLayoutRefresh("all")
+        end)
     end
 end
 
@@ -128,8 +144,4 @@ end
 
 function Events:OnAccountMoney()
     OneWoW_Bags:OnAccountMoney()
-end
-
-function Events:OnPredicateInvalidation()
-    InvalidatePredicatePropsCache()
 end
