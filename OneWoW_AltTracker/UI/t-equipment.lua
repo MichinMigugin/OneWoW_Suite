@@ -190,16 +190,8 @@ local function GetEquipmentStats(charKey, charData)
                     end
                     local itemSockets = item.numSockets or 0
                     missingGems = missingGems + math.max(0, itemSockets - (item.socketsWithGems or 0))
-                    if item.name then
-                        if item.name:find("Hollow Sentinel's") or item.name:find("Charhound's Vicious") or
-                           item.name:find("Mother Eagle") or item.name:find("Skymane of the") or
-                           item.name:find("Spellweaver's Immaculate") or item.name:find("Midnight Herald's") or
-                           item.name:find("Augur's Ephemeral") or item.name:find("Fallen Storms") or
-                           item.name:find("Lucent Battalion") or item.name:find("Dying Star's") or
-                           item.name:find("Sudden Eclipse") or item.name:find("Channeled Fury") or
-                           item.name:find("Inquisitor's") or item.name:find("Living Weapon's") then
-                            tierCount = tierCount + 1
-                        end
+                    if item.setID and item.setID > 0 then
+                        tierCount = tierCount + 1
                     end
                 end
             end
@@ -330,22 +322,9 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
                         totalGemSlots = totalGemSlots + itemSockets
                         missingGems = missingGems + math.max(0, itemSockets - (item.socketsWithGems or 0))
 
-                        if item.name then
-                            if item.name:find("Hollow Sentinel's") or
-                               item.name:find("Charhound's Vicious") or
-                               item.name:find("Mother Eagle") or
-                               item.name:find("Skymane of the") or
-                               item.name:find("Spellweaver's Immaculate") or
-                               item.name:find("Midnight Herald's") or
-                               item.name:find("Augur's Ephemeral") or
-                               item.name:find("Fallen Storms") or
-                               item.name:find("Lucent Battalion") or
-                               item.name:find("Dying Star's") or
-                               item.name:find("Sudden Eclipse") or
-                               item.name:find("Channeled Fury") or
-                               item.name:find("Inquisitor's") or
-                               item.name:find("Living Weapon's") then
-                                tierCount = tierCount + 1
+                        if item.setID and item.setID > 0 then
+                            tierCount = tierCount + 1
+                            if item.name then
                                 table.insert(tierPieces, item.name)
                             end
                         end
@@ -721,23 +700,8 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
 
                         charMissingGems = charMissingGems + math.max(0, (item.numSockets or 0) - (item.socketsWithGems or 0))
 
-                        if item.name then
-                            if item.name:find("Hollow Sentinel's") or
-                               item.name:find("Charhound's Vicious") or
-                               item.name:find("Mother Eagle") or
-                               item.name:find("Skymane of the") or
-                               item.name:find("Spellweaver's Immaculate") or
-                               item.name:find("Midnight Herald's") or
-                               item.name:find("Augur's Ephemeral") or
-                               item.name:find("Fallen Storms") or
-                               item.name:find("Lucent Battalion") or
-                               item.name:find("Dying Star's") or
-                               item.name:find("Sudden Eclipse") or
-                               item.name:find("Channeled Fury") or
-                               item.name:find("Inquisitor's") or
-                               item.name:find("Living Weapon's") then
-                                charTierCount = charTierCount + 1
-                            end
+                        if item.setID and item.setID > 0 then
+                            charTierCount = charTierCount + 1
                         end
                     end
                 end

@@ -66,6 +66,11 @@ function Module:CollectData(charKey, charData)
             end
             equipment[slotID].numSockets = numSockets
             equipment[slotID].socketsWithGems = socketsWithGems
+
+            local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, setID = C_Item.GetItemInfo(itemLink)
+            if setID and setID > 0 then
+                equipment[slotID].setID = setID
+            end
         end
     end
 
