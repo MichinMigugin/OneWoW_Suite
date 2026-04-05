@@ -5,6 +5,7 @@ function OneWoW_Bags:SortButtons(buttons, overrideSortMode)
     if sortMode == "none" then
         return buttons
     elseif sortMode == "default" then
+        -- sort by bagID then slotID
         sort(buttons, function(a, b)
             if not a.owb_hasItem then return false end
             if not b.owb_hasItem then return true end
@@ -16,6 +17,7 @@ function OneWoW_Bags:SortButtons(buttons, overrideSortMode)
             return aSlot < bSlot
         end)
     elseif sortMode == "name" then
+        -- sort by localized item name
         sort(buttons, function(a, b)
             if not a.owb_hasItem then return false end
             if not b.owb_hasItem then return true end
@@ -28,6 +30,7 @@ function OneWoW_Bags:SortButtons(buttons, overrideSortMode)
             return aName < bName
         end)
     elseif sortMode == "rarity" then
+        -- sort by quality in Enum.ItemQuality order then by localized item name
         sort(buttons, function(a, b)
             if not a.owb_hasItem then return false end
             if not b.owb_hasItem then return true end
@@ -41,6 +44,7 @@ function OneWoW_Bags:SortButtons(buttons, overrideSortMode)
             return aName < bName
         end)
     elseif sortMode == "ilvl" then
+        -- sort by actual item level (not including upgrades) then by quality in Enum.ItemQuality order
         sort(buttons, function(a, b)
             if not a.owb_hasItem then return false end
             if not b.owb_hasItem then return true end
@@ -54,6 +58,8 @@ function OneWoW_Bags:SortButtons(buttons, overrideSortMode)
             return aQ > bQ
         end)
     elseif sortMode == "type" then
+        -- sort by numeric item class, then by numeric item sub-class, then by localized item name
+        -- sorting by numerics retains sort order across locales
         sort(buttons, function(a, b)
             if not a.owb_hasItem then return false end
             if not b.owb_hasItem then return true end
@@ -61,17 +67,21 @@ function OneWoW_Bags:SortButtons(buttons, overrideSortMode)
             local bID = b.owb_itemInfo and b.owb_itemInfo.itemID
             if not aID then return false end
             if not bID then return true end
-            local _, _, _, _, _, aType = C_Item.GetItemInfo(aID)
-            local _, _, _, _, _, bType = C_Item.GetItemInfo(bID)
-            aType = aType or ""
-            bType = bType or ""
-            if aType ~= bType then return aType < bType end
+            local _, _, _, _, _, aClass, aSub = C_Item.GetItemInfoInstant(aID)
+            local _, _, _, _, _, bClass, bSub = C_Item.GetItemInfoInstant(bID)
+            aClass = aClass or 0
+            bClass = bClass or 0
+            if aClass ~= bClass then return aClass < bClass end
+            aSub = aSub or 0
+            bSub = bSub or 0
+            if aSub ~= bSub then return aSub < bSub end
             local aName = C_Item.GetItemNameByID(aID) or ""
             local bName = C_Item.GetItemNameByID(bID) or ""
             return aName < bName
         end)
     elseif sortMode == "expansion" then
         local WH = OneWoW_Bags.WindowHelpers
+        -- sort by expansion ID in Enum.ExpansionLevel order then by quality in Enum.ItemQuality order
         sort(buttons, function(a, b)
             if not a.owb_hasItem then return false end
             if not b.owb_hasItem then return true end
