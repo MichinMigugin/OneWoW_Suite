@@ -6,7 +6,7 @@
 --   Layer 2 (Compiler):   tokenizes + parses expressions into function(props)->bool
 --
 -- Design decisions:
---   - Hybrid bind detection: API primary, tooltip fallback when isBound is nil
+--   - Structured tooltip bind detection via TooltipDataItemBinding
 --   - Strict soulbound: character-only; account-bound does NOT match #soulbound
 --   - ~ operator is string-contains ONLY; negation uses ! or "not"
 --   - ${CONSTANT} curly-brace syntax for named constants / parameters
@@ -32,7 +32,6 @@ local C_MountJournal = C_MountJournal
 local C_PetJournal = C_PetJournal
 local C_TransmogCollection = C_TransmogCollection
 local C_TradeSkillUI = C_TradeSkillUI
-local TooltipUtil = TooltipUtil
 local Enum = Enum
 
 --- Transforms an enum table into a lookup table with custom aliases and synonyms
@@ -199,6 +198,7 @@ RegisterPropAlias("typeid",         "classID")
 RegisterPropAlias("subclass",       "subClassID")
 RegisterPropAlias("subtypeid",      "subClassID")
 RegisterPropAlias("bindtype",       "bindType")
+RegisterPropAlias("currentbind",    "currentbind")
 RegisterPropAlias("totalvalue",     "totalValue")
 RegisterPropAlias("craftedquality", "craftedQuality")
 RegisterPropAlias("upgradelevel",   "upgradeLevel")
@@ -258,10 +258,10 @@ local FLAG_REGISTRY = {
     istradeableloot      = "isTradeableLoot",
 
     -- Aliases mapping to canonical props fields
-    iswarbound            = "isBOA",
+    iswarbound            = "isWarbound",
     iswarbounduntilequip  = "isWUE",
     isbindonequip         = "isBOE",
-    isaccountbound        = "isBOA",
+    isaccountbound        = "isWarbound",
     isbindonuse           = "isBOU",
 }
 
@@ -299,9 +299,9 @@ RegisterKeyword("bound",              function(p) return p.isSoulbound end)
 RegisterKeyword("bop",                function(p) return p.isSoulbound end)
 RegisterKeyword("boe",                function(p) return p.isBOE end)
 RegisterKeyword("bindonequip",        function(p) return p.isBOE end)
-RegisterKeyword("boa",                function(p) return p.isBOA end)
-RegisterKeyword("accountbound",       function(p) return p.isBOA end)
-RegisterKeyword("warbound",           function(p) return p.isBOA end)
+RegisterKeyword("boa",                function(p) return p.isBOA or p.isWUE end)
+RegisterKeyword("accountbound",       function(p) return p.isBOA or p.isWUE end)
+RegisterKeyword("warbound",           function(p) return p.isBOA or p.isWUE end)
 RegisterKeyword("bou",                function(p) return p.isBOU end)
 RegisterKeyword("bindonuse",          function(p) return p.isBOU end)
 RegisterKeyword("wue",                function(p) return p.isWUE end)
@@ -519,10 +519,8 @@ local function GetTooltipText(bagID, slotID)
         return ""
     end
 
-    TooltipUtil.SurfaceArgs(tooltipData)
     local parts = {}
     for _, line in ipairs(tooltipData.lines) do
-        TooltipUtil.SurfaceArgs(line)
         parts[#parts + 1] = line.leftText or ""
     end
     local text = tconcat(parts, "\n")
@@ -587,9 +585,11 @@ local function ResolveTooltipFields(props)
 end
 
 -- ---------- ResolveBind_Tooltip ----------
--- Tooltip-based bind fallback, called ONLY when the API couldn't determine
--- bind status (containerInfo.isBound was nil or bindType was nil).
+-- Tooltip-based bind detection. Reflects the current state of binding on an item.
 -- Implements strict soulbound: account-bound text does NOT match isSoulbound.
+local TDIB = Enum.TooltipDataItemBinding
+local BIND_LINE_TYPE = 20
+
 local function ResolveBind_Tooltip(props)
     local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
     if not bagID or not slotID then
@@ -598,22 +598,41 @@ local function ResolveBind_Tooltip(props)
         rawset(props, "isBOA", false)
         rawset(props, "isBOU", false)
         rawset(props, "isWUE", false)
+        rawset(props, "isWarbound", false)
         return
     end
 
-    local tt = GetTooltipText(bagID, slotID)
+    local tooltipData = C_TooltipInfo.GetBagItem(bagID, slotID)
+    local bonding
+    if tooltipData then
+        for _, line in ipairs(tooltipData.lines) do
+            if line.type == BIND_LINE_TYPE and line.bonding ~= nil then
+                bonding = line.bonding
+                break
+            end
+        end
+    end
 
-    local isAccountBoundText = (strfind(tt, ITEM_ACCOUNTBOUND or "Account Bound") ~= nil)
-                            or (strfind(tt, ITEM_BNETACCOUNTBOUND or "Blizzard Account Bound") ~= nil)
+    if bonding == nil then
+        rawset(props, "isSoulbound", false)
+        rawset(props, "isBOE", false)
+        rawset(props, "isBOA", false)
+        rawset(props, "isBOU", false)
+        rawset(props, "isWUE", false)
+        rawset(props, "isWarbound", false)
+        return
+    end
 
-    -- Strict soulbound: "Soulbound" in tooltip AND not account-bound text
-    local isSoulboundText = strfind(tt, ITEM_SOULBOUND) ~= nil
-    rawset(props, "isSoulbound", isSoulboundText and not isAccountBoundText)
+    local isBOA = bonding == TDIB.Account or bonding == TDIB.BnetAccount or bonding == TDIB.BindToAccount or bonding == TDIB.BindToBnetAccount
+    local isWUE = bonding == TDIB.AccountUntilEquipped or bonding == TDIB.BindToAccountUntilEquipped
 
-    rawset(props, "isBOE", strfind(tt, ITEM_BIND_ON_EQUIP) ~= nil)
-    rawset(props, "isBOA", isAccountBoundText)
-    rawset(props, "isBOU", strfind(tt, ITEM_BIND_ON_USE) ~= nil)
-    rawset(props, "isWUE", strfind(tt, "Warbound until equipped") ~= nil)
+    rawset(props, "currentbind", bonding)
+    rawset(props, "isSoulbound", bonding == TDIB.Soulbound or bonding == TDIB.BindOnPickup)
+    rawset(props, "isBOE",       bonding == TDIB.BindOnEquip)
+    rawset(props, "isBOA",       isBOA)
+    rawset(props, "isBOU",       bonding == TDIB.BindOnUse)
+    rawset(props, "isWUE",       isWUE)
+    rawset(props, "isWarbound",  isBOA or isWUE)
 end
 
 -- ============================================================================
@@ -629,13 +648,15 @@ local TOOLTIP_FIELDS_SET = {
     tooltipText    = true,
 }
 
--- Bind fields that might need tooltip fallback if API returned nil
+-- Bind fields
 local BIND_FIELDS_SET = {
     isSoulbound = true,
     isBOE       = true,
     isBOA       = true,
     isBOU       = true,
     isWUE       = true,
+    isWarbound  = true,
+    currentbind = true,
 }
 
 -- Metatable applied to every props table for lazy field resolution.
@@ -712,7 +733,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.classID     = classID
     props.subClassID  = subclassID
     props.expansionID = expansionID
-    props.bindType    = bindType
+    props.bindType    = bindType    -- template bindType: what the item was designed to do; may not reflect current bindType
     props.maxStack    = itemStackCount or 1
     props.setID       = setID
     props.isTierSet   = setID ~= nil
@@ -733,24 +754,6 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     if itemID == BATTLE_PET_CAGE_ID then
         props.classID = Enum.ItemClass.Battlepet
     end
-
-    -- ---- Hybrid bind detection (strict soulbound) ----
-    -- API-based primary path: uses containerInfo.isBound + bindType.
-    -- If either is nil, bind fields are left unset and the __index metatable
-    -- triggers ResolveBind_Tooltip on first access.
-    local IB = Enum.ItemBind
-    if containerInfo and containerInfo.isBound ~= nil and bindType ~= nil then
-        local isAccountBindType = (bindType == IB.ToWoWAccount
-                                or bindType == IB.ToBnetAccount
-                                or bindType == IB.ToBnetAccountUntilEquipped)
-        props.isSoulbound = containerInfo.isBound == true and not isAccountBindType
-        props.isBOE       = bindType == IB.OnEquip and not containerInfo.isBound
-        props.isBOA       = isAccountBindType
-        props.isBOU       = bindType == IB.OnUse and not containerInfo.isBound
-        props.isWUE       = bindType == IB.ToBnetAccountUntilEquipped
-        props._bindResolved = true
-    end
-    -- else: bind fields are nil, __index will call ResolveBind_Tooltip
 
     -- ---- Equipment ----
     props.isEquipment = C_Item.IsEquippableItem(itemID) == true
@@ -867,6 +870,11 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     -- ---- Equippable (by this character) ----
     props.isEquippable = C_Item.IsEquippableItem(itemID) == true
+
+    -- ---- Hybrid bind detection (strict soulbound) ----
+    -- API-based primary path: uses containerInfo.isBound + bindType.
+    -- If either is nil, bind fields are left unset and the __index metatable triggers ResolveBind_Tooltip on first access.
+    -- NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.
 
     -- ---- Apply lazy tooltip metatable ----
     setmetatable(props, propsMT)
