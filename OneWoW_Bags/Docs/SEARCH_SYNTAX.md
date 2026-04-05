@@ -254,22 +254,17 @@ precedence:
 |---|---|---|
 | `!` or `not` | NOT (negate) | `!#junk` or `not #junk` |
 | `&` or `and` | AND (both must match) | `#armor & #epic` or `#armor and #epic` |
-| `\|\|` or `or` | OR (either can match) | `#food \|\| #potion` or `#food or #potion` |
-| `( )` | Grouping | `#hearthstone \|\| (#armor & #junk)` |
-
-> **WoW edit box note:** WoW uses `|` as an internal escape character, so a
-> single `|` may not work when typed in the search bar. Use `||` (double pipe)
-> or the word `or` instead. In saved expressions (custom categories, vendor
-> rules), both `|` and `||` work.
+| `\|` or `or` | OR (either can match) | `#food \| #potion` or `#food or #potion` |
+| `( )` | Grouping | `#hearthstone \| (#armor & #junk)` |
 
 ### Precedence
 
-`!` binds tightest, then `&`, then `||`/`or`. Use parentheses to override.
+`!` binds tightest, then `&`, then `|`/`or`. Use parentheses to override.
 
 | Expression | Evaluated as |
 |---|---|
-| `#armor & #epic \|\| #legendary` | `(#armor & #epic) \|\| #legendary` |
-| `#armor & (#epic \|\| #legendary)` | Armor that is epic or legendary |
+| `#armor & #epic \| #legendary` | `(#armor & #epic) \| #legendary` |
+| `#armor & (#epic \| #legendary)` | Armor that is epic or legendary |
 | `!#junk & #sellable` | Not-junk items that are sellable |
 
 ---
