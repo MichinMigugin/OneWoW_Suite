@@ -129,7 +129,9 @@ function FB:GetFilteredEntry(idx)
 end
 
 function FB:IsBookmarked(name)
-    return Addon.db.global.fontBookmarks[name] or false
+    local fb = Addon.db.global.fontBookmarks
+    if not fb then return false end
+    return fb[name] or false
 end
 
 function FB:ToggleBookmark(name)

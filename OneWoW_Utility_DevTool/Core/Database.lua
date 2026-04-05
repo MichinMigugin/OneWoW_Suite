@@ -160,6 +160,7 @@ function Addon:InitializeDatabase()
             soundBrowserLeftPaneWidth = nil,
             soundBrowserChannel = "SFX",
             soundBookmarks = {},
+            fontBookmarks = {},
             fontBrowserPreviewBg = nil,
             monitor = {
                 showOnLoad = false,
