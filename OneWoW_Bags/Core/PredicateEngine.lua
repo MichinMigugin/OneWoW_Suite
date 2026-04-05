@@ -34,42 +34,6 @@ local C_TransmogCollection = C_TransmogCollection
 local C_TradeSkillUI = C_TradeSkillUI
 local Enum = Enum
 
---- Transforms an enum table into a lookup table with custom aliases and synonyms
-local function ConfigEnum(sourceEnum, config, autoRegisterMissing)
-    if type(sourceEnum) ~= "table" then
-       error("sourceEnum must be a table")
-    end
-
-    if type(config) ~= "table" then
-       error("config must be a table")
-    end
-
-    local enumTable = {}
-
-    for name, value in pairs(sourceEnum) do
-       name = name:lower()
-       local synonyms = config[name]
-
-       if synonyms then
-          local keep_key = synonyms[#synonyms]
-
-          if keep_key then
-             enumTable[name] = value
-          end
-
-          for i=1, #synonyms - 1 do
-             enumTable[synonyms[i]] = value
-          end
-       else
-          if autoRegisterMissing then
-             enumTable[name] = value
-          end
-       end
-    end
-
-    return enumTable
- end
-
 -- ============================================================================
 -- SECTION 2: CACHES
 -- ============================================================================
@@ -106,25 +70,6 @@ if ITEM_SPELL_CHARGES then
 else
     chargesPattern = "(%d+) Charges?"
 end
-
--- Expansion ID mapping using the ConfigEnum helper from Core.lua.
--- Each entry: { alias1, alias2, ..., keepOriginalKey (bool) }
-local EXPANSION_IDS_CONFIG = {
-    ["none"]              = {"classic", "vanilla", false},
-    ["burningcrusade"]    = {"tbc", true},
-    ["northrend"]         = {"wrath", "wotlk", false},
-    ["cataclysm"]         = {"cata", true},
-    ["mistsofpandaria"]   = {"mists", "mop", "pandaria", false},
-    ["draenor"]           = {"wod", "warlords", true},
-    ["legion"]            = {true},
-    ["battleforazeroth"]  = {"bfa", true},
-    ["shadowlands"]       = {"sl", true},
-    ["dragonflight"]      = {"df", true},
-    ["warwithin"]         = {"tww", "thewarwithin", true},
-    ["midnight"]          = {true},
-    ["lasttitan"]         = {"titan", true},
-}
-local EXPANSION_IDS_MAP = ConfigEnum(Enum.ExpansionLevel, EXPANSION_IDS_CONFIG, true)
 
 -- ============================================================================
 -- SECTION 4: CONSTANT_MAP
@@ -171,32 +116,29 @@ local CONSTANT_MAP = {
 
 local PROP_REGISTRY = {}
 
-local function RegisterPropAlias(name, field, propType)
-    PROP_REGISTRY[strlower(name)] = { field = field, type = propType or "number" }
+local function RegisterPropAlias(nameOrNames, field, propType)
+    local entry = { field = field, type = propType or "number" }
+    if type(nameOrNames) == "table" then
+        for _, name in ipairs(nameOrNames) do
+            PROP_REGISTRY[strlower(name)] = entry
+        end
+    else
+        PROP_REGISTRY[strlower(nameOrNames)] = entry
+    end
 end
 
 -- Numeric properties
-RegisterPropAlias("ilvl",           "ilvl")
-RegisterPropAlias("itemlevel",      "ilvl")
-RegisterPropAlias("level",          "ilvl")
-RegisterPropAlias("id",             "id")
-RegisterPropAlias("itemid",         "id")
-RegisterPropAlias("count",          "count")
-RegisterPropAlias("stacks",         "count")
+RegisterPropAlias({"ilvl", "itemlevel", "level"},           "ilvl")
+RegisterPropAlias({"id", "itemid"},                         "id")
+RegisterPropAlias({"count", "stacks"},                      "count")
+RegisterPropAlias({"vendorprice", "price", "unitvalue"},    "vendorPrice")
+RegisterPropAlias({"maxstack", "stacksize"},                "maxStack")
+RegisterPropAlias({"reqlevel", "minlevel"},                 "reqLevel")
+RegisterPropAlias({"expansion", "expac"},                   "expansionID")
+RegisterPropAlias({"class", "typeid"},                      "classID")
+RegisterPropAlias({"subclass", "subtypeid"},                "subClassID")
+
 RegisterPropAlias("quality",        "quality")
-RegisterPropAlias("vendorprice",    "vendorPrice")
-RegisterPropAlias("price",          "vendorPrice")
-RegisterPropAlias("unitvalue",      "vendorPrice")
-RegisterPropAlias("maxstack",       "maxStack")
-RegisterPropAlias("stacksize",      "maxStack")
-RegisterPropAlias("reqlevel",       "reqLevel")
-RegisterPropAlias("minlevel",       "reqLevel")
-RegisterPropAlias("expansion",      "expansionID")
-RegisterPropAlias("expac",          "expansionID")
-RegisterPropAlias("class",          "classID")
-RegisterPropAlias("typeid",         "classID")
-RegisterPropAlias("subclass",       "subClassID")
-RegisterPropAlias("subtypeid",      "subClassID")
 RegisterPropAlias("bindtype",       "bindType")
 RegisterPropAlias("currentbind",    "currentbind")
 RegisterPropAlias("totalvalue",     "totalValue")
@@ -206,6 +148,20 @@ RegisterPropAlias("upgrademax",     "upgradeMax")
 RegisterPropAlias("maxlevel",       "maxLevel")
 RegisterPropAlias("setid",          "setID")
 RegisterPropAlias("sockets",        "sockets")
+RegisterPropAlias("armor",          "statArmor")
+
+-- Stat properties (comparison syntax)
+RegisterPropAlias({"intellect", "int"},         "statIntellect")
+RegisterPropAlias({"agility", "agi"},           "statAgility")
+RegisterPropAlias({"strength", "str"},          "statStrength")
+RegisterPropAlias({"stamina", "stam"},          "statStamina")
+RegisterPropAlias("crit",                       "statCrit")
+RegisterPropAlias("haste",                      "statHaste")
+RegisterPropAlias("mastery",                    "statMastery")
+RegisterPropAlias({"versatility", "vers"},      "statVersatility")
+RegisterPropAlias("speed",                      "statSpeed")
+RegisterPropAlias("leech",                      "statLeech")
+RegisterPropAlias("avoidance",                  "statAvoidance")
 
 -- String properties
 RegisterPropAlias("name",     "name",     "string")
@@ -274,71 +230,63 @@ local FLAG_REGISTRY = {
 
 local KEYWORD_MAP = {}
 
-local function RegisterKeyword(name, func)
-    KEYWORD_MAP[strlower(name)] = func
+local function RegisterKeyword(nameOrNames, func)
+    if type(nameOrNames) == "table" then
+        for _, name in ipairs(nameOrNames) do
+            KEYWORD_MAP[strlower(name)] = func
+        end
+    else
+        KEYWORD_MAP[strlower(nameOrNames)] = func
+    end
 end
 
 -- ---- 7.1  Quality keywords ----
 for _, def in ipairs({
-    {"poor",IQ.Poor},{"junk",IQ.Poor},{"grey",IQ.Poor},{"gray",IQ.Poor},{"trash",IQ.Poor},
-    {"common",IQ.Common},{"white",IQ.Common},
-    {"uncommon",IQ.Uncommon},{"green",IQ.Uncommon},
-    {"rare",IQ.Rare},{"blue",IQ.Rare},
-    {"epic",IQ.Epic},{"purple",IQ.Epic},
-    {"legendary",IQ.Legendary},{"orange",IQ.Legendary},
-    {"artifact",IQ.Artifact},
-    {"heirloom",IQ.Heirloom},
+    {{"poor", "junk", "grey", "gray", "trash"}, IQ.Poor},
+    {{"common", "white"},                       IQ.Common},
+    {{"uncommon", "green"},                     IQ.Uncommon},
+    {{"rare", "blue"},                          IQ.Rare},
+    {{"epic", "purple"},                        IQ.Epic},
+    {{"legendary", "orange"},                   IQ.Legendary},
+    {"artifact",                                IQ.Artifact},
+    {"heirloom",                                IQ.Heirloom},
 }) do
     local q = def[2]
     RegisterKeyword(def[1], function(p) return p.quality == q end)
 end
 
 -- ---- 7.2  Bind keywords ----
-RegisterKeyword("soulbound",          function(p) return p.isSoulbound end)
-RegisterKeyword("bound",              function(p) return p.isSoulbound end)
-RegisterKeyword("bop",                function(p) return p.isSoulbound end)
-RegisterKeyword("boe",                function(p) return p.isBOE end)
-RegisterKeyword("bindonequip",        function(p) return p.isBOE end)
-RegisterKeyword("boa",                function(p) return p.isBOA or p.isWUE end)
-RegisterKeyword("accountbound",       function(p) return p.isBOA or p.isWUE end)
-RegisterKeyword("warbound",           function(p) return p.isBOA or p.isWUE end)
-RegisterKeyword("bou",                function(p) return p.isBOU end)
-RegisterKeyword("bindonuse",          function(p) return p.isBOU end)
-RegisterKeyword("wue",                function(p) return p.isWUE end)
-RegisterKeyword("warbounduntilequip", function(p) return p.isWUE end)
+RegisterKeyword({"soulbound", "bound", "bop"},          function(p) return p.isSoulbound end)
+RegisterKeyword({"boe", "bindonequip"},                 function(p) return p.isBOE end)
+RegisterKeyword({"boa", "accountbound", "warbound"},    function(p) return p.isBOA or p.isWUE end)
+RegisterKeyword({"bou", "bindonuse"},                   function(p) return p.isBOU end)
+RegisterKeyword({"wue", "warbounduntilequip"},          function(p) return p.isWUE end)
 
 -- ---- 7.3  Item class keywords ----
 -- Same order as found in Enum.ItemClass
-RegisterKeyword("consumable",       function(p) return p.classID == Enum.ItemClass.Consumable end)
-RegisterKeyword("container",        function(p) return p.classID == Enum.ItemClass.Container end)
-RegisterKeyword("bag",              function(p) return p.classID == Enum.ItemClass.Container end)
-RegisterKeyword("weapon",           function(p) return p.classID == Enum.ItemClass.Weapon end)
-RegisterKeyword("gem",              function(p) return p.classID == Enum.ItemClass.Gem end)
-RegisterKeyword("armor",            function(p) return p.classID == Enum.ItemClass.Armor end)
-RegisterKeyword("reagent",          function(p) return p.classID == Enum.ItemClass.Reagent end)
-RegisterKeyword("projectile",       function(p) return p.classID == Enum.ItemClass.Projectile end)
-RegisterKeyword("tradegoods",       function(p) return p.classID == Enum.ItemClass.Tradegoods end)
-RegisterKeyword("tradegood",        function(p) return p.classID == Enum.ItemClass.Tradegoods end)
-RegisterKeyword("itemenhancement",  function(p) return p.classID == Enum.ItemClass.ItemEnhancement end)
-RegisterKeyword("enhancement",      function(p) return p.classID == Enum.ItemClass.ItemEnhancement end)
-RegisterKeyword("recipe",           function(p) return p.classID == Enum.ItemClass.Recipe end)
+RegisterKeyword("consumable",                           function(p) return p.classID == Enum.ItemClass.Consumable end)
+RegisterKeyword({"container", "bag"},                   function(p) return p.classID == Enum.ItemClass.Container end)
+RegisterKeyword("weapon",                               function(p) return p.classID == Enum.ItemClass.Weapon end)
+RegisterKeyword("gem",                                  function(p) return p.classID == Enum.ItemClass.Gem end)
+RegisterKeyword("armor",                                function(p) return p.classID == Enum.ItemClass.Armor end)
+RegisterKeyword("reagent",                              function(p) return p.classID == Enum.ItemClass.Reagent end)
+RegisterKeyword("projectile",                           function(p) return p.classID == Enum.ItemClass.Projectile end)
+RegisterKeyword({"tradegoods", "tradegood"},            function(p) return p.classID == Enum.ItemClass.Tradegoods end)
+RegisterKeyword({"itemenhancement", "enhancement"},     function(p) return p.classID == Enum.ItemClass.ItemEnhancement end)
+RegisterKeyword("recipe",                               function(p) return p.classID == Enum.ItemClass.Recipe end)
 -- CurrencyTokenObsolete (skipped)
-RegisterKeyword("quiver",           function(p) return p.classID == Enum.ItemClass.Quiver end)
+RegisterKeyword("quiver",                               function(p) return p.classID == Enum.ItemClass.Quiver end)
 
 -- Quest items: classID OR C_Container quest info (populated in BuildProps)
-RegisterKeyword("quest",     function(p) return p.isQuestItem end)
-RegisterKeyword("questitem", function(p) return p.isQuestItem end)
-
-RegisterKeyword("key",              function(p) return p.classID == Enum.ItemClass.Key end)
+RegisterKeyword({"quest", "questitem"},                 function(p) return p.isQuestItem end)
+RegisterKeyword("key",                                  function(p) return p.classID == Enum.ItemClass.Key end)
 -- PermanentObsolete (skipped)
-RegisterKeyword("miscellaneous",    function(p) return p.classID == Enum.ItemClass.Miscellaneous end)
-RegisterKeyword("misc",             function(p) return p.classID == Enum.ItemClass.Miscellaneous end)
-RegisterKeyword("glyph",            function(p) return p.classID == Enum.ItemClass.Glyph end)
+RegisterKeyword({"miscellaneous", "misc"},              function(p) return p.classID == Enum.ItemClass.Miscellaneous end)
+RegisterKeyword("glyph",                                function(p) return p.classID == Enum.ItemClass.Glyph end)
 -- Battlepet is handled in BuildProps
-RegisterKeyword("tradeskill",       function(p) return p.classID == Enum.ItemClass.Profession end)
-RegisterKeyword("profession",       function(p) return p.classID == Enum.ItemClass.Profession end)
-RegisterKeyword("wowtoken",         function(p) return p.classID == Enum.ItemClass.WoWToken end)
-RegisterKeyword("housing",          function(p) return p.classID == Enum.ItemClass.Housing end)
+RegisterKeyword({"tradeskill", "profession"},           function(p) return p.classID == Enum.ItemClass.Profession end)
+RegisterKeyword("wowtoken",                             function(p) return p.classID == Enum.ItemClass.WoWToken end)
+RegisterKeyword("housing",                              function(p) return p.classID == Enum.ItemClass.Housing end)
 
 -- ---- 7.4  Composite consumable keywords ----
 -- #potion includes potions, elixirs, and flasks
@@ -349,11 +297,7 @@ RegisterKeyword("potion", function(p)
         or sub == Enum.ItemConsumableSubclass.Elixir
         or sub == Enum.ItemConsumableSubclass.Flasksphials
 end)
-RegisterKeyword("food", function(p)
-    return p.classID == Enum.ItemClass.Consumable
-       and p.subClassID == Enum.ItemConsumableSubclass.Fooddrink
-end)
-RegisterKeyword("drink", function(p)
+RegisterKeyword({"food", "drink"}, function(p)
     return p.classID == Enum.ItemClass.Consumable
        and p.subClassID == Enum.ItemConsumableSubclass.Fooddrink
 end)
@@ -370,13 +314,36 @@ RegisterKeyword("bandage", function(p)
        and p.subClassID == Enum.ItemConsumableSubclass.Bandage
 end)
 
+RegisterKeyword("scroll", function(p)
+    return p.classID == Enum.ItemClass.Consumable
+       and p.subClassID == Enum.ItemConsumableSubclass.Scroll
+end)
+RegisterKeyword("vantusrune", function(p)
+    return p.classID == Enum.ItemClass.Consumable
+       and p.subClassID == Enum.ItemConsumableSubclass.VantusRune
+end)
+RegisterKeyword("utilitycurio", function(p)
+    return p.classID == Enum.ItemClass.Consumable
+       and p.subClassID == Enum.ItemConsumableSubclass.UtilityCurio
+end)
+RegisterKeyword("combatcurio", function(p)
+    return p.classID == Enum.ItemClass.Consumable
+       and p.subClassID == Enum.ItemConsumableSubclass.CombatCurio
+end)
+RegisterKeyword("curio", function(p)
+    if p.classID ~= Enum.ItemClass.Consumable then return false end
+    return p.subClassID == Enum.ItemConsumableSubclass.UtilityCurio
+        or p.subClassID == Enum.ItemConsumableSubclass.CombatCurio
+end)
+RegisterKeyword("explosive", function(p)
+    return p.classID == Enum.ItemClass.Consumable
+       and p.subClassID == Enum.ItemConsumableSubclass.Generic
+end)
+
 -- ---- 7.5  Equipment keywords ----
-RegisterKeyword("gear",         function(p) return p.isEquipment end)
-RegisterKeyword("equipment",    function(p) return p.isEquipment end)
-RegisterKeyword("equippable",   function(p) return p.isEquipment end)
-RegisterKeyword("set",          function(p) return p.isInEquipmentSet end)
-RegisterKeyword("equipmentset", function(p) return p.isInEquipmentSet end)
-RegisterKeyword("cosmetic",     function(p)
+RegisterKeyword({"gear", "equipment", "equippable"}, function(p) return p.isEquipment end)
+RegisterKeyword({"set", "equipmentset"},             function(p) return p.isInEquipmentSet end)
+RegisterKeyword("cosmetic", function(p)
     return p.classID == Enum.ItemClass.Armor
        and p.subClassID == Enum.ItemArmorSubclass.Cosmetic
 end)
@@ -400,91 +367,247 @@ for _, def in ipairs({
     end)
 end
 
--- ---- 7.7  Slot keywords ----
--- Map keyword -> equip location string(s).
--- "chest" matches both INVTYPE_CHEST and INVTYPE_ROBE.
-local SLOT_MAP = {
-    head     = "INVTYPE_HEAD",    helm     = "INVTYPE_HEAD",    helmet   = "INVTYPE_HEAD",
-    neck     = "INVTYPE_NECK",    necklace = "INVTYPE_NECK",    amulet   = "INVTYPE_NECK",
-    shoulder = "INVTYPE_SHOULDER", shoulders = "INVTYPE_SHOULDER",
-    waist    = "INVTYPE_WAIST",   belt     = "INVTYPE_WAIST",
-    legs     = "INVTYPE_LEGS",    pants    = "INVTYPE_LEGS",
-    feet     = "INVTYPE_FEET",    boots    = "INVTYPE_FEET",
-    wrist    = "INVTYPE_WRIST",   bracers  = "INVTYPE_WRIST",  bracer = "INVTYPE_WRIST",
-    hands    = "INVTYPE_HAND",    gloves   = "INVTYPE_HAND",
-    finger   = "INVTYPE_FINGER",  ring     = "INVTYPE_FINGER",
-    trinket  = "INVTYPE_TRINKET",
-    back     = "INVTYPE_CLOAK",   cloak    = "INVTYPE_CLOAK",  cape = "INVTYPE_CLOAK",
-    mainhand = "INVTYPE_WEAPONMAINHAND",
-    shield   = "INVTYPE_SHIELD",
-    tabard   = "INVTYPE_TABARD",
-    shirt    = "INVTYPE_BODY",
-}
+-- ---- 7.7  Weapon subclass keywords ----
+for _, def in ipairs({
+    {{"1haxe", "onehandaxe"},       Enum.ItemWeaponSubclass.Axe1H},
+    {{"2haxe", "twohandaxe"},       Enum.ItemWeaponSubclass.Axe2H},
+    {{"1hsword", "onehandsword"},   Enum.ItemWeaponSubclass.Sword1H},
+    {{"2hsword", "twohandsword"},   Enum.ItemWeaponSubclass.Sword2H},
+    {{"1hmace", "onehandmace"},     Enum.ItemWeaponSubclass.Mace1H},
+    {{"2hmace", "twohandmace"},     Enum.ItemWeaponSubclass.Mace2H},
+    {{"dagger", "daggers"},         Enum.ItemWeaponSubclass.Dagger},
+    {{"staff", "staves"},           Enum.ItemWeaponSubclass.Staff},
+    {"polearm",                     Enum.ItemWeaponSubclass.Polearm},
+    {{"bow", "bows"},               Enum.ItemWeaponSubclass.Bows},
+    {{"gun", "guns"},               Enum.ItemWeaponSubclass.Guns},
+    {"crossbow",                    Enum.ItemWeaponSubclass.Crossbow},
+    {{"warglaive", "glaive"},       Enum.ItemWeaponSubclass.Warglaive},
+    {{"fist", "fistweapon"},        Enum.ItemWeaponSubclass.Unarmed},
+}) do
+    local sub = def[2]
+    RegisterKeyword(def[1], function(p)
+        return p.classID == Enum.ItemClass.Weapon and p.subClassID == sub
+    end)
+end
 
-for name, loc in pairs(SLOT_MAP) do
-    local capturedLoc = loc
-    RegisterKeyword(name, function(p) return p.equipLoc == capturedLoc end)
+-- Composite: #axe, #sword, #mace match both 1H and 2H variants
+RegisterKeyword("axe", function(p)
+    if p.classID ~= Enum.ItemClass.Weapon then return false end
+    return p.subClassID == Enum.ItemWeaponSubclass.Axe1H
+        or p.subClassID == Enum.ItemWeaponSubclass.Axe2H
+end)
+RegisterKeyword("sword", function(p)
+    if p.classID ~= Enum.ItemClass.Weapon then return false end
+    return p.subClassID == Enum.ItemWeaponSubclass.Sword1H
+        or p.subClassID == Enum.ItemWeaponSubclass.Sword2H
+end)
+RegisterKeyword("mace", function(p)
+    if p.classID ~= Enum.ItemClass.Weapon then return false end
+    return p.subClassID == Enum.ItemWeaponSubclass.Mace1H
+        or p.subClassID == Enum.ItemWeaponSubclass.Mace2H
+end)
+
+-- Composite: handedness
+RegisterKeyword({"2h", "twohand"}, function(p)
+    if p.classID ~= Enum.ItemClass.Weapon then return false end
+    local s = p.subClassID
+    return s == Enum.ItemWeaponSubclass.Axe2H
+        or s == Enum.ItemWeaponSubclass.Sword2H
+        or s == Enum.ItemWeaponSubclass.Mace2H
+        or s == Enum.ItemWeaponSubclass.Polearm
+        or s == Enum.ItemWeaponSubclass.Staff
+end)
+RegisterKeyword({"1h", "onehand"}, function(p)
+    if p.classID ~= Enum.ItemClass.Weapon then return false end
+    local s = p.subClassID
+    return s == Enum.ItemWeaponSubclass.Axe1H
+        or s == Enum.ItemWeaponSubclass.Sword1H
+        or s == Enum.ItemWeaponSubclass.Mace1H
+        or s == Enum.ItemWeaponSubclass.Dagger
+        or s == Enum.ItemWeaponSubclass.Unarmed
+        or s == Enum.ItemWeaponSubclass.Warglaive
+end)
+
+-- ---- 7.8  Gem subclass keywords ----
+for _, def in ipairs({
+    {{"intgem", "intellectgem"},        Enum.ItemGemSubclass.Intellect},
+    {{"agigem", "agilitygem"},          Enum.ItemGemSubclass.Agility},
+    {{"strgem", "strengthgem"},         Enum.ItemGemSubclass.Strength},
+    {{"stagem", "staminagem"},          Enum.ItemGemSubclass.Stamina},
+    {{"critgem", "criticalgem"},        Enum.ItemGemSubclass.Criticalstrike},
+    {"masterygem",                      Enum.ItemGemSubclass.Mastery},
+    {"hastegem",                        Enum.ItemGemSubclass.Haste},
+    {{"versgem", "versatilitygem"},     Enum.ItemGemSubclass.Versatility},
+    {"multigem",                        Enum.ItemGemSubclass.Multiplestats},
+}) do
+    local sub = def[2]
+    RegisterKeyword(def[1], function(p)
+        return p.classID == Enum.ItemClass.Gem and p.subClassID == sub
+    end)
+end
+
+-- ---- 7.9  Housing subclass keywords ----
+for _, def in ipairs({
+    {"decor",                   Enum.ItemHousingSubclass.Decor},
+    {{"dye", "housingdye"},     Enum.ItemHousingSubclass.Dye},
+    {"room",                    Enum.ItemHousingSubclass.Room},
+    {"roomcustomization",       Enum.ItemHousingSubclass.RoomCustomization},
+    {"exteriorcustomization",   Enum.ItemHousingSubclass.ExteriorCustomization},
+    {"serviceitem",             Enum.ItemHousingSubclass.ServiceItem},
+}) do
+    local sub = def[2]
+    RegisterKeyword(def[1], function(p)
+        return p.classID == Enum.ItemClass.Housing and p.subClassID == sub
+    end)
+end
+
+-- ---- 7.10  Profession subclass keywords ----
+for _, def in ipairs({
+    {"blacksmithing",   Enum.ItemProfessionSubclass.Blacksmithing},
+    {"leatherworking",  Enum.ItemProfessionSubclass.Leatherworking},
+    {"alchemy",         Enum.ItemProfessionSubclass.Alchemy},
+    {"herbalism",       Enum.ItemProfessionSubclass.Herbalism},
+    {"cooking",         Enum.ItemProfessionSubclass.Cooking},
+    {"mining",          Enum.ItemProfessionSubclass.Mining},
+    {"tailoring",       Enum.ItemProfessionSubclass.Tailoring},
+    {"engineering",     Enum.ItemProfessionSubclass.Engineering},
+    {"enchanting",      Enum.ItemProfessionSubclass.Enchanting},
+    {"fishing",         Enum.ItemProfessionSubclass.Fishing},
+    {"skinning",        Enum.ItemProfessionSubclass.Skinning},
+    {"jewelcrafting",   Enum.ItemProfessionSubclass.Jewelcrafting},
+    {"inscription",     Enum.ItemProfessionSubclass.Inscription},
+    {"archaeology",     Enum.ItemProfessionSubclass.Archaeology},
+}) do
+    local sub = def[2]
+    RegisterKeyword(def[1], function(p)
+        return p.classID == Enum.ItemClass.Profession and p.subClassID == sub
+    end)
+end
+
+-- ---- 7.11  Miscellaneous subclass keywords ----
+RegisterKeyword("holiday", function(p)
+    return p.classID == Enum.ItemClass.Miscellaneous
+       and p.subClassID == Enum.ItemMiscellaneousSubclass.Holiday
+end)
+RegisterKeyword("companionpet", function(p)
+    return p.classID == Enum.ItemClass.Miscellaneous
+       and p.subClassID == Enum.ItemMiscellaneousSubclass.CompanionPet
+end)
+RegisterKeyword("mountequipment", function(p)
+    return p.classID == Enum.ItemClass.Miscellaneous
+       and p.subClassID == Enum.ItemMiscellaneousSubclass.MountEquipment
+end)
+
+-- ---- 7.12  Reagent subclass keywords ----
+RegisterKeyword("contexttoken", function(p)
+    return p.classID == Enum.ItemClass.Reagent
+       and p.subClassID == Enum.ItemReagentSubclass.ContextToken
+end)
+
+-- ---- 7.13  Recipe subclass keywords ----
+for _, def in ipairs({
+    {"alchemyrecipe",           Enum.ItemRecipeSubclass.Alchemy},
+    {"blacksmithingrecipe",     Enum.ItemRecipeSubclass.Blacksmithing},
+    {"cookingrecipe",           Enum.ItemRecipeSubclass.Cooking},
+    {"enchantingrecipe",        Enum.ItemRecipeSubclass.Enchanting},
+    {"engineeringrecipe",       Enum.ItemRecipeSubclass.Engineering},
+    {"inscriptionrecipe",       Enum.ItemRecipeSubclass.Inscription},
+    {"jewelcraftingrecipe",     Enum.ItemRecipeSubclass.Jewelcrafting},
+    {"leatherworkingrecipe",    Enum.ItemRecipeSubclass.Leatherworking},
+    {"tailoringrecipe",         Enum.ItemRecipeSubclass.Tailoring},
+    {"fishingrecipe",           Enum.ItemRecipeSubclass.Fishing},
+}) do
+    local sub = def[2]
+    RegisterKeyword(def[1], function(p)
+        return p.classID == Enum.ItemClass.Recipe and p.subClassID == sub
+    end)
+end
+
+-- ---- 7.14  Slot keywords ----
+for _, def in ipairs({
+    {{"head", "helm", "helmet"},        "INVTYPE_HEAD"},
+    {{"neck", "necklace", "amulet"},    "INVTYPE_NECK"},
+    {{"shoulder", "shoulders"},         "INVTYPE_SHOULDER"},
+    {{"waist", "belt"},                 "INVTYPE_WAIST"},
+    {{"legs", "pants"},                 "INVTYPE_LEGS"},
+    {{"feet", "boots"},                 "INVTYPE_FEET"},
+    {{"wrist", "bracers", "bracer"},    "INVTYPE_WRIST"},
+    {{"hands", "gloves"},               "INVTYPE_HAND"},
+    {{"finger", "ring"},                "INVTYPE_FINGER"},
+    {"trinket",                         "INVTYPE_TRINKET"},
+    {{"back", "cloak", "cape"},         "INVTYPE_CLOAK"},
+    {"mainhand",                        "INVTYPE_WEAPONMAINHAND"},
+    {"tabard",                          "INVTYPE_TABARD"},
+    {"shirt",                           "INVTYPE_BODY"},
+}) do
+    local loc = def[2]
+    RegisterKeyword(def[1], function(p) return p.equipLoc == loc end)
 end
 
 -- Special multi-location slot keywords
-RegisterKeyword("chest", function(p)
-    return p.equipLoc == "INVTYPE_CHEST" or p.equipLoc == "INVTYPE_ROBE"
-end)
-RegisterKeyword("robe", function(p) return p.equipLoc == "INVTYPE_ROBE" end)
-RegisterKeyword("offhand", function(p)
-    return p.equipLoc == "INVTYPE_WEAPONOFFHAND" or p.equipLoc == "INVTYPE_HOLDABLE"
-end)
+RegisterKeyword("chest",    function(p) return p.equipLoc == "INVTYPE_CHEST" or p.equipLoc == "INVTYPE_ROBE" end)
+RegisterKeyword("robe",     function(p) return p.equipLoc == "INVTYPE_ROBE" end)
+RegisterKeyword("offhand",  function(p) return p.equipLoc == "INVTYPE_WEAPONOFFHAND" or p.equipLoc == "INVTYPE_HOLDABLE" end)
 RegisterKeyword("holdable", function(p) return p.equipLoc == "INVTYPE_HOLDABLE" end)
-RegisterKeyword("ranged", function(p)
-    return p.equipLoc == "INVTYPE_RANGED" or p.equipLoc == "INVTYPE_RANGEDRIGHT"
-end)
-RegisterKeyword("wand", function(p) return p.equipLoc == "INVTYPE_RANGEDRIGHT" end)
+RegisterKeyword("ranged",   function(p) return p.equipLoc == "INVTYPE_RANGED" or p.equipLoc == "INVTYPE_RANGEDRIGHT" end)
+RegisterKeyword("wand",     function(p) return p.equipLoc == "INVTYPE_RANGEDRIGHT" end)
 
--- ---- 7.8  Expansion keywords ----
--- Built from ConfigEnum expansion map so aliases (tww, df, sl, etc.) all work.
-for name, id in pairs(EXPANSION_IDS_MAP) do
-    local capturedID = id
-    RegisterKeyword(name, function(p) return p.expansionID == capturedID end)
+-- ---- 7.15  Expansion keywords ----
+for _, def in ipairs({
+    {{"classic", "vanilla"},                            EL.None},
+    {{"burningcrusade", "tbc"},                         EL.BurningCrusade},
+    {{"wrath", "wotlk"},                                EL.Northrend},
+    {{"cataclysm", "cata"},                             EL.Cataclysm},
+    {{"mistsofpandaria", "mists", "mop", "pandaria"},   EL.MistsOfPandaria},
+    {{"draenor", "wod", "warlords"},                    EL.Draenor},
+    {"legion",                                          EL.Legion},
+    {{"battleforazeroth", "bfa"},                       EL.BattleForAzeroth},
+    {{"shadowlands", "sl"},                             EL.Shadowlands},
+    {{"dragonflight", "df"},                            EL.Dragonflight},
+    {{"warwithin", "tww", "thewarwithin"},              EL.WarWithin},
+    {"midnight",                                        EL.Midnight},
+    {{"lasttitan", "titan"},                            EL.LastTitan},
+}) do
+    local id = def[2]
+    RegisterKeyword(def[1], function(p) return p.expansionID == id end)
 end
 
--- ---- 7.9  Collectible keywords ----
-RegisterKeyword("toy",         function(p) return p.isToy end)
-RegisterKeyword("mount",       function(p) return p.isMount end)
-RegisterKeyword("pet",         function(p) return p.isPet end)
-RegisterKeyword("battlepet",   function(p) return p.isPet end)
-RegisterKeyword("collected",   function(p) return p.isCollected end)
-RegisterKeyword("uncollected", function(p) return not p.isCollected end)
-RegisterKeyword("alreadyknown", function(p) return p.isAlreadyKnown end)
+-- ---- 7.16  Collectible keywords ----
+RegisterKeyword("toy",                  function(p) return p.isToy end)
+RegisterKeyword("mount",                function(p) return p.isMount end)
+RegisterKeyword({"pet", "battlepet"},   function(p) return p.isPet end)
+RegisterKeyword("collected",            function(p) return p.isCollected end)
+RegisterKeyword("uncollected",          function(p) return not p.isCollected end)
+RegisterKeyword("alreadyknown",         function(p) return p.isAlreadyKnown end)
 
--- ---- 7.10  Transmog keywords ----
+-- ---- 7.17  Transmog keywords ----
 RegisterKeyword("transmog",        function(p) return p.hasAppearance end)
 RegisterKeyword("knowntransmog",   function(p) return p.isAppearanceCollected end)
 RegisterKeyword("unknowntransmog", function(p) return p.isUnknownAppearance end)
 
--- ---- 7.11  State keywords ----
-RegisterKeyword("usable",   function(p) return p.isUsable end)
-RegisterKeyword("use",      function(p) return p.isUsable end)
-RegisterKeyword("unusable",  function(p) return not p.isUsable end)
-RegisterKeyword("locked",   function(p) return p.isLocked end)
-RegisterKeyword("charges",  function(p) return p.hasCharges end)
-RegisterKeyword("unique",   function(p) return p.isUnique end)
-RegisterKeyword("socket",   function(p) return p.hasSocket end)
-RegisterKeyword("equipped",  function(p) return p.isEquipped end)
+-- ---- 7.18  State keywords ----
+RegisterKeyword({"usable", "use"},  function(p) return p.isUsable end)
+RegisterKeyword("unusable",         function(p) return not p.isUsable end)
+RegisterKeyword("locked",           function(p) return p.isLocked end)
+RegisterKeyword("charges",          function(p) return p.hasCharges end)
+RegisterKeyword("unique",           function(p) return p.isUnique end)
+RegisterKeyword("socket",           function(p) return p.hasSocket end)
+RegisterKeyword("equipped",         function(p) return p.isEquipped end)
 
--- ---- 7.12  Vendor / value keywords ----
+-- ---- 7.19  Vendor / value keywords ----
 RegisterKeyword("unsellable", function(p) return p.isUnsellable end)
 RegisterKeyword("sellable",   function(p) return not p.isUnsellable end)
 
--- ---- 7.13  Crafting keywords ----
+-- ---- 7.20  Crafting keywords ----
 RegisterKeyword("craftingreagent",     function(p) return p.isCraftingReagent end)
 RegisterKeyword("crafted",             function(p) return (p.craftedQuality or 0) > 0 end)
 RegisterKeyword("professionequipment", function(p) return p.isProfessionEquipment end)
 
--- ---- 7.14  Upgrade keywords ----
+-- ---- 7.21  Upgrade keywords ----
 RegisterKeyword("upgradeable",   function(p) return p.isUpgradeable end)
 RegisterKeyword("fullyupgraded", function(p) return p.isFullyUpgraded end)
 
--- ---- 7.15  Tooltip-text keywords ----
+-- ---- 7.22  Tooltip-text keywords ----
 -- These trigger the lazy tooltip scan on first access to tooltipText.
 RegisterKeyword("reputation", function(p)
     local tt = p.tooltipText
@@ -496,10 +619,39 @@ RegisterKeyword("openable", function(p)
     return tt and (strfind(tt, "Right Click to Open") ~= nil)
 end)
 
--- ---- 7.16  Special keywords ----
+-- ---- 7.23  Special keywords ----
 RegisterKeyword("hearthstone", function(p) return p._isHearthstone end)
 RegisterKeyword("keystone",    function(p) return p._isKeystone end)
 RegisterKeyword("tierset",     function(p) return p.isTierSet end)
+
+-- ---- 7.24  Stat keywords ----
+-- Primary stats
+RegisterKeyword({"intellect", "int"},           function(p) return (p.statIntellect or 0) > 0 end)
+RegisterKeyword({"agility", "agi"},             function(p) return (p.statAgility or 0) > 0 end)
+RegisterKeyword({"strength", "str"},            function(p) return (p.statStrength or 0) > 0 end)
+RegisterKeyword({"stamina", "stam"},            function(p) return (p.statStamina or 0) > 0 end)
+
+-- Secondary stats
+RegisterKeyword({"crit", "criticalstrike"},     function(p) return (p.statCrit or 0) > 0 end)
+RegisterKeyword("haste",                        function(p) return (p.statHaste or 0) > 0 end)
+RegisterKeyword("mastery",                      function(p) return (p.statMastery or 0) > 0 end)
+RegisterKeyword({"versatility", "vers"},         function(p) return (p.statVersatility or 0) > 0 end)
+
+-- Tertiary stats
+RegisterKeyword("speed",                        function(p) return (p.statSpeed or 0) > 0 end)
+RegisterKeyword("leech",                        function(p) return (p.statLeech or 0) > 0 end)
+RegisterKeyword("avoidance",                    function(p) return (p.statAvoidance or 0) > 0 end)
+
+-- ---- 7.25  Socket type keywords ----
+RegisterKeyword("prismatic",       function(p) return (p.socketPrismatic or 0) > 0 end)
+RegisterKeyword("metasocket",      function(p) return (p.socketMeta or 0) > 0 end)
+RegisterKeyword("redsocket",       function(p) return (p.socketRed or 0) > 0 end)
+RegisterKeyword("yellowsocket",    function(p) return (p.socketYellow or 0) > 0 end)
+RegisterKeyword("bluesocket",      function(p) return (p.socketBlue or 0) > 0 end)
+RegisterKeyword("cogwheel",        function(p) return (p.socketCogwheel or 0) > 0 end)
+RegisterKeyword("tinkersocket",    function(p) return (p.socketTinker or 0) > 0 end)
+RegisterKeyword("dominationsocket", function(p) return (p.socketDomination or 0) > 0 end)
+RegisterKeyword("primordial",      function(p) return (p.socketPrimordial or 0) > 0 end)
 
 -- ============================================================================
 -- SECTION 8: LAYER 1 — UTILITY FUNCTIONS
@@ -584,13 +736,13 @@ local function ResolveTooltipFields(props)
     rawset(props, "isTradeableLoot", strfind(tt, "You may trade this item") ~= nil)
 end
 
--- ---------- ResolveBind_Tooltip ----------
+-- ---------- ResolveBind ----------
 -- Tooltip-based bind detection. Reflects the current state of binding on an item.
 -- Implements strict soulbound: account-bound text does NOT match isSoulbound.
 local TDIB = Enum.TooltipDataItemBinding
 local BIND_LINE_TYPE = 20
 
-local function ResolveBind_Tooltip(props)
+local function ResolveBind(props)
     local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
     if not bagID or not slotID then
         rawset(props, "isSoulbound", false)
@@ -635,6 +787,69 @@ local function ResolveBind_Tooltip(props)
     rawset(props, "isWarbound",  isBOA or isWUE)
 end
 
+-- ---------- ResolveStats ----------
+-- Lazily populates item stat fields on first access.
+-- Called by the propsMT.__index metatable handler.
+-- Keys returned by C_Item.GetItemStats are ITEM_MOD_*_SHORT global names (not localized).
+local STAT_GLOBAL_MAP = {
+    ITEM_MOD_INTELLECT_SHORT      = "statIntellect",
+    ITEM_MOD_AGILITY_SHORT        = "statAgility",
+    ITEM_MOD_STRENGTH_SHORT       = "statStrength",
+    ITEM_MOD_STAMINA_SHORT        = "statStamina",
+    ITEM_MOD_CRIT_RATING_SHORT    = "statCrit",
+    ITEM_MOD_HASTE_RATING_SHORT   = "statHaste",
+    ITEM_MOD_MASTERY_RATING_SHORT = "statMastery",
+    ITEM_MOD_VERSATILITY          = "statVersatility",
+    ITEM_MOD_CR_SPEED_SHORT       = "statSpeed",
+    ITEM_MOD_CR_LIFESTEAL_SHORT   = "statLeech",
+    ITEM_MOD_CR_AVOIDANCE_SHORT   = "statAvoidance",
+    RESISTANCE0_NAME              = "statArmor",
+    -- Socket types (from GetItemStats EMPTY_SOCKET_* keys)
+    EMPTY_SOCKET_PRISMATIC          = "socketPrismatic",
+    EMPTY_SOCKET_NO_COLOR           = "socketPrismatic",
+    EMPTY_SOCKET_META               = "socketMeta",
+    EMPTY_SOCKET_RED                = "socketRed",
+    EMPTY_SOCKET_YELLOW             = "socketYellow",
+    EMPTY_SOCKET_BLUE               = "socketBlue",
+    EMPTY_SOCKET_COGWHEEL           = "socketCogwheel",
+    EMPTY_SOCKET_HYDRAULIC          = "socketHydraulic",
+    EMPTY_SOCKET_DOMINATION         = "socketDomination",
+    EMPTY_SOCKET_CYPHER             = "socketCypher",
+    EMPTY_SOCKET_TINKER             = "socketTinker",
+    EMPTY_SOCKET_PRIMORDIAL         = "socketPrimordial",
+    EMPTY_SOCKET_FRAGRANCE          = "socketFragrance",
+    EMPTY_SOCKET_FIBER              = "socketFiber",
+    EMPTY_SOCKET_PUNCHCARDRED       = "socketPunchcardRed",
+    EMPTY_SOCKET_PUNCHCARDYELLOW    = "socketPunchcardYellow",
+    EMPTY_SOCKET_PUNCHCARDBLUE      = "socketPunchcardBlue",
+    EMPTY_SOCKET_SINGINGSEA         = "socketSingingSea",
+    EMPTY_SOCKET_SINGINGTHUNDER     = "socketSingingThunder",
+    EMPTY_SOCKET_SINGINGWIND        = "socketSingingWind",
+    EMPTY_SOCKET_SINGING_SEA        = "socketSingingSea",
+    EMPTY_SOCKET_SINGING_THUNDER    = "socketSingingThunder",
+    EMPTY_SOCKET_SINGING_WIND       = "socketSingingWind",
+}
+
+local function ResolveStats(props)
+    -- Zero out all stat fields first
+    for _, field in pairs(STAT_GLOBAL_MAP) do
+        rawset(props, field, 0)
+    end
+
+    local link = rawget(props, "hyperlink")
+    if not link then return end
+
+    local stats = C_Item.GetItemStats(link)
+    if not stats then return end
+
+    for globalKey, field in pairs(STAT_GLOBAL_MAP) do
+        local val = stats[globalKey]
+        if val then
+            rawset(props, field, val)
+        end
+    end
+end
+
 -- ============================================================================
 -- SECTION 9: LAYER 1 — BUILDPROPS
 -- ============================================================================
@@ -659,6 +874,41 @@ local BIND_FIELDS_SET = {
     currentbind = true,
 }
 
+-- Stat fields (lazy via C_Item.GetItemStats)
+local STAT_FIELDS_SET = {
+    statIntellect           = true,
+    statAgility             = true,
+    statStrength            = true,
+    statStamina             = true,
+    statCrit                = true,
+    statHaste               = true,
+    statMastery             = true,
+    statVersatility         = true,
+    statSpeed               = true,
+    statLeech               = true,
+    statAvoidance           = true,
+    statArmor               = true,
+    socketPrismatic         = true,
+    socketMeta              = true,
+    socketRed               = true,
+    socketYellow            = true,
+    socketBlue              = true,
+    socketCogwheel          = true,
+    socketHydraulic         = true,
+    socketDomination        = true,
+    socketCypher            = true,
+    socketTinker            = true,
+    socketPrimordial        = true,
+    socketFragrance         = true,
+    socketFiber             = true,
+    socketPunchcardRed      = true,
+    socketPunchcardYellow   = true,
+    socketPunchcardBlue     = true,
+    socketSingingSea        = true,
+    socketSingingThunder    = true,
+    socketSingingWind       = true,
+}
+
 -- Metatable applied to every props table for lazy field resolution.
 -- Stays permanently; uses _tooltipResolved and _bindResolved flags to
 -- avoid redundant scans (rather than stripping the metatable).
@@ -675,8 +925,16 @@ local propsMT = {
         -- Bind fields: tooltip fallback only when API didn't populate them
         if BIND_FIELDS_SET[key] then
             if not rawget(self, "_bindResolved") then
-                ResolveBind_Tooltip(self)
+                ResolveBind(self)
                 rawset(self, "_bindResolved", true)
+            end
+            return rawget(self, key)
+        end
+        -- Stat fields: C_Item.GetItemStats on first access
+        if STAT_FIELDS_SET[key] then
+            if not rawget(self, "_statsResolved") then
+                ResolveStats(self)
+                rawset(self, "_statsResolved", true)
             end
             return rawget(self, key)
         end
@@ -873,7 +1131,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     -- ---- Hybrid bind detection (strict soulbound) ----
     -- API-based primary path: uses containerInfo.isBound + bindType.
-    -- If either is nil, bind fields are left unset and the __index metatable triggers ResolveBind_Tooltip on first access.
+    -- If either is nil, bind fields are left unset and the __index metatable triggers ResolveBind on first access.
     -- NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.
 
     -- ---- Apply lazy tooltip metatable ----
@@ -1261,14 +1519,6 @@ end
 -- SECTION 12: PUBLIC API
 -- ============================================================================
 
---- Transforms an enum table into a lookup table with custom aliases and synonyms.
---- `config` table uses lowercase keys matching the sourceEnum: [synonyms..., keepOriginalBool].
---- last element in each config array acts as a boolean toggle to include the original key in the returned table
---- Returns a new table with mapped synonyms and/or original keys pointing to the enum values.
-function PE:ConfigEnum(sourceEnum, config, autoRegisterMissing)
-    return ConfigEnum(sourceEnum, config, autoRegisterMissing)
-end
-
 --- Compile an expression string into a predicate function.
 --- Returns the compiled function(props)->bool, cached for repeated use.
 --- Returns nil, errorMessage on failure or empty input.
@@ -1370,15 +1620,28 @@ end
 
 --- Register a custom keyword (for third-party / suite extensions).
 --- Wipes the compiled cache since available keywords changed.
-function PE:RegisterKeyword(name, func)
-    KEYWORD_MAP[strlower(name)] = func
+function PE:RegisterKeyword(nameOrNames, func)
+    if type(nameOrNames) == "table" then
+        for _, name in ipairs(nameOrNames) do
+            KEYWORD_MAP[strlower(name)] = func
+        end
+    else
+        KEYWORD_MAP[strlower(nameOrNames)] = func
+    end
     wipe(compiledCache)
 end
 
 --- Register a custom numeric/string property for comparison syntax.
 --- def = { field = "fieldName", type = "number"|"string" }
-function PE:RegisterProperty(name, def)
-    PROP_REGISTRY[strlower(name)] = { field = def.field, type = def.type or "number" }
+function PE:RegisterProperty(nameOrNames, def)
+    local entry = { field = def.field, type = def.type or "number" }
+    if type(nameOrNames) == "table" then
+        for _, name in ipairs(nameOrNames) do
+            PROP_REGISTRY[strlower(name)] = entry
+        end
+    else
+        PROP_REGISTRY[strlower(nameOrNames)] = entry
+    end
     wipe(compiledCache)
 end
 

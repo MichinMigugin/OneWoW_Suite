@@ -18,6 +18,8 @@ all three contexts.
 | `ilvl>=600` | Items at item level 600 or above |
 | `>600` | Same thing (shorthand) |
 | `200-300` | Items with item level between 200 and 300 |
+| `#haste & ilvl>=600` | Items with haste at ilvl 600+ |
+| `haste>=200` | Items with 200+ haste rating |
 
 ---
 
@@ -87,11 +89,16 @@ All keywords are case-insensitive.
 | Keyword | What it matches |
 |---|---|
 | `#potion` | Potions, elixirs, and flasks |
-| `#food` | Food and drink |
-| `#drink` | Food and drink (same as `#food`) |
+| `#food` | Food and drink (alias: `#drink`) |
 | `#flask` | Flasks and phials |
 | `#elixir` | Elixirs |
 | `#bandage` | Bandages |
+| `#scroll` | Scrolls |
+| `#vantusrune` | Vantus Runes |
+| `#utilitycurio` | Utility Curios |
+| `#combatcurio` | Combat Curios |
+| `#curio` | All curios (utility + combat) |
+| `#explosive` | Explosives and generic consumables |
 
 ### Equipment
 
@@ -101,7 +108,7 @@ All keywords are case-insensitive.
 | `#set` | `#equipmentset` | Items in an equipment set |
 | `#cosmetic` | | Cosmetic armor |
 
-### Armor Type
+### Armor Subtype
 
 | Keyword | What it matches |
 |---|---|
@@ -115,6 +122,42 @@ All keywords are case-insensitive.
 | `#totem` | Totems |
 | `#sigil` | Sigils |
 | `#relic` | Relics |
+
+### Weapon Subtype
+
+Individual weapon types:
+
+| Keyword | Aliases |
+|---|---|
+| `#1haxe` | `#onehandaxe` |
+| `#2haxe` | `#twohandaxe` |
+| `#1hsword` | `#onehandsword` |
+| `#2hsword` | `#twohandsword` |
+| `#1hmace` | `#onehandmace` |
+| `#2hmace` | `#twohandmace` |
+| `#dagger` | `#daggers` |
+| `#staff` | `#staves` |
+| `#polearm` | |
+| `#bow` | `#bows` |
+| `#gun` | `#guns` |
+| `#crossbow` | |
+| `#warglaive` | `#glaive` |
+| `#fist` | `#fistweapon` |
+
+Composite weapon keywords match both 1H and 2H variants:
+
+| Keyword | What it matches |
+|---|---|
+| `#axe` | 1H and 2H axes |
+| `#sword` | 1H and 2H swords |
+| `#mace` | 1H and 2H maces |
+
+Handedness keywords:
+
+| Keyword | Aliases | What it matches |
+|---|---|---|
+| `#2h` | `#twohand` | 2H axes, swords, maces, polearms, staves |
+| `#1h` | `#onehand` | 1H axes, swords, maces, daggers, fist weapons, warglaives |
 
 ### Equipment Slot
 
@@ -140,6 +183,81 @@ All keywords are case-insensitive.
 | `#wand` | |
 | `#tabard` | |
 | `#shirt` | |
+
+### Gem Subtype
+
+| Keyword | Aliases |
+|---|---|
+| `#intgem` | `#intellectgem` |
+| `#agigem` | `#agilitygem` |
+| `#strgem` | `#strengthgem` |
+| `#stagem` | `#staminagem` |
+| `#critgem` | `#criticalgem` |
+| `#masterygem` | |
+| `#hastegem` | |
+| `#versgem` | `#versatilitygem` |
+| `#multigem` | (multi-stat gems) |
+
+### Housing Subtype
+
+| Keyword | Aliases |
+|---|---|
+| `#decor` | |
+| `#dye` | `#housingdye` |
+| `#room` | |
+| `#roomcustomization` | |
+| `#exteriorcustomization` | |
+| `#serviceitem` | |
+
+### Profession Reagent Subtype
+
+These match items with the Profession item class and a specific profession subclass.
+
+| Keyword | What it matches |
+|---|---|
+| `#blacksmithing` | Blacksmithing reagents |
+| `#leatherworking` | Leatherworking reagents |
+| `#alchemy` | Alchemy reagents |
+| `#herbalism` | Herbalism reagents |
+| `#cooking` | Cooking reagents |
+| `#mining` | Mining reagents |
+| `#tailoring` | Tailoring reagents |
+| `#engineering` | Engineering reagents |
+| `#enchanting` | Enchanting reagents |
+| `#fishing` | Fishing reagents |
+| `#skinning` | Skinning reagents |
+| `#jewelcrafting` | Jewelcrafting reagents |
+| `#inscription` | Inscription reagents |
+| `#archaeology` | Archaeology reagents |
+
+### Miscellaneous Subtypes
+
+| Keyword | What it matches |
+|---|---|
+| `#holiday` | Holiday items |
+| `#companionpet` | Companion pet items |
+| `#mountequipment` | Mount equipment |
+
+### Reagent Subtypes
+
+| Keyword | What it matches |
+|---|---|
+| `#contexttoken` | Context tokens |
+
+### Recipe Subtypes
+
+| Keyword | What it matches |
+|---|---|
+| `#alchemyrecipe` | Alchemy recipes |
+| `#blacksmithingrecipe` | Blacksmithing recipes |
+| `#cookingrecipe` | Cooking recipes |
+| `#enchantingrecipe` | Enchanting recipes |
+| `#engineeringrecipe` | Engineering recipes |
+| `#inscriptionrecipe` | Inscription recipes |
+| `#jewelcraftingrecipe` | Jewelcrafting recipes |
+| `#leatherworkingrecipe` | Leatherworking recipes |
+| `#tailoringrecipe` | Tailoring recipes |
+| `#fishingrecipe` | Fishing recipes |
 
 ### Binding
 
@@ -170,7 +288,7 @@ Each expansion has a full name keyword and one or more short aliases.
 | `#burningcrusade` | `#tbc` |
 | `#wrath` | `#wotlk` |
 | `#cataclysm` | `#cata` |
-| `#mists` | `#mop`, `#pandaria` |
+| `#mistsofpandaria` | `#mists`, `#mop`, `#pandaria` |
 | `#draenor` | `#wod`, `#warlords` |
 | `#legion` | |
 | `#battleforazeroth` | `#bfa` |
@@ -179,10 +297,6 @@ Each expansion has a full name keyword and one or more short aliases.
 | `#warwithin` | `#tww`, `#thewarwithin` |
 | `#midnight` | |
 | `#lasttitan` | `#titan` |
-
-> **Note:** `#mistsofpandaria` is not a valid keyword — use `#mists`, `#mop`, or
-> `#pandaria` instead. Similarly, `#northrend` is not valid — use `#wrath` or
-> `#wotlk`.
 
 ### Collectibles
 
@@ -202,6 +316,58 @@ Each expansion has a full name keyword and one or more short aliases.
 | `#transmog` | Items with a transmog appearance |
 | `#knowntransmog` | Items whose appearance you've collected |
 | `#unknowntransmog` | Items whose appearance you haven't collected |
+
+### Stats
+
+Stat keywords match items that have any amount of the given stat (value > 0).
+For threshold checks, use the property comparison syntax (`haste>=200`).
+
+**Primary:**
+
+| Keyword | Aliases |
+|---|---|
+| `#intellect` | `#int` |
+| `#agility` | `#agi` |
+| `#strength` | `#str` |
+| `#stamina` | `#stam` |
+
+**Secondary:**
+
+| Keyword | Aliases |
+|---|---|
+| `#crit` | `#criticalstrike` |
+| `#haste` | |
+| `#mastery` | |
+| `#versatility` | `#vers` |
+
+**Tertiary:**
+
+| Keyword | What it matches |
+|---|---|
+| `#speed` | Items with the Speed tertiary stat |
+| `#leech` | Items with the Leech tertiary stat |
+| `#avoidance` | Items with the Avoidance tertiary stat |
+
+### Socket Type
+
+These keywords match items that have at least one socket of the given type.
+Socket type data is resolved lazily via `C_Item.GetItemStats`.
+
+| Keyword | What it matches |
+|---|---|
+| `#prismatic` | Items with a prismatic socket |
+| `#metasocket` | Items with a meta socket |
+| `#redsocket` | Items with a red socket |
+| `#yellowsocket` | Items with a yellow socket |
+| `#bluesocket` | Items with a blue socket |
+| `#cogwheel` | Items with a cogwheel socket |
+| `#tinkersocket` | Items with a tinker socket |
+| `#dominationsocket` | Items with a domination socket |
+| `#primordial` | Items with a primordial socket |
+
+> **`#socket` vs socket type keywords:** The keyword `#socket` (in Item State
+> below) matches any item with *any* socket. The socket type keywords above
+> match items with a *specific* socket type.
 
 ### Item State
 
@@ -298,7 +464,7 @@ Syntax: `property>=value`, `property<=value`, `property>value`, `property<value`
 | `quality` | | Quality as a number (0=Poor, 1=Common, 2=Uncommon, 3=Rare, 4=Epic, 5=Legendary) |
 | `count` | `stacks` | Stack size in the slot |
 | `vendorprice` | `price`, `unitvalue` | Vendor sell price per unit (copper) |
-| `totalvalue` | | Vendor sell price x stack size (copper) |
+| `totalvalue` | | Vendor sell price × stack size (copper) |
 | `maxstack` | `stacksize` | Maximum stack size |
 | `reqlevel` | `minlevel` | Required player level |
 | `expansion` | `expac` | Expansion ID (0=Classic, 1=TBC, ..., 10=TWW, 11=Midnight, 12=Last Titan) |
@@ -306,12 +472,28 @@ Syntax: `property>=value`, `property<=value`, `property>value`, `property<value`
 | `subclass` | `subtypeid` | Item subclass ID |
 | `bindtype` | | Bind type ID from item data (0=None, 1=BoP, 2=BoE, 3=BoU, 8=Warband, 9=WUE) |
 | `currentbind` | | Current tooltip bind state (from `Enum.TooltipDataItemBinding`). Reflects actual binding, not item definition. |
-| `craftedquality` | | Crafted quality tier (1-5, 0 if not crafted) |
+| `craftedquality` | | Crafted quality tier (1–5, 0 if not crafted) |
 | `upgradelevel` | | Current upgrade level |
 | `upgrademax` | | Maximum upgrade level |
 | `maxlevel` | | Maximum possible item level after upgrades |
 | `setid` | | Equipment set ID |
 | `sockets` | | Number of gem sockets |
+| `armor` | | Armor stat value |
+| `intellect` | `int` | Intellect stat value |
+| `agility` | `agi` | Agility stat value |
+| `strength` | `str` | Strength stat value |
+| `stamina` | `stam` | Stamina stat value |
+| `crit` | | Critical Strike rating |
+| `haste` | | Haste rating |
+| `mastery` | | Mastery rating |
+| `versatility` | `vers` | Versatility rating |
+| `speed` | | Speed tertiary stat |
+| `leech` | | Leech tertiary stat |
+| `avoidance` | | Avoidance tertiary stat |
+
+> **`#armor` vs `armor>=N`:** The keyword `#armor` matches any item in the
+> Armor item class. The property `armor` in a comparison like `armor>=100`
+> checks the item's armor *stat value*. These are independent.
 
 **Examples:**
 
@@ -323,6 +505,8 @@ expansion==10           The War Within items
 count>1                 Stacked items
 sockets>0               Items with at least one socket
 upgradelevel>0          Partially upgraded items
+haste>=200              Items with 200+ haste rating
+crit>0                  Items with any crit (same as #crit)
 ```
 
 ### String Comparisons
@@ -502,6 +686,21 @@ Equippable items with uncollected appearances, excluding cosmetics.
 #hearthstone || (#armor & #junk) || #food
 ```
 Hearthstones, junk armor, or food.
+
+```
+#2hsword & #epic & ilvl>=620
+```
+Epic two-handed swords at ilvl 620+.
+
+```
+#haste & #vers & #gear
+```
+Equippable items with both haste and versatility.
+
+```
+#gem & #hastegem
+```
+Haste gems.
 
 ```
 IsEquipment & !IsInEquipmentSet & quality<${RARE} & vendorprice>0
