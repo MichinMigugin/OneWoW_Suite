@@ -107,6 +107,8 @@ All keywords are case-insensitive.
 | `#gear` | `#equipment`, `#equippable` | Any equippable item |
 | `#set` | `#equipmentset` | Items in an equipment set |
 | `#cosmetic` | | Cosmetic armor |
+| `#myclass` | | Equipment your class can use |
+| `#myspec` | | Equipment usable by your current spec (universal gear included) |
 
 ### Armor Subtype
 
@@ -400,6 +402,7 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 
 | Keyword | What it matches |
 |---|---|
+| `#upgrade` | Items flagged as an upgrade for your character (via OneWoW upgrade detection) |
 | `#upgradeable` | Items that can be upgraded |
 | `#fullyupgraded` | Items at max upgrade level |
 
