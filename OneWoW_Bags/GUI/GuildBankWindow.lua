@@ -119,7 +119,7 @@ function GuildBankGUI:CleanupAllViews()
         return
     end
     needsCleanupAfterCombat = false
- 
+
     if GuildBankSet.isBuilt then
         local allButtons = GuildBankSet:GetAllButtons()
         for _, button in ipairs(allButtons) do
