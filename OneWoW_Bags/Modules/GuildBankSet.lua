@@ -142,16 +142,6 @@ function GBSet:ApplyCacheToButtons()
             local cached = self.cache[tabID] and self.cache[tabID][slotID]
             OneWoW_Bags.ItemPool:ClearNewItemGlow(button)
 
-            if button._owb_clearedLink then
-                if cached and cached.itemLink == button._owb_clearedLink then
-                    cached = nil
-                elseif not cached or not cached.itemLink then
-                    button._owb_clearedLink = nil
-                else
-                    button._owb_clearedLink = nil
-                end
-            end
-
             if cached and cached.itemLink then
                 HideDynamicChildren(button)
                 button:SetAlpha(1.0)
@@ -306,14 +296,9 @@ function GBSet:ApplyGuildBankScripts(button)
                 SetCurrentGuildBankTab(tabID)
             end
             local hadItem = self.owb_hasItem
-            local clearedLink = self.owb_itemInfo and self.owb_itemInfo.hyperlink
             local isPlacingItem = cursorType ~= nil
             PickupGuildBankItem(tabID, slotID)
-            if hadItem then
-                OneWoW_Bags:TrackGuildBankTransferTab(tabID)
-                self._owb_clearedLink = clearedLink
-                ClearGuildBankButton(self)
-            elseif isPlacingItem then
+            if hadItem or isPlacingItem then
                 OneWoW_Bags:TrackGuildBankTransferTab(tabID)
             end
         end
@@ -337,12 +322,9 @@ function GBSet:ApplyGuildBankScripts(button)
             SetCurrentGuildBankTab(tabID)
         end
         local hadItem = self.owb_hasItem
-        local clearedLink = self.owb_itemInfo and self.owb_itemInfo.hyperlink
         PickupGuildBankItem(tabID, slotID)
         if hadItem then
             OneWoW_Bags:TrackGuildBankTransferTab(tabID)
-            self._owb_clearedLink = clearedLink
-            ClearGuildBankButton(self)
         end
     end)
 
@@ -383,7 +365,6 @@ function GBSet:RestoreButtonScripts(button)
     button.UpdateTooltip = button._gbOrigUpdateTooltip
     button._gbOrigUpdateTooltip = nil
     button.SplitStack = nil
-    button._owb_clearedLink = nil
 end
 
 function GBSet:ReleaseAll()

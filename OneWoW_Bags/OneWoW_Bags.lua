@@ -513,8 +513,6 @@ function OneWoW_Bags:ProcessPendingGuildBankTransferTabs()
     local transferTabs = self._guildBankTransferTabs
     if not transferTabs then return end
 
-    self._guildBankTransferTabs = nil
-
     local queried = false
     for tabID in pairs(transferTabs) do
         QueryGuildBankTab(tabID)
@@ -523,7 +521,7 @@ function OneWoW_Bags:ProcessPendingGuildBankTransferTabs()
 
     if queried then
         local currentTab = GetCurrentGuildBankTab()
-        if currentTab then
+        if currentTab and not transferTabs[currentTab] then
             QueryGuildBankTab(currentTab)
         end
 
@@ -576,6 +574,7 @@ function OneWoW_Bags:OnGuildBankOpened()
     self._guildBankRefreshDirty = false
     self._guildBankTransferTabs = nil
     self:SuppressGuildBankFrame()
+
     self.GuildBankGUI:Show()
 
     if self.db.global.autoOpenWithBank then
