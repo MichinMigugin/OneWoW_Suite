@@ -28,11 +28,12 @@ local C_Item = C_Item
 local C_Container = C_Container
 local C_TooltipInfo = C_TooltipInfo
 local C_ToyBox, PlayerHasToy = C_ToyBox, PlayerHasToy
-local C_MountJournal = C_MountJournal
-local C_PetJournal = C_PetJournal
+local C_MountJournal, C_PetJournal = C_MountJournal, C_PetJournal
 local C_TransmogCollection = C_TransmogCollection
 local C_TradeSkillUI = C_TradeSkillUI
+local C_PlayerInfo = C_PlayerInfo
 local Enum = Enum
+local GetSpecialization, GetSpecializationInfo = GetSpecialization, GetSpecializationInfo
 
 -- ============================================================================
 -- SECTION 2: CACHES
@@ -344,8 +345,22 @@ end)
 RegisterKeyword({"gear", "equipment", "equippable"}, function(p) return p.isEquipment end)
 RegisterKeyword({"set", "equipmentset"},             function(p) return p.isInEquipmentSet end)
 RegisterKeyword("cosmetic", function(p)
-    return p.classID == Enum.ItemClass.Armor
-       and p.subClassID == Enum.ItemArmorSubclass.Cosmetic
+    return p.classID == Enum.ItemClass.Armor and p.subClassID == Enum.ItemArmorSubclass.Cosmetic
+end)
+
+RegisterKeyword("myclass",  function(p) return p.isEquipment and C_PlayerInfo.CanUseItem(p.id) end)
+RegisterKeyword("myspec",   function(p)
+    if not p.isEquipment then return false end
+    if not C_PlayerInfo.CanUseItem(p.id) then return false end
+    local hyperlink = p.hyperlink
+    if not hyperlink then return false end
+    local specs = C_Item.GetItemSpecInfo(hyperlink)
+    if not specs or #specs == 0 then return true end  -- universal gear
+    local currentSpec = GetSpecializationInfo(GetSpecialization())
+    for _, specID in ipairs(specs) do
+        if specID == currentSpec then return true end
+    end
+    return false
 end)
 
 -- ---- 7.6  Armor subclass keywords ----
@@ -604,8 +619,9 @@ RegisterKeyword("crafted",             function(p) return (p.craftedQuality or 0
 RegisterKeyword("professionequipment", function(p) return p.isProfessionEquipment end)
 
 -- ---- 7.21  Upgrade keywords ----
-RegisterKeyword("upgradeable",   function(p) return p.isUpgradeable end)
-RegisterKeyword("fullyupgraded", function(p) return p.isFullyUpgraded end)
+RegisterKeyword("upgrade",          function(p) return p.isUpgrade end)
+RegisterKeyword("upgradeable",      function(p) return p.isUpgradeable end)
+RegisterKeyword("fullyupgraded",    function(p) return p.isFullyUpgraded end)
 
 -- ---- 7.22  Tooltip-text keywords ----
 -- These trigger the lazy tooltip scan on first access to tooltipText.
@@ -1067,8 +1083,8 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isUpgrade = false
     if _G.OneWoW and _G.OneWoW.UpgradeDetection and hyperlink then
         local UD = _G.OneWoW.UpgradeDetection
-        if UD.IsUpgrade then
-            props.isUpgrade = UD:IsUpgrade(bagID, slotID, itemID, hyperlink) or false
+        if UD.CheckItemUpgrade then
+            props.isUpgrade = UD:CheckItemUpgrade(hyperlink) or false
         end
     end
 
