@@ -6,6 +6,7 @@ if not OneWoW_GUI then return end
 local ItemPool = OneWoW_Bags.ItemPool
 
 local tonumber, pairs = tonumber, pairs
+local GameTooltip = GameTooltip
 
 OneWoW_Bags.GuildBankSet = {}
 local GBSet = OneWoW_Bags.GuildBankSet
@@ -102,6 +103,12 @@ function GBSet:ApplyCacheToButtons()
 
             local cached = self.cache[tabID] and self.cache[tabID][slotID]
 
+            if button._owb_clearedLink and cached and cached.itemLink == button._owb_clearedLink then
+                cached = nil
+            elseif button._owb_clearedLink then
+                button._owb_clearedLink = nil
+            end
+
             if cached and cached.itemLink then
                 if button.IconOverlay then button.IconOverlay:Hide() end
                 if button.ItemContextOverlay then button.ItemContextOverlay:Hide() end
@@ -173,12 +180,42 @@ function GBSet:UpdateQualityColors()
     end
 end
 
+local function ShowTooltipForButton(button)
+    if not button then return false end
+
+    local tabID = button.owb_bagID
+    local slotID = button.owb_slotID
+    if not tabID or not slotID or not button.owb_hasItem then
+        return false
+    end
+
+    GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+
+    if tabID == GetCurrentGuildBankTab() then
+        GameTooltip:SetGuildBankItem(tabID, slotID)
+    elseif button.owb_itemInfo and button.owb_itemInfo.hyperlink then
+        GameTooltip:SetHyperlink(button.owb_itemInfo.hyperlink)
+    else
+        return false
+    end
+
+    GameTooltip:Show()
+    return true
+end
+
 function GBSet:ApplyGuildBankScripts(button)
     button._gbOrigOnClick = button:GetScript("OnClick")
     button._gbOrigOnEnter = button:GetScript("OnEnter")
     button._gbOrigOnLeave = button:GetScript("OnLeave")
     button._gbOrigOnDragStart = button:GetScript("OnDragStart")
     button._gbOrigOnReceiveDrag = button:GetScript("OnReceiveDrag")
+
+    button._gbOrigUpdateTooltip = button.UpdateTooltip
+    button.UpdateTooltip = function(self)
+        if not ShowTooltipForButton(self) then
+            GameTooltip:Hide()
+        end
+    end
 
     button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     button:RegisterForDrag("LeftButton")
@@ -224,8 +261,10 @@ function GBSet:ApplyGuildBankScripts(button)
                 SetCurrentGuildBankTab(tabID)
             end
             local hadItem = self.owb_hasItem
+            local clearedLink = self.owb_itemInfo and self.owb_itemInfo.hyperlink
             PickupGuildBankItem(tabID, slotID)
             if hadItem and GetCursorInfo() then
+                self._owb_clearedLink = clearedLink
                 SetItemButtonTexture(self, nil)
                 SetItemButtonCount(self, 0)
                 self.owb_hasItem = false
@@ -235,16 +274,8 @@ function GBSet:ApplyGuildBankScripts(button)
     end)
 
     button:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        local tabID = self.owb_bagID
-        local slotID = self.owb_slotID
-        if tabID and slotID and self.owb_hasItem then
-            if tabID == GetCurrentGuildBankTab() then
-                GameTooltip:SetGuildBankItem(tabID, slotID)
-            elseif self.owb_itemInfo and self.owb_itemInfo.hyperlink then
-                GameTooltip:SetHyperlink(self.owb_itemInfo.hyperlink)
-            end
-            GameTooltip:Show()
+        if not ShowTooltipForButton(self) then
+            GameTooltip:Hide()
         end
     end)
 
@@ -260,8 +291,10 @@ function GBSet:ApplyGuildBankScripts(button)
             SetCurrentGuildBankTab(tabID)
         end
         local hadItem = self.owb_hasItem
+        local clearedLink = self.owb_itemInfo and self.owb_itemInfo.hyperlink
         PickupGuildBankItem(tabID, slotID)
         if hadItem and GetCursorInfo() then
+            self._owb_clearedLink = clearedLink
             SetItemButtonTexture(self, nil)
             SetItemButtonCount(self, 0)
             self.owb_hasItem = false
@@ -302,7 +335,10 @@ function GBSet:RestoreButtonScripts(button)
     button._gbOrigOnLeave = nil
     button._gbOrigOnDragStart = nil
     button._gbOrigOnReceiveDrag = nil
+    button.UpdateTooltip = button._gbOrigUpdateTooltip
+    button._gbOrigUpdateTooltip = nil
     button.SplitStack = nil
+    button._owb_clearedLink = nil
 end
 
 function GBSet:ReleaseAll()
