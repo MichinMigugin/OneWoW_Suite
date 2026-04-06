@@ -142,14 +142,14 @@ function GBSet:ApplyCacheToButtons()
             local cached = self.cache[tabID] and self.cache[tabID][slotID]
             OneWoW_Bags.ItemPool:ClearNewItemGlow(button)
 
-            if button._owb_clearedLink and cached and cached.itemLink == button._owb_clearedLink then
-                if tabID == GetCurrentGuildBankTab() and not (OneWoW_Bags._guildBankTransferTabs and OneWoW_Bags._guildBankTransferTabs[tabID]) then
+            if button._owb_clearedLink then
+                if cached and cached.itemLink == button._owb_clearedLink then
+                    cached = nil
+                elseif not cached or not cached.itemLink then
                     button._owb_clearedLink = nil
                 else
-                    cached = nil
+                    button._owb_clearedLink = nil
                 end
-            elseif button._owb_clearedLink then
-                button._owb_clearedLink = nil
             end
 
             if cached and cached.itemLink then
@@ -309,7 +309,7 @@ function GBSet:ApplyGuildBankScripts(button)
             local clearedLink = self.owb_itemInfo and self.owb_itemInfo.hyperlink
             local isPlacingItem = cursorType ~= nil
             PickupGuildBankItem(tabID, slotID)
-            if hadItem and GetCursorInfo() then
+            if hadItem then
                 OneWoW_Bags:TrackGuildBankTransferTab(tabID)
                 self._owb_clearedLink = clearedLink
                 ClearGuildBankButton(self)
@@ -339,7 +339,7 @@ function GBSet:ApplyGuildBankScripts(button)
         local hadItem = self.owb_hasItem
         local clearedLink = self.owb_itemInfo and self.owb_itemInfo.hyperlink
         PickupGuildBankItem(tabID, slotID)
-        if hadItem and GetCursorInfo() then
+        if hadItem then
             OneWoW_Bags:TrackGuildBankTransferTab(tabID)
             self._owb_clearedLink = clearedLink
             ClearGuildBankButton(self)
