@@ -68,7 +68,7 @@ function GuildBankController:ToggleSelectedTab(tabID)
     if self.addon.GuildBankBar then
         self.addon.GuildBankBar:UpdateTabHighlights()
     end
-    self.addon:RequestLayoutRefresh("guild")
+    self.addon:QueueGuildBankRefresh()
 
     if self.addon.GuildBankLog then
         self.addon.GuildBankLog:OnTabChanged()

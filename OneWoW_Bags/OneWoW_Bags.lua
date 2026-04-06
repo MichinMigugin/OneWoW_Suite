@@ -492,6 +492,73 @@ function OneWoW_Bags:RestoreGuildBankFrame()
     GuildBankFrame:SetAlpha(1)
 end
 
+function OneWoW_Bags:RefreshGuildBankContents()
+    if not self.GuildBankSet.isBuilt then return end
+
+    self.GuildBankSet:UpdateAllSlots()
+
+    if self.GuildBankGUI and self.GuildBankGUI:IsShown() then
+        self.GuildBankGUI:RefreshLayout()
+    end
+end
+
+function OneWoW_Bags:TrackGuildBankTransferTab(tabID)
+    if not tabID then return end
+
+    self._guildBankTransferTabs = self._guildBankTransferTabs or {}
+    self._guildBankTransferTabs[tabID] = true
+end
+
+function OneWoW_Bags:ProcessPendingGuildBankTransferTabs()
+    local transferTabs = self._guildBankTransferTabs
+    if not transferTabs then return end
+
+    self._guildBankTransferTabs = nil
+
+    local queried = false
+    for tabID in pairs(transferTabs) do
+        QueryGuildBankTab(tabID)
+        queried = true
+    end
+
+    if queried then
+        local currentTab = GetCurrentGuildBankTab()
+        if currentTab then
+            QueryGuildBankTab(currentTab)
+        end
+
+        C_Timer.After(0.05, function()
+            if self.GuildBankSet and self.GuildBankSet.isBuilt then
+                self:QueueGuildBankRefresh()
+            end
+        end)
+    end
+end
+
+function OneWoW_Bags:QueueGuildBankRefresh()
+    if not self.GuildBankSet.isBuilt then return end
+
+    self._guildBankRefreshDirty = true
+    if self._guildBankUpdatePending then return end
+    self._guildBankUpdatePending = true
+
+    C_Timer.After(0, function()
+        self._guildBankUpdatePending = false
+        if not self.GuildBankSet.isBuilt then
+            self._guildBankRefreshDirty = false
+            return
+        end
+
+        self._guildBankRefreshDirty = false
+        self:ProcessPendingGuildBankTransferTabs()
+        self:RefreshGuildBankContents()
+
+        if self._guildBankRefreshDirty then
+            self:QueueGuildBankRefresh()
+        end
+    end)
+end
+
 function OneWoW_Bags:OnGuildBankOpened()
     self.guildBankOpen = self:IsBankUIEnabled()
     if not self:IsBankUIEnabled() then
@@ -505,6 +572,9 @@ function OneWoW_Bags:OnGuildBankOpened()
         return
     end
 
+    self._guildBankUpdatePending = false
+    self._guildBankRefreshDirty = false
+    self._guildBankTransferTabs = nil
     self:SuppressGuildBankFrame()
     self.GuildBankGUI:Show()
 
@@ -521,6 +591,9 @@ function OneWoW_Bags:OnGuildBankClosed()
     end
     if not self.guildBankOpen then return end
     self.guildBankOpen = false
+    self._guildBankUpdatePending = false
+    self._guildBankRefreshDirty = false
+    self._guildBankTransferTabs = nil
     self.GuildBankGUI:Hide()
     self.GuildBankSet:ReleaseAll()
     self.GuildBankSet:ClearCache()
@@ -528,28 +601,18 @@ function OneWoW_Bags:OnGuildBankClosed()
 end
 
 function OneWoW_Bags:OnGuildBankSlotsChanged()
-    if not self.GuildBankSet.isBuilt then return end
-    if self._guildBankUpdatePending then return end
-    self._guildBankUpdatePending = true
+    self:QueueGuildBankRefresh()
+end
 
-    C_Timer.After(0, function()
-        self._guildBankUpdatePending = false
-        if not self.GuildBankSet.isBuilt then return end
-        for tabID = 1, self.GuildBankSet.numTabs do
-            if self.GuildBankSet.slots[tabID] then
-                self.GuildBankSet:CacheTab(tabID)
-            end
-        end
-        self.GuildBankSet:ApplyCacheToButtons()
-        self.GuildBankGUI:RefreshLayout()
-    end)
+function OneWoW_Bags:OnGuildBankItemLockChanged()
+    self:QueueGuildBankRefresh()
 end
 
 function OneWoW_Bags:OnGuildBankTabsUpdated()
     if self.guildBankOpen then
         self.GuildBankSet:Build()
         self.GuildBankBar:BuildTabButtons()
-        self.GuildBankGUI:RefreshLayout()
+        self:RefreshGuildBankContents()
     end
 end
 
@@ -1010,6 +1073,9 @@ local runtimeEventHandlers = {
     end,
     GUILDBANKBAGSLOTS_CHANGED = function(...)
         Events:OnGuildBankSlotsChanged(...)
+    end,
+    GUILDBANK_ITEM_LOCK_CHANGED = function(...)
+        Events:OnGuildBankItemLockChanged(...)
     end,
     GUILDBANK_UPDATE_TABS = function(...)
         Events:OnGuildBankTabsUpdated(...)

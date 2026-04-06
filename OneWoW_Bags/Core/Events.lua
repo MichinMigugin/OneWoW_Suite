@@ -21,6 +21,7 @@ Events.RuntimeEvents = {
     "PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
     "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
     "GUILDBANKBAGSLOTS_CHANGED",
+    "GUILDBANK_ITEM_LOCK_CHANGED",
     "GUILDBANK_UPDATE_TABS",
     "GUILDBANK_UPDATE_MONEY",
     "GUILDBANK_UPDATE_WITHDRAWMONEY",
@@ -124,6 +125,10 @@ end
 
 function Events:OnGuildBankSlotsChanged()
     OneWoW_Bags:OnGuildBankSlotsChanged()
+end
+
+function Events:OnGuildBankItemLockChanged()
+    OneWoW_Bags:OnGuildBankItemLockChanged()
 end
 
 function Events:OnGuildBankTabsUpdated()

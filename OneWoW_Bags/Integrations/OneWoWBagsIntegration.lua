@@ -78,6 +78,11 @@ function OneWoW_Bags:ClearBankOverlays()
 		end
 	end
 
+end
+
+function OneWoW_Bags:ClearGuildBankOverlays()
+	local engine = _G.OneWoW and _G.OneWoW.OverlayEngine
+
 	if GuildBankSet.slots then
 		for tabID, tabSlots in pairs(GuildBankSet.slots) do
 			for slotID, button in pairs(tabSlots) do
@@ -120,7 +125,7 @@ local function HookGUIRefresh()
 		originalGBRefresh(self)
 		if db.global.enableBankOverlays then
 			C_Timer.After(0.05, function()
-				OneWoW_Bags:FireCallbacksOnBankButtons()
+				OneWoW_Bags:ClearGuildBankOverlays()
 			end)
 		end
 	end
