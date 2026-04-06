@@ -59,6 +59,9 @@ local function InitializeModules()
     if ns.ProfessionUI then
         ns.ProfessionUI:Initialize()
     end
+    if ns.OrdersUI then
+        ns.OrdersUI:Initialize()
+    end
     if ns.CatalogIntegration then
         ns.CatalogIntegration:Initialize()
     end
