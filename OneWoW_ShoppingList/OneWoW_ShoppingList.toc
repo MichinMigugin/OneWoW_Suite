@@ -43,6 +43,7 @@ Modules\Tooltips.lua
 Modules\BagOverlays.lua
 Modules\BagButton.lua
 Modules\ProfessionUI.lua
+Modules\OrdersUI.lua
 Modules\CatalogIntegration.lua
 
 # GUI
