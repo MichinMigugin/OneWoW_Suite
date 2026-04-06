@@ -571,7 +571,7 @@ RegisterKeyword("wand",     function(p) return p.equipLoc == "INVTYPE_RANGEDRIGH
 for _, def in ipairs({
     {{"classic", "vanilla"},                            EL.None},
     {{"burningcrusade", "tbc"},                         EL.BurningCrusade},
-    {{"wrath", "wotlk"},                                EL.Northrend},
+    {{"wrath", "wotlk", "northrend"},                   EL.Northrend},
     {{"cataclysm", "cata"},                             EL.Cataclysm},
     {{"mistsofpandaria", "mists", "mop", "pandaria"},   EL.MistsOfPandaria},
     {{"draenor", "wod", "warlords"},                    EL.Draenor},

@@ -89,32 +89,20 @@ end
 
 function OneWoW_Bags:IsAltShowActive()
     local db = self:GetDB()
-    if not db or not db.global.altToShow then
-        return false
-    end
+    if not db.global.altToShow then return false end
     return self.inventoryPresentationState.altShowActive == true
 end
 
 function OneWoW_Bags:GetItemSortMode()
     local db = self:GetDB()
-    if not db then
-        return "default"
-    end
     return db.global.itemSort or "default"
 end
 
 function OneWoW_Bags:ShouldShowItemQuality(isBank, quality)
-    if self:IsAltShowActive() then
-        return true
-    end
-    if not quality or quality < 1 then
-        return false
-    end
+    if self:IsAltShowActive() then return true end
+    if not quality or quality < 1 then return false end
 
     local db = self:GetDB()
-    if not db then
-        return false
-    end
 
     if isBank then
         return db.global.bankRarityColor == true
@@ -125,17 +113,11 @@ end
 
 function OneWoW_Bags:ShouldDimJunkItem(isJunk)
     local db = self:GetDB()
-    if not db then
-        return false
-    end
     return isJunk and db.global.dimJunkItems and not self:IsAltShowActive()
 end
 
 function OneWoW_Bags:ShouldStripJunkOverlays(isJunk)
     local db = self:GetDB()
-    if not db then
-        return false
-    end
     return isJunk and db.global.stripJunkOverlays and not self:IsAltShowActive()
 end
 
@@ -148,7 +130,6 @@ function OneWoW_Bags:EnsureCategoryModification(categoryName)
     if not categoryName then return nil end
 
     local db = self:GetDB()
-    if not db then return nil end
 
     local categoryModifications = EnsureTable(db.global, "categoryModifications")
     return EnsureTable(categoryModifications, categoryName)
@@ -163,46 +144,27 @@ end
 function OneWoW_Bags:InitializeControllers()
     if self.ControllersInitialized then return end
 
-    if self.WindowLayoutController and self.WindowLayoutController.Create then
-        self.WindowLayoutController = self.WindowLayoutController:Create(self)
-    end
-    if self.BagsController and self.BagsController.Create then
-        self.BagsController = self.BagsController:Create(self)
-    end
-    if self.BankController and self.BankController.Create then
-        self.BankController = self.BankController:Create(self)
-    end
-    if self.GuildBankController and self.GuildBankController.Create then
-        self.GuildBankController = self.GuildBankController:Create(self)
-    end
-    if self.SettingsController and self.SettingsController.Create then
-        self.SettingsController = self.SettingsController:Create(self)
-    end
-    if self.CategoryController and self.CategoryController.Create then
-        self.CategoryController = self.CategoryController:Create(self)
-    end
+    self.WindowLayoutController = self.WindowLayoutController:Create(self)
+    self.BagsController = self.BagsController:Create(self)
+    self.BankController = self.BankController:Create(self)
+    self.GuildBankController = self.GuildBankController:Create(self)
+    self.SettingsController = self.SettingsController:Create(self)
+    self.CategoryController = self.CategoryController:Create(self)
 
     self.ControllersInitialized = true
 end
 
 function OneWoW_Bags:InvalidateCategorization(scope)
     local db = self:GetDB()
-    if not db then return end
 
-    if self.Categories then
-        self.Categories:SetCustomCategories(db.global.customCategoriesV2)
-        self.Categories:SetRecentItemDuration(db.global.recentItemDuration)
-        if self.Categories.InvalidateCache then
-            self.Categories:InvalidateCache()
-        end
-    end
+    self.Categories:SetCustomCategories(db.global.customCategoriesV2)
+    self.Categories:SetRecentItemDuration(db.global.recentItemDuration)
+    self.Categories:InvalidateCache()
 
-    if self.PredicateEngine then
-        if scope == "props" and self.PredicateEngine.InvalidatePropsCache then
-            self.PredicateEngine:InvalidatePropsCache()
-        elseif self.PredicateEngine.InvalidateCache then
-            self.PredicateEngine:InvalidateCache()
-        end
+    if scope == "props" then
+        self.PredicateEngine:InvalidatePropsCache()
+    else
+        self.PredicateEngine:InvalidateCache()
     end
 end
 
@@ -495,7 +457,33 @@ end
 function OneWoW_Bags:RefreshGuildBankContents()
     if not self.GuildBankSet.isBuilt then return end
 
+    self:ProcessPendingGuildBankTransferTabs()
     self.GuildBankSet:UpdateAllSlots()
+
+    local sources = self._guildBankClearSources
+    if sources then
+        local expired = self._guildBankClearSourcesExpiry and GetTime() > self._guildBankClearSourcesExpiry
+        local remaining = {}
+        for _, src in ipairs(sources) do
+            local cached = self.GuildBankSet.cache[src.tab] and self.GuildBankSet.cache[src.tab][src.slot]
+            if cached and cached.texture then
+                if not expired then
+                    self.GuildBankSet:ClearCacheSlot(src.tab, src.slot)
+                    tinsert(remaining, src)
+                end
+            end
+        end
+        if #remaining > 0 then
+            self._guildBankClearSources = remaining
+        else
+            self._guildBankClearSources = nil
+            self._guildBankClearSourcesExpiry = nil
+        end
+    end
+
+    if self.GuildBankBar then
+        self.GuildBankBar:UpdateFreeSlots(self.GuildBankSet:GetFreeSlotCount(), self.GuildBankSet:GetSlotCount())
+    end
 
     if self.GuildBankGUI and self.GuildBankGUI:IsShown() then
         self.GuildBankGUI:RefreshLayout()
@@ -504,56 +492,94 @@ end
 
 function OneWoW_Bags:TrackGuildBankTransferTab(tabID)
     if not tabID then return end
-
     self._guildBankTransferTabs = self._guildBankTransferTabs or {}
     self._guildBankTransferTabs[tabID] = true
 end
 
+function OneWoW_Bags:TrackGuildBankTransferSource(tabID, slotID)
+    if not tabID or not slotID then return end
+    self._guildBankTransferSources = self._guildBankTransferSources or {}
+    tinsert(self._guildBankTransferSources, {tab = tabID, slot = slotID})
+end
+
+function OneWoW_Bags:PurgeClearSource(tabID, slotID)
+    local sources = self._guildBankClearSources
+    if sources then
+        for i = #sources, 1, -1 do
+            if sources[i].tab == tabID and sources[i].slot == slotID then
+                tremove(sources, i)
+            end
+        end
+        if #sources == 0 then
+            self._guildBankClearSources = nil
+            self._guildBankClearSourcesExpiry = nil
+        end
+    end
+    local pending = self._guildBankTransferSources
+    if pending then
+        for i = #pending, 1, -1 do
+            if pending[i].tab == tabID and pending[i].slot == slotID then
+                tremove(pending, i)
+            end
+        end
+        if #pending == 0 then
+            self._guildBankTransferSources = nil
+        end
+    end
+end
+
 function OneWoW_Bags:ProcessPendingGuildBankTransferTabs()
     local transferTabs = self._guildBankTransferTabs
-    if not transferTabs then return end
+    if not transferTabs then
+        return
+    end
 
-    local queried = false
+    local cursorType = GetCursorInfo()
+    if cursorType then
+        return
+    end
+
+    self._guildBankTransferTabs = nil
+    self._guildBankSeenBagPickup = false
+
+    if self._guildBankTransferSources then
+        if not self._guildBankClearSources then
+            self._guildBankClearSources = {}
+        end
+        for _, src in ipairs(self._guildBankTransferSources) do
+            tinsert(self._guildBankClearSources, src)
+        end
+        self._guildBankClearSourcesExpiry = GetTime() + 5
+        self._guildBankTransferSources = nil
+    end
+
     for tabID in pairs(transferTabs) do
         QueryGuildBankTab(tabID)
-        queried = true
     end
 
-    if queried then
-        local currentTab = GetCurrentGuildBankTab()
-        if currentTab and not transferTabs[currentTab] then
-            QueryGuildBankTab(currentTab)
+    C_Timer.After(0.5, function()
+        if self.guildBankOpen and self.GuildBankSet and self.GuildBankSet.isBuilt then
+            self:QueueGuildBankRefresh()
         end
-
-        C_Timer.After(0.05, function()
-            if self.GuildBankSet and self.GuildBankSet.isBuilt then
-                self:QueueGuildBankRefresh()
-            end
-        end)
-    end
+    end)
 end
 
 function OneWoW_Bags:QueueGuildBankRefresh()
     if not self.GuildBankSet.isBuilt then return end
 
-    self._guildBankRefreshDirty = true
-    if self._guildBankUpdatePending then return end
+    if self._guildBankUpdatePending then
+        return
+    end
     self._guildBankUpdatePending = true
 
-    C_Timer.After(0, function()
+    if not self._guildBankRefreshDriver then
+        self._guildBankRefreshDriver = CreateFrame("Frame")
+    end
+
+    self._guildBankRefreshDriver:SetScript("OnUpdate", function(frame)
+        frame:SetScript("OnUpdate", nil)
         self._guildBankUpdatePending = false
-        if not self.GuildBankSet.isBuilt then
-            self._guildBankRefreshDirty = false
-            return
-        end
-
-        self._guildBankRefreshDirty = false
-        self:ProcessPendingGuildBankTransferTabs()
         self:RefreshGuildBankContents()
-
-        if self._guildBankRefreshDirty then
-            self:QueueGuildBankRefresh()
-        end
     end)
 end
 
@@ -571,8 +597,13 @@ function OneWoW_Bags:OnGuildBankOpened()
     end
 
     self._guildBankUpdatePending = false
-    self._guildBankRefreshDirty = false
     self._guildBankTransferTabs = nil
+    self._guildBankTransferSources = nil
+    self._guildBankClearSources = nil
+    self._guildBankClearSourcesExpiry = nil
+    self._guildBankSeenBagPickup = false
+    self._wasPlacingBeforeGBOp = nil
+    self._destHadItemBeforeGBOp = nil
     self:SuppressGuildBankFrame()
 
     self.GuildBankGUI:Show()
@@ -591,8 +622,13 @@ function OneWoW_Bags:OnGuildBankClosed()
     if not self.guildBankOpen then return end
     self.guildBankOpen = false
     self._guildBankUpdatePending = false
-    self._guildBankRefreshDirty = false
     self._guildBankTransferTabs = nil
+    self._guildBankTransferSources = nil
+    self._guildBankClearSources = nil
+    self._guildBankClearSourcesExpiry = nil
+    self._guildBankSeenBagPickup = false
+    self._wasPlacingBeforeGBOp = nil
+    self._destHadItemBeforeGBOp = nil
     self.GuildBankGUI:Hide()
     self.GuildBankSet:ReleaseAll()
     self.GuildBankSet:ClearCache()
@@ -604,14 +640,20 @@ function OneWoW_Bags:OnGuildBankSlotsChanged()
 end
 
 function OneWoW_Bags:OnGuildBankItemLockChanged()
-    self:QueueGuildBankRefresh()
+    if not self.GuildBankSet.isBuilt then return end
+    local currentTab = GetCurrentGuildBankTab()
+    if currentTab then
+        self.GuildBankSet:RefreshLockVisuals({[currentTab] = true})
+    end
 end
 
 function OneWoW_Bags:OnGuildBankTabsUpdated()
     if self.guildBankOpen then
         self.GuildBankSet:Build()
         self.GuildBankBar:BuildTabButtons()
-        self:RefreshGuildBankContents()
+        if self.GuildBankGUI and self.GuildBankGUI:IsShown() then
+            self.GuildBankGUI:RefreshLayout()
+        end
     end
 end
 
@@ -844,6 +886,37 @@ function OneWoW_Bags:HookBlizzardBags()
     hooksecurefunc("OpenAllBags", function() OpenOurBags("auto") end)
     hooksecurefunc("CloseAllBags", function() CloseOurBags("auto") end)
 
+    hooksecurefunc("PickupGuildBankItem", function(tabID, slotID)
+        local cursorAfter = GetCursorInfo()
+        local wasPlacing = self._wasPlacingBeforeGBOp
+        local destHadItem = self._destHadItemBeforeGBOp
+        self._wasPlacingBeforeGBOp = nil
+        self._destHadItemBeforeGBOp = nil
+
+        self:TrackGuildBankTransferTab(tabID)
+
+        if not slotID then return end
+
+        if wasPlacing and destHadItem and not cursorAfter then
+            self:PurgeClearSource(tabID, slotID)
+            self._guildBankTransferSources = nil
+        elseif wasPlacing or not cursorAfter then
+            self:PurgeClearSource(tabID, slotID)
+        else
+            self:TrackGuildBankTransferSource(tabID, slotID)
+        end
+    end)
+    hooksecurefunc("SplitGuildBankItem", function(tabID, slotID)
+        self:TrackGuildBankTransferTab(tabID)
+    end)
+    if C_Container and C_Container.PickupContainerItem then
+        hooksecurefunc(C_Container, "PickupContainerItem", function()
+            if self.guildBankOpen then
+                self._guildBankSeenBagPickup = true
+            end
+        end)
+    end
+
     hooksecurefunc("OpenBag", function(bagID)
         if self.BagTypes:IsPlayerBag(bagID) then
             OpenOurBags("auto")
@@ -1022,7 +1095,7 @@ end
 _G["1WoW_Bags_OnAddonCompartmentEnter"] = function(addonName, button)
     GameTooltip:SetOwner(button, "ANCHOR_LEFT")
     GameTooltip:SetText("|cFFFFD100OneWoW|r - |cFF00FF00" .. L["ADDON_TITLE"] .. "|r", 1, 1, 1)
-    GameTooltip:AddLine(OneWoW_Bags.L["COMPARTMENT_TOGGLE"], 0.7, 0.7, 0.7)
+    GameTooltip:AddLine(L["COMPARTMENT_TOGGLE"], 0.7, 0.7, 0.7)
     GameTooltip:Show()
 end
 
@@ -1097,7 +1170,7 @@ local runtimeEventHandlers = {
     PLAYER_EQUIPMENT_CHANGED = function(...)
         Events:OnPredicateInvalidation(...)
     end,
-    GET_ITEM_INFO_RECEIVED = function(...)
+    GET_ITEM_INFO_RECEIVED = function(itemID, ...)
         Events:OnPredicateInvalidation(...)
     end,
 }

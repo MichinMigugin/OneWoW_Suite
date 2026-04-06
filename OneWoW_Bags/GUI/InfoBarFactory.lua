@@ -269,7 +269,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             if showExpac and infoBarFrame.expacText then
                 local activeFilter = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or OneWoW_Bags[ef.filterKey]
                 if activeFilter == nil then
-                    infoBarFrame.expacText:SetText(OneWoW_Bags.L["EXPAC_FILTER_BTN"])
+                    infoBarFrame.expacText:SetText(L["EXPAC_FILTER_BTN"])
                 else
                     local expName = WH and WH:GetExpansionName(activeFilter) or tostring(activeFilter)
                     infoBarFrame.expacText:SetText(expName)

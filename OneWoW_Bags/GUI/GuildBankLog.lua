@@ -149,6 +149,10 @@ end
 
 function GuildBankLog:RefreshItems()
     local tab = GetCurrentGuildBankTab()
+    if not tab then
+        GuildBankLog:SetText(L["GUILD_BANK_NO_LOG"])
+        return
+    end
     local numTransactions = GetNumGuildBankTransactions(tab)
     local msg = ""
 
@@ -238,7 +242,10 @@ function GuildBankLog:ShowItems()
         GuildBankLog:PositionNearMainWindow()
         logFrame:Show()
     end
-    QueryGuildBankLog(GetCurrentGuildBankTab())
+    local tab = GetCurrentGuildBankTab()
+    if tab then
+        QueryGuildBankLog(tab)
+    end
     GuildBankLog:RefreshItems()
 end
 
@@ -269,7 +276,10 @@ function GuildBankLog:OnTabChanged()
     if not logFrame or not logFrame:IsShown() then return end
     if currentMode == "items" then
         C_Timer.After(0.1, function()
-            QueryGuildBankLog(GetCurrentGuildBankTab())
+            local tab = GetCurrentGuildBankTab()
+            if tab then
+                QueryGuildBankLog(tab)
+            end
             GuildBankLog:RefreshItems()
         end)
     end

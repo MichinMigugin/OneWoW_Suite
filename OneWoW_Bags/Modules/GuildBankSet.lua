@@ -5,8 +5,9 @@ if not OneWoW_GUI then return end
 
 local ItemPool = OneWoW_Bags.ItemPool
 
-local tonumber, pairs = tonumber, pairs
+local tonumber, pairs, ipairs = tonumber, pairs, ipairs
 local GameTooltip = GameTooltip
+local C_Item = C_Item
 
 OneWoW_Bags.GuildBankSet = {}
 local GBSet = OneWoW_Bags.GuildBankSet
@@ -20,6 +21,130 @@ GBSet.numTabs = 0
 GBSet.cache = {}
 
 local SLOTS_PER_TAB = 98
+
+local function CreateSummary()
+    return {
+        anyChanged = false,
+        visualChanged = false,
+        layoutChanged = false,
+        lockChanged = false,
+        changedTabs = {},
+    }
+end
+
+local function MergeSummary(summary, update)
+    if not update then
+        return summary
+    end
+
+    if update.anyChanged then
+        summary.anyChanged = true
+    end
+    if update.visualChanged then
+        summary.visualChanged = true
+    end
+    if update.layoutChanged then
+        summary.layoutChanged = true
+    end
+    if update.lockChanged then
+        summary.lockChanged = true
+    end
+
+    if update.changedTabs then
+        for tabID in pairs(update.changedTabs) do
+            summary.changedTabs[tabID] = true
+        end
+    end
+
+    return summary
+end
+
+local function BuildTabSet(tabID)
+    if not tabID then
+        return nil
+    end
+
+    return {
+        [tabID] = true,
+    }
+end
+
+local function NormalizeTabSet(tabSet, slots)
+    if tabSet then
+        return tabSet
+    end
+
+    local normalized = {}
+    for tabID in pairs(slots) do
+        normalized[tabID] = true
+    end
+    return normalized
+end
+
+local function BuildCachedItem(tabID, slotID)
+    local texture, itemCount, locked, _, quality = GetGuildBankItemInfo(tabID, slotID)
+    if not texture then
+        return nil
+    end
+
+    local itemLink = GetGuildBankItemLink(tabID, slotID)
+    local itemID
+    if itemLink then
+        itemID = C_Item.GetItemInfoInstant(itemLink)
+    end
+    if not itemID and itemLink then
+        itemID = tonumber(itemLink:match("item:(%d+)"))
+    end
+
+    return {
+        texture = texture,
+        itemCount = itemCount,
+        locked = locked,
+        quality = quality,
+        itemLink = itemLink,
+        itemID = itemID,
+    }
+end
+
+local function DiffCachedItem(oldItem, newItem)
+    local changed = false
+    local visualChanged = false
+    local layoutChanged = false
+    local lockChanged = false
+
+    if oldItem == nil and newItem == nil then
+        return changed, visualChanged, layoutChanged, lockChanged
+    end
+
+    if (oldItem == nil) ~= (newItem == nil) then
+        changed = true
+        visualChanged = true
+        layoutChanged = true
+        return changed, visualChanged, layoutChanged, lockChanged
+    end
+
+    if oldItem.texture ~= newItem.texture
+        or oldItem.itemCount ~= newItem.itemCount
+        or oldItem.locked ~= newItem.locked
+        or oldItem.quality ~= newItem.quality
+        or oldItem.itemLink ~= newItem.itemLink
+        or oldItem.itemID ~= newItem.itemID then
+        changed = true
+        visualChanged = true
+    end
+
+    if oldItem.locked ~= newItem.locked then
+        lockChanged = true
+    end
+
+    if oldItem.itemID ~= newItem.itemID
+        or oldItem.itemLink ~= newItem.itemLink
+        or oldItem.quality ~= newItem.quality then
+        layoutChanged = true
+    end
+
+    return changed, visualChanged, layoutChanged, lockChanged
+end
 
 local function HideDynamicChildren(button)
     local baseCount = button._owb_baseChildCount or 0
@@ -73,31 +198,26 @@ function GBSet:Build()
     self.numTabs = GetNumGuildBankTabs() or 0
 
     for tabID = 1, self.numTabs do
-        local name, icon, isViewable = GetGuildBankTabInfo(tabID)
         self.slots[tabID] = {}
+        local gbFrame = GetOrCreateGuildBankFrame(tabID)
+        self.bagContainerFrames[tabID] = gbFrame
 
-        if isViewable then
-            local gbFrame = GetOrCreateGuildBankFrame(tabID)
-            self.bagContainerFrames[tabID] = gbFrame
+        for slotID = 1, SLOTS_PER_TAB do
+            local button = ItemPool:Acquire()
+            button:SetParent(gbFrame)
+            OneWoW_Bags:ApplyItemButtonMixin(button)
+            button.owb_bagID = tabID
+            button.owb_slotID = slotID
+            button:SetID(slotID)
+            button.owb_isGuildBank = true
+            self.slots[tabID][slotID] = button
+            self.totalSlots = self.totalSlots + 1
 
-            for slotID = 1, SLOTS_PER_TAB do
-                local button = ItemPool:Acquire()
-                button:SetParent(gbFrame)
-                OneWoW_Bags:ApplyItemButtonMixin(button)
-                button.owb_bagID = tabID
-                button.owb_slotID = slotID
-                button:SetID(slotID)
-                button.owb_isGuildBank = true
-                self.slots[tabID][slotID] = button
-                self.totalSlots = self.totalSlots + 1
-
-                GBSet:ApplyGuildBankScripts(button)
-            end
+            GBSet:ApplyGuildBankScripts(button)
         end
     end
 
     self.isBuilt = true
-
     self:UpdateAllSlots()
 end
 
@@ -106,100 +226,175 @@ function GBSet:CacheTab(tabID)
         self.cache[tabID] = {}
     end
 
+    local summary = CreateSummary()
     for slotID = 1, SLOTS_PER_TAB do
-        local texture, itemCount, locked, _, quality = GetGuildBankItemInfo(tabID, slotID)
-        local itemLink = GetGuildBankItemLink(tabID, slotID)
+        local oldItem = self.cache[tabID][slotID]
+        local newItem = BuildCachedItem(tabID, slotID)
+        local changed, visualChanged, layoutChanged, lockChanged = DiffCachedItem(oldItem, newItem)
 
-        if texture then
-            local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
-            self.cache[tabID][slotID] = {
-                texture = texture,
-                itemCount = itemCount,
-                locked = locked,
-                quality = quality,
-                itemLink = itemLink,
-                itemID = itemID,
-            }
-        else
-            self.cache[tabID][slotID] = nil
+        if changed then
+            summary.anyChanged = true
+            summary.changedTabs[tabID] = true
         end
+        if visualChanged then
+            summary.visualChanged = true
+        end
+        if layoutChanged then
+            summary.layoutChanged = true
+        end
+        if lockChanged then
+            summary.lockChanged = true
+        end
+
+        self.cache[tabID][slotID] = newItem
     end
+
+    return summary
 end
 
 function GBSet:CacheAllTabs()
+    local summary = CreateSummary()
     for tabID = 1, self.numTabs do
         if self.slots[tabID] then
-            self:CacheTab(tabID)
+            MergeSummary(summary, self:CacheTab(tabID))
         end
+    end
+    return summary
+end
+
+local function ApplyCachedItemToButton(button, cached)
+    OneWoW_Bags.ItemPool:ClearNewItemGlow(button)
+
+    if cached and cached.texture then
+        HideDynamicChildren(button)
+        button:SetAlpha(1.0)
+        if button._owbUnusableOverlay then button._owbUnusableOverlay:Hide() end
+        if button.IconOverlay then button.IconOverlay:Hide() end
+        if button.ItemContextOverlay then button.ItemContextOverlay:Hide() end
+        if button.ExtendedSlot then button.ExtendedSlot:Hide() end
+        if button.IconQuestTexture then button.IconQuestTexture:Hide() end
+
+        SetItemButtonTexture(button, cached.texture)
+        SetItemButtonCount(button, cached.itemCount)
+        SetItemButtonDesaturated(button, cached.locked)
+
+        button.owb_itemInfo = {
+            itemID = cached.itemID,
+            hyperlink = cached.itemLink,
+            stackCount = cached.itemCount,
+            isLocked = cached.locked,
+            quality = cached.quality,
+            iconFileID = cached.texture,
+        }
+
+        if button.SetItemButtonQuality then
+            button:SetItemButtonQuality(cached.quality, cached.itemLink, false)
+            if button.IconBorder then button.IconBorder:Hide() end
+            if button.ProfessionQualityOverlay then
+                button.ProfessionQualityOverlay:SetDrawLayer("OVERLAY", 7)
+            end
+        end
+
+        if OneWoW_Bags:ShouldShowItemQuality(true, cached.quality) then
+            OneWoW_GUI:UpdateIconQuality(button, cached.quality)
+        else
+            OneWoW_GUI:UpdateIconQuality(button, nil)
+        end
+
+        button.owb_hasItem = true
+    else
+        ClearGuildBankButton(button)
     end
 end
 
-function GBSet:ApplyCacheToButtons()
-    self.freeSlots = 0
+function GBSet:ApplyCacheToButtons(tabSet)
+    local tabs = NormalizeTabSet(tabSet, self.slots)
 
-    for tabID, tabSlots in pairs(self.slots) do
-        for slotID, button in pairs(tabSlots) do
-            local cached = self.cache[tabID] and self.cache[tabID][slotID]
-            OneWoW_Bags.ItemPool:ClearNewItemGlow(button)
-
-            if cached and cached.itemLink then
-                HideDynamicChildren(button)
-                button:SetAlpha(1.0)
-                if button._owbUnusableOverlay then button._owbUnusableOverlay:Hide() end
-                if button.IconOverlay then button.IconOverlay:Hide() end
-                if button.ItemContextOverlay then button.ItemContextOverlay:Hide() end
-                if button.ExtendedSlot then button.ExtendedSlot:Hide() end
-                if button.IconQuestTexture then button.IconQuestTexture:Hide() end
-
-                SetItemButtonTexture(button, cached.texture)
-                SetItemButtonCount(button, cached.itemCount)
-                SetItemButtonDesaturated(button, cached.locked)
-
-                button.owb_itemInfo = {
-                    itemID = cached.itemID,
-                    hyperlink = cached.itemLink,
-                    stackCount = cached.itemCount,
-                    isLocked = cached.locked,
-                    quality = cached.quality,
-                    iconFileID = cached.texture,
-                }
-
-                if button.SetItemButtonQuality then
-                    button:SetItemButtonQuality(cached.quality, cached.itemLink, false)
-                    if button.IconBorder then button.IconBorder:Hide() end
-                    if button.ProfessionQualityOverlay then
-                        button.ProfessionQualityOverlay:SetDrawLayer("OVERLAY", 7)
-                    end
-                end
-
-                if OneWoW_Bags:ShouldShowItemQuality(true, cached.quality) then
-                    OneWoW_GUI:UpdateIconQuality(button, cached.quality)
-                else
-                    OneWoW_GUI:UpdateIconQuality(button, nil)
-                end
-
-                button.owb_hasItem = true
-            else
-                ClearGuildBankButton(button)
-                self.freeSlots = self.freeSlots + 1
+    for tabID in pairs(tabs) do
+        local tabSlots = self.slots[tabID]
+        if tabSlots then
+            for slotID, button in pairs(tabSlots) do
+                local cached = self.cache[tabID] and self.cache[tabID][slotID]
+                ApplyCachedItemToButton(button, cached)
             end
         end
     end
+
+    self:RecountFreeSlots()
 end
 
 function GBSet:UpdateTab(tabID)
     if not self.isBuilt then return end
-    self:CacheTab(tabID)
-    self:ApplyCacheToButtons()
+    local summary = self:CacheTab(tabID)
+    self:ApplyCacheToButtons(BuildTabSet(tabID))
+    return summary
+end
+
+function GBSet:UpdateTabs(tabSet)
+    if not self.isBuilt then return CreateSummary() end
+
+    local tabs = NormalizeTabSet(tabSet, self.slots)
+    local summary = CreateSummary()
+    for tabID in pairs(tabs) do
+        if self.slots[tabID] then
+            MergeSummary(summary, self:CacheTab(tabID))
+        end
+    end
+
+    self:ApplyCacheToButtons(tabs)
+    return summary
 end
 
 function GBSet:UpdateAllSlots()
-    self:CacheAllTabs()
+    local summary = self:CacheAllTabs()
     self:ApplyCacheToButtons()
+    return summary
 end
 
 function GBSet:RefreshAllVisuals()
     self:UpdateAllSlots()
+end
+
+function GBSet:ClearCacheSlot(tabID, slotID)
+    if self.cache[tabID] then
+        self.cache[tabID][slotID] = nil
+    end
+    local tabSlots = self.slots[tabID]
+    if tabSlots and tabSlots[slotID] then
+        ClearGuildBankButton(tabSlots[slotID])
+    end
+end
+
+function GBSet:RefreshLockVisuals(tabSet)
+    if not self.isBuilt then return CreateSummary() end
+
+    local tabs = NormalizeTabSet(tabSet, self.slots)
+    local summary = CreateSummary()
+
+    for tabID in pairs(tabs) do
+        local tabSlots = self.slots[tabID]
+        if tabSlots then
+            for slotID, button in pairs(tabSlots) do
+                if button.owb_hasItem then
+                    local _, _, locked = GetGuildBankItemInfo(tabID, slotID)
+                    SetItemButtonDesaturated(button, locked)
+                    if button.owb_itemInfo then
+                        button.owb_itemInfo.isLocked = locked
+                    end
+                    if self.cache[tabID] and self.cache[tabID][slotID] then
+                        self.cache[tabID][slotID].locked = locked
+                    end
+                else
+                    SetItemButtonDesaturated(button, false)
+                end
+            end
+            summary.visualChanged = true
+            summary.lockChanged = true
+            summary.changedTabs[tabID] = true
+        end
+    end
+
+    return summary
 end
 
 function GBSet:UpdateQualityColors()
@@ -297,6 +492,8 @@ function GBSet:ApplyGuildBankScripts(button)
             end
             local hadItem = self.owb_hasItem
             local isPlacingItem = cursorType ~= nil
+            OneWoW_Bags._wasPlacingBeforeGBOp = isPlacingItem
+            OneWoW_Bags._destHadItemBeforeGBOp = hadItem and isPlacingItem
             PickupGuildBankItem(tabID, slotID)
             if hadItem or isPlacingItem then
                 OneWoW_Bags:TrackGuildBankTransferTab(tabID)
@@ -322,6 +519,7 @@ function GBSet:ApplyGuildBankScripts(button)
             SetCurrentGuildBankTab(tabID)
         end
         local hadItem = self.owb_hasItem
+        OneWoW_Bags._wasPlacingBeforeGBOp = false
         PickupGuildBankItem(tabID, slotID)
         if hadItem then
             OneWoW_Bags:TrackGuildBankTransferTab(tabID)
@@ -336,6 +534,8 @@ function GBSet:ApplyGuildBankScripts(button)
                 SetCurrentGuildBankTab(tabID)
             end
             OneWoW_Bags:TrackGuildBankTransferTab(tabID)
+            OneWoW_Bags._wasPlacingBeforeGBOp = true
+            OneWoW_Bags._destHadItemBeforeGBOp = self.owb_hasItem
             PickupGuildBankItem(tabID, self.owb_slotID)
         end
     end)

@@ -34,20 +34,8 @@ Events.RuntimeEvents = {
 
 local predicateRefreshPending = false
 
-local function InvalidatePredicatePropsCache()
-    if OneWoW_Bags and OneWoW_Bags.InvalidateCategorization then
-        OneWoW_Bags:InvalidateCategorization("props")
-        return
-    end
-
-    local PE = OneWoW_Bags.PredicateEngine
-    if PE and PE.InvalidatePropsCache then
-        PE:InvalidatePropsCache()
-    end
-end
-
 function Events:OnPredicateInvalidation()
-    InvalidatePredicatePropsCache()
+    OneWoW_Bags:InvalidateCategorization("props")
 
     -- when game downloads item data for uncached items, stale visuals can persist - coalesce them until next frame.
     -- similar pattern as BAG_UPDATE -> BAG_UPDATE_DELAYED
@@ -75,7 +63,7 @@ end
 function Events:OnBagUpdateDelayed()
     local dirty = self.dirtyBags
     self.dirtyBags = {}
-    InvalidatePredicatePropsCache()
+    OneWoW_Bags:InvalidateCategorization("props")
     OneWoW_Bags:ProcessBagUpdate(dirty)
 end
 
@@ -123,12 +111,12 @@ function Events:OnPlayerInteractionHide(interactType)
     end
 end
 
-function Events:OnGuildBankSlotsChanged()
-    OneWoW_Bags:OnGuildBankSlotsChanged()
+function Events:OnGuildBankSlotsChanged(...)
+    OneWoW_Bags:OnGuildBankSlotsChanged(...)
 end
 
-function Events:OnGuildBankItemLockChanged()
-    OneWoW_Bags:OnGuildBankItemLockChanged()
+function Events:OnGuildBankItemLockChanged(...)
+    OneWoW_Bags:OnGuildBankItemLockChanged(...)
 end
 
 function Events:OnGuildBankTabsUpdated()
@@ -150,3 +138,4 @@ end
 function Events:OnAccountMoney()
     OneWoW_Bags:OnAccountMoney()
 end
+
