@@ -4,6 +4,9 @@ OneWoW_UI/
 .gitignore
 .git/
 
+# Local reference / archive (not synced; keep on disk only)
+6_Last WN Addons/
+
 # Local Cursor rules (user-specific)
 .cursor/rules/1W-Ricky-*.mdc
 
