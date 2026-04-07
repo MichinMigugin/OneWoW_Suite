@@ -13,6 +13,7 @@ local floor, max, min, sqrt, ceil = math.floor, math.max, math.min, math.sqrt, m
 local pairs, ipairs = pairs, ipairs
 local tremove, tinsert, wipe, sort = tremove, tinsert, wipe, sort
 local tostring = tostring
+local SetItemButtonCount = SetItemButtonCount
 
 OneWoW_Bags.CategoryView = {}
 local View = OneWoW_Bags.CategoryView
@@ -138,7 +139,20 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
         return nil
     end
 
+    local function RestoreItemButtonCounts(items)
+        for _, btn in ipairs(items) do
+            btn._owb_stackCount = nil
+            local info = btn.owb_itemInfo
+            if info and info.hyperlink then
+                SetItemButtonCount(btn, info.stackCount or 0)
+            else
+                SetItemButtonCount(btn, 0)
+            end
+        end
+    end
+
     local function StackItems(items)
+        RestoreItemButtonCounts(items)
         if not db.global.stackItems then return items end
         local stacks = {}
         local stackOrder = {}
@@ -161,6 +175,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
             local rep = stack.representative or stack.buttons[1]
             if stack.count > 1 and rep then
                 rep._owb_stackCount = stack.count
+                SetItemButtonCount(rep, stack.count)
             end
             tinsert(result, rep)
             for _, btn in ipairs(stack.buttons) do

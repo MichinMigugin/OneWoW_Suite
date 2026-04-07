@@ -113,6 +113,7 @@ function Pool:ResetButton(button)
     button.owb_bagID = nil
     button.owb_slotID = nil
     button.owb_itemInfo = nil
+    button._owb_stackCount = nil
     button.owb_categoryName = nil
     button.owb_hasItem = false
     button:SetAlpha(1.0)
