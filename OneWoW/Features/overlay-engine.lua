@@ -68,6 +68,15 @@ local INVTYPE_TO_SLOT = {
     [Enum.InventoryType.IndexHoldableType] = 17,
 }
 
+local BATTLE_PET_CAGE_ID = 82800
+
+local function NormalizeCageItemClass(itemID, classID, subclassID)
+    if itemID == BATTLE_PET_CAGE_ID then
+        return Enum.ItemClass.Battlepet, subclassID or 0
+    end
+    return classID, subclassID
+end
+
 local bagThrottle        = {}
 local bankThrottle       = false
 local trackedBankButtons = {}
@@ -387,27 +396,58 @@ local function GetOrCreatePoolEntry(button, index)
     return button.onewow_overlayPool[index]
 end
 
+local function GetPetLevelFromLink(itemLink)
+    if not itemLink then return nil end
+    local level = itemLink:match("|Hbattlepet:%d+:(%d+)")
+    return level and tonumber(level)
+end
+
+local function GetContainerSlotCount(itemID)
+    if not itemID then return nil end
+    local td = C_TooltipInfo and C_TooltipInfo.GetItemByID and C_TooltipInfo.GetItemByID(itemID)
+    if td and td.lines then
+        for _, line in ipairs(td.lines) do
+            if line.leftText then
+                local slots = line.leftText:match("(%d+)%s+Slot")
+                if slots then return tonumber(slots) end
+            end
+        end
+    end
+    return nil
+end
+
 local function ApplyItemLevelToButton(button, item, itemLink, classID, itemLocation)
     local cfg = GetOverlayCfg("itemlevel")
     if not cfg or not cfg.enabled then return end
 
+    local ilvl
+    local isPetItem = (classID == Enum.ItemClass.Battlepet)
+        or (itemLink and itemLink:find("|Hbattlepet:") ~= nil)
     local isContainer = (classID == Enum.ItemClass.Container)
-    if not isContainer then
+
+    if isPetItem and cfg.showPetLevel ~= false then
+        ilvl = GetPetLevelFromLink(itemLink)
+        if not ilvl or ilvl == 0 then return end
+    elseif isContainer and cfg.showContainerSlots ~= false then
+        local itemID = C_Item.GetItemInfoInstant(itemLink)
+        ilvl = GetContainerSlotCount(itemID)
+        if not ilvl or ilvl == 0 then return end
+    else
+        if isPetItem or isContainer then return end
         local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
         if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_NON_EQUIP"
             or equipLoc == "INVTYPE_NON_EQUIP_IGNORE" then
             return
         end
-    end
 
-    local ilvl
-    if itemLocation and C_Item.DoesItemExist(itemLocation) then
-        ilvl = C_Item.GetCurrentItemLevel(itemLocation)
+        if itemLocation and C_Item.DoesItemExist(itemLocation) then
+            ilvl = C_Item.GetCurrentItemLevel(itemLocation)
+        end
+        if not ilvl or ilvl == 0 then
+            ilvl = C_Item.GetDetailedItemLevelInfo(itemLink)
+        end
+        if not ilvl or ilvl == 0 then return end
     end
-    if not ilvl or ilvl == 0 then
-        ilvl = C_Item.GetDetailedItemLevelInfo(itemLink)
-    end
-    if not ilvl or ilvl == 0 then return end
 
     if not button.onewow_ilvl then
         local container = GetOrCreateContainer(button)
@@ -574,21 +614,31 @@ local function ApplyOverlayToButton(button, overlayId, positionIndex)
     ApplyBackground(entry, cfg, finalSize, button.onewow_itemLink)
 end
 
--- Returns: true = collectible AND already known/collected
---          false = collectible AND not yet known/collected
---          nil = not a collectible type (no overlay either way)
+local function IsPetOverlayItem(itemID, classID, subclassID)
+    if not itemID then return false end
+    if itemID == BATTLE_PET_CAGE_ID then return true end
+    if not classID then return false end
+    if classID == Enum.ItemClass.Battlepet then return true end
+    if classID == Enum.ItemClass.Miscellaneous
+        and subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet then
+        return true
+    end
+    return false
+end
+
 local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
-    if not itemID or not itemLink or not classID then return nil end
+    if not itemID or not itemLink then return nil end
+
+    classID, subclassID = NormalizeCageItemClass(itemID, classID, subclassID)
+    if not classID then return nil end
 
     local isMisc = (classID == Enum.ItemClass.Miscellaneous)
 
-    -- Toys: fast API, no tooltip needed
     if C_ToyBox and C_ToyBox.GetToyInfo and C_ToyBox.GetToyInfo(itemID) then
         return PlayerHasToy(itemID) == true
     end
 
-    -- Caged battle pets
-    if classID == Enum.ItemClass.Battlepet or itemID == 82800 then
+    if classID == Enum.ItemClass.Battlepet or itemID == BATTLE_PET_CAGE_ID then
         local speciesID = tonumber(itemLink:match("|Hbattlepet:(%d+):"))
         if speciesID then
             local numCollected = C_PetJournal.GetNumCollectedInfo(speciesID)
@@ -597,7 +647,6 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
         return nil
     end
 
-    -- Mounts
     if isMisc and subclassID == Enum.ItemMiscellaneousSubclass.Mount then
         if C_MountJournal and C_MountJournal.GetMountFromItem then
             local mountID = C_MountJournal.GetMountFromItem(itemID)
@@ -606,7 +655,6 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
                 return isCollected == true
             end
         end
-        -- fallback: tooltip scan
         local td = C_TooltipInfo and C_TooltipInfo.GetHyperlink and C_TooltipInfo.GetHyperlink(itemLink)
         if td and td.lines then
             for _, line in ipairs(td.lines) do
@@ -616,7 +664,6 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
         return false
     end
 
-    -- Companion pets
     if isMisc and subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet then
         local td = C_TooltipInfo and C_TooltipInfo.GetHyperlink and C_TooltipInfo.GetHyperlink(itemLink)
         if td and td.lines then
@@ -631,7 +678,6 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
         return false
     end
 
-    -- Recipes: only real teachable ones (have ItemSpellTriggerLearn line)
     if classID == Enum.ItemClass.Recipe then
         local td = C_TooltipInfo and C_TooltipInfo.GetHyperlink and C_TooltipInfo.GetHyperlink(itemLink)
         if not td or not td.lines then return nil end
@@ -649,8 +695,6 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
         return isKnown
     end
 
-    -- Transmog appearances (weapons and armor)
-    -- Trinkets, rings, necks have no transmog — skip them entirely
     if classID == Enum.ItemClass.Weapon or classID == Enum.ItemClass.Armor then
         local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
         if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_NON_EQUIP"
@@ -766,14 +810,8 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
         end
     end
 
-    if IsOverlayEnabled("pets") then
-        local isPet = (classID == Enum.ItemClass.Battlepet)
-        if not isPet and isMisc then
-            isPet = (subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet)
-        end
-        if isPet then
-            hits[#hits + 1] = "pets"
-        end
+    if IsOverlayEnabled("pets") and IsPetOverlayItem(itemID, classID, subclassID) then
+        hits[#hits + 1] = "pets"
     end
 
     if IsOverlayEnabled("quest") then
@@ -882,7 +920,17 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
         return
     end
 
-    local itemID = C_Item.GetItemInfoInstant(itemLink)
+    local isBattlePetLink = itemLink:find("|Hbattlepet:") ~= nil
+    local itemID, classID, subclassID
+
+    if isBattlePetLink then
+        itemID   = BATTLE_PET_CAGE_ID
+        classID  = Enum.ItemClass.Battlepet
+        subclassID = 0
+    else
+        itemID = C_Item.GetItemInfoInstant(itemLink)
+    end
+
     if not itemID then
         CleanButton(button)
         return
@@ -891,7 +939,10 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
     CleanButton(button)
     button.onewow_itemLink = itemLink
 
-    local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemLink)
+    if not classID then
+        local _, _, _, _, _, cID, scID = C_Item.GetItemInfoInstant(itemLink)
+        classID, subclassID = NormalizeCageItemClass(itemID, cID, scID)
+    end
     if classID then
         local hits = DetectOverlays(classID, subclassID, itemID, itemLink, itemLocation)
         hits = FilterHitsByContext(hits, context)
@@ -918,6 +969,7 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
         item:ContinueOnItemLoad(function()
             if not IsGlobalEnabled() then return end
             local _, _, _, _, _, cID, scID = C_Item.GetItemInfoInstant(itemLink)
+            cID, scID = NormalizeCageItemClass(itemID, cID, scID)
             if not cID then return end
 
             local hits = DetectOverlays(cID, scID, itemID, itemLink, itemLocation)

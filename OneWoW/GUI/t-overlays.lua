@@ -911,6 +911,22 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end)
         yOffset = yOffset - 30 - 16
 
+        local petLvlCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_ILVL_PET_LEVEL"] })
+        petLvlCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        petLvlCb:SetChecked(reg:GetOverlaySetting(featureId, "showPetLevel") ~= false)
+        petLvlCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "showPetLevel", self:GetChecked())
+        end)
+        yOffset = yOffset - 30
+
+        local containerSlotsCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_ILVL_CONTAINER_SLOTS"] })
+        containerSlotsCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        containerSlotsCb:SetChecked(reg:GetOverlaySetting(featureId, "showContainerSlots") ~= false)
+        containerSlotsCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "showContainerSlots", self:GetChecked())
+        end)
+        yOffset = yOffset - 30 - 16
+
         local fsLabel = OneWoW_GUI:CreateFS(dsc, 12)
         fsLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         fsLabel:SetText(L["OVR_FONTSIZE_LABEL"])

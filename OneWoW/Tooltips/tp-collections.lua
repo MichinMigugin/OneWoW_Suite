@@ -1,5 +1,14 @@
 local ADDON_NAME, OneWoW = ...
 
+local BATTLE_PET_CAGE_ID = 82800
+
+local function NormalizeCageItemClass(itemID, classID, subclassID)
+    if itemID == BATTLE_PET_CAGE_ID then
+        return Enum.ItemClass.Battlepet, subclassID or 0
+    end
+    return classID, subclassID
+end
+
 local ITEM_TYPE_COLORS = {
     [0]  = {0.47, 0.94, 0.47},
     [1]  = {0.80, 0.70, 0.50},
@@ -21,7 +30,10 @@ local ITEM_TYPE_COLORS = {
 OneWoW.ITEM_TYPE_COLORS = ITEM_TYPE_COLORS
 
 local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
-    if not itemID or not itemLink or not classID then return nil end
+    if not itemID or not itemLink then return nil end
+
+    classID, subclassID = NormalizeCageItemClass(itemID, classID, subclassID)
+    if not classID then return nil end
 
     local isMisc = (classID == Enum.ItemClass.Miscellaneous)
 
@@ -37,7 +49,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
         return false
     end
 
-    if classID == Enum.ItemClass.Battlepet or itemID == 82800 then
+    if classID == Enum.ItemClass.Battlepet or itemID == BATTLE_PET_CAGE_ID then
         local speciesID = tonumber(itemLink:match("|Hbattlepet:(%d+):"))
         if speciesID then
             local numCollected = C_PetJournal.GetNumCollectedInfo(speciesID)
@@ -129,15 +141,16 @@ end
 local function CollectionsProvider(tooltip, context)
     if not context.itemID then return nil end
 
-    local _, itemType, itemSubType, _, _, classID, subclassID = C_Item.GetItemInfoInstant(context.itemID)
-    if not itemType then return nil end
+    local classID, subclassID, typeString, typeColor
 
-    local typeString = itemType
+    local _, itemType, itemSubType
+    _, itemType, itemSubType, _, _, classID, subclassID = C_Item.GetItemInfoInstant(context.itemID)
+    if not itemType then return nil end
+    typeString = itemType
     if itemSubType and itemSubType ~= "" and itemSubType ~= itemType then
         typeString = itemType .. " | " .. itemSubType
     end
-
-    local typeColor = ITEM_TYPE_COLORS[classID] or {0.9, 0.9, 0.9}
+    typeColor = ITEM_TYPE_COLORS[classID] or {0.9, 0.9, 0.9}
 
     local status = CheckCollectionStatus(context.itemID, context.itemLink, classID, subclassID)
 
