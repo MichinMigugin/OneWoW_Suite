@@ -78,14 +78,10 @@ local HS_IDS = {
     [208704]=true,[209035]=true,[210455]=true,[212337]=true,[228940]=true,
 }
 
--- Locale-aware charges pattern built from Blizzard's ITEM_SPELL_CHARGES global.
--- The English fallback matches "3 Charges" / "1 Charge".
-local chargesPattern
-if ITEM_SPELL_CHARGES then
-    chargesPattern = ITEM_SPELL_CHARGES:gsub("%%d", "(%%d+)"):gsub("|4.-;", "%%a+")
-else
-    chargesPattern = "(%d+) Charges?"
-end
+-- Locale-aware patterns built from Blizzard globals.
+local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
+local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
+local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-")
 
 -- ============================================================================
 -- SECTION 4: CONSTANT_MAP
@@ -217,6 +213,7 @@ local FLAG_REGISTRY = {
     isunsellable         = "isUnsellable",
     hascharges           = "hasCharges",
     isunique             = "isUnique",
+    isuniqueequipped     = "isUniqueEquipped",
     isquestitem          = "isQuestItem",
     istierset            = "isTierSet",
     isappearancecollected = "isAppearanceCollected",
@@ -226,12 +223,13 @@ local FLAG_REGISTRY = {
     isfullyupgraded       = "isFullyUpgraded",
     isprofessionequipment = "isProfessionEquipment",
     isequipped            = "isEquipped",
-    isequippable          = "isEquippable",
+    isequippable          = "isEquipment",
     iscraftingreagent    = "isCraftingReagent",
     hassocket            = "hasSocket",
 
     -- Tooltip-derived flags (lazy)
     hasuseability        = "hasUseAbility",
+    hasEquipAbility      = "hasEquipAbility",
     isalreadyknown       = "isAlreadyKnown",
     istradeableloot      = "isTradeableLoot",
 
@@ -641,8 +639,6 @@ RegisterKeyword("unknowntransmog", function(p) return p.isUnknownAppearance end)
 RegisterKeyword({"usable", "use"},  function(p) return p.isUsable end)
 RegisterKeyword("unusable",         function(p) return not p.isUsable end)
 RegisterKeyword("locked",           function(p) return p.isLocked end)
-RegisterKeyword("charges",          function(p) return p.hasCharges end)
-RegisterKeyword("unique",           function(p) return p.isUnique end)
 RegisterKeyword("socket",           function(p) return p.hasSocket end)
 RegisterKeyword("equipped",         function(p) return p.isEquipped end)
 
@@ -662,6 +658,11 @@ RegisterKeyword("fullyupgraded",    function(p) return p.isFullyUpgraded end)
 
 -- ---- 7.22  Tooltip-text keywords ----
 -- These trigger the lazy tooltip scan on first access to tooltipText.
+RegisterKeyword("charges",          function(p) return p.hasCharges end)
+RegisterKeyword("onuse",            function(p) return p.hasUseAbility end)
+RegisterKeyword("onequip",          function(p) return p.hasEquipAbility end)
+RegisterKeyword("unique",           function(p) return p.isUnique end)
+RegisterKeyword("uniqueequipped",   function(p) return p.isUniqueEquipped end)
 RegisterKeyword("reputation", function(p)
     local tt = p.tooltipText
     return tt and strfind(tt, "Reputation") ~= nil
@@ -809,25 +810,33 @@ end
 -- ---------- ResolveTooltipFields ----------
 -- Lazily populates the tooltip-derived fields on first access.
 -- Called by the propsMT.__index metatable handler.
--- Only the fields that genuinely require tooltip scanning live here;
--- bind, crafting reagent, and socket detection all use API calls instead.
+-- Only the fields that genuinely require tooltip scanning live here
 local function ResolveTooltipFields(props)
     local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
     if not bagID or not slotID then
         rawset(props, "hasCharges", false)
         rawset(props, "hasUseAbility", false)
+        rawset(props, "hasEquipAbility", false)
         rawset(props, "isAlreadyKnown", false)
         rawset(props, "isTradeableLoot", false)
+        rawset(props, "isUnique", false)
+        rawset(props, "isUniqueEquipped", false)
         rawset(props, "tooltipText", "")
         return
     end
 
     local tt = GetTooltipText(bagID, slotID)
-    rawset(props, "tooltipText", tt)
-    rawset(props, "hasCharges",      tt:match(chargesPattern) ~= nil)
-    rawset(props, "hasUseAbility",   strfind(tt, "^Use:") ~= nil or strfind(tt, "\nUse:") ~= nil)
-    rawset(props, "isAlreadyKnown",  strfind(tt, ITEM_SPELL_KNOWN or "Already Known") ~= nil)
-    rawset(props, "isTradeableLoot", strfind(tt, "You may trade this item") ~= nil)
+
+    local isUniqueEquipped = strfind(tt, "^"..uniqueEquipPattern) ~= nil or strfind(tt, "\n"..ITEM_UNIQUE_EQUIPPABLE, 1, true) ~= nil
+
+    rawset(props, "tooltipText",        tt)
+    rawset(props, "hasCharges",         strfind(tt, "(%d+) |4" .. chargesPattern) ~= nil)
+    rawset(props, "hasUseAbility",      strfind(tt, "^"..USE_COLON) ~= nil or strfind(tt, "\n"..USE_COLON, 1, true) ~= nil)
+    rawset(props, "hasEquipAbility",    strfind(tt, "^"..ITEM_SPELL_TRIGGER_ONEQUIP) ~= nil or strfind(tt, "\n"..ITEM_SPELL_TRIGGER_ONEQUIP, 1, true) ~= nil)
+    rawset(props, "isAlreadyKnown",     strfind(tt, ITEM_SPELL_KNOWN, 1, true) ~= nil)
+    rawset(props, "isTradeableLoot",    strfind(tt, tradeablePattern, 1, true) ~= nil)
+    rawset(props, "isUniqueEquipped",   isUniqueEquipped)
+    rawset(props, "isUnique",           isUniqueEquipped or strfind(tt, "^"..ITEM_UNIQUE) ~= nil or strfind(tt, "\n"..ITEM_UNIQUE, 1, true) ~= nil)
 end
 
 -- ---------- ResolveBind ----------
@@ -950,11 +959,14 @@ end
 
 -- Fields that are resolved lazily via __index (tooltip scan on first access)
 local TOOLTIP_FIELDS_SET = {
-    hasCharges     = true,
-    hasUseAbility  = true,
-    isAlreadyKnown = true,
-    isTradeableLoot = true,
-    tooltipText    = true,
+    hasCharges          = true,
+    hasUseAbility       = true,
+    hasEquipAbility     = true,
+    isAlreadyKnown      = true,
+    isTradeableLoot     = true,
+    isUnique            = true,
+    isUniqueEquipped    = true,
+    tooltipText         = true,
 }
 
 -- Bind fields
@@ -1127,9 +1139,6 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     -- ---- Usability ----
     props.isUsable = (C_Item.IsUsableItem(itemID) == true)
 
-    -- ---- Unique ----
-    props.isUnique = C_Item.GetItemUniquenessByID(itemID) == true
-
     -- ---- Socket detection (API-based, no tooltip needed) ----
     local socketCount = hyperlink and C_Item.GetItemNumSockets(hyperlink) or 0
     props.hasSocket = socketCount > 0
@@ -1227,13 +1236,9 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     -- ---- Equipped status ----
     props.isEquipped = C_Item.IsEquippedItem(itemID) == true
 
-    -- ---- Equippable (by this character) ----
-    props.isEquippable = C_Item.IsEquippableItem(itemID) == true
 
-    -- ---- Hybrid bind detection (strict soulbound) ----
-    -- API-based primary path: uses containerInfo.isBound + bindType.
-    -- If either is nil, bind fields are left unset and the __index metatable triggers ResolveBind on first access.
-    -- NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.
+    -- BIND DETECTION NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.
+    -- UNIQUE DETECTION NOTE: C_Item.GetItemUniquenessByID only matches unique-equipped items; its purpose is to identify restrictions on equipping items, not on owning them.
 
     -- ---- Apply lazy tooltip metatable ----
     setmetatable(props, propsMT)
