@@ -13,3 +13,4 @@ reg:Register("tooltips", { id = "enhancements",  title = "TIPS_ENHANCEMENTS_TITL
 reg:Register("tooltips", { id = "talentmods",   title = "TIPS_TALENTMODS_TITLE",   description = "TIPS_TALENTMODS_DESC" })
 reg:Register("tooltips", { id = "technicalids",  title = "TIPS_TECHNICALIDS_TITLE",  description = "TIPS_TECHNICALIDS_DESC" })
 reg:Register("tooltips", { id = "value",         title = "TIPS_VALUE_TITLE",         description = "TIPS_VALUE_DESC" })
+reg:Register("tooltips", { id = "pets",          title = "TIPS_PETS_TITLE",          description = "TIPS_PETS_DESC" })

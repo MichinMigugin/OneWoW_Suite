@@ -71,6 +71,7 @@ Tooltips\tp-notewarning.lua
 Tooltips\tp-itemstatus.lua
 Tooltips\tp-gearupgrades.lua
 Tooltips\tp-value.lua
+Tooltips\tp-pets.lua
 
 # Portal Hub - Data
 Portals\Data\Hearthstones.lua

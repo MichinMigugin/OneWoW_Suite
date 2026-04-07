@@ -1258,6 +1258,86 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     split.UpdateDetailThumb()
 end
 
+local PETS_TOGGLES = {
+    { key = "showCollectionStatus", localeKey = "TIPS_PETS_SHOW_COLLECTION" },
+    { key = "showPetInfo",          localeKey = "TIPS_PETS_SHOW_PETINFO" },
+    { key = "showSource",           localeKey = "TIPS_PETS_SHOW_SOURCE" },
+    { key = "showDescription",      localeKey = "TIPS_PETS_SHOW_DESCRIPTION" },
+    { key = "showValue",            localeKey = "TIPS_PETS_SHOW_VALUE" },
+    { key = "showAHValue",          localeKey = "TIPS_PETS_SHOW_AH_VALUE" },
+    { key = "showItemStatus",       localeKey = "TIPS_PETS_SHOW_ITEMSTATUS" },
+    { key = "showTechnicalIDs",     localeKey = "TIPS_PETS_SHOW_TECHIDS" },
+}
+
+local function ShowPetsDetail(split, dsc, feature, selectedRow)
+    local yOffset = -10
+
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
+    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    titleLabel:SetJustifyH("LEFT")
+    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
+    yOffset = yOffset - 12
+
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
+    descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    descLabel:SetJustifyH("LEFT")
+    descLabel:SetWordWrap(true)
+    descLabel:SetSpacing(3)
+    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - descLabel:GetStringHeight() - 16
+
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local toggleBtnSets = {}
+
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
+            end
+            for _, tbs in ipairs(toggleBtnSets) do
+                local val = OneWoW.db.global.settings.tooltips.pets[tbs.key]
+                tbs.refresh(newState, val ~= false)
+                tbs.label:SetTextColor(newState and OneWoW_GUI:GetThemeColor("TEXT_PRIMARY") or OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            end
+        end,
+    })
+
+    yOffset = statusBlock.getBottomY() - 14
+
+    local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
+    toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    toggleHeader:SetText(L["TIPS_MODULE_TOGGLES"] or "Module Toggles")
+    toggleHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+    yOffset = yOffset - toggleHeader:GetStringHeight() - 8
+
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
+    yOffset = yOffset - 10
+
+    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
+    local petsSettings = db and db.tooltips and db.tooltips.pets or {}
+
+    yOffset = CreateSettingToggleRows(dsc, PETS_TOGGLES, toggleBtnSets, isEnabled, petsSettings, "pets", yOffset)
+
+    dsc:SetHeight(math.abs(yOffset) + 20)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
+    split.UpdateDetailThumb()
+end
+
 local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     local dsc = split.detailScrollChild
     OneWoW_GUI:ClearFrame(dsc)
@@ -1299,6 +1379,11 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     if feature.id == "value" then
         ShowValueDetail(split, dsc, feature, selectedRow)
+        return
+    end
+
+    if feature.id == "pets" then
+        ShowPetsDetail(split, dsc, feature, selectedRow)
         return
     end
 

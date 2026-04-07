@@ -5,9 +5,8 @@ local ITEM_TYPE_COLORS = OneWoW.ITEM_TYPE_COLORS
 local function ItemTypeProvider(tooltip, context)
     if not context.itemID then return nil end
 
-    local _, itemType, itemSubType, _, _, classID, subClassID = C_Item.GetItemInfoInstant(context.itemID)
+    local _, itemType, itemSubType, _, _, classID = C_Item.GetItemInfoInstant(context.itemID)
     if not itemType then return nil end
-
     local typeString = itemType
     if itemSubType and itemSubType ~= "" and itemSubType ~= itemType then
         typeString = itemType .. " | " .. itemSubType

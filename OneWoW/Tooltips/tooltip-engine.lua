@@ -167,7 +167,7 @@ function TooltipEngine:BuildContext(tooltip, tooltipType, data)
         context.type = "currency"
     elseif tooltipType == Enum.TooltipDataType.BattlePet then
         context.petID = data.id
-        context.type = "pet"
+        context.type = "battlepet"
     elseif tooltipType == Enum.TooltipDataType.Achievement then
         context.achievementID = data.id
         context.type = "achievement"
