@@ -288,7 +288,7 @@ Each expansion has a full name keyword and one or more short aliases.
 |---|---|
 | `#classic` | `#vanilla` |
 | `#burningcrusade` | `#tbc` |
-| `#wrath` | `#wotlk` |
+| `#wrath` | `#wotlk`, `#northrend` |
 | `#cataclysm` | `#cata` |
 | `#mistsofpandaria` | `#mists`, `#mop`, `#pandaria` |
 | `#draenor` | `#wod`, `#warlords` |
@@ -310,6 +310,33 @@ Each expansion has a full name keyword and one or more short aliases.
 | `#collected` | Toys/mounts/pets you already own |
 | `#uncollected` | Toys/mounts/pets you don't own |
 | `#alreadyknown` | Recipes/items marked "Already Known" |
+
+### Battle Pet Type
+
+These keywords are intended to pair naturally with `#pet`.
+
+| Keyword | What it matches |
+|---|---|
+| `#pethumanoid` | Humanoid battle pets |
+| `#petdragonkin` | Dragonkin battle pets |
+| `#petflying` | Flying battle pets |
+| `#petundead` | Undead battle pets |
+| `#petcritter` | Critter battle pets |
+| `#petmagic` | Magic battle pets |
+| `#petelemental` | Elemental battle pets |
+| `#petbeast` | Beast battle pets |
+| `#petaquatic` | Aquatic battle pets |
+| `#petmechanical` | Mechanical battle pets |
+
+**Examples:**
+
+```
+#pet & #petbeast
+#pet & (#pethumanoid | #petdragonkin)
+```
+
+> **Pet quality:** There are no separate `#pet*quality*` keywords. Use the
+> normal quality keywords instead, for example `#pet & #epic`.
 
 ### Transmog
 
@@ -473,6 +500,12 @@ Syntax: `property>=value`, `property<=value`, `property>value`, `property<value`
 | `expansion` | `expac` | Expansion ID (0=Classic, 1=TBC, ..., 10=TWW, 11=Midnight, 12=Last Titan) |
 | `class` | `typeid` | Item class ID |
 | `subclass` | `subtypeid` | Item subclass ID |
+| `pettype` | | Battle pet type ID (1=Humanoid, 2=Dragonkin, 3=Flying, 4=Undead, 5=Critter, 6=Magic, 7=Elemental, 8=Beast, 9=Aquatic, 10=Mechanical) |
+| `petquality` | | Battle pet quality tier |
+| `petlevel` | | Battle pet level |
+| `petmaxhealth` | | Battle pet max health |
+| `petpower` | | Battle pet power |
+| `petspeed` | | Battle pet speed |
 | `bindtype` | | Bind type ID from item data (0=None, 1=BoP, 2=BoE, 3=BoU, 8=Warband, 9=WUE) |
 | `currentbind` | | Current tooltip bind state (from `Enum.TooltipDataItemBinding`). Reflects actual binding, not item definition. |
 | `craftedquality` | | Crafted quality tier (1–5, 0 if not crafted) |
@@ -510,6 +543,9 @@ sockets>0               Items with at least one socket
 upgradelevel>0          Partially upgraded items
 haste>=200              Items with 200+ haste rating
 crit>0                  Items with any crit (same as #crit)
+pettype=8               Beast battle pets
+petlevel:1-10           Low-level pets
+petquality>=4           Epic or better pets
 ```
 
 ### String Comparisons
@@ -568,7 +604,7 @@ read more like natural conditions.
 | `IsSoulbound` | `#soulbound` |
 | `IsBOE` | `#boe` |
 | `IsBindOnEquip` | `#boe` |
-| `IsBOA` | `#warbound` |
+| `IsBOA` | — (strict account-bound only; see note) |
 | `IsWarbound` | `#warbound` |
 | `IsAccountBound` | `#warbound` |
 | `IsBOU` | `#bou` |
@@ -603,6 +639,14 @@ read more like natural conditions.
 | `IsAlreadyKnown` | `#alreadyknown` |
 | `IsTradeableLoot` | `#tradeableloot` |
 | `HasSocket` | `#socket` |
+
+> **`IsBOA` vs `#boa`:** The `IsBOA` flag checks the strict `isBOA` property —
+> true only for items whose tooltip shows account-bound binding (not Warbound
+> Until Equipped). The `#boa` keyword (and its aliases `#accountbound`,
+> `#warbound`) is broader: it matches both account-bound **and** WUE items
+> (`isBOA or isWUE`). To match all warbound items in flag syntax, use
+> `IsWarbound` or `IsAccountBound`. To match strict account-bound only, use
+> `IsBOA`.
 
 **Example (vendor rule style):**
 
@@ -669,6 +713,16 @@ All food items.
 #weapon & #epic & ilvl>=620
 ```
 Epic weapons at ilvl 620 or above.
+
+```
+#pet & (#pethumanoid || #petbeast)
+```
+Pets that are either Humanoid or Beast.
+
+```
+#pet & #epic & petlevel>=25
+```
+Epic pets at level 25 or above.
 
 ```
 #armor & #tww & !#set & #boe
