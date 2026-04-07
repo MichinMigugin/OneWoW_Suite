@@ -381,6 +381,8 @@ Expression pipeline with registries for properties, keywords, and flags; caches 
 
 Used for: search filtering, custom category expressions, builtin category search strings in `Categories`.
 
+Tokenizer notes: string-property comparisons accept unquoted single-token values and quoted string literals for phrases. Standalone quoted `~"..."` / `~'...'` is treated as shorthand for `name~...`. `~` remains literal contains, while `~~` uses Lua pattern matching and malformed patterns fail safely as non-matches.
+
 ### Categories
 
 **27** builtin rows in `CATEGORY_DEFINITIONS` (including `1W Junk`, `1W Upgrades`, `Recent Items`, `Other`, `Empty`, and search-driven builtins such as `Housing`, `Toys`, `Junk`, etc.). Builtin search categories are collected into `SEARCH_CATEGORIES` sorted by `searchOrder`.
