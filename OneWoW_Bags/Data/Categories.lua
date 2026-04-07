@@ -112,6 +112,14 @@ local function InvalidateCache()
     wipe(categoryCache)
 end
 
+local function GetCategoryCacheKey(itemID, bagID, slotID, itemInfo)
+    if not itemID then return nil end
+    if bagID and slotID then
+        return bagID .. ":" .. slotID
+    end
+    return PE:GetItemIdentityKey(itemID, itemInfo and itemInfo.hyperlink)
+end
+
 local function IsItemUpgrade(bagID, slotID, itemID, hyperlink)
     if not itemID or not bagID or not slotID or not hyperlink then return false end
 
@@ -228,8 +236,9 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         return "Other"
     end
 
-    if itemID then
-        local cached = categoryCache[itemID]
+    local cacheKey = GetCategoryCacheKey(itemID, bagID, slotID, itemInfo)
+    if cacheKey then
+        local cached = categoryCache[cacheKey]
         if cached then
             return cached
         end
@@ -263,8 +272,8 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         category = "Other"
     end
 
-    if itemID and hyperlink and props.classID ~= nil then
-        categoryCache[itemID] = category
+    if cacheKey and hyperlink and props.classID ~= nil then
+        categoryCache[cacheKey] = category
     end
 
     return category
@@ -469,9 +478,7 @@ function Categories:AddItemToCustomCategory(categoryID, itemID)
 
     customCategoriesV2[categoryID].items[itemID] = true
 
-    if categoryCache[itemID] then
-        categoryCache[itemID] = nil
-    end
+    InvalidateCache()
 
     return true
 end
@@ -483,9 +490,7 @@ function Categories:RemoveItemFromCustomCategory(categoryID, itemID)
 
     customCategoriesV2[categoryID].items[itemID] = nil
 
-    if categoryCache[itemID] then
-        categoryCache[itemID] = nil
-    end
+    InvalidateCache()
 
     return true
 end

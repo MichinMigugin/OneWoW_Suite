@@ -34,6 +34,7 @@ local C_TradeSkillUI = C_TradeSkillUI
 local C_PlayerInfo = C_PlayerInfo
 local Enum = Enum
 local GetSpecialization, GetSpecializationInfo = GetSpecialization, GetSpecializationInfo
+local BattlePetToolTip_UnpackBattlePetLink = BattlePetToolTip_UnpackBattlePetLink
 
 -- ============================================================================
 -- SECTION 2: CACHES
@@ -51,6 +52,20 @@ local compiledCache = {}
 -- ============================================================================
 
 local BATTLE_PET_CAGE_ID = 82800
+local BATTLE_PET_TYPES = {
+    Humanoid = 1,
+    Dragonkin = 2,
+    Flying = 3,
+    Undead = 4,
+    Critter = 5,
+    Magic = 6,
+    Elemental = 7,
+    Beast = 8,
+    Aquatic = 9,
+    Mechanical = 10,
+}
+
+PE.BattlePetTypes = BATTLE_PET_TYPES
 
 -- Hearthstone item IDs: base + all known toy variants.
 -- Module-level so it's not recreated per-call.
@@ -138,6 +153,12 @@ RegisterPropAlias({"reqlevel", "minlevel"},                 "reqLevel")
 RegisterPropAlias({"expansion", "expac"},                   "expansionID")
 RegisterPropAlias({"class", "typeid"},                      "classID")
 RegisterPropAlias({"subclass", "subtypeid"},                "subClassID")
+RegisterPropAlias("pettype",                                "petType")
+RegisterPropAlias("petquality",                             "petQuality")
+RegisterPropAlias("petlevel",                               "petLevel")
+RegisterPropAlias("petmaxhealth",                           "petMaxHealth")
+RegisterPropAlias("petpower",                               "petPower")
+RegisterPropAlias("petspeed",                               "petSpeed")
 
 RegisterPropAlias("quality",        "quality")
 RegisterPropAlias("bindtype",       "bindType")
@@ -595,6 +616,22 @@ RegisterKeyword("collected",            function(p) return p.isCollected end)
 RegisterKeyword("uncollected",          function(p) return not p.isCollected end)
 RegisterKeyword("alreadyknown",         function(p) return p.isAlreadyKnown end)
 
+for _, def in ipairs({
+    {"pethumanoid",   BATTLE_PET_TYPES.Humanoid},
+    {"petdragonkin",  BATTLE_PET_TYPES.Dragonkin},
+    {"petflying",     BATTLE_PET_TYPES.Flying},
+    {"petundead",     BATTLE_PET_TYPES.Undead},
+    {"petcritter",    BATTLE_PET_TYPES.Critter},
+    {"petmagic",      BATTLE_PET_TYPES.Magic},
+    {"petelemental",  BATTLE_PET_TYPES.Elemental},
+    {"petbeast",      BATTLE_PET_TYPES.Beast},
+    {"petaquatic",    BATTLE_PET_TYPES.Aquatic},
+    {"petmechanical", BATTLE_PET_TYPES.Mechanical},
+}) do
+    local petType = def[2]
+    RegisterKeyword(def[1], function(p) return p.petType == petType end)
+end
+
 -- ---- 7.17  Transmog keywords ----
 RegisterKeyword("transmog",        function(p) return p.hasAppearance end)
 RegisterKeyword("knowntransmog",   function(p) return p.isAppearanceCollected end)
@@ -698,6 +735,52 @@ end
 
 -- ---------- ResolveCollected ----------
 -- Checks toy/mount/pet collection status for a specific item.
+local function GetBattlePetCageData(itemID, hyperlink)
+    if itemID ~= BATTLE_PET_CAGE_ID or not hyperlink or not BattlePetToolTip_UnpackBattlePetLink then
+        return nil
+    end
+
+    local speciesID, level, breedQuality, maxHealth, power, speed = BattlePetToolTip_UnpackBattlePetLink(hyperlink)
+    if not speciesID then
+        return nil
+    end
+
+    local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
+    return {
+        speciesID = speciesID,
+        petLevel = level or 0,
+        petQuality = breedQuality or 0,
+        petMaxHealth = maxHealth or 0,
+        petPower = power or 0,
+        petSpeed = speed or 0,
+        petType = petType or 0,
+        petName = petName,
+    }
+end
+
+local function GetItemIdentityKey(itemID, hyperlink)
+    if not itemID then
+        return nil
+    end
+
+    if itemID ~= BATTLE_PET_CAGE_ID then
+        return tostring(itemID)
+    end
+
+    local petData = GetBattlePetCageData(itemID, hyperlink)
+    if not petData then
+        return tostring(itemID)
+    end
+
+    return tostring(itemID)
+        .. ":" .. tostring(petData.speciesID)
+        .. ":" .. tostring(petData.petLevel)
+        .. ":" .. tostring(petData.petQuality)
+        .. ":" .. tostring(petData.petMaxHealth)
+        .. ":" .. tostring(petData.petPower)
+        .. ":" .. tostring(petData.petSpeed)
+end
+
 local function ResolveCollected(itemID, classID, subClassID, hyperlink)
     -- Toy check
     local toyInfo = C_ToyBox.GetToyInfo(itemID)
@@ -705,15 +788,10 @@ local function ResolveCollected(itemID, classID, subClassID, hyperlink)
         return PlayerHasToy(itemID)
     end
     -- Battle pet check
-    if itemID == BATTLE_PET_CAGE_ID and hyperlink then
-        local petID = hyperlink:match("battlepet:(%d+)")
-        if petID then
-            local speciesID = tonumber(petID)
-            if speciesID then
-                local num = C_PetJournal.GetNumCollectedInfo(speciesID)
-                return num and num > 0
-            end
-        end
+    local petData = GetBattlePetCageData(itemID, hyperlink)
+    if petData and petData.speciesID then
+        local num = C_PetJournal.GetNumCollectedInfo(petData.speciesID)
+        return num and num > 0
     end
     -- Mount check
     if classID == Enum.ItemClass.Miscellaneous and subClassID == Enum.ItemMiscellaneousSubclass.Mount then
@@ -965,11 +1043,11 @@ local propsMT = {
 function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     if not itemID then return {} end
 
-    local cacheKey = bagID and slotID and (bagID .. ":" .. slotID) or tostring(itemID)
-    if propsCache[cacheKey] then return propsCache[cacheKey] end
-
     itemInfo = itemInfo or {}
     local hyperlink = itemInfo.hyperlink
+    local cacheKey = bagID and slotID and (bagID .. ":" .. slotID) or GetItemIdentityKey(itemID, hyperlink) or tostring(itemID)
+    if propsCache[cacheKey] then return propsCache[cacheKey] end
+    local petData = GetBattlePetCageData(itemID, hyperlink)
 
     local props = {
         id        = itemID,
@@ -1012,6 +1090,13 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.setID       = setID
     props.isTierSet   = setID ~= nil
     props.isCraftingReagent = apiCraftingReagent == true
+    props.petSpeciesID = petData and petData.speciesID or 0
+    props.petLevel = petData and petData.petLevel or 0
+    props.petQuality = petData and petData.petQuality or 0
+    props.petMaxHealth = petData and petData.petMaxHealth or 0
+    props.petPower = petData and petData.petPower or 0
+    props.petSpeed = petData and petData.petSpeed or 0
+    props.petType = petData and petData.petType or 0
 
     -- ---- C_Container.GetContainerItemInfo ----
     local containerInfo
@@ -1632,6 +1717,14 @@ function PE:ResolveParams(expr, params)
     end)
 
     return resolved
+end
+
+function PE:GetBattlePetCageData(itemID, hyperlink)
+    return GetBattlePetCageData(itemID, hyperlink)
+end
+
+function PE:GetItemIdentityKey(itemID, hyperlink)
+    return GetItemIdentityKey(itemID, hyperlink)
 end
 
 --- Register a custom keyword (for third-party / suite extensions).

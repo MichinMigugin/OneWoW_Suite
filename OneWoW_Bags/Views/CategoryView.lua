@@ -157,17 +157,18 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
         local stacks = {}
         local stackOrder = {}
         for _, btn in ipairs(items) do
-            local itemID = btn.owb_itemInfo and btn.owb_itemInfo.itemID
+            local info = btn.owb_itemInfo
+            local itemID = info and info.itemID
             if not itemID then
                 tinsert(stackOrder, { buttons = {btn}, count = 1 })
             else
-                local key = tostring(itemID)
+                local key = PE:GetItemIdentityKey(itemID, info and info.hyperlink) or tostring(itemID)
                 if not stacks[key] then
                     stacks[key] = { buttons = {}, count = 0, representative = btn }
                     tinsert(stackOrder, stacks[key])
                 end
                 tinsert(stacks[key].buttons, btn)
-                stacks[key].count = stacks[key].count + (btn.owb_itemInfo.stackCount or 1)
+                stacks[key].count = stacks[key].count + (info.stackCount or 1)
             end
         end
         local result = {}
