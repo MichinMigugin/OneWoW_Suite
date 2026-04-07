@@ -99,6 +99,13 @@ OneWoW.SearchData = {
         keywords = {"item status", "soulbound", "warbound", "bind on equip", "boe", "bop", "bou", "bound status"},
     },
     {
+        path     = function() return L("SRCH_PATH_OW_TOOLTIPS_PETS") end,
+        desc     = function() return L("SRCH_DESC_OW_TOOLTIPS_PETS") end,
+        addonKey = nil, addonLabel = "OneWoW",
+        navType = "module", module = "qol", subtab = "tooltips",
+        keywords = {"pet tooltip", "caged pet", "battle pet tooltip", "pet info", "pet collection", "pet source", "caged pet tooltip", "species"},
+    },
+    {
         path     = function() return L("SRCH_PATH_OW_TOOLTIPS_VALUE") end,
         desc     = function() return L("SRCH_DESC_OW_TOOLTIPS_VALUE") end,
         addonKey = nil, addonLabel = "OneWoW",
@@ -140,7 +147,7 @@ OneWoW.SearchData = {
         desc     = function() return L("SRCH_DESC_OW_OVERLAYS_PETS") end,
         addonKey = nil, addonLabel = "OneWoW",
         navType = "module", module = "qol", subtab = "overlays",
-        keywords = {"pet", "pets", "battle pet", "companion pet", "overlay pet"},
+        keywords = {"pet", "pets", "battle pet", "caged pet", "companion pet", "overlay pet"},
     },
     {
         path     = function() return L("SRCH_PATH_OW_OVERLAYS_QUEST") end,
@@ -210,7 +217,7 @@ OneWoW.SearchData = {
         desc     = function() return L("SRCH_DESC_OW_OVERLAYS_ITEMLEVEL") end,
         addonKey = nil, addonLabel = "OneWoW",
         navType = "module", module = "qol", subtab = "overlays",
-        keywords = {"item level", "ilvl", "ilevel", "item level overlay", "show ilvl"},
+        keywords = {"item level", "ilvl", "ilevel", "item level overlay", "show ilvl", "pet level", "container slots", "bag slots"},
     },
     {
         path     = function() return L("SRCH_PATH_OW_OVERLAYS_PROTECTED") end,
