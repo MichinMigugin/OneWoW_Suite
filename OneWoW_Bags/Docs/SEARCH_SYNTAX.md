@@ -41,6 +41,9 @@ You can also use the explicit name property with the contains operator:
 | `name=Hearthstone` | Exact name match (case-insensitive) |
 | `name!=Hearthstone` | Everything except items named "Hearthstone" |
 
+Multiple terms must be joined with an explicit operator. There is no implicit
+AND between adjacent tokens, so write `#armor & #epic`, not `#armor #epic`.
+
 ---
 
 ## Keywords
@@ -440,6 +443,9 @@ other keywords on first access.
 
 | Keyword | What it matches |
 |---|---|
+| `#onuse` | Items with a `Use:` tooltip effect |
+| `#onequip` | Items with an `Equip:` tooltip effect |
+| `#uniqueequipped` | Unique-equipped items |
 | `#reputation` | Items with "Reputation" in the tooltip |
 | `#tradeableloot` | Loot still in the trade window |
 | `#openable` | Containers you can right-click to open |
@@ -551,7 +557,7 @@ petquality>=4           Epic or better pets
 ### String Comparisons
 
 Syntax: `property=value` (exact), `property!=value` (not equal),
-`property~value` (contains)
+`property==value` (exact), `property~value` (contains)
 
 | Property | Aliases | What it is |
 |---|---|---|
@@ -569,6 +575,8 @@ equiploc=INVTYPE_HEAD   Head slot items
 ### Range Syntax
 
 Syntax: `property:min-max`
+
+Range syntax is intended for numeric properties.
 
 ```
 ilvl:200-300            Items with ilvl between 200 and 300
@@ -624,6 +632,7 @@ read more like natural conditions.
 | `IsUnsellable` | `#unsellable` |
 | `HasCharges` | `#charges` |
 | `IsUnique` | `#unique` |
+| `IsUniqueEquipped` | `#uniqueequipped` |
 | `IsQuestItem` | `#quest` |
 | `IsTierSet` | `#tierset` |
 | `IsAppearanceCollected` | `#knowntransmog` |
