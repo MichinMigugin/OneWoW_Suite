@@ -369,7 +369,7 @@ local function BuildBagsTab(sc, L, db, GUI)
     dispY = dispY - 6
 
     dispY = BuildSliderRow(dispContainer, L["SETTING_BAG_COLUMNS"], dispY, {
-        minVal = 2, maxVal = 30, step = 1, currentVal = db.global.bagColumns or 15,
+        minVal = 10, maxVal = 30, step = 1, currentVal = db.global.bagColumns or 15,
         onChange = function(val)
             ApplySetting("bagColumns", val)
         end,
@@ -699,7 +699,7 @@ local function BuildBankTab(sc, L, db, GUI)
     dispY = dispY - 6
 
     dispY = BuildSliderRow(dispContainer, L["SETTING_BANK_COLUMNS"], dispY, {
-        minVal = 2, maxVal = 30, step = 1, currentVal = db.global.bankColumns or 14,
+        minVal = 10, maxVal = 30, step = 1, currentVal = db.global.bankColumns or 14,
         onChange = function(val)
             ApplySetting("bankColumns", val)
         end,

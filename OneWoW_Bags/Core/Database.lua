@@ -141,6 +141,15 @@ function OneWoW_Bags:InitializeDatabase()
         { version = 7, name = "split_collapsed_bank_state", run = function(d)
             self:MigrateCollapsedBankState(d)
         end },
+        { version = 8, name = "columns_minimum_10", run = function(d)
+            local g = d.global
+            if type(g.bagColumns) == "number" and g.bagColumns < 10 then
+                g.bagColumns = 10
+            end
+            if type(g.bankColumns) == "number" and g.bankColumns < 10 then
+                g.bankColumns = 10
+            end
+        end },
     })
 end
 

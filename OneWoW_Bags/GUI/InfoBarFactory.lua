@@ -48,6 +48,26 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         return OneWoW_Bags[config.guiTargetKey]
     end
 
+    local function effectiveViewMode(raw)
+        if raw then
+            for _, vm in ipairs(config.viewModes) do
+                if vm.mode == raw then
+                    return raw
+                end
+            end
+        end
+        return config.viewModes[1].mode
+    end
+
+    local function viewModeLabel(mode)
+        for _, vm in ipairs(config.viewModes) do
+            if vm.mode == mode then
+                return L[vm.labelKey] or vm.labelKey
+            end
+        end
+        return L[config.viewModes[1].labelKey] or config.viewModes[1].labelKey
+    end
+
     function bar:CreateViewBtn(parent, label)
         local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = label, height = 22, minWidth = 36 })
         btn.isActive = false
@@ -79,35 +99,53 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         local btnY   = -floor((ROW1_H - 22) / 2)
         local searchY = -(ROW1_H + floor((ROW2_H - 22) / 2))
 
-        local prevBtn = nil
-        infoBarFrame._viewButtons = {}
-        for i, vm in ipairs(config.viewModes) do
-            local btn = bar:CreateViewBtn(infoBarFrame, L[vm.labelKey] or vm.labelKey)
-            if i == 1 then
-                btn:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), btnY)
-            else
-                btn:SetPoint("TOPLEFT", prevBtn, "TOPRIGHT", 3, 0)
-            end
-            btn:SetScript("OnClick", function()
+        local dropW = config.viewModeDropdownWidth or 170
+        local viewModeDropdown, viewModeText = OneWoW_GUI:CreateDropdown(infoBarFrame, {
+            width = dropW,
+            height = 22,
+            text = viewModeLabel(config.viewModes[1].mode),
+        })
+        viewModeDropdown:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), btnY)
+        infoBarFrame.viewModeDropdown = viewModeDropdown
+        infoBarFrame.viewModeText = viewModeText
+        OneWoW_GUI:AttachFilterMenu(viewModeDropdown, {
+            searchable = false,
+            buildItems = function()
+                local items = {}
+                for _, vm in ipairs(config.viewModes) do
+                    tinsert(items, { text = L[vm.labelKey] or vm.labelKey, value = vm.mode })
+                end
+                return items
+            end,
+            getActiveValue = function()
+                local controller = GetController()
+                local raw = controller and controller.GetViewMode and controller:GetViewMode()
+                if raw == nil then
+                    local d = OneWoW_Bags:GetDB()
+                    raw = d and d.global and d.global[config.viewModeDBKey]
+                end
+                return effectiveViewMode(raw)
+            end,
+            onSelect = function(value, text)
                 local controller = GetController()
                 if config.onViewModeChanged then
-                    config.onViewModeChanged(vm.mode, controller)
+                    config.onViewModeChanged(value, controller)
                 elseif controller and controller.SetViewMode then
-                    controller:SetViewMode(vm.mode)
+                    controller:SetViewMode(value)
+                end
+                if viewModeText then
+                    viewModeText:SetText(text)
                 end
                 bar:UpdateViewButtons()
-            end)
-            infoBarFrame._viewButtons[i] = { btn = btn, mode = vm.mode }
-            infoBarFrame["view_" .. vm.mode] = btn
-            prevBtn = btn
-        end
+            end,
+        })
 
         if config.expacFilter then
             local ef = config.expacFilter
             local expacDropdown, expacText = OneWoW_GUI:CreateDropdown(infoBarFrame, {
                 width = 130, height = 22, text = L["EXPAC_FILTER_BTN"],
             })
-            expacDropdown:SetPoint("TOPLEFT", prevBtn, "TOPRIGHT", 8, 0)
+            expacDropdown:SetPoint("TOPLEFT", viewModeDropdown, "TOPRIGHT", 8, 0)
             OneWoW_GUI:AttachFilterMenu(expacDropdown, {
                 searchable = false,
                 buildItems = function()
@@ -224,27 +262,16 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         if not infoBarFrame then return end
         local db = OneWoW_Bags:GetDB()
         local controller = GetController()
-        local mode = controller and controller.GetViewMode and controller:GetViewMode() or db.global[config.viewModeDBKey] or config.viewModes[1].mode
+        local rawMode = controller and controller.GetViewMode and controller:GetViewMode() or db.global[config.viewModeDBKey] or config.viewModes[1].mode
         local showHeader = GetShowHeader(db)
         local showSearch = GetShowSearch(db)
 
-        for _, entry in ipairs(infoBarFrame._viewButtons) do
-            local btn = entry.btn
-            if not showHeader then
-                btn:Hide()
+        if infoBarFrame.viewModeDropdown and infoBarFrame.viewModeText then
+            if showHeader then
+                infoBarFrame.viewModeDropdown:Show()
+                infoBarFrame.viewModeText:SetText(viewModeLabel(effectiveViewMode(rawMode)))
             else
-                btn:Show()
-                if entry.mode == mode then
-                    btn.isActive = true
-                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                else
-                    btn.isActive = false
-                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                end
+                infoBarFrame.viewModeDropdown:Hide()
             end
         end
 
@@ -255,7 +282,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         if infoBarFrame.emptyToggleBtn then
             local showing = controller and controller.GetShowEmptySlots and controller:GetShowEmptySlots() or true
             infoBarFrame.emptyToggleBtn:SetAlpha(showing and 1.0 or 0.35)
-            infoBarFrame.emptyToggleBtn:SetShown(showSearch and (mode == "list" or mode == "tab"))
+            infoBarFrame.emptyToggleBtn:SetShown(showSearch and (rawMode == "list" or rawMode == "tab"))
         end
 
         if infoBarFrame.searchBox then

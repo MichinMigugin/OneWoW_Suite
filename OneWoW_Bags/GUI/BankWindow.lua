@@ -10,7 +10,6 @@ local BankInfoBar = OneWoW_Bags.BankInfoBar
 local BankSet = OneWoW_Bags.BankSet
 local BankCategoryManager = OneWoW_Bags.BankCategoryManager
 local BankCategoryView = OneWoW_Bags.BankCategoryView
-local Settings = OneWoW_Bags.Settings
 local BankBar = OneWoW_Bags.BankBar
 local BankTabView = OneWoW_Bags.BankTabView
 local ListView = OneWoW_Bags.ListView
@@ -71,17 +70,19 @@ function BankGUI:InitMainWindow()
     if not MainWindow then return end
 
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
-    titleBar = WH:CreateWindowTitleBar(MainWindow, {
+    local bankSettingsBtn
+    titleBar, bankSettingsBtn = WH:CreateWindowTitleBar(MainWindow, {
         title = L["BANK_TITLE"] or "Bank",
         factionTheme = factionTheme,
         onClose = function() MainWindow:Hide() end,
         settingsText = L["SETTINGS"],
         onSettings = function()
-            if Settings and Settings.Toggle then
-                Settings:Toggle()
+            if OneWoW_Bags.Settings then
+                OneWoW_Bags.Settings:Toggle()
             end
         end,
     })
+    WH:AttachShoppingListCartButton(titleBar, bankSettingsBtn)
     contentArea = WH:CreateContentArea(MainWindow)
 
     local infoBar = BankInfoBar:Create(contentArea)

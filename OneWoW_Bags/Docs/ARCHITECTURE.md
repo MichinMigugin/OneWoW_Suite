@@ -66,7 +66,7 @@ Views\GuildBankTabView.lua         ← guild bank per-tab layout
 
 GUI\WindowHelpers.lua              ← window shell, scroll scaffold, filtering helpers
 GUI\InfoBarFactory.lua             ← shared info bar builder (bank / guild bank)
-GUI\InfoBar.lua                    ← bags top bar (view modes, search, expansion filter)
+GUI\InfoBar.lua                    ← bags top bar (view mode dropdown, search, expansion filter)
 GUI\BagsBar.lua                    ← bags bottom bar (bag icons, gold, trackers)
 GUI\BankInfoBar.lua
 GUI\BankBar.lua
@@ -395,7 +395,7 @@ Three windows share the same structural pattern (shell from `WindowHelpers:Creat
 
 **Guild bank:** `GuildBankLog` is a separate movable panel listening for `GUILDBANKLOG_UPDATE`, toggled from the guild bank bar; it is not a child of the main guild bank scroll content.
 
-**Info bars:** Bags use hand-built `InfoBar.lua`. Bank and guild bank use `InfoBarFactory:Create` with per-window config (controller, view toggles, expansion filter flags, DB keys).
+**Info bars:** Bags use hand-built `InfoBar.lua`. Bank and guild bank use `InfoBarFactory:Create` with per-window config (controller, view mode list for the dropdown, expansion filter flags, DB keys).
 
 ### Sorting (`Data\Sorting.lua` → `OneWoW_Bags:SortButtons`)
 

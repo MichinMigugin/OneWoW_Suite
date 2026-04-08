@@ -21,6 +21,32 @@ local infoBarFrame = nil
 local ROW1_H = 28
 local ROW2_H = 28
 
+local BAG_VIEW_MODES = {
+    { mode = "list",     labelKey = "VIEW_LIST" },
+    { mode = "category", labelKey = "VIEW_CATEGORY" },
+    { mode = "bag",      labelKey = "VIEW_BAG" },
+}
+
+local function effectiveBagViewMode(raw)
+    if raw then
+        for _, vm in ipairs(BAG_VIEW_MODES) do
+            if vm.mode == raw then
+                return raw
+            end
+        end
+    end
+    return BAG_VIEW_MODES[1].mode
+end
+
+local function bagViewModeLabel(mode)
+    for _, vm in ipairs(BAG_VIEW_MODES) do
+        if vm.mode == mode then
+            return L[vm.labelKey] or vm.labelKey
+        end
+    end
+    return L[BAG_VIEW_MODES[1].labelKey] or BAG_VIEW_MODES[1].labelKey
+end
+
 local function GetController()
     return OneWoW_Bags.BagsController
 end
@@ -67,44 +93,48 @@ function InfoBar:Create(parent)
     end)
     infoBarFrame.sortBtn = sortBtn
 
-    -- Row 1 left: view buttons
-    local viewList = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_LIST"])
-    viewList:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), btnY)
-    viewList:SetScript("OnClick", function()
-        local controller = GetController()
-        if controller and controller.SetViewMode then
-            controller:SetViewMode("list")
-        end
-        InfoBar:UpdateViewButtons()
-    end)
-    infoBarFrame.viewList = viewList
-
-    local viewCat = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_CATEGORY"])
-    viewCat:SetPoint("TOPLEFT", viewList, "TOPRIGHT", 3, 0)
-    viewCat:SetScript("OnClick", function()
-        local controller = GetController()
-        if controller and controller.SetViewMode then
-            controller:SetViewMode("category")
-        end
-        InfoBar:UpdateViewButtons()
-    end)
-    infoBarFrame.viewCat = viewCat
-
-    local viewBag = InfoBar:CreateViewBtn(infoBarFrame, L["VIEW_BAG"])
-    viewBag:SetPoint("TOPLEFT", viewCat, "TOPRIGHT", 3, 0)
-    viewBag:SetScript("OnClick", function()
-        local controller = GetController()
-        if controller and controller.SetViewMode then
-            controller:SetViewMode("bag")
-        end
-        InfoBar:UpdateViewButtons()
-    end)
-    infoBarFrame.viewBag = viewBag
+    local viewModeDropdown, viewModeText = OneWoW_GUI:CreateDropdown(infoBarFrame, {
+        width = 170,
+        height = 22,
+        text = bagViewModeLabel(BAG_VIEW_MODES[1].mode),
+    })
+    viewModeDropdown:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), btnY)
+    infoBarFrame.viewModeDropdown = viewModeDropdown
+    infoBarFrame.viewModeText = viewModeText
+    OneWoW_GUI:AttachFilterMenu(viewModeDropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for _, vm in ipairs(BAG_VIEW_MODES) do
+                tinsert(items, { text = L[vm.labelKey] or vm.labelKey, value = vm.mode })
+            end
+            return items
+        end,
+        getActiveValue = function()
+            local controller = GetController()
+            local raw = controller and controller.GetViewMode and controller:GetViewMode()
+            if raw == nil then
+                local d = OneWoW_Bags:GetDB()
+                raw = d and d.global and d.global.viewMode
+            end
+            return effectiveBagViewMode(raw)
+        end,
+        onSelect = function(value, text)
+            local controller = GetController()
+            if controller and controller.SetViewMode then
+                controller:SetViewMode(value)
+            end
+            if viewModeText then
+                viewModeText:SetText(text)
+            end
+            InfoBar:UpdateViewButtons()
+        end,
+    })
 
     local expacDropdown, expacText = OneWoW_GUI:CreateDropdown(infoBarFrame, {
         width = 130, height = 22, text = L["EXPAC_FILTER_BTN"],
     })
-    expacDropdown:SetPoint("TOPLEFT", viewBag, "TOPRIGHT", 8, 0)
+    expacDropdown:SetPoint("TOPLEFT", viewModeDropdown, "TOPRIGHT", 8, 0)
     OneWoW_GUI:AttachFilterMenu(expacDropdown, {
         searchable = false,
         buildItems = function()
@@ -198,43 +228,6 @@ function InfoBar:Create(parent)
     InfoBar:UpdateVisibility()
     InfoBar:UpdateViewButtons()
 
-    local function CreateShoppingCartButton()
-        if infoBarFrame.shoppingCartBtn then return end
-        local cartBtn = CreateFrame("Button", nil, infoBarFrame)
-        cartBtn:SetSize(22, 22)
-        cartBtn:SetPoint("TOPRIGHT", infoBarFrame.sortBtn or catMgrBtn, "TOPLEFT", -3, 0)
-        cartBtn:SetNormalAtlas("Perks-ShoppingCart")
-        cartBtn:SetPushedAtlas("Perks-ShoppingCart")
-        cartBtn:SetHighlightAtlas("Perks-ShoppingCart")
-        cartBtn:GetHighlightTexture():SetAlpha(0.5)
-        cartBtn:SetScript("OnClick", function()
-            if _G.OneWoW_ShoppingList and _G.OneWoW_ShoppingList.MainWindow then
-                _G.OneWoW_ShoppingList.MainWindow:Toggle()
-            end
-        end)
-        cartBtn:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText(L["SHOPPING_LIST"], 1, 1, 1)
-            GameTooltip:AddLine(L["SHOPPING_LIST_DESC"], 0.8, 0.8, 0.8, true)
-            GameTooltip:Show()
-        end)
-        cartBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        infoBarFrame.shoppingCartBtn = cartBtn
-    end
-
-    if _G.OneWoW_ShoppingList then
-        CreateShoppingCartButton()
-    else
-        local slEventFrame = CreateFrame("Frame")
-        slEventFrame:RegisterEvent("ADDON_LOADED")
-        slEventFrame:SetScript("OnEvent", function(_, event, addonName)
-            if addonName == "OneWoW_ShoppingList" then
-                CreateShoppingCartButton()
-                slEventFrame:UnregisterEvent("ADDON_LOADED")
-            end
-        end)
-    end
-
     return infoBarFrame
 end
 
@@ -264,39 +257,21 @@ function InfoBar:UpdateViewButtons()
     if not infoBarFrame then return end
     local db = OneWoW_Bags:GetDB()
     local controller = GetController()
-    local mode = controller and controller.GetViewMode and controller:GetViewMode() or db.global.viewMode
+    local rawMode = controller and controller.GetViewMode and controller:GetViewMode() or db.global.viewMode
 
     local showHeader, showSearch = GetEffectiveInfoBarChrome(db)
 
-    local buttons = {
-        { btn = infoBarFrame.viewList, mode = "list" },
-        { btn = infoBarFrame.viewCat, mode = "category" },
-        { btn = infoBarFrame.viewBag, mode = "bag" },
-    }
-
-    for _, entry in ipairs(buttons) do
-        local btn = entry.btn
-        if not showHeader then
-            btn:Hide()
+    if infoBarFrame.viewModeDropdown and infoBarFrame.viewModeText then
+        if showHeader then
+            infoBarFrame.viewModeDropdown:Show()
+            infoBarFrame.viewModeText:SetText(bagViewModeLabel(effectiveBagViewMode(rawMode)))
         else
-            btn:Show()
-            if entry.mode == mode then
-                btn.isActive = true
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            else
-                btn.isActive = false
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
+            infoBarFrame.viewModeDropdown:Hide()
         end
     end
 
     if infoBarFrame.catMgrBtn then infoBarFrame.catMgrBtn:SetShown(showHeader) end
     if infoBarFrame.sortBtn then infoBarFrame.sortBtn:SetShown(showHeader) end
-    if infoBarFrame.shoppingCartBtn then infoBarFrame.shoppingCartBtn:SetShown(showHeader) end
     if infoBarFrame.searchBox then infoBarFrame.searchBox:SetShown(showSearch) end
 
     if infoBarFrame.expacDropdown then
@@ -320,7 +295,7 @@ function InfoBar:UpdateViewButtons()
         else
             infoBarFrame.emptyToggleBtn:SetAlpha(0.35)
         end
-        infoBarFrame.emptyToggleBtn:SetShown(showSearch and mode == "list")
+        infoBarFrame.emptyToggleBtn:SetShown(showSearch and rawMode == "list")
     end
 
     local newHeight = 0

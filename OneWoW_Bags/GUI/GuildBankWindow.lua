@@ -72,7 +72,8 @@ function GuildBankGUI:InitMainWindow()
     if not MainWindow then return end
 
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
-    titleBar = WH:CreateWindowTitleBar(MainWindow, {
+    local guildBankSettingsBtn
+    titleBar, guildBankSettingsBtn = WH:CreateWindowTitleBar(MainWindow, {
         title = L["GUILD_BANK_TITLE"],
         factionTheme = factionTheme,
         onClose = function() MainWindow:Hide() end,
@@ -83,6 +84,7 @@ function GuildBankGUI:InitMainWindow()
             end
         end,
     })
+    WH:AttachShoppingListCartButton(titleBar, guildBankSettingsBtn)
     contentArea = WH:CreateContentArea(MainWindow)
 
     local infoBar = GuildBankInfoBar:Create(contentArea)

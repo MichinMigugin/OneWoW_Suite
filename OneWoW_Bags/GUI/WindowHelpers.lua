@@ -82,6 +82,55 @@ function WH:CreateWindowTitleBar(mainWindow, config)
     return titleBar, settingsBtn
 end
 
+function WH:AttachShoppingListCartButton(titleBar, settingsBtn)
+    if not titleBar or not settingsBtn then return end
+    if titleBar._owbShoppingCartBtn then return end
+
+    local L = OneWoW_Bags.L
+    local function createCart()
+        if titleBar._owbShoppingCartBtn then return end
+        local cartBtn = CreateFrame("Button", nil, titleBar)
+        cartBtn:SetSize(22, 22)
+        cartBtn:SetPoint("RIGHT", settingsBtn, "LEFT", -2, 0)
+        cartBtn:SetNormalAtlas("Perks-ShoppingCart")
+        cartBtn:SetPushedAtlas("Perks-ShoppingCart")
+        cartBtn:SetHighlightAtlas("Perks-ShoppingCart")
+        cartBtn:GetHighlightTexture():SetAlpha(0.5)
+        cartBtn:SetScript("OnClick", function()
+            if _G.OneWoW_ShoppingList and _G.OneWoW_ShoppingList.MainWindow then
+                _G.OneWoW_ShoppingList.MainWindow:Toggle()
+            end
+        end)
+        cartBtn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(L["SHOPPING_LIST"], 1, 1, 1)
+            GameTooltip:AddLine(L["SHOPPING_LIST_DESC"], 0.8, 0.8, 0.8, true)
+            GameTooltip:Show()
+        end)
+        cartBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        titleBar._owbShoppingCartBtn = cartBtn
+        local waitFrame = titleBar._owbShoppingListEventFrame
+        if waitFrame then
+            waitFrame:UnregisterAllEvents()
+            waitFrame:SetScript("OnEvent", nil)
+            titleBar._owbShoppingListEventFrame = nil
+        end
+    end
+
+    if _G.OneWoW_ShoppingList then
+        createCart()
+    else
+        local f = CreateFrame("Frame")
+        titleBar._owbShoppingListEventFrame = f
+        f:RegisterEvent("ADDON_LOADED")
+        f:SetScript("OnEvent", function(_, _, addonName)
+            if addonName == "OneWoW_ShoppingList" then
+                createCart()
+            end
+        end)
+    end
+end
+
 function WH:CreateContentArea(mainWindow)
     local spacing = OneWoW_GUI:GetSpacing("XS")
     local contentArea = CreateFrame("Frame", nil, mainWindow)

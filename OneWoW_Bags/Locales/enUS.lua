@@ -261,8 +261,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["DESC_SHOW_BANK_SEARCH_BAR"] = "Show or hide the search bar on the bank window.",
 
     ["SETTING_SHOW_HEADER_BAR"] = "Show Header Bar",
-    ["DESC_SHOW_HEADER_BAR"] = "Show or hide the top bar with view mode buttons, categories button, and shopping cart.",
-    ["DESC_SHOW_BANK_HEADER_BAR"] = "Show or hide the top bar with view mode buttons in the bank window.",
+    ["DESC_SHOW_HEADER_BAR"] = "Show or hide the top bar with the view mode menu, categories button, and sort.",
+    ["DESC_SHOW_BANK_HEADER_BAR"] = "Show or hide the top bar with the view mode menu in the bank window.",
 
     ["SETTING_SHOW_CAT_HEADERS"] = "Show Category Headers",
     ["DESC_SHOW_CAT_HEADERS"] = "Show or hide category name labels in Category view. Categories still group items, but the header text and collapse bar are hidden.",

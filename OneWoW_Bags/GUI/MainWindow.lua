@@ -68,6 +68,7 @@ function GUI:InitMainWindow()
             Settings:Toggle()
         end,
     })
+    WH:AttachShoppingListCartButton(titleBar, settingsBtn)
 
     contentArea = WH:CreateContentArea(MainWindow)
 
