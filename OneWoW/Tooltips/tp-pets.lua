@@ -2,7 +2,7 @@ local ADDON_NAME, OneWoW = ...
 
 local BATTLE_PET_CAGE_ID = 82800
 
-local PET_TYPE_NAMES = {
+local PET_TYPE_FALLBACKS = {
     [1]  = "Humanoid",
     [2]  = "Dragonkin",
     [3]  = "Flying",
@@ -14,6 +14,10 @@ local PET_TYPE_NAMES = {
     [9]  = "Aquatic",
     [10] = "Mechanical",
 }
+
+local function GetPetTypeName(petType)
+    return _G["BATTLE_PET_NAME_" .. petType] or PET_TYPE_FALLBACKS[petType] or "Unknown"
+end
 
 local function GetPetSettings()
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
@@ -39,12 +43,13 @@ end
 local function FormatAge(timestamp)
     if not timestamp or timestamp == 0 then return nil end
     local age = time() - timestamp
+    local L = OneWoW.L
     if age < 3600 then
-        return math.floor(age / 60) .. "m ago"
+        return string.format(L["TIPS_TIME_MINUTES_AGO"] or "%dm ago", math.floor(age / 60))
     elseif age < 86400 then
-        return math.floor(age / 3600) .. "h ago"
+        return string.format(L["TIPS_TIME_HOURS_AGO"] or "%dh ago", math.floor(age / 3600))
     else
-        return math.floor(age / 86400) .. "d ago"
+        return string.format(L["TIPS_TIME_DAYS_AGO"] or "%dd ago", math.floor(age / 86400))
     end
 end
 
@@ -85,13 +90,15 @@ local function FillPetTooltip(tip, speciesID)
     local iconTheme = (_gui and _gui:GetSetting("minimap.theme")) or "neutral"
     local addonIcon = CreateTextureMarkup("Interface\\AddOns\\OneWoW\\Media\\OneWoWMini-" .. iconTheme, 64, 64, 16, 16, 0, 1, 0, 1)
 
+    local battlePetsLabel = AUCTION_CATEGORY_BATTLE_PETS or "Battle Pets"
+
     if cfg.showCollectionStatus ~= false and numCollected ~= nil then
         local collected = numCollected > 0
         local statusText
         if collected then
-            statusText = string.format("|cFF66CC66%s|r | %s", L["TIPS_COLLECTIONS_COLLECTED"] or "Collected", "Battle Pets")
+            statusText = string.format("|cFF66CC66%s|r | %s", L["TIPS_COLLECTIONS_COLLECTED"] or "Collected", battlePetsLabel)
         else
-            statusText = string.format("|cFFCC6666%s|r | %s", L["TIPS_COLLECTIONS_NOT_COLLECTED"] or "Not Collected", "Battle Pets")
+            statusText = string.format("|cFFCC6666%s|r | %s", L["TIPS_COLLECTIONS_NOT_COLLECTED"] or "Not Collected", battlePetsLabel)
         end
         tip:AddDoubleLine(
             addonIcon .. " OneWoW",
@@ -102,7 +109,7 @@ local function FillPetTooltip(tip, speciesID)
     else
         tip:AddDoubleLine(
             addonIcon .. " OneWoW",
-            "Battle Pets",
+            battlePetsLabel,
             TOOLTIP_CONFIG.headerColor[1], TOOLTIP_CONFIG.headerColor[2], TOOLTIP_CONFIG.headerColor[3],
             0.9, 0.8, 0.4
         )
@@ -110,7 +117,7 @@ local function FillPetTooltip(tip, speciesID)
     hasLines = true
 
     if cfg.showPetInfo ~= false then
-        local typeName = PET_TYPE_NAMES[petType] or "Unknown"
+        local typeName = GetPetTypeName(petType)
         tip:AddDoubleLine(
             "  " .. (L["TIPS_PETS_TYPE"] or "Type"),
             typeName,

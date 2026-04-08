@@ -46,6 +46,7 @@ local function DoGearUpgrade(context)
     if comparison.unusable then return nil, "unusable" end
     if not comparison.diff then return nil, "no diff" end
 
+    local L = OneWoW.L
     local lines = {}
 
     local mode = comparison.mode or "ILVL"
@@ -54,9 +55,10 @@ local function DoGearUpgrade(context)
     elseif mode == "PAWN>ILVL" then methodText = "Pawn > iLvL"
     end
 
+    local headerLabel = L["TIPS_GEARCOMP_HEADER"] or "Gear Comparison"
     lines[#lines + 1] = {
         type = "text",
-        text = "Gear Comparison (" .. methodText .. ")",
+        text = headerLabel .. " (" .. methodText .. ")",
         r = 0.4, g = 0.8, b = 1.0,
     }
 
@@ -69,11 +71,15 @@ local function DoGearUpgrade(context)
         percent = (comparison.diff / comparison.equipValue) * 100
     end
 
+    local thisLabel = L["TIPS_GEARCOMP_THIS"] or "This"
+    local equipLabel = L["TIPS_GEARCOMP_EQUIP"] or "Equip"
+    local diffLabel = L["TIPS_GEARCOMP_DIFF"] or "Diff"
+
     local rightText
     if comparison.isDecimal then
-        rightText = colorCode .. "This:" .. string.format("%.1f", comparison.thisValue) .. " Equip:" .. string.format("%.1f", comparison.equipValue) .. " Diff:" .. string.format("%+.1f", comparison.diff) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
+        rightText = colorCode .. thisLabel .. ":" .. string.format("%.1f", comparison.thisValue) .. " " .. equipLabel .. ":" .. string.format("%.1f", comparison.equipValue) .. " " .. diffLabel .. ":" .. string.format("%+.1f", comparison.diff) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
     else
-        rightText = colorCode .. "This:" .. tostring(comparison.thisValue) .. " Equip:" .. tostring(comparison.equipValue) .. " Diff:" .. string.format("%+d", comparison.diff) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
+        rightText = colorCode .. thisLabel .. ":" .. tostring(comparison.thisValue) .. " " .. equipLabel .. ":" .. tostring(comparison.equipValue) .. " " .. diffLabel .. ":" .. string.format("%+d", comparison.diff) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
     end
 
     lines[#lines + 1] = {
@@ -99,7 +105,7 @@ local function DoGearUpgrade(context)
                     if altResult.equipped and altResult.equipped > 0 then
                         aPercent = (altResult.diff / altResult.equipped) * 100
                     end
-                    local aRight = aColor .. "This:" .. tostring(altResult.new) .. " Equip:" .. tostring(altResult.equipped) .. " Diff:" .. string.format("%+d", altResult.diff) .. " (" .. string.format("%+.0f", aPercent) .. "%%)" .. aEnd .. "|r"
+                    local aRight = aColor .. thisLabel .. ":" .. tostring(altResult.new) .. " " .. equipLabel .. ":" .. tostring(altResult.equipped) .. " " .. diffLabel .. ":" .. string.format("%+d", altResult.diff) .. " (" .. string.format("%+.0f", aPercent) .. "%%)" .. aEnd .. "|r"
                     lines[#lines + 1] = {
                         type = "double",
                         left = "  " .. aIcon .. " " .. aName,

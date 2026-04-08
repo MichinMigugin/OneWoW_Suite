@@ -14,12 +14,13 @@ end
 local function FormatAge(timestamp)
     if not timestamp or timestamp == 0 then return nil end
     local age = time() - timestamp
+    local L = OneWoW.L
     if age < 3600 then
-        return math.floor(age / 60) .. "m ago"
+        return string.format(L["TIPS_TIME_MINUTES_AGO"] or "%dm ago", math.floor(age / 60))
     elseif age < 86400 then
-        return math.floor(age / 3600) .. "h ago"
+        return string.format(L["TIPS_TIME_HOURS_AGO"] or "%dh ago", math.floor(age / 3600))
     else
-        return math.floor(age / 86400) .. "d ago"
+        return string.format(L["TIPS_TIME_DAYS_AGO"] or "%dd ago", math.floor(age / 86400))
     end
 end
 

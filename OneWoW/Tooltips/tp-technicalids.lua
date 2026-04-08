@@ -49,21 +49,35 @@ local ID_ORDER = {
     "vignetteID", "visualID",
 }
 
-local EXPANSION_NAMES = {
-    [0]  = {name = "Classic Era",           version = "v1"},
-    [1]  = {name = "The Burning Crusade",   version = "v2"},
-    [2]  = {name = "Wrath of the Lich King",version = "v3"},
-    [3]  = {name = "Cataclysm",             version = "v4"},
-    [4]  = {name = "Mists of Pandaria",     version = "v5"},
-    [5]  = {name = "Warlords of Draenor",   version = "v6"},
-    [6]  = {name = "Legion",                version = "v7"},
-    [7]  = {name = "Battle for Azeroth",    version = "v8"},
-    [8]  = {name = "Shadowlands",           version = "v9"},
-    [9]  = {name = "Dragonflight",          version = "v10"},
-    [10] = {name = "The War Within",        version = "v11"},
-    [11] = {name = "Midnight",              version = "v12"},
-    [12] = {name = "The Last Titan",        version = "v13"},
+local EXPANSION_FALLBACKS = {
+    [0]  = "Classic Era",
+    [1]  = "The Burning Crusade",
+    [2]  = "Wrath of the Lich King",
+    [3]  = "Cataclysm",
+    [4]  = "Mists of Pandaria",
+    [5]  = "Warlords of Draenor",
+    [6]  = "Legion",
+    [7]  = "Battle for Azeroth",
+    [8]  = "Shadowlands",
+    [9]  = "Dragonflight",
+    [10] = "The War Within",
+    [11] = "Midnight",
+    [12] = "The Last Titan",
 }
+
+local EXPANSION_VERSIONS = {
+    [0] = "v1", [1] = "v2", [2] = "v3", [3] = "v4", [4] = "v5",
+    [5] = "v6", [6] = "v7", [7] = "v8", [8] = "v9", [9] = "v10",
+    [10] = "v11", [11] = "v12", [12] = "v13",
+}
+
+local function GetExpansionName(id)
+    return _G["EXPANSION_NAME" .. id] or EXPANSION_FALLBACKS[id]
+end
+
+local function GetExpansionVersion(id)
+    return EXPANSION_VERSIONS[id]
+end
 
 local GetItemLinkByGUID = C_Item and C_Item.GetItemLinkByGUID
 local GetItemGem = C_Item and C_Item.GetItemGem
@@ -174,15 +188,18 @@ local function FormatIDLine(idKey, idValue)
         }
     end
 
-    if idKey == "expansionID" and EXPANSION_NAMES[idValue] then
-        local expInfo = EXPANSION_NAMES[idValue]
-        return {
-            type = "double",
-            left  = string.format("  |cFFFFDD00%s|r  |cFF6699FF%s|r |cFFB3B3B3(%s)|r", label, expInfo.name, expInfo.version),
-            right = string.format("|cFFFFFFFF%d|r", idValue),
-            lr = 1, lg = 1, lb = 1,
-            rr = 1, rg = 1, rb = 1,
-        }
+    if idKey == "expansionID" then
+        local expName = GetExpansionName(idValue)
+        local expVersion = GetExpansionVersion(idValue)
+        if expName then
+            return {
+                type = "double",
+                left  = string.format("  |cFFFFDD00%s|r  |cFF6699FF%s|r |cFFB3B3B3(%s)|r", label, expName, expVersion or ""),
+                right = string.format("|cFFFFFFFF%d|r", idValue),
+                lr = 1, lg = 1, lb = 1,
+                rr = 1, rg = 1, rb = 1,
+            }
+        end
     end
 
     local rightFmt = (type(idValue) == "number") and ("|cFFFFFFFF%d|r") or ("|cFFFFFFFF%s|r")

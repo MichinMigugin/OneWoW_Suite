@@ -1,28 +1,63 @@
 local ADDON_NAME, OneWoW = ...
 
-local PROFESSION_NAMES = {
-    "Alchemy", "Blacksmithing", "Enchanting", "Engineering", "Herbalism",
-    "Inscription", "Jewelcrafting", "Leatherworking", "Mining", "Skinning",
-    "Tailoring", "Cooking", "Fishing", "First Aid", "Archaeology",
+local PROFESSION_SKILL_IDS = {
+    171, 164, 333, 202, 182,
+    773, 755, 165, 186, 393,
+    197, 185, 356, 129, 794,
 }
 
-local PROFESSION_ABBR = {
-    ["Alchemy"]        = "ALC",
-    ["Blacksmithing"]  = "BS",
-    ["Enchanting"]     = "ENCH",
-    ["Engineering"]    = "ENG",
-    ["Herbalism"]      = "HERB",
-    ["Inscription"]    = "INSC",
-    ["Jewelcrafting"]  = "JC",
-    ["Leatherworking"] = "LW",
-    ["Mining"]         = "MIN",
-    ["Skinning"]       = "SKIN",
-    ["Tailoring"]      = "TAIL",
-    ["Cooking"]        = "COOK",
-    ["Fishing"]        = "FISH",
-    ["First Aid"]      = "FA",
-    ["Archaeology"]    = "ARCH",
+local PROFESSION_ABBR_BY_ID = {
+    [171] = "ALC",
+    [164] = "BS",
+    [333] = "ENCH",
+    [202] = "ENG",
+    [182] = "HERB",
+    [773] = "INSC",
+    [755] = "JC",
+    [165] = "LW",
+    [186] = "MIN",
+    [393] = "SKIN",
+    [197] = "TAIL",
+    [185] = "COOK",
+    [356] = "FISH",
+    [129] = "FA",
+    [794] = "ARCH",
 }
+
+local professionNameCache = {}
+
+local function GetLocalizedProfessionName(skillID)
+    if professionNameCache[skillID] then return professionNameCache[skillID] end
+    local name = C_TradeSkillUI and C_TradeSkillUI.GetTradeSkillDisplayName and C_TradeSkillUI.GetTradeSkillDisplayName(skillID)
+    if not name or name == "" then
+        local fallback = {
+            [171]="Alchemy", [164]="Blacksmithing", [333]="Enchanting", [202]="Engineering",
+            [182]="Herbalism", [773]="Inscription", [755]="Jewelcrafting", [165]="Leatherworking",
+            [186]="Mining", [393]="Skinning", [197]="Tailoring", [185]="Cooking",
+            [356]="Fishing", [129]="First Aid", [794]="Archaeology",
+        }
+        name = fallback[skillID] or tostring(skillID)
+    end
+    professionNameCache[skillID] = name
+    return name
+end
+
+local function GetAllProfessionNames()
+    local names = {}
+    for _, skillID in ipairs(PROFESSION_SKILL_IDS) do
+        names[#names + 1] = GetLocalizedProfessionName(skillID)
+    end
+    return names
+end
+
+local function GetProfessionAbbr(profName)
+    for skillID, abbr in pairs(PROFESSION_ABBR_BY_ID) do
+        if GetLocalizedProfessionName(skillID) == profName then
+            return abbr
+        end
+    end
+    return profName
+end
 
 local function ProfNamesMatch(storedName, searchName)
     if not storedName or not searchName then return false end
@@ -45,16 +80,15 @@ local GetClassColor = OneWoW.GetClassColor
 local function DetectProfession(itemID)
     local td = C_TooltipInfo.GetItemByID(itemID)
     if not td or not td.lines then return nil end
+    local profNames = GetAllProfessionNames()
     local lastMatch = nil
     for _, line in ipairs(td.lines) do
         if line.leftText then
             local text = line.leftText
-            if text:find("^Requires") and not text:find("^Requires Level") then
-                for _, profName in ipairs(PROFESSION_NAMES) do
-                    if text:find(profName, 1, true) then
-                        lastMatch = profName
-                        break
-                    end
+            for _, profName in ipairs(profNames) do
+                if text:find(profName, 1, true) then
+                    lastMatch = profName
+                    break
                 end
             end
         end
@@ -136,7 +170,7 @@ local function RecipeKnowledgeProvider(tooltip, context)
     table.sort(unknownBy, sortByName)
 
     local lines = {}
-    local abbr  = PROFESSION_ABBR[profName] or profName
+    local abbr  = GetProfessionAbbr(profName)
 
     local currentInKnown   = false
     local currentInUnknown = false

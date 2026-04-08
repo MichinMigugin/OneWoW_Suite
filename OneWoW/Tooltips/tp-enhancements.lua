@@ -133,7 +133,7 @@ local function EnhancementsUnitProvider(tooltip, context)
                 if leftLine then
                     local text = leftLine:GetText()
                     if text then
-                        if text == "PvP" or text == FACTION_HORDE or text == FACTION_ALLIANCE then
+                        if text == (PVP or "PvP") or text == FACTION_HORDE or text == FACTION_ALLIANCE then
                             leftLine:SetText("")
                             leftLine:Hide()
                             local rightLine = _G[tooltipName .. "TextRight" .. i]
@@ -238,9 +238,10 @@ local function EnhancementsUnitProvider(tooltip, context)
         if not UnitIsUnit("player", unit) then
             local target = UnitName(unit .. "target")
             if target then
+                local L = OneWoW.L
                 table.insert(lines, {
                     type = "double",
-                    left = "  |cFFFFDD00Target|r",
+                    left = "  |cFFFFDD00" .. (L["TIPS_ENHANCEMENTS_TARGET_LABEL"] or "Target") .. "|r",
                     right = "|cFFFFFFFF" .. target .. "|r",
                     lr = 1, lg = 1, lb = 1,
                     rr = 1, rg = 1, rb = 1,
@@ -260,9 +261,10 @@ local function EnhancementsUnitProvider(tooltip, context)
             else
                 scoreText = string.format("|cFFFFFFFF%d|r", score)
             end
+            local L = OneWoW.L
             table.insert(lines, {
                 type = "double",
-                left = "  |cFFFFDD00M+ Score|r",
+                left = "  |cFFFFDD00" .. (L["TIPS_ENHANCEMENTS_MPLUS_LABEL"] or "M+ Score") .. "|r",
                 right = scoreText,
                 lr = 1, lg = 1, lb = 1,
                 rr = 1, rg = 1, rb = 1,

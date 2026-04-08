@@ -29,6 +29,10 @@ local ITEM_TYPE_COLORS = {
 
 OneWoW.ITEM_TYPE_COLORS = ITEM_TYPE_COLORS
 
+local COLLECTED_STRING = COLLECTED or "Collected"
+local NOT_COLLECTED_STRING = NOT_COLLECTED or "Not Collected"
+local APPEARANCE_UNKNOWN_STRING = TRANSMOGRIFY_TOOLTIP_APPEARANCE_UNKNOWN or "You haven't collected this appearance"
+
 local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
     if not itemID or not itemLink then return nil end
 
@@ -62,7 +66,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
         local td = C_TooltipInfo.GetHyperlink(itemLink)
         if td and td.lines then
             for _, line in ipairs(td.lines) do
-                if line.leftText and (line.leftText == ITEM_SPELL_KNOWN or line.leftText == "Already known") then
+                if line.leftText and line.leftText == ITEM_SPELL_KNOWN then
                     return true
                 end
             end
@@ -74,7 +78,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
         local td = C_TooltipInfo.GetHyperlink(itemLink)
         if td and td.lines then
             for _, line in ipairs(td.lines) do
-                if line.leftText and line.leftText:match("Collected") then
+                if line.leftText and line.leftText:find(COLLECTED_STRING, 1, true) then
                     return true
                 end
             end
@@ -125,10 +129,10 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
     if td and td.lines then
         for _, line in ipairs(td.lines) do
             if line.leftText then
-                if line.leftText == ITEM_SPELL_KNOWN or line.leftText == "Already known" then
+                if line.leftText == ITEM_SPELL_KNOWN then
                     return true
                 end
-                if line.leftText:match("You haven't collected this appearance") or line.leftText:match("haven't collected") then
+                if line.leftText:find(APPEARANCE_UNKNOWN_STRING, 1, true) or line.leftText:find(NOT_COLLECTED_STRING, 1, true) then
                     return false
                 end
             end
