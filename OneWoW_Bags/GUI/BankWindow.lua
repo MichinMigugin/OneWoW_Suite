@@ -16,9 +16,11 @@ local ListView = OneWoW_Bags.ListView
 
 local ipairs, pairs, pcall = ipairs, pairs, pcall
 
+local C_Bank = C_Bank
 local C_Timer = C_Timer
 local C_PlayerInteractionManager = C_PlayerInteractionManager
 local InCombatLockdown = InCombatLockdown
+local max = math.max
 
 OneWoW_Bags.BankGUI = OneWoW_Bags.BankGUI or {}
 local BankGUI = OneWoW_Bags.BankGUI
@@ -31,6 +33,12 @@ local titleBar = nil
 local contentArea = nil
 local needsCleanupAfterCombat = false
 local cleanupEventFrame = nil
+local purchasePromptFrame = nil
+local lastBuiltBankType = nil
+local lastPurchasedTabCount = nil
+local forcedPurchasePromptBankType = nil
+
+local PURCHASE_PROMPT_HEIGHT = 280
 
 local function GetDB()
     return OneWoW_Bags:GetDB()
@@ -38,6 +46,85 @@ end
 
 local function GetLayoutController()
     return OneWoW_Bags.WindowLayoutController
+end
+
+local function GetActiveBankType()
+    local db = GetDB()
+    if db and db.global.bankShowWarband then
+        return Enum.BankType.Account
+    end
+    return Enum.BankType.Character
+end
+
+local function GetPurchasedTabCount(bankType)
+    return C_Bank.FetchNumPurchasedBankTabs(bankType) or 0
+end
+
+local function GetPurchasePromptData(bankType, allowPurchasedTabs)
+    if not bankType then
+        return nil
+    end
+    if not allowPurchasedTabs and GetPurchasedTabCount(bankType) > 0 then
+        return nil
+    end
+    if not C_Bank.CanPurchaseBankTab(bankType) then
+        return nil
+    end
+    return C_Bank.FetchNextPurchasableBankTabData(bankType)
+end
+
+local function GetRequestedPurchasePrompt()
+    local activeBankType = GetActiveBankType()
+    if forcedPurchasePromptBankType and forcedPurchasePromptBankType == activeBankType then
+        return activeBankType, true
+    end
+
+    if GetPurchasedTabCount(activeBankType) == 0 then
+        return activeBankType, false
+    end
+
+    return nil, false
+end
+
+local function ShouldShowPurchasePrompt()
+    local bankType, allowPurchasedTabs = GetRequestedPurchasePrompt()
+    local tabData = GetPurchasePromptData(bankType, allowPurchasedTabs)
+    return tabData ~= nil, tabData, bankType
+end
+
+local function TrackBuiltBankState()
+    lastBuiltBankType = GetActiveBankType()
+    lastPurchasedTabCount = GetPurchasedTabCount(lastBuiltBankType)
+end
+
+local function ApplyPurchasePromptTheme(promptFrame)
+    if not promptFrame then return end
+
+    promptFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    promptFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    promptFrame.inner:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    promptFrame.inner:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    promptFrame.Title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    promptFrame.PromptText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    promptFrame.TabCostFrame.TabCost:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+end
+
+local function UpdatePurchasePromptFrameLevel(promptFrame)
+    if not promptFrame or not contentFrame then return end
+
+    local targetLevel = max(contentFrame:GetFrameLevel() + 100, 100)
+    promptFrame:SetFrameStrata(MainWindow and MainWindow:GetFrameStrata() or "DIALOG")
+    promptFrame:SetFrameLevel(targetLevel)
+
+    if promptFrame.inner then
+        promptFrame.inner:SetFrameStrata(promptFrame:GetFrameStrata())
+        promptFrame.inner:SetFrameLevel(targetLevel + 1)
+    end
+
+    if promptFrame.TabCostFrame then
+        promptFrame.TabCostFrame:SetFrameStrata(promptFrame:GetFrameStrata())
+        promptFrame.TabCostFrame:SetFrameLevel(targetLevel + 2)
+    end
 end
 
 function BankGUI:InitMainWindow()
@@ -50,6 +137,11 @@ function BankGUI:InitMainWindow()
         defaultHeight = Constants.GUI.WINDOW_HEIGHT,
         onHide = function()
             if not isInitialized then return end
+            forcedPurchasePromptBankType = nil
+            BankGUI:RestoreBlizzardPurchaseButton()
+            if purchasePromptFrame then
+                purchasePromptFrame:Hide()
+            end
             BankGUI:CleanupAllViews()
             BankInfoBar:ClearSearch()
             OneWoW_Bags.activeBankExpansionFilter = nil
@@ -114,6 +206,196 @@ function BankGUI:InitMainWindow()
     end
 end
 
+function BankGUI:EnsurePurchasePrompt()
+    if purchasePromptFrame or not contentFrame then
+        return purchasePromptFrame
+    end
+
+    local promptFrame = OneWoW_GUI:CreateFrame(contentFrame, {
+        backdrop = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS,
+        bgColor = "BG_PRIMARY",
+        borderColor = "BORDER_SUBTLE",
+    })
+    promptFrame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, 0)
+    promptFrame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, 0)
+    promptFrame:SetHeight(PURCHASE_PROMPT_HEIGHT)
+    promptFrame:Hide()
+
+    local inner = OneWoW_GUI:CreateFrame(promptFrame, {
+        backdrop = OneWoW_GUI.Constants.BACKDROP_SOFT,
+        bgColor = "BG_SECONDARY",
+        borderColor = "BORDER_DEFAULT",
+    })
+    inner:SetPoint("TOPLEFT", promptFrame, "TOPLEFT", 18, -18)
+    inner:SetPoint("TOPRIGHT", promptFrame, "TOPRIGHT", -18, -18)
+    inner:SetPoint("BOTTOMLEFT", promptFrame, "BOTTOMLEFT", 18, 18)
+    inner:SetPoint("BOTTOMRIGHT", promptFrame, "BOTTOMRIGHT", -18, 18)
+    promptFrame.inner = inner
+
+    local title = inner:CreateFontString(nil, "OVERLAY", "QuestFont_Enormous")
+    title:SetPoint("TOPLEFT", inner, "TOPLEFT", 30, -44)
+    title:SetPoint("TOPRIGHT", inner, "TOPRIGHT", -30, -44)
+    title:SetJustifyH("CENTER")
+    title:SetJustifyV("MIDDLE")
+    title:SetWordWrap(true)
+    promptFrame.Title = title
+
+    local promptText = inner:CreateFontString(nil, "OVERLAY", "Game16Font")
+    promptText:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -20)
+    promptText:SetPoint("TOPRIGHT", title, "BOTTOMRIGHT", 0, -20)
+    promptText:SetJustifyH("CENTER")
+    promptText:SetJustifyV("TOP")
+    promptText:SetWordWrap(true)
+    promptFrame.PromptText = promptText
+
+    local tabCostFrame = CreateFrame("Frame", nil, inner)
+    tabCostFrame:SetHeight(30)
+    tabCostFrame:SetPoint("TOPLEFT", promptText, "BOTTOMLEFT", 0, -22)
+    tabCostFrame:SetPoint("TOPRIGHT", promptText, "BOTTOMRIGHT", 0, -22)
+    promptFrame.TabCostFrame = tabCostFrame
+
+    local moneyDisplay = CreateFrame("Frame", nil, tabCostFrame, "SmallMoneyFrameTemplate")
+    moneyDisplay:SetPoint("CENTER", tabCostFrame, "CENTER", -30, 0)
+    SmallMoneyFrame_OnLoad(moneyDisplay)
+    MoneyFrame_SetType(moneyDisplay, "STATIC")
+    tabCostFrame.MoneyDisplay = moneyDisplay
+
+    local purchaseButtonAnchor = CreateFrame("Frame", nil, tabCostFrame)
+    purchaseButtonAnchor:SetSize(105, 21)
+    purchaseButtonAnchor:SetPoint("LEFT", moneyDisplay, "RIGHT", 12, 0)
+    tabCostFrame.PurchaseButtonAnchor = purchaseButtonAnchor
+
+    local tabCost = tabCostFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalMed3")
+    tabCost:SetPoint("RIGHT", moneyDisplay, "LEFT", -10, 0)
+    tabCost:SetJustifyH("RIGHT")
+    tabCost:SetText(COSTS_LABEL)
+    tabCostFrame.TabCost = tabCost
+
+    promptFrame:SetScript("OnShow", function(self)
+        self:RegisterEvent("PLAYER_MONEY")
+    end)
+    promptFrame:SetScript("OnHide", function(self)
+        self:UnregisterEvent("PLAYER_MONEY")
+    end)
+    promptFrame:SetScript("OnEvent", function()
+        if MainWindow and MainWindow:IsShown() then
+            BankGUI:RefreshLayout()
+        end
+    end)
+
+    ApplyPurchasePromptTheme(promptFrame)
+    UpdatePurchasePromptFrameLevel(promptFrame)
+    purchasePromptFrame = promptFrame
+    return purchasePromptFrame
+end
+
+function BankGUI:AttachBlizzardPurchaseButton(bankType)
+    local promptFrame = self:EnsurePurchasePrompt()
+    if not promptFrame then return nil end
+    if not (BankFrame and BankFrame.BankPanel and BankFrame.BankPanel.PurchasePrompt) then return nil end
+
+    local blizzardButton = BankFrame.BankPanel.PurchasePrompt.TabCostFrame and BankFrame.BankPanel.PurchasePrompt.TabCostFrame.PurchaseButton
+    if not blizzardButton then return nil end
+
+    if not promptFrame._originalPurchaseButtonParent then
+        promptFrame._originalPurchaseButtonParent = blizzardButton:GetParent()
+    end
+
+    blizzardButton:SetParent(promptFrame.TabCostFrame)
+    blizzardButton:ClearAllPoints()
+    blizzardButton:SetPoint("TOPLEFT", promptFrame.TabCostFrame.PurchaseButtonAnchor, "TOPLEFT", 0, 0)
+    blizzardButton:SetPoint("BOTTOMRIGHT", promptFrame.TabCostFrame.PurchaseButtonAnchor, "BOTTOMRIGHT", 0, 0)
+    blizzardButton:SetAttribute("overrideBankType", bankType)
+    blizzardButton:SetFrameStrata(promptFrame:GetFrameStrata())
+    blizzardButton:SetFrameLevel(promptFrame.TabCostFrame:GetFrameLevel() + 1)
+    blizzardButton:Show()
+    promptFrame.TabCostFrame.PurchaseButton = blizzardButton
+
+    return blizzardButton
+end
+
+function BankGUI:RestoreBlizzardPurchaseButton()
+    if not purchasePromptFrame then return end
+    local blizzardButton = purchasePromptFrame.TabCostFrame and purchasePromptFrame.TabCostFrame.PurchaseButton
+    local originalParent = purchasePromptFrame._originalPurchaseButtonParent
+    if not blizzardButton or not originalParent then return end
+
+    blizzardButton:SetParent(originalParent)
+    blizzardButton:ClearAllPoints()
+    blizzardButton:SetPoint("LEFT", originalParent.MoneyDisplay, "RIGHT", 12, 0)
+    purchasePromptFrame.TabCostFrame.PurchaseButton = nil
+end
+
+function BankGUI:ShowPurchasePrompt(bankType)
+    forcedPurchasePromptBankType = bankType or GetActiveBankType()
+    self:RefreshLayout()
+end
+
+function BankGUI:ClearForcedPurchasePrompt()
+    forcedPurchasePromptBankType = nil
+end
+
+function BankGUI:GetPurchasePromptLayoutHeight()
+    local shouldShow = ShouldShowPurchasePrompt()
+    if shouldShow then
+        return PURCHASE_PROMPT_HEIGHT
+    end
+    return 0
+end
+
+function BankGUI:RefreshPurchasePrompt(layoutHeight)
+    if not contentFrame then return false end
+
+    local promptFrame = self:EnsurePurchasePrompt()
+    if not promptFrame then
+        return false
+    end
+
+    local shouldShow, tabData, bankType = ShouldShowPurchasePrompt()
+    if not shouldShow or not tabData then
+        forcedPurchasePromptBankType = nil
+        self:RestoreBlizzardPurchaseButton()
+        promptFrame:Hide()
+        return false
+    end
+
+    local purchaseButton = self:AttachBlizzardPurchaseButton(bankType)
+    promptFrame:SetHeight(max(layoutHeight or 0, PURCHASE_PROMPT_HEIGHT))
+    UpdatePurchasePromptFrameLevel(promptFrame)
+    promptFrame.Title:SetText(tabData.purchasePromptTitle or "")
+    promptFrame.PromptText:SetText(tabData.purchasePromptBody or "")
+    MoneyFrame_Update(promptFrame.TabCostFrame.MoneyDisplay, tabData.tabCost or 0)
+    SetMoneyFrameColorByFrame(promptFrame.TabCostFrame.MoneyDisplay, tabData.canAfford and "white" or "red")
+    if purchaseButton then
+        purchaseButton:SetEnabled(tabData.canAfford and true or false)
+        purchaseButton:SetAttribute("overrideBankType", bankType)
+    end
+    ApplyPurchasePromptTheme(promptFrame)
+    promptFrame:Show()
+
+    return true
+end
+
+function BankGUI:SyncBuiltTabState()
+    local bankType = GetActiveBankType()
+    local purchasedTabCount = GetPurchasedTabCount(bankType)
+
+    if not BankSet.isBuilt then
+        lastBuiltBankType = bankType
+        lastPurchasedTabCount = purchasedTabCount
+        return
+    end
+
+    if lastBuiltBankType ~= bankType or lastPurchasedTabCount ~= purchasedTabCount then
+        forcedPurchasePromptBankType = nil
+        BankSet:ReleaseAll()
+        BankSet:Build()
+    end
+
+    lastBuiltBankType = bankType
+    lastPurchasedTabCount = purchasedTabCount
+end
+
 function BankGUI:CleanupAllViews()
     if InCombatLockdown() then
         needsCleanupAfterCombat = true
@@ -152,6 +434,8 @@ function BankGUI:RefreshLayout()
     local controller = GetLayoutController()
     if not controller or not controller.Refresh then return end
 
+    self:SyncBuiltTabState()
+
     controller:Refresh({
         mainWindow = MainWindow,
         isBuilt = function()
@@ -180,13 +464,20 @@ function BankGUI:RefreshLayout()
             return BankSet:GetAllButtons()
         end,
         filterButtons = function(allButtons)
+            if ShouldShowPurchasePrompt() then
+                return {}
+            end
             local visibleButtons = WH:FilterByTab(allButtons, db.global.bankSelectedTab)
             local filteredButtons = WH:FilterBySearch(visibleButtons, BankInfoBar:GetSearchText())
             return WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeBankExpansionFilter)
         end,
         layoutButtons = function(filteredButtons)
+            if ShouldShowPurchasePrompt() then
+                return PURCHASE_PROMPT_HEIGHT
+            end
             local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
             local viewMode = db.global.bankViewMode
+            local layoutHeight
             local categoryViewContext = controller:CreateViewContext({
                 sectionManager = BankCategoryManager,
                 sortMode = db.global.itemSort,
@@ -223,15 +514,18 @@ function BankGUI:RefreshLayout()
             })
 
             if viewMode == "category" then
-                return BankCategoryView:Layout(contentFrame, contentWidth, filteredButtons, categoryViewContext)
+                layoutHeight = BankCategoryView:Layout(contentFrame, contentWidth, filteredButtons, categoryViewContext)
+            elseif viewMode == "tab" then
+                layoutHeight = BankTabView:Layout(contentFrame, contentWidth, filteredButtons, tabViewContext)
+            else
+                layoutHeight = ListView:Layout(contentFrame, filteredButtons, contentWidth, categoryViewContext)
             end
-            if viewMode == "tab" then
-                return BankTabView:Layout(contentFrame, contentWidth, filteredButtons, tabViewContext)
-            end
-            return ListView:Layout(contentFrame, filteredButtons, contentWidth, categoryViewContext)
+
+            return max(layoutHeight, BankGUI:GetPurchasePromptLayoutHeight())
         end,
-        afterLayout = function()
+        afterLayout = function(_, layoutHeight)
             BankBar:UpdateFreeSlots(BankSet:GetFreeSlotCount(), BankSet:GetSlotCount())
+            BankGUI:RefreshPurchasePrompt(layoutHeight)
         end,
     })
 end
@@ -254,6 +548,7 @@ function BankGUI:OnBankTypeChanged()
 
     BankSet:ReleaseAll()
     BankSet:Build()
+    TrackBuiltBankState()
 
     BankBar:BuildTabButtons()
     BankBar:UpdateModeButtons()
@@ -279,6 +574,7 @@ function BankGUI:Show()
     if not BankSet.isBuilt then
         BankSet:Build()
     end
+    TrackBuiltBankState()
 
     OneWoW_Bags.BankBar:UpdateModeButtons()
     OneWoW_Bags.BankBar:BuildTabButtons()
@@ -298,6 +594,11 @@ end
 function BankGUI:Hide()
     if MainWindow then
         MainWindow:Hide()
+    end
+    self:RestoreBlizzardPurchaseButton()
+    forcedPurchasePromptBankType = nil
+    if purchasePromptFrame then
+        purchasePromptFrame:Hide()
     end
 end
 
@@ -327,6 +628,10 @@ function BankGUI:FullReset()
     contentArea = nil
     contentScrollFrame = nil
     contentFrame = nil
+    purchasePromptFrame = nil
+    lastBuiltBankType = nil
+    lastPurchasedTabCount = nil
+    forcedPurchasePromptBankType = nil
     isInitialized = false
 end
 
@@ -334,6 +639,7 @@ function BankGUI:ApplyTheme()
     if not MainWindow then return end
 
     WH:ApplyBaseTheme(MainWindow, titleBar, BankInfoBar, BankBar)
+    ApplyPurchasePromptTheme(purchasePromptFrame)
     BankInfoBar:UpdateViewButtons()
     self:RefreshLayout()
 end

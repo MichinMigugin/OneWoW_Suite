@@ -158,7 +158,6 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
     local db = GetDB()
     local btn = CreateFrame("Button", "OneWoW_BankTab" .. bagID, parent)
     btn:SetSize(26, 26)
-    btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     local icon = btn:CreateTexture(nil, "ARTWORK")
     icon:SetAllPoints()
@@ -217,18 +216,27 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    btn:SetScript("OnClick", function(self, mouseButton)
-        if not self.isPurchased then
+    if not isPurchased then
+        local showWarband = db.global.bankShowWarband
+        local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
+        btn:RegisterForClicks("LeftButtonUp")
+        btn:SetAttribute("overrideBankType", nil)
+        btn.GetBankTypeForTabPurchase = nil
+        btn:SetScript("OnClick", function()
             if not OneWoW_Bags.bankOpen then return end
-            local showWarband = db.global.bankShowWarband
-            local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
-            if C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
-                local tabData = C_Bank.FetchNextPurchasableBankTabData(bType)
-                if tabData and tabData.tabCost then
-                    StaticPopup_Show("CONFIRM_BUY_BANK_TAB", tabData.tabCost, nil, { bankType = bType })
-                end
+            if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.ShowPurchasePrompt then
+                OneWoW_Bags.BankGUI:ShowPurchasePrompt(bType)
             end
-            return
+        end)
+        return btn
+    end
+
+    btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    btn:SetAttribute("overrideBankType", nil)
+    btn.GetBankTypeForTabPurchase = nil
+    btn:SetScript("OnClick", function(self, mouseButton)
+        if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.ClearForcedPurchasePrompt then
+            OneWoW_Bags.BankGUI:ClearForcedPurchasePrompt()
         end
 
         if mouseButton == "RightButton" and OneWoW_Bags.bankOpen then

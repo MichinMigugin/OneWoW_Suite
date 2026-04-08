@@ -678,6 +678,39 @@ function OneWoW_Bags:OnAccountMoney()
     end
 end
 
+function OneWoW_Bags:OnBankTabsChanged(bankType)
+    if not self.bankOpen then return end
+
+    local activeBankType = self.db.global.bankShowWarband and Enum.BankType.Account or Enum.BankType.Character
+    if bankType and bankType ~= activeBankType then
+        return
+    end
+
+    C_Bank.FetchPurchasedBankTabData(activeBankType)
+    C_Bank.FetchNumPurchasedBankTabs(activeBankType)
+
+    self.db.global.bankSelectedTab = nil
+
+    if self.BankGUI and self.BankGUI.ClearForcedPurchasePrompt then
+        self.BankGUI:ClearForcedPurchasePrompt()
+    end
+
+    if self.BankSet then
+        self.BankSet:ReleaseAll()
+        self.BankSet:Build()
+    end
+
+    if self.BankBar then
+        self.BankBar:BuildTabButtons()
+        self.BankBar:UpdateTabHighlights()
+        self.BankBar:UpdateGold()
+    end
+
+    if self.BankGUI and self.BankGUI.RefreshLayout then
+        self.BankGUI:RefreshLayout()
+    end
+end
+
 function OneWoW_Bags:SuppressBankFrame()
     if not BankFrame then return end
     if self._bankFrameSuppressed then return end
@@ -1116,6 +1149,9 @@ local runtimeEventHandlers = {
     end,
     BANKFRAME_CLOSED = function(...)
         Events:OnBankClosed(...)
+    end,
+    BANK_TABS_CHANGED = function(...)
+        Events:OnBankTabsChanged(...)
     end,
     MERCHANT_SHOW = function(...)
         Events:OnMerchantShow(...)

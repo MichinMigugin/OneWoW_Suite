@@ -16,6 +16,7 @@ Events.RuntimeEvents = {
     "QUEST_REMOVED",
     "BANKFRAME_OPENED",
     "BANKFRAME_CLOSED",
+    "BANK_TABS_CHANGED",
     "MERCHANT_SHOW",
     "MERCHANT_CLOSED",
     "PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
@@ -89,6 +90,10 @@ end
 
 function Events:OnBankClosed()
     OneWoW_Bags:OnBankClosed()
+end
+
+function Events:OnBankTabsChanged(bankType)
+    OneWoW_Bags:OnBankTabsChanged(bankType)
 end
 
 function Events:OnMerchantShow()
