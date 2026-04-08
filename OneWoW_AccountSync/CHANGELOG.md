@@ -4,7 +4,7 @@ All notable changes to this application are documented here. The **Discord annou
 
 ---
 
-## [1.0.0] — 2026-04-09
+## [B6.2604.0900] — 2026-04-09
 
 ### Added
 
@@ -27,7 +27,7 @@ All notable changes to this application are documented here. The **Discord annou
 ## Discord announcement (copy-paste)
 
 ```
-🟢 OneWoW Account Sync
+🟢 OneWoW Account Sync · B6.2604.0900
 
 ✨ What It Is
 ✓ Desktop app for Windows and Mac that syncs your WoW addon SavedVariables across multiple Battle.net accounts on the same PC

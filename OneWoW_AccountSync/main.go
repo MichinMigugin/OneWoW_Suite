@@ -18,6 +18,8 @@ var iconBytes []byte
 // Minimum window size (user-requested: allow smaller than default content min).
 const winMinW, winMinH float32 = 520, 480
 
+const appVersion = "B6.2604.0900"
+
 // ── Application state ───────────────────────────────────────────
 
 type appState struct {
@@ -71,7 +73,7 @@ func main() {
 	iconRes := fyne.NewStaticResource("icon.png", iconBytes)
 	a.SetIcon(iconRes)
 
-	w := a.NewWindow("OneWoW Account Sync")
+	w := a.NewWindow("OneWoW Account Sync — " + appVersion)
 	w.SetFixedSize(false)
 	w.Resize(fyne.NewSize(720, 640))
 
