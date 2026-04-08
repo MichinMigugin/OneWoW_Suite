@@ -543,6 +543,27 @@ function MainWindow:BuildSettingsPanel()
         return h
     end
 
+    AddSectionHeader(L["OWSL_SETTINGS_CONFIRMATIONS"], yOff)
+    yOff = yOff - 22
+
+    local confirmItemCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_CONFIRM_ITEM_DELETE"] })
+    confirmItemCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
+    confirmItemCb:SetChecked(curS.confirmItemDelete ~= false)
+    confirmItemCb:SetScript("OnClick", function(self)
+        local dbRef = GetDB()
+        if dbRef then dbRef.global.settings.confirmItemDelete = self:GetChecked() end
+    end)
+    yOff = yOff - 26
+
+    local confirmListCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_CONFIRM_LIST_DELETE"] })
+    confirmListCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
+    confirmListCb:SetChecked(curS.confirmListDelete ~= false)
+    confirmListCb:SetScript("OnClick", function(self)
+        local dbRef = GetDB()
+        if dbRef then dbRef.global.settings.confirmListDelete = self:GetChecked() end
+    end)
+    yOff = yOff - 30
+
     local function AddStatusRow(labelText, detected, y)
         local lbl = OneWoW_GUI:CreateFS(scrollContent, 12)
         lbl:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, y)
@@ -735,6 +756,12 @@ function MainWindow:RefreshSidebar()
 
         if capturedName ~= ns.MAIN_LIST_KEY then
             row.deleteBtn:SetScript("OnClick", function()
+                if GetSettings().confirmListDelete == false then
+                    ns.ShoppingList:DeleteList(capturedName)
+                    MainWindow:RefreshSidebar()
+                    MainWindow:RefreshItemList()
+                    return
+                end
                 ns.Dialogs:ConfirmDialog(
                     string.format(L["OWSL_DIALOG_DELETE_CONFIRM"], capturedName),
                     L["OWSL_DIALOG_DELETE_CONFIRM2"],
@@ -744,7 +771,14 @@ function MainWindow:RefreshSidebar()
                         MainWindow:RefreshItemList()
                     end,
                     L["OWSL_BTN_DELETE"],
-                    mainFrame
+                    mainFrame,
+                    {
+                        showDontAskAgain = true,
+                        onDontAskAgain = function()
+                            local db = GetDB()
+                            if db then db.global.settings.confirmListDelete = false end
+                        end,
+                    }
                 )
             end)
         else
@@ -1105,6 +1139,11 @@ function MainWindow:RefreshItemList()
                 end
             end)
             removeBtn:SetScript("OnClick", function()
+                if GetSettings().confirmItemDelete == false then
+                    ns.ShoppingList:RemoveItemFromList(capturedListN, capturedData.itemID)
+                    MainWindow:RefreshItemList()
+                    return
+                end
                 ns.Dialogs:ConfirmDialog(
                     L["OWSL_DIALOG_DELETE_CONFIRM"]:format(capturedData.displayName),
                     L["OWSL_DIALOG_DELETE_CONFIRM2"],
@@ -1113,7 +1152,14 @@ function MainWindow:RefreshItemList()
                         MainWindow:RefreshItemList()
                     end,
                     L["OWSL_BTN_DELETE"],
-                    mainFrame
+                    mainFrame,
+                    {
+                        showDontAskAgain = true,
+                        onDontAskAgain = function()
+                            local db = GetDB()
+                            if db then db.global.settings.confirmItemDelete = false end
+                        end,
+                    }
                 )
             end)
             row:SetScript("OnMouseDown", function(self, btn)
@@ -1290,6 +1336,12 @@ function MainWindow:ShowListContextMenu(listName)
 
         if listName ~= ns.MAIN_LIST_KEY then
             rootDescription:CreateButton(L["OWSL_MENU_DELETE_LIST"], function()
+                if GetSettings().confirmListDelete == false then
+                    ns.ShoppingList:DeleteList(listName)
+                    MainWindow:RefreshSidebar()
+                    MainWindow:RefreshItemList()
+                    return
+                end
                 local childCount = #ns.ShoppingList:GetChildLists(listName)
                 local bodyText   = L["OWSL_DIALOG_DELETE_CONFIRM2"]
                 if childCount > 0 then
@@ -1304,7 +1356,14 @@ function MainWindow:ShowListContextMenu(listName)
                         MainWindow:RefreshItemList()
                     end,
                     L["OWSL_BTN_DELETE"],
-                    mainFrame
+                    mainFrame,
+                    {
+                        showDontAskAgain = true,
+                        onDontAskAgain = function()
+                            local db = GetDB()
+                            if db then db.global.settings.confirmListDelete = false end
+                        end,
+                    }
                 )
             end)
         end

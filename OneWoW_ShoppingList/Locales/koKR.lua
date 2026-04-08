@@ -261,6 +261,10 @@ ns.RegisterLocale("koKR", {
     ["OWSL_MM_LIST_COUNT"] = "%d개의 목록",
     ["OWSL_MM_ITEM_COUNT"] = "%d개의 항목",
 
+    ["OWSL_SETTINGS_CONFIRMATIONS"] = "확인",
+    ["OWSL_SETTINGS_CONFIRM_ITEM_DELETE"] = "아이템 삭제 확인",
+    ["OWSL_SETTINGS_CONFIRM_LIST_DELETE"] = "목록 삭제 확인",
+    ["OWSL_DIALOG_DONT_ASK_AGAIN"] = "다시 묻지 않기",
     ["OWSL_SETTINGS_MINIMAP_TITLE"] = "미니맵 버튼",
     ["OWSL_SETTINGS_MINIMAP_DESC"] = "미니맵 버튼을 표시하거나 숨깁니다.",
     ["OWSL_SETTINGS_ICON_TITLE"] = "아이콘 테마",

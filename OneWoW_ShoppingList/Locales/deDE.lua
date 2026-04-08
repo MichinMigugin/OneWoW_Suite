@@ -261,6 +261,10 @@ ns.RegisterLocale("deDE", {
     ["OWSL_MM_LIST_COUNT"] = "%d Listen",
     ["OWSL_MM_ITEM_COUNT"] = "%d Gegenstände",
 
+    ["OWSL_SETTINGS_CONFIRMATIONS"] = "BESTÄTIGUNGEN",
+    ["OWSL_SETTINGS_CONFIRM_ITEM_DELETE"] = "Löschung von Gegenständen bestätigen",
+    ["OWSL_SETTINGS_CONFIRM_LIST_DELETE"] = "Löschung von Listen bestätigen",
+    ["OWSL_DIALOG_DONT_ASK_AGAIN"] = "Nicht erneut fragen",
     ["OWSL_SETTINGS_MINIMAP_TITLE"] = "Minikarten-Button",
     ["OWSL_SETTINGS_MINIMAP_DESC"] = "Minikarten-Button ein- oder ausblenden.",
     ["OWSL_SETTINGS_ICON_TITLE"] = "Symbol-Thema",

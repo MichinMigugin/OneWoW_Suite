@@ -66,19 +66,27 @@ function Dialogs:InputDialog(labelText, defaultVal, onConfirm, parent)
     return result.frame
 end
 
-function Dialogs:ConfirmDialog(titleText, bodyText, onConfirm, confirmLabel, parent)
+function Dialogs:ConfirmDialog(titleText, bodyText, onConfirm, confirmLabel, parent, opts)
     CloseActive()
 
+    local showDontAsk = opts and opts.showDontAskAgain
+
     local result = OneWoW_GUI:CreateConfirmDialog({
-        title   = titleText,
-        message = bodyText,
-        width   = 420,
-        buttons = {
+        addonTitle = L["OWSL_WINDOW_TITLE"],
+        title      = titleText,
+        message    = bodyText,
+        width      = 420,
+        checkbox   = showDontAsk and { label = L["OWSL_DIALOG_DONT_ASK_AGAIN"] } or nil,
+        buttons    = {
             { text = confirmLabel or L["OWSL_BTN_DELETE"],
               color = { 0.7, 0.15, 0.15 },
               onClick = function(f)
+                  local checked = result.checkbox and result.checkbox:GetChecked()
                   f:Hide()
                   activeDialogResult = nil
+                  if checked and opts and opts.onDontAskAgain then
+                      opts.onDontAskAgain()
+                  end
                   if onConfirm then onConfirm() end
               end },
             { text = L["OWSL_BTN_CANCEL"], onClick = function(f)
@@ -87,6 +95,7 @@ function Dialogs:ConfirmDialog(titleText, bodyText, onConfirm, confirmLabel, par
               end },
         },
     })
+
     activeDialogResult = result
     result.frame:Show()
     return result.frame

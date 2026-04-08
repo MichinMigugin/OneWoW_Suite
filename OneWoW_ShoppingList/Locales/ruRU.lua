@@ -261,6 +261,10 @@ ns.RegisterLocale("ruRU", {
     ["OWSL_MM_LIST_COUNT"] = "%d списков",
     ["OWSL_MM_ITEM_COUNT"] = "%d предметов",
 
+    ["OWSL_SETTINGS_CONFIRMATIONS"] = "ПОДТВЕРЖДЕНИЯ",
+    ["OWSL_SETTINGS_CONFIRM_ITEM_DELETE"] = "Подтверждать удаление предметов",
+    ["OWSL_SETTINGS_CONFIRM_LIST_DELETE"] = "Подтверждать удаление списков",
+    ["OWSL_DIALOG_DONT_ASK_AGAIN"] = "Не спрашивать снова",
     ["OWSL_SETTINGS_MINIMAP_TITLE"] = "Кнопка мини-карты",
     ["OWSL_SETTINGS_MINIMAP_DESC"] = "Показать или скрыть кнопку мини-карты.",
     ["OWSL_SETTINGS_ICON_TITLE"] = "Тема значков",

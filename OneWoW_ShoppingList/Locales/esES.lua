@@ -261,6 +261,10 @@ ns.RegisterLocale("esES", {
     ["OWSL_MM_LIST_COUNT"] = "%d listas",
     ["OWSL_MM_ITEM_COUNT"] = "%d objetos",
 
+    ["OWSL_SETTINGS_CONFIRMATIONS"] = "CONFIRMACIONES",
+    ["OWSL_SETTINGS_CONFIRM_ITEM_DELETE"] = "Confirmar eliminación de objetos",
+    ["OWSL_SETTINGS_CONFIRM_LIST_DELETE"] = "Confirmar eliminación de listas",
+    ["OWSL_DIALOG_DONT_ASK_AGAIN"] = "No volver a preguntar",
     ["OWSL_SETTINGS_MINIMAP_TITLE"] = "Botón del minimapa",
     ["OWSL_SETTINGS_MINIMAP_DESC"] = "Mostrar u ocultar el botón del minimapa.",
     ["OWSL_SETTINGS_ICON_TITLE"] = "Tema del icono",
