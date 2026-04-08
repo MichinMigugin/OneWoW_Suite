@@ -83,9 +83,15 @@ func detectWoWMac() string {
 }
 
 func (w *WoWInstallation) GameVersions() []string {
+	return GameVersionsAt(w.BasePath)
+}
+
+// GameVersionsAt returns game flavor folders under a WoW install root
+// (e.g. _retail_) that contain WTF/Account.
+func GameVersionsAt(basePath string) []string {
 	var out []string
 	for _, v := range gameVersions {
-		if isDir(filepath.Join(w.BasePath, v, "WTF", "Account")) {
+		if isDir(filepath.Join(basePath, v, "WTF", "Account")) {
 			out = append(out, v)
 		}
 	}
@@ -93,7 +99,12 @@ func (w *WoWInstallation) GameVersions() []string {
 }
 
 func (w *WoWInstallation) Accounts(gameVer string) []string {
-	root := filepath.Join(w.BasePath, gameVer, "WTF", "Account")
+	return AccountsAt(w.BasePath, gameVer)
+}
+
+// AccountsAt lists Battle.net account folder names for a WoW root + version.
+func AccountsAt(basePath, gameVer string) []string {
+	root := filepath.Join(basePath, gameVer, "WTF", "Account")
 	entries, err := os.ReadDir(root)
 	if err != nil {
 		return nil
@@ -144,7 +155,7 @@ func isDir(p string) bool {
 }
 
 func IsOneWoWFile(name string) bool {
-	return name == "OneWoW" || strings.HasPrefix(name, "OneWoW_")
+	return name == "OneWoW" || strings.HasPrefix(name, "OneWoW_") || strings.HasPrefix(name, "One_WoW")
 }
 
 func IsWoWRunning() bool {
@@ -306,15 +317,34 @@ func (e *SyncEngine) SyncCopy(gameVer, source string, targets, files []string, c
 	return log
 }
 
-// ── sync: merge ──
+// ── sync: smart merge ──
 
 func (e *SyncEngine) SyncMerge(gameVer string, accounts []string, primary string, files []string, cb func(float64, string)) []string {
 	var log []string
-	total := len(files) * len(accounts) * 2
+	total := len(files) * (len(accounts) + 1)
 	done := 0
 
 	for _, name := range files {
-		log = append(log, fmt.Sprintf("── Merging %s.lua ──", name))
+		info := LookupAddon(name)
+		strategy := "deep merge"
+		if info != nil {
+			switch info.Kind {
+			case MergePrimaryWins:
+				strategy = "primary wins"
+			case MergeCharacterMap:
+				strategy = "character-map merge"
+			case MergeAccounting:
+				strategy = "transaction merge"
+			case MergeNotRecommended:
+				log = append(log, fmt.Sprintf("── SKIP %s.lua (not recommended) ──", name))
+				done += len(accounts) + 1
+				if cb != nil {
+					cb(float64(done)/float64(total), "")
+				}
+				continue
+			}
+		}
+		log = append(log, fmt.Sprintf("── Merging %s.lua [%s] ──", name, strategy))
 
 		parsed := make(map[string]*LuaFile)
 		for _, acct := range accounts {
@@ -336,48 +366,11 @@ func (e *SyncEngine) SyncMerge(gameVer string, accounts []string, primary string
 
 		if len(parsed) < 1 {
 			log = append(log, "   Nothing to merge.")
-			done += len(accounts)
+			done++
 			continue
 		}
 
-		// Build merged result: non-primary first, primary last (wins scalars)
-		merged := NewLuaFile()
-		for _, acct := range accounts {
-			if acct == primary {
-				continue
-			}
-			f, ok := parsed[acct]
-			if !ok {
-				continue
-			}
-			for _, varName := range f.order {
-				val := f.vars[varName]
-				if existing, exists := merged.vars[varName]; exists {
-					eMap, eOK := existing.(*OrderedMap)
-					vMap, vOK := val.(*OrderedMap)
-					if eOK && vOK {
-						merged.Set(varName, DeepMerge(eMap, vMap))
-						continue
-					}
-				}
-				merged.Set(varName, val)
-			}
-		}
-		// Primary last
-		if pf, ok := parsed[primary]; ok {
-			for _, varName := range pf.order {
-				val := pf.vars[varName]
-				if existing, exists := merged.vars[varName]; exists {
-					eMap, eOK := existing.(*OrderedMap)
-					vMap, vOK := val.(*OrderedMap)
-					if eOK && vOK {
-						merged.Set(varName, DeepMerge(eMap, vMap))
-						continue
-					}
-				}
-				merged.Set(varName, val)
-			}
-		}
+		merged := SmartMerge(name, parsed, primary, accounts)
 
 		// Write to all accounts
 		for _, acct := range accounts {
@@ -389,10 +382,64 @@ func (e *SyncEngine) SyncMerge(gameVer string, accounts []string, primary string
 			} else {
 				log = append(log, fmt.Sprintf("   WRITE %s", acct))
 			}
+		}
+		done++
+		if cb != nil {
+			cb(float64(done)/float64(total), fmt.Sprintf("Wrote %s to all accounts", name))
+		}
+	}
+	return log
+}
+
+// ── remote source merge ──
+
+func (e *SyncEngine) MergeFromRemote(gameVer string, targetAccounts []string, primary string,
+	remotePaths map[string]string, cb func(float64, string)) []string {
+	var log []string
+	total := len(remotePaths)
+	done := 0
+
+	for name, remotePath := range remotePaths {
+		log = append(log, fmt.Sprintf("── Merging %s from remote ──", name))
+
+		remoteData, err := os.ReadFile(remotePath)
+		if err != nil {
+			log = append(log, fmt.Sprintf("   ERROR reading remote: %v", err))
 			done++
 			if cb != nil {
-				cb(float64(done)/float64(total), fmt.Sprintf("Writing %s to %s…", name, acct))
+				cb(float64(done)/float64(total), "")
 			}
+			continue
+		}
+		remoteFile, err := ParseLuaString(string(remoteData))
+		if err != nil {
+			log = append(log, fmt.Sprintf("   ERROR parsing remote: %v", err))
+			done++
+			continue
+		}
+
+		for _, acct := range targetAccounts {
+			localPath := e.WoW.SVPath(gameVer, acct, name)
+			e.CreateBackup(gameVer, acct, []string{name})
+
+			parsed := map[string]*LuaFile{"remote": remoteFile}
+			localFile, err := ParseLuaFile(localPath)
+			if err == nil {
+				parsed["local"] = localFile
+			}
+
+			merged := SmartMerge(name, parsed, "local", []string{"remote", "local"})
+
+			os.MkdirAll(filepath.Dir(localPath), 0755)
+			if err := WriteLuaFile(localPath, merged); err != nil {
+				log = append(log, fmt.Sprintf("   ERROR writing %s: %v", acct, err))
+			} else {
+				log = append(log, fmt.Sprintf("   WRITE %s", acct))
+			}
+		}
+		done++
+		if cb != nil {
+			cb(float64(done)/float64(total), name)
 		}
 	}
 	return log
@@ -410,6 +457,90 @@ func (e *SyncEngine) UnionSVFiles(gameVer string, accounts []string) []string {
 	var out []string
 	for f := range seen {
 		out = append(out, f)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// ── remote / second-install paths ──
+
+const remoteSVFolderSentinel = "— SavedVariables folder (no version) —"
+
+// ResolveRemoteSavedVariablesDir turns a user path into a SavedVariables directory.
+// root may be a WoW install, a direct SavedVariables folder, or any folder that
+// already contains .lua SavedVariables files.
+func ResolveRemoteSavedVariablesDir(root, gameVer, account string) (svDir string, err error) {
+	root = strings.TrimSpace(root)
+	if root == "" {
+		return "", fmt.Errorf("remote path is empty")
+	}
+	if !isDir(root) {
+		return "", fmt.Errorf("remote path is not a directory: %s", root)
+	}
+
+	// Explicit SavedVariables folder
+	if strings.EqualFold(filepath.Base(root), "SavedVariables") {
+		return root, nil
+	}
+	// UI marks plain SavedVariables-like folders with this sentinel version
+	if gameVer == remoteSVFolderSentinel {
+		return root, nil
+	}
+
+	// Folder that already looks like SavedVariables (has .lua files, not a WoW root)
+	if len(GameVersionsAt(root)) == 0 && dirLooksLikeSavedVariables(root) {
+		return root, nil
+	}
+
+	// WoW install root
+	if len(GameVersionsAt(root)) == 0 {
+		return "", fmt.Errorf("not a WoW folder or SavedVariables directory")
+	}
+	if gameVer == "" || gameVer == "(none)" || strings.HasPrefix(gameVer, "—") {
+		return "", fmt.Errorf("select remote game version")
+	}
+	if account == "" || strings.HasPrefix(account, "(") || strings.HasPrefix(account, "—") {
+		return "", fmt.Errorf("select remote Battle.net account")
+	}
+	p := filepath.Join(root, gameVer, "WTF", "Account", account, "SavedVariables")
+	if !isDir(p) {
+		return "", fmt.Errorf("SavedVariables not found: %s", p)
+	}
+	return p, nil
+}
+
+func dirLooksLikeSavedVariables(dir string) bool {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+	lua := 0
+	for _, e := range entries {
+		if e.IsDir() {
+			return false
+		}
+		if strings.HasSuffix(strings.ToLower(e.Name()), ".lua") {
+			lua++
+		}
+	}
+	return lua > 0
+}
+
+// ListSavedVariableStems returns base names (without .lua) in a SavedVariables dir.
+func ListSavedVariableStems(svDir string) []string {
+	entries, err := os.ReadDir(svDir)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		n := e.Name()
+		if strings.HasSuffix(n, ".lua") && !strings.HasSuffix(n, ".lua.bak") {
+			out = append(out, strings.TrimSuffix(n, ".lua"))
+		}
 	}
 	sort.Strings(out)
 	return out
