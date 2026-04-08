@@ -148,14 +148,19 @@ end
 
 function OneWoW_GUI:CreateConfirmDialog(config)
     config = config or {}
-    local titleText = config.title or ""
+    local headingText = config.title or ""
     local messageText = config.message or ""
     local dialogWidth = config.width or 420
+    local checkboxConfig = config.checkbox
+    local showBrand = config.showBrand ~= false
+    local addonTitle = config.addonTitle or ""
+    local titleBarHeight = Constants.GUI.TITLEBAR_HEIGHT
 
-    local titlePad = 20
+    local headingPad = 15
     local msgPad = 10
-    local bottomPad = 10
+    local contentPadBottom = 10
     local btnRowHeight = 28 + 10 + 10
+    local checkboxRow = checkboxConfig and (1 + 8 + Constants.GUI.CHECKBOX_SIZE + 8) or 0
 
     local measureFS = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     measureFS:SetWidth(dialogWidth - 40)
@@ -164,43 +169,60 @@ function OneWoW_GUI:CreateConfirmDialog(config)
     measureFS:Hide()
     measureFS:SetParent(nil)
 
-    local titleFS = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    titleFS:SetText(titleText)
-    local titleTextHeight = titleFS:GetStringHeight()
-    titleFS:Hide()
-    titleFS:SetParent(nil)
+    local headingFS = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    headingFS:SetText(headingText)
+    local headingHeight = headingFS:GetStringHeight()
+    headingFS:Hide()
+    headingFS:SetParent(nil)
 
-    local totalHeight = titlePad + titleTextHeight + msgPad + msgHeight + msgPad + btnRowHeight + bottomPad
+    local contentHeight = headingPad + headingHeight + msgPad + msgHeight + contentPadBottom + checkboxRow
+    local totalHeight = titleBarHeight + contentHeight + btnRowHeight + 2
     totalHeight = math.max(totalHeight, 140)
 
     local result = self:CreateDialog({
         name = config.name,
-        title = "",
+        title = addonTitle,
         width = dialogWidth,
         height = totalHeight,
         movable = false,
         escClose = true,
-        titleHeight = 1,
+        showBrand = showBrand,
+        factionTheme = config.factionTheme,
+        onClose = config.onClose,
         buttons = config.buttons,
     })
 
-    result.titleBar:SetAlpha(0)
-    result.titleBar:SetHeight(1)
-
-    local titleLabel = result.contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    OneWoW_GUI:SafeSetFont(titleLabel, OneWoW_GUI:GetFont(), 16)
-    titleLabel:SetPoint("TOP", result.contentFrame, "TOP", 0, -titlePad)
-    titleLabel:SetText(titleText)
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    result.titleLabel = titleLabel
+    local headingLabel = result.contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    OneWoW_GUI:SafeSetFont(headingLabel, OneWoW_GUI:GetFont(), 16)
+    headingLabel:SetPoint("TOP", result.contentFrame, "TOP", 0, -headingPad)
+    headingLabel:SetText(headingText)
+    headingLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    result.titleLabel = headingLabel
 
     local msgLabel = result.contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     OneWoW_GUI:SafeSetFont(msgLabel, OneWoW_GUI:GetFont(), 12)
-    msgLabel:SetPoint("TOP", titleLabel, "BOTTOM", 0, -msgPad)
+    msgLabel:SetPoint("TOP", headingLabel, "BOTTOM", 0, -msgPad)
     msgLabel:SetWidth(dialogWidth - 40)
     msgLabel:SetText(messageText)
     msgLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     result.messageLabel = msgLabel
+
+    if checkboxConfig then
+        local cbDivider = result.contentFrame:CreateTexture(nil, "ARTWORK")
+        cbDivider:SetHeight(1)
+        cbDivider:SetPoint("TOPLEFT", result.contentFrame, "TOPLEFT", 10, -(headingPad + headingHeight + msgPad + msgHeight + contentPadBottom))
+        cbDivider:SetPoint("TOPRIGHT", result.contentFrame, "TOPRIGHT", -10, -(headingPad + headingHeight + msgPad + msgHeight + contentPadBottom))
+        cbDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+        local cb = self:CreateCheckbox(result.contentFrame, {
+            label = checkboxConfig.label or "",
+        })
+        cb:SetPoint("TOP", cbDivider, "BOTTOM", -40, -8)
+        if cb.label then
+            cb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+        result.checkbox = cb
+    end
 
     return result
 end
