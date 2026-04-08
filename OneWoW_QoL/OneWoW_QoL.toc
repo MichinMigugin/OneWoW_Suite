@@ -181,3 +181,11 @@ Modules\external\achieveuntrack\Locales\koKR.lua
 Modules\external\achieveuntrack\achieveuntrack.lua
 Modules\external\achieveuntrack\data.lua
 
+Modules\external\framemover\Locales\enUS.lua
+Modules\external\framemover\Locales\koKR.lua
+Modules\external\framemover\framemover.lua
+Modules\external\framemover\framemover-core.lua
+Modules\external\framemover\framemover-frames.lua
+Modules\external\framemover\framemover-ui.lua
+Modules\external\framemover\data.lua
+

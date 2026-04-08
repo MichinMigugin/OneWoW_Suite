@@ -1,0 +1,3 @@
+local addonName, ns = ...
+local L = ns.L or {}
+ns.L = L
