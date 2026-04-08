@@ -99,29 +99,14 @@ local function GetNotesByType(noteType)
 				end
 			end
 
-			local hasContent = note.content and note.content ~= ""
 			local hasTasks = #incompleteTodos > 0
 
-			if noteType == "escpanel" then
-				if hasContent or hasTasks then
-					table.insert(notes, {
-						title     = note.title,
-						id        = note.id,
-						content   = hasContent and note.content or nil,
-						tasks     = hasTasks and incompleteTodos or nil,
-						fontSize  = note.fontSize or 12,
-						fontColor = note.fontColor or "match",
-						pinColor  = note.pinColor or "hunter",
-					})
-				end
-			else
-				if hasTasks then
-					table.insert(notes, {
-						title = note.title,
-						id    = note.id,
-						tasks = incompleteTodos,
-					})
-				end
+			if hasTasks then
+				table.insert(notes, {
+					title = note.title,
+					id    = note.id,
+					tasks = incompleteTodos,
+				})
 			end
 		end
 	end
@@ -208,7 +193,7 @@ local function CreateHeader(panel, textKey)
 	return header
 end
 
-local function CalculateLayout(ph, showZone, hasDaily, hasWeekly, hasEscNotes, hasAlerts)
+local function CalculateLayout(ph, showZone, hasDaily, hasWeekly, hasAlerts)
 	local screenHeight = UIParent:GetHeight()
 	local fixedHeight = ph.escShowCharacterInfo ~= false and CHARINFO_HEIGHT or 0
 	local gapCount = 0
@@ -219,10 +204,6 @@ local function CalculateLayout(ph, showZone, hasDaily, hasWeekly, hasEscNotes, h
 		gapCount = gapCount + 1
 	end
 	if showZone then
-		flexCount = flexCount + 1
-		gapCount = gapCount + 1
-	end
-	if hasEscNotes then
 		flexCount = flexCount + 1
 		gapCount = gapCount + 1
 	end
@@ -281,8 +262,12 @@ local function EnsurePanelsContainer()
 	end
 
 	panelsContainer:ClearAllPoints()
-	panelsContainer:SetPoint("TOP", UIParent, "TOP", 0, 0)
-	panelsContainer:SetPoint("RIGHT", GameMenuFrame, "LEFT", -20, 0)
+	local gmLeft = GameMenuFrame and GameMenuFrame:GetLeft()
+	if gmLeft then
+		panelsContainer:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", gmLeft - 20, UIParent:GetHeight())
+	else
+		panelsContainer:SetPoint("TOPRIGHT", UIParent, "TOP", -200, 0)
+	end
 	panelsContainer:SetSize(PANEL_WIDTH, UIParent:GetHeight())
 	panelsContainer:Show()
 end
@@ -715,153 +700,6 @@ local function BuildNotesPanel(container, yOffset, anchorPanel, panelKey, header
 	return panel, yOffset - flexHeight - PANEL_GAP
 end
 
-local function BuildEscNotesPanel(container, yOffset, anchorPanel, flexHeight, escNotes)
-	if not panelFrames.escnotes then
-		local panel = CreatePanel(container, "OneWoWEscPanel_escnotes", flexHeight)
-		CreateHeader(panel, "ESCPANEL_ESC_NOTES")
-
-		panel.contentTexts = {}
-
-		local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(panel, {})
-		scrollFrame:ClearAllPoints()
-		scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -35)
-		scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 10)
-		scrollChild:SetWidth(PANEL_WIDTH - 40)
-		panel.scrollFrame = scrollFrame
-		panel.scrollChild = scrollChild
-
-		local editBg = CreateFrame("Frame", nil, panel.scrollChild, "BackdropTemplate")
-		editBg:SetBackdrop(BACKDROP_INFO)
-		editBg:SetBackdropColor(0, 0, 0, 0.3)
-		editBg:SetBackdropBorderColor(unpack(BORDER_COLOR()))
-
-		local editScroll = CreateFrame("ScrollFrame", "OneWoWEscQuickNoteScroll", editBg, "UIPanelScrollFrameTemplate")
-		editScroll:SetPoint("TOPLEFT", editBg, "TOPLEFT", 4, -4)
-		editScroll:SetPoint("BOTTOMRIGHT", editBg, "BOTTOMRIGHT", -22, 4)
-
-		local editBox = CreateFrame("EditBox", nil, editScroll)
-		editBox:SetMultiLine(true)
-		editBox:SetFontObject("ChatFontNormal")
-		editBox:SetWidth(PANEL_WIDTH - 90)
-		editBox:SetAutoFocus(false)
-		editBox:SetMaxLetters(0)
-		editBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-
-		local saveTimer
-		editBox:SetScript("OnTextChanged", function(self, userInput)
-			if not userInput then return end
-			if saveTimer then saveTimer:Cancel() end
-			saveTimer = C_Timer.NewTimer(0.5, function()
-				local ph = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
-				if ph then
-					ph.escQuickNote = self:GetText()
-				end
-			end)
-		end)
-
-		editScroll:SetScrollChild(editBox)
-		panel.editBg = editBg
-		panel.editBox = editBox
-
-		panelFrames.escnotes = panel
-	end
-
-	local panel = panelFrames.escnotes
-	panel:ClearAllPoints()
-	panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
-	panel:SetHeight(flexHeight)
-
-	for _, text in pairs(panel.contentTexts) do
-		text:Hide()
-	end
-
-	local yOff = -5
-	local fsIndex = 1
-
-	if escNotes and #escNotes > 0 then
-		for _, noteData in ipairs(escNotes) do
-			local tr, tg, tb
-			local cr, cg, cb
-			if noteData.pinColor then
-				tr, tg, tb = GetNoteTextColor("match", noteData.pinColor)
-				cr, cg, cb = GetNoteTextColor(noteData.fontColor or "match", noteData.pinColor)
-			else
-				local hc = HEADER_COLOR()
-				tr, tg, tb = hc[1], hc[2], hc[3]
-				local txc = TEXT_COLOR()
-				cr, cg, cb = txc[1], txc[2], txc[3]
-			end
-
-			local titleText = GetOrCreateFontString(panel, fsIndex, 12)
-			fsIndex = fsIndex + 1
-			titleText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 10, yOff)
-			titleText:SetText(noteData.title)
-			titleText:SetTextColor(tr, tg, tb, 1)
-			titleText:SetJustifyH("LEFT")
-			titleText:SetWidth(PANEL_WIDTH - 50)
-			yOff = yOff - 20
-
-			if noteData.content then
-				local contentText = GetOrCreateFontString(panel, fsIndex, 10)
-				fsIndex = fsIndex + 1
-				contentText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 15, yOff)
-				contentText:SetText(noteData.content)
-				contentText:SetTextColor(cr, cg, cb, 1)
-				if noteData.fontSize then
-					OneWoW_GUI:SafeSetFont(contentText, OneWoW_GUI:GetFont(), noteData.fontSize)
-				end
-				contentText:SetJustifyH("LEFT")
-				contentText:SetWordWrap(true)
-				contentText:SetWidth(PANEL_WIDTH - 55)
-				yOff = yOff - contentText:GetStringHeight() - 6
-			end
-
-			if noteData.tasks then
-				for _, task in ipairs(noteData.tasks) do
-					local taskText = GetOrCreateFontString(panel, fsIndex, 10)
-					fsIndex = fsIndex + 1
-					taskText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 25, yOff)
-					taskText:SetText("  - " .. task)
-					taskText:SetTextColor(cr, cg, cb, 1)
-					if noteData.fontSize then
-						OneWoW_GUI:SafeSetFont(taskText, OneWoW_GUI:GetFont(), noteData.fontSize)
-					end
-					taskText:SetJustifyH("LEFT")
-					taskText:SetWidth(PANEL_WIDTH - 65)
-					yOff = yOff - 18
-				end
-			end
-
-			yOff = yOff - 10
-		end
-	end
-
-	yOff = yOff - 5
-	local quickLabel = GetOrCreateFontString(panel, fsIndex, 10)
-	fsIndex = fsIndex + 1
-	quickLabel:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 10, yOff)
-	quickLabel:SetText(L["ESCPANEL_QUICK_NOTE"] or "Quick Note:")
-	quickLabel:SetTextColor(unpack(HEADER_COLOR()))
-	quickLabel:SetJustifyH("LEFT")
-	yOff = yOff - 16
-
-	panel.editBg:ClearAllPoints()
-	panel.editBg:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 5, yOff)
-	panel.editBg:SetPoint("RIGHT", panel.scrollChild, "RIGHT", -5, 0)
-	panel.editBg:SetHeight(80)
-
-	local ph = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
-	local savedNote = ph and ph.escQuickNote or ""
-	panel.editBox:SetText(savedNote)
-	panel.editBox:SetTextColor(unpack(TEXT_COLOR()))
-
-	yOff = yOff - 90
-	panel.scrollChild:SetHeight(math.abs(yOff) + 10)
-
-	panel:Show()
-	return panel, yOffset - flexHeight - PANEL_GAP
-end
-
 local function BuildInstanceToastPanel(container, yOffset, anchorPanel)
 	local instName, instanceType, diffID, diffName, _, _, _, instanceMapID = GetInstanceInfo()
 	if instanceType ~= "party" and instanceType ~= "raid" then
@@ -957,18 +795,13 @@ function EscPanels:Build(parent)
 	EnsurePanelsContainer()
 
 	local showTasks = ph.escShowTasks ~= false
-	local dailyNotes, weeklyNotes, escNotes
+	local dailyNotes, weeklyNotes
 	if showTasks then
 		dailyNotes = GetNotesByType("daily")
 		weeklyNotes = GetNotesByType("weekly")
 	end
-	if ph.escShowEscNotes then
-		escNotes = GetNotesByType("escpanel")
-	end
 	local hasDaily = dailyNotes and #dailyNotes > 0
 	local hasWeekly = weeklyNotes and #weeklyNotes > 0
-	local hasEscNotes = escNotes and #escNotes > 0
-	local showEscNotes = ph.escShowEscNotes
 
 	local hasAlerts = ph.escShowAlerts and (HasNewMail and HasNewMail())
 
@@ -976,7 +809,7 @@ function EscPanels:Build(parent)
 	local zoneHasContent = zoneData and ((zoneData.content and zoneData.content ~= "") or (zoneData.todos and #zoneData.todos > 0))
 	local showZone = ph.escShowZoneNotes and (not ph.escHideZoneNotesWhenEmpty or zoneHasContent)
 
-	local flexHeight, verticalOffset = CalculateLayout(ph, showZone, hasDaily, hasWeekly, showEscNotes, hasAlerts)
+	local flexHeight, verticalOffset = CalculateLayout(ph, showZone, hasDaily, hasWeekly, hasAlerts)
 	local yOffset = -verticalOffset
 	local lastPanel = panelsContainer
 
@@ -1008,14 +841,6 @@ function EscPanels:Build(parent)
 		panelFrames.zoneNotes:Hide()
 	end
 
-	if showEscNotes then
-		local escPanel
-		escPanel, yOffset = BuildEscNotesPanel(panelsContainer, yOffset, lastPanel, flexHeight, escNotes)
-		lastPanel = escPanel
-	elseif panelFrames.escnotes then
-		panelFrames.escnotes:Hide()
-	end
-
 	if showTasks then
 		if hasDaily then
 			local dailyPanel
@@ -1039,13 +864,6 @@ function EscPanels:Build(parent)
 end
 
 function EscPanels:HideAll()
-	if panelFrames.escnotes and panelFrames.escnotes.editBox then
-		local ph = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
-		if ph then
-			ph.escQuickNote = panelFrames.escnotes.editBox:GetText()
-		end
-		panelFrames.escnotes.editBox:ClearFocus()
-	end
 	for _, panel in pairs(panelFrames) do
 		if panel and panel.Hide then
 			panel:Hide()

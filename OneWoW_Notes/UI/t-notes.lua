@@ -763,7 +763,7 @@ function ns.UI.CreateNotesTab(parent)
                     end
                     if header.noteTypeLine then
                         local noteType = note.noteType or "standard"
-                        local noteTypeText = noteType == "daily" and L["NOTE_TYPE_DAILY"] or noteType == "weekly" and L["NOTE_TYPE_WEEKLY"] or noteType == "escpanel" and L["NOTE_TYPE_ESCPANEL"] or L["NOTE_TYPE_STANDARD"]
+                        local noteTypeText = noteType == "daily" and L["NOTE_TYPE_DAILY"] or noteType == "weekly" and L["NOTE_TYPE_WEEKLY"] or L["NOTE_TYPE_STANDARD"]
                         header.noteTypeLine:SetText(string.format(L["UI_TYPE_FORMAT"], noteTypeText))
                     end
                     if header.autoPinCheckbox then

@@ -30,7 +30,6 @@ local DEFAULTS = {
         escShowZoneNotes = true,
         escHideZoneNotesWhenEmpty = false,
         escShowAlerts = true,
-        escShowEscNotes = true,
         escPortalsEnabled = true,
         escShowCharacterInfo = true,
         allFavorites = {},

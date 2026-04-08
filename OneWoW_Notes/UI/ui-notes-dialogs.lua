@@ -259,7 +259,6 @@ function ns.UI.ShowAddNoteDialog()
         {text = L["NOTE_TYPE_STANDARD"], value = "standard"},
         {text = L["NOTE_TYPE_DAILY"],    value = "daily"},
         {text = L["NOTE_TYPE_WEEKLY"],   value = "weekly"},
-        {text = L["NOTE_TYPE_ESCPANEL"], value = "escpanel"},
     })
     noteTypeDD:SetSelected("standard")
     dialog.noteTypeDD = noteTypeDD
@@ -612,7 +611,6 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
         {text = L["NOTE_TYPE_STANDARD"], value = "standard"},
         {text = L["NOTE_TYPE_DAILY"],    value = "daily"},
         {text = L["NOTE_TYPE_WEEKLY"],   value = "weekly"},
-        {text = L["NOTE_TYPE_ESCPANEL"], value = "escpanel"},
     })
     noteTypeDD:SetSelected(noteData.noteType or "standard")
 

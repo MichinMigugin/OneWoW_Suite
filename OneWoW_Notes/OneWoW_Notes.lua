@@ -139,6 +139,19 @@ local function OnEnable()
         ns.Zones:MigrateFontFamily()
     end
 
+    if ns.NotesData then
+        local allNotes = ns.NotesData:GetAllNotes()
+        if allNotes then
+            for noteID, note in pairs(allNotes) do
+                if type(note) == "table" and note.noteType == "escpanel" then
+                    note.noteType = "standard"
+                    note.category = "General"
+                    note.modified = GetServerTime()
+                end
+            end
+        end
+    end
+
     RegisterWithOneWoW()
 
     if not ns.oneWoWHubActive then

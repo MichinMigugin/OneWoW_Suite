@@ -219,8 +219,6 @@ L["NOTE_TYPE_DAILY"]            = "Daily"
 L["NOTE_TYPE_DAILY_DESC"]       = "TODOs reset at daily server reset time"
 L["NOTE_TYPE_WEEKLY"]           = "Weekly"
 L["NOTE_TYPE_WEEKLY_DESC"]      = "TODOs reset at weekly server reset time"
-L["NOTE_TYPE_ESCPANEL"]         = "ESC Panel"
-L["NOTE_TYPE_ESCPANEL_DESC"]    = "Displayed on the ESC menu panel"
 L["NOTE_TYPE_LABEL_FORMAT"]     = "%s Note"
 
 -- Note todo
