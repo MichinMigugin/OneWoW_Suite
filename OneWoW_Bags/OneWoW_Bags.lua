@@ -17,6 +17,7 @@ _G.OneWoW_Bags = OneWoW_Bags
 OneWoW_Bags.oneWoWHubActive = false
 OneWoW_Bags.bankOpen = false
 OneWoW_Bags.guildBankOpen = false
+OneWoW_Bags.isWarbandOnlyBankAccess = false
 OneWoW_Bags.inventoryPresentationState = {
     altShowActive = false,
 }
@@ -382,6 +383,7 @@ end
 function OneWoW_Bags:OnBankOpened()
     self.bankOpen = self:IsBankUIEnabled()
     if not self:IsBankUIEnabled() then
+        self.isWarbandOnlyBankAccess = false
         self:RestoreBankFrame()
         if self.BankGUI and self.BankGUI:IsShown() then
             self.BankGUI:Hide()
@@ -393,6 +395,13 @@ function OneWoW_Bags:OnBankOpened()
     end
 
     self:SuppressBankFrame()
+
+    local canUseCharacter = C_Bank.CanUseBank and C_Bank.CanUseBank(Enum.BankType.Character)
+    local canUseAccount = C_Bank.CanUseBank and C_Bank.CanUseBank(Enum.BankType.Account)
+    self.isWarbandOnlyBankAccess = canUseAccount and not canUseCharacter or false
+    if self.isWarbandOnlyBankAccess then
+        self.db.global.bankShowWarband = true
+    end
 
     local activeBankType = self.db.global.bankShowWarband and Enum.BankType.Account or Enum.BankType.Character
     if BankFrame and BankFrame.BankPanel then
@@ -415,11 +424,13 @@ end
 function OneWoW_Bags:OnBankClosed()
     if not self:IsBankUIEnabled() then
         self.bankOpen = false
+        self.isWarbandOnlyBankAccess = false
         self:RestoreBankFrame()
         return
     end
     if not self.bankOpen then return end
     self.bankOpen = false
+    self.isWarbandOnlyBankAccess = false
     if BankFrame and BankFrame.BankPanel then
         BankFrame.BankPanel:Hide()
     end

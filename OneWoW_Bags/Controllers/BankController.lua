@@ -91,6 +91,7 @@ end
 function BankController:SetBankMode(showWarband)
     local db = self.addon:GetDB()
     if not db or db.global.bankShowWarband == showWarband then return end
+    if showWarband == false and self.addon.isWarbandOnlyBankAccess then return end
     db.global.bankShowWarband = showWarband
     if self.addon.BankBar then
         self.addon.BankBar:UpdateBankTypeButtons()

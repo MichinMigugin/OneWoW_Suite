@@ -153,7 +153,9 @@ function BankGUI:InitMainWindow()
                 end
                 BankSet:ReleaseAll()
                 C_Timer.After(0, function()
-                    C_PlayerInteractionManager.ClearInteraction(Enum.PlayerInteractionType.Banker)
+                    if C_Bank and C_Bank.CloseBankFrame then
+                        C_Bank.CloseBankFrame()
+                    end
                 end)
             end
         end,

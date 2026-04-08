@@ -318,6 +318,7 @@ function BankBar:UpdateBankTypeButtons()
     if not bagsBarFrame then return end
     local db = GetDB()
     local showWarband = db.global.bankShowWarband
+    local warbandOnly = OneWoW_Bags.isWarbandOnlyBankAccess == true
 
     local function setActive(btn)
         if not btn then return end
@@ -335,7 +336,14 @@ function BankBar:UpdateBankTypeButtons()
         if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
     end
 
-    if showWarband then
+    if bagsBarFrame.personalBtn then
+        bagsBarFrame.personalBtn:SetShown(not warbandOnly)
+    end
+    if bagsBarFrame.warbandBtn then
+        bagsBarFrame.warbandBtn:Show()
+    end
+
+    if showWarband or warbandOnly then
         setActive(bagsBarFrame.warbandBtn)
         setInactive(bagsBarFrame.personalBtn)
     else
