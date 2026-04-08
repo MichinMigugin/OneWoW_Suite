@@ -66,7 +66,6 @@ function ns.UI.CreateEquipmentTab(parent)
             {label = L["EQUIPMENT_MISSING_ENCHANTS"], value = "0", ttTitle = L["TT_EQUIPMENT_MISSING_ENCHANTS"], ttDesc = L["TT_EQUIPMENT_MISSING_ENCHANTS_DESC"]},
             {label = L["EQUIPMENT_MISSING_GEMS"],    value = "0", ttTitle = L["TT_EQUIPMENT_MISSING_GEMS"],    ttDesc = L["TT_EQUIPMENT_MISSING_GEMS_DESC"]},
             {label = L["EQUIPMENT_LOW_DURABILITY"],  value = "0", ttTitle = L["TT_EQUIPMENT_LOW_DURABILITY"],  ttDesc = L["TT_EQUIPMENT_LOW_DURABILITY_DESC"]},
-            {label = L["EQUIPMENT_UPGRADE_READY"],   value = "0", ttTitle = L["TT_EQUIPMENT_UPGRADE_READY"],   ttDesc = L["TT_EQUIPMENT_UPGRADE_READY_DESC"]},
             {label = L["EQUIPMENT_SET_BONUSES"],     value = "0", ttTitle = L["TT_EQUIPMENT_SET_BONUSES"],     ttDesc = L["TT_EQUIPMENT_SET_BONUSES_DESC"]},
         },
     })
@@ -156,6 +155,32 @@ function ns.UI.CreateEquipmentTab(parent)
     OneWoW_GUI:ApplyFontToFrame(parent)
 
     C_Timer.After(0.5, function()
+        if ns.UI.RefreshEquipmentTab then
+            ns.UI.RefreshEquipmentTab(parent)
+        end
+    end)
+
+    local equipEventFrame = CreateFrame("Frame")
+    equipEventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+    equipEventFrame:RegisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE")
+    equipEventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
+    equipEventFrame:SetScript("OnEvent", function(_, event, unit)
+        if event == "UNIT_INVENTORY_CHANGED" and unit ~= "player" then return end
+        if parent:IsVisible() and ns.UI.RefreshEquipmentTab then
+            C_Timer.After(1, function()
+                if parent:IsVisible() then
+                    ns.UI.RefreshEquipmentTab(parent)
+                end
+            end)
+        end
+    end)
+    parent:HookScript("OnHide", function()
+        equipEventFrame:UnregisterAllEvents()
+    end)
+    parent:HookScript("OnShow", function()
+        equipEventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+        equipEventFrame:RegisterEvent("PLAYER_AVG_ITEM_LEVEL_UPDATE")
+        equipEventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
         if ns.UI.RefreshEquipmentTab then
             ns.UI.RefreshEquipmentTab(parent)
         end
@@ -648,7 +673,6 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
         missingEnchants = 0,
         missingGems = 0,
         lowDurability = 0,
-        upgradeReady = 0,
         tierSets = 0
     }
 
@@ -703,6 +727,7 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
                         if item.setID and item.setID > 0 then
                             charTierCount = charTierCount + 1
                         end
+
                     end
                 end
             end
@@ -719,7 +744,6 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
             if charTierCount >= 2 then
                 stats.tierSets = stats.tierSets + 1
             end
-
             if charLowDurability >= 3 or charHardMissingEnchants >= 5 or charMissingGems >= 5 then
                 stats.attention = stats.attention + 1
             end
@@ -740,7 +764,6 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
         if statBoxes[6] then statBoxes[6].value:SetText(tostring(stats.missingEnchants)) end
         if statBoxes[7] then statBoxes[7].value:SetText(tostring(stats.missingGems)) end
         if statBoxes[8] then statBoxes[8].value:SetText(tostring(stats.lowDurability)) end
-        if statBoxes[9] then statBoxes[9].value:SetText(tostring(stats.upgradeReady)) end
-        if statBoxes[10] then statBoxes[10].value:SetText(tostring(stats.tierSets)) end
+        if statBoxes[9] then statBoxes[9].value:SetText(tostring(stats.tierSets)) end
     end
 end

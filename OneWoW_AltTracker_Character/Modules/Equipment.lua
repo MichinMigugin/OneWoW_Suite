@@ -67,10 +67,13 @@ function Module:CollectData(charKey, charData)
             equipment[slotID].numSockets = numSockets
             equipment[slotID].socketsWithGems = socketsWithGems
 
-            local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, setID = C_Item.GetItemInfo(itemLink)
+            local itemInfoName, _, _, _, _, _, _, _, _, _, _, _, _, _, _, setID = C_Item.GetItemInfo(itemLink)
             if setID and setID > 0 then
                 equipment[slotID].setID = setID
+            elseif not itemInfoName then
+                equipment[slotID]._pendingSetID = true
             end
+
         end
     end
 
@@ -81,6 +84,19 @@ function Module:CollectData(charKey, charData)
     charData.itemLevelColor = {r = r or 1, g = g or 1, b = b or 1}
 
     charData.equipment = equipment
+
+    for slotID, slotData in pairs(equipment) do
+        if slotData._pendingSetID then
+            slotData._pendingSetID = nil
+            local item = Item:CreateFromItemID(slotData.itemID)
+            item:ContinueOnItemLoad(function()
+                local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, loadedSetID = C_Item.GetItemInfo(slotData.itemLink)
+                if loadedSetID and loadedSetID > 0 then
+                    slotData.setID = loadedSetID
+                end
+            end)
+        end
+    end
 
     return true
 end
