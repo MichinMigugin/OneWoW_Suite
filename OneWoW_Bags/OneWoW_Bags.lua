@@ -878,10 +878,8 @@ function OneWoW_Bags:HookBlizzardBags()
     end
 
     hooksecurefunc("OpenBackpack", function() OpenOurBags("auto") end)
-    hooksecurefunc("CloseBackpack", function() CloseOurBags("auto") end)
     hooksecurefunc("ToggleAllBags", function() ToggleOurBags("auto") end)
     hooksecurefunc("OpenAllBags", function() OpenOurBags("auto") end)
-    hooksecurefunc("CloseAllBags", function() CloseOurBags("auto") end)
 
     hooksecurefunc("PickupGuildBankItem", function(tabID, slotID)
         local cursorAfter = GetCursorInfo()
@@ -920,18 +918,9 @@ function OneWoW_Bags:HookBlizzardBags()
         end
     end)
 
-    hooksecurefunc("CloseBag", function(bagID)
-        if self.BagTypes:IsPlayerBag(bagID) then
-            CloseOurBags("auto")
-        end
-    end)
-
     if EventRegistry then
         EventRegistry:RegisterCallback("ContainerFrame.OpenAllBags", function()
             OpenOurBags("auto")
-        end, self)
-        EventRegistry:RegisterCallback("ContainerFrame.CloseAllBags", function()
-            CloseOurBags("auto")
         end, self)
     end
 
