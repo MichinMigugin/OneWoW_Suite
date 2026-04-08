@@ -7,7 +7,8 @@ OneWoW_UI/
 # Local reference / archive (not synced; keep on disk only)
 6_Last WN Addons/
 
-# Local Cursor rules (user-specific)
+# Ricky's Cursor rules — local only, never commit or push (AccountSync, Triggers, Gitmode, CHANGELOG, etc.)
+# `git add` will refuse these unless you force; keep them out of the shared repo.
 .cursor/rules/1W-Ricky-*.mdc
 
 # Local secrets (never commit)
