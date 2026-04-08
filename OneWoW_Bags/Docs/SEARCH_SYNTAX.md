@@ -38,8 +38,13 @@ You can also use the explicit name property with the contains operator:
 | Example | Matches |
 |---|---|
 | `name~sword` | Same as bare `sword` |
+| `name~"two words"` | Name contains the phrase `two words` |
+| `~"two words"` | Shorthand for `name~"two words"` |
 | `name=Hearthstone` | Exact name match (case-insensitive) |
 | `name!=Hearthstone` | Everything except items named "Hearthstone" |
+
+Multiple terms must be joined with an explicit operator. There is no implicit
+AND between adjacent tokens, so write `#armor & #epic`, not `#armor #epic`.
 
 ---
 
@@ -440,6 +445,9 @@ other keywords on first access.
 
 | Keyword | What it matches |
 |---|---|
+| `#onuse` | Items with a `Use:` tooltip effect |
+| `#onequip` | Items with an `Equip:` tooltip effect |
+| `#uniqueequipped` | Unique-equipped items |
 | `#reputation` | Items with "Reputation" in the tooltip |
 | `#tradeableloot` | Loot still in the trade window |
 | `#openable` | Containers you can right-click to open |
@@ -551,24 +559,57 @@ petquality>=4           Epic or better pets
 ### String Comparisons
 
 Syntax: `property=value` (exact), `property!=value` (not equal),
-`property~value` (contains)
+`property==value` (exact), `property~value` (literal contains),
+`property~~value` (Lua pattern contains)
+
+String matching is case-insensitive. Values may be unquoted single tokens or
+quoted strings when you need spaces or explicit delimiters.
+
+`~~` uses Lua pattern syntax, not full regex syntax. `~` remains plain literal
+contains and does not treat pattern characters specially.
 
 | Property | Aliases | What it is |
 |---|---|---|
 | `name` | | Item name (case-insensitive) |
 | `equiploc` | | Equipment location string (e.g. `INVTYPE_HEAD`) |
+| `tooltip` | | Concatenated tooltip text (case-insensitive) |
 
 **Examples:**
 
 ```
 name~sword              Items with "sword" in the name
+name~"two words"        Name contains the phrase "two words"
+name~~"^gleaming"       Name starts with "gleaming"
 name=Hearthstone        Exact name match
+name=="two words"       Exact multi-word name match
+name!="two words"       Exclude an exact multi-word name
 equiploc=INVTYPE_HEAD   Head slot items
+tooltip~"binds when picked up"
+tooltip~~"classes:.+monk"
+~"stone"
+!(tooltip~~"classes:.+monk")
 ```
+
+Use either quote style for the wrapper:
+
+- `name=="O'Brien"`
+- `tooltip~'Say "hi"'`
+
+Backslash escaping is not supported in v1. If your text contains one quote
+character, wrap the value in the other quote style.
+
+For Lua pattern searches with `~~`, escape pattern metacharacters with `%` when
+you want a literal match. For example:
+
+- `name~"a.b"` matches the literal text `a.b`
+- `name~~"a%.b"` uses Lua pattern escaping to match a literal dot
+- `tooltip~~"[unterminated"` is treated as a safe non-match instead of an error
 
 ### Range Syntax
 
 Syntax: `property:min-max`
+
+Range syntax is intended for numeric properties.
 
 ```
 ilvl:200-300            Items with ilvl between 200 and 300
@@ -624,6 +665,7 @@ read more like natural conditions.
 | `IsUnsellable` | `#unsellable` |
 | `HasCharges` | `#charges` |
 | `IsUnique` | `#unique` |
+| `IsUniqueEquipped` | `#uniqueequipped` |
 | `IsQuestItem` | `#quest` |
 | `IsTierSet` | `#tierset` |
 | `IsAppearanceCollected` | `#knowntransmog` |

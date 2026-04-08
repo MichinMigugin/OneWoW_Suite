@@ -25,6 +25,13 @@ local function GetController()
     return OneWoW_Bags.BagsController
 end
 
+local function GetEffectiveInfoBarChrome(db)
+    local altReveal = OneWoW_Bags:IsAltShowActive()
+    local showHeader = (db.global.showHeaderBar ~= false) or altReveal
+    local showSearch = (db.global.showSearchBar ~= false) or altReveal
+    return showHeader, showSearch
+end
+
 function InfoBar:Create(parent)
     if infoBarFrame then return infoBarFrame end
 
@@ -259,9 +266,7 @@ function InfoBar:UpdateViewButtons()
     local controller = GetController()
     local mode = controller and controller.GetViewMode and controller:GetViewMode() or db.global.viewMode
 
-    local altShow = OneWoW_Bags:IsAltShowActive()
-    local showHeader = (db.global.showHeaderBar ~= false) or altShow
-    local showSearch = (db.global.showSearchBar ~= false) or altShow
+    local showHeader, showSearch = GetEffectiveInfoBarChrome(db)
 
     local buttons = {
         { btn = infoBarFrame.viewList, mode = "list" },
@@ -337,8 +342,7 @@ function InfoBar:UpdateVisibility()
 
     self:UpdateViewButtons()
 
-    local showHeader = db.global.showHeaderBar ~= false
-    local showSearch = db.global.showSearchBar ~= false
+    local showHeader, showSearch = GetEffectiveInfoBarChrome(db)
 
     if showSearch and infoBarFrame.searchBox then
         local searchY = showHeader and -(ROW1_H + floor((ROW2_H - 22) / 2)) or -floor((ROW2_H - 22) / 2)
