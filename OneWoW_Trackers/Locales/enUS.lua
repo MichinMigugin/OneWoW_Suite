@@ -17,6 +17,7 @@ ns.RegisterLocale("enUS", {
     ["TRACKER_EXPORT"]                  = "Export",
     ["TRACKER_DUPLICATE"]               = "Duplicate",
     ["TRACKER_FAV"]                     = "Favorite",
+    ["TRACKER_FAV_TT"]                  = "Mark or unmark this list as a favorite.",
     ["TRACKER_UNFAV"]                   = "Unfavorite",
     ["TRACKER_RESET"]                   = "Reset",
     ["TRACKER_DELETE"]                  = "Delete",

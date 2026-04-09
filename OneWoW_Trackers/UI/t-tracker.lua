@@ -204,14 +204,14 @@ function ns.UI.CreateTrackerTab(parent)
 
         local titleLabel = OneWoW_GUI:CreateFS(row, 12)
         titleLabel:SetPoint("TOPLEFT", typeIcon, "TOPRIGHT", 8, -2)
-        titleLabel:SetPoint("RIGHT", row, "RIGHT", -60, 0)
+        titleLabel:SetPoint("RIGHT", row, "RIGHT", -72, 0)
         titleLabel:SetJustifyH("LEFT")
         titleLabel:SetText(listData.title or "Untitled")
         titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local metaLabel = OneWoW_GUI:CreateFS(row, 10)
         metaLabel:SetPoint("TOPLEFT", titleLabel, "BOTTOMLEFT", 0, -2)
-        metaLabel:SetPoint("RIGHT", row, "RIGHT", -60, 0)
+        metaLabel:SetPoint("RIGHT", row, "RIGHT", -72, 0)
         metaLabel:SetJustifyH("LEFT")
         local typeColor = LIST_TYPE_COLORS[listData.listType] or { 0.7, 0.7, 0.7 }
         local typeName = TE:GetListTypeDisplayName(listData.listType)
@@ -223,7 +223,7 @@ function ns.UI.CreateTrackerTab(parent)
         local done, total = TD:GetListCompletion(listData.id)
 
         local progressLabel = OneWoW_GUI:CreateFS(row, 10)
-        progressLabel:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+        progressLabel:SetPoint("RIGHT", row, "RIGHT", -28, 0)
         progressLabel:SetText(total > 0 and format("%d/%d", done, total) or "")
         progressLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
@@ -239,12 +239,19 @@ function ns.UI.CreateTrackerTab(parent)
             progressBar._text:Hide()
         end
 
-        if listData.favorite then
-            local favIcon = row:CreateTexture(nil, "OVERLAY")
-            favIcon:SetSize(12, 12)
-            favIcon:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -4)
-            favIcon:SetAtlas("PetJournal-FavoritesIcon")
-        end
+        local listFavBtn = OneWoW_GUI:CreateFavoriteToggleButton(row, {
+            size     = 18,
+            favorite = listData.favorite == true,
+            tooltipTitle = L["TRACKER_FAV"] or "Favorite",
+            tooltipText  = L["TRACKER_FAV_TT"] or "Mark or unmark this list as a favorite.",
+            onClick = function(_, isFav)
+                TD:UpdateList(listData.id, { favorite = isFav })
+                parent.RefreshList()
+                parent.ShowDetail(listData.id)
+            end,
+        })
+        listFavBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -4)
+        listFavBtn:SetFrameLevel((row:GetFrameLevel() or 0) + 15)
 
         local isSelected = (listData.id == selectedListID)
         if isSelected then
@@ -530,19 +537,8 @@ function ns.UI.CreateTrackerTab(parent)
             end
         end)
 
-        local favBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, {
-            text = list.favorite and (L["TRACKER_UNFAV"] or "Unfavorite") or (L["TRACKER_FAV"] or "Favorite"),
-            height = 22,
-        })
-        favBtn:SetPoint("LEFT", dupeBtn, "RIGHT", 4, 0)
-        favBtn:SetScript("OnClick", function()
-            TD:UpdateList(list.id, { favorite = not list.favorite })
-            parent.RefreshList()
-            parent.ShowDetail(list.id)
-        end)
-
         local resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_RESET"] or "Reset", height = 22 })
-        resetBtn:SetPoint("LEFT", favBtn, "RIGHT", 4, 0)
+        resetBtn:SetPoint("LEFT", dupeBtn, "RIGHT", 4, 0)
         resetBtn:SetScript("OnClick", function()
             TD:ResetProgress(list.id)
             TE:FullScan()
