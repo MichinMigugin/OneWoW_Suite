@@ -23,7 +23,7 @@ local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
 local strlower, strfind = string.lower, string.find
 local strmatch = string.match
 local rawset, rawget, setmetatable = rawset, rawget, setmetatable
-local pcall = pcall
+local pcall, select= pcall, select
 local C_Item = C_Item
 local C_Container = C_Container
 local C_TooltipInfo = C_TooltipInfo
@@ -794,10 +794,16 @@ local function ResolveCollected(itemID, classID, subClassID, hyperlink)
     if toyInfo then
         return PlayerHasToy(itemID)
     end
-    -- Battle pet check
+    -- Caged battle pet check
     local petData = GetBattlePetCageData(itemID, hyperlink)
     if petData and petData.speciesID then
         local num = C_PetJournal.GetNumCollectedInfo(petData.speciesID)
+        return num and num > 0
+    end
+    -- Non-caged pet check
+    if classID == Enum.ItemClass.Battlepet or (classID == Enum.ItemClass.Miscellaneous and subClassID == Enum.ItemMiscellaneousSubclass.CompanionPet) then
+        local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
+        local num = C_PetJournal.GetNumCollectedInfo(speciesID)
         return num and num > 0
     end
     -- Mount check
@@ -1095,7 +1101,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     props.nameRaw     = itemName or (C_Item.GetItemNameByID(itemID) or "")
     props.name        = strlower(props.nameRaw)
-    props.quality     = itemQuality or itemInfo.quality or 0
+    props.quality     = itemQuality or itemInfo.quality or -1 -- don't use 0 since that == "poor" and causes bad matches
     props.ilvl        = itemLevel or 0
     props.reqLevel    = itemMinLevel or 0
     props.equipLoc    = itemEquipLoc or ""
@@ -1746,6 +1752,8 @@ end
 -- ============================================================================
 -- SECTION 12: PUBLIC API
 -- ============================================================================
+
+--- NOTE: PE:BuildProps is also public, just further up in the code.
 
 --- Compile an expression string into a predicate function.
 --- Returns the compiled function(props)->bool, cached for repeated use.
