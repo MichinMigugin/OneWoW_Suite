@@ -1,4 +1,4 @@
-local MAJOR, MINOR = "OneWoW_GUI-1.0", 6
+local MAJOR, MINOR = "OneWoW_GUI-1.0", 8
 local OneWoW_GUI, oldMinor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not OneWoW_GUI then return end
@@ -78,7 +78,44 @@ function OneWoW_GUI:RestoreWindowPosition(frame, storage)
     return true
 end
 
+--- Use BreakUpLargeNumbers (client locale) when enabled; otherwise US-style comma grouping.
+function OneWoW_GUI:UseRegionalMoneyNumbers()
+    local db = self._settingsDB
+    if not db or not db.moneyDisplay then
+        return true
+    end
+    return db.moneyDisplay.useRegionalNumbers ~= false
+end
+
+--- When true, show colored g/s/c text. When false, use Blizzard coin textures.
+function OneWoW_GUI:UseMoneyLetters()
+    local db = self._settingsDB
+    if not db or not db.moneyDisplay then
+        return false
+    end
+    return db.moneyDisplay.useLetters == true
+end
+
+--- When true (letter mode), show amounts in white; when false, classic gold/silver/copper tint on digits too.
+function OneWoW_GUI:UseMoneyWhiteValues()
+    local db = self._settingsDB
+    if not db or not db.moneyDisplay then
+        return true
+    end
+    return db.moneyDisplay.useWhiteValues ~= false
+end
+
 function OneWoW_GUI:FormatNumber(n)
+    n = math.floor(tonumber(n) or 0)
+    if n < 0 then
+        n = math.abs(n)
+    end
+    if self:UseRegionalMoneyNumbers() and type(BreakUpLargeNumbers) == "function" then
+        local formatted = BreakUpLargeNumbers(n)
+        if formatted and formatted ~= "" then
+            return formatted
+        end
+    end
     local s = tostring(n)
     local pos = #s % 3
     if pos == 0 then pos = 3 end
@@ -90,15 +127,56 @@ function OneWoW_GUI:FormatNumber(n)
 end
 
 function OneWoW_GUI:FormatGold(copper)
-    local gold = math.floor(copper / 10000)
-    local silver = math.floor((copper % 10000) / 100)
-    local cop = copper % 100
-    if gold > 0 then
-        return string.format("|cFFFFD100%sg|r |cFFC0C0C0%ds|r |cFFAD6A24%dc|r", self:FormatNumber(gold), silver, cop)
-    elseif silver > 0 then
-        return string.format("|cFFC0C0C0%ds|r |cFFAD6A24%dc|r", silver, cop)
+    if copper == nil or type(copper) ~= "number" then
+        copper = 0
     else
-        return string.format("|cFFAD6A24%dc|r", cop)
+        copper = math.floor(tonumber(copper) or 0)
+    end
+
+    local useLetters = self:UseMoneyLetters()
+    local isNegative = copper < 0
+    local absCopper = math.abs(copper)
+
+    if not useLetters then
+        local texFn = _G.GetCoinTextureString
+            or (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString)
+        if texFn then
+            local ok, result = pcall(texFn, absCopper)
+            if ok and result and result ~= "" then
+                return (isNegative and "-" or "") .. result
+            end
+        end
+        useLetters = true
+    end
+
+    local gold = math.floor(absCopper / 10000)
+    local silver = math.floor((absCopper % 10000) / 100)
+    local cop = absCopper % 100
+    local prefix = isNegative and "-" or ""
+
+    if self:UseMoneyWhiteValues() then
+        local W = "|cFFFFFFFF"
+        if gold > 0 then
+            return prefix .. string.format(
+                "%s%s|r|cFFFFD100g|r %s%s|r|cFFC0C0C0s|r %s%s|r|cFFAD6A24c|r",
+                W, self:FormatNumber(gold), W, silver, W, cop
+            )
+        elseif silver > 0 then
+            return prefix .. string.format(
+                "%s%s|r|cFFC0C0C0s|r %s%s|r|cFFAD6A24c|r",
+                W, silver, W, cop
+            )
+        else
+            return prefix .. string.format("%s%s|r|cFFAD6A24c|r", W, cop)
+        end
+    end
+
+    if gold > 0 then
+        return prefix .. string.format("|cFFFFD100%sg|r |cFFC0C0C0%ds|r |cFFAD6A24%dc|r", self:FormatNumber(gold), silver, cop)
+    elseif silver > 0 then
+        return prefix .. string.format("|cFFC0C0C0%ds|r |cFFAD6A24%dc|r", silver, cop)
+    else
+        return prefix .. string.format("|cFFAD6A24%dc|r", cop)
     end
 end
 

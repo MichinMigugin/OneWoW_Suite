@@ -36,6 +36,10 @@ local function InitSettingsDB()
     if db.minimap.hide == nil then db.minimap.hide = false end
     if db.minimap.theme == nil then db.minimap.theme = DEFAULT_THEME_ICON end
     if not db.minimapLaunchers then db.minimapLaunchers = {} end
+    if not db.moneyDisplay then db.moneyDisplay = {} end
+    if db.moneyDisplay.useLetters == nil then db.moneyDisplay.useLetters = false end
+    if db.moneyDisplay.useRegionalNumbers == nil then db.moneyDisplay.useRegionalNumbers = true end
+    if db.moneyDisplay.useWhiteValues == nil then db.moneyDisplay.useWhiteValues = true end
     OneWoW_GUI._settingsDB = db
 end
 
@@ -48,6 +52,15 @@ function OneWoW_GUI:GetSetting(key)
     elseif key == "fontSizeOffset" then return db.fontSizeOffset
     elseif key == "minimap.hide" then return db.minimap and db.minimap.hide
     elseif key == "minimap.theme" then return db.minimap and db.minimap.theme
+    elseif key == "moneyDisplay.useLetters" then
+        if not db.moneyDisplay then return false end
+        return db.moneyDisplay.useLetters == true
+    elseif key == "moneyDisplay.useRegionalNumbers" then
+        if not db.moneyDisplay then return true end
+        return db.moneyDisplay.useRegionalNumbers ~= false
+    elseif key == "moneyDisplay.useWhiteValues" then
+        if not db.moneyDisplay then return true end
+        return db.moneyDisplay.useWhiteValues ~= false
     end
 end
 
@@ -76,6 +89,18 @@ function OneWoW_GUI:SetSetting(key, value)
         if not db.minimap then db.minimap = {} end
         db.minimap.theme = value
         FireCallbacks("OnIconThemeChanged", value)
+    elseif key == "moneyDisplay.useLetters" then
+        if not db.moneyDisplay then db.moneyDisplay = {} end
+        db.moneyDisplay.useLetters = value and true or false
+        FireCallbacks("OnMoneyDisplayChanged", value)
+    elseif key == "moneyDisplay.useRegionalNumbers" then
+        if not db.moneyDisplay then db.moneyDisplay = {} end
+        db.moneyDisplay.useRegionalNumbers = value and true or false
+        FireCallbacks("OnMoneyDisplayChanged", value)
+    elseif key == "moneyDisplay.useWhiteValues" then
+        if not db.moneyDisplay then db.moneyDisplay = {} end
+        db.moneyDisplay.useWhiteValues = value and true or false
+        FireCallbacks("OnMoneyDisplayChanged", value)
     end
 end
 
@@ -99,6 +124,12 @@ function OneWoW_GUI:MigrateSettings(sourceGlobal)
     if sourceGlobal.minimap then
         if sourceGlobal.minimap.hide ~= nil then db.minimap.hide = sourceGlobal.minimap.hide end
         if sourceGlobal.minimap.theme then db.minimap.theme = sourceGlobal.minimap.theme end
+    end
+    if sourceGlobal.moneyDisplay then
+        if not db.moneyDisplay then db.moneyDisplay = {} end
+        if sourceGlobal.moneyDisplay.useLetters ~= nil then db.moneyDisplay.useLetters = sourceGlobal.moneyDisplay.useLetters end
+        if sourceGlobal.moneyDisplay.useRegionalNumbers ~= nil then db.moneyDisplay.useRegionalNumbers = sourceGlobal.moneyDisplay.useRegionalNumbers end
+        if sourceGlobal.moneyDisplay.useWhiteValues ~= nil then db.moneyDisplay.useWhiteValues = sourceGlobal.moneyDisplay.useWhiteValues end
     end
 end
 
@@ -1060,7 +1091,64 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     yOffset = yOffset - 185
 
     ----------------------------------------------------------------
-    -- ROW 4: Discord | Buy Me A Coffee
+    -- ROW 4: Value display (money)
+    ----------------------------------------------------------------
+    local valuePanel = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    valuePanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+    valuePanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+    valuePanel:SetHeight(158)
+    valuePanel:SetBackdrop(panelBackdrop)
+    valuePanel:SetBackdropColor(self:GetThemeColor("BG_SECONDARY"))
+    valuePanel:SetBackdropBorderColor(self:GetThemeColor("BORDER_SUBTLE"))
+
+    local valueTitle = valuePanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    valueTitle:SetPoint("TOPLEFT", valuePanel, "TOPLEFT", 15, -12)
+    valueTitle:SetText("Value display")
+    valueTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
+
+    local valueDesc = valuePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    valueDesc:SetPoint("TOPLEFT", valuePanel, "TOPLEFT", 15, -38)
+    valueDesc:SetPoint("TOPRIGHT", valuePanel, "TOPRIGHT", -15, -38)
+    valueDesc:SetText("How gold and prices are shown across OneWoW (bags, AltTracker, Catalog, tooltips, farm value tracker, etc.).")
+    valueDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
+    valueDesc:SetJustifyH("LEFT")
+    valueDesc:SetWordWrap(true)
+
+    local lettersChecked = self:GetSetting("moneyDisplay.useLetters") and true or false
+    local regionalChecked = self:GetSetting("moneyDisplay.useRegionalNumbers") ~= false
+    local whiteValuesChecked = self:GetSetting("moneyDisplay.useWhiteValues") ~= false
+
+    local lettersCb = self:CreateCheckbox(valuePanel, {
+        label = "Show letters g, s, c (instead of coin icons)",
+    })
+    lettersCb:SetPoint("TOPLEFT", valuePanel, "TOPLEFT", 12, -72)
+    lettersCb:SetChecked(lettersChecked)
+    lettersCb:SetScript("OnClick", function(cb)
+        OneWoW_GUI:SetSetting("moneyDisplay.useLetters", cb:GetChecked())
+    end)
+
+    local regionalCb = self:CreateCheckbox(valuePanel, {
+        label = "Use regional number grouping (client locale)",
+    })
+    regionalCb:SetPoint("TOPLEFT", lettersCb, "BOTTOMLEFT", 0, -6)
+    regionalCb:SetChecked(regionalChecked)
+    regionalCb:SetScript("OnClick", function(cb)
+        OneWoW_GUI:SetSetting("moneyDisplay.useRegionalNumbers", cb:GetChecked())
+    end)
+
+    local whiteValuesCb = self:CreateCheckbox(valuePanel, {
+        label = "Use white values (letter mode; classic look when off)",
+    })
+    whiteValuesCb:SetPoint("TOPLEFT", regionalCb, "BOTTOMLEFT", 0, -6)
+    whiteValuesCb:SetChecked(whiteValuesChecked)
+    whiteValuesCb:SetScript("OnClick", function(cb)
+        OneWoW_GUI:SetSetting("moneyDisplay.useWhiteValues", cb:GetChecked())
+    end)
+
+    yOffset = yOffset - 178
+
+    ----------------------------------------------------------------
+    -- ROW 5: Discord | Buy Me A Coffee
     ----------------------------------------------------------------
     local _, discordPanel, coffeePanel = CreateSplitRow(120)
 
