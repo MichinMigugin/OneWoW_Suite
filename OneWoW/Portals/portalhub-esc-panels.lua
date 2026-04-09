@@ -6,6 +6,7 @@ OneWoW.EscPanels = OneWoW.EscPanels or {}
 local EscPanels = OneWoW.EscPanels
 
 local PANEL_WIDTH = 350
+EscPanels.PANEL_WIDTH = PANEL_WIDTH
 local PANEL_GAP = 6
 local PANEL_PADDING = 12
 local SCREEN_PAD = 10
@@ -254,7 +255,14 @@ local function EnsureDimOverlay()
 	dimOverlay:Show()
 end
 
-local function EnsurePanelsContainer()
+local function GetPanelsHorizontalMode(ph)
+	if ph and ph.escPanelsSide == "right" then
+		return "right"
+	end
+	return "left"
+end
+
+local function EnsurePanelsContainer(ph)
 	if not panelsContainer then
 		panelsContainer = CreateFrame("Frame", "OneWoWEscPanelsContainer", UIParent)
 		panelsContainer:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -263,8 +271,18 @@ local function EnsurePanelsContainer()
 
 	panelsContainer:ClearAllPoints()
 	local gmLeft = GameMenuFrame and GameMenuFrame:GetLeft()
-	if gmLeft then
-		panelsContainer:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", gmLeft - 20, UIParent:GetHeight())
+	local gmRight = GameMenuFrame and GameMenuFrame:GetRight()
+	local mode = GetPanelsHorizontalMode(ph)
+	local yTop = UIParent:GetHeight()
+
+	if mode == "right" then
+		if gmRight then
+			panelsContainer:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", gmRight + 20, yTop)
+		else
+			panelsContainer:SetPoint("TOPLEFT", UIParent, "TOP", 200, 0)
+		end
+	elseif gmLeft then
+		panelsContainer:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", gmLeft - 20, yTop)
 	else
 		panelsContainer:SetPoint("TOPRIGHT", UIParent, "TOP", -200, 0)
 	end
@@ -272,7 +290,7 @@ local function EnsurePanelsContainer()
 	panelsContainer:Show()
 end
 
-local function BuildCharacterInfoPanel(container, yOffset)
+local function BuildCharacterInfoPanel(container, yOffset, hMode)
 	if not panelFrames.charInfo then
 		local panel = CreatePanel(container, "OneWoWEscPanelCharInfo", CHARINFO_HEIGHT)
 		CreateHeader(panel, "ESCPANEL_CHARACTER_INFO")
@@ -312,7 +330,11 @@ local function BuildCharacterInfoPanel(container, yOffset)
 
 	local panel = panelFrames.charInfo
 	panel:ClearAllPoints()
-	panel:SetPoint("TOPRIGHT", container, "TOPRIGHT", 0, yOffset)
+	if hMode == "right" then
+		panel:SetPoint("TOPLEFT", container, "TOPLEFT", 0, yOffset)
+	else
+		panel:SetPoint("TOPRIGHT", container, "TOPRIGHT", 0, yOffset)
+	end
 	panel:SetHeight(CHARINFO_HEIGHT)
 
 	local char = GetCharacterInfo()
@@ -351,7 +373,7 @@ local function BuildCharacterInfoPanel(container, yOffset)
 	return panel, yOffset - CHARINFO_HEIGHT - PANEL_GAP
 end
 
-local function BuildAlertsPanel(container, yOffset, anchorPanel)
+local function BuildAlertsPanel(container, yOffset, anchorPanel, hMode)
 	if not panelFrames.alerts then
 		local panel = CreatePanel(container, "OneWoWEscPanelAlerts", ALERTS_HEIGHT)
 		CreateHeader(panel, "ESCPANEL_ALERTS")
@@ -383,7 +405,11 @@ local function BuildAlertsPanel(container, yOffset, anchorPanel)
 
 	local panel = panelFrames.alerts
 	panel:ClearAllPoints()
-	panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
+	if hMode == "right" then
+		panel:SetPoint("TOPLEFT", anchorPanel, "BOTTOMLEFT", 0, -PANEL_GAP)
+	else
+		panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
+	end
 	panel:SetHeight(ALERTS_HEIGHT)
 
 	local alertIndex = 1
@@ -411,7 +437,7 @@ local function BuildAlertsPanel(container, yOffset, anchorPanel)
 	return panel, yOffset - ALERTS_HEIGHT - PANEL_GAP
 end
 
-local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
+local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, hMode)
 	local zoneName, zoneData = GetZoneNoteData()
 	local displayZone = zoneName or (GetZoneText() or "")
 
@@ -477,7 +503,11 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight)
 
 	local panel = panelFrames.zoneNotes
 	panel:ClearAllPoints()
-	panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
+	if hMode == "right" then
+		panel:SetPoint("TOPLEFT", anchorPanel, "BOTTOMLEFT", 0, -PANEL_GAP)
+	else
+		panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
+	end
 	panel:SetHeight(flexHeight)
 	panel.currentZoneName = zoneName
 
@@ -670,7 +700,7 @@ local function UpdateNotesContent(panel, notesData, emptyKey)
 	panel.scrollChild:SetHeight(math.abs(yOff) + 10)
 end
 
-local function BuildNotesPanel(container, yOffset, anchorPanel, panelKey, headerKey, emptyKey, noteType, flexHeight, prefetchedData)
+local function BuildNotesPanel(container, yOffset, anchorPanel, panelKey, headerKey, emptyKey, noteType, flexHeight, prefetchedData, hMode)
 	if not panelFrames[panelKey] then
 		local panel = CreatePanel(container, "OneWoWEscPanel_" .. panelKey, flexHeight)
 		CreateHeader(panel, headerKey)
@@ -690,7 +720,11 @@ local function BuildNotesPanel(container, yOffset, anchorPanel, panelKey, header
 
 	local panel = panelFrames[panelKey]
 	panel:ClearAllPoints()
-	panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
+	if hMode == "right" then
+		panel:SetPoint("TOPLEFT", anchorPanel, "BOTTOMLEFT", 0, -PANEL_GAP)
+	else
+		panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
+	end
 	panel:SetHeight(flexHeight)
 
 	local notesData = prefetchedData or GetNotesByType(noteType)
@@ -700,7 +734,7 @@ local function BuildNotesPanel(container, yOffset, anchorPanel, panelKey, header
 	return panel, yOffset - flexHeight - PANEL_GAP
 end
 
-local function BuildInstanceToastPanel(container, yOffset, anchorPanel)
+local function BuildInstanceToastPanel(container, yOffset, anchorPanel, hMode)
 	local instName, instanceType, diffID, diffName, _, _, _, instanceMapID = GetInstanceInfo()
 	if instanceType ~= "party" and instanceType ~= "raid" then
 		if panelFrames.instanceToast then
@@ -733,7 +767,11 @@ local function BuildInstanceToastPanel(container, yOffset, anchorPanel)
 
 	local panel = panelFrames.instanceToast
 	panel:ClearAllPoints()
-	panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
+	if hMode == "right" then
+		panel:SetPoint("TOPLEFT", anchorPanel, "BOTTOMLEFT", 0, -PANEL_GAP)
+	else
+		panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
+	end
 
 	if instName and instName ~= "" then
 		panel.headerText:SetText(instName)
@@ -792,8 +830,9 @@ function EscPanels:Build(parent)
 	end
 
 	EnsureDimOverlay()
-	EnsurePanelsContainer()
+	EnsurePanelsContainer(ph)
 
+	local hMode = GetPanelsHorizontalMode(ph)
 	local showTasks = ph.escShowTasks ~= false
 	local dailyNotes, weeklyNotes
 	if showTasks then
@@ -815,19 +854,19 @@ function EscPanels:Build(parent)
 
 	local charPanel
 	if ph.escShowCharacterInfo ~= false then
-		charPanel, yOffset = BuildCharacterInfoPanel(panelsContainer, yOffset)
+		charPanel, yOffset = BuildCharacterInfoPanel(panelsContainer, yOffset, hMode)
 		lastPanel = charPanel
 	elseif panelFrames.charInfo then
 		panelFrames.charInfo:Hide()
 	end
 
 	local instPanel
-	instPanel, yOffset = BuildInstanceToastPanel(panelsContainer, yOffset, lastPanel)
+	instPanel, yOffset = BuildInstanceToastPanel(panelsContainer, yOffset, lastPanel, hMode)
 	lastPanel = instPanel
 
 	if hasAlerts then
 		local alertPanel
-		alertPanel, yOffset = BuildAlertsPanel(panelsContainer, yOffset, lastPanel)
+		alertPanel, yOffset = BuildAlertsPanel(panelsContainer, yOffset, lastPanel, hMode)
 		lastPanel = alertPanel
 	elseif panelFrames.alerts then
 		panelFrames.alerts:Hide()
@@ -835,7 +874,7 @@ function EscPanels:Build(parent)
 
 	if showZone then
 		local zonePanel
-		zonePanel, yOffset = BuildZoneNotesPanel(panelsContainer, yOffset, lastPanel, flexHeight)
+		zonePanel, yOffset = BuildZoneNotesPanel(panelsContainer, yOffset, lastPanel, flexHeight, hMode)
 		lastPanel = zonePanel
 	elseif panelFrames.zoneNotes then
 		panelFrames.zoneNotes:Hide()
@@ -844,7 +883,7 @@ function EscPanels:Build(parent)
 	if showTasks then
 		if hasDaily then
 			local dailyPanel
-			dailyPanel, yOffset = BuildNotesPanel(panelsContainer, yOffset, lastPanel, "daily", "ESCPANEL_DAILY_NOTES", "ESCPANEL_NO_DAILY", "daily", flexHeight, dailyNotes)
+			dailyPanel, yOffset = BuildNotesPanel(panelsContainer, yOffset, lastPanel, "daily", "ESCPANEL_DAILY_NOTES", "ESCPANEL_NO_DAILY", "daily", flexHeight, dailyNotes, hMode)
 			lastPanel = dailyPanel
 		elseif panelFrames.daily then
 			panelFrames.daily:Hide()
@@ -852,7 +891,7 @@ function EscPanels:Build(parent)
 
 		if hasWeekly then
 			local weeklyPanel
-			weeklyPanel, yOffset = BuildNotesPanel(panelsContainer, yOffset, lastPanel, "weekly", "ESCPANEL_WEEKLY_NOTES", "ESCPANEL_NO_WEEKLY", "weekly", flexHeight, weeklyNotes)
+			weeklyPanel, yOffset = BuildNotesPanel(panelsContainer, yOffset, lastPanel, "weekly", "ESCPANEL_WEEKLY_NOTES", "ESCPANEL_NO_WEEKLY", "weekly", flexHeight, weeklyNotes, hMode)
 			lastPanel = weeklyPanel
 		elseif panelFrames.weekly then
 			panelFrames.weekly:Hide()
@@ -861,6 +900,27 @@ function EscPanels:Build(parent)
 		if panelFrames.daily then panelFrames.daily:Hide() end
 		if panelFrames.weekly then panelFrames.weekly:Hide() end
 	end
+
+	if not self:HasVisiblePanelStack() then
+		if panelsContainer then
+			panelsContainer:Hide()
+		end
+	end
+end
+
+function EscPanels:HasVisiblePanelStack()
+	for _, p in pairs(panelFrames) do
+		if p and p.IsShown and p:IsShown() then
+			return true
+		end
+	end
+	return false
+end
+
+function EscPanels:SyncPanelsContainerPosition(ph)
+	if not ph or not ph.escEnabled then return end
+	if not panelsContainer or not panelsContainer:IsShown() then return end
+	EnsurePanelsContainer(ph)
 end
 
 function EscPanels:HideAll()

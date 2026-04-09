@@ -75,6 +75,58 @@ function EscMenu:HookGameMenu()
 	end
 end
 
+local STRIP_GAP = 6
+local PADDING_MENU_LEFT = 40
+local PADDING_MENU_RIGHT = 10
+
+function EscMenu:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide, ph)
+	local gm = GameMenuFrame
+	if not gm then return portalsSide == "left" and -PADDING_MENU_LEFT or PADDING_MENU_RIGHT end
+	local pc = _G.OneWoWEscPanelsContainer
+	local sameSide = (portalsSide == "left" and panelsSide == "left")
+		or (portalsSide == "right" and panelsSide == "right")
+	local panelsVisible = OneWoW.EscPanels and OneWoW.EscPanels:HasVisiblePanelStack()
+	local pcReady = pc and pc:IsShown()
+
+	if portalsSide == "left" then
+		if sameSide and panelsVisible and pcReady then
+			return (pc:GetLeft() - STRIP_GAP) - gm:GetLeft()
+		end
+		return -PADDING_MENU_LEFT
+	end
+
+	if sameSide and panelsVisible and pcReady then
+		return (pc:GetRight() + STRIP_GAP) - gm:GetRight()
+	end
+	return PADDING_MENU_RIGHT
+end
+
+function EscMenu:SyncEscLayout()
+	if not GameMenuFrame or not GameMenuFrame:IsShown() then return end
+	local ph = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
+	if not ph or not ph.escEnabled then return end
+
+	if OneWoW.EscPanels then
+		OneWoW.EscPanels:SyncPanelsContainerPosition(ph)
+	end
+
+	local portalsSide = ph.escPortalsSide == "left" and "left" or "right"
+	local panelsSide = ph.escPanelsSide == "right" and "right" or "left"
+	local iconSize = ph.escIconSize or 40
+	local yStart = -(iconSize / 2) - 10
+	local ox = self:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide, ph)
+
+	if ph.escPortalsEnabled then
+		if portalsSide == "left" and leftFrame and leftFrame:IsShown() then
+			leftFrame:ClearAllPoints()
+			leftFrame:SetPoint("TOPRIGHT", GameMenuFrame, "TOPLEFT", ox, yStart)
+		elseif portalsSide == "right" and rightFrame and rightFrame:IsShown() then
+			rightFrame:ClearAllPoints()
+			rightFrame:SetPoint("TOPLEFT", GameMenuFrame, "TOPRIGHT", ox, yStart)
+		end
+	end
+end
+
 function EscMenu:HidePortalFrames()
 	if OneWoW.PortalHubFlyouts then
 		OneWoW.PortalHubFlyouts:RecycleAll()
@@ -119,18 +171,44 @@ function EscMenu:ShowPortalFrames()
 
 	local iconSize = OneWoW.db.global.portalHub.escIconSize or 40
 	local iconGap = 2
-	local paddingLeft = 40
-	local paddingRight = 10
 	local yStart = -(iconSize / 2) - 10
 
-	leftFrame:SetPoint("TOPRIGHT", GameMenuFrame, "TOPLEFT", -paddingLeft, yStart)
-	rightFrame:SetPoint("TOPLEFT", GameMenuFrame, "TOPRIGHT", paddingRight, yStart)
+	local ph = OneWoW.db.global.portalHub or {}
+	local panelsSide = ph.escPanelsSide == "right" and "right" or "left"
+	local portalsSide = ph.escPortalsSide == "left" and "left" or "right"
+
+	leftFrame:Hide()
+	rightFrame:Hide()
 
 	self:BuildLeftSide(leftFrame, iconSize, iconGap)
-	self:BuildRightSide(rightFrame, iconSize, iconGap)
 
-	leftFrame:Show()
-	rightFrame:Show()
+	local ox = self:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide, ph)
+
+	if ph.escPortalsEnabled then
+		if portalsSide == "left" then
+			leftFrame:ClearAllPoints()
+			leftFrame:SetPoint("TOPRIGHT", GameMenuFrame, "TOPLEFT", ox, yStart)
+			self:BuildPortalStrip(leftFrame, iconSize, iconGap, true)
+			leftFrame:Show()
+		end
+		if portalsSide == "right" then
+			rightFrame:ClearAllPoints()
+			rightFrame:SetPoint("TOPLEFT", GameMenuFrame, "TOPRIGHT", ox, yStart)
+			self:BuildPortalStrip(rightFrame, iconSize, iconGap, false)
+			rightFrame:Show()
+		end
+	end
+
+	local function deferredSync()
+		if not GameMenuFrame or not GameMenuFrame:IsShown() then return end
+		if InCombatLockdown() then return end
+		local hub = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
+		if not hub or not hub.escEnabled then return end
+		EscMenu:SyncEscLayout()
+	end
+
+	C_Timer.After(0, deferredSync)
+	C_Timer.After(0.05, deferredSync)
 end
 
 function EscMenu:BuildLeftSide(parent, iconSize, iconGap)
@@ -139,10 +217,11 @@ function EscMenu:BuildLeftSide(parent, iconSize, iconGap)
 	end
 end
 
-function EscMenu:BuildRightSide(parent, iconSize, iconGap)
+function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	local ph = OneWoW.db.global.portalHub
 	if not ph or not ph.escPortalsEnabled then return end
 	local showAll = ph.showAllOnEsc or false
+	local flyoutOrient = growLeft and "LEFT" or "RIGHT"
 	local yOffset = 0
 	local xOffset = 0
 
@@ -177,7 +256,7 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 
 	xOffset = 0
 	for _, hearth in ipairs(hearthButtons) do
-		local button = self:CreatePortalButton(parent, hearth, xOffset, yOffset, iconSize, "RIGHT")
+		local button = self:CreatePortalButton(parent, hearth, xOffset, yOffset, iconSize, growLeft)
 		table.insert(secureButtons, button)
 		xOffset = xOffset + iconSize + iconGap
 	end
@@ -194,7 +273,7 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 	if #favAvailable > 0 or showAll then
 		local displayFav = #favAvailable > 0 and favAvailable or {{type = "spell", id = 6948}}
 		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, 1506458, iconSize, 0, yOffset, displayFav, "RIGHT", "Fav"
+			parent, 1506458, iconSize, 0, yOffset, displayFav, flyoutOrient, "Fav", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
@@ -218,7 +297,7 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 	if #allAbilities > 0 or showAll then
 		local displayAbilities = #allAbilities > 0 and allAbilities or {{type = "spell", id = 556}}
 		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, "Interface\\Icons\\Achievement_BG_winAB_underXminutes", iconSize, 0, yOffset, displayAbilities, "RIGHT", "Abilities"
+			parent, "Interface\\Icons\\Achievement_BG_winAB_underXminutes", iconSize, 0, yOffset, displayAbilities, flyoutOrient, "Abilities", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
@@ -236,7 +315,7 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 	if #allEng > 0 or showAll then
 		local displayEng = #allEng > 0 and allEng or {{type = "toy", id = 48933}}
 		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, "Interface\\Icons\\Trade_Engineering", iconSize, 0, yOffset, displayEng, "RIGHT", "Prof"
+			parent, "Interface\\Icons\\Trade_Engineering", iconSize, 0, yOffset, displayEng, flyoutOrient, "Prof", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
@@ -251,7 +330,7 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 		local icon = C_Spell.GetSpellTexture(3561) or 237509
 		local displayMage = #allMage > 0 and allMage or {{type = "spell", id = 3561}}
 		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, icon, iconSize, 0, yOffset, displayMage, "RIGHT", "Mage"
+			parent, icon, iconSize, 0, yOffset, displayMage, flyoutOrient, "Mage", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
@@ -281,7 +360,7 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 		end
 
 		if hasDungeons then
-			local dungeonButton = OneWoW.NestedFlyouts:CreateDungeonsButton(parent, iconSize, yOffset, dungeonExpansions, showAll)
+			local dungeonButton = OneWoW.NestedFlyouts:CreateDungeonsButton(parent, iconSize, yOffset, dungeonExpansions, showAll, growLeft)
 			table.insert(flyoutButtons, dungeonButton)
 			yOffset = yOffset - (iconSize + iconGap)
 		end
@@ -307,7 +386,7 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 		end
 
 		if hasRaids then
-			local raidButton = OneWoW.NestedFlyouts:CreateRaidsButton(parent, iconSize, yOffset, raidExpansions, showAll)
+			local raidButton = OneWoW.NestedFlyouts:CreateRaidsButton(parent, iconSize, yOffset, raidExpansions, showAll, growLeft)
 			table.insert(flyoutButtons, raidButton)
 			yOffset = yOffset - (iconSize + iconGap)
 		end
@@ -319,7 +398,7 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 		local displaySeason = #seasonPortals > 0 and seasonPortals or {{type = "spell", id = 1254400}}
 		local seasonIcon = C_Spell.GetSpellTexture(1254400) or "Interface\\Icons\\Achievement_Boss_Archaedas"
 		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, seasonIcon, iconSize, 0, yOffset, displaySeason, "RIGHT", "S.1"
+			parent, seasonIcon, iconSize, 0, yOffset, displaySeason, flyoutOrient, "S.1", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
@@ -330,7 +409,7 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 		if #allItems > 0 or showAll then
 			local displayItems = #allItems > 0 and allItems or {{type = "item", id = 6948}}
 			local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
-				parent, "Interface\\Icons\\INV_Misc_Bag_10", iconSize, 0, yOffset, displayItems, "RIGHT", "Items"
+				parent, "Interface\\Icons\\INV_Misc_Bag_10", iconSize, 0, yOffset, displayItems, flyoutOrient, "Items", growLeft
 			)
 			table.insert(flyoutButtons, button)
 			yOffset = yOffset - (iconSize + iconGap)
@@ -339,16 +418,16 @@ function EscMenu:BuildRightSide(parent, iconSize, iconGap)
 
 	yOffset = yOffset - (iconSize + iconGap)
 
-	local openButton = self:CreateOpenHubButton(parent, 0, yOffset, iconSize)
+	local openButton = self:CreateOpenHubButton(parent, 0, yOffset, iconSize, growLeft)
 	table.insert(secureButtons, openButton)
 end
 
-function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSize, side)
+function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSize, growLeft)
 	local button = CreateFrame("Button", nil, parent, "SecureActionButtonTemplate")
 	button:SetSize(iconSize, iconSize)
 
-	if side == "LEFT" then
-		button:SetPoint("TOPLEFT", parent, "TOPRIGHT", xOffset, yOffset)
+	if growLeft then
+		button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -xOffset, yOffset)
 	else
 		button:SetPoint("TOPLEFT", parent, "TOPLEFT", xOffset, yOffset)
 	end
@@ -479,7 +558,7 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 	end)
 
 	button:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, side == "LEFT" and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
+		GameTooltip:SetOwner(self, growLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
 		if portalData.type == "randomhearth" or portalData.type == "item" then
 			GameTooltip:SetItemByID(portalData.id)
 		elseif portalData.type == "toy" then
@@ -539,10 +618,14 @@ function EscMenu:UpdateCooldown(button, portalData)
 	end
 end
 
-function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize)
+function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize, growLeft)
 	local button = CreateFrame("Button", nil, parent)
 	button:SetSize(iconSize, iconSize)
-	button:SetPoint("LEFT", parent, "TOPLEFT", xOffset, yOffset)
+	if growLeft then
+		button:SetPoint("RIGHT", parent, "TOPRIGHT", -xOffset, yOffset)
+	else
+		button:SetPoint("LEFT", parent, "TOPLEFT", xOffset, yOffset)
+	end
 	button:SetNormalTexture("Interface\\Icons\\INV_Misc_Book_09")
 
 	button:SetScript("OnClick", function()
@@ -562,7 +645,7 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize)
 	end)
 
 	button:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetOwner(self, growLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
 		GameTooltip:SetText(L["Open Portal Hub"], 1, 1, 1)
 		GameTooltip:Show()
 	end)

@@ -7,10 +7,14 @@ local Nested = OneWoW.NestedFlyouts
 
 local activeNested = {}
 
-local function CreateInstanceButton(self, parent, iconSize, yOffset, expansions, showAll, config)
+local function CreateInstanceButton(self, parent, iconSize, yOffset, expansions, showAll, config, growLeft)
 	local mainButton = CreateFrame("Button", nil, parent)
 	mainButton:SetSize(iconSize, iconSize)
-	mainButton:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
+	if growLeft then
+		mainButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
+	else
+		mainButton:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
+	end
 	mainButton:SetNormalTexture(config.icon)
 
 	mainButton.text = OneWoW_GUI:CreateFS(mainButton, 8)
@@ -24,7 +28,11 @@ local function CreateInstanceButton(self, parent, iconSize, yOffset, expansions,
 	expFlyout:SetFrameStrata("FULLSCREEN_DIALOG")
 	expFlyout:SetFrameLevel(103)
 	expFlyout:SetSize(iconSize * #expansions, iconSize)
-	expFlyout:SetPoint("TOPLEFT", mainButton, "TOPRIGHT", 2, 0)
+	if growLeft then
+		expFlyout:SetPoint("TOPRIGHT", mainButton, "TOPLEFT", -2, 0)
+	else
+		expFlyout:SetPoint("TOPLEFT", mainButton, "TOPRIGHT", 2, 0)
+	end
 
 	local expButtons = {}
 	local validExpansions = {}
@@ -39,7 +47,8 @@ local function CreateInstanceButton(self, parent, iconSize, yOffset, expansions,
 	for i, expData in ipairs(validExpansions) do
 		local expButton = CreateFrame("Button", nil, expFlyout)
 		expButton:SetSize(iconSize, iconSize)
-		expButton:SetPoint("TOPLEFT", expFlyout, "TOPLEFT", (i-1) * iconSize, 0)
+		local xPad = (growLeft and (#validExpansions - i) or (i - 1)) * iconSize
+		expButton:SetPoint("TOPLEFT", expFlyout, "TOPLEFT", xPad, 0)
 		expButton:SetNormalTexture(expData.icon)
 
 		expButton.text = OneWoW_GUI:CreateFS(expButton, 8)
@@ -104,9 +113,10 @@ local function CreateInstanceButton(self, parent, iconSize, yOffset, expansions,
 		table.insert(expButtons, expButton)
 	end
 
+	local tipAnchor = growLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT"
 	mainButton:SetScript("OnEnter", function(self)
 		expFlyout:Show()
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetOwner(self, tipAnchor)
 		GameTooltip:SetText(config.tooltip, 1, 1, 1)
 		GameTooltip:Show()
 	end)
@@ -156,20 +166,20 @@ local function CreateInstanceButton(self, parent, iconSize, yOffset, expansions,
 	return mainButton
 end
 
-function Nested:CreateDungeonsButton(parent, iconSize, yOffset, expansions, showAll)
+function Nested:CreateDungeonsButton(parent, iconSize, yOffset, expansions, showAll, growLeft)
 	return CreateInstanceButton(self, parent, iconSize, yOffset, expansions, showAll, {
 		icon = "Interface\\Icons\\Achievement_Boss_Archaedas",
 		label = L["SETTINGS_PORTALHUB_DUNGEONS"],
 		tooltip = L["SETTINGS_PORTALHUB_DUNGEONS"],
-	})
+	}, growLeft)
 end
 
-function Nested:CreateRaidsButton(parent, iconSize, yOffset, expansions, showAll)
+function Nested:CreateRaidsButton(parent, iconSize, yOffset, expansions, showAll, growLeft)
 	return CreateInstanceButton(self, parent, iconSize, yOffset, expansions, showAll, {
 		icon = 4062765,
 		label = L["SETTINGS_PORTALHUB_RAIDS"],
 		tooltip = L["SETTINGS_PORTALHUB_RAIDS"],
-	})
+	}, growLeft)
 end
 
 function Nested:RecycleAll()

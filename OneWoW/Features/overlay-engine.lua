@@ -190,7 +190,8 @@ local BG_SOLID_STYLES = { ["Solid-Circle"] = true, ["Solid-Square"] = true }
 
 local function SetupIconAnimation(entry)
     if entry.iconAnim then return end
-    local ag = entry.frame:CreateAnimationGroup()
+    local host = entry.iconFrame or entry.frame
+    local ag = host:CreateAnimationGroup()
 
     local spin1 = ag:CreateAnimation("Rotation")
     spin1:SetDuration(1.5)
@@ -293,6 +294,18 @@ local function SetupBackground(entry)
     bf:Hide()
 end
 
+--- bgFrame is behind entry.frame; icon lives on iconFrame above bg (child frame draw order).
+local function SyncEntryLayerLevels(entry)
+    local f = entry.frame
+    if not f then return end
+    if entry.bgFrame then
+        entry.bgFrame:SetFrameLevel(f:GetFrameLevel() - 1)
+    end
+    if entry.iconFrame then
+        entry.iconFrame:SetFrameLevel(f:GetFrameLevel() + 1)
+    end
+end
+
 local function ApplyBackground(entry, cfg, iconSize, itemLink)
     if not cfg.bgEnabled then
         if entry.bgFrame then
@@ -304,7 +317,7 @@ local function ApplyBackground(entry, cfg, iconSize, itemLink)
     end
 
     SetupBackground(entry)
-    entry.bgFrame:SetFrameLevel(entry.frame:GetFrameLevel() - 1)
+    SyncEntryLayerLevels(entry)
 
     local style = cfg.bgStyle or "Solid-Circle"
     local bgScale = cfg.bgScale or 1.0
@@ -382,16 +395,44 @@ local function ApplyBackground(entry, cfg, iconSize, itemLink)
     entry.bgFrame:Show()
 end
 
+local function MigratePoolEntryIconLayer(entry)
+    if entry.iconFrame or not entry.frame or not entry.texture then return end
+    local f, t = entry.frame, entry.texture
+    local iconFr = CreateFrame("Frame", nil, f)
+    iconFr:SetAllPoints(f)
+    iconFr:EnableMouse(false)
+    t:SetParent(iconFr)
+    t:ClearAllPoints()
+    t:SetAllPoints(iconFr)
+    iconFr:SetFrameLevel(f:GetFrameLevel() + 1)
+    entry.iconFrame = iconFr
+    if entry.iconAnim then
+        entry.iconAnim:Stop()
+        entry.iconAnim = nil
+        entry.iconSpin1 = nil
+        entry.iconSpin2 = nil
+        entry.iconScaleUp = nil
+        entry.iconScaleDown = nil
+    end
+end
+
 local function GetOrCreatePoolEntry(button, index)
     PreparePool(button)
+    if button.onewow_overlayPool[index] then
+        MigratePoolEntryIconLayer(button.onewow_overlayPool[index])
+    end
     if not button.onewow_overlayPool[index] then
         local container = GetOrCreateContainer(button)
         local f = CreateFrame("Frame", nil, container)
         f:SetFrameLevel(button:GetFrameLevel() + 3)
         f:EnableMouse(false)
-        local t = f:CreateTexture(nil, "OVERLAY", nil, 3)
-        t:SetAllPoints(f)
-        button.onewow_overlayPool[index] = { frame = f, texture = t }
+        local iconFr = CreateFrame("Frame", nil, f)
+        iconFr:SetAllPoints(f)
+        iconFr:EnableMouse(false)
+        iconFr:SetFrameLevel(f:GetFrameLevel() + 1)
+        local t = iconFr:CreateTexture(nil, "OVERLAY", nil, 3)
+        t:SetAllPoints(iconFr)
+        button.onewow_overlayPool[index] = { frame = f, iconFrame = iconFr, texture = t }
     end
     return button.onewow_overlayPool[index]
 end
@@ -579,6 +620,10 @@ local function ApplyOverlayToButton(button, overlayId, positionIndex)
         entry.configAlpha = questAlpha
         button.onewow_questEntry = entry
         entry.frame:Show()
+        if entry.iconFrame then
+            entry.iconFrame:Show()
+        end
+        SyncEntryLayerLevels(entry)
         return
     end
 
@@ -609,9 +654,13 @@ local function ApplyOverlayToButton(button, overlayId, positionIndex)
     end
     entry.configAlpha = (iconName == "BLANK") and 0 or alpha
     entry.frame:Show()
+    if entry.iconFrame then
+        entry.iconFrame:Show()
+    end
 
     ApplyIconEffect(entry, cfg.effect)
     ApplyBackground(entry, cfg, finalSize, button.onewow_itemLink)
+    SyncEntryLayerLevels(entry)
 end
 
 local function IsPetOverlayItem(itemID, classID, subclassID)

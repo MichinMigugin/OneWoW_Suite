@@ -284,7 +284,7 @@ function GUI:CreatePortalsTab(parent)
 			button.favoriteIcon = button:CreateTexture(nil, "OVERLAY")
 			button.favoriteIcon:SetSize(16, 16)
 			button.favoriteIcon:SetPoint("TOPRIGHT", button, "TOPRIGHT", 0, 0)
-			button.favoriteIcon:SetTexture("Interface\\COMMON\\FavoritesIcon")
+			OneWoW_GUI:SetFavoriteAtlasTexture(button.favoriteIcon)
 			button.favoriteIcon:Hide()
 
 			button.dimOverlay = button:CreateTexture(nil, "ARTWORK")
@@ -644,7 +644,11 @@ function GUI:CreatePortalsTab(parent)
 				local icon = categoryFrame:CreateTexture(nil, "ARTWORK")
 				icon:SetSize(24, 24)
 				icon:SetPoint("LEFT", categoryFrame, "LEFT", 8, 0)
-				icon:SetTexture(category.icon)
+				if category.iconAtlas then
+					icon:SetAtlas(category.iconAtlas)
+				else
+					icon:SetTexture(category.icon)
+				end
 
 				local nameText = OneWoW_GUI:CreateFS(categoryFrame, 12)
 				nameText:SetPoint("LEFT", icon, "RIGHT", 8, 0)

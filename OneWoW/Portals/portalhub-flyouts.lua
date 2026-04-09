@@ -179,10 +179,14 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 	return button
 end
 
-function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset, yOffset, portals, side, label)
+function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset, yOffset, portals, side, label, layoutGrowLeft)
 	local button = CreateFrame("Button", nil, parent)
 	button:SetSize(iconSize, iconSize)
-	button:SetPoint("TOPLEFT", parent, "TOPRIGHT", xOffset, yOffset)
+	if layoutGrowLeft then
+		button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -xOffset, yOffset)
+	else
+		button:SetPoint("TOPLEFT", parent, "TOPRIGHT", xOffset, yOffset)
+	end
 
 	button.icon = button:CreateTexture(nil, "BACKGROUND")
 	button.icon:SetAllPoints()
@@ -221,7 +225,7 @@ function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset
 		local btnYOffset = -row * (iconSize + iconGap)
 
 		if side == "LEFT" then
-			btnXOffset = -(numCols - col - 1) * (iconSize + iconGap)
+			btnXOffset = (numCols - col - 1) * (iconSize + iconGap)
 		end
 
 		local flyoutBtn = self:CreateFlyoutButton(flyoutFrame, portal, btnXOffset, btnYOffset, iconSize)
@@ -236,9 +240,10 @@ function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset
 
 	flyoutFrame.parentButton = button
 
+	local tipAnchor = layoutGrowLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT"
 	button:SetScript("OnEnter", function(self)
 		flyoutFrame:Show()
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetOwner(self, tipAnchor)
 		GameTooltip:SetText(L["SETTINGS_PORTALHUB_HOVER_TO_EXPAND"], 1, 1, 1)
 		GameTooltip:Show()
 	end)

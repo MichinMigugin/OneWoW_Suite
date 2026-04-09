@@ -155,7 +155,7 @@ function PortalHub:GetCategories()
 	table.insert(categories, {
 		id = "favorites",
 		name = L["Favorites"],
-		icon = "Interface\\COMMON\\FavoritesIcon"
+		iconAtlas = "auctionhouse-icon-favorite",
 	})
 
 	table.insert(categories, {
