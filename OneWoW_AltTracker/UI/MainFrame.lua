@@ -315,6 +315,28 @@ function ns.UI.RegisterRosterTabFrame(tabName, frame)
     addon.rosterTabFrames[tabName] = frame
 end
 
+function ns.UI.RefreshMoneyDisplayTabs()
+    local mf = _G.OneWoWAltTrackerMainFrame
+    local addon = _G.OneWoW_AltTracker
+    local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
+    if not t then return end
+    if ns.UI.RefreshSummaryTab and t.summary then
+        ns.UI.RefreshSummaryTab(t.summary)
+    end
+    if ns.UI.RefreshFinancialsTab and t.financials then
+        ns.UI.RefreshFinancialsTab(t.financials)
+    end
+    if ns.UI.RefreshItemsTab and t.items then
+        ns.UI.RefreshItemsTab(t.items)
+    end
+    if ns.UI.RefreshAuctionsTab and t.auctions then
+        ns.UI.RefreshAuctionsTab(t.auctions)
+        if ns.UI.RefreshAuctionsStats then
+            ns.UI.RefreshAuctionsStats(t.auctions)
+        end
+    end
+end
+
 function ns.UI.RefreshAllFavoriteRosters()
     local mf = _G.OneWoWAltTrackerMainFrame
     local addon = _G.OneWoW_AltTracker

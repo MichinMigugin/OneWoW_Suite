@@ -17,44 +17,25 @@ function Formatters:GetCurrentCharacterKey()
 end
 
 function Formatters:FormatGold(copper)
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    if OneWoW_GUI and OneWoW_GUI.FormatGold then
+        return OneWoW_GUI:FormatGold(copper)
+    end
     if not copper or type(copper) ~= "number" then
         return C_CurrencyInfo.GetCoinTextureString(0)
     end
     copper = math.floor(tonumber(copper) or 0)
-    if copper == 0 then
-        return C_CurrencyInfo.GetCoinTextureString(0)
-    end
-
     local isNegative = copper < 0
     local absCopper = math.abs(copper)
-
     local success, result = pcall(C_CurrencyInfo.GetCoinTextureString, absCopper)
-    if success then
-        if isNegative then
-            return "-" .. result
-        end
-        return result
-    else
-        return self:FormatGoldSimple(copper)
+    if success and result then
+        return (isNegative and "-" or "") .. result
     end
+    return self:FormatGoldSimple(copper)
 end
 
 function Formatters:FormatGoldSimple(copper)
-    if not copper or copper == 0 then
-        return "0g"
-    end
-
-    local gold = math.floor(copper / 10000)
-    local silver = math.floor((copper % 10000) / 100)
-    local copperRem = copper % 100
-
-    if gold > 0 then
-        return string.format("%dg", gold)
-    elseif silver > 0 then
-        return string.format("%ds", silver)
-    else
-        return string.format("%dc", copperRem)
-    end
+    return self:FormatGold(copper)
 end
 
 function Formatters:FormatRelativeTime(timestamp)

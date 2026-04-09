@@ -413,6 +413,16 @@ function ns.UI.RefreshItemsTab(itemsTab)
     if not itemsTab then return end
     if not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.characters then return end
 
+    do
+        local hideScan = _G.OneWoW and _G.OneWoW.ItemPrices and _G.OneWoW.ItemPrices:IsAuctionatorAHSourceActive()
+        if itemsTab.scanAHButton then
+            itemsTab.scanAHButton:SetShown(not hideScan)
+        end
+        if itemsTab.noticeText then
+            itemsTab.noticeText:SetText(hideScan and (L["ITEMS_NOTICE_AUCTIONATOR"] or L["ITEMS_NOTICE"]) or L["ITEMS_NOTICE"])
+        end
+    end
+
     local scrollContent = itemsTab.scrollContent
     if not scrollContent then return end
 
@@ -658,13 +668,25 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
 
         if shouldInclude then
-            local priceDB = _G.OneWoW_AHPrices
-            if priceDB and priceDB[itemID] then
-                itemData.ahPrice = priceDB[itemID].price or 0
-                itemData.ahTime = priceDB[itemID].timestamp or 0
+            local ow = _G.OneWoW
+            if ow and ow.ItemPrices then
+                local p, meta = ow.ItemPrices:GetUnitAHPrice(itemID, itemData.itemLink)
+                if p and p > 0 then
+                    itemData.ahPrice = p
+                    itemData.ahTime = (meta and meta.timestamp) or 0
+                else
+                    itemData.ahPrice = 0
+                    itemData.ahTime = 0
+                end
             else
-                itemData.ahPrice = 0
-                itemData.ahTime = 0
+                local priceDB = _G.OneWoW_AHPrices
+                if priceDB and priceDB[itemID] then
+                    itemData.ahPrice = priceDB[itemID].price or 0
+                    itemData.ahTime = priceDB[itemID].timestamp or 0
+                else
+                    itemData.ahPrice = 0
+                    itemData.ahTime = 0
+                end
             end
             if itemData.ahPrice and itemData.ahPrice > 0 then
                 totalAHValue = totalAHValue + (itemData.ahPrice * itemData.totalQty)
