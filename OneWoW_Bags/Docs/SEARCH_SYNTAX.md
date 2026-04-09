@@ -20,6 +20,7 @@ all three contexts.
 | `200-300` | Items with item level between 200 and 300 |
 | `#haste & ilvl>=600` | Items with haste at ilvl 600+ |
 | `haste>=200` | Items with 200+ haste rating |
+| `#knowledge` | Profession knowledge study items |
 
 ---
 
@@ -104,6 +105,11 @@ All keywords are case-insensitive.
 | `#combatcurio` | Combat Curios |
 | `#curio` | All curios (utility + combat) |
 | `#explosive` | Explosives and generic consumables |
+| `#knowledge` | Profession knowledge study items (items whose Use spell uses the shared knowledge-study spell icons) |
+
+> **`#knowledge`:** Matching is based on the spell tied to the item (via
+> `C_Item.GetItemSpell` and that spell’s icon), not on scanning tooltip text.
+> Items without an item spell never match.
 
 ### Equipment
 
@@ -681,6 +687,7 @@ read more like natural conditions.
 | `IsAlreadyKnown` | `#alreadyknown` |
 | `IsTradeableLoot` | `#tradeableloot` |
 | `HasSocket` | `#socket` |
+| `IsKnowledge` | `#knowledge` |
 
 > **`IsBOA` vs `#boa`:** The `IsBOA` flag checks the strict `isBOA` property —
 > true only for items whose tooltip shows account-bound binding (not Warbound

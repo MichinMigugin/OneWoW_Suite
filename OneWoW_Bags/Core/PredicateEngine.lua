@@ -78,6 +78,9 @@ local HS_IDS = {
     [208704]=true,[209035]=true,[210455]=true,[212337]=true,[228940]=true,
 }
 
+-- icons shared by knowledge items (Use: Study to increase your ... knowledge by #)
+local KNOWLEDGE_ICONS = {[236225]=true, [136175]=true}
+
 -- Locale-aware patterns built from Blizzard globals.
 local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
 local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
@@ -195,51 +198,52 @@ RegisterPropAlias("tooltip",    "tooltipText",    "string")
 
 local FLAG_REGISTRY = {
     -- Core boolean flags
-    isequipment          = "isEquipment",
-    issoulbound          = "isSoulbound",
-    isboe                = "isBOE",
-    isboa                = "isBOA",
-    isbou                = "isBOU",
-    iswue                = "isWUE",
-    isinequipmentset     = "isInEquipmentSet",
-    iscollected          = "isCollected",
-    isusable             = "isUsable",
-    isjunk               = "isJunk",
-    isupgrade            = "isUpgrade",
-    istoy                = "isToy",
-    ismount              = "isMount",
-    ispet                = "isPet",
-    iscosmetic           = "isCosmetic",
-    islocked             = "isLocked",
-    isunsellable         = "isUnsellable",
-    hascharges           = "hasCharges",
-    isunique             = "isUnique",
-    isuniqueequipped     = "isUniqueEquipped",
-    isquestitem          = "isQuestItem",
-    istierset            = "isTierSet",
-    isappearancecollected = "isAppearanceCollected",
-    isunknownappearance   = "isUnknownAppearance",
-    hasappearance         = "hasAppearance",
-    isupgradeable         = "isUpgradeable",
-    isfullyupgraded       = "isFullyUpgraded",
-    isprofessionequipment = "isProfessionEquipment",
-    isequipped            = "isEquipped",
-    isequippable          = "isEquipment",
-    iscraftingreagent    = "isCraftingReagent",
-    hassocket            = "hasSocket",
+    isequipment             = "isEquipment",
+    issoulbound             = "isSoulbound",
+    isboe                   = "isBOE",
+    isboa                   = "isBOA",
+    isbou                   = "isBOU",
+    iswue                   = "isWUE",
+    isinequipmentset        = "isInEquipmentSet",
+    iscollected             = "isCollected",
+    isusable                = "isUsable",
+    isjunk                  = "isJunk",
+    isupgrade               = "isUpgrade",
+    istoy                   = "isToy",
+    ismount                 = "isMount",
+    ispet                   = "isPet",
+    iscosmetic              = "isCosmetic",
+    islocked                = "isLocked",
+    isunsellable            = "isUnsellable",
+    hascharges              = "hasCharges",
+    isunique                = "isUnique",
+    isuniqueequipped        = "isUniqueEquipped",
+    isquestitem             = "isQuestItem",
+    istierset               = "isTierSet",
+    isappearancecollected   = "isAppearanceCollected",
+    isunknownappearance     = "isUnknownAppearance",
+    hasappearance           = "hasAppearance",
+    isupgradeable           = "isUpgradeable",
+    isfullyupgraded         = "isFullyUpgraded",
+    isprofessionequipment   = "isProfessionEquipment",
+    isequipped              = "isEquipped",
+    isequippable            = "isEquipment",
+    iscraftingreagent       = "isCraftingReagent",
+    hassocket               = "hasSocket",
+    isknowledge             = "isKnowledge",
 
     -- Tooltip-derived flags (lazy)
-    hasuseability        = "hasUseAbility",
-    hasEquipAbility      = "hasEquipAbility",
-    isalreadyknown       = "isAlreadyKnown",
-    istradeableloot      = "isTradeableLoot",
+    hasuseability           = "hasUseAbility",
+    hasEquipAbility         = "hasEquipAbility",
+    isalreadyknown          = "isAlreadyKnown",
+    istradeableloot         = "isTradeableLoot",
 
     -- Aliases mapping to canonical props fields
-    iswarbound            = "isWarbound",
-    iswarbounduntilequip  = "isWUE",
-    isbindonequip         = "isBOE",
-    isaccountbound        = "isWarbound",
-    isbindonuse           = "isBOU",
+    iswarbound              = "isWarbound",
+    iswarbounduntilequip    = "isWUE",
+    isbindonequip           = "isBOE",
+    isaccountbound          = "isWarbound",
+    isbindonuse             = "isBOU",
 }
 
 -- ============================================================================
@@ -642,6 +646,7 @@ RegisterKeyword("unusable",         function(p) return not p.isUsable end)
 RegisterKeyword("locked",           function(p) return p.isLocked end)
 RegisterKeyword("socket",           function(p) return p.hasSocket end)
 RegisterKeyword("equipped",         function(p) return p.isEquipped end)
+RegisterKeyword("knowledge",        function(p) return p.isKnowledge end)
 
 -- ---- 7.19  Vendor / value keywords ----
 RegisterKeyword("unsellable", function(p) return p.isUnsellable end)
@@ -1110,6 +1115,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.petPower = petData and petData.petPower or 0
     props.petSpeed = petData and petData.petSpeed or 0
     props.petType = petData and petData.petType or 0
+    props.isKnowledge = false
 
     -- ---- C_Container.GetContainerItemInfo ----
     local containerInfo
@@ -1237,6 +1243,13 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     -- ---- Equipped status ----
     props.isEquipped = C_Item.IsEquippedItem(itemID) == true
 
+    -- ---- Knowledge items ----
+    local _, spellName = C_Item.GetItemSpell(hyperlink)
+    if spellName then
+        local spellinfo = C_Spell.GetSpellInfo(spellName)
+        local spellIconID = spellinfo.iconID
+        props.isKnowledge = KNOWLEDGE_ICONS[spellIconID] == true
+    end
 
     -- BIND DETECTION NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.
     -- UNIQUE DETECTION NOTE: C_Item.GetItemUniquenessByID only matches unique-equipped items; its purpose is to identify restrictions on equipping items, not on owning them.
