@@ -28,12 +28,34 @@ local modifierFrame
 local SPECIAL = {}
 
 local function SyncEscPanels()
+    local esc = _G.OneWoW and OneWoW.PortalHubEsc
+    if esc and esc.SyncEscLayout then
+        esc:SyncEscLayout()
+        return
+    end
     local container = _G["OneWoWEscPanelsContainer"]
     if not container or not container:IsShown() then return end
-    local gmLeft = GameMenuFrame and GameMenuFrame:GetLeft()
-    if not gmLeft then return end
+    local gm = GameMenuFrame
+    if not gm then return end
+    local ph = _G.OneWoW and OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
+    local panelsRight = ph and ph.escPanelsSide == "right"
+    local yTop = UIParent:GetHeight()
     container:ClearAllPoints()
-    container:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", gmLeft - 20, UIParent:GetHeight())
+    if panelsRight then
+        local gmRight = gm:GetRight()
+        if gmRight then
+            container:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", gmRight + 20, yTop)
+        else
+            container:SetPoint("TOPLEFT", UIParent, "TOP", 200, 0)
+        end
+    else
+        local gmLeft = gm:GetLeft()
+        if gmLeft then
+            container:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", gmLeft - 20, yTop)
+        else
+            container:SetPoint("TOPRIGHT", UIParent, "TOP", -200, 0)
+        end
+    end
 end
 
 SPECIAL["GameMenuFrame"] = {
