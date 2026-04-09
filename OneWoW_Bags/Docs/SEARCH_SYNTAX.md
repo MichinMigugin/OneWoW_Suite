@@ -427,6 +427,7 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 |---|---|
 | `#sellable` | Items with a vendor price |
 | `#unsellable` | Items that cannot be sold |
+| `#refundable` | Items still eligible for a full vendor refund (same window as the in-game refund indicator) |
 
 ### Crafting
 
@@ -688,6 +689,7 @@ read more like natural conditions.
 | `IsTradeableLoot` | `#tradeableloot` |
 | `HasSocket` | `#socket` |
 | `IsKnowledge` | `#knowledge` |
+| `IsRefundable` | `#refundable` |
 
 > **`IsBOA` vs `#boa`:** The `IsBOA` flag checks the strict `isBOA` property —
 > true only for items whose tooltip shows account-bound binding (not Warbound
