@@ -104,6 +104,14 @@ local function ShowTrackerDialog()
     end)
 end
 
+function BagsBar:UpdateGoldDisplay()
+    if not bagsBarFrame or not bagsBarFrame.goldText then return end
+    bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(GetMoney()))
+    if bagsBarFrame.goldBtn then
+        bagsBarFrame.goldBtn:SetWidth(max(bagsBarFrame.goldText:GetStringWidth() + 4, 60))
+    end
+end
+
 function BagsBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
 
@@ -197,8 +205,8 @@ function BagsBar:Create(parent)
 
     local goldText = goldBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     goldText:SetPoint("RIGHT", goldBtn, "RIGHT", 0, 0)
-    goldText:SetText(OneWoW_GUI:FormatGold(GetMoney()))
     bagsBarFrame.goldText = goldText
+    BagsBar:UpdateGoldDisplay()
 
     goldBtn:SetWidth(max(goldText:GetStringWidth() + 4, 60))
     goldBtn:SetScript("OnEnter", function(self)
@@ -215,11 +223,8 @@ function BagsBar:Create(parent)
     eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_MONEY")
     eventFrame:SetScript("OnEvent", function(_, event)
-        if event == "PLAYER_MONEY" and bagsBarFrame and bagsBarFrame.goldText then
-            bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(GetMoney()))
-            if bagsBarFrame.goldBtn then
-                bagsBarFrame.goldBtn:SetWidth(max(bagsBarFrame.goldText:GetStringWidth() + 4, 60))
-            end
+        if event == "PLAYER_MONEY" then
+            BagsBar:UpdateGoldDisplay()
         end
     end)
 

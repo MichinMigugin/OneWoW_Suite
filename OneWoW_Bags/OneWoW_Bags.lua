@@ -302,6 +302,17 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
             owner.Minimap:SetShown(not isHidden)
         end
     end)
+    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", self, function()
+        if OneWoW_Bags.BagsBar and OneWoW_Bags.BagsBar.UpdateGoldDisplay then
+            OneWoW_Bags.BagsBar:UpdateGoldDisplay()
+        end
+        if OneWoW_Bags.BankBar and OneWoW_Bags.BankBar.UpdateGold then
+            OneWoW_Bags.BankBar:UpdateGold()
+        end
+        if OneWoW_Bags.GuildBankBar and OneWoW_Bags.GuildBankBar.UpdateGold then
+            OneWoW_Bags.GuildBankBar:UpdateGold()
+        end
+    end)
 
     local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
