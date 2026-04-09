@@ -150,6 +150,8 @@ end
 
 
 local function CreateInstanceCard(parent, instData, yOffset, onClick)
+    local capInstanceID = instData.instanceID
+
     local card = CreateFrame("Button", nil, parent, "BackdropTemplate")
     card:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
     card:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
@@ -157,6 +159,11 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     card:SetClipsChildren(true)
     card:SetBackdrop(BACKDROP_SIMPLE)
     card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    if card.SetPropagateMouseClicks then
+        pcall(function()
+            card:SetPropagateMouseClicks("LeftButton", false)
+        end)
+    end
 
     local bgImage = GetInstanceBackground(instData.instanceID)
     if bgImage and bgImage ~= false then
@@ -171,11 +178,35 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
 
     local nameText = OneWoW_GUI:CreateFS(card, 12)
     nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -6)
-    nameText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -6)
+    nameText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -34, -6)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     nameText:SetText(instData.name)
     nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    local favBtn = OneWoW_GUI:CreateFavoriteToggleButton(card, {
+        size     = 20,
+        favorite = ns.Favorites and ns.Favorites:IsFavorite("journal", capInstanceID) or false,
+        tooltipTitle = L["CATALOG_FAVORITE"],
+        tooltipText  = L["CATALOG_FAVORITE_TT"],
+        onClick = function(_, on)
+            if ns.Favorites then
+                ns.Favorites:SetFavorite("journal", capInstanceID, on)
+            end
+            local p = panels_ref or ns.UI.journalPanels
+            if p and _G.RefreshJournalList then
+                -- Immediate refresh so remaining favorites compact to the top; unfavorite must reorder the list.
+                _G.RefreshJournalList(p)
+                C_Timer.After(0, function()
+                    if (panels_ref or ns.UI.journalPanels) == p and _G.RefreshJournalList then
+                        _G.RefreshJournalList(p)
+                    end
+                end)
+            end
+        end,
+    })
+    favBtn:SetPoint("TOPRIGHT", card, "TOPRIGHT", -6, -4)
+    favBtn:SetFrameLevel((card:GetFrameLevel() or 0) + 10)
 
     local typeStr = instData.instanceType == "raid" and L["JOURNAL_CARD_RAID"]
                  or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
@@ -334,6 +365,19 @@ local function GetUniqueDifficulties(instData)
 end
 
 local panels_ref = nil
+
+-- Base list from data (expensive); only refetch when filters change. Favorite sort uses a shallow copy.
+local journalBaseListKey  = nil
+local journalBaseList     = nil
+
+local function JournalInstanceOrderKey(id)
+    return id ~= nil and tostring(id) or ""
+end
+
+local function InvalidateJournalFilterCache()
+    journalBaseListKey = nil
+    journalBaseList = nil
+end
 
 local function RefreshDetailView(isSecondRefresh)
     if not panels_ref or not selectedInstance then return end
@@ -629,8 +673,11 @@ local function ShowInstanceDetail(panels, instData)
     RefreshDetailView(false)
 end
 
-local function RefreshJournalList(panels)
+function RefreshJournalList(panels)
     ClearInstanceList()
+    if panels.listScrollFrame and panels.listScrollFrame.SetVerticalScroll then
+        panels.listScrollFrame:SetVerticalScroll(0)
+    end
 
     local addon = GetDataAddon()
     if not addon or not addon.JournalData then
@@ -639,7 +686,46 @@ local function RefreshJournalList(panels)
         return
     end
 
-    local sorted = addon.JournalData:GetSortedInstances(expansionFilter, searchText, instanceTypeFilter)
+    local filtKey = string.format("%d\0%s\0%s", expansionFilter, searchText or "", tostring(instanceTypeFilter or "all"))
+    if journalBaseListKey ~= filtKey or not journalBaseList then
+        journalBaseList = addon.JournalData:GetSortedInstances(expansionFilter, searchText, instanceTypeFilter)
+        journalBaseListKey = filtKey
+    end
+
+    local sorted = {}
+    for i = 1, #journalBaseList do
+        sorted[i] = journalBaseList[i]
+    end
+
+    if ns.Favorites then
+        local keyFn = JournalInstanceOrderKey
+        local origOrder = {}
+        for i, inst in ipairs(sorted) do
+            origOrder[keyFn(inst.instanceID)] = i
+        end
+        local function cmpBaseOrder(a, b)
+            return (origOrder[keyFn(a.instanceID)] or 0) < (origOrder[keyFn(b.instanceID)] or 0)
+        end
+        local favInsts, restInsts = {}, {}
+        for _, inst in ipairs(sorted) do
+            if ns.Favorites:IsFavorite("journal", inst.instanceID) then
+                table.insert(favInsts, inst)
+            else
+                table.insert(restInsts, inst)
+            end
+        end
+        table.sort(favInsts, cmpBaseOrder)
+        table.sort(restInsts, cmpBaseOrder)
+        local pos = 0
+        for _, inst in ipairs(favInsts) do
+            pos = pos + 1
+            sorted[pos] = inst
+        end
+        for _, inst in ipairs(restInsts) do
+            pos = pos + 1
+            sorted[pos] = inst
+        end
+    end
 
     local totalSorted = #sorted
     local displayLimit = nil
@@ -688,6 +774,8 @@ local function RefreshJournalList(panels)
         end
     end
 end
+
+_G.RefreshJournalList = RefreshJournalList
 
 local function InitializeDropdowns(panels)
     local addon = GetDataAddon()
@@ -997,6 +1085,7 @@ function ns.UI.CreateJournalTab(parent)
 
         if addon.RegisterScanCallback then
             addon:RegisterScanCallback(function()
+                InvalidateJournalFilterCache()
                 if ns.UI.journalPanels then
                     RefreshJournalList(ns.UI.journalPanels)
                 end
@@ -1021,6 +1110,7 @@ function ns.UI.CreateJournalTab(parent)
                 emptyDetail:SetText(L["JOURNAL_SELECT"])
                 if retryAddon.RegisterScanCallback then
                     retryAddon:RegisterScanCallback(function()
+                        InvalidateJournalFilterCache()
                         RefreshJournalList(ns.UI.journalPanels)
                     end)
                 end

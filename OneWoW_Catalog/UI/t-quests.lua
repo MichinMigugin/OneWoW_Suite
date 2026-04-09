@@ -23,6 +23,7 @@ local completionFilter = "all"
 
 local dataAddon            = nil
 local PopulateZoneDropdown = nil
+local RefreshQuestList
 
 local function GetDataAddon()
     if dataAddon then return dataAddon end
@@ -326,7 +327,7 @@ local function ShowQuestDetail(panels, questData)
     panels.detailScrollChild:SetHeight(math.abs(yOffset) + 20)
 end
 
-local function CreateQuestListEntry(parent, quest, yOffset, onClick)
+local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
     local addon   = GetDataAddon()
     local tracker = addon and addon.CompletionTracker
 
@@ -341,7 +342,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, onClick)
 
     local nameText = OneWoW_GUI:CreateFS(btn, 12)
     nameText:SetPoint("TOPLEFT",  btn, "TOPLEFT",  8, -6)
-    nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -26, -6)
+    nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -44, -6)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     nameText:SetText(quest.name or string.format(L["QUESTS_UNNAMED"], quest.id or 0))
@@ -355,7 +356,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, onClick)
 
     local subText = OneWoW_GUI:CreateFS(btn, 10)
     subText:SetPoint("BOTTOMLEFT",  btn, "BOTTOMLEFT",  8, 6)
-    subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -26, 6)
+    subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -44, 6)
     subText:SetJustifyH("LEFT")
     subText:SetWordWrap(false)
     subText:SetText(expShort)
@@ -365,9 +366,23 @@ local function CreateQuestListEntry(parent, quest, yOffset, onClick)
     if isCompleted then
         local checkTex = btn:CreateTexture(nil, "ARTWORK")
         checkTex:SetSize(14, 14)
-        checkTex:SetPoint("RIGHT", btn, "RIGHT", -6, 0)
+        checkTex:SetPoint("RIGHT", btn, "RIGHT", -28, 0)
         checkTex:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
         checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    end
+
+    if ns.Favorites then
+        local favBtn = OneWoW_GUI:CreateFavoriteToggleButton(btn, {
+            size     = 18,
+            favorite = ns.Favorites:IsFavorite("quests", quest.id),
+            tooltipTitle = L["CATALOG_FAVORITE"],
+            tooltipText  = L["CATALOG_FAVORITE_TT"],
+            onClick = function(_, on)
+                ns.Favorites:SetFavorite("quests", quest.id, on)
+                RefreshQuestList(panels)
+            end,
+        })
+        favBtn:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -4, -6)
     end
 
     btn:SetScript("OnEnter", function(self)
@@ -390,7 +405,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, onClick)
     return btn
 end
 
-local function RefreshQuestList(panels)
+function RefreshQuestList(panels)
     ClearQuestList()
 
     local addon = GetDataAddon()
@@ -427,6 +442,19 @@ local function RefreshQuestList(panels)
         quests = filtered
     end
 
+    if ns.Favorites and #quests > 0 then
+        local origOrder = {}
+        for i, q in ipairs(quests) do
+            origOrder[q.id] = i
+        end
+        table.sort(quests, function(a, b)
+            local fa = ns.Favorites:IsFavorite("quests", a.id)
+            local fb = ns.Favorites:IsFavorite("quests", b.id)
+            if fa ~= fb then return fa end
+            return (origOrder[a.id] or 0) < (origOrder[b.id] or 0)
+        end)
+    end
+
     if #quests == 0 then
         if panels.emptyList then
             panels.emptyList:SetText(
@@ -447,7 +475,7 @@ local function RefreshQuestList(panels)
 
     local yOffset = -4
     for _, quest in ipairs(quests) do
-        local btn = CreateQuestListEntry(panels.listScrollChild, quest, yOffset, function(q, clickedBtn)
+        local btn = CreateQuestListEntry(panels.listScrollChild, quest, yOffset, panels, function(q, clickedBtn)
             for _, b in ipairs(questListButtons) do
                 b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 if b.nameText then b.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end

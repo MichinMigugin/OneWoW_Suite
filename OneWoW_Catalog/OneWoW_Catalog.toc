@@ -23,6 +23,7 @@ Locales\koKR.lua
 # Core
 Core\Constants.lua
 Core\Database.lua
+Core\Favorites.lua
 
 # Main
 OneWoW_Catalog.lua

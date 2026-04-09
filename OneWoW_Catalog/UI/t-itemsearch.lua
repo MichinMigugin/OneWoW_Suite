@@ -164,23 +164,63 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
         end
     end
 
-    local hasOwned        = result.ownedCount and result.ownedCount > 0
-    local nameRightOffset = hasOwned and -42 or -6
+    local hasOwned = result.ownedCount and result.ownedCount > 0
+    local showFav = ns.Favorites and result.itemID
+    local useRightChrome = hasOwned or showFav
+
+    local rightCluster, qtyBadge, favBtn
+    if useRightChrome then
+        -- Right cluster, LTR: name … xN … star (quantity left of star, star flush right).
+        rightCluster = CreateFrame("Frame", nil, row)
+        rightCluster:SetHeight(ITEM_ROW_HEIGHT)
+        rightCluster:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+
+        if showFav then
+            favBtn = OneWoW_GUI:CreateFavoriteToggleButton(rightCluster, {
+                size     = 16,
+                favorite = ns.Favorites:IsFavorite("itemSearch", result.itemID),
+                tooltipTitle = L["CATALOG_FAVORITE"],
+                tooltipText  = L["CATALOG_FAVORITE_TT"],
+                onClick = function(_, on)
+                    ns.Favorites:SetFavorite("itemSearch", result.itemID, on)
+                    RefreshItemList()
+                end,
+            })
+            favBtn:SetPoint("RIGHT", rightCluster, "RIGHT", 0, 0)
+        end
+
+        if hasOwned then
+            qtyBadge = OneWoW_GUI:CreateFS(rightCluster, 10)
+            qtyBadge:SetText("x" .. result.ownedCount)
+            qtyBadge:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            if favBtn then
+                qtyBadge:SetPoint("RIGHT", favBtn, "LEFT", -4, 0)
+            else
+                qtyBadge:SetPoint("RIGHT", rightCluster, "RIGHT", 0, 0)
+            end
+        end
+
+        local clusterW = 4
+        if favBtn then
+            clusterW = clusterW + 20
+        end
+        if qtyBadge then
+            clusterW = clusterW + math.max(22, qtyBadge:GetStringWidth() + 4)
+        end
+        rightCluster:SetWidth(math.max(clusterW, 28))
+    end
 
     local nameText = OneWoW_GUI:CreateFS(row, 10)
     nameText:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
-    nameText:SetPoint("RIGHT", row, "RIGHT", nameRightOffset, 0)
+    if rightCluster then
+        nameText:SetPoint("RIGHT", rightCluster, "LEFT", -6, 0)
+    else
+        nameText:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+    end
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     nameText:SetText(result.name or ("Item #" .. result.itemID))
     nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
-
-    if hasOwned then
-        local badge = OneWoW_GUI:CreateFS(row, 10)
-        badge:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        badge:SetText("x" .. result.ownedCount)
-        badge:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    end
 
     row.result = result
     row.rowIdx = rowIdx
@@ -438,6 +478,21 @@ RefreshItemList = function()
     end
 
     if emptyList then emptyList:Hide() end
+
+    if ns.Favorites and #results > 0 then
+        local origOrder = {}
+        for i, r in ipairs(results) do
+            if r.itemID then origOrder[tostring(r.itemID)] = i end
+        end
+        table.sort(results, function(a, b)
+            local fa = ns.Favorites:IsFavorite("itemSearch", a.itemID)
+            local fb = ns.Favorites:IsFavorite("itemSearch", b.itemID)
+            if fa ~= fb then return fa end
+            local oa = a.itemID and origOrder[tostring(a.itemID)] or 0
+            local ob = b.itemID and origOrder[tostring(b.itemID)] or 0
+            return oa < ob
+        end)
+    end
 
     local yOffset = -4
     local rowIdx  = 0

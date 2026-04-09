@@ -19,6 +19,9 @@ L["TAB_QUESTS"]     = "Quests"
 L["TAB_ITEMSEARCH"] = "Item Search"
 L["TAB_SETTINGS"]   = "Settings"
 
+L["CATALOG_FAVORITE"]    = "Favorite"
+L["CATALOG_FAVORITE_TT"] = "Mark this entry as a favorite. Favorites sort to the top of the list."
+
 L["JOURNAL_LIST_TITLE"]   = "Instances"
 L["JOURNAL_DETAIL_TITLE"] = "Details"
 L["JOURNAL_EMPTY"]        = "No journal data loaded."

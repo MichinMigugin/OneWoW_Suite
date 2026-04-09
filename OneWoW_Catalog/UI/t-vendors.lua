@@ -17,6 +17,7 @@ local zoneFilter = nil
 local currentZoneOnly = false
 local currencyFilter = nil
 local dataAddon = nil
+local RefreshVendorList
 
 local function FormatGold(copper)
     if not copper or copper <= 0 then return "" end
@@ -220,7 +221,7 @@ local function ClearVendorList()
     wipe(vendorListButtons)
 end
 
-local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
+local function CreateVendorListEntry(parent, vendor, yOffset, panels, onClick)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
     btn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
@@ -230,7 +231,7 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
 
     local nameText = OneWoW_GUI:CreateFS(btn, 12)
     nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", 8, -6)
-    nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -8, -6)
+    nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -32, -6)
     nameText:SetJustifyH("LEFT")
     if vendor.name then
         nameText:SetText(vendor.name)
@@ -251,7 +252,7 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
 
     local infoText = OneWoW_GUI:CreateFS(btn, 10)
     infoText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -2)
-    infoText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -8, 0)
+    infoText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -32, 0)
     infoText:SetJustifyH("LEFT")
 
     local zone = location and location.zone or L["VENDORS_UNKNOWN_LOCATION"]
@@ -269,6 +270,20 @@ local function CreateVendorListEntry(parent, vendor, yOffset, onClick)
         scanText:SetText(FormatTimestamp(vendor.lastScanned))
     end
     scanText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    if ns.Favorites and vendor.npcID then
+        local favBtn = OneWoW_GUI:CreateFavoriteToggleButton(btn, {
+            size     = 20,
+            favorite = ns.Favorites:IsFavorite("vendors", vendor.npcID),
+            tooltipTitle = L["CATALOG_FAVORITE"],
+            tooltipText  = L["CATALOG_FAVORITE_TT"],
+            onClick = function(_, on)
+                ns.Favorites:SetFavorite("vendors", vendor.npcID, on)
+                RefreshVendorList(panels)
+            end,
+        })
+        favBtn:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -6, -4)
+    end
 
     btn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
@@ -504,7 +519,7 @@ local function ShowVendorDetail(panels, vendor)
     panels.UpdateDetailThumb()
 end
 
-local function RefreshVendorList(panels)
+function RefreshVendorList(panels)
     ClearVendorList()
 
     local addon = GetDataAddon()
@@ -555,6 +570,19 @@ local function RefreshVendorList(panels)
         end
     end
 
+    if ns.Favorites and #filtered > 0 then
+        local origOrder = {}
+        for i, v in ipairs(filtered) do
+            if v.npcID then origOrder[v.npcID] = i end
+        end
+        table.sort(filtered, function(a, b)
+            local fa = a.npcID and ns.Favorites:IsFavorite("vendors", a.npcID)
+            local fb = b.npcID and ns.Favorites:IsFavorite("vendors", b.npcID)
+            if fa ~= fb then return fa end
+            return (a.npcID and origOrder[a.npcID] or 0) < (b.npcID and origOrder[b.npcID] or 0)
+        end)
+    end
+
     local stats = addon.VendorData:GetStats()
     if panels.statsText then
         panels.statsText:SetText(string.format(L["VENDORS_STATS"], stats.vendorCount, stats.uniqueItems))
@@ -588,7 +616,7 @@ local function RefreshVendorList(panels)
     local yOffset = -4
     for i = 1, displayCount do
         local vendor = filtered[i]
-        local btn = CreateVendorListEntry(panels.listScrollChild, vendor, yOffset, function(v)
+        local btn = CreateVendorListEntry(panels.listScrollChild, vendor, yOffset, panels, function(v)
             for _, b in ipairs(vendorListButtons) do
                 if b.vendor and b.vendor.npcID == v.npcID then
                     b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))

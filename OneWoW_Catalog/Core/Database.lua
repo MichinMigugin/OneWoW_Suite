@@ -15,6 +15,12 @@ ns.DatabaseDefaults = {
     mainFrameSize     = nil,
     mainFramePosition = nil,
     minimap           = { hide = false, minimapPos = 220, theme = "horde" },
+    favorites         = {
+        journal    = {},
+        quests     = {},
+        vendors    = {},
+        itemSearch = {},
+    },
 }
 
 function ns:InitializeDatabase()
