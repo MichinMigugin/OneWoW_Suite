@@ -16,5 +16,9 @@ ns.DatabaseDefaults = {
             theme = "horde",
         },
         modules = {},
+        uiFavorites = {
+            features = {},
+            toggles  = {},
+        },
     },
 }

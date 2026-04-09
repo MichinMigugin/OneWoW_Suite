@@ -18,6 +18,27 @@ local selectedRow       = nil
 local modDetailsDialog  = nil
 local modDetailsContent = nil
 
+local function QoLUiFavorites()
+    local db = _G.OneWoW_QoL and _G.OneWoW_QoL.db and _G.OneWoW_QoL.db.global
+    if not db then return nil end
+    db.uiFavorites = db.uiFavorites or { features = {}, toggles = {} }
+    db.uiFavorites.features = db.uiFavorites.features or {}
+    db.uiFavorites.toggles = db.uiFavorites.toggles or {}
+    return db.uiFavorites
+end
+
+local function IsQoLFeatureFavorite(id)
+    local u = QoLUiFavorites()
+    return u and id and u.features[id] == true
+end
+
+local function SetQoLFeatureFavorite(id, on)
+    local u = QoLUiFavorites()
+    if u and id then
+        u.features[id] = on and true or nil
+    end
+end
+
 local function ShowDetailPlaceholder(detailScrollChild, message)
     OneWoW_GUI:ClearFrame(detailScrollChild)
     local placeholder = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -384,12 +405,77 @@ local function BuildFeaturesList(split, filterText)
     local categories = ns.ModuleRegistry:GetCategories()
     local rowHeight = 32
 
+    local favModules = {}
+    for _, module in ipairs(allModules) do
+        if IsQoLFeatureFavorite(module.id) then
+            if not filter or (ns.L[module.title] or module.title):lower():find(filter, 1, true) then
+                table.insert(favModules, module)
+            end
+        end
+    end
+    table.sort(favModules, function(a, b)
+        return (ns.L[a.title] or a.title or "") < (ns.L[b.title] or b.title or "")
+    end)
+
+    if #favModules > 0 then
+        local favLabel = listScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        favLabel:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 8, yOffset)
+        favLabel:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -8, yOffset)
+        favLabel:SetJustifyH("LEFT")
+        favLabel:SetText(L["FEATURES_FAVORITES_SECTION"])
+        favLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+        yOffset = yOffset - favLabel:GetStringHeight() - 4
+
+        for _, module in ipairs(favModules) do
+            local capturedModule = module
+            shownCount = shownCount + 1
+            local row = OneWoW_GUI:CreateListRowBasic(listScrollChild, {
+                height = rowHeight,
+                label = ns.L[module.title] or module.title,
+                showDot = true,
+                dotEnabled = ns.ModuleRegistry:IsEnabled(module.id),
+                favoriteToggle = {
+                    isFavorite = true,
+                    size = 16,
+                    tooltipTitle = L["FEATURES_FAVORITE_TT_TITLE"],
+                    tooltipText = L["FEATURES_FAVORITE_TT_DESC"],
+                    onChange = function(isFav)
+                        SetQoLFeatureFavorite(capturedModule.id, isFav)
+                        BuildFeaturesList(split, split.searchBox and split.searchBox:GetSearchText() or "")
+                    end,
+                },
+                onClick = function(self)
+                    if selectedRow and selectedRow ~= self then
+                        selectedRow:SetActive(false)
+                    end
+                    selectedModuleId = capturedModule.id
+                    selectedRow = self
+                    ShowModuleDetail(split, capturedModule)
+                    self:SetActive(true)
+                    if split.rightStatusText then
+                        local isEnabled = ns.ModuleRegistry:IsEnabled(capturedModule.id)
+                        local modName = ns.L[capturedModule.title] or capturedModule.title
+                        split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
+                    end
+                end,
+            })
+            row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
+            row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -4, yOffset)
+
+            yOffset = yOffset - rowHeight - 4
+        end
+
+        yOffset = yOffset - 8
+    end
+
     for _, category in ipairs(categories) do
         local catModules = ns.ModuleRegistry:GetByCategory(category)
         local filteredModules = {}
         for _, module in ipairs(catModules) do
-            if not filter or (ns.L[module.title] or module.title):lower():find(filter, 1, true) then
-                table.insert(filteredModules, module)
+            if not IsQoLFeatureFavorite(module.id) then
+                if not filter or (ns.L[module.title] or module.title):lower():find(filter, 1, true) then
+                    table.insert(filteredModules, module)
+                end
             end
         end
 
@@ -410,6 +496,16 @@ local function BuildFeaturesList(split, filterText)
                     label = ns.L[module.title] or module.title,
                     showDot = true,
                     dotEnabled = ns.ModuleRegistry:IsEnabled(module.id),
+                    favoriteToggle = {
+                        isFavorite = false,
+                        size = 16,
+                        tooltipTitle = L["FEATURES_FAVORITE_TT_TITLE"],
+                        tooltipText = L["FEATURES_FAVORITE_TT_DESC"],
+                        onChange = function(isFav)
+                            SetQoLFeatureFavorite(capturedModule.id, isFav)
+                            BuildFeaturesList(split, split.searchBox and split.searchBox:GetSearchText() or "")
+                        end,
+                    },
                     onClick = function(self)
                         if selectedRow and selectedRow ~= self then
                             selectedRow:SetActive(false)

@@ -163,6 +163,31 @@ local selectedEntry = nil
 local selectedRow   = nil
 local split_ref     = nil
 
+local function QoLToggleFavStore()
+    local db = _G.OneWoW_QoL and _G.OneWoW_QoL.db and _G.OneWoW_QoL.db.global
+    if not db then return nil end
+    db.uiFavorites = db.uiFavorites or { features = {}, toggles = {} }
+    db.uiFavorites.toggles = db.uiFavorites.toggles or {}
+    return db.uiFavorites
+end
+
+local function ToggleFavKey(entry)
+    if not entry then return "" end
+    return entry.cvar or entry.name or ""
+end
+
+local function IsQoLToggleFavorite(entry)
+    local u = QoLToggleFavStore()
+    return u and entry and u.toggles[ToggleFavKey(entry)] == true
+end
+
+local function SetQoLToggleFavorite(entry, on)
+    local u = QoLToggleFavStore()
+    if u and entry then
+        u.toggles[ToggleFavKey(entry)] = on and true or nil
+    end
+end
+
 local function FormatSliderVal(value, step)
     if not step or step >= 1 then
         return tostring(math.floor(value + 0.5))
@@ -371,10 +396,94 @@ local function BuildTogglesList(split, filterText)
     local yOfs = -5
     local rowH = 30
 
+    local function appendToggleRow(entry)
+        local capturedEntry = entry
+        local displayText, isOn = GetRowDisplay(entry)
+
+        local rowOptions = {
+            height = rowH,
+            label = L[entry.name] or entry.name,
+            onClick = function(self)
+                if selectedRow and selectedRow ~= self then
+                    selectedRow:SetActive(false)
+                end
+                selectedRow   = self
+                selectedEntry = capturedEntry
+                ShowToggleDetail(split, capturedEntry)
+                self:SetActive(true)
+                if split.rightStatusText then
+                    local curVal = C_CVar.GetCVar(capturedEntry.cvar)
+                    local display = curVal or "?"
+                    if capturedEntry.widget == "dropdown" and capturedEntry.options then
+                        for i, opt in ipairs(capturedEntry.options) do
+                            if curVal == tostring(opt) then
+                                display = L[capturedEntry.optLabels[i]] or capturedEntry.optLabels[i]
+                                break
+                            end
+                        end
+                    end
+                    split.rightStatusText:SetText((L[capturedEntry.name] or capturedEntry.name) .. ": " .. display)
+                end
+            end,
+            favoriteToggle = {
+                isFavorite = IsQoLToggleFavorite(entry),
+                size = 16,
+                tooltipTitle = L["TOGGLES_FAVORITE_TT_TITLE"],
+                tooltipText = L["TOGGLES_FAVORITE_TT_DESC"],
+                onChange = function(isFav)
+                    SetQoLToggleFavorite(capturedEntry, isFav)
+                    BuildTogglesList(split, split.searchBox and split.searchBox:GetSearchText() or "")
+                end,
+            },
+        }
+
+        if entry.widget == "checkbox" then
+            rowOptions.showDot = true
+            rowOptions.dotEnabled = isOn
+        else
+            rowOptions.showValueText = true
+            rowOptions.valueText = displayText or ""
+        end
+
+        local row = OneWoW_GUI:CreateListRowBasic(child, rowOptions)
+        row:SetPoint("TOPLEFT",  child, "TOPLEFT",  4, yOfs)
+        row:SetPoint("TOPRIGHT", child, "TOPRIGHT", -4, yOfs)
+        shownCount = shownCount + 1
+        return yOfs - rowH - 3
+    end
+
+    local favEntries = {}
+    for _, entry in ipairs(CVAR_DATA) do
+        if IsQoLToggleFavorite(entry) then
+            if not filter or (L[entry.name] or entry.name):lower():find(filter, 1, true) then
+                table.insert(favEntries, entry)
+            end
+        end
+    end
+    table.sort(favEntries, function(a, b)
+        return (L[a.name] or a.name or "") < (L[b.name] or b.name or "")
+    end)
+
+    if #favEntries > 0 then
+        local favLabel = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        favLabel:SetPoint("TOPLEFT",  child, "TOPLEFT",  8, yOfs)
+        favLabel:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOfs)
+        favLabel:SetJustifyH("LEFT")
+        favLabel:SetText(L["TOGGLES_FAVORITES_SECTION"])
+        favLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+        yOfs = yOfs - favLabel:GetStringHeight() - 4
+
+        for _, entry in ipairs(favEntries) do
+            yOfs = appendToggleRow(entry)
+        end
+
+        yOfs = yOfs - 8
+    end
+
     for _, cat in ipairs(CATEGORY_ORDER) do
         local catEntries = {}
         for _, entry in ipairs(CVAR_DATA) do
-            if entry.cat == cat then
+            if entry.cat == cat and not IsQoLToggleFavorite(entry) then
                 if not filter or (L[entry.name] or entry.name):lower():find(filter, 1, true) then
                     table.insert(catEntries, entry)
                 end
@@ -391,51 +500,7 @@ local function BuildTogglesList(split, filterText)
             yOfs = yOfs - catLabel:GetStringHeight() - 4
 
             for _, entry in ipairs(catEntries) do
-                local capturedEntry = entry
-                local displayText, isOn = GetRowDisplay(entry)
-
-                local rowOptions = {
-                    height = rowH,
-                    label = L[entry.name] or entry.name,
-                    onClick = function(self)
-                        if selectedRow and selectedRow ~= self then
-                            selectedRow:SetActive(false)
-                        end
-                        selectedRow   = self
-                        selectedEntry = capturedEntry
-                        ShowToggleDetail(split, capturedEntry)
-                        self:SetActive(true)
-                        if split.rightStatusText then
-                            local curVal = C_CVar.GetCVar(capturedEntry.cvar)
-                            local display = curVal or "?"
-                            if capturedEntry.widget == "dropdown" and capturedEntry.options then
-                                for i, opt in ipairs(capturedEntry.options) do
-                                    if curVal == tostring(opt) then
-                                        display = L[capturedEntry.optLabels[i]] or capturedEntry.optLabels[i]
-                                        break
-                                    end
-                                end
-                            end
-                            split.rightStatusText:SetText((L[capturedEntry.name] or capturedEntry.name) .. ": " .. display)
-                        end
-                    end,
-                }
-
-                if entry.widget == "checkbox" then
-                    rowOptions.showDot = true
-                    rowOptions.dotEnabled = isOn
-                else
-                    rowOptions.showValueText = true
-                    rowOptions.valueText = displayText or ""
-                end
-
-                local row = OneWoW_GUI:CreateListRowBasic(child, rowOptions)
-                row:SetPoint("TOPLEFT",  child, "TOPLEFT",  4, yOfs)
-                row:SetPoint("TOPRIGHT", child, "TOPRIGHT", -4, yOfs)
-
-                shownCount = shownCount + 1
-
-                yOfs = yOfs - rowH - 3
+                yOfs = appendToggleRow(entry)
             end
 
             yOfs = yOfs - 8
