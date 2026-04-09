@@ -39,11 +39,22 @@ function Addon.DevTool_WipeSoundAssetData()
 	collectgarbage("collect")
 end
 
+-- Match if major.minor.patch (first three dotted segments) agree; build/hotfix
+-- suffix may differ. Falls back to full string equality if a side lacks three segments.
+local function devToolDataVersionMatches(gameVersion, expectedVersion)
+	local a1, a2, a3 = gameVersion:match("^([^.]+)%.([^.]+)%.([^.]+)")
+	local b1, b2, b3 = expectedVersion:match("^([^.]+)%.([^.]+)%.([^.]+)")
+	if a1 and b1 then
+		return a1 == b1 and a2 == b2 and a3 == b3
+	end
+	return gameVersion == expectedVersion
+end
+
 function Addon.ValidateDataBuildGameBuild(expectedVersion)
 	local buildVersion, buildNumber = GetBuildInfo()
 	local gameVersion = buildVersion .. "." .. buildNumber
 	if type(expectedVersion) == "string" then
-		if gameVersion == expectedVersion then
+		if devToolDataVersionMatches(gameVersion, expectedVersion) then
 			return true
 		end
 		print(format("Game version %s doesn't match Data version %s", gameVersion, expectedVersion))
@@ -53,7 +64,7 @@ function Addon.ValidateDataBuildGameBuild(expectedVersion)
 		local allowed = {}
 		for _, version in ipairs(expectedVersion) do
 			if type(version) == "string" then
-				if gameVersion == version then
+				if devToolDataVersionMatches(gameVersion, version) then
 					return true
 				end
 				allowed[#allowed + 1] = version
