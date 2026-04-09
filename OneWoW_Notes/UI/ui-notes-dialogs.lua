@@ -67,7 +67,8 @@ function ns.UI.ShowAddNoteDialog()
                         noteType      = selectedNoteType,
                         lastReset     = 0,
                         autoPinEnabled = dlg.autoPinCheckbox and dlg.autoPinCheckbox:GetChecked() or false,
-                        autoUnpinned  = false
+                        autoUnpinned  = false,
+                        pinHideTasksUntilHover = false,
                     }
 
                     if ns.NotesData then
@@ -656,6 +657,39 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
         end
     end
     yPos = yPos - ROW_H + 4
+
+    local pinTasksHoverRow = OneWoW_GUI:CreateCheckbox(content, {
+        label = L["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER"],
+        checked = noteData.pinHideTasksUntilHover == true,
+        onClick = function(self)
+            local checked = self:GetChecked()
+            local notesDB = ns.NotesData:GetNotesDB(noteData.storage or "account")
+            if notesDB and notesDB[noteID] then
+                notesDB[noteID].pinHideTasksUntilHover = checked
+                notesDB[noteID].modified = GetServerTime()
+            end
+            noteData.pinHideTasksUntilHover = checked
+            local pf = addon.notePins and addon.notePins[noteID]
+            if pf then
+                pf._tasksHoverShown = checked and pf:IsMouseOver() or false
+                if pf.RefreshLayout then pf:RefreshLayout() end
+            end
+        end,
+    })
+    pinTasksHoverRow:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
+    local function PinTasksHoverTooltip(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER"], 1, 1, 1)
+        GameTooltip:AddLine(L["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end
+    pinTasksHoverRow:SetScript("OnEnter", PinTasksHoverTooltip)
+    pinTasksHoverRow:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    if pinTasksHoverRow.label then
+        pinTasksHoverRow.label:SetScript("OnEnter", PinTasksHoverTooltip)
+        pinTasksHoverRow.label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
+    yPos = yPos - 28
 
     local previewLabel = OneWoW_GUI:CreateFS(content, 10)
     previewLabel:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)

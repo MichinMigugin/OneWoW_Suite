@@ -121,7 +121,7 @@ function NotesPins:HideAllNotePins()
     addon.notePins = {}
 end
 
-function NotesPins:SavePinPosition(noteID, point, relativePoint, x, y, width, height)
+function NotesPins:SavePinPosition(noteID, point, relativePoint, x, y, width, height, meta)
     if not noteID then return end
 
     local addon = _G.OneWoW_Notes
@@ -129,13 +129,17 @@ function NotesPins:SavePinPosition(noteID, point, relativePoint, x, y, width, he
         addon.db.global.notePinPositions = {}
     end
 
+    meta = meta or {}
     addon.db.global.notePinPositions[noteID] = {
         point = point,
         relativePoint = relativePoint,
         x = x,
         y = y,
         width = width,
-        height = height
+        height = height,
+        collapsed = meta.collapsed and true or false,
+        expandedWidth = meta.expandedWidth or width,
+        expandedHeight = meta.expandedHeight or height,
     }
 end
 
@@ -164,6 +168,22 @@ function NotesPins:CreateNotePin(noteID, note)
         return addon.notePins[noteID]
     end
 
+    local function SavePinGeometry(pinFrame)
+        local point, _, relativePoint, x, y = pinFrame:GetPoint()
+        local w, h = pinFrame:GetWidth(), pinFrame:GetHeight()
+        local collapsed = pinFrame.collapsed and true or false
+        local ew, eh = w, h
+        if collapsed then
+            ew = pinFrame._savedWidth or w
+            eh = pinFrame._savedHeight or h
+        end
+        NotesPins:SavePinPosition(noteID, point, relativePoint, x, y, w, h, {
+            collapsed = collapsed,
+            expandedWidth = ew,
+            expandedHeight = eh,
+        })
+    end
+
     local pinColor = note.pinColor or "hunter"
     local colorConfig = ns.Config:GetResolvedColorConfig(pinColor)
     local bgColor = colorConfig.background
@@ -183,8 +203,7 @@ function NotesPins:CreateNotePin(noteID, note)
     pin:SetScript("OnDragStart", pin.StartMoving)
     pin:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
-        local point, relativeTo, relativePoint, x, y = self:GetPoint()
-        NotesPins:SavePinPosition(noteID, point, relativePoint, x, y, self:GetWidth(), self:GetHeight())
+        SavePinGeometry(self)
     end)
 
     pin:SetScript("OnMouseDown", function(self)
@@ -216,6 +235,11 @@ function NotesPins:CreateNotePin(noteID, note)
     pin:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
     pin:SetAlpha(1.0)
     pin.noteID = noteID
+    pin.collapsed = false
+    pin._titleBarLastClick = 0
+    pin._savedWidth = 300
+    pin._savedHeight = 400
+    pin._tasksHoverShown = false
 
     local titleBar = CreateFrame("Frame", nil, pin, "BackdropTemplate")
     titleBar:SetPoint("TOPLEFT", pin, "TOPLEFT", 4, -4)
@@ -382,6 +406,53 @@ function NotesPins:CreateNotePin(noteID, note)
     pin.todoContainer = todoContainer
     pin.todoItems = {}
 
+    local function ApplyTaskHoverHeight(self, currentNote, todoCount, hasContent)
+        if not currentNote or self.collapsed or todoCount == 0 then
+            return
+        end
+
+        if not currentNote.pinHideTasksUntilHover then
+            self._pinHeightTasksExpanded = nil
+            return
+        end
+
+        local todoH = 0
+        if self.todoContainer then
+            todoH = math.max(self.todoContainer:GetHeight() or 0, 1)
+        end
+        if todoH < 20 then
+            todoH = math.max(48, todoCount * 25 + 16)
+        end
+        local todoBlock = todoH + 10
+
+        local titleBarH = 30
+        local margins = 35
+        local contentMin = hasContent and 40 or 0
+        local minCompact = titleBarH + contentMin + margins
+        if not hasContent then
+            minCompact = titleBarH + 14 + 15
+        end
+
+        if self._tasksHoverShown then
+            if self._pinHeightTasksExpanded and self._pinHeightTasksExpanded > 0 then
+                if math.abs(self:GetHeight() - self._pinHeightTasksExpanded) > 1 then
+                    self:SetHeight(self._pinHeightTasksExpanded)
+                end
+            end
+            self._pinHeightTasksExpanded = self:GetHeight()
+            return
+        end
+
+        local curH = self:GetHeight()
+        if not self._pinHeightTasksExpanded or curH > self._pinHeightTasksExpanded then
+            self._pinHeightTasksExpanded = curH
+        end
+        local target = math.max(minCompact, (self._pinHeightTasksExpanded or curH) - todoBlock)
+        if target < curH - 1 then
+            self:SetHeight(target)
+        end
+    end
+
     pin.RefreshLayout = function(self, skipTodoRefresh)
         if not self.contentFrame or not self.todoMainFrame then return end
 
@@ -389,19 +460,36 @@ function NotesPins:CreateNotePin(noteID, note)
         local currentNote = allNotes[self.noteID]
         if not currentNote then return end
 
+        if self.collapsed then
+            local sw = GetScreenWidth()
+            local sh = GetScreenHeight()
+            local ch = self.titleBar:GetHeight() + 14
+            self:SetResizeBounds(200, ch, sw, sh)
+            self.contentFrame:Hide()
+            self.todoMainFrame:Hide()
+            self.resizeBtn:Hide()
+            return
+        end
+
         local todoCount = 0
         if currentNote.todos then todoCount = #currentNote.todos end
+
+        local layoutTodoCount = todoCount
+        if currentNote.pinHideTasksUntilHover and todoCount > 0 and not self._tasksHoverShown then
+            layoutTodoCount = 0
+        end
+
         local taskHeight = 0
-        if todoCount > 0 then
+        if layoutTodoCount > 0 then
             taskHeight = self.todoContainer:GetHeight() or 40
             if taskHeight <= 10 then
-                taskHeight = math.max(40, todoCount * 25 + 20)
+                taskHeight = math.max(40, layoutTodoCount * 25 + 20)
             end
         end
 
         local hasContent = currentNote.content and currentNote.content ~= ""
         local contentMinHeight = hasContent and 40 or 0
-        local taskMinHeight = todoCount > 0 and 40 or 0
+        local taskMinHeight = (layoutTodoCount > 0) and 40 or 0
         local titleBarHeight = 30
         local margins = 35
         local minWindowHeight = titleBarHeight + contentMinHeight + taskMinHeight + margins
@@ -415,7 +503,7 @@ function NotesPins:CreateNotePin(noteID, note)
 
         local tasksOnTop = currentNote.tasksOnTop == true
 
-        if todoCount == 0 then
+        if layoutTodoCount == 0 then
             self.todoMainFrame:Hide()
             if hasContent then
                 self.contentFrame:SetPoint("TOPLEFT", self.titleBar, "BOTTOMLEFT", 5, -5)
@@ -455,6 +543,10 @@ function NotesPins:CreateNotePin(noteID, note)
 
         if not skipTodoRefresh and self.RefreshTodos then
             self:RefreshTodos()
+        end
+
+        if not skipTodoRefresh then
+            ApplyTaskHoverHeight(self, currentNote, todoCount, hasContent)
         end
     end
 
@@ -566,17 +658,93 @@ function NotesPins:CreateNotePin(noteID, note)
     end)
     resizeBtn:SetScript("OnMouseUp", function(self)
         pin:StopMovingOrSizing()
-        local point, relativeTo, relativePoint, x, y = pin:GetPoint()
-        NotesPins:SavePinPosition(noteID, point, relativePoint, x, y, pin:GetWidth(), pin:GetHeight())
+        SavePinGeometry(pin)
         if pin.RefreshLayout then pin:RefreshLayout() end
     end)
     pin.resizeBtn = resizeBtn
+
+    local function TogglePinCollapsed()
+        if pin.collapsed then
+            pin.collapsed = false
+            pin:SetSize(pin._savedWidth or 300, pin._savedHeight or 400)
+            if note.lockResize then
+                pin.resizeBtn:Hide()
+                pin.resizeBtn:Disable()
+                pin:SetResizable(false)
+            else
+                pin.resizeBtn:Show()
+                pin.resizeBtn:Enable()
+                pin:SetResizable(true)
+            end
+            pin:RefreshLayout()
+        else
+            pin._savedWidth = pin:GetWidth()
+            pin._savedHeight = pin:GetHeight()
+            pin.collapsed = true
+            pin._tasksHoverShown = false
+            if pin.hoverControlsPanel then pin.hoverControlsPanel:Hide() end
+            if pin.timerText then pin.timerText:Hide() end
+            pin.contentFrame:Hide()
+            pin.todoMainFrame:Hide()
+            pin.resizeBtn:Hide()
+            pin:SetResizable(false)
+            local ch = pin.titleBar:GetHeight() + 14
+            pin:SetHeight(ch)
+            local sw, sh = GetScreenWidth(), GetScreenHeight()
+            pin:SetResizeBounds(200, ch, sw, sh)
+        end
+        SavePinGeometry(pin)
+    end
+
+    titleBar:EnableMouse(true)
+    titleBar:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(titleBar, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(L["CORE_PIN_TITLE_COLLAPSE_HINT"], 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    titleBar:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    titleBar:SetScript("OnMouseUp", function(_, button)
+        if button ~= "LeftButton" then return end
+        if IsShiftKeyDown() then
+            TogglePinCollapsed()
+            pin._titleBarLastClick = 0
+            return
+        end
+        local now = GetTime()
+        if pin._titleBarLastClick and (now - pin._titleBarLastClick) < 0.4 then
+            TogglePinCollapsed()
+            pin._titleBarLastClick = 0
+        else
+            pin._titleBarLastClick = now
+        end
+    end)
+
+    local function SyncPinnedTitleBarDrag()
+        if note.lockMove then
+            titleBar:RegisterForDrag()
+        else
+            titleBar:RegisterForDrag("LeftButton")
+        end
+    end
+
+    titleBar:SetScript("OnDragStart", function()
+        if not note.lockMove then
+            pin:StartMoving()
+        end
+    end)
+    titleBar:SetScript("OnDragStop", function()
+        pin:StopMovingOrSizing()
+        SavePinGeometry(pin)
+    end)
+    SyncPinnedTitleBarDrag()
 
     -- Hover controls panel
     local hoverControlsPanel = CreateFrame("Frame", nil, pin, "BackdropTemplate")
     hoverControlsPanel:SetPoint("TOPLEFT", pin, "BOTTOMLEFT", 0, 0)
     hoverControlsPanel:SetPoint("TOPRIGHT", pin, "BOTTOMRIGHT", 0, 0)
-    hoverControlsPanel:SetHeight(50)
+    hoverControlsPanel:SetHeight(72)
     hoverControlsPanel:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -633,14 +801,41 @@ function NotesPins:CreateNotePin(noteID, note)
                 pin:SetMovable(true)
                 pin:RegisterForDrag("LeftButton")
             end
+            SyncPinnedTitleBarDrag()
         end,
     })
-    lockMoveCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 5)
+    lockMoveCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 28)
     if note.lockMove then
         pin:SetMovable(false)
         pin:RegisterForDrag()
     end
     pin.lockMoveCB = lockMoveCB
+
+    local hoverTasksCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
+        label = L["CORE_PIN_HOVER_TASKS"],
+        checked = note.pinHideTasksUntilHover == true,
+        onClick = function(self)
+            note.pinHideTasksUntilHover = self:GetChecked()
+            note.modified = GetServerTime()
+            pin._pinHeightTasksExpanded = nil
+            pin._tasksHoverShown = false
+            if pin.RefreshLayout then pin:RefreshLayout() end
+        end,
+    })
+    hoverTasksCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 4)
+    local function HoverTasksTooltip(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["CORE_PIN_HOVER_TASKS"], 1, 1, 1)
+        GameTooltip:AddLine(L["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end
+    hoverTasksCB:SetScript("OnEnter", HoverTasksTooltip)
+    hoverTasksCB:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    if hoverTasksCB.label then
+        hoverTasksCB.label:SetScript("OnEnter", HoverTasksTooltip)
+        hoverTasksCB.label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
+    pin.hoverTasksCB = hoverTasksCB
 
     local lockResizeCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
         label = L["CORE_PIN_LOCK_RESIZE"],
@@ -652,9 +847,11 @@ function NotesPins:CreateNotePin(noteID, note)
                 resizeBtn:Disable()
                 pin:SetResizable(false)
             else
-                resizeBtn:Show()
-                resizeBtn:Enable()
                 pin:SetResizable(true)
+                if not pin.collapsed then
+                    resizeBtn:Show()
+                    resizeBtn:Enable()
+                end
             end
         end,
     })
@@ -668,7 +865,7 @@ function NotesPins:CreateNotePin(noteID, note)
 
     local resetTodosBtn = CreateFrame("Button", nil, hoverControlsPanel)
     resetTodosBtn:SetSize(24, 24)
-    resetTodosBtn:SetPoint("BOTTOMRIGHT", hoverControlsPanel, "BOTTOMRIGHT", -10, 5)
+    resetTodosBtn:SetPoint("BOTTOMRIGHT", hoverControlsPanel, "BOTTOMRIGHT", -10, 28)
     resetTodosBtn:SetNormalAtlas("talents-button-undo")
     resetTodosBtn:SetPushedAtlas("talents-button-undo")
     resetTodosBtn:SetHighlightAtlas("talents-button-undo")
@@ -696,6 +893,7 @@ function NotesPins:CreateNotePin(noteID, note)
     end
 
     local function ShowHoverControls()
+        if pin.collapsed then return end
         hoverControlsPanel:Show()
         if pin.timerText and note.noteType and (note.noteType == "daily" or note.noteType == "weekly") then
             pin.timerText:Show()
@@ -704,21 +902,49 @@ function NotesPins:CreateNotePin(noteID, note)
 
     HideHoverControls()
 
-    pin:SetScript("OnEnter", ShowHoverControls)
-    pin:SetScript("OnLeave", function()
+    local function ShowHoverControlsMerged()
+        if pin.collapsed then return end
+        ShowHoverControls()
+        local n = ns.NotesData:GetAllNotes()[noteID]
+        if n and n.pinHideTasksUntilHover and not pin.collapsed then
+            pin._tasksHoverShown = true
+            if pin.RefreshLayout then pin:RefreshLayout() end
+        end
+    end
+
+    local function PinLeaveMouseCheck()
         C_Timer.After(0.05, function()
             local overAny = pin:IsMouseOver() or hoverControlsPanel:IsMouseOver()
-            if not overAny then HideHoverControls() end
+            if not overAny then
+                HideHoverControls()
+                if pin.collapsed then return end
+                local n = ns.NotesData:GetAllNotes()[noteID]
+                if n and n.pinHideTasksUntilHover then
+                    pin._tasksHoverShown = false
+                    if pin.RefreshLayout then pin:RefreshLayout() end
+                end
+            end
         end)
-    end)
+    end
+
+    pin:SetScript("OnEnter", ShowHoverControlsMerged)
+    pin:SetScript("OnLeave", PinLeaveMouseCheck)
 
     -- Restore saved position
     local savedPos = self:GetPinPosition(noteID)
     if savedPos then
         pin:ClearAllPoints()
         pin:SetPoint(savedPos.point or "CENTER", UIParent, savedPos.relativePoint or "CENTER", savedPos.x or 0, savedPos.y or 0)
-        if savedPos.width and savedPos.height then
+        if savedPos.collapsed and savedPos.expandedWidth and savedPos.expandedHeight then
+            pin.collapsed = true
+            pin._savedWidth = savedPos.expandedWidth
+            pin._savedHeight = savedPos.expandedHeight
+            pin:SetSize(savedPos.width or 300, savedPos.height or (pin.titleBar:GetHeight() + 14))
+        elseif savedPos.width and savedPos.height then
             pin:SetSize(savedPos.width, savedPos.height)
+            pin.collapsed = false
+            pin._savedWidth = savedPos.width
+            pin._savedHeight = savedPos.height
         end
     end
 
@@ -816,6 +1042,9 @@ function NotesPins:RefreshNotePinColors(noteID)
         pinFrame.contentText:SetTextColor(textColor[1], textColor[2], textColor[3], 1)
         local fontPath = ns.Config:ResolveFontPath(note.fontFamily)
         pinFrame.contentText:SetFont(fontPath, fontSize, note.fontOutline or "")
+    end
+    if pinFrame.hoverTasksCB then
+        pinFrame.hoverTasksCB:SetChecked(note.pinHideTasksUntilHover == true)
     end
     if pinFrame.RefreshTodos then
         pinFrame:RefreshTodos()

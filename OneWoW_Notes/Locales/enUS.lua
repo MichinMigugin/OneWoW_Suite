@@ -312,6 +312,10 @@ L["CORE_PIN_LOCK_MOVE"]         = "Lock Move"
 L["CORE_PIN_LOCK_RESIZE"]       = "Lock Resize"
 L["CORE_PIN_RESET_TODOS"]       = "Reset All TODOs"
 L["CORE_PIN_RESET_TODOS_DESC"]  = "Uncheck all completed tasks"
+L["CORE_PIN_TITLE_COLLAPSE_HINT"] = "Double-click or Shift+click to collapse or expand"
+L["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER"] = "Hide pinned tasks until hover"
+L["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER_DESC"] = "When pinned, show the task list only while the mouse is over the note."
+L["CORE_PIN_HOVER_TASKS"] = "Hover tasks"
 
 -- Items tab
 L["ITEMS_CONTROLS"]                  = "Items Controls"
