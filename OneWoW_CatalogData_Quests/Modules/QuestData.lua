@@ -6,6 +6,14 @@ local addonName, ns = ...
 ns.QuestData = {}
 local QuestData = ns.QuestData
 
+local function GetOneWoWGUI()
+    local stub = _G.LibStub
+    if stub then
+        return stub("OneWoW_GUI-1.0", true)
+    end
+    return nil
+end
+
 local EXPANSION_NAMES = {
     [0]  = "Classic",
     [1]  = "The Burning Crusade",
@@ -256,6 +264,10 @@ end
 
 function QuestData:FormatGold(copper)
     if not copper or copper == 0 then return nil end
+    local OneWoW_GUI = GetOneWoWGUI()
+    if OneWoW_GUI and OneWoW_GUI.FormatGold then
+        return OneWoW_GUI:FormatGold(copper)
+    end
     local gold   = math.floor(copper / 10000)
     local silver = math.floor((copper % 10000) / 100)
     local c      = copper % 100
@@ -268,6 +280,10 @@ end
 
 function QuestData:FormatNumber(num)
     if not num or num == 0 then return nil end
+    local OneWoW_GUI = GetOneWoWGUI()
+    if OneWoW_GUI and OneWoW_GUI.FormatNumber then
+        return OneWoW_GUI:FormatNumber(math.floor(num))
+    end
     local str = tostring(math.floor(num))
     return str:reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
 end

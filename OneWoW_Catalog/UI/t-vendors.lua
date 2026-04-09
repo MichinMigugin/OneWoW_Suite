@@ -19,18 +19,6 @@ local currencyFilter = nil
 local dataAddon = nil
 local RefreshVendorList
 
-local function FormatGold(copper)
-    if not copper or copper <= 0 then return "" end
-    local gold = math.floor(copper / 10000)
-    local silver = math.floor((copper % 10000) / 100)
-    local cop = copper % 100
-    local parts = {}
-    if gold > 0 then table.insert(parts, gold .. "g") end
-    if silver > 0 then table.insert(parts, silver .. "s") end
-    if cop > 0 then table.insert(parts, cop .. "c") end
-    return table.concat(parts, " ")
-end
-
 local function FormatCost(itemData)
     if itemData.currencies and #itemData.currencies > 0 then
         local parts = {}
@@ -65,7 +53,7 @@ local function FormatCost(itemData)
         end
         return table.concat(parts, " - ")
     elseif itemData.cost and itemData.cost > 0 then
-        return FormatGold(itemData.cost)
+        return OneWoW_GUI:FormatGold(itemData.cost)
     end
     return L["VENDORS_PRICE_UNKNOWN"]
 end
@@ -634,8 +622,6 @@ function RefreshVendorList(panels)
     panels.UpdateListThumb()
 end
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
 function ns.UI.CreateVendorsTab(parent)
     local GAP    = ns.Constants.GUI.PANEL_GAP
     local HDR_H  = 42
@@ -813,4 +799,7 @@ function ns.UI.CreateVendorsTab(parent)
     end
 
     ns.UI.vendorsPanels = panels
+    ns.UI.RefreshVendorsList = function()
+        RefreshVendorList(panels)
+    end
 end

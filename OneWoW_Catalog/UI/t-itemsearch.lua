@@ -23,6 +23,7 @@ local searchBox      = nil
 local emptyList      = nil
 local emptyDetail    = nil
 local searchTimer    = nil
+local scanAHButtonRef = nil
 
 local ITEM_ROW_HEIGHT  = 30
 local SOURCE_BTN_H     = 22
@@ -40,6 +41,12 @@ local SOURCE_DEFS = {
 
 local RefreshItemList
 local ShowItemDetail
+
+local function UpdateItemSearchScanButton()
+    if not scanAHButtonRef then return end
+    local hide = _G.OneWoW and _G.OneWoW.ItemPrices and _G.OneWoW.ItemPrices:IsAuctionatorAHSourceActive()
+    scanAHButtonRef:SetShown(not hide)
+end
 
 local function ClearListElements()
     for _, el in ipairs(listElements) do
@@ -412,6 +419,7 @@ ShowItemDetail = function(result)
 
     local vendorSellPrice = 0
     local itemName, itemLink, itemQuality, _, _, _, _, _, _, _, sellPrice = GetItemInfo(result.itemID)
+    itemLink = itemLink or (select(2, C_Item.GetItemInfo(result.itemID)))
     if sellPrice and sellPrice > 0 then
         vendorSellPrice = sellPrice
     end
@@ -424,19 +432,38 @@ ShowItemDetail = function(result)
         AddTextRow(L["ITEMSEARCH_NOT_SELLABLE"], 12, "TEXT_MUTED")
     end
 
-    local priceDB = _G.OneWoW_AHPrices
-    local ahData = priceDB and priceDB[result.itemID]
-    if ahData and ahData.price and ahData.price > 0 then
-        local ageSeconds = GetServerTime() - (ahData.timestamp or 0)
-        local ageText
-        if ageSeconds < 3600 then
-            ageText = math.max(1, math.floor(ageSeconds / 60)) .. "m " .. L["ITEMSEARCH_AH_AGO"]
-        elseif ageSeconds < 86400 then
-            ageText = math.floor(ageSeconds / 3600) .. "h " .. L["ITEMSEARCH_AH_AGO"]
-        else
-            ageText = math.floor(ageSeconds / 86400) .. "d " .. L["ITEMSEARCH_AH_AGO"]
+    local ahPrice, ahMeta
+    local ow = _G.OneWoW
+    if ow and ow.ItemPrices then
+        ahPrice, ahMeta = ow.ItemPrices:GetUnitAHPrice(result.itemID, itemLink)
+    end
+    if not ahPrice or ahPrice <= 0 then
+        local priceDB = _G.OneWoW_AHPrices
+        local ahData = priceDB and priceDB[result.itemID]
+        if ahData and ahData.price and ahData.price > 0 then
+            ahPrice = ahData.price
+            ahMeta = { source = "onewow", timestamp = ahData.timestamp }
         end
-        AddTextRow(L["ITEMSEARCH_AH_PRICE"] .. ":  " .. OneWoW_GUI:FormatGold(ahData.price) .. "  |cFF888888(" .. ageText .. ")|r", 12, "TEXT_PRIMARY")
+    end
+    if ahPrice and ahPrice > 0 then
+        local ageText
+        if ahMeta and ahMeta.timestamp and ahMeta.timestamp > 0 then
+            local ageSeconds = GetServerTime() - ahMeta.timestamp
+            if ageSeconds < 3600 then
+                ageText = math.max(1, math.floor(ageSeconds / 60)) .. "m " .. L["ITEMSEARCH_AH_AGO"]
+            elseif ageSeconds < 86400 then
+                ageText = math.floor(ageSeconds / 3600) .. "h " .. L["ITEMSEARCH_AH_AGO"]
+            else
+                ageText = math.floor(ageSeconds / 86400) .. "d " .. L["ITEMSEARCH_AH_AGO"]
+            end
+        elseif ahMeta and ahMeta.ageDays ~= nil then
+            ageText = string.format(L["ITEMSEARCH_AH_AGE_DAYS"] or "%d d", ahMeta.ageDays) .. " " .. L["ITEMSEARCH_AH_AGO"]
+        end
+        local row = L["ITEMSEARCH_AH_PRICE"] .. ":  " .. OneWoW_GUI:FormatGold(ahPrice)
+        if ageText then
+            row = row .. "  |cFF888888(" .. ageText .. ")|r"
+        end
+        AddTextRow(row, 12, "TEXT_PRIMARY")
     else
         AddTextRow(L["ITEMSEARCH_NO_AH_DATA"], 12, "TEXT_MUTED")
     end
@@ -447,6 +474,7 @@ end
 
 RefreshItemList = function()
     if not panels then return end
+    UpdateItemSearchScanButton()
     ClearListElements()
     panels.listScrollFrame:SetVerticalScroll(0)
 
@@ -611,6 +639,8 @@ function ns.UI.CreateItemSearchTab(parent)
     local scanAHButton = OneWoW_GUI:CreateFitTextButton(searchHeader, { text = L["ITEMSEARCH_SCAN_AH"], height = 26, minWidth = 100 })
     scanAHButton:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
     scanAHButton.isScanning = false
+    scanAHButtonRef = scanAHButton
+    UpdateItemSearchScanButton()
 
     local scanBarContainer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     scanBarContainer:SetPoint("TOPLEFT", noticeBar, "BOTTOMLEFT", 0, -2)
@@ -728,4 +758,6 @@ function ns.UI.CreateItemSearchTab(parent)
 
     UpdateSourceButtonStates()
     RefreshItemList()
+
+    ns.UI.RefreshItemSearchList = RefreshItemList
 end

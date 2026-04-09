@@ -754,4 +754,8 @@ function ns.UI.CreateQuestsTab(parent)
         SetupProgressDropdown(panels)
         RefreshQuestList(panels)
     end)
+
+    ns.UI.RefreshQuestsList = function()
+        RefreshQuestList(panels)
+    end
 end

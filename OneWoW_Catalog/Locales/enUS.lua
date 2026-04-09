@@ -283,6 +283,7 @@ L["ITEMSEARCH_SCAN_PROCESSING"]   = "Processing %d%% ..."
 L["ITEMSEARCH_PRICES_FOUND"]      = "prices found"
 L["ITEMSEARCH_AH_NOT_OPEN"]       = "Open the Auction House first to scan prices."
 L["ITEMSEARCH_AH_AGO"]            = "ago"
+L["ITEMSEARCH_AH_AGE_DAYS"]      = "%d d"
 L["ITEMSEARCH_AH_AUCTIONS"]      = "auctions"
 
 L["LANGUAGE_SELECTION"] = "Language Selection"

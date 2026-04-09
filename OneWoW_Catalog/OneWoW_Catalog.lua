@@ -79,6 +79,11 @@ local function OnInitialize()
     OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", addon, function(owner)
         if owner.Minimap then owner.Minimap:UpdateIcon() end
     end)
+    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", addon, function()
+        if ns.UI.RefreshItemSearchList then ns.UI.RefreshItemSearchList() end
+        if ns.UI.RefreshVendorsList then ns.UI.RefreshVendorsList() end
+        if ns.UI.RefreshQuestsList then ns.UI.RefreshQuestsList() end
+    end)
 
     local _ver = OneWoW_GUI:GetAddonVersion(addonName)
     if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
