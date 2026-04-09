@@ -167,6 +167,9 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         if OneWoW.TooltipEngine then
             OneWoW.TooltipEngine:Initialize()
         end
+        if OneWoW.ExternalTooltipSync_OnLogin then
+            OneWoW.ExternalTooltipSync_OnLogin()
+        end
         if OneWoW.InitializeContextMenus then
             OneWoW:InitializeContextMenus()
         end

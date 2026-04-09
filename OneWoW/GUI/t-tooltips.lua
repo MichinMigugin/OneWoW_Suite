@@ -726,6 +726,35 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
 
     local enhSettings = OneWoW.db.global.settings.tooltips.enhancements
 
+    local sectionItems = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_ENHANCEMENTS_SECTION_ITEMS"],
+        yOffset = yOffset,
+    })
+    yOffset = sectionItems.bottomY - 6
+
+    local secItemsDesc = OneWoW_GUI:CreateFS(dsc, 10)
+    secItemsDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    secItemsDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    secItemsDesc:SetJustifyH("LEFT")
+    secItemsDesc:SetWordWrap(true)
+    secItemsDesc:SetSpacing(2)
+    secItemsDesc:SetText(L["TIPS_ENHANCEMENTS_SECTION_ITEMS_DESC"])
+    secItemsDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - secItemsDesc:GetStringHeight() - 10
+
+    local newY0, refresh0 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_ENHANCEMENTS_REMOVE_BLIZZ_VENDOR"],
+        description = L["TIPS_ENHANCEMENTS_REMOVE_BLIZZ_VENDOR_DESC"],
+        value = enhSettings.removeBlizzardVendorValue ~= false,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            enhSettings.removeBlizzardVendorValue = newVal
+        end,
+    })
+    yOffset = newY0
+    table.insert(allRefreshFuncs, function(enabled) refresh0(enabled, enhSettings.removeBlizzardVendorValue ~= false) end)
+
     local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
         title = L["TIPS_ENHANCEMENTS_SECTION_APPEARANCE"],
         yOffset = yOffset,
@@ -1188,21 +1217,27 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
 
     local valSettings = OneWoW.db.global.settings.tooltips.value
 
-    local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_VALUE_OPTIONS_SECTION"],
+    local function SyncExternalTooltips()
+        if OneWoW.ExternalTooltipSync and OneWoW.ExternalTooltipSync.SyncAll then
+            OneWoW.ExternalTooltipSync:SyncAll()
+        end
+    end
+
+    local secDisplay = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_VALUE_SECTION_DISPLAY"] or L["TIPS_VALUE_OPTIONS_SECTION"],
         yOffset = yOffset,
     })
-    yOffset = section1.bottomY - 6
+    yOffset = secDisplay.bottomY - 12
 
-    local sec1Desc = OneWoW_GUI:CreateFS(dsc, 10)
-    sec1Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    sec1Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    sec1Desc:SetJustifyH("LEFT")
-    sec1Desc:SetWordWrap(true)
-    sec1Desc:SetSpacing(2)
-    sec1Desc:SetText(L["TIPS_VALUE_OPTIONS_DESC"])
-    sec1Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - sec1Desc:GetStringHeight() - 6
+    local dispDesc = OneWoW_GUI:CreateFS(dsc, 10)
+    dispDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    dispDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    dispDesc:SetJustifyH("LEFT")
+    dispDesc:SetWordWrap(true)
+    dispDesc:SetSpacing(2)
+    dispDesc:SetText(L["TIPS_VALUE_SECTION_DISPLAY_DESC"] or L["TIPS_VALUE_OPTIONS_DESC"])
+    dispDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - dispDesc:GetStringHeight() - 10
 
     local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(dsc, {
         yOffset = yOffset,
@@ -1229,6 +1264,160 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     })
     yOffset = newY2
     table.insert(allRefreshFuncs, function(enabled) refresh2(enabled, valSettings.showAHValue ~= false) end)
+
+    yOffset = yOffset - 16
+
+    local secAH = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_VALUE_SECTION_AH"] or "Auction House data",
+        yOffset = yOffset,
+    })
+    yOffset = secAH.bottomY - 12
+
+    local ahIntro = OneWoW_GUI:CreateFS(dsc, 10)
+    ahIntro:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    ahIntro:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    ahIntro:SetJustifyH("LEFT")
+    ahIntro:SetWordWrap(true)
+    ahIntro:SetSpacing(2)
+    ahIntro:SetText(L["TIPS_VALUE_SECTION_AH_DESC"] or "")
+    ahIntro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - ahIntro:GetStringHeight() - 8
+
+    local ahSource = valSettings.ahPriceSource or "onewow"
+    local ahSourceLabel = ahSource == "auctionator" and (L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"] or "Auctionator")
+        or (L["TIPS_VALUE_AH_SOURCE_ONEWOW"] or "OneWoW AH scan")
+
+    local ahSrcLabel = OneWoW_GUI:CreateFS(dsc, 12)
+    ahSrcLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    ahSrcLabel:SetJustifyH("LEFT")
+    ahSrcLabel:SetText(L["TIPS_VALUE_AH_SOURCE_LABEL"] or "AH price data")
+    ahSrcLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - ahSrcLabel:GetStringHeight() - 4
+
+    local ahSrcDrop, ahSrcText = OneWoW_GUI:CreateDropdown(dsc, {
+        width = 220,
+        height = 26,
+        text = ahSourceLabel,
+    })
+    ahSrcDrop:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    OneWoW_GUI:AttachFilterMenu(ahSrcDrop, {
+        searchable = false,
+        buildItems = function()
+            return {
+                { value = "onewow", text = L["TIPS_VALUE_AH_SOURCE_ONEWOW"] or "OneWoW AH scan" },
+                { value = "auctionator", text = L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"] or "Auctionator" },
+            }
+        end,
+        onSelect = function(value, text)
+            valSettings.ahPriceSource = value
+            ahSrcText:SetText(text)
+            SyncExternalTooltips()
+        end,
+        getActiveValue = function() return valSettings.ahPriceSource or "onewow" end,
+    })
+    yOffset = yOffset - 32
+
+    local ahSrcDesc = OneWoW_GUI:CreateFS(dsc, 10)
+    ahSrcDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    ahSrcDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    ahSrcDesc:SetJustifyH("LEFT")
+    ahSrcDesc:SetWordWrap(true)
+    ahSrcDesc:SetSpacing(2)
+    ahSrcDesc:SetText(L["TIPS_VALUE_AH_SOURCE_DESC"] or "")
+    ahSrcDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    yOffset = yOffset - ahSrcDesc:GetStringHeight() - 10
+
+    local function refreshAhSourceRow(enabled, ahOn)
+        local on = enabled and ahOn
+        if on then
+            ahSrcLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        else
+            ahSrcLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+        ahSrcDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        ahSrcDrop:SetAlpha(on and 1 or 0.45)
+    end
+    table.insert(allRefreshFuncs, function(enabled) refreshAhSourceRow(enabled, valSettings.showAHValue ~= false) end)
+    refreshAhSourceRow(isEnabled, valSettings.showAHValue ~= false)
+
+    yOffset = yOffset - 14
+
+    local secTSM = OneWoW_GUI:CreateSectionHeader(dsc, {
+        title = L["TIPS_VALUE_SECTION_TSM"] or "TradeSkillMaster",
+        yOffset = yOffset,
+    })
+    yOffset = secTSM.bottomY - 12
+
+    local tsmIntro = OneWoW_GUI:CreateFS(dsc, 10)
+    tsmIntro:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    tsmIntro:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    tsmIntro:SetJustifyH("LEFT")
+    tsmIntro:SetWordWrap(true)
+    tsmIntro:SetSpacing(2)
+    tsmIntro:SetText(L["TIPS_VALUE_SECTION_TSM_DESC"] or "")
+    tsmIntro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - tsmIntro:GetStringHeight() - 8
+
+    local newY3, refresh3 = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset = yOffset,
+        label = L["TIPS_VALUE_SHOW_TSM"] or "TSM price",
+        description = L["TIPS_VALUE_SHOW_TSM_DESC"] or "",
+        value = valSettings.showTSMValue == true,
+        isEnabled = isEnabled,
+        onValueChange = function(newVal)
+            valSettings.showTSMValue = newVal
+            SyncExternalTooltips()
+        end,
+    })
+    yOffset = newY3
+    table.insert(allRefreshFuncs, function(enabled) refresh3(enabled, valSettings.showTSMValue == true) end)
+
+    local tsmStrLabel = OneWoW_GUI:CreateFS(dsc, 12)
+    tsmStrLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    tsmStrLabel:SetJustifyH("LEFT")
+    tsmStrLabel:SetText(L["TIPS_VALUE_TSM_STRING_LABEL"] or "TSM price string")
+    tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - tsmStrLabel:GetStringHeight() - 4
+
+    local tsmStrEb = OneWoW_GUI:CreateEditBox(dsc, {
+        width = 240,
+        height = 26,
+        placeholderText = "",
+    })
+    tsmStrEb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    tsmStrEb:SetText(valSettings.tsmPriceString or "dbmarket")
+    tsmStrEb:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    tsmStrEb:HookScript("OnEditFocusLost", function(self)
+        local t = self:GetText()
+        valSettings.tsmPriceString = (t and t ~= "") and t or "dbmarket"
+    end)
+    tsmStrEb:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+    end)
+    yOffset = yOffset - 32
+
+    local tsmStrDesc = OneWoW_GUI:CreateFS(dsc, 10)
+    tsmStrDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    tsmStrDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    tsmStrDesc:SetJustifyH("LEFT")
+    tsmStrDesc:SetWordWrap(true)
+    tsmStrDesc:SetSpacing(2)
+    tsmStrDesc:SetText(L["TIPS_VALUE_TSM_STRING_DESC"] or "")
+    tsmStrDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    yOffset = yOffset - tsmStrDesc:GetStringHeight() - 10
+
+    local function refreshTsmStrRow(enabled, tsmOn)
+        local on = enabled and tsmOn
+        if on then
+            tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        else
+            tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+        tsmStrDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        tsmStrEb:SetAlpha(on and 1 or 0.45)
+    end
+    table.insert(allRefreshFuncs, function(enabled) refreshTsmStrRow(enabled, valSettings.showTSMValue == true) end)
+    refreshTsmStrRow(isEnabled, valSettings.showTSMValue == true)
 
     local reqSection = OneWoW_GUI:CreateSectionHeader(dsc, {
         title = L["TIPS_VALUE_REQUIRES_SECTION"],

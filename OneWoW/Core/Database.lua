@@ -274,9 +274,18 @@ local DEFAULTS = {
             },
             recipeknowledge = { enabled = true },
             customnotes = { enabled = true },
-            enhancements = {},
+            enhancements = {
+                removeBlizzardVendorValue = true,
+            },
             talentmods = {},
-            value = { enabled = true },
+            value = {
+                enabled = true,
+                showVendorPrice = true,
+                showAHValue = true,
+                ahPriceSource = "onewow",
+                showTSMValue = false,
+                tsmPriceString = "dbmarket",
+            },
             pets = {
                 enabled = true,
                 showCollectionStatus = true,

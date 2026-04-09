@@ -1,14 +1,18 @@
 local ADDON_NAME, OneWoW = ...
+local format = string.format
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+local function FormatMoneyLine(copper)
+    if OneWoW_GUI and OneWoW_GUI.FormatGold then
+        return OneWoW_GUI:FormatGold(copper)
+    end
+    return GetCoinTextureString(copper)
+end
 
 local function GetVendorPrice(itemLink, itemID)
     local _, _, _, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemLink or itemID)
     return sellPrice or 0
-end
-
-local function GetAHPrice(itemID)
-    local db = _G.OneWoW_AHPrices
-    if not db then return nil end
-    return db[itemID]
 end
 
 local function FormatAge(timestamp)
@@ -16,12 +20,24 @@ local function FormatAge(timestamp)
     local age = time() - timestamp
     local L = OneWoW.L
     if age < 3600 then
-        return string.format(L["TIPS_TIME_MINUTES_AGO"] or "%dm ago", math.floor(age / 60))
+        return format(L["TIPS_TIME_MINUTES_AGO"] or "%dm ago", math.floor(age / 60))
     elseif age < 86400 then
-        return string.format(L["TIPS_TIME_HOURS_AGO"] or "%dh ago", math.floor(age / 3600))
+        return format(L["TIPS_TIME_HOURS_AGO"] or "%dh ago", math.floor(age / 3600))
     else
-        return string.format(L["TIPS_TIME_DAYS_AGO"] or "%dd ago", math.floor(age / 86400))
+        return format(L["TIPS_TIME_DAYS_AGO"] or "%dd ago", math.floor(age / 86400))
     end
+end
+
+local function FormatAHMeta(meta)
+    if not meta then return nil end
+    local L = OneWoW.L
+    if meta.timestamp then
+        return FormatAge(meta.timestamp)
+    end
+    if meta.ageDays ~= nil then
+        return format(L["TIPS_VALUE_AH_AGE_DAYS"] or "%d d ago", meta.ageDays)
+    end
+    return nil
 end
 
 local function ValueProvider(tooltip, context)
@@ -42,25 +58,47 @@ local function ValueProvider(tooltip, context)
             table.insert(lines, {
                 type  = "double",
                 left  = "  " .. L["TIPS_VALUE_VENDOR_PRICE"],
-                right = GetCoinTextureString(sellPrice),
+                right = FormatMoneyLine(sellPrice),
                 lr = 0.4, lg = 0.8, lb = 1.0,
                 rr = 1.0, rg = 1.0, rb = 1.0,
             })
         end
     end
 
-    if showAHValue and C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Auctions") then
-        local ahData = GetAHPrice(context.itemID)
-        if ahData and ahData.price and ahData.price > 0 then
-            local ageText = FormatAge(ahData.timestamp)
-            local rightText = GetCoinTextureString(ahData.price)
+    if showAHValue and OneWoW.ItemPrices then
+        local price, meta = OneWoW.ItemPrices:GetUnitAHPrice(context.itemID, context.itemLink)
+        if price and price > 0 then
+            local ageText = FormatAHMeta(meta)
+            local rightText = FormatMoneyLine(price)
             if ageText then
                 rightText = rightText .. "  |cFF888888(" .. ageText .. ")|r"
             end
+            local leftLabel = L["TIPS_VALUE_AH_PRICE"]
+            if meta and meta.source == "auctionator" then
+                leftLabel = L["TIPS_VALUE_AH_PRICE_AUCTIONATOR"] or leftLabel
+            end
             table.insert(lines, {
                 type  = "double",
-                left  = "  " .. L["TIPS_VALUE_AH_PRICE"],
+                left  = "  " .. leftLabel,
                 right = rightText,
+                lr = 0.4, lg = 0.8, lb = 1.0,
+                rr = 1.0, rg = 1.0, rb = 1.0,
+            })
+        end
+    end
+
+    if cfg.showTSMValue == true and OneWoW.ItemPrices and context.itemLink then
+        local tsmPrice, srcStr = OneWoW.ItemPrices:GetTSMUnitPrice(context.itemLink)
+        if tsmPrice and tsmPrice > 0 then
+            local tsmRight = FormatMoneyLine(tsmPrice)
+            local leftT = L["TIPS_VALUE_TSM_PRICE"] or "TSM"
+            if srcStr and srcStr ~= "" then
+                leftT = format(L["TIPS_VALUE_TSM_PRICE_FMT"] or "TSM (%s)", srcStr)
+            end
+            table.insert(lines, {
+                type  = "double",
+                left  = "  " .. leftT,
+                right = tsmRight,
                 lr = 0.4, lg = 0.8, lb = 1.0,
                 rr = 1.0, rg = 1.0, rb = 1.0,
             })

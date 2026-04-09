@@ -36,6 +36,7 @@ Get toast notifications (pop-up alerts) whenever you earn something new:
 
 ### Enhanced Item Tooltips
 Hover over any item to see extra helpful information:
+- **Tooltip Enhancements** can hide Blizzard's default vendor sell-price line (on by default), which avoids the stock MoneyFrame tooltip path and related display issues; enable **Tooltips → Value → Show Vendor Price** if you want sell value only in the OneWoW tooltip section
 - Whether you've collected this mount, pet, or toy already
 - Custom notes you've added to items
 - Gear upgrade suggestions
