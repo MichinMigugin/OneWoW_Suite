@@ -10,6 +10,13 @@ local tinsert = tinsert
 
 local SECTION_PRESETS = {
     {
+        id = "farm_value",
+        label = "Farm value",
+        listType = "farmvalue",
+        category = "Farming",
+        sections = {},
+    },
+    {
         id = "great_vault",
         label = "Great Vault",
         listType = "weekly",
@@ -223,6 +230,10 @@ function TP:CreateListFromPreset(presetID)
                         })
                     end
                 end
+            end
+
+            if preset.listType == "farmvalue" then
+                list.farmPanel = { mode = "watchlist", items = {} }
             end
 
             return list

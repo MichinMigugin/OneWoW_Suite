@@ -879,6 +879,7 @@ function TE:GetListTypeDisplayName(listType)
         weekly    = L["TRACKER_LIST_WEEKLY"] or "Weekly",
         todo      = L["TRACKER_LIST_TODO"] or "To-Do",
         repeating = L["TRACKER_LIST_REPEATING"] or "Repeating",
+        farmvalue = L["TRACKER_LIST_FARMVALUE"] or "Farm value",
     }
     return names[listType] or listType
 end

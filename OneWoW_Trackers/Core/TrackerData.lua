@@ -17,6 +17,7 @@ local LIST_TYPES = {
     "weekly",
     "todo",
     "repeating",
+    "farmvalue",
 }
 
 local LIST_TYPE_SET = {}

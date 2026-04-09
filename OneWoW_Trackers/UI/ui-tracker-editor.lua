@@ -51,6 +51,15 @@ local QUICK_START = {
         preset = "todo_template",
     },
     {
+        key = "farmvalue",
+        title = "Farm value (pin while farming)",
+        desc = "Watch listed items or all tradeable bag loot with stack values from OneWoW (AH / optional TSM). Pin the window while you farm.",
+        icon = "Interface\\Icons\\INV_Misc_Coin_01",
+        listType = "farmvalue",
+        category = "Farming",
+        preset = "farm_value",
+    },
+    {
         key = "vault",
         title = "Great Vault Tracker",
         desc = "Track your raid, dungeon, and world content progress for the weekly vault.",

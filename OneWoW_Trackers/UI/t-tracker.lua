@@ -18,6 +18,7 @@ local LIST_TYPE_ICONS = {
     weekly    = "Interface\\Icons\\Achievement_General_100kQuests",
     todo      = "Interface\\Icons\\INV_Misc_Note_01",
     repeating = "Interface\\Icons\\Spell_Nature_TimeStop",
+    farmvalue = "Interface\\Icons\\INV_Misc_Coin_01",
 }
 
 local LIST_TYPE_COLORS = {
@@ -26,6 +27,7 @@ local LIST_TYPE_COLORS = {
     weekly    = { 0.6, 0.4, 1.0 },
     todo      = { 0.8, 0.8, 0.8 },
     repeating = { 0.4, 1.0, 0.6 },
+    farmvalue = { 1.0, 0.84, 0.0 },
 }
 
 function ns.UI.CreateTrackerTab(parent)
@@ -489,6 +491,11 @@ function ns.UI.CreateTrackerTab(parent)
         progressText:SetText(total > 0 and format("%d / %d", done, total) or "")
         progressText:SetTextColor(1, 1, 1)
 
+        if list.listType == "farmvalue" then
+            progressBar:Hide()
+            progressText:Hide()
+        end
+
         local btnY = -54
         local btnX = 10
 
@@ -571,6 +578,11 @@ function ns.UI.CreateTrackerTab(parent)
             end
         end)
 
+        if list.listType == "farmvalue" then
+            addSectionBtn:Hide()
+            resetBtn:Hide()
+        end
+
         yOffset = yOffset - 90
 
         if list.description and list.description ~= "" then
@@ -590,6 +602,10 @@ function ns.UI.CreateTrackerTab(parent)
             local descH = descText:GetStringHeight() + 12
             descFrame:SetHeight(descH)
             yOffset = yOffset - descH
+        end
+
+        if list.listType == "farmvalue" and ns.TrackerFarmValue then
+            yOffset = ns.TrackerFarmValue:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, parent)
         end
 
         for secIdx, sec in ipairs(list.sections) do

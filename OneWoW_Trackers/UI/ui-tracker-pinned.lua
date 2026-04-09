@@ -215,6 +215,12 @@ function TP:Create(listID)
         local currentList = TD:GetList(listID)
         if not currentList then return end
 
+        if currentList.listType == "farmvalue" and ns.TrackerFarmValue then
+            totalLabel:SetText("")
+            ns.TrackerFarmValue:RenderPinned(currentList, scrollChild, frame)
+            return
+        end
+
         local done, total = TD:GetListCompletion(listID)
         totalLabel:SetText(total > 0 and format("%d/%d", done, total) or "")
 
