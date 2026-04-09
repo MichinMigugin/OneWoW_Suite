@@ -334,7 +334,7 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
             local icon = btn:CreateTexture(nil, "ARTWORK")
             icon:SetSize(12, 12)
             icon:SetPoint("CENTER")
-            icon:SetTexture("Interface/Common/FavoritesIcon")
+            OneWoW_GUI:SetFavoriteAtlasTexture(icon)
             btn.icon = icon
         elseif col.dungData then
             local dung = col.dungData

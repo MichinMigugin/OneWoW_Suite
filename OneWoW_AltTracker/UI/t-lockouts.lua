@@ -45,7 +45,7 @@ local onHeaderCreate = function(btn, col, index)
         local icon = btn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(12, 12)
         icon:SetPoint("CENTER")
-        icon:SetTexture("Interface/Common/FavoritesIcon")
+        OneWoW_GUI:SetFavoriteAtlasTexture(icon)
         btn.icon = icon
         if btn.text then btn.text:SetText("") end
     end

@@ -15,6 +15,7 @@ local currentSortAscending = true
 
 local columnsConfig = {
     {key = "expand", label = "",                      width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],          ttDesc = L["TT_COL_EXPAND_DESC"]},
+    {key = "favorite", label = L["ITEMS_COL_FAVORITE"], width = 28, fixed = true, align = "center", sortable = false, ttTitle = L["TT_ITEMS_COL_FAVORITE"], ttDesc = L["TT_ITEMS_COL_FAVORITE_DESC"]},
     {key = "item",   label = L["ITEMS_COL_ITEM"],     width = 150, fixed = false, align = "left",                     ttTitle = L["TT_ITEMS_COL_ITEM"],     ttDesc = L["TT_ITEMS_COL_ITEM_DESC"]},
     {key = "total",  label = L["ITEMS_COL_TOTAL"],    width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_ITEMS_COL_TOTAL"],    ttDesc = L["TT_ITEMS_COL_TOTAL_DESC"]},
     {key = "vendor", label = L["ITEMS_COL_VENDOR"],   width = 80,  fixed = false, align = "right",                    ttTitle = L["TT_ITEMS_COL_VENDOR"],   ttDesc = L["TT_ITEMS_COL_VENDOR_DESC"]},
@@ -29,6 +30,12 @@ local onHeaderCreate = function(btn, col, index)
         icon:SetPoint("CENTER")
         icon:SetAtlas("Gamepad_Rev_Plus_64")
         btn.icon = icon
+        if btn.text then btn.text:SetText("") end
+    elseif col.key == "favorite" then
+        local icon = btn:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(14, 14)
+        icon:SetPoint("CENTER")
+        OneWoW_GUI:SetFavoriteAtlasTexture(icon)
         if btn.text then btn.text:SetText("") end
     end
 end
@@ -684,33 +691,41 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
     end
 
-    if currentSortColumn == "item" then
+    local function sortWithFavoritesFirst(inner)
         table.sort(filteredItems, function(a, b)
+            local fa, fb = ns.IsFavoriteItem(a.itemID), ns.IsFavoriteItem(b.itemID)
+            if fa ~= fb then return fa end
+            return inner(a, b)
+        end)
+    end
+
+    if currentSortColumn == "item" then
+        sortWithFavoritesFirst(function(a, b)
             if currentSortAscending then return (a.itemName or "") < (b.itemName or "")
             else return (a.itemName or "") > (b.itemName or "") end
         end)
     elseif currentSortColumn == "total" then
-        table.sort(filteredItems, function(a, b)
+        sortWithFavoritesFirst(function(a, b)
             if currentSortAscending then return (a.totalQty or 0) < (b.totalQty or 0)
             else return (a.totalQty or 0) > (b.totalQty or 0) end
         end)
     elseif currentSortColumn == "vendor" then
-        table.sort(filteredItems, function(a, b)
+        sortWithFavoritesFirst(function(a, b)
             if currentSortAscending then return (a.vendorPrice or 0) < (b.vendorPrice or 0)
             else return (a.vendorPrice or 0) > (b.vendorPrice or 0) end
         end)
     elseif currentSortColumn == "ah" then
-        table.sort(filteredItems, function(a, b)
+        sortWithFavoritesFirst(function(a, b)
             if currentSortAscending then return (a.ahPrice or 0) < (b.ahPrice or 0)
             else return (a.ahPrice or 0) > (b.ahPrice or 0) end
         end)
     elseif currentSortColumn == "lastseen" then
-        table.sort(filteredItems, function(a, b)
+        sortWithFavoritesFirst(function(a, b)
             if currentSortAscending then return (a.lastSeenTime or 0) < (b.lastSeenTime or 0)
             else return (a.lastSeenTime or 0) > (b.lastSeenTime or 0) end
         end)
     else
-        table.sort(filteredItems, function(a, b)
+        sortWithFavoritesFirst(function(a, b)
             return (a.itemName or "") < (b.itemName or "")
         end)
     end
@@ -748,6 +763,19 @@ function ns.UI.RefreshItemsTab(itemsTab)
                 OneWoW_GUI:ApplyFontToFrame(ef)
             end,
         })
+
+        local capturedItemID = itemData.itemID
+        local favBtn = OneWoW_GUI:CreateFavoriteToggleButton(itemRow, {
+            size = 18,
+            favorite = ns.IsFavoriteItem(capturedItemID),
+            tooltipTitle = L["TT_ITEMS_COL_FAVORITE"],
+            tooltipText = L["TT_ITEMS_COL_FAVORITE_DESC"],
+            onClick = function(_, isFav)
+                ns.SetFavoriteItem(capturedItemID, isFav)
+                ns.UI.RefreshItemsTab(itemsTab)
+            end,
+        })
+        table.insert(itemRow.cells, 2, favBtn)
 
         local itemContainer = CreateFrame("Frame", nil, itemRow)
         itemContainer:SetHeight(rowHeight - 4)

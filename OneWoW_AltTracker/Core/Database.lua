@@ -35,6 +35,8 @@ ns.DatabaseDefaults = {
         },
 
         favorites = {},
+        favoriteBarSets = {},
+        favoriteItems   = {},
         seasonChecklist = {}
     },
 

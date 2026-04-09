@@ -684,6 +684,77 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
     local yOffset = -5
     local rowHeight = 32
 
+    local function matchesFilter(entry)
+        if not filter then return true end
+        return entry.name and entry.name:lower():find(filter, 1, true)
+    end
+
+    local favEntries = {}
+    for _, entry in ipairs(setNames) do
+        if ns.IsFavoriteBarSet(entry.name) and matchesFilter(entry) then
+            local cls = entry.data.sourceClass or "UNKNOWN"
+            if not activeFilterClass or activeFilterClass == cls then
+                table.insert(favEntries, entry)
+            end
+        end
+    end
+    table.sort(favEntries, function(a, b)
+        return (a.name or "") < (b.name or "")
+    end)
+
+    if #favEntries > 0 then
+        local favLabel = OneWoW_GUI:CreateFS(listScrollChild, 10)
+        favLabel:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 8, yOffset)
+        favLabel:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -8, yOffset)
+        favLabel:SetJustifyH("LEFT")
+        favLabel:SetText(L["AB_FAVORITES_SECTION"] or "Favorites")
+        favLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+        yOffset = yOffset - favLabel:GetStringHeight() - 4
+
+        for _, entry in ipairs(favEntries) do
+            local capturedName = entry.name
+            shownCount = shownCount + 1
+            local hasBarData = ns.ActionBarsModule:HasSetBarData(capturedName)
+
+            local row = OneWoW_GUI:CreateListRowBasic(listScrollChild, {
+                height = rowHeight,
+                label = capturedName,
+                showDot = true,
+                dotEnabled = hasBarData,
+                favoriteToggle = {
+                    isFavorite = true,
+                    size = 16,
+                    tooltipTitle = L["AB_FAVORITE_SET_TT"] or L["TT_COL_STAR"],
+                    tooltipText = L["AB_FAVORITE_SET_TT_DESC"] or "",
+                    onChange = function(isFav)
+                        ns.SetFavoriteBarSet(capturedName, isFav)
+                        ns.UI.BuildActionBarSetsList(split, split.searchBox and split.searchBox:GetSearchText() or "")
+                    end,
+                },
+                onClick = function(self)
+                    if selectedRow and selectedRow ~= self then
+                        selectedRow:SetActive(false)
+                    end
+                    selectedSetName = capturedName
+                    selectedRow = self
+                    self:SetActive(true)
+                    ns.UI.ShowSetDetails(split, capturedName)
+                end,
+            })
+            row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
+            row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -4, yOffset)
+
+            if selectedSetName == capturedName then
+                row:SetActive(true)
+                selectedRow = row
+            end
+
+            yOffset = yOffset - rowHeight - 4
+        end
+
+        yOffset = yOffset - 8
+    end
+
     local classBuckets = {}
     local classOrder = {}
 
@@ -706,7 +777,9 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
             local filteredEntries = {}
 
             for _, entry in ipairs(entries) do
-                if not filter or entry.name:lower():find(filter, 1, true) then
+                if ns.IsFavoriteBarSet(entry.name) then
+                    -- Listed under Favorites only
+                elseif not filter or entry.name:lower():find(filter, 1, true) then
                     table.insert(filteredEntries, entry)
                 end
             end
@@ -736,6 +809,16 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
                         label = capturedName,
                         showDot = true,
                         dotEnabled = hasBarData,
+                        favoriteToggle = {
+                            isFavorite = false,
+                            size = 16,
+                            tooltipTitle = L["AB_FAVORITE_SET_TT"] or L["TT_COL_STAR"],
+                            tooltipText = L["AB_FAVORITE_SET_TT_DESC"] or "",
+                            onChange = function(isFav)
+                                ns.SetFavoriteBarSet(capturedName, isFav)
+                                ns.UI.BuildActionBarSetsList(split, split.searchBox and split.searchBox:GetSearchText() or "")
+                            end,
+                        },
                         onClick = function(self)
                             if selectedRow and selectedRow ~= self then
                                 selectedRow:SetActive(false)

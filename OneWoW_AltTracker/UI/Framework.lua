@@ -114,3 +114,34 @@ function ns.SetFavoriteChar(charKey, value)
     end
     addon.db.global.favorites[charKey] = value and true or nil
 end
+
+function ns.IsFavoriteBarSet(setName)
+    if not setName then return false end
+    local db = _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global
+    return db and db.favoriteBarSets and db.favoriteBarSets[setName] == true
+end
+
+function ns.SetFavoriteBarSet(setName, value)
+    local addon = _G.OneWoW_AltTracker
+    if not addon or not addon.db or not setName then return end
+    if not addon.db.global.favoriteBarSets then
+        addon.db.global.favoriteBarSets = {}
+    end
+    addon.db.global.favoriteBarSets[setName] = value and true or nil
+end
+
+function ns.IsFavoriteItem(itemID)
+    if not itemID then return false end
+    local db = _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global
+    return db and db.favoriteItems and db.favoriteItems[tostring(itemID)] == true
+end
+
+function ns.SetFavoriteItem(itemID, value)
+    local addon = _G.OneWoW_AltTracker
+    if not addon or not addon.db or not itemID then return end
+    if not addon.db.global.favoriteItems then
+        addon.db.global.favoriteItems = {}
+    end
+    local k = tostring(itemID)
+    addon.db.global.favoriteItems[k] = value and true or nil
+end

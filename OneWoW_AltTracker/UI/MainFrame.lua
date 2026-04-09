@@ -368,12 +368,14 @@ function ns.UI.CreateFavoriteStarButton(charRow, charKey)
     local starIcon = starBtn:CreateTexture(nil, "ARTWORK")
     starIcon:SetSize(14, 14)
     starIcon:SetPoint("CENTER")
-    starIcon:SetTexture("Interface/Common/FavoritesIcon")
+    OneWoW_GUI:SetFavoriteAtlasTexture(starIcon)
     local function applyStarColor()
         if ns.IsFavoriteChar(charKey) then
-            starIcon:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            starIcon:SetDesaturated(false)
+            starIcon:SetAlpha(1)
         else
-            starIcon:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            starIcon:SetDesaturated(true)
+            starIcon:SetAlpha(0.4)
         end
     end
     applyStarColor()
