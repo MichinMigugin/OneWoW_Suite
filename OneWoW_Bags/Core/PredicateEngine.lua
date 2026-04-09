@@ -231,6 +231,7 @@ local FLAG_REGISTRY = {
     iscraftingreagent       = "isCraftingReagent",
     hassocket               = "hasSocket",
     isknowledge             = "isKnowledge",
+    isrefundable            = "isRefundable",
 
     -- Tooltip-derived flags (lazy)
     hasuseability           = "hasUseAbility",
@@ -647,6 +648,7 @@ RegisterKeyword("locked",           function(p) return p.isLocked end)
 RegisterKeyword("socket",           function(p) return p.hasSocket end)
 RegisterKeyword("equipped",         function(p) return p.isEquipped end)
 RegisterKeyword("knowledge",        function(p) return p.isKnowledge end)
+RegisterKeyword("refundable",       function(p) return p.isRefundable end)
 
 -- ---- 7.19  Vendor / value keywords ----
 RegisterKeyword("unsellable", function(p) return p.isUnsellable end)
@@ -766,9 +768,7 @@ local function GetBattlePetCageData(itemID, hyperlink)
 end
 
 local function GetItemIdentityKey(itemID, hyperlink)
-    if not itemID then
-        return nil
-    end
+    if not itemID then return nil end
 
     if itemID ~= BATTLE_PET_CAGE_ID then
         return tostring(itemID)
@@ -1069,7 +1069,15 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     itemInfo = itemInfo or {}
     local hyperlink = itemInfo.hyperlink
-    local cacheKey = bagID and slotID and (bagID .. ":" .. slotID) or GetItemIdentityKey(itemID, hyperlink) or tostring(itemID)
+    local cacheKey, itemLocation
+
+    if bagID and slotID then
+        cacheKey = bagID .. ":" .. slotID
+        itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+    else
+        cacheKey = GetItemIdentityKey(itemID, hyperlink) or tostring(itemID)
+    end
+
     if propsCache[cacheKey] then return propsCache[cacheKey] end
     local petData = GetBattlePetCageData(itemID, hyperlink)
 
@@ -1256,6 +1264,9 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
         local spellIconID = spellinfo.iconID
         props.isKnowledge = KNOWLEDGE_ICONS[spellIconID] == true
     end
+
+    -- ---- Refundable items ----
+    props.isRefundable = C_Item.CanBeRefunded(itemLocation)
 
     -- BIND DETECTION NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.
     -- UNIQUE DETECTION NOTE: C_Item.GetItemUniquenessByID only matches unique-equipped items; its purpose is to identify restrictions on equipping items, not on owning them.
