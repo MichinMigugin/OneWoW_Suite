@@ -1,4 +1,4 @@
-local MAJOR, MINOR = "OneWoW_GUI-1.0", 3
+local MAJOR, MINOR = "OneWoW_GUI-1.0", 6
 local OneWoW_GUI, oldMinor = LibStub:NewLibrary(MAJOR, MINOR)
 
 if not OneWoW_GUI then return end

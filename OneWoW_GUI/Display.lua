@@ -39,6 +39,8 @@ function OneWoW_GUI:CreateListRowBasic(parent, options)
     local dotEnabled = options.dotEnabled
     local showValueText = options.showValueText
     local valueText = options.valueText or ""
+    local showFavoriteGlyph = options.showFavoriteGlyph
+    local favoriteToggle = options.favoriteToggle
 
     local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
     row:SetHeight(height)
@@ -52,6 +54,36 @@ function OneWoW_GUI:CreateListRowBasic(parent, options)
         row.dot:SetPoint("RIGHT", row, "RIGHT", -8, 0)
     end
 
+    if favoriteToggle and type(favoriteToggle) == "table" and Constants.FAVORITE_ATLAS then
+        local ft = favoriteToggle
+        row.favoriteBtn = self:CreateFavoriteToggleButton(row, {
+            size     = ft.size or 18,
+            favorite = ft.isFavorite == true,
+            tooltipTitle = ft.tooltipTitle,
+            tooltipText  = ft.tooltipText,
+            onClick = function(_, isFav)
+                if ft.onChange then
+                    ft.onChange(isFav)
+                end
+            end,
+        })
+        if showDot and row.dot then
+            row.favoriteBtn:SetPoint("RIGHT", row.dot, "LEFT", -6, 0)
+        else
+            row.favoriteBtn:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+        end
+        row.favoriteBtn:SetFrameLevel((row:GetFrameLevel() or 0) + 20)
+    elseif showFavoriteGlyph and Constants.FAVORITE_ATLAS then
+        row.favoriteGlyph = row:CreateTexture(nil, "OVERLAY")
+        row.favoriteGlyph:SetSize(14, 14)
+        row.favoriteGlyph:SetAtlas(Constants.FAVORITE_ATLAS)
+        if showDot and row.dot then
+            row.favoriteGlyph:SetPoint("RIGHT", row.dot, "LEFT", -6, 0)
+        else
+            row.favoriteGlyph:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+        end
+    end
+
     if showValueText then
         row.valueText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         row.valueText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
@@ -63,7 +95,13 @@ function OneWoW_GUI:CreateListRowBasic(parent, options)
     row.label = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     row.label:SetPoint("LEFT", row, "LEFT", 10, 0)
     if showDot then
-        row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
+        local labelRightPad = -24
+        if row.favoriteBtn then
+            labelRightPad = -48
+        elseif showFavoriteGlyph and row.favoriteGlyph then
+            labelRightPad = -40
+        end
+        row.label:SetPoint("RIGHT", row, "RIGHT", labelRightPad, 0)
     elseif showValueText and row.valueText then
         row.label:SetPoint("RIGHT", row.valueText, "LEFT", -4, 0)
     else
@@ -101,6 +139,15 @@ function OneWoW_GUI:CreateListRowBasic(parent, options)
 
     if onClick then
         row:SetScript("OnClick", function(self) onClick(self) end)
+    end
+
+    if row.favoriteBtn and row.valueText then
+        row.valueText:ClearAllPoints()
+        row.valueText:SetPoint("RIGHT", row.favoriteBtn, "LEFT", -6, 0)
+        row.label:ClearAllPoints()
+        row.label:SetPoint("LEFT", row, "LEFT", 10, 0)
+        row.label:SetPoint("RIGHT", row.valueText, "LEFT", -4, 0)
+        row.label:SetJustifyH("LEFT")
     end
 
     return row

@@ -281,3 +281,75 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, options)
     refresh(isEnabled, value)
     return onBtn, offBtn, refresh, statusPfx, statusVal
 end
+
+function OneWoW_GUI:GetFavoriteAtlas()
+    return Constants.FAVORITE_ATLAS or "auctionhouse-icon-favorite"
+end
+
+--- Apply the standard OneWoW favorite atlas to an existing texture.
+function OneWoW_GUI:SetFavoriteAtlasTexture(tex)
+    if not tex or not tex.SetAtlas then return end
+    tex:SetAtlas(self:GetFavoriteAtlas())
+end
+
+--- Small icon-only favorite toggle (auction house star). options: size, favorite (bool), onClick(btn, isFavorite), tooltipTitle, tooltipText
+function OneWoW_GUI:CreateFavoriteToggleButton(parent, options)
+    options = options or {}
+    local size = options.size or 22
+    local btn = CreateFrame("Button", nil, parent)
+    btn:SetSize(size, size)
+    btn:EnableMouse(true)
+    btn:RegisterForClicks("LeftButtonUp")
+
+    local tex = btn:CreateTexture(nil, "ARTWORK")
+    tex:SetAllPoints()
+    tex:SetAtlas(self:GetFavoriteAtlas())
+
+    local function applyVisual(on)
+        btn._favorite = on and true or false
+        if on then
+            tex:SetDesaturated(false)
+            tex:SetAlpha(1)
+        else
+            tex:SetDesaturated(true)
+            tex:SetAlpha(0.38)
+        end
+    end
+
+    applyVisual(options.favorite)
+
+    btn.SetFavorite = function(self, on)
+        applyVisual(on)
+    end
+    btn.GetFavorite = function(self)
+        return self._favorite
+    end
+
+    btn:SetScript("OnClick", function(self)
+        local nv = not self._favorite
+        applyVisual(nv)
+        if options.onClick then
+            options.onClick(self, nv)
+        end
+    end)
+
+    local tTitle = options.tooltipTitle
+    local tText = options.tooltipText
+    if tTitle or tText then
+        btn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            if tTitle then
+                GameTooltip:SetText(tTitle, 1, 1, 1)
+            end
+            if tText then
+                GameTooltip:AddLine(tText, 0.8, 0.8, 0.8, true)
+            end
+            GameTooltip:Show()
+        end)
+        btn:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+    end
+
+    return btn
+end

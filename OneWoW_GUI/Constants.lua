@@ -29,6 +29,9 @@ OneWoW_GUI.Constants = {
         neutral  = MEDIA_BASE .. "neutral-mini.png",
     },
 
+    -- Standard favorite glyph for OneWoW addons (Blizzard atlas).
+    FAVORITE_ATLAS = "auctionhouse-icon-favorite",
+
     -- backdrops
     BACKDROP_SIMPLE = {
         bgFile = "Interface\\Buttons\\WHITE8x8",
