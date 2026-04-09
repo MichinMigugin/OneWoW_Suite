@@ -59,9 +59,33 @@ local function CreateListRow(parent)
     row.starBtn:SetPoint("LEFT", row, "LEFT", 4, 0)
     row.starTex = row.starBtn:CreateTexture(nil, "OVERLAY")
     row.starTex:SetAllPoints()
-    row.starTex:SetAtlas("VignetteStar")
+    row.starTex:SetAtlas("VignetteKill")
     row.starTex:SetAlpha(0.3)
     row.starBtn:SetNormalTexture(row.starTex)
+    row.starBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["OWSL_TT_DEFAULT_LIST"], 1, 1, 1)
+        GameTooltip:AddLine(L["OWSL_TT_DEFAULT_LIST_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    row.starBtn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
+    row.favBtn = OneWoW_GUI:CreateFavoriteToggleButton(row, {
+        size = 16,
+        favorite = false,
+        tooltipTitle = L["OWSL_TT_FAVORITE_LIST"],
+        tooltipText = L["OWSL_TT_FAVORITE_LIST_DESC"],
+        onClick = function(btn, isFav)
+            local r = btn:GetParent()
+            if r and r.data and r.data.listName then
+                ns.ShoppingList:SetListFavorite(r.data.listName, isFav)
+                MainWindow:RefreshSidebar()
+            end
+        end,
+    })
+    row.favBtn:SetPoint("LEFT", row.starBtn, "RIGHT", 2, 0)
 
     row.deleteBtn = CreateFrame("Button", nil, row)
     row.deleteBtn:SetSize(14, 14)
@@ -84,7 +108,7 @@ local function CreateListRow(parent)
     row.deleteBtn:Hide()
 
     row.nameText = OneWoW_GUI:CreateFS(row, 12)
-    row.nameText:SetPoint("LEFT",  row, "LEFT",  24, 0)
+    row.nameText:SetPoint("LEFT",  row, "LEFT",  40, 0)
     row.nameText:SetPoint("RIGHT", row, "RIGHT", -48, 0)
     row.nameText:SetJustifyH("LEFT")
     row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -161,6 +185,10 @@ local function ConfigureListRow(row, listName, isSelected, isDefault, childCount
 
     row.starTex:Show()
     row.starTex:SetAlpha(isDefault and 1.0 or 0.3)
+
+    if row.favBtn then
+        row.favBtn:SetFavorite(ns.ShoppingList:IsListFavorite(listName))
+    end
 
     if list and list.isCraftOrder then
         row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_MUTED"))
@@ -697,6 +725,11 @@ function MainWindow:RefreshSidebar()
     end
 
     table.sort(parentLists, function(a, b)
+        if a == defaultList then return true end
+        if b == defaultList then return false end
+        local fa = ns.ShoppingList:IsListFavorite(a)
+        local fb = ns.ShoppingList:IsListFavorite(b)
+        if fa ~= fb then return fa end
         if a == ns.MAIN_LIST_KEY then return true end
         if b == ns.MAIN_LIST_KEY then return false end
         return a < b
@@ -729,7 +762,17 @@ function MainWindow:RefreshSidebar()
         row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0,      -yOff)
         row:SetHeight(height)
 
-        if depth > 0 then row.starBtn:Hide() else row.starBtn:Show() end
+        if depth > 0 then
+            row.starBtn:Hide()
+            row.favBtn:ClearAllPoints()
+            row.favBtn:SetPoint("LEFT", row, "LEFT", 4, 0)
+            row.nameText:SetPoint("LEFT", row, "LEFT", 24, 0)
+        else
+            row.starBtn:Show()
+            row.favBtn:ClearAllPoints()
+            row.favBtn:SetPoint("LEFT", row.starBtn, "RIGHT", 2, 0)
+            row.nameText:SetPoint("LEFT", row, "LEFT", 40, 0)
+        end
 
         local capturedName = listName
 

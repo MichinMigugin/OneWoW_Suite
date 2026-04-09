@@ -80,6 +80,26 @@ function ShoppingList:GetList(listName)
     return GetDB().global.shoppingLists.lists[listName]
 end
 
+function ShoppingList:IsListFavorite(listName)
+    local l = self:GetList(listName)
+    return l and l.favorite == true
+end
+
+function ShoppingList:SetListFavorite(listName, on)
+    local l = self:GetList(listName)
+    if not l then return false end
+    l.favorite = on and true or nil
+    ScheduleRefresh()
+    return true
+end
+
+function ShoppingList:ToggleListFavorite(listName)
+    local l = self:GetList(listName)
+    if not l then return end
+    l.favorite = not l.favorite
+    ScheduleRefresh()
+end
+
 function ShoppingList:CreateList(listName, parentListName)
     local db = GetDB().global.shoppingLists.lists
     if db[listName] then
@@ -99,6 +119,7 @@ function ShoppingList:CreateList(listName, parentListName)
         parentList  = nil,
         childLists  = {},
         quantity    = 1,
+        favorite    = false,
     }
 
     if parentListName then
@@ -157,6 +178,7 @@ function ShoppingList:CreateCraftOrder(parentListName, itemID, quantity, recipeI
         parentList   = parentListName,
         childLists   = {},
         quantity     = quantity,
+        favorite     = false,
         craftedItem  = {
             itemID    = itemID,
             quantity  = quantity,
