@@ -41,6 +41,7 @@ local function InitSettingsDB()
     if db.moneyDisplay.useRegionalNumbers == nil then db.moneyDisplay.useRegionalNumbers = true end
     if db.moneyDisplay.useWhiteValues == nil then db.moneyDisplay.useWhiteValues = true end
     OneWoW_GUI._settingsDB = db
+    OneWoW_GUI:ApplyTheme()
 end
 
 function OneWoW_GUI:GetSetting(key)
@@ -158,8 +159,9 @@ for _, icon in ipairs(ICON_THEMES) do
     ICON_LOOKUP[icon.key] = icon.label
 end
 
-local THEMES_ORDER = Constants.THEMES_ORDER
 local THEMES = Constants.THEMES
+local THEME_SPECIAL_OPTIONS = Constants.THEME_SPECIAL_OPTIONS
+local THEME_MENU_GROUPS = Constants.THEME_MENU_GROUPS
 local FONT_BASE = Constants.FONT_BASE
 
 local FONTS = {
@@ -462,7 +464,6 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local yOffset = options.yOffset or -10
 
     local currentLang = self:GetSetting("language") or "enUS"
-    local currentThemeKey = self:GetSetting("theme") or DEFAULT_THEME_KEY
     local currentIconTheme = self:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
     local currentFontKey = self:GetSetting("font") or "default"
     local currentFontData = FONT_LOOKUP[currentFontKey]
@@ -570,13 +571,15 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local themeDesc = themePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     themeDesc:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -38)
     themeDesc:SetPoint("TOPRIGHT", themePanel, "TOPRIGHT", -15, -38)
-    themeDesc:SetText("Choose your preferred theme.")
+    themeDesc:SetText("Themes are grouped below. Random picks one palette each reload; reopen the menu and choose Random again to reroll this session.")
     themeDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     themeDesc:SetJustifyH("LEFT")
     themeDesc:SetWordWrap(true)
 
-    local currentThemeData = THEMES[currentThemeKey]
-    local currentThemeName = currentThemeData and currentThemeData.name or DEFAULT_THEME_NAME
+    self:ApplyTheme()
+    local currentThemeName = self:GetThemeDisplayName()
+    local effThemeKey = self:GetEffectiveThemeKey()
+    local currentThemeData = THEMES[effThemeKey]
 
     local currentThemeLabel = themePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     currentThemeLabel:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -90)
@@ -613,6 +616,10 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             return
         end
 
+        local maxMenuHeight = 400
+        local rowH = 26
+        local headerH = 20
+
         local overlay = CreateFrame("Button", nil, UIParent)
         overlay:SetAllPoints(UIParent)
         overlay:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -626,85 +633,118 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
         menu:SetFrameLevel(10)
         menu:SetClampedToScreen(true)
-        menu:SetSize(240, 318)
+        menu:SetWidth(268)
         menu:SetBackdrop(dropdownBackdrop)
-        menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
-        menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+        menu:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        menu:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         menu:EnableMouse(true)
+
+        overlay:SetScript("OnClick", function() menu:Hide() end)
+        menu:SetScript("OnHide", function() overlay:Hide() end)
+
+        local scrollContainer = CreateFrame("Frame", nil, menu)
+        scrollContainer:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
+        scrollContainer:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -2, 2)
+
+        local scrollFrame = CreateFrame("ScrollFrame", nil, scrollContainer, "UIPanelScrollFrameTemplate")
+        scrollFrame:SetPoint("TOPLEFT", scrollContainer, "TOPLEFT", 0, 0)
+        scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", 0, 0)
+        scrollFrame:EnableMouseWheel(true)
+        OneWoW_GUI:StyleScrollBar(scrollFrame, { container = scrollContainer, offset = -2 })
+
+        local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+        scrollChild:SetHeight(1)
+        scrollFrame:SetScrollChild(scrollChild)
+        scrollFrame:HookScript("OnSizeChanged", function(sf, w)
+            scrollChild:SetWidth(math.max(1, (w or sf:GetWidth()) - 6))
+        end)
+        scrollChild:SetWidth(math.max(1, scrollFrame:GetWidth() - 6))
+
+        local y = -4
+        local function addSectionHeader(text)
+            local h = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            OneWoW_GUI:SafeSetFont(h, OneWoW_GUI:GetFont(), 11)
+            h:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 6, y)
+            h:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -6, y)
+            h:SetJustifyH("LEFT")
+            h:SetText(text)
+            h:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            y = y - headerH
+        end
+
+        local function addThemePickRow(capturedKey, label, dotR, dotG, dotB)
+            local tbtn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+            tbtn:SetHeight(rowH)
+            tbtn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, y)
+            tbtn:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, y)
+            tbtn:SetBackdrop(simpleBackdrop)
+            tbtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            local dot = tbtn:CreateTexture(nil, "OVERLAY")
+            dot:SetSize(14, 14)
+            dot:SetPoint("LEFT", tbtn, "LEFT", 8, 0)
+            dot:SetColorTexture(dotR, dotG, dotB)
+            local txt = tbtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            txt:SetPoint("LEFT", tbtn, "LEFT", 28, 0)
+            txt:SetPoint("RIGHT", tbtn, "RIGHT", -6, 0)
+            txt:SetJustifyH("LEFT")
+            txt:SetText(label)
+            txt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            tbtn:SetScript("OnEnter", function(s)
+                s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                txt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            end)
+            tbtn:SetScript("OnLeave", function(s)
+                s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                txt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end)
+            tbtn:SetScript("OnClick", function()
+                menu:Hide()
+                if capturedKey == "random" then
+                    Constants.SESSION_RANDOM_THEME_KEY = nil
+                end
+                OneWoW_GUI:SetSetting("theme", capturedKey)
+                currentThemeLabel:SetText("Current: " .. OneWoW_GUI:GetThemeDisplayName())
+                themeDropText:SetText(OneWoW_GUI:GetThemeDisplayName())
+                local eff = OneWoW_GUI:GetEffectiveThemeKey()
+                local td = THEMES[eff]
+                if td then
+                    themeColorPreview:SetColorTexture(unpack(td.ACCENT_PRIMARY))
+                end
+            end)
+            y = y - rowH - 2
+        end
+
+        addSectionHeader("Special")
+        for _, opt in ipairs(THEME_SPECIAL_OPTIONS or {}) do
+            addThemePickRow(opt.key, opt.label, 0.55, 0.45, 0.95)
+        end
+        for _, group in ipairs(THEME_MENU_GROUPS or {}) do
+            addSectionHeader(group.title)
+            for _, themeKey in ipairs(group.keys) do
+                local themeData = THEMES[themeKey]
+                if themeData then
+                    local ap = themeData.ACCENT_PRIMARY
+                    addThemePickRow(themeKey, themeData.name, ap[1], ap[2], ap[3])
+                end
+            end
+        end
+
+        scrollChild:SetHeight(math.max(1, math.abs(y) + 8))
+
+        local contentH = scrollChild:GetHeight() + 12
+        local menuH = math.min(maxMenuHeight, math.max(120, contentH))
+        menu:SetHeight(menuH)
 
         local screenH = UIParent:GetHeight()
         local btnBottom = btn:GetBottom() or 0
-        if btnBottom < 318 and (screenH - (btn:GetTop() or screenH)) < btnBottom then
+        local mh = menu:GetHeight()
+        if btnBottom < mh and (screenH - (btn:GetTop() or screenH)) < btnBottom then
             menu:SetPoint("BOTTOMLEFT", btn, "TOPLEFT", 0, 2)
         else
             menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
         end
 
-        overlay:SetScript("OnClick", function() menu:Hide() end)
-        menu:SetScript("OnHide", function() overlay:Hide() end)
-
-        local scrollFrame = CreateFrame("ScrollFrame", nil, menu)
-        scrollFrame:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
-        scrollFrame:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -15, 2)
-
-        local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-        scrollChild:SetWidth(scrollFrame:GetWidth())
-        scrollFrame:SetScrollChild(scrollChild)
-
-        local scrollBar = CreateFrame("Slider", nil, scrollFrame, "BackdropTemplate")
-        scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 0, -2)
-        scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 0, 2)
-        scrollBar:SetWidth(12)
-        scrollBar:SetBackdrop(simpleBackdrop)
-        scrollBar:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-        scrollBar:EnableMouse(true)
-        scrollBar:SetScript("OnValueChanged", function(self, value) scrollFrame:SetVerticalScroll(value) end)
-
-        local thumb = scrollBar:CreateTexture(nil, "OVERLAY")
-        thumb:SetSize(8, 40)
-        thumb:SetPoint("TOP", scrollBar, "TOP", 0, -2)
-        thumb:SetColorTexture(0.5, 0.5, 0.5)
-        scrollBar:SetThumbTexture(thumb)
-
-        scrollFrame:EnableMouseWheel(true)
-        scrollFrame:SetScript("OnMouseWheel", function(self, direction)
-            local currentScroll = scrollFrame:GetVerticalScroll()
-            local maxScroll = scrollChild:GetHeight() - scrollFrame:GetHeight()
-            local newScroll = math.max(0, math.min(maxScroll, currentScroll - (direction * 30)))
-            scrollFrame:SetVerticalScroll(newScroll)
-            scrollBar:SetValue(newScroll)
-        end)
-
-        for i, themeKey in ipairs(THEMES_ORDER) do
-            local themeData = THEMES[themeKey]
-            if themeData then
-                local tbtn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-                tbtn:SetSize(230, 26)
-                tbtn:SetPoint("TOP", scrollChild, "TOP", 0, -(5 + (i - 1) * 28))
-                tbtn:SetBackdrop(simpleBackdrop)
-                tbtn:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-                local dot = tbtn:CreateTexture(nil, "OVERLAY")
-                dot:SetSize(14, 14)
-                dot:SetPoint("LEFT", tbtn, "LEFT", 8, 0)
-                dot:SetColorTexture(unpack(themeData.ACCENT_PRIMARY))
-                local txt = tbtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                txt:SetPoint("LEFT", tbtn, "LEFT", 28, 0)
-                txt:SetText(themeData.name)
-                txt:SetTextColor(0.9, 0.9, 0.9)
-                tbtn:SetScript("OnEnter", function(s) s:SetBackdropColor(0.2, 0.2, 0.2, 1) txt:SetTextColor(1, 0.82, 0) end)
-                tbtn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.1, 0.1, 0.1, 0.8) txt:SetTextColor(0.9, 0.9, 0.9) end)
-                local capturedKey = themeKey
-                tbtn:SetScript("OnClick", function()
-                    menu:Hide()
-                    OneWoW_GUI:SetSetting("theme", capturedKey)
-                end)
-            end
-        end
-        scrollChild:SetHeight(#THEMES_ORDER * 28 + 10)
-        local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
-        scrollBar:SetMinMaxValues(0, maxScroll)
         scrollFrame:SetVerticalScroll(0)
-
         menu:Show()
     end)
 
@@ -891,6 +931,9 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             return
         end
 
+        local maxMenuHeight = 400
+        local rowH = 26
+
         local overlay = CreateFrame("Button", nil, UIParent)
         overlay:SetAllPoints(UIParent)
         overlay:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -904,75 +947,55 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         menu:SetFrameStrata("FULLSCREEN_DIALOG")
         menu:SetFrameLevel(10)
         menu:SetClampedToScreen(true)
-        menu:SetSize(260, 318)
+        menu:SetWidth(268)
         menu:SetBackdrop(dropdownBackdrop)
-        menu:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
-        menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+        menu:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        menu:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         menu:EnableMouse(true)
-
-        local screenH = UIParent:GetHeight()
-        local btnBottom = btn:GetBottom() or 0
-        if btnBottom < 318 and (screenH - (btn:GetTop() or screenH)) < btnBottom then
-            menu:SetPoint("BOTTOMLEFT", btn, "TOPLEFT", 0, 2)
-        else
-            menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
-        end
 
         overlay:SetScript("OnClick", function() menu:Hide() end)
         menu:SetScript("OnHide", function() overlay:Hide() end)
 
-        local scrollFrame = CreateFrame("ScrollFrame", nil, menu)
-        scrollFrame:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
-        scrollFrame:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -15, 2)
+        local scrollContainer = CreateFrame("Frame", nil, menu)
+        scrollContainer:SetPoint("TOPLEFT", menu, "TOPLEFT", 2, -2)
+        scrollContainer:SetPoint("BOTTOMRIGHT", menu, "BOTTOMRIGHT", -2, 2)
+
+        local scrollFrame = CreateFrame("ScrollFrame", nil, scrollContainer, "UIPanelScrollFrameTemplate")
+        scrollFrame:SetPoint("TOPLEFT", scrollContainer, "TOPLEFT", 0, 0)
+        scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", 0, 0)
+        scrollFrame:EnableMouseWheel(true)
+        OneWoW_GUI:StyleScrollBar(scrollFrame, { container = scrollContainer, offset = -2 })
 
         local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-        scrollChild:SetWidth(scrollFrame:GetWidth())
+        scrollChild:SetHeight(1)
         scrollFrame:SetScrollChild(scrollChild)
-
-        local scrollBar = CreateFrame("Slider", nil, scrollFrame, "BackdropTemplate")
-        scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 0, -2)
-        scrollBar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", 0, 2)
-        scrollBar:SetWidth(12)
-        scrollBar:SetBackdrop(simpleBackdrop)
-        scrollBar:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-        scrollBar:EnableMouse(true)
-        scrollBar:SetScript("OnValueChanged", function(self, value) scrollFrame:SetVerticalScroll(value) end)
-
-        local thumb = scrollBar:CreateTexture(nil, "OVERLAY")
-        thumb:SetSize(8, 40)
-        thumb:SetPoint("TOP", scrollBar, "TOP", 0, -2)
-        thumb:SetColorTexture(0.5, 0.5, 0.5)
-        scrollBar:SetThumbTexture(thumb)
-
-        scrollFrame:EnableMouseWheel(true)
-        scrollFrame:SetScript("OnMouseWheel", function(self, direction)
-            local currentScroll = scrollFrame:GetVerticalScroll()
-            local maxScroll = scrollChild:GetHeight() - scrollFrame:GetHeight()
-            local newScroll = math.max(0, math.min(maxScroll, currentScroll - (direction * 30)))
-            scrollFrame:SetVerticalScroll(newScroll)
-            scrollBar:SetValue(newScroll)
+        scrollFrame:HookScript("OnSizeChanged", function(sf, w)
+            scrollChild:SetWidth(math.max(1, (w or sf:GetWidth()) - 6))
         end)
+        scrollChild:SetWidth(math.max(1, scrollFrame:GetWidth() - 6))
 
-        for i, fontInfo in ipairs(FONTS) do
+        local y = -2
+        for _, fontInfo in ipairs(FONTS) do
             local fbtn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-            fbtn:SetSize(240, 26)
-            fbtn:SetPoint("TOP", scrollChild, "TOP", 0, -(2 + (i - 1) * 26))
+            fbtn:SetHeight(rowH)
+            fbtn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, y)
+            fbtn:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, y)
             fbtn:SetBackdrop(simpleBackdrop)
-            fbtn:SetBackdropColor(0, 0, 0, 0)
+            fbtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
-            fbtn.text = fbtn:CreateFontString(nil, "OVERLAY")
+            fbtn.text = fbtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             fbtn.text:SetPoint("LEFT", 8, 0)
             OneWoW_GUI:SafeSetFont(fbtn.text, fontInfo.file, 13)
             fbtn.text:SetText(fontInfo.label)
-            fbtn.text:SetTextColor(0.9, 0.9, 0.9)
+            fbtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             fbtn:SetScript("OnEnter", function(s)
-                s:SetBackdropColor(0.2, 0.2, 0.2, 1)
-                fbtn.text:SetTextColor(1, 0.82, 0)
+                s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                fbtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end)
             fbtn:SetScript("OnLeave", function(s)
-                s:SetBackdropColor(0, 0, 0, 0)
-                fbtn.text:SetTextColor(0.9, 0.9, 0.9)
+                s:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                fbtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end)
 
             local capturedKey = fontInfo.key
@@ -986,13 +1009,25 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
                 fontPreview:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 OneWoW_GUI:SetSetting("font", capturedKey)
             end)
+            y = y - rowH - 2
         end
 
-        scrollChild:SetHeight(#FONTS * 26 + 4)
-        local maxScroll = math.max(0, scrollChild:GetHeight() - scrollFrame:GetHeight())
-        scrollBar:SetMinMaxValues(0, maxScroll)
-        scrollFrame:SetVerticalScroll(0)
+        scrollChild:SetHeight(math.max(1, math.abs(y) + 6))
 
+        local contentH = scrollChild:GetHeight() + 12
+        local menuH = math.min(maxMenuHeight, math.max(120, contentH))
+        menu:SetHeight(menuH)
+
+        local screenH = UIParent:GetHeight()
+        local btnBottom = btn:GetBottom() or 0
+        local mh = menu:GetHeight()
+        if btnBottom < mh and (screenH - (btn:GetTop() or screenH)) < btnBottom then
+            menu:SetPoint("BOTTOMLEFT", btn, "TOPLEFT", 0, 2)
+        else
+            menu:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
+        end
+
+        scrollFrame:SetVerticalScroll(0)
         menu:Show()
     end)
 
@@ -1199,6 +1234,29 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     end)
 
     yOffset = yOffset - 140
+
+    local function refreshThemePickerLabels()
+        OneWoW_GUI:ApplyTheme()
+        local name = OneWoW_GUI:GetThemeDisplayName()
+        currentThemeLabel:SetText("Current: " .. name)
+        themeDropText:SetText(name)
+        local eff = OneWoW_GUI:GetEffectiveThemeKey()
+        local td = THEMES[eff]
+        if td and themeColorPreview then
+            themeColorPreview:SetColorTexture(unpack(td.ACCENT_PRIMARY))
+        end
+    end
+    if parent then
+        parent._owgRefreshThemePickerLabels = refreshThemePickerLabels
+        if not parent._owgThemePickerHooked then
+            parent._owgThemePickerHooked = true
+            OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", parent, function(owner)
+                if owner._owgRefreshThemePickerLabels then
+                    owner._owgRefreshThemePickerLabels()
+                end
+            end)
+        end
+    end
 
     return yOffset
 end
