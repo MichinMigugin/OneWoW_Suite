@@ -763,8 +763,10 @@ local FIXED_FIELDS = {
 }
 
 --- Extracts quality enum value from |cnIQx| color prefix.
+--- NOTE: Some items emit |cnIQx:| with a trailing colon before |H.
+--- Undocumented as of 11.1.5; we accept it optionally.
 local function ExtractItemQuality(link)
-    local q = link:match("|cnIQ(%d+)|")
+    local q = link:match("|cnIQ(%d+):?|")
     return q and tonumber(q)
 end
 

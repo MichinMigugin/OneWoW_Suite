@@ -8,8 +8,6 @@ local StorageAPI = _G.StorageAPI
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
 local BagTypes = OneWoW_Bags.BagTypes
-local InfoBar = OneWoW_Bags.InfoBar
-
 
 local tinsert, sort = tinsert, sort
 local pairs, ipairs = pairs, ipairs
@@ -123,7 +121,7 @@ function BagsBar:Create(parent)
     bagsBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     bagsBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    -- Row 1: bag icons | cleanup button + slots right
+    -- Row 1: bag icons | free slots right
     local row1Frame = CreateFrame("Frame", nil, bagsBarFrame)
     row1Frame:SetPoint("TOPLEFT", bagsBarFrame, "TOPLEFT", 0, 0)
     row1Frame:SetPoint("TOPRIGHT", bagsBarFrame, "TOPRIGHT", 0, 0)
@@ -160,18 +158,10 @@ function BagsBar:Create(parent)
         end
     end
 
-    -- Row 1 right: free slots then cleanup button
     local freeSlots = row1Frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     freeSlots:SetPoint("RIGHT", row1Frame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
     freeSlots:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     bagsBarFrame.freeSlots = freeSlots
-
-    local cleanupBtn = OneWoW_GUI:CreateFitTextButton(row1Frame, { text = L["CLEANUP"], height = 22 })
-    cleanupBtn:SetPoint("RIGHT", freeSlots, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
-    cleanupBtn:SetScript("OnClick", function()
-        C_Container.SortBags()
-    end)
-    bagsBarFrame.cleanupBtn = cleanupBtn
 
     -- Row 2 left: add tracker button
     local addTrackerBtn = OneWoW_GUI:CreateButton(row2Frame, { text = "+", width = 20, height = 20 })
