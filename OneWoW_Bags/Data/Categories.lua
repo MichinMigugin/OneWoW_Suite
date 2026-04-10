@@ -1,9 +1,5 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW = _G.OneWoW
-local UD = OneWoW and OneWoW.UpgradeDetection
-local ItemStatus = OneWoW and OneWoW.ItemStatus
-
 local L = OneWoW_Bags.L
 
 local PE = OneWoW_Bags.PredicateEngine
@@ -70,29 +66,6 @@ local function GetDB()
     return OneWoW_Bags:GetDB()
 end
 
-local INVTYPE_TO_EQUIP_SLOT = {
-    [Enum.InventoryType.IndexHeadType]          = 1,
-    [Enum.InventoryType.IndexNeckType]          = 2,
-    [Enum.InventoryType.IndexShoulderType]      = 3,
-    [Enum.InventoryType.IndexBodyType]          = 4,
-    [Enum.InventoryType.IndexChestType]         = 5,
-    [Enum.InventoryType.IndexWaistType]         = 6,
-    [Enum.InventoryType.IndexLegsType]          = 7,
-    [Enum.InventoryType.IndexFeetType]          = 8,
-    [Enum.InventoryType.IndexWristType]         = 9,
-    [Enum.InventoryType.IndexHandType]          = 10,
-    [Enum.InventoryType.IndexFingerType]        = 11,
-    [Enum.InventoryType.IndexTrinketType]       = 13,
-    [Enum.InventoryType.IndexWeaponType]        = 16,
-    [Enum.InventoryType.IndexShieldType]        = 17,
-    [Enum.InventoryType.IndexCloakType]         = 15,
-    [Enum.InventoryType.Index2HweaponType]      = 16,
-    [Enum.InventoryType.IndexRobeType]          = 5,
-    [Enum.InventoryType.IndexWeaponmainhandType] = 16,
-    [Enum.InventoryType.IndexWeaponoffhandType] = 17,
-    [Enum.InventoryType.IndexHoldableType]      = 17,
-}
-
 local SLOT_NORMALIZE = {
     ["INVTYPE_ROBE"] = "INVTYPE_CHEST",
     ["INVTYPE_RANGEDRIGHT"] = "INVTYPE_RANGED",
@@ -112,69 +85,6 @@ local function InvalidateCache()
     wipe(categoryCache)
 end
 
-local function GetCategoryCacheKey(itemID, bagID, slotID, itemInfo)
-    if not itemID then return nil end
-    if bagID and slotID then
-        return bagID .. ":" .. slotID
-    end
-    return PE:GetItemIdentityKey(itemID, itemInfo and itemInfo.hyperlink)
-end
-
-local function IsItemUpgrade(bagID, slotID, itemID, hyperlink)
-    if not itemID or not bagID or not slotID or not hyperlink then return false end
-
-    if UD then
-        local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
-        if itemLocation and C_Item.DoesItemExist(itemLocation) then
-            return UD:CheckItemUpgrade(hyperlink, itemLocation)
-        end
-        return false
-    end
-
-    local invType = C_Item.GetItemInventoryTypeByID(itemID)
-    if not invType then return false end
-
-    local equipSlot = INVTYPE_TO_EQUIP_SLOT[invType]
-    if not equipSlot or equipSlot <= 0 then return false end
-
-    local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
-    if not itemLocation or not itemLocation:IsValid() then return false end
-    if not C_Item.DoesItemExist(itemLocation) then return false end
-
-    local ilvl = C_Item.GetCurrentItemLevel(itemLocation)
-    if not ilvl or ilvl <= 0 then return false end
-
-    local equippedLink = GetInventoryItemLink("player", equipSlot)
-    if equippedLink then
-        local equippedIlvl = C_Item.GetDetailedItemLevelInfo(equippedLink)
-        if equippedIlvl and ilvl > equippedIlvl then
-            return true
-        end
-    else
-        return true
-    end
-
-    if equipSlot == 11 then
-        local equippedLink2 = GetInventoryItemLink("player", 12)
-        if equippedLink2 then
-            local equippedIlvl2 = C_Item.GetDetailedItemLevelInfo(equippedLink2)
-            if equippedIlvl2 and ilvl > equippedIlvl2 then return true end
-        else
-            return true
-        end
-    elseif equipSlot == 13 then
-        local equippedLink2 = GetInventoryItemLink("player", 14)
-        if equippedLink2 then
-            local equippedIlvl2 = C_Item.GetDetailedItemLevelInfo(equippedLink2)
-            if equippedIlvl2 and ilvl > equippedIlvl2 then return true end
-        else
-            return true
-        end
-    end
-
-    return false
-end
-
 function Categories:GetItemCategory(bagID, slotID, itemInfo)
     if not itemInfo then return "Other" end
 
@@ -185,28 +95,14 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
 
     local junkCatEnabled = db.global.enableJunkCategory and not disabled["1W Junk"]
     if junkCatEnabled and itemID then
-        local isJunk = false
-        if ItemStatus and ItemStatus:IsItemJunk(itemID) then
-            isJunk = true
-        end
-        if not isJunk then
-            local quality = itemInfo.quality
-            if not quality and hyperlink then
-                local _, _, q = C_Item.GetItemInfo(hyperlink)
-                quality = q
-            end
-            if quality == Enum.ItemQuality.Poor then
-                isJunk = true
-            end
-        end
-        if isJunk then
+        if PE:BuildProps(itemID, bagID, slotID, itemInfo).isJunk then
             return "1W Junk"
         end
     end
 
-    if itemID and hyperlink and OneWoW then
+    if itemID and hyperlink then
         if db.global.enableUpgradeCategory and not disabled["1W Upgrades"] then
-            if IsItemUpgrade(bagID, slotID, itemID, hyperlink) then
+            if PE:BuildProps(itemID, bagID, slotID, itemInfo).isUpgrade then
                 return "1W Upgrades"
             end
         end
@@ -236,7 +132,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         return "Other"
     end
 
-    local cacheKey = GetCategoryCacheKey(itemID, bagID, slotID, itemInfo)
+    local cacheKey = PE:GetItemCacheKey(itemID, bagID, slotID, itemInfo.hyperlink)
     if cacheKey then
         local cached = categoryCache[cacheKey]
         if cached then
