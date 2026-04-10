@@ -981,7 +981,10 @@ local function ResolveCollected(itemID, classID, subClassID, hyperlink)
     -- Non-caged pet check
     if classID == Enum.ItemClass.Battlepet or (classID == Enum.ItemClass.Miscellaneous and subClassID == Enum.ItemMiscellaneousSubclass.CompanionPet) then
         local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
-        local num = C_PetJournal.GetNumCollectedInfo(speciesID)
+        local num = 0
+        if speciesID then
+            num = C_PetJournal.GetNumCollectedInfo(speciesID)
+        end
         return num and num > 0
     end
     -- Mount check
