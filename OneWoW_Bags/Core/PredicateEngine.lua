@@ -81,6 +81,20 @@ local HS_IDS = {
 -- icons shared by knowledge items (Use: Study to increase your ... knowledge by #)
 local KNOWLEDGE_ICONS = {[236225]=true, [136175]=true}
 
+-- information about the item source: Enum.ItemCreationContext
+local ITEM_CONTEXT_CATEGORY = {}
+local function MapContexts(category, values)
+    for _, v in ipairs(values) do
+        ITEM_CONTEXT_CATEGORY[v] = category
+    end
+end
+MapContexts("raid",       {3, 4, 5, 6, 81, 82, 83, 84, 85, 89, 90, 91, 92, 93, 94, 95, 96, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158})
+MapContexts("dungeon",    {1, 2, 16, 17, 18, 19, 20, 23, 33, 34, 35, 87, 101, 102, 103, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 159, 160, 161})
+MapContexts("delves",     {104, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138})
+MapContexts("worldquest", {25, 26, 27, 28, 29, 30, 36, 37, 42, 43, 53, 54, 55, 74})
+MapContexts("pvp",        {7, 8, 24, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 50, 51, 52, 56, 76, 77, 78, 88})
+MapContexts("store",      {12})
+
 -- Locale-aware patterns built from Blizzard globals.
 local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
 local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
@@ -658,7 +672,7 @@ RegisterKeyword("sellable",   function(p) return not p.isUnsellable end)
 
 -- ---- 7.20  Crafting keywords ----
 RegisterKeyword("craftingreagent",     function(p) return p.isCraftingReagent end)
-RegisterKeyword("crafted",             function(p) return (p.craftedQuality or 0) > 0 end)
+RegisterKeyword("crafted",             function(p) return p.isCrafted end)
 RegisterKeyword("professionequipment", function(p) return p.isProfessionEquipment end)
 
 -- ---- 7.21  Upgrade keywords ----
@@ -716,6 +730,14 @@ RegisterKeyword("cogwheel",        function(p) return (p.socketCogwheel or 0) > 
 RegisterKeyword("tinkersocket",    function(p) return (p.socketTinker or 0) > 0 end)
 RegisterKeyword("dominationsocket", function(p) return (p.socketDomination or 0) > 0 end)
 RegisterKeyword("primordial",      function(p) return (p.socketPrimordial or 0) > 0 end)
+
+-- ---- 7.25  Item creation context keywords ----
+RegisterKeyword("raid", function(p) return p.itemContextCategory == "raid" end)
+RegisterKeyword("dungeon", function(p) return p.itemContextCategory == "dungeon" end)
+RegisterKeyword("delves", function(p) return p.itemContextCategory == "delves" end)
+RegisterKeyword("worldquest", function(p) return p.itemContextCategory == "worldquest" end)
+RegisterKeyword("pvp", function(p) return p.itemContextCategory == "pvp" end)
+RegisterKeyword("store", function(p) return p.itemContextCategory == "store" end)
 
 -- ============================================================================
 -- SECTION 8: LAYER 1 — UTILITY FUNCTIONS
@@ -1269,6 +1291,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.petType = petData and petData.petType or 0
     props.isKnowledge = false
     props.isEnchanted = false
+    props.isCrafted = false
 
     -- ---- C_Container.GetContainerItemInfo ----
     local containerInfo
@@ -1411,6 +1434,8 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     local itemLinkProperties = ParseItemLink(itemLink)
     if itemLinkProperties then
         props.isEnchanted = itemLinkProperties.enchantID ~= nil
+        props.isCrafted = itemLinkProperties.crafterGUID ~= nil
+        props.itemContextCategory = ITEM_CONTEXT_CATEGORY[itemLinkProperties.itemContext]
     end
 
     -- BIND DETECTION NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.

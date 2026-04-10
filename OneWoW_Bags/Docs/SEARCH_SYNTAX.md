@@ -311,6 +311,26 @@ Each expansion has a full name keyword and one or more short aliases.
 | `#midnight` | |
 | `#lasttitan` | `#titan` |
 
+### Item source (creation context)
+
+These keywords classify items using the **item creation context** embedded in the
+item link (`Enum.ItemCreationContext`), grouped into broad source categories.
+They only apply when the engine can parse a full item link for the slot; items
+without link data never match.
+
+| Keyword | What it matches |
+|---|---|
+| `#raid` | Raid drops and raid-tagged sources |
+| `#dungeon` | Dungeon and similar instanced PvE sources |
+| `#delves` | Delve-related sources |
+| `#worldquest` | World quest and open-world mission rewards |
+| `#pvp` | PvP and rated rewards |
+| `#store` | Shop / store sources |
+
+> **Implementation note:** Each keyword maps a fixed set of
+> `Enum.ItemCreationContext` numeric values in the engine. Blizzard may add new
+> context IDs in patches; unlisted values do not match any of these keywords.
+
 ### Collectibles
 
 | Keyword | What it matches |
@@ -417,9 +437,12 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 | `#unusable` | Items you cannot use |
 | `#locked` | Locked items |
 | `#charges` | Items with charges |
-| `#unique` | Unique-equipped items |
+| `#unique` | Items whose tooltip shows **Unique** or **Unique-Equipped** (includes `#uniqueequipped`) |
 | `#socket` | Items with gem sockets |
 | `#equipped` | Items currently equipped |
+| `#knowledge` | Profession knowledge study items (same rules as under Consumable Subtypes) |
+| `#refundable` | Items still eligible for a full vendor refund (same window as the in-game refund indicator) |
+| `#enchanted` | Items whose link includes a permanent enchant (enchant ID in the parsed item link) |
 
 ### Vendor / Value
 
@@ -427,15 +450,21 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 |---|---|
 | `#sellable` | Items with a vendor price |
 | `#unsellable` | Items that cannot be sold |
-| `#refundable` | Items still eligible for a full vendor refund (same window as the in-game refund indicator) |
 
 ### Crafting
 
 | Keyword | What it matches |
 |---|---|
 | `#craftingreagent` | Crafting reagents |
-| `#crafted` | Player-crafted items (has a crafted quality) |
+| `#crafted` | Items whose item link carries a **crafter GUID** (player-crafted instances) |
 | `#professionequipment` | Profession tools and accessories |
+
+> **`#crafted` vs `craftedquality`:** `#crafted` follows **crafter presence in the
+> link**, not the crafted-quality stars. The numeric property `craftedquality`
+> comes from `C_TradeSkillUI.GetItemCraftedQualityByItemInfo` (tier 1–5, or 0
+> when none). An item can have a non-zero `craftedquality` without matching
+> `#crafted`, or match `#crafted` with `craftedquality==0`, depending on the
+> item and link data.
 
 ### Upgrades
 
@@ -523,7 +552,7 @@ Syntax: `property>=value`, `property<=value`, `property>value`, `property<value`
 | `petspeed` | | Battle pet speed |
 | `bindtype` | | Bind type ID from item data (0=None, 1=BoP, 2=BoE, 3=BoU, 8=Warband, 9=WUE) |
 | `currentbind` | | Current tooltip bind state (from `Enum.TooltipDataItemBinding`). Reflects actual binding, not item definition. |
-| `craftedquality` | | Crafted quality tier (1–5, 0 if not crafted) |
+| `craftedquality` | | Crafted quality tier from trade-skill UI (1–5, or 0 if none); independent of `#crafted` (see Crafting keywords) |
 | `upgradelevel` | | Current upgrade level |
 | `upgrademax` | | Maximum upgrade level |
 | `maxlevel` | | Maximum possible item level after upgrades |
@@ -684,12 +713,14 @@ read more like natural conditions.
 | `IsEquipped` | `#equipped` |
 | `IsEquippable` | `#gear` |
 | `IsCraftingReagent` | `#craftingreagent` |
-| `HasUseAbility` | (tooltip: has a "Use:" effect) |
+| `HasUseAbility` | `#onuse` |
+| `HasEquipAbility` | `#onequip` |
 | `IsAlreadyKnown` | `#alreadyknown` |
 | `IsTradeableLoot` | `#tradeableloot` |
 | `HasSocket` | `#socket` |
 | `IsKnowledge` | `#knowledge` |
 | `IsRefundable` | `#refundable` |
+| `IsEnchanted` | `#enchanted` |
 
 > **`IsBOA` vs `#boa`:** The `IsBOA` flag checks the strict `isBOA` property —
 > true only for items whose tooltip shows account-bound binding (not Warbound
