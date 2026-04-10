@@ -62,9 +62,8 @@ function OneWoW_GUI:GetBrandIcon(factionTheme)
     return OneWoW_GUI.Constants.ICON_TEXTURES[factionTheme] or DEFAULT_ICON_TEXTURE
 end
 
-function OneWoW_GUI:ApplyTheme(addon)
+local function GetRawThemeKeyFromSources(self, addon)
     local themeKey
-
     if self._settingsDB and self._settingsDB.theme then
         themeKey = self._settingsDB.theme
     elseif _G.OneWoW and _G.OneWoW.db and _G.OneWoW.db.global and _G.OneWoW.db.global.theme then
@@ -72,8 +71,56 @@ function OneWoW_GUI:ApplyTheme(addon)
     elseif addon and addon.db and addon.db.global and addon.db.global.theme then
         themeKey = addon.db.global.theme
     end
+    if not themeKey or themeKey == "" then
+        themeKey = DEFAULT_THEME_KEY
+    end
+    return themeKey
+end
 
-    local selectedTheme = Constants.THEMES[themeKey] or Constants.THEMES[DEFAULT_THEME_KEY]
+-- Palette key actually driving colors this session (resolves "random").
+function OneWoW_GUI:GetEffectiveThemeKey()
+    local raw = GetRawThemeKeyFromSources(self, nil)
+    if raw == "random" then
+        if not Constants.SESSION_RANDOM_THEME_KEY then
+            self:ApplyTheme()
+        end
+        return Constants.SESSION_RANDOM_THEME_KEY or DEFAULT_THEME_KEY
+    end
+    return raw
+end
+
+-- Human-readable label for the settings UI (includes Random → resolved name).
+function OneWoW_GUI:GetThemeDisplayName()
+    local raw = GetRawThemeKeyFromSources(self, nil)
+    if raw == "random" then
+        local eff = self:GetEffectiveThemeKey()
+        local data = Constants.THEMES[eff]
+        return string.format("Random (%s)", data and data.name or eff)
+    end
+    local data = Constants.THEMES[raw]
+    return data and data.name or DEFAULT_THEME_NAME
+end
+
+function OneWoW_GUI:ApplyTheme(addon)
+    local raw = GetRawThemeKeyFromSources(self, addon)
+    if raw ~= "random" then
+        Constants.SESSION_RANDOM_THEME_KEY = nil
+    end
+
+    local effectiveKey = raw
+    if raw == "random" then
+        if not Constants.SESSION_RANDOM_THEME_KEY then
+            local order = Constants.THEMES_ORDER
+            if order and #order > 0 then
+                Constants.SESSION_RANDOM_THEME_KEY = order[math.random(1, #order)]
+            else
+                Constants.SESSION_RANDOM_THEME_KEY = DEFAULT_THEME_KEY
+            end
+        end
+        effectiveKey = Constants.SESSION_RANDOM_THEME_KEY
+    end
+
+    local selectedTheme = Constants.THEMES[effectiveKey] or Constants.THEMES[DEFAULT_THEME_KEY]
     Constants.ACTIVE_THEME = setmetatable(selectedTheme, themeMetatable)
 end
 
