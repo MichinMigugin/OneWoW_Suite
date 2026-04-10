@@ -813,7 +813,7 @@ OneWoW.Locales["enUS"] = {
     -- Search descriptions
     ["SRCH_DESC_OW_SETTINGS"]            = "Language, theme, minimap button, and global options",
     ["SRCH_DESC_OW_SETTINGS_LANGUAGE"]   = "Choose from English, Spanish, Korean, French, Russian, German",
-    ["SRCH_DESC_OW_SETTINGS_THEME"]      = "Choose from 24 color themes including dark, light, and faction styles",
+    ["SRCH_DESC_OW_SETTINGS_THEME"]      = "Choose from many color themes (grouped menu), high contrast, random-per-reload, dark, light, and stylized palettes",
     ["SRCH_DESC_OW_SETTINGS_MINIMAP"]    = "Show or hide the minimap icon, choose Horde, Alliance, or Neutral style",
     ["SRCH_DESC_OW_TOOLTIPS"]            = "Enable or disable all tooltip enhancements globally",
     ["SRCH_DESC_OW_TOOLTIPS_ITEMTYPES"]  = "Show item type categories on item tooltips",
