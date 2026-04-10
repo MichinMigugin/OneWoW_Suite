@@ -1,5 +1,5 @@
 -- ============================================================================
--- OneWoW_Bags PredicateEngine
+-- PredicateEngine
 -- ============================================================================
 -- Two-layer architecture:
 --   Layer 1 (BuildProps): enriches a bag slot into a flat property table
@@ -23,7 +23,8 @@ local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
 local strlower, strfind = string.lower, string.find
 local strmatch = string.match
 local rawset, rawget, setmetatable = rawset, rawget, setmetatable
-local pcall, select= pcall, select
+local pcall, select = pcall, select
+local Enum = Enum
 local C_Item = C_Item
 local C_Container = C_Container
 local C_TooltipInfo = C_TooltipInfo
@@ -32,7 +33,6 @@ local C_MountJournal, C_PetJournal = C_MountJournal, C_PetJournal
 local C_TransmogCollection = C_TransmogCollection
 local C_TradeSkillUI = C_TradeSkillUI
 local C_PlayerInfo = C_PlayerInfo
-local Enum = Enum
 local GetSpecialization, GetSpecializationInfo = GetSpecialization, GetSpecializationInfo
 local BattlePetToolTip_UnpackBattlePetLink = BattlePetToolTip_UnpackBattlePetLink
 
@@ -232,6 +232,7 @@ local FLAG_REGISTRY = {
     hassocket               = "hasSocket",
     isknowledge             = "isKnowledge",
     isrefundable            = "isRefundable",
+    isenchanted             = "isEnchanted",
 
     -- Tooltip-derived flags (lazy)
     hasuseability           = "hasUseAbility",
@@ -649,6 +650,7 @@ RegisterKeyword("socket",           function(p) return p.hasSocket end)
 RegisterKeyword("equipped",         function(p) return p.isEquipped end)
 RegisterKeyword("knowledge",        function(p) return p.isKnowledge end)
 RegisterKeyword("refundable",       function(p) return p.isRefundable end)
+RegisterKeyword("enchanted",        function(p) return p.isEnchanted end)
 
 -- ---- 7.19  Vendor / value keywords ----
 RegisterKeyword("unsellable", function(p) return p.isUnsellable end)
@@ -718,6 +720,142 @@ RegisterKeyword("primordial",      function(p) return (p.socketPrimordial or 0) 
 -- ============================================================================
 -- SECTION 8: LAYER 1 — UTILITY FUNCTIONS
 -- ============================================================================
+
+-- ---------- ParseItemLink ----------
+-- Fixed-position field indices (1-based, relative to strsplit output)
+local FIXED_FIELDS = {
+    itemID            = 1,
+    enchantID         = 2,
+    -- gemIDs occupy 3-6, handled separately
+    suffixID          = 7,
+    uniqueID          = 8,
+    linkLevel         = 9,
+    specializationID  = 10,
+    modifiersMask     = 11,
+    itemContext        = 12,
+}
+
+--- Extracts quality enum value from |cnIQx| color prefix.
+local function ExtractItemQuality(link)
+    local q = link:match("|cnIQ(%d+)|")
+    return q and tonumber(q)
+end
+
+--- Extracts display name from hyperlink brackets.
+local function ExtractItemName(link)
+    return link:match("|h%[(.-)%]|h")
+end
+
+--- Consumes a count-prefixed variable-length segment from fields array.
+--- Pattern: numEntries [:entry1 :entry2 ...]
+local function ConsumeCountedSegment(fields, idx)
+    local count = tonumber(fields[idx])
+    if not count or count == 0 then
+        return nil, idx + 1
+    end
+    local entries = {}
+    for i = 1, count do
+        entries[i] = tonumber(fields[idx + i])
+    end
+    return entries, idx + count + 1
+end
+
+--- Consumes item modifiers segment (key-value pairs).
+--- Pattern: numModifiers [:type1 :value1 :type2 :value2 ...]
+local function ConsumeModifiers(fields, idx)
+    local count = tonumber(fields[idx])
+    if not count or count == 0 then
+        return nil, idx + 1
+    end
+    local modifiers = {}
+    for i = 1, count do
+        local offset = (i - 1) * 2
+        modifiers[i] = {
+            type  = tonumber(fields[idx + offset + 1]),
+            value = tonumber(fields[idx + offset + 2]),
+        }
+    end
+    return modifiers, idx + count * 2 + 1
+end
+
+--- Parses full item hyperlink or item string into a structured table.
+--- Based on ItemLink format at warcraft.wiki.gg/wiki/ItemLink
+--- Retail 12+ (Patch 11.1.5+: |cnIQx| color scheme)
+---
+--- Accepts either:
+---   - Full hyperlink:  |cnIQ4|Hitem:12345:...|h[Name]|h|r
+---   - Bare item string: item:12345:...
+---
+--- Returned table fields:
+---   .itemID            number|nil
+---   .enchantID         number|nil
+---   .gems              table|nil   -- sparse array [1..4] of gem itemIDs
+---   .suffixID          number|nil
+---   .uniqueID          number|nil
+---   .linkLevel         number|nil
+---   .specializationID  number|nil
+---   .modifiersMask     number|nil
+---   .itemContext        number|nil  -- Enum.ItemCreationContext
+---   .bonusIDs          table|nil   -- array of bonus ID numbers
+---   .modifiers         table|nil   -- array of {type, value}
+---   .relicBonusIDs     table|nil   -- sparse array [1..3], each an array of bonus IDs
+---   .crafterGUID       string|nil  -- Player GUID string
+---   .extraEnchantID    number|nil
+---   .quality           number|nil  -- Enum.ItemQuality (from |cnIQx| prefix)
+---   .name              string|nil  -- Display name from bracket text
+local function ParseItemLink(link)
+    if not link then return nil end
+
+    local linkOptions = link:match("|Hitem:(.+)|h") or link:match("^item:(.+)")
+    if not linkOptions then return nil end
+
+    linkOptions = linkOptions:gsub("|h.*$", "")
+
+    local fields = { strsplit(":", linkOptions) }
+    local t = {}
+
+    t.quality = ExtractItemQuality(link)
+    t.name    = ExtractItemName(link)
+
+    -- Fixed-position numeric fields
+    for key, pos in pairs(FIXED_FIELDS) do
+        t[key] = tonumber(fields[pos])
+    end
+
+    -- Gem IDs (positions 3-6); gemID4 is unused per the wiki but we parse it anyway
+    for i = 1, 4 do
+        local gem = tonumber(fields[i + 2])
+        if gem then
+            t.gems = t.gems or {}
+            t.gems[i] = gem
+        end
+    end
+
+    -- Variable-length segments start at index 13
+    local idx = 13
+
+    t.bonusIDs, idx = ConsumeCountedSegment(fields, idx)
+    t.modifiers, idx = ConsumeModifiers(fields, idx)
+
+    for i = 1, 3 do
+        local relicBonuses
+        relicBonuses, idx = ConsumeCountedSegment(fields, idx)
+        if relicBonuses then
+            t.relicBonusIDs = t.relicBonusIDs or {}
+            t.relicBonusIDs[i] = relicBonuses
+        end
+    end
+
+    local crafterGUID = fields[idx]
+    if crafterGUID and #crafterGUID > 0 then
+        t.crafterGUID = crafterGUID
+    end
+    idx = idx + 1
+
+    t.extraEnchantID = tonumber(fields[idx])
+
+    return t
+end
 
 -- ---------- GetTooltipText ----------
 -- Returns the concatenated left-text of all tooltip lines for a bag slot.
@@ -1089,13 +1227,13 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     }
 
     -- ---- C_Item.GetItemInfo: 18 return values ----
-    local itemName, _, itemQuality, itemLevel, itemMinLevel,
+    local itemName, itemLink, itemQuality, itemLevel, itemMinLevel,
           _, _, itemStackCount, itemEquipLoc, _,
           sellPrice, classID, subclassID, bindType, expansionID,
           setID, apiCraftingReagent
 
     if hyperlink then
-        itemName, _, itemQuality, itemLevel, itemMinLevel,
+        itemName, itemLink, itemQuality, itemLevel, itemMinLevel,
             _, _, itemStackCount, itemEquipLoc, _,
             sellPrice, classID, subclassID, bindType, expansionID,
             setID, apiCraftingReagent = C_Item.GetItemInfo(hyperlink)
@@ -1130,6 +1268,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.petSpeed = petData and petData.petSpeed or 0
     props.petType = petData and petData.petType or 0
     props.isKnowledge = false
+    props.isEnchanted = false
 
     -- ---- C_Container.GetContainerItemInfo ----
     local containerInfo
@@ -1267,6 +1406,12 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     -- ---- Refundable items ----
     props.isRefundable = C_Item.CanBeRefunded(itemLocation)
+
+    -- ---- Item link parsed properties ----
+    local itemLinkProperties = ParseItemLink(itemLink)
+    if itemLinkProperties then
+        props.isEnchanted = itemLinkProperties.enchantID ~= nil
+    end
 
     -- BIND DETECTION NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.
     -- UNIQUE DETECTION NOTE: C_Item.GetItemUniquenessByID only matches unique-equipped items; its purpose is to identify restrictions on equipping items, not on owning them.
@@ -1873,7 +2018,11 @@ function PE:GetItemIdentityKey(itemID, hyperlink)
     return GetItemIdentityKey(itemID, hyperlink)
 end
 
---- Register a custom keyword (for third-party / suite extensions).
+function PE:ParseItemLink(link)
+    return ParseItemLink(link)
+end
+
+--- Register custom keyword (for third-party / suite extensions).
 --- Wipes the compiled cache since available keywords changed.
 function PE:RegisterKeyword(nameOrNames, func)
     if type(nameOrNames) == "table" then
@@ -1886,7 +2035,7 @@ function PE:RegisterKeyword(nameOrNames, func)
     wipe(compiledCache)
 end
 
---- Register a custom numeric/string property for comparison syntax.
+--- Register custom numeric/string property for comparison syntax.
 --- def = { field = "fieldName", type = "number"|"string" }
 function PE:RegisterProperty(nameOrNames, def)
     local entry = { field = def.field, type = def.type or "number" }
@@ -1900,21 +2049,21 @@ function PE:RegisterProperty(nameOrNames, def)
     wipe(compiledCache)
 end
 
---- Invalidate all caches (compiled expressions + props + tooltip).
+--- Invalidate all caches
 function PE:InvalidateCache()
     wipe(compiledCache)
     wipe(propsCache)
     wipe(tooltipCache)
 end
 
---- Invalidate only props and tooltip caches (lighter, for frequent events).
+--- Invalidate props and tooltip caches (lighter, for frequent events).
 --- Compiled expressions are still valid since the grammar didn't change.
 function PE:InvalidatePropsCache()
     wipe(propsCache)
     wipe(tooltipCache)
 end
 
---- Expose raw tooltip text for consumers that still need it
+--- Expose raw tooltip text
 --- (e.g. Categories:GetSubCategory for charges display).
 function PE:GetTooltipText(bagID, slotID)
     return GetTooltipText(bagID, slotID)
