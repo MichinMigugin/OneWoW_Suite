@@ -150,7 +150,7 @@ The root object provides:
 - **State flags:** `bankOpen`, `guildBankOpen`, `oneWoWHubActive`, `inventoryPresentationState` (contains `altShowActive`), `activeExpansionFilter` (bags search bar expansion filter), `activeBankExpansionFilter`
 - **Lifecycle:** `OnAddonLoaded`, `OnPlayerLogin`, `InitializeControllers`, `InitializeDatabase`
 - **Refresh orchestration:** `RequestLayoutRefresh(target)`, `RequestVisualRefresh(target)`, `RequestWindowReset(target)`
-- **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration`, clears category cache; if `scope == "props"` then `PredicateEngine:InvalidatePropsCache()`, else full `PredicateEngine:InvalidateCache()`
+- **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category cache; if `scope == "props"` then `PredicateEngine:InvalidatePropsCache()`, else full `PredicateEngine:InvalidateCache()`
 - **Blizzard hooks:** `HookBlizzardBags`, `SuppressBankFrame`, `RestoreBankFrame`, `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
 - **Guild bank orchestration:** `RefreshGuildBankContents`, `QueueGuildBankRefresh`, `TrackGuildBankTransferTab`, `TrackGuildBankTransferSource`, `ProcessPendingGuildBankTransferTabs`, `PurgeClearSource`, plus internal coalescing state for cross-tab moves
 - **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldShowItemQuality`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`
@@ -168,7 +168,7 @@ ADDON_LOADED (this addon)
        ├─→ InitializeControllers (WindowLayoutController, *Controller:Create)
        ├─→ OneWoW_GUI:MigrateSettings(db.global)
        ├─→ ApplyTheme, ApplyLanguage
-       ├─→ Categories:SetCustomCategories, SetRecentItemDuration
+       ├─→ Categories:SetCustomCategories, SetRecentItemDuration, SetRecentItems
        ├─→ RegisterSlashCommands
        ├─→ RegisterRuntimeEvents
        └─→ OneWoW_GUI:RegisterSettingsCallback (theme, language, font, icon, minimap)
@@ -197,6 +197,7 @@ Game event: BAG_UPDATE_DELAYED (once after coalesced updates)
   └─→ Events:OnBagUpdateDelayed
        ├─→ InvalidateCategorization("props")  ← Categories refresh + PredicateEngine:InvalidatePropsCache
        └─→ OneWoW_Bags:ProcessBagUpdate(dirtyBags)
+            ├─→ Categories:OnPlayerBagDirtySnapshot(dirtyBags) (expire GUID map; stamp GUIDs for Blizzard-new slots in player bags)
             ├─→ BagSet:UpdateDirtyBags(dirtyBags)
             │    ├─→ Slot count changed → RebuildBag (release + re-acquire from pool)
             │    ├─→ Else → OWB_MarkDirty on affected buttons
@@ -205,6 +206,20 @@ Game event: BAG_UPDATE_DELAYED (once after coalesced updates)
             │            cooldown, new-item glow, junk dim, unusable overlay, lock refresh
             ├─→ GUI:RefreshLayout (if bags window built + shown)
             └─→ BankGUI:RefreshLayout (if bank open, bank set built, window shown)
+```
+
+Main bags window visibility ([`GUI:Show`](c:\Users\kelle\Downloads\Projects\OneWoW_Suite\OneWoW_Bags\GUI\MainWindow.lua) / [`GUI:Hide`](c:\Users\kelle\Downloads\Projects\OneWoW_Suite\OneWoW_Bags\GUI\MainWindow.lua) / [`GUI:FullReset`](c:\Users\kelle\Downloads\Projects\OneWoW_Suite\OneWoW_Bags\GUI\MainWindow.lua)):
+
+```
+GUI:Show (after init)
+  └─→ Categories:BeginRecentExpiryTicker
+       └─→ C_Timer.NewTicker(RECENT_EXPIRY_TICK_INTERVAL) while active
+            ├─→ If GUI no longer shown → EndRecentExpiryTicker (safety)
+            ├─→ CleanExpiredRecent → true if any GUID removed
+            └─→ RequestLayoutRefresh("bags") when removed
+
+GUI:Hide / GUI:FullReset (start of reset)
+  └─→ Categories:EndRecentExpiryTicker → cancel ticker + CleanExpiredRecent
 ```
 
 Guild bank updates use a separate path: `GUILDBANKBAGSLOTS_CHANGED` and related events → `QueueGuildBankRefresh` (OnUpdate-coalesced) → `RefreshGuildBankContents` → slot cache + `GuildBankGUI:RefreshLayout` when visible.
@@ -246,7 +261,7 @@ CategoryManager:AssignCategories()
             ├─→ 2. Optional 1W Upgrades (PredicateEngine `props.isUpgrade` via OneWoW.UpgradeDetection; gated by UpgradeDetection + settings)
             ├─→ 3. Custom category (items list, search expression, type/subtype filter)
             ├─→ 4. Builtin addedItems (categoryModifications[].addedItems)
-            ├─→ 5. Recent Items (C_NewItems.IsNewItem and/or GUID map in Categories + recentItemDuration)
+            ├─→ 5. Recent Items (GUID in `db.global.recentItems` within `recentItemDuration` via `SlotMatchesRecent`; **not** `BuildProps.isNew` — avoids stale props cache. GUIDs stamped from `OnPlayerBagDirtySnapshot` when slots are Blizzard-new on coalesced bag updates; `CleanExpiredRecent` on ticker while window open + on hide/snapshot)
             ├─→ 6. If no hyperlink → "Other"
             ├─→ 7. Category cache lookup (key: bagID:slotID, else PredicateEngine identity key; stored only when resolvable props exist)
             ├─→ 8. PredicateEngine search builtins (SEARCH_CATEGORIES by searchOrder, unless category disabled)
@@ -269,6 +284,7 @@ CategoryManager:GetSectionedLayout(itemsByCategory, containerType)
 Search uses `PredicateEngine` (tokenizer, AST, evaluation):
 
 - Keywords, properties, operators (`&` `|` `!`), parentheses, bare name text
+- `#recent` is registered at `Data\Categories.lua` load via `PredicateEngine:RegisterKeyword` (Bags-only): GUID map + duration only. `#new` / `IsNew` in core engine use `C_NewItems` via `BuildProps` (can lag until `InvalidatePropsCache`); `#recent` does not use that cached flag for classification
 - `WH:FilterBySearch` compiles the expression once per refresh and evaluates per button via `PredicateEngine:CheckItem`
 
 ```
@@ -314,8 +330,8 @@ Acquire/release pool for `ContainerFrameItemButtonTemplate` buttons. `Preallocat
 Applied with `OneWoW_Bags:ApplyItemButtonMixin` (copies `OneWoW_Bags.ItemButtonMixin` methods onto the button once).
 
 - `OWB_SetSlot`, `OWB_MarkDirty`, `OWB_IsDirty`, `OWB_FullUpdate`
-- `OWB_UpdateNewItemGlow` — player bags only (`BagTypes:IsPlayerBag`), uses `C_NewItems` + template overlays
-- `OWB_IsJunkItem`, `OWB_UpdateJunkDim`, `OWB_UpdateUnusableOverlay`
+- `OWB_UpdateNewItemGlow` — player bags only (`BagTypes:IsPlayerBag`); uses `PredicateEngine:BuildProps(...).isNew` + template overlays
+- `OWB_UpdateJunkDim`, `OWB_UpdateUnusableOverlay` — junk from `BuildProps(...).isJunk`
 - `OWB_RefreshCooldown`, `OWB_RefreshLock`, `OWB_SetIconSize`, `OWB_GetLink`
 
 Per-button state includes `owb_bagID`, `owb_slotID`, `owb_itemInfo`, `owb_hasItem`, `owb_categoryName` (when categorized), `owb_isBank`, `owb_isGuildBank`, and internal junk/overlay flags.

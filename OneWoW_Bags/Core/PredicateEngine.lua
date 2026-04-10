@@ -27,6 +27,7 @@ local pcall, select = pcall, select
 local Enum = Enum
 local C_Item = C_Item
 local C_Container = C_Container
+local C_NewItems = C_NewItems
 local C_TooltipInfo = C_TooltipInfo
 local C_ToyBox, PlayerHasToy = C_ToyBox, PlayerHasToy
 local C_MountJournal, C_PetJournal = C_MountJournal, C_PetJournal
@@ -222,6 +223,7 @@ local FLAG_REGISTRY = {
     iscollected             = "isCollected",
     isusable                = "isUsable",
     isjunk                  = "isJunk",
+    isnew                   = "isNew",
     isupgrade               = "isUpgrade",
     istoy                   = "isToy",
     ismount                 = "isMount",
@@ -662,6 +664,7 @@ RegisterKeyword("unknowntransmog", function(p) return p.isUnknownAppearance end)
 RegisterKeyword({"usable", "use"},  function(p) return p.isUsable end)
 RegisterKeyword("unusable",         function(p) return not p.isUsable end)
 RegisterKeyword("locked",           function(p) return p.isLocked end)
+RegisterKeyword("new",              function(p) return p.isNew end)
 RegisterKeyword("socket",           function(p) return p.hasSocket end)
 RegisterKeyword("equipped",         function(p) return p.isEquipped end)
 RegisterKeyword("knowledge",        function(p) return p.isKnowledge end)
@@ -1313,6 +1316,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     end
     props.count    = containerInfo and containerInfo.stackCount or itemInfo.count or 1
     props.isLocked = containerInfo and containerInfo.isLocked or false
+    props.isNew    = (bagID and slotID and C_NewItems.IsNewItem(bagID, slotID)) == true
 
     -- ---- Computed value ----
     props.totalValue = props.vendorPrice * props.count
