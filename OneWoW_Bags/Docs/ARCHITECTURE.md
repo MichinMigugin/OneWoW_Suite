@@ -242,8 +242,8 @@ Guild bank updates use a separate path: `GUILDBANKBAGSLOTS_CHANGED` and related 
 CategoryManager:AssignCategories()
   └─→ For each BagSet button with an item:
        └─→ Categories:GetItemCategory(bagID, slotID, itemInfo)
-            ├─→ 1. Optional 1W Junk (OneWoW.ItemStatus and/or Poor quality; gated by enable + disabledCategories)
-            ├─→ 2. Optional 1W Upgrades (UpgradeDetection or ilvl vs equipped; gated by OneWoW + settings)
+            ├─→ 1. Optional 1W Junk (PredicateEngine `props.isJunk`: Poor quality and/or OneWoW ItemStatus; gated by enable + disabledCategories)
+            ├─→ 2. Optional 1W Upgrades (PredicateEngine `props.isUpgrade` via OneWoW.UpgradeDetection; gated by UpgradeDetection + settings)
             ├─→ 3. Custom category (items list, search expression, type/subtype filter)
             ├─→ 4. Builtin addedItems (categoryModifications[].addedItems)
             ├─→ 5. Recent Items (C_NewItems.IsNewItem and/or GUID map in Categories + recentItemDuration)

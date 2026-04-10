@@ -56,9 +56,11 @@ All keywords are case-insensitive.
 
 ### Quality
 
+These keywords match **Blizzard item quality** only.
+
 | Keyword | Aliases |
 |---|---|
-| `#poor` | `#junk`, `#grey`, `#gray`, `#trash` |
+| `#poor` | `#grey`, `#gray` |
 | `#common` | `#white` |
 | `#uncommon` | `#green` |
 | `#rare` | `#blue` |
@@ -66,6 +68,14 @@ All keywords are case-insensitive.
 | `#legendary` | `#orange` |
 | `#artifact` | |
 | `#heirloom` | |
+
+### Junk and trash
+
+| Keyword | Aliases | What it matches |
+|---|---|---|
+| `#junk` | `#trash` | The same flag as property `isjunk` and the **1W Junk** category: Poor-quality items **or** items marked junk by OneWoW **ItemStatus** (when loaded). |
+
+> **Behavior change:** `#junk` and `#trash` used to be aliases of `#poor` (gray quality only). For **gray quality only**, use `#poor`, `#grey`, or `#gray`.
 
 ### Item Type
 
@@ -470,7 +480,7 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 
 | Keyword | What it matches |
 |---|---|
-| `#upgrade` | Items flagged as an upgrade for your character (via OneWoW upgrade detection) |
+| `#upgrade` | Items flagged as an upgrade for your character (via OneWoW upgrade detection; uses bag slot item level when the item is in a bag slot) |
 | `#upgradeable` | Items that can be upgraded |
 | `#fullyupgraded` | Items at max upgrade level |
 
@@ -691,7 +701,7 @@ read more like natural conditions.
 | `IsInEquipmentSet` | `#set` |
 | `IsCollected` | `#collected` |
 | `IsUsable` | `#usable` |
-| `IsJunk` | `#junk` |
+| `IsJunk` | `#junk`, `#trash` |
 | `IsUpgrade` | (OneWoW upgrade detection) |
 | `IsToy` | `#toy` |
 | `IsMount` | `#mount` |
@@ -824,7 +834,7 @@ Equippable items with uncollected appearances, excluding cosmetics.
 ```
 #hearthstone || (#armor & #junk) || #food
 ```
-Hearthstones, junk armor, or food.
+Hearthstones, armor that matches `#junk` (Poor or 1W-marked junk), or food.
 
 ```
 #2hsword & #epic & ilvl>=620

@@ -283,18 +283,20 @@ end
 
 -- ---- 7.1  Quality keywords ----
 for _, def in ipairs({
-    {{"poor", "junk", "grey", "gray", "trash"}, IQ.Poor},
-    {{"common", "white"},                       IQ.Common},
-    {{"uncommon", "green"},                     IQ.Uncommon},
-    {{"rare", "blue"},                          IQ.Rare},
-    {{"epic", "purple"},                        IQ.Epic},
-    {{"legendary", "orange"},                   IQ.Legendary},
-    {"artifact",                                IQ.Artifact},
-    {"heirloom",                                IQ.Heirloom},
+    {{"poor", "grey", "gray"}, IQ.Poor},
+    {{"common", "white"},      IQ.Common},
+    {{"uncommon", "green"},    IQ.Uncommon},
+    {{"rare", "blue"},         IQ.Rare},
+    {{"epic", "purple"},       IQ.Epic},
+    {{"legendary", "orange"},  IQ.Legendary},
+    {"artifact",               IQ.Artifact},
+    {"heirloom",               IQ.Heirloom},
 }) do
     local q = def[2]
     RegisterKeyword(def[1], function(p) return p.quality == q end)
 end
+
+RegisterKeyword({"junk", "trash"}, function(p) return p.isJunk end)
 
 -- ---- 7.2  Bind keywords ----
 RegisterKeyword({"soulbound", "bound", "bop"},          function(p) return p.isSoulbound end)
@@ -948,6 +950,17 @@ local function GetItemIdentityKey(itemID, hyperlink)
         .. ":" .. tostring(petData.petSpeed)
 end
 
+local function GetItemCacheKey(itemID, bagID, slotID, hyperlink)
+    local cacheKey
+    if bagID and slotID then
+        cacheKey = bagID .. ":" .. slotID
+    else
+        cacheKey = GetItemIdentityKey(itemID, hyperlink)
+    end
+
+    return cacheKey
+end
+
 local function ResolveCollected(itemID, classID, subClassID, hyperlink)
     -- Toy check
     local toyInfo = C_ToyBox.GetToyInfo(itemID)
@@ -1229,16 +1242,16 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     itemInfo = itemInfo or {}
     local hyperlink = itemInfo.hyperlink
-    local cacheKey, itemLocation
 
+    -- tostring(itemID) here is to satisfy Lua linter
+    local cacheKey = GetItemCacheKey(itemID, bagID, slotID, itemInfo) or tostring(itemID)
+    if propsCache[cacheKey] then return propsCache[cacheKey] end
+
+    local itemLocation
     if bagID and slotID then
-        cacheKey = bagID .. ":" .. slotID
         itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
-    else
-        cacheKey = GetItemIdentityKey(itemID, hyperlink) or tostring(itemID)
     end
 
-    if propsCache[cacheKey] then return propsCache[cacheKey] end
     local petData = GetBattlePetCageData(itemID, hyperlink)
 
     local props = {
@@ -1361,7 +1374,11 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     if _G.OneWoW and _G.OneWoW.UpgradeDetection and hyperlink then
         local UD = _G.OneWoW.UpgradeDetection
         if UD.CheckItemUpgrade then
-            props.isUpgrade = UD:CheckItemUpgrade(hyperlink) or false
+            if itemLocation and C_Item.DoesItemExist(itemLocation) then
+                props.isUpgrade = UD:CheckItemUpgrade(hyperlink, itemLocation) or false
+            else
+                props.isUpgrade = UD:CheckItemUpgrade(hyperlink) or false
+            end
         end
     end
 
@@ -2037,6 +2054,10 @@ end
 
 function PE:GetBattlePetCageData(itemID, hyperlink)
     return GetBattlePetCageData(itemID, hyperlink)
+end
+
+function PE:GetItemCacheKey(itemID, bagID, slotID, hyperlink)
+    return GetItemCacheKey(itemID, bagID, slotID, hyperlink)
 end
 
 function PE:GetItemIdentityKey(itemID, hyperlink)
