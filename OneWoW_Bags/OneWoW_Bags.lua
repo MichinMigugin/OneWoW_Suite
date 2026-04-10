@@ -160,6 +160,7 @@ function OneWoW_Bags:InvalidateCategorization(scope)
 
     self.Categories:SetCustomCategories(db.global.customCategoriesV2)
     self.Categories:SetRecentItemDuration(db.global.recentItemDuration)
+    self.Categories:SetRecentItems(db.global.recentItems)
     self.Categories:InvalidateCache()
 
     if scope == "props" then
@@ -272,6 +273,7 @@ function OneWoW_Bags:OnAddonLoaded(loadedAddon)
 
     OneWoW_Bags.Categories:SetCustomCategories(self.db.global.customCategoriesV2)
     OneWoW_Bags.Categories:SetRecentItemDuration(self.db.global.recentItemDuration)
+    OneWoW_Bags.Categories:SetRecentItems(self.db.global.recentItems)
 
     self:RegisterSlashCommands()
     self:RegisterRuntimeEvents()
@@ -800,6 +802,7 @@ function OneWoW_Bags:RestoreBankFrame()
 end
 
 function OneWoW_Bags:ProcessBagUpdate(dirtyBags)
+    self.Categories:OnPlayerBagDirtySnapshot(dirtyBags)
     if self.BagSet.isBuilt then
         self.BagSet:UpdateDirtyBags(dirtyBags)
         self.GUI:RefreshLayout()

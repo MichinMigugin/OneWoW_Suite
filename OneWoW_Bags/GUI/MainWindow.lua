@@ -11,6 +11,7 @@ local Settings = OneWoW_Bags.Settings
 local BagsBar = OneWoW_Bags.BagsBar
 local BagSet = OneWoW_Bags.BagSet
 local CategoryManager = OneWoW_Bags.CategoryManager
+local Categories = OneWoW_Bags.Categories
 local ListView = OneWoW_Bags.ListView
 local BagView = OneWoW_Bags.BagView
 local CategoryView = OneWoW_Bags.CategoryView
@@ -247,9 +248,12 @@ function GUI:Show()
     WH:QueueContentRefresh(contentScrollFrame, contentFrame, function()
         GUI:RefreshLayout()
     end)
+
+    Categories:BeginRecentExpiryTicker()
 end
 
 function GUI:Hide()
+    Categories:EndRecentExpiryTicker()
     if MainWindow then
         MainWindow:Hide()
     end
@@ -269,6 +273,7 @@ function GUI:IsShown()
 end
 
 function GUI:FullReset()
+    Categories:EndRecentExpiryTicker()
     OneWoW_Bags.BagSet:ReleaseAll()
     CategoryManager:ReleaseAllSections()
     Settings:Reset()

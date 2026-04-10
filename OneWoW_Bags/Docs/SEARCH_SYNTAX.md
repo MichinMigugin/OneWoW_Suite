@@ -445,6 +445,7 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 |---|---|
 | `#usable` | Items you can use (alias: `#use`) |
 | `#unusable` | Items you cannot use |
+| `#new` | Items Blizzard marks as new in the bag slot (`C_NewItems.IsNewItem`), via PredicateEngine `BuildProps` (may lag real client state until the props cache is invalidated) |
 | `#locked` | Locked items |
 | `#charges` | Items with charges |
 | `#unique` | Items whose tooltip shows **Unique** or **Unique-Equipped** (includes `#uniqueequipped`) |
@@ -453,6 +454,12 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 | `#knowledge` | Profession knowledge study items (same rules as under Consumable Subtypes) |
 | `#refundable` | Items still eligible for a full vendor refund (same window as the in-game refund indicator) |
 | `#enchanted` | Items whose link includes a permanent enchant (enchant ID in the parsed item link) |
+
+### Recent (OneWoW Bags)
+
+| Keyword | What it matches |
+|---|---|
+| `#recent` | Same rule as the **Recent Items** category: item GUID is in `db.global.recentItems` and still within **Recent item duration** (bag settings). GUIDs are stamped when a coalesced bag update sees the slot as Blizzard-new (`C_NewItems.IsNewItem`); classification does **not** use cached `BuildProps.isNew`. While the main bags window is open, expired GUIDs are also swept on a short ticker. Registered from `Categories`, not core PredicateEngine. |
 
 ### Vendor / Value
 
@@ -701,6 +708,7 @@ read more like natural conditions.
 | `IsInEquipmentSet` | `#set` |
 | `IsCollected` | `#collected` |
 | `IsUsable` | `#usable` |
+| `IsNew` | `#new` |
 | `IsJunk` | `#junk`, `#trash` |
 | `IsUpgrade` | (OneWoW upgrade detection) |
 | `IsToy` | `#toy` |

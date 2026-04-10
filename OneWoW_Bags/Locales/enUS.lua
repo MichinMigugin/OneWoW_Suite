@@ -356,7 +356,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SEARCH_HELP_TITLE"] = "Search Expression Help",
     ["SEARCH_HELP_DESC"] = "Use search keywords with operators to match items automatically.",
     ["SEARCH_HELP_PLACEHOLDER"] = "#battlepet&!#collected",
-    ["SEARCH_HELP_KEYWORDS"] = "Keywords: #pet #mount #toy #collected #soulbound #boe #boa #junk #trash #gear #weapon #armor #consumable #potion #food #reagent #recipe #gem #quest #hearthstone #keystone #locked #charges",
+    ["SEARCH_HELP_KEYWORDS"] = "Keywords: #pet #mount #toy #collected #soulbound #boe #boa #junk #trash #gear #weapon #armor #consumable #potion #food #reagent #recipe #gem #quest #hearthstone #keystone #new #recent #locked #charges",
     ["SEARCH_HELP_QUALITY"] = "Quality: #poor #grey #gray #common #uncommon #rare #epic #legendary",
     ["SEARCH_HELP_SLOTS"] = "Slots: #head #shoulder #chest #waist #legs #feet #wrist #hands #ring #trinket #back #shield",
     ["SEARCH_HELP_ARMOR"] = "Armor: #cloth #leather #mail #plate",
@@ -409,7 +409,7 @@ OneWoW_Bags.Locales["enUS"] = {
 
     ["CAT_DESC_1W_JUNK"] = "Items marked as junk by 1W or grey quality items",
     ["CAT_DESC_1W_UPGRADES"] = "Equippable items with higher item level than currently equipped",
-    ["CAT_DESC_RECENT_ITEMS"] = "Recently acquired items (tracked by GUID)",
+    ["CAT_DESC_RECENT_ITEMS"] = "Items whose GUID is tracked after Blizzard marks the bag slot new, until Recent item duration elapses (not the same as search #new)",
     ["CAT_DESC_HEARTHSTONE"] = "Hearthstone and hearthstone toy variants (#hearthstone)",
     ["CAT_DESC_KEYSTONE"] = "Mythic+ Keystones (#keystone)",
     ["CAT_DESC_POTIONS"] = "Consumable: Potions, Elixirs, Flasks (#potion)",

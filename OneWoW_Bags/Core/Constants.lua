@@ -13,6 +13,7 @@ OneWoW_Bags.Constants = {
         INFOBAR_HEIGHT = 56,
         BAGSBAR_HEIGHT = 58,
         TITLEBAR_HEIGHT = 20,
+        RECENT_EXPIRY_TICK_INTERVAL = 2,
     }),
 
     ICON_SIZES = {

@@ -5,11 +5,11 @@ if not OneWoW_GUI then return end
 
 local BagTypes = OneWoW_Bags.BagTypes
 local ItemPool = OneWoW_Bags.ItemPool
+local PE = OneWoW_Bags.PredicateEngine
 
 local pairs, select = pairs, select
 
 local UnitLevel = UnitLevel
-local C_NewItems = C_NewItems
 local C_Container = C_Container
 local C_Item = C_Item
 
@@ -31,8 +31,6 @@ function Mixin:OWB_IsDirty()
     return self.owb_dirty
 end
 
---- New-item glow for player inventory bags only (not bank / guild bank). Uses Blizzard
---- C_NewItems plus ContainerFrameItemButtonTemplate overlays (see default ContainerFrame).
 function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
     local db = OneWoW_Bags:GetDB()
     local bagID, slotID = self.owb_bagID, self.owb_slotID
@@ -47,7 +45,12 @@ function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
         return
     end
 
-    if not C_NewItems.IsNewItem(bagID, slotID) then
+    local infoForProps = self.owb_itemInfo
+    if not infoForProps or not infoForProps.itemID then
+        ItemPool:ClearNewItemGlow(self)
+        return
+    end
+    if not PE:BuildProps(infoForProps.itemID, bagID, slotID, infoForProps).isNew then
         ItemPool:ClearNewItemGlow(self)
         return
     end
@@ -84,14 +87,6 @@ function Mixin:OWB_UpdateNewItemGlow(quality, hasItem)
             self.newitemglowAnim:Play()
         end
     end
-end
-
-function Mixin:OWB_IsJunkItem(quality, info)
-    if quality == Enum.ItemQuality.Poor then return true end
-    if info and info.itemID and _G.OneWoW and _G.OneWoW.ItemStatus then
-        if _G.OneWoW.ItemStatus:IsItemJunk(info.itemID) then return true end
-    end
-    return false
 end
 
 function Mixin:OWB_FullUpdate()
@@ -139,7 +134,9 @@ function Mixin:OWB_FullUpdate()
     self:OWB_UpdateJunkDim(quality, hasItem, info)
     self:OWB_UpdateUnusableOverlay(hasItem, info)
 
-    self._owb_isJunk = hasItem and self:OWB_IsJunkItem(quality, info) or false
+    self._owb_isJunk = hasItem and info and info.itemID
+        and PE:BuildProps(info.itemID, self.owb_bagID, self.owb_slotID, info).isJunk
+        or false
 end
 
 function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
@@ -148,7 +145,9 @@ function Mixin:OWB_UpdateJunkDim(quality, hasItem, info)
         return
     end
 
-    local isJunk = self:OWB_IsJunkItem(quality, info)
+    local isJunk = info and info.itemID
+        and PE:BuildProps(info.itemID, self.owb_bagID, self.owb_slotID, info).isJunk
+        or false
 
     if OneWoW_Bags:ShouldDimJunkItem(isJunk) then
         self:SetAlpha(0.4)

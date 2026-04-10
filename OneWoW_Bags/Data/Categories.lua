@@ -1,13 +1,16 @@
 local _, OneWoW_Bags = ...
 
 local L = OneWoW_Bags.L
-
 local PE = OneWoW_Bags.PredicateEngine
+local BagTypes = OneWoW_Bags.BagTypes
+local Constants = OneWoW_Bags.Constants
 
 local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs
 local type, time, tostring = type, time, tostring
-local C_Item, C_NewItems = C_Item, C_NewItems
+local C_Item = C_Item
+local C_Container = C_Container
+local C_NewItems = C_NewItems
 
 OneWoW_Bags.Categories = {}
 local Categories = OneWoW_Bags.Categories
@@ -57,6 +60,7 @@ sort(SEARCH_CATEGORIES, function(a, b) return a.searchOrder < b.searchOrder end)
 
 local recentItems = {}
 local recentItemDuration = 120
+local recentExpiryTicker = nil
 
 local customCategoriesV2 = {}
 
@@ -124,7 +128,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         end
     end
 
-    if not disabled["Recent Items"] and self:IsItemRecent(bagID, slotID) then
+    if not disabled["Recent Items"] and itemID and self:SlotMatchesRecent(itemID, bagID, slotID, itemInfo) then
         return "Recent Items"
     end
 
@@ -237,14 +241,8 @@ function Categories:SortCategories(categoryList, sortMode)
     end
 end
 
-function Categories:IsItemRecent(bagID, slotID)
-    if bagID and slotID then
-        if C_NewItems.IsNewItem(bagID, slotID) then
-            return true
-        end
-    end
-
-    local key = bagID .. ":" .. slotID
+function Categories:SlotMatchesRecent(itemID, bagID, slotID, itemInfo)
+    if not itemID or not bagID or not slotID then return false end
     local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
     if itemLocation and itemLocation:IsValid() and C_Item.DoesItemExist(itemLocation) then
         local guid = C_Item.GetItemGUID(itemLocation)
@@ -257,7 +255,6 @@ function Categories:IsItemRecent(bagID, slotID)
             end
         end
     end
-
     return false
 end
 
@@ -268,19 +265,44 @@ end
 
 function Categories:CleanExpiredRecent()
     local currentTime = time()
+    local removed = false
     for guid, timestamp in pairs(recentItems) do
         if currentTime - timestamp >= recentItemDuration then
             recentItems[guid] = nil
+            removed = true
         end
     end
+    return removed
+end
+
+function Categories:BeginRecentExpiryTicker()
+    if recentExpiryTicker then
+        recentExpiryTicker:Cancel()
+        recentExpiryTicker = nil
+    end
+    local interval = Constants.GUI.RECENT_EXPIRY_TICK_INTERVAL or 2
+    recentExpiryTicker = C_Timer.NewTicker(interval, function()
+        local gui = OneWoW_Bags.GUI
+        if not gui or not gui:IsShown() then
+            Categories:EndRecentExpiryTicker()
+            return
+        end
+        if Categories:CleanExpiredRecent() then
+            OneWoW_Bags:RequestLayoutRefresh("bags")
+        end
+    end)
+end
+
+function Categories:EndRecentExpiryTicker()
+    if recentExpiryTicker then
+        recentExpiryTicker:Cancel()
+        recentExpiryTicker = nil
+    end
+    self:CleanExpiredRecent()
 end
 
 function Categories:SetRecentItemDuration(duration)
     recentItemDuration = duration or 120
-end
-
-function Categories:GetRecentItems()
-    return recentItems
 end
 
 function Categories:SetRecentItems(saved)
@@ -289,9 +311,25 @@ function Categories:SetRecentItems(saved)
     end
 end
 
-function Categories:ClearRecentItems()
-    wipe(recentItems)
-    C_NewItems.ClearAll()
+function Categories:OnPlayerBagDirtySnapshot(dirtyBags)
+    if not dirtyBags then return end
+    self:CleanExpiredRecent()
+    for bagID in pairs(dirtyBags) do
+        if BagTypes:IsPlayerBag(bagID) then
+            local numSlots = C_Container.GetContainerNumSlots(bagID) or 0
+            for slotID = 1, numSlots do
+                if C_NewItems.IsNewItem(bagID, slotID) then
+                    local loc = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+                    if loc and loc:IsValid() and C_Item.DoesItemExist(loc) then
+                        local guid = C_Item.GetItemGUID(loc)
+                        if guid then
+                            self:AddRecentItem(guid)
+                        end
+                    end
+                end
+            end
+        end
+    end
 end
 
 function Categories:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
@@ -518,3 +556,13 @@ function Categories:GetCategoryDescription(categoryName)
     local key = descKeys[categoryName]
     return key and L[key] or nil
 end
+
+PE:RegisterKeyword("recent", function(p)
+    if not p.id then return false end
+    local itemInfo = {
+        hyperlink = p.hyperlink,
+        quality = p.quality,
+        count = p.count,
+    }
+    return Categories:SlotMatchesRecent(p.id, p._bagID, p._slotID, itemInfo)
+end)
