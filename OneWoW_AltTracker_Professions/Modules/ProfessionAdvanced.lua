@@ -32,10 +32,25 @@ function Module:CollectData(charKey, charData, professionName)
 
     local recipes = {}
 
+    local profsDB = _G.OneWoW_AltTracker_Professions_DB
+    if profsDB and not profsDB.recipeItemMap then
+        profsDB.recipeItemMap = {}
+    end
+
     for _, recipeID in ipairs(allRecipeIDs) do
         local recipeInfo = C_TradeSkillUI.GetRecipeInfo(recipeID)
         if recipeInfo and recipeInfo.learned then
             recipes[recipeID] = true
+        end
+
+        if profsDB and C_TradeSkillUI.GetRecipeItemLink then
+            local link = C_TradeSkillUI.GetRecipeItemLink(recipeID)
+            if link then
+                local itemID = tonumber(link:match("item:(%d+)"))
+                if itemID then
+                    profsDB.recipeItemMap[itemID] = recipeID
+                end
+            end
         end
     end
 
