@@ -34,6 +34,7 @@ local Categories = OneWoW_Bags.Categories
 
 local random, max, floor, time = math.random, math.max, math.floor, time
 local pairs, ipairs = pairs, ipairs
+local GameTooltip = GameTooltip
 local tostring, tonumber, format = tostring, tonumber, format
 local tinsert, tremove, wipe = tinsert, tremove, wipe
 
@@ -42,7 +43,9 @@ local CatMgrUI = OneWoW_Bags.CategoryManagerUI
 
 local managerFrame       = nil
 local dialogContentFrame = nil
+local leftScrollFrame    = nil
 local leftScrollContent  = nil
+local rightScrollFrame   = nil
 local rightItemArea      = nil
 local rightItemScrollContent = nil
 local rightTopWrapper    = nil
@@ -398,8 +401,8 @@ function CatMgrUI:RefreshRight()
         hint:SetPoint("CENTER")
         hint:SetText(L["CATEGORY_SELECT_PROMPT"])
         hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        if rightItemScrollContent then
-            rightItemScrollContent:SetHeight(80)
+        if rightScrollFrame then
+            rightScrollFrame:GetScrollChild():SetHeight(80)
         end
         return
     end
@@ -498,8 +501,8 @@ function CatMgrUI:RefreshRight()
 
         local totalH = max(abs(checkY) + 4, 100)
         rightTopWrapper:SetHeight(totalH)
-        if rightItemScrollContent then
-            rightItemScrollContent:SetHeight(totalH)
+        if rightScrollFrame then
+            rightScrollFrame:GetScrollChild():SetHeight(totalH)
         end
         return
     end
@@ -1074,8 +1077,8 @@ function CatMgrUI:RefreshRight()
 
     local totalH = max(abs(yPos) + 8, 100)
     rightTopWrapper:SetHeight(totalH)
-    if rightItemScrollContent then
-        rightItemScrollContent:SetHeight(totalH)
+    if rightScrollFrame then
+        rightScrollFrame:GetScrollChild():SetHeight(totalH)
     end
 end
 
@@ -1195,7 +1198,8 @@ function CatMgrUI:RefreshLeft()
         if mod.addedItems and next(mod.addedItems) then badges = badges .. "+" end
         if mod.hideIn and next(mod.hideIn) then badges = badges .. "H" end
         if mod.priority and mod.priority ~= 0 then badges = badges .. "P" end
-        if not entry.isBuiltin and entry.data and entry.data.searchExpression then badges = badges .. "E" end
+        local searchExpr = not entry.isBuiltin and entry.data and entry.data.searchExpression
+        if searchExpr and searchExpr ~= "" then badges = badges .. "E" end
 
         local badgeAnchor = upB
         if badges ~= "" then
@@ -1203,6 +1207,18 @@ function CatMgrUI:RefreshLeft()
             badgeTxt:SetPoint("RIGHT", upB, "LEFT", -4, 0)
             badgeTxt:SetText(badges)
             badgeTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+            local badgeHit = CreateFrame("Frame", nil, row)
+            badgeHit:EnableMouse(true)
+            badgeHit:SetSize(max(24, #badges * 9 + 8), 28)
+            badgeHit:SetPoint("RIGHT", upB, "LEFT", -4, 0)
+            badgeHit:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["CATEGORY_BADGE_TOOLTIP_TITLE"], 1, 1, 1)
+                local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
+                GameTooltip:AddLine(L["CATEGORY_BADGE_TOOLTIP_BODY"], tr, tg, tb, true)
+                GameTooltip:Show()
+            end)
+            badgeHit:SetScript("OnLeave", GameTooltip_Hide)
             badgeAnchor = badgeTxt
         end
 
@@ -1443,7 +1459,9 @@ function CatMgrUI:RefreshLeft()
 
     local totalH = yOffset + 4
     leftWrapper:SetHeight(max(totalH, 40))
-    leftScrollContent:SetHeight(max(totalH, 40))
+    if leftScrollFrame then
+        leftScrollFrame:GetScrollChild():SetHeight(max(totalH, 40))
+    end
 end
 
 -- ============================================================
@@ -1564,8 +1582,10 @@ function CatMgrUI:Show()
     leftInner:SetPoint("TOPLEFT",     leftPanel, "TOPLEFT",     4, -26)
     leftInner:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -4,  4)
 
-    local _, lContent = OneWoW_GUI:CreateScrollFrame(leftInner, { name="OneWoW_BagsCatMgrLeft" })
-    leftScrollContent = lContent
+    leftScrollFrame, leftScrollContent = OneWoW_GUI:CreateScrollFrame(leftInner, {
+        name = "OneWoW_BagsCatMgrLeft",
+        layoutRightInset = 24,
+    })
 
     -- Right panel (resizer will reanchor it)
     local rightPanel = CreateFrame("Frame", nil, splitArea, "BackdropTemplate")
@@ -1588,8 +1608,10 @@ function CatMgrUI:Show()
     rightItemArea:SetPoint("TOPLEFT",     rightPanel, "TOPLEFT",      8, -8)
     rightItemArea:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -8,  8)
 
-    local _, rContent = OneWoW_GUI:CreateScrollFrame(rightItemArea, { name="OneWoW_BagsCatMgrItems" })
-    rightItemScrollContent = rContent
+    rightScrollFrame, rightItemScrollContent = OneWoW_GUI:CreateScrollFrame(rightItemArea, {
+        name = "OneWoW_BagsCatMgrItems",
+        layoutRightInset = 24,
+    })
 
     CatMgrUI:Refresh()
     if managerFrame then
