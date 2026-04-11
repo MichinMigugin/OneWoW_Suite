@@ -10,6 +10,7 @@ OneWoW_UI/
 # Ricky's Cursor rules — local only, never commit or push (AccountSync, Triggers, Gitmode, CHANGELOG, etc.)
 # `git add` will refuse these unless you force; keep them out of the shared repo.
 .cursor/rules/1W-Ricky-*.mdc
+.cursor/rules/Git-Commit-Rules.mdc
 
 # Local secrets (never commit)
 .env
