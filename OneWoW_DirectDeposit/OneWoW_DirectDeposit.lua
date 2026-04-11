@@ -42,11 +42,15 @@ OneWoW_DirectDeposit.ApplyLanguage = ApplyLanguage
 function OneWoW_DirectDeposit:ReinitForLanguage(langCode)
     self.db.global.language = langCode
     ApplyLanguage()
-    if self.GUI then
+    if self.GUI and self.GUI.FullReset then
+        local mw = self.GUI:GetMainWindow()
+        local wasShown = mw and mw:IsShown()
         self.GUI:FullReset()
-        C_Timer.After(0.1, function()
-            self.GUI:Show()
-        end)
+        if wasShown then
+            C_Timer.After(0.1, function()
+                if self.GUI and self.GUI.Show then self.GUI:Show() end
+            end)
+        end
     end
 end
 
