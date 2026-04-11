@@ -11,13 +11,21 @@ local BH = OneWoW_Bags.BarHelpers
 
 local pairs, ipairs = pairs, ipairs
 
-local C_Timer = C_Timer
 local C_Bank = C_Bank
 
 OneWoW_Bags.BankBar = {}
 local BankBar = OneWoW_Bags.BankBar
 
-local bagsBarFrame = nil
+---@class BankBarFrame : Frame
+---@field withdrawBtn table
+---@field depositGoldBtn table
+---@field depositReagentsBtn table
+---@field warbandBtn table
+---@field personalBtn table
+---@field goldText FontString
+---@field freeSlots FontString
+---@field _tabSettingsMenu table
+local bagsBarFrame = nil ---@type BankBarFrame?
 local tabButtons = {}
 
 local ROW1_Y = 12

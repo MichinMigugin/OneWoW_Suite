@@ -12,7 +12,13 @@ local pairs = pairs
 OneWoW_Bags.GuildBankBar = {}
 local GuildBankBar = OneWoW_Bags.GuildBankBar
 
-local bagsBarFrame = nil
+---@class GuildBankBarFrame : Frame
+---@field withdrawBtn table
+---@field depositBtn table
+---@field logBtn table
+---@field goldText FontString
+---@field freeSlots FontString
+local bagsBarFrame = nil ---@type GuildBankBarFrame?
 local tabButtons = {}
 
 local ROW1_Y = 0

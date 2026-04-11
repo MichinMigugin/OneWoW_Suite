@@ -9,6 +9,7 @@ local string_format = string.format
 OneWoW_Bags.BarHelpers = {}
 local BH = OneWoW_Bags.BarHelpers
 
+---@return Frame
 function BH:CreateBarFrame(parent, frameName, barHeight)
     local frame = CreateFrame("Frame", frameName, parent, "BackdropTemplate")
     frame:SetHeight(barHeight)
