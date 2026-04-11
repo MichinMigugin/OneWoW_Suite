@@ -177,48 +177,48 @@ local function FillPetTooltip(tip, speciesID)
                 1.0, 1.0, 1.0
             )
         end
+    end
 
-        if cfg.showAHValue ~= false then
-            local ahPrice, meta
-            if OneWoW.ItemPrices then
-                ahPrice, meta = OneWoW.ItemPrices:GetUnitAHPriceForSpecies(speciesID, name)
-            else
-                local ahData = GetAHPrice()
-                if ahData and ahData.price and ahData.price > 0 then
-                    ahPrice = ahData.price
-                    meta = { source = "onewow", timestamp = ahData.timestamp }
-                end
-            end
-            if ahPrice and ahPrice > 0 then
-                local ageText
-                if meta and meta.timestamp then
-                    ageText = FormatAge(meta.timestamp)
-                elseif meta and meta.ageDays ~= nil then
-                    ageText = string.format(L["TIPS_VALUE_AH_AGE_DAYS"] or "%d d ago", meta.ageDays)
-                end
-                local rightText = FormatMoneyLine(ahPrice)
-                if ageText then
-                    rightText = rightText .. "  |cFF888888(" .. ageText .. ")|r"
-                end
-                local leftAH = L["TIPS_VALUE_AH_PRICE"] or "AH Price"
-                if meta and meta.source == "auctionator" then
-                    leftAH = L["TIPS_VALUE_AH_PRICE_AUCTIONATOR"] or leftAH
-                end
-                tip:AddDoubleLine("  " .. leftAH, rightText, 0.4, 0.8, 1.0, 1.0, 1.0, 1.0)
+    if cfg.showAHValue ~= false then
+        local ahPrice, meta
+        if OneWoW.ItemPrices then
+            ahPrice, meta = OneWoW.ItemPrices:GetUnitAHPriceForSpecies(speciesID, name)
+        else
+            local ahData = GetAHPrice()
+            if ahData and ahData.price and ahData.price > 0 then
+                ahPrice = ahData.price
+                meta = { source = "onewow", timestamp = ahData.timestamp }
             end
         end
-
-        local valCfg = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.tooltips and OneWoW.db.global.settings.tooltips.value
-        if valCfg and valCfg.showTSMValue == true and OneWoW.ItemPrices then
-            local tsmPrice, srcStr = OneWoW.ItemPrices:GetTSMUnitPriceForSpecies(speciesID, name)
-            if tsmPrice and tsmPrice > 0 then
-                local tsmRight = FormatMoneyLine(tsmPrice)
-                local leftT = L["TIPS_VALUE_TSM_PRICE"] or "TSM"
-                if srcStr and srcStr ~= "" then
-                    leftT = string.format(L["TIPS_VALUE_TSM_PRICE_FMT"] or "TSM (%s)", srcStr)
-                end
-                tip:AddDoubleLine("  " .. leftT, tsmRight, 0.4, 0.8, 1.0, 1.0, 1.0, 1.0)
+        if ahPrice and ahPrice > 0 then
+            local ageText
+            if meta and meta.timestamp then
+                ageText = FormatAge(meta.timestamp)
+            elseif meta and meta.ageDays ~= nil then
+                ageText = string.format(L["TIPS_VALUE_AH_AGE_DAYS"] or "%d d ago", meta.ageDays)
             end
+            local rightText = FormatMoneyLine(ahPrice)
+            if ageText then
+                rightText = rightText .. "  |cFF888888(" .. ageText .. ")|r"
+            end
+            local leftAH = L["TIPS_VALUE_AH_PRICE"] or "AH Price"
+            if meta and meta.source == "auctionator" then
+                leftAH = L["TIPS_VALUE_AH_PRICE_AUCTIONATOR"] or leftAH
+            end
+            tip:AddDoubleLine("  " .. leftAH, rightText, 0.4, 0.8, 1.0, 1.0, 1.0, 1.0)
+        end
+    end
+
+    local valCfg = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.tooltips and OneWoW.db.global.settings.tooltips.value
+    if valCfg and valCfg.showTSMValue == true and OneWoW.ItemPrices then
+        local tsmPrice, srcStr = OneWoW.ItemPrices:GetTSMUnitPriceForSpecies(speciesID, name)
+        if tsmPrice and tsmPrice > 0 then
+            local tsmRight = FormatMoneyLine(tsmPrice)
+            local leftT = L["TIPS_VALUE_TSM_PRICE"] or "TSM"
+            if srcStr and srcStr ~= "" then
+                leftT = string.format(L["TIPS_VALUE_TSM_PRICE_FMT"] or "TSM (%s)", srcStr)
+            end
+            tip:AddDoubleLine("  " .. leftT, tsmRight, 0.4, 0.8, 1.0, 1.0, 1.0, 1.0)
         end
     end
 
