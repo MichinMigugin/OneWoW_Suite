@@ -735,13 +735,9 @@ To programmatically read tooltip information **without displaying a tooltip**
 (replaces the old hidden-tooltip scanning technique), use `C_TooltipInfo`:
 
 ```lua
--- Get structured tooltip data for an item
 local tooltipData = C_TooltipInfo.GetItemByID(itemID)
 if tooltipData then
-    TooltipUtil.SurfaceArgs(tooltipData)    -- REQUIRED: populates fields
     for _, line in ipairs(tooltipData.lines) do
-        TooltipUtil.SurfaceArgs(line)       -- REQUIRED per line
-        -- line.leftText, line.rightText, line.type, etc. now accessible
         print(line.leftText)
     end
 end
@@ -757,9 +753,12 @@ end
 -- ... and many more (see warcraft.wiki.gg/wiki/Category:API_systems/TooltipInfo)
 ```
 
-**Critical:** You MUST call `TooltipUtil.SurfaceArgs()` on the returned
-`tooltipData` and on each `line` entry before accessing fields like
-`leftText`, `type`, `guid`, etc. Without this call, those fields are nil.
+**`TooltipUtil.SurfaceArgs` — no longer needed (Patch 10.1.0+):** Before
+Patch 10.1.0, callers had to run `TooltipUtil.SurfaceArgs(tooltipData)` and
+`TooltipUtil.SurfaceArgs(line)` per line to populate fields like `leftText`,
+`type`, `guid`, etc. As of **Patch 10.1.0**, C_TooltipInfo APIs return data
+with all arguments already surfaced, so the call is unnecessary. Legacy code
+that still calls `SurfaceArgs` is harmless but redundant.
 
 #### 7.5.4 Custom Tooltip Frames
 
@@ -865,7 +864,7 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 7. **Using `OnTooltipSetItem` / `OnTooltipSetSpell` hooks.** These script
    handlers were removed in 10.0.2. Use `TooltipDataProcessor.AddTooltipPostCall`
    with `Enum.TooltipDataType.*` instead. Also don't create hidden
-   `GameTooltip` frames for scanning — use `C_TooltipInfo` + `TooltipUtil.SurfaceArgs`.
+   `GameTooltip` frames for scanning — use `C_TooltipInfo`.
 8. **Not testing inside instances.** Secret value restrictions often only
    apply in instanced content. Your addon may work in the open world and
    break in dungeons/raids.
