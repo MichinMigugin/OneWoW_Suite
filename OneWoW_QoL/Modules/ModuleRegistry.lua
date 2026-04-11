@@ -38,6 +38,10 @@ function Registry:GetAll()
     return result
 end
 
+function Registry:GetById(moduleId)
+    return modules[moduleId]
+end
+
 function Registry:GetByCategory(category)
     local result = {}
     for _, id in ipairs(moduleOrder) do

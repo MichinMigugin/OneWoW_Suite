@@ -562,6 +562,7 @@ function ns.UI.CreateFeaturesTab(parent)
         showSearch = true,
         searchPlaceholder = L["SEARCH_HINT"],
     })
+    ns.UI._featuresSplit = split
 
     split.listTitle:SetText(L["FEATURES_LIST_TITLE"])
     split.detailTitle:SetText(L["FEATURES_DETAIL_TITLE"])
@@ -574,5 +575,31 @@ function ns.UI.CreateFeaturesTab(parent)
 
     C_Timer.After(0.1, function()
         BuildFeaturesList(split, "")
+    end)
+end
+
+function ns.UI.SelectFeature(moduleId)
+    if not moduleId then return end
+
+    if ns.oneWoWHubActive and _G.OneWoW and _G.OneWoW.GUI then
+        _G.OneWoW.GUI:Show("qol")
+    elseif ns.UI and ns.UI.Toggle then
+        ns.UI:Toggle()
+    end
+
+    C_Timer.After(0.15, function()
+        local split = ns.UI._featuresSplit
+        if not split then return end
+        local module = ns.ModuleRegistry:GetById(moduleId)
+        if not module then return end
+        selectedModuleId = module.id
+        if selectedRow then selectedRow:SetActive(false) end
+        selectedRow = nil
+        ShowModuleDetail(split, module)
+        if split.rightStatusText then
+            local isEnabled = ns.ModuleRegistry:IsEnabled(module.id)
+            local modName = ns.L[module.title] or module.title
+            split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
+        end
     end)
 end
