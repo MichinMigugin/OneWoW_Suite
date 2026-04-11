@@ -1,5 +1,7 @@
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
 local BagBarModule = {
     id          = "bagbar",
     title       = "BAGBAR_TITLE",
@@ -44,6 +46,7 @@ local function GetSettings()
     if s.maxButtons      == nil then s.maxButtons      = 12   end
     if s.buttonSize      == nil then s.buttonSize      = 36   end
     if s.columns         == nil then s.columns         = 12   end
+    if s.iconSpacing     == nil then s.iconSpacing     = 4    end
     if not s.manualItems    then s.manualItems    = {} end
     if not s.blacklist      then s.blacklist      = {} end
     if s.showRecipes     == nil then s.showRecipes     = true end
@@ -193,8 +196,13 @@ function BagBarModule:CreateBar()
         edgeSize = 0,
         insets = { left = 0, right = 0, top = 0, bottom = 0 },
     })
-    dragHandle:SetBackdropColor(0.2, 0.2, 0.2, 0.9)
-    dragHandle:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
+    if OneWoW_GUI then
+        dragHandle:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        dragHandle:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    else
+        dragHandle:SetBackdropColor(0.2, 0.2, 0.2, 0.9)
+        dragHandle:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
+    end
     dragHandle:EnableMouse(true)
     dragHandle:RegisterForDrag("LeftButton")
     dragHandle:SetMovable(true)
@@ -202,17 +210,29 @@ function BagBarModule:CreateBar()
     local dragLine = dragHandle:CreateTexture(nil, "ARTWORK")
     dragLine:SetSize(3, 20)
     dragLine:SetPoint("CENTER")
-    dragLine:SetColorTexture(0.6, 0.6, 0.6, 1)
+    if OneWoW_GUI then
+        dragLine:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    else
+        dragLine:SetColorTexture(0.6, 0.6, 0.6, 1)
+    end
 
     dragHandle:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.3, 0.3, 0.3, 1)
+        if OneWoW_GUI then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        else
+            self:SetBackdropColor(0.3, 0.3, 0.3, 1)
+        end
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:SetText(ns.L["BAGBAR_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(ns.L["BAGBAR_DRAG_TOOLTIP"], 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
     dragHandle:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.15, 0.15, 0.15, 0.9)
+        if OneWoW_GUI then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        else
+            self:SetBackdropColor(0.15, 0.15, 0.15, 0.9)
+        end
         GameTooltip:Hide()
     end)
     dragHandle:SetScript("OnDragStart", function(self)
@@ -223,6 +243,11 @@ function BagBarModule:CreateBar()
     dragHandle:SetScript("OnDragStop", function(self)
         barFrame:StopMovingOrSizing()
         BagBarModule:SavePosition()
+    end)
+    dragHandle:SetScript("OnMouseUp", function(self, mouseButton)
+        if mouseButton == "RightButton" then
+            BagBarModule:ShowContextMenu(self)
+        end
     end)
 
     barFrame.dragHandle = dragHandle
@@ -247,42 +272,32 @@ function BagBarModule:CreateButton(index)
     button:RegisterForClicks("AnyDown", "AnyUp")
     button:SetAttribute("useOnKeyDown", true)
 
-    button.icon = button:CreateTexture(nil, "ARTWORK")
-    button.icon:SetSize(34, 34)
-    button.icon:SetPoint("CENTER")
-    button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    local icon = button:CreateTexture(nil, "ARTWORK")
+    icon:SetAllPoints(button)
+    button.icon = icon
+    button._skinnedIcon = icon
 
-    button.normalTex = button:CreateTexture(nil, "BACKGROUND")
-    button.normalTex:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-    button.normalTex:SetSize(64, 64)
-    button.normalTex:SetPoint("CENTER", 0, -1)
+    if OneWoW_GUI then
+        OneWoW_GUI:SkinIconFrame(button, { preset = "clean" })
+    end
 
     button.count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
     button.count:SetPoint("BOTTOMRIGHT", -2, 2)
 
     button.cooldown = CreateFrame("Cooldown", btnName .. "CD", button, "CooldownFrameTemplate")
-    button.cooldown:SetSize(34, 34)
-    button.cooldown:SetPoint("CENTER")
+    button.cooldown:SetPoint("TOPLEFT", icon, "TOPLEFT")
+    button.cooldown:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT")
     button.cooldown:SetDrawEdge(false)
     button.cooldown:SetHideCountdownNumbers(false)
-
-    button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-    local ht = button:GetHighlightTexture()
-    if ht then
-        ht:SetAlpha(0.4)
-        ht:SetSize(36, 36)
-        ht:SetPoint("CENTER")
-    end
-
-    button:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
-    local pt = button:GetPushedTexture()
-    if pt then
-        pt:SetSize(36, 36)
-        pt:SetPoint("CENTER")
+    if OneWoW_GUI then
+        OneWoW_GUI:SkinCooldown(button.cooldown)
     end
 
     button:SetScript("OnEnter", function(self)
         if not self.owb_itemID or not self.owb_bag or not self.owb_slot then return end
+        if self._skinBorder and not (self._skinQuality and self._skinQuality > 1) then
+            self._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink(self.owb_itemLink or ("item:" .. self.owb_itemID))
         GameTooltip:AddLine(" ")
@@ -292,7 +307,10 @@ function BagBarModule:CreateButton(index)
         GameTooltip:Show()
     end)
 
-    button:SetScript("OnLeave", function()
+    button:SetScript("OnLeave", function(self)
+        if self._skinBorder and not (self._skinQuality and self._skinQuality > 1) then
+            self._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+        end
         GameTooltip:Hide()
     end)
 
@@ -526,7 +544,7 @@ end
 function BagBarModule:LayoutButtons(count)
     local s          = GetSettings()
     local btnSize    = s.buttonSize or 36
-    local padding    = 5
+    local spacing    = s.iconSpacing or 4
     local cols       = s.columns or 12
     local actualCols = math.min(count, cols)
     local rows       = math.max(1, math.ceil(count / cols))
@@ -537,19 +555,15 @@ function BagBarModule:LayoutButtons(count)
         holders[i]:ClearAllPoints()
         holders[i]:SetSize(btnSize, btnSize)
         holders[i]:SetPoint("TOPLEFT", barFrame, "TOPLEFT",
-            col * (btnSize + padding),
-            -(row * (btnSize + padding)))
+            col * (btnSize + spacing),
+            -(row * (btnSize + spacing)))
 
         local b = buttons[i]
         b:SetSize(btnSize, btnSize)
-        local iconSize = btnSize - 2
-        b.icon:SetSize(iconSize, iconSize)
-        b.normalTex:SetSize(math.floor(btnSize * 1.7), math.floor(btnSize * 1.7))
-        b.cooldown:SetSize(iconSize, iconSize)
-        local ht = b:GetHighlightTexture()
-        if ht then ht:SetSize(btnSize, btnSize) end
-        local pt = b:GetPushedTexture()
-        if pt then pt:SetSize(btnSize, btnSize) end
+
+        if OneWoW_GUI then
+            OneWoW_GUI:SkinIconFrame(b, { preset = "clean" })
+        end
 
         holders[i]:Show()
     end
@@ -560,8 +574,8 @@ function BagBarModule:LayoutButtons(count)
     end
 
     if actualCols > 0 then
-        local width  = (actualCols * btnSize) + ((actualCols - 1) * padding)
-        local height = (rows * btnSize) + ((rows - 1) * padding)
+        local width  = (actualCols * btnSize) + ((actualCols - 1) * spacing)
+        local height = (rows * btnSize) + ((rows - 1) * spacing)
         barFrame:SetSize(width, height)
     else
         barFrame:SetSize(btnSize, btnSize)
@@ -622,6 +636,28 @@ end
 
 function BagBarModule:IsPreviewActive()
     return previewMode
+end
+
+function BagBarModule:OpenSettings()
+    if ns.UI and ns.UI.SelectFeature then
+        ns.UI.SelectFeature("bagbar")
+    end
+end
+
+function BagBarModule:ShowContextMenu(anchor)
+    if MenuUtil and MenuUtil.CreateContextMenu then
+        MenuUtil.CreateContextMenu(anchor, function(_, rootDescription)
+            local s = GetSettings()
+            rootDescription:CreateTitle(ns.L["BAGBAR_TITLE"])
+            local lockLabel = s.locked and ns.L["BAGBAR_CONTEXT_UNLOCK"] or ns.L["BAGBAR_CONTEXT_LOCK"]
+            rootDescription:CreateButton(lockLabel, function()
+                BagBarModule:SetLocked(not s.locked)
+            end)
+            rootDescription:CreateButton(ns.L["BAGBAR_CONTEXT_SETTINGS"], function()
+                BagBarModule:OpenSettings()
+            end)
+        end)
+    end
 end
 
 ns.BagBarModule = BagBarModule

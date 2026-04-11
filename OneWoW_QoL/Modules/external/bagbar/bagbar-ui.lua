@@ -219,15 +219,15 @@ local function BuildContent(container, isEnabled)
     end)
     cy = cy - 46
 
+    local sliderRowY = cy
     local sizeLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    sizeLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    sizeLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, sliderRowY)
     sizeLabel:SetText(string.format("%s: %d", L["BAGBAR_BUTTON_SIZE"], s.buttonSize or 36))
     sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    cy = cy - sizeLabel:GetStringHeight() - 4
 
     local sizeSlider = CreateFrame("Slider", "OneWoW_QoL_BagBarSizeSlider", container, "OptionsSliderTemplate")
-    sizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
-    sizeSlider:SetWidth(220)
+    sizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, sliderRowY - sizeLabel:GetStringHeight() - 4)
+    sizeSlider:SetWidth(170)
     sizeSlider:SetMinMaxValues(24, 48)
     sizeSlider:SetValue(s.buttonSize or 36)
     sizeSlider:SetValueStep(2)
@@ -238,6 +238,52 @@ local function BuildContent(container, isEnabled)
         local v = math.floor(value + 0.5)
         GetSettings().buttonSize = v
         sizeLabel:SetText(string.format("%s: %d", L["BAGBAR_BUTTON_SIZE"], v))
+        ns.BagBarModule:ScheduleUpdate()
+    end)
+
+    local colsLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    colsLabel:SetPoint("TOP", sizeLabel, "TOP")
+    colsLabel:SetPoint("LEFT", sizeSlider, "RIGHT", 24, 0)
+    colsLabel:SetText(string.format("%s: %d", L["BAGBAR_COLUMNS"], s.columns or 12))
+    colsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local colsSlider = CreateFrame("Slider", "OneWoW_QoL_BagBarColsSlider", container, "OptionsSliderTemplate")
+    colsSlider:SetPoint("TOP", sizeSlider, "TOP")
+    colsSlider:SetPoint("LEFT", sizeSlider, "RIGHT", 24, 0)
+    colsSlider:SetWidth(170)
+    colsSlider:SetMinMaxValues(1, 12)
+    colsSlider:SetValue(s.columns or 12)
+    colsSlider:SetValueStep(1)
+    colsSlider:SetObeyStepOnDrag(true)
+    _G["OneWoW_QoL_BagBarColsSliderLow"]:SetText("1")
+    _G["OneWoW_QoL_BagBarColsSliderHigh"]:SetText("12")
+    colsSlider:SetScript("OnValueChanged", function(self, value)
+        local v = math.floor(value + 0.5)
+        GetSettings().columns = v
+        colsLabel:SetText(string.format("%s: %d", L["BAGBAR_COLUMNS"], v))
+        ns.BagBarModule:ScheduleUpdate()
+    end)
+    cy = cy - 50
+
+    local spacingLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    spacingLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    spacingLabel:SetText(string.format("%s: %d", L["BAGBAR_ICON_SPACING"], s.iconSpacing or 4))
+    spacingLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    cy = cy - spacingLabel:GetStringHeight() - 4
+
+    local spacingSlider = CreateFrame("Slider", "OneWoW_QoL_BagBarSpacingSlider", container, "OptionsSliderTemplate")
+    spacingSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+    spacingSlider:SetWidth(220)
+    spacingSlider:SetMinMaxValues(0, 12)
+    spacingSlider:SetValue(s.iconSpacing or 4)
+    spacingSlider:SetValueStep(1)
+    spacingSlider:SetObeyStepOnDrag(true)
+    _G["OneWoW_QoL_BagBarSpacingSliderLow"]:SetText("0")
+    _G["OneWoW_QoL_BagBarSpacingSliderHigh"]:SetText("12")
+    spacingSlider:SetScript("OnValueChanged", function(self, value)
+        local v = math.floor(value + 0.5)
+        GetSettings().iconSpacing = v
+        spacingLabel:SetText(string.format("%s: %d", L["BAGBAR_ICON_SPACING"], v))
         ns.BagBarModule:ScheduleUpdate()
     end)
     cy = cy - 50
