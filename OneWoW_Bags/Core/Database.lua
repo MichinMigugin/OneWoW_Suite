@@ -4,7 +4,7 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local DB = OneWoW_GUI.DB
-local pairs, ipairs, next, wipe, tinsert = pairs, ipairs, next, wipe, tinsert
+local pairs, ipairs, next, wipe, tinsert, tremove = pairs, ipairs, next, wipe, tinsert, tremove
 
 local defaults = {
     global = {
@@ -156,6 +156,9 @@ function OneWoW_Bags:InitializeDatabase()
                 g.bankColumns = 15
             end
         end },
+        { version = 10, name = "onewow_bags_default_section", run = function(d)
+            self:MigrateOnewowBagsSection(d)
+        end },
     })
 end
 
@@ -276,14 +279,15 @@ function OneWoW_Bags:MigrateCategorySystemV3(db)
         g.recentItemDuration = 120
     end
 
-    local secEquip = "sec_equipment"
-    local secCraft = "sec_crafting"
-    local secHouse = "sec_housing"
+    local SD = OneWoW_Bags.SectionDefaults
+    local secEquip = SD.SEC_EQUIPMENT
+    local secCraft = SD.SEC_CRAFTING
+    local secHouse = SD.SEC_HOUSING
 
     g.categorySections = {
-        [secEquip] = { name = "EQUIPMENT", categories = { "Equipment Sets", "Weapons", "Armor" }, collapsed = false, showHeader = true },
-        [secCraft] = { name = "CRAFTING",  categories = { "Reagents", "Trade Goods", "Tradeskill", "Recipes" }, collapsed = false, showHeader = true },
-        [secHouse] = { name = "HOUSING",   categories = { "Housing" }, collapsed = false, showHeader = true },
+        [secEquip] = { name = "EQUIPMENT", categories = CopyTable(SD.EQUIPMENT_CATEGORIES), collapsed = false, showHeader = true },
+        [secCraft] = { name = "CRAFTING",  categories = CopyTable(SD.CRAFTING_CATEGORIES), collapsed = false, showHeader = true },
+        [secHouse] = { name = "HOUSING",   categories = CopyTable(SD.HOUSING_CATEGORIES), collapsed = false, showHeader = true },
     }
     g.sectionOrder = { secEquip, secCraft, secHouse }
 
@@ -361,6 +365,61 @@ end
 
 function OneWoW_Bags:MigrateItemSortToNone(db)
     db.global.itemSort = "none"
+end
+
+function OneWoW_Bags:MigrateOnewowBagsSection(db)
+    local g = db.global
+    local SD = OneWoW_Bags.SectionDefaults
+    local secOw = SD.SEC_ONEWOW_BAGS
+    local secEquip = SD.SEC_EQUIPMENT
+    local secCraft = SD.SEC_CRAFTING
+    local secHouse = SD.SEC_HOUSING
+    local loc = OneWoW_Bags.Locales and OneWoW_Bags.Locales["enUS"]
+    local secTitle = (loc and loc["SECTION_ONEWOW_BAGS"]) or "ONEWOW BAGS"
+
+    if not g.categorySections[secEquip] then
+        g.categorySections[secEquip] = { name = "EQUIPMENT", categories = CopyTable(SD.EQUIPMENT_CATEGORIES), collapsed = false, showHeader = true }
+    end
+    if not g.categorySections[secCraft] then
+        g.categorySections[secCraft] = { name = "CRAFTING", categories = CopyTable(SD.CRAFTING_CATEGORIES), collapsed = false, showHeader = true }
+    end
+    if not g.categorySections[secHouse] then
+        g.categorySections[secHouse] = { name = "HOUSING", categories = CopyTable(SD.HOUSING_CATEGORIES), collapsed = false, showHeader = true }
+    end
+
+    local order = g.sectionOrder
+    local function orderContains(id)
+        for _, v in ipairs(order) do
+            if v == id then return true end
+        end
+        return false
+    end
+    if not orderContains(secEquip) then tinsert(order, secEquip) end
+    if not orderContains(secCraft) then tinsert(order, secCraft) end
+    if not orderContains(secHouse) then tinsert(order, secHouse) end
+
+    if not g.categorySections[secOw] then
+        local members = SD:BuildOnewowMembers(g)
+        g.categorySections[secOw] = {
+            name = secTitle,
+            categories = members,
+            collapsed = false,
+            showHeader = false,
+        }
+        for _, nm in ipairs(members) do
+            g.disabledCategories[nm] = nil
+        end
+    end
+
+    for i = #order, 1, -1 do
+        if order[i] == secOw then
+            tremove(order, i)
+        end
+    end
+    tinsert(order, 1, secOw)
+
+    wipe(g.displayOrder)
+    SD:ScrubCategoryOrderForSections(g)
 end
 
 function OneWoW_Bags:MigrateCollapsedBankState(db)

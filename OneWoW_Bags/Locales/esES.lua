@@ -66,6 +66,7 @@ OneWoW_Bags.Locales["esES"] = {
     ["BAG_REAGENT"] = "Bolsa de Componentes",
 
     ["CUSTOM_CATEGORIES"] = "Categorias Personalizadas",
+    ["SECTION_ONEWOW_BAGS"] = "ONEWOW BAGS",
     ["CREATE_CATEGORY"] = "Crear Categoria",
     ["DELETE_CATEGORY"] = "Eliminar Categoria",
     ["ADD_ITEM"] = "Anadir Objeto",

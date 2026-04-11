@@ -66,6 +66,7 @@ OneWoW_Bags.Locales["frFR"] = {
     ["BAG_REAGENT"] = "Sac de Composants",
 
     ["CUSTOM_CATEGORIES"] = "Categories Personnalisees",
+    ["SECTION_ONEWOW_BAGS"] = "SACS ONEWOW",
     ["CREATE_CATEGORY"] = "Creer une Categorie",
     ["DELETE_CATEGORY"] = "Supprimer la Categorie",
     ["ADD_ITEM"] = "Ajouter un Objet",

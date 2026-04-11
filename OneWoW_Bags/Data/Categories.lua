@@ -16,8 +16,8 @@ OneWoW_Bags.Categories = {}
 local Categories = OneWoW_Bags.Categories
 
 local CATEGORY_DEFINITIONS = {
-    { name = "1W Junk",          priority = 0   },
-    { name = "1W Upgrades",      priority = 0.5 },
+    { name = "1W Junk",          priority = 1   },
+    { name = "1W Upgrades",      priority = 1   },
     { name = "Recent Items",     priority = 1   },
     { name = "Hearthstone",      priority = 2,   search = "#hearthstone",     searchOrder = 2  },
     { name = "Keystone",         priority = 3,   search = "#keystone",        searchOrder = 8  },

@@ -66,6 +66,7 @@ OneWoW_Bags.Locales["deDE"] = {
     ["BAG_REAGENT"] = "Reagenzientasche",
 
     ["CUSTOM_CATEGORIES"] = "Benutzerdefinierte Kategorien",
+    ["SECTION_ONEWOW_BAGS"] = "ONEWOW TASCHEN",
     ["CREATE_CATEGORY"] = "Kategorie Erstellen",
     ["DELETE_CATEGORY"] = "Kategorie Loschen",
     ["ADD_ITEM"] = "Gegenstand Hinzufugen",

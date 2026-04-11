@@ -50,11 +50,13 @@ SettingsController.appliers = {
         db.global.enableJunkCategory = value
         self.addon:InvalidateCategorization()
         self.addon:RequestLayoutRefresh("bags")
+        self.addon.CategoryManagerUI:Refresh()
     end,
     enableUpgradeCategory = function(self, db, value)
         db.global.enableUpgradeCategory = value
         self.addon:InvalidateCategorization()
         self.addon:RequestLayoutRefresh("bags")
+        self.addon.CategoryManagerUI:Refresh()
     end,
     moveUpgradesToTop = function(self, db, value)
         db.global.moveUpgradesToTop = value

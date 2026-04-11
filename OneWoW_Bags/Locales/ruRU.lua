@@ -66,6 +66,7 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["BAG_REAGENT"] = "Сумка Материалов",
 
     ["CUSTOM_CATEGORIES"] = "Пользовательские Категории",
+    ["SECTION_ONEWOW_BAGS"] = "ONEWOW СУМКИ",
     ["CREATE_CATEGORY"] = "Создать Категорию",
     ["DELETE_CATEGORY"] = "Удалить Категорию",
     ["ADD_ITEM"] = "Добавить Предмет",

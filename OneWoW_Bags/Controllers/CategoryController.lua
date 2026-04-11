@@ -174,6 +174,10 @@ function CategoryController:DeleteSection(id)
         wipe(db.global.displayOrder)
     end
 
+    if id ~= OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS then
+        OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(db.global)
+    end
+
     self:RefreshUI()
 end
 
@@ -218,6 +222,10 @@ function CategoryController:SetSectionMembership(id, categoryName, isMember)
 
     if #db.global.displayOrder > 0 then
         wipe(db.global.displayOrder)
+    end
+
+    if id ~= OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS then
+        OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(db.global)
     end
 
     self:RefreshUI()
@@ -486,6 +494,8 @@ function CategoryController:ImportBaganator()
             end
         end
     end
+
+    OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(db.global)
 
     self:RefreshUI()
     return importedCategories, importedSections

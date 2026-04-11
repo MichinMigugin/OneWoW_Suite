@@ -56,6 +56,10 @@ function BankController:SetExpansionFilter(value)
     self.addon:RequestLayoutRefresh("bank")
 end
 
+function BankController:ToggleCategoryManager()
+    self.addon.CategoryManagerUI:Toggle()
+end
+
 function BankController:OnSearchChanged(text)
     if self.addon.BankGUI then
         self.addon.BankGUI:OnSearchChanged(text)

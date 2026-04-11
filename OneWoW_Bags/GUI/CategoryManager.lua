@@ -31,12 +31,14 @@ local db = setmetatable({}, {
 
 local PE = OneWoW_Bags.PredicateEngine
 local Categories = OneWoW_Bags.Categories
+local SD = OneWoW_Bags.SectionDefaults
 
 local random, max, floor, time = math.random, math.max, math.floor, time
 local pairs, ipairs = pairs, ipairs
 local GameTooltip = GameTooltip
 local tostring, tonumber, format = tostring, tonumber, format
 local tinsert, tremove, wipe = tinsert, tremove, wipe
+local sort = table.sort
 
 OneWoW_Bags.CategoryManagerUI = {}
 local CatMgrUI = OneWoW_Bags.CategoryManagerUI
@@ -52,14 +54,6 @@ local rightTopWrapper    = nil
 local rightItemWrapper   = nil
 local leftWrapper        = nil
 local selectedCatKey     = nil  -- nil | "builtin:Name" | "section:ID" | customID
-
-local BUILTIN_NAMES = {
-    "Recent Items", "Hearthstone", "Keystone", "Potions", "Food",
-    "Consumables", "Quest Items", "Equipment Sets", "Weapons", "Armor",
-    "Reagents", "Trade Goods", "Tradeskill", "Recipes", "Housing",
-    "Gems", "Item Enhancement", "Containers", "Keys", "Miscellaneous",
-    "Battle Pets", "Toys", "Other", "Junk",
-}
 
 local BUILTIN_LOCALE_KEYS = {
     ["Recent Items"]     = "CAT_RECENT_ITEMS",
@@ -86,9 +80,12 @@ local BUILTIN_LOCALE_KEYS = {
     ["Toys"]             = "CAT_TOYS",
     ["Other"]            = "CAT_OTHER",
     ["Junk"]             = "CAT_JUNK",
+    ["1W Junk"]          = "CAT_1W_JUNK",
+    ["1W Upgrades"]      = "CAT_1W_UPGRADES",
 }
 
 local BUILTIN_PRIORITY = {
+    ["1W Junk"]=1,          ["1W Upgrades"]=1,
     ["Recent Items"]=1,     ["Hearthstone"]=2,      ["Keystone"]=3,
     ["Potions"]=4,          ["Food"]=5,             ["Consumables"]=6,
     ["Quest Items"]=7,      ["Equipment Sets"]=8,   ["Weapons"]=9,
@@ -131,23 +128,37 @@ local BAGANATOR_CAT_MAP = {
 -- ============================================================
 -- Helpers
 -- ============================================================
+local function GetEffectiveBuiltinNamesList()
+    return SD:GetEffectiveBuiltinNames(GetDB().global)
+end
+
 local function EnsureDefaultSection()
     local sections = db.global.categorySections
     local sectOrder = db.global.sectionOrder
 
     if #sectOrder > 0 then return end
 
-    local secEquip = "sec_equipment"
-    local secCraft = "sec_crafting"
-    local secHouse = "sec_housing"
+    local secEquip = SD.SEC_EQUIPMENT
+    local secCraft = SD.SEC_CRAFTING
+    local secHouse = SD.SEC_HOUSING
+    local secOw = SD.SEC_ONEWOW_BAGS
 
-    sections[secEquip] = { name = "EQUIPMENT", categories = { "Equipment Sets", "Weapons", "Armor" }, collapsed = false, showHeader = true }
-    sections[secCraft] = { name = "CRAFTING",  categories = { "Reagents", "Trade Goods", "Tradeskill", "Recipes" }, collapsed = false, showHeader = true }
-    sections[secHouse] = { name = "HOUSING",   categories = { "Housing" }, collapsed = false, showHeader = true }
+    sections[secEquip] = { name = "EQUIPMENT", categories = CopyTable(SD.EQUIPMENT_CATEGORIES), collapsed = false, showHeader = true }
+    sections[secCraft] = { name = "CRAFTING",  categories = CopyTable(SD.CRAFTING_CATEGORIES), collapsed = false, showHeader = true }
+    sections[secHouse] = { name = "HOUSING",   categories = CopyTable(SD.HOUSING_CATEGORIES), collapsed = false, showHeader = true }
 
-    sectOrder[1] = secEquip
-    sectOrder[2] = secCraft
-    sectOrder[3] = secHouse
+    local members = SD:BuildOnewowMembers(db.global)
+    sections[secOw] = {
+        name = L["SECTION_ONEWOW_BAGS"],
+        categories = members,
+        collapsed = false,
+        showHeader = false,
+    }
+
+    sectOrder[1] = secOw
+    sectOrder[2] = secEquip
+    sectOrder[3] = secCraft
+    sectOrder[4] = secHouse
 end
 
 local function ReleaseWrapper(w)
@@ -461,7 +472,7 @@ function CatMgrUI:RefreshRight()
         infoLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local allCatNames = {}
-        for _, n in ipairs(BUILTIN_NAMES) do tinsert(allCatNames, n) end
+        for _, n in ipairs(GetEffectiveBuiltinNamesList()) do tinsert(allCatNames, n) end
         for _, cd in pairs(db.global.customCategoriesV2) do tinsert(allCatNames, cd.name) end
 
         local memberSet = {}
@@ -1109,7 +1120,7 @@ function CatMgrUI:RefreshLeft()
 
     -- Build root category list (not in any section)
     local rootCats = {}
-    for _, name in ipairs(BUILTIN_NAMES) do
+    for _, name in ipairs(GetEffectiveBuiltinNamesList()) do
         if not inSection[name] then
             tinsert(rootCats, { name=name, isBuiltin=true, key="builtin:"..name })
         end
@@ -1277,12 +1288,6 @@ function CatMgrUI:RefreshLeft()
         yOffset = yOffset + 30
     end
 
-    -- Render root categories
-    for i, entry in ipairs(rootCats) do
-        RenderCatRow(entry, i, #rootCats, 0)
-    end
-
-    -- Render sections
     local totalSections = #sectOrder
     for secIdx, sectionID in ipairs(sectOrder) do
         local section = sections[sectionID]
@@ -1457,6 +1462,10 @@ function CatMgrUI:RefreshLeft()
         end
     end
 
+    for i, entry in ipairs(rootCats) do
+        RenderCatRow(entry, i, #rootCats, 0)
+    end
+
     local totalH = yOffset + 4
     leftWrapper:SetHeight(max(totalH, 40))
     if leftScrollFrame then
@@ -1573,13 +1582,8 @@ function CatMgrUI:Show()
     leftPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     leftPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local leftTitleLbl = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    leftTitleLbl:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 10, -8)
-    leftTitleLbl:SetText(L["CUSTOM_CATEGORIES"] or "Categories")
-    leftTitleLbl:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
     local leftInner = CreateFrame("Frame", nil, leftPanel)
-    leftInner:SetPoint("TOPLEFT",     leftPanel, "TOPLEFT",     4, -26)
+    leftInner:SetPoint("TOPLEFT",     leftPanel, "TOPLEFT",     4, -8)
     leftInner:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -4,  4)
 
     leftScrollFrame, leftScrollContent = OneWoW_GUI:CreateScrollFrame(leftInner, {

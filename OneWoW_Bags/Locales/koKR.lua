@@ -66,6 +66,7 @@ OneWoW_Bags.Locales["koKR"] = {
     ["BAG_REAGENT"] = "재료 가방",
 
     ["CUSTOM_CATEGORIES"] = "사용자 분류",
+    ["SECTION_ONEWOW_BAGS"] = "ONEWOW 가방",
     ["CREATE_CATEGORY"] = "분류 만들기",
     ["DELETE_CATEGORY"] = "분류 삭제",
     ["ADD_ITEM"] = "아이템 추가",
