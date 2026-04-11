@@ -193,6 +193,7 @@ function OneWoW_GUI:CreateConfirmDialog(config)
     })
 
     local headingLabel = result.contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    headingLabel._owBaseSize = 16
     OneWoW_GUI:SafeSetFont(headingLabel, OneWoW_GUI:GetFont(), 16)
     headingLabel:SetPoint("TOP", result.contentFrame, "TOP", 0, -headingPad)
     headingLabel:SetText(headingText)
@@ -200,6 +201,7 @@ function OneWoW_GUI:CreateConfirmDialog(config)
     result.titleLabel = headingLabel
 
     local msgLabel = result.contentFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    msgLabel._owBaseSize = 12
     OneWoW_GUI:SafeSetFont(msgLabel, OneWoW_GUI:GetFont(), 12)
     msgLabel:SetPoint("TOP", headingLabel, "BOTTOM", 0, -msgPad)
     msgLabel:SetWidth(dialogWidth - 40)
@@ -489,6 +491,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     listPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local listTitle = listPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    listTitle._owBaseSize = 12
     OneWoW_GUI:SafeSetFont(listTitle, OneWoW_GUI:GetFont(), 12)
     listTitle:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 10, -10)
     listTitle:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -10, -10)
@@ -531,6 +534,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     detailPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local detailTitle = detailPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    detailTitle._owBaseSize = 12
     OneWoW_GUI:SafeSetFont(detailTitle, OneWoW_GUI:GetFont(), 12)
     detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -10)
     detailTitle:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
@@ -564,6 +568,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     leftStatusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local leftStatusText = leftStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    leftStatusText._owBaseSize = 10
     OneWoW_GUI:SafeSetFont(leftStatusText, OneWoW_GUI:GetFont(), 10)
     leftStatusText:SetPoint("LEFT", leftStatusBar, "LEFT", 10, 0)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -578,6 +583,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     rightStatusBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local rightStatusText = rightStatusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    rightStatusText._owBaseSize = 10
     OneWoW_GUI:SafeSetFont(rightStatusText, OneWoW_GUI:GetFont(), 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -761,6 +767,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
             btn.icon = icon
         else
             local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            text._owBaseSize = 10
             OneWoW_GUI:SafeSetFont(text, OneWoW_GUI:GetFont(), 10)
             text:SetPoint("CENTER")
             text:SetText(col.label or "")
@@ -1112,6 +1119,7 @@ function OneWoW_GUI:CreateOverviewPanel(parent, options)
     panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local titleFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    titleFS._owBaseSize = 12
     OneWoW_GUI:SafeSetFont(titleFS, OneWoW_GUI:GetFont(), 12)
     titleFS:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -6)
     titleFS:SetText(title)

@@ -287,6 +287,7 @@ end
 
 function OneWoW_GUI:CreateFS(parent, size, layer)
     local fs = parent:CreateFontString(nil, layer or "OVERLAY")
+    fs._owBaseSize = size or 12
     self:SafeSetFont(fs, self:GetFont(), size or 12)
     return fs
 end

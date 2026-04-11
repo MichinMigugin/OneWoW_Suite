@@ -125,7 +125,8 @@ local function CreateSettingToggleRows(dsc, toggleList, toggleBtnSets, isEnabled
 
         tinsert(toggleBtnSets, { onBtn = onBtn, offBtn = offBtn, label = toggleLabel, statusPrefix = statusPfx, statusVal = statusVal, key = capturedKey, refresh = refresh })
 
-        yOffset = yOffset - 22 - 10
+        local rowH = math.max(22, toggleLabel:GetStringHeight() + 4)
+        yOffset = yOffset - rowH - 10
     end
 
     return yOffset
@@ -200,7 +201,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
         detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
 
-    yOffset = yOffset - 24
+    yOffset = yOffset - math.max(24, reqLabel:GetStringHeight() + 8)
 
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
     local cnSettings = db and db.tooltips and db.tooltips.customnotes or {}
@@ -472,7 +473,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
         vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_NOT_DETECTED"])
         vendorDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
-    yOffset = yOffset - 24
+    yOffset = yOffset - math.max(24, vendorReqLabel:GetStringHeight() + 8)
 
     local instReqLabel = OneWoW_GUI:CreateFS(dsc, 12)
     instReqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -489,7 +490,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
         instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_NOT_DETECTED"])
         instDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
-    yOffset = yOffset - 24
+    yOffset = yOffset - math.max(24, instReqLabel:GetStringHeight() + 8)
 
     dsc:SetHeight(math.abs(yOffset) + 20)
     OneWoW_GUI:ApplyFontToFrame(dsc)
@@ -562,7 +563,7 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
         detectedValue:SetText(L["TIPS_PLAYERMOUNTS_NOT_DETECTED"])
         detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
-    yOffset = yOffset - 24
+    yOffset = yOffset - math.max(24, reqLabel:GetStringHeight() + 8)
 
     local noteLabel = OneWoW_GUI:CreateFS(dsc, 10)
     noteLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -1216,6 +1217,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     yOffset = statusBlock.getBottomY() - 14
 
     local valSettings = OneWoW.db.global.settings.tooltips.value
+    local fontOffset = math.max(0, OneWoW_GUI:GetFontSizeOffset() or 0)
 
     local function SyncExternalTooltips()
         if OneWoW.ExternalTooltipSync and OneWoW.ExternalTooltipSync.SyncAll then
@@ -1315,7 +1317,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
         end,
         getActiveValue = function() return valSettings.ahPriceSource or "onewow" end,
     })
-    yOffset = yOffset - 32
+    yOffset = yOffset - (32 + fontOffset)
 
     local ahSrcDesc = OneWoW_GUI:CreateFS(dsc, 10)
     ahSrcDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -1394,7 +1396,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     tsmStrEb:SetScript("OnEnterPressed", function(self)
         self:ClearFocus()
     end)
-    yOffset = yOffset - 32
+    yOffset = yOffset - (32 + fontOffset)
 
     local tsmStrDesc = OneWoW_GUI:CreateFS(dsc, 10)
     tsmStrDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -1440,7 +1442,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
         auctionsDetVal:SetText(L["TIPS_VALUE_AUCTIONS_NOT_DETECTED"])
         auctionsDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
-    yOffset = yOffset - 24
+    yOffset = yOffset - math.max(24, auctionsReqLabel:GetStringHeight() + 8)
 
     dsc:SetHeight(math.abs(yOffset) + 20)
     OneWoW_GUI:ApplyFontToFrame(dsc)

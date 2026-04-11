@@ -110,6 +110,7 @@ function OneWoW_GUI:CreateHeader(parent, options)
     local text = options.text or ""
     local yOffset = options.yOffset or -OneWoW_GUI:GetSpacing("MD")
     local header = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    header._owBaseSize = 16
     OneWoW_GUI:SafeSetFont(header, OneWoW_GUI:GetFont(), 16)
     header:SetPoint("TOPLEFT", OneWoW_GUI:GetSpacing("MD"), yOffset)
     header:SetText(text)
@@ -134,6 +135,7 @@ function OneWoW_GUI:CreateSection(parent, options)
     local title = options.title or ""
     local yOffset = options.yOffset or 0
     local header = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    header._owBaseSize = 12
     OneWoW_GUI:SafeSetFont(header, OneWoW_GUI:GetFont(), 12)
     header:SetPoint("TOPLEFT", parent, "TOPLEFT", OneWoW_GUI:GetSpacing("MD"), yOffset)
     header:SetText(title)
@@ -166,6 +168,7 @@ function OneWoW_GUI:CreateTitleBar(parent, options)
     titleBg:SetFrameLevel(parent:GetFrameLevel() + 1)
 
     titleBg._titleText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    titleBg._titleText._owBaseSize = 12
     OneWoW_GUI:SafeSetFont(titleBg._titleText, OneWoW_GUI:GetFont(), 12)
 
     if showBrand then
@@ -187,6 +190,7 @@ function OneWoW_GUI:CreateTitleBar(parent, options)
         end)
 
         local brandText = titleBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        brandText._owBaseSize = 12
         OneWoW_GUI:SafeSetFont(brandText, OneWoW_GUI:GetFont(), 12)
         brandText:SetPoint("LEFT", brandIcon, "RIGHT", 4, 0)
         brandText:SetText("OneWoW")
@@ -224,12 +228,15 @@ function OneWoW_GUI:CreateSectionHeader(parent, options)
     section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local titleText = section:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    titleText._owBaseSize = 12
     OneWoW_GUI:SafeSetFont(titleText, OneWoW_GUI:GetFont(), 12)
     titleText:SetPoint("LEFT", 12, 0)
     titleText:SetText(title)
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    section.bottomY = yOffset - 30
+    local sectionHeight = math.max(30, titleText:GetStringHeight() + 14)
+    section:SetHeight(sectionHeight)
+    section.bottomY = yOffset - sectionHeight
 
     return section
 end
