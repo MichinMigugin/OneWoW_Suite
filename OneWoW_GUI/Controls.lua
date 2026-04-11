@@ -94,6 +94,11 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
         descFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, newYOffset)
         descFs:SetJustifyH("LEFT")
         descFs:SetWordWrap(true)
+        local parentW = parent:GetWidth()
+        local wrapW = (parentW and parentW > Constants.GUI.TOGGLE_ROW_DESC_WRAP_MIN)
+            and (parentW - 24)
+            or Constants.GUI.TOGGLE_ROW_DESC_WRAP_FALLBACK
+        descFs:SetWidth(wrapW)
         descFs:SetText(description)
         descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         newYOffset = newYOffset - descFs:GetStringHeight() - 6

@@ -94,6 +94,8 @@ OneWoW_GUI.Constants = {
         TAB_BUTTON_HEIGHT = 30,
         TOGGLE_BUTTON_WIDTH  = 50,
         TOGGLE_BUTTON_HEIGHT = 22,
+        TOGGLE_ROW_DESC_WRAP_MIN = 80,
+        TOGGLE_ROW_DESC_WRAP_FALLBACK = 280,
         TITLEBAR_HEIGHT = 20,
     },
 

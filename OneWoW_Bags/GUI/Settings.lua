@@ -274,8 +274,6 @@ local function BuildGeneralTab(sc, L, db, GUI)
         end,
     })
 
-    placeY = placeY - 6
-
     placeY = BuildSliderRow(placeContainer, L["SETTING_RECENT_DURATION"], placeY, {
         minVal = 15, maxVal = 600, step = 15, currentVal = db.global.recentItemDuration,
         onChange = function(val)
