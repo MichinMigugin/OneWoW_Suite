@@ -422,7 +422,7 @@ function BankGUI:UpdateWindowWidth()
         controller:UpdateFixedWidth({
             mainWindow = MainWindow,
             columnsKey = "bankColumns",
-            defaultColumns = 14,
+            defaultColumns = 15,
             hideScrollKey = "bankHideScrollBar",
             outerPadding = OneWoW_GUI:GetSpacing("XS"),
         })
@@ -478,7 +478,7 @@ function BankGUI:RefreshLayout()
             if ShouldShowPurchasePrompt() then
                 return PURCHASE_PROMPT_HEIGHT
             end
-            local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
+            local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 15)
             local viewMode = db.global.bankViewMode
             local layoutHeight
             local categoryViewContext = controller:CreateViewContext({

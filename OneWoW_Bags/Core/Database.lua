@@ -43,7 +43,7 @@ local defaults = {
         showEmptySlots = true,
         mainFramePosition = {},
         bagColumns = 15,
-        bankColumns = 14,
+        bankColumns = 15,
         compactCategories = false,
         enableInventorySlots = false,
         itemSort = "none",
@@ -148,6 +148,12 @@ function OneWoW_Bags:InitializeDatabase()
             end
             if type(g.bankColumns) == "number" and g.bankColumns < 10 then
                 g.bankColumns = 10
+            end
+        end },
+        { version = 9, name = "bank_columns_minimum_15", run = function(d)
+            local g = d.global
+            if type(g.bankColumns) == "number" and g.bankColumns < 15 then
+                g.bankColumns = 15
             end
         end },
     })
