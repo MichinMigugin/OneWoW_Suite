@@ -28,24 +28,23 @@ end
 
 function BagsController:GetViewMode()
     local db = self.addon:GetDB()
-    return db and db.global.viewMode or "list"
+    return db.global.viewMode
 end
 
 function BagsController:SetViewMode(mode)
     local db = self.addon:GetDB()
-    if not db or db.global.viewMode == mode then return end
+    if db.global.viewMode == mode then return end
     db.global.viewMode = mode
     self.addon:RequestLayoutRefresh("bags")
 end
 
 function BagsController:GetSelectedBag()
     local db = self.addon:GetDB()
-    return db and db.global.selectedBag or nil
+    return db.global.selectedBag
 end
 
 function BagsController:ToggleSelectedBag(bagIndex)
     local db = self.addon:GetDB()
-    if not db then return end
 
     if db.global.selectedBag == bagIndex then
         db.global.selectedBag = nil
@@ -65,17 +64,11 @@ end
 
 function BagsController:GetShowEmptySlots()
     local db = self.addon:GetDB()
-    if not db then return true end
-    local showEmptySlots = db.global.showEmptySlots
-    if showEmptySlots == nil then
-        return true
-    end
-    return showEmptySlots
+    return db.global.showEmptySlots
 end
 
 function BagsController:ToggleEmptySlots()
     local db = self.addon:GetDB()
-    if not db then return end
     db.global.showEmptySlots = not db.global.showEmptySlots
     self.addon:RequestLayoutRefresh("bags")
 end

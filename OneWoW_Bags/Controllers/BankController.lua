@@ -16,29 +16,23 @@ end
 
 function BankController:GetViewMode()
     local db = self.addon:GetDB()
-    return db and db.global.bankViewMode or "list"
+    return db.global.bankViewMode
 end
 
 function BankController:SetViewMode(mode)
     local db = self.addon:GetDB()
-    if not db or db.global.bankViewMode == mode then return end
+    if db.global.bankViewMode == mode then return end
     db.global.bankViewMode = mode
     self.addon:RequestLayoutRefresh("bank")
 end
 
 function BankController:GetShowEmptySlots()
     local db = self.addon:GetDB()
-    if not db then return true end
-    local showEmptySlots = db.global.showEmptySlots
-    if showEmptySlots == nil then
-        return true
-    end
-    return showEmptySlots
+    return db.global.showEmptySlots
 end
 
 function BankController:ToggleEmptySlots()
     local db = self.addon:GetDB()
-    if not db then return end
     db.global.showEmptySlots = not db.global.showEmptySlots
     self.addon:RequestLayoutRefresh("bank")
 end
@@ -68,12 +62,11 @@ end
 
 function BankController:GetSelectedTab()
     local db = self.addon:GetDB()
-    return db and db.global.bankSelectedTab or nil
+    return db.global.bankSelectedTab
 end
 
 function BankController:ToggleSelectedTab(tabID)
     local db = self.addon:GetDB()
-    if not db then return end
 
     if db.global.bankSelectedTab == tabID then
         db.global.bankSelectedTab = nil
@@ -89,12 +82,12 @@ end
 
 function BankController:IsWarbandMode()
     local db = self.addon:GetDB()
-    return db and db.global.bankShowWarband == true or false
+    return db.global.bankShowWarband == true
 end
 
 function BankController:SetBankMode(showWarband)
     local db = self.addon:GetDB()
-    if not db or db.global.bankShowWarband == showWarband then return end
+    if db.global.bankShowWarband == showWarband then return end
     if showWarband == false and self.addon.isWarbandOnlyBankAccess then return end
     db.global.bankShowWarband = showWarband
     if self.addon.BankBar then

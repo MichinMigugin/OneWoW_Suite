@@ -14,29 +14,23 @@ end
 
 function GuildBankController:GetViewMode()
     local db = self.addon:GetDB()
-    return db and db.global.guildBankViewMode or "list"
+    return db.global.guildBankViewMode
 end
 
 function GuildBankController:SetViewMode(mode)
     local db = self.addon:GetDB()
-    if not db or db.global.guildBankViewMode == mode then return end
+    if db.global.guildBankViewMode == mode then return end
     db.global.guildBankViewMode = mode
     self.addon:RequestLayoutRefresh("guild")
 end
 
 function GuildBankController:GetShowEmptySlots()
     local db = self.addon:GetDB()
-    if not db then return true end
-    local showEmptySlots = db.global.showEmptySlots
-    if showEmptySlots == nil then
-        return true
-    end
-    return showEmptySlots
+    return db.global.showEmptySlots
 end
 
 function GuildBankController:ToggleEmptySlots()
     local db = self.addon:GetDB()
-    if not db then return end
     db.global.showEmptySlots = not db.global.showEmptySlots
     self.addon:RequestLayoutRefresh("guild")
 end
@@ -49,12 +43,11 @@ end
 
 function GuildBankController:GetSelectedTab()
     local db = self.addon:GetDB()
-    return db and db.global.guildBankSelectedTab or nil
+    return db.global.guildBankSelectedTab
 end
 
 function GuildBankController:ToggleSelectedTab(tabID)
     local db = self.addon:GetDB()
-    if not db then return end
 
     if db.global.guildBankSelectedTab == tabID then
         db.global.guildBankSelectedTab = nil

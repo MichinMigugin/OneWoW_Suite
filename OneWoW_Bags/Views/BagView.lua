@@ -57,6 +57,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
         if #buttons > 0 and (selectedBag == nil or bagID == selectedBag) then
             sortButtons(buttons)
             local section = acquireSection(contentFrame)
+            section:ClearAllPoints()
             section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
             section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
             section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))

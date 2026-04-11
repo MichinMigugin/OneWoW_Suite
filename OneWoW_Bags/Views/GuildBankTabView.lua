@@ -64,6 +64,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
             if #buttons > 0 then
                 sortButtons(buttons)
                 local section = acquireSection(contentFrame)
+                section:ClearAllPoints()
                 section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
                 section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
                 section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -71,7 +72,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
 
                 local tabName = GetGuildBankTabInfo(tabID)
                 if not tabName or tabName == "" then
-                    tabName = L["GUILD_BANK_TAB"] and L["GUILD_BANK_TAB"]:format(tabID) or ("Tab " .. tabID)
+                    tabName = L["GUILD_BANK_TAB"]:format(tabID)
                 end
 
                 section.title:SetText(tabName)

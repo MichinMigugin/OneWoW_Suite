@@ -3,39 +3,12 @@ local _, OneWoW_Bags = ...
 local ipairs, pairs = ipairs, pairs
 local random, time = math.random, time
 local tonumber, tostring = tonumber, tostring
-local tinsert, tremove, wipe, sort = tinsert, tremove, wipe, sort
+local tinsert, tremove, wipe = tinsert, tremove, wipe
 local strtrim = strtrim
 local string_lower = string.lower
 
 OneWoW_Bags.CategoryController = {}
 local CategoryController = OneWoW_Bags.CategoryController
-
-local BUILTIN_PRIORITY = {
-    ["Recent Items"] = 1,
-    ["Hearthstone"] = 2,
-    ["Keystone"] = 3,
-    ["Potions"] = 4,
-    ["Food"] = 5,
-    ["Consumables"] = 6,
-    ["Quest Items"] = 7,
-    ["Equipment Sets"] = 8,
-    ["Weapons"] = 9,
-    ["Armor"] = 10,
-    ["Reagents"] = 11,
-    ["Trade Goods"] = 12,
-    ["Tradeskill"] = 13,
-    ["Recipes"] = 14,
-    ["Housing"] = 15,
-    ["Gems"] = 16,
-    ["Item Enhancement"] = 17,
-    ["Containers"] = 18,
-    ["Keys"] = 19,
-    ["Miscellaneous"] = 20,
-    ["Battle Pets"] = 21,
-    ["Toys"] = 22,
-    ["Junk"] = 90,
-    ["Other"] = 98,
-}
 
 local BAGANATOR_CAT_MAP = {
     ["default_auto_recents"] = "Recent Items",

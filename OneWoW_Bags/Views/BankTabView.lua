@@ -70,12 +70,13 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
             if #buttons > 0 then
                 sortButtons(buttons)
                 local section = acquireSection(contentFrame)
+                section:ClearAllPoints()
                 section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
                 section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
                 section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-                local tabName = L["BANK_TAB"] and L["BANK_TAB"]:format(tabIdx) or ("Tab " .. tabIdx)
+                local tabName = L["BANK_TAB"]:format(tabIdx)
                 if tabDataList and tabDataList[tabIdx] and tabDataList[tabIdx].name and tabDataList[tabIdx].name ~= "" then
                     tabName = tabDataList[tabIdx].name
                 end

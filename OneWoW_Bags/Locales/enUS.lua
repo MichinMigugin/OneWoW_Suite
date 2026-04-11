@@ -3,7 +3,6 @@ local _, OneWoW_Bags = ...
 OneWoW_Bags.Locales = OneWoW_Bags.Locales or {}
 OneWoW_Bags.Locales["enUS"] = {
     ["ADDON_TITLE"] = "Bags",
-    ["ADDON_SUBTITLE"] = "Inventory Management and Organization",
 
     ["SETTINGS"] = "Settings",
     ["STATUS"] = "Status",
@@ -162,8 +161,6 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SHOPPING_LIST"] = "Shopping List",
     ["SHOPPING_LIST_DESC"] = "Open the Shopping List",
 
-    ["SORT_ALPHABETICAL"] = "Alphabetical",
-
     ["BUILTIN_CATEGORIES"] = "Built-in Categories",
     ["CATEGORY_DRAG_HINT"] = "Drop item here to assign",
 
@@ -294,8 +291,6 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SETTING_BANK_LOCK"] = "Lock Window Position",
     ["DESC_BANK_LOCK"] = "Prevent the bank window from being moved.",
 
-    ["CAT_ONEWOW_JUNK"] = "1W Junk",
-    ["CAT_ONEWOW_UPGRADES"] = "1W Upgrades",
     ["CAT_1W_JUNK"] = "1W Junk",
     ["CAT_1W_UPGRADES"] = "1W Upgrades",
 
@@ -336,9 +331,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["PRIORITY_MAX"] = "Max",
 
     ["COLOR"] = "Color",
-    ["COLOR_PICK"] = "Pick Color",
     ["COLOR_CLEAR"] = "Clear",
-    ["COLOR_HEX"] = "Hex Color:",
 
     ["HIDE_IN"] = "Hide In",
     ["HIDE_BACKPACK"] = "Backpack",
@@ -349,7 +342,6 @@ OneWoW_Bags.Locales["enUS"] = {
     ["ADDED_ITEMS_DESC"] = "Items manually assigned to this category override normal classification.",
     ["ADDED_ITEMS_NONE"] = "No items manually added.",
 
-    ["CATEGORY_TYPE_AUTO"] = "Automatic",
     ["CATEGORY_TYPE_BUILTIN"] = "Built-in",
     ["CATEGORY_TYPE_CUSTOM"] = "Custom",
     ["CATEGORY_TYPE_TSM"] = "TSM",
@@ -360,14 +352,10 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SETTING_STACK_ITEMS"] = "Stack Identical Items",
     ["DESC_STACK_ITEMS"] = "Group identical items into a single slot showing combined count in category view.",
 
-    ["SEARCH_HELP_TITLE"] = "Search Expression Help",
     ["SEARCH_HELP_DESC"] = "Use search keywords with operators to match items automatically.",
     ["SEARCH_HELP_PLACEHOLDER"] = "#battlepet&!#collected",
     ["SEARCH_HELP_KEYWORDS"] = "Keywords: #pet #mount #toy #collected #soulbound #boe #boa #junk #trash #gear #weapon #armor #consumable #potion #food #reagent #recipe #gem #quest #hearthstone #keystone #new #recent #locked #charges",
     ["SEARCH_HELP_QUALITY"] = "Quality: #poor #grey #gray #common #uncommon #rare #epic #legendary",
-    ["SEARCH_HELP_SLOTS"] = "Slots: #head #shoulder #chest #waist #legs #feet #wrist #hands #ring #trinket #back #shield",
-    ["SEARCH_HELP_ARMOR"] = "Armor: #cloth #leather #mail #plate",
-    ["SEARCH_HELP_EXPANSION"] = "Expansion: #classic #tbc #wrath #cata #mists #wod #legion #bfa #shadowlands #dragonflight #warwithin #midnight",
     ["SEARCH_HELP_OPERATORS"] = "Operators: & (and), | (or), ! (not), () grouping",
     ["SEARCH_HELP_ILVL"] = "Item Level: >400, <200, 200-300, >=350",
     ["SEARCH_HELP_EXAMPLE"] = "Example: (#pet|#mount|#toy)&!#collected",
@@ -376,9 +364,6 @@ OneWoW_Bags.Locales["enUS"] = {
     ["TSM_IMPORT_SUCCESS"] = "Imported %d categories from TradeSkillMaster.",
     ["TSM_IMPORT_NONE"] = "No TSM data found. Is TradeSkillMaster installed?",
     ["TSM_NOT_INSTALLED"] = "TradeSkillMaster is not installed.",
-
-    ["DIVIDER_ADD"] = "Add Divider",
-    ["DISPLAY_ORDER"] = "Display Order",
 
     ["SETTING_MOVE_UPGRADES_TOP"] = "Pin Recent Items to Top",
     ["DESC_MOVE_UPGRADES_TOP"] = "Keep the Recent Items category above the rest of the layout (Category view).",
@@ -445,6 +430,17 @@ OneWoW_Bags.Locales["enUS"] = {
     ["CAT_DESC_OTHER"] = "Fallback for items that don't match any other category",
     ["CAT_DESC_JUNK"] = "Grey quality (Poor) items (#poor)",
 
+    ["LOADED"] = "Loaded",
+    ["PET_TYPE_PREFIX"] = "Type ",
+    ["COUNT_PREFIX"] = "x",
+    ["EXPANSION_FALLBACK"] = "Expansion %d",
+    ["BANK_TAB"] = "Tab %d",
+    ["UNKNOWN_EXPANSION"] = "Unknown",
+    ["QUALITY_PREFIX"] = "Quality ",
+    ["BANK_WARBAND_TITLE"] = "Warband Bank",
+    ["ADDON_CHAT_PREFIX"] = "OneWoW Bags:",
+    ["BAGANATOR_IMPORT_WITH_SECTIONS"] = "Imported %d |4category:categories; and %d |4section:sections; from Baganator.",
+    ["PLACEHOLDER_ITEM_SUBTYPE"] = "Decor",
 }
 
 OneWoW_Bags.L = {}

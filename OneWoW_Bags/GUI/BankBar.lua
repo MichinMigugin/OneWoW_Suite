@@ -7,6 +7,7 @@ local L = OneWoW_Bags.L
 local BankTypes = OneWoW_Bags.BankTypes
 local BankSet = OneWoW_Bags.BankSet
 local WH = OneWoW_Bags.WindowHelpers
+local BH = OneWoW_Bags.BarHelpers
 
 local pairs, ipairs = pairs, ipairs
 
@@ -34,13 +35,7 @@ end
 function BankBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
 
-    bagsBarFrame = CreateFrame("Frame", "OneWoW_BankBagsBar", parent, "BackdropTemplate")
-    bagsBarFrame:SetHeight(BAR_HEIGHT)
-    bagsBarFrame:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
-    bagsBarFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    bagsBarFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    bagsBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    bagsBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    bagsBarFrame = BH:CreateBarFrame(parent, "OneWoW_BankBagsBar", BAR_HEIGHT)
 
     local leftInsetCreate, rightInsetCreate = WH:GetItemGridChromeInsets(GetDB().global.bankHideScrollBar)
 
@@ -66,14 +61,7 @@ function BankBar:Create(parent)
     end)
     bagsBarFrame.depositGoldBtn = depositGoldBtn
 
-    local goldText = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    goldText:SetPoint("RIGHT", depositGoldBtn, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
-    bagsBarFrame.goldText = goldText
-
-    local freeSlots = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    freeSlots:SetPoint("RIGHT", goldText, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
-    freeSlots:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    bagsBarFrame.freeSlots = freeSlots
+    BH:CreateGoldDisplay(bagsBarFrame, depositGoldBtn)
 
     local depositReagentsBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_DEPOSIT_REAGENTS"] or "Deposit Reagents", height = 22 })
     depositReagentsBtn:SetPoint("LEFT", bagsBarFrame, "LEFT", leftInsetCreate, ROW2_Y)
@@ -165,11 +153,7 @@ function BankBar:BuildTabButtons()
     local db = GetDB()
     local showWarband = db.global.bankShowWarband
 
-    for _, btn in pairs(tabButtons) do
-        btn:Hide()
-        btn:ClearAllPoints()
-        btn:SetParent(UIParent)
-    end
+    BH:RecycleTabButtons(tabButtons)
     tabButtons = {}
 
     local bagList = showWarband and BankTypes:GetWarbandTabIDs() or BankTypes:GetBankTabIDs()
@@ -337,17 +321,7 @@ function BankBar:GetTabData(bagID, tabIndex)
 end
 
 function BankBar:UpdateTabHighlights()
-    local db = GetDB()
-    local selected = db.global.bankSelectedTab
-    for bagID, btn in pairs(tabButtons) do
-        if btn._skinBorder then
-            if selected ~= nil and selected == bagID then
-                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            else
-                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-            end
-        end
-    end
+    BH:UpdateTabHighlights(tabButtons, GetDB().global.bankSelectedTab)
 end
 
 function BankBar:UpdateBankTypeButtons()
@@ -417,8 +391,7 @@ function BankBar:UpdateGold()
 end
 
 function BankBar:UpdateFreeSlots(free, total)
-    if not bagsBarFrame or not bagsBarFrame.freeSlots then return end
-    bagsBarFrame.freeSlots:SetText(string.format("%d/%d", free, total))
+    BH:UpdateFreeSlots(bagsBarFrame, free, total)
 end
 
 function BankBar:GetFrame()
@@ -432,10 +405,7 @@ function BankBar:SetShown(show)
 end
 
 function BankBar:Reset()
-    if bagsBarFrame then
-        bagsBarFrame:Hide()
-        bagsBarFrame:SetParent(UIParent)
-    end
+    BH:ResetBar(bagsBarFrame)
     bagsBarFrame = nil
     tabButtons = {}
 end

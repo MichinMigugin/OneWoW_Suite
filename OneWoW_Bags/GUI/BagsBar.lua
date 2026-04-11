@@ -418,7 +418,7 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
     countText:SetPoint("RIGHT", tf, "RIGHT", -4, 0)
     countText:SetJustifyH("RIGHT")
     countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    countText:SetText("x" .. countValue)
+    countText:SetText(L["COUNT_PREFIX"] .. countValue)
     tf.countText = countText
 
     tf.trackType = entry.type
@@ -468,7 +468,7 @@ function BagsBar:RefreshTrackerCounts()
         if tf.countText and tf.trackType and tf.trackId then
             local entry = { type = tf.trackType, id = tf.trackId }
             local countValue = GetTrackerCountAndIcon(entry)
-            tf.countText:SetText("x" .. countValue)
+            tf.countText:SetText(L["COUNT_PREFIX"] .. countValue)
         end
     end
 end

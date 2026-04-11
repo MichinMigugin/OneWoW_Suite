@@ -713,7 +713,7 @@ function CatMgrUI:RefreshRight()
             tLbl:SetText(L["CAT_ITEM_TYPE"])
             tLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             local tBox = MakeEditBoxWithSave(parent,
-                { width=160, height=22, placeholderText = "Housing" },
+                { width=160, height=22, placeholderText = L["CAT_HOUSING"] },
                 function() return catData.itemType end,
                 function(v)
                     local controller = GetController()
@@ -730,7 +730,7 @@ function CatMgrUI:RefreshRight()
             sLbl:SetText(L["CAT_ITEM_SUBTYPE"])
             sLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             local sBox = MakeEditBoxWithSave(parent,
-                { width=160, height=22, placeholderText = "Decor" },
+                { width=160, height=22, placeholderText = L["PLACEHOLDER_ITEM_SUBTYPE"] },
                 function() return catData.itemSubType end,
                 function(v)
                     local controller = GetController()
@@ -1608,12 +1608,12 @@ function CatMgrUI:Show()
             end
             if cats > 0 or secs > 0 then
                 if secs > 0 then
-                    print(string.format("|cFFFFD100OneWoW Bags:|r Imported %d |4category:categories; and %d |4section:sections; from Baganator.", cats, secs))
+                    print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. string.format(L["BAGANATOR_IMPORT_WITH_SECTIONS"], cats, secs))
                 else
-                    print(string.format("|cFFFFD100OneWoW Bags:|r " .. L["BAGANATOR_IMPORT_SUCCESS"], cats))
+                    print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. string.format(L["BAGANATOR_IMPORT_SUCCESS"], cats))
                 end
             else
-                print("|cFFFFD100OneWoW Bags:|r " .. L["BAGANATOR_IMPORT_NONE"])
+                print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["BAGANATOR_IMPORT_NONE"])
             end
         end)
 
@@ -1626,11 +1626,7 @@ function CatMgrUI:Show()
     local TSM = OneWoW_Bags.TSMIntegration
     if TSM and TSM:IsAvailable() then
         local tsmBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["TSM_IMPORT"] or "Import TSM", height=24 })
-        if HasBaganator() then
-            tsmBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
-        else
-            tsmBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
-        end
+        tsmBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
         tsmBtn:SetScript("OnClick", function()
             local controller = GetController()
             local count = 0
@@ -1638,9 +1634,9 @@ function CatMgrUI:Show()
                 count = controller:ImportTSM()
             end
             if count > 0 then
-                print(string.format("|cFFFFD100OneWoW Bags:|r " .. (L["TSM_IMPORT_SUCCESS"] or "Imported %d categories from TSM."), count))
+                print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. string.format(L["TSM_IMPORT_SUCCESS"], count))
             else
-                print("|cFFFFD100OneWoW Bags:|r " .. (L["TSM_IMPORT_NONE"] or "No TSM data found."))
+                print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["TSM_IMPORT_NONE"])
             end
         end)
     end

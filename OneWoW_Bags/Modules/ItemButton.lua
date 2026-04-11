@@ -204,7 +204,7 @@ function Mixin:OWB_UpdateUnusableOverlay(hasItem, info)
         end
 
         if canEquip and info.hyperlink then
-            local itemLevel = C_Item.GetDetailedItemLevelInfo and C_Item.GetDetailedItemLevelInfo(info.hyperlink)
+            local itemLevel = C_Item.GetDetailedItemLevelInfo(info.hyperlink)
             local reqLevel = select(5, C_Item.GetItemInfo(info.hyperlink))
             if reqLevel and reqLevel > 0 then
                 local playerLevel = UnitLevel("player")

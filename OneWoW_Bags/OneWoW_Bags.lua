@@ -124,7 +124,7 @@ end
 
 function OneWoW_Bags:IsBankUIEnabled()
     local db = self:GetDB()
-    return db and db.global.enableBankUI ~= false
+    return db.global.enableBankUI ~= false
 end
 
 function OneWoW_Bags:EnsureCategoryModification(categoryName)
@@ -373,23 +373,21 @@ function OneWoW_Bags:HookPetCageTooltip()
         if not itemLink then return end
         local petData = predicateEngine:GetBattlePetCageData(CAGE_ID, itemLink)
         if not petData or not petData.speciesID or not petData.petName then return end
-        if petData.petName then
-            tooltip:AddLine(" ")
-            tooltip:AddLine(petData.petName, 1, 0.82, 0)
-            if petData.petType and petData.petType > 0 then
-                local petTypeName = _G["BATTLE_PET_NAME_" .. petData.petType] or ("Type " .. petData.petType)
-                tooltip:AddLine(petTypeName, 0.7, 0.7, 0.7)
-            end
-            local numCollected, limit = C_PetJournal.GetNumCollectedInfo(petData.speciesID)
-            if numCollected then
-                if numCollected > 0 then
-                    tooltip:AddLine(COLLECTED .. ": " .. numCollected .. "/" .. (limit or "?"), 0.2, 1, 0.2)
-                else
-                    tooltip:AddLine(COLLECTED .. ": 0/" .. (limit or "?"), 1, 0.2, 0.2)
-                end
-            end
-            tooltip:Show()
+        tooltip:AddLine(" ")
+        tooltip:AddLine(petData.petName, 1, 0.82, 0)
+        if petData.petType and petData.petType > 0 then
+            local petTypeName = _G["BATTLE_PET_NAME_" .. petData.petType] or ("Type " .. petData.petType)
+            tooltip:AddLine(petTypeName, 0.7, 0.7, 0.7)
         end
+        local numCollected, limit = C_PetJournal.GetNumCollectedInfo(petData.speciesID)
+        if numCollected then
+            if numCollected > 0 then
+                tooltip:AddLine(COLLECTED .. ": " .. numCollected .. "/" .. (limit or "?"), 0.2, 1, 0.2)
+            else
+                tooltip:AddLine(COLLECTED .. ": 0/" .. (limit or "?"), 1, 0.2, 0.2)
+            end
+        end
+        tooltip:Show()
     end)
 end
 
@@ -409,8 +407,8 @@ function OneWoW_Bags:OnBankOpened()
 
     self:SuppressBankFrame()
 
-    local canUseCharacter = C_Bank.CanUseBank and C_Bank.CanUseBank(Enum.BankType.Character)
-    local canUseAccount = C_Bank.CanUseBank and C_Bank.CanUseBank(Enum.BankType.Account)
+    local canUseCharacter = C_Bank.CanUseBank(Enum.BankType.Character)
+    local canUseAccount = C_Bank.CanUseBank(Enum.BankType.Account)
     self.isWarbandOnlyBankAccess = canUseAccount and not canUseCharacter or false
     if self.isWarbandOnlyBankAccess then
         self.db.global.bankShowWarband = true
@@ -962,13 +960,11 @@ function OneWoW_Bags:HookBlizzardBags()
     hooksecurefunc("SplitGuildBankItem", function(tabID, slotID)
         self:TrackGuildBankTransferTab(tabID)
     end)
-    if C_Container and C_Container.PickupContainerItem then
-        hooksecurefunc(C_Container, "PickupContainerItem", function()
-            if self.guildBankOpen then
-                self._guildBankSeenBagPickup = true
-            end
-        end)
-    end
+    hooksecurefunc(C_Container, "PickupContainerItem", function()
+        if self.guildBankOpen then
+            self._guildBankSeenBagPickup = true
+        end
+    end)
 
     hooksecurefunc("OpenBag", function(bagID)
         if self.BagTypes:IsPlayerBag(bagID) then
@@ -976,11 +972,9 @@ function OneWoW_Bags:HookBlizzardBags()
         end
     end)
 
-    if EventRegistry then
-        EventRegistry:RegisterCallback("ContainerFrame.OpenAllBags", function()
-            OpenOurBags("auto")
-        end, self)
-    end
+    EventRegistry:RegisterCallback("ContainerFrame.OpenAllBags", function()
+        OpenOurBags("auto")
+    end, self)
 
 end
 

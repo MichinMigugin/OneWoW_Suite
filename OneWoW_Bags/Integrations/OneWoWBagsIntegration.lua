@@ -13,7 +13,6 @@ local callbacks = OneWoW_Bags.ItemButtonCallbacks
 function OneWoW_Bags:RegisterItemButtonCallback(name, callback)
 	if not callback or type(callback) ~= "function" then
 		error("InvalidCallback: callback must be a function")
-		return
 	end
 	callbacks[name] = callback
 end

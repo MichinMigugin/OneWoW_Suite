@@ -632,33 +632,6 @@ function Categories:GetSearchCategories()
     return SEARCH_CATEGORIES
 end
 
-function Categories:GetSubCategory(categoryName, bagID, slotID, itemInfo)
-    if not bagID or not slotID then return nil end
-
-    if categoryName == "Containers" then
-        local tt = PE:GetTooltipText(bagID, slotID)
-        if tt then
-            if tt:find(LOCKED) then
-                return "Locked"
-            else
-                return "Unlocked"
-            end
-        end
-    end
-
-    if categoryName == "Consumables" or categoryName == "Potions" or categoryName == "Food" then
-        local tt = PE:GetTooltipText(bagID, slotID)
-        if tt then
-            local charges = tt:match("(%d+) Charges?")
-            if charges then
-                return charges .. " Charges"
-            end
-        end
-    end
-
-    return nil
-end
-
 function Categories:AddItemToBuiltinCategory(categoryName, itemID)
     if not categoryName or not itemID then return false end
 

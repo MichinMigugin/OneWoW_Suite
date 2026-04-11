@@ -13,7 +13,7 @@
 ## AddonCompartmentFuncOnLeave: 1WoW_Bags_OnAddonCompartmentLeave
 ## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
 ## RequiredDeps: OneWoW_GUI
-## OptionalDeps: OneWoW, OneWoW_AltTracker, OneWoW_ShoppingList, TradeSkillMaster
+## OptionalDeps: OneWoW, OneWoW_AltTracker, OneWoW_ShoppingList, TradeSkillMaster, Baganator
 ## Group: OneWoW
 
 # Libraries
@@ -65,6 +65,7 @@ Controllers\CategoryController.lua
 
 # Views
 Views\ListView.lua
+Views\CategoryViewHelpers.lua
 Views\CategoryView.lua
 Views\BagView.lua
 Views\BankCategoryView.lua
@@ -77,6 +78,7 @@ GUI\InfoBarFactory.lua
 GUI\InfoBar.lua
 GUI\BagsBar.lua
 GUI\BankInfoBar.lua
+GUI\BarHelpers.lua
 GUI\BankBar.lua
 GUI\BankWindow.lua
 GUI\GuildBankInfoBar.lua

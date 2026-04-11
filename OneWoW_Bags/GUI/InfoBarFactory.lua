@@ -21,16 +21,14 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
     local ROW2_H = 28
 
     local function GetShowHeader(db)
-        if not config.showHeaderKey then
-            return true
-        end
+        if config.showHeaderFn then return config.showHeaderFn(db) end
+        if not config.showHeaderKey then return true end
         return db.global[config.showHeaderKey] ~= false
     end
 
     local function GetShowSearch(db)
-        if not config.showSearchKey then
-            return true
-        end
+        if config.showSearchFn then return config.showSearchFn(db) end
+        if not config.showSearchKey then return true end
         return db.global[config.showSearchKey] ~= false
     end
 
@@ -182,7 +180,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                         sort(ids)
                     end
                     for _, id in ipairs(ids) do
-                        tinsert(items, { text = WH:GetExpansionName(id) or ("Expansion " .. id), value = id })
+                        tinsert(items, { text = WH:GetExpansionName(id) or L["EXPANSION_FALLBACK"]:format(id), value = id })
                     end
                     return items
                 end,
@@ -353,6 +351,17 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 end
             end
         end
+
+        local newHeight = 0
+        if showHeader then newHeight = newHeight + ROW1_H end
+        if showSearch then newHeight = newHeight + ROW2_H end
+
+        if newHeight == 0 then
+            infoBarFrame:Hide()
+        else
+            infoBarFrame:SetHeight(newHeight)
+            infoBarFrame:Show()
+        end
     end
 
     function bar:UpdateVisibility()
@@ -395,21 +404,6 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         if infoBarFrame.emptyToggleBtn and showSearch then
             infoBarFrame.emptyToggleBtn:ClearAllPoints()
             infoBarFrame.emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, searchY)
-        end
-
-        local newHeight = 0
-        if showHeader then
-            newHeight = newHeight + ROW1_H
-        end
-        if showSearch then
-            newHeight = newHeight + ROW2_H
-        end
-
-        if newHeight == 0 then
-            infoBarFrame:Hide()
-        else
-            infoBarFrame:SetHeight(newHeight)
-            infoBarFrame:Show()
         end
     end
 

@@ -7,10 +7,11 @@ local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
 local Categories = OneWoW_Bags.Categories
 local BankSet = OneWoW_Bags.BankSet
+local H = OneWoW_Bags.CategoryViewHelpers
 
-local tremove, tinsert, wipe = tremove, tinsert, wipe
+local tinsert = tinsert
 local pairs, ipairs = pairs, ipairs
-local floor, min, max, ceil, sqrt = math.floor, math.min, math.max, math.ceil, math.sqrt
+local floor, max = math.floor, math.max
 
 OneWoW_Bags.BankCategoryView = {}
 local View = OneWoW_Bags.BankCategoryView
@@ -19,33 +20,7 @@ local function GetDB()
     return OneWoW_Bags:GetDB()
 end
 
-local labelPool = {}
-local activeLabels = {}
-
-local function AcquireLabel(parent)
-    local label
-    if #labelPool > 0 then
-        label = tremove(labelPool)
-        label:SetParent(parent)
-    else
-        label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        label:SetJustifyH("LEFT")
-        label:SetWordWrap(false)
-    end
-    label:ClearAllPoints()
-    label:Show()
-    activeLabels[label] = true
-    return label
-end
-
-local function ReleaseAllLabels()
-    for label in pairs(activeLabels) do
-        label:Hide()
-        label:ClearAllPoints()
-        tinsert(labelPool, label)
-    end
-    wipe(activeLabels)
-end
+local AcquireLabel, ReleaseAllLabels = H.CreateLabelPool()
 
 function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local db = GetDB()
@@ -97,24 +72,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local sortMode = db.global.categorySort
     Categories:SortCategories(categoryNames, sortMode)
 
-    local moveRecentToTop = db.global.moveUpgradesToTop
-    local moveOtherToBottom = db.global.moveOtherToBottom
-    if moveRecentToTop or moveOtherToBottom then
-        local pinRecent, pinBottom, rest = {}, {}, {}
-        for _, name in ipairs(categoryNames) do
-            if name == "Recent Items" and moveRecentToTop then
-                tinsert(pinRecent, name)
-            elseif name == "Other" and moveOtherToBottom then
-                tinsert(pinBottom, name)
-            else
-                tinsert(rest, name)
-            end
-        end
-        categoryNames = {}
-        for _, n in ipairs(pinRecent) do tinsert(categoryNames, n) end
-        for _, n in ipairs(rest)    do tinsert(categoryNames, n) end
-        for _, n in ipairs(pinBottom) do tinsert(categoryNames, n) end
-    end
+    categoryNames = H.PinSpecialCategories(categoryNames, db.global.moveUpgradesToTop, db.global.moveOtherToBottom)
 
     local cols = db.global.bankColumns or floor((width - padding * 2) / (iconSize + spacing))
     cols = max(cols, 1)
@@ -122,122 +80,35 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local totalGridWidth = cols * cellSize - spacing
     local leftPadding = max(padding, floor((width - totalGridWidth) / 2))
 
+    local catMods = db.global.categoryModifications
     local yOffset = 0
 
     if compact then
-        local gapSlots = compactGapSlots
-        local labelHeight = showHeaders and 16 or 0
-
         local catInfoList = {}
         for _, categoryName in ipairs(categoryNames) do
             local items = itemsByCategory[categoryName]
             if items and #items > 0 then
                 sortButtons(items)
-                local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
-                local displayName = L[localeKey] or categoryName
-                tinsert(catInfoList, { name = categoryName, displayName = displayName, items = items })
+                tinsert(catInfoList, {
+                    name = categoryName,
+                    displayName = H.ResolveCategoryName(categoryName),
+                    items = items,
+                })
             end
         end
 
-        local lines = {}
-        local currentLine = {}
-        local curCol = 0
-
-        for _, catInfo in ipairs(catInfoList) do
-            local count = #catInfo.items
-            local startCol = curCol > 0 and (curCol + gapSlots) or 0
-            local avail = floor(cols - startCol)
-
-            if avail < 1 then
-                tinsert(lines, currentLine)
-                currentLine = {}
-                curCol = 0
-                startCol = 0
-                avail = cols
-            end
-
-            local optimalWidth = count <= cols and count or max(2, floor(sqrt(count / 1.618)))
-            local blockWidth = min(optimalWidth, avail)
-            local blockRows = ceil(count / blockWidth)
-
-            if blockRows > 1 and (curCol > 0 or blockWidth < cols) then
-                if #currentLine > 0 then
-                    tinsert(lines, currentLine)
-                    currentLine = {}
-                end
-                curCol = 0
-                startCol = 0
-                blockWidth = min(count, cols)
-                blockRows = ceil(count / blockWidth)
-            end
-
-            tinsert(currentLine, {
-                name = catInfo.name,
-                displayName = catInfo.displayName,
-                items = catInfo.items,
-                startCol = startCol,
-                blockWidth = blockWidth,
-                blockRows = blockRows,
-            })
-
-            if blockRows > 1 then
-                tinsert(lines, currentLine)
-                currentLine = {}
-                curCol = 0
-            else
-                curCol = startCol + blockWidth
-            end
-        end
-        if #currentLine > 0 then
-            tinsert(lines, currentLine)
-        end
-
-        for _, line in ipairs(lines) do
-            if showHeaders then
-                for _, cat in ipairs(line) do
-                    local label = AcquireLabel(contentFrame)
-                    label:SetPoint("TOPLEFT", contentFrame, "TOPLEFT",
-                        leftPadding + cat.startCol * cellSize, -yOffset)
-                    label:SetWidth(cat.blockWidth * cellSize)
-                    label:SetText(cat.displayName)
-                    local catMods2 = db.global.categoryModifications
-                    local catMod2 = catMods2[cat.name]
-                    if catMod2 and catMod2.color then
-                        local cr = tonumber(catMod2.color:sub(1,2), 16) / 255
-                        local cg = tonumber(catMod2.color:sub(3,4), 16) / 255
-                        local cb = tonumber(catMod2.color:sub(5,6), 16) / 255
-                        label:SetTextColor(cr, cg, cb, 1.0)
-                    else
-                        label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                    end
-                end
-            end
-            yOffset = yOffset + labelHeight
-
-            local maxRows = 0
-            for _, cat in ipairs(line) do
-                if cat.blockRows > maxRows then maxRows = cat.blockRows end
-                local itemCol = 0
-                local itemRow = 0
-                for _, button in ipairs(cat.items) do
-                    local x = leftPadding + (cat.startCol + itemCol) * cellSize
-                    local y = -(yOffset + itemRow * cellSize)
-                    button:ClearAllPoints()
-                    button:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", x, y)
-                    button:OWB_SetIconSize(iconSize)
-                    button:Show()
-                    itemCol = itemCol + 1
-                    if itemCol >= cat.blockWidth then
-                        itemCol = 0
-                        itemRow = itemRow + 1
-                    end
-                end
-            end
-            yOffset = yOffset + maxRows * cellSize
-        end
-        if #lines > 0 then
-            yOffset = yOffset + floor(cellSize * verticalSpacing * 0.25 + 0.5)
-        end
+        yOffset = H.LayoutCompactGroup(catInfoList, contentFrame, {
+            yOffset = yOffset,
+            cols = cols,
+            gapSlots = compactGapSlots,
+            showHeaders = showHeaders,
+            leftPadding = leftPadding,
+            cellSize = cellSize,
+            iconSize = iconSize,
+            catMods = catMods,
+            AcquireLabel = AcquireLabel,
+            verticalSpacing = verticalSpacing,
+        })
     else
         for _, categoryName in ipairs(categoryNames) do
             local items = itemsByCategory[categoryName]
@@ -246,26 +117,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
 
                 if showHeaders then
                     local section = acquireSection(contentFrame)
-                    section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
-                    section:SetPoint("RIGHT", contentFrame, "RIGHT", 0, 0)
-                    section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                    section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-                    local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
-                    local displayName = L[localeKey] or categoryName
-                    section.title:SetText(displayName)
-                    local catMods = db.global.categoryModifications
-                    local catMod = catMods[categoryName]
-                    if catMod and catMod.color then
-                        local cr = tonumber(catMod.color:sub(1,2), 16) / 255
-                        local cg = tonumber(catMod.color:sub(3,4), 16) / 255
-                        local cb = tonumber(catMod.color:sub(5,6), 16) / 255
-                        section.title:SetTextColor(cr, cg, cb, 1.0)
-                    else
-                        section.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                    end
-                    section.count:SetText(tostring(#items))
-                    section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                    H.SetupCategorySection(section, contentFrame, yOffset, categoryName, #items, catMods)
 
                     local collapsed = getCollapsed("category", categoryName)
                     section.isCollapsed = collapsed or false
@@ -273,26 +125,8 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                     local sectionHeight = 26
 
                     if not section.isCollapsed then
-                        local itemRow = 0
-                        local itemCol = 0
                         section.content:SetHeight(1)
-
-                        for _, button in ipairs(items) do
-                            local x = leftPadding + (itemCol * cellSize)
-                            local y = -(itemRow * cellSize)
-                            button:ClearAllPoints()
-                            button:SetPoint("TOPLEFT", section.content, "TOPLEFT", x, y)
-                            button:OWB_SetIconSize(iconSize)
-                            button:Show()
-                            itemCol = itemCol + 1
-                            if itemCol >= cols then
-                                itemCol = 0
-                                itemRow = itemRow + 1
-                            end
-                        end
-
-                        local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
-                        local contentHeight = totalRows * cellSize
+                        local contentHeight = H.RenderItemGrid(section.content, items, 0, leftPadding, cellSize, iconSize, cols)
                         section.content:SetHeight(contentHeight)
                         section.content:Show()
                         sectionHeight = sectionHeight + contentHeight + 4
@@ -304,30 +138,15 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                     end
 
                     section:SetHeight(sectionHeight)
-                    yOffset = yOffset + sectionHeight + floor(cellSize * verticalSpacing * 0.25 + 0.5)
+                    yOffset = yOffset + sectionHeight + H.VerticalGap(cellSize, verticalSpacing)
 
                     section.header:SetScript("OnClick", function()
                         section.isCollapsed = not section.isCollapsed
                         setCollapsed("category", categoryName, section.isCollapsed)
                     end)
                 else
-                    local itemRow = 0
-                    local itemCol = 0
-                    for _, button in ipairs(items) do
-                        local x = leftPadding + (itemCol * cellSize)
-                        local y = -(yOffset + itemRow * cellSize)
-                        button:ClearAllPoints()
-                        button:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", x, y)
-                        button:OWB_SetIconSize(iconSize)
-                        button:Show()
-                        itemCol = itemCol + 1
-                        if itemCol >= cols then
-                            itemCol = 0
-                            itemRow = itemRow + 1
-                        end
-                    end
-                    local totalRows = (itemCol > 0) and (itemRow + 1) or itemRow
-                    yOffset = yOffset + totalRows * cellSize + floor(cellSize * verticalSpacing * 0.25 + 0.5)
+                    local gridHeight = H.RenderItemGrid(contentFrame, items, yOffset, leftPadding, cellSize, iconSize, cols)
+                    yOffset = yOffset + gridHeight + H.VerticalGap(cellSize, verticalSpacing)
                 end
             end
         end

@@ -5,6 +5,7 @@ if not OneWoW_GUI then return end
 
 local L = OneWoW_Bags.L
 local WH = OneWoW_Bags.WindowHelpers
+local BH = OneWoW_Bags.BarHelpers
 
 local pairs = pairs
 
@@ -28,13 +29,7 @@ end
 function GuildBankBar:Create(parent)
     if bagsBarFrame then return bagsBarFrame end
 
-    bagsBarFrame = CreateFrame("Frame", "OneWoW_GuildBankBagsBar", parent, "BackdropTemplate")
-    bagsBarFrame:SetHeight(BAR_HEIGHT)
-    bagsBarFrame:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
-    bagsBarFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    bagsBarFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    bagsBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    bagsBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    bagsBarFrame = BH:CreateBarFrame(parent, "OneWoW_GuildBankBagsBar", BAR_HEIGHT)
 
     local _, rightInsetCreate = WH:GetItemGridChromeInsets(GetDB().global.bankHideScrollBar)
 
@@ -70,14 +65,7 @@ function GuildBankBar:Create(parent)
     end)
     bagsBarFrame.logBtn = logBtn
 
-    local goldText = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    goldText:SetPoint("RIGHT", logBtn, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
-    bagsBarFrame.goldText = goldText
-
-    local freeSlots = bagsBarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    freeSlots:SetPoint("RIGHT", goldText, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
-    freeSlots:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    bagsBarFrame.freeSlots = freeSlots
+    BH:CreateGoldDisplay(bagsBarFrame, logBtn)
 
     GuildBankBar:UpdateGold()
 
@@ -123,11 +111,7 @@ end
 function GuildBankBar:BuildTabButtons()
     if not bagsBarFrame then return end
 
-    for _, btn in pairs(tabButtons) do
-        btn:Hide()
-        btn:ClearAllPoints()
-        btn:SetParent(UIParent)
-    end
+    BH:RecycleTabButtons(tabButtons)
     tabButtons = {}
 
     local numTabs = GetNumGuildBankTabs() or 0
@@ -250,17 +234,7 @@ function GuildBankBar:OpenTabEditor(tabID)
 end
 
 function GuildBankBar:UpdateTabHighlights()
-    local db = GetDB()
-    local selected = db.global.guildBankSelectedTab
-    for tabID, btn in pairs(tabButtons) do
-        if btn._skinBorder then
-            if selected ~= nil and selected == tabID then
-                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            else
-                btn._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-            end
-        end
-    end
+    BH:UpdateTabHighlights(tabButtons, GetDB().global.guildBankSelectedTab)
 end
 
 function GuildBankBar:UpdateWithdrawButton()
@@ -287,8 +261,7 @@ function GuildBankBar:UpdateGold()
 end
 
 function GuildBankBar:UpdateFreeSlots(free, total)
-    if not bagsBarFrame or not bagsBarFrame.freeSlots then return end
-    bagsBarFrame.freeSlots:SetText(string.format("%d/%d", free, total))
+    BH:UpdateFreeSlots(bagsBarFrame, free, total)
 end
 
 function GuildBankBar:GetFrame()
@@ -302,10 +275,7 @@ function GuildBankBar:SetShown(show)
 end
 
 function GuildBankBar:Reset()
-    if bagsBarFrame then
-        bagsBarFrame:Hide()
-        bagsBarFrame:SetParent(UIParent)
-    end
+    BH:ResetBar(bagsBarFrame)
     bagsBarFrame = nil
     tabButtons = {}
 end

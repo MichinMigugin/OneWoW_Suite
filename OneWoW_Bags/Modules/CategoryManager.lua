@@ -65,7 +65,6 @@ end
 
 function CM:GetSectionedLayout(itemsByCategory, containerType)
     local db = OneWoW_Bags.db
-    if not db then return self:GetSortedCategoryNames(itemsByCategory) end
 
     local sections    = db.global.categorySections
     local sectOrder   = db.global.sectionOrder
