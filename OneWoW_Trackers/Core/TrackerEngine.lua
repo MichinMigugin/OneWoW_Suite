@@ -314,7 +314,16 @@ function TE:EvaluateObjective(obj)
     elseif ot == "spell_known" then
         local spellID = tonumber(op.spellID)
         if spellID then
-            return IsSpellKnown(spellID) and 1 or 0, 1
+            if IsSpellKnown(spellID) then return 1, 1 end
+            if IsSpellKnownOrOverridesKnown and IsSpellKnownOrOverridesKnown(spellID) then return 1, 1 end
+            if op.itemID then
+                local Util = _G.OneWoW_RecipeKnownUtil
+                if Util then
+                    local result = Util:IsRecipeKnown(tonumber(op.itemID))
+                    if result then return 1, 1 end
+                end
+            end
+            return 0, 1
         end
 
     elseif ot == "ilvl" then

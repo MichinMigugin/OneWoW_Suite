@@ -42,15 +42,11 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
     local isMisc = (classID == Enum.ItemClass.Miscellaneous)
 
     if classID == Enum.ItemClass.Recipe then
-        local td = C_TooltipInfo.GetHyperlink(itemLink)
-        if td and td.lines then
-            for _, line in ipairs(td.lines) do
-                if line.leftText and line.leftText == ITEM_SPELL_KNOWN then
-                    return true
-                end
-            end
+        local Util = OneWoW.RecipeKnownUtil
+        if Util then
+            return Util:IsRecipeKnown(itemID)
         end
-        return false
+        return nil
     end
 
     if classID == Enum.ItemClass.Battlepet or itemID == BATTLE_PET_CAGE_ID then

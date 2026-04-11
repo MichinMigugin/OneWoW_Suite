@@ -102,9 +102,6 @@ local function RecipeKnowledgeProvider(tooltip, context)
     local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(context.itemID)
     if classID ~= Enum.ItemClass.Recipe then return nil end
 
-    local _, spellID = C_Item.GetItemSpell(context.itemID)
-    if not spellID then return nil end
-
     local profName = DetectProfession(context.itemID)
     if not profName then return nil end
 
@@ -112,9 +109,10 @@ local function RecipeKnowledgeProvider(tooltip, context)
     local charDB  = _G.OneWoW_AltTracker_Character_DB
     if not profsDB or not profsDB.characters then return nil end
 
+    local Util           = OneWoW.RecipeKnownUtil
     local L              = OneWoW.L
     local currentCharKey = UnitName("player") .. "-" .. GetRealmName()
-    local currentKnows   = IsSpellKnown(spellID)
+    local currentKnows   = Util and Util:IsRecipeKnown(context.itemID)
 
     local knownBy  = {}
     local unknownBy = {}
@@ -140,7 +138,11 @@ local function RecipeKnowledgeProvider(tooltip, context)
                     knowsRecipe = currentKnows
                 else
                     local recipeSet = FindRecipes(charData, profName)
-                    knowsRecipe = recipeSet and recipeSet[spellID] ~= nil
+                    if recipeSet and Util then
+                        knowsRecipe = Util:IsAltRecipeKnown(recipeSet, context.itemID)
+                    else
+                        knowsRecipe = false
+                    end
                 end
 
                 local entry = {
@@ -195,9 +197,9 @@ local function RecipeKnowledgeProvider(tooltip, context)
         })
     end
 
-    local knownShow   = math.min(2, #knownBy)
-    local unknownShow = math.min(5 - knownShow, #unknownBy)
-    knownShow         = math.min(5 - unknownShow, #knownBy)
+    local totalSlots = 5
+    local knownShow   = math.min(#knownBy, totalSlots)
+    local unknownShow = math.min(#unknownBy, totalSlots - knownShow)
 
     local function addGroup(list, limit, colorHex, statusKey)
         local total = #list

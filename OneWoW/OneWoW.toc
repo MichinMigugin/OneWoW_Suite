@@ -37,6 +37,7 @@ Core\Database.lua
 Core\ModuleRegistry.lua
 Core\SettingsFeatureRegistry.lua
 Core\ItemPrices.lua
+Core\RecipeKnownUtil.lua
 
 # Integrations
 Integrations\ExternalTooltipSync.lua

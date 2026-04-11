@@ -189,6 +189,19 @@ end
 
 local function IsAlreadyKnown(itemLink)
     if not itemLink then return false end
+
+    local itemID = tonumber(itemLink:match("item:(%d+)"))
+    if itemID then
+        local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemID)
+        if classID == Enum.ItemClass.Recipe then
+            local Util = _G.OneWoW_RecipeKnownUtil
+            if Util then
+                local result = Util:IsRecipeKnown(itemID, itemLink)
+                if result ~= nil then return result end
+            end
+        end
+    end
+
     if not _G["OneWoW_QoL_VendorKnownScanner"] then
         CreateFrame("GameTooltip", "OneWoW_QoL_VendorKnownScanner", nil, "GameTooltipTemplate")
     end

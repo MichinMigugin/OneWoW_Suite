@@ -728,20 +728,11 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
     end
 
     if classID == Enum.ItemClass.Recipe then
-        local td = C_TooltipInfo and C_TooltipInfo.GetHyperlink and C_TooltipInfo.GetHyperlink(itemLink)
-        if not td or not td.lines then return nil end
-        local isTeachable = false
-        local isKnown     = false
-        for _, line in ipairs(td.lines) do
-            if line.type == Enum.TooltipDataLineType.ItemSpellTriggerLearn then
-                isTeachable = true
-            end
-            if line.leftText and line.leftText == ITEM_SPELL_KNOWN then
-                isKnown = true
-            end
+        local Util = OneWoW.RecipeKnownUtil
+        if Util then
+            return Util:IsRecipeKnown(itemID)
         end
-        if not isTeachable then return nil end
-        return isKnown
+        return nil
     end
 
     if classID == Enum.ItemClass.Weapon or classID == Enum.ItemClass.Armor then

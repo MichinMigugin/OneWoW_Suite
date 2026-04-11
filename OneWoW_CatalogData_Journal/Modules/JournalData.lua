@@ -137,6 +137,11 @@ function JournalData:IsItemCollected(itemID, itemData, specialType)
                 return recipeInfo.learned
             end
         end
+        local Util = _G.OneWoW_RecipeKnownUtil
+        if Util then
+            local result = Util:IsRecipeKnown(itemID, itemData.link)
+            if result ~= nil then return result end
+        end
         return nil
     end
 

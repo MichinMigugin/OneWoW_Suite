@@ -1026,8 +1026,19 @@ local function ResolveTooltipFields(props)
     rawset(props, "hasCharges",         strfind(tt, "(%d+) |4" .. chargesPattern) ~= nil)
     rawset(props, "hasUseAbility",      strfind(tt, "^"..USE_COLON) ~= nil or strfind(tt, "\n"..USE_COLON, 1, true) ~= nil)
     rawset(props, "hasEquipAbility",    strfind(tt, "^"..ITEM_SPELL_TRIGGER_ONEQUIP) ~= nil or strfind(tt, "\n"..ITEM_SPELL_TRIGGER_ONEQUIP, 1, true) ~= nil)
-    rawset(props, "isAlreadyKnown",     strfind(tt, ITEM_SPELL_KNOWN, 1, true) ~= nil)
     rawset(props, "isTradeableLoot",    strfind(tt, tradeablePattern, 1, true) ~= nil)
+
+    local alreadyKnown = strfind(tt, ITEM_SPELL_KNOWN, 1, true) ~= nil
+    if not alreadyKnown and rawget(props, "classID") == Enum.ItemClass.Recipe then
+        local Util = _G.OneWoW_RecipeKnownUtil
+        if Util then
+            local result = Util:IsRecipeKnown(rawget(props, "id"), rawget(props, "hyperlink"))
+            if result ~= nil then
+                alreadyKnown = result
+            end
+        end
+    end
+    rawset(props, "isAlreadyKnown", alreadyKnown)
     rawset(props, "isUniqueEquipped",   isUniqueEquipped)
     rawset(props, "isUnique",           isUniqueEquipped or strfind(tt, "^"..ITEM_UNIQUE) ~= nil or strfind(tt, "\n"..ITEM_UNIQUE, 1, true) ~= nil)
 end
