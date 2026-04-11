@@ -9,6 +9,7 @@ local PANEL_WIDTH = 350
 EscPanels.PANEL_WIDTH = PANEL_WIDTH
 local PANEL_GAP = 6
 local PANEL_PADDING = 12
+local ZONE_NOTES_HEADER_GAP = 8
 local SCREEN_PAD = 10
 local CHARINFO_HEIGHT = 160
 local ALERTS_HEIGHT = 100
@@ -17,33 +18,6 @@ local function TEXT_COLOR() return {OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")} en
 local function DIM_COLOR() return {OneWoW_GUI:GetThemeColor("TEXT_MUTED")} end
 local function BG_COLOR() return {OneWoW_GUI:GetThemeColor("BG_PRIMARY")} end
 local function BORDER_COLOR() return {OneWoW_GUI:GetThemeColor("BORDER_DEFAULT")} end
-
-local function GetNoteTextColor(fontColorKey, pinColorKey)
-	local notesAddon = _G.OneWoW_Notes
-	local PIN_COLORS = notesAddon and notesAddon.Config and notesAddon.Config.PIN_COLORS
-	if not PIN_COLORS then
-		local tc = TEXT_COLOR()
-		return tc[1], tc[2], tc[3]
-	end
-	local pinConfig = PIN_COLORS[pinColorKey] or PIN_COLORS["hunter"]
-	if fontColorKey == "match" then
-		local b = pinConfig.border
-		return b[1], b[2], b[3]
-	elseif fontColorKey == "white" then
-		return 1, 1, 1
-	elseif fontColorKey == "black" then
-		return 0, 0, 0
-	else
-		local fontConfig = PIN_COLORS[fontColorKey]
-		if fontConfig then
-			local b = fontConfig.border
-			return b[1], b[2], b[3]
-		else
-			local b = pinConfig.border
-			return b[1], b[2], b[3]
-		end
-	end
-end
 
 local panelFrames = {}
 local dimOverlay = nil
@@ -77,41 +51,6 @@ local function GetCharacterInfo()
 		mythicPlusRating = mplusRating,
 		money            = GetMoney(),
 	}
-end
-
-local function GetNotesByType(noteType)
-	local notes = {}
-	local notesAddon = _G.OneWoW_Notes
-	if not notesAddon then return notes end
-	local notesData = notesAddon.NotesData
-	if not notesData or not notesData.GetAllNotes then return notes end
-
-	local allNotes = notesData:GetAllNotes()
-	if not allNotes then return notes end
-
-	for noteID, note in pairs(allNotes) do
-		if type(note) == "table" and note.noteType == noteType then
-			local incompleteTodos = {}
-			if note.todos and #note.todos > 0 then
-				for _, todo in ipairs(note.todos) do
-					if not todo.completed then
-						table.insert(incompleteTodos, todo.text)
-					end
-				end
-			end
-
-			local hasTasks = #incompleteTodos > 0
-
-			if hasTasks then
-				table.insert(notes, {
-					title = note.title,
-					id    = note.id,
-					tasks = incompleteTodos,
-				})
-			end
-		end
-	end
-	return notes
 end
 
 local function GetZoneNoteData()
@@ -194,7 +133,7 @@ local function CreateHeader(panel, textKey)
 	return header
 end
 
-local function CalculateLayout(ph, showZone, hasDaily, hasWeekly, hasAlerts)
+local function CalculateLayout(ph, showZone, hasAlerts)
 	local screenHeight = UIParent:GetHeight()
 	local fixedHeight = ph.escShowCharacterInfo ~= false and CHARINFO_HEIGHT or 0
 	local gapCount = 0
@@ -205,14 +144,6 @@ local function CalculateLayout(ph, showZone, hasDaily, hasWeekly, hasAlerts)
 		gapCount = gapCount + 1
 	end
 	if showZone then
-		flexCount = flexCount + 1
-		gapCount = gapCount + 1
-	end
-	if hasDaily then
-		flexCount = flexCount + 1
-		gapCount = gapCount + 1
-	end
-	if hasWeekly then
 		flexCount = flexCount + 1
 		gapCount = gapCount + 1
 	end
@@ -445,15 +376,16 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 		local panel = CreatePanel(container, "OneWoWEscPanelZoneNotes", flexHeight)
 
 		local header = OneWoW_GUI:CreateFS(panel, 16)
-		header:SetPoint("TOP", panel, "TOP", 0, -PANEL_PADDING)
 		header:SetTextColor(unpack(HEADER_COLOR()))
+		header:SetWordWrap(true)
+		header:SetJustifyH("CENTER")
+		header:SetJustifyV("TOP")
 		panel.header = header
 
 		panel.contentTexts = {}
 
 		local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(panel, {})
 		scrollFrame:ClearAllPoints()
-		scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -35)
 		scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 35)
 		scrollChild:SetWidth(PANEL_WIDTH - 40)
 		panel.scrollFrame = scrollFrame
@@ -511,11 +443,23 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 	panel:SetHeight(flexHeight)
 	panel.currentZoneName = zoneName
 
+	local headerPad = PANEL_PADDING
+	local headerW = PANEL_WIDTH - 2 * headerPad
+	panel.header:SetWidth(headerW)
+	panel.header:ClearAllPoints()
+	panel.header:SetPoint("TOPLEFT", panel, "TOPLEFT", headerPad, -headerPad)
+
 	if displayZone ~= "" then
 		panel.header:SetText(L["ESCPANEL_ZONE_NOTES"] .. " - " .. displayZone)
 	else
 		panel.header:SetText(L["ESCPANEL_ZONE_NOTES"])
 	end
+
+	local headerH = panel.header:GetStringHeight()
+	local scrollTop = headerPad + headerH + ZONE_NOTES_HEADER_GAP
+	panel.scrollFrame:ClearAllPoints()
+	panel.scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -scrollTop)
+	panel.scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 35)
 
 	for _, fs in pairs(panel.contentTexts) do
 		fs:Hide()
@@ -606,130 +550,6 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 	end
 
 	panel.scrollChild:SetHeight(math.abs(contentY) + 10)
-	panel:Show()
-	return panel, yOffset - flexHeight - PANEL_GAP
-end
-
-local function GetOrCreateFontString(panel, index, fontSize)
-	if panel.contentTexts[index] then
-		local fs = panel.contentTexts[index]
-		fs:ClearAllPoints()
-		fs:Show()
-		return fs
-	end
-	local fs = OneWoW_GUI:CreateFS(panel.scrollChild, fontSize)
-	panel.contentTexts[index] = fs
-	return fs
-end
-
-local function UpdateNotesContent(panel, notesData, emptyKey)
-	for _, text in pairs(panel.contentTexts) do
-		text:Hide()
-	end
-
-	local yOff = -5
-	local fsIndex = 1
-
-	if not notesData or #notesData == 0 then
-		local emptyText = GetOrCreateFontString(panel, fsIndex, 10)
-		emptyText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 10, yOff)
-		emptyText:SetText(L[emptyKey])
-		emptyText:SetTextColor(unpack(DIM_COLOR()))
-		emptyText:SetJustifyH("LEFT")
-		emptyText:SetWidth(PANEL_WIDTH - 50)
-		panel.scrollChild:SetHeight(30)
-		return
-	end
-
-	for _, noteData in ipairs(notesData) do
-		local tr, tg, tb
-		local cr, cg, cb
-		if noteData.pinColor then
-			tr, tg, tb = GetNoteTextColor("match", noteData.pinColor)
-			cr, cg, cb = GetNoteTextColor(noteData.fontColor or "match", noteData.pinColor)
-		else
-			local hc = HEADER_COLOR()
-			tr, tg, tb = hc[1], hc[2], hc[3]
-			local txc = TEXT_COLOR()
-			cr, cg, cb = txc[1], txc[2], txc[3]
-		end
-
-		local titleText = GetOrCreateFontString(panel, fsIndex, 12)
-		fsIndex = fsIndex + 1
-		titleText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 10, yOff)
-		titleText:SetText(noteData.title)
-		titleText:SetTextColor(tr, tg, tb, 1)
-		titleText:SetJustifyH("LEFT")
-		titleText:SetWidth(PANEL_WIDTH - 50)
-		yOff = yOff - 20
-
-		if noteData.content then
-			local contentText = GetOrCreateFontString(panel, fsIndex, 10)
-			fsIndex = fsIndex + 1
-			contentText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 15, yOff)
-			contentText:SetText(noteData.content)
-			contentText:SetTextColor(cr, cg, cb, 1)
-			if noteData.fontSize then
-				OneWoW_GUI:SafeSetFont(contentText, OneWoW_GUI:GetFont(), noteData.fontSize)
-			end
-			contentText:SetJustifyH("LEFT")
-			contentText:SetWordWrap(true)
-			contentText:SetWidth(PANEL_WIDTH - 55)
-			yOff = yOff - contentText:GetStringHeight() - 6
-		end
-
-		if noteData.tasks then
-			for _, task in ipairs(noteData.tasks) do
-				local taskText = GetOrCreateFontString(panel, fsIndex, 10)
-				fsIndex = fsIndex + 1
-				taskText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 25, yOff)
-				taskText:SetText("  - " .. task)
-				taskText:SetTextColor(cr, cg, cb, 1)
-				if noteData.fontSize then
-					OneWoW_GUI:SafeSetFont(taskText, OneWoW_GUI:GetFont(), noteData.fontSize)
-				end
-				taskText:SetJustifyH("LEFT")
-				taskText:SetWidth(PANEL_WIDTH - 65)
-				yOff = yOff - 18
-			end
-		end
-
-		yOff = yOff - 10
-	end
-
-	panel.scrollChild:SetHeight(math.abs(yOff) + 10)
-end
-
-local function BuildNotesPanel(container, yOffset, anchorPanel, panelKey, headerKey, emptyKey, noteType, flexHeight, prefetchedData, hMode)
-	if not panelFrames[panelKey] then
-		local panel = CreatePanel(container, "OneWoWEscPanel_" .. panelKey, flexHeight)
-		CreateHeader(panel, headerKey)
-
-		local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(panel, {})
-		scrollFrame:ClearAllPoints()
-		scrollFrame:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -35)
-		scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 10)
-		scrollChild:SetWidth(PANEL_WIDTH - 40)
-		panel.scrollFrame = scrollFrame
-		panel.scrollChild = scrollChild
-
-		panel.contentTexts = {}
-
-		panelFrames[panelKey] = panel
-	end
-
-	local panel = panelFrames[panelKey]
-	panel:ClearAllPoints()
-	if hMode == "right" then
-		panel:SetPoint("TOPLEFT", anchorPanel, "BOTTOMLEFT", 0, -PANEL_GAP)
-	else
-		panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
-	end
-	panel:SetHeight(flexHeight)
-
-	local notesData = prefetchedData or GetNotesByType(noteType)
-	UpdateNotesContent(panel, notesData, emptyKey)
-
 	panel:Show()
 	return panel, yOffset - flexHeight - PANEL_GAP
 end
@@ -833,14 +653,6 @@ function EscPanels:Build(parent)
 	EnsurePanelsContainer(ph)
 
 	local hMode = GetPanelsHorizontalMode(ph)
-	local showTasks = ph.escShowTasks ~= false
-	local dailyNotes, weeklyNotes
-	if showTasks then
-		dailyNotes = GetNotesByType("daily")
-		weeklyNotes = GetNotesByType("weekly")
-	end
-	local hasDaily = dailyNotes and #dailyNotes > 0
-	local hasWeekly = weeklyNotes and #weeklyNotes > 0
 
 	local hasAlerts = ph.escShowAlerts and (HasNewMail and HasNewMail())
 
@@ -848,7 +660,7 @@ function EscPanels:Build(parent)
 	local zoneHasContent = zoneData and ((zoneData.content and zoneData.content ~= "") or (zoneData.todos and #zoneData.todos > 0))
 	local showZone = ph.escShowZoneNotes and (not ph.escHideZoneNotesWhenEmpty or zoneHasContent)
 
-	local flexHeight, verticalOffset = CalculateLayout(ph, showZone, hasDaily, hasWeekly, hasAlerts)
+	local flexHeight, verticalOffset = CalculateLayout(ph, showZone, hasAlerts)
 	local yOffset = -verticalOffset
 	local lastPanel = panelsContainer
 
@@ -880,26 +692,8 @@ function EscPanels:Build(parent)
 		panelFrames.zoneNotes:Hide()
 	end
 
-	if showTasks then
-		if hasDaily then
-			local dailyPanel
-			dailyPanel, yOffset = BuildNotesPanel(panelsContainer, yOffset, lastPanel, "daily", "ESCPANEL_DAILY_NOTES", "ESCPANEL_NO_DAILY", "daily", flexHeight, dailyNotes, hMode)
-			lastPanel = dailyPanel
-		elseif panelFrames.daily then
-			panelFrames.daily:Hide()
-		end
-
-		if hasWeekly then
-			local weeklyPanel
-			weeklyPanel, yOffset = BuildNotesPanel(panelsContainer, yOffset, lastPanel, "weekly", "ESCPANEL_WEEKLY_NOTES", "ESCPANEL_NO_WEEKLY", "weekly", flexHeight, weeklyNotes, hMode)
-			lastPanel = weeklyPanel
-		elseif panelFrames.weekly then
-			panelFrames.weekly:Hide()
-		end
-	else
-		if panelFrames.daily then panelFrames.daily:Hide() end
-		if panelFrames.weekly then panelFrames.weekly:Hide() end
-	end
+	if panelFrames.daily then panelFrames.daily:Hide() end
+	if panelFrames.weekly then panelFrames.weekly:Hide() end
 
 	if not self:HasVisiblePanelStack() then
 		if panelsContainer then

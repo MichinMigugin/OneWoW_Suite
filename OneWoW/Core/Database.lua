@@ -26,7 +26,6 @@ local DEFAULTS = {
         showGarrisonHearth = true,
         showFlightWhistle = true,
         showHousingPortal = true,
-        escShowTasks = true,
         escShowZoneNotes = true,
         escHideZoneNotesWhenEmpty = false,
         escShowAlerts = true,
