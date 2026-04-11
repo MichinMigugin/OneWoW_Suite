@@ -1,9 +1,20 @@
 local _, OneWoW_Bags = ...
 
+local L = OneWoW_Bags.L
 local C_Container = C_Container
 local C_CurrencyInfo = C_CurrencyInfo
 local tinsert, tremove = tinsert, tremove
 local tonumber = tonumber
+local ipairs = ipairs
+
+local function IsAlreadyTracked(trackers, trackType, id)
+    for _, entry in ipairs(trackers) do
+        if entry.type == trackType and entry.id == id then
+            return true
+        end
+    end
+    return false
+end
 
 OneWoW_Bags.BagsController = {}
 local BagsController = OneWoW_Bags.BagsController
@@ -115,7 +126,13 @@ function BagsController:AddTrackedEntryFromID(rawID)
         trackType = "currency"
     end
 
-    tinsert(db.global.trackedCurrencies, { type = trackType, id = id })
+    local list = db.global.trackedCurrencies
+    if IsAlreadyTracked(list, trackType, id) then
+        print("|cffff4444OneWoW_Bags:|r " .. (L["TRACKER_ALREADY_TRACKED"] or ""))
+        return false
+    end
+
+    tinsert(list, { type = trackType, id = id })
     if self.addon.BagsBar then
         self.addon.BagsBar:UpdateTrackers()
         self.addon.BagsBar:UpdateRowVisibility()
@@ -125,13 +142,20 @@ end
 
 function BagsController:AddTrackedItem(itemID)
     local db = self.addon:GetDB()
-    if not db or not itemID then return end
+    if not db or not itemID then return false end
 
-    tinsert(db.global.trackedCurrencies, { type = "item", id = itemID })
+    local list = db.global.trackedCurrencies
+    if IsAlreadyTracked(list, "item", itemID) then
+        print("|cffff4444OneWoW_Bags:|r " .. (L["TRACKER_ALREADY_TRACKED"] or ""))
+        return false
+    end
+
+    tinsert(list, { type = "item", id = itemID })
     if self.addon.BagsBar then
         self.addon.BagsBar:UpdateTrackers()
         self.addon.BagsBar:UpdateRowVisibility()
     end
+    return true
 end
 
 function BagsController:RemoveTrackedEntry(index)

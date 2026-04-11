@@ -125,7 +125,9 @@ OneWoW_Bags.Locales["koKR"] = {
     ["TRACKER_ADD"] = "추적 추가",
     ["TRACKER_ADD_DESC"] = "클릭하여 재화나 아이템을 추적하거나\n아이템을 여기로 끌어다 놓으세요",
     ["TRACKER_ADD_ID"] = "추적할 아이템 ID 또는 재화 ID를 입력:",
-    ["TRACKER_REMOVE"] = "추적 제거",
+    ["TRACKER_MENU_REMOVE"] = "추적 제거",
+    ["TRACKER_HINT_REMOVE"] = "이 추적을 제거하려면 우클릭하세요.",
+    ["TRACKER_ALREADY_TRACKED"] = "이미 추적 중인 아이템 또는 재화입니다.",
 
     ["CATEGORY_MANAGER_BTN"] = "분류",
     ["CATEGORY_MANAGER_TITLE"] = "사용자 분류 관리",
@@ -185,7 +187,7 @@ OneWoW_Bags.Locales["koKR"] = {
     ["DESC_SHOW_NEW"] = "새로 획득한 아이템을 강조합니다.",
     ["SETTING_SHOW_SCROLLBAR"] = "스크롤바 표시",
     ["DESC_SHOW_SCROLLBAR"] = "가방 창의 스크롤바를 표시하거나 숨깁니다.",
-    ["DESC_SHOW_BAGS_BAR"] = "하단에 가방 아이콘과 골드를 표시하는 가방 바를 표시합니다.",
+    ["DESC_SHOW_BAGS_BAR"] = "착용 가방 아이콘과 사용/전체 칸 수를 표시합니다. 추적기와 골드는 아래 줄에 그대로 둡니다.",
     ["SETTING_BAG_COLUMNS"] = "가방 열 수",
     ["SETTING_BANK_COLUMNS"] = "은행 열 수",
 

@@ -76,16 +76,15 @@ function GUI:InitMainWindow()
     local infoBar = InfoBar:Create(contentArea)
 
     local bagsBar = BagsBar:Create(contentArea)
-    local showBagsBar = db.global.showBagsBar
-    if showBagsBar == nil then showBagsBar = true end
-    BagsBar:SetShown(showBagsBar)
+    BagsBar:SetShown(true)
+    BagsBar:UpdateRowVisibility()
 
     local hideScrollBar = db.global.hideScrollBar
     contentScrollFrame, contentFrame = WH:CreateScrollScaffold({
         contentArea = contentArea,
         scrollName = "OneWoW_BagsContentScroll",
         topAnchor = infoBar,
-        bottomAnchor = showBagsBar and bagsBar or nil,
+        bottomAnchor = bagsBar,
         hideScrollBar = hideScrollBar,
     })
 
@@ -220,6 +219,8 @@ function GUI:RefreshLayout()
         end,
         afterLayout = function()
             BagsBar:UpdateFreeSlots(BagSet:GetFreeSlotCount(), BagSet:GetSlotCount())
+            BagsBar:UpdateTrackers()
+            BagsBar:RefreshTrackerCounts()
         end,
     })
 end

@@ -3,6 +3,7 @@ local _, OneWoW_Bags = ...
 OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
     controllerKey = "BankController",
     guiTargetKey = "BankGUI",
+    hideScrollBarKey = "bankHideScrollBar",
     viewModeDBKey = "bankViewMode",
     showHeaderKey = "showBankHeaderBar",
     showSearchKey = "showBankSearchBar",

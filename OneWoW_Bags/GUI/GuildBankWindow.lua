@@ -163,6 +163,8 @@ function GuildBankGUI:RefreshLayout()
             GuildBankGUI:UpdateWindowWidth()
         end,
         beforeLayout = function()
+            GuildBankInfoBar:UpdateVisibility()
+            GuildBankBar:RefreshChromeAnchors()
             controller:BindScrollFrame({
                 scrollFrame = contentScrollFrame,
                 hideScrollBar = db.global.bankHideScrollBar,

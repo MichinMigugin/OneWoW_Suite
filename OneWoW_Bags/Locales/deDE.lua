@@ -125,7 +125,9 @@ OneWoW_Bags.Locales["deDE"] = {
     ["TRACKER_ADD"] = "Tracker hinzufugen",
     ["TRACKER_ADD_DESC"] = "Klicken, um eine Wahrung oder einen Gegenstand zu verfolgen\nOder einen Gegenstand hierher ziehen",
     ["TRACKER_ADD_ID"] = "Gegenstand-ID oder Wahrungs-ID zum Verfolgen eingeben:",
-    ["TRACKER_REMOVE"] = "Tracker entfernen",
+    ["TRACKER_MENU_REMOVE"] = "Tracker entfernen",
+    ["TRACKER_HINT_REMOVE"] = "Rechtsklick, um diesen Tracker zu entfernen.",
+    ["TRACKER_ALREADY_TRACKED"] = "Dieser Gegenstand oder diese Wahrung wird bereits verfolgt.",
 
     ["CATEGORY_MANAGER_BTN"] = "Kategorien",
     ["CATEGORY_MANAGER_TITLE"] = "Eigene Kategorien verwalten",
@@ -185,7 +187,7 @@ OneWoW_Bags.Locales["deDE"] = {
     ["DESC_SHOW_NEW"] = "Neu erhaltene Gegenstande hervorheben.",
     ["SETTING_SHOW_SCROLLBAR"] = "Scrollleiste anzeigen",
     ["DESC_SHOW_SCROLLBAR"] = "Scrollleiste des Taschenfensters anzeigen oder ausblenden.",
-    ["DESC_SHOW_BAGS_BAR"] = "Taschenleiste mit Taschenicons und Gold unten anzeigen.",
+    ["DESC_SHOW_BAGS_BAR"] = "Ausgerustete Taschen-Icons und Belegung anzeigen. Tracker und Gold bleiben in der Zeile darunter.",
     ["SETTING_BAG_COLUMNS"] = "Taschenspalten",
     ["SETTING_BANK_COLUMNS"] = "Bankspalten",
 
