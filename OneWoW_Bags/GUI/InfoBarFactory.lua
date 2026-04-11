@@ -48,6 +48,17 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         return OneWoW_Bags[config.guiTargetKey]
     end
 
+    local function GetFactoryChromeInsets()
+        local db = OneWoW_Bags:GetDB()
+        local hideScroll = false
+        if config.hideScrollBarKey then
+            hideScroll = db.global[config.hideScrollBarKey] and true or false
+        else
+            hideScroll = db.global.hideScrollBar and true or false
+        end
+        return WH:GetItemGridChromeInsets(hideScroll)
+    end
+
     local function effectiveViewMode(raw)
         if raw then
             for _, vm in ipairs(config.viewModes) do
@@ -99,13 +110,15 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         local btnY   = -floor((ROW1_H - 22) / 2)
         local searchY = -(ROW1_H + floor((ROW2_H - 22) / 2))
 
+        local leftInset, rightInset = GetFactoryChromeInsets()
+
         local dropW = config.viewModeDropdownWidth or 170
         local viewModeDropdown, viewModeText = OneWoW_GUI:CreateDropdown(infoBarFrame, {
             width = dropW,
             height = 22,
             text = viewModeLabel(config.viewModes[1].mode),
         })
-        viewModeDropdown:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), btnY)
+        viewModeDropdown:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, btnY)
         infoBarFrame.viewModeDropdown = viewModeDropdown
         infoBarFrame.viewModeText = viewModeText
         OneWoW_GUI:AttachFilterMenu(viewModeDropdown, {
@@ -197,17 +210,27 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         end
 
         if config.cleanupCallback then
-            local cleanupBtn = bar:CreateViewBtn(infoBarFrame, L["CLEANUP"] or "Cleanup")
-            cleanupBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), btnY)
+            local cleanupBtn = OneWoW_GUI:CreateAtlasIconButton(infoBarFrame, {
+                atlas = "crosshair_ui-cursor-broom_32",
+                width = 20,
+                height = 20,
+            })
+            cleanupBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, btnY)
             cleanupBtn:SetScript("OnClick", function()
                 config.cleanupCallback(GetController())
             end)
+            cleanupBtn:HookScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetText(L["CLEANUP"], 1, 1, 1)
+                GameTooltip:Show()
+            end)
+            cleanupBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
             infoBarFrame.cleanupBtn = cleanupBtn
         end
 
         local emptyToggleBtn = CreateFrame("Button", nil, infoBarFrame)
         emptyToggleBtn:SetSize(22, 22)
-        emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), searchY)
+        emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, searchY)
         local emptyIcon = emptyToggleBtn:CreateTexture(nil, "ARTWORK")
         emptyIcon:SetAllPoints()
         emptyIcon:SetTexture("Interface\\COMMON\\FavoritesIcon")
@@ -250,7 +273,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 end
             end,
         })
-        searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), searchY)
+        searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, searchY)
         searchBox:SetPoint("TOPRIGHT", emptyToggleBtn, "TOPLEFT", -3, 0)
         infoBarFrame.searchBox = searchBox
 
@@ -312,13 +335,30 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         local showHeader = GetShowHeader(db)
         local showSearch = GetShowSearch(db)
         local searchY = showHeader and -(ROW1_H + floor((ROW2_H - 22) / 2)) or -floor((ROW2_H - 22) / 2)
+        local btnY = -floor((ROW1_H - 22) / 2)
+        local leftInset, rightInset = GetFactoryChromeInsets()
 
         bar:UpdateViewButtons()
 
+        if showHeader and infoBarFrame.viewModeDropdown then
+            infoBarFrame.viewModeDropdown:ClearAllPoints()
+            infoBarFrame.viewModeDropdown:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, btnY)
+        end
+
+        if infoBarFrame.cleanupBtn and showHeader then
+            infoBarFrame.cleanupBtn:ClearAllPoints()
+            infoBarFrame.cleanupBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, btnY)
+        end
+
         if infoBarFrame.searchBox and showSearch then
             infoBarFrame.searchBox:ClearAllPoints()
-            infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), searchY)
+            infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, searchY)
             infoBarFrame.searchBox:SetPoint("TOPRIGHT", infoBarFrame.emptyToggleBtn, "TOPLEFT", -3, 0)
+        end
+
+        if infoBarFrame.emptyToggleBtn and showSearch then
+            infoBarFrame.emptyToggleBtn:ClearAllPoints()
+            infoBarFrame.emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, searchY)
         end
 
         local newHeight = 0

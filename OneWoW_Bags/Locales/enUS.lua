@@ -135,7 +135,9 @@ OneWoW_Bags.Locales["enUS"] = {
     ["TRACKER_ADD"] = "Add Tracker",
     ["TRACKER_ADD_DESC"] = "Click to add a currency or item to track\nOr drag an item here",
     ["TRACKER_ADD_ID"] = "Enter Item ID or Currency ID to track:",
-    ["TRACKER_REMOVE"] = "Remove Tracker",
+    ["TRACKER_MENU_REMOVE"] = "Remove tracker",
+    ["TRACKER_HINT_REMOVE"] = "Right-click to remove this tracker.",
+    ["TRACKER_ALREADY_TRACKED"] = "That item or currency is already being tracked.",
 
     ["CATEGORY_MANAGER_BTN"] = "Categories",
     ["CATEGORY_MANAGER_TITLE"] = "Custom Category Manager",
@@ -195,7 +197,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["DESC_SHOW_NEW"] = "Show a highlight on newly obtained items.",
     ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
     ["DESC_SHOW_SCROLLBAR"] = "Show or hide the scroll bar on the bags window.",
-    ["DESC_SHOW_BAGS_BAR"] = "Show the bag bar with individual bag icons and gold at the bottom.",
+    ["DESC_SHOW_BAGS_BAR"] = "Show equipped bag icons and the used/total slot count. Tracker and money stay on the row below.",
     ["SETTING_BAG_COLUMNS"] = "Bag Columns",
     ["SETTING_BANK_COLUMNS"] = "Bank Columns",
 
@@ -274,8 +276,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SETTING_COMPACT_GAP"] = "Compact Category Gap",
     ["DESC_COMPACT_GAP"] = "Controls the horizontal gap between side-by-side compact categories, measured in slot widths.",
 
-    ["SETTING_SHOW_MONEY_BAR"] = "Show Money Bar",
-    ["DESC_SHOW_MONEY_BAR"] = "Show the bottom bar with gold, trackers, and bank button.",
+    ["SETTING_SHOW_MONEY_BAR"] = "Show Money",
+    ["DESC_SHOW_MONEY_BAR"] = "Show your gold on the bottom bar. Trackers and other controls stay visible when this is off.",
     ["DESC_SHOW_BANK_MONEY_BAR"] = "Show the bottom bar with gold display in the bank window.",
 
     ["SETTING_SHOW_BANK_BAGS_BAR"] = "Show Bag Bar",

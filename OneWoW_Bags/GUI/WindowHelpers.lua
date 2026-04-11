@@ -16,6 +16,14 @@ local Enum = Enum
 OneWoW_Bags.WindowHelpers = {}
 local WH = OneWoW_Bags.WindowHelpers
 
+local ITEM_GRID_H_PADDING = 2
+local SCROLLBAR_RESERVE_WIDTH = 12
+
+function WH:GetItemGridChromeInsets(hideScrollbar)
+    local gutter = hideScrollbar and 0 or SCROLLBAR_RESERVE_WIDTH
+    return ITEM_GRID_H_PADDING, ITEM_GRID_H_PADDING + gutter
+end
+
 function WH:CreateWindowShell(config)
     local db = OneWoW_Bags:GetDB()
     local position = DB:Ensure(db, "global", config.positionDBKey)
@@ -64,10 +72,10 @@ function WH:CreateWindowTitleBar(mainWindow, config)
 
     local settingsBtn = nil
     if config.settingsText and config.onSettings then
-        settingsBtn = OneWoW_GUI:CreateFitTextButton(titleBar, {
-            text = config.settingsText,
+        settingsBtn = OneWoW_GUI:CreateAtlasIconButton(titleBar, {
+            atlas = config.settingsAtlas or "mechagon-projects",
+            width = 20,
             height = 20,
-            minWidth = 30,
         })
         if settingsBtn then
             if titleBar and titleBar._closeBtn then
@@ -76,6 +84,15 @@ function WH:CreateWindowTitleBar(mainWindow, config)
                 settingsBtn:SetPoint("RIGHT", titleBar, "RIGHT", -2, 0)
             end
             settingsBtn:SetScript("OnClick", config.onSettings)
+            local settingsTooltipTitle = config.settingsText
+            settingsBtn:HookScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetText(settingsTooltipTitle, 1, 1, 1)
+                GameTooltip:Show()
+            end)
+            settingsBtn:HookScript("OnLeave", function()
+                GameTooltip:Hide()
+            end)
         end
     end
 

@@ -449,6 +449,7 @@ function BankGUI:RefreshLayout()
         beforeLayout = function()
             BankInfoBar:UpdateVisibility()
             BankBar:SetShown(db.global.showBankBagsBar ~= false)
+            BankBar:RefreshChromeAnchors()
             controller:BindScrollFrame({
                 scrollFrame = contentScrollFrame,
                 hideScrollBar = db.global.bankHideScrollBar,

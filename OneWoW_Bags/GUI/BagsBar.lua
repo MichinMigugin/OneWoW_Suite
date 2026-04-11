@@ -8,10 +8,11 @@ local StorageAPI = _G.StorageAPI
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
 local BagTypes = OneWoW_Bags.BagTypes
+local WH = OneWoW_Bags.WindowHelpers
 
 local tinsert, sort = tinsert, sort
 local pairs, ipairs = pairs, ipairs
-local min, max = math.min, math.max
+local min, max, ceil, floor = math.min, math.max, math.ceil, math.floor
 local C_Timer = C_Timer
 local C_Item = C_Item
 local C_CurrencyInfo = C_CurrencyInfo
@@ -27,8 +28,8 @@ local trackerDialog = nil
 
 local ROW1_HEIGHT = 32
 local ROW2_HEIGHT = 26
-local ROW1_TRACKER_MAX = 3
 local MAX_ALT_DISPLAY = 10
+local trackerRelayoutPending = false
 
 local function GetDB()
     return OneWoW_Bags:GetDB()
@@ -38,6 +39,25 @@ local function GetController()
     return OneWoW_Bags.BagsController
 end
 
+local function SyncBagsBarOuterHeight()
+    if not bagsBarFrame then return end
+    local db = GetDB()
+    local altShow = OneWoW_Bags:IsAltShowActive()
+    local showBagsBar = db.global.showBagsBar ~= false
+    local showRow1 = showBagsBar
+    if altShow then
+        showRow1 = true
+    end
+    local h = 0
+    if showRow1 and bagsBarFrame.row1Frame and bagsBarFrame.row1Frame:IsShown() then
+        h = h + ROW1_HEIGHT
+    end
+    if bagsBarFrame.row2Frame and bagsBarFrame.row2Frame:IsShown() then
+        h = h + bagsBarFrame.row2Frame:GetHeight()
+    end
+    bagsBarFrame:SetHeight(max(h, 1))
+end
+
 local function ShowTrackerDialog()
     if not trackerDialog then
         local function doAdd()
@@ -45,11 +65,12 @@ local function ShowTrackerDialog()
                 return
             end
             local controller = GetController()
-            if controller and controller.AddTrackedEntryFromID then
-                controller:AddTrackedEntryFromID(trackerDialog.editBox:GetText())
+            if controller then
+                if controller:AddTrackedEntryFromID(strtrim(trackerDialog.editBox:GetText())) then
+                    trackerDialog.editBox:SetText("")
+                    trackerDialog.frame:Hide()
+                end
             end
-            trackerDialog.editBox:SetText("")
-            trackerDialog.frame:Hide()
         end
 
         local dialog = OneWoW_GUI:CreateDialog({
@@ -128,7 +149,6 @@ function BagsBar:Create(parent)
     row1Frame:SetHeight(ROW1_HEIGHT)
     bagsBarFrame.row1Frame = row1Frame
 
-    -- Row 2: add tracker | trackers | gold right
     local row2Frame = CreateFrame("Frame", nil, bagsBarFrame, "BackdropTemplate")
     row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
     row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
@@ -138,8 +158,23 @@ function BagsBar:Create(parent)
     row2Frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     bagsBarFrame.row2Frame = row2Frame
 
+    local toolbarBand = CreateFrame("Frame", nil, row2Frame)
+    toolbarBand:SetPoint("TOPLEFT", row2Frame, "TOPLEFT", 0, 0)
+    toolbarBand:SetPoint("TOPRIGHT", row2Frame, "TOPRIGHT", 0, 0)
+    toolbarBand:SetHeight(ROW2_HEIGHT)
+    bagsBarFrame.toolbarBand = toolbarBand
+
+    local dbCreate = GetDB()
+    local bagsBarLeftInset, bagsBarRightInset = WH:GetItemGridChromeInsets(dbCreate.global.hideScrollBar)
+
+    local controlCluster = CreateFrame("Frame", nil, toolbarBand)
+    controlCluster:SetPoint("LEFT", toolbarBand, "LEFT", bagsBarLeftInset, 0)
+    controlCluster:SetHeight(ROW2_HEIGHT)
+    controlCluster:SetWidth(72)
+    bagsBarFrame.trackerControlCluster = controlCluster
+
     -- Bag icon buttons (row 1, left)
-    local xOffset = OneWoW_GUI:GetSpacing("SM")
+    local xOffset = bagsBarLeftInset
 
     for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do
         if not BagTypes:IsReagentBag(bagID) then
@@ -152,6 +187,7 @@ function BagsBar:Create(parent)
             sep:SetSize(1, 20)
             sep:SetPoint("LEFT", row1Frame, "LEFT", xOffset + 2, 0)
             sep:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            bagsBarFrame.reagentSeparator = sep
             xOffset = xOffset + 6
             local bagSlot = BagsBar:CreateBagButton(row1Frame, bagID, xOffset)
             bagButtons[bagID] = bagSlot
@@ -159,39 +195,90 @@ function BagsBar:Create(parent)
     end
 
     local freeSlots = row1Frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    freeSlots:SetPoint("RIGHT", row1Frame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    freeSlots:SetPoint("RIGHT", row1Frame, "RIGHT", -bagsBarRightInset, 0)
     freeSlots:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     bagsBarFrame.freeSlots = freeSlots
 
-    -- Row 2 left: add tracker button
-    local addTrackerBtn = OneWoW_GUI:CreateButton(row2Frame, { text = "+", width = 20, height = 20 })
-    addTrackerBtn:SetPoint("LEFT", row2Frame, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
+    local addTrackerBtn = OneWoW_GUI:CreateAtlasIconButton(controlCluster, {
+        atlas = "Garr_Building-AddFollowerPlus",
+        width = 20,
+        height = 20,
+    })
+    addTrackerBtn:SetPoint("LEFT", controlCluster, "LEFT", 0, 0)
     addTrackerBtn:SetScript("OnClick", function()
         ShowTrackerDialog()
     end)
-    addTrackerBtn:SetScript("OnEnter", function(self)
+    addTrackerBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(L["TRACKER_ADD"], 1, 1, 1)
         GameTooltip:AddLine(L["TRACKER_ADD_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
-    addTrackerBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    addTrackerBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
     addTrackerBtn:RegisterForDrag("LeftButton")
     addTrackerBtn:SetScript("OnReceiveDrag", function(self)
-        local cursorType, itemID = GetCursorInfo()
-        if cursorType == "item" and itemID then
-            local controller = GetController()
-            if controller and controller.AddTrackedItem then
-                controller:AddTrackedItem(itemID)
-            end
-            ClearCursor()
+        local cursorType, itemID, itemLink = GetCursorInfo()
+        if cursorType ~= "item" then return end
+        local id = itemID
+        if (not id or id == 0) and itemLink then
+            id = C_Item.GetItemInfoInstant(itemLink)
         end
+        if (not id or id == 0) and itemLink then
+            id = tonumber(itemLink:match("item:(%d+)"))
+        end
+        if id and id > 0 then
+            local controller = GetController()
+            if controller then
+                controller:AddTrackedItem(id)
+            end
+        end
+        ClearCursor()
     end)
     bagsBarFrame.addTrackerBtn = addTrackerBtn
 
-    local goldBtn = CreateFrame("Button", nil, row2Frame)
+    local cleanupBagsBtn = OneWoW_GUI:CreateAtlasIconButton(controlCluster, {
+        atlas = "crosshair_ui-cursor-broom_32",
+        width = 20,
+        height = 20,
+    })
+    cleanupBagsBtn:SetPoint("LEFT", addTrackerBtn, "RIGHT", 4, 0)
+    cleanupBagsBtn:SetScript("OnClick", function()
+        local controller = GetController()
+        if controller and controller.SortBags then
+            controller:SortBags()
+        end
+    end)
+    cleanupBagsBtn:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText(L["CLEANUP"], 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    cleanupBagsBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    bagsBarFrame.cleanupBagsBtn = cleanupBagsBtn
+
+    local categoriesBtn = OneWoW_GUI:CreateAtlasIconButton(controlCluster, {
+        atlas = "housing-sidetabs-catalog-active",
+        width = 20,
+        height = 20,
+    })
+    categoriesBtn:SetPoint("LEFT", cleanupBagsBtn, "RIGHT", 4, 0)
+    categoriesBtn:SetScript("OnClick", function()
+        local controller = GetController()
+        if controller and controller.ToggleCategoryManager then
+            controller:ToggleCategoryManager()
+        end
+    end)
+    categoriesBtn:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText(L["CATEGORY_MANAGER_BTN"], 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    categoriesBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    bagsBarFrame.categoriesBtn = categoriesBtn
+
+    local goldBtn = CreateFrame("Button", nil, toolbarBand)
     goldBtn:SetHeight(20)
-    goldBtn:SetPoint("RIGHT", row2Frame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    goldBtn:SetPoint("RIGHT", toolbarBand, "RIGHT", -bagsBarRightInset, 0)
 
     local goldText = goldBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     goldText:SetPoint("RIGHT", goldBtn, "RIGHT", 0, 0)
@@ -207,8 +294,23 @@ function BagsBar:Create(parent)
     goldBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     bagsBarFrame.goldBtn = goldBtn
 
+    local trackerLayoutHost = CreateFrame("Frame", nil, row2Frame)
+    trackerLayoutHost:SetPoint("TOPLEFT", toolbarBand, "BOTTOMLEFT", 0, 0)
+    trackerLayoutHost:SetPoint("TOPRIGHT", toolbarBand, "BOTTOMRIGHT", 0, 0)
+    trackerLayoutHost:SetHeight(0)
+    bagsBarFrame.trackerLayoutHost = trackerLayoutHost
+
     bagsBarFrame.trackerFrames = {}
     BagsBar:UpdateTrackers()
+
+    bagsBarFrame:SetScript("OnSizeChanged", function()
+        if trackerRelayoutPending then return end
+        trackerRelayoutPending = true
+        C_Timer.After(0, function()
+            trackerRelayoutPending = false
+            BagsBar:UpdateTrackers()
+        end)
+    end)
 
     eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_MONEY")
@@ -275,10 +377,7 @@ function BagsBar:ShowGoldTooltip()
     end
 end
 
-function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
-    local tf = CreateFrame("Button", nil, parentFrame)
-    tf:SetSize(65, 22)
-
+local function GetTrackerCountAndIcon(entry)
     local iconTexture
     local countValue = 0
     if entry.type == "item" then
@@ -291,78 +390,116 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
             countValue = info.quantity
         end
     end
+    return countValue, iconTexture
+end
+
+function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
+    local cellW = Constants.GUI.TRACKER_CELL_WIDTH
+    local cellH = Constants.GUI.TRACKER_CELL_HEIGHT
+    local tf = OneWoW_GUI:CreateFrame(parentFrame, {
+        width = cellW,
+        height = cellH,
+        bgColor = "BG_TERTIARY",
+        borderColor = "BORDER_SUBTLE",
+    })
+
+    local countValue, iconTexture = GetTrackerCountAndIcon(entry)
 
     local iconFrame = OneWoW_GUI:CreateSkinnedIcon(tf, {
         size = 16,
         preset = "clean",
         iconTexture = iconTexture,
     })
-    iconFrame:SetPoint("LEFT", tf, "LEFT", 2, 0)
+    iconFrame:SetPoint("LEFT", tf, "LEFT", 4, 0)
+    iconFrame:EnableMouse(false)
     tf.iconFrame = iconFrame
 
     local countText = tf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    countText:SetPoint("LEFT", iconFrame, "RIGHT", 3, 0)
+    countText:SetPoint("RIGHT", tf, "RIGHT", -4, 0)
+    countText:SetJustifyH("RIGHT")
     countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     countText:SetText("x" .. countValue)
     tf.countText = countText
 
+    tf.trackType = entry.type
+    tf.trackId = entry.id
+
     local capturedIdx = index
-    local removeBtn = OneWoW_GUI:CreateButton(tf, { text = "X", width = 14, height = 14 })
-    removeBtn:SetPoint("CENTER", tf.iconFrame, "CENTER", 0, 0)
-    removeBtn:SetFrameLevel(tf:GetFrameLevel() + 5)
-    removeBtn:Hide()
-    removeBtn:SetScript("OnClick", function()
-        local controller = GetController()
-        if controller and controller.RemoveTrackedEntry then
-            controller:RemoveTrackedEntry(capturedIdx)
-        end
+    tf:EnableMouse(true)
+    tf:SetScript("OnMouseDown", function(self, button)
+        if button ~= "RightButton" then return end
+        MenuUtil.CreateContextMenu(self, function(_, rootDescription)
+            rootDescription:CreateButton(L["TRACKER_MENU_REMOVE"], function()
+                local controller = GetController()
+                if controller and controller.RemoveTrackedEntry then
+                    controller:RemoveTrackedEntry(capturedIdx)
+                end
+            end)
+        end)
     end)
-    removeBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["TRACKER_REMOVE"], 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    removeBtn:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-        removeBtn:Hide()
-    end)
-    tf.removeBtn = removeBtn
 
     if entry.type == "item" then
         tf:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetItemByID(entry.id)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(L["TRACKER_HINT_REMOVE"], 0.7, 0.7, 0.7, true)
             GameTooltip:Show()
-            if self.removeBtn then self.removeBtn:Show() end
-        end)
-        tf:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
-            if self.removeBtn and not self.removeBtn:IsMouseOver() then
-                self.removeBtn:Hide()
-            end
         end)
     elseif entry.type == "currency" then
         tf:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetCurrencyByID(entry.id)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(L["TRACKER_HINT_REMOVE"], 0.7, 0.7, 0.7, true)
             GameTooltip:Show()
-            if self.removeBtn then self.removeBtn:Show() end
-        end)
-        tf:SetScript("OnLeave", function(self)
-            GameTooltip:Hide()
-            if self.removeBtn and not self.removeBtn:IsMouseOver() then
-                self.removeBtn:Hide()
-            end
         end)
     end
+    tf:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
 
     return tf
 end
 
+function BagsBar:RefreshTrackerCounts()
+    if not bagsBarFrame or not bagsBarFrame.trackerFrames then return end
+    for _, tf in ipairs(bagsBarFrame.trackerFrames) do
+        if tf.countText and tf.trackType and tf.trackId then
+            local entry = { type = tf.trackType, id = tf.trackId }
+            local countValue = GetTrackerCountAndIcon(entry)
+            tf.countText:SetText("x" .. countValue)
+        end
+    end
+end
+
 function BagsBar:UpdateTrackers()
-    if not bagsBarFrame then return end
+    if not bagsBarFrame or not bagsBarFrame.trackerLayoutHost then return end
 
     local db = GetDB()
+    local host = bagsBarFrame.trackerLayoutHost
+    local row2Frame = bagsBarFrame.row2Frame
+
+    local barW = host:GetWidth()
+    if barW < 1 then
+        barW = row2Frame:GetWidth()
+    end
+    if barW < 1 then
+        barW = bagsBarFrame:GetWidth()
+    end
+
+    if barW < 1 then
+        if not bagsBarFrame._trackerLayoutRetry then
+            bagsBarFrame._trackerLayoutRetry = true
+            C_Timer.After(0, function()
+                if bagsBarFrame then
+                    bagsBarFrame._trackerLayoutRetry = nil
+                end
+                BagsBar:UpdateTrackers()
+            end)
+        end
+        return
+    end
 
     for _, tf in ipairs(bagsBarFrame.trackerFrames) do
         tf:Hide()
@@ -372,59 +509,38 @@ function BagsBar:UpdateTrackers()
     bagsBarFrame.trackerFrames = {}
 
     local trackers = db.global.trackedCurrencies
-    local count = #trackers
-    local row2Frame = bagsBarFrame.row2Frame
+    local n = #trackers
 
-    local needExtraRow = count > ROW1_TRACKER_MAX
-    if needExtraRow then
-        bagsBarFrame:SetHeight(Constants.GUI.BAGSBAR_HEIGHT + ROW2_HEIGHT)
-    else
-        bagsBarFrame:SetHeight(Constants.GUI.BAGSBAR_HEIGHT)
+    local cellW = Constants.GUI.TRACKER_CELL_WIDTH
+    local cellH = Constants.GUI.TRACKER_CELL_HEIGHT
+    local cellGap = Constants.GUI.TRACKER_CELL_GAP
+    local cellStride = cellW + cellGap
+    local leftInset, rightInset = WH:GetItemGridChromeInsets(db.global.hideScrollBar)
+
+    local innerW = barW - leftInset - rightInset
+    local perRow = max(1, floor(innerW / cellStride))
+    local trackerRows = 0
+    if n > 0 then
+        trackerRows = ceil(n / perRow)
     end
 
-    local row2Count = min(count, ROW1_TRACKER_MAX)
-    local anchorLeft = bagsBarFrame.addTrackerBtn
-    for i = 1, row2Count do
-        local tf = BagsBar:CreateTrackerFrame(row2Frame, i, trackers[i])
-        tf:SetPoint("LEFT", anchorLeft, "RIGHT", 4, 0)
-        anchorLeft = tf
+    local trackerBandH = trackerRows * ROW2_HEIGHT
+    host:SetHeight(trackerBandH)
+    row2Frame:SetHeight(ROW2_HEIGHT + trackerBandH)
+
+    local yPad = (ROW2_HEIGHT - cellH) / 2
+    for i = 1, n do
+        local tf = BagsBar:CreateTrackerFrame(host, i, trackers[i])
+        local row = ceil(i / perRow)
+        local col = (i - 1) % perRow + 1
+        local x = leftInset + (col - 1) * cellStride
+        local y = -((row - 1) * ROW2_HEIGHT) - yPad
+        tf:SetPoint("TOPLEFT", host, "TOPLEFT", x, y)
         tinsert(bagsBarFrame.trackerFrames, tf)
         tf:Show()
     end
 
-    if needExtraRow then
-        local extraRow = bagsBarFrame.extraRow
-        if not extraRow then
-            extraRow = CreateFrame("Frame", nil, bagsBarFrame, "BackdropTemplate")
-            extraRow:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
-            extraRow:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
-            extraRow:SetHeight(ROW2_HEIGHT)
-            extraRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-            extraRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            extraRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            bagsBarFrame.extraRow = extraRow
-        end
-        extraRow:Show()
-        row2Frame:ClearAllPoints()
-        row2Frame:SetPoint("BOTTOMLEFT", extraRow, "TOPLEFT", 0, 0)
-        row2Frame:SetPoint("BOTTOMRIGHT", extraRow, "TOPRIGHT", 0, 0)
-
-        local xOff = 8
-        for i = ROW1_TRACKER_MAX + 1, count do
-            local tf = BagsBar:CreateTrackerFrame(extraRow, i, trackers[i])
-            tf:SetPoint("LEFT", extraRow, "LEFT", xOff, 0)
-            xOff = xOff + 69
-            tinsert(bagsBarFrame.trackerFrames, tf)
-            tf:Show()
-        end
-    else
-        if bagsBarFrame.extraRow then
-            bagsBarFrame.extraRow:Hide()
-        end
-        row2Frame:ClearAllPoints()
-        row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
-        row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
-    end
+    SyncBagsBarOuterHeight()
 end
 
 function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
@@ -531,66 +647,105 @@ function BagsBar:SetShown(show)
     end
 end
 
+function BagsBar:UpdateChromeAnchors()
+    if not bagsBarFrame or not bagsBarFrame.row1Frame then return end
+    local db = GetDB()
+    local leftInset, rightInset = WH:GetItemGridChromeInsets(db.global.hideScrollBar)
+    local row1Frame = bagsBarFrame.row1Frame
+    local toolbarBand = bagsBarFrame.toolbarBand
+
+    if bagsBarFrame.trackerControlCluster and toolbarBand then
+        bagsBarFrame.trackerControlCluster:ClearAllPoints()
+        bagsBarFrame.trackerControlCluster:SetPoint("LEFT", toolbarBand, "LEFT", leftInset, 0)
+    end
+
+    local xOffset = leftInset
+    for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do
+        if not BagTypes:IsReagentBag(bagID) then
+            local bagSlot = bagButtons[bagID]
+            if bagSlot then
+                bagSlot:ClearAllPoints()
+                bagSlot:SetPoint("LEFT", row1Frame, "LEFT", xOffset, 0)
+            end
+            xOffset = xOffset + 30
+        else
+            if bagsBarFrame.reagentSeparator then
+                bagsBarFrame.reagentSeparator:ClearAllPoints()
+                bagsBarFrame.reagentSeparator:SetPoint("LEFT", row1Frame, "LEFT", xOffset + 2, 0)
+            end
+            xOffset = xOffset + 6
+            local bagSlot = bagButtons[bagID]
+            if bagSlot then
+                bagSlot:ClearAllPoints()
+                bagSlot:SetPoint("LEFT", row1Frame, "LEFT", xOffset, 0)
+            end
+            xOffset = xOffset + 30
+        end
+    end
+
+    if bagsBarFrame.freeSlots then
+        bagsBarFrame.freeSlots:ClearAllPoints()
+        bagsBarFrame.freeSlots:SetPoint("RIGHT", row1Frame, "RIGHT", -rightInset, 0)
+    end
+    if bagsBarFrame.goldBtn and toolbarBand then
+        bagsBarFrame.goldBtn:ClearAllPoints()
+        bagsBarFrame.goldBtn:SetPoint("RIGHT", toolbarBand, "RIGHT", -rightInset, 0)
+    end
+end
+
 function BagsBar:UpdateRowVisibility()
     if not bagsBarFrame then return end
 
     local db = GetDB()
     local altShow = OneWoW_Bags:IsAltShowActive()
-    local showBags = db.global.showBagsBar ~= false
+    local showBagsBar = db.global.showBagsBar ~= false
     local showMoney = db.global.showMoneyBar ~= false
-    if altShow then showBags = true; showMoney = true end
-
-    local trackers = db.global.trackedCurrencies
-    local hasTrackers = #trackers > 0
-    local showRow2 = showMoney or hasTrackers
-    local needExtraRow = showRow2 and #trackers > ROW1_TRACKER_MAX
+    local showRow1 = showBagsBar
+    if altShow then
+        showRow1 = true
+        showMoney = true
+    end
 
     if bagsBarFrame.row1Frame then
-        bagsBarFrame.row1Frame:SetShown(showBags)
+        bagsBarFrame.row1Frame:SetShown(showRow1)
     end
 
     if bagsBarFrame.goldBtn then
         bagsBarFrame.goldBtn:SetShown(showMoney)
     end
 
+    if bagsBarFrame.cleanupBagsBtn then
+        local showCleanup = (db.global.showHeaderBar ~= false) or altShow
+        bagsBarFrame.cleanupBagsBtn:SetShown(showCleanup)
+    end
+
+    if bagsBarFrame.categoriesBtn then
+        local showCategories = (db.global.showHeaderBar ~= false) or altShow
+        bagsBarFrame.categoriesBtn:SetShown(showCategories)
+    end
+
     if bagsBarFrame.row2Frame then
-        bagsBarFrame.row2Frame:SetShown(showRow2)
-    end
-
-    if bagsBarFrame.extraRow then
-        bagsBarFrame.extraRow:SetShown(needExtraRow)
-    end
-
-    if not showBags and not showRow2 then
-        bagsBarFrame:Hide()
-        return
+        bagsBarFrame.row2Frame:SetShown(true)
     end
 
     bagsBarFrame:Show()
 
-    local baseHeight = 0
-    if showBags then baseHeight = baseHeight + ROW1_HEIGHT end
-    if showRow2 then baseHeight = baseHeight + ROW2_HEIGHT end
-    if needExtraRow then baseHeight = baseHeight + ROW2_HEIGHT end
+    bagsBarFrame.row2Frame:ClearAllPoints()
+    bagsBarFrame.row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
+    bagsBarFrame.row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
 
-    bagsBarFrame:SetHeight(baseHeight)
-
-    if showRow2 then
-        bagsBarFrame.row2Frame:ClearAllPoints()
-        if needExtraRow and bagsBarFrame.extraRow then
-            bagsBarFrame.row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame.extraRow, "TOPLEFT", 0, 0)
-            bagsBarFrame.row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame.extraRow, "TOPRIGHT", 0, 0)
-        else
-            bagsBarFrame.row2Frame:SetPoint("BOTTOMLEFT", bagsBarFrame, "BOTTOMLEFT", 0, 0)
-            bagsBarFrame.row2Frame:SetPoint("BOTTOMRIGHT", bagsBarFrame, "BOTTOMRIGHT", 0, 0)
-        end
-    end
-
-    if showBags then
+    if showRow1 then
         bagsBarFrame.row1Frame:ClearAllPoints()
         bagsBarFrame.row1Frame:SetPoint("TOPLEFT", bagsBarFrame, "TOPLEFT", 0, 0)
         bagsBarFrame.row1Frame:SetPoint("TOPRIGHT", bagsBarFrame, "TOPRIGHT", 0, 0)
     end
+
+    BagsBar:UpdateChromeAnchors()
+    BagsBar:UpdateTrackers()
+end
+
+function BagsBar:GetTrackerControlCluster()
+    return bagsBarFrame and bagsBarFrame.trackerControlCluster or nil
 end
 
 function BagsBar:Reset()

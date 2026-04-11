@@ -125,7 +125,9 @@ OneWoW_Bags.Locales["esES"] = {
     ["TRACKER_ADD"] = "Anadir rastreador",
     ["TRACKER_ADD_DESC"] = "Clic para anadir una moneda u objeto a rastrear\nO arrastra un objeto aqui",
     ["TRACKER_ADD_ID"] = "Introduce ID de objeto o moneda a rastrear:",
-    ["TRACKER_REMOVE"] = "Quitar rastreador",
+    ["TRACKER_MENU_REMOVE"] = "Quitar rastreador",
+    ["TRACKER_HINT_REMOVE"] = "Clic derecho para quitar este rastreador.",
+    ["TRACKER_ALREADY_TRACKED"] = "Ese objeto o moneda ya esta siendo rastreado.",
 
     ["CATEGORY_MANAGER_BTN"] = "Categorias",
     ["CATEGORY_MANAGER_TITLE"] = "Administrador de categorias personalizadas",
@@ -185,7 +187,7 @@ OneWoW_Bags.Locales["esES"] = {
     ["DESC_SHOW_NEW"] = "Resaltar objetos recien obtenidos.",
     ["SETTING_SHOW_SCROLLBAR"] = "Mostrar barra de desplazamiento",
     ["DESC_SHOW_SCROLLBAR"] = "Mostrar u ocultar la barra de desplazamiento.",
-    ["DESC_SHOW_BAGS_BAR"] = "Mostrar la barra de bolsas con iconos y oro.",
+    ["DESC_SHOW_BAGS_BAR"] = "Mostrar iconos de bolsas equipadas y conteo de ranuras. Rastreador y oro siguen en la fila inferior.",
     ["SETTING_BAG_COLUMNS"] = "Columnas de bolsas",
     ["SETTING_BANK_COLUMNS"] = "Columnas del banco",
 

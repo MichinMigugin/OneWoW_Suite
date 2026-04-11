@@ -4,6 +4,7 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local L = OneWoW_Bags.L
+local WH = OneWoW_Bags.WindowHelpers
 
 local pairs = pairs
 
@@ -35,10 +36,12 @@ function GuildBankBar:Create(parent)
     bagsBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     bagsBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
+    local _, rightInsetCreate = WH:GetItemGridChromeInsets(GetDB().global.bankHideScrollBar)
+
     GuildBankBar:BuildTabButtons()
 
     local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_WITHDRAW"] or "Withdraw", height = 22 })
-    withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), ROW1_Y)
+    withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInsetCreate, ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
         local controller = GetController()
         if controller and controller.ShowWithdrawMoney then
@@ -81,6 +84,42 @@ function GuildBankBar:Create(parent)
     return bagsBarFrame
 end
 
+function GuildBankBar:RefreshChromeAnchors()
+    if not bagsBarFrame then return end
+    local db = GetDB()
+    local leftInset, rightInset = WH:GetItemGridChromeInsets(db.global.bankHideScrollBar)
+    if bagsBarFrame.withdrawBtn then
+        bagsBarFrame.withdrawBtn:ClearAllPoints()
+        bagsBarFrame.withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInset, ROW1_Y)
+    end
+    if bagsBarFrame.depositBtn and bagsBarFrame.withdrawBtn then
+        bagsBarFrame.depositBtn:ClearAllPoints()
+        bagsBarFrame.depositBtn:SetPoint("RIGHT", bagsBarFrame.withdrawBtn, "LEFT", -4, 0)
+    end
+    if bagsBarFrame.logBtn and bagsBarFrame.depositBtn then
+        bagsBarFrame.logBtn:ClearAllPoints()
+        bagsBarFrame.logBtn:SetPoint("RIGHT", bagsBarFrame.depositBtn, "LEFT", -4, 0)
+    end
+    if bagsBarFrame.goldText and bagsBarFrame.logBtn then
+        bagsBarFrame.goldText:ClearAllPoints()
+        bagsBarFrame.goldText:SetPoint("RIGHT", bagsBarFrame.logBtn, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    end
+    if bagsBarFrame.freeSlots and bagsBarFrame.goldText then
+        bagsBarFrame.freeSlots:ClearAllPoints()
+        bagsBarFrame.freeSlots:SetPoint("RIGHT", bagsBarFrame.goldText, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
+    end
+    local numTabs = GetNumGuildBankTabs() or 0
+    local xOffset = leftInset
+    for tabID = 1, numTabs do
+        local btn = tabButtons[tabID]
+        if btn then
+            btn:ClearAllPoints()
+            btn:SetPoint("LEFT", bagsBarFrame, "LEFT", xOffset, ROW1_Y)
+        end
+        xOffset = xOffset + 30
+    end
+end
+
 function GuildBankBar:BuildTabButtons()
     if not bagsBarFrame then return end
 
@@ -92,7 +131,7 @@ function GuildBankBar:BuildTabButtons()
     tabButtons = {}
 
     local numTabs = GetNumGuildBankTabs() or 0
-    local xOffset = OneWoW_GUI:GetSpacing("SM")
+    local xOffset = select(1, WH:GetItemGridChromeInsets(GetDB().global.bankHideScrollBar))
 
     for tabID = 1, numTabs do
         local name, icon, isViewable = GetGuildBankTabInfo(tabID)

@@ -125,7 +125,9 @@ OneWoW_Bags.Locales["frFR"] = {
     ["TRACKER_ADD"] = "Ajouter un suivi",
     ["TRACKER_ADD_DESC"] = "Cliquez pour ajouter une monnaie ou un objet a suivre\nOu glissez un objet ici",
     ["TRACKER_ADD_ID"] = "Entrez l'ID d'objet ou de monnaie a suivre :",
-    ["TRACKER_REMOVE"] = "Retirer le suivi",
+    ["TRACKER_MENU_REMOVE"] = "Retirer le suivi",
+    ["TRACKER_HINT_REMOVE"] = "Clic droit pour retirer ce suivi.",
+    ["TRACKER_ALREADY_TRACKED"] = "Cet objet ou cette monnaie est deja suivi.",
 
     ["CATEGORY_MANAGER_BTN"] = "Categories",
     ["CATEGORY_MANAGER_TITLE"] = "Gestionnaire de categories personnalisees",
@@ -185,7 +187,7 @@ OneWoW_Bags.Locales["frFR"] = {
     ["DESC_SHOW_NEW"] = "Mettre en surbrillance les nouveaux objets obtenus.",
     ["SETTING_SHOW_SCROLLBAR"] = "Afficher la barre de defilement",
     ["DESC_SHOW_SCROLLBAR"] = "Afficher ou masquer la barre de defilement.",
-    ["DESC_SHOW_BAGS_BAR"] = "Afficher la barre des sacs avec les icones et l'or.",
+    ["DESC_SHOW_BAGS_BAR"] = "Afficher les icones de sacs equipes et le compteur de places. Suivi et or restent sur la ligne du bas.",
     ["SETTING_BAG_COLUMNS"] = "Colonnes de sacs",
     ["SETTING_BANK_COLUMNS"] = "Colonnes de banque",
 

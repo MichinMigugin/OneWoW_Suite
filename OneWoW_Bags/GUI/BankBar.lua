@@ -6,6 +6,7 @@ if not OneWoW_GUI then return end
 local L = OneWoW_Bags.L
 local BankTypes = OneWoW_Bags.BankTypes
 local BankSet = OneWoW_Bags.BankSet
+local WH = OneWoW_Bags.WindowHelpers
 
 local pairs, ipairs = pairs, ipairs
 
@@ -41,10 +42,12 @@ function BankBar:Create(parent)
     bagsBarFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     bagsBarFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
+    local leftInsetCreate, rightInsetCreate = WH:GetItemGridChromeInsets(GetDB().global.bankHideScrollBar)
+
     BankBar:BuildTabButtons()
 
     local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_WITHDRAW_GOLD"] or "Withdraw", height = 22 })
-    withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), ROW1_Y)
+    withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInsetCreate, ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
         local controller = GetController()
         if controller and controller.ShowWithdrawMoney then
@@ -73,7 +76,7 @@ function BankBar:Create(parent)
     bagsBarFrame.freeSlots = freeSlots
 
     local depositReagentsBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_DEPOSIT_REAGENTS"] or "Deposit Reagents", height = 22 })
-    depositReagentsBtn:SetPoint("LEFT", bagsBarFrame, "LEFT", OneWoW_GUI:GetSpacing("SM"), ROW2_Y)
+    depositReagentsBtn:SetPoint("LEFT", bagsBarFrame, "LEFT", leftInsetCreate, ROW2_Y)
     depositReagentsBtn:SetScript("OnClick", function()
         local controller = GetController()
         if controller and controller.DepositReagents then
@@ -83,7 +86,7 @@ function BankBar:Create(parent)
     bagsBarFrame.depositReagentsBtn = depositReagentsBtn
 
     local warbandBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_WARBAND"] or "Warband", height = 22 })
-    warbandBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), ROW2_Y)
+    warbandBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInsetCreate, ROW2_Y)
     warbandBtn._defaultEnter = warbandBtn:GetScript("OnEnter")
     warbandBtn._defaultLeave = warbandBtn:GetScript("OnLeave")
     warbandBtn:SetScript("OnEnter", function(self)
@@ -124,6 +127,39 @@ function BankBar:Create(parent)
     return bagsBarFrame
 end
 
+function BankBar:RefreshChromeAnchors()
+    if not bagsBarFrame then return end
+    local db = GetDB()
+    local leftInset, rightInset = WH:GetItemGridChromeInsets(db.global.bankHideScrollBar)
+    if bagsBarFrame.withdrawBtn then
+        bagsBarFrame.withdrawBtn:ClearAllPoints()
+        bagsBarFrame.withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInset, ROW1_Y)
+    end
+    if bagsBarFrame.warbandBtn then
+        bagsBarFrame.warbandBtn:ClearAllPoints()
+        bagsBarFrame.warbandBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInset, ROW2_Y)
+    end
+    if bagsBarFrame.personalBtn and bagsBarFrame.warbandBtn then
+        bagsBarFrame.personalBtn:ClearAllPoints()
+        bagsBarFrame.personalBtn:SetPoint("RIGHT", bagsBarFrame.warbandBtn, "LEFT", -4, 0)
+    end
+    if bagsBarFrame.depositReagentsBtn then
+        bagsBarFrame.depositReagentsBtn:ClearAllPoints()
+        bagsBarFrame.depositReagentsBtn:SetPoint("LEFT", bagsBarFrame, "LEFT", leftInset, ROW2_Y)
+    end
+    local showWarband = db.global.bankShowWarband
+    local bagList = showWarband and BankTypes:GetWarbandTabIDs() or BankTypes:GetBankTabIDs()
+    local xOffset = leftInset
+    for _, bagID in ipairs(bagList) do
+        local btn = tabButtons[bagID]
+        if btn then
+            btn:ClearAllPoints()
+            btn:SetPoint("LEFT", bagsBarFrame, "LEFT", xOffset, ROW1_Y)
+        end
+        xOffset = xOffset + 30
+    end
+end
+
 function BankBar:BuildTabButtons()
     if not bagsBarFrame then return end
     local db = GetDB()
@@ -137,7 +173,7 @@ function BankBar:BuildTabButtons()
     tabButtons = {}
 
     local bagList = showWarband and BankTypes:GetWarbandTabIDs() or BankTypes:GetBankTabIDs()
-    local xOffset = OneWoW_GUI:GetSpacing("SM")
+    local xOffset = select(1, WH:GetItemGridChromeInsets(db.global.bankHideScrollBar))
 
     local numPurchased = 0
     if OneWoW_Bags.bankOpen then

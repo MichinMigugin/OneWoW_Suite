@@ -55,6 +55,60 @@ end
 local tabContents = {}
 local tabBtns = {}
 
+local function SyncTabScrollWidths()
+    for _, sf in ipairs(tabContents) do
+        local scrollFrame = sf.scrollFrame
+        local scrollContent = sf.scrollContent
+        if scrollFrame and scrollContent then
+            local w = scrollFrame:GetWidth()
+            if w and w > 0 then
+                scrollContent:SetWidth(w)
+                scrollFrame:UpdateScrollChildRect()
+            end
+        end
+    end
+end
+
+local function ReflowWrappedFontStrings(frame)
+    if not frame then return end
+    local regions = { frame:GetRegions() }
+    for ri = 1, #regions do
+        local r = regions[ri]
+        if r:IsObjectType("FontString") and r.GetWordWrap and r:GetWordWrap() then
+            local txt = r:GetText()
+            if txt and txt ~= "" then
+                r:SetText(txt)
+            end
+        end
+    end
+    local children = { frame:GetChildren() }
+    for ci = 1, #children do
+        ReflowWrappedFontStrings(children[ci])
+    end
+end
+
+local function NudgeVerticalScroll(scrollFrame)
+    if not scrollFrame or not scrollFrame.GetVerticalScrollRange then return end
+    local maxScroll = scrollFrame:GetVerticalScrollRange()
+    if not maxScroll or maxScroll <= 0 then return end
+    local v = scrollFrame:GetVerticalScroll()
+    local bump = (v < maxScroll) and 1 or -1
+    scrollFrame:SetVerticalScroll(v + bump)
+    scrollFrame:SetVerticalScroll(v)
+end
+
+local function RefreshSettingsScrollLayouts()
+    SyncTabScrollWidths()
+    for _, sf in ipairs(tabContents) do
+        if sf.scrollContent then
+            ReflowWrappedFontStrings(sf.scrollContent)
+        end
+        if sf.scrollFrame then
+            NudgeVerticalScroll(sf.scrollFrame)
+        end
+    end
+end
+
 local function SwitchTab(n)
     for i, content in ipairs(tabContents) do
         content:SetShown(i == n)
@@ -79,6 +133,8 @@ local function SwitchTab(n)
             if btn._activeBar then btn._activeBar:Hide() end
         end
     end
+    RefreshSettingsScrollLayouts()
+    C_Timer.After(0, RefreshSettingsScrollLayouts)
 end
 
 local function BuildContainer(parent, yOffset)
@@ -840,6 +896,27 @@ function Settings:Create()
         sf.scrollFrame = scrollFrame
         sf.scrollContent = scrollContent
         tabContents[i] = sf
+        scrollFrame:HookScript("OnSizeChanged", function(self)
+            local w = self:GetWidth()
+            if w and w > 0 then
+                scrollContent:SetWidth(w)
+                self:UpdateScrollChildRect()
+                ReflowWrappedFontStrings(scrollContent)
+            end
+        end)
+        local tabPanel = sf
+        tabPanel:HookScript("OnShow", function()
+            C_Timer.After(0, function()
+                if not tabPanel.scrollFrame or not tabPanel.scrollContent then return end
+                local w = tabPanel.scrollFrame:GetWidth()
+                if w and w > 0 then
+                    tabPanel.scrollContent:SetWidth(w)
+                    tabPanel.scrollFrame:UpdateScrollChildRect()
+                    ReflowWrappedFontStrings(tabPanel.scrollContent)
+                    NudgeVerticalScroll(tabPanel.scrollFrame)
+                end
+            end)
+        end)
         sf:Hide()
     end
 
@@ -848,6 +925,13 @@ function Settings:Create()
     BuildBankTab(tabContents[3].scrollContent, L, db, GUI)
 
     SwitchTab(1)
+
+    if settingsFrame then
+        settingsFrame:HookScript("OnShow", function()
+            RefreshSettingsScrollLayouts()
+            C_Timer.After(0, RefreshSettingsScrollLayouts)
+        end)
+    end
 
     isCreated = true
     return settingsFrame

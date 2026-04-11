@@ -14,6 +14,9 @@ OneWoW_Bags.Constants = {
         BAGSBAR_HEIGHT = 58,
         TITLEBAR_HEIGHT = 20,
         RECENT_EXPIRY_TICK_INTERVAL = 2,
+        TRACKER_CELL_WIDTH = 76,
+        TRACKER_CELL_HEIGHT = 20,
+        TRACKER_CELL_GAP = 4,
     }),
 
     ICON_SIZES = {

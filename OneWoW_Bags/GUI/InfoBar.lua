@@ -11,7 +11,6 @@ local WH = OneWoW_Bags.WindowHelpers
 local floor = math.floor
 local pairs, ipairs = pairs, ipairs
 local tinsert, sort = tinsert, sort
-local C_Container = C_Container
 
 OneWoW_Bags.InfoBar = {}
 local InfoBar = OneWoW_Bags.InfoBar
@@ -58,6 +57,11 @@ local function GetEffectiveInfoBarChrome(db)
     return showHeader, showSearch
 end
 
+local function GetBagsChromeInsets()
+    local db = OneWoW_Bags:GetDB()
+    return WH:GetItemGridChromeInsets(db.global.hideScrollBar)
+end
+
 function InfoBar:Create(parent)
     if infoBarFrame then return infoBarFrame end
 
@@ -72,33 +76,14 @@ function InfoBar:Create(parent)
     local btnY   = -floor((ROW1_H - 22) / 2)
     local searchY = -(ROW1_H + floor((ROW2_H - 22) / 2))
 
-    -- Row 1 right: Category Manager button
-    local catMgrBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CATEGORY_MANAGER_BTN"])
-    catMgrBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), btnY)
-    catMgrBtn:SetScript("OnClick", function()
-        local controller = GetController()
-        if controller and controller.ToggleCategoryManager then
-            controller:ToggleCategoryManager()
-        end
-    end)
-    infoBarFrame.catMgrBtn = catMgrBtn
-
-    local sortBtn = InfoBar:CreateViewBtn(infoBarFrame, L["CLEANUP"] or "Sort")
-    sortBtn:SetPoint("TOPRIGHT", catMgrBtn, "TOPLEFT", -3, 0)
-    sortBtn:SetScript("OnClick", function()
-        local controller = GetController()
-        if controller and controller.SortBags then
-            controller:SortBags()
-        end
-    end)
-    infoBarFrame.sortBtn = sortBtn
+    local leftInset, rightInset = GetBagsChromeInsets()
 
     local viewModeDropdown, viewModeText = OneWoW_GUI:CreateDropdown(infoBarFrame, {
         width = 170,
         height = 22,
         text = bagViewModeLabel(BAG_VIEW_MODES[1].mode),
     })
-    viewModeDropdown:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), btnY)
+    viewModeDropdown:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, btnY)
     infoBarFrame.viewModeDropdown = viewModeDropdown
     infoBarFrame.viewModeText = viewModeText
     OneWoW_GUI:AttachFilterMenu(viewModeDropdown, {
@@ -184,7 +169,7 @@ function InfoBar:Create(parent)
     -- Row 2 right: empty slots toggle (created before searchBox so search can anchor to it)
     local emptyToggleBtn = CreateFrame("Button", nil, infoBarFrame)
     emptyToggleBtn:SetSize(22, 22)
-    emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), searchY)
+    emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, searchY)
     local emptyIcon = emptyToggleBtn:CreateTexture(nil, "ARTWORK")
     emptyIcon:SetAllPoints()
     emptyIcon:SetTexture("Interface\\COMMON\\FavoritesIcon")
@@ -221,7 +206,7 @@ function InfoBar:Create(parent)
             end
         end,
     })
-    searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), searchY)
+    searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, searchY)
     searchBox:SetPoint("TOPRIGHT", emptyToggleBtn, "TOPLEFT", -3, 0)
     infoBarFrame.searchBox = searchBox
 
@@ -270,8 +255,6 @@ function InfoBar:UpdateViewButtons()
         end
     end
 
-    if infoBarFrame.catMgrBtn then infoBarFrame.catMgrBtn:SetShown(showHeader) end
-    if infoBarFrame.sortBtn then infoBarFrame.sortBtn:SetShown(showHeader) end
     if infoBarFrame.searchBox then infoBarFrame.searchBox:SetShown(showSearch) end
 
     if infoBarFrame.expacDropdown then
@@ -318,16 +301,23 @@ function InfoBar:UpdateVisibility()
     self:UpdateViewButtons()
 
     local showHeader, showSearch = GetEffectiveInfoBarChrome(db)
+    local leftInset, rightInset = GetBagsChromeInsets()
+    local btnY = -floor((ROW1_H - 22) / 2)
+
+    if showHeader and infoBarFrame.viewModeDropdown then
+        infoBarFrame.viewModeDropdown:ClearAllPoints()
+        infoBarFrame.viewModeDropdown:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, btnY)
+    end
 
     if showSearch and infoBarFrame.searchBox then
         local searchY = showHeader and -(ROW1_H + floor((ROW2_H - 22) / 2)) or -floor((ROW2_H - 22) / 2)
         infoBarFrame.searchBox:ClearAllPoints()
-        infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("SM"), searchY)
+        infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, searchY)
         infoBarFrame.searchBox:SetPoint("TOPRIGHT", infoBarFrame.emptyToggleBtn, "TOPLEFT", -3, 0)
 
         if infoBarFrame.emptyToggleBtn then
             infoBarFrame.emptyToggleBtn:ClearAllPoints()
-            infoBarFrame.emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("SM"), searchY)
+            infoBarFrame.emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, searchY)
         end
     end
 end
