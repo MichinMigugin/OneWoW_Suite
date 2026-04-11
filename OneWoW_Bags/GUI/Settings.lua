@@ -277,7 +277,7 @@ local function BuildGeneralTab(sc, L, db, GUI)
     placeY = placeY - 6
 
     placeY = BuildSliderRow(placeContainer, L["SETTING_RECENT_DURATION"], placeY, {
-        minVal = 15, maxVal = 600, step = 15, currentVal = db.global.recentItemDuration or 120,
+        minVal = 15, maxVal = 600, step = 15, currentVal = db.global.recentItemDuration,
         onChange = function(val)
             ApplySetting("recentItemDuration", val)
         end,
@@ -425,7 +425,7 @@ local function BuildBagsTab(sc, L, db, GUI)
     dispY = dispY - 6
 
     dispY = BuildSliderRow(dispContainer, L["SETTING_BAG_COLUMNS"], dispY, {
-        minVal = 10, maxVal = 30, step = 1, currentVal = db.global.bagColumns or 15,
+        minVal = 10, maxVal = 30, step = 1, currentVal = db.global.bagColumns,
         onChange = function(val)
             ApplySetting("bagColumns", val)
         end,
@@ -433,7 +433,7 @@ local function BuildBagsTab(sc, L, db, GUI)
     })
 
     dispY = BuildSliderRow(dispContainer, L["SETTING_CATEGORY_SPACING"], dispY, {
-        minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.categorySpacing or 1.0,
+        minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.categorySpacing,
         onChange = function(val)
             ApplySetting("categorySpacing", val)
         end,
@@ -447,7 +447,7 @@ local function BuildBagsTab(sc, L, db, GUI)
         gapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         dispY = dispY - gapLbl:GetStringHeight() - 4
 
-        local curIdx = CompactGapToIndex(db.global.compactGap or 1)
+        local curIdx = CompactGapToIndex(db.global.compactGap)
         local gapSlider = OneWoW_GUI:CreateSlider(dispContainer, {
             minVal = 1, maxVal = #COMPACT_GAP_STEPS, step = 1, currentVal = curIdx,
             onChange = function(val)
@@ -755,7 +755,7 @@ local function BuildBankTab(sc, L, db, GUI)
     dispY = dispY - 6
 
     dispY = BuildSliderRow(dispContainer, L["SETTING_BANK_COLUMNS"], dispY, {
-        minVal = 10, maxVal = 30, step = 1, currentVal = db.global.bankColumns or 14,
+        minVal = 15, maxVal = 30, step = 1, currentVal = db.global.bankColumns,
         onChange = function(val)
             ApplySetting("bankColumns", val)
         end,
@@ -763,7 +763,7 @@ local function BuildBankTab(sc, L, db, GUI)
     })
 
     dispY = BuildSliderRow(dispContainer, L["SETTING_CATEGORY_SPACING"], dispY, {
-        minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.bankCategorySpacing or 1.0,
+        minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.bankCategorySpacing,
         onChange = function(val)
             ApplySetting("bankCategorySpacing", val)
         end,
@@ -789,7 +789,7 @@ local function BuildBankTab(sc, L, db, GUI)
         gapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         dispY = dispY - gapLbl:GetStringHeight() - 4
 
-        local curIdx = CompactGapToIndex(db.global.bankCompactGap or 1)
+        local curIdx = CompactGapToIndex(db.global.bankCompactGap)
         local gapSlider = OneWoW_GUI:CreateSlider(dispContainer, {
             minVal = 1, maxVal = #COMPACT_GAP_STEPS, step = 1, currentVal = curIdx,
             onChange = function(val)

@@ -140,7 +140,7 @@ function GuildBankGUI:UpdateWindowWidth()
         controller:UpdateFixedWidth({
             mainWindow = MainWindow,
             columnsKey = "bankColumns",
-            defaultColumns = 14,
+            defaultColumns = 15,
             hideScrollKey = "bankHideScrollBar",
             outerPadding = OneWoW_GUI:GetSpacing("XS"),
         })
@@ -186,7 +186,7 @@ function GuildBankGUI:RefreshLayout()
             return WH:FilterBySearch(visibleButtons, GuildBankInfoBar:GetSearchText())
         end,
         layoutButtons = function(filteredButtons)
-            local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 14)
+            local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 15)
             local tabViewContext = controller:CreateViewContext({
                 sectionManager = GuildBankCategoryManager,
                 sortMode = db.global.itemSort,
