@@ -505,6 +505,9 @@ function Categories:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
         return nil, nil
     end
     local best = PickBestCandidate(eligible, db, db.global, false)
+    if not best then
+        return nil, nil
+    end
     return best.name, best.tieKey
 end
 
