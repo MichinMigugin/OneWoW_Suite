@@ -1,6 +1,7 @@
 ---
 description: Do not add code comments unless the user explicitly asks for them.
-alwaysApply: true
+globs: **/*.lua
+alwaysApply: false
 ---
 
 # No unsolicited code comments
