@@ -81,16 +81,14 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
     local itemsByCategory = CategoryManager:GetItemsByCategory()
     local layout = CategoryManager:GetSectionedLayout(itemsByCategory, containerType)
 
-    local moveUpgradesToTop = db.global.moveUpgradesToTop
+    local moveRecentToTop = db.global.moveUpgradesToTop
     local moveOtherToBottom = db.global.moveOtherToBottom
-    if moveUpgradesToTop or moveOtherToBottom then
-        local pinRecent, pinUpgrades, pinBottom, rest = {}, {}, {}, {}
+    if moveRecentToTop or moveOtherToBottom then
+        local pinRecent, pinBottom, rest = {}, {}, {}
         if type(layout[1]) == "table" then
             for _, entry in ipairs(layout) do
-                if entry.type == "category" and entry.name == "Recent Items" and moveUpgradesToTop then
+                if entry.type == "category" and entry.name == "Recent Items" and moveRecentToTop then
                     tinsert(pinRecent, entry)
-                elseif entry.type == "category" and entry.name == "1W Upgrades" and moveUpgradesToTop then
-                    tinsert(pinUpgrades, entry)
                 elseif entry.type == "category" and entry.name == "Other" and moveOtherToBottom then
                     tinsert(pinBottom, entry)
                 else
@@ -99,10 +97,8 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
             end
         else
             for _, name in ipairs(layout) do
-                if name == "Recent Items" and moveUpgradesToTop then
+                if name == "Recent Items" and moveRecentToTop then
                     tinsert(pinRecent, name)
-                elseif name == "1W Upgrades" and moveUpgradesToTop then
-                    tinsert(pinUpgrades, name)
                 elseif name == "Other" and moveOtherToBottom then
                     tinsert(pinBottom, name)
                 else
@@ -111,10 +107,9 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
             end
         end
         layout = {}
-        for _, e in ipairs(pinRecent)   do tinsert(layout, e) end
-        for _, e in ipairs(pinUpgrades) do tinsert(layout, e) end
-        for _, e in ipairs(rest)        do tinsert(layout, e) end
-        for _, e in ipairs(pinBottom)   do tinsert(layout, e) end
+        for _, e in ipairs(pinRecent) do tinsert(layout, e) end
+        for _, e in ipairs(rest)    do tinsert(layout, e) end
+        for _, e in ipairs(pinBottom) do tinsert(layout, e) end
     end
 
     local cols = db.global.bagColumns or floor((width - padding * 2) / (iconSize + spacing))

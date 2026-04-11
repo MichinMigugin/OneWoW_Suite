@@ -66,6 +66,7 @@ OneWoW_Bags.Locales["esES"] = {
     ["BAG_REAGENT"] = "Bolsa de Componentes",
 
     ["CUSTOM_CATEGORIES"] = "Categorias Personalizadas",
+    ["SECTION_ONEWOW_BAGS"] = "ONEWOW BAGS",
     ["CREATE_CATEGORY"] = "Crear Categoria",
     ["DELETE_CATEGORY"] = "Eliminar Categoria",
     ["ADD_ITEM"] = "Anadir Objeto",
@@ -132,6 +133,8 @@ OneWoW_Bags.Locales["esES"] = {
     ["CATEGORY_MANAGER_BTN"] = "Categorias",
     ["CATEGORY_MANAGER_TITLE"] = "Administrador de categorias personalizadas",
     ["CATEGORY_MANAGER_INFO"] = "Crea categorias personalizadas y asigna objetos. Arrastra un objeto a una categoria o anade por ID.",
+    ["CATEGORY_BADGE_TOOLTIP_TITLE"] = "Indicadores de categoria",
+    ["CATEGORY_BADGE_TOOLTIP_BODY"] = "S — Modo de orden personalizado\nG — Agrupar\n+ — Objetos anadidos manualmente\nH — Oculto en algunas vistas de bolsas\nP — Prioridad no predeterminada\nE — Filtro por expresion de busqueda",
     ["CATEGORY_CREATE"] = "Crear categoria nueva",
     ["CATEGORY_CREATE_ENTER"] = "Nombre de la categoria:",
     ["CATEGORY_RENAME"] = "Renombrar",
@@ -170,6 +173,8 @@ OneWoW_Bags.Locales["esES"] = {
     ["POPUP_CREATE"] = "Crear",
     ["POPUP_DELETE"] = "Eliminar",
     ["POPUP_RENAME"] = "Renombrar",
+    ["DUPLICATE_CATEGORY_NAME"] = "Ya existe una categoria con ese nombre.",
+    ["DUPLICATE_SECTION_NAME"] = "Ya existe una seccion con ese nombre.",
     ["GUI_NOT_INSTALLED"] = "Instala OneWoW_GUI para tema, fuente e idioma completos.",
     ["SORT"] = "Ordenar",
 

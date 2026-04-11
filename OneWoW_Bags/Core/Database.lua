@@ -4,7 +4,9 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local DB = OneWoW_GUI.DB
-local pairs, ipairs, next, wipe, tinsert = pairs, ipairs, next, wipe, tinsert
+local pairs, ipairs, next, wipe, tinsert, tremove, sort = pairs, ipairs, next, wipe, tinsert, tremove, table.sort
+local strtrim = strtrim
+local string_lower = string.lower
 
 local defaults = {
     global = {
@@ -156,6 +158,15 @@ function OneWoW_Bags:InitializeDatabase()
                 g.bankColumns = 15
             end
         end },
+        { version = 10, name = "onewow_bags_default_section", run = function(d)
+            self:MigrateOnewowBagsSection(d)
+        end },
+        { version = 11, name = "display_name_uniqueness", run = function(d)
+            self:MigrateDisplayNameUniqueness(d)
+        end },
+        { version = 12, name = "section_category_membership_cleanup", run = function(d)
+            self:MigrateSectionCategoryMembershipCleanup(d)
+        end },
     })
 end
 
@@ -276,14 +287,15 @@ function OneWoW_Bags:MigrateCategorySystemV3(db)
         g.recentItemDuration = 120
     end
 
-    local secEquip = "sec_equipment"
-    local secCraft = "sec_crafting"
-    local secHouse = "sec_housing"
+    local SD = OneWoW_Bags.SectionDefaults
+    local secEquip = SD.SEC_EQUIPMENT
+    local secCraft = SD.SEC_CRAFTING
+    local secHouse = SD.SEC_HOUSING
 
     g.categorySections = {
-        [secEquip] = { name = "EQUIPMENT", categories = { "Equipment Sets", "Weapons", "Armor" }, collapsed = false, showHeader = true },
-        [secCraft] = { name = "CRAFTING",  categories = { "Reagents", "Trade Goods", "Tradeskill", "Recipes" }, collapsed = false, showHeader = true },
-        [secHouse] = { name = "HOUSING",   categories = { "Housing" }, collapsed = false, showHeader = true },
+        [secEquip] = { name = "EQUIPMENT", categories = CopyTable(SD.EQUIPMENT_CATEGORIES), collapsed = false, showHeader = true },
+        [secCraft] = { name = "CRAFTING",  categories = CopyTable(SD.CRAFTING_CATEGORIES), collapsed = false, showHeader = true },
+        [secHouse] = { name = "HOUSING",   categories = CopyTable(SD.HOUSING_CATEGORIES), collapsed = false, showHeader = true },
     }
     g.sectionOrder = { secEquip, secCraft, secHouse }
 
@@ -361,6 +373,211 @@ end
 
 function OneWoW_Bags:MigrateItemSortToNone(db)
     db.global.itemSort = "none"
+end
+
+function OneWoW_Bags:MigrateOnewowBagsSection(db)
+    local g = db.global
+    local SD = OneWoW_Bags.SectionDefaults
+    local secOw = SD.SEC_ONEWOW_BAGS
+    local secEquip = SD.SEC_EQUIPMENT
+    local secCraft = SD.SEC_CRAFTING
+    local secHouse = SD.SEC_HOUSING
+    local loc = OneWoW_Bags.Locales and OneWoW_Bags.Locales["enUS"]
+    local secTitle = (loc and loc["SECTION_ONEWOW_BAGS"]) or "ONEWOW BAGS"
+
+    if not g.categorySections[secEquip] then
+        g.categorySections[secEquip] = { name = "EQUIPMENT", categories = CopyTable(SD.EQUIPMENT_CATEGORIES), collapsed = false, showHeader = true }
+    end
+    if not g.categorySections[secCraft] then
+        g.categorySections[secCraft] = { name = "CRAFTING", categories = CopyTable(SD.CRAFTING_CATEGORIES), collapsed = false, showHeader = true }
+    end
+    if not g.categorySections[secHouse] then
+        g.categorySections[secHouse] = { name = "HOUSING", categories = CopyTable(SD.HOUSING_CATEGORIES), collapsed = false, showHeader = true }
+    end
+
+    local order = g.sectionOrder
+    local function orderContains(id)
+        for _, v in ipairs(order) do
+            if v == id then return true end
+        end
+        return false
+    end
+    if not orderContains(secEquip) then tinsert(order, secEquip) end
+    if not orderContains(secCraft) then tinsert(order, secCraft) end
+    if not orderContains(secHouse) then tinsert(order, secHouse) end
+
+    if not g.categorySections[secOw] then
+        local members = SD:BuildOnewowMembers(g)
+        g.categorySections[secOw] = {
+            name = secTitle,
+            categories = members,
+            collapsed = false,
+            showHeader = false,
+        }
+        for _, nm in ipairs(members) do
+            g.disabledCategories[nm] = nil
+        end
+    end
+
+    for i = #order, 1, -1 do
+        if order[i] == secOw then
+            tremove(order, i)
+        end
+    end
+    tinsert(order, 1, secOw)
+
+    wipe(g.displayOrder)
+    SD:ScrubCategoryOrderForSections(g)
+end
+
+function OneWoW_Bags:MigrateDisplayNameUniqueness(db)
+    local g = db.global
+    local SD = OneWoW_Bags.SectionDefaults
+    local function norm(s)
+        return string_lower(strtrim(s or ""))
+    end
+
+    local eff = SD:GetEffectiveBuiltinNames(g)
+    local builtinNorm = {}
+    for _, n in ipairs(eff) do
+        builtinNorm[norm(n)] = true
+    end
+
+    local customEntries = {}
+    for id in pairs(g.customCategoriesV2 or {}) do
+        local cat = g.customCategoriesV2[id]
+        tinsert(customEntries, { id = id, sortOrder = (cat and cat.sortOrder) or 0 })
+    end
+    sort(customEntries, function(a, b)
+        if a.sortOrder ~= b.sortOrder then
+            return a.sortOrder < b.sortOrder
+        end
+        return a.id < b.id
+    end)
+
+    local function categoryKeyFree(kn, usedCustomNorm)
+        if builtinNorm[kn] then
+            return false
+        end
+        if usedCustomNorm[kn] then
+            return false
+        end
+        return true
+    end
+
+    local usedCustomNorm = {}
+    for _, entry in ipairs(customEntries) do
+        local cat = g.customCategoriesV2[entry.id]
+        if cat and cat.name then
+            local nm = strtrim(cat.name)
+            if nm ~= "" then
+                local kn = norm(nm)
+                if not categoryKeyFree(kn, usedCustomNorm) then
+                    local base = nm
+                    local i = 2
+                    repeat
+                        nm = base .. " (" .. i .. ")"
+                        kn = norm(nm)
+                        i = i + 1
+                    until categoryKeyFree(kn, usedCustomNorm)
+                    cat.name = nm
+                    kn = norm(nm)
+                end
+                usedCustomNorm[kn] = true
+            end
+        end
+    end
+
+    local seenSec = {}
+    if g.sectionOrder and g.categorySections then
+        for _, sid in ipairs(g.sectionOrder) do
+            local sec = g.categorySections[sid]
+            if sec and sec.name then
+                local nm = strtrim(sec.name)
+                if nm ~= "" then
+                    local kn = norm(nm)
+                    if seenSec[kn] then
+                        local base = nm
+                        local i = 2
+                        repeat
+                            nm = base .. " (" .. i .. ")"
+                            kn = norm(nm)
+                            i = i + 1
+                        until not seenSec[kn]
+                        sec.name = nm
+                        kn = norm(nm)
+                    end
+                    seenSec[kn] = true
+                end
+            end
+        end
+    end
+
+    if g.categorySections[SD.SEC_ONEWOW_BAGS] then
+        SD:SyncOnewowSectionCategories(g)
+    end
+end
+
+function OneWoW_Bags:MigrateSectionCategoryMembershipCleanup(db)
+    local g = db.global
+    local SD = OneWoW_Bags.SectionDefaults
+    local eff = SD:GetEffectiveBuiltinNames(g)
+    local builtinExact = {}
+    for _, n in ipairs(eff) do
+        builtinExact[n] = true
+    end
+    builtinExact["Empty"] = true
+
+    local function normName(s)
+        return string_lower(strtrim(s or ""))
+    end
+
+    local function isLiveCustomName(nm)
+        local kn = normName(nm)
+        if kn == "" then
+            return false
+        end
+        for _, cd in pairs(g.customCategoriesV2 or {}) do
+            if cd and cd.name and normName(cd.name) == kn then
+                return true
+            end
+        end
+        return false
+    end
+
+    for _, sec in pairs(g.categorySections or {}) do
+        if sec and sec.categories then
+            for i = #sec.categories, 1, -1 do
+                local nm = sec.categories[i]
+                if not builtinExact[nm] and not isLiveCustomName(nm) then
+                    tremove(sec.categories, i)
+                end
+            end
+        end
+    end
+
+    local seen = {}
+    if g.sectionOrder and g.categorySections then
+        for _, sid in ipairs(g.sectionOrder) do
+            local sec = g.categorySections[sid]
+            if sec and sec.categories then
+                local newList = {}
+                local seenLocal = {}
+                for _, nm in ipairs(sec.categories) do
+                    if not seen[nm] and not seenLocal[nm] then
+                        seen[nm] = true
+                        seenLocal[nm] = true
+                        tinsert(newList, nm)
+                    end
+                end
+                sec.categories = newList
+            end
+        end
+    end
+
+    if g.categorySections[SD.SEC_ONEWOW_BAGS] then
+        SD:SyncOnewowSectionCategories(g)
+    end
 end
 
 function OneWoW_Bags:MigrateCollapsedBankState(db)

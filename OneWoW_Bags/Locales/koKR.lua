@@ -66,6 +66,7 @@ OneWoW_Bags.Locales["koKR"] = {
     ["BAG_REAGENT"] = "재료 가방",
 
     ["CUSTOM_CATEGORIES"] = "사용자 분류",
+    ["SECTION_ONEWOW_BAGS"] = "ONEWOW 가방",
     ["CREATE_CATEGORY"] = "분류 만들기",
     ["DELETE_CATEGORY"] = "분류 삭제",
     ["ADD_ITEM"] = "아이템 추가",
@@ -132,6 +133,8 @@ OneWoW_Bags.Locales["koKR"] = {
     ["CATEGORY_MANAGER_BTN"] = "분류",
     ["CATEGORY_MANAGER_TITLE"] = "사용자 분류 관리",
     ["CATEGORY_MANAGER_INFO"] = "사용자 분류를 만들고 아이템을 지정하세요. 분류 위로 아이템을 끌거나 ID로 추가할 수 있습니다.",
+    ["CATEGORY_BADGE_TOOLTIP_TITLE"] = "분류 표시",
+    ["CATEGORY_BADGE_TOOLTIP_BODY"] = "S — 사용자 정렬\nG — 묶음\n+ — 수동 추가 아이템\nH — 일부 가방 보기에서 숨김\nP — 기본이 아닌 우선순위\nE — 검색 식 필터",
     ["CATEGORY_CREATE"] = "새 분류 만들기",
     ["CATEGORY_CREATE_ENTER"] = "분류 이름 입력:",
     ["CATEGORY_RENAME"] = "이름 바꾸기",
@@ -170,6 +173,8 @@ OneWoW_Bags.Locales["koKR"] = {
     ["POPUP_CREATE"] = "만들기",
     ["POPUP_DELETE"] = "삭제",
     ["POPUP_RENAME"] = "이름 바꾸기",
+    ["DUPLICATE_CATEGORY_NAME"] = "같은 이름의 분류가 이미 있습니다.",
+    ["DUPLICATE_SECTION_NAME"] = "같은 이름의 구역이 이미 있습니다.",
     ["GUI_NOT_INSTALLED"] = "테마·글꼴·언어 전체 설정은 OneWoW_GUI를 설치하세요.",
     ["SORT"] = "정렬",
 

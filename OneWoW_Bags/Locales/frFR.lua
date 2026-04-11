@@ -66,6 +66,7 @@ OneWoW_Bags.Locales["frFR"] = {
     ["BAG_REAGENT"] = "Sac de Composants",
 
     ["CUSTOM_CATEGORIES"] = "Categories Personnalisees",
+    ["SECTION_ONEWOW_BAGS"] = "SACS ONEWOW",
     ["CREATE_CATEGORY"] = "Creer une Categorie",
     ["DELETE_CATEGORY"] = "Supprimer la Categorie",
     ["ADD_ITEM"] = "Ajouter un Objet",
@@ -132,6 +133,8 @@ OneWoW_Bags.Locales["frFR"] = {
     ["CATEGORY_MANAGER_BTN"] = "Categories",
     ["CATEGORY_MANAGER_TITLE"] = "Gestionnaire de categories personnalisees",
     ["CATEGORY_MANAGER_INFO"] = "Creez des categories et assignez des objets. Glissez un objet sur une categorie ou ajoutez par ID.",
+    ["CATEGORY_BADGE_TOOLTIP_TITLE"] = "Indicateurs de categorie",
+    ["CATEGORY_BADGE_TOOLTIP_BODY"] = "S — Tri personnalise\nG — Regroupement\n+ — Objets ajoutes manuellement\nH — Masque dans certaines vues de sacs\nP — Priorite non par defaut\nE — Filtre par expression de recherche",
     ["CATEGORY_CREATE"] = "Creer une categorie",
     ["CATEGORY_CREATE_ENTER"] = "Nom de la categorie :",
     ["CATEGORY_RENAME"] = "Renommer",
@@ -170,6 +173,8 @@ OneWoW_Bags.Locales["frFR"] = {
     ["POPUP_CREATE"] = "Creer",
     ["POPUP_DELETE"] = "Supprimer",
     ["POPUP_RENAME"] = "Renommer",
+    ["DUPLICATE_CATEGORY_NAME"] = "Une categorie porte deja ce nom.",
+    ["DUPLICATE_SECTION_NAME"] = "Une section porte deja ce nom.",
     ["GUI_NOT_INSTALLED"] = "Installez OneWoW_GUI pour le theme, la police et la langue complets.",
     ["SORT"] = "Trier",
 

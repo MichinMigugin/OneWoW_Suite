@@ -238,10 +238,6 @@ function CM:GetSectionedLayout(itemsByCategory, containerType)
         Categories:SortCategories(rootCats, db.global.categorySort or "priority")
     end
 
-    for _, name in ipairs(rootCats) do
-        tinsert(layout, { type = "category", name = name })
-    end
-
     for _, sectionID in ipairs(sectOrder) do
         local sec = sections[sectionID]
         if sec and sec.categories then
@@ -267,6 +263,10 @@ function CM:GetSectionedLayout(itemsByCategory, containerType)
                 end
             end
         end
+    end
+
+    for _, name in ipairs(rootCats) do
+        tinsert(layout, { type = "category", name = name })
     end
 
     return layout

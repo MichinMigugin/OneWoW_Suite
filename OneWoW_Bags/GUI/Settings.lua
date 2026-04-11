@@ -4,6 +4,7 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local ipairs, pairs = ipairs, pairs
+local tinsert = tinsert
 local abs, floor = math.abs, math.floor
 
 local C_Timer = C_Timer
@@ -52,8 +53,11 @@ local function CompactGapFromIndex(idx)
     return COMPACT_GAP_STEPS[idx] or 1
 end
 
+local SETTINGS_SECTION_KEYS = { "TAB_GENERAL", "TAB_BAGS", "TAB_BANK" }
+local activeSettingsSection = 1
+local settingsSectionDropdownText = nil
+
 local tabContents = {}
-local tabBtns = {}
 
 local function SyncTabScrollWidths()
     for _, sf in ipairs(tabContents) do
@@ -113,25 +117,9 @@ local function SwitchTab(n)
     for i, content in ipairs(tabContents) do
         content:SetShown(i == n)
     end
-    for i, btn in ipairs(tabBtns) do
-        if i == n then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            if not btn._activeBar then
-                btn._activeBar = btn:CreateTexture(nil, "OVERLAY")
-                btn._activeBar:SetHeight(2)
-                btn._activeBar:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 1, 1)
-                btn._activeBar:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -1, 1)
-            end
-            btn._activeBar:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            btn._activeBar:Show()
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            if btn._activeBar then btn._activeBar:Hide() end
-        end
+    activeSettingsSection = n
+    if settingsSectionDropdownText then
+        settingsSectionDropdownText:SetText(L[SETTINGS_SECTION_KEYS[n]])
     end
     RefreshSettingsScrollLayouts()
     C_Timer.After(0, RefreshSettingsScrollLayouts)
@@ -440,52 +428,6 @@ local function BuildBagsTab(sc, L, db, GUI)
         width = 240, fmt = "%.1f",
     })
 
-    do
-        local gapLbl = dispContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        gapLbl:SetPoint("TOPLEFT", dispContainer, "TOPLEFT", 15, dispY)
-        gapLbl:SetText(L["SETTING_COMPACT_GAP"])
-        gapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        dispY = dispY - gapLbl:GetStringHeight() - 4
-
-        local curIdx = CompactGapToIndex(db.global.compactGap)
-        local gapSlider = OneWoW_GUI:CreateSlider(dispContainer, {
-            minVal = 1, maxVal = #COMPACT_GAP_STEPS, step = 1, currentVal = curIdx,
-            onChange = function(val)
-                local idx = floor(val + 0.5)
-                local realVal = CompactGapFromIndex(idx)
-                ApplySetting("compactGap", realVal)
-            end,
-            width = 240, fmt = "%d",
-        })
-        gapSlider:SetPoint("TOPLEFT", dispContainer, "TOPLEFT", 15, dispY)
-
-        local slider = gapSlider:GetChildren()
-        if slider then
-            slider:HookScript("OnValueChanged", function(self, val)
-                local idx = floor(val + 0.5)
-                local realVal = CompactGapFromIndex(idx)
-                local valLabel = gapSlider:GetRegions()
-                if not valLabel then return end
-                for _, region in pairs({gapSlider:GetRegions()}) do
-                    if region:IsObjectType("FontString") and region:GetText() then
-                        region:SetText(string.format("%.1f", realVal))
-                        break
-                    end
-                end
-            end)
-            local idx = floor(curIdx + 0.5)
-            C_Timer.After(0, function()
-                for _, region in pairs({gapSlider:GetRegions()}) do
-                    if region:IsObjectType("FontString") and region:GetText() then
-                        region:SetText(string.format("%.1f", CompactGapFromIndex(idx)))
-                        break
-                    end
-                end
-            end)
-        end
-        dispY = dispY - 40
-    end
-
     yOffset = FinalizeContainer(dispContainer, dispY, yOffset)
 
     yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_CATEGORIES"], yOffset = yOffset })
@@ -506,6 +448,18 @@ local function BuildBagsTab(sc, L, db, GUI)
 
     catY, _, _ = OneWoW_GUI:CreateToggleRow(catContainer, {
         yOffset = catY,
+        label = L["SETTING_STACK_ITEMS"],
+        description = L["DESC_STACK_ITEMS"],
+        isEnabled = true,
+        value = db.global.stackItems,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            ApplySetting("stackItems", newVal)
+        end,
+    })
+
+    catY, _, _ = OneWoW_GUI:CreateToggleRow(catContainer, {
+        yOffset = catY,
         label = L["SETTING_COMPACT_CATEGORIES"],
         description = L["DESC_COMPACT_CATEGORIES"],
         isEnabled = true,
@@ -516,17 +470,49 @@ local function BuildBagsTab(sc, L, db, GUI)
         end,
     })
 
-    catY, _, _ = OneWoW_GUI:CreateToggleRow(catContainer, {
-        yOffset = catY,
-        label = L["SETTING_STACK_ITEMS"],
-        description = L["DESC_STACK_ITEMS"],
-        isEnabled = true,
-        value = db.global.stackItems,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("stackItems", newVal)
-        end,
-    })
+    do
+        local gapLbl = catContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        gapLbl:SetPoint("TOPLEFT", catContainer, "TOPLEFT", 15, catY)
+        gapLbl:SetText(L["SETTING_COMPACT_GAP"])
+        gapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        catY = catY - gapLbl:GetStringHeight() - 4
+
+        local curIdx = CompactGapToIndex(db.global.compactGap)
+        local gapSlider = OneWoW_GUI:CreateSlider(catContainer, {
+            minVal = 1, maxVal = #COMPACT_GAP_STEPS, step = 1, currentVal = curIdx,
+            onChange = function(val)
+                local idx = floor(val + 0.5)
+                local realVal = CompactGapFromIndex(idx)
+                ApplySetting("compactGap", realVal)
+            end,
+            width = 240, fmt = "%d",
+        })
+        gapSlider:SetPoint("TOPLEFT", catContainer, "TOPLEFT", 15, catY)
+
+        local slider = gapSlider:GetChildren()
+        if slider then
+            slider:HookScript("OnValueChanged", function(self, val)
+                local idx = floor(val + 0.5)
+                local realVal = CompactGapFromIndex(idx)
+                for _, region in pairs({gapSlider:GetRegions()}) do
+                    if region:IsObjectType("FontString") and region:GetText() then
+                        region:SetText(string.format("%.1f", realVal))
+                        break
+                    end
+                end
+            end)
+            local idx = floor(curIdx + 0.5)
+            C_Timer.After(0, function()
+                for _, region in pairs({gapSlider:GetRegions()}) do
+                    if region:IsObjectType("FontString") and region:GetText() then
+                        region:SetText(string.format("%.1f", CompactGapFromIndex(idx)))
+                        break
+                    end
+                end
+            end)
+        end
+        catY = catY - 40
+    end
 
     yOffset = FinalizeContainer(catContainer, catY, yOffset)
 
@@ -873,20 +859,32 @@ function Settings:Create()
     tabRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     tabRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local tabLabels = { L["TAB_GENERAL"], L["TAB_BAGS"], L["TAB_BANK"] }
-    local prevBtn = nil
-    for i, label in ipairs(tabLabels) do
-        local btn = OneWoW_GUI:CreateFitTextButton(tabRow, { text = label, height = 26, minWidth = 90 })
-        if not prevBtn then
-            btn:SetPoint("LEFT", tabRow, "LEFT", 6, 0)
-        else
-            btn:SetPoint("LEFT", prevBtn, "RIGHT", 4, 0)
-        end
-        local idx = i
-        btn:SetScript("OnClick", function() SwitchTab(idx) end)
-        tabBtns[i] = btn
-        prevBtn = btn
-    end
+    local sectionDropH = 22
+    local sectionDropY = -floor((34 - sectionDropH) / 2)
+    local sectionDropdown, sectionDropdownText = OneWoW_GUI:CreateDropdown(tabRow, {
+        width = 200,
+        height = sectionDropH,
+        text = L["TAB_GENERAL"],
+    })
+    sectionDropdown:SetPoint("TOPLEFT", tabRow, "TOPLEFT", 6, sectionDropY)
+    settingsSectionDropdownText = sectionDropdownText
+    OneWoW_GUI:AttachFilterMenu(sectionDropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for i = 1, #SETTINGS_SECTION_KEYS do
+                local key = SETTINGS_SECTION_KEYS[i]
+                tinsert(items, { text = L[key], value = i })
+            end
+            return items
+        end,
+        getActiveValue = function()
+            return activeSettingsSection
+        end,
+        onSelect = function(value)
+            SwitchTab(value)
+        end,
+    })
 
     for i = 1, 3 do
         local sf = CreateFrame("Frame", nil, contentFrame)
@@ -981,5 +979,6 @@ function Settings:Reset()
     settingsFrame = nil
     isCreated = false
     tabContents = {}
-    tabBtns = {}
+    settingsSectionDropdownText = nil
+    activeSettingsSection = 1
 end

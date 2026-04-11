@@ -209,13 +209,36 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             infoBarFrame.expacText = expacText
         end
 
+        if config.categoryManagerCallback then
+            local categoriesBtn = OneWoW_GUI:CreateAtlasIconButton(infoBarFrame, {
+                atlas = "housing-sidetabs-catalog-active",
+                width = 20,
+                height = 20,
+            })
+            categoriesBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, btnY)
+            categoriesBtn:SetScript("OnClick", function()
+                config.categoryManagerCallback(GetController())
+            end)
+            categoriesBtn:HookScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetText(L["CATEGORY_MANAGER_BTN"], 1, 1, 1)
+                GameTooltip:Show()
+            end)
+            categoriesBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
+            infoBarFrame.categoriesBtn = categoriesBtn
+        end
+
         if config.cleanupCallback then
             local cleanupBtn = OneWoW_GUI:CreateAtlasIconButton(infoBarFrame, {
                 atlas = "crosshair_ui-cursor-broom_32",
                 width = 20,
                 height = 20,
             })
-            cleanupBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, btnY)
+            if infoBarFrame.categoriesBtn then
+                cleanupBtn:SetPoint("RIGHT", infoBarFrame.categoriesBtn, "LEFT", -4, 0)
+            else
+                cleanupBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, btnY)
+            end
             cleanupBtn:SetScript("OnClick", function()
                 config.cleanupCallback(GetController())
             end)
@@ -302,6 +325,10 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             infoBarFrame.cleanupBtn:SetShown(showHeader)
         end
 
+        if infoBarFrame.categoriesBtn then
+            infoBarFrame.categoriesBtn:SetShown(showHeader)
+        end
+
         if infoBarFrame.emptyToggleBtn then
             local showing = controller and controller.GetShowEmptySlots and controller:GetShowEmptySlots() or true
             infoBarFrame.emptyToggleBtn:SetAlpha(showing and 1.0 or 0.35)
@@ -345,9 +372,18 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             infoBarFrame.viewModeDropdown:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, btnY)
         end
 
+        if infoBarFrame.categoriesBtn and showHeader then
+            infoBarFrame.categoriesBtn:ClearAllPoints()
+            infoBarFrame.categoriesBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, btnY)
+        end
+
         if infoBarFrame.cleanupBtn and showHeader then
             infoBarFrame.cleanupBtn:ClearAllPoints()
-            infoBarFrame.cleanupBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, btnY)
+            if infoBarFrame.categoriesBtn then
+                infoBarFrame.cleanupBtn:SetPoint("RIGHT", infoBarFrame.categoriesBtn, "LEFT", -4, 0)
+            else
+                infoBarFrame.cleanupBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, btnY)
+            end
         end
 
         if infoBarFrame.searchBox and showSearch then

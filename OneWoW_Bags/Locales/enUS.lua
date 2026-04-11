@@ -142,6 +142,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["CATEGORY_MANAGER_BTN"] = "Categories",
     ["CATEGORY_MANAGER_TITLE"] = "Custom Category Manager",
     ["CATEGORY_MANAGER_INFO"] = "Create custom categories and assign items to them. Drag an item onto a category or add by Item ID.",
+    ["CATEGORY_BADGE_TOOLTIP_TITLE"] = "Category indicators",
+    ["CATEGORY_BADGE_TOOLTIP_BODY"] = "S — Custom sort mode\nG — Group by\n+ — Manually added items\nH — Hidden in some bag views\nP — Non-default priority\nE — Search expression filter",
     ["CATEGORY_CREATE"] = "Create New Category",
     ["CATEGORY_CREATE_ENTER"] = "Enter category name:",
     ["CATEGORY_RENAME"] = "Rename",
@@ -180,6 +182,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["POPUP_CREATE"] = "Create",
     ["POPUP_DELETE"] = "Delete",
     ["POPUP_RENAME"] = "Rename",
+    ["DUPLICATE_CATEGORY_NAME"] = "A category with that name already exists.",
+    ["DUPLICATE_SECTION_NAME"] = "A section with that name already exists.",
     ["GUI_NOT_INSTALLED"] = "Install OneWoW_GUI for full theme, font, and language settings.",
     ["SORT"] = "Sort",
 
@@ -251,6 +255,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SECTION_DELETE_CONFIRM"] = "Delete this section? Categories will return to the main list.",
     ["CATEGORY_IN_SECTION"] = "Toggle categories to include in this section:",
     ["SECTION_SHOW_HEADER"] = "Show section header in bags",
+    ["SECTION_ONEWOW_BAGS"] = "ONEWOW BAGS",
     ["SETTING_COMPACT_CATEGORIES"] = "Compact Categories",
     ["DESC_COMPACT_CATEGORIES"] = "Place small categories side by side to save vertical space.",
 
@@ -295,7 +300,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["CAT_1W_UPGRADES"] = "1W Upgrades",
 
     ["SETTING_ENABLE_JUNK_CAT"] = "1W Junk Category",
-    ["DESC_ENABLE_JUNK_CAT"] = "Combine all junk items (grey quality and 1W-marked) into a single dedicated category at the top.",
+    ["DESC_ENABLE_JUNK_CAT"] = "Combine all junk items (poor quality and 1W-marked) into a single dedicated category.",
     ["SETTING_ENABLE_UPGRADE_CAT"] = "1W Upgrades Category",
     ["DESC_ENABLE_UPGRADE_CAT"] = "Group items that are gear upgrades for your character into a dedicated category.",
 
@@ -375,8 +380,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["DIVIDER_ADD"] = "Add Divider",
     ["DISPLAY_ORDER"] = "Display Order",
 
-    ["SETTING_MOVE_UPGRADES_TOP"] = "Move Upgrades to Top",
-    ["DESC_MOVE_UPGRADES_TOP"] = "Pin the 1W Upgrades category near the top, just below Recent Items.",
+    ["SETTING_MOVE_UPGRADES_TOP"] = "Pin Recent Items to Top",
+    ["DESC_MOVE_UPGRADES_TOP"] = "Keep the Recent Items category above the rest of the layout (Category view).",
     ["SETTING_MOVE_OTHER_BOTTOM"] = "Move Other to Bottom",
     ["DESC_MOVE_OTHER_BOTTOM"] = "Always pin the Other category to the very bottom of the list, below all sections.",
 

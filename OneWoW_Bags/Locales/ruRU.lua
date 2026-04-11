@@ -66,6 +66,7 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["BAG_REAGENT"] = "Сумка Материалов",
 
     ["CUSTOM_CATEGORIES"] = "Пользовательские Категории",
+    ["SECTION_ONEWOW_BAGS"] = "ONEWOW СУМКИ",
     ["CREATE_CATEGORY"] = "Создать Категорию",
     ["DELETE_CATEGORY"] = "Удалить Категорию",
     ["ADD_ITEM"] = "Добавить Предмет",
@@ -132,6 +133,8 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["CATEGORY_MANAGER_BTN"] = "Категории",
     ["CATEGORY_MANAGER_TITLE"] = "Менеджер своих категорий",
     ["CATEGORY_MANAGER_INFO"] = "Создавайте категории и назначайте предметы. Перетащите предмет на категорию или добавьте по ID.",
+    ["CATEGORY_BADGE_TOOLTIP_TITLE"] = "Метки категории",
+    ["CATEGORY_BADGE_TOOLTIP_BODY"] = "S — Своя сортировка\nG — Группировка\n+ — Вручную добавленные предметы\nH — Скрыто в некоторых видах сумок\nP — Нестандартный приоритет\nE — Фильтр по поисковому выражению",
     ["CATEGORY_CREATE"] = "Создать категорию",
     ["CATEGORY_CREATE_ENTER"] = "Введите название категории:",
     ["CATEGORY_RENAME"] = "Переименовать",
@@ -170,6 +173,8 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["POPUP_CREATE"] = "Создать",
     ["POPUP_DELETE"] = "Удалить",
     ["POPUP_RENAME"] = "Переименовать",
+    ["DUPLICATE_CATEGORY_NAME"] = "Категория с таким именем уже существует.",
+    ["DUPLICATE_SECTION_NAME"] = "Раздел с таким названием уже существует.",
     ["GUI_NOT_INSTALLED"] = "Установите OneWoW_GUI для полных настроек темы, шрифта и языка.",
     ["SORT"] = "Сортировка",
 

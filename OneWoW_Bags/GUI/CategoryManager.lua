@@ -31,32 +31,31 @@ local db = setmetatable({}, {
 
 local PE = OneWoW_Bags.PredicateEngine
 local Categories = OneWoW_Bags.Categories
+local SD = OneWoW_Bags.SectionDefaults
 
 local random, max, floor, time = math.random, math.max, math.floor, time
 local pairs, ipairs = pairs, ipairs
+local strtrim = strtrim
+local C_Timer = C_Timer
+local GameTooltip = GameTooltip
 local tostring, tonumber, format = tostring, tonumber, format
 local tinsert, tremove, wipe = tinsert, tremove, wipe
+local sort = table.sort
 
 OneWoW_Bags.CategoryManagerUI = {}
 local CatMgrUI = OneWoW_Bags.CategoryManagerUI
 
 local managerFrame       = nil
 local dialogContentFrame = nil
+local leftScrollFrame    = nil
 local leftScrollContent  = nil
+local rightScrollFrame   = nil
 local rightItemArea      = nil
 local rightItemScrollContent = nil
 local rightTopWrapper    = nil
 local rightItemWrapper   = nil
 local leftWrapper        = nil
 local selectedCatKey     = nil  -- nil | "builtin:Name" | "section:ID" | customID
-
-local BUILTIN_NAMES = {
-    "Recent Items", "Hearthstone", "Keystone", "Potions", "Food",
-    "Consumables", "Quest Items", "Equipment Sets", "Weapons", "Armor",
-    "Reagents", "Trade Goods", "Tradeskill", "Recipes", "Housing",
-    "Gems", "Item Enhancement", "Containers", "Keys", "Miscellaneous",
-    "Battle Pets", "Toys", "Other", "Junk",
-}
 
 local BUILTIN_LOCALE_KEYS = {
     ["Recent Items"]     = "CAT_RECENT_ITEMS",
@@ -83,9 +82,12 @@ local BUILTIN_LOCALE_KEYS = {
     ["Toys"]             = "CAT_TOYS",
     ["Other"]            = "CAT_OTHER",
     ["Junk"]             = "CAT_JUNK",
+    ["1W Junk"]          = "CAT_1W_JUNK",
+    ["1W Upgrades"]      = "CAT_1W_UPGRADES",
 }
 
 local BUILTIN_PRIORITY = {
+    ["1W Junk"]=1,          ["1W Upgrades"]=1,
     ["Recent Items"]=1,     ["Hearthstone"]=2,      ["Keystone"]=3,
     ["Potions"]=4,          ["Food"]=5,             ["Consumables"]=6,
     ["Quest Items"]=7,      ["Equipment Sets"]=8,   ["Weapons"]=9,
@@ -128,23 +130,37 @@ local BAGANATOR_CAT_MAP = {
 -- ============================================================
 -- Helpers
 -- ============================================================
+local function GetEffectiveBuiltinNamesList()
+    return SD:GetEffectiveBuiltinNames(GetDB().global)
+end
+
 local function EnsureDefaultSection()
     local sections = db.global.categorySections
     local sectOrder = db.global.sectionOrder
 
     if #sectOrder > 0 then return end
 
-    local secEquip = "sec_equipment"
-    local secCraft = "sec_crafting"
-    local secHouse = "sec_housing"
+    local secEquip = SD.SEC_EQUIPMENT
+    local secCraft = SD.SEC_CRAFTING
+    local secHouse = SD.SEC_HOUSING
+    local secOw = SD.SEC_ONEWOW_BAGS
 
-    sections[secEquip] = { name = "EQUIPMENT", categories = { "Equipment Sets", "Weapons", "Armor" }, collapsed = false, showHeader = true }
-    sections[secCraft] = { name = "CRAFTING",  categories = { "Reagents", "Trade Goods", "Tradeskill", "Recipes" }, collapsed = false, showHeader = true }
-    sections[secHouse] = { name = "HOUSING",   categories = { "Housing" }, collapsed = false, showHeader = true }
+    sections[secEquip] = { name = "EQUIPMENT", categories = CopyTable(SD.EQUIPMENT_CATEGORIES), collapsed = false, showHeader = true }
+    sections[secCraft] = { name = "CRAFTING",  categories = CopyTable(SD.CRAFTING_CATEGORIES), collapsed = false, showHeader = true }
+    sections[secHouse] = { name = "HOUSING",   categories = CopyTable(SD.HOUSING_CATEGORIES), collapsed = false, showHeader = true }
 
-    sectOrder[1] = secEquip
-    sectOrder[2] = secCraft
-    sectOrder[3] = secHouse
+    local members = SD:BuildOnewowMembers(db.global)
+    sections[secOw] = {
+        name = L["SECTION_ONEWOW_BAGS"],
+        categories = members,
+        collapsed = false,
+        showHeader = false,
+    }
+
+    sectOrder[1] = secOw
+    sectOrder[2] = secEquip
+    sectOrder[3] = secCraft
+    sectOrder[4] = secHouse
 end
 
 local function ReleaseWrapper(w)
@@ -198,12 +214,33 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self)
-        local name = self.EditBox:GetText()
-        if name and name ~= "" then
-            local controller = GetController()
-            if controller and controller.CreateCategory then
-                selectedCatKey = controller:CreateCategory(name)
+        local name = strtrim(self.EditBox:GetText() or "")
+        if name == "" then return end
+        local controller = GetController()
+        if not controller or not controller.CreateCategory then return end
+        local prevSel = selectedCatKey
+        local id, err = controller:CreateCategory(name)
+        if not id then
+            if err and L[err] then
+                UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
+            C_Timer.After(0, function()
+                local d = StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY")
+                if d and d.EditBox then
+                    d.EditBox:SetText(name)
+                    d.EditBox:SetFocus()
+                end
+            end)
+            return
+        end
+        selectedCatKey = id
+        local g = GetDB().global
+        local secId = prevSel and prevSel:match("^section:(.+)$")
+        if secId and secId ~= SD.SEC_ONEWOW_BAGS then
+            controller:SetSectionMembership(secId, name, true)
+        elseif g.categorySections[SD.SEC_ONEWOW_BAGS] then
+            SD:SyncOnewowSectionCategories(g)
+            controller:RefreshUI()
         end
     end,
     EditBoxOnEnterPressed = function(self)
@@ -226,12 +263,22 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self, data)
-        local name = self.EditBox:GetText()
-        if name and name ~= "" and data then
-            local controller = GetController()
-            if controller and controller.RenameCategory then
-                controller:RenameCategory(data, name)
+        local name = strtrim(self.EditBox:GetText() or "")
+        if name == "" or not data then return end
+        local controller = GetController()
+        if not controller or not controller.RenameCategory then return end
+        local ok, err = controller:RenameCategory(data, name)
+        if not ok then
+            if err and L[err] then
+                UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
+            C_Timer.After(0, function()
+                local d = StaticPopup_Show("ONEWOW_BAGS_RENAME_CATEGORY", nil, nil, data)
+                if d and d.EditBox then
+                    d.EditBox:SetText(name)
+                    d.EditBox:SetFocus()
+                end
+            end)
         end
     end,
     EditBoxOnEnterPressed = function(self)
@@ -269,14 +316,25 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self)
-        local name = self.EditBox:GetText()
-        if name and name ~= "" then
-            local controller = GetController()
-            if controller and controller.CreateSection then
-                local id = controller:CreateSection(name)
-                selectedCatKey = "section:" .. id
+        local name = strtrim(self.EditBox:GetText() or "")
+        if name == "" then return end
+        local controller = GetController()
+        if not controller or not controller.CreateSection then return end
+        local id, err = controller:CreateSection(name)
+        if not id then
+            if err and L[err] then
+                UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
+            C_Timer.After(0, function()
+                local d = StaticPopup_Show("ONEWOW_BAGS_CREATE_SECTION")
+                if d and d.EditBox then
+                    d.EditBox:SetText(name)
+                    d.EditBox:SetFocus()
+                end
+            end)
+            return
         end
+        selectedCatKey = "section:" .. id
     end,
     EditBoxOnEnterPressed = function(self)
         local p = self:GetParent()
@@ -298,12 +356,22 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self, data)
-        local name = self.EditBox:GetText()
-        if name and name ~= "" and data then
-            local controller = GetController()
-            if controller and controller.RenameSection then
-                controller:RenameSection(data, name)
+        local name = strtrim(self.EditBox:GetText() or "")
+        if name == "" or not data then return end
+        local controller = GetController()
+        if not controller or not controller.RenameSection then return end
+        local ok, err = controller:RenameSection(data, name)
+        if not ok then
+            if err and L[err] then
+                UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
+            C_Timer.After(0, function()
+                local d = StaticPopup_Show("ONEWOW_BAGS_RENAME_SECTION", nil, nil, data)
+                if d and d.EditBox then
+                    d.EditBox:SetText(name)
+                    d.EditBox:SetFocus()
+                end
+            end)
         end
     end,
     EditBoxOnEnterPressed = function(self)
@@ -398,8 +466,8 @@ function CatMgrUI:RefreshRight()
         hint:SetPoint("CENTER")
         hint:SetText(L["CATEGORY_SELECT_PROMPT"])
         hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        if rightItemScrollContent then
-            rightItemScrollContent:SetHeight(80)
+        if rightScrollFrame then
+            rightScrollFrame:GetScrollChild():SetHeight(80)
         end
         return
     end
@@ -458,7 +526,7 @@ function CatMgrUI:RefreshRight()
         infoLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local allCatNames = {}
-        for _, n in ipairs(BUILTIN_NAMES) do tinsert(allCatNames, n) end
+        for _, n in ipairs(GetEffectiveBuiltinNamesList()) do tinsert(allCatNames, n) end
         for _, cd in pairs(db.global.customCategoriesV2) do tinsert(allCatNames, cd.name) end
 
         local memberSet = {}
@@ -498,8 +566,8 @@ function CatMgrUI:RefreshRight()
 
         local totalH = max(abs(checkY) + 4, 100)
         rightTopWrapper:SetHeight(totalH)
-        if rightItemScrollContent then
-            rightItemScrollContent:SetHeight(totalH)
+        if rightScrollFrame then
+            rightScrollFrame:GetScrollChild():SetHeight(totalH)
         end
         return
     end
@@ -1074,8 +1142,8 @@ function CatMgrUI:RefreshRight()
 
     local totalH = max(abs(yPos) + 8, 100)
     rightTopWrapper:SetHeight(totalH)
-    if rightItemScrollContent then
-        rightItemScrollContent:SetHeight(totalH)
+    if rightScrollFrame then
+        rightScrollFrame:GetScrollChild():SetHeight(totalH)
     end
 end
 
@@ -1106,7 +1174,7 @@ function CatMgrUI:RefreshLeft()
 
     -- Build root category list (not in any section)
     local rootCats = {}
-    for _, name in ipairs(BUILTIN_NAMES) do
+    for _, name in ipairs(GetEffectiveBuiltinNamesList()) do
         if not inSection[name] then
             tinsert(rootCats, { name=name, isBuiltin=true, key="builtin:"..name })
         end
@@ -1195,7 +1263,8 @@ function CatMgrUI:RefreshLeft()
         if mod.addedItems and next(mod.addedItems) then badges = badges .. "+" end
         if mod.hideIn and next(mod.hideIn) then badges = badges .. "H" end
         if mod.priority and mod.priority ~= 0 then badges = badges .. "P" end
-        if not entry.isBuiltin and entry.data and entry.data.searchExpression then badges = badges .. "E" end
+        local searchExpr = not entry.isBuiltin and entry.data and entry.data.searchExpression
+        if searchExpr and searchExpr ~= "" then badges = badges .. "E" end
 
         local badgeAnchor = upB
         if badges ~= "" then
@@ -1203,6 +1272,18 @@ function CatMgrUI:RefreshLeft()
             badgeTxt:SetPoint("RIGHT", upB, "LEFT", -4, 0)
             badgeTxt:SetText(badges)
             badgeTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+            local badgeHit = CreateFrame("Frame", nil, row)
+            badgeHit:EnableMouse(true)
+            badgeHit:SetSize(max(24, #badges * 9 + 8), 28)
+            badgeHit:SetPoint("RIGHT", upB, "LEFT", -4, 0)
+            badgeHit:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["CATEGORY_BADGE_TOOLTIP_TITLE"], 1, 1, 1)
+                local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
+                GameTooltip:AddLine(L["CATEGORY_BADGE_TOOLTIP_BODY"], tr, tg, tb, true)
+                GameTooltip:Show()
+            end)
+            badgeHit:SetScript("OnLeave", GameTooltip_Hide)
             badgeAnchor = badgeTxt
         end
 
@@ -1261,12 +1342,6 @@ function CatMgrUI:RefreshLeft()
         yOffset = yOffset + 30
     end
 
-    -- Render root categories
-    for i, entry in ipairs(rootCats) do
-        RenderCatRow(entry, i, #rootCats, 0)
-    end
-
-    -- Render sections
     local totalSections = #sectOrder
     for secIdx, sectionID in ipairs(sectOrder) do
         local section = sections[sectionID]
@@ -1441,9 +1516,15 @@ function CatMgrUI:RefreshLeft()
         end
     end
 
+    for i, entry in ipairs(rootCats) do
+        RenderCatRow(entry, i, #rootCats, 0)
+    end
+
     local totalH = yOffset + 4
     leftWrapper:SetHeight(max(totalH, 40))
-    leftScrollContent:SetHeight(max(totalH, 40))
+    if leftScrollFrame then
+        leftScrollFrame:GetScrollChild():SetHeight(max(totalH, 40))
+    end
 end
 
 -- ============================================================
@@ -1555,17 +1636,14 @@ function CatMgrUI:Show()
     leftPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     leftPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local leftTitleLbl = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    leftTitleLbl:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 10, -8)
-    leftTitleLbl:SetText(L["CUSTOM_CATEGORIES"] or "Categories")
-    leftTitleLbl:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
     local leftInner = CreateFrame("Frame", nil, leftPanel)
-    leftInner:SetPoint("TOPLEFT",     leftPanel, "TOPLEFT",     4, -26)
+    leftInner:SetPoint("TOPLEFT",     leftPanel, "TOPLEFT",     4, -8)
     leftInner:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -4,  4)
 
-    local _, lContent = OneWoW_GUI:CreateScrollFrame(leftInner, { name="OneWoW_BagsCatMgrLeft" })
-    leftScrollContent = lContent
+    leftScrollFrame, leftScrollContent = OneWoW_GUI:CreateScrollFrame(leftInner, {
+        name = "OneWoW_BagsCatMgrLeft",
+        layoutRightInset = 24,
+    })
 
     -- Right panel (resizer will reanchor it)
     local rightPanel = CreateFrame("Frame", nil, splitArea, "BackdropTemplate")
@@ -1588,8 +1666,10 @@ function CatMgrUI:Show()
     rightItemArea:SetPoint("TOPLEFT",     rightPanel, "TOPLEFT",      8, -8)
     rightItemArea:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -8,  8)
 
-    local _, rContent = OneWoW_GUI:CreateScrollFrame(rightItemArea, { name="OneWoW_BagsCatMgrItems" })
-    rightItemScrollContent = rContent
+    rightScrollFrame, rightItemScrollContent = OneWoW_GUI:CreateScrollFrame(rightItemArea, {
+        name = "OneWoW_BagsCatMgrItems",
+        layoutRightInset = 24,
+    })
 
     CatMgrUI:Refresh()
     if managerFrame then

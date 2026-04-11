@@ -97,15 +97,13 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local sortMode = db.global.categorySort
     Categories:SortCategories(categoryNames, sortMode)
 
-    local moveUpgradesToTop = db.global.moveUpgradesToTop
+    local moveRecentToTop = db.global.moveUpgradesToTop
     local moveOtherToBottom = db.global.moveOtherToBottom
-    if moveUpgradesToTop or moveOtherToBottom then
-        local pinRecent, pinUpgrades, pinBottom, rest = {}, {}, {}, {}
+    if moveRecentToTop or moveOtherToBottom then
+        local pinRecent, pinBottom, rest = {}, {}, {}
         for _, name in ipairs(categoryNames) do
-            if name == "Recent Items" and moveUpgradesToTop then
+            if name == "Recent Items" and moveRecentToTop then
                 tinsert(pinRecent, name)
-            elseif name == "1W Upgrades" and moveUpgradesToTop then
-                tinsert(pinUpgrades, name)
             elseif name == "Other" and moveOtherToBottom then
                 tinsert(pinBottom, name)
             else
@@ -113,10 +111,9 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
             end
         end
         categoryNames = {}
-        for _, n in ipairs(pinRecent)   do tinsert(categoryNames, n) end
-        for _, n in ipairs(pinUpgrades) do tinsert(categoryNames, n) end
-        for _, n in ipairs(rest)        do tinsert(categoryNames, n) end
-        for _, n in ipairs(pinBottom)   do tinsert(categoryNames, n) end
+        for _, n in ipairs(pinRecent) do tinsert(categoryNames, n) end
+        for _, n in ipairs(rest)    do tinsert(categoryNames, n) end
+        for _, n in ipairs(pinBottom) do tinsert(categoryNames, n) end
     end
 
     local cols = db.global.bankColumns or floor((width - padding * 2) / (iconSize + spacing))

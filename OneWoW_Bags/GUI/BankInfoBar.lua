@@ -23,4 +23,7 @@ OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
             controller:SortBank()
         end
     end,
+    categoryManagerCallback = function(controller)
+        controller:ToggleCategoryManager()
+    end,
 })

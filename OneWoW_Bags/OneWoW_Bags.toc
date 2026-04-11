@@ -29,6 +29,7 @@ Locales\deDE.lua
 
 # Core
 Core\Constants.lua
+Core\SectionDefaults.lua
 Core\Database.lua
 Core\BagTypes.lua
 Core\BankTypes.lua
