@@ -253,11 +253,13 @@ L["TT_IS_FILTER_OWNED_DESC"]      = "Show only items you own across all characte
 L["ITEMSEARCH_SECTION_DROPS"]     = "Drops From"
 L["ITEMSEARCH_SECTION_VENDORS"]   = "Sold By"
 L["ITEMSEARCH_SECTION_CRAFTED"]   = "Crafted By"
+L["ITEMSEARCH_SECTION_KNOWNBY"]   = "Known By"
 L["ITEMSEARCH_SECTION_INVENTORY"] = "In Your Inventory"
 
 L["ITEMSEARCH_NO_DROPS"]          = "Not available as a drop."
 L["ITEMSEARCH_NO_VENDORS"]        = "Not sold by any vendor."
 L["ITEMSEARCH_NO_CRAFTED"]        = "Not crafted via professions."
+L["ITEMSEARCH_NO_KNOWNBY"]        = "No alt data available. Install AltTracker - Professions."
 L["ITEMSEARCH_NO_INVENTORY"]      = "Not in any inventory."
 
 L["ITEMSEARCH_ITEM_ID"]           = "Item ID"

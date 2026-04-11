@@ -21,6 +21,68 @@ local TRADESKILL_PROFS = {
 local MAX_RESULTS = 200
 local DEFAULT_LIMIT = 50
 
+local function GetRecipeKnownByFromAltTracker(itemID)
+    local profsDB = _G.OneWoW_AltTracker_Professions_DB
+    if not profsDB or not profsDB.characters then return nil end
+
+    local recipeSpellID
+    if profsDB.recipeItemMap and profsDB.recipeItemMap[itemID] then
+        recipeSpellID = profsDB.recipeItemMap[itemID]
+    end
+
+    if not recipeSpellID and C_Item and C_Item.GetItemSpell then
+        local _, spellID = C_Item.GetItemSpell(itemID)
+        if spellID then recipeSpellID = spellID end
+    end
+
+    local knownBy = {}
+    local seen = {}
+
+    if recipeSpellID then
+        for charKey, charData in pairs(profsDB.characters) do
+            if charData.recipes then
+                for profName, recipeSet in pairs(charData.recipes) do
+                    if recipeSet[recipeSpellID] and not seen[charKey] then
+                        seen[charKey] = true
+                        table.insert(knownBy, charKey)
+                    end
+                end
+            end
+        end
+    end
+
+    if #knownBy == 0 then
+        local itemName = C_Item.GetItemNameByID(itemID)
+        if itemName then
+            local craftedName = itemName:match("^%S+:%s*(.+)$") or itemName
+            for charKey, charData in pairs(profsDB.characters) do
+                if charData.recipes and not seen[charKey] then
+                    for profName, recipeSet in pairs(charData.recipes) do
+                        for storedID in pairs(recipeSet) do
+                            local info = C_TradeSkillUI and C_TradeSkillUI.GetRecipeInfo
+                                         and C_TradeSkillUI.GetRecipeInfo(storedID)
+                            if info and info.name == craftedName then
+                                if profsDB.recipeItemMap then
+                                    profsDB.recipeItemMap[itemID] = storedID
+                                end
+                                if not seen[charKey] then
+                                    seen[charKey] = true
+                                    table.insert(knownBy, charKey)
+                                end
+                                break
+                            end
+                        end
+                        if seen[charKey] then break end
+                    end
+                end
+            end
+        end
+    end
+
+    table.sort(knownBy)
+    return knownBy
+end
+
 local EXPANSION_PRIORITY = {
     "Midnight", "TheWarWithin", "Dragonflight", "Shadowlands",
     "BattleforAzeroth", "Legion", "WarlordsofDraenor", "MistsofPandaria",
@@ -291,11 +353,21 @@ function ItemSearch:GetDefaultItems(limit)
 end
 
 function ItemSearch:GetDetail(itemID)
+    local isRecipe = false
+    if C_Item and C_Item.GetItemInfoInstant then
+        local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemID)
+        if classID == Enum.ItemClass.Recipe then
+            isRecipe = true
+        end
+    end
+
     local detail = {
-        drops   = {},
-        vendors = {},
-        crafted = {},
-        owned   = {},
+        drops        = {},
+        vendors      = {},
+        crafted      = {},
+        owned        = {},
+        isRecipe     = isRecipe,
+        recipeKnownBy = isRecipe and GetRecipeKnownByFromAltTracker(itemID) or nil,
     }
 
     for _, expName in ipairs(EXPANSION_NAMES) do

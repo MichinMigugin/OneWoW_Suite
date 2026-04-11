@@ -375,20 +375,32 @@ ShowItemDetail = function(result)
 
     yOffset = yOffset - 6
 
-    AddSectionHeader("ITEMSEARCH_SECTION_CRAFTED")
-    if #detail.crafted > 0 then
-        for _, c in ipairs(detail.crafted) do
-            AddTextRow(c.profName or "", 12, "TEXT_PRIMARY")
-            if c.knownBy and #c.knownBy > 0 then
-                for _, charKey in ipairs(c.knownBy) do
-                    AddTextRow(charKey, 24, "TEXT_SECONDARY")
-                end
-            else
-                AddTextRow(L["TRADESKILLS_NOT_SCANNED"], 24, "TEXT_MUTED")
+    if detail.isRecipe then
+        AddSectionHeader("ITEMSEARCH_SECTION_KNOWNBY")
+        if detail.recipeKnownBy and #detail.recipeKnownBy > 0 then
+            for _, charKey in ipairs(detail.recipeKnownBy) do
+                local charName = charKey:match("^([^%-]+)") or charKey
+                AddTextRow(charName, 12, "TEXT_PRIMARY")
             end
+        else
+            AddTextRow(L["ITEMSEARCH_NO_KNOWNBY"], 12, "TEXT_MUTED")
         end
     else
-        AddTextRow(L["ITEMSEARCH_NO_CRAFTED"], 12, "TEXT_MUTED")
+        AddSectionHeader("ITEMSEARCH_SECTION_CRAFTED")
+        if #detail.crafted > 0 then
+            for _, c in ipairs(detail.crafted) do
+                AddTextRow(c.profName or "", 12, "TEXT_PRIMARY")
+                if c.knownBy and #c.knownBy > 0 then
+                    for _, charKey in ipairs(c.knownBy) do
+                        AddTextRow(charKey, 24, "TEXT_SECONDARY")
+                    end
+                else
+                    AddTextRow(L["TRADESKILLS_NOT_SCANNED"], 24, "TEXT_MUTED")
+                end
+            end
+        else
+            AddTextRow(L["ITEMSEARCH_NO_CRAFTED"], 12, "TEXT_MUTED")
+        end
     end
 
     yOffset = yOffset - 6
