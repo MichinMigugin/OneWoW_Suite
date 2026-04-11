@@ -1,23 +1,15 @@
-﻿--[[
-OneWoW Bags Integration - TransmogLootHelper Example
+﻿--[[ OneWoW Bags Integration for TransmogLootHelper
+================================================
+This file allows TransmogLootHelper to add transmog loot markers/overlays to items
+displayed in OneWoW Bags.
 
-This is a real-world example showing how TransmogLootHelper integrates with OneWoW Bags.
-
-TransmogLootHelper provides transmog loot marking overlays on items. This integration
-adds those same overlays to items displayed in OneWoW Bags.
-
-Instructions for TransmogLootHelper devs:
-1. Copy to: TransmogLootHelper/Integrations/OneWoWBags.lua
-2. Add to .toc: Integrations\OneWoWBags.lua
-3. Done! The integration will automatically activate.
+Place this file in: TransmogLootHelper/integrations/OneWoWBags.lua
+Then add it to TransmogLootHelper.toc as:
+Integrations\OneWoWBags.lua
 ]]
+local _, app = ...
 
-local appName, app = ...                                                                                                   
-   
-  if _G.OneWoW_Bags then                                                                                                     
-                                                                  
-        local debugCount = 0
-
+  if _G.OneWoW_Bags then
         local function UpdateItemButton(button, bagID, slotID)
                 if not button then return end
 
@@ -25,8 +17,6 @@ local appName, app = ...
                         button.TLHOverlay = CreateFrame("Frame", nil, button)
                         button.TLHOverlay:SetAllPoints(button)
                         button.TLHOverlay:SetFrameLevel(button:GetFrameLevel() + 1)
-
-                        debugCount = debugCount + 1
                 end
 
                 local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
@@ -43,5 +33,4 @@ local appName, app = ...
         end
 
         _G.OneWoW_Bags:RegisterItemButtonCallback("TransmogLootHelper", UpdateItemButton)
-
   end
