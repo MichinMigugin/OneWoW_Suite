@@ -279,6 +279,29 @@ local function BuildContent(container, isEnabled, contentYOffset)
     end)
     cy = cy - 50
 
+    local spacingLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    spacingLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    spacingLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_ICON_SPACING"], s.iconSpacing or 4))
+    spacingLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    cy = cy - spacingLabel:GetStringHeight() - 4
+
+    local spacingSlider = CreateFrame("Slider", "OneWoW_QoL_QIBarSpacingSlider", container, "OptionsSliderTemplate")
+    spacingSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+    spacingSlider:SetWidth(170)
+    spacingSlider:SetMinMaxValues(0, 12)
+    spacingSlider:SetValue(s.iconSpacing or 4)
+    spacingSlider:SetValueStep(1)
+    spacingSlider:SetObeyStepOnDrag(true)
+    _G["OneWoW_QoL_QIBarSpacingSliderLow"]:SetText("0")
+    _G["OneWoW_QoL_QIBarSpacingSliderHigh"]:SetText("12")
+    spacingSlider:SetScript("OnValueChanged", function(self, value)
+        local v = math.floor(value + 0.5)
+        GetSettings().iconSpacing = v
+        spacingLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_ICON_SPACING"], v))
+        ns.QuestItemBarModule:ScheduleUpdate()
+    end)
+    cy = cy - 50
+
     -- Quest Item Status section
     local listSection = OneWoW_GUI:CreateSectionHeader(container, {
         title = L["QUESTITEMBAR_QUEST_ITEM_STATUS"],

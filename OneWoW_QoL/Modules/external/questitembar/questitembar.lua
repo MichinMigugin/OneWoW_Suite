@@ -34,7 +34,6 @@ local MIN_BUTTON_SIZE = 24
 local MAX_BUTTON_SIZE = 48
 local MIN_COLUMNS = 1
 local MAX_COLUMNS = 12
-local BUTTON_PADDING = 5
 
 local SORT_MODES = {
     { value = 1, labelKey = "QUESTITEMBAR_SORT_NONE" },
@@ -79,6 +78,7 @@ local function GetSettings()
     if s.showOnlyTracked      == nil then s.showOnlyTracked      = false end
     if s.buttonSize       == nil then s.buttonSize       = defaultButtonSize    end
     if s.columns          == nil then s.columns         = defaultColumns    end
+    if s.iconSpacing      == nil then s.iconSpacing     = 4                   end
     if s.sortMode         == nil then s.sortMode        = defaultSortMode     end
     if s.dynamicOrder     == nil or #s.dynamicOrder == 0 then
         s.dynamicOrder = { "supertracked", "proximity", "zone", "tracked" }
@@ -478,44 +478,34 @@ local function EnsureButton(i)
     local b = CreateFrame("Button", "OneWoW_QoL_QuestItemBarBtn" .. i, barFrame, "SecureActionButtonTemplate")
     b:SetSize(defaultButtonSize, defaultButtonSize)
 
-    b.icon = b:CreateTexture(nil, "ARTWORK")
-    b.icon:SetSize(defaultButtonSize - 2, defaultButtonSize - 2)
-    b.icon:SetPoint("CENTER")
-    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    local icon = b:CreateTexture(nil, "ARTWORK")
+    icon:SetAllPoints(b)
+    b.icon = icon
+    b._skinnedIcon = icon
 
-    b.normalTex = b:CreateTexture(nil, "BACKGROUND")
-    b.normalTex:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-    b.normalTex:SetSize(defaultButtonSize, defaultButtonSize)
-    b.normalTex:SetPoint("CENTER")
+    if OneWoW_GUI then
+        OneWoW_GUI:SkinIconFrame(b, { preset = "clean" })
+    end
 
     b.count = b:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
     b.count:SetPoint("BOTTOMRIGHT", -2, 2)
 
     b.cooldown = CreateFrame("Cooldown", "OneWoW_QoL_QuestItemBarBtn" .. i .. "CD", b, "CooldownFrameTemplate")
-    b.cooldown:SetSize(defaultButtonSize - 2, defaultButtonSize - 2)
-    b.cooldown:SetPoint("CENTER")
+    b.cooldown:SetPoint("TOPLEFT", icon, "TOPLEFT")
+    b.cooldown:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT")
     b.cooldown:SetDrawEdge(false)
     b.cooldown:SetHideCountdownNumbers(false)
+    if OneWoW_GUI then
+        OneWoW_GUI:SkinCooldown(b.cooldown)
+    end
 
     b:RegisterForClicks("AnyDown", "AnyUp")
 
-    b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-    local ht = b:GetHighlightTexture()
-    if ht then
-        ht:SetAlpha(0.4)
-        ht:SetSize(defaultButtonSize, defaultButtonSize)
-        ht:SetPoint("CENTER")
-    end
-
-    b:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
-    local pt = b:GetPushedTexture()
-    if pt then
-        pt:SetSize(defaultButtonSize, defaultButtonSize)
-        pt:SetPoint("CENTER")
-    end
-
     b:SetScript("OnEnter", function(self)
         if not self.itemLink then return end
+        if self._skinBorder and not (self._skinQuality and self._skinQuality > 1) then
+            self._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink(self.itemLink)
         if self.questTitle and self.questTitle ~= "" then
@@ -526,7 +516,10 @@ local function EnsureButton(i)
         GameTooltip:Show()
     end)
 
-    b:SetScript("OnLeave", function()
+    b:SetScript("OnLeave", function(self)
+        if self._skinBorder and not (self._skinQuality and self._skinQuality > 1) then
+            self._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+        end
         GameTooltip:Hide()
     end)
 
@@ -577,7 +570,7 @@ function QuestItemBarModule:LayoutButtons(count)
     if not barFrame then return end
     local s       = GetSettings()
     local btnSize = s.buttonSize or defaultButtonSize
-    local padding = BUTTON_PADDING
+    local spacing = s.iconSpacing or 4
     local cols    = s.columns or defaultColumns
     local actualCols = math.min(count, cols)
     local rows    = math.max(1, math.ceil(count / cols))
@@ -589,18 +582,12 @@ function QuestItemBarModule:LayoutButtons(count)
         b:ClearAllPoints()
         b:SetSize(btnSize, btnSize)
         b:SetPoint("TOPLEFT", barFrame, "TOPLEFT",
-            col * (btnSize + padding),
-            -(row * (btnSize + padding)))
+            col * (btnSize + spacing),
+            -(row * (btnSize + spacing)))
 
-        local iconSize = btnSize - 2
-        b.icon:SetSize(iconSize, iconSize)
-        b.normalTex:SetSize(btnSize, btnSize)
-        b.cooldown:SetSize(iconSize, iconSize)
-
-        local ht = b:GetHighlightTexture()
-        if ht then ht:SetSize(btnSize, btnSize) end
-        local pt = b:GetPushedTexture()
-        if pt then pt:SetSize(btnSize, btnSize) end
+        if OneWoW_GUI then
+            OneWoW_GUI:SkinIconFrame(b, { preset = "clean" })
+        end
 
         b:Show()
     end
@@ -610,8 +597,8 @@ function QuestItemBarModule:LayoutButtons(count)
     end
 
     if actualCols > 0 then
-        local width  = (actualCols * btnSize) + ((actualCols - 1) * padding)
-        local height = (rows * btnSize) + ((rows - 1) * padding)
+        local width  = (actualCols * btnSize) + ((actualCols - 1) * spacing)
+        local height = (rows * btnSize) + ((rows - 1) * spacing)
         barFrame:SetSize(width, height)
     else
         barFrame:SetSize(btnSize, btnSize)
@@ -824,6 +811,11 @@ function QuestItemBarModule:CreateBar()
         dragHandle:SetScript("OnUpdate", nil)
         QuestItemBarModule:SavePosition()
     end)
+    dragHandle:SetScript("OnMouseUp", function(self, mouseButton)
+        if mouseButton == "RightButton" then
+            QuestItemBarModule:ShowContextMenu(self)
+        end
+    end)
 
     barFrame.dragHandle = dragHandle
     self.frame = barFrame
@@ -971,6 +963,28 @@ function QuestItemBarModule:SetLocked(locked)
         else
             barFrame.dragHandle:Show()
         end
+    end
+end
+
+function QuestItemBarModule:OpenSettings()
+    if ns.UI and ns.UI.SelectFeature then
+        ns.UI.SelectFeature("questitembar")
+    end
+end
+
+function QuestItemBarModule:ShowContextMenu(anchor)
+    if MenuUtil and MenuUtil.CreateContextMenu then
+        MenuUtil.CreateContextMenu(anchor, function(_, rootDescription)
+            local s = GetSettings()
+            rootDescription:CreateTitle(ns.L["QUESTITEMBAR_TITLE"])
+            local lockLabel = s.locked and ns.L["QUESTITEMBAR_CONTEXT_UNLOCK"] or ns.L["QUESTITEMBAR_CONTEXT_LOCK"]
+            rootDescription:CreateButton(lockLabel, function()
+                QuestItemBarModule:SetLocked(not s.locked)
+            end)
+            rootDescription:CreateButton(ns.L["QUESTITEMBAR_CONTEXT_SETTINGS"], function()
+                QuestItemBarModule:OpenSettings()
+            end)
+        end)
     end
 end
 
