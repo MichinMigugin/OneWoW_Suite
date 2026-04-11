@@ -384,6 +384,10 @@ OneWoW_Bags.Locales["enUS"] = {
     ["DESC_MOVE_UPGRADES_TOP"] = "Keep the Recent Items category above the rest of the layout (Category view).",
     ["SETTING_MOVE_OTHER_BOTTOM"] = "Move Other to Bottom",
     ["DESC_MOVE_OTHER_BOTTOM"] = "Always pin the Other category to the very bottom of the list, below all sections.",
+    ["SETTING_PINNED_CATEGORY_SHOWS_WHEN_DISABLED"] = "Show Pinned Items in Disabled Categories",
+    ["DESC_PINNED_CATEGORY_SHOWS_WHEN_DISABLED"] = "When a category is disabled but still has manually assigned items, keep showing that category in bags. When off, those items are categorized normally (e.g. Other) until the category is enabled again.",
+    ["ERR_ITEM_ALREADY_MANUAL_CATEGORY"] = "That item is already assigned to \"%s\". Remove it there first.",
+    ["ERR_ITEM_ALREADY_MANUAL_CATEGORY_GENERIC"] = "That item is already assigned to another category. Remove it there first.",
 
     ["SECTION_CAT_PLACEMENT"] = "Category Placement",
     ["DESC_RECENT_DURATION"] = "How long (in seconds) a newly looted item stays in the Recent Items category.",

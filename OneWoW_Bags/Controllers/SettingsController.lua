@@ -66,6 +66,14 @@ SettingsController.appliers = {
         db.global.moveOtherToBottom = value
         self.addon:RequestLayoutRefresh("all")
     end,
+    pinnedCategoryShowsWhenDisabled = function(self, db, value)
+        db.global.pinnedCategoryShowsWhenDisabled = value
+        self.addon:InvalidateCategorization()
+        self.addon:RequestLayoutRefresh("all")
+        if self.addon.CategoryManagerUI and self.addon.CategoryManagerUI.Refresh then
+            self.addon.CategoryManagerUI:Refresh()
+        end
+    end,
     recentItemDuration = function(self, db, value)
         db.global.recentItemDuration = value
         if self.addon.Categories then

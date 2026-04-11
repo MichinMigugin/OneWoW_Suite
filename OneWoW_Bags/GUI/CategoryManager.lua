@@ -197,7 +197,14 @@ end
 local function MoveItemToCategory(itemID, destCatID)
     local controller = GetController()
     if controller and controller.AddItemToCategory then
-        controller:AddItemToCategory(destCatID, itemID)
+        local ok, ownerName = controller:AddItemToCategory(destCatID, itemID)
+        if not ok then
+            if ownerName then
+                UIErrorsFrame:AddMessage(format(L["ERR_ITEM_ALREADY_MANUAL_CATEGORY"], ownerName), 1, 0, 0)
+            else
+                UIErrorsFrame:AddMessage(L["ERR_ITEM_ALREADY_MANUAL_CATEGORY_GENERIC"], 1, 0, 0)
+            end
+        end
     end
 end
 
@@ -1037,10 +1044,18 @@ function CatMgrUI:RefreshRight()
             ClearCursor()
             local controller = GetController()
             if controller then
+                local ok, ownerName
                 if isCustom and capturedID and controller.AddItemToCategory then
-                    controller:AddItemToCategory(capturedID, itemID)
+                    ok, ownerName = controller:AddItemToCategory(capturedID, itemID)
                 elseif isBuiltin and controller.AddItemToCategory then
-                    controller:AddItemToCategory(selectedCatKey, itemID)
+                    ok, ownerName = controller:AddItemToCategory(selectedCatKey, itemID)
+                end
+                if ok == false then
+                    if ownerName then
+                        UIErrorsFrame:AddMessage(format(L["ERR_ITEM_ALREADY_MANUAL_CATEGORY"], ownerName), 1, 0, 0)
+                    else
+                        UIErrorsFrame:AddMessage(L["ERR_ITEM_ALREADY_MANUAL_CATEGORY_GENERIC"], 1, 0, 0)
+                    end
                 end
             end
         end
@@ -1070,7 +1085,14 @@ function CatMgrUI:RefreshRight()
         if #addedItems > 0 then
             local controller = GetController()
             if controller and controller.AddItemsToCategory then
-                controller:AddItemsToCategory(selectedCatKey, addedItems)
+                local ok, ownerName = controller:AddItemsToCategory(selectedCatKey, addedItems)
+                if not ok then
+                    if ownerName then
+                        UIErrorsFrame:AddMessage(format(L["ERR_ITEM_ALREADY_MANUAL_CATEGORY"], ownerName), 1, 0, 0)
+                    else
+                        UIErrorsFrame:AddMessage(L["ERR_ITEM_ALREADY_MANUAL_CATEGORY_GENERIC"], 1, 0, 0)
+                    end
+                end
             end
             addBox:SetText("")
         end

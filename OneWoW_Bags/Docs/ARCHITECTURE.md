@@ -55,7 +55,7 @@ Controllers\BagsController.lua
 Controllers\BankController.lua
 Controllers\GuildBankController.lua
 Controllers\SettingsController.lua      ← setting write + side-effects + debounce
-Controllers\CategoryController.lua      ← category/section CRUD, Baganator import
+Controllers\CategoryController.lua      ← category/section CRUD, manual pin rules, Baganator import
 
 Views\ListView.lua                 ← flat grid layout strategy
 Views\CategoryView.lua             ← categorized layout strategy (bags)
@@ -257,23 +257,29 @@ Guild bank updates use a separate path: `GUILDBANKBAGSLOTS_CHANGED` and related 
 CategoryManager:AssignCategories()
   └─→ For each BagSet button with an item:
        └─→ Categories:GetItemCategory(bagID, slotID, itemInfo)
-            ├─→ 1. Optional 1W Junk (PredicateEngine `props.isJunk`: Poor quality and/or OneWoW ItemStatus; gated by enable + disabledCategories)
-            ├─→ 2. Optional 1W Upgrades (PredicateEngine `props.isUpgrade` via OneWoW.UpgradeDetection; gated by UpgradeDetection + settings)
-            ├─→ 3. Custom category (items list, search expression, type/subtype filter)
-            ├─→ 4. Builtin addedItems (categoryModifications[].addedItems)
-            ├─→ 5. Recent Items (GUID in `db.global.recentItems` within `recentItemDuration` via `SlotMatchesRecent`; **not** `BuildProps.isNew` — avoids stale props cache. GUIDs stamped from `OnPlayerBagDirtySnapshot` when slots are Blizzard-new on coalesced bag updates; `CleanExpiredRecent` on ticker while window open + on hide/snapshot)
-            ├─→ 6. If no hyperlink → "Other"
-            ├─→ 7. Category cache lookup (key: bagID:slotID, else PredicateEngine identity key; stored only when resolvable props exist)
-            ├─→ 8. PredicateEngine search builtins (SEARCH_CATEGORIES by searchOrder, unless category disabled)
-            ├─→ 9. If enableInventorySlots: Weapons/Armor → localized equip slot name category
-            ├─→ 10. If assigned category is disabled → "Other"
-            └─→ 11. Cache write when applicable
-
-CategoryManager:GetSectionedLayout(itemsByCategory, containerType)
-  └─→ When displayOrder / section graph is empty, falls back to GetSortedCategoryNames
-  └─→ Otherwise builds ordered layout from displayOrder, categorySections, sectionOrder,
-       categoryModifications.hideIn[containerType], optional equip-slot names when inventory slots enabled
 ```
+
+**`Categories:GetItemCategory` stages** (in order; early return stops the rest):
+
+1. **Manual pins** — `customCategoriesV2[*].items` and `categoryModifications[*].addedItems` (no `PredicateEngine` on this path). Overrides everything below, including Junk/Upgrades. If `db.global.pinnedCategoryShowsWhenDisabled` is **false**, pins in **disabled** categories are ignored here so later stages can assign (e.g. `Other`). If **true**, a disabled pinned category still wins assignment. Legacy saves with the same item ID in multiple pin tables: `PickBestCandidate` among those rows (priority → section order → stable tie key).
+2. **1W Junk** — `PredicateEngine` `props.isJunk`; gated by `enableJunkCategory` + `disabledCategories`.
+3. **1W Upgrades** — `props.isUpgrade`; gated by settings + `disabledCategories`.
+4. **Custom predicate tier** — `GetCustomCategoryForItem`: **only** search expressions and type/subtype rules (explicit `items` pins are handled in step 1). Collects **all** matching custom categories, drops **disabled** names, then picks one winner: higher `categoryModifications[catName].priority`, then earlier `sectionOrder` section containing the name, then stable `customCategoriesV2` id. **Custom predicates always run before** builtin `SEARCH_CATEGORIES` (no mixing in one pool).
+5. **Recent Items** — `SlotMatchesRecent` (GUID map + `recentItemDuration`; same semantics as before).
+6. **No hyperlink** → `"Other"`.
+7. **Category cache** read (PredicateEngine cache key when hyperlink exists).
+8. **Builtin search tier** — collect **all** `SEARCH_CATEGORIES` matches where `PredicateEngine:CheckItem` succeeds (respecting `disabledCategories`), then pick winner: same **priority** and **section order** rules as custom, then **`searchOrder`** from the definition as tertiary tie-break.
+9. **Inventory slots** — if result is `Weapons` or `Armor` and `enableInventorySlots`, remap to localized equip-slot category name.
+10. **Disabled fallback** — if final builtin-derived name is disabled → `"Other"` (manual path bypasses this by returning early).
+11. **Cache write** when applicable (same key rules as before).
+
+**`Categories:FindManualPinForItem(itemID)`** — returns `{ kind, categoryId | categoryName, displayName }` or `nil`; used for **single-pin enforcement** when adding items (see `CategoryController`).
+
+**`CategoryManager:GetSectionedLayout(itemsByCategory, containerType)`**
+
+- `IsCategoryVisible` hides a category when `disabledCategories[catName]` is set **unless** `pinnedCategoryShowsWhenDisabled` is on **and** that category has items in `itemsByCategory` (so pinned rows can still appear for disabled categories).
+- Still applies `categoryModifications.hideIn[containerType]`.
+- When `displayOrder` / section graph is empty, falls back to `GetSortedCategoryNames`; otherwise builds from `displayOrder`, `categorySections`, `sectionOrder`, optional equip-slot names when inventory slots are enabled.
 
 **Bank — `BankCategoryView`:** does **not** use `CategoryManager:AssignCategories`. During `BankCategoryView:Layout`, it walks `BankSet:GetAllButtons()`, calls `Categories:GetItemCategory` per occupied slot, groups into `itemsByCategory`, then lays out with pins / `moveUpgradesToTop` / `moveOtherToBottom` and bank compact modes. `BankCategoryManager` supplies **section frames only** via `viewContext`.
 
@@ -317,6 +323,8 @@ Settings UI interaction
 
 Layout-affecting numeric settings (e.g. `bagColumns`) use `SettingsController:Debounce` to reduce thrash.
 
+**Category placement:** `pinnedCategoryShowsWhenDisabled` (General → Category Placement) runs applier `pinnedCategoryShowsWhenDisabled`: `InvalidateCategorization`, `RequestLayoutRefresh("all")`, and `CategoryManagerUI:Refresh` when present (same class of side effects as junk/upgrade category toggles).
+
 ---
 
 ## Key Components In Detail
@@ -353,7 +361,7 @@ Per-button state includes `owb_bagID`, `owb_slotID`, `owb_itemInfo`, `owb_hasIte
 ### CategoryManager (module)
 
 - `AssignCategories` — **inventory BagSet only** (used from `CategoryView`).
-- `GetItemsByCategory`, `GetSortedCategoryNames`, `GetSectionedLayout` — bags categorized view and ordering.
+- `GetItemsByCategory`, `GetSortedCategoryNames`, `GetSectionedLayout` — bags categorized view and ordering; `GetSectionedLayout` respects **disabled categories** vs **`pinnedCategoryShowsWhenDisabled`** as above.
 
 **Naming:** not the same as `GUI\CategoryManager.lua` (category editor UI).
 
@@ -401,7 +409,9 @@ Tokenizer notes: string-property comparisons accept unquoted single-token values
 
 ### Categories
 
-**27** builtin rows in `CATEGORY_DEFINITIONS` (including `1W Junk`, `1W Upgrades`, `Recent Items`, `Other`, `Empty`, and search-driven builtins such as `Housing`, `Toys`, `Junk`, etc.). Builtin search categories are collected into `SEARCH_CATEGORIES` sorted by `searchOrder`.
+**27** builtin rows in `CATEGORY_DEFINITIONS` (including `1W Junk`, `1W Upgrades`, `Recent Items`, `Other`, `Empty`, and search-driven builtins such as `Housing`, `Toys`, `Junk`, etc.). Builtin search categories are collected into `SEARCH_CATEGORIES` sorted by `searchOrder` (used for tie-breaking when multiple builtins match, not for “first match wins” during assignment).
+
+Builtin **assignment** uses the same **priority** (`categoryModifications[].priority`, higher wins) and **section order** (first section listing the category wins ties) as custom predicate categories; `searchOrder` breaks remaining ties among builtins.
 
 ---
 
@@ -472,7 +482,7 @@ Persisted layout and behavior state lives under `OneWoW_Bags_DB.global`. The def
 
 ### Categories
 
-`customCategoriesV2`, `disabledCategories`, `categoryModifications`, `categorySort`, `categoryOrder`, `categorySections`, `sectionOrder`, `displayOrder`, `enableJunkCategory`, `enableUpgradeCategory`, `moveUpgradesToTop`, `moveOtherToBottom`, `pinnedCategories`
+`customCategoriesV2`, `disabledCategories`, `categoryModifications`, `categorySort`, `categoryOrder`, `categorySections`, `sectionOrder`, `displayOrder`, `enableJunkCategory`, `enableUpgradeCategory`, `moveUpgradesToTop`, `moveOtherToBottom`, `pinnedCategoryShowsWhenDisabled`, `pinnedCategories`
 
 ### Collapse
 
@@ -563,13 +573,13 @@ After `GUI:RefreshLayout`, visible inventory buttons fire registered callbacks (
 
 ## Custom Category System
 
-Three filter modes in `customCategoriesV2`:
+**Storage (`customCategoriesV2`):** per-row `items` (explicit item IDs, keyed by `tostring(itemID)`), optional `searchExpression` / `filterMode == "search"`, and type / subtype strings vs `C_Item.GetItemClassInfo` / `GetItemSubClassInfo` with `typeMatchMode` where applicable.
 
-1. Explicit item ID set  
-2. `searchExpression` / `filterMode == "search"` — `PredicateEngine:CheckItem`  
-3. Type / subtype strings vs `C_Item.GetItemClassInfo` / `GetItemSubClassInfo`, with `typeMatchMode` where applicable  
+**Classification:** explicit `items` pins are resolved only in the **manual** stage of `GetItemCategory` (first). `GetCustomCategoryForItem` evaluates **predicate-only** matches (search + type/subtype); overlapping custom rules pick one winner by **priority** → **section order** → stable category id.
 
-Organization: root order, `categorySections` + `sectionOrder`, and `displayOrder` with `"----"`, `"section:id"`, `"section_end"` markers.
+**Manual pins (global rule):** at most **one** pin per item ID across all `customCategoriesV2[*].items` and all `categoryModifications[*].addedItems`. `CategoryController:AddItemToCategory` / `AddItemsToCategory` returns `false, owningDisplayName` if the item is already pinned elsewhere; the category manager UI shows `UIErrorsFrame` messages from locale keys `ERR_ITEM_ALREADY_MANUAL_CATEGORY` / `_GENERIC`. Adding to the **same** custom category again is a no-op. `Categories:AddItemToBuiltinCategory` enforces the same rule when called directly.
+
+**Organization:** root order, `categorySections` + `sectionOrder`, and `displayOrder` with `"----"`, `"section:id"`, `"section_end"` markers. Reordering sections (`CategoryController:MoveSection` / `MoveSectionCategory`) uses default `RefreshUI()` so **categorization cache** invalidates when assignment depends on section order.
 
 ---
 

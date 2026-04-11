@@ -76,7 +76,15 @@ function CM:GetSectionedLayout(itemsByCategory, containerType)
     end
 
     local catMods = db.global.categoryModifications
+    local g = db.global
+    local disabled = g.disabledCategories
     local function IsCategoryVisible(catName)
+        if disabled[catName] then
+            local hasItems = itemsByCategory[catName] and #itemsByCategory[catName] > 0
+            if not (g.pinnedCategoryShowsWhenDisabled and hasItems) then
+                return false
+            end
+        end
         local mod = catMods[catName]
         if mod and mod.hideIn and containerType then
             if mod.hideIn[containerType] then

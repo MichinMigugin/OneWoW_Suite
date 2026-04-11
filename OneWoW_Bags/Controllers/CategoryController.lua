@@ -419,7 +419,7 @@ function CategoryController:MoveSection(sectionID, direction)
                 return
             end
             sectionOrder[i], sectionOrder[otherIndex] = sectionOrder[otherIndex], sectionOrder[i]
-            self:RefreshUI({ invalidate = false })
+            self:RefreshUI()
             return
         end
     end
@@ -433,7 +433,7 @@ function CategoryController:MoveSectionCategory(sectionID, index, direction)
     if otherIndex < 1 or otherIndex > #section.categories then return end
 
     section.categories[index], section.categories[otherIndex] = section.categories[otherIndex], section.categories[index]
-    self:RefreshUI({ invalidate = false })
+    self:RefreshUI()
 end
 
 function CategoryController:SetBuiltinCategoryEnabled(categoryName, enabled)
@@ -498,18 +498,30 @@ function CategoryController:SetCustomCategoryValue(categoryID, key, value, optio
     self:RefreshUI(options)
 end
 
-function CategoryController:AddItemToCategory(categoryKey, itemID)
+function CategoryController:AddItemToCategory(categoryKey, itemID, options)
+    options = options or {}
     local db = self:GetDB()
     local numericID = tonumber(itemID)
-    if not categoryKey or not numericID then return end
+    if not categoryKey or not numericID then return false end
+
+    local Categories = self.addon.Categories
 
     if categoryKey:sub(1, 8) == "builtin:" then
-        self.addon.Categories:AddItemToBuiltinCategory(categoryKey:sub(9), numericID)
+        local catName = categoryKey:sub(9)
+        local ok, ownerName = Categories:AddItemToBuiltinCategory(catName, numericID)
+        if not ok then
+            return false, ownerName
+        end
     else
-        for id, category in pairs(db.global.customCategoriesV2) do
-            if id ~= categoryKey and category.items then
-                category.items[tostring(numericID)] = nil
+        local pin = Categories:FindManualPinForItem(numericID)
+        if pin then
+            if pin.kind == "custom" and pin.categoryId == categoryKey then
+                if not options.skipRefresh then
+                    self:RefreshUI()
+                end
+                return true
             end
+            return false, pin.displayName
         end
 
         local target = db.global.customCategoriesV2[categoryKey]
@@ -519,13 +531,22 @@ function CategoryController:AddItemToCategory(categoryKey, itemID)
         end
     end
 
-    self:RefreshUI()
+    if not options.skipRefresh then
+        self:RefreshUI()
+    end
+    return true
 end
 
 function CategoryController:AddItemsToCategory(categoryKey, itemIDs)
     for _, itemID in ipairs(itemIDs) do
-        self:AddItemToCategory(categoryKey, itemID)
+        local ok, ownerName = self:AddItemToCategory(categoryKey, itemID, { skipRefresh = true })
+        if not ok then
+            self:RefreshUI()
+            return false, ownerName
+        end
     end
+    self:RefreshUI()
+    return true
 end
 
 function CategoryController:RemoveItemFromCategory(categoryKey, itemID)

@@ -93,6 +93,7 @@ local defaults = {
         enableBankExpansionFilter = false,
         moveOtherToBottom = false,
         moveUpgradesToTop = false,
+        pinnedCategoryShowsWhenDisabled = true,
     },
 }
 

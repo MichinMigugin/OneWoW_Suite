@@ -89,6 +89,108 @@ local function InvalidateCache()
     wipe(categoryCache)
 end
 
+local function ModPriority(db, catName)
+    local mod = db.global.categoryModifications[catName]
+    if mod and mod.priority then
+        return mod.priority
+    end
+    return 0
+end
+
+local function SectionOrderIndexForCategory(g, catName)
+    if not g.sectionOrder or not g.categorySections then
+        return 999
+    end
+    local order = g.sectionOrder
+    for i, sid in ipairs(order) do
+        local sec = g.categorySections[sid]
+        if sec and sec.categories then
+            for _, nm in ipairs(sec.categories) do
+                if nm == catName then
+                    return i
+                end
+            end
+        end
+    end
+    return #order + 1
+end
+
+local function CandidateBeats(a, b, db, g, useSearchOrder)
+    local pa, pb = ModPriority(db, a.name), ModPriority(db, b.name)
+    if pa ~= pb then
+        return pa > pb
+    end
+    local sa, sb = SectionOrderIndexForCategory(g, a.name), SectionOrderIndexForCategory(g, b.name)
+    if sa ~= sb then
+        return sa < sb
+    end
+    if useSearchOrder then
+        local oa = a.searchOrder or 9999
+        local ob = b.searchOrder or 9999
+        if oa ~= ob then
+            return oa < ob
+        end
+    end
+    local ta = a.tieKey or a.name
+    local tb = b.tieKey or b.name
+    return ta < tb
+end
+
+local function PickBestCandidate(cands, db, g, useSearchOrder)
+    if not cands or #cands == 0 then
+        return nil
+    end
+    local best = cands[1]
+    for i = 2, #cands do
+        if CandidateBeats(cands[i], best, db, g, useSearchOrder) then
+            best = cands[i]
+        end
+    end
+    return best
+end
+
+local function CollectManualCategoryCandidates(itemID, db, disabled, showPinnedWhenDisabled)
+    local idstr = tostring(itemID)
+    local cands = {}
+    for categoryId, categoryData in pairs(customCategoriesV2) do
+        if categoryData.enabled ~= false and categoryData.name and categoryData.items then
+            local it = categoryData.items
+            if it[idstr] or it[itemID] then
+                tinsert(cands, { name = categoryData.name, tieKey = "c:" .. categoryId })
+            end
+        end
+    end
+    local catMods = db.global.categoryModifications
+    for catName, mod in pairs(catMods) do
+        if mod.addedItems and mod.addedItems[idstr] then
+            tinsert(cands, { name = catName, tieKey = "b:" .. catName })
+        end
+    end
+    if #cands == 0 then
+        return cands
+    end
+    if not showPinnedWhenDisabled then
+        local filtered = {}
+        for _, c in ipairs(cands) do
+            if not disabled[c.name] then
+                tinsert(filtered, c)
+            end
+        end
+        return filtered
+    end
+    return cands
+end
+
+local function ResolveManualCategoryName(itemID, db, disabled)
+    local showPinned = db.global.pinnedCategoryShowsWhenDisabled
+    local cands = CollectManualCategoryCandidates(itemID, db, disabled, showPinned)
+    if #cands == 0 then
+        return nil
+    end
+    local best = PickBestCandidate(cands, db, db.global, false)
+    return best and best.name or nil
+end
+
 function Categories:GetItemCategory(bagID, slotID, itemInfo)
     if not itemInfo then return "Other" end
 
@@ -96,6 +198,13 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     local itemID = itemInfo.itemID
     local hyperlink = itemInfo.hyperlink
     local disabled = db.global.disabledCategories
+
+    if itemID then
+        local manualName = ResolveManualCategoryName(itemID, db, disabled)
+        if manualName then
+            return manualName
+        end
+    end
 
     local junkCatEnabled = db.global.enableJunkCategory and not disabled["1W Junk"]
     if junkCatEnabled and itemID then
@@ -119,15 +228,6 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         end
     end
 
-    if itemID then
-        local catMods = db.global.categoryModifications
-        for catName, mod in pairs(catMods) do
-            if mod.addedItems and mod.addedItems[tostring(itemID)] then
-                return catName
-            end
-        end
-    end
-
     if not disabled["Recent Items"] and itemID and self:SlotMatchesRecent(itemID, bagID, slotID, itemInfo) then
         return "Recent Items"
     end
@@ -146,13 +246,24 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
 
     local props = PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
-    local category = "Other"
+    local builtinCands = {}
     for _, def in ipairs(SEARCH_CATEGORIES) do
         if not disabled[def.name] then
             if PE:CheckItem(def.search, itemID, bagID, slotID, itemInfo) then
-                category = def.name
-                break
+                tinsert(builtinCands, {
+                    name = def.name,
+                    tieKey = def.name,
+                    searchOrder = def.searchOrder,
+                })
             end
+        end
+    end
+
+    local category = "Other"
+    if #builtinCands > 0 then
+        local best = PickBestCandidate(builtinCands, db, db.global, true)
+        if best then
+            category = best.name
         end
     end
 
@@ -335,16 +446,17 @@ end
 function Categories:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
     if not itemID then return nil end
 
+    local db = GetDB()
+    local disabled = db.global.disabledCategories
+    local cands = {}
+
     for categoryId, categoryData in pairs(customCategoriesV2) do
         if categoryData.enabled ~= false then
-            if categoryData.items and categoryData.items[tostring(itemID)] then
-                return categoryData.name, categoryId
-            end
             local fm = categoryData.filterMode
             if (fm == "search" or (not fm and categoryData.searchExpression and categoryData.searchExpression ~= "")) then
                 if categoryData.searchExpression and categoryData.searchExpression ~= "" then
                     if PE:CheckItem(categoryData.searchExpression, itemID, bagID, slotID, itemInfo or {}) then
-                        return categoryData.name, categoryId
+                        tinsert(cands, { name = categoryData.name, tieKey = categoryId })
                     end
                 end
             end
@@ -377,13 +489,48 @@ function Categories:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
                     matched = subTypeMatch
                 end
                 if matched then
-                    return categoryData.name, categoryId
+                    tinsert(cands, { name = categoryData.name, tieKey = categoryId })
                 end
             end
         end
     end
 
-    return nil, nil
+    local eligible = {}
+    for _, c in ipairs(cands) do
+        if not disabled[c.name] then
+            tinsert(eligible, c)
+        end
+    end
+    if #eligible == 0 then
+        return nil, nil
+    end
+    local best = PickBestCandidate(eligible, db, db.global, false)
+    return best.name, best.tieKey
+end
+
+function Categories:FindManualPinForItem(itemID)
+    if not itemID then return nil end
+    local idstr = tostring(itemID)
+    for categoryId, categoryData in pairs(customCategoriesV2) do
+        if categoryData.items and (categoryData.items[idstr] or categoryData.items[itemID]) then
+            return {
+                kind = "custom",
+                categoryId = categoryId,
+                displayName = categoryData.name or categoryId,
+            }
+        end
+    end
+    local db = GetDB()
+    for catName, mod in pairs(db.global.categoryModifications) do
+        if mod.addedItems and mod.addedItems[idstr] then
+            return {
+                kind = "builtin",
+                categoryName = catName,
+                displayName = catName,
+            }
+        end
+    end
+    return nil
 end
 
 function Categories:CreateCustomCategory(name)
@@ -410,7 +557,9 @@ function Categories:AddItemToCustomCategory(categoryID, itemID)
         return false
     end
 
-    customCategoriesV2[categoryID].items[itemID] = true
+    local idstr = tostring(itemID)
+    customCategoriesV2[categoryID].items = customCategoriesV2[categoryID].items or {}
+    customCategoriesV2[categoryID].items[idstr] = true
 
     InvalidateCache()
 
@@ -422,7 +571,12 @@ function Categories:RemoveItemFromCustomCategory(categoryID, itemID)
         return false
     end
 
-    customCategoriesV2[categoryID].items[itemID] = nil
+    local idstr = tostring(itemID)
+    local items = customCategoriesV2[categoryID].items
+    if items then
+        items[idstr] = nil
+        items[itemID] = nil
+    end
 
     InvalidateCache()
 
@@ -504,6 +658,14 @@ end
 
 function Categories:AddItemToBuiltinCategory(categoryName, itemID)
     if not categoryName or not itemID then return false end
+
+    local pin = self:FindManualPinForItem(itemID)
+    if pin then
+        if pin.kind == "builtin" and pin.categoryName == categoryName then
+            return true
+        end
+        return false, pin.displayName
+    end
 
     local addedItems = OneWoW_Bags:EnsureBuiltinCategoryAddedItems(categoryName)
     if not addedItems then return false end

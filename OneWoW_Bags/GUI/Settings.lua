@@ -262,6 +262,18 @@ local function BuildGeneralTab(sc, L, db, GUI)
         end,
     })
 
+    placeY, _, _ = OneWoW_GUI:CreateToggleRow(placeContainer, {
+        yOffset = placeY,
+        label = L["SETTING_PINNED_CATEGORY_SHOWS_WHEN_DISABLED"],
+        description = L["DESC_PINNED_CATEGORY_SHOWS_WHEN_DISABLED"],
+        isEnabled = true,
+        value = db.global.pinnedCategoryShowsWhenDisabled,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            ApplySetting("pinnedCategoryShowsWhenDisabled", newVal)
+        end,
+    })
+
     placeY = placeY - 6
 
     placeY = BuildSliderRow(placeContainer, L["SETTING_RECENT_DURATION"], placeY, {
