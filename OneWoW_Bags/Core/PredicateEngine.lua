@@ -2130,7 +2130,6 @@ function PE:InvalidatePropsCache()
 end
 
 --- Expose raw tooltip text
---- (e.g. Categories:GetSubCategory for charges display).
 function PE:GetTooltipText(bagID, slotID)
     return GetTooltipText(bagID, slotID)
 end
