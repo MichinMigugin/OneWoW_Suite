@@ -9,7 +9,7 @@ OneWoW_Bags is a unified bag/bank/guild bank replacement addon for World of Warc
 **TOC:** `## Interface: 120001, 120005` (Retail + compatible build).
 
 **Hard dependency:** `OneWoW_GUI`  
-**Soft dependencies:** `OneWoW` (hub, overlays, item status, upgrade detection), `OneWoW_AltTracker`, `OneWoW_ShoppingList`, `TradeSkillMaster`
+**Soft dependencies:** `OneWoW` (hub, overlays, item status, upgrade detection), `OneWoW_AltTracker`, `OneWoW_ShoppingList`, `TradeSkillMaster`, `Baganator` (profile import via `CategoryController`)
 
 ---
 
@@ -28,6 +28,7 @@ Locales\ruRU.lua
 Locales\deDE.lua
 
 Core\Constants.lua                 ← OneWoW_GUI:RegisterGUIConstants, icon sizes, GUI metrics
+Core\SectionDefaults.lua           ← stable section IDs, builtin lists, OneWoW Bags catch-all section sync
 Core\Database.lua                  ← DB:Init, defaults, migrations
 Core\BagTypes.lua                  ← bag ID constants, reagent/player bag helpers
 Core\BankTypes.lua                 ← bank/warband tab constants
@@ -58,6 +59,7 @@ Controllers\SettingsController.lua      ← setting write + side-effects + debou
 Controllers\CategoryController.lua      ← category/section CRUD, manual pin rules, Baganator import
 
 Views\ListView.lua                 ← flat grid layout strategy
+Views\CategoryViewHelpers.lua      ← shared category/grid/compact helpers (bags + bank category views)
 Views\CategoryView.lua             ← categorized layout strategy (bags)
 Views\BagView.lua                  ← per-bag sections layout strategy
 Views\BankCategoryView.lua         ← bank category layout (inline classification)
@@ -69,6 +71,7 @@ GUI\InfoBarFactory.lua             ← shared info bar builder (bank / guild ban
 GUI\InfoBar.lua                    ← bags top bar (view mode dropdown, search, expansion filter)
 GUI\BagsBar.lua                    ← bags bottom bar (bag icons, gold, trackers)
 GUI\BankInfoBar.lua
+GUI\BarHelpers.lua                 ← shared bank/guild bank bar chrome (frame, gold, tab recycling)
 GUI\BankBar.lua
 GUI\BankWindow.lua
 GUI\GuildBankInfoBar.lua
@@ -94,7 +97,8 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 ┌──────────────────────────────────────────────────────────────┐
 │                      GUI Layer                               │
 │  MainWindow, BankWindow, GuildBankWindow, Settings,          │
-│  CategoryManager (UI), InfoBar, BagsBar, WindowHelpers       │
+│  CategoryManager (UI), InfoBar, BagsBar, BarHelpers,         │
+│  BankBar, GuildBankBar, WindowHelpers                        │
 │  ─ Creates frames, wires user interactions to controllers    │
 │  ─ Delegates layout to Views via WindowLayoutController      │
 └────────────────────────────┬─────────────────────────────────┘
@@ -111,8 +115,9 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
                              │ calls
 ┌────────────────────────────▼─────────────────────────────────┐
 │                      View Layer                              │
-│  ListView, CategoryView, BagView, BankCategoryView,            │
+│  ListView, CategoryView, BagView, BankCategoryView,          │
 │  BankTabView, GuildBankTabView                               │
+│  CategoryViewHelpers — grids, compact bins, labels (shared)  │
 │  ─ Layout: receives buttons + width, returns height          │
 │  ─ Uses viewContext for sort, sections, collapse state        │
 └────────────────────────────┬─────────────────────────────────┘
@@ -138,6 +143,7 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 │  Database (DB:Init, defaults, migrations)                    │
 │  Events (event routing table, dirtyBags accumulator)         │
 │  Constants (GUI metrics, icon sizes)                         │
+│  SectionDefaults (section IDs, builtin ordering, OWB section)  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -153,7 +159,8 @@ The root object provides:
 - **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category cache; if `scope == "props"` then `PredicateEngine:InvalidatePropsCache()`, else full `PredicateEngine:InvalidateCache()`
 - **Blizzard hooks:** `HookBlizzardBags`, `SuppressBankFrame`, `RestoreBankFrame`, `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
 - **Guild bank orchestration:** `RefreshGuildBankContents`, `QueueGuildBankRefresh`, `TrackGuildBankTransferTab`, `TrackGuildBankTransferSource`, `ProcessPendingGuildBankTransferTabs`, `PurgeClearSource`, plus internal coalescing state for cross-tab moves
-- **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldShowItemQuality`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`
+- **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldShowItemQuality`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`, `GetMoneyDialog`, `ShowMoneyDialog`
+- **Shared tables:** `SectionDefaults`, `CategoryViewHelpers`, `BarHelpers` (see Key Components)
 
 ---
 
@@ -329,6 +336,18 @@ Layout-affecting numeric settings (e.g. `bagColumns`) use `SettingsController:De
 
 ## Key Components In Detail
 
+### SectionDefaults (`Core\SectionDefaults.lua`)
+
+Stable section IDs (`SEC_ONEWOW_BAGS`, `SEC_EQUIPMENT`, `SEC_CRAFTING`, `SEC_HOUSING`), default member lists per section, and `BUILTIN_SORT_PRIORITY` for ordering. `BuildOnewowMembers` / `SyncOnewowSectionCategories` maintain the **OneWoW Bags** catch-all section: builtins and custom categories not assigned elsewhere, sorted per saved `categoryOrder` or builtin priority. Used by `CategoryController`, category UI (`GUI\CategoryManager.lua`), and migrations (v3+ and v10+).
+
+### CategoryViewHelpers (`Views\CategoryViewHelpers.lua`)
+
+Shared by `CategoryView` and `BankCategoryView`: label object pools, localized category titles, header styling, `RenderItemGrid`, compact multi-category line packing (`LayoutCompactGroup`), and helpers such as `PinSpecialCategories` for Recent/Other placement.
+
+### BarHelpers (`GUI\BarHelpers.lua`)
+
+Shared bottom-bar construction for `BankBar` and `GuildBankBar`: themed bar frame, gold + free-slot font strings, tab button recycling helpers.
+
 ### ItemPool
 
 Acquire/release pool for `ContainerFrameItemButtonTemplate` buttons. `Preallocate(220)` at login. `OneWoW_GUI:SkinIconFrame` during creation; mixin applied when bound in `BagSet` / `BankSet` / `GuildBankSet`.
@@ -371,11 +390,11 @@ Each view exposes `Layout(...)` and returns total content height.
 
 **ListView** — Grid with optional reagent-bag segment after normal bags. Computes column count from **content width** and icon spacing when not overridden by bag/category views. Honors `showEmptySlots`.
 
-**CategoryView** — Stacked sections (collapsible) or compact bin-packing; `groupBy`; `stackItems`; uses `CategoryManager` sections + `AssignCategories` at entry.
+**CategoryView** — Stacked sections (collapsible) or compact bin-packing; `groupBy`; `stackItems`; uses `CategoryManager` sections + `AssignCategories` at entry; delegates grids/compact layout to `CategoryViewHelpers`.
 
 **BagView** — One section per physical bag; `selectedBag` filter.
 
-**BankCategoryView** — Inline `Categories:GetItemCategory` over `BankSet`; stacked/compact; `BankCategoryManager` for sections; `labelPool` for compact labels.
+**BankCategoryView** — Inline `Categories:GetItemCategory` over `BankSet`; stacked/compact; `BankCategoryManager` for sections; compact labels via `CategoryViewHelpers` pools.
 
 **BankTabView** — Sections per bank tab; `bankSelectedTab`; respects warband vs character via `bankShowWarband`.
 
@@ -494,7 +513,20 @@ Persisted layout and behavior state lives under `OneWoW_Bags_DB.global`. The def
 
 ### Migrations
 
-`_migrationVersion` is advanced by `DB:RunMigrations` up to **7**: (1) category v2, (2) junk rename, (3) displayOrder, (4) category v3, (5) itemSort default to none, (6) remove legacy migration flags, (7) split collapsed bank vs guild-bank tab/category keys.
+`_migrationVersion` is advanced by `DB:RunMigrations` up to **12**:
+
+1. `category_system_v2` — split Equipment/Consumables builtins; seed `categorySections` / `sectionOrder`  
+2. `junk_rename` — `OneWoW Junk` / `OneWoW Upgrades` → `1W Junk` / `1W Upgrades` in disabled/collapsed maps  
+3. `display_order` — build `displayOrder` from legacy section graph  
+4. `category_system_v3` — `recentItemDuration` clamp; sections use `SectionDefaults` IDs; rebuild `displayOrder`  
+5. `item_sort_to_none` — default `itemSort` to `none`  
+6. `cleanup_old_flags` — remove legacy `*Migrated` boolean keys from SavedVariables  
+7. `split_collapsed_bank_state` — separate collapsed keys for bank tab/category vs guild bank  
+8. `columns_minimum_10` — raise `bagColumns` / `bankColumns` below 10 up to 10  
+9. `bank_columns_minimum_15` — raise `bankColumns` below 15 up to 15  
+10. `onewow_bags_default_section` — ensure Equipment/Crafting/Housing sections; add/sync **OneWoW Bags** section (`SEC_ONEWOW_BAGS`)  
+11. `display_name_uniqueness` — disambiguate custom category display names that collide with builtins or each other  
+12. `section_category_membership_cleanup` — strip stale names from section `categories` lists (removed custom rows, etc.)
 
 ---
 
@@ -523,7 +555,11 @@ After `GUI:RefreshLayout`, visible inventory buttons fire registered callbacks (
 
 ### TSM / Baganator
 
-`TSMIntegration:Import` → `customCategoriesV2`. `CategoryController:ImportBaganator()` maps external profiles into OneWoW_Bags structures.
+`TSMIntegration:Import` → `customCategoriesV2`. `CategoryController:ImportBaganator()` maps Baganator profiles into OneWoW_Bags structures when that addon is present (`OptionalDeps`).
+
+### `API/` (documentation only)
+
+The addon folder includes `API/` (`README.md`, `ITEM_BUTTON_API.md`, `INTEGRATION_GUIDE.md`, and `Examples/*.lua`). These files are **not** listed in the TOC; they document `RegisterItemButtonCallback` and related integration patterns for other authors.
 
 ---
 
@@ -561,7 +597,7 @@ After `GUI:RefreshLayout`, visible inventory buttons fire registered callbacks (
 
 ## Performance Patterns
 
-- **Pooling:** `ItemPool`, `CategoryManagerBase` section/divider/header frames, bank/guild label pools inside category/tab views where used
+- **Pooling:** `ItemPool`, `CategoryManagerBase` section/divider/header frames, `CategoryViewHelpers` compact label pools, bank/guild tab button recycling via `BarHelpers`
 - **Dirty batching:** `dirtyBags` until `BAG_UPDATE_DELAYED`
 - **Predicate / category caches** with targeted invalidation (`props` vs full)
 - **Settings debounce** on high-churn sliders
@@ -579,7 +615,7 @@ After `GUI:RefreshLayout`, visible inventory buttons fire registered callbacks (
 
 **Manual pins (global rule):** at most **one** pin per item ID across all `customCategoriesV2[*].items` and all `categoryModifications[*].addedItems`. `CategoryController:AddItemToCategory` / `AddItemsToCategory` returns `false, owningDisplayName` if the item is already pinned elsewhere; the category manager UI shows `UIErrorsFrame` messages from locale keys `ERR_ITEM_ALREADY_MANUAL_CATEGORY` / `_GENERIC`. Adding to the **same** custom category again is a no-op. `Categories:AddItemToBuiltinCategory` enforces the same rule when called directly.
 
-**Organization:** root order, `categorySections` + `sectionOrder`, and `displayOrder` with `"----"`, `"section:id"`, `"section_end"` markers. Reordering sections (`CategoryController:MoveSection` / `MoveSectionCategory`) uses default `RefreshUI()` so **categorization cache** invalidates when assignment depends on section order.
+**Organization:** root order, `categorySections` + `sectionOrder`, and `displayOrder` with `"----"`, `"section:id"`, `"section_end"` markers. The **OneWoW Bags** section (`SectionDefaults.SEC_ONEWOW_BAGS`) holds a generated member list (`BuildOnewowMembers`); `CategoryController` and related UI call `SyncOnewowSectionCategories` after changes so unassigned builtins/custom rows stay in that section. Reordering sections (`CategoryController:MoveSection` / `MoveSectionCategory`) uses default `RefreshUI()` so **categorization cache** invalidates when assignment depends on section order.
 
 ---
 
