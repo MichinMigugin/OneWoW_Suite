@@ -1,0 +1,131 @@
+---
+description: Prevents unnecessary defensive nil/existence checks on WoW APIs, addon internals, and DB-initialized keys. OneWoW targets Retail 12+ only — all C_* APIs, Enum.* tables, and Blizzard globals are guaranteed to exist.
+globs: **/*.lua
+alwaysApply: false
+---
+# No Defensive Guards — OneWoW Suite Rule
+
+OneWoW addons target **WoW Retail version 12+ only**. There is no Classic, BC,
+Wrath, or multi-version support. Every `C_*` namespace, `Enum.*` table, and
+modern API that ships with Retail is **guaranteed to exist at load time**.
+
+## Banned Patterns
+
+### 1. API existence checks
+
+Never guard Blizzard API calls with existence checks. These APIs are always
+present on Retail 12+.
+
+```lua
+-- BAD: C_Item is always present on Retail
+if C_Item and C_Item.GetItemInfo then
+    local info = C_Item.GetItemInfo(itemID)
+end
+
+-- BAD: double-guard on namespace + method
+if C_Container and C_Container.GetContainerItemInfo then ...
+
+-- BAD: guarding Enum tables
+if Enum and Enum.ItemQuality then ...
+
+-- BAD: guarding global Blizzard functions
+if GetSpellInfo then ...          -- (also deprecated in 12.0, use C_Spell)
+if CreateFrame then ...
+
+-- GOOD: just call it
+local info = C_Item.GetItemInfo(itemID)
+local slots = C_Container.GetContainerNumSlots(bagID)
+if quality >= Enum.ItemQuality.Epic then ...
+```
+
+### 2. Addon / library existence guards (internal calls)
+
+OneWoW addons declare hard dependencies via TOC `RequiredDeps`. If an addon
+loads, its dependencies are guaranteed present. Do not guard internal calls.
+
+```lua
+-- BAD: OneWoW_GUI is a RequiredDep — it's always there
+if OneWoW_GUI and OneWoW_GUI.DB then
+    OneWoW_GUI.DB:Init(...)
+end
+
+-- BAD: guarding your own addon table
+if Addon and Addon.SomeModule then
+    Addon.SomeModule:DoThing()
+end
+
+-- GOOD: call directly, let errors surface
+OneWoW_GUI.DB:Init(...)
+Addon.SomeModule:DoThing()
+```
+
+### 3. DB nil-chain guards after Init
+
+After `DB:Init` + `MergeMissing`, every key in the defaults table is
+guaranteed to exist. Do not write nil-chain guards on these paths.
+
+```lua
+-- BAD: dead code — DB:Init guarantees these exist
+local sortOrder = Addon.db and Addon.db.global and Addon.db.global.monitor
+    and Addon.db.global.monitor.sortOrder or 2
+
+-- BAD: or-default on a key that has a default
+local scale = Addon.db.global.scale or 1.0
+
+-- GOOD: trust the DB API
+local sortOrder = Addon.db.global.monitor.sortOrder
+local scale = Addon.db.global.scale
+```
+
+`or {}` / `or default` is only appropriate for **dynamic keys** not defined in
+the defaults table (e.g. `catMods[entryName] or {}`).
+
+### 4. Defensive tonumber() on numeric API returns
+
+Do not wrap `tonumber()` around Blizzard APIs that always return numbers. Silent
+type coercion masks upstream bugs instead of surfacing them.
+
+```lua
+-- BAD: GetContainerNumSlots always returns a number
+local slots = tonumber(C_Container.GetContainerNumSlots(bagID))
+
+-- GOOD
+local slots = C_Container.GetContainerNumSlots(bagID)
+```
+
+### 5. Redundant pcall / xpcall wrapping
+
+Do not wrap known-stable API calls in `pcall` to "be safe." If an API errors,
+that's a bug worth seeing, not hiding.
+
+```lua
+-- BAD
+local ok, info = pcall(C_Item.GetItemInfo, itemID)
+
+-- GOOD
+local info = C_Item.GetItemInfo(itemID)
+```
+
+## Why This Matters
+
+- **Dead code obscures intent.** Readers waste time wondering what failure case
+  the guard handles. The answer is: none, on Retail 12+.
+- **Silent failures hide bugs.** A guard that short-circuits to `nil` or a
+  default when an API "doesn't exist" masks real problems (wrong item ID,
+  missing data, Blizzard regression) behind a silent no-op.
+- **Multi-version compat is not a goal.** Code patterns from addons that
+  support both Classic and Retail do not apply here. If you see them in
+  reference code from other addons, do not carry them over.
+
+## The Only Valid nil Check
+
+Checking whether an API **returned** nil (because the item isn't cached yet,
+the unit doesn't exist, etc.) is correct and expected:
+
+```lua
+local info = C_Item.GetItemInfo(itemID)
+if not info then return end  -- item not cached yet — this is fine
+```
+
+The rule is: **don't check if the API exists; do check if its return value is
+nil when the API documents that it can return nil.**
