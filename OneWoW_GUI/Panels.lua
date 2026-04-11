@@ -227,6 +227,8 @@ function OneWoW_GUI:CreateConfirmDialog(config)
     return result
 end
 
+local SCROLL_FRAME_CHILD_RIGHT_GUTTER = 24
+
 function OneWoW_GUI:CreateScrollFrame(parent, options)
     options = options or {}
     local name = options.name
@@ -244,11 +246,32 @@ function OneWoW_GUI:CreateScrollFrame(parent, options)
 
     if width then
         content:SetWidth(width - 32)
-    else
-        scrollFrame:HookScript("OnSizeChanged", function(self, w)
-            content:SetWidth(w)
-        end)
+        return scrollFrame, content
     end
+
+    local layoutRightInset = options.layoutRightInset
+    if layoutRightInset and layoutRightInset > 0 then
+        local function syncOuterFullWidth()
+            local w = scrollFrame:GetWidth()
+            content:SetWidth(math.max(1, w))
+        end
+        scrollFrame:HookScript("OnSizeChanged", syncOuterFullWidth)
+        scrollFrame:HookScript("OnShow", syncOuterFullWidth)
+        syncOuterFullWidth()
+        local layoutName = name and (name .. "Layout") or nil
+        local layout = CreateFrame("Frame", layoutName, content)
+        layout:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        layout:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -layoutRightInset, 0)
+        return scrollFrame, layout
+    end
+
+    local function syncScrollChildWidth()
+        local w = scrollFrame:GetWidth()
+        content:SetWidth(math.max(1, w - SCROLL_FRAME_CHILD_RIGHT_GUTTER))
+    end
+    scrollFrame:HookScript("OnSizeChanged", syncScrollChildWidth)
+    scrollFrame:HookScript("OnShow", syncScrollChildWidth)
+    syncScrollChildWidth()
 
     return scrollFrame, content
 end
