@@ -122,7 +122,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     if itemID then
         local catMods = db.global.categoryModifications
         for catName, mod in pairs(catMods) do
-            if mod.addedItems and mod.addedItems[tostring(itemID)] and not disabled[catName] then
+            if mod.addedItems and mod.addedItems[tostring(itemID)] then
                 return catName
             end
         end
