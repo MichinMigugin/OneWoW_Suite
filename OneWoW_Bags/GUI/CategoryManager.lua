@@ -35,6 +35,8 @@ local SD = OneWoW_Bags.SectionDefaults
 
 local random, max, floor, time = math.random, math.max, math.floor, time
 local pairs, ipairs = pairs, ipairs
+local strtrim = strtrim
+local C_Timer = C_Timer
 local GameTooltip = GameTooltip
 local tostring, tonumber, format = tostring, tonumber, format
 local tinsert, tremove, wipe = tinsert, tremove, wipe
@@ -212,12 +214,33 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self)
-        local name = self.EditBox:GetText()
-        if name and name ~= "" then
-            local controller = GetController()
-            if controller and controller.CreateCategory then
-                selectedCatKey = controller:CreateCategory(name)
+        local name = strtrim(self.EditBox:GetText() or "")
+        if name == "" then return end
+        local controller = GetController()
+        if not controller or not controller.CreateCategory then return end
+        local prevSel = selectedCatKey
+        local id, err = controller:CreateCategory(name)
+        if not id then
+            if err and L[err] then
+                UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
+            C_Timer.After(0, function()
+                local d = StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY")
+                if d and d.EditBox then
+                    d.EditBox:SetText(name)
+                    d.EditBox:SetFocus()
+                end
+            end)
+            return
+        end
+        selectedCatKey = id
+        local g = GetDB().global
+        local secId = prevSel and prevSel:match("^section:(.+)$")
+        if secId and secId ~= SD.SEC_ONEWOW_BAGS then
+            controller:SetSectionMembership(secId, name, true)
+        elseif g.categorySections[SD.SEC_ONEWOW_BAGS] then
+            SD:SyncOnewowSectionCategories(g)
+            controller:RefreshUI()
         end
     end,
     EditBoxOnEnterPressed = function(self)
@@ -240,12 +263,22 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self, data)
-        local name = self.EditBox:GetText()
-        if name and name ~= "" and data then
-            local controller = GetController()
-            if controller and controller.RenameCategory then
-                controller:RenameCategory(data, name)
+        local name = strtrim(self.EditBox:GetText() or "")
+        if name == "" or not data then return end
+        local controller = GetController()
+        if not controller or not controller.RenameCategory then return end
+        local ok, err = controller:RenameCategory(data, name)
+        if not ok then
+            if err and L[err] then
+                UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
+            C_Timer.After(0, function()
+                local d = StaticPopup_Show("ONEWOW_BAGS_RENAME_CATEGORY", nil, nil, data)
+                if d and d.EditBox then
+                    d.EditBox:SetText(name)
+                    d.EditBox:SetFocus()
+                end
+            end)
         end
     end,
     EditBoxOnEnterPressed = function(self)
@@ -283,14 +316,25 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self)
-        local name = self.EditBox:GetText()
-        if name and name ~= "" then
-            local controller = GetController()
-            if controller and controller.CreateSection then
-                local id = controller:CreateSection(name)
-                selectedCatKey = "section:" .. id
+        local name = strtrim(self.EditBox:GetText() or "")
+        if name == "" then return end
+        local controller = GetController()
+        if not controller or not controller.CreateSection then return end
+        local id, err = controller:CreateSection(name)
+        if not id then
+            if err and L[err] then
+                UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
+            C_Timer.After(0, function()
+                local d = StaticPopup_Show("ONEWOW_BAGS_CREATE_SECTION")
+                if d and d.EditBox then
+                    d.EditBox:SetText(name)
+                    d.EditBox:SetFocus()
+                end
+            end)
+            return
         end
+        selectedCatKey = "section:" .. id
     end,
     EditBoxOnEnterPressed = function(self)
         local p = self:GetParent()
@@ -312,12 +356,22 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self, data)
-        local name = self.EditBox:GetText()
-        if name and name ~= "" and data then
-            local controller = GetController()
-            if controller and controller.RenameSection then
-                controller:RenameSection(data, name)
+        local name = strtrim(self.EditBox:GetText() or "")
+        if name == "" or not data then return end
+        local controller = GetController()
+        if not controller or not controller.RenameSection then return end
+        local ok, err = controller:RenameSection(data, name)
+        if not ok then
+            if err and L[err] then
+                UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
+            C_Timer.After(0, function()
+                local d = StaticPopup_Show("ONEWOW_BAGS_RENAME_SECTION", nil, nil, data)
+                if d and d.EditBox then
+                    d.EditBox:SetText(name)
+                    d.EditBox:SetFocus()
+                end
+            end)
         end
     end,
     EditBoxOnEnterPressed = function(self)

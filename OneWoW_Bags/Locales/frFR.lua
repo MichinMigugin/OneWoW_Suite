@@ -173,6 +173,8 @@ OneWoW_Bags.Locales["frFR"] = {
     ["POPUP_CREATE"] = "Creer",
     ["POPUP_DELETE"] = "Supprimer",
     ["POPUP_RENAME"] = "Renommer",
+    ["DUPLICATE_CATEGORY_NAME"] = "Une categorie porte deja ce nom.",
+    ["DUPLICATE_SECTION_NAME"] = "Une section porte deja ce nom.",
     ["GUI_NOT_INSTALLED"] = "Installez OneWoW_GUI pour le theme, la police et la langue complets.",
     ["SORT"] = "Trier",
 

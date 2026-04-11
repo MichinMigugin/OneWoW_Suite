@@ -4,6 +4,8 @@ local ipairs, pairs = ipairs, pairs
 local random, time = math.random, time
 local tonumber, tostring = tonumber, tostring
 local tinsert, tremove, wipe, sort = tinsert, tremove, wipe, sort
+local strtrim = strtrim
+local string_lower = string.lower
 
 OneWoW_Bags.CategoryController = {}
 local CategoryController = OneWoW_Bags.CategoryController
@@ -63,6 +65,43 @@ local BAGANATOR_CAT_MAP = {
     ["default_special_empty"] = "Empty",
 }
 
+local function removeCategoryNameFromOtherSections(g, categoryName, keepSectionId)
+    for sid, sec in pairs(g.categorySections) do
+        if sid ~= keepSectionId and sec and sec.categories then
+            for i = #sec.categories, 1, -1 do
+                if sec.categories[i] == categoryName then
+                    tremove(sec.categories, i)
+                end
+            end
+        end
+    end
+end
+
+local function removeCategoryNameFromAllSections(g, categoryName)
+    for _, sec in pairs(g.categorySections) do
+        if sec and sec.categories then
+            for i = #sec.categories, 1, -1 do
+                if sec.categories[i] == categoryName then
+                    tremove(sec.categories, i)
+                end
+            end
+        end
+    end
+end
+
+local function replaceCategoryNameInAllSections(g, oldName, newName)
+    if oldName == newName then return end
+    for _, sec in pairs(g.categorySections) do
+        if sec and sec.categories then
+            for i, nm in ipairs(sec.categories) do
+                if nm == oldName then
+                    sec.categories[i] = newName
+                end
+            end
+        end
+    end
+end
+
 function CategoryController:Create(addon)
     local controller = {}
     controller.addon = addon
@@ -72,6 +111,51 @@ end
 
 function CategoryController:GetDB()
     return self.addon:GetDB()
+end
+
+function CategoryController:NormalizeDisplayNameKey(name)
+    if not name or type(name) ~= "string" then
+        return ""
+    end
+    return string_lower(strtrim(name))
+end
+
+function CategoryController:IsCategoryDisplayNameAvailable(name, excludeCustomId)
+    local key = self:NormalizeDisplayNameKey(name)
+    if key == "" then
+        return false
+    end
+    local g = self:GetDB().global
+    local SD = OneWoW_Bags.SectionDefaults
+    for _, bn in ipairs(SD:GetEffectiveBuiltinNames(g)) do
+        if string_lower(bn) == key then
+            return false
+        end
+    end
+    for cid, cat in pairs(g.customCategoriesV2) do
+        if cid ~= excludeCustomId and cat and cat.name then
+            if self:NormalizeDisplayNameKey(cat.name) == key then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+function CategoryController:IsSectionDisplayNameAvailable(name, excludeSectionId)
+    local key = self:NormalizeDisplayNameKey(name)
+    if key == "" then
+        return false
+    end
+    local g = self:GetDB().global
+    for sid, sec in pairs(g.categorySections) do
+        if sid ~= excludeSectionId and sec and sec.name then
+            if self:NormalizeDisplayNameKey(sec.name) == key then
+                return false
+            end
+        end
+    end
+    return true
 end
 
 function CategoryController:RefreshUI(options)
@@ -88,7 +172,11 @@ function CategoryController:RefreshUI(options)
 end
 
 function CategoryController:CreateCategory(name)
-    if not name or name == "" then return nil end
+    name = name and strtrim(name) or ""
+    if name == "" then return nil end
+    if not self:IsCategoryDisplayNameAvailable(name, nil) then
+        return nil, "DUPLICATE_CATEGORY_NAME"
+    end
 
     local db = self:GetDB()
     local order = 1
@@ -111,24 +199,75 @@ function CategoryController:CreateCategory(name)
 end
 
 function CategoryController:RenameCategory(id, name)
-    if not id or not name or name == "" then return end
+    if not id then return false end
+    name = name and strtrim(name) or ""
+    if name == "" then return false end
 
-    local category = self:GetDB().global.customCategoriesV2[id]
-    if not category then return end
+    local db = self:GetDB()
+    local g = db.global
+    local category = g.customCategoriesV2[id]
+    if not category then return false end
 
+    if self:NormalizeDisplayNameKey(category.name) == self:NormalizeDisplayNameKey(name) then
+        local oldName = category.name
+        category.name = name
+        replaceCategoryNameInAllSections(g, oldName, name)
+        if oldName ~= name then
+            if #db.global.displayOrder > 0 then
+                wipe(db.global.displayOrder)
+            end
+            if g.categorySections[OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS] then
+                OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(g)
+            end
+            self:RefreshUI()
+        else
+            self:RefreshUI({ invalidate = false })
+        end
+        return true
+    end
+    if not self:IsCategoryDisplayNameAvailable(name, id) then
+        return false, "DUPLICATE_CATEGORY_NAME"
+    end
+
+    local oldName = category.name
     category.name = name
-    self:RefreshUI({ invalidate = false })
+    replaceCategoryNameInAllSections(g, oldName, name)
+    if #db.global.displayOrder > 0 then
+        wipe(db.global.displayOrder)
+    end
+    if g.categorySections[OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS] then
+        OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(g)
+    end
+    self:RefreshUI()
+    return true
 end
 
 function CategoryController:DeleteCategory(id)
     if not id then return end
 
-    self:GetDB().global.customCategoriesV2[id] = nil
+    local db = self:GetDB()
+    local g = db.global
+    local cat = g.customCategoriesV2[id]
+    local catName = cat and cat.name and strtrim(cat.name) or nil
+    g.customCategoriesV2[id] = nil
+    if catName and catName ~= "" then
+        removeCategoryNameFromAllSections(g, catName)
+    end
+    if #db.global.displayOrder > 0 then
+        wipe(db.global.displayOrder)
+    end
+    if g.categorySections[OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS] then
+        OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(g)
+    end
     self:RefreshUI()
 end
 
 function CategoryController:CreateSection(name)
-    if not name or name == "" then return nil end
+    name = name and strtrim(name) or ""
+    if name == "" then return nil end
+    if not self:IsSectionDisplayNameAvailable(name, nil) then
+        return nil, "DUPLICATE_SECTION_NAME"
+    end
 
     local db = self:GetDB()
     local id = "sec_" .. time() .. "_" .. random(1000, 9999)
@@ -148,13 +287,25 @@ function CategoryController:CreateSection(name)
 end
 
 function CategoryController:RenameSection(id, name)
-    if not id or not name or name == "" then return end
+    if not id then return false end
+    name = name and strtrim(name) or ""
+    if name == "" then return false end
 
     local section = self:GetDB().global.categorySections[id]
-    if not section then return end
+    if not section then return false end
+
+    if self:NormalizeDisplayNameKey(section.name) == self:NormalizeDisplayNameKey(name) then
+        section.name = name
+        self:RefreshUI({ invalidate = false })
+        return true
+    end
+    if not self:IsSectionDisplayNameAvailable(name, id) then
+        return false, "DUPLICATE_SECTION_NAME"
+    end
 
     section.name = name
     self:RefreshUI({ invalidate = false })
+    return true
 end
 
 function CategoryController:DeleteSection(id)
@@ -205,12 +356,17 @@ function CategoryController:SetSectionMembership(id, categoryName, isMember)
     if not section then return end
 
     if isMember then
+        removeCategoryNameFromOtherSections(db.global, categoryName, id)
+        local already = false
         for _, existing in ipairs(section.categories) do
             if existing == categoryName then
-                return
+                already = true
+                break
             end
         end
-        tinsert(section.categories, categoryName)
+        if not already then
+            tinsert(section.categories, categoryName)
+        end
     else
         for i, existing in ipairs(section.categories) do
             if existing == categoryName then
@@ -391,14 +547,14 @@ end
 
 function CategoryController:ImportBaganator()
     local db = self:GetDB()
-    if not _G.BAGANATOR_CONFIG or not _G.BAGANATOR_CONFIG.Profiles then
+    if not BAGANATOR_CONFIG or not BAGANATOR_CONFIG.Profiles then
         return 0, 0
     end
 
     local importedCategories = 0
     local importedSections = 0
     local profile
-    for _, candidate in pairs(_G.BAGANATOR_CONFIG.Profiles) do
+    for _, candidate in pairs(BAGANATOR_CONFIG.Profiles) do
         profile = candidate
         break
     end
@@ -410,15 +566,8 @@ function CategoryController:ImportBaganator()
         for _, categoryData in pairs(profile.custom_categories) do
             local name = categoryData.name
             if name and name ~= "" then
-                local exists = false
-                for _, existing in pairs(db.global.customCategoriesV2) do
-                    if existing.name == name then
-                        exists = true
-                        break
-                    end
-                end
-                if not exists then
-                    local id = self:CreateCategory(name)
+                local id = self:CreateCategory(name)
+                if id then
                     local target = db.global.customCategoriesV2[id]
                     target.items = {}
 
@@ -457,15 +606,8 @@ function CategoryController:ImportBaganator()
         for bagIndex, sectionData in pairs(profile.category_sections) do
             local name = sectionData.name
             if name and name ~= "" then
-                local exists = false
-                for _, existing in pairs(db.global.categorySections) do
-                    if existing.name == name then
-                        exists = true
-                        break
-                    end
-                end
-                if not exists then
-                    local sectionID = self:CreateSection(name)
+                local sectionID = self:CreateSection(name)
+                if sectionID then
                     sectionIDMap[bagIndex] = sectionID
                     importedSections = importedSections + 1
                 end
@@ -487,7 +629,17 @@ function CategoryController:ImportBaganator()
                 if categoryName and not addedToSection[categoryName] then
                     local section = db.global.categorySections[currentSectionID]
                     if section then
-                        tinsert(section.categories, categoryName)
+                        removeCategoryNameFromOtherSections(db.global, categoryName, currentSectionID)
+                        local already = false
+                        for _, e in ipairs(section.categories) do
+                            if e == categoryName then
+                                already = true
+                                break
+                            end
+                        end
+                        if not already then
+                            tinsert(section.categories, categoryName)
+                        end
                         addedToSection[categoryName] = true
                     end
                 end

@@ -173,6 +173,8 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["POPUP_CREATE"] = "Создать",
     ["POPUP_DELETE"] = "Удалить",
     ["POPUP_RENAME"] = "Переименовать",
+    ["DUPLICATE_CATEGORY_NAME"] = "Категория с таким именем уже существует.",
+    ["DUPLICATE_SECTION_NAME"] = "Раздел с таким названием уже существует.",
     ["GUI_NOT_INSTALLED"] = "Установите OneWoW_GUI для полных настроек темы, шрифта и языка.",
     ["SORT"] = "Сортировка",
 

@@ -173,6 +173,8 @@ OneWoW_Bags.Locales["koKR"] = {
     ["POPUP_CREATE"] = "만들기",
     ["POPUP_DELETE"] = "삭제",
     ["POPUP_RENAME"] = "이름 바꾸기",
+    ["DUPLICATE_CATEGORY_NAME"] = "같은 이름의 분류가 이미 있습니다.",
+    ["DUPLICATE_SECTION_NAME"] = "같은 이름의 구역이 이미 있습니다.",
     ["GUI_NOT_INSTALLED"] = "테마·글꼴·언어 전체 설정은 OneWoW_GUI를 설치하세요.",
     ["SORT"] = "정렬",
 

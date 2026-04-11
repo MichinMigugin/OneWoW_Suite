@@ -2,6 +2,8 @@ local _, OneWoW_Bags = ...
 
 local sort, tinsert = table.sort, tinsert
 local pairs, ipairs = pairs, ipairs
+local strtrim = strtrim
+local string_lower = string.lower
 
 OneWoW_Bags.SectionDefaults = OneWoW_Bags.SectionDefaults or {}
 local SD = OneWoW_Bags.SectionDefaults
@@ -113,16 +115,70 @@ function SD:SortMemberNames(names, g)
     end
 end
 
+local function IsNameInBuiltinList(name, eff)
+    for _, n in ipairs(eff) do
+        if n == name then
+            return true
+        end
+    end
+    return false
+end
+
 function SD:BuildOnewowMembers(g)
     local eff = SD:GetEffectiveBuiltinNames(g)
     local assigned = SD:CollectAssignedExcept(g.categorySections, SD.SEC_ONEWOW_BAGS)
-    local members = {}
+    local builtinMembers = {}
     for _, n in ipairs(eff) do
         if not assigned[n] then
-            tinsert(members, n)
+            tinsert(builtinMembers, n)
         end
     end
-    SD:SortMemberNames(members, g)
+    SD:SortMemberNames(builtinMembers, g)
+
+    local customRows = {}
+    for id, catData in pairs(g.customCategoriesV2 or {}) do
+        if catData then
+            local nm = catData.name
+            if type(nm) == "string" then
+                nm = strtrim(nm)
+            else
+                nm = ""
+            end
+            if nm ~= "" and not assigned[nm] and not IsNameInBuiltinList(nm, eff) then
+                tinsert(customRows, {
+                    id = id,
+                    name = nm,
+                    sortOrder = catData.sortOrder or 0,
+                })
+            end
+        end
+    end
+    sort(customRows, function(a, b)
+        if a.sortOrder ~= b.sortOrder then
+            return a.sortOrder < b.sortOrder
+        end
+        if a.name ~= b.name then
+            return a.name < b.name
+        end
+        return a.id < b.id
+    end)
+    local customSeenNorm = {}
+    local customMembers = {}
+    for _, row in ipairs(customRows) do
+        local kn = string_lower(row.name)
+        if not customSeenNorm[kn] then
+            customSeenNorm[kn] = true
+            tinsert(customMembers, row.name)
+        end
+    end
+
+    local members = {}
+    for _, n in ipairs(builtinMembers) do
+        tinsert(members, n)
+    end
+    for _, n in ipairs(customMembers) do
+        tinsert(members, n)
+    end
     return members
 end
 
