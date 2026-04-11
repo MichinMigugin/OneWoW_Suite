@@ -133,8 +133,9 @@ local function CreateHeader(panel, textKey)
 	return header
 end
 
-local function CalculateLayout(ph, showZone, hasAlerts)
-	local screenHeight = UIParent:GetHeight()
+-- flexHeight for zone (and similar) panels; availHeight should match the panels column (e.g. GameMenu height).
+local function CalculateLayout(ph, showZone, hasAlerts, availHeight)
+	availHeight = availHeight or UIParent:GetHeight()
 	local fixedHeight = ph.escShowCharacterInfo ~= false and CHARINFO_HEIGHT or 0
 	local gapCount = 0
 	local flexCount = 0
@@ -148,7 +149,7 @@ local function CalculateLayout(ph, showZone, hasAlerts)
 		gapCount = gapCount + 1
 	end
 
-	local instName, instanceType = GetInstanceInfo()
+	local _, instanceType = GetInstanceInfo()
 	local hasInstance = (instanceType == "party" or instanceType == "raid")
 	if hasInstance then
 		fixedHeight = fixedHeight + 120
@@ -157,19 +158,15 @@ local function CalculateLayout(ph, showZone, hasAlerts)
 
 	local totalGaps = gapCount * PANEL_GAP
 	local totalPadding = SCREEN_PAD * 2
-	local available = screenHeight - fixedHeight - totalGaps - totalPadding
+	local available = availHeight - fixedHeight - totalGaps - totalPadding
 
 	local flexHeight = 180
-	if flexCount > 0 then
+	if flexCount > 0 and available > 0 then
 		flexHeight = math.floor(available / flexCount)
-		flexHeight = math.max(100, math.min(300, flexHeight))
+		flexHeight = math.max(80, math.min(300, flexHeight))
 	end
 
-	local totalUsed = fixedHeight + (flexCount * flexHeight) + totalGaps
-	local verticalOffset = math.floor((screenHeight - totalUsed) / 2)
-	verticalOffset = math.max(SCREEN_PAD, verticalOffset)
-
-	return flexHeight, verticalOffset
+	return flexHeight
 end
 
 local function EnsureDimOverlay()
@@ -193,35 +190,64 @@ local function GetPanelsHorizontalMode(ph)
 	return "left"
 end
 
-local function EnsurePanelsContainer(ph)
+local MENU_PANEL_H_GAP = 20
+
+function EscPanels:EnsurePanelsContainer(ph)
 	if not panelsContainer then
 		panelsContainer = CreateFrame("Frame", "OneWoWEscPanelsContainer", UIParent)
 		panelsContainer:SetFrameStrata("FULLSCREEN_DIALOG")
-		panelsContainer:SetFrameLevel(100)
+		panelsContainer:SetFrameLevel(500)
 	end
 
-	panelsContainer:ClearAllPoints()
-	local gmLeft = GameMenuFrame and GameMenuFrame:GetLeft()
-	local gmRight = GameMenuFrame and GameMenuFrame:GetRight()
+	panelsContainer:SetParent(UIParent)
+	local gm = GameMenuFrame
 	local mode = GetPanelsHorizontalMode(ph)
-	local yTop = UIParent:GetHeight()
+	panelsContainer:ClearAllPoints()
+	panelsContainer:SetWidth(PANEL_WIDTH)
 
-	if mode == "right" then
-		if gmRight then
-			panelsContainer:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", gmRight + 20, yTop)
+	if gm and gm:IsShown() then
+		if mode == "right" then
+			panelsContainer:SetPoint("TOPLEFT", gm, "TOPRIGHT", MENU_PANEL_H_GAP, 0)
+			panelsContainer:SetPoint("BOTTOMLEFT", gm, "BOTTOMRIGHT", MENU_PANEL_H_GAP, 0)
 		else
-			panelsContainer:SetPoint("TOPLEFT", UIParent, "TOP", 200, 0)
+			panelsContainer:SetPoint("TOPRIGHT", gm, "TOPLEFT", -MENU_PANEL_H_GAP, 0)
+			panelsContainer:SetPoint("BOTTOMRIGHT", gm, "BOTTOMLEFT", -MENU_PANEL_H_GAP, 0)
 		end
-	elseif gmLeft then
-		panelsContainer:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", gmLeft - 20, yTop)
 	else
-		panelsContainer:SetPoint("TOPRIGHT", UIParent, "TOP", -200, 0)
+		local yTop = UIParent:GetHeight()
+		local gmLeft = gm and gm.GetLeft and gm:GetLeft()
+		local gmRight = gm and gm.GetRight and gm:GetRight()
+		if mode == "right" then
+			if gmRight then
+				panelsContainer:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", gmRight + MENU_PANEL_H_GAP, yTop)
+			else
+				panelsContainer:SetPoint("TOPLEFT", UIParent, "TOP", 200, 0)
+			end
+		elseif gmLeft then
+			panelsContainer:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", gmLeft - MENU_PANEL_H_GAP, yTop)
+		else
+			panelsContainer:SetPoint("TOPRIGHT", UIParent, "TOP", -200, 0)
+		end
+		panelsContainer:SetHeight(UIParent:GetHeight())
 	end
-	panelsContainer:SetSize(PANEL_WIDTH, UIParent:GetHeight())
+
 	panelsContainer:Show()
 end
 
-local function BuildCharacterInfoPanel(container, yOffset, hMode)
+local function EnsureStackBase(container)
+	if not container.stackBase then
+		container.stackBase = CreateFrame("Frame", "OneWoWEscPanelsStackBase", container)
+	end
+	local f = container.stackBase
+	f:ClearAllPoints()
+	f:SetSize(PANEL_WIDTH, 1)
+	f:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+	f:SetPoint("TOPRIGHT", container, "TOPRIGHT", 0, 0)
+	f:Show()
+	return f
+end
+
+local function BuildCharacterInfoPanel(container, anchorPanel, hMode)
 	if not panelFrames.charInfo then
 		local panel = CreatePanel(container, "OneWoWEscPanelCharInfo", CHARINFO_HEIGHT)
 		CreateHeader(panel, "ESCPANEL_CHARACTER_INFO")
@@ -262,9 +288,9 @@ local function BuildCharacterInfoPanel(container, yOffset, hMode)
 	local panel = panelFrames.charInfo
 	panel:ClearAllPoints()
 	if hMode == "right" then
-		panel:SetPoint("TOPLEFT", container, "TOPLEFT", 0, yOffset)
+		panel:SetPoint("TOPLEFT", anchorPanel, "BOTTOMLEFT", 0, 0)
 	else
-		panel:SetPoint("TOPRIGHT", container, "TOPRIGHT", 0, yOffset)
+		panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, 0)
 	end
 	panel:SetHeight(CHARINFO_HEIGHT)
 
@@ -301,7 +327,7 @@ local function BuildCharacterInfoPanel(container, yOffset, hMode)
 		BreakUpLargeNumbers(gold), silver, copper)
 
 	panel:Show()
-	return panel, yOffset - CHARINFO_HEIGHT - PANEL_GAP
+	return panel
 end
 
 local function BuildAlertsPanel(container, yOffset, anchorPanel, hMode)
@@ -650,7 +676,7 @@ function EscPanels:Build(parent)
 	end
 
 	EnsureDimOverlay()
-	EnsurePanelsContainer(ph)
+	self:EnsurePanelsContainer(ph)
 
 	local hMode = GetPanelsHorizontalMode(ph)
 
@@ -660,13 +686,17 @@ function EscPanels:Build(parent)
 	local zoneHasContent = zoneData and ((zoneData.content and zoneData.content ~= "") or (zoneData.todos and #zoneData.todos > 0))
 	local showZone = ph.escShowZoneNotes and (not ph.escHideZoneNotesWhenEmpty or zoneHasContent)
 
-	local flexHeight, verticalOffset = CalculateLayout(ph, showZone, hasAlerts)
-	local yOffset = -verticalOffset
-	local lastPanel = panelsContainer
+	local availH = panelsContainer:GetHeight()
+	if (not availH) or availH < 80 then
+		availH = GameMenuFrame and GameMenuFrame.GetHeight and GameMenuFrame:GetHeight() or UIParent:GetHeight()
+	end
+	local flexHeight = CalculateLayout(ph, showZone, hasAlerts, availH)
+	local yOffset = -SCREEN_PAD
+	local lastPanel = EnsureStackBase(panelsContainer)
 
 	local charPanel
 	if ph.escShowCharacterInfo ~= false then
-		charPanel, yOffset = BuildCharacterInfoPanel(panelsContainer, yOffset, hMode)
+		charPanel = BuildCharacterInfoPanel(panelsContainer, lastPanel, hMode)
 		lastPanel = charPanel
 	elseif panelFrames.charInfo then
 		panelFrames.charInfo:Hide()
@@ -714,7 +744,7 @@ end
 function EscPanels:SyncPanelsContainerPosition(ph)
 	if not ph or not ph.escEnabled then return end
 	if not panelsContainer or not panelsContainer:IsShown() then return end
-	EnsurePanelsContainer(ph)
+	self:EnsurePanelsContainer(ph)
 end
 
 function EscPanels:HideAll()
