@@ -1466,7 +1466,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     end
 
     -- ---- Refundable items ----
-    if itemLocation:IsValid() then
+    if itemLocation and itemLocation:IsValid() then
         props.isRefundable = C_Item.CanBeRefunded(itemLocation)
     end
 
