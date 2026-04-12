@@ -430,7 +430,11 @@ local function CreateCaptureFrame()
     captureFrame:SetAllPoints()
     captureFrame:EnableMouse(false)
     captureFrame:EnableMouseWheel(false)
-    captureFrame:SetScript("OnMouseWheel", function(_, delta)
+    captureFrame:SetScript("OnMouseWheel", function(self, delta)
+        if not IsControlKeyDown() then
+            self:EnableMouseWheel(false)
+            return
+        end
         if not FM.active then return end
         if not FM:ScalingEnabled() then return end
         local name, frame = FM:GetFrameUnderCursor()

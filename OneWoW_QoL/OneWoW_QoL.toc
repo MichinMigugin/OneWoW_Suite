@@ -189,3 +189,15 @@ Modules\external\framemover\framemover-frames.lua
 Modules\external\framemover\framemover-ui.lua
 Modules\external\framemover\data.lua
 
+Modules\external\minimapbuttons\Locales\enUS.lua
+Modules\external\minimapbuttons\Locales\koKR.lua
+Modules\external\minimapbuttons\minimapbuttons.lua
+Modules\external\minimapbuttons\minimapbuttons-ui.lua
+Modules\external\minimapbuttons\data.lua
+
+Modules\external\minimapskin\Locales\enUS.lua
+Modules\external\minimapskin\minimapskin.lua
+Modules\external\minimapskin\minimapskin-engine.lua
+Modules\external\minimapskin\minimapskin-ui.lua
+Modules\external\minimapskin\data.lua
+
