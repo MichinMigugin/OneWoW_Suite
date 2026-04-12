@@ -26,3 +26,6 @@ scripts/Send-ChangelogToDiscord.ps1
 guiplanner.md
 apiplanner.md
 dbplanner.md
+
+# OneWoW Updater (local tray app — not part of the addon suite)
+bin/updatefolder/
