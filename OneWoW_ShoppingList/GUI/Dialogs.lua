@@ -71,7 +71,8 @@ function Dialogs:ConfirmDialog(titleText, bodyText, onConfirm, confirmLabel, par
 
     local showDontAsk = opts and opts.showDontAskAgain
 
-    local result = OneWoW_GUI:CreateConfirmDialog({
+    local result
+    result = OneWoW_GUI:CreateConfirmDialog({
         addonTitle = L["OWSL_WINDOW_TITLE"],
         title      = titleText,
         message    = bodyText,
