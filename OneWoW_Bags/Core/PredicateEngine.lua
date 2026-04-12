@@ -1324,6 +1324,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isKnowledge = false
     props.isEnchanted = false
     props.isCrafted = false
+    props.isRefundable = false
 
     -- ---- C_Container.GetContainerItemInfo ----
     local containerInfo
@@ -1465,7 +1466,9 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     end
 
     -- ---- Refundable items ----
-    props.isRefundable = C_Item.CanBeRefunded(itemLocation)
+    if itemLocation:IsValid() then
+        props.isRefundable = C_Item.CanBeRefunded(itemLocation)
+    end
 
     -- ---- Item link parsed properties ----
     local itemLinkProperties = ParseItemLink(itemLink)
