@@ -60,9 +60,9 @@ local function BuildContent(container)
     local cy = 0
 
     -- ═══════════════════════════════════════════════════════════════════════
-    -- Scale
+    -- Scale & Opacity (always visible)
     -- ═══════════════════════════════════════════════════════════════════════
-    cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_SCALE"] or "Scale", yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_OPACITY"] or "Scale & Opacity", yOffset = cy })
 
     local scaleLabel
     scaleLabel, cy = AddLabel(container, cy,
@@ -80,6 +80,26 @@ local function BuildContent(container)
         end,
     })
     scaleSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+    cy = cy - SLIDER_HEIGHT
+
+    if s.minimapAlpha == nil then s.minimapAlpha = 1.0 end
+    local opacityLabel
+    opacityLabel, cy = AddLabel(container, cy,
+        string.format("%s: %.0f%%", L["MMSKIN_OPACITY"] or "Minimap Opacity", s.minimapAlpha * 100))
+
+    local opacitySlider = OneWoW_GUI:CreateSlider(container, {
+        minVal = 10, maxVal = 100, step = 5,
+        currentVal = math.floor(s.minimapAlpha * 100),
+        width = 260, fmt = "%d%%",
+        onChange = function(val)
+            s.minimapAlpha = val / 100
+            opacityLabel:SetText(string.format("%s: %.0f%%", L["MMSKIN_OPACITY"] or "Minimap Opacity", val))
+            if ns.ModuleRegistry:IsEnabled("minimapskin") and M.RefreshAlpha then
+                M.RefreshAlpha()
+            end
+        end,
+    })
+    opacitySlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
     cy = cy - SLIDER_HEIGHT
 
     -- ═══════════════════════════════════════════════════════════════════════

@@ -91,6 +91,33 @@ local function ResolveName(name)
     return nil
 end
 
+local function ResolveNameFuzzy(name)
+    if not name then return nil end
+
+    local suffix = name:match("^Enchant%s+%w+%s+%-%s+(.+)$")
+    if suffix then
+        local resolved = ResolveName(suffix)
+        if resolved then return resolved end
+    end
+
+    local savedNames = GetSavedNameMap()
+    local pool = savedNames or nameToRecipeSpell
+    if not pool then return nil end
+
+    for storedName, recipeSpellID in pairs(pool) do
+        if name:sub(-#storedName) == storedName and #storedName > 3 then
+            nameToRecipeSpell[name] = recipeSpellID
+            return recipeSpellID
+        end
+        if storedName:sub(-#name) == name and #name > 3 then
+            nameToRecipeSpell[name] = recipeSpellID
+            return recipeSpellID
+        end
+    end
+
+    return nil
+end
+
 function RecipeKnownUtil:GetRecipeSpellID(itemID)
     if not itemID then return nil end
 
@@ -107,6 +134,9 @@ function RecipeKnownUtil:GetRecipeSpellID(itemID)
         local recipeName = itemName:match("^[^:]+:%s*(.+)$")
         if recipeName then
             local resolved = ResolveName(recipeName)
+            if not resolved then
+                resolved = ResolveNameFuzzy(recipeName)
+            end
             if resolved then
                 SaveToMap(itemID, resolved)
                 return resolved
@@ -121,28 +151,30 @@ function RecipeKnownUtil:IsRecipeKnown(itemID)
     if not itemID then return nil end
 
     local recipeSpellID = self:GetRecipeSpellID(itemID)
-    if recipeSpellID then
-        if knownRecipeSpells[recipeSpellID] then
-            return true
-        end
+    if not recipeSpellID then return nil end
 
-        local info = C_TradeSkillUI.GetRecipeInfo(recipeSpellID)
-        if info and info.learned ~= nil then
-            if info.learned then
-                knownRecipeSpells[recipeSpellID] = true
+    if knownRecipeSpells[recipeSpellID] then
+        return true
+    end
+
+    local profsDB = _G.OneWoW_AltTracker_Professions_DB
+    if profsDB and profsDB.characters then
+        local charKey = UnitName("player") .. "-" .. GetRealmName()
+        local charData = profsDB.characters[charKey]
+        if charData and charData.recipes then
+            for _, recipeSet in pairs(charData.recipes) do
+                if recipeSet[recipeSpellID] then
+                    knownRecipeSpells[recipeSpellID] = true
+                    return true
+                end
             end
-            return info.learned
         end
+    end
 
-        if IsSpellKnown(recipeSpellID) then
-            knownRecipeSpells[recipeSpellID] = true
-            return true
-        end
-
-        if IsSpellKnownOrOverridesKnown(recipeSpellID) then
-            knownRecipeSpells[recipeSpellID] = true
-            return true
-        end
+    local info = C_TradeSkillUI.GetRecipeInfo(recipeSpellID)
+    if info and info.learned then
+        knownRecipeSpells[recipeSpellID] = true
+        return true
     end
 
     return nil

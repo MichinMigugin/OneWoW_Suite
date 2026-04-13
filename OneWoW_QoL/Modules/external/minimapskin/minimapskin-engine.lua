@@ -5,7 +5,6 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
 -- ─── Constants ──────────────────────────────────────────────────────────────
 
-local ROUND_MASK  = "Textures\\MinimapMask"
 local SQUARE_MASK = "Interface\\BUTTONS\\WHITE8X8"
 local MINIMAP     = Minimap
 
@@ -19,7 +18,8 @@ local clickOverlay
 local eventFrame
 local skinTooltip
 local autoZoomSeq, autoZoomCur = 0, 0
-local savedParents = {}
+local savedParents    = {}   -- show/hide toggling (element visibility)
+local iconMoveParents = {}   -- icons reparented to MINIMAP when detached
 local clockRunning = false
 
 -- ─── Settings ───────────────────────────────────────────────────────────────
@@ -31,6 +31,7 @@ local function GetSettings()
     if not mods.minimapskin then mods.minimapskin = {} end
     local s = mods.minimapskin
     if s.scale           == nil then s.scale           = 1.0        end
+    if s.minimapAlpha    == nil then s.minimapAlpha    = 1.0        end
     if s.borderSize      == nil then s.borderSize      = 3          end
     if s.useThemeColor   == nil then s.useThemeColor   = true       end
     if s.autoZoomDelay   == nil then s.autoZoomDelay   = 10         end
@@ -73,7 +74,7 @@ local function GetHiddenFrame()
     return hiddenFrame
 end
 
--- ─── Element Show / Hide ────────────────────────────────────────────────────
+-- ─── Element Show / Hide (visibility toggles) ───────────────────────────────
 
 local function HideElement(frame)
     if not frame then return end
@@ -101,7 +102,7 @@ local function GetTooltip()
     return skinTooltip
 end
 
--- ─── Layout suppression (only used by DetachMinimap) ────────────────────────
+-- ─── Layout suppression (only DetachMinimap) ────────────────────────────────
 
 local function SuppressLayout()
     if not M._layoutSuppressed then
@@ -119,39 +120,69 @@ local function RestoreLayout()
     end
 end
 
+-- ─── Strata ─────────────────────────────────────────────────────────────────
+
+local function ApplyMinimapStrata()
+    MINIMAP:SetFrameStrata("LOW")
+    MINIMAP:SetFrameLevel(2)
+    MINIMAP:SetFixedFrameStrata(true)
+    MINIMAP:SetFixedFrameLevel(true)
+end
+
+local function RestoreMinimapStrata()
+    MINIMAP:SetFixedFrameStrata(false)
+    MINIMAP:SetFixedFrameLevel(false)
+end
+
 -- ─── Shape ──────────────────────────────────────────────────────────────────
 
-local function ApplyShape()
+-- Once SetMaskTexture is called on the Minimap frame there is no API to undo it.
+-- BasicMinimap solves this by shipping its own circle texture file.
+-- Leatrix_Plus solves this by requiring a UI reload.
+-- We take the Leatrix_Plus approach: going back to round requires a reload.
+
+StaticPopupDialogs["ONEWOW_MMSKIN_RELOAD"] = {
+    text = "Changing minimap shape requires a UI reload.\nReload now?",
+    button1 = ACCEPT,
+    button2 = CANCEL,
+    OnAccept = ReloadUI,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+}
+
+local function ApplySquareMask()
     if not MINIMAP then return end
-    local isSquare = GetToggle("squareShape")
-    local mask = isSquare and SQUARE_MASK or ROUND_MASK
 
-    MINIMAP:SetMaskTexture(mask)
+    MINIMAP:SetMaskTexture(SQUARE_MASK)
+    if MinimapCompassTexture then MinimapCompassTexture:Hide() end
 
-    if isSquare then
-        if MinimapCompassTexture then MinimapCompassTexture:Hide() end
+    pcall(function()
+        MINIMAP:SetArchBlobRingScalar(0)
+        MINIMAP:SetArchBlobRingAlpha(0)
+        MINIMAP:SetQuestBlobRingScalar(0)
+        MINIMAP:SetQuestBlobRingAlpha(0)
+    end)
 
-        pcall(function()
-            MINIMAP:SetArchBlobRingScalar(0)
-            MINIMAP:SetArchBlobRingAlpha(0)
-            MINIMAP:SetQuestBlobRingScalar(0)
-            MINIMAP:SetQuestBlobRingAlpha(0)
-        end)
+    _G.GetMinimapShape = function() return "SQUARE" end
 
-        _G.GetMinimapShape = function() return "SQUARE" end
-    else
-        if MinimapCompassTexture then MinimapCompassTexture:Show() end
-
-        _G.GetMinimapShape = nil
-    end
-
-    if HybridMinimap then
+    if HybridMinimap and HybridMinimap.CircleMask then
         pcall(function()
             HybridMinimap.MapCanvas:SetUseMaskTexture(false)
-            HybridMinimap.CircleMask:SetTexture(mask)
+            HybridMinimap.CircleMask:SetTexture(SQUARE_MASK)
             HybridMinimap.MapCanvas:SetUseMaskTexture(true)
         end)
     end
+end
+
+local function ApplyShape()
+    if not MINIMAP then return end
+    if GetToggle("squareShape") then
+        ApplySquareMask()
+    end
+    -- Round mode is the Blizzard default — never touch masks when round.
+    -- If the user toggled square OFF, OnToggle prompts a reload.
 end
 
 -- ─── Border ─────────────────────────────────────────────────────────────────
@@ -197,8 +228,8 @@ local function UpdateBorder()
     local bw = s.borderSize
 
     borderFrame:ClearAllPoints()
-    borderFrame:SetPoint("TOPLEFT", MINIMAP, "TOPLEFT", -bw, bw)
-    borderFrame:SetPoint("BOTTOMRIGHT", MINIMAP, "BOTTOMRIGHT", bw, -bw)
+    borderFrame:SetPoint("TOPLEFT",     MINIMAP, "TOPLEFT",     -bw,  bw)
+    borderFrame:SetPoint("BOTTOMRIGHT", MINIMAP, "BOTTOMRIGHT",  bw, -bw)
     borderFrame:SetBackdrop({
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = bw,
@@ -210,6 +241,15 @@ local function UpdateBorder()
 end
 
 M.RefreshBorder = UpdateBorder
+
+-- ─── Opacity ─────────────────────────────────────────────────────────────────
+
+local function ApplyMinimapAlpha()
+    if not MINIMAP then return end
+    MINIMAP:SetAlpha(GetSettings().minimapAlpha)
+end
+
+M.RefreshAlpha = ApplyMinimapAlpha
 
 -- ─── Zone Text ──────────────────────────────────────────────────────────────
 
@@ -249,7 +289,8 @@ local function ApplyZoneFont()
         zoneFontStr:SetFontObject(GameFontNormalSmall)
     end
     if zoneFrame then
-        zoneFrame:SetHeight(s.zoneFontSize + 4)
+        local s2 = GetSettings()
+        zoneFrame:SetHeight(s2.zoneFontSize + 4)
         zoneFrame:SetWidth(math.max(MINIMAP:GetWidth() + 40, zoneFontStr:GetStringWidth() + 20))
     end
 end
@@ -392,7 +433,8 @@ local function ApplyClockFont()
         clockFontStr:SetFontObject(GameFontNormalSmall)
     end
     if clockFrame then
-        clockFrame:SetHeight(s.clockFontSize + 4)
+        local s2 = GetSettings()
+        clockFrame:SetHeight(s2.clockFontSize + 4)
         clockFontStr:SetText("99:99")
         clockFrame:SetWidth(clockFontStr:GetUnboundedStringWidth() + 20)
         UpdateClockDisplay()
@@ -413,9 +455,6 @@ local function CreateClock()
     clockFontStr:SetJustifyH("CENTER")
 
     ApplyClockFont()
-
-    clockFontStr:SetText("99:99")
-    clockFrame:SetWidth(clockFontStr:GetUnboundedStringWidth() + 10)
 
     clockFrame:SetScript("OnEnter", function(self)
         if not CALENDAR_MONTHS then
@@ -570,7 +609,7 @@ local function AutoZoomTick()
     autoZoomCur = autoZoomCur + 1
     if autoZoomSeq == autoZoomCur then
         MINIMAP:SetZoom(0)
-        if Minimap.ZoomIn  then Minimap.ZoomIn:Enable()  end
+        if Minimap.ZoomIn  then Minimap.ZoomIn:Enable()   end
         if Minimap.ZoomOut then Minimap.ZoomOut:Disable() end
         autoZoomSeq, autoZoomCur = 0, 0
     end
@@ -621,6 +660,16 @@ end
 M.RefreshScale = ApplyScale
 
 -- ─── Element Visibility ─────────────────────────────────────────────────────
+-- When detached, "visible" icons live on MINIMAP so they move with it.
+-- When attached, "visible" icons live on their original parent.
+
+local function GetShowParent(frame)
+    if M._detached then
+        return MINIMAP
+    end
+    -- return the original parent (either still in savedParents or actual parent)
+    return iconMoveParents[frame] or frame:GetParent()
+end
 
 local function ApplyElementVisibility()
     local mailFrame  = MinimapCluster and MinimapCluster.IndicatorFrame and MinimapCluster.IndicatorFrame.MailFrame
@@ -628,21 +677,46 @@ local function ApplyElementVisibility()
     local diffFrame  = MinimapCluster and MinimapCluster.InstanceDifficulty
 
     if mailFrame then
-        if GetToggle("showMail") then RestoreElement(mailFrame) else HideElement(mailFrame) end
+        if GetToggle("showMail") then
+            mailFrame:SetParent(GetShowParent(mailFrame))
+            savedParents[mailFrame] = nil
+        else
+            HideElement(mailFrame)
+        end
     end
     if craftFrame then
-        if GetToggle("showCraftingOrder") then RestoreElement(craftFrame) else HideElement(craftFrame) end
+        if GetToggle("showCraftingOrder") then
+            craftFrame:SetParent(GetShowParent(craftFrame))
+            savedParents[craftFrame] = nil
+        else
+            HideElement(craftFrame)
+        end
     end
     if diffFrame then
-        if GetToggle("showDifficulty") then RestoreElement(diffFrame) else HideElement(diffFrame) end
+        if GetToggle("showDifficulty") then
+            diffFrame:SetParent(GetShowParent(diffFrame))
+            savedParents[diffFrame] = nil
+        else
+            HideElement(diffFrame)
+        end
     end
     if ExpansionLandingPageMinimapButton then
-        if GetToggle("showMissions") then RestoreElement(ExpansionLandingPageMinimapButton) else HideElement(ExpansionLandingPageMinimapButton) end
+        if GetToggle("showMissions") then
+            ExpansionLandingPageMinimapButton:SetParent(GetShowParent(ExpansionLandingPageMinimapButton))
+            savedParents[ExpansionLandingPageMinimapButton] = nil
+        else
+            HideElement(ExpansionLandingPageMinimapButton)
+        end
     end
 
     local s = GetSettings()
     if AddonCompartmentFrame then
-        if s.showCompartment then RestoreElement(AddonCompartmentFrame) else HideElement(AddonCompartmentFrame) end
+        if s.showCompartment then
+            AddonCompartmentFrame:SetParent(GetShowParent(AddonCompartmentFrame))
+            savedParents[AddonCompartmentFrame] = nil
+        else
+            HideElement(AddonCompartmentFrame)
+        end
     end
 
     ApplyZoomButtons()
@@ -674,6 +748,42 @@ local function ApplyHideAddonIcons()
     end
 end
 
+-- ─── Icon Reparent (detach / attach) ────────────────────────────────────────
+-- We save originals in iconMoveParents so we can restore on attach.
+
+local ICON_FRAMES = {
+    function() return MinimapCluster and MinimapCluster.IndicatorFrame and MinimapCluster.IndicatorFrame.MailFrame end,
+    function() return MinimapCluster and MinimapCluster.IndicatorFrame and MinimapCluster.IndicatorFrame.CraftingOrderFrame end,
+    function() return MinimapCluster and MinimapCluster.InstanceDifficulty end,
+    function() return ExpansionLandingPageMinimapButton end,
+    function() return AddonCompartmentFrame end,
+    function() return GameTimeFrame end,
+    function() return TrackingButton end,
+}
+
+local function ReparentIconsToMinimap()
+    for _, getter in ipairs(ICON_FRAMES) do
+        local f = getter()
+        if f and f:GetParent() ~= GetHiddenFrame() then
+            -- only move visible (not already hidden by our toggles) icons
+            if not iconMoveParents[f] then
+                iconMoveParents[f] = f:GetParent()
+            end
+            f:SetParent(MINIMAP)
+        end
+    end
+end
+
+local function RestoreIconParents()
+    for _, getter in ipairs(ICON_FRAMES) do
+        local f = getter()
+        if f and iconMoveParents[f] then
+            f:SetParent(iconMoveParents[f])
+            iconMoveParents[f] = nil
+        end
+    end
+end
+
 -- ─── Detach / Attach Minimap ────────────────────────────────────────────────
 
 local function DetachMinimap()
@@ -684,11 +794,8 @@ local function DetachMinimap()
         M._origMinimapParent = MINIMAP:GetParent()
     end
 
-    MINIMAP:SetFixedFrameStrata(true)
-    MINIMAP:SetFixedFrameLevel(true)
-    MINIMAP:SetFrameStrata("LOW")
-    MINIMAP:SetFrameLevel(2)
     MINIMAP:SetParent(UIParent)
+    ApplyMinimapStrata()
 
     if MinimapCluster then
         MinimapCluster:EnableMouse(false)
@@ -719,11 +826,15 @@ local function DetachMinimap()
     else
         MINIMAP:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -20, -20)
     end
+
+    ReparentIconsToMinimap()
 end
 
 local function AttachMinimap()
     if not M._detached then return end
     M._detached = false
+
+    RestoreIconParents()
 
     MINIMAP:SetScript("OnDragStart", nil)
     MINIMAP:SetScript("OnDragStop", nil)
@@ -746,7 +857,7 @@ local function AttachMinimap()
     end
 end
 
--- ─── Unclamp ───────────────────────────────────────────────────────────────
+-- ─── Unclamp ─────────────────────────────────────────────────────────────────
 
 local function ApplyUnclamp()
     local unclamped = GetSettings().unclampMinimap
@@ -764,11 +875,12 @@ M.RefreshUnclamp = ApplyUnclamp
 
 local function ApplyCombatFadeState(inCombat)
     if not MINIMAP then return end
+    local base = GetSettings().minimapAlpha
     if not GetToggle("combatFade") then
-        MINIMAP:SetAlpha(1)
+        MINIMAP:SetAlpha(base)
         return
     end
-    MINIMAP:SetAlpha(inCombat and GetSettings().combatFadeAlpha or 1)
+    MINIMAP:SetAlpha(inCombat and (base * GetSettings().combatFadeAlpha) or base)
 end
 
 -- ─── Events ─────────────────────────────────────────────────────────────────
@@ -799,7 +911,9 @@ local function RegisterEvents()
         elseif event == "PET_BATTLE_CLOSE" then
             if GetToggle("petBattleHide") then MINIMAP:Show() end
         elseif event == "ADDON_LOADED" and arg1 == "Blizzard_HybridMinimap" then
-            ApplyShape()
+            if GetToggle("squareShape") then
+                ApplySquareMask()
+            end
         end
     end)
 end
@@ -828,9 +942,11 @@ end
 function M:OnEnable()
     if not MINIMAP then return end
 
+    ApplyMinimapStrata()
     ApplyShape()
     UpdateBorder()
     ApplyScale()
+    ApplyMinimapAlpha()
 
     if GetToggle("unlockMinimap") then
         DetachMinimap()
@@ -870,24 +986,18 @@ function M:OnDisable()
         MinimapCluster:SetClampedToScreen(true)
     end
 
-    MINIMAP:SetMaskTexture(ROUND_MASK)
-    _G.GetMinimapShape = nil
-
-    if MinimapCompassTexture then MinimapCompassTexture:Show() end
+    -- If square mask was applied, a reload is needed to restore Blizzard default
+    if GetToggle("squareShape") then
+        StaticPopup_Show("ONEWOW_MMSKIN_RELOAD")
+    end
 
     RestoreLayout()
-
-    if HybridMinimap then
-        pcall(function()
-            HybridMinimap.MapCanvas:SetUseMaskTexture(false)
-            HybridMinimap.CircleMask:SetTexture(ROUND_MASK)
-            HybridMinimap.MapCanvas:SetUseMaskTexture(true)
-        end)
-    end
+    RestoreMinimapStrata()
 
     if borderFrame then borderFrame:Hide() end
 
     MINIMAP:SetScale(1)
+    MINIMAP:SetAlpha(1)
 
     if zoneFrame then zoneFrame:Hide() end
     if MinimapCluster then
@@ -904,6 +1014,7 @@ function M:OnDisable()
     MINIMAP:EnableMouseWheel(false)
     MINIMAP:SetScript("OnMouseWheel", nil)
 
+    -- Restore all visibility-toggled elements
     for frame in pairs(savedParents) do
         RestoreElement(frame)
     end
@@ -918,8 +1029,6 @@ function M:OnDisable()
         end
     end
 
-    MINIMAP:SetAlpha(1)
-
     if not MINIMAP:IsShown() then MINIMAP:Show() end
 
     UnregisterEvents()
@@ -927,7 +1036,11 @@ end
 
 function M:OnToggle(toggleId, value)
     if toggleId == "squareShape" then
-        ApplyShape()
+        if value then
+            ApplySquareMask()
+        else
+            StaticPopup_Show("ONEWOW_MMSKIN_RELOAD")
+        end
         UpdateBorder()
     elseif toggleId == "showBorder" or toggleId == "classBorder" then
         UpdateBorder()
@@ -937,8 +1050,9 @@ function M:OnToggle(toggleId, value)
         else
             AttachMinimap()
         end
+        ApplyElementVisibility()
     elseif toggleId == "lockPosition" then
-        -- nothing to apply; drag handler reads the toggle live
+        -- drag handler reads toggle live
     elseif toggleId == "showZoneText" then
         ShowZoneText()
     elseif toggleId == "showClock" then
