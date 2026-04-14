@@ -168,9 +168,11 @@ local function CanPlayerUseItem(itemLink)
     end
 
     if classID == Enum.ItemClass.Armor then
-        local armorType = GetItemArmorType(itemID)
-        if armorType and not CanClassUseArmor(playerClass, armorType) then
-            return false
+        if equipLoc ~= "INVTYPE_CLOAK" then
+            local armorType = GetItemArmorType(itemID)
+            if armorType and not CanClassUseArmor(playerClass, armorType) then
+                return false
+            end
         end
     elseif classID == Enum.ItemClass.Weapon then
         if not CanClassUseWeapon(playerClass, subclassID) then

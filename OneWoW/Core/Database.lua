@@ -193,6 +193,9 @@ local DEFAULTS = {
                 applyToAuctionHouse = false,
                 mode = "ILVL",
                 showInTooltip = false,
+                tooltipDetail = "FULL",
+                tooltipOnlyUpgrade = false,
+                tooltipShowSkipReason = false,
                 showPawnPrompt = true,
             },
             transmog = {

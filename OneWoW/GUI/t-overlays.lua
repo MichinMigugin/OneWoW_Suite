@@ -799,16 +799,85 @@ local function ShowOverlayDetail(split, feature, selectedRow)
 
         yOffset = yOffset - 6
 
+        local DETAIL_LEVELS = {
+            { value = "FULL",    text = L["OVR_TOOLTIP_DETAIL_FULL"] },
+            { value = "SIMPLE",  text = L["OVR_TOOLTIP_DETAIL_SIMPLE"] },
+            { value = "MINIMUM", text = L["OVR_TOOLTIP_DETAIL_MINIMUM"] },
+        }
+        local function GetDetailLabel(val)
+            for _, d in ipairs(DETAIL_LEVELS) do
+                if d.value == val then return d.text end
+            end
+            return val
+        end
+
+        -- Row 1: [Show in Tooltips checkbox]   [Detail dropdown]
         local tooltipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_LABEL"] })
         tooltipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
         tooltipCb:SetChecked(reg:GetOverlaySetting(featureId, "showInTooltip") or false)
-        tooltipCb:SetScript("OnClick", function(self)
-            local odb = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-            if odb and odb.overlays and odb.overlays.upgrade then
-                odb.overlays.upgrade.showInTooltip = self:GetChecked()
-            end
+
+        local currentDetail = reg:GetOverlaySetting(featureId, "tooltipDetail") or "FULL"
+        local detailDD, detailDDText = OneWoW_GUI:CreateDropdown(dsc, {
+            width = 110,
+            text = GetDetailLabel(currentDetail),
+        })
+        detailDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+        OneWoW_GUI:AttachFilterMenu(detailDD, {
+            searchable = false,
+            buildItems = function() return DETAIL_LEVELS end,
+            onSelect = function(value, text)
+                detailDDText:SetText(text)
+                reg:SetOverlaySetting(featureId, "tooltipDetail", value)
+            end,
+            getActiveValue = function()
+                return reg:GetOverlaySetting(featureId, "tooltipDetail") or "FULL"
+            end,
+        })
+        yOffset = yOffset - 30
+
+        -- Row 2: [Only show if upgrade] (indented sub-option)
+        local onlyUpgradeCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_ONLY_UPGRADE"] })
+        onlyUpgradeCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 30, yOffset)
+        onlyUpgradeCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipOnlyUpgrade") or false)
+        onlyUpgradeCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "tooltipOnlyUpgrade", self:GetChecked())
+        end)
+        yOffset = yOffset - 28
+
+        -- Row 3: [Show skipped reason] (indented sub-option)
+        local showSkipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_SHOW_SKIP"] })
+        showSkipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 30, yOffset)
+        showSkipCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipShowSkipReason") or false)
+        showSkipCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "tooltipShowSkipReason", self:GetChecked())
         end)
         yOffset = yOffset - 30 - 10
+
+        local function refreshTooltipSubs(enabled)
+            if enabled then
+                detailDD:Enable()
+                detailDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                detailDD:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                onlyUpgradeCb:Enable()
+                onlyUpgradeCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                showSkipCb:Enable()
+                showSkipCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            else
+                detailDD:Disable()
+                detailDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                detailDD:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                onlyUpgradeCb:Disable()
+                onlyUpgradeCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                showSkipCb:Disable()
+                showSkipCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            end
+        end
+        refreshTooltipSubs(reg:GetOverlaySetting(featureId, "showInTooltip") or false)
+
+        tooltipCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "showInTooltip", self:GetChecked())
+            refreshTooltipSubs(self:GetChecked())
+        end)
     end
 
     if not OVERLAY_SETTINGS_IDS[featureId] then

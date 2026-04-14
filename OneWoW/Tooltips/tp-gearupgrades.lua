@@ -30,7 +30,33 @@ local function ResolveItemLink(context)
     return nil
 end
 
-local function DoGearUpgrade(context)
+local function BuildRightText(colorCode, endIcon, diffVal, equipVal, thisVal, isDecimal, detail, L)
+    local percent = 0
+    if equipVal and equipVal > 0 then
+        percent = (diffVal / equipVal) * 100
+    end
+
+    if detail == "MINIMUM" then
+        return nil
+    elseif detail == "SIMPLE" then
+        if isDecimal then
+            return colorCode .. string.format("%+.1f", diffVal) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
+        else
+            return colorCode .. string.format("%+d", diffVal) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
+        end
+    else
+        local thisLabel  = L["TIPS_GEARCOMP_THIS"]  or "This"
+        local equipLabel = L["TIPS_GEARCOMP_EQUIP"] or "Equip"
+        local diffLabel  = L["TIPS_GEARCOMP_DIFF"]  or "Diff"
+        if isDecimal then
+            return colorCode .. thisLabel .. ":" .. string.format("%.1f", thisVal) .. " " .. equipLabel .. ":" .. string.format("%.1f", equipVal) .. " " .. diffLabel .. ":" .. string.format("%+.1f", diffVal) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
+        else
+            return colorCode .. thisLabel .. ":" .. tostring(thisVal) .. " " .. equipLabel .. ":" .. tostring(equipVal) .. " " .. diffLabel .. ":" .. string.format("%+d", diffVal) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
+        end
+    end
+end
+
+local function DoGearUpgrade(context, onlyUpgrade, detail)
     local itemLink = ResolveItemLink(context)
     if not itemLink then return nil, "no link" end
 
@@ -45,6 +71,8 @@ local function DoGearUpgrade(context)
     if not comparison then return nil, "comparison nil" end
     if comparison.unusable then return nil, "unusable" end
     if not comparison.diff then return nil, "no diff" end
+
+    if onlyUpgrade and comparison.diff <= 0 then return nil, "not upgrade" end
 
     local L = OneWoW.L
     local lines = {}
@@ -66,29 +94,22 @@ local function DoGearUpgrade(context)
     local _, playerClass = UnitClass("player")
     local charName = GetClassColoredName(UnitName("player"), playerClass)
 
-    local percent = 0
-    if comparison.equipValue and comparison.equipValue > 0 then
-        percent = (comparison.diff / comparison.equipValue) * 100
-    end
-
-    local thisLabel = L["TIPS_GEARCOMP_THIS"] or "This"
-    local equipLabel = L["TIPS_GEARCOMP_EQUIP"] or "Equip"
-    local diffLabel = L["TIPS_GEARCOMP_DIFF"] or "Diff"
-
-    local rightText
-    if comparison.isDecimal then
-        rightText = colorCode .. thisLabel .. ":" .. string.format("%.1f", comparison.thisValue) .. " " .. equipLabel .. ":" .. string.format("%.1f", comparison.equipValue) .. " " .. diffLabel .. ":" .. string.format("%+.1f", comparison.diff) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
+    local rightText = BuildRightText(colorCode, endIcon, comparison.diff, comparison.equipValue, comparison.thisValue, comparison.isDecimal, detail, L)
+    if rightText then
+        lines[#lines + 1] = {
+            type = "double",
+            left = "  " .. statusIcon .. " " .. charName,
+            right = rightText,
+            lr = 0.9, lg = 0.9, lb = 0.9,
+            rr = 1, rg = 1, rb = 1,
+        }
     else
-        rightText = colorCode .. thisLabel .. ":" .. tostring(comparison.thisValue) .. " " .. equipLabel .. ":" .. tostring(comparison.equipValue) .. " " .. diffLabel .. ":" .. string.format("%+d", comparison.diff) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
+        lines[#lines + 1] = {
+            type = "text",
+            text = "  " .. statusIcon .. " " .. charName,
+            r = 0.9, g = 0.9, b = 0.9,
+        }
     end
-
-    lines[#lines + 1] = {
-        type = "double",
-        left = "  " .. statusIcon .. " " .. charName,
-        right = rightText,
-        lr = 0.9, lg = 0.9, lb = 0.9,
-        rr = 1, rg = 1, rb = 1,
-    }
 
     local charDB = _G.OneWoW_AltTracker_Character_DB
     local charAPI = _G.OneWoW_AltTracker_Character_API
@@ -99,21 +120,27 @@ local function DoGearUpgrade(context)
             if charKey ~= currentKey and type(charData) == "table" and charData.class and charData.name and altCount < 10 then
                 local altResult = UD:IsItemUpgradeForAlt(context.itemID, itemLink, charData)
                 if altResult and altResult.diff then
-                    local aIcon, aColor, aEnd = GetIcons(altResult.diff)
-                    local aName = GetClassColoredName(charData.name, charData.class)
-                    local aPercent = 0
-                    if altResult.equipped and altResult.equipped > 0 then
-                        aPercent = (altResult.diff / altResult.equipped) * 100
+                    if not onlyUpgrade or altResult.diff > 0 then
+                        local aIcon, aColor, aEnd = GetIcons(altResult.diff)
+                        local aName = GetClassColoredName(charData.name, charData.class)
+                        local aRight = BuildRightText(aColor, aEnd, altResult.diff, altResult.equipped, altResult.new, false, detail, L)
+                        if aRight then
+                            lines[#lines + 1] = {
+                                type = "double",
+                                left = "  " .. aIcon .. " " .. aName,
+                                right = aRight,
+                                lr = 0.9, lg = 0.9, lb = 0.9,
+                                rr = 1, rg = 1, rb = 1,
+                            }
+                        else
+                            lines[#lines + 1] = {
+                                type = "text",
+                                text = "  " .. aIcon .. " " .. aName,
+                                r = 0.9, g = 0.9, b = 0.9,
+                            }
+                        end
+                        altCount = altCount + 1
                     end
-                    local aRight = aColor .. thisLabel .. ":" .. tostring(altResult.new) .. " " .. equipLabel .. ":" .. tostring(altResult.equipped) .. " " .. diffLabel .. ":" .. string.format("%+d", altResult.diff) .. " (" .. string.format("%+.0f", aPercent) .. "%%)" .. aEnd .. "|r"
-                    lines[#lines + 1] = {
-                        type = "double",
-                        left = "  " .. aIcon .. " " .. aName,
-                        right = aRight,
-                        lr = 0.9, lg = 0.9, lb = 0.9,
-                        rr = 1, rg = 1, rb = 1,
-                    }
-                    altCount = altCount + 1
                 end
             end
         end
@@ -129,7 +156,11 @@ local function GearUpgradeProvider(tooltip, context)
     if not db or not db.overlays or not db.overlays.upgrade then return nil end
     if not db.overlays.upgrade.showInTooltip then return nil end
 
-    local ok, result, debugMsg = pcall(DoGearUpgrade, context)
+    local onlyUpgrade    = db.overlays.upgrade.tooltipOnlyUpgrade    or false
+    local detail         = db.overlays.upgrade.tooltipDetail         or "FULL"
+    local showSkipReason = db.overlays.upgrade.tooltipShowSkipReason or false
+
+    local ok, result, debugMsg = pcall(DoGearUpgrade, context, onlyUpgrade, detail)
 
     if not ok then
         return {
@@ -137,10 +168,13 @@ local function GearUpgradeProvider(tooltip, context)
         }
     end
 
-    if not result and debugMsg then
-        return {
-            { type = "text", text = "GearComp skip: " .. debugMsg, r = 1, g = 0.5, b = 0 },
-        }
+    if not result then
+        if showSkipReason and debugMsg then
+            return {
+                { type = "text", text = "GearComp skip: " .. debugMsg, r = 1, g = 0.5, b = 0 },
+            }
+        end
+        return nil
     end
 
     return result
