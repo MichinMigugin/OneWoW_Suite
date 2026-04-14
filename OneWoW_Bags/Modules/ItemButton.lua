@@ -188,29 +188,15 @@ function Mixin:OWB_UpdateUnusableOverlay(hasItem, info)
 
     local canEquip = true
     if info.hyperlink then
-        local _, _, _, _, _, _, _, _, equipLoc, _, _, classID, subClassID = C_Item.GetItemInfo(info.hyperlink)
-        if classID == Enum.ItemClass.Armor and subClassID then
-            local playerClass = select(2, UnitClass("player"))
-            local armorProf = {
-                WARRIOR = 4, PALADIN = 4, DEATHKNIGHT = 4,
-                HUNTER = 3, SHAMAN = 3, EVOKER = 3,
-                DRUID = 2, ROGUE = 2, MONK = 2, DEMONHUNTER = 2,
-                MAGE = 1, WARLOCK = 1, PRIEST = 1,
-            }
-            local maxArmor = armorProf[playerClass] or 4
-            if subClassID >= 1 and subClassID <= 4 and subClassID > maxArmor then
-                canEquip = false
-            end
+        local UD = _G.OneWoW and _G.OneWoW.UpgradeDetection
+        if UD then
+            canEquip = UD:CanPlayerUseItem(info.hyperlink)
         end
 
-        if canEquip and info.hyperlink then
-            local itemLevel = C_Item.GetDetailedItemLevelInfo(info.hyperlink)
+        if canEquip then
             local reqLevel = select(5, C_Item.GetItemInfo(info.hyperlink))
-            if reqLevel and reqLevel > 0 then
-                local playerLevel = UnitLevel("player")
-                if playerLevel < reqLevel then
-                    canEquip = false
-                end
+            if reqLevel and reqLevel > 0 and UnitLevel("player") < reqLevel then
+                canEquip = false
             end
         end
     end
