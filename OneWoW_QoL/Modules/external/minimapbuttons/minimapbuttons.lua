@@ -37,6 +37,8 @@ local enhancedRow      = {}
 local searchBox        = nil
 local searchFilter     = ""
 local autoCloseTimer   = nil
+local _layouting       = false
+local _relayoutTimer   = nil
 
 -- ─── Blizzard frames that must never be collected ───────────────────────────
 
@@ -62,6 +64,18 @@ local OWN_BUTTON_NAME = "OneWoW_QoL_MMBtnCollector"
 -- ─── Helpers ────────────────────────────────────────────────────────────────
 
 local noOp = function() end
+
+local function ScheduleRelayout()
+    if _relayoutTimer then
+        _relayoutTimer:Cancel()
+    end
+    _relayoutTimer = C_Timer.NewTimer(0.15, function()
+        _relayoutTimer = nil
+        if containerFrame and containerFrame:IsShown() then
+            MinimapButtonsModule:LayoutContainer()
+        end
+    end)
+end
 
 local function GetSettings()
     local addon = _G.OneWoW_QoL
@@ -195,6 +209,19 @@ local function CollectButton(frame)
 
     table.insert(collectedButtons, frame)
     collectedMap[frame] = frame:IsShown()
+
+    frame:HookScript("OnShow", function()
+        if not _layouting then
+            collectedMap[frame] = true
+            ScheduleRelayout()
+        end
+    end)
+    frame:HookScript("OnHide", function()
+        if not _layouting then
+            collectedMap[frame] = false
+            ScheduleRelayout()
+        end
+    end)
 end
 
 local function UncollectButton(frame)
@@ -381,13 +408,18 @@ end
 -- ─── Container Layout ───────────────────────────────────────────────────────
 
 local function FilteredButtons()
-    if searchFilter == "" then return collectedButtons end
     local filtered = {}
-    local lower = searchFilter:lower()
+    local lower = searchFilter ~= "" and searchFilter:lower() or nil
     for _, btn in ipairs(collectedButtons) do
-        local name = btn:GetName() or ""
-        if name:lower():find(lower, 1, true) then
-            table.insert(filtered, btn)
+        if collectedMap[btn] ~= false then
+            if not lower then
+                table.insert(filtered, btn)
+            else
+                local name = btn:GetName() or ""
+                if name:lower():find(lower, 1, true) then
+                    table.insert(filtered, btn)
+                end
+            end
         end
     end
     return filtered
@@ -395,6 +427,7 @@ end
 
 function MinimapButtonsModule:LayoutContainer()
     if not containerFrame then return end
+    _layouting = true
     local s = GetSettings()
     local btnSize = s.buttonSize
     local spacing = s.buttonSpacing
@@ -546,6 +579,7 @@ function MinimapButtonsModule:LayoutContainer()
     if maxW < 40 then maxW = 40 end
 
     containerFrame:SetSize(maxW, totalH)
+    _layouting = false
 end
 
 -- ─── Container Frame ────────────────────────────────────────────────────────
