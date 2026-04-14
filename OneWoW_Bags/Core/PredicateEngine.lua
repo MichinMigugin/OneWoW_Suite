@@ -173,6 +173,8 @@ RegisterPropAlias("petlevel",                               "petLevel")
 RegisterPropAlias("petmaxhealth",                           "petMaxHealth")
 RegisterPropAlias("petpower",                               "petPower")
 RegisterPropAlias("petspeed",                               "petSpeed")
+RegisterPropAlias("petcollected",                           "petCollected")
+RegisterPropAlias("petlimit",                               "petLimit")
 
 RegisterPropAlias("quality",        "quality")
 RegisterPropAlias("bindtype",       "bindType")
@@ -228,6 +230,9 @@ local FLAG_REGISTRY = {
     istoy                   = "isToy",
     ismount                 = "isMount",
     ispet                   = "isPet",
+    iswildpet               = "isWildPet",
+    canpetbattle            = "canPetBattle",
+    ispettradeable          = "isPetTradeable",
     iscosmetic              = "isCosmetic",
     islocked                = "isLocked",
     isunsellable            = "isUnsellable",
@@ -655,6 +660,10 @@ for _, def in ipairs({
     RegisterKeyword(def[1], function(p) return p.petType == petType end)
 end
 
+RegisterKeyword("wildpet",         function(p) return p.isWildPet end)
+RegisterKeyword("petcanbattle",       function(p) return p.canPetBattle end)
+RegisterKeyword("pettradeable",    function(p) return p.isPetTradeable end)
+
 -- ---- 7.17  Transmog keywords ----
 RegisterKeyword("transmog",        function(p) return p.hasAppearance end)
 RegisterKeyword("knowntransmog",   function(p) return p.isAppearanceCollected end)
@@ -690,7 +699,7 @@ RegisterKeyword("fullyupgraded",    function(p) return p.isFullyUpgraded end)
 RegisterKeyword("charges",          function(p) return p.hasCharges end)
 RegisterKeyword("onuse",            function(p) return p.hasUseAbility end)
 RegisterKeyword("onequip",          function(p) return p.hasEquipAbility end)
-RegisterKeyword("unique",           function(p) return p.isUnique end)
+RegisterKeyword("unique",           function(p) return p.isUnique or p.isPetUnique end)
 RegisterKeyword("uniqueequipped",   function(p) return p.isUniqueEquipped end)
 RegisterKeyword("reputation", function(p)
     local tt = p.tooltipText
@@ -910,19 +919,31 @@ local function GetTooltipText(bagID, slotID)
 end
 
 -- ---------- ResolveCollected ----------
--- Checks toy/mount/pet collection status for a specific item.
-local function GetBattlePetCageData(itemID, hyperlink)
-    if itemID ~= BATTLE_PET_CAGE_ID or not hyperlink or not BattlePetToolTip_UnpackBattlePetLink then
-        return nil
+local function GetBattlePetData(itemID, hyperlink)
+    if not hyperlink then return nil end
+    local petGUID, speciesID, level, breedQuality, maxHealth, power, speed
+    local petName, petType, isWild, canBattle, isTradeable, isUnique
+
+    if itemID == BATTLE_PET_CAGE_ID then
+        speciesID, level, breedQuality, maxHealth, power, speed = BattlePetToolTip_UnpackBattlePetLink(hyperlink)
+        petName, _, petType, _, _, _, isWild, canBattle, isTradeable, isUnique = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
+    else
+        petName, _, petType, _, _, _, isWild, canBattle, isTradeable, isUnique, _, _, speciesID = C_PetJournal.GetPetInfoByItemID(itemID)
+
+        if petName then
+            petGUID = select(2, C_PetJournal.FindPetIDByName(petName))
+
+            if petGUID then
+                _, maxHealth, power, speed, breedQuality = C_PetJournal.GetPetStats(petGUID)
+            end
+        end
     end
 
-    local speciesID, level, breedQuality, maxHealth, power, speed = BattlePetToolTip_UnpackBattlePetLink(hyperlink)
-    if not speciesID then
-        return nil
-    end
+    if not speciesID then return nil end
+    local numCollected, limit = C_PetJournal.GetNumCollectedInfo(speciesID)
 
-    local petName, _, petType = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
     return {
+        petGUID = petGUID,
         speciesID = speciesID,
         petLevel = level or 0,
         petQuality = breedQuality or 0,
@@ -931,20 +952,20 @@ local function GetBattlePetCageData(itemID, hyperlink)
         petSpeed = speed or 0,
         petType = petType or 0,
         petName = petName,
+        isWild = isWild or false,
+        canBattle = canBattle or false,
+        isTradeable = isTradeable or false,
+        isUnique = isUnique or false,
+        numCollected = numCollected,
+        limit = limit,
     }
 end
 
 local function GetItemIdentityKey(itemID, hyperlink)
     if not itemID then return nil end
 
-    if itemID ~= BATTLE_PET_CAGE_ID then
-        return tostring(itemID)
-    end
-
-    local petData = GetBattlePetCageData(itemID, hyperlink)
-    if not petData then
-        return tostring(itemID)
-    end
+    local petData = GetBattlePetData(itemID, hyperlink)
+    if not petData then return tostring(itemID) end
 
     return tostring(itemID)
         .. ":" .. tostring(petData.speciesID)
@@ -966,25 +987,17 @@ local function GetItemCacheKey(itemID, bagID, slotID, hyperlink)
     return cacheKey
 end
 
+-- Checks toy/mount/pet collection status for a specific item.
 local function ResolveCollected(itemID, classID, subClassID, hyperlink)
     -- Toy check
     local toyInfo = C_ToyBox.GetToyInfo(itemID)
     if toyInfo then
         return PlayerHasToy(itemID)
     end
-    -- Caged battle pet check
-    local petData = GetBattlePetCageData(itemID, hyperlink)
+    -- Battle pet check (both caged and captured)
+    local petData = GetBattlePetData(itemID, hyperlink)
     if petData and petData.speciesID then
-        local num = C_PetJournal.GetNumCollectedInfo(petData.speciesID)
-        return num and num > 0
-    end
-    -- Non-caged pet check
-    if classID == Enum.ItemClass.Battlepet or (classID == Enum.ItemClass.Miscellaneous and subClassID == Enum.ItemMiscellaneousSubclass.CompanionPet) then
-        local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
-        local num = 0
-        if speciesID then
-            num = C_PetJournal.GetNumCollectedInfo(speciesID)
-        end
+        local num = petData.numCollected
         return num and num > 0
     end
     -- Mount check
@@ -1271,7 +1284,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
         itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
     end
 
-    local petData = GetBattlePetCageData(itemID, hyperlink)
+    local petData = GetBattlePetData(itemID, hyperlink)
 
     local props = {
         id        = itemID,
@@ -1321,6 +1334,12 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.petPower = petData and petData.petPower or 0
     props.petSpeed = petData and petData.petSpeed or 0
     props.petType = petData and petData.petType or 0
+    props.isWildPet = petData and petData.isWild or false
+    props.canPetBattle = petData and petData.canBattle or false
+    props.isPetTradeable = petData and petData.isTradeable or false
+    props.isPetUnique = petData and petData.isUnique or false
+    props.petCollected = petData and petData.numCollected or 0
+    props.petLimit = petData and petData.limit or 0
     props.isKnowledge = false
     props.isEnchanted = false
     props.isCrafted = false
@@ -1698,6 +1717,13 @@ local function Tokenize(searchStr)
                         end
                         local valStr = searchStr:sub(valStart, i - 1)
                         val = tonumber(valStr)
+                        if not val then
+                            local rhsKey = strlower(valStr)
+                            local rhsReg = PROP_REGISTRY[rhsKey]
+                            if rhsReg and rhsReg.type == "number" then
+                                val = rhsKey
+                            end
+                        end
                     elseif opStr == "=" or opStr == "==" or opStr == "!="
                     or opStr == "~" or opStr == "~~" then
                         while i <= len do
@@ -1911,15 +1937,29 @@ ParsePrimary = function(tokens, pos)
         local val = token.value
 
         if reg.type == "number" then
-            return function(props)
-                local actual = props[field] or 0
-                if     op == ">=" then return actual >= val
-                elseif op == "<=" then return actual <= val
-                elseif op == ">"  then return actual >  val
-                elseif op == "<"  then return actual <  val
-                elseif op == "!=" then return actual ~= val
-                else   return actual == val end
-            end, pos + 1
+            if type(val) == "string" then
+                local rhsField = PROP_REGISTRY[val].field
+                return function(props)
+                    local lhs = props[field] or 0
+                    local rhs = props[rhsField] or 0
+                    if     op == ">=" then return lhs >= rhs
+                    elseif op == "<=" then return lhs <= rhs
+                    elseif op == ">"  then return lhs >  rhs
+                    elseif op == "<"  then return lhs <  rhs
+                    elseif op == "!=" then return lhs ~= rhs
+                    else   return lhs == rhs end
+                end, pos + 1
+            else
+                return function(props)
+                    local actual = props[field] or 0
+                    if     op == ">=" then return actual >= val
+                    elseif op == "<=" then return actual <= val
+                    elseif op == ">"  then return actual >  val
+                    elseif op == "<"  then return actual <  val
+                    elseif op == "!=" then return actual ~= val
+                    else   return actual == val end
+                end, pos + 1
+            end
         else
             -- String comparison: = / == for exact, != for not-equal, ~ for contains, ~~ for Lua patterns
             return function(props)
@@ -2075,8 +2115,8 @@ function PE:ResolveParams(expr, params)
     return resolved
 end
 
-function PE:GetBattlePetCageData(itemID, hyperlink)
-    return GetBattlePetCageData(itemID, hyperlink)
+function PE:GetBattlePetData(itemID, hyperlink)
+    return GetBattlePetData(itemID, hyperlink)
 end
 
 function PE:GetItemCacheKey(itemID, bagID, slotID, hyperlink)

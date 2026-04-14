@@ -364,14 +364,13 @@ end
 
 function OneWoW_Bags:HookPetCageTooltip()
     local predicateEngine = self.PredicateEngine
-    if not predicateEngine or not predicateEngine.BATTLE_PET_CAGE_ID then return end
     local CAGE_ID = predicateEngine.BATTLE_PET_CAGE_ID
 
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
         if not data or not data.id or data.id ~= CAGE_ID then return end
         local _, itemLink = tooltip:GetItem()
         if not itemLink then return end
-        local petData = predicateEngine:GetBattlePetCageData(CAGE_ID, itemLink)
+        local petData = predicateEngine:GetBattlePetData(CAGE_ID, itemLink)
         if not petData or not petData.speciesID or not petData.petName then return end
         tooltip:AddLine(" ")
         tooltip:AddLine(petData.petName, 1, 0.82, 0)
@@ -379,7 +378,7 @@ function OneWoW_Bags:HookPetCageTooltip()
             local petTypeName = _G["BATTLE_PET_NAME_" .. petData.petType] or ("Type " .. petData.petType)
             tooltip:AddLine(petTypeName, 0.7, 0.7, 0.7)
         end
-        local numCollected, limit = C_PetJournal.GetNumCollectedInfo(petData.speciesID)
+        local numCollected, limit = petData.numCollected, petData.limit
         if numCollected then
             if numCollected > 0 then
                 tooltip:AddLine(COLLECTED .. ": " .. numCollected .. "/" .. (limit or "?"), 0.2, 1, 0.2)
