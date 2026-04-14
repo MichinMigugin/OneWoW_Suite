@@ -196,6 +196,61 @@ local function BuildContent(container, isEnabled)
     end)
     cy = cy - 32
 
+    -- Hide anchor toggle
+    local hideAnchorCheck = OneWoW_GUI:CreateCheckbox(container, {
+        label   = L["BAGBAR_HIDE_ANCHOR"],
+        checked = s.hideAnchor,
+        onClick = function(self)
+            GetSettings().hideAnchor = self:GetChecked()
+            ns.BagBarModule:ScheduleUpdate()
+        end,
+    })
+    hideAnchorCheck:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    cy = cy - 28
+
+    -- Grow direction dropdown
+    local GROW_DIRS = { "RIGHT", "LEFT", "DOWN", "UP" }
+    local growDirLabels = {
+        RIGHT = L["BAGBAR_GROW_RIGHT"],
+        LEFT  = L["BAGBAR_GROW_LEFT"],
+        DOWN  = L["BAGBAR_GROW_DOWN"],
+        UP    = L["BAGBAR_GROW_UP"],
+    }
+    local curDir = s.growDirection or "RIGHT"
+
+    local growDirLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    growDirLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    growDirLabel:SetText(L["BAGBAR_GROW_DIRECTION"] .. ":")
+    growDirLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local growDirDropdown = OneWoW_GUI:CreateDropdown(container, {
+        text   = growDirLabels[curDir] or curDir,
+        width  = 120,
+        height = 26,
+    })
+    growDirDropdown:SetPoint("LEFT", growDirLabel, "RIGHT", 8, 0)
+    growDirDropdown._activeValue = curDir
+    OneWoW_GUI:AttachFilterMenu(growDirDropdown, {
+        searchable = false,
+        menuHeight = 140,
+        buildItems = function()
+            local items = {}
+            for _, d in ipairs(GROW_DIRS) do
+                tinsert(items, { text = growDirLabels[d] or d, value = d })
+            end
+            return items
+        end,
+        getActiveValue = function()
+            return GetSettings().growDirection or "RIGHT"
+        end,
+        onSelect = function(value, text)
+            GetSettings().growDirection = value
+            growDirDropdown._text:SetText(text)
+            ns.BagBarModule:ScheduleUpdate()
+        end,
+    })
+    cy = cy - 32
+
     local maxLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     maxLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     maxLabel:SetText(string.format("%s: %d", L["BAGBAR_MAX_BUTTONS"], s.maxButtons or 12))
