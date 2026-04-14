@@ -197,6 +197,7 @@ function ns.UI.CreateBankTab(parent)
         OneWoW_GUI:AttachFilterMenu(charDropdown, {
             searchable = true,
             menuHeight = 314,
+            maxVisible = 150,
             buildItems = function()
                 local items = {}
                 for _, charInfo in ipairs(characterList) do
