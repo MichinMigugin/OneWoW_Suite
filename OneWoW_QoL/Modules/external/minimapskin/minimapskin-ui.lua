@@ -6,8 +6,10 @@ if not OneWoW_GUI then return end
 
 -- ─── Constants ──────────────────────────────────────────────────────────────
 
-local ROW_HEIGHT   = 28
+local ROW_HEIGHT    = 28
 local SLIDER_HEIGHT = 42
+local INDENT_LABEL  = 24   -- indented label x for sub-settings
+local INDENT_SLIDER = 36   -- indented slider x for sub-settings
 
 local CLICK_OPTIONS = { "none", "calendar", "tracking", "missions", "map" }
 local CLICK_LABEL_KEYS = {
@@ -23,6 +25,14 @@ local CLICK_LABEL_KEYS = {
 local function AddLabel(parent, cy, text, color)
     local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     fs:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, cy)
+    fs:SetText(text)
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor(color or "TEXT_SECONDARY"))
+    return fs, cy - fs:GetStringHeight() - 4
+end
+
+local function AddLabelIndented(parent, cy, text, color)
+    local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    fs:SetPoint("TOPLEFT", parent, "TOPLEFT", INDENT_LABEL, cy)
     fs:SetText(text)
     fs:SetTextColor(OneWoW_GUI:GetThemeColor(color or "TEXT_SECONDARY"))
     return fs, cy - fs:GetStringHeight() - 4
@@ -59,8 +69,22 @@ local function BuildContent(container)
     local s = M.GetSettings()
     local cy = 0
 
+    -- Inline toggle checkbox — modifies cy via Lua upvalue closure.
+    -- Calls SetToggleValue which triggers M:OnToggle → behavior + detail refresh.
+    local function InlineCB(id, labelKey, fallback)
+        local cb = OneWoW_GUI:CreateCheckbox(container, {
+            label   = L[labelKey] or fallback,
+            checked = ns.ModuleRegistry:GetToggleValue("minimapskin", id),
+            onClick = function(self)
+                ns.ModuleRegistry:SetToggleValue("minimapskin", id, self:GetChecked())
+            end,
+        })
+        cb:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+        cy = cy - ROW_HEIGHT
+    end
+
     -- ═══════════════════════════════════════════════════════════════════════
-    -- Scale & Opacity (always visible)
+    -- 1. Scale & Opacity (always visible)
     -- ═══════════════════════════════════════════════════════════════════════
     cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_OPACITY"] or "Scale & Opacity", yOffset = cy })
 
@@ -103,7 +127,7 @@ local function BuildContent(container)
     cy = cy - SLIDER_HEIGHT
 
     -- ═══════════════════════════════════════════════════════════════════════
-    -- Border Settings (only when border AND square toggles are on)
+    -- 2. Border Settings (only when showBorder + squareShape are both on)
     -- ═══════════════════════════════════════════════════════════════════════
     if ns.ModuleRegistry:GetToggleValue("minimapskin", "showBorder") and ns.ModuleRegistry:GetToggleValue("minimapskin", "squareShape") then
         cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_BORDER"] or "Border Settings", yOffset = cy })
@@ -170,26 +194,26 @@ local function BuildContent(container)
     end
 
     -- ═══════════════════════════════════════════════════════════════════════
-    -- Zone Text Settings (only when showZoneText toggle is on)
+    -- 3. Information Overlays — Zone Text & Clock, each with inline toggle
     -- ═══════════════════════════════════════════════════════════════════════
-    if ns.ModuleRegistry:GetToggleValue("minimapskin", "showZoneText") then
-        cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_ZONE_FONT"] or "Zone Text", yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_GROUP_INFO"] or "Information Overlays", yOffset = cy })
 
-        local _, zoneFontLabelCy = AddLabel(container, cy, L["MMSKIN_ZONE_FONT_LABEL"] or "Font")
-        cy = zoneFontLabelCy
+    -- Zone Text toggle + sub-settings
+    InlineCB("showZoneText", "MMSKIN_ZONE_TEXT", "Zone Text")
+    if ns.ModuleRegistry:GetToggleValue("minimapskin", "showZoneText") then
+        local zoneFontLabel
+        zoneFontLabel, cy = AddLabelIndented(container, cy, L["MMSKIN_ZONE_FONT_LABEL"] or "Font")
 
         local zoneFontDrop, zoneFontText = OneWoW_GUI:CreateDropdown(container, {
             width = 200, height = 22,
             text = GetFontLabel(s.zoneFont),
         })
-        zoneFontDrop:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+        zoneFontDrop:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
         cy = cy - ROW_HEIGHT
 
         if OneWoW_GUI.AttachFilterMenu then
             OneWoW_GUI:AttachFilterMenu(zoneFontDrop, {
-                searchable = false,
-                menuHeight = 200,
-                maxVisible = 10,
+                searchable = false, menuHeight = 200, maxVisible = 10,
                 getActiveValue = function() return s.zoneFont end,
                 buildItems = BuildFontItems,
                 onSelect = function(value, text)
@@ -203,12 +227,12 @@ local function BuildContent(container)
         end
 
         local zfSizeLabel
-        zfSizeLabel, cy = AddLabel(container, cy,
+        zfSizeLabel, cy = AddLabelIndented(container, cy,
             string.format("%s: %d", L["MMSKIN_ZONE_FONT_SIZE"] or "Font Size", s.zoneFontSize))
 
         local zfSizeSlider = OneWoW_GUI:CreateSlider(container, {
             minVal = 8, maxVal = 24, step = 1,
-            currentVal = s.zoneFontSize, width = 260, fmt = "%d",
+            currentVal = s.zoneFontSize, width = 240, fmt = "%d",
             onChange = function(val)
                 s.zoneFontSize = val
                 zfSizeLabel:SetText(string.format("%s: %d", L["MMSKIN_ZONE_FONT_SIZE"] or "Font Size", val))
@@ -217,31 +241,27 @@ local function BuildContent(container)
                 end
             end,
         })
-        zfSizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+        zfSizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
         cy = cy - SLIDER_HEIGHT
+        cy = cy - 4
     end
 
-    -- ═══════════════════════════════════════════════════════════════════════
-    -- Clock Settings (only when showClock toggle is on)
-    -- ═══════════════════════════════════════════════════════════════════════
+    -- Clock toggle + sub-settings
+    InlineCB("showClock", "MMSKIN_CLOCK", "Clock")
     if ns.ModuleRegistry:GetToggleValue("minimapskin", "showClock") then
-        cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_CLOCK_FONT"] or "Clock", yOffset = cy })
-
-        local _, clockFontLabelCy = AddLabel(container, cy, L["MMSKIN_CLOCK_FONT_LABEL"] or "Font")
-        cy = clockFontLabelCy
+        local clockFontLabel
+        clockFontLabel, cy = AddLabelIndented(container, cy, L["MMSKIN_CLOCK_FONT_LABEL"] or "Font")
 
         local clockFontDrop, clockFontText = OneWoW_GUI:CreateDropdown(container, {
             width = 200, height = 22,
             text = GetFontLabel(s.clockFont),
         })
-        clockFontDrop:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+        clockFontDrop:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
         cy = cy - ROW_HEIGHT
 
         if OneWoW_GUI.AttachFilterMenu then
             OneWoW_GUI:AttachFilterMenu(clockFontDrop, {
-                searchable = false,
-                menuHeight = 200,
-                maxVisible = 10,
+                searchable = false, menuHeight = 200, maxVisible = 10,
                 getActiveValue = function() return s.clockFont end,
                 buildItems = BuildFontItems,
                 onSelect = function(value, text)
@@ -255,12 +275,12 @@ local function BuildContent(container)
         end
 
         local cfSizeLabel
-        cfSizeLabel, cy = AddLabel(container, cy,
+        cfSizeLabel, cy = AddLabelIndented(container, cy,
             string.format("%s: %d", L["MMSKIN_CLOCK_FONT_SIZE"] or "Font Size", s.clockFontSize))
 
         local cfSizeSlider = OneWoW_GUI:CreateSlider(container, {
             minVal = 8, maxVal = 24, step = 1,
-            currentVal = s.clockFontSize, width = 260, fmt = "%d",
+            currentVal = s.clockFontSize, width = 240, fmt = "%d",
             onChange = function(val)
                 s.clockFontSize = val
                 cfSizeLabel:SetText(string.format("%s: %d", L["MMSKIN_CLOCK_FONT_SIZE"] or "Font Size", val))
@@ -269,37 +289,36 @@ local function BuildContent(container)
                 end
             end,
         })
-        cfSizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+        cfSizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
         cy = cy - SLIDER_HEIGHT
     end
 
     -- ═══════════════════════════════════════════════════════════════════════
-    -- Auto Zoom Settings (only when autoZoomOut toggle is on)
+    -- 4. Zoom & Scroll — Auto Zoom (inline toggle + delay), plus map controls
     -- ═══════════════════════════════════════════════════════════════════════
-    if ns.ModuleRegistry:GetToggleValue("minimapskin", "autoZoomOut") then
-        cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_ZOOM"] or "Auto Zoom", yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_GROUP_ZOOM"] or "Zoom & Scroll", yOffset = cy })
 
+    -- Auto Zoom Out toggle + delay sub-setting
+    InlineCB("autoZoomOut", "MMSKIN_AUTO_ZOOM", "Auto Zoom Out")
+    if ns.ModuleRegistry:GetToggleValue("minimapskin", "autoZoomOut") then
         local azLabel
-        azLabel, cy = AddLabel(container, cy,
+        azLabel, cy = AddLabelIndented(container, cy,
             string.format("%s: %ds", L["MMSKIN_AUTO_ZOOM_DELAY"] or "Auto Zoom Delay", s.autoZoomDelay))
 
         local azSlider = OneWoW_GUI:CreateSlider(container, {
             minVal = 3, maxVal = 30, step = 1,
-            currentVal = s.autoZoomDelay, width = 260, fmt = "%d",
+            currentVal = s.autoZoomDelay, width = 240, fmt = "%d",
             onChange = function(val)
                 s.autoZoomDelay = val
                 azLabel:SetText(string.format("%s: %ds", L["MMSKIN_AUTO_ZOOM_DELAY"] or "Auto Zoom Delay", val))
             end,
         })
-        azSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+        azSlider:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
         cy = cy - SLIDER_HEIGHT
+        cy = cy - 4
     end
 
-    -- ═══════════════════════════════════════════════════════════════════════
-    -- Additional Elements
-    -- ═══════════════════════════════════════════════════════════════════════
-    cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_ELEMENTS"] or "Additional Elements", yOffset = cy })
-
+    -- Additional map control checkboxes
     local zbCB = OneWoW_GUI:CreateCheckbox(container, {
         label   = L["MMSKIN_SHOW_ZOOM_BTNS"] or "Show Zoom Buttons",
         checked = s.showZoomBtns,
@@ -340,34 +359,36 @@ local function BuildContent(container)
     cy = cy - ROW_HEIGHT
 
     -- ═══════════════════════════════════════════════════════════════════════
-    -- Combat Fade Settings (only when combatFade toggle is on)
+    -- 5. Combat Fade — inline toggle + opacity sub-setting
     -- ═══════════════════════════════════════════════════════════════════════
-    if ns.ModuleRegistry:GetToggleValue("minimapskin", "combatFade") then
-        cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_COMBAT"] or "Combat Fade Settings", yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_COMBAT"] or "Combat Fade", yOffset = cy })
 
-        local cfLabel
-        cfLabel, cy = AddLabel(container, cy,
+    InlineCB("combatFade", "MMSKIN_COMBAT_FADE", "Combat Fade")
+    if ns.ModuleRegistry:GetToggleValue("minimapskin", "combatFade") then
+        local fadeCfLabel
+        fadeCfLabel, cy = AddLabelIndented(container, cy,
             string.format("%s: %.0f%%", L["MMSKIN_COMBAT_ALPHA"] or "Combat Opacity", s.combatFadeAlpha * 100))
 
-        local cfSlider = OneWoW_GUI:CreateSlider(container, {
+        local fadeCfSlider = OneWoW_GUI:CreateSlider(container, {
             minVal = 10, maxVal = 90, step = 5,
             currentVal = math.floor(s.combatFadeAlpha * 100),
-            width = 260, fmt = "%d%%",
+            width = 240, fmt = "%d%%",
             onChange = function(val)
                 s.combatFadeAlpha = val / 100
-                cfLabel:SetText(string.format("%s: %.0f%%", L["MMSKIN_COMBAT_ALPHA"] or "Combat Opacity", val))
+                fadeCfLabel:SetText(string.format("%s: %.0f%%", L["MMSKIN_COMBAT_ALPHA"] or "Combat Opacity", val))
             end,
         })
-        cfSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+        fadeCfSlider:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
         cy = cy - SLIDER_HEIGHT
     end
 
     -- ═══════════════════════════════════════════════════════════════════════
-    -- Click Bindings (only when clickActions toggle is on)
+    -- 6. Click Actions — inline toggle + per-button binding rows
     -- ═══════════════════════════════════════════════════════════════════════
-    if ns.ModuleRegistry:GetToggleValue("minimapskin", "clickActions") then
-        cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_CLICKS"] or "Click Binding Settings", yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_CLICKS"] or "Click Binding Settings", yOffset = cy })
 
+    InlineCB("clickActions", "MMSKIN_CLICK_ACTIONS", "Enable Click Actions")
+    if ns.ModuleRegistry:GetToggleValue("minimapskin", "clickActions") then
         local bindings = {
             { key = "clickRight",  label = L["MMSKIN_CLICK_RIGHT"]  or "Right Click"  },
             { key = "clickMiddle", label = L["MMSKIN_CLICK_MIDDLE"] or "Middle Click" },
@@ -376,11 +397,11 @@ local function BuildContent(container)
         }
 
         for _, bind in ipairs(bindings) do
-            local _, newCy = AddLabel(container, cy, bind.label)
+            local _, newCy = AddLabelIndented(container, cy, bind.label)
             cy = newCy
 
             local checkboxes = {}
-            local xOff = 24
+            local xOff = INDENT_SLIDER
             for _, opt in ipairs(CLICK_OPTIONS) do
                 local capturedOpt = opt
                 local capturedKey = bind.key
@@ -397,11 +418,35 @@ local function BuildContent(container)
                 })
                 cb:SetPoint("TOPLEFT", container, "TOPLEFT", xOff, cy)
                 table.insert(checkboxes, cb)
-                xOff = xOff + 80
+                xOff = xOff + 76
             end
             cy = cy - ROW_HEIGHT
         end
     end
+
+    -- ═══════════════════════════════════════════════════════════════════════
+    -- 7. Developer Tools — debug icon overlay button
+    -- ═══════════════════════════════════════════════════════════════════════
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_DEBUG"] or "Developer Tools", yOffset = cy })
+
+    local debugBtnLabel = M._debugActive
+        and (L["MMSKIN_DEBUG_HIDE"] or "Hide Debug Icons")
+        or  (L["MMSKIN_DEBUG_SHOW"] or "Show Debug Icons")
+
+    local debugBtn = OneWoW_GUI:CreateFitTextButton(container, { text = debugBtnLabel, height = 24 })
+    debugBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    debugBtn:SetScript("OnClick", function()
+        if M.DebugIconsToggle then
+            M.DebugIconsToggle()
+            if M._refreshCustomDetail then M._refreshCustomDetail() end
+        end
+    end)
+    cy = cy - 32
+
+    local _, descCy = AddLabel(container, cy,
+        L["MMSKIN_DEBUG_DESC"] or "Force all tracked icons visible with colored labels to verify their positions.",
+        "TEXT_MUTED")
+    cy = descCy
 
     container:SetHeight(math.abs(cy))
     return cy

@@ -19,8 +19,10 @@ local eventFrame
 local skinTooltip
 local autoZoomSeq, autoZoomCur = 0, 0
 local savedParents    = {}   -- show/hide toggling (element visibility)
-local iconMoveParents = {}   -- icons reparented to MINIMAP when detached
+local iconMoveParents = {}   -- { frame = { parent, points[] } } saved before detach
 local clockRunning = false
+local debugOverlays   = {}   -- colored debug overlay frames, indexed by ICON_FRAMES position
+local debugActive     = false
 
 -- ─── Settings ───────────────────────────────────────────────────────────────
 
@@ -667,8 +669,14 @@ local function GetShowParent(frame)
     if M._detached then
         return MINIMAP
     end
-    -- return the original parent (either still in savedParents or actual parent)
-    return iconMoveParents[frame] or frame:GetParent()
+    -- iconMoveParents[frame] = { parent, points[] } — saved during detach
+    local moveSaved = iconMoveParents[frame]
+    if moveSaved then return moveSaved.parent end
+    -- savedParents[frame] = original parent saved by HideElement
+    -- Must use this when restoring a frame that was hidden, otherwise
+    -- frame:GetParent() returns GetHiddenFrame() and the icon stays invisible.
+    if savedParents[frame] then return savedParents[frame] end
+    return frame:GetParent()
 end
 
 local function ApplyElementVisibility()
@@ -749,39 +757,137 @@ local function ApplyHideAddonIcons()
 end
 
 -- ─── Icon Reparent (detach / attach) ────────────────────────────────────────
--- We save originals in iconMoveParents so we can restore on attach.
+-- Each entry carries a getter, a display name for debug, and the anchor offset
+-- to use when reparented to MINIMAP. Positions are relative to the MINIMAP frame
+-- itself so they work for both circle and square shapes. Tune via Debug Icons.
 
 local ICON_FRAMES = {
-    function() return MinimapCluster and MinimapCluster.IndicatorFrame and MinimapCluster.IndicatorFrame.MailFrame end,
-    function() return MinimapCluster and MinimapCluster.IndicatorFrame and MinimapCluster.IndicatorFrame.CraftingOrderFrame end,
-    function() return MinimapCluster and MinimapCluster.InstanceDifficulty end,
-    function() return ExpansionLandingPageMinimapButton end,
-    function() return AddonCompartmentFrame end,
-    function() return GameTimeFrame end,
-    function() return TrackingButton end,
+    { name = "Mail",        color = {1, 0.82, 0,   0.7},
+      getter  = function() return MinimapCluster and MinimapCluster.IndicatorFrame and MinimapCluster.IndicatorFrame.MailFrame end,
+      anchor  = { "TOPRIGHT",    "TOPRIGHT",    -2,   2 } },
+    { name = "Crafting",    color = {1, 0.45, 0,   0.7},
+      getter  = function() return MinimapCluster and MinimapCluster.IndicatorFrame and MinimapCluster.IndicatorFrame.CraftingOrderFrame end,
+      anchor  = { "TOPRIGHT",    "TOPRIGHT",   -28,   2 } },
+    { name = "Difficulty",  color = {1, 0.2,  0.2, 0.7},
+      getter  = function() return MinimapCluster and MinimapCluster.InstanceDifficulty end,
+      anchor  = { "TOPLEFT",     "TOPLEFT",      2,   2 } },
+    { name = "Missions",    color = {0.6, 0.2, 1,  0.7},
+      getter  = function() return ExpansionLandingPageMinimapButton end,
+      anchor  = { "BOTTOMRIGHT", "BOTTOMRIGHT", -2,  -2 } },
+    { name = "Compartment", color = {0, 0.8,  1,   0.7},
+      getter  = function() return AddonCompartmentFrame end,
+      anchor  = { "TOPLEFT",     "TOPLEFT",      2, -24 } },
+    { name = "GameTime",    color = {0.2, 1,  0.2, 0.7},
+      getter  = function() return GameTimeFrame end,
+      anchor  = { "BOTTOMLEFT",  "BOTTOMLEFT",   2,  -2 } },
+    { name = "Tracking",    color = {0.2, 0.5, 1,  0.7},
+      getter  = function() return MinimapCluster and MinimapCluster.Tracking and MinimapCluster.Tracking.Button end,
+      anchor  = { "BOTTOM",      "BOTTOM",       0,  -8 } },
 }
 
+local function SaveIconPoints(f)
+    local data = { parent = f:GetParent(), points = {} }
+    for i = 1, f:GetNumPoints() do
+        local p, rel, rp, x, y = f:GetPoint(i)
+        data.points[i] = { p, rel, rp, x, y }
+    end
+    iconMoveParents[f] = data
+end
+
 local function ReparentIconsToMinimap()
-    for _, getter in ipairs(ICON_FRAMES) do
-        local f = getter()
+    for _, def in ipairs(ICON_FRAMES) do
+        local f = def.getter()
         if f and f:GetParent() ~= GetHiddenFrame() then
-            -- only move visible (not already hidden by our toggles) icons
             if not iconMoveParents[f] then
-                iconMoveParents[f] = f:GetParent()
+                SaveIconPoints(f)
             end
             f:SetParent(MINIMAP)
+            f:ClearAllPoints()
+            local a = def.anchor
+            f:SetPoint(a[1], MINIMAP, a[2], a[3], a[4])
         end
     end
 end
 
 local function RestoreIconParents()
-    for _, getter in ipairs(ICON_FRAMES) do
-        local f = getter()
+    for _, def in ipairs(ICON_FRAMES) do
+        local f = def.getter()
         if f and iconMoveParents[f] then
-            f:SetParent(iconMoveParents[f])
+            local saved = iconMoveParents[f]
+            f:SetParent(saved.parent)
+            f:ClearAllPoints()
+            for _, pt in ipairs(saved.points) do
+                -- pt[2] may be nil if the original anchor was relative to parent
+                if pt[2] then
+                    f:SetPoint(pt[1], pt[2], pt[3], pt[4], pt[5])
+                else
+                    f:SetPoint(pt[1], saved.parent, pt[3], pt[4], pt[5])
+                end
+            end
             iconMoveParents[f] = nil
         end
     end
+end
+
+-- ─── Debug Icon Overlays ─────────────────────────────────────────────────────
+
+local function HideDebugOverlays()
+    debugActive = false
+    for _, ov in pairs(debugOverlays) do
+        if ov then ov:Hide() end
+    end
+    ApplyElementVisibility()
+end
+
+local function ShowDebugOverlays()
+    debugActive = true
+    for i, def in ipairs(ICON_FRAMES) do
+        local f = def.getter()
+        if f then
+            -- Temporarily pull out of the hidden frame so it's visible
+            if f:GetParent() == GetHiddenFrame() then
+                f:SetParent(MINIMAP)
+                f:ClearAllPoints()
+                local a = def.anchor
+                f:SetPoint(a[1], MINIMAP, a[2], a[3], a[4])
+            end
+            f:Show()
+
+            -- Build or reuse the overlay
+            local ov = debugOverlays[i]
+            if not ov then
+                ov = CreateFrame("Frame", nil, f)
+                ov:SetFrameStrata("TOOLTIP")
+                ov:SetFrameLevel(100)
+
+                local bg = ov:CreateTexture(nil, "BACKGROUND")
+                bg:SetAllPoints()
+                local c = def.color
+                bg:SetColorTexture(c[1], c[2], c[3], c[4])
+
+                local lbl = ov:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                lbl:SetAllPoints()
+                lbl:SetText(def.name)
+                lbl:SetTextColor(0, 0, 0)
+                lbl:SetJustifyH("CENTER")
+                lbl:SetJustifyV("MIDDLE")
+
+                debugOverlays[i] = ov
+            end
+            ov:SetParent(f)
+            ov:SetAllPoints(f)
+            ov:Show()
+        end
+    end
+end
+
+function M.DebugIconsToggle()
+    if debugActive then
+        HideDebugOverlays()
+    else
+        ShowDebugOverlays()
+    end
+    M._debugActive = debugActive
 end
 
 -- ─── Detach / Attach Minimap ────────────────────────────────────────────────
@@ -1030,6 +1136,15 @@ function M:OnDisable()
     end
 
     if not MINIMAP:IsShown() then MINIMAP:Show() end
+
+    -- Clean up any active debug overlays
+    if debugActive then
+        debugActive = false
+        M._debugActive = false
+        for _, ov in pairs(debugOverlays) do
+            if ov then ov:Hide() end
+        end
+    end
 
     UnregisterEvents()
 end

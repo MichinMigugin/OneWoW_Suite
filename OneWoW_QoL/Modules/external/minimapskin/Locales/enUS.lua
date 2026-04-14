@@ -100,3 +100,8 @@ L["MMSKIN_FONT_GLOBAL"]             = "Global Font"
 
 L["MMSKIN_SECTION_OPACITY"]         = "Scale & Opacity"
 L["MMSKIN_OPACITY"]                 = "Minimap Opacity"
+
+L["MMSKIN_SECTION_DEBUG"]           = "Developer Tools"
+L["MMSKIN_DEBUG_SHOW"]              = "Show Debug Icons"
+L["MMSKIN_DEBUG_HIDE"]              = "Hide Debug Icons"
+L["MMSKIN_DEBUG_DESC"]              = "Force all tracked icons visible with colored labels to verify their positions. Useful when icons aren't actively triggering (e.g. no mail in your mailbox)."

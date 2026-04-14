@@ -19,13 +19,13 @@ local MinimapSkinModule = {
         { id = "unlockMinimap", label = "MMSKIN_UNLOCK",       description = "MMSKIN_UNLOCK_DESC",       default = false, group = "MMSKIN_GROUP_SHAPE" },
         { id = "lockPosition",  label = "MMSKIN_LOCK_POS",     description = "MMSKIN_LOCK_POS_DESC",     default = false, group = "MMSKIN_GROUP_SHAPE" },
 
-        { id = "showZoneText",   label = "MMSKIN_ZONE_TEXT",    description = "MMSKIN_ZONE_TEXT_DESC",    default = true,  group = "MMSKIN_GROUP_INFO" },
-        { id = "showClock",      label = "MMSKIN_CLOCK",        description = "MMSKIN_CLOCK_DESC",        default = true,  group = "MMSKIN_GROUP_INFO" },
+        { id = "showZoneText",   label = "MMSKIN_ZONE_TEXT",    description = "MMSKIN_ZONE_TEXT_DESC",    default = true,  group = "MMSKIN_GROUP_INFO",   detailOnly = true },
+        { id = "showClock",      label = "MMSKIN_CLOCK",        description = "MMSKIN_CLOCK_DESC",        default = true,  group = "MMSKIN_GROUP_INFO",   detailOnly = true },
 
         { id = "mouseWheelZoom", label = "MMSKIN_WHEEL_ZOOM",   description = "MMSKIN_WHEEL_ZOOM_DESC",   default = true,  group = "MMSKIN_GROUP_ZOOM" },
-        { id = "autoZoomOut",    label = "MMSKIN_AUTO_ZOOM",    description = "MMSKIN_AUTO_ZOOM_DESC",    default = true,  group = "MMSKIN_GROUP_ZOOM" },
+        { id = "autoZoomOut",    label = "MMSKIN_AUTO_ZOOM",    description = "MMSKIN_AUTO_ZOOM_DESC",    default = true,  group = "MMSKIN_GROUP_ZOOM",   detailOnly = true },
 
-        { id = "clickActions",   label = "MMSKIN_CLICK_ACTIONS", description = "MMSKIN_CLICK_ACTIONS_DESC", default = true, group = "MMSKIN_GROUP_CLICKS" },
+        { id = "clickActions",   label = "MMSKIN_CLICK_ACTIONS", description = "MMSKIN_CLICK_ACTIONS_DESC", default = true, group = "MMSKIN_GROUP_CLICKS", detailOnly = true },
 
         { id = "showMail",         label = "MMSKIN_MAIL",       description = "MMSKIN_MAIL_DESC",         default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
         { id = "showCraftingOrder", label = "MMSKIN_CRAFTING",   description = "MMSKIN_CRAFTING_DESC",     default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
@@ -33,7 +33,7 @@ local MinimapSkinModule = {
         { id = "showMissions",     label = "MMSKIN_MISSIONS",    description = "MMSKIN_MISSIONS_DESC",     default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
 
         { id = "hideAddonIcons", label = "MMSKIN_HIDE_ADDONS",  description = "MMSKIN_HIDE_ADDONS_DESC",  default = false, group = "MMSKIN_GROUP_EXTRAS" },
-        { id = "combatFade",     label = "MMSKIN_COMBAT_FADE",  description = "MMSKIN_COMBAT_FADE_DESC",  default = false, group = "MMSKIN_GROUP_EXTRAS" },
+        { id = "combatFade",     label = "MMSKIN_COMBAT_FADE",  description = "MMSKIN_COMBAT_FADE_DESC",  default = false, group = "MMSKIN_GROUP_EXTRAS", detailOnly = true },
         { id = "petBattleHide",  label = "MMSKIN_PET_HIDE",     description = "MMSKIN_PET_HIDE_DESC",     default = true,  group = "MMSKIN_GROUP_EXTRAS" },
     },
 }
