@@ -384,6 +384,7 @@ local function BuildFeaturesList(split, filterText)
     local listScrollChild = split.listScrollChild
     OneWoW_GUI:ClearFrame(listScrollChild)
     selectedRow = nil
+    split.featureRows = {}
 
     local allModules = ns.ModuleRegistry:GetAll()
     if #allModules == 0 then
@@ -463,6 +464,7 @@ local function BuildFeaturesList(split, filterText)
             })
             row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
             row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -4, yOffset)
+            split.featureRows[capturedModule.id] = row
 
             yOffset = yOffset - rowHeight - 4
         end
@@ -525,6 +527,7 @@ local function BuildFeaturesList(split, filterText)
                 })
                 row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
                 row:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -4, yOffset)
+                split.featureRows[capturedModule.id] = row
 
                 yOffset = yOffset - rowHeight - 4
             end
@@ -585,8 +588,10 @@ function ns.UI.SelectFeature(moduleId)
 
     if ns.oneWoWHubActive and _G.OneWoW and _G.OneWoW.GUI then
         _G.OneWoW.GUI:Show("qol")
-    elseif ns.UI and ns.UI.Toggle then
-        ns.UI:Toggle()
+    elseif ns.UI and ns.UI.Show then
+        -- Use Show("features") so the window opens/stays open on the features tab
+        -- (Toggle() would close the window if it was already visible)
+        ns.UI:Show("features")
     end
 
     C_Timer.After(0.15, function()
@@ -595,9 +600,19 @@ function ns.UI.SelectFeature(moduleId)
         local module = ns.ModuleRegistry:GetById(moduleId)
         if not module then return end
         selectedModuleId = module.id
+
+        -- Deactivate whatever row was selected before
         if selectedRow then selectedRow:SetActive(false) end
         selectedRow = nil
+
         ShowModuleDetail(split, module)
+
+        -- Highlight the correct row in the left-panel list
+        if split.featureRows and split.featureRows[moduleId] then
+            selectedRow = split.featureRows[moduleId]
+            selectedRow:SetActive(true)
+        end
+
         if split.rightStatusText then
             local isEnabled = ns.ModuleRegistry:IsEnabled(module.id)
             local modName = ns.L[module.title] or module.title
