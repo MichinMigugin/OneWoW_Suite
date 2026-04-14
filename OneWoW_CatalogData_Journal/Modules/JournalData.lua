@@ -25,8 +25,10 @@ JournalData.journalCache = nil
 JournalData.initialized = false
 
 function JournalData:DetermineItemSpecial(idata)
-    if idata.isTransmog then
-        return "TMog"
+    -- Achievement-gated items are tagged first so they can be excluded from
+    -- regular loot counts and shown with achievement info in the UI.
+    if idata.achievementID then
+        return "Achievement"
     end
 
     if idata.mountID then
@@ -39,6 +41,10 @@ function JournalData:DetermineItemSpecial(idata)
 
     if idata.isToy then
         return "Toy"
+    end
+
+    if idata.isTransmog then
+        return "TMog"
     end
 
     local itemType    = idata.itemType    or ""
@@ -263,15 +269,22 @@ function JournalData:BuildJournalCache()
 
                 local hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing = false, false, false, false, false, false
                 local totalItems = 0
+                -- Count each unique itemID once regardless of how many encounter
+                -- locations it appears in (e.g. both general loot and a boss drop).
+                -- Achievement-gated items are excluded from the loot count entirely.
+                local seenItemIDs = {}
                 for _, enc in ipairs(encounters) do
                     for _, item in ipairs(enc.items) do
-                        totalItems = totalItems + 1
-                        if item.special == "Mount"   then hasMounts  = true end
-                        if item.special == "Pet"     then hasPets    = true end
-                        if item.special == "Toy"     then hasToys    = true end
-                        if item.special == "Recipe"  then hasRecipes = true end
-                        if item.special == "Quest"   then hasQuest   = true end
-                        if item.special == "Housing" then hasHousing = true end
+                        if item.special ~= "Achievement" and not seenItemIDs[item.itemID] then
+                            seenItemIDs[item.itemID] = true
+                            totalItems = totalItems + 1
+                            if item.special == "Mount"   then hasMounts  = true end
+                            if item.special == "Pet"     then hasPets    = true end
+                            if item.special == "Toy"     then hasToys    = true end
+                            if item.special == "Recipe"  then hasRecipes = true end
+                            if item.special == "Quest"   then hasQuest   = true end
+                            if item.special == "Housing" then hasHousing = true end
+                        end
                     end
                 end
 
@@ -319,15 +332,19 @@ function JournalData:RecalculateInstanceTotals(inst)
     local L = ns.L
     local hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing = false, false, false, false, false, false
     local totalItems = 0
+    local seenItemIDs = {}
     for _, enc in ipairs(inst.encounters) do
         for _, item in ipairs(enc.items) do
-            totalItems = totalItems + 1
-            if item.special == "Mount"   then hasMounts  = true end
-            if item.special == "Pet"     then hasPets    = true end
-            if item.special == "Toy"     then hasToys    = true end
-            if item.special == "Recipe"  then hasRecipes = true end
-            if item.special == "Quest"   then hasQuest   = true end
-            if item.special == "Housing" then hasHousing = true end
+            if item.special ~= "Achievement" and not seenItemIDs[item.itemID] then
+                seenItemIDs[item.itemID] = true
+                totalItems = totalItems + 1
+                if item.special == "Mount"   then hasMounts  = true end
+                if item.special == "Pet"     then hasPets    = true end
+                if item.special == "Toy"     then hasToys    = true end
+                if item.special == "Recipe"  then hasRecipes = true end
+                if item.special == "Quest"   then hasQuest   = true end
+                if item.special == "Housing" then hasHousing = true end
+            end
         end
     end
     inst.hasMounts     = hasMounts
