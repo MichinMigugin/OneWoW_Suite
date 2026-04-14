@@ -83,6 +83,8 @@ local function GetSettings()
     if s.dynamicOrder     == nil or #s.dynamicOrder == 0 then
         s.dynamicOrder = { "supertracked", "proximity", "zone", "tracked" }
     end
+    if s.hideAnchor      == nil then s.hideAnchor      = false   end
+    if s.growDirection   == nil then s.growDirection   = "RIGHT" end
     return s
 end
 
@@ -571,9 +573,11 @@ function QuestItemBarModule:LayoutButtons(count)
     local s       = GetSettings()
     local btnSize = s.buttonSize or defaultButtonSize
     local spacing = s.iconSpacing or 4
-    local cols    = s.columns or defaultColumns
+    local dir     = s.growDirection or "RIGHT"
+    -- Down/Up are single-column: buttons stack vertically
+    local cols    = (dir == "DOWN" or dir == "UP") and 1 or (s.columns or defaultColumns)
     local actualCols = math.min(count, cols)
-    local rows    = math.max(1, math.ceil(count / cols))
+    local rows       = math.max(1, math.ceil(count / cols))
 
     for i = 1, count do
         local b = EnsureButton(i)
@@ -581,9 +585,20 @@ function QuestItemBarModule:LayoutButtons(count)
         local col = (i - 1) % cols
         b:ClearAllPoints()
         b:SetSize(btnSize, btnSize)
-        b:SetPoint("TOPLEFT", barFrame, "TOPLEFT",
-            col * (btnSize + spacing),
-            -(row * (btnSize + spacing)))
+
+        if dir == "LEFT" then
+            b:SetPoint("TOPRIGHT", barFrame, "TOPRIGHT",
+                -(col * (btnSize + spacing)),
+                -(row * (btnSize + spacing)))
+        elseif dir == "UP" then
+            b:SetPoint("BOTTOMLEFT", barFrame, "BOTTOMLEFT",
+                col * (btnSize + spacing),
+                row * (btnSize + spacing))
+        else -- RIGHT or DOWN
+            b:SetPoint("TOPLEFT", barFrame, "TOPLEFT",
+                col * (btnSize + spacing),
+                -(row * (btnSize + spacing)))
+        end
 
         if OneWoW_GUI then
             OneWoW_GUI:SkinIconFrame(b, { preset = "clean" })
@@ -605,12 +620,36 @@ function QuestItemBarModule:LayoutButtons(count)
     end
 
     if barFrame.dragHandle then
-        local height = barFrame:GetHeight()
-        barFrame.dragHandle:SetSize(20, math.max(height, defaultButtonSize))
-        if previewMode or not s.locked then
-            barFrame.dragHandle:Show()
+        local dh = barFrame.dragHandle
+        local bw = barFrame:GetWidth()
+        local bh = barFrame:GetHeight()
+        dh:ClearAllPoints()
+
+        if dir == "LEFT" then
+            dh:SetSize(20, math.max(bh, defaultButtonSize))
+            dh:SetPoint("LEFT", barFrame, "RIGHT", 2, 0)
+            if dh.dragLine then dh.dragLine:SetSize(3, 20) end
+        elseif dir == "DOWN" then
+            dh:SetSize(math.max(bw, defaultButtonSize), 20)
+            dh:SetPoint("BOTTOM", barFrame, "TOP", 0, 2)
+            if dh.dragLine then dh.dragLine:SetSize(20, 3) end
+        elseif dir == "UP" then
+            dh:SetSize(math.max(bw, defaultButtonSize), 20)
+            dh:SetPoint("TOP", barFrame, "BOTTOM", 0, -2)
+            if dh.dragLine then dh.dragLine:SetSize(20, 3) end
+        else -- RIGHT
+            dh:SetSize(20, math.max(bh, defaultButtonSize))
+            dh:SetPoint("RIGHT", barFrame, "LEFT", -2, 0)
+            if dh.dragLine then dh.dragLine:SetSize(3, 20) end
+        end
+
+        local shouldShow = previewMode or not s.locked
+        if shouldShow then
+            dh:Show()
+            dh:SetAlpha(s.hideAnchor and 0 or 1)
         else
-            barFrame.dragHandle:Hide()
+            dh:Hide()
+            dh:SetAlpha(1)
         end
     end
 end
@@ -712,32 +751,67 @@ end
 function QuestItemBarModule:SavePosition()
     if not barFrame then return end
     local left   = barFrame:GetLeft()
+    local right  = barFrame:GetRight()
     local top    = barFrame:GetTop()
     local bottom = barFrame:GetBottom()
     if not left or not top or not bottom then return end
 
-    local centerY      = (top + bottom) / 2
+    local s            = GetSettings()
+    local dir          = s.growDirection or "RIGHT"
+    local screenWidth  = UIParent:GetWidth()
     local screenHeight = UIParent:GetHeight()
-    local anchorPoint, yOffset
+    local anchorPoint, xOffset, yOffset
 
-    if centerY > (screenHeight * 0.66) then
-        anchorPoint = "TOPLEFT"
-        yOffset     = top - screenHeight
-    elseif centerY < (screenHeight * 0.33) then
-        anchorPoint = "BOTTOMLEFT"
-        yOffset     = bottom
-    else
-        anchorPoint = "LEFT"
-        yOffset     = centerY - (screenHeight / 2)
+    if dir == "LEFT" then
+        local centerY = (top + bottom) / 2
+        if centerY > (screenHeight * 0.66) then
+            anchorPoint = "TOPRIGHT"
+            yOffset     = top - screenHeight
+        elseif centerY < (screenHeight * 0.33) then
+            anchorPoint = "BOTTOMRIGHT"
+            yOffset     = bottom
+        else
+            anchorPoint = "RIGHT"
+            yOffset     = centerY - (screenHeight / 2)
+        end
+        xOffset = right - screenWidth
+
+    elseif dir == "DOWN" or dir == "UP" then
+        local centerX = (left + right) / 2
+        local isDown  = (dir == "DOWN")
+        if centerX < (screenWidth * 0.33) then
+            anchorPoint = isDown and "TOPLEFT" or "BOTTOMLEFT"
+            xOffset     = left
+        elseif centerX > (screenWidth * 0.66) then
+            anchorPoint = isDown and "TOPRIGHT" or "BOTTOMRIGHT"
+            xOffset     = right - screenWidth
+        else
+            anchorPoint = isDown and "TOP" or "BOTTOM"
+            xOffset     = centerX - (screenWidth / 2)
+        end
+        yOffset = isDown and (top - screenHeight) or bottom
+
+    else -- RIGHT (default)
+        local centerY = (top + bottom) / 2
+        if centerY > (screenHeight * 0.66) then
+            anchorPoint = "TOPLEFT"
+            yOffset     = top - screenHeight
+        elseif centerY < (screenHeight * 0.33) then
+            anchorPoint = "BOTTOMLEFT"
+            yOffset     = bottom
+        else
+            anchorPoint = "LEFT"
+            yOffset     = centerY - (screenHeight / 2)
+        end
+        xOffset = left
     end
 
     barFrame:Execute(string.format([[
         self:ClearAllPoints()
         self:SetPoint("%s", self:GetParent(), "%s", %.2f, %.2f)
-    ]], anchorPoint, anchorPoint, left, yOffset))
+    ]], anchorPoint, anchorPoint, xOffset, yOffset))
 
-    local s = GetSettings()
-    s.position = { point = anchorPoint, relativePoint = anchorPoint, x = left, y = yOffset }
+    s.position = { point = anchorPoint, relativePoint = anchorPoint, x = xOffset, y = yOffset }
 end
 
 function QuestItemBarModule:CreateBar()
@@ -777,14 +851,26 @@ function QuestItemBarModule:CreateBar()
     dragLine:SetSize(3, 20)
     dragLine:SetPoint("CENTER")
     dragLine:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    dragHandle.dragLine = dragLine
+
     dragHandle:SetScript("OnEnter", function(self)
+        local st = GetSettings()
+        if st.hideAnchor and not st.locked then
+            self:SetAlpha(1)
+        end
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        local dir = st.growDirection or "RIGHT"
+        local tooltipAnchor = (dir == "LEFT") and "ANCHOR_RIGHT" or "ANCHOR_LEFT"
+        GameTooltip:SetOwner(self, tooltipAnchor)
         GameTooltip:SetText(ns.L["QUESTITEMBAR_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(ns.L["QUESTITEMBAR_DRAG_TOOLTIP"], 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
     dragHandle:SetScript("OnLeave", function(self)
+        local st = GetSettings()
+        if st.hideAnchor and not st.locked then
+            self:SetAlpha(0)
+        end
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         GameTooltip:Hide()
     end)
@@ -960,8 +1046,13 @@ function QuestItemBarModule:SetLocked(locked)
     if barFrame and barFrame.dragHandle then
         if locked then
             barFrame.dragHandle:Hide()
+            barFrame.dragHandle:SetAlpha(1)
+        elseif s.hideAnchor then
+            barFrame.dragHandle:Show()
+            barFrame.dragHandle:SetAlpha(0)
         else
             barFrame.dragHandle:Show()
+            barFrame.dragHandle:SetAlpha(1)
         end
     end
 end

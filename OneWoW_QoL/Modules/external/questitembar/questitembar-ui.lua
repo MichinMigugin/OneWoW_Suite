@@ -102,6 +102,61 @@ local function BuildContent(container, isEnabled, contentYOffset)
     end)
     cy = cy - 36
 
+    -- Hide anchor toggle
+    local hideAnchorCheck = CreateFrame("CheckButton", nil, container, "InterfaceOptionsCheckButtonTemplate")
+    hideAnchorCheck:SetPoint("TOPLEFT", container, "TOPLEFT", 8, cy)
+    hideAnchorCheck.Text:SetText(L["QUESTITEMBAR_HIDE_ANCHOR"])
+    hideAnchorCheck.Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    hideAnchorCheck:SetChecked(s.hideAnchor)
+    hideAnchorCheck:SetScript("OnClick", function(self)
+        GetSettings().hideAnchor = self:GetChecked()
+        ns.QuestItemBarModule:ScheduleUpdate()
+    end)
+    cy = cy - 28
+
+    -- Grow direction dropdown
+    local GROW_DIRS = { "RIGHT", "LEFT", "DOWN", "UP" }
+    local growDirLabels = {
+        RIGHT = L["QUESTITEMBAR_GROW_RIGHT"],
+        LEFT  = L["QUESTITEMBAR_GROW_LEFT"],
+        DOWN  = L["QUESTITEMBAR_GROW_DOWN"],
+        UP    = L["QUESTITEMBAR_GROW_UP"],
+    }
+    local curDir = s.growDirection or "RIGHT"
+
+    local growDirLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    growDirLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    growDirLabel:SetText(L["QUESTITEMBAR_GROW_DIRECTION"] .. ":")
+    growDirLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local growDirDropdown = OneWoW_GUI:CreateDropdown(container, {
+        text   = growDirLabels[curDir] or curDir,
+        width  = 120,
+        height = 26,
+    })
+    growDirDropdown:SetPoint("LEFT", growDirLabel, "RIGHT", 8, 0)
+    growDirDropdown._activeValue = curDir
+    OneWoW_GUI:AttachFilterMenu(growDirDropdown, {
+        searchable = false,
+        menuHeight = 140,
+        buildItems = function()
+            local items = {}
+            for _, d in ipairs(GROW_DIRS) do
+                tinsert(items, { text = growDirLabels[d] or d, value = d })
+            end
+            return items
+        end,
+        getActiveValue = function()
+            return GetSettings().growDirection or "RIGHT"
+        end,
+        onSelect = function(value, text)
+            GetSettings().growDirection = value
+            growDirDropdown._text:SetText(text)
+            ns.QuestItemBarModule:ScheduleUpdate()
+        end,
+    })
+    cy = cy - 32
+
     -- Row 2: Show only these quest items: [] Supertracked [] Current Zone [] Tracked
     local row2 = CreateFrame("Frame", nil, container)
     row2:SetPoint("TOPLEFT", container, "TOPLEFT", 8, cy)
