@@ -31,6 +31,24 @@ local ROW2_HEIGHT = 26
 local MAX_ALT_DISPLAY = 10
 local trackerRelayoutPending = false
 
+-- Squared screen-pixel distance before a left-drag counts as reordering (avoids accidental moves on click).
+local TRACKER_DRAG_MIN_DIST_SQ = 36
+
+local trackerDragState = {
+    fromIndex = nil,
+    active = false,
+    pickupVisualApplied = false,
+    startX = 0,
+    startY = 0,
+    sourceTf = nil,
+    hoverTf = nil,
+}
+
+local TRACKER_DRAG_SOURCE_FRAME_LEVEL_BOOST = 50
+
+local dragWatchFrame = CreateFrame("Frame", nil, UIParent)
+dragWatchFrame:Hide()
+
 local function GetDB()
     return OneWoW_Bags:GetDB()
 end
@@ -531,6 +549,166 @@ local function ApplyCurrencyCapTrackerStyle(tf)
     end
 end
 
+local function TrackerDrag_ClearHover()
+    local st = trackerDragState
+    if st.hoverTf then
+        ApplyCurrencyCapTrackerStyle(st.hoverTf)
+        st.hoverTf = nil
+    end
+end
+
+local function TrackerDrag_RestoreSourceVisual(tf)
+    if not tf or not tf.trackerDragOrigPoint then
+        return
+    end
+    tf:StopMovingOrSizing()
+    tf:SetMovable(false)
+    tf:SetFrameStrata(tf.trackerDragOrigStrata)
+    tf:SetParent(tf.trackerDragOrigParent)
+    tf:ClearAllPoints()
+    tf:SetPoint(unpack(tf.trackerDragOrigPoint))
+    tf:SetFrameLevel(tf.trackerDragOrigLevel)
+    tf:SetAlpha(1)
+    tf.trackerDragOrigParent = nil
+    tf.trackerDragOrigPoint = nil
+    tf.trackerDragOrigLevel = nil
+    tf.trackerDragOrigStrata = nil
+    ApplyCurrencyCapTrackerStyle(tf)
+end
+
+local function TrackerDrag_ApplySourcePickupVisual(tf)
+    if not tf or tf.trackerDragOrigPoint then
+        return
+    end
+    tf.trackerDragOrigParent = tf:GetParent()
+    tf.trackerDragOrigPoint = { tf:GetPoint(1) }
+    tf.trackerDragOrigLevel = tf:GetFrameLevel()
+    tf.trackerDragOrigStrata = tf:GetFrameStrata()
+
+    local scale = tf:GetEffectiveScale()
+    local left, bottom = tf:GetLeft() * scale, tf:GetBottom() * scale
+
+    tf:SetParent(UIParent)
+    tf:ClearAllPoints()
+    local uiScale = UIParent:GetEffectiveScale()
+    tf:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left / uiScale, bottom / uiScale)
+
+    tf:SetFrameStrata("TOOLTIP")
+    tf:SetFrameLevel(TRACKER_DRAG_SOURCE_FRAME_LEVEL_BOOST)
+    tf:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+    tf:SetAlpha(0.92)
+
+    tf:SetMovable(true)
+    tf:SetClampedToScreen(true)
+    tf:StartMoving()
+end
+
+-- forceCancel: true when hiding UI — never apply reorder even if a drag was in progress.
+local function TrackerDrag_End(forceCancel)
+    local st = trackerDragState
+    local wasActive = st.active
+    local fromIdx = st.fromIndex
+    local sourceTf = st.sourceTf
+
+    dragWatchFrame:Hide()
+    dragWatchFrame:SetScript("OnUpdate", nil)
+
+    if sourceTf then
+        TrackerDrag_RestoreSourceVisual(sourceTf)
+    end
+    TrackerDrag_ClearHover()
+
+    if not forceCancel and wasActive and fromIdx and bagsBarFrame and bagsBarFrame.trackerFrames then
+        local dropIdx = nil
+        for idx, tf in ipairs(bagsBarFrame.trackerFrames) do
+            if tf:IsMouseOver() then
+                dropIdx = idx
+                break
+            end
+        end
+        if dropIdx and dropIdx ~= fromIdx then
+            local controller = GetController()
+            if controller and controller.MoveTrackedEntry then
+                controller:MoveTrackedEntry(fromIdx, dropIdx)
+            end
+        end
+    end
+
+    GameTooltip:Hide()
+
+    st.fromIndex = nil
+    st.active = false
+    st.pickupVisualApplied = false
+    st.startX = 0
+    st.startY = 0
+    st.sourceTf = nil
+end
+
+local function TrackerDrag_OnUpdate()
+    local st = trackerDragState
+    if not st.fromIndex then
+        dragWatchFrame:Hide()
+        dragWatchFrame:SetScript("OnUpdate", nil)
+        return
+    end
+
+    if not IsMouseButtonDown("LeftButton") then
+        TrackerDrag_End(false)
+        return
+    end
+
+    local x, y = GetCursorPosition()
+    if not st.active then
+        local dx = x - st.startX
+        local dy = y - st.startY
+        if dx * dx + dy * dy >= TRACKER_DRAG_MIN_DIST_SQ then
+            st.active = true
+            if st.sourceTf and not st.pickupVisualApplied then
+                st.pickupVisualApplied = true
+                TrackerDrag_ApplySourcePickupVisual(st.sourceTf)
+            end
+            GameTooltip:Hide()
+        end
+    end
+
+    if not st.active then
+        return
+    end
+
+    local newHover = nil
+    if bagsBarFrame and bagsBarFrame.trackerFrames then
+        for _, tf in ipairs(bagsBarFrame.trackerFrames) do
+            if tf:IsMouseOver() and tf ~= st.sourceTf then
+                newHover = tf
+                break
+            end
+        end
+    end
+
+    if newHover ~= st.hoverTf then
+        TrackerDrag_ClearHover()
+        st.hoverTf = newHover
+        if st.hoverTf then
+            ---@diagnostic disable-next-line: undefined-field
+            st.hoverTf:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        end
+    end
+end
+
+local function TrackerDrag_Begin(tf, index)
+    if trackerDragState.fromIndex then
+        return
+    end
+    local st = trackerDragState
+    st.fromIndex = index
+    st.active = false
+    st.pickupVisualApplied = false
+    st.startX, st.startY = GetCursorPosition()
+    st.sourceTf = tf
+    dragWatchFrame:SetScript("OnUpdate", TrackerDrag_OnUpdate)
+    dragWatchFrame:Show()
+end
+
 function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
     local cellW = Constants.GUI.TRACKER_CELL_WIDTH
     local cellH = Constants.GUI.TRACKER_CELL_HEIGHT
@@ -561,34 +739,46 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
 
     tf.trackType = entry.type
     tf.trackId = entry.id
+    tf.trackerIndex = index
 
     local capturedIdx = index
     tf:EnableMouse(true)
     tf:SetScript("OnMouseDown", function(self, button)
-        if button ~= "RightButton" then return end
-        MenuUtil.CreateContextMenu(self, function(_, rootDescription)
-            rootDescription:CreateButton(L["TRACKER_MENU_REMOVE"], function()
-                local controller = GetController()
-                if controller and controller.RemoveTrackedEntry then
-                    controller:RemoveTrackedEntry(capturedIdx)
-                end
+        if button == "RightButton" then
+            MenuUtil.CreateContextMenu(self, function(_, rootDescription)
+                rootDescription:CreateButton(L["TRACKER_MENU_REMOVE"], function()
+                    local controller = GetController()
+                    if controller and controller.RemoveTrackedEntry then
+                        controller:RemoveTrackedEntry(capturedIdx)
+                    end
+                end)
             end)
-        end)
+        elseif button == "LeftButton" then
+            TrackerDrag_Begin(self, capturedIdx)
+        end
     end)
 
     if entry.type == "item" then
         tf:SetScript("OnEnter", function(self)
+            if trackerDragState.active then
+                return
+            end
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetItemByID(entry.id)
             GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(L["TRACKER_HINT_DRAG_REORDER"], 0.7, 0.7, 0.7, true)
             GameTooltip:AddLine(L["TRACKER_HINT_REMOVE"], 0.7, 0.7, 0.7, true)
             GameTooltip:Show()
         end)
     elseif entry.type == "currency" then
         tf:SetScript("OnEnter", function(self)
+            if trackerDragState.active then
+                return
+            end
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetCurrencyByID(entry.id)
             GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(L["TRACKER_HINT_DRAG_REORDER"], 0.7, 0.7, 0.7, true)
             GameTooltip:AddLine(L["TRACKER_HINT_REMOVE"], 0.7, 0.7, 0.7, true)
             GameTooltip:Show()
         end)
@@ -784,6 +974,9 @@ end
 
 function BagsBar:SetShown(show)
     if bagsBarFrame then
+        if not show then
+            TrackerDrag_End(true)
+        end
         bagsBarFrame:SetShown(show)
     end
 end
@@ -890,6 +1083,7 @@ function BagsBar:GetTrackerControlCluster()
 end
 
 function BagsBar:Reset()
+    TrackerDrag_End(true)
     if trackerDialog then
         trackerDialog.frame:Hide()
     end

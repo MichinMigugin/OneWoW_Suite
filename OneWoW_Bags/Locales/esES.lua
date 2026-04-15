@@ -122,6 +122,7 @@ OneWoW_Bags.Locales["esES"] = {
     ["TRACKER_ADD_ID"] = "Introduce ID de objeto o moneda a rastrear:",
     ["TRACKER_MENU_REMOVE"] = "Quitar rastreador",
     ["TRACKER_HINT_REMOVE"] = "Clic derecho para quitar este rastreador.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Arrastra con el boton izquierdo para reordenar.",
     ["TRACKER_ALREADY_TRACKED"] = "Ese objeto o moneda ya esta siendo rastreado.",
     ["CATEGORY_MANAGER_BTN"] = "Categorias",
     ["CATEGORY_MANAGER_TITLE"] = "Administrador de categorias personalizadas",

@@ -122,6 +122,7 @@ OneWoW_Bags.Locales["deDE"] = {
     ["TRACKER_ADD_ID"] = "Gegenstand-ID oder Wahrungs-ID zum Verfolgen eingeben:",
     ["TRACKER_MENU_REMOVE"] = "Tracker entfernen",
     ["TRACKER_HINT_REMOVE"] = "Rechtsklick, um diesen Tracker zu entfernen.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Mit links ziehen zum Sortieren.",
     ["TRACKER_ALREADY_TRACKED"] = "Dieser Gegenstand oder diese Wahrung wird bereits verfolgt.",
     ["CATEGORY_MANAGER_BTN"] = "Kategorien",
     ["CATEGORY_MANAGER_TITLE"] = "Eigene Kategorien verwalten",

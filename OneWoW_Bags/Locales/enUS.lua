@@ -136,6 +136,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["TRACKER_ADD_ID"] = "Enter Item ID or Currency ID to track:",
     ["TRACKER_MENU_REMOVE"] = "Remove tracker",
     ["TRACKER_HINT_REMOVE"] = "Right-click to remove this tracker.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Drag left to reorder.",
     ["TRACKER_ALREADY_TRACKED"] = "That item or currency is already being tracked.",
 
     ["CATEGORY_MANAGER_BTN"] = "Categories",

@@ -122,6 +122,7 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["TRACKER_ADD_ID"] = "Введите ID предмета или валюты для отслеживания:",
     ["TRACKER_MENU_REMOVE"] = "Убрать отслеживание",
     ["TRACKER_HINT_REMOVE"] = "ПКМ, чтобы убрать это отслеживание.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Перетащите ЛКМ, чтобы изменить порядок.",
     ["TRACKER_ALREADY_TRACKED"] = "Этот предмет или валюта уже отслеживается.",
     ["CATEGORY_MANAGER_BTN"] = "Категории",
     ["CATEGORY_MANAGER_TITLE"] = "Менеджер своих категорий",

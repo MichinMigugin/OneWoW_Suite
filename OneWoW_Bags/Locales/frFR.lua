@@ -122,6 +122,7 @@ OneWoW_Bags.Locales["frFR"] = {
     ["TRACKER_ADD_ID"] = "Entrez l'ID d'objet ou de monnaie a suivre :",
     ["TRACKER_MENU_REMOVE"] = "Retirer le suivi",
     ["TRACKER_HINT_REMOVE"] = "Clic droit pour retirer ce suivi.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Glisser avec le bouton gauche pour reordonner.",
     ["TRACKER_ALREADY_TRACKED"] = "Cet objet ou cette monnaie est deja suivi.",
     ["CATEGORY_MANAGER_BTN"] = "Categories",
     ["CATEGORY_MANAGER_TITLE"] = "Gestionnaire de categories personnalisees",

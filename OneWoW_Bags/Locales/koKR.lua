@@ -122,6 +122,7 @@ OneWoW_Bags.Locales["koKR"] = {
     ["TRACKER_ADD_ID"] = "추적할 아이템 ID 또는 재화 ID를 입력:",
     ["TRACKER_MENU_REMOVE"] = "추적 제거",
     ["TRACKER_HINT_REMOVE"] = "이 추적을 제거하려면 우클릭하세요.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "왼쪽 버튼으로 드래그하여 순서를 바꿉니다.",
     ["TRACKER_ALREADY_TRACKED"] = "이미 추적 중인 아이템 또는 재화입니다.",
     ["CATEGORY_MANAGER_BTN"] = "분류",
     ["CATEGORY_MANAGER_TITLE"] = "사용자 분류 관리",

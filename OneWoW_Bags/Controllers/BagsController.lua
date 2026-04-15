@@ -161,3 +161,22 @@ function BagsController:RemoveTrackedEntry(index)
         self.addon.BagsBar:UpdateRowVisibility()
     end
 end
+
+function BagsController:MoveTrackedEntry(fromIndex, toIndex)
+    local db = self.addon:GetDB()
+    if not db then return end
+
+    local list = db.global.trackedCurrencies
+    local n = #list
+    if fromIndex < 1 or fromIndex > n or toIndex < 1 or toIndex > n or fromIndex == toIndex then
+        return
+    end
+
+    local entry = tremove(list, fromIndex)
+    tinsert(list, toIndex, entry)
+
+    if self.addon.BagsBar then
+        self.addon.BagsBar:UpdateTrackers()
+        self.addon.BagsBar:UpdateRowVisibility()
+    end
+end
