@@ -377,9 +377,66 @@ function BagsBar:ShowGoldTooltip()
     end
 end
 
-local function GetTrackerCountAndIcon(entry)
-    local iconTexture
-    local countValue = 0
+-- Shared 75/80/90/95/100% bands for wallet, weekly earn, and seasonal total-earned pressure.
+local function GetCapStyleLevelFromRatio(current, maxQ)
+    if not maxQ or maxQ <= 0 then
+        return 0
+    end
+    local q = current or 0
+    if q >= maxQ then
+        return 5
+    end
+    local pct = q / maxQ
+    if pct < 0.75 then
+        return 0
+    end
+    if pct < 0.80 then
+        return 1
+    end
+    if pct < 0.90 then
+        return 2
+    end
+    if pct < 0.95 then
+        return 3
+    end
+    return 4
+end
+
+local function GetWalletCapStyleLevel(info)
+    if not info or not info.maxQuantity or info.maxQuantity <= 0 then
+        return 0
+    end
+    return GetCapStyleLevelFromRatio(info.quantity, info.maxQuantity)
+end
+
+local function GetWeeklyEarnCapStyleLevel(info)
+    if not info or not info.canEarnPerWeek or not info.maxWeeklyQuantity or info.maxWeeklyQuantity <= 0 then
+        return 0
+    end
+    return GetCapStyleLevelFromRatio(info.quantityEarnedThisWeek, info.maxWeeklyQuantity)
+end
+
+-- Seasonal / moving cap: totalEarned vs maxQuantity when useTotalEarnedForMaxQty (not weekly fields).
+local function GetSeasonEarnCapStyleLevel(info)
+    if not info or not info.useTotalEarnedForMaxQty or not info.maxQuantity or info.maxQuantity <= 0 then
+        return 0
+    end
+    return GetCapStyleLevelFromRatio(info.totalEarned, info.maxQuantity)
+end
+
+local function GetCurrencyCapStyleLevel(info)
+    if not info then
+        return 0
+    end
+    return max(
+        GetWalletCapStyleLevel(info),
+        GetWeeklyEarnCapStyleLevel(info),
+        GetSeasonEarnCapStyleLevel(info)
+    )
+end
+
+local function GetTrackerDisplayState(entry)
+    local countValue, iconTexture, capLevel = 0, nil, 0
     if entry.type == "item" then
         countValue = C_Item.GetItemCount(entry.id, true)
         iconTexture = C_Item.GetItemIconByID(entry.id)
@@ -387,10 +444,89 @@ local function GetTrackerCountAndIcon(entry)
         local info = C_CurrencyInfo.GetCurrencyInfo(entry.id)
         if info then
             iconTexture = info.iconFileID
-            countValue = info.quantity
+            countValue = info.quantity or 0
+            capLevel = GetCurrencyCapStyleLevel(info)
         end
     end
-    return countValue, iconTexture
+    return countValue, iconTexture, capLevel
+end
+
+local function EnsureCurrencyCapGlow(tf)
+    if tf.capGlowTex then
+        return
+    end
+    local glowCfg = Constants.TRACKER_CURRENCY_CAP_GLOW
+    local tex = tf:CreateTexture(nil, "BACKGROUND", nil, 1)
+    tex:SetPoint("TOPLEFT", tf, "TOPLEFT", -3, 3)
+    tex:SetPoint("BOTTOMRIGHT", tf, "BOTTOMRIGHT", 3, -3)
+    tex:SetAtlas("bags-glow-white")
+    tex:SetBlendMode("ADD")
+    tex:SetVertexColor(glowCfg.vertex[1], glowCfg.vertex[2], glowCfg.vertex[3])
+    tex:Hide()
+    tf.capGlowTex = tex
+
+    local ag = tex:CreateAnimationGroup()
+    local up = ag:CreateAnimation("Alpha")
+    up:SetOrder(1)
+    up:SetDuration(0.85)
+    up:SetSmoothing("IN_OUT")
+    up:SetFromAlpha(glowCfg.alphaMin)
+    up:SetToAlpha(glowCfg.alphaMax)
+    local down = ag:CreateAnimation("Alpha")
+    down:SetOrder(2)
+    down:SetDuration(0.85)
+    down:SetSmoothing("IN_OUT")
+    down:SetFromAlpha(glowCfg.alphaMax)
+    down:SetToAlpha(glowCfg.alphaMin)
+    ag:SetLooping("REPEAT")
+    tf.capGlowAnim = ag
+end
+
+local function ApplyCurrencyCapTrackerStyle(tf)
+    if not tf or not tf.trackType or not tf.trackId or not tf.countText then
+        return
+    end
+    local entry = { type = tf.trackType, id = tf.trackId }
+    local _, _, capLevel = GetTrackerDisplayState(entry)
+
+    if entry.type ~= "currency" or capLevel == 0 then
+        tf:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        tf:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        tf.countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        if tf.capGlowTex then
+            tf.capGlowTex:Hide()
+            if tf.capGlowAnim and tf.capGlowAnim:IsPlaying() then
+                tf.capGlowAnim:Stop()
+            end
+        end
+        return
+    end
+
+    local pack = Constants.TRACKER_CURRENCY_CAP[capLevel]
+    if not pack then
+        return
+    end
+    tf:SetBackdropColor(unpack(pack.bg))
+    tf:SetBackdropBorderColor(unpack(pack.border))
+    tf.countText:SetTextColor(unpack(pack.countText))
+
+    if capLevel == 5 then
+        EnsureCurrencyCapGlow(tf)
+        local glowCfg = Constants.TRACKER_CURRENCY_CAP_GLOW
+        tf.capGlowTex:SetVertexColor(glowCfg.vertex[1], glowCfg.vertex[2], glowCfg.vertex[3])
+        tf.capGlowTex:SetAlpha(glowCfg.alphaMin)
+        tf.capGlowTex:Show()
+        if tf.capGlowAnim and not tf.capGlowAnim:IsPlaying() then
+            tf.capGlowAnim:Play()
+        end
+    else
+        if tf.capGlowTex then
+            tf.capGlowTex:Hide()
+            if tf.capGlowAnim and tf.capGlowAnim:IsPlaying() then
+                tf.capGlowAnim:Stop()
+            end
+        end
+    end
 end
 
 function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
@@ -403,7 +539,7 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
         borderColor = "BORDER_SUBTLE",
     })
 
-    local countValue, iconTexture = GetTrackerCountAndIcon(entry)
+    local countValue, iconTexture = GetTrackerDisplayState(entry)
 
     local iconFrame = OneWoW_GUI:CreateSkinnedIcon(tf, {
         size = 16,
@@ -459,6 +595,8 @@ function BagsBar:CreateTrackerFrame(parentFrame, index, entry)
         GameTooltip:Hide()
     end)
 
+    ApplyCurrencyCapTrackerStyle(tf)
+
     return tf
 end
 
@@ -467,8 +605,9 @@ function BagsBar:RefreshTrackerCounts()
     for _, tf in ipairs(bagsBarFrame.trackerFrames) do
         if tf.countText and tf.trackType and tf.trackId then
             local entry = { type = tf.trackType, id = tf.trackId }
-            local countValue = GetTrackerCountAndIcon(entry)
+            local countValue = select(1, GetTrackerDisplayState(entry))
             tf.countText:SetText(L["COUNT_PREFIX"] .. countValue)
+            ApplyCurrencyCapTrackerStyle(tf)
         end
     end
 end

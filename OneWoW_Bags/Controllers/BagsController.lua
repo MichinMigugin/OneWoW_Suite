@@ -111,7 +111,7 @@ end
 function BagsController:AddTrackedEntryFromID(rawID)
     local db = self.addon:GetDB()
     local id = tonumber(rawID)
-    if not db or not id or id <= 0 then return false end
+    if not id or id <= 0 then return false end
 
     local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(id)
     local trackType = "item"
@@ -135,7 +135,7 @@ end
 
 function BagsController:AddTrackedItem(itemID)
     local db = self.addon:GetDB()
-    if not db or not itemID then return false end
+    if not itemID then return false end
 
     local list = db.global.trackedCurrencies
     if IsAlreadyTracked(list, "item", itemID) then
