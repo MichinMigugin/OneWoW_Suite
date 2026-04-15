@@ -175,6 +175,21 @@ function OneWoW_Bags:InitializeDatabase()
                 g.moveUpgradesToTop = nil
             end
         end },
+        { version = 14, name = "hide_in_to_applies_in", run = function(d)
+            local catMods = d.global.categoryModifications
+            for _, mod in pairs(catMods) do
+                if mod.hideIn then
+                    mod.appliesIn = {}
+                    for _, key in ipairs({ "backpack", "character_bank", "warband_bank" }) do
+                        if mod.hideIn[key] then
+                            mod.appliesIn[key] = false
+                        end
+                    end
+                    if not next(mod.appliesIn) then mod.appliesIn = nil end
+                    mod.hideIn = nil
+                end
+            end
+        end },
     })
 end
 

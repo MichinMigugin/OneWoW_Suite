@@ -483,15 +483,25 @@ function BankGUI:RefreshLayout()
             local layoutHeight
             local categoryViewContext = controller:CreateViewContext({
                 sectionManager = BankCategoryManager,
+                containerType = db.global.bankShowWarband and "warband_bank" or "character_bank",
                 sortMode = db.global.itemSort,
                 getCollapsed = function(kind, key)
                     if kind == "category" then
                         return db.global.collapsedBankCategorySections[key] or db.global.collapsedBankSections[key]
                     end
+                    if kind == "section" then
+                        local section = db.global.categorySections and db.global.categorySections[key]
+                        return section and section.collapsed or false
+                    end
                 end,
                 setCollapsed = function(kind, key, collapsed)
                     if kind == "category" then
                         db.global.collapsedBankCategorySections[key] = collapsed or nil
+                    elseif kind == "section" then
+                        local section = db.global.categorySections and db.global.categorySections[key]
+                        if section then
+                            section.collapsed = collapsed
+                        end
                     end
                 end,
                 requestRelayout = function()

@@ -89,6 +89,18 @@ local function InvalidateCache()
     wipe(categoryCache)
 end
 
+local ALWAYS_APPLY = { ["Other"] = true, ["Empty"] = true }
+
+local function CategoryAppliesTo(catName, containerType, catMods)
+    if not containerType then return true end
+    if ALWAYS_APPLY[catName] then return true end
+    local mod = catMods[catName]
+    if mod and mod.appliesIn then
+        if mod.appliesIn[containerType] == false then return false end
+    end
+    return true
+end
+
 local function ModPriority(db, catName)
     local mod = db.global.categoryModifications[catName]
     if mod and mod.priority then
@@ -188,9 +200,22 @@ local function CollectManualCategoryCandidates(itemID, db, disabled, showPinnedW
     return cands
 end
 
-local function ResolveManualCategoryName(itemID, db, disabled)
+local function ResolveManualCategoryName(itemID, db, disabled, containerType)
     local showPinned = db.global.pinnedCategoryShowsWhenDisabled
     local cands = CollectManualCategoryCandidates(itemID, db, disabled, showPinned)
+    if #cands == 0 then
+        return nil
+    end
+    if containerType then
+        local catMods = db.global.categoryModifications
+        local filtered = {}
+        for _, c in ipairs(cands) do
+            if CategoryAppliesTo(c.name, containerType, catMods) then
+                tinsert(filtered, c)
+            end
+        end
+        cands = filtered
+    end
     if #cands == 0 then
         return nil
     end
@@ -264,30 +289,32 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     local itemID = itemInfo.itemID
     local hyperlink = itemInfo.hyperlink
     local disabled = db.global.disabledCategories
+    local containerType = BagTypes:GetContainerType(bagID)
+    local catMods = db.global.categoryModifications
 
     if itemID then
-        local manualName = ResolveManualCategoryName(itemID, db, disabled)
+        local manualName = ResolveManualCategoryName(itemID, db, disabled, containerType)
         if manualName then
             return manualName
         end
     end
 
     local junkCatEnabled = db.global.enableJunkCategory and not disabled["1W Junk"]
-    if junkCatEnabled and itemID then
+    if junkCatEnabled and itemID and CategoryAppliesTo("1W Junk", containerType, catMods) then
         if PE:BuildProps(itemID, bagID, slotID, itemInfo).isJunk then
             return "1W Junk"
         end
     end
 
     if itemID and hyperlink then
-        if db.global.enableUpgradeCategory and not disabled["1W Upgrades"] then
+        if db.global.enableUpgradeCategory and not disabled["1W Upgrades"] and CategoryAppliesTo("1W Upgrades", containerType, catMods) then
             if PE:BuildProps(itemID, bagID, slotID, itemInfo).isUpgrade then
                 return "1W Upgrades"
             end
         end
     end
 
-    if not disabled["Recent Items"] and itemID and self:SlotMatchesRecent(itemID, bagID, slotID, itemInfo) then
+    if not disabled["Recent Items"] and CategoryAppliesTo("Recent Items", containerType, catMods) and itemID and self:SlotMatchesRecent(itemID, bagID, slotID, itemInfo) then
         return "Recent Items"
     end
 
@@ -325,6 +352,16 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         end
     end
 
+    if containerType then
+        local applicable = {}
+        for _, c in ipairs(allCands) do
+            if CategoryAppliesTo(c.name, containerType, catMods) then
+                tinsert(applicable, c)
+            end
+        end
+        allCands = applicable
+    end
+
     local category = "Other"
     if #allCands > 0 then
         local best = PickBestCandidate(allCands, db, db.global)
@@ -338,7 +375,7 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
             local equipLoc = props.equipLoc
             if equipLoc and equipLoc ~= "" then
                 local slotName = GetSlotCategoryName(equipLoc)
-                if slotName then
+                if slotName and CategoryAppliesTo(slotName, containerType, catMods) then
                     category = slotName
                 end
             end
@@ -463,7 +500,7 @@ function Categories:BeginRecentExpiryTicker()
             return
         end
         if Categories:CleanExpiredRecent() then
-            OneWoW_Bags:RequestLayoutRefresh("bags")
+            OneWoW_Bags:RequestLayoutRefresh("all")
         end
     end)
 end
@@ -706,6 +743,11 @@ function Categories:GetCategoryDescription(categoryName)
     }
     local key = descKeys[categoryName]
     return key and L[key] or nil
+end
+
+function Categories:CategoryAppliesTo(catName, containerType)
+    local db = GetDB()
+    return CategoryAppliesTo(catName, containerType, db.global.categoryModifications)
 end
 
 PE:RegisterKeyword("recent", function(p)

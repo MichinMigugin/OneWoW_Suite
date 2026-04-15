@@ -4,10 +4,10 @@ This document describes how items are assigned to categories, how category rows 
 
 ## Overview
 
-1. **Assignment**: For each occupied bag/bank slot, `Categories:GetItemCategory(bagID, slotID, itemInfo)` returns a **category name** string.
+1. **Assignment**: For each occupied bag/bank slot, `Categories:GetItemCategory(bagID, slotID, itemInfo)` returns a **category name** string. The function filters by `appliesIn` per container type at assignment time.
 2. **Bucket**: Buttons are grouped by that name (`CategoryManager:GetItemsByCategory` for bags; an inline loop in `BankCategoryView`).
-3. **Category row order**: `CategoryManager:GetSectionedLayout` (bags, when sections or `displayOrder` apply) or `Categories:SortCategories` over the set of names (bank category view and several fallbacks).
-4. **Within-category presentation**: Optional search filter, then `SortButtons` (global `itemSort` and/or per-category `sortMode`), optional `stackItems`, optional `groupBy` sub-rows (bags category view only).
+3. **Category row order**: `H.GetSectionedLayout` (in `CategoryViewHelpers.lua`, shared by bags and bank) when sections or `displayOrder` apply, or `H.GetSortedCategoryNames` / `Categories:SortCategories` for fallbacks.
+4. **Within-category presentation**: Optional search filter, then `SortButtons` (global `itemSort` and/or per-category `sortMode`), optional `stackItems`, optional `groupBy` sub-rows. All of these features are shared by both bags and bank via the `H.LayoutCategoryContent` pipeline.
 
 ---
 
@@ -15,9 +15,9 @@ This document describes how items are assigned to categories, how category rows 
 
 1. `CategoryView:Layout` calls `CategoryManager:AssignCategories()`, which walks `BagSet:GetAllButtons()` and sets `button.owb_categoryName = Categories:GetItemCategory(...)` for occupied slots.
 2. `CategoryManager:GetItemsByCategory()` buckets buttons by `owb_categoryName`.
-3. `CategoryManager:GetSectionedLayout(itemsByCategory, containerType)` produces either a flat sorted name list or a structured list of entries (`separator`, `section_header`, `category`).
-4. `CategoryViewHelpers.PinSpecialCategories` may move **"Recent Items"** to the top and **"Other"** to the bottom using `db.global.moveRecentToTop` and `moveOtherToBottom`.
-5. For each category, filtered buttons are sorted, optionally stacked, and optionally split into subgroup grids.
+3. `H.GetSectionedLayout(itemsByCategory, containerType)` (in `CategoryViewHelpers.lua`) produces either a flat sorted name list or a structured list of entries (`separator`, `section_header`, `category`).
+4. `H.PinSpecialCategories` may move **"Recent Items"** to the top and **"Other"** to the bottom using `db.global.moveRecentToTop` and `moveOtherToBottom`.
+5. `H.LayoutCategoryContent(config)` renders each category: filtered buttons are sorted, optionally stacked, and optionally split into subgroup grids.
 
 ---
 
@@ -28,18 +28,20 @@ Resolution order (each step returns immediately when matched; later steps are sk
 | Step | Condition | Result |
 |------|-----------|--------|
 | 0 | Missing `itemInfo` | `"Other"` |
-| 1 | **Manual pin** — item ID found in `customCategoriesV2[*].items` or `categoryModifications[*].addedItems` | Resolved name (see below) |
-| 2 | **1W Junk** — `enableJunkCategory` **and** category not in `disabledCategories` **and** `PredicateEngine` `props.isJunk` | `"1W Junk"` |
-| 3 | **1W Upgrades** — `itemID` **and** `hyperlink` **and** `enableUpgradeCategory` **and** category not in `disabledCategories` **and** `props.isUpgrade` | `"1W Upgrades"` |
-| 4 | **Recent Items** — `"Recent Items"` not in `disabledCategories` **and** `SlotMatchesRecent` (GUID map + `recentItemDuration`) | `"Recent Items"` |
+| 1 | **Manual pin** — item ID found in `customCategoriesV2[*].items` or `categoryModifications[*].addedItems`, filtered by `appliesIn[containerType]` | Resolved name (see below) |
+| 2 | **1W Junk** — `enableJunkCategory` **and** category not in `disabledCategories` **and** `appliesIn` check **and** `PredicateEngine` `props.isJunk` | `"1W Junk"` |
+| 3 | **1W Upgrades** — `itemID` **and** `hyperlink` **and** `enableUpgradeCategory` **and** category not in `disabledCategories` **and** `appliesIn` check **and** `props.isUpgrade` | `"1W Upgrades"` |
+| 4 | **Recent Items** — `"Recent Items"` not in `disabledCategories` **and** `appliesIn` check **and** `SlotMatchesRecent` (GUID map + `recentItemDuration`) | `"Recent Items"` |
 | 5 | No **hyperlink** on the item | `"Other"` (classification skipped) |
 | 6 | **Category cache** hit — `categoryCache[cacheKey]` exists | Cached string |
-| 7 | **Merged candidate pool** — collect all matching custom predicate categories AND builtin search categories; `PickBestCandidate` picks one winner | Best name, or `"Other"` if none match |
-| 8 | **Inventory slots** — result is `"Weapons"` or `"Armor"` **and** `enableInventorySlots` | Localized equip-slot category name (e.g. `_G["INVTYPE_HEAD"]`) |
+| 7 | **Merged candidate pool** — collect all matching custom predicate categories AND builtin search categories, filter by `appliesIn[containerType]`; `PickBestCandidate` picks one winner | Best name, or `"Other"` if none match |
+| 8 | **Inventory slots** — result is `"Weapons"` or `"Armor"` **and** `enableInventorySlots` **and** slot name passes `appliesIn` check | Localized equip-slot category name (e.g. `_G["INVTYPE_HEAD"]`) |
 | 9 | Result name is in **`disabledCategories`** | `"Other"` |
 | 10 | — | Store in `categoryCache` when `cacheKey`, `hyperlink`, and `props.classID` all exist |
 
 **Key detail — steps 1–4 bypass steps 7–9.** Manual pins, 1W Junk, 1W Upgrades, and Recent Items all return early. They are never remapped by inventory-slot logic or the disabled fallback. Step 9 only catches candidate-pool-derived names that happen to be disabled.
+
+**`containerType` resolution:** At the top of `GetItemCategory`, `BagTypes:GetContainerType(bagID)` resolves the container type (`"backpack"`, `"character_bank"`, or `"warband_bank"`). This is used throughout the pipeline by `CategoryAppliesTo` to filter categories that don't apply to the current container. "Other" and "Empty" are always exempt from `appliesIn` filtering.
 
 ### Step 0: Missing `itemInfo`
 
@@ -52,6 +54,8 @@ If `itemInfo` is nil, the function returns `"Other"` immediately. No further pro
 - `customCategoriesV2[*].items` — manual pins on custom categories. Each candidate gets `tieKey = "c:" .. categoryId`.
 - `categoryModifications[builtinName].addedItems` — manual pins into a built-in category. Each candidate gets `tieKey = "b:" .. catName`.
 
+After collecting candidates, they are filtered by `CategoryAppliesTo(name, containerType, catMods)` — candidates whose category has `appliesIn[containerType] == false` are removed. If no candidates remain, the step returns nil.
+
 **`pinnedCategoryShowsWhenDisabled` behavior:**
 
 - If **false**: candidates whose category name is in `disabledCategories` are removed before tie-breaking. If no candidates remain, the step returns nil and the item falls through to later stages (Junk, Upgrades, Recent Items, etc.).
@@ -61,15 +65,15 @@ If `itemInfo` is nil, the function returns `"Other"` immediately. No further pro
 
 ### Step 2: 1W Junk
 
-Gated by `db.global.enableJunkCategory` (separate toggle, default `true`) AND `"1W Junk"` not in `disabledCategories`. If both pass, calls `PE:BuildProps(itemID, bagID, slotID, itemInfo).isJunk`. The `isJunk` prop is true when item quality is Poor, or when `OneWoW.ItemStatus:IsItemJunk(itemID)` returns true (cross-addon junk hook).
+Gated by `db.global.enableJunkCategory` (separate toggle, default `true`) AND `"1W Junk"` not in `disabledCategories` AND `CategoryAppliesTo("1W Junk", containerType, catMods)`. If all pass, calls `PE:BuildProps(itemID, bagID, slotID, itemInfo).isJunk`. The `isJunk` prop is true when item quality is Poor, or when `OneWoW.ItemStatus:IsItemJunk(itemID)` returns true (cross-addon junk hook).
 
 ### Step 3: 1W Upgrades
 
-Requires **both** `itemID` and `hyperlink` (items without a hyperlink skip this step entirely). Gated by `db.global.enableUpgradeCategory` (separate toggle, default `true`) AND `"1W Upgrades"` not in `disabledCategories`. If all pass, calls `PE:BuildProps(...).isUpgrade`. The `isUpgrade` prop delegates to `OneWoW.UpgradeDetection:CheckItemUpgrade(hyperlink, itemLocation)`.
+Requires **both** `itemID` and `hyperlink` (items without a hyperlink skip this step entirely). Gated by `db.global.enableUpgradeCategory` (separate toggle, default `true`) AND `"1W Upgrades"` not in `disabledCategories` AND `CategoryAppliesTo("1W Upgrades", containerType, catMods)`. If all pass, calls `PE:BuildProps(...).isUpgrade`. The `isUpgrade` prop delegates to `OneWoW.UpgradeDetection:CheckItemUpgrade(hyperlink, itemLocation)`.
 
 ### Step 4: Recent Items
 
-Gated only by `disabledCategories` (no separate enable toggle). Calls `SlotMatchesRecent(itemID, bagID, slotID, itemInfo)`, which checks the item's GUID against the `recentItems` timestamp map. An item is "recent" if `time() - recentItems[guid] < recentItemDuration` (default 120 seconds, configurable 15–600). Expired entries are cleaned on access.
+Gated by `disabledCategories` (no separate enable toggle) AND `CategoryAppliesTo("Recent Items", containerType, catMods)`. Calls `SlotMatchesRecent(itemID, bagID, slotID, itemInfo)`, which checks the item's GUID against the `recentItems` timestamp map. An item is "recent" if `time() - recentItems[guid] < recentItemDuration` (default 120 seconds, configurable 15–600). Expired entries are cleaned on access.
 
 The `#recent` keyword in PredicateEngine delegates to `Categories:SlotMatchesRecent`, so search expressions like `#recent` work in custom categories or the search bar.
 
@@ -217,7 +221,7 @@ If **`sectionOrder` is empty**, `GetSectionedLayout` returns `GetSortedCategoryN
 
 ## Grouping (sub-rows inside one category)
 
-Only **bags** `CategoryView` (with category headers enabled and section expanded):
+Shared by both `CategoryView` (bags) and `BankCategoryView` (bank) via `H.LayoutCategoryContent` (with category headers enabled and section expanded):
 
 - `categoryModifications[name].groupBy`: `expansion`, `type`, `slot`, `quality`, or `none` / unset.
 - Subgroups: small label + `RenderItemGrid` per group (`GroupItemsByExpansion`, `GroupItemsByType`, `GroupItemsBySlot`, `GroupItemsByQuality`).
@@ -226,10 +230,11 @@ Only **bags** `CategoryView` (with category headers enabled and section expanded
 
 ## Layout visibility and `containerType`
 
-`GetSectionedLayout(..., containerType)` (e.g. **`"backpack"`** from the main bag window):
+`H.GetSectionedLayout(itemsByCategory, containerType)` (in `CategoryViewHelpers.lua`):
 
 - **Disabled category**: hidden unless `pinnedCategoryShowsWhenDisabled` and the category has items in `itemsByCategory`.
-- **`categoryModifications[cat].hideIn[containerType]`**: category row hidden for that container.
+- **`categoryModifications[cat].appliesIn[containerType]`**: when `appliesIn[containerType] == false`, the category is excluded from layout for that container. "Other" and "Empty" are always exempt.
+- **Section header visibility**: resolved per-container. Bags use `section.showHeader`; bank uses `section.showHeaderBank` (falls back to `section.showHeader` when nil). This allows independent control of header visibility between bags and bank.
 
 **Equipment sections**: If a section lists **"Weapons"** or **"Armor"** and **`enableInventorySlots`**, additional **dynamic** category names (localized equip slot labels) that have items and are not already listed in `displayOrder` can be injected into that section.
 
@@ -252,12 +257,12 @@ Search strings use the PredicateEngine language (`#keyword`, operators, etc.). `
 | Mechanism | Role |
 |-----------|------|
 | `customCategoriesV2` | Custom categories: `items`, `searchExpression`, `itemType` / `itemSubType`, `filterMode`, `typeMatchMode`, `enabled`, `sortOrder`, `isTSM`, etc. |
-| `categoryModifications[name]` | `sortMode`, `groupBy`, `priority`, `color`, `hideIn`, `addedItems` |
+| `categoryModifications[name]` | `sortMode`, `groupBy`, `priority`, `color`, `appliesIn`, `addedItems` |
 | `disabledCategories` | Disable builtin/custom by name; classification remaps to **Other** when applicable |
 | `enableJunkCategory` | Separate toggle for step 2 (default `true`); disabling skips the 1W Junk check entirely |
 | `enableUpgradeCategory` | Separate toggle for step 3 (default `true`); disabling skips the 1W Upgrades check entirely |
-| `pinnedCategoryShowsWhenDisabled` | If true, manual pins win even when their target category is disabled. If false, disabled pins are filtered out so later stages can assign. Also controls visibility of disabled categories with items in `GetSectionedLayout`. |
-| `categoryOrder`, `sectionOrder`, `displayOrder`, `categorySections` | Structural ordering and grouping |
+| `pinnedCategoryShowsWhenDisabled` | If true, manual pins win even when their target category is disabled. If false, disabled pins are filtered out so later stages can assign. Also controls visibility of disabled categories with items in `H.GetSectionedLayout`. |
+| `categoryOrder`, `sectionOrder`, `displayOrder`, `categorySections` | Structural ordering and grouping; `categorySections[id].showHeader` / `.showHeaderBank` control per-container header visibility |
 | `enableInventorySlots` | Split **Weapons** / **Armor** into slot-named categories after candidate pool pick (default `false`) |
 | `stackItems` | Merge identical items for display inside category view |
 | `compactCategories` / `compactGap` | Side-by-side category blocks via `CategoryViewHelpers.LayoutCompactGroup` |
@@ -269,13 +274,19 @@ Search strings use the PredicateEngine language (`#keyword`, operators, etc.). `
 
 ## Bags vs bank (category view)
 
+Both views are thin wrappers that delegate to the shared pipeline in `CategoryViewHelpers.lua` (`H.GetSectionedLayout` + `H.LayoutCategoryContent`).
+
 | Feature | Bags `CategoryView` | `BankCategoryView` |
 |---------|---------------------|---------------------|
-| `AssignCategories` + `GetSectionedLayout` | Yes | No (inline `GetItemCategory` + flat list) |
-| Sections / `displayOrder` | Yes | No |
+| Classification | `CategoryManager:AssignCategories()` (pre-walk `BagSet`) | Inline `Categories:GetItemCategory` per `BankSet` button |
+| Bucketing | `CategoryManager:GetItemsByCategory()` | Inline loop building `itemsByCategory` |
+| Sections / `displayOrder` | Yes (shared `H.GetSectionedLayout`) | Yes (shared `H.GetSectionedLayout`) |
 | Per-category `sortMode` | Yes | Yes |
-| Per-category `groupBy` | Yes | No |
-| `hideIn` via layout | Yes | N/A |
+| Per-category `groupBy` | Yes | Yes |
+| `stackItems` | Yes | Yes |
+| `appliesIn` filtering | Yes (at assignment + layout) | Yes (at assignment + layout) |
+| Section header visibility | `showHeader` | `showHeaderBank` (falls back to `showHeader`) |
+| Compact mode | `compactCategories` / `compactGap` | `bankCompactCategories` / `bankCompactGap` |
 
 ---
 
@@ -297,12 +308,12 @@ Search strings use the PredicateEngine language (`#keyword`, operators, etc.). `
 
 | File | Responsibility |
 |------|------------------|
-| `Data/Categories.lua` | Assignment, `SortCategories`, manual/custom/builtin helpers, cache |
-| `Modules/CategoryManager.lua` | Bag assignment, `GetSectionedLayout`, visibility |
-| `Views/CategoryView.lua` | Sort, stack, group, render |
-| `Views/CategoryViewHelpers.lua` | Grids, compact layout, `PinSpecialCategories` |
-| `Views/BankCategoryView.lua` | Bank flat category layout |
+| `Data/Categories.lua` | Assignment, `SortCategories`, manual/custom/builtin helpers, cache, `appliesIn` filtering at classification time |
+| `Modules/CategoryManager.lua` | Bag assignment (`AssignCategories`), bucketing (`GetItemsByCategory`) |
+| `Views/CategoryViewHelpers.lua` | Shared layout pipeline: `GetSortedCategoryNames`, `GetSectionedLayout`, grouping, stacking, filtering, `LayoutCategoryContent`, grids, compact layout, `PinSpecialCategories` |
+| `Views/CategoryView.lua` | Bags category view (thin wrapper over shared pipeline) |
+| `Views/BankCategoryView.lua` | Bank category view (thin wrapper over shared pipeline) |
 | `Data/Sorting.lua` | `SortButtons` |
 | `Core/PredicateEngine.lua` | Expressions and props |
 | `Core/SectionDefaults.lua` | Section IDs, builtin ordering, OneWoW Bags section sync |
-| `Controllers/CategoryController.lua` | CRUD, import maps, UI refresh orchestration |
+| `Controllers/CategoryController.lua` | CRUD, import maps, UI refresh orchestration, `appliesIn` / `showHeaderBank` setters |

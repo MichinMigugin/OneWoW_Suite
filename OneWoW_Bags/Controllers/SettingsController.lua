@@ -49,13 +49,13 @@ SettingsController.appliers = {
     enableJunkCategory = function(self, db, value)
         db.global.enableJunkCategory = value
         self.addon:InvalidateCategorization()
-        self.addon:RequestLayoutRefresh("bags")
+        self.addon:RequestLayoutRefresh("all")
         self.addon.CategoryManagerUI:Refresh()
     end,
     enableUpgradeCategory = function(self, db, value)
         db.global.enableUpgradeCategory = value
         self.addon:InvalidateCategorization()
-        self.addon:RequestLayoutRefresh("bags")
+        self.addon:RequestLayoutRefresh("all")
         self.addon.CategoryManagerUI:Refresh()
     end,
     moveRecentToTop = function(self, db, value)
@@ -148,7 +148,7 @@ SettingsController.appliers = {
     enableInventorySlots = function(self, db, value)
         db.global.enableInventorySlots = value
         self.addon:InvalidateCategorization()
-        self.addon:RequestLayoutRefresh("bags")
+        self.addon:RequestLayoutRefresh("all")
     end,
     compactCategories = function(self, db, value)
         db.global.compactCategories = value
@@ -156,7 +156,7 @@ SettingsController.appliers = {
     end,
     stackItems = function(self, db, value)
         db.global.stackItems = value
-        self.addon:RequestLayoutRefresh("bags")
+        self.addon:RequestLayoutRefresh("all")
     end,
     showUnusableOverlay = function(self, db, value)
         db.global.showUnusableOverlay = value

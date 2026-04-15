@@ -140,7 +140,7 @@ function CategoryController:RefreshUI(options)
         self.addon.CategoryManagerUI:Refresh()
     end
     if options.layout ~= false then
-        self.addon:RequestLayoutRefresh("bags")
+        self.addon:RequestLayoutRefresh("all")
     end
 end
 
@@ -319,7 +319,18 @@ function CategoryController:SetSectionShowHeader(id, showHeader)
     local section = self:GetDB().global.categorySections[id]
     if not section then return end
 
+    if section.showHeaderBank == nil then
+        section.showHeaderBank = section.showHeader or false
+    end
     section.showHeader = showHeader and true or false
+    self:RefreshUI({ invalidate = false })
+end
+
+function CategoryController:SetSectionShowHeaderBank(id, showHeader)
+    local section = self:GetDB().global.categorySections[id]
+    if not section then return end
+
+    section.showHeaderBank = showHeader and true or false
     self:RefreshUI({ invalidate = false })
 end
 
@@ -448,19 +459,18 @@ function CategoryController:ClearCategoryColor(categoryName)
     self:RefreshUI({ invalidate = false })
 end
 
-function CategoryController:SetCategoryHiddenIn(categoryName, key, hidden)
-    local hideIn = self:GetCategoryModification(categoryName).hideIn
-    if not hideIn then
-        hideIn = {}
-        self:GetCategoryModification(categoryName).hideIn = hideIn
-    end
-
-    if hidden then
-        hideIn[key] = true
+function CategoryController:SetCategoryAppliesIn(categoryName, key, applies)
+    local mod = self:GetCategoryModification(categoryName)
+    if applies then
+        if mod.appliesIn then
+            mod.appliesIn[key] = nil
+            if not next(mod.appliesIn) then mod.appliesIn = nil end
+        end
     else
-        hideIn[key] = nil
+        if not mod.appliesIn then mod.appliesIn = {} end
+        mod.appliesIn[key] = false
     end
-    self:RefreshUI({ invalidate = false })
+    self:RefreshUI({ invalidate = true })
 end
 
 function CategoryController:SetCustomCategoryValue(categoryID, key, value, options)

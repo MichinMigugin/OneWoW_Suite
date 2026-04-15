@@ -36,3 +36,11 @@ end
 function BagTypes:GetBagName(bagID)
     return bagNames[bagID] or "UNKNOWN"
 end
+
+function BagTypes:GetContainerType(bagID)
+    local BankTypes = OneWoW_Bags.BankTypes
+    if self:IsPlayerBag(bagID) then return "backpack" end
+    if BankTypes:IsPersonalBankTab(bagID) then return "character_bank" end
+    if BankTypes:IsWarbandTab(bagID) then return "warband_bank" end
+    return nil
+end

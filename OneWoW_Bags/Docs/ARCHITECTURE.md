@@ -44,7 +44,7 @@ Modules\BagSet.lua                 ← player inventory slot management
 Modules\BankSet.lua                ← personal + warband bank slots
 Modules\GuildBankSet.lua           ← guild bank tab/slot management + cache
 Modules\CategoryManagerBase.lua    ← section/divider/header frame pool factory
-Modules\CategoryManager.lua        ← bags: category assignment + sectioned layout helpers
+Modules\CategoryManager.lua        ← bags: category assignment + bucketing
 Modules\BankCategoryManager.lua    ← bank: CategoryManagerBase instance (section pools)
 Modules\GuildBankCategoryManager.lua
 
@@ -59,10 +59,10 @@ Controllers\SettingsController.lua      ← setting write + side-effects + debou
 Controllers\CategoryController.lua      ← category/section CRUD, manual pin rules, Baganator import
 
 Views\ListView.lua                 ← flat grid layout strategy
-Views\CategoryViewHelpers.lua      ← shared category/grid/compact helpers (bags + bank category views)
-Views\CategoryView.lua             ← categorized layout strategy (bags)
+Views\CategoryViewHelpers.lua      ← shared layout pipeline: GetSectionedLayout, grouping, stacking, render dispatch
+Views\CategoryView.lua             ← bags category view (thin wrapper over shared pipeline)
 Views\BagView.lua                  ← per-bag sections layout strategy
-Views\BankCategoryView.lua         ← bank category layout (inline classification)
+Views\BankCategoryView.lua         ← bank category view (thin wrapper over shared pipeline)
 Views\BankTabView.lua              ← bank per-tab layout
 Views\GuildBankTabView.lua         ← guild bank per-tab layout
 
@@ -223,7 +223,7 @@ GUI:Show (after init)
        └─→ C_Timer.NewTicker(RECENT_EXPIRY_TICK_INTERVAL) while active
             ├─→ If GUI no longer shown → EndRecentExpiryTicker (safety)
             ├─→ CleanExpiredRecent → true if any GUID removed
-            └─→ RequestLayoutRefresh("bags") when removed
+            └─→ RequestLayoutRefresh("all") when removed
 
 GUI:Hide / GUI:FullReset (start of reset)
   └─→ Categories:EndRecentExpiryTicker → cancel ticker + CleanExpiredRecent
@@ -281,13 +281,15 @@ CategoryManager:AssignCategories()
 
 **`Categories:FindManualPinForItem(itemID)`** — returns `{ kind, categoryId | categoryName, displayName }` or `nil`; used for **single-pin enforcement** when adding items (see `CategoryController`).
 
-**`CategoryManager:GetSectionedLayout(itemsByCategory, containerType)`**
+**`H.GetSectionedLayout(itemsByCategory, containerType)`** (in `CategoryViewHelpers.lua`)
 
 - `IsCategoryVisible` hides a category when `disabledCategories[catName]` is set **unless** `pinnedCategoryShowsWhenDisabled` is on **and** that category has items in `itemsByCategory` (so pinned rows can still appear for disabled categories).
-- Still applies `categoryModifications.hideIn[containerType]`.
-- When `displayOrder` / section graph is empty, falls back to `GetSortedCategoryNames`; otherwise builds from `displayOrder`, `categorySections`, `sectionOrder`, optional equip-slot names when inventory slots are enabled.
+- Applies `categoryModifications.appliesIn[containerType]` — categories with `appliesIn[containerType] == false` are excluded. "Other" and "Empty" are always exempt.
+- Section header visibility is resolved per-container: bags use `showHeader`, bank uses `showHeaderBank` (falls back to `showHeader` when nil).
+- When `displayOrder` / section graph is empty, falls back to `H.GetSortedCategoryNames`; otherwise builds from `displayOrder`, `categorySections`, `sectionOrder`, optional equip-slot names when inventory slots are enabled.
+- Shared by both `CategoryView` (bags) and `BankCategoryView` (bank).
 
-**Bank — `BankCategoryView`:** does **not** use `CategoryManager:AssignCategories`. During `BankCategoryView:Layout`, it walks `BankSet:GetAllButtons()`, calls `Categories:GetItemCategory` per occupied slot, groups into `itemsByCategory`, then lays out with pins / `moveRecentToTop` / `moveOtherToBottom` and bank compact modes. Per-category `sortMode` from `categoryModifications` is applied. `BankCategoryManager` supplies **section frames only** via `viewContext`.
+**Bank — `BankCategoryView`:** walks `BankSet:GetAllButtons()`, calls `Categories:GetItemCategory` per occupied slot (which filters by `appliesIn` at assignment time), groups into `itemsByCategory`, then calls `H.GetSectionedLayout` + `H.LayoutCategoryContent` with bank settings. `BankCategoryManager` supplies **section frames only** via `viewContext`.
 
 **List / tab views:** no `AssignCategories`; sort order comes from `viewContext.sortButtons` → `SortButtons`.
 
@@ -341,7 +343,14 @@ Stable section IDs (`SEC_ONEWOW_BAGS`, `SEC_EQUIPMENT`, `SEC_CRAFTING`, `SEC_HOU
 
 ### CategoryViewHelpers (`Views\CategoryViewHelpers.lua`)
 
-Shared by `CategoryView` and `BankCategoryView`: label object pools, localized category titles, header styling, `RenderItemGrid`, compact multi-category line packing (`LayoutCompactGroup`), and helpers such as `PinSpecialCategories` for Recent/Other placement.
+Shared by `CategoryView` and `BankCategoryView`. Contains the full shared layout pipeline:
+
+- `H.GetSortedCategoryNames` / `H.GetSectionedLayout` — section/display-order resolution, `appliesIn` container filtering, per-container section header visibility (`showHeader` for bags, `showHeaderBank` for bank with fallback to `showHeader` when nil)
+- Grouping functions: `GroupItemsByExpansion`, `GroupItemsByType`, `GroupItemsBySlot`, `GroupItemsByQuality`
+- `StackItems` / `RestoreItemButtonCounts` — item stacking logic
+- `FilterItems` — per-category search filter evaluation
+- `H.LayoutCategoryContent(config)` — unified entry point for the full render dispatch (sort, stack, group, grid/compact)
+- Label/header object pools, localized category titles, `RenderItemGrid`, compact multi-category line packing (`LayoutCompactGroup`), `PinSpecialCategories` for Recent/Other placement
 
 ### BarHelpers (`GUI\BarHelpers.lua`)
 
@@ -372,14 +381,16 @@ Per-button state includes `owb_bagID`, `owb_slotID`, `owb_itemInfo`, `owb_hasIte
 
 `Create()` returns an instance with section/header/divider pools. Three module-level instances:
 
-- `OneWoW_Bags.CategoryManager` — extends base with bags assignment + `GetSectionedLayout` / `GetSortedCategoryNames`
+- `OneWoW_Bags.CategoryManager` — extends base with bags assignment + bucketing (`AssignCategories`, `GetItemsByCategory`)
 - `OneWoW_Bags.BankCategoryManager`
 - `OneWoW_Bags.GuildBankCategoryManager`
 
 ### CategoryManager (module)
 
 - `AssignCategories` — **inventory BagSet only** (used from `CategoryView`).
-- `GetItemsByCategory`, `GetSortedCategoryNames`, `GetSectionedLayout` — bags categorized view and ordering; `GetSectionedLayout` respects **disabled categories** vs **`pinnedCategoryShowsWhenDisabled`** as above.
+- `GetItemsByCategory` — buckets assigned buttons by `owb_categoryName`.
+
+Layout functions (`GetSortedCategoryNames`, `GetSectionedLayout`) live in `CategoryViewHelpers` and are shared by both bags and bank views.
 
 **Naming:** not the same as `GUI\CategoryManager.lua` (category editor UI).
 
@@ -389,11 +400,11 @@ Each view exposes `Layout(...)` and returns total content height.
 
 **ListView** — Grid with optional reagent-bag segment after normal bags. Computes column count from **content width** and icon spacing when not overridden by bag/category views. Honors `showEmptySlots`.
 
-**CategoryView** — Stacked sections (collapsible) or compact bin-packing; `groupBy`; `stackItems`; uses `CategoryManager` sections + `AssignCategories` at entry; delegates grids/compact layout to `CategoryViewHelpers`.
+**CategoryView** — Thin wrapper: runs `CategoryManager:AssignCategories()` + `:GetItemsByCategory()`, then calls `H.GetSectionedLayout` and `H.LayoutCategoryContent` from the shared pipeline with bag-specific settings.
 
 **BagView** — One section per physical bag; `selectedBag` filter.
 
-**BankCategoryView** — Inline `Categories:GetItemCategory` over `BankSet`; stacked/compact; `BankCategoryManager` for sections; compact labels via `CategoryViewHelpers` pools.
+**BankCategoryView** — Thin wrapper: builds `itemsByCategory` from `BankSet` via inline `Categories:GetItemCategory`, then calls `H.GetSectionedLayout` and `H.LayoutCategoryContent` from the shared pipeline with bank-specific settings.
 
 **BankTabView** — Sections per bank tab; `bankSelectedTab`; respects warband vs character via `bankShowWarband`.
 
@@ -414,7 +425,7 @@ Each view exposes `Layout(...)` and returns total content height.
 **Collapse `kind` values in use:**
 
 - Bags: `"category"`, `"bag"`, `"section"` (section metadata in `categorySections`)
-- Bank category mode: `"category"`; bank tab mode: `"tab"` (with legacy fallbacks to `collapsedBankSections` in getters)
+- Bank category mode: `"category"`, `"section"` (shared section collapse state via `categorySections`); bank tab mode: `"tab"` (with legacy fallbacks to `collapsedBankSections` in getters)
 - Guild bank tab mode: `"tab"` (with legacy fallbacks to `collapsedGuildBankSections`)
 
 ### PredicateEngine
@@ -512,7 +523,7 @@ Persisted layout and behavior state lives under `OneWoW_Bags_DB.global`. The def
 
 ### Migrations
 
-`_migrationVersion` is advanced by `DB:RunMigrations` up to **12**:
+`_migrationVersion` is advanced by `DB:RunMigrations` up to **14**:
 
 1. `category_system_v2` — split Equipment/Consumables builtins; seed `categorySections` / `sectionOrder`  
 2. `junk_rename` — `OneWoW Junk` / `OneWoW Upgrades` → `1W Junk` / `1W Upgrades` in disabled/collapsed maps  
@@ -525,7 +536,9 @@ Persisted layout and behavior state lives under `OneWoW_Bags_DB.global`. The def
 9. `bank_columns_minimum_15` — raise `bankColumns` below 15 up to 15  
 10. `onewow_bags_default_section` — ensure Equipment/Crafting/Housing sections; add/sync **OneWoW Bags** section (`SEC_ONEWOW_BAGS`)  
 11. `display_name_uniqueness` — disambiguate custom category display names that collide with builtins or each other  
-12. `section_category_membership_cleanup` — strip stale names from section `categories` lists (removed custom rows, etc.)
+12. `section_category_membership_cleanup` — strip stale names from section `categories` lists (removed custom rows, etc.)  
+13. `rename_move_upgrades_to_top` — rename `moveUpgradesToTop` key to `moveRecentToTop`  
+14. `hide_in_to_applies_in` — convert `categoryModifications[*].hideIn` to `appliesIn` with inverted semantics
 
 ---
 
@@ -602,7 +615,7 @@ The addon folder includes `API/` (`README.md`, `ITEM_BUTTON_API.md`, `INTEGRATIO
 - **Settings debounce** on high-churn sliders
 - **Combat-deferred cleanup** via `WindowHelpers:RegisterDeferredCleanup` when windows hide during lockdown
 - **Guild bank refresh coalescing** — `QueueGuildBankRefresh` uses a one-shot OnUpdate driver
-- **Scoped refresh targets** — avoid refreshing bank UIs for pure bag setting changes
+- **Scoped refresh targets** — pure display settings (e.g. `bagColumns`, `scale`) target `"bags"` only; category-affecting settings (e.g. junk/upgrade toggles, `stackItems`, `appliesIn` changes) target `"all"` to keep bags and bank in sync
 
 ---
 

@@ -511,11 +511,12 @@ function CatMgrUI:RefreshRight()
         div:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, -36)
         div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
+        local captSectionID = sectionID
+
         local showHeaderCB = CreateFrame("CheckButton", nil, rightTopWrapper, "UICheckButtonTemplate")
         showHeaderCB:SetSize(18, 18)
         showHeaderCB:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 8, -42)
         showHeaderCB:SetChecked(section.showHeader or false)
-        local captSectionID = sectionID
         showHeaderCB:SetScript("OnClick", function(self)
             local controller = GetController()
             if controller and controller.SetSectionShowHeader then
@@ -524,8 +525,25 @@ function CatMgrUI:RefreshRight()
         end)
         local showHeaderLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         showHeaderLbl:SetPoint("LEFT", showHeaderCB, "RIGHT", 4, 0)
-        showHeaderLbl:SetText(L["SECTION_SHOW_HEADER"] or "Show section header in bags")
+        showHeaderLbl:SetText(L["SECTION_SHOW_HEADER_BAGS"])
         showHeaderLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        local showHeaderBankCB = CreateFrame("CheckButton", nil, rightTopWrapper, "UICheckButtonTemplate")
+        showHeaderBankCB:SetSize(18, 18)
+        showHeaderBankCB:SetPoint("LEFT", showHeaderLbl, "RIGHT", 8, 0)
+        local bankHeaderVal = section.showHeaderBank
+        if bankHeaderVal == nil then bankHeaderVal = section.showHeader or false end
+        showHeaderBankCB:SetChecked(bankHeaderVal)
+        showHeaderBankCB:SetScript("OnClick", function(self)
+            local controller = GetController()
+            if controller and controller.SetSectionShowHeaderBank then
+                controller:SetSectionShowHeaderBank(captSectionID, self:GetChecked())
+            end
+        end)
+        local showHeaderBankLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        showHeaderBankLbl:SetPoint("LEFT", showHeaderBankCB, "RIGHT", 4, 0)
+        showHeaderBankLbl:SetText(L["SECTION_SHOW_HEADER_BANK"])
+        showHeaderBankLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local infoLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         infoLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -66)
@@ -959,35 +977,35 @@ function CatMgrUI:RefreshRight()
     end)
     yPos = yPos - 28
 
-    local hideLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hideLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
-    hideLbl:SetText(L["HIDE_IN"])
-    hideLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local appliesLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    appliesLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+    appliesLbl:SetText(L["APPLIES_TO"])
+    appliesLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    if not catMod.hideIn then catMod.hideIn = {} end
-    local hideContainers = {
-        { key = "backpack", label = L["HIDE_BACKPACK"] },
-        { key = "character_bank", label = L["HIDE_CHAR_BANK"] },
-        { key = "warband_bank", label = L["HIDE_WARBAND_BANK"] },
+    local appliesContainers = {
+        { key = "backpack", label = L["APPLIES_BACKPACK"] },
+        { key = "character_bank", label = L["APPLIES_CHAR_BANK"] },
+        { key = "warband_bank", label = L["APPLIES_WARBAND_BANK"] },
     }
-    local hideX = 60
-    for _, hc in ipairs(hideContainers) do
+    local appliesX = 70
+    for _, hc in ipairs(appliesContainers) do
         local cb = CreateFrame("CheckButton", nil, rightTopWrapper, "UICheckButtonTemplate")
         cb:SetSize(18, 18)
-        cb:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", hideX, yPos + 2)
-        cb:SetChecked(catMod.hideIn[hc.key] or false)
+        cb:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", appliesX, yPos + 2)
+        local isApplied = not (catMod.appliesIn and catMod.appliesIn[hc.key] == false)
+        cb:SetChecked(isApplied)
         local capKey = hc.key
         cb:SetScript("OnClick", function(self)
             local controller = GetController()
-            if controller and controller.SetCategoryHiddenIn then
-                controller:SetCategoryHiddenIn(capCatName, capKey, self:GetChecked())
+            if controller and controller.SetCategoryAppliesIn then
+                controller:SetCategoryAppliesIn(capCatName, capKey, self:GetChecked())
             end
         end)
         local cbLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         cbLbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
         cbLbl:SetText(hc.label)
         cbLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        hideX = hideX + cbLbl:GetStringWidth() + 28
+        appliesX = appliesX + cbLbl:GetStringWidth() + 28
     end
     yPos = yPos - 26
 
@@ -1283,7 +1301,11 @@ function CatMgrUI:RefreshLeft()
         if mod.sortMode and mod.sortMode ~= "none" then badges = badges .. "S" end
         if mod.groupBy and mod.groupBy ~= "none" then badges = badges .. "G" end
         if mod.addedItems and next(mod.addedItems) then badges = badges .. "+" end
-        if mod.hideIn and next(mod.hideIn) then badges = badges .. "H" end
+        if mod.appliesIn then
+            for _, v in pairs(mod.appliesIn) do
+                if v == false then badges = badges .. "A"; break end
+            end
+        end
         if mod.priority and mod.priority ~= 0 then badges = badges .. "P" end
         local searchExpr = not entry.isBuiltin and entry.data and entry.data.searchExpression
         if searchExpr and searchExpr ~= "" then badges = badges .. "E" end
