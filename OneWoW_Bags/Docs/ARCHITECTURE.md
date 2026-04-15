@@ -271,14 +271,13 @@ CategoryManager:AssignCategories()
 1. **Manual pins** — `customCategoriesV2[*].items` and `categoryModifications[*].addedItems` (no `PredicateEngine` on this path). Overrides everything below, including Junk/Upgrades. If `db.global.pinnedCategoryShowsWhenDisabled` is **false**, pins in **disabled** categories are ignored here so later stages can assign (e.g. `Other`). If **true**, a disabled pinned category still wins assignment. Legacy saves with the same item ID in multiple pin tables: `PickBestCandidate` among those rows (priority → section order → stable tie key).
 2. **1W Junk** — `PredicateEngine` `props.isJunk`; gated by `enableJunkCategory` + `disabledCategories`.
 3. **1W Upgrades** — `props.isUpgrade`; gated by settings + `disabledCategories`.
-4. **Custom predicate tier** — `GetCustomCategoryForItem`: **only** search expressions and type/subtype rules (explicit `items` pins are handled in step 1). Collects **all** matching custom categories, drops **disabled** names, then picks one winner: higher `categoryModifications[catName].priority`, then earlier `sectionOrder` section containing the name, then stable `customCategoriesV2` id. **Custom predicates always run before** builtin `SEARCH_CATEGORIES` (no mixing in one pool).
-5. **Recent Items** — `SlotMatchesRecent` (GUID map + `recentItemDuration`; same semantics as before).
-6. **No hyperlink** → `"Other"`.
-7. **Category cache** read (PredicateEngine cache key when hyperlink exists).
-8. **Builtin search tier** — collect **all** `SEARCH_CATEGORIES` matches where `PredicateEngine:CheckItem` succeeds (respecting `disabledCategories`), then pick winner: same **priority** and **section order** rules as custom, then **`searchOrder`** from the definition as tertiary tie-break.
-9. **Inventory slots** — if result is `Weapons` or `Armor` and `enableInventorySlots`, remap to localized equip-slot category name.
-10. **Disabled fallback** — if final builtin-derived name is disabled → `"Other"` (manual path bypasses this by returning early).
-11. **Cache write** when applicable (same key rules as before).
+4. **Recent Items** — `SlotMatchesRecent` (GUID map + `recentItemDuration`). Surfaces recent non-junk/non-upgrade items before custom/builtin classification.
+5. **No hyperlink** → `"Other"`.
+6. **Category cache** read (PredicateEngine cache key when hyperlink exists).
+7. **Merged candidate pool** — collects **all** matching custom predicate categories (`CollectCustomPredicateCandidates`) and builtin `SEARCH_CATEGORIES` matches into one pool, then picks one winner via `PickBestCandidate`: user-facing priority (higher wins) → custom beats builtin at equal priority → `defaultOrder` (lower wins) → section order → `searchOrder` → tieKey.
+8. **Inventory slots** — if result is `Weapons` or `Armor` and `enableInventorySlots`, remap to localized equip-slot category name.
+9. **Disabled fallback** — if final candidate-pool-derived name is disabled → `"Other"` (steps 1–4 bypass this).
+10. **Cache write** when applicable (same key rules as before).
 
 **`Categories:FindManualPinForItem(itemID)`** — returns `{ kind, categoryId | categoryName, displayName }` or `nil`; used for **single-pin enforcement** when adding items (see `CategoryController`).
 
@@ -288,7 +287,7 @@ CategoryManager:AssignCategories()
 - Still applies `categoryModifications.hideIn[containerType]`.
 - When `displayOrder` / section graph is empty, falls back to `GetSortedCategoryNames`; otherwise builds from `displayOrder`, `categorySections`, `sectionOrder`, optional equip-slot names when inventory slots are enabled.
 
-**Bank — `BankCategoryView`:** does **not** use `CategoryManager:AssignCategories`. During `BankCategoryView:Layout`, it walks `BankSet:GetAllButtons()`, calls `Categories:GetItemCategory` per occupied slot, groups into `itemsByCategory`, then lays out with pins / `moveUpgradesToTop` / `moveOtherToBottom` and bank compact modes. `BankCategoryManager` supplies **section frames only** via `viewContext`.
+**Bank — `BankCategoryView`:** does **not** use `CategoryManager:AssignCategories`. During `BankCategoryView:Layout`, it walks `BankSet:GetAllButtons()`, calls `Categories:GetItemCategory` per occupied slot, groups into `itemsByCategory`, then lays out with pins / `moveRecentToTop` / `moveOtherToBottom` and bank compact modes. Per-category `sortMode` from `categoryModifications` is applied. `BankCategoryManager` supplies **section frames only** via `viewContext`.
 
 **List / tab views:** no `AssignCategories`; sort order comes from `viewContext.sortButtons` → `SortButtons`.
 
@@ -428,9 +427,9 @@ Tokenizer notes: string-property comparisons accept unquoted single-token values
 
 ### Categories
 
-**27** builtin rows in `CATEGORY_DEFINITIONS` (including `1W Junk`, `1W Upgrades`, `Recent Items`, `Other`, `Empty`, and search-driven builtins such as `Housing`, `Toys`, `Junk`, etc.). Builtin search categories are collected into `SEARCH_CATEGORIES` sorted by `searchOrder` (used for tie-breaking when multiple builtins match, not for “first match wins” during assignment).
+**27** builtin rows in `CATEGORY_DEFINITIONS` (including `1W Junk`, `1W Upgrades`, `Recent Items`, `Other`, `Empty`, and search-driven builtins such as `Housing`, `Toys`, `Junk`, etc.). Builtin search categories are collected into `SEARCH_CATEGORIES` sorted by `searchOrder`.
 
-Builtin **assignment** uses the same **priority** (`categoryModifications[].priority`, higher wins) and **section order** (first section listing the category wins ties) as custom predicate categories; `searchOrder` breaks remaining ties among builtins.
+Custom predicate and builtin search categories are merged into a **single candidate pool** during assignment. Tie-breaking: user-facing **priority** (`categoryModifications[].priority`, higher wins) → custom beats builtin at equal priority → `defaultOrder` (lower wins) → section order → `searchOrder` → stable tieKey.
 
 ---
 
@@ -501,7 +500,7 @@ Persisted layout and behavior state lives under `OneWoW_Bags_DB.global`. The def
 
 ### Categories
 
-`customCategoriesV2`, `disabledCategories`, `categoryModifications`, `categorySort`, `categoryOrder`, `categorySections`, `sectionOrder`, `displayOrder`, `enableJunkCategory`, `enableUpgradeCategory`, `moveUpgradesToTop`, `moveOtherToBottom`, `pinnedCategoryShowsWhenDisabled`, `pinnedCategories`
+`customCategoriesV2`, `disabledCategories`, `categoryModifications`, `categorySort`, `categoryOrder`, `categorySections`, `sectionOrder`, `displayOrder`, `enableJunkCategory`, `enableUpgradeCategory`, `moveRecentToTop`, `moveOtherToBottom`, `pinnedCategoryShowsWhenDisabled`, `pinnedCategories`
 
 ### Collapse
 
@@ -611,7 +610,7 @@ The addon folder includes `API/` (`README.md`, `ITEM_BUTTON_API.md`, `INTEGRATIO
 
 **Storage (`customCategoriesV2`):** per-row `items` (explicit item IDs, keyed by `tostring(itemID)`), optional `searchExpression` / `filterMode == "search"`, and type / subtype strings vs `C_Item.GetItemClassInfo` / `GetItemSubClassInfo` with `typeMatchMode` where applicable.
 
-**Classification:** explicit `items` pins are resolved only in the **manual** stage of `GetItemCategory` (first). `GetCustomCategoryForItem` evaluates **predicate-only** matches (search + type/subtype); overlapping custom rules pick one winner by **priority** → **section order** → stable category id.
+**Classification:** explicit `items` pins are resolved only in the **manual** stage of `GetItemCategory` (first). Custom predicate categories (search + type/subtype) and builtin search categories are collected into a merged candidate pool; the winner is picked by user-facing **priority** → custom-wins-ties → `defaultOrder` → section order → `searchOrder` → stable tieKey.
 
 **Manual pins (global rule):** at most **one** pin per item ID across all `customCategoriesV2[*].items` and all `categoryModifications[*].addedItems`. `CategoryController:AddItemToCategory` / `AddItemsToCategory` returns `false, owningDisplayName` if the item is already pinned elsewhere; the category manager UI shows `UIErrorsFrame` messages from locale keys `ERR_ITEM_ALREADY_MANUAL_CATEGORY` / `_GENERIC`. Adding to the **same** custom category again is a no-op. `Categories:AddItemToBuiltinCategory` enforces the same rule when called directly.
 

@@ -243,10 +243,10 @@ local function BuildGeneralTab(sc, L, db, GUI)
         label = L["SETTING_MOVE_UPGRADES_TOP"],
         description = L["DESC_MOVE_UPGRADES_TOP"],
         isEnabled = true,
-        value = db.global.moveUpgradesToTop,
+        value = db.global.moveRecentToTop,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("moveUpgradesToTop", newVal)
+            ApplySetting("moveRecentToTop", newVal)
         end,
     })
 

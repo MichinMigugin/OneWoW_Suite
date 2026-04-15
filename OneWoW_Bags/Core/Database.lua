@@ -92,7 +92,7 @@ local defaults = {
         enableExpansionFilter = false,
         enableBankExpansionFilter = false,
         moveOtherToBottom = false,
-        moveUpgradesToTop = false,
+        moveRecentToTop = false,
         pinnedCategoryShowsWhenDisabled = true,
     },
 }
@@ -167,6 +167,13 @@ function OneWoW_Bags:InitializeDatabase()
         end },
         { version = 12, name = "section_category_membership_cleanup", run = function(d)
             self:MigrateSectionCategoryMembershipCleanup(d)
+        end },
+        { version = 13, name = "rename_move_upgrades_to_top", run = function(d)
+            local g = d.global
+            if g.moveUpgradesToTop ~= nil then
+                g.moveRecentToTop = g.moveUpgradesToTop
+                g.moveUpgradesToTop = nil
+            end
         end },
     })
 end

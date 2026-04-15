@@ -58,8 +58,8 @@ SettingsController.appliers = {
         self.addon:RequestLayoutRefresh("bags")
         self.addon.CategoryManagerUI:Refresh()
     end,
-    moveUpgradesToTop = function(self, db, value)
-        db.global.moveUpgradesToTop = value
+    moveRecentToTop = function(self, db, value)
+        db.global.moveRecentToTop = value
         self.addon:RequestLayoutRefresh("all")
     end,
     moveOtherToBottom = function(self, db, value)

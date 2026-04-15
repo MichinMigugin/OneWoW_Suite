@@ -56,7 +56,7 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
     local itemsByCategory = CategoryManager:GetItemsByCategory()
     local layout = CategoryManager:GetSectionedLayout(itemsByCategory, containerType)
 
-    local moveRecentToTop = db.global.moveUpgradesToTop
+    local moveRecentToTop = db.global.moveRecentToTop
     local moveOtherToBottom = db.global.moveOtherToBottom
     if moveRecentToTop or moveOtherToBottom then
         if type(layout[1]) == "table" then

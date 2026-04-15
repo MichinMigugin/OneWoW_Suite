@@ -72,7 +72,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local sortMode = db.global.categorySort
     Categories:SortCategories(categoryNames, sortMode)
 
-    categoryNames = H.PinSpecialCategories(categoryNames, db.global.moveUpgradesToTop, db.global.moveOtherToBottom)
+    categoryNames = H.PinSpecialCategories(categoryNames, db.global.moveRecentToTop, db.global.moveOtherToBottom)
 
     local cols = db.global.bankColumns or floor((width - padding * 2) / (iconSize + spacing))
     cols = max(cols, 1)
@@ -83,12 +83,18 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local catMods = db.global.categoryModifications
     local yOffset = 0
 
+    local function GetCategorySortMode(categoryName)
+        local mod = catMods[categoryName]
+        if mod and mod.sortMode then return mod.sortMode end
+        return nil
+    end
+
     if compact then
         local catInfoList = {}
         for _, categoryName in ipairs(categoryNames) do
             local items = itemsByCategory[categoryName]
             if items and #items > 0 then
-                sortButtons(items)
+                sortButtons(items, GetCategorySortMode(categoryName))
                 tinsert(catInfoList, {
                     name = categoryName,
                     displayName = H.ResolveCategoryName(categoryName),
@@ -113,7 +119,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
         for _, categoryName in ipairs(categoryNames) do
             local items = itemsByCategory[categoryName]
             if items and #items > 0 then
-                sortButtons(items)
+                sortButtons(items, GetCategorySortMode(categoryName))
 
                 if showHeaders then
                     local section = acquireSection(contentFrame)

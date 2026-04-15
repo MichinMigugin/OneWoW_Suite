@@ -45,9 +45,9 @@ local CATEGORY_DEFINITIONS = {
     { name = "Empty",            priority = 99  },
 }
 
-local CATEGORY_PRIORITY = {}
+local CATEGORY_DEFAULT_ORDER = {}
 for _, def in ipairs(CATEGORY_DEFINITIONS) do
-    CATEGORY_PRIORITY[def.name] = def.priority
+    CATEGORY_DEFAULT_ORDER[def.name] = def.priority
 end
 
 local SEARCH_CATEGORIES = {}
@@ -115,34 +115,41 @@ local function SectionOrderIndexForCategory(g, catName)
     return #order + 1
 end
 
-local function CandidateBeats(a, b, db, g, useSearchOrder)
+local function CandidateBeats(a, b, db, g)
     local pa, pb = ModPriority(db, a.name), ModPriority(db, b.name)
     if pa ~= pb then
         return pa > pb
+    end
+    local ac, bc = a.isCustom, b.isCustom
+    if ac ~= bc then
+        return ac == true
+    end
+    local da = a.defaultOrder or 9999
+    local db2 = b.defaultOrder or 9999
+    if da ~= db2 then
+        return da < db2
     end
     local sa, sb = SectionOrderIndexForCategory(g, a.name), SectionOrderIndexForCategory(g, b.name)
     if sa ~= sb then
         return sa < sb
     end
-    if useSearchOrder then
-        local oa = a.searchOrder or 9999
-        local ob = b.searchOrder or 9999
-        if oa ~= ob then
-            return oa < ob
-        end
+    local oa = a.searchOrder or 9999
+    local ob = b.searchOrder or 9999
+    if oa ~= ob then
+        return oa < ob
     end
     local ta = a.tieKey or a.name
     local tb = b.tieKey or b.name
     return ta < tb
 end
 
-local function PickBestCandidate(cands, db, g, useSearchOrder)
+local function PickBestCandidate(cands, db, g)
     if not cands or #cands == 0 then
         return nil
     end
     local best = cands[1]
     for i = 2, #cands do
-        if CandidateBeats(cands[i], best, db, g, useSearchOrder) then
+        if CandidateBeats(cands[i], best, db, g) then
             best = cands[i]
         end
     end
@@ -187,8 +194,67 @@ local function ResolveManualCategoryName(itemID, db, disabled)
     if #cands == 0 then
         return nil
     end
-    local best = PickBestCandidate(cands, db, db.global, false)
+    local best = PickBestCandidate(cands, db, db.global)
     return best and best.name or nil
+end
+
+local function InferFilterMode(categoryData)
+    local fm = categoryData.filterMode
+    if fm then return fm end
+    if categoryData.searchExpression and categoryData.searchExpression ~= "" then
+        return "search"
+    end
+    return "type"
+end
+
+local function CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo, disabled, cands)
+    for categoryId, categoryData in pairs(customCategoriesV2) do
+        if categoryData.enabled ~= false then
+            local fm = InferFilterMode(categoryData)
+            if fm == "search" then
+                if categoryData.searchExpression and categoryData.searchExpression ~= "" then
+                    if PE:CheckItem(categoryData.searchExpression, itemID, bagID, slotID, itemInfo or {}) then
+                        if not disabled[categoryData.name] then
+                            tinsert(cands, { name = categoryData.name, tieKey = categoryId, isCustom = true })
+                        end
+                    end
+                end
+            else
+                local hasType = categoryData.itemType and categoryData.itemType ~= ""
+                local hasSubType = categoryData.itemSubType and categoryData.itemSubType ~= ""
+                if hasType or hasSubType then
+                    local props = PE:BuildProps(itemID, bagID, slotID, itemInfo)
+                    local classID = props.classID
+                    local subClassID = props.subClassID
+                    local typeMatch = not hasType
+                    local subTypeMatch = not hasSubType
+                    if hasType and classID ~= nil then
+                        local className = C_Item.GetItemClassInfo(classID)
+                        typeMatch = className ~= nil and className:lower() == categoryData.itemType:lower()
+                    end
+                    if hasSubType and classID ~= nil and subClassID ~= nil then
+                        local subClassName = C_Item.GetItemSubClassInfo(classID, subClassID)
+                        subTypeMatch = subClassName ~= nil and subClassName:lower() == categoryData.itemSubType:lower()
+                    end
+                    local matched
+                    if hasType and hasSubType then
+                        if categoryData.typeMatchMode == "or" then
+                            matched = typeMatch or subTypeMatch
+                        else
+                            matched = typeMatch and subTypeMatch
+                        end
+                    elseif hasType then
+                        matched = typeMatch
+                    else
+                        matched = subTypeMatch
+                    end
+                    if matched and not disabled[categoryData.name] then
+                        tinsert(cands, { name = categoryData.name, tieKey = categoryId, isCustom = true })
+                    end
+                end
+            end
+        end
+    end
 end
 
 function Categories:GetItemCategory(bagID, slotID, itemInfo)
@@ -221,13 +287,6 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
         end
     end
 
-    if itemID then
-        local customName = self:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
-        if customName then
-            return customName
-        end
-    end
-
     if not disabled["Recent Items"] and itemID and self:SlotMatchesRecent(itemID, bagID, slotID, itemInfo) then
         return "Recent Items"
     end
@@ -246,13 +305,20 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
 
     local props = PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
-    local builtinCands = {}
+    local allCands = {}
+
+    if itemID then
+        CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo, disabled, allCands)
+    end
+
     for _, def in ipairs(SEARCH_CATEGORIES) do
         if not disabled[def.name] then
             if PE:CheckItem(def.search, itemID, bagID, slotID, itemInfo) then
-                tinsert(builtinCands, {
+                tinsert(allCands, {
                     name = def.name,
                     tieKey = def.name,
+                    isCustom = false,
+                    defaultOrder = def.priority,
                     searchOrder = def.searchOrder,
                 })
             end
@@ -260,8 +326,8 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     end
 
     local category = "Other"
-    if #builtinCands > 0 then
-        local best = PickBestCandidate(builtinCands, db, db.global, true)
+    if #allCands > 0 then
+        local best = PickBestCandidate(allCands, db, db.global)
         if best then
             category = best.name
         end
@@ -290,8 +356,8 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     return category
 end
 
-function Categories:GetCategoryPriority(categoryName)
-    return CATEGORY_PRIORITY[categoryName] or 50
+function Categories:GetCategoryDefaultOrder(categoryName)
+    return CATEGORY_DEFAULT_ORDER[categoryName] or 50
 end
 
 function Categories:SortCategories(categoryList, sortMode)
@@ -327,24 +393,22 @@ function Categories:SortCategories(categoryList, sortMode)
             local aName = type(a) == "table" and a.name or a
             local bName = type(b) == "table" and b.name or b
 
-            local aPriority = self:GetCategoryPriority(aName)
-            local bPriority = self:GetCategoryPriority(bName)
+            local aOrder = self:GetCategoryDefaultOrder(aName)
+            local bOrder = self:GetCategoryDefaultOrder(bName)
 
             local aMod = catMods[aName]
             local bMod = catMods[bName]
-            if aMod and aMod.priority then aPriority = aPriority + aMod.priority end
-            if bMod and bMod.priority then bPriority = bPriority + bMod.priority end
+            if aMod and aMod.priority then aOrder = aOrder + aMod.priority end
+            if bMod and bMod.priority then bOrder = bOrder + bMod.priority end
 
-            if aPriority ~= bPriority then
-                return aPriority < bPriority
+            if aOrder ~= bOrder then
+                return aOrder < bOrder
             end
 
-            if aPriority == 50 then
-                local aOrder = customOrderMap[aName] or 999
-                local bOrder = customOrderMap[bName] or 999
-                if aOrder ~= bOrder then
-                    return aOrder < bOrder
-                end
+            local aCustomSort = customOrderMap[aName] or 999
+            local bCustomSort = customOrderMap[bName] or 999
+            if aCustomSort ~= bCustomSort then
+                return aCustomSort < bCustomSort
             end
 
             return aName < bName
@@ -449,62 +513,11 @@ function Categories:GetCustomCategoryForItem(itemID, bagID, slotID, itemInfo)
     local db = GetDB()
     local disabled = db.global.disabledCategories
     local cands = {}
-
-    for categoryId, categoryData in pairs(customCategoriesV2) do
-        if categoryData.enabled ~= false then
-            local fm = categoryData.filterMode
-            if (fm == "search" or (not fm and categoryData.searchExpression and categoryData.searchExpression ~= "")) then
-                if categoryData.searchExpression and categoryData.searchExpression ~= "" then
-                    if PE:CheckItem(categoryData.searchExpression, itemID, bagID, slotID, itemInfo or {}) then
-                        tinsert(cands, { name = categoryData.name, tieKey = categoryId })
-                    end
-                end
-            end
-            local hasType = categoryData.itemType and categoryData.itemType ~= ""
-            local hasSubType = categoryData.itemSubType and categoryData.itemSubType ~= ""
-            if (fm == "type" or not fm) and (hasType or hasSubType) then
-                local props = PE:BuildProps(itemID, bagID, slotID, itemInfo)
-                local classID = props.classID
-                local subClassID = props.subClassID
-                local typeMatch = not hasType
-                local subTypeMatch = not hasSubType
-                if hasType and classID ~= nil then
-                    local className = C_Item.GetItemClassInfo(classID)
-                    typeMatch = className ~= nil and className:lower() == categoryData.itemType:lower()
-                end
-                if hasSubType and classID ~= nil and subClassID ~= nil then
-                    local subClassName = C_Item.GetItemSubClassInfo(classID, subClassID)
-                    subTypeMatch = subClassName ~= nil and subClassName:lower() == categoryData.itemSubType:lower()
-                end
-                local matched
-                if hasType and hasSubType then
-                    if categoryData.typeMatchMode == "or" then
-                        matched = typeMatch or subTypeMatch
-                    else
-                        matched = typeMatch and subTypeMatch
-                    end
-                elseif hasType then
-                    matched = typeMatch
-                else
-                    matched = subTypeMatch
-                end
-                if matched then
-                    tinsert(cands, { name = categoryData.name, tieKey = categoryId })
-                end
-            end
-        end
-    end
-
-    local eligible = {}
-    for _, c in ipairs(cands) do
-        if not disabled[c.name] then
-            tinsert(eligible, c)
-        end
-    end
-    if #eligible == 0 then
+    CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo, disabled, cands)
+    if #cands == 0 then
         return nil, nil
     end
-    local best = PickBestCandidate(eligible, db, db.global, false)
+    local best = PickBestCandidate(cands, db, db.global)
     if not best then
         return nil, nil
     end
