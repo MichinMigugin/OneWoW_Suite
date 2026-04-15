@@ -105,6 +105,10 @@ SettingsController.appliers = {
         db.global.showMoneyBar = value
         self.addon:RequestLayoutRefresh("bags")
     end,
+    showCurrencyTrackerCapHighlight = function(self, db, value)
+        db.global.showCurrencyTrackerCapHighlight = value
+        self.addon:RequestLayoutRefresh("bags")
+    end,
     showHeaderBar = function(self, db, value)
         db.global.showHeaderBar = value
         self.addon:RequestLayoutRefresh("bags")

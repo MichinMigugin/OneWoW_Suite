@@ -241,6 +241,9 @@ OneWoW_Bags.Locales["deDE"] = {
     ["DESC_COMPACT_GAP"] = "Steuert den horizontalen Abstand zwischen nebeneinander liegenden kompakten Kategorien, gemessen in Platzbreiten.",
     ["SETTING_SHOW_MONEY_BAR"] = "Gold anzeigen",
     ["DESC_SHOW_MONEY_BAR"] = "Zeigt Ihr Gold in der unteren Leiste. Tracker und andere Steuerungen bleiben sichtbar, wenn dies aus ist.",
+
+    ["SETTING_TRACKER_CAP_HIGHLIGHT"] = "Tracker: Cap-Hervorhebung",
+    ["DESC_TRACKER_CAP_HIGHLIGHT"] = "Farbig hervorheben, wenn Wahrungstracker nahe am Brieftaschen-, Wochen- oder Saisonlimit sind.",
     ["DESC_SHOW_BANK_MONEY_BAR"] = "Zeigt die untere Leiste mit Goldanzeige im Bankfenster.",
     ["SETTING_SHOW_BANK_BAGS_BAR"] = "Taschenleiste anzeigen",
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Zeigt die Taschenauswahlleiste unten im Bankfenster.",

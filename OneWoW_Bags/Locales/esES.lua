@@ -241,6 +241,9 @@ OneWoW_Bags.Locales["esES"] = {
     ["DESC_COMPACT_GAP"] = "Controla el espacio horizontal entre categorías compactas adyacentes, medido en anchuras de ranura.",
     ["SETTING_SHOW_MONEY_BAR"] = "Mostrar oro",
     ["DESC_SHOW_MONEY_BAR"] = "Muestra tu oro en la barra inferior. Los rastreadores y otros controles siguen visibles si esto está desactivado.",
+
+    ["SETTING_TRACKER_CAP_HIGHLIGHT"] = "Resaltar limite en rastreadores",
+    ["DESC_TRACKER_CAP_HIGHLIGHT"] = "Colorea los rastreadores de moneda cuando te acercas al limite de cartera, ganancia semanal o de temporada.",
     ["DESC_SHOW_BANK_MONEY_BAR"] = "Muestra la barra inferior con el oro en la ventana del banco.",
     ["SETTING_SHOW_BANK_BAGS_BAR"] = "Mostrar barra de bolsas",
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Muestra la barra de selección de bolsas en la parte inferior de la ventana del banco.",

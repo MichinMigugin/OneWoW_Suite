@@ -374,6 +374,18 @@ local function BuildBagsTab(sc, L, db, GUI)
 
     dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
+        label = L["SETTING_TRACKER_CAP_HIGHLIGHT"],
+        description = L["DESC_TRACKER_CAP_HIGHLIGHT"],
+        isEnabled = true,
+        value = db.global.showCurrencyTrackerCapHighlight,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            ApplySetting("showCurrencyTrackerCapHighlight", newVal)
+        end,
+    })
+
+    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+        yOffset = dispY,
         label = L["SETTING_SHOW_HEADER_BAR"],
         description = L["DESC_SHOW_HEADER_BAR"],
         isEnabled = true,

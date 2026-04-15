@@ -241,6 +241,9 @@ OneWoW_Bags.Locales["koKR"] = {
     ["DESC_COMPACT_GAP"] = "나란히 놓인 컴팩트 분류 사이 가로 간격을 칸 너비 단위로 조절합니다.",
     ["SETTING_SHOW_MONEY_BAR"] = "골드 표시",
     ["DESC_SHOW_MONEY_BAR"] = "하단 바에 골드를 표시합니다. 끄면 추적기 등 다른 조작은 그대로 보입니다.",
+
+    ["SETTING_TRACKER_CAP_HIGHLIGHT"] = "추적기 한도 근접 강조",
+    ["DESC_TRACKER_CAP_HIGHLIGHT"] = "보유 한도, 주간 획득 한도, 시즌 획득 한도에 가까울 때 통화 추적기 색을 바꿉니다.",
     ["DESC_SHOW_BANK_MONEY_BAR"] = "은행 창 하단 골드 표시 바를 표시합니다.",
     ["SETTING_SHOW_BANK_BAGS_BAR"] = "가방 바 표시",
     ["DESC_SHOW_BANK_BAGS_BAR"] = "은행 창 하단에 가방 선택 바를 표시합니다.",

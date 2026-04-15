@@ -445,7 +445,9 @@ local function GetTrackerDisplayState(entry)
         if info then
             iconTexture = info.iconFileID
             countValue = info.quantity or 0
-            capLevel = GetCurrencyCapStyleLevel(info)
+            if GetDB().global.showCurrencyTrackerCapHighlight then
+                capLevel = GetCurrencyCapStyleLevel(info)
+            end
         end
     end
     return countValue, iconTexture, capLevel

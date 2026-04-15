@@ -241,6 +241,9 @@ OneWoW_Bags.Locales["frFR"] = {
     ["DESC_COMPACT_GAP"] = "Contrôle l'espace horizontal entre catégories compactes adjacentes, mesuré en largeurs d'emplacement.",
     ["SETTING_SHOW_MONEY_BAR"] = "Afficher l'or",
     ["DESC_SHOW_MONEY_BAR"] = "Affiche votre or sur la barre du bas. Les trackers et autres contrôles restent visibles si désactivé.",
+
+    ["SETTING_TRACKER_CAP_HIGHLIGHT"] = "Suivi : couleur proche du plafond",
+    ["DESC_TRACKER_CAP_HIGHLIGHT"] = "Colore les suiveurs de monnaies proches des limites de portefeuille, de gain hebdomadaire ou de saison.",
     ["DESC_SHOW_BANK_MONEY_BAR"] = "Affiche la barre inférieure avec l'or dans la fenêtre de banque.",
     ["SETTING_SHOW_BANK_BAGS_BAR"] = "Afficher la barre des sacs",
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Affiche la barre de sélection des sacs en bas de la fenêtre de banque.",

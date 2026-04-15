@@ -281,6 +281,9 @@ OneWoW_Bags.Locales["enUS"] = {
 
     ["SETTING_SHOW_MONEY_BAR"] = "Show Money",
     ["DESC_SHOW_MONEY_BAR"] = "Show your gold on the bottom bar. Trackers and other controls stay visible when this is off.",
+
+    ["SETTING_TRACKER_CAP_HIGHLIGHT"] = "Currency Tracker Cap Highlight",
+    ["DESC_TRACKER_CAP_HIGHLIGHT"] = "Color currency trackers on the bag bar when you are near wallet, weekly earn, or seasonal earn limits.",
     ["DESC_SHOW_BANK_MONEY_BAR"] = "Show the bottom bar with gold display in the bank window.",
 
     ["SETTING_SHOW_BANK_BAGS_BAR"] = "Show Bag Bar",

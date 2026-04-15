@@ -82,6 +82,7 @@ local defaults = {
         bankCompactGap = 1,
         bankCompactCategories = false,
         showMoneyBar = true,
+        showCurrencyTrackerCapHighlight = true,
         showUnusableOverlay = false,
         dimJunkItems = false,
         stripJunkOverlays = false,
