@@ -275,7 +275,7 @@ function BagsBar:Create(parent)
     bagsBarFrame.cleanupBagsBtn = cleanupBagsBtn
 
     local categoriesBtn = OneWoW_GUI:CreateAtlasIconButton(controlCluster, {
-        atlas = "housing-sidetabs-catalog-active",
+        atlas = "decor-ability-layoutmode-active",
         width = 20,
         height = 20,
     })

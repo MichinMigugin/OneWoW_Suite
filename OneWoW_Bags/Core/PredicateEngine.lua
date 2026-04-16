@@ -20,8 +20,7 @@ local PE = OneWoW_Bags.PredicateEngine
 
 local tconcat, tinsert, wipe = table.concat, tinsert, wipe
 local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
-local strlower, strfind = string.lower, string.find
-local strmatch = string.match
+local strlower, strfind, strmatch = string.lower, string.find, string.match
 local rawset, rawget, setmetatable = rawset, rawget, setmetatable
 local pcall, select = pcall, select
 local Enum = Enum
@@ -1043,7 +1042,7 @@ local function ResolveTooltipFields(props)
 
     local alreadyKnown = strfind(tt, ITEM_SPELL_KNOWN, 1, true) ~= nil
     if not alreadyKnown and rawget(props, "classID") == Enum.ItemClass.Recipe then
-        local Util = _G.OneWoW_RecipeKnownUtil
+        local Util = OneWoW_RecipeKnownUtil
         if Util then
             local result = Util:IsRecipeKnown(rawget(props, "id"), rawget(props, "hyperlink"))
             if result ~= nil then

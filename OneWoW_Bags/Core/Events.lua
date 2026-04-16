@@ -44,7 +44,16 @@ function Events:OnPredicateInvalidation()
         predicateRefreshPending = true
         C_Timer.After(0, function()
             predicateRefreshPending = false
-            OneWoW_Bags:RequestLayoutRefresh("all")
+            local refreshBags = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsShown and OneWoW_Bags.GUI:IsShown()
+            local refreshBankRelated = OneWoW_Bags.bankOpen or OneWoW_Bags.guildBankOpen
+
+            if refreshBags and refreshBankRelated then
+                OneWoW_Bags:RequestVisualRefresh("all")
+            elseif refreshBankRelated then
+                OneWoW_Bags:RequestVisualRefresh("bank_related")
+            elseif refreshBags then
+                OneWoW_Bags:RequestVisualRefresh("bags")
+            end
         end)
     end
 end
