@@ -12,6 +12,7 @@ local pairs, select = pairs, select
 local UnitLevel = UnitLevel
 local C_Container = C_Container
 local C_Item = C_Item
+local PixelUtil = PixelUtil
 
 OneWoW_Bags.ItemButtonMixin = {}
 local Mixin = OneWoW_Bags.ItemButtonMixin
@@ -230,7 +231,7 @@ function Mixin:OWB_RefreshLock()
 end
 
 function Mixin:OWB_SetIconSize(size)
-    self:SetSize(size, size)
+    PixelUtil.SetSize(self, size, size)
 end
 
 function Mixin:OWB_GetLink()

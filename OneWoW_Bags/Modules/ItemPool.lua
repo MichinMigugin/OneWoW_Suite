@@ -5,6 +5,7 @@ if not OneWoW_GUI then return end
 
 local tinsert, tremove = tinsert, tremove
 local pairs = pairs
+local PixelUtil = PixelUtil
 
 OneWoW_Bags.ItemPool = {}
 local Pool = OneWoW_Bags.ItemPool
@@ -62,7 +63,7 @@ function Pool:CreateButton()
     totalCreated = totalCreated + 1
     local name = "OneWoW_BagsItem" .. totalCreated
     local button = CreateFrame("ItemButton", name, UIParent, "ContainerFrameItemButtonTemplate")
-    button:SetSize(37, 37)
+    PixelUtil.SetSize(button, 37, 37)
     button:Hide()
     button.owb_dirty = false
     button.owb_bagID = nil

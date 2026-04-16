@@ -12,6 +12,7 @@ local tinsert, sort = tinsert, sort
 local ipairs, pairs = ipairs, pairs
 local type = type
 local Enum = Enum
+local PixelUtil = PixelUtil
 
 OneWoW_Bags.WindowHelpers = {}
 local WH = OneWoW_Bags.WindowHelpers
@@ -182,6 +183,13 @@ function WH:CreateScrollScaffold(config)
     scrollFrame:HookScript("OnSizeChanged", function(self, width)
         contentFrame:SetWidth(width)
     end)
+
+    local rawSetVerticalScroll = scrollFrame.SetVerticalScroll
+    scrollFrame.SetVerticalScroll = function(self, value)
+        local scale = self:GetEffectiveScale()
+        local snapped = PixelUtil.GetNearestPixelSize(value or 0, scale, 0)
+        rawSetVerticalScroll(self, snapped)
+    end
 
     return scrollFrame, contentFrame
 end

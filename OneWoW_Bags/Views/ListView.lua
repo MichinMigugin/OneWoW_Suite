@@ -6,6 +6,7 @@ local BagTypes = OneWoW_Bags.BagTypes
 local floor, max = math.floor, math.max
 local ipairs = ipairs
 local tinsert = tinsert
+local PixelUtil = PixelUtil
 
 OneWoW_Bags.ListView = {}
 local View = OneWoW_Bags.ListView
@@ -52,7 +53,7 @@ function View:Layout(contentFrame, buttons, width, viewContext)
         local y = -(padding + (row * (iconSize + spacing)) + extraYOffset)
 
         button:ClearAllPoints()
-        button:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", x, y)
+        PixelUtil.SetPoint(button, "TOPLEFT", contentFrame, "TOPLEFT", x, y)
         button:OWB_SetIconSize(iconSize)
         button:Show()
 
