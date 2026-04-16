@@ -10,7 +10,6 @@ local BankTypes = OneWoW_Bags.BankTypes
 
 local tinsert, ipairs = tinsert, ipairs
 local floor, max = math.floor, math.max
-local PixelUtil = PixelUtil
 
 OneWoW_Bags.BankTabView = {}
 local View = OneWoW_Bags.BankTabView
@@ -109,7 +108,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                         local y = -(itemRow * (iconSize + spacing))
 
                         button:ClearAllPoints()
-                        PixelUtil.SetPoint(button, "TOPLEFT", section.content, "TOPLEFT", x, y)
+                        OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, section.content, x, y)
                         button:OWB_SetIconSize(iconSize)
                         button:Show()
 

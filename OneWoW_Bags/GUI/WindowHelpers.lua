@@ -11,6 +11,7 @@ local PE = OneWoW_Bags.PredicateEngine
 local tinsert, sort = tinsert, sort
 local ipairs, pairs = ipairs, pairs
 local type = type
+local floor = math.floor
 local Enum = Enum
 local PixelUtil = PixelUtil
 
@@ -23,6 +24,27 @@ local SCROLLBAR_RESERVE_WIDTH = 12
 function WH:GetItemGridChromeInsets(hideScrollbar)
     local gutter = hideScrollbar and 0 or SCROLLBAR_RESERVE_WIDTH
     return ITEM_GRID_H_PADDING, ITEM_GRID_H_PADDING + gutter
+end
+
+-- Snap a region's absolute physical top-left to an integer pixel, regardless of
+-- how fractional the parent's physical position is. PixelUtil.SetPoint only
+-- snaps the offset (delta from parent), so ancestors at fractional positions
+-- smear 1-px edges across 2 rows of physical pixels. This helper solves for
+-- the offset required to land the region's top-left exactly on an integer
+-- pixel, guaranteeing crisp 1-px BackdropTemplate borders.
+function WH:SetPointPixelAligned(region, parent, offsetX, offsetY)
+    local pScale = parent and parent.GetEffectiveScale and parent:GetEffectiveScale()
+    local pLeft = parent and parent.GetLeft and parent:GetLeft()
+    local pTop = parent and parent.GetTop and parent:GetTop()
+    if not pScale or not pLeft or not pTop then
+        region:SetPoint("TOPLEFT", parent, "TOPLEFT", offsetX, offsetY)
+        return
+    end
+    local targetPhysX = floor((pLeft + offsetX) * pScale + 0.5)
+    local targetPhysY = floor((pTop + offsetY) * pScale + 0.5)
+    region:SetPoint("TOPLEFT", parent, "TOPLEFT",
+        targetPhysX / pScale - pLeft,
+        targetPhysY / pScale - pTop)
 end
 
 function WH:CreateWindowShell(config)

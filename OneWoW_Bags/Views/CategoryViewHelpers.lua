@@ -11,7 +11,6 @@ local floor, min, max, ceil, sqrt = math.floor, math.min, math.max, math.ceil, m
 local tostring = tostring
 local SetItemButtonCount = SetItemButtonCount
 local C_Item = C_Item
-local PixelUtil = PixelUtil
 
 OneWoW_Bags.CategoryViewHelpers = {}
 local H = OneWoW_Bags.CategoryViewHelpers
@@ -97,7 +96,7 @@ function H.RenderItemGrid(parentFrame, items, startY, leftPadding, cellSize, ico
         local x = leftPadding + (itemCol * cellSize)
         local y = -(startY + itemRow * cellSize)
         button:ClearAllPoints()
-        PixelUtil.SetPoint(button, "TOPLEFT", parentFrame, "TOPLEFT", x, y)
+        OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, parentFrame, x, y)
         button:OWB_SetIconSize(iconSize)
         button:Show()
         itemCol = itemCol + 1
@@ -213,7 +212,7 @@ function H.LayoutCompactGroup(catInfoList, contentFrame, opts)
                 local x = leftPadding + (cat.startCol + itemCol) * cellSize
                 local y = -(yOffset + itemRow * cellSize)
                 button:ClearAllPoints()
-                PixelUtil.SetPoint(button, "TOPLEFT", contentFrame, "TOPLEFT", x, y)
+                OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, contentFrame, x, y)
                 button:OWB_SetIconSize(iconSize)
                 button:Show()
                 itemCol = itemCol + 1

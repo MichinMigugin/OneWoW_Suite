@@ -9,7 +9,6 @@ local GuildBankSet = OneWoW_Bags.GuildBankSet
 
 local ipairs, tinsert = ipairs, tinsert
 local floor, max = math.floor, math.max
-local PixelUtil = PixelUtil
 
 OneWoW_Bags.GuildBankTabView = {}
 local View = OneWoW_Bags.GuildBankTabView
@@ -103,7 +102,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                         local y = -(itemRow * (iconSize + spacing))
 
                         button:ClearAllPoints()
-                        PixelUtil.SetPoint(button, "TOPLEFT", section.content, "TOPLEFT", x, y)
+                        OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, section.content, x, y)
                         button:OWB_SetIconSize(iconSize)
                         button:Show()
 
