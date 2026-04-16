@@ -26,6 +26,33 @@ function WH:GetItemGridChromeInsets(hideScrollbar)
     return ITEM_GRID_H_PADDING, ITEM_GRID_H_PADDING + gutter
 end
 
+-- Snap a frame's physical top-left to the nearest integer pixel by adjusting
+-- its current anchor offset. Call AFTER StopMovingOrSizing / SetPoint so the
+-- frame already has a resolvable position. Keeps the existing anchor point
+-- (TOPLEFT, CENTER, etc.) and relativeTo to preserve movement semantics, then
+-- nudges the offset by at most 1 physical pixel to land on an integer. This
+-- is the root cause fix for 1-px BackdropTemplate borders rendering dim or
+-- missing: any ancestor at a fractional physical position causes its
+-- descendants' 1-px edges to smear across two rows of physical pixels.
+function WH:SnapFrameToPixel(frame)
+    if not frame then return end
+    local point, relativeTo, relativePoint, offsetX, offsetY = frame:GetPoint(1)
+    if not point or not offsetX or not offsetY then return end
+    local scale = frame:GetEffectiveScale()
+    if not scale or scale <= 0 then return end
+    local left, top = frame:GetLeft(), frame:GetTop()
+    if not left or not top then return end
+    local physLeft = left * scale
+    local physTop = top * scale
+    local snappedPhysLeft = floor(physLeft + 0.5)
+    local snappedPhysTop = floor(physTop + 0.5)
+    local deltaX = (snappedPhysLeft - physLeft) / scale
+    local deltaY = (snappedPhysTop - physTop) / scale
+    if deltaX == 0 and deltaY == 0 then return end
+    frame:ClearAllPoints()
+    frame:SetPoint(point, relativeTo, relativePoint, offsetX + deltaX, offsetY + deltaY)
+end
+
 -- Snap a region's absolute physical top-left to an integer pixel, regardless of
 -- how fractional the parent's physical position is. PixelUtil.SetPoint only
 -- snaps the offset (delta from parent), so ancestors at fractional positions
@@ -69,13 +96,18 @@ function WH:CreateWindowShell(config)
     mainWindow:SetScript("OnDragStart", mainWindow.StartMoving)
     mainWindow:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
+        WH:SnapFrameToPixel(self)
         OneWoW_GUI:SaveWindowPosition(self, position)
+        if config.onDragStop then config.onDragStop(self) end
     end)
     mainWindow:SetClampedToScreen(true)
     mainWindow:SetClampRectInsets(0, 0, 0, 0)
     mainWindow:SetFrameStrata(config.frameStrata or "MEDIUM")
     mainWindow:SetToplevel(true)
     mainWindow:SetScript("OnHide", config.onHide)
+    mainWindow:HookScript("OnShow", function(self)
+        WH:SnapFrameToPixel(self)
+    end)
     mainWindow:Hide()
 
     self:RegisterSpecialFrame(config.name, mainWindow)
@@ -351,6 +383,7 @@ function WH:SetupResizeButton(mainWindow, gui, positionDBKey)
     resizeBtn:SetScript("OnMouseUp", function(self)
         local db = OneWoW_Bags:GetDB()
         mainWindow:StopMovingOrSizing()
+        WH:SnapFrameToPixel(mainWindow)
         local pos = DB:Ensure(db, "global", positionDBKey)
         OneWoW_GUI:SaveWindowPosition(mainWindow, pos)
         gui:RefreshLayout()
@@ -375,6 +408,7 @@ function WH:SaveAndRestorePosition(mainWindow, positionDBKey)
     if not OneWoW_GUI:RestoreWindowPosition(mainWindow, pos) then
         mainWindow:SetPoint("CENTER")
     end
+    WH:SnapFrameToPixel(mainWindow)
 end
 
 function WH:ApplyBaseTheme(mainWindow, titleBar, infoBarRef, bottomBarRef)

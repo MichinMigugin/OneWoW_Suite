@@ -55,6 +55,9 @@ function GUI:InitMainWindow()
             OneWoW_Bags.activeExpansionFilter = nil
             OneWoW_GUI:SaveWindowPosition(MainWindow, db.global.mainFramePosition)
         end,
+        onDragStop = function()
+            if isInitialized then GUI:RefreshLayout() end
+        end,
     })
 
     if not MainWindow then return end
