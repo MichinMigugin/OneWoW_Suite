@@ -42,50 +42,27 @@ local ICON_STYLE_PRESETS = {
     },
 }
 
+local BORDER_EDGE_FILE = "Interface\\Buttons\\WHITE8X8"
+
+local function ApplyBorderBackdrop(border, edgeSize)
+    border:SetBackdrop({
+        edgeFile = BORDER_EDGE_FILE,
+        edgeSize = edgeSize,
+    })
+end
+
+-- Uses Blizzard's BackdropTemplate (not custom OVERLAY textures) so 1px edges
+-- pixel-snap reliably even when the parent lands on non-integer physical pixels.
+-- FrameLevel = parent + 1 so the border draws above the icon; overlay containers
+-- (ilvl, etc.) render at parent + 2 so they remain above the border.
 local function CreateEdgeBorder(frame, edgeSize)
-    local edges = {}
-    local t = frame:CreateTexture(nil, "OVERLAY", nil, 1)
-    t:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-    t:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-    t:SetHeight(edgeSize)
-    t:SetColorTexture(1, 1, 1, 1)
-    edges[1] = t
-
-    local b = frame:CreateTexture(nil, "OVERLAY", nil, 1)
-    b:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
-    b:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-    b:SetHeight(edgeSize)
-    b:SetColorTexture(1, 1, 1, 1)
-    edges[2] = b
-
-    local l = frame:CreateTexture(nil, "OVERLAY", nil, 1)
-    l:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -edgeSize)
-    l:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, edgeSize)
-    l:SetWidth(edgeSize)
-    l:SetColorTexture(1, 1, 1, 1)
-    edges[3] = l
-
-    local r = frame:CreateTexture(nil, "OVERLAY", nil, 1)
-    r:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -edgeSize)
-    r:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, edgeSize)
-    r:SetWidth(edgeSize)
-    r:SetColorTexture(1, 1, 1, 1)
-    edges[4] = r
-
-    local border = { _edges = edges }
-    function border:SetBackdropBorderColor(cr, cg, cb, ca)
-        for i = 1, 4 do
-            edges[i]:SetVertexColor(cr, cg, cb, ca or 1)
-        end
-    end
-    function border:SetBackdrop(val)
-        if val then
-            for i = 1, 4 do edges[i]:Show() end
-        else
-            for i = 1, 4 do edges[i]:Hide() end
-        end
-    end
-    function border:SetBackdropColor() end
+    local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    border:SetAllPoints(frame)
+    border:SetFrameLevel(frame:GetFrameLevel() + 1)
+    border:EnableMouse(false)
+    ApplyBorderBackdrop(border, edgeSize)
+    border:SetBackdropBorderColor(1, 1, 1, 1)
+    border._edgeSize = edgeSize
     return border
 end
 
@@ -267,6 +244,9 @@ function OneWoW_GUI:SkinIconFrame(frame, options)
     if borderSize > 0 then
         if not frame._skinBorder then
             frame._skinBorder = CreateEdgeBorder(frame, borderSize)
+        else
+            ApplyBorderBackdrop(frame._skinBorder, borderSize)
+            frame._skinBorder._edgeSize = borderSize
         end
 
         if quality and quality > 1 then
