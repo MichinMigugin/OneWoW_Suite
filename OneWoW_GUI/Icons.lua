@@ -7,14 +7,6 @@ local unpack = unpack
 local ICON_TRIM_COORDS = { 0.07, 0.93, 0.07, 0.93 }
 local ICON_FULL_COORDS = { 0, 1, 0, 1 }
 
-local ICON_BACKDROP_THIN = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
-local ICON_BACKDROP_THICK = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 2,
-}
-
 local ICON_STYLE_PRESETS = {
     clean = {
         borderSize = 1,
@@ -49,6 +41,53 @@ local ICON_STYLE_PRESETS = {
         bgAlpha = 0,
     },
 }
+
+local function CreateEdgeBorder(frame, edgeSize)
+    local edges = {}
+    local t = frame:CreateTexture(nil, "OVERLAY", nil, 1)
+    t:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    t:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+    t:SetHeight(edgeSize)
+    t:SetColorTexture(1, 1, 1, 1)
+    edges[1] = t
+
+    local b = frame:CreateTexture(nil, "OVERLAY", nil, 1)
+    b:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+    b:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+    b:SetHeight(edgeSize)
+    b:SetColorTexture(1, 1, 1, 1)
+    edges[2] = b
+
+    local l = frame:CreateTexture(nil, "OVERLAY", nil, 1)
+    l:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -edgeSize)
+    l:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, edgeSize)
+    l:SetWidth(edgeSize)
+    l:SetColorTexture(1, 1, 1, 1)
+    edges[3] = l
+
+    local r = frame:CreateTexture(nil, "OVERLAY", nil, 1)
+    r:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -edgeSize)
+    r:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, edgeSize)
+    r:SetWidth(edgeSize)
+    r:SetColorTexture(1, 1, 1, 1)
+    edges[4] = r
+
+    local border = { _edges = edges }
+    function border:SetBackdropBorderColor(cr, cg, cb, ca)
+        for i = 1, 4 do
+            edges[i]:SetVertexColor(cr, cg, cb, ca or 1)
+        end
+    end
+    function border:SetBackdrop(val)
+        if val then
+            for i = 1, 4 do edges[i]:Show() end
+        else
+            for i = 1, 4 do edges[i]:Hide() end
+        end
+    end
+    function border:SetBackdropColor() end
+    return border
+end
 
 function OneWoW_GUI:CreateItemIcon(parent, options)
     options = options or {}
@@ -227,13 +266,8 @@ function OneWoW_GUI:SkinIconFrame(frame, options)
 
     if borderSize > 0 then
         if not frame._skinBorder then
-            frame._skinBorder = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-            frame._skinBorder:SetAllPoints(frame)
-            frame._skinBorder:SetFrameLevel(frame:GetFrameLevel() + 2)
+            frame._skinBorder = CreateEdgeBorder(frame, borderSize)
         end
-        local backdrop = borderSize >= 2 and ICON_BACKDROP_THICK or ICON_BACKDROP_THIN
-        frame._skinBorder:SetBackdrop(backdrop)
-        frame._skinBorder:SetBackdropColor(0, 0, 0, 0)
 
         if quality and quality > 1 then
             frame._skinBorder:SetBackdropBorderColor(self:GetItemQualityColor(quality))
@@ -340,19 +374,14 @@ function OneWoW_GUI:CreateSkinnedIcon(parent, options)
     iconFrame._skinnedIcon = tex
 
     if borderSize > 0 then
-        local borderFrame = CreateFrame("Frame", nil, iconFrame, "BackdropTemplate")
-        borderFrame:SetAllPoints(iconFrame)
-        borderFrame:SetFrameLevel(iconFrame:GetFrameLevel() + 2)
-        local backdrop = borderSize >= 2 and ICON_BACKDROP_THICK or ICON_BACKDROP_THIN
-        borderFrame:SetBackdrop(backdrop)
-        borderFrame:SetBackdropColor(0, 0, 0, 0)
+        local border = CreateEdgeBorder(iconFrame, borderSize)
 
         if quality and quality > 1 then
-            borderFrame:SetBackdropBorderColor(self:GetItemQualityColor(quality))
+            border:SetBackdropBorderColor(self:GetItemQualityColor(quality))
         else
-            borderFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor(options.borderColorKey or "BORDER_DEFAULT"))
+            border:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor(options.borderColorKey or "BORDER_DEFAULT"))
         end
-        iconFrame._skinBorder = borderFrame
+        iconFrame._skinBorder = border
         iconFrame._skinBorderColorKey = options.borderColorKey or "BORDER_DEFAULT"
         iconFrame._skinHoverBorderColorKey = options.hoverBorderColorKey or "BORDER_ACCENT"
         iconFrame._skinQuality = quality
