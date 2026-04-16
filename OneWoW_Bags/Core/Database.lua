@@ -191,6 +191,9 @@ function OneWoW_Bags:InitializeDatabase()
                 end
             end
         end },
+        { version = 15, name = "mats_crafting_category", run = function(d)
+            self:MigrateMatsBuiltinCategory(d)
+        end },
     })
 end
 
@@ -238,7 +241,7 @@ function OneWoW_Bags:MigrateCategorySystemV2(db)
             "Miscellaneous", "Battle Pets", "Toys", "Other", "Junk",
         }, collapsed = false },
         [secEquip] = { name = "EQUIPMENT", categories = { "Equipment Sets", "Weapons", "Armor" }, collapsed = false },
-        [secCraft] = { name = "CRAFTING",  categories = { "Reagents", "Trade Goods", "Tradeskill", "Recipes" }, collapsed = false },
+        [secCraft] = { name = "CRAFTING",  categories = { "Mats", "Reagents", "Trade Goods", "Tradeskill", "Recipes" }, collapsed = false },
         [secHouse] = { name = "HOUSING",   categories = { "Housing" }, collapsed = false },
     }
     g.sectionOrder = { secDefault, secEquip, secCraft, secHouse }
@@ -340,6 +343,7 @@ function OneWoW_Bags:MigrateCategorySystemV3(db)
         "Armor",
         "section_end",
         "section:" .. secCraft,
+        "Mats",
         "Reagents",
         "Trade Goods",
         "Tradeskill",
@@ -600,6 +604,47 @@ function OneWoW_Bags:MigrateSectionCategoryMembershipCleanup(db)
     end
 
     if g.categorySections[SD.SEC_ONEWOW_BAGS] then
+        SD:SyncOnewowSectionCategories(g)
+    end
+end
+
+function OneWoW_Bags:MigrateMatsBuiltinCategory(db)
+    local g = db.global
+    local SD = OneWoW_Bags.SectionDefaults
+
+    local function insertMatsBeforeReagents(categories)
+        if not categories then return end
+        local hasMats = false
+        local reagentsIdx = nil
+        for i, nm in ipairs(categories) do
+            if nm == "Mats" then
+                hasMats = true
+            elseif nm == "Reagents" and not reagentsIdx then
+                reagentsIdx = i
+            end
+        end
+        if hasMats or not reagentsIdx then return end
+        tinsert(categories, reagentsIdx, "Mats")
+    end
+
+    for _, sec in pairs(g.categorySections or {}) do
+        insertMatsBeforeReagents(sec.categories)
+    end
+
+    local disp = g.displayOrder
+    if disp and #disp > 0 then
+        local i = 1
+        while i <= #disp do
+            if disp[i] == "Reagents" and (i == 1 or disp[i - 1] ~= "Mats") then
+                tinsert(disp, i, "Mats")
+                i = i + 2
+            else
+                i = i + 1
+            end
+        end
+    end
+
+    if g.categorySections and g.categorySections[SD.SEC_ONEWOW_BAGS] then
         SD:SyncOnewowSectionCategories(g)
     end
 end

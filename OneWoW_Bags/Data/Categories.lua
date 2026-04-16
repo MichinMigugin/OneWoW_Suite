@@ -16,9 +16,9 @@ OneWoW_Bags.Categories = {}
 local Categories = OneWoW_Bags.Categories
 
 local CATEGORY_DEFINITIONS = {
-    { name = "1W Junk",          priority = 1   },
-    { name = "1W Upgrades",      priority = 1   },
-    { name = "Recent Items",     priority = 1   },
+    { name = "1W Junk",          priority = 1},
+    { name = "1W Upgrades",      priority = 1},
+    { name = "Recent Items",     priority = 1},
     { name = "Hearthstone",      priority = 2,   search = "#hearthstone",     searchOrder = 2  },
     { name = "Keystone",         priority = 3,   search = "#keystone",        searchOrder = 8  },
     { name = "Potions",          priority = 4,   search = "#potion",          searchOrder = 9  },
@@ -28,7 +28,8 @@ local CATEGORY_DEFINITIONS = {
     { name = "Equipment Sets",   priority = 8,   search = "#set",             searchOrder = 3  },
     { name = "Weapons",          priority = 9,   search = "#weapon",          searchOrder = 14 },
     { name = "Armor",            priority = 10,  search = "#armor & #gear",   searchOrder = 15 },
-    { name = "Reagents",         priority = 11,  search = "#reagent",         searchOrder = 11 },
+    { name = "Mats",             priority = 10.5, search = "#craftingreagent", searchOrder = 10 },
+    { name = "Reagents",         priority = 11,  search = "#reagent & !#craftingreagent", searchOrder = 11 },
     { name = "Trade Goods",      priority = 12,  search = "#tradegoods",      searchOrder = 20 },
     { name = "Tradeskill",       priority = 13,  search = "#tradeskill",      searchOrder = 22 },
     { name = "Recipes",          priority = 14,  search = "#recipe",          searchOrder = 21 },
@@ -726,6 +727,7 @@ function Categories:GetCategoryDescription(categoryName)
         ["Equipment Sets"] = "CAT_DESC_EQUIPMENT_SETS",
         ["Weapons"] = "CAT_DESC_WEAPONS",
         ["Armor"] = "CAT_DESC_ARMOR",
+        ["Mats"] = "CAT_DESC_MATS",
         ["Reagents"] = "CAT_DESC_REAGENTS",
         ["Trade Goods"] = "CAT_DESC_TRADE_GOODS",
         ["Tradeskill"] = "CAT_DESC_TRADESKILL",
