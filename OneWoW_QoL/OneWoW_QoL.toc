@@ -195,9 +195,15 @@ Modules\external\minimapbuttons\minimapbuttons.lua
 Modules\external\minimapbuttons\minimapbuttons-ui.lua
 Modules\external\minimapbuttons\data.lua
 
-Modules\external\minimapskin\Locales\enUS.lua
-Modules\external\minimapskin\minimapskin.lua
-Modules\external\minimapskin\minimapskin-engine.lua
-Modules\external\minimapskin\minimapskin-ui.lua
-Modules\external\minimapskin\data.lua
+Modules\external\map_mini_tools\Locales\enUS.lua
+Modules\external\map_mini_tools\map_mini_tools.lua
+Modules\external\map_mini_tools\map_mini_tools-engine.lua
+Modules\external\map_mini_tools\map_mini_tools-ui.lua
+Modules\external\map_mini_tools\data.lua
+
+Modules\external\map_world_tools\Locales\enUS.lua
+Modules\external\map_world_tools\map_world_tools.lua
+Modules\external\map_world_tools\map_world_tools-engine.lua
+Modules\external\map_world_tools\map_world_tools-ui.lua
+Modules\external\map_world_tools\data.lua
 

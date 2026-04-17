@@ -20,6 +20,9 @@ local MinimapButtonsModule = {
 
 local RawClearAllPoints = UIParent.ClearAllPoints
 local RawSetPoint       = UIParent.SetPoint
+local RawSetScale       = UIParent.SetScale
+
+local IS_RETAIL = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_MAINLINE)
 
 -- ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -39,6 +42,7 @@ local searchFilter     = ""
 local autoCloseTimer   = nil
 local _layouting       = false
 local _relayoutTimer   = nil
+local _compartmentHooksRegistered = false
 
 -- ─── Blizzard frames that must never be collected ───────────────────────────
 
@@ -90,21 +94,61 @@ local function GetSettings()
     if s.maxRows         == nil then s.maxRows         = 0           end
     if s.buttonSize      == nil then s.buttonSize      = 34          end
     if s.buttonSpacing   == nil then s.buttonSpacing   = 2           end
+    if s.buttonScale     == nil then s.buttonScale     = 10          end
     if s.locked          == nil then s.locked          = false       end
     if s.growDirection   == nil then s.growDirection    = "down"      end
     if s.hideCollected   == nil then s.hideCollected   = true        end
     if s.showTooltips    == nil then s.showTooltips    = true        end
     if not s.whitelist       then s.whitelist       = {}          end
     if not s.blacklist       then s.blacklist       = {}          end
+    if not s.mbbWhitelistSeed then
+        s.mbbWhitelistSeed = true
+        if #s.whitelist == 0 then
+            for _, n in ipairs({
+                "ZygorGuidesViewerMapIcon",
+                "TrinketMenu_IconFrame",
+                "CodexBrowserIcon",
+            }) do
+                table.insert(s.whitelist, n)
+            end
+        end
+    end
     return s
 end
 
 MinimapButtonsModule.GetSettings = GetSettings
 
+-- Disabling tears down hooks/parenting; LibDBIcon + square minimap need a full UI reload to behave (same class of issue as Leatrix/minimap shape).
+local function ShowDisableReloadDialog()
+    local d = StaticPopupDialogs["ONEWOW_MMBTNS_RELOAD"]
+    if not d then
+        StaticPopupDialogs["ONEWOW_MMBTNS_RELOAD"] = {
+            text = "",
+            button1 = ACCEPT,
+            button2 = CANCEL,
+            OnAccept = ReloadUI,
+            OnCancel = function()
+                print("|cFFFFD100OneWoW QoL:|r " .. (ns.L["MMBTNS_DISABLE_RELOAD_CHAT"] or "Reload later with /reload to fully restore minimap buttons."))
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            preferredIndex = 3,
+        }
+        d = StaticPopupDialogs["ONEWOW_MMBTNS_RELOAD"]
+    end
+    d.text = ns.L["MMBTNS_DISABLE_RELOAD_TEXT"]
+        or "Disabling this feature requires a UI reload to restore minimap buttons.\n\nReload now?"
+    d.button1 = ns.L["MMBTNS_DISABLE_RELOAD_BTN"] or ACCEPT
+    StaticPopup_Show("ONEWOW_MMBTNS_RELOAD")
+end
+
 local function IsBlacklisted(frameName)
+    if not frameName then return false end
+    local lower = frameName:lower()
     local s = GetSettings()
     for _, name in ipairs(s.blacklist) do
-        if name == frameName then return true end
+        if name and name:lower() == lower then return true end
     end
     return false
 end
@@ -140,122 +184,247 @@ local function RestoreHubPosition()
     end
 end
 
--- ─── Button Detection ───────────────────────────────────────────────────────
+-- ─── Button Detection (aligned with MinimapButtonButton Logic/Main.lua) ─────
 
-local NAME_PATTERNS = {
-    "^LibDBIcon10_",
-    "MinimapButton",
-    "MinimapFrame",
-    "MinimapIcon",
-    "[-_]Minimap[-_]",
-    "Minimap$",
-}
+local function isValidFrame(frame)
+    return type(frame) == "table" and frame.IsObjectType and frame:IsObjectType("Frame")
+end
 
-local function FrameNameMatchesPatterns(name)
-    for _, pat in ipairs(NAME_PATTERNS) do
-        if name:find(pat) then return true end
+local function isTomCatsButton(frameName)
+    return frameName:match("^TomCats%-") ~= nil
+end
+
+local function nameEndsWithNumber(frameName)
+    return frameName:match("%d$") ~= nil
+end
+
+local function nameMatchesButtonPattern(frameName)
+    local patterns = {
+        "^LibDBIcon10_",
+        "MinimapButton",
+        "MinimapFrame",
+        "MinimapIcon",
+        "[-_]Minimap[-_]",
+        "Minimap$",
+    }
+    for _, pattern in ipairs(patterns) do
+        if frameName:match(pattern) then return true end
     end
     return false
 end
 
-local function HasIconTexture(frame)
-    for _, child in ipairs({ frame:GetRegions() }) do
-        if child:IsObjectType("Texture") then
-            local drawLayer = child:GetDrawLayer()
-            if drawLayer == "ARTWORK" or drawLayer == "BACKGROUND" then
-                local tex = child:GetTexture()
-                if tex and tex ~= "" then return true end
-            end
-        end
-    end
-    return false
-end
+local function isMinimapButton(frame)
+    local frameName = frame and frame.GetName and frame:GetName()
+    if not frameName then return false end
 
-local function ShouldCollectChild(child)
-    if not child.GetName then return false end
-    local name = child:GetName()
-    if not name or name == "" then return false end
-    if name == OWN_BUTTON_NAME then return false end
-    if BLIZZARD_SKIP[name] then return false end
-    if collectedNames[name] then return false end
-    if IsBlacklisted(name) then return false end
-
-    if issecurevariable and _G[name] and issecurevariable(_G, name) then
+    if issecurevariable and _G[frameName] and issecurevariable(_G, frameName) then
         return false
     end
 
-    if FrameNameMatchesPatterns(name) then return true end
-    if HasIconTexture(child) then return true end
+    if isTomCatsButton(frameName) then return true end
+    if nameEndsWithNumber(frameName) then return false end
 
-    return false
+    return nameMatchesButtonPattern(frameName)
 end
 
--- ─── Button Collection (MBB-style: simple reparent, no texture manipulation) ─
+local function isButtonCollected(frame)
+    if not frame or not frame.GetName then return false end
+    local n = frame:GetName()
+    if not n then return false end
+    return collectedNames[n] == true
+end
+
+local function updateLayoutIfVisibilityChanged(frame)
+    if not frame or not frame._OneWoWMBBCollected then return end
+    -- During LayoutContainer we Hide() every collected button; hooksecurefunc would
+    -- set collectedMap to false and FilteredButtons() would drop all icons (empty panel).
+    if _layouting then return end
+    local visibility = frame:IsShown()
+    if collectedMap[frame] ~= visibility then
+        collectedMap[frame] = visibility
+        ScheduleRelayout()
+    end
+end
+
+-- Parent hide (e.g. closing the collector) can fire Hide on children and poison
+-- collectedMap; reset when reopening or after addon compartment toggles.
+local function ResetCollectedVisibilityMap()
+    for _, btn in ipairs(collectedButtons) do
+        if btn and btn._OneWoWMBBCollected then
+            collectedMap[btn] = true
+        end
+    end
+end
+
+-- Match Leatrix Plus / LibDBIcon: square minimap uses a small radius; round uses full orbit.
+local function SyncLibDBIconRadiusToMinimapShape()
+    local lib = LibStub and LibStub("LibDBIcon-1.0", true)
+    if not lib or not lib.SetButtonRadius then return end
+    local shape = "ROUND"
+    if _G.GetMinimapShape then
+        shape = GetMinimapShape() or "ROUND"
+    end
+    if type(shape) == "string" and strupper(shape) == "SQUARE" then
+        lib:SetButtonRadius(0.165)
+    else
+        lib:SetButtonRadius(1)
+    end
+end
+
+local function LibDBIconNotifyRestored(frame)
+    local lib = LibStub and LibStub("LibDBIcon-1.0", true)
+    if not lib or not frame then return end
+    local list = lib.GetButtonList and lib:GetButtonList()
+    if not list then return end
+    for _, n in ipairs(list) do
+        local btn = lib.GetMinimapButton and lib:GetMinimapButton(n)
+        if btn == frame then
+            if type(lib.Show) == "function" then
+                pcall(lib.Show, lib, n)
+            end
+            break
+        end
+    end
+end
+
+local function RefreshAllLibDBIcons()
+    local lib = LibStub and LibStub("LibDBIcon-1.0", true)
+    if not lib or not lib.GetButtonList or not lib.Show then return end
+    SyncLibDBIconRadiusToMinimapShape()
+    local list = lib:GetButtonList()
+    if not list then return end
+    for _, n in ipairs(list) do
+        pcall(lib.Show, lib, n)
+    end
+end
+
+local function getButtonByName(buttonName)
+    local parent = _G
+    for frameName in buttonName:gmatch("[^%.]+") do
+        parent = parent[frameName]
+        if type(parent) ~= "table" then return nil end
+    end
+    return parent
+end
+
+local function shouldCollectMinimapScan(frame)
+    if isButtonCollected(frame) or not isValidFrame(frame) or IsBlacklisted(frame:GetName() or "") then
+        return false
+    end
+    return isMinimapButton(frame)
+end
+
+-- ─── Button Collection (MBB-style: reparent, raw scale, hooksecurefunc Show/Hide)
+
+local function ApplyCollectedButtonScale(frame)
+    local s = GetSettings()
+    local scale = (s.buttonScale or 10) / 10
+    if scale > 0 then
+        RawSetScale(frame, scale)
+    end
+end
+
+function MinimapButtonsModule:ApplyButtonScale()
+    for _, frame in ipairs(collectedButtons) do
+        if frame and frame._OneWoWMBBCollected then
+            ApplyCollectedButtonScale(frame)
+        end
+    end
+    self:LayoutContainer()
+end
 
 local function CollectButton(frame)
     local name = frame:GetName()
     if not name or collectedNames[name] then return end
+    if not GetSettings().hideCollected then return end
+
+    local origEnter = frame:GetScript("OnEnter")
+    local origLeave = frame:GetScript("OnLeave")
+
     collectedNames[name] = true
+    frame._OneWoWMBBCollected = true
 
     frame:SetParent(containerFrame)
     frame:SetFrameStrata(CONTAINER_STRATA)
     frame:SetScript("OnDragStart", nil)
     frame:SetScript("OnDragStop", nil)
+    if frame.SetIgnoreParentScale then
+        frame:SetIgnoreParentScale(false)
+    end
+    ApplyCollectedButtonScale(frame)
 
     frame.ClearAllPoints = noOp
     frame.SetPoint       = noOp
     frame.SetParent      = noOp
     frame.SetScale       = noOp
 
+    if not frame._OneWoWMBBShowHooked then
+        hooksecurefunc(frame, "Show", function()
+            updateLayoutIfVisibilityChanged(frame)
+        end)
+        hooksecurefunc(frame, "Hide", function()
+            updateLayoutIfVisibilityChanged(frame)
+        end)
+        frame._OneWoWMBBShowHooked = true
+    end
+
+    frame._OneWoWMBBOrigEnter = origEnter
+    frame._OneWoWMBBOrigLeave = origLeave
+    frame:SetScript("OnEnter", function(self)
+        if frame._OneWoWMBBOrigEnter then frame._OneWoWMBBOrigEnter(self) end
+        if not GetSettings().showTooltips then
+            GameTooltip:Hide()
+        end
+    end)
+    frame:SetScript("OnLeave", function(self)
+        if frame._OneWoWMBBOrigLeave then frame._OneWoWMBBOrigLeave(self) end
+        if not GetSettings().showTooltips then
+            GameTooltip:Hide()
+        end
+    end)
+
     table.insert(collectedButtons, frame)
     collectedMap[frame] = frame:IsShown()
-
-    frame:HookScript("OnShow", function()
-        if not _layouting then
-            collectedMap[frame] = true
-            ScheduleRelayout()
-        end
-    end)
-    frame:HookScript("OnHide", function()
-        if not _layouting then
-            collectedMap[frame] = false
-            ScheduleRelayout()
-        end
-    end)
 end
 
 local function UncollectButton(frame)
-    local origCP  = UIParent.ClearAllPoints
-    local origSP  = UIParent.SetPoint
-    local origPar = UIParent.SetParent
-    local origSc  = UIParent.SetScale
+    frame._OneWoWMBBCollected = false
+    local n = frame:GetName()
+    if n then
+        collectedNames[n] = nil
+    end
+    collectedMap[frame] = nil
 
     frame.ClearAllPoints = nil
     frame.SetPoint       = nil
     frame.SetParent      = nil
     frame.SetScale       = nil
+    RawSetScale(frame, 1)
+
+    frame:SetScript("OnEnter", frame._OneWoWMBBOrigEnter)
+    frame:SetScript("OnLeave", frame._OneWoWMBBOrigLeave)
+    frame._OneWoWMBBOrigEnter = nil
+    frame._OneWoWMBBOrigLeave = nil
+
+    -- Drop layout anchors from the collector grid; otherwise icons stay where the panel was.
+    RawClearAllPoints(frame)
     frame:SetParent(_G.Minimap)
+    if frame.Show then frame:Show() end
+    LibDBIconNotifyRestored(frame)
 end
 
 local function ScanMinimapChildren()
-    if not containerFrame then return end
+    if not containerFrame or not GetSettings().hideCollected then return end
     for _, child in ipairs({ _G.Minimap:GetChildren() }) do
-        if child:IsObjectType("Button") or child:IsObjectType("Frame") then
-            if ShouldCollectChild(child) then
-                CollectButton(child)
-            end
-            for _, grandchild in ipairs({ child:GetChildren() }) do
-                if (grandchild:IsObjectType("Button") or grandchild:IsObjectType("Frame"))
-                   and ShouldCollectChild(grandchild) then
-                    CollectButton(grandchild)
-                end
-            end
+        if (child:IsObjectType("Button") or child:IsObjectType("Frame"))
+            and shouldCollectMinimapScan(child) then
+            CollectButton(child)
         end
     end
 end
 
 local function ScanLibDBIcon()
-    if not containerFrame then return end
+    if not containerFrame or not GetSettings().hideCollected then return end
     local libDBIcon = LibStub and LibStub("LibDBIcon-1.0", true)
     if not libDBIcon then return end
 
@@ -275,14 +444,34 @@ local function ScanLibDBIcon()
     end
 end
 
+local function ScanLibMapButton()
+    if not containerFrame or not GetSettings().hideCollected then return end
+    local libMap = LibStub and LibStub("LibMapButton-1.1", true)
+    if not libMap or not libMap.buttons then return end
+    for _, btn in pairs(libMap.buttons) do
+        if btn and btn.GetName then
+            local frameName = btn:GetName()
+            if frameName and not collectedNames[frameName]
+                and not BLIZZARD_SKIP[frameName]
+                and not IsBlacklisted(frameName)
+                and frameName ~= OWN_BUTTON_NAME then
+                CollectButton(btn)
+            end
+        end
+    end
+end
+
 local function ScanWhitelist()
-    if not containerFrame then return end
+    if not containerFrame or not GetSettings().hideCollected then return end
     local s = GetSettings()
-    for _, name in ipairs(s.whitelist) do
-        if not collectedNames[name] then
-            local frame = _G[name]
-            if frame and type(frame) == "table" and frame.GetName and frame:GetName() then
-                CollectButton(frame)
+    for _, path in ipairs(s.whitelist) do
+        if path and path ~= "" then
+            local frame = getButtonByName(path)
+            if isValidFrame(frame) and not isButtonCollected(frame) then
+                local fn = frame:GetName()
+                if fn and not IsBlacklisted(fn) then
+                    CollectButton(frame)
+                end
             end
         end
     end
@@ -295,13 +484,33 @@ local function SortCollected()
 end
 
 function MinimapButtonsModule:CollectAll()
-    if InCombatLockdown() then
-        self._needsCollect = true
+    local s = GetSettings()
+    if not s.hideCollected then
+        SyncLibDBIconRadiusToMinimapShape()
+        local copy = {}
+        for _, b in ipairs(collectedButtons) do
+            copy[#copy + 1] = b
+        end
+        for _, btn in ipairs(copy) do
+            UncollectButton(btn)
+        end
+        wipe(collectedButtons)
+        wipe(collectedNames)
+        wipe(collectedMap)
+        RefreshAllLibDBIcons()
+        C_Timer.After(0, function()
+            SyncLibDBIconRadiusToMinimapShape()
+            RefreshAllLibDBIcons()
+        end)
+        self:LayoutContainer()
+        self:UpdateBadge()
         return
     end
+
     ScanLibDBIcon()
-    ScanMinimapChildren()
+    ScanLibMapButton()
     ScanWhitelist()
+    ScanMinimapChildren()
     SortCollected()
     self:LayoutContainer()
     self:UpdateBadge()
@@ -627,6 +836,7 @@ end
 
 local function ShowContainer()
     if not containerFrame then return end
+    ResetCollectedVisibilityMap()
     MinimapButtonsModule:CollectAll()
     PositionContainer()
     containerFrame:Show()
@@ -834,6 +1044,7 @@ function MinimapButtonsModule:OnDisable()
         self._eventFrame:UnregisterAllEvents()
     end
 
+    SyncLibDBIconRadiusToMinimapShape()
     for _, btn in ipairs(collectedButtons) do
         UncollectButton(btn)
     end
@@ -841,15 +1052,37 @@ function MinimapButtonsModule:OnDisable()
     wipe(collectedNames)
     wipe(collectedMap)
 
+    RefreshAllLibDBIcons()
+    C_Timer.After(0, function()
+        SyncLibDBIconRadiusToMinimapShape()
+        RefreshAllLibDBIcons()
+    end)
+
     if containerFrame then
         containerFrame:Hide()
     end
     if hubButton then
         hubButton:Hide()
     end
+
+    C_Timer.After(0, ShowDisableReloadDialog)
 end
 
 function MinimapButtonsModule:OnToggle(toggleId, value)
+end
+
+function MinimapButtonsModule:RegisterAddonCompartmentHooks()
+    if _compartmentHooksRegistered then return end
+    local f = _G.AddonCompartmentFrame
+    if not f or not f.HookScript then return end
+    _compartmentHooksRegistered = true
+    local function onCompartmentVisibility()
+        if not containerFrame or not containerFrame:IsShown() then return end
+        ResetCollectedVisibilityMap()
+        ScheduleRelayout()
+    end
+    f:HookScript("OnShow", onCompartmentVisibility)
+    f:HookScript("OnHide", onCompartmentVisibility)
 end
 
 function MinimapButtonsModule:RegisterEvents()
@@ -857,16 +1090,20 @@ function MinimapButtonsModule:RegisterEvents()
         self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_MMBtnEvents")
     end
     self._eventFrame:UnregisterAllEvents()
-    self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    if IS_RETAIL then
+        self._eventFrame:RegisterEvent("PET_BATTLE_OPENING_START")
+        self._eventFrame:RegisterEvent("PET_BATTLE_CLOSE")
+    end
 
     self._eventFrame:SetScript("OnEvent", function(_, event)
-        if event == "PLAYER_REGEN_ENABLED" then
-            if MinimapButtonsModule._needsCollect then
-                MinimapButtonsModule._needsCollect = false
-                MinimapButtonsModule:CollectAll()
-            end
+        if event == "PET_BATTLE_OPENING_START" then
+            if hubButton then hubButton:Hide() end
+        elseif event == "PET_BATTLE_CLOSE" then
+            if hubButton then hubButton:Show() end
         end
     end)
+
+    self:RegisterAddonCompartmentHooks()
 end
 
 function MinimapButtonsModule:Refresh()
@@ -874,6 +1111,15 @@ function MinimapButtonsModule:Refresh()
         BuildEnhancedRow()
     end
     self:CollectAll()
+end
+
+function MinimapButtonsModule:ApplyMinimapShapeToLibDBIcons()
+    SyncLibDBIconRadiusToMinimapShape()
+    RefreshAllLibDBIcons()
+    C_Timer.After(0, function()
+        SyncLibDBIconRadiusToMinimapShape()
+        RefreshAllLibDBIcons()
+    end)
 end
 
 ns.MinimapButtonsModule = MinimapButtonsModule

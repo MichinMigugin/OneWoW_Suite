@@ -23,6 +23,7 @@ L["MMBTNS_MAX_COLUMNS"]                 = "Max Columns"
 L["MMBTNS_MAX_ROWS"]                    = "Max Rows"
 L["MMBTNS_MAX_ROWS_DESC"]              = "0 = unlimited. Cannot be 1x1 if multiple buttons exist."
 L["MMBTNS_BUTTON_SIZE"]                 = "Button Size"
+L["MMBTNS_BUTTON_SCALE"]                = "Collected icon scale"
 L["MMBTNS_BUTTON_SPACING"]             = "Button Spacing"
 
 L["MMBTNS_LOCK_POSITION"]              = "Lock Position"
@@ -63,3 +64,7 @@ L["MMBTNS_CONTEXT_SETTINGS"]          = "Open Settings"
 L["MMBTNS_CONTEXT_REFRESH"]           = "Refresh Buttons"
 
 L["MMBTNS_1X1_WARNING"]               = "Cannot set 1x1 layout with multiple buttons. Max rows reset to unlimited."
+
+L["MMBTNS_DISABLE_RELOAD_TEXT"]       = "Turning off the Minimap Button Collector leaves LibDBIcon and other minimap hooks in a bad state until the UI reloads (icons may not drag on a square map, and re-enabling may not show the container).\n\nReload the interface now to restore normal minimap buttons?"
+L["MMBTNS_DISABLE_RELOAD_BTN"]        = "Reload UI"
+L["MMBTNS_DISABLE_RELOAD_CHAT"]       = "Reload later with |cFFFFD100/reload|r to fully restore minimap buttons."

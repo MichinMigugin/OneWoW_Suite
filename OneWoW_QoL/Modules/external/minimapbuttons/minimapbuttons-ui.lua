@@ -252,6 +252,7 @@ local function BuildContent(container, isEnabled)
         checked = s.hideCollected,
         onClick = function(self)
             s.hideCollected = self:GetChecked()
+            ns.MinimapButtonsModule:Refresh()
         end,
     })
     hideCB:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -385,6 +386,27 @@ local function BuildContent(container, isEnabled)
         end,
     })
     sizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
+    cy = cy - SLIDER_HEIGHT
+
+    -- Collected icon scale (MinimapButtonButton-style: stored as tenths, e.g. 10 = 1.0 scale)
+    local scaleLabel
+    scaleLabel, cy = AddLabel(container, cy,
+        string.format("%s: %.1f", L["MMBTNS_BUTTON_SCALE"] or "Collected icon scale", (s.buttonScale or 10) / 10))
+
+    local scaleSlider = OneWoW_GUI:CreateSlider(container, {
+        minVal     = 1,
+        maxVal     = 50,
+        step       = 1,
+        currentVal = s.buttonScale or 10,
+        width      = 260,
+        fmt        = "%d",
+        onChange    = function(val)
+            s.buttonScale = val
+            scaleLabel:SetText(string.format("%s: %.1f", L["MMBTNS_BUTTON_SCALE"] or "Collected icon scale", val / 10))
+            ns.MinimapButtonsModule:ApplyButtonScale()
+        end,
+    })
+    scaleSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
     cy = cy - SLIDER_HEIGHT
 
     -- Button Spacing

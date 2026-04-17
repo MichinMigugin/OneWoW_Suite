@@ -145,6 +145,16 @@ function addon:InitializeDatabase()
     if not self.db.global.modules then
         self.db.global.modules = {}
     end
+    local mods = self.db.global.modules
+    if mods.minimapskin and not mods.map_mini_tools then
+        mods.map_mini_tools = mods.minimapskin
+        mods.minimapskin = nil
+    end
+    local fav = self.db.global.uiFavorites
+    if fav and fav.features and fav.features.minimapskin and not fav.features.map_mini_tools then
+        fav.features.map_mini_tools = fav.features.minimapskin
+        fav.features.minimapskin = nil
+    end
 end
 
 local eventFrame = CreateFrame("Frame")

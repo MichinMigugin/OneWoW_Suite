@@ -1,5 +1,9 @@
 OneWoW_Utility_Extractor/
 OneWoW_UI/
+
+# Local game prototypes (Godot / experiments — not part of the addon suite)
+games/
+
 .releases/
 .gitignore
 .git/
