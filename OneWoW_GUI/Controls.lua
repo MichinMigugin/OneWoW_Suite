@@ -204,7 +204,6 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
     local searchable = options.searchable ~= false
     local buildItems = options.buildItems
     local onSelect = options.onSelect
-    local maxVisible = options.maxVisible or 20
     local menuHeight = options.menuHeight or 314
     local getActiveValue = options.getActiveValue
 
@@ -485,16 +484,13 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     elem.frame:Hide()
                 elseif elem.type == "item" then
                     if not isFiltering or string.find(elem.filterKey, filter, 1, true) then
-                        if shown < maxVisible or isFiltering then
-                            elem.frame:ClearAllPoints()
-                            elem.frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, yPos)
-                            elem.frame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, yPos)
-                            elem.frame:Show()
-                            yPos = yPos - elem.height
-                            shown = shown + 1
-                        else
-                            elem.frame:Hide()
-                        end
+                        -- Scroll frame must list every row; do not cap with maxVisible (that hid options 11+).
+                        elem.frame:ClearAllPoints()
+                        elem.frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, yPos)
+                        elem.frame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, yPos)
+                        elem.frame:Show()
+                        yPos = yPos - elem.height
+                        shown = shown + 1
                     else
                         elem.frame:Hide()
                     end

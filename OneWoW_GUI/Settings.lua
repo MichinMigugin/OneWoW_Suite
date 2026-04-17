@@ -266,16 +266,16 @@ function OneWoW_GUI:SafeSetFont(fontString, fontPath, size, flags)
     if not fontString then return end
     local offset = self._settingsDB and self._settingsDB.fontSizeOffset or 0
     if not fontPath then
-        if offset ~= 0 and size then
-            local defaultPath = GameFontNormal:GetFont()
+        -- SetFont with the stock font file + explicit point size; SetFontObject ignores size sliders.
+        local defaultPath = select(1, GameFontNormal:GetFont())
+        if defaultPath then
             local adjustedSize = math.max(6, (size or 12) + offset)
             local ok, success = pcall(fontString.SetFont, fontString, defaultPath, adjustedSize, flags or "")
-            if not ok or not success then
-                fontString:SetFontObject(GameFontNormal)
+            if ok and success then
+                return
             end
-        else
-            fontString:SetFontObject(GameFontNormal)
         end
+        fontString:SetFontObject(GameFontNormal)
         return
     end
     local adjustedSize = math.max(6, (size or 12) + offset)
