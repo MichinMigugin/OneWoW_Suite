@@ -29,6 +29,7 @@ EditBoxes.lua
 Layout.lua
 Panels.lua
 Icons.lua
+ReorderDrag.lua
 
 Settings.lua
 Minimap.lua
