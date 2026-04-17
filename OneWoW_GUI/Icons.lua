@@ -7,14 +7,6 @@ local unpack = unpack
 local ICON_TRIM_COORDS = { 0.07, 0.93, 0.07, 0.93 }
 local ICON_FULL_COORDS = { 0, 1, 0, 1 }
 
-local ICON_BACKDROP_THIN = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
-local ICON_BACKDROP_THICK = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 2,
-}
-
 local ICON_STYLE_PRESETS = {
     clean = {
         borderSize = 1,
@@ -49,6 +41,30 @@ local ICON_STYLE_PRESETS = {
         bgAlpha = 0,
     },
 }
+
+local BORDER_EDGE_FILE = "Interface\\Buttons\\WHITE8X8"
+
+local function ApplyBorderBackdrop(border, edgeSize)
+    border:SetBackdrop({
+        edgeFile = BORDER_EDGE_FILE,
+        edgeSize = edgeSize,
+    })
+end
+
+-- Uses Blizzard's BackdropTemplate (not custom OVERLAY textures) so 1px edges
+-- pixel-snap reliably even when the parent lands on non-integer physical pixels.
+-- FrameLevel = parent + 1 so the border draws above the icon; overlay containers
+-- (ilvl, etc.) render at parent + 2 so they remain above the border.
+local function CreateEdgeBorder(frame, edgeSize)
+    local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    border:SetAllPoints(frame)
+    border:SetFrameLevel(frame:GetFrameLevel() + 1)
+    border:EnableMouse(false)
+    ApplyBorderBackdrop(border, edgeSize)
+    border:SetBackdropBorderColor(1, 1, 1, 1)
+    border._edgeSize = edgeSize
+    return border
+end
 
 function OneWoW_GUI:CreateItemIcon(parent, options)
     options = options or {}
@@ -227,13 +243,11 @@ function OneWoW_GUI:SkinIconFrame(frame, options)
 
     if borderSize > 0 then
         if not frame._skinBorder then
-            frame._skinBorder = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-            frame._skinBorder:SetAllPoints(frame)
-            frame._skinBorder:SetFrameLevel(frame:GetFrameLevel() + 2)
+            frame._skinBorder = CreateEdgeBorder(frame, borderSize)
+        else
+            ApplyBorderBackdrop(frame._skinBorder, borderSize)
+            frame._skinBorder._edgeSize = borderSize
         end
-        local backdrop = borderSize >= 2 and ICON_BACKDROP_THICK or ICON_BACKDROP_THIN
-        frame._skinBorder:SetBackdrop(backdrop)
-        frame._skinBorder:SetBackdropColor(0, 0, 0, 0)
 
         if quality and quality > 1 then
             frame._skinBorder:SetBackdropBorderColor(self:GetItemQualityColor(quality))
@@ -340,19 +354,14 @@ function OneWoW_GUI:CreateSkinnedIcon(parent, options)
     iconFrame._skinnedIcon = tex
 
     if borderSize > 0 then
-        local borderFrame = CreateFrame("Frame", nil, iconFrame, "BackdropTemplate")
-        borderFrame:SetAllPoints(iconFrame)
-        borderFrame:SetFrameLevel(iconFrame:GetFrameLevel() + 2)
-        local backdrop = borderSize >= 2 and ICON_BACKDROP_THICK or ICON_BACKDROP_THIN
-        borderFrame:SetBackdrop(backdrop)
-        borderFrame:SetBackdropColor(0, 0, 0, 0)
+        local border = CreateEdgeBorder(iconFrame, borderSize)
 
         if quality and quality > 1 then
-            borderFrame:SetBackdropBorderColor(self:GetItemQualityColor(quality))
+            border:SetBackdropBorderColor(self:GetItemQualityColor(quality))
         else
-            borderFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor(options.borderColorKey or "BORDER_DEFAULT"))
+            border:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor(options.borderColorKey or "BORDER_DEFAULT"))
         end
-        iconFrame._skinBorder = borderFrame
+        iconFrame._skinBorder = border
         iconFrame._skinBorderColorKey = options.borderColorKey or "BORDER_DEFAULT"
         iconFrame._skinHoverBorderColorKey = options.hoverBorderColorKey or "BORDER_ACCENT"
         iconFrame._skinQuality = quality

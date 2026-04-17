@@ -135,6 +135,24 @@ function BagSet:UpdateAllSlots()
     self:ProcessDirtySlots()
 end
 
+function BagSet:UpdateSlotsForItems(itemIDs)
+    if not self.isBuilt or not itemIDs then return end
+    local anyDirty = false
+    for bagID, bagSlots in pairs(self.slots) do
+        for slotID, button in pairs(bagSlots) do
+            local info = button.owb_itemInfo
+            local id = info and info.itemID
+            if id and itemIDs[id] then
+                button:OWB_MarkDirty()
+                anyDirty = true
+            end
+        end
+    end
+    if anyDirty then
+        self:ProcessDirtySlots()
+    end
+end
+
 function BagSet:UpdateQualityColors()
     for bagID, bagSlots in pairs(self.slots) do
         for slotID, button in pairs(bagSlots) do

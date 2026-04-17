@@ -67,6 +67,9 @@ function GuildBankGUI:InitMainWindow()
                 end)
             end
         end,
+        onDragStop = function()
+            if isInitialized then GuildBankGUI:RefreshLayout() end
+        end,
     })
 
     if not MainWindow then return end

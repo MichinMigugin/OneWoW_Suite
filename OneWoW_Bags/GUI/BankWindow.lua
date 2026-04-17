@@ -159,6 +159,9 @@ function BankGUI:InitMainWindow()
                 end)
             end
         end,
+        onDragStop = function()
+            if isInitialized then BankGUI:RefreshLayout() end
+        end,
     })
 
     if not MainWindow then return end

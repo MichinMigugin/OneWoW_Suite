@@ -34,19 +34,53 @@ Events.RuntimeEvents = {
 }
 
 local predicateRefreshPending = false
+local pendingItemIDs = nil
 
+-- Fires on infrequent, broad predicate changes (EQUIPMENT_SETS_CHANGED,
+-- PLAYER_EQUIPMENT_CHANGED). These affect upgrade/unusable overlays and
+-- equipment-set membership across every slot, so a full coalesced visual
+-- refresh is appropriate.
 function Events:OnPredicateInvalidation()
     OneWoW_Bags:InvalidateCategorization("props")
 
-    -- when game downloads item data for uncached items, stale visuals can persist - coalesce them until next frame.
-    -- similar pattern as BAG_UPDATE -> BAG_UPDATE_DELAYED
     if not predicateRefreshPending then
         predicateRefreshPending = true
         C_Timer.After(0, function()
             predicateRefreshPending = false
+            local refreshBags = OneWoW_Bags.GUI and OneWoW_Bags.GUI.IsShown and OneWoW_Bags.GUI:IsShown()
+            local refreshBankRelated = OneWoW_Bags.bankOpen or OneWoW_Bags.guildBankOpen
+
+            if refreshBags and refreshBankRelated then
+                OneWoW_Bags:RequestVisualRefresh("all")
+            elseif refreshBankRelated then
+                OneWoW_Bags:RequestVisualRefresh("bank_related")
+            elseif refreshBags then
+                OneWoW_Bags:RequestVisualRefresh("bags")
+            end
+        end)
+    end
+end
+
+-- Fires per-item as the client streams item data. Using the broad visual
+-- refresh path here rebuilds every slot on every event, causing flashing
+-- when the server re-queries items (e.g. failed Warband soulbound inserts).
+-- Instead, coalesce itemIDs until next frame and re-render only the slots
+-- holding those specific items.
+function Events:OnItemInfoReceived(itemID)
+    if not itemID then return end
+
+    OneWoW_Bags:InvalidateCategorization("props")
+
+    if not pendingItemIDs then
+        pendingItemIDs = {}
+        C_Timer.After(0, function()
+            local ids = pendingItemIDs
+            pendingItemIDs = nil
+            OneWoW_Bags:UpdateSlotsForItemIDs(ids)
             OneWoW_Bags:RequestLayoutRefresh("all")
         end)
     end
+    pendingItemIDs[itemID] = true
 end
 
 local function BuildAllBagDirtySet()

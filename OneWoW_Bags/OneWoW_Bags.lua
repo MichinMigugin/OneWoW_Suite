@@ -178,6 +178,19 @@ function OneWoW_Bags:RequestLayoutRefresh(target)
     end)
 end
 
+-- Re-renders only slots whose cached item matches one of the given itemIDs.
+-- Used by GET_ITEM_INFO_RECEIVED streaming so we don't rebuild every slot
+-- on every item-info callback.
+function OneWoW_Bags:UpdateSlotsForItemIDs(itemIDs)
+    if not itemIDs then return end
+    for _, key in ipairs(VISUAL_TARGET_KEYS.all) do
+        local setObj = self[key]
+        if setObj and setObj.isBuilt and setObj.UpdateSlotsForItems then
+            setObj:UpdateSlotsForItems(itemIDs)
+        end
+    end
+end
+
 function OneWoW_Bags:RequestVisualRefresh(target)
     ForEachTarget(self, target, VISUAL_TARGET_KEYS, function(setObj)
         if setObj.isBuilt == false then
@@ -1211,7 +1224,7 @@ local runtimeEventHandlers = {
         Events:OnPredicateInvalidation(...)
     end,
     GET_ITEM_INFO_RECEIVED = function(itemID, ...)
-        Events:OnPredicateInvalidation(...)
+        Events:OnItemInfoReceived(itemID)
     end,
 }
 

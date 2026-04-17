@@ -102,7 +102,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                         local y = -(itemRow * (iconSize + spacing))
 
                         button:ClearAllPoints()
-                        button:SetPoint("TOPLEFT", section.content, "TOPLEFT", x, y)
+                        OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, section.content, x, y)
                         button:OWB_SetIconSize(iconSize)
                         button:Show()
 

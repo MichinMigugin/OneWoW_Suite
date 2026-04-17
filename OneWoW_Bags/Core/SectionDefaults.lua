@@ -14,13 +14,13 @@ SD.SEC_CRAFTING = "sec_crafting"
 SD.SEC_HOUSING = "sec_housing"
 
 SD.EQUIPMENT_CATEGORIES = { "Equipment Sets", "Weapons", "Armor" }
-SD.CRAFTING_CATEGORIES = { "Reagents", "Trade Goods", "Tradeskill", "Recipes" }
+SD.CRAFTING_CATEGORIES = { "Mats", "Reagents", "Trade Goods", "Tradeskill", "Recipes" }
 SD.HOUSING_CATEGORIES = { "Housing" }
 
 SD.BASE_BUILTIN_NAMES = {
     "Recent Items", "Hearthstone", "Keystone", "Potions", "Food",
     "Consumables", "Quest Items", "Equipment Sets", "Weapons", "Armor",
-    "Reagents", "Trade Goods", "Tradeskill", "Recipes", "Housing",
+    "Mats", "Reagents", "Trade Goods", "Tradeskill", "Recipes", "Housing",
     "Gems", "Item Enhancement", "Containers", "Keys", "Miscellaneous",
     "Battle Pets", "Toys", "Other", "Junk",
 }
@@ -38,6 +38,7 @@ SD.BUILTIN_SORT_PRIORITY = {
     ["Equipment Sets"] = 8,
     ["Weapons"] = 9,
     ["Armor"] = 10,
+    ["Mats"] = 10.5,
     ["Reagents"] = 11,
     ["Trade Goods"] = 12,
     ["Tradeskill"] = 13,

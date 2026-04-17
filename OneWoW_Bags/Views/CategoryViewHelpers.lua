@@ -96,7 +96,7 @@ function H.RenderItemGrid(parentFrame, items, startY, leftPadding, cellSize, ico
         local x = leftPadding + (itemCol * cellSize)
         local y = -(startY + itemRow * cellSize)
         button:ClearAllPoints()
-        button:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", x, y)
+        OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, parentFrame, x, y)
         button:OWB_SetIconSize(iconSize)
         button:Show()
         itemCol = itemCol + 1
@@ -212,7 +212,7 @@ function H.LayoutCompactGroup(catInfoList, contentFrame, opts)
                 local x = leftPadding + (cat.startCol + itemCol) * cellSize
                 local y = -(yOffset + itemRow * cellSize)
                 button:ClearAllPoints()
-                button:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", x, y)
+                OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, contentFrame, x, y)
                 button:OWB_SetIconSize(iconSize)
                 button:Show()
                 itemCol = itemCol + 1

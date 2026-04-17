@@ -144,6 +144,9 @@ local function GetOrCreateContainer(button)
         local c = CreateFrame("Frame", nil, button)
         c:SetAllPoints(button)
         c:EnableMouse(false)
+        -- OneWoW_GUI's rarity border sits at button FrameLevel + 1; keep the
+        -- overlay container above it so ilvl/quality overlays stay on top.
+        c:SetFrameLevel(button:GetFrameLevel() + 2)
         c:Hide()
         button.onewow_overlayContainer = c
     end
