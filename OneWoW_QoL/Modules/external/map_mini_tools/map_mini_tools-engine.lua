@@ -50,6 +50,7 @@ local function GetSettings()
     if s.zoneFontSize    == nil then s.zoneFontSize    = 12         end
     if s.clockFont       == nil then s.clockFont       = "global"   end
     if s.clockFontSize   == nil then s.clockFontSize   = 12         end
+    -- zoneTextPos / clockPos = { point, relName, relPoint, x, y } relName: Minimap | MinimapCluster | UIParent
     return s
 end
 
@@ -57,6 +58,35 @@ M.GetSettings = GetSettings
 
 local function GetToggle(id)
     return ns.ModuleRegistry:GetToggleValue("map_mini_tools", id)
+end
+
+local function IsPlumberLoaded()
+    return C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("Plumber")
+end
+
+M.IsPlumberLoaded = IsPlumberLoaded
+
+--- Plumber adds its own expansion minimap control; hiding Blizzard's avoids a duplicate when our "show missions" reparents the stock button.
+local function ShouldHideBlizzardExpansionForPlumber()
+    return IsPlumberLoaded() and GetToggle("hideBlizzardExpansionWhenPlumber")
+end
+
+local function EnsureExpansionPlumberHook()
+    local b = ExpansionLandingPageMinimapButton
+    if not b or M._plumberExpansionHook then return end
+    M._plumberExpansionHook = true
+    b:HookScript("OnShow", function(self)
+        if ns.ModuleRegistry:IsEnabled("map_mini_tools") and ShouldHideBlizzardExpansionForPlumber() then
+            self:Hide()
+        end
+    end)
+end
+
+--- After debug overlay or visibility changes, Blizzard tooltip can call SetText(nil) unless the button state is refreshed.
+local function RefreshExpansionMinimapButtonTooltipState()
+    local b = ExpansionLandingPageMinimapButton
+    if not b or not b.RefreshButton then return end
+    pcall(function() b:RefreshButton(true) end)
 end
 
 local function ResolveFontPath(key)
@@ -324,6 +354,160 @@ end
 
 M.RefreshZoneFont = ApplyZoneFont
 
+local function ResolveLayoutRelative(relName)
+    if relName == "Minimap" and MINIMAP then return MINIMAP end
+    if relName == "MinimapCluster" and MinimapCluster then return MinimapCluster end
+    return UIParent
+end
+
+local function ApplySavedFramePos(frame, key)
+    local sdb = GetSettings()[key]
+    if not sdb or type(sdb) ~= "table" or #sdb < 5 then return false end
+    local rel = ResolveLayoutRelative(sdb[2])
+    if not rel then return false end
+    frame:ClearAllPoints()
+    frame:SetPoint(sdb[1], rel, sdb[3], sdb[4], sdb[5])
+    return true
+end
+
+local function SaveFrameLayoutPos(frame, key)
+    local p, rel, rp, x, y = frame:GetPoint(1)
+    if not p then return end
+    local relName = "UIParent"
+    if rel == MINIMAP then
+        relName = "Minimap"
+    elseif rel == MinimapCluster then
+        relName = "MinimapCluster"
+    elseif rel == UIParent then
+        relName = "UIParent"
+    end
+    GetSettings()[key] = { p, relName, rp, x, y }
+end
+
+local function HookZoneClockDragScripts()
+    if zoneFrame and not zoneFrame._oneWoWDragHooked then
+        zoneFrame._oneWoWDragHooked = true
+        zoneFrame:SetScript("OnMouseDown", function(self, button)
+            if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
+            if not GetToggle("zoneClockDraggable") or button ~= "LeftButton" then return end
+            if not IsShiftKeyDown() then return end
+            if self:IsMovable() then
+                self._oneWoWDragging = true
+                self:StartMoving()
+            end
+        end)
+        zoneFrame:SetScript("OnMouseUp", function(self)
+            if self._oneWoWDragging then
+                self:StopMovingOrSizing()
+                self._oneWoWDragging = nil
+                SaveFrameLayoutPos(self, "zoneTextPos")
+            end
+        end)
+        zoneFrame:SetScript("OnHide", function(self)
+            if self._oneWoWDragging then
+                self:StopMovingOrSizing()
+                self._oneWoWDragging = nil
+            end
+        end)
+    end
+
+    if clockFrame and not clockFrame._oneWoWDragHooked then
+        clockFrame._oneWoWDragHooked = true
+        clockFrame:SetScript("OnMouseDown", function(self, button)
+            if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
+            if not GetToggle("zoneClockDraggable") or button ~= "LeftButton" then return end
+            if not IsShiftKeyDown() then return end
+            if self:IsMovable() then
+                self._oneWoWDragging = true
+                self:StartMoving()
+            end
+        end)
+        clockFrame:SetScript("OnMouseUp", function(self, button)
+            if self._oneWoWDragging then
+                self:StopMovingOrSizing()
+                self._oneWoWDragging = nil
+                SaveFrameLayoutPos(self, "clockPos")
+                return
+            end
+            if button == "LeftButton" and not InCombatLockdown() and TimeManagerFrame then
+                TimeManagerFrame:SetShown(not TimeManagerFrame:IsShown())
+            end
+        end)
+        clockFrame:SetScript("OnHide", function(self)
+            if self._oneWoWDragging then
+                self:StopMovingOrSizing()
+                self._oneWoWDragging = nil
+            end
+        end)
+    end
+end
+
+local function ApplyZoneTextLayout()
+    if not zoneFrame then return end
+    if GetToggle("zoneClockDraggable") then
+        zoneFrame:SetParent(UIParent)
+        zoneFrame:SetFrameStrata("HIGH")
+        zoneFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 30)
+        zoneFrame:SetMovable(true)
+        zoneFrame:SetClampedToScreen(true)
+        if not ApplySavedFramePos(zoneFrame, "zoneTextPos") then
+            zoneFrame:ClearAllPoints()
+            if GetToggle("zoneClockInside") then
+                zoneFrame:SetPoint("TOP", MINIMAP, "TOP", 0, -6)
+            else
+                zoneFrame:SetPoint("BOTTOM", MINIMAP, "TOP", 0, 4)
+            end
+        end
+        HookZoneClockDragScripts()
+    else
+        zoneFrame:SetParent(MINIMAP)
+        zoneFrame:SetMovable(false)
+        zoneFrame:SetClampedToScreen(false)
+        zoneFrame:ClearAllPoints()
+        if GetToggle("zoneClockInside") then
+            zoneFrame:SetFrameStrata("HIGH")
+            zoneFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 25)
+            zoneFrame:SetPoint("TOP", MINIMAP, "TOP", 0, -6)
+        else
+            zoneFrame:SetPoint("BOTTOM", MINIMAP, "TOP", 0, 4)
+        end
+        HookZoneClockDragScripts()
+    end
+end
+
+local function ApplyClockLayout()
+    if not clockFrame then return end
+    if GetToggle("zoneClockDraggable") then
+        clockFrame:SetParent(UIParent)
+        clockFrame:SetFrameStrata("HIGH")
+        clockFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 30)
+        clockFrame:SetMovable(true)
+        clockFrame:SetClampedToScreen(true)
+        if not ApplySavedFramePos(clockFrame, "clockPos") then
+            clockFrame:ClearAllPoints()
+            if GetToggle("zoneClockInside") then
+                clockFrame:SetPoint("BOTTOM", MINIMAP, "BOTTOM", 0, 6)
+            else
+                clockFrame:SetPoint("TOP", MINIMAP, "BOTTOM", 0, -4)
+            end
+        end
+        HookZoneClockDragScripts()
+    else
+        clockFrame:SetParent(MINIMAP)
+        clockFrame:SetMovable(false)
+        clockFrame:SetClampedToScreen(false)
+        clockFrame:ClearAllPoints()
+        if GetToggle("zoneClockInside") then
+            clockFrame:SetFrameStrata("HIGH")
+            clockFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 25)
+            clockFrame:SetPoint("BOTTOM", MINIMAP, "BOTTOM", 0, 6)
+        else
+            clockFrame:SetPoint("TOP", MINIMAP, "BOTTOM", 0, -4)
+        end
+        HookZoneClockDragScripts()
+    end
+end
+
 local function CreateZoneText()
     if zoneFrame then return end
     zoneFrame = CreateFrame("Button", nil, MINIMAP)
@@ -375,14 +559,7 @@ local function ShowZoneText()
 
     CreateZoneText()
     ApplyZoneFont()
-    zoneFrame:ClearAllPoints()
-    if GetToggle("zoneClockInside") then
-        zoneFrame:SetFrameStrata("HIGH")
-        zoneFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 25)
-        zoneFrame:SetPoint("TOP", MINIMAP, "TOP", 0, -6)
-    else
-        zoneFrame:SetPoint("BOTTOM", MINIMAP, "TOP", 0, 4)
-    end
+    ApplyZoneTextLayout()
     zoneFrame:Show()
 
     if MinimapCluster then
@@ -524,11 +701,7 @@ local function CreateClock()
         tt:Show()
     end)
     clockFrame:SetScript("OnLeave", function() GetTooltip():Hide() end)
-    clockFrame:SetScript("OnClick", function()
-        if TimeManagerFrame then
-            TimeManagerFrame:SetShown(not TimeManagerFrame:IsShown())
-        end
-    end)
+    -- Click / Shift-drag handled in HookZoneClockDragScripts (OnMouseUp)
 end
 
 local function ShowClock()
@@ -541,14 +714,7 @@ local function ShowClock()
 
     CreateClock()
     ApplyClockFont()
-    clockFrame:ClearAllPoints()
-    if GetToggle("zoneClockInside") then
-        clockFrame:SetFrameStrata("HIGH")
-        clockFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 25)
-        clockFrame:SetPoint("BOTTOM", MINIMAP, "BOTTOM", 0, 6)
-    else
-        clockFrame:SetPoint("TOP", MINIMAP, "BOTTOM", 0, -4)
-    end
+    ApplyClockLayout()
     clockFrame:Show()
 
     if TimeManagerClockButton then TimeManagerClockButton:SetAlpha(0) end
@@ -752,10 +918,25 @@ local function ApplyElementVisibility()
             HideElement(diffFrame)
         end
     end
+
+    local trackingCluster = MinimapCluster and MinimapCluster.Tracking
+    if trackingCluster then
+        if GetToggle("showTracking") then
+            trackingCluster:SetParent(GetShowParent(trackingCluster))
+            savedParents[trackingCluster] = nil
+            trackingCluster:Show()
+        else
+            HideElement(trackingCluster)
+        end
+    end
+
     if ExpansionLandingPageMinimapButton then
-        if GetToggle("showMissions") then
+        local showBlizzardExpansion = GetToggle("showMissions") and not ShouldHideBlizzardExpansionForPlumber()
+        if showBlizzardExpansion then
+            EnsureExpansionPlumberHook()
             ExpansionLandingPageMinimapButton:SetParent(GetShowParent(ExpansionLandingPageMinimapButton))
             savedParents[ExpansionLandingPageMinimapButton] = nil
+            ExpansionLandingPageMinimapButton:Show()
         else
             HideElement(ExpansionLandingPageMinimapButton)
         end
@@ -827,8 +1008,9 @@ local ICON_FRAMES = {
     { name = "GameTime",    color = {0.2, 1,  0.2, 0.7},
       getter  = function() return GameTimeFrame end,
       anchor  = { "BOTTOMLEFT",  "BOTTOMLEFT",   2,  -2 } },
+    -- Whole cluster frame (reparenting only .Button left an empty Tracking ring on MinimapCluster).
     { name = "Tracking",    color = {0.2, 0.5, 1,  0.7},
-      getter  = function() return MinimapCluster and MinimapCluster.Tracking and MinimapCluster.Tracking.Button end,
+      getter  = function() return MinimapCluster and MinimapCluster.Tracking end,
       anchor  = { "BOTTOM",      "BOTTOM",       0,  -8 } },
 }
 
@@ -884,6 +1066,7 @@ local function HideDebugOverlays()
         if ov then ov:Hide() end
     end
     ApplyElementVisibility()
+    RefreshExpansionMinimapButtonTooltipState()
 end
 
 local function ShowDebugOverlays()
@@ -926,6 +1109,7 @@ local function ShowDebugOverlays()
             ov:Show()
         end
     end
+    RefreshExpansionMinimapButtonTooltipState()
 end
 
 function M.DebugIconsToggle()
@@ -1155,11 +1339,16 @@ local function RegisterEvents()
             if GetToggle("petBattleHide") then MINIMAP:Hide() end
         elseif event == "PET_BATTLE_CLOSE" then
             if GetToggle("petBattleHide") then MINIMAP:Show() end
-        elseif event == "ADDON_LOADED" and arg1 == "Blizzard_HybridMinimap" then
-            if GetToggle("squareShape") then
-                ApplySquareMask()
-            else
-                NotifyLibDBIconShapeChanged()
+        elseif event == "ADDON_LOADED" then
+            if arg1 == "Blizzard_HybridMinimap" then
+                if GetToggle("squareShape") then
+                    ApplySquareMask()
+                else
+                    NotifyLibDBIconShapeChanged()
+                end
+            elseif arg1 == "Plumber" then
+                EnsureExpansionPlumberHook()
+                ApplyElementVisibility()
             end
         end
     end)
@@ -1178,9 +1367,11 @@ function M:ApplyTheme()
     if zoneFontStr then
         ApplyZoneFont()
         UpdateZoneDisplay()
+        if zoneFrame then ApplyZoneTextLayout() end
     end
     if clockFontStr then
         ApplyClockFont()
+        if clockFrame then ApplyClockLayout() end
     end
 end
 
@@ -1217,6 +1408,8 @@ function M:OnEnable()
 
     EnsureWorldMapButtonHook()
     ApplyWorldMapButtonVisibility()
+
+    EnsureExpansionPlumberHook()
 
     if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
         OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
@@ -1329,7 +1522,7 @@ function M:OnToggle(toggleId, value)
         ShowZoneText()
     elseif toggleId == "showClock" then
         ShowClock()
-    elseif toggleId == "zoneClockInside" then
+    elseif toggleId == "zoneClockInside" or toggleId == "zoneClockDraggable" then
         ShowZoneText()
         ShowClock()
     elseif toggleId == "mouseWheelZoom" then
@@ -1337,7 +1530,8 @@ function M:OnToggle(toggleId, value)
     elseif toggleId == "clickActions" then
         ShowClickOverlay()
     elseif toggleId == "showMail" or toggleId == "showCraftingOrder"
-        or toggleId == "showDifficulty" or toggleId == "showMissions" then
+        or toggleId == "showDifficulty" or toggleId == "showTracking"
+        or toggleId == "showMissions" or toggleId == "hideBlizzardExpansionWhenPlumber" then
         ApplyElementVisibility()
     elseif toggleId == "hideAddonIcons" then
         ApplyHideAddonIcons()

@@ -11,6 +11,7 @@ L["MMSKIN_GROUP_ZOOM"]              = "Zoom & Scroll"
 L["MMSKIN_GROUP_CLICKS"]            = "Click Actions"
 L["MMSKIN_GROUP_ELEMENTS"]          = "Element Visibility"
 L["MMSKIN_GROUP_EXTRAS"]            = "Extras"
+L["MMSKIN_GROUP_COMPAT"]            = "Compatibility"
 
 L["MMSKIN_SQUARE"]                  = "Square Minimap"
 L["MMSKIN_SQUARE_DESC"]             = "Change the minimap shape from round to square. Disabling requires a UI reload."
@@ -31,6 +32,9 @@ L["MMSKIN_CLOCK_DESC"]              = "Show a clock below the minimap. Tooltip s
 L["MMSKIN_ZONE_CLOCK_INSIDE"]       = "Zone & clock inside minimap"
 L["MMSKIN_ZONE_CLOCK_INSIDE_DESC"]  = "Anchor the zone name and clock on the inside edges of the minimap instead of above and below it."
 
+L["MMSKIN_ZONE_CLOCK_DRAG"]         = "Drag zone & clock (hold Shift)"
+L["MMSKIN_ZONE_CLOCK_DRAG_DESC"]    = "You must hold Shift while dragging the zone name or clock to move them on screen. Positions are saved. Release Shift for normal clicks (clock still opens the time manager)."
+
 L["MMSKIN_WHEEL_ZOOM"]              = "Mouse Wheel Zoom"
 L["MMSKIN_WHEEL_ZOOM_DESC"]         = "Zoom the minimap in and out using the mouse wheel."
 L["MMSKIN_AUTO_ZOOM"]               = "Auto Zoom Out"
@@ -45,8 +49,16 @@ L["MMSKIN_CRAFTING"]                = "Crafting Orders"
 L["MMSKIN_CRAFTING_DESC"]           = "Show the crafting order indicator on the minimap."
 L["MMSKIN_DIFFICULTY"]              = "Difficulty Icon"
 L["MMSKIN_DIFFICULTY_DESC"]         = "Show the instance difficulty icon on the minimap."
+
+L["MMSKIN_TRACKING"]               = "Tracking Filter"
+L["MMSKIN_TRACKING_DESC"]           = "Show the minimap tracking filter (resource / herb / ore / etc. dropdown). Turning it off removes the small ring/control next to the minimap."
 L["MMSKIN_MISSIONS"]                = "Missions Button"
 L["MMSKIN_MISSIONS_DESC"]           = "Show the expansion landing page / missions button."
+
+L["MMSKIN_PLUMBER_HIDE_BLIZZARD"]     = "Hide duplicate Blizzard expansion button with Plumber"
+L["MMSKIN_PLUMBER_HIDE_BLIZZARD_DESC"] = "When Plumber is loaded, keep Blizzard's expansion minimap button hidden so only Plumber's Expansion Summary control shows. Turn off to show both (not recommended)."
+L["MMSKIN_PLUMBER_STATUS_ON"]        = "Plumber is loaded — this option applies."
+L["MMSKIN_PLUMBER_STATUS_OFF"]       = "Plumber is not loaded — enable this before logging in, or reload after installing Plumber."
 
 L["MMSKIN_HIDE_ADDONS"]             = "Hide Addon Icons"
 L["MMSKIN_HIDE_ADDONS_DESC"]        = "Hide addon minimap buttons until you hover over the minimap area."

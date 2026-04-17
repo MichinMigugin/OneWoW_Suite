@@ -22,6 +22,7 @@ local MapMiniToolsModule = {
         { id = "showZoneText",   label = "MMSKIN_ZONE_TEXT",    description = "MMSKIN_ZONE_TEXT_DESC",    default = true,  group = "MMSKIN_GROUP_INFO",   detailOnly = true },
         { id = "showClock",      label = "MMSKIN_CLOCK",        description = "MMSKIN_CLOCK_DESC",        default = true,  group = "MMSKIN_GROUP_INFO",   detailOnly = true },
         { id = "zoneClockInside", label = "MMSKIN_ZONE_CLOCK_INSIDE", description = "MMSKIN_ZONE_CLOCK_INSIDE_DESC", default = false, group = "MMSKIN_GROUP_INFO", detailOnly = true },
+        { id = "zoneClockDraggable", label = "MMSKIN_ZONE_CLOCK_DRAG", description = "MMSKIN_ZONE_CLOCK_DRAG_DESC", default = false, group = "MMSKIN_GROUP_INFO", detailOnly = true },
 
         { id = "mouseWheelZoom", label = "MMSKIN_WHEEL_ZOOM",   description = "MMSKIN_WHEEL_ZOOM_DESC",   default = true,  group = "MMSKIN_GROUP_ZOOM" },
         { id = "autoZoomOut",    label = "MMSKIN_AUTO_ZOOM",    description = "MMSKIN_AUTO_ZOOM_DESC",    default = true,  group = "MMSKIN_GROUP_ZOOM",   detailOnly = true },
@@ -31,7 +32,10 @@ local MapMiniToolsModule = {
         { id = "showMail",         label = "MMSKIN_MAIL",       description = "MMSKIN_MAIL_DESC",         default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
         { id = "showCraftingOrder", label = "MMSKIN_CRAFTING",   description = "MMSKIN_CRAFTING_DESC",     default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
         { id = "showDifficulty",   label = "MMSKIN_DIFFICULTY",  description = "MMSKIN_DIFFICULTY_DESC",   default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
+        { id = "showTracking",     label = "MMSKIN_TRACKING",    description = "MMSKIN_TRACKING_DESC",     default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
         { id = "showMissions",     label = "MMSKIN_MISSIONS",    description = "MMSKIN_MISSIONS_DESC",     default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
+
+        { id = "hideBlizzardExpansionWhenPlumber", label = "MMSKIN_PLUMBER_HIDE_BLIZZARD", description = "MMSKIN_PLUMBER_HIDE_BLIZZARD_DESC", default = true, group = "MMSKIN_GROUP_COMPAT", detailOnly = true },
 
         { id = "hideAddonIcons", label = "MMSKIN_HIDE_ADDONS",  description = "MMSKIN_HIDE_ADDONS_DESC",  default = false, group = "MMSKIN_GROUP_EXTRAS" },
         { id = "hideWorldMapButton", label = "MMSKIN_HIDE_WM_BTN", description = "MMSKIN_HIDE_WM_BTN_DESC", default = false, group = "MMSKIN_GROUP_ZOOM", detailOnly = true },

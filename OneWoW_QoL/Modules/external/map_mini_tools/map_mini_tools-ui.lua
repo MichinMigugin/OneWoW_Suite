@@ -199,6 +199,7 @@ local function BuildContent(container)
     cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_GROUP_INFO"] or "Information Overlays", yOffset = cy })
 
     InlineCB("zoneClockInside", "MMSKIN_ZONE_CLOCK_INSIDE", "Zone & clock inside minimap")
+    InlineCB("zoneClockDraggable", "MMSKIN_ZONE_CLOCK_DRAG", "Drag zone & clock (hold Shift)")
 
     -- Zone Text toggle + sub-settings
     InlineCB("showZoneText", "MMSKIN_ZONE_TEXT", "Zone Text")
@@ -429,7 +430,19 @@ local function BuildContent(container)
     end
 
     -- ═══════════════════════════════════════════════════════════════════════
-    -- 7. Developer Tools — debug icon overlay button
+    -- 7. Compatibility — Plumber / expansion minimap duplicate
+    -- ═══════════════════════════════════════════════════════════════════════
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_GROUP_COMPAT"] or "Compatibility", yOffset = cy })
+
+    InlineCB("hideBlizzardExpansionWhenPlumber", "MMSKIN_PLUMBER_HIDE_BLIZZARD", "Hide duplicate Blizzard expansion button with Plumber")
+
+    local plumberStatus = (M.IsPlumberLoaded and M.IsPlumberLoaded()) and (L["MMSKIN_PLUMBER_STATUS_ON"] or "Plumber is loaded.")
+        or (L["MMSKIN_PLUMBER_STATUS_OFF"] or "Plumber is not loaded.")
+    local _, statusCy = AddLabelIndented(container, cy, plumberStatus, "TEXT_MUTED")
+    cy = statusCy
+
+    -- ═══════════════════════════════════════════════════════════════════════
+    -- 8. Developer Tools — debug icon overlay button
     -- ═══════════════════════════════════════════════════════════════════════
     cy = OneWoW_GUI:CreateSection(container, { title = L["MMSKIN_SECTION_DEBUG"] or "Developer Tools", yOffset = cy })
 
