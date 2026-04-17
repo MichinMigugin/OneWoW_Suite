@@ -60,6 +60,12 @@ local sectionReorder     = nil
 local sectionRowFrames   = nil
 local leftLayoutFrames   = nil
 local dragCollapseState  = nil
+local dragDriver         = nil
+
+-- Rollup pacing for the drag-collapse animation. Each step hides one member
+-- row (from the bottom up) and slides the followers up by one row-height.
+-- 8ms yields ~208ms total for a 26-member section, which still feels snappy.
+local COLLAPSE_STEP_SEC = 0.008
 
 local BUILTIN_LOCALE_KEYS = {
     ["Recent Items"]     = "CAT_RECENT_ITEMS",
@@ -187,11 +193,36 @@ local function ApplySectionHeaderReorderVisual(secRow)
 end
 
 -- Visually collapse the dragged section for the duration of the drag.
--- We hide its member rows and slide everything below the section's tail up
--- by dy pixels, so the scroll list stays gap-free and a drop target is always
--- visible. EndDragCollapse reverses all of this. On a successful drop the
--- controller's RefreshUI rebuilds the list from scratch and the temporary
--- shift state is discarded naturally.
+-- We hide its member rows one-by-one from the bottom up and slide every frame
+-- below the section's tail up by one row-height per step, producing a rollup
+-- animation that keeps the scroll list gap-free and always exposes a drop
+-- target. EndDragCollapse cancels the animation and snaps everything back.
+-- On a successful drop the controller's RefreshUI rebuilds the list from
+-- scratch and the temporary shift state is discarded naturally.
+local function StopDragDriver()
+    if dragDriver then
+        dragDriver:SetScript("OnUpdate", nil)
+        dragDriver:Hide()
+    end
+end
+
+local function ApplyFollowerShift(dy)
+    local st = dragCollapseState
+    if not st or not leftWrapper then return end
+    for frame, orig in pairs(st.shifted) do
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", orig.origX, -(orig.origY - dy))
+        frame:SetPoint("RIGHT",   leftWrapper, "RIGHT",   0, 0)
+    end
+    if leftWrapper._catMgrBaseHeight then
+        local newH = max(leftWrapper._catMgrBaseHeight - dy, 40)
+        leftWrapper:SetHeight(newH)
+        if leftScrollFrame then
+            leftScrollFrame:GetScrollChild():SetHeight(newH)
+        end
+    end
+end
+
 local function BeginDragCollapse(secRow)
     if dragCollapseState then return end
     if not secRow or not leftLayoutFrames or not leftWrapper then return end
@@ -200,31 +231,48 @@ local function BeginDragCollapse(secRow)
     local tailIdx = secRow._catMgrTailIndex
     if not tailIdx then return end
 
-    local dy = #members * 28
     local shifted = {}
     for i = tailIdx + 1, #leftLayoutFrames do
         local e = leftLayoutFrames[i]
-        local f = e.frame
-        shifted[f] = { origX = e.origX, origY = e.origY }
-        f:ClearAllPoints()
-        f:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", e.origX, -(e.origY - dy))
-        f:SetPoint("RIGHT",   leftWrapper, "RIGHT",   0, 0)
+        shifted[e.frame] = { origX = e.origX, origY = e.origY }
     end
 
-    for _, r in ipairs(members) do r:Hide() end
+    dragCollapseState = {
+        secRow      = secRow,
+        members     = members,
+        shifted     = shifted,
+        nextIdx     = #members,
+        hiddenCount = 0,
+        stepAccum   = 0,
+    }
 
-    if leftWrapper._catMgrBaseHeight then
-        local newH = max(leftWrapper._catMgrBaseHeight - dy, 40)
-        leftWrapper:SetHeight(newH)
-        if leftScrollFrame then
-            leftScrollFrame:GetScrollChild():SetHeight(newH)
+    if not dragDriver then
+        dragDriver = CreateFrame("Frame")
+    end
+    dragDriver:Show()
+    dragDriver:SetScript("OnUpdate", function(_, dt)
+        local st = dragCollapseState
+        if not st then
+            StopDragDriver()
+            return
         end
-    end
-
-    dragCollapseState = { secRow = secRow, dy = dy, shifted = shifted }
+        st.stepAccum = st.stepAccum + dt
+        while st.stepAccum >= COLLAPSE_STEP_SEC and st.nextIdx > 0 do
+            st.stepAccum = st.stepAccum - COLLAPSE_STEP_SEC
+            local row = st.members[st.nextIdx]
+            if row then row:Hide() end
+            st.nextIdx = st.nextIdx - 1
+            st.hiddenCount = st.hiddenCount + 1
+            ApplyFollowerShift(st.hiddenCount * 28)
+        end
+        if st.nextIdx == 0 then
+            StopDragDriver()
+        end
+    end)
 end
 
 local function EndDragCollapse()
+    StopDragDriver()
     if not dragCollapseState then return end
     local st = dragCollapseState
     dragCollapseState = nil
