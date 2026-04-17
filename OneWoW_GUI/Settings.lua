@@ -176,7 +176,6 @@ local FONTS = {
     { key = "dejavuserif",          label = "DejaVu Serif",         file = FONT_BASE .. "DejaVuLGCSerif.ttf" },
     { key = "diedidie",             label = "DieDieDie",            file = FONT_BASE .. "DieDieDie.ttf" },
     { key = "dorispp",              label = "DorisPP",              file = FONT_BASE .. "DorisPP.ttf" },
-    { key = "enigmatic",            label = "Enigmatic",            file = FONT_BASE .. "EnigmaU_2.TTF" },
     { key = "expressway",           label = "Expressway",           file = FONT_BASE .. "Expressway.ttf" },
     { key = "fitzgerald",           label = "Fitzgerald",           file = FONT_BASE .. "Fitzgerald.ttf" },
     { key = "gentiumplus",          label = "Gentium Plus",         file = FONT_BASE .. "GentiumPlus-Regular.ttf" },
@@ -260,28 +259,77 @@ function OneWoW_GUI:GetFontSizeOffset()
     return self._settingsDB and self._settingsDB.fontSizeOffset or 0
 end
 
--- Safely apply a font file; falls back to GameFontNormal if the asset is missing.
--- Use this when applying fonts from GetFont/GetFontByKey to avoid errors for missing files.
+-- Safely apply a font file. Guarantees the fontstring ends with SOME valid font
+-- set at the requested size, so callers can safely call SetText/SetFormattedText
+-- afterwards without risking a "Font not set" error.
+--
+-- Mainline FontString:SetFont quirks we work around here:
+--  1. SetFont's boolean return value is unreliable. Some valid custom TTFs
+--     render correctly yet return false/nil. We cannot simply fall back to
+--     SetFontObject(GameFontNormal) on a falsy return, because SetFontObject
+--     forces BOTH font face AND size back to the object's baked defaults,
+--     silently discarding the caller's size.
+--  2. The first SetFont call with an uncached TTF can "fail" while loading the
+--     file into WoW's font cache as a side effect; a second immediate call
+--     then succeeds. We retry once.
+--  3. A font file may be genuinely missing / corrupt (FONTS entry whose file
+--     is not on disk). To avoid leaving the fontstring with no font (which
+--     crashes SetText later), we fall back to GameFontNormal's *path* applied
+--     at the caller's size - keeping the size slider functional.
+local STOCK_FONT_PATH
+local function GetStockFontPath()
+    if not STOCK_FONT_PATH then
+        STOCK_FONT_PATH = select(1, GameFontNormal:GetFont())
+    end
+    return STOCK_FONT_PATH
+end
+
+local function TrySetFont(fontString, path, size, flags)
+    local ok, success = pcall(fontString.SetFont, fontString, path, size, flags)
+    return ok, success
+end
+
 function OneWoW_GUI:SafeSetFont(fontString, fontPath, size, flags)
     if not fontString then return end
     local offset = self._settingsDB and self._settingsDB.fontSizeOffset or 0
-    if not fontPath then
-        -- SetFont with the stock font file + explicit point size; SetFontObject ignores size sliders.
-        local defaultPath = select(1, GameFontNormal:GetFont())
-        if defaultPath then
-            local adjustedSize = math.max(6, (size or 12) + offset)
-            local ok, success = pcall(fontString.SetFont, fontString, defaultPath, adjustedSize, flags or "")
-            if ok and success then
+    local adjustedSize = math.max(6, (size or 12) + offset)
+    local f = flags or ""
+    local stockPath = GetStockFontPath()
+
+    local target = fontPath or stockPath
+    if target then
+        local ok, success = TrySetFont(fontString, target, adjustedSize, f)
+        if ok and success ~= false then
+            return
+        end
+        if ok and success == false then
+            local ok2, success2 = TrySetFont(fontString, target, adjustedSize, f)
+            if ok2 and success2 ~= false then
                 return
             end
         end
-        fontString:SetFontObject(GameFontNormal)
-        return
     end
-    local adjustedSize = math.max(6, (size or 12) + offset)
-    local ok, success = pcall(fontString.SetFont, fontString, fontPath, adjustedSize, flags or "")
-    if not ok or not success then
-        fontString:SetFontObject(GameFontNormal)
+
+    -- Target font is unusable (missing file, bad args, etc.). Apply the stock
+    -- font at the caller's size so the fontstring is never left without a font.
+    if stockPath and stockPath ~= target then
+        local ok = TrySetFont(fontString, stockPath, adjustedSize, f)
+        if ok then return end
+    end
+    fontString:SetFontObject(GameFontNormal)
+end
+
+-- Pre-warm every shipped font once at load. The first SetFont call on an
+-- uncached TTF is the "slow / sometimes-fails" one; subsequent calls hit WoW's
+-- font cache and render reliably. By warming all fonts on a throwaway
+-- fontstring we make later font changes immediate and consistent.
+local function PrewarmFonts()
+    local f = UIParent:CreateFontString(nil, "BACKGROUND")
+    f:Hide()
+    for _, entry in ipairs(FONTS) do
+        if entry.file then
+            pcall(f.SetFont, f, entry.file, 12, "")
+        end
     end
 end
 
@@ -311,6 +359,7 @@ function OneWoW_GUI:ApplyFontCapped(fs, size, maxOffset)
     local offset = self:GetFontSizeOffset() or 0
     local cappedSize = math.max(6, size + math.min(offset, maxOffset))
     if fontPath then
+        -- See SafeSetFont: don't distrust SetFont's return value; only the pcall error.
         local ok = pcall(fs.SetFont, fs, fontPath, cappedSize, "")
         if not ok then fs:SetFontObject(GameFontNormal) end
     else
@@ -1267,6 +1316,7 @@ eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:SetScript("OnEvent", function(self, event, loadedAddon)
     if loadedAddon == "OneWoW_GUI" then
         InitSettingsDB()
+        PrewarmFonts()
         self:UnregisterEvent("ADDON_LOADED")
     end
 end)
