@@ -61,8 +61,15 @@ function OneWoW_Bags.CategoryManagerBase:Create()
         section.header:SetPoint("TOPLEFT", 0, 0)
         section.header:SetPoint("TOPRIGHT", 0, 0)
 
+        section.collapseBtn = CreateFrame("Button", nil, section.header)
+        section.collapseBtn:SetSize(20, 20)
+        section.collapseBtn:SetPoint("LEFT", section.header, "LEFT", 4, 0)
+        section.collapseBtn:SetFrameLevel(section.header:GetFrameLevel() + 1)
+        section.collapseBtn.icon = section.collapseBtn:CreateTexture(nil, "ARTWORK")
+        section.collapseBtn.icon:SetAllPoints()
+
         section.title = section.header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        section.title:SetPoint("LEFT", 8, 0)
+        section.title:SetPoint("LEFT", section.collapseBtn, "RIGHT", 4, 0)
         section.title:SetJustifyH("LEFT")
 
         section.count = section.header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

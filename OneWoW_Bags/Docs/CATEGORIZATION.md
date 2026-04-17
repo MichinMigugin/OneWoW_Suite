@@ -204,9 +204,9 @@ Stores the result in `categoryCache` when all three conditions are met: `cacheKe
 
 - **`categorySort`**: `"priority"` or `"alphabetical"`. Alphabetical mode applies special ordering: **"Empty"** last; **"Other"** and **"Junk"** near bottom; **"Recent Items"** first among the rest; then string compare on names.
 - **Priority mode** (`SortCategories`): effective order = `defaultOrder + mod.priority`; lower wins. When two categories tie on effective order, falls back to `customCategoriesV2[*].sortOrder` (lower wins, 999 if unset), then name alphabetical.
-- **`categoryOrder`**: When set, used by `GetSortedCategoryNames` and for sorting **root** categories in some layout paths.
+- **`categoryOrder`**: When set, used by `GetSortedCategoryNames` and for sorting **orphaned** categories (fallback path) in some layout paths.
 - **`displayOrder`**: Linear sequence with `"----"` separators and `section:ID` … `section_end` blocks. Categories not listed are collected as **leftover**, sorted with `SortCategories`, and appended.
-- **`sectionOrder` + `categorySections`**: When `displayOrder` is empty, sections render in `sectionOrder`, then non-section (**root**) categories.
+- **`sectionOrder` + `categorySections`**: When `displayOrder` is empty, sections render in `sectionOrder`, then any **orphaned** categories (fallback, should normally be empty since `SyncOnewowSectionCategories` scoops orphans into the ONEWOW_BAGS section).
 
 If **`sectionOrder` is empty**, `GetSectionedLayout` returns `GetSortedCategoryNames` only (no section structure).
 

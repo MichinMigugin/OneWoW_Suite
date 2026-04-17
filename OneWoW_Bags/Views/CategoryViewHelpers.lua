@@ -427,24 +427,28 @@ function H.GetSectionedLayout(itemsByCategory, containerType)
 
     local layout = {}
 
-    local rootCats = {}
+    -- Fallback: any visible category not placed in a section.
+    -- SyncOnewowSectionCategories should normally prevent this, but we keep
+    -- the safety net so orphaned items remain visible in the bag if the
+    -- invariant is ever broken.
+    local orphanedCats = {}
     for name in pairs(itemsByCategory) do
         if not inSection[name] and IsCategoryVisible(name) then
-            tinsert(rootCats, name)
+            tinsert(orphanedCats, name)
         end
     end
 
     if #catOrder > 0 then
         local orderMap = {}
         for i, name in ipairs(catOrder) do orderMap[name] = i end
-        sort(rootCats, function(a, b)
+        sort(orphanedCats, function(a, b)
             local aP = orderMap[a] or 999
             local bP = orderMap[b] or 999
             if aP ~= bP then return aP < bP end
             return a < b
         end)
     else
-        Categories:SortCategories(rootCats, db.global.categorySort or "priority")
+        Categories:SortCategories(orphanedCats, db.global.categorySort or "priority")
     end
 
     for _, sectionID in ipairs(sectOrder) do
@@ -474,7 +478,7 @@ function H.GetSectionedLayout(itemsByCategory, containerType)
         end
     end
 
-    for _, name in ipairs(rootCats) do
+    for _, name in ipairs(orphanedCats) do
         tinsert(layout, { type = "category", name = name })
     end
 
@@ -681,6 +685,9 @@ function H.LayoutCategoryContent(config)
             local collapsed = getCollapsed("category", categoryName)
             section.isCollapsed = collapsed or false
 
+            section.collapseBtn.icon:SetAtlas(section.isCollapsed and "uitools-icon-chevron-right" or "uitools-icon-chevron-down")
+            section.collapseBtn.icon:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+
             local sectionHeight = 26
 
             if not section.isCollapsed then
@@ -726,7 +733,8 @@ function H.LayoutCategoryContent(config)
             yOffset = yOffset + sectionHeight + H.VerticalGap(cellSize, verticalSpacing)
 
             local capturedName = categoryName
-            section.header:SetScript("OnClick", function()
+            section.header:SetScript("OnClick", nil)
+            section.collapseBtn:SetScript("OnClick", function()
                 section.isCollapsed = not section.isCollapsed
                 setCollapsed("category", capturedName, section.isCollapsed)
             end)
@@ -772,15 +780,18 @@ function H.LayoutCategoryContent(config)
 
         section.title:SetText(sectionName)
         section.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-        section.count:SetText(entry.collapsed and ">" or "")
-        section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        section.count:SetText("")
+
+        section.collapseBtn.icon:SetAtlas(entry.collapsed and "uitools-icon-chevron-right" or "uitools-icon-chevron-down")
+        section.collapseBtn.icon:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
 
         section.content:Hide()
         section:SetHeight(24)
         yOffset = yOffset + 26
 
         local capturedSectionID = sectionID
-        section.header:SetScript("OnClick", function()
+        section.header:SetScript("OnClick", nil)
+        section.collapseBtn:SetScript("OnClick", function()
             section.isCollapsed = not section.isCollapsed
             setCollapsed("section", capturedSectionID, section.isCollapsed)
         end)

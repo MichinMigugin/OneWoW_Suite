@@ -83,6 +83,9 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                 local collapsed = getCollapsed("tab", tabID)
                 section.isCollapsed = collapsed or false
 
+                section.collapseBtn.icon:SetAtlas(section.isCollapsed and "uitools-icon-chevron-right" or "uitools-icon-chevron-down")
+                section.collapseBtn.icon:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+
                 local sectionHeight = 26
 
                 if not section.isCollapsed then
@@ -130,7 +133,8 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                 yOffset = yOffset + sectionHeight + 4
 
                 local capturedTabID = tabID
-                section.header:SetScript("OnClick", function()
+                section.header:SetScript("OnClick", nil)
+                section.collapseBtn:SetScript("OnClick", function()
                     section.isCollapsed = not section.isCollapsed
                     setCollapsed("tab", capturedTabID, section.isCollapsed)
                 end)

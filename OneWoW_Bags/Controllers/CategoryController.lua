@@ -371,29 +371,6 @@ function CategoryController:SetSectionMembership(id, categoryName, isMember)
     self:RefreshUI()
 end
 
-function CategoryController:EnsureRootCategoryOrder(rootCats)
-    local db = self:GetDB()
-    if #db.global.categoryOrder > 0 then
-        return db.global.categoryOrder
-    end
-
-    local seeded = {}
-    for i, entry in ipairs(rootCats) do
-        seeded[i] = entry.name
-    end
-    db.global.categoryOrder = seeded
-    return db.global.categoryOrder
-end
-
-function CategoryController:MoveRootCategory(rootCats, index, direction)
-    local order = self:EnsureRootCategoryOrder(rootCats)
-    local otherIndex = index + direction
-    if otherIndex < 1 or otherIndex > #order then return end
-
-    order[index], order[otherIndex] = order[otherIndex], order[index]
-    self:RefreshUI({ invalidate = false })
-end
-
 function CategoryController:MoveSectionOrder(fromIndex, toIndex)
     local sectionOrder = self:GetDB().global.sectionOrder
     local n = #sectionOrder

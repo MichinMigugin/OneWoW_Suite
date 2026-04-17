@@ -73,6 +73,9 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
             local collapsed = getCollapsed("bag", bagID)
             section.isCollapsed = collapsed or false
 
+            section.collapseBtn.icon:SetAtlas(section.isCollapsed and "uitools-icon-chevron-right" or "uitools-icon-chevron-down")
+            section.collapseBtn.icon:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+
             local sectionHeight = 26
 
             if not section.isCollapsed then
@@ -119,7 +122,8 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
             section:SetHeight(sectionHeight)
             yOffset = yOffset + sectionHeight + 4
 
-            section.header:SetScript("OnClick", function()
+            section.header:SetScript("OnClick", nil)
+            section.collapseBtn:SetScript("OnClick", function()
                 section.isCollapsed = not section.isCollapsed
                 setCollapsed("bag", bagID, section.isCollapsed)
             end)
