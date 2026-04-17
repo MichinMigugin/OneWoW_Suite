@@ -56,6 +56,10 @@ local rightTopWrapper    = nil
 local rightItemWrapper   = nil
 local leftWrapper        = nil
 local selectedCatKey     = nil  -- nil | "builtin:Name" | "section:ID" | customID
+local sectionReorder     = nil
+local sectionRowFrames   = nil
+local leftLayoutFrames   = nil
+local dragCollapseState  = nil
 
 local BUILTIN_LOCALE_KEYS = {
     ["Recent Items"]     = "CAT_RECENT_ITEMS",
@@ -170,6 +174,110 @@ local function ReleaseWrapper(w)
         w:SetParent(UIParent)
     end
     return nil
+end
+
+local function ApplySectionHeaderReorderVisual(secRow)
+    if not secRow then return end
+    ---@diagnostic disable-next-line: undefined-field
+    if secRow._catMgrSelected then
+        secRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    else
+        secRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    end
+end
+
+-- Visually collapse the dragged section for the duration of the drag.
+-- We hide its member rows and slide everything below the section's tail up
+-- by dy pixels, so the scroll list stays gap-free and a drop target is always
+-- visible. EndDragCollapse reverses all of this. On a successful drop the
+-- controller's RefreshUI rebuilds the list from scratch and the temporary
+-- shift state is discarded naturally.
+local function BeginDragCollapse(secRow)
+    if dragCollapseState then return end
+    if not secRow or not leftLayoutFrames or not leftWrapper then return end
+    local members = secRow._catMgrMemberRows
+    if not members or #members == 0 then return end
+    local tailIdx = secRow._catMgrTailIndex
+    if not tailIdx then return end
+
+    local dy = #members * 28
+    local shifted = {}
+    for i = tailIdx + 1, #leftLayoutFrames do
+        local e = leftLayoutFrames[i]
+        local f = e.frame
+        shifted[f] = { origX = e.origX, origY = e.origY }
+        f:ClearAllPoints()
+        f:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", e.origX, -(e.origY - dy))
+        f:SetPoint("RIGHT",   leftWrapper, "RIGHT",   0, 0)
+    end
+
+    for _, r in ipairs(members) do r:Hide() end
+
+    if leftWrapper._catMgrBaseHeight then
+        local newH = max(leftWrapper._catMgrBaseHeight - dy, 40)
+        leftWrapper:SetHeight(newH)
+        if leftScrollFrame then
+            leftScrollFrame:GetScrollChild():SetHeight(newH)
+        end
+    end
+
+    dragCollapseState = { secRow = secRow, dy = dy, shifted = shifted }
+end
+
+local function EndDragCollapse()
+    if not dragCollapseState then return end
+    local st = dragCollapseState
+    dragCollapseState = nil
+
+    for frame, orig in pairs(st.shifted) do
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", orig.origX, -orig.origY)
+        frame:SetPoint("RIGHT",   leftWrapper, "RIGHT",   0, 0)
+    end
+
+    local secRow = st.secRow
+    if secRow and secRow._catMgrMemberRows then
+        for _, r in ipairs(secRow._catMgrMemberRows) do r:Show() end
+    end
+
+    if leftWrapper and leftWrapper._catMgrBaseHeight then
+        leftWrapper:SetHeight(leftWrapper._catMgrBaseHeight)
+        if leftScrollFrame then
+            leftScrollFrame:GetScrollChild():SetHeight(leftWrapper._catMgrBaseHeight)
+        end
+    end
+end
+
+local function EnsureSectionReorder()
+    if sectionReorder then return sectionReorder end
+    sectionReorder = OneWoW_GUI:CreateReorderDrag({
+        getItems = function()
+            return sectionRowFrames
+        end,
+        onReorder = function(from, to)
+            local controller = GetController()
+            if controller and controller.MoveSectionOrder then
+                controller:MoveSectionOrder(from, to)
+            end
+        end,
+        onPickup = function(secRow)
+            ---@diagnostic disable-next-line: undefined-field
+            secRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+            BeginDragCollapse(secRow)
+        end,
+        onRestore = function(secRow)
+            EndDragCollapse()
+            ApplySectionHeaderReorderVisual(secRow)
+        end,
+        onHover = function(secRow)
+            ---@diagnostic disable-next-line: undefined-field
+            secRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        end,
+        onUnhover = function(secRow)
+            ApplySectionHeaderReorderVisual(secRow)
+        end,
+    })
+    return sectionReorder
 end
 
 local function MakeSmallBtn(parent, label, onClick, active)
@@ -1193,6 +1301,11 @@ end
 -- ============================================================
 
 function CatMgrUI:RefreshLeft()
+    if sectionReorder then
+        sectionReorder:Cancel()
+    end
+    EndDragCollapse()
+    leftLayoutFrames = nil
     leftWrapper = ReleaseWrapper(leftWrapper)
     if not leftScrollContent then return end
 
@@ -1205,6 +1318,7 @@ function CatMgrUI:RefreshLeft()
     leftWrapper:SetPoint("TOPLEFT", leftScrollContent, "TOPLEFT", 0, 0)
     leftWrapper:SetPoint("RIGHT",   leftScrollContent, "RIGHT",   0, 0)
 
+    leftLayoutFrames = {}
     local yOffset = 0
 
     -- Determine which categories are inside a section
@@ -1254,6 +1368,7 @@ function CatMgrUI:RefreshLeft()
         row:SetHeight(28)
         row:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", indent, -yOffset)
         row:SetPoint("RIGHT",   leftWrapper, "RIGHT",   0, 0)
+        tinsert(leftLayoutFrames, { frame = row, origX = indent, origY = yOffset })
         row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
 
         if isSelected then
@@ -1387,7 +1502,8 @@ function CatMgrUI:RefreshLeft()
         yOffset = yOffset + 30
     end
 
-    local totalSections = #sectOrder
+    sectionRowFrames = {}
+    local reorder = EnsureSectionReorder()
     for secIdx, sectionID in ipairs(sectOrder) do
         local section = sections[sectionID]
         if section then
@@ -1395,12 +1511,16 @@ function CatMgrUI:RefreshLeft()
             local isSelSec  = (selectedCatKey == sKey)
             local collapsed = section.collapsed
 
-            -- Section header
             local secRow = CreateFrame("Button", nil, leftWrapper, "BackdropTemplate")
             secRow:SetHeight(28)
             secRow:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", 0, -yOffset)
             secRow:SetPoint("RIGHT",   leftWrapper, "RIGHT",   0, 0)
             secRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+            secRow:EnableMouse(true)
+            secRow:RegisterForClicks("LeftButtonUp")
+            secRow._catMgrSelected = isSelSec
+            tinsert(leftLayoutFrames, { frame = secRow, origX = 0, origY = yOffset })
+            secRow._catMgrTailIndex = #leftLayoutFrames
 
             if isSelSec then
                 secRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
@@ -1410,40 +1530,37 @@ function CatMgrUI:RefreshLeft()
                 secRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             end
 
-            -- Section up/down (reorders among sections only)
-            local captSecIdx = secIdx
-            local dnSec = MakeSmallBtn(secRow, "v", function()
-                if captSecIdx < totalSections then
-                    local controller = GetController()
-                    if controller and controller.MoveSection then
-                        controller:MoveSection(sectionID, 1)
-                    end
-                end
-            end, secIdx < totalSections)
-            dnSec:SetPoint("RIGHT", secRow, "RIGHT", -2, 0)
-
-            local upSec = MakeSmallBtn(secRow, "^", function()
-                if captSecIdx > 1 then
-                    local controller = GetController()
-                    if controller and controller.MoveSection then
-                        controller:MoveSection(sectionID, -1)
-                    end
-                end
-            end, secIdx > 1)
-            upSec:SetPoint("RIGHT", dnSec, "LEFT", -2, 0)
-
-            local arrow = secRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            arrow:SetPoint("LEFT", secRow, "LEFT", 4, 0)
+            local collapseBtn = CreateFrame("Button", nil, secRow)
+            collapseBtn:SetSize(22, 22)
+            collapseBtn:SetPoint("LEFT", secRow, "LEFT", 2, 0)
+            local collapseTex = collapseBtn:CreateTexture(nil, "ARTWORK")
+            collapseTex:SetAllPoints()
             if collapsed then
-                arrow:SetText(">")
+                collapseTex:SetAtlas("uitools-icon-chevron-right")
             else
-                arrow:SetText("v")
+                collapseTex:SetAtlas("uitools-icon-chevron-down")
             end
-            arrow:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+            collapseTex:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+
+            local captSKey = sKey
+            local captSecId = sectionID
+            collapseBtn:SetScript("OnClick", function()
+                local controller = GetController()
+                if controller and controller.SetSectionCollapsed then
+                    controller:SetSectionCollapsed(captSecId, not section.collapsed)
+                end
+                selectedCatKey = captSKey
+                CatMgrUI:Refresh()
+            end)
+
+            local selectStrip = CreateFrame("Frame", nil, secRow)
+            selectStrip:SetPoint("TOPLEFT", collapseBtn, "TOPRIGHT", 0, 0)
+            selectStrip:SetPoint("BOTTOMRIGHT", secRow, "BOTTOMRIGHT", -4, 0)
+            selectStrip:EnableMouse(false)
 
             local secName = secRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            secName:SetPoint("LEFT",  secRow, "LEFT",  18, 0)
-            secName:SetPoint("RIGHT", upSec,  "LEFT",  -4, 0)
+            secName:SetPoint("LEFT", collapseBtn, "RIGHT", 4, 0)
+            secName:SetPoint("RIGHT", secRow, "RIGHT", -6, 0)
             secName:SetJustifyH("LEFT")
             secName:SetText(section.name)
             if isSelSec then
@@ -1452,15 +1569,28 @@ function CatMgrUI:RefreshLeft()
                 secName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
 
-            local captSKey = sKey
             secRow:SetScript("OnClick", function()
-                local controller = GetController()
-                if controller and controller.SetSectionCollapsed then
-                    controller:SetSectionCollapsed(sectionID, not section.collapsed)
-                end
                 selectedCatKey = captSKey
                 CatMgrUI:Refresh()
             end)
+
+            secRow:SetScript("OnEnter", function(self)
+                if reorder:IsActive() then return end
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(section.name, 1, 1, 1)
+                GameTooltip:AddLine(" ")
+                local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
+                GameTooltip:AddLine(L["SECTION_DRAG_HINT"], tr, tg, tb, true)
+                GameTooltip:Show()
+            end)
+            secRow:SetScript("OnLeave", GameTooltip_Hide)
+
+            secRow._catMgrSectionId = sectionID
+            secRow._catMgrCollapseTex = collapseTex
+            secRow._catMgrMemberRows = {}
+
+            tinsert(sectionRowFrames, secRow)
+            reorder:Attach(secRow, secIdx)
             yOffset = yOffset + 30
 
             -- Member categories (indented)
@@ -1490,6 +1620,8 @@ function CatMgrUI:RefreshLeft()
                         row:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", 16, -yOffset)
                         row:SetPoint("RIGHT",   leftWrapper, "RIGHT",    0, 0)
                         row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+                        tinsert(leftLayoutFrames, { frame = row, origX = 16, origY = yOffset })
+                        secRow._catMgrTailIndex = #leftLayoutFrames
                         if isSelCat then
                             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -1554,6 +1686,7 @@ function CatMgrUI:RefreshLeft()
                             nTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                         end
 
+                        tinsert(secRow._catMgrMemberRows, row)
                         yOffset = yOffset + 28
                     end
                 end
@@ -1565,10 +1698,11 @@ function CatMgrUI:RefreshLeft()
         RenderCatRow(entry, i, #rootCats, 0)
     end
 
-    local totalH = yOffset + 4
-    leftWrapper:SetHeight(max(totalH, 40))
+    local totalH = max(yOffset + 4, 40)
+    leftWrapper:SetHeight(totalH)
+    leftWrapper._catMgrBaseHeight = totalH
     if leftScrollFrame then
-        leftScrollFrame:GetScrollChild():SetHeight(max(totalH, 40))
+        leftScrollFrame:GetScrollChild():SetHeight(totalH)
     end
 end
 
@@ -1602,6 +1736,11 @@ function CatMgrUI:Show()
     })
     managerFrame       = dialog.frame
     dialogContentFrame = dialog.contentFrame
+    managerFrame:HookScript("OnHide", function()
+        if sectionReorder then
+            sectionReorder:Cancel()
+        end
+    end)
 
     -- ---- Action bar ----
     local actionBar = CreateFrame("Frame", nil, dialogContentFrame, "BackdropTemplate")
@@ -1612,13 +1751,13 @@ function CatMgrUI:Show()
     actionBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     actionBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local createBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["CATEGORY_CREATE"], height=24 })
-    createBtn:SetPoint("LEFT", actionBar, "LEFT", 6, 0)
-    createBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY") end)
-
     local sectionBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["SECTION_CREATE"], height=24 })
-    sectionBtn:SetPoint("LEFT", createBtn, "RIGHT", 6, 0)
+    sectionBtn:SetPoint("LEFT", actionBar, "LEFT", 6, 0)
     sectionBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_SECTION") end)
+
+    local createBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["CATEGORY_CREATE"], height=24 })
+    createBtn:SetPoint("LEFT", sectionBtn, "RIGHT", 6, 0)
+    createBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY") end)
 
     if HasBaganator() then
         local bagBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["BAGANATOR_IMPORT"], height=24 })
@@ -1720,6 +1859,9 @@ end
 
 function CatMgrUI:Toggle()
     if managerFrame and managerFrame:IsShown() then
+        if sectionReorder then
+            sectionReorder:Cancel()
+        end
         managerFrame:Hide()
     else
         CatMgrUI:Show()

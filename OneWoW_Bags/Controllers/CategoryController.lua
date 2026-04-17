@@ -394,19 +394,15 @@ function CategoryController:MoveRootCategory(rootCats, index, direction)
     self:RefreshUI({ invalidate = false })
 end
 
-function CategoryController:MoveSection(sectionID, direction)
+function CategoryController:MoveSectionOrder(fromIndex, toIndex)
     local sectionOrder = self:GetDB().global.sectionOrder
-    for i, id in ipairs(sectionOrder) do
-        if id == sectionID then
-            local otherIndex = i + direction
-            if otherIndex < 1 or otherIndex > #sectionOrder then
-                return
-            end
-            sectionOrder[i], sectionOrder[otherIndex] = sectionOrder[otherIndex], sectionOrder[i]
-            self:RefreshUI()
-            return
-        end
+    local n = #sectionOrder
+    if fromIndex < 1 or fromIndex > n or toIndex < 1 or toIndex > n or fromIndex == toIndex then
+        return
     end
+    local id = tremove(sectionOrder, fromIndex)
+    tinsert(sectionOrder, toIndex, id)
+    self:RefreshUI()
 end
 
 function CategoryController:MoveSectionCategory(sectionID, index, direction)
