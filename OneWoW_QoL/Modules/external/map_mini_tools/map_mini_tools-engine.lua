@@ -2,6 +2,7 @@ local addonName, ns = ...
 local M = ns.MapMiniToolsModule
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 -- ─── Constants ──────────────────────────────────────────────────────────────
 
@@ -18,11 +19,12 @@ local clockFrame, clockFontStr
 local clickOverlay
 local eventFrame
 local skinTooltip
-local autoZoomSeq, autoZoomCur = 0, 0
+local autoZoomTimer
 local savedParents    = {}   -- show/hide toggling (element visibility)
 local iconMoveParents = {}   -- { frame = { parent, points[] } } saved before detach
 local clockRunning = false
 local debugOverlays   = {}   -- colored debug overlay frames, indexed by ICON_FRAMES position
+local debugShownSaved = {}   -- { frame = bool } IsShown() state captured before debug force-show
 local debugActive     = false
 local applyingIconAnchors = false -- re-entrancy guard for SetPoint bursts
 local minimapLayoutHooked = false
@@ -30,9 +32,7 @@ local minimapLayoutHooked = false
 -- ─── Settings ───────────────────────────────────────────────────────────────
 
 local function GetSettings()
-    local addon = _G.OneWoW_QoL
-    if not addon or not addon.db then return {} end
-    local mods = addon.db.global.modules
+    local mods = _G.OneWoW_QoL.db.global.modules
     if not mods.map_mini_tools then mods.map_mini_tools = {} end
     local s = mods.map_mini_tools
     if s.scale           == nil then s.scale           = 1.0        end
@@ -65,7 +65,7 @@ local function GetToggle(id)
 end
 
 local function IsPlumberLoaded()
-    return C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("Plumber")
+    return C_AddOns.IsAddOnLoaded("Plumber")
 end
 
 M.IsPlumberLoaded = IsPlumberLoaded
@@ -84,17 +84,34 @@ local function EnsureExpansionPlumberHook()
             self:Hide()
         end
     end)
+    -- Blizzard's SetTooltip does GameTooltip:SetText(self.title, ...). self.title is
+    -- only populated by UpdateIconForGarrison; in the current expansion, Plumber or
+    -- other addons are expected to set it. When we force-show the button (Missions
+    -- toggle on, Plumber-hide toggle off) and nothing has populated .title, hovering
+    -- calls SetText(nil) and errors. Wrap SetTooltip with a nil-guarded shim.
+    if b.SetTooltip and not b._oneWoWTooltipGuarded then
+        b._oneWoWTooltipGuarded = true
+        local origSetTooltip = b.SetTooltip
+        b.SetTooltip = function(self)
+            if not self.title then
+                self.title = ns.L["MMSKIN_ACTION_MISSIONS"]
+            end
+            if not self.description then
+                self.description = ""
+            end
+            origSetTooltip(self)
+        end
+    end
 end
 
 --- After debug overlay or visibility changes, Blizzard tooltip can call SetText(nil) unless the button state is refreshed.
 local function RefreshExpansionMinimapButtonTooltipState()
     local b = ExpansionLandingPageMinimapButton
     if not b or not b.RefreshButton then return end
-    pcall(function() b:RefreshButton(true) end)
+    b:RefreshButton(true)
 end
 
 local function ResolveFontPath(key)
-    if not OneWoW_GUI then return nil end
     if not key or key == "global" then
         return OneWoW_GUI:GetFont()
     end
@@ -110,6 +127,10 @@ local function GetHiddenFrame()
     if not hiddenFrame then
         hiddenFrame = CreateFrame("Frame", "OneWoW_QoL_MmSkinHidden")
         hiddenFrame:Hide()
+        -- Blizzard's MiniMapMailFrameMixin/MiniMapCraftingOrderFrameMixin OnEvent
+        -- handlers call self:GetParent():Layout(). When we reparent those frames
+        -- to this hidden frame, parent:Layout() would be nil; stub it to a no-op.
+        hiddenFrame.Layout = function() end
     end
     return hiddenFrame
 end
@@ -181,8 +202,10 @@ end
 -- Leatrix_Plus solves this by requiring a UI reload.
 -- We take the Leatrix_Plus approach: going back to round requires a reload.
 
+-- text is resolved at show time (ns.L is still being built when this file
+-- loads; ns.ApplyLanguage() runs later in the startup sequence).
 StaticPopupDialogs["ONEWOW_MMSKIN_RELOAD"] = {
-    text = "Changing minimap shape requires a UI reload.\nReload now?",
+    text = "%s",
     button1 = ACCEPT,
     button2 = CANCEL,
     OnAccept = ReloadUI,
@@ -193,48 +216,47 @@ StaticPopupDialogs["ONEWOW_MMSKIN_RELOAD"] = {
 }
 
 local function NotifyLibDBIconShapeChanged()
-    if ns.MinimapButtonsModule and ns.MinimapButtonsModule.ApplyMinimapShapeToLibDBIcons then
+    if ns.MinimapButtonsModule.ApplyMinimapShapeToLibDBIcons then
         ns.MinimapButtonsModule:ApplyMinimapShapeToLibDBIcons()
+        return
+    end
+    -- LibDBIcon is optional at runtime, so keep the soft LibStub.
+    local lib = LibStub("LibDBIcon-1.0", true)
+    if not lib then return end
+    local shape = "ROUND"
+    if _G.GetMinimapShape then
+        shape = GetMinimapShape() or "ROUND"
+    end
+    if type(shape) == "string" and strupper(shape) == "SQUARE" then
+        lib:SetButtonRadius(0.165)
     else
-        local lib = LibStub and LibStub("LibDBIcon-1.0", true)
-        if lib and lib.SetButtonRadius and lib.GetButtonList and lib.Show then
-            local shape = "ROUND"
-            if _G.GetMinimapShape then
-                shape = GetMinimapShape() or "ROUND"
-            end
-            if type(shape) == "string" and strupper(shape) == "SQUARE" then
-                lib:SetButtonRadius(0.165)
-            else
-                lib:SetButtonRadius(1)
-            end
-            for _, n in ipairs(lib:GetButtonList()) do
-                pcall(lib.Show, lib, n)
-            end
-        end
+        lib:SetButtonRadius(1)
+    end
+    for _, n in ipairs(lib:GetButtonList()) do
+        lib:Show(n)
     end
 end
 
 local function ApplySquareMask()
     if not MINIMAP then return end
 
+    -- Tracked so OnDisable only prompts the reload popup when we actually
+    -- mutated Blizzard's mask textures this session.
+    M._squareMaskApplied = true
     MINIMAP:SetMaskTexture(SQUARE_MASK)
     if MinimapCompassTexture then MinimapCompassTexture:Hide() end
 
-    pcall(function()
-        MINIMAP:SetArchBlobRingScalar(0)
-        MINIMAP:SetArchBlobRingAlpha(0)
-        MINIMAP:SetQuestBlobRingScalar(0)
-        MINIMAP:SetQuestBlobRingAlpha(0)
-    end)
+    MINIMAP:SetArchBlobRingScalar(0)
+    MINIMAP:SetArchBlobRingAlpha(0)
+    MINIMAP:SetQuestBlobRingScalar(0)
+    MINIMAP:SetQuestBlobRingAlpha(0)
 
     _G.GetMinimapShape = function() return "SQUARE" end
 
     if HybridMinimap and HybridMinimap.CircleMask then
-        pcall(function()
-            HybridMinimap.MapCanvas:SetUseMaskTexture(false)
-            HybridMinimap.CircleMask:SetTexture(SQUARE_MASK)
-            HybridMinimap.MapCanvas:SetUseMaskTexture(true)
-        end)
+        HybridMinimap.MapCanvas:SetUseMaskTexture(false)
+        HybridMinimap.CircleMask:SetTexture(SQUARE_MASK)
+        HybridMinimap.MapCanvas:SetUseMaskTexture(true)
     end
 
     NotifyLibDBIconShapeChanged()
@@ -260,7 +282,7 @@ local function GetBorderColor()
         if color then return color.r, color.g, color.b, 1 end
     end
 
-    if s.useThemeColor and OneWoW_GUI then
+    if s.useThemeColor then
         return OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
     end
 
@@ -298,6 +320,9 @@ local function UpdateBorder()
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = bw,
     })
+    -- Clear any cached fill Blizzard may keep around the backdrop; we only
+    -- want the edge, not a translucent rectangle inside the minimap.
+    borderFrame:SetBackdropColor(0, 0, 0, 0)
 
     local r, g, b, a = GetBorderColor()
     borderFrame:SetBackdropBorderColor(r, g, b, a)
@@ -314,6 +339,62 @@ local function ApplyMinimapAlpha()
 end
 
 M.RefreshAlpha = ApplyMinimapAlpha
+
+-- ─── Hit / drag helpers (shared by zone and clock) ──────────────────────────
+
+-- Keeps the wide outer frame for positioning but shrinks the clickable / drag
+-- rectangle to the measured text plus padding. Prevents zone and clock from
+-- stealing each other's drags when their hidden flanks overlap on screen.
+local function ApplyHitInsetsForText(frame, fontString, padX, padY)
+    padX = padX or 4
+    padY = padY or 2
+    local fw = frame:GetWidth()
+    local fh = frame:GetHeight()
+    local tw = fontString.GetUnboundedStringWidth and fontString:GetUnboundedStringWidth()
+        or fontString:GetStringWidth()
+    local th = fontString:GetStringHeight()
+    if tw <= 0 or th <= 0 or fw <= 0 or fh <= 0 then
+        frame:SetHitRectInsets(0, 0, 0, 0)
+        return
+    end
+    local hx = math.max(0, (fw - (tw + padX * 2)) / 2)
+    local hy = math.max(0, (fh - (th + padY * 2)) / 2)
+    frame:SetHitRectInsets(hx, hx, hy, hy)
+end
+
+-- After a drag, nudge the frame so the measured text rect stays on-screen.
+-- The outer frame rectangle (which is much wider than the text) is allowed
+-- to extend off-screen; only the visible glyphs are clamped.
+local function ClampFrameToTextOnScreen(frame, fontString)
+    local tw = fontString.GetUnboundedStringWidth and fontString:GetUnboundedStringWidth()
+        or fontString:GetStringWidth()
+    local th = fontString:GetStringHeight()
+    if tw <= 0 or th <= 0 then return end
+
+    local fLeft   = frame:GetLeft()
+    local fBottom = frame:GetBottom()
+    local fw      = frame:GetWidth()
+    local fh      = frame:GetHeight()
+    if not fLeft or not fBottom then return end
+
+    local textLeft   = fLeft + (fw - tw) / 2
+    local textRight  = textLeft + tw
+    local textBottom = fBottom + (fh - th) / 2
+    local textTop    = textBottom + th
+
+    local sw, sh = UIParent:GetWidth(), UIParent:GetHeight()
+    local dx, dy = 0, 0
+    if     textLeft  < 0  then dx = -textLeft
+    elseif textRight > sw then dx = sw - textRight end
+    if     textBottom < 0 then dy = -textBottom
+    elseif textTop   > sh then dy = sh - textTop end
+
+    if dx == 0 and dy == 0 then return end
+    local p, rel, rp, x, y = frame:GetPoint(1)
+    if not p then return end
+    frame:ClearAllPoints()
+    frame:SetPoint(p, rel, rp, (x or 0) + dx, (y or 0) + dy)
+end
 
 -- ─── Zone Text ──────────────────────────────────────────────────────────────
 
@@ -334,10 +415,12 @@ local function UpdateZoneDisplay()
     local c = PVP_COLORS[pvpType]
     if c then
         zoneFontStr:SetTextColor(c[1], c[2], c[3])
-    elseif OneWoW_GUI then
-        zoneFontStr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     else
-        zoneFontStr:SetTextColor(1, 0.82, 0)
+        zoneFontStr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    end
+
+    if zoneFrame then
+        ApplyHitInsetsForText(zoneFrame, zoneFontStr, 6, 2)
     end
 end
 
@@ -355,14 +438,8 @@ end
 local function ApplyZoneFont()
     if not zoneFontStr then return end
     local s = GetSettings()
-    local fontPath = ResolveFontPath(s.zoneFont)
-    if OneWoW_GUI and fontPath then
-        OneWoW_GUI:SafeSetFont(zoneFontStr, fontPath, s.zoneFontSize, "OUTLINE")
-    elseif OneWoW_GUI then
-        OneWoW_GUI:SafeSetFont(zoneFontStr, OneWoW_GUI:GetFont(), s.zoneFontSize, "OUTLINE")
-    else
-        zoneFontStr:SetFontObject(GameFontNormalSmall)
-    end
+    local fontPath = ResolveFontPath(s.zoneFont) or OneWoW_GUI:GetFont()
+    OneWoW_GUI:SafeSetFont(zoneFontStr, fontPath, s.zoneFontSize, "OUTLINE")
     LayoutZoneFontString()
     UpdateZoneDisplay()
     if zoneFrame then
@@ -370,6 +447,7 @@ local function ApplyZoneFont()
         local textH = zoneFontStr:GetStringHeight()
         zoneFrame:SetHeight(math.max(textH + 6, s2.zoneFontSize + 4))
         zoneFrame:SetWidth(math.max(MINIMAP:GetWidth() + 40, zoneFontStr:GetStringWidth() + 16))
+        ApplyHitInsetsForText(zoneFrame, zoneFontStr, 6, 2)
     end
 end
 
@@ -421,6 +499,7 @@ local function HookZoneClockDragScripts()
             if self._oneWoWDragging then
                 self:StopMovingOrSizing()
                 self._oneWoWDragging = nil
+                ClampFrameToTextOnScreen(self, zoneFontStr)
                 SaveFrameLayoutPos(self, "zoneTextPos")
             end
         end)
@@ -447,6 +526,7 @@ local function HookZoneClockDragScripts()
             if self._oneWoWDragging then
                 self:StopMovingOrSizing()
                 self._oneWoWDragging = nil
+                ClampFrameToTextOnScreen(self, clockFontStr)
                 SaveFrameLayoutPos(self, "clockPos")
                 return
             end
@@ -471,7 +551,9 @@ local function ApplyZoneTextLayout()
         zoneFrame:SetFrameStrata(MINIMAP:GetFrameStrata() or "LOW")
         zoneFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 5)
         zoneFrame:SetMovable(true)
-        zoneFrame:SetClampedToScreen(true)
+        -- Outer frame is much wider than the text; let it cross the screen edge.
+        -- ClampFrameToTextOnScreen keeps the visible glyphs on-screen after drag.
+        zoneFrame:SetClampedToScreen(false)
         if not ApplySavedFramePos(zoneFrame, "zoneTextPos") then
             zoneFrame:ClearAllPoints()
             if GetToggle("zoneClockInside") then
@@ -504,7 +586,9 @@ local function ApplyClockLayout()
         clockFrame:SetFrameStrata(MINIMAP:GetFrameStrata() or "LOW")
         clockFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 5)
         clockFrame:SetMovable(true)
-        clockFrame:SetClampedToScreen(true)
+        -- Outer frame is much wider than the text; let it cross the screen edge.
+        -- ClampFrameToTextOnScreen keeps the visible glyphs on-screen after drag.
+        clockFrame:SetClampedToScreen(false)
         if not ApplySavedFramePos(clockFrame, "clockPos") then
             clockFrame:ClearAllPoints()
             if GetToggle("zoneClockInside") then
@@ -613,6 +697,7 @@ local function FitClockFrameToText()
     -- ~2× measured width + padding: 12h + AM/PM, locales, outline, and UI scale cannot clip.
     clockFrame:SetHeight(math.max(textH + 8, (s2.clockFontSize or 12) + 6))
     clockFrame:SetWidth(math.max(uw * 2 + 32, 144))
+    ApplyHitInsetsForText(clockFrame, clockFontStr, 4, 2)
 end
 
 local function UpdateClockDisplay()
@@ -676,16 +761,9 @@ local CALENDAR_MONTHS
 local function ApplyClockFont()
     if not clockFontStr then return end
     local s = GetSettings()
-    local fontPath = ResolveFontPath(s.clockFont)
-    if OneWoW_GUI and fontPath then
-        OneWoW_GUI:SafeSetFont(clockFontStr, fontPath, s.clockFontSize, "OUTLINE")
-        clockFontStr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    elseif OneWoW_GUI then
-        OneWoW_GUI:SafeSetFont(clockFontStr, OneWoW_GUI:GetFont(), s.clockFontSize, "OUTLINE")
-        clockFontStr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    else
-        clockFontStr:SetFontObject(GameFontNormalSmall)
-    end
+    local fontPath = ResolveFontPath(s.clockFont) or OneWoW_GUI:GetFont()
+    OneWoW_GUI:SafeSetFont(clockFontStr, fontPath, s.clockFontSize, "OUTLINE")
+    clockFontStr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     LayoutClockFontString()
     if clockFrame then
         UpdateClockDisplay()
@@ -737,7 +815,7 @@ local function CreateClock()
             SecondsToTime(C_DateAndTime.GetSecondsUntilWeeklyReset()),
             nR, nG, nB, wR, wG, wB)
         tt:AddLine(" ")
-        tt:AddLine(ns.L["MMSKIN_CLOCK_TT_TOGGLE"] or GAMETIME_TOOLTIP_TOGGLE_CLOCK, 0.5, 0.5, 0.6)
+        tt:AddLine(ns.L["MMSKIN_CLOCK_TT_TOGGLE"], 0.5, 0.5, 0.6)
         tt:Show()
     end)
     clockFrame:SetScript("OnLeave", function() GetTooltip():Hide() end)
@@ -850,20 +928,17 @@ end
 
 -- ─── Auto Zoom Out ──────────────────────────────────────────────────────────
 
-local function AutoZoomTick()
-    autoZoomCur = autoZoomCur + 1
-    if autoZoomSeq == autoZoomCur then
+local function TriggerAutoZoom()
+    if not GetToggle("autoZoomOut") then return end
+    -- Cancel any previous pending zoom-out so rapid zoom clicks do not queue
+    -- multiple stale callbacks.
+    if autoZoomTimer then autoZoomTimer:Cancel() end
+    autoZoomTimer = C_Timer.NewTimer(GetSettings().autoZoomDelay, function()
+        autoZoomTimer = nil
         MINIMAP:SetZoom(0)
         if Minimap.ZoomIn  then Minimap.ZoomIn:Enable()   end
         if Minimap.ZoomOut then Minimap.ZoomOut:Disable() end
-        autoZoomSeq, autoZoomCur = 0, 0
-    end
-end
-
-local function TriggerAutoZoom()
-    if not GetToggle("autoZoomOut") then return end
-    autoZoomSeq = autoZoomSeq + 1
-    C_Timer.After(GetSettings().autoZoomDelay, AutoZoomTick)
+    end)
 end
 
 local function SetupAutoZoom()
@@ -878,6 +953,25 @@ end
 
 -- ─── Zoom Button Visibility ─────────────────────────────────────────────────
 
+-- Force the zoom buttons' IsMouseOver to always return true so they never fade
+-- out; we cache the originals so OnDisable (or toggling showZoomBtns off) can
+-- restore Blizzard's normal behavior.
+local function StashZoomIsMouseOver()
+    if M._savedZoomIsMouseOver then return end
+    M._savedZoomIsMouseOver = {
+        zin  = Minimap.ZoomIn.IsMouseOver,
+        zout = Minimap.ZoomOut.IsMouseOver,
+    }
+end
+
+local function RestoreZoomIsMouseOver()
+    local saved = M._savedZoomIsMouseOver
+    if not saved then return end
+    if Minimap.ZoomIn  and saved.zin  then Minimap.ZoomIn.IsMouseOver  = saved.zin  end
+    if Minimap.ZoomOut and saved.zout then Minimap.ZoomOut.IsMouseOver = saved.zout end
+    M._savedZoomIsMouseOver = nil
+end
+
 local function ApplyZoomButtons()
     local s = GetSettings()
     if not Minimap.ZoomIn or not Minimap.ZoomOut then return end
@@ -885,11 +979,13 @@ local function ApplyZoomButtons()
     if s.showZoomBtns then
         RestoreElement(Minimap.ZoomIn)
         RestoreElement(Minimap.ZoomOut)
+        StashZoomIsMouseOver()
         Minimap.ZoomIn.IsMouseOver  = function() return true end
         Minimap.ZoomOut.IsMouseOver = function() return true end
         Minimap.ZoomIn:Show()
         Minimap.ZoomOut:Show()
     else
+        RestoreZoomIsMouseOver()
         HideElement(Minimap.ZoomIn)
         HideElement(Minimap.ZoomOut)
     end
@@ -1003,7 +1099,8 @@ M.RefreshElements = ApplyElementVisibility
 -- ─── Hide Addon Icons (LibDBIcon ShowOnEnter) ───────────────────────────────
 
 local function ApplyHideAddonIcons()
-    local ldbi = LibStub and LibStub("LibDBIcon-1.0", true)
+    -- LibDBIcon is optional at runtime.
+    local ldbi = LibStub("LibDBIcon-1.0", true)
     if not ldbi then return end
 
     local hide = GetToggle("hideAddonIcons")
@@ -1054,13 +1151,16 @@ local ICON_FRAMES = {
       anchor  = { "BOTTOM",      "BOTTOM",       0,  -8 } },
 }
 
+-- Returns icon-center offset from minimap-center. Using :GetCenter() on both
+-- frames keeps the math correct regardless of MINIMAP's position in UIParent;
+-- an earlier left/bottom-based computation implicitly assumed MINIMAP was at
+-- UIParent origin and caused dragged icons to snap to the minimap's top-right.
 local function FrameCenterOffsetFromMinimapCenter(f)
     if not f or not MINIMAP then return 0, 0 end
-    local mw, mh = MINIMAP:GetSize()
-    local fw, fh = f:GetSize()
-    local left, bottom = f:GetLeft(), f:GetBottom()
-    if not left or not bottom then return 0, 0 end
-    return left + fw / 2 - mw / 2, bottom + fh / 2 - mh / 2
+    local fcx, fcy = f:GetCenter()
+    local mcx, mcy = MINIMAP:GetCenter()
+    if not fcx or not mcx then return 0, 0 end
+    return fcx - mcx, fcy - mcy
 end
 
 local function ClampIconCenterOffset(cx, cy, f)
@@ -1151,7 +1251,7 @@ local function FinishDebugIconDrag(ov)
     C_Timer.After(0, ReapplySavedMinimapIconAnchors)
 end
 
-local function DebugIconDragUpdate(self, elapsed)
+local function DebugIconDragUpdate(self)
     local d = self._oneWoWIconDrag
     if not d or not self._oneWoWDragging then return end
     if not debugActive or not IsMouseButtonDown("LeftButton") then
@@ -1185,6 +1285,7 @@ local function SetupDebugIconDrag(ov, f, def)
         local icx, icy = FrameCenterOffsetFromMinimapCenter(parent)
         self._oneWoWDragging = true
         self._oneWoWIconDrag = { f = parent, def = def, lastX = mx, lastY = my, icx = icx, icy = icy }
+        GetTooltip():Hide()
         self:SetScript("OnUpdate", DebugIconDragUpdate)
     end)
     ov:SetScript("OnMouseUp", function(self, button)
@@ -1241,6 +1342,18 @@ local function HideDebugOverlays()
     for _, ov in pairs(debugOverlays) do
         if ov then ov:Hide() end
     end
+    -- Restore each Blizzard icon frame to the visibility state it had before
+    -- ShowDebugOverlays force-showed it. Blizzard's count/state-driven show/hide
+    -- events (e.g. CRAFTINGORDERS_UPDATE_PERSONAL_ORDER_COUNTS, UPDATE_PENDING_MAIL)
+    -- only fire on state changes, so without this restore an empty indicator can
+    -- linger visible on the minimap.
+    for _, def in ipairs(ICON_FRAMES) do
+        local f = def.getter()
+        if f and debugShownSaved[f] ~= nil then
+            if debugShownSaved[f] then f:Show() else f:Hide() end
+            debugShownSaved[f] = nil
+        end
+    end
     -- Re-anchor Blizzard icons on the cluster when not using a detached minimap.
     if not M._detached then
         RestoreIconParents()
@@ -1261,6 +1374,9 @@ local function ShowDebugOverlays()
                 f:SetParent(MINIMAP)
             end
             ApplyIconAnchorToMinimap(f, def)
+            if debugShownSaved[f] == nil then
+                debugShownSaved[f] = f:IsShown() and true or false
+            end
             f:Show()
 
             -- Build or reuse the overlay
@@ -1286,6 +1402,27 @@ local function ShowDebugOverlays()
             end
             ov:SetParent(f)
             ov:SetAllPoints(f)
+            ov._oneWoWDebugDef = def
+            ov._oneWoWDebugFrame = f
+            ov:SetScript("OnEnter", function(self)
+                if self._oneWoWDragging then return end
+                local d = self._oneWoWDebugDef
+                local tf = self._oneWoWDebugFrame
+                if not d then return end
+                local tt = GetTooltip()
+                tt:SetOwner(self, "ANCHOR_RIGHT")
+                tt:AddLine(d.name, 1, 1, 1)
+                local globalName = tf and tf.GetName and tf:GetName()
+                tt:AddLine(globalName or d.id, 0.7, 0.7, 0.7)
+                local s = GetSettings()
+                local pos = s.iconPositions and s.iconPositions[d.id]
+                if pos and pos.cx ~= nil and pos.cy ~= nil then
+                    tt:AddLine(ns.L["MMSKIN_DEBUG_TT_POS_FMT"]:format(pos.cx, pos.cy), 0.7, 0.7, 0.7)
+                end
+                tt:AddLine(ns.L["MMSKIN_DEBUG_TT_DRAG_HINT"], 0.5, 0.8, 1, true)
+                tt:Show()
+            end)
+            ov:SetScript("OnLeave", function() GetTooltip():Hide() end)
             ov:Show()
             SetupDebugIconDrag(ov, f, def)
         end
@@ -1420,9 +1557,7 @@ local function RestoreAddonCompartmentSnapshot()
     for i = 1, #s.points do
         local t = s.points[i]
         if t then
-            pcall(function()
-                f:SetPoint(t[1], t[2], t[3], t[4], t[5])
-            end)
+            f:SetPoint(t[1], t[2], t[3], t[4], t[5])
         end
     end
     compartmentSquareActive = false
@@ -1436,7 +1571,17 @@ local function ApplyAddonCompartmentSquareLayout()
     local want = GetToggle("squareShape") and GetSettings().showCompartment
     if not want or f:GetParent() == GetHiddenFrame() then
         if compartmentSquareActive then
-            RestoreAddonCompartmentSnapshot()
+            -- When the compartment is parked on our hidden frame (HideElement),
+            -- parenting is owned by ApplyElementVisibility. Restoring the
+            -- snapshot here would SetParent back to Blizzard's original parent
+            -- and undo the hide. Just clear the flag; strata/point restore
+            -- isn't visible while hidden anyway and will be reapplied if the
+            -- user re-enables showCompartment.
+            if f:GetParent() == GetHiddenFrame() then
+                compartmentSquareActive = false
+            else
+                RestoreAddonCompartmentSnapshot()
+            end
         end
         return
     end
@@ -1599,7 +1744,10 @@ function M:OnEnable()
 
     EnsureExpansionPlumberHook()
 
-    if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
+    -- OneWoW_GUI has no UnregisterSettingsCallback API today; gate to one-shot so
+    -- disable/enable cycles do not stack duplicate theme/font callbacks.
+    if not M._guiCallbacksRegistered then
+        M._guiCallbacksRegistered = true
         OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
             M:ApplyTheme()
         end)
@@ -1627,9 +1775,10 @@ function M:OnDisable()
         MinimapCluster:SetClampedToScreen(true)
     end
 
-    -- If square mask was applied, a reload is needed to restore Blizzard default
-    if GetToggle("squareShape") then
-        StaticPopup_Show("ONEWOW_MMSKIN_RELOAD")
+    -- Reload only if the square mask was actually applied this session;
+    -- disabling the module without ever applying the mask needs no reload.
+    if M._squareMaskApplied then
+        StaticPopup_Show("ONEWOW_MMSKIN_RELOAD", ns.L["MMSKIN_RELOAD_PROMPT"])
     end
 
     RestoreLayout()
@@ -1661,7 +1810,8 @@ function M:OnDisable()
         RestoreElement(frame)
     end
 
-    local ldbi = LibStub and LibStub("LibDBIcon-1.0", true)
+    -- LibDBIcon is optional at runtime.
+    local ldbi = LibStub("LibDBIcon-1.0", true)
     if ldbi then
         local list = ldbi:GetButtonList()
         if list then
@@ -1669,9 +1819,15 @@ function M:OnDisable()
                 ldbi:ShowOnEnter(bname, false)
             end
         end
+        if M._addonIconCB then
+            ldbi.UnregisterCallback(M, "LibDBIcon_IconCreated")
+            M._addonIconCB = nil
+        end
     end
 
     if not MINIMAP:IsShown() then MINIMAP:Show() end
+
+    RestoreZoomIsMouseOver()
 
     -- Clean up any active debug overlays
     if debugActive then
@@ -1679,6 +1835,14 @@ function M:OnDisable()
         M._debugActive = false
         for _, ov in pairs(debugOverlays) do
             if ov then ov:Hide() end
+        end
+    end
+    -- Restore any visibility state we force-shifted during debug overlays.
+    for _, def in ipairs(ICON_FRAMES) do
+        local f = def.getter()
+        if f and debugShownSaved[f] ~= nil then
+            if debugShownSaved[f] then f:Show() else f:Hide() end
+            debugShownSaved[f] = nil
         end
     end
 
@@ -1690,7 +1854,7 @@ function M:OnToggle(toggleId, value)
         if value then
             ApplySquareMask()
         else
-            StaticPopup_Show("ONEWOW_MMSKIN_RELOAD")
+            StaticPopup_Show("ONEWOW_MMSKIN_RELOAD", ns.L["MMSKIN_RELOAD_PROMPT"])
         end
         UpdateBorder()
         ApplyAddonCompartmentSquareLayout()

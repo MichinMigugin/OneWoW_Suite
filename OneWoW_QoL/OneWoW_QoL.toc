@@ -196,6 +196,7 @@ Modules\external\minimapbuttons\minimapbuttons-ui.lua
 Modules\external\minimapbuttons\data.lua
 
 Modules\external\map_mini_tools\Locales\enUS.lua
+Modules\external\map_mini_tools\Locales\koKR.lua
 Modules\external\map_mini_tools\map_mini_tools.lua
 Modules\external\map_mini_tools\map_mini_tools-engine.lua
 Modules\external\map_mini_tools\map_mini_tools-ui.lua
