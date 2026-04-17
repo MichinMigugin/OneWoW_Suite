@@ -24,6 +24,8 @@ local iconMoveParents = {}   -- { frame = { parent, points[] } } saved before de
 local clockRunning = false
 local debugOverlays   = {}   -- colored debug overlay frames, indexed by ICON_FRAMES position
 local debugActive     = false
+local applyingIconAnchors = false -- re-entrancy guard for SetPoint bursts
+local minimapLayoutHooked = false
 
 -- ─── Settings ───────────────────────────────────────────────────────────────
 
@@ -50,6 +52,8 @@ local function GetSettings()
     if s.zoneFontSize    == nil then s.zoneFontSize    = 12         end
     if s.clockFont       == nil then s.clockFont       = "global"   end
     if s.clockFontSize   == nil then s.clockFontSize   = 12         end
+    -- iconPositions[id] = { cx =, cy = } offsets from Minimap CENTER/CENTER; set while Debug Icons is on
+    if not s.iconPositions then s.iconPositions = {} end
     -- zoneTextPos / clockPos = { point, relName, relPoint, x, y } relName: Minimap | MinimapCluster | UIParent
     return s
 end
@@ -93,6 +97,9 @@ local function ResolveFontPath(key)
     if not OneWoW_GUI then return nil end
     if not key or key == "global" then
         return OneWoW_GUI:GetFont()
+    end
+    if key == "wow_default" then
+        return select(1, GameFontNormalSmall:GetFont())
     end
     return OneWoW_GUI:GetFontByKey(key)
 end
@@ -334,6 +341,17 @@ local function UpdateZoneDisplay()
     end
 end
 
+-- Top-anchored text so changing font size does not shift the label vertically on the minimap edge.
+local function LayoutZoneFontString()
+    if not zoneFontStr or not zoneFrame then return end
+    zoneFontStr:ClearAllPoints()
+    zoneFontStr:SetPoint("TOP", zoneFrame, "TOP", 0, -2)
+    zoneFontStr:SetPoint("LEFT", zoneFrame, "LEFT", 6, 0)
+    zoneFontStr:SetPoint("RIGHT", zoneFrame, "RIGHT", -6, 0)
+    zoneFontStr:SetJustifyH("CENTER")
+    zoneFontStr:SetJustifyV("TOP")
+end
+
 local function ApplyZoneFont()
     if not zoneFontStr then return end
     local s = GetSettings()
@@ -345,10 +363,13 @@ local function ApplyZoneFont()
     else
         zoneFontStr:SetFontObject(GameFontNormalSmall)
     end
+    LayoutZoneFontString()
+    UpdateZoneDisplay()
     if zoneFrame then
         local s2 = GetSettings()
-        zoneFrame:SetHeight(s2.zoneFontSize + 4)
-        zoneFrame:SetWidth(math.max(MINIMAP:GetWidth() + 40, zoneFontStr:GetStringWidth() + 20))
+        local textH = zoneFontStr:GetStringHeight()
+        zoneFrame:SetHeight(math.max(textH + 6, s2.zoneFontSize + 4))
+        zoneFrame:SetWidth(math.max(MINIMAP:GetWidth() + 40, zoneFontStr:GetStringWidth() + 16))
     end
 end
 
@@ -446,8 +467,9 @@ local function ApplyZoneTextLayout()
     if not zoneFrame then return end
     if GetToggle("zoneClockDraggable") then
         zoneFrame:SetParent(UIParent)
-        zoneFrame:SetFrameStrata("HIGH")
-        zoneFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 30)
+        -- Match the minimap stack so zone text stays above the minimap but not above unrelated UI.
+        zoneFrame:SetFrameStrata(MINIMAP:GetFrameStrata() or "LOW")
+        zoneFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 5)
         zoneFrame:SetMovable(true)
         zoneFrame:SetClampedToScreen(true)
         if not ApplySavedFramePos(zoneFrame, "zoneTextPos") then
@@ -479,8 +501,8 @@ local function ApplyClockLayout()
     if not clockFrame then return end
     if GetToggle("zoneClockDraggable") then
         clockFrame:SetParent(UIParent)
-        clockFrame:SetFrameStrata("HIGH")
-        clockFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 30)
+        clockFrame:SetFrameStrata(MINIMAP:GetFrameStrata() or "LOW")
+        clockFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 5)
         clockFrame:SetMovable(true)
         clockFrame:SetClampedToScreen(true)
         if not ApplySavedFramePos(clockFrame, "clockPos") then
@@ -515,7 +537,6 @@ local function CreateZoneText()
     zoneFrame:EnableMouse(true)
 
     zoneFontStr = zoneFrame:CreateFontString(nil, "OVERLAY")
-    zoneFontStr:SetAllPoints(zoneFrame)
     zoneFontStr:SetJustifyH("CENTER")
 
     ApplyZoneFont()
@@ -572,6 +593,28 @@ end
 
 -- ─── Clock ──────────────────────────────────────────────────────────────────
 
+-- Single CENTER anchor: never stretch the font string between LEFT/RIGHT (that forces truncation / "22:...").
+local function LayoutClockFontString()
+    if not clockFontStr or not clockFrame then return end
+    clockFontStr:ClearAllPoints()
+    clockFontStr:SetPoint("CENTER", clockFrame, "CENTER", 0, 0)
+    clockFontStr:SetJustifyH("CENTER")
+    clockFontStr:SetJustifyV("MIDDLE")
+    clockFontStr:SetWordWrap(false)
+end
+
+local function FitClockFrameToText()
+    if not clockFrame or not clockFontStr then return end
+    local s2 = GetSettings()
+    -- Unbounded width avoids measuring while the string is still squeezed by a narrow parent.
+    local uw = clockFontStr.GetUnboundedStringWidth and clockFontStr:GetUnboundedStringWidth()
+        or clockFontStr:GetStringWidth()
+    local textH = clockFontStr:GetStringHeight()
+    -- ~2× measured width + padding: 12h + AM/PM, locales, outline, and UI scale cannot clip.
+    clockFrame:SetHeight(math.max(textH + 8, (s2.clockFontSize or 12) + 6))
+    clockFrame:SetWidth(math.max(uw * 2 + 32, 144))
+end
+
 local function UpdateClockDisplay()
     if not clockFontStr then return end
     local hour, minute
@@ -591,6 +634,7 @@ local function UpdateClockDisplay()
         end
         clockFontStr:SetFormattedText(TIMEMANAGER_TICKER_12HOUR, hour, minute)
     end
+    FitClockFrameToText()
 end
 
 local function StartClockUpdates()
@@ -642,11 +686,8 @@ local function ApplyClockFont()
     else
         clockFontStr:SetFontObject(GameFontNormalSmall)
     end
+    LayoutClockFontString()
     if clockFrame then
-        local s2 = GetSettings()
-        clockFrame:SetHeight(s2.clockFontSize + 4)
-        clockFontStr:SetText("99:99")
-        clockFrame:SetWidth(clockFontStr:GetUnboundedStringWidth() + 20)
         UpdateClockDisplay()
     end
 end
@@ -661,7 +702,6 @@ local function CreateClock()
     clockFrame:RegisterForClicks("AnyUp")
 
     clockFontStr = clockFrame:CreateFontString(nil, "OVERLAY")
-    clockFontStr:SetAllPoints(clockFrame)
     clockFontStr:SetJustifyH("CENTER")
 
     ApplyClockFont()
@@ -990,29 +1030,168 @@ end
 -- itself so they work for both circle and square shapes. Tune via Debug Icons.
 
 local ICON_FRAMES = {
-    { name = "Mail",        color = {1, 0.82, 0,   0.7},
+    { id = "mail",       name = "Mail",        color = {1, 0.82, 0,   0.7},
       getter  = function() return MinimapCluster and MinimapCluster.IndicatorFrame and MinimapCluster.IndicatorFrame.MailFrame end,
       anchor  = { "TOPRIGHT",    "TOPRIGHT",    -2,   2 } },
-    { name = "Crafting",    color = {1, 0.45, 0,   0.7},
+    { id = "crafting",   name = "Crafting",    color = {1, 0.45, 0,   0.7},
       getter  = function() return MinimapCluster and MinimapCluster.IndicatorFrame and MinimapCluster.IndicatorFrame.CraftingOrderFrame end,
       anchor  = { "TOPRIGHT",    "TOPRIGHT",   -28,   2 } },
-    { name = "Difficulty",  color = {1, 0.2,  0.2, 0.7},
+    { id = "difficulty", name = "Difficulty",  color = {1, 0.2,  0.2, 0.7},
       getter  = function() return MinimapCluster and MinimapCluster.InstanceDifficulty end,
       anchor  = { "TOPLEFT",     "TOPLEFT",      2,   2 } },
-    { name = "Missions",    color = {0.6, 0.2, 1,  0.7},
+    { id = "missions",   name = "Missions",    color = {0.6, 0.2, 1,  0.7},
       getter  = function() return ExpansionLandingPageMinimapButton end,
       anchor  = { "BOTTOMRIGHT", "BOTTOMRIGHT", -2,  -2 } },
-    { name = "Compartment", color = {0, 0.8,  1,   0.7},
+    { id = "compartment", name = "Compartment", color = {0, 0.8,  1,   0.7},
       getter  = function() return AddonCompartmentFrame end,
       anchor  = { "TOPLEFT",     "TOPLEFT",      2, -24 } },
-    { name = "GameTime",    color = {0.2, 1,  0.2, 0.7},
+    { id = "gametime",   name = "GameTime",    color = {0.2, 1,  0.2, 0.7},
       getter  = function() return GameTimeFrame end,
       anchor  = { "BOTTOMLEFT",  "BOTTOMLEFT",   2,  -2 } },
     -- Whole cluster frame (reparenting only .Button left an empty Tracking ring on MinimapCluster).
-    { name = "Tracking",    color = {0.2, 0.5, 1,  0.7},
+    { id = "tracking",   name = "Tracking",    color = {0.2, 0.5, 1,  0.7},
       getter  = function() return MinimapCluster and MinimapCluster.Tracking end,
       anchor  = { "BOTTOM",      "BOTTOM",       0,  -8 } },
 }
+
+local function FrameCenterOffsetFromMinimapCenter(f)
+    if not f or not MINIMAP then return 0, 0 end
+    local mw, mh = MINIMAP:GetSize()
+    local fw, fh = f:GetSize()
+    local left, bottom = f:GetLeft(), f:GetBottom()
+    if not left or not bottom then return 0, 0 end
+    return left + fw / 2 - mw / 2, bottom + fh / 2 - mh / 2
+end
+
+local function ClampIconCenterOffset(cx, cy, f)
+    if not f or not MINIMAP then return cx, cy end
+    local mw, mh = MINIMAP:GetSize()
+    local fw, fh = f:GetSize()
+    local margin = 2
+    local maxX = math.max(0, mw / 2 - fw / 2 - margin)
+    local maxY = math.max(0, mh / 2 - fh / 2 - margin)
+    cx = math.max(-maxX, math.min(maxX, cx))
+    cy = math.max(-maxY, math.min(maxY, cy))
+    return cx, cy
+end
+
+local function ApplyIconAnchorToMinimap(f, def)
+    if not f or not MINIMAP or not def then return end
+    applyingIconAnchors = true
+    f:SetParent(MINIMAP)
+    f:ClearAllPoints()
+    local pos = GetSettings().iconPositions[def.id]
+    if pos and pos.cx ~= nil and pos.cy ~= nil then
+        f:SetPoint("CENTER", MINIMAP, "CENTER", pos.cx, pos.cy)
+    else
+        local a = def.anchor
+        f:SetPoint(a[1], MINIMAP, a[2], a[3], a[4])
+    end
+    applyingIconAnchors = false
+end
+
+-- Blizzard Minimap:Layout() repositions children; StartMoving also fights that — use saved anchors next frame.
+local function ReapplySavedMinimapIconAnchors()
+    if applyingIconAnchors or not MINIMAP then return end
+    if not (debugActive or M._detached) then return end
+    local s = GetSettings()
+    if not s.iconPositions then return end
+    applyingIconAnchors = true
+    for _, def in ipairs(ICON_FRAMES) do
+        local pos = s.iconPositions[def.id]
+        if pos and pos.cx ~= nil and pos.cy ~= nil then
+            local f = def.getter()
+            if f and f:GetParent() == MINIMAP then
+                f:ClearAllPoints()
+                f:SetPoint("CENTER", MINIMAP, "CENTER", pos.cx, pos.cy)
+            end
+        end
+    end
+    applyingIconAnchors = false
+end
+
+local function EnsureMinimapLayoutHooks()
+    if minimapLayoutHooked or not MINIMAP then return end
+    if not MINIMAP.Layout then return end
+    minimapLayoutHooked = true
+    hooksecurefunc(MINIMAP, "Layout", function()
+        if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
+        C_Timer.After(0, ReapplySavedMinimapIconAnchors)
+    end)
+    if MinimapCluster and MinimapCluster.Layout then
+        hooksecurefunc(MinimapCluster, "Layout", function()
+            if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
+            C_Timer.After(0, ReapplySavedMinimapIconAnchors)
+        end)
+    end
+end
+
+local function FinishDebugIconDrag(ov)
+    if not ov or not ov._oneWoWDragging then return end
+    local d = ov._oneWoWIconDrag
+    if not d then
+        ov._oneWoWDragging = false
+        ov:SetScript("OnUpdate", nil)
+        return
+    end
+    ov._oneWoWDragging = false
+    ov._oneWoWIconDrag = nil
+    ov:SetScript("OnUpdate", nil)
+    local f = d.f
+    local def = d.def
+    if not f or not def or f:GetParent() ~= MINIMAP then return end
+    local cx, cy = ClampIconCenterOffset(d.icx, d.icy, f)
+    applyingIconAnchors = true
+    f:ClearAllPoints()
+    f:SetPoint("CENTER", MINIMAP, "CENTER", cx, cy)
+    applyingIconAnchors = false
+    local s = GetSettings()
+    s.iconPositions[def.id] = { cx = cx, cy = cy }
+    ReapplySavedMinimapIconAnchors()
+    C_Timer.After(0, ReapplySavedMinimapIconAnchors)
+end
+
+local function DebugIconDragUpdate(self, elapsed)
+    local d = self._oneWoWIconDrag
+    if not d or not self._oneWoWDragging then return end
+    if not debugActive or not IsMouseButtonDown("LeftButton") then
+        FinishDebugIconDrag(self)
+        return
+    end
+    local mx, my = GetCursorPosition()
+    local scale = UIParent:GetEffectiveScale() or 1
+    local dx = (mx - d.lastX) / scale
+    local dy = (my - d.lastY) / scale
+    d.lastX, d.lastY = mx, my
+    d.icx = d.icx + dx
+    d.icy = d.icy + dy
+    local cx, cy = ClampIconCenterOffset(d.icx, d.icy, d.f)
+    d.icx, d.icy = cx, cy
+    applyingIconAnchors = true
+    d.f:ClearAllPoints()
+    d.f:SetPoint("CENTER", MINIMAP, "CENTER", cx, cy)
+    applyingIconAnchors = false
+end
+
+local function SetupDebugIconDrag(ov, f, def)
+    if not ov or ov._oneWoWIconDragSetup then return end
+    ov._oneWoWIconDragSetup = true
+    ov:EnableMouse(true)
+    ov:SetScript("OnMouseDown", function(self, button)
+        if not debugActive or button ~= "LeftButton" then return end
+        local parent = self:GetParent()
+        if not parent or parent:GetParent() ~= MINIMAP then return end
+        local mx, my = GetCursorPosition()
+        local icx, icy = FrameCenterOffsetFromMinimapCenter(parent)
+        self._oneWoWDragging = true
+        self._oneWoWIconDrag = { f = parent, def = def, lastX = mx, lastY = my, icx = icx, icy = icy }
+        self:SetScript("OnUpdate", DebugIconDragUpdate)
+    end)
+    ov:SetScript("OnMouseUp", function(self, button)
+        if button ~= "LeftButton" then return end
+        FinishDebugIconDrag(self)
+    end)
+end
 
 local function SaveIconPoints(f)
     local data = { parent = f:GetParent(), points = {} }
@@ -1030,10 +1209,7 @@ local function ReparentIconsToMinimap()
             if not iconMoveParents[f] then
                 SaveIconPoints(f)
             end
-            f:SetParent(MINIMAP)
-            f:ClearAllPoints()
-            local a = def.anchor
-            f:SetPoint(a[1], MINIMAP, a[2], a[3], a[4])
+            ApplyIconAnchorToMinimap(f, def)
         end
     end
 end
@@ -1065,6 +1241,10 @@ local function HideDebugOverlays()
     for _, ov in pairs(debugOverlays) do
         if ov then ov:Hide() end
     end
+    -- Re-anchor Blizzard icons on the cluster when not using a detached minimap.
+    if not M._detached then
+        RestoreIconParents()
+    end
     ApplyElementVisibility()
     RefreshExpansionMinimapButtonTooltipState()
 end
@@ -1074,13 +1254,13 @@ local function ShowDebugOverlays()
     for i, def in ipairs(ICON_FRAMES) do
         local f = def.getter()
         if f then
-            -- Temporarily pull out of the hidden frame so it's visible
-            if f:GetParent() == GetHiddenFrame() then
+            if f:GetParent() ~= MINIMAP then
+                if f:GetParent() ~= GetHiddenFrame() and not iconMoveParents[f] then
+                    SaveIconPoints(f)
+                end
                 f:SetParent(MINIMAP)
-                f:ClearAllPoints()
-                local a = def.anchor
-                f:SetPoint(a[1], MINIMAP, a[2], a[3], a[4])
             end
+            ApplyIconAnchorToMinimap(f, def)
             f:Show()
 
             -- Build or reuse the overlay
@@ -1107,6 +1287,7 @@ local function ShowDebugOverlays()
             ov:SetParent(f)
             ov:SetAllPoints(f)
             ov:Show()
+            SetupDebugIconDrag(ov, f, def)
         end
     end
     RefreshExpansionMinimapButtonTooltipState()
@@ -1265,7 +1446,12 @@ local function ApplyAddonCompartmentSquareLayout()
     end
     f:SetFrameStrata("MEDIUM")
     f:ClearAllPoints()
-    f:SetPoint("TOPRIGHT", MINIMAP, "TOPRIGHT", -2, -2)
+    local sdb = GetSettings().iconPositions
+    if sdb and sdb.compartment and sdb.compartment.cx ~= nil and sdb.compartment.cy ~= nil then
+        f:SetPoint("CENTER", MINIMAP, "CENTER", sdb.compartment.cx, sdb.compartment.cy)
+    else
+        f:SetPoint("TOPRIGHT", MINIMAP, "TOPRIGHT", -2, -2)
+    end
     compartmentSquareActive = true
 end
 
@@ -1379,6 +1565,8 @@ end
 
 function M:OnEnable()
     if not MINIMAP then return end
+
+    EnsureMinimapLayoutHooks()
 
     ApplyMinimapStrata()
     ApplyShape()

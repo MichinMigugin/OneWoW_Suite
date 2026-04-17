@@ -203,6 +203,9 @@ Modules\external\map_mini_tools\data.lua
 
 Modules\external\map_world_tools\Locales\enUS.lua
 Modules\external\map_world_tools\map_world_tools.lua
+Modules\external\map_world_tools\map_world_reveal_data.lua
+Modules\external\map_world_tools\map_world_tools-explore.lua
+Modules\external\map_world_tools\map_world_tools-battlefield.lua
 Modules\external\map_world_tools\map_world_tools-engine.lua
 Modules\external\map_world_tools\map_world_tools-ui.lua
 Modules\external\map_world_tools\data.lua

@@ -43,6 +43,9 @@ local function GetFontLabel(fontKey)
     if not fontKey or fontKey == "global" then
         return L["MMSKIN_FONT_GLOBAL"] or "Global Font"
     end
+    if fontKey == "wow_default" then
+        return L["MMSKIN_FONT_WOW_DEFAULT"] or "WoW default (small)"
+    end
     if OneWoW_GUI.GetFontList then
         for _, f in ipairs(OneWoW_GUI:GetFontList()) do
             if f.key == fontKey then return f.label end
@@ -53,7 +56,10 @@ end
 
 local function BuildFontItems()
     local L = ns.L
-    local items = { { value = "global", text = L["MMSKIN_FONT_GLOBAL"] or "Global Font" } }
+    local items = {
+        { value = "global",     text = L["MMSKIN_FONT_GLOBAL"] or "Global Font" },
+        { value = "wow_default", text = L["MMSKIN_FONT_WOW_DEFAULT"] or "WoW default (small)" },
+    }
     if OneWoW_GUI.GetFontList then
         for _, f in ipairs(OneWoW_GUI:GetFontList()) do
             table.insert(items, { value = f.key, text = f.label })
@@ -216,7 +222,7 @@ local function BuildContent(container)
 
         if OneWoW_GUI.AttachFilterMenu then
             OneWoW_GUI:AttachFilterMenu(zoneFontDrop, {
-                searchable = false, menuHeight = 200, maxVisible = 10,
+                searchable = true, menuHeight = 320,
                 getActiveValue = function() return s.zoneFont end,
                 buildItems = BuildFontItems,
                 onSelect = function(value, text)
@@ -264,7 +270,7 @@ local function BuildContent(container)
 
         if OneWoW_GUI.AttachFilterMenu then
             OneWoW_GUI:AttachFilterMenu(clockFontDrop, {
-                searchable = false, menuHeight = 200, maxVisible = 10,
+                searchable = true, menuHeight = 320,
                 getActiveValue = function() return s.clockFont end,
                 buildItems = BuildFontItems,
                 onSelect = function(value, text)
