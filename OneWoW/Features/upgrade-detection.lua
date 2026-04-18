@@ -186,7 +186,9 @@ end
 function UpgradeDetection:CheckPawnUpgrade(itemLink)
     if not self.hasPawn or not itemLink then return nil end
     if not _G.PawnShouldItemLinkHaveUpgradeArrow then return nil end
-    local ok, result = pcall(_G.PawnShouldItemLinkHaveUpgradeArrow, itemLink, true)
+    local cfg = GetDB()
+    local enforceReqLevel = not cfg or cfg.pawnEnforceReqLevel ~= false
+    local ok, result = pcall(_G.PawnShouldItemLinkHaveUpgradeArrow, itemLink, enforceReqLevel)
     if ok then return result end
     return nil
 end

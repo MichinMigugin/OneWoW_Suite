@@ -192,6 +192,7 @@ local DEFAULTS = {
                 applyToVendorItems = false,
                 applyToAuctionHouse = false,
                 mode = "ILVL",
+                pawnEnforceReqLevel = true,
                 showInTooltip = false,
                 tooltipDetail = "FULL",
                 tooltipOnlyUpgrade = false,

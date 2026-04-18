@@ -751,6 +751,8 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         }
 
         local radioButtons = {}
+        local refreshEnforcePawnState
+
         for _, modeInfo in ipairs(MODES) do
             local radio = CreateFrame("CheckButton", nil, dsc, "UIRadioButtonTemplate")
             radio:SetPoint("TOPLEFT", dsc, "TOPLEFT", 15, yOffset)
@@ -783,6 +785,9 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                     rb:SetChecked(false)
                 end
                 radio:SetChecked(true)
+                if refreshEnforcePawnState then
+                    refreshEnforcePawnState(modeInfo.value)
+                end
                 OneWoW.OverlayEngine:Refresh()
             end)
 
@@ -795,6 +800,36 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             pawnNote:SetText(L["OVR_UPGRADE_PAWN_NOT_INSTALLED"])
             pawnNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             yOffset = yOffset - pawnNote:GetStringHeight() - 10
+        end
+
+        if hasPawn then
+            local enforceCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_PAWN_ENFORCE_REQ_LEVEL"] })
+            enforceCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+            enforceCb:SetChecked(reg:GetOverlaySetting(featureId, "pawnEnforceReqLevel") ~= false)
+            enforceCb:SetScript("OnClick", function(self)
+                reg:SetOverlaySetting(featureId, "pawnEnforceReqLevel", self:GetChecked())
+                OneWoW.OverlayEngine:Refresh()
+            end)
+            enforceCb:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(L["OVR_UPGRADE_PAWN_ENFORCE_REQ_LEVEL"], 1, 1, 1)
+                GameTooltip:AddLine(L["OVR_UPGRADE_PAWN_ENFORCE_REQ_LEVEL_TOOLTIP"], nil, nil, nil, true)
+                GameTooltip:Show()
+            end)
+            enforceCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+            refreshEnforcePawnState = function(mode)
+                local usesPawn = (mode == "PAWN") or (mode == "PAWN>ILVL")
+                if usesPawn then
+                    enforceCb:Enable()
+                    enforceCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                else
+                    enforceCb:Disable()
+                    enforceCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                end
+            end
+            refreshEnforcePawnState(currentMode)
+            yOffset = yOffset - 28
         end
 
         yOffset = yOffset - 6
