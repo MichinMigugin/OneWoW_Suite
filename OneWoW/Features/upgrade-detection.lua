@@ -251,7 +251,7 @@ function UpgradeDetection:CheckItemUpgrade(itemLink, itemLocation)
 
     if mode == "PAWN>ILVL" then
         local pawnResult = self:CheckPawnUpgrade(itemLink)
-        if pawnResult ~= nil then return pawnResult == true end
+        if pawnResult == true then return true end
     end
 
     if not CanPlayerUseItem(itemLink) then return false end
