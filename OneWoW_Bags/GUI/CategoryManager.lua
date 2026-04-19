@@ -1037,7 +1037,7 @@ function CatMgrUI:RefreshRight()
     local PRIORITY_LABELS = { L["PRIORITY_LOWEST"], L["PRIORITY_LOW"], L["PRIORITY_NORMAL"], L["PRIORITY_HIGH"], L["PRIORITY_HIGHEST"], L["PRIORITY_MAX"] }
 
     local LABEL_X   = 16
-    local CONTROL_X = 110
+    local CONTROL_X = 140
     local ROW_H     = 26
     local DROPDOWN_W = 140
     local DROPDOWN_H = 22
