@@ -75,6 +75,7 @@ function OneWoW_GUI:CreateFitTextButton(parent, options)
     local height = options.height or Constants.GUI.BUTTON_HEIGHT
     local minWidth = options.minWidth or 40
     local paddingX = options.paddingX or 24
+    local toggleable = options.toggleable == true
 
     local btn = self:CreateButton(parent, { text = text, width = minWidth, height = height })
     local textWidth = btn.text:GetStringWidth()
@@ -88,6 +89,58 @@ function OneWoW_GUI:CreateFitTextButton(parent, options)
         self.text:SetText(newText)
         local w = self.text:GetStringWidth()
         self:SetWidth(math.max(self._minWidth, w + self._paddingX))
+    end
+
+    if toggleable then
+        btn.isActive = false
+
+        local function applyNormal(self)
+            if self.isActive then
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            else
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+        end
+
+        local function applyHover(self)
+            if self.isActive then
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            else
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            end
+        end
+
+        btn:SetScript("OnEnter", applyHover)
+        btn:SetScript("OnLeave", applyNormal)
+        btn:SetScript("OnMouseDown", function(self)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+        end)
+        btn:SetScript("OnMouseUp", function(self)
+            if self:IsMouseOver() then
+                applyHover(self)
+            else
+                applyNormal(self)
+            end
+        end)
+
+        function btn:SetActive(active)
+            self.isActive = active and true or false
+            if self:IsMouseOver() then
+                applyHover(self)
+            else
+                applyNormal(self)
+            end
+        end
+
+        applyNormal(btn)
     end
 
     return btn
