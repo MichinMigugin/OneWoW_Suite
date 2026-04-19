@@ -1463,6 +1463,48 @@ function CatMgrUI:RefreshRight()
     end
     yPos = yPos - ROW_H
 
+    BuildLabelRow("CAT_FORCE_OWN_LINE", yPos)
+
+    local compactForKey = {
+        backpack       = db.global.compactCategories and true or false,
+        character_bank = db.global.bankCompactCategories and true or false,
+        warband_bank   = db.global.bankCompactCategories and true or false,
+    }
+
+    local ownLineX = CONTROL_X
+    for _, hc in ipairs(appliesContainers) do
+        local cb = CreateFrame("CheckButton", nil, rightTopWrapper, "UICheckButtonTemplate")
+        cb:SetSize(18, 18)
+        cb:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", ownLineX, yPos + 2)
+        cb:SetChecked(catMod.forceOwnLine and catMod.forceOwnLine[hc.key] and true or false)
+
+        local isApplied = not (catMod.appliesIn and catMod.appliesIn[hc.key] == false)
+        local enabled = isApplied and compactForKey[hc.key]
+
+        local lbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        lbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
+        lbl:SetText(hc.label)
+
+        if enabled then
+            cb:Enable()
+            lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        else
+            cb:Disable()
+            lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+
+        local capKey = hc.key
+        cb:SetScript("OnClick", function(self)
+            local controller = GetController()
+            if controller and controller.SetCategoryForceOwnLine then
+                controller:SetCategoryForceOwnLine(capCatName, capKey, self:GetChecked())
+            end
+        end)
+
+        ownLineX = ownLineX + 20 + lbl:GetStringWidth() + 14
+    end
+    yPos = yPos - ROW_H
+
     local div3 = rightTopWrapper:CreateTexture(nil, "ARTWORK")
     div3:SetHeight(1)
     div3:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)

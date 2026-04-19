@@ -88,5 +88,6 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
         ReleaseAllLabels = ReleaseAllLabels,
         moveRecentToTop = db.global.moveRecentToTop,
         moveOtherToBottom = db.global.moveOtherToBottom,
+        containerType = containerType,
     })
 end

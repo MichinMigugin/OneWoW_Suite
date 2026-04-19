@@ -290,6 +290,7 @@ OneWoW_Bags.Locales["koKR"] = {
     ["COLOR"] = "색",
     ["COLOR_CLEAR"] = "지우기",
     ["APPLIES_TO"] = "적용 대상",
+    ["CAT_FORCE_OWN_LINE"] = "독립된 줄에:",
     ["APPLIES_BACKPACK"] = "가방",
     ["APPLIES_CHAR_BANK"] = "캐릭터 은행",
     ["APPLIES_WARBAND_BANK"] = "전장 부대 은행",

@@ -290,6 +290,7 @@ OneWoW_Bags.Locales["frFR"] = {
     ["COLOR"] = "Couleur",
     ["COLOR_CLEAR"] = "Effacer",
     ["APPLIES_TO"] = "S'applique à",
+    ["CAT_FORCE_OWN_LINE"] = "Sur sa propre ligne :",
     ["APPLIES_BACKPACK"] = "Sacs",
     ["APPLIES_CHAR_BANK"] = "Banque du personnage",
     ["APPLIES_WARBAND_BANK"] = "Banque de bataillon",

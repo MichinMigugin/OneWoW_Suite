@@ -342,6 +342,7 @@ OneWoW_Bags.Locales["enUS"] = {
     ["COLOR_CLEAR"] = "Clear",
 
     ["APPLIES_TO"] = "Applies to",
+    ["CAT_FORCE_OWN_LINE"] = "On own line:",
     ["APPLIES_BACKPACK"] = "Bags",
     ["APPLIES_CHAR_BANK"] = "Personal Bank",
     ["APPLIES_WARBAND_BANK"] = "Warband Bank",

@@ -136,6 +136,7 @@ function H.LayoutCompactGroup(catInfoList, contentFrame, opts)
     local catMods = opts.catMods
     local AcquireLabel = opts.AcquireLabel
     local verticalSpacing = opts.verticalSpacing
+    local containerType = opts.containerType
 
     local lines = {}
     local currentLine = {}
@@ -143,47 +144,71 @@ function H.LayoutCompactGroup(catInfoList, contentFrame, opts)
 
     for _, catInfo in ipairs(catInfoList) do
         local count = #catInfo.items
-        local startCol = curCol > 0 and (curCol + gapSlots) or 0
-        local avail = floor(cols - startCol)
+        local mod = catMods and catMods[catInfo.name]
+        local forceOwn = mod and mod.forceOwnLine and mod.forceOwnLine[containerType]
 
-        if avail < 1 then
-            tinsert(lines, currentLine)
-            currentLine = {}
-            curCol = 0
-            startCol = 0
-            avail = cols
-        end
-
-        local optimalWidth = count <= cols and count or max(2, floor(sqrt(count / 1.618)))
-        local blockWidth = min(optimalWidth, avail)
-        local blockRows = ceil(count / blockWidth)
-
-        if blockRows > 1 and (curCol > 0 or blockWidth < cols) then
+        if forceOwn then
             if #currentLine > 0 then
                 tinsert(lines, currentLine)
                 currentLine = {}
             end
             curCol = 0
-            startCol = 0
-            blockWidth = min(count, cols)
-            blockRows = ceil(count / blockWidth)
-        end
-
-        tinsert(currentLine, {
-            name = catInfo.name,
-            displayName = catInfo.displayName,
-            items = catInfo.items,
-            startCol = startCol,
-            blockWidth = blockWidth,
-            blockRows = blockRows,
-        })
-
-        if blockRows > 1 then
+            local blockWidth = min(count, cols)
+            local blockRows = ceil(count / blockWidth)
+            tinsert(currentLine, {
+                name = catInfo.name,
+                displayName = catInfo.displayName,
+                items = catInfo.items,
+                startCol = 0,
+                blockWidth = blockWidth,
+                blockRows = blockRows,
+            })
             tinsert(lines, currentLine)
             currentLine = {}
             curCol = 0
         else
-            curCol = startCol + blockWidth
+            local startCol = curCol > 0 and (curCol + gapSlots) or 0
+            local avail = floor(cols - startCol)
+
+            if avail < 1 then
+                tinsert(lines, currentLine)
+                currentLine = {}
+                curCol = 0
+                startCol = 0
+                avail = cols
+            end
+
+            local optimalWidth = count <= cols and count or max(2, floor(sqrt(count / 1.618)))
+            local blockWidth = min(optimalWidth, avail)
+            local blockRows = ceil(count / blockWidth)
+
+            if blockRows > 1 and (curCol > 0 or blockWidth < cols) then
+                if #currentLine > 0 then
+                    tinsert(lines, currentLine)
+                    currentLine = {}
+                end
+                curCol = 0
+                startCol = 0
+                blockWidth = min(count, cols)
+                blockRows = ceil(count / blockWidth)
+            end
+
+            tinsert(currentLine, {
+                name = catInfo.name,
+                displayName = catInfo.displayName,
+                items = catInfo.items,
+                startCol = startCol,
+                blockWidth = blockWidth,
+                blockRows = blockRows,
+            })
+
+            if blockRows > 1 then
+                tinsert(lines, currentLine)
+                currentLine = {}
+                curCol = 0
+            else
+                curCol = startCol + blockWidth
+            end
         end
     end
     if #currentLine > 0 then
@@ -636,6 +661,7 @@ function H.LayoutCategoryContent(config)
     local filterSet = config.filterSet
     local db = config.db
     local PE = config.PE
+    local containerType = config.containerType
 
     local sortButtons = viewContext.sortButtons
     local acquireSection = viewContext.acquireSection
@@ -755,6 +781,7 @@ function H.LayoutCategoryContent(config)
         catMods = catMods,
         AcquireLabel = AcquireLabel,
         verticalSpacing = verticalSpacing,
+        containerType = containerType,
     }
 
     local function RenderSeparator()

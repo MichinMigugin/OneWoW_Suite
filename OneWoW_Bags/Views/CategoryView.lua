@@ -70,5 +70,6 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
         ReleaseAllLabels = ReleaseAllLabels,
         moveRecentToTop = db.global.moveRecentToTop,
         moveOtherToBottom = db.global.moveOtherToBottom,
+        containerType = containerType,
     })
 end

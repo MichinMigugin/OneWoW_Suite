@@ -452,6 +452,20 @@ function CategoryController:SetCategoryAppliesIn(categoryName, key, applies)
     self:RefreshUI({ invalidate = true })
 end
 
+function CategoryController:SetCategoryForceOwnLine(categoryName, key, value)
+    local mod = self:GetCategoryModification(categoryName)
+    if value then
+        if not mod.forceOwnLine then mod.forceOwnLine = {} end
+        mod.forceOwnLine[key] = true
+    else
+        if mod.forceOwnLine then
+            mod.forceOwnLine[key] = nil
+            if not next(mod.forceOwnLine) then mod.forceOwnLine = nil end
+        end
+    end
+    self:RefreshUI({ invalidate = true })
+end
+
 function CategoryController:SetCustomCategoryValue(categoryID, key, value, options)
     local category = self:GetDB().global.customCategoriesV2[categoryID]
     if not category then return end

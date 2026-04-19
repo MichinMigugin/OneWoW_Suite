@@ -290,6 +290,7 @@ OneWoW_Bags.Locales["deDE"] = {
     ["COLOR"] = "Farbe",
     ["COLOR_CLEAR"] = "Zurücksetzen",
     ["APPLIES_TO"] = "Gilt für",
+    ["CAT_FORCE_OWN_LINE"] = "In eigener Zeile:",
     ["APPLIES_BACKPACK"] = "Taschen",
     ["APPLIES_CHAR_BANK"] = "Charakterbank",
     ["APPLIES_WARBAND_BANK"] = "Kriegsmeer-Bank",

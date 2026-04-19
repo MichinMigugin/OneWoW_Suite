@@ -290,6 +290,7 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["COLOR"] = "Цвет",
     ["COLOR_CLEAR"] = "Очистить",
     ["APPLIES_TO"] = "Применяется к",
+    ["CAT_FORCE_OWN_LINE"] = "На отдельной строке:",
     ["APPLIES_BACKPACK"] = "Сумки",
     ["APPLIES_CHAR_BANK"] = "Банк персонажа",
     ["APPLIES_WARBAND_BANK"] = "Банк отряда",
