@@ -382,14 +382,18 @@ function CategoryController:MoveSectionOrder(fromIndex, toIndex)
     self:RefreshUI()
 end
 
-function CategoryController:MoveSectionCategory(sectionID, index, direction)
-    local section = self:GetDB().global.categorySections[sectionID]
-    if not section then return end
+function CategoryController:MoveCategoryToSection(fromSectionID, fromIdx, toSectionID, toIdx)
+    local sections = self:GetDB().global.categorySections
+    local src, dst = sections[fromSectionID], sections[toSectionID]
+    if not src or not dst or not src.categories or not src.categories[fromIdx] then return end
 
-    local otherIndex = index + direction
-    if otherIndex < 1 or otherIndex > #section.categories then return end
-
-    section.categories[index], section.categories[otherIndex] = section.categories[otherIndex], section.categories[index]
+    local name = tremove(src.categories, fromIdx)
+    if src == dst and toIdx > fromIdx then toIdx = toIdx - 1 end
+    local dstLen = dst.categories and #dst.categories or 0
+    if not dst.categories then dst.categories = {} end
+    if toIdx < 1 then toIdx = 1 end
+    if toIdx > dstLen + 1 then toIdx = dstLen + 1 end
+    tinsert(dst.categories, toIdx, name)
     self:RefreshUI()
 end
 

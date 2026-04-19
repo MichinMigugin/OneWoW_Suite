@@ -218,6 +218,7 @@ OneWoW_Bags.Locales["esES"] = {
     ["SECTION_CREATE"] = "Nueva sección",
     ["SECTION_CREATE_ENTER"] = "Introduce el nombre de la sección:",
     ["SECTION_DRAG_HINT"] = "Arrastra con el boton izquierdo para reordenar las secciones.",
+    ["CATEGORY_DRAG_HINT"] = "Arrastra con el boton izquierdo para reordenar o mover categorias.",
     ["SECTION_RENAME_ENTER"] = "Introduce el nuevo nombre de la sección:",
     ["SECTION_DELETE_CONFIRM"] = "¿Eliminar esta sección? Las categorías volverán a la lista principal.",
     ["CATEGORY_IN_SECTION"] = "Activa o desactiva las categorías que incluir en esta sección:",

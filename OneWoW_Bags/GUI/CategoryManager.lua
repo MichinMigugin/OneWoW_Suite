@@ -61,11 +61,21 @@ local sectionRowFrames   = nil
 local leftLayoutFrames   = nil
 local dragCollapseState  = nil
 local dragDriver         = nil
+local categoryReorder    = nil
+local categoryRowFrames  = nil
+local dwellState         = nil
+local dwellDriver        = nil
 
 -- Rollup pacing for the drag-collapse animation. Each step hides one member
 -- row (from the bottom up) and slides the followers up by one row-height.
 -- 8ms yields ~208ms total for a 26-member section, which still feels snappy.
 local COLLAPSE_STEP_SEC = 0.008
+
+-- How long the cursor must dwell on a collapsed section header during a
+-- category drag before we auto-expand it in place.
+local CATEGORY_DWELL_EXPAND_SEC = 0.4
+local SECTION_ROW_HEIGHT = 30
+local MEMBER_ROW_HEIGHT  = 28
 
 local BUILTIN_LOCALE_KEYS = {
     ["Recent Items"]     = "CAT_RECENT_ITEMS",
@@ -298,14 +308,29 @@ end
 
 local function EnsureSectionReorder()
     if sectionReorder then return sectionReorder end
+    local r, g, b = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
     sectionReorder = OneWoW_GUI:CreateReorderDrag({
         getItems = function()
             return sectionRowFrames
         end,
-        onReorder = function(from, to)
+        dropIndicator = {
+            thickness         = 2,
+            horizontalPadding = 4,
+            color             = { r, g, b, 1 },
+        },
+        autoScroll = {
+            getFrame = function() return leftScrollFrame end,
+            edgeZone = 40,
+            maxSpeed = 14,
+            minSpeed = 2,
+        },
+        onReorder = function(fromIdx, toIdx, insertBefore)
+            local destIdx = insertBefore and toIdx or (toIdx + 1)
+            if destIdx > fromIdx then destIdx = destIdx - 1 end
+            if destIdx == fromIdx then return end
             local controller = GetController()
             if controller and controller.MoveSectionOrder then
-                controller:MoveSectionOrder(from, to)
+                controller:MoveSectionOrder(fromIdx, destIdx)
             end
         end,
         onPickup = function(secRow)
@@ -328,27 +353,313 @@ local function EnsureSectionReorder()
     return sectionReorder
 end
 
-local function MakeSmallBtn(parent, label, onClick, active)
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetSize(20, 20)
-    btn:SetBackdrop({ bgFile="Interface\\Buttons\\WHITE8x8", edgeFile="Interface\\Buttons\\WHITE8x8", edgeSize=1 })
-    if active then
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        btn:SetScript("OnClick", onClick)
+-- ============================================================
+-- Category drag/drop (intra- and inter-section)
+-- ============================================================
+
+local ApplyMemberRowReorderVisual
+local ApplyCategoryHoverVisual
+local ClearCategoryHoverVisual
+local InlineExpandSection
+local BuildSectionMemberRows
+local EnsureCategoryReorder
+local StopDwellTimer
+
+local function RestoreMemberRowBorder(row)
+    if not row then return end
+    if row._catMgrSelected then
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     else
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end
-    local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    lbl:SetPoint("CENTER")
-    lbl:SetText(label)
-    if active then
-        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+end
+
+ApplyMemberRowReorderVisual = function(row, picked)
+    if not row then return end
+    if picked then
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
     else
-        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        RestoreMemberRowBorder(row)
     end
-    return btn
+end
+
+StopDwellTimer = function()
+    dwellState = nil
+    if dwellDriver then dwellDriver:Hide() end
+end
+
+local function StartDwellTimer(target)
+    if not target then return end
+    dwellState = {
+        sectionID = target._catMgrSectionID,
+        startedAt = GetTime(),
+        target    = target,
+    }
+    if not dwellDriver then
+        dwellDriver = CreateFrame("Frame")
+        dwellDriver:SetScript("OnUpdate", function()
+            local st = dwellState
+            if not st then
+                dwellDriver:Hide()
+                return
+            end
+            if GetTime() - st.startedAt >= CATEGORY_DWELL_EXPAND_SEC then
+                local sid = st.sectionID
+                local tgt = st.target
+                dwellState = nil
+                dwellDriver:Hide()
+                if sid and tgt and InlineExpandSection then
+                    InlineExpandSection(sid, tgt)
+                end
+            end
+        end)
+    end
+    dwellDriver:Show()
+end
+
+ApplyCategoryHoverVisual = function(target, _)
+    if not target then return end
+    if target._catMgrKind == "header" then
+        if categoryReorder then categoryReorder:SetIndicatorVisible(false) end
+        target:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        target:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        local section = db.global.categorySections[target._catMgrSectionID]
+        if section and section.collapsed then
+            if not dwellState or dwellState.target ~= target then
+                StartDwellTimer(target)
+            end
+        else
+            StopDwellTimer()
+        end
+    else
+        if categoryReorder then categoryReorder:SetIndicatorVisible(true) end
+        target:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+        StopDwellTimer()
+    end
+end
+
+ClearCategoryHoverVisual = function(target)
+    if not target then return end
+    if target._catMgrKind == "header" then
+        if target._catMgrSelected then
+            target:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            target:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        else
+            target:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+            target:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+        end
+    else
+        RestoreMemberRowBorder(target)
+    end
+    StopDwellTimer()
+end
+
+EnsureCategoryReorder = function()
+    if categoryReorder then return categoryReorder end
+    local r, g, b = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
+    categoryReorder = OneWoW_GUI:CreateReorderDrag({
+        getItems = function()
+            return categoryRowFrames
+        end,
+        dropIndicator = {
+            thickness         = 2,
+            horizontalPadding = 6,
+            color             = { r, g, b, 1 },
+        },
+        autoScroll = {
+            getFrame = function() return leftScrollFrame end,
+            edgeZone = 40,
+            maxSpeed = 14,
+            minSpeed = 2,
+        },
+        onPickup = function(row)
+            ApplyMemberRowReorderVisual(row, true)
+        end,
+        onRestore = function(row)
+            ApplyMemberRowReorderVisual(row, false)
+            StopDwellTimer()
+        end,
+        onHover = function(target, _, insertBefore)
+            ApplyCategoryHoverVisual(target, insertBefore)
+        end,
+        onUnhover = function(target)
+            ClearCategoryHoverVisual(target)
+        end,
+        onReorder = function(fromIdx, toIdx, insertBefore)
+            local src = categoryRowFrames and categoryRowFrames[fromIdx]
+            local tgt = categoryRowFrames and categoryRowFrames[toIdx]
+            if not src or not tgt or src._catMgrKind ~= "member" then return end
+            if tgt == src then return end
+
+            local destSection, destIdx
+            if tgt._catMgrKind == "header" then
+                destSection = tgt._catMgrSectionID
+                destIdx = 1
+            else
+                destSection = tgt._catMgrSectionID
+                destIdx = insertBefore and tgt._catMgrSectionIdx or (tgt._catMgrSectionIdx + 1)
+            end
+            local controller = GetController()
+            if controller and controller.MoveCategoryToSection then
+                controller:MoveCategoryToSection(src._catMgrSectionID, src._catMgrSectionIdx,
+                                                 destSection, destIdx)
+            end
+        end,
+    })
+    return categoryReorder
+end
+
+BuildSectionMemberRows = function(secRow, section, sectionID, startY)
+    local customCats = db.global.customCategoriesV2
+    local disabled   = db.global.disabledCategories
+    local reorder    = EnsureCategoryReorder()
+
+    local y = startY
+    local cats = section.categories or {}
+    for catIdx, catName in ipairs(cats) do
+        local isBuiltin = BUILTIN_PRIORITY[catName] ~= nil
+        local catData, catID = nil, nil
+        if not isBuiltin then
+            for id, data in pairs(customCats) do
+                if data.name == catName then catData = data; catID = id; break end
+            end
+        end
+        local key = isBuiltin and ("builtin:" .. catName) or catID
+        if key then
+            local isSelCat = (selectedCatKey == key)
+
+            local row = CreateFrame("Button", nil, leftWrapper, "BackdropTemplate")
+            row:SetHeight(26)
+            row:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", 16, -y)
+            row:SetPoint("RIGHT",   leftWrapper, "RIGHT",    0, 0)
+            row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+            ---@diagnostic disable-next-line: param-type-mismatch
+            tinsert(leftLayoutFrames, { frame = row, origX = 16, origY = y })
+            secRow._catMgrTailIndex = #leftLayoutFrames
+            if isSelCat then
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            elseif isBuiltin then
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            else
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            end
+
+            row._catMgrKind       = "member"
+            row._catMgrSectionID  = sectionID
+            row._catMgrSectionIdx = catIdx
+            row._catMgrSelected   = isSelCat
+
+            local captEKey = key
+            row:SetScript("OnClick", function()
+                if reorder:IsActive() then return end
+                selectedCatKey = captEKey
+                CatMgrUI:Refresh()
+            end)
+
+            local captName = catName
+            row:SetScript("OnEnter", function(self)
+                if reorder:IsActive() then return end
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                local locKey = BUILTIN_LOCALE_KEYS[captName]
+                GameTooltip:SetText((locKey and L[locKey]) or captName, 1, 1, 1)
+                GameTooltip:AddLine(" ")
+                local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
+                GameTooltip:AddLine(L["CATEGORY_DRAG_HINT"], tr, tg, tb, true)
+                GameTooltip:Show()
+            end)
+            row:SetScript("OnLeave", GameTooltip_Hide)
+
+            local nameX = 8
+            if isBuiltin then
+                local capN2 = catName
+                local isDisabled2 = disabled[catName]
+                local cb2 = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
+                cb2:SetSize(16, 16)
+                cb2:SetPoint("LEFT", row, "LEFT", 4, 0)
+                cb2:SetChecked(not isDisabled2)
+                cb2:SetScript("OnClick", function(self)
+                    local controller = GetController()
+                    if controller and controller.SetBuiltinCategoryEnabled then
+                        controller:SetBuiltinCategoryEnabled(capN2, self:GetChecked())
+                    end
+                end)
+                nameX = 22
+            end
+
+            local locKey2 = BUILTIN_LOCALE_KEYS[catName]
+            local nTxt = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            nTxt:SetPoint("LEFT",  row,  "LEFT",  nameX, 0)
+            nTxt:SetPoint("RIGHT", row,  "RIGHT", -6, 0)
+            nTxt:SetJustifyH("LEFT")
+            nTxt:SetText((locKey2 and L[locKey2]) or catName)
+            if isSelCat then
+                nTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            else
+                nTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+
+            tinsert(secRow._catMgrMemberRows, row)
+            ---@diagnostic disable-next-line: param-type-mismatch
+            tinsert(categoryRowFrames, row)
+            reorder:Attach(row)
+            y = y + MEMBER_ROW_HEIGHT
+        end
+    end
+    return y
+end
+
+InlineExpandSection = function(sectionID, secRow)
+    if not secRow or not leftWrapper or not leftLayoutFrames then return end
+    local section = db.global.categorySections[sectionID]
+    if not section or not section.collapsed then return end
+
+    section.collapsed = false
+
+    local tailIdx = secRow._catMgrTailIndex
+    if not tailIdx or not leftLayoutFrames[tailIdx] then return end
+    local headerEntry = leftLayoutFrames[tailIdx]
+
+    local trailing = {}
+    for i = tailIdx + 1, #leftLayoutFrames do
+        trailing[#trailing + 1] = leftLayoutFrames[i]
+        leftLayoutFrames[i] = nil
+    end
+
+    local startY = headerEntry.origY + SECTION_ROW_HEIGHT
+    local newEndY = BuildSectionMemberRows(secRow, section, sectionID, startY)
+    local dy = newEndY - startY
+    local addedCount = #leftLayoutFrames - tailIdx
+
+    for _, e in ipairs(trailing) do
+        e.origY = e.origY + dy
+        e.frame:ClearAllPoints()
+        e.frame:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", e.origX, -e.origY)
+        e.frame:SetPoint("RIGHT",   leftWrapper, "RIGHT",   0, 0)
+        tinsert(leftLayoutFrames, e)
+    end
+
+    if sectionRowFrames then
+        for i = 1, #sectionRowFrames do
+            local otherRow = sectionRowFrames[i]
+            if otherRow ~= secRow and otherRow._catMgrTailIndex and otherRow._catMgrTailIndex > tailIdx then
+                otherRow._catMgrTailIndex = otherRow._catMgrTailIndex + addedCount
+            end
+        end
+    end
+
+    local newH = (leftWrapper._catMgrBaseHeight or leftWrapper:GetHeight()) + dy
+    leftWrapper._catMgrBaseHeight = newH
+    leftWrapper:SetHeight(newH)
+    if leftScrollFrame then
+        leftScrollFrame:GetScrollChild():SetHeight(newH)
+    end
+
+    if secRow._catMgrCollapseTex then
+        secRow._catMgrCollapseTex:SetAtlas("uitools-icon-chevron-down")
+    end
 end
 
 local function MoveItemToCategory(itemID, destCatID)
@@ -1352,15 +1663,17 @@ function CatMgrUI:RefreshLeft()
     if sectionReorder then
         sectionReorder:Cancel()
     end
+    if categoryReorder then
+        categoryReorder:Cancel()
+    end
+    StopDwellTimer()
     EndDragCollapse()
     leftLayoutFrames = nil
     leftWrapper = ReleaseWrapper(leftWrapper)
     if not leftScrollContent then return end
 
-    local disabled   = db.global.disabledCategories
     local sections   = db.global.categorySections
     local sectOrder  = db.global.sectionOrder
-    local customCats = db.global.customCategoriesV2
 
     leftWrapper = CreateFrame("Frame", nil, leftScrollContent)
     leftWrapper:SetPoint("TOPLEFT", leftScrollContent, "TOPLEFT", 0, 0)
@@ -1370,7 +1683,9 @@ function CatMgrUI:RefreshLeft()
     local yOffset = 0
 
     sectionRowFrames = {}
-    local reorder = EnsureSectionReorder()
+    categoryRowFrames = {}
+    local sReorder = EnsureSectionReorder()
+    EnsureCategoryReorder()
     for secIdx, sectionID in ipairs(sectOrder) do
         local section = sections[sectionID]
         if section then
@@ -1385,7 +1700,9 @@ function CatMgrUI:RefreshLeft()
             secRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
             secRow:EnableMouse(true)
             secRow:RegisterForClicks("LeftButtonUp")
-            secRow._catMgrSelected = isSelSec
+            secRow._catMgrSelected   = isSelSec
+            secRow._catMgrKind       = "header"
+            secRow._catMgrSectionID  = sectionID
             tinsert(leftLayoutFrames, { frame = secRow, origX = 0, origY = yOffset })
             secRow._catMgrTailIndex = #leftLayoutFrames
 
@@ -1400,6 +1717,7 @@ function CatMgrUI:RefreshLeft()
             local collapseBtn = CreateFrame("Button", nil, secRow)
             collapseBtn:SetSize(22, 22)
             collapseBtn:SetPoint("LEFT", secRow, "LEFT", 2, 0)
+            collapseBtn:SetFrameLevel(secRow:GetFrameLevel() + 1)
             local collapseTex = collapseBtn:CreateTexture(nil, "ARTWORK")
             collapseTex:SetAllPoints()
             if collapsed then
@@ -1420,11 +1738,6 @@ function CatMgrUI:RefreshLeft()
                 CatMgrUI:Refresh()
             end)
 
-            local selectStrip = CreateFrame("Frame", nil, secRow)
-            selectStrip:SetPoint("TOPLEFT", collapseBtn, "TOPRIGHT", 0, 0)
-            selectStrip:SetPoint("BOTTOMRIGHT", secRow, "BOTTOMRIGHT", -4, 0)
-            selectStrip:EnableMouse(false)
-
             local secName = secRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             secName:SetPoint("LEFT", collapseBtn, "RIGHT", 4, 0)
             secName:SetPoint("RIGHT", secRow, "RIGHT", -6, 0)
@@ -1442,7 +1755,7 @@ function CatMgrUI:RefreshLeft()
             end)
 
             secRow:SetScript("OnEnter", function(self)
-                if reorder:IsActive() then return end
+                if sReorder:IsActive() or (categoryReorder and categoryReorder:IsActive()) then return end
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 GameTooltip:SetText(section.name, 1, 1, 1)
                 GameTooltip:AddLine(" ")
@@ -1452,111 +1765,16 @@ function CatMgrUI:RefreshLeft()
             end)
             secRow:SetScript("OnLeave", GameTooltip_Hide)
 
-            secRow._catMgrSectionId = sectionID
             secRow._catMgrCollapseTex = collapseTex
             secRow._catMgrMemberRows = {}
 
             tinsert(sectionRowFrames, secRow)
-            reorder:Attach(secRow, secIdx)
-            yOffset = yOffset + 30
+            tinsert(categoryRowFrames, secRow)
+            sReorder:Attach(secRow, secIdx)
+            yOffset = yOffset + SECTION_ROW_HEIGHT
 
-            -- Member categories (indented)
             if not collapsed then
-                local cats = section.categories or {}
-                for catIdx, catName in ipairs(cats) do
-                    local isBuiltin = BUILTIN_PRIORITY[catName] ~= nil
-                    local catData, catID = nil, nil
-                    if not isBuiltin then
-                        for id, data in pairs(customCats) do
-                            if data.name == catName then catData = data; catID = id; break end
-                        end
-                    end
-                    local entry = {
-                        name = catName, isBuiltin = isBuiltin,
-                        id = catID, data = catData,
-                        key = isBuiltin and ("builtin:" .. catName) or catID,
-                    }
-                    if entry.key then
-                        -- Section-internal up/down uses section.categories array
-                        local captIdx = catIdx
-                        local captCats = cats
-                        local isSelCat = (selectedCatKey == entry.key)
-
-                        local row = CreateFrame("Button", nil, leftWrapper, "BackdropTemplate")
-                        row:SetHeight(26)
-                        row:SetPoint("TOPLEFT", leftWrapper, "TOPLEFT", 16, -yOffset)
-                        row:SetPoint("RIGHT",   leftWrapper, "RIGHT",    0, 0)
-                        row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-                        tinsert(leftLayoutFrames, { frame = row, origX = 16, origY = yOffset })
-                        secRow._catMgrTailIndex = #leftLayoutFrames
-                        if isSelCat then
-                            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                        elseif isBuiltin then
-                            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-                            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                        else
-                            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                        end
-                        local captEKey = entry.key
-                        row:SetScript("OnClick", function()
-                            selectedCatKey = captEKey
-                            CatMgrUI:Refresh()
-                        end)
-
-                        local dnB2 = MakeSmallBtn(row, "v", function()
-                            if captIdx < #captCats then
-                                local controller = GetController()
-                                if controller and controller.MoveSectionCategory then
-                                    controller:MoveSectionCategory(sectionID, captIdx, 1)
-                                end
-                            end
-                        end, catIdx < #cats)
-                        dnB2:SetPoint("RIGHT", row, "RIGHT", -2, 0)
-                        local upB2 = MakeSmallBtn(row, "^", function()
-                            if captIdx > 1 then
-                                local controller = GetController()
-                                if controller and controller.MoveSectionCategory then
-                                    controller:MoveSectionCategory(sectionID, captIdx, -1)
-                                end
-                            end
-                        end, catIdx > 1)
-                        upB2:SetPoint("RIGHT", dnB2, "LEFT", -2, 0)
-
-                        local nameX = 8
-                        if isBuiltin then
-                            local capN2 = catName
-                            local isDisabled2 = disabled[catName]
-                            local cb2 = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
-                            cb2:SetSize(16, 16)
-                            cb2:SetPoint("LEFT", row, "LEFT", 4, 0)
-                            cb2:SetChecked(not isDisabled2)
-                            cb2:SetScript("OnClick", function(self)
-                                local controller = GetController()
-                                if controller and controller.SetBuiltinCategoryEnabled then
-                                    controller:SetBuiltinCategoryEnabled(capN2, self:GetChecked())
-                                end
-                            end)
-                            nameX = 22
-                        end
-
-                        local locKey2 = BUILTIN_LOCALE_KEYS[catName]
-                        local nTxt = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                        nTxt:SetPoint("LEFT",  row,  "LEFT",  nameX, 0)
-                        nTxt:SetPoint("RIGHT", upB2, "LEFT", -4, 0)
-                        nTxt:SetJustifyH("LEFT")
-                        nTxt:SetText((locKey2 and L[locKey2]) or catName)
-                        if isSelCat then
-                            nTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                        else
-                            nTxt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                        end
-
-                        tinsert(secRow._catMgrMemberRows, row)
-                        yOffset = yOffset + 28
-                    end
-                end
+                yOffset = BuildSectionMemberRows(secRow, section, sectionID, yOffset)
             end
         end
     end
@@ -1603,6 +1821,10 @@ function CatMgrUI:Show()
         if sectionReorder then
             sectionReorder:Cancel()
         end
+        if categoryReorder then
+            categoryReorder:Cancel()
+        end
+        StopDwellTimer()
     end)
 
     -- ---- Action bar ----
@@ -1725,6 +1947,10 @@ function CatMgrUI:Toggle()
         if sectionReorder then
             sectionReorder:Cancel()
         end
+        if categoryReorder then
+            categoryReorder:Cancel()
+        end
+        StopDwellTimer()
         managerFrame:Hide()
     else
         CatMgrUI:Show()

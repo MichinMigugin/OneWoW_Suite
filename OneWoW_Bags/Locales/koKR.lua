@@ -218,6 +218,7 @@ OneWoW_Bags.Locales["koKR"] = {
     ["SECTION_CREATE"] = "새 구역",
     ["SECTION_CREATE_ENTER"] = "구역 이름 입력:",
     ["SECTION_DRAG_HINT"] = "왼쪽 버튼으로 드래그하여 구역 순서를 바꿉니다.",
+    ["CATEGORY_DRAG_HINT"] = "왼쪽 버튼으로 드래그하여 카테고리 순서를 바꾸거나 다른 구역으로 이동합니다.",
     ["SECTION_RENAME_ENTER"] = "새 구역 이름 입력:",
     ["SECTION_DELETE_CONFIRM"] = "이 구역을 삭제할까요? 분류는 주 목록으로 돌아갑니다.",
     ["CATEGORY_IN_SECTION"] = "이 구역에 포함할 분류를 켜거나 끕니다:",
