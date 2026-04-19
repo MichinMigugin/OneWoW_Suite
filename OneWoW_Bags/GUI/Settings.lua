@@ -151,7 +151,7 @@ local function BuildSliderRow(container, label, yOffset, options)
     slider:SetPoint("TOPLEFT", container, "TOPLEFT", 15, yOffset)
     yOffset = yOffset - 40
 
-    return yOffset
+    return yOffset, slider, lbl
 end
 
 local function BuildGeneralTab(sc, L, db, GUI)
@@ -642,6 +642,38 @@ end
 local function BuildBankTab(sc, L, db, GUI)
     local yOffset = -15
 
+    local dependents = {}
+
+    local function addToggle(refresh, getValue)
+        tinsert(dependents, function(enabled)
+            refresh(enabled, getValue())
+        end)
+    end
+
+    local function addSlider(sliderContainer, extraLabel)
+        tinsert(dependents, function(enabled)
+            local inner = sliderContainer:GetChildren()
+            if inner then
+                if enabled then inner:Enable() else inner:Disable() end
+            end
+            local r, g, b = OneWoW_GUI:GetThemeColor(enabled and "TEXT_PRIMARY" or "TEXT_MUTED")
+            if extraLabel then
+                extraLabel:SetTextColor(r, g, b)
+            end
+            for _, region in pairs({ sliderContainer:GetRegions() }) do
+                if region:IsObjectType("FontString") then
+                    region:SetTextColor(r, g, b)
+                end
+            end
+        end)
+    end
+
+    local function applyEnabled(enabled)
+        for i = 1, #dependents do
+            dependents[i](enabled)
+        end
+    end
+
     yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_BANK"], yOffset = yOffset })
     local bankTopContainer = BuildContainer(sc, yOffset)
     local topY = -10
@@ -655,8 +687,21 @@ local function BuildBankTab(sc, L, db, GUI)
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
             ApplySetting("enableBankUI", newVal)
+            applyEnabled(newVal)
         end,
     })
+
+    local lockRefresh
+    topY, lockRefresh = OneWoW_GUI:CreateToggleRow(bankTopContainer, {
+        yOffset = topY,
+        label = L["SETTING_BANK_LOCK"],
+        description = L["DESC_BANK_LOCK"],
+        isEnabled = true,
+        value = db.global.bankLocked,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal) ApplySetting("bankLocked", newVal) end,
+    })
+    addToggle(lockRefresh, function() return db.global.bankLocked end)
 
     yOffset = FinalizeContainer(bankTopContainer, topY, yOffset)
 
@@ -664,7 +709,8 @@ local function BuildBankTab(sc, L, db, GUI)
     local dispContainer = BuildContainer(sc, yOffset)
     local dispY = -10
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+    local rarityRefresh
+    dispY, rarityRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
         label = L["SETTING_RARITY_COLOR"],
         description = L["DESC_BANK_RARITY_COLOR"],
@@ -675,8 +721,10 @@ local function BuildBankTab(sc, L, db, GUI)
             ApplySetting("bankRarityColor", newVal)
         end,
     })
+    addToggle(rarityRefresh, function() return db.global.bankRarityColor end)
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+    local overlaysRefresh
+    dispY, overlaysRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
         label = L["SETTING_BANK_OVERLAYS"],
         description = L["DESC_BANK_OVERLAYS"],
@@ -687,8 +735,10 @@ local function BuildBankTab(sc, L, db, GUI)
             ApplySetting("enableBankOverlays", newVal)
         end,
     })
+    addToggle(overlaysRefresh, function() return db.global.enableBankOverlays end)
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+    local scrollbarRefresh
+    dispY, scrollbarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
         label = L["SETTING_SHOW_SCROLLBAR"],
         description = L["DESC_SHOW_BANK_SCROLLBAR"],
@@ -699,8 +749,10 @@ local function BuildBankTab(sc, L, db, GUI)
             ApplySetting("showBankScrollBar", newVal)
         end,
     })
+    addToggle(scrollbarRefresh, function() return not db.global.bankHideScrollBar end)
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+    local bagsBarRefresh
+    dispY, bagsBarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
         label = L["SETTING_SHOW_BANK_BAGS_BAR"],
         description = L["DESC_SHOW_BANK_BAGS_BAR"],
@@ -711,8 +763,10 @@ local function BuildBankTab(sc, L, db, GUI)
             ApplySetting("showBankBagsBar", newVal)
         end,
     })
+    addToggle(bagsBarRefresh, function() return db.global.showBankBagsBar end)
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+    local headerBarRefresh
+    dispY, headerBarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
         label = L["SETTING_SHOW_HEADER_BAR"],
         description = L["DESC_SHOW_BANK_HEADER_BAR"],
@@ -723,8 +777,10 @@ local function BuildBankTab(sc, L, db, GUI)
             ApplySetting("showBankHeaderBar", newVal)
         end,
     })
+    addToggle(headerBarRefresh, function() return db.global.showBankHeaderBar end)
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+    local searchBarRefresh
+    dispY, searchBarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
         label = L["SETTING_SHOW_SEARCH_BAR"],
         description = L["DESC_SHOW_BANK_SEARCH_BAR"],
@@ -735,8 +791,10 @@ local function BuildBankTab(sc, L, db, GUI)
             ApplySetting("showBankSearchBar", newVal)
         end,
     })
+    addToggle(searchBarRefresh, function() return db.global.showBankSearchBar end)
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+    local expacFilterRefresh
+    dispY, expacFilterRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
         label = L["SETTING_ENABLE_EXPAC_FILTER"],
         description = L["DESC_ENABLE_BANK_EXPAC_FILTER"],
@@ -747,8 +805,10 @@ local function BuildBankTab(sc, L, db, GUI)
             ApplySetting("enableBankExpansionFilter", newVal)
         end,
     })
+    addToggle(expacFilterRefresh, function() return db.global.enableBankExpansionFilter end)
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+    local catHeadersRefresh
+    dispY, catHeadersRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
         label = L["SETTING_SHOW_CAT_HEADERS"],
         description = L["DESC_SHOW_BANK_CAT_HEADERS"],
@@ -759,26 +819,32 @@ local function BuildBankTab(sc, L, db, GUI)
             ApplySetting("showBankCategoryHeaders", newVal)
         end,
     })
+    addToggle(catHeadersRefresh, function() return db.global.showBankCategoryHeaders end)
 
     dispY = dispY - 6
 
-    dispY = BuildSliderRow(dispContainer, L["SETTING_BANK_COLUMNS"], dispY, {
+    local colSliderContainer, colSliderLbl
+    dispY, colSliderContainer, colSliderLbl = BuildSliderRow(dispContainer, L["SETTING_BANK_COLUMNS"], dispY, {
         minVal = 15, maxVal = 30, step = 1, currentVal = db.global.bankColumns,
         onChange = function(val)
             ApplySetting("bankColumns", val)
         end,
         width = 240, fmt = "%d",
     })
+    addSlider(colSliderContainer, colSliderLbl)
 
-    dispY = BuildSliderRow(dispContainer, L["SETTING_CATEGORY_SPACING"], dispY, {
+    local spaceSliderContainer, spaceSliderLbl
+    dispY, spaceSliderContainer, spaceSliderLbl = BuildSliderRow(dispContainer, L["SETTING_CATEGORY_SPACING"], dispY, {
         minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.bankCategorySpacing,
         onChange = function(val)
             ApplySetting("bankCategorySpacing", val)
         end,
         width = 240, fmt = "%.1f",
     })
+    addSlider(spaceSliderContainer, spaceSliderLbl)
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+    local compactRefresh
+    dispY, compactRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
         label = L["SETTING_COMPACT_CATEGORIES"],
         description = L["DESC_COMPACT_CATEGORIES"],
@@ -789,6 +855,7 @@ local function BuildBankTab(sc, L, db, GUI)
             ApplySetting("bankCompactCategories", newVal)
         end,
     })
+    addToggle(compactRefresh, function() return db.global.bankCompactCategories end)
 
     do
         local gapLbl = dispContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -830,26 +897,13 @@ local function BuildBankTab(sc, L, db, GUI)
                 end
             end)
         end
+        addSlider(gapSlider, gapLbl)
         dispY = dispY - 40
     end
 
     yOffset = FinalizeContainer(dispContainer, dispY, yOffset)
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_BEHAVIOR"], yOffset = yOffset })
-    local behContainer = BuildContainer(sc, yOffset)
-    local behY = -10
-
-    behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
-        yOffset = behY,
-        label = L["SETTING_BANK_LOCK"],
-        description = L["DESC_BANK_LOCK"],
-        isEnabled = true,
-        value = db.global.bankLocked,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) ApplySetting("bankLocked", newVal) end,
-    })
-
-    yOffset = FinalizeContainer(behContainer, behY, yOffset)
+    applyEnabled(db.global.enableBankUI)
 
     sc:SetHeight(abs(yOffset) + 40)
 end
