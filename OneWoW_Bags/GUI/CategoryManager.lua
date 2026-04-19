@@ -915,18 +915,6 @@ local function MakeEditBoxWithSave(parent, opts, getValue, setValue)
     return box
 end
 
-local function StyleToggleBtn(btn, active)
-    if active then
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
-    else
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
-    end
-end
-
 function CatMgrUI:RefreshRight()
     rightTopWrapper  = ReleaseWrapper(rightTopWrapper)
     rightItemWrapper = ReleaseWrapper(rightItemWrapper)
@@ -1048,6 +1036,12 @@ function CatMgrUI:RefreshRight()
     local PRIORITY_OPTIONS = { -2, -1, 0, 1, 2, 3 }
     local PRIORITY_LABELS = { L["PRIORITY_LOWEST"], L["PRIORITY_LOW"], L["PRIORITY_NORMAL"], L["PRIORITY_HIGH"], L["PRIORITY_HIGHEST"], L["PRIORITY_MAX"] }
 
+    local LABEL_X   = 16
+    local CONTROL_X = 110
+    local ROW_H     = 26
+    local DROPDOWN_W = 140
+    local DROPDOWN_H = 22
+
     rightTopWrapper = CreateFrame("Frame", nil, rightItemScrollContent)
     rightTopWrapper:SetPoint("TOPLEFT", rightItemScrollContent, "TOPLEFT", 0, 0)
     rightTopWrapper:SetPoint("RIGHT", rightItemScrollContent, "RIGHT", 0, 0)
@@ -1103,7 +1097,7 @@ function CatMgrUI:RefreshRight()
         local descText = Categories:GetCategoryDescription(catName)
         if descText then
             local ruleLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            ruleLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+            ruleLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", LABEL_X, yPos)
             ruleLbl:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -10, yPos)
             ruleLbl:SetJustifyH("LEFT")
             ruleLbl:SetWordWrap(true)
@@ -1126,13 +1120,13 @@ function CatMgrUI:RefreshRight()
         end
 
         local filterLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        filterLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+        filterLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", LABEL_X, yPos)
         filterLbl:SetText(L["CAT_MATCH_MODE"])
         filterLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local typeFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["CAT_MATCH_BY_TYPE"], height = 20, minWidth = 70 })
-        typeFilterBtn:SetPoint("LEFT", filterLbl, "RIGHT", 8, 0)
-        local advFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["CAT_MATCH_ADVANCED"], height = 20, minWidth = 70 })
+        local typeFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["CAT_MATCH_BY_TYPE"], height = 20, minWidth = 70, toggleable = true })
+        typeFilterBtn:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", CONTROL_X, yPos + 2)
+        local advFilterBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["CAT_MATCH_ADVANCED"], height = 20, minWidth = 70, toggleable = true })
         advFilterBtn:SetPoint("LEFT", typeFilterBtn, "RIGHT", 4, 0)
 
         local filterContent = CreateFrame("Frame", nil, rightTopWrapper)
@@ -1142,16 +1136,16 @@ function CatMgrUI:RefreshRight()
         local function BuildTypeFilter(parent)
             local fY = -4
             local desc = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            desc:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            desc:SetPoint("TOPLEFT", parent, "TOPLEFT", LABEL_X, fY)
             desc:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, fY)
             desc:SetJustifyH("LEFT")
             desc:SetWordWrap(true)
             desc:SetText(L["CAT_TYPE_FILTER_DESC"])
             desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            fY = fY - desc:GetStringHeight() - 6
+            fY = fY - desc:GetStringHeight() - 12
 
             local tLbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            tLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            tLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", LABEL_X, fY)
             tLbl:SetText(L["CAT_ITEM_TYPE"])
             tLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             local tBox = MakeEditBoxWithSave(parent,
@@ -1163,12 +1157,12 @@ function CatMgrUI:RefreshRight()
                         controller:SetCustomCategoryValue(capturedID, "itemType", v)
                     end
                 end)
-            tBox:SetPoint("LEFT", tLbl, "RIGHT", 8, 0)
+            tBox:SetPoint("TOPLEFT", parent, "TOPLEFT", CONTROL_X, fY + 2)
             tBox:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
-            fY = fY - 28
+            fY = fY - ROW_H
 
             local sLbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            sLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            sLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", LABEL_X, fY)
             sLbl:SetText(L["CAT_ITEM_SUBTYPE"])
             sLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             local sBox = MakeEditBoxWithSave(parent,
@@ -1180,49 +1174,49 @@ function CatMgrUI:RefreshRight()
                         controller:SetCustomCategoryValue(capturedID, "itemSubType", v)
                     end
                 end)
-            sBox:SetPoint("LEFT", sLbl, "RIGHT", 8, 0)
+            sBox:SetPoint("TOPLEFT", parent, "TOPLEFT", CONTROL_X, fY + 2)
             sBox:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
-            fY = fY - 28
+            fY = fY - ROW_H
 
             local mLbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            mLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            mLbl:SetPoint("TOPLEFT", parent, "TOPLEFT", LABEL_X, fY)
             mLbl:SetText(L["CAT_TYPE_MATCH_MODE"])
             mLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             local curMode = catData.typeMatchMode or "and"
-            local andB = OneWoW_GUI:CreateFitTextButton(parent, { text = L["CAT_TYPE_MATCH_AND"], height = 20, minWidth = 40 })
-            andB:SetPoint("LEFT", mLbl, "RIGHT", 8, 0)
-            local orB = OneWoW_GUI:CreateFitTextButton(parent, { text = L["CAT_TYPE_MATCH_OR"], height = 20, minWidth = 40 })
+            local andB = OneWoW_GUI:CreateFitTextButton(parent, { text = L["CAT_TYPE_MATCH_AND"], height = 20, minWidth = 40, toggleable = true })
+            andB:SetPoint("TOPLEFT", parent, "TOPLEFT", CONTROL_X, fY + 2)
+            local orB = OneWoW_GUI:CreateFitTextButton(parent, { text = L["CAT_TYPE_MATCH_OR"], height = 20, minWidth = 40, toggleable = true })
             orB:SetPoint("LEFT", andB, "RIGHT", 4, 0)
-            StyleToggleBtn(andB, curMode ~= "or")
-            StyleToggleBtn(orB, curMode == "or")
+            andB:SetActive(curMode ~= "or")
+            orB:SetActive(curMode == "or")
             andB:SetScript("OnClick", function()
                 local controller = GetController()
                 if controller and controller.SetCustomCategoryValue then
                     controller:SetCustomCategoryValue(capturedID, "typeMatchMode", "and")
                 end
-                StyleToggleBtn(andB, true); StyleToggleBtn(orB, false)
+                andB:SetActive(true); orB:SetActive(false)
             end)
             orB:SetScript("OnClick", function()
                 local controller = GetController()
                 if controller and controller.SetCustomCategoryValue then
                     controller:SetCustomCategoryValue(capturedID, "typeMatchMode", "or")
                 end
-                StyleToggleBtn(andB, false); StyleToggleBtn(orB, true)
+                andB:SetActive(false); orB:SetActive(true)
             end)
-            fY = fY - 26
+            fY = fY - 26 - 8
             return abs(fY)
         end
 
         local function BuildSearchFilter(parent)
             local fY = -4
             local desc = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            desc:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            desc:SetPoint("TOPLEFT", parent, "TOPLEFT", LABEL_X, fY)
             desc:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, fY)
             desc:SetJustifyH("LEFT")
             desc:SetWordWrap(true)
             desc:SetText(L["SEARCH_HELP_DESC"])
             desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            fY = fY - desc:GetStringHeight() - 6
+            fY = fY - desc:GetStringHeight() - 12
 
             local sBox = MakeEditBoxWithSave(parent,
                 { width=200, height=22, placeholderText = L["SEARCH_HELP_PLACEHOLDER"] },
@@ -1233,13 +1227,11 @@ function CatMgrUI:RefreshRight()
                         controller:SetCustomCategoryValue(capturedID, "searchExpression", v)
                     end
                 end)
-            sBox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+            sBox:SetPoint("TOPLEFT", parent, "TOPLEFT", LABEL_X, fY)
             sBox:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
             fY = fY - 28
 
             local helpLines = {
-                L["SEARCH_HELP_KEYWORDS"],
-                L["SEARCH_HELP_QUALITY"],
                 L["SEARCH_HELP_OPERATORS"],
                 L["SEARCH_HELP_ILVL"],
                 L["SEARCH_HELP_EXAMPLE"],
@@ -1247,7 +1239,7 @@ function CatMgrUI:RefreshRight()
             for _, line in ipairs(helpLines) do
                 if line ~= "" then
                     local hl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    hl:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, fY)
+                    hl:SetPoint("TOPLEFT", parent, "TOPLEFT", LABEL_X, fY)
                     hl:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, fY)
                     hl:SetJustifyH("LEFT")
                     hl:SetWordWrap(true)
@@ -1256,6 +1248,7 @@ function CatMgrUI:RefreshRight()
                     fY = fY - hl:GetStringHeight() - 2
                 end
             end
+            fY = fY - 8
             return abs(fY)
         end
 
@@ -1267,8 +1260,8 @@ function CatMgrUI:RefreshRight()
             if controller and controller.SetCustomCategoryValue then
                 controller:SetCustomCategoryValue(capturedID, "filterMode", mode, { refreshUI = false })
             end
-            StyleToggleBtn(typeFilterBtn, mode == "type")
-            StyleToggleBtn(advFilterBtn, mode == "search")
+            typeFilterBtn:SetActive(mode == "type")
+            advFilterBtn:SetActive(mode == "search")
             if mode == "type" then
                 filterH = BuildTypeFilter(filterContent)
             else
@@ -1287,71 +1280,111 @@ function CatMgrUI:RefreshRight()
     div2:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 4, yPos)
     div2:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -4, yPos)
     div2:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    yPos = yPos - 8
+    yPos = yPos - 10
 
-    local sortLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    sortLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
-    sortLbl:SetText(L["CAT_SORT"])
-    sortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local function BuildLabelRow(textKey, yOffset)
+        local lbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        lbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", LABEL_X, yOffset)
+        lbl:SetText(L[textKey])
+        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        return lbl
+    end
+
+    local function LabelFromOptions(options, labels, value, fallbackIdx)
+        for i, v in ipairs(options) do
+            if v == value then return labels[i] end
+        end
+        return labels[fallbackIdx or 1]
+    end
+
+    BuildLabelRow("CAT_SORT", yPos)
     local currentSort = catMod.sortMode or "none"
-    local sortIdx = 1
-    for i, v in ipairs(SORT_OPTIONS) do if v == currentSort then sortIdx = i; break end end
-    local sortBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = SORT_LABELS[sortIdx], height = 20, minWidth = 60 })
-    sortBtn:SetPoint("LEFT", sortLbl, "RIGHT", 8, 0)
-    sortBtn:SetScript("OnClick", function()
-        sortIdx = (sortIdx % #SORT_OPTIONS) + 1
-        sortBtn.text:SetText(SORT_LABELS[sortIdx])
-        local controller = GetController()
-        if controller and controller.SetCategorySortMode then
-            controller:SetCategorySortMode(capCatName, SORT_OPTIONS[sortIdx])
-        end
-    end)
+    local sortDropdown, sortDropdownText = OneWoW_GUI:CreateDropdown(rightTopWrapper, {
+        width = DROPDOWN_W,
+        height = DROPDOWN_H,
+        text = LabelFromOptions(SORT_OPTIONS, SORT_LABELS, currentSort, 1),
+    })
+    sortDropdown:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", CONTROL_X, yPos + 2)
+    OneWoW_GUI:AttachFilterMenu(sortDropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for i, v in ipairs(SORT_OPTIONS) do
+                tinsert(items, { text = SORT_LABELS[i], value = v })
+            end
+            return items
+        end,
+        getActiveValue = function() return catMod.sortMode or "none" end,
+        onSelect = function(value, text)
+            sortDropdownText:SetText(text)
+            local controller = GetController()
+            if controller and controller.SetCategorySortMode then
+                controller:SetCategorySortMode(capCatName, value)
+            end
+        end,
+    })
+    yPos = yPos - ROW_H
 
-    local groupLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    groupLbl:SetPoint("LEFT", sortBtn, "RIGHT", 16, 0)
-    groupLbl:SetText(L["GROUP_BY"])
-    groupLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    BuildLabelRow("GROUP_BY", yPos)
     local currentGroup = catMod.groupBy or "none"
-    local groupIdx = 1
-    for i, v in ipairs(GROUP_OPTIONS) do if v == currentGroup then groupIdx = i; break end end
-    local groupBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = GROUP_LABELS[groupIdx], height = 20, minWidth = 60 })
-    groupBtn:SetPoint("LEFT", groupLbl, "RIGHT", 8, 0)
-    groupBtn:SetScript("OnClick", function()
-        groupIdx = (groupIdx % #GROUP_OPTIONS) + 1
-        groupBtn.text:SetText(GROUP_LABELS[groupIdx])
-        local controller = GetController()
-        if controller and controller.SetCategoryGroupBy then
-            controller:SetCategoryGroupBy(capCatName, GROUP_OPTIONS[groupIdx])
-        end
-    end)
-    yPos = yPos - 28
+    local groupDropdown, groupDropdownText = OneWoW_GUI:CreateDropdown(rightTopWrapper, {
+        width = DROPDOWN_W,
+        height = DROPDOWN_H,
+        text = LabelFromOptions(GROUP_OPTIONS, GROUP_LABELS, currentGroup, 1),
+    })
+    groupDropdown:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", CONTROL_X, yPos + 2)
+    OneWoW_GUI:AttachFilterMenu(groupDropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for i, v in ipairs(GROUP_OPTIONS) do
+                tinsert(items, { text = GROUP_LABELS[i], value = v })
+            end
+            return items
+        end,
+        getActiveValue = function() return catMod.groupBy or "none" end,
+        onSelect = function(value, text)
+            groupDropdownText:SetText(text)
+            local controller = GetController()
+            if controller and controller.SetCategoryGroupBy then
+                controller:SetCategoryGroupBy(capCatName, value)
+            end
+        end,
+    })
+    yPos = yPos - ROW_H
 
-    local prioLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    prioLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
-    prioLbl:SetText(L["PRIORITY"])
-    prioLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    BuildLabelRow("PRIORITY", yPos)
     local currentPrio = catMod.priority or 0
-    local prioIdx = 3
-    for i, v in ipairs(PRIORITY_OPTIONS) do if v == currentPrio then prioIdx = i; break end end
-    local prioBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = PRIORITY_LABELS[prioIdx], height = 20, minWidth = 60 })
-    prioBtn:SetPoint("LEFT", prioLbl, "RIGHT", 8, 0)
-    prioBtn:SetScript("OnClick", function()
-        prioIdx = (prioIdx % #PRIORITY_OPTIONS) + 1
-        prioBtn.text:SetText(PRIORITY_LABELS[prioIdx])
-        local controller = GetController()
-        if controller and controller.SetCategoryPriority then
-            controller:SetCategoryPriority(capCatName, PRIORITY_OPTIONS[prioIdx])
-        end
-    end)
+    local prioDropdown, prioDropdownText = OneWoW_GUI:CreateDropdown(rightTopWrapper, {
+        width = DROPDOWN_W,
+        height = DROPDOWN_H,
+        text = LabelFromOptions(PRIORITY_OPTIONS, PRIORITY_LABELS, currentPrio, 3),
+    })
+    prioDropdown:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", CONTROL_X, yPos + 2)
+    OneWoW_GUI:AttachFilterMenu(prioDropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for i, v in ipairs(PRIORITY_OPTIONS) do
+                tinsert(items, { text = PRIORITY_LABELS[i], value = v })
+            end
+            return items
+        end,
+        getActiveValue = function() return catMod.priority or 0 end,
+        onSelect = function(value, text)
+            prioDropdownText:SetText(text)
+            local controller = GetController()
+            if controller and controller.SetCategoryPriority then
+                controller:SetCategoryPriority(capCatName, value)
+            end
+        end,
+    })
+    yPos = yPos - ROW_H
 
-    local colorLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    colorLbl:SetPoint("LEFT", prioBtn, "RIGHT", 16, 0)
-    colorLbl:SetText(L["COLOR"])
-    colorLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
+    BuildLabelRow("COLOR", yPos)
     local colorSwatch = CreateFrame("Button", nil, rightTopWrapper, "BackdropTemplate")
     colorSwatch:SetSize(20, 20)
-    colorSwatch:SetPoint("LEFT", colorLbl, "RIGHT", 6, 0)
+    colorSwatch:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", CONTROL_X, yPos + 2)
     colorSwatch:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     colorSwatch:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     if catMod.color then
@@ -1391,7 +1424,7 @@ function CatMgrUI:RefreshRight()
     end)
 
     local clearColorBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text = L["COLOR_CLEAR"], height = 20 })
-    clearColorBtn:SetPoint("LEFT", colorSwatch, "RIGHT", 4, 0)
+    clearColorBtn:SetPoint("LEFT", colorSwatch, "RIGHT", 6, 0)
     clearColorBtn:SetScript("OnClick", function()
         local controller = GetController()
         if controller and controller.ClearCategoryColor then
@@ -1399,19 +1432,16 @@ function CatMgrUI:RefreshRight()
         end
         colorSwatch:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     end)
-    yPos = yPos - 28
+    yPos = yPos - ROW_H
 
-    local appliesLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    appliesLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
-    appliesLbl:SetText(L["APPLIES_TO"])
-    appliesLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    BuildLabelRow("APPLIES_TO", yPos)
 
     local appliesContainers = {
         { key = "backpack", label = L["APPLIES_BACKPACK"] },
         { key = "character_bank", label = L["APPLIES_CHAR_BANK"] },
         { key = "warband_bank", label = L["APPLIES_WARBAND_BANK"] },
     }
-    local appliesX = 70
+    local appliesX = CONTROL_X
     for _, hc in ipairs(appliesContainers) do
         local cb = CreateFrame("CheckButton", nil, rightTopWrapper, "UICheckButtonTemplate")
         cb:SetSize(18, 18)
@@ -1429,9 +1459,9 @@ function CatMgrUI:RefreshRight()
         cbLbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
         cbLbl:SetText(hc.label)
         cbLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        appliesX = appliesX + cbLbl:GetStringWidth() + 28
+        appliesX = appliesX + 20 + cbLbl:GetStringWidth() + 14
     end
-    yPos = yPos - 26
+    yPos = yPos - ROW_H
 
     local div3 = rightTopWrapper:CreateTexture(nil, "ARTWORK")
     div3:SetHeight(1)
@@ -1453,7 +1483,7 @@ function CatMgrUI:RefreshRight()
     addDescLbl:SetWordWrap(true)
     addDescLbl:SetText(L["ADDED_ITEMS_DESC"])
     addDescLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    yPos = yPos - addDescLbl:GetStringHeight() - 6
+    yPos = yPos - addDescLbl:GetStringHeight() - 10
 
     local dropZone = CreateFrame("Button", nil, rightTopWrapper, "BackdropTemplate")
     dropZone:SetHeight(28)
@@ -1504,14 +1534,14 @@ function CatMgrUI:RefreshRight()
     end
     dropZone:SetScript("OnReceiveDrag", handleDrop)
     dropZone:SetScript("OnMouseUp", function(_, btn) if btn == "LeftButton" then handleDrop() end end)
-    yPos = yPos - 32
+    yPos = yPos - 44
 
     local addLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    addLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, yPos)
+    addLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", LABEL_X, yPos)
     addLbl:SetText(L["CATEGORY_ADD_BY_ID"])
     addLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     local addBox = OneWoW_GUI:CreateEditBox(rightTopWrapper, { width=120, height=22 })
-    addBox:SetPoint("LEFT", addLbl, "RIGHT", 8, 0)
+    addBox:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", CONTROL_X, yPos + 2)
     local addBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["ADD_ITEM"], height=22 })
     addBtn:SetPoint("LEFT", addBox, "RIGHT", 6, 0)
     addBtn:SetScript("OnClick", function()

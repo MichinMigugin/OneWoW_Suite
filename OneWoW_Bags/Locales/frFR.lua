@@ -305,8 +305,6 @@ OneWoW_Bags.Locales["frFR"] = {
     ["DESC_STACK_ITEMS"] = "Regroupe les objets identiques sur un seul emplacement avec le total en vue Catégorie.",
     ["SEARCH_HELP_DESC"] = "Utilisez des mots-clés de recherche avec opérateurs pour faire correspondre les objets automatiquement.",
     ["SEARCH_HELP_PLACEHOLDER"] = "#battlepet&!#collected",
-    ["SEARCH_HELP_KEYWORDS"] = "Mots-clés : #pet #mount #toy #collected #soulbound #boe #boa #junk #trash #gear #weapon #armor #consumable #potion #food #reagent #craftingreagent #recipe #gem #quest #hearthstone #keystone #new #recent #locked #charges",
-    ["SEARCH_HELP_QUALITY"] = "Qualité : #poor #grey #gray #common #uncommon #rare #epic #legendary",
     ["SEARCH_HELP_OPERATORS"] = "Opérateurs : & (et), | (ou), ! (non), () groupement",
     ["SEARCH_HELP_ILVL"] = "Niveau d'objet : >400, <200, 200-300, >=350",
     ["SEARCH_HELP_EXAMPLE"] = "Exemple : (#pet|#mount|#toy)&!#collected",

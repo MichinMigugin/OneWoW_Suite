@@ -362,8 +362,6 @@ OneWoW_Bags.Locales["enUS"] = {
 
     ["SEARCH_HELP_DESC"] = "Use search keywords with operators to match items automatically.",
     ["SEARCH_HELP_PLACEHOLDER"] = "#battlepet&!#collected",
-    ["SEARCH_HELP_KEYWORDS"] = "Keywords: #pet #mount #toy #collected #soulbound #boe #boa #junk #trash #gear #weapon #armor #consumable #potion #food #reagent #craftingreagent #recipe #gem #quest #hearthstone #keystone #new #recent #locked #charges",
-    ["SEARCH_HELP_QUALITY"] = "Quality: #poor #grey #gray #common #uncommon #rare #epic #legendary",
     ["SEARCH_HELP_OPERATORS"] = "Operators: & (and), | (or), ! (not), () grouping",
     ["SEARCH_HELP_ILVL"] = "Item Level: >400, <200, 200-300, >=350",
     ["SEARCH_HELP_EXAMPLE"] = "Example: (#pet|#mount|#toy)&!#collected",

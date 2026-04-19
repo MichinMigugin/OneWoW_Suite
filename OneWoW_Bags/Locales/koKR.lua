@@ -305,8 +305,6 @@ OneWoW_Bags.Locales["koKR"] = {
     ["DESC_STACK_ITEMS"] = "분류 보기에서 같은 아이템을 한 칸에 합쳐 총 개수를 표시합니다.",
     ["SEARCH_HELP_DESC"] = "연산자가 있는 검색 키워드로 아이템을 자동으로 찾습니다.",
     ["SEARCH_HELP_PLACEHOLDER"] = "#battlepet&!#collected",
-    ["SEARCH_HELP_KEYWORDS"] = "키워드: #pet #mount #toy #collected #soulbound #boe #boa #junk #trash #gear #weapon #armor #consumable #potion #food #reagent #craftingreagent #recipe #gem #quest #hearthstone #keystone #new #recent #locked #charges",
-    ["SEARCH_HELP_QUALITY"] = "품질: #poor #grey #gray #common #uncommon #rare #epic #legendary",
     ["SEARCH_HELP_OPERATORS"] = "연산자: & (그리고), | (또는), ! (아님), () 묶음",
     ["SEARCH_HELP_ILVL"] = "아이템 레벨: >400, <200, 200-300, >=350",
     ["SEARCH_HELP_EXAMPLE"] = "예: (#pet|#mount|#toy)&!#collected",
