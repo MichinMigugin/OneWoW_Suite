@@ -7,6 +7,45 @@ local C_Timer = C_Timer
 OneWoW_Bags.BankController = {}
 local BankController = OneWoW_Bags.BankController
 
+local PERSONAL_KEYS = {
+    viewMode         = "bankViewMode",
+    columns          = "bankColumns",
+    rarityColor      = "bankRarityColor",
+    overlays         = "enableBankOverlays",
+    hideScrollBar    = "bankHideScrollBar",
+    showBagsBar      = "showBankBagsBar",
+    showHeaderBar    = "showBankHeaderBar",
+    showSearchBar    = "showBankSearchBar",
+    showCategoryHeaders = "showBankCategoryHeaders",
+    categorySpacing  = "bankCategorySpacing",
+    compactCategories = "bankCompactCategories",
+    compactGap       = "bankCompactGap",
+    expansionFilter  = "enableBankExpansionFilter",
+    selectedTab      = "bankSelectedTab",
+    collapsedTabs    = "collapsedBankTabSections",
+}
+
+local WARBAND_KEYS = {
+    viewMode         = "warbandBankViewMode",
+    columns          = "warbandBankColumns",
+    rarityColor      = "warbandBankRarityColor",
+    overlays         = "enableWarbandBankOverlays",
+    hideScrollBar    = "warbandBankHideScrollBar",
+    showBagsBar      = "showWarbandBankBagsBar",
+    showHeaderBar    = "showWarbandBankHeaderBar",
+    showSearchBar    = "showWarbandBankSearchBar",
+    showCategoryHeaders = "showWarbandBankCategoryHeaders",
+    categorySpacing  = "warbandBankCategorySpacing",
+    compactCategories = "warbandBankCompactCategories",
+    compactGap       = "warbandBankCompactGap",
+    expansionFilter  = "enableWarbandBankExpansionFilter",
+    selectedTab      = "warbandBankSelectedTab",
+    collapsedTabs    = "collapsedWarbandBankTabSections",
+}
+
+BankController.PERSONAL_KEYS = PERSONAL_KEYS
+BankController.WARBAND_KEYS = WARBAND_KEYS
+
 function BankController:Create(addon)
     local controller = {}
     controller.addon = addon
@@ -14,15 +53,50 @@ function BankController:Create(addon)
     return controller
 end
 
-function BankController:GetViewMode()
+function BankController:ActiveKeys()
     local db = self.addon:GetDB()
-    return db.global.bankViewMode
+    if db and db.global.bankShowWarband then
+        return WARBAND_KEYS
+    end
+    return PERSONAL_KEYS
+end
+
+function BankController:KeysFor(mode)
+    if mode == "warband" then return WARBAND_KEYS end
+    return PERSONAL_KEYS
+end
+
+function BankController:Get(field)
+    local db = self.addon:GetDB()
+    local keys = self:ActiveKeys()
+    return db.global[keys[field]]
+end
+
+function BankController:Set(field, value)
+    local db = self.addon:GetDB()
+    local keys = self:ActiveKeys()
+    db.global[keys[field]] = value
+end
+
+function BankController:GetFor(mode, field)
+    local db = self.addon:GetDB()
+    local keys = self:KeysFor(mode)
+    return db.global[keys[field]]
+end
+
+function BankController:SetFor(mode, field, value)
+    local db = self.addon:GetDB()
+    local keys = self:KeysFor(mode)
+    db.global[keys[field]] = value
+end
+
+function BankController:GetViewMode()
+    return self:Get("viewMode")
 end
 
 function BankController:SetViewMode(mode)
-    local db = self.addon:GetDB()
-    if db.global.bankViewMode == mode then return end
-    db.global.bankViewMode = mode
+    if self:Get("viewMode") == mode then return end
+    self:Set("viewMode", mode)
     self.addon:RequestLayoutRefresh("bank")
 end
 
@@ -61,17 +135,14 @@ function BankController:OnSearchChanged(text)
 end
 
 function BankController:GetSelectedTab()
-    local db = self.addon:GetDB()
-    return db.global.bankSelectedTab
+    return self:Get("selectedTab")
 end
 
 function BankController:ToggleSelectedTab(tabID)
-    local db = self.addon:GetDB()
-
-    if db.global.bankSelectedTab == tabID then
-        db.global.bankSelectedTab = nil
+    if self:Get("selectedTab") == tabID then
+        self:Set("selectedTab", nil)
     else
-        db.global.bankSelectedTab = tabID
+        self:Set("selectedTab", tabID)
     end
 
     if self.addon.BankBar then
@@ -93,7 +164,13 @@ function BankController:SetBankMode(showWarband)
     if self.addon.BankBar then
         self.addon.BankBar:UpdateBankTypeButtons()
     end
+    if self.addon.BankInfoBar and self.addon.BankInfoBar.UpdateVisibility then
+        self.addon.BankInfoBar:UpdateVisibility()
+    end
     if self.addon.BankGUI then
+        if self.addon.BankGUI.UpdateWindowWidth then
+            self.addon.BankGUI:UpdateWindowWidth()
+        end
         self.addon.BankGUI:OnBankTypeChanged()
     end
 end

@@ -47,8 +47,7 @@ function OneWoW_Bags:FireCallbacksOnAllButtons()
 end
 
 function OneWoW_Bags:FireCallbacksOnBankButtons()
-	local db = self:GetDB()
-	if not db.global.enableBankOverlays then return end
+	if not self.BankController:Get("overlays") then return end
 
 	if BankSet.slots then
 		for bagID, bagSlots in pairs(BankSet.slots) do
@@ -109,9 +108,8 @@ local function HookGUIRefresh()
 
 	local originalBankRefresh = OneWoW_Bags.BankGUI.RefreshLayout
 	function OneWoW_Bags.BankGUI:RefreshLayout()
-		local db = OneWoW_Bags:GetDB()
 		originalBankRefresh(self)
-		if db.global.enableBankOverlays then
+		if OneWoW_Bags.BankController:Get("overlays") then
 			C_Timer.After(0.05, function()
 				OneWoW_Bags:FireCallbacksOnBankButtons()
 			end)
@@ -143,8 +141,7 @@ integrationEventFrame:SetScript("OnEvent", function(self, event, ...)
 			end
 		end)
 	elseif event == "BANKFRAME_OPENED" then
-		local db = OneWoW_Bags:GetDB()
-		if db.global.enableBankOverlays then
+		if OneWoW_Bags.BankController:Get("overlays") then
 			C_Timer.After(0.1, function()
 				OneWoW_Bags:FireCallbacksOnBankButtons()
 			end)

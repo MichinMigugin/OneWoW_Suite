@@ -185,9 +185,9 @@ function BankGUI:InitMainWindow()
     local infoBar = BankInfoBar:Create(contentArea)
     local bankBar = BankBar:Create(contentArea)
     BankInfoBar:UpdateVisibility()
-    BankBar:SetShown(db.global.showBankBagsBar ~= false)
+    BankBar:SetShown(OneWoW_Bags.BankController:Get("showBagsBar") ~= false)
 
-    local hideScrollBar = db.global.bankHideScrollBar
+    local hideScrollBar = OneWoW_Bags.BankController:Get("hideScrollBar")
     contentScrollFrame, contentFrame = WH:CreateScrollScaffold({
         contentArea = contentArea,
         scrollName = "OneWoW_BankContentScroll",
@@ -422,11 +422,12 @@ function BankGUI:UpdateWindowWidth()
     if not MainWindow then return end
     local controller = GetLayoutController()
     if controller and controller.UpdateFixedWidth then
+        local activeKeys = OneWoW_Bags.BankController:ActiveKeys()
         controller:UpdateFixedWidth({
             mainWindow = MainWindow,
-            columnsKey = "bankColumns",
+            columnsKey = activeKeys.columns,
             defaultColumns = 15,
-            hideScrollKey = "bankHideScrollBar",
+            hideScrollKey = activeKeys.hideScrollBar,
             outerPadding = OneWoW_GUI:GetSpacing("XS"),
         })
     end
@@ -451,11 +452,11 @@ function BankGUI:RefreshLayout()
         end,
         beforeLayout = function()
             BankInfoBar:UpdateVisibility()
-            BankBar:SetShown(db.global.showBankBagsBar ~= false)
+            BankBar:SetShown(OneWoW_Bags.BankController:Get("showBagsBar") ~= false)
             BankBar:RefreshChromeAnchors()
             controller:BindScrollFrame({
                 scrollFrame = contentScrollFrame,
-                hideScrollBar = db.global.bankHideScrollBar,
+                hideScrollBar = OneWoW_Bags.BankController:Get("hideScrollBar"),
                 topAnchor = BankInfoBar:GetFrame(),
                 bottomAnchor = BankBar:GetFrame(),
                 contentArea = contentArea,
@@ -473,7 +474,7 @@ function BankGUI:RefreshLayout()
             if ShouldShowPurchasePrompt() then
                 return {}
             end
-            local visibleButtons = WH:FilterByTab(allButtons, db.global.bankSelectedTab)
+            local visibleButtons = WH:FilterByTab(allButtons, OneWoW_Bags.BankController:Get("selectedTab"))
             local filteredButtons = WH:FilterBySearch(visibleButtons, BankInfoBar:GetSearchText())
             return WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeBankExpansionFilter)
         end,
@@ -481,8 +482,9 @@ function BankGUI:RefreshLayout()
             if ShouldShowPurchasePrompt() then
                 return PURCHASE_PROMPT_HEIGHT
             end
-            local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 15)
-            local viewMode = db.global.bankViewMode
+            local columnsKey = OneWoW_Bags.BankController:ActiveKeys().columns
+            local _, _, _, contentWidth = WH:GetLayoutMetrics(columnsKey, 15)
+            local viewMode = OneWoW_Bags.BankController:Get("viewMode")
             local layoutHeight
             local categoryViewContext = controller:CreateViewContext({
                 sectionManager = BankCategoryManager,
@@ -516,12 +518,16 @@ function BankGUI:RefreshLayout()
                 sortMode = db.global.itemSort,
                 getCollapsed = function(kind, key)
                     if kind == "tab" then
-                        return db.global.collapsedBankTabSections[key] or db.global.collapsedBankSections[key]
+                        local tabsKey = OneWoW_Bags.BankController:ActiveKeys().collapsedTabs
+                        local tabs = db.global[tabsKey]
+                        return (tabs and tabs[key]) or db.global.collapsedBankSections[key]
                     end
                 end,
                 setCollapsed = function(kind, key, collapsed)
                     if kind == "tab" then
-                        db.global.collapsedBankTabSections[key] = collapsed or nil
+                        local tabsKey = OneWoW_Bags.BankController:ActiveKeys().collapsedTabs
+                        db.global[tabsKey] = db.global[tabsKey] or {}
+                        db.global[tabsKey][key] = collapsed or nil
                     end
                 end,
                 requestRelayout = function()
@@ -552,7 +558,7 @@ end
 
 function BankGUI:OnBankTypeChanged()
     local db = GetDB()
-    db.global.bankSelectedTab = nil
+    OneWoW_Bags.BankController:Set("selectedTab", nil)
 
     local showWarband = db.global.bankShowWarband
 

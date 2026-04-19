@@ -28,10 +28,11 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
-    local compact = db.global.bankCompactCategories
-    local showHeaders = db.global.showBankCategoryHeaders ~= false
-    local verticalSpacing = (db.global.bankCategorySpacing or 1.0)
-    local compactGapSlots = db.global.bankCompactGap or 1
+    local BC = OneWoW_Bags.BankController
+    local compact = BC:Get("compactCategories")
+    local showHeaders = BC:Get("showCategoryHeaders") ~= false
+    local verticalSpacing = (BC:Get("categorySpacing") or 1.0)
+    local compactGapSlots = BC:Get("compactGap") or 1
 
     local filterSet
     if filteredButtons then
@@ -62,7 +63,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
 
     local layout = H.GetSectionedLayout(itemsByCategory, containerType)
 
-    local cols = db.global.bankColumns or floor((width - padding * 2) / (iconSize + spacing))
+    local cols = BC:Get("columns") or floor((width - padding * 2) / (iconSize + spacing))
     cols = max(cols, 1)
     local cellSize = iconSize + spacing
     local totalGridWidth = cols * cellSize - spacing

@@ -190,6 +190,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["TOGGLE_OFF"] = "Off",
 
     ["SECTION_BANK"] = "Bank",
+    ["SECTION_PERSONAL_BANK"] = "Personal Bank",
+    ["SECTION_WARBAND_BANK"] = "Warband Bank",
     ["SETTING_ENABLE_BANK"] = "Enable Bank UI",
     ["DESC_ENABLE_BANK"] = "Replace the default bank window with the OneWoW Bags interface.",
     ["SETTING_BANK_OVERLAYS"] = "Bank Item Overlays",
@@ -264,6 +266,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["TAB_GENERAL"] = "General",
     ["TAB_BAGS"] = "Bags",
     ["TAB_BANK"] = "Bank",
+    ["TAB_PERSONAL_BANK"] = "Personal Bank",
+    ["TAB_WARBAND_BANK"] = "Warband Bank",
 
     ["SETTING_SHOW_SEARCH_BAR"] = "Show Search Bar",
     ["DESC_SHOW_SEARCH_BAR"] = "Show or hide the search bar on the bags window.",

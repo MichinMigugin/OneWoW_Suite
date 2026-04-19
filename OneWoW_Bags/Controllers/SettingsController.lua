@@ -274,4 +274,93 @@ SettingsController.appliers = {
     bankLocked = function(self, db, value)
         db.global.bankLocked = value
     end,
+    warbandBankRarityColor = function(self, db, value)
+        db.global.warbandBankRarityColor = value
+        if self.addon.BankController:IsWarbandMode() then
+            self.addon:RequestVisualRefresh("bank_related")
+        end
+    end,
+    enableWarbandBankOverlays = function(self, db, value)
+        db.global.enableWarbandBankOverlays = value
+        if not self.addon.BankController:IsWarbandMode() then return end
+        if value then
+            if self.addon.FireCallbacksOnBankButtons then
+                self.addon:FireCallbacksOnBankButtons()
+            end
+        elseif self.addon.ClearBankOverlays then
+            self.addon:ClearBankOverlays()
+        end
+    end,
+    showWarbandBankScrollBar = function(self, db, value)
+        db.global.warbandBankHideScrollBar = not value
+        if self.addon.BankController:IsWarbandMode() then
+            self.addon:RequestWindowReset("bank_related")
+        end
+    end,
+    showWarbandBankBagsBar = function(self, db, value)
+        db.global.showWarbandBankBagsBar = value
+        if self.addon.BankController:IsWarbandMode() then
+            self.addon:RequestLayoutRefresh("bank")
+        end
+    end,
+    showWarbandBankHeaderBar = function(self, db, value)
+        db.global.showWarbandBankHeaderBar = value
+        if self.addon.BankController:IsWarbandMode() then
+            self.addon:RequestLayoutRefresh("bank")
+        end
+    end,
+    showWarbandBankSearchBar = function(self, db, value)
+        db.global.showWarbandBankSearchBar = value
+        if self.addon.BankController:IsWarbandMode() then
+            self.addon:RequestLayoutRefresh("bank")
+        end
+    end,
+    enableWarbandBankExpansionFilter = function(self, db, value)
+        db.global.enableWarbandBankExpansionFilter = value
+        if not value then
+            self.addon.activeBankExpansionFilter = nil
+        end
+        if self.addon.BankInfoBar then
+            self.addon.BankInfoBar:UpdateViewButtons()
+        end
+        if self.addon.BankController:IsWarbandMode() then
+            self.addon:RequestLayoutRefresh("bank")
+        end
+    end,
+    showWarbandBankCategoryHeaders = function(self, db, value)
+        db.global.showWarbandBankCategoryHeaders = value
+        if self.addon.BankController:IsWarbandMode() then
+            self.addon:RequestLayoutRefresh("bank")
+        end
+    end,
+    warbandBankColumns = function(self, db, value)
+        db.global.warbandBankColumns = value
+        self:Debounce("warbandBankColumns", 0.15, function()
+            if self.addon.BankController:IsWarbandMode() then
+                self.addon:RequestLayoutRefresh("bank_related")
+            end
+        end)
+    end,
+    warbandBankCategorySpacing = function(self, db, value)
+        db.global.warbandBankCategorySpacing = value
+        self:Debounce("warbandBankCategorySpacing", 0.15, function()
+            if self.addon.BankController:IsWarbandMode() then
+                self.addon:RequestLayoutRefresh("bank")
+            end
+        end)
+    end,
+    warbandBankCompactCategories = function(self, db, value)
+        db.global.warbandBankCompactCategories = value
+        if self.addon.BankController:IsWarbandMode() then
+            self.addon:RequestLayoutRefresh("bank")
+        end
+    end,
+    warbandBankCompactGap = function(self, db, value)
+        db.global.warbandBankCompactGap = value
+        self:Debounce("warbandBankCompactGap", 0.15, function()
+            if self.addon.BankController:IsWarbandMode() then
+                self.addon:RequestLayoutRefresh("bank")
+            end
+        end)
+    end,
 }

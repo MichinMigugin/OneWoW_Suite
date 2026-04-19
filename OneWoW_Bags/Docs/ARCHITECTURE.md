@@ -254,7 +254,8 @@ Guild bank updates use a separate path: `GUILDBANKBAGSLOTS_CHANGED` and related 
 **Column keys for width and grid metrics:**
 
 - Inventory main window: `db.global.bagColumns` (not the legacy `columns` default key, which is unused by current GUI code).
-- Bank and guild bank windows: `db.global.bankColumns`.
+- Bank window: `db.global.bankColumns` in personal mode, `db.global.warbandBankColumns` in warband mode (selected via `BankController:ActiveKeys().columns`).
+- Guild bank window: `db.global.bankColumns`.
 
 ### 4. Category Classification Pipeline
 
@@ -406,7 +407,7 @@ Each view exposes `Layout(...)` and returns total content height.
 
 **BankCategoryView** — Thin wrapper: builds `itemsByCategory` from `BankSet` via inline `Categories:GetItemCategory`, then calls `H.GetSectionedLayout` and `H.LayoutCategoryContent` from the shared pipeline with bank-specific settings.
 
-**BankTabView** — Sections per bank tab; `bankSelectedTab`; respects warband vs character via `bankShowWarband`.
+**BankTabView** — Sections per bank tab; mode-aware selected tab (personal: `bankSelectedTab`, warband: `warbandBankSelectedTab`) and mode-aware columns (personal: `bankColumns`, warband: `warbandBankColumns`). Both read via `BankController:Get("selectedTab"/"columns")`. Respects warband vs character via `bankShowWarband`.
 
 **GuildBankTabView** — Sections per guild tab; `guildBankSelectedTab`.
 
@@ -497,17 +498,27 @@ Persisted layout and behavior state lives under `OneWoW_Bags_DB.global`. The def
 
 `viewMode`, `bagColumns`, `scale`, `iconSize`, `itemSort`, `compactCategories`, `compactGap`, `categorySpacing`, `showCategoryHeaders`, `showEmptySlots`, `hideScrollBar`, `showBagsBar`, `showMoneyBar`, `showHeaderBar`, `showSearchBar`, `selectedBag`
 
-### Display — bank / guild bank
+### Display — personal bank / warband bank / guild bank
 
-`bankViewMode`, `guildBankViewMode`, `bankColumns`, `bankCompactCategories`, `bankCompactGap`, `bankCategorySpacing`, `showBankCategoryHeaders`, `bankHideScrollBar`, `showBankBagsBar`, `showBankSearchBar`, `showBankHeaderBar`, `bankSelectedTab`, `guildBankSelectedTab`, `bankShowWarband`
+Personal bank: `bankViewMode`, `bankColumns`, `bankCompactCategories`, `bankCompactGap`, `bankCategorySpacing`, `showBankCategoryHeaders`, `bankHideScrollBar`, `showBankBagsBar`, `showBankSearchBar`, `showBankHeaderBar`, `bankSelectedTab`, `collapsedBankTabSections`.
+
+Warband bank (parallel keys, selected at runtime by `bankShowWarband`): `warbandBankViewMode`, `warbandBankColumns`, `warbandBankCompactCategories`, `warbandBankCompactGap`, `warbandBankCategorySpacing`, `showWarbandBankCategoryHeaders`, `warbandBankHideScrollBar`, `showWarbandBankBagsBar`, `showWarbandBankSearchBar`, `showWarbandBankHeaderBar`, `warbandBankSelectedTab`, `collapsedWarbandBankTabSections`.
+
+Guild bank: `guildBankViewMode`, `guildBankSelectedTab`.
+
+Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCategorySections` (categories are global across modes).
+
+`BankController:Get(field)` / `BankController:GetFor(mode, field)` dispatches to the correct keyset based on mode.
 
 ### Behavior
 
-`autoOpen`, `autoClose`, `autoOpenWithBank`, `locked`, `bankLocked`, `enableBankUI`, `enableBankOverlays`, `altToShow`, `enableExpansionFilter`, `enableBankExpansionFilter`, `enableInventorySlots`, `stackItems`
+`autoOpen`, `autoClose`, `autoOpenWithBank`, `locked`, `bankLocked`, `enableBankUI`, `enableBankOverlays`, `enableWarbandBankOverlays`, `altToShow`, `enableExpansionFilter`, `enableBankExpansionFilter`, `enableWarbandBankExpansionFilter`, `enableInventorySlots`, `stackItems`
+
+`enableBankUI` and `bankLocked` are single shared keys mirrored into both Personal Bank and Warband Bank settings tabs via cross-tab UI sync.
 
 ### Visual
 
-`rarityColor`, `rarityIntensity`, `bankRarityColor`, `showNewItems`, `showUnusableOverlay`, `dimJunkItems`, `stripJunkOverlays`
+`rarityColor`, `rarityIntensity`, `bankRarityColor`, `warbandBankRarityColor`, `showNewItems`, `showUnusableOverlay`, `dimJunkItems`, `stripJunkOverlays`
 
 ### Categories
 

@@ -1467,8 +1467,8 @@ function CatMgrUI:RefreshRight()
 
     local compactForKey = {
         backpack       = db.global.compactCategories and true or false,
-        character_bank = db.global.bankCompactCategories and true or false,
-        warband_bank   = db.global.bankCompactCategories and true or false,
+        character_bank = OneWoW_Bags.BankController:GetFor("personal", "compactCategories") and true or false,
+        warband_bank   = OneWoW_Bags.BankController:GetFor("warband", "compactCategories") and true or false,
     }
 
     local ownLineX = CONTROL_X

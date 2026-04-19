@@ -53,7 +53,7 @@ local function CompactGapFromIndex(idx)
     return COMPACT_GAP_STEPS[idx] or 1
 end
 
-local SETTINGS_SECTION_KEYS = { "TAB_GENERAL", "TAB_BAGS", "TAB_BANK" }
+local SETTINGS_SECTION_KEYS = { "TAB_GENERAL", "TAB_BAGS", "TAB_PERSONAL_BANK", "TAB_WARBAND_BANK" }
 local activeSettingsSection = 1
 local settingsSectionDropdownText = nil
 
@@ -639,9 +639,103 @@ local function BuildBagsTab(sc, L, db, GUI)
     sc:SetHeight(abs(yOffset) + 40)
 end
 
-local function BuildBankTab(sc, L, db, GUI)
-    local yOffset = -15
+local MODE_KEYS = {
+    personal = {
+        sectionTitle = "SECTION_PERSONAL_BANK",
+        db = {
+            rarityColor       = "bankRarityColor",
+            overlays          = "enableBankOverlays",
+            hideScrollBar     = "bankHideScrollBar",
+            showBagsBar       = "showBankBagsBar",
+            showHeaderBar     = "showBankHeaderBar",
+            showSearchBar     = "showBankSearchBar",
+            expacFilter       = "enableBankExpansionFilter",
+            showCatHeaders    = "showBankCategoryHeaders",
+            columns           = "bankColumns",
+            categorySpacing   = "bankCategorySpacing",
+            compactCategories = "bankCompactCategories",
+            compactGap        = "bankCompactGap",
+        },
+        applier = {
+            rarityColor       = "bankRarityColor",
+            overlays          = "enableBankOverlays",
+            showScrollBar     = "showBankScrollBar",
+            showBagsBar       = "showBankBagsBar",
+            showHeaderBar     = "showBankHeaderBar",
+            showSearchBar     = "showBankSearchBar",
+            expacFilter       = "enableBankExpansionFilter",
+            showCatHeaders    = "showBankCategoryHeaders",
+            columns           = "bankColumns",
+            categorySpacing   = "bankCategorySpacing",
+            compactCategories = "bankCompactCategories",
+            compactGap        = "bankCompactGap",
+        },
+    },
+    warband = {
+        sectionTitle = "SECTION_WARBAND_BANK",
+        db = {
+            rarityColor       = "warbandBankRarityColor",
+            overlays          = "enableWarbandBankOverlays",
+            hideScrollBar     = "warbandBankHideScrollBar",
+            showBagsBar       = "showWarbandBankBagsBar",
+            showHeaderBar     = "showWarbandBankHeaderBar",
+            showSearchBar     = "showWarbandBankSearchBar",
+            expacFilter       = "enableWarbandBankExpansionFilter",
+            showCatHeaders    = "showWarbandBankCategoryHeaders",
+            columns           = "warbandBankColumns",
+            categorySpacing   = "warbandBankCategorySpacing",
+            compactCategories = "warbandBankCompactCategories",
+            compactGap        = "warbandBankCompactGap",
+        },
+        applier = {
+            rarityColor       = "warbandBankRarityColor",
+            overlays          = "enableWarbandBankOverlays",
+            showScrollBar     = "showWarbandBankScrollBar",
+            showBagsBar       = "showWarbandBankBagsBar",
+            showHeaderBar     = "showWarbandBankHeaderBar",
+            showSearchBar     = "showWarbandBankSearchBar",
+            expacFilter       = "enableWarbandBankExpansionFilter",
+            showCatHeaders    = "showWarbandBankCategoryHeaders",
+            columns           = "warbandBankColumns",
+            categorySpacing   = "warbandBankCategorySpacing",
+            compactCategories = "warbandBankCompactCategories",
+            compactGap        = "warbandBankCompactGap",
+        },
+    },
+}
 
+local sharedEnableRefreshers = {}
+local sharedLockRefreshers = {}
+local sharedApplyEnabledFns = {}
+
+local function BroadcastSharedEnable(newVal)
+    for i = 1, #sharedEnableRefreshers do
+        sharedEnableRefreshers[i](true, newVal)
+    end
+    for i = 1, #sharedApplyEnabledFns do
+        sharedApplyEnabledFns[i](newVal)
+    end
+end
+
+local function BroadcastSharedLock(newVal)
+    local enabled = GetDB().global.enableBankUI and true or false
+    for i = 1, #sharedLockRefreshers do
+        sharedLockRefreshers[i](enabled, newVal)
+    end
+end
+
+local function ResetSharedBankRefreshers()
+    sharedEnableRefreshers = {}
+    sharedLockRefreshers = {}
+    sharedApplyEnabledFns = {}
+end
+
+local function BuildBankTabFor(mode, sc, L, db, GUI)
+    local keys = MODE_KEYS[mode]
+    local dbKeys = keys.db
+    local applierKeys = keys.applier
+
+    local yOffset = -15
     local dependents = {}
 
     local function addToggle(refresh, getValue)
@@ -673,12 +767,14 @@ local function BuildBankTab(sc, L, db, GUI)
             dependents[i](enabled)
         end
     end
+    tinsert(sharedApplyEnabledFns, applyEnabled)
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_BANK"], yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(sc, { title = L[keys.sectionTitle], yOffset = yOffset })
     local bankTopContainer = BuildContainer(sc, yOffset)
     local topY = -10
 
-    topY, _, _ = OneWoW_GUI:CreateToggleRow(bankTopContainer, {
+    local enableRefresh
+    topY, enableRefresh = OneWoW_GUI:CreateToggleRow(bankTopContainer, {
         yOffset = topY,
         label = L["SETTING_ENABLE_BANK"],
         description = L["DESC_ENABLE_BANK"],
@@ -687,9 +783,10 @@ local function BuildBankTab(sc, L, db, GUI)
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
             ApplySetting("enableBankUI", newVal)
-            applyEnabled(newVal)
+            BroadcastSharedEnable(newVal)
         end,
     })
+    tinsert(sharedEnableRefreshers, enableRefresh)
 
     local lockRefresh
     topY, lockRefresh = OneWoW_GUI:CreateToggleRow(bankTopContainer, {
@@ -699,8 +796,12 @@ local function BuildBankTab(sc, L, db, GUI)
         isEnabled = true,
         value = db.global.bankLocked,
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) ApplySetting("bankLocked", newVal) end,
+        onValueChange = function(newVal)
+            ApplySetting("bankLocked", newVal)
+            BroadcastSharedLock(newVal)
+        end,
     })
+    tinsert(sharedLockRefreshers, lockRefresh)
     addToggle(lockRefresh, function() return db.global.bankLocked end)
 
     yOffset = FinalizeContainer(bankTopContainer, topY, yOffset)
@@ -715,13 +816,13 @@ local function BuildBankTab(sc, L, db, GUI)
         label = L["SETTING_RARITY_COLOR"],
         description = L["DESC_BANK_RARITY_COLOR"],
         isEnabled = true,
-        value = db.global.bankRarityColor,
+        value = db.global[dbKeys.rarityColor],
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("bankRarityColor", newVal)
+            ApplySetting(applierKeys.rarityColor, newVal)
         end,
     })
-    addToggle(rarityRefresh, function() return db.global.bankRarityColor end)
+    addToggle(rarityRefresh, function() return db.global[dbKeys.rarityColor] end)
 
     local overlaysRefresh
     dispY, overlaysRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
@@ -729,13 +830,13 @@ local function BuildBankTab(sc, L, db, GUI)
         label = L["SETTING_BANK_OVERLAYS"],
         description = L["DESC_BANK_OVERLAYS"],
         isEnabled = true,
-        value = db.global.enableBankOverlays,
+        value = db.global[dbKeys.overlays],
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("enableBankOverlays", newVal)
+            ApplySetting(applierKeys.overlays, newVal)
         end,
     })
-    addToggle(overlaysRefresh, function() return db.global.enableBankOverlays end)
+    addToggle(overlaysRefresh, function() return db.global[dbKeys.overlays] end)
 
     local scrollbarRefresh
     dispY, scrollbarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
@@ -743,13 +844,13 @@ local function BuildBankTab(sc, L, db, GUI)
         label = L["SETTING_SHOW_SCROLLBAR"],
         description = L["DESC_SHOW_BANK_SCROLLBAR"],
         isEnabled = true,
-        value = not db.global.bankHideScrollBar,
+        value = not db.global[dbKeys.hideScrollBar],
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("showBankScrollBar", newVal)
+            ApplySetting(applierKeys.showScrollBar, newVal)
         end,
     })
-    addToggle(scrollbarRefresh, function() return not db.global.bankHideScrollBar end)
+    addToggle(scrollbarRefresh, function() return not db.global[dbKeys.hideScrollBar] end)
 
     local bagsBarRefresh
     dispY, bagsBarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
@@ -757,13 +858,13 @@ local function BuildBankTab(sc, L, db, GUI)
         label = L["SETTING_SHOW_BANK_BAGS_BAR"],
         description = L["DESC_SHOW_BANK_BAGS_BAR"],
         isEnabled = true,
-        value = db.global.showBankBagsBar,
+        value = db.global[dbKeys.showBagsBar],
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("showBankBagsBar", newVal)
+            ApplySetting(applierKeys.showBagsBar, newVal)
         end,
     })
-    addToggle(bagsBarRefresh, function() return db.global.showBankBagsBar end)
+    addToggle(bagsBarRefresh, function() return db.global[dbKeys.showBagsBar] end)
 
     local headerBarRefresh
     dispY, headerBarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
@@ -771,13 +872,13 @@ local function BuildBankTab(sc, L, db, GUI)
         label = L["SETTING_SHOW_HEADER_BAR"],
         description = L["DESC_SHOW_BANK_HEADER_BAR"],
         isEnabled = true,
-        value = db.global.showBankHeaderBar,
+        value = db.global[dbKeys.showHeaderBar],
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("showBankHeaderBar", newVal)
+            ApplySetting(applierKeys.showHeaderBar, newVal)
         end,
     })
-    addToggle(headerBarRefresh, function() return db.global.showBankHeaderBar end)
+    addToggle(headerBarRefresh, function() return db.global[dbKeys.showHeaderBar] end)
 
     local searchBarRefresh
     dispY, searchBarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
@@ -785,13 +886,13 @@ local function BuildBankTab(sc, L, db, GUI)
         label = L["SETTING_SHOW_SEARCH_BAR"],
         description = L["DESC_SHOW_BANK_SEARCH_BAR"],
         isEnabled = true,
-        value = db.global.showBankSearchBar,
+        value = db.global[dbKeys.showSearchBar],
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("showBankSearchBar", newVal)
+            ApplySetting(applierKeys.showSearchBar, newVal)
         end,
     })
-    addToggle(searchBarRefresh, function() return db.global.showBankSearchBar end)
+    addToggle(searchBarRefresh, function() return db.global[dbKeys.showSearchBar] end)
 
     local expacFilterRefresh
     dispY, expacFilterRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
@@ -799,13 +900,13 @@ local function BuildBankTab(sc, L, db, GUI)
         label = L["SETTING_ENABLE_EXPAC_FILTER"],
         description = L["DESC_ENABLE_BANK_EXPAC_FILTER"],
         isEnabled = true,
-        value = db.global.enableBankExpansionFilter,
+        value = db.global[dbKeys.expacFilter],
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("enableBankExpansionFilter", newVal)
+            ApplySetting(applierKeys.expacFilter, newVal)
         end,
     })
-    addToggle(expacFilterRefresh, function() return db.global.enableBankExpansionFilter end)
+    addToggle(expacFilterRefresh, function() return db.global[dbKeys.expacFilter] end)
 
     local catHeadersRefresh
     dispY, catHeadersRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
@@ -813,21 +914,21 @@ local function BuildBankTab(sc, L, db, GUI)
         label = L["SETTING_SHOW_CAT_HEADERS"],
         description = L["DESC_SHOW_BANK_CAT_HEADERS"],
         isEnabled = true,
-        value = db.global.showBankCategoryHeaders,
+        value = db.global[dbKeys.showCatHeaders],
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("showBankCategoryHeaders", newVal)
+            ApplySetting(applierKeys.showCatHeaders, newVal)
         end,
     })
-    addToggle(catHeadersRefresh, function() return db.global.showBankCategoryHeaders end)
+    addToggle(catHeadersRefresh, function() return db.global[dbKeys.showCatHeaders] end)
 
     dispY = dispY - 6
 
     local colSliderContainer, colSliderLbl
     dispY, colSliderContainer, colSliderLbl = BuildSliderRow(dispContainer, L["SETTING_BANK_COLUMNS"], dispY, {
-        minVal = 15, maxVal = 30, step = 1, currentVal = db.global.bankColumns,
+        minVal = 15, maxVal = 30, step = 1, currentVal = db.global[dbKeys.columns],
         onChange = function(val)
-            ApplySetting("bankColumns", val)
+            ApplySetting(applierKeys.columns, val)
         end,
         width = 240, fmt = "%d",
     })
@@ -835,9 +936,9 @@ local function BuildBankTab(sc, L, db, GUI)
 
     local spaceSliderContainer, spaceSliderLbl
     dispY, spaceSliderContainer, spaceSliderLbl = BuildSliderRow(dispContainer, L["SETTING_CATEGORY_SPACING"], dispY, {
-        minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.bankCategorySpacing,
+        minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global[dbKeys.categorySpacing],
         onChange = function(val)
-            ApplySetting("bankCategorySpacing", val)
+            ApplySetting(applierKeys.categorySpacing, val)
         end,
         width = 240, fmt = "%.1f",
     })
@@ -849,13 +950,13 @@ local function BuildBankTab(sc, L, db, GUI)
         label = L["SETTING_COMPACT_CATEGORIES"],
         description = L["DESC_COMPACT_CATEGORIES"],
         isEnabled = true,
-        value = db.global.bankCompactCategories,
+        value = db.global[dbKeys.compactCategories],
         onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
         onValueChange = function(newVal)
-            ApplySetting("bankCompactCategories", newVal)
+            ApplySetting(applierKeys.compactCategories, newVal)
         end,
     })
-    addToggle(compactRefresh, function() return db.global.bankCompactCategories end)
+    addToggle(compactRefresh, function() return db.global[dbKeys.compactCategories] end)
 
     do
         local gapLbl = dispContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -864,13 +965,13 @@ local function BuildBankTab(sc, L, db, GUI)
         gapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         dispY = dispY - gapLbl:GetStringHeight() - 4
 
-        local curIdx = CompactGapToIndex(db.global.bankCompactGap)
+        local curIdx = CompactGapToIndex(db.global[dbKeys.compactGap])
         local gapSlider = OneWoW_GUI:CreateSlider(dispContainer, {
             minVal = 1, maxVal = #COMPACT_GAP_STEPS, step = 1, currentVal = curIdx,
             onChange = function(val)
                 local idx = floor(val + 0.5)
                 local realVal = CompactGapFromIndex(idx)
-                ApplySetting("bankCompactGap", realVal)
+                ApplySetting(applierKeys.compactGap, realVal)
             end,
             width = 240, fmt = "%d",
         })
@@ -962,7 +1063,9 @@ function Settings:Create()
         end,
     })
 
-    for i = 1, 3 do
+    ResetSharedBankRefreshers()
+
+    for i = 1, #SETTINGS_SECTION_KEYS do
         local sf = CreateFrame("Frame", nil, contentFrame)
         sf:SetPoint("TOPLEFT", tabRow, "BOTTOMLEFT", 0, -2)
         sf:SetPoint("BOTTOMRIGHT", contentFrame, "BOTTOMRIGHT", 0, 0)
@@ -996,7 +1099,8 @@ function Settings:Create()
 
     BuildGeneralTab(tabContents[1].scrollContent, L, db, GUI)
     BuildBagsTab(tabContents[2].scrollContent, L, db, GUI)
-    BuildBankTab(tabContents[3].scrollContent, L, db, GUI)
+    BuildBankTabFor("personal", tabContents[3].scrollContent, L, db, GUI)
+    BuildBankTabFor("warband", tabContents[4].scrollContent, L, db, GUI)
 
     SwitchTab(1)
 
@@ -1057,4 +1161,5 @@ function Settings:Reset()
     tabContents = {}
     settingsSectionDropdownText = nil
     activeSettingsSection = 1
+    ResetSharedBankRefreshers()
 end

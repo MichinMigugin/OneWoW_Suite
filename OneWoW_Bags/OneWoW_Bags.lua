@@ -106,7 +106,7 @@ function OneWoW_Bags:ShouldShowItemQuality(isBank, quality)
     local db = self:GetDB()
 
     if isBank then
-        return db.global.bankRarityColor == true
+        return self.BankController:Get("rarityColor") == true
     end
 
     return db.global.rarityColor == true
@@ -723,7 +723,7 @@ function OneWoW_Bags:OnBankTabsChanged(bankType)
     C_Bank.FetchPurchasedBankTabData(activeBankType)
     C_Bank.FetchNumPurchasedBankTabs(activeBankType)
 
-    self.db.global.bankSelectedTab = nil
+    self.BankController:Set("selectedTab", nil)
 
     if self.BankGUI and self.BankGUI.ClearForcedPurchasePrompt then
         self.BankGUI:ClearForcedPurchasePrompt()

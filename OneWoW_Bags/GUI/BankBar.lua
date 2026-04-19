@@ -126,7 +126,7 @@ end
 function BankBar:RefreshChromeAnchors()
     if not bagsBarFrame then return end
     local db = GetDB()
-    local leftInset, rightInset = WH:GetItemGridChromeInsets(db.global.bankHideScrollBar)
+    local leftInset, rightInset = WH:GetItemGridChromeInsets(OneWoW_Bags.BankController:Get("hideScrollBar"))
     if bagsBarFrame.withdrawBtn then
         bagsBarFrame.withdrawBtn:ClearAllPoints()
         bagsBarFrame.withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInset, ROW1_Y)
@@ -165,7 +165,7 @@ function BankBar:BuildTabButtons()
     tabButtons = {}
 
     local bagList = showWarband and BankTypes:GetWarbandTabIDs() or BankTypes:GetBankTabIDs()
-    local xOffset = select(1, WH:GetItemGridChromeInsets(db.global.bankHideScrollBar))
+    local xOffset = select(1, WH:GetItemGridChromeInsets(OneWoW_Bags.BankController:Get("hideScrollBar")))
 
     local numPurchased = 0
     if OneWoW_Bags.bankOpen then

@@ -49,12 +49,24 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
     local function GetFactoryChromeInsets()
         local db = OneWoW_Bags:GetDB()
         local hideScroll = false
-        if config.hideScrollBarKey then
+        if config.hideScrollBarFn then
+            hideScroll = config.hideScrollBarFn(db) and true or false
+        elseif config.hideScrollBarKey then
             hideScroll = db.global[config.hideScrollBarKey] and true or false
         else
             hideScroll = db.global.hideScrollBar and true or false
         end
         return WH:GetItemGridChromeInsets(hideScroll)
+    end
+
+    local function GetExpacEnabled(db)
+        if config.expacFilter then
+            if config.expacFilter.settingFn then
+                return config.expacFilter.settingFn(db) == true
+            end
+            return db.global[config.expacFilter.settingKey] == true
+        end
+        return false
     end
 
     local function effectiveViewMode(raw)
@@ -339,7 +351,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
 
         if config.expacFilter and infoBarFrame.expacDropdown then
             local ef = config.expacFilter
-            local showExpac = showHeader and db.global[ef.settingKey] == true
+            local showExpac = showHeader and GetExpacEnabled(db)
             infoBarFrame.expacDropdown:SetShown(showExpac == true)
             if showExpac and infoBarFrame.expacText then
                 local activeFilter = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or OneWoW_Bags[ef.filterKey]

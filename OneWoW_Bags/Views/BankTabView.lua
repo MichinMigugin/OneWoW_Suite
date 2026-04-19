@@ -37,7 +37,8 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local getCollapsed = viewContext.getCollapsed
     local setCollapsed = viewContext.setCollapsed
 
-    local selectedTab = db.global.bankSelectedTab
+    local BC = OneWoW_Bags.BankController
+    local selectedTab = BC:Get("selectedTab")
     local showWarband = BankSet:IsWarband()
     local bagList = showWarband and BankTypes:GetWarbandTabIDs() or BankTypes:GetBankTabIDs()
     local bankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
@@ -95,7 +96,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                 local sectionHeight = 26
 
                 if not section.isCollapsed then
-                    local cols = db.global.bankColumns or floor((width - padding * 2) / (iconSize + spacing))
+                    local cols = BC:Get("columns") or floor((width - padding * 2) / (iconSize + spacing))
                     cols = max(cols, 1)
 
                     local totalGridWidth = cols * (iconSize + spacing) - spacing

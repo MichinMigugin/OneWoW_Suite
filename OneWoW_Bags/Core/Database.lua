@@ -74,6 +74,21 @@ local defaults = {
         bankCategorySpacing = 1.0,
         bankLocked = false,
         bankRarityColor = true,
+        warbandBankViewMode = "list",
+        warbandBankColumns = 15,
+        warbandBankRarityColor = true,
+        enableWarbandBankOverlays = true,
+        warbandBankHideScrollBar = false,
+        showWarbandBankBagsBar = true,
+        showWarbandBankHeaderBar = true,
+        showWarbandBankSearchBar = true,
+        showWarbandBankCategoryHeaders = true,
+        warbandBankCategorySpacing = 1.0,
+        warbandBankCompactCategories = false,
+        warbandBankCompactGap = 1,
+        enableWarbandBankExpansionFilter = false,
+        warbandBankSelectedTab = nil,
+        collapsedWarbandBankTabSections = {},
         enableJunkCategory = true,
         enableUpgradeCategory = true,
         showHeaderBar = true,
@@ -194,7 +209,34 @@ function OneWoW_Bags:InitializeDatabase()
         { version = 15, name = "mats_crafting_category", run = function(d)
             self:MigrateMatsBuiltinCategory(d)
         end },
+        { version = 16, name = "split_warband_bank_settings", run = function(d)
+            self:MigrateSplitWarbandBankSettings(d)
+        end },
     })
+end
+
+function OneWoW_Bags:MigrateSplitWarbandBankSettings(db)
+    local g = db.global
+    local mapping = {
+        { src = "bankViewMode",               dst = "warbandBankViewMode" },
+        { src = "bankColumns",                dst = "warbandBankColumns" },
+        { src = "bankRarityColor",            dst = "warbandBankRarityColor" },
+        { src = "enableBankOverlays",         dst = "enableWarbandBankOverlays" },
+        { src = "bankHideScrollBar",          dst = "warbandBankHideScrollBar" },
+        { src = "showBankBagsBar",            dst = "showWarbandBankBagsBar" },
+        { src = "showBankHeaderBar",          dst = "showWarbandBankHeaderBar" },
+        { src = "showBankSearchBar",          dst = "showWarbandBankSearchBar" },
+        { src = "showBankCategoryHeaders",    dst = "showWarbandBankCategoryHeaders" },
+        { src = "bankCategorySpacing",        dst = "warbandBankCategorySpacing" },
+        { src = "bankCompactCategories",      dst = "warbandBankCompactCategories" },
+        { src = "bankCompactGap",             dst = "warbandBankCompactGap" },
+        { src = "enableBankExpansionFilter",  dst = "enableWarbandBankExpansionFilter" },
+    }
+    for _, p in ipairs(mapping) do
+        if g[p.dst] == nil and g[p.src] ~= nil then
+            g[p.dst] = g[p.src]
+        end
+    end
 end
 
 function OneWoW_Bags:MigrateCategorySystemV2(db)
