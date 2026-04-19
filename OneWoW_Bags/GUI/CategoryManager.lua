@@ -567,13 +567,13 @@ BuildSectionMemberRows = function(secRow, section, sectionID, startY)
                 GameTooltip:SetText((locKey and L[locKey]) or captName, 1, 1, 1)
                 GameTooltip:AddLine(" ")
                 local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
-                GameTooltip:AddLine(L["CATEGORY_DRAG_HINT"], tr, tg, tb, true)
+                GameTooltip:AddLine(L["CATEGORY_REORDER_HINT"], tr, tg, tb, true)
                 GameTooltip:Show()
             end)
             row:SetScript("OnLeave", GameTooltip_Hide)
 
             local nameX = 8
-            if isBuiltin then
+            if catName ~= "Other" then
                 local capN2 = catName
                 local isDisabled2 = disabled[catName]
                 local cb2 = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
@@ -582,8 +582,8 @@ BuildSectionMemberRows = function(secRow, section, sectionID, startY)
                 cb2:SetChecked(not isDisabled2)
                 cb2:SetScript("OnClick", function(self)
                     local controller = GetController()
-                    if controller and controller.SetBuiltinCategoryEnabled then
-                        controller:SetBuiltinCategoryEnabled(capN2, self:GetChecked())
+                    if controller and controller.SetCategoryEnabled then
+                        controller:SetCategoryEnabled(capN2, self:GetChecked())
                     end
                 end)
                 nameX = 22
@@ -998,7 +998,7 @@ function CatMgrUI:RefreshRight()
 
         local showHeaderBankCB = CreateFrame("CheckButton", nil, rightTopWrapper, "UICheckButtonTemplate")
         showHeaderBankCB:SetSize(18, 18)
-        showHeaderBankCB:SetPoint("LEFT", showHeaderLbl, "RIGHT", 8, 0)
+        showHeaderBankCB:SetPoint("TOPLEFT", showHeaderCB, "BOTTOMLEFT", 0, -6)
         local bankHeaderVal = section.showHeaderBank
         if bankHeaderVal == nil then bankHeaderVal = section.showHeader or false end
         showHeaderBankCB:SetChecked(bankHeaderVal)
@@ -1013,51 +1013,7 @@ function CatMgrUI:RefreshRight()
         showHeaderBankLbl:SetText(L["SECTION_SHOW_HEADER_BANK"])
         showHeaderBankLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        local infoLbl = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        infoLbl:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 10, -66)
-        infoLbl:SetText(L["CATEGORY_IN_SECTION"] or "Toggle categories to include in this section:")
-        infoLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-        local allCatNames = {}
-        for _, n in ipairs(GetEffectiveBuiltinNamesList()) do tinsert(allCatNames, n) end
-        for _, cd in pairs(db.global.customCategoriesV2) do tinsert(allCatNames, cd.name) end
-
-        local memberSet = {}
-        for _, n in ipairs(section.categories) do memberSet[n] = true end
-
-        local checkY = -84
-        for _, catName in ipairs(allCatNames) do
-            local locKey   = BUILTIN_LOCALE_KEYS[catName]
-            local dispName = (locKey and L[locKey]) or catName
-            local isMember = memberSet[catName]
-
-            local row = CreateFrame("Frame", nil, rightTopWrapper)
-            row:SetHeight(22)
-            row:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", 0, checkY)
-            row:SetPoint("RIGHT",   rightTopWrapper, "RIGHT",   0, 0)
-
-            local cb = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
-            cb:SetSize(18, 18)
-            cb:SetPoint("LEFT", row, "LEFT", 4, 0)
-            cb:SetChecked(isMember)
-
-            local cbLbl = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            cbLbl:SetPoint("LEFT", cb, "RIGHT", 4, 0)
-            cbLbl:SetText(dispName)
-            cbLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-            local captCat = catName
-            cb:SetScript("OnClick", function(self)
-                local controller = GetController()
-                if controller and controller.SetSectionMembership then
-                    controller:SetSectionMembership(sectionID, captCat, self:GetChecked())
-                end
-            end)
-
-            checkY = checkY - 24
-        end
-
-        local totalH = max(abs(checkY) + 4, 100)
+        local totalH = 96
         rightTopWrapper:SetHeight(totalH)
         if rightScrollFrame then
             rightScrollFrame:GetScrollChild():SetHeight(totalH)

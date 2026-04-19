@@ -397,7 +397,7 @@ function CategoryController:MoveCategoryToSection(fromSectionID, fromIdx, toSect
     self:RefreshUI()
 end
 
-function CategoryController:SetBuiltinCategoryEnabled(categoryName, enabled)
+function CategoryController:SetCategoryEnabled(categoryName, enabled)
     local disabledCategories = self:GetDB().global.disabledCategories
     if enabled then
         disabledCategories[categoryName] = nil
@@ -406,6 +406,8 @@ function CategoryController:SetBuiltinCategoryEnabled(categoryName, enabled)
     end
     self:RefreshUI()
 end
+
+CategoryController.SetBuiltinCategoryEnabled = CategoryController.SetCategoryEnabled
 
 function CategoryController:GetCategoryModification(categoryName)
     return self.addon:EnsureCategoryModification(categoryName)
