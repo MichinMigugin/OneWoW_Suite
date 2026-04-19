@@ -9,7 +9,7 @@ OneWoW_Bags is a unified bag/bank/guild bank replacement addon for World of Warc
 **TOC:** `## Interface: 120001, 120005` (Retail + compatible build).
 
 **Hard dependency:** `OneWoW_GUI`  
-**Soft dependencies:** `OneWoW` (hub, overlays, item status, upgrade detection), `OneWoW_AltTracker`, `OneWoW_ShoppingList`, `TradeSkillMaster`, `Baganator` (profile import via `CategoryController`)
+**Soft dependencies:** `OneWoW` (hub, overlays, item status, upgrade detection), `OneWoW_AltTracker`, `OneWoW_ShoppingList`, `TradeSkillMaster`, `Baganator` (profile import via `CategoryController`), `Pawn`
 
 ---
 
@@ -439,7 +439,7 @@ Tokenizer notes: string-property comparisons accept unquoted single-token values
 
 ### Categories
 
-**27** builtin rows in `CATEGORY_DEFINITIONS` (including `1W Junk`, `1W Upgrades`, `Recent Items`, `Other`, `Empty`, and search-driven builtins such as `Housing`, `Toys`, `Junk`, etc.). Builtin search categories are collected into `SEARCH_CATEGORIES` sorted by `searchOrder`.
+**28** builtin rows in `CATEGORY_DEFINITIONS` (including `1W Junk`, `1W Upgrades`, `Recent Items`, `Other`, `Empty`, and search-driven builtins such as `Housing`, `Toys`, `Mats`, `Junk`, etc.). Builtin search categories are collected into `SEARCH_CATEGORIES` sorted by `searchOrder`.
 
 Custom predicate and builtin search categories are merged into a **single candidate pool** during assignment. Tie-breaking: user-facing **priority** (`categoryModifications[].priority`, higher wins) → custom beats builtin at equal priority → `defaultOrder` (lower wins) → section order → `searchOrder` → stable tieKey.
 
@@ -496,7 +496,7 @@ Persisted layout and behavior state lives under `OneWoW_Bags_DB.global`. The def
 
 ### Display — bags
 
-`viewMode`, `bagColumns`, `scale`, `iconSize`, `itemSort`, `compactCategories`, `compactGap`, `categorySpacing`, `showCategoryHeaders`, `showEmptySlots`, `hideScrollBar`, `showBagsBar`, `showMoneyBar`, `showHeaderBar`, `showSearchBar`, `selectedBag`
+`viewMode`, `bagColumns`, `scale`, `iconSize`, `itemSort`, `compactCategories`, `compactGap`, `categorySpacing`, `showCategoryHeaders`, `showEmptySlots`, `hideScrollBar`, `showBagsBar`, `showMoneyBar`, `showCurrencyTrackerCapHighlight`, `showHeaderBar`, `showSearchBar`, `selectedBag`
 
 ### Display — personal bank / warband bank / guild bank
 
@@ -526,7 +526,7 @@ Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCate
 
 ### Collapse
 
-`collapsedSections`, `collapsedBagSections`, `collapsedBankSections`, `collapsedGuildBankSections`, `collapsedBankCategorySections`, `collapsedBankTabSections`, `collapsedGuildBankTabSections`
+`collapsedSections`, `collapsedBagSections`, `collapsedBankSections`, `collapsedGuildBankSections`, `collapsedBankCategorySections`, `collapsedBankTabSections`, `collapsedWarbandBankTabSections`, `collapsedGuildBankTabSections`
 
 ### Other
 
@@ -534,7 +534,7 @@ Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCate
 
 ### Migrations
 
-`_migrationVersion` is advanced by `DB:RunMigrations` up to **14**:
+`_migrationVersion` is advanced by `DB:RunMigrations` up to **16**:
 
 1. `category_system_v2` — split Equipment/Consumables builtins; seed `categorySections` / `sectionOrder`  
 2. `junk_rename` — `OneWoW Junk` / `OneWoW Upgrades` → `1W Junk` / `1W Upgrades` in disabled/collapsed maps  
@@ -550,6 +550,8 @@ Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCate
 12. `section_category_membership_cleanup` — strip stale names from section `categories` lists (removed custom rows, etc.)  
 13. `rename_move_upgrades_to_top` — rename `moveUpgradesToTop` key to `moveRecentToTop`  
 14. `hide_in_to_applies_in` — convert `categoryModifications[*].hideIn` to `appliesIn` with inverted semantics
+15. `mats_crafting_category` — insert the `Mats` builtin before `Reagents` in all section/member/displayOrder lists so existing saves pick up the new crafting category
+16. `split_warband_bank_settings` — copy legacy `bank*` values into parallel `warbandBank*` keys when the warband key is not already set, preserving user settings during the personal/warband settings split
 
 ---
 
