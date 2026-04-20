@@ -64,6 +64,22 @@ local function BuildFontItems()
     return items
 end
 
+local function BuildAlignItems()
+    local L = ns.L
+    return {
+        { value = "LEFT",   text = L["MMSKIN_ALIGN_LEFT"]   },
+        { value = "CENTER", text = L["MMSKIN_ALIGN_CENTER"] },
+        { value = "RIGHT",  text = L["MMSKIN_ALIGN_RIGHT"]  },
+    }
+end
+
+local function GetAlignLabel(val)
+    local L = ns.L
+    if val == "LEFT"  then return L["MMSKIN_ALIGN_LEFT"]  end
+    if val == "RIGHT" then return L["MMSKIN_ALIGN_RIGHT"] end
+    return L["MMSKIN_ALIGN_CENTER"]
+end
+
 -- When the module is disabled, every widget registered here is made
 -- non-interactive so the user cannot toggle checkboxes / move sliders /
 -- click buttons that would otherwise reach into engine code paths.
@@ -288,6 +304,31 @@ local function BuildContent(container)
         zfSizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
         track(zfSizeSlider)
         cy = cy - SLIDER_HEIGHT
+
+        local _, zaCy = AddLabelIndented(container, cy, L["MMSKIN_ZONE_ALIGN_LABEL"])
+        cy = zaCy
+
+        local zoneAlignDrop, zoneAlignText = OneWoW_GUI:CreateDropdown(container, {
+            width = 200, height = 22,
+            text = GetAlignLabel(s.zoneAlign),
+        })
+        zoneAlignDrop:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
+        track(zoneAlignDrop)
+        cy = cy - ROW_HEIGHT
+
+        OneWoW_GUI:AttachFilterMenu(zoneAlignDrop, {
+            searchable = false,
+            getActiveValue = function() return s.zoneAlign or "CENTER" end,
+            buildItems = BuildAlignItems,
+            onSelect = function(value, text)
+                s.zoneAlign = value
+                zoneAlignText:SetText(text)
+                if ns.ModuleRegistry:IsEnabled("map_mini_tools") then
+                    if M.RefreshZoneFont   then M.RefreshZoneFont()   end
+                    if M.RefreshZoneLayout then M.RefreshZoneLayout() end
+                end
+            end,
+        })
         cy = cy - 4
     end
 
@@ -336,6 +377,42 @@ local function BuildContent(container)
         cfSizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
         track(cfSizeSlider)
         cy = cy - SLIDER_HEIGHT
+
+        local classClockCB = OneWoW_GUI:CreateCheckbox(container, {
+            label   = L["MMSKIN_CLASS_CLOCK_COLOR"],
+            checked = ns.ModuleRegistry:GetToggleValue("map_mini_tools", "classClockColor"),
+            onClick = function(self)
+                ns.ModuleRegistry:SetToggleValue("map_mini_tools", "classClockColor", self:GetChecked())
+            end,
+        })
+        classClockCB:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_LABEL, cy)
+        track(classClockCB)
+        cy = cy - ROW_HEIGHT
+
+        local _, caCy = AddLabelIndented(container, cy, L["MMSKIN_CLOCK_ALIGN_LABEL"])
+        cy = caCy
+
+        local clockAlignDrop, clockAlignText = OneWoW_GUI:CreateDropdown(container, {
+            width = 200, height = 22,
+            text = GetAlignLabel(s.clockAlign),
+        })
+        clockAlignDrop:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_SLIDER, cy)
+        track(clockAlignDrop)
+        cy = cy - ROW_HEIGHT
+
+        OneWoW_GUI:AttachFilterMenu(clockAlignDrop, {
+            searchable = false,
+            getActiveValue = function() return s.clockAlign or "CENTER" end,
+            buildItems = BuildAlignItems,
+            onSelect = function(value, text)
+                s.clockAlign = value
+                clockAlignText:SetText(text)
+                if ns.ModuleRegistry:IsEnabled("map_mini_tools") then
+                    if M.RefreshClockFont   then M.RefreshClockFont()   end
+                    if M.RefreshClockLayout then M.RefreshClockLayout() end
+                end
+            end,
+        })
     end
 
     -- ═══════════════════════════════════════════════════════════════════════

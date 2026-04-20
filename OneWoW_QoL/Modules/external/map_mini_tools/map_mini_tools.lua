@@ -21,6 +21,7 @@ local MapMiniToolsModule = {
 
         { id = "showZoneText",   label = "MMSKIN_ZONE_TEXT",    description = "MMSKIN_ZONE_TEXT_DESC",    default = true,  group = "MMSKIN_GROUP_INFO",   detailOnly = true },
         { id = "showClock",      label = "MMSKIN_CLOCK",        description = "MMSKIN_CLOCK_DESC",        default = true,  group = "MMSKIN_GROUP_INFO",   detailOnly = true },
+        { id = "classClockColor", label = "MMSKIN_CLASS_CLOCK_COLOR", description = "MMSKIN_CLASS_CLOCK_COLOR_DESC", default = false, group = "MMSKIN_GROUP_INFO", detailOnly = true },
         { id = "zoneClockInside", label = "MMSKIN_ZONE_CLOCK_INSIDE", description = "MMSKIN_ZONE_CLOCK_INSIDE_DESC", default = false, group = "MMSKIN_GROUP_INFO", detailOnly = true },
         { id = "zoneClockDraggable", label = "MMSKIN_ZONE_CLOCK_DRAG", description = "MMSKIN_ZONE_CLOCK_DRAG_DESC", default = false, group = "MMSKIN_GROUP_INFO", detailOnly = true },
 
@@ -34,6 +35,7 @@ local MapMiniToolsModule = {
         { id = "showDifficulty",   label = "MMSKIN_DIFFICULTY",  description = "MMSKIN_DIFFICULTY_DESC",   default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
         { id = "showTracking",     label = "MMSKIN_TRACKING",    description = "MMSKIN_TRACKING_DESC",     default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
         { id = "showMissions",     label = "MMSKIN_MISSIONS",    description = "MMSKIN_MISSIONS_DESC",     default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
+        { id = "showGameTime",     label = "MMSKIN_GAMETIME",    description = "MMSKIN_GAMETIME_DESC",     default = true,  group = "MMSKIN_GROUP_ELEMENTS" },
 
         { id = "hideBlizzardExpansionWhenPlumber", label = "MMSKIN_PLUMBER_HIDE_BLIZZARD", description = "MMSKIN_PLUMBER_HIDE_BLIZZARD_DESC", default = true, group = "MMSKIN_GROUP_COMPAT", detailOnly = true },
 

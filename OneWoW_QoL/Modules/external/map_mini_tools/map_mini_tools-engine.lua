@@ -50,8 +50,10 @@ local function GetSettings()
     if s.unclampMinimap  == nil then s.unclampMinimap  = false      end
     if s.zoneFont        == nil then s.zoneFont        = "global"   end
     if s.zoneFontSize    == nil then s.zoneFontSize    = 12         end
+    if s.zoneAlign       == nil then s.zoneAlign       = "CENTER"   end
     if s.clockFont       == nil then s.clockFont       = "global"   end
     if s.clockFontSize   == nil then s.clockFontSize   = 12         end
+    if s.clockAlign      == nil then s.clockAlign      = "CENTER"   end
     -- iconPositions[id] = { cx =, cy = } offsets from Minimap CENTER/CENTER; set while Debug Icons is on
     if not s.iconPositions then s.iconPositions = {} end
     -- zoneTextPos / clockPos = { point, relName, relPoint, x, y } relName: Minimap | MinimapCluster | UIParent
@@ -424,6 +426,12 @@ local function UpdateZoneDisplay()
     end
 end
 
+local function GetZoneAlign()
+    local a = GetSettings().zoneAlign
+    if a == "LEFT" or a == "RIGHT" then return a end
+    return "CENTER"
+end
+
 -- Top-anchored text so changing font size does not shift the label vertically on the minimap edge.
 local function LayoutZoneFontString()
     if not zoneFontStr or not zoneFrame then return end
@@ -431,7 +439,14 @@ local function LayoutZoneFontString()
     zoneFontStr:SetPoint("TOP", zoneFrame, "TOP", 0, -2)
     zoneFontStr:SetPoint("LEFT", zoneFrame, "LEFT", 6, 0)
     zoneFontStr:SetPoint("RIGHT", zoneFrame, "RIGHT", -6, 0)
-    zoneFontStr:SetJustifyH("CENTER")
+    local align = GetZoneAlign()
+    if align == "LEFT" then
+        zoneFontStr:SetJustifyH("LEFT")
+    elseif align == "RIGHT" then
+        zoneFontStr:SetJustifyH("RIGHT")
+    else
+        zoneFontStr:SetJustifyH("CENTER")
+    end
     zoneFontStr:SetJustifyV("TOP")
 end
 
@@ -446,7 +461,13 @@ local function ApplyZoneFont()
         local s2 = GetSettings()
         local textH = zoneFontStr:GetStringHeight()
         zoneFrame:SetHeight(math.max(textH + 6, s2.zoneFontSize + 4))
-        zoneFrame:SetWidth(math.max(MINIMAP:GetWidth() + 40, zoneFontStr:GetStringWidth() + 16))
+        -- LEFT/RIGHT alignment uses a tight frame so the text sits flush
+        -- against the matching minimap edge instead of extending past it.
+        if GetZoneAlign() == "CENTER" then
+            zoneFrame:SetWidth(math.max(MINIMAP:GetWidth() + 40, zoneFontStr:GetStringWidth() + 16))
+        else
+            zoneFrame:SetWidth(math.max(zoneFontStr:GetStringWidth() + 16, 40))
+        end
         ApplyHitInsetsForText(zoneFrame, zoneFontStr, 6, 2)
     end
 end
@@ -543,24 +564,37 @@ local function HookZoneClockDragScripts()
     end
 end
 
+local function GetZoneAnchor()
+    local align  = GetZoneAlign()
+    local inside = GetToggle("zoneClockInside")
+    if align == "LEFT" then
+        if inside then return "TOPLEFT",    "TOPLEFT",    6, -6
+        else           return "BOTTOMLEFT", "TOPLEFT",    0,  4 end
+    elseif align == "RIGHT" then
+        if inside then return "TOPRIGHT",    "TOPRIGHT",   -6, -6
+        else           return "BOTTOMRIGHT", "TOPRIGHT",    0,  4 end
+    else
+        if inside then return "TOP",    "TOP",  0, -6
+        else           return "BOTTOM", "TOP",  0,  4 end
+    end
+end
+
 local function ApplyZoneTextLayout()
     if not zoneFrame then return end
+    local point, relPoint, x, y = GetZoneAnchor()
     if GetToggle("zoneClockDraggable") then
         zoneFrame:SetParent(UIParent)
         -- Match the minimap stack so zone text stays above the minimap but not above unrelated UI.
         zoneFrame:SetFrameStrata(MINIMAP:GetFrameStrata() or "LOW")
         zoneFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 5)
         zoneFrame:SetMovable(true)
-        -- Outer frame is much wider than the text; let it cross the screen edge.
-        -- ClampFrameToTextOnScreen keeps the visible glyphs on-screen after drag.
+        -- Outer frame can be much wider than the text in CENTER mode; let it
+        -- cross the screen edge. ClampFrameToTextOnScreen keeps the visible
+        -- glyphs on-screen after drag.
         zoneFrame:SetClampedToScreen(false)
         if not ApplySavedFramePos(zoneFrame, "zoneTextPos") then
             zoneFrame:ClearAllPoints()
-            if GetToggle("zoneClockInside") then
-                zoneFrame:SetPoint("TOP", MINIMAP, "TOP", 0, -6)
-            else
-                zoneFrame:SetPoint("BOTTOM", MINIMAP, "TOP", 0, 4)
-            end
+            zoneFrame:SetPoint(point, MINIMAP, relPoint, x, y)
         end
         HookZoneClockDragScripts()
     else
@@ -571,31 +605,50 @@ local function ApplyZoneTextLayout()
         if GetToggle("zoneClockInside") then
             zoneFrame:SetFrameStrata("HIGH")
             zoneFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 25)
-            zoneFrame:SetPoint("TOP", MINIMAP, "TOP", 0, -6)
-        else
-            zoneFrame:SetPoint("BOTTOM", MINIMAP, "TOP", 0, 4)
         end
+        zoneFrame:SetPoint(point, MINIMAP, relPoint, x, y)
         HookZoneClockDragScripts()
+    end
+end
+
+M.RefreshZoneLayout = ApplyZoneTextLayout
+
+local function GetClockAlign()
+    local a = GetSettings().clockAlign
+    if a == "LEFT" or a == "RIGHT" then return a end
+    return "CENTER"
+end
+
+local function GetClockAnchor()
+    local align  = GetClockAlign()
+    local inside = GetToggle("zoneClockInside")
+    if align == "LEFT" then
+        if inside then return "BOTTOMLEFT", "BOTTOMLEFT",  6,  6
+        else           return "TOPLEFT",    "BOTTOMLEFT",  0, -4 end
+    elseif align == "RIGHT" then
+        if inside then return "BOTTOMRIGHT", "BOTTOMRIGHT", -6,  6
+        else           return "TOPRIGHT",    "BOTTOMRIGHT",  0, -4 end
+    else
+        if inside then return "BOTTOM", "BOTTOM",  0,  6
+        else           return "TOP",    "BOTTOM",  0, -4 end
     end
 end
 
 local function ApplyClockLayout()
     if not clockFrame then return end
+    local point, relPoint, x, y = GetClockAnchor()
     if GetToggle("zoneClockDraggable") then
         clockFrame:SetParent(UIParent)
         clockFrame:SetFrameStrata(MINIMAP:GetFrameStrata() or "LOW")
         clockFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 5)
         clockFrame:SetMovable(true)
-        -- Outer frame is much wider than the text; let it cross the screen edge.
-        -- ClampFrameToTextOnScreen keeps the visible glyphs on-screen after drag.
+        -- Outer frame can be much wider than the text in CENTER mode; let it
+        -- cross the screen edge. ClampFrameToTextOnScreen keeps the visible
+        -- glyphs on-screen after drag.
         clockFrame:SetClampedToScreen(false)
         if not ApplySavedFramePos(clockFrame, "clockPos") then
             clockFrame:ClearAllPoints()
-            if GetToggle("zoneClockInside") then
-                clockFrame:SetPoint("BOTTOM", MINIMAP, "BOTTOM", 0, 6)
-            else
-                clockFrame:SetPoint("TOP", MINIMAP, "BOTTOM", 0, -4)
-            end
+            clockFrame:SetPoint(point, MINIMAP, relPoint, x, y)
         end
         HookZoneClockDragScripts()
     else
@@ -606,13 +659,13 @@ local function ApplyClockLayout()
         if GetToggle("zoneClockInside") then
             clockFrame:SetFrameStrata("HIGH")
             clockFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 25)
-            clockFrame:SetPoint("BOTTOM", MINIMAP, "BOTTOM", 0, 6)
-        else
-            clockFrame:SetPoint("TOP", MINIMAP, "BOTTOM", 0, -4)
         end
+        clockFrame:SetPoint(point, MINIMAP, relPoint, x, y)
         HookZoneClockDragScripts()
     end
 end
+
+M.RefreshClockLayout = ApplyClockLayout
 
 local function CreateZoneText()
     if zoneFrame then return end
@@ -677,12 +730,22 @@ end
 
 -- ─── Clock ──────────────────────────────────────────────────────────────────
 
--- Single CENTER anchor: never stretch the font string between LEFT/RIGHT (that forces truncation / "22:...").
+-- CENTER uses a single CENTER anchor (never stretch LEFT/RIGHT or the string truncates to "22:...").
+-- LEFT/RIGHT alignment pins the font string to the matching edge of a tight frame.
 local function LayoutClockFontString()
     if not clockFontStr or not clockFrame then return end
     clockFontStr:ClearAllPoints()
-    clockFontStr:SetPoint("CENTER", clockFrame, "CENTER", 0, 0)
-    clockFontStr:SetJustifyH("CENTER")
+    local align = GetClockAlign()
+    if align == "LEFT" then
+        clockFontStr:SetPoint("LEFT",  clockFrame, "LEFT",   4, 0)
+        clockFontStr:SetJustifyH("LEFT")
+    elseif align == "RIGHT" then
+        clockFontStr:SetPoint("RIGHT", clockFrame, "RIGHT", -4, 0)
+        clockFontStr:SetJustifyH("RIGHT")
+    else
+        clockFontStr:SetPoint("CENTER", clockFrame, "CENTER", 0, 0)
+        clockFontStr:SetJustifyH("CENTER")
+    end
     clockFontStr:SetJustifyV("MIDDLE")
     clockFontStr:SetWordWrap(false)
 end
@@ -694,9 +757,14 @@ local function FitClockFrameToText()
     local uw = clockFontStr.GetUnboundedStringWidth and clockFontStr:GetUnboundedStringWidth()
         or clockFontStr:GetStringWidth()
     local textH = clockFontStr:GetStringHeight()
-    -- ~2× measured width + padding: 12h + AM/PM, locales, outline, and UI scale cannot clip.
     clockFrame:SetHeight(math.max(textH + 8, (s2.clockFontSize or 12) + 6))
-    clockFrame:SetWidth(math.max(uw * 2 + 32, 144))
+    if GetClockAlign() == "CENTER" then
+        -- ~2× measured width + padding: 12h + AM/PM, locales, outline, and UI scale cannot clip.
+        clockFrame:SetWidth(math.max(uw * 2 + 32, 144))
+    else
+        -- LEFT/RIGHT uses a tight frame so the text sits flush against the minimap edge.
+        clockFrame:SetWidth(math.max(uw + 16, 40))
+    end
     ApplyHitInsetsForText(clockFrame, clockFontStr, 4, 2)
 end
 
@@ -763,7 +831,18 @@ local function ApplyClockFont()
     local s = GetSettings()
     local fontPath = ResolveFontPath(s.clockFont) or OneWoW_GUI:GetFont()
     OneWoW_GUI:SafeSetFont(clockFontStr, fontPath, s.clockFontSize, "OUTLINE")
-    clockFontStr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local usedClassColor = false
+    if GetToggle("classClockColor") then
+        local _, class = UnitClass("player")
+        local color = (CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[class]) or RAID_CLASS_COLORS[class]
+        if color then
+            clockFontStr:SetTextColor(color.r, color.g, color.b)
+            usedClassColor = true
+        end
+    end
+    if not usedClassColor then
+        clockFontStr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
     LayoutClockFontString()
     if clockFrame then
         UpdateClockDisplay()
@@ -867,6 +946,11 @@ local function CreateClickOverlay()
     if clickOverlay then return end
     clickOverlay = CreateFrame("Frame", nil, MINIMAP)
     clickOverlay:SetAllPoints(MINIMAP)
+    -- Pin at Minimap's own level so children of Minimap (TomTom waypoints,
+    -- LibDBIcon buttons, other pin addons) stay above us and receive their
+    -- own right-clicks and mouseover. Our click-actions still fire when a
+    -- right/middle/Btn4/Btn5 click lands on empty minimap pixels.
+    clickOverlay:SetFrameLevel(MINIMAP:GetFrameLevel())
     clickOverlay:EnableMouse(true)
     clickOverlay:SetPassThroughButtons("LeftButton")
     clickOverlay:SetPropagateMouseMotion(true)
@@ -1075,6 +1159,16 @@ local function ApplyElementVisibility()
             ExpansionLandingPageMinimapButton:Show()
         else
             HideElement(ExpansionLandingPageMinimapButton)
+        end
+    end
+
+    if GameTimeFrame then
+        if GetToggle("showGameTime") then
+            GameTimeFrame:SetParent(GetShowParent(GameTimeFrame))
+            savedParents[GameTimeFrame] = nil
+            GameTimeFrame:Show()
+        else
+            HideElement(GameTimeFrame)
         end
     end
 
@@ -1883,8 +1977,11 @@ function M:OnToggle(toggleId, value)
         ShowClickOverlay()
     elseif toggleId == "showMail" or toggleId == "showCraftingOrder"
         or toggleId == "showDifficulty" or toggleId == "showTracking"
-        or toggleId == "showMissions" or toggleId == "hideBlizzardExpansionWhenPlumber" then
+        or toggleId == "showMissions" or toggleId == "showGameTime"
+        or toggleId == "hideBlizzardExpansionWhenPlumber" then
         ApplyElementVisibility()
+    elseif toggleId == "classClockColor" then
+        ApplyClockFont()
     elseif toggleId == "hideAddonIcons" then
         ApplyHideAddonIcons()
     elseif toggleId == "combatFade" then
