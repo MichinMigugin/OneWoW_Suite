@@ -551,6 +551,13 @@ frame:SetScript("OnEvent", function(self, event, arg1)
                 Addon.MonitorTab:RestorePinnedMonitorsPending()
             end
         end)
+        if Addon.InstallNotice and not Addon.InstallNotice:IsAcknowledged() then
+            C_Timer.After(4.0, function()
+                if Addon.InstallNotice and not Addon.InstallNotice:IsAcknowledged() then
+                    Addon.InstallNotice:Show()
+                end
+            end)
+        end
     end
 end)
 
@@ -559,6 +566,16 @@ SLASH_ONEWOW_DEVTOOL2 = "/devtool"
 SLASH_ONEWOW_DEVTOOL3 = "/devtools"
 SLASH_ONEWOW_DEVTOOL4 = "/1wdt"
 SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
+    msg = (type(msg) == "string") and msg:lower():gsub("^%s+", ""):gsub("%s+$", "") or ""
+
+    if msg == "notice" then
+        if Addon.InstallNotice then
+            Addon.InstallNotice:ResetAck()
+            Addon.InstallNotice:Show(true)
+        end
+        return
+    end
+
     if not Addon.UI then
         Addon:Print(Addon.L["MSG_UI_NOT_LOADED"])
         return

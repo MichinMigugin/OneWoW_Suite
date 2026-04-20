@@ -197,6 +197,7 @@ function Addon:InitializeDatabase()
             },
             deferTextureBrowserData = false,
             deferSoundBrowserData = false,
+            installNoticeAcknowledged = false,
             tabs = tabDefaults,
         },
     }

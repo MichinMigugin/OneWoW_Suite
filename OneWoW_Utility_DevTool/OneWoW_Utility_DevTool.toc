@@ -73,6 +73,7 @@ Modules\SoundBrowser.lua
 Modules\MonitorTab.lua
 Modules\EditorSyntax.lua
 Modules\EditorEngine.lua
+Modules\InstallNotice.lua
 
 # Main UI shell (defines Addon.UI, StyleContentPanel, Initialize)
 GUI\MainWindow.lua

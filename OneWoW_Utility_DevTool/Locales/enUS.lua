@@ -372,6 +372,14 @@ Addon.Locales["enUS"] = {
     ["MSG_UI_NOT_LOADED"] = "UI not loaded yet",
     ["ADDON_COMPARTMENT_HINT"] = "Click to toggle window",
     ["ADDON_TOOLTIP_TITLE"] = "|cFFFFD100OneWoW|r - Utility: DevTool",
+
+    -- Install Notice (shown on first load to remind users this is a developer addon)
+    ["INSTALL_NOTICE_ADDON_TITLE"] = "|cFFFFD100OneWoW|r - Utility: |cFFFF0000DevTool|r",
+    ["INSTALL_NOTICE_TITLE"] = "Heads up - this is a developer addon",
+    ["INSTALL_NOTICE_MESSAGE"] = "OneWoW DevTool is not commonly installed. It exists to assist with addon development and troubleshooting (frame inspection, event monitoring, error capture, texture/font/sound browsing, etc.).\n\nIf you just installed all OneWoW addons from CurseForge as a bundle, you may want to remove DevTool unless you actively develop or debug addons.",
+    ["INSTALL_NOTICE_DONT_SHOW"] = "Don't show this again",
+    ["INSTALL_NOTICE_BTN_OK"] = "Got it",
+    ["MSG_INSTALL_NOTICE_RESET"] = "Install notice will show again on next login.",
     ["MSG_REOPEN_ON_RELOAD"] = "Reopen on /reload",
     ["MSG_ADDED_COMMON_EVENTS"] = "Added common events ({count} total)",
     ["MSG_SELECTED_ALL_EVENTS"] = "Selected all events ({count} total)",
