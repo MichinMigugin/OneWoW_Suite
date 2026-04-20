@@ -231,6 +231,18 @@ local function BuildGeneralTab(sc, L, db, GUI)
             end,
         })
 
+        intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
+            yOffset = intY,
+            label = L["SETTING_SHOW_KEYWORDS_TOOLTIP"],
+            description = L["DESC_SHOW_KEYWORDS_TOOLTIP"],
+            isEnabled = true,
+            value = db.global.showKeywordsInTooltips,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showKeywordsInTooltips", newVal)
+            end,
+        })
+
         yOffset = FinalizeContainer(intContainer, intY, yOffset)
     end
 

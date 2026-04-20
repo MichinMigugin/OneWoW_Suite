@@ -277,13 +277,23 @@ local FLAG_REGISTRY = {
 
 local KEYWORD_MAP = {}
 
+local KEYWORD_CANONICAL = {}
+local KEYWORD_CANONICAL_ORDER = {}
+
 local function RegisterKeyword(nameOrNames, func)
+    local names
     if type(nameOrNames) == "table" then
-        for _, name in ipairs(nameOrNames) do
-            KEYWORD_MAP[strlower(name)] = func
-        end
+        names = nameOrNames
     else
-        KEYWORD_MAP[strlower(nameOrNames)] = func
+        names = { nameOrNames }
+    end
+    for _, name in ipairs(names) do
+        KEYWORD_MAP[strlower(name)] = func
+    end
+    if not KEYWORD_CANONICAL[func] then
+        local firstName = strlower(names[1])
+        KEYWORD_CANONICAL[func] = firstName
+        tinsert(KEYWORD_CANONICAL_ORDER, { name = firstName, fn = func })
     end
 end
 
@@ -2133,14 +2143,43 @@ end
 --- Register custom keyword (for third-party / suite extensions).
 --- Wipes the compiled cache since available keywords changed.
 function PE:RegisterKeyword(nameOrNames, func)
+    local names
     if type(nameOrNames) == "table" then
-        for _, name in ipairs(nameOrNames) do
-            KEYWORD_MAP[strlower(name)] = func
-        end
+        names = nameOrNames
     else
-        KEYWORD_MAP[strlower(nameOrNames)] = func
+        names = { nameOrNames }
+    end
+    for _, name in ipairs(names) do
+        KEYWORD_MAP[strlower(name)] = func
+    end
+    if not KEYWORD_CANONICAL[func] then
+        local firstName = strlower(names[1])
+        KEYWORD_CANONICAL[func] = firstName
+        tinsert(KEYWORD_CANONICAL_ORDER, { name = firstName, fn = func })
     end
     wipe(compiledCache)
+end
+
+--- List every registered keyword that matches a given item.
+--- Returns an ordered array of canonical keyword names (without the leading "#").
+--- Aliases (e.g. #grey / #gray for #poor) are deduplicated by predicate-function
+--- identity; the first name a keyword was registered under is treated as canonical.
+--- When bagID/slotID are nil, slot-specific keywords (#recent, #new, #locked,
+--- binding-state keywords, etc.) simply do not match.
+function PE:GetMatchingKeywords(itemID, bagID, slotID, itemInfo)
+    local results = {}
+    if not itemID then return results end
+
+    local props = self:BuildProps(itemID, bagID, slotID, itemInfo)
+    if not props then return results end
+
+    for _, entry in ipairs(KEYWORD_CANONICAL_ORDER) do
+        local ok, matched = pcall(entry.fn, props)
+        if ok and matched then
+            tinsert(results, entry.name)
+        end
+    end
+    return results
 end
 
 --- Register custom numeric/string property for comparison syntax.

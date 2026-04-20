@@ -53,6 +53,7 @@ Modules\GuildBankCategoryManager.lua
 
 # Integrations
 Integrations\OneWoWBagsIntegration.lua
+Integrations\OneWoWTooltips.lua
 Integrations\TSMIntegration.lua
 
 # Controllers

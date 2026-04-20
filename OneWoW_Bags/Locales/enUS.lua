@@ -310,6 +310,9 @@ OneWoW_Bags.Locales["enUS"] = {
     ["DESC_ENABLE_JUNK_CAT"] = "Combine all junk items (poor quality and 1W-marked) into a single dedicated category.",
     ["SETTING_ENABLE_UPGRADE_CAT"] = "1W Upgrades Category",
     ["DESC_ENABLE_UPGRADE_CAT"] = "Group items that are gear upgrades for your character into a dedicated category.",
+    ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "Show #keywords in tooltips",
+    ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "While the Category Manager is open, add the list of matching #keywords (the same syntax used in custom category rules and the search bar) to item tooltips. Useful for building category rules; hidden at all other times.",
+    ["TOOLTIP_KEYWORDS_HEADER"] = "Matched keywords:",
 
     ["SETTING_UNUSABLE_OVERLAY"] = "Red Overlay on Unusable Items",
     ["DESC_UNUSABLE_OVERLAY"] = "Show a semi-transparent red overlay on items your character cannot use.",

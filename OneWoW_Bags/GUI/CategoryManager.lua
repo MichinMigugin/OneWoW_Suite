@@ -1984,3 +1984,7 @@ function CatMgrUI:Toggle()
         CatMgrUI:Show()
     end
 end
+
+function CatMgrUI:IsOpen()
+    return managerFrame ~= nil and managerFrame:IsShown() == true
+end

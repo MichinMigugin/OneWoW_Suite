@@ -110,6 +110,7 @@ local defaults = {
         moveOtherToBottom = false,
         moveRecentToTop = false,
         pinnedCategoryShowsWhenDisabled = true,
+        showKeywordsInTooltips = true,
     },
 }
 

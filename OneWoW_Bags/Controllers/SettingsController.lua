@@ -58,6 +58,9 @@ SettingsController.appliers = {
         self.addon:RequestLayoutRefresh("all")
         self.addon.CategoryManagerUI:Refresh()
     end,
+    showKeywordsInTooltips = function(self, db, value)
+        db.global.showKeywordsInTooltips = value
+    end,
     moveRecentToTop = function(self, db, value)
         db.global.moveRecentToTop = value
         self.addon:RequestLayoutRefresh("all")
