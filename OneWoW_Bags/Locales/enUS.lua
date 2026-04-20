@@ -333,6 +333,9 @@ OneWoW_Bags.Locales["enUS"] = {
     ["GROUP_TYPE"] = "Type",
     ["GROUP_SLOT"] = "Slot",
     ["GROUP_QUALITY"] = "Quality",
+    ["GROUP_EQUIPMENT_SET"] = "Equipment Set",
+    ["EQUIPMENT_SET_MULTIPLE"] = "Multiple",
+    ["EQUIPMENT_SET_NONE"] = "No Set",
     ["CAT_SORT"] = "Sort",
 
     ["SECTION_ITEM_DISPLAY"] = "Item Display",

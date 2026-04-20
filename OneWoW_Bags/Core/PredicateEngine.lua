@@ -20,7 +20,7 @@ local PE = OneWoW_Bags.PredicateEngine
 
 local tconcat, tinsert, wipe = table.concat, tinsert, wipe
 local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
-local strlower, strfind, strmatch = string.lower, string.find, string.match
+local strlower, strfind, strmatch, strtrim, strsplit = string.lower, string.find, string.match, strtrim, strsplit
 local rawset, rawget, setmetatable = rawset, rawget, setmetatable
 local pcall, select = pcall, select
 local Enum = Enum
@@ -82,6 +82,7 @@ local HS_IDS = {
 local KNOWLEDGE_ICONS = {[236225]=true, [136175]=true}
 
 -- information about the item source: Enum.ItemCreationContext
+-- https://warcraft.wiki.gg/wiki/ItemLink#Item_Context
 local ITEM_CONTEXT_CATEGORY = {}
 local function MapContexts(category, values)
     for _, v in ipairs(values) do
@@ -721,9 +722,10 @@ RegisterKeyword("openable", function(p)
 end)
 
 -- ---- 7.23  Special keywords ----
-RegisterKeyword("hearthstone", function(p) return p._isHearthstone end)
-RegisterKeyword("keystone",    function(p) return p._isKeystone end)
-RegisterKeyword("tierset",     function(p) return p.isTierSet end)
+RegisterKeyword("hearthstone",  function(p) return p.isHearthstone end)
+RegisterKeyword("keystone",     function(p) return p.isKeystone end)
+RegisterKeyword("tierset",      function(p) return p.isTierSet end)
+RegisterKeyword("battlepay",    function(p) return p.isBattlePayItem end)
 
 -- ---- 7.24  Stat keywords ----
 -- Primary stats
@@ -1288,11 +1290,6 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     local cacheKey = GetItemCacheKey(itemID, bagID, slotID, itemInfo) or tostring(itemID)
     if propsCache[cacheKey] then return propsCache[cacheKey] end
 
-    local itemLocation
-    if bagID and slotID then
-        itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
-    end
-
     local petData = GetBattlePetData(itemID, hyperlink)
 
     local props = {
@@ -1353,15 +1350,35 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isEnchanted = false
     props.isCrafted = false
     props.isRefundable = false
+    props.isBattlePayItem = false
+    props.isInEquipmentSet = false
+    props.equipmentSetList = {}
 
-    -- ---- C_Container.GetContainerItemInfo ----
-    local containerInfo
+    local containerInfo, itemLocation
     if bagID and slotID then
         containerInfo = C_Container.GetContainerItemInfo(bagID, slotID)
+        itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+
+        props.isNew = C_NewItems.IsNewItem(bagID, slotID) == true
+        props.isBattlePayItem = C_Container.IsBattlePayItem(bagID, slotID) == true
+
+        -- ---- Equipment set (API-based, no cache needed) ----
+        local inSet, setList = C_Container.GetContainerItemEquipmentSetInfo(bagID, slotID)
+        props.isInEquipmentSet = inSet == true
+
+        if props.isInEquipmentSet and type(setList) == "string" and setList ~= "" then
+            local parts = { strsplit(",", setList) }
+            for i = 1, #parts do
+                local n = strtrim(parts[i])
+                if n ~= "" then
+                    tinsert(props.equipmentSetList, n)
+                end
+            end
+        end
     end
+
     props.count    = containerInfo and containerInfo.stackCount or itemInfo.count or 1
     props.isLocked = containerInfo and containerInfo.isLocked or false
-    props.isNew    = (bagID and slotID and C_NewItems.IsNewItem(bagID, slotID)) == true
 
     -- ---- Computed value ----
     props.totalValue = props.vendorPrice * props.count
@@ -1373,13 +1390,6 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     -- ---- Equipment ----
     props.isEquipment = C_Item.IsEquippableItem(itemID) == true
-
-    -- ---- Equipment set (API-based, no cache needed) ----
-    props.isInEquipmentSet = false
-    if bagID and slotID then
-        local inSet = C_Container.GetContainerItemEquipmentSetInfo(bagID, slotID)
-        props.isInEquipmentSet = inSet == true
-    end
 
     -- ---- Usability ----
     props.isUsable = (C_Item.IsUsableItem(itemID) == true)
@@ -1432,15 +1442,15 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     end
 
     -- ---- Special items ----
-    props._isHearthstone = HS_IDS[itemID] or false
-    if not props._isHearthstone and props.isToy then
+    props.isHearthstone = HS_IDS[itemID] or false
+    if not props.isHearthstone and props.isToy then
         local hsName = C_Item.GetItemNameByID(itemID)
         if hsName and strfind(strlower(hsName), "hearthstone") then
-            props._isHearthstone = true
+            props.isHearthstone = true
         end
     end
 
-    props._isKeystone = C_Item.IsItemKeystoneByID(itemID) == true
+    props.isKeystone = C_Item.IsItemKeystoneByID(itemID) == true
 
     -- ---- Crafted quality ----
     props.craftedQuality = hyperlink and C_TradeSkillUI.GetItemCraftedQualityByItemInfo(hyperlink) or 0

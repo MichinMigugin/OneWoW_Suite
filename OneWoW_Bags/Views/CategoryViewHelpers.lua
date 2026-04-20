@@ -638,6 +638,33 @@ function H.GroupItemsBy(items, groupBy, PE, L)
             tinsert(groups[qName], btn)
         end
         sort(groupOrder, function(a, b) return a.sortKey > b.sortKey end)
+    elseif groupBy == "equipmentset" then
+        local MULTI = L["EQUIPMENT_SET_MULTIPLE"]
+        local NONE  = L["EQUIPMENT_SET_NONE"]
+        for _, btn in ipairs(items) do
+            local key = NONE
+            if btn.owb_itemInfo then
+                local props = PE:BuildProps(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
+                local list = props.equipmentSetList
+                if list and #list > 1 then
+                    key = MULTI
+                elseif list and #list == 1 then
+                    key = list[1]
+                end
+            end
+            if not groups[key] then
+                groups[key] = {}
+                tinsert(groupOrder, { name = key, sortKey = key })
+            end
+            tinsert(groups[key], btn)
+        end
+        sort(groupOrder, function(a, b)
+            if a.name == MULTI then return false end
+            if b.name == MULTI then return true end
+            if a.name == NONE  then return false end
+            if b.name == NONE  then return true end
+            return a.name < b.name
+        end)
     else
         return nil, nil
     end
