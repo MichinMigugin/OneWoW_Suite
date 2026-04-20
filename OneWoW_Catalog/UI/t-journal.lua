@@ -23,9 +23,49 @@ local selectedDifficulty = "all"
 local expandedEncounters = {}
 local dataAddon = nil
 
-local filterItemType = "all"
+-- Multi-select Item Type filter: keys from ITEM_TYPE_DEFS map to item.special values.
+-- Empty table = "Show All" (no filter applied).
+local filterItemTypes = {}
 local filterCollection = "all"
 local hideNonCollectable = false
+
+-- Ordered definition for the Item Type filter menu. Keys here drive both the menu rows
+-- and the filterItemTypes set; the `special` field is what each entry matches against
+-- item.special in ItemMatchesFilters.
+local ITEM_TYPE_DEFS = {
+    { key = "tmog",    special = "TMog",    labelKey = "JOURNAL_FILTER_TMOG"    },
+    { key = "mounts",  special = "Mount",   labelKey = "JOURNAL_FILTER_MOUNTS"  },
+    { key = "pets",    special = "Pet",     labelKey = "JOURNAL_FILTER_PETS"    },
+    { key = "recipes", special = "Recipe",  labelKey = "JOURNAL_FILTER_RECIPES" },
+    { key = "toys",    special = "Toy",     labelKey = "JOURNAL_FILTER_TOYS"    },
+    { key = "quest",   special = "Quest",   labelKey = "JOURNAL_FILTER_QUEST"   },
+    { key = "housing", special = "Housing", labelKey = "JOURNAL_FILTER_HOUSING" },
+}
+
+local function CountSelectedItemTypes()
+    local n = 0
+    for _ in pairs(filterItemTypes) do n = n + 1 end
+    return n
+end
+
+local function GetItemTypeFilterLabel()
+    local count = CountSelectedItemTypes()
+    if count == 0 then
+        return L["JOURNAL_FILTER_SHOW_ALL"]
+    end
+    if count == 1 then
+        for _, def in ipairs(ITEM_TYPE_DEFS) do
+            if filterItemTypes[def.key] then
+                return L[def.labelKey] or def.key
+            end
+        end
+    end
+    return string.format(L["JOURNAL_FILTER_N_SELECTED"], count)
+end
+
+local function ResetItemTypeFilter()
+    wipe(filterItemTypes)
+end
 
 local CARD_HEIGHT = 85
 local ITEM_ROW_HEIGHT = 32
@@ -94,15 +134,19 @@ local function FormatDifficulties(difficulties)
 end
 
 local function ItemMatchesFilters(item, addon)
-    if filterItemType ~= "all" then
+    if next(filterItemTypes) ~= nil then
+        -- When at least one Item Type is selected, an item must match one of the chosen
+        -- specials; items with no special (e.g. regular gear) are excluded.
         local special = item.special
-        if filterItemType == "tmog"    and special ~= "TMog"    then return false end
-        if filterItemType == "mounts"  and special ~= "Mount"   then return false end
-        if filterItemType == "pets"    and special ~= "Pet"     then return false end
-        if filterItemType == "recipes" and special ~= "Recipe"  then return false end
-        if filterItemType == "toys"    and special ~= "Toy"     then return false end
-        if filterItemType == "quest"   and special ~= "Quest"   then return false end
-        if filterItemType == "housing" and special ~= "Housing" then return false end
+        if not special then return false end
+        local matched = false
+        for _, def in ipairs(ITEM_TYPE_DEFS) do
+            if filterItemTypes[def.key] and special == def.special then
+                matched = true
+                break
+            end
+        end
+        if not matched then return false end
     end
 
     if filterCollection ~= "all" and item.special then
@@ -809,27 +853,40 @@ local function InitializeDropdowns(panels)
     end
 
     if panels.itemFilterDropdown then
-        panels.itemFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
+        panels.itemFilterText:SetText(GetItemTypeFilterLabel())
         OneWoW_GUI:AttachFilterMenu(panels.itemFilterDropdown, {
             searchable = false,
-            getActiveValue = function() return filterItemType end,
             buildItems = function()
-                return {
-                    { value = "all",     text = L["JOURNAL_FILTER_SHOW_ALL"] },
-                    { value = "tmog",    text = L["JOURNAL_FILTER_TMOG"]     },
-                    { value = "mounts",  text = L["JOURNAL_FILTER_MOUNTS"]   },
-                    { value = "pets",    text = L["JOURNAL_FILTER_PETS"]     },
-                    { value = "recipes", text = L["JOURNAL_FILTER_RECIPES"]  },
-                    { value = "toys",    text = L["JOURNAL_FILTER_TOYS"]     },
-                    { value = "quest",   text = L["JOURNAL_FILTER_QUEST"]    },
-                    { value = "housing", text = L["JOURNAL_FILTER_HOUSING"]  },
-                }
+                local items = {}
+                for _, def in ipairs(ITEM_TYPE_DEFS) do
+                    local capKey = def.key
+                    table.insert(items, {
+                        type    = "checkbox",
+                        text    = L[def.labelKey] or def.key,
+                        checked = filterItemTypes[capKey] == true,
+                        onToggle = function(checked)
+                            filterItemTypes[capKey] = checked and true or nil
+                            panels.itemFilterText:SetText(GetItemTypeFilterLabel())
+                            if selectedInstance then
+                                RefreshDetailView(false)
+                            end
+                        end,
+                    })
+                end
+                table.insert(items, { type = "divider" })
+                table.insert(items, {
+                    value = "__reset__",
+                    text  = L["JOURNAL_FILTER_RESET"],
+                })
+                return items
             end,
-            onSelect = function(value, text)
-                filterItemType = value
-                panels.itemFilterText:SetText(value == "all" and L["JOURNAL_FILTER_SHOW_ALL"] or text)
-                if selectedInstance then
-                    RefreshDetailView(false)
+            onSelect = function(value)
+                if value == "__reset__" then
+                    ResetItemTypeFilter()
+                    panels.itemFilterText:SetText(GetItemTypeFilterLabel())
+                    if selectedInstance then
+                        RefreshDetailView(false)
+                    end
                 end
             end,
         })
@@ -1019,13 +1076,13 @@ function ns.UI.CreateJournalTab(parent)
         searchText         = ""
         expansionFilter    = 0
         instanceTypeFilter = "all"
-        filterItemType     = "all"
+        ResetItemTypeFilter()
         filterCollection   = "all"
         hideNonCollectable = false
         searchBox:SetText("")
         searchBox:ClearFocus()
         expText:SetText(L["JOURNAL_EXPANSION_ALL"])
-        itemFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
+        itemFilterText:SetText(GetItemTypeFilterLabel())
         collectionFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
         chkBox:SetChecked(false)
         for _, b in ipairs(typeButtons) do

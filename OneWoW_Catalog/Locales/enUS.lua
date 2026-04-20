@@ -59,6 +59,8 @@ L["JOURNAL_FILTER_QUEST"]          = "Quest Items"
 L["JOURNAL_FILTER_HOUSING"]        = "Housing"
 L["JOURNAL_FILTER_COLLECTED"]      = "Collected Only"
 L["JOURNAL_FILTER_NOT_COLLECTED"]  = "Not Collected Only"
+L["JOURNAL_FILTER_RESET"]          = "Reset"
+L["JOURNAL_FILTER_N_SELECTED"]     = "%d selected"
 
 L["JOURNAL_CARD_RAID"]         = "Raid"
 L["JOURNAL_CARD_DUNGEON"]      = "Dungeon"
