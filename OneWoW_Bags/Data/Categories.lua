@@ -761,3 +761,17 @@ PE:RegisterKeyword("recent", function(p)
     }
     return Categories:SlotMatchesRecent(p.id, p._bagID, p._slotID, itemInfo)
 end)
+
+if TransmogUpgradeMaster_API then
+    PE:RegisterKeyword("catalyst", function(p)
+        local hyperlink = p.hyperlink
+        if not hyperlink then return false end
+        return select(1, TransmogUpgradeMaster_API.IsAppearanceMissing(hyperlink)) == true
+    end)
+
+    PE:RegisterKeyword("catalystupgrade", function(p)
+        local hyperlink = p.hyperlink
+        if not hyperlink then return false end
+        return select(2, TransmogUpgradeMaster_API.IsAppearanceMissing(hyperlink)) == true
+    end)
+end

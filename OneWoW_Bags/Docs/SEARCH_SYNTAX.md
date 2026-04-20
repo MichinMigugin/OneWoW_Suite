@@ -406,6 +406,13 @@ These keywords are intended to pair naturally with `#pet`.
 | `#transmog` | Items with a transmog appearance |
 | `#knowntransmog` | Items whose appearance you've collected |
 | `#unknowntransmog` | Items whose appearance you haven't collected |
+| `#catalyst` | **TransmogUpgradeMaster:** first boolean from `IsAppearanceMissing(itemLink)` is true |
+| `#catalystupgrade` | **TransmogUpgradeMaster:** second boolean from `IsAppearanceMissing(itemLink)` is true |
+
+> **`#catalyst` / `#catalystupgrade`:** These keywords are registered only when
+> the [TransmogUpgradeMaster](https://www.curseforge.com/wow/addons/transmog-upgrade-master)
+> addon is loaded (OneWoW Bags optional dependency). They require a full item
+> link for the slot; items without link data never match.
 
 ### Stats
 
