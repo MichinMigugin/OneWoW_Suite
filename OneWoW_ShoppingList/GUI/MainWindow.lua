@@ -511,6 +511,25 @@ function MainWindow:BuildSettingsPanel()
     end)
     yOff = yOff - 26
 
+    local wrapNamesCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_WRAP_NAMES"] })
+    wrapNamesCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
+    wrapNamesCb:SetChecked(db and db.global.settings.wrapItemNames ~= false)
+    wrapNamesCb:SetScript("OnClick", function(self)
+        local dbRef = GetDB()
+        if dbRef then
+            dbRef.global.settings.wrapItemNames = self:GetChecked()
+            MainWindow:RefreshItemList()
+        end
+    end)
+    wrapNamesCb:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["OWSL_SETTINGS_WRAP_NAMES"], 1, 1, 1)
+        GameTooltip:AddLine(L["OWSL_SETTINGS_WRAP_NAMES_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    wrapNamesCb:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    yOff = yOff - 26
+
     local overlayCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_ENABLE_OVERLAY"] })
     overlayCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
     local settings = db and db.global.settings or {}
@@ -547,6 +566,20 @@ function MainWindow:BuildSettingsPanel()
         if dbRef then
             dbRef.global.settings.showProfessionButtons = self:GetChecked()
             ns.ProfessionUI:UpdateVisibility()
+        end
+    end)
+    yOff = yOff - 26
+
+    local ordersBtnCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_SHOW_ORDERS_BUTTONS"] })
+    ordersBtnCb:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, yOff)
+    ordersBtnCb:SetChecked(curS.showOrdersButtons ~= false)
+    ordersBtnCb:SetScript("OnClick", function(self)
+        local dbRef = GetDB()
+        if dbRef then
+            dbRef.global.settings.showOrdersButtons = self:GetChecked()
+            if ns.OrdersUI and ns.OrdersUI.UpdateVisibility then
+                ns.OrdersUI:UpdateVisibility()
+            end
         end
     end)
     yOff = yOff - 26
@@ -950,14 +983,16 @@ function MainWindow:RefreshItemList()
     local rowHeight = 32
     local rowGap    = 2
     local yOffset   = -2
+    local wrapNames = GetSettings().wrapItemNames ~= false
 
     local function RepositionAllRows()
         local y = -2
         for _, r in ipairs(itemRows) do
+            local rH = r.customHeight or rowHeight
             r:ClearAllPoints()
             r:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  0, y)
             r:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, y)
-            y = y - (rowHeight + rowGap)
+            y = y - (rH + rowGap)
             if r.isExpanded and r.expandedFrame and r.expandedFrame:IsShown() then
                 y = y - (r.expandedFrame:GetHeight() + rowGap)
             end
@@ -1006,8 +1041,24 @@ function MainWindow:RefreshItemList()
         nameText:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
         nameText:SetWidth(150)
         nameText:SetJustifyH("LEFT")
-        nameText:SetWordWrap(false)
+        if wrapNames then
+            nameText:SetWordWrap(true)
+            nameText:SetNonSpaceWrap(true)
+            nameText:SetMaxLines(2)
+        else
+            nameText:SetWordWrap(false)
+            nameText:SetNonSpaceWrap(false)
+        end
         nameText:SetText(itemData.displayName)
+
+        if wrapNames then
+            local nameH      = nameText:GetStringHeight() or 0
+            local neededRowH = math.ceil(nameH) + 8
+            if neededRowH > rowHeight then
+                row:SetHeight(neededRowH)
+                row.customHeight = neededRowH
+            end
+        end
 
         local qtyBox = OneWoW_GUI:CreateEditBox(row, { width = 45, height = 20 })
         qtyBox:SetPoint("LEFT", nameText, "RIGHT", 8, 0)
@@ -1239,7 +1290,7 @@ function MainWindow:RefreshItemList()
 
         row:Show()
         table.insert(itemRows, row)
-        yOffset = yOffset - (rowHeight + rowGap)
+        yOffset = yOffset - ((row.customHeight or rowHeight) + rowGap)
     end
 
     RepositionAllRows()

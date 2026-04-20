@@ -544,7 +544,7 @@ local function CreateButtons(details)
 
     openBtn = CreateFrame("Button", nil, details, "BackdropTemplate")
     openBtn:SetSize(30, 30)
-    openBtn:SetPoint("BOTTOMRIGHT", details, "BOTTOMRIGHT", -10, 10)
+    openBtn:SetPoint("BOTTOMRIGHT", details, "BOTTOMRIGHT", -10, 28)
     openBtn:SetNormalAtlas("Perks-ShoppingCart")
     openBtn:SetPushedAtlas("Perks-ShoppingCart")
     openBtn:SetHighlightAtlas("Perks-ShoppingCart")
@@ -608,7 +608,25 @@ local function CreateButtons(details)
     end)
     addToListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    UpdateButtonsState()
+    OrdersUI:UpdateVisibility()
+end
+
+function OrdersUI:UpdateVisibility()
+    local db = GetDB()
+    local show = not (db and db.global and db.global.settings and db.global.settings.showOrdersButtons == false)
+
+    if show then
+        if openBtn then openBtn:Show() end
+        if makeListBtn then makeListBtn:Show() end
+        if addToActiveBtn then addToActiveBtn:Show() end
+        if addToListBtn then addToListBtn:Show() end
+        UpdateButtonsState()
+    else
+        if openBtn then openBtn:Hide() end
+        if makeListBtn then makeListBtn:Hide() end
+        if addToActiveBtn then addToActiveBtn:Hide() end
+        if addToListBtn then addToListBtn:Hide() end
+    end
 end
 
 function OrdersUI:HookOrdersPage()
@@ -616,6 +634,7 @@ function OrdersUI:HookOrdersPage()
     if not details then return end
 
     CreateButtons(details)
+    OrdersUI:UpdateVisibility()
 
     for _, fnName in ipairs({ "SetOrder", "SetOrderID", "SetOrderInfo", "Refresh", "UpdateOrder", "SetDisplayedOrder" }) do
         if details[fnName] then
