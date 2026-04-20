@@ -122,6 +122,26 @@ local STEP_CATEGORIES = {
         fields = { { key = "questID", label = "Quest ID", hint = "e.g. 86387", width = 160 } },
     },
     {
+        key = "quest_pool",
+        title = "Complete Quest(s) from a Pool",
+        desc = "Auto-completes when you finish N quests from a list of possible IDs. Great for rotating weeklies where one of several quests is active.",
+        trackType = "quest_pool",
+        fields = {
+            { key = "questIDs", label = "Quest IDs (comma-separated)", hint = "e.g. 93889, 91966", width = 320, isList = true, maxLetters = 400 },
+            { key = "pick",     label = "How many to complete?",       hint = "e.g. 1",             width = 80,  default = "1" },
+        },
+    },
+    {
+        key = "quest_pool_account",
+        title = "Complete Quest(s) from a Pool (Account)",
+        desc = "Like Quest Pool, but counts quests completed on any character on your account.",
+        trackType = "quest_pool_account",
+        fields = {
+            { key = "questIDs", label = "Quest IDs (comma-separated)", hint = "e.g. 93889, 91966", width = 320, isList = true, maxLetters = 400 },
+            { key = "pick",     label = "How many to complete?",       hint = "e.g. 1",             width = 80,  default = "1" },
+        },
+    },
+    {
         key = "item",
         title = "Collect Items",
         desc = "Tracks how many of an item you have in your bags. Great for farming.",
@@ -894,14 +914,24 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                     width = field.width or 120,
                     height = 22,
                     placeholderText = field.hint or "",
-                    maxLetters = 12,
+                    maxLetters = field.maxLetters or 12,
                 })
                 fbox:SetPoint("TOPLEFT", flbl, "BOTTOMLEFT", 0, -1)
                 fbox._fieldKey = field.key
 
                 if existing and existing.trackParams and existing.trackType == cat.trackType then
                     local val = existing.trackParams[field.key]
-                    if val then fbox:SetText(tostring(val)) end
+                    if val ~= nil then
+                        if field.isList and type(val) == "table" then
+                            local parts = {}
+                            for _, v in ipairs(val) do
+                                tinsert(parts, tostring(v))
+                            end
+                            fbox:SetText(table.concat(parts, ", "))
+                        else
+                            fbox:SetText(tostring(val))
+                        end
+                    end
                 end
                 if not existing and field.default then
                     fbox:SetText(field.default)
@@ -932,7 +962,18 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                     if w then
                         local val = strtrim(w:GetText() or "")
                         if val ~= "" then
-                            trackParams[field.key] = tonumber(val) or val
+                            if field.isList then
+                                local list = {}
+                                for part in val:gmatch("[^,%s]+") do
+                                    local n = tonumber(part)
+                                    if n then tinsert(list, n) end
+                                end
+                                if #list > 0 then
+                                    trackParams[field.key] = list
+                                end
+                            else
+                                trackParams[field.key] = tonumber(val) or val
+                            end
                         end
                     end
                 end
@@ -952,6 +993,8 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 local max = 1
                 if cat.trackType == "item" then
                     max = tonumber(trackParams.count) or 1
+                elseif cat.trackType == "quest_pool" or cat.trackType == "quest_pool_account" then
+                    max = tonumber(trackParams.pick) or 1
                 end
 
                 local resetVal = dialog._resetDD:GetValue()
