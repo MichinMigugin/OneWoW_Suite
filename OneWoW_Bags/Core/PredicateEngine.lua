@@ -1704,6 +1704,7 @@ local function Tokenize(searchStr)
     local len = #searchStr
 
     while i <= len do
+        local prevI = i
         local c = searchStr:sub(i, i)
 
         -- ---- Whitespace: skip ----
@@ -2046,6 +2047,13 @@ local function Tokenize(searchStr)
                     tinsert(tokens, { type = "text", value = word })
                 end
             end
+        end
+
+        if i <= prevI then
+            if PE._STRICT_TOKENIZER then
+                error(("Tokenizer stalled at pos %d (char %q)"):format(prevI, c))
+            end
+            i = prevI + 1
         end
     end
 
