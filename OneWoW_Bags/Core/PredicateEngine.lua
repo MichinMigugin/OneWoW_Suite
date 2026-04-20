@@ -187,6 +187,8 @@ RegisterPropAlias("maxlevel",       "maxLevel")
 RegisterPropAlias("setid",          "setID")
 RegisterPropAlias("sockets",        "sockets")
 RegisterPropAlias("armor",          "statArmor")
+RegisterPropAlias("durability",     "durability")
+RegisterPropAlias("maxdurability",  "maxDurability")
 
 -- Stat properties (comparison syntax)
 RegisterPropAlias({"intellect", "int"},         "statIntellect")
@@ -401,8 +403,10 @@ RegisterKeyword("explosive", function(p)
 end)
 
 -- ---- 7.5  Equipment keywords ----
-RegisterKeyword({"gear", "equipment", "equippable"}, function(p) return p.isEquipment end)
-RegisterKeyword({"set", "equipmentset"},             function(p) return p.isInEquipmentSet end)
+RegisterKeyword({"gear", "equipment", "equippable"},    function(p) return p.isEquipment end)
+RegisterKeyword({"set", "equipmentset"},                function(p) return p.isInEquipmentSet end)
+RegisterKeyword("needsrepair",                          function(p) return p.needsRepair end)
+RegisterKeyword("broken",                               function(p) return p.isBroken end)
 RegisterKeyword("cosmetic", function(p)
     return p.classID == Enum.ItemClass.Armor and p.subClassID == Enum.ItemArmorSubclass.Cosmetic
 end)
@@ -1434,6 +1438,10 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isBattlePayItem = false
     props.isInEquipmentSet = false
     props.equipmentSetList = {}
+    props.needsRepair = false
+    props.isBroken = false
+    props.durability = nil
+    props.maxDurability = nil
 
     local containerInfo, itemLocation
     if bagID and slotID then
@@ -1442,6 +1450,13 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
         props.isNew = C_NewItems.IsNewItem(bagID, slotID) == true
         props.isBattlePayItem = C_Container.IsBattlePayItem(bagID, slotID) == true
+
+        -- ---- Item durability ----
+        local durability, maxDurability = C_Container.GetContainerItemDurability(bagID, slotID)
+        props.durability = durability
+        props.maxDurability = maxDurability
+        props.needsRepair = durability ~= maxDurability
+        props.isBroken = durability == 0
 
         -- ---- Equipment set (API-based, no cache needed) ----
         local inSet, setList = C_Container.GetContainerItemEquipmentSetInfo(bagID, slotID)
