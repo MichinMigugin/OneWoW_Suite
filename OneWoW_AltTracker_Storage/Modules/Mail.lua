@@ -93,8 +93,36 @@ function private.RecordMail(index)
     return true
 end
 
+-- Lightweight flag refresh that works away from the mailbox.
+-- Uses Blizzard's HasNewMail() API (the same signal that drives the
+-- minimap envelope), so it is accurate whether or not MailFrame is open.
+function Module:UpdateHasNewMailFlag(charKey, charData)
+    if not charKey or not charData then return false end
+
+    charData.mail = charData.mail or { mails = {}, numMails = 0 }
+
+    local has = false
+    if type(HasNewMail) == "function" then
+        has = HasNewMail() == true
+    end
+
+    charData.mail.hasNewMail = has
+    charData.mailLastUpdate = time()
+    return true
+end
+
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
+
+    -- If the mailbox UI isn't actually open, GetInboxNumItems() / GetInboxHeaderInfo()
+    -- return 0/nil. Wiping charData.mail in that case would destroy known mail state
+    -- AND force hasNewMail to false even when the character really has mail waiting
+    -- (which is exactly what UPDATE_PENDING_MAIL is telling us). Instead, just refresh
+    -- the hasNewMail flag from HasNewMail() and preserve the existing mails table.
+    local mailboxOpen = _G.MailFrame and _G.MailFrame:IsShown()
+    if not mailboxOpen then
+        return self:UpdateHasNewMailFlag(charKey, charData)
+    end
 
     local existingMail = charData.mail or {mails = {}, numMails = 0}
     local mailbox = {mails = {}, numMails = 0}
@@ -173,6 +201,13 @@ function Module:CollectData(charKey, charData)
             mailbox.hasNewMail = true
             break
         end
+    end
+
+    -- HasNewMail() is the canonical signal (it's what drives the minimap envelope).
+    -- OR it in so we never miss a "yes, new mail" state even if the wasRead heuristic
+    -- disagrees (e.g. mail past index 20 that we didn't iterate).
+    if type(HasNewMail) == "function" and HasNewMail() == true then
+        mailbox.hasNewMail = true
     end
 
     charData.mail = mailbox

@@ -28,6 +28,8 @@ function DataManager:RegisterEvents()
         "MAIL_CLOSED",
         "MAIL_INBOX_UPDATE",
         "UPDATE_PENDING_MAIL",
+        "PLAYER_ENTERING_WORLD",
+        "PLAYER_LOGOUT",
     }
 
     for _, event in ipairs(events) do
@@ -88,15 +90,36 @@ function DataManager:HandleEvent(event, ...)
             self:CollectMail()
         end)
 
-    elseif event == "MAIL_INBOX_UPDATE" or event == "UPDATE_PENDING_MAIL" then
+    elseif event == "MAIL_INBOX_UPDATE" then
+        -- Inbox contents actually changed while the mailbox is open: full scan is safe.
         C_Timer.After(0.2, function()
             self:CollectMail()
+        end)
+
+    elseif event == "UPDATE_PENDING_MAIL" then
+        -- Fires whenever the server flips the "you have new mail" indicator.
+        -- This fires away from the mailbox too, so we MUST NOT do a full inbox
+        -- scan here (that would return 0 items and wipe the flag). Just refresh
+        -- hasNewMail from HasNewMail() and tell the UI to re-skin its icons.
+        C_Timer.After(0.2, function()
+            self:UpdateMailFlag()
         end)
 
     elseif event == "MAIL_CLOSED" then
         C_Timer.After(0.2, function()
             self:CollectMail()
         end)
+
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        -- On login / reload, make sure the current character's mail flag reflects
+        -- reality before the UI reads it. HasNewMail() is ready by this point.
+        C_Timer.After(1, function()
+            self:UpdateMailFlag()
+        end)
+
+    elseif event == "PLAYER_LOGOUT" then
+        -- Persist final state so other alts can see "Alt X had mail at logout".
+        self:UpdateMailFlag()
     end
 end
 
@@ -203,7 +226,32 @@ function DataManager:CollectMail()
         ns.Mail:CollectData(charKey, charData)
     end
 
+    self:NotifyMailChanged()
     return true
+end
+
+function DataManager:UpdateMailFlag()
+    local charKey = ns:GetCharacterKey()
+    if not charKey then return false end
+
+    local charData = ns:GetCharacterData(charKey)
+    if not charData then return false end
+
+    if ns.Mail and ns.Mail.UpdateHasNewMailFlag then
+        ns.Mail:UpdateHasNewMailFlag(charKey, charData)
+    end
+
+    self:NotifyMailChanged()
+    return true
+end
+
+-- Ask AltTracker's UI (if present and loaded) to re-skin any mail icons it has on
+-- screen. We don't rebuild tabs here; AltTracker exposes a cheap in-place refresh.
+function DataManager:NotifyMailChanged()
+    local atUI = _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.UI
+    if atUI and type(atUI.RefreshMailIcons) == "function" then
+        atUI.RefreshMailIcons()
+    end
 end
 
 function DataManager:CollectAllData()

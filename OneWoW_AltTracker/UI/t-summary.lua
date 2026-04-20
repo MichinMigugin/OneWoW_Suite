@@ -283,13 +283,13 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
         table.insert(charRow.cells, factionCell)
 
-        local hasMail = false
-        if StorageAPI then
-            local mailData = StorageAPI.GetMail(charKey)
-            hasMail = mailData and mailData.hasNewMail
-        end
+        local hasMail = ns.UI.GetHasMailForChar and ns.UI.GetHasMailForChar(charKey) or false
         local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
         table.insert(charRow.cells, mailCell)
+        charRow.mailCell = mailCell
+        if ns.UI.RegisterMailIconCell then
+            ns.UI.RegisterMailIconCell(mailCell, charKey)
+        end
 
         local nameText = OneWoW_GUI:CreateFS(charRow, 12)
         nameText:SetText(charData.name or charKey)

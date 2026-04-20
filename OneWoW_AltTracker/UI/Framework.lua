@@ -33,7 +33,57 @@ function ns.UI.CreateFilterBar(parent, config)
     return OneWoW_GUI:CreateFilterBar(parent, config)
 end
 
-local StorageAPI = _G.OneWoW_AltTracker_StorageAPI
+-- Weak-keyed registry of all visible mail icon cells, keyed by the cell frame
+-- itself. Values are the charKey the cell belongs to. Weak keys let orphaned
+-- cells (from rebuilt tabs) be garbage collected automatically.
+ns.UI.mailIconCells = ns.UI.mailIconCells or setmetatable({}, { __mode = "k" })
+
+function ns.UI.GetHasMailForChar(charKey)
+    if not charKey then return false end
+
+    local api = _G.StorageAPI
+    if api and api.GetMail then
+        local mailData = api.GetMail(charKey)
+        return mailData and mailData.hasNewMail and true or false
+    end
+
+    local storageDB = _G.OneWoW_AltTracker_Storage_DB
+    if storageDB and storageDB.characters then
+        local sc = storageDB.characters[charKey]
+        return sc and sc.mail and sc.mail.hasNewMail and true or false
+    end
+
+    return false
+end
+
+local function ApplyMailCellState(cell, hasMail)
+    if not cell or not cell.icon then return end
+    if hasMail then
+        cell.icon:SetVertexColor(1, 1, 0, 1)
+    else
+        cell.icon:SetVertexColor(0.3, 0.3, 0.3, 0.5)
+    end
+end
+
+function ns.UI.RegisterMailIconCell(cell, charKey)
+    if not cell or not charKey then return end
+    ns.UI.mailIconCells[cell] = charKey
+end
+
+-- Cheap in-place refresh: walks the registered mail icon cells and re-skins
+-- each one from current storage. Does NOT rebuild rows, so it's safe to call
+-- any time (e.g. from UPDATE_PENDING_MAIL) without flashing the UI.
+function ns.UI.RefreshMailIcons()
+    if not ns.UI.mailIconCells then return end
+    for cell, charKey in pairs(ns.UI.mailIconCells) do
+        ApplyMailCellState(cell, ns.UI.GetHasMailForChar(charKey))
+    end
+end
+
+-- Expose the refresh to other addons (Storage calls this from DataManager).
+_G.OneWoW_AltTracker = _G.OneWoW_AltTracker or {}
+_G.OneWoW_AltTracker.UI = _G.OneWoW_AltTracker.UI or {}
+_G.OneWoW_AltTracker.UI.RefreshMailIcons = ns.UI.RefreshMailIcons
 
 function ns.UI.GetSortedCharacters(getSortValue, sortColumn, sortAscending)
     if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return {} end
@@ -70,16 +120,11 @@ function ns.UI.AddCommonCells(charRow, charKey, charData)
     end
     local factionCell = OneWoW_GUI:CreateFactionIcon(charRow, { faction = charData.faction })
     table.insert(charRow.cells, factionCell)
-    local hasMail = false
-    if StorageAPI then
-        local mailData = StorageAPI.GetMail(charKey)
-        hasMail = mailData and mailData.hasNewMail
-    elseif _G.OneWoW_AltTracker_Storage_DB and _G.OneWoW_AltTracker_Storage_DB.characters then
-        local sc = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
-        hasMail = sc and sc.mail and sc.mail.hasNewMail
-    end
+    local hasMail = ns.UI.GetHasMailForChar(charKey)
     local mailCell = OneWoW_GUI:CreateMailIcon(charRow, { hasMail = hasMail })
     table.insert(charRow.cells, mailCell)
+    charRow.mailCell = mailCell
+    ns.UI.RegisterMailIconCell(mailCell, charKey)
     local nameText = OneWoW_GUI:CreateFS(charRow, 12)
     nameText:SetText(charData.name or charKey)
     local classColor = RAID_CLASS_COLORS[charData.class]
