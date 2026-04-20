@@ -31,6 +31,7 @@ Events.RuntimeEvents = {
     "EQUIPMENT_SETS_CHANGED",
     "PLAYER_EQUIPMENT_CHANGED",
     "GET_ITEM_INFO_RECEIVED",
+    "SKILL_LINES_CHANGED",
 }
 
 local predicateRefreshPending = false

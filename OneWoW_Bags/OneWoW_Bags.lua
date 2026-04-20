@@ -1226,6 +1226,10 @@ local runtimeEventHandlers = {
     GET_ITEM_INFO_RECEIVED = function(itemID, ...)
         Events:OnItemInfoReceived(itemID)
     end,
+    SKILL_LINES_CHANGED = function(...)
+        OneWoW_Bags.PredicateEngine:InvalidateKnownProfessions()
+        Events:OnPredicateInvalidation(...)
+    end,
 }
 
 function OneWoW_Bags:RegisterRuntimeEvents()

@@ -558,6 +558,87 @@ for _, def in ipairs({
     end)
 end
 
+-- ---- 7.10b  Character-aware profession keyword ----
+-- #myprofs matches profession tools AND recipes whose subclass belongs to a
+-- profession the current character has learned. Uses GetProfessions() +
+-- GetProfessionInfo().skillLine (TradeSkillLineID) for locale-independent
+-- identification. The known set is built lazily and invalidated on
+-- SKILL_LINES_CHANGED.
+
+local PROFESSION_NAMES_BY_SKILL_LINE = {
+    [171] = "alchemy",       [164] = "blacksmithing",
+    [185] = "cooking",       [333] = "enchanting",
+    [202] = "engineering",   [356] = "fishing",
+    [182] = "herbalism",     [773] = "inscription",
+    [755] = "jewelcrafting", [165] = "leatherworking",
+    [186] = "mining",        [393] = "skinning",
+    [197] = "tailoring",     [794] = "archaeology",
+}
+
+local PROF_TOOL_NAME = {
+    [Enum.ItemProfessionSubclass.Blacksmithing]  = "blacksmithing",
+    [Enum.ItemProfessionSubclass.Leatherworking] = "leatherworking",
+    [Enum.ItemProfessionSubclass.Alchemy]        = "alchemy",
+    [Enum.ItemProfessionSubclass.Herbalism]      = "herbalism",
+    [Enum.ItemProfessionSubclass.Cooking]        = "cooking",
+    [Enum.ItemProfessionSubclass.Mining]         = "mining",
+    [Enum.ItemProfessionSubclass.Tailoring]      = "tailoring",
+    [Enum.ItemProfessionSubclass.Engineering]    = "engineering",
+    [Enum.ItemProfessionSubclass.Enchanting]     = "enchanting",
+    [Enum.ItemProfessionSubclass.Fishing]        = "fishing",
+    [Enum.ItemProfessionSubclass.Skinning]       = "skinning",
+    [Enum.ItemProfessionSubclass.Jewelcrafting]  = "jewelcrafting",
+    [Enum.ItemProfessionSubclass.Inscription]    = "inscription",
+    [Enum.ItemProfessionSubclass.Archaeology]    = "archaeology",
+}
+
+-- Recipe subclass enum uses different numeric values than profession subclass
+-- enum; we must pivot through the lowercase name.
+local PROF_RECIPE_NAME = {
+    [Enum.ItemRecipeSubclass.Alchemy]        = "alchemy",
+    [Enum.ItemRecipeSubclass.Blacksmithing]  = "blacksmithing",
+    [Enum.ItemRecipeSubclass.Cooking]        = "cooking",
+    [Enum.ItemRecipeSubclass.Enchanting]     = "enchanting",
+    [Enum.ItemRecipeSubclass.Engineering]    = "engineering",
+    [Enum.ItemRecipeSubclass.Inscription]    = "inscription",
+    [Enum.ItemRecipeSubclass.Jewelcrafting]  = "jewelcrafting",
+    [Enum.ItemRecipeSubclass.Leatherworking] = "leatherworking",
+    [Enum.ItemRecipeSubclass.Tailoring]      = "tailoring",
+    [Enum.ItemRecipeSubclass.Fishing]        = "fishing",
+}
+
+local knownProfs
+
+local function RefreshKnownProfessions()
+    knownProfs = {}
+    local slots = { GetProfessions() }
+    for _, idx in ipairs(slots) do
+        if idx then
+            local skillLine = select(7, GetProfessionInfo(idx))
+            local name = PROFESSION_NAMES_BY_SKILL_LINE[skillLine]
+            if name then knownProfs[name] = true end
+        end
+    end
+end
+
+function PE:InvalidateKnownProfessions()
+    knownProfs = nil
+end
+
+RegisterKeyword({"myprofs", "myprofession", "myprofessions"}, function(p)
+    if not knownProfs then RefreshKnownProfessions() end
+    local cid = p.classID
+    if cid == Enum.ItemClass.Profession then
+        local name = PROF_TOOL_NAME[p.subClassID]
+        return name ~= nil and knownProfs[name] == true
+    end
+    if cid == Enum.ItemClass.Recipe then
+        local name = PROF_RECIPE_NAME[p.subClassID]
+        return name ~= nil and knownProfs[name] == true
+    end
+    return false
+end)
+
 -- ---- 7.11  Miscellaneous subclass keywords ----
 RegisterKeyword("holiday", function(p)
     return p.classID == Enum.ItemClass.Miscellaneous
@@ -2211,6 +2292,7 @@ function PE:InvalidateCache()
     wipe(compiledCache)
     wipe(propsCache)
     wipe(tooltipCache)
+    knownProfs = nil
 end
 
 --- Invalidate props and tooltip caches (lighter, for frequent events).
