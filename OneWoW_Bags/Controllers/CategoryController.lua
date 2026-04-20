@@ -10,34 +10,6 @@ local string_lower = string.lower
 OneWoW_Bags.CategoryController = {}
 local CategoryController = OneWoW_Bags.CategoryController
 
-local BAGANATOR_CAT_MAP = {
-    ["default_auto_recents"] = "Recent Items",
-    ["default_weapon"] = "Weapons",
-    ["default_armor"] = "Armor",
-    ["default_auto_equipment_sets"] = "Equipment Sets",
-    ["default_consumable"] = "Consumables",
-    ["default_food"] = "Food",
-    ["default_potion"] = "Potions",
-    ["default_reagent"] = "Reagents",
-    ["default_tradegoods"] = "Trade Goods",
-    ["default_profession"] = "Tradeskill",
-    ["default_recipe"] = "Recipes",
-    ["default_gem"] = "Gems",
-    ["default_questitem"] = "Quest Items",
-    ["default_toy"] = "Toys",
-    ["default_battlepet"] = "Battle Pets",
-    ["default_miscellaneous"] = "Miscellaneous",
-    ["default_key"] = "Keys",
-    ["default_keystone"] = "Keystone",
-    ["default_junk"] = "Junk",
-    ["default_other"] = "Other",
-    ["default_housing"] = "Housing",
-    ["default_container"] = "Containers",
-    ["default_itemenhancement"] = "Item Enhancement",
-    ["default_hearthstone"] = "Hearthstone",
-    ["default_special_empty"] = "Empty",
-}
-
 local function removeCategoryNameFromOtherSections(g, categoryName, keepSectionId)
     for sid, sec in pairs(g.categorySections) do
         if sid ~= keepSectionId and sec and sec.categories then
@@ -542,112 +514,30 @@ function CategoryController:RemoveItemFromCategory(categoryKey, itemID)
     self:RefreshUI()
 end
 
+local function openImportPreview(self, plan)
+    if not plan then return false end
+    local Preview = OneWoW_Bags.ImportPreview
+    if Preview and Preview.Show then
+        Preview:Show(plan, self, self:GetDB())
+        return true
+    end
+    local Applier = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Applier
+    if Applier and Applier.Apply then
+        Applier:Apply(plan, self, self:GetDB())
+        return true
+    end
+    return false
+end
+
 function CategoryController:ImportBaganator()
-    local db = self:GetDB()
-    if not BAGANATOR_CONFIG or not BAGANATOR_CONFIG.Profiles then
+    local Planner = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Planner
+    if not Planner or not BAGANATOR_CONFIG or not BAGANATOR_CONFIG.Profiles then
         return 0, 0
     end
-
-    local importedCategories = 0
-    local importedSections = 0
-    local profile
-    for _, candidate in pairs(BAGANATOR_CONFIG.Profiles) do
-        profile = candidate
-        break
-    end
-    if not profile then
-        return 0, 0
-    end
-
-    if profile.custom_categories then
-        for _, categoryData in pairs(profile.custom_categories) do
-            local name = categoryData.name
-            if name and name ~= "" then
-                local id = self:CreateCategory(name)
-                if id then
-                    local target = db.global.customCategoriesV2[id]
-                    target.items = {}
-
-                    if categoryData.items then
-                        if categoryData.items[1] ~= nil then
-                            for _, rawID in ipairs(categoryData.items) do
-                                if tonumber(rawID) then
-                                    target.items[tostring(rawID)] = true
-                                end
-                            end
-                        else
-                            for rawID in pairs(categoryData.items) do
-                                if tonumber(rawID) then
-                                    target.items[tostring(rawID)] = true
-                                end
-                            end
-                        end
-                    end
-
-                    if categoryData.rules then
-                        for _, rule in ipairs(categoryData.rules) do
-                            if rule.type == "item" and rule.itemID then
-                                target.items[tostring(rule.itemID)] = true
-                            end
-                        end
-                    end
-
-                    importedCategories = importedCategories + 1
-                end
-            end
-        end
-    end
-
-    local sectionIDMap = {}
-    if profile.category_sections and profile.category_display_order then
-        for bagIndex, sectionData in pairs(profile.category_sections) do
-            local name = sectionData.name
-            if name and name ~= "" then
-                local sectionID = self:CreateSection(name)
-                if sectionID then
-                    sectionIDMap[bagIndex] = sectionID
-                    importedSections = importedSections + 1
-                end
-            end
-        end
-
-        local currentSectionID
-        local addedToSection = {}
-        for _, entry in ipairs(profile.category_display_order) do
-            if entry:sub(1, 1) == "_" and entry ~= "----" then
-                if entry == "__end" then
-                    currentSectionID = nil
-                    wipe(addedToSection)
-                else
-                    currentSectionID = sectionIDMap[entry:sub(2)]
-                end
-            elseif entry ~= "----" and currentSectionID then
-                local categoryName = BAGANATOR_CAT_MAP[entry]
-                if categoryName and not addedToSection[categoryName] then
-                    local section = db.global.categorySections[currentSectionID]
-                    if section then
-                        removeCategoryNameFromOtherSections(db.global, categoryName, currentSectionID)
-                        local already = false
-                        for _, e in ipairs(section.categories) do
-                            if e == categoryName then
-                                already = true
-                                break
-                            end
-                        end
-                        if not already then
-                            tinsert(section.categories, categoryName)
-                        end
-                        addedToSection[categoryName] = true
-                    end
-                end
-            end
-        end
-    end
-
-    OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(db.global)
-
-    self:RefreshUI()
-    return importedCategories, importedSections
+    local plan = Planner:FromBaganatorDirect(self:GetDB())
+    openImportPreview(self, plan)
+    local estimate = plan and plan.estimate or {}
+    return estimate.categoriesNew or 0, estimate.sectionsNew or 0
 end
 
 function CategoryController:ImportTSM()
@@ -655,10 +545,12 @@ function CategoryController:ImportTSM()
     if not tsm or not tsm.IsAvailable or not tsm:IsAvailable() then
         return 0
     end
-
-    local count = tsm:Import()
-    if count > 0 then
-        self:RefreshUI()
+    local Planner = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Planner
+    if not Planner then
+        return 0
     end
-    return count
+    local plan = Planner:FromTsmDirect(self:GetDB(), { tsmPrefix = true })
+    openImportPreview(self, plan)
+    local estimate = plan and plan.estimate or {}
+    return estimate.categoriesNew or 0
 end

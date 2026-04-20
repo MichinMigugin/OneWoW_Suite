@@ -1872,49 +1872,163 @@ function CatMgrUI:Show()
     createBtn:SetPoint("LEFT", sectionBtn, "RIGHT", 6, 0)
     createBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY") end)
 
-    if HasBaganator() then
-        local bagBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["BAGANATOR_IMPORT"], height=24 })
-        bagBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
-        bagBtn:SetScript("OnClick", function()
-            local controller = GetController()
-            local cats, secs = 0, 0
-            if controller and controller.ImportBaganator then
-                cats, secs = controller:ImportBaganator()
-            end
-            if cats > 0 or secs > 0 then
-                if secs > 0 then
-                    print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. string.format(L["BAGANATOR_IMPORT_WITH_SECTIONS"], cats, secs))
-                else
-                    print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. string.format(L["BAGANATOR_IMPORT_SUCCESS"], cats))
+    -- ---- Import / Export / Undo ----
+    local Backup = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Backup
+    local Serializer = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Serializer
+    local Planner = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Planner
+    local ImportPreview = OneWoW_Bags.ImportPreview
+    local LibCopyPaste = LibStub and LibStub("LibCopyPaste-1.0", true)
+
+    -- Undo (icon-only) pinned to the far right
+    local undoBtn = CreateFrame("Button", nil, actionBar, "BackdropTemplate")
+    undoBtn:SetSize(22, 22)
+    undoBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
+    local undoTex = undoBtn:CreateTexture(nil, "ARTWORK")
+    undoTex:SetAllPoints(undoBtn)
+    undoTex:SetAtlas("common-icon-undo")
+    local function refreshUndoBtn()
+        if Backup and Backup:HasBackup(GetDB()) then
+            undoBtn:Enable()
+            undoTex:SetDesaturated(false)
+        else
+            undoBtn:Disable()
+            undoTex:SetDesaturated(true)
+        end
+    end
+    undoBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
+        if self:IsEnabled() then
+            GameTooltip:SetText(L["IMPORT_UNDO_TOOLTIP"] or "Undo last import")
+        else
+            GameTooltip:SetText(L["IMPORT_UNDO_TOOLTIP_DISABLED"] or "No import to undo")
+        end
+        GameTooltip:Show()
+    end)
+    undoBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    undoBtn:SetScript("OnClick", function()
+        if not Backup or not Backup:HasBackup(GetDB()) then return end
+        StaticPopup_Show("ONEWOW_BAGS_UNDO_IMPORT")
+    end)
+    StaticPopupDialogs["ONEWOW_BAGS_UNDO_IMPORT"] = StaticPopupDialogs["ONEWOW_BAGS_UNDO_IMPORT"] or {
+        text = L["IMPORT_UNDO_CONFIRM"] or "Undo the last import and restore previous categories?",
+        button1 = YES, button2 = NO,
+        OnAccept = function()
+            if not Backup then return end
+            Backup:Restore(GetDB(), GetController())
+            Backup:Clear(GetDB())
+            refreshUndoBtn()
+            print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. (L["IMPORT_UNDO_SUCCESS"] or "Import reverted."))
+        end,
+        timeout = 0, whileDead = true, hideOnEscape = true,
+    }
+
+    -- LibCopyPaste uses DIALOG strata; the Category Manager also uses DIALOG, so
+    -- the copy dialog can render at or below it. Discover the singleton frame on
+    -- first use (by matching our title text) and raise it to FULLSCREEN_DIALOG.
+    local cachedCPFrame
+    local function raiseCopyPasteDialog(title)
+        if cachedCPFrame and cachedCPFrame:IsShown() then
+            cachedCPFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+            cachedCPFrame:Raise()
+            return
+        end
+        local children = { UIParent:GetChildren() }
+        for i = #children, 1, -1 do
+            local child = children[i]
+            if child and child.IsShown and child:IsShown() and child.GetFrameStrata then
+                for _, region in ipairs({ child:GetRegions() }) do
+                    if region.GetText and region:GetText() == title then
+                        cachedCPFrame = child
+                        child:SetFrameStrata("FULLSCREEN_DIALOG")
+                        child:Raise()
+                        return
+                    end
                 end
-            else
-                print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["BAGANATOR_IMPORT_NONE"])
             end
-        end)
-
-        local bagLbl = actionBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        bagLbl:SetPoint("RIGHT", bagBtn, "LEFT", -6, 0)
-        bagLbl:SetText(L["BAGANATOR_LABEL"])
-        bagLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
     end
 
-    local TSM = OneWoW_Bags.TSMIntegration
-    if TSM and TSM:IsAvailable() then
-        local tsmBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["TSM_IMPORT"] or "Import TSM", height=24 })
-        tsmBtn:SetPoint("RIGHT", actionBar, "RIGHT", -6, 0)
-        tsmBtn:SetScript("OnClick", function()
-            local controller = GetController()
-            local count = 0
-            if controller and controller.ImportTSM then
-                count = controller:ImportTSM()
-            end
-            if count > 0 then
-                print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. string.format(L["TSM_IMPORT_SUCCESS"], count))
-            else
-                print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["TSM_IMPORT_NONE"])
-            end
-        end)
+    -- Export button (right of undo)
+    local exportBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text = L["EXPORT_LABEL"] or "Export", height = 24 })
+    exportBtn:SetPoint("RIGHT", undoBtn, "LEFT", -6, 0)
+    exportBtn:SetScript("OnClick", function()
+        if not Serializer or not LibCopyPaste then return end
+        local title = L["EXPORT_DIALOG_TITLE"] or "OneWoW Bags Export"
+        local payload = Serializer:Encode(Serializer:BuildExport(GetDB()))
+        LibCopyPaste:Copy(title, payload, { readOnly = true })
+        raiseCopyPasteDialog(title)
+    end)
+
+    -- Import pulldown (right of export button)
+    local importDropdown = OneWoW_GUI:CreateDropdown(actionBar, {
+        text   = L["IMPORT_FROM_LABEL"] or "Import from...",
+        width  = 160,
+        height = 24,
+    })
+    importDropdown:SetPoint("RIGHT", exportBtn, "LEFT", -6, 0)
+
+    local function doOpenPreview(plan)
+        if not plan or not ImportPreview then return end
+        ImportPreview:Show(plan, GetController(), GetDB())
     end
+
+    OneWoW_GUI:AttachFilterMenu(importDropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            local bagAvailable = HasBaganator()
+            local tsm = OneWoW_Bags.TSMIntegration
+            local tsmAvailable = tsm and tsm.IsAvailable and tsm:IsAvailable()
+
+            tinsert(items, {
+                value = "baganator_direct",
+                text  = (L["IMPORT_SRC_BAGANATOR_DIRECT"] or "Baganator (direct)")
+                    .. (bagAvailable and "" or "  " .. (L["IMPORT_NOT_AVAILABLE_HINT"] or "(not loaded)")),
+            })
+            tinsert(items, {
+                value = "tsm_direct",
+                text  = (L["IMPORT_SRC_TSM_DIRECT"] or "TSM (direct)")
+                    .. (tsmAvailable and "" or "  " .. (L["IMPORT_NOT_AVAILABLE_HINT"] or "(not loaded)")),
+            })
+            tinsert(items, { type = "divider" })
+            tinsert(items, { value = "onewow_string",    text = L["IMPORT_SRC_ONEWOW_PASTE"]    or "OneWoW string (paste)" })
+            tinsert(items, { value = "baganator_string", text = L["IMPORT_SRC_BAGANATOR_PASTE"] or "Baganator string (paste)" })
+            return items
+        end,
+        onSelect = function(value)
+            if value == "baganator_direct" then
+                if not HasBaganator() then
+                    print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r "
+                        .. (L["IMPORT_NOT_AVAILABLE_TOOLTIP"] or "Baganator is not loaded."))
+                    return
+                end
+                doOpenPreview(Planner:FromBaganatorDirect(GetDB()))
+            elseif value == "tsm_direct" then
+                local tsm = OneWoW_Bags.TSMIntegration
+                if not tsm or not tsm:IsAvailable() then
+                    print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r "
+                        .. (L["IMPORT_NOT_AVAILABLE_TOOLTIP"] or "TSM is not loaded."))
+                    return
+                end
+                doOpenPreview(Planner:FromTsmDirect(GetDB(), { tsmPrefix = true }))
+            elseif value == "onewow_string" and LibCopyPaste then
+                local title = L["IMPORT_DIALOG_TITLE"] or "Paste OneWoW export"
+                LibCopyPaste:Paste(title, function(text)
+                    doOpenPreview(Planner:FromOneWowString(text, GetDB()))
+                end)
+                raiseCopyPasteDialog(title)
+            elseif value == "baganator_string" and LibCopyPaste then
+                local title = L["IMPORT_DIALOG_TITLE"] or "Paste Baganator export"
+                LibCopyPaste:Paste(title, function(text)
+                    doOpenPreview(Planner:FromBaganatorString(text, GetDB()))
+                end)
+                raiseCopyPasteDialog(title)
+            end
+        end,
+    })
+
+    actionBar:HookScript("OnShow", refreshUndoBtn)
+    refreshUndoBtn()
 
     local splitArea = CreateFrame("Frame", nil, dialogContentFrame)
     splitArea:SetPoint("TOPLEFT",     actionBar,         "BOTTOMLEFT",  0, -4)

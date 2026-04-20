@@ -8,6 +8,12 @@ The engine itself is published by `OneWoW_GUI` as `OneWoW_GUI.PredicateEngine`;
 for engine internals, the public API, or how to extend it from another addon,
 see [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
 
+> **Keywords are English-only.** All `#...` keywords (e.g. `#armor`, `#epic`,
+> `#soulbound`) are canonical English tokens regardless of the client locale.
+> If you paste rules from another addon that uses localized keywords, run them
+> through `Import from...` so they are translated to the canonical form. See
+> [`IMPORT_EXPORT.md`](IMPORT_EXPORT.md) for details.
+
 ---
 
 ## Quick Start

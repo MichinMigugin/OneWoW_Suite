@@ -18,6 +18,7 @@
 
 # Libraries
 Libs\LibStub\LibStub.lua
+Libs\LibCopyPaste-1.0\LibCopyPaste-1.0.lua
 
 # Locales
 Locales\enUS.lua
@@ -38,6 +39,7 @@ Core\Events.lua
 # Data
 Data\Sorting.lua
 Data\Categories.lua
+Data\BaganatorDefaultMap.lua
 
 # Modules
 Modules\ItemPool.lua
@@ -50,10 +52,20 @@ Modules\CategoryManager.lua
 Modules\BankCategoryManager.lua
 Modules\GuildBankCategoryManager.lua
 
+# Import/Export
+ImportExport\Serializer.lua
+ImportExport\Backup.lua
+ImportExport\SyntaxTranslators\Registry.lua
+ImportExport\SyntaxTranslators\SyndicatorLocaleMap.lua
+ImportExport\SyntaxTranslators\Syndicator.lua
+ImportExport\Planner.lua
+ImportExport\Applier.lua
+
 # Integrations
 Integrations\OneWoWBagsIntegration.lua
 Integrations\OneWoWTooltips.lua
 Integrations\TSMIntegration.lua
+Integrations\BaganatorImport.lua
 
 # Controllers
 Controllers\WindowLayoutController.lua
@@ -85,6 +97,7 @@ GUI\GuildBankInfoBar.lua
 GUI\GuildBankBar.lua
 GUI\GuildBankLog.lua
 GUI\GuildBankWindow.lua
+GUI\ImportPreview.lua
 GUI\CategoryManager.lua
 GUI\Settings.lua
 GUI\MainWindow.lua

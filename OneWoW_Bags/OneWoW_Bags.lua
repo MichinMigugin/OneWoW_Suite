@@ -859,6 +859,38 @@ function OneWoW_Bags:RegisterSlashCommands()
     SlashCmdList["ONEWOW_BAGS"] = function(msg)
         self.GUI:Toggle()
     end
+
+    SLASH_ONEWOW_BAGS_EXPORT1 = "/owbags-export"
+    SlashCmdList["ONEWOW_BAGS_EXPORT"] = function()
+        local Serializer = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Serializer
+        local LibCopyPaste = LibStub and LibStub("LibCopyPaste-1.0", true)
+        if not Serializer or not LibCopyPaste then
+            print("|cFFFF6060" .. L["ADDON_CHAT_PREFIX"] .. "|r Export unavailable (Serializer or LibCopyPaste missing).")
+            return
+        end
+        local db = OneWoW_Bags.db
+        if not db or not db.global then
+            print("|cFFFF6060" .. L["ADDON_CHAT_PREFIX"] .. "|r Export unavailable (database not ready).")
+            return
+        end
+        local title = L["EXPORT_DIALOG_TITLE"] or "OneWoW Bags Export"
+        local payload = Serializer:Encode(Serializer:BuildExport(db))
+        LibCopyPaste:Copy(title, payload, { readOnly = true })
+
+        local children = { UIParent:GetChildren() }
+        for i = #children, 1, -1 do
+            local child = children[i]
+            if child and child.IsShown and child:IsShown() and child.GetFrameStrata then
+                for _, region in ipairs({ child:GetRegions() }) do
+                    if region.GetText and region:GetText() == title then
+                        child:SetFrameStrata("FULLSCREEN_DIALOG")
+                        child:Raise()
+                        return
+                    end
+                end
+            end
+        end
+    end
 end
 
 function OneWoW_Bags:HookBlizzardBags()
