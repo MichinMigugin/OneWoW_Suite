@@ -3,6 +3,8 @@ local ADDON_NAME, OneWoW_Bags = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local PE = OneWoW_GUI.PredicateEngine
+
 local L = OneWoW_Bags.L
 local Events = OneWoW_Bags.Events
 
@@ -164,9 +166,9 @@ function OneWoW_Bags:InvalidateCategorization(scope)
     self.Categories:InvalidateCache()
 
     if scope == "props" then
-        self.PredicateEngine:InvalidatePropsCache()
+        PE:InvalidatePropsCache()
     else
-        self.PredicateEngine:InvalidateCache()
+        PE:InvalidateCache()
     end
 end
 
@@ -376,7 +378,7 @@ function OneWoW_Bags:OnPlayerLogin()
 end
 
 function OneWoW_Bags:HookPetCageTooltip()
-    local predicateEngine = self.PredicateEngine
+    local predicateEngine = PE
     local CAGE_ID = predicateEngine.BATTLE_PET_CAGE_ID
 
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
@@ -1227,7 +1229,7 @@ local runtimeEventHandlers = {
         Events:OnItemInfoReceived(itemID)
     end,
     SKILL_LINES_CHANGED = function(...)
-        OneWoW_Bags.PredicateEngine:InvalidateKnownProfessions()
+        PE:InvalidateKnownProfessions()
         Events:OnPredicateInvalidation(...)
     end,
 }

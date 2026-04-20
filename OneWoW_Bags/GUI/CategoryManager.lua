@@ -29,7 +29,7 @@ local db = setmetatable({}, {
     end,
 })
 
-local PE = OneWoW_Bags.PredicateEngine
+local PE = OneWoW_GUI.PredicateEngine
 local Categories = OneWoW_Bags.Categories
 local SD = OneWoW_Bags.SectionDefaults
 

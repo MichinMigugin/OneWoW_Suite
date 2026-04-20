@@ -1,5 +1,10 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local PE = OneWoW_GUI.PredicateEngine
+
 local L = OneWoW_Bags.L
 
 local tinsert = tinsert
@@ -53,7 +58,7 @@ local function KeywordProvider(tooltip, context)
     if not IsEnabled() then return nil end
     if not IsManagerOpen() then return nil end
 
-    local keywords = OneWoW_Bags.PredicateEngine:GetMatchingKeywords(
+    local keywords = PE:GetMatchingKeywords(
         context.itemID, nil, nil, { hyperlink = context.itemLink }
     )
     if #keywords == 0 then return nil end

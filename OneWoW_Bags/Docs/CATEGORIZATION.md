@@ -1,6 +1,6 @@
 # OneWoW_Bags — Categorization
 
-This document describes how items are assigned to categories, how category rows are ordered, and how per-category sorting and grouping work. It reflects the implementation in `Data/Categories.lua`, `Modules/CategoryManager.lua`, `Views/CategoryView.lua`, `Views/CategoryViewHelpers.lua`, `Views/BankCategoryView.lua`, `Data/Sorting.lua`, `Core/PredicateEngine.lua`, `Core/SectionDefaults.lua`, and related settings in `Core/Database.lua`.
+This document describes how items are assigned to categories, how category rows are ordered, and how per-category sorting and grouping work. It reflects the implementation in `Data/Categories.lua`, `Modules/CategoryManager.lua`, `Views/CategoryView.lua`, `Views/CategoryViewHelpers.lua`, `Views/BankCategoryView.lua`, `Data/Sorting.lua`, `Core/SectionDefaults.lua`, and related settings in `Core/Database.lua`. The expression engine consumed throughout the pipeline (`PE` below) is provided by `OneWoW_GUI`; for engine internals and its public API, see [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
 
 ## Overview
 
@@ -242,13 +242,11 @@ Shared by both `CategoryView` (bags) and `BankCategoryView` (bank) via `H.Layout
 
 ## PredicateEngine
 
-Search strings use the PredicateEngine language (`#keyword`, operators, etc.). `BuildProps` enriches items; `CheckItem(expr, ...)` evaluates membership. Both custom `searchExpression` categories and builtin search categories use this engine.
+The engine lives in `OneWoW_GUI` (`OneWoW_GUI.PredicateEngine`) and is acquired in Bags via `local PE = OneWoW_GUI.PredicateEngine`. Full reference: [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
 
-**Architecture:** Two-layer design:
-- **Layer 1 (`BuildProps`):** Enriches a bag slot into a flat property table. Cached by `"bagID:slotID"`. Tooltip-derived fields, bind fields, and stat fields are resolved lazily via metatables on first access.
-- **Layer 2 (Compiler):** Tokenizes + parses expressions into `function(props) -> bool`. Cached by expression string.
+Search strings use its expression language (`#keyword`, operators, etc.). `BuildProps` enriches items; `CheckItem(expr, ...)` evaluates membership. Both custom `searchExpression` categories and builtin search categories use this engine.
 
-**The `#recent` keyword** is registered by `Categories.lua` to delegate to `Categories:SlotMatchesRecent`, so `#recent` works in custom search expressions and the search bar.
+**Bags-specific registration:** The `#recent` keyword is registered by `Data/Categories.lua` to delegate to `Categories:SlotMatchesRecent` (GUID map + duration are Bags-owned). `#catalyst` / `#catalystupgrade` are now registered by the engine itself and silently no-op when TransmogUpgradeMaster is absent.
 
 ---
 
@@ -314,6 +312,6 @@ Both views are thin wrappers that delegate to the shared pipeline in `CategoryVi
 | `Views/CategoryView.lua` | Bags category view (thin wrapper over shared pipeline) |
 | `Views/BankCategoryView.lua` | Bank category view (thin wrapper over shared pipeline) |
 | `Data/Sorting.lua` | `SortButtons` |
-| `Core/PredicateEngine.lua` | Expressions and props |
+| `OneWoW_GUI/PredicateEngine.lua` | Shared expression engine and item props (see [`PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md)) |
 | `Core/SectionDefaults.lua` | Section IDs, builtin ordering, OneWoW Bags section sync |
 | `Controllers/CategoryController.lua` | CRUD, import maps, UI refresh orchestration, `appliesIn` / `showHeaderBank` setters |

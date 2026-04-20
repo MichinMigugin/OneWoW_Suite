@@ -4,6 +4,10 @@ OneWoW Bags uses a single expression engine for the search bar, custom category
 rules, and (in the future) vendor sell rules. Everything described here works in
 all three contexts.
 
+The engine itself is published by `OneWoW_GUI` as `OneWoW_GUI.PredicateEngine`;
+for engine internals, the public API, or how to extend it from another addon,
+see [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
+
 ---
 
 ## Quick Start
@@ -269,7 +273,7 @@ These match items with the Profession item class and a specific profession subcl
 | `#myprofs` | `#myprofession`, `#myprofessions` | Profession-class **tools** and **recipes** whose profession matches a trade skill the current character has learned (skill line IDs from `GetProfessions` / `GetProfessionInfo`). Other item types do not match. |
 
 The known-profession set is cached until
-`PredicateEngine:InvalidateKnownProfessions()` runs. OneWoW Bags listens for
+`OneWoW_GUI.PredicateEngine:InvalidateKnownProfessions()` runs. OneWoW Bags listens for
 `SKILL_LINES_CHANGED` and calls it automatically.
 
 ### Miscellaneous Subtypes
@@ -474,7 +478,7 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 |---|---|
 | `#usable` | Items you can use (alias: `#use`) |
 | `#unusable` | Items you cannot use |
-| `#new` | Items Blizzard marks as new in the bag slot (`C_NewItems.IsNewItem`), via PredicateEngine `BuildProps` (may lag real client state until the props cache is invalidated) |
+| `#new` | Items Blizzard marks as new in the bag slot (`C_NewItems.IsNewItem`), via the shared PredicateEngine `BuildProps` (may lag real client state until the props cache is invalidated) |
 | `#locked` | Locked items |
 | `#charges` | Items with charges |
 | `#unique` | Tooltip **Unique** / **Unique-Equipped**, **or** unique battle pets (`isPetUnique` from the journal) |
@@ -489,7 +493,7 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 
 | Keyword | What it matches |
 |---|---|
-| `#recent` | Same rule as the **Recent Items** category: item GUID is in `db.global.recentItems` and still within **Recent item duration** (bag settings). GUIDs are stamped when a coalesced bag update sees the slot as Blizzard-new (`C_NewItems.IsNewItem`); classification does **not** use cached `BuildProps.isNew`. While the main bags window is open, expired GUIDs are also swept on a short ticker. Registered from `Categories`, not core PredicateEngine. |
+| `#recent` | Same rule as the **Recent Items** category: item GUID is in `db.global.recentItems` and still within **Recent item duration** (bag settings). GUIDs are stamped when a coalesced bag update sees the slot as Blizzard-new (`C_NewItems.IsNewItem`); classification does **not** use cached `BuildProps.isNew`. While the main bags window is open, expired GUIDs are also swept on a short ticker. Registered from Bags' `Data/Categories.lua`, not the shared engine (the ticker and GUID map are Bags-specific). |
 
 ### Vendor / Value
 

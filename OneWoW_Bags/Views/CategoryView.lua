@@ -7,7 +7,7 @@ local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
 local CategoryManager = OneWoW_Bags.CategoryManager
 local H = OneWoW_Bags.CategoryViewHelpers
-local PE = OneWoW_Bags.PredicateEngine
+local PE = OneWoW_GUI.PredicateEngine
 
 local floor, max = math.floor, math.max
 local ipairs = ipairs

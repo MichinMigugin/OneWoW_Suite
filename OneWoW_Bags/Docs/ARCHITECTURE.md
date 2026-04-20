@@ -33,10 +33,9 @@ Core\Database.lua                  ← DB:Init, defaults, migrations
 Core\BagTypes.lua                  ← bag ID constants, reagent/player bag helpers
 Core\BankTypes.lua                 ← bank/warband tab constants
 Core\Events.lua                    ← event router (dirtyBags, RuntimeEvents)
-Core\PredicateEngine.lua           ← search expression tokenizer/compiler/evaluator
 
 Data\Sorting.lua                   ← item sort comparators (SortButtons)
-Data\Categories.lua                ← builtin category defs, classification engine
+Data\Categories.lua                ← builtin category defs, classification engine (consumes OneWoW_GUI.PredicateEngine)
 
 Modules\ItemPool.lua               ← frame object pool (ItemButton recycling)
 Modules\ItemButton.lua             ← ItemButtonMixin + ApplyItemButtonMixin
@@ -133,9 +132,9 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
                              │ reads
 ┌────────────────────────────▼─────────────────────────────────┐
 │                      Data Layer                              │
-│  Categories, PredicateEngine, Sorting, BagTypes, BankTypes   │
-│  ─ Classification, expression evaluation, sort comparators   │
-│  ─ Categories uses PredicateEngine for search builtins       │
+│  Categories, Sorting, BagTypes, BankTypes                    │
+│  ─ Classification, sort comparators                          │
+│  ─ Categories uses OneWoW_GUI.PredicateEngine for search     │
 └────────────────────────────┬─────────────────────────────────┘
                              │ reads
 ┌────────────────────────────▼─────────────────────────────────┐
@@ -156,7 +155,7 @@ The root object provides:
 - **State flags:** `bankOpen`, `guildBankOpen`, `oneWoWHubActive`, `inventoryPresentationState` (contains `altShowActive`), `activeExpansionFilter` (bags search bar expansion filter), `activeBankExpansionFilter`
 - **Lifecycle:** `OnAddonLoaded`, `OnPlayerLogin`, `InitializeControllers`, `InitializeDatabase`
 - **Refresh orchestration:** `RequestLayoutRefresh(target)`, `RequestVisualRefresh(target)`, `RequestWindowReset(target)`
-- **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category cache; if `scope == "props"` then `PredicateEngine:InvalidatePropsCache()`, else full `PredicateEngine:InvalidateCache()`
+- **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category cache; if `scope == "props"` then `OneWoW_GUI.PredicateEngine:InvalidatePropsCache()`, else full `OneWoW_GUI.PredicateEngine:InvalidateCache()`
 - **Blizzard hooks:** `HookBlizzardBags`, `SuppressBankFrame`, `RestoreBankFrame`, `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
 - **Guild bank orchestration:** `RefreshGuildBankContents`, `QueueGuildBankRefresh`, `TrackGuildBankTransferTab`, `TrackGuildBankTransferSource`, `ProcessPendingGuildBankTransferTabs`, `PurgeClearSource`, plus internal coalescing state for cross-tab moves
 - **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldShowItemQuality`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`, `GetMoneyDialog`, `ShowMoneyDialog`
@@ -202,7 +201,7 @@ Game event: BAG_UPDATE (per bag, may repeat same frame)
 
 Game event: BAG_UPDATE_DELAYED (once after coalesced updates)
   └─→ Events:OnBagUpdateDelayed
-       ├─→ InvalidateCategorization("props")  ← Categories refresh + PredicateEngine:InvalidatePropsCache
+       ├─→ InvalidateCategorization("props")  ← Categories refresh + OneWoW_GUI.PredicateEngine:InvalidatePropsCache
        └─→ OneWoW_Bags:ProcessBagUpdate(dirtyBags)
             ├─→ Categories:OnPlayerBagDirtySnapshot(dirtyBags) (expire GUID map; stamp GUIDs for Blizzard-new slots in player bags)
             ├─→ BagSet:UpdateDirtyBags(dirtyBags)
@@ -269,12 +268,12 @@ CategoryManager:AssignCategories()
 
 **`Categories:GetItemCategory` stages** (in order; early return stops the rest):
 
-1. **Manual pins** — `customCategoriesV2[*].items` and `categoryModifications[*].addedItems` (no `PredicateEngine` on this path). Overrides everything below, including Junk/Upgrades. If `db.global.pinnedCategoryShowsWhenDisabled` is **false**, pins in **disabled** categories are ignored here so later stages can assign (e.g. `Other`). If **true**, a disabled pinned category still wins assignment. Legacy saves with the same item ID in multiple pin tables: `PickBestCandidate` among those rows (priority → section order → stable tie key).
-2. **1W Junk** — `PredicateEngine` `props.isJunk`; gated by `enableJunkCategory` + `disabledCategories`.
+1. **Manual pins** — `customCategoriesV2[*].items` and `categoryModifications[*].addedItems` (no predicate engine on this path). Overrides everything below, including Junk/Upgrades. If `db.global.pinnedCategoryShowsWhenDisabled` is **false**, pins in **disabled** categories are ignored here so later stages can assign (e.g. `Other`). If **true**, a disabled pinned category still wins assignment. Legacy saves with the same item ID in multiple pin tables: `PickBestCandidate` among those rows (priority → section order → stable tie key).
+2. **1W Junk** — `OneWoW_GUI.PredicateEngine` `props.isJunk`; gated by `enableJunkCategory` + `disabledCategories`.
 3. **1W Upgrades** — `props.isUpgrade`; gated by settings + `disabledCategories`.
 4. **Recent Items** — `SlotMatchesRecent` (GUID map + `recentItemDuration`). Surfaces recent non-junk/non-upgrade items before custom/builtin classification.
 5. **No hyperlink** → `"Other"`.
-6. **Category cache** read (PredicateEngine cache key when hyperlink exists).
+6. **Category cache** read (engine cache key when hyperlink exists).
 7. **Merged candidate pool** — collects **all** matching custom predicate categories (`CollectCustomPredicateCandidates`) and builtin `SEARCH_CATEGORIES` matches into one pool, then picks one winner via `PickBestCandidate`: user-facing priority (higher wins) → custom beats builtin at equal priority → `defaultOrder` (lower wins) → section order → `searchOrder` → tieKey.
 8. **Inventory slots** — if result is `Weapons` or `Armor` and `enableInventorySlots`, remap to localized equip-slot category name.
 9. **Disabled fallback** — if final candidate-pool-derived name is disabled → `"Other"` (steps 1–4 bypass this).
@@ -296,23 +295,24 @@ CategoryManager:AssignCategories()
 
 ### 5. Search Pipeline
 
-Search uses `PredicateEngine` (tokenizer, AST, evaluation):
+Search uses `OneWoW_GUI.PredicateEngine` (tokenizer, AST, evaluation). For full engine internals and public API, see [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
 
 - Keywords, properties, operators (`&` `|` `!`), parentheses, bare name text
-- `#recent` is registered at `Data\Categories.lua` load via `PredicateEngine:RegisterKeyword` (Bags-only): GUID map + duration only. `#new` / `IsNew` in core engine use `C_NewItems` via `BuildProps` (can lag until `InvalidatePropsCache`); `#recent` does not use that cached flag for classification
-- `WH:FilterBySearch` compiles the expression once per refresh and evaluates per button via `PredicateEngine:CheckItem`
+- `#recent` is registered at `Data\Categories.lua` load via `PE:RegisterKeyword` (Bags-only): GUID map + duration only. `#new` / `IsNew` in the engine use `C_NewItems` via `BuildProps` (can lag until `InvalidatePropsCache`); `#recent` does not use that cached flag for classification
+- `#catalyst` / `#catalystupgrade` are registered by the engine itself with call-time `TransmogUpgradeMaster_API` checks (no-op if the addon is absent)
+- `WH:FilterBySearch` compiles the expression once per refresh and evaluates per button via `PE:CheckItem`
 
 ```
 InfoBar / BankInfoBar / GuildBankInfoBar: search changed
   └─→ *Controller:OnSearchChanged → *GUI:RefreshLayout
        └─→ filterButtons → WH:FilterBySearch
-            └─→ PredicateEngine:CheckItem(expr, itemID, bagID, slotID, info)
+            └─→ PE:CheckItem(expr, itemID, bagID, slotID, info)
                  ├─→ Compile(expr) → cached AST
                  ├─→ BuildProps(...) → cached props (+ tooltip laziness inside props)
                  └─→ Evaluate AST → true/false
 ```
 
-Expansion filtering for bags/bank uses `WindowHelpers:ResolveExpansionID` (PredicateEngine expansion helpers under the hood), not the same code path as the search box unless the user types expansion predicates.
+Expansion filtering for bags/bank uses `WindowHelpers:ResolveExpansionID` (engine expansion helpers under the hood), not the same code path as the search box unless the user types expansion predicates.
 
 ### 6. Settings Pipeline
 
@@ -366,7 +366,7 @@ Acquire/release pool for `ContainerFrameItemButtonTemplate` buttons. `Preallocat
 Applied with `OneWoW_Bags:ApplyItemButtonMixin` (copies `OneWoW_Bags.ItemButtonMixin` methods onto the button once).
 
 - `OWB_SetSlot`, `OWB_MarkDirty`, `OWB_IsDirty`, `OWB_FullUpdate`
-- `OWB_UpdateNewItemGlow` — player bags only (`BagTypes:IsPlayerBag`); uses `PredicateEngine:BuildProps(...).isNew` + template overlays
+- `OWB_UpdateNewItemGlow` — player bags only (`BagTypes:IsPlayerBag`); uses `OneWoW_GUI.PredicateEngine:BuildProps(...).isNew` + template overlays
 - `OWB_UpdateJunkDim`, `OWB_UpdateUnusableOverlay` — junk from `BuildProps(...).isJunk`
 - `OWB_RefreshCooldown`, `OWB_RefreshLock`, `OWB_SetIconSize`, `OWB_GetLink`
 
@@ -431,11 +431,11 @@ Each view exposes `Layout(...)` and returns total content height.
 
 ### PredicateEngine
 
-Expression pipeline with registries for properties, keywords, and flags; caches for compiled expressions, per-item props, and tooltip text. `InvalidateCache` wipes compile + props + tooltip; `InvalidatePropsCache` wipes props + tooltip only (used from `InvalidateCategorization("props")` on bag delayed updates).
+Lives in `OneWoW_GUI` as `OneWoW_GUI.PredicateEngine` (published by the `OneWoW_GUI-1.0` LibStub library). Bags consumes it via `local PE = OneWoW_GUI.PredicateEngine`. Full reference: [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
 
-Used for: search filtering, custom category expressions, builtin category search strings in `Categories`.
+Used by Bags for: search filtering (`WH:FilterBySearch`), custom category expressions and builtin category search strings in `Data/Categories.lua`, item button state (`ItemButton` junk / new / upgrade flags), and keyword tooltips in `Integrations/OneWoWTooltips.lua`.
 
-Tokenizer notes: string-property comparisons accept unquoted single-token values and quoted string literals for phrases. Standalone quoted `~"..."` / `~'...'` is treated as shorthand for `name~...`. `~` remains literal contains, while `~~` uses Lua pattern matching and malformed patterns fail safely as non-matches.
+Cache invalidation boundary: `InvalidateCategorization("props")` on `BAG_UPDATE_DELAYED` calls `PE:InvalidatePropsCache()` (props + tooltip only). Full `PE:InvalidateCache()` runs on keyword/property registration, settings changes that reshape categorization, and manual refresh.
 
 ### Categories
 

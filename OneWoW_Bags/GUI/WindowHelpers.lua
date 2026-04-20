@@ -6,7 +6,7 @@ if not OneWoW_GUI then return end
 local DB = OneWoW_GUI.DB
 
 local Constants = OneWoW_Bags.Constants
-local PE = OneWoW_Bags.PredicateEngine
+local PE = OneWoW_GUI.PredicateEngine
 
 local tinsert, sort = tinsert, sort
 local ipairs, pairs = ipairs, pairs

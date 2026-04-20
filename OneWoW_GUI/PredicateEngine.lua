@@ -13,10 +13,11 @@
 --   - Lazy tooltip metatable for the few remaining tooltip-only fields
 -- ============================================================================
 
-local _, OneWoW_Bags = ...
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
-OneWoW_Bags.PredicateEngine = {}
-local PE = OneWoW_Bags.PredicateEngine
+OneWoW_GUI.PredicateEngine = {}
+local PE = OneWoW_GUI.PredicateEngine
 
 local tconcat, tinsert, wipe = table.concat, tinsert, wipe
 local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
@@ -795,9 +796,11 @@ RegisterKeyword("petcanbattle",       function(p) return p.canPetBattle end)
 RegisterKeyword("pettradeable",    function(p) return p.isPetTradeable end)
 
 -- ---- 7.17  Transmog keywords ----
-RegisterKeyword("transmog",        function(p) return p.hasAppearance end)
-RegisterKeyword("knowntransmog",   function(p) return p.isAppearanceCollected end)
-RegisterKeyword("unknowntransmog", function(p) return p.isUnknownAppearance end)
+RegisterKeyword("transmog",         function(p) return p.hasAppearance end)
+RegisterKeyword("knowntransmog",    function(p) return p.isAppearanceCollected end)
+RegisterKeyword("unknowntransmog",  function(p) return p.isUnknownAppearance end)
+RegisterKeyword("catalyst",         function(p) return p.isCatalyst end)
+RegisterKeyword("catalystupgrade",  function(p) return p.isCatalystUpgrade end)
 
 -- ---- 7.18  State keywords ----
 RegisterKeyword({"usable", "use"},  function(p) return p.isUsable end)
@@ -1478,6 +1481,8 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.durability = nil
     props.maxDurability = nil
     props.durabilityPct = nil
+    props.isCatalyst = false
+    props.isCatalystUpgrade = false
 
     local containerInfo, itemLocation
     if bagID and slotID then
@@ -1650,6 +1655,13 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
         props.isEnchanted = itemLinkProperties.enchantID ~= nil
         props.isCrafted = itemLinkProperties.crafterGUID ~= nil
         props.itemContextCategory = ITEM_CONTEXT_CATEGORY[itemLinkProperties.itemContext]
+    end
+
+    -- ---- Catalyst properties ----
+    if TransmogUpgradeMaster_API and TransmogUpgradeMaster_API.IsAppearanceMissing then
+        local isCatalyst, isCatalystUpgrade = TransmogUpgradeMaster_API.IsAppearanceMissing(hyperlink)
+        props.isCatalyst = isCatalyst == true
+        props.isCatalystUpgrade = isCatalystUpgrade == true
     end
 
     -- BIND DETECTION NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.

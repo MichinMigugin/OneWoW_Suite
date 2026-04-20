@@ -19,6 +19,7 @@ Core.lua
 Database.lua
 Constants.lua
 OneWoW_GUI.lua
+PredicateEngine.lua
 
 # Widget files - DO NOT reorder. Dependencies: Controls needs Buttons+Display;
 # Layout needs Buttons+Controls; Panels needs Buttons+Layout+EditBoxes.

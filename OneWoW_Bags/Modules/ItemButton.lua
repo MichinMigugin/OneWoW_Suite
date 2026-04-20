@@ -5,7 +5,7 @@ if not OneWoW_GUI then return end
 
 local BagTypes = OneWoW_Bags.BagTypes
 local ItemPool = OneWoW_Bags.ItemPool
-local PE = OneWoW_Bags.PredicateEngine
+local PE = OneWoW_GUI.PredicateEngine
 
 local pairs, select = pairs, select
 

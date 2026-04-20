@@ -8,7 +8,7 @@ local L = OneWoW_Bags.L
 local Categories = OneWoW_Bags.Categories
 local BankSet = OneWoW_Bags.BankSet
 local H = OneWoW_Bags.CategoryViewHelpers
-local PE = OneWoW_Bags.PredicateEngine
+local PE = OneWoW_GUI.PredicateEngine
 
 local tinsert = tinsert
 local ipairs = ipairs
