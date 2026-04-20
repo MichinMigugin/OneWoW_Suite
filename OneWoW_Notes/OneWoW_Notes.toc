@@ -1,6 +1,6 @@
 ## Interface: 120001, 120005
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Notes|r
-## Version: R6.2604.1619
+## Version: R6.2604.2021
 ## Notes: OneWoW Addon that: provides note-taking for characters, NPCs, zones, and items.
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
