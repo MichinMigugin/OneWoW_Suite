@@ -189,6 +189,7 @@ RegisterPropAlias("sockets",        "sockets")
 RegisterPropAlias("armor",          "statArmor")
 RegisterPropAlias("durability",     "durability")
 RegisterPropAlias("maxdurability",  "maxDurability")
+RegisterPropAlias("durabilitypct",  "durabilityPct")
 
 -- Stat properties (comparison syntax)
 RegisterPropAlias({"intellect", "int"},         "statIntellect")
@@ -259,7 +260,7 @@ local FLAG_REGISTRY = {
 
     -- Tooltip-derived flags (lazy)
     hasuseability           = "hasUseAbility",
-    hasEquipAbility         = "hasEquipAbility",
+    hasequipability         = "hasEquipAbility",
     isalreadyknown          = "isAlreadyKnown",
     istradeableloot         = "isTradeableLoot",
 
@@ -1442,6 +1443,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isBroken = false
     props.durability = nil
     props.maxDurability = nil
+    props.durabilityPct = nil
 
     local containerInfo, itemLocation
     if bagID and slotID then
@@ -1453,10 +1455,14 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
         -- ---- Item durability ----
         local durability, maxDurability = C_Container.GetContainerItemDurability(bagID, slotID)
-        props.durability = durability
-        props.maxDurability = maxDurability
-        props.needsRepair = durability ~= maxDurability
-        props.isBroken = durability == 0
+
+        if durability then
+            props.durability = durability
+            props.maxDurability = maxDurability
+            props.durabilityPct = (durability/maxDurability)*100    -- Let the caller decide if they want to floor, ceil, or round
+            props.needsRepair = durability ~= maxDurability
+            props.isBroken = durability == 0
+        end
 
         -- ---- Equipment set (API-based, no cache needed) ----
         local inSet, setList = C_Container.GetContainerItemEquipmentSetInfo(bagID, slotID)

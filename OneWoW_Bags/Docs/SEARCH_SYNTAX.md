@@ -130,6 +130,13 @@ These keywords match **Blizzard item quality** only.
 | `#cosmetic` | | Cosmetic armor |
 | `#myclass` | | Equipment your class can use |
 | `#myspec` | | Equipment usable by your current spec (universal gear included) |
+| `#needsrepair` | | Current durability differs from max (requires bag/slot context; see note below) |
+| `#broken` | | Zero durability (`durability==0`; requires bag/slot context) |
+
+> **Durability keywords:** Values come from `C_Container.GetContainerItemDurability`
+> when the item is built from a real `bagID`/`slotID`. Without that, `#needsrepair`
+> and `#broken` stay false and numeric `durability` / `maxdurability` comparisons
+> treat missing durability as `0`.
 
 ### Armor Subtype
 
@@ -253,6 +260,16 @@ These match items with the Profession item class and a specific profession subcl
 | `#inscription` | Inscription reagents |
 | `#archaeology` | Archaeology reagents |
 
+### Character profession filter
+
+| Keyword | Aliases | What it matches |
+|---|---|---|
+| `#myprofs` | `#myprofession`, `#myprofessions` | Profession-class **tools** and **recipes** whose profession matches a trade skill the current character has learned (skill line IDs from `GetProfessions` / `GetProfessionInfo`). Other item types do not match. |
+
+The known-profession set is cached until
+`PredicateEngine:InvalidateKnownProfessions()` runs. OneWoW Bags listens for
+`SKILL_LINES_CHANGED` and calls it automatically.
+
 ### Miscellaneous Subtypes
 
 | Keyword | What it matches |
@@ -368,6 +385,9 @@ These keywords are intended to pair naturally with `#pet`.
 | `#petbeast` | Beast battle pets |
 | `#petaquatic` | Aquatic battle pets |
 | `#petmechanical` | Mechanical battle pets |
+| `#wildpet` | Wild battle pets (`C_PetJournal` wild flag) |
+| `#petcanbattle` | Pets that can battle |
+| `#pettradeable` | Tradable pets |
 
 **Examples:**
 
@@ -448,12 +468,13 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 | `#new` | Items Blizzard marks as new in the bag slot (`C_NewItems.IsNewItem`), via PredicateEngine `BuildProps` (may lag real client state until the props cache is invalidated) |
 | `#locked` | Locked items |
 | `#charges` | Items with charges |
-| `#unique` | Items whose tooltip shows **Unique** or **Unique-Equipped** (includes `#uniqueequipped`) |
+| `#unique` | Tooltip **Unique** / **Unique-Equipped**, **or** unique battle pets (`isPetUnique` from the journal) |
 | `#socket` | Items with gem sockets |
 | `#equipped` | Items currently equipped |
-| `#knowledge` | Profession knowledge study items (same rules as under Consumable Subtypes) |
 | `#refundable` | Items still eligible for a full vendor refund (same window as the in-game refund indicator) |
 | `#enchanted` | Items whose link includes a permanent enchant (enchant ID in the parsed item link) |
+
+For `#knowledge`, see **Consumable Subtypes** (same predicate).
 
 ### Recent (OneWoW Bags)
 
@@ -504,6 +525,12 @@ other keywords on first access.
 | `#reputation` | Items with "Reputation" in the tooltip |
 | `#tradeableloot` | Loot still in the trade window |
 | `#openable` | Containers you can right-click to open |
+
+### Shop / battle.net item
+
+| Keyword | What it matches |
+|---|---|
+| `#battlepay` | Items flagged as Battle.net / shop purchases (`C_Container.IsBattlePayItem` for bag/slot items) |
 
 ### Special
 
@@ -587,10 +614,20 @@ Syntax: `property>=value`, `property<=value`, `property>value`, `property<value`
 | `speed` | | Speed tertiary stat |
 | `leech` | | Leech tertiary stat |
 | `avoidance` | | Avoidance tertiary stat |
+| `petcollected` | | Number of that battle pet species already collected |
+| `petlimit` | | Max allowed copies for that species (pet journal) |
+| `durability` | | Current durability (bag/slot items; otherwise treated as `0` for comparisons) |
+| `maxdurability` | | Maximum durability for the slot |
 
 > **`#armor` vs `armor>=N`:** The keyword `#armor` matches any item in the
 > Armor item class. The property `armor` in a comparison like `armor>=100`
 > checks the item's armor *stat value*. These are independent.
+
+**Property-vs-property comparisons:** If the right-hand side is the **lowercased
+name of another numeric property** in the table (for example `ilvl>=reqlevel`), the
+engine compares the two live property values instead of parsing a numeric literal.
+Other examples: `petpower>=petspeed`, `petlevel:1-25` still uses numeric bounds only
+(the range syntax does not accept property names).
 
 **Examples:**
 
@@ -607,7 +644,9 @@ crit>0                  Items with any crit (same as #crit)
 pettype=8               Beast battle pets
 petlevel:1-10           Low-level pets
 petquality>=4           Epic or better pets
+ilvl>=reqlevel          Item level at or above required level (property vs property)
 ```
+
 
 ### String Comparisons
 
@@ -714,6 +753,9 @@ read more like natural conditions.
 | `IsToy` | `#toy` |
 | `IsMount` | `#mount` |
 | `IsPet` | `#pet` |
+| `IsWildPet` | `#wildpet` |
+| `CanPetBattle` | `#petcanbattle` |
+| `IsPetTradeable` | `#pettradeable` |
 | `IsCosmetic` | `#cosmetic` |
 | `IsLocked` | `#locked` |
 | `IsUnsellable` | `#unsellable` |
