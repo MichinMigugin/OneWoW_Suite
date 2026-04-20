@@ -238,59 +238,77 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
         return
     end
 
-    local itemsToDeposit = {}
-    for itemID, itemData in pairs(itemList) do
-        if itemData and itemData.bankType then
-            local shouldDeposit = false
-            if activeType == "guild" then
-                shouldDeposit = itemData.bankType == "guild"
-            else
-                shouldDeposit = itemData.bankType == "personal" or itemData.bankType == "warband"
-            end
-            if shouldDeposit then
-                table.insert(itemsToDeposit, {itemID = tonumber(itemID), bankType = itemData.bankType, itemName = itemData.itemName})
+    -- Walk the player's live bags once and only queue slots that hold an item
+    -- on the deposit list and are compatible with the currently-open bank.
+    -- This keeps the schedule proportional to what's actually being moved
+    -- instead of the full list size (which can be hundreds of entries).
+    local slotsToDeposit = {}
+    local hasGuildItems = false
+
+    for bagID = 0, 5 do
+        local numSlots = C_Container.GetContainerNumSlots(bagID)
+        if numSlots and numSlots > 0 then
+            for slotID = 1, numSlots do
+                local itemInfo = C_Container.GetContainerItemInfo(bagID, slotID)
+                if itemInfo and itemInfo.itemID then
+                    local itemData = itemList[tostring(itemInfo.itemID)]
+                    if itemData and itemData.bankType then
+                        local targetType = itemData.bankType
+                        local shouldDeposit = false
+                        if activeType == "guild" then
+                            shouldDeposit = targetType == "guild"
+                        else
+                            shouldDeposit = targetType == "personal" or targetType == "warband"
+                        end
+                        if shouldDeposit then
+                            if targetType == "guild" then
+                                hasGuildItems = true
+                            end
+                            table.insert(slotsToDeposit, {
+                                bagID    = bagID,
+                                slotID   = slotID,
+                                itemID   = itemInfo.itemID,
+                                bankType = targetType,
+                                itemName = itemData.itemName,
+                            })
+                        end
+                    end
+                end
             end
         end
     end
 
-    if #itemsToDeposit == 0 then
+    if #slotsToDeposit == 0 then
         return
     end
 
     self.isDepositing = true
     self.isPaused = false
     self.currentDepositIndex = 0
-    self.totalDepositItems = #itemsToDeposit
+    self.totalDepositItems = #slotsToDeposit
     self.depositedItems = {}
     self.failedItems = {}
     self.depositTimers = {}
 
     if manualTrigger then
-        print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Starting manual deposit of " .. #itemsToDeposit .. " item(s)...|r")
+        print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Starting manual deposit of " .. #slotsToDeposit .. " stack(s)...|r")
     end
 
-    local hasGuildItems = false
-    for _, itemInfo in ipairs(itemsToDeposit) do
-        if itemInfo.bankType == "guild" then
-            hasGuildItems = true
-            break
-        end
-    end
     local delayStep = hasGuildItems and 1.0 or 0.3
 
     local delay = delayStep
-    for i, itemInfo in ipairs(itemsToDeposit) do
+    for i, slotInfo in ipairs(slotsToDeposit) do
         local timer = C_Timer.After(delay, function()
             if self.isPaused then
                 return
             end
             self.currentDepositIndex = i
             if self.progressCallback then
-                self.progressCallback(i, #itemsToDeposit, itemInfo.itemName)
+                self.progressCallback(i, #slotsToDeposit, slotInfo.itemName)
             end
-            self:DepositItemByID(itemInfo.itemID, itemInfo.bankType, itemInfo.itemName)
+            self:DepositSingleSlot(slotInfo)
 
-            if i == #itemsToDeposit then
+            if i == #slotsToDeposit then
                 C_Timer.After(0.5, function()
                     self:FinishDeposit()
                 end)
@@ -298,6 +316,94 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
         end)
         table.insert(self.depositTimers, timer)
         delay = delay + delayStep
+    end
+end
+
+function DirectDeposit:DepositSingleSlot(slotInfo)
+    if not slotInfo then return end
+
+    local bagID          = slotInfo.bagID
+    local slotID         = slotInfo.slotID
+    local expectedID     = slotInfo.itemID
+    local targetBankType = slotInfo.bankType
+    local itemName       = slotInfo.itemName
+
+    -- Re-verify the slot still holds the expected item. Bag contents can shift
+    -- between the initial scan and the scheduled deposit (prior stack merged,
+    -- item consumed, user moved it, etc.), so skip silently if it no longer matches.
+    local itemInfo = C_Container.GetContainerItemInfo(bagID, slotID)
+    if not itemInfo or itemInfo.itemID ~= expectedID then
+        return
+    end
+
+    local bankTypeEnum
+    local isGuildBank = false
+
+    if targetBankType == "warband" then
+        bankTypeEnum = Enum.BankType.Account
+    elseif targetBankType == "personal" then
+        bankTypeEnum = Enum.BankType.Character
+    elseif targetBankType == "guild" then
+        isGuildBank = true
+        if not self.guildBankOpen then
+            table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Guild bank not open"})
+            return
+        end
+    else
+        return
+    end
+
+    if not isGuildBank and not C_Bank.CanUseBank(bankTypeEnum) then
+        table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Bank not accessible"})
+        return
+    end
+
+    local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+    if not itemLocation or not itemLocation:IsValid() then
+        return
+    end
+
+    if not isGuildBank then
+        local allowed = C_Bank.IsItemAllowedInBankType(bankTypeEnum, itemLocation)
+        if not allowed then
+            table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Item binding prevents deposit"})
+            return
+        end
+    else
+        local ok, bindType = pcall(C_Item.GetItemBindType, itemLocation)
+        if ok and (bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest) then
+            table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Item binding prevents deposit"})
+            return
+        end
+    end
+
+    if isGuildBank then
+        C_Container.UseContainerItem(bagID, slotID)
+    else
+        C_Container.UseContainerItem(bagID, slotID, nil, bankTypeEnum)
+    end
+
+    local stackCount = itemInfo.stackCount or 1
+    local resolvedItemName = itemName or C_Item.GetItemNameByID(expectedID) or "Item"
+
+    -- Collapse repeats of the same item+bankType into one summary entry so the
+    -- FinishDeposit readout matches the old per-itemID grouping.
+    local existing
+    for _, rec in ipairs(self.depositedItems) do
+        if rec.itemID == expectedID and rec.bankType == targetBankType then
+            existing = rec
+            break
+        end
+    end
+    if existing then
+        existing.count = existing.count + stackCount
+    else
+        table.insert(self.depositedItems, {
+            itemID   = expectedID,
+            itemName = resolvedItemName,
+            count    = stackCount,
+            bankType = targetBankType,
+        })
     end
 end
 
