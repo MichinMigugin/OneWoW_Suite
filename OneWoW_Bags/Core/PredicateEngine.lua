@@ -146,8 +146,8 @@ local CONSTANT_MAP = {
 
 local PROP_REGISTRY = {}
 
-local function RegisterPropAlias(nameOrNames, field, propType)
-    local entry = { field = field, type = propType or "number" }
+local function RegisterPropAlias(nameOrNames, field, propType, unit)
+    local entry = { field = field, type = propType or "number", unit = unit }
     if type(nameOrNames) == "table" then
         for _, name in ipairs(nameOrNames) do
             PROP_REGISTRY[strlower(name)] = entry
@@ -157,11 +157,45 @@ local function RegisterPropAlias(nameOrNames, field, propType)
     end
 end
 
+local function ParseMoney(str)
+    if not str or str == "" then return nil end
+    local s = strlower(str)
+    local hasUnit = false
+    local copper = 0
+    local pos = 1
+    local len = #s
+    while pos <= len do
+        local numStart = pos
+        while pos <= len and s:sub(pos, pos):match("[%d%.]") do
+            pos = pos + 1
+        end
+        if pos == numStart then return nil end
+        local n = tonumber(s:sub(numStart, pos - 1))
+        if not n then return nil end
+        local unit = s:sub(pos, pos)
+        if unit == "g" then
+            copper = copper + math.floor(n * 10000)
+        elseif unit == "s" then
+            copper = copper + math.floor(n * 100)
+        elseif unit == "c" then
+            copper = copper + math.floor(n)
+        else
+            return nil
+        end
+        hasUnit = true
+        pos = pos + 1
+    end
+    return hasUnit and copper or nil
+end
+PE.ParseMoney = ParseMoney
+
+local MONEY_CHAR_CLASS = "[%d%.gGsScC]"
+
 -- Numeric properties
 RegisterPropAlias({"ilvl", "itemlevel", "level"},           "ilvl")
 RegisterPropAlias({"id", "itemid"},                         "id")
 RegisterPropAlias({"count", "stacks"},                      "count")
-RegisterPropAlias({"vendorprice", "price", "unitvalue"},    "vendorPrice")
+RegisterPropAlias({"vendorprice", "price", "unitvalue"},    "vendorPrice", "number", "money")
 RegisterPropAlias({"maxstack", "stacksize"},                "maxStack")
 RegisterPropAlias({"reqlevel", "minlevel"},                 "reqLevel")
 RegisterPropAlias({"expansion", "expac"},                   "expansionID")
@@ -179,7 +213,7 @@ RegisterPropAlias("petlimit",                               "petLimit")
 RegisterPropAlias("quality",        "quality")
 RegisterPropAlias("bindtype",       "bindType")
 RegisterPropAlias("currentbind",    "currentbind")
-RegisterPropAlias("totalvalue",     "totalValue")
+RegisterPropAlias("totalvalue",     "totalValue",     "number", "money")
 RegisterPropAlias("craftedquality", "craftedQuality")
 RegisterPropAlias("upgradelevel",   "upgradeLevel")
 RegisterPropAlias("upgrademax",     "upgradeMax")
@@ -1727,43 +1761,80 @@ local function Tokenize(searchStr)
 
         -- ---- Bare comparison starting with > or <  (ilvl sugar like Bagantor) ----
         -- >=200 becomes prop_compare(ilvl, >=, 200)
+        -- >100g becomes prop_compare(vendorprice, >, 1000000)
         elseif c == ">" or c == "<" then
             local j = i + 1
             if j <= len and searchStr:sub(j, j) == "=" then j = j + 1 end
-            local numStart = j
-            while j <= len and searchStr:sub(j, j):match("%d") do j = j + 1 end
-            local opStr = searchStr:sub(i, numStart - 1)
-            local num = tonumber(searchStr:sub(numStart, j - 1))
+            local valStart = j
+            while j <= len and searchStr:sub(j, j):match(MONEY_CHAR_CLASS) do
+                j = j + 1
+            end
+            local opStr = searchStr:sub(i, valStart - 1)
+            local valStr = searchStr:sub(valStart, j - 1)
+            local num = tonumber(valStr)
+            local prop = "ilvl"
+            if not num then
+                local money = ParseMoney(valStr)
+                if money then
+                    num, prop = money, "vendorprice"
+                end
+            end
             if num then
                 tinsert(tokens, {
-                    type = "prop_compare", prop = "ilvl",
+                    type = "prop_compare", prop = prop,
                     op = opStr, value = num,
                 })
             end
             i = j
 
-        -- ---- Bare number: could be ilvl exact match or ilvl range ----
+        -- ---- Bare number: could be ilvl or vendorprice, exact match or range ----
         -- 623 becomes ilvl==623; 200-300 becomes ilvl:200-300
+        -- 100g becomes vendorprice==1000000; 10s-50s becomes vendorprice:1000-5000
         elseif c:match("%d") then
             local j = i
-            while j <= len and searchStr:sub(j, j):match("%d") do j = j + 1 end
+            while j <= len and searchStr:sub(j, j):match(MONEY_CHAR_CLASS) do
+                j = j + 1
+            end
+            local firstStr = searchStr:sub(i, j - 1)
             if j <= len and searchStr:sub(j, j) == "-" then
                 local k = j + 1
-                while k <= len and searchStr:sub(k, k):match("%d") do k = k + 1 end
-                local low  = tonumber(searchStr:sub(i, j - 1))
-                local high = tonumber(searchStr:sub(j + 1, k - 1))
+                while k <= len and searchStr:sub(k, k):match(MONEY_CHAR_CLASS) do
+                    k = k + 1
+                end
+                local secondStr = searchStr:sub(j + 1, k - 1)
+                local low  = tonumber(firstStr)
+                local high = tonumber(secondStr)
+                local prop = "ilvl"
+                if not (low and high) then
+                    local lowM  = ParseMoney(firstStr)
+                    local highM = ParseMoney(secondStr)
+                    if lowM or highM then
+                        low  = lowM  or tonumber(firstStr)
+                        high = highM or tonumber(secondStr)
+                        if low and high then
+                            prop = "vendorprice"
+                        end
+                    end
+                end
                 if low and high then
                     tinsert(tokens, {
-                        type = "prop_range", prop = "ilvl",
+                        type = "prop_range", prop = prop,
                         low = low, high = high,
                     })
                 end
                 i = k
             else
-                local num = tonumber(searchStr:sub(i, j - 1))
+                local num = tonumber(firstStr)
+                local prop = "ilvl"
+                if not num then
+                    local money = ParseMoney(firstStr)
+                    if money then
+                        num, prop = money, "vendorprice"
+                    end
+                end
                 if num then
                     tinsert(tokens, {
-                        type = "prop_compare", prop = "ilvl",
+                        type = "prop_compare", prop = prop,
                         op = "=", value = num,
                     })
                 end
@@ -1838,6 +1909,9 @@ local function Tokenize(searchStr)
                         end
                         local valStr = searchStr:sub(valStart, i - 1)
                         val = tonumber(valStr)
+                        if not val and reg.unit == "money" then
+                            val = ParseMoney(valStr)
+                        end
                         if not val then
                             local rhsKey = strlower(valStr)
                             local rhsReg = PROP_REGISTRY[rhsKey]
@@ -1940,13 +2014,24 @@ local function Tokenize(searchStr)
                         i = i + 1
                     end
                     local rangeStr = searchStr:sub(rangeStart, i - 1)
+                    local reg = PROP_REGISTRY[wordLower]
+                    local lowN, highN
                     local low, high = rangeStr:match("^(%d+)-(%d+)$")
                     if low and high then
+                        lowN, highN = tonumber(low), tonumber(high)
+                    elseif reg.unit == "money" then
+                        local lowStr, highStr = rangeStr:match("^([%d%.gGsScC]+)-([%d%.gGsScC]+)$")
+                        if lowStr and highStr then
+                            lowN  = ParseMoney(lowStr)  or tonumber(lowStr)
+                            highN = ParseMoney(highStr) or tonumber(highStr)
+                        end
+                    end
+                    if lowN and highN then
                         tinsert(tokens, {
                             type = "prop_range",
                             prop = wordLower,
-                            low  = tonumber(low),
-                            high = tonumber(high),
+                            low  = lowN,
+                            high = highN,
                         })
                     else
                         tinsert(tokens, { type = "text", value = word })

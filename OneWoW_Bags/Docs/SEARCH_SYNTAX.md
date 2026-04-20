@@ -20,6 +20,8 @@ all three contexts.
 | `200-300` | Items with item level between 200 and 300 |
 | `#haste & ilvl>=600` | Items with haste at ilvl 600+ |
 | `haste>=200` | Items with 200+ haste rating |
+| `vendorprice>100g` | Items that sell for more than 100 gold |
+| `>50s` | Same thing, for any price above 50 silver (shorthand) |
 | `#knowledge` | Profession knowledge study items |
 
 ---
@@ -588,8 +590,8 @@ Syntax: `property>=value`, `property<=value`, `property>value`, `property<value`
 | `id` | `itemid` | Item ID |
 | `quality` | | Quality as a number (0=Poor, 1=Common, 2=Uncommon, 3=Rare, 4=Epic, 5=Legendary) |
 | `count` | `stacks` | Stack size in the slot |
-| `vendorprice` | `price`, `unitvalue` | Vendor sell price per unit (copper) |
-| `totalvalue` | | Vendor sell price × stack size (copper) |
+| `vendorprice` | `price`, `unitvalue` | Vendor sell price per unit (copper; accepts `g`/`s`/`c` notation) |
+| `totalvalue` | | Vendor sell price × stack size (copper; accepts `g`/`s`/`c` notation) |
 | `maxstack` | `stacksize` | Maximum stack size |
 | `reqlevel` | `minlevel` | Required player level |
 | `expansion` | `expac` | Expansion ID (0=Classic, 1=TBC, ..., 10=TWW, 11=Midnight, 12=Last Titan) |
@@ -636,12 +638,34 @@ engine compares the two live property values instead of parsing a numeric litera
 Other examples: `petpower>=petspeed`, `petlevel:1-25` still uses numeric bounds only
 (the range syntax does not accept property names).
 
+**Money notation (money-typed properties only):** `vendorprice` and `totalvalue`
+accept values written as combinations of `g` (gold), `s` (silver), and `c`
+(copper) instead of raw copper. Units may be combined and decimals are allowed.
+Under the hood the literal is converted to copper at parse time — so every
+operator, range, and bare shorthand works unchanged.
+
+| You type | Means |
+|---|---|
+| `vendorprice>100g` | Over 100 gold per unit |
+| `price>=2g50s` | At least 2 gold, 50 silver |
+| `totalvalue:10g-50g` | Stack total value between 10 and 50 gold |
+| `price==1.5g` | Exactly 1.5 gold (equivalent to `1g50s`) |
+| `totalvalue!=0c` | Items with non-zero stack value |
+| `>100g`, `<50s` | Bare shorthand — auto-routes to `vendorprice` |
+| `100g` | Exact `vendorprice==100g` (bare shorthand) |
+| `10s-50s` | Bare range `vendorprice:1000-5000` |
+
+Units other than `g`/`s`/`c` are not recognised. Money notation is only parsed
+on money-typed properties; `ilvl==100g` is rejected (it is not a money prop).
+
 **Examples:**
 
 ```
 ilvl>=600               Items at ilvl 600+
 quality>=4              Epic or better
 vendorprice>0           Items worth something to a vendor
+vendorprice>=1g         Items worth at least 1 gold each
+totalvalue:10g-50g      Stack value between 10g and 50g
 expansion==10           The War Within items
 count>1                 Stacked items
 sockets>0               Items with at least one socket
