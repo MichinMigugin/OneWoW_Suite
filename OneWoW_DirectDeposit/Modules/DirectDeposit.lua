@@ -6,6 +6,7 @@ local DirectDeposit = OneWoW_DirectDeposit.DirectDeposit
 
 DirectDeposit.guildBankOpen = false
 DirectDeposit.currentOpenBankType = nil
+DirectDeposit.bankSessionHandled = false
 DirectDeposit.isDepositing = false
 DirectDeposit.isPaused = false
 DirectDeposit.currentDepositIndex = 0
@@ -48,6 +49,7 @@ function DirectDeposit:RegisterEvents()
             if DirectDeposit.currentOpenBankType == "personal" then
                 DirectDeposit.currentOpenBankType = nil
             end
+            DirectDeposit.bankSessionHandled = false
         elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
             local interactionType = ...
             if interactionType == Enum.PlayerInteractionType.GuildBanker then
@@ -66,8 +68,10 @@ function DirectDeposit:RegisterEvents()
             if interactionType == Enum.PlayerInteractionType.GuildBanker then
                 DirectDeposit.guildBankOpen = false
                 DirectDeposit.currentOpenBankType = nil
+                DirectDeposit.bankSessionHandled = false
             elseif interactionType == 68 or interactionType == 67 then
                 DirectDeposit.currentOpenBankType = nil
+                DirectDeposit.bankSessionHandled = false
             end
         end
     end)
@@ -103,6 +107,16 @@ function DirectDeposit:GetTargetGold()
 end
 
 function DirectDeposit:OnBankOpened()
+    -- The remote Warband Bank (and some banker NPCs) fire BANKFRAME_OPENED and
+    -- PLAYER_INTERACTION_MANAGER_FRAME_SHOW back-to-back in the same frame. Without
+    -- this guard the body would run twice before the server has a chance to apply
+    -- the first deposit/withdraw, causing C_Bank.DepositMoney / C_Bank.WithdrawMoney
+    -- to see stale GetMoney() and double the transfer. One run per bank session.
+    if self.bankSessionHandled then
+        return
+    end
+    self.bankSessionHandled = true
+
     self:SweepWarboundItems()
 
     if not self:IsEnabled() then
