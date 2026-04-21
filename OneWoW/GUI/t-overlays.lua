@@ -1714,6 +1714,14 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     split.UpdateDetailThumb()
 end
 
+-- Public entry point so other tabs (e.g. Tooltips > Gear Upgrades) can render
+-- an overlay feature's full detail panel as a 1:1 mirror. The caller passes a
+-- feature table with the overlays-side id (e.g. id = "upgrade") but may
+-- override title/description locale keys for tab-specific wording.
+function GUI:ShowOverlayFeatureDetail(split, feature, selectedRow)
+    ShowOverlayDetail(split, feature, selectedRow)
+end
+
 local function BuildFeatureList(split, tabName)
     local lsc = split.listScrollChild
     local features = OneWoW.SettingsFeatureRegistry:GetByTab(tabName)

@@ -1578,6 +1578,21 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
         return
     end
 
+    if feature.id == "gearupgrades" then
+        -- 1:1 mirror of Overlays > Gear Upgrade Overlay. We hand the overlay
+        -- detail builder a feature whose id points at the overlays-side key
+        -- ("upgrade") so enable state + every setting reads/writes the same
+        -- storage used by the Overlays tab. Only the displayed title/desc
+        -- are overridden with the Tooltips-flavored locale keys.
+        local overlayFeature = {
+            id          = "upgrade",
+            title       = feature.title,
+            description = feature.description,
+        }
+        OneWoW.GUI:ShowOverlayFeatureDetail(split, overlayFeature, selectedRow)
+        return
+    end
+
     local yOffset = -10
 
     local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)

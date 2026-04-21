@@ -22,15 +22,28 @@ function reg:GetByTab(tabName)
     return sorted
 end
 
+-- Resolves a (tabName, featureId) through any registered settingsTab/settingsId
+-- override on the feature data, so a feature registered on one tab can fully
+-- mirror another tab's stored state (e.g. tooltips/gearupgrades -> overlays/upgrade).
+local function ResolveStorage(tabName, featureId)
+    local list = featuresByTab[tabName]
+    if list then
+        for _, f in ipairs(list) do
+            if f.id == featureId then
+                return (f.settingsTab or tabName), (f.settingsId or f.id)
+            end
+        end
+    end
+    return tabName, featureId
+end
+
 function reg:IsEnabled(tabName, featureId)
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    if not db or not db[tabName] then
-        return false
-    end
-    local entry = db[tabName][featureId]
-    if entry == nil then
-        return false
-    end
+    if not db then return false end
+    local storageTab, storageId = ResolveStorage(tabName, featureId)
+    if not db[storageTab] then return false end
+    local entry = db[storageTab][storageId]
+    if entry == nil then return false end
     return entry.enabled == true
 end
 
@@ -39,11 +52,12 @@ function reg:SetEnabled(tabName, featureId, value)
     if not db then
         return
     end
-    db[tabName] = db[tabName] or {}
-    db[tabName][featureId] = db[tabName][featureId] or {}
-    db[tabName][featureId].enabled = value
+    local storageTab, storageId = ResolveStorage(tabName, featureId)
+    db[storageTab] = db[storageTab] or {}
+    db[storageTab][storageId] = db[storageTab][storageId] or {}
+    db[storageTab][storageId].enabled = value
 
-    if tabName == "overlays" and OneWoW.OverlayEngine then
+    if storageTab == "overlays" and OneWoW.OverlayEngine then
         C_Timer.After(0.05, function()
             OneWoW.OverlayEngine:Refresh()
         end)
