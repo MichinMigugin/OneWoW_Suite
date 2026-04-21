@@ -169,7 +169,7 @@ function BankGUI:InitMainWindow()
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
     local bankSettingsBtn
     titleBar, bankSettingsBtn = WH:CreateWindowTitleBar(MainWindow, {
-        title = L["BANK_TITLE"] or "Bank",
+        title = L["BANK_TITLE"],
         factionTheme = factionTheme,
         onClose = function() MainWindow:Hide() end,
         settingsText = L["SETTINGS"],

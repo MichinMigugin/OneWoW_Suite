@@ -41,7 +41,7 @@ function GuildBankBar:Create(parent)
 
     GuildBankBar:BuildTabButtons()
 
-    local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_WITHDRAW"] or "Withdraw", height = 22 })
+    local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_WITHDRAW"], height = 22 })
     withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInsetCreate, ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
         local controller = GetController()
@@ -51,7 +51,7 @@ function GuildBankBar:Create(parent)
     end)
     bagsBarFrame.withdrawBtn = withdrawBtn
 
-    local depositBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_DEPOSIT"] or "Deposit", height = 22 })
+    local depositBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_DEPOSIT"], height = 22 })
     depositBtn:SetPoint("RIGHT", withdrawBtn, "LEFT", -4, 0)
     depositBtn:SetScript("OnClick", function(self)
         local controller = GetController()
@@ -61,7 +61,7 @@ function GuildBankBar:Create(parent)
     end)
     bagsBarFrame.depositBtn = depositBtn
 
-    local logBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_LOG"] or "Log", height = 22, minWidth = 30 })
+    local logBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_LOG"], height = 22, minWidth = 30 })
     logBtn:SetPoint("RIGHT", depositBtn, "LEFT", -4, 0)
     logBtn:SetScript("OnClick", function()
         local controller = GetController()

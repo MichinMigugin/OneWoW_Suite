@@ -121,7 +121,7 @@ function BagsController:AddTrackedEntryFromID(rawID)
 
     local list = db.global.trackedCurrencies
     if IsAlreadyTracked(list, trackType, id) then
-        print("|cffff4444OneWoW_Bags:|r " .. (L["TRACKER_ALREADY_TRACKED"] or ""))
+        print("|cffff4444OneWoW_Bags:|r " .. (L["TRACKER_ALREADY_TRACKED"]))
         return false
     end
 
@@ -139,7 +139,7 @@ function BagsController:AddTrackedItem(itemID)
 
     local list = db.global.trackedCurrencies
     if IsAlreadyTracked(list, "item", itemID) then
-        print("|cffff4444OneWoW_Bags:|r " .. (L["TRACKER_ALREADY_TRACKED"] or ""))
+        print("|cffff4444OneWoW_Bags:|r " .. (L["TRACKER_ALREADY_TRACKED"]))
         return false
     end
 

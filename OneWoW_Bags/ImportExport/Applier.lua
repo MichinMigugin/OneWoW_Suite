@@ -359,7 +359,7 @@ local function applyUnmappedDefaults(plan, controller, result)
 
     local locales = OneWoW_Bags.Locales or {}
     local loc = locales[GetLocale and GetLocale() or "enUS"] or locales["enUS"] or {}
-    local catchAll = loc["IMPORT_BAGANATOR_CATCHALL_SECTION"] or "Baganator Import"
+    local catchAll = loc["IMPORT_BAGANATOR_CATCHALL_SECTION"]
 
     local kept = {}
     for _, def in ipairs(plan.unmappedDefaults) do

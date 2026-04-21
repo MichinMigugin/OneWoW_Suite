@@ -873,7 +873,7 @@ function OneWoW_Bags:RegisterSlashCommands()
             print("|cFFFF6060" .. L["ADDON_CHAT_PREFIX"] .. "|r Export unavailable (database not ready).")
             return
         end
-        local title = L["EXPORT_DIALOG_TITLE"] or "OneWoW Bags Export"
+        local title = L["EXPORT_DIALOG_TITLE"]
         local payload = Serializer:Encode(Serializer:BuildExport(db))
         LibCopyPaste:Copy(title, payload, { readOnly = true })
 

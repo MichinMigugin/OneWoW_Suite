@@ -729,8 +729,8 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
     text = "", hasEditBox = true,
-    button1 = L["POPUP_RENAME"] or "Rename",
-    button2 = L["POPUP_CANCEL"] or "Cancel",
+    button1 = L["POPUP_RENAME"],
+    button2 = L["POPUP_CANCEL"],
     OnShow = function(self, data)
         self.Text:SetText(L["CATEGORY_RENAME_ENTER"])
         local cat = data and db.global.customCategoriesV2[data]
@@ -787,7 +787,7 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
     button1 = L["POPUP_CREATE"],
     button2 = L["POPUP_CANCEL"],
     OnShow = function(self)
-        self.Text:SetText(L["SECTION_CREATE_ENTER"] or "Enter section name:")
+        self.Text:SetText(L["SECTION_CREATE_ENTER"])
         self.EditBox:SetFocus()
     end,
     OnAccept = function(self)
@@ -822,10 +822,10 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
     text = "", hasEditBox = true,
-    button1 = L["POPUP_RENAME"] or "Rename",
-    button2 = L["POPUP_CANCEL"] or "Cancel",
+    button1 = L["POPUP_RENAME"],
+    button2 = L["POPUP_CANCEL"],
     OnShow = function(self, data)
-        self.Text:SetText(L["SECTION_RENAME_ENTER"] or "Enter new section name:")
+        self.Text:SetText(L["SECTION_RENAME_ENTER"])
         local sec = data and db.global.categorySections[data]
         if sec then self.EditBox:SetText(sec.name); self.EditBox:HighlightText() end
         self.EditBox:SetFocus()
@@ -1898,9 +1898,9 @@ function CatMgrUI:Show()
     undoBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
         if self:IsEnabled() then
-            GameTooltip:SetText(L["IMPORT_UNDO_TOOLTIP"] or "Undo last import")
+            GameTooltip:SetText(L["IMPORT_UNDO_TOOLTIP"])
         else
-            GameTooltip:SetText(L["IMPORT_UNDO_TOOLTIP_DISABLED"] or "No import to undo")
+            GameTooltip:SetText(L["IMPORT_UNDO_TOOLTIP_DISABLED"])
         end
         GameTooltip:Show()
     end)
@@ -1910,14 +1910,14 @@ function CatMgrUI:Show()
         StaticPopup_Show("ONEWOW_BAGS_UNDO_IMPORT")
     end)
     StaticPopupDialogs["ONEWOW_BAGS_UNDO_IMPORT"] = StaticPopupDialogs["ONEWOW_BAGS_UNDO_IMPORT"] or {
-        text = L["IMPORT_UNDO_CONFIRM"] or "Undo the last import and restore previous categories?",
+        text = L["IMPORT_UNDO_CONFIRM"],
         button1 = YES, button2 = NO,
         OnAccept = function()
             if not Backup then return end
             Backup:Restore(GetDB(), GetController())
             Backup:Clear(GetDB())
             refreshUndoBtn()
-            print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. (L["IMPORT_UNDO_SUCCESS"] or "Import reverted."))
+            print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. (L["IMPORT_UNDO_SUCCESS"]))
         end,
         timeout = 0, whileDead = true, hideOnEscape = true,
     }
@@ -1949,11 +1949,11 @@ function CatMgrUI:Show()
     end
 
     -- Export button (right of undo)
-    local exportBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text = L["EXPORT_LABEL"] or "Export", height = 24 })
+    local exportBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text = L["EXPORT_LABEL"], height = 24 })
     exportBtn:SetPoint("RIGHT", undoBtn, "LEFT", -6, 0)
     exportBtn:SetScript("OnClick", function()
         if not Serializer or not LibCopyPaste then return end
-        local title = L["EXPORT_DIALOG_TITLE"] or "OneWoW Bags Export"
+        local title = L["EXPORT_DIALOG_TITLE"]
         local payload = Serializer:Encode(Serializer:BuildExport(GetDB()))
         LibCopyPaste:Copy(title, payload, { readOnly = true })
         raiseCopyPasteDialog(title)
@@ -1961,7 +1961,7 @@ function CatMgrUI:Show()
 
     -- Import pulldown (right of export button)
     local importDropdown = OneWoW_GUI:CreateDropdown(actionBar, {
-        text   = L["IMPORT_FROM_LABEL"] or "Import from...",
+        text   = L["IMPORT_FROM_LABEL"],
         width  = 160,
         height = 24,
     })
@@ -1982,24 +1982,24 @@ function CatMgrUI:Show()
 
             tinsert(items, {
                 value = "baganator_direct",
-                text  = (L["IMPORT_SRC_BAGANATOR_DIRECT"] or "Baganator (direct)")
-                    .. (bagAvailable and "" or "  " .. (L["IMPORT_NOT_AVAILABLE_HINT"] or "(not loaded)")),
+                text  = (L["IMPORT_SRC_BAGANATOR_DIRECT"])
+                    .. (bagAvailable and "" or "  " .. (L["IMPORT_NOT_AVAILABLE_HINT"])),
             })
             tinsert(items, {
                 value = "tsm_direct",
-                text  = (L["IMPORT_SRC_TSM_DIRECT"] or "TSM (direct)")
-                    .. (tsmAvailable and "" or "  " .. (L["IMPORT_NOT_AVAILABLE_HINT"] or "(not loaded)")),
+                text  = (L["IMPORT_SRC_TSM_DIRECT"])
+                    .. (tsmAvailable and "" or "  " .. (L["IMPORT_NOT_AVAILABLE_HINT"])),
             })
             tinsert(items, { type = "divider" })
-            tinsert(items, { value = "onewow_string",    text = L["IMPORT_SRC_ONEWOW_PASTE"]    or "OneWoW string (paste)" })
-            tinsert(items, { value = "baganator_string", text = L["IMPORT_SRC_BAGANATOR_PASTE"] or "Baganator string (paste)" })
+            tinsert(items, { value = "onewow_string",    text = L["IMPORT_SRC_ONEWOW_PASTE"] })
+            tinsert(items, { value = "baganator_string", text = L["IMPORT_SRC_BAGANATOR_PASTE"] })
             return items
         end,
         onSelect = function(value)
             if value == "baganator_direct" then
                 if not HasBaganator() then
                     print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r "
-                        .. (L["IMPORT_NOT_AVAILABLE_TOOLTIP"] or "Baganator is not loaded."))
+                        .. (L["IMPORT_NOT_AVAILABLE_TOOLTIP"]))
                     return
                 end
                 doOpenPreview(Planner:FromBaganatorDirect(GetDB()))
@@ -2007,18 +2007,18 @@ function CatMgrUI:Show()
                 local tsm = OneWoW_Bags.TSMIntegration
                 if not tsm or not tsm:IsAvailable() then
                     print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r "
-                        .. (L["IMPORT_NOT_AVAILABLE_TOOLTIP"] or "TSM is not loaded."))
+                        .. (L["IMPORT_NOT_AVAILABLE_TOOLTIP"]))
                     return
                 end
                 doOpenPreview(Planner:FromTsmDirect(GetDB(), { tsmPrefix = true }))
             elseif value == "onewow_string" and LibCopyPaste then
-                local title = L["IMPORT_DIALOG_TITLE"] or "Paste OneWoW export"
+                local title = L["IMPORT_DIALOG_TITLE"]
                 LibCopyPaste:Paste(title, function(text)
                     doOpenPreview(Planner:FromOneWowString(text, GetDB()))
                 end)
                 raiseCopyPasteDialog(title)
             elseif value == "baganator_string" and LibCopyPaste then
-                local title = L["IMPORT_DIALOG_TITLE"] or "Paste Baganator export"
+                local title = L["IMPORT_DIALOG_TITLE"]
                 LibCopyPaste:Paste(title, function(text)
                     doOpenPreview(Planner:FromBaganatorString(text, GetDB()))
                 end)

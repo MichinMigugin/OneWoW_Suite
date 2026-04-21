@@ -49,7 +49,7 @@ function BankBar:Create(parent)
 
     BankBar:BuildTabButtons()
 
-    local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_WITHDRAW_GOLD"] or "Withdraw", height = 22 })
+    local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_WITHDRAW_GOLD"], height = 22 })
     withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInsetCreate, ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
         local controller = GetController()
@@ -59,7 +59,7 @@ function BankBar:Create(parent)
     end)
     bagsBarFrame.withdrawBtn = withdrawBtn
 
-    local depositGoldBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_DEPOSIT_GOLD"] or "Deposit", height = 22 })
+    local depositGoldBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_DEPOSIT_GOLD"], height = 22 })
     depositGoldBtn:SetPoint("RIGHT", withdrawBtn, "LEFT", -4, 0)
     depositGoldBtn:SetScript("OnClick", function(self)
         local controller = GetController()
@@ -71,7 +71,7 @@ function BankBar:Create(parent)
 
     BH:CreateGoldDisplay(bagsBarFrame, depositGoldBtn)
 
-    local depositReagentsBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_DEPOSIT_REAGENTS"] or "Deposit Reagents", height = 22 })
+    local depositReagentsBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_DEPOSIT_REAGENTS"], height = 22 })
     depositReagentsBtn:SetPoint("LEFT", bagsBarFrame, "LEFT", leftInsetCreate, ROW2_Y)
     depositReagentsBtn:SetScript("OnClick", function()
         local controller = GetController()
@@ -81,7 +81,7 @@ function BankBar:Create(parent)
     end)
     bagsBarFrame.depositReagentsBtn = depositReagentsBtn
 
-    local warbandBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_WARBAND"] or "Warband", height = 22 })
+    local warbandBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_WARBAND"], height = 22 })
     warbandBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInsetCreate, ROW2_Y)
     warbandBtn._defaultEnter = warbandBtn:GetScript("OnEnter")
     warbandBtn._defaultLeave = warbandBtn:GetScript("OnLeave")
@@ -99,7 +99,7 @@ function BankBar:Create(parent)
     end)
     bagsBarFrame.warbandBtn = warbandBtn
 
-    local personalBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_PERSONAL"] or "Personal", height = 22 })
+    local personalBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["BANK_PERSONAL"], height = 22 })
     personalBtn:SetPoint("RIGHT", warbandBtn, "LEFT", -4, 0)
     personalBtn._defaultEnter = personalBtn:GetScript("OnEnter")
     personalBtn._defaultLeave = personalBtn:GetScript("OnLeave")
@@ -231,13 +231,13 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
             if OneWoW_Bags.bankOpen and C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
                 local tabData = C_Bank.FetchNextPurchasableBankTabData(bType)
                 if tabData and tabData.tabCost then
-                    GameTooltip:SetText(L["BANK_TAB_PURCHASE"] or "Purchase Tab", 1, 0.82, 0)
+                    GameTooltip:SetText(L["BANK_TAB_PURCHASE"], 1, 0.82, 0)
                     GameTooltip:AddLine(OneWoW_GUI:FormatGold(tabData.tabCost), 1, 1, 1)
                 else
-                    GameTooltip:SetText(L["BANK_TAB_LOCKED"] or "Locked", 0.5, 0.5, 0.5)
+                    GameTooltip:SetText(L["BANK_TAB_LOCKED"], 0.5, 0.5, 0.5)
                 end
             else
-                GameTooltip:SetText(L["BANK_TAB_LOCKED"] or "Locked", 0.5, 0.5, 0.5)
+                GameTooltip:SetText(L["BANK_TAB_LOCKED"], 0.5, 0.5, 0.5)
             end
         end
         GameTooltip:Show()
