@@ -886,7 +886,46 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         showSkipCb:SetScript("OnClick", function(self)
             reg:SetOverlaySetting(featureId, "tooltipShowSkipReason", self:GetChecked())
         end)
+        yOffset = yOffset - 28
+
+        -- Row 4: [Show alt upgrades] (indented sub-option)
+        local showAltsCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_SHOW_ALTS"] })
+        showAltsCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 30, yOffset)
+        showAltsCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipShowAlts") ~= false)
+        showAltsCb:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_SHOW_ALTS"], 1, 1, 1)
+            GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_SHOW_ALTS_TOOLTIP"], nil, nil, nil, true)
+            GameTooltip:Show()
+        end)
+        showAltsCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        yOffset = yOffset - 28
+
+        -- Row 5: [Match alts' current spec only] (double-indented under Show alt upgrades)
+        local altSpecCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_ALT_SPEC_MATCH"] })
+        altSpecCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset)
+        altSpecCb:SetChecked(reg:GetOverlaySetting(featureId, "altSpecMatch") or false)
+        altSpecCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "altSpecMatch", self:GetChecked())
+        end)
+        altSpecCb:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["OVR_UPGRADE_ALT_SPEC_MATCH"], 1, 1, 1)
+            GameTooltip:AddLine(L["OVR_UPGRADE_ALT_SPEC_MATCH_TOOLTIP"], nil, nil, nil, true)
+            GameTooltip:Show()
+        end)
+        altSpecCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
         yOffset = yOffset - 30 - 10
+
+        local function setAltSpecEnabled(enabled)
+            if enabled then
+                altSpecCb:Enable()
+                altSpecCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            else
+                altSpecCb:Disable()
+                altSpecCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            end
+        end
 
         local function refreshTooltipSubs(enabled)
             if enabled then
@@ -897,6 +936,9 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 onlyUpgradeCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 showSkipCb:Enable()
                 showSkipCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                showAltsCb:Enable()
+                showAltsCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                setAltSpecEnabled(showAltsCb:GetChecked())
             else
                 detailDD:Disable()
                 detailDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -905,9 +947,17 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 onlyUpgradeCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 showSkipCb:Disable()
                 showSkipCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                showAltsCb:Disable()
+                showAltsCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                setAltSpecEnabled(false)
             end
         end
         refreshTooltipSubs(reg:GetOverlaySetting(featureId, "showInTooltip") or false)
+
+        showAltsCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "tooltipShowAlts", self:GetChecked())
+            setAltSpecEnabled(self:GetChecked())
+        end)
 
         tooltipCb:SetScript("OnClick", function(self)
             reg:SetOverlaySetting(featureId, "showInTooltip", self:GetChecked())

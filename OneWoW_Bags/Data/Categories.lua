@@ -312,8 +312,18 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
 
     if itemID and hyperlink then
         if db.global.enableUpgradeCategory and not disabled["1W Upgrades"] and CategoryAppliesTo("1W Upgrades", containerType, catMods) then
-            if PE:BuildProps(itemID, bagID, slotID, itemInfo).isUpgrade then
-                return "1W Upgrades"
+            local UD = _G.OneWoW and _G.OneWoW.UpgradeDetection
+            if UD and UD.CheckItemUpgrade then
+                local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+                if itemLocation and C_Item.DoesItemExist(itemLocation) then
+                    if UD:CheckItemUpgrade(hyperlink, itemLocation) then
+                        return "1W Upgrades"
+                    end
+                else
+                    if UD:CheckItemUpgrade(hyperlink) then
+                        return "1W Upgrades"
+                    end
+                end
             end
         end
     end

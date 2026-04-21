@@ -56,7 +56,27 @@ local function BuildRightText(colorCode, endIcon, diffVal, equipVal, thisVal, is
     end
 end
 
-local function DoGearUpgrade(context, onlyUpgrade, detail)
+local function BuildCharLine(diff, name, class, equipped, new, isDecimal, detail, L)
+    local icon, colorCode, endIcon = GetIcons(diff)
+    local coloredName = GetClassColoredName(name, class)
+    local rightText = BuildRightText(colorCode, endIcon, diff, equipped, new, isDecimal, detail, L)
+    if rightText then
+        return {
+            type = "double",
+            left = "  " .. icon .. " " .. coloredName,
+            right = rightText,
+            lr = 0.9, lg = 0.9, lb = 0.9,
+            rr = 1, rg = 1, rb = 1,
+        }
+    end
+    return {
+        type = "text",
+        text = "  " .. icon .. " " .. coloredName,
+        r = 0.9, g = 0.9, b = 0.9,
+    }
+end
+
+local function DoGearUpgrade(context, onlyUpgrade, detail, showAlts)
     local itemLink = ResolveItemLink(context)
     if not itemLink then return nil, "no link" end
 
@@ -67,83 +87,78 @@ local function DoGearUpgrade(context, onlyUpgrade, detail)
     local UD = OneWoW.UpgradeDetection
     if not UD then return nil, "no UD" end
 
-    local comparison = UD:GetItemComparison(itemLink)
-    if not comparison then return nil, "comparison nil" end
-    if comparison.unusable then return nil, "unusable" end
-    if not comparison.diff then return nil, "no diff" end
-
-    if onlyUpgrade and comparison.diff <= 0 then return nil, "not upgrade" end
-
     local L = OneWoW.L
-    local lines = {}
+    local comparison = UD:GetItemComparison(itemLink)
 
-    local mode = comparison.mode or "ILVL"
+    local selfLine
+    local mode = comparison and comparison.mode or "ILVL"
+
+    if comparison and comparison.diff and not comparison.unusable then
+        if not onlyUpgrade or comparison.diff > 0 then
+            local _, playerClass = UnitClass("player")
+            selfLine = BuildCharLine(
+                comparison.diff,
+                UnitName("player"),
+                playerClass,
+                comparison.equipValue,
+                comparison.thisValue,
+                comparison.isDecimal,
+                detail,
+                L
+            )
+        end
+    end
+
+    local altLines = {}
+    local charAPI = _G.OneWoW_AltTracker_Character_API
+    if showAlts and charAPI and charAPI.GetAllCharacters then
+        local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
+        local entries = charAPI.GetAllCharacters() or {}
+        local altCount = 0
+        for _, entry in ipairs(entries) do
+            if altCount >= 10 then break end
+            local charKey = entry.key
+            local charData = entry.data
+            if charKey and charKey ~= currentKey and type(charData) == "table" then
+                local altResult = UD:IsItemUpgradeForAlt(context.itemID, itemLink, charData)
+                if altResult and altResult.diff and (not onlyUpgrade or altResult.diff > 0) then
+                    altLines[#altLines + 1] = BuildCharLine(
+                        altResult.diff,
+                        charData.name,
+                        charData.class,
+                        altResult.equipped,
+                        altResult.new,
+                        false,
+                        detail,
+                        L
+                    )
+                    altCount = altCount + 1
+                end
+            end
+        end
+    end
+
+    if not selfLine and #altLines == 0 then
+        return nil, "nothing to show"
+    end
+
     local methodText = "iLvL"
     if mode == "PAWN" then methodText = "Pawn"
     elseif mode == "PAWN>ILVL" then methodText = "Pawn > iLvL"
     end
 
     local headerLabel = L["TIPS_GEARCOMP_HEADER"] or "Gear Comparison"
-    lines[#lines + 1] = {
-        type = "text",
-        text = headerLabel .. " (" .. methodText .. ")",
-        r = 0.4, g = 0.8, b = 1.0,
+    local lines = {
+        {
+            type = "text",
+            text = headerLabel .. " (" .. methodText .. ")",
+            r = 0.4, g = 0.8, b = 1.0,
+        },
     }
 
-    local statusIcon, colorCode, endIcon = GetIcons(comparison.diff)
-    local _, playerClass = UnitClass("player")
-    local charName = GetClassColoredName(UnitName("player"), playerClass)
-
-    local rightText = BuildRightText(colorCode, endIcon, comparison.diff, comparison.equipValue, comparison.thisValue, comparison.isDecimal, detail, L)
-    if rightText then
-        lines[#lines + 1] = {
-            type = "double",
-            left = "  " .. statusIcon .. " " .. charName,
-            right = rightText,
-            lr = 0.9, lg = 0.9, lb = 0.9,
-            rr = 1, rg = 1, rb = 1,
-        }
-    else
-        lines[#lines + 1] = {
-            type = "text",
-            text = "  " .. statusIcon .. " " .. charName,
-            r = 0.9, g = 0.9, b = 0.9,
-        }
-    end
-
-    local charDB = _G.OneWoW_AltTracker_Character_DB
-    local charAPI = _G.OneWoW_AltTracker_Character_API
-    if charDB and charAPI and charAPI.GetCurrentCharacterKey then
-        local currentKey = charAPI.GetCurrentCharacterKey()
-        local altCount = 0
-        for charKey, charData in pairs(charDB) do
-            if charKey ~= currentKey and type(charData) == "table" and charData.class and charData.name and altCount < 10 then
-                local altResult = UD:IsItemUpgradeForAlt(context.itemID, itemLink, charData)
-                if altResult and altResult.diff then
-                    if not onlyUpgrade or altResult.diff > 0 then
-                        local aIcon, aColor, aEnd = GetIcons(altResult.diff)
-                        local aName = GetClassColoredName(charData.name, charData.class)
-                        local aRight = BuildRightText(aColor, aEnd, altResult.diff, altResult.equipped, altResult.new, false, detail, L)
-                        if aRight then
-                            lines[#lines + 1] = {
-                                type = "double",
-                                left = "  " .. aIcon .. " " .. aName,
-                                right = aRight,
-                                lr = 0.9, lg = 0.9, lb = 0.9,
-                                rr = 1, rg = 1, rb = 1,
-                            }
-                        else
-                            lines[#lines + 1] = {
-                                type = "text",
-                                text = "  " .. aIcon .. " " .. aName,
-                                r = 0.9, g = 0.9, b = 0.9,
-                            }
-                        end
-                        altCount = altCount + 1
-                    end
-                end
-            end
-        end
+    if selfLine then lines[#lines + 1] = selfLine end
+    for _, line in ipairs(altLines) do
+        lines[#lines + 1] = line
     end
 
     return lines, nil
@@ -159,8 +174,9 @@ local function GearUpgradeProvider(tooltip, context)
     local onlyUpgrade    = db.overlays.upgrade.tooltipOnlyUpgrade    or false
     local detail         = db.overlays.upgrade.tooltipDetail         or "FULL"
     local showSkipReason = db.overlays.upgrade.tooltipShowSkipReason or false
+    local showAlts       = db.overlays.upgrade.tooltipShowAlts       ~= false
 
-    local ok, result, debugMsg = pcall(DoGearUpgrade, context, onlyUpgrade, detail)
+    local ok, result, debugMsg = pcall(DoGearUpgrade, context, onlyUpgrade, detail, showAlts)
 
     if not ok then
         return {

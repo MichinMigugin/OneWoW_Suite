@@ -270,7 +270,7 @@ CategoryManager:AssignCategories()
 
 1. **Manual pins** — `customCategoriesV2[*].items` and `categoryModifications[*].addedItems` (no predicate engine on this path). Overrides everything below, including Junk/Upgrades. If `db.global.pinnedCategoryShowsWhenDisabled` is **false**, pins in **disabled** categories are ignored here so later stages can assign (e.g. `Other`). If **true**, a disabled pinned category still wins assignment. Legacy saves with the same item ID in multiple pin tables: `PickBestCandidate` among those rows (priority → section order → stable tie key).
 2. **1W Junk** — `OneWoW_GUI.PredicateEngine` `props.isJunk`; gated by `enableJunkCategory` + `disabledCategories`.
-3. **1W Upgrades** — `props.isUpgrade`; gated by settings + `disabledCategories`.
+3. **1W Upgrades** — direct call to `OneWoW.UpgradeDetection:CheckItemUpgrade(hyperlink, itemLocation)`; gated by settings + `disabledCategories`.
 4. **Recent Items** — `SlotMatchesRecent` (GUID map + `recentItemDuration`). Surfaces recent non-junk/non-upgrade items before custom/builtin classification.
 5. **No hyperlink** → `"Other"`.
 6. **Category cache** read (engine cache key when hyperlink exists).

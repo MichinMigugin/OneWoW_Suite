@@ -197,7 +197,9 @@ local DEFAULTS = {
                 tooltipDetail = "FULL",
                 tooltipOnlyUpgrade = false,
                 tooltipShowSkipReason = false,
+                tooltipShowAlts = true,
                 showPawnPrompt = true,
+                altSpecMatch = false,
             },
             transmog = {
                 enabled = false,

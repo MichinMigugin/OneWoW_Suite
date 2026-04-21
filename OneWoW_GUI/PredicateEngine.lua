@@ -102,6 +102,28 @@ local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
 local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
 local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-")
 
+-- Class token (UnitClass second return, uppercase) -> classID used by
+-- C_Item.DoesItemContainSpec. Needed for alt-path eligibility checks where
+-- we start from a stored class string; UnitClass("player") already returns
+-- classID for self-checks.
+local CLASS_ID = {
+    WARRIOR     = 1,
+    PALADIN     = 2,
+    HUNTER      = 3,
+    ROGUE       = 4,
+    PRIEST      = 5,
+    DEATHKNIGHT = 6,
+    SHAMAN      = 7,
+    MAGE        = 8,
+    WARLOCK     = 9,
+    MONK        = 10,
+    DRUID       = 11,
+    DEMONHUNTER = 12,
+    EVOKER      = 13,
+}
+
+PE.ClassID = CLASS_ID
+
 -- ============================================================================
 -- SECTION 4: CONSTANT_MAP
 -- ============================================================================
@@ -264,7 +286,6 @@ local FLAG_REGISTRY = {
     isusable                = "isUsable",
     isjunk                  = "isJunk",
     isnew                   = "isNew",
-    isupgrade               = "isUpgrade",
     istoy                   = "isToy",
     ismount                 = "isMount",
     ispet                   = "isPet",
@@ -447,19 +468,17 @@ RegisterKeyword("cosmetic", function(p)
     return p.classID == Enum.ItemClass.Armor and p.subClassID == Enum.ItemArmorSubclass.Cosmetic
 end)
 
-RegisterKeyword("myclass",  function(p) return p.isEquipment and C_PlayerInfo.CanUseItem(p.id) end)
-RegisterKeyword("myspec",   function(p)
+RegisterKeyword("myclass", function(p)
     if not p.isEquipment then return false end
-    if not C_PlayerInfo.CanUseItem(p.id) then return false end
-    local hyperlink = p.hyperlink
-    if not hyperlink then return false end
-    local specs = C_Item.GetItemSpecInfo(hyperlink)
-    if not specs or #specs == 0 then return true end  -- universal gear
-    local currentSpec = GetSpecializationInfo(GetSpecialization())
-    for _, specID in ipairs(specs) do
-        if specID == currentSpec then return true end
-    end
-    return false
+    return PE:CanClassEquip(p.id, p.hyperlink)
+end)
+RegisterKeyword("myspec", function(p)
+    if not p.isEquipment then return false end
+    local _, _, classID = UnitClass("player")
+    local specID = GetSpecializationInfo(GetSpecialization())
+    if not classID or not specID then return false end
+    local item = p.hyperlink or p.id
+    return item and C_Item.DoesItemContainSpec(item, classID, specID) == true
 end)
 
 -- ---- 7.6  Armor subclass keywords ----
@@ -823,7 +842,10 @@ RegisterKeyword("crafted",             function(p) return p.isCrafted end)
 RegisterKeyword("professionequipment", function(p) return p.isProfessionEquipment end)
 
 -- ---- 7.21  Upgrade keywords ----
-RegisterKeyword("upgrade",          function(p) return p.isUpgrade end)
+-- #upgrade is registered by OneWoW.UpgradeDetection via PE:RegisterKeyword
+-- at runtime since "is this an upgrade" is policy (mode, equipped state) that
+-- belongs to that module. Without UpgradeDetection loaded, #upgrade is simply
+-- unregistered and predicates using it evaluate to false.
 RegisterKeyword("upgradeable",      function(p) return p.isUpgradeable end)
 RegisterKeyword("fullyupgraded",    function(p) return p.isFullyUpgraded end)
 
@@ -1567,19 +1589,6 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isJunk = (props.quality == IQ.Poor)
     if not props.isJunk and _G.OneWoW and _G.OneWoW.ItemStatus then
         props.isJunk = _G.OneWoW.ItemStatus:IsItemJunk(itemID) or false
-    end
-
-    -- ---- Upgrade (OneWoW hook) ----
-    props.isUpgrade = false
-    if _G.OneWoW and _G.OneWoW.UpgradeDetection and hyperlink then
-        local UD = _G.OneWoW.UpgradeDetection
-        if UD.CheckItemUpgrade then
-            if itemLocation and C_Item.DoesItemExist(itemLocation) then
-                props.isUpgrade = UD:CheckItemUpgrade(hyperlink, itemLocation) or false
-            else
-                props.isUpgrade = UD:CheckItemUpgrade(hyperlink) or false
-            end
-        end
     end
 
     -- ---- Special items ----
@@ -2355,6 +2364,25 @@ end
 
 function PE:ParseItemLink(link)
     return ParseItemLink(link)
+end
+
+--- Is this item usable by the given class (or the current player if class is nil).
+--- Pass a class token ("WARRIOR", "PALADIN", ...) to check an alt. Returns a
+--- plain boolean; treats universal gear (empty spec list) as usable and
+--- correctly rejects class-locked drops on classes that cannot equip them.
+--- Caller may pass itemID or a hyperlink; hyperlink is preferred when available
+--- because it carries modified-itemID context for reworked/tokenized gear.
+function PE:CanClassEquip(itemID, hyperlink, class)
+    local classID
+    if class then
+        classID = CLASS_ID[class]
+    else
+        _, _, classID = UnitClass("player")
+    end
+    if not classID then return true end
+    local item = hyperlink or itemID
+    if not item then return false end
+    return C_Item.DoesItemContainSpec(item, classID) == true
 end
 
 --- Register custom keyword (for third-party / suite extensions).

@@ -104,8 +104,15 @@ Inside `BuildProps`, the engine consults a few optional globals when resolving i
 | Hook | Used by | Effect if missing |
 |---|---|---|
 | `_G.OneWoW.ItemStatus:IsItemJunk(itemID)` | `props.isJunk` (in addition to `quality == Poor`) | `isJunk` reflects only the quality check. |
-| `_G.OneWoW.UpgradeDetection:CheckItemUpgrade(hyperlink, itemLocation?)` | `props.isUpgrade` | `isUpgrade` is always `false`. |
 | `_G.TransmogUpgradeMaster_API.IsAppearanceMissing(hyperlink)` | `#catalyst`, `#catalystupgrade` keywords | The keywords register as no-ops (always `false`). |
+
+### Keywords registered by external modules
+
+Some keywords are registered at runtime by other addons via `PE:RegisterKeyword`, so PE has no hardcoded dependency on them:
+
+| Keyword | Registered by | Effect if module missing |
+|---|---|---|
+| `#upgrade` | `OneWoW.UpgradeDetection:Initialize()` → calls `OneWoW.UpgradeDetection:CheckItemUpgrade(hyperlink, itemLocation?)` | Keyword is unregistered; predicates using it evaluate to `false`. |
 
 ---
 

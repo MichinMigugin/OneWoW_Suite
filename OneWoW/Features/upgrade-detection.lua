@@ -1,66 +1,11 @@
 local ADDON_NAME, OneWoW = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+local PE = OneWoW_GUI.PredicateEngine
+
 local UpgradeDetection = {}
 OneWoW.UpgradeDetection = UpgradeDetection
-
-local ARMOR_CLASSES = {
-    CLOTH   = {PRIEST = true, MAGE = true, WARLOCK = true, EVOKER = true},
-    LEATHER = {DRUID = true, ROGUE = true, MONK = true, DEMONHUNTER = true},
-    MAIL    = {HUNTER = true, SHAMAN = true},
-    PLATE   = {WARRIOR = true, PALADIN = true, DEATHKNIGHT = true},
-}
-
-local WEAPON_CLASSES = {
-    WARRIOR = {
-        [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [5] = true,
-        [6] = true, [7] = true, [8] = true, [13] = true, [15] = true, [18] = true,
-    },
-    PALADIN = {
-        [0] = true, [1] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true,
-    },
-    HUNTER = {
-        [0] = true, [1] = true, [2] = true, [3] = true, [6] = true, [7] = true,
-        [8] = true, [10] = true, [18] = true,
-    },
-    ROGUE = {
-        [0] = true, [4] = true, [7] = true, [13] = true, [15] = true,
-    },
-    PRIEST = {
-        [4] = true, [10] = true, [15] = true, [19] = true,
-    },
-    MAGE = {
-        [7] = true, [10] = true, [15] = true, [19] = true,
-    },
-    WARLOCK = {
-        [7] = true, [10] = true, [15] = true, [19] = true,
-    },
-    SHAMAN = {
-        [0] = true, [1] = true, [4] = true, [5] = true, [10] = true, [13] = true, [15] = true,
-    },
-    DRUID = {
-        [4] = true, [6] = true, [10] = true, [13] = true, [15] = true,
-    },
-    DEATHKNIGHT = {
-        [0] = true, [1] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true,
-    },
-    MONK = {
-        [0] = true, [4] = true, [6] = true, [7] = true, [10] = true, [13] = true,
-    },
-    DEMONHUNTER = {
-        [0] = true, [7] = true, [13] = true, [9] = true,
-    },
-    EVOKER = {
-        [0] = true, [4] = true, [7] = true, [10] = true, [13] = true, [15] = true,
-    },
-}
-
-local SHIELD_CLASSES = {WARRIOR = true, PALADIN = true, SHAMAN = true}
-
-local OFFHAND_CLASSES = {
-    WARRIOR = true, PALADIN = true, SHAMAN = true,
-    PRIEST = true, MAGE = true, WARLOCK = true, EVOKER = true,
-    DRUID = true, ROGUE = true, MONK = true, DEMONHUNTER = true,
-}
 
 local EQUIPLOC_TO_SLOTS = {
     INVTYPE_HEAD            = {1},
@@ -113,33 +58,6 @@ local function GetMode()
     return cfg and cfg.mode or "ILVL"
 end
 
-local function GetItemArmorType(itemID)
-    local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
-    if classID ~= Enum.ItemClass.Armor then return nil end
-    local armorTypes = {[1] = "CLOTH", [2] = "LEATHER", [3] = "MAIL", [4] = "PLATE"}
-    return armorTypes[subclassID]
-end
-
-local function CanClassUseArmor(class, armorType)
-    if not class or not armorType then return false end
-    local classes = ARMOR_CLASSES[armorType]
-    return classes and classes[class] or false
-end
-
-local function CanClassUseWeapon(class, weaponSubclassID)
-    if not class or not weaponSubclassID then return false end
-    local classWeapons = WEAPON_CLASSES[class]
-    return classWeapons and classWeapons[weaponSubclassID] or false
-end
-
-local function CanClassUseShield(class)
-    return SHIELD_CLASSES[class] == true
-end
-
-local function CanClassUseOffhand(class)
-    return OFFHAND_CLASSES[class] == true
-end
-
 local function HasTwoHanderEquipped()
     local mainHandLink = GetInventoryItemLink("player", 16)
     if not mainHandLink then return false end
@@ -147,39 +65,24 @@ local function HasTwoHanderEquipped()
     return equipLoc == "INVTYPE_2HWEAPON" or equipLoc == "INVTYPE_RANGEDRIGHT" or equipLoc == "INVTYPE_RANGED"
 end
 
+local function AltHasTwoHanderEquipped(equipment)
+    local mh = equipment and equipment[16]
+    local link = mh and mh.itemLink
+    if not link then return false end
+    local _, _, _, equipLoc = C_Item.GetItemInfoInstant(link)
+    return equipLoc == "INVTYPE_2HWEAPON" or equipLoc == "INVTYPE_RANGEDRIGHT" or equipLoc == "INVTYPE_RANGED"
+end
+
 local function CanPlayerUseItem(itemLink)
     if not itemLink then return false end
-
-    local itemID, _, _, equipLoc, _, classID, subclassID = C_Item.GetItemInfoInstant(itemLink)
+    local itemID, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
     if not itemID then return false end
-
-    local _, playerClass = UnitClass("player")
-
-    if equipLoc == "INVTYPE_SHIELD" then
-        if not CanClassUseShield(playerClass) then return false end
-    end
-
-    if equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND" then
-        if not CanClassUseOffhand(playerClass) then return false end
-    end
-
-    if equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND" or equipLoc == "INVTYPE_SHIELD" then
+    if not PE:CanClassEquip(itemID, itemLink) then return false end
+    if equipLoc == "INVTYPE_SHIELD"
+       or equipLoc == "INVTYPE_HOLDABLE"
+       or equipLoc == "INVTYPE_WEAPONOFFHAND" then
         if HasTwoHanderEquipped() then return false end
     end
-
-    if classID == Enum.ItemClass.Armor then
-        if equipLoc ~= "INVTYPE_CLOAK" then
-            local armorType = GetItemArmorType(itemID)
-            if armorType and not CanClassUseArmor(playerClass, armorType) then
-                return false
-            end
-        end
-    elseif classID == Enum.ItemClass.Weapon then
-        if not CanClassUseWeapon(playerClass, subclassID) then
-            return false
-        end
-    end
-
     return true
 end
 
@@ -477,27 +380,16 @@ end
 function UpgradeDetection:IsItemUpgradeForAlt(itemID, itemLink, altData)
     if not itemID or not altData or not altData.class then return nil end
 
-    local _, _, _, equipLoc, _, classID, subclassID = C_Item.GetItemInfoInstant(itemLink or itemID)
+    local _, _, _, equipLoc, _, classID = C_Item.GetItemInfoInstant(itemLink or itemID)
     if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_NON_EQUIP" then return nil end
     if classID ~= Enum.ItemClass.Armor and classID ~= Enum.ItemClass.Weapon then return nil end
 
-    local altClass = altData.class
+    if not PE:CanClassEquip(itemID, itemLink, altData.class) then return nil end
 
-    if equipLoc == "INVTYPE_SHIELD" then
-        if not CanClassUseShield(altClass) then return nil end
-    end
-
-    if equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND" then
-        if not CanClassUseOffhand(altClass) then return nil end
-    end
-
-    if classID == Enum.ItemClass.Armor then
-        local armorType = GetItemArmorType(itemID)
-        if armorType and not CanClassUseArmor(altClass, armorType) then
-            return nil
-        end
-    elseif classID == Enum.ItemClass.Weapon then
-        if not CanClassUseWeapon(altClass, subclassID) then
+    local cfg = GetDB()
+    if cfg and cfg.altSpecMatch and altData.stats and altData.stats.specID then
+        local altClassID = PE.ClassID[altData.class]
+        if not altClassID or not C_Item.DoesItemContainSpec(itemLink or itemID, altClassID, altData.stats.specID) then
             return nil
         end
     end
@@ -514,24 +406,28 @@ function UpgradeDetection:IsItemUpgradeForAlt(itemID, itemLink, altData)
     for _, slotID in ipairs(slots) do
         local equipped = equipment[slotID]
         if not equipped then
-            return {
-                slot     = slotID,
-                slotName = SLOT_NAMES[slotID] or "Unknown",
-                equipped = 0,
-                new      = ilvl,
-                diff     = ilvl,
-            }
-        end
-
-        local equippedIlvl = equipped.itemLevel or 0
-        if ilvl > equippedIlvl then
-            return {
-                slot     = slotID,
-                slotName = SLOT_NAMES[slotID] or "Unknown",
-                equipped = equippedIlvl,
-                new      = ilvl,
-                diff     = ilvl - equippedIlvl,
-            }
+            if slotID == 17 and AltHasTwoHanderEquipped(equipment) then
+                -- skip
+            else
+                return {
+                    slot     = slotID,
+                    slotName = SLOT_NAMES[slotID] or "Unknown",
+                    equipped = 0,
+                    new      = ilvl,
+                    diff     = ilvl,
+                }
+            end
+        else
+            local equippedIlvl = equipped.itemLevel or 0
+            if ilvl > equippedIlvl then
+                return {
+                    slot     = slotID,
+                    slotName = SLOT_NAMES[slotID] or "Unknown",
+                    equipped = equippedIlvl,
+                    new      = ilvl,
+                    diff     = ilvl - equippedIlvl,
+                }
+            end
         end
     end
     return nil
@@ -553,13 +449,15 @@ function UpgradeDetection:GetAltsWhoNeedItem(itemID, itemLink)
     end
 
     local charAPI = _G.OneWoW_AltTracker_Character_API
-    local charDB = _G.OneWoW_AltTracker_Character_DB
-    if not charAPI or not charDB then return upgrades end
+    if not charAPI or not charAPI.GetAllCharacters then return upgrades end
 
     local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
+    local entries = charAPI.GetAllCharacters() or {}
 
-    for charKey, charData in pairs(charDB) do
-        if charKey ~= currentKey and type(charData) == "table" and charData.class and charData.name then
+    for _, entry in ipairs(entries) do
+        local charKey = entry.key
+        local charData = entry.data
+        if charKey and charKey ~= currentKey and type(charData) == "table" then
             local altResult = self:IsItemUpgradeForAlt(itemID, itemLink, charData)
             if altResult then
                 altResult.character = charData.name
@@ -581,6 +479,16 @@ end
 
 function UpgradeDetection:Initialize()
     self.hasPawn = _G.PawnShouldItemLinkHaveUpgradeArrow ~= nil
+
+    PE:RegisterKeyword("upgrade", function(p)
+        if not p.hyperlink then return false end
+        local loc
+        if p._bagID and p._slotID then
+            loc = ItemLocation:CreateFromBagAndSlot(p._bagID, p._slotID)
+            if loc and not C_Item.DoesItemExist(loc) then loc = nil end
+        end
+        return UpgradeDetection:CheckItemUpgrade(p.hyperlink, loc) == true
+    end)
 
     if self.hasPawn then
         self:HookPawnTooltips()

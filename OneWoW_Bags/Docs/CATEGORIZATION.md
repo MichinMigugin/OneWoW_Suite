@@ -30,7 +30,7 @@ Resolution order (each step returns immediately when matched; later steps are sk
 | 0 | Missing `itemInfo` | `"Other"` |
 | 1 | **Manual pin** — item ID found in `customCategoriesV2[*].items` or `categoryModifications[*].addedItems`, filtered by `appliesIn[containerType]` | Resolved name (see below) |
 | 2 | **1W Junk** — `enableJunkCategory` **and** category not in `disabledCategories` **and** `appliesIn` check **and** `PredicateEngine` `props.isJunk` | `"1W Junk"` |
-| 3 | **1W Upgrades** — `itemID` **and** `hyperlink` **and** `enableUpgradeCategory` **and** category not in `disabledCategories` **and** `appliesIn` check **and** `props.isUpgrade` | `"1W Upgrades"` |
+| 3 | **1W Upgrades** — `itemID` **and** `hyperlink` **and** `enableUpgradeCategory` **and** category not in `disabledCategories` **and** `appliesIn` check **and** `OneWoW.UpgradeDetection:CheckItemUpgrade(hyperlink, itemLocation)` | `"1W Upgrades"` |
 | 4 | **Recent Items** — `"Recent Items"` not in `disabledCategories` **and** `appliesIn` check **and** `SlotMatchesRecent` (GUID map + `recentItemDuration`) | `"Recent Items"` |
 | 5 | No **hyperlink** on the item | `"Other"` (classification skipped) |
 | 6 | **Category cache** hit — `categoryCache[cacheKey]` exists | Cached string |
@@ -69,7 +69,7 @@ Gated by `db.global.enableJunkCategory` (separate toggle, default `true`) AND `"
 
 ### Step 3: 1W Upgrades
 
-Requires **both** `itemID` and `hyperlink` (items without a hyperlink skip this step entirely). Gated by `db.global.enableUpgradeCategory` (separate toggle, default `true`) AND `"1W Upgrades"` not in `disabledCategories` AND `CategoryAppliesTo("1W Upgrades", containerType, catMods)`. If all pass, calls `PE:BuildProps(...).isUpgrade`. The `isUpgrade` prop delegates to `OneWoW.UpgradeDetection:CheckItemUpgrade(hyperlink, itemLocation)`.
+Requires **both** `itemID` and `hyperlink` (items without a hyperlink skip this step entirely). Gated by `db.global.enableUpgradeCategory` (separate toggle, default `true`) AND `"1W Upgrades"` not in `disabledCategories` AND `CategoryAppliesTo("1W Upgrades", containerType, catMods)`. If all pass, calls `OneWoW.UpgradeDetection:CheckItemUpgrade(hyperlink, itemLocation)` directly — bags bypasses `PredicateEngine` here because "is this an upgrade" is policy (mode, equipped state, level enforcement) owned by `UpgradeDetection`, not an item intrinsic.
 
 ### Step 4: Recent Items
 
