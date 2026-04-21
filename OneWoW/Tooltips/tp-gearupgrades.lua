@@ -76,7 +76,29 @@ local function BuildCharLine(diff, name, class, equipped, new, isDecimal, detail
     }
 end
 
-local function DoGearUpgrade(context, onlyUpgrade, detail, showAlts)
+local function ResolveItemLocation(tooltip)
+    if not tooltip or not tooltip.GetOwner then return nil end
+    local owner = tooltip:GetOwner()
+    if not owner then return nil end
+    local bagID  = owner.GetBagID and owner:GetBagID()
+    local slotID = owner.GetID and owner:GetID()
+    if not bagID or not slotID then return nil end
+    local loc = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+    if loc and C_Item.DoesItemExist(loc) then return loc end
+    return nil
+end
+
+local function IsItemStrictlySoulbound(itemLink, itemLocation)
+    if not itemLocation then return false end
+    if not C_Item.IsBound(itemLocation) then return false end
+    if C_Item.IsItemBindToAccountUntilEquip(itemLink) then return false end
+    if C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, itemLocation) then
+        return false
+    end
+    return true
+end
+
+local function DoGearUpgrade(tooltip, context, onlyUpgrade, detail, showAlts, altOptions)
     local itemLink = ResolveItemLink(context)
     if not itemLink then return nil, "no link" end
 
@@ -110,16 +132,30 @@ local function DoGearUpgrade(context, onlyUpgrade, detail, showAlts)
     end
 
     local altLines = {}
+    local effectiveShowAlts = showAlts
+
+    if effectiveShowAlts and altOptions and not altOptions.ignoreSoulbound then
+        local itemLocation = ResolveItemLocation(tooltip)
+        if IsItemStrictlySoulbound(itemLink, itemLocation) then
+            effectiveShowAlts = false
+        end
+    end
+
     local charAPI = _G.OneWoW_AltTracker_Character_API
-    if showAlts and charAPI and charAPI.GetAllCharacters then
+    if effectiveShowAlts and charAPI and charAPI.GetAllCharacters then
         local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
         local entries = charAPI.GetAllCharacters() or {}
+
+        local limit = (altOptions and altOptions.limit) or 10
+        local whitelist = altOptions and altOptions.whitelistEnabled and altOptions.whitelist or nil
+
         local altCount = 0
         for _, entry in ipairs(entries) do
-            if altCount >= 10 then break end
+            if limit > 0 and altCount >= limit then break end
             local charKey = entry.key
             local charData = entry.data
-            if charKey and charKey ~= currentKey and type(charData) == "table" then
+            if charKey and charKey ~= currentKey and type(charData) == "table"
+               and (not whitelist or whitelist[charKey]) then
                 local altResult = UD:IsItemUpgradeForAlt(context.itemID, itemLink, charData)
                 if altResult and altResult.diff and (not onlyUpgrade or altResult.diff > 0) then
                     altLines[#altLines + 1] = BuildCharLine(
@@ -171,12 +207,20 @@ local function GearUpgradeProvider(tooltip, context)
     if not db or not db.overlays or not db.overlays.upgrade then return nil end
     if not db.overlays.upgrade.showInTooltip then return nil end
 
-    local onlyUpgrade    = db.overlays.upgrade.tooltipOnlyUpgrade    or false
-    local detail         = db.overlays.upgrade.tooltipDetail         or "FULL"
-    local showSkipReason = db.overlays.upgrade.tooltipShowSkipReason or false
-    local showAlts       = db.overlays.upgrade.tooltipShowAlts       ~= false
+    local up = db.overlays.upgrade
+    local onlyUpgrade    = up.tooltipOnlyUpgrade    or false
+    local detail         = up.tooltipDetail         or "FULL"
+    local showSkipReason = up.tooltipShowSkipReason or false
+    local showAlts       = up.tooltipShowAlts       ~= false
 
-    local ok, result, debugMsg = pcall(DoGearUpgrade, context, onlyUpgrade, detail, showAlts)
+    local altOptions = {
+        ignoreSoulbound    = up.tooltipIgnoreSoulbound,
+        limit              = up.tooltipAltLimit,
+        whitelistEnabled   = up.tooltipAltWhitelistEnabled,
+        whitelist          = up.tooltipAltWhitelist,
+    }
+
+    local ok, result, debugMsg = pcall(DoGearUpgrade, tooltip, context, onlyUpgrade, detail, showAlts, altOptions)
 
     if not ok then
         return {

@@ -832,6 +832,22 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             yOffset = yOffset - 28
         end
 
+        local selfSpecCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_SELF_SPEC_MATCH"] })
+        selfSpecCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        selfSpecCb:SetChecked(reg:GetOverlaySetting(featureId, "selfSpecMatch") or false)
+        selfSpecCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "selfSpecMatch", self:GetChecked())
+            OneWoW.OverlayEngine:Refresh()
+        end)
+        selfSpecCb:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["OVR_UPGRADE_SELF_SPEC_MATCH"], 1, 1, 1)
+            GameTooltip:AddLine(L["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"], nil, nil, nil, true)
+            GameTooltip:Show()
+        end)
+        selfSpecCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        yOffset = yOffset - 28
+
         yOffset = yOffset - 6
 
         local DETAIL_LEVELS = {
@@ -915,17 +931,234 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             GameTooltip:Show()
         end)
         altSpecCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        yOffset = yOffset - 30 - 10
+        yOffset = yOffset - 28
 
-        local function setAltSpecEnabled(enabled)
+        -- Row 6: [Ignore Soulbound] (double-indented under Show alt upgrades)
+        local ignoreSBCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_IGNORE_SOULBOUND"] })
+        ignoreSBCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset)
+        ignoreSBCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipIgnoreSoulbound") or false)
+        ignoreSBCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "tooltipIgnoreSoulbound", self:GetChecked())
+        end)
+        ignoreSBCb:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_IGNORE_SOULBOUND"], 1, 1, 1)
+            GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_IGNORE_SOULBOUND_TOOLTIP"], nil, nil, nil, true)
+            GameTooltip:Show()
+        end)
+        ignoreSBCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        yOffset = yOffset - 28
+
+        local ALT_LIMIT_VALUES = { 1, 2, 3, 4, 6, 8, 10, 15, 20, 25, 0 }
+        local function altLimitValueToPos(val)
+            for i, v in ipairs(ALT_LIMIT_VALUES) do
+                if v == val then return i end
+            end
+            return 7
+        end
+        local function altLimitLabel(pos)
+            local v = ALT_LIMIT_VALUES[pos]
+            if v == 0 then return L["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] end
+            return tostring(v)
+        end
+
+        local altLimitLbl = OneWoW_GUI:CreateFS(dsc, 12)
+        altLimitLbl:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset - 4)
+        altLimitLbl:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"])
+        altLimitLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        altLimitLbl:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"], 1, 1, 1)
+            GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"], nil, nil, nil, true)
+            GameTooltip:Show()
+        end)
+        altLimitLbl:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        local currentLimit = reg:GetOverlaySetting(featureId, "tooltipAltLimit") or 10
+        local altLimitSliderWrap = OneWoW_GUI:CreateSlider(dsc, {
+            width = 220,
+            minVal = 1,
+            maxVal = #ALT_LIMIT_VALUES,
+            step = 1,
+            currentVal = altLimitValueToPos(currentLimit),
+            getLabel = altLimitLabel,
+            getValue = function(pos) return ALT_LIMIT_VALUES[pos] end,
+            onChange = function(value)
+                reg:SetOverlaySetting(featureId, "tooltipAltLimit", value)
+            end,
+        })
+        altLimitSliderWrap:SetPoint("TOPLEFT", dsc, "TOPLEFT", 200, yOffset - 2)
+        yOffset = yOffset - 36
+
+        -- Row 8: [Only show upgrades for these alts] (double-indented)
+        local whitelistCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] })
+        whitelistCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset)
+        whitelistCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipAltWhitelistEnabled") or false)
+        whitelistCb:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"], 1, 1, 1)
+            GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"], nil, nil, nil, true)
+            GameTooltip:Show()
+        end)
+        whitelistCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        yOffset = yOffset - 28
+
+        local pickAltsBtn = OneWoW_GUI:CreateDropdown(dsc, {
+            width = 110,
+            height = 22,
+            text = L["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"],
+        })
+        pickAltsBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 66, yOffset)
+
+        local whitelistSummary = OneWoW_GUI:CreateFS(dsc, 11)
+        whitelistSummary:SetPoint("LEFT", pickAltsBtn, "RIGHT", 8, 0)
+        whitelistSummary:SetPoint("RIGHT", dsc, "RIGHT", -12, 0)
+        whitelistSummary:SetJustifyH("LEFT")
+        whitelistSummary:SetWordWrap(false)
+
+        local function GetAltEntries()
+            local charAPI = _G.OneWoW_AltTracker_Character_API
+            if not charAPI or not charAPI.GetAllCharacters then return {}, nil end
+            local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
+            return charAPI.GetAllCharacters() or {}, currentKey
+        end
+
+        local function GetClassColoredName(name, class)
+            if class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] then
+                local c = RAID_CLASS_COLORS[class]
+                return string.format("|cFF%02x%02x%02x%s|r", c.r * 255, c.g * 255, c.b * 255, name or "?")
+            end
+            return name or "?"
+        end
+
+        local function RefreshWhitelistSummary()
+            local whitelist = reg:GetOverlaySetting(featureId, "tooltipAltWhitelist")
+            local entries, currentKey = GetAltEntries()
+            if #entries == 0 then
+                whitelistSummary:SetText(L["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"])
+                whitelistSummary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                return
+            end
+            local names = {}
+            for _, entry in ipairs(entries) do
+                if entry.key and entry.key ~= currentKey and whitelist[entry.key] then
+                    local data = entry.data
+                    local nm = data and data.name or entry.key
+                    local cls = data and data.class
+                    names[#names + 1] = GetClassColoredName(nm, cls)
+                end
+            end
+            if #names == 0 then
+                whitelistSummary:SetText(L["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"])
+                whitelistSummary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            else
+                whitelistSummary:SetText(table.concat(names, ", "))
+                whitelistSummary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+        end
+
+        OneWoW_GUI:AttachFilterMenu(pickAltsBtn, {
+            searchable = true,
+            buildItems = function()
+                local items = {}
+                local whitelist = reg:GetOverlaySetting(featureId, "tooltipAltWhitelist")
+                local entries, currentKey = GetAltEntries()
+                if #entries == 0 then
+                    items[#items + 1] = {
+                        type = "header",
+                        text = L["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"],
+                    }
+                    return items
+                end
+                local sorted = {}
+                for _, entry in ipairs(entries) do
+                    if entry.key and entry.key ~= currentKey and type(entry.data) == "table" then
+                        sorted[#sorted + 1] = entry
+                    end
+                end
+                table.sort(sorted, function(a, b)
+                    local an = (a.data and a.data.name) or a.key or ""
+                    local bn = (b.data and b.data.name) or b.key or ""
+                    return an:lower() < bn:lower()
+                end)
+                for _, entry in ipairs(sorted) do
+                    local data = entry.data
+                    local nm = data.name or entry.key
+                    local cls = data.class
+                    local charKey = entry.key
+                    items[#items + 1] = {
+                        type = "checkbox",
+                        text = GetClassColoredName(nm, cls),
+                        checked = whitelist[charKey] and true or false,
+                        onToggle = function(isOn)
+                            local wl = reg:GetOverlaySetting(featureId, "tooltipAltWhitelist")
+                            if isOn then
+                                wl[charKey] = true
+                            else
+                                wl[charKey] = nil
+                            end
+                            RefreshWhitelistSummary()
+                        end,
+                    }
+                end
+                return items
+            end,
+        })
+        RefreshWhitelistSummary()
+        yOffset = yOffset - 26
+
+        yOffset = yOffset - 10
+
+        local function setAltChildrenEnabled(enabled)
             if enabled then
                 altSpecCb:Enable()
                 altSpecCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                ignoreSBCb:Enable()
+                ignoreSBCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                altLimitLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                if altLimitSliderWrap.slider then
+                    altLimitSliderWrap.slider:Enable()
+                end
+                altLimitSliderWrap.valLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                whitelistCb:Enable()
+                whitelistCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                if whitelistCb:GetChecked() then
+                    pickAltsBtn:Enable()
+                    pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                else
+                    pickAltsBtn:Disable()
+                    pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                end
             else
                 altSpecCb:Disable()
                 altSpecCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                ignoreSBCb:Disable()
+                ignoreSBCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                altLimitLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                if altLimitSliderWrap.slider then
+                    altLimitSliderWrap.slider:Disable()
+                end
+                altLimitSliderWrap.valLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                whitelistCb:Disable()
+                whitelistCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                pickAltsBtn:Disable()
+                pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
         end
+
+        whitelistCb:SetScript("OnClick", function(self)
+            reg:SetOverlaySetting(featureId, "tooltipAltWhitelistEnabled", self:GetChecked())
+            if showAltsCb:GetChecked() then
+                if self:GetChecked() then
+                    pickAltsBtn:Enable()
+                    pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                else
+                    pickAltsBtn:Disable()
+                    pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                end
+            end
+            RefreshWhitelistSummary()
+        end)
 
         local function refreshTooltipSubs(enabled)
             if enabled then
@@ -938,7 +1171,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 showSkipCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 showAltsCb:Enable()
                 showAltsCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                setAltSpecEnabled(showAltsCb:GetChecked())
+                setAltChildrenEnabled(showAltsCb:GetChecked())
             else
                 detailDD:Disable()
                 detailDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -949,14 +1182,14 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 showSkipCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 showAltsCb:Disable()
                 showAltsCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                setAltSpecEnabled(false)
+                setAltChildrenEnabled(false)
             end
         end
         refreshTooltipSubs(reg:GetOverlaySetting(featureId, "showInTooltip") or false)
 
         showAltsCb:SetScript("OnClick", function(self)
             reg:SetOverlaySetting(featureId, "tooltipShowAlts", self:GetChecked())
-            setAltSpecEnabled(self:GetChecked())
+            setAltChildrenEnabled(self:GetChecked())
         end)
 
         tooltipCb:SetScript("OnClick", function(self)

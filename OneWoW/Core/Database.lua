@@ -198,8 +198,13 @@ local DEFAULTS = {
                 tooltipOnlyUpgrade = false,
                 tooltipShowSkipReason = false,
                 tooltipShowAlts = true,
+                tooltipIgnoreSoulbound = false,
+                tooltipAltLimit = 10,
+                tooltipAltWhitelistEnabled = false,
+                tooltipAltWhitelist = {},
                 showPawnPrompt = true,
                 altSpecMatch = false,
+                selfSpecMatch = false,
             },
             transmog = {
                 enabled = false,

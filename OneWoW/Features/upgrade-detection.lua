@@ -73,11 +73,30 @@ local function AltHasTwoHanderEquipped(equipment)
     return equipLoc == "INVTYPE_2HWEAPON" or equipLoc == "INVTYPE_RANGEDRIGHT" or equipLoc == "INVTYPE_RANGED"
 end
 
+local function GetCurrentSpecID()
+    local specIndex = GetSpecialization and GetSpecialization()
+    if not specIndex then return nil end
+    local specID = GetSpecializationInfo and GetSpecializationInfo(specIndex)
+    return specID
+end
+
 local function CanPlayerUseItem(itemLink)
     if not itemLink then return false end
     local itemID, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
     if not itemID then return false end
     if not PE:CanClassEquip(itemID, itemLink) then return false end
+
+    local cfg = GetDB()
+    if cfg and cfg.selfSpecMatch then
+        local specID = GetCurrentSpecID()
+        if specID then
+            local _, _, classID = UnitClass("player")
+            if classID and not C_Item.DoesItemContainSpec(itemLink, classID, specID) then
+                return false
+            end
+        end
+    end
+
     if equipLoc == "INVTYPE_SHIELD"
        or equipLoc == "INVTYPE_HOLDABLE"
        or equipLoc == "INVTYPE_WEAPONOFFHAND" then
