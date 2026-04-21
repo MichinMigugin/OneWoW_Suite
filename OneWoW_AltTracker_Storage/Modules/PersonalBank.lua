@@ -33,13 +33,13 @@ function Module:CollectData(charKey, charData)
                 if itemInfo and itemInfo.itemID then
                     local itemLink = C_Container.GetContainerItemLink(bankBagID, slotID)
                     local itemID = itemInfo.itemID
-                    local itemName, _, itemQuality, itemLevel, _, _, _, _, _, itemTexture, sellPrice = GetItemInfo(itemID)
+                    local itemName, _, itemQuality, itemLevel, _, _, _, _, _, itemTexture, sellPrice = GetItemInfo(itemLink or itemID)
 
                     tabData.items[slotID] = {
                         itemID = itemID,
                         itemLink = itemLink,
                         itemName = itemName,
-                        quality = itemQuality,
+                        quality = itemInfo.quality or itemQuality,
                         itemLevel = itemLevel,
                         texture = itemTexture,
                         sellPrice = sellPrice or 0,

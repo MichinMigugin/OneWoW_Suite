@@ -3,6 +3,23 @@ local addonName, ns = ...
 ns.GuildBank = {}
 local Module = ns.GuildBank
 
+local LINK_COLOR_TO_QUALITY = {
+    ["ff9d9d9d"] = 0, -- Poor
+    ["ffffffff"] = 1, -- Common
+    ["ff1eff00"] = 2, -- Uncommon
+    ["ff0070dd"] = 3, -- Rare
+    ["ffa335ee"] = 4, -- Epic
+    ["ffff8000"] = 5, -- Legendary
+    ["ffe6cc80"] = 6, -- Artifact
+    ["ff00ccff"] = 7, -- Heirloom
+}
+
+local function QualityFromLink(itemLink)
+    if not itemLink then return nil end
+    local hex = itemLink:match("|c(%x%x%x%x%x%x%x%x)")
+    return hex and LINK_COLOR_TO_QUALITY[hex:lower()] or nil
+end
+
 function Module:CollectData(charKey, charData)
     if not charKey then return false end
     if not _G.OneWoW_AltTracker_Storage_DB then return false end
@@ -47,7 +64,7 @@ function Module:CollectData(charKey, charData)
                         itemID = itemID,
                         itemLink = itemLink,
                         itemName = itemName,
-                        quality = itemQuality,
+                        quality = QualityFromLink(itemLink) or itemQuality,
                         itemLevel = itemLevel,
                         texture = texture,
                         sellPrice = sellPrice or 0,
