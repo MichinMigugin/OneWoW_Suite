@@ -1042,7 +1042,7 @@ local preset = OneWoW_GUI:GetIconStylePreset("clean")
 
 These components exist in the library but are not fully documented here. See source for option keys.
 
-- **CreateSlider(parent, options)** — minVal, maxVal, step, currentVal, onChange, width, fmt
+- **CreateSlider(parent, options)** — minVal, maxVal, step, currentVal, onChange, width, fmt. Optional `getLabel(pos) -> string` overrides the default `string.format(fmt, pos)` display (also used for the Low/High tick labels). Optional `getValue(pos) -> any` maps slider position to a domain value; when provided, `onChange` is called as `onChange(mappedValue, pos)` instead of `onChange(pos)`. Return value: a container frame with `.slider` and `.valLabel` fields for external access (e.g. to `Enable()`/`Disable()` the underlying slider).
 - **CreateProgressBar(parent, options)** — progress bar with theme colors
 - **CreateDataTable(parent, options)** — table with `ClearDataRows`, `LayoutDataRows`, `CreateDataRow`
 - **CreateOverviewPanel(parent, options)** — overview layout

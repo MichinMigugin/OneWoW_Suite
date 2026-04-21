@@ -555,6 +555,12 @@ function OneWoW_GUI:CreateSlider(parent, options)
     local onChange = options.onChange or noop
     local width = options.width or 200
     local fmt = options.fmt or "%.1f"
+    local getLabel = options.getLabel
+    local getValue = options.getValue
+    local function formatVal(pos)
+        if getLabel then return getLabel(pos) end
+        return string.format(fmt, pos)
+    end
     local container = CreateFrame("Frame", nil, parent)
     container:SetSize(width, 36)
 
@@ -570,20 +576,26 @@ function OneWoW_GUI:CreateSlider(parent, options)
     local valLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     OneWoW_GUI:SafeSetFont(valLabel, OneWoW_GUI:GetFont(), 12)
     valLabel:SetPoint("LEFT", slider, "RIGHT", 6, 0)
-    valLabel:SetText(string.format(fmt, currentVal))
+    valLabel:SetText(formatVal(currentVal))
     valLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    if slider.Low  then slider.Low:SetText(tostring(minVal)) end
-    if slider.High then slider.High:SetText(tostring(maxVal)) end
+    if slider.Low  then slider.Low:SetText(formatVal(minVal)) end
+    if slider.High then slider.High:SetText(formatVal(maxVal)) end
     if slider.Text then slider.Text:SetText("") end
 
     slider:SetScript("OnValueChanged", function(self, val)
         local rounded = math.floor(val / step + 0.5) * step
         rounded = math.max(minVal, math.min(maxVal, rounded))
-        valLabel:SetText(string.format(fmt, rounded))
-        onChange(rounded)
+        valLabel:SetText(formatVal(rounded))
+        if getValue then
+            onChange(getValue(rounded), rounded)
+        else
+            onChange(rounded)
+        end
     end)
 
+    container.slider = slider
+    container.valLabel = valLabel
     return container
 end
 

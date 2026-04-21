@@ -2405,6 +2405,34 @@ function PE:RegisterKeyword(nameOrNames, func)
     wipe(compiledCache)
 end
 
+--- List every registered keyword in registration order.
+--- Returns an ordered array of `{ canonical = "poor", aliases = { "grey", "gray" } }`
+--- entries. Intended for help/reference UIs that want to show every keyword
+--- the engine currently knows about (including addons that registered extras
+--- via RegisterKeyword). Aliases exclude the canonical name itself and are
+--- sorted alphabetically for stable display.
+function PE:GetAllKeywords()
+    local results = {}
+    local seen = {}
+
+    for _, entry in ipairs(KEYWORD_CANONICAL_ORDER) do
+        local canonical = entry.name
+        local fn = entry.fn
+        local aliases = {}
+        for name, mapFn in pairs(KEYWORD_MAP) do
+            if mapFn == fn and name ~= canonical then
+                tinsert(aliases, name)
+            end
+        end
+        table.sort(aliases)
+        if not seen[canonical] then
+            seen[canonical] = true
+            tinsert(results, { canonical = canonical, aliases = aliases })
+        end
+    end
+    return results
+end
+
 --- List every registered keyword that matches a given item.
 --- Returns an ordered array of canonical keyword names (without the leading "#").
 --- Aliases (e.g. #grey / #gray for #poor) are deduplicated by predicate-function
