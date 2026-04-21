@@ -296,6 +296,7 @@ local function BuildKeywordFrame()
     })
     grammarFrame:SetPoint("TOPLEFT", keywordFrame, "TOPLEFT", 10, -32)
     grammarFrame:SetPoint("TOPRIGHT", keywordFrame, "TOPRIGHT", -10, -32)
+    grammarFrame:SetHeight(2000)
 
     local gy = -8
     local gHeaderFS = grammarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -304,23 +305,30 @@ local function BuildKeywordFrame()
     gHeaderFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     gy = gy - 18
 
+    local grammarRowGap = 4
     for _, row in ipairs(GRAMMAR_ROWS) do
+        local rightColW = math.max(1, grammarFrame:GetWidth() - 260)
+
         local leftFS = grammarFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        leftFS:SetHeight(0)
         leftFS:SetPoint("TOPLEFT", grammarFrame, "TOPLEFT", 12, gy)
         leftFS:SetWidth(230)
         leftFS:SetJustifyH("LEFT")
+        leftFS:SetWordWrap(true)
         leftFS:SetText(row.left)
         leftFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local rightFS = grammarFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        rightFS:SetHeight(0)
         rightFS:SetPoint("TOPLEFT", grammarFrame, "TOPLEFT", 250, gy)
-        rightFS:SetPoint("TOPRIGHT", grammarFrame, "TOPRIGHT", -10, gy)
+        rightFS:SetWidth(rightColW)
         rightFS:SetJustifyH("LEFT")
         rightFS:SetWordWrap(true)
         rightFS:SetText(row.right)
         rightFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-        gy = gy - 16
+        local rowH = math.max(leftFS:GetHeight(), rightFS:GetHeight(), 14)
+        gy = gy - rowH - grammarRowGap
     end
     grammarFrame:SetHeight(math.abs(gy) + 12)
 
