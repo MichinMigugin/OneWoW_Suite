@@ -1,6 +1,7 @@
 local addonName, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local PE = OneWoW_GUI and OneWoW_GUI.PredicateEngine
 
 local BagBarModule = {
     id          = "bagbar",
@@ -57,6 +58,7 @@ local function GetSettings()
     if s.showDecor       == nil then s.showDecor       = true end
     if s.hideAnchor      == nil then s.hideAnchor      = false   end
     if s.growDirection   == nil then s.growDirection   = "RIGHT" end
+    if s.advancedFilter  == nil then s.advancedFilter  = ""      end
     return s
 end
 
@@ -78,29 +80,43 @@ local CLASSID_PROFESSION = 19
 local MISC_SUB_COMPANION = 2
 local MISC_SUB_MOUNT     = 5
 
-function BagBarModule:PassesCategoryFilter(itemID)
+local function PassesAdvancedFilter(itemID, bag, slot)
+    local s = GetSettings()
+    local expr = s.advancedFilter
+    if not expr or expr == "" or not PE then return true end
+    local ok, matched = pcall(PE.CheckItem, PE, expr, itemID, bag, slot)
+    if not ok then return true end
+    return matched == true
+end
+
+function BagBarModule:PassesCategoryFilter(itemID, bag, slot)
     local s = GetSettings()
     local _, _, _, _, _, classID, subClassID = C_Item.GetItemInfoInstant(itemID)
-    if not classID then return true end
+    local categoryPass
+    if not classID then
+        categoryPass = true
+    elseif classID == CLASSID_RECIPE or classID == CLASSID_PROFESSION then
+        categoryPass = s.showRecipes
+    elseif classID == CLASSID_CONTAINER then
+        categoryPass = s.showContainers
+    elseif classID == CLASSID_CONSUMABLE then
+        categoryPass = s.showUsableItems
+    elseif classID == CLASSID_BATTLEPET then
+        categoryPass = s.showPets
+    elseif classID == CLASSID_MISC then
+        if subClassID == MISC_SUB_MOUNT then
+            categoryPass = s.showMounts
+        elseif subClassID == MISC_SUB_COMPANION then
+            categoryPass = s.showPets
+        else
+            categoryPass = s.showDecor
+        end
+    else
+        categoryPass = true
+    end
 
-    if classID == CLASSID_RECIPE or classID == CLASSID_PROFESSION then
-        return s.showRecipes
-    end
-    if classID == CLASSID_CONTAINER then
-        return s.showContainers
-    end
-    if classID == CLASSID_CONSUMABLE then
-        return s.showUsableItems
-    end
-    if classID == CLASSID_BATTLEPET then
-        return s.showPets
-    end
-    if classID == CLASSID_MISC then
-        if subClassID == MISC_SUB_MOUNT then return s.showMounts end
-        if subClassID == MISC_SUB_COMPANION then return s.showPets end
-        return s.showDecor
-    end
-    return true
+    if not categoryPass then return false end
+    return PassesAdvancedFilter(itemID, bag, slot)
 end
 
 function BagBarModule:AddToBlacklist(itemID, permanent)
@@ -486,7 +502,7 @@ end
 
 function BagBarModule:ShouldShowItem(bag, slot, itemID)
     if self:IsBlacklisted(itemID) then return false end
-    if not self:PassesCategoryFilter(itemID) then return false end
+    if not self:PassesCategoryFilter(itemID, bag, slot) then return false end
     return self:IsItemUsableForBar(bag, slot, itemID)
 end
 

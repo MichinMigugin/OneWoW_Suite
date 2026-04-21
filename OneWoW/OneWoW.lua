@@ -80,6 +80,15 @@ local function RegisterSlashCommands()
             OneWoW.GUI:Toggle()
         end
     end
+
+    SLASH_ONEWOWKEYWORDS1 = "/owkeys"
+    SLASH_ONEWOWKEYWORDS2 = "/1wkeys"
+    SLASH_ONEWOWKEYWORDS3 = "/onewowkeywords"
+    SlashCmdList["ONEWOWKEYWORDS"] = function()
+        if OneWoW_GUI and OneWoW_GUI.ShowKeywordHelp then
+            OneWoW_GUI:ShowKeywordHelp()
+        end
+    end
 end
 
 function OneWoW:OnAddonLoaded(loadedAddon)

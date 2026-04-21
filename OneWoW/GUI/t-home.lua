@@ -689,6 +689,7 @@ function GUI:CreateHomeTab(parent)
             header = "OneWoW",
             commands = {
                 { cmd = "/1w, /ow, /one, /onewow", desc = L["CMD_TOGGLE_ONEWOW"] or "Toggle OneWoW" },
+                { cmd = "/1wkeys, /owkeys", desc = L["CMD_KEYWORD_HELP"] or "Open Search Keywords help" },
             },
         },
         {

@@ -3,8 +3,25 @@ local L = ns.L
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
+local PE = OneWoW_GUI.PredicateEngine
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
+local function MatchesShoppingSearch(searchText, itemID, itemLink, displayName, quantity)
+    if not searchText or searchText == "" then return true end
+    if PE and itemID then
+        local itemInfo = {
+            hyperlink = itemLink,
+            count = quantity or 1,
+        }
+        if C_Item and C_Item.GetItemQualityByID then
+            itemInfo.quality = C_Item.GetItemQualityByID(itemID)
+        end
+        local ok, matched = pcall(PE.CheckItem, PE, searchText, itemID, nil, nil, itemInfo)
+        if ok then return matched == true end
+    end
+    return displayName and displayName:lower():find(searchText:lower(), 1, true) ~= nil
+end
 
 ns.MainWindow = {}
 local MainWindow = ns.MainWindow
@@ -387,14 +404,30 @@ function MainWindow:Create()
     end)
     searchAltsBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
+    local shopHelpBtn
+    if OneWoW_GUI.CreateKeywordHelpButton then
+        shopHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(contentHeader, { size = 20 })
+        shopHelpBtn:SetPoint("RIGHT", searchAltsBtn.label or searchAltsBtn, "LEFT", -6, 0)
+    end
+
     searchBox = OneWoW_GUI:CreateEditBox(contentHeader, { name = "OWSL_SearchBox", width = 120, height = 22 })
-    searchBox:SetPoint("RIGHT", searchAltsBtn.label or searchAltsBtn, "LEFT", -6, 0)
+    if shopHelpBtn then
+        searchBox:SetPoint("RIGHT", shopHelpBtn, "LEFT", -4, 0)
+        shopHelpBtn:SetScript("OnClick", function()
+            OneWoW_GUI:ShowKeywordHelp(searchBox)
+        end)
+    else
+        searchBox:SetPoint("RIGHT", searchAltsBtn.label or searchAltsBtn, "LEFT", -6, 0)
+    end
     searchBox:SetScript("OnTextChanged", function(self, userInput)
         if userInput then
             searchFilter = self:GetText():lower()
             MainWindow:RefreshItemList()
         end
     end)
+    if OneWoW_GUI.AttachSearchTooltip then
+        OneWoW_GUI:AttachSearchTooltip(searchBox)
+    end
 
     local searchLabel = OneWoW_GUI:CreateFS(contentHeader, 10)
     searchLabel:SetPoint("RIGHT", searchBox, "LEFT", -4, 0)
@@ -934,8 +967,8 @@ function MainWindow:RefreshItemList()
             C_Item.RequestLoadItemDataByID(itemID)
             displayName = string.format(L["OWSL_ITEM_PREFIX"], itemID)
         end
-        if searchFilter == "" or displayName:lower():find(searchFilter, 1, true) then
-            local _, itemLink, _, _, _, _, _, _, _, iconFile = GetItemInfo(itemID)
+        local _, itemLink, _, _, _, _, _, _, _, iconFile = GetItemInfo(itemID)
+        if MatchesShoppingSearch(searchFilter, itemID, itemLink, displayName, itemInfo.quantity) then
             local status               = ns.ShoppingList:GetItemStatus(itemID, activeList)
             local isCraftable, recipes = ns.ShoppingList:IsItemCraftable(itemID)
             table.insert(items, {
@@ -955,7 +988,7 @@ function MainWindow:RefreshItemList()
 
     for uid, unresolvedItem in pairs(list.unresolvedItems or {}) do
         local name = unresolvedItem.itemName
-        if searchFilter == "" or name:lower():find(searchFilter, 1, true) then
+        if searchFilter == "" or (name and name:lower():find(searchFilter, 1, true)) then
             table.insert(items, {
                 key          = uid,
                 itemID       = nil,

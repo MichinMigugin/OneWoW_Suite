@@ -3,8 +3,27 @@ local L = ns.L
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
+local PE = OneWoW_GUI.PredicateEngine
 
 ns.UI = ns.UI or {}
+
+local function MatchesSearch(itemData, searchText)
+    if not searchText or searchText == "" then return true end
+    if PE then
+        local itemInfo = {
+            hyperlink = itemData.itemLink,
+            count = itemData.totalQty or 1,
+            quality = itemData.quality,
+        }
+        if itemData.vendorPrice and itemData.vendorPrice > 0 then
+            itemInfo.vendorprice = itemData.vendorPrice
+        end
+        local ok, matched = pcall(PE.CheckItem, PE, searchText, itemData.itemID, nil, nil, itemInfo)
+        if ok then return matched == true end
+    end
+    local name = itemData.itemName
+    return name and name:lower():find(searchText:lower(), 1, true) ~= nil
+end
 
 local itemRows = {}
 local filterText = ""
@@ -69,8 +88,21 @@ function ns.UI.CreateItemsTab(parent)
     searchBox:SetWidth(200)
     searchBox:SetPoint("LEFT", filterBar, "LEFT", 8, 0)
 
+    if OneWoW_GUI.AttachSearchTooltip then
+        OneWoW_GUI:AttachSearchTooltip(searchBox)
+    end
+    local searchHelpBtn
+    if OneWoW_GUI.CreateKeywordHelpButton then
+        searchHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(filterBar, { editBox = searchBox, size = 20 })
+        searchHelpBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, 0)
+    end
+
     local checkBound = OneWoW_GUI:CreateCheckbox(filterBar, { label = L["ITEMS_FILTER_BOUND"] })
-    checkBound:SetPoint("LEFT", searchBox, "RIGHT", 15, 1)
+    if searchHelpBtn then
+        checkBound:SetPoint("LEFT", searchHelpBtn, "RIGHT", 10, 1)
+    else
+        checkBound:SetPoint("LEFT", searchBox, "RIGHT", 15, 1)
+    end
     checkBound:SetScript("OnClick", function(self)
         hidebound = self:GetChecked()
         if ns.UI.RefreshItemsTab then
@@ -384,13 +416,19 @@ local function ResolveItemData(itemData)
     local itemLink = itemData.itemLink
     local vendorPrice = itemData.sellPrice or 0
 
-    if not itemName or not texture then
-        local name, link, _, _, _, _, _, _, _, tex, sell = GetItemInfo(itemData.itemID)
+    -- Prefer a link-based live lookup so the vendor price reflects the
+    -- per-variant sell price (bonus IDs, item level, crafted quality),
+    -- matching the OneWoW Tooltips "Value" line.
+    local lookupKey = itemLink or itemData.itemID
+    if lookupKey then
+        local name, link, _, _, _, _, _, _, _, tex, sell = GetItemInfo(lookupKey)
         if name then
-            itemName  = itemName  or name
-            itemLink  = itemLink  or link
-            texture   = texture   or tex
-            if vendorPrice == 0 then vendorPrice = sell or 0 end
+            itemName = itemName or name
+            itemLink = itemLink or link
+            texture  = texture  or tex
+            if sell and sell > 0 then
+                vendorPrice = sell
+            end
         end
     end
 
@@ -510,13 +548,14 @@ function ns.UI.RefreshItemsTab(itemsTab)
                         if itemData and itemData.itemID then
                             local itemID = itemData.itemID
                             if not items[itemID] then
+                                local iName, iTex, iLink, iVend = ResolveItemData(itemData)
                                 items[itemID] = {
                                     itemID = itemID,
-                                    itemName = itemData.itemName or itemData.name or "Unknown",
-                                    texture = itemData.texture,
+                                    itemName = iName or itemData.name or "Unknown",
+                                    texture = iTex or itemData.texture,
                                     quality = itemData.quality,
-                                    itemLink = itemData.itemLink,
-                                    vendorPrice = itemData.sellPrice or 0,
+                                    itemLink = iLink,
+                                    vendorPrice = iVend,
                                     totalQty = 0,
                                     isBound = false,
                                     locations = {},
@@ -662,7 +701,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
 
         if shouldInclude and filterText and filterText ~= "" then
-            if not (itemData.itemName and itemData.itemName:lower():find(filterText:lower(), 1, true)) then
+            if not MatchesSearch(itemData, filterText) then
                 shouldInclude = false
             end
         end

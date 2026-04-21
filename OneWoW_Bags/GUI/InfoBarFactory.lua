@@ -306,9 +306,25 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 end
             end,
         })
+
+        local bagsHelpBtn
+        if OneWoW_GUI.CreateKeywordHelpButton then
+            bagsHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(infoBarFrame, { editBox = searchBox, size = 20 })
+            bagsHelpBtn:SetPoint("RIGHT", emptyToggleBtn, "LEFT", -3, 0)
+        end
+
         searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, searchY)
-        searchBox:SetPoint("TOPRIGHT", emptyToggleBtn, "TOPLEFT", -3, 0)
+        if bagsHelpBtn then
+            searchBox:SetPoint("TOPRIGHT", bagsHelpBtn, "TOPLEFT", -3, 0)
+        else
+            searchBox:SetPoint("TOPRIGHT", emptyToggleBtn, "TOPLEFT", -3, 0)
+        end
+
+        if OneWoW_GUI.AttachSearchTooltip then
+            OneWoW_GUI:AttachSearchTooltip(searchBox)
+        end
         infoBarFrame.searchBox = searchBox
+        infoBarFrame.searchHelpBtn = bagsHelpBtn
 
         bar:UpdateVisibility()
         return infoBarFrame
@@ -347,6 +363,10 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
 
         if infoBarFrame.searchBox then
             infoBarFrame.searchBox:SetShown(showSearch)
+        end
+
+        if infoBarFrame.searchHelpBtn then
+            infoBarFrame.searchHelpBtn:SetShown(showSearch)
         end
 
         if config.expacFilter and infoBarFrame.expacDropdown then
@@ -407,15 +427,24 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             end
         end
 
-        if infoBarFrame.searchBox and showSearch then
-            infoBarFrame.searchBox:ClearAllPoints()
-            infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, searchY)
-            infoBarFrame.searchBox:SetPoint("TOPRIGHT", infoBarFrame.emptyToggleBtn, "TOPLEFT", -3, 0)
-        end
-
         if infoBarFrame.emptyToggleBtn and showSearch then
             infoBarFrame.emptyToggleBtn:ClearAllPoints()
             infoBarFrame.emptyToggleBtn:SetPoint("TOPRIGHT", infoBarFrame, "TOPRIGHT", -rightInset, searchY)
+        end
+
+        if infoBarFrame.searchHelpBtn and showSearch then
+            infoBarFrame.searchHelpBtn:ClearAllPoints()
+            infoBarFrame.searchHelpBtn:SetPoint("RIGHT", infoBarFrame.emptyToggleBtn, "LEFT", -3, 0)
+        end
+
+        if infoBarFrame.searchBox and showSearch then
+            infoBarFrame.searchBox:ClearAllPoints()
+            infoBarFrame.searchBox:SetPoint("TOPLEFT", infoBarFrame, "TOPLEFT", leftInset, searchY)
+            if infoBarFrame.searchHelpBtn then
+                infoBarFrame.searchBox:SetPoint("TOPRIGHT", infoBarFrame.searchHelpBtn, "TOPLEFT", -3, 0)
+            else
+                infoBarFrame.searchBox:SetPoint("TOPRIGHT", infoBarFrame.emptyToggleBtn, "TOPLEFT", -3, 0)
+            end
         end
     end
 

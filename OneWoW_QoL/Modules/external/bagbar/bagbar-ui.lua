@@ -393,6 +393,44 @@ local function BuildContent(container, isEnabled)
     end
     cy = cy - (math.ceil(#filterToggles / 2) * 26) - 6
 
+    cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_ADVANCED_FILTER_HEADER"], yOffset = cy })
+
+    local advDesc = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    advDesc:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    advDesc:SetPoint("TOPRIGHT", container, "TOPRIGHT", -12, cy)
+    advDesc:SetJustifyH("LEFT")
+    advDesc:SetWordWrap(true)
+    advDesc:SetSpacing(2)
+    advDesc:SetText(L["BAGBAR_ADVANCED_FILTER_DESC"])
+    advDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local advBox = OneWoW_GUI:CreateEditBox(container, {
+        height = 24,
+        placeholderText = L["BAGBAR_ADVANCED_FILTER_PLACEHOLDER"],
+        onTextChanged = function(text)
+            local cur = GetSettings()
+            cur.advancedFilter = text or ""
+            ns.BagBarModule:ScheduleUpdate()
+        end,
+    })
+    advBox:SetPoint("TOPLEFT",  advDesc, "BOTTOMLEFT",  0, -8)
+    advBox:SetPoint("TOPRIGHT", advDesc, "BOTTOMRIGHT", -30, -8)
+
+    if OneWoW_GUI.CreateKeywordHelpButton then
+        local helpBtn = OneWoW_GUI:CreateKeywordHelpButton(container, { editBox = advBox })
+        helpBtn:SetPoint("LEFT", advBox, "RIGHT", 4, 0)
+    end
+    if OneWoW_GUI.AttachSearchTooltip then
+        OneWoW_GUI:AttachSearchTooltip(advBox)
+    end
+
+    if s.advancedFilter and s.advancedFilter ~= "" then
+        advBox:SetText(s.advancedFilter)
+        advBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+
+    cy = cy - 64
+
     cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_MANUAL_ITEMS_HEADER"], yOffset = cy })
 
     cy = MakeItemDropZone(container, L["BAGBAR_ITEM_ID_LABEL"], cy,

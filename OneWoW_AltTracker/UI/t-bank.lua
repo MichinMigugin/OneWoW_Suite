@@ -3,12 +3,28 @@ local L = ns.L
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
+local PE = OneWoW_GUI.PredicateEngine
 
 ns.UI = ns.UI or {}
 
 local selectedCharacterKey = nil
 local currentBankType = "personal"
 local selectedGuildName = nil
+
+local function MatchesSearch(itemData, searchText)
+    if not searchText or searchText == "" then return true end
+    if PE and itemData.itemID then
+        local itemInfo = {
+            hyperlink = itemData.itemLink,
+            count = itemData.count or itemData.quantity or 1,
+            quality = itemData.quality,
+        }
+        local ok, matched = pcall(PE.CheckItem, PE, searchText, itemData.itemID, nil, nil, itemInfo)
+        if ok then return matched == true end
+    end
+    local name = itemData.itemName
+    return name and name:lower():find(searchText:lower(), 1, true) ~= nil
+end
 
 function ns.UI.CreateBankTab(parent)
     local currentChar = UnitName("player")
@@ -131,8 +147,16 @@ function ns.UI.CreateBankTab(parent)
             ns.UI.FilterBankItems(parent, text)
         end,
     })
-    searchBox:SetPoint("BOTTOMLEFT", controlPanel, "BOTTOMLEFT", 10, 6)
-    searchBox:SetPoint("BOTTOMRIGHT", controlPanel, "BOTTOMRIGHT", -10, 6)
+    searchBox:SetPoint("BOTTOMLEFT",  controlPanel, "BOTTOMLEFT",  10, 6)
+    searchBox:SetPoint("BOTTOMRIGHT", controlPanel, "BOTTOMRIGHT", -38, 6)
+
+    if OneWoW_GUI.AttachSearchTooltip then
+        OneWoW_GUI:AttachSearchTooltip(searchBox)
+    end
+    if OneWoW_GUI.CreateKeywordHelpButton then
+        local bankHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(controlPanel, { editBox = searchBox, size = 22 })
+        bankHelpBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, 0)
+    end
 
     local bankViewPanel = OneWoW_GUI:CreateFrame(parent)
     bankViewPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -8)
@@ -462,9 +486,8 @@ function ns.UI.RefreshBankDisplay(parent)
         local searchText = parent.searchBox:GetSearchText()
         if searchText and searchText ~= "" then
             local filtered = {}
-            local searchLower = searchText:lower()
             for _, itemData in ipairs(sortedItems) do
-                if itemData.itemName and itemData.itemName:lower():find(searchLower, 1, true) then
+                if MatchesSearch(itemData, searchText) then
                     table.insert(filtered, itemData)
                 end
             end
@@ -508,9 +531,8 @@ function ns.UI.FilterBankItems(parent, searchText)
     local items = parent._allItems
     if searchText and searchText ~= "" then
         local filtered = {}
-        local searchLower = searchText:lower()
         for _, itemData in ipairs(items) do
-            if itemData.itemName and itemData.itemName:lower():find(searchLower, 1, true) then
+            if MatchesSearch(itemData, searchText) then
                 table.insert(filtered, itemData)
             end
         end
