@@ -289,12 +289,11 @@ function M.InstallExploreReveal()
 end
 
 function M.RefreshExploreAppearance()
-    if WorldMapFrame and WorldMapFrame.RefreshAll then
-        WorldMapFrame:RefreshAll()
-    elseif WorldMapFrame and WorldMapFrame.RefreshAllDataProviders then
-        WorldMapFrame:RefreshAllDataProviders()
-    end
-    if BattlefieldMapFrame and BattlefieldMapFrame.RefreshAll then
-        BattlefieldMapFrame:RefreshAll()
+    M.SafeRefreshWorldMap()
+    if BattlefieldMapFrame and BattlefieldMapFrame.mapID then
+        local sc = BattlefieldMapFrame.ScrollContainer
+        if sc and sc.zoomLevels then
+            BattlefieldMapFrame:RefreshAll()
+        end
     end
 end

@@ -48,13 +48,17 @@ M.GetSettings = GetSettings
 
 local function SafeRefreshWorldMap()
     local f = WorldMapFrame
-    if not f then return end
+    if not f or not f.mapID then return end
+    local sc = f.ScrollContainer
+    if not sc or not sc.zoomLevels then return end
     if f.RefreshAll then
         f:RefreshAll()
     elseif f.RefreshAllDataProviders then
         f:RefreshAllDataProviders()
     end
 end
+
+M.SafeRefreshWorldMap = SafeRefreshWorldMap
 
 local function ForEachTextureInFrame(frame, fn)
     if not frame then return end
