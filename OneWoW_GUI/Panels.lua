@@ -712,10 +712,11 @@ function OneWoW_GUI:CreateDataTable(parent, options)
 
         local resolvedWidths = {}
         local fixedWidth = 0
-        local flexCount = 0
+        local flexMinTotal = 0
+        local flexWeightTotal = 0
         for i, col in ipairs(columns) do
             if col.fixed then
-                local w = col.width
+                local w = col.width or minFlexWidth
                 local btn = headerRow.columnButtons[i]
                 if btn and btn.text and btn.text.GetStringWidth then
                     local textW = btn.text:GetStringWidth() + 14
@@ -724,19 +725,35 @@ function OneWoW_GUI:CreateDataTable(parent, options)
                 resolvedWidths[i] = w
                 fixedWidth = fixedWidth + w
             else
-                flexCount = flexCount + 1
+                local minW = col.minWidth or col.width or minFlexWidth
+                local weight = col.flexWeight or 1
+                if weight < 0 then weight = 0 end
+                resolvedWidths[i] = minW
+                flexMinTotal = flexMinTotal + minW
+                flexWeightTotal = flexWeightTotal + weight
             end
         end
 
         local totalGaps = (#columns - 1) * colGap
-        local remainingWidth = availableWidth - fixedWidth - totalGaps
-        local flexWidth = flexCount > 0 and math.max(0, remainingWidth / flexCount) or 0
+        local remainingWidth = availableWidth - fixedWidth - flexMinTotal - totalGaps
+        if remainingWidth < 0 then remainingWidth = 0 end
+
+        if flexWeightTotal > 0 and remainingWidth > 0 then
+            for i, col in ipairs(columns) do
+                if not col.fixed then
+                    local weight = col.flexWeight or 1
+                    if weight < 0 then weight = 0 end
+                    local extra = math.floor(remainingWidth * (weight / flexWeightTotal))
+                    resolvedWidths[i] = resolvedWidths[i] + extra
+                end
+            end
+        end
 
         local xOffset = 5
         for i, col in ipairs(columns) do
             local btn = headerRow.columnButtons[i]
             if btn then
-                local width = col.fixed and resolvedWidths[i] or math.max(minFlexWidth, flexWidth)
+                local width = resolvedWidths[i]
                 btn:SetWidth(width)
                 btn:ClearAllPoints()
                 btn:SetPoint("BOTTOMLEFT", headerRow, "BOTTOMLEFT", xOffset, 2)
