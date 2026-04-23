@@ -1,15 +1,6 @@
-OneWoW_Utility_Extractor/
-OneWoW_UI/
-
-# Local game prototypes (Godot / experiments — not part of the addon suite)
-games/
-
 .releases/
 .gitignore
 .git/
-
-# Local reference / archive (not synced; keep on disk only)
-6_Last WN Addons/
 
 # Ricky's Cursor rules — local only, never commit or push (AccountSync, Triggers, Gitmode, CHANGELOG, etc.)
 # `git add` will refuse these unless you force; keep them out of the shared repo.
@@ -27,9 +18,22 @@ scripts/Send-ChangelogToDiscord.ps1
 # Ephemeral Discord API payloads (Send-ChangelogToDiscord.ps1)
 .discord-changelog-send.json*
 
+# Local Documentation - Never Commit
 guiplanner.md
 apiplanner.md
 dbplanner.md
 
-# OneWoW Updater (local tray app — not part of the addon suite)
+
+# Local Developer Tools - Never Commit
+OneWoW_Utility_Extractor/
+OneWoW_UI/
 bin/updatefolder/
+
+# Local game prototypes (Godot - not part of the addon suite) - Never Commit
+games/
+
+# Local reference / archive (R5 Production Files) - Never Commit
+6_Last WN Addons/
+
+# Local R7 Production Folder - Never Commit
+ONEWOW_SUITE_7/
