@@ -6,8 +6,6 @@ local addonName, ns = ...
 ns.Currencies = {}
 local Module = ns.Currencies
 
-local DEFAULT_CURRENCY_IDS = {2914, 2915, 2916, 2917, 3008}
-
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
 
@@ -26,15 +24,6 @@ function Module:CollectData(charKey, charData)
        _G.OneWoW_AltTracker_DB.global.overrides.progress.trackedCurrencyIDs then
         for _, id in ipairs(_G.OneWoW_AltTracker_DB.global.overrides.progress.trackedCurrencyIDs) do
             if id and id > 0 and not seen[id] then
-                table.insert(idsToCollect, id)
-                seen[id] = true
-            end
-        end
-    end
-
-    if #idsToCollect == 0 then
-        for _, id in ipairs(DEFAULT_CURRENCY_IDS) do
-            if not seen[id] then
                 table.insert(idsToCollect, id)
                 seen[id] = true
             end

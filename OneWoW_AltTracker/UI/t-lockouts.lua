@@ -194,7 +194,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                 currentTime = currentTime,
             },
             createDetails = function(ef, d)
-                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef, T)
+                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
 
                 local raidList = {}
                 local dungeonList = {}

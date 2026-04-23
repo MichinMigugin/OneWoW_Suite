@@ -878,8 +878,12 @@ function ns.UI.CreateSettingsTab(parent)
         resetBtn:ClearAllPoints()
         resetBtn:SetPoint("BOTTOMLEFT", overrideDialog, "BOTTOMLEFT", 10, 10)
         resetBtn:SetScript("OnClick", function()
-            OneWoWAltTracker.db.global.overrides.progress.trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316}
-            OneWoWAltTracker.db.global.overrides.progress.worldBossQuestIDs = {}
+            OneWoWAltTracker.db.global.overrides.progress.trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310, 3405}
+            OneWoWAltTracker.db.global.overrides.progress.worldBossQuestIDs = {92123, 92560, 92636, 92034}
+            OneWoWAltTracker.db.global.overrides.progress.weeklyActivityQuests = {
+                {questID = 95842, key = "voidAssaults", name = "Void Assaults"},
+                {questID = 95843, key = "ritualSites",  name = "Ritual Sites"},
+            }
             RebuildCurrencyList()
             RebuildBossList()
         end)

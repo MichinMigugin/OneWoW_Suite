@@ -26,6 +26,8 @@ function DataManager:RegisterEvents()
         "CURRENCY_DISPLAY_UPDATE",
         "PVP_RATED_STATS_UPDATE",
         "HONOR_LEVEL_UPDATE",
+        "QUEST_TURNED_IN",
+        "QUEST_REMOVED",
     }
 
     for _, event in ipairs(events) do
@@ -41,6 +43,13 @@ function DataManager:HandleEvent(event, ...)
     if event == "PLAYER_ALIVE" or event == "PLAYER_ENTERING_WORLD" then
         C_Timer.After(2, function()
             self:CollectAllData()
+        end)
+        C_Timer.After(8, function()
+            self:UpdateGreatVault()
+            self:UpdateRaids()
+        end)
+        C_Timer.After(20, function()
+            self:UpdateGreatVault()
         end)
 
     elseif event == "CHALLENGE_MODE_MAPS_UPDATE" or event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE" then
@@ -63,6 +72,13 @@ function DataManager:HandleEvent(event, ...)
             self:UpdatePVP()
             self:UpdateCurrencies()
         end)
+
+    elseif event == "QUEST_TURNED_IN" or event == "QUEST_REMOVED" then
+        C_Timer.After(0.5, function()
+            self:UpdateWorldBoss()
+            self:UpdateWeeklyActivities()
+            self:UpdateRaids()
+        end)
     end
 end
 
@@ -82,6 +98,7 @@ function DataManager:CollectAllData()
     ns.PVP:CollectData(charKey, charData)
     ns.WorldBoss:CollectData(charKey, charData)
     ns.Currencies:CollectData(charKey, charData)
+    ns.WeeklyActivities:CollectData(charKey, charData)
 
     return true
 end
@@ -144,6 +161,16 @@ function DataManager:UpdateWorldBoss()
     if not charData then return false end
 
     ns.WorldBoss:CollectData(charKey, charData)
+end
+
+function DataManager:UpdateWeeklyActivities()
+    local charKey = ns:GetCharacterKey()
+    if not charKey then return false end
+
+    local charData = ns:GetCharacterData(charKey)
+    if not charData then return false end
+
+    ns.WeeklyActivities:CollectData(charKey, charData)
 end
 
 function DataManager:GetCharacterData(charKey)

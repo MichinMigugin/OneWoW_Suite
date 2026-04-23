@@ -8,6 +8,8 @@ local DB = OneWoW_GUI.DB
 OneWoW_AltTracker = {}
 local OneWoWAltTracker = OneWoW_AltTracker
 
+OneWoW_AltTracker.SeasonData = ns.SeasonData
+
 ns.OneWoWAltTracker = OneWoWAltTracker
 ns.oneWoWHubActive = false
 
@@ -186,19 +188,36 @@ function OneWoWAltTracker:InitializeDatabase()
     end
 
     if not self.db.global.overrides then
-        self.db.global.overrides = { progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310}, worldBossQuestID = 0 } }
+        self.db.global.overrides = { progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310, 3405}, worldBossQuestID = 0 } }
     end
     if not self.db.global.overrides.progress then
-        self.db.global.overrides.progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310}, worldBossQuestID = 0 }
+        self.db.global.overrides.progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310, 3405}, worldBossQuestID = 0 }
     end
     if not self.db.global.overrides.progress.trackedCurrencyIDs then
-        self.db.global.overrides.progress.trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310}
+        self.db.global.overrides.progress.trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310, 3405}
         self.db.global.overrides.progress.currency1ID = nil
         self.db.global.overrides.progress.currency2ID = nil
+    end
+    do
+        local ids = self.db.global.overrides.progress.trackedCurrencyIDs
+        local required = {3310, 3405}
+        for _, reqID in ipairs(required) do
+            local found = false
+            for _, id in ipairs(ids) do
+                if id == reqID then found = true; break end
+            end
+            if not found then table.insert(ids, reqID) end
+        end
     end
     if not self.db.global.overrides.progress.worldBossQuestIDs or #self.db.global.overrides.progress.worldBossQuestIDs == 0 then
         self.db.global.overrides.progress.worldBossQuestIDs = {92123, 92560, 92636, 92034}
         self.db.global.overrides.progress.worldBossQuestID = nil
+    end
+    if not self.db.global.overrides.progress.weeklyActivityQuests then
+        self.db.global.overrides.progress.weeklyActivityQuests = {
+            {questID = 95842, key = "voidAssaults", name = "Void Assaults"},
+            {questID = 95843, key = "ritualSites",  name = "Ritual Sites"},
+        }
     end
     self.db.global.overrides.progress.primaryRaidName = nil
     self.db.global.overrides.progress.worldBossName = nil

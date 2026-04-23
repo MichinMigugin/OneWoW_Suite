@@ -12,26 +12,32 @@ ns.UI = ns.UI or {}
 local HEADER_HEIGHT = 30
 local DUNGEON_ICON_FALLBACK = "Interface\\Icons\\INV_Misc_Map01"
 local CURRENCY_ICON_FALLBACK = "Interface\\Icons\\INV_Misc_QuestionMark"
+local DOT_TEXTURE = "Interface\\Buttons\\WHITE8x8"
+local DOT_COLOR_ALL  = {0.20, 0.90, 0.20, 1}
+local DOT_COLOR_SOME = {0.94, 0.78, 0.20, 1}
+local DOT_COLOR_NONE = {0.70, 0.20, 0.20, 1}
+local DOT_COLOR_EMPTY = {0.25, 0.25, 0.25, 1}
+local BOX_COLOR_MET  = {0.15, 0.55, 0.15, 0.85}
+local BOX_COLOR_UNMET = {0.55, 0.15, 0.15, 0.85}
 
-local SEASON_DUNGEONS = {
-    {key = "sd1", name = "Magisters' Terrace",       short = "MAGT",  mapID = 558},
-    {key = "sd2", name = "Maisara Caverns",           short = "MAIS",  mapID = 560},
-    {key = "sd3", name = "Nexus-Point Xenas",         short = "XENA",  mapID = 559},
-    {key = "sd4", name = "Windrunner Spire",          short = "WSPIR", mapID = 557},
-    {key = "sd5", name = "Algeth'ar Academy",         short = "ACAD",  mapID = 402},
-    {key = "sd6", name = "Seat of the Triumvirate",   short = "SEAT",  mapID = 239},
-    {key = "sd7", name = "Skyreach",                  short = "SKY",   mapID = 161},
-    {key = "sd8", name = "Pit of Saron",              short = "POS",   mapID = 556},
-}
+local function GetSeasonData()
+    return ns.SeasonData
+end
 
-local SEASON_RAID_DIFFS = {
-    {key = "rLFR", label = "LFR", diffFind = "Looking"},
-    {key = "rNor", label = "NOR", diffFind = "Normal"},
-    {key = "rHer", label = "HER", diffFind = "Heroic"},
-    {key = "rMyt", label = "MYT", diffFind = "Mythic"},
-}
+local function GetSeasonDungeons()
+    local sd = GetSeasonData()
+    return (sd and sd.dungeons) or {}
+end
 
-local SEASON_RAID_TOTAL = 6
+local function GetSeasonRaids()
+    local sd = GetSeasonData()
+    return (sd and sd.raids) or {}
+end
+
+local function GetRaidDifficulties()
+    local sd = GetSeasonData()
+    return (sd and sd.raidDifficulties) or {}
+end
 
 local SEASON_CURRENCIES = {
     {key = "cur_3383", currencyID = 3383, name = "Adventurer Dawncrest", width = 45},
@@ -45,15 +51,50 @@ local SEASON_CURRENCIES = {
     {key = "cur_3379", currencyID = 3379, name = "Brimming Arcana",      width = 45},
     {key = "cur_3385", currencyID = 3385, name = "Luminous Dust",        width = 45},
     {key = "cur_3316", currencyID = 3316, name = "Voidlight Marl",       width = 45},
-    {key = "cur_3310", currencyID = 3310, name = "Coffer Key Shards",   width = 45},
+    {key = "cur_3310", currencyID = 3310, name = "Coffer Key Shards",    width = 45},
+    {key = "cur_3405", currencyID = 3405, name = "Field Accolade",       width = 50},
 }
 
 local subTabState = {
     mythicplus = { sortColumn = nil, sortAscending = true, rows = {}, columns = {} },
     raids      = { sortColumn = nil, sortAscending = true, rows = {}, columns = {} },
     currencies = { sortColumn = nil, sortAscending = true, rows = {}, columns = {} },
+    weekly     = { sortColumn = nil, sortAscending = true, rows = {}, columns = {} },
 }
 local currentSubTab = "mythicplus"
+
+local function GetWeeklyActivitiesList()
+    if OneWoW_AltTracker and OneWoW_AltTracker.db and
+       OneWoW_AltTracker.db.global and OneWoW_AltTracker.db.global.overrides and
+       OneWoW_AltTracker.db.global.overrides.progress and
+       OneWoW_AltTracker.db.global.overrides.progress.weeklyActivityQuests then
+        return OneWoW_AltTracker.db.global.overrides.progress.weeklyActivityQuests
+    end
+    return {
+        {questID = 95842, key = "voidAssaults", name = "Void Assaults"},
+        {questID = 95843, key = "ritualSites",  name = "Ritual Sites"},
+    }
+end
+
+local function GetWeeklyActivityCompleted(endgameData, questID)
+    if not endgameData or not endgameData.weeklyActivities or not endgameData.weeklyActivities.activities then
+        return false
+    end
+    local a = endgameData.weeklyActivities.activities[questID]
+    return a and a.completed or false
+end
+
+local function GetWeeklyActivityCounts(endgameData)
+    local activities = GetWeeklyActivitiesList()
+    local done = 0
+    local total = #activities
+    for _, entry in ipairs(activities) do
+        if GetWeeklyActivityCompleted(endgameData, entry.questID) then
+            done = done + 1
+        end
+    end
+    return done, total
+end
 
 local function GetBestTimedRun(endgameData)
     if not endgameData or not endgameData.mythicPlus or not endgameData.mythicPlus.seasonBest then
@@ -283,23 +324,29 @@ local function GetProgressSortValue(charKey, charData, sortColumn)
         return GetVaultTypeString(edg, "dungeon")
     elseif sortColumn == "vaultWorld" then
         return GetVaultTypeString(edg, "world")
+    elseif sortColumn == "weeklyCount" then
+        local done = GetWeeklyActivityCounts(edg)
+        return done or 0
+    elseif sortColumn:sub(1, 3) == "wa_" then
+        local qid = tonumber(sortColumn:sub(4))
+        return (qid and GetWeeklyActivityCompleted(edg, qid)) and 1 or 0
+    elseif sortColumn:sub(1, 5) == "raid_" then
+        local raidKey = sortColumn:sub(6)
+        if edg and edg.raids and edg.raids.bosses and edg.raids.bosses[raidKey] then
+            local prog = edg.raids.bosses[raidKey].progress or {}
+            local best = 0
+            for _, p in pairs(prog) do
+                if p > best then best = p end
+            end
+            return best
+        end
+        return 0
     else
-        for _, dung in ipairs(SEASON_DUNGEONS) do
+        for _, dung in ipairs(GetSeasonDungeons()) do
             if dung.key == sortColumn then
                 if not edg or not edg.mythicPlus or not edg.mythicPlus.seasonBest then return 0 end
                 local best = edg.mythicPlus.seasonBest[dung.mapID]
                 if best and best.intime then return best.intime.level or 0 end
-                return 0
-            end
-        end
-        for _, diff in ipairs(SEASON_RAID_DIFFS) do
-            if diff.key == sortColumn then
-                if not edg or not edg.raids or not edg.raids.lockouts then return 0 end
-                for _, lockout in ipairs(edg.raids.lockouts) do
-                    if (lockout.difficultyName or ""):find(diff.diffFind) then
-                        return lockout.encounterProgress or 0
-                    end
-                end
                 return 0
             end
         end
@@ -311,6 +358,46 @@ local function GetSortedCharacters(subTabKey)
     if not _G.OneWoW_AltTracker_Endgame_DB then return {} end
     local state = subTabState[subTabKey]
     return ns.UI.GetSortedCharacters(GetProgressSortValue, state.sortColumn, state.sortAscending)
+end
+
+local _measureFS = nil
+local function MeasureTextWidth(text, fontSize)
+    if not text or text == "" then return 0 end
+    if not _measureFS then
+        _measureFS = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        _measureFS:Hide()
+    end
+    OneWoW_GUI:SafeSetFont(_measureFS, OneWoW_GUI:GetFont(), fontSize or 12)
+    _measureFS:SetText(text)
+    return math.ceil(_measureFS:GetStringWidth() or 0)
+end
+
+local function UpdateCharServerMinWidths(contentFrame, allChars)
+    local cols = contentFrame.headerRow and contentFrame.headerRow.columns
+    if not cols then return end
+
+    local nameIdx, serverIdx = nil, nil
+    for i, c in ipairs(cols) do
+        if c.key == "name" then nameIdx = i
+        elseif c.key == "server" then serverIdx = i end
+    end
+
+    local maxName = 0
+    local maxServer = 0
+    for _, charInfo in ipairs(allChars) do
+        local charData = charInfo.data or {}
+        local nameW = MeasureTextWidth(charData.name or "", 12)
+        if nameW > maxName then maxName = nameW end
+        local serverW = MeasureTextWidth(charData.realm or "", 12)
+        if serverW > maxServer then maxServer = serverW end
+    end
+
+    if nameIdx and cols[nameIdx] then
+        cols[nameIdx].minWidth = math.max(cols[nameIdx].width or 135, maxName + 16)
+    end
+    if serverIdx and cols[serverIdx] then
+        cols[serverIdx].minWidth = math.max(cols[serverIdx].width or 50, maxServer + 12)
+    end
 end
 
 local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
@@ -353,6 +440,25 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
             end
             btn.icon = icon
             if btn.text then btn.text:SetText("") end
+        elseif col.raidData then
+            local raid = col.raidData
+            local tex = nil
+            local sd = GetSeasonData()
+            if sd then
+                local cache = sd:GetRaidCache()
+                local info = cache[raid.label]
+                if info and info.buttonImage and info.buttonImage > 0 then
+                    tex = info.buttonImage
+                end
+            end
+            if tex then
+                local icon = btn:CreateTexture(nil, "ARTWORK")
+                icon:SetSize(22, 22)
+                icon:SetPoint("CENTER")
+                icon:SetTexture(tex)
+                btn.icon = icon
+                if btn.text then btn.text:SetText("") end
+            end
         elseif col.currencyData then
             local icon = btn:CreateTexture(nil, "ARTWORK")
             icon:SetSize(18, 18)
@@ -476,19 +582,121 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         end
 
     elseif subTabKey == "raids" then
+        local difficulties = GetRaidDifficulties()
+        for _, raid in ipairs(GetSeasonRaids()) do
+            local raidBlock = endgameData and endgameData.raids and endgameData.raids.bosses and endgameData.raids.bosses[raid.key]
+            local total = (raidBlock and raidBlock.numEncounters) or 0
+            local bestKilled = 0
+            if raidBlock and raidBlock.progress then
+                for _, diff in ipairs(difficulties) do
+                    local k = raidBlock.progress[diff.id] or 0
+                    if k > bestKilled then bestKilled = k end
+                end
+            end
+            local header = raid.label .. "  " .. bestKilled .. "/" .. total
+            local panel = grid:AddPanel(header)
+
+            local diffHeaderParts = {"                                           "}
+            for _, diff in ipairs(difficulties) do
+                table.insert(diffHeaderParts, diff.label)
+            end
+            grid:AddLine(panel, table.concat(diffHeaderParts, "    "), {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+
+            if raidBlock and raidBlock.encounters then
+                local ordered = {}
+                for _, enc in pairs(raidBlock.encounters) do
+                    table.insert(ordered, enc)
+                end
+                table.sort(ordered, function(a, b)
+                    return (a.journalEncounterID or 0) < (b.journalEncounterID or 0)
+                end)
+                for _, enc in ipairs(ordered) do
+                    local marks = {}
+                    for _, diff in ipairs(difficulties) do
+                        local killed = enc.killed and enc.killed[diff.id]
+                        if killed then
+                            table.insert(marks, "|cFF33CC33[X]|r")
+                        else
+                            table.insert(marks, "|cFF666666[ ]|r")
+                        end
+                    end
+                    local name = enc.name or "Unknown"
+                    local line = name .. "    " .. table.concat(marks, "   ")
+                    grid:AddLine(panel, line)
+                end
+            else
+                grid:AddLine(panel, L["PROGRESS_RAID_NO_DATA"] or "No data - log in to scan.", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
+            end
+        end
+
+    elseif subTabKey == "weekly" then
         local p1 = grid:AddPanel(L["PROGRESS_GREAT_VAULT_DETAIL"])
+        local function VaultRow(list, label)
+            if not list or not (list[1] or list[2] or list[3]) then
+                grid:AddLine(p1, label .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+                return
+            end
+            local total = GetVaultTrackTotal(list)
+            local parts = {(L["PROGRESS_VAULT_TOTAL"] or "T:") .. total}
+            for j = 1, 3 do
+                local act = list[j]
+                if act then
+                    local prog = act.progress or 0
+                    local thresh = act.threshold or 0
+                    local met = thresh > 0 and prog >= thresh
+                    local itemLevel = act.itemLevel
+                    local disp
+                    if met and itemLevel then
+                        disp = "[" .. thresh .. "=ilvl " .. itemLevel .. "]"
+                    elseif met then
+                        disp = "[" .. thresh .. "]"
+                    else
+                        disp = "[" .. prog .. "/" .. thresh .. "]"
+                    end
+                    if met then
+                        table.insert(parts, "|cFF33CC33" .. disp .. "|r")
+                    else
+                        table.insert(parts, "|cFFCC3333" .. disp .. "|r")
+                    end
+                end
+            end
+            grid:AddLine(p1, label .. ": " .. table.concat(parts, "  "))
+        end
         if endgameData and endgameData.greatVault and endgameData.greatVault.activities then
             local acts = endgameData.greatVault.activities
-            VaultTypeStr(grid, p1, acts.raid, L["PROGRESS_VAULT_RAID"])
-            VaultTypeStr(grid, p1, acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
-            VaultTypeStr(grid, p1, acts.world, L["PROGRESS_VAULT_WORLD"])
+            VaultRow(acts.raid, L["PROGRESS_VAULT_RAID"])
+            VaultRow(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
+            VaultRow(acts.world, L["PROGRESS_VAULT_WORLD"])
         else
             grid:AddLine(p1, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
             grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
             grid:AddLine(p1, L["PROGRESS_VAULT_WORLD"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
         end
 
+        local resetSec = C_DateAndTime.GetSecondsUntilWeeklyReset()
+        if resetSec and resetSec > 0 then
+            local days = math.floor(resetSec / 86400)
+            local hours = math.floor((resetSec % 86400) / 3600)
+            local mins = math.floor((resetSec % 3600) / 60)
+            local resetStr = string.format("%dd %dh %dm", days, hours, mins)
+            grid:AddLine(p1, (L["PROGRESS_WEEKLY_RESET"] or "Reset in:") .. " " .. resetStr, {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")})
+        end
+
         local p2 = grid:AddPanel(L["PROGRESS_WEEKLY_ACTIVITIES"])
+        local activities = GetWeeklyActivitiesList()
+        if #activities > 0 then
+            for _, entry in ipairs(activities) do
+                local done = GetWeeklyActivityCompleted(endgameData, entry.questID)
+                local label = entry.name or C_QuestLog.GetTitleForQuestID(entry.questID) or ("Quest " .. entry.questID)
+                local text = label .. ": " .. (done and L["PROGRESS_WEEKLY_COMPLETED"] or L["PROGRESS_WEEKLY_NOT_DONE"])
+                local color = done
+                    and {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")}
+                    or  {OneWoW_GUI:GetThemeColor("TEXT_MUTED")}
+                grid:AddLine(p2, text, color)
+            end
+        else
+            grid:AddLine(p2, "--", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
+        end
         local bossKilled, bossName = GetWorldBossKilled(endgameData)
         if bossKilled then
             local bossStr = L["PROGRESS_BOSS_KILLED"]
@@ -496,25 +704,6 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             grid:AddLine(p2, "Boss: " .. bossStr, {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")})
         else
             grid:AddLine(p2, "Boss: " .. L["PROGRESS_BOSS_NONE"], {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
-        end
-        local capStr = GetCurrencyCapString(endgameData)
-        grid:AddLine(p2, L["PROGRESS_CURRENCY_CAP"] .. " " .. capStr)
-
-        local p3 = grid:AddPanel(L["PROGRESS_RAID_PROG_LABEL"])
-        if endgameData and endgameData.raids and endgameData.raids.lockouts then
-            local lockCount = #endgameData.raids.lockouts
-            if lockCount > 0 then
-                for _, lockout in ipairs(endgameData.raids.lockouts) do
-                    local prog = lockout.encounterProgress or 0
-                    local total = lockout.numEncounters or 0
-                    local d = GetDiffAbbr(lockout.difficultyName)
-                    grid:AddLine(p3, (lockout.name or "Unknown") .. " " .. d .. ": " .. prog .. "/" .. total)
-                end
-            else
-                grid:AddLine(p3, "--", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
-            end
-        else
-            grid:AddLine(p3, "--", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
         end
 
     elseif subTabKey == "currencies" then
@@ -562,6 +751,11 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
 
     local allChars = GetSortedCharacters(subTabKey)
     if #allChars == 0 then return end
+
+    UpdateCharServerMinWidths(contentFrame, allChars)
+    if contentFrame.UpdateColumnLayout then
+        contentFrame.UpdateColumnLayout()
+    end
 
     local rowHeight = 32
     local rowGap = 2
@@ -632,84 +826,193 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
     OneWoW_GUI:ApplyFontToFrame(contentFrame)
 end
 
-local function CreateMythicPlusColumns()
-    local cols = {
-        {key = "expand",    label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],      ttDesc = L["TT_COL_EXPAND_DESC"]},
-        {key = "star",      label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],        ttDesc = L["TT_COL_STAR_DESC"]},
-        {key = "faction",   label = "F",                         width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],     ttDesc = L["TT_COL_FACTION_DESC"]},
-        {key = "mail",      label = "",                          width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],        ttDesc = L["TT_COL_MAIL_DESC"]},
-        {key = "name",      label = L["COL_CHARACTER"],          width = 135, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],   ttDesc = L["TT_COL_CHARACTER_DESC"]},
-        {key = "server",    label = L["COL_SERVER"],             width = 50,  fixed = false, align = "left",                     ttTitle = L["TT_COL_SERVER"],      ttDesc = L["TT_COL_SERVER_DESC"]},
-        {key = "level",     label = L["COL_LEVEL"],              width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_LEVEL"],       ttDesc = L["TT_COL_LEVEL_DESC"]},
-        {key = "ilvl",      label = L["PROGRESS_COL_ILVL"],      width = 55,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ILVL"],        ttDesc = L["TT_COL_ILVL_DESC"]},
-        {key = "rating",    label = L["PROGRESS_COL_RATING"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_RATING"],      ttDesc = L["TT_COL_RATING_DESC"]},
-        {key = "bestTime",  label = L["PROGRESS_COL_BEST_RUN"] or "Best Run", width = 55, fixed = true, align = "left",         ttTitle = L["TT_COL_BEST_TIME"],   ttDesc = L["TT_COL_BEST_TIME_DESC"]},
-        {key = "keystone",  label = L["PROGRESS_COL_KEYSTONE"],  width = 65,  fixed = true,  align = "left",                     ttTitle = L["TT_COL_KEYSTONE"],    ttDesc = L["TT_COL_KEYSTONE_DESC"]},
+local function BuildCommonColumns()
+    return {
+        {key = "expand",  label = "",                  width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],    ttDesc = L["TT_COL_EXPAND_DESC"]},
+        {key = "star",    label = "",                  width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],      ttDesc = L["TT_COL_STAR_DESC"]},
+        {key = "faction", label = "F",                 width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],   ttDesc = L["TT_COL_FACTION_DESC"]},
+        {key = "mail",    label = "",                  width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],      ttDesc = L["TT_COL_MAIL_DESC"]},
+        {key = "name",    label = L["COL_CHARACTER"],  width = 135, minWidth = 135, flexWeight = 4, align = "left",                  ttTitle = L["TT_COL_CHARACTER"], ttDesc = L["TT_COL_CHARACTER_DESC"]},
+        {key = "server",  label = L["COL_SERVER"],     width = 50,  minWidth = 50,  flexWeight = 3, align = "left",                  ttTitle = L["TT_COL_SERVER"],    ttDesc = L["TT_COL_SERVER_DESC"]},
+        {key = "level",   label = L["COL_LEVEL"],      width = 40,  minWidth = 40,  flexWeight = 1, align = "center",                ttTitle = L["TT_COL_LEVEL"],     ttDesc = L["TT_COL_LEVEL_DESC"]},
+        {key = "ilvl",    label = L["PROGRESS_COL_ILVL"], width = 55, minWidth = 55, flexWeight = 1, align = "center",              ttTitle = L["TT_COL_ILVL"],      ttDesc = L["TT_COL_ILVL_DESC"]},
+        {key = "rating",  label = L["PROGRESS_COL_RATING"], width = 50, minWidth = 50, flexWeight = 1, align = "center",            ttTitle = L["TT_COL_RATING"],    ttDesc = L["TT_COL_RATING_DESC"]},
     }
-    for _, dung in ipairs(SEASON_DUNGEONS) do
+end
+
+local function CreateMythicPlusColumns()
+    local cols = BuildCommonColumns()
+    table.insert(cols, {key = "bestTime", label = L["PROGRESS_COL_BEST_RUN"] or "Best Run", width = 55, minWidth = 55, flexWeight = 1, align = "left", ttTitle = L["TT_COL_BEST_TIME"], ttDesc = L["TT_COL_BEST_TIME_DESC"]})
+    table.insert(cols, {key = "keystone", label = L["PROGRESS_COL_KEYSTONE"],               width = 65, minWidth = 65, flexWeight = 1, align = "left", ttTitle = L["TT_COL_KEYSTONE"],  ttDesc = L["TT_COL_KEYSTONE_DESC"]})
+    for _, dung in ipairs(GetSeasonDungeons()) do
         table.insert(cols, {
-            key      = dung.key,
-            label    = dung.short,
-            width    = 40,
-            fixed    = true,
-            align    = "center",
-            ttTitle  = dung.name,
-            ttDesc   = dung.name,
-            dungData = dung,
+            key        = dung.key,
+            label      = dung.short,
+            width      = 40,
+            minWidth   = 40,
+            flexWeight = 1,
+            align      = "center",
+            ttTitle    = dung.name,
+            ttDesc     = dung.name,
+            dungData   = dung,
         })
     end
     return cols
 end
 
+local function GetRaidProgressSummary(endgameData, raidKey)
+    if not endgameData or not endgameData.raids or not endgameData.raids.bosses then
+        return nil
+    end
+    return endgameData.raids.bosses[raidKey]
+end
+
 local function CreateRaidsColumns()
-    local cols = {
-        {key = "expand",      label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],      ttDesc = L["TT_COL_EXPAND_DESC"]},
-        {key = "star",        label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],        ttDesc = L["TT_COL_STAR_DESC"]},
-        {key = "faction",     label = "F",                         width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],     ttDesc = L["TT_COL_FACTION_DESC"]},
-        {key = "mail",        label = "",                          width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],        ttDesc = L["TT_COL_MAIL_DESC"]},
-        {key = "name",        label = L["COL_CHARACTER"],          width = 135, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],   ttDesc = L["TT_COL_CHARACTER_DESC"]},
-        {key = "server",      label = L["COL_SERVER"],             width = 50,  fixed = false, align = "left",                     ttTitle = L["TT_COL_SERVER"],      ttDesc = L["TT_COL_SERVER_DESC"]},
-        {key = "level",       label = L["COL_LEVEL"],              width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_LEVEL"],       ttDesc = L["TT_COL_LEVEL_DESC"]},
-        {key = "ilvl",        label = L["PROGRESS_COL_ILVL"],      width = 55,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ILVL"],        ttDesc = L["TT_COL_ILVL_DESC"]},
-        {key = "rating",      label = L["PROGRESS_COL_RATING"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_RATING"],      ttDesc = L["TT_COL_RATING_DESC"]},
-    }
-    for _, diff in ipairs(SEASON_RAID_DIFFS) do
+    local cols = BuildCommonColumns()
+    for _, raid in ipairs(GetSeasonRaids()) do
         table.insert(cols, {
-            key      = diff.key,
-            label    = diff.label,
-            width    = 40,
-            fixed    = true,
-            align    = "center",
-            ttTitle  = diff.label .. " Raid",
-            ttDesc   = diff.label .. " raid difficulty progress",
-            raidDiff = diff,
+            key        = "raid_" .. raid.key,
+            label      = raid.short or raid.label,
+            width      = 80,
+            minWidth   = 80,
+            flexWeight = 1,
+            align      = "center",
+            ttTitle    = raid.label,
+            ttDesc     = raid.label,
+            raidData   = raid,
         })
     end
-    table.insert(cols, {key = "worldBoss",    label = L["PROGRESS_COL_WORLD_BOSS"] or "W.Boss",    width = 55, fixed = true, align = "left",   ttTitle = L["TT_COL_WORLD_BOSS"],      ttDesc = L["TT_COL_WORLD_BOSS_DESC"]})
-    table.insert(cols, {key = "vaultRaid",    label = L["PROGRESS_COL_VAULT_RAID"] or "V:Raid",     width = 50, fixed = true, align = "center", ttTitle = L["PROGRESS_VAULT_RAID"],     ttDesc = "Great Vault raid progress"})
-    table.insert(cols, {key = "vaultDungeon", label = L["PROGRESS_COL_VAULT_DUNGEON"] or "V:Dung",  width = 50, fixed = true, align = "center", ttTitle = L["PROGRESS_VAULT_DUNGEON"],  ttDesc = "Great Vault dungeon progress"})
-    table.insert(cols, {key = "vaultWorld",   label = L["PROGRESS_COL_VAULT_WORLD"] or "V:World",   width = 50, fixed = true, align = "center", ttTitle = L["PROGRESS_VAULT_WORLD"],    ttDesc = "Great Vault world progress"})
+    return cols
+end
+
+local function CreateRaidDotCell(parent, raidBlock, difficulties)
+    local cell = CreateFrame("Frame", nil, parent)
+    cell:SetSize(80, 18)
+    cell.dots = {}
+    local dotSize = 10
+    local spacing = 4
+    local total = (raidBlock and raidBlock.numEncounters) or 0
+    local numDiffs = #difficulties
+    local totalWidth = numDiffs * dotSize + (numDiffs - 1) * spacing
+    local startX = -totalWidth / 2
+    for i, diff in ipairs(difficulties) do
+        local dot = cell:CreateTexture(nil, "ARTWORK")
+        dot:SetTexture(DOT_TEXTURE)
+        dot:SetSize(dotSize, dotSize)
+        dot:SetPoint("CENTER", cell, "CENTER", startX + (i - 1) * (dotSize + spacing) + dotSize / 2, 0)
+        local color = DOT_COLOR_EMPTY
+        if raidBlock and raidBlock.progress and total > 0 then
+            local killed = raidBlock.progress[diff.id] or 0
+            if killed >= total then color = DOT_COLOR_ALL
+            elseif killed > 0 then color = DOT_COLOR_SOME
+            else color = DOT_COLOR_NONE end
+        end
+        dot:SetVertexColor(color[1], color[2], color[3], color[4] or 1)
+        cell.dots[i] = dot
+    end
+    return cell
+end
+
+local function GetVaultActivities(endgameData, vaultType)
+    if not endgameData or not endgameData.greatVault or not endgameData.greatVault.activities then
+        return nil
+    end
+    return endgameData.greatVault.activities[vaultType]
+end
+
+local function GetVaultTrackTotal(list)
+    if not list then return 0 end
+    local highest = 0
+    for _, act in ipairs(list) do
+        local prog = act.progress or 0
+        if prog > highest then highest = prog end
+    end
+    return highest
+end
+
+local function CreateVaultTrackCell(parent, list)
+    local cell = CreateFrame("Frame", nil, parent)
+    cell:SetSize(110, 18)
+
+    local total = GetVaultTrackTotal(list)
+    local tPrefix = (L["PROGRESS_VAULT_TOTAL"] or "T:") .. total
+    local tText = cell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    tText:SetPoint("LEFT", cell, "LEFT", 2, 0)
+    tText:SetText(tPrefix)
+    tText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local boxWidth, boxHeight = 22, 14
+    local spacing = 2
+    local startX = 36
+    for i = 1, 3 do
+        local act = list and list[i]
+        local thresh = act and (act.threshold or 0) or 0
+        local prog = act and (act.progress or 0) or 0
+        local itemLevel = act and act.itemLevel
+        local met = thresh > 0 and prog >= thresh
+
+        local box = CreateFrame("Frame", nil, cell)
+        box:SetSize(boxWidth, boxHeight)
+        box:SetPoint("LEFT", cell, "LEFT", startX + (i - 1) * (boxWidth + spacing), 0)
+
+        local bg = box:CreateTexture(nil, "BACKGROUND")
+        bg:SetAllPoints()
+        bg:SetTexture(DOT_TEXTURE)
+        if thresh <= 0 then
+            bg:SetVertexColor(0.15, 0.15, 0.15, 0.85)
+        elseif met then
+            bg:SetVertexColor(BOX_COLOR_MET[1], BOX_COLOR_MET[2], BOX_COLOR_MET[3], BOX_COLOR_MET[4])
+        else
+            bg:SetVertexColor(BOX_COLOR_UNMET[1], BOX_COLOR_UNMET[2], BOX_COLOR_UNMET[3], BOX_COLOR_UNMET[4])
+        end
+
+        local label = box:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        label:SetPoint("CENTER")
+        if thresh <= 0 then
+            label:SetText("-")
+        elseif met and itemLevel then
+            label:SetText(tostring(itemLevel))
+        else
+            label:SetText(tostring(thresh))
+        end
+        label:SetTextColor(1, 1, 1)
+    end
+
+    return cell
+end
+
+local function CreateWeeklyColumns()
+    local cols = BuildCommonColumns()
+    table.insert(cols, {key = "vaultRaid",    label = L["PROGRESS_COL_VAULT_R"] or "Vault-R", width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_RAID"],    ttDesc = L["TT_COL_VAULT_R_DESC"] or "Great Vault raid track"})
+    table.insert(cols, {key = "vaultDungeon", label = L["PROGRESS_COL_VAULT_D"] or "Vault-D", width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_DUNGEON"], ttDesc = L["TT_COL_VAULT_D_DESC"] or "Great Vault dungeon track"})
+    table.insert(cols, {key = "vaultWorld",   label = L["PROGRESS_COL_VAULT_W"] or "Vault-W", width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_WORLD"],   ttDesc = L["TT_COL_VAULT_W_DESC"] or "Great Vault world track"})
+    table.insert(cols, {key = "worldBoss",    label = L["PROGRESS_COL_WORLD_BOSS"] or "W.Boss", width = 65, minWidth = 65, flexWeight = 1, align = "left", ttTitle = L["TT_COL_WORLD_BOSS"], ttDesc = L["TT_COL_WORLD_BOSS_DESC"]})
+    for _, entry in ipairs(GetWeeklyActivitiesList()) do
+        local label = ns.ShortNames:GetShortName(entry.name or "", 8)
+        table.insert(cols, {
+            key          = "wa_" .. entry.questID,
+            label        = label,
+            width        = 70,
+            minWidth     = 70,
+            flexWeight   = 1,
+            align        = "center",
+            ttTitle      = entry.name,
+            ttDesc       = entry.name,
+            activityData = entry,
+        })
+    end
     return cols
 end
 
 local function CreateCurrenciesColumns()
-    local cols = {
-        {key = "expand",    label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],      ttDesc = L["TT_COL_EXPAND_DESC"]},
-        {key = "star",      label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],        ttDesc = L["TT_COL_STAR_DESC"]},
-        {key = "faction",   label = "F",                         width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],     ttDesc = L["TT_COL_FACTION_DESC"]},
-        {key = "mail",      label = "",                          width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],        ttDesc = L["TT_COL_MAIL_DESC"]},
-        {key = "name",      label = L["COL_CHARACTER"],          width = 135, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],   ttDesc = L["TT_COL_CHARACTER_DESC"]},
-        {key = "server",    label = L["COL_SERVER"],             width = 50,  fixed = false, align = "left",                     ttTitle = L["TT_COL_SERVER"],      ttDesc = L["TT_COL_SERVER_DESC"]},
-        {key = "level",     label = L["COL_LEVEL"],              width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_LEVEL"],       ttDesc = L["TT_COL_LEVEL_DESC"]},
-        {key = "ilvl",      label = L["PROGRESS_COL_ILVL"],      width = 55,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ILVL"],        ttDesc = L["TT_COL_ILVL_DESC"]},
-        {key = "rating",    label = L["PROGRESS_COL_RATING"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_RATING"],      ttDesc = L["TT_COL_RATING_DESC"]},
-    }
+    local cols = BuildCommonColumns()
     for _, cur in ipairs(SEASON_CURRENCIES) do
         table.insert(cols, {
             key          = cur.key,
             label        = "",
             width        = cur.width,
-            fixed        = true,
+            minWidth     = cur.width,
+            flexWeight   = 1,
             align        = "center",
             ttTitle      = cur.name,
             ttDesc       = cur.name,
@@ -740,7 +1043,7 @@ local function BuildMythicPlusCells(charRow, charData, charKey, endgameData, pro
     keystoneText:SetJustifyH("LEFT")
     table.insert(charRow.cells, keystoneText)
 
-    for _, dung in ipairs(SEASON_DUNGEONS) do
+    for _, dung in ipairs(GetSeasonDungeons()) do
         local dungText = OneWoW_GUI:CreateFS(charRow, 12)
         local dungLevel = nil
         if dung.mapID and dung.mapID > 0 and endgameData and endgameData.mythicPlus and endgameData.mythicPlus.seasonBest then
@@ -826,7 +1129,7 @@ local function BuildMythicPlusTooltip(self, edg, chd, chk, contentFrame)
             GameTooltip:AddLine("* overtime (not timed)", 0.6, 0.6, 0.6)
         end
     else
-        for _, dung in ipairs(SEASON_DUNGEONS) do
+        for _, dung in ipairs(GetSeasonDungeons()) do
             if dung.key == colKey then
                 GameTooltip:SetText(dung.name, 1, 1, 1)
                 local dungLevel = nil
@@ -847,59 +1150,12 @@ local function BuildMythicPlusTooltip(self, edg, chd, chk, contentFrame)
 end
 
 local function BuildRaidsCells(charRow, charData, charKey, endgameData, progressTab)
-    for _, diff in ipairs(SEASON_RAID_DIFFS) do
-        local raidText = OneWoW_GUI:CreateFS(charRow, 12)
-        local progress, total = 0, SEASON_RAID_TOTAL
-        if endgameData and endgameData.raids and endgameData.raids.lockouts then
-            for _, lockout in ipairs(endgameData.raids.lockouts) do
-                if (lockout.difficultyName or ""):find(diff.diffFind) then
-                    progress = lockout.encounterProgress or 0
-                    total    = lockout.numEncounters or SEASON_RAID_TOTAL
-                    break
-                end
-            end
-        end
-        raidText:SetText(progress .. "/" .. total)
-        if progress > 0 and progress >= total then
-            raidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        elseif progress > 0 then
-            raidText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        else
-            raidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-        raidText:SetJustifyH("CENTER")
-        table.insert(charRow.cells, raidText)
+    local difficulties = GetRaidDifficulties()
+    for _, raid in ipairs(GetSeasonRaids()) do
+        local raidBlock = GetRaidProgressSummary(endgameData, raid.key)
+        local cell = CreateRaidDotCell(charRow, raidBlock, difficulties)
+        table.insert(charRow.cells, cell)
     end
-
-    local worldBossText = OneWoW_GUI:CreateFS(charRow, 10)
-    local wbKilled, wbName = GetWorldBossKilled(endgameData)
-    if wbKilled then
-        worldBossText:SetText(ns.ShortNames:GetShortName(wbName or L["PROGRESS_BOSS_KILLED"], 9))
-        worldBossText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        worldBossText:SetText("--")
-        worldBossText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    end
-    worldBossText:SetJustifyH("LEFT")
-    table.insert(charRow.cells, worldBossText)
-
-    local vaultRaidText = OneWoW_GUI:CreateFS(charRow, 12)
-    vaultRaidText:SetText(GetVaultTypeString(endgameData, "raid"))
-    vaultRaidText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    vaultRaidText:SetJustifyH("CENTER")
-    table.insert(charRow.cells, vaultRaidText)
-
-    local vaultDungeonText = OneWoW_GUI:CreateFS(charRow, 12)
-    vaultDungeonText:SetText(GetVaultTypeString(endgameData, "dungeon"))
-    vaultDungeonText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    vaultDungeonText:SetJustifyH("CENTER")
-    table.insert(charRow.cells, vaultDungeonText)
-
-    local vaultWorldText = OneWoW_GUI:CreateFS(charRow, 12)
-    vaultWorldText:SetText(GetVaultTypeString(endgameData, "world"))
-    vaultWorldText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    vaultWorldText:SetJustifyH("CENTER")
-    table.insert(charRow.cells, vaultWorldText)
 end
 
 local function BuildRaidsTooltip(self, edg, chd, chk, contentFrame)
@@ -914,62 +1170,44 @@ local function BuildRaidsTooltip(self, edg, chd, chk, contentFrame)
         GameTooltip:SetText(chd.name or chk, 1, 1, 1)
         if chd.class then GameTooltip:AddLine(chd.class, 1, 1, 1) end
         if chd.guild and chd.guild.name then GameTooltip:AddLine("<" .. chd.guild.name .. ">", 0.8, 0.8, 0.8) end
-    elseif colKey == "worldBoss" then
-        GameTooltip:SetText(L["TT_COL_WORLD_BOSS"], 1, 1, 1)
-        local killed, bossName = GetWorldBossKilled(edg)
-        if killed then
-            GameTooltip:AddLine(L["PROGRESS_BOSS_KILLED"] .. ": " .. (bossName or ""), 0.2, 0.9, 0.2)
-        else
-            GameTooltip:AddLine(L["PROGRESS_BOSS_NONE"], 0.5, 0.5, 0.5)
+    elseif colKey == "rating" then
+        GameTooltip:SetText(L["TT_COL_RATING"], 1, 1, 1)
+        GameTooltip:AddLine(tostring((edg and edg.mythicPlus and edg.mythicPlus.overallScore) or 0), 0.9, 0.9, 0.9)
+    elseif colKey == "ilvl" then
+        GameTooltip:SetText(L["TT_COL_ILVL"], 1, 1, 1)
+        GameTooltip:AddLine(tostring(chd.itemLevel or 0), 0.9, 0.9, 0.9)
+    elseif colKey == "level" then
+        GameTooltip:SetText(L["COL_LEVEL"], 1, 1, 1)
+        GameTooltip:AddLine(tostring(chd.level or 0), 0.9, 0.9, 0.9)
+    elseif colKey:sub(1, 5) == "raid_" then
+        local raidKey = colKey:sub(6)
+        local raidEntry
+        for _, r in ipairs(GetSeasonRaids()) do
+            if r.key == raidKey then raidEntry = r; break end
         end
-    elseif colKey == "vaultRaid" or colKey == "vaultDungeon" or colKey == "vaultWorld" then
-        GameTooltip:SetText(L["TT_COL_VAULT"], 1, 1, 1)
-        if edg and edg.greatVault and edg.greatVault.activities then
-            local acts = edg.greatVault.activities
-            local function VaultTT(list, label)
-                if not list or #list == 0 then
-                    GameTooltip:AddLine(label .. ": --", 0.5, 0.5, 0.5)
-                    return
-                end
-                for j, act in ipairs(list) do
-                    local prog = act.progress or 0
-                    local thresh = act.threshold or 0
-                    local done = thresh > 0 and prog >= thresh
-                    if done then
-                        GameTooltip:AddLine(label .. " " .. j .. ": " .. prog .. "/" .. thresh, 0.2, 0.9, 0.2)
-                    else
-                        GameTooltip:AddLine(label .. " " .. j .. ": " .. prog .. "/" .. thresh, 0.8, 0.8, 0.8)
-                    end
+        if raidEntry then
+            GameTooltip:SetText(raidEntry.label, 1, 1, 1)
+            local raidBlock = GetRaidProgressSummary(edg, raidKey)
+            local total = raidBlock and raidBlock.numEncounters or 0
+            GameTooltip:AddLine(total .. " bosses", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine(" ")
+            local difficulties = GetRaidDifficulties()
+            for _, diff in ipairs(difficulties) do
+                local killed = (raidBlock and raidBlock.progress and raidBlock.progress[diff.id]) or 0
+                local line = diff.label .. ": " .. killed .. "/" .. total
+                if total > 0 and killed >= total then
+                    GameTooltip:AddLine(line, 0.2, 0.9, 0.2)
+                elseif killed > 0 then
+                    GameTooltip:AddLine(line, 0.94, 0.78, 0.20)
+                else
+                    GameTooltip:AddLine(line, 0.5, 0.5, 0.5)
                 end
             end
-            VaultTT(acts.raid, L["PROGRESS_VAULT_RAID"])
-            VaultTT(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
-            VaultTT(acts.world, L["PROGRESS_VAULT_WORLD"])
         else
-            GameTooltip:AddLine("--", 0.5, 0.5, 0.5)
+            GameTooltip:SetText(colKey, 1, 1, 1)
         end
     else
-        for _, diff in ipairs(SEASON_RAID_DIFFS) do
-            if diff.key == colKey then
-                GameTooltip:SetText(diff.label .. " Raid", 1, 1, 1)
-                local progress, total = 0, SEASON_RAID_TOTAL
-                if edg and edg.raids and edg.raids.lockouts then
-                    for _, lockout in ipairs(edg.raids.lockouts) do
-                        if (lockout.difficultyName or ""):find(diff.diffFind) then
-                            progress = lockout.encounterProgress or 0
-                            total    = lockout.numEncounters or SEASON_RAID_TOTAL
-                            break
-                        end
-                    end
-                end
-                GameTooltip:AddLine(progress .. "/" .. total .. " bosses", 0.9, 0.9, 0.9)
-                break
-            end
-        end
-        if colKey == "rating" then
-            GameTooltip:SetText(L["TT_COL_RATING"], 1, 1, 1)
-            GameTooltip:AddLine(tostring((edg and edg.mythicPlus and edg.mythicPlus.overallScore) or 0), 0.9, 0.9, 0.9)
-        end
+        GameTooltip:SetText(colKey, 1, 1, 1)
     end
     GameTooltip:Show()
 end
@@ -1047,6 +1285,162 @@ local function BuildCurrenciesTooltip(self, edg, chd, chk, contentFrame)
     GameTooltip:Show()
 end
 
+local function BuildWeeklyCells(charRow, charData, charKey, endgameData, progressTab)
+    local vaultRaidCell = CreateVaultTrackCell(charRow, GetVaultActivities(endgameData, "raid"))
+    table.insert(charRow.cells, vaultRaidCell)
+
+    local vaultDungeonCell = CreateVaultTrackCell(charRow, GetVaultActivities(endgameData, "dungeon"))
+    table.insert(charRow.cells, vaultDungeonCell)
+
+    local vaultWorldCell = CreateVaultTrackCell(charRow, GetVaultActivities(endgameData, "world"))
+    table.insert(charRow.cells, vaultWorldCell)
+
+    local worldBossText = OneWoW_GUI:CreateFS(charRow, 10)
+    local wbKilled, wbName = GetWorldBossKilled(endgameData)
+    if wbKilled then
+        worldBossText:SetText(ns.ShortNames:GetShortName(wbName or L["PROGRESS_BOSS_KILLED"], 9))
+        worldBossText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    else
+        worldBossText:SetText("--")
+        worldBossText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    end
+    worldBossText:SetJustifyH("LEFT")
+    table.insert(charRow.cells, worldBossText)
+
+    for _, entry in ipairs(GetWeeklyActivitiesList()) do
+        local cellText = OneWoW_GUI:CreateFS(charRow, 12)
+        local done = GetWeeklyActivityCompleted(endgameData, entry.questID)
+        cellText:SetText(done and "1/1" or "0/1")
+        if done then
+            cellText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            cellText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+        cellText:SetJustifyH("CENTER")
+        table.insert(charRow.cells, cellText)
+    end
+end
+
+local function BuildWeeklyTooltip(self, edg, chd, chk, contentFrame)
+    local cols = subTabState["weekly"].columns
+    local colKey = GetHoveredColumnKey(self, cols, contentFrame)
+    if not colKey or colKey == "expand" or colKey == "star" or colKey == "faction" or colKey == "mail" then
+        GameTooltip:Hide()
+        return
+    end
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    if colKey == "name" then
+        GameTooltip:SetText(chd.name or chk, 1, 1, 1)
+        if chd.class then GameTooltip:AddLine(chd.class, 1, 1, 1) end
+        if chd.guild and chd.guild.name then GameTooltip:AddLine("<" .. chd.guild.name .. ">", 0.8, 0.8, 0.8) end
+    elseif colKey == "worldBoss" then
+        GameTooltip:SetText(L["TT_COL_WORLD_BOSS"], 1, 1, 1)
+        local killed, bossName = GetWorldBossKilled(edg)
+        if killed then
+            GameTooltip:AddLine(L["PROGRESS_BOSS_KILLED"] .. ": " .. (bossName or ""), 0.2, 0.9, 0.2)
+        else
+            GameTooltip:AddLine(L["PROGRESS_BOSS_NONE"], 0.5, 0.5, 0.5)
+        end
+    elseif colKey == "vaultRaid" or colKey == "vaultDungeon" or colKey == "vaultWorld" then
+        local vaultType = (colKey == "vaultRaid" and "raid") or (colKey == "vaultDungeon" and "dungeon") or "world"
+        local headerL = (vaultType == "raid" and L["PROGRESS_VAULT_RAID"]) or (vaultType == "dungeon" and L["PROGRESS_VAULT_DUNGEON"]) or L["PROGRESS_VAULT_WORLD"]
+        GameTooltip:SetText(headerL, 1, 1, 1)
+        local list = GetVaultActivities(edg, vaultType)
+        if list and (list[1] or list[2] or list[3]) then
+            local total = GetVaultTrackTotal(list)
+            GameTooltip:AddLine((L["PROGRESS_VAULT_TOTAL"] or "T:") .. total, 0.9, 0.9, 0.9)
+            GameTooltip:AddLine(" ")
+
+            local unlockVerb
+            if vaultType == "raid" then
+                unlockVerb = "Defeat %d raid bosses this week to unlock this reward."
+            elseif vaultType == "dungeon" then
+                unlockVerb = "Complete %d dungeons this week to unlock this reward."
+            else
+                unlockVerb = "Complete %d world activities this week to unlock this reward."
+            end
+
+            for j = 1, 3 do
+                local act = list[j]
+                if act then
+                    local prog = act.progress or 0
+                    local thresh = act.threshold or 0
+                    local met = thresh > 0 and prog >= thresh
+                    local itemLevel = act.itemLevel
+                    local upgradeItemLevel = act.upgradeItemLevel
+
+                    if met then
+                        local header = string.format("Slot %d - Unlocked", j)
+                        GameTooltip:AddLine(header, 0.20, 0.90, 0.20)
+                        if vaultType == "world" and act.level and act.level > 0 then
+                            if itemLevel then
+                                GameTooltip:AddLine(string.format("  Item Level %d  (Tier %d)", itemLevel, act.level), 1, 1, 1)
+                            else
+                                GameTooltip:AddLine(string.format("  Tier %d", act.level), 1, 1, 1)
+                            end
+                        elseif itemLevel then
+                            GameTooltip:AddLine(string.format("  Item Level %d", itemLevel), 1, 1, 1)
+                        end
+                        if upgradeItemLevel and itemLevel and upgradeItemLevel > itemLevel then
+                            GameTooltip:AddLine(string.format("  Upgrades to Item Level %d", upgradeItemLevel), 0.60, 0.85, 1.00)
+                        elseif itemLevel then
+                            GameTooltip:AddLine("  Reward at Highest Item Level", 0.20, 0.90, 0.20)
+                        end
+                    else
+                        local header = string.format("Slot %d - %d/%d", j, prog, thresh)
+                        GameTooltip:AddLine(header, 0.80, 0.30, 0.30)
+                        if thresh > 0 then
+                            local remaining = thresh - prog
+                            GameTooltip:AddLine(string.format("  " .. unlockVerb, thresh), 0.85, 0.85, 0.85)
+                            if remaining > 0 then
+                                GameTooltip:AddLine(string.format("  %d more to unlock", remaining), 1, 0.82, 0)
+                            end
+                        end
+                        if itemLevel then
+                            GameTooltip:AddLine(string.format("  Preview reward: Item Level %d", itemLevel), 0.55, 0.55, 0.55)
+                        end
+                    end
+
+                    if j < 3 and list[j + 1] then
+                        GameTooltip:AddLine(" ")
+                    end
+                end
+            end
+        else
+            GameTooltip:AddLine("No vault data yet - log in to scan.", 0.5, 0.5, 0.5)
+        end
+    elseif colKey:sub(1, 3) == "wa_" then
+        local qid = tonumber(colKey:sub(4))
+        local label
+        for _, entry in ipairs(GetWeeklyActivitiesList()) do
+            if entry.questID == qid then label = entry.name; break end
+        end
+        label = label or C_QuestLog.GetTitleForQuestID(qid or 0) or ("Quest " .. (qid or "?"))
+        GameTooltip:SetText(label, 1, 1, 1)
+        local completed = qid and GetWeeklyActivityCompleted(edg, qid)
+        if completed then
+            GameTooltip:AddLine(L["PROGRESS_WEEKLY_COMPLETED"], 0.2, 0.9, 0.2)
+        else
+            GameTooltip:AddLine(L["PROGRESS_WEEKLY_NOT_DONE"], 0.5, 0.5, 0.5)
+        end
+        if qid then
+            GameTooltip:AddLine("Quest ID: " .. qid, 0.6, 0.6, 0.6)
+        end
+    elseif colKey == "rating" then
+        GameTooltip:SetText(L["TT_COL_RATING"], 1, 1, 1)
+        GameTooltip:AddLine(tostring((edg and edg.mythicPlus and edg.mythicPlus.overallScore) or 0), 0.9, 0.9, 0.9)
+    elseif colKey == "ilvl" then
+        GameTooltip:SetText(L["TT_COL_ILVL"], 1, 1, 1)
+        GameTooltip:AddLine(tostring(chd.itemLevel or 0), 0.9, 0.9, 0.9)
+    elseif colKey == "level" then
+        GameTooltip:SetText(L["COL_LEVEL"], 1, 1, 1)
+        GameTooltip:AddLine(tostring(chd.level or 0), 0.9, 0.9, 0.9)
+    else
+        GameTooltip:SetText(colKey, 1, 1, 1)
+    end
+    GameTooltip:Show()
+end
+
 function ns.UI.CreateProgressTab(parent)
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["PROGRESS_OVERVIEW"],
@@ -1090,10 +1484,11 @@ function ns.UI.CreateProgressTab(parent)
 
     local subTabButtons = {}
     local subTabFrames = {}
-    local subTabOrder = {"mythicplus", "raids", "currencies"}
+    local subTabOrder = {"mythicplus", "raids", "weekly", "currencies"}
     local subTabNames = {
         mythicplus = L["SUBTAB_MYTHICPLUS"] or "Mythic+",
         raids      = L["SUBTAB_RAIDS"] or "Raids",
+        weekly     = L["SUBTAB_WEEKLY"] or "Weekly",
         currencies = L["SUBTAB_CURRENCIES"] or "Currencies",
     }
 
@@ -1182,6 +1577,12 @@ function ns.UI.CreateProgressTab(parent)
     CreateSubTabContent(subTabFrames["raids"], raidCols, "raids")
     subTabFrames["raids"].refreshFunc = function(frame)
         RefreshSubTabContent(frame, "raids", parent, BuildRaidsCells, BuildRaidsTooltip)
+    end
+
+    local weeklyCols = CreateWeeklyColumns()
+    CreateSubTabContent(subTabFrames["weekly"], weeklyCols, "weekly")
+    subTabFrames["weekly"].refreshFunc = function(frame)
+        RefreshSubTabContent(frame, "weekly", parent, BuildWeeklyCells, BuildWeeklyTooltip)
     end
 
     local curCols = CreateCurrenciesColumns()

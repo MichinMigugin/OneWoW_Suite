@@ -346,7 +346,7 @@ function ns.UI.RefreshAllFavoriteRosters()
         ns.UI.RefreshSummaryTab(t.summary)
     end
     if t.progress and t.progress.subTabFrames then
-        for _, key in ipairs({ "mythicplus", "raids", "currencies" }) do
+        for _, key in ipairs({ "mythicplus", "raids", "weekly", "currencies" }) do
             local f = t.progress.subTabFrames[key]
             if f and f.refreshFunc then
                 f.refreshFunc(f)

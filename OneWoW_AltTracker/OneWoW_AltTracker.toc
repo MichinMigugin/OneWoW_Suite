@@ -1,6 +1,6 @@
 ## Interface: 120001, 120005
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00AltTracker|r
-## Version: R6.2604.2021
+## Version: R6.2604.2321
 ## Notes: OneWoW Addon that: tracks all your characters' progress, gold, professions, bank, auctions, and more.
 ## Author: MichinMuggin / Ricky
 ## X-Website: https://wow2.xyz/
@@ -30,6 +30,7 @@ Core\Core.lua
 # Data Files
 Data\d-expansions.lua
 Data\d-professions.lua
+Data\d-season.lua
 Data\ShortNames.lua
 
 # Main Addon File

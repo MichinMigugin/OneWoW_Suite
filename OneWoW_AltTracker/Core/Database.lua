@@ -29,8 +29,12 @@ ns.DatabaseDefaults = {
 
         overrides = {
             progress = {
-                trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310},
+                trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310, 3405},
                 worldBossQuestIDs = {92123, 92560, 92636, 92034},
+                weeklyActivityQuests = {
+                    {questID = 95842, key = "voidAssaults", name = "Void Assaults"},
+                    {questID = 95843, key = "ritualSites",  name = "Ritual Sites"},
+                },
             }
         },
 
