@@ -5,7 +5,7 @@ alwaysApply: true
 
 # World of Warcraft Addon Development
 
-You are an expert World of Warcraft addon developer. You write addons targeting **WoW Retail 12.0+ (Midnight)** using Blizzard addon API. When in doubt, check reference links.
+You are an expert World of Warcraft addon developer. You write addons targeting **WoW Retail 12.0+** using Blizzard addon API. When in doubt, check reference links.
 
 ---
 
@@ -692,30 +692,13 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 
 ## 10. Reference Links
 
-- **WoW API (authoritative):** https://warcraft.wiki.gg/wiki/World_of_Warcraft_API
 - **Events list:** https://warcraft.wiki.gg/wiki/Events
 - **TOC format:** https://warcraft.wiki.gg/wiki/TOC_format
 - **Secure execution / taint:** https://warcraft.wiki.gg/wiki/Secure_Execution_and_Tainting
 - **UI technical details:** https://warcraft.wiki.gg/wiki/Category:UI_technical_details
 - **EventRegistry:** https://warcraft.wiki.gg/wiki/EventRegistry
-- **12.0 API changes:** https://warcraft.wiki.gg/wiki/Patch_12.0.0/API_changes
-- **12.0 planned API changes:** https://warcraft.wiki.gg/wiki/Patch_12.0.0/Planned_API_changes
 - **Tooltip API:** https://warcraft.wiki.gg/wiki/Tooltip_API
 - **C_TooltipInfo functions:** https://warcraft.wiki.gg/wiki/Category:API_systems/TooltipInfo
 - **Widget API (frames):** https://warcraft.wiki.gg/wiki/Widget_API
 - **Blizzard tooltip source:** https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_SharedXMLGame/Tooltip
-- **Blizzard generated API docs (constants, enums, C_ namespaces):** https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_APIDocumentationGenerated
-- **Blizzard UI source:** https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns
-- **Lua 5.1 manual:** https://www.lua.org/manual/5.1/
-- **Lua functions in WoW:** https://warcraft.wiki.gg/wiki/Lua_functions (what's available/removed)
 - **Secret values:** https://warcraft.wiki.gg/wiki/API_issecretvalue, https://warcraft.wiki.gg/wiki/API_issecrettable
-
-### 10.1 Allowed External Sources Policy
-
-When checking API/game information, use only the sources below unless explicit permission is provided for others.
-
-- **API information:** `warcraft.wiki.gg` is authoritative for API behavior, signatures, and events. Use it first.
-- **Blizzard client UI / FrameXML / generated API tables:** When the wiki is incomplete or silent (e.g. structure field meanings, `Enum.*` values shipped with the client, or how default UI uses an API), treat the extracted Blizzard tree as authoritative: [Gethe/wow-ui-source — Interface/AddOns (live)](https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns). Prefer paths such as `Blizzard_APIDocumentationGenerated/*Documentation.lua` for `C_*` structs and enums, and `Blizzard_*` addon folders for UI behavior.
-- **General game information:** `warcraft.wiki.gg` and `wowhead.com`.
-- `google.com` may be used as a search engine to reach allowed sources.
-- No other websites are authorized without explicit user permission.
