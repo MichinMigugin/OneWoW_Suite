@@ -418,13 +418,15 @@ These keywords are intended to pair naturally with `#pet`.
 | `#transmog` | Items with a transmog appearance |
 | `#knowntransmog` | Items whose appearance you've collected |
 | `#unknowntransmog` | Items whose appearance you haven't collected |
-| `#catalyst` | **TransmogUpgradeMaster:** first boolean from `IsAppearanceMissing(itemLink)` is true |
-| `#catalystupgrade` | **TransmogUpgradeMaster:** second boolean from `IsAppearanceMissing(itemLink)` is true |
+| `#catalyst` | **TransmogUpgradeMaster:** first boolean from `IsAppearanceMissing(hyperlink)` is true |
+| `#catalystupgrade` | **TransmogUpgradeMaster:** second boolean from `IsAppearanceMissing(hyperlink)` is true |
 
-> **`#catalyst` / `#catalystupgrade`:** These keywords are registered only when
-> the [TransmogUpgradeMaster](https://www.curseforge.com/wow/addons/transmog-upgrade-master)
-> addon is loaded (OneWoW Bags optional dependency). They require a full item
-> link for the slot; items without link data never match.
+> **`#catalyst` / `#catalystupgrade`:** The keywords always exist in the engine.
+> `BuildProps` sets both flags from
+> [TransmogUpgradeMaster](https://www.curseforge.com/wow/addons/transmog-upgrade-master)'s
+> `TransmogUpgradeMaster_API.IsAppearanceMissing` when that API is present; otherwise
+> they stay false. A full item hyperlink is required for the API call—items built
+> without link data never match.
 
 ### Stats
 
@@ -486,12 +488,11 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 | `#unusable` | Items you cannot use |
 | `#new` | Items Blizzard marks as new in the bag slot (`C_NewItems.IsNewItem`), via the shared PredicateEngine `BuildProps` (may lag real client state until the props cache is invalidated) |
 | `#locked` | Locked items |
-| `#charges` | Items with charges |
-| `#unique` | Tooltip **Unique** / **Unique-Equipped**, **or** unique battle pets (`isPetUnique` from the journal) |
 | `#socket` | Items with gem sockets |
 | `#equipped` | Items currently equipped |
 | `#refundable` | Items still eligible for a full vendor refund (same window as the in-game refund indicator) |
 | `#enchanted` | Items whose link includes a permanent enchant (enchant ID in the parsed item link) |
+| `#scrappable` | Items `C_Item.CanScrapItem` reports as scrappable for the bag slot (`ItemLocation` must be valid); always false without a real bag/slot |
 
 For `#knowledge`, see **Consumable Subtypes** (same predicate).
 
@@ -527,17 +528,18 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 
 | Keyword | What it matches |
 |---|---|
-| `#upgrade` | Items flagged as an upgrade for your character (via OneWoW upgrade detection; uses bag slot item level when the item is in a bag slot) |
-| `#upgradeable` | Items that can be upgraded |
+| `#upgrade` | Items flagged as an upgrade for your character (OneWoW upgrade-detection registers this with `PE:RegisterKeyword` at runtime; if that module is not loaded, `#upgrade` is unknown and matches nothing) |
+| `#upgradeable` | Items that can be upgraded (`C_Item.GetItemUpgradeInfo`) |
 | `#fullyupgraded` | Items at max upgrade level |
 
 ### Tooltip
 
-These keywords scan the item's tooltip text. They may be slightly slower than
-other keywords on first access.
+These keywords scan the item's tooltip text (or tooltip-derived fields filled by that scan). They may be slightly slower than other keywords on first access.
 
 | Keyword | What it matches |
 |---|---|
+| `#charges` | Charge pattern in the tooltip (`ITEM_SPELL_CHARGES`–based detection) |
+| `#unique` | Tooltip **Unique** / **Unique-Equipped**, **or** unique battle pets (`isPetUnique` from the journal) |
 | `#onuse` | Items with a `Use:` tooltip effect |
 | `#onequip` | Items with an `Equip:` tooltip effect |
 | `#uniqueequipped` | Unique-equipped items |
@@ -637,6 +639,7 @@ Syntax: `property>=value`, `property<=value`, `property>value`, `property<value`
 | `petlimit` | | Max allowed copies for that species (pet journal) |
 | `durability` | | Current durability (bag/slot items; otherwise treated as `0` for comparisons) |
 | `maxdurability` | | Maximum durability for the slot |
+| `durabilitypct` | | `current / max * 100` when the slot has durability from `C_Container.GetContainerItemDurability`; otherwise the field is unset and numeric comparisons treat it as `0` |
 
 > **`#armor` vs `armor>=N`:** The keyword `#armor` matches any item in the
 > Armor item class. The property `armor` in a comparison like `armor>=100`
@@ -686,6 +689,7 @@ pettype=8               Beast battle pets
 petlevel:1-10           Low-level pets
 petquality>=4           Epic or better pets
 ilvl>=reqlevel          Item level at or above required level (property vs property)
+durabilitypct<100       Damaged gear (bag/slot only; see durability note above)
 ```
 
 
@@ -790,7 +794,7 @@ read more like natural conditions.
 | `IsUsable` | `#usable` |
 | `IsNew` | `#new` |
 | `IsJunk` | `#junk`, `#trash` |
-| `IsUpgrade` | (OneWoW upgrade detection) |
+| `IsScrappable` | `#scrappable` |
 | `IsToy` | `#toy` |
 | `IsMount` | `#mount` |
 | `IsPet` | `#pet` |
@@ -822,6 +826,10 @@ read more like natural conditions.
 | `IsKnowledge` | `#knowledge` |
 | `IsRefundable` | `#refundable` |
 | `IsEnchanted` | `#enchanted` |
+
+There is no `IsUpgrade` verbose flag in `FLAG_REGISTRY`. Use `#upgrade` when
+OneWoW's upgrade-detection module registers it via `PE:RegisterKeyword`; otherwise
+that keyword is unknown and matches nothing.
 
 > **`IsBOA` vs `#boa`:** The `IsBOA` flag checks the strict `isBOA` property —
 > true only for items whose tooltip shows account-bound binding (not Warbound

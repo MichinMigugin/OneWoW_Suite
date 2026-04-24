@@ -312,6 +312,7 @@ local FLAG_REGISTRY = {
     hassocket               = "hasSocket",
     isknowledge             = "isKnowledge",
     isrefundable            = "isRefundable",
+    isscrappable            = "isScrappable",
     isenchanted             = "isEnchanted",
 
     -- Tooltip-derived flags (lazy)
@@ -831,6 +832,7 @@ RegisterKeyword("equipped",         function(p) return p.isEquipped end)
 RegisterKeyword("knowledge",        function(p) return p.isKnowledge end)
 RegisterKeyword("refundable",       function(p) return p.isRefundable end)
 RegisterKeyword("enchanted",        function(p) return p.isEnchanted end)
+RegisterKeyword("scrappable",       function(p) return p.isScrappable end)
 
 -- ---- 7.19  Vendor / value keywords ----
 RegisterKeyword("unsellable", function(p) return p.isUnsellable end)
@@ -1495,6 +1497,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isEnchanted = false
     props.isCrafted = false
     props.isRefundable = false
+    props.isScrappable = false
     props.isBattlePayItem = false
     props.isInEquipmentSet = false
     props.equipmentSetList = {}
@@ -1537,6 +1540,12 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
                     tinsert(props.equipmentSetList, n)
                 end
             end
+        end
+
+            -- ---- Refundable items ----
+        if itemLocation and itemLocation:IsValid() then
+            props.isRefundable = C_Item.CanBeRefunded(itemLocation)
+            props.isScrappable = C_Item.CanScrapItem(itemLocation)
         end
     end
 
@@ -1651,11 +1660,6 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
         local spellinfo = C_Spell.GetSpellInfo(spellName)
         local spellIconID = spellinfo.iconID
         props.isKnowledge = KNOWLEDGE_ICONS[spellIconID] == true
-    end
-
-    -- ---- Refundable items ----
-    if itemLocation and itemLocation:IsValid() then
-        props.isRefundable = C_Item.CanBeRefunded(itemLocation)
     end
 
     -- ---- Item link parsed properties ----
