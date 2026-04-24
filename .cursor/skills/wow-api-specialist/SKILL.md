@@ -6,7 +6,7 @@ description: Use this skill when writing or debugging WoW addon code requiring s
 # WoW API Specialist Skill
 
 ## Context
-You have access to curated Blizzard implementation docs at `_OneWoW_Offline\Docs\`.
+You have access to curated Blizzard implementation docs at `.wow_docs`.
 You have access to indexed docs for `warcraft.wiki.gg` via `@WoW API`.
 You have access to indexed docs for `https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_APIDocumentationGenerated` via `@Blizzard API`
 Ensure compatibility with WoW API v12.0+.
@@ -15,7 +15,7 @@ Ensure compatibility with WoW API v12.0+.
 When checking API/game information, use only the sources below unless explicit permission is provided for others.
 Prioritize modern `C_` namespaces (e.g., `C_Timer`, `C_Item`). Functions marked protected/restricted cannot be used.
 
-1. `_OneWoW_Offline\Docs\`: curated set of WoW API documents. Use this first.
+1. `.wow_docs`: curated set of WoW API documents. Use this first.
 2. `@WoW API`: use as authoritative for API behavior, signatures, and events.
 3. `@Blizzard API`: Blizzard generated API docs (constants, enums, C_ namespaces). Use when wiki is incomplete or silent.
 4. `https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns`: Blizzard client UI / FrameXML. Use when previous sources are exhausted or as validation of how APIs are used in-game.
