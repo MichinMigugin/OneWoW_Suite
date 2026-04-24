@@ -1937,11 +1937,14 @@ function CatMgrUI:Show()
             local child = children[i]
             if child and child.IsShown and child:IsShown() and child.GetFrameStrata then
                 for _, region in ipairs({ child:GetRegions() }) do
-                    if region.GetText and region:GetText() == title then
-                        cachedCPFrame = child
-                        child:SetFrameStrata("FULLSCREEN_DIALOG")
-                        child:Raise()
-                        return
+                    if region:GetObjectType() == "FontString" then
+                        ---@cast region FontString
+                        if region:GetText() == title then
+                            cachedCPFrame = child
+                            child:SetFrameStrata("FULLSCREEN_DIALOG")
+                            child:Raise()
+                            return
+                        end
                     end
                 end
             end
