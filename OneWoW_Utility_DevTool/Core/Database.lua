@@ -203,7 +203,7 @@ function Addon:InitializeDatabase()
     }
 
     local db = DB:Init({
-        addonName = "OneWoW_UtilityDevTool",
+        addonName = ADDON_NAME,
         savedVar = "OneWoW_UtilityDevTool_DB",
         defaults = defaults,
     })
