@@ -40,16 +40,7 @@ local function EJ_GetNumLootCompat()
     return EJ_Call("GetNumLoot", "EJ_GetNumLoot") or 0
 end
 local function EJ_GetLootInfoByIndexCompat(index)
-    if CEJ.GetLootInfoByIndex then
-        return CEJ.GetLootInfoByIndex(index)
-    end
-    if _G.EJ_GetLootInfoByIndex then
-        local name, icon, slot, armorType, itemID, itemLink = _G.EJ_GetLootInfoByIndex(index)
-        if name then
-            return { name = name, icon = icon, itemID = itemID, link = itemLink }
-        end
-    end
-    return nil
+     return CEJ.GetLootInfoByIndex(index)
 end
 local function EJ_GetSlotFilterCompat()
     return EJ_Call("GetSlotFilter", "EJ_GetSlotFilter")
@@ -178,7 +169,7 @@ local function dungeonHasNormalLoot(instanceID, firstEncounterID)
     if not n or n < 1 then return false end
     local info = EJ_GetLootInfoByIndexCompat(1)
     if not info or not info.link then return false end
-    local itemLevel = select(4, GetItemInfo(info.link))
+    local itemLevel = select(4, C_Item.GetItemInfo(info.link))
     if not itemLevel then return false end
     return itemLevel >= 200
 end
