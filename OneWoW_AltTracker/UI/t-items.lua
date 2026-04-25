@@ -207,19 +207,19 @@ function ns.UI.CreateItemsTab(parent)
 end
 
 function ns.UI:StartAHScan(itemsTab, scanButton)
-    local Auctions = _G.OneWoW_AltTracker_Auctions
+    local Auctions = OneWoW_AltTracker_Auctions
     if not Auctions or not Auctions.AHScanner then
         return
     end
 
-    if not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.characters then
+    if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then
         return
     end
 
     local itemsToScan = {}
     local seenItems = {}
 
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Storage_DB.characters) do
+    for charKey, charData in pairs(OneWoW_AltTracker_Storage_DB.characters) do
         if charData.bags then
             for bagID, bagInfo in pairs(charData.bags) do
                 if bagInfo.slots then
@@ -421,7 +421,7 @@ local function ResolveItemData(itemData)
     -- matching the OneWoW Tooltips "Value" line.
     local lookupKey = itemLink or itemData.itemID
     if lookupKey then
-        local name, link, _, _, _, _, _, _, _, tex, sell = GetItemInfo(lookupKey)
+        local name, link, _, _, _, _, _, _, _, tex, sell = C_Item.GetItemInfo(lookupKey)
         if name then
             itemName = itemName or name
             itemLink = itemLink or link
@@ -449,7 +449,7 @@ end
 
 function ns.UI.RefreshItemsTab(itemsTab)
     if not itemsTab then return end
-    if not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.characters then return end
+    if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then return end
 
     do
         local hideScan = _G.OneWoW and _G.OneWoW.ItemPrices and _G.OneWoW.ItemPrices:IsAuctionatorAHSourceActive()
@@ -641,8 +641,8 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
     end
 
-    if _G.OneWoW_AltTracker_Auctions_DB and _G.OneWoW_AltTracker_Auctions_DB.characters then
-        for charKey, charData in pairs(_G.OneWoW_AltTracker_Auctions_DB.characters) do
+    if OneWoW_AltTracker_Auctions_DB and OneWoW_AltTracker_Auctions_DB.characters then
+        for charKey, charData in pairs(OneWoW_AltTracker_Auctions_DB.characters) do
             local charName = charKey:match("^([^%-]+)")
             local ts = charData.lastAuctionUpdate or 0
             if charData.activeAuctions then

@@ -397,7 +397,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
                             itemID = item and item.itemID,
                             quality = item and item.quality or 1,
                             itemLevel = item and item.itemLevel,
-                            iconTexture = (item and item.itemLink) and GetItemIcon(item.itemID) or nil,
+                            iconTexture = (item and item.itemLink) and C_Item.GetItemIconByID(item.itemID) or nil,
                         })
                         iconFrame:SetPoint("TOPLEFT", ef, "TOPLEFT", xPos, startY)
                     end
