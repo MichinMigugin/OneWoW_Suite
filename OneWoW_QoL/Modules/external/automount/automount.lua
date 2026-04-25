@@ -75,7 +75,7 @@ local function GetPreferences()
     if not addon or not addon.db then
         return {
             ground = "auto", flying = "auto", aquatic = "auto",
-            groundEnabled = true, flyingEnabled = true, aquaticEnabled = true, druidEnabled = true,
+            groundEnabled = true, flyingEnabled = true, aquaticEnabled = true, druidEnabled = true, druidCancelTravelForm = false,
             dismountDelay = 15, fishingDelay = 15, gatherRemountDelay = 0.5,
             dismountDisabled = false, fishingDisabled = false,
         }
@@ -93,6 +93,7 @@ local function GetPreferences()
     if prefs.flyingEnabled  == nil then prefs.flyingEnabled  = true   end
     if prefs.aquaticEnabled == nil then prefs.aquaticEnabled = true   end
     if prefs.druidEnabled   == nil then prefs.druidEnabled   = true   end
+    if prefs.druidCancelTravelForm == nil then prefs.druidCancelTravelForm = false end
     if prefs.dismountDelay      == nil then prefs.dismountDelay      = 15  end
     if prefs.fishingDelay       == nil then prefs.fishingDelay       = 15  end
     if prefs.gatherRemountDelay == nil then prefs.gatherRemountDelay = 0.5 end
@@ -379,6 +380,32 @@ local function CancelAutoMountingIfNeeded()
     end
 end
 
+local function EvaluateDruidFlightForm()
+    if
+        GetPreferences().druidCancelTravelForm and UnitClassBase("player") == "DRUID" and
+        GetShapeshiftFormID() == 3 and
+        IsFlyableArea() and not IsFlying() and not IsSubmerged() and
+        not UnitAffectingCombat("player") and
+        not C_ChallengeMode.IsChallengeModeActive() and
+        not IsInInstance()
+    then
+        CancelShapeshiftForm()
+    end
+end
+
+function AutoMountModule:UpdateDruidFlightWatcher()
+    if not self._eventFrame then return end
+
+    if GetPreferences().druidCancelTravelForm and UnitClassBase("player") == "DRUID" then
+        self._eventFrame:RegisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED")
+        self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        EvaluateDruidFlightForm()
+    else
+        self._eventFrame:UnregisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED")
+        self._eventFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
+    end
+end
+
 local TICK_INTERVAL = 0.5
 
 local function ShouldAutoMountPoll()
@@ -449,6 +476,10 @@ function AutoMountModule:OnEnable()
                 if unit == "player" and fishingSpellSet[spellID] then
                     lastFishingTime = GetTime()
                 end
+            elseif event == "MOUNT_JOURNAL_USABILITY_CHANGED" then
+                EvaluateDruidFlightForm()
+            elseif event == "PLAYER_REGEN_ENABLED" then
+                C_Timer.After(0.2, EvaluateDruidFlightForm)
             end
         end)
     end
@@ -462,6 +493,7 @@ function AutoMountModule:OnEnable()
         self._mountStatusLabel:Show()
     end
 
+    self:UpdateDruidFlightWatcher()
     self:UpdatePollingState()
 end
 
@@ -822,6 +854,36 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
 
     if registerRefresh then registerRefresh(UpdateDruidRow) end
     UpdateDruidRow()
+
+    yOffset = yOffset - 4
+
+    local cancelPrefs = GetPreferences()
+    local cancelRowRefresh
+    local UpdateCancelRow
+    yOffset, cancelRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+        yOffset = yOffset,
+        label = L["AUTOMOUNT_DRUID_CANCEL_LABEL"],
+        description = L["AUTOMOUNT_DRUID_CANCEL_DESC"],
+        value = cancelPrefs.druidCancelTravelForm,
+        isEnabled = isEnabled,
+        onValueChange = function(val)
+            SavePreference("druidCancelTravelForm", val)
+            UpdateCancelRow()
+            AM:UpdateDruidFlightWatcher()
+        end,
+        onLabel = L["AUTOMOUNT_CAT_ON"],
+        offLabel = L["AUTOMOUNT_CAT_OFF"],
+    })
+
+    UpdateCancelRow = function()
+        local isEnabledNow = ns.ModuleRegistry:IsEnabled(AM.id)
+        local prefs        = GetPreferences()
+        local cancelEnabled = prefs.druidCancelTravelForm
+        cancelRowRefresh(isEnabledNow, cancelEnabled)
+    end
+
+    if registerRefresh then registerRefresh(UpdateCancelRow) end
+    UpdateCancelRow()
 
     return yOffset
 end

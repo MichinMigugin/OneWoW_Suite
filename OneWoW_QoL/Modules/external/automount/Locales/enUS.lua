@@ -33,3 +33,5 @@ L["AUTOMOUNT_FISHING_DELAY_DESC"]  = "How long after fishing before auto-mount r
 L["AUTOMOUNT_GATHER_DELAY"]        = "Gather Remount Delay"
 L["AUTOMOUNT_GATHER_DELAY_DESC"]   = "How quickly to remount after gathering."
 L["AUTOMOUNT_DISABLE"]             = "Disable"
+L["AUTOMOUNT_DRUID_CANCEL_LABEL"]  = "Auto-cancel Travel Form:"
+L["AUTOMOUNT_DRUID_CANCEL_DESC"]   = "Automatically cancels Travel Form when you enter a flyable area, allowing you to mount a flying mount instead."
