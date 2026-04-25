@@ -39,20 +39,21 @@ for _, v in ipairs(DB.ScopePriority) do
 end
 
 function OneWoW_GUI:GetCharacterKey(name, realm)
-    name = name or UnitName("player")
-    realm = realm or GetRealmName()
+    name = name or UnitName("player") or "Unknown"
+    realm = realm or GetRealmName() or "Unknown"
     if not name or not realm or realm == "" then return nil end
+    realm = realm:gsub("%s", "")
     return name .. "-" .. realm
 end
 
-local function BuildCharKey()
+function OneWoW_GUI:BuildCharKey()
     local name = UnitName("player")
     local realm = GetRealmName()
     return OneWoW_GUI:GetCharacterKey(name, realm)
 end
 
 local function GetIdentityKeys()
-    local charKey = BuildCharKey()
+    local charKey = OneWoW_GUI:BuildCharKey()
     local realm = GetRealmName()
     local faction = UnitFactionGroup("player")
     local _, classToken = UnitClass("player")
@@ -616,7 +617,7 @@ function DB:NewCompat(savedVarName, defaults, useDefaultProfile)
     if not sv.char then sv.char = {} end
     if not sv.profileKeys then sv.profileKeys = {} end
 
-    local charKey = BuildCharKey()
+    local charKey = OneWoW_GUI:BuildCharKey()
     
     if charKey then
         if not sv.char[charKey] then sv.char[charKey] = {} end
