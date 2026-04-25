@@ -1,18 +1,11 @@
 local ADDON_NAME, OneWoW = ...
 
-local GUI = OneWoW.GUI
-
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local GUI = OneWoW.GUI
 
-local function GetCharacterKey()
-    local name = UnitName("player") or "Unknown"
-    local realm = GetRealmName() or "Unknown"
-    realm = realm:gsub("%s", "")
-    return name .. "-" .. realm
-end
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local function GetCharProfiles()
     if not OneWoW.db.global.charProfiles then
@@ -373,7 +366,7 @@ function Module:SaveProfile(name, options)
         return false
     end
 
-    local profile = { name = name, timestamp = time(), savedBy = GetCharacterKey() }
+    local profile = { name = name, timestamp = time(), savedBy = OneWoW_GUI:BuildCharKey() }
 
     if options.keybinds then
         profile.keybinds = self:CaptureKeybinds()
