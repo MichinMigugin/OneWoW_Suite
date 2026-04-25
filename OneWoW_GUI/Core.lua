@@ -138,15 +138,7 @@ function OneWoW_GUI:FormatGold(copper)
     local absCopper = math.abs(copper)
 
     if not useLetters then
-        local texFn = _G.GetCoinTextureString
-            or (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString)
-        if texFn then
-            local ok, result = pcall(texFn, absCopper)
-            if ok and result and result ~= "" then
-                return (isNegative and "-" or "") .. result
-            end
-        end
-        useLetters = true
+        return (isNegative and "-" or "") .. C_CurrencyInfo.GetCoinTextureString(absCopper)
     end
 
     local gold = math.floor(absCopper / 10000)

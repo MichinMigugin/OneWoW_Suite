@@ -379,8 +379,7 @@ local function BuildKeywordFrame()
 end
 
 --- Open the shared keyword help panel.
---- @param editBox (optional) an EditBox instance. When provided, clicking any
----                keyword in the panel inserts the #keyword into that box.
+--- @param editBox EditBox When provided, clicking any keyword in the panel inserts the #keyword into that box.
 function OneWoW_GUI:ShowKeywordHelp(editBox)
     BuildKeywordFrame()
     currentEditBox = editBox
