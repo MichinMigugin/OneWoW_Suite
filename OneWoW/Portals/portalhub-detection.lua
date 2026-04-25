@@ -9,7 +9,7 @@ function Detection:IsAvailable(type, id)
 	elseif type == "item" then
 		return C_Item.GetItemCount(id) > 0 or PlayerHasToy(id)
 	elseif type == "spell" then
-		return IsSpellKnown(id)
+		return C_SpellBook.IsSpellKnown(id)
 	elseif type == "housing" then
 		return C_Housing and C_Housing.HasHousingExpansionAccess()
 	end
@@ -97,11 +97,11 @@ function Detection:GetDruidPortals(showAll)
 		return portals
 	end
 
-	if IsSpellKnown(18960) or showAll then
+	if C_SpellBook.IsSpellKnown(18960) or showAll then
 		table.insert(portals, {type = "spell", id = 18960})
 	end
 
-	if IsSpellKnown(193753) or showAll then
+	if C_SpellBook.IsSpellKnown(193753) or showAll then
 		table.insert(portals, {type = "spell", id = 193753})
 	end
 
@@ -115,7 +115,7 @@ function Detection:GetDeathKnightPortals(showAll)
 		return portals
 	end
 
-	if IsSpellKnown(50977) or showAll then
+	if C_SpellBook.IsSpellKnown(50977) or showAll then
 		table.insert(portals, {type = "spell", id = 50977})
 	end
 
@@ -129,7 +129,7 @@ function Detection:GetMonkPortals(showAll)
 		return portals
 	end
 
-	if IsSpellKnown(126892) or showAll then
+	if C_SpellBook.IsSpellKnown(126892) or showAll then
 		table.insert(portals, {type = "spell", id = 126892})
 	end
 
@@ -143,7 +143,7 @@ function Detection:GetShamanPortals(showAll)
 		return portals
 	end
 
-	if IsSpellKnown(556) or showAll then
+	if C_SpellBook.IsSpellKnown(556) or showAll then
 		table.insert(portals, {type = "spell", id = 556})
 	end
 
@@ -153,7 +153,7 @@ end
 function Detection:GetCovenantPortals(showAll)
 	local portals = {}
 
-	if IsSpellKnown(324547) or showAll then
+	if C_SpellBook.IsSpellKnown(324547) or showAll then
 		table.insert(portals, {type = "spell", id = 324547})
 	end
 
@@ -165,22 +165,22 @@ function Detection:GetRacePortals(showAll)
 	local _, race = UnitRace("player")
 
 	if race == "Dark Iron Dwarf" or showAll then
-		if IsSpellKnown(265225) or showAll then
+		if C_SpellBook.IsSpellKnown(265225) or showAll then
 			table.insert(portals, {type = "spell", id = 265225})
 		end
 	end
 
 	if race == "Vulpera" or showAll then
-		if IsSpellKnown(312370) or showAll then
+		if C_SpellBook.IsSpellKnown(312370) or showAll then
 			table.insert(portals, {type = "spell", id = 312370})
 		end
-		if IsSpellKnown(312372) or showAll then
+		if C_SpellBook.IsSpellKnown(312372) or showAll then
 			table.insert(portals, {type = "spell", id = 312372})
 		end
 	end
 
 	if race == "Haranir" or showAll then
-		if IsSpellKnown(1238686) or showAll then
+		if C_SpellBook.IsSpellKnown(1238686) or showAll then
 			table.insert(portals, {type = "spell", id = 1238686})
 		end
 	end
@@ -224,7 +224,7 @@ function Detection:GetDungeonPortals(expansion, showAll)
 	local faction = UnitFactionGroup("player")
 	for _, spellID in ipairs(spells) do
 		if spellID then
-			if IsSpellKnown(spellID) or showAll then
+			if C_SpellBook.IsSpellKnown(spellID) or showAll then
 				table.insert(portals, {type = "spell", id = spellID})
 			end
 		end
@@ -234,10 +234,10 @@ function Detection:GetDungeonPortals(expansion, showAll)
 		local siegeID = faction == "Alliance" and 445418 or 464256
 		local motherID = faction == "Alliance" and 467553 or 467555
 
-		if IsSpellKnown(siegeID) or showAll then
+		if C_SpellBook.IsSpellKnown(siegeID) or showAll then
 			table.insert(portals, {type = "spell", id = siegeID})
 		end
-		if IsSpellKnown(motherID) or showAll then
+		if C_SpellBook.IsSpellKnown(motherID) or showAll then
 			table.insert(portals, {type = "spell", id = motherID})
 		end
 	end
@@ -277,7 +277,7 @@ function Detection:GetRaidPortals(expansion, showAll)
 	end
 
 	for _, spellID in ipairs(spells) do
-		if IsSpellKnown(spellID) or showAll then
+		if C_SpellBook.IsSpellKnown(spellID) or showAll then
 			table.insert(portals, {type = "spell", id = spellID})
 		end
 	end
@@ -383,7 +383,7 @@ function Detection:GetSpecialPortals(showAll)
 		table.insert(portals, {type = "toy", id = 110560})
 	end
 
-	if IsSpellKnown(83958) or showAll then
+	if C_SpellBook.IsSpellKnown(83958) or showAll then
 		table.insert(portals, {type = "spell", id = 83958})
 	end
 
@@ -410,7 +410,7 @@ function Detection:GetCurrentSeasonPortals(showAll)
 		1254557,
 	}
 	for _, spellID in ipairs(seasonSpells) do
-		if IsSpellKnown(spellID) or showAll then
+		if C_SpellBook.IsSpellKnown(spellID) or showAll then
 			table.insert(portals, {type = "spell", id = spellID})
 		end
 	end

@@ -160,17 +160,10 @@ local function ExtractItemIDs(itemID, tooltip, data, itemLinkFromTooltip)
         detectedIDs.spellID = spellID
     end
 
-    if C_HousingCatalog and C_HousingCatalog.GetCatalogEntryInfoByItem then
-        local success, info = pcall(C_HousingCatalog.GetCatalogEntryInfoByItem, itemID, false)
-        if success and info and info.entryID then
-            local entryVal = info.entryID
-            if type(entryVal) == "table" and entryVal.entryID then
-                entryVal = entryVal.entryID
-            end
-            if type(entryVal) == "number" and entryVal > 0 then
-                detectedIDs.decorEntryID = entryVal
-            end
-        end
+    local housingCatalogEntryInfo = C_HousingCatalog.GetCatalogEntryInfoByItem(itemID, false)
+
+    if housingCatalogEntryInfo and housingCatalogEntryInfo.entryID then
+        detectedIDs.decorEntryID = housingCatalogEntryInfo.entryID.recordID
     end
 
     return detectedIDs
@@ -366,13 +359,12 @@ local function TechnicalIDsProvider(tooltip, context)
 
     elseif context.type == "conduit" and context.conduitID then
         detectedIDs.conduitID = context.conduitID
-        if C_Spell and C_Spell.GetSpellTexture then
-            local spellID = C_Soulbinds and C_Soulbinds.GetConduitSpellID and C_Soulbinds.GetConduitSpellID(context.conduitID)
-            if spellID then
-                detectedIDs.spellID = spellID
-                local iconID = C_Spell.GetSpellTexture(spellID)
-                if iconID then detectedIDs.iconID = iconID end
-            end
+
+        local spellID = C_Soulbinds.GetConduitSpellID(context.conduitID, C_Soulbinds.GetConduitRank(context.conduitID))
+        if spellID then
+            detectedIDs.spellID = spellID
+            local iconID = C_Spell.GetSpellTexture(spellID)
+            if iconID then detectedIDs.iconID = iconID end
         end
 
     elseif context.type == "outfit" and context.outfitID then

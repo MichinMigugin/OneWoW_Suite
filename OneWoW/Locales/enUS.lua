@@ -417,9 +417,6 @@ OneWoW.Locales["enUS"] = {
     ["TIPS_TALENTMODS_HIDE_COMBAT_DESC"] = "Hides talent modifier information while you are in combat.",
     ["TIPS_TALENTMODS_SECTION_SETTINGS"] = "Settings",
     ["TIPS_TALENTMODS_SECTION_SETTINGS_DESC"] = "Configure how talent modifier information is displayed.",
-
-    ["TIPS_GEARUPGRADES_TITLE"] = "Gear Upgrades",
-
     ["TIPS_PETS_TITLE"] = "Pets (Caged)",
     ["TIPS_PETS_DESC"] = "Caged battle pets use a special Blizzard tooltip that cannot be extended the normal way. This feature hooks that tooltip and shows a companion OneWoW panel beside it with the pet information you choose.",
     ["TIPS_PETS_TYPE"] = "Type",

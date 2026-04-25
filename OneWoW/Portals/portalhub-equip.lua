@@ -34,7 +34,7 @@ function EquipManager:EquipItem(itemId)
 		}
 	end
 
-	EquipItemByName(itemId)
+	C_Item.EquipItemByName(itemId)
 	pendingEquip[itemId] = {slot = slot, timestamp = GetTime()}
 
 	return true
@@ -60,7 +60,7 @@ function EquipManager:ReequipOriginalItem(slot)
 	if equippedItems[slot] then
 		local originalItem = equippedItems[slot]
 		if C_Item.GetItemCount(originalItem.itemId) > 0 then
-			EquipItemByName(originalItem.itemId)
+			C_Item.EquipItemByName(originalItem.itemId)
 		end
 		equippedItems[slot] = nil
 	end

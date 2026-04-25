@@ -147,7 +147,7 @@ local function ScanBagsForCollectibles()
                                 local link = info.hyperlink
                                 if link then
                                     local spellID = tonumber(link:match("enchant:(%d+)") or link:match("spell:(%d+)"))
-                                    if spellID and not IsSpellKnownOrOverridesKnown(spellID) then
+                                    if spellID and not C_SpellBook.IsSpellInSpellBook(spellID) then
                                         FireLootToast("recipe", itemName, itemTexture, nil)
                                     end
                                 end
