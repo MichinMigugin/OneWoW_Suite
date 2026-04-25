@@ -22,7 +22,7 @@ local CharInfoModule = {
 }
 local CI = CharInfoModule
 
-local SECONDARY_HAND_SLOT = GetInventorySlotInfo("SecondaryHandSlot")
+local SECONDARY_HAND_SLOT = GetInventorySlotInfo("SECONDARYHANDSLOT")
 
 local enchantSlotDefaults = {
     [1]  = true,
@@ -195,7 +195,7 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
             if actualILvl and actualILvl > 0 then
                 local colorString = "|cffffffff"
                 if quality then
-                    local _, _, _, hex = GetItemQualityColor(quality)
+                    local _, _, _, hex = C_Item.GetItemQualityColor(quality)
                     if hex then colorString = "|c" .. hex end
                 end
                 panel.ilvlText:SetText(colorString .. actualILvl .. "|r")
@@ -357,7 +357,7 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
         if actualILvl and actualILvl > 0 then
             local colorString = "|cffffffff"
             if quality then
-                local _, _, _, hex = GetItemQualityColor(quality)
+                local _, _, _, hex = C_Item.GetItemQualityColor(quality)
                 if hex then colorString = "|c" .. hex end
             end
             panel.ilvlText:SetText(colorString .. actualILvl .. "|r")
@@ -396,7 +396,7 @@ local function HideAllSlots()
 end
 
 function CharInfoModule:OnEnable()
-    if not self._hooked and _G.PaperDollItemSlotButton_Update then
+    if not self._hooked and PaperDollItemSlotButton_Update then
         hooksecurefunc("PaperDollItemSlotButton_Update", function(button)
             if not ns.ModuleRegistry:IsEnabled("charinfo") then return end
             local slotID = button:GetID()

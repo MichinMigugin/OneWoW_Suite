@@ -19,7 +19,7 @@ end
 
 local function GetShowBlizzJunk()
     local db = GetDB()
-    return db.toggles and db.toggles.show_blizz_junk or false
+    return db and db.toggles and db.toggles.show_blizz_junk or false
 end
 
 local function GetShowPanel()
@@ -71,13 +71,13 @@ ns.VPFilters = VPFilters
 
 local function IsMount(itemLink)
     if not itemLink then return false end
-    local itemType, itemSubType = select(6, GetItemInfo(itemLink))
+    local itemType, itemSubType = select(6, C_Item.GetItemInfo(itemLink))
     return itemType == "Miscellaneous" and itemSubType == "Mount"
 end
 
 local function IsPet(itemLink)
     if not itemLink then return false end
-    local itemID = GetItemInfoInstant(itemLink)
+    local itemID = C_Item.GetItemInfoInstant(itemLink)
     if itemID then
         local speciesID = C_PetJournal.GetPetInfoByItemID(itemID)
         return speciesID ~= nil
@@ -87,7 +87,7 @@ end
 
 local function IsToy(itemLink)
     if not itemLink then return false end
-    local itemID = GetItemInfoInstant(itemLink)
+    local itemID = C_Item.GetItemInfoInstant(itemLink)
     if itemID then
         local toyName = C_ToyBox.GetToyInfo(itemID)
         return toyName ~= nil
@@ -97,7 +97,7 @@ end
 
 local function IsCosmetic(itemLink)
     if not itemLink then return false end
-    local itemType, itemSubType = select(6, GetItemInfo(itemLink))
+    local itemType, itemSubType = select(6, C_Item.GetItemInfo(itemLink))
     return itemType == "Armor" and itemSubType == "Cosmetic"
 end
 
@@ -136,26 +136,26 @@ end
 
 local function IsHousingItem(itemLink)
     if not itemLink then return false end
-    local itemType = select(6, GetItemInfo(itemLink))
+    local itemType = select(6, C_Item.GetItemInfo(itemLink))
     return itemType == "Housing"
 end
 
 local function IsConsumable(itemLink)
     if not itemLink then return false end
-    local itemType = select(6, GetItemInfo(itemLink))
+    local itemType = select(6, C_Item.GetItemInfo(itemLink))
     return itemType == "Consumable"
 end
 
 local function IsReagent(itemLink)
     if not itemLink then return false end
-    local _, _, _, _, _, _, _, _, _, _, _, classID = select(6, GetItemInfo(itemLink))
-    local itemType = select(6, GetItemInfo(itemLink))
+    local _, _, _, _, _, _, _, _, _, _, _, classID = select(6, C_Item.GetItemInfo(itemLink))
+    local itemType = select(6, C_Item.GetItemInfo(itemLink))
     return itemType == "Reagent" or classID == Enum.ItemClass.Tradegoods
 end
 
 local function GetArmorTypeFromLink(itemLink)
     if not itemLink then return nil end
-    local itemType, itemSubType = select(6, GetItemInfo(itemLink))
+    local itemType, itemSubType = select(6, C_Item.GetItemInfo(itemLink))
     if itemType == "Armor" then return itemSubType end
     return nil
 end
@@ -194,7 +194,7 @@ local function IsAlreadyKnown(itemLink)
     if itemID then
         local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemID)
         if classID == Enum.ItemClass.Recipe then
-            local Util = _G.OneWoW_RecipeKnownUtil
+            local Util = OneWoW_RecipeKnownUtil
             if Util then
                 local result = Util:IsRecipeKnown(itemID, itemLink)
                 if result ~= nil then return result end
@@ -227,12 +227,6 @@ local function IsAlreadyKnown(itemLink)
         end
     end
     return false
-end
-
-local function IsBackItem(itemLink)
-    if not itemLink then return false end
-    local equipLoc = select(9, GetItemInfo(itemLink))
-    return equipLoc == "INVTYPE_CLOAK"
 end
 
 local function GetProfessionFromTooltip(itemLink)
@@ -303,19 +297,19 @@ function VPFilters.CheckVendorItemFilter(itemLink, filterType)
     elseif filterType == "Reagents" then
         matches = IsReagent(itemLink)
     elseif filterType == "Equipable" then
-        local equipSlot = select(9, GetItemInfo(itemLink))
+        local equipSlot = select(9, C_Item.GetItemInfo(itemLink))
         matches = equipSlot and equipSlot ~= "" and equipSlot ~= "INVTYPE_NON_EQUIP_IGNORE"
     elseif filterType == "Weapons" then
-        local equipSlot = select(9, GetItemInfo(itemLink))
+        local equipSlot = select(9, C_Item.GetItemInfo(itemLink))
         matches = weaponSlots[equipSlot] or false
     elseif filterType == "Patterns" or filterType == "All Patterns" then
-        local itemType = select(6, GetItemInfo(itemLink))
+        local itemType = select(6, C_Item.GetItemInfo(itemLink))
         matches = itemType == "Recipe"
     elseif professionList[filterType] then
         local profession = GetProfessionFromTooltip(itemLink)
         matches = (profession == filterType)
     elseif slotFilterMap[filterType] then
-        local equipSlot = select(9, GetItemInfo(itemLink))
+        local equipSlot = select(9, C_Item.GetItemInfo(itemLink))
         matches = (equipSlot == slotFilterMap[filterType])
     end
 
@@ -340,7 +334,7 @@ function VPFilters.ScanVendor()
     for i = 1, GetMerchantNumItems() do
         local itemLink = GetMerchantItemLink(i)
         if itemLink then
-            local itemType, itemSubType, _, equipSlot = select(6, GetItemInfo(itemLink))
+            local itemType, itemSubType, _, equipSlot = select(6, C_Item.GetItemInfo(itemLink))
             local armorType = GetArmorTypeFromLink(itemLink)
             if armorType then state.availableFilters[armorType] = true end
             local label = slotLabels[equipSlot]

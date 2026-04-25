@@ -413,7 +413,7 @@ local function UpdateZoneDisplay()
     if not zoneFontStr then return end
     zoneFontStr:SetText(GetMinimapZoneText())
 
-    local pvpType = (C_PvP and C_PvP.GetZonePVPInfo or GetZonePVPInfo)()
+    local pvpType = C_PvP.GetZonePVPInfo()
     local c = PVP_COLORS[pvpType]
     if c then
         zoneFontStr:SetTextColor(c[1], c[2], c[3])
@@ -681,7 +681,7 @@ local function CreateZoneText()
     zoneFrame:SetScript("OnEnter", function(self)
         local tt = GetTooltip()
         tt:SetOwner(self, "ANCHOR_LEFT")
-        local pvpType, _, factionName = (C_PvP and C_PvP.GetZonePVPInfo or GetZonePVPInfo)()
+        local pvpType, _, factionName = C_PvP.GetZonePVPInfo()
         local zoneName = GetZoneText()
         local subzone  = GetSubZoneText()
         tt:AddLine(zoneName, 1, 1, 1)

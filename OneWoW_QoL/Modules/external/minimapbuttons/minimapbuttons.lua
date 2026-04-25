@@ -591,7 +591,7 @@ local function BuildEnhancedRow()
 
         btn:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:AddLine(comp.name, 1, 0.82, 0, 1)
+            GameTooltip:AddLine(comp.name, 1, 0.82, 0, true)
             if comp.ver and comp.ver ~= "" then
                 GameTooltip:AddLine("v" .. comp.ver, 0.7, 0.7, 0.7)
             end
@@ -1073,7 +1073,7 @@ end
 
 function MinimapButtonsModule:RegisterAddonCompartmentHooks()
     if _compartmentHooksRegistered then return end
-    local f = _G.AddonCompartmentFrame
+    local f = AddonCompartmentFrame
     if not f or not f.HookScript then return end
     _compartmentHooksRegistered = true
     local function onCompartmentVisibility()

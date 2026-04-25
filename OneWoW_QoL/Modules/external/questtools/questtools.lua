@@ -49,7 +49,7 @@ end
 
 function QuestToolsModule:GetGossipDisplayedButtonTexts()
     local out = {}
-    local gf = _G.GossipFrame
+    local gf = GossipFrame
     if not gf or not gf:IsShown() then return out end
     local scrollTarget = gf.GreetingPanel and gf.GreetingPanel.ScrollBox and gf.GreetingPanel.ScrollBox.ScrollTarget
     if not scrollTarget then return out end
@@ -182,7 +182,7 @@ function QuestToolsModule:TryAutoGossip()
     if not ns.ModuleRegistry:IsEnabled("questtools") or not GetToggle("auto_gossip") then return false end
     if IsShiftKeyDown() then return false end
     if not C_GossipInfo or not C_GossipInfo.GetOptions then return false end
-    local gf = _G.GossipFrame
+    local gf = GossipFrame
     if gf and not gf:IsShown() then return false end
 
     local opt = self:PickQuestGossipOption()
@@ -220,7 +220,7 @@ function QuestToolsModule:ScheduleGossipRetries()
         if token ~= self._gossipRetryToken then return end
         if not GetToggle("auto_gossip") then return end
         if IsShiftKeyDown() then return end
-        local gf = _G.GossipFrame
+        local gf = GossipFrame
         if gf and not gf:IsShown() then return end
         attempt = attempt + 1
         if self:TryAutoGossip() then return end
@@ -242,7 +242,7 @@ end
 
 function QuestToolsModule:HookGossipFrameShow()
     if self._gossipHooked then return end
-    local gf = _G.GossipFrame
+    local gf = GossipFrame
     if not gf or not gf.HookScript then return end
     self._gossipHooked = true
     gf:HookScript("OnShow", function()
@@ -377,7 +377,7 @@ function QuestToolsModule:EvaluateRewards()
     local allCached = true
     for i = 1, count do
         if choices[i] and choices[i].link then
-            if not GetItemInfo(choices[i].link) then
+            if not C_Item.GetItemInfo(choices[i].link) then
                 allCached = false
                 local itemID = GetItemInfoFromHyperlink(choices[i].link)
                 if itemID then C_Item.RequestLoadItemDataByID(itemID) end
@@ -395,7 +395,7 @@ function QuestToolsModule:EvaluateRewards()
     for i = 1, count do
         local choice = choices[i]
         if choice and choice.link then
-            local vendorPrice = select(11, GetItemInfo(choice.link))
+            local vendorPrice = select(11, C_Item.GetItemInfo(choice.link))
             if vendorPrice and vendorPrice > highestValue then
                 highestValue = vendorPrice
                 highestChoice = choice

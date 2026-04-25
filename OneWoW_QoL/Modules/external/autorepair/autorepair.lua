@@ -47,10 +47,10 @@ function AutoRepairModule:MERCHANT_SHOW()
 
     if useGuildBank then
         RepairAllItems(true)
-        print(string.format("|cFFFFD100OneWoW QoL:|r Auto-repaired using guild bank for %s", GetCoinTextureString(repairAllCost)))
+        print(string.format("|cFFFFD100OneWoW QoL:|r Auto-repaired using guild bank for %s", C_CurrencyInfo.GetCoinTextureString(repairAllCost)))
     elseif repairAllCost <= GetMoney() then
         RepairAllItems(false)
-        print(string.format("|cFFFFD100OneWoW QoL:|r Auto-repaired for %s", GetCoinTextureString(repairAllCost)))
+        print(string.format("|cFFFFD100OneWoW QoL:|r Auto-repaired for %s", C_CurrencyInfo.GetCoinTextureString(repairAllCost)))
     else
         print("|cFFFFD100OneWoW QoL:|r Insufficient funds for auto-repair")
     end
