@@ -37,7 +37,7 @@ function ActiveAuctions:CollectData(charKey, charData)
             local itemID = itemKey and itemKey.itemID
 
             if itemID then
-                local itemName, itemLink, itemRarity = GetItemInfo(itemID)
+                local itemName, itemLink, itemRarity = C_Item.GetItemInfo(itemID)
                 local itemIcon = C_Item.GetItemIconByID(itemID)
 
                 local auctionData = {

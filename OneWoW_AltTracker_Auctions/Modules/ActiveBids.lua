@@ -4,8 +4,6 @@ ns.ActiveBids = {}
 local ActiveBids = ns.ActiveBids
 
 function ActiveBids:CollectData(charKey, charData)
-    if not C_AuctionHouse then return false end
-
     local numBids = C_AuctionHouse.GetNumBids()
 
     if numBids == 0 then
@@ -27,7 +25,7 @@ function ActiveBids:CollectData(charKey, charData)
             local itemID = itemKey and itemKey.itemID
 
             if itemID then
-                local itemName, itemLink, itemRarity = GetItemInfo(itemID)
+                local itemName, itemLink, itemRarity = C_Item.GetItemInfo(itemID)
                 local itemIcon = C_Item.GetItemIconByID(itemID)
 
                 local bidData = {
