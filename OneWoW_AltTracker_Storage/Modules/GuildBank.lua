@@ -22,7 +22,7 @@ end
 
 function Module:CollectData(charKey, charData)
     if not charKey then return false end
-    if not _G.OneWoW_AltTracker_Storage_DB then return false end
+    if not OneWoW_AltTracker_Storage_DB then return false end
 
     if not IsInGuild() then
         return true
@@ -58,7 +58,7 @@ function Module:CollectData(charKey, charData)
                 if itemLink then
                     local texture, itemCount, locked = GetGuildBankItemInfo(tabID, slotID)
                     local itemID = tonumber(itemLink:match("item:(%d+)"))
-                    local itemName, _, itemQuality, itemLevel, _, _, _, _, _, itemTexture, sellPrice = GetItemInfo(itemLink)
+                    local itemName, _, itemQuality, itemLevel, _, _, _, _, _, itemTexture, sellPrice = C_Item.GetItemInfo(itemLink)
 
                     guildBank.tabs[tabID].slots[slotID] = {
                         itemID = itemID,

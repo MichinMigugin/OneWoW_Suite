@@ -5,7 +5,7 @@ local Module = ns.WarbandBank
 
 function Module:CollectData(charKey, charData)
     if not charKey then return false end
-    if not _G.OneWoW_AltTracker_Storage_DB then return false end
+    if not OneWoW_AltTracker_Storage_DB then return false end
 
     local warbandBank = {
         tabs = {},
@@ -47,7 +47,7 @@ function Module:CollectData(charKey, charData)
                     local itemInfo = C_Container.GetContainerItemInfo(warbandBagID, slotIndex)
                     if itemInfo and itemInfo.itemID then
                         local itemLink = C_Container.GetContainerItemLink(warbandBagID, slotIndex)
-                        local itemName, _, itemQuality, itemLevel, _, _, _, _, _, itemTexture, sellPrice = GetItemInfo(itemLink or itemInfo.itemID)
+                        local itemName, _, itemQuality, itemLevel, _, _, _, _, _, itemTexture, sellPrice = C_Item.GetItemInfo(itemLink or itemInfo.itemID)
                         tabData.items[slotIndex] = {
                             itemID = itemInfo.itemID,
                             itemName = itemName,

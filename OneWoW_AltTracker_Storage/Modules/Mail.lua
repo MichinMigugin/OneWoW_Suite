@@ -81,7 +81,7 @@ function private.RecordMail(index)
 
     elseif money and money > 0 and CODAmount and CODAmount > 0 then
         local itemLink = GetInboxItemLink(index, 1)
-        local itemInfoName = itemLink and select(1, GetItemInfo(itemLink)) or itemName
+        local itemInfoName = itemLink and select(1, C_Item.GetItemInfo(itemLink)) or itemName
         AccountingAddon.Transactions:RecordExpense("mail_cod_send", CODAmount, sender or "Unknown", itemLink, itemInfoName or "Item", nil, "COD payment")
         return true
 
@@ -119,7 +119,7 @@ function Module:CollectData(charKey, charData)
     -- AND force hasNewMail to false even when the character really has mail waiting
     -- (which is exactly what UPDATE_PENDING_MAIL is telling us). Instead, just refresh
     -- the hasNewMail flag from HasNewMail() and preserve the existing mails table.
-    local mailboxOpen = _G.MailFrame and _G.MailFrame:IsShown()
+    local mailboxOpen = MailFrame and MailFrame:IsShown()
     if not mailboxOpen then
         return self:UpdateHasNewMailFlag(charKey, charData)
     end
@@ -157,7 +157,7 @@ function Module:CollectData(charKey, charData)
                         local itemID = mailItemID or (itemLink and tonumber(itemLink:match("item:(%d+)")))
                         local itemName, sellPrice = nil, 0
                         if itemLink then
-                            itemName, _, _, _, _, _, _, _, _, _, sellPrice = GetItemInfo(itemLink)
+                            itemName, _, _, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemLink)
                             sellPrice = sellPrice or 0
                         end
                         mailbox.mails[mailID].items[attachmentIndex] = {
