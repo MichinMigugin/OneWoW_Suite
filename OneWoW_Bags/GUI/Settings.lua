@@ -684,7 +684,7 @@ local MODE_KEYS = {
         },
     },
     warband = {
-        sectionTitle = "SECTION_WARBAND_BANK",
+        sectionTitle = ACCOUNT_BANK_PANEL_TITLE,
         db = {
             rarityColor       = "warbandBankRarityColor",
             overlays          = "enableWarbandBankOverlays",

@@ -47,7 +47,7 @@ function GuildBankLog:Init()
     logFrame:Hide()
 
     local titleBar = OneWoW_GUI:CreateTitleBar(logFrame, {
-        title = L["GUILD_BANK_LOG"],
+        title = GUILD_BANK_LOG,
         height = TITLEBAR_HEIGHT,
         showBrand = false,
         onClose = function() logFrame:Hide() end,

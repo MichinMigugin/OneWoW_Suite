@@ -4,7 +4,6 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local Constants = OneWoW_Bags.Constants
-local L = OneWoW_Bags.L
 local BankSet = OneWoW_Bags.BankSet
 local BankTypes = OneWoW_Bags.BankTypes
 
@@ -77,7 +76,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                 section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
                 section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-                local tabName = L["BANK_TAB"]:format(tabIdx)
+                local tabName = GUILDBANK_TAB_NUMBER:format(tabIdx)
                 if tabDataList and tabDataList[tabIdx] and tabDataList[tabIdx].name and tabDataList[tabIdx].name ~= "" then
                     tabName = tabDataList[tabIdx].name
                 end

@@ -6,18 +6,11 @@ if not OneWoW_GUI then return end
 OneWoW_Bags.ImportPreview = OneWoW_Bags.ImportPreview or {}
 local ImportPreview = OneWoW_Bags.ImportPreview
 
-local pairs, ipairs, type, tostring = pairs, ipairs, type, tostring
-local tinsert, tconcat = table.insert, table.concat
-local sort = table.sort
-local format = string.format
+local pairs, ipairs, tostring = pairs, ipairs, tostring
+local tinsert, sort = tinsert, sort
+local format = format
 
 local L = OneWoW_Bags.L
-
-local function getLoc(key, fallback)
-    local s = L and L[key]
-    if s and s ~= "" then return s end
-    return fallback or key
-end
 
 -- ------------------------------------------------------------------
 -- Summary helpers
@@ -61,10 +54,10 @@ end
 
 local function sourceLabel(source)
     local map = {
-        baganator_direct = getLoc("IMPORT_SRC_BAGANATOR_DIRECT", "Import from Baganator (direct)"),
-        baganator_string = getLoc("IMPORT_SRC_BAGANATOR_PASTE",  "Import from Baganator (paste)"),
-        tsm_direct       = getLoc("IMPORT_SRC_TSM_DIRECT",       "Import from TSM (direct)"),
-        onewow_string    = getLoc("IMPORT_SRC_ONEWOW_PASTE",     "Import from OneWoW string"),
+        baganator_direct = L["IMPORT_SRC_BAGANATOR_DIRECT"],
+        baganator_string = L["IMPORT_SRC_BAGANATOR_PASTE"],
+        tsm_direct       = L["IMPORT_SRC_TSM_DIRECT"],
+        onewow_string    = L["IMPORT_SRC_ONEWOW_PASTE"],
     }
     return map[source] or tostring(source)
 end
@@ -94,21 +87,21 @@ local function cycleValue(seq, current)
 end
 
 local function resolutionLabel(r)
-    if r == "skip"   then return getLoc("IMPORT_CONFLICT_SKIP",   "Skip") end
-    if r == "merge"  then return getLoc("IMPORT_CONFLICT_MERGE",  "Merge") end
-    if r == "rename" then return getLoc("IMPORT_CONFLICT_RENAME", "Rename") end
-    return "Create"
+    if r == "skip"   then return L["IMPORT_PREVIEW_RES_SKIP"] end
+    if r == "merge"  then return L["IMPORT_PREVIEW_RES_MERGE"] end
+    if r == "rename" then return L["IMPORT_PREVIEW_RES_RENAME"] end
+    return L["IMPORT_PREVIEW_RES_CREATE"]
 end
 
 local function ruleLabel(r)
-    if r == "skip_rule"     then return getLoc("IMPORT_RULE_SKIP",       "Skip rule") end
-    if r == "snapshot_items" then return getLoc("IMPORT_RULE_SNAPSHOT",  "Snapshot items") end
-    return getLoc("IMPORT_RULE_USE_TRANSLATED", "Use translated")
+    if r == "skip_rule"      then return L["IMPORT_PREVIEW_RULE_SKIP"] end
+    if r == "snapshot_items" then return L["IMPORT_PREVIEW_RULE_SNAPSHOT"] end
+    return L["IMPORT_PREVIEW_RULE_USE_TRANSLATED"]
 end
 
 local function unmappedLabel(r)
-    if r == "keep" then return getLoc("IMPORT_UNMAPPED_KEEP", "Keep") end
-    return getLoc("IMPORT_UNMAPPED_IGNORE", "Ignore")
+    if r == "keep" then return L["IMPORT_PREVIEW_KEEP"] end
+    return L["IMPORT_PREVIEW_IGNORE"]
 end
 
 local function clearChildren(parent)
@@ -178,9 +171,9 @@ renderContent = function(state)
 
     local stats = makeText(scrollContent,
         format("%s: %d | %s: %d | %s: %d",
-            getLoc("IMPORT_PREVIEW_SECTIONS",   "Sections"),   counts.sectionsNew + counts.sectionsMerge,
-            getLoc("IMPORT_PREVIEW_CATEGORIES", "Categories"), counts.catsNew + counts.renamed + counts.merged,
-            getLoc("IMPORT_PREVIEW_ITEMS",      "Items"),      counts.itemsTotal),
+            L["IMPORT_PREVIEW_STAT_SECTIONS"],   counts.sectionsNew + counts.sectionsMerge,
+            L["IMPORT_PREVIEW_STAT_CATEGORIES"], counts.catsNew + counts.renamed + counts.merged,
+            L["IMPORT_PREVIEW_STAT_ITEMS"],      counts.itemsTotal),
         11, { 0.9, 0.9, 0.9 })
     stats:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 8, y)
     addChild(scrollContent, stats)
@@ -194,7 +187,7 @@ renderContent = function(state)
 
     if #state.plan.warnings > 0 then
         local warnHeader = makeText(scrollContent,
-            format("%s (%d)", getLoc("IMPORT_PREVIEW_WARNINGS", "Warnings"), #state.plan.warnings),
+            format("%s (%d)", L["IMPORT_PREVIEW_WARNINGS"], #state.plan.warnings),
             12, { 1, 0.6, 0.2 })
         warnHeader:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 8, y)
         addChild(scrollContent, warnHeader)
@@ -216,14 +209,14 @@ renderContent = function(state)
     end
 
     -- ---------- Bulk apply-to-all bar ----------
-    local bulkLabel = makeText(scrollContent, getLoc("IMPORT_APPLY_TO_ALL_LABEL", "Apply to conflicts:"), 11)
+    local bulkLabel = makeText(scrollContent, L["IMPORT_PREVIEW_BULK_LABEL"], 11)
     bulkLabel:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 8, y)
     addChild(scrollContent, bulkLabel)
 
     local bulkButtons = {
-        { txt = getLoc("IMPORT_APPLY_ALL_SKIP",   "Skip all"),   val = "skip" },
-        { txt = getLoc("IMPORT_APPLY_ALL_RENAME", "Rename all"), val = "rename" },
-        { txt = getLoc("IMPORT_APPLY_ALL_MERGE",  "Merge all"),  val = "merge" },
+        { txt = L["IMPORT_PREVIEW_BULK_SKIP"],   val = "skip" },
+        { txt = L["IMPORT_PREVIEW_BULK_RENAME"], val = "rename" },
+        { txt = L["IMPORT_PREVIEW_BULK_MERGE"],  val = "merge" },
     }
     local lastAnchor
     for _, def in ipairs(bulkButtons) do
@@ -248,20 +241,20 @@ renderContent = function(state)
     -- ---------- Unmapped defaults panel (Baganator-only) ----------
     if state.plan.unmappedDefaults and #state.plan.unmappedDefaults > 0 then
         local h = makeText(scrollContent,
-            getLoc("IMPORT_UNMAPPED_PANEL_TITLE", "Baganator default categories without an equivalent"),
+            L["IMPORT_PREVIEW_UNMAPPED_TITLE"],
             12, { 1, 0.82, 0 })
         h:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 8, y)
         addChild(scrollContent, h)
         y = y - 18
 
-        local bulkKeep = makeSmallBtn(scrollContent, getLoc("IMPORT_UNMAPPED_KEEP_ALL", "Keep all"), function()
+        local bulkKeep = makeSmallBtn(scrollContent, L["IMPORT_PREVIEW_UNMAPPED_KEEP_ALL"], function()
             for _, def in ipairs(state.plan.unmappedDefaults) do def.resolution = "keep" end
             renderContent(state)
         end)
         bulkKeep:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 16, y)
         addChild(scrollContent, bulkKeep)
 
-        local bulkIgnore = makeSmallBtn(scrollContent, getLoc("IMPORT_UNMAPPED_IGNORE_ALL", "Ignore all"), function()
+        local bulkIgnore = makeSmallBtn(scrollContent, L["IMPORT_PREVIEW_UNMAPPED_IGNORE_ALL"], function()
             for _, def in ipairs(state.plan.unmappedDefaults) do def.resolution = "ignore" end
             renderContent(state)
         end)
@@ -290,7 +283,7 @@ renderContent = function(state)
 
     -- ---------- Section tree ----------
     local treeHeader = makeText(scrollContent,
-        getLoc("IMPORT_PREVIEW_TREE_TITLE", "Sections & categories"),
+        L["IMPORT_PREVIEW_TREE_TITLE"],
         12, { 1, 0.82, 0 })
     treeHeader:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 8, y)
     addChild(scrollContent, treeHeader)
@@ -304,13 +297,13 @@ renderContent = function(state)
     sort(sectionIds)
 
     local function renderCategoryRow(cat, indent)
-        local name = cat.name or "(unnamed)"
-        local tag = cat.isNew and getLoc("IMPORT_TAG_NEW", "new") or getLoc("IMPORT_TAG_CONFLICT", "exists")
+        local name = cat.name or L["IMPORT_PREVIEW_CATEGORY_UNNAMED"]
+        local tag = cat.isNew and L["IMPORT_PREVIEW_TAG_NEW"] or L["IMPORT_PREVIEW_TAG_EXISTS"]
         local color = cat.isNew and { 0.6, 1, 0.6 } or { 1, 0.8, 0.3 }
         local itemCount = 0
         if cat.items then for _ in pairs(cat.items) do itemCount = itemCount + 1 end end
 
-        local label = format("%s  [%s]  (%d items)", name, tag, itemCount)
+        local label = format("%s  [%s]  %s", name, tag, format(L["IMPORT_PREVIEW_CATEGORY_ITEM_COUNT"], itemCount))
         local fs = makeText(scrollContent, label, 11, color)
         fs:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 16 + indent, y)
         addChild(scrollContent, fs)
@@ -347,7 +340,7 @@ renderContent = function(state)
             ruleBtn:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 32 + indent, y)
             addChild(scrollContent, ruleBtn)
 
-            local originalText = makeText(scrollContent, "rule: " .. cat.originalSearchExpression, 10, { 0.7, 0.7, 0.9 })
+            local originalText = makeText(scrollContent, format(L["IMPORT_PREVIEW_RULE_LINE"], cat.originalSearchExpression), 10, { 0.7, 0.7, 0.9 })
             originalText:SetPoint("LEFT", ruleBtn, "RIGHT", 8, 0)
             originalText:SetWidth(scrollContent:GetWidth() - 200 - indent)
             originalText:SetJustifyH("LEFT")
@@ -359,8 +352,8 @@ renderContent = function(state)
     for _, sid in ipairs(sectionIds) do
         local sec = state.plan.sections[sid]
         local secLabel = sec.isNew
-            and format("+ %s  [%s]", sec.name or "", getLoc("IMPORT_TAG_NEW", "new"))
-            or  format("= %s  [%s]", sec.name or "", getLoc("IMPORT_TAG_MERGE", "merge"))
+            and format("+ %s  [%s]", sec.name or "", L["IMPORT_PREVIEW_TAG_NEW"])
+            or  format("= %s  [%s]", sec.name or "", L["IMPORT_PREVIEW_TAG_MERGE"])
         local color = sec.isNew and { 0.7, 1, 0.7 } or { 0.7, 0.9, 1 }
         local sfs = makeText(scrollContent, secLabel, 12, color)
         sfs:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 12, y)
@@ -385,7 +378,7 @@ renderContent = function(state)
         if not assignedNames[cat.name] then tinsert(loose, cat) end
     end
     if #loose > 0 then
-        local lh = makeText(scrollContent, getLoc("IMPORT_LOOSE_CATEGORIES", "Categories (no section)"), 12, { 0.9, 0.9, 0.6 })
+        local lh = makeText(scrollContent, L["IMPORT_PREVIEW_LOOSE_CATEGORIES"], 12, { 0.9, 0.9, 0.6 })
         lh:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 12, y)
         addChild(scrollContent, lh)
         y = y - 18
@@ -399,7 +392,7 @@ renderContent = function(state)
     y = y - 8
     local summary = makeText(scrollContent,
         format("%s  new:%d rename:%d merge:%d skip:%d  items:%d",
-            getLoc("IMPORT_SUMMARY", "Summary:"),
+            L["IMPORT_PREVIEW_SUMMARY_LABEL"],
             counts.catsNew, counts.renamed, counts.merged, counts.skipped, counts.itemsTotal),
         11, { 1, 0.82, 0 })
     summary:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 8, y)
@@ -411,7 +404,7 @@ renderContent = function(state)
     -- Live-update footer if present
     if state.footerFS then
         state.footerFS:SetText(format("%s  new:%d  rename:%d  merge:%d  skip:%d  items:%d",
-            getLoc("IMPORT_SUMMARY", "Summary:"),
+            L["IMPORT_PREVIEW_SUMMARY_LABEL"],
             counts.catsNew, counts.renamed, counts.merged, counts.skipped, counts.itemsTotal))
     end
 end
@@ -434,13 +427,13 @@ function ImportPreview:Show(plan, controller, db)
     if not dlg then
         dlg = OneWoW_GUI:CreateDialog({
             name   = "OneWoW_Bags_ImportPreview",
-            title  = getLoc("IMPORT_PREVIEW_TITLE", "Import Preview"),
+            title  = L["IMPORT_PREVIEW_TITLE"],
             width  = 640,
             height = 520,
             showScrollFrame = true,
             buttons = {
-                { text = getLoc("IMPORT_CANCEL", "Cancel"), onClick = function(f) f:Hide() end },
-                { text = getLoc("IMPORT_APPLY",  "Import"),
+                { text = L["IMPORT_PREVIEW_CANCEL"], onClick = function(f) f:Hide() end },
+                { text = L["IMPORT_PREVIEW_CONFIRM"],
                   color = { 0.2, 0.6, 0.2 },
                   onClick = function(f)
                       if not dlg._state then return end
@@ -458,10 +451,9 @@ function ImportPreview:Show(plan, controller, db)
                       local result = Applier:Apply(s.plan, s.controller, s.db)
                       f:Hide()
                       if result then
-                          local prefix = getLoc("ADDON_CHAT_PREFIX", "OneWoW Bags:")
+                          local prefix = L["ADDON_CHAT_PREFIX"]
                           local msg = format(
-                              getLoc("IMPORT_SUCCESS_COUNTS",
-                                  "Import complete. Sections new:%d merged:%d | Categories new:%d renamed:%d merged:%d skipped:%d"),
+                              L["IMPORT_PREVIEW_APPLY_SUCCESS"],
                               result.sectionsNew or 0, result.sectionsMerged or 0,
                               result.categoriesNew or 0, result.categoriesRenamed or 0,
                               result.categoriesMerged or 0, result.categoriesSkipped or 0)

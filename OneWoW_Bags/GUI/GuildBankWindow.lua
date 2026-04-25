@@ -77,7 +77,7 @@ function GuildBankGUI:InitMainWindow()
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or "horde"
     local guildBankSettingsBtn
     titleBar, guildBankSettingsBtn = WH:CreateWindowTitleBar(MainWindow, {
-        title = L["GUILD_BANK_TITLE"],
+        title = GUILD_BANK,
         factionTheme = factionTheme,
         onClose = function() MainWindow:Hide() end,
         settingsText = L["SETTINGS"],

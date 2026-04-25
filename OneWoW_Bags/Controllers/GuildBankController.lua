@@ -89,7 +89,7 @@ function GuildBankController:ShowWithdrawMoney(anchorFrame)
 
     local limit = GetGuildBankWithdrawMoney()
     self.addon:ShowMoneyDialog({
-        title = self.addon.L["GUILD_BANK_TITLE"],
+        title = GUILD_BANK,
         anchorFrame = anchorFrame,
         onWithdraw = function(copper)
             local amount = (limit == -1) and copper or math.min(copper, limit)
@@ -107,7 +107,7 @@ function GuildBankController:ShowDepositMoney(anchorFrame)
     if not self.addon.guildBankOpen then return end
 
     self.addon:ShowMoneyDialog({
-        title = self.addon.L["GUILD_BANK_TITLE"],
+        title = GUILD_BANK,
         anchorFrame = anchorFrame,
         onDeposit = function(copper)
             DepositGuildBankMoney(copper)

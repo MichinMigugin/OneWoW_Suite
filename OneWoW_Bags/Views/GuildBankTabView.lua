@@ -4,7 +4,6 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local Constants = OneWoW_Bags.Constants
-local L = OneWoW_Bags.L
 local GuildBankSet = OneWoW_Bags.GuildBankSet
 
 local ipairs, tinsert = ipairs, tinsert
@@ -72,7 +71,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
 
                 local tabName = GetGuildBankTabInfo(tabID)
                 if not tabName or tabName == "" then
-                    tabName = L["GUILD_BANK_TAB"]:format(tabID)
+                    tabName = GUILDBANK_TAB_NUMBER:format(tabID)
                 end
 
                 section.title:SetText(tabName)

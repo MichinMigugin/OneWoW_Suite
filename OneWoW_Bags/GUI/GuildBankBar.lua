@@ -41,7 +41,7 @@ function GuildBankBar:Create(parent)
 
     GuildBankBar:BuildTabButtons()
 
-    local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_WITHDRAW"], height = 22 })
+    local withdrawBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = BANK_WITHDRAW_MONEY_BUTTON_LABEL, height = 22 })
     withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInsetCreate, ROW1_Y)
     withdrawBtn:SetScript("OnClick", function(self)
         local controller = GetController()
@@ -51,7 +51,7 @@ function GuildBankBar:Create(parent)
     end)
     bagsBarFrame.withdrawBtn = withdrawBtn
 
-    local depositBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_DEPOSIT"], height = 22 })
+    local depositBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = BANK_DEPOSIT_MONEY_BUTTON_LABEL, height = 22 })
     depositBtn:SetPoint("RIGHT", withdrawBtn, "LEFT", -4, 0)
     depositBtn:SetScript("OnClick", function(self)
         local controller = GetController()
@@ -61,7 +61,7 @@ function GuildBankBar:Create(parent)
     end)
     bagsBarFrame.depositBtn = depositBtn
 
-    local logBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = L["GUILD_BANK_LOG"], height = 22, minWidth = 30 })
+    local logBtn = OneWoW_GUI:CreateFitTextButton(bagsBarFrame, { text = GUILD_BANK_LOG, height = 22, minWidth = 30 })
     logBtn:SetPoint("RIGHT", depositBtn, "LEFT", -4, 0)
     logBtn:SetScript("OnClick", function()
         local controller = GetController()
@@ -175,7 +175,7 @@ function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewabl
 
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        local tName = self.tabName or format(L["GUILD_BANK_TAB"], self.tabID)
+        local tName = self.tabName or format(GUILDBANK_TAB_NUMBER, self.tabID)
         GameTooltip:SetText(tName, 1, 1, 1)
         if self.isViewable then
             local _, _, _, _, _, remainingWithdrawals = GetGuildBankTabInfo(self.tabID)

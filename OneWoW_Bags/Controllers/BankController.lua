@@ -194,7 +194,7 @@ function BankController:ShowWithdrawMoney(anchorFrame)
     if not self.addon.bankOpen or not self:IsWarbandMode() then return end
 
     self.addon:ShowMoneyDialog({
-        title = self.addon.L["BANK_WARBAND_TITLE"],
+        title = ACCOUNT_BANK_PANEL_TITLE,
         anchorFrame = anchorFrame,
         onWithdraw = function(copper)
             if C_Bank.CanWithdrawMoney(Enum.BankType.Account) then
@@ -213,7 +213,7 @@ function BankController:ShowDepositMoney(anchorFrame)
     if not self.addon.bankOpen or not self:IsWarbandMode() then return end
 
     self.addon:ShowMoneyDialog({
-        title = self.addon.L["BANK_WARBAND_TITLE"],
+        title = ACCOUNT_BANK_PANEL_TITLE,
         anchorFrame = anchorFrame,
         onDeposit = function(copper)
             if C_Bank.CanDepositMoney(Enum.BankType.Account) then
