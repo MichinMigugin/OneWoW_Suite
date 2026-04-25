@@ -1,15 +1,15 @@
 local addonName, ns = ...
 
+local C_Spell, C_Item = C_Spell, C_Item
+
 ns.ActionBars = {}
 local Module = ns.ActionBars
 
-local PickupSpell = C_Spell and C_Spell.PickupSpell or _G.PickupSpell
-local PickupItem = C_Item and C_Item.PickupItem or _G.PickupItem
-local PickupMacro = _G.PickupMacro
-local PickupAction = _G.PickupAction
-local PlaceAction = _G.PlaceAction
-local GetCursorInfo = _G.GetCursorInfo
-local ClearCursor = _G.ClearCursor
+local PickupMacro = PickupMacro
+local PickupAction = PickupAction
+local PlaceAction = PlaceAction
+local GetCursorInfo = GetCursorInfo
+local ClearCursor = ClearCursor
 
 local ACTION_BAR_SLOTS = {
     [1] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},
@@ -41,16 +41,18 @@ local covenantSignatureAbilities = {
     [324631] = true,
     [310143] = true,
 }
+
 local function IsCovenantSignatureAbility(id)
     return covenantSignatureAbilities[id] ~= nil
 end
+
 local function GetCovenantSignatureAbility()
     for id, valid in pairs(covenantSignatureAbilities) do
-        if valid and IsSpellKnown(id, false) then
+        if valid and C_SpellBook.IsSpellKnown(id, Enum.SpellBookSpellBank.Player) then
             return id
         end
     end
-    return IsSpellKnown(326526, false) and 326526
+    return C_SpellBook.IsSpellKnown(326526, Enum.SpellBookSpellBank.Player) and 326526
 end
 
 function Module:GetActionInfo(slotID)
@@ -58,7 +60,13 @@ function Module:GetActionInfo(slotID)
         return nil
     end
 
-    local actionType, id, subType = GetActionInfo(slotID)
+    ---@type string|nil
+    local actionType
+    ---@type string|number|nil
+    local id
+    local subType
+    actionType, id, subType = GetActionInfo(slotID)
+
     local texture = GetActionTexture(slotID)
     local text = GetActionText(slotID)
 
@@ -101,31 +109,30 @@ function Module:GetActionInfo(slotID)
             id = GetCovenantSignatureAbility() or id
         end
 
-        if C_Spell and C_Spell.GetSpellName then
-            actionData.spellName = C_Spell.GetSpellName(id)
+        local spellName = C_Spell.GetSpellName(id)
+        if spellName then
+            actionData.spellName = spellName
             actionData.spellID = id
         else
-            local spellInfo = C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(id)
+            local spellInfo = C_Spell.GetSpellInfo(id)
             actionData.spellName = spellInfo and spellInfo.name or "Unknown Spell"
             actionData.spellID = id
         end
         actionData.displayName = actionData.spellName
     elseif actionType == "item" then
-        local itemName, itemLink, itemQuality = GetItemInfo(id)
+        local itemName, itemLink, itemQuality = C_Item.GetItemInfo(id)
         actionData.itemName = itemName
         actionData.itemLink = itemLink
         actionData.itemQuality = itemQuality
         actionData.itemID = id
         actionData.displayName = itemName
 
-        if C_ToyBox and C_ToyBox.GetToyInfo then
-            local toyName, toyIcon = C_ToyBox.GetToyInfo(id)
-            if toyName then
-                actionData.isToy = true
-                actionData.toyName = toyName
-                actionData.toyIcon = toyIcon
-                actionData.displayName = string.format("Toy: %s", toyName)
-            end
+        local toyName, toyIcon = C_ToyBox.GetToyInfo(id)
+        if toyName then
+            actionData.isToy = true
+            actionData.toyName = toyName
+            actionData.toyIcon = toyIcon
+            actionData.displayName = string.format("Toy: %s", toyName)
         end
     elseif actionType == "macro" then
         if id and id ~= 0 then
@@ -148,26 +155,18 @@ function Module:GetActionInfo(slotID)
         end
 
         if subType == "MOUNT" then
-            if C_MountJournal and C_MountJournal.GetMountInfoByID then
-                local mountName = C_MountJournal.GetMountInfoByID(id)
-                if mountName then
-                    actionData.companionName = mountName
-                    actionData.displayName = string.format("Mount: %s", mountName)
-                else
-                    actionData.displayName = "Mount"
-                end
+            local mountName = C_MountJournal.GetMountInfoByID(id)
+            if mountName then
+                actionData.companionName = mountName
+                actionData.displayName = string.format("Mount: %s", mountName)
             else
                 actionData.displayName = "Mount"
             end
         elseif subType == "CRITTER" then
-            if C_PetJournal and C_PetJournal.GetPetInfoByPetID then
-                local _, customName, _, _, _, _, _, petName = C_PetJournal.GetPetInfoByPetID(id)
-                local displayPetName = customName and customName ~= "" and customName or petName
-                actionData.companionName = displayPetName
-                actionData.displayName = displayPetName and string.format("Pet: %s", displayPetName) or "Pet"
-            else
-                actionData.displayName = "Pet"
-            end
+            local _, customName, _, _, _, _, _, petName = C_PetJournal.GetPetInfoByPetID(id)
+            local displayPetName = customName and customName ~= "" and customName or petName
+            actionData.companionName = displayPetName
+            actionData.displayName = displayPetName and string.format("Pet: %s", displayPetName) or "Pet"
         else
             actionData.displayName = "Companion"
         end
@@ -175,35 +174,27 @@ function Module:GetActionInfo(slotID)
         if subType and subType ~= actionType then
             actionData.petType = subType
         end
-        if C_PetJournal and C_PetJournal.GetPetInfoByPetID then
-            local _, customName, _, _, _, _, _, petName = C_PetJournal.GetPetInfoByPetID(id)
-            local displayPetName = customName and customName ~= "" and customName or petName
-            actionData.petName = displayPetName
-            actionData.displayName = displayPetName and string.format("Pet: %s", displayPetName) or "Pet"
-        else
-            actionData.displayName = "Pet"
-        end
+        local _, customName, _, _, _, _, _, petName = C_PetJournal.GetPetInfoByPetID(id)
+        local displayPetName = customName and customName ~= "" and customName or petName
+        actionData.petName = displayPetName
+        actionData.displayName = displayPetName and string.format("Pet: %s", displayPetName) or "Pet"
     elseif actionType == "equipmentset" then
-        if C_EquipmentSet and C_EquipmentSet.GetEquipmentSetInfo then
-            local setID = tonumber(id)
-            if not setID then
-                for _, checkSetID in ipairs(C_EquipmentSet.GetEquipmentSetIDs() or {}) do
-                    local setInfo = C_EquipmentSet.GetEquipmentSetInfo(checkSetID)
-                    if setInfo and setInfo.name == id then
-                        setID = checkSetID
-                        break
-                    end
+        local setID = tonumber(id)
+        if not setID then
+            for _, checkSetID in ipairs(C_EquipmentSet.GetEquipmentSetIDs() or {}) do
+                local name = C_EquipmentSet.GetEquipmentSetInfo(checkSetID)
+                if name == id then
+                    setID = checkSetID
+                    break
                 end
             end
-            if setID then
-                local setInfo = C_EquipmentSet.GetEquipmentSetInfo(setID)
-                if setInfo then
-                    actionData.equipmentSetName = setInfo.name
-                    actionData.equipmentSetIcon = setInfo.iconFileID
-                    actionData.displayName = string.format("Set: %s", setInfo.name)
-                else
-                    actionData.displayName = "Equipment Set"
-                end
+        end
+        if setID then
+            local name, iconFileID = C_EquipmentSet.GetEquipmentSetInfo(setID)
+            if name then
+                actionData.equipmentSetName = name
+                actionData.equipmentSetIcon = iconFileID
+                actionData.displayName = string.format("Set: %s", name)
             else
                 actionData.displayName = "Equipment Set"
             end
@@ -245,13 +236,9 @@ function Module:GetPetActionInfo(slotID)
     if isToken then
         actionData.displayName = name
     elseif spellID then
-        if C_Spell and C_Spell.GetSpellName then
-            local spellName = C_Spell.GetSpellName(spellID)
-            actionData.displayName = spellName or name
-            actionData.spellName = spellName
-        else
-            actionData.displayName = name
-        end
+        local spellName = C_Spell.GetSpellName(spellID)
+        actionData.displayName = spellName or name
+        actionData.spellName = spellName
     else
         actionData.displayName = name or "Pet Action"
     end
@@ -806,18 +793,12 @@ local function RestoreKeybindsGeneric(keybindData)
         local key2 = bindData.key2
 
         if key1 then
-            local bindingContext = 1
-            if C_KeyBindings and C_KeyBindings.GetBindingContextForAction then
-                bindingContext = C_KeyBindings.GetBindingContextForAction(command)
-            end
+            local bindingContext = C_KeyBindings.GetBindingContextForAction(command)
             SetBinding(key1, command, bindingContext)
         end
 
         if key2 then
-            local bindingContext = 1
-            if C_KeyBindings and C_KeyBindings.GetBindingContextForAction then
-                bindingContext = C_KeyBindings.GetBindingContextForAction(command)
-            end
+            local bindingContext = C_KeyBindings.GetBindingContextForAction(command)
             SetBinding(key2, command, bindingContext)
         end
     end
@@ -986,16 +967,14 @@ end
 function Module:CreateFlyoutSpellbookMap()
     local flyouts = {}
 
-    if C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines then
-        for skillLineIndex = 1, C_SpellBook.GetNumSpellBookSkillLines() do
-            local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(skillLineIndex)
-            if skillLineInfo then
-                for i = 1, skillLineInfo.numSpellBookItems do
-                    local spellIndex = skillLineInfo.itemIndexOffset + i
-                    local spellTypeEnum, spellId = C_SpellBook.GetSpellBookItemType(spellIndex, Enum.SpellBookSpellBank.Player)
-                    if spellId and spellTypeEnum == Enum.SpellBookItemType.Flyout then
-                        flyouts[spellId] = { spellIndex, Enum.SpellBookSpellBank.Player }
-                    end
+    for skillLineIndex = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+        local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(skillLineIndex)
+        if skillLineInfo then
+            for i = 1, skillLineInfo.numSpellBookItems do
+                local spellIndex = skillLineInfo.itemIndexOffset + i
+                local spellTypeEnum, spellId = C_SpellBook.GetSpellBookItemType(spellIndex, Enum.SpellBookSpellBank.Player)
+                if spellId and spellTypeEnum == Enum.SpellBookItemType.Flyout then
+                    flyouts[spellId] = { spellIndex, Enum.SpellBookSpellBank.Player }
                 end
             end
         end
@@ -1007,12 +986,10 @@ end
 function Module:CreateMountCache()
     local mounts = {}
 
-    if C_MountJournal and C_MountJournal.GetNumMounts then
-        for i = 1, C_MountJournal.GetNumMounts() do
-            local _, _, _, _, _, _, _, _, _, _, isCollected, mountId = C_MountJournal.GetDisplayedMountInfo(i)
-            if isCollected then
-                mounts[mountId] = i
-            end
+    for i = 1, C_MountJournal.GetNumMounts() do
+        local _, _, _, _, _, _, _, _, _, _, isCollected, mountId = C_MountJournal.GetDisplayedMountInfo(i)
+        if isCollected then
+            mounts[mountId] = i
         end
     end
 
@@ -1022,26 +999,24 @@ end
 function Module:CreateSpellOverrideMap()
     local spellOverride = {}
 
-    if C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines then
-        for skillLineIndex = 1, C_SpellBook.GetNumSpellBookSkillLines() do
-            local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(skillLineIndex)
-            if skillLineInfo then
-                for i = 1, skillLineInfo.numSpellBookItems do
-                    local spellIndex = skillLineInfo.itemIndexOffset + i
-                    local spellType, id, spellId = C_SpellBook.GetSpellBookItemType(spellIndex, Enum.SpellBookSpellBank.Player)
-                    if spellId and C_Spell and C_Spell.GetOverrideSpell then
-                        local newid = C_Spell.GetOverrideSpell(spellId)
-                        if newid ~= spellId then
-                            spellOverride[newid] = spellId
-                        end
-                    elseif spellType == Enum.SpellBookItemType.Flyout then
-                        local _, _, numSlots, isKnown = GetFlyoutInfo(id)
-                        if isKnown and (numSlots > 0) then
-                            for k = 1, numSlots do
-                                local spellID, overrideSpellID = GetFlyoutSlotInfo(id, k)
-                                if spellID and overrideSpellID then
-                                    spellOverride[overrideSpellID] = spellID
-                                end
+    for skillLineIndex = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+        local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(skillLineIndex)
+        if skillLineInfo then
+            for i = 1, skillLineInfo.numSpellBookItems do
+                local spellIndex = skillLineInfo.itemIndexOffset + i
+                local spellType, id, spellId = C_SpellBook.GetSpellBookItemType(spellIndex, Enum.SpellBookSpellBank.Player)
+                if spellId then
+                    local newid = C_Spell.GetOverrideSpell(spellId)
+                    if newid ~= spellId then
+                        spellOverride[newid] = spellId
+                    end
+                elseif spellType == Enum.SpellBookItemType.Flyout then
+                    local _, _, numSlots, isKnown = GetFlyoutInfo(id)
+                    if isKnown and (numSlots > 0) then
+                        for k = 1, numSlots do
+                            local spellID, overrideSpellID = GetFlyoutSlotInfo(id, k)
+                            if spellID and overrideSpellID then
+                                spellOverride[overrideSpellID] = spellID
                             end
                         end
                     end
@@ -1054,7 +1029,7 @@ function Module:CreateSpellOverrideMap()
             for tier = 1, MAX_TALENT_TIERS do
                 for column = 1, NUM_TALENT_COLUMNS do
                     local spellId = select(6, GetTalentInfo(tier, column, specIndex))
-                    if spellId and C_Spell and C_Spell.GetOverrideSpell then
+                    if spellId then
                         local newid = C_Spell.GetOverrideSpell(spellId)
                         if newid ~= spellId then
                             spellOverride[newid] = spellId
@@ -1069,7 +1044,7 @@ function Module:CreateSpellOverrideMap()
             if slotInfo then
                 for i, pvpTalentID in ipairs(slotInfo.availableTalentIDs) do
                     local spellId = select(6, GetPvpTalentInfoByID(pvpTalentID))
-                    if spellId and C_Spell and C_Spell.GetOverrideSpell then
+                    if spellId then
                         local newid = C_Spell.GetOverrideSpell(spellId)
                         if newid ~= spellId then
                             spellOverride[newid] = spellId
@@ -1156,15 +1131,11 @@ local function PickupActionTable(actionData, flyouts, mountCache)
                 end
             end
 
-            if C_Spell and C_Spell.PickupSpell then
-                C_Spell.PickupSpell(spellId)
-            else
-                PickupSpell(spellId)
-            end
+            C_Spell.PickupSpell(spellId)
 
             if not GetCursorInfo() then
                 if actionData.spellName then
-                    PickupSpell(actionData.spellName)
+                    C_Spell.PickupSpell(actionData.spellName)
                 end
             end
 
@@ -1179,7 +1150,7 @@ local function PickupActionTable(actionData, flyouts, mountCache)
 
     elseif actionData.actionType == "item" then
         if actionData.itemID then
-            PickupItem(actionData.itemID)
+            C_Item.PickupItem(actionData.itemID)
             if not GetCursorInfo() then
                 success = false
                 failReason = "Item not in bags"
@@ -1193,9 +1164,9 @@ local function PickupActionTable(actionData, flyouts, mountCache)
         local subType = actionData.subType or actionData.companionType
         if subType == "MOUNT" then
             local displayIndex = mountCache and mountCache[actionData.id]
-            if displayIndex and C_MountJournal and C_MountJournal.Pickup then
+            if displayIndex then
                 C_MountJournal.Pickup(displayIndex)
-            elseif C_MountJournal and C_MountJournal.Pickup then
+            else
                 C_MountJournal.Pickup(0)
             end
             if not GetCursorInfo() then
@@ -1203,22 +1174,17 @@ local function PickupActionTable(actionData, flyouts, mountCache)
                 failReason = "Mount not collected"
             end
         elseif subType == "CRITTER" then
-            if C_PetJournal and C_PetJournal.PickupPet then
-                C_PetJournal.PickupPet(actionData.id, false)
-                if not GetCursorInfo() then
-                    C_PetJournal.PickupPet(actionData.id, true)
-                end
+            C_PetJournal.PickupPet(actionData.id)
+            if not GetCursorInfo() then
+                C_PetJournal.PickupPet(actionData.id)
             end
             if not GetCursorInfo() then
                 success = false
                 failReason = "Pet not collected"
             end
         else
-            if C_Spell and C_Spell.PickupSpell then
-                C_Spell.PickupSpell(actionData.id)
-            else
-                PickupSpell(actionData.id)
-            end
+            C_Spell.PickupSpell(actionData.id)
+
             if not GetCursorInfo() then
                 success = false
                 failReason = "Companion not found"
@@ -1227,9 +1193,9 @@ local function PickupActionTable(actionData, flyouts, mountCache)
 
     elseif actionData.actionType == "summonmount" then
         local displayIndex = mountCache and mountCache[actionData.id]
-        if displayIndex and C_MountJournal and C_MountJournal.Pickup then
+        if displayIndex then
             C_MountJournal.Pickup(displayIndex)
-        elseif C_MountJournal and C_MountJournal.Pickup then
+        else
             C_MountJournal.Pickup(0)
         end
         if not GetCursorInfo() then
@@ -1238,11 +1204,9 @@ local function PickupActionTable(actionData, flyouts, mountCache)
         end
 
     elseif actionData.actionType == "summonpet" then
-        if C_PetJournal and C_PetJournal.PickupPet then
-            C_PetJournal.PickupPet(actionData.id, false)
-            if not GetCursorInfo() then
-                C_PetJournal.PickupPet(actionData.id, true)
-            end
+        C_PetJournal.PickupPet(actionData.id)
+        if not GetCursorInfo() then
+            C_PetJournal.PickupPet(actionData.id)
         end
         if not GetCursorInfo() then
             success = false
@@ -1250,19 +1214,17 @@ local function PickupActionTable(actionData, flyouts, mountCache)
         end
 
     elseif actionData.actionType == "equipmentset" then
-        if C_EquipmentSet and C_EquipmentSet.PickupEquipmentSet then
-            local setName = actionData.equipmentSetName or actionData.id
-            local setID
-            for _, checkID in ipairs(C_EquipmentSet.GetEquipmentSetIDs() or {}) do
-                local setInfo = C_EquipmentSet.GetEquipmentSetInfo(checkID)
-                if setInfo and setInfo.name == setName then
-                    setID = checkID
-                    break
-                end
+        local setName = actionData.equipmentSetName or actionData.id
+        local setID
+        for _, checkID in ipairs(C_EquipmentSet.GetEquipmentSetIDs() or {}) do
+            local name = C_EquipmentSet.GetEquipmentSetInfo(checkID)
+            if name == setName then
+                setID = checkID
+                break
             end
-            if setID then
-                C_EquipmentSet.PickupEquipmentSet(setID)
-            end
+        end
+        if setID then
+            C_EquipmentSet.PickupEquipmentSet(setID)
         end
         if not GetCursorInfo() then
             success = false
@@ -1274,11 +1236,7 @@ local function PickupActionTable(actionData, flyouts, mountCache)
         if flyoutID and flyouts then
             local flyout = flyouts[flyoutID]
             if flyout then
-                if C_SpellBook and C_SpellBook.PickupSpellBookItem then
-                    C_SpellBook.PickupSpellBookItem(flyout[1], flyout[2])
-                else
-                    PickupSpellBookItem(flyout[1], flyout[2])
-                end
+                C_SpellBook.PickupSpellBookItem(flyout[1], flyout[2])
             end
         end
         if not GetCursorInfo() then
