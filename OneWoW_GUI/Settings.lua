@@ -1,10 +1,12 @@
+local ADDON_NAME, _ = ...
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local DB = OneWoW_GUI.DB
 local Constants = OneWoW_GUI.Constants
 local DEFAULT_THEME_ICON = Constants.DEFAULT_THEME_ICON
 local DEFAULT_THEME_KEY = Constants.DEFAULT_THEME_KEY
-local DEFAULT_THEME_NAME = Constants.DEFAULT_THEME_NAME
 local CreateFrame = CreateFrame
 local unpack = unpack
 
@@ -24,50 +26,89 @@ local function FireCallbacks(event, value)
 end
 
 local function InitSettingsDB()
-    if not OneWoW_GUI_DB then
-        OneWoW_GUI_DB = {}
+    local defaults = {
+        global = {
+            language = GetLocale(),
+            theme = DEFAULT_THEME_KEY,
+            font = "default",
+            fontSizeOffset = 0,
+            minimap = {
+                hide = false,
+                theme = DEFAULT_THEME_ICON,
+            },
+            minimapLaunchers = {},
+            moneyDisplay = {
+                useLetters = false,
+                useRegionalNumbers = true,
+                useWhiteValues = true,
+            },
+        },
+    }
+
+    local sv = _G["OneWoW_GUI_DB"]
+    if sv and not sv.global and next(sv) ~= nil then
+        local oldData = {}
+        for k, v in pairs(sv) do
+            oldData[k] = v
+        end
+        wipe(sv)
+        sv.global = oldData
     end
-    local db = OneWoW_GUI_DB
-    if not db.language then db.language = GetLocale() end
-    if not db.theme then db.theme = DEFAULT_THEME_KEY end
-    if not db.font then db.font = "default" end
-    if db.fontSizeOffset == nil then db.fontSizeOffset = 0 end
-    if not db.minimap then db.minimap = {} end
-    if db.minimap.hide == nil then db.minimap.hide = false end
-    if db.minimap.theme == nil then db.minimap.theme = DEFAULT_THEME_ICON end
-    if not db.minimapLaunchers then db.minimapLaunchers = {} end
-    if not db.moneyDisplay then db.moneyDisplay = {} end
-    if db.moneyDisplay.useLetters == nil then db.moneyDisplay.useLetters = false end
-    if db.moneyDisplay.useRegionalNumbers == nil then db.moneyDisplay.useRegionalNumbers = true end
-    if db.moneyDisplay.useWhiteValues == nil then db.moneyDisplay.useWhiteValues = true end
-    OneWoW_GUI._settingsDB = db
+
+    local db = DB:Init({
+        addonName = ADDON_NAME,
+        savedVar = "OneWoW_GUI_DB",
+        defaults = defaults,
+    })
+
+    DB:RunMigrations(db, {
+        { version = 1, name = "cleanup_legacy_root_keys", run = function(d)
+            local keepRootKeys = {
+                global = true,
+                chars = true,
+                realms = true,
+                factions = true,
+                classes = true,
+                specs = true,
+                presets = true,
+                _activePreset = true,
+            }
+            local root = d.root
+            if not root then return end
+            for key in pairs(root) do
+                if not keepRootKeys[key] then
+                    root[key] = nil
+                end
+            end
+        end },
+    })
+
+    OneWoW_GUI._settingsDBHandle = db
+    OneWoW_GUI._settingsDB = db.global
     OneWoW_GUI:ApplyTheme()
 end
 
 function OneWoW_GUI:GetSetting(key)
     local db = self._settingsDB
-    if not db then return nil end
+
     if key == "theme" then return db.theme
     elseif key == "language" then return db.language
     elseif key == "font" then return db.font
     elseif key == "fontSizeOffset" then return db.fontSizeOffset
-    elseif key == "minimap.hide" then return db.minimap and db.minimap.hide
-    elseif key == "minimap.theme" then return db.minimap and db.minimap.theme
+    elseif key == "minimap.hide" then return db.minimap.hide
+    elseif key == "minimap.theme" then return db.minimap.theme
     elseif key == "moneyDisplay.useLetters" then
-        if not db.moneyDisplay then return false end
         return db.moneyDisplay.useLetters == true
     elseif key == "moneyDisplay.useRegionalNumbers" then
-        if not db.moneyDisplay then return true end
         return db.moneyDisplay.useRegionalNumbers ~= false
     elseif key == "moneyDisplay.useWhiteValues" then
-        if not db.moneyDisplay then return true end
         return db.moneyDisplay.useWhiteValues ~= false
     end
 end
 
 function OneWoW_GUI:SetSetting(key, value)
     local db = self._settingsDB
-    if not db then return end
+
     if key == "theme" then
         db.theme = value
         self:ApplyTheme()
@@ -91,15 +132,12 @@ function OneWoW_GUI:SetSetting(key, value)
         db.minimap.theme = value
         FireCallbacks("OnIconThemeChanged", value)
     elseif key == "moneyDisplay.useLetters" then
-        if not db.moneyDisplay then db.moneyDisplay = {} end
         db.moneyDisplay.useLetters = value and true or false
         FireCallbacks("OnMoneyDisplayChanged", value)
     elseif key == "moneyDisplay.useRegionalNumbers" then
-        if not db.moneyDisplay then db.moneyDisplay = {} end
         db.moneyDisplay.useRegionalNumbers = value and true or false
         FireCallbacks("OnMoneyDisplayChanged", value)
     elseif key == "moneyDisplay.useWhiteValues" then
-        if not db.moneyDisplay then db.moneyDisplay = {} end
         db.moneyDisplay.useWhiteValues = value and true or false
         FireCallbacks("OnMoneyDisplayChanged", value)
     end
@@ -107,9 +145,10 @@ end
 
 function OneWoW_GUI:MigrateSettings(sourceGlobal)
     local db = self._settingsDB
-    if not db or not sourceGlobal then return end
+    if not sourceGlobal then return end
     if db._migrated then return end
     db._migrated = true
+
     if sourceGlobal.theme and sourceGlobal.theme ~= DEFAULT_THEME_KEY then
         db.theme = sourceGlobal.theme
     end
@@ -127,7 +166,6 @@ function OneWoW_GUI:MigrateSettings(sourceGlobal)
         if sourceGlobal.minimap.theme then db.minimap.theme = sourceGlobal.minimap.theme end
     end
     if sourceGlobal.moneyDisplay then
-        if not db.moneyDisplay then db.moneyDisplay = {} end
         if sourceGlobal.moneyDisplay.useLetters ~= nil then db.moneyDisplay.useLetters = sourceGlobal.moneyDisplay.useLetters end
         if sourceGlobal.moneyDisplay.useRegionalNumbers ~= nil then db.moneyDisplay.useRegionalNumbers = sourceGlobal.moneyDisplay.useRegionalNumbers end
         if sourceGlobal.moneyDisplay.useWhiteValues ~= nil then db.moneyDisplay.useWhiteValues = sourceGlobal.moneyDisplay.useWhiteValues end
