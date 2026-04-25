@@ -70,7 +70,7 @@ function private.UpdateItemMap(itemKey)
         local info = C_AuctionHouse.GetItemSearchResultInfo(itemKey, i)
         if info and info.auctionID and info.buyoutAmount then
             private.auctionIdToLink[info.auctionID] = info.itemLink
-            private.auctionIdToName[info.auctionID] = info.itemName
+            private.auctionIdToName[info.auctionID] = select(1, C_Item.GetItemInfo(info.itemLink or ""))
             private.auctionIdToQuantity[info.auctionID] = info.quantity or 1
             private.auctionIdToBuyout[info.auctionID] = info.buyoutAmount
         end
@@ -151,7 +151,7 @@ function private.OnPlayerMoney()
 
     local deposit = private.pendingPost.goldBefore - GetMoney()
     if deposit > 0 then
-        local name = private.pendingPost.itemLink and select(1, GetItemInfo(private.pendingPost.itemLink)) or "Item"
+        local name = private.pendingPost.itemLink and select(1, C_Item.GetItemInfo(private.pendingPost.itemLink)) or "Item"
         ns.Transactions:RecordExpense("auction_deposit", deposit, "Auction House", private.pendingPost.itemLink, name, private.pendingPost.quantity, "Posting deposit")
     end
 

@@ -84,7 +84,7 @@ function VendorTracker:OnUseContainerItem(bag, slot)
     if not itemLink then return end
     local itemID = tonumber(itemLink:match("item:(%d+)"))
     if not itemID then return end
-    local name, _, _, _, _, _, _, stackCount, _, _, sellPrice = GetItemInfo(itemID)
+    local name, _, _, _, _, _, _, stackCount, _, _, sellPrice = C_Item.GetItemInfo(itemID)
     local info = C_Container and C_Container.GetContainerItemInfo(bag, slot)
     local count = (info and info.stackCount) or stackCount or 1
     if sellPrice and sellPrice > 0 then
