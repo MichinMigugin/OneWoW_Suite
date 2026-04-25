@@ -1,7 +1,11 @@
--- OneWoW Addon File
--- OneWoW_CatalogData_Quests/Modules/CompletionTracker.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local pairs, ipairs = pairs, ipairs
+local tinsert, sort = tinsert, sort
+local C_QuestLog = C_QuestLog
 
 ns.CompletionTracker = {}
 local CompletionTracker = ns.CompletionTracker
@@ -11,11 +15,6 @@ local cacheBuilt     = false
 
 local function GetDB()
     return OneWoW_CatalogData_Quests_DB
-end
-
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-local function GetCharacterKey()
-    return OneWoW_GUI and OneWoW_GUI:GetCharacterKey() or nil
 end
 
 local function BuildAltTrackerCache()
@@ -50,7 +49,7 @@ function CompletionTracker:Initialize()
     local db = GetDB()
     if not db then return end
 
-    local charKey = GetCharacterKey()
+    local charKey = OneWoW_GUI:BuildCharKey()
     if not charKey then return end
 
     if not db.completion[charKey] then
@@ -71,7 +70,7 @@ function CompletionTracker:MarkCompleted(questID)
     local db = GetDB()
     if not db then return end
 
-    local charKey = GetCharacterKey()
+    local charKey = OneWoW_GUI:BuildCharKey()
     if not charKey then return end
 
     if not db.completion[charKey] then
@@ -95,10 +94,10 @@ function CompletionTracker:GetCompletedCharacters(questID)
     local seen   = {}
 
     -- Current character: always live
-    local currentKey = GetCharacterKey()
+    local currentKey = OneWoW_GUI:BuildCharKey()
     if currentKey and C_QuestLog.IsQuestFlaggedCompleted(questID) then
         local charName = currentKey:match("^(.-)%-") or currentKey
-        table.insert(result, { key = currentKey, name = charName })
+        tinsert(result, { key = currentKey, name = charName })
         seen[currentKey] = true
     end
 
@@ -108,7 +107,7 @@ function CompletionTracker:GetCompletedCharacters(questID)
         for charKey, completedMap in pairs(db.completion) do
             if not seen[charKey] and completedMap[questID] then
                 local charName = charKey:match("^(.-)%-") or charKey
-                table.insert(result, { key = charKey, name = charName })
+                tinsert(result, { key = charKey, name = charName })
                 seen[charKey] = true
             end
         end
@@ -122,14 +121,14 @@ function CompletionTracker:GetCompletedCharacters(questID)
             for charKey, lookup in pairs(completedCache) do
                 if not seen[charKey] and lookup[questID] then
                     local charName = charKey:match("^(.-)%-") or charKey
-                    table.insert(result, { key = charKey, name = charName })
+                    tinsert(result, { key = charKey, name = charName })
                     seen[charKey] = true
                 end
             end
         end
     end
 
-    table.sort(result, function(a, b) return a.name < b.name end)
+    sort(result, function(a, b) return a.name < b.name end)
     return result
 end
 
@@ -148,10 +147,10 @@ function CompletionTracker:GetAllTrackedCharacters()
     local seen   = {}
 
     -- Always include current character
-    local currentKey = GetCharacterKey()
+    local currentKey = OneWoW_GUI:BuildCharKey()
     if currentKey then
         local charName = currentKey:match("^(.-)%-") or currentKey
-        table.insert(result, { key = currentKey, name = charName })
+        tinsert(result, { key = currentKey, name = charName })
         seen[currentKey] = true
     end
 
@@ -161,7 +160,7 @@ function CompletionTracker:GetAllTrackedCharacters()
         for charKey, _ in pairs(db.completion) do
             if not seen[charKey] then
                 local charName = charKey:match("^(.-)%-") or charKey
-                table.insert(result, { key = charKey, name = charName })
+                tinsert(result, { key = charKey, name = charName })
                 seen[charKey] = true
             end
         end
@@ -175,13 +174,13 @@ function CompletionTracker:GetAllTrackedCharacters()
             for charKey, _ in pairs(completedCache) do
                 if not seen[charKey] then
                     local charName = charKey:match("^(.-)%-") or charKey
-                    table.insert(result, { key = charKey, name = charName })
+                    tinsert(result, { key = charKey, name = charName })
                     seen[charKey] = true
                 end
             end
         end
     end
 
-    table.sort(result, function(a, b) return a.name < b.name end)
+    sort(result, function(a, b) return a.name < b.name end)
     return result
 end

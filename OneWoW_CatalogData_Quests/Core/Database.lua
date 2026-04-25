@@ -1,7 +1,4 @@
--- OneWoW Addon File
--- OneWoW_CatalogData_Quests/Core/Database.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 
 ns.DatabaseDefaults = {
     settings = {
@@ -13,5 +10,5 @@ ns.DatabaseDefaults = {
 }
 
 function ns:GetSettings()
-    return _G.OneWoW_CatalogData_Quests_DB and _G.OneWoW_CatalogData_Quests_DB.settings or {}
+    return OneWoW_CatalogData_Quests_DB and OneWoW_CatalogData_Quests_DB.settings or {}
 end

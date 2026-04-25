@@ -1,7 +1,9 @@
--- OneWoW Addon File
--- OneWoW_CatalogData_Quests/Modules/QuestScanner.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+
+local ipairs = ipairs
+local tinsert = tinsert
+local C_QuestLog, C_QuestInfoSystem = C_QuestLog, C_QuestInfoSystem
+local C_Map, C_Timer = C_Map, C_Timer
 
 ns.QuestScanner = {}
 local QuestScanner = ns.QuestScanner
@@ -41,9 +43,10 @@ end
 local function CaptureQuestFromLog(questID)
     if not questID then return end
 
-    local data = { id = questID }
-
-    data.name = C_QuestLog.GetTitleForQuestID(questID)
+    local data = {
+        id = questID,
+        name = C_QuestLog.GetTitleForQuestID(questID),
+    }
 
     local logIndex = GetQuestLogIndex(questID)
     local logInfo  = logIndex and C_QuestLog.GetInfo(logIndex)
@@ -61,14 +64,12 @@ local function CaptureQuestFromLog(questID)
         end
     end
 
-    if C_QuestInfoSystem and C_QuestInfoSystem.GetQuestClassification then
-        local classification = C_QuestInfoSystem.GetQuestClassification(questID)
-        data.classification = classification
-        if classification == 2 then
-            data.isCampaign = true
-        elseif classification == 10 then
-            data.isWorldQuest = true
-        end
+    local classification = C_QuestInfoSystem.GetQuestClassification(questID)
+    data.classification = classification
+    if classification == Enum.QuestClassification.Campaign then
+        data.isCampaign = true
+    elseif classification == Enum.QuestClassification.WorldQuest then
+        data.isWorldQuest = true
     end
 
     local tagInfo = C_QuestLog.GetQuestTagInfo(questID)
@@ -102,7 +103,7 @@ local function CaptureQuestFromLog(questID)
         local objList = {}
         for _, obj in ipairs(objectives) do
             if obj.text and obj.text ~= "" then
-                table.insert(objList, obj.text)
+                tinsert(objList, obj.text)
             end
         end
         if #objList > 0 then
@@ -126,7 +127,7 @@ local function CaptureQuestFromLog(questID)
         for i = 1, numRewards do
             local itemName, itemTexture, numItems, quality, _, itemID = GetQuestLogRewardInfo(i, questID)
             if itemID then
-                table.insert(items, {
+                tinsert(items, {
                     itemID  = itemID,
                     name    = itemName,
                     count   = numItems or 1,

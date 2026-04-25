@@ -1,18 +1,14 @@
--- OneWoW Addon File
--- OneWoW_CatalogData_Quests/Modules/QuestData.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local ipairs, pairs = ipairs, pairs
+local tinsert, sort = tinsert, sort
+local time = time
 
 ns.QuestData = {}
 local QuestData = ns.QuestData
-
-local function GetOneWoWGUI()
-    local stub = _G.LibStub
-    if stub then
-        return stub("OneWoW_GUI-1.0", true)
-    end
-    return nil
-end
 
 local EXPANSION_NAMES = {
     [0]  = "Classic",
@@ -203,12 +199,12 @@ function QuestData:GetSortedQuests(expansionFilter, zoneFilter, typeFilter, ques
             end
 
             if pass then
-                table.insert(result, quest)
+                tinsert(result, quest)
             end
         end
     end
 
-    table.sort(result, function(a, b)
+    sort(result, function(a, b)
         return (a.name or "") < (b.name or "")
     end)
 
@@ -228,12 +224,12 @@ function QuestData:GetAvailableExpansions()
 
     local result = {}
     for expID in pairs(seen) do
-        table.insert(result, {
+        tinsert(result, {
             id   = expID,
             name = EXPANSION_NAMES[expID] or "Unknown",
         })
     end
-    table.sort(result, function(a, b) return a.id < b.id end)
+    sort(result, function(a, b) return a.id < b.id end)
     return result
 end
 
@@ -256,34 +252,8 @@ function QuestData:GetAvailableZones(expansionFilter)
 
     local result = {}
     for zoneName in pairs(seen) do
-        table.insert(result, zoneName)
+        tinsert(result, zoneName)
     end
-    table.sort(result)
+    sort(result)
     return result
-end
-
-function QuestData:FormatGold(copper)
-    if not copper or copper == 0 then return nil end
-    local OneWoW_GUI = GetOneWoWGUI()
-    if OneWoW_GUI and OneWoW_GUI.FormatGold then
-        return OneWoW_GUI:FormatGold(copper)
-    end
-    local gold   = math.floor(copper / 10000)
-    local silver = math.floor((copper % 10000) / 100)
-    local c      = copper % 100
-    local parts  = {}
-    if gold   > 0 then table.insert(parts, gold .. "g")   end
-    if silver > 0 then table.insert(parts, silver .. "s") end
-    if c      > 0 then table.insert(parts, c .. "c")       end
-    return table.concat(parts, " ")
-end
-
-function QuestData:FormatNumber(num)
-    if not num or num == 0 then return nil end
-    local OneWoW_GUI = GetOneWoWGUI()
-    if OneWoW_GUI and OneWoW_GUI.FormatNumber then
-        return OneWoW_GUI:FormatNumber(math.floor(num))
-    end
-    local str = tostring(math.floor(num))
-    return str:reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
 end
