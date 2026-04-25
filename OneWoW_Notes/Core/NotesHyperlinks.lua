@@ -18,7 +18,7 @@ function NotesHyperlinks:ConvertManualLinks(text)
     local function convertItemID(itemID)
         local id = tonumber(itemID)
         if id then
-            local itemName, itemLink = GetItemInfo(id)
+            local _, itemLink = C_Item.GetItemInfo(id)
             if itemLink then
                 return itemLink
             else
@@ -31,14 +31,7 @@ function NotesHyperlinks:ConvertManualLinks(text)
     local function convertSpellID(spellID)
         local id = tonumber(spellID)
         if id then
-            local spellLink = nil
-            if C_Spell and C_Spell.GetSpellLink then
-                spellLink = C_Spell.GetSpellLink(id)
-            elseif GetSpellLink then
-                spellLink = GetSpellLink(id)
-            elseif C_SpellBook and C_SpellBook.GetSpellLinkFromSpellID then
-                spellLink = C_SpellBook.GetSpellLinkFromSpellID(id)
-            end
+            local spellLink = C_Spell.GetSpellLink(id) or C_SpellBook.GetSpellLinkFromSpellID(id)
             if spellLink then return spellLink end
         end
         return "(spell=" .. spellID .. ")"
@@ -47,12 +40,7 @@ function NotesHyperlinks:ConvertManualLinks(text)
     local function convertQuestID(questID)
         local id = tonumber(questID)
         if id then
-            local questLink = nil
-            if GetQuestLink then
-                questLink = GetQuestLink(id)
-            elseif C_QuestLog and C_QuestLog.GetQuestLink then
-                questLink = C_QuestLog.GetQuestLink(id)
-            end
+            local questLink = C_QuestLog.GetQuestLink(id)
             if questLink then return questLink end
         end
         return "(quest=" .. questID .. ")"
@@ -61,10 +49,7 @@ function NotesHyperlinks:ConvertManualLinks(text)
     local function convertAchievementID(achievementID)
         local id = tonumber(achievementID)
         if id then
-            local achievementLink = nil
-            if GetAchievementLink then
-                achievementLink = GetAchievementLink(id)
-            end
+            local achievementLink = GetAchievementLink(id)
             if achievementLink then return achievementLink end
         end
         return "(achievement=" .. achievementID .. ")"
@@ -73,10 +58,7 @@ function NotesHyperlinks:ConvertManualLinks(text)
     local function convertCurrencyID(currencyID)
         local id = tonumber(currencyID)
         if id then
-            local currencyLink = nil
-            if C_CurrencyInfo and C_CurrencyInfo.GetCurrencyLink then
-                currencyLink = C_CurrencyInfo.GetCurrencyLink(id)
-            end
+            local currencyLink = C_CurrencyInfo.GetCurrencyLink(id)
             if currencyLink then return currencyLink end
         end
         return "(currency=" .. currencyID .. ")"
@@ -85,10 +67,7 @@ function NotesHyperlinks:ConvertManualLinks(text)
     local function convertToyID(toyID)
         local id = tonumber(toyID)
         if id then
-            local toyLink = nil
-            if C_ToyBox and C_ToyBox.GetToyLink then
-                toyLink = C_ToyBox.GetToyLink(id)
-            end
+            local toyLink = C_ToyBox.GetToyLink(id)
             if toyLink then return toyLink end
         end
         return "(toy=" .. toyID .. ")"
@@ -98,12 +77,11 @@ function NotesHyperlinks:ConvertManualLinks(text)
         local id = tonumber(petID)
         if id then
             local petLink = nil
-            if C_PetJournal and C_PetJournal.GetPetInfoBySpeciesID then
-                local speciesName = C_PetJournal.GetPetInfoBySpeciesID(id)
-                if speciesName and type(speciesName) == "string" and speciesName ~= "" then
-                    petLink = "|cffffd000|Hbattlepet:species:" .. id .. "|h[" .. speciesName .. "]|h|r"
-                end
+            local speciesName = C_PetJournal.GetPetInfoBySpeciesID(id)
+            if speciesName and type(speciesName) == "string" and speciesName ~= "" then
+                petLink = "|cffffd000|Hbattlepet:species:" .. id .. "|h[" .. speciesName .. "]|h|r"
             end
+
             if petLink then return petLink end
         end
         return "(battlepet=" .. petID .. ")"
@@ -113,20 +91,13 @@ function NotesHyperlinks:ConvertManualLinks(text)
         local id = tonumber(mountID)
         if id then
             local mountLink = nil
-            if C_MountJournal and C_MountJournal.GetMountInfoByID then
-                local name, spellID = C_MountJournal.GetMountInfoByID(id)
-                if name and spellID then
-                    local spellLink = nil
-                    if C_Spell and C_Spell.GetSpellLink then
-                        spellLink = C_Spell.GetSpellLink(spellID)
-                    elseif GetSpellLink then
-                        spellLink = GetSpellLink(spellID)
-                    end
-                    if spellLink then
-                        mountLink = spellLink
-                    else
-                        mountLink = "|cff71d5ff|Hspell:" .. spellID .. "|h[" .. name .. "]|h|r"
-                    end
+            local name, spellID = C_MountJournal.GetMountInfoByID(id)
+            if name and spellID then
+                local spellLink = C_Spell.GetSpellLink(spellID)
+                if spellLink then
+                    mountLink = spellLink
+                else
+                    mountLink = "|cff71d5ff|Hspell:" .. spellID .. "|h[" .. name .. "]|h|r"
                 end
             end
             if mountLink then return mountLink end
@@ -262,14 +233,14 @@ function ns.UI.CreateNotesHelpPanel()
 
     helpPanel._visibilityTicker = nil
     helpPanel:SetScript("OnShow", function(self)
-        local mf = _G.OneWoW_NotesMainFrame or _G.OneWoWMainWindow
+        local mf = OneWoW_NotesMainFrame or OneWoWMainWindow
         if mf and mf:IsShown() then
             self:ClearAllPoints()
             self:SetPoint("TOPLEFT", mf, "TOPRIGHT", 5, 0)
         end
         if not self._visibilityTicker then
             self._visibilityTicker = C_Timer.NewTicker(0.5, function()
-                local mainFrame = _G.OneWoW_NotesMainFrame or _G.OneWoWMainWindow
+                local mainFrame = OneWoW_NotesMainFrame or OneWoWMainWindow
                 if not mainFrame or not mainFrame:IsShown() then
                     self:Hide()
                 end

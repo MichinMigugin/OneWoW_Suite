@@ -1155,7 +1155,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name           = "OneWoW_NotesNPCProperties",
-        title          = (L["DIALOG_NPC_PROPERTIES"] or "NPC Properties") .. ": " .. (nd.name or "NPC " .. npcID),
+        title          = L["DIALOG_NPC_PROPERTIES"] .. ": " .. (nd.name or "NPC ") .. npcID,
         width          = 500,
         height         = 520,
         destroyOnClose = true,
