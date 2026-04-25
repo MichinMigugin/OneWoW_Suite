@@ -106,8 +106,8 @@ local function OnEnable()
             end,
             onTooltip = function(frame)
                 GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
-                GameTooltip:AddLine(L["MINIMAP_TOOLTIP_TITLE"], 1, 0.82, 0, 1)
-                GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
+                GameTooltip:AddLine(L["MINIMAP_TOOLTIP_TITLE"], 1, 0.82, 0, true)
+                GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, true)
                 GameTooltip:Show()
             end,
         })

@@ -1,5 +1,4 @@
-local addonName, ns = ...
-local L = ns.L
+local _, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -7,6 +6,11 @@ if not OneWoW_GUI then return end
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 
+local ipairs, pairs = ipairs, pairs
+local tinsert, sort, tconcat = tinsert, sort, table.concat
+local C_Item, C_CurrencyInfo, C_Map, C_Timer = C_Item, C_CurrencyInfo, C_Map, C_Timer
+
+local L = ns.L
 ns.UI = ns.UI or {}
 
 local selectedVendor = nil
@@ -49,9 +53,9 @@ local function FormatCost(itemData)
                 iconStr = "|T" .. icon .. ":14:14|t "
             end
 
-            table.insert(parts, "x" .. curr.amount .. " " .. iconStr)
+            tinsert(parts, "x" .. curr.amount .. " " .. iconStr)
         end
-        return table.concat(parts, " - ")
+        return tconcat(parts, " - ")
     elseif itemData.cost and itemData.cost > 0 then
         return OneWoW_GUI:FormatGold(itemData.cost)
     end
@@ -97,9 +101,9 @@ local function BuildZoneList()
 
     local zones = {}
     for zone in pairs(zoneSet) do
-        table.insert(zones, zone)
+        tinsert(zones, zone)
     end
-    table.sort(zones)
+    sort(zones)
     return zones
 end
 
@@ -133,7 +137,7 @@ local function BuildCurrencyList()
                                 name = info and info.name
                             end
                             if name and name ~= "" then
-                                table.insert(currencies, {
+                                tinsert(currencies, {
                                     key = key,
                                     name = name,
                                     currencyID = curr.currencyID,
@@ -147,7 +151,7 @@ local function BuildCurrencyList()
         end
     end
 
-    table.sort(currencies, function(a, b) return a.name < b.name end)
+    sort(currencies, function(a, b) return a.name < b.name end)
     return currencies
 end
 
@@ -316,7 +320,7 @@ local function ShowVendorDetail(panels, vendor)
         nameHeader:SetText("NPC #" .. (vendor.npcID or "?"))
         nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
-    table.insert(detailElements, nameHeader)
+    tinsert(detailElements, nameHeader)
     yOffset = yOffset - 22
 
     local infoLine = OneWoW_GUI:CreateFS(parent, 12)
@@ -324,16 +328,16 @@ local function ShowVendorDetail(panels, vendor)
     infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     infoLine:SetJustifyH("LEFT")
     local infoParts = {}
-    table.insert(infoParts, L["VENDORS_NPC_ID"] .. ": " .. (vendor.npcID or "?"))
+    tinsert(infoParts, L["VENDORS_NPC_ID"] .. ": " .. (vendor.npcID or "?"))
     if vendor.level and vendor.level > 0 then
-        table.insert(infoParts, L["VENDORS_LEVEL"] .. ": " .. vendor.level)
+        tinsert(infoParts, L["VENDORS_LEVEL"] .. ": " .. vendor.level)
     end
     if vendor.creatureType and vendor.creatureType ~= "" then
-        table.insert(infoParts, vendor.creatureType)
+        tinsert(infoParts, vendor.creatureType)
     end
-    infoLine:SetText(table.concat(infoParts, "  |  "))
+    infoLine:SetText(tconcat(infoParts, "  |  "))
     infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    table.insert(detailElements, infoLine)
+    tinsert(detailElements, infoLine)
     yOffset = yOffset - 18
 
     if vendor.locations then
@@ -351,11 +355,11 @@ local function ShowVendorDetail(panels, vendor)
             end
             locLine:SetText(L["VENDORS_LOCATION"] .. ": " .. (loc.zone or "") .. coordStr)
             locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            table.insert(detailElements, locLine)
+            tinsert(detailElements, locLine)
 
             local wpBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["VENDORS_WAYPOINT"], height = 16, minWidth = 50 })
             wpBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-            table.insert(detailElements, wpBtn)
+            tinsert(detailElements, wpBtn)
 
             local capturedMapID = mapID
             wpBtn:SetScript("OnClick", function()
@@ -370,7 +374,7 @@ local function ShowVendorDetail(panels, vendor)
 
     yOffset = yOffset - 4
     local divider = OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
-    table.insert(detailElements, divider)
+    tinsert(detailElements, divider)
     yOffset = yOffset - 8
 
     local scanInfo = OneWoW_GUI:CreateFS(parent, 10)
@@ -379,17 +383,17 @@ local function ShowVendorDetail(panels, vendor)
     scanInfo:SetJustifyH("LEFT")
     local scanParts = {}
     if vendor.firstSeen then
-        table.insert(scanParts, L["VENDORS_FIRST_SEEN"] .. ": " .. FormatTimestamp(vendor.firstSeen))
+        tinsert(scanParts, L["VENDORS_FIRST_SEEN"] .. ": " .. FormatTimestamp(vendor.firstSeen))
     end
     if vendor.lastScanned then
-        table.insert(scanParts, L["VENDORS_LAST_SCANNED"] .. ": " .. FormatTimestamp(vendor.lastScanned))
+        tinsert(scanParts, L["VENDORS_LAST_SCANNED"] .. ": " .. FormatTimestamp(vendor.lastScanned))
     end
     if vendor.scanCount then
-        table.insert(scanParts, L["VENDORS_SCAN_COUNT"] .. ": " .. vendor.scanCount)
+        tinsert(scanParts, L["VENDORS_SCAN_COUNT"] .. ": " .. vendor.scanCount)
     end
-    scanInfo:SetText(table.concat(scanParts, "  |  "))
+    scanInfo:SetText(tconcat(scanParts, "  |  "))
     scanInfo:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    table.insert(detailElements, scanInfo)
+    tinsert(detailElements, scanInfo)
     yOffset = yOffset - 20
 
     local itemsHeader = OneWoW_GUI:CreateFS(parent, 12)
@@ -401,7 +405,7 @@ local function ShowVendorDetail(panels, vendor)
     end
     itemsHeader:SetText(L["VENDORS_ITEM_COUNT"] .. ": " .. itemCount)
     itemsHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    table.insert(detailElements, itemsHeader)
+    tinsert(detailElements, itemsHeader)
     yOffset = yOffset - 22
 
     if panels.rightStatusText then
@@ -411,9 +415,9 @@ local function ShowVendorDetail(panels, vendor)
     if vendor.items then
         local sortedItems = {}
         for itemID, itemData in pairs(vendor.items) do
-            table.insert(sortedItems, { id = itemID, data = itemData })
+            tinsert(sortedItems, { id = itemID, data = itemData })
         end
-        table.sort(sortedItems, function(a, b)
+        sort(sortedItems, function(a, b)
             return (a.data.cost or 0) > (b.data.cost or 0)
         end)
 
@@ -427,41 +431,41 @@ local function ShowVendorDetail(panels, vendor)
             itemRow:SetHeight(32)
             itemRow:SetBackdrop(BACKDROP_SIMPLE)
             itemRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            table.insert(detailElements, itemRow)
+            tinsert(detailElements, itemRow)
 
             local iconFrame = CreateFrame("Frame", nil, itemRow, "BackdropTemplate")
             iconFrame:SetSize(26, 26)
             iconFrame:SetPoint("LEFT", itemRow, "LEFT", 6, 0)
             iconFrame:SetBackdrop(BACKDROP_EDGE)
             iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            table.insert(detailElements, iconFrame)
+            tinsert(detailElements, iconFrame)
 
             local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
             iconTex:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 1, -1)
             iconTex:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -1, 1)
             iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-            table.insert(detailElements, iconTex)
+            tinsert(detailElements, iconTex)
 
             local itemName = OneWoW_GUI:CreateFS(itemRow, 12)
             itemName:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
             itemName:SetPoint("RIGHT", itemRow, "RIGHT", -150, 0)
             itemName:SetJustifyH("LEFT")
             itemName:SetWordWrap(false)
-            table.insert(detailElements, itemName)
+            tinsert(detailElements, itemName)
 
             local costText = OneWoW_GUI:CreateFS(itemRow, 10)
             costText:SetPoint("RIGHT", itemRow, "RIGHT", -8, 0)
             costText:SetJustifyH("RIGHT")
             costText:SetText(FormatCost(itemData))
             costText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            table.insert(detailElements, costText)
+            tinsert(detailElements, costText)
 
             if itemData.limited then
                 local limitTag = OneWoW_GUI:CreateFS(itemRow, 10)
                 limitTag:SetPoint("RIGHT", costText, "LEFT", -6, 0)
                 limitTag:SetText("[" .. L["VENDORS_LIMITED"] .. "]")
                 limitTag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-                table.insert(detailElements, limitTag)
+                tinsert(detailElements, limitTag)
             end
 
             local cachedItem = addon and addon.DataLoader and addon.DataLoader:GetCachedItem(itemID)
@@ -554,7 +558,7 @@ function RefreshVendorList(panels)
         local passesCurrency = VendorMatchesCurrencyFilter(vendor, currencyFilter)
 
         if passesZone and passesSearch and passesCurrency then
-            table.insert(filtered, vendor)
+            tinsert(filtered, vendor)
         end
     end
 
@@ -563,7 +567,7 @@ function RefreshVendorList(panels)
         for i, v in ipairs(filtered) do
             if v.npcID then origOrder[v.npcID] = i end
         end
-        table.sort(filtered, function(a, b)
+        sort(filtered, function(a, b)
             local fa = a.npcID and ns.Favorites:IsFavorite("vendors", a.npcID)
             local fb = b.npcID and ns.Favorites:IsFavorite("vendors", b.npcID)
             if fa ~= fb then return fa end
@@ -614,7 +618,7 @@ function RefreshVendorList(panels)
             end
             ShowVendorDetail(panels, v)
         end)
-        table.insert(vendorListButtons, btn)
+        tinsert(vendorListButtons, btn)
         yOffset = yOffset - 54
     end
 
@@ -671,9 +675,9 @@ function ns.UI.CreateVendorsTab(parent)
         getActiveValue = function() return zoneFilter end,
         buildItems = function()
             local items = {}
-            table.insert(items, { value = nil, text = L["VENDORS_ZONE_ALL"] })
+            tinsert(items, { value = nil, text = L["VENDORS_ZONE_ALL"] })
             for _, zone in ipairs(BuildZoneList()) do
-                table.insert(items, { value = zone, text = zone })
+                tinsert(items, { value = zone, text = zone })
             end
             return items
         end,
@@ -701,10 +705,10 @@ function ns.UI.CreateVendorsTab(parent)
         getActiveValue = function() return currencyFilter end,
         buildItems = function()
             local items = {}
-            table.insert(items, { value = nil, text = L["VENDORS_CURRENCY_ALL"] })
+            tinsert(items, { value = nil, text = L["VENDORS_CURRENCY_ALL"] })
             for _, curr in ipairs(BuildCurrencyList()) do
                 local currCopy = curr
-                table.insert(items, {
+                tinsert(items, {
                     value = currCopy.key,
                     text = currCopy.name,
                     onEnter = function(btn)

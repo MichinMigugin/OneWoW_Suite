@@ -1,7 +1,8 @@
--- OneWoW Addon File
--- OneWoW_Catalog/Modules/m-itemsearch.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+
+local pairs, ipairs = pairs, ipairs
+local tinsert, sort = tinsert, sort
+local C_Item, C_TradeSkillUI = C_Item, C_TradeSkillUI
 
 ns.ItemSearch = {}
 local ItemSearch = ns.ItemSearch
@@ -22,7 +23,7 @@ local MAX_RESULTS = 200
 local DEFAULT_LIMIT = 50
 
 local function GetRecipeKnownByFromAltTracker(itemID)
-    local profsDB = _G.OneWoW_AltTracker_Professions_DB
+    local profsDB = OneWoW_AltTracker_Professions_DB
     if not profsDB or not profsDB.characters then return nil end
 
     local recipeSpellID
@@ -30,7 +31,7 @@ local function GetRecipeKnownByFromAltTracker(itemID)
         recipeSpellID = profsDB.recipeItemMap[itemID]
     end
 
-    if not recipeSpellID and C_Item and C_Item.GetItemSpell then
+    if not recipeSpellID then
         local _, spellID = C_Item.GetItemSpell(itemID)
         if spellID then recipeSpellID = spellID end
     end
@@ -44,7 +45,7 @@ local function GetRecipeKnownByFromAltTracker(itemID)
                 for profName, recipeSet in pairs(charData.recipes) do
                     if recipeSet[recipeSpellID] and not seen[charKey] then
                         seen[charKey] = true
-                        table.insert(knownBy, charKey)
+                        tinsert(knownBy, charKey)
                     end
                 end
             end
@@ -59,15 +60,14 @@ local function GetRecipeKnownByFromAltTracker(itemID)
                 if charData.recipes and not seen[charKey] then
                     for profName, recipeSet in pairs(charData.recipes) do
                         for storedID in pairs(recipeSet) do
-                            local info = C_TradeSkillUI and C_TradeSkillUI.GetRecipeInfo
-                                         and C_TradeSkillUI.GetRecipeInfo(storedID)
+                            local info = C_TradeSkillUI.GetRecipeInfo(storedID)
                             if info and info.name == craftedName then
                                 if profsDB.recipeItemMap then
                                     profsDB.recipeItemMap[itemID] = storedID
                                 end
                                 if not seen[charKey] then
                                     seen[charKey] = true
-                                    table.insert(knownBy, charKey)
+                                    tinsert(knownBy, charKey)
                                 end
                                 break
                             end
@@ -79,7 +79,7 @@ local function GetRecipeKnownByFromAltTracker(itemID)
         end
     end
 
-    table.sort(knownBy)
+    sort(knownBy)
     return knownBy
 end
 
@@ -91,7 +91,7 @@ local EXPANSION_PRIORITY = {
 
 local function GetOwnedItems()
     local owned = {}
-    local sdb = _G.OneWoW_AltTracker_Storage_DB
+    local sdb = OneWoW_AltTracker_Storage_DB
     if not sdb then return owned end
 
     local function addOwned(itemID, count, charName, locLabel)
@@ -99,7 +99,7 @@ local function GetOwnedItems()
             owned[itemID] = { total = 0, locations = {} }
         end
         owned[itemID].total = owned[itemID].total + count
-        table.insert(owned[itemID].locations, { charName = charName, locLabel = locLabel, count = count })
+        tinsert(owned[itemID].locations, { charName = charName, locLabel = locLabel, count = count })
     end
 
     if sdb.characters then
@@ -172,7 +172,7 @@ local function GetOwnedItems()
         end
     end
 
-    local adb = _G.OneWoW_AltTracker_Auctions_DB
+    local adb = OneWoW_AltTracker_Auctions_DB
     if adb and adb.characters then
         for charKey, charData in pairs(adb.characters) do
             local charName = charKey:match("^([^%-]+)") or charKey
@@ -245,7 +245,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     end
 
     if doVendors and not limitReached then
-        local vdb = _G.OneWoW_CatalogData_Vendors_DB
+        local vdb = OneWoW_CatalogData_Vendors_DB
         if vdb and vdb.vendors then
             for _, vendor in pairs(vdb.vendors) do
                 if vendor.items then
@@ -300,7 +300,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
         end
     end
 
-    table.sort(results, function(a, b)
+    sort(results, function(a, b)
         if a.ownedCount > 0 and b.ownedCount == 0 then return true end
         if a.ownedCount == 0 and b.ownedCount > 0 then return false end
         return (a.name or "") < (b.name or "")
@@ -343,7 +343,7 @@ function ItemSearch:GetDefaultItems(limit)
         if count >= limit then break end
     end
 
-    table.sort(results, function(a, b)
+    sort(results, function(a, b)
         if a.ownedCount > 0 and b.ownedCount == 0 then return true end
         if a.ownedCount == 0 and b.ownedCount > 0 then return false end
         return (a.name or "") < (b.name or "")
@@ -354,11 +354,9 @@ end
 
 function ItemSearch:GetDetail(itemID)
     local isRecipe = false
-    if C_Item and C_Item.GetItemInfoInstant then
-        local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemID)
-        if classID == Enum.ItemClass.Recipe then
-            isRecipe = true
-        end
+    local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemID)
+    if classID == Enum.ItemClass.Recipe then
+        isRecipe = true
     end
 
     local detail = {
@@ -386,7 +384,7 @@ function ItemSearch:GetDetail(itemID)
                         local encInfo = encounters[loc.encounterID]
                         encName = encInfo and encInfo.name
                     end
-                    table.insert(detail.drops, {
+                    tinsert(detail.drops, {
                         instanceName  = instName,
                         encounterName = encName,
                         difficulties  = loc.difficulties,
@@ -396,7 +394,7 @@ function ItemSearch:GetDetail(itemID)
         end
     end
 
-    local vdb = _G.OneWoW_CatalogData_Vendors_DB
+    local vdb = OneWoW_CatalogData_Vendors_DB
     if vdb and vdb.vendors then
         for npcID, vendor in pairs(vdb.vendors) do
             if vendor.items and vendor.items[itemID] then
@@ -408,7 +406,7 @@ function ItemSearch:GetDetail(itemID)
                         break
                     end
                 end
-                table.insert(detail.vendors, {
+                tinsert(detail.vendors, {
                     name  = vendor.name,
                     npcID = npcID,
                     zone  = loc and loc.zone,
@@ -429,7 +427,7 @@ function ItemSearch:GetDetail(itemID)
                     if tsAddon and tsAddon.TradeskillScanner then
                         knownBy = tsAddon.TradeskillScanner:GetRecipeKnownBy(recipeID)
                     end
-                    table.insert(detail.crafted, {
+                    tinsert(detail.crafted, {
                         recipeID  = recipeID,
                         profName  = recipe.prof or profName,
                         expansion = recipe.exp,
@@ -448,7 +446,7 @@ function ItemSearch:GetDetail(itemID)
             local key = loc.charName .. "|" .. loc.locLabel
             if not byCharLoc[key] then
                 byCharLoc[key] = { charName = loc.charName, locLabel = loc.locLabel, count = 0 }
-                table.insert(detail.owned, byCharLoc[key])
+                tinsert(detail.owned, byCharLoc[key])
             end
             byCharLoc[key].count = byCharLoc[key].count + loc.count
         end

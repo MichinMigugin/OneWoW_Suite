@@ -1,7 +1,4 @@
--- OneWoW Addon File
--- OneWoW_Catalog/Locales/enUS.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 ns.Locales = ns.Locales or {}
 ns.Locales["enUS"] = {}
 local L = ns.Locales["enUS"]

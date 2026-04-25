@@ -1,6 +1,9 @@
 local ADDON_NAME, OneWoW = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local DB = OneWoW_GUI.DB
 
 local DEFAULTS = {
     language = GetLocale(),
@@ -367,9 +370,7 @@ function OneWoW:InitializeDatabase()
         global = OneWoW_DB,
     }
 
-    if OneWoW_GUI then
-        OneWoW_GUI.DB:MergeMissing(self.db.global, DEFAULTS)
-    end
+    DB:MergeMissing(self.db.global, DEFAULTS)
 
     local ov = self.db.global.settings and self.db.global.settings.overlays or {}
     local outerRename = {
@@ -425,5 +426,4 @@ function OneWoW:InitializeDatabase()
         ts.anchor.visible = true
         ts.anchor.locked  = false
     end
-
 end

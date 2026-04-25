@@ -1,15 +1,11 @@
--- OneWoW Addon File
--- OneWoW_Catalog/UI/t-settings.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
-local OneWoWCatalog = OneWoW_Catalog
-local L = ns.L
+local _, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
+local L = ns.L
 ns.UI = ns.UI or {}
 
 function ns.UI.CreateSettingsTab(parent)

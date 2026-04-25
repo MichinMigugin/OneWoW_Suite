@@ -20,9 +20,7 @@ local zoneFilter       = ""
 local typeFilter       = "all"
 local questTypeFilter  = "all"
 local completionFilter = "all"
-
-local dataAddon            = nil
-local PopulateZoneDropdown = nil
+local dataAddon        = nil
 local RefreshQuestList
 
 local function GetDataAddon()
@@ -105,7 +103,8 @@ local function ShowQuestDetail(panels, questData)
 
     local parent  = panels.detailScrollChild
     local addon   = GetDataAddon()
-    local tracker = addon and addon.CompletionTracker
+    if not addon then return end
+    local tracker = addon.CompletionTracker
 
     local contentWidth = parent:GetWidth()
     if contentWidth < 50 then
@@ -117,7 +116,7 @@ local function ShowQuestDetail(panels, questData)
         return
     end
 
-    if addon and addon.QuestData then
+    if addon.QuestData then
         if not questData.mapID then
             local liveMapID = GetQuestUiMapID(questData.id)
             if liveMapID and liveMapID ~= 0 then
@@ -251,7 +250,7 @@ local function ShowQuestDetail(panels, questData)
         if questData.rewardGold and questData.rewardGold > 0 then
             local goldText = track(OneWoW_GUI:CreateFS(parent, 12))
             goldText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
-            goldText:SetText(L["QUESTS_GOLD"] .. ": " .. addon.QuestData:FormatGold(questData.rewardGold))
+            goldText:SetText(L["QUESTS_GOLD"] .. ": " .. OneWoW_GUI:FormatGold(questData.rewardGold))
             goldText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             yOffset = yOffset - 18
         end
@@ -259,7 +258,7 @@ local function ShowQuestDetail(panels, questData)
         if questData.rewardXP and questData.rewardXP > 0 then
             local xpText = track(OneWoW_GUI:CreateFS(parent, 12))
             xpText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
-            xpText:SetText(L["QUESTS_XP"] .. ": " .. addon.QuestData:FormatNumber(questData.rewardXP))
+            xpText:SetText(L["QUESTS_XP"] .. ": " .. OneWoW_GUI:FormatNumber(questData.rewardXP))
             xpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             yOffset = yOffset - 18
         end
@@ -329,7 +328,8 @@ end
 
 local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
     local addon   = GetDataAddon()
-    local tracker = addon and addon.CompletionTracker
+    if not addon then return end
+    local tracker = addon.CompletionTracker
 
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetHeight(44)
@@ -350,7 +350,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
     btn.nameText = nameText
 
     local expShort = ""
-    if quest.expansion ~= nil and addon then
+    if quest.expansion ~= nil then
         expShort = addon.QuestData:GetExpansionShortName(quest.expansion) or ""
     end
 
@@ -498,6 +498,32 @@ function RefreshQuestList(panels)
     end
 end
 
+local PopulateZoneDropdown = function(panels)
+    local addon = GetDataAddon()
+    if not addon or not addon.QuestData then return end
+
+    OneWoW_GUI:AttachFilterMenu(panels.zoneDropdown, {
+        searchable = true,
+        getActiveValue = function() return zoneFilter end,
+        buildItems = function()
+            local zones = addon.QuestData:GetAvailableZones(expansionFilter ~= -1 and expansionFilter or nil)
+            local items = { { value = "", text = L["QUESTS_ZONE_ALL"] } }
+            for _, zoneName in ipairs(zones) do
+                table.insert(items, {
+                    value   = zoneName,
+                    text    = zoneName,
+                })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            zoneFilter = value
+            panels.zoneText:SetText(value == "" and L["QUESTS_ZONE_ALL"] or text)
+            RefreshQuestList(panels)
+        end,
+    })
+end
+
 local function PopulateExpansionDropdown(panels)
     local addon = GetDataAddon()
     if not addon or not addon.QuestData then return end
@@ -522,32 +548,6 @@ local function PopulateExpansionDropdown(panels)
             zoneFilter = ""
             panels.zoneText:SetText(L["QUESTS_ZONE_ALL"])
             PopulateZoneDropdown(panels)
-            RefreshQuestList(panels)
-        end,
-    })
-end
-
-PopulateZoneDropdown = function(panels)
-    local addon = GetDataAddon()
-    if not addon or not addon.QuestData then return end
-
-    OneWoW_GUI:AttachFilterMenu(panels.zoneDropdown, {
-        searchable = true,
-        getActiveValue = function() return zoneFilter end,
-        buildItems = function()
-            local zones = addon.QuestData:GetAvailableZones(expansionFilter ~= -1 and expansionFilter or nil)
-            local items = { { value = "", text = L["QUESTS_ZONE_ALL"] } }
-            for _, zoneName in ipairs(zones) do
-                table.insert(items, {
-                    value   = zoneName,
-                    text    = zoneName,
-                })
-            end
-            return items
-        end,
-        onSelect = function(value, text)
-            zoneFilter = value
-            panels.zoneText:SetText(value == "" and L["QUESTS_ZONE_ALL"] or text)
             RefreshQuestList(panels)
         end,
     })
@@ -615,8 +615,6 @@ local function SetupProgressDropdown(panels)
         end,
     })
 end
-
-local panels_ref = nil
 
 function ns.UI.CreateQuestsTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
@@ -722,7 +720,6 @@ function ns.UI.CreateQuestsTab(parent)
     panels.searchBox     = searchBox
 
     ns.UI.questsPanels = panels
-    panels_ref = panels
 
     emptyList:SetText(L["QUESTS_EMPTY"])
     emptyDetail:SetText(L["QUESTS_SELECT"])

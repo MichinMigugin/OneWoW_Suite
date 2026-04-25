@@ -1,7 +1,4 @@
--- OneWoW Addon File
--- OneWoW_Catalog/UI/t-itemsearch.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
@@ -429,14 +426,8 @@ ShowItemDetail = function(result)
 
     AddSectionHeader("ITEMSEARCH_SECTION_VALUE")
 
-    local vendorSellPrice = 0
-    local itemName, itemLink, itemQuality, _, _, _, _, _, _, _, sellPrice = GetItemInfo(result.itemID)
-    itemLink = itemLink or (select(2, C_Item.GetItemInfo(result.itemID)))
-    if sellPrice and sellPrice > 0 then
-        vendorSellPrice = sellPrice
-    end
-
-    local isVendorItem = #detail.vendors > 0
+    local _, itemLink, _, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(result.itemID)
+    local vendorSellPrice = sellPrice or 0
 
     if vendorSellPrice > 0 then
         AddTextRow(L["ITEMSEARCH_VENDOR_PRICE"] .. ":  " .. OneWoW_GUI:FormatGold(vendorSellPrice), 12, "TEXT_PRIMARY")

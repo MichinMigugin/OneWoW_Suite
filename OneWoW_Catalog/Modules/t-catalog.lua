@@ -1,7 +1,4 @@
--- OneWoW Addon File
--- OneWoW_Catalog/Modules/t-catalog.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 
 ns.Catalog = {}
 local Catalog = ns.Catalog

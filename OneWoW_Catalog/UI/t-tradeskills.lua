@@ -1,8 +1,4 @@
--- OneWoW Addon File
--- OneWoW_Catalog/UI/t-tradeskills.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
-local L = ns.L
+local _, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -10,6 +6,11 @@ if not OneWoW_GUI then return end
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
+local ipairs = ipairs
+local tinsert, sort = tinsert, sort
+local C_TradeSkillUI, C_Spell, C_Timer = C_TradeSkillUI, C_Spell, C_Timer
+
+local L = ns.L
 ns.UI = ns.UI or {}
 
 local dataAddon = nil
@@ -32,7 +33,7 @@ local filterExpansion = nil
 
 _G.OneWoW_Catalog_TradeskillAPI = {
     RegisterRecipeCallback = function(callback)
-        table.insert(recipeDetailCallbacks, callback)
+        tinsert(recipeDetailCallbacks, callback)
     end,
 }
 
@@ -71,18 +72,9 @@ local function GetDataAddon()
     return dataAddon
 end
 
-local function GetCurrentCharKey()
-    local name = UnitName("player")
-    local realm = GetRealmName()
-    if name and realm then
-        return name .. "-" .. realm
-    end
-    return nil
-end
-
 local function FilterByKnown(recipes, addon)
     if not filterKnownByMe and not filterKnownByAlts then return recipes end
-    local charKey = GetCurrentCharKey()
+    local charKey = OneWoW_GUI:BuildCharKey()
     local filtered = {}
     for _, recipe in ipairs(recipes) do
         local knownBy = addon.TradeskillScanner:GetRecipeKnownBy(recipe.id)
@@ -97,7 +89,7 @@ local function FilterByKnown(recipes, addon)
                 end
             end
             if (filterKnownByMe and knownByMe) or (filterKnownByAlts and knownByAlt) then
-                table.insert(filtered, recipe)
+                tinsert(filtered, recipe)
             end
         end
     end
@@ -141,16 +133,14 @@ local function UpdateProfButtonStates()
 end
 
 local function GetLocalizedProfName(profData)
-    if C_TradeSkillUI and C_TradeSkillUI.GetTradeSkillDisplayName then
-        local name = C_TradeSkillUI.GetTradeSkillDisplayName(profData.id)
-        if name and name ~= "" then return name end
+    local name = C_TradeSkillUI.GetTradeSkillDisplayName(profData.id)
+    if name and name ~= "" then return name end
+
+    local info = C_TradeSkillUI.GetProfessionInfoBySkillLineID(profData.id)
+    if info and info.professionName and info.professionName ~= "" then
+        return info.professionName
     end
-    if C_TradeSkillUI and C_TradeSkillUI.GetProfessionInfoBySkillLineID then
-        local info = C_TradeSkillUI.GetProfessionInfoBySkillLineID(profData.id)
-        if info and info.professionName and info.professionName ~= "" then
-            return info.professionName
-        end
-    end
+
     return profData.name
 end
 
@@ -273,12 +263,8 @@ local function CreateRecipeRow(parent, recipe, yOffset, rowIdx, onClick)
         end
     else
         icon:SetTexture(recipe.icon)
-        if C_Spell and C_Spell.GetSpellName then
-            local spellName = C_Spell.GetSpellName(recipe.id)
-            nameText:SetText(spellName or ("Recipe #" .. recipe.id))
-        else
-            nameText:SetText("Recipe #" .. recipe.id)
-        end
+        local spellName = C_Spell.GetSpellName(recipe.id)
+        nameText:SetText(spellName or ("Recipe #" .. recipe.id))
         nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
 
@@ -336,7 +322,7 @@ ShowRecipeDetail = function(recipe)
     headerFrame:SetPoint("TOPRIGHT", child, "TOPRIGHT", 0, yOffset)
     headerFrame:SetBackdrop(BACKDROP_SIMPLE)
     headerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    table.insert(detailElements, headerFrame)
+    tinsert(detailElements, headerFrame)
 
     local hIconFrame = CreateFrame("Button", nil, headerFrame, "BackdropTemplate")
     hIconFrame:SetSize(40, 40)
@@ -391,11 +377,7 @@ ShowRecipeDetail = function(recipe)
         end
     else
         hIcon:SetTexture(recipe.icon)
-        if C_Spell and C_Spell.GetSpellName then
-            recipeName:SetText(C_Spell.GetSpellName(recipe.id) or ("Recipe #" .. recipe.id))
-        else
-            recipeName:SetText("Recipe #" .. recipe.id)
-        end
+        recipeName:SetText(C_Spell.GetSpellName(recipe.id) or ("Recipe #" .. recipe.id))
         recipeName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
 
@@ -412,7 +394,7 @@ ShowRecipeDetail = function(recipe)
         row:SetHeight(20)
         row:SetPoint("TOPLEFT", child, "TOPLEFT", 8, yOffset)
         row:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
-        table.insert(detailElements, row)
+        tinsert(detailElements, row)
 
         local lbl = OneWoW_GUI:CreateFS(row, 10)
         lbl:SetPoint("LEFT", 0, 0)
@@ -454,7 +436,7 @@ ShowRecipeDetail = function(recipe)
         reagentHeader:SetPoint("TOPRIGHT", child, "TOPRIGHT", 0, yOffset)
         reagentHeader:SetBackdrop(BACKDROP_SIMPLE)
         reagentHeader:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        table.insert(detailElements, reagentHeader)
+        tinsert(detailElements, reagentHeader)
 
         local reagentTitle = OneWoW_GUI:CreateFS(reagentHeader, 12)
         reagentTitle:SetPoint("LEFT", 8, 0)
@@ -478,7 +460,7 @@ ShowRecipeDetail = function(recipe)
             rgRow:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
             rgRow:SetBackdrop(BACKDROP_SIMPLE)
             rgRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-            table.insert(detailElements, rgRow)
+            tinsert(detailElements, rgRow)
 
             local rgIcon = CreateFrame("Frame", nil, rgRow, "BackdropTemplate")
             rgIcon:SetSize(22, 22)
@@ -555,7 +537,7 @@ ShowRecipeDetail = function(recipe)
                     slotLabel:SetHeight(16)
                     slotLabel:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOffset)
                     slotLabel:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
-                    table.insert(detailElements, slotLabel)
+                    tinsert(detailElements, slotLabel)
 
                     local slotText = OneWoW_GUI:CreateFS(slotLabel, 10)
                     slotText:SetPoint("LEFT", 0, 0)
@@ -569,7 +551,7 @@ ShowRecipeDetail = function(recipe)
                         optRow:SetHeight(18)
                         optRow:SetPoint("TOPLEFT", child, "TOPLEFT", 28, yOffset)
                         optRow:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
-                        table.insert(detailElements, optRow)
+                        tinsert(detailElements, optRow)
 
                         local optName = OneWoW_GUI:CreateFS(optRow, 10)
                         optName:SetPoint("LEFT", 0, 0)
@@ -613,7 +595,7 @@ ShowRecipeDetail = function(recipe)
     knownByHeader:SetPoint("TOPRIGHT", child, "TOPRIGHT", 0, yOffset)
     knownByHeader:SetBackdrop(BACKDROP_SIMPLE)
     knownByHeader:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    table.insert(detailElements, knownByHeader)
+    tinsert(detailElements, knownByHeader)
 
     local knownByTitle = OneWoW_GUI:CreateFS(knownByHeader, 12)
     knownByTitle:SetPoint("LEFT", 8, 0)
@@ -628,7 +610,7 @@ ShowRecipeDetail = function(recipe)
             charRow:SetHeight(18)
             charRow:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOffset)
             charRow:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
-            table.insert(detailElements, charRow)
+            tinsert(detailElements, charRow)
 
             local charText = OneWoW_GUI:CreateFS(charRow, 10)
             charText:SetPoint("LEFT", 0, 0)
@@ -641,7 +623,7 @@ ShowRecipeDetail = function(recipe)
         noData:SetHeight(18)
         noData:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOffset)
         noData:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
-        table.insert(detailElements, noData)
+        tinsert(detailElements, noData)
 
         local noDataText = OneWoW_GUI:CreateFS(noData, 10)
         noDataText:SetPoint("LEFT", 0, 0)
@@ -657,7 +639,7 @@ ShowRecipeDetail = function(recipe)
     if reagents then
         for _, rg in ipairs(reagents) do
             if rg[3] ~= 0 then
-                table.insert(requiredReagents, rg)
+                tinsert(requiredReagents, rg)
             end
         end
     end
@@ -684,6 +666,8 @@ local function RecipeClickHandler(recipeData)
 end
 
 local function RefreshRecipeListFlat(recipes)
+    if not panels then return end
+
     local MAX_DISPLAY = 50
     local totalCount = #recipes
     local displayCount = math.min(totalCount, MAX_DISPLAY)
@@ -693,7 +677,7 @@ local function RefreshRecipeListFlat(recipes)
     for i = 1, displayCount do
         local recipe = recipes[i]
         local row = CreateRecipeRow(panels.listScrollChild, recipe, yOffset, rowIdx, RecipeClickHandler)
-        table.insert(listElements, row)
+        tinsert(listElements, row)
         yOffset = yOffset - RECIPE_ROW_HEIGHT
         rowIdx = rowIdx + 1
     end
@@ -712,26 +696,27 @@ end
 local EXP_HEADER_HEIGHT = 28
 
 local function RefreshRecipeListGrouped(recipes, addon)
+    if not panels then return end
     local expansions = addon.TradeskillData:GetExpansions()
 
     local grouped = {}
     for _, recipe in ipairs(recipes) do
         local key = recipe.exp or "Unknown"
         if not grouped[key] then grouped[key] = {} end
-        table.insert(grouped[key], recipe)
+        tinsert(grouped[key], recipe)
     end
 
     local orderedGroups = {}
     for _, exp in ipairs(expansions) do
         if grouped[exp.key] and #grouped[exp.key] > 0 then
-            table.insert(orderedGroups, { key = exp.key, order = exp.order, recipes = grouped[exp.key] })
+            tinsert(orderedGroups, { key = exp.key, order = exp.order, recipes = grouped[exp.key] })
         end
     end
     if grouped["Unknown"] and #grouped["Unknown"] > 0 then
-        table.insert(orderedGroups, { key = "Unknown", order = 99, recipes = grouped["Unknown"] })
+        tinsert(orderedGroups, { key = "Unknown", order = 99, recipes = grouped["Unknown"] })
     end
 
-    table.sort(orderedGroups, function(a, b) return a.order > b.order end)
+    sort(orderedGroups, function(a, b) return a.order > b.order end)
 
     local yOffset = -4
     local totalRecipes = 0
@@ -750,7 +735,7 @@ local function RefreshRecipeListGrouped(recipes, addon)
         hdrBtn:SetHeight(EXP_HEADER_HEIGHT)
         hdrBtn:SetBackdrop(BACKDROP_SIMPLE)
         hdrBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        table.insert(listElements, hdrBtn)
+        tinsert(listElements, hdrBtn)
 
         local arrowText = OneWoW_GUI:CreateFS(hdrBtn, 12)
         arrowText:SetPoint("LEFT", hdrBtn, "LEFT", 8, 0)
@@ -785,7 +770,7 @@ local function RefreshRecipeListGrouped(recipes, addon)
             local rowIdx = 0
             for _, recipe in ipairs(expRecipes) do
                 local row = CreateRecipeRow(panels.listScrollChild, recipe, yOffset, rowIdx, RecipeClickHandler)
-                table.insert(listElements, row)
+                tinsert(listElements, row)
                 yOffset = yOffset - RECIPE_ROW_HEIGHT
                 rowIdx = rowIdx + 1
             end
@@ -837,7 +822,7 @@ RefreshRecipeList = function()
                 )
                 if profRecipes then
                     for _, r in ipairs(profRecipes) do
-                        table.insert(recipes, r)
+                        tinsert(recipes, r)
                     end
                 end
             end
@@ -894,15 +879,15 @@ function ns.UI.CreateTradeskillsTab(parent)
     local professions = addon and addon.TradeskillData:GetProfessions() or {}
 
     local allBtn = CreateProfTextButton(profHeader, L["TRADESKILLS_ALL"], nil, true)
-    table.insert(profButtons, allBtn)
+    tinsert(profButtons, allBtn)
 
     local buttonList = {allBtn}
     for _, prof in ipairs(professions) do
         if prof.hasData then
             local displayName = GetLocalizedProfName(prof)
             local btn = CreateProfTextButton(profHeader, displayName, prof, false)
-            table.insert(profButtons, btn)
-            table.insert(buttonList, btn)
+            tinsert(profButtons, btn)
+            tinsert(buttonList, btn)
         end
     end
 
@@ -993,7 +978,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         buildItems = function()
             local items = {}
             for _, opt in ipairs(EXPANSION_OPTIONS) do
-                table.insert(items, { value = opt.key, text = opt.label })
+                tinsert(items, { value = opt.key, text = opt.label })
             end
             return items
         end,
