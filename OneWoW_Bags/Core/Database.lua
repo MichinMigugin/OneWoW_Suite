@@ -126,7 +126,7 @@ function OneWoW_Bags:InitializeDatabase()
     end
 
     local db = DB:Init({
-        addonName = "OneWoW_Bags",
+        addonName = ADDON_NAME,
         savedVar = "OneWoW_Bags_DB",
         defaults = defaults,
     })
@@ -212,6 +212,25 @@ function OneWoW_Bags:InitializeDatabase()
         end },
         { version = 16, name = "split_warband_bank_settings", run = function(d)
             self:MigrateSplitWarbandBankSettings(d)
+        end },
+        { version = 17, name = "cleanup_legacy_root_keys", run = function(d)
+            local keepRootKeys = {
+                global = true,
+                chars = true,
+                realms = true,
+                factions = true,
+                classes = true,
+                specs = true,
+                presets = true,
+                _activePreset = true,
+            }
+            local root = d.root
+            if not root then return end
+            for key in pairs(root) do
+                if not keepRootKeys[key] then
+                    root[key] = nil
+                end
+            end
         end },
     })
 end
