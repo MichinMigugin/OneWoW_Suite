@@ -459,7 +459,7 @@ function MainWindow:Create()
             local activeList = ns.ShoppingList:GetActiveListName()
             local ok = ns.ShoppingList:AddItemToList(activeList, id, 1)
             if ok then
-                local name = C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
+                local name = id and C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
                 print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
                 MainWindow:RefreshItemList()
             end
@@ -761,7 +761,7 @@ function MainWindow:RegisterDragDrop(frame)
             local activeList = ns.ShoppingList:GetActiveListName()
             local ok = ns.ShoppingList:AddItemToList(activeList, id, 1)
             if ok then
-                local name = C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
+                local name = id and C_Item.GetItemNameByID(id) or string.format(L["OWSL_ITEM_PREFIX"], id)
                 print(string.format(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_ADDED_TO_LIST"], name, activeList))
                 MainWindow:RefreshItemList()
             end
@@ -967,7 +967,7 @@ function MainWindow:RefreshItemList()
             C_Item.RequestLoadItemDataByID(itemID)
             displayName = string.format(L["OWSL_ITEM_PREFIX"], itemID)
         end
-        local _, itemLink, _, _, _, _, _, _, _, iconFile = GetItemInfo(itemID)
+        local _, itemLink, _, _, _, _, _, _, _, iconFile = C_Item.GetItemInfo(itemID)
         if MatchesShoppingSearch(searchFilter, itemID, itemLink, displayName, itemInfo.quantity) then
             local status               = ns.ShoppingList:GetItemStatus(itemID, activeList)
             local isCraftable, recipes = ns.ShoppingList:IsItemCraftable(itemID)
