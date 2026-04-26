@@ -4,9 +4,14 @@ OneWoW Bags uses a single expression engine for the search bar, custom category
 rules, and (in the future) vendor sell rules. Everything described here works in
 all three contexts.
 
-The engine itself is published by `OneWoW_GUI` as `OneWoW_GUI.PredicateEngine`;
-for engine internals, the public API, or how to extend it from another addon,
-see [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
+The engine itself is published by `OneWoW_GUI` as `OneWoW_GUI.PredicateEngine`.
+The canonical set of **built-in** `#` keywords, property names, and verbose
+`Is…` flags is defined in
+[`OneWoW_GUI/PredicateEngine.lua`](../../OneWoW_GUI/PredicateEngine.lua) (use
+`OneWoW_GUI.PredicateEngine:GetAllKeywords()` at runtime to list every keyword
+currently registered, including any added via `RegisterKeyword` from other
+addons). For the public API, caches, and extension points, see
+[`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
 
 > **Keywords are English-only.** All `#...` keywords (e.g. `#armor`, `#epic`,
 > `#soulbound`) are canonical English tokens regardless of the client locale.
@@ -112,6 +117,26 @@ These keywords match **Blizzard item quality** only.
 | `#quiver` | | Quivers |
 | `#wowtoken` | | WoW Tokens |
 
+### Glyph (class) Subtype
+
+These match the **Glyph** item class with a **class-specific** subclass (as in
+`PredicateEngine.lua`). They are finer-grained than `#glyph` alone.
+
+| Keyword | Class |
+|---|---|
+| `#warriorglyph` | Warrior |
+| `#paladinglyph` | Paladin |
+| `#hunterglyph` | Hunter |
+| `#rogueglyph` | Rogue |
+| `#priestglyph` | Priest |
+| `#deathknightglyph` | Death Knight |
+| `#shamanglyph` | Shaman |
+| `#mageglyph` | Mage |
+| `#warlockglyph` | Warlock |
+| `#monkglyph` | Monk |
+| `#druidglyph` | Druid |
+| `#demonhunterglyph` | Demon Hunter |
+
 ### Consumable Subtypes
 
 | Keyword | What it matches |
@@ -185,6 +210,8 @@ Individual weapon types:
 | `#crossbow` | |
 | `#warglaive` | `#glaive` |
 | `#fist` | `#fistweapon` |
+| `#thrown` | Thrown weapons |
+| `#fishingpole` | Fishing poles |
 
 Composite weapon keywords match both 1H and 2H variants:
 
@@ -239,6 +266,7 @@ Handedness keywords:
 | `#hastegem` | |
 | `#versgem` | `#versatilitygem` |
 | `#multigem` | (multi-stat gems) |
+| `#artifactrelic` | Artifact relic sockets (gem subclass) |
 
 ### Housing Subtype
 
@@ -271,6 +299,29 @@ These match items with the Profession item class and a specific profession subcl
 | `#jewelcrafting` | Jewelcrafting reagents |
 | `#inscription` | Inscription reagents |
 | `#archaeology` | Archaeology reagents |
+
+### Trade Goods — Crafting reagent (subtype)
+
+These match the **Trade Goods** item class with a **crafting reagent** subclass
+(`Enum.ItemTradeGoodsSubclass` values wired in the engine). They are separate
+from the [Profession reagent](#profession-reagent-subtype) family above (which
+uses the **Profession** item class).
+
+| Keyword | Aliases |
+|---|---|
+| `#craftingreagentparts` | |
+| `#craftingreagentjewelcrafting` | |
+| `#craftingreagentcloth` | |
+| `#craftingreagentleather` | |
+| `#craftingreagentmetal` | `#craftingreagentstone` |
+| `#craftingreagentcooking` | |
+| `#craftingreagentherb` | |
+| `#craftingreagentelemental` | |
+| `#craftingreagentother` | |
+| `#craftingreagentenchanting` | |
+| `#craftingreagentinscription` | |
+| `#craftingreagentoptional` | |
+| `#craftingreagentfinishing` | |
 
 ### Character profession filter
 
@@ -310,6 +361,8 @@ The known-profession set is cached until
 | `#leatherworkingrecipe` | Leatherworking recipes |
 | `#tailoringrecipe` | Tailoring recipes |
 | `#fishingrecipe` | Fishing recipes |
+| `#firstaidrecipe` | First Aid recipes |
+| `#bookrecipe` | Book recipes |
 
 ### Binding
 
@@ -888,6 +941,35 @@ evaluation. This allows rule templates with adjustable thresholds.
 ```
 quality>=${EPIC} & expansion==${WARWITHIN}
 ```
+
+---
+
+## PredicateEngine.lua (file map)
+
+This is a structural index of
+[`OneWoW_GUI/PredicateEngine.lua`](../../OneWoW_GUI/PredicateEngine.lua) for
+anyone cross-checking behavior or diffs. User-facing behavior is also summarized
+in this document; full API and extension notes are in
+[`PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
+
+| Area | What lives there (approx.) |
+|---|---|
+| Caches | `propsCache`, `tooltipCache`, `compiledCache` — keyed by expression string and `bagID:slotID` where applicable. |
+| Data / patterns | Hearthstone ID set, knowledge-study icon set, `ITEM_CONTEXT_CATEGORY` → `#raid` / `#dungeon` / etc., locale patterns for charges / tradeable / unique-equip, `CLASS_ID` (token → class id). |
+| `CONSTANT_MAP` | `${POOR}` … `${HEIRLOOM}` and expansion `${CLASSIC}` … `${LASTTITAN}` for `ResolveParams` / vendor templates. |
+| `PROP_REGISTRY` | Built-in numeric and string property names and aliases (including money units on `vendorprice` / `totalvalue`). Exposed to callers via `RegisterProperty` merges. |
+| `FLAG_REGISTRY` | Lowercased `IsEquipment`-style words → `props` field names (vendor-style verbose rules). |
+| `KEYWORD_MAP` | All `#` keywords via `RegisterKeyword` (quality, class, subtypes, stats, context, etc.). |
+| `BuildProps` | Layer 1: `itemID` + optional slot → flat `props` (lazy tooltip/binds/stats on access). |
+| `ParseItemLink` (internal) | Decomposes retail item link fields (context, bonuses, craft GUID, quality prefix, etc.). |
+| `Tokenize` | Layer 2 input: `&` `and` `\|` `or` `!` `not` `#keyword`, comparisons, flags, `()` , bare `ilvl` / money shorthands, `||` OR, quoted `~` name shorthand, text fallback. |
+| Parser | `ParseExpression` → `ParseAnd` → `ParseNot` → `ParsePrimary` (precedence: `!` tightest, then `&`, then `|` / `or`). |
+| Public `PE:` API | `Compile`, `SafeEvaluate`, `CheckItem`, `BuildProps`, `ResolveParams`, `RegisterKeyword`, `RegisterProperty`, `GetAllKeywords`, `GetMatchingKeywords`, `InvalidateCache`, `InvalidatePropsCache`, `InvalidateKnownProfessions`, `GetBattlePetData`, `GetItemCacheKey`, `GetItemIdentityKey`, `ParseItemLink`, `CanClassEquip`, `GetTooltipText`, `GetExpansionID`, `GetExpansionName`. |
+| `PE` fields | `ParseMoney`, `BattlePetTypes`, `ClassID`, `BATTLE_PET_CAGE_ID`. |
+
+`#upgrade` is not hardcoded: it is registered at runtime (see
+`PREDICATE_ENGINE.md`). `#recent` is a OneWoW Bags–registered keyword, not
+part of the core engine file.
 
 ---
 

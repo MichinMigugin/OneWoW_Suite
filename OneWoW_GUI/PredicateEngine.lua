@@ -465,9 +465,6 @@ RegisterKeyword({"gear", "equipment", "equippable"},    function(p) return p.isE
 RegisterKeyword({"set", "equipmentset"},                function(p) return p.isInEquipmentSet end)
 RegisterKeyword("needsrepair",                          function(p) return p.needsRepair end)
 RegisterKeyword("broken",                               function(p) return p.isBroken end)
-RegisterKeyword("cosmetic", function(p)
-    return p.classID == Enum.ItemClass.Armor and p.subClassID == Enum.ItemArmorSubclass.Cosmetic
-end)
 
 RegisterKeyword("myclass", function(p)
     if not p.isEquipment then return false end
@@ -484,16 +481,17 @@ end)
 
 -- ---- 7.6  Armor subclass keywords ----
 for _, def in ipairs({
-    {"cloth",   Enum.ItemArmorSubclass.Cloth},
-    {"leather", Enum.ItemArmorSubclass.Leather},
-    {"mail",    Enum.ItemArmorSubclass.Mail},
-    {"plate",   Enum.ItemArmorSubclass.Plate},
-    {"shield",  Enum.ItemArmorSubclass.Shield},
-    {"libram",  Enum.ItemArmorSubclass.Libram},
-    {"idol",    Enum.ItemArmorSubclass.Idol},
-    {"totem",   Enum.ItemArmorSubclass.Totem},
-    {"sigil",   Enum.ItemArmorSubclass.Sigil},
-    {"relic",   Enum.ItemArmorSubclass.Relic},
+    {"cloth",       Enum.ItemArmorSubclass.Cloth},
+    {"leather",     Enum.ItemArmorSubclass.Leather},
+    {"mail",        Enum.ItemArmorSubclass.Mail},
+    {"plate",       Enum.ItemArmorSubclass.Plate},
+    {"cosmetic",    Enum.ItemArmorSubclass.Cosmetic},
+    {"shield",      Enum.ItemArmorSubclass.Shield},
+    {"libram",      Enum.ItemArmorSubclass.Libram},
+    {"idol",        Enum.ItemArmorSubclass.Idol},
+    {"totem",       Enum.ItemArmorSubclass.Totem},
+    {"sigil",       Enum.ItemArmorSubclass.Sigil},
+    {"relic",       Enum.ItemArmorSubclass.Relic},
 }) do
     local sub = def[2]
     RegisterKeyword(def[1], function(p)
@@ -517,6 +515,8 @@ for _, def in ipairs({
     {"crossbow",                    Enum.ItemWeaponSubclass.Crossbow},
     {{"warglaive", "glaive"},       Enum.ItemWeaponSubclass.Warglaive},
     {{"fist", "fistweapon"},        Enum.ItemWeaponSubclass.Unarmed},
+    {"thrown",                      Enum.ItemWeaponSubclass.Thrown},
+    {"fishingpole",                  Enum.ItemWeaponSubclass.Fishingpole},
 }) do
     local sub = def[2]
     RegisterKeyword(def[1], function(p)
@@ -573,6 +573,7 @@ for _, def in ipairs({
     {"hastegem",                        Enum.ItemGemSubclass.Haste},
     {{"versgem", "versatilitygem"},     Enum.ItemGemSubclass.Versatility},
     {"multigem",                        Enum.ItemGemSubclass.Multiplestats},
+    {"artifactrelic",                   Enum.ItemGemSubclass.Artifactrelic},
 }) do
     local sub = def[2]
     RegisterKeyword(def[1], function(p)
@@ -665,6 +666,8 @@ local PROF_RECIPE_NAME = {
     [Enum.ItemRecipeSubclass.Leatherworking] = "leatherworking",
     [Enum.ItemRecipeSubclass.Tailoring]      = "tailoring",
     [Enum.ItemRecipeSubclass.Fishing]        = "fishing",
+    [Enum.ItemRecipeSubclass.FirstAid]       = "firstaid",
+    [Enum.ItemRecipeSubclass.Book]           = "book"
 }
 
 local knownProfs
@@ -731,10 +734,55 @@ for _, def in ipairs({
     {"leatherworkingrecipe",    Enum.ItemRecipeSubclass.Leatherworking},
     {"tailoringrecipe",         Enum.ItemRecipeSubclass.Tailoring},
     {"fishingrecipe",           Enum.ItemRecipeSubclass.Fishing},
+    {"firstaidrecipe",          Enum.ItemRecipeSubclass.FirstAid},
+    {"bookrecipe",              Enum.ItemRecipeSubclass.Book},
 }) do
     local sub = def[2]
     RegisterKeyword(def[1], function(p)
         return p.classID == Enum.ItemClass.Recipe and p.subClassID == sub
+    end)
+end
+
+-- ---- 7.13b  Glyph subclass keywords ----
+for _, def in ipairs({
+    {"warriorglyph",      1},
+    {"paladinglyph",      2},
+    {"hunterglyph",       3},
+    {"rogueglyph",        4},
+    {"priestglyph",       5},
+    {"deathknightglyph",  6},
+    {"shamanglyph",       7},
+    {"mageglyph",         8},
+    {"warlockglyph",      9},
+    {"monkglyph",        10},
+    {"druidglyph",       11},
+    {"demonhunterglyph", 12},
+}) do
+    local sub = def[2]
+    RegisterKeyword(def[1], function(p)
+        return p.classID == Enum.ItemClass.Glyph and p.subClassID == sub
+    end)
+end
+
+-- ---- 7.13c  Tradegoods subclass keywords ----
+for _, def in ipairs({
+    {"craftingreagentparts",                            1},
+    {"craftingreagentjewelcrafting",                    4},
+    {"craftingreagentcloth",                            5},
+    {"craftingreagentleather",                          6},
+    {{"craftingreagentmetal", "craftingreagentstone"},  7},
+    {"craftingreagentcooking",                          8},
+    {"craftingreagentherb",                             9},
+    {"craftingreagentelemental",                        10},
+    {"craftingreagentother",                            11},
+    {"craftingreagentenchanting",                       12},
+    {"craftingreagentinscription",                      16},
+    {"craftingreagentoptional",                         18},
+    {"craftingreagentfinishing",                        19},
+}) do
+    local sub = def[2]
+    RegisterKeyword(def[1], function(p)
+        return p.classID == Enum.ItemClass.Tradegoods and p.subClassID == sub
     end)
 end
 
@@ -760,12 +808,12 @@ for _, def in ipairs({
 end
 
 -- Special multi-location slot keywords
-RegisterKeyword("chest",    function(p) return p.equipLoc == "INVTYPE_CHEST" or p.equipLoc == "INVTYPE_ROBE" end)
-RegisterKeyword("robe",     function(p) return p.equipLoc == "INVTYPE_ROBE" end)
-RegisterKeyword("offhand",  function(p) return p.equipLoc == "INVTYPE_WEAPONOFFHAND" or p.equipLoc == "INVTYPE_HOLDABLE" end)
-RegisterKeyword("holdable", function(p) return p.equipLoc == "INVTYPE_HOLDABLE" end)
-RegisterKeyword("ranged",   function(p) return p.equipLoc == "INVTYPE_RANGED" or p.equipLoc == "INVTYPE_RANGEDRIGHT" end)
-RegisterKeyword("wand",     function(p) return p.equipLoc == "INVTYPE_RANGEDRIGHT" end)
+RegisterKeyword("chest",            function(p) return p.equipLoc == "INVTYPE_CHEST" or p.equipLoc == "INVTYPE_ROBE" end)
+RegisterKeyword("robe",             function(p) return p.equipLoc == "INVTYPE_ROBE" end)
+RegisterKeyword("offhand",          function(p) return p.equipLoc == "INVTYPE_WEAPONOFFHAND" or p.equipLoc == "INVTYPE_HOLDABLE" end)
+RegisterKeyword("holdable",         function(p) return p.equipLoc == "INVTYPE_HOLDABLE" end)
+RegisterKeyword("ranged",           function(p) return p.equipLoc == "INVTYPE_RANGED" or p.equipLoc == "INVTYPE_RANGEDRIGHT" end)
+RegisterKeyword({"wand", "wands"},  function(p) return p.equipLoc == "INVTYPE_RANGEDRIGHT" or (p.classID == Enum.ItemClass.Weapon and p.subClassID == Enum.ItemWeaponSubclass.Wand) end)
 
 -- ---- 7.15  Expansion keywords ----
 for _, def in ipairs({
@@ -903,7 +951,7 @@ RegisterKeyword("tinkersocket",    function(p) return (p.socketTinker or 0) > 0 
 RegisterKeyword("dominationsocket", function(p) return (p.socketDomination or 0) > 0 end)
 RegisterKeyword("primordial",      function(p) return (p.socketPrimordial or 0) > 0 end)
 
--- ---- 7.25  Item creation context keywords ----
+-- ---- 7.26  Item creation context keywords ----
 RegisterKeyword("raid", function(p) return p.itemContextCategory == "raid" end)
 RegisterKeyword("dungeon", function(p) return p.itemContextCategory == "dungeon" end)
 RegisterKeyword("delves", function(p) return p.itemContextCategory == "delves" end)
