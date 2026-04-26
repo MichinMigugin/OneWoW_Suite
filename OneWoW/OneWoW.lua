@@ -199,6 +199,17 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
             end
             print("|cFF00FF00OneWoW|r |cFF888888v." .. ver .. "|r: " .. table.concat(parts, " + ") .. " |cFF00FF00loaded|r - /1w")
         end
+
+        -- First-run feature picker: show once per account. Delayed a few
+        -- seconds so it appears AFTER the suite's load banner and any error
+        -- popups have cleared.
+        if OneWoW.FirstRun and OneWoW.FirstRun:ShouldShowWizard() then
+            C_Timer.After(3, function()
+                if OneWoW.FirstRun and OneWoW.FirstRun:ShouldShowWizard() then
+                    OneWoW.FirstRun:ShowWizard()
+                end
+            end)
+        end
     end
 end)
 

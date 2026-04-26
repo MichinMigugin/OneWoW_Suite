@@ -95,8 +95,9 @@ function GUI:CreateSettingsMainTab(parent)
 end
 
 local coreSettingsTabs = {
-    { name = "settings", displayName = function() return (OneWoW.L and OneWoW.L["SETTINGS_SUBTAB"] or "Settings") end, create = function(parent) GUI:CreateSettingsMainTab(parent) end },
-    { name = "profiles", displayName = function() return "Profiles" end, create = function(parent) GUI:CreateProfilesTab(parent) end },
+    { name = "settings",       displayName = function() return (OneWoW.L and OneWoW.L["SETTINGS_SUBTAB"] or "Settings") end, create = function(parent) GUI:CreateSettingsMainTab(parent) end },
+    { name = "profiles",       displayName = function() return "Profiles"        end, create = function(parent) GUI:CreateProfilesTab(parent)       end },
+    { name = "managefeatures", displayName = function() return "Manage Features" end, create = function(parent) GUI:CreateManageFeaturesTab(parent) end },
 }
 
 local qolFeatureTabs = {
