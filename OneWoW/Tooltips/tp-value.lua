@@ -7,7 +7,7 @@ local function FormatMoneyLine(copper)
     if OneWoW_GUI and OneWoW_GUI.FormatGold then
         return OneWoW_GUI:FormatGold(copper)
     end
-    return GetCoinTextureString(copper)
+    return C_CurrencyInfo.GetCoinTextureString(copper)
 end
 
 local function GetVendorPrice(itemLink, itemID)
