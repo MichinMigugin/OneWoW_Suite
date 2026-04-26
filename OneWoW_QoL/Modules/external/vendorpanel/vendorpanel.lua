@@ -1285,7 +1285,7 @@ function VendorPanelModule:OnEnable()
                     local index = i + (MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE
                     local itemLink = GetMerchantItemLink(index)
                     if button and itemLink then
-                        local _, itemSubType, _, equipSlot = select(6, GetItemInfo(itemLink))
+                        local _, itemSubType, _, equipSlot = select(6, C_Item.GetItemInfo(itemLink))
                         local matches = VPFilters.CheckVendorItemFilter(itemLink, state.currentVendorFilter)
                         if state.currentVendorFilter == "Show All" then
                             -- no armor override when showing all

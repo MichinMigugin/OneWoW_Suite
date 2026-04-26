@@ -98,6 +98,10 @@ OneWoW.Locales["enUS"] = {
     ["CTX_OPEN_DEVTOOLS"] = "Open DevTools",
     ["CTX_OPEN_CATALOG"] = "Open Catalog",
 
+    ["WIZARD_TITLE"] = "Welcome to OneWoW",
+    ["MANAGE_FEATURES_TITLE"] = "Manage Features",
+    ["MANAGE_FEATURES_DESC"] = "Uncheck any feature you don't use. Its addon (and any exclusively-owned datastore addons) will be fully unloaded \226\128\148 no RAM, no CPU, no SavedVariables written. Shared datastores (e.g. Storage / Character) stay enabled as long as any enabled feature depends on them.",
+
     ["HOME_COMMANDS"] = "Available Commands",
     ["CMD_TOGGLE_ONEWOW"] = "Toggle OneWoW",
     ["CMD_KEYWORD_HELP"] = "Open Search Keywords help",

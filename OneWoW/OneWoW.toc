@@ -38,6 +38,7 @@ Core\ModuleRegistry.lua
 Core\SettingsFeatureRegistry.lua
 Core\ItemPrices.lua
 Core\RecipeKnownUtil.lua
+Core\FirstRunWizard.lua
 
 # Integrations
 Integrations\ExternalTooltipSync.lua
@@ -112,6 +113,7 @@ GUI\t-tooltips.lua
 GUI\t-portals.lua
 GUI\t-profiles.lua
 GUI\t-charprofiles.lua
+GUI\t-managefeatures.lua
 
 # Main
 OneWoW.lua
