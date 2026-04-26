@@ -1,10 +1,69 @@
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 ns.CharacterStats = {}
 local Module = ns.CharacterStats
 
+local HeroSpecs = {
+    -- Priest
+    [18] = "Voidweaver",
+    [19] = "Archon",
+    [20] = "Oracle",
+    -- Druid
+    [21] = "Druid of the Claw",
+    [22] = "Wildstalker",
+    [23] = "Keeper of the Grove",
+    [24] = "Elune's Chosen",
+    -- Death Knight
+    [31] = "San'layn",
+    [32] = "Rider of the Apocalypse",
+    [33] = "Deathbringer",
+    -- Demon Hunter
+    [34] = "Fel-Scarred",
+    [35] = "Aldrachi Reaver",
+    -- Evoker
+    [36] = "Scalecommander",
+    [37] = "Flameshaper",
+    [38] = "Chronowarden",
+    -- Mage
+    [39] = "Sunfury",
+    [40] = "Spellslinger",
+    [41] = "Frostfire",
+    -- Hunter
+    [42] = "Sentinel",
+    [43] = "Pack Leader",
+    [44] = "Dark Ranger",
+    -- Paladin
+    [48] = "Templar",
+    [49] = "Lightsmith",
+    [50] = "Herald of the Sun",
+    -- Rogue
+    [51] = "Trickster",
+    [52] = "Fatebound",
+    [53] = "Deathstalker",
+    -- Shaman
+    [54] = "Totemic",
+    [55] = "Stormbringer",
+    [56] = "Farseer",
+    -- Warlock
+    [57] = "Soul Harvester",
+    [58] = "Hellcaller",
+    [59] = "Diabolist",
+    -- Warrior
+    [60] = "Slayer",
+    [61] = "Mountain Thane",
+    [62] = "Colossus",
+    -- Monk
+    [64] = "Conduit of the Celestials",
+    [65] = "Shado-pan",
+    [66] = "Master of Harmony",
+}
+
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
+    if OneWoW_GUI:IsAddonRestricted() then return end
 
     local stats = {}
 
@@ -35,29 +94,7 @@ function Module:CollectData(charKey, charData)
     end
 
     local heroSpecID = C_ClassTalents.GetActiveHeroTalentSpec()
-    if heroSpecID and heroSpecID > 0 then
-        local configID = C_ClassTalents.GetActiveConfigID()
-        stats.heroSpecID = heroSpecID
-        stats.activeConfigID = configID
-
-        local heroConfig = C_Traits.GetConfigInfo(configID)
-        if heroConfig and heroConfig.treeIDs then
-            for _, treeID in ipairs(heroConfig.treeIDs) do
-                local treeInfo = C_Traits.GetTreeInfo(configID, treeID)
-                if treeInfo and treeInfo.ID == heroSpecID then
-                    stats.heroSpecName = treeInfo.name
-                    break
-                end
-            end
-        end
-
-        if not stats.heroSpecName then
-            local nodeInfo = C_Traits.GetNodeInfo(configID, heroSpecID)
-            if nodeInfo then
-                stats.heroSpecName = nodeInfo.name
-            end
-        end
-    end
+    stats.heroSpecName = HeroSpecs[heroSpecID] or nil
 
     charData.stats = stats
 

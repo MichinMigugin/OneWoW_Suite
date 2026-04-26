@@ -7,7 +7,7 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 ## SavedVariables: OneWoW_AltTracker_Character_DB
-## RequiredDeps: OneWoW_AltTracker
+## RequiredDeps: OneWoW_AltTracker, OneWoW_GUI
 ## Category: OneWoW
 ## Group: OneWoW_AltTracker
 
