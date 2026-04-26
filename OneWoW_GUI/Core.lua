@@ -182,3 +182,15 @@ function OneWoW_GUI:ClearFrame(frame)
         region:Hide()
     end
 end
+
+function OneWoW_GUI:IsAddonRestricted()
+    if InCombatLockdown() then return true end
+    local state
+
+    for _, val in pairs(Enum.AddOnRestrictionType) do
+        state = C_RestrictedActions.GetAddOnRestrictionState(val)
+        if state ~= Enum.AddOnRestrictionState.Inactive then return true end
+     end
+
+     return false
+end
