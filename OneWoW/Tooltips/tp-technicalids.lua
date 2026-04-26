@@ -273,36 +273,28 @@ local function TechnicalIDsProvider(tooltip, context)
             return nil
         end
         detectedIDs.spellID = context.spellID
-        if C_Spell and C_Spell.GetSpellTexture then
-            local iconID = C_Spell.GetSpellTexture(context.spellID)
-            if iconID then detectedIDs.iconID = iconID end
-        end
+        local iconID = C_Spell.GetSpellTexture(context.spellID)
+        if iconID then detectedIDs.iconID = iconID end
 
     elseif context.type == "mount" and context.mountID then
         detectedIDs.mountID = context.mountID
-        if C_MountJournal and C_MountJournal.GetMountInfoByID then
-            local _, spellID, iconID = C_MountJournal.GetMountInfoByID(context.mountID)
-            if spellID then detectedIDs.spellID = spellID end
-            if iconID then detectedIDs.iconID = iconID end
-        end
+        local _, spellID, iconID = C_MountJournal.GetMountInfoByID(context.mountID)
+        if spellID then detectedIDs.spellID = spellID end
+        if iconID then detectedIDs.iconID = iconID end
 
     elseif context.type == "currency" and context.currencyID then
         detectedIDs.currencyID = context.currencyID
+        
     elseif context.type == "pet" and context.petID then
         detectedIDs.petID = context.petID
-        if C_PetJournal and C_PetJournal.GetPetInfoBySpeciesID then
-            local iconID = select(2, C_PetJournal.GetPetInfoBySpeciesID(context.petID))
-            if iconID then detectedIDs.iconID = iconID end
-            local npcID = select(4, C_PetJournal.GetPetInfoBySpeciesID(context.petID))
-            if npcID then detectedIDs.npcID = npcID end
-        end
+        local _, iconID, _, npcID = C_PetJournal.GetPetInfoBySpeciesID(context.petID)
+        if iconID then detectedIDs.iconID = iconID end
+        if npcID then detectedIDs.npcID = npcID end
 
     elseif context.type == "achievement" and context.achievementID then
         detectedIDs.achievementID = context.achievementID
-        if GetAchievementInfo then
-            local iconID = select(10, GetAchievementInfo(context.achievementID))
-            if iconID then detectedIDs.iconID = iconID end
-        end
+        local iconID = select(10, GetAchievementInfo(context.achievementID))
+        if iconID then detectedIDs.iconID = iconID end
 
     elseif context.type == "quest" and context.questID then
         detectedIDs.questID = context.questID
@@ -312,49 +304,39 @@ local function TechnicalIDsProvider(tooltip, context)
 
     elseif context.type == "unitaura" and context.spellID then
         detectedIDs.spellID = context.spellID
-        if C_Spell and C_Spell.GetSpellTexture then
-            local iconID = C_Spell.GetSpellTexture(context.spellID)
-            if iconID then detectedIDs.iconID = iconID end
-        end
+        local iconID = C_Spell.GetSpellTexture(context.spellID)
+        if iconID then detectedIDs.iconID = iconID end
 
     elseif context.type == "companionpet" and context.petID then
         detectedIDs.petID = context.petID
-        if C_PetJournal and C_PetJournal.GetPetInfoBySpeciesID then
-            local iconID = select(2, C_PetJournal.GetPetInfoBySpeciesID(context.petID))
-            if iconID then detectedIDs.iconID = iconID end
-            local npcID = select(4, C_PetJournal.GetPetInfoBySpeciesID(context.petID))
-            if npcID then detectedIDs.npcID = npcID end
-        end
+        local iconID = select(2, C_PetJournal.GetPetInfoBySpeciesID(context.petID))
+        if iconID then detectedIDs.iconID = iconID end
+        local npcID = select(4, C_PetJournal.GetPetInfoBySpeciesID(context.petID))
+        if npcID then detectedIDs.npcID = npcID end
 
     elseif context.type == "totem" and context.spellID then
         detectedIDs.spellID = context.spellID
-        if C_Spell and C_Spell.GetSpellTexture then
-            local iconID = C_Spell.GetSpellTexture(context.spellID)
-            if iconID then detectedIDs.iconID = iconID end
-        end
+        local iconID = C_Spell.GetSpellTexture(context.spellID)
+        if iconID then detectedIDs.iconID = iconID end
 
     elseif context.type == "questpartyprogress" and context.questID then
         detectedIDs.questID = context.questID
 
     elseif context.type == "recipe" and context.recipeID then
         detectedIDs.recipeID = context.recipeID
-        if C_Spell and C_Spell.GetSpellTexture then
-            local iconID = C_Spell.GetSpellTexture(context.recipeID)
-            if iconID then detectedIDs.iconID = iconID end
-        end
+        local iconID = C_Spell.GetSpellTexture(context.recipeID)
+        if iconID then detectedIDs.iconID = iconID end
 
     elseif context.type == "equipmentset" and context.equipmentSetID then
         detectedIDs.equipmentSetID = context.equipmentSetID
 
     elseif context.type == "azeriteessence" and context.essenceID then
         detectedIDs.essenceID = context.essenceID
-        if C_Spell and C_Spell.GetSpellTexture then
-            local spellID = C_AzeriteEssence and C_AzeriteEssence.GetEssenceSpell and C_AzeriteEssence.GetEssenceSpell(context.essenceID)
-            if spellID then
-                detectedIDs.spellID = spellID
-                local iconID = C_Spell.GetSpellTexture(spellID)
-                if iconID then detectedIDs.iconID = iconID end
-            end
+        local spellID = C_AzeriteEssence and C_AzeriteEssence.GetEssenceSpell and C_AzeriteEssence.GetEssenceSpell(context.essenceID)
+        if spellID then
+            detectedIDs.spellID = spellID
+            local iconID = C_Spell.GetSpellTexture(spellID)
+            if iconID then detectedIDs.iconID = iconID end
         end
 
     elseif context.type == "conduit" and context.conduitID then

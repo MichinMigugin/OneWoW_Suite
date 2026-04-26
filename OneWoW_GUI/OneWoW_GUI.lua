@@ -98,7 +98,7 @@ function OneWoW_GUI:GetThemeDisplayName()
         return string.format("Random (%s)", data and data.name or eff)
     end
     local data = Constants.THEMES[raw]
-    return data and data.name or DEFAULT_THEME_NAME
+    return data and data.name or Constants.DEFAULT_THEME_NAME
 end
 
 function OneWoW_GUI:ApplyTheme(addon)

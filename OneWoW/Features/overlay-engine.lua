@@ -1672,7 +1672,7 @@ function Engine:Initialize()
         end
     end
 
-    if _G.BankPanel then
+    if BankPanel then
         if BankPanel.RefreshBankPanel then
             hooksecurefunc(BankPanel, "RefreshBankPanel", function() RefreshBank() end)
         end
@@ -1684,7 +1684,7 @@ function Engine:Initialize()
         end
     end
 
-    if _G.AccountBankPanel then
+    if AccountBankPanel then
         if AccountBankPanel.GenerateItemSlotsForSelectedTab then
             hooksecurefunc(AccountBankPanel, "GenerateItemSlotsForSelectedTab", function() RefreshBank() end)
         end

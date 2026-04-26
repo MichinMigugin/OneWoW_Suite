@@ -146,6 +146,16 @@ local function VaultTypeStr(grid, panel, list, label)
     grid:AddLine(panel, label .. ": " .. table.concat(parts, "  "))
 end
 
+local function GetVaultTrackTotal(list)
+    if not list then return 0 end
+    local highest = 0
+    for _, act in ipairs(list) do
+        local prog = act.progress or 0
+        if prog > highest then highest = prog end
+    end
+    return highest
+end
+
 local function GetHoveredColumnKey(self, columns, contentFrame)
     local x = GetCursorPosition() / UIParent:GetEffectiveScale()
     local rowLeft = self:GetLeft()
@@ -294,7 +304,7 @@ local function GetWorldBossKilled(endgameData)
 end
 
 local function GetProgressSortValue(charKey, charData, sortColumn)
-    local endgameDB = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters
+    local endgameDB = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters
     local edg = endgameDB and endgameDB[charKey]
 
     if sortColumn == "name" then
@@ -355,7 +365,7 @@ local function GetProgressSortValue(charKey, charData, sortColumn)
 end
 
 local function GetSortedCharacters(subTabKey)
-    if not _G.OneWoW_AltTracker_Endgame_DB then return {} end
+    if not OneWoW_AltTracker_Endgame_DB then return {} end
     local state = subTabState[subTabKey]
     return ns.UI.GetSortedCharacters(GetProgressSortValue, state.sortColumn, state.sortAscending)
 end
@@ -764,7 +774,7 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
     for charIndex, charInfo in ipairs(allChars) do
         local charKey = charInfo.key
         local charData = charInfo.data
-        local endgameData = _G.OneWoW_AltTracker_Endgame_DB.characters and _G.OneWoW_AltTracker_Endgame_DB.characters[charKey]
+        local endgameData = OneWoW_AltTracker_Endgame_DB.characters and OneWoW_AltTracker_Endgame_DB.characters[charKey]
 
         local charRow = OneWoW_GUI:CreateDataRow(scrollContent, {
             rowHeight = rowHeight,
@@ -918,16 +928,6 @@ local function GetVaultActivities(endgameData, vaultType)
         return nil
     end
     return endgameData.greatVault.activities[vaultType]
-end
-
-local function GetVaultTrackTotal(list)
-    if not list then return 0 end
-    local highest = 0
-    for _, act in ipairs(list) do
-        local prog = act.progress or 0
-        if prog > highest then highest = prog end
-    end
-    return highest
 end
 
 local function CreateVaultTrackCell(parent, list)
@@ -1637,7 +1637,7 @@ function ns.UI.RefreshProgressStats(progressTab)
     if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
 
     local charDB = _G.OneWoW_AltTracker_Character_DB.characters
-    local endgameDB = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters
+    local endgameDB = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters
 
     local stats = {
         total = 0,
@@ -1769,7 +1769,7 @@ end
 function ns.UI.RefreshTrackingBar(progressTab)
     if not progressTab or not progressTab.trackingText then return end
     local charDB = _G.OneWoW_AltTracker_Character_DB and _G.OneWoW_AltTracker_Character_DB.characters
-    local endgameDB = _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters
+    local endgameDB = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters
 
     local raidName = ""
     local bossName = ""

@@ -22,6 +22,7 @@ local instanceTypeFilter = "all"
 local selectedDifficulty = "all"
 local expandedEncounters = {}
 local dataAddon = nil
+local panels_ref = nil
 
 -- Multi-select Item Type filter: keys from ITEM_TYPE_DEFS map to item.special values.
 -- Empty table = "Show All" (no filter applied).
@@ -407,8 +408,6 @@ local function GetUniqueDifficulties(instData)
     table.sort(result, function(a, b) return a.id < b.id end)
     return result
 end
-
-local panels_ref = nil
 
 -- Base list from data (expensive); only refetch when filters change. Favorite sort uses a shallow copy.
 local journalBaseListKey  = nil

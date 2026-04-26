@@ -686,6 +686,8 @@ function Addon.UI:CreateEditorTab(parent)
         lnColFS:SetText(format(L["EDITOR_STATUS_LN_COL"], line, col))
     end
 
+    local errorLine = nil
+    
     local function doSyntaxCheck()
         if not activeSnippetId then
             syntaxErrFS:SetText("")
@@ -731,8 +733,6 @@ function Addon.UI:CreateEditorTab(parent)
             end
         end)
     end
-
-    local errorLine = nil
 
     updateGutter = function()
         if not tab.editBox then return end

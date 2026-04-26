@@ -616,12 +616,7 @@ function ns.UI.CreateZonesTab(parent)
                         elseif cursorType == "spell" then
                             local spellID = select(2, GetCursorInfo())
                             if spellID then
-                                local spellLink = nil
-                                if C_Spell and C_Spell.GetSpellLink then
-                                    spellLink = C_Spell.GetSpellLink(spellID)
-                                elseif GetSpellLink then
-                                    spellLink = GetSpellLink(spellID)
-                                end
+                                local spellLink = C_Spell.GetSpellLink(spellID)
                                 if spellLink then detailPanel.contentEditBox:Insert(spellLink) end
                             end
                             ClearCursor()

@@ -57,9 +57,9 @@ local function CollectAllCharacterKeys()
         end
     end
 
-    if _G.OneWoW_AltTracker_Accounting_DB and _G.OneWoW_AltTracker_Accounting_DB.transactions then
+    if OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.transactions then
         local seen = {}
-        for _, tx in ipairs(_G.OneWoW_AltTracker_Accounting_DB.transactions) do
+        for _, tx in ipairs(OneWoW_AltTracker_Accounting_DB.transactions) do
             if tx.character and not seen[tx.character] then
                 seen[tx.character] = true
                 if not charMap[tx.character] then
@@ -94,8 +94,8 @@ local function CollectAllCharacterKeys()
         end
     end
 
-    if _G.OneWoW_CatalogData_Quests_DB and _G.OneWoW_CatalogData_Quests_DB.completion then
-        for charKey, _ in pairs(_G.OneWoW_CatalogData_Quests_DB.completion) do
+    if OneWoW_CatalogData_Quests_DB and OneWoW_CatalogData_Quests_DB.completion then
+        for charKey, _ in pairs(OneWoW_CatalogData_Quests_DB.completion) do
             if type(charKey) == "string" then
                 if not charMap[charKey] then
                     charMap[charKey] = {
@@ -161,8 +161,8 @@ local function PurgeCharacter(charKey)
         end
     end
 
-    if _G.OneWoW_AltTracker_Accounting_DB and _G.OneWoW_AltTracker_Accounting_DB.transactions then
-        local txs = _G.OneWoW_AltTracker_Accounting_DB.transactions
+    if OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.transactions then
+        local txs = OneWoW_AltTracker_Accounting_DB.transactions
         local removed = 0
         for i = #txs, 1, -1 do
             if txs[i].character == charKey then
@@ -183,9 +183,9 @@ local function PurgeCharacter(charKey)
         end
     end
 
-    if _G.OneWoW_CatalogData_Quests_DB and _G.OneWoW_CatalogData_Quests_DB.completion then
-        if _G.OneWoW_CatalogData_Quests_DB.completion[charKey] then
-            _G.OneWoW_CatalogData_Quests_DB.completion[charKey] = nil
+    if OneWoW_CatalogData_Quests_DB and OneWoW_CatalogData_Quests_DB.completion then
+        if OneWoW_CatalogData_Quests_DB.completion[charKey] then
+            OneWoW_CatalogData_Quests_DB.completion[charKey] = nil
             table.insert(purgedFrom, "Quest Completion")
         end
     end
@@ -713,38 +713,6 @@ function ns.UI.CreateSettingsTab(parent)
         local currencyListFrames = {}
         local bossListFrames = {}
 
-        local function RebuildCurrencyList()
-            for _, f in ipairs(currencyListFrames) do f:Hide(); f:SetParent(nil) end
-            wipe(currencyListFrames)
-
-            local ids = GetCurrencyIDs()
-            local startDY = sc.currencyListStartDY or dy
-            local ldY = startDY
-            for i, id in ipairs(ids) do
-                local info = C_CurrencyInfo.GetCurrencyInfo(id)
-                local nm = (info and info.name) or ("Currency ID: " .. id)
-                local row = MakeListRow(sc, "ID: " .. id, nm, ldY)
-                MakeRemoveBtn(sc, row, function()
-                    table.remove(ids, i)
-                    RebuildCurrencyList()
-                end)
-                ldY = ldY - 32
-                table.insert(currencyListFrames, row)
-            end
-            if sc.currencyAddRow then
-                sc.currencyAddRow:ClearAllPoints()
-                sc.currencyAddRow:SetPoint("TOPLEFT", 8, ldY)
-                sc.currencyAddRow:SetPoint("TOPRIGHT", -8, ldY)
-                ldY = ldY - 36
-            end
-            sc.currencyListEndDY = ldY
-            if sc.bossListStartDY then
-                local bossStartDY = ldY - 8
-                sc.bossListStartDY = bossStartDY
-                RebuildBossList()
-            end
-        end
-
         local function RebuildBossList()
             for _, f in ipairs(bossListFrames) do f:Hide(); f:SetParent(nil) end
             wipe(bossListFrames)
@@ -788,6 +756,38 @@ function ns.UI.CreateSettingsTab(parent)
                 ldY = ldY - 26
             end
             sc:SetHeight(math.abs(ldY) + 20)
+        end
+
+        local function RebuildCurrencyList()
+            for _, f in ipairs(currencyListFrames) do f:Hide(); f:SetParent(nil) end
+            wipe(currencyListFrames)
+
+            local ids = GetCurrencyIDs()
+            local startDY = sc.currencyListStartDY or dy
+            local ldY = startDY
+            for i, id in ipairs(ids) do
+                local info = C_CurrencyInfo.GetCurrencyInfo(id)
+                local nm = (info and info.name) or ("Currency ID: " .. id)
+                local row = MakeListRow(sc, "ID: " .. id, nm, ldY)
+                MakeRemoveBtn(sc, row, function()
+                    table.remove(ids, i)
+                    RebuildCurrencyList()
+                end)
+                ldY = ldY - 32
+                table.insert(currencyListFrames, row)
+            end
+            if sc.currencyAddRow then
+                sc.currencyAddRow:ClearAllPoints()
+                sc.currencyAddRow:SetPoint("TOPLEFT", 8, ldY)
+                sc.currencyAddRow:SetPoint("TOPRIGHT", -8, ldY)
+                ldY = ldY - 36
+            end
+            sc.currencyListEndDY = ldY
+            if sc.bossListStartDY then
+                local bossStartDY = ldY - 8
+                sc.bossListStartDY = bossStartDY
+                RebuildBossList()
+            end
         end
 
         local sec1 = OneWoW_GUI:CreateSectionHeader(sc, { title = L["OVERRIDE_SECTION_SUMMARY"], yOffset = dy })

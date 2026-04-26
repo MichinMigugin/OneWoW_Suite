@@ -17,6 +17,8 @@ local TOTAL_ONLY = {
     housing = true,
 }
 
+local EJ_INSTANCES = nil
+
 local function GetDB()
     return OneWoW.db and OneWoW.db.global and OneWoW.db.global.toasts
 end
@@ -24,21 +26,6 @@ end
 local function InstanceEnabled()
     local db = GetDB()
     return db and db.instance and db.instance.enabled ~= false
-end
-
-local function GetInstanceIcon(instanceName)
-    if not EJ_GetInstanceInfo then return nil end
-    local count = EJ_GetNumInstances and EJ_GetNumInstances() or 0
-    for i = 1, count do
-        local id = EJ_GetInstanceByIndex(i, false)
-        if id then
-            local name, _, _, buttonImage1 = EJ_GetInstanceInfo(id)
-            if name == instanceName and buttonImage1 and buttonImage1 ~= 0 then
-                return buttonImage1
-            end
-        end
-    end
-    return nil
 end
 
 local function GetCatalogData(mapID)
@@ -119,26 +106,48 @@ instanceFrame:SetScript("OnEvent", function(self, event, isInitialLogin, isReloa
     if not inInstance then return end
     if instanceType == "pvp" or instanceType == "arena" then return end
 
+    -- build cache of all encounter journal instances
+    if not EJ_INSTANCES then
+        EJ_INSTANCES = {}
+        for tierIndex=1, EJ_GetNumTiers() do
+            EJ_SelectTier(tierIndex)
+            -- loop once for dungeons and once for raids
+            local isRaid = false
+            for i=1, 2 do
+                local index = 1
+                -- there is no API to get the number of instances per tier
+                while true do
+                    local _, instanceName, _, _, buttonImage1 = EJ_GetInstanceByIndex(index, isRaid)
+                    if not instanceName then break end
+                    EJ_INSTANCES[instanceName] = buttonImage1
+                    index = index + 1
+                end
+                isRaid = not isRaid
+            end
+        end
+    end
+    -- failsafe in case something goes wrong when using the EJ_* APIs
+    if not EJ_INSTANCES then return end
+
     C_Timer.After(3, function()
         if not InstanceEnabled() then return end
         local stillIn, stillType = IsInInstance()
         if not stillIn then return end
         if stillType == "pvp" or stillType == "arena" then return end
 
-        local name, _, diffID, diffName, _, _, _, instanceID = GetInstanceInfo()
+        local name, _, _, diffName, _, _, _, instanceID = GetInstanceInfo()
         if not name or name == "" then return end
 
-        local icon = GetInstanceIcon(name)
-
-        local catalogData = GetCatalogData(instanceID)
-        local grid        = BuildGrid(catalogData)
+        if stillType == "neighborhood" then
+            diffName = C_HousingNeighborhood.GetNeighborhoodName()
+        end
 
         Toasts.FireToast({
             toastType     = "instance",
             title         = name,
             subtitle      = diffName or "",
-            icon          = icon,
-            grid          = grid,
+            icon          = EJ_INSTANCES[name],
+            grid          = BuildGrid(GetCatalogData(instanceID)),
             instanceMapID = instanceID,
         })
     end)

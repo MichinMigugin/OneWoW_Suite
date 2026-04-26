@@ -80,7 +80,7 @@ end
 
 function VendorTracker:OnUseContainerItem(bag, slot)
     if not private.merchantOpen then return end
-    local itemLink = C_Container and C_Container.GetContainerItemLink(bag, slot) or GetContainerItemLink(bag, slot)
+    local itemLink = C_Container.GetContainerItemLink(bag, slot)
     if not itemLink then return end
     local itemID = tonumber(itemLink:match("item:(%d+)"))
     if not itemID then return end
