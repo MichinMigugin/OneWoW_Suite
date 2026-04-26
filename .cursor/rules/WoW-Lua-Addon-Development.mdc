@@ -7,6 +7,15 @@ alwaysApply: true
 
 You are an expert World of Warcraft addon developer. You write addons targeting **WoW Retail 12.0+** using Blizzard addon API. When in doubt, check reference links.
 
+## Specialist Skills
+
+Load on demand for deep references — these replace what used to live in this rule:
+
+- `onewow-database-api` — `OneWoW_GUI.DB`, defaults, migrations, scope resolution
+- `wow-tooltip-system` — TooltipDataProcessor, C_TooltipInfo, line types, bind detection
+- `onewow-gui-ui` — component API, theme colors, backdrops, constants/localization
+- `wow-api-specialist` — broader WoW/Blizzard API verification via Cursor's indexed docs
+
 ---
 
 ## 1. Lua Language & Runtime
@@ -84,109 +93,13 @@ This applies to all files that call OneWoW_GUI — not just the main addon file.
 Fail fast: if OneWoW_GUI is unavailable, the file exits immediately. No defensive guards like `if OneWoW_GUI and OneWoW_GUI.SomeMethod then`.
 Call `OneWoW_GUI.SomeMethod(...)` directly. When something fails (e.g. missing method), it errors and gets fixed, not silently ignored.
 
-### 2.3.2 OneWoW_GUI-First UI Policy (Mandatory)
+### 2.3.1 OneWoW_GUI UI Policy (Mandatory)
 
-All addon UI must be created via the OneWoW GUI addon whenever a matching component/helper exists.
+For OneWoW_GUI component creation, theme colors, backdrops, GUI dimensions, button auto-sizing, and the no-static-strings rule, load the `onewow-gui-ui` skill.
 
-- **Do not build raw UI widgets first** (`CreateFrame`, `CreateFontString`, manual backdrops/buttons/scrollbars) when OneWoW_GUI already provides an equivalent helper/component.
-- **Before adding or changing UI code**, check whether OneWoW_GUI already has a function for it and prefer that function.
-- **Reduce custom UI code whenever possible**. Refactors should bias toward replacing custom UI construction with OneWoW_GUI calls to reduce duplicate code and improve consistency.
-- If behavior requires changing a OneWoW_GUI function, **stop and discuss it first** before implementing local workarounds.
-- If the needed UI function does not exist in OneWoW_GUI, **stop and discuss adding it** before introducing new custom UI patterns.
-- If no OneWoW_GUI equivalent exists and work must proceed, clearly document why a temporary direct WoW UI call is required.
+### 2.4 OneWoW Suite — Database API (Mandatory)
 
-### 2.3.1 OneWoW_GUI Component API
-
-OneWoW_GUI uses a consistent `CreateComponent(parent, options)` pattern: parent first, all other parameters in `options`.
-Call OneWoW_GUI directly; do not add Framework shims or wrappers.
-Examples:
-
-```lua
-OneWoW_GUI:CreateFitTextButton(parent, { text = L.SAVE, height = 24 })
-OneWoW_GUI:CreateScrollFrame(parent, { name = "MyScroll" })
-OneWoW_GUI:CreateSectionHeader(parent, { title = L.SECTION, yOffset = 0 })
-```
-
-**Button auto-sizing:** ALL buttons in every addon must auto-size to their text.
-Different languages need different amounts of space; fixed-width buttons cause truncation or overflow.
-Prefer `CreateFitTextButton` over `CreateButton` for user-facing buttons.
-Only use fixed-width buttons when layout explicitly requires it (e.g. a rigid grid).
-
-### 2.4 OneWoW Suite — Theme Colors
-
-Always use `OneWoW_GUI:GetThemeColor(key)` for theme colors.
-Do **not** access raw theme data (e.g. `currentThemeData.ACCENT_PRIMARY` or `unpack(currentThemeData.ACCENT_PRIMARY)`).
-
-```lua
--- BAD: direct theme data access
-if currentThemeData and currentThemeData.ACCENT_PRIMARY then
-    themeColorPreview:SetColorTexture(unpack(currentThemeData.ACCENT_PRIMARY))
-end
-
--- BAD: pass-through wrapper — adds extra function call overhead for no benefit
-local GetThemeColor = function(key) return OneWoW_GUI:GetThemeColor(key) end
-
--- GOOD: use the API directly
-themeColorPreview:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-```
-
-`GetThemeColor` returns `r, g, b, a` (suitable for `SetColorTexture`, `SetBackdropColor`, `SetTextColor`, etc.).
-Centralizing theme access via API ensures consistency and correct behavior when themes change.
-
-### 2.5 Constants & Localization
-
-**No static strings in code.** All user-facing text (labels, tooltips, titles, button text, error messages, etc.) must reference constants or translations.
-Never hardcode display strings like `"Save"` or `"Cancel"` directly in UI code.
-
-**Constants:** Every addon has `Addon/Core/Constants.lua`. Create it if it does not exist.
-Constants are stored as `Addon.Constants.X` where `X` can be any data type (tables, strings, numbers, etc.).
-Example:
-
-```lua
--- MyAddon/Core/Constants.lua
-Addon.Constants = Addon.Constants or {}
-Addon.Constants.DEFAULT_SCALE = 1.0
-Addon.Constants.KEY_SAVE = "SAVE"
-```
-
-**Translations:** All translations live in `Addon/Locales/` (e.g. `MyAddon/Locales/enUS.lua`, `MyAddon/Locales/deDE.lua`).
-Reference them via the addon's locale table (e.g. `L.SAVE`, `L.BUTTON_CANCEL`).
-
-### 2.6 OneWoW Suite — Database API (Mandatory)
-
-All OneWoW addons must use the shared `OneWoW_GUI.DB` API for SavedVariable management.
-Do not hand-roll merge functions, ensure-if-nil blocks, or per-addon default application logic.
-Full design rationale: [OneWoW_GUI/Docs/DATABASE.md](OneWoW_GUI/Docs/DATABASE.md).
-For the API surface, read `OneWoW_GUI/Database.lua` directly.
-
-```lua
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
-local DB = OneWoW_GUI.DB
-```
-
-**Key rules:**
-
-- **`DB:Init`** initializes database. Three modes: `single` (one SavedVariable root with `global`/`chars`), `split` (separate global + per-char SavedVariables), or `acedb` (wraps an existing AceDB handle). After `Init` returns, `db`, `db.global`, and every key in the defaults table are **guaranteed to exist**.
-- **`DB:MergeMissing`** fills only `nil` keys — never overwrites user data. It replaces custom `mergeSubTable` / `ApplyDefaults` / ensure-if-nil patterns.
-- **`DB:RunMigrations`** runs versioned one-time transformations. Migrations are structural changes (rename keys, move data). Defaults application is a normalizer handled by `Init` + `MergeMissing`, not a migration.
-- **No defensive nil-chain guards after Init.** `DB:Init` and `MergeMissing` guarantee all defaulted keys exist. Do not write `Addon.db and Addon.db.global and Addon.db.global.X` chains or `Addon.db.global.X or defaultValue` when the default is already in the defaults table. These guards are dead code that obscures intent.
-
-```lua
--- BAD: redundant guards — DB:Init guarantees these exist
-local sortOrder = Addon.db and Addon.db.global and Addon.db.global.monitor
-    and Addon.db.global.monitor.sortOrder or 2
-if Addon.db and Addon.db.global then
-    Addon.db.global.position = pos
-end
-
--- GOOD: trust the DB API
-local sortOrder = Addon.db.global.monitor.sortOrder
-Addon.db.global.position = pos
-```
-
-- **`or {}` / `or default` is only appropriate for dynamic keys** not defined in the defaults table (e.g. `catMods[entryName] or {}`).
-- **Shared settings** (`theme`, `language`, `minimap`) are managed by `OneWoW_GUI:GetSetting` / `OneWoW_GUI:SetSetting`. Addons must not store these locally.
+All OneWoW addons must use `OneWoW_GUI.DB` for SavedVariables. For the API surface, defaults, migrations, and scope resolution, load the `onewow-database-api` skill.
 
 ---
 
@@ -457,9 +370,9 @@ Examples:
 
 ---
 
-## 7. Coding Standards
+## 6. Coding Standards
 
-### 7.1 Globals & Locals
+### 6.1 Globals & Locals
 
 - **Localize frequently-used globals** at the top of each file for performance and clarity:
   ```lua
@@ -470,7 +383,7 @@ Examples:
 - **Never pollute the global namespace.** Use the addon namespace (`ns`) or Ace3's addon object to share data between files.
 - Name global frames sparingly with a unique prefix: `MyAddon_MainFrame`.
 
-#### 7.1.5 WoW Table Globals
+#### 6.1.5 WoW Table Globals
 
 Prefer WoW's global table helpers over Lua's `table.*` functions:
 
@@ -479,7 +392,7 @@ Prefer WoW's global table helpers over Lua's `table.*` functions:
 - `sort` over `table.sort`
 - `wipe` over `table.wipe`
 
-### 7.2 Performance
+### 6.2 Performance
 
 - Avoid allocations in OnUpdate, CLEU handlers, or any high-frequency path. Reuse tables with `wipe()`.
 - Avoid string concatenation in loops; use `format()` or `table.concat()`.
@@ -487,12 +400,12 @@ Prefer WoW's global table helpers over Lua's `table.*` functions:
 - Use `C_Timer.After` / `C_Timer.NewTicker` instead of OnUpdate when frame-perfect timing isn't required.
 - For COMBAT_LOG_EVENT_UNFILTERED, always call `CombatLogGetCurrentEventInfo()` inside the handler — do NOT pass args via `...` (they don't exist for CLEU).
 
-### 7.2.1 Compliance Baseline
+### 6.2.1 Compliance Baseline
 
-- All code must comply with **WoW Retail Midnight 12.0.0.1** API behavior.
+- All code must comply with **WoW Retail 12.0.0.1** or later API behavior.
 - Account for modern API changes (including **secret values** restrictions) when implementing or reviewing features.
 
-### 7.3 Error Handling
+### 6.3 Error Handling
 
 When an actual error could be thrown from a call. Don't blindly wrap everything "just in case".
 
@@ -504,102 +417,11 @@ if not ok then
 end
 ```
 
-### 7.4 SavedVariables
+### 6.4 Tooltips
 
-- **OneWoW addons:** Use `OneWoW_GUI.DB:Init` (see section 2.6). Do not use raw SavedVariable init or AceDB directly for new OneWoW addons.
-- Initialize defaults on `ADDON_LOADED` or in Ace3's `OnInitialize`.
-- Always validate / migrate saved data — the user might have data from an older version. In OneWoW addons, use `DB:RunMigrations` for this.
+The 10.0.2 tooltip rewrite removed `OnTooltipSetItem`/`OnTooltipSetSpell` and hidden GameTooltip scanning. For `TooltipDataProcessor` hooks, `C_TooltipInfo` scanning, structured line reading, and locale-safe text matching, load the `wow-tooltip-system` skill.
 
-### 7.5 Tooltip System (Modern — 10.0.2+)
-
-The tooltip system was **completely rewritten** in Dragonflight (10.0.2).
-The old `OnTooltipSetItem`/`OnTooltipSetSpell` script handlers are **removed**.
-GameTooltip no longer exposes native methods for retrieving or populating tooltip contents directly.
-There are now three key patterns:
-
-#### 7.5.1 Displaying Simple Custom Tooltips
-
-For basic addon-owned tooltips (hover info on your own frames), the `SetOwner` / `SetText` / `AddLine` / `Show` pattern still works:
-
-```lua
-frame:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Title", 1, 1, 1)             -- white title
-    GameTooltip:AddLine("Description text", nil, nil, nil, true) -- wrap
-    GameTooltip:AddDoubleLine("Left", "Right", 1,1,1, 0.5,0.5,0.5)
-    GameTooltip:Show()
-end)
-frame:SetScript("OnLeave", GameTooltip_Hide)
-```
-
-#### 7.5.2 Hooking Into Existing Tooltips (TooltipDataProcessor)
-
-To add lines or modify tooltips for items, spells, units, etc., use `TooltipDataProcessor.AddTooltipPostCall`.
-This **replaces** the old `GameTooltip:HookScript("OnTooltipSetItem", ...)` pattern.
-
-```lua
--- Add extra info to item tooltips
-TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item,
-    function(tooltip, data)
-        if tooltip == GameTooltip then
-            tooltip:AddLine("My custom line", 0.5, 1, 0.5)
-        end
-    end
-)
-
--- For spell tooltips, use Enum.TooltipDataType.Spell
--- For unit tooltips, use Enum.TooltipDataType.Unit
--- For ALL tooltip types, use TooltipDataProcessor.AllTypes (or "ALL")
-```
-
-There are also `AddTooltipPreCall`, `AddLinePreCall`, and `AddLinePostCall` variants for more granular control.
-
-**Important:** Callbacks registered with TooltipDataProcessor are global — they fire for ALL tooltip frames inheriting `GameTooltipTemplate`.
-Always check `tooltip == GameTooltip` (or your specific tooltip) if you only want to modify a particular tooltip instance.
-
-#### 7.5.3 Scanning / Extracting Tooltip Data (C_TooltipInfo)
-
-To programmatically read tooltip information **without displaying a tooltip** (replaces the old hidden-tooltip scanning technique), use `C_TooltipInfo`:
-
-```lua
-local tooltipData = C_TooltipInfo.GetItemByID(itemID)
-if tooltipData then
-    for _, line in ipairs(tooltipData.lines) do
-        print(line.leftText)
-    end
-end
-
--- Other C_TooltipInfo functions:
--- C_TooltipInfo.GetUnit(unitToken)
--- C_TooltipInfo.GetSpellByID(spellID)
--- C_TooltipInfo.GetHyperlink(hyperlink)
--- C_TooltipInfo.GetUnitAura(unit, index, filter)
--- C_TooltipInfo.GetUnitBuffByAuraInstanceID(unit, auraInstanceID)
--- C_TooltipInfo.GetEquipmentSet(name)
--- C_TooltipInfo.GetItemByItemLink(itemLink)
--- ... and many more (see warcraft.wiki.gg/wiki/Category:API_systems/TooltipInfo)
-```
-
-**`TooltipUtil.SurfaceArgs` — no longer needed (Patch 10.1.0+):**
-Before Patch 10.1.0, callers had to run `TooltipUtil.SurfaceArgs(tooltipData)` and `TooltipUtil.SurfaceArgs(line)` per line to populate fields like `leftText`, `type`, `guid`, etc.
-As of **Patch 10.1.0**, C_TooltipInfo APIs return data with all arguments already surfaced, so the call is unnecessary.
-
-#### 7.5.4 Custom Tooltip Frames
-
-If creating your own GameTooltip-type frame, it **must** inherit `GameTooltipTemplate` (which includes `GameTooltipDataMixin` for automatic handling of `TOOLTIP_DATA_UPDATE` events):
-
-```lua
-local myTooltip = CreateFrame("GameTooltip", "MyAddonTooltip", UIParent,
-    "GameTooltipTemplate")
-```
-
-#### 7.5.5 Key Enum.TooltipDataType Values
-
-`Item`, `Spell`, `Unit`, `UnitAura`, `Currency`, `Mount`, `Macro`,
-`Achievement`, `Quest`, `QuestPartyProgress`, `BattlePet`, `Toy`,
-`Hyperlink`, `MinimapPing`, `EquipmentSet`.
-
-### 7.6 Menus (Modern)
+### 6.5 Menus (Modern)
 
 The old `UIDropDownMenu` system is deprecated. Use `MenuUtil` in 12.0+:
 
@@ -611,7 +433,7 @@ MenuUtil.CreateContextMenu(ownerFrame, function(ownerRegion, rootDescription)
 end)
 ```
 
-### 7.7 Closures & Frame Scripts
+### 6.6 Closures & Frame Scripts
 
 Pitfalls when writing frame scripts and event handlers in WoW addons.
 
@@ -666,39 +488,32 @@ local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 -- Parent's toggle handler: for _, fn in ipairs(customRefreshCallbacks) do fn() end
 ```
 
----
+## Common Mistakes to Avoid
 
-## 9. Common Mistakes to Avoid
-
-1. **Using removed/deprecated APIs.** If you learned WoW addon dev before Dragonflight, many APIs you knew have moved to `C_*` namespaces or been removed entirely. Always check the wiki.
+1. **Using removed/deprecated APIs.** If you learned WoW addon dev before Dragonflight, many APIs you knew have moved to `C_*` namespaces or been removed entirely. See `wow-api-specialist` skill.
 2. **Modifying secure frames in combat.** This will silently fail or throw taint errors. Gate all secure frame modifications behind `not InCombatLockdown()`.
 3. **Hardcoding spell/item IDs without fallbacks.** IDs can change between patches. Prefer name-based lookups with ID as cache keys, and always nil-check returns.
 4. **Forgetting that CLEU doesn't pass event args via `...`.** You MUST call `CombatLogGetCurrentEventInfo()` inside the handler.
 5. **Creating frames in a loop without pooling.** Use `CreateFramePool` or manually pool/recycle frames.
 6. **Using `UIDropDownMenu` in new code.** It's deprecated; use `MenuUtil`.
-7. **Using `OnTooltipSetItem` / `OnTooltipSetSpell` hooks.** These were removed in 10.0.2. Use `TooltipDataProcessor.AddTooltipPostCall` with `Enum.TooltipDataType.*` instead. Also don't create hidden `GameTooltip` frames for scanning — use `C_TooltipInfo`.
+7. **Using `OnTooltipSetItem` / `OnTooltipSetSpell` hooks.** These were removed in 10.0.2. See `wow-tooltip-system` skill.
 8. **Not testing inside instances.** Secret value restrictions often only apply in instanced content. Your addon may work in the open world and break in dungeons/raids.
 9. **Writing to global table keys carelessly.** Every addon shares the same global environment. A stray `count = 0` at file scope clobbers (and taints) any other addon's `count` global.
 10. **Assuming SavedVariables exist on first load.** They're `nil` until the player has logged out at least once with your addon enabled.
 11. **Calling API functions too early.** Many APIs return nil before `PLAYER_LOGIN`. Don't query unit info or map data at file load time.
-12. **Closure/upvalue pitfalls in frame scripts.** Event handlers capture variables by reference. Declare and initialize variables used by closures _before_ defining the handler. When a callback updates state that closures depend on, reassign the upvalue in that callback (e.g. `isEnabled = enabled`). See section 7.7.
+12. **Closure/upvalue pitfalls in frame scripts.** Event handlers capture variables by reference. Declare and initialize variables used by closures _before_ defining the handler. When a callback updates state that closures depend on, reassign the upvalue in that callback (e.g. `isEnabled = enabled`).
 13. **Fixed-width buttons.** Buttons must auto-size to text for localization. Use `CreateFitTextButton` (or equivalent) — fixed widths cause truncation in other languages.
-14. **Static strings in UI code.** Never hardcode user-facing strings. Use `Addon.Constants` (in `Core/Constants.lua`) or locale tables in `Addon/Locales/` (e.g. `L.SAVE`). See section 2.5.
-15. **Fullscreen overlay above host for popup dismiss.** A `UIParent`-parented overlay above the host window catches clicks but **consumes** them — forcing a second click to activate the control underneath. Use the OnUpdate hybrid pattern instead (section 4.7): OnUpdate detects `IsMouseButtonDown` transitions while `IsMouseOver()` is false. Input fires before OnUpdate in the same frame, so both the control action and the dismiss happen on a single click.
-16. **Reusing FontStrings across different FontObjects.** `SetFontObject()` does not clear local overrides from explicit setter calls (`SetJustifyH`, `SetTextColor`, `SetFont`, etc.). Properties from a previous font "stick" to subsequent selections. Recreate the FontString or read values from the Font object directly. See section 4.8.
-17. **Defensive nil-chain guards on DB-initialized keys.** After `DB:Init` + `MergeMissing`, all defaulted keys are guaranteed to exist. Writing `Addon.db and Addon.db.global and Addon.db.global.X` or `Addon.db.global.X or defaultValue` (when the default is in the defaults table) is dead code that hides intent. Trust the DB API. See section 2.6.
+14. **Static strings in UI code.** See `onewow-gui-ui` skill.
+15. **Fullscreen overlay above host for popup dismiss.** A `UIParent`-parented overlay above the host window catches clicks but **consumes** them — forcing a second click to activate the control underneath. Use the OnUpdate hybrid pattern instead: OnUpdate detects `IsMouseButtonDown` transitions while `IsMouseOver()` is false. Input fires before OnUpdate in the same frame, so both the control action and the dismiss happen on a single click.
+16. **Reusing FontStrings across different FontObjects.** `SetFontObject()` does not clear local overrides from explicit setter calls (`SetJustifyH`, `SetTextColor`, `SetFont`, etc.). Properties from a previous font "stick" to subsequent selections. Recreate the FontString or read values from the Font object directly.
+17. **Defensive nil-chain guards on DB-initialized keys.** See `onewow-database-api` skill.
 
----
-
-## 10. Reference Links
+## Reference Links
 
 - **Events list:** https://warcraft.wiki.gg/wiki/Events
 - **TOC format:** https://warcraft.wiki.gg/wiki/TOC_format
 - **Secure execution / taint:** https://warcraft.wiki.gg/wiki/Secure_Execution_and_Tainting
 - **UI technical details:** https://warcraft.wiki.gg/wiki/Category:UI_technical_details
 - **EventRegistry:** https://warcraft.wiki.gg/wiki/EventRegistry
-- **Tooltip API:** https://warcraft.wiki.gg/wiki/Tooltip_API
-- **C_TooltipInfo functions:** https://warcraft.wiki.gg/wiki/Category:API_systems/TooltipInfo
 - **Widget API (frames):** https://warcraft.wiki.gg/wiki/Widget_API
-- **Blizzard tooltip source:** https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_SharedXMLGame/Tooltip
 - **Secret values:** https://warcraft.wiki.gg/wiki/API_issecretvalue, https://warcraft.wiki.gg/wiki/API_issecrettable
