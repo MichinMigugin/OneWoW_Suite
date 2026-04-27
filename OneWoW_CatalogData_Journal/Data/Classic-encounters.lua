@@ -225,18 +225,6 @@ OneWoWEncounters_Classic = {
 		expansionID = 1,
 		bossIndex = 5,
 	},
-	[455] = {
-		encounterID = 455,
-		name = "Ramstein the Gorger",
-		instanceID = 236,
-		expansionID = 1,
-	},
-	[456] = {
-		encounterID = 456,
-		name = "Lord Aurius Rivendare",
-		instanceID = 236,
-		expansionID = 1,
-	},
 	[443] = {
 		encounterID = 443,
 		name = "Hearthsinger Forresten",
@@ -285,30 +273,6 @@ OneWoWEncounters_Classic = {
 		instanceID = 236,
 		expansionID = 1,
 		bossIndex = 2,
-	},
-	[451] = {
-		encounterID = 451,
-		name = "Baroness Anastari",
-		instanceID = 236,
-		expansionID = 1,
-	},
-	[452] = {
-		encounterID = 452,
-		name = "Nerub'enkan",
-		instanceID = 236,
-		expansionID = 1,
-	},
-	[453] = {
-		encounterID = 453,
-		name = "Maleki the Pallid",
-		instanceID = 236,
-		expansionID = 1,
-	},
-	[454] = {
-		encounterID = 454,
-		name = "Magistrate Barthilas",
-		instanceID = 236,
-		expansionID = 1,
 	},
 	[2633] = {
 		encounterID = 2633,
@@ -878,18 +842,6 @@ OneWoWEncounters_Classic = {
 		expansionID = 1,
 		bossIndex = 5,
 	},
-	[411] = {
-		encounterID = 411,
-		name = "Guard Mol'dar",
-		instanceID = 230,
-		expansionID = 1,
-	},
-	[412] = {
-		encounterID = 412,
-		name = "Stomper Kreeg",
-		instanceID = 230,
-		expansionID = 1,
-	},
 	[413] = {
 		encounterID = 413,
 		name = "Guard Fengus",
@@ -905,36 +857,6 @@ OneWoWEncounters_Classic = {
 	[415] = {
 		encounterID = 415,
 		name = "Captain Kromcrush",
-		instanceID = 230,
-		expansionID = 1,
-	},
-	[416] = {
-		encounterID = 416,
-		name = "Cho'Rush the Observer",
-		instanceID = 230,
-		expansionID = 1,
-	},
-	[402] = {
-		encounterID = 402,
-		name = "Zevrim Thornhoof",
-		instanceID = 230,
-		expansionID = 1,
-	},
-	[403] = {
-		encounterID = 403,
-		name = "Hydrospawn",
-		instanceID = 230,
-		expansionID = 1,
-	},
-	[404] = {
-		encounterID = 404,
-		name = "Lethtendris",
-		instanceID = 230,
-		expansionID = 1,
-	},
-	[405] = {
-		encounterID = 405,
-		name = "Alzzin the Wildshaper",
 		instanceID = 230,
 		expansionID = 1,
 	},
@@ -965,12 +887,6 @@ OneWoWEncounters_Classic = {
 		instanceID = 230,
 		expansionID = 1,
 		bossIndex = 4,
-	},
-	[417] = {
-		encounterID = 417,
-		name = "King Gordok",
-		instanceID = 230,
-		expansionID = 1,
 	},
 	[901] = {
 		encounterID = 901,
