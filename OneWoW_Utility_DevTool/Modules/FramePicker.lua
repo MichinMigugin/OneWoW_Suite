@@ -184,15 +184,7 @@ function FramePicker:OnUpdate(elapsed)
         return
     end
 
-    local frames = {}
-
-    if GetMouseFoci then
-        frames = GetMouseFoci() or {}
-    elseif GetMouseFocus then
-        local frame = GetMouseFocus()
-        frames = frame and {frame} or {}
-    end
-
+    local frames = GetMouseFoci()
     local geometricFrames = self:GetGeometricFramesAtCursor()
 
     local frameSet = {}

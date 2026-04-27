@@ -55,18 +55,30 @@ local function GetCovenantSignatureAbility()
     return C_SpellBook.IsSpellKnown(326526, Enum.SpellBookSpellBank.Player) and 326526
 end
 
+local function GetMacroByText(text)
+    if not text then return nil end
+    text = trim(text)
+
+    local global, character = GetNumMacros()
+    for i = 1, global do
+        if trim(GetMacroBody(i)) == text then
+            return i
+        end
+    end
+    for i = MAX_ACCOUNT_MACROS + 1, MAX_ACCOUNT_MACROS + character do
+        if trim(GetMacroBody(i)) == text then
+            return i
+        end
+    end
+    return nil
+end
+
 function Module:GetActionInfo(slotID)
     if not HasAction(slotID) then
         return nil
     end
 
-    ---@type string|nil
-    local actionType
-    ---@type string|number|nil
-    local id
-    local subType
-    actionType, id, subType = GetActionInfo(slotID)
-
+    local actionType, id, subType = GetActionInfo(slotID)
     local texture = GetActionTexture(slotID)
     local text = GetActionText(slotID)
 
@@ -1056,27 +1068,6 @@ function Module:CreateSpellOverrideMap()
     end
 
     return spellOverride
-end
-
-local function GetMacroByText(text)
-    if not text then
-        return nil
-    end
-
-    text = trim(text)
-
-    local global, character = GetNumMacros()
-    for i = 1, global do
-        if trim(GetMacroBody(i)) == text then
-            return i
-        end
-    end
-    for i = MAX_ACCOUNT_MACROS + 1, MAX_ACCOUNT_MACROS + character do
-        if trim(GetMacroBody(i)) == text then
-            return i
-        end
-    end
-    return nil
 end
 
 local function PickupMacroByText(text)

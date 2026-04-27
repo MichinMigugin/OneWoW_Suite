@@ -815,7 +815,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
             rowGap = rowGap,
             data = { itemData = itemData },
             createDetails = function(ef, d)
-                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef, T)
+                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
                 local p1 = grid:AddPanel(d.itemData.itemName or "")
                 for _, locData in ipairs(d.itemData.locations) do
                     grid:AddLine(p1, locData.charName .. " - " .. locData.location .. " x" .. locData.qty)

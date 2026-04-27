@@ -59,7 +59,7 @@ local function ShowEditAmountDialog(tx)
     local function doSave()
         local copper = MoneyInputFrame_GetCopper(dialog.moneyBox)
         if copper >= 0 then
-            local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+            local AccountingAddon = OneWoW_AltTracker_Accounting
             if AccountingAddon and AccountingAddon.Transactions then
                 AccountingAddon.Transactions:UpdateTransaction(tx.id, { amount = copper })
                 if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
@@ -121,7 +121,7 @@ local function ShowEditItemNameDialog(tx)
     local function doSave()
         local newName = strtrim(dialog.editBox:GetText())
         if newName ~= "" then
-            local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+            local AccountingAddon = OneWoW_AltTracker_Accounting
             if AccountingAddon and AccountingAddon.Transactions then
                 AccountingAddon.Transactions:UpdateTransaction(tx.id, { itemName = newName })
                 if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
@@ -221,7 +221,7 @@ local function ShowChangeCategoryMenu(tx)
             end,
             onSelect = function(value)
                 if categoryChangeTx and categoryChangeTx.id then
-                    local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+                    local AccountingAddon = OneWoW_AltTracker_Accounting
                     if AccountingAddon and AccountingAddon.Transactions then
                         AccountingAddon.Transactions:UpdateTransaction(categoryChangeTx.id, { category = value })
                         if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
@@ -250,7 +250,7 @@ local function ShowDeleteConfirmation(tx)
             {
                 text = L["FIN_DELETE_ACCEPT"],
                 onClick = function(dialog)
-                    local AccountingAddon = _G.OneWoW_AltTracker_Accounting
+                    local AccountingAddon = OneWoW_AltTracker_Accounting
                     if AccountingAddon and AccountingAddon.Transactions then
                         AccountingAddon.Transactions:DeleteTransaction(tx.id)
                         if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
@@ -294,10 +294,7 @@ local function ShowTransactionContextMenu(tx)
             ShowDeleteConfirmation(tx)
         end)
         deleteBtn:AddInitializer(function(button)
-            local fontString = button.fontString
-            if fontString then
-                fontString:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-            end
+            button.fontString:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
         end)
     end)
 end
@@ -563,16 +560,16 @@ function ns.UI.CreateFinancialsTab(parent)
                 {
                     text = L["FIN_RESET_ACCEPT"],
                     onClick = function(dialog)
-                        if _G.OneWoW_AltTracker_Accounting_DB then
-                            _G.OneWoW_AltTracker_Accounting_DB.transactions = {}
-                            if _G.OneWoW_AltTracker_Accounting_DB.statistics then
-                                _G.OneWoW_AltTracker_Accounting_DB.statistics.totalIncome = 0
-                                _G.OneWoW_AltTracker_Accounting_DB.statistics.totalExpense = 0
-                                _G.OneWoW_AltTracker_Accounting_DB.statistics.netProfit = 0
-                                _G.OneWoW_AltTracker_Accounting_DB.statistics.lastCalculated = 0
+                        if OneWoW_AltTracker_Accounting_DB then
+                            OneWoW_AltTracker_Accounting_DB.transactions = {}
+                            if OneWoW_AltTracker_Accounting_DB.statistics then
+                                OneWoW_AltTracker_Accounting_DB.statistics.totalIncome = 0
+                                OneWoW_AltTracker_Accounting_DB.statistics.totalExpense = 0
+                                OneWoW_AltTracker_Accounting_DB.statistics.netProfit = 0
+                                OneWoW_AltTracker_Accounting_DB.statistics.lastCalculated = 0
                             end
-                            if _G.OneWoW_AltTracker_Accounting_DB.settings then
-                                _G.OneWoW_AltTracker_Accounting_DB.settings.resetDate = GetServerTime()
+                            if OneWoW_AltTracker_Accounting_DB.settings then
+                                OneWoW_AltTracker_Accounting_DB.settings.resetDate = GetServerTime()
                             end
                         end
                         parent.timePeriod = "week"
@@ -610,9 +607,9 @@ function ns.UI.CreateFinancialsTab(parent)
     guildPersonalCheck:SetPoint("RIGHT", filterPanel, "RIGHT", -10 - guildPersonalCheck.label:GetStringWidth(), 0)
 
     C_Timer.After(0.6, function()
-        local val = _G.OneWoW_AltTracker_Accounting_DB and
-                    _G.OneWoW_AltTracker_Accounting_DB.settings and
-                    _G.OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal == true
+        local val = OneWoW_AltTracker_Accounting_DB and
+                    OneWoW_AltTracker_Accounting_DB.settings and
+                    OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal == true
         guildPersonalCheck:SetChecked(val)
     end)
 
@@ -624,8 +621,8 @@ function ns.UI.CreateFinancialsTab(parent)
     end)
     guildPersonalCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
     guildPersonalCheck:SetScript("OnClick", function(self)
-        if _G.OneWoW_AltTracker_Accounting_DB and _G.OneWoW_AltTracker_Accounting_DB.settings then
-            _G.OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal = self:GetChecked() and true or false
+        if OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.settings then
+            OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal = self:GetChecked() and true or false
         end
     end)
 
@@ -669,9 +666,9 @@ function ns.UI.CreateFinancialsTab(parent)
     activeFinancialsTab = parent
 
     local function SetupRefreshCallback()
-        if not _G.OneWoW_AltTracker_Accounting then return false end
+        if not OneWoW_AltTracker_Accounting then return false end
         local refreshPending = false
-        _G.OneWoW_AltTracker_Accounting.onNewTransaction = function()
+        OneWoW_AltTracker_Accounting.onNewTransaction = function()
             if refreshPending then return end
             refreshPending = true
             C_Timer.After(0.3, function()
@@ -707,7 +704,7 @@ end
 function ns.UI.RefreshFinancialsTab(financialsTab)
     if not financialsTab then return end
 
-    if not _G.OneWoW_AltTracker_Accounting_DB then
+    if not OneWoW_AltTracker_Accounting_DB then
         if financialsTab.statusText then
             financialsTab.statusText:SetText(L["FIN_INSTALL_ACCOUNTING"])
         end
@@ -724,7 +721,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
     wipe(transactionRows)
     if dt then dt:ClearRows() end
 
-    local allTransactions = _G.OneWoW_AltTracker_Accounting_DB.transactions or {}
+    local allTransactions = OneWoW_AltTracker_Accounting_DB.transactions or {}
     local timePeriod = financialsTab.timePeriod or "week"
     local typeFilter = financialsTab.typeFilter or "all"
     local characterFilter = financialsTab.characterFilter
@@ -739,7 +736,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
     elseif timePeriod == "week" then
         timeStart = GetLastWeeklyReset()
     elseif timePeriod == "reset" then
-        local customReset = _G.OneWoW_AltTracker_Accounting_DB and _G.OneWoW_AltTracker_Accounting_DB.settings and _G.OneWoW_AltTracker_Accounting_DB.settings.resetDate
+        local customReset = OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.settings and OneWoW_AltTracker_Accounting_DB.settings.resetDate
         if customReset and customReset > 0 then
             timeStart = customReset
         else
@@ -771,8 +768,8 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
         end
     end
 
-    if financialsTab.statBoxes and _G.OneWoW_AltTracker_Accounting then
-        local stats = _G.OneWoW_AltTracker_Accounting:CalculateStatistics(timeStart, now, characterFilter, categoryFilter)
+    if financialsTab.statBoxes and OneWoW_AltTracker_Accounting then
+        local stats = OneWoW_AltTracker_Accounting:CalculateStatistics(timeStart, now, characterFilter, categoryFilter)
 
         if financialsTab.statBoxes[1] then
             financialsTab.statBoxes[1].value:SetText(ns.AltTrackerFormatters:FormatGold(stats.income))
@@ -894,7 +891,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
             rowGap = rowGap,
             data = { tx = tx },
             createDetails = function(ef, d)
-                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef, T)
+                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
                 local p1 = grid:AddPanel(L["FIN_COL_DATE"])
                 grid:AddLine(p1, L["FIN_EXPANDED_ID"] .. " " .. (d.tx.id or "?") .. "  |  " .. date("%Y-%m-%d %H:%M:%S", d.tx.timestamp or 0))
                 if d.tx.quantity and d.tx.quantity > 1 then
