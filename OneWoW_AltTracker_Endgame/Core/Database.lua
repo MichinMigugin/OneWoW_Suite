@@ -1,4 +1,5 @@
 local addonName, ns = ...
+
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
 local DB = OneWoW_GUI.DB
 
