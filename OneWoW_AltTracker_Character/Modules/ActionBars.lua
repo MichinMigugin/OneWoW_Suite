@@ -74,19 +74,17 @@ local function GetMacroByText(text)
 end
 
 function Module:GetActionInfo(slotID)
-    if not HasAction(slotID) then
+    if not C_ActionBar.HasAction(slotID) then
         return nil
     end
 
     local actionType, id, subType = GetActionInfo(slotID)
-    local texture = GetActionTexture(slotID)
-    local text = GetActionText(slotID)
 
     local actionData = {
         actionType = actionType,
         id = id,
-        texture = texture,
-        text = text,
+        texture = GetActionTexture(slotID),
+        text = GetActionText(slotID),
         timestamp = time()
     }
 
@@ -98,18 +96,6 @@ function Module:GetActionInfo(slotID)
         id = 1229376
         subType = "spell"
         actionType = "spell"
-    end
-
-    if actionType == "macro" then
-        PickupAction(slotID)
-        local cursorType, cursorId = GetCursorInfo()
-        if cursorType == "macro" then
-            id = cursorId
-        else
-            actionType = nil
-            id = nil
-        end
-        PlaceAction(slotID)
     end
 
     if actionType == "spell" then
@@ -139,6 +125,7 @@ function Module:GetActionInfo(slotID)
         actionData.itemID = id
         actionData.displayName = itemName
 
+        ---@cast id number
         local toyName, toyIcon = C_ToyBox.GetToyInfo(id)
         if toyName then
             actionData.isToy = true
@@ -147,16 +134,22 @@ function Module:GetActionInfo(slotID)
             actionData.displayName = string.format("Toy: %s", toyName)
         end
     elseif actionType == "macro" then
-        if id and id ~= 0 then
-            local macroName, macroIcon = GetMacroInfo(id)
-            local macroBody = GetMacroBody(id)
-            if macroName and macroBody then
-                actionData.macroName = macroName
-                actionData.macroIcon = macroIcon
-                actionData.macroBody = macroBody
-                actionData.displayName = string.format("Macro: %s", macroName)
-            else
-                return nil
+        PickupAction(slotID)
+        local cursorType, cursorId = GetCursorInfo()
+        PlaceAction(slotID)
+
+        if cursorType == "macro" then
+            if cursorId and cursorId ~= 0 then
+                local macroName, macroIcon = GetMacroInfo(cursorId)
+                local macroBody = GetMacroBody(cursorId)
+                if macroName and macroBody then
+                    actionData.macroName = macroName
+                    actionData.macroIcon = macroIcon
+                    actionData.macroBody = macroBody
+                    actionData.displayName = string.format("Macro: %s", macroName)
+                else
+                    return nil
+                end
             end
         else
             return nil
@@ -167,6 +160,7 @@ function Module:GetActionInfo(slotID)
         end
 
         if subType == "MOUNT" then
+            ---@cast id number
             local mountName = C_MountJournal.GetMountInfoByID(id)
             if mountName then
                 actionData.companionName = mountName
@@ -175,6 +169,7 @@ function Module:GetActionInfo(slotID)
                 actionData.displayName = "Mount"
             end
         elseif subType == "CRITTER" then
+            ---@cast id string
             local _, customName, _, _, _, _, _, petName = C_PetJournal.GetPetInfoByPetID(id)
             local displayPetName = customName and customName ~= "" and customName or petName
             actionData.companionName = displayPetName
@@ -186,6 +181,7 @@ function Module:GetActionInfo(slotID)
         if subType and subType ~= actionType then
             actionData.petType = subType
         end
+        ---@cast id string
         local _, customName, _, _, _, _, _, petName = C_PetJournal.GetPetInfoByPetID(id)
         local displayPetName = customName and customName ~= "" and customName or petName
         actionData.petName = displayPetName
@@ -215,6 +211,7 @@ function Module:GetActionInfo(slotID)
         end
     elseif actionType == "flyout" then
         if GetFlyoutInfo then
+            ---@cast id number
             local flyoutName = GetFlyoutInfo(id)
             actionData.flyoutName = flyoutName
             actionData.displayName = flyoutName and string.format("Flyout: %s", flyoutName) or "Flyout"
