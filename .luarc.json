@@ -21,7 +21,6 @@
     "table": "default",
     "utf8": "default"
   },
-  "type.weakUnionCheck": true,
   "workspace.preloadFileSize": 750,
   "diagnostics.ignoredFiles": "Disable",
   "diagnostics.globals": [
