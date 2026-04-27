@@ -28,6 +28,7 @@ dbplanner.md
 OneWoW_Utility_Extractor/
 OneWoW_UI/
 bin/updatefolder/
+ONEWOW_SUITE.code-workspace
 
 # Audit tools: ignore everything EXCEPT the two published report files
 bin/audit-tools/*
