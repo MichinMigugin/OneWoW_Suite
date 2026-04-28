@@ -204,11 +204,7 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     card:SetClipsChildren(true)
     card:SetBackdrop(BACKDROP_SIMPLE)
     card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    if card.SetPropagateMouseClicks then
-        pcall(function()
-            card:SetPropagateMouseClicks("LeftButton", false)
-        end)
-    end
+    card:SetPropagateMouseClicks(false)
 
     local bgImage = GetInstanceBackground(instData.instanceID)
     if bgImage and bgImage ~= false then

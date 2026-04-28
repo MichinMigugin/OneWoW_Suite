@@ -1083,15 +1083,13 @@ local function ProcessBagContainer(container)
 end
 
 local function RefreshBags()
-    if ContainerFrameCombinedBags and ContainerFrameCombinedBags:IsVisible() then
+    if ContainerFrameCombinedBags:IsVisible() then
         ProcessBagContainer(ContainerFrameCombinedBags)
     end
 
-    if ContainerFrameContainer then
-        for _, cf in ipairs(ContainerFrameContainer.ContainerFrames or {}) do
-            if cf and cf:IsVisible() then
-                ProcessBagContainer(cf)
-            end
+    for _, cf in ipairs(ContainerFrameContainer.ContainerFrames or {}) do
+        if cf and cf:IsVisible() then
+            ProcessBagContainer(cf)
         end
     end
 
@@ -1114,7 +1112,7 @@ local function RefreshBank()
         end
         trackedBankButtons = {}
 
-        if _G.BankPanel and BankPanel:IsVisible() then
+        if BankPanel and BankPanel:IsVisible() then
             for i = 1, 98 do
                 local btn = BankPanel.FindItemButtonByContainerSlotID and BankPanel:FindItemButtonByContainerSlotID(i)
                 if btn then
@@ -1127,26 +1125,6 @@ local function RefreshBank()
                             if link then BuildOverlaysForButton(btn, link, loc) else CleanButton(btn) end
                         else
                             CleanButton(btn)
-                        end
-                    end
-                end
-            end
-        end
-
-        if _G.AccountBankPanel and AccountBankPanel:IsVisible() then
-            for itemButton in AccountBankPanel:EnumerateValidItems() do
-                if itemButton and itemButton:IsVisible() then
-                    trackedBankButtons[itemButton] = true
-                    local tabID  = itemButton.GetBankTabID and itemButton:GetBankTabID()
-                    local slotID = itemButton.GetContainerSlotID and itemButton:GetContainerSlotID()
-                    if tabID and slotID then
-                        local loc    = ItemLocation:CreateFromBagAndSlot(tabID, slotID)
-                        local exists = C_Item.DoesItemExist(loc)
-                        if exists then
-                            local link = C_Item.GetItemLink(loc)
-                            if link then BuildOverlaysForButton(itemButton, link, loc) else CleanButton(itemButton) end
-                        else
-                            CleanButton(itemButton)
                         end
                     end
                 end
@@ -1222,18 +1200,12 @@ local function RefreshSearchDim()
         end
     end
 
-    if _G.BankPanel and BankPanel:IsVisible() then
+    if BankPanel and BankPanel:IsVisible() then
         if BankPanel.FindItemButtonByContainerSlotID then
             for i = 1, 98 do
                 local btn = BankPanel:FindItemButtonByContainerSlotID(i)
                 if btn then SyncSearchDim(btn) end
             end
-        end
-    end
-
-    if _G.AccountBankPanel and AccountBankPanel:IsVisible() then
-        for itemButton in AccountBankPanel:EnumerateValidItems() do
-            SyncSearchDim(itemButton)
         end
     end
 end
@@ -1274,7 +1246,7 @@ end
 local surfacesInitialized = false
 
 local function RefreshGuildBank()
-    if not _G.GuildBankFrame or not GuildBankFrame:IsShown() then return end
+    if not GuildBankFrame or not GuildBankFrame:IsShown() then return end
     for tab = 1, 7 do
         if GuildBankFrame.Columns and GuildBankFrame.Columns[tab] then
             for slot = 1, 14 do
@@ -1344,7 +1316,7 @@ local function RefreshGroupLoot()
 end
 
 local function RefreshLootFrame()
-    if not _G.LootFrame or not LootFrame:IsShown() then return end
+    if not LootFrame or not LootFrame:IsShown() then return end
     if LootFrame.ScrollBox and LootFrame.ScrollBox.view and LootFrame.ScrollBox.view.frames then
         for _, frame in next, LootFrame.ScrollBox.view.frames do
             if frame and frame.Item then
@@ -1363,9 +1335,9 @@ local function RefreshLootFrame()
 end
 
 local function RefreshGreatVault()
-    if not _G.WeeklyRewardsFrame or not WeeklyRewardsFrame:IsShown() then return end
-    local children = { WeeklyRewardsFrame:GetChildren() }
-    for _, v in pairs(children) do
+    if not WeeklyRewardsFrame:IsShown() then return end
+    for _, v in pairs(WeeklyRewardsFrame.Activities) do
+        ---@cast v { hasRewards: boolean?, info: WeeklyRewardActivityInfo?, ItemFrame: Button? }
         if v and v.hasRewards and v.ItemFrame and v.info and v.info.rewards and v.info.rewards[1] then
             local link = C_WeeklyRewards.GetItemHyperlink(v.info.rewards[1].itemDBID)
             if link then
@@ -1378,7 +1350,7 @@ local function RefreshGreatVault()
 end
 
 local function RefreshWorldQuestPins()
-    if not _G.WorldMapFrame then return end
+    if not WorldMapFrame then return end
     C_Timer.After(0.1, function()
         for pin in WorldMapFrame:EnumeratePinsByTemplate("WorldMap_WorldQuestPinTemplate") do
             if pin and pin.questID then
@@ -1410,21 +1382,21 @@ local function InitializeSurfaces()
     if surfacesInitialized then return end
     surfacesInitialized = true
 
-    if _G.LootFrame and LootFrame.HookScript then
+    if LootFrame and LootFrame.HookScript then
         LootFrame:HookScript("OnShow", RefreshLootFrame)
     end
 
-    if _G.GuildBankFrame then
+    if GuildBankFrame then
         if GuildBankFrame.Update then
             hooksecurefunc(GuildBankFrame, "Update", RefreshGuildBank)
         end
         GuildBankFrame:HookScript("OnShow", RefreshGuildBank)
     end
 
-    if _G.InboxPrevPageButton then
+    if InboxPrevPageButton then
         InboxPrevPageButton:HookScript("OnClick", RefreshMailbox)
     end
-    if _G.InboxNextPageButton then
+    if InboxNextPageButton then
         InboxNextPageButton:HookScript("OnClick", RefreshMailbox)
     end
     for i = 1, 7 do
@@ -1451,7 +1423,7 @@ local function InitializeSurfaces()
                             C_QuestLog.SetSelectedQuest(GetQuestID())
                         end
                         link = GetQuestLogItemLink(v.type, k)
-                    elseif rewardsFrame == _G.MapQuestInfoRewardsFrame then
+                    elseif rewardsFrame == MapQuestInfoRewardsFrame then
                         link = GetQuestLogItemLink(v.type, k)
                     else
                         link = GetQuestItemLink(v.type, k)
@@ -1470,25 +1442,25 @@ local function InitializeSurfaces()
     end
 
     local function RefreshQuestRewards(mode)
-        if _G.QuestInfoRewardsFrame and not (_G.WorldMapFrame and WorldMapFrame:IsShown()) then
+        if QuestInfoRewardsFrame and not (WorldMapFrame and WorldMapFrame:IsShown()) then
             ProcessQuestRewardFrame(QuestInfoRewardsFrame, mode)
             C_Timer.After(1, function() ProcessQuestRewardFrame(QuestInfoRewardsFrame, mode) end)
         end
-        if _G.MapQuestInfoRewardsFrame and _G.WorldMapFrame and WorldMapFrame:IsShown() then
+        if MapQuestInfoRewardsFrame and WorldMapFrame and WorldMapFrame:IsShown() then
             ProcessQuestRewardFrame(MapQuestInfoRewardsFrame, mode)
         end
     end
 
-    if _G.QuestFrameRewardPanel then
+    if QuestFrameRewardPanel then
         QuestFrameRewardPanel:HookScript("OnShow", function() RefreshQuestRewards() end)
     end
-    if _G.QuestInfoRewardsFrame then
+    if QuestInfoRewardsFrame then
         QuestInfoRewardsFrame:HookScript("OnShow", function() RefreshQuestRewards() end)
     end
-    if _G.QuestInfo_Display then
+    if QuestInfo_Display then
         hooksecurefunc("QuestInfo_Display", function() RefreshQuestRewards() end)
     end
-    if _G.QuestMapFrame_ShowQuestDetails then
+    if QuestMapFrame_ShowQuestDetails then
         hooksecurefunc("QuestMapFrame_ShowQuestDetails", function()
             RefreshQuestRewards()
             C_Timer.After(0.1, function() RefreshQuestRewards() end)
@@ -1498,7 +1470,7 @@ local function InitializeSurfaces()
     local ejHooked = false
     local function RegisterEJHook()
         if ejHooked then return end
-        if not _G.EncounterJournalEncounterFrameInfo then return end
+        if not EncounterJournalEncounterFrameInfo then return end
         if not EncounterJournalEncounterFrameInfo.LootContainer then return end
         if not EncounterJournalEncounterFrameInfo.LootContainer.ScrollBox then return end
         EncounterJournalEncounterFrameInfo.LootContainer.ScrollBox:RegisterCallback("OnAcquiredFrame", function(_, v)
@@ -1522,13 +1494,13 @@ local function InitializeSurfaces()
         end)
         ejHooked = true
     end
-    if _G.EncounterJournal then
+    if EncounterJournal then
         EncounterJournal:HookScript("OnShow", RegisterEJHook)
     end
     local surfaceEventFrame_EJ = CreateFrame("Frame")
     surfaceEventFrame_EJ:RegisterEvent("UPDATE_INSTANCE_INFO")
     surfaceEventFrame_EJ:SetScript("OnEvent", function()
-        if _G.EncounterJournal and EncounterJournal:IsShown() then
+        if EncounterJournal and EncounterJournal:IsShown() then
             RegisterEJHook()
         end
     end)
@@ -1537,7 +1509,7 @@ local function InitializeSurfaces()
     local ahHooked = false
     local function RegisterAHHook()
         if ahHooked then return end
-        if not _G.AuctionHouseFrame then return end
+        if not AuctionHouseFrame then return end
         if not AuctionHouseFrame.BrowseResultsFrame then return end
         if not AuctionHouseFrame.BrowseResultsFrame.ItemList then return end
         if not AuctionHouseFrame.BrowseResultsFrame.ItemList.ScrollBox then return end
@@ -1571,7 +1543,7 @@ local function InitializeSurfaces()
     local bmHooked = false
     local function RegisterBMHook()
         if bmHooked then return end
-        if not _G.BlackMarketFrame then return end
+        if not BlackMarketFrame then return end
         if not BlackMarketFrame.ScrollBox then return end
         BlackMarketFrame.ScrollBox:RegisterCallback("OnAcquiredFrame", function(_, v, data)
             C_Timer.After(0.1, function()
@@ -1589,18 +1561,18 @@ local function InitializeSurfaces()
         end)
         bmHooked = true
     end
-    if _G.BlackMarketFrame then
+    if BlackMarketFrame then
         BlackMarketFrame:HookScript("OnShow", RegisterBMHook)
     end
 
-    if _G.WeeklyRewardsFrame then
+    if WeeklyRewardsFrame then
         WeeklyRewardsFrame:HookScript("OnShow", function()
             RefreshGreatVault()
             C_Timer.After(1, RefreshGreatVault)
         end)
     end
 
-    if _G.WorldMapFrame then
+    if WorldMapFrame then
         WorldMapFrame:HookScript("OnShow", RefreshWorldQuestPins)
         if EventRegistry then
             EventRegistry:RegisterCallback("MapCanvas.MapSet", RefreshWorldQuestPins)
@@ -1684,16 +1656,7 @@ function Engine:Initialize()
         end
     end
 
-    if AccountBankPanel then
-        if AccountBankPanel.GenerateItemSlotsForSelectedTab then
-            hooksecurefunc(AccountBankPanel, "GenerateItemSlotsForSelectedTab", function() RefreshBank() end)
-        end
-        if AccountBankPanel.RefreshAllItemsForSelectedTab then
-            hooksecurefunc(AccountBankPanel, "RefreshAllItemsForSelectedTab", function() RefreshBank() end)
-        end
-    end
-
-    if _G.MerchantFrame_Update then
+    if MerchantFrame_Update then
         hooksecurefunc("MerchantFrame_Update", RefreshVendor)
     end
 

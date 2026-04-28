@@ -1,3 +1,5 @@
+-- NOTE: this code doesn't seem to be used anywhere (2026-04-27)
+
 local addonName, ns = ...
 ns.UI = ns.UI or {}
 ns.UI.Dialog = {}
@@ -103,6 +105,7 @@ function ns.UI.Dialog.Create(config)
         onClose = function()
             if config.onClose then config.onClose() end
             if config.destroyOnClose then
+                ---@diagnostic disable-next-line: undefined-global
                 ns.UI.Dialog.DestroyDialog(dialog)
                 ns.UI.Dialog.openDialogs[dialogName] = nil
             end
