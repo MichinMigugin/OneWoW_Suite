@@ -1,5 +1,9 @@
 local ADDON_NAME, OneWoW = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+local PE = OneWoW_GUI.PredicateEngine
+
 local TooltipEngine = {}
 OneWoW.TooltipEngine = TooltipEngine
 
@@ -153,9 +157,30 @@ function TooltipEngine:BuildContext(tooltip, tooltipType, data)
         end
         context.type = "unit"
     elseif tooltipType == Enum.TooltipDataType.Item then
-        if data.id and not issecretvalue(data.id) and tooltip.GetItem then
-            local _, itemLink = tooltip:GetItem()
+        if data.id and not issecretvalue(data.id) then
             context.itemID = data.id
+
+            local itemLink
+            if data.guid and not issecretvalue(data.guid) then
+                itemLink = C_Item.GetItemLinkByGUID(data.guid)
+            end
+            if not itemLink and data.hyperlink and not issecretvalue(data.hyperlink)
+                and type(data.hyperlink) == "string" then
+                itemLink = data.hyperlink
+            end
+            if not itemLink and tooltip.GetItem then
+                local _, linkFromTooltip = tooltip:GetItem()
+                itemLink = linkFromTooltip
+            end
+
+            if itemLink and context.itemID then
+                local parsed = PE:ParseItemLink(itemLink)
+                local linkItemID = parsed and parsed.itemID
+                if linkItemID and linkItemID ~= context.itemID then
+                    itemLink = select(2, C_Item.GetItemInfo(context.itemID)) or nil
+                end
+            end
+
             context.itemLink = itemLink
         end
         context.type = "item"

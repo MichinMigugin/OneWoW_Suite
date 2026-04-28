@@ -33,7 +33,6 @@ local C_ToyBox, PlayerHasToy = C_ToyBox, PlayerHasToy
 local C_MountJournal, C_PetJournal = C_MountJournal, C_PetJournal
 local C_TransmogCollection = C_TransmogCollection
 local C_TradeSkillUI = C_TradeSkillUI
-local C_PlayerInfo = C_PlayerInfo
 local GetSpecialization, GetSpecializationInfo = GetSpecialization, GetSpecializationInfo
 local BattlePetToolTip_UnpackBattlePetLink = BattlePetToolTip_UnpackBattlePetLink
 
@@ -51,6 +50,38 @@ local compiledCache = {}
 -- ============================================================================
 -- SECTION 3: CONSTANTS AND LOCALE PATTERNS
 -- ============================================================================
+
+-- Some items have broken properties so we override them here
+local ITEM_ID_OVERRIDES = {
+    -- RECIPE: BLACKSMITHING
+    [265530] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [259319] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [259317] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [259237] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [265536] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [259322] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [259318] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [265528] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [265534] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [259235] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [259233] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [265532] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    [259231] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
+    -- RECIPE: ENGINEERING
+    [259180] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
+    [259174] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
+    [259178] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
+    [259184] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
+    [268480] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
+    [259176] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
+    [259172] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
+    [259182] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
+    -- RECIPE: INSCRIPTION
+    [259206] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Inscription },
+    [259210] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Inscription },
+    [259208] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Inscription },
+    [257028] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Inscription },
+}
 
 local BATTLE_PET_CAGE_ID = 82800
 local BATTLE_PET_TYPES = {
@@ -1729,6 +1760,14 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     -- BIND DETECTION NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.
     -- UNIQUE DETECTION NOTE: C_Item.GetItemUniquenessByID only matches unique-equipped items; its purpose is to identify restrictions on equipping items, not on owning them.
+
+    -- Override item properties for when they don't classify correctly.
+    local itemOverride = ITEM_ID_OVERRIDES[itemID]
+    if itemOverride then
+        for propName, propValue in pairs(itemOverride) do
+            props[propName] = propValue
+        end
+    end
 
     -- ---- Apply lazy tooltip metatable ----
     setmetatable(props, propsMT)
