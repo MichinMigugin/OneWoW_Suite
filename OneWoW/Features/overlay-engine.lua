@@ -1335,15 +1335,16 @@ local function RefreshLootFrame()
 end
 
 local function RefreshGreatVault()
-    if not WeeklyRewardsFrame:IsShown() then return end
-    for _, v in pairs(WeeklyRewardsFrame.Activities) do
-        ---@cast v { hasRewards: boolean?, info: WeeklyRewardActivityInfo?, ItemFrame: Button? }
-        if v and v.hasRewards and v.ItemFrame and v.info and v.info.rewards and v.info.rewards[1] then
-            local link = C_WeeklyRewards.GetItemHyperlink(v.info.rewards[1].itemDBID)
-            if link then
-                BuildOverlaysForButton(v.ItemFrame, link, nil)
-            else
-                CleanButton(v.ItemFrame)
+    if WeeklyRewardsFrame and WeeklyRewardsFrame:IsShown() then
+        for _, v in pairs(WeeklyRewardsFrame.Activities) do
+            ---@cast v { hasRewards: boolean?, info: WeeklyRewardActivityInfo?, ItemFrame: Button? }
+            if v and v.hasRewards and v.ItemFrame and v.info and v.info.rewards and v.info.rewards[1] then
+                local link = C_WeeklyRewards.GetItemHyperlink(v.info.rewards[1].itemDBID)
+                if link then
+                    BuildOverlaysForButton(v.ItemFrame, link, nil)
+                else
+                    CleanButton(v.ItemFrame)
+                end
             end
         end
     end
