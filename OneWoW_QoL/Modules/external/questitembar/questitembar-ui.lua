@@ -475,7 +475,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
             itemCol:EnableMouse(true)
             itemCol:SetScript("OnEnter", function(self)
                 row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                local link = entry.link or (entry.itemID and C_Item.GetItemLinkByID(entry.itemID))
+                local link = entry.link or (entry.itemID and select(2, C_Item.GetItemInfo(entry.itemID)))
                 if link then
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     GameTooltip:SetHyperlink(link)
