@@ -267,9 +267,8 @@ local function TechnicalIDsProvider(tooltip, context)
         -- Skip for talent tooltips; the SetTooltipInternal hook adds everything
         -- so our IDs aren't split by game lines ("Right click to unlearn", etc.)
         local owner = tooltip and tooltip.GetOwner and tooltip:GetOwner()
-        local focus = GetMouseFocus and GetMouseFocus()
-        local check = owner or focus
-        if check and (check.entryID or check.definitionID) then
+
+        if owner and (owner.entryID or owner.definitionID) then
             return nil
         end
         detectedIDs.spellID = context.spellID
@@ -546,13 +545,15 @@ if GetActionInfo then
         local actionType, id = GetActionInfo(slot)
         if not id then return end
         if actionType == "companion" then
-            local ids = { companionID = id }
-            if C_PetJournal and C_PetJournal.GetPetInfoBySpeciesID then
-                ids.petID = id
-                local _, iconID, _, npcID = C_PetJournal.GetPetInfoBySpeciesID(id)
-                if npcID then ids.npcID = npcID end
-                if iconID then ids.iconID = iconID end
-            end
+            local ids = {
+                companionID = id,
+                petID = id
+            }
+            ---@cast id number
+            local _, iconID, _, npcID = C_PetJournal.GetPetInfoBySpeciesID(id)
+            if npcID then ids.npcID = npcID end
+            if iconID then ids.iconID = iconID end
+
             AddHookIDBlock(tooltip, ids)
         end
     end)

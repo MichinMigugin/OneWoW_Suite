@@ -17,7 +17,7 @@ end
 
 local function TexturePool_ResetVertexColor(pool, texture)
     texture:SetVertexColor(1, 1, 1, 1)
-    return TexturePool_HideAndClearAnchors(pool, texture)
+    return Pool_HideAndClearAnchors(pool, texture)
 end
 
 --- Faction-specific garrison tile patches (fileDataIDs to strip from comma list).
@@ -87,7 +87,13 @@ local function AppendMissingExplorationOverlays(pin, mapID, artTable, outList, f
 
     for rectKey, filesStr in pairs(artTable) do
         if not TileExists[rectKey] then
-            local sw, sh, offsetX, offsetY = strsplit(":", rectKey)
+            local sw, sh
+            ---@type string|number
+            local offsetX
+            ---@type string|number
+            local offsetY
+
+            sw, sh, offsetX, offsetY = strsplit(":", rectKey)
             local width = tonumber(sw)
             local height = tonumber(sh)
             offsetX = tonumber(offsetX) or 0

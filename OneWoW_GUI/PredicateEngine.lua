@@ -1132,7 +1132,10 @@ local function GetBattlePetData(itemID, hyperlink)
 
     if itemID == BATTLE_PET_CAGE_ID then
         speciesID, level, breedQuality, maxHealth, power, speed = BattlePetToolTip_UnpackBattlePetLink(hyperlink)
-        petName, _, petType, _, _, _, isWild, canBattle, isTradeable, isUnique = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
+
+        if speciesID then
+            petName, _, petType, _, _, _, isWild, canBattle, isTradeable, isUnique = C_PetJournal.GetPetInfoBySpeciesID(speciesID)
+        end
     else
         petName, _, petType, _, _, _, isWild, canBattle, isTradeable, isUnique, _, _, speciesID = C_PetJournal.GetPetInfoByItemID(itemID)
 
@@ -1590,7 +1593,6 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
             end
         end
 
-            -- ---- Refundable items ----
         if itemLocation and itemLocation:IsValid() then
             props.isRefundable = C_Item.CanBeRefunded(itemLocation)
             props.isScrappable = C_Item.CanScrapItem(itemLocation)

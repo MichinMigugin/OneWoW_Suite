@@ -283,10 +283,10 @@ function QuestToolsModule:InitAccept()
         elseif event == "QUEST_GREETING" then
             if not GetToggle("auto_accept") then return end
             if IsShiftKeyDown() then return end
-            local numActive = GetNumActiveQuests()
-            for i = 1, numActive do SelectActiveQuest(i) end
-            local numAvail = GetNumAvailableQuests()
-            for i = 1, numAvail do SelectAvailableQuest(i) end
+            local numActive = C_GossipInfo.GetNumActiveQuests()
+            for i = 1, numActive do C_GossipInfo.SelectActiveQuest(i) end
+            local numAvail = C_GossipInfo.GetNumAvailableQuests()
+            for i = 1, numAvail do C_GossipInfo.SelectAvailableQuest(i) end
         end
     end)
 end

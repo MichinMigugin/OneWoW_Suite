@@ -16,7 +16,7 @@ local MinimapButtonsModule = {
     defaultEnabled = true,
 }
 
--- ─── Raw UIParent methods (bypass noOp overrides when positioning buttons) ──
+-- ─── Raw UIParent methods (bypass noop overrides when positioning buttons) ──
 
 local RawClearAllPoints = UIParent.ClearAllPoints
 local RawSetPoint       = UIParent.SetPoint
@@ -67,7 +67,7 @@ local OWN_BUTTON_NAME = "OneWoW_QoL_MMBtnCollector"
 
 -- ─── Helpers ────────────────────────────────────────────────────────────────
 
-local noOp = function() end
+local noop = function(...) end
 
 local function ScheduleRelayout()
     if _relayoutTimer then
@@ -277,12 +277,14 @@ local function LibDBIconNotifyRestored(frame)
     local list = lib.GetButtonList and lib:GetButtonList()
     if not list then return end
     for _, n in ipairs(list) do
-        local btn = lib.GetMinimapButton and lib:GetMinimapButton(n)
-        if btn == frame then
-            if type(lib.Show) == "function" then
-                pcall(lib.Show, lib, n)
+        if type(n) == "string" then
+            local btn = lib.GetMinimapButton and lib:GetMinimapButton(n)
+            if btn == frame then
+                if type(lib.Show) == "function" then
+                    pcall(lib.Show, lib, n)
+                end
+                break
             end
-            break
         end
     end
 end
@@ -353,10 +355,10 @@ local function CollectButton(frame)
     end
     ApplyCollectedButtonScale(frame)
 
-    frame.ClearAllPoints = noOp
-    frame.SetPoint       = noOp
-    frame.SetParent      = noOp
-    frame.SetScale       = noOp
+    frame.ClearAllPoints = noop
+    frame.SetPoint       = noop
+    frame.SetParent      = noop
+    frame.SetScale       = noop
 
     if not frame._OneWoWMBBShowHooked then
         hooksecurefunc(frame, "Show", function()
@@ -431,14 +433,16 @@ local function ScanLibDBIcon()
     local list = libDBIcon:GetButtonList()
     if not list then return end
     for _, name in ipairs(list) do
-        local btn = libDBIcon:GetMinimapButton(name)
-        if btn and btn.GetName then
-            local frameName = btn:GetName()
-            if frameName and not collectedNames[frameName]
-               and not BLIZZARD_SKIP[frameName]
-               and not IsBlacklisted(frameName)
-               and frameName ~= OWN_BUTTON_NAME then
-                CollectButton(btn)
+        if type(name) == "string" then
+            local btn = libDBIcon:GetMinimapButton(name)
+            if btn and btn.GetName then
+                local frameName = btn:GetName()
+                if frameName and not collectedNames[frameName]
+                   and not BLIZZARD_SKIP[frameName]
+                   and not IsBlacklisted(frameName)
+                   and frameName ~= OWN_BUTTON_NAME then
+                    CollectButton(btn)
+                end
             end
         end
     end
@@ -467,7 +471,7 @@ local function ScanWhitelist()
     for _, path in ipairs(s.whitelist) do
         if path and path ~= "" then
             local frame = getButtonByName(path)
-            if isValidFrame(frame) and not isButtonCollected(frame) then
+            if frame and isValidFrame(frame) and not isButtonCollected(frame) then
                 local fn = frame:GetName()
                 if fn and not IsBlacklisted(fn) then
                     CollectButton(frame)

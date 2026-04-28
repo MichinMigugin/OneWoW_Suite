@@ -338,7 +338,7 @@ local function CanMount(opts)
         if updateMountFailedReason("CombatCooldown", (now - lastCombatTime) <= 1) then blocked = true end
         if updateMountFailedReason("CastingNonMount", WasCastingNonMount()) then blocked = true end
         if updateMountFailedReason("MountCastCooldown", (now - lastCastingMountTime) <= 4) then blocked = true end
-        if updateMountFailedReason("CastBarVisible", CastingBarFrame and CastingBarFrame:IsVisible()) then blocked = true end
+        if updateMountFailedReason("CastBarVisible", PlayerCastingBarFrame:IsVisible()) then blocked = true end
         if updateMountFailedReason("MapUpdate", (now - lastMapUpdate) <= 1) then blocked = true end
         if updateMountFailedReason("MountedCooldown", (now - lastMountedTime) <= 1) then blocked = true end
         if updateMountFailedReason("MovingCooldown", (now - lastMovingTime) <= 0.4) then blocked = true end
@@ -624,7 +624,7 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
                     AM:ShowMountPicker(capturedKey, function()
                         local prefs2 = GetPreferences()
                         local sel    = prefs2[capturedKey]
-                        if sel == "auto" or not sel then
+                        if type(sel) ~= "number" then
                             mountBtn.mountIcon:SetTexture("Interface\\Icons\\achievement_guildperk_mountup")
                             mountBtn.mountText:SetText(L["AUTOMOUNT_RANDOM_FAVORITE"])
                         else
@@ -666,7 +666,7 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
             local mountBtn = mountBtnRef[1]
             if mountBtn then
                 local sel = prefs2[capturedKey]
-                if sel == "auto" or not sel then
+                if type(sel) ~= "number" then
                     mountBtn.mountIcon:SetTexture("Interface\\Icons\\achievement_guildperk_mountup")
                     mountBtn.mountText:SetText(L["AUTOMOUNT_RANDOM_FAVORITE"])
                 else
@@ -755,7 +755,7 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
             disableCheck = CreateFrame("CheckButton", nil, detailScrollChild, "UICheckButtonTemplate")
             disableCheck:SetSize(26, 26)
             disableCheck:SetPoint("LEFT", sliderContainer, "RIGHT", 8, 10)
-            disableCheck:SetChecked(timingPrefs[def.disableKey])
+            disableCheck:SetChecked(timingPrefs[def.disableKey] == true)
 
             local disableLabel = disableCheck:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
             disableLabel:SetPoint("LEFT", disableCheck, "RIGHT", 2, 0)
