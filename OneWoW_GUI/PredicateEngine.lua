@@ -499,10 +499,12 @@ RegisterKeyword("broken",                               function(p) return p.isB
 
 RegisterKeyword("myclass", function(p)
     if not p.isEquipment then return false end
+    if p.classID == Enum.ItemClass.Profession then return false end -- some tradeskill items show up as equipment
     return PE:CanClassEquip(p.id, p.hyperlink)
 end)
 RegisterKeyword("myspec", function(p)
     if not p.isEquipment then return false end
+    if p.classID == Enum.ItemClass.Profession then return false end -- some tradeskill items show up as equipment
     local _, _, classID = UnitClass("player")
     local specID = GetSpecializationInfo(GetSpecialization())
     if not classID or not specID then return false end
