@@ -7,6 +7,37 @@ local strlower = string.lower
 
 local Constants = OneWoW_GUI.Constants
 
+---@class OneWoW_GUI_KeywordEntry
+---@field canonical string  Lowercase canonical keyword name (no leading "#").
+---@field aliases string[]  Other names for the same predicate. Excludes `canonical`. Sorted alphabetically. May be empty.
+
+---@class OneWoW_GUI_KeywordCategory
+---@field id string     Stable category key referenced by `CATEGORY_RULES`.
+---@field title string  Human-readable header rendered above the chip group.
+
+---@class OneWoW_GUI_GrammarRow
+---@field left string   Syntax sample shown in the left column.
+---@field right string  Plain-language description shown in the right column.
+
+--- A chip Button extended with `BackdropTemplate` mixin methods plus the
+--- per-chip metadata stashed by `MakeKeywordChip`.
+---@class OneWoW_GUI_KeywordChip : Button, BackdropTemplate
+---@field label FontString          Always present; renders `#canonical`.
+---@field sub FontString?           Present only when the keyword has aliases; renders the alias list in muted text.
+---@field canonical string          Mirrors `OneWoW_GUI_KeywordEntry.canonical`.
+---@field aliasList string[]        Mirrors `OneWoW_GUI_KeywordEntry.aliases`. Empty array, never nil.
+
+--- The "?" Button created by `CreateKeywordHelpButton`. No extra fields, but the
+--- class lets us cleanly express "Button + BackdropTemplate".
+---@class OneWoW_GUI_KeywordHelpButton : Button, BackdropTemplate
+
+--- An `OneWoW_GUI:CreateEditBox`-flavored EditBox that optionally carries a
+--- `placeholderText` field. Native EditBoxes created elsewhere may not, so the
+--- field is typed optional.
+---@class OneWoW_GUI_PlaceholderEditBox : EditBox
+---@field placeholderText string?
+
+---@return table?  The `OneWoW_GUI.PredicateEngine` instance, or nil if not yet attached.
 local function GetPE()
     return OneWoW_GUI.PredicateEngine
 end
@@ -14,6 +45,7 @@ end
 -- Category bucketing. Any keyword whose canonical name isn't listed here
 -- falls into "Other". This keeps the help panel scannable without forcing
 -- hard categorization on the engine itself.
+---@type OneWoW_GUI_KeywordCategory[]
 local CATEGORIES = {
     { id = "grammar", title = "Syntax & Operators" },
     { id = "quality", title = "Quality" },
@@ -37,6 +69,7 @@ local CATEGORIES = {
     { id = "other",   title = "Other" },
 }
 
+---@type table<string, table<string, boolean>>
 local CATEGORY_RULES = {
     quality = { poor = true, common = true, uncommon = true, rare = true, epic = true, legendary = true, artifact = true, heirloom = true, junk = true },
     bind    = { soulbound = true, boe = true, boa = true, bou = true, wue = true },
@@ -58,6 +91,10 @@ local CATEGORY_RULES = {
     special = { hearthstone = true, keystone = true, tierset = true, battlepay = true, wowtoken = true, housing = true, decor = true, dye = true, room = true, recent = true },
 }
 
+--- Resolve the display category for a canonical keyword name. Falls back to
+--- `"other"` when no `CATEGORY_RULES` entry claims it.
+---@param canonical string  Lowercase keyword name (no leading "#").
+---@return string catId     One of the `id` values in `CATEGORIES`.
 local function CategorizeKeyword(canonical)
     for catId, map in pairs(CATEGORY_RULES) do
         if map[canonical] then return catId end
@@ -65,6 +102,7 @@ local function CategorizeKeyword(canonical)
     return "other"
 end
 
+---@type OneWoW_GUI_GrammarRow[]
 local GRAMMAR_ROWS = {
     { left = "a and b   |   a & b",             right = "Both conditions must match (default)." },
     { left = "a or b   |   a | b",              right = "Either condition may match." },
@@ -79,20 +117,32 @@ local GRAMMAR_ROWS = {
     { left = "#epic and ilvl>=600 and !#soulbound", right = "Complex example: epic items 600+ ilvl that are not soulbound." },
 }
 
+---@type Frame?  Lazy-built shared help window. nil until `BuildKeywordFrame` runs.
 local keywordFrame
-local keywordScroll
+---@type Frame?  Scroll child that hosts the per-category chip grid.
 local keywordContent
+---@type OneWoW_GUI_PlaceholderEditBox?  Edit box that receives clicked-keyword tokens, set per-`ShowKeywordHelp` call.
 local currentEditBox
+---@type string  Current filter substring, lower-cased on apply by `KeywordMatchesFilter`.
 local currentFilterText = ""
+---@type table<string, FontString>  catId -> reusable header FontString rendered above each chip group.
 local categoryHeaders = {}
+---@type OneWoW_GUI_KeywordChip[]  All keyword chips ever created, kept for re-layout on filter/resize.
 local keywordChips = {}
 
+--- Append `token` to `editBox` with a single-space separator, restoring the
+--- normal text color (clearing placeholder/muted styling) and re-running any
+--- registered `OnTextChanged` handler so search results update immediately.
+--- No-op when `editBox` is nil.
+---@param editBox OneWoW_GUI_PlaceholderEditBox?  Target edit box (typically a search input). `placeholderText` is honored if present.
+---@param token string                            Text to append (e.g. `"#rare"`).
 local function AppendToEditBox(editBox, token)
     if not editBox then
         return
     end
     local text = editBox:GetText() or ""
-    if editBox.placeholderText and text == editBox.placeholderText then
+    local placeholder = editBox.placeholderText
+    if placeholder and text == placeholder then
         text = ""
     end
     if text ~= "" and not text:match("%s$") then
@@ -109,6 +159,10 @@ local function AppendToEditBox(editBox, token)
     editBox:SetCursorPosition(#text)
 end
 
+--- Build the two label strings for a keyword chip.
+---@param entry OneWoW_GUI_KeywordEntry
+---@return string mainLabel   `"#" .. canonical` (e.g. `"#rare"`).
+---@return string? aliasLabel Space-separated `"#alias1 #alias2"` string, or nil when `entry.aliases` is empty.
 local function BuildChipLabel(entry)
     if entry.aliases and #entry.aliases > 0 then
         local aliasStr = "#" .. table.concat(entry.aliases, " #")
@@ -117,8 +171,20 @@ local function BuildChipLabel(entry)
     return "#" .. entry.canonical, nil
 end
 
+--- Create a clickable chip Button representing a single keyword.
+---
+--- Click behavior: when `currentEditBox` is set, the chip appends `"#canonical"`
+--- to that edit box (see `AppendToEditBox`). When unset, the click is a no-op
+--- and the tooltip omits the "click to insert" hint.
+---
+--- The returned button stashes `canonical` and `aliasList` fields for later
+--- filtering/categorization without re-walking the entry table.
+---@param parent Frame
+---@param entry OneWoW_GUI_KeywordEntry
+---@return OneWoW_GUI_KeywordChip chip
 local function MakeKeywordChip(parent, entry)
     local canonical = entry.canonical
+    ---@type OneWoW_GUI_KeywordChip
     local chip = CreateFrame("Button", nil, parent, "BackdropTemplate")
     chip:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     chip:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
@@ -171,6 +237,12 @@ local function MakeKeywordChip(parent, entry)
     return chip
 end
 
+--- Substring match against canonical name and aliases. Empty/nil filter matches
+--- everything. Comparison is case-insensitive (filter is lowered) and uses plain
+--- `string.find` (no Lua patterns).
+---@param entry { canonical: string, aliases: string[]? }
+---@param filter string?
+---@return boolean
 local function KeywordMatchesFilter(entry, filter)
     if not filter or filter == "" then return true end
     local lower = strlower(filter)
@@ -181,6 +253,13 @@ local function KeywordMatchesFilter(entry, filter)
     return false
 end
 
+--- Re-position every chip into category groups, applying the active
+--- `currentFilterText` filter and showing/hiding chips accordingly. Recomputes
+--- `keywordContent` height so the parent scroll frame can size correctly.
+---
+--- Safe to call repeatedly. Invoked on filter change, OnSizeChanged, and OnShow.
+--- The `"grammar"` category is intentionally skipped — grammar rows are rendered
+--- statically above the chip area in `BuildKeywordFrame`.
 local function LayoutChips()
     local content = keywordContent
     if not content then return end
@@ -252,6 +331,17 @@ local function LayoutChips()
     content:SetHeight(math.max(totalHeight + 16, 1))
 end
 
+--- Lazily build the shared keyword help window the first time it is requested.
+--- Subsequent calls return the cached frame untouched.
+---
+--- Side effects on first build:
+---   * Populates the module-level `keywordFrame`, `keywordContent`,
+---     `categoryHeaders`, and `keywordChips` tables.
+---   * Queries `OneWoW_GUI.PredicateEngine:GetAllKeywords()` and creates one
+---     chip per entry. If the engine isn't attached yet, the chip area stays
+---     empty (the frame still builds).
+---   * Hooks `OnSizeChanged` / `OnShow` so layout re-runs after resize/reopen.
+---@return Frame keywordFrame  The shared, hidden-by-default help window.
 local function BuildKeywordFrame()
     if keywordFrame then return keywordFrame end
 
@@ -269,7 +359,6 @@ local function BuildKeywordFrame()
     keywordFrame:SetToplevel(true)
     keywordFrame:Hide()
 
-    -- Title bar
     local titleBar = CreateFrame("Frame", nil, keywordFrame)
     titleBar:SetPoint("TOPLEFT", keywordFrame, "TOPLEFT", 0, 0)
     titleBar:SetPoint("TOPRIGHT", keywordFrame, "TOPRIGHT", 0, 0)
@@ -332,7 +421,6 @@ local function BuildKeywordFrame()
     end
     grammarFrame:SetHeight(math.abs(gy) + 12)
 
-    -- Filter box
     local filterBox = OneWoW_GUI:CreateEditBox(keywordFrame, {
         height = 22,
         placeholderText = "Filter keywords (e.g. mount, boe, rare)...",
@@ -349,10 +437,8 @@ local function BuildKeywordFrame()
     scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", filterBox, "BOTTOMLEFT", -4, -8)
     scroll:SetPoint("BOTTOMRIGHT", keywordFrame, "BOTTOMRIGHT", -10, 36)
-    keywordScroll = scroll
     keywordContent = content
 
-    -- Footer note
     local footer = keywordFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     footer:SetPoint("BOTTOMLEFT", keywordFrame, "BOTTOMLEFT", 12, 10)
     footer:SetPoint("BOTTOMRIGHT", keywordFrame, "BOTTOMRIGHT", -12, 10)
@@ -378,23 +464,39 @@ local function BuildKeywordFrame()
     return keywordFrame
 end
 
---- Open the shared keyword help panel.
---- @param editBox EditBox When provided, clicking any keyword in the panel inserts the #keyword into that box.
+--- Open the shared keyword help panel and (optionally) wire its chips to an
+--- edit box. The panel is built lazily on first call and reused thereafter.
+---
+--- The `editBox` binding is global to the panel for the duration it is open:
+--- calling `ShowKeywordHelp` again replaces the previously bound box. Pass nil
+--- to display the panel in read-only mode (chips become non-inserting).
+---@param editBox OneWoW_GUI_PlaceholderEditBox?  Optional edit box that receives `#keyword` tokens on chip click. Any standard `EditBox` is accepted; the optional `placeholderText` field is honored if present.
 function OneWoW_GUI:ShowKeywordHelp(editBox)
-    BuildKeywordFrame()
+    local frame = BuildKeywordFrame()
     currentEditBox = editBox
-    keywordFrame:Show()
-    keywordFrame:Raise()
+    frame:Show()
+    frame:Raise()
 end
 
+--- Hide the shared keyword help panel if it has been built. No-op otherwise.
 function OneWoW_GUI:HideKeywordHelp()
     if keywordFrame then keywordFrame:Hide() end
 end
 
---- Create a small "?" button that opens the keyword help panel when clicked.
---- @param parent frame
---- @param options table  { editBox = optional EditBox to target, size = 20, tooltipTitle = ..., tooltipDesc = ... }
---- @return Button
+---@class OneWoW_GUI_KeywordHelpButtonOptions
+---@field editBox OneWoW_GUI_PlaceholderEditBox?  Edit box that chip clicks should target while the panel is open. Optional.
+---@field size number?                            Square pixel size of the button. Defaults to 20.
+---@field tooltipTitle string?                    Tooltip header text. Defaults to `"Search Help"`.
+---@field tooltipDesc string?                     Tooltip body text. Defaults to a generic search-syntax hint.
+
+--- Create a small "?" button that opens the shared keyword help panel.
+---
+--- The button styles itself from the active OneWoW_GUI theme (BG_TERTIARY +
+--- BORDER_SUBTLE, with a BTN_HOVER swap on mouseover) and is parented but not
+--- positioned — callers must `SetPoint` it themselves.
+---@param parent Frame
+---@param options OneWoW_GUI_KeywordHelpButtonOptions?
+---@return OneWoW_GUI_KeywordHelpButton
 function OneWoW_GUI:CreateKeywordHelpButton(parent, options)
     options = options or {}
     local size = options.size or 20
@@ -402,6 +504,7 @@ function OneWoW_GUI:CreateKeywordHelpButton(parent, options)
     local title = options.tooltipTitle or "Search Help"
     local desc = options.tooltipDesc or "Search by item name, item ID, or #keywords. Click to see all keywords and syntax."
 
+    ---@type OneWoW_GUI_KeywordHelpButton
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetSize(size, size)
     btn:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
@@ -431,8 +534,16 @@ function OneWoW_GUI:CreateKeywordHelpButton(parent, options)
     return btn
 end
 
+---@class OneWoW_GUI_SearchTooltipOptions
+---@field tooltipTitle string? Tooltip header text. Defaults to `"Search"`.
+---@field tooltipDesc string?  Tooltip body text. Defaults to a generic search-syntax hint.
+
 --- Attach a standard search-help tooltip (no button) to an existing edit box.
---- OnEnter/OnLeave handlers are composed with any existing ones.
+---
+--- Existing `OnEnter` / `OnLeave` handlers are preserved: the previous handler
+--- runs first, then the tooltip is shown/hidden. No-op when `editBox` is nil.
+---@param editBox EditBox?
+---@param options OneWoW_GUI_SearchTooltipOptions?
 function OneWoW_GUI:AttachSearchTooltip(editBox, options)
     if not editBox then return end
     options = options or {}
