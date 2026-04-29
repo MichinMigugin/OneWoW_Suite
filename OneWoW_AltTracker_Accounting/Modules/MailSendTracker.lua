@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.MailSendTracker = {}
 local MailSendTracker = ns.MailSendTracker
@@ -17,7 +17,7 @@ function MailSendTracker:HookMailSend()
         local codItemName, codItemCount
         if cod > 0 then
             for i = 1, ATTACHMENTS_MAX_SEND do
-                local name, texture, count, quality = GetSendMailItem(i)
+                local name, _, count, _ = GetSendMailItem(i)
                 if name then
                     codItemName = name
                     codItemCount = count

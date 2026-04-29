@@ -1,7 +1,7 @@
 -- OneWoW AltTracker Addon File
 -- OneWoW_AltTracker_Endgame/Modules/Currencies.lua
 -- Created by MichinMigugin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 
 ns.Currencies = {}
 local Module = ns.Currencies
@@ -17,12 +17,12 @@ function Module:CollectData(charKey, charData)
     local idsToCollect = {}
     local seen = {}
 
-    if _G.OneWoW_AltTracker_DB and
-       _G.OneWoW_AltTracker_DB.global and
-       _G.OneWoW_AltTracker_DB.global.overrides and
-       _G.OneWoW_AltTracker_DB.global.overrides.progress and
-       _G.OneWoW_AltTracker_DB.global.overrides.progress.trackedCurrencyIDs then
-        for _, id in ipairs(_G.OneWoW_AltTracker_DB.global.overrides.progress.trackedCurrencyIDs) do
+    if OneWoW_AltTracker_DB and
+       OneWoW_AltTracker_DB.global and
+       OneWoW_AltTracker_DB.global.overrides and
+       OneWoW_AltTracker_DB.global.overrides.progress and
+       OneWoW_AltTracker_DB.global.overrides.progress.trackedCurrencyIDs then
+        for _, id in ipairs(OneWoW_AltTracker_DB.global.overrides.progress.trackedCurrencyIDs) do
             if id and id > 0 and not seen[id] then
                 table.insert(idsToCollect, id)
                 seen[id] = true
