@@ -471,6 +471,7 @@ function Categories:SlotMatchesRecent(itemID, bagID, slotID, itemInfo)
     if not itemID or not bagID or not slotID then return false end
     local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
     if itemLocation and itemLocation:IsValid() and C_Item.DoesItemExist(itemLocation) then
+        ---@cast itemLocation ItemLocation
         local guid = C_Item.GetItemGUID(itemLocation)
         if guid and recentItems[guid] then
             local currentTime = time()
@@ -547,6 +548,7 @@ function Categories:OnPlayerBagDirtySnapshot(dirtyBags)
                 if C_NewItems.IsNewItem(bagID, slotID) then
                     local loc = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
                     if loc and loc:IsValid() and C_Item.DoesItemExist(loc) then
+                        ---@cast loc ItemLocation
                         local guid = C_Item.GetItemGUID(loc)
                         if guid then
                             self:AddRecentItem(guid)

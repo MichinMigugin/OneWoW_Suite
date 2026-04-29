@@ -1158,12 +1158,14 @@ local function GetTooltipText(bagID, slotID)
 end
 
 -- ---------- ResolveCollected ----------
+---@param itemID number
+---@param hyperlink string|nil
+---@return table|nil
 local function GetBattlePetData(itemID, hyperlink)
-    if not hyperlink then return nil end
     local petGUID, speciesID, level, breedQuality, maxHealth, power, speed
     local petName, petType, isWild, canBattle, isTradeable, isUnique
 
-    if itemID == BATTLE_PET_CAGE_ID then
+    if itemID == BATTLE_PET_CAGE_ID and hyperlink then
         speciesID, level, breedQuality, maxHealth, power, speed = BattlePetToolTip_UnpackBattlePetLink(hyperlink)
 
         if speciesID then
@@ -1203,11 +1205,19 @@ local function GetBattlePetData(itemID, hyperlink)
     }
 end
 
+---@param itemID number
+---@param hyperlink string|nil
+---@return string
 local function GetItemIdentityKey(itemID, hyperlink)
-    if not itemID then return nil end
-
     local petData = GetBattlePetData(itemID, hyperlink)
-    if not petData then return tostring(itemID) end
+
+    if not petData then
+        if hyperlink and hyperlink ~= "" then
+            return hyperlink
+        end
+
+        return tostring(itemID)
+    end
 
     return tostring(itemID)
         .. ":" .. tostring(petData.speciesID)
@@ -1218,6 +1228,11 @@ local function GetItemIdentityKey(itemID, hyperlink)
         .. ":" .. tostring(petData.petSpeed)
 end
 
+---@param itemID number
+---@param bagID number|nil
+---@param slotID number|nil
+---@param hyperlink string|nil
+---@return string
 local function GetItemCacheKey(itemID, bagID, slotID, hyperlink)
     local cacheKey
     if bagID and slotID then
@@ -1230,6 +1245,11 @@ local function GetItemCacheKey(itemID, bagID, slotID, hyperlink)
 end
 
 -- Checks toy/mount/pet collection status for a specific item.
+---@param itemID number
+---@param classID number
+---@param subClassID number
+---@param hyperlink string|nil
+---@return boolean
 local function ResolveCollected(itemID, classID, subClassID, hyperlink)
     -- Toy check
     local toyInfo = C_ToyBox.GetToyInfo(itemID)
@@ -1299,54 +1319,93 @@ local function ResolveTooltipFields(props)
 end
 
 -- ---------- ResolveBind ----------
--- Tooltip-based bind detection. Reflects the current state of binding on an item.
--- Implements strict soulbound: account-bound text does NOT match isSoulbound.
+-- Tooltip-based bind detection. Source-aware so the same enum value can carry
+-- different semantics depending on which tooltip API supplied it:
+--
+--   * Bag mode (C_TooltipInfo.GetBagItem): the item is in the player's
+--     possession. `bonding == BindOnPickup` is observed only for tradeable
+--     BoP loot (within the trade timer) and is treated as currently-bound,
+--     which is the historical behavior #bop / #soulbound users rely on.
+--
+--   * Link mode (C_TooltipInfo.GetHyperlink): the item is being inspected
+--     out-of-container (vendor / loot / great vault / etc.). Here
+--     `bonding == BindOnPickup` is the policy line shown for unowned items;
+--     the player is not yet bound to it, so #bop / #soulbound must NOT match.
+--
+-- Other binding values (BindOnEquip, BindOnUse, Soulbound, account variants,
+-- account-until-equipped) carry the same meaning in both modes.
+--
+-- Asymmetry note: in tooltip-only (link) mode, #boe / #bou / #warbound / #wue
+-- match because the policy-line state is well-defined; #bop / #soulbound do
+-- not match because we cannot infer current-bound state for an item the
+-- player does not own. This is intentional and matches user expectations.
 local TDIB = Enum.TooltipDataItemBinding
 local BIND_LINE_TYPE = 20
 
-local function ResolveBind(props)
-    local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
-    if not bagID or not slotID then
-        rawset(props, "isSoulbound", false)
-        rawset(props, "isBOE", false)
-        rawset(props, "isBOA", false)
-        rawset(props, "isBOU", false)
-        rawset(props, "isWUE", false)
-        rawset(props, "isWarbound", false)
-        return
-    end
+local BIND_FIELDS = { "isSoulbound", "isBOE", "isBOA", "isBOU", "isWUE", "isWarbound" }
 
-    local tooltipData = C_TooltipInfo.GetBagItem(bagID, slotID)
-    local bonding
-    if tooltipData then
-        for _, line in ipairs(tooltipData.lines) do
-            if line.type == BIND_LINE_TYPE and line.bonding ~= nil then
-                bonding = line.bonding
-                break
-            end
+local function ClearBindFields(props)
+    for i = 1, #BIND_FIELDS do
+        rawset(props, BIND_FIELDS[i], false)
+    end
+end
+
+local function ScanBondingFromTooltipData(tooltipData)
+    if not tooltipData then return nil end
+    for _, line in ipairs(tooltipData.lines) do
+        if line.type == BIND_LINE_TYPE and line.bonding ~= nil then
+            return line.bonding
         end
     end
+    return nil
+end
 
-    if bonding == nil then
-        rawset(props, "isSoulbound", false)
-        rawset(props, "isBOE", false)
-        rawset(props, "isBOA", false)
-        rawset(props, "isBOU", false)
-        rawset(props, "isWUE", false)
-        rawset(props, "isWarbound", false)
-        return
-    end
-
-    local isBOA = bonding == TDIB.Account or bonding == TDIB.BnetAccount or bonding == TDIB.BindToAccount or bonding == TDIB.BindToBnetAccount
+-- source: "bag" or "link". Controls whether BindOnPickup is treated as state
+-- (bag) or policy-only (link).
+local function ApplyBonding(props, bonding, source)
+    local isBOA = bonding == TDIB.Account or bonding == TDIB.BnetAccount
+               or bonding == TDIB.BindToAccount or bonding == TDIB.BindToBnetAccount
     local isWUE = bonding == TDIB.AccountUntilEquipped or bonding == TDIB.BindToAccountUntilEquipped
 
+    -- Soulbound mapping: in bag mode, BindOnPickup folds into Soulbound to
+    -- preserve #bop matching for tradeable BoP loot. In link mode it does not.
+    local isSoulbound = bonding == TDIB.Soulbound
+    if source == "bag" and bonding == TDIB.BindOnPickup then
+        isSoulbound = true
+    end
+
     rawset(props, "currentbind", bonding)
-    rawset(props, "isSoulbound", bonding == TDIB.Soulbound or bonding == TDIB.BindOnPickup)
+    rawset(props, "isSoulbound", isSoulbound)
     rawset(props, "isBOE",       bonding == TDIB.BindOnEquip)
     rawset(props, "isBOA",       isBOA)
     rawset(props, "isBOU",       bonding == TDIB.BindOnUse)
     rawset(props, "isWUE",       isWUE)
     rawset(props, "isWarbound",  isBOA or isWUE)
+end
+
+local function ResolveBind(props)
+    local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
+    local hyperlink = rawget(props, "hyperlink")
+
+    local tooltipData
+    local source
+
+    if bagID and slotID then
+        tooltipData = C_TooltipInfo.GetBagItem(bagID, slotID)
+        source = "bag"
+    elseif hyperlink then
+        tooltipData = C_TooltipInfo.GetHyperlink(hyperlink)
+        source = "link"
+    end
+
+    local bonding = ScanBondingFromTooltipData(tooltipData)
+
+    if bonding == nil then
+        ClearBindFields(props)
+        return
+    end
+
+    ApplyBonding(props, bonding, source)
 end
 
 -- ---------- ResolveStats ----------
@@ -1508,17 +1567,97 @@ local propsMT = {
 }
 
 -- ---------- BuildProps ----------
--- Core Layer 1 function. Enriches a bag slot into a flat property table.
--- Cached by "bagID:slotID". Returns the same table on subsequent calls
--- until the cache is invalidated (BAG_UPDATE_DELAYED, etc.).
+-- Core Layer 1 function. Enriches an item identity into a flat property table.
+--
+-- Cache strategy:
+--   - When bagID/slotID are present, cached by "bagID:slotID" so slot-state
+--     fields (durability, isNew, isLocked, equipment-set membership, current
+--     bind state) can vary per slot.
+--   - Otherwise cached by item identity (hyperlink for normal items, itemID
+--     plus pet stats for caged battle pets) so independent calls for the same
+--     item link share work.
+--
+-- Caches live for the session only (file-scope locals, never persisted) and
+-- are invalidated by PE:InvalidateCache / PE:InvalidatePropsCache or on
+-- BAG_UPDATE_DELAYED in the integration layer.
+--
+-- Input contract (any combination is valid; the function backfills missing
+-- pieces from whichever sources can produce them):
+--   - itemID:    item ID. Required for the function to do useful work, but may
+--                be nil if bagID/slotID or a hyperlink can resolve it.
+--   - bagID/slotID: container coordinates. Both must be present together.
+--                   Source of truth for slot-state fields.
+--   - itemInfo:  string | table | nil
+--       * string: treated as a hyperlink.
+--       * table:  preserves the historical container-info shape; only `.hyperlink`
+--                 is consumed.
+--       * nil:    no override; bag/slot path supplies the hyperlink when present.
+--
+-- Bag/slot-derived hyperlink takes precedence over itemInfo so callers can
+-- safely pass slot coordinates without re-deriving the link.
+--
+-- Returns an empty {} when no usable identity can be resolved (consistent
+-- early-exit for callers that pass partial information for empty slots, etc.).
+---@param itemID number|nil
+---@param bagID number|nil
+---@param slotID number|nil
+---@param itemInfo string|table|nil
+---@return table
 function PE:BuildProps(itemID, bagID, slotID, itemInfo)
+    if (not itemID or itemID == 0) and not bagID and not slotID and not itemInfo then return {} end
+
+    ---@type string|nil
+    local hyperlink
+    ---@type ContainerItemInfo
+    local containerInfo
+    ---@type table|ItemLocation
+    local itemLocation
+
+    if bagID and slotID then
+        containerInfo = C_Container.GetContainerItemInfo(bagID, slotID)
+
+        if containerInfo then
+            if not hyperlink then
+                hyperlink = containerInfo.hyperlink
+            end
+            if not itemID then
+                itemID = containerInfo.itemID
+            end
+        end
+
+        itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+
+        if itemLocation:IsValid() and C_Item.DoesItemExist(itemLocation) then
+            if not hyperlink then
+                hyperlink = C_Item.GetItemLink(itemLocation)
+            end
+            if not itemID then
+                ---@cast itemLocation ItemLocation
+                itemID = C_Item.GetItemID(itemLocation)
+            end
+        end
+    end
+
+    -- Bag/slot-derived hyperlink wins; itemInfo only fills in when bag/slot didn't.
+    -- itemInfo accepts a hyperlink string, a container-info-shaped table with .hyperlink,
+    -- or nil. Any combination of (itemID, bagID/slotID, itemInfo) is supported.
+    if not hyperlink then
+        if type(itemInfo) == "table" then
+            hyperlink = itemInfo.hyperlink
+        elseif type(itemInfo) == "string" then
+            hyperlink = itemInfo
+        end
+    end
+
+    if not itemID and hyperlink then
+        itemID = C_Item.GetItemIDForItemInfo(hyperlink)
+    end
+
+    -- Without an itemID we cannot produce meaningful props; consistent with the
+    -- "everything missing" early-return above.
     if not itemID then return {} end
 
-    itemInfo = itemInfo or {}
-    local hyperlink = itemInfo.hyperlink
-
-    -- tostring(itemID) here is to satisfy Lua linter
-    local cacheKey = GetItemCacheKey(itemID, bagID, slotID, itemInfo) or tostring(itemID)
+    local cacheKey = GetItemCacheKey(itemID, bagID, slotID, hyperlink)
     if propsCache[cacheKey] then return propsCache[cacheKey] end
 
     local petData = GetBattlePetData(itemID, hyperlink)
@@ -1530,35 +1669,40 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
         hyperlink = hyperlink,
     }
 
-    -- ---- C_Item.GetItemInfo: 18 return values ----
+    -- C_Item.GetItemInfo returns 17 values; we capture all except `description`
     local itemName, itemLink, itemQuality, itemLevel, itemMinLevel,
-          _, _, itemStackCount, itemEquipLoc, _,
+          itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture,
           sellPrice, classID, subclassID, bindType, expansionID,
           setID, apiCraftingReagent
 
     if hyperlink then
         itemName, itemLink, itemQuality, itemLevel, itemMinLevel,
-            _, _, itemStackCount, itemEquipLoc, _,
+            itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture,
             sellPrice, classID, subclassID, bindType, expansionID,
             setID, apiCraftingReagent = C_Item.GetItemInfo(hyperlink)
     end
 
-    -- Synchronous fallback for uncached items
+    -- Synchronous fallback for uncached items. GetItemInfoInstant always returns
+    -- immediately for a valid itemID, even when full item data hasn't been
+    -- downloaded yet. Lower fidelity than GetItemInfo (no quality/ilvl/etc.) but
+    -- carries class/subclass/equipLoc/icon/localized type strings.
     if not classID then
-        -- Always returns immediately for valid itemID, even when full item data hasn't been downloaded yet
-        _, _, _, itemEquipLoc, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
+        _, itemType, itemSubType, itemEquipLoc, itemTexture, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
     end
 
     props.nameRaw     = itemName or (C_Item.GetItemNameByID(itemID) or "")
     props.name        = strlower(props.nameRaw)
-    props.quality     = itemQuality or itemInfo.quality or -1 -- don't use 0 since that == "poor" and causes bad matches
+    props.quality     = itemQuality or -1 -- don't use 0 since that == "poor" and causes bad matches
     props.ilvl        = itemLevel or 0
     props.reqLevel    = itemMinLevel or 0
+    props.itemType    = itemType
+    props.itemSubType = itemSubType
     props.equipLoc    = itemEquipLoc or ""
+    props.icon        = itemTexture
     props.vendorPrice = sellPrice or 0
     props.classID     = classID
     props.subClassID  = subclassID
-    props.expansionID = expansionID
+    props.expansionID = expansionID or -1
     props.bindType    = bindType    -- template bindType: what the item was designed to do; may not reflect current bindType
     props.maxStack    = itemStackCount or 1
     props.setID       = setID
@@ -1593,11 +1737,27 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isCatalyst = false
     props.isCatalystUpgrade = false
 
-    local containerInfo, itemLocation
-    if bagID and slotID then
-        containerInfo = C_Container.GetContainerItemInfo(bagID, slotID)
-        itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+    props.craftedQuality = hyperlink and C_TradeSkillUI.GetItemCraftedQualityByItemInfo(hyperlink) or 0
+    props.isKeystone = C_Item.IsItemKeystoneByID(itemID) == true
 
+    props.isEquipment = C_Item.IsEquippableItem(itemID) == true
+    -- ---- Profession equipment ----
+    props.isProfessionEquipment = false
+    props.isProfessionEquipment = props.classID == Enum.ItemClass.Profession and props.isEquipment
+
+    -- 'Usable' in this context is equivalent to the item having a 'Use: ' text in tooltip
+    props.isUsable = (C_Item.IsUsableItem(itemID) == true)
+
+    -- ---- Socket detection (API-based, no tooltip needed) ----
+    local socketCount = hyperlink and C_Item.GetItemNumSockets(hyperlink) or 0
+    props.hasSocket = socketCount > 0
+    props.sockets   = socketCount
+
+    -- ---- Equipped status ----
+    props.isEquipped = C_Item.IsEquippedItem(itemID) == true
+
+    -- ---- Items that need more complex processing ----
+    if bagID and slotID then
         props.isNew = C_NewItems.IsNewItem(bagID, slotID) == true
         props.isBattlePayItem = C_Container.IsBattlePayItem(bagID, slotID) == true
 
@@ -1632,7 +1792,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
         end
     end
 
-    props.count    = containerInfo and containerInfo.stackCount or itemInfo.count or 1
+    props.count    = containerInfo and containerInfo.stackCount or 1
     props.isLocked = containerInfo and containerInfo.isLocked or false
 
     -- ---- Computed value ----
@@ -1643,23 +1803,12 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
         props.classID = Enum.ItemClass.Battlepet
     end
 
-    -- ---- Equipment ----
-    props.isEquipment = C_Item.IsEquippableItem(itemID) == true
-
-    -- ---- Usability ----
-    props.isUsable = (C_Item.IsUsableItem(itemID) == true)
-
-    -- ---- Socket detection (API-based, no tooltip needed) ----
-    local socketCount = hyperlink and C_Item.GetItemNumSockets(hyperlink) or 0
-    props.hasSocket = socketCount > 0
-    props.sockets   = socketCount
-
     -- ---- Unsellable (fully API-based) ----
     props.isUnsellable = (props.vendorPrice == 0) or (containerInfo and containerInfo.hasNoValue == true)
 
-    -- ---- Collection status (toy / mount / pet) ----
+    -- ---- Collectable items  ----
     props.isToy = C_ToyBox.GetToyInfo(itemID) ~= nil
-    
+
     props.isPet = (itemID == BATTLE_PET_CAGE_ID)
                or (props.classID == Enum.ItemClass.Battlepet)
                or (props.classID == Enum.ItemClass.Miscellaneous and props.subClassID == Enum.ItemMiscellaneousSubclass.CompanionPet)
@@ -1668,7 +1817,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     props.isCosmetic = (props.classID == Enum.ItemClass.Armor and props.subClassID == Enum.ItemArmorSubclass.Cosmetic)
     props.isCollected = ResolveCollected(itemID, props.classID, props.subClassID, hyperlink)
 
-    -- ---- Quest item (classID + C_Container quest info) ----
+    -- ---- Quest item ----
     props.isQuestItem = (classID == Enum.ItemClass.Questitem)
     if not props.isQuestItem and bagID and slotID then
         local qInfo = C_Container.GetContainerItemQuestInfo(bagID, slotID)
@@ -1691,11 +1840,6 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
             props.isHearthstone = true
         end
     end
-
-    props.isKeystone = C_Item.IsItemKeystoneByID(itemID) == true
-
-    -- ---- Crafted quality ----
-    props.craftedQuality = hyperlink and C_TradeSkillUI.GetItemCraftedQualityByItemInfo(hyperlink) or 0
 
     -- ---- Upgrade track info ----
     props.upgradeLevel    = 0
@@ -1728,21 +1872,14 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
         end
     end
 
-    -- ---- Profession equipment ----
-    props.isProfessionEquipment = false
-    if props.classID == Enum.ItemClass.Profession and props.isEquipment then
-        props.isProfessionEquipment = true
-    end
-
-    -- ---- Equipped status ----
-    props.isEquipped = C_Item.IsEquippedItem(itemID) == true
-
     -- ---- Knowledge items ----
-    local _, spellName = C_Item.GetItemSpell(hyperlink)
-    if spellName then
-        local spellinfo = C_Spell.GetSpellInfo(spellName)
-        local spellIconID = spellinfo.iconID
-        props.isKnowledge = KNOWLEDGE_ICONS[spellIconID] == true
+    if hyperlink then
+        local _, spellName = C_Item.GetItemSpell(hyperlink)
+        if spellName then
+            local spellinfo = C_Spell.GetSpellInfo(spellName)
+            local spellIconID = spellinfo.iconID
+            props.isKnowledge = KNOWLEDGE_ICONS[spellIconID] == true
+        end
     end
 
     -- ---- Item link parsed properties ----
@@ -1754,7 +1891,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     end
 
     -- ---- Catalyst properties ----
-    if TransmogUpgradeMaster_API and TransmogUpgradeMaster_API.IsAppearanceMissing then
+    if hyperlink and TransmogUpgradeMaster_API and TransmogUpgradeMaster_API.IsAppearanceMissing then
         local isCatalyst, isCatalystUpgrade = TransmogUpgradeMaster_API.IsAppearanceMissing(hyperlink)
         props.isCatalyst = isCatalyst == true
         props.isCatalystUpgrade = isCatalystUpgrade == true
@@ -2348,7 +2485,10 @@ end
 
 --- Compile an expression string into a predicate function.
 --- Returns the compiled function(props)->bool, cached for repeated use.
---- Returns nil, errorMessage on failure or empty input.
+--- Returns nil on empty input; returns nil, errorMessage on tokenize/parse failure.
+---@param expr string|nil
+---@return (fun(props: table): boolean)|nil compiled
+---@return string|nil errorMessage
 function PE:Compile(expr)
     if not expr or expr == "" then return nil end
 
@@ -2394,7 +2534,11 @@ function PE:Compile(expr)
 end
 
 --- Evaluate a compiled predicate safely (pcall wrapped).
---- Returns result (bool), errorMessage (nil on success).
+--- Returns result, errorMessage (errorMessage is nil on success).
+---@param compiled fun(props: table): boolean
+---@param props table
+---@return boolean result
+---@return string|nil errorMessage
 function PE:SafeEvaluate(compiled, props)
     local ok, result = pcall(compiled, props)
     if not ok then
@@ -2404,6 +2548,13 @@ function PE:SafeEvaluate(compiled, props)
 end
 
 --- High-level: compile + evaluate in one call. Builds props if needed.
+--- Returns false on any of: empty expression, missing itemID, compile failure.
+---@param expr string|nil
+---@param itemID number|nil
+---@param bagID number|nil
+---@param slotID number|nil
+---@param itemInfo string|table|nil
+---@return boolean
 function PE:CheckItem(expr, itemID, bagID, slotID, itemInfo)
     if not expr or expr == "" or not itemID then return false end
 
@@ -2422,6 +2573,11 @@ end
 ---   quality==${EPIC} & ilvl<${PARAM_ILVL}
 ---   with params = { PARAM_ILVL = { value = 600 } }
 ---   becomes: quality==4 & ilvl<600
+---
+--- Passes nil through unchanged.
+---@param expr string|nil
+---@param params table<string, { value: any?, default: any? }>|nil
+---@return string|nil
 function PE:ResolveParams(expr, params)
     if not expr then return expr end
     local resolved = expr
@@ -2445,18 +2601,47 @@ function PE:ResolveParams(expr, params)
     return resolved
 end
 
+--- Battle-pet metadata for caged pets (item 82800) or pet items.
+--- Returns nil for items that have no associated pet species.
+---@param itemID number
+---@param hyperlink string|nil
+---@return table|nil
 function PE:GetBattlePetData(itemID, hyperlink)
     return GetBattlePetData(itemID, hyperlink)
 end
 
+--- Cache key used by BuildProps. Slot-aware ("bagID:slotID") when bag/slot
+--- coordinates are present; otherwise an item-identity key (hyperlink for
+--- normal items, itemID + pet stats for caged pets).
+---@param itemID number
+---@param bagID number|nil
+---@param slotID number|nil
+---@param hyperlink string|nil
+---@return string
 function PE:GetItemCacheKey(itemID, bagID, slotID, hyperlink)
     return GetItemCacheKey(itemID, bagID, slotID, hyperlink)
 end
 
+--- Stable identity key for an item. Uses hyperlink when available so suffixed
+--- variants do not collide; for caged pets folds in pet stats so different
+--- breed levels stack separately. Falls back to tostring(itemID) when no
+--- hyperlink is provided.
+---@param itemID number
+---@param hyperlink string|nil
+---@return string
 function PE:GetItemIdentityKey(itemID, hyperlink)
     return GetItemIdentityKey(itemID, hyperlink)
 end
 
+--- Parse a full item hyperlink (or `item:...` string) into structured fields.
+--- Returns nil for inputs that do not match the item link grammar.
+---
+--- Populated fields (any may be nil): id, enchantID, gemID1..gemID3, suffixID,
+--- uniqueID, linkLevel, specID, modifiersMask, itemContext, gems[],
+--- bonusIDs[], modifiers, relicBonusIDs[1..3], crafterGUID, extraEnchantID,
+--- quality, name.
+---@param link string|nil
+---@return table|nil
 function PE:ParseItemLink(link)
     return ParseItemLink(link)
 end
@@ -2467,6 +2652,10 @@ end
 --- correctly rejects class-locked drops on classes that cannot equip them.
 --- Caller may pass itemID or a hyperlink; hyperlink is preferred when available
 --- because it carries modified-itemID context for reworked/tokenized gear.
+---@param itemID number|nil
+---@param hyperlink string|nil
+---@param class string|nil class token (UnitClass second return); nil means current player
+---@return boolean
 function PE:CanClassEquip(itemID, hyperlink, class)
     local classID
     if class then
@@ -2482,6 +2671,8 @@ end
 
 --- Register custom keyword (for third-party / suite extensions).
 --- Wipes the compiled cache since available keywords changed.
+---@param nameOrNames string|string[]
+---@param func fun(props: table): boolean
 function PE:RegisterKeyword(nameOrNames, func)
     local names
     if type(nameOrNames) == "table" then
@@ -2506,6 +2697,7 @@ end
 --- the engine currently knows about (including addons that registered extras
 --- via RegisterKeyword). Aliases exclude the canonical name itself and are
 --- sorted alphabetically for stable display.
+---@return { canonical: string, aliases: string[] }[]
 function PE:GetAllKeywords()
     local results = {}
     local seen = {}
@@ -2532,8 +2724,23 @@ end
 --- Returns an ordered array of canonical keyword names (without the leading "#").
 --- Aliases (e.g. #grey / #gray for #poor) are deduplicated by predicate-function
 --- identity; the first name a keyword was registered under is treated as canonical.
---- When bagID/slotID are nil, slot-specific keywords (#recent, #new, #locked,
---- binding-state keywords, etc.) simply do not match.
+---
+--- Tooltip-only mode (bagID/slotID nil):
+---   * `#boe`/`#bou`/`#warbound`/`#wue` work via a hyperlink-tooltip fallback
+---     in ResolveBind.
+---   * `#bop`/`#soulbound`/`#bound` will not match because current-bound state
+---     cannot be inferred from a hyperlink (item is not in the player's
+---     inventory). See ResolveBind comment for the source-aware mapping.
+---   * Other slot-state-only properties degrade to false:
+---     `#new`, `#locked`, `#tradeableloot`, `#alreadyknown` (toy/spell path),
+---     `#unique`/`#uniqueequipped`, `#hascharges`. Slot-only fields read
+---     directly (durability, equipmentSetList, isInEquipmentSet, count,
+---     isRefundable, isScrappable, isBattlePayItem) are similarly absent.
+---@param itemID number|nil
+---@param bagID number|nil
+---@param slotID number|nil
+---@param itemInfo string|table|nil
+---@return string[]
 function PE:GetMatchingKeywords(itemID, bagID, slotID, itemInfo)
     local results = {}
     if not itemID then return results end
@@ -2551,9 +2758,12 @@ function PE:GetMatchingKeywords(itemID, bagID, slotID, itemInfo)
 end
 
 --- Register custom numeric/string property for comparison syntax.
---- def = { field = "fieldName", type = "number"|"string" }
+--- The optional unit = "money" enables money parsing (e.g. "100g") on the RHS
+--- of comparisons for number-typed properties.
+---@param nameOrNames string|string[]
+---@param def { field: string, type: ("number"|"string")?, unit: ("money"|nil)? }
 function PE:RegisterProperty(nameOrNames, def)
-    local entry = { field = def.field, type = def.type or "number" }
+    local entry = { field = def.field, type = def.type or "number", unit = def.unit }
     if type(nameOrNames) == "table" then
         for _, name in ipairs(nameOrNames) do
             PROP_REGISTRY[strlower(name)] = entry
@@ -2579,12 +2789,22 @@ function PE:InvalidatePropsCache()
     wipe(tooltipCache)
 end
 
---- Expose raw tooltip text
+--- Expose raw concatenated tooltip left-text for a bag slot.
+--- Returns the empty string when bagID/slotID are missing or no tooltip data
+--- is available. Cached per "bagID:slotID" until invalidation.
+---@param bagID number|nil
+---@param slotID number|nil
+---@return string
 function PE:GetTooltipText(bagID, slotID)
     return GetTooltipText(bagID, slotID)
 end
 
---- Backward compat: get expansion ID for an item.
+--- Backward compat: get expansion ID for an item. Prefers the hyperlink path
+--- (carries modified-item context); falls back to itemID. Returns nil when
+--- C_Item.GetItemInfo cannot supply expansion data (cache miss / invalid input).
+---@param itemID number|nil
+---@param hyperlink string|nil
+---@return number|nil
 function PE:GetExpansionID(itemID, hyperlink)
     local expacID = nil
 
@@ -2605,7 +2825,10 @@ function PE:GetExpansionID(itemID, hyperlink)
     return nil
 end
 
---- Backward compat: get localized expansion name from ID.
+--- Backward compat: get localized expansion name from ID. Returns nil when
+--- expID is nil or no matching EXPANSION_NAME<id> global exists.
+---@param expID number|nil
+---@return string|nil
 function PE:GetExpansionName(expID)
     if not expID then return nil end
     return _G["EXPANSION_NAME" .. expID]

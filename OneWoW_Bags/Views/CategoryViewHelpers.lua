@@ -10,7 +10,6 @@ local pairs, ipairs, type = pairs, ipairs, type
 local floor, min, max, ceil, sqrt = math.floor, math.min, math.max, math.ceil, math.sqrt
 local tostring = tostring
 local SetItemButtonCount = SetItemButtonCount
-local C_Item = C_Item
 
 OneWoW_Bags.CategoryViewHelpers = {}
 local H = OneWoW_Bags.CategoryViewHelpers
@@ -533,7 +532,7 @@ function H.StackItems(items, db, PE)
         if not itemID then
             tinsert(stackOrder, { buttons = {btn}, count = 1 })
         else
-            local key = PE:GetItemIdentityKey(itemID, info and info.hyperlink) or tostring(itemID)
+            local key = PE:GetItemIdentityKey(itemID, info and info.hyperlink)
             if not stacks[key] then
                 stacks[key] = { buttons = {}, count = 0, representative = btn }
                 tinsert(stackOrder, stacks[key])
@@ -586,8 +585,9 @@ function H.GroupItemsBy(items, groupBy, PE, L)
     if groupBy == "expansion" then
         for _, btn in ipairs(items) do
             local expID = -1
-            if btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
-                expID = PE:GetExpansionID(btn.owb_itemInfo.itemID, btn.owb_itemInfo.hyperlink) or -1
+            if btn.owb_itemInfo then
+                local props = PE:BuildProps(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
+                expID = props.expansionID or -1
             end
             local expName = PE:GetExpansionName(expID) or L["UNKNOWN_EXPANSION"]
             if not groups[expName] then
@@ -600,9 +600,9 @@ function H.GroupItemsBy(items, groupBy, PE, L)
     elseif groupBy == "type" then
         for _, btn in ipairs(items) do
             local typeName = "Other"
-            if btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
-                local _, _, _, _, _, itemType = C_Item.GetItemInfo(btn.owb_itemInfo.hyperlink)
-                typeName = itemType or "Other"
+            if btn.owb_itemInfo then
+                local props = PE:BuildProps(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
+                typeName = props.itemType or "Other"
             end
             if not groups[typeName] then
                 groups[typeName] = {}
@@ -614,8 +614,9 @@ function H.GroupItemsBy(items, groupBy, PE, L)
     elseif groupBy == "slot" then
         for _, btn in ipairs(items) do
             local slotName = "Other"
-            if btn.owb_itemInfo and btn.owb_itemInfo.hyperlink then
-                local _, _, _, _, _, _, _, _, equipLoc = C_Item.GetItemInfo(btn.owb_itemInfo.hyperlink)
+            if btn.owb_itemInfo then
+                local props = PE:BuildProps(btn.owb_itemInfo.itemID, btn.owb_bagID, btn.owb_slotID, btn.owb_itemInfo)
+                local equipLoc = props.equipLoc
                 if equipLoc and equipLoc ~= "" then
                     slotName = _G[equipLoc] or equipLoc
                 end
