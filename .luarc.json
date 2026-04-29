@@ -22,6 +22,7 @@
     "utf8": "default"
   },
   "workspace.preloadFileSize": 750,
+  "workspace.maxPreload": 10000,
   "diagnostics.ignoredFiles": "Disable",
   "diagnostics.globals": [
     "ACCEPT",
@@ -102,6 +103,7 @@
     "NOT_COLLECTED",
     "OKAY",
     "OneWoW",
+    "OneWoW_AltTracker_DB",
     "OneWoW_AltTracker_Accounting_DB",
     "OneWoW_AltTracker_Auctions",
     "OneWoW_AltTracker_Auctions_DB",
@@ -116,6 +118,7 @@
     "OneWoW_CatalogData_Vendors_DB",
     "OneWoWMainWindow",
     "OneWoW_NotesMainFrame",
+    "OneWoW_QoLDevHelpDialog",
     "OneWoW_RecipeKnownUtil",
     "OneWoW_UtilityDevTool_DB",
     "PVP",
