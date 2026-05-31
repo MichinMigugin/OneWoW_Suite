@@ -117,6 +117,67 @@ local function GetDataAddon()
     return dataAddon
 end
 
+-- Tooltips use the difficulty-scaled Encounter Journal link (captured per
+-- difficulty by EJLiveLoot) so the displayed item level matches the Adventure
+-- Guide. Rank maps a difficulty id to its relative ilvl tier; used to pick the
+-- highest available link when no specific difficulty is selected.
+local DIFF_ILVL_RANK = {
+    [17] = 1,  -- Raid: Looking For Raid
+    [1]  = 1,  -- Dungeon: Normal
+    [14] = 2,  -- Raid: Normal
+    [2]  = 2,  -- Dungeon: Heroic
+    [15] = 3,  -- Raid: Heroic
+    [23] = 3,  -- Dungeon: Mythic
+    [16] = 4,  -- Raid: Mythic
+    [8]  = 4,  -- Mythic+
+}
+
+--- Pick the difficulty id whose scaled item level should drive the tooltip.
+--- Honors the active difficulty filter; with "all" selected, returns the highest
+--- ilvl tier available for the item (mirrors how the Adventure Guide defaults).
+---@param item table
+---@return number|nil diffID
+local function ResolveTooltipDifficulty(item)
+    if selectedDifficulty ~= "all" then
+        return selectedDifficulty
+    end
+    local bestID, bestRank
+    for _, diff in ipairs(item.difficulties or {}) do
+        local rank = DIFF_ILVL_RANK[diff.id] or 0
+        if not bestRank or rank > bestRank then
+            bestRank = rank
+            bestID = diff.id
+        end
+    end
+    return bestID
+end
+
+--- Resolve the difficulty-scaled Encounter Journal link for an item's tooltip.
+--- Uses any link already captured by the background merge, otherwise resolves it
+--- live (and caches it back onto the item). Returns nil to fall back to itemID.
+---@param item table
+---@param encounterID number|nil
+---@return string|nil scaledLink
+local function GetScaledItemLink(item, encounterID)
+    local diffID = ResolveTooltipDifficulty(item)
+    if not diffID then return nil end
+
+    if item.linkByDiff and item.linkByDiff[diffID] then
+        return item.linkByDiff[diffID]
+    end
+
+    local addon = GetDataAddon()
+    if addon and addon.EJLiveLoot and selectedInstance and encounterID then
+        local link = addon.EJLiveLoot:GetScaledLootLink(selectedInstance.instanceID, encounterID, diffID, item.itemID)
+        if link then
+            item.linkByDiff = item.linkByDiff or {}
+            item.linkByDiff[diffID] = link
+            return link
+        end
+    end
+    return nil
+end
+
 local function FormatDifficulties(difficulties)
     if not difficulties or #difficulties == 0 then return "" end
     local parts = {}
@@ -202,7 +263,12 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     card:SetBackdrop(BACKDROP_SIMPLE)
     card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    card:SetPropagateMouseClicks(false)
+    -- SetPropagateMouseClicks became a protected function; calling it while the
+    -- list refreshes in combat throws ADDON_ACTION_BLOCKED. false is the default
+    -- state anyway, so skipping it under restriction is harmless.
+    if not OneWoW_GUI:IsAddonRestricted() then
+        card:SetPropagateMouseClicks(false)
+    end
 
     local bgImage = GetInstanceBackground(instData.instanceID)
     if bgImage and bgImage ~= false then
@@ -647,7 +713,12 @@ local function RefreshDetailView(isSecondRefresh)
                     self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                     self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:SetItemByID(item.itemID)
+                    local scaledLink = GetScaledItemLink(item, capturedEncID)
+                    if scaledLink then
+                        GameTooltip:SetHyperlink(scaledLink)
+                    else
+                        GameTooltip:SetItemByID(item.itemID)
+                    end
                     GameTooltip:Show()
                 end)
                 itemRow:SetScript("OnLeave", function(self)
