@@ -658,6 +658,7 @@ L_enUS["TT_COL_MACROS_DESC"] = "Total number of saved macros (account + characte
 L_enUS["TT_COL_MAIL"] = "Mail"
 L_enUS["TT_COL_MAIL_DESC"] = "Mailbox status - shows if character has mail"
 L_enUS["TT_MAIL_NONE"] = "No mail waiting"
+L_enUS["TT_MAIL_NEW_UNSCANNED"] = "New mail has arrived - open your mailbox to see details"
 L_enUS["TT_MAIL_NEVER_SCANNED"] = "Inbox not scanned on this character yet"
 L_enUS["TT_MAIL_COUNT"] = "Mail waiting: %d"
 L_enUS["TT_MAIL_OLDEST"] = "Oldest expires in %s"
@@ -1196,9 +1197,9 @@ L_enUS["MSG_CHAR_ADDON_NOT_LOADED"] = "Warning - Character data addon not loaded
 L_enUS["MSG_NO_CHARS_SELECTED"] = "No characters selected."
 L_enUS["MSG_CHARS_REMOVED"] = "Removed %d character(s). Reloading..."
 
-L_enUS["BINDING_HEADER_ONEWOW_ALTTRACKER"] = "|cFF00FF00OneWoW|r AltTracker"
-L_enUS["BINDING_NAME_ONEWOW_ALTTRACKER_TOGGLE"] = "Toggle AltTracker Window"
-L_enUS["BINDING_NAME_ONEWOW_ALTTRACKER_OPEN_SETUP"] = "Open Alt Setup"
+_G["BINDING_HEADER_ONEWOW_ALTTRACKER"] = "|cFF00FF00OneWoW|r AltTracker"
+_G["BINDING_NAME_ONEWOW_ALTTRACKER_TOGGLE"] = "Toggle AltTracker Window"
+_G["BINDING_NAME_ONEWOW_ALTTRACKER_OPEN_SETUP"] = "Open Alt Setup"
 
 ns.L = {}
 for k, v in pairs(ns.Locales["enUS"]) do ns.L[k] = v end
