@@ -17,6 +17,14 @@ local defaults = {
         trackerGlobalProgress  = {},
         mainFrameSize          = nil,
         mainFramePosition      = nil,
+        -- Account-wide lists share progress across characters, so their reset
+        -- boundary is tracked per account here. Char-scoped lists use the
+        -- per-character markers below.
+        trackerLastWeeklyReset = 0,
+        trackerLastDailyReset  = 0,
+        -- "auto" follows the realm's region via C_DateAndTime; a region key
+        -- ("us"/"eu"/"asia") forces the weekly reset weekday instead.
+        weeklyResetRegion      = "auto",
     },
     char = {
         trackerProgress        = {},
