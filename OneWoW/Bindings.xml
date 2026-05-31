@@ -1,0 +1,20 @@
+<Bindings>
+    <Binding name="ONEWOW_TOGGLE" category="BINDING_HEADER_ONEWOW">
+        if OneWoW and OneWoW.GUI and OneWoW.GUI.Toggle then
+            OneWoW.GUI:Toggle()
+        end
+    </Binding>
+    <Binding name="ONEWOW_RELOAD_UI" category="BINDING_HEADER_ONEWOW">
+        ReloadUI()
+    </Binding>
+    <Binding name="ONEWOW_MARK_ITEM_JUNK" category="BINDING_HEADER_ONEWOW">
+        if OneWoW and OneWoW.MarkItemJunkKeybind then
+            OneWoW:MarkItemJunkKeybind()
+        end
+    </Binding>
+    <Binding name="ONEWOW_MARK_ITEM_PROTECTED" category="BINDING_HEADER_ONEWOW">
+        if OneWoW and OneWoW.MarkItemProtectedKeybind then
+            OneWoW:MarkItemProtectedKeybind()
+        end
+    </Binding>
+</Bindings>

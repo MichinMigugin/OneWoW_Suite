@@ -1,0 +1,998 @@
+local addonName, ns = ...
+local L = ns.L
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+ns.UI = ns.UI or {}
+
+local transactionRows = {}
+local currentSortColumn = "date"
+local currentSortAscending = false
+local loginServerTime = 0
+local activeFinancialsTab = nil
+
+local amountDialog
+local itemDialog
+
+local function GetAmountDialog()
+    if amountDialog then return amountDialog end
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_FinEditAmount",
+        showBrand = true,
+        title = L["FIN_EDIT_AMOUNT"],
+        width = 300,
+        height = 120,
+        strata = "DIALOG",
+        movable = true,
+        escClose = true,
+    })
+
+    amountDialog = result.frame
+    amountDialog:SetFrameLevel(500)
+    amountDialog._titleBar = result.titleBar
+    amountDialog._contentFrame = result.contentFrame
+
+    local moneyBox = CreateFrame("Frame", "OneWoW_FinAmountInput", result.contentFrame, "MoneyInputFrameTemplate")
+    moneyBox:SetPoint("TOP", result.contentFrame, "TOP", 0, -10)
+    amountDialog.moneyBox = moneyBox
+
+    local saveBtn = OneWoW_GUI:CreateFitTextButton(result.contentFrame, { text = ACCEPT, height = 26 })
+    saveBtn:SetPoint("BOTTOM", result.contentFrame, "BOTTOM", 0, 10)
+    amountDialog.saveBtn = saveBtn
+
+    return amountDialog
+end
+
+local function ShowEditAmountDialog(tx)
+    if not tx or not tx.id then return end
+    local dialog = GetAmountDialog()
+    dialog:Hide()
+    MoneyInputFrame_ResetMoney(dialog.moneyBox)
+
+    local currentGold = math.floor((tx.amount or 0) / 10000)
+    local currentSilver = math.floor(((tx.amount or 0) % 10000) / 100)
+    local currentCopper = (tx.amount or 0) % 100
+    MoneyInputFrame_SetCopper(dialog.moneyBox, currentGold * 10000 + currentSilver * 100 + currentCopper)
+
+    local function doSave()
+        local copper = MoneyInputFrame_GetCopper(dialog.moneyBox)
+        if copper >= 0 then
+            local AccountingAddon = OneWoW_AltTracker_Accounting
+            if AccountingAddon and AccountingAddon.Transactions then
+                AccountingAddon.Transactions:UpdateTransaction(tx.id, { amount = copper })
+                if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                    ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                end
+            end
+        end
+        dialog:Hide()
+    end
+
+    dialog.saveBtn:SetScript("OnClick", doSave)
+    dialog.moneyBox.gold:SetScript("OnEnterPressed", doSave)
+    dialog.moneyBox.silver:SetScript("OnEnterPressed", doSave)
+    dialog.moneyBox.copper:SetScript("OnEnterPressed", doSave)
+
+    dialog:ClearAllPoints()
+    dialog:SetPoint("CENTER")
+    dialog:Show()
+    dialog.moneyBox.gold:SetFocus()
+end
+
+local function GetItemDialog()
+    if itemDialog then return itemDialog end
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_FinEditItem",
+        showBrand = true,
+        title = L["FIN_EDIT_ITEM"],
+        width = 350,
+        height = 110,
+        strata = "DIALOG",
+        movable = true,
+        escClose = true,
+    })
+
+    itemDialog = result.frame
+    itemDialog:SetFrameLevel(500)
+    itemDialog._contentFrame = result.contentFrame
+
+    local editBox = OneWoW_GUI:CreateEditBox(result.contentFrame, { width = 300, height = 22 })
+    editBox:SetPoint("TOP", result.contentFrame, "TOP", 0, -10)
+    itemDialog.editBox = editBox
+
+    local saveBtn = OneWoW_GUI:CreateFitTextButton(result.contentFrame, { text = ACCEPT, height = 26 })
+    saveBtn:SetPoint("BOTTOM", result.contentFrame, "BOTTOM", 0, 10)
+    itemDialog.saveBtn = saveBtn
+
+    return itemDialog
+end
+
+local function ShowEditItemNameDialog(tx)
+    if not tx or not tx.id then return end
+    local dialog = GetItemDialog()
+    dialog:Hide()
+
+    dialog.editBox:SetText(tx.itemName or tx.source or "")
+    dialog.editBox:HighlightText()
+
+    local function doSave()
+        local newName = strtrim(dialog.editBox:GetText())
+        if newName ~= "" then
+            local AccountingAddon = OneWoW_AltTracker_Accounting
+            if AccountingAddon and AccountingAddon.Transactions then
+                AccountingAddon.Transactions:UpdateTransaction(tx.id, { itemName = newName })
+                if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                    ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                end
+            end
+        end
+        dialog:Hide()
+    end
+
+    dialog.saveBtn:SetScript("OnClick", doSave)
+    dialog.editBox:SetScript("OnEnterPressed", doSave)
+    dialog.editBox:SetScript("OnEscapePressed", function() dialog:Hide() end)
+
+    dialog:ClearAllPoints()
+    dialog:SetPoint("CENTER")
+    dialog:Show()
+    dialog.editBox:SetFocus()
+end
+
+local function BuildCategoryMenuItems(includeAll)
+    local items = {}
+    if includeAll then
+        table.insert(items, { value = "all", text = L["FIN_CAT_ALL"] })
+        table.insert(items, { type = "divider" })
+    end
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_VENDOR"] })
+    table.insert(items, { value = "vendor_purchase", text = L["FIN_CAT_VENDOR_PURCHASE"] })
+    table.insert(items, { value = "vendor_sale", text = L["FIN_CAT_VENDOR_SALE"] })
+    table.insert(items, { value = "vendor_buyback", text = L["FIN_CAT_VENDOR_BUYBACK"] })
+    table.insert(items, { value = "repair", text = L["FIN_CAT_REPAIR"] })
+    table.insert(items, { value = "trainer_purchase", text = L["FIN_CAT_TRAINER"] })
+    table.insert(items, { value = "transmog", text = L["FIN_CAT_TRANSMOG"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_AUCTION"] })
+    table.insert(items, { value = "auction_sale", text = L["FIN_CAT_AUCTION_SALE"] })
+    table.insert(items, { value = "auction_purchase", text = L["FIN_CAT_AUCTION_PURCHASE"] })
+    table.insert(items, { value = "auction_deposit", text = L["FIN_CAT_AUCTION_DEPOSIT"] })
+    table.insert(items, { value = "bmah_purchase", text = L["FIN_CAT_BMAH"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_TRADE"] })
+    table.insert(items, { value = "trade_buy", text = L["FIN_CAT_TRADE_BUY"] })
+    table.insert(items, { value = "trade_sale", text = L["FIN_CAT_TRADE_SALE"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_MAIL"] })
+    table.insert(items, { value = "mail_send", text = L["FIN_CAT_MAIL_SEND"] })
+    table.insert(items, { value = "mail_cod_send", text = L["FIN_CAT_MAIL_COD"] })
+    table.insert(items, { value = "mail_postage", text = L["FIN_CAT_POSTAGE"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_BANK"] })
+    table.insert(items, { value = "guild_bank_deposit", text = L["FIN_CAT_GUILD_DEPOSIT"] })
+    table.insert(items, { value = "guild_bank_withdraw", text = L["FIN_CAT_GUILD_WITHDRAW"] })
+    table.insert(items, { value = "warband_bank_deposit", text = L["FIN_CAT_WARBAND_DEPOSIT"] })
+    table.insert(items, { value = "warband_bank_withdraw", text = L["FIN_CAT_WARBAND_WITHDRAW"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_TRANSFER"] })
+    table.insert(items, { value = "money_transfer_in", text = L["FIN_CAT_MONEY_IN"] })
+    table.insert(items, { value = "money_transfer_out", text = L["FIN_CAT_MONEY_OUT"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_REWARD"] })
+    table.insert(items, { value = "quest_reward", text = L["FIN_CAT_QUEST_REWARD"] })
+    table.insert(items, { value = "loot_money", text = L["FIN_CAT_LOOT_MONEY"] })
+    table.insert(items, { value = "mythicplus_reward", text = L["FIN_CAT_MYTHICPLUS"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_CRAFTING"] })
+    table.insert(items, { value = "crafting_order", text = L["FIN_CAT_CRAFTING_ORDER"] })
+    table.insert(items, { value = "crafting_order_placed", text = L["FIN_CAT_ORDER_PLACED"] })
+    table.insert(items, { value = "crafting_order_refund", text = L["FIN_CAT_ORDER_REFUND"] })
+    table.insert(items, { type = "divider" })
+    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_OTHER"] })
+    table.insert(items, { value = "death_cost", text = L["FIN_CAT_DEATH_COST"] })
+    table.insert(items, { value = "uncategorized", text = L["FIN_CAT_UNCATEGORIZED"] })
+    return items
+end
+
+local categoryChangeTx
+local categoryChangeDropdown
+
+local function ShowChangeCategoryMenu(tx)
+    if not tx or not tx.id then return end
+    categoryChangeTx = tx
+
+    if not categoryChangeDropdown then
+        categoryChangeDropdown = OneWoW_GUI:CreateDropdown(UIParent, { width = 220, height = 1 })
+        categoryChangeDropdown:SetAlpha(0)
+        categoryChangeDropdown:EnableMouse(false)
+        categoryChangeDropdown:SetFrameStrata("HIGH")
+
+        OneWoW_GUI:AttachFilterMenu(categoryChangeDropdown, {
+            searchable = true,
+            menuHeight = 400,
+            getActiveValue = function()
+                return categoryChangeTx and categoryChangeTx.category or nil
+            end,
+            buildItems = function()
+                return BuildCategoryMenuItems(false)
+            end,
+            onSelect = function(value)
+                if categoryChangeTx and categoryChangeTx.id then
+                    local AccountingAddon = OneWoW_AltTracker_Accounting
+                    if AccountingAddon and AccountingAddon.Transactions then
+                        AccountingAddon.Transactions:UpdateTransaction(categoryChangeTx.id, { category = value })
+                        if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                            ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                        end
+                    end
+                end
+            end,
+        })
+    end
+
+    local x, y = GetCursorPosition()
+    local scale = UIParent:GetEffectiveScale()
+    categoryChangeDropdown:ClearAllPoints()
+    categoryChangeDropdown:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+    categoryChangeDropdown:Show()
+    categoryChangeDropdown:GetScript("OnClick")(categoryChangeDropdown)
+end
+
+local function ShowDeleteConfirmation(tx)
+    if not tx or not tx.id then return end
+    local result = OneWoW_GUI:CreateConfirmDialog({
+        title = L["FIN_DELETE_CONFIRM"],
+        message = L["FIN_DELETE_CONFIRM"],
+        buttons = {
+            {
+                text = L["FIN_DELETE_ACCEPT"],
+                onClick = function(dialog)
+                    local AccountingAddon = OneWoW_AltTracker_Accounting
+                    if AccountingAddon and AccountingAddon.Transactions then
+                        AccountingAddon.Transactions:DeleteTransaction(tx.id)
+                        if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
+                            ns.UI.RefreshFinancialsTab(activeFinancialsTab)
+                        end
+                    end
+                    dialog:Hide()
+                end,
+            },
+            {
+                text = CANCEL,
+                onClick = function(dialog)
+                    dialog:Hide()
+                end,
+            },
+        },
+    })
+    result.frame:Show()
+end
+
+local function ShowTransactionContextMenu(tx)
+    if not tx then return end
+    MenuUtil.CreateContextMenu(UIParent, function(ownerRegion, rootDescription)
+        rootDescription:CreateTitle(L["FIN_CONTEXT_TITLE"])
+
+        rootDescription:CreateButton(L["FIN_EDIT_AMOUNT"], function()
+            ShowEditAmountDialog(tx)
+        end)
+
+        rootDescription:CreateButton(L["FIN_EDIT_ITEM"], function()
+            ShowEditItemNameDialog(tx)
+        end)
+
+        rootDescription:CreateButton(L["FIN_EDIT_CATEGORY"], function()
+            ShowChangeCategoryMenu(tx)
+        end)
+
+        rootDescription:CreateDivider()
+
+        local deleteBtn = rootDescription:CreateButton(L["FIN_DELETE_TX"], function()
+            ShowDeleteConfirmation(tx)
+        end)
+        deleteBtn:AddInitializer(function(button)
+            button.fontString:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        end)
+    end)
+end
+
+local loginFrame = CreateFrame("Frame")
+loginFrame:RegisterEvent("PLAYER_LOGIN")
+loginFrame:SetScript("OnEvent", function(self)
+    loginServerTime = GetServerTime()
+    self:UnregisterEvent("PLAYER_LOGIN")
+end)
+
+local function GetWeeklyResetTime()
+    local now = GetServerTime()
+    local currentDate = date("*t", now)
+    local daysUntilTuesday = (3 - currentDate.wday + 7) % 7
+    if daysUntilTuesday == 0 and currentDate.hour >= 15 then
+        daysUntilTuesday = 7
+    end
+    local nextReset = now + (daysUntilTuesday * 86400)
+    local resetDate = date("*t", nextReset)
+    resetDate.hour = 15
+    resetDate.min = 0
+    resetDate.sec = 0
+    return time(resetDate)
+end
+
+local function GetLastWeeklyReset()
+    return GetWeeklyResetTime() - (7 * 86400)
+end
+
+local categoryNames = {
+    vendor_purchase = "FIN_CAT_VENDOR_PURCHASE",
+    vendor_sale = "FIN_CAT_VENDOR_SALE",
+    vendor_buyback = "FIN_CAT_VENDOR_BUYBACK",
+    repair = "FIN_CAT_REPAIR",
+    auction_sale = "FIN_CAT_AUCTION_SALE",
+    auction_purchase = "FIN_CAT_AUCTION_PURCHASE",
+    auction_deposit = "FIN_CAT_AUCTION_DEPOSIT",
+    trade_buy = "FIN_CAT_TRADE_BUY",
+    trade_sale = "FIN_CAT_TRADE_SALE",
+    money_transfer_in = "FIN_CAT_MONEY_IN",
+    money_transfer_out = "FIN_CAT_MONEY_OUT",
+    guild_bank_deposit = "FIN_CAT_GUILD_DEPOSIT",
+    guild_bank_withdraw = "FIN_CAT_GUILD_WITHDRAW",
+    warband_bank_deposit = "FIN_CAT_WARBAND_DEPOSIT",
+    warband_bank_withdraw = "FIN_CAT_WARBAND_WITHDRAW",
+    mail_send = "FIN_CAT_MAIL_SEND",
+    mail_cod_send = "FIN_CAT_MAIL_COD",
+    mail_postage = "FIN_CAT_POSTAGE",
+    quest_reward = "FIN_CAT_QUEST_REWARD",
+    loot_money = "FIN_CAT_LOOT_MONEY",
+    transmog = "FIN_CAT_TRANSMOG",
+    death_cost = "FIN_CAT_DEATH_COST",
+    crafting_order = "FIN_CAT_CRAFTING_ORDER",
+    crafting_order_placed = "FIN_CAT_ORDER_PLACED",
+    crafting_order_refund = "FIN_CAT_ORDER_REFUND",
+    trainer_purchase = "FIN_CAT_TRAINER",
+    mythicplus_reward = "FIN_CAT_MYTHICPLUS",
+    bmah_purchase = "FIN_CAT_BMAH",
+    uncategorized = "FIN_CAT_UNCATEGORIZED",
+}
+
+function ns.UI.GetCategoryDisplayName(category)
+    local key = categoryNames[category]
+    if key then return L[key] end
+    return category
+end
+
+local columnsConfig = {
+    {key = "expand",    label = "",                      width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],         ttDesc = L["TT_COL_EXPAND_DESC"]},
+    {key = "date",      label = L["FIN_COL_DATE"],      width = 100, fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_DATE"],      ttDesc = L["TT_FIN_COL_DATE_DESC"]},
+    {key = "character", label = L["FIN_COL_CHARACTER"],  width = 90,  fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_CHARACTER"],  ttDesc = L["TT_FIN_COL_CHARACTER_DESC"]},
+    {key = "category",  label = L["FIN_COL_CATEGORY"],   width = 100, fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_CATEGORY"],  ttDesc = L["TT_FIN_COL_CATEGORY_DESC"]},
+    {key = "item",      label = L["FIN_COL_ITEM"],       width = 130, fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_ITEM"],      ttDesc = L["TT_FIN_COL_ITEM_DESC"]},
+    {key = "amount",    label = L["FIN_COL_AMOUNT"],     width = 80,  fixed = false, align = "right", ttTitle = L["TT_FIN_COL_AMOUNT"],    ttDesc = L["TT_FIN_COL_AMOUNT_DESC"]},
+}
+
+local onHeaderCreate = function(btn, col, index)
+    if col.key == "expand" then
+        local icon = btn:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(14, 14)
+        icon:SetPoint("CENTER")
+        icon:SetAtlas("Gamepad_Rev_Plus_64")
+        btn.icon = icon
+        if btn.text then btn.text:SetText("") end
+    end
+end
+
+function ns.UI.CreateFinancialsTab(parent)
+    local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
+        title = L["FINANCIALS_OVERVIEW"],
+        height = 70,
+        columns = 5,
+        stats = {
+            {label = L["FIN_INCOME"],       value = "0", ttTitle = L["TT_FIN_INCOME"],       ttDesc = L["TT_FIN_INCOME_DESC"]},
+            {label = L["FIN_EXPENSE"],      value = "0", ttTitle = L["TT_FIN_EXPENSE"],      ttDesc = L["TT_FIN_EXPENSE_DESC"]},
+            {label = L["FIN_PROFIT"],       value = "0", ttTitle = L["TT_FIN_PROFIT"],       ttDesc = L["TT_FIN_PROFIT_DESC"]},
+            {label = L["FIN_SUCCESS_RATE"], value = "0", ttTitle = L["TT_FIN_ROI"],          ttDesc = L["TT_FIN_ROI_DESC"]},
+            {label = L["FIN_TRANSACTIONS"], value = "0", ttTitle = L["TT_FIN_TRANSACTIONS"], ttDesc = L["TT_FIN_TRANSACTIONS_DESC"]},
+        },
+    })
+
+    local filterPanel = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = overview.panel, offset = -8 })
+
+    parent.timePeriod = "week"
+    parent.typeFilter = "all"
+    parent.characterFilter = nil
+    parent.categoryFilter = nil
+
+    local timePeriods = {
+        {key = "login",  label = L["FIN_PERIOD_SESSION"], tooltip = L["FIN_PERIOD_SESSION_TT"]},
+        {key = "today",  label = L["FIN_PERIOD_TODAY"],   tooltip = L["FIN_PERIOD_TODAY_TT"]},
+        {key = "week",   label = L["FIN_PERIOD_WEEK"],    tooltip = L["FIN_PERIOD_WEEK_TT"]},
+        {key = "month",  label = L["FIN_PERIOD_MONTH"],   tooltip = L["FIN_PERIOD_MONTH_TT"]},
+        {key = "reset",  label = L["FIN_PERIOD_CUSTOM"],  tooltip = L["FIN_PERIOD_CUSTOM_TT"]},
+        {key = "all",    label = L["FIN_PERIOD_ALL"],     tooltip = L["FIN_PERIOD_ALL_TT"]},
+    }
+
+    local periodDropdown, periodDropdownText = OneWoW_GUI:CreateDropdown(filterPanel, {
+        width = 120,
+        height = 24,
+        text = L["FIN_PERIOD_WEEK"],
+    })
+    periodDropdown:SetPoint("LEFT", filterPanel, "LEFT", 8, 0)
+
+    OneWoW_GUI:AttachFilterMenu(periodDropdown, {
+        searchable = false,
+        menuHeight = #timePeriods * 26 + 8,
+        buildItems = function()
+            local items = {}
+            for _, period in ipairs(timePeriods) do
+                table.insert(items, {
+                    text = period.label,
+                    value = period.key,
+                    tooltip = period.tooltip,
+                })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            parent.timePeriod = value
+            periodDropdown._text:SetText(text)
+            if ns.UI.RefreshFinancialsTab then
+                ns.UI.RefreshFinancialsTab(parent)
+            end
+        end,
+        getActiveValue = function()
+            return parent.timePeriod
+        end,
+    })
+
+    local typeFilters = {
+        {key = "all",     label = L["FIN_FILTER_ALL"]},
+        {key = "income",  label = L["FIN_FILTER_INCOME"]},
+        {key = "expense", label = L["FIN_FILTER_EXPENSE"]},
+    }
+
+    local typeButtons = {}
+    for i, filter in ipairs(typeFilters) do
+        local btn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = filter.label, height = 24 })
+
+        if i == 1 then
+            btn:SetPoint("LEFT", periodDropdown, "RIGHT", 25, 0)
+        else
+            btn:SetPoint("LEFT", typeButtons[i-1], "RIGHT", 4, 0)
+        end
+
+        btn.filterKey = filter.key
+
+        btn:SetScript("OnClick", function(self)
+            parent.typeFilter = self.filterKey
+            for _, b in ipairs(typeButtons) do
+                if b.filterKey == parent.typeFilter then
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+                else
+                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+                    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                end
+            end
+            if ns.UI.RefreshFinancialsTab then
+                ns.UI.RefreshFinancialsTab(parent)
+            end
+        end)
+
+        if filter.key == "all" then
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        else
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+        table.insert(typeButtons, btn)
+    end
+
+    local charLabel = OneWoW_GUI:CreateFS(filterPanel, 10)
+    charLabel:SetPoint("LEFT", typeButtons[#typeButtons], "RIGHT", 25, 0)
+    charLabel:SetText(L["FIN_CHAR_LABEL"])
+    charLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local charBtn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = L["FIN_CHAR_ALL"], height = 24 })
+    charBtn:SetPoint("LEFT", charLabel, "RIGHT", 2, 0)
+
+    charBtn:SetScript("OnClick", function(self)
+        if parent.characterFilter then
+            parent.characterFilter = nil
+            self.text:SetText(L["FIN_CHAR_ALL"])
+        else
+            local charKey = ns.AltTrackerFormatters:GetCurrentCharacterKey()
+            parent.characterFilter = charKey
+            local charName = charKey:match("^([^%-]+)")
+            self.text:SetText(charName)
+        end
+        if ns.UI.RefreshFinancialsTab then
+            ns.UI.RefreshFinancialsTab(parent)
+        end
+    end)
+
+    local catLabel = OneWoW_GUI:CreateFS(filterPanel, 10)
+    catLabel:SetPoint("LEFT", charBtn, "RIGHT", 25, 0)
+    catLabel:SetText(L["FIN_CAT_LABEL"])
+    catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local catDropdown = OneWoW_GUI:CreateDropdown(filterPanel, { width = 140, height = 24, text = L["FIN_CAT_ALL"] })
+    catDropdown:SetPoint("LEFT", catLabel, "RIGHT", 2, 0)
+
+    OneWoW_GUI:AttachFilterMenu(catDropdown, {
+        searchable = true,
+        menuHeight = 400,
+        getActiveValue = function()
+            return parent.categoryFilter or "all"
+        end,
+        buildItems = function()
+            return BuildCategoryMenuItems(true)
+        end,
+        onSelect = function(value, text)
+            if value == "all" then
+                parent.categoryFilter = nil
+                catDropdown._text:SetText(L["FIN_CAT_ALL"])
+            else
+                parent.categoryFilter = value
+                catDropdown._text:SetText(text)
+            end
+            if ns.UI.RefreshFinancialsTab then
+                ns.UI.RefreshFinancialsTab(parent)
+            end
+        end,
+    })
+
+    local resetBtn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = L["FIN_RESET_DATA"], height = 24 })
+    resetBtn:SetPoint("LEFT", catDropdown, "RIGHT", 25, 0)
+    resetBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+    resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+    resetBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+
+    resetBtn:SetScript("OnClick", function(self)
+        local result = OneWoW_GUI:CreateConfirmDialog({
+            title = L["FIN_RESET_CONFIRM"],
+            message = L["FIN_RESET_CONFIRM"],
+            buttons = {
+                {
+                    text = L["FIN_RESET_ACCEPT"],
+                    onClick = function(dialog)
+                        if OneWoW_AltTracker_Accounting_DB then
+                            OneWoW_AltTracker_Accounting_DB.transactions = {}
+                            if OneWoW_AltTracker_Accounting_DB.statistics then
+                                OneWoW_AltTracker_Accounting_DB.statistics.totalIncome = 0
+                                OneWoW_AltTracker_Accounting_DB.statistics.totalExpense = 0
+                                OneWoW_AltTracker_Accounting_DB.statistics.netProfit = 0
+                                OneWoW_AltTracker_Accounting_DB.statistics.lastCalculated = 0
+                            end
+                            if OneWoW_AltTracker_Accounting_DB.settings then
+                                OneWoW_AltTracker_Accounting_DB.settings.resetDate = GetServerTime()
+                            end
+                        end
+                        parent.timePeriod = "week"
+                        if ns.UI.RefreshFinancialsTab then
+                            ns.UI.RefreshFinancialsTab(parent)
+                        end
+                        dialog:Hide()
+                    end,
+                },
+                {
+                    text = CANCEL,
+                    onClick = function(dialog)
+                        dialog:Hide()
+                    end,
+                },
+            },
+        })
+        result.frame:Show()
+    end)
+
+    resetBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText(L["FIN_RESET_TT"], 1, 0.3, 0.3)
+        GameTooltip:AddLine(L["FIN_RESET_TT_DESC"], 0.7, 0.7, 0.7, true)
+        GameTooltip:Show()
+    end)
+
+    resetBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+        GameTooltip:Hide()
+    end)
+
+    local guildPersonalCheck = OneWoW_GUI:CreateCheckbox(filterPanel, { label = L["FIN_GUILD_AS_PERSONAL"] })
+    guildPersonalCheck:SetPoint("RIGHT", filterPanel, "RIGHT", -10 - guildPersonalCheck.label:GetStringWidth(), 0)
+
+    C_Timer.After(0.6, function()
+        local val = OneWoW_AltTracker_Accounting_DB and
+                    OneWoW_AltTracker_Accounting_DB.settings and
+                    OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal == true
+        guildPersonalCheck:SetChecked(val)
+    end)
+
+    guildPersonalCheck:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText(L["FIN_GUILD_AS_PERSONAL"], 1, 1, 1)
+        GameTooltip:AddLine(L["FIN_GUILD_AS_PERSONAL_TT"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    guildPersonalCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    guildPersonalCheck:SetScript("OnClick", function(self)
+        if OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.settings then
+            OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal = self:GetChecked() and true or false
+        end
+    end)
+
+    local rosterPanel = OneWoW_GUI:CreateRosterPanel(parent, filterPanel)
+
+    local dt
+    dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
+        columns = columnsConfig,
+        headerHeight = 26,
+        onHeaderCreate = onHeaderCreate,
+        onSort = function(sortColumn, sortAscending)
+            currentSortColumn = sortColumn
+            currentSortAscending = sortAscending
+            ns.UI.RefreshFinancialsTab(parent)
+            C_Timer.After(0.1, function() dt.UpdateSortIndicators() end)
+        end,
+    })
+
+    local status = OneWoW_GUI:CreateStatusBar(parent, rosterPanel, {
+        text = string.format(L["FIN_STATUS_COUNT"], 0),
+    })
+
+    parent.overviewPanel = overview.panel
+    parent.statBoxes = overview.statBoxes
+    parent.filterPanel = filterPanel
+    parent.rosterPanel = rosterPanel
+    parent.dataTable = dt
+    parent.columnsConfig = columnsConfig
+    parent.headerRow = dt.headerRow
+    parent.scrollContent = dt.scrollContent
+    parent.statusBar = status.bar
+    parent.statusText = status.text
+
+    C_Timer.After(0.5, function()
+        if ns.UI.RefreshFinancialsTab then
+            ns.UI.RefreshFinancialsTab(parent)
+        end
+    end)
+
+    parent.financialsDirty = false
+    activeFinancialsTab = parent
+
+    local function SetupRefreshCallback()
+        if not OneWoW_AltTracker_Accounting then return false end
+        local refreshPending = false
+        OneWoW_AltTracker_Accounting.onNewTransaction = function()
+            if refreshPending then return end
+            refreshPending = true
+            C_Timer.After(0.3, function()
+                refreshPending = false
+                if parent and parent:IsVisible() then
+                    ns.UI.RefreshFinancialsTab(parent)
+                else
+                    parent.financialsDirty = true
+                end
+            end)
+        end
+        return true
+    end
+
+    local function TrySetupCallback(attempt)
+        if SetupRefreshCallback() then return end
+        if attempt < 10 then
+            C_Timer.After(1, function() TrySetupCallback(attempt + 1) end)
+        end
+    end
+    TrySetupCallback(1)
+
+    parent:HookScript("OnShow", function()
+        if parent.financialsDirty then
+            parent.financialsDirty = false
+            ns.UI.RefreshFinancialsTab(parent)
+        end
+    end)
+
+    OneWoW_GUI:ApplyFontToFrame(parent)
+end
+
+function ns.UI.RefreshFinancialsTab(financialsTab)
+    if not financialsTab then return end
+
+    if not OneWoW_AltTracker_Accounting_DB then
+        if financialsTab.statusText then
+            financialsTab.statusText:SetText(L["FIN_INSTALL_ACCOUNTING"])
+        end
+        return
+    end
+
+    local scrollContent = financialsTab.scrollContent
+    if not scrollContent then return end
+
+    local dt = financialsTab.dataTable
+    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+    OneWoW_GUI:ClearDataRows(scrollContent)
+    wipe(transactionRows)
+    if dt then dt:ClearRows() end
+
+    local allTransactions = OneWoW_AltTracker_Accounting_DB.transactions or {}
+    local timePeriod = financialsTab.timePeriod or "week"
+    local typeFilter = financialsTab.typeFilter or "all"
+    local characterFilter = financialsTab.characterFilter
+
+    local timeStart = 0
+    local now = GetServerTime()
+    if timePeriod == "login" then
+        timeStart = loginServerTime
+    elseif timePeriod == "today" then
+        local hour, minute = GetGameTime()
+        timeStart = now - ((hour * 3600) + (minute * 60))
+    elseif timePeriod == "week" then
+        timeStart = GetLastWeeklyReset()
+    elseif timePeriod == "reset" then
+        local customReset = OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.settings and OneWoW_AltTracker_Accounting_DB.settings.resetDate
+        if customReset and customReset > 0 then
+            timeStart = customReset
+        else
+            timeStart = GetLastWeeklyReset()
+        end
+    elseif timePeriod == "month" then
+        local hour, minute = GetGameTime()
+        local serverMidnight = now - ((hour * 3600) + (minute * 60))
+        local d = date("*t", serverMidnight)
+        d.day = 1
+        d.hour = 0
+        d.min = 0
+        d.sec = 0
+        timeStart = time(d)
+    end
+
+    local categoryFilter = financialsTab.categoryFilter
+
+    local transactions = {}
+    for _, tx in ipairs(allTransactions) do
+        if tx.timestamp >= timeStart then
+            if typeFilter == "all" or tx.type == typeFilter then
+                if not characterFilter or tx.character == characterFilter then
+                    if not categoryFilter or tx.category == categoryFilter then
+                        table.insert(transactions, tx)
+                    end
+                end
+            end
+        end
+    end
+
+    if financialsTab.statBoxes and OneWoW_AltTracker_Accounting then
+        local stats = OneWoW_AltTracker_Accounting:CalculateStatistics(timeStart, now, characterFilter, categoryFilter)
+
+        if financialsTab.statBoxes[1] then
+            financialsTab.statBoxes[1].value:SetText(ns.AltTrackerFormatters:FormatGold(stats.income))
+            financialsTab.statBoxes[1].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+
+            local topIncome = {}
+            for category, amount in pairs(stats.categories or {}) do
+                if amount and type(amount) == "number" and amount > 0 then
+                    table.insert(topIncome, {category = category, amount = amount})
+                end
+            end
+            table.sort(topIncome, function(a, b) return (a.amount or 0) > (b.amount or 0) end)
+
+            financialsTab.statBoxes[1].extraTooltipLines = {}
+            if #topIncome > 0 then
+                table.insert(financialsTab.statBoxes[1].extraTooltipLines, {text = L["FIN_TOP_INCOME"], r = 1, g = 1, b = 1})
+                for i = 1, math.min(5, #topIncome) do
+                    local cat = topIncome[i]
+                    if cat and cat.amount and type(cat.amount) == "number" then
+                        table.insert(financialsTab.statBoxes[1].extraTooltipLines, {text = ns.UI.GetCategoryDisplayName(cat.category) .. ": " .. ns.AltTrackerFormatters:FormatGoldSimple(cat.amount), r = 0, g = 1, b = 0})
+                    end
+                end
+            end
+        end
+
+        if financialsTab.statBoxes[2] then
+            financialsTab.statBoxes[2].value:SetText(ns.AltTrackerFormatters:FormatGold(stats.expense))
+            financialsTab.statBoxes[2].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+
+            local topExpense = {}
+            for category, amount in pairs(stats.categories or {}) do
+                if amount and type(amount) == "number" and amount < 0 then
+                    table.insert(topExpense, {category = category, amount = math.abs(amount)})
+                end
+            end
+            table.sort(topExpense, function(a, b) return (a.amount or 0) > (b.amount or 0) end)
+
+            financialsTab.statBoxes[2].extraTooltipLines = {}
+            if #topExpense > 0 then
+                table.insert(financialsTab.statBoxes[2].extraTooltipLines, {text = L["FIN_TOP_EXPENSES"], r = 1, g = 1, b = 1})
+                for i = 1, math.min(5, #topExpense) do
+                    local cat = topExpense[i]
+                    if cat and cat.amount and type(cat.amount) == "number" then
+                        table.insert(financialsTab.statBoxes[2].extraTooltipLines, {text = ns.UI.GetCategoryDisplayName(cat.category) .. ": " .. ns.AltTrackerFormatters:FormatGoldSimple(cat.amount), r = 1, g = 0.5, b = 0.5})
+                    end
+                end
+            end
+        end
+
+        if financialsTab.statBoxes[3] then
+            financialsTab.statBoxes[3].value:SetText(ns.AltTrackerFormatters:FormatGold(stats.profit))
+            if stats.profit >= 0 then
+                financialsTab.statBoxes[3].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            else
+                financialsTab.statBoxes[3].value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+            end
+        end
+
+        if financialsTab.statBoxes[4] then
+            local roi = stats.expense > 0 and math.floor((stats.income / stats.expense) * 100) or 0
+            financialsTab.statBoxes[4].value:SetText(roi .. "%")
+        end
+
+        if financialsTab.statBoxes[5] then
+            financialsTab.statBoxes[5].value:SetText(tostring(stats.transactionCount))
+        end
+    end
+
+    if #transactions == 0 then
+        if financialsTab.statusText then
+            if #allTransactions == 0 then
+                financialsTab.statusText:SetText(L["FIN_NO_TRANSACTIONS"])
+            else
+                financialsTab.statusText:SetText(L["FIN_NO_MATCH"])
+            end
+        end
+        return
+    end
+
+    table.sort(transactions, function(a, b)
+        local aVal, bVal
+
+        if currentSortColumn == "date" then
+            aVal = a.timestamp or 0
+            bVal = b.timestamp or 0
+        elseif currentSortColumn == "character" then
+            aVal = a.character or ""
+            bVal = b.character or ""
+        elseif currentSortColumn == "category" then
+            aVal = a.category or ""
+            bVal = b.category or ""
+        elseif currentSortColumn == "item" then
+            aVal = a.itemName or a.source or ""
+            bVal = b.itemName or b.source or ""
+        elseif currentSortColumn == "amount" then
+            aVal = a.amount or 0
+            bVal = b.amount or 0
+        else
+            aVal = a.timestamp or 0
+            bVal = b.timestamp or 0
+        end
+
+        if type(aVal) == "number" then
+            if currentSortAscending then return aVal < bVal else return aVal > bVal end
+        else
+            if currentSortAscending then return aVal < bVal else return aVal > bVal end
+        end
+    end)
+
+    local rowHeight = 28
+    local rowGap = 2
+
+    for i = 1, math.min(100, #transactions) do
+        local tx = transactions[i]
+
+        local txRow = OneWoW_GUI:CreateDataRow(scrollContent, {
+            rowHeight = rowHeight,
+            expandedHeight = 50,
+            rowGap = rowGap,
+            data = { tx = tx },
+            createDetails = function(ef, d)
+                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
+                local p1 = grid:AddPanel(L["FIN_COL_DATE"])
+                grid:AddLine(p1, L["FIN_EXPANDED_ID"] .. " " .. (d.tx.id or "?") .. "  |  " .. date("%Y-%m-%d %H:%M:%S", d.tx.timestamp or 0))
+                if d.tx.quantity and d.tx.quantity > 1 then
+                    grid:AddLine(p1, L["FIN_EXPANDED_QTY"] .. " " .. d.tx.quantity)
+                end
+                if d.tx.notes then
+                    grid:AddLine(p1, d.tx.notes)
+                end
+                grid:Finish()
+                OneWoW_GUI:ApplyFontToFrame(ef)
+            end,
+        })
+
+        local dateText = OneWoW_GUI:CreateFS(txRow, 10)
+        dateText:SetText(date("%m/%d %H:%M", tx.timestamp or 0))
+        dateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        dateText:SetJustifyH("LEFT")
+        table.insert(txRow.cells, dateText)
+
+        local charText = OneWoW_GUI:CreateFS(txRow, 10)
+        local charName = (tx.character or ""):match("^([^%-]+)")
+        charText:SetText(charName or "?")
+        charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        charText:SetJustifyH("LEFT")
+        table.insert(txRow.cells, charText)
+
+        local categoryText = OneWoW_GUI:CreateFS(txRow, 10)
+        categoryText:SetText(ns.UI.GetCategoryDisplayName(tx.category))
+        categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        categoryText:SetJustifyH("LEFT")
+        table.insert(txRow.cells, categoryText)
+
+        local itemText = OneWoW_GUI:CreateFS(txRow, 10)
+        itemText:SetText(tx.itemName or tx.source or "")
+        itemText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        itemText:SetJustifyH("LEFT")
+        table.insert(txRow.cells, itemText)
+
+        local amountText = OneWoW_GUI:CreateFS(txRow, 12)
+        local amountFormatted = ns.AltTrackerFormatters:FormatGold(tx.amount or 0)
+        if tx.type == "income" then
+            amountText:SetText("+" .. amountFormatted)
+            amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        elseif tx.type == "transfer" then
+            amountText:SetText(amountFormatted)
+            amountText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        else
+            amountText:SetText("-" .. amountFormatted)
+            amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        end
+        amountText:SetJustifyH("RIGHT")
+        table.insert(txRow.cells, amountText)
+
+        if dt and dt.headerRow and dt.headerRow.columnButtons and columnsConfig then
+            for ci, cell in ipairs(txRow.cells) do
+                local btn = dt.headerRow.columnButtons[ci]
+                if btn and btn.columnWidth and btn.columnX then
+                    local width = btn.columnWidth
+                    local x = btn.columnX
+                    local col = columnsConfig[ci]
+                    cell:ClearAllPoints()
+                    if col and col.align == "icon" then
+                        cell:SetSize(width, rowHeight)
+                        cell:SetPoint("LEFT", txRow, "LEFT", x, 0)
+                    elseif col and col.align == "center" then
+                        cell:SetWidth(width - 6)
+                        cell:SetPoint("CENTER", txRow, "LEFT", x + width / 2, 0)
+                    elseif col and col.align == "right" then
+                        cell:SetWidth(width - 6)
+                        cell:SetPoint("RIGHT", txRow, "LEFT", x + width - 3, 0)
+                    else
+                        cell:SetWidth(width - 6)
+                        cell:SetPoint("LEFT", txRow, "LEFT", x + 3, 0)
+                    end
+                end
+            end
+        end
+
+        txRow:HookScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(L["FIN_ROW_TT"], 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        txRow:HookScript("OnLeave", function(self)
+            GameTooltip:Hide()
+        end)
+        txRow:HookScript("OnMouseDown", function(self, button)
+            if button == "RightButton" then
+                ShowTransactionContextMenu(tx)
+            end
+        end)
+
+        table.insert(transactionRows, txRow)
+        if dt then dt:RegisterRow(txRow) end
+    end
+
+    OneWoW_GUI:LayoutDataRows(scrollContent, { rowHeight = rowHeight, rowGap = rowGap })
+
+    OneWoW_GUI:ApplyFontToFrame(financialsTab)
+
+    if financialsTab.statusText then
+        financialsTab.statusText:SetText(string.format(L["FIN_STATUS_COUNT"], #transactions))
+    end
+end

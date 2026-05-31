@@ -1,0 +1,7 @@
+<Bindings>
+    <Binding name="ONEWOW_DEVTOOL_OPEN_ERRORS" category="BINDING_HEADER_ONEWOW_DEVTOOL">
+        if OneWoW_UtilityDevTool and OneWoW_UtilityDevTool.OpenDevToolErrorsTab then
+            OneWoW_UtilityDevTool:OpenDevToolErrorsTab()
+        end
+    </Binding>
+</Bindings>

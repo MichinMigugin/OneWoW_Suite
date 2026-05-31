@@ -1,0 +1,422 @@
+local addonName, ns = ...
+local OneWoWAltTracker = OneWoW_AltTracker
+local L = ns.L
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+ns.UI = ns.UI or {}
+
+local MainWindow = nil
+local isInitialized = false
+
+function ns.UI:Show(tabName)
+    if not MainWindow then
+        local savedTab = OneWoWAltTracker.db.global.lastTab
+        local tabToSelect = tabName or savedTab or "summary"
+        self:CreateMainFrame(tabToSelect)
+        if MainWindow then MainWindow:Show() end
+    else
+        MainWindow:Show()
+        if tabName and type(tabName) == "string" and MainWindow.SelectTab then
+            MainWindow:SelectTab(tabName)
+        end
+    end
+end
+
+function ns.UI:Hide()
+    if MainWindow then
+        MainWindow:Hide()
+    end
+end
+
+function ns.UI:Toggle()
+    if MainWindow and MainWindow:IsShown() then
+        self:Hide()
+    else
+        self:Show()
+    end
+end
+
+function ns.UI:Reset()
+    if MainWindow then
+        MainWindow:Hide()
+    end
+    isInitialized = false
+    MainWindow = nil
+end
+
+function ns.UI:CreateMainFrame(defaultTab)
+    if not OneWoWAltTracker or not OneWoWAltTracker.db or not OneWoWAltTracker.db.global then
+        print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW - AltTracker:|r") .. " " .. (L and L["ADDON_MSG_DB_NOT_READY"] or "Database not ready."))
+        return nil
+    end
+
+    if not L then
+        print("|cFFFFD100OneWoW - AltTracker:|r Localization not ready.")
+        return nil
+    end
+
+    local frame = CreateFrame("Frame", "OneWoWAltTrackerMainFrame", UIParent, "BackdropTemplate")
+
+    local savedSize = OneWoWAltTracker.db.global.mainFrameSize
+    local width = (savedSize and savedSize.width) or ns.Constants.GUI.WINDOW_WIDTH
+    local height = (savedSize and savedSize.height) or ns.Constants.GUI.WINDOW_HEIGHT
+
+    frame:SetSize(width, height)
+
+    local savedPos = OneWoWAltTracker.db.global.mainFramePosition
+    if savedPos and savedPos.point then
+        frame:SetPoint(savedPos.point, UIParent, savedPos.relativePoint or "CENTER", savedPos.xOfs or 0, savedPos.yOfs or 0)
+    else
+        frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    end
+
+    frame:SetFrameStrata("MEDIUM")
+    frame:SetToplevel(true)
+    frame:SetClampedToScreen(true)
+    frame:SetMovable(true)
+    frame:SetResizable(true)
+    frame:EnableMouse(true)
+
+    frame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    frame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+
+    frame:SetResizeBounds(ns.Constants.GUI.MIN_WIDTH, ns.Constants.GUI.MIN_HEIGHT, ns.Constants.GUI.MAX_WIDTH, ns.Constants.GUI.MAX_HEIGHT)
+    frame:RegisterForDrag("LeftButton")
+
+    frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    frame:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local point, relativeTo, relativePoint, xOfs, yOfs = self:GetPoint()
+        OneWoWAltTracker.db.global.mainFramePosition = {
+            point = point,
+            relativePoint = relativePoint,
+            xOfs = xOfs,
+            yOfs = yOfs
+        }
+    end)
+
+    local resizeButton = CreateFrame("Button", nil, frame)
+    resizeButton:SetSize(16, 16)
+    resizeButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("XS")/2, OneWoW_GUI:GetSpacing("XS")/2)
+    resizeButton:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    resizeButton:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    resizeButton:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    resizeButton:RegisterForDrag("LeftButton")
+    resizeButton:SetScript("OnDragStart", function(self)
+        frame:StartSizing("BOTTOMRIGHT")
+    end)
+    resizeButton:SetScript("OnDragStop", function(self)
+        frame:StopMovingOrSizing()
+        local width, height = frame:GetSize()
+        OneWoWAltTracker.db.global.mainFrameSize = {width = width, height = height}
+    end)
+
+    local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
+        title = L["ADDON_TITLE_FRAME"],
+        showBrand = true,
+        onClose = function() frame:Hide() end,
+    })
+    titleBg:ClearAllPoints()
+    titleBg:SetPoint("TOPLEFT", frame, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
+    titleBg:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
+    titleBg:EnableMouse(true)
+    titleBg:RegisterForDrag("LeftButton")
+    titleBg:SetScript("OnDragStart", function() frame:StartMoving() end)
+    titleBg:SetScript("OnDragStop", function()
+        frame:StopMovingOrSizing()
+        local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
+        OneWoWAltTracker.db.global.mainFramePosition = {
+            point = point,
+            relativePoint = relativePoint,
+            xOfs = xOfs,
+            yOfs = yOfs
+        }
+    end)
+
+    tinsert(UISpecialFrames, "OneWoWAltTrackerMainFrame")
+
+    local tabButtonContainer = CreateFrame("Frame", nil, frame)
+    tabButtonContainer:SetPoint("TOPLEFT", titleBg, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("SM"))
+    tabButtonContainer:SetPoint("TOPRIGHT", titleBg, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("SM"))
+    tabButtonContainer:SetHeight(ns.Constants.GUI.TAB_BUTTON_HEIGHT)
+
+    local tabContainer = CreateFrame("Frame", nil, frame)
+    tabContainer:SetPoint("TOPLEFT", tabButtonContainer, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("SM"))
+    tabContainer:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), OneWoW_GUI:GetSpacing("SM"))
+
+    local tabs = {}
+    local tabButtons = {}
+    local tabOrder = {}
+    local currentTabName = nil
+
+    local function SelectTab(tabName)
+        currentTabName = tabName
+
+        if OneWoWAltTracker and OneWoWAltTracker.db and OneWoWAltTracker.db.global then
+            OneWoWAltTracker.db.global.lastTab = tabName
+        end
+
+        for name, tabFrame in pairs(tabs) do
+            if name == tabName then
+                tabFrame:Show()
+            else
+                tabFrame:Hide()
+            end
+        end
+
+        for name, button in pairs(tabButtons) do
+            if name == tabName then
+                button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            else
+                button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            end
+        end
+
+        if tabName == "professions" and ns.UI.RefreshProfessionsTab and tabs.professions then
+            C_Timer.After(0.1, function()
+                ns.UI.RefreshProfessionsTab(tabs.professions)
+            end)
+        end
+    end
+
+    local function UpdateTabLayout()
+        local containerWidth = tabButtonContainer:GetWidth()
+        if not containerWidth or containerWidth <= 0 then return end
+
+        local numButtons = #tabOrder
+        if numButtons == 0 then return end
+
+        local spacing = OneWoW_GUI:GetSpacing("SM")
+        local totalSpacing = spacing * (numButtons - 1)
+        local availableWidth = containerWidth - totalSpacing
+        local buttonWidth = math.floor(availableWidth / numButtons)
+
+        for i, name in ipairs(tabOrder) do
+            local button = tabButtons[name]
+            if button then
+                button:SetWidth(buttonWidth)
+                button:ClearAllPoints()
+                if i == 1 then
+                    button:SetPoint("TOPLEFT", tabButtonContainer, "TOPLEFT", 0, 0)
+                else
+                    local prevButton = tabButtons[tabOrder[i-1]]
+                    button:SetPoint("TOPLEFT", prevButton, "TOPRIGHT", spacing, 0)
+                end
+            end
+        end
+    end
+
+    tabButtonContainer:SetScript("OnSizeChanged", function(self, width, height)
+        UpdateTabLayout()
+    end)
+
+    local function CreateTab(name, displayName)
+        local button = OneWoW_GUI:CreateButton(tabButtonContainer, { text = displayName, width = 100, height = 28 })
+        button:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        button:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        button.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        button:SetScript("OnClick", function() SelectTab(name) end)
+        button:SetScript("OnEnter", function(self)
+            if tabs[name] and not tabs[name]:IsShown() then
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+            end
+        end)
+        button:SetScript("OnLeave", function(self)
+            if tabs[name] and not tabs[name]:IsShown() then
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+        end)
+
+        tabButtons[name] = button
+        table.insert(tabOrder, name)
+
+        local tabFrame = CreateFrame("Frame", nil, tabContainer)
+        tabFrame:SetAllPoints(tabContainer)
+        tabFrame:Hide()
+        tabs[name] = tabFrame
+
+        return tabFrame
+    end
+
+    local summaryTab = CreateTab("summary", L["SUBTAB_SUMMARY"] or "Summary")
+    ns.UI.CreateSummaryTab(summaryTab)
+
+    local progressTab = CreateTab("progress", L["SUBTAB_PROGRESS"] or "Progress")
+    ns.UI.CreateProgressTab(progressTab)
+
+    local bankTab = CreateTab("bank", L["SUBTAB_BANK"] or "Bank")
+    ns.UI.CreateBankTab(bankTab)
+
+    local equipmentTab = CreateTab("equipment", L["SUBTAB_EQUIPMENT"] or "Equipment")
+    ns.UI.CreateEquipmentTab(equipmentTab)
+
+    local professionsTab = CreateTab("professions", L["SUBTAB_PROFESSIONS"] or "Professions")
+    ns.UI.CreateProfessionsTab(professionsTab)
+
+    local auctionsTab = CreateTab("auctions", L["SUBTAB_AUCTIONS"] or "Auctions")
+    ns.UI.CreateAuctionsTab(auctionsTab)
+
+    local financialsTab = CreateTab("financials", L["SUBTAB_FINANCIALS"] or "Financials")
+    ns.UI.CreateFinancialsTab(financialsTab)
+    financialsTab:SetScript("OnShow", function()
+        if ns.UI.RefreshFinancialsTab then
+            ns.UI.RefreshFinancialsTab(financialsTab)
+        end
+    end)
+
+    local itemsTab = CreateTab("items", L["SUBTAB_ITEMS"] or "Items")
+    ns.UI.CreateItemsTab(itemsTab)
+    itemsTab:SetScript("OnShow", function()
+        if ns.UI.RefreshItemsTab then
+            ns.UI.RefreshItemsTab(itemsTab)
+        end
+    end)
+
+    local profilesTab = CreateTab("actionbars", L["SUBTAB_ACTIONBARS"] or "Action Bars")
+    ns.UI.CreateActionBarsTab(profilesTab)
+
+    local lockoutsTab = CreateTab("lockouts", L["SUBTAB_LOCKOUTS"] or "Lockouts")
+    ns.UI.CreateLockoutsTab(lockoutsTab)
+
+    local settingsTab = CreateTab("settings", L["TAB_SETTINGS"] or "Settings")
+    ns.UI.CreateSettingsTab(settingsTab)
+
+    C_Timer.After(0.1, function() UpdateTabLayout() end)
+
+    SelectTab(defaultTab or "summary")
+
+    frame.tabs = tabs
+    frame.tabButtons = tabButtons
+    frame.SelectTab = function(_, tab) SelectTab(tab) end
+
+    for name, tabFrame in pairs(tabs) do
+        if ns.UI.RegisterRosterTabFrame then
+            ns.UI.RegisterRosterTabFrame(name, tabFrame)
+        end
+    end
+
+    MainWindow = frame
+    isInitialized = true
+
+    return frame
+end
+
+function ns.UI.RegisterRosterTabFrame(tabName, frame)
+    local addon = _G.OneWoW_AltTracker
+    if not addon or not tabName or not frame then return end
+    addon.rosterTabFrames = addon.rosterTabFrames or {}
+    addon.rosterTabFrames[tabName] = frame
+end
+
+function ns.UI.RefreshMoneyDisplayTabs()
+    local mf = _G.OneWoWAltTrackerMainFrame
+    local addon = _G.OneWoW_AltTracker
+    local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
+    if not t then return end
+    if ns.UI.RefreshSummaryTab and t.summary then
+        ns.UI.RefreshSummaryTab(t.summary)
+    end
+    if ns.UI.RefreshFinancialsTab and t.financials then
+        ns.UI.RefreshFinancialsTab(t.financials)
+    end
+    if ns.UI.RefreshItemsTab and t.items then
+        ns.UI.RefreshItemsTab(t.items)
+    end
+    if ns.UI.RefreshAuctionsTab and t.auctions then
+        ns.UI.RefreshAuctionsTab(t.auctions)
+        if ns.UI.RefreshAuctionsStats then
+            ns.UI.RefreshAuctionsStats(t.auctions)
+        end
+    end
+end
+
+function ns.UI.RefreshAllFavoriteRosters()
+    local mf = _G.OneWoWAltTrackerMainFrame
+    local addon = _G.OneWoW_AltTracker
+    local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
+    if not t then return end
+    if ns.UI.RefreshSummaryTab and t.summary then
+        ns.UI.RefreshSummaryTab(t.summary)
+    end
+    if t.progress and t.progress.subTabFrames then
+        for _, key in ipairs({ "mythicplus", "raids", "weekly", "currencies" }) do
+            local f = t.progress.subTabFrames[key]
+            if f and f.refreshFunc then
+                f.refreshFunc(f)
+            end
+        end
+        if ns.UI.RefreshProgressStats and t.progress then
+            ns.UI.RefreshProgressStats(t.progress)
+        end
+    end
+    if ns.UI.RefreshEquipmentTab and t.equipment then
+        ns.UI.RefreshEquipmentTab(t.equipment)
+    end
+    if ns.UI.RefreshProfessionsTab and t.professions then
+        ns.UI.RefreshProfessionsTab(t.professions)
+    end
+    if ns.UI.RefreshLockoutsTab and t.lockouts then
+        ns.UI.RefreshLockoutsTab(t.lockouts)
+    end
+end
+
+function ns.UI.ResizeOverviewPanels()
+    local mf = _G.OneWoWAltTrackerMainFrame
+    local addon = _G.OneWoW_AltTracker
+    local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
+    if not t then return end
+    local offset = OneWoW_GUI:GetFontSizeOffset() or 0
+    local extraHeight = math.max(0, offset) * 8
+    for _, tabFrame in pairs(t) do
+        if tabFrame.overviewPanel and tabFrame.overviewPanel._baseHeight then
+            tabFrame.overviewPanel:SetHeight(tabFrame.overviewPanel._baseHeight + extraHeight)
+        end
+    end
+end
+
+function ns.UI.CreateFavoriteStarButton(charRow, charKey)
+    local L = ns.L
+    local starBtn = CreateFrame("Button", nil, charRow)
+    starBtn:SetSize(30, 32)
+    starBtn:EnableMouse(true)
+    starBtn:RegisterForClicks("LeftButtonUp")
+    local starIcon = starBtn:CreateTexture(nil, "ARTWORK")
+    starIcon:SetSize(14, 14)
+    starIcon:SetPoint("CENTER")
+    OneWoW_GUI:SetFavoriteAtlasTexture(starIcon)
+    local function applyStarColor()
+        if ns.IsFavoriteChar(charKey) then
+            starIcon:SetDesaturated(false)
+            starIcon:SetAlpha(1)
+        else
+            starIcon:SetDesaturated(true)
+            starIcon:SetAlpha(0.4)
+        end
+    end
+    applyStarColor()
+    starBtn:SetFrameLevel((charRow:GetFrameLevel() or 0) + 10)
+    starBtn:SetScript("OnClick", function()
+        ns.SetFavoriteChar(charKey, not ns.IsFavoriteChar(charKey))
+        applyStarColor()
+        if ns.UI.RefreshAllFavoriteRosters then
+            ns.UI.RefreshAllFavoriteRosters()
+        end
+    end)
+    starBtn:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(starBtn, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["TT_COL_STAR"], 1, 1, 1)
+        GameTooltip:AddLine(L["TT_COL_STAR_DESC"], nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    starBtn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    return starBtn
+end

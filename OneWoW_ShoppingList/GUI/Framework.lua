@@ -1,0 +1,1 @@
+-- Framework.lua is deprecated. Scroll areas are now created via OneWoW_GUI:CreateScrollFrame().

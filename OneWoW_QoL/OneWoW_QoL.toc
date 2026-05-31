@@ -1,0 +1,242 @@
+## Interface: 120005, 120007
+## Version: R6.2605.2800
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00Quality of Life|r
+## Notes: OneWoW Addon that: provides a Quality of Life hub with a developer-extensible module system.
+## Author: OneWoW Dev Team
+
+## RequiredDeps: OneWoW, OneWoW_GUI
+## Category: OneWoW
+## Group: OneWoW
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+
+## SavedVariables: OneWoW_QoL_DB
+
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+
+# Localization (MUST load immediately after libs)
+Locales\LocaleManager.lua
+Locales\enUS.lua
+Locales\koKR.lua
+
+# Core (load before everything else)
+Core\Constants.lua
+Core\Database.lua
+Core\Core.lua
+
+# Main Addon File
+OneWoW_QoL.lua
+
+# Module Registry (MUST load before UI and external modules)
+Modules\ModuleRegistry.lua
+
+# UI Main Frame
+UI\MainFrame.lua
+
+# Tab UI Files
+UI\t-features.lua
+UI\t-toggles.lua
+UI\t-settings.lua
+
+# ==============================================================
+# EXTERNAL MODULES
+# To add a module:
+#   1. Create your folder: Modules\external\yourmodule\
+#   2. Add your files below in this section (locales FIRST)
+#   3. yourmodule.lua defines your module table and exports it to ns
+#   4. Add as many additional .lua files as your module needs
+#   5. data.lua calls ns.ModuleRegistry:Register(ns.YourModule) and must be LAST
+#   6. Each module is fully self-contained in its folder
+#
+# Load order: Locales first -> yourmodule.lua -> any extra files -> data.lua last
+#
+# Minimum pattern:
+#   Modules\external\yourmodule\Locales\enUS.lua
+#   Modules\external\yourmodule\yourmodule.lua
+#   Modules\external\yourmodule\data.lua
+#
+# Multi-file example (any number of files is fine):
+#   Modules\external\yourmodule\Locales\enUS.lua
+#   Modules\external\yourmodule\yourmodule.lua
+#   Modules\external\yourmodule\logic.lua
+#   Modules\external\yourmodule\ui.lua
+#   Modules\external\yourmodule\data.lua
+# ==============================================================
+
+Modules\external\autodelete\Locales\enUS.lua
+Modules\external\autodelete\Locales\koKR.lua
+Modules\external\autodelete\autodelete.lua
+Modules\external\autodelete\logic.lua
+Modules\external\autodelete\data.lua
+
+Modules\external\fastloot\Locales\enUS.lua
+Modules\external\fastloot\Locales\koKR.lua
+Modules\external\fastloot\fastloot.lua
+Modules\external\fastloot\data.lua
+
+Modules\external\autorepair\Locales\enUS.lua
+Modules\external\autorepair\Locales\koKR.lua
+Modules\external\autorepair\autorepair.lua
+Modules\external\autorepair\data.lua
+
+Modules\external\fastforward\Locales\enUS.lua
+Modules\external\fastforward\Locales\koKR.lua
+Modules\external\fastforward\fastforward.lua
+Modules\external\fastforward\data.lua
+
+Modules\external\autoopen\Locales\enUS.lua
+Modules\external\autoopen\Locales\koKR.lua
+Modules\external\autoopen\autoopen-data.lua
+Modules\external\autoopen\autoopen.lua
+Modules\external\autoopen\data.lua
+
+Modules\external\questtools\Locales\enUS.lua
+Modules\external\questtools\Locales\koKR.lua
+Modules\external\questtools\questtools.lua
+Modules\external\questtools\data.lua
+
+Modules\external\playmounts\Locales\enUS.lua
+Modules\external\playmounts\Locales\koKR.lua
+Modules\external\playmounts\playmounts.lua
+Modules\external\playmounts\data.lua
+
+Modules\external\copytext\Locales\enUS.lua
+Modules\external\copytext\Locales\koKR.lua
+Modules\external\copytext\copytext.lua
+Modules\external\copytext\data.lua
+
+Modules\external\coords\Locales\enUS.lua
+Modules\external\coords\Locales\koKR.lua
+Modules\external\coords\coords.lua
+Modules\external\coords\data.lua
+
+Modules\external\automount\Locales\enUS.lua
+Modules\external\automount\Locales\koKR.lua
+Modules\external\automount\automount.lua
+Modules\external\automount\data.lua
+
+Modules\external\cursorenhancer\Locales\enUS.lua
+Modules\external\cursorenhancer\Locales\koKR.lua
+Modules\external\cursorenhancer\cursorenhancer.lua
+Modules\external\cursorenhancer\data.lua
+
+Modules\external\professionspanel\Locales\enUS.lua
+Modules\external\professionspanel\Locales\koKR.lua
+Modules\external\professionspanel\professionspanel.lua
+Modules\external\professionspanel\professionspanel-ui.lua
+Modules\external\professionspanel\data.lua
+
+Modules\external\afkpanel\Locales\enUS.lua
+Modules\external\afkpanel\Locales\koKR.lua
+Modules\external\afkpanel\afkpanel.lua
+Modules\external\afkpanel\data.lua
+
+Modules\external\escpanel\Locales\enUS.lua
+Modules\external\escpanel\Locales\koKR.lua
+Modules\external\escpanel\escpanel.lua
+Modules\external\escpanel\data.lua
+
+Modules\external\vendorpanel\Locales\enUS.lua
+Modules\external\vendorpanel\Locales\koKR.lua
+Modules\external\vendorpanel\vendorpanel.lua
+Modules\external\vendorpanel\vendorpanel-ui.lua
+Modules\external\vendorpanel\data.lua
+
+Modules\external\charinfo\Locales\enUS.lua
+Modules\external\charinfo\Locales\koKR.lua
+Modules\external\charinfo\charinfo.lua
+Modules\external\charinfo\data.lua
+
+Modules\external\bagbar\Locales\enUS.lua
+Modules\external\bagbar\Locales\koKR.lua
+Modules\external\bagbar\bagbar.lua
+Modules\external\bagbar\bagbar-ui.lua
+Modules\external\bagbar\data.lua
+
+Modules\external\questitembar\Locales\enUS.lua
+Modules\external\questitembar\Locales\koKR.lua
+Modules\external\questitembar\questitembar.lua
+Modules\external\questitembar\questitembar-ui.lua
+Modules\external\questitembar\data.lua
+
+Modules\external\auctionhouse\Locales\enUS.lua
+Modules\external\auctionhouse\Locales\koKR.lua
+Modules\external\auctionhouse\auctionhouse.lua
+Modules\external\auctionhouse\data.lua
+
+Modules\external\lfgpanel\Locales\enUS.lua
+Modules\external\lfgpanel\Locales\koKR.lua
+Modules\external\lfgpanel\lfgpanel.lua
+Modules\external\lfgpanel\lfgpanel-ui.lua
+Modules\external\lfgpanel\data.lua
+
+Modules\external\achieveuntrack\Locales\enUS.lua
+Modules\external\achieveuntrack\Locales\koKR.lua
+Modules\external\achieveuntrack\achieveuntrack.lua
+Modules\external\achieveuntrack\data.lua
+
+Modules\external\framemover\Locales\enUS.lua
+Modules\external\framemover\Locales\koKR.lua
+Modules\external\framemover\framemover.lua
+Modules\external\framemover\framemover-core.lua
+Modules\external\framemover\framemover-frames.lua
+Modules\external\framemover\framemover-ui.lua
+Modules\external\framemover\data.lua
+
+Modules\external\minimapbuttons\Locales\enUS.lua
+Modules\external\minimapbuttons\Locales\koKR.lua
+Modules\external\minimapbuttons\minimapbuttons.lua
+Modules\external\minimapbuttons\minimapbuttons-ui.lua
+Modules\external\minimapbuttons\data.lua
+
+Modules\external\map_mini_tools\Locales\enUS.lua
+Modules\external\map_mini_tools\Locales\koKR.lua
+Modules\external\map_mini_tools\map_mini_tools.lua
+Modules\external\map_mini_tools\map_mini_tools-engine.lua
+Modules\external\map_mini_tools\map_mini_tools-ui.lua
+Modules\external\map_mini_tools\data.lua
+
+Modules\external\map_world_tools\Locales\enUS.lua
+Modules\external\map_world_tools\map_world_tools.lua
+Modules\external\map_world_tools\map_world_reveal_data.lua
+Modules\external\map_world_tools\map_world_tools-explore.lua
+Modules\external\map_world_tools\map_world_tools-battlefield.lua
+Modules\external\map_world_tools\map_world_tools-engine.lua
+Modules\external\map_world_tools\map_world_tools-ui.lua
+Modules\external\map_world_tools\data.lua
+
+Modules\external\autoinvite\Locales\enUS.lua
+Modules\external\autoinvite\Locales\koKR.lua
+Modules\external\autoinvite\autoinvite.lua
+Modules\external\autoinvite\data.lua
+
+Modules\external\autoresurrect\Locales\enUS.lua
+Modules\external\autoresurrect\Locales\koKR.lua
+Modules\external\autoresurrect\autoresurrect.lua
+Modules\external\autoresurrect\data.lua
+
+Modules\external\autosummon\Locales\enUS.lua
+Modules\external\autosummon\Locales\koKR.lua
+Modules\external\autosummon\autosummon.lua
+Modules\external\autosummon\data.lua
+
+Modules\external\declineduel\Locales\enUS.lua
+Modules\external\declineduel\Locales\koKR.lua
+Modules\external\declineduel\declineduel.lua
+Modules\external\declineduel\data.lua
+
+Modules\external\screenshotachievements\Locales\enUS.lua
+Modules\external\screenshotachievements\Locales\koKR.lua
+Modules\external\screenshotachievements\screenshotachievements.lua
+Modules\external\screenshotachievements\data.lua
+
+Modules\external\hideerrors\Locales\enUS.lua
+Modules\external\hideerrors\Locales\koKR.lua
+Modules\external\hideerrors\hideerrors.lua
+Modules\external\hideerrors\data.lua
+
+Modules\external\autoreadycheck\Locales\enUS.lua
+Modules\external\autoreadycheck\Locales\koKR.lua
+Modules\external\autoreadycheck\autoreadycheck.lua
+Modules\external\autoreadycheck\data.lua

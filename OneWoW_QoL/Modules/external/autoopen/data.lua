@@ -1,0 +1,3 @@
+local _, ns = ...
+
+ns.ModuleRegistry:Register(ns.AutoOpenModule)

@@ -1,0 +1,96 @@
+-- Shadowlands-instances.lua
+-- Instance data for Shadowlands
+
+OneWoWInstances_Shadowlands = {
+	[1182] = {
+		instanceID = 1182,
+		name = "The Necrotic Wake",
+		mapID = 2286,
+		instanceType = "party",
+		expansionID = 9,
+	},
+	[1186] = {
+		instanceID = 1186,
+		name = "Spires of Ascension",
+		mapID = 2285,
+		instanceType = "party",
+		expansionID = 9,
+	},
+	[1190] = {
+		instanceID = 1190,
+		name = "Castle Nathria",
+		mapID = 2296,
+		instanceType = "raid",
+		expansionID = 9,
+	},
+	[1194] = {
+		instanceID = 1194,
+		name = "Tazavesh, the Veiled Market",
+		mapID = 2441,
+		instanceType = "party",
+		expansionID = 9,
+	},
+	[1183] = {
+		instanceID = 1183,
+		name = "Plaguefall",
+		mapID = 2289,
+		instanceType = "party",
+		expansionID = 9,
+	},
+	[1187] = {
+		instanceID = 1187,
+		name = "Theater of Pain",
+		mapID = 2293,
+		instanceType = "party",
+		expansionID = 9,
+	},
+	[1195] = {
+		instanceID = 1195,
+		name = "Sepulcher of the First Ones",
+		mapID = 2481,
+		instanceType = "raid",
+		expansionID = 9,
+	},
+	[1184] = {
+		instanceID = 1184,
+		name = "Mists of Tirna Scithe",
+		mapID = 2290,
+		instanceType = "party",
+		expansionID = 9,
+	},
+	[1188] = {
+		instanceID = 1188,
+		name = "De Other Side",
+		mapID = 2291,
+		instanceType = "party",
+		expansionID = 9,
+	},
+	[1192] = {
+		instanceID = 1192,
+		name = "Shadowlands",
+		mapID = 2559,
+		instanceType = "raid",
+		expansionID = 9,
+	},
+	[1185] = {
+		instanceID = 1185,
+		name = "Halls of Atonement",
+		mapID = 2287,
+		instanceType = "party",
+		expansionID = 9,
+	},
+	[1189] = {
+		instanceID = 1189,
+		name = "Sanguine Depths",
+		mapID = 2284,
+		instanceType = "party",
+		expansionID = 9,
+	},
+	[1193] = {
+		instanceID = 1193,
+		name = "Sanctum of Domination",
+		mapID = 2450,
+		instanceType = "raid",
+		expansionID = 9,
+	},
+}

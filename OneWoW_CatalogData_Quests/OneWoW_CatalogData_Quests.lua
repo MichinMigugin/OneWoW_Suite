@@ -1,0 +1,18 @@
+local _, ns = ...
+
+OneWoW_CatalogData_Quests = ns
+
+OneWoW_CatalogData_Quests_API = {
+    GetSettings = function()
+        return ns:GetSettings()
+    end,
+    GetQuest = function(questID)
+        return ns.QuestData and ns.QuestData:GetQuest(questID)
+    end,
+    GetQuestCount = function()
+        return ns.QuestData and ns.QuestData:GetCapturedQuestCount() or 0
+    end,
+    GetCompletedCharacters = function(questID)
+        return ns.CompletionTracker and ns.CompletionTracker:GetCompletedCharacters(questID) or {}
+    end,
+}

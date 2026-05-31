@@ -1,0 +1,430 @@
+local _, ns = ...
+local L = ns.L
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+
+ns.NotesContextMenu = {}
+local NotesContextMenu = ns.NotesContextMenu
+
+local hyperlinkDialog = nil
+local waypointDialog = nil
+
+local function CreateDialogTitleBar(parent, titleText)
+    local titleBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    titleBar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+    titleBar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
+    titleBar:SetHeight(30)
+    titleBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    titleBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BG"))
+    titleBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TITLEBAR_BORDER"))
+
+    local titleLabel = OneWoW_GUI:CreateFS(titleBar, 12)
+    titleLabel:SetPoint("LEFT", titleBar, "LEFT", 10, 0)
+    titleLabel:SetText(titleText)
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    local closeBtn = CreateFrame("Button", nil, parent)
+    closeBtn:SetSize(18, 18)
+    closeBtn:SetPoint("RIGHT", titleBar, "RIGHT", -6, 0)
+    local closeTex = closeBtn:CreateTexture(nil, "ARTWORK")
+    closeTex:SetAllPoints()
+    closeTex:SetTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+    closeBtn:SetScript("OnClick", function()
+        parent:Hide()
+    end)
+
+    parent:SetMovable(true)
+    parent:EnableMouse(true)
+    titleBar:EnableMouse(true)
+    titleBar:SetScript("OnMouseDown", function(_, button)
+        if button == "LeftButton" then
+            parent:StartMoving()
+        end
+    end)
+    titleBar:SetScript("OnMouseUp", function()
+        parent:StopMovingOrSizing()
+    end)
+
+    return titleBar
+end
+
+local function CreateDialogEditBox(parent, width, height, numeric)
+    local eb = OneWoW_GUI:CreateEditBox(parent, {
+        width = width,
+        height = height or 26,
+        placeholderText = "",
+    })
+    if numeric then eb:SetNumeric(true) end
+    return eb
+end
+
+local function GetHyperlinkDialog()
+    if hyperlinkDialog then return hyperlinkDialog end
+
+    local dlg = CreateFrame("Frame", "OneWoW_NotesHyperlinkDialog", UIParent, "BackdropTemplate")
+    dlg:SetSize(490, 310)
+    dlg:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    dlg:SetFrameStrata("DIALOG")
+    dlg:SetFrameLevel(100)
+    dlg:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    dlg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    dlg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    dlg:Hide()
+
+    CreateDialogTitleBar(dlg, L["CTX_INSERT_HYPERLINK"])
+
+    local typeLbl = OneWoW_GUI:CreateFS(dlg, 12)
+    typeLbl:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12, -40)
+    typeLbl:SetText(L["CTX_LINK_TYPE_LABEL"])
+    typeLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local typeData = {
+        { key = "item",        label = L["CTX_LINK_TYPE_ITEM"],        help = L["CTX_HELP_ITEM"] },
+        { key = "spell",       label = L["CTX_LINK_TYPE_SPELL"],       help = L["CTX_HELP_SPELL"] },
+        { key = "quest",       label = L["CTX_LINK_TYPE_QUEST"],       help = L["CTX_HELP_QUEST"] },
+        { key = "achievement", label = L["CTX_LINK_TYPE_ACHIEVEMENT"], help = L["CTX_HELP_ACHIEVEMENT"] },
+        { key = "currency",    label = L["CTX_LINK_TYPE_CURRENCY"],    help = L["CTX_HELP_CURRENCY"] },
+        { key = "toy",         label = L["CTX_LINK_TYPE_TOY"],         help = L["CTX_HELP_TOY"] },
+        { key = "battlepet",   label = L["CTX_LINK_TYPE_BATTLEPET"],   help = L["CTX_HELP_BATTLEPET"] },
+        { key = "mount",       label = L["CTX_LINK_TYPE_MOUNT"],       help = L["CTX_HELP_MOUNT"] },
+    }
+
+    dlg.selectedLinkType = "item"
+    dlg.typeButtons = {}
+
+    local btnW = 113
+    local btnH = 24
+    local btnGap = 4
+
+    for i, data in ipairs(typeData) do
+        local col = (i - 1) % 4
+        local row = math.floor((i - 1) / 4)
+        local btn = CreateFrame("Button", nil, dlg, "BackdropTemplate")
+        btn:SetSize(btnW, btnH)
+        btn:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12 + col * (btnW + btnGap), -58 - row * (btnH + btnGap))
+        btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        btn.typeKey = data.key
+        btn.helpText = data.help
+
+        local btnLabel = OneWoW_GUI:CreateFS(btn, 10)
+        btnLabel:SetPoint("CENTER")
+        btnLabel:SetText(data.label)
+        btn.labelText = btnLabel
+
+        btn:SetScript("OnEnter", function(self)
+            if dlg.selectedLinkType ~= self.typeKey then
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+            end
+        end)
+        btn:SetScript("OnLeave", function(self)
+            if dlg.selectedLinkType ~= self.typeKey then
+                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                self.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+        end)
+        btn:SetScript("OnClick", function(self)
+            dlg.selectedLinkType = self.typeKey
+            for _, tb in ipairs(dlg.typeButtons) do
+                if tb.typeKey == dlg.selectedLinkType then
+                    tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                    tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                    tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                else
+                    tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                    tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                    tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                end
+            end
+            if dlg.helpLabel then
+                dlg.helpLabel:SetText(self.helpText)
+            end
+        end)
+
+        table.insert(dlg.typeButtons, btn)
+    end
+
+    for _, tb in ipairs(dlg.typeButtons) do
+        if tb.typeKey == "item" then
+            tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        else
+            tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+
+    local valueLbl = OneWoW_GUI:CreateFS(dlg, 12)
+    valueLbl:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12, -58 - 2 * (btnH + btnGap) - 14)
+    valueLbl:SetText(L["CTX_ID_OR_VALUE"])
+    valueLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local valueEditBox = CreateDialogEditBox(dlg, 300, 26)
+    valueEditBox:SetPoint("TOPLEFT", valueLbl, "BOTTOMLEFT", 0, -6)
+    dlg.valueEditBox = valueEditBox
+
+    local helpLabel = OneWoW_GUI:CreateFS(dlg, 10)
+    helpLabel:SetPoint("TOPLEFT", valueEditBox, "BOTTOMLEFT", 0, -8)
+    helpLabel:SetPoint("TOPRIGHT", dlg, "TOPRIGHT", -12, 0)
+    helpLabel:SetJustifyH("LEFT")
+    helpLabel:SetWordWrap(true)
+    helpLabel:SetText(L["CTX_HELP_ITEM"])
+    helpLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    dlg.helpLabel = helpLabel
+
+    local insertBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_INSERT"], width = 100, height = 28 })
+    insertBtn:SetPoint("BOTTOMLEFT", dlg, "BOTTOMLEFT", 12, 10)
+    insertBtn:SetScript("OnClick", function()
+        local linkType = dlg.selectedLinkType or "item"
+        local linkValue = dlg.valueEditBox:GetText()
+        if linkValue and linkValue ~= "" then
+            local hyperlinkText = string.format("(%s=%s)", linkType, linkValue)
+            if ns.NotesHyperlinks then
+                local converted = ns.NotesHyperlinks:ConvertManualLinks(hyperlinkText)
+                dlg.targetEditBox:Insert(converted)
+            else
+                dlg.targetEditBox:Insert(hyperlinkText)
+            end
+            dlg:Hide()
+        end
+    end)
+
+    local cancelBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_CANCEL"], width = 100, height = 28 })
+    cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
+    cancelBtn:SetScript("OnClick", function()
+        dlg:Hide()
+    end)
+
+    hyperlinkDialog = dlg
+    return dlg
+end
+
+local function GetWaypointDialog()
+    if waypointDialog then return waypointDialog end
+
+    local dlg = CreateFrame("Frame", "OneWoW_NotesWaypointDialog", UIParent, "BackdropTemplate")
+    dlg:SetSize(380, 360)
+    dlg:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    dlg:SetFrameStrata("DIALOG")
+    dlg:SetFrameLevel(100)
+    dlg:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    dlg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    dlg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    dlg:Hide()
+
+    CreateDialogTitleBar(dlg, L["CTX_INSERT_WAYPOINT"])
+
+    local mapLbl = OneWoW_GUI:CreateFS(dlg, 12)
+    mapLbl:SetPoint("TOPLEFT", dlg, "TOPLEFT", 12, -42)
+    mapLbl:SetText(L["CTX_MAP_ID"])
+    mapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local mapEditBox = CreateDialogEditBox(dlg, 150, 26, true)
+    mapEditBox:SetPoint("TOPLEFT", mapLbl, "BOTTOMLEFT", 0, -6)
+    dlg.mapEditBox = mapEditBox
+
+    local mapHelp = OneWoW_GUI:CreateFS(dlg, 10)
+    mapHelp:SetPoint("TOPLEFT", mapEditBox, "BOTTOMLEFT", 0, -4)
+    mapHelp:SetText(L["CTX_MAP_HELP"])
+    mapHelp:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local xLbl = OneWoW_GUI:CreateFS(dlg, 12)
+    xLbl:SetPoint("TOPLEFT", mapHelp, "BOTTOMLEFT", 0, -10)
+    xLbl:SetText(L["CTX_X_COORDINATE"])
+    xLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local xEditBox = CreateDialogEditBox(dlg, 150, 26, true)
+    xEditBox:SetPoint("TOPLEFT", xLbl, "BOTTOMLEFT", 0, -6)
+    dlg.xEditBox = xEditBox
+
+    local yLbl = OneWoW_GUI:CreateFS(dlg, 12)
+    yLbl:SetPoint("TOPLEFT", xEditBox, "BOTTOMLEFT", 0, -10)
+    yLbl:SetText(L["CTX_Y_COORDINATE"])
+    yLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local yEditBox = CreateDialogEditBox(dlg, 150, 26, true)
+    yEditBox:SetPoint("TOPLEFT", yLbl, "BOTTOMLEFT", 0, -6)
+    dlg.yEditBox = yEditBox
+
+    local descLbl = OneWoW_GUI:CreateFS(dlg, 12)
+    descLbl:SetPoint("TOPLEFT", yEditBox, "BOTTOMLEFT", 0, -10)
+    descLbl:SetText(L["CTX_DESCRIPTION"])
+    descLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local descEditBox = CreateDialogEditBox(dlg, 300, 26)
+    descEditBox:SetPoint("TOPLEFT", descLbl, "BOTTOMLEFT", 0, -6)
+    dlg.descEditBox = descEditBox
+
+    local insertBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_INSERT"], width = 100, height = 28 })
+    insertBtn:SetPoint("BOTTOMLEFT", dlg, "BOTTOMLEFT", 12, 10)
+    insertBtn:SetScript("OnClick", function()
+        local mapID = dlg.mapEditBox:GetNumber()
+        local x = dlg.xEditBox:GetNumber()
+        local y = dlg.yEditBox:GetNumber()
+        local desc = dlg.descEditBox:GetText()
+        if desc == "" then desc = "Waypoint" end
+
+        if x >= 0 and x <= 100 and y >= 0 and y <= 100 then
+            if mapID == 0 then
+                local currentMapID = C_Map.GetBestMapForUnit("player")
+                if not currentMapID then
+                    print("|cFFFFD100OneWoW - Notes:|r " .. L["CTX_CANNOT_DETERMINE_ZONE"])
+                    return
+                end
+                mapID = currentMapID
+            end
+            local waypoint = string.format("(map=%d %.2f %.2f %s)", mapID, x, y, desc)
+            if ns.NotesHyperlinks then
+                local converted = ns.NotesHyperlinks:ConvertManualLinks(waypoint)
+                dlg.targetEditBox:Insert(converted)
+            else
+                dlg.targetEditBox:Insert(waypoint)
+            end
+            dlg:Hide()
+        else
+            print("|cFFFFD100OneWoW - Notes:|r " .. L["CTX_COORDS_OUT_OF_RANGE"])
+        end
+    end)
+
+    local cancelBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_CANCEL"], width = 100, height = 28 })
+    cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
+    cancelBtn:SetScript("OnClick", function()
+        dlg:Hide()
+    end)
+
+    waypointDialog = dlg
+    return dlg
+end
+
+function NotesContextMenu:ShowEditBoxContextMenu(editBox)
+    if not UIDropDownMenu_Initialize then return end
+
+    local contextMenu = CreateFrame("Frame", "OneWoW_NotesEditBoxCtxMenu", UIParent, "UIDropDownMenuTemplate")
+    UIDropDownMenu_Initialize(contextMenu, function()
+        local info = UIDropDownMenu_CreateInfo()
+
+        info.text = L["CTX_INSERT_TARGET"]
+        info.notCheckable = true
+        info.func = function()
+            if not UnitExists("target") then
+                print("|cFFFFD100OneWoW - Notes:|r " .. L["CTX_NO_TARGET"])
+                return
+            end
+            local targetName = UnitName("target")
+            local targetText = targetName
+            if UnitIsPlayer("target") then
+                local lvl = UnitLevel("target")
+                local race = UnitRace("target")
+                local class = UnitClass("target")
+                if lvl and race and class then
+                    targetText = string.format("%s %d %s %s", targetName, lvl, race, class)
+                end
+            end
+            editBox:Insert(targetText)
+        end
+        UIDropDownMenu_AddButton(info)
+
+        info = UIDropDownMenu_CreateInfo()
+        info.text = L["CTX_INSERT_DATETIME"]
+        info.notCheckable = true
+        info.func = function()
+            editBox:Insert(date("%Y-%m-%d %H:%M:%S"))
+        end
+        UIDropDownMenu_AddButton(info)
+
+        info = UIDropDownMenu_CreateInfo()
+        info.text = L["CTX_INSERT_SELF"]
+        info.notCheckable = true
+        info.func = function()
+            editBox:Insert(UnitName("player"))
+        end
+        UIDropDownMenu_AddButton(info)
+
+        info = UIDropDownMenu_CreateInfo()
+        info.text = L["CTX_INSERT_HYPERLINK"]
+        info.notCheckable = true
+        info.func = function()
+            NotesContextMenu:ShowHyperlinkDialog(editBox)
+        end
+        UIDropDownMenu_AddButton(info)
+
+        info = UIDropDownMenu_CreateInfo()
+        info.text = L["CTX_INSERT_WAYPOINT"]
+        info.notCheckable = true
+        info.func = function()
+            NotesContextMenu:ShowWaypointDialog(editBox)
+        end
+        UIDropDownMenu_AddButton(info)
+
+        info = UIDropDownMenu_CreateInfo()
+        info.text = L["CTX_ADD_CURRENT_LOCATION"]
+        info.notCheckable = true
+        info.func = function()
+            local mapID = C_Map.GetBestMapForUnit("player")
+            if not mapID then
+                print("|cFFFFD100OneWoW - Notes:|r " .. L["CTX_CANNOT_DETERMINE_LOCATION"])
+                return
+            end
+            local position = C_Map.GetPlayerMapPosition(mapID, "player")
+            if not position then
+                print("|cFFFFD100OneWoW - Notes:|r " .. L["CTX_CANNOT_GET_POSITION"])
+                return
+            end
+            local x, y = position:GetXY()
+            x = x * 100
+            y = y * 100
+            local waypoint = string.format("(map=%d %.2f %.2f Location)", mapID, x, y)
+            if ns.NotesHyperlinks then
+                local converted = ns.NotesHyperlinks:ConvertManualLinks(waypoint)
+                editBox:Insert(converted)
+            else
+                editBox:Insert(waypoint)
+            end
+            print("|cFFFFD100OneWoW - Notes:|r " .. string.format(L["CTX_LOCATION_INSERTED"], mapID, x, y))
+        end
+        UIDropDownMenu_AddButton(info)
+
+    end, "MENU")
+
+    ToggleDropDownMenu(1, nil, contextMenu, "cursor", 0, 0)
+end
+
+function NotesContextMenu:ShowHyperlinkDialog(editBox)
+    local dlg = GetHyperlinkDialog()
+    dlg.targetEditBox = editBox
+    dlg.selectedLinkType = "item"
+    dlg.valueEditBox:SetText("")
+    if dlg.helpLabel then
+        dlg.helpLabel:SetText(L["CTX_HELP_ITEM"])
+    end
+    for _, tb in ipairs(dlg.typeButtons) do
+        if tb.typeKey == "item" then
+            tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        else
+            tb:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            tb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            tb.labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+    dlg:Show()
+    dlg.valueEditBox:SetFocus()
+end
+
+function NotesContextMenu:ShowWaypointDialog(editBox)
+    local dlg = GetWaypointDialog()
+    dlg.targetEditBox = editBox
+    dlg.mapEditBox:SetText("0")
+    dlg.xEditBox:SetText("")
+    dlg.yEditBox:SetText("")
+    dlg.descEditBox:SetText("")
+    dlg:Show()
+    dlg.mapEditBox:SetFocus()
+end

@@ -1,0 +1,52 @@
+# OneWoW Suite — pre-commit configuration
+#
+# Install:
+#   pip install pre-commit
+#   python -m pre_commit install
+#
+# Run manually against all files:
+#   python -m pre-commit run --all-files
+#
+# Bypass for a single commit (use sparingly):
+#   git commit --no-verify
+
+exclude: |
+  (?x)^(
+    \.wow_docs/
+    | Libs/
+  )
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-json
+
+  - repo: local
+    hooks:
+      - id: no-g-literal-access
+        name: No _G.<name> literal access in Lua
+        description: |
+          Forbids `_G.SomeGlobal` (literal field access on _G).
+          Allowed: bare global name, or `_G[expr]` for computed keys.
+          See .cursor/rules/OneWoW-Lua-Conventions.mdc.
+        entry: python bin/check_no_g_literal.py
+        language: python
+        types: [lua]
+        # Mirror .luarc.json workspace.ignoreDir — these are reference / vendored / generated.
+        exclude: |
+          (?x)^(
+            Libs/
+            | \.lua-defs/
+            | \.wow_docs/
+            | \.vscode/
+            | \.releases/
+            | OneWoW_Bags/API/Examples/
+          )

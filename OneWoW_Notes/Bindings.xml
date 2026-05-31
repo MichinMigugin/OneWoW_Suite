@@ -1,0 +1,7 @@
+<Bindings>
+    <Binding name="ONEWOW_NOTES_QUICKNOTE" category="BINDING_HEADER_ONEWOW_NOTES">
+        if OneWoW_Notes and OneWoW_Notes.QuickNote then
+            OneWoW_Notes.QuickNote()
+        end
+    </Binding>
+</Bindings>

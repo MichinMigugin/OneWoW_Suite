@@ -1,0 +1,1694 @@
+local ADDON_NAME, OneWoW = ...
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+
+OneWoW.OverlayEngine = {}
+local Engine = OneWoW.OverlayEngine
+
+local PositionOffsets = {
+    TOPLEFT     = {1, -1},
+    TOPRIGHT    = {-1, -1},
+    BOTTOMLEFT  = {1,  1},
+    BOTTOMRIGHT = {-1,  1},
+    BOTTOM      = {0,  1},
+    TOP         = {0, -1},
+    LEFT        = {1,  0},
+    RIGHT       = {-1,  0},
+    CENTER      = {0,  0},
+}
+
+local OuterPositionData = {
+    ["Outer-Top-Left"]      = { "TOPLEFT",     4, -4 },
+    ["Outer-Top-Middle"]    = { "TOP",         0, -4 },
+    ["Outer-Top-Right"]     = { "TOPRIGHT",   -4, -4 },
+    ["Outer-Bottom-Left"]   = { "BOTTOMLEFT",  4,  4 },
+    ["Outer-Bottom-Middle"] = { "BOTTOM",      0,  4 },
+    ["Outer-Bottom-Right"]  = { "BOTTOMRIGHT",-4,  4 },
+}
+
+local OVERLAY_ORDER = {
+    "protected",
+    "junk",
+    "consumables",
+    "housingdecor",
+    "knownitems",
+    "unknownitems",
+    "transmog",
+    "mounts",
+    "pets",
+    "quest",
+    "reagents",
+    "recipe",
+    "soulbound",
+    "toys",
+    "upgrade",
+    "warbound",
+}
+
+local INVTYPE_TO_SLOT = {
+    [Enum.InventoryType.IndexHeadType] = 1,
+    [Enum.InventoryType.IndexNeckType] = 2,
+    [Enum.InventoryType.IndexShoulderType] = 3,
+    [Enum.InventoryType.IndexBodyType] = 4,
+    [Enum.InventoryType.IndexChestType] = 5,
+    [Enum.InventoryType.IndexWaistType] = 6,
+    [Enum.InventoryType.IndexLegsType] = 7,
+    [Enum.InventoryType.IndexFeetType] = 8,
+    [Enum.InventoryType.IndexWristType] = 9,
+    [Enum.InventoryType.IndexHandType] = 10,
+    [Enum.InventoryType.IndexFingerType] = 11,
+    [Enum.InventoryType.IndexTrinketType] = 13,
+    [Enum.InventoryType.IndexWeaponType] = 16,
+    [Enum.InventoryType.IndexShieldType] = 17,
+    [Enum.InventoryType.IndexCloakType] = 15,
+    [Enum.InventoryType.Index2HweaponType] = 16,
+    [Enum.InventoryType.IndexRobeType] = 5,
+    [Enum.InventoryType.IndexWeaponmainhandType] = 16,
+    [Enum.InventoryType.IndexWeaponoffhandType] = 17,
+    [Enum.InventoryType.IndexHoldableType] = 17,
+}
+
+local BATTLE_PET_CAGE_ID = 82800
+
+local function NormalizeCageItemClass(itemID, classID, subclassID)
+    if itemID == BATTLE_PET_CAGE_ID then
+        return Enum.ItemClass.Battlepet, subclassID or 0
+    end
+    return classID, subclassID
+end
+
+local bagThrottle        = {}
+local bankThrottle       = false
+local trackedBankButtons = {}
+local vendorPending      = false
+local initialized   = false
+
+Engine.integrationRefreshCallbacks = {}
+
+function Engine:RegisterIntegration(fn)
+    table.insert(self.integrationRefreshCallbacks, fn)
+end
+
+local function GetDB()
+    return OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
+end
+
+local function IsGlobalEnabled()
+    local db = GetDB()
+    if not db then return false end
+    return db.general and db.general.enabled ~= false
+end
+
+local function GetOverlayCfg(overlayId)
+    local db = GetDB()
+    if not db then return nil end
+    return db[overlayId]
+end
+
+local function IsOverlayEnabled(overlayId)
+    if not IsGlobalEnabled() then return false end
+    local cfg = GetOverlayCfg(overlayId)
+    return cfg and cfg.enabled == true
+end
+
+local function AnyVendorOverlayEnabled()
+    for _, id in ipairs(OVERLAY_ORDER) do
+        local cfg = GetOverlayCfg(id)
+        if cfg and cfg.enabled and cfg.applyToVendorItems then
+            return true
+        end
+    end
+    local ilvlCfg = GetOverlayCfg("itemlevel")
+    if ilvlCfg and ilvlCfg.enabled and ilvlCfg.applyToVendorItems then
+        return true
+    end
+    return false
+end
+
+local function AnyAHOverlayEnabled()
+    for _, id in ipairs(OVERLAY_ORDER) do
+        local cfg = GetOverlayCfg(id)
+        if cfg and cfg.enabled and cfg.applyToAuctionHouse then
+            return true
+        end
+    end
+    local ilvlCfg = GetOverlayCfg("itemlevel")
+    if ilvlCfg and ilvlCfg.enabled and ilvlCfg.applyToAuctionHouse then
+        return true
+    end
+    return false
+end
+
+local function GetOrCreateContainer(button)
+    if not button.onewow_overlayContainer then
+        local c = CreateFrame("Frame", nil, button)
+        c:SetAllPoints(button)
+        c:EnableMouse(false)
+        -- OneWoW_GUI's rarity border sits at button FrameLevel + 1; keep the
+        -- overlay container above it so ilvl/quality overlays stay on top.
+        c:SetFrameLevel(button:GetFrameLevel() + 2)
+        c:Hide()
+        button.onewow_overlayContainer = c
+    end
+    return button.onewow_overlayContainer
+end
+
+local function CleanButton(button)
+    if not button then return end
+    if button.onewow_overlayContainer then
+        button.onewow_overlayContainer:Hide()
+    end
+    if button.onewow_overlayPool then
+        for _, entry in ipairs(button.onewow_overlayPool) do
+            if entry.frame then
+                entry.frame:ClearAllPoints()
+                entry.frame:Hide()
+            end
+            if entry.iconAnim then
+                entry.iconAnim:Stop()
+            end
+            if entry.bgAnim then
+                entry.bgAnim:Stop()
+            end
+            if entry.bgPulseAnim then
+                entry.bgPulseAnim:Stop()
+            end
+            if entry.bgFrame then
+                entry.bgFrame:Hide()
+            end
+        end
+    end
+    if button.onewow_ilvl then
+        button.onewow_ilvl:Hide()
+    end
+end
+
+local function PreparePool(button)
+    if not button.onewow_overlayPool then
+        button.onewow_overlayPool = {}
+    end
+end
+
+local BG_SOLID_STYLES = { ["Solid-Circle"] = true, ["Solid-Square"] = true }
+
+local function SetupIconAnimation(entry)
+    if entry.iconAnim then return end
+    local host = entry.iconFrame or entry.frame
+    local ag = host:CreateAnimationGroup()
+
+    local spin1 = ag:CreateAnimation("Rotation")
+    spin1:SetDuration(1.5)
+    spin1:SetDegrees(-360)
+    spin1:SetOrder(1)
+
+    local scaleUp = ag:CreateAnimation("Scale")
+    scaleUp:SetDuration(0.75)
+    scaleUp:SetScale(1.5, 1.5)
+    scaleUp:SetOrder(1)
+
+    local spin2 = ag:CreateAnimation("Rotation")
+    spin2:SetDuration(1.5)
+    spin2:SetDegrees(-360)
+    spin2:SetOrder(2)
+
+    local scaleDown = ag:CreateAnimation("Scale")
+    scaleDown:SetDuration(0.75)
+    scaleDown:SetScale(1 / 1.5, 1 / 1.5)
+    scaleDown:SetOrder(2)
+
+    ag:SetLooping("REPEAT")
+
+    entry.iconAnim = ag
+    entry.iconSpin1 = spin1
+    entry.iconSpin2 = spin2
+    entry.iconScaleUp = scaleUp
+    entry.iconScaleDown = scaleDown
+end
+
+local function ApplyIconEffect(entry, effect)
+    if not effect or effect == "none" then
+        if entry.iconAnim then
+            entry.iconAnim:Stop()
+        end
+        return
+    end
+
+    SetupIconAnimation(entry)
+    entry.iconAnim:Stop()
+
+    local hasSpin = (effect == "spinning" or effect == "both")
+    local hasZoom = (effect == "zooming" or effect == "both")
+
+    entry.iconSpin1:SetDegrees(hasSpin and -360 or 0)
+    entry.iconSpin2:SetDegrees(hasSpin and -360 or 0)
+    entry.iconScaleUp:SetScale(hasZoom and 1.5 or 1, hasZoom and 1.5 or 1)
+    entry.iconScaleDown:SetScale(hasZoom and (1/1.5) or 1, hasZoom and (1/1.5) or 1)
+
+    entry.iconAnim:Play()
+end
+
+local function SetupBackground(entry)
+    if entry.bgFrame then return end
+    local bf = CreateFrame("Frame", nil, entry.frame)
+    bf:SetPoint("CENTER", entry.frame, "CENTER", 0, 0)
+    bf:SetFrameLevel(entry.frame:GetFrameLevel() - 1)
+    bf:EnableMouse(false)
+
+    local tex = bf:CreateTexture(nil, "ARTWORK")
+
+    local ag = tex:CreateAnimationGroup()
+    local spin1 = ag:CreateAnimation("Rotation")
+    spin1:SetDuration(1.5)
+    spin1:SetDegrees(-360)
+    spin1:SetOrder(1)
+    local scaleUp = ag:CreateAnimation("Scale")
+    scaleUp:SetDuration(0.75)
+    scaleUp:SetScale(1.8, 1.8)
+    scaleUp:SetOrder(1)
+    local spin2 = ag:CreateAnimation("Rotation")
+    spin2:SetDuration(1.5)
+    spin2:SetDegrees(-360)
+    spin2:SetOrder(2)
+    local scaleDown = ag:CreateAnimation("Scale")
+    scaleDown:SetDuration(0.75)
+    scaleDown:SetScale(1 / 1.8, 1 / 1.8)
+    scaleDown:SetOrder(2)
+    ag:SetLooping("REPEAT")
+
+    local pulseAg = tex:CreateAnimationGroup()
+    local fadeOut = pulseAg:CreateAnimation("Alpha")
+    fadeOut:SetFromAlpha(1.0)
+    fadeOut:SetToAlpha(0.3)
+    fadeOut:SetDuration(0.75)
+    fadeOut:SetOrder(1)
+    local fadeIn = pulseAg:CreateAnimation("Alpha")
+    fadeIn:SetFromAlpha(0.3)
+    fadeIn:SetToAlpha(1.0)
+    fadeIn:SetDuration(0.75)
+    fadeIn:SetOrder(2)
+    pulseAg:SetLooping("REPEAT")
+
+    entry.bgFrame = bf
+    entry.bgTexture = tex
+    entry.bgAnim = ag
+    entry.bgPulseAnim = pulseAg
+    entry.bgMask = nil
+    entry.bgMaskApplied = false
+    bf:Hide()
+end
+
+--- bgFrame is behind entry.frame; icon lives on iconFrame above bg (child frame draw order).
+local function SyncEntryLayerLevels(entry)
+    local f = entry.frame
+    if not f then return end
+    if entry.bgFrame then
+        entry.bgFrame:SetFrameLevel(f:GetFrameLevel() - 1)
+    end
+    if entry.iconFrame then
+        entry.iconFrame:SetFrameLevel(f:GetFrameLevel() + 1)
+    end
+end
+
+local function ApplyBackground(entry, cfg, iconSize, itemLink)
+    if not cfg.bgEnabled then
+        if entry.bgFrame then
+            entry.bgAnim:Stop()
+            if entry.bgPulseAnim then entry.bgPulseAnim:Stop() end
+            entry.bgFrame:Hide()
+        end
+        return
+    end
+
+    SetupBackground(entry)
+    SyncEntryLayerLevels(entry)
+
+    local style = cfg.bgStyle or "Solid-Circle"
+    local bgScale = cfg.bgScale or 1.0
+    local bgColor = cfg.bgColor or {1, 1, 1}
+
+    if cfg.bgUseRarityColor and itemLink then
+        local quality = select(3, C_Item.GetItemInfo(itemLink))
+        if quality then
+            local r, g, b = C_Item.GetItemQualityColor(quality)
+            bgColor = {r, g, b}
+        end
+    end
+
+    local baseSize = (iconSize or 20) * 1.6
+    local finalSize = baseSize * bgScale
+
+    entry.bgFrame:SetSize(finalSize, finalSize)
+    entry.bgTexture:ClearAllPoints()
+    entry.bgTexture:SetAllPoints(entry.bgFrame)
+    entry.bgTexture:SetVertexColor(bgColor[1], bgColor[2], bgColor[3])
+
+    local function ApplyCircleMask()
+        if not entry.bgMask then
+            local mask = entry.bgFrame:CreateMaskTexture()
+            mask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+            mask:SetAllPoints(entry.bgFrame)
+            entry.bgMask = mask
+        end
+        if not entry.bgMaskApplied then
+            entry.bgTexture:AddMaskTexture(entry.bgMask)
+            entry.bgMaskApplied = true
+        end
+        entry.bgMask:Show()
+    end
+
+    local function RemoveCircleMask()
+        if entry.bgMask and entry.bgMaskApplied then
+            entry.bgTexture:RemoveMaskTexture(entry.bgMask)
+            entry.bgMaskApplied = false
+            entry.bgMask:Hide()
+        end
+    end
+
+    if style == "Spinning Orbs" then
+        RemoveCircleMask()
+        entry.bgTexture:SetTexture(nil)
+        entry.bgTexture:SetAtlas("ArtifactsFX-SpinningGlowys-Purple", false)
+        if entry.bgPulseAnim then entry.bgPulseAnim:Stop() end
+        entry.bgAnim:Play()
+    elseif style == "Portal Spiral" then
+        RemoveCircleMask()
+        entry.bgTexture:SetTexture(nil)
+        entry.bgTexture:SetAtlas("UI-Frame-jailerstower-Portrait-QualityEpic", false)
+        if entry.bgPulseAnim then entry.bgPulseAnim:Stop() end
+        entry.bgAnim:Play()
+    elseif style == "Glow Pulse" then
+        entry.bgAnim:Stop()
+        entry.bgTexture:SetAtlas("")
+        entry.bgTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
+        ApplyCircleMask()
+        if entry.bgPulseAnim then entry.bgPulseAnim:Play() end
+    else
+        entry.bgAnim:Stop()
+        if entry.bgPulseAnim then entry.bgPulseAnim:Stop() end
+        entry.bgTexture:SetAtlas("")
+        entry.bgTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
+
+        if style == "Solid-Circle" then
+            ApplyCircleMask()
+        else
+            RemoveCircleMask()
+        end
+    end
+
+    entry.bgFrame:Show()
+end
+
+local function MigratePoolEntryIconLayer(entry)
+    if entry.iconFrame or not entry.frame or not entry.texture then return end
+    local f, t = entry.frame, entry.texture
+    local iconFr = CreateFrame("Frame", nil, f)
+    iconFr:SetAllPoints(f)
+    iconFr:EnableMouse(false)
+    t:SetParent(iconFr)
+    t:ClearAllPoints()
+    t:SetAllPoints(iconFr)
+    iconFr:SetFrameLevel(f:GetFrameLevel() + 1)
+    entry.iconFrame = iconFr
+    if entry.iconAnim then
+        entry.iconAnim:Stop()
+        entry.iconAnim = nil
+        entry.iconSpin1 = nil
+        entry.iconSpin2 = nil
+        entry.iconScaleUp = nil
+        entry.iconScaleDown = nil
+    end
+end
+
+local function GetOrCreatePoolEntry(button, index)
+    PreparePool(button)
+    if button.onewow_overlayPool[index] then
+        MigratePoolEntryIconLayer(button.onewow_overlayPool[index])
+    end
+    if not button.onewow_overlayPool[index] then
+        local container = GetOrCreateContainer(button)
+        local f = CreateFrame("Frame", nil, container)
+        f:SetFrameLevel(button:GetFrameLevel() + 3)
+        f:EnableMouse(false)
+        local iconFr = CreateFrame("Frame", nil, f)
+        iconFr:SetAllPoints(f)
+        iconFr:EnableMouse(false)
+        iconFr:SetFrameLevel(f:GetFrameLevel() + 1)
+        local t = iconFr:CreateTexture(nil, "OVERLAY", nil, 3)
+        t:SetAllPoints(iconFr)
+        button.onewow_overlayPool[index] = { frame = f, iconFrame = iconFr, texture = t }
+    end
+    return button.onewow_overlayPool[index]
+end
+
+local function GetPetLevelFromLink(itemLink)
+    if not itemLink then return nil end
+    local level = itemLink:match("|Hbattlepet:%d+:(%d+)")
+    return level and tonumber(level)
+end
+
+local function GetContainerSlotCount(itemID)
+    if not itemID then return nil end
+    local td = C_TooltipInfo and C_TooltipInfo.GetItemByID and C_TooltipInfo.GetItemByID(itemID)
+    if td and td.lines then
+        for _, line in ipairs(td.lines) do
+            if line.leftText then
+                local slots = line.leftText:match("(%d+)%s+Slot")
+                if slots then return tonumber(slots) end
+            end
+        end
+    end
+    return nil
+end
+
+local function ApplyItemLevelToButton(button, item, itemLink, classID, itemLocation)
+    local cfg = GetOverlayCfg("itemlevel")
+    if not cfg or not cfg.enabled then return end
+
+    local ilvl
+    local isPetItem = (classID == Enum.ItemClass.Battlepet)
+        or (itemLink and itemLink:find("|Hbattlepet:") ~= nil)
+    local isContainer = (classID == Enum.ItemClass.Container)
+
+    if isPetItem and cfg.showPetLevel ~= false then
+        ilvl = GetPetLevelFromLink(itemLink)
+        if not ilvl or ilvl == 0 then return end
+    elseif isContainer and cfg.showContainerSlots ~= false then
+        local itemID = C_Item.GetItemInfoInstant(itemLink)
+        ilvl = GetContainerSlotCount(itemID)
+        if not ilvl or ilvl == 0 then return end
+    else
+        if isPetItem or isContainer then return end
+        local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
+        if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_NON_EQUIP"
+            or equipLoc == "INVTYPE_NON_EQUIP_IGNORE" then
+            return
+        end
+
+        if itemLocation and C_Item.DoesItemExist(itemLocation) then
+            ilvl = C_Item.GetCurrentItemLevel(itemLocation)
+        end
+        if not ilvl or ilvl == 0 then
+            ilvl = C_Item.GetDetailedItemLevelInfo(itemLink)
+        end
+        if not ilvl or ilvl == 0 then return end
+    end
+
+    if not button.onewow_ilvl then
+        local container = GetOrCreateContainer(button)
+        button.onewow_ilvl = OneWoW_GUI:CreateFS(container, 10)
+    end
+    local fontPath = OneWoW_GUI:GetFont() or "Fonts\\FRIZQT__.TTF"
+    local fontKey = OneWoW_GUI:MigrateLSMFontName(cfg.fontFamily) or cfg.fontFamily
+    if fontKey then
+        local path = OneWoW_GUI:GetFontByKey(fontKey)
+        if path then
+            fontPath = path
+        end
+    end
+    OneWoW_GUI:SafeSetFont(button.onewow_ilvl, fontPath, cfg.fontSize or 10, cfg.fontOutline or "OUTLINE")
+
+    local position  = cfg.position or "TOPRIGHT"
+    local container = GetOrCreateContainer(button)
+    button.onewow_ilvl:ClearAllPoints()
+    local outerData = OuterPositionData[position]
+    if outerData then
+        button.onewow_ilvl:SetPoint("CENTER", container, outerData[1], outerData[2], outerData[3])
+    else
+        local offsets = PositionOffsets[position] or {0, 0}
+        button.onewow_ilvl:SetPoint(position, container, position, offsets[1], offsets[2])
+    end
+
+    if cfg.useQualityColors then
+        local quality = item and item:GetItemQuality() or select(3, C_Item.GetItemInfo(itemLink)) or 1
+        local r, g, b = C_Item.GetItemQualityColor(quality)
+        button.onewow_ilvl:SetTextColor(r, g, b)
+    else
+        button.onewow_ilvl:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    end
+
+    button.onewow_ilvl:SetText(tostring(ilvl))
+    button.onewow_ilvl:Show()
+end
+
+local function GetButtonVisualSize(button)
+    local container = button.onewow_overlayContainer
+    if container then
+        local cw, ch = container:GetSize()
+        if cw and cw > 1 and ch and ch > 1 then
+            return cw, ch
+        end
+    end
+    return button:GetSize()
+end
+
+local function PresetContainerOnIcon(button, iconFrame, inset)
+    if button.onewow_overlayContainer then return end
+    inset = inset or 0
+    local c = CreateFrame("Frame", nil, button)
+    c:SetPoint("TOPLEFT",     iconFrame, "TOPLEFT",      inset, -inset)
+    c:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -inset,  inset)
+    c:EnableMouse(false)
+    c:SetFrameStrata("HIGH")
+    c:Hide()
+    button.onewow_overlayContainer = c
+end
+
+local function PresetContainerFixed(button, parent, w, h, anchorPoint, anchorTo, ox, oy)
+    if button.onewow_overlayContainer then return end
+    local c = CreateFrame("Frame", nil, parent)
+    c:SetSize(w, h)
+    c:SetPoint(anchorPoint, anchorTo, anchorPoint, ox, oy)
+    c:EnableMouse(false)
+    c:SetFrameStrata("HIGH")
+    c:Hide()
+    button.onewow_overlayContainer = c
+end
+
+local function SyncQuestAlpha(button)
+    if not button or not button.onewow_questEntry then return end
+    local entry = button.onewow_questEntry
+    if not entry.frame or not entry.frame:IsShown() then return end
+    local questAlpha = 1.0
+    if button.IconOverlay and button.IconOverlay:IsShown() then
+        local a = button.IconOverlay:GetAlpha()
+        if a and a < 1.0 then questAlpha = a end
+    end
+    entry.texture:SetAlpha(questAlpha)
+end
+
+local function SyncSearchDim(button)
+    if not button then return end
+    local isDimmed = (button.ItemContextOverlay and button.ItemContextOverlay:IsShown())
+        or (button:GetAlpha() < 0.9)
+    if button.onewow_overlayPool then
+        for _, entry in ipairs(button.onewow_overlayPool) do
+            if entry.frame and entry.frame:IsShown() then
+                if isDimmed then
+                    entry.texture:SetAlpha(0.2)
+                    if entry.bgFrame then entry.bgFrame:SetAlpha(0.2) end
+                else
+                    entry.texture:SetAlpha(entry.configAlpha or 1.0)
+                    if entry.bgFrame then entry.bgFrame:SetAlpha(1.0) end
+                end
+            end
+        end
+    end
+    if button.onewow_ilvl and button.onewow_ilvl:IsShown() then
+        button.onewow_ilvl:SetAlpha(isDimmed and 0.2 or 1.0)
+    end
+end
+
+local function ApplyOverlayToButton(button, overlayId, positionIndex)
+    local cfg = GetOverlayCfg(overlayId)
+    if not cfg then return end
+
+    local container = GetOrCreateContainer(button)
+    local entry = GetOrCreatePoolEntry(button, positionIndex)
+
+    if overlayId == "quest" then
+        local bw, bh = GetButtonVisualSize(button)
+        entry.frame:ClearAllPoints()
+        entry.frame:SetPoint("CENTER", container, "CENTER", 0, 0)
+        entry.frame:SetSize(bw, bh)
+        entry.texture:SetTexture(TEXTURE_ITEM_QUEST_BANG)
+        local questAlpha = 1.0
+        if button.IconOverlay and button.IconOverlay:IsShown() then
+            local a = button.IconOverlay:GetAlpha()
+            if a and a < 1.0 then questAlpha = a end
+        end
+        entry.texture:SetAlpha(questAlpha)
+        entry.configAlpha = questAlpha
+        button.onewow_questEntry = entry
+        entry.frame:Show()
+        if entry.iconFrame then
+            entry.iconFrame:Show()
+        end
+        SyncEntryLayerLevels(entry)
+        return
+    end
+
+    local iconName  = cfg.icon or "VignetteEvent-SuperTracked"
+    local position  = cfg.position or "TOPRIGHT"
+    local scale     = cfg.scale or 1.0
+    local alpha     = math.min(cfg.alpha or 1.0, 1.0)
+    local bw, bh    = GetButtonVisualSize(button)
+    local baseSize  = math.min(bw or 37, bh or 37) * 0.54
+    local finalSize = baseSize * scale
+
+    entry.frame:ClearAllPoints()
+    local outerData = OuterPositionData[position]
+    if outerData then
+        entry.frame:SetPoint("CENTER", container, outerData[1], outerData[2], outerData[3])
+        entry.frame:SetFrameStrata("HIGH")
+        entry.frame:SetFrameLevel(button:GetFrameLevel() + 10)
+    else
+        local offsets = PositionOffsets[position] or {0, 0}
+        entry.frame:SetPoint(position, container, position, offsets[1], offsets[2])
+        entry.frame:SetFrameStrata(container:GetFrameStrata())
+        entry.frame:SetFrameLevel(button:GetFrameLevel() + 3)
+    end
+    entry.frame:SetSize(finalSize, finalSize)
+    OneWoW.OverlayIcons:ApplyToTexture(entry.texture, iconName)
+    if iconName ~= "BLANK" then
+        entry.texture:SetAlpha(alpha)
+    end
+    entry.configAlpha = (iconName == "BLANK") and 0 or alpha
+    entry.frame:Show()
+    if entry.iconFrame then
+        entry.iconFrame:Show()
+    end
+
+    ApplyIconEffect(entry, cfg.effect)
+    ApplyBackground(entry, cfg, finalSize, button.onewow_itemLink)
+    SyncEntryLayerLevels(entry)
+end
+
+local function IsPetOverlayItem(itemID, classID, subclassID)
+    if not itemID then return false end
+    if itemID == BATTLE_PET_CAGE_ID then return true end
+    if not classID then return false end
+    if classID == Enum.ItemClass.Battlepet then return true end
+    if classID == Enum.ItemClass.Miscellaneous
+        and subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet then
+        return true
+    end
+    return false
+end
+
+local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
+    if not itemID or not itemLink then return nil end
+
+    classID, subclassID = NormalizeCageItemClass(itemID, classID, subclassID)
+    if not classID then return nil end
+
+    local isMisc = (classID == Enum.ItemClass.Miscellaneous)
+
+    if C_ToyBox and C_ToyBox.GetToyInfo and C_ToyBox.GetToyInfo(itemID) then
+        return PlayerHasToy(itemID) == true
+    end
+
+    if classID == Enum.ItemClass.Battlepet or itemID == BATTLE_PET_CAGE_ID then
+        local speciesID = tonumber(itemLink:match("|Hbattlepet:(%d+):"))
+        if speciesID then
+            local numCollected = C_PetJournal.GetNumCollectedInfo(speciesID)
+            return numCollected ~= nil and numCollected > 0
+        end
+        return nil
+    end
+
+    if isMisc and subclassID == Enum.ItemMiscellaneousSubclass.Mount then
+        if C_MountJournal and C_MountJournal.GetMountFromItem then
+            local mountID = C_MountJournal.GetMountFromItem(itemID)
+            if mountID then
+                local _, _, _, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(mountID)
+                return isCollected == true
+            end
+        end
+        local td = C_TooltipInfo and C_TooltipInfo.GetHyperlink and C_TooltipInfo.GetHyperlink(itemLink)
+        if td and td.lines then
+            for _, line in ipairs(td.lines) do
+                if line.leftText and line.leftText == ITEM_SPELL_KNOWN then return true end
+            end
+        end
+        return false
+    end
+
+    if isMisc and subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet then
+        local td = C_TooltipInfo and C_TooltipInfo.GetHyperlink and C_TooltipInfo.GetHyperlink(itemLink)
+        if td and td.lines then
+            for _, line in ipairs(td.lines) do
+                if line.leftText then
+                    if line.leftText == ITEM_SPELL_KNOWN or line.leftText:match("Collected") then
+                        return true
+                    end
+                end
+            end
+        end
+        return false
+    end
+
+    if classID == Enum.ItemClass.Recipe then
+        local Util = OneWoW.RecipeKnownUtil
+        if Util then
+            return Util:IsRecipeKnown(itemID)
+        end
+        return nil
+    end
+
+    if classID == Enum.ItemClass.Weapon or classID == Enum.ItemClass.Armor then
+        local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
+        if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_NON_EQUIP"
+            or equipLoc == "INVTYPE_TRINKET" or equipLoc == "INVTYPE_FINGER"
+            or equipLoc == "INVTYPE_NECK" then
+            return nil
+        end
+        if not C_TransmogCollection then return nil end
+        local sourceID = select(2, C_TransmogCollection.GetItemInfo(itemLink))
+        if not sourceID then return nil end
+
+        if C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID) then
+            return true
+        end
+        local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
+        if sourceInfo then
+            if sourceInfo.isCollected then return true end
+            if sourceInfo.visualID then
+                local allSources = C_TransmogCollection.GetAllAppearanceSources(sourceInfo.visualID)
+                if allSources then
+                    for _, otherID in ipairs(allSources) do
+                        local otherInfo = C_TransmogCollection.GetSourceInfo(otherID)
+                        if otherInfo and otherInfo.isCollected
+                            and otherInfo.categoryID == sourceInfo.categoryID then
+                            return true
+                        end
+                    end
+                end
+            end
+        end
+        return false
+    end
+
+    return nil
+end
+
+local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocation)
+    local hits = {}
+
+    if IsOverlayEnabled("protected") and OneWoW.ItemStatus and OneWoW.ItemStatus:IsItemProtected(itemID) then
+        hits[#hits + 1] = "protected"
+    end
+
+    if IsOverlayEnabled("junk") then
+        local isJunk = OneWoW.ItemStatus and OneWoW.ItemStatus:IsItemJunk(itemID)
+        if not isJunk and GetOverlayCfg("junk") and GetOverlayCfg("junk").includeGreyItems then
+            local quality = select(3, C_Item.GetItemInfo(itemLink))
+            if quality and quality == 0 then
+                isJunk = true
+            end
+        end
+        if isJunk then
+            hits[#hits + 1] = "junk"
+        end
+    end
+
+    local isMisc = (classID == Enum.ItemClass.Miscellaneous)
+
+    if IsOverlayEnabled("consumables") then
+        if classID == Enum.ItemClass.Consumable then
+            hits[#hits + 1] = "consumables"
+        end
+    end
+
+    if IsOverlayEnabled("housingdecor") then
+        local isDecor = false
+        if Enum.ItemClass.Housing and classID == Enum.ItemClass.Housing then
+            isDecor = true
+        elseif C_HousingDecor and C_HousingDecor.IsDecorItem then
+            isDecor = C_HousingDecor.IsDecorItem(itemID) or false
+        end
+        if isDecor then
+            hits[#hits + 1] = "housingdecor"
+        end
+    end
+
+    local needCollectionCheck = IsOverlayEnabled("knownitems") or IsOverlayEnabled("unknownitems")
+    if needCollectionCheck then
+        local status = CheckCollectionStatus(itemID, itemLink, classID, subclassID)
+        if status == true and IsOverlayEnabled("knownitems") then
+            hits[#hits + 1] = "knownitems"
+        elseif status == false and IsOverlayEnabled("unknownitems") then
+            hits[#hits + 1] = "unknownitems"
+        end
+    end
+
+    if IsOverlayEnabled("transmog") then
+        if classID == Enum.ItemClass.Weapon or classID == Enum.ItemClass.Armor then
+            local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
+            if equipLoc and equipLoc ~= "" and equipLoc ~= "INVTYPE_NON_EQUIP"
+                and equipLoc ~= "INVTYPE_TRINKET" and equipLoc ~= "INVTYPE_FINGER"
+                and equipLoc ~= "INVTYPE_NECK" then
+                if C_TransmogCollection then
+                    local sourceID = select(2, C_TransmogCollection.GetItemInfo(itemLink))
+                    if sourceID then
+                        local known = C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID)
+                        if not known then
+                            local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
+                            if sourceInfo and sourceInfo.isCollected then known = true end
+                        end
+                        if not known then
+                            hits[#hits + 1] = "transmog"
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if IsOverlayEnabled("mounts") then
+        if isMisc and subclassID == Enum.ItemMiscellaneousSubclass.Mount then
+            hits[#hits + 1] = "mounts"
+        end
+    end
+
+    if IsOverlayEnabled("pets") and IsPetOverlayItem(itemID, classID, subclassID) then
+        hits[#hits + 1] = "pets"
+    end
+
+    if IsOverlayEnabled("quest") then
+        if classID == Enum.ItemClass.Questitem then
+            hits[#hits + 1] = "quest"
+        end
+    end
+
+    if IsOverlayEnabled("reagents") then
+        if classID == Enum.ItemClass.Tradegoods then
+            hits[#hits + 1] = "reagents"
+        end
+    end
+
+
+    if IsOverlayEnabled("recipe") then
+        if classID == Enum.ItemClass.Recipe then
+            local isTeachable = false
+            local tooltipData = C_TooltipInfo and C_TooltipInfo.GetItemByID and C_TooltipInfo.GetItemByID(itemID)
+            if tooltipData and tooltipData.lines then
+                for _, line in ipairs(tooltipData.lines) do
+                    if line.type == Enum.TooltipDataLineType.ItemSpellTriggerLearn then
+                        isTeachable = true
+                        break
+                    end
+                end
+            end
+            if isTeachable then
+                hits[#hits + 1] = "recipe"
+            end
+        end
+    end
+
+    if IsOverlayEnabled("toys") then
+        if C_ToyBox and C_ToyBox.GetToyInfo and C_ToyBox.GetToyInfo(itemID) then
+            hits[#hits + 1] = "toys"
+        end
+    end
+
+    local isBound              = false
+    local isWarbound           = false
+    local isWarboundUntilEquip = false
+
+    if C_Item.IsItemBindToAccountUntilEquip and itemLink then
+        isWarboundUntilEquip = C_Item.IsItemBindToAccountUntilEquip(itemLink) or false
+    end
+
+    if itemLocation then
+        if C_Item.IsBound then
+            isBound = C_Item.IsBound(itemLocation) or false
+        end
+        if isBound and C_Bank and C_Bank.IsItemAllowedInBankType then
+            isWarbound = C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, itemLocation) or false
+        end
+    end
+
+    if IsOverlayEnabled("warbound") then
+        if isWarbound or isWarboundUntilEquip then
+            hits[#hits + 1] = "warbound"
+        end
+    end
+
+    if IsOverlayEnabled("soulbound") then
+        if isBound and not isWarbound and not isWarboundUntilEquip then
+            hits[#hits + 1] = "soulbound"
+        end
+    end
+
+    if IsOverlayEnabled("upgrade") then
+        if itemLocation and C_Item.DoesItemExist(itemLocation) then
+            local UD = OneWoW.UpgradeDetection
+            if UD and UD:CheckItemUpgrade(itemLink, itemLocation) then
+                hits[#hits + 1] = "upgrade"
+            end
+        end
+    end
+
+    return hits
+end
+
+local function FilterHitsByContext(hits, context)
+    if context ~= "auctionhouse" then return hits end
+    local filtered = {}
+    for _, id in ipairs(hits) do
+        local cfg = GetOverlayCfg(id)
+        if cfg and cfg.applyToAuctionHouse then
+            filtered[#filtered + 1] = id
+        end
+    end
+    return filtered
+end
+
+local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
+    if not button or not itemLink then
+        CleanButton(button)
+        return
+    end
+
+    local objType = button.GetObjectType and button:GetObjectType()
+    if objType == "Texture" or objType == "FontString" then
+        return
+    end
+
+    if not IsGlobalEnabled() then
+        CleanButton(button)
+        return
+    end
+
+    local isBattlePetLink = itemLink:find("|Hbattlepet:") ~= nil
+    local itemID, classID, subclassID
+
+    if isBattlePetLink then
+        itemID   = BATTLE_PET_CAGE_ID
+        classID  = Enum.ItemClass.Battlepet
+        subclassID = 0
+    else
+        itemID = C_Item.GetItemInfoInstant(itemLink)
+    end
+
+    if not itemID then
+        CleanButton(button)
+        return
+    end
+
+    CleanButton(button)
+    button.onewow_itemLink = itemLink
+
+    if not classID then
+        local _, _, _, _, _, cID, scID = C_Item.GetItemInfoInstant(itemLink)
+        classID, subclassID = NormalizeCageItemClass(itemID, cID, scID)
+    end
+    if classID then
+        local hits = DetectOverlays(classID, subclassID, itemID, itemLink, itemLocation)
+        hits = FilterHitsByContext(hits, context)
+        for i, overlayId in ipairs(hits) do
+            ApplyOverlayToButton(button, overlayId, i)
+        end
+
+        if C_Item.IsItemDataCachedByID(itemID) then
+            local item = Item:CreateFromItemID(itemID)
+            local ilvlCfg = GetOverlayCfg("itemlevel")
+            if context ~= "auctionhouse" or (ilvlCfg and ilvlCfg.applyToAuctionHouse) then
+                ApplyItemLevelToButton(button, item, itemLink, classID, itemLocation)
+            end
+        end
+
+        if button.onewow_overlayContainer then
+            button.onewow_overlayContainer:Show()
+        end
+
+        SyncSearchDim(button)
+    else
+        C_Item.RequestLoadItemDataByID(itemID)
+        local item = Item:CreateFromItemID(itemID)
+        item:ContinueOnItemLoad(function()
+            if not IsGlobalEnabled() then return end
+            local _, _, _, _, _, cID, scID = C_Item.GetItemInfoInstant(itemLink)
+            cID, scID = NormalizeCageItemClass(itemID, cID, scID)
+            if not cID then return end
+
+            local hits = DetectOverlays(cID, scID, itemID, itemLink, itemLocation)
+            hits = FilterHitsByContext(hits, context)
+            for i, overlayId in ipairs(hits) do
+                ApplyOverlayToButton(button, overlayId, i)
+            end
+
+            local ilvlCfg = GetOverlayCfg("itemlevel")
+            if context ~= "auctionhouse" or (ilvlCfg and ilvlCfg.applyToAuctionHouse) then
+                ApplyItemLevelToButton(button, item, itemLink, cID, itemLocation)
+            end
+
+            if button.onewow_overlayContainer then
+                button.onewow_overlayContainer:Show()
+            end
+
+            SyncSearchDim(button)
+        end)
+    end
+end
+
+local function ProcessBagContainer(container)
+    if not container then return end
+
+    local key = tostring(container)
+    if bagThrottle[key] then
+        bagThrottle[key] = "pending"
+        return
+    end
+
+    bagThrottle[key] = "running"
+
+    local function runPass()
+        if not container.Items then return end
+        for _, itemButton in ipairs(container.Items) do
+            if itemButton and itemButton:IsVisible() then
+                local bagID  = itemButton.GetBagID and itemButton:GetBagID()
+                local slotID = itemButton.GetID and itemButton:GetID()
+                if bagID and slotID then
+                    local loc    = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+                    local exists = C_Item.DoesItemExist(loc)
+                    if exists then
+                        local link = C_Item.GetItemLink(loc)
+                        if link then
+                            BuildOverlaysForButton(itemButton, link, loc)
+                        else
+                            CleanButton(itemButton)
+                        end
+                    else
+                        CleanButton(itemButton)
+                    end
+                end
+            end
+        end
+    end
+
+    runPass()
+
+    C_Timer.After(0.1, function()
+        if bagThrottle[key] == "pending" then
+            bagThrottle[key] = nil
+            ProcessBagContainer(container)
+        else
+            bagThrottle[key] = nil
+        end
+    end)
+end
+
+local function RefreshBags()
+    if ContainerFrameCombinedBags:IsVisible() then
+        ProcessBagContainer(ContainerFrameCombinedBags)
+    end
+
+    for _, cf in ipairs(ContainerFrameContainer.ContainerFrames or {}) do
+        if cf and cf:IsVisible() then
+            ProcessBagContainer(cf)
+        end
+    end
+
+    for i = 1, 13 do
+        local cf = _G["ContainerFrame" .. i]
+        if cf and cf:IsVisible() then
+            ProcessBagContainer(cf)
+        end
+    end
+end
+
+local function RefreshBank()
+    if bankThrottle then return end
+    bankThrottle = true
+    C_Timer.After(0.1, function()
+        bankThrottle = false
+
+        for btn in pairs(trackedBankButtons) do
+            CleanButton(btn)
+        end
+        trackedBankButtons = {}
+
+        if BankPanel and BankPanel:IsVisible() then
+            for i = 1, 98 do
+                local btn = BankPanel.FindItemButtonByContainerSlotID and BankPanel:FindItemButtonByContainerSlotID(i)
+                if btn then
+                    trackedBankButtons[btn] = true
+                    if BankPanel.selectedTabID then
+                        local loc    = ItemLocation:CreateFromBagAndSlot(BankPanel.selectedTabID, i)
+                        local exists = C_Item.DoesItemExist(loc)
+                        if exists then
+                            local link = C_Item.GetItemLink(loc)
+                            if link then BuildOverlaysForButton(btn, link, loc) else CleanButton(btn) end
+                        else
+                            CleanButton(btn)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function RefreshVendor()
+    if not MerchantFrame or not MerchantFrame:IsShown() then return end
+    if vendorPending then return end
+    vendorPending = true
+    C_Timer.After(0.05, function()
+        vendorPending = false
+        if not MerchantFrame or not MerchantFrame:IsShown() then return end
+
+        if not IsGlobalEnabled() then
+            for i = 1, MERCHANT_ITEMS_PER_PAGE do
+                local btn = _G["MerchantItem" .. i]
+                if btn then CleanButton(btn.ItemButton or btn) end
+            end
+            return
+        end
+
+        if not AnyVendorOverlayEnabled() then
+            for i = 1, MERCHANT_ITEMS_PER_PAGE do
+                local btn = _G["MerchantItem" .. i]
+                if btn then CleanButton(btn.ItemButton or btn) end
+            end
+            return
+        end
+
+        for i = 1, MERCHANT_ITEMS_PER_PAGE do
+            local btn = _G["MerchantItem" .. i]
+            if btn then
+                local index   = i + (MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE
+                local link    = GetMerchantItemLink(index)
+                local itemBtn = btn.ItemButton or btn
+                if link then
+                    BuildOverlaysForButton(itemBtn, link, nil)
+                else
+                    CleanButton(itemBtn)
+                end
+            end
+        end
+    end)
+end
+
+local function RefreshSearchDim()
+    local function syncContainer(container)
+        if not container or not container.Items then return end
+        for _, itemButton in ipairs(container.Items) do
+            SyncSearchDim(itemButton)
+        end
+    end
+
+    if ContainerFrameCombinedBags and ContainerFrameCombinedBags:IsVisible() then
+        syncContainer(ContainerFrameCombinedBags)
+    end
+
+    if ContainerFrameContainer then
+        for _, cf in ipairs(ContainerFrameContainer.ContainerFrames or {}) do
+            if cf and cf:IsVisible() then
+                syncContainer(cf)
+            end
+        end
+    end
+
+    for i = 1, 13 do
+        local cf = _G["ContainerFrame" .. i]
+        if cf and cf:IsVisible() then
+            syncContainer(cf)
+        end
+    end
+
+    if BankPanel and BankPanel:IsVisible() then
+        if BankPanel.FindItemButtonByContainerSlotID then
+            for i = 1, 98 do
+                local btn = BankPanel:FindItemButtonByContainerSlotID(i)
+                if btn then SyncSearchDim(btn) end
+            end
+        end
+    end
+end
+
+local function RefreshAll()
+    RefreshBags()
+    RefreshBank()
+    RefreshVendor()
+    for _, fn in ipairs(Engine.integrationRefreshCallbacks) do
+        fn()
+    end
+end
+
+function Engine:Refresh()
+    RefreshAll()
+end
+
+function Engine:RefreshBags()
+    RefreshBags()
+end
+
+function Engine:RefreshBank()
+    RefreshBank()
+end
+
+function Engine:RefreshVendor()
+    RefreshVendor()
+end
+
+function Engine:ProcessButton(button, link, location)
+    BuildOverlaysForButton(button, link, location)
+end
+
+function Engine:CleanButton(button)
+    CleanButton(button)
+end
+
+local surfacesInitialized = false
+
+local function RefreshGuildBank()
+    if not GuildBankFrame or not GuildBankFrame:IsShown() then return end
+    for tab = 1, 7 do
+        if GuildBankFrame.Columns and GuildBankFrame.Columns[tab] then
+            for slot = 1, 14 do
+                local btn = GuildBankFrame.Columns[tab].Buttons and GuildBankFrame.Columns[tab].Buttons[slot]
+                if btn then
+                    local link = GetGuildBankItemLink(tab, slot)
+                    if link then
+                        BuildOverlaysForButton(btn, link, nil)
+                    else
+                        CleanButton(btn)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local selectedMailIndex = nil
+
+local function RefreshMailbox()
+    for i = 1, 7 do
+        local btn = _G["MailItem"..i.."Button"]
+        if btn then
+            if btn.hasItem == 1 then
+                local _, itemID = GetInboxItem(i, 1)
+                if itemID then
+                    local _, link = C_Item.GetItemInfo(itemID)
+                    if link then
+                        BuildOverlaysForButton(btn, link, nil)
+                    else
+                        CleanButton(btn)
+                    end
+                else
+                    CleanButton(btn)
+                end
+            else
+                CleanButton(btn)
+            end
+        end
+    end
+
+    for i = 1, ATTACHMENTS_MAX_RECEIVE do
+        local btn = _G["OpenMailAttachmentButton"..i]
+        if btn and selectedMailIndex then
+            local link = GetInboxItemLink(selectedMailIndex, i)
+            if link then
+                BuildOverlaysForButton(btn, link, nil)
+            else
+                CleanButton(btn)
+            end
+        end
+    end
+end
+
+local function RefreshGroupLoot()
+    for i = 1, 4 do
+        local frame = _G["GroupLootFrame"..i]
+        if frame and frame:IsShown() and frame.rollID and frame.IconFrame then
+            local link = GetLootRollItemLink(frame.rollID)
+            if link then
+                BuildOverlaysForButton(frame.IconFrame, link, nil)
+            else
+                CleanButton(frame.IconFrame)
+            end
+        end
+    end
+end
+
+local function RefreshLootFrame()
+    if not LootFrame or not LootFrame:IsShown() then return end
+    if LootFrame.ScrollBox and LootFrame.ScrollBox.view and LootFrame.ScrollBox.view.frames then
+        for _, frame in next, LootFrame.ScrollBox.view.frames do
+            if frame and frame.Item then
+                local slotIndex = frame.GetSlotIndex and frame:GetSlotIndex()
+                if slotIndex then
+                    local link = GetLootSlotLink(slotIndex)
+                    if link then
+                        BuildOverlaysForButton(frame.Item, link, nil)
+                    else
+                        CleanButton(frame.Item)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function RefreshGreatVault()
+    if WeeklyRewardsFrame and WeeklyRewardsFrame:IsShown() then
+        for _, v in pairs(WeeklyRewardsFrame.Activities) do
+            ---@cast v { hasRewards: boolean?, info: WeeklyRewardActivityInfo?, ItemFrame: Button? }
+            if v and v.hasRewards and v.ItemFrame and v.info and v.info.rewards and v.info.rewards[1] then
+                local link = C_WeeklyRewards.GetItemHyperlink(v.info.rewards[1].itemDBID)
+                if link then
+                    BuildOverlaysForButton(v.ItemFrame, link, nil)
+                else
+                    CleanButton(v.ItemFrame)
+                end
+            end
+        end
+    end
+end
+
+local function RefreshWorldQuestPins()
+    if not WorldMapFrame then return end
+    C_Timer.After(0.1, function()
+        for pin in WorldMapFrame:EnumeratePinsByTemplate("WorldMap_WorldQuestPinTemplate") do
+            if pin and pin.questID then
+                if not pin.onewow_overlayContainer and pin.GetButton then
+                    local btn = pin:GetButton()
+                    if btn then
+                        PresetContainerOnIcon(pin, btn, 0)
+                        if pin.onewow_overlayContainer then
+                            pin.onewow_overlayContainer:SetScale(0.8)
+                        end
+                    end
+                end
+                if pin.onewow_overlayContainer then
+                    pin.onewow_overlayContainer:Hide()
+                end
+                local bestIdx, bestType = QuestUtils_GetBestQualityItemRewardIndex(pin.questID)
+                if bestIdx and bestType then
+                    local link = GetQuestLogItemLink(bestType, bestIdx, pin.questID)
+                    if link then
+                        BuildOverlaysForButton(pin, link, nil)
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function InitializeSurfaces()
+    if surfacesInitialized then return end
+    surfacesInitialized = true
+
+    if LootFrame and LootFrame.HookScript then
+        LootFrame:HookScript("OnShow", RefreshLootFrame)
+    end
+
+    if GuildBankFrame then
+        if GuildBankFrame.Update then
+            hooksecurefunc(GuildBankFrame, "Update", RefreshGuildBank)
+        end
+        GuildBankFrame:HookScript("OnShow", RefreshGuildBank)
+    end
+
+    if InboxPrevPageButton then
+        InboxPrevPageButton:HookScript("OnClick", RefreshMailbox)
+    end
+    if InboxNextPageButton then
+        InboxNextPageButton:HookScript("OnClick", RefreshMailbox)
+    end
+    for i = 1, 7 do
+        local btn = _G["MailItem"..i.."Button"]
+        if btn then
+            btn:HookScript("OnClick", function()
+                selectedMailIndex = btn.index
+                RefreshMailbox()
+            end)
+        end
+    end
+
+    local function ProcessQuestRewardFrame(rewardsFrame, mode)
+        if not rewardsFrame or not rewardsFrame.RewardButtons then return end
+        for k, v in pairs(rewardsFrame.RewardButtons) do
+            local btn = QuestInfo_GetRewardButton(rewardsFrame, k)
+            if btn then
+                if v.objectType == "currency" or not v.type then
+                    CleanButton(btn)
+                else
+                    local link
+                    if mode == "turnin" then
+                        if GetQuestID() then
+                            C_QuestLog.SetSelectedQuest(GetQuestID())
+                        end
+                        link = GetQuestLogItemLink(v.type, k)
+                    elseif rewardsFrame == MapQuestInfoRewardsFrame then
+                        link = GetQuestLogItemLink(v.type, k)
+                    else
+                        link = GetQuestItemLink(v.type, k)
+                    end
+                    if link then
+                        if btn.IconBorder and not btn.onewow_overlayContainer then
+                            PresetContainerOnIcon(btn, btn.IconBorder, 0)
+                        end
+                        BuildOverlaysForButton(btn, link, nil)
+                    else
+                        CleanButton(btn)
+                    end
+                end
+            end
+        end
+    end
+
+    local function RefreshQuestRewards(mode)
+        if QuestInfoRewardsFrame and not (WorldMapFrame and WorldMapFrame:IsShown()) then
+            ProcessQuestRewardFrame(QuestInfoRewardsFrame, mode)
+            C_Timer.After(1, function() ProcessQuestRewardFrame(QuestInfoRewardsFrame, mode) end)
+        end
+        if MapQuestInfoRewardsFrame and WorldMapFrame and WorldMapFrame:IsShown() then
+            ProcessQuestRewardFrame(MapQuestInfoRewardsFrame, mode)
+        end
+    end
+
+    if QuestFrameRewardPanel then
+        QuestFrameRewardPanel:HookScript("OnShow", function() RefreshQuestRewards() end)
+    end
+    if QuestInfoRewardsFrame then
+        QuestInfoRewardsFrame:HookScript("OnShow", function() RefreshQuestRewards() end)
+    end
+    if QuestInfo_Display then
+        hooksecurefunc("QuestInfo_Display", function() RefreshQuestRewards() end)
+    end
+    if QuestMapFrame_ShowQuestDetails then
+        hooksecurefunc("QuestMapFrame_ShowQuestDetails", function()
+            RefreshQuestRewards()
+            C_Timer.After(0.1, function() RefreshQuestRewards() end)
+        end)
+    end
+
+    local ejHooked = false
+    local function RegisterEJHook()
+        if ejHooked then return end
+        if not EncounterJournalEncounterFrameInfo then return end
+        if not EncounterJournalEncounterFrameInfo.LootContainer then return end
+        if not EncounterJournalEncounterFrameInfo.LootContainer.ScrollBox then return end
+        EncounterJournalEncounterFrameInfo.LootContainer.ScrollBox:RegisterCallback("OnAcquiredFrame", function(_, v)
+            RunNextFrame(function()
+                if not v then return end
+                if v.icon and not v.onewow_overlayContainer then
+                    local c = CreateFrame("Frame", nil, v)
+                    c:SetPoint("TOPLEFT",     v.icon, "TOPLEFT",      4, -4)
+                    c:SetPoint("BOTTOMRIGHT", v.icon, "BOTTOMRIGHT", -4,  4)
+                    c:EnableMouse(false)
+                    c:SetFrameStrata("HIGH")
+                    c:Hide()
+                    v.onewow_overlayContainer = c
+                end
+                if v.link then
+                    BuildOverlaysForButton(v, v.link, nil)
+                else
+                    CleanButton(v)
+                end
+            end)
+        end)
+        ejHooked = true
+    end
+    if EncounterJournal then
+        EncounterJournal:HookScript("OnShow", RegisterEJHook)
+    end
+    local surfaceEventFrame_EJ = CreateFrame("Frame")
+    surfaceEventFrame_EJ:RegisterEvent("UPDATE_INSTANCE_INFO")
+    surfaceEventFrame_EJ:SetScript("OnEvent", function()
+        if EncounterJournal and EncounterJournal:IsShown() then
+            RegisterEJHook()
+        end
+    end)
+
+
+    local ahHooked = false
+    local function RegisterAHHook()
+        if ahHooked then return end
+        if not AuctionHouseFrame then return end
+        if not AuctionHouseFrame.BrowseResultsFrame then return end
+        if not AuctionHouseFrame.BrowseResultsFrame.ItemList then return end
+        if not AuctionHouseFrame.BrowseResultsFrame.ItemList.ScrollBox then return end
+        AuctionHouseFrame.BrowseResultsFrame.ItemList.ScrollBox:RegisterCallback("OnAcquiredFrame", function(_, v)
+            C_Timer.After(0.1, function()
+                if not v then return end
+                if not AnyAHOverlayEnabled() then
+                    CleanButton(v)
+                    return
+                end
+                PresetContainerFixed(v, v, 36, 36, "LEFT", v, 4, 0)
+                local rowData = v.rowData
+                if rowData and rowData.itemKey then
+                    local itemID = rowData.itemKey.itemID
+                    if itemID then
+                        local _, link = C_Item.GetItemInfo(itemID)
+                        if link then
+                            BuildOverlaysForButton(v, link, nil, "auctionhouse")
+                        else
+                            CleanButton(v)
+                        end
+                    end
+                else
+                    CleanButton(v)
+                end
+            end)
+        end)
+        ahHooked = true
+    end
+
+    local bmHooked = false
+    local function RegisterBMHook()
+        if bmHooked then return end
+        if not BlackMarketFrame then return end
+        if not BlackMarketFrame.ScrollBox then return end
+        BlackMarketFrame.ScrollBox:RegisterCallback("OnAcquiredFrame", function(_, v, data)
+            C_Timer.After(0.1, function()
+                if not v then return end
+                if v.Item and not v.onewow_overlayContainer then
+                    PresetContainerOnIcon(v, v.Item, 0)
+                end
+                local link = data and data.link
+                if link then
+                    BuildOverlaysForButton(v, link, nil)
+                else
+                    CleanButton(v)
+                end
+            end)
+        end)
+        bmHooked = true
+    end
+    if BlackMarketFrame then
+        BlackMarketFrame:HookScript("OnShow", RegisterBMHook)
+    end
+
+    if WeeklyRewardsFrame then
+        WeeklyRewardsFrame:HookScript("OnShow", function()
+            RefreshGreatVault()
+            C_Timer.After(1, RefreshGreatVault)
+        end)
+    end
+
+    if WorldMapFrame then
+        WorldMapFrame:HookScript("OnShow", RefreshWorldQuestPins)
+        if EventRegistry then
+            EventRegistry:RegisterCallback("MapCanvas.MapSet", RefreshWorldQuestPins)
+        end
+    end
+
+    local surfaceEventFrame = CreateFrame("Frame")
+    surfaceEventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
+    surfaceEventFrame:RegisterEvent("TRANSMOG_COLLECTION_UPDATED")
+    surfaceEventFrame:RegisterEvent("NEW_RECIPE_LEARNED")
+    surfaceEventFrame:RegisterEvent("MAIL_SHOW")
+    surfaceEventFrame:RegisterEvent("MAIL_INBOX_UPDATE")
+    surfaceEventFrame:RegisterEvent("QUEST_DETAIL")
+    surfaceEventFrame:RegisterEvent("QUEST_COMPLETE")
+    surfaceEventFrame:RegisterEvent("START_LOOT_ROLL")
+    surfaceEventFrame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
+    surfaceEventFrame:RegisterEvent("AUCTION_HOUSE_THROTTLED_SYSTEM_READY")
+    surfaceEventFrame:SetScript("OnEvent", function(_, event)
+        if event == "GUILDBANKBAGSLOTS_CHANGED" then
+            RefreshGuildBank()
+        elseif event == "TRANSMOG_COLLECTION_UPDATED" then
+            C_Timer.After(0.1, RefreshAll)
+            C_Timer.After(0.1, RefreshGuildBank)
+        elseif event == "NEW_RECIPE_LEARNED" then
+            C_Timer.After(0.1, RefreshAll)
+        elseif event == "MAIL_SHOW" or event == "MAIL_INBOX_UPDATE" then
+            C_Timer.After(0.1, RefreshMailbox)
+        elseif event == "QUEST_DETAIL" then
+            RefreshQuestRewards()
+        elseif event == "QUEST_COMPLETE" then
+            RefreshQuestRewards("turnin")
+        elseif event == "START_LOOT_ROLL" then
+            RunNextFrame(RefreshGroupLoot)
+        elseif event == "WEEKLY_REWARDS_UPDATE" then
+            RefreshGreatVault()
+            C_Timer.After(1, RefreshGreatVault)
+        elseif event == "AUCTION_HOUSE_THROTTLED_SYSTEM_READY" then
+            RegisterAHHook()
+        end
+    end)
+end
+
+function Engine:Initialize()
+    if initialized then return end
+    initialized = true
+
+    if ContainerFrameCombinedBags then
+        hooksecurefunc(ContainerFrameCombinedBags, "UpdateItems", function(container)
+            ProcessBagContainer(container)
+        end)
+    end
+
+    if ContainerFrameContainer then
+        for _, cf in ipairs(ContainerFrameContainer.ContainerFrames or {}) do
+            if cf then
+                hooksecurefunc(cf, "UpdateItems", function(container)
+                    ProcessBagContainer(container)
+                end)
+            end
+        end
+    end
+
+    for i = 1, 6 do
+        local cf = _G["ContainerFrame" .. i]
+        if cf and cf.UpdateItems then
+            hooksecurefunc(cf, "UpdateItems", function(container)
+                ProcessBagContainer(container)
+            end)
+        end
+    end
+
+    if BankPanel then
+        if BankPanel.RefreshBankPanel then
+            hooksecurefunc(BankPanel, "RefreshBankPanel", function() RefreshBank() end)
+        end
+        if BankPanel.GenerateItemSlotsForSelectedTab then
+            hooksecurefunc(BankPanel, "GenerateItemSlotsForSelectedTab", function() RefreshBank() end)
+        end
+        if BankPanel.RefreshAllItemsForSelectedTab then
+            hooksecurefunc(BankPanel, "RefreshAllItemsForSelectedTab", function() RefreshBank() end)
+        end
+    end
+
+    if MerchantFrame_Update then
+        hooksecurefunc("MerchantFrame_Update", RefreshVendor)
+    end
+
+    if SetItemButtonOverlay then
+        hooksecurefunc("SetItemButtonOverlay", function(button)
+            SyncQuestAlpha(button)
+        end)
+    end
+    if ClearItemButtonOverlay then
+        hooksecurefunc("ClearItemButtonOverlay", function(button)
+            SyncQuestAlpha(button)
+        end)
+    end
+
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+    eventFrame:RegisterEvent("BANKFRAME_OPENED")
+    eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+    eventFrame:RegisterEvent("PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED")
+    eventFrame:RegisterEvent("MERCHANT_UPDATE")
+    eventFrame:RegisterEvent("MERCHANT_SHOW")
+    eventFrame:RegisterEvent("INVENTORY_SEARCH_UPDATE")
+    eventFrame:SetScript("OnEvent", function(_, event)
+        if event == "BAG_UPDATE_DELAYED" then
+            RefreshBags()
+            for _, fn in ipairs(Engine.integrationRefreshCallbacks) do fn() end
+        elseif event == "BANKFRAME_OPENED" or event == "PLAYERBANKSLOTS_CHANGED" or event == "PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED" then
+            RefreshBank()
+        elseif event == "MERCHANT_UPDATE" or event == "MERCHANT_SHOW" then
+            RefreshVendor()
+        elseif event == "INVENTORY_SEARCH_UPDATE" then
+            C_Timer.After(0, RefreshSearchDim)
+        end
+    end)
+
+    InitializeSurfaces()
+end

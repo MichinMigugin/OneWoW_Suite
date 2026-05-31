@@ -1,0 +1,91 @@
+## Interface: 120005, 120007
+## Version: R6.2605.2800
+## Title: |cFFFFD100OneWoW|r - Utility: |cFFFF0000DevTool|r
+## Notes: OneWoW Utility Addon that: provides frame inspection and addon development utilities.
+## Author: OneWoW Dev Team
+
+## RequiredDeps: OneWoW_GUI
+## OptionalDeps: !BugGrabber
+## Category: OneWoW
+## Group: OneWoW
+
+## SavedVariables: OneWoW_UtilityDevTool_DB
+
+## AddonCompartmentFunc: 1WoW_UtilityDevTool_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: 1WoW_UtilityDevTool_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: 1WoW_UtilityDevTool_OnAddonCompartmentLeave
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+
+# Locales
+Locales\enUS.lua
+Locales\esES.lua
+Locales\koKR.lua
+Locales\frFR.lua
+Locales\ruRU.lua
+Locales\deDE.lua
+
+# Core
+Core\Constants.lua
+Core\Database.lua
+
+# Main Addon File
+OneWoW_Utility_DevTool.lua
+
+# Texture Atlas Data, Font Catalog, SoundFile Paths
+Data\Core.lua
+
+# These AllowLoadGameType lines don't work - all of them load on Mainline; loading handled in files.
+Data\AtlasInfo-wow.lua [AllowLoadGameType mainline]
+Data\AtlasInfo-wowt.lua [AllowLoadGameType mainline-test]
+
+Data\SoundFiles-wow-Init.lua [AllowLoadGameType mainline]
+Data\SoundFiles-wow-S0001.lua [AllowLoadGameType mainline]
+Data\SoundFiles-wow-S0002.lua [AllowLoadGameType mainline]
+Data\SoundFiles-wow-S0003.lua [AllowLoadGameType mainline]
+Data\SoundFiles-wowt-Init.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-wowt-S0001.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-wowt-S0002.lua [AllowLoadGameType mainline-test]
+Data\SoundFiles-wowt-S0003.lua [AllowLoadGameType mainline-test]
+
+Data\FontObjectNames.lua
+Data\LuaSyntax.lua
+
+# Modules
+Modules\FrameInspector.lua
+Modules\FrameTree.lua
+Modules\FramePicker.lua
+Modules\ErrorExport.lua
+Modules\StackColorizer.lua
+Modules\ErrorAnalyzer.lua
+Modules\ErrorLogger.lua
+Modules\EventMonitor.lua
+Modules\ColorTools.lua
+Modules\GlobalsBrowser.lua
+Modules\TextureAtlasBrowser.lua
+Modules\FontBrowserTab.lua
+Modules\SoundBrowser.lua
+Modules\MonitorTab.lua
+Modules\EditorSyntax.lua
+Modules\EditorEngine.lua
+Modules\InstallNotice.lua
+
+# Main UI shell (defines Addon.UI, StyleContentPanel, Initialize)
+GUI\MainWindow.lua
+
+# Tab implementations (extend Addon.UI)
+GUI\Tabs\FrameInspectorTab.lua
+GUI\Tabs\EventMonitorTab.lua
+GUI\Tabs\ErrorsTab.lua
+GUI\Tabs\GlobalsBrowserTab.lua
+GUI\Tabs\TextureViewerTab.lua
+GUI\Tabs\ColorToolsTab.lua
+GUI\Tabs\LayoutTab.lua
+GUI\Tabs\MonitorTab.lua
+GUI\Tabs\SettingsTab.lua
+GUI\Tabs\EditorTab.lua
+GUI\Tabs\FontBrowserTab.lua
+GUI\Tabs\SoundBrowserTab.lua

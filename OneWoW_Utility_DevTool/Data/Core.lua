@@ -1,0 +1,102 @@
+local _, Addon = ...
+
+local format = format
+local table_concat = table.concat
+local type = type
+
+local SOUND_UNCAT = "uncategorized"
+local SOUND_PATH_PREFIX = (Addon.Constants and Addon.Constants.SOUND_PATH_PREFIX) or "sound/"
+
+function Addon.DevTool_WipeTextureAssetData()
+	local UI = Addon.UI
+	if UI and UI.IsTabEnabled and UI:IsTabEnabled("textures") then
+		return
+	end
+	Addon._AtlasInfo = nil
+	Addon._AtlasInfoVersion = nil
+	Addon._DevToolTextureAssetsPurgedSession = true
+	local BR = Addon.TextureAtlasBrowser
+	if BR and BR.ResetAfterAssetUnload then
+		BR:ResetAfterAssetUnload()
+	end
+	collectgarbage("collect")
+end
+
+function Addon.DevTool_WipeSoundAssetData()
+	local UI = Addon.UI
+	if UI and UI.IsTabEnabled and UI:IsTabEnabled("sounds") then
+		return
+	end
+	Addon._SoundEntries = nil
+	Addon._SoundSlices = nil
+	Addon._SoundFilesVersion = nil
+	Addon._SoundEntryDelimiter = nil
+	Addon._DevToolSoundAssetsPurgedSession = true
+	local SB = Addon.SoundBrowser
+	if SB and SB.ResetAfterAssetUnload then
+		SB:ResetAfterAssetUnload()
+	end
+	collectgarbage("collect")
+end
+
+-- Match if major.minor.patch (first three dotted segments) agree; build/hotfix
+-- suffix may differ. Falls back to full string equality if a side lacks three segments.
+local function devToolDataVersionMatches(gameVersion, expectedVersion)
+	local a1, a2, a3 = gameVersion:match("^([^.]+)%.([^.]+)%.([^.]+)")
+	local b1, b2, b3 = expectedVersion:match("^([^.]+)%.([^.]+)%.([^.]+)")
+	if a1 and b1 then
+		return a1 == b1 and a2 == b2 and a3 == b3
+	end
+	return gameVersion == expectedVersion
+end
+
+function Addon.ValidateDataBuildGameBuild(dataType, expectedVersion, verbose)
+	local buildVersion, buildNumber = GetBuildInfo()
+	local gameVersion = buildVersion .. "." .. buildNumber
+	if type(expectedVersion) == "string" then
+		if devToolDataVersionMatches(gameVersion, expectedVersion) then
+			return true
+		end
+		if verbose then
+			print(format("Game version %s doesn't match Data version %s (%s)", gameVersion, expectedVersion, dataType))
+		end
+		return false
+	end
+	if type(expectedVersion) == "table" then
+		local allowed = {}
+		for _, version in ipairs(expectedVersion) do
+			if type(version) == "string" then
+				if devToolDataVersionMatches(gameVersion, version) then
+					return true
+				end
+				allowed[#allowed + 1] = version
+			end
+		end
+		if #allowed > 0 then
+			if verbose then
+				print(format("Game version %s doesn't match Data versions %s (%s)", gameVersion, table_concat(allowed, ", "), dataType))
+			end
+			return false
+		end
+	end
+	if verbose then
+		print(format("Game version %s doesn't match Data version %s (%s)", gameVersion, tostring(expectedVersion), dataType))
+	end
+	return false
+end
+
+function Addon.RebuildSoundFilePath(top, sub, tail)
+	if not tail or tail == "" then
+		return tail
+	end
+	if top == SOUND_UNCAT and sub == SOUND_UNCAT then
+		if string.find(tail, "/", 1, true) then
+			return tail
+		end
+		return SOUND_PATH_PREFIX .. tail
+	end
+	if sub == SOUND_UNCAT then
+		return SOUND_PATH_PREFIX .. top .. "/" .. tail
+	end
+	return SOUND_PATH_PREFIX .. top .. "/" .. sub .. "/" .. tail
+end

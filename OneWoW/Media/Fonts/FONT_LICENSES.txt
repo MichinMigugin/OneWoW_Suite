@@ -1,0 +1,136 @@
+OneWoW Suite - Bundled Fonts
+============================
+
+The following fonts are included in the OneWoW addon suite. All fonts are
+free to use and redistribute in non-commercial software. Full license texts
+are available at the sources listed below.
+
+
+Adventure.ttf
+  Name:    Adventure
+  License: Pixel Sagas Freeware License (free for personal/freeware use)
+  Source:  http://www.pixelsagas.com/?download=adventure
+
+HookedUp.ttf
+  Name:    All Hooked Up
+  License: Design Science License (open content, copyleft)
+  Source:  http://dartcanada.tripod.com/Objets/index.html
+
+Bazooka.ttf
+  Name:    Bazooka
+  License: Public Domain
+
+BlackChancery.ttf
+  Name:    Black Chancery
+  License: Public Domain
+
+CelestiaMediumRedux1.55.ttf
+  Name:    Celestia Medium Redux
+  License: Public Domain
+  Source:  http://www.mattyhex.net/CMR/
+  Version: 1.55
+
+DejaVuLGCSans.ttf
+  Name:    DejaVu Sans (LGC)
+  License: Bitstream Vera Fonts Copyright / Arev Fonts Copyright / Public Domain
+  Source:  https://dejavu-fonts.github.io/
+  Version: 2.37
+
+DejaVuLGCSerif.ttf
+  Name:    DejaVu Serif (LGC)
+  License: Bitstream Vera Fonts Copyright / Arev Fonts Copyright / Public Domain
+  Source:  https://dejavu-fonts.github.io/
+  Version: 2.37
+
+DorisPP.ttf
+  Name:    Doris PP
+  License: Public Domain
+
+EnigmaU_2.TTF
+  Name:    Enigmatic
+  License: Design Science License (open content, copyleft)
+  Source:  http://dartcanada.tripod.com/Objets/index.html
+
+Fitzgerald.ttf
+  Name:    Fitzgerald
+  License: Design Science License (open content, copyleft)
+  Source:  http://dartcanada.tripod.com/Objets/index.html
+
+GentiumPlus-Regular.ttf
+  Name:    Gentium Plus
+  License: SIL Open Font License 1.1
+  Source:  http://software.sil.org/gentium/
+  Version: 6.200
+
+Hack-Regular.ttf
+  Name:    Hack
+  License: MIT License / Bitstream Vera License
+  Source:  http://sourcefoundry.org/hack/
+  Version: 3.003
+
+LiberationMono-Regular.ttf
+  Name:    Liberation Mono
+  License: SIL Open Font License 1.1
+  Source:  https://github.com/liberationfonts/liberation-fonts/
+  Version: 2.1.5
+
+LiberationSans-Regular.ttf
+  Name:    Liberation Sans
+  License: SIL Open Font License 1.1
+  Source:  https://github.com/liberationfonts/liberation-fonts/
+  Version: 2.1.5
+
+LiberationSerif-Regular.ttf
+  Name:    Liberation Serif
+  License: SIL Open Font License 1.1
+  Source:  https://github.com/liberationfonts/liberation-fonts/
+  Version: 2.1.5
+
+SFAtarianSystem.ttf
+  Name:    SF Atarian System
+  License: ShyFoundry Freeware EULA (free for personal/freeware use)
+  Source:  http://shyfoundry.com/fonts/freeware/sfatarians.html
+
+SFCovington.ttf
+  Name:    SF Covington
+  License: ShyFoundry Freeware EULA (free for personal/freeware use)
+  Source:  http://shyfoundry.com/fonts/shareware/sfcovingto.html
+
+SFMoviePoster-Bold.ttf
+  Name:    SF Movie Poster Bold
+  License: ShyFoundry Freeware EULA (free for personal/freeware use)
+  Source:  http://shyfoundry.com/fonts/shareware/sfmoviepos.html
+
+SFWonderComic.ttf
+  Name:    SF Wonder Comic
+  License: ShyFoundry Freeware EULA (free for personal/freeware use)
+  Source:  http://shyfoundry.com/fonts/shareware/sfwonderco.html
+
+SWFIT.ttf
+  Name:    SWF!T (renamed to SWFIT.ttf for compatibility)
+  License: Custom free license (see source)
+  Source:  http://www.orgdot.com/aliasfonts/index.htm
+
+texgyreadventor-regular.otf
+  Name:    TeX Gyre Adventor
+  License: GUST Font License (free to use, modify, redistribute)
+  Source:  http://www.gust.org.pl/projects/e-foundry/tex-gyre/adventor
+  Version: 2.501
+
+texgyreadventor-bold.otf
+  Name:    TeX Gyre Adventor Bold
+  License: GUST Font License (free to use, modify, redistribute)
+  Source:  http://www.gust.org.pl/projects/e-foundry/tex-gyre/adventor
+  Version: 2.501
+
+wqy-zenhei.ttf
+  Name:    WenQuanYi Zen Hei
+  License: GPL v2 with font embedding exception
+           (the embedding exception permits inclusion in non-GPL software)
+  Source:  http://wqy.sourceforge.net/en/
+  Version: 0.9.45
+
+yellow.ttf
+  Name:    Yellowjacket
+  License: Iconian Freeware License (free for personal/freeware use)
+  Source:  http://www.iconian.com/

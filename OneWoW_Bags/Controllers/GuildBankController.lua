@@ -1,0 +1,121 @@
+local _, OneWoW_Bags = ...
+
+local C_Timer = C_Timer
+
+OneWoW_Bags.GuildBankController = {}
+local GuildBankController = OneWoW_Bags.GuildBankController
+
+function GuildBankController:Create(addon)
+    local controller = {}
+    controller.addon = addon
+    setmetatable(controller, { __index = self })
+    return controller
+end
+
+function GuildBankController:GetViewMode()
+    local db = self.addon:GetDB()
+    return db.global.guildBankViewMode
+end
+
+--- Return the column count used for guild bank tab grids.
+--- Currently shares the personal-bank column setting; routed through the
+--- controller so callers don't reach into DB directly (mirrors BankController).
+---@return number columns
+function GuildBankController:GetColumns()
+    return self.addon:GetDB().global.bankColumns
+end
+
+function GuildBankController:SetViewMode(mode)
+    local db = self.addon:GetDB()
+    if db.global.guildBankViewMode == mode then return end
+    db.global.guildBankViewMode = mode
+    self.addon:RequestLayoutRefresh("guild")
+end
+
+function GuildBankController:GetShowEmptySlots()
+    local db = self.addon:GetDB()
+    return db.global.guildBankShowEmptySlots
+end
+
+function GuildBankController:OnSearchChanged(text)
+    if self.addon.GuildBankGUI then
+        self.addon.GuildBankGUI:OnSearchChanged(text)
+    end
+end
+
+function GuildBankController:GetSelectedTab()
+    local db = self.addon:GetDB()
+    return db.global.guildBankSelectedTab
+end
+
+function GuildBankController:ToggleSelectedTab(tabID)
+    local db = self.addon:GetDB()
+
+    if db.global.guildBankSelectedTab == tabID then
+        db.global.guildBankSelectedTab = nil
+    else
+        db.global.guildBankSelectedTab = tabID
+    end
+
+    SetCurrentGuildBankTab(tabID)
+    QueryGuildBankTab(tabID)
+
+    if self.addon.GuildBankBar then
+        self.addon.GuildBankBar:UpdateTabHighlights()
+    end
+
+    self.addon:RequestLayoutRefresh("guild")
+
+    if self.addon.GuildBankLog then
+        self.addon.GuildBankLog:OnTabChanged()
+    end
+end
+
+function GuildBankController:ToggleLog()
+    if self.addon.GuildBankLog then
+        self.addon.GuildBankLog:Toggle()
+    end
+end
+
+function GuildBankController:OpenTabEditor(tabID)
+    SetCurrentGuildBankTab(tabID)
+    if self.addon.GuildBankBar then
+        self.addon.GuildBankBar:OpenTabEditor(tabID)
+    end
+end
+
+function GuildBankController:ShowWithdrawMoney(anchorFrame)
+    if not self.addon.guildBankOpen or not CanWithdrawGuildBankMoney() then return end
+
+    local limit = GetGuildBankWithdrawMoney()
+    self.addon:ShowMoneyDialog({
+        title = GUILD_BANK,
+        anchorFrame = anchorFrame,
+        onWithdraw = function(copper)
+            local amount = (limit == -1) and copper or math.min(copper, limit)
+            WithdrawGuildBankMoney(amount)
+            C_Timer.After(0.3, function()
+                if self.addon.GuildBankBar then
+                    self.addon.GuildBankBar:UpdateGold()
+                end
+            end)
+        end,
+    })
+end
+
+function GuildBankController:ShowDepositMoney(anchorFrame)
+    if not self.addon.guildBankOpen then return end
+
+    self.addon:ShowMoneyDialog({
+        title = GUILD_BANK,
+        anchorFrame = anchorFrame,
+        onDeposit = function(copper)
+            DepositGuildBankMoney(copper)
+            C_Timer.After(0.3, function()
+                if self.addon.GuildBankBar then
+                    self.addon.GuildBankBar:UpdateGold()
+                end
+            end)
+        end,
+    })
+end

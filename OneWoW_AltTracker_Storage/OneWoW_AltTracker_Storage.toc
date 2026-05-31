@@ -1,0 +1,40 @@
+## Interface: 120005, 120007
+## Version: R6.2605.2800
+## Title: OneWoW - Data: |cFFFFFFFFStorage|r
+## Notes: OneWoW Data Addon that: tracks bags, Personal Bank, Warband Bank, Guild Bank, and Mail for all your characters.
+## Author: OneWoW Dev Team
+
+## RequiredDeps: OneWoW, OneWoW_GUI, OneWoW_AltTracker
+## Category: OneWoW
+## Group: OneWoW_AltTracker
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+
+## SavedVariables: OneWoW_AltTracker_Storage_DB
+
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+
+# Localization
+Locales\enUS.lua
+
+# Core
+Core\Database.lua
+Core\API.lua
+Core\Core.lua
+
+# Data Collection Modules
+Modules\Bags.lua
+Modules\PersonalBank.lua
+Modules\WarbandBank.lua
+Modules\GuildBank.lua
+Modules\Mail.lua
+
+# Item Index (inverted item lookup for tooltips)
+Modules\ItemIndex.lua
+
+# Data Manager (orchestrates all modules)
+Modules\DataManager.lua
+
+# Main Addon File
+OneWoW_AltTracker_Storage.lua

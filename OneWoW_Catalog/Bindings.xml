@@ -1,0 +1,12 @@
+<Bindings>
+    <Binding name="ONEWOW_CATALOG_OPEN" category="BINDING_HEADER_ONEWOW_CATALOG">
+        if OneWoW_Catalog and OneWoW_Catalog.UI and OneWoW_Catalog.UI.Toggle then
+            OneWoW_Catalog.UI:Toggle()
+        end
+    </Binding>
+    <Binding name="ONEWOW_CATALOG_ITEM_SEARCH" category="BINDING_HEADER_ONEWOW_CATALOG">
+        if OneWoW_Catalog and OneWoW_Catalog.UI and OneWoW_Catalog.UI.OpenItemSearch then
+            OneWoW_Catalog.UI:OpenItemSearch()
+        end
+    </Binding>
+</Bindings>

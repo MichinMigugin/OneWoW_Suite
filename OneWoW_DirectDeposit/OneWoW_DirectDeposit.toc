@@ -1,0 +1,38 @@
+## Interface: 120005, 120007
+## Version: R6.2605.2800
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00Direct Deposit|r
+## Notes: OneWoW Addon that: automatically manages gold deposits between your character and Warband Bank.
+## Author: OneWoW Dev Team
+
+## RequiredDeps: OneWoW, OneWoW_GUI
+## Category: OneWoW
+## Group: OneWoW
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+
+## SavedVariables: OneWoW_DirectDeposit_DB
+## SavedVariablesPerCharacter: OneWoW_DirectDeposit_CharDB
+
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+
+# Locales
+Locales\enUS.lua
+Locales\esES.lua
+Locales\koKR.lua
+Locales\ruRU.lua
+Locales\frFR.lua
+Locales\deDE.lua
+
+# Core
+Core\Constants.lua
+Core\Database.lua
+
+# Modules
+Modules\DirectDeposit.lua
+
+# GUI
+GUI\MainWindow.lua
+
+# Main
+OneWoW_DirectDeposit.lua

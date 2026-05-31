@@ -1,0 +1,95 @@
+---
+description: Lua coding conventions for OneWoW addons. Covers global access style, self shadowing in closures, linter cleanliness, and annotation requirements for hot paths and API surfaces.
+globs: **/*.lua
+alwaysApply: false
+---
+
+# Lua Coding Conventions — OneWoW Suite
+
+These conventions apply to all Lua code in the OneWoW Suite. They keep code consistent across files, work cleanly with Lua Language Server, and surface bugs at lint time rather than runtime.
+
+## Global access — no `_G.` prefix
+
+WoW addons run in a shared global environment. Reference globals by name, not via `_G.`:
+
+```lua
+-- BAD
+local frame = _G.UIParent
+
+-- GOOD
+local frame = UIParent
+```
+
+If the linter (Lua Language Server) flags an unknown global, add the symbol to `.luarc.json` under `diagnostics.globals` rather than `_G.`-prefixing each call site. Fix it once in config; never decorate the use sites.
+
+The exception: **bracket access with a computed key** — `_G["GameTooltipTextLeft"..i]`. The symbol name isn't known at edit time, so `_G[expr]` is the correct form. Direct `_G.FIELD` (with a literal field) is never necessary: either the name is known (use it directly) or it's computed (use `_G[expr]`).
+
+## `self` shadowing — rename the inner `self` to `myself`
+
+When a closure inside a method also receives `self` as its first argument (widget callbacks like `OnClick`, `OnTextChanged`, etc.), name the **inner** parameter `myself` so the outer `self` continues to refer to the module/object throughout the closure body.
+
+```lua
+-- GOOD
+function GUI:CreateGoldPanel(parent)
+    -- self here is GUI
+    accountEnabled:SetScript("OnClick", function(myself)
+        -- myself is the checkbox (the closure's own self, renamed)
+        -- self is still GUI (captured upvalue)
+        OneWoW_DirectDeposit.db.global.directDeposit.enabled = myself:GetChecked()
+        GUI:UpdateStatusText()
+    end)
+end
+```
+
+This avoids the "which `self` does this refer to?" bug without breaking the convention that a method's first argument is always `self`. The outer reference stays accessible without an explicit capture line (`local outer = self`), and the widget reference is unambiguous as `myself`.
+
+## Linter cleanliness
+
+Lua Language Server (configured via `.luarc.json`) must be clean before code is committed. No yellow squiggles, no red ones.
+
+When the linter complains:
+
+- **Unknown global** — add the symbol to `.luarc.json` → `diagnostics.globals`.
+- **Unknown type, class, or field** — see `.lua-defs/`. These are `---@meta _` LuaCATS definition files that override or extend the LSP's understanding of Blizzard APIs and addon types. Extend an existing file (e.g. `MenuUtil_override.lua`) if applicable; create a new one if not.
+- **Type mismatch in your own code** — fix the code or the annotation. Don't suppress.
+
+If a warning genuinely needs suppressing, use a targeted `---@diagnostic disable-next-line:` directive at the specific line. No file-wide disables.
+
+## Annotation requirements
+
+OneWoW code uses Lua Language Server annotations (LuaCATS / Sumneko-flavored). Two categories must be **fully annotated** — every parameter typed, every return typed, prose description for non-trivial behavior:
+
+### Hot-path local functions
+
+Local functions invoked frequently — inside per-frame callbacks, item-iteration loops, event handlers that fire many times per second, predicate evaluators — must be fully annotated. The LSP can then catch type errors before they ship, which matters disproportionately for code that runs thousands of times per second.
+
+```lua
+--- Resolves the bind state of an item from its tooltip data.
+--- Mutates props in place; sets isSoulbound, isBOE, isBOA, etc.
+---@param props table
+local function ResolveBind(props)
+    ...
+end
+```
+
+### Public API methods
+
+Every function exposed as part of an addon's public surface — module exports, library functions, methods on tables that other files or other addons call — must be fully annotated.
+
+```lua
+--- Compile an expression string into a predicate function.
+--- Returns the compiled function(props)->bool, cached for repeated use.
+---@param expr string|nil
+---@return (fun(props: table): boolean)|nil compiled
+---@return string|nil errorMessage
+function PE:Compile(expr)
+    ...
+end
+```
+
+Internal helpers that aren't on a hot path don't need full annotation. Reserve the effort for the two categories above where it pays off.
+
+## Related rules
+
+- `.cursor/rules/No-Defensive-Guards.mdc` — covers when not to guard global / API existence checks.
+- `.cursor/rules/OneWoW-Code-Comments.mdc` — covers comment style and broader guidance on LuaCATS for public API.

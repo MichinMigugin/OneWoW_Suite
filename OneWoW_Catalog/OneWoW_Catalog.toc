@@ -1,0 +1,51 @@
+## Interface: 120005, 120007
+## Version: R6.2605.2800
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00Catalog|r
+## Notes: OneWoW Addon that: provides a catalog of game data including journal, vendors, tradeskills, and quests.
+## Author: OneWoW Dev Team
+
+## RequiredDeps: OneWoW, OneWoW_GUI
+## OptionalDeps: OneWoW_AltTracker, OneWoW_AltTracker_Auctions
+## Category: OneWoW
+## Group: OneWoW_Catalog
+## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+
+## SavedVariables: OneWoW_Catalog_DB
+
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+
+# Locales
+Locales\LocaleManager.lua
+Locales\enUS.lua
+Locales\koKR.lua
+
+# Core
+Core\Constants.lua
+Core\Database.lua
+Core\Favorites.lua
+Core\VendorCategories.lua
+Core\Navigation.lua
+
+# Main
+OneWoW_Catalog.lua
+
+# Services
+Services\ItemDataLoader.lua
+
+# UI
+UI\MainFrame.lua
+
+# UI - Tabs
+UI\t-journal.lua
+UI\t-vendors.lua
+UI\t-tradeskills.lua
+UI\t-quests.lua
+
+UI\t-itemsearch.lua
+UI\t-settings.lua
+
+# Modules
+Modules\t-catalog.lua
+Modules\m-itemsearch.lua

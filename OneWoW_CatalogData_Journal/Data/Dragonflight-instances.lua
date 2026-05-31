@@ -1,0 +1,96 @@
+-- Dragonflight-instances.lua
+-- Instance data for Dragonflight
+
+OneWoWInstances_Dragonflight = {
+	[1197] = {
+		instanceID = 1197,
+		name = "Uldaman: Legacy of Tyr",
+		mapID = 2451,
+		instanceType = "party",
+		expansionID = 10,
+	},
+	[1201] = {
+		instanceID = 1201,
+		name = "Algeth'ar Academy",
+		mapID = 2526,
+		instanceType = "party",
+		expansionID = 10,
+	},
+	[1205] = {
+		instanceID = 1205,
+		name = "Dragon Isles",
+		mapID = 2574,
+		instanceType = "raid",
+		expansionID = 10,
+	},
+	[1209] = {
+		instanceID = 1209,
+		name = "Dawn of the Infinite",
+		mapID = 2579,
+		instanceType = "party",
+		expansionID = 10,
+	},
+	[1198] = {
+		instanceID = 1198,
+		name = "The Nokhud Offensive",
+		mapID = 2516,
+		instanceType = "party",
+		expansionID = 10,
+	},
+	[1202] = {
+		instanceID = 1202,
+		name = "Ruby Life Pools",
+		mapID = 2521,
+		instanceType = "party",
+		expansionID = 10,
+	},
+	[1199] = {
+		instanceID = 1199,
+		name = "Neltharus",
+		mapID = 2519,
+		instanceType = "party",
+		expansionID = 10,
+	},
+	[1203] = {
+		instanceID = 1203,
+		name = "The Azure Vault",
+		mapID = 2515,
+		instanceType = "party",
+		expansionID = 10,
+	},
+	[1207] = {
+		instanceID = 1207,
+		name = "Amirdrassil, the Dream's Hope",
+		mapID = 2549,
+		instanceType = "raid",
+		expansionID = 10,
+	},
+	[1196] = {
+		instanceID = 1196,
+		name = "Brackenhide Hollow",
+		mapID = 2520,
+		instanceType = "party",
+		expansionID = 10,
+	},
+	[1200] = {
+		instanceID = 1200,
+		name = "Vault of the Incarnates",
+		mapID = 2522,
+		instanceType = "raid",
+		expansionID = 10,
+	},
+	[1204] = {
+		instanceID = 1204,
+		name = "Halls of Infusion",
+		mapID = 2527,
+		instanceType = "party",
+		expansionID = 10,
+	},
+	[1208] = {
+		instanceID = 1208,
+		name = "Aberrus, the Shadowed Crucible",
+		mapID = 2569,
+		instanceType = "raid",
+		expansionID = 10,
+	},
+}

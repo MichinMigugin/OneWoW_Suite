@@ -1,0 +1,4 @@
+---@class Minimap : Frame
+---@field ZoomIn Button
+---@field ZoomOut Button
+---@

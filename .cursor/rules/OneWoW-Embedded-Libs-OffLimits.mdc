@@ -1,0 +1,10 @@
+---
+description: Embedded Libs folders are off-limits — do not modify third-party libraries.
+alwaysApply: true
+---
+
+# Embedded Libs
+
+**Do not edit, refactor, or modify files in embedded `Libs` folders.**
+
+These are third-party libraries (LibStub, Ace3, etc.) that are vendored/embedded as-is. Changes can break compatibility and diverge from upstream. If a task requires modifying Lib, implement needed behavior in addon code, or note the Lib needs updated manually.

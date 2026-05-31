@@ -1,0 +1,3 @@
+local addonName, ns = ...
+
+_G.OneWoW_AltTracker_Endgame = ns

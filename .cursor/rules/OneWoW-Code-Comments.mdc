@@ -1,0 +1,264 @@
+---
+description: Guidance on code and public API LuaCATS doc comments for OneWoW addon code. Encourages structural and rationale comments that durably aid readers; discourages restating-what-the-code-does, changelog noise, commented-out code, and brittle references.
+globs: **/*.lua
+alwaysApply: false
+---
+
+# Code Comments — OneWoW Suite
+
+Comments earn their place by helping a reader understand things the code itself can't show: architecture, design tradeoffs, non-obvious gotchas, and the reasons behind unusual patterns. Comments that restate what the code already says are clutter — they age into noise and lie when the code changes underneath them.
+
+The canonical example of well-commented code in this repo is `OneWoW_GUI/PredicateEngine.lua`. When in doubt, mirror its style.
+
+## Encouraged
+
+### File header banners
+
+Long or architecturally significant files should open with a banner that orients the reader: what the file is, how it's structured, and the design decisions a reader needs to know to make sense of the code below.
+
+```lua
+-- ============================================================================
+-- PredicateEngine
+-- ============================================================================
+-- Two-layer architecture:
+--   Layer 1 (BuildProps): enriches a bag slot into a flat property table
+--   Layer 2 (Compiler):   tokenizes + parses expressions into function(props)->bool
+--
+-- Design decisions:
+--   - Structured tooltip bind detection via TooltipDataItemBinding
+--   - Strict soulbound: character-only; account-bound does NOT match #soulbound
+--   - ${CONSTANT} curly-brace syntax for named constants / parameters
+-- ============================================================================
+```
+
+### Comments orient; docs explain
+
+File headers and section comments give a reader enough context to navigate the
+code — what the file is, how it's structured, the design decisions a reader
+needs to make sense of what's below. They are **summaries**, not the full
+rationale.
+
+Full architectural writeups, design alternatives considered, evolution history,
+and protocol/format specifications belong in `Docs/` markdown files alongside
+the source. The comment header points at them when relevant.
+
+The canonical example: `OneWoW_GUI/PredicateEngine.lua` opens with a five-bullet
+design-decisions summary in the file header. The full rationale — why two
+layers, why a lazy metatable, the tokenizer grammar evolution — lives in
+`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`.
+
+```lua
+-- ============================================================================
+-- PredicateEngine
+-- ============================================================================
+-- Two-layer architecture:
+--   Layer 1 (BuildProps): enriches a bag slot into a flat property table
+--   Layer 2 (Compiler):   tokenizes + parses expressions into function(props)->bool
+--
+-- Design decisions:
+--   - Structured tooltip bind detection via TooltipDataItemBinding
+--   - Strict soulbound: character-only; account-bound does NOT match #soulbound
+--   - ${CONSTANT} curly-brace syntax for named constants / parameters
+--
+-- Full design rationale: OneWoW_GUI/Docs/PREDICATE_ENGINE.md
+-- ============================================================================
+```
+
+The "Full design rationale: ..." pointer line is the connective tissue — it
+makes the docs discoverable from the code without duplicating their content.
+
+**Heuristic:** if a header comment is growing past 10–15 lines of bullets, the
+overflow probably wants to move into a `Docs/` markdown file with a one-line
+pointer left behind in the header.
+
+### Section dividers in long files
+
+When a file has multiple logical regions, banner-style section headers help a reader navigate without folding. Pair the divider with a short paragraph describing what the section does and any non-obvious rules that apply to it.
+
+```lua
+-- ============================================================================
+-- SECTION 5: PROP_REGISTRY
+-- ============================================================================
+-- Maps user-facing property names (lowercased) to { field, type }.
+-- Used by the tokenizer to recognize prop_compare (ilvl>=200) and
+-- prop_range (ilvl:200-300) syntax.
+-- "number" props support >=, <=, >, <, =, ==, !=
+-- "string" props support =, ==, != (exact) and ~ (contains)
+```
+
+### Subsection markers
+
+Inside long functions or registry blocks, lightweight markers (`-- ---- Foo ----`) make it easy to spot logical breaks without imposing the heavy banner style.
+
+```lua
+-- ---- Knowledge items ----
+if hyperlink then
+    ...
+end
+
+-- ---- Item link parsed properties ----
+local itemLinkProperties = ParseItemLink(itemLink)
+```
+
+### "Why" comments — rationale and tradeoffs
+
+When code does something a reader might assume is wrong, redundant, or could be simplified — leave a note explaining why. The test: would someone reading this code consider "fixing" it without understanding the context? If yes, comment.
+
+```lua
+-- BIND DETECTION NOTE: API-based bind detection removed — not detailed enough.
+-- Warbound == Soulbound according to the API.
+-- (current implementation uses tooltip data instead)
+
+-- UNIQUE DETECTION NOTE: C_Item.GetItemUniquenessByID only matches
+-- unique-equipped items; its purpose is restrictions on equipping items,
+-- not on owning them.
+```
+
+### Gotchas, workarounds, API quirks
+
+Non-obvious behavior in Blizzard APIs, locale-fragile patterns, taint considerations, and "this looks wrong but is correct" patterns are exactly what comments are for.
+
+```lua
+-- C_TooltipInfo line text is raw markup, not displayed text.
+-- "1 Charge" displays as "1 |4Charge:Charges;" in the line data.
+local hasCharges = strfind(text, "%d+ |4" .. chargesPattern) ~= nil
+```
+
+### Grammar, format, and protocol documentation
+
+When code implements a parser, serializer, or protocol, the format/grammar belongs in a comment near the implementation.
+
+```lua
+-- Grammar:
+--   Expression = And ( "|" And )*
+--   And        = Not ( "&" Not )*
+--   Not        = "!" Not | Primary
+--   Primary    = "(" Expression ")"
+--             | keyword | prop_compare | prop_range
+--             | prop_flag | text
+```
+
+### LuaCATS doc comments on public API
+
+Functions that are part of an addon's public surface (anything called from outside the file, especially library/module exports) deserve `---@param`, `---@return`, and a short prose description.
+
+```lua
+--- Compile an expression string into a predicate function.
+--- Returns the compiled function(props)->bool, cached for repeated use.
+--- Returns nil on empty input; returns nil, errorMessage on tokenize/parse failure.
+---@param expr string|nil
+---@return (fun(props: table): boolean)|nil compiled
+---@return string|nil errorMessage
+function PE:Compile(expr)
+```
+
+Internal helpers don't need this. Reserve it for the API surface.
+
+### TODO / FIXME / NOTE markers
+
+Forward-looking notes are useful and should be kept. Tag them clearly and prefer concrete language ("revisit when X lands") over vague ones ("clean up someday").
+
+```lua
+-- TODO: replace pcall after Blizzard fixes the empty-tooltip case in 12.0.5
+-- FIXME: this allocates per call; pool when usage grows
+```
+
+## Discouraged
+
+### Architecture writeups inside source files
+
+Multi-paragraph design rationale, "why we chose X over Y" comparisons, evolution
+history, and protocol/format specifications longer than ~10 lines do not belong
+in source comments. They drift when the code changes, they make files harder to
+read, and they hide from contributors who would find them faster in `Docs/`.
+
+If a comment block is starting to feel like a document, it is one — move it to
+`Docs/` and leave a pointer.
+
+### Restating what the code does
+
+If the comment is just the code in English, delete the comment.
+
+```lua
+-- BAD: comment adds no information
+-- Increment i
+i = i + 1
+
+-- Loop through items
+for _, item in ipairs(items) do
+
+-- Set the player's health to 100
+player.health = 100
+```
+
+### Changelog and historical notes in source
+
+Version control already records what changed and when. Comments like "changed from X to Y for performance" age into noise — by next month no one knows what "X" was, and the comment can't be trusted because the next change won't update it.
+
+```lua
+-- BAD: belongs in commit message, not source
+-- Changed from C_Item.GetItemInfo to C_Item.GetItemInfoInstant for perf (2024-03)
+local _, _, classID = C_Item.GetItemInfoInstant(itemID)
+
+-- BAD: "this used to be" comments rot fast
+-- This was originally in MainFrame.lua but moved here when we refactored
+```
+
+If a past approach is genuinely worth knowing about (it failed in an instructive way, or someone will be tempted to undo the refactor), turn it into a "why" comment that explains the *current* code, not the history.
+
+### Commented-out code
+
+Delete it. Version control has it. Commented-out blocks make readers wonder whether the code is paused or abandoned, and "uncomment to debug" patterns drift out of sync immediately.
+
+```lua
+-- BAD
+-- old approach:
+-- if not Addon.db.global.X then Addon.db.global.X = {} end
+local x = DB:Ensure(db, "global", "X")
+```
+
+### Brittle references
+
+Comments that point at specific line numbers, function names that may rename, or other addons' internals will rot. If you need to reference something, name the *concept* and let the reader find it.
+
+```lua
+-- BAD: line numbers shift with the next edit
+-- See line 423 for the related logic
+
+-- BAD: function may be renamed
+-- See ProcessItem() above
+
+-- GOOD: durable reference
+-- Mirrors the bind-resolution logic in ResolveBind below.
+```
+
+### Decorative dividers without information
+
+A row of dashes by itself adds visual noise without orienting the reader. If a section needs a divider, give it a label and a sentence.
+
+```lua
+-- BAD
+-----------------------------------------
+
+-- GOOD
+-- ============================================================================
+-- SECTION 4: TOKEN TYPES
+-- ============================================================================
+-- Each token represents one parsed unit from the input expression.
+```
+
+### Doc comments on trivial getters and setters
+
+`function GetX() return self.x end` doesn't need a paragraph. Reserve LuaCATS doc comments for the public API surface and anything with non-obvious return semantics or side effects.
+
+### Pep talks and meta-commentary
+
+`-- this is the cool part`, `-- finally fixed!`, `-- HACK HACK HACK` without context — none of these help a future reader.
+
+## When in doubt
+
+Three questions to apply before adding a comment:
+
+1. **Will this comment still be true if the surrounding code changes?** If it embeds line numbers, current function names, or version-specific facts that aren't load-bearing, it'll rot. Rewrite or skip.
+2. **Does the code already say this?** If yes, the comment is noise.
+3. **Would a reader unfamiliar with this file be helped by knowing this?** If yes, write it. If you're commenting for yourself, that's fine — but pitch the wording at someone seeing the file for the first time.

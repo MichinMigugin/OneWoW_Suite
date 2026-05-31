@@ -1,0 +1,12 @@
+<Bindings>
+    <Binding name="ONEWOW_ALTTRACKER_TOGGLE" category="BINDING_HEADER_ONEWOW_ALTTRACKER">
+        if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.Toggle then
+            OneWoW_AltTracker.UI:Toggle()
+        end
+    </Binding>
+    <Binding name="ONEWOW_ALTTRACKER_OPEN_SETUP" category="BINDING_HEADER_ONEWOW_ALTTRACKER">
+        if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.OpenSetup then
+            OneWoW_AltTracker.UI:OpenSetup()
+        end
+    </Binding>
+</Bindings>

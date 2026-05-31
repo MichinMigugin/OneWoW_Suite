@@ -1,0 +1,16 @@
+local addonName, ns = ...
+if GetLocale() ~= "koKR" then return end
+if not ns.L then ns.L = {} end
+local L = ns.L
+
+L["PROFPANEL_TITLE"] = "TEST"
+L["PROFPANEL_DESC"] = "TEST"
+L["PROFPANEL_AUTO_SHOW"] = "TEST"
+L["PROFPANEL_TOGGLE_TIP"] = "TEST"
+L["PROFPANEL_HIDE_TIP"] = "TEST"
+L["PROFPANEL_SHOW_TIP"] = "TEST"
+L["PROFPANEL_STATS_TITLE"] = "TEST"
+L["PROFPANEL_NO_EXPANSION_DATA"] = "TEST"
+L["PROFPANEL_NO_ALT_DATA"] = "TEST"
+L["PROFPANEL_OTHER_ALTS"] = "TEST"
+L["PROFPANEL_LAST_SCANNED"] = "TEST"
