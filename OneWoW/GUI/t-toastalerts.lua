@@ -199,6 +199,7 @@ local function AddItemAlertsExtras(dsc, yOffset)
         { key = "npcs",    label = L["TOAST_NOTES_NPCS"]    or "NPC Alerts" },
         { key = "players", label = L["TOAST_NOTES_PLAYERS"] or "Player Alerts" },
         { key = "zones",   label = L["TOAST_NOTES_ZONES"]   or "Zone Alerts" },
+        { key = "items",   label = L["TOAST_NOTES_ITEMS"]   or "Item Loot Alerts" },
     }
 
     for _, entry in ipairs(types) do

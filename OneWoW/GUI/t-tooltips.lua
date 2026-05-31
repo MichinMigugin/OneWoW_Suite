@@ -175,7 +175,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
             for _, tbs in ipairs(toggleBtnSets) do
                 local val = OneWoW.db.global.settings.tooltips.customnotes[tbs.key]
                 tbs.refresh(newState, val ~= false)
-                tbs.label:SetTextColor(newState and OneWoW_GUI:GetThemeColor("TEXT_PRIMARY") or OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
             end
         end,
     })
@@ -335,7 +335,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
             for _, tbs in ipairs(toggleBtnSets) do
                 local val = OneWoW.db.global.settings.tooltips.technicalids[tbs.key]
                 tbs.refresh(newState, val ~= false)
-                tbs.label:SetTextColor(newState and OneWoW_GUI:GetThemeColor("TEXT_PRIMARY") or OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
             end
         end,
     })
@@ -416,7 +416,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
             for _, tbs in ipairs(toggleBtnSets) do
                 local val = OneWoW.db.global.settings.tooltips.itemtracker[tbs.key]
                 tbs.refresh(newState, val ~= false)
-                tbs.label:SetTextColor(newState and OneWoW_GUI:GetThemeColor("TEXT_PRIMARY") or OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
             end
         end,
     })
@@ -1503,7 +1503,7 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
             for _, tbs in ipairs(toggleBtnSets) do
                 local val = OneWoW.db.global.settings.tooltips.pets[tbs.key]
                 tbs.refresh(newState, val ~= false)
-                tbs.label:SetTextColor(newState and OneWoW_GUI:GetThemeColor("TEXT_PRIMARY") or OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
             end
         end,
     })
