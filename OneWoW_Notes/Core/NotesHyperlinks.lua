@@ -347,33 +347,50 @@ function ns.UI.CreateNotesHelpPanel()
     fromGameDesc:SetText(L["UI_HELP_FROM_GAME_DESC"])
     fromGameDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
+    -- Pure relative-anchor stacking: each row (and its expanded detail) is pinned
+    -- below the previous element's BOTTOM, so the widget system computes the gaps
+    -- itself. Detail frames auto-size to their wrapped contents (see below), so a
+    -- larger font grows the layout instead of overlapping it.
+    local function UpdateLinksScrollHeight()
+        local top    = linksScrollContent:GetTop()
+        local bottom = fromGameDesc:GetBottom()
+        if top and bottom and top > bottom then
+            linksScrollContent:SetHeight((top - bottom) + 20)
+        end
+        linksScrollObj.UpdateThumb()
+    end
+
     local function UpdateRowPositions()
-        local yPos = 0
+        local prev = nil
         for i, row in ipairs(allRows) do
             row:ClearAllPoints()
-            row:SetPoint("TOPLEFT",  linksScrollContent, "TOPLEFT",  0, yPos)
-            row:SetPoint("TOPRIGHT", linksScrollContent, "TOPRIGHT", 0, yPos)
-            yPos = yPos - 24
+            if prev then
+                row:SetPoint("TOPLEFT",  prev, "BOTTOMLEFT",  0, -2)
+                row:SetPoint("TOPRIGHT", prev, "BOTTOMRIGHT", 0, -2)
+            else
+                row:SetPoint("TOPLEFT",  linksScrollContent, "TOPLEFT",  0, 0)
+                row:SetPoint("TOPRIGHT", linksScrollContent, "TOPRIGHT", 0, 0)
+            end
+            prev = row
 
+            -- The detail frame stays anchored to its row (set at creation), so
+            -- it follows automatically; when expanded it becomes the anchor the
+            -- next row stacks beneath.
             if expandedRows[i] and allDetailFrames[i] then
-                allDetailFrames[i]:ClearAllPoints()
-                allDetailFrames[i]:SetPoint("TOPLEFT",  row, "BOTTOMLEFT",  0, -2)
-                allDetailFrames[i]:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -2)
-                yPos = yPos - 66
+                prev = allDetailFrames[i]
             end
         end
 
-        local fromGameY = yPos - 8
         fromGameLabel:ClearAllPoints()
-        fromGameLabel:SetPoint("TOPLEFT",  linksScrollContent, "TOPLEFT",  0, fromGameY)
-        fromGameLabel:SetPoint("TOPRIGHT", linksScrollContent, "TOPRIGHT", 0, fromGameY)
+        fromGameLabel:SetPoint("TOPLEFT",  prev or linksScrollContent, prev and "BOTTOMLEFT"  or "TOPLEFT",  0, -8)
+        fromGameLabel:SetPoint("TOPRIGHT", prev or linksScrollContent, prev and "BOTTOMRIGHT" or "TOPRIGHT", 0, -8)
 
         fromGameDesc:ClearAllPoints()
-        fromGameDesc:SetPoint("TOPLEFT",  linksScrollContent, "TOPLEFT",  0, fromGameY - 20)
-        fromGameDesc:SetPoint("TOPRIGHT", linksScrollContent, "TOPRIGHT", 0, fromGameY - 20)
+        fromGameDesc:SetPoint("TOP",   fromGameLabel, "BOTTOM", 0, -4)
+        fromGameDesc:SetPoint("LEFT",  linksScrollContent, "LEFT",  0, 0)
+        fromGameDesc:SetPoint("RIGHT", linksScrollContent, "RIGHT", 0, 0)
 
-        linksScrollContent:SetHeight(math.abs(fromGameY) + 80)
-        linksScrollObj.UpdateThumb()
+        UpdateLinksScrollHeight()
     end
 
     for i, linkType in ipairs(linkTypes) do
@@ -400,8 +417,12 @@ function ns.UI.CreateNotesHelpPanel()
         expandIcon:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         expandIcon:SetAtlas("common-button-collapseExpand-down")
 
+        -- The detail's contents anchor to the ROW (not to the detail frame) and
+        -- chain vertically among themselves, so nothing anchors back to the
+        -- detail frame. That lets the detail frame safely wrap them by pinning
+        -- its BOTTOM to the Paste button without creating an anchor cycle. The
+        -- whole stack therefore grows with the font and never overlaps.
         local detailFrame = CreateFrame("Frame", nil, linksScrollContent, "BackdropTemplate")
-        detailFrame:SetHeight(64)
         detailFrame:SetPoint("TOPLEFT",  row, "BOTTOMLEFT",  0, -2)
         detailFrame:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -2)
         detailFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
@@ -410,22 +431,25 @@ function ns.UI.CreateNotesHelpPanel()
         detailFrame:Hide()
 
         local instrText = OneWoW_GUI:CreateFS(detailFrame, 10)
-        instrText:SetPoint("TOPLEFT",  detailFrame, "TOPLEFT",  8, -6)
-        instrText:SetPoint("TOPRIGHT", detailFrame, "TOPRIGHT", -8, -6)
+        instrText:SetPoint("TOPLEFT",  row, "BOTTOMLEFT",  8, -8)
+        instrText:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", -8, -8)
         instrText:SetJustifyH("LEFT")
         instrText:SetWordWrap(true)
         instrText:SetText(L["UI_HELP_DETAIL_INSTRUCTION"])
         instrText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         local exampleText = OneWoW_GUI:CreateFS(detailFrame, 10)
-        exampleText:SetPoint("TOPLEFT",  instrText, "BOTTOMLEFT",  0, -3)
-        exampleText:SetPoint("TOPRIGHT", instrText, "BOTTOMRIGHT", 0, -3)
+        exampleText:SetPoint("TOP",   instrText, "BOTTOM", 0, -3)
+        exampleText:SetPoint("LEFT",  row, "LEFT",  8, 0)
+        exampleText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
         exampleText:SetJustifyH("LEFT")
+        exampleText:SetWordWrap(true)
         exampleText:SetText(string.format(L["UI_HELP_DETAIL_EXAMPLE"], linkType.example))
         exampleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local pasteBtn = OneWoW_GUI:CreateButton(detailFrame, { text = L["UI_HELP_PASTE_BUTTON"], width = 60, height = 20 })
-        pasteBtn:SetPoint("BOTTOMLEFT", detailFrame, "BOTTOMLEFT", 8, 6)
+        pasteBtn:SetPoint("TOPLEFT", exampleText, "BOTTOMLEFT", 0, -6)
+        detailFrame:SetPoint("BOTTOM", pasteBtn, "BOTTOM", 0, -6)
         pasteBtn:SetScript("OnClick", function()
             local editBox = ns.UI.activeContentEditBox
             if editBox then
@@ -451,6 +475,7 @@ function ns.UI.CreateNotesHelpPanel()
                 expandedRows[i] = true
             end
             UpdateRowPositions()
+            C_Timer.After(0, UpdateLinksScrollHeight)
         end)
 
         row:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) end)
@@ -458,6 +483,8 @@ function ns.UI.CreateNotesHelpPanel()
     end
 
     UpdateRowPositions()
+    linksScrollContent:HookScript("OnSizeChanged", UpdateLinksScrollHeight)
+    linksContent:HookScript("OnShow", function() C_Timer.After(0, UpdateLinksScrollHeight) end)
 
     -- =============================================
     -- PINS TAB
@@ -468,62 +495,83 @@ function ns.UI.CreateNotesHelpPanel()
 
     local pinsScrollContent = pinsScrollObj.scrollChild
 
-    local function CreatePinCard(title, lines, yOffset)
+    -- Each card's title/lines anchor to the SCROLL CHILD (external) for width and
+    -- chain vertically (TOP -> previous element's BOTTOM); nothing anchors back to
+    -- the card. The card frame then wraps that content (TOPLEFT from its title,
+    -- BOTTOM from its last line) without forming an anchor cycle. Result: pure
+    -- widget-driven layout that adapts to any font and never overlaps, with no
+    -- GetStringHeight measurement.
+    local pinCards = {}
+    local prevCard = nil
+
+    local function CreatePinCard(title, lines)
         local card = CreateFrame("Frame", nil, pinsScrollContent, "BackdropTemplate")
-        card:SetPoint("TOPLEFT",  pinsScrollContent, "TOPLEFT",  0, yOffset)
-        card:SetPoint("TOPRIGHT", pinsScrollContent, "TOPRIGHT", 0, yOffset)
         card:SetBackdrop(BACKDROP_INNER_NO_INSETS)
         card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
         local cardTitle = OneWoW_GUI:CreateFS(card, 12)
-        cardTitle:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -8)
-        cardTitle:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -8)
+        if prevCard then
+            cardTitle:SetPoint("TOPLEFT",  prevCard, "BOTTOMLEFT",  8, -16)
+            cardTitle:SetPoint("TOPRIGHT", prevCard, "BOTTOMRIGHT", -8, -16)
+        else
+            cardTitle:SetPoint("TOPLEFT",  pinsScrollContent, "TOPLEFT",  8, -8)
+            cardTitle:SetPoint("TOPRIGHT", pinsScrollContent, "TOPRIGHT", -8, -8)
+        end
         cardTitle:SetJustifyH("LEFT")
+        cardTitle:SetWordWrap(true)
         cardTitle:SetText(title)
         cardTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-        local currentY = -26
+        local prev = cardTitle
         for _, line in ipairs(lines) do
             local lineText = OneWoW_GUI:CreateFS(card, 10)
-            lineText:SetPoint("TOPLEFT",  card, "TOPLEFT",  10, currentY)
-            lineText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, currentY)
+            lineText:SetPoint("TOP",   prev, "BOTTOM", 0, -6)
+            lineText:SetPoint("LEFT",  pinsScrollContent, "LEFT",  10, 0)
+            lineText:SetPoint("RIGHT", pinsScrollContent, "RIGHT", -10, 0)
             lineText:SetJustifyH("LEFT")
             lineText:SetWordWrap(true)
             lineText:SetText(line)
             lineText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            currentY = currentY - lineText:GetStringHeight() - 6
+            prev = lineText
         end
 
-        local cardHeight = math.abs(currentY) + 10
-        card:SetHeight(cardHeight)
-        return cardHeight
+        card:SetPoint("TOPLEFT",  cardTitle, "TOPLEFT",  -8, 8)
+        card:SetPoint("RIGHT",    pinsScrollContent, "RIGHT", 0, 0)
+        card:SetPoint("BOTTOM",   prev, "BOTTOM", 0, -10)
+
+        pinCards[#pinCards + 1] = card
+        prevCard = card
     end
 
-    local cardY = 0
-    local h1 = CreatePinCard(L["UI_HELP_PIN_REGULAR_TITLE"], {
+    local function UpdatePinsScrollHeight()
+        local top    = pinsScrollContent:GetTop()
+        local bottom = prevCard and prevCard:GetBottom()
+        if top and bottom and top > bottom then
+            pinsScrollContent:SetHeight((top - bottom) + 20)
+        end
+        pinsScrollObj.UpdateThumb()
+    end
+
+    CreatePinCard(L["UI_HELP_PIN_REGULAR_TITLE"], {
         L["UI_HELP_PIN_REGULAR_LINE1"],
         L["UI_HELP_PIN_REGULAR_LINE2"],
         L["UI_HELP_PIN_REGULAR_LINE3"],
-    }, cardY)
-    cardY = cardY - h1 - 8
-
-    local h2 = CreatePinCard(L["UI_HELP_PIN_DAILY_TITLE"], {
+    })
+    CreatePinCard(L["UI_HELP_PIN_DAILY_TITLE"], {
         L["UI_HELP_PIN_DAILY_LINE1"],
         L["UI_HELP_PIN_DAILY_LINE2"],
         L["UI_HELP_PIN_DAILY_LINE3"],
-    }, cardY)
-    cardY = cardY - h2 - 8
-
-    local h3 = CreatePinCard(L["UI_HELP_PIN_ZONE_TITLE"], {
+    })
+    CreatePinCard(L["UI_HELP_PIN_ZONE_TITLE"], {
         L["UI_HELP_PIN_ZONE_LINE1"],
         L["UI_HELP_PIN_ZONE_LINE2"],
         L["UI_HELP_PIN_ZONE_LINE3"],
-    }, cardY)
-    cardY = cardY - h3
+    })
 
-    pinsScrollContent:SetHeight(math.abs(cardY) + 20)
-    pinsScrollObj.UpdateThumb()
+    pinsScrollContent:HookScript("OnSizeChanged", UpdatePinsScrollHeight)
+    pinsContent:HookScript("OnShow", function() C_Timer.After(0, UpdatePinsScrollHeight) end)
+    UpdatePinsScrollHeight()
 
     return helpPanel
 end

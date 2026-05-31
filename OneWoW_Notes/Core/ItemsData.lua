@@ -95,3 +95,42 @@ function Items:RemoveItem(itemID)
     if not itemID then return end
     self:Remove(itemID)
 end
+
+function Items:Initialize()
+    if Items._lootFrame then return end
+
+    -- Identify self-loot messages via Blizzard's own localized loot strings
+    -- (plain-text prefix match, locale-safe) so we ignore other players' loot.
+    local selfPrefixes = {}
+    for _, g in ipairs({ LOOT_ITEM_SELF, LOOT_ITEM_SELF_MULTIPLE, LOOT_ITEM_PUSHED_SELF, LOOT_ITEM_PUSHED_SELF_MULTIPLE }) do
+        local prefix = g and g:match("^(.-)%%s")
+        if prefix and prefix ~= "" then
+            selfPrefixes[#selfPrefixes + 1] = prefix
+        end
+    end
+
+    local f = CreateFrame("Frame")
+    Items._lootFrame = f
+    f:SetScript("OnEvent", function(_, _, msg)
+        if not msg then return end
+
+        local isSelf = false
+        for _, prefix in ipairs(selfPrefixes) do
+            if msg:find(prefix, 1, true) == 1 then
+                isSelf = true
+                break
+            end
+        end
+        if not isSelf then return end
+
+        local itemID = tonumber(msg:match("Hitem:(%d+)"))
+        if not itemID then return end
+
+        local itemData = Items:GetItem(itemID)
+        if not itemData or not itemData.alertOnLoot then return end
+
+        local count = tonumber(msg:match("x(%d+)%.?$")) or 1
+        OneWoW.Toasts.FireItemLootAlert(itemData.name, itemData.icon, count)
+    end)
+    f:RegisterEvent("CHAT_MSG_LOOT")
+end

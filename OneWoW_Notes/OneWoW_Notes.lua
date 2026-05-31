@@ -127,6 +127,9 @@ local function OnEnable()
     if ns.NPCs and ns.NPCs.Initialize then
         ns.NPCs:Initialize()
     end
+    if ns.Items and ns.Items.Initialize then
+        ns.Items:Initialize()
+    end
 
     ns.notePins    = ns.notePins    or {}
     ns.windowStack = ns.windowStack or {}
