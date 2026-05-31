@@ -26,10 +26,20 @@ local function GetShowPanel()
     return ns.ModuleRegistry:GetToggleValue("vendorpanel", "show_panel")
 end
 
+--- True when the standalone VendorFilter addon is loaded. We defer all merchant
+--- grid filtering to it while it is present (to avoid two addons fighting over
+--- the same MerchantFrame_Update hook) and reposition our button clear of its
+--- dropdown.
+---@return boolean
+local function IsVendorFilterLoaded()
+    return C_AddOns.IsAddOnLoaded("VendorFilter") and true or false
+end
+
 ns.VPGetDB = GetDB
 ns.VPGetSettings = GetSettings
 ns.VPGetShowBlizzJunk = GetShowBlizzJunk
 ns.VPGetShowPanel = GetShowPanel
+ns.VPIsVendorFilterLoaded = IsVendorFilterLoaded
 
 -- ============================================================
 -- Shared state (vendorpanel-ui.lua reads ns.VPState)
@@ -56,6 +66,10 @@ local state = {
     activeSellConfirmTicker = nil,
     activeSellErrFrame = nil,
     vendorSellSeq = 0,
+    _buttonRetry = nil,
+    filteredVendorItems = {},
+    clearedSlots = {},
+    slotMap = {},
 }
 ns.VPState = state
 
@@ -371,10 +385,338 @@ function VPFilters.FormatMoney(amount)
 end
 
 -- ============================================================
+-- Global exclusions + merchant-grid filtering
+-- ============================================================
+-- These power the "filter the vendor itself" features (hide non-matching
+-- items, hide known items, permanently exclude whole categories) that were
+-- absorbed from the standalone VendorFilter addon. The grid renderer below
+-- repopulates MerchantFrame's 12 slots from a pre-built index list and
+-- repaginates, the same way Blizzard's own paging works.
+
+local EXCLUSION_KEYS = { "Mounts", "Pets", "Toys", "Cosmetics", "Decor", "Housing" }
+
+local function GetExclusions()
+    local settings = GetSettings()
+    if not settings.exclusions then settings.exclusions = {} end
+    return settings.exclusions
+end
+ns.VPGetExclusions = GetExclusions
+
+local function AnyExclusionActive()
+    local ex = GetExclusions()
+    for _, key in ipairs(EXCLUSION_KEYS) do
+        if ex[key] then return true end
+    end
+    return false
+end
+
+--- True when the item belongs to a category the user has globally excluded.
+---@param itemLink string
+---@return boolean
+local function IsExcluded(itemLink)
+    local ex = GetExclusions()
+    if ex.Mounts and IsMount(itemLink) then return true end
+    if ex.Pets and IsPet(itemLink) then return true end
+    if ex.Toys and IsToy(itemLink) then return true end
+    if ex.Cosmetics and IsAnyCosmetic(itemLink) then return true end
+    if ex.Decor and IsDecorItem(itemLink) then return true end
+    if ex.Housing and IsHousingItem(itemLink) then return true end
+    return false
+end
+
+--- Whether the item matches the active category filter, applying the same
+--- preferred-armor override the fade renderer uses.
+---@param itemLink string
+---@param preferredArmor string|nil
+---@return boolean
+local function ComputeFilterMatch(itemLink, preferredArmor)
+    local matches = VPFilters.CheckVendorItemFilter(itemLink, state.currentVendorFilter)
+    local _, itemSubType, _, equipSlot = select(6, C_Item.GetItemInfo(itemLink))
+    if state.currentVendorFilter == "Show All" then
+        -- no armor override when showing all
+    elseif state.showAllArmor then
+        -- keep matches as is
+    elseif itemSubType == preferredArmor then
+        -- keep matches as is
+    elseif equipSlot == "INVTYPE_CLOAK" then
+        -- keep matches as is
+    elseif ARMOR_TYPES[itemSubType] then
+        matches = false
+    end
+    return matches
+end
+ns.VPComputeFilterMatch = ComputeFilterMatch
+
+-- ============================================================
 -- VendorPanel
 -- ============================================================
 local VendorPanel = {}
 ns.VendorPanel = VendorPanel
+
+--- True when our merchant-grid filtering should engage. We stand down entirely
+--- when VendorFilter is loaded (it owns the grid then) and otherwise only
+--- repaginate when the user has opted into hiding (filtered / known / excluded
+--- categories). With no opt-in, the lighter fade renderer is used instead.
+---@return boolean
+function VendorPanel:GridFilteringActive()
+    if IsVendorFilterLoaded() then return false end
+    local settings = GetSettings()
+    return (settings.hideFiltered or settings.hideKnownEntirely or AnyExclusionActive()) and true or false
+end
+
+--- Builds state.filteredVendorItems: the ordered merchant indices to display
+--- after removing excluded categories, removing known items (when hide-known is
+--- on), and removing non-matching items (when hide-filtered is on).
+function VPFilters.BuildDisplayList()
+    wipe(state.filteredVendorItems)
+    local settings = GetSettings()
+    local hideFiltered = settings.hideFiltered
+    local hideKnown = settings.hideKnownEntirely
+    local preferredArmor = GetPreferredArmor()
+    for i = 1, GetMerchantNumItems() do
+        local itemLink = GetMerchantItemLink(i)
+        if itemLink and not IsExcluded(itemLink) then
+            if not (hideKnown and IsAlreadyKnown(itemLink)) then
+                if not hideFiltered or ComputeFilterMatch(itemLink, preferredArmor) then
+                    tinsert(state.filteredVendorItems, i)
+                end
+            end
+        end
+    end
+end
+
+-- ---- Merchant grid renderers ----
+-- RenderMerchantGrid repopulates and repaginates the 12 merchant slots from
+-- state.filteredVendorItems (excluded / known / non-matching items removed).
+-- FadeMerchantGrid is the lighter path used when no hiding is requested: it
+-- leaves Blizzard's own layout intact and only fades / dims items in place.
+
+--- Plumber's MerchantPrice module reads itemButton:GetID() itself, so when it is
+--- active we must not also re-drive native currency display or we double it up.
+---@return boolean
+local function IsPlumberMerchantActive()
+    if not C_AddOns.IsAddOnLoaded("Plumber") then return false end
+    local db = _G["PlumberDB"]
+    if not db then return false end
+    local mp = db["MerchantPrice"]
+    if type(mp) == "table" then
+        return mp["enable"] == true
+    end
+    return mp == true
+end
+
+--- Re-drives native currency display for a populated slot using the correct
+--- merchant index (native display keys off slot position, which our remapping
+--- breaks).
+---@param btn integer
+---@param merchantIndex integer
+local function FixSlotCurrency(btn, merchantIndex)
+    local moneyFrame  = _G["MerchantItem" .. btn .. "MoneyFrame"]
+    local altCurrency = _G["MerchantItem" .. btn .. "AltCurrencyFrame"]
+    local numCurrencies = GetMerchantItemCostInfo(merchantIndex)
+    if not numCurrencies or numCurrencies == 0 then
+        if altCurrency then altCurrency:Hide() end
+        local info = C_MerchantFrame.GetItemInfo(merchantIndex)
+        if info and info.price and info.price > 0 and moneyFrame then
+            MoneyFrame_Update("MerchantItem" .. btn .. "MoneyFrame", info.price)
+            moneyFrame:Show()
+        end
+        return
+    end
+    if moneyFrame then moneyFrame:Hide() end
+    if altCurrency then
+        MerchantFrame_UpdateAltCurrency(merchantIndex, btn, CanAffordMerchantItem(merchantIndex))
+        altCurrency:Show()
+    end
+end
+
+---@param btn integer
+local function ClearMerchantSlot(btn)
+    local merchantButton = _G["MerchantItem" .. btn]
+    local itemName       = _G["MerchantItem" .. btn .. "Name"]
+    local itemButton     = _G["MerchantItem" .. btn .. "ItemButton"]
+    local altCurrency    = _G["MerchantItem" .. btn .. "AltCurrencyFrame"]
+    state.clearedSlots[btn] = true
+    itemName:SetText("")
+    itemButton:Hide()
+    altCurrency:Hide()
+    for j = 1, 3 do
+        local cb = _G["MerchantItem" .. btn .. "AltCurrencyFrameItem" .. j]
+        if cb then cb:Hide() end
+    end
+    itemButton.IconQuestTexture:Hide()
+    SetItemButtonSlotVertexColor(merchantButton, 0.4, 0.4, 0.4)
+    SetItemButtonNameFrameVertexColor(merchantButton, 0.5, 0.5, 0.5)
+    merchantButton:SetAlpha(1)
+    merchantButton:Show()
+end
+
+--- Populates merchant slot `btn` with the item at merchant index `i`, or clears
+--- it when `i` is nil. Applies fade (non-matching) / dim (known) alpha.
+---@param btn integer
+---@param i integer|nil
+---@param preferredArmor string|nil
+local function UpdateMerchantSlot(btn, i, preferredArmor)
+    local merchantButton = _G["MerchantItem" .. btn]
+    local itemName       = _G["MerchantItem" .. btn .. "Name"]
+    local itemButton     = _G["MerchantItem" .. btn .. "ItemButton"]
+    local altCurrency    = _G["MerchantItem" .. btn .. "AltCurrencyFrame"]
+
+    if i == nil then
+        state.slotMap[btn] = nil
+        ClearMerchantSlot(btn)
+        return
+    end
+
+    local item = C_MerchantFrame.GetItemInfo(i)
+    if not item or item.name == nil then
+        state.slotMap[btn] = nil
+        ClearMerchantSlot(btn)
+        return
+    end
+
+    state.clearedSlots[btn] = nil
+    state.slotMap[btn] = i
+    altCurrency:Hide()
+    for j = 1, 3 do
+        local cb = _G["MerchantItem" .. btn .. "AltCurrencyFrameItem" .. j]
+        if cb then cb:Hide() end
+    end
+
+    itemName:SetText(item.name)
+    SetItemButtonTexture(itemButton, item.texture)
+    MerchantFrame_UpdateAltCurrency(i, btn, CanAffordMerchantItem(i))
+    altCurrency:Show()
+
+    local itemLink = GetMerchantItemLink(i)
+    MerchantFrameItem_UpdateQuality(merchantButton, itemLink)
+
+    itemButton:SetID(i)
+    itemButton:Show()
+    itemButton.link = itemLink
+    itemButton.texture = item.texture
+
+    if not item.isPurchasable or not item.isUsable then
+        SetItemButtonSlotVertexColor(merchantButton, 1.0, 0, 0)
+        SetItemButtonTextureVertexColor(itemButton, 0.9, 0, 0)
+        SetItemButtonNormalTextureVertexColor(itemButton, 0.9, 0, 0)
+        SetItemButtonNameFrameVertexColor(merchantButton, 1.0, 0, 0)
+    else
+        SetItemButtonSlotVertexColor(merchantButton, 1.0, 1.0, 1.0)
+        SetItemButtonTextureVertexColor(itemButton, 1.0, 1.0, 1.0)
+        SetItemButtonNormalTextureVertexColor(itemButton, 1.0, 1.0, 1.0)
+        SetItemButtonNameFrameVertexColor(merchantButton, 1.0, 1.0, 1.0)
+    end
+
+    local matches = ComputeFilterMatch(itemLink, preferredArmor)
+    if not matches then
+        merchantButton:SetAlpha(0.4)
+        SetItemButtonDesaturated(itemButton, true)
+    elseif state.dimKnownItems and IsAlreadyKnown(itemLink) then
+        merchantButton:SetAlpha(0.2)
+        SetItemButtonDesaturated(itemButton, true)
+    else
+        merchantButton:SetAlpha(1.0)
+        SetItemButtonDesaturated(itemButton, false)
+    end
+end
+
+--- Restores all merchant slots to a clean, fully-visible state (used when
+--- filtering is not engaged or the Sell tab is active). Blizzard repopulates
+--- slot content on its own each MerchantFrame_Update, so we only undo our
+--- alpha / desaturation.
+function VendorPanel:ResetMerchantButtons()
+    for i = 1, MERCHANT_ITEMS_PER_PAGE do
+        local button = _G["MerchantItem" .. i]
+        if button then button:Show(); button:SetAlpha(1.0) end
+        local itemButton = _G["MerchantItem" .. i .. "ItemButton"]
+        if itemButton then SetItemButtonDesaturated(itemButton, false) end
+    end
+end
+
+--- Light renderer: keep Blizzard's layout, only fade non-matching and dim known
+--- items in place. No repagination.
+function VendorPanel:FadeMerchantGrid()
+    local preferredArmor = GetPreferredArmor()
+    local knownCount = 0
+    for i = 1, MERCHANT_ITEMS_PER_PAGE do
+        local lnk = GetMerchantItemLink(i + (MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE)
+        if lnk and IsAlreadyKnown(lnk) then knownCount = knownCount + 1 end
+    end
+    print(string.format("|cffff8800VP fade|r dim=%s knownAtVendor=%d", tostring(state.dimKnownItems), knownCount))
+    for i = 1, MERCHANT_ITEMS_PER_PAGE do
+        local button = _G["MerchantItem" .. i]
+        local index = i + (MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE
+        local itemLink = GetMerchantItemLink(index)
+        if button and itemLink then
+            local matches = ComputeFilterMatch(itemLink, preferredArmor)
+            button:Show()
+            if matches then
+                local known = state.dimKnownItems and IsAlreadyKnown(itemLink)
+                button:SetAlpha(known and 0.2 or 1.0)
+                if button.icon then button.icon:SetDesaturated(known and true or false) end
+            else
+                button:SetAlpha(0.4)
+                if button.icon then button.icon:SetDesaturated(true) end
+            end
+        end
+    end
+end
+
+--- Heavy renderer: repopulate and repaginate the 12 slots from the filtered
+--- index list so excluded / known / non-matching items are physically removed.
+function VendorPanel:RenderMerchantGrid()
+    if not MerchantFrame or not MerchantFrame:IsShown() then return end
+    if MerchantFrame.selectedTab ~= 1 then return end
+
+    VPFilters.BuildDisplayList()
+    print(string.format("|cffff8800VP render|r merchantItems=%d shown=%d", GetMerchantNumItems(), #state.filteredVendorItems))
+    wipe(state.clearedSlots)
+    wipe(state.slotMap)
+
+    local preferredArmor = GetPreferredArmor()
+    local perPage = MERCHANT_ITEMS_PER_PAGE
+    local totalFiltered = #state.filteredVendorItems
+    local totalPages = math.max(1, math.ceil(totalFiltered / perPage))
+    if MerchantFrame.page > totalPages then MerchantFrame.page = totalPages end
+
+    if totalFiltered <= perPage then
+        MerchantPageText:Hide()
+        MerchantPrevPageButton:Hide()
+        MerchantNextPageButton:Hide()
+    else
+        MerchantPageText:SetFormattedText(MERCHANT_PAGE_NUMBER, MerchantFrame.page, totalPages)
+        MerchantPageText:Show()
+        MerchantPrevPageButton:Show()
+        MerchantNextPageButton:Show()
+        if MerchantFrame.page <= 1 then MerchantPrevPageButton:Disable() else MerchantPrevPageButton:Enable() end
+        if MerchantFrame.page >= totalPages then MerchantNextPageButton:Disable() else MerchantNextPageButton:Enable() end
+    end
+
+    for btn = 1, perPage do
+        local filteredIndex = (MerchantFrame.page - 1) * perPage + btn
+        UpdateMerchantSlot(btn, state.filteredVendorItems[filteredIndex], preferredArmor)
+    end
+
+    C_Timer.After(0.05, function()
+        if not MerchantFrame or not MerchantFrame:IsShown() then return end
+        local usePlumber = IsPlumberMerchantActive()
+        for btn = 1, perPage do
+            if state.clearedSlots[btn] then
+                local altCurrency = _G["MerchantItem" .. btn .. "AltCurrencyFrame"]
+                if altCurrency then altCurrency:Hide() end
+                for j = 1, 3 do
+                    local cb = _G["MerchantItem" .. btn .. "AltCurrencyFrameItem" .. j]
+                    if cb then cb:Hide() end
+                end
+                local moneyFrame = _G["MerchantItem" .. btn .. "MoneyFrame"]
+                if moneyFrame then moneyFrame:Hide() end
+            elseif not usePlumber and state.slotMap[btn] then
+                FixSlotCurrency(btn, state.slotMap[btn])
+            end
+        end
+    end)
+end
 
 function VendorPanel:IsItemInNeverSellList(itemID)
     return GetItemStatus():IsItemProtected(itemID)
@@ -597,86 +939,27 @@ function VendorPanel:SellJunkItems()
     state.activeSellTicker = sellTicker
 end
 
-function VendorPanel:GetJunkItemCount()
-    local count = 0
-    for bag = 0, NUM_BAG_SLOTS + 1 do
-        local numSlots = C_Container.GetContainerNumSlots(bag)
-        if numSlots then
-            for slot = 1, numSlots do
-                local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
-                if itemInfo and itemInfo.itemID then
-                    local _, _, quality, _, _, _, _, _, _, _, sellPrice, classID, subclassID = C_Item.GetItemInfo(itemInfo.itemID)
-                    local itemLevel, actualQuality = 0, quality
-                    local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
-                    if itemLocation and C_Item.DoesItemExist(itemLocation) then
-                        local item = Item:CreateFromItemLocation(itemLocation)
-                        if item and item:IsItemDataCached() then
-                            itemLevel = item:GetCurrentItemLevel() or 0
-                            actualQuality = item:GetItemQuality() or quality
-                        end
-                    end
-                    if not self:IsItemInNeverSellList(itemInfo.itemID) and
-                       not (GetItemStatus():IsItemProtected(itemInfo.itemID)) then
-                        local isUserMarked = GetItemStatus():IsItemJunk(itemInfo.itemID)
-                        local isGray = quality and quality == 0
-                        local isGameJunk = (classID == Enum.ItemClass.Miscellaneous and subclassID == Enum.ItemMiscellaneousSubclass.Junk)
-                        local isIlvlGear = state.oneTimeItems.ilvlGear[itemInfo.itemID]
-                        local isReagent = state.oneTimeItems.reagents[itemInfo.itemID]
-                        local isJunkItem = false
-                        if isUserMarked then isJunkItem = true
-                        elseif isIlvlGear or isReagent then isJunkItem = true
-                        elseif (isGray or isGameJunk) and GetShowBlizzJunk() then isJunkItem = true
-                        end
-                        if isJunkItem and not itemInfo.hasNoValue and sellPrice and sellPrice > 0 then
-                            count = count + 1
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return count
-end
+--- Sellable / destroyable junk counts that mirror the side panel exactly.
+--- Reuses GetJunkItemsDetailed (the same source the panel renders from) so the
+--- button text, button tooltip, and panel can never disagree. Returns
+--- allCached=false while bag item data is still loading, so callers can retry
+--- instead of locking in an early, undercounted value.
+---@return integer sellable
+---@return integer destroyable
+---@return boolean allCached
+function VendorPanel:GetJunkCounts()
+    local grayItems, markedItems, ilvlGearItems, reagentItems, noValueJunkItems, allCached = self:GetJunkItemsDetailed()
+    if not allCached then return 0, 0, false end
+    if not GetShowBlizzJunk() then noValueJunkItems = {} end
 
-function VendorPanel:GetDestroyableItemCount()
-    local count = 0
-    for bag = 0, NUM_BAG_SLOTS + 1 do
-        local numSlots = C_Container.GetContainerNumSlots(bag)
-        if numSlots then
-            for slot = 1, numSlots do
-                local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
-                if itemInfo and itemInfo.itemID then
-                    local _, _, quality, _, _, _, _, _, _, _, sellPrice, classID, subclassID = C_Item.GetItemInfo(itemInfo.itemID)
-                    local itemLevel, actualQuality = 0, quality
-                    local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
-                    if itemLocation and C_Item.DoesItemExist(itemLocation) then
-                        local item = Item:CreateFromItemLocation(itemLocation)
-                        if item and item:IsItemDataCached() then
-                            itemLevel = item:GetCurrentItemLevel() or 0
-                            actualQuality = item:GetItemQuality() or quality
-                        end
-                    end
-                    if not self:IsItemInNeverSellList(itemInfo.itemID) and
-                       not GetItemStatus():IsItemProtected(itemInfo.itemID) then
-                        local isUserMarked = GetItemStatus():IsItemJunk(itemInfo.itemID)
-                        local isGray = quality and quality == 0
-                        local isGameJunk = (classID == Enum.ItemClass.Miscellaneous and subclassID == Enum.ItemMiscellaneousSubclass.Junk)
-                        local isIlvlGear = state.oneTimeItems.ilvlGear[itemInfo.itemID]
-                        local isReagent = state.oneTimeItems.reagents[itemInfo.itemID]
-                        local isJunkItem = false
-                        if isUserMarked then isJunkItem = true
-                        elseif isIlvlGear or isReagent then isJunkItem = true
-                        elseif (isGray or isGameJunk) and GetShowBlizzJunk() then isJunkItem = true
-                        end
-                        if isJunkItem and (itemInfo.hasNoValue or not sellPrice or sellPrice == 0) then
-                            count = count + 1
-                        end
-                    end
-                end
-            end
+    local sellable, destroyable = 0, 0
+    for _, list in ipairs({ grayItems, markedItems, ilvlGearItems, reagentItems }) do
+        for _, item in ipairs(list) do
+            if not item.noSellPrice then sellable = sellable + 1 else destroyable = destroyable + 1 end
         end
     end
-    return count
+    for _ in ipairs(noValueJunkItems) do destroyable = destroyable + 1 end
+    return sellable, destroyable, true
 end
 
 function VendorPanel:DestroyNextJunkItem()
@@ -967,14 +1250,20 @@ end
 
 function VendorPanel:UpdateButton()
     if not state.vendorButton then return end
-    local junkCount = self:GetJunkItemCount()
-    local destroyCount = self:GetDestroyableItemCount()
+    local junkCount, destroyCount, allCached = self:GetJunkCounts()
+    if not allCached then
+        if state._buttonRetry then state._buttonRetry:Cancel() end
+        state._buttonRetry = C_Timer.NewTimer(0.3, function() VendorPanel:UpdateButton() end)
+        return
+    end
+    ---@diagnostic disable-next-line: undefined-field
+    local btnText = state.vendorButton.text
     if junkCount > 0 or destroyCount > 0 then
-        state.vendorButton:SetText(string.format(ns.L["VENDOR_SELL_COUNTS"], junkCount, destroyCount))
+        btnText:SetText(string.format(ns.L["VENDOR_SELL_COUNTS"], junkCount, destroyCount))
         state.vendorButton:Enable()
         state.vendorButton:SetAlpha(1.0)
     else
-        state.vendorButton:SetText(string.format(ns.L["VENDOR_SELL_COUNTS"], 0, 0))
+        btnText:SetText(string.format(ns.L["VENDOR_SELL_COUNTS"], 0, 0))
         state.vendorButton:Disable()
         state.vendorButton:SetAlpha(0.6)
     end
@@ -1127,6 +1416,7 @@ end
 
 function VendorPanel:OnMerchantClosed()
     self:StopUpdates()
+    if state._buttonRetry then state._buttonRetry:Cancel(); state._buttonRetry = nil end
     if state.activeSellTicker then state.activeSellTicker:Cancel(); state.activeSellTicker = nil end
     if state.activeSellConfirmTicker then state.activeSellConfirmTicker:Cancel(); state.activeSellConfirmTicker = nil end
     state.vendorSellSeq = (state.vendorSellSeq or 0) + 1
@@ -1217,6 +1507,16 @@ function VendorPanelModule:OnEnable()
         state.playerClassId = classId
     end
 
+    if IsVendorFilterLoaded() then
+        local settings = GetSettings()
+        if not settings.vfNotified then
+            settings.vfNotified = true
+            C_Timer.After(5, function()
+                print("|cFF00FF00OneWoW QoL|r: " .. ns.L["VENDOR_VF_DETECTED"])
+            end)
+        end
+    end
+
     if not self._eventFrame then
         local frame = CreateFrame("Frame", "OneWoW_QoL_VendorPanelEvents")
         self._eventFrame = frame
@@ -1261,57 +1561,24 @@ function VendorPanelModule:OnEnable()
                 if not MerchantFrame or not MerchantFrame:IsShown() then return end
                 local isBuyMode = (MerchantFrame.selectedTab == 1)
                 if not isBuyMode then
-                    for i = 1, MERCHANT_ITEMS_PER_PAGE do
-                        local button = _G["MerchantItem" .. i]
-                        if button then button:Show(); button:SetAlpha(1) end
-                    end
+                    VendorPanel:ResetMerchantButtons()
                     if state.replacementSellButton then state.replacementSellButton:Hide() end
                     return
                 end
                 local panelShown = state.junkPreviewPanel and state.junkPreviewPanel:IsShown()
                 VendorPanel:ManageBlizzardSellButton(panelShown and true or false)
-                if not panelShown then
-                    for i = 1, MERCHANT_ITEMS_PER_PAGE do
-                        local button = _G["MerchantItem"..i]
-                        if button then button:SetAlpha(1.0); if button.icon then button.icon:SetDesaturated(false) end end
-                    end
+                if not panelShown or IsVendorFilterLoaded() then
+                    VendorPanel:ResetMerchantButtons()
                     return
                 end
-                local preferredArmor = GetPreferredArmor()
-                local knownAlpha = 0.2
-                local filteredAlpha = 0.4
-                for i = 1, MERCHANT_ITEMS_PER_PAGE do
-                    local button = _G["MerchantItem"..i]
-                    local index = i + (MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE
-                    local itemLink = GetMerchantItemLink(index)
-                    if button and itemLink then
-                        local _, itemSubType, _, equipSlot = select(6, C_Item.GetItemInfo(itemLink))
-                        local matches = VPFilters.CheckVendorItemFilter(itemLink, state.currentVendorFilter)
-                        if state.currentVendorFilter == "Show All" then
-                            -- no armor override when showing all
-                        elseif state.showAllArmor then
-                            -- keep matches as is
-                        elseif itemSubType == preferredArmor then
-                            -- keep matches as is
-                        elseif equipSlot == "INVTYPE_CLOAK" then
-                            -- keep matches as is
-                        elseif ARMOR_TYPES[itemSubType] then
-                            matches = false
-                        end
-                        button:Show()
-                        if matches then
-                            local known = state.dimKnownItems and IsAlreadyKnown(itemLink)
-                            if known then
-                                button:SetAlpha(knownAlpha)
-                            else
-                                button:SetAlpha(1.0)
-                            end
-                            if button.icon then button.icon:SetDesaturated(known and true or false) end
-                        else
-                            button:SetAlpha(filteredAlpha)
-                            if button.icon then button.icon:SetDesaturated(true) end
-                        end
-                    end
+                local s = GetSettings()
+                print(string.format("|cffff8800VP dispatch|r grid=%s hideF=%s hideK=%s dim=%s excl=%s filter=%s",
+                    tostring(VendorPanel:GridFilteringActive()), tostring(s.hideFiltered), tostring(s.hideKnownEntirely),
+                    tostring(state.dimKnownItems), tostring(AnyExclusionActive()), tostring(state.currentVendorFilter)))
+                if VendorPanel:GridFilteringActive() then
+                    VendorPanel:RenderMerchantGrid()
+                else
+                    VendorPanel:FadeMerchantGrid()
                 end
             end)
         end)

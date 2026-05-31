@@ -14,6 +14,7 @@ end
 local GetShowBlizzJunk = ns.VPGetShowBlizzJunk
 local GetShowPanel = ns.VPGetShowPanel
 local GetSettings = ns.VPGetSettings
+local GetExclusions = ns.VPGetExclusions
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
@@ -39,6 +40,14 @@ function VendorPanel:CreateVendorButton()
     state.vendorButton = OneWoW_GUI:CreateButton(MerchantFrame, { name = "OneWoW_QoL_VendorButton", text = "Sell (0/0)", width = 100, height = 22 })
     state.vendorButton:SetPoint("TOPLEFT", MerchantFrame, "TOPLEFT", 60, -28)
     state.vendorButton:SetFrameLevel(MerchantFrame:GetFrameLevel() + 10)
+
+    -- We own the merchant top-left spot. If VendorFilter is loaded, shove its
+    -- dropdown up out of the way (above the merchant window) so it no longer
+    -- sits under our button.
+    if ns.VPIsVendorFilterLoaded() and _G["VendorFilterDropdown"] then
+        _G["VendorFilterDropdown"]:ClearAllPoints()
+        _G["VendorFilterDropdown"]:SetPoint("BOTTOMLEFT", MerchantFrame, "TOPLEFT", 10, 2)
+    end
     state.vendorButton.fontString = state.vendorButton.text
     state.vendorButton.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
@@ -57,8 +66,7 @@ function VendorPanel:CreateVendorButton()
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
         self.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
-        local junkCount = VendorPanel:GetJunkItemCount()
-        local destroyCount = VendorPanel:GetDestroyableItemCount()
+        local junkCount, destroyCount = VendorPanel:GetJunkCounts()
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
         GameTooltip:SetText(ns.L["VENDOR_JUNK_MANAGER"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(ns.L["VENDOR_SELL_JUNK"], 1, 1, 1, true)
@@ -223,8 +231,7 @@ function VendorPanel:CreateReplacementSellButton()
     end)
 
     state.replacementSellButton:HookScript("OnEnter", function(self)
-        local junkCount = VendorPanel:GetJunkItemCount()
-        local destroyCount = VendorPanel:GetDestroyableItemCount()
+        local junkCount, destroyCount = VendorPanel:GetJunkCounts()
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:AddTexture(GetBrandIcon())
         GameTooltip:AddLine(ns.L["VENDOR_JUNK_MANAGER"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -289,6 +296,11 @@ function VendorPanel:CreatePreviewPanel()
     state.junkPreviewPanel:SetScript("OnShow", function()
         if titleBar.brandIcon then titleBar.brandIcon:SetTexture(GetBrandIcon()) end
     end)
+    -- When the panel closes, let Blizzard repopulate any merchant slots our grid
+    -- filtering cleared so the vendor returns to its normal, unfiltered layout.
+    state.junkPreviewPanel:SetScript("OnHide", function()
+        if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
+    end)
 
     local filterRow = CreateFrame("Frame", nil, state.junkPreviewPanel, "BackdropTemplate")
     filterRow:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, -1)
@@ -311,6 +323,45 @@ function VendorPanel:CreatePreviewPanel()
 
     local function buildVendorFilterItems()
         local items = {}
+        local panelSettings = GetSettings()
+
+        local function rerenderGrid()
+            if MerchantFrame and MerchantFrame:IsShown() then
+                MerchantFrame.page = 1
+                MerchantFrame_Update()
+            end
+        end
+
+        table.insert(items, { type = "header", text = ns.L["VENDOR_OPT_HEADER"] })
+        table.insert(items, {
+            type = "checkbox",
+            text = ns.L["VENDOR_HIDE_FILTERED"],
+            checked = panelSettings.hideFiltered,
+            onToggle = function(checked)
+                panelSettings.hideFiltered = checked
+                rerenderGrid()
+            end,
+        })
+        table.insert(items, {
+            type = "checkbox",
+            text = ns.L["VENDOR_HIDE_KNOWN"],
+            checked = panelSettings.hideKnownEntirely,
+            onToggle = function(checked)
+                panelSettings.hideKnownEntirely = checked
+                rerenderGrid()
+            end,
+        })
+        table.insert(items, {
+            type = "checkbox",
+            text = ns.L["VENDOR_DIM_KNOWN"],
+            checked = state.dimKnownItems,
+            onToggle = function(checked)
+                state.dimKnownItems = checked
+                panelSettings.dimKnownItems = checked
+                rerenderGrid()
+            end,
+        })
+        table.insert(items, { type = "divider" })
 
         if state.availableFilters["Equipable"] then
             table.insert(items, {
@@ -384,6 +435,29 @@ function VendorPanel:CreatePreviewPanel()
             end
         end
 
+        local exclusions = GetExclusions()
+        local exclusionDefs = {
+            { key = "Mounts",    text = ns.L["VENDOR_EX_MOUNTS"] },
+            { key = "Pets",      text = ns.L["VENDOR_EX_PETS"] },
+            { key = "Toys",      text = ns.L["VENDOR_EX_TOYS"] },
+            { key = "Cosmetics", text = ns.L["VENDOR_EX_COSMETICS"] },
+            { key = "Decor",     text = ns.L["VENDOR_EX_DECOR"] },
+            { key = "Housing",   text = ns.L["VENDOR_EX_HOUSING"] },
+        }
+        table.insert(items, { type = "divider" })
+        table.insert(items, { type = "header", text = ns.L["VENDOR_ALWAYS_HIDE"] })
+        for _, def in ipairs(exclusionDefs) do
+            table.insert(items, {
+                type = "checkbox",
+                text = def.text,
+                checked = exclusions[def.key] and true or false,
+                onToggle = function(checked)
+                    exclusions[def.key] = checked or nil
+                    rerenderGrid()
+                end,
+            })
+        end
+
         return items
     end
 
@@ -406,50 +480,9 @@ function VendorPanel:CreatePreviewPanel()
 
     state.junkPreviewPanel.vendorDropdown = vendorDropdown
 
-    local dimKnownRow = CreateFrame("Button", nil, state.junkPreviewPanel, "BackdropTemplate")
-    dimKnownRow:SetPoint("TOPLEFT", filterRow, "BOTTOMLEFT", 0, -1)
-    dimKnownRow:SetPoint("TOPRIGHT", filterRow, "BOTTOMRIGHT", 0, -1)
-    dimKnownRow:SetHeight(24)
-    dimKnownRow:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
-    dimKnownRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-
-    local dimCheckBox = OneWoW_GUI:CreateCheckbox(dimKnownRow, { label = ns.L["VENDOR_DIM_KNOWN"] })
-    dimCheckBox:SetSize(18, 18)
-    dimCheckBox:SetPoint("LEFT", dimKnownRow, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-    dimCheckBox:SetChecked(state.dimKnownItems)
-    dimCheckBox.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-    local function ToggleDimKnown()
-        state.dimKnownItems = dimCheckBox:GetChecked()
-        local settings = GetSettings()
-        settings.dimKnownItems = state.dimKnownItems
-        if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
-    end
-
-    dimCheckBox:SetScript("OnClick", ToggleDimKnown)
-    dimKnownRow:SetScript("OnClick", function()
-        dimCheckBox:SetChecked(not dimCheckBox:GetChecked())
-        ToggleDimKnown()
-    end)
-    dimKnownRow:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        dimCheckBox.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(ns.L["VENDOR_DIM_KNOWN_TT"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["VENDOR_DIM_KNOWN_TT_DESC"], 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    dimKnownRow:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        dimCheckBox.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        GameTooltip:Hide()
-    end)
-
-    state.junkPreviewPanel.dimKnownCheckBox = dimCheckBox
-
     local quickAddBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = ns.L["VENDOR_QUICK_ADD"], height = 26, minWidth = panelWidth - 16 })
-    quickAddBtn:SetPoint("TOPLEFT", dimKnownRow, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
-    quickAddBtn:SetPoint("TOPRIGHT", dimKnownRow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
+    quickAddBtn:SetPoint("TOPLEFT", filterRow, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
+    quickAddBtn:SetPoint("TOPRIGHT", filterRow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
     quickAddBtn:SetScript("OnClick", function() VendorPanel:ToggleFiltersDialog() end)
     quickAddBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")

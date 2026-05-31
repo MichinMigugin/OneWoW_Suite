@@ -259,36 +259,122 @@ function ns.UI.CreateSettingsTab(parent)
         UpdateThumb()
     end)
 
+    local SIDE = 16
     local yOffset = -20
 
     if not _G.OneWoW then
         yOffset = OneWoW_GUI:CreateSettingsPanel(scrollChild, { yOffset = yOffset, addonName = "OneWoW_QoL" })
     end
 
-    yOffset = yOffset - 20
-    local devHeader = CreateSectionHeader(scrollChild, L["SETTINGS_DEVELOPER_HEADER"], yOffset)
-    yOffset = yOffset - devHeader:GetHeight() - 8
-    CreateSectionDivider(scrollChild, yOffset)
-    yOffset = yOffset - 12
+    -- Relative-anchored layout: each block is anchored to the bottom of the
+    -- previous one (full content width), so the panel reflows without overlap
+    -- at any font size instead of relying on fixed offsets the text can overrun.
+    local cursor = CreateFrame("Frame", nil, scrollChild)
+    cursor:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", SIDE, yOffset)
+    cursor:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -SIDE, yOffset)
+    cursor:SetHeight(1)
+
+    local lastRow = cursor
+
+    local function StackBelow(region, gap)
+        region:ClearAllPoints()
+        region:SetPoint("TOPLEFT", lastRow, "BOTTOMLEFT", 0, -(gap or 0))
+        region:SetPoint("TOPRIGHT", lastRow, "BOTTOMRIGHT", 0, -(gap or 0))
+        lastRow = region
+    end
+
+    -- Weekly reset region picker. Hosted here, but owned by OneWoW_Trackers,
+    -- which exposes the data + strings through its public API. Only shown when
+    -- Trackers is loaded (it is the sole consumer of the setting).
+    local trackers = _G.OneWoW_Trackers
+    if trackers and trackers.GetWeeklyResetRegionOptions then
+        local resetTitle, resetDescText, resetCurrentFmt = trackers:GetWeeklyResetUIText()
+
+        local resetHeader = CreateSectionHeader(scrollChild, resetTitle, 0)
+        StackBelow(resetHeader, 20)
+
+        local resetDivider = CreateSectionDivider(scrollChild, 0)
+        StackBelow(resetDivider, 8)
+
+        local resetDesc = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        resetDesc:SetJustifyH("LEFT")
+        resetDesc:SetWordWrap(true)
+        resetDesc:SetSpacing(3)
+        resetDesc:SetText(resetDescText)
+        resetDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        StackBelow(resetDesc, 10)
+
+        local resetRow = CreateFrame("Frame", nil, scrollChild)
+        resetRow:SetHeight(30)
+        StackBelow(resetRow, 12)
+
+        local dropdown = OneWoW_GUI:CreateDropdown(resetRow, {
+            width = 240,
+            height = 28,
+            text = trackers:GetWeeklyResetRegionLabel(),
+        })
+        dropdown:SetPoint("LEFT", resetRow, "LEFT", 0, 0)
+
+        local currentLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        currentLabel:SetPoint("LEFT", dropdown, "RIGHT", 12, 0)
+        currentLabel:SetText(resetCurrentFmt:format(trackers:GetWeeklyResetRegionLabel()))
+        currentLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+        OneWoW_GUI:AttachFilterMenu(dropdown, {
+            searchable = false,
+            buildItems = function()
+                local items = {}
+                for _, opt in ipairs(trackers:GetWeeklyResetRegionOptions()) do
+                    items[#items + 1] = { text = opt.label, value = opt.value }
+                end
+                return items
+            end,
+            onSelect = function(value, text)
+                trackers:SetWeeklyResetRegion(value)
+                dropdown._text:SetText(text)
+                currentLabel:SetText(resetCurrentFmt:format(text))
+            end,
+            getActiveValue = function() return trackers:GetWeeklyResetRegion() end,
+        })
+    end
+
+    local devHeader = CreateSectionHeader(scrollChild, L["SETTINGS_DEVELOPER_HEADER"], 0)
+    StackBelow(devHeader, 20)
+
+    local devDivider = CreateSectionDivider(scrollChild, 0)
+    StackBelow(devDivider, 8)
 
     local devDesc = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    devDesc:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 16, yOffset)
-    devDesc:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -16, yOffset)
     devDesc:SetJustifyH("LEFT")
     devDesc:SetWordWrap(true)
     devDesc:SetSpacing(3)
     devDesc:SetText(L["SETTINGS_DEVELOPER_DESC"])
     devDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    yOffset = yOffset - devDesc:GetStringHeight() - 14
+    StackBelow(devDesc, 12)
 
-    local devHelpBtn = OneWoW_GUI:CreateFitTextButton(scrollChild, { text = L["SETTINGS_DEV_HELP_BTN"], height = 32 })
-    devHelpBtn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 16, yOffset)
+    local devBtnRow = CreateFrame("Frame", nil, scrollChild)
+    devBtnRow:SetHeight(34)
+    StackBelow(devBtnRow, 12)
+
+    local devHelpBtn = OneWoW_GUI:CreateFitTextButton(devBtnRow, { text = L["SETTINGS_DEV_HELP_BTN"], height = 32 })
+    devHelpBtn:SetPoint("LEFT", devBtnRow, "LEFT", 0, 0)
     devHelpBtn:SetScript("OnClick", function()
         ShowDevHelpDialog()
     end)
 
-    yOffset = yOffset - 50
+    -- Content height is measured from the rendered bottom of the last row once
+    -- the panel has a real width, so wrapped text at any font size is included.
+    local function RecalcHeight()
+        local top = scrollChild:GetTop()
+        local bottom = lastRow and lastRow:GetBottom()
+        if top and bottom then
+            scrollChild:SetHeight((top - bottom) + 30)
+        end
+        UpdateThumb()
+    end
 
-    scrollChild:SetHeight(math.abs(yOffset) + 20)
-    C_Timer.After(0.1, function() UpdateThumb() end)
+    scrollChild:SetHeight(600)
+    scrollFrame:HookScript("OnSizeChanged", RecalcHeight)
+    C_Timer.After(0.1, RecalcHeight)
+    C_Timer.After(0.5, RecalcHeight)
 end

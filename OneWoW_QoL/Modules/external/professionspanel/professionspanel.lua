@@ -450,8 +450,9 @@ end
 
 function ProfPanelModule:OnProfessionWindowOpened()
     C_Timer.After(0.1, function()
-        if not ns.ModuleRegistry:GetToggleValue("professionspanel", "auto_show") then return end
-
+        -- The sidebar tab is the only in-game way to open the panel, so it must
+        -- be created whenever the profession window opens — independently of the
+        -- auto_show preference, which gates only the automatic Show() below.
         if not self._toggleTab then
             self:CreateToggleButton()
         end
@@ -459,28 +460,32 @@ function ProfPanelModule:OnProfessionWindowOpened()
             self:UpdateToggleIcon()
         end
 
-        if C_TradeSkillUI and C_TradeSkillUI.IsTradeSkillReady() then
+        if C_TradeSkillUI.IsTradeSkillReady() then
             local professionInfo = C_TradeSkillUI.GetBaseProfessionInfo()
             if professionInfo and professionInfo.professionName then
                 self._currentProf = professionInfo.professionName
                 self._cachedData = nil
                 self._lastScanTime = 0
+            end
+        end
 
-                if not self._panel and ns.ProfPanelUI then
-                    self._panel = ns.ProfPanelUI:CreatePanel()
-                end
+        if not ns.ModuleRegistry:GetToggleValue("professionspanel", "auto_show") then return end
 
-                if self._panel and not self._panel.manuallyHidden then
-                    self:UpdatePanelData()
-                    self._panel:Show()
-                    self:RepositionSidebar()
-                    if self._toggleTab then
-                        self._toggleTab:SetChecked(true)
-                        self._toggleTab.Icon:SetTexture(self:GetCurrentIcon())
-                        self._toggleTab.Icon:SetSize(24, 24)
-                        if ProfessionsFrameTabSideBar then
-                            ProfessionsFrameTabSideBar.selTab = self._sidebarIndex or 0
-                        end
+        if self._currentProf then
+            if not self._panel and ns.ProfPanelUI then
+                self._panel = ns.ProfPanelUI:CreatePanel()
+            end
+
+            if self._panel and not self._panel.manuallyHidden then
+                self:UpdatePanelData()
+                self._panel:Show()
+                self:RepositionSidebar()
+                if self._toggleTab then
+                    self._toggleTab:SetChecked(true)
+                    self._toggleTab.Icon:SetTexture(self:GetCurrentIcon())
+                    self._toggleTab.Icon:SetSize(24, 24)
+                    if ProfessionsFrameTabSideBar then
+                        ProfessionsFrameTabSideBar.selTab = self._sidebarIndex or 0
                     end
                 end
             end
