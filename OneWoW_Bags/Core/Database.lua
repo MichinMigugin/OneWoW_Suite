@@ -384,7 +384,6 @@ function OneWoW_Bags:MigrateToDisplayOrder(db)
     for _, sectionID in ipairs(g.sectionOrder) do
         local sec = g.categorySections[sectionID]
         if sec and sec.categories then
-            tinsert(order, "----")
             tinsert(order, "section:" .. sectionID)
             for _, catName in ipairs(sec.categories) do
                 tinsert(order, catName)
@@ -419,7 +418,6 @@ function OneWoW_Bags:MigrateCategorySystemV3(db)
         "1W Junk",
         "1W Upgrades",
         "Recent Items",
-        "----",
         "Hearthstone",
         "Keystone",
         "Potions",
@@ -449,7 +447,6 @@ function OneWoW_Bags:MigrateCategorySystemV3(db)
         "Battle Pets",
         "Toys",
         "Other",
-        "----",
         "Junk",
         "Empty",
     }

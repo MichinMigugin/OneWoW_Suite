@@ -15,7 +15,7 @@ This document describes how items are assigned to categories, how category rows 
 
 1. `CategoryView:Layout` calls `CategoryManager:AssignCategories()`, which walks `BagSet:GetAllButtons()` and sets `button.owb_categoryName = Categories:GetItemCategory(...)` for occupied slots.
 2. `CategoryManager:GetItemsByCategory()` buckets buttons by `owb_categoryName`.
-3. `H.GetSectionedLayout(itemsByCategory, containerType)` (in `CategoryViewHelpers.lua`) produces either a flat sorted name list or a structured list of entries (`separator`, `section_header`, `category`).
+3. `H.GetSectionedLayout(itemsByCategory, containerType)` (in `CategoryViewHelpers.lua`) produces either a flat sorted name list or a structured list of entries (`section_header`, `category`).
 4. `H.PinSpecialCategories` may move **"Recent Items"** to the top and **"Other"** to the bottom using `db.global.moveRecentToTop` and `moveOtherToBottom`.
 5. `H.LayoutCategoryContent(config)` renders each category: filtered buttons are sorted, optionally stacked, and optionally split into subgroup grids.
 
@@ -172,7 +172,7 @@ Both participate in the same merged pool as other `SEARCH_CATEGORIES` rows (sort
 - **`categorySort`**: `"priority"` or `"alphabetical"`. Alphabetical mode applies special ordering: **"Empty"** last; **"Other"** and **"Junk"** near bottom; **"Recent Items"** first among the rest; then string compare on names.
 - **Priority mode** (`SortCategories`): effective order = `defaultOrder + mod.priority`; lower wins. When two categories tie on effective order, falls back to `customCategoriesV2[*].sortOrder` (lower wins, 999 if unset), then name alphabetical.
 - **`categoryOrder`**: When set, used by `GetSortedCategoryNames` and for sorting **orphaned** categories (fallback path) in some layout paths.
-- **`displayOrder`**: Linear sequence with `"----"` separators and `section:ID` … `section_end` blocks. Categories not listed are collected as **leftover**, sorted with `SortCategories`, and appended.
+- **`displayOrder`**: Linear sequence of `section:ID` … `section_end` blocks. Categories not listed are collected as **leftover**, sorted with `SortCategories`, and appended. (Legacy `"----"` separator tokens may still appear in saved data; they are ignored at parse time — the section header is the divider.)
 - **`sectionOrder` + `categorySections`**: When `displayOrder` is empty, sections render in `sectionOrder`, then any **orphaned** categories (fallback, should normally be empty since `SyncOnewowSectionCategories` scoops orphans into the ONEWOW_BAGS section).
 
 If **`sectionOrder` is empty**, `GetSectionedLayout` returns `GetSortedCategoryNames` only (no section structure).
@@ -194,8 +194,10 @@ If **`sectionOrder` is empty**, `GetSectionedLayout` returns `GetSortedCategoryN
 
 Shared by both `CategoryView` (bags) and `BankCategoryView` (bank) via `H.LayoutCategoryContent` (with category headers enabled and section expanded):
 
-- `categoryModifications[name].groupBy`: `expansion`, `type`, `slot`, `quality`, or `none` / unset.
-- Subgroups: small label + `RenderItemGrid` per group (`GroupItemsByExpansion`, `GroupItemsByType`, `GroupItemsBySlot`, `GroupItemsByQuality`).
+- `categoryModifications[name].groupBy`: `expansion`, `type`, `slot`, `quality`, `equipmentset`, or `none` / unset.
+- `H.GroupItemsBy` buckets the items into ordered subgroups. **Stacked** layout draws them via `H.RenderGroupedGrids` (one full-width label + grid per subgroup, stacked vertically).
+- Grouping honored in **both** stacked and compact layouts. Grouping requires category headers to be on (with headers off, both layouts render a flat grid).
+- In **compact** mode a grouped category takes its own line for its title, then its subgroups are packed by `H.PackCompactBlocks` using the same compact rules as categories: single-row subgroups sit side-by-side; multi-row subgroups take their own full-width line. So a bag with small quality tiers packs them onto shared rows, while a bank with large tiers shows each on its own line. Subgroup labels use `TEXT_SECONDARY`; the category title keeps its category color.
 
 ---
 
@@ -235,7 +237,7 @@ Search strings use its expression language (`#keyword`, operators, etc.). `Build
 | `categoryOrder`, `sectionOrder`, `displayOrder`, `categorySections` | Structural ordering and grouping; `categorySections[id].showHeader` / `.showHeaderBank` control per-container header visibility |
 | `enableInventorySlots` | Split **Weapons** / **Armor** into slot-named categories after candidate pool pick (default `false`) |
 | `stackItems` | Merge identical items for display inside category view |
-| `compactCategories` / `compactGap` | Side-by-side category blocks via `CategoryViewHelpers.LayoutCompactGroup` |
+| `compactCategories` / `compactGap` | Side-by-side category blocks via `CategoryViewHelpers.LayoutCompactGroup` (`PackCompactBlocks`). Honors per-category `groupBy` (when category headers are on); a grouped category takes its own line for its title, then its subgroups pack with the same compact rules (`compactGap` between them) |
 | `moveRecentToTop` | Pins **"Recent Items"** to the top of the layout (default `false`) |
 | `moveOtherToBottom` | Pins **"Other"** to the bottom of the layout (default `false`) |
 | `recentItemDuration` | Seconds an item stays "recent" after acquisition (default 120, range 15–600) |
@@ -252,11 +254,11 @@ Both views are thin wrappers that delegate to the shared pipeline in `CategoryVi
 | Bucketing | `CategoryManager:GetItemsByCategory()` | Inline loop building `itemsByCategory` |
 | Sections / `displayOrder` | Yes (shared `H.GetSectionedLayout`) | Yes (shared `H.GetSectionedLayout`) |
 | Per-category `sortMode` / `subSortMode` | Yes | Yes |
-| Per-category `groupBy` | Yes | Yes |
+| Per-category `groupBy` | Yes (stacked and compact) | Yes (stacked and compact) |
 | `stackItems` | Yes | Yes |
 | `appliesIn` filtering | Yes (at assignment + layout) | Yes (at assignment + layout) |
 | Section header visibility | `showHeader` | `showHeaderBank` (falls back to `showHeader`) |
-| Compact mode | `compactCategories` / `compactGap` | `bankCompactCategories` / `bankCompactGap` |
+| Compact mode | `compactCategories` / `compactGap` (honors `groupBy`) | `bankCompactCategories` / `bankCompactGap` (honors `groupBy`) |
 
 ---
 
@@ -283,7 +285,7 @@ Both views are thin wrappers that delegate to the shared pipeline in `CategoryVi
 |------|------------------|
 | `Data/Categories.lua` | `GetItemCategory`, internal `ResolveBaseCategory`, `SortCategories`, two-tier caches + tentative/streaming handling, `precomputedCustomCands`, manual/custom/builtin helpers, `InvalidateItemIDs` hooks |
 | `Modules/CategoryManager.lua` | Bag assignment (`AssignCategories`), bucketing (`GetItemsByCategory`) |
-| `Views/CategoryViewHelpers.lua` | Shared layout pipeline: `GetSortedCategoryNames`, `GetSectionedLayout`, grouping, stacking, filtering, `LayoutCategoryContent`, grids, compact layout, `PinSpecialCategories` |
+| `Views/CategoryViewHelpers.lua` | Shared layout pipeline: `GetSortedCategoryNames`, `GetSectionedLayout`, grouping (`GroupItemsBy`; `RenderGroupedGrids` for stacked, recursive `PackCompactBlocks` for compact), stacking, filtering, `LayoutCategoryContent`, grids, compact layout (`LayoutCompactGroup` / `PackCompactBlocks`), `PinSpecialCategories` |
 | `Views/CategoryView.lua` | Bags category view (thin wrapper over shared pipeline) |
 | `Views/BankCategoryView.lua` | Bank category view (thin wrapper over shared pipeline) |
 | `Data/Sorting.lua` | `SortButtons` |

@@ -112,6 +112,43 @@ function H.RenderItemGrid(parentFrame, items, startY, leftPadding, cellSize, ico
     return totalRows * cellSize
 end
 
+--- Render subgroup label + item grid pairs for a grouped category.
+--- Shared by the stacked layout and the compact layout so grouping looks
+--- identical in both. Lays out at horizontal offset `opts.x` using `opts.gridCols`
+--- columns; subgroup labels span `opts.labelWidth`. Starts at vertical offset
+--- `opts.startY` and returns the ending vertical offset.
+---@param parent table parent frame to anchor labels/items to
+---@param groups table<string, table[]> subgroup name -> button list (from H.GroupItemsBy)
+---@param groupOrder { name: string }[] ordered subgroup descriptors (from H.GroupItemsBy)
+---@param opts table { x, gridCols, labelWidth, startY, cellSize, iconSize, AcquireLabel }
+---@return number endY ending vertical offset after the last subgroup grid
+function H.RenderGroupedGrids(parent, groups, groupOrder, opts)
+    local AcquireLabel = opts.AcquireLabel
+    local x = opts.x
+    local gridCols = opts.gridCols
+    local labelWidth = opts.labelWidth
+    local cellSize = opts.cellSize
+    local iconSize = opts.iconSize
+    local subY = opts.startY
+
+    for _, groupInfo in ipairs(groupOrder) do
+        local groupItems = groups[groupInfo.name]
+        if groupItems and #groupItems > 0 then
+            local subLabel = AcquireLabel(parent)
+            subLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -subY)
+            subLabel:SetWidth(labelWidth)
+            subLabel:SetText(groupInfo.name)
+            subLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            subY = subY + 14
+
+            local gridH = H.RenderItemGrid(parent, groupItems, subY, x, cellSize, iconSize, gridCols)
+            subY = subY + gridH + 4
+        end
+    end
+
+    return subY
+end
+
 function H.SetupCategorySection(section, contentFrame, yOffset, categoryName, itemCount, catMods)
     section:ClearAllPoints()
     section:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
@@ -125,14 +162,30 @@ function H.SetupCategorySection(section, contentFrame, yOffset, categoryName, it
     section.count:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 end
 
-function H.LayoutCompactGroup(catInfoList, contentFrame, opts)
-    if #catInfoList == 0 then return opts.yOffset end
+--- Pack and render a list of category-like blocks using the compact rules:
+--- single-row blocks pack side-by-side; multi-row blocks take their own
+--- full-width line. A grouped block renders a category title then recurses on
+--- its subgroups (exactly one level deep, since subgroups carry no `groupBy`),
+--- so subgroups follow the same side-by-side packing as categories. Returns the
+--- ending vertical offset WITHOUT a trailing gap; callers add spacing.
+---@param blockList table[] list of { name, displayName, items, groupBy? }
+---@param contentFrame table parent frame to anchor labels/items to
+---@param opts table { yOffset, cols, gapSlots, showHeaders, leftPadding, cellSize, iconSize, catMods, AcquireLabel, verticalSpacing, containerType, labelStyler?, rowTopPad? }
+---@return number yOffset ending vertical offset
+function H.PackCompactBlocks(blockList, contentFrame, opts)
+    if #blockList == 0 then return opts.yOffset end
 
     local yOffset = opts.yOffset
     local cols = opts.cols
     local gapSlots = opts.gapSlots
     local showHeaders = opts.showHeaders
     local labelHeight = showHeaders and 16 or 0
+    -- Empty band drawn ABOVE each category line's label so headers aren't
+    -- smooshed against the items/section header above them. Sized to 75% of
+    -- labelHeight (the category-title -> subgroup gap) for a touch of breathing
+    -- room without being too loose. The subgroup recursion passes 0 to keep
+    -- grouped categories looking the same.
+    local rowTopPad = opts.rowTopPad or floor(labelHeight * 0.75 + 0.5)
     local leftPadding = opts.leftPadding
     local cellSize = opts.cellSize
     local iconSize = opts.iconSize
@@ -140,17 +193,55 @@ function H.LayoutCompactGroup(catInfoList, contentFrame, opts)
     local AcquireLabel = opts.AcquireLabel
     local verticalSpacing = opts.verticalSpacing
     local containerType = opts.containerType
+    -- Category headers render one step larger than subgroup headers so the
+    -- hierarchy reads clearly in compact mode (mirrors the stacked layout, where
+    -- the category title is GameFontNormal). Labels are pooled and reused, so the
+    -- font object MUST be set every render at both levels to avoid a big category
+    -- font leaking onto a reused subgroup label (and vice versa).
+    local labelStyler = opts.labelStyler or function(label, block)
+        label:SetFontObject(GameFontNormal)
+        H.ApplyCategoryColor(label, catMods, block.name)
+    end
 
     local lines = {}
     local currentLine = {}
     local curCol = 0
 
-    for _, catInfo in ipairs(catInfoList) do
+    for _, catInfo in ipairs(blockList) do
         local count = #catInfo.items
         local mod = catMods and catMods[catInfo.name]
         local forceOwn = mod and mod.forceOwnLine and mod.forceOwnLine[containerType]
 
-        if forceOwn then
+        -- A grouped category renders its title then packs its subgroups with
+        -- these same compact rules (recursively). Grouping only applies when
+        -- category headers are shown; the category takes its own line.
+        local groupByVal = catInfo.groupBy
+        local isGrouped = showHeaders and groupByVal and groupByVal ~= "none"
+        local groups, groupOrder
+        if isGrouped then
+            groups, groupOrder = H.GroupItemsBy(catInfo.items, groupByVal)
+            if not (groups and groupOrder) then isGrouped = false end
+        end
+
+        if isGrouped then
+            if #currentLine > 0 then
+                tinsert(lines, currentLine)
+                currentLine = {}
+            end
+            curCol = 0
+
+            tinsert(lines, { {
+                name = catInfo.name,
+                displayName = catInfo.displayName,
+                startCol = 0,
+                blockWidth = cols,
+                grouped = true,
+                groups = groups,
+                groupOrder = groupOrder,
+            } })
+            currentLine = {}
+            curCol = 0
+        elseif forceOwn then
             if #currentLine > 0 then
                 tinsert(lines, currentLine)
                 currentLine = {}
@@ -219,45 +310,104 @@ function H.LayoutCompactGroup(catInfoList, contentFrame, opts)
     end
 
     for _, line in ipairs(lines) do
-        if showHeaders then
-            for _, cat in ipairs(line) do
-                local label = AcquireLabel(contentFrame)
-                label:SetPoint("TOPLEFT", contentFrame, "TOPLEFT",
-                    leftPadding + cat.startCol * cellSize, -yOffset)
-                label:SetWidth(cat.blockWidth * cellSize)
-                label:SetText(cat.displayName)
-                H.ApplyCategoryColor(label, catMods, cat.name)
-            end
-        end
-        yOffset = yOffset + labelHeight
+        -- A grouped category occupies a line by itself: category title on top,
+        -- then its subgroups packed with the same compact rules (recursively).
+        local groupedCat = (#line == 1 and line[1].grouped) and line[1] or nil
 
-        local maxRows = 0
-        for _, cat in ipairs(line) do
-            if cat.blockRows > maxRows then maxRows = cat.blockRows end
-            local itemCol = 0
-            local itemRow = 0
-            for _, button in ipairs(cat.items) do
-                local x = leftPadding + (cat.startCol + itemCol) * cellSize
-                local y = -(yOffset + itemRow * cellSize)
-                button:ClearAllPoints()
-                OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, contentFrame, x, y)
-                button:OWB_SetIconSize(iconSize)
-                button:Show()
-                itemCol = itemCol + 1
-                if itemCol >= cat.blockWidth then
-                    itemCol = 0
-                    itemRow = itemRow + 1
+        yOffset = yOffset + rowTopPad
+
+        if groupedCat then
+            local blockX = leftPadding + groupedCat.startCol * cellSize
+            if showHeaders then
+                local label = AcquireLabel(contentFrame)
+                label:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", blockX, -yOffset)
+                label:SetWidth(groupedCat.blockWidth * cellSize)
+                label:SetText(groupedCat.displayName)
+                label:SetFontObject(GameFontNormal)
+                H.ApplyCategoryColor(label, catMods, groupedCat.name)
+            end
+            yOffset = yOffset + labelHeight
+
+            local subBlocks = {}
+            for _, groupInfo in ipairs(groupedCat.groupOrder) do
+                local groupItems = groupedCat.groups[groupInfo.name]
+                if groupItems and #groupItems > 0 then
+                    tinsert(subBlocks, {
+                        name = groupInfo.name,
+                        displayName = groupInfo.name,
+                        items = groupItems,
+                    })
                 end
             end
-        end
-        yOffset = yOffset + maxRows * cellSize
-    end
+            yOffset = H.PackCompactBlocks(subBlocks, contentFrame, {
+                yOffset = yOffset,
+                cols = cols,
+                gapSlots = gapSlots,
+                showHeaders = showHeaders,
+                leftPadding = leftPadding,
+                cellSize = cellSize,
+                iconSize = iconSize,
+                catMods = catMods,
+                AcquireLabel = AcquireLabel,
+                verticalSpacing = verticalSpacing,
+                containerType = containerType,
+                rowTopPad = 0,
+                labelStyler = function(label)
+                    label:SetFontObject(GameFontNormalSmall)
+                    label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                end,
+            })
+        else
+            if showHeaders then
+                for _, cat in ipairs(line) do
+                    local label = AcquireLabel(contentFrame)
+                    label:SetPoint("TOPLEFT", contentFrame, "TOPLEFT",
+                        leftPadding + cat.startCol * cellSize, -yOffset)
+                    label:SetWidth(cat.blockWidth * cellSize)
+                    label:SetText(cat.displayName)
+                    labelStyler(label, cat)
+                end
+            end
+            yOffset = yOffset + labelHeight
 
-    if #lines > 0 then
-        yOffset = yOffset + H.VerticalGap(cellSize, verticalSpacing)
+            local maxRows = 0
+            for _, cat in ipairs(line) do
+                if cat.blockRows > maxRows then maxRows = cat.blockRows end
+                local itemCol = 0
+                local itemRow = 0
+                for _, button in ipairs(cat.items) do
+                    local x = leftPadding + (cat.startCol + itemCol) * cellSize
+                    local y = -(yOffset + itemRow * cellSize)
+                    button:ClearAllPoints()
+                    OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, contentFrame, x, y)
+                    button:OWB_SetIconSize(iconSize)
+                    button:Show()
+                    itemCol = itemCol + 1
+                    if itemCol >= cat.blockWidth then
+                        itemCol = 0
+                        itemRow = itemRow + 1
+                    end
+                end
+            end
+            yOffset = yOffset + maxRows * cellSize
+        end
     end
 
     return yOffset
+end
+
+--- Public entry for compact category layout. Packs the categories with no
+--- trailing gap: inter-row spacing is carried by `rowTopPad` in
+--- `PackCompactBlocks`, and the caller adds a `VerticalGap` only before a
+--- visible section header/separator. This keeps a hidden section boundary
+--- spaced identically to a normal category row.
+---@param catInfoList table[] category blocks from `BuildCatInfo`
+---@param contentFrame table parent frame
+---@param opts table layout options (see `H.PackCompactBlocks`)
+---@return number yOffset ending vertical offset
+function H.LayoutCompactGroup(catInfoList, contentFrame, opts)
+    if #catInfoList == 0 then return opts.yOffset end
+    return H.PackCompactBlocks(catInfoList, contentFrame, opts)
 end
 
 function H.GetSortedCategoryNames(itemsByCategory)
@@ -359,7 +509,9 @@ local function GetSectionedLayoutImpl(itemsByCategory, containerType)
             local entry = displayOrder[i]
 
             if entry == "----" then
-                tinsert(layout, { type = "separator", showHeader = true })
+                -- Separators are obsolete (every category lives in a section, so
+                -- the section header is the divider); ignore stray "----" tokens
+                -- left in saved displayOrder data.
             elseif entry:sub(1, 8) == "section:" then
                 local sectionID = entry:sub(9)
                 local sec = sections[sectionID]
@@ -492,7 +644,6 @@ local function GetSectionedLayoutImpl(itemsByCategory, containerType)
                 local showHeader = ResolveSectionShowHeader(sec, containerType)
                 local effectiveCollapsed = showHeader and sec.collapsed
 
-                tinsert(layout, { type = "separator", showHeader = showHeader })
                 tinsert(layout, { type = "section_header", name = sec.name, sectionID = sectionID, collapsed = effectiveCollapsed, showHeader = showHeader })
                 if not effectiveCollapsed then
                     for _, catName in ipairs(sec.categories) do
@@ -725,7 +876,6 @@ function H.LayoutCategoryContent(config)
     local sortButtons = viewContext.sortButtons
     local acquireSection = viewContext.acquireSection
     local acquireSectionHeader = viewContext.acquireSectionHeader
-    local acquireDivider = viewContext.acquireDivider
     local getCollapsed = viewContext.getCollapsed
     local setCollapsed = viewContext.setCollapsed
 
@@ -782,21 +932,15 @@ function H.LayoutCategoryContent(config)
                     local groups, groupOrder = H.GroupItemsBy(items, groupBy)
 
                     if groups and groupOrder then
-                        local subY = 0
-                        for _, groupInfo in ipairs(groupOrder) do
-                            local groupItems = groups[groupInfo.name]
-                            if groupItems and #groupItems > 0 then
-                                local subLabel = AcquireLabel(section.content)
-                                subLabel:SetPoint("TOPLEFT", section.content, "TOPLEFT", leftPadding, -subY)
-                                subLabel:SetWidth(cols * cellSize)
-                                subLabel:SetText(groupInfo.name)
-                                subLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-                                subY = subY + 14
-
-                                local gridH = H.RenderItemGrid(section.content, groupItems, subY, leftPadding, cellSize, iconSize, cols)
-                                subY = subY + gridH + 4
-                            end
-                        end
+                        local subY = H.RenderGroupedGrids(section.content, groups, groupOrder, {
+                            x = leftPadding,
+                            gridCols = cols,
+                            labelWidth = cols * cellSize,
+                            startY = 0,
+                            cellSize = cellSize,
+                            iconSize = iconSize,
+                            AcquireLabel = AcquireLabel,
+                        })
                         section.content:SetHeight(subY)
                         section.content:Show()
                         sectionHeight = sectionHeight + subY + 4
@@ -843,16 +987,6 @@ function H.LayoutCategoryContent(config)
         containerType = containerType,
     }
 
-    local function RenderSeparator()
-        local divider = acquireDivider(contentFrame)
-        divider:ClearAllPoints()
-        divider:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 8, -(yOffset + 4))
-        divider:SetPoint("RIGHT", contentFrame, "RIGHT", -8, 0)
-        divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        divider:Show()
-        yOffset = yOffset + 10
-    end
-
     local function RenderSectionHeader(entry)
         local sectionID = entry.sectionID
         local sectionName = entry.name
@@ -886,7 +1020,12 @@ function H.LayoutCategoryContent(config)
     local function BuildCatInfo(categoryName)
         local items = DoFilterItems(categoryName)
         if not items then return nil end
-        return { name = categoryName, displayName = H.ResolveCategoryName(categoryName), items = items }
+        return {
+            name = categoryName,
+            displayName = H.ResolveCategoryName(categoryName),
+            items = items,
+            groupBy = GetCategoryGrouping(categoryName),
+        }
     end
 
     if type(layout) == "table" and layout[1] and type(layout[1]) == "table" then
@@ -898,18 +1037,16 @@ function H.LayoutCategoryContent(config)
                     if catInfo then
                         tinsert(currentGroup, catInfo)
                     end
-                elseif entry.type == "separator" then
-                    compactOpts.yOffset = yOffset
-                    yOffset = H.LayoutCompactGroup(currentGroup, contentFrame, compactOpts)
-                    currentGroup = {}
-                    if entry.showHeader then
-                        RenderSeparator()
-                    end
                 elseif entry.type == "section_header" then
                     compactOpts.yOffset = yOffset
                     yOffset = H.LayoutCompactGroup(currentGroup, contentFrame, compactOpts)
                     currentGroup = {}
                     if entry.showHeader then
+                        -- Skip the leading gap for the very first section (nothing
+                        -- above it yet) so it sits flush to the top.
+                        if yOffset > 0 then
+                            yOffset = yOffset + H.VerticalGap(cellSize, verticalSpacing)
+                        end
                         RenderSectionHeader(entry)
                     end
                 end
@@ -920,10 +1057,6 @@ function H.LayoutCategoryContent(config)
             for _, entry in ipairs(layout) do
                 if entry.type == "category" then
                     RenderCategoryStacked(entry.name)
-                elseif entry.type == "separator" then
-                    if entry.showHeader then
-                        RenderSeparator()
-                    end
                 elseif entry.type == "section_header" then
                     if entry.showHeader then
                         RenderSectionHeader(entry)

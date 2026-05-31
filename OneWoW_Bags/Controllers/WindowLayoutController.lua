@@ -18,8 +18,20 @@ function WindowLayoutController:UpdateFixedWidth(config)
 end
 
 function WindowLayoutController:Refresh(config)
-    if not config.mainWindow or not config.mainWindow:IsShown() then return end
-    if not config.isBuilt or not config.isBuilt() then return end
+    local LD = self.addon.LayoutDebug
+    local debugTarget = config.layoutDebugTarget
+    if not config.mainWindow or not config.mainWindow:IsShown() then
+        if LD and LD.enabled and debugTarget then
+            LD:Record("wlc_early", { target = debugTarget, note = "mainWindow not shown" })
+        end
+        return
+    end
+    if not config.isBuilt or not config.isBuilt() then
+        if LD and LD.enabled and debugTarget then
+            LD:Record("wlc_early", { target = debugTarget, note = "set not built" })
+        end
+        return
+    end
 
     if config.updateWindowWidth then
         config.updateWindowWidth()
@@ -36,12 +48,24 @@ function WindowLayoutController:Refresh(config)
     end
 
     if config.cleanup then
+        if LD and LD.enabled and debugTarget then
+            LD:Record("cleanup", { target = debugTarget })
+        end
         config.cleanup()
     end
 
     local buttons = config.getButtons and config.getButtons() or {}
+    local totalButtons = #buttons
     if config.filterButtons then
         buttons = config.filterButtons(buttons)
+    end
+    local filteredCount = #buttons
+    if LD and LD.enabled and debugTarget then
+        LD:Record("filtered", {
+            target = debugTarget,
+            total = totalButtons,
+            filtered = filteredCount,
+        })
     end
     self.filterToken = (self.filterToken or 0) + 1
     buttons._owb_filterToken = self.filterToken
@@ -56,6 +80,13 @@ function WindowLayoutController:Refresh(config)
 
     if config.afterLayout then
         config.afterLayout(buttons, layoutHeight)
+    end
+
+    if debugTarget then
+        LD = self.addon.LayoutDebug
+        if LD then
+            LD:RecordLayoutComplete(debugTarget, filteredCount, layoutHeight, buttons, self.filterToken, totalButtons)
+        end
     end
 end
 
@@ -106,12 +137,6 @@ function WindowLayoutController:CreateViewContext(config)
         end
         if config.sectionManager and config.sectionManager.AcquireSection then
             return config.sectionManager:AcquireSection(parent)
-        end
-    end
-
-    context.acquireDivider = function(parent)
-        if config.sectionManager and config.sectionManager.AcquireDivider then
-            return config.sectionManager:AcquireDivider(parent)
         end
     end
 
