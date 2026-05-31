@@ -697,9 +697,22 @@ Inventory windows share `WindowLayoutController:Refresh`, which runs `cleanup` (
 |-----------|----------|----------|
 | Guarded layout | `WindowHelpers:RunGuardedLayoutRefresh` | Wraps each GUI `RefreshLayout` body in `pcall`; always clears `_layoutInProgress`. Reentrant calls schedule `RequestLayoutRefresh(..., "reentrant_followup")` instead of returning silently. |
 | Guard reset | `onHide` / `FullReset` on `GUI`, `BankGUI`, `GuildBankGUI` | Clears `_layoutInProgress` so a stuck in-flight layout cannot survive window close. |
-| Coalesced flush | `FlushPendingLayoutRefreshes` | Clears `pendingRefresh` only when a refresh actually runs. Skips (hidden frame or `Set._building`) leave pending set and reschedule flush on the next frame. |
+| Coalesced flush | `FlushPendingLayoutRefreshes` | Clears `pendingRefresh` only when a refresh actually runs. Skips (hidden frame or `Set._building`) leave pending set and reschedule flush on the next frame. Bank/guild targets are not queued while their window is closed (`ShouldQueueLayoutRefresh`); stale pending is dropped on close and on flush. |
 | Zone enter | `Events:OnPlayerEnteringWorld` | After zone load (not initial login), refreshes each visible built UI (`bags` / `bank` / `guild`) immediately and again after 0.1s. |
 | Frame show | `WindowHelpers:AttachLayoutOnShow` | Hooks main window `OnShow` to request `show_onshow` when the backing set is already built. |
+
+### Layout debug (`/owblayout`)
+
+[`Core/LayoutDebug.lua`](../Core/LayoutDebug.lua) records a ring buffer (64 entries) of layout scheduler decisions when enabled. Use after a blank-inventory repro:
+
+| Command | Action |
+|---------|--------|
+| `/owblayout on` | Enable recording (clears ring) |
+| `/owblayout off` | Disable recording |
+| `/owblayout clear` | Clear ring |
+| `/owblayout dump` | Print scheduler snapshot, per-GUI button stats (`hasItem` vs `IsShown`), and recent events |
+
+Hooks: `RequestLayoutRefresh`, `FlushPendingLayoutRefreshes` (exec / skip_hidden / skip_building / flush_drop_stale / reschedule), `RunGuardedLayoutRefresh`, `RefreshLayout` early exits, `WindowLayoutController` (cleanup / filtered / layout_done / empty_filter). Ring `layout_done` rows include `filtShown`, `hasItem`, and `shown` for diagnosing blank-inventory reports via `/owblayout dump`.
 
 ---
 

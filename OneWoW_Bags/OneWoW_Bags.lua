@@ -225,16 +225,63 @@ function OneWoW_Bags:InvalidateItemIDs(idSet)
     if Profile then Profile:Stop("InvalidateItemIDs") end
 end
 
+--- Snapshot coalesced layout refresh state for `/owblayout dump`.
+---@return table snapshot `{ refreshScheduled: boolean, pending: table<guiKey, { pending: boolean, reason: string|nil }> }`
+function OneWoW_Bags:GetLayoutDebugSchedulerSnapshot()
+    local pending = {}
+    for guiKey in pairs(pendingRefresh) do
+        pending[guiKey] = {
+            pending = pendingRefresh[guiKey] == true,
+            reason = pendingRefreshReason[guiKey],
+        }
+    end
+    return {
+        refreshScheduled = refreshScheduled,
+        pending = pending,
+    }
+end
+
 --- Refresh item layout for one or more windows. Coalesced: multiple calls
 --- in the same frame collapse to a single deferred flush. Hidden windows
 --- and windows whose backing Set is mid-Build are skipped.
+--- Whether a coalesced refresh should be queued for this GUI (avoids guild/bank pending while closed).
+---@param guiKey "GUI"|"BankGUI"|"GuildBankGUI"
+---@return boolean
+function OneWoW_Bags:ShouldQueueLayoutRefresh(guiKey)
+    if guiKey == "GuildBankGUI" then
+        return self.guildBankOpen == true
+    end
+    if guiKey == "BankGUI" then
+        return self.bankOpen == true
+    end
+    return true
+end
+
+--- Clear coalesced refresh state for a window that is closing.
+---@param guiKey "GUI"|"BankGUI"|"GuildBankGUI"
+function OneWoW_Bags:ClearPendingLayoutRefresh(guiKey)
+    pendingRefresh[guiKey] = nil
+    pendingRefreshReason[guiKey] = nil
+end
+
 ---@param target "bags"|"bank"|"guild"|"bank_related"|"all"|nil
 ---@param reason string|nil diagnostic tag; first-write-wins per target
 function OneWoW_Bags:RequestLayoutRefresh(target, reason)
     ForEachTarget(self, target, GUI_TARGET_KEYS, function(_, key)
+        if not self:ShouldQueueLayoutRefresh(key) then
+            return
+        end
         pendingRefresh[key] = true
         if reason and not pendingRefreshReason[key] then
             pendingRefreshReason[key] = reason
+        end
+        local LD = self.LayoutDebug
+        if LD and LD.enabled then
+            LD:Record("request", {
+                guiKey = key,
+                reason = reason,
+                target = target,
+            })
         end
     end)
     if not refreshScheduled then
@@ -277,6 +324,7 @@ function OneWoW_Bags:FlushPendingLayoutRefreshes()
     end
 
     local needsReschedule = false
+    local LD = self.LayoutDebug
     for _, guiKey in ipairs(guiKeys) do
         if not pendingRefresh[guiKey] then
             -- Cleared by an earlier iteration or external path.
@@ -285,15 +333,35 @@ function OneWoW_Bags:FlushPendingLayoutRefreshes()
             local gui = self[guiKey]
             local setKey = GUI_TO_SET[guiKey]
             local backingSet = setKey and self[setKey]
-            local visible = gui and (gui.IsShown == nil or gui:IsShown())
+            local visible = gui and gui.IsShown and gui:IsShown() or false
             local building = backingSet and backingSet._building == true
+            local inProgress = gui and gui._layoutInProgress == true
 
             if not gui or not gui.RefreshLayout then
                 pendingRefresh[guiKey] = nil
                 pendingRefreshReason[guiKey] = nil
+                if LD and LD.enabled then
+                    LD:Record("flush_drop", { guiKey = guiKey, reason = reason, outcome = "no_gui", note = "missing RefreshLayout" })
+                end
+            elseif not self:ShouldQueueLayoutRefresh(guiKey) then
+                pendingRefresh[guiKey] = nil
+                pendingRefreshReason[guiKey] = nil
+                if LD and LD.enabled then
+                    LD:Record("flush_drop_stale", { guiKey = guiKey, reason = reason, note = "window closed" })
+                end
             elseif visible and not building then
                 pendingRefresh[guiKey] = nil
                 pendingRefreshReason[guiKey] = nil
+                if LD and LD.enabled then
+                    LD:Record("flush_exec", {
+                        guiKey = guiKey,
+                        reason = reason,
+                        outcome = "exec",
+                        visible = visible,
+                        building = building,
+                        inProgress = inProgress,
+                    })
+                end
                 if Profile and reason then
                     Profile:Start(guiKey .. ":RefreshLayout.reason." .. reason)
                 end
@@ -306,11 +374,25 @@ function OneWoW_Bags:FlushPendingLayoutRefreshes()
                 end
             else
                 needsReschedule = true
+                if LD and LD.enabled then
+                    local outcome = not visible and "skip_hidden" or (building and "skip_building" or "skip")
+                    LD:Record(outcome, {
+                        guiKey = guiKey,
+                        reason = reason,
+                        outcome = outcome,
+                        visible = visible,
+                        building = building,
+                        inProgress = inProgress,
+                    })
+                end
             end
         end
     end
 
     if needsReschedule then
+        if LD and LD.enabled then
+            LD:Record("flush_reschedule", { note = "pending work remains" })
+        end
         for guiKey in pairs(pendingRefresh) do
             if pendingRefresh[guiKey] then
                 refreshScheduled = true
@@ -637,6 +719,7 @@ function OneWoW_Bags:OnBankClosed()
     end
     if not self.bankOpen then return end
     self.bankOpen = false
+    self:ClearPendingLayoutRefresh("BankGUI")
     self.isWarbandOnlyBankAccess = false
     if BankFrame and BankFrame.BankPanel then
         BankFrame.BankPanel:Hide()
@@ -835,6 +918,7 @@ function OneWoW_Bags:OnGuildBankClosed()
     end
     if not self.guildBankOpen then return end
     self.guildBankOpen = false
+    self:ClearPendingLayoutRefresh("GuildBankGUI")
     self._guildBankUpdatePending = false
     self._guildBankTransferTabs = nil
     self._guildBankTransferSources = nil

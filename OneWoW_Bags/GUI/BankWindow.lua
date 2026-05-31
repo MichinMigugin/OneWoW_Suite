@@ -439,11 +439,21 @@ function BankGUI:UpdateWindowWidth()
 end
 
 function BankGUI:RefreshLayout()
-    if not isInitialized or not MainWindow then return end
-    if not MainWindow:IsShown() then return end
+    local LD = OneWoW_Bags.LayoutDebug
+    if not isInitialized or not MainWindow then
+        if LD and LD.enabled then LD:Record("refresh_early", { target = "bank", note = "not initialized" }) end
+        return
+    end
+    if not MainWindow:IsShown() then
+        if LD and LD.enabled then LD:Record("refresh_early", { target = "bank", note = "frame hidden" }) end
+        return
+    end
     local db = GetDB()
     local controller = GetLayoutController()
-    if not controller or not controller.Refresh then return end
+    if not controller or not controller.Refresh then
+        if LD and LD.enabled then LD:Record("refresh_early", { target = "bank", note = "no controller" }) end
+        return
+    end
 
     local Profile = OneWoW_Bags.Profile
     Profile:Start("BankGUI:RefreshLayout")
@@ -452,6 +462,7 @@ function BankGUI:RefreshLayout()
     self:SyncBuiltTabState()
 
     controller:Refresh({
+        layoutDebugTarget = "bank",
         mainWindow = MainWindow,
         isBuilt = function()
             return BankSet.isBuilt

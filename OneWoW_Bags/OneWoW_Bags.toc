@@ -26,6 +26,7 @@ Locales\deDE.lua
 
 # Core
 Core\Profile.lua
+Core\LayoutDebug.lua
 Core\Constants.lua
 Core\SectionDefaults.lua
 Core\Database.lua

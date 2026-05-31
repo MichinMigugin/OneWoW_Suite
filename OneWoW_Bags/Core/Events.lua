@@ -1,5 +1,6 @@
 local _, OneWoW_Bags = ...
 
+local format = string.format
 local BagTypes = OneWoW_Bags.BagTypes
 
 OneWoW_Bags.Events = {}
@@ -137,6 +138,16 @@ function Events:OnPlayerEnteringWorld(isLogin)
             and addon.GuildBankSet and addon.GuildBankSet.isBuilt then
             addon:RequestLayoutRefresh("guild", reason)
         end
+    end
+
+    local LD = addon.LayoutDebug
+    if LD and LD.enabled then
+        local bagsShown = addon.GUI and addon.GUI.IsShown and addon.GUI:IsShown()
+        local bankShown = addon.bankOpen and addon.BankGUI and addon.BankGUI.IsShown and addon.BankGUI:IsShown()
+        local guildShown = addon.guildBankOpen and addon.GuildBankGUI and addon.GuildBankGUI.IsShown and addon.GuildBankGUI:IsShown()
+        LD:Record("entering_world", {
+            note = format("bags=%s bank=%s guild=%s", tostring(bagsShown), tostring(bankShown), tostring(guildShown)),
+        })
     end
 
     refreshVisible("entering_world")

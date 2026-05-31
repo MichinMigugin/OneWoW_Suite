@@ -27,15 +27,27 @@ local scratchTables = {}
 ---@param targetKey "bags"|"bank"|"guild"
 ---@param body function
 function WH:RunGuardedLayoutRefresh(owner, targetKey, body)
+    local LD = OneWoW_Bags.LayoutDebug
     if owner._layoutInProgress then
+        if LD and LD.enabled then
+            LD:Record("guard_reentrant", { target = targetKey, inProgress = true })
+        end
         OneWoW_Bags:RequestLayoutRefresh(targetKey, "reentrant_followup")
         return
+    end
+    if LD and LD.enabled then
+        LD:Record("guard_start", { target = targetKey })
     end
     owner._layoutInProgress = true
     local ok, err = pcall(body)
     owner._layoutInProgress = false
     if not ok then
+        if LD and LD.enabled then
+            LD:Record("guard_err", { target = targetKey, err = tostring(err) })
+        end
         print("|cffff4444OneWoW_Bags:|r layout refresh failed (" .. tostring(targetKey) .. "):", err)
+    elseif LD and LD.enabled then
+        LD:Record("guard_ok", { target = targetKey })
     end
 end
 
@@ -47,6 +59,10 @@ function WH:AttachLayoutOnShow(mainWindow, targetKey, isBuiltFn)
     if not mainWindow or not isBuiltFn then return end
     mainWindow:HookScript("OnShow", function()
         if isBuiltFn() then
+            local LD = OneWoW_Bags.LayoutDebug
+            if LD and LD.enabled then
+                LD:Record("onshow", { target = targetKey })
+            end
             OneWoW_Bags:RequestLayoutRefresh(targetKey, "show_onshow")
         end
     end)
