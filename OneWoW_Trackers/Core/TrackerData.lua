@@ -67,6 +67,8 @@ local TRACK_TYPES = {
     "location",
     "coordinates",
     "npc_interact",
+    "enter_instance",
+    "kill_creature",
     "loot_item",
     "toy",
     "mount",

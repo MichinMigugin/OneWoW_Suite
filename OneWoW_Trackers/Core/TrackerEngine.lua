@@ -15,6 +15,9 @@ local time = time
 local eventFrame = nil
 local lootIndex = {}
 local npcIndex = {}
+local instanceIndex = {}
+local killIndex = {}
+local next = next
 local lastScanTime = 0
 local SCAN_THROTTLE = 1.0
 local initialized = false
@@ -104,6 +107,8 @@ end
 local function BuildIndices()
     wipe(lootIndex)
     wipe(npcIndex)
+    wipe(instanceIndex)
+    wipe(killIndex)
 
     local lists = TD:GetListsDB()
     for listID, list in pairs(lists) do
@@ -129,6 +134,22 @@ local function BuildIndices()
                     end
                 end
 
+                if tt == "enter_instance" and tp.instanceID then
+                    local insID = tonumber(tp.instanceID)
+                    if insID then
+                        instanceIndex[insID] = instanceIndex[insID] or {}
+                        tinsert(instanceIndex[insID], { listID = listID, sectionKey = sec.key, stepKey = step.key })
+                    end
+                end
+
+                if tt == "kill_creature" and tp.creatureID then
+                    local cid = tonumber(tp.creatureID)
+                    if cid then
+                        killIndex[cid] = killIndex[cid] or {}
+                        tinsert(killIndex[cid], { listID = listID, sectionKey = sec.key, stepKey = step.key })
+                    end
+                end
+
                 for _, obj in ipairs(step.objectives or {}) do
                     local ot = obj.type
                     local op = obj.params or {}
@@ -138,6 +159,28 @@ local function BuildIndices()
                         if nid then
                             npcIndex[nid] = npcIndex[nid] or {}
                             tinsert(npcIndex[nid], {
+                                listID = listID, sectionKey = sec.key,
+                                stepKey = step.key, objKey = obj.key,
+                            })
+                        end
+                    end
+
+                    if ot == "enter_instance" and op.instanceID then
+                        local insID = tonumber(op.instanceID)
+                        if insID then
+                            instanceIndex[insID] = instanceIndex[insID] or {}
+                            tinsert(instanceIndex[insID], {
+                                listID = listID, sectionKey = sec.key,
+                                stepKey = step.key, objKey = obj.key,
+                            })
+                        end
+                    end
+
+                    if ot == "kill_creature" and op.creatureID then
+                        local cid = tonumber(op.creatureID)
+                        if cid then
+                            killIndex[cid] = killIndex[cid] or {}
+                            tinsert(killIndex[cid], {
                                 listID = listID, sectionKey = sec.key,
                                 stepKey = step.key, objKey = obj.key,
                             })
@@ -361,6 +404,12 @@ function TE:EvaluateObjective(obj)
         end
 
     elseif ot == "npc_interact" then
+        return nil
+
+    elseif ot == "enter_instance" then
+        return nil
+
+    elseif ot == "kill_creature" then
         return nil
 
     elseif ot == "loot_item" then
@@ -634,14 +683,16 @@ function TE:EvaluateList(listID)
             for _, step in ipairs(sec.steps or {}) do
                 if self:IsStepVisible(step, sec) then
                     if step.trackType ~= "manual" and step.trackType ~= "npc_interact" and
-                       step.trackType ~= "loot_item" then
+                       step.trackType ~= "loot_item" and step.trackType ~= "enter_instance" and
+                       step.trackType ~= "kill_creature" then
                         self:EvaluateStep(listID, sec.key, step)
                     end
 
                     if step.objectives then
                         for _, obj in ipairs(step.objectives) do
                             if obj.type ~= "manual" and obj.type ~= "npc_interact" and
-                               obj.type ~= "loot_item" then
+                               obj.type ~= "loot_item" and obj.type ~= "enter_instance" and
+                               obj.type ~= "kill_creature" then
                                 local current, max = self:EvaluateObjective(obj)
                                 if current ~= nil then
                                     local complete = max and max > 0 and current >= max
@@ -688,13 +739,53 @@ local function OnNPCInteract(npcID)
     DeferRefresh()
 end
 
+local function OnEnterInstance()
+    if not next(instanceIndex) then return end
+    local _, instanceType, _, _, _, _, _, instanceID = GetInstanceInfo()
+    if instanceType == "none" then return end
+    instanceID = tonumber(instanceID)
+    if not instanceID or not instanceIndex[instanceID] then return end
+
+    for _, ref in ipairs(instanceIndex[instanceID]) do
+        if ref.objKey then
+            TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
+        else
+            TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, 1)
+        end
+    end
+
+    FireCallbacks("OnProgressChanged")
+    DeferRefresh()
+end
+
+local function OnCreatureKilled(creatureID)
+    creatureID = tonumber(creatureID)
+    if not creatureID or not killIndex[creatureID] then return end
+
+    for _, ref in ipairs(killIndex[creatureID]) do
+        if ref.objKey then
+            TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
+        else
+            local step = TD:GetStep(ref.listID, ref.sectionKey, ref.stepKey)
+            local max = step and step.max or 1
+            TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, max)
+        end
+    end
+
+    FireCallbacks("OnProgressChanged")
+    DeferRefresh()
+end
+
 local function OnEvent(_, event, ...)
     if event == "PLAYER_ENTERING_WORLD" then
         TD:CheckResets()
         TD:CheckCustomTimerResets()
         BuildIndices()
         scanPending = true
-        C_Timer.After(2, function() TE:FullScan() end)
+        C_Timer.After(2, function()
+            TE:FullScan()
+            OnEnterInstance()
+        end)
         C_Timer.After(3, function()
             if C_Calendar and C_Calendar.OpenCalendar then
                 C_Calendar.OpenCalendar()
@@ -717,6 +808,17 @@ local function OnEvent(_, event, ...)
             local npcType, _, _, _, _, npcID = strsplit("-", npcGUID)
             if npcType == "Creature" then
                 OnNPCInteract(npcID)
+            end
+        end
+
+    elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+        if next(killIndex) then
+            local _, subEvent, _, _, _, _, _, destGUID = CombatLogGetCurrentEventInfo()
+            if subEvent == "PARTY_KILL" and destGUID and not issecretvalue(destGUID) then
+                local unitType, _, _, _, _, creatureID = strsplit("-", destGUID)
+                if unitType == "Creature" or unitType == "Vehicle" then
+                    OnCreatureKilled(creatureID)
+                end
             end
         end
 
@@ -750,6 +852,7 @@ function TE:Initialize()
     frame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
     frame:RegisterEvent("CHAT_MSG_LOOT")
     frame:RegisterEvent("GOSSIP_SHOW")
+    frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     frame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
     frame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
     frame:RegisterEvent("ENCOUNTER_END")
@@ -859,6 +962,8 @@ function TE:GetTrackTypeDisplayName(trackType)
         location        = L["TRACKER_TYPE_LOCATION"] or "Zone",
         coordinates     = L["TRACKER_TYPE_COORDINATES"] or "Coordinates",
         npc_interact    = L["TRACKER_TYPE_NPC_INTERACT"] or "NPC Interact",
+        enter_instance  = L["TRACKER_TYPE_ENTER_INSTANCE"] or "Enter Dungeon/Raid",
+        kill_creature   = L["TRACKER_TYPE_KILL_CREATURE"] or "Kill Creature",
         loot_item       = L["TRACKER_TYPE_LOOT_ITEM"] or "Loot Item",
         toy             = L["TRACKER_TYPE_TOY"] or "Toy",
         mount           = L["TRACKER_TYPE_MOUNT"] or "Mount",

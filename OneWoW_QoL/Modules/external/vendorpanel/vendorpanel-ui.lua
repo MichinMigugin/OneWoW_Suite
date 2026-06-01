@@ -335,15 +335,6 @@ function VendorPanel:CreatePreviewPanel()
         table.insert(items, { type = "header", text = ns.L["VENDOR_OPT_HEADER"] })
         table.insert(items, {
             type = "checkbox",
-            text = ns.L["VENDOR_HIDE_FILTERED"],
-            checked = panelSettings.hideFiltered,
-            onToggle = function(checked)
-                panelSettings.hideFiltered = checked
-                rerenderGrid()
-            end,
-        })
-        table.insert(items, {
-            type = "checkbox",
             text = ns.L["VENDOR_HIDE_KNOWN"],
             checked = panelSettings.hideKnownEntirely,
             onToggle = function(checked)
@@ -470,7 +461,10 @@ function VendorPanel:CreatePreviewPanel()
         onSelect = function(value, text)
             state.currentVendorFilter = value
             dropText:SetText(value == "Cosmetic Items" and "Cosmetics" or value)
-            if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
+            if MerchantFrame and MerchantFrame:IsShown() then
+                MerchantFrame.page = 1
+                MerchantFrame_Update()
+            end
         end,
     })
 

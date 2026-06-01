@@ -453,15 +453,16 @@ ns.VPComputeFilterMatch = ComputeFilterMatch
 local VendorPanel = {}
 ns.VendorPanel = VendorPanel
 
---- True when our merchant-grid filtering should engage. We stand down entirely
---- when VendorFilter is loaded (it owns the grid then) and otherwise only
---- repaginate when the user has opted into hiding (filtered / known / excluded
---- categories). With no opt-in, the lighter fade renderer is used instead.
+--- True when our merchant-grid filtering should engage (hide + repaginate). We
+--- stand down entirely when VendorFilter is loaded (it owns the grid then).
+--- Otherwise we repaginate whenever a specific category filter is chosen, known
+--- items are being hidden, or any category is globally excluded. With "Show All"
+--- and no hiding, the lighter fade renderer is used instead.
 ---@return boolean
 function VendorPanel:GridFilteringActive()
     if IsVendorFilterLoaded() then return false end
     local settings = GetSettings()
-    return (settings.hideFiltered or settings.hideKnownEntirely or AnyExclusionActive()) and true or false
+    return (state.currentVendorFilter ~= "Show All" or settings.hideKnownEntirely or AnyExclusionActive()) and true or false
 end
 
 --- Builds state.filteredVendorItems: the ordered merchant indices to display
@@ -470,14 +471,14 @@ end
 function VPFilters.BuildDisplayList()
     wipe(state.filteredVendorItems)
     local settings = GetSettings()
-    local hideFiltered = settings.hideFiltered
     local hideKnown = settings.hideKnownEntirely
+    local hideNonMatching = (state.currentVendorFilter ~= "Show All")
     local preferredArmor = GetPreferredArmor()
     for i = 1, GetMerchantNumItems() do
         local itemLink = GetMerchantItemLink(i)
         if itemLink and not IsExcluded(itemLink) then
             if not (hideKnown and IsAlreadyKnown(itemLink)) then
-                if not hideFiltered or ComputeFilterMatch(itemLink, preferredArmor) then
+                if not hideNonMatching or ComputeFilterMatch(itemLink, preferredArmor) then
                     tinsert(state.filteredVendorItems, i)
                 end
             end
@@ -638,12 +639,6 @@ end
 --- items in place. No repagination.
 function VendorPanel:FadeMerchantGrid()
     local preferredArmor = GetPreferredArmor()
-    local knownCount = 0
-    for i = 1, MERCHANT_ITEMS_PER_PAGE do
-        local lnk = GetMerchantItemLink(i + (MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE)
-        if lnk and IsAlreadyKnown(lnk) then knownCount = knownCount + 1 end
-    end
-    print(string.format("|cffff8800VP fade|r dim=%s knownAtVendor=%d", tostring(state.dimKnownItems), knownCount))
     for i = 1, MERCHANT_ITEMS_PER_PAGE do
         local button = _G["MerchantItem" .. i]
         local index = i + (MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE
@@ -670,7 +665,6 @@ function VendorPanel:RenderMerchantGrid()
     if MerchantFrame.selectedTab ~= 1 then return end
 
     VPFilters.BuildDisplayList()
-    print(string.format("|cffff8800VP render|r merchantItems=%d shown=%d", GetMerchantNumItems(), #state.filteredVendorItems))
     wipe(state.clearedSlots)
     wipe(state.slotMap)
 
@@ -1571,10 +1565,6 @@ function VendorPanelModule:OnEnable()
                     VendorPanel:ResetMerchantButtons()
                     return
                 end
-                local s = GetSettings()
-                print(string.format("|cffff8800VP dispatch|r grid=%s hideF=%s hideK=%s dim=%s excl=%s filter=%s",
-                    tostring(VendorPanel:GridFilteringActive()), tostring(s.hideFiltered), tostring(s.hideKnownEntirely),
-                    tostring(state.dimKnownItems), tostring(AnyExclusionActive()), tostring(state.currentVendorFilter)))
                 if VendorPanel:GridFilteringActive() then
                     VendorPanel:RenderMerchantGrid()
                 else

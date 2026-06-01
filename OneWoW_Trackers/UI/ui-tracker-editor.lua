@@ -21,6 +21,42 @@ local function MakeLabel(parent, text, x, y)
     return fs
 end
 
+local function FillMsg(key)
+    print((ns.L["ADDON_CHAT_PREFIX"] or "OneWoW Trackers:") .. " " .. (ns.L[key] or ""))
+end
+
+local function GetTargetCreatureID()
+    local guid = UnitGUID("target")
+    if not guid or issecretvalue(guid) then return nil end
+    local unitType, _, _, _, _, npcID = strsplit("-", guid)
+    if unitType ~= "Creature" and unitType ~= "Vehicle" then return nil end
+    return tonumber(npcID)
+end
+
+local function FillCreatureFromTarget(card, fieldKey)
+    local cid = GetTargetCreatureID()
+    if not cid then FillMsg("TRACKER_FILL_NO_TARGET"); return end
+    local box = card["_field_" .. fieldKey]
+    if box then box:SetText(tostring(cid)) end
+end
+
+local function FillCoordsFromPosition(card)
+    local mapID = C_Map.GetBestMapForUnit("player")
+    local pos = mapID and C_Map.GetPlayerMapPosition(mapID, "player")
+    if not mapID or not pos then FillMsg("TRACKER_FILL_NO_POSITION"); return end
+    local x, y = pos:GetXY()
+    if not x or not y then FillMsg("TRACKER_FILL_NO_POSITION"); return end
+    if card._field_mapID then card._field_mapID:SetText(tostring(mapID)) end
+    if card._field_x then card._field_x:SetText(format("%.1f", x * 100)) end
+    if card._field_y then card._field_y:SetText(format("%.1f", y * 100)) end
+end
+
+local function FillInstanceFromCurrent(card)
+    local _, instanceType, _, _, _, _, _, instanceID = GetInstanceInfo()
+    if instanceType == "none" or not instanceID then FillMsg("TRACKER_FILL_NO_INSTANCE"); return end
+    if card._field_instanceID then card._field_instanceID:SetText(tostring(instanceID)) end
+end
+
 local QUICK_START = {
     {
         key = "weekly",
@@ -178,6 +214,8 @@ local STEP_CATEGORIES = {
             { key = "y", label = "Y", hint = "0-100", width = 60 },
             { key = "radius", label = "Range", hint = "15", width = 50, default = "15" },
         },
+        fillKey = "TRACKER_FILL_FROM_POSITION",
+        onFill = function(card) FillCoordsFromPosition(card) end,
     },
     {
         key = "npc",
@@ -185,6 +223,26 @@ local STEP_CATEGORIES = {
         desc = "Auto-completes when you open a dialog with a specific NPC.",
         trackType = "npc_interact",
         fields = { { key = "npcID", label = "NPC ID", hint = "e.g. 224561", width = 160 } },
+        fillKey = "TRACKER_FILL_FROM_TARGET",
+        onFill = function(card) FillCreatureFromTarget(card, "npcID") end,
+    },
+    {
+        key = "enter_instance",
+        title = "Enter a Dungeon/Raid",
+        desc = "Auto-completes when you enter a specific dungeon or raid. Use the button while inside to fill the instance ID.",
+        trackType = "enter_instance",
+        fields = { { key = "instanceID", label = "Instance ID", hint = "e.g. 2769", width = 160 } },
+        fillKey = "TRACKER_FILL_FROM_INSTANCE",
+        onFill = function(card) FillInstanceFromCurrent(card) end,
+    },
+    {
+        key = "kill_creature",
+        title = "Kill a Rare or Boss",
+        desc = "Auto-completes when your group kills a specific creature. Target the creature and use the button to fill its ID.",
+        trackType = "kill_creature",
+        fields = { { key = "creatureID", label = "Creature ID", hint = "e.g. 224562", width = 160 } },
+        fillKey = "TRACKER_FILL_FROM_TARGET",
+        onFill = function(card) FillCreatureFromTarget(card, "creatureID") end,
     },
     {
         key = "mount",
@@ -844,6 +902,8 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             if c ~= keepCard and c._expanded and c._cat and #c._cat.fields > 0 then
                 c._expanded = false
                 if c._fieldRow then c._fieldRow:Hide() end
+                if c._saveFieldBtn then c._saveFieldBtn:Hide() end
+                if c._fillBtn then c._fillBtn:Hide() end
                 local baseH = 28 + (c._descHeight or 14) + 8
                 c:SetHeight(baseH)
                 c:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -943,12 +1003,22 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             saveFieldBtn:SetPoint("TOPLEFT", fieldRow, "BOTTOMLEFT", 0, -4)
             local expandedHeight = cardHeight + 42 + 30
 
+            local fillBtn
+            if cat.onFill then
+                fillBtn = OneWoW_GUI:CreateFitTextButton(card, { text = L[cat.fillKey] or "Fill", height = 22 })
+                fillBtn:SetPoint("LEFT", saveFieldBtn, "RIGHT", 8, 0)
+                fillBtn:SetScript("OnClick", function() cat.onFill(card) end)
+                card._fillBtn = fillBtn
+            end
+
             if isActive then
                 cardHeight = expandedHeight
                 saveFieldBtn:Show()
+                if fillBtn then fillBtn:Show() end
             else
                 fieldRow:Hide()
                 saveFieldBtn:Hide()
+                if fillBtn then fillBtn:Hide() end
             end
 
             saveFieldBtn:SetScript("OnClick", function()
@@ -1060,6 +1130,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 myself._expanded = true
                 if myself._fieldRow then myself._fieldRow:Show() end
                 if myself._saveFieldBtn then myself._saveFieldBtn:Show() end
+                if myself._fillBtn then myself._fillBtn:Show() end
                 local newH = 28 + (descHeight) + 8 + 42 + 30
                 myself:SetHeight(newH)
                 myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
