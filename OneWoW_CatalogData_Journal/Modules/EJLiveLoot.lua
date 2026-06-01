@@ -184,8 +184,14 @@ function EJLive:ScanEncounterDifficulties(instanceID, encounterID, instanceType,
         for itemID, data in pairs(byID) do
             local row = results[itemID]
             if not row then
-                row = { itemID = itemID, name = data.name, icon = data.icon, difficulties = {} }
+                row = { itemID = itemID, name = data.name, icon = data.icon, difficulties = {}, linkByDiff = {} }
                 results[itemID] = row
+            end
+            -- The EJ loot link is already scaled to the active difficulty, so keep it
+            -- per-difficulty; the UI tooltip uses it to mirror the Adventure Guide ilvl.
+            if data.link then
+                row.linkByDiff = row.linkByDiff or {}
+                row.linkByDiff[diffID] = data.link
             end
             local seen = false
             for _, d in ipairs(row.difficulties) do
@@ -217,6 +223,61 @@ function EJLive:ScanEncounterDifficulties(instanceID, encounterID, instanceType,
         addDiff(d.id)
     end
     return results
+end
+
+-- On-demand single-item link resolution. The Adventure Guide derives item level
+-- from the difficulty-scaled loot link, so we select the same instance/encounter/
+-- difficulty context and read the matching item's link live. Results are cached;
+-- the scanningOnDemand flag stops the EJ_LOOT_DATA_RECIEVED handler from treating
+-- our own selection churn as a reason to rebuild the cache.
+local scaledLinkCache = {}
+EJLive.scanningOnDemand = false
+
+---@param instanceID number
+---@param encounterID number
+---@param diffID number
+---@param itemID number
+---@return string|nil scaledLink difficulty-scaled item link, or nil if unavailable
+function EJLive:GetScaledLootLink(instanceID, encounterID, diffID, itemID)
+    if not (instanceID and encounterID and diffID and itemID) then return nil end
+    if encounterID == 0 then return nil end
+
+    local key = instanceID .. ":" .. encounterID .. ":" .. diffID .. ":" .. itemID
+    if scaledLinkCache[key] then return scaledLinkCache[key] end
+
+    -- The EJ loot system only works once the journal UI is loaded; on a fresh
+    -- session the player may never have opened the Adventure Guide.
+    if not C_AddOns.IsAddOnLoaded("Blizzard_EncounterJournal") then
+        C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
+    end
+
+    local result
+    SuppressEJ()
+    EJLive.scanningOnDemand = true
+    pcall(function()
+        EJ_SelectInstanceCompat(instanceID)
+        EJ_SelectEncounterCompat(encounterID)
+        EJ_SetDifficultyCompat(diffID)
+        EJ_SetSlotFilterCompat(EISFT.NoFilter)
+        applyLootFilterForScan()
+        local n = EJ_GetNumLootCompat()
+        for i = 1, n do
+            local info = EJ_GetLootInfoByIndexCompat(i)
+            if info and info.itemID == itemID and info.link then
+                result = info.link
+                break
+            end
+        end
+    end)
+    EJLive.scanningOnDemand = false
+    UnsuppressEJ()
+
+    -- Only cache hits; a miss is usually loot data not received yet, so allow a
+    -- retry on the next hover rather than caching the negative permanently.
+    if result then
+        scaledLinkCache[key] = result
+    end
+    return result
 end
 
 local mergeQueue = {}
@@ -268,6 +329,7 @@ local function buildItemRowFromEJ(itemID, ejRow, JournalDataRef)
         quality      = idata.quality,
         special      = JournalDataRef:DetermineItemSpecial(idata),
         difficulties = CopyTable(ejRow.difficulties or {}),
+        linkByDiff   = CopyTable(ejRow.linkByDiff or {}),
         source       = "ej",
         fromLiveEJ   = true,
     }
@@ -289,6 +351,12 @@ local function mergeEJRowsIntoEncounter(enc, ejMap, JournalDataRef)
                 if not seen then
                     row.difficulties = row.difficulties or {}
                     table.insert(row.difficulties, d)
+                end
+            end
+            if ejRow.linkByDiff then
+                row.linkByDiff = row.linkByDiff or {}
+                for diffID, link in pairs(ejRow.linkByDiff) do
+                    row.linkByDiff[diffID] = link
                 end
             end
             row.fromLiveEJ = true
@@ -399,6 +467,7 @@ function EJLive:OnJournalCacheCleared()
     end
     self.debounceTimer = nil
     wipe(dungeonNormalCache)
+    wipe(scaledLinkCache)
 end
 
 function EJLive:ScheduleAfterStaticBuild()
@@ -412,7 +481,7 @@ end
 local ejEvent = CreateFrame("Frame")
 ejEvent:RegisterEvent("EJ_LOOT_DATA_RECIEVED")
 ejEvent:SetScript("OnEvent", function()
-    if mergeRunning then return end
+    if mergeRunning or EJLive.scanningOnDemand then return end
     if not JournalData.journalCache then return end
     if EJLive.debounceTimer and EJLive.debounceTimer.Cancel then
         EJLive.debounceTimer:Cancel()

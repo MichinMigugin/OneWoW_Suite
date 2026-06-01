@@ -40,6 +40,7 @@ local collectedNames   = {}
 local collectedMap     = {}
 local hiddenButtons    = {}           -- [frame] = true for currently-hidden buttons
 local enhancedRow      = {}
+local enhancedBuiltCount = 0          -- #_loadedComponents the row was last built from
 local searchBox        = nil
 local searchFilter     = ""
 local autoCloseTimer   = nil
@@ -823,6 +824,36 @@ local OW_COMPANION_ICONS = {
     GUI           = "Interface\\ICONS\\Spell_Holy_MagicalSentry",
 }
 
+-- Resolves a loaded component to the open action the owning addon registered
+-- via OneWoW:RegisterMinimap (callback, or hub tabKey -> GUI:Show). This is the
+-- same deterministic path the hub's own minimap context menu uses, so it does
+-- not depend on slash-command registration timing or SlashCmdList iteration
+-- order. _minimapEntries are keyed by addon global name (e.g. "OneWoW_QoL");
+-- match it against the component's display name ("QoL").
+---@param compName string
+---@return (fun())|nil
+local function FindMinimapEntryAction(compName)
+    if not OneWoW or not OneWoW._minimapEntries then return nil end
+    local target = compName:lower()
+    for _, entry in ipairs(OneWoW._minimapEntries) do
+        local stripped = (entry.addon or ""):gsub("^OneWoW_?", ""):gsub("_", ""):lower()
+        if stripped == target then
+            if entry.callback then
+                return entry.callback
+            elseif entry.tabKey then
+                local tabKey = entry.tabKey
+                return function()
+                    if OneWoW and OneWoW.GUI then
+                        OneWoW.GUI:Show(tabKey)
+                    end
+                end
+            end
+            return nil
+        end
+    end
+    return nil
+end
+
 local function GetCompanionAction(compName)
     if not OneWoW then return nil end
     local companions = OneWoW._loadedComponents
@@ -838,6 +869,10 @@ local function GetCompanionAction(compName)
                         OneWoW.GUI:Toggle()
                     end
                 end
+            end
+            local entryAction = FindMinimapEntryAction(comp.name)
+            if entryAction then
+                return entryAction
             end
             if comp.cmd then
                 return function()
@@ -874,44 +909,50 @@ local function BuildEnhancedRow()
 
     if not OneWoW or not OneWoW._loadedComponents then return end
 
+    enhancedBuiltCount = #OneWoW._loadedComponents
+
     for _, comp in ipairs(OneWoW._loadedComponents) do
-        local icon = OW_COMPANION_ICONS[comp.name] or "Interface\\ICONS\\INV_Misc_QuestionMark"
-        local action = GetCompanionAction(comp.name)
+        -- GUI only opens the main OneWoW window, identical to the Core tile, so
+        -- it would be a redundant duplicate launcher. Skip it.
+        if comp.name ~= "GUI" then
+            local icon = OW_COMPANION_ICONS[comp.name] or "Interface\\ICONS\\INV_Misc_QuestionMark"
+            local action = GetCompanionAction(comp.name)
 
-        local btn = CreateFrame("Button", nil, containerFrame)
-        btn:SetSize(28, 28)
+            local btn = CreateFrame("Button", nil, containerFrame)
+            btn:SetSize(28, 28)
 
-        local tex = btn:CreateTexture(nil, "ARTWORK")
-        tex:SetAllPoints()
-        tex:SetTexture(icon)
-        tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            local tex = btn:CreateTexture(nil, "ARTWORK")
+            tex:SetAllPoints()
+            tex:SetTexture(icon)
+            tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-        if OneWoW_GUI then
-            OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
-        end
-
-        btn:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:AddLine(comp.name, 1, 0.82, 0, true)
-            if comp.ver and comp.ver ~= "" then
-                GameTooltip:AddLine("v" .. comp.ver, 0.7, 0.7, 0.7)
+            if OneWoW_GUI then
+                OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
             end
-            if comp.cmd then
-                GameTooltip:AddLine(comp.cmd, 0.5, 0.5, 0.6)
-            end
-            GameTooltip:Show()
-        end)
-        btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-        if action then
-            btn:SetScript("OnClick", function() action() end)
-        elseif OneWoW and OneWoW.GUI then
-            btn:SetScript("OnClick", function()
-                OneWoW.GUI:Toggle()
+            btn:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:AddLine(comp.name, 1, 0.82, 0, true)
+                if comp.ver and comp.ver ~= "" then
+                    GameTooltip:AddLine("v" .. comp.ver, 0.7, 0.7, 0.7)
+                end
+                if comp.cmd then
+                    GameTooltip:AddLine(comp.cmd, 0.5, 0.5, 0.6)
+                end
+                GameTooltip:Show()
             end)
-        end
+            btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-        table.insert(enhancedRow, btn)
+            if action then
+                btn:SetScript("OnClick", function() action() end)
+            elseif OneWoW and OneWoW.GUI then
+                btn:SetScript("OnClick", function()
+                    OneWoW.GUI:Toggle()
+                end)
+            end
+
+            table.insert(enhancedRow, btn)
+        end
     end
 end
 
@@ -1137,6 +1178,15 @@ end
 
 local function ShowContainer()
     if not containerFrame then return end
+    -- The enhanced row is first built at OnEnable, when OneWoW companions may
+    -- not all have registered yet (load-order race) — leaving tiles missing or
+    -- wired to stale actions until a /reload. Rebuild here when the loaded
+    -- component count has changed since the last build, so opening the panel
+    -- always reflects the fully-populated, correctly-wired set.
+    if GetSettings().enhancedMenu and OneWoW and OneWoW._loadedComponents
+        and enhancedBuiltCount ~= #OneWoW._loadedComponents then
+        BuildEnhancedRow()
+    end
     ResetCollectedVisibilityMap()
     MinimapButtonsModule:CollectAll()
     PositionContainer()

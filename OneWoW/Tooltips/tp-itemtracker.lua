@@ -1,4 +1,7 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
 local JOURNAL_EXPANSIONS = {
     "Classic", "BurningCrusade", "WrathoftheLichKing", "Cataclysm",
@@ -223,7 +226,7 @@ local function FormatTrackerRow(row, colorByClass)
     end
 end
 
-local function ItemTrackerProvider(tooltip, context)
+local function ItemTrackerProvider(_, context)
     if not context.itemID then return nil end
 
     local L   = OneWoW.L
@@ -394,6 +397,7 @@ do
     f:RegisterEvent("MODIFIER_STATE_CHANGED")
     f:SetScript("OnEvent", function(_, _, key)
         if key ~= "LSHIFT" and key ~= "RSHIFT" then return end
+        if OneWoW_GUI:IsAddonRestricted() then return end
         if GameTooltip and GameTooltip:IsShown() and GameTooltip.RefreshData then
             GameTooltip:RefreshData()
         end

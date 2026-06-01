@@ -196,9 +196,9 @@ function ns.UI.ShowMailDetail(charKey)
     if not charKey then return end
     local dialog = EnsureDialog()
 
-    local charData = OneWoW_AltTracker_Character_DB
-        and OneWoW_AltTracker_Character_DB.characters
-        and OneWoW_AltTracker_Character_DB.characters[charKey]
+    local charData = _G.OneWoW_AltTracker_Character_DB
+        and _G.OneWoW_AltTracker_Character_DB.characters
+        and _G.OneWoW_AltTracker_Character_DB.characters[charKey]
     local charName = (charData and charData.name) or charKey
     dialog.titleBar._titleText:SetText(string.format(L["MAIL_DETAIL_TITLE"], charName))
 
@@ -217,7 +217,7 @@ function ns.UI.ShowMailDetail(charKey)
     local scrollContent = dialog.scrollContent
     scrollContent:SetPoint("TOPLEFT", dialog.contentFrame, "TOPLEFT", 0, -32)
 
-    local mailData = StorageAPI and StorageAPI.GetMail and StorageAPI.GetMail(charKey)
+    local mailData = _G.StorageAPI and _G.StorageAPI.GetMail and _G.StorageAPI.GetMail(charKey)
     if not mailData or not mailData.mails or not next(mailData.mails) then
         local empty = OneWoW_GUI:CreateFS(scrollContent, 13)
         empty:SetPoint("TOP", scrollContent, "TOP", 0, -20)

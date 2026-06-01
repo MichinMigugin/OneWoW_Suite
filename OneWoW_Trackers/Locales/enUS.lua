@@ -167,4 +167,12 @@ ns.RegisterLocale("enUS", {
     ["TRACKER_ACCOUNT_WIDE_HINT"]       = "Checked tasks are shared across all characters",
     ["ADDON_CHAT_PREFIX"]               = "|cFFFFD100OneWoW Trackers:|r",
     ["TAB_SETTINGS"]                    = "Settings",
+
+    ["SETTINGS_RESET_TITLE"]            = "Weekly Reset Day",
+    ["SETTINGS_RESET_DESC"]             = "Weekly trackers reset on your region's reset day, detected automatically from your realm. If detection is ever wrong, force your region here.",
+    ["SETTINGS_RESET_CURRENT"]          = "Current: %s",
+    ["RESET_REGION_AUTO"]               = "Auto-detect (recommended)",
+    ["RESET_REGION_US"]                 = "North America — Tuesday",
+    ["RESET_REGION_EU"]                 = "Europe — Wednesday",
+    ["RESET_REGION_ASIA"]               = "Asia / KR / TW — Thursday",
 })

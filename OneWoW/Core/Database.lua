@@ -332,6 +332,7 @@ local DEFAULTS = {
             npcs    = false,
             players = false,
             zones   = false,
+            items   = false,
             sound   = SOUNDKIT.ACHIEVEMENT_MENU_OPEN,
         },
         instance = {
@@ -429,6 +430,7 @@ function OneWoW:InitializeDatabase()
         ts.notes.npcs    = false
         ts.notes.players = false
         ts.notes.zones   = false
+        ts.notes.items   = false
         ts.instance.enabled = false
         if ta.general        then ta.general.enabled        = false end
         if ta.detectiontypes then ta.detectiontypes.enabled = false end

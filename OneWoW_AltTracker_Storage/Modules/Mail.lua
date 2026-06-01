@@ -123,7 +123,7 @@ function private.RescanHandler()
 end
 
 function private.RecordMail(index)
-    local AccountingAddon = OneWoW_AltTracker_Accounting
+    local AccountingAddon = _G.OneWoW_AltTracker_Accounting
     if not AccountingAddon or not AccountingAddon.Transactions or not OneWoW_AltTracker_Accounting_DB then
         return false
     end

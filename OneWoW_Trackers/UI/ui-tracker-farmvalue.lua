@@ -592,8 +592,11 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     cbHeaders:SetPoint("TOPLEFT", ahSrcBtn, "BOTTOMLEFT", -4, -6)
 
     local sessionNote = OneWoW_GUI:CreateFS(box, 9)
+    -- Right edge anchors to the box, not cbHeaders: a checkbox is only ~24px
+    -- wide, so anchoring the wrapped note to it collapses the text into a tall
+    -- column that pushes the buttons + watchlist off-screen.
     sessionNote:SetPoint("TOPLEFT", cbHeaders, "BOTTOMLEFT", 4, -4)
-    sessionNote:SetPoint("TOPRIGHT", cbHeaders, "BOTTOMRIGHT", -4, -4)
+    sessionNote:SetPoint("RIGHT", box, "RIGHT", -8, 0)
     sessionNote:SetJustifyH("LEFT")
     sessionNote:SetWordWrap(true)
     sessionNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))

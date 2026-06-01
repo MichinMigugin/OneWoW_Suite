@@ -5,6 +5,7 @@ local Toasts = OneWoW.Toasts
 local COLOR_NPC    = {0.40, 0.70, 1.00, 1.0}
 local COLOR_PLAYER = {0.40, 0.70, 1.00, 1.0}
 local COLOR_ZONE   = {0.40, 1.00, 0.50, 1.0}
+local COLOR_ITEM   = {1.00, 0.82, 0.40, 1.0}
 
 local function GetDB()
     return OneWoW.db and OneWoW.db.global and OneWoW.db.global.toasts
@@ -60,5 +61,20 @@ function OneWoW.Toasts.FireZoneAlert(zoneName, notePreview)
         subtitle  = notePreview or nil,
         icon      = "Interface\\Icons\\INV_Misc_Map_01",
         color     = COLOR_ZONE,
+    })
+end
+
+function OneWoW.Toasts.FireItemLootAlert(itemName, itemTexture, count)
+    if not NotesEnabled() or not CategoryEnabled("items") then return end
+    if not itemName or itemName == "" then return end
+    local subtitle = nil
+    if count and count > 1 then subtitle = "x" .. count end
+    Toasts.FireToast({
+        toastType = "notes",
+        category  = "item",
+        title     = itemName,
+        subtitle  = subtitle,
+        icon      = itemTexture or "Interface\\Icons\\INV_Misc_QuestionMark",
+        color     = COLOR_ITEM,
     })
 end

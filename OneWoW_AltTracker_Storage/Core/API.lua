@@ -1,11 +1,11 @@
 local addonName, ns = ...
 
-StorageAPI = {
+_G.StorageAPI = {
     GetBags = function(charKey)
-        if not charKey or not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then
+        if not charKey or not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.characters then
             return nil
         end
-        local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
+        local charData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
         if charData then
             return charData.bags
         end
@@ -13,10 +13,10 @@ StorageAPI = {
     end,
 
     GetPersonalBank = function(charKey)
-        if not charKey or not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then
+        if not charKey or not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.characters then
             return nil
         end
-        local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
+        local charData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
         if charData then
             return charData.personalBank
         end
@@ -24,54 +24,54 @@ StorageAPI = {
     end,
 
     GetWarbandBank = function(charKey)
-        if not OneWoW_AltTracker_Storage_DB then
+        if not _G.OneWoW_AltTracker_Storage_DB then
             return nil
         end
-        return OneWoW_AltTracker_Storage_DB.warbandBank
+        return _G.OneWoW_AltTracker_Storage_DB.warbandBank
     end,
 
     GetWarbandBankGold = function(charKey)
-        if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.warbandBank then
+        if not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.warbandBank then
             return 0
         end
-        return OneWoW_AltTracker_Storage_DB.warbandBank.money or 0
+        return _G.OneWoW_AltTracker_Storage_DB.warbandBank.money or 0
     end,
 
     GetGuildBank = function(charKey)
-        if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then
+        if not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.characters then
             return nil
         end
-        local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
+        local charData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
         if not charData then return nil end
 
         local guildName = GetGuildInfo("player")
         if not guildName then return nil end
 
-        if OneWoW_AltTracker_Storage_DB.guildBanks then
-            return OneWoW_AltTracker_Storage_DB.guildBanks[guildName]
+        if _G.OneWoW_AltTracker_Storage_DB.guildBanks then
+            return _G.OneWoW_AltTracker_Storage_DB.guildBanks[guildName]
         end
         return nil
     end,
 
     GetGuildBankGold = function(charKey)
-        if not OneWoW_AltTracker_Storage_DB then
+        if not _G.OneWoW_AltTracker_Storage_DB then
             return 0
         end
 
         local guildName = GetGuildInfo("player")
         if not guildName then return 0 end
 
-        if OneWoW_AltTracker_Storage_DB.guildBanks and OneWoW_AltTracker_Storage_DB.guildBanks[guildName] then
-            return OneWoW_AltTracker_Storage_DB.guildBanks[guildName].money or 0
+        if _G.OneWoW_AltTracker_Storage_DB.guildBanks and _G.OneWoW_AltTracker_Storage_DB.guildBanks[guildName] then
+            return _G.OneWoW_AltTracker_Storage_DB.guildBanks[guildName].money or 0
         end
         return 0
     end,
 
     GetMail = function(charKey)
-        if not charKey or not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then
+        if not charKey or not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.characters then
             return nil
         end
-        local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
+        local charData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
         if charData then
             return charData.mail
         end
@@ -84,15 +84,19 @@ StorageAPI = {
     -- Drops already-expired entries on the fly (without persisting). Returns
     -- nil when the character has no mail data at all.
     GetMailSummary = function(charKey)
-        if not charKey or not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then
+        if not charKey or not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.characters then
             return nil
         end
-        local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
+        local charData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
         if not charData or not charData.mail then return nil end
 
         local summary = ns.Mail:GetSummary(charData.mail)
         summary.lastScan = charData.mailLastUpdate
-        summary.hasAnyMail = summary.count > 0
+        -- HasNewMail() captured at login (persisted as mail.hasNewMail) lights
+        -- the icon even before the inbox has been scanned into mail.mails, so a
+        -- character with freshly arrived mail shows up without visiting the box.
+        summary.hasNewMail = charData.mail.hasNewMail == true
+        summary.hasAnyMail = summary.count > 0 or summary.hasNewMail
         return summary
     end,
 }
