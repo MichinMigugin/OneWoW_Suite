@@ -811,11 +811,15 @@ local function OnEvent(_, event, ...)
             end
         end
 
-    elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
+    elseif event == "PARTY_KILL" then
+        -- 12.0 removed COMBAT_LOG_EVENT_UNFILTERED for addons; PARTY_KILL now
+        -- delivers (attackerGUID, targetGUID) directly. The target GUID is a
+        -- secret value while its unit identity is restricted (inside instances),
+        -- so kill tracking only resolves in the open world.
         if next(killIndex) then
-            local _, subEvent, _, _, _, _, _, destGUID = CombatLogGetCurrentEventInfo()
-            if subEvent == "PARTY_KILL" and destGUID and not issecretvalue(destGUID) then
-                local unitType, _, _, _, _, creatureID = strsplit("-", destGUID)
+            local _, targetGUID = ...
+            if targetGUID and not issecretvalue(targetGUID) then
+                local unitType, _, _, _, _, creatureID = strsplit("-", targetGUID)
                 if unitType == "Creature" or unitType == "Vehicle" then
                     OnCreatureKilled(creatureID)
                 end
@@ -852,7 +856,7 @@ function TE:Initialize()
     frame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
     frame:RegisterEvent("CHAT_MSG_LOOT")
     frame:RegisterEvent("GOSSIP_SHOW")
-    frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    frame:RegisterEvent("PARTY_KILL")
     frame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
     frame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
     frame:RegisterEvent("ENCOUNTER_END")
