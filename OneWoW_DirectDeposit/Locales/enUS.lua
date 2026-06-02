@@ -127,6 +127,14 @@ OneWoW_DirectDeposit.Locales["enUS"] = {
     ["WARBOUND_ENABLE"] = "Auto-Deposit All Warbound Items",
     ["WARBOUND_ENABLE_DESC"] = "When opening any bank, automatically deposit all warbound (account-bound) items from your bags into the Warband Bank. Items already in your deposit list above are excluded.",
 
+    ["WARBOUND_EXCLUDE_KEYWORD_LABEL"] = "Keep by Keyword",
+    ["WARBOUND_EXCLUDE_KEYWORD_DESC"] = "Items matching this keyword expression are kept in your bags and never auto-deposited. Use keywords like #potion, #flask, #elixir, #consumable, separated by | for \"or\". Example: #potion | #flask",
+    ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "e.g. #potion | #flask",
+    ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Keep Specific Items",
+    ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "These items are always kept in your bags, even when warbound. Drag an item here or enter its Item ID.",
+    ["WARBOUND_EXCLUDE_ADD"] = "Keep",
+    ["WARBOUND_EXCLUDE_EMPTY"] = "No kept items.\nDrag items here to keep them in your bags.",
+
     ["TOOLTIP_SECTION"] = "Tooltip Overlay",
     ["TOOLTIP_ENABLE"] = "Show Deposit Status in Tooltips",
     ["TOOLTIP_ENABLE_DESC"] = "Items queued for deposit will show their destination bank at the bottom of their tooltip.",

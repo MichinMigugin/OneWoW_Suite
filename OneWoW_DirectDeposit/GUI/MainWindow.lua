@@ -424,6 +424,122 @@ function GUI:CreateItemsPanel(parent)
     warboundDesc:SetJustifyH("LEFT")
     warboundDesc:SetWordWrap(true)
     yOffset = yOffset - 52
+    yOffset = yOffset - 14
+
+    local excludeKwLabel = OneWoW_GUI:CreateFS(scrollContent, 12)
+    excludeKwLabel:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 40, yOffset)
+    excludeKwLabel:SetText(L["WARBOUND_EXCLUDE_KEYWORD_LABEL"])
+    excludeKwLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - 24
+
+    local excludeKwBox = OneWoW_GUI:CreateEditBox(scrollContent, { width = 300, height = 26 })
+    excludeKwBox:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 40, yOffset)
+    excludeKwBox:SetText(OneWoW_DirectDeposit.db.global.directDeposit.warboundExcludeExpr)
+    excludeKwBox:SetScript("OnTextChanged", function(myself)
+        OneWoW_DirectDeposit.db.global.directDeposit.warboundExcludeExpr = strtrim(myself:GetText() or "")
+    end)
+    excludeKwBox:SetScript("OnEnterPressed", function(myself) myself:ClearFocus() end)
+    panel.excludeKwBox = excludeKwBox
+    yOffset = yOffset - 34
+
+    local excludeKwDesc = OneWoW_GUI:CreateFS(scrollContent, 11)
+    excludeKwDesc:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  40, yOffset)
+    excludeKwDesc:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -20, yOffset)
+    excludeKwDesc:SetText(L["WARBOUND_EXCLUDE_KEYWORD_DESC"])
+    excludeKwDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    excludeKwDesc:SetJustifyH("LEFT")
+    excludeKwDesc:SetWordWrap(true)
+    yOffset = yOffset - 64
+
+    local excludeItemsLabel = OneWoW_GUI:CreateFS(scrollContent, 12)
+    excludeItemsLabel:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 40, yOffset)
+    excludeItemsLabel:SetText(L["WARBOUND_EXCLUDE_ITEMS_LABEL"])
+    excludeItemsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - 24
+
+    local excludeBox = OneWoW_GUI:CreateFrame(scrollContent, {
+        backdrop     = BACKDROP_INNER_NO_INSETS,
+        bgColor      = "BG_SECONDARY",
+        borderColor  = "BORDER_SUBTLE",
+    })
+    excludeBox:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  40, yOffset)
+    excludeBox:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -20, yOffset)
+    excludeBox:SetHeight(180)
+    excludeBox:EnableMouse(true)
+    excludeBox:RegisterForDrag("LeftButton")
+
+    local function AddExcludeFromCursor()
+        local infoType, itemID = GetCursorInfo()
+        if infoType == "item" and itemID then
+            local success, msg = OneWoW_DirectDeposit.DirectDeposit:AddWarboundExclude(itemID)
+            if success then
+                GUI:RefreshExcludeList(panel)
+            else
+                print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
+            end
+            ClearCursor()
+        end
+    end
+
+    excludeBox:SetScript("OnReceiveDrag", AddExcludeFromCursor)
+    excludeBox:SetScript("OnMouseUp",     AddExcludeFromCursor)
+
+    local excludeHint = OneWoW_GUI:CreateFS(excludeBox, 10)
+    excludeHint:SetPoint("TOPRIGHT", excludeBox, "TOPRIGHT", -10, -8)
+    excludeHint:SetText(L["ITEM_DRAG_HINT"])
+    excludeHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local excludeAddLabel = OneWoW_GUI:CreateFS(excludeBox, 12)
+    excludeAddLabel:SetPoint("TOPLEFT", excludeBox, "TOPLEFT", 10, -10)
+    excludeAddLabel:SetText(L["ITEM_ID_LABEL"])
+    excludeAddLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local excludeInputBox = OneWoW_GUI:CreateEditBox(excludeBox, { width = 100, height = 26 })
+    excludeInputBox:SetPoint("LEFT", excludeAddLabel, "RIGHT", 10, 0)
+    excludeInputBox:SetNumeric(true)
+
+    local excludeAddBtn = OneWoW_GUI:CreateFitTextButton(excludeBox, { text = L["WARBOUND_EXCLUDE_ADD"], height = 26 })
+    excludeAddBtn:SetPoint("LEFT", excludeInputBox, "RIGHT", 10, 0)
+    excludeAddBtn:SetScript("OnClick", function()
+        local itemIDText = excludeInputBox:GetText()
+        if itemIDText and itemIDText ~= "" then
+            local itemID = tonumber(itemIDText)
+            if itemID then
+                local success, msg = OneWoW_DirectDeposit.DirectDeposit:AddWarboundExclude(itemID)
+                if success then
+                    excludeInputBox:SetText("")
+                    GUI:RefreshExcludeList(panel)
+                else
+                    print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
+                end
+            else
+                print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000Invalid item ID|r")
+            end
+        end
+        excludeInputBox:ClearFocus()
+    end)
+
+    excludeInputBox:SetScript("OnEnterPressed", function()
+        excludeAddBtn:Click()
+    end)
+
+    local excludeScrollArea = CreateFrame("Frame", nil, excludeBox)
+    excludeScrollArea:SetPoint("TOPLEFT",     excludeBox, "TOPLEFT",     10, -44)
+    excludeScrollArea:SetPoint("BOTTOMRIGHT", excludeBox, "BOTTOMRIGHT", -10, 10)
+
+    local excludeScrollFrame, excludeScrollChild = OneWoW_GUI:CreateScrollFrame(excludeScrollArea, {
+        name = "OneWoW_DirectDepositExcludeList",
+    })
+    excludeScrollFrame:SetScript("OnReceiveDrag", AddExcludeFromCursor)
+    excludeScrollFrame:SetScript("OnMouseUp",     AddExcludeFromCursor)
+
+    panel.excludeScrollChild = excludeScrollChild
+    panel.excludeScrollFrame = excludeScrollFrame
+    panel.excludeBox         = excludeBox
+
+    GUI:RefreshExcludeList(panel)
+
+    yOffset = yOffset - 190
     yOffset = yOffset - 20
 
     local itemSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
@@ -724,6 +840,91 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
             GUI:RefreshItemList(nextPanel, true)
         end
     end)
+end
+
+function GUI:RefreshExcludeList(panel)
+    if not panel or not panel.excludeScrollChild then return end
+
+    -- Frame width is 0 until the panel has laid out once. Retry shortly so rows
+    -- anchor to a real width instead of collapsing to 1px on first paint.
+    local boxWidth = panel.excludeBox:GetWidth()
+    if boxWidth == 0 then
+        C_Timer.After(0.05, function() GUI:RefreshExcludeList(panel) end)
+        return
+    end
+
+    local excludeScrollChild = panel.excludeScrollChild
+
+    for i = 1, excludeScrollChild:GetNumChildren() do
+        local child = select(i, excludeScrollChild:GetChildren())
+        if child then
+            child:Hide()
+            child:SetParent(nil)
+        end
+    end
+
+    local excludeList = OneWoW_DirectDeposit.DirectDeposit:GetWarboundExcludeList()
+    local sortedItems = {}
+    for itemID, itemData in pairs(excludeList) do
+        table.insert(sortedItems, { id = tonumber(itemID), data = itemData })
+    end
+    table.sort(sortedItems, function(a, b) return (a.data.addedTime or 0) < (b.data.addedTime or 0) end)
+
+    excludeScrollChild:SetWidth(boxWidth - 40)
+
+    local yOffset = 0
+
+    for _, item in ipairs(sortedItems) do
+        local itemRow = OneWoW_GUI:CreateFrame(excludeScrollChild, {
+            backdrop    = BACKDROP_INNER_NO_INSETS,
+            bgColor     = "BG_TERTIARY",
+            borderColor = "BORDER_SUBTLE",
+        })
+        itemRow:SetPoint("TOPLEFT",  excludeScrollChild, "TOPLEFT",  5, yOffset)
+        itemRow:SetPoint("TOPRIGHT", excludeScrollChild, "TOPRIGHT", -5, yOffset)
+        itemRow:SetHeight(32)
+
+        local removeBtn = OneWoW_GUI:CreateButton(itemRow, { text = "X", width = 22, height = 22 })
+        removeBtn:SetPoint("LEFT", itemRow, "LEFT", 5, 0)
+        removeBtn:SetScript("OnClick", function()
+            OneWoW_DirectDeposit.DirectDeposit:RemoveWarboundExclude(item.id)
+            GUI:RefreshExcludeList(panel)
+        end)
+
+        local itemNameFrame = CreateFrame("Frame", nil, itemRow)
+        itemNameFrame:SetPoint("LEFT",  removeBtn, "RIGHT",  5, 0)
+        itemNameFrame:SetPoint("RIGHT", itemRow,   "RIGHT", -5, 0)
+        itemNameFrame:SetHeight(32)
+        itemNameFrame:EnableMouse(true)
+        itemNameFrame:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetItemByID(item.id)
+            GameTooltip:Show()
+        end)
+        itemNameFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        local itemNameText = OneWoW_GUI:CreateFS(itemNameFrame, 12)
+        itemNameText:SetPoint("LEFT",  itemNameFrame, "LEFT",  0, 0)
+        itemNameText:SetPoint("RIGHT", itemNameFrame, "RIGHT", 0, 0)
+        itemNameText:SetText(item.data.itemName or ("Item " .. item.id))
+        itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        itemNameText:SetJustifyH("LEFT")
+        itemNameText:SetWordWrap(false)
+
+        itemRow:Show()
+        yOffset = yOffset - 35
+    end
+
+    if #sortedItems == 0 then
+        local noItemsText = OneWoW_GUI:CreateFS(excludeScrollChild, 10)
+        noItemsText:SetPoint("TOP", excludeScrollChild, "TOP", 0, -10)
+        noItemsText:SetText(L["WARBOUND_EXCLUDE_EMPTY"])
+        noItemsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        noItemsText:SetJustifyH("CENTER")
+        yOffset = yOffset - 40
+    end
+
+    excludeScrollChild:SetHeight(math.max(math.abs(yOffset) + 10, 1))
 end
 
 function GUI:CreateSettingsPanel(parent)

@@ -27,6 +27,10 @@ Beyond gold, you can also auto-deposit specific items:
 ### Warband Auto-Deposit (Warbound Items)
 Optional one-click feature: when any bank opens, automatically deposit every warbound (account-bound) item from your bags into the Warband Bank. Items already on your auto-deposit list are excluded so per-item routing still wins.
 
+You can keep specific warbound items in your bags instead of sweeping them:
+- **Keep by Keyword** - enter a keyword expression (e.g. `#potion | #flask`) and anything matching it is left in your bags. Uses the same keyword engine as OneWoW Bags, so categories like `#consumable`, `#elixir`, or `#food` all work.
+- **Keep Specific Items** - drag an item in or enter an Item ID to always keep that exact item, even when warbound.
+
 ### Account-Wide vs. Per-Character Settings
 - Account-wide settings that apply to all characters
 - Override settings per character for special cases (bank alts, etc.)

@@ -25,6 +25,8 @@ local defaults = {
             itemList = {},
             tooltipEnabled = true,
             warboundAutoDeposit = false,
+            warboundExcludeExpr = "",
+            warboundExcludeList = {},
         },
     },
     char = {

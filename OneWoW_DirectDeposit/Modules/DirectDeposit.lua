@@ -1,6 +1,11 @@
 local _, OneWoW_DirectDeposit = ...
 local L = OneWoW_DirectDeposit.L
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
+local PE = OneWoW_GUI.PredicateEngine
+
 OneWoW_DirectDeposit.DirectDeposit = {}
 local DirectDeposit = OneWoW_DirectDeposit.DirectDeposit
 
@@ -112,12 +117,107 @@ function DirectDeposit:OnBankOpened()
     self:DepositItemsToBank()
 end
 
+--- Decides whether a bag slot holds a warbound item the sweep should deposit.
+--- C_Item.IsBound only catches items that are *already* bound (account-bound
+--- crafted goods, etc.) and returns false for "Warbound until equipped" gear,
+--- which is the most common warbound gear and was silently skipped. The
+--- PredicateEngine resolves bind state from tooltip data and exposes isWarbound
+--- (isBOA or isWUE), so it catches WUE gear too. IsBound stays as a cheap
+--- first check so already-working items take the fast path.
+---@param itemLocation ItemLocation
+---@param itemInfo table
+---@param bagID number
+---@param slotID number
+---@return boolean
+function DirectDeposit:IsWarboundItem(itemLocation, itemInfo, bagID, slotID)
+    if C_Item.IsBound(itemLocation) then
+        return true
+    end
+    local props = PE:BuildProps(itemInfo.itemID, bagID, slotID, itemInfo)
+    return props ~= nil and props.isWarbound == true
+end
+
+--- Tests a bag slot against the compiled warbound-exclude predicate.
+--- Returns false when there is no predicate (empty/invalid expression), so an
+--- unset exclude box never blocks the sweep.
+---@param compiled (fun(props: table): boolean)|nil
+---@param itemInfo table
+---@param bagID number
+---@param slotID number
+---@return boolean
+function DirectDeposit:MatchesWarboundExclude(compiled, itemInfo, bagID, slotID)
+    if not compiled then return false end
+    local props = PE:BuildProps(itemInfo.itemID, bagID, slotID, itemInfo)
+    if not props then return false end
+    local result = PE:SafeEvaluate(compiled, props)
+    return result == true
+end
+
+--- Returns the warband-exclude item-ID list (keyed by tostring(itemID)).
+---@return table
+function DirectDeposit:GetWarboundExcludeList()
+    return OneWoW_DirectDeposit.db.global.directDeposit.warboundExcludeList
+end
+
+--- Adds an item to the warband-exclude list so the sweep never deposits it.
+---@param itemID number
+---@return boolean success
+---@return string message
+function DirectDeposit:AddWarboundExclude(itemID)
+    if not itemID then
+        return false, "Invalid item ID"
+    end
+
+    local excludeList = OneWoW_DirectDeposit.db.global.directDeposit.warboundExcludeList
+    if excludeList[tostring(itemID)] then
+        return false, "Item already excluded"
+    end
+
+    local itemName = C_Item.GetItemNameByID(itemID)
+    if not itemName then
+        return false, "Invalid item ID"
+    end
+
+    excludeList[tostring(itemID)] = {
+        itemID    = itemID,
+        itemName  = itemName,
+        addedTime = time(),
+    }
+
+    return true, "Item excluded"
+end
+
+--- Removes an item from the warband-exclude list.
+---@param itemID number
+---@return boolean
+function DirectDeposit:RemoveWarboundExclude(itemID)
+    if not itemID then return false end
+
+    local excludeList = OneWoW_DirectDeposit.db.global.directDeposit.warboundExcludeList
+    local key = tostring(itemID)
+    if excludeList[key] then
+        excludeList[key] = nil
+        return true
+    end
+
+    return false
+end
+
 function DirectDeposit:SweepWarboundItems()
-    if not OneWoW_DirectDeposit.db.global.directDeposit.warboundAutoDeposit then
+    local dd = OneWoW_DirectDeposit.db.global.directDeposit
+    if not dd.warboundAutoDeposit then
         return
     end
 
-    local itemList = OneWoW_DirectDeposit.db.global.directDeposit.itemList
+    local itemList = dd.itemList
+    local excludeList = dd.warboundExcludeList
+
+    -- Keyword/predicate exclude: compile the user's expression once per sweep
+    -- (e.g. "#potion | #flask") and skip any slot whose item matches it. nil
+    -- when the box is empty or the expression fails to compile, in which case
+    -- nothing is excluded by keyword.
+    local excludeCompiled = PE:Compile(dd.warboundExcludeExpr)
+
     local itemsToDeposit = {}
 
     for bagID = 0, 5 do
@@ -125,10 +225,16 @@ function DirectDeposit:SweepWarboundItems()
         if numSlots and numSlots > 0 then
             for slotID = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bagID, slotID)
-                if itemInfo and itemInfo.itemID and not itemList[tostring(itemInfo.itemID)] then
+                if itemInfo and itemInfo.itemID
+                    and not itemList[tostring(itemInfo.itemID)]
+                    and not excludeList[tostring(itemInfo.itemID)]
+                    and not self:MatchesWarboundExclude(excludeCompiled, itemInfo, bagID, slotID)
+                then
                     local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
                     if itemLocation and itemLocation:IsValid() then
-                        if C_Item.IsBound(itemLocation) and C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, itemLocation) then
+                        if C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, itemLocation)
+                            and self:IsWarboundItem(itemLocation, itemInfo, bagID, slotID)
+                        then
                             table.insert(itemsToDeposit, {
                                 bagID    = bagID,
                                 slotID   = slotID,
