@@ -107,6 +107,7 @@ function DataManager:CollectAdvancedData(charKey, charData, professionName)
     if not charKey or not charData or not professionName then return false end
 
     ns.ProfessionAdvanced:CollectData(charKey, charData, professionName)
+    ns.ProfessionBasics:CollectExpansionSkills(charKey, charData)
 
     return true
 end

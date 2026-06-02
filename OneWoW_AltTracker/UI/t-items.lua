@@ -452,12 +452,21 @@ function ns.UI.RefreshItemsTab(itemsTab)
     if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then return end
 
     do
-        local hideScan = _G.OneWoW and _G.OneWoW.ItemPrices and _G.OneWoW.ItemPrices:IsAuctionatorAHSourceActive()
+        local ip = _G.OneWoW and _G.OneWoW.ItemPrices
+        local auctionatorActive = ip and ip:IsAuctionatorAHSourceActive()
+        local tsmActive = ip and ip:IsTSMAHSourceActive()
+        local hideScan = auctionatorActive or tsmActive
         if itemsTab.scanAHButton then
             itemsTab.scanAHButton:SetShown(not hideScan)
         end
         if itemsTab.noticeText then
-            itemsTab.noticeText:SetText(hideScan and (L["ITEMS_NOTICE_AUCTIONATOR"] or L["ITEMS_NOTICE"]) or L["ITEMS_NOTICE"])
+            local notice = L["ITEMS_NOTICE"]
+            if auctionatorActive then
+                notice = L["ITEMS_NOTICE_AUCTIONATOR"] or notice
+            elseif tsmActive then
+                notice = L["ITEMS_NOTICE_TSM"] or notice
+            end
+            itemsTab.noticeText:SetText(notice)
         end
     end
 

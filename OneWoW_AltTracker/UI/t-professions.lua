@@ -255,8 +255,26 @@ local function GetTotalSkill(profData)
     return totalCurrent, totalMax
 end
 
-local function BuildExpandedPanels(ef, data)
+local function BuildExpandedPanels(ef, data, row)
     local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
+
+    local shiftHeld = IsShiftKeyDown()
+    ef._renderedShift = shiftHeld
+
+    -- Re-render this row's detail in place when SHIFT is pressed/released so the
+    -- per-expansion skill breakdown can be toggled without collapsing the row.
+    if row and not ef._shiftWatcherHooked then
+        ef._shiftWatcherHooked = true
+        ef:RegisterEvent("MODIFIER_STATE_CHANGED")
+        ef:SetScript("OnEvent", function(self, event, key)
+            if event ~= "MODIFIER_STATE_CHANGED" then return end
+            if key ~= "LSHIFT" and key ~= "RSHIFT" then return end
+            if not self:IsShown() then return end
+            if IsShiftKeyDown() ~= self._renderedShift then
+                row:RefreshDetails()
+            end
+        end)
+    end
 
     local professions = data.professions
     local professionEquipment = data.professionEquipment
@@ -283,14 +301,49 @@ local function BuildExpandedPanels(ef, data)
     local pEquip = grid:AddPanel(L["PROF_EXPANDED_EQUIPMENT"])
     local pRecipes = grid:AddPanel(L["PROF_EXPANDED_RECIPE_DATA"])
 
+    local isCurrentPlayer = (data.charKey == OneWoW_GUI:GetCharacterKey())
+
+    -- Overlay a click target on a profession name line that opens that
+    -- profession's window. Only the current character's own professions can be
+    -- opened, so other alts' rows stay non-interactive.
+    local function MakeProfClickable(fs, panel, profData)
+        if not fs or not isCurrentPlayer or not profData or not profData.skillLine then return end
+        local btn = CreateFrame("Button", nil, panel)
+        btn:SetAllPoints(fs)
+        btn:RegisterForClicks("AnyUp")
+        btn:SetScript("OnClick", function()
+            if InCombatLockdown() then return end
+            C_TradeSkillUI.OpenTradeSkill(profData.skillLine)
+        end)
+        btn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(profData.name, 1, 1, 1)
+            GameTooltip:AddLine(L["PROF_CLICK_TO_OPEN"], 0.4, 0.8, 1)
+            GameTooltip:Show()
+        end)
+        btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
+
     local function AddSkillLines(profData)
         if not profData or not profData.name then return end
         local iconPath = ns.ProfessionData:GetIcon(profData.name)
         local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 16, 16, 0, 1, 0, 1)
-        grid:AddLine(pSkills, iconMarkup .. " " .. profData.name)
+        local nameFS = grid:AddLine(pSkills, iconMarkup .. " " .. profData.name)
+        MakeProfClickable(nameFS, pSkills, profData)
         local totalCurrent, totalMax = GetTotalSkill(profData)
         local r, g, b = GetSkillColor(totalCurrent, totalMax)
         grid:AddLine(pSkills, "  " .. L["PROF_LABEL_SKILL"] .. " " .. string.format("%d / %d", totalCurrent, totalMax), {r, g, b})
+        local hasExpansions = profData.expansions and #profData.expansions > 0
+        if hasExpansions and shiftHeld then
+            for _, expansion in ipairs(profData.expansions) do
+                local curSkill = expansion.currentSkill or 0
+                local maxSkill = expansion.maxSkill or 0
+                local er, eg, eb = GetSkillColor(curSkill, maxSkill)
+                grid:AddLine(pSkills, "    " .. (expansion.name or L["PROF_VALUE_UNKNOWN"]) .. ": " .. string.format("%d / %d", curSkill, maxSkill), {er, eg, eb})
+            end
+        elseif hasExpansions then
+            grid:AddLine(pSkills, "  " .. L["PROF_SHIFT_FOR_EXPANSION"], {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+        end
         grid:AddLine(pSkills, " ")
     end
 
@@ -313,7 +366,8 @@ local function BuildExpandedPanels(ef, data)
         if not profData or not profData.name then return end
         local iconPath = ns.ProfessionData:GetIcon(profData.name)
         local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 16, 16, 0, 1, 0, 1)
-        grid:AddLine(pEquip, iconMarkup .. " " .. profData.name)
+        local nameFS = grid:AddLine(pEquip, iconMarkup .. " " .. profData.name)
+        MakeProfClickable(nameFS, pEquip, profData)
 
         local profEquipData = professionEquipment and professionEquipment[profData.name]
 
@@ -352,7 +406,8 @@ local function BuildExpandedPanels(ef, data)
         if not profData or not profData.name then return end
         local iconPath = ns.ProfessionData:GetIcon(profData.name)
         local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 16, 16, 0, 1, 0, 1)
-        grid:AddLine(pRecipes, iconMarkup .. " " .. profData.name)
+        local nameFS = grid:AddLine(pRecipes, iconMarkup .. " " .. profData.name)
+        MakeProfClickable(nameFS, pRecipes, profData)
 
         local totalRecipes = 0
         local totalLearned = 0
@@ -486,8 +541,9 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
                 professionEquipment = professionEquipment,
                 recipesByExpansion = recipesByExpansion,
             },
-            createDetails = function(ef, d)
-                BuildExpandedPanels(ef, d)
+            exclusiveExpand = true,
+            createDetails = function(ef, d, expandedRow)
+                BuildExpandedPanels(ef, d, expandedRow)
                 OneWoW_GUI:ApplyFontToFrame(ef)
             end,
         })

@@ -576,12 +576,48 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         goldText:SetJustifyH("RIGHT")
         table.insert(charRow.cells, goldText)
 
-        local hearthText = OneWoW_GUI:CreateFS(charRow, 12)
+        local hearthContainer = CreateFrame("Frame", nil, charRow)
+        hearthContainer:SetSize(80, rowHeight)
+
+        local hearthText = OneWoW_GUI:CreateFS(hearthContainer, 12)
+        hearthText:SetPoint("LEFT")
+        hearthText:SetJustifyH("LEFT")
         local hearthLocation = (charData.location and charData.location.bindLocation) or ""
         hearthText:SetText(hearthLocation)
-        hearthText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        hearthText:SetJustifyH("LEFT")
-        table.insert(charRow.cells, hearthText)
+
+        local hearthMapID = charData.location and charData.location.hearthMapID
+        if hearthMapID then
+            hearthText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+
+            local hearthX = charData.location.hearthX
+            local hearthY = charData.location.hearthY
+
+            hearthContainer:EnableMouse(true)
+            hearthContainer:SetScript("OnMouseUp", function()
+                if hearthX and hearthY and C_Map.CanSetUserWaypointOnMap(hearthMapID) then
+                    C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(hearthMapID, hearthX, hearthY))
+                    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+                end
+                OpenWorldMap(hearthMapID)
+            end)
+            hearthContainer:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(hearthLocation, OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                local mapInfo = C_Map.GetMapInfo(hearthMapID)
+                if mapInfo then
+                    GameTooltip:AddLine(mapInfo.name, OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                end
+                GameTooltip:AddLine(L["TT_HEARTH_CLICK_MAP"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                GameTooltip:Show()
+            end)
+            hearthContainer:SetScript("OnLeave", function()
+                GameTooltip:Hide()
+            end)
+        else
+            hearthText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+
+        table.insert(charRow.cells, hearthContainer)
 
         local lastSeenContainer = CreateFrame("Frame", nil, charRow)
         lastSeenContainer:SetSize(80, rowHeight)

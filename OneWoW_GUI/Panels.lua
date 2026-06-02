@@ -1105,6 +1105,7 @@ function OneWoW_GUI:CreateDataRow(scrollContent, options)
     local expandedHeight = options.expandedHeight or 160
     local rowGap = options.rowGap or 2
     local expandable = options.expandable ~= false
+    local exclusiveExpand = options.exclusiveExpand
     local createDetails = options.createDetails
     local onRowEnter = options.onEnter
     local onRowLeave = options.onLeave
@@ -1143,6 +1144,15 @@ function OneWoW_GUI:CreateDataRow(scrollContent, options)
         row.isExpanded = not row.isExpanded
 
         if row.isExpanded then
+            -- Accordion mode: only one row open at a time.
+            if exclusiveExpand and scrollContent._dataRows then
+                for _, otherRow in ipairs(scrollContent._dataRows) do
+                    if otherRow ~= row and otherRow.isExpanded and otherRow.Collapse then
+                        otherRow:Collapse()
+                    end
+                end
+            end
+
             if expandIcon then expandIcon:SetAtlas("Gamepad_Rev_Minus_64") end
             if not row.expandedFrame then
                 local detBgR, detBgG, detBgB = OneWoW_GUI:GetThemeColor("BG_SECONDARY")
@@ -1158,7 +1168,7 @@ function OneWoW_GUI:CreateDataRow(scrollContent, options)
                 row.expandedFrame.bg = detBg
 
                 if createDetails then
-                    createDetails(row.expandedFrame, row.data)
+                    createDetails(row.expandedFrame, row.data, row)
                 end
             end
             row.expandedFrame:Show()
@@ -1192,6 +1202,20 @@ function OneWoW_GUI:CreateDataRow(scrollContent, options)
     function row:Collapse()
         if not expandable or not row.isExpanded then return end
         ToggleExpanded()
+    end
+
+    -- Re-render an already-open row's detail content in place (e.g. when a
+    -- modifier key changes what the detail builder wants to show), then reflow
+    -- the rows below to match the new height.
+    function row:RefreshDetails()
+        if not row.expandedFrame or not row.isExpanded then return end
+        if createDetails then
+            createDetails(row.expandedFrame, row.data, row)
+        end
+        OneWoW_GUI:LayoutDataRows(scrollContent, {
+            rowHeight = rowHeight,
+            rowGap = rowGap,
+        })
     end
 
     if expandable and expandBtn then
@@ -1376,7 +1400,19 @@ function OneWoW_GUI:CreateExpandedPanelGrid(ef, options)
     local minRows = options.minRows or 5
     local maxRows = options.maxRows or 50
 
+    -- Release panels from a previous render so re-rendering the same expand
+    -- frame (e.g. a SHIFT toggle) does not stack new panels on top of old ones.
+    local oldPanels = ef._gridPanels
+    if oldPanels then
+        for _, p in ipairs(oldPanels) do
+            p:Hide()
+            p:ClearAllPoints()
+            p:SetParent(nil)
+        end
+    end
+
     local panels = {}
+    ef._gridPanels = panels
 
     local grid = {
         ef = ef,
