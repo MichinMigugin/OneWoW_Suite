@@ -60,6 +60,7 @@ local function GetSettings()
     local s = addon.db.global.modules.bagbar
     if not s then return {} end
     if not s.manualItems then s.manualItems = {} end
+    if not s.manualMacros then s.manualMacros = {} end
     if not s.blacklist then s.blacklist = {} end
     return s
 end
@@ -82,8 +83,11 @@ local function ClearBagBarButton(button)
     button.owb_bag = nil
     button.owb_slot = nil
     button.owb_itemLink = nil
+    button.owb_isMacro = nil
+    button.owb_macroName = nil
     button:SetAttribute("type1", nil)
     button:SetAttribute("item1", nil)
+    button:SetAttribute("macro1", nil)
     if button.icon then button.icon:SetTexture(nil) end
     if button.count then button.count:SetText("") end
     if button.cooldown then
@@ -265,6 +269,22 @@ function BagBarModule:CreateButton(index)
     OneWoW_GUI:SkinCooldown(button.cooldown)
 
     button:SetScript("OnEnter", function(myself)
+        if myself.owb_isMacro then
+            if not myself.owb_macroName then return end
+            if myself._skinBorder then
+                myself._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            end
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetText(myself.owb_macroName, 1, 1, 1)
+            local _, _, body = GetMacroInfo(myself.owb_macroName)
+            if body and body ~= "" then
+                GameTooltip:AddLine(strtrim(body), 0.7, 0.7, 0.7, true)
+            end
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(ns.L["BAGBAR_MACRO_LEFT_CLICK_TO_RUN"], 1, 1, 1)
+            GameTooltip:Show()
+            return
+        end
         if not myself.owb_itemID or not myself.owb_bag or not myself.owb_slot then return end
         if myself._skinBorder and not (myself._skinQuality and myself._skinQuality > 1) then
             myself._skinBorder:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
@@ -375,6 +395,7 @@ function BagBarModule:RegisterEvents()
     self._eventFrame:RegisterEvent("TRADE_SKILL_SHOW")
     self._eventFrame:RegisterEvent("TRADE_SKILL_CLOSE")
     self._eventFrame:RegisterEvent("UPDATE_BINDINGS")
+    self._eventFrame:RegisterEvent("UPDATE_MACROS")
 
     self._eventFrame:SetScript("OnEvent", function(_, event)
         if event == "UPDATE_BINDINGS" then
@@ -387,7 +408,7 @@ function BagBarModule:RegisterEvents()
         elseif event == "TRADE_SKILL_CLOSE" then
             BagBarModule._suppressedForProfessions = false
             BagBarModule:ScheduleUpdate()
-        elseif event == "BAG_UPDATE_DELAYED" then
+        elseif event == "BAG_UPDATE_DELAYED" or event == "UPDATE_MACROS" then
             BagBarModule:ScheduleUpdate()
         elseif event == "PLAYER_REGEN_ENABLED" then
             if BagBarModule.needsUpdate then
@@ -492,6 +513,37 @@ function BagBarModule:GetUsableItems()
     return items
 end
 
+--- Returns the ordered list of bar entries: manual macros first (alphabetical),
+--- then usable bag items. Each entry carries kind = "macro" or "item".
+--- Macros whose source macro no longer exists are skipped (kept in settings so
+--- they reappear if the macro is recreated).
+---@return table[] entries
+function BagBarModule:GetBarEntries()
+    local entries = {}
+    local s = GetSettings()
+    local macros = s.manualMacros or {}
+
+    local names = {}
+    for name in pairs(macros) do
+        tinsert(names, name)
+    end
+    sort(names)
+
+    for _, name in ipairs(names) do
+        local mName, mIcon = GetMacroInfo(name)
+        if mName and mIcon then
+            tinsert(entries, { kind = "macro", macroName = mName, iconFileID = mIcon })
+        end
+    end
+
+    for _, item in ipairs(self:GetUsableItems()) do
+        item.kind = "item"
+        tinsert(entries, item)
+    end
+
+    return entries
+end
+
 function BagBarModule:UpdateBar()
     if not barFrame then return end
     if not ModuleBagEnabled() then
@@ -509,12 +561,12 @@ function BagBarModule:UpdateBar()
         return
     end
 
-    local items     = self:GetUsableItems()
-    local s         = GetSettings()
-    local maxBtns   = math.min(s.maxButtons or 12, BAGBAR_MAX_SLOTS)
-    local itemCount = #items
+    local entries    = self:GetBarEntries()
+    local s          = GetSettings()
+    local maxBtns    = math.min(s.maxButtons or 12, BAGBAR_MAX_SLOTS)
+    local entryCount = #entries
 
-    if itemCount == 0 and not previewMode then
+    if entryCount == 0 and not previewMode then
         for i = 1, BAGBAR_MAX_SLOTS do
             ClearBagBarButton(buttons[i])
         end
@@ -522,26 +574,46 @@ function BagBarModule:UpdateBar()
         return
     end
 
-    local visible = math.min(itemCount, maxBtns)
-    if previewMode and itemCount == 0 then
+    local visible = math.min(entryCount, maxBtns)
+    if previewMode and entryCount == 0 then
         visible = math.min(3, maxBtns)
     end
 
     for i = 1, BAGBAR_MAX_SLOTS do
-        if i <= itemCount and i <= maxBtns then
-            local item = items[i]
+        if i <= entryCount and i <= maxBtns then
+            local entry = entries[i]
             local b = buttons[i]
-            b.owb_itemID = item.itemID
-            b.owb_bag = item.bag
-            b.owb_slot = item.slot
-            b.owb_itemLink = item.itemLink
-            b:SetAttribute("type1", "item")
-            b:SetAttribute("item1", "item:" .. item.itemID)
-            b.icon:SetTexture(item.iconFileID)
-            b.count:SetText((item.stackCount and item.stackCount > 1) and item.stackCount or "")
-            local start, duration, enable = C_Container.GetContainerItemCooldown(item.bag, item.slot)
-            if b.cooldown then
-                CooldownFrame_Set(b.cooldown, start or 0, duration or 0, enable or 0)
+            if entry.kind == "macro" then
+                b.owb_isMacro = true
+                b.owb_macroName = entry.macroName
+                b.owb_itemID = nil
+                b.owb_bag = nil
+                b.owb_slot = nil
+                b.owb_itemLink = nil
+                b:SetAttribute("type1", "macro")
+                b:SetAttribute("item1", nil)
+                b:SetAttribute("macro1", entry.macroName)
+                b.icon:SetTexture(entry.iconFileID)
+                b.count:SetText("")
+                if b.cooldown then
+                    CooldownFrame_Set(b.cooldown, 0, 0, 0)
+                end
+            else
+                b.owb_isMacro = nil
+                b.owb_macroName = nil
+                b.owb_itemID = entry.itemID
+                b.owb_bag = entry.bag
+                b.owb_slot = entry.slot
+                b.owb_itemLink = entry.itemLink
+                b:SetAttribute("type1", "item")
+                b:SetAttribute("macro1", nil)
+                b:SetAttribute("item1", "item:" .. entry.itemID)
+                b.icon:SetTexture(entry.iconFileID)
+                b.count:SetText((entry.stackCount and entry.stackCount > 1) and entry.stackCount or "")
+                local start, duration, enable = C_Container.GetContainerItemCooldown(entry.bag, entry.slot)
+                if b.cooldown then
+                    CooldownFrame_Set(b.cooldown, start or 0, duration or 0, enable or 0)
+                end
             end
         else
             ClearBagBarButton(buttons[i])

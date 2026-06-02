@@ -25,6 +25,7 @@ local defaults = {
                 columns           = 12,
                 iconSpacing       = 4,
                 manualItems       = {},
+                manualMacros      = {},
                 blacklist         = {},
                 hideAnchor        = false,
                 growDirection     = "RIGHT",
