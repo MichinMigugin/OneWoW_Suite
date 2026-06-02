@@ -15,6 +15,11 @@ local defaults = {
         trackerBundledVersions = {},
         trackerBundledDeleted  = {},
         trackerGlobalProgress  = {},
+        -- Per-character roster completion for steps flagged `rosterMode`. Keyed
+        -- by listID then stepKey; the completers map is account-wide (every
+        -- character that satisfies the step's trigger is recorded here), so it
+        -- lives in `global` regardless of the host list's own scope.
+        trackerRosters         = {},
         mainFrameSize          = nil,
         mainFramePosition      = nil,
         -- Account-wide lists share progress across characters, so their reset

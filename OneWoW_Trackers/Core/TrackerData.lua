@@ -124,6 +124,105 @@ function TD:GetGlobalProgressDB()
     return GetDB().global.trackerGlobalProgress
 end
 
+-- ============================================================================
+-- Per-character roster (rosterMode steps)
+-- ============================================================================
+-- A roster step reuses any existing trigger type. Instead of a single shared
+-- checkbox, every character that satisfies the trigger this reset is recorded
+-- under db.global.trackerRosters[listID][stepKey].completers, so the step shows
+-- a class-colored "Name-Realm" list of who's done it. Recording is idempotent
+-- and account-wide; the reset engine wipes completers on the step's effective
+-- daily/weekly boundary (always against the account markers, since the roster
+-- aggregates across the whole account).
+
+--- Canonical "Name-Realm" key for the logged-in character, or nil pre-login.
+---@return string|nil
+function TD:GetCurrentCharKey()
+    return OneWoW_GUI:GetCharacterKey()
+end
+
+--- Roster record for a step, optionally created on demand.
+---@param listID string
+---@param stepKey string
+---@param create boolean|nil
+---@return table|nil
+function TD:GetRoster(listID, stepKey, create)
+    local store = GetDB().global.trackerRosters
+    local listRosters = store[listID]
+    if not listRosters then
+        if not create then return nil end
+        listRosters = {}
+        store[listID] = listRosters
+    end
+    local roster = listRosters[stepKey]
+    if not roster then
+        if not create then return nil end
+        roster = { lastReset = time(), completers = {} }
+        listRosters[stepKey] = roster
+    end
+    return roster
+end
+
+--- Records the current character as a completer of a roster step. Idempotent —
+--- re-recording only refreshes the timestamp.
+---@param listID string
+---@param stepKey string
+function TD:RecordRosterCompletion(listID, stepKey)
+    local charKey = self:GetCurrentCharKey()
+    if not charKey then return end
+    local roster = self:GetRoster(listID, stepKey, true)
+    roster.completers[charKey] = {
+        name  = UnitName("player"),
+        realm = GetRealmName(),
+        class = select(2, UnitClass("player")),
+        at    = time(),
+    }
+end
+
+--- Removes a character from a roster step (manual override).
+---@param listID string
+---@param stepKey string
+---@param charKey string
+function TD:RemoveRosterCompleter(listID, stepKey, charKey)
+    local roster = self:GetRoster(listID, stepKey, false)
+    if roster then roster.completers[charKey] = nil end
+end
+
+--- True if a character is currently recorded on a roster step.
+---@param listID string
+---@param stepKey string
+---@param charKey string|nil
+---@return boolean
+function TD:IsRosterCompleter(listID, stepKey, charKey)
+    if not charKey then return false end
+    local roster = self:GetRoster(listID, stepKey, false)
+    return (roster and roster.completers[charKey]) and true or false
+end
+
+--- Sorted (by completion time) array of completer records for display.
+---@param listID string
+---@param stepKey string
+---@return table[]
+function TD:GetRosterCompleters(listID, stepKey)
+    local out = {}
+    local roster = self:GetRoster(listID, stepKey, false)
+    if not roster then return out end
+    for charKey, info in pairs(roster.completers) do
+        tinsert(out, {
+            charKey = charKey,
+            name    = info.name or charKey,
+            realm   = info.realm,
+            class   = info.class,
+            at      = info.at or 0,
+        })
+    end
+    sort(out, function(a, b)
+        if a.at ~= b.at then return a.at < b.at end
+        return a.charKey < b.charKey
+    end)
+    return out
+end
+
 function TD:IsListAccountWide(listID)
     local list = self:GetList(listID)
     return list and list.accountWide or false
@@ -198,6 +297,7 @@ function TD:RemoveList(listID)
     db.global.trackerLists[listID] = nil
     db.char.trackerProgress[listID] = nil
     db.global.trackerGlobalProgress[listID] = nil
+    db.global.trackerRosters[listID] = nil
     return true
 end
 
@@ -319,6 +419,7 @@ function TD:AddStep(listID, sectionKey, opts)
         trackParams   = opts.trackParams or {},
         max           = tonumber(opts.max) or 1,
         noMax         = opts.noMax or false,
+        rosterMode    = opts.rosterMode or false,
         resetOverride = opts.resetOverride or nil,
         optional      = opts.optional or false,
         userNote      = opts.userNote or "",
@@ -371,6 +472,8 @@ function TD:RemoveStep(listID, sectionKey, stepKey)
     for i, step in ipairs(sec.steps) do
         if step.key == stepKey then
             tremove(sec.steps, i)
+            local listRosters = GetDB().global.trackerRosters[listID]
+            if listRosters then listRosters[stepKey] = nil end
             local list = self:GetList(listID)
             if list then list.modified = time() end
             return true
@@ -555,6 +658,10 @@ function TD:SetObjectiveComplete(listID, sectionKey, stepKey, objKey, complete)
 end
 
 function TD:IsStepComplete(listID, sectionKey, stepKey)
+    local step = self:GetStep(listID, sectionKey, stepKey)
+    if step and step.rosterMode then
+        return self:IsRosterCompleter(listID, stepKey, self:GetCurrentCharKey())
+    end
     local sp = self:GetStepProgress(listID, sectionKey, stepKey)
     return sp.completed or false
 end
@@ -805,6 +912,29 @@ function TD:CheckResets()
         end
     end
 
+    -- Roster completers are account-wide aggregates, so they reset on the
+    -- account daily/weekly boundary regardless of the host list's own scope.
+    if needsAcctDaily or needsAcctWeekly then
+        local rosterStore = db.global.trackerRosters
+        for listID, list in pairs(lists) do
+            local listRosters = rosterStore[listID]
+            if listRosters then
+                for _, sec in ipairs(list.sections) do
+                    for _, step in ipairs(sec.steps or {}) do
+                        if step.rosterMode and listRosters[step.key] then
+                            local resetType = self:GetEffectiveResetType(list, sec, step)
+                            if (resetType == "daily" and needsAcctDaily) or
+                               (resetType == "weekly" and needsAcctWeekly) then
+                                wipe(listRosters[step.key].completers)
+                                listRosters[step.key].lastReset = now
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     if needsCharWeekly or needsAcctWeekly then
         print("|cFFFFD100OneWoW Trackers:|r Tracker weekly progress has been reset.")
     end
@@ -851,6 +981,7 @@ local SERIALIZE_KEYS = {
     listType = "lt", category = "c", resetInterval = "ri", sections = "s",
     label = "l", resetOverride = "ro", steps = "st", key = "k",
     trackType = "tt", trackParams = "tp", max = "m", noMax = "nm",
+    rosterMode = "rm",
     optional = "o", faction = "f", mapID = "mi", coordX = "cx",
     coordY = "cy", waypointRadius = "wr", requiresSteps = "rs",
     objectives = "ob", type = "ty", params = "p",
@@ -970,6 +1101,7 @@ local function ValidateAndNormalizeImport(expanded)
             step.trackParams = type(step.trackParams) == "table" and step.trackParams or {}
             step.max         = tonumber(step.max) or 1
             step.noMax       = step.noMax == true
+            step.rosterMode  = step.rosterMode == true
             step.optional    = step.optional == true
             step.objectives  = type(step.objectives) == "table" and step.objectives or {}
             for _, obj in ipairs(step.objectives) do
@@ -1116,6 +1248,7 @@ function TD:NormalizeAllLists()
                             if not TRACK_TYPE_SET[step.trackType] then step.trackType = "manual" end
                             if type(step.trackParams) ~= "table" then step.trackParams = {} end
                             if type(step.objectives)  ~= "table" then step.objectives  = {} end
+                            step.rosterMode = step.rosterMode == true
                             step.max = tonumber(step.max) or 1
                         end
                     end

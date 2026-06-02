@@ -39,6 +39,14 @@ local function FireCallbacks(event, ...)
     end
 end
 
+-- True when a step is flagged rosterMode. Roster steps record the current
+-- character into the account-wide roster on trigger completion instead of
+-- flipping a single shared checkbox.
+local function StepIsRoster(listID, sectionKey, stepKey)
+    local step = TD:GetStep(listID, sectionKey, stepKey)
+    return step and step.rosterMode
+end
+
 local activeEventsCache = {}
 local lastEventCheck = 0
 
@@ -626,6 +634,16 @@ function TE:EvaluateStep(listID, sectionKey, step)
             params = step.trackParams or {},
         })
 
+        if step.rosterMode then
+            if current ~= nil then
+                local effectiveMax = step.noMax and 0 or (step.max or 1)
+                if effectiveMax > 0 and current >= effectiveMax then
+                    TD:RecordRosterCompletion(listID, step.key)
+                end
+            end
+            return
+        end
+
         if current ~= nil then
             local sp = TD:GetStepProgress(listID, sectionKey, step.key)
             sp.current = current
@@ -714,6 +732,8 @@ local function OnItemLooted(itemID)
     for _, ref in ipairs(lootIndex[itemID]) do
         if ref.objKey then
             TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
+        elseif StepIsRoster(ref.listID, ref.sectionKey, ref.stepKey) then
+            TD:RecordRosterCompletion(ref.listID, ref.stepKey)
         else
             TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, 1)
         end
@@ -730,6 +750,8 @@ local function OnNPCInteract(npcID)
     for _, ref in ipairs(npcIndex[npcID]) do
         if ref.objKey then
             TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
+        elseif StepIsRoster(ref.listID, ref.sectionKey, ref.stepKey) then
+            TD:RecordRosterCompletion(ref.listID, ref.stepKey)
         else
             TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, 1)
         end
@@ -749,6 +771,8 @@ local function OnEnterInstance()
     for _, ref in ipairs(instanceIndex[instanceID]) do
         if ref.objKey then
             TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
+        elseif StepIsRoster(ref.listID, ref.sectionKey, ref.stepKey) then
+            TD:RecordRosterCompletion(ref.listID, ref.stepKey)
         else
             TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, 1)
         end
@@ -767,8 +791,12 @@ local function OnCreatureKilled(creatureID)
             TD:SetObjectiveComplete(ref.listID, ref.sectionKey, ref.stepKey, ref.objKey, true)
         else
             local step = TD:GetStep(ref.listID, ref.sectionKey, ref.stepKey)
-            local max = step and step.max or 1
-            TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, max)
+            if step and step.rosterMode then
+                TD:RecordRosterCompletion(ref.listID, ref.stepKey)
+            else
+                local max = step and step.max or 1
+                TD:BumpStepProgress(ref.listID, ref.sectionKey, ref.stepKey, 1, max)
+            end
         end
     end
 
@@ -1020,6 +1048,12 @@ function TE:BuildStepTooltip(tooltip, listID, sectionKey, step)
     local tt = step.trackType or "manual"
     tooltip:AddLine(" ")
     tooltip:AddDoubleLine("Track Type:", self:GetTrackTypeDisplayName(tt), 0.5, 0.5, 0.5, 1, 0.82, 0)
+
+    if step.rosterMode then
+        local completers = TD:GetRosterCompleters(listID, step.key)
+        tooltip:AddDoubleLine(ns.L["TRACKER_ROSTER_MODE"] or "Per-character roster",
+            tostring(#completers), 0.5, 0.5, 0.5, 1, 1, 1)
+    end
 
     if tt ~= "manual" then
         local current, max = self:EvaluateObjective({

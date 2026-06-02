@@ -716,7 +716,13 @@ function ns.UI.CreateTrackerTab(parent)
             for stepIdx, step in ipairs(sec.steps or {}) do
               if TE:IsStepVisible(step, sec) and not (hideCompleted and TD:IsStepComplete(list.id, sec.key, step.key)) then
                 local sp = TD:GetStepProgress(list.id, sec.key, step.key)
-                local isComplete = sp.completed or false
+                local rosterCompleters = step.rosterMode and TD:GetRosterCompleters(list.id, step.key) or nil
+                local isComplete
+                if step.rosterMode then
+                    isComplete = TD:IsRosterCompleter(list.id, step.key, TD:GetCurrentCharKey())
+                else
+                    isComplete = sp.completed or false
+                end
 
                 local depsMet = TD:AreStepDependenciesMet(list.id, step)
 
@@ -753,7 +759,18 @@ function ns.UI.CreateTrackerTab(parent)
                     checkBtn:SetPoint("LEFT", stepRow, "LEFT", 6, 0)
                     checkBtn:SetChecked(isComplete)
 
-                    if step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
+                    if step.rosterMode then
+                        checkBtn:SetScript("OnClick", function()
+                            if TD:IsRosterCompleter(list.id, step.key, TD:GetCurrentCharKey()) then
+                                TD:RemoveRosterCompleter(list.id, step.key, TD:GetCurrentCharKey())
+                            else
+                                TD:RecordRosterCompletion(list.id, step.key)
+                            end
+                            parent.RefreshList()
+                            parent.ShowDetail(list.id)
+                            TE:RefreshAllPinnedWindows()
+                        end)
+                    elseif step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                         checkBtn:SetScript("OnClick", function()
                             TD:ToggleStepComplete(list.id, sec.key, step.key)
                             parent.RefreshList()
@@ -782,7 +799,9 @@ function ns.UI.CreateTrackerTab(parent)
                 end
 
                 local progressStr = ""
-                if step.trackType ~= "manual" or (step.max and step.max > 1) then
+                if rosterCompleters then
+                    progressStr = tostring(#rosterCompleters)
+                elseif step.trackType ~= "manual" or (step.max and step.max > 1) then
                     local current = sp.current or 0
                     local max = step.noMax and 0 or (step.max or 1)
                     if max > 0 then
@@ -848,6 +867,34 @@ function ns.UI.CreateTrackerTab(parent)
                         local objH = math.max(18, objLabel:GetStringHeight() + 4)
                         objY = objY - objH
                         rowHeight = rowHeight + objH
+                    end
+                end
+
+                if rosterCompleters then
+                    local rosterY = -(rowHeight - 4)
+                    if #rosterCompleters == 0 then
+                        local emptyFS = OneWoW_GUI:CreateFS(stepRow, 10)
+                        emptyFS:SetPoint("TOPLEFT", stepRow, "TOPLEFT", 30, rosterY)
+                        emptyFS:SetText(L["TRACKER_ROSTER_NOBODY"] or "No characters yet")
+                        emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                        rowHeight = rowHeight + 18
+                    else
+                        for _, c in ipairs(rosterCompleters) do
+                            local nameFS = OneWoW_GUI:CreateFS(stepRow, 10)
+                            nameFS:SetPoint("TOPLEFT", stepRow, "TOPLEFT", 30, rosterY)
+                            nameFS:SetPoint("RIGHT", stepRow, "RIGHT", -80, 0)
+                            nameFS:SetJustifyH("LEFT")
+                            nameFS:SetText(c.realm and (c.name .. "-" .. c.realm) or c.name)
+                            local color = c.class and RAID_CLASS_COLORS[c.class]
+                            if color then
+                                nameFS:SetTextColor(color.r, color.g, color.b)
+                            else
+                                nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                            end
+                            local nameH = math.max(18, nameFS:GetStringHeight() + 4)
+                            rosterY = rosterY - nameH
+                            rowHeight = rowHeight + nameH
+                        end
                     end
                 end
 

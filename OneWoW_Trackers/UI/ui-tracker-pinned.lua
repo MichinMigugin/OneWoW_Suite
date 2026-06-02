@@ -311,7 +311,13 @@ function TP:Create(listID)
             for _, step in ipairs(sec.steps or {}) do
               if TE:IsStepVisible(step, sec) then
                 local sp = TD:GetStepProgress(listID, sec.key, step.key)
-                local isComplete = sp.completed or false
+                local rosterCompleters = step.rosterMode and TD:GetRosterCompleters(listID, step.key) or nil
+                local isComplete
+                if step.rosterMode then
+                    isComplete = TD:IsRosterCompleter(listID, step.key, TD:GetCurrentCharKey())
+                else
+                    isComplete = sp.completed or false
+                end
 
                if not (hideCompleted and isComplete) then
                 local stepRow = AcquireStep(scrollChild)
@@ -341,7 +347,9 @@ function TP:Create(listID)
                 end
 
                 local progressStr = ""
-                if step.trackType ~= "manual" or (step.max and step.max > 1) then
+                if rosterCompleters then
+                    progressStr = tostring(#rosterCompleters)
+                elseif step.trackType ~= "manual" or (step.max and step.max > 1) then
                     local current = sp.current or 0
                     local max = step.noMax and 0 or (step.max or 1)
                     if max > 0 then
@@ -365,7 +373,7 @@ function TP:Create(listID)
                         C_SuperTrack.SetSuperTrackedUserWaypoint(true)
                         print(format("%s Waypoint set for %s (%.1f, %.1f)", L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW Trackers:|r", step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
                     end)
-                elseif step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
+                elseif not step.rosterMode and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                     stepRow:RegisterForClicks("AnyDown", "AnyUp")
                     stepRow:SetScript("OnClick", function(_, button)
                         if button == "LeftButton" then
@@ -399,7 +407,64 @@ function TP:Create(listID)
 
                 yOffset = yOffset - 20
 
-                if step.objectives and #step.objectives > 0 then
+                if rosterCompleters then
+                    local myKey = TD:GetCurrentCharKey()
+                    local meListed = false
+
+                    for _, c in ipairs(rosterCompleters) do
+                        local cRow = AcquireObj(scrollChild)
+                        cRow:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 20, yOffset)
+                        cRow:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -4, yOffset)
+                        tinsert(activeObjs, cRow)
+
+                        SetDotStatus(cRow._dot, true)
+                        cRow._label:ClearAllPoints()
+                        cRow._label:SetPoint("LEFT", cRow._dot, "RIGHT", 4, 0)
+                        cRow._label:SetPoint("RIGHT", cRow, "RIGHT", -4, 0)
+                        cRow._label:SetText(c.realm and (c.name .. "-" .. c.realm) or c.name)
+
+                        local color = c.class and RAID_CLASS_COLORS[c.class]
+                        if color then
+                            cRow._label:SetTextColor(color.r, color.g, color.b)
+                        else
+                            cRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                        end
+
+                        if c.charKey == myKey then meListed = true end
+
+                        local removeKey = c.charKey
+                        cRow:SetScript("OnClick", function()
+                            TD:RemoveRosterCompleter(listID, step.key, removeKey)
+                            frame:Refresh()
+                            ns.TrackerEngine:RefreshAllPinnedWindows()
+                        end)
+
+                        yOffset = yOffset - 18
+                    end
+
+                    if not meListed and myKey then
+                        local addRow = AcquireObj(scrollChild)
+                        addRow:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 20, yOffset)
+                        addRow:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -4, yOffset)
+                        tinsert(activeObjs, addRow)
+
+                        SetDotStatus(addRow._dot, false)
+                        addRow._label:ClearAllPoints()
+                        addRow._label:SetPoint("LEFT", addRow._dot, "RIGHT", 4, 0)
+                        addRow._label:SetPoint("RIGHT", addRow, "RIGHT", -4, 0)
+                        addRow._label:SetText(L["TRACKER_ROSTER_ADD_ME"] or "+ Add me")
+                        addRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+                        addRow:SetScript("OnClick", function()
+                            TD:RecordRosterCompletion(listID, step.key)
+                            frame:Refresh()
+                            ns.TrackerEngine:RefreshAllPinnedWindows()
+                        end)
+
+                        yOffset = yOffset - 18
+                    end
+
+                elseif step.objectives and #step.objectives > 0 then
                     for _, obj in ipairs(step.objectives) do
                         local objComplete = TD:GetObjectiveProgress(listID, sec.key, step.key, obj.key)
 

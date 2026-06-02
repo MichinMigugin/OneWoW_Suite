@@ -40,6 +40,12 @@ local function FillCreatureFromTarget(card, fieldKey)
     if box then box:SetText(tostring(cid)) end
 end
 
+local function UpdateTitleFromTarget(nameBox)
+    local name = UnitName("target")
+    if not name or issecretvalue(name) then FillMsg("TRACKER_FILL_NO_TARGET"); return end
+    nameBox:SetText(format(ns.L["TRACKER_TALK_TO_FORMAT"] or "Talk to %s", name))
+end
+
 local function FillCoordsFromPosition(card)
     local mapID = C_Map.GetBestMapForUnit("player")
     local pos = mapID and C_Map.GetPlayerMapPosition(mapID, "player")
@@ -796,12 +802,19 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             {
                 text = L["NOTES_SAVE"] or "Save",
                 onClick = function(frame)
+                    -- Route through the selected category card so its track type
+                    -- and fields are saved, not a blank checkbox.
+                    if frame._activeCard and frame._activeCard._doSave then
+                        frame._activeCard._doSave()
+                        return
+                    end
                     local stepName = strtrim(frame._nameBox:GetText() or "")
                     if stepName == "" then stepName = existing and existing.label or "New Step" end
                     local resetVal3 = frame._resetDD:GetValue()
                     local changes = {
                         label = stepName,
                         optional = not frame._trackCheck:GetChecked(),
+                        rosterMode = frame._rosterCheck:GetChecked() and true or false,
                         resetOverride = (resetVal3 and resetVal3 ~= "none") and resetVal3 or false,
                         userNote = strtrim(frame._notesBox:GetText() or ""),
                     }
@@ -843,8 +856,21 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     trackHint:SetText(L["TRACKER_TRACK_HINT"] or "Uncheck for info-only (no checkbox, won't count toward completion)")
     trackHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
+    local rosterCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ROSTER_MODE"] or "Per-character roster" })
+    rosterCheck:SetPoint("TOPLEFT", trackHint, "BOTTOMLEFT", -18, -8)
+    rosterCheck:SetChecked(existing and existing.rosterMode or false)
+    dialog._rosterCheck = rosterCheck
+
+    local rosterHint = OneWoW_GUI:CreateFS(content, 10)
+    rosterHint:SetPoint("TOPLEFT", rosterCheck, "BOTTOMLEFT", 18, -2)
+    rosterHint:SetPoint("RIGHT", content, "RIGHT", -10, 0)
+    rosterHint:SetJustifyH("LEFT")
+    rosterHint:SetWordWrap(true)
+    rosterHint:SetText(L["TRACKER_ROSTER_HINT"] or "Auto-lists each character that completes this step's trigger this reset. You can also add or remove yourself manually.")
+    rosterHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
     local resetLabel = OneWoW_GUI:CreateFS(content, 10)
-    resetLabel:SetPoint("TOPLEFT", trackHint, "BOTTOMLEFT", -18, -8)
+    resetLabel:SetPoint("TOPLEFT", rosterHint, "BOTTOMLEFT", -18, -8)
     resetLabel:SetText(L["TRACKER_RESET_LABEL"] or "Reset:")
     resetLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
@@ -904,6 +930,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 if c._fieldRow then c._fieldRow:Hide() end
                 if c._saveFieldBtn then c._saveFieldBtn:Hide() end
                 if c._fillBtn then c._fillBtn:Hide() end
+                if c._titleBtn then c._titleBtn:Hide() end
                 local baseH = 28 + (c._descHeight or 14) + 8
                 c:SetHeight(baseH)
                 c:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -1011,17 +1038,28 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                 card._fillBtn = fillBtn
             end
 
+            local titleBtn
+            if cat.trackType == "npc_interact" then
+                titleBtn = OneWoW_GUI:CreateFitTextButton(card, { text = L["TRACKER_UPDATE_TITLE"] or "Update title", height = 22 })
+                titleBtn:SetPoint("LEFT", fillBtn or saveFieldBtn, "RIGHT", 8, 0)
+                titleBtn:SetScript("OnClick", function() UpdateTitleFromTarget(nameBox) end)
+                card._titleBtn = titleBtn
+            end
+
             if isActive then
                 cardHeight = expandedHeight
                 saveFieldBtn:Show()
                 if fillBtn then fillBtn:Show() end
+                if titleBtn then titleBtn:Show() end
+                dialog._activeCard = card
             else
                 fieldRow:Hide()
                 saveFieldBtn:Hide()
                 if fillBtn then fillBtn:Hide() end
+                if titleBtn then titleBtn:Hide() end
             end
 
-            saveFieldBtn:SetScript("OnClick", function()
+            card._doSave = function()
                 local stepName = strtrim(nameBox:GetText() or "")
                 if stepName == "" then stepName = cat.title end
 
@@ -1073,6 +1111,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                     trackParams = trackParams,
                     max = max,
                     optional = not dialog._trackCheck:GetChecked(),
+                    rosterMode = dialog._rosterCheck:GetChecked() and true or false,
                     resetOverride = (resetVal and resetVal ~= "none") and resetVal or false,
                     userNote = strtrim(dialog._notesBox:GetText() or ""),
                 }
@@ -1092,7 +1131,9 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
                 dialog:Hide(); dialog:SetParent(nil)
                 if callback then callback() end
-            end)
+            end
+
+            saveFieldBtn:SetScript("OnClick", card._doSave)
         end
 
         card:SetHeight(cardHeight)
@@ -1110,6 +1151,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                     trackParams = {},
                     max = 1,
                     optional = not dialog._trackCheck:GetChecked(),
+                    rosterMode = dialog._rosterCheck:GetChecked() and true or false,
                     resetOverride = (resetVal2 and resetVal2 ~= "none") and resetVal2 or false,
                     userNote = strtrim(dialog._notesBox:GetText() or ""),
                 }
@@ -1128,9 +1170,11 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
             if not myself._expanded then
                 CollapseAllExcept(myself)
                 myself._expanded = true
+                dialog._activeCard = myself
                 if myself._fieldRow then myself._fieldRow:Show() end
                 if myself._saveFieldBtn then myself._saveFieldBtn:Show() end
                 if myself._fillBtn then myself._fillBtn:Show() end
+                if myself._titleBtn then myself._titleBtn:Show() end
                 local newH = 28 + (descHeight) + 8 + 42 + 30
                 myself:SetHeight(newH)
                 myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
