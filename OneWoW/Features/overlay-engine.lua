@@ -43,6 +43,8 @@ local OVERLAY_ORDER = {
     "toys",
     "upgrade",
     "warbound",
+    "wue",
+    "boe",
 }
 
 local INVTYPE_TO_SLOT = {
@@ -649,6 +651,12 @@ local function ApplyOverlayToButton(button, overlayId, positionIndex)
     end
     entry.frame:SetSize(finalSize, finalSize)
     OneWoW.OverlayIcons:ApplyToTexture(entry.texture, iconName)
+    local iconColor = cfg.iconColor
+    if iconColor then
+        entry.texture:SetVertexColor(iconColor[1], iconColor[2], iconColor[3])
+    else
+        entry.texture:SetVertexColor(1, 1, 1)
+    end
     if iconName ~= "BLANK" then
         entry.texture:SetAlpha(alpha)
     end
@@ -908,9 +916,30 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
         end
     end
 
+    -- Warbound covers Warbound-Until-Equipped only while its includeWUE setting
+    -- is on (the default). When off, WuE items are handed to the standalone
+    -- "wue" overlay instead, so the two overlays never double-mark one slot.
+    local warboundCfg = GetOverlayCfg("warbound")
+    local warboundIncludesWUE = not warboundCfg or warboundCfg.includeWUE ~= false
+
     if IsOverlayEnabled("warbound") then
-        if isWarbound or isWarboundUntilEquip then
+        if isWarbound or (isWarboundUntilEquip and warboundIncludesWUE) then
             hits[#hits + 1] = "warbound"
+        end
+    end
+
+    if IsOverlayEnabled("wue") then
+        if isWarboundUntilEquip and not warboundIncludesWUE then
+            hits[#hits + 1] = "wue"
+        end
+    end
+
+    if IsOverlayEnabled("boe") then
+        if not isBound and not isWarbound and not isWarboundUntilEquip then
+            local bindType = select(14, C_Item.GetItemInfo(itemLink))
+            if bindType == Enum.ItemBind.OnEquip then
+                hits[#hits + 1] = "boe"
+            end
         end
     end
 

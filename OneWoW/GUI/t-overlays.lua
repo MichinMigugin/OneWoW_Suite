@@ -26,6 +26,8 @@ local OVERLAY_SETTINGS_IDS = {
     unknownitems = true,
     upgrade      = true,
     warbound     = true,
+    wue          = true,
+    boe          = true,
     transmog       = true,
 }
 
@@ -74,6 +76,14 @@ local ICON_CATEGORIES = {
             "icon-add", "icon-alert", "icon-alliance", "icon-compass", "icon-fav",
             "icon-flag", "icon-gears", "icon-horde", "icon-minus", "icon-mount",
             "icon-pet", "icon-pin", "icon-recipe", "icon-toy", "icon-trash",
+        },
+    },
+    {
+        nameKey = "OVR_ICON_CAT_SHAPES",
+        icons   = {
+            "WhiteCircle-RaidBlips", "Gamepad_Shp_Circle_64", "Gamepad_Shp_Square_64",
+            "Gamepad_Shp_Triangle_64", "Gamepad_Shp_Cross_64", "Rare-Elite-Star",
+            "UI-Achievement-Shield-2-Desaturated",
         },
     },
     {
@@ -411,6 +421,8 @@ local function CreateSlotPreview(parent, featureId, reg)
             overlayTex:SetAlpha(0)
         else
             OneWoW.OverlayIcons:ApplyToTexture(overlayTex, icon)
+            local iconColor = reg:GetOverlaySetting(featureId, "iconColor") or {1, 1, 1}
+            overlayTex:SetVertexColor(iconColor[1], iconColor[2], iconColor[3])
             overlayTex:SetAlpha(alpha)
         end
         overlayFrame:Show()
@@ -684,6 +696,46 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
+    -- While Warbound is set to also cover Warbound-Until-Equipped items, the
+    -- standalone WuE overlay is managed by Warbound and can't be toggled here.
+    -- Offer a confirm-gated button to split it out into its own overlay.
+    if featureId == "wue" and reg:GetOverlaySetting("warbound", "includeWUE") ~= false then
+        local incNote = OneWoW_GUI:CreateFS(dsc, 12)
+        incNote:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
+        incNote:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+        incNote:SetJustifyH("LEFT")
+        incNote:SetWordWrap(true)
+        incNote:SetSpacing(3)
+        incNote:SetText(L["OVR_WUE_INCLUDED_NOTE"])
+        incNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        yOffset = yOffset - incNote:GetStringHeight() - 16
+
+        local splitBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_WUE_SPLIT_BTN"], height = 26 })
+        splitBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        splitBtn:SetScript("OnClick", function()
+            local dialog = OneWoW_GUI:CreateConfirmDialog({
+                name    = "OneWoW_OverlayWUESplitConfirm",
+                title   = L["OVR_WUE_SPLIT_CONFIRM_TITLE"],
+                message = L["OVR_WUE_SPLIT_CONFIRM_MSG"],
+                buttons = {
+                    { text = L["OVR_WUE_SPLIT_CONFIRM_YES"], color = { 0.2, 0.6, 0.2 }, onClick = function(d)
+                        d:Hide()
+                        reg:SetOverlaySetting("warbound", "includeWUE", false)
+                        ShowOverlayDetail(split, feature, selectedRow)
+                    end },
+                    { text = L["CANCEL"], onClick = function(d) d:Hide() end },
+                },
+            })
+            dialog.frame:Show()
+        end)
+        yOffset = yOffset - 26 - 16
+
+        dsc:SetHeight(math.abs(yOffset) + 20)
+        OneWoW_GUI:ApplyFontToFrame(dsc)
+        split.UpdateDetailThumb()
+        return
+    end
+
     local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
         yOffset = yOffset,
         statusLabel = L["FEATURE_STATUS_LABEL"],
@@ -701,6 +753,33 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     })
 
     yOffset = statusBlock.getBottomY() - 20
+
+    if featureId == "warbound" then
+        local incCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_WARBOUND_INCLUDE_WUE_LABEL"] })
+        incCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        incCb:SetChecked(reg:GetOverlaySetting("warbound", "includeWUE") ~= false)
+        incCb:SetScript("OnClick", function(myself)
+            local checked = myself:GetChecked()
+            reg:SetOverlaySetting("warbound", "includeWUE", checked)
+            -- Keep the two mutually exclusive: folding WuE back into Warbound
+            -- turns the standalone WuE overlay off.
+            if checked then
+                reg:SetEnabled("overlays", "wue", false)
+            end
+            OneWoW.OverlayEngine:Refresh()
+        end)
+        yOffset = yOffset - 28
+
+        local incNote = OneWoW_GUI:CreateFS(dsc, 11)
+        incNote:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
+        incNote:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+        incNote:SetJustifyH("LEFT")
+        incNote:SetWordWrap(true)
+        incNote:SetSpacing(3)
+        incNote:SetText(L["OVR_WARBOUND_INCLUDE_WUE_NOTE"])
+        incNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        yOffset = yOffset - incNote:GetStringHeight() - 16
+    end
 
     if featureId == "junk" or featureId == "protected" then
         local noteKey = (featureId == "junk") and "OVR_JUNK_NOTE" or "OVR_PROTECTED_NOTE"
@@ -1426,6 +1505,12 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     previewTex:SetAllPoints(previewFrame)
     OneWoW.OverlayIcons:ApplyToTexture(previewTex, currentIcon)
 
+    local function ApplyPreviewTint()
+        local iconColor = reg:GetOverlaySetting(featureId, "iconColor") or {1, 1, 1}
+        previewTex:SetVertexColor(iconColor[1], iconColor[2], iconColor[3])
+    end
+    ApplyPreviewTint()
+
     local previewName = OneWoW_GUI:CreateFS(dsc, 10)
     previewName:SetPoint("LEFT", previewFrame, "RIGHT", 6, 0)
     previewName:SetText(OneWoW.OverlayIcons:GetDisplayName(currentIcon))
@@ -1500,6 +1585,25 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     alphaSlider:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
     alphaSlider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
     rightY = rightY - 36 - 10
+
+    local iconColorLabel = OneWoW_GUI:CreateFS(dsc, 12)
+    iconColorLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
+    iconColorLabel:SetText(L["OVR_ICON_COLOR_LABEL"])
+    iconColorLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local iconSwatch = OneWoW_GUI:CreateColorSwatch(dsc, {
+        getColor = function()
+            local sc = reg:GetOverlaySetting(featureId, "iconColor") or {1, 1, 1}
+            return sc[1], sc[2], sc[3]
+        end,
+        onColorChanged = function(r, g, b)
+            reg:SetOverlaySetting(featureId, "iconColor", {r, g, b})
+            ApplyPreviewTint()
+            RefreshPreview()
+        end,
+    })
+    iconSwatch:SetPoint("LEFT", iconColorLabel, "RIGHT", 8, 0)
+    rightY = rightY - 28 - 10
 
     local effectLabel = OneWoW_GUI:CreateFS(dsc, 12)
     effectLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
@@ -1631,12 +1735,15 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     local picker = CreateIconPicker(dsc, currentIcon, function(iconName)
         reg:SetOverlaySetting(featureId, "icon", iconName)
         OneWoW.OverlayIcons:ApplyToTexture(previewTex, iconName)
+        ApplyPreviewTint()
         previewName:SetText(OneWoW.OverlayIcons:GetDisplayName(iconName))
         RefreshPreview()
     end)
     picker:SetPoint("TOPLEFT",  dsc, "TOPLEFT", 12,  yOffset)
     picker:SetPoint("TOPRIGHT", dsc, "TOP",     -20, yOffset)
     yOffset = yOffset - picker:GetHeight() - 16
+
+    yOffset = math.min(yOffset, rightY)
 
     local vendorCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_VENDOR_LABEL"] })
     vendorCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -1647,7 +1754,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     end)
 
     local vendorApplyAll = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_APPLY_TO_ALL_BTN"], height = 20 })
-    vendorApplyAll:SetPoint("LEFT", vendorCb, "RIGHT", 160, 0)
+    vendorApplyAll:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     vendorApplyAll:SetScript("OnClick", function()
         local val = vendorCb:GetChecked()
         local db = OneWoW.db.global.settings.overlays
@@ -1668,7 +1775,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     end)
 
     local ahApplyAll = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_APPLY_TO_ALL_BTN"], height = 20 })
-    ahApplyAll:SetPoint("LEFT", ahCb, "RIGHT", 160, 0)
+    ahApplyAll:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     ahApplyAll:SetScript("OnClick", function()
         local val = ahCb:GetChecked()
         local db = OneWoW.db.global.settings.overlays
@@ -1679,8 +1786,6 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end
     end)
     yOffset = yOffset - 30 - 10
-
-    yOffset = math.min(yOffset, rightY)
 
     if featureId == "junk" or featureId == "protected" then
         local tooltipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_TOOLTIP_LABEL"] })

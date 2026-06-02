@@ -21,6 +21,14 @@ local iconDisplayNames = {
     ["icon-toy"]     = "Toy Icon",
     ["icon-trash"]   = "Trash Icon",
 
+    ["WhiteCircle-RaidBlips"]               = "Circle",
+    ["Gamepad_Shp_Circle_64"]               = "Circle (Outline)",
+    ["Gamepad_Shp_Square_64"]               = "Square",
+    ["Gamepad_Shp_Triangle_64"]             = "Triangle",
+    ["Gamepad_Shp_Cross_64"]                = "Cross",
+    ["Rare-Elite-Star"]                     = "Star",
+    ["UI-Achievement-Shield-2-Desaturated"] = "Shield",
+
     ["bags-glow-white"]    = "Glow - White",
     ["bags-glow-purple"]   = "Glow - Purple",
     ["bags-glow-blue"]     = "Glow - Blue",
@@ -71,6 +79,13 @@ local iconDisplayNames = {
 function OverlayIcons:GetIconList()
     return {
         "BLANK",
+        "WhiteCircle-RaidBlips",
+        "Gamepad_Shp_Circle_64",
+        "Gamepad_Shp_Square_64",
+        "Gamepad_Shp_Triangle_64",
+        "Gamepad_Shp_Cross_64",
+        "Rare-Elite-Star",
+        "UI-Achievement-Shield-2-Desaturated",
         "icon-add",
         "icon-alert",
         "icon-alliance",

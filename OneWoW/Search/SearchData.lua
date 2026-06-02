@@ -199,6 +199,20 @@ OneWoW.SearchData = {
         keywords = {"warbound", "overlay warbound", "bou", "warbound until equipped"},
     },
     {
+        path     = function() return L("SRCH_PATH_OW_OVERLAYS_WUE") end,
+        desc     = function() return L("SRCH_DESC_OW_OVERLAYS_WUE") end,
+        addonKey = nil, addonLabel = "OneWoW",
+        navType = "module", module = "qol", subtab = "overlays",
+        keywords = {"warbound until equipped", "wue", "overlay wue", "until equipped"},
+    },
+    {
+        path     = function() return L("SRCH_PATH_OW_OVERLAYS_BOE") end,
+        desc     = function() return L("SRCH_DESC_OW_OVERLAYS_BOE") end,
+        addonKey = nil, addonLabel = "OneWoW",
+        navType = "module", module = "qol", subtab = "overlays",
+        keywords = {"bind on equip", "boe", "overlay boe", "bop", "unbound"},
+    },
+    {
         path     = function() return L("SRCH_PATH_OW_OVERLAYS_ICONSTYLE") end,
         desc     = function() return L("SRCH_DESC_OW_OVERLAYS_ICONSTYLE") end,
         addonKey = nil, addonLabel = "OneWoW",

@@ -76,6 +76,8 @@ local function ValueProvider(tooltip, context)
             local leftLabel = L["TIPS_VALUE_AH_PRICE"]
             if meta and meta.source == "auctionator" then
                 leftLabel = L["TIPS_VALUE_AH_PRICE_AUCTIONATOR"] or leftLabel
+            elseif meta and meta.source == "tsm" then
+                leftLabel = L["TIPS_VALUE_AH_PRICE_TSM"] or leftLabel
             end
             table.insert(lines, {
                 type  = "double",

@@ -1286,8 +1286,14 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     yOffset = yOffset - ahIntro:GetStringHeight() - 8
 
     local ahSource = valSettings.ahPriceSource or "onewow"
-    local ahSourceLabel = ahSource == "auctionator" and (L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"] or "Auctionator")
-        or (L["TIPS_VALUE_AH_SOURCE_ONEWOW"] or "OneWoW AH scan")
+    local ahSourceLabel
+    if ahSource == "auctionator" then
+        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"] or "Auctionator"
+    elseif ahSource == "tsm" then
+        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_TSM"] or "TradeSkillMaster"
+    else
+        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_ONEWOW"] or "OneWoW AH scan"
+    end
 
     local ahSrcLabel = OneWoW_GUI:CreateFS(dsc, 12)
     ahSrcLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -1308,6 +1314,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
             return {
                 { value = "onewow", text = L["TIPS_VALUE_AH_SOURCE_ONEWOW"] or "OneWoW AH scan" },
                 { value = "auctionator", text = L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"] or "Auctionator" },
+                { value = "tsm", text = L["TIPS_VALUE_AH_SOURCE_TSM"] or "TradeSkillMaster" },
             }
         end,
         onSelect = function(value, text)
