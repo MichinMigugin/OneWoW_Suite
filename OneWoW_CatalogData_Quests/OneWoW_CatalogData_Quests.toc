@@ -5,6 +5,7 @@
 ## Author: OneWoW Dev Team
 
 ## RequiredDeps: OneWoW, OneWoW_GUI, OneWoW_Catalog
+## LoadWith: OneWoW_Catalog
 ## Category: OneWoW
 ## Group: OneWoW_Catalog
 ## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
