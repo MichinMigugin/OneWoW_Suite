@@ -6,7 +6,7 @@
 -- is enabled we offer to disable that datastore too; if any consumer is
 -- enabled we keep it enabled.
 
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -48,7 +48,7 @@ FirstRun.CATALOG = {
       datastores = { "OneWoW_AltTracker_Storage", "OneWoW_AltTracker_Character" } },
     { addonName = "OneWoW_ShoppingList", labelKey = "WIZARD_FEATURE_SHOPPINGLIST", summaryKey = "WIZARD_FEATURE_SHOPPINGLIST_DESC", group = "standalone",
       iconTexture = "Interface\\Icons\\INV_Misc_Coin_01",
-      datastores = { "OneWoW_AltTracker_Storage", "OneWoW_AltTracker_Professions" } },
+      datastores = { "OneWoW_AltTracker_Storage", "OneWoW_CatalogData_Tradeskills" } },
     { addonName = "OneWoW_DirectDeposit", labelKey = "WIZARD_FEATURE_DIRECTDEPOSIT", summaryKey = "WIZARD_FEATURE_DIRECTDEPOSIT_DESC", group = "standalone",
       iconTexture = "Interface\\Icons\\INV_Misc_Coin_02",
       datastores = {} },
@@ -250,13 +250,13 @@ function FirstRun:BuildPanel(parent)
         btn.itemValue = item.value
         btn.isActive  = item.isActive or false
         ApplyPresetVisual(btn)
-        btn:HookScript("OnEnter", function(self)
-            if not self.isActive then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+        btn:HookScript("OnEnter", function(myself)
+            if not myself.isActive then
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
             end
         end)
-        btn:HookScript("OnLeave", function(self) ApplyPresetVisual(self) end)
+        btn:HookScript("OnLeave", function(myself) ApplyPresetVisual(myself) end)
         local w = btn:GetWidth() or 0
         if w > maxBtnWidth then maxBtnWidth = w end
         presetButtons[i] = btn
@@ -293,17 +293,17 @@ function FirstRun:BuildPanel(parent)
     actionBar.right:SetWidth(applyBtn:GetWidth())
     actionBar:Refresh()
 
-    local initialDontShow = (_G.OneWoW_DB and _G.OneWoW_DB.wizardShown ~= false) and true or false
-    if _G.OneWoW_DB then
-        _G.OneWoW_DB.wizardShown = initialDontShow
+    local initialDontShow = (OneWoW_DB and OneWoW_DB.wizardShown ~= false) and true or false
+    if OneWoW_DB then
+        OneWoW_DB.wizardShown = initialDontShow
     end
     local dontShowRow = OneWoW_GUI:CreateLayoutFrame(content, { height = C.CHECKBOX_SIZE or 24 })
     local dontShowCB = OneWoW_GUI:CreateCheckbox(dontShowRow, {
         label   = L["WIZARD_DONT_SHOW_AGAIN"],
         checked = initialDontShow,
         onClick = function(myself)
-            if _G.OneWoW_DB then
-                _G.OneWoW_DB.wizardShown = myself:GetChecked() and true or false
+            if OneWoW_DB then
+                OneWoW_DB.wizardShown = myself:GetChecked() and true or false
             end
         end,
     })
@@ -435,7 +435,7 @@ function FirstRun:BuildPanel(parent)
 end
 
 function FirstRun:ShouldShowWizard()
-    return _G.OneWoW_DB and not _G.OneWoW_DB.wizardShown
+    return OneWoW_DB and not OneWoW_DB.wizardShown
 end
 
 -- First-run popup: a themed dialog that wraps BuildPanel. Triggered from
@@ -466,7 +466,7 @@ function FirstRun:ShowWizard()
 end
 
 -- Slash command to re-open the wizard anytime.
-_G.SLASH_ONEWOW_WIZARD1 = "/ow-wizard"
+SLASH_ONEWOW_WIZARD1 = "/ow-wizard"
 SlashCmdList["ONEWOW_WIZARD"] = function()
     FirstRun:ShowWizard()
 end
