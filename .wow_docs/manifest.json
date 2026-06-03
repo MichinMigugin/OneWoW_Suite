@@ -7,8 +7,8 @@
       "scan_roots": [
         "Interface/AddOns"
       ],
-      "last_synced_commit": "ff2d0be9ca06c50c14d0bb811f182fa15b4eec3c",
-      "last_synced_date": "2026-05-06"
+      "last_synced_commit": "9746fb49dbaaf708dbc1110180607154c10b55b7",
+      "last_synced_date": "2026-06-03"
     },
     "blizzard-interface-resources": {
       "url": "https://github.com/Ketho/BlizzardInterfaceResources.git",
@@ -16,8 +16,8 @@
       "scan_roots": [
         "Resources"
       ],
-      "last_synced_commit": "df7396513cf05fdb56e90a47967d03cf534092a0",
-      "last_synced_date": "2026-05-06"
+      "last_synced_commit": "c8d1f943caa7a66ed42b6a74153008c29b76b395",
+      "last_synced_date": "2026-06-03"
     }
   },
   "default_source": "wow-ui-source",
@@ -49,15 +49,12 @@
     "general/ColorManager.lua": "Interface/AddOns/Blizzard_Colors/Mainline/ColorManager.lua",
     "general/ColorUtilDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/ColorUtilDocumentation.lua",
     "general/Constants.lua": "Interface/AddOns/Blizzard_FrameXMLBase/Constants.lua",
+    "general/CurrencyInfoDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/CurrencyInfoDocumentation.lua",
     "general/CursorConstDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/CursorConstDocumentation.lua",
     "general/CursorDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/CursorDocumentation.lua",
     "general/ExpansionUtil.lua": "Interface/AddOns/Blizzard_FrameXMLUtil/Mainline/ExpansionUtil.lua",
     "general/FormattingUtil.lua": "Interface/AddOns/Blizzard_SharedXML/FormattingUtil.lua",
     "general/GameCursorDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/GameCursorDocumentation.lua",
-    "general/GlobalStrings.lua": {
-      "source": "blizzard-interface-resources",
-      "path": "Resources/GlobalStrings/enUS.lua"
-    },
     "general/PlayerInteractionFrameManager.lua": "Interface/AddOns/Blizzard_UIPanels_Game/Shared/PlayerInteractionFrameManager.lua",
     "general/SharedColorConstants.lua": "Interface/AddOns/Blizzard_SharedXML/SharedColorConstants.lua",
     "housing/Blizzard_HouseEditorStorageFrame.lua": "Interface/AddOns/Blizzard_HouseEditor/Blizzard_HouseEditorStorageFrame.lua",
@@ -115,6 +112,7 @@
     "professions/Blizzard_ProfessionsSpecializationsTemplates.lua": "Interface/AddOns/Blizzard_Professions/Blizzard_ProfessionsSpecializationsTemplates.lua",
     "professions/Blizzard_ProfessionsTemplates.lua": "Interface/AddOns/Blizzard_ProfessionsTemplates/Blizzard_ProfessionsTemplates.lua",
     "professions/Blizzard_ProfessionsTransaction.lua": "Interface/AddOns/Blizzard_ProfessionsTemplates/Blizzard_ProfessionsTransaction.lua",
+    "professions/TradeSkillUIDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/TradeSkillUIDocumentation.lua",
     "quest/GossipFrame.lua": "Interface/AddOns/Blizzard_UIPanels_Game/Mainline/GossipFrame.lua",
     "quest/GossipFrameShared.lua": "Interface/AddOns/Blizzard_UIPanels_Game/Shared/GossipFrameShared.lua",
     "quest/Quest.lua": "Interface/AddOns/Blizzard_ObjectAPI/Mainline/Quest.lua",
