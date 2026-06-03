@@ -728,6 +728,9 @@ function ns.UI.CreateItemSearchTab(parent)
             return
         end
 
+        -- Pull the Auctions store on demand (this explicit user action is the
+        -- sanctioned case for an on-demand load, per Load-Unit-Map.md §5.1).
+        OneWoW:EnsureLoaded("OneWoW_AltTracker_Auctions")
         local Auctions = OneWoW_AltTracker_Auctions
         if not Auctions or not Auctions.FullAHScanner then
             print("|cFFFFD100OneWoW:|r " .. L["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"])

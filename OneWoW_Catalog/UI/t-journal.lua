@@ -16,6 +16,7 @@ local detailElements = {}
 local searchText = ""
 local expansionFilter = 0
 local instanceTypeFilter = "all"
+---@type string|number # "all" sentinel, or a numeric EJ difficulty id
 local selectedDifficulty = "all"
 local expandedEncounters = {}
 local dataAddon = nil
@@ -139,7 +140,7 @@ local DIFF_ILVL_RANK = {
 ---@return number|nil diffID
 local function ResolveTooltipDifficulty(item)
     if selectedDifficulty ~= "all" then
-        return selectedDifficulty
+        return selectedDifficulty --[[@as number]]
     end
     local bestID, bestRank
     for _, diff in ipairs(item.difficulties or {}) do

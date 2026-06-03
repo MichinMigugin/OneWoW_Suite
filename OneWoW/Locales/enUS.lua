@@ -4,6 +4,10 @@ OneWoW.Locales = OneWoW.Locales or {}
 OneWoW.Locales["enUS"] = {
     ["ADDON_TITLE"] = "OneWoW",
 
+    -- Addon loader (OneWoW:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
+    ["LOAD_FAIL_COMBAT"] = "Can't load that addon during combat - try again after combat ends.",
+    ["LOAD_FAIL_UNKNOWN"] = "That addon could not be loaded.",
+
     ["HOME_TAB"] = "OneWoW",
     ["SETTINGS_TAB"] = "Settings",
     ["SETTINGS_SUBTAB"] = "Settings",

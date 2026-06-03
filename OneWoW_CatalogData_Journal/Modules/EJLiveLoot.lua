@@ -247,9 +247,7 @@ function EJLive:GetScaledLootLink(instanceID, encounterID, diffID, itemID)
 
     -- The EJ loot system only works once the journal UI is loaded; on a fresh
     -- session the player may never have opened the Adventure Guide.
-    if not C_AddOns.IsAddOnLoaded("Blizzard_EncounterJournal") then
-        C_AddOns.LoadAddOn("Blizzard_EncounterJournal")
-    end
+    OneWoW:EnsureLoaded("Blizzard_EncounterJournal")
 
     local result
     SuppressEJ()

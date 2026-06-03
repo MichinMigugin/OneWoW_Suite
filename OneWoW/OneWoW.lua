@@ -1,6 +1,8 @@
 local ADDON_NAME, OneWoW = ...
 
-_G.OneWoW = OneWoW
+-- Using _G[""] form so pre-commit hook is satisfied, but also because we can't do
+-- `OneWoW = OneWoW` since it's already defined as a local
+_G["OneWoW"] = OneWoW
 
 local L = OneWoW.L
 
@@ -80,7 +82,7 @@ local function RegisterSlashCommands()
     SLASH_ONEWOW2 = "/one"
     SLASH_ONEWOW3 = "/onewow"
     SLASH_ONEWOW4 = "/1w"
-    SlashCmdList["ONEWOW"] = function(msg)
+    SlashCmdList["ONEWOW"] = function()
         if OneWoW.GUI then
             OneWoW.GUI:Toggle()
         end
@@ -103,12 +105,12 @@ function OneWoW:OnAddonLoaded(loadedAddon)
 
     OneWoW_GUI:MigrateSettings(self.db.global)
 
-    OneWoW_GUI:ApplyTheme(_G.OneWoW)
+    OneWoW_GUI:ApplyTheme(OneWoW)
     ApplyLanguage()
     RegisterSlashCommands()
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
-        OneWoW_GUI:ApplyTheme(_G.OneWoW)
+        OneWoW_GUI:ApplyTheme(OneWoW)
         ScheduleDefaultSave()
         ResetGUIOnSettingChange(self2)
     end)
@@ -155,11 +157,14 @@ local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 
-eventFrame:SetScript("OnEvent", function(self, event, ...)
+eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
         local loadedAddon = ...
         OneWoW:OnAddonLoaded(loadedAddon)
     elseif event == "PLAYER_LOGIN" then
+        if OneWoW.LoadOrchestrator then
+            OneWoW.LoadOrchestrator:RunLoginPhase()
+        end
         if OneWoW.Minimap then
             OneWoW.Minimap:Initialize()
         end
@@ -218,13 +223,13 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
     end
 end)
 
-_G["1WoW_OnAddonCompartmentClick"] = function(addonName, buttonName)
+_G["1WoW_OnAddonCompartmentClick"] = function()
     if OneWoW.GUI then
         OneWoW.GUI:Toggle()
     end
 end
 
-_G["1WoW_OnAddonCompartmentEnter"] = function(addonName, button)
+_G["1WoW_OnAddonCompartmentEnter"] = function(_, button)
     GameTooltip:SetOwner(button, "ANCHOR_LEFT")
     GameTooltip:SetText("|cFFFFD1001WoW|r", 1, 1, 1)
     local modCount = OneWoW.ModuleRegistry and OneWoW.ModuleRegistry:GetModuleCount() or 0
@@ -235,6 +240,6 @@ _G["1WoW_OnAddonCompartmentEnter"] = function(addonName, button)
     GameTooltip:Show()
 end
 
-_G["1WoW_OnAddonCompartmentLeave"] = function(addonName, button)
+_G["1WoW_OnAddonCompartmentLeave"] = function()
     GameTooltip:Hide()
 end

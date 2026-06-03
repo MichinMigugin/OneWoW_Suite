@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -284,11 +284,7 @@ function M.InstallBattlefieldEnhance()
         return
     end
 
-    if C_AddOns and C_AddOns.LoadAddOn then
-        C_AddOns.LoadAddOn("Blizzard_BattlefieldMap")
-    elseif UIParentLoadAddOn then
-        UIParentLoadAddOn("Blizzard_BattlefieldMap")
-    end
+    OneWoW:EnsureLoaded("Blizzard_BattlefieldMap")
 
     if not BattlefieldMapFrame then
         if EventUtil and EventUtil.ContinueOnAddOnLoaded and not M._battleLoadPending then

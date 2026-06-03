@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local GUI = OneWoW.GUI
 local L = OneWoW.L
@@ -244,6 +244,12 @@ function GUI:SelectModuleTab(moduleName)
         return
     end
 
+    -- Lazy modules load the first time their tab is opened. Dormant until modules
+    -- become LoadOnDemand (migration step 3); a no-op for login-phase modules.
+    if OneWoW.LoadOrchestrator then
+        OneWoW.LoadOrchestrator:EnsureModuleForTab(moduleName)
+    end
+
     currentModuleTab = moduleName
     currentSubTab = nil
 
@@ -251,8 +257,8 @@ function GUI:SelectModuleTab(moduleName)
         OneWoW.db.global.lastModuleTab = moduleName
     end
 
-    if _G.OneWoW_Notes and _G.OneWoW_Notes.CloseHelpPanel then
-        _G.OneWoW_Notes:CloseHelpPanel()
+    if OneWoW_Notes and OneWoW_Notes.CloseHelpPanel then
+        OneWoW_Notes:CloseHelpPanel()
     end
 
     UpdateRow1Styling()
@@ -360,8 +366,8 @@ function GUI:SelectSubTab(moduleName, subTabName)
         OneWoW.db.global.lastSubTabs[moduleName] = subTabName
     end
 
-    if _G.OneWoW_Notes and _G.OneWoW_Notes.CloseHelpPanel then
-        _G.OneWoW_Notes:CloseHelpPanel()
+    if OneWoW_Notes and OneWoW_Notes.CloseHelpPanel then
+        OneWoW_Notes:CloseHelpPanel()
     end
 
     UpdateRow2Styling()
@@ -447,7 +453,7 @@ function GUI:InitMainWindow()
     local maxW = math.min(C.MAX_WIDTH, screenW)
     local maxH = math.min(C.MAX_HEIGHT, screenH)
     MainWindow:SetResizeBounds(C.MIN_WIDTH, C.MIN_HEIGHT, maxW, maxH)
-    MainWindow:SetScript("OnHide", function(self)
+    MainWindow:SetScript("OnHide", function(myself)
         local g = OneWoW.db and OneWoW.db.global
         if g then
             g.mainFramePosition = g.mainFramePosition or {}
@@ -455,12 +461,12 @@ function GUI:InitMainWindow()
         end
         if GUI.HasPendingHomeChanges and GUI:HasPendingHomeChanges() and not GUI._forceHide then
             C_Timer.After(0, function()
-                if not self:IsShown() and not GUI._forceHide then
+                if not myself:IsShown() and not GUI._forceHide then
                     if GameMenuFrame and GameMenuFrame:IsShown() then
                         HideUIPanel(GameMenuFrame)
                     end
-                    self:Show()
-                    self:Raise()
+                    myself:Show()
+                    myself:Raise()
                     GUI._pendingAction = function()
                         GUI._forceHide = true
                         GUI:Hide()
@@ -657,10 +663,10 @@ function GUI:CreateAddonPlaceholderFrame(parent, info)
     urlBox:SetPoint("TOP", installLabel, "BOTTOM", 0, -8)
     urlBox:SetText(info.url)
     urlBox:SetAutoFocus(false)
-    urlBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
-    urlBox:SetScript("OnEditFocusLost", function(self)
-        self:HighlightText(0, 0)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    urlBox:SetScript("OnEditFocusGained", function(myself) myself:HighlightText() end)
+    urlBox:SetScript("OnEditFocusLost", function(myself)
+        myself:HighlightText(0, 0)
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 end
 

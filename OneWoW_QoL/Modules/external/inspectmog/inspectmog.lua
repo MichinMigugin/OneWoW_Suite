@@ -1,6 +1,3 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/inspectmog/inspectmog.lua
---
 -- Inspect Gear: a side panel on Blizzard's Inspect frame that lists the
 -- equipped gear of the inspected player. Gear is read from the live unit via
 -- GetInventoryItemLink (the item link already carries the colored name, so no
@@ -11,7 +8,7 @@
 -- appearances. Resolving another player's transmog appearance to an item is
 -- unreliable on 12.0 (C_TransmogCollection.GetAppearanceSources only returns
 -- data for the inspector's own class proficiency), so it is not attempted.
-local addonName, ns = ...
+local _, ns = ...
 
 -- OneWoW Notes category key for items collected here (matches a built-in
 -- OneWoW Notes Items category; not a translated string).
@@ -269,9 +266,7 @@ function InspectMogModule:HookInspectFrame()
 end
 
 function InspectMogModule:OnEnable()
-    if not C_AddOns.IsAddOnLoaded("Blizzard_InspectUI") then
-        C_AddOns.LoadAddOn("Blizzard_InspectUI")
-    end
+    OneWoW:EnsureLoaded("Blizzard_InspectUI")
 
     if InspectFrame then
         self:HookInspectFrame()

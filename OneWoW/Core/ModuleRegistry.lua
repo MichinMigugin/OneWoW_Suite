@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 OneWoW.ModuleRegistry = {}
 local Registry = OneWoW.ModuleRegistry
@@ -15,6 +15,7 @@ function OneWoW:RegisterModule(moduleInfo)
         displayName = moduleInfo.displayName or moduleInfo.name,
         addonName = moduleInfo.addonName or "",
         order = moduleInfo.order or 99,
+        loadPhase = moduleInfo.loadPhase or "login",
         tabs = moduleInfo.tabs or {},
     }
 end
