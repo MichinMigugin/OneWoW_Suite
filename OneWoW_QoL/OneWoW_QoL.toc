@@ -246,3 +246,8 @@ Modules\external\preybar\Locales\koKR.lua
 Modules\external\preybar\preybar.lua
 Modules\external\preybar\preybar-ui.lua
 Modules\external\preybar\data.lua
+
+Modules\external\inspectmog\Locales\enUS.lua
+Modules\external\inspectmog\inspectmog.lua
+Modules\external\inspectmog\inspectpanel.lua
+Modules\external\inspectmog\data.lua
