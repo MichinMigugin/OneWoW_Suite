@@ -4,12 +4,12 @@ local L = ns.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
 ns.UI = ns.UI or {}
 
 local selectedQuest    = nil
-local questListButtons = {}
+local questResults     = {}
+local questListAPI     = nil
+local activePanels     = nil
 local detailElements   = {}
 local searchText       = ""
 local expansionFilter  = -1
@@ -17,7 +17,18 @@ local zoneFilter       = ""
 local typeFilter       = "all"
 local questTypeFilter  = "all"
 local completionFilter = "all"
+local advCategory      = "all"
+local advFlag          = "all"
+local advFaction       = "all"
+local advStory         = "all"
+local advRuntime       = "all"
+local advClass         = "all"
+local advRace          = "all"
+local advProfession    = "all"
 local dataAddon        = nil
+local ROW_HEIGHT       = 44
+local npcNameCache     = {}
+local detailNameRetryPending = false
 local RefreshQuestList
 
 local function GetDataAddon()
@@ -34,14 +45,6 @@ local function ClearDetailElements()
         if element.SetParent then element:SetParent(nil) end
     end
     wipe(detailElements)
-end
-
-local function ClearQuestList()
-    for _, btn in ipairs(questListButtons) do
-        btn:Hide()
-        btn:SetParent(nil)
-    end
-    wipe(questListButtons)
 end
 
 local function GetQuestTypeLabel(quest)
@@ -68,9 +71,51 @@ local function CreateSeparatorLine(parent, yOffset)
     return OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
 end
 
+local function IsGenericNPCName(name)
+    return not name or name == "" or name:find("^NPC %d") ~= nil
+end
+
+-- Resolves a real creature name for an NPC ID. Priority: live-captured name,
+-- then a saved Notes name, then a client tooltip lookup (the same unit-hyperlink
+-- scan the Vendors data loader uses). Returns nil if still unknown; sets
+-- detailNameRetryPending so the detail view can re-resolve shortly after the
+-- client caches the name.
+local function ResolveNPCName(npcID, knownName)
+    if not IsGenericNPCName(knownName) then
+        return knownName
+    end
+
+    if OneWoW_Notes then
+        local note = OneWoW_Notes.NPCs:GetNPC(npcID)
+        if note and not IsGenericNPCName(note.name) then
+            return note.name
+        end
+    end
+
+    if npcNameCache[npcID] then
+        return npcNameCache[npcID]
+    end
+
+    local data = C_TooltipInfo.GetHyperlink(
+        string.format("unit:Creature-0-0-0-0-%d-0000000000", npcID)
+    )
+    if data and data.lines and data.lines[1] then
+        local name = data.lines[1].leftText
+        if name and name ~= "" and not name:find("Retrieving") then
+            npcNameCache[npcID] = name
+            return name
+        end
+    end
+
+    -- The lookup above primes the client cache; ask the detail to re-resolve.
+    detailNameRetryPending = true
+    return nil
+end
+
 local function ShowQuestDetail(panels, questData)
     selectedQuest = questData
     ClearDetailElements()
+    detailNameRetryPending = false
 
     if not questData then
         if panels.emptyDetail then
@@ -105,14 +150,14 @@ local function ShowQuestDetail(panels, questData)
                 local mapInfo = C_Map.GetMapInfo(liveMapID)
                 questData.mapID    = liveMapID
                 questData.zoneName = mapInfo and mapInfo.name or questData.zoneName
-                addon.QuestData:StoreQuestInfo(questData.id, { mapID = liveMapID, zoneName = questData.zoneName })
+                addon.QuestData:StoreQuestInfoQuiet(questData.id, { mapID = liveMapID, zoneName = questData.zoneName })
             end
         end
         if not questData.classification and C_QuestInfoSystem and C_QuestInfoSystem.GetQuestClassification then
             local cls = C_QuestInfoSystem.GetQuestClassification(questData.id)
             if cls then
                 questData.classification = cls
-                addon.QuestData:StoreQuestInfo(questData.id, { classification = cls })
+                addon.QuestData:StoreQuestInfoQuiet(questData.id, { classification = cls })
             end
         end
         if not questData.tagName then
@@ -120,7 +165,7 @@ local function ShowQuestDetail(panels, questData)
             if tagInfo and tagInfo.tagName then
                 questData.tagName = tagInfo.tagName
                 questData.isElite = tagInfo.isElite
-                addon.QuestData:StoreQuestInfo(questData.id, { tagName = tagInfo.tagName, isElite = tagInfo.isElite })
+                addon.QuestData:StoreQuestInfoQuiet(questData.id, { tagName = tagInfo.tagName, isElite = tagInfo.isElite })
             end
         end
     end
@@ -181,6 +226,63 @@ local function ShowQuestDetail(panels, questData)
     )
     yOffset = yOffset + 8
     addWrappedText(metaStr, 10, { OneWoW_GUI:GetThemeColor("TEXT_SECONDARY") })
+
+    local pinMapID = (questData.coords and questData.coords.mapID) or questData.mapID
+    if pinMapID and pinMapID ~= 0 then
+        local cx = questData.coords and questData.coords.x
+        local cy = questData.coords and questData.coords.y
+        local mapBtn = track(OneWoW_GUI:CreateFitTextButton(parent, { text = L["QUESTS_SHOW_ON_MAP"], height = 22 }))
+        mapBtn:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
+        mapBtn:SetScript("OnClick", function()
+            ns.Navigation:OpenMapPin(pinMapID, cx, cy)
+        end)
+        yOffset = yOffset - 28
+    end
+
+    -- Quest giver / turn-in NPC. When Notes is installed these open (and add)
+    -- the NPC in OneWoW_Notes; otherwise they show as plain text.
+    local function AddNPCLink(labelText, npcID, npcName, npcMapID, npcCoords, npcZone)
+        if type(npcID) ~= "number" then return end
+        local resolved = ResolveNPCName(npcID, npcName)
+        local displayName = resolved or string.format(L["QUESTS_NPC_UNNAMED"], npcID)
+
+        if OneWoW_Notes then
+            local hasNote = OneWoW_Notes.NPCs:GetNPC(npcID) ~= nil
+            local suffix = hasNote and L["QUESTS_SEE_NOTE"] or L["QUESTS_MAKE_NOTE"]
+            local btn = track(OneWoW_GUI:CreateFitTextButton(parent, {
+                text = labelText .. ": " .. displayName .. " - " .. suffix,
+                height = 20,
+            }))
+            btn:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
+            btn:SetScript("OnClick", function()
+                ns.Navigation:OpenNPC(npcID, { name = resolved or npcName, mapID = npcMapID, coords = npcCoords, zone = npcZone })
+            end)
+            yOffset = yOffset - 24
+        else
+            local fs = track(OneWoW_GUI:CreateFS(parent, 11))
+            fs:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
+            fs:SetText(labelText .. ": " .. displayName)
+            fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            yOffset = yOffset - 20
+        end
+    end
+
+    local starts1 = questData.starts and questData.starts[1]
+    local ends1   = questData.ends and questData.ends[1]
+
+    local giverID     = questData.questGiverID or (starts1 and starts1.npcID)
+    local giverName   = questData.questGiverName or (starts1 and (starts1.npcName or starts1.name))
+    local giverCoords = (starts1 and starts1.x) and { x = starts1.x, y = starts1.y } or nil
+    AddNPCLink(L["QUESTS_QUEST_GIVER"], giverID, giverName,
+        (starts1 and starts1.mapID) or questData.mapID, giverCoords,
+        (starts1 and starts1.zoneName) or questData.zoneName)
+
+    local turnInID     = questData.questTurnInID or (ends1 and ends1.npcID)
+    local turnInName   = questData.questTurnInName or (ends1 and (ends1.npcName or ends1.name))
+    local turnInCoords = (ends1 and ends1.x) and { x = ends1.x, y = ends1.y } or nil
+    AddNPCLink(L["QUESTS_TURN_IN"], turnInID, turnInName,
+        (ends1 and ends1.mapID) or questData.mapID, turnInCoords,
+        (ends1 and ends1.zoneName) or questData.zoneName)
 
     addSep()
 
@@ -250,20 +352,89 @@ local function ShowQuestDetail(panels, questData)
             itemHdr:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
             itemHdr:SetText(L["QUESTS_ITEMS"] .. ":")
             itemHdr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            yOffset = yOffset - 18
+            yOffset = yOffset - 20
+
+            -- Reward items render as a wrapping grid of skinned icons. Hover for
+            -- the tooltip; Ctrl-click previews equippable items in the dressing room.
+            local ICON, ICON_GAP = 36, 4
+            local startX = PAD + 16
+            local perRow = math.max(1, math.floor((W - 16) / (ICON + ICON_GAP)))
+            local col = 0
 
             for _, item in ipairs(questData.rewardItems) do
-                local itemName = item.name or string.format(L["QUESTS_ITEM_UNNAMED"], item.itemID or 0)
-                local countStr = (item.count and item.count > 1) and (" x" .. item.count) or ""
-                local itemLine = track(OneWoW_GUI:CreateFS(parent, 12))
-                itemLine:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 16, yOffset)
-                itemLine:SetText(itemName .. countStr)
-                itemLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                yOffset = yOffset - 18
+                -- Reward entries may be numeric item IDs (static DB) or tables.
+                local itemID = (type(item) == "table") and (item.itemID or item.id) or item
+                if itemID then
+                    local iconObj = OneWoW_GUI:CreateItemIcon(parent, { size = ICON, itemID = itemID, showIlvl = false })
+                    local iconFrame = track(iconObj.frame)
+                    iconFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", startX + col * (ICON + ICON_GAP), yOffset)
+                    iconFrame:SetScript("OnEnter", function(self)
+                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                        GameTooltip:SetItemByID(itemID)
+                        if OneWoW_Notes then
+                            local hasNote = OneWoW_Notes.Items:GetItem(itemID) ~= nil
+                            local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_ACCENT")
+                            GameTooltip:AddLine(hasNote and L["QUESTS_TT_SEE_NOTE"] or L["QUESTS_TT_MAKE_NOTE"], r, g, b)
+                        end
+                        GameTooltip:Show()
+                    end)
+                    iconFrame:SetScript("OnLeave", GameTooltip_Hide)
+                    iconFrame:SetScript("OnClick", function()
+                        if IsControlKeyDown() then
+                            ns.Navigation:OpenItemNote(itemID, { category = "Quest" })
+                        end
+                    end)
+
+                    col = col + 1
+                    if col >= perRow then
+                        col = 0
+                        yOffset = yOffset - (ICON + ICON_GAP)
+                    end
+                end
+            end
+
+            if col > 0 then
+                yOffset = yOffset - (ICON + ICON_GAP)
             end
         end
 
         addVSpace(4)
+    end
+
+    -- Quest chain (storyline / series) as clickable links to related quests.
+    local chainIDs, chainSeen = {}, {}
+    local function collectChain(list)
+        if not list then return end
+        for _, qid in ipairs(list) do
+            qid = tonumber(qid)
+            if qid and qid ~= questData.id and not chainSeen[qid] then
+                chainSeen[qid] = true
+                chainIDs[#chainIDs + 1] = qid
+            end
+        end
+    end
+    collectChain(questData.storyline)
+    collectChain(questData.series)
+
+    if #chainIDs > 0 then
+        addSep()
+
+        local chainLabel = track(OneWoW_GUI:CreateFS(parent, 10))
+        chainLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
+        chainLabel:SetText(L["QUESTS_CHAIN"])
+        chainLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        yOffset = yOffset - 18
+
+        for _, qid in ipairs(chainIDs) do
+            local linked = addon.QuestData:GetQuest(qid)
+            local lname = (linked and linked.name) or string.format(L["QUESTS_UNNAMED"], qid)
+            local linkBtn = track(OneWoW_GUI:CreateFitTextButton(parent, { text = lname, height = 20 }))
+            linkBtn:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
+            linkBtn:SetScript("OnClick", function()
+                ShowQuestDetail(panels, addon.QuestData:GetQuest(qid) or { id = qid, name = lname })
+            end)
+            yOffset = yOffset - 24
+        end
     end
 
     addSep()
@@ -306,178 +477,223 @@ local function ShowQuestDetail(panels, questData)
 
     addVSpace(4)
     panels.detailScrollChild:SetHeight(math.abs(yOffset) + 20)
+
+    -- A creature name lookup primed the client cache but wasn't ready yet;
+    -- re-resolve once shortly after so the real name replaces "NPC <id>".
+    if detailNameRetryPending and not questData._nameRetried then
+        questData._nameRetried = true
+        C_Timer.After(0.5, function()
+            if selectedQuest == questData then
+                ShowQuestDetail(panels, questData)
+            end
+        end)
+    end
 end
 
-local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
-    local addon   = GetDataAddon()
-    if not addon then return end
-    local tracker = addon.CompletionTracker
+-- Applies selected/normal background + text colors to a pooled list row.
+local function ApplyRowColors(btn, selected)
+    btn._selected = selected
+    if selected then
+        btn.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        if btn.nameText then btn.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
+    else
+        btn.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        if btn.nameText then btn.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
+    end
+end
 
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetHeight(44)
-    btn:SetPoint("TOPLEFT",  parent, "TOPLEFT",  4, yOffset)
-    btn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -4, yOffset)
-    btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    btn.quest = quest
+-- renderRow callback for CreateVirtualizedList. Rows are pooled: child widgets
+-- are built once (guarded by _questBuilt) and updated on each render. The pooled
+-- buttons are plain frames without BackdropTemplate, so row coloring uses a
+-- background texture rather than SetBackdrop.
+local function RenderQuestRow(btn, _, quest, selected)
+    local addon = GetDataAddon()
+    local tracker = addon and addon.CompletionTracker
 
-    local nameText = OneWoW_GUI:CreateFS(btn, 12)
-    nameText:SetPoint("TOPLEFT",  btn, "TOPLEFT",  8, -6)
-    nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -44, -6)
-    nameText:SetJustifyH("LEFT")
-    nameText:SetWordWrap(false)
-    nameText:SetText(quest.name or string.format(L["QUESTS_UNNAMED"], quest.id or 0))
-    nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    btn.nameText = nameText
+    if not btn._questBuilt then
+        btn.bg = btn:CreateTexture(nil, "BACKGROUND")
+        btn.bg:SetPoint("TOPLEFT", btn, "TOPLEFT", 2, -1)
+        btn.bg:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -2, 1)
+
+        btn.nameText = OneWoW_GUI:CreateFS(btn, 12)
+        btn.nameText:SetPoint("TOPLEFT",  btn, "TOPLEFT",  8, -6)
+        btn.nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -44, -6)
+        btn.nameText:SetJustifyH("LEFT")
+        btn.nameText:SetWordWrap(false)
+
+        btn.subText = OneWoW_GUI:CreateFS(btn, 10)
+        btn.subText:SetPoint("BOTTOMLEFT",  btn, "BOTTOMLEFT",  8, 6)
+        btn.subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -44, 6)
+        btn.subText:SetJustifyH("LEFT")
+        btn.subText:SetWordWrap(false)
+        btn.subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+        btn.checkTex = btn:CreateTexture(nil, "ARTWORK")
+        btn.checkTex:SetSize(14, 14)
+        btn.checkTex:SetPoint("RIGHT", btn, "RIGHT", -28, 0)
+        btn.checkTex:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+        btn.checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+
+        if ns.Favorites then
+            btn.favBtn = OneWoW_GUI:CreateFavoriteToggleButton(btn, {
+                size         = 18,
+                tooltipTitle = L["CATALOG_FAVORITE"],
+                tooltipText  = L["CATALOG_FAVORITE_TT"],
+                onClick = function(_, on)
+                    if btn._quest then
+                        ns.Favorites:SetFavorite("quests", btn._quest.id, on)
+                        if activePanels then RefreshQuestList(activePanels) end
+                    end
+                end,
+            })
+            btn.favBtn:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -4, -6)
+        end
+
+        btn:HookScript("OnEnter", function(self)
+            if not self._selected then
+                self.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                if self.nameText then self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
+            end
+        end)
+        btn:HookScript("OnLeave", function(self)
+            ApplyRowColors(self, self._selected)
+        end)
+
+        btn._questBuilt = true
+    end
+
+    btn._quest = quest
+    btn.nameText:SetText(quest.name or string.format(L["QUESTS_UNNAMED"], quest.id or 0))
 
     local expShort = ""
-    if quest.expansion ~= nil then
+    if quest.expansion ~= nil and addon then
         expShort = addon.QuestData:GetExpansionShortName(quest.expansion) or ""
     end
+    btn.subText:SetText(expShort)
 
-    local subText = OneWoW_GUI:CreateFS(btn, 10)
-    subText:SetPoint("BOTTOMLEFT",  btn, "BOTTOMLEFT",  8, 6)
-    subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -44, 6)
-    subText:SetJustifyH("LEFT")
-    subText:SetWordWrap(false)
-    subText:SetText(expShort)
-    subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-    local isCompleted = tracker and tracker:IsCompletedByCurrentChar(quest.id)
-    if isCompleted then
-        local checkTex = btn:CreateTexture(nil, "ARTWORK")
-        checkTex:SetSize(14, 14)
-        checkTex:SetPoint("RIGHT", btn, "RIGHT", -28, 0)
-        checkTex:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-        checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    if tracker and tracker:IsCompletedByCurrentChar(quest.id) then
+        btn.checkTex:Show()
+    else
+        btn.checkTex:Hide()
     end
 
-    if ns.Favorites then
-        local favBtn = OneWoW_GUI:CreateFavoriteToggleButton(btn, {
-            size     = 18,
-            favorite = ns.Favorites:IsFavorite("quests", quest.id),
-            tooltipTitle = L["CATALOG_FAVORITE"],
-            tooltipText  = L["CATALOG_FAVORITE_TT"],
-            onClick = function(_, on)
-                ns.Favorites:SetFavorite("quests", quest.id, on)
-                RefreshQuestList(panels)
-            end,
-        })
-        favBtn:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -4, -6)
+    if btn.favBtn then
+        btn.favBtn:SetFavorite(ns.Favorites:IsFavorite("quests", quest.id))
     end
 
-    btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    end)
-    btn:SetScript("OnLeave", function(self)
-        if selectedQuest and selectedQuest.id == quest.id then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-    end)
-    btn:SetScript("OnClick", function(self)
-        if onClick then onClick(quest, self) end
-    end)
-
-    return btn
+    ApplyRowColors(btn, selected)
 end
 
-function RefreshQuestList(panels)
-    ClearQuestList()
+-- True when no search text and all filters are at their defaults.
+local function IsDefaultView()
+    return searchText == ""
+        and expansionFilter == -1
+        and zoneFilter == ""
+        and typeFilter == "all"
+        and questTypeFilter == "all"
+        and completionFilter == "all"
+        and advCategory == "all"
+        and advFlag == "all"
+        and advFaction == "all"
+        and advStory == "all"
+        and advRuntime == "all"
+        and advClass == "all"
+        and advRace == "all"
+        and advProfession == "all"
+end
 
+-- Initial-view cap: how many quests to show before the user searches/filters.
+local INITIAL_VIEW_LIMIT = 100
+
+function RefreshQuestList(panels)
     local addon = GetDataAddon()
     if not addon or not addon.QuestData then
+        wipe(questResults)
+        if questListAPI then questListAPI.Refresh() end
         if panels.emptyList then
             panels.emptyList:SetText(L["QUESTS_NO_DATA"])
             panels.emptyList:Show()
         end
-        panels.listScrollChild:SetHeight(100)
-        return
-    end
-
-    local quests = addon.QuestData:GetSortedQuests(
-        expansionFilter,
-        zoneFilter,
-        typeFilter,
-        questTypeFilter,
-        searchText
-    )
-
-    if completionFilter ~= "all" then
-        local filtered = {}
-        for _, quest in ipairs(quests) do
-            if completionFilter == "completed" then
-                if C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
-            elseif completionFilter == "not_completed" then
-                if not C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
-            elseif completionFilter == "active" then
-                if C_QuestLog.IsOnQuest(quest.id) then table.insert(filtered, quest) end
-            elseif completionFilter == "warband" then
-                if C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.id) then table.insert(filtered, quest) end
-            end
-        end
-        quests = filtered
-    end
-
-    if ns.Favorites and #quests > 0 then
-        local origOrder = {}
-        for i, q in ipairs(quests) do
-            origOrder[q.id] = i
-        end
-        table.sort(quests, function(a, b)
-            local fa = ns.Favorites:IsFavorite("quests", a.id)
-            local fb = ns.Favorites:IsFavorite("quests", b.id)
-            if fa ~= fb then return fa end
-            return (origOrder[a.id] or 0) < (origOrder[b.id] or 0)
-        end)
-    end
-
-    if #quests == 0 then
-        if panels.emptyList then
-            panels.emptyList:SetText(
-                (addon.QuestData:GetCapturedQuestCount() == 0)
-                and L["QUESTS_NONE_YET"]
-                or  L["QUESTS_EMPTY"]
-            )
-            panels.emptyList:Show()
-        end
-        panels.listScrollChild:SetHeight(100)
         if panels.leftStatusText then
             panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], 0))
         end
         return
     end
 
-    if panels.emptyList then panels.emptyList:Hide() end
+    local defaultView = IsDefaultView()
+    local quests, defaultTotal
 
-    local yOffset = -4
-    for _, quest in ipairs(quests) do
-        local btn = CreateQuestListEntry(panels.listScrollChild, quest, yOffset, panels, function(q, clickedBtn)
-            for _, b in ipairs(questListButtons) do
-                b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                if b.nameText then b.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
+    if defaultView then
+        -- Unfiltered view: all expansions, sorted, capped to INITIAL_VIEW_LIMIT.
+        quests, defaultTotal = addon.QuestData:GetInitialQuests(INITIAL_VIEW_LIMIT)
+    else
+        quests = addon.QuestData:GetSortedQuests(
+            expansionFilter,
+            zoneFilter,
+            typeFilter,
+            questTypeFilter,
+            searchText,
+            {
+                category   = advCategory,
+                flag       = advFlag,
+                faction    = advFaction,
+                story      = advStory,
+                runtime    = advRuntime,
+                class      = advClass,
+                race       = advRace,
+                profession = advProfession,
+            }
+        )
+
+        if completionFilter ~= "all" then
+            local filtered = {}
+            for _, quest in ipairs(quests) do
+                if completionFilter == "completed" then
+                    if C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
+                elseif completionFilter == "not_completed" then
+                    if not C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
+                elseif completionFilter == "active" then
+                    if C_QuestLog.IsOnQuest(quest.id) then table.insert(filtered, quest) end
+                elseif completionFilter == "warband" then
+                    if C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.id) then table.insert(filtered, quest) end
+                end
             end
-            clickedBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            clickedBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            ShowQuestDetail(panels, q)
-        end)
-        table.insert(questListButtons, btn)
-        yOffset = yOffset - 48
+            quests = filtered
+        end
+
+        if ns.Favorites and #quests > 0 then
+            local origOrder = {}
+            for i, q in ipairs(quests) do
+                origOrder[q.id] = i
+            end
+            table.sort(quests, function(a, b)
+                local fa = ns.Favorites:IsFavorite("quests", a.id)
+                local fb = ns.Favorites:IsFavorite("quests", b.id)
+                if fa ~= fb then return fa end
+                return (origOrder[a.id] or 0) < (origOrder[b.id] or 0)
+            end)
+        end
     end
 
-    panels.listScrollChild:SetHeight(math.abs(yOffset) + 10)
+    questResults = quests
+
+    if panels.emptyList then
+        if #quests == 0 then
+            panels.emptyList:SetText(defaultView and L["QUESTS_NONE_YET"] or L["QUESTS_EMPTY"])
+            panels.emptyList:Show()
+        else
+            panels.emptyList:Hide()
+        end
+    end
+
+    if questListAPI then questListAPI.Refresh() end
 
     if panels.leftStatusText then
-        panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], #quests))
+        if defaultView and defaultTotal and defaultTotal > #quests then
+            panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_CAPPED"], #quests, defaultTotal))
+        else
+            panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], #quests))
+        end
     end
 
     if selectedQuest then
@@ -603,6 +819,147 @@ local function SetupProgressDropdown(panels)
     })
 end
 
+-- Title-cases a lowercase data token for display (e.g. "world_quest" -> "World Quest").
+local function TitleCase(token)
+    token = tostring(token):gsub("_", " ")
+    return (token:gsub("(%a)([%w]*)", function(a, b) return a:upper() .. b:lower() end))
+end
+
+local function SetupAdvancedDropdowns(panels)
+    OneWoW_GUI:AttachFilterMenu(panels.factionDropdown, {
+        searchable = false,
+        getActiveValue = function() return advFaction end,
+        buildItems = function()
+            return {
+                { value = "all",      text = L["QUESTS_FILTER_FACTION_ALL"] },
+                { value = "neutral",  text = L["QUESTS_FACTION_NEUTRAL"]    },
+                { value = "alliance", text = L["QUESTS_FACTION_ALLIANCE"]   },
+                { value = "horde",    text = L["QUESTS_FACTION_HORDE"]      },
+            }
+        end,
+        onSelect = function(value, text)
+            advFaction = value
+            panels.factionText:SetText(value == "all" and L["QUESTS_FILTER_FACTION_ALL"] or text)
+            RefreshQuestList(panels)
+        end,
+    })
+
+    OneWoW_GUI:AttachFilterMenu(panels.storyDropdown, {
+        searchable = false,
+        getActiveValue = function() return advStory end,
+        buildItems = function()
+            return {
+                { value = "all",        text = L["QUESTS_FILTER_STORY_ALL"] },
+                { value = "storyline",  text = L["QUESTS_STORY_STORYLINE"]  },
+                { value = "chain",      text = L["QUESTS_STORY_CHAIN"]      },
+                { value = "standalone", text = L["QUESTS_STORY_STANDALONE"] },
+            }
+        end,
+        onSelect = function(value, text)
+            advStory = value
+            panels.storyText:SetText(value == "all" and L["QUESTS_FILTER_STORY_ALL"] or text)
+            RefreshQuestList(panels)
+        end,
+    })
+
+    OneWoW_GUI:AttachFilterMenu(panels.dataDropdown, {
+        searchable = false,
+        getActiveValue = function() return advRuntime end,
+        buildItems = function()
+            return {
+                { value = "all",              text = L["QUESTS_FILTER_DATA_ALL"]      },
+                { value = "has_location",     text = L["QUESTS_DATA_HAS_LOCATION"]    },
+                { value = "missing_location", text = L["QUESTS_DATA_MISSING_LOCATION"] },
+                { value = "has_quest_giver",  text = L["QUESTS_DATA_HAS_GIVER"]       },
+                { value = "has_turnin",       text = L["QUESTS_DATA_HAS_TURNIN"]      },
+                { value = "has_rewards",      text = L["QUESTS_DATA_HAS_REWARDS"]     },
+            }
+        end,
+        onSelect = function(value, text)
+            advRuntime = value
+            panels.dataText:SetText(value == "all" and L["QUESTS_FILTER_DATA_ALL"] or text)
+            RefreshQuestList(panels)
+        end,
+    })
+
+    -- Data-driven dropdowns: options come from the values actually present in
+    -- the quest set (QuestData:GetFilterValues). Class/race IDs resolve to
+    -- localized names; profession/category/flag tokens are title-cased.
+    local function SetupDataDriven(dropdown, textRegion, getVar, setVar, allKey, listKey, labelFn)
+        OneWoW_GUI:AttachFilterMenu(dropdown, {
+            searchable = true,
+            getActiveValue = getVar,
+            buildItems = function()
+                local items = { { value = "all", text = L[allKey] } }
+                local addon = GetDataAddon()
+                local fv = addon and addon.QuestData and addon.QuestData:GetFilterValues()
+                if fv then
+                    for _, v in ipairs(fv[listKey]) do
+                        local label = labelFn(v)
+                        if label and label ~= "" then
+                            table.insert(items, { value = tostring(v), text = label })
+                        end
+                    end
+                end
+                return items
+            end,
+            onSelect = function(value, text)
+                setVar(value)
+                textRegion:SetText(value == "all" and L[allKey] or text)
+                RefreshQuestList(panels)
+            end,
+        })
+    end
+
+    SetupDataDriven(panels.classDropdown, panels.classText,
+        function() return advClass end, function(v) advClass = v end,
+        "QUESTS_FILTER_CLASS_ALL", "classes", function(id) return (GetClassInfo(id)) end)
+
+    SetupDataDriven(panels.raceDropdown, panels.raceText,
+        function() return advRace end, function(v) advRace = v end,
+        "QUESTS_FILTER_RACE_ALL", "races", function(id)
+            local info = C_CreatureInfo.GetRaceInfo(id)
+            return info and info.raceName
+        end)
+
+    SetupDataDriven(panels.professionDropdown, panels.professionText,
+        function() return advProfession end, function(v) advProfession = v end,
+        "QUESTS_FILTER_PROFESSION_ALL", "professions", TitleCase)
+
+    SetupDataDriven(panels.categoryDropdown, panels.categoryText,
+        function() return advCategory end, function(v) advCategory = v end,
+        "QUESTS_FILTER_CATEGORY_ALL", "categories", TitleCase)
+
+    SetupDataDriven(panels.flagDropdown, panels.flagText,
+        function() return advFlag end, function(v) advFlag = v end,
+        "QUESTS_FILTER_FLAG_ALL", "flags", TitleCase)
+end
+
+-- Navigates the Catalog to the quests tab and opens the given quest's detail.
+-- Used by Item Search's quest-reward cross-references.
+function ns.UI.OpenToQuest(questID)
+    questID = tonumber(questID)
+    if not questID then return end
+
+    if ns.oneWoWHubActive then
+        OneWoW.GUI:Show("catalog")
+        OneWoW.GUI:SelectSubTab("catalog", "quests")
+    else
+        ns.UI:Show("quests")
+    end
+
+    C_Timer.After(0.15, function()
+        local panels = activePanels or ns.UI.questsPanels
+        if not panels then return end
+        local addon = GetDataAddon()
+        if not addon or not addon.QuestData then return end
+        local quest = addon.QuestData:GetQuest(questID)
+        if quest then
+            ShowQuestDetail(panels, quest)
+        end
+    end)
+end
+
 function ns.UI.CreateQuestsTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP    = ns.Constants.GUI.PANEL_GAP
@@ -626,8 +983,31 @@ function ns.UI.CreateQuestsTab(parent)
     panels.listTitle:SetText(L["QUESTS_LIST_TITLE"])
     panels.detailTitle:SetText(L["QUESTS_DETAIL_TITLE"])
 
+    -- The split panel's plain list scroll would need one frame per quest, which
+    -- is unusable with the ~33k-quest static DB. Replace it with a pooled
+    -- virtualized list hosted in the same area.
+    panels.listScrollFrame:Hide()
+
+    local listHost = CreateFrame("Frame", nil, panels.listPanel)
+    listHost:SetPoint("TOPLEFT", panels.listPanel, "TOPLEFT", 8, -32)
+    listHost:SetPoint("BOTTOMRIGHT", panels.listPanel, "BOTTOMRIGHT", -8, 8)
+
+    questListAPI = OneWoW_GUI:CreateVirtualizedList(listHost, {
+        name = "OneWoWCatalogQuestList",
+        rowHeight = ROW_HEIGHT,
+        getCount = function() return #questResults end,
+        getEntry = function(i) return questResults[i] end,
+        onSelect = function(_, quest) ShowQuestDetail(panels, quest) end,
+        renderRow = RenderQuestRow,
+    })
+
+    activePanels = panels
+
+    local advBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = L["QUESTS_ADVANCED"], height = 26, minWidth = 34 })
+    advBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
+
     local clearBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = L["QUESTS_CLEAR"], height = 26, minWidth = 34 })
-    clearBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
+    clearBtn:SetPoint("TOPRIGHT", advBtn, "TOPLEFT", -4, 0)
 
     local searchBox = OneWoW_GUI:CreateEditBox(leftHeader, {
         height = 26,
@@ -642,6 +1022,64 @@ function ns.UI.CreateQuestsTab(parent)
     })
     searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
+
+    -- Advanced filter drawer (hidden until toggled). Two rows of four filters,
+    -- full width below the search/filter headers; opening it pushes content down.
+    local ADV_H = 74
+    local advHeader = OneWoW_GUI:CreateFilterBar(parent, { height = ADV_H, offset = 0 })
+    advHeader:ClearAllPoints()
+    advHeader:SetPoint("TOPLEFT", leftHeader, "BOTTOMLEFT", 0, -GAP)
+    advHeader:SetPoint("TOPRIGHT", rightHeader, "BOTTOMRIGHT", 0, -GAP)
+    advHeader:SetHeight(ADV_H)
+    advHeader:Hide()
+
+    local function UpdateContentAnchor()
+        contentArea:ClearAllPoints()
+        if advHeader:IsShown() then
+            contentArea:SetPoint("TOPLEFT", advHeader, "BOTTOMLEFT", 0, -GAP)
+        else
+            contentArea:SetPoint("TOPLEFT", leftHeader, "BOTTOMLEFT", 0, -GAP)
+        end
+        contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+    end
+
+    advBtn:SetScript("OnClick", function()
+        if advHeader:IsShown() then advHeader:Hide() else advHeader:Show() end
+        UpdateContentAnchor()
+    end)
+
+    local advDropdowns = {}
+    local function MakeAdvDropdown(key, allKey)
+        local dd, txt = OneWoW_GUI:CreateDropdown(advHeader, { width = 10, text = L[allKey] })
+        panels[key .. "Dropdown"] = dd
+        panels[key .. "Text"] = txt
+        advDropdowns[#advDropdowns + 1] = dd
+    end
+
+    MakeAdvDropdown("faction",    "QUESTS_FILTER_FACTION_ALL")
+    MakeAdvDropdown("story",      "QUESTS_FILTER_STORY_ALL")
+    MakeAdvDropdown("data",       "QUESTS_FILTER_DATA_ALL")
+    MakeAdvDropdown("class",      "QUESTS_FILTER_CLASS_ALL")
+    MakeAdvDropdown("race",       "QUESTS_FILTER_RACE_ALL")
+    MakeAdvDropdown("profession", "QUESTS_FILTER_PROFESSION_ALL")
+    MakeAdvDropdown("category",   "QUESTS_FILTER_CATEGORY_ALL")
+    MakeAdvDropdown("flag",       "QUESTS_FILTER_FLAG_ALL")
+
+    local function LayoutAdvDropdowns(w)
+        local cols, pad, gap = 4, 8, 4
+        local ddW = math.floor((w - (pad * 2) - (gap * (cols - 1))) / cols)
+        for i, dd in ipairs(advDropdowns) do
+            local col = (i - 1) % cols
+            local row = math.floor((i - 1) / cols)
+            dd:ClearAllPoints()
+            dd:SetSize(ddW, 26)
+            dd:SetPoint("TOPLEFT", advHeader, "TOPLEFT", pad + col * (ddW + gap), -8 - row * 32)
+        end
+    end
+
+    advHeader:SetScript("OnSizeChanged", function(_, w)
+        LayoutAdvDropdowns(w)
+    end)
 
     local DD_GAP = 4
     local DD_PAD = 8
@@ -684,8 +1122,8 @@ function ns.UI.CreateQuestsTab(parent)
         if w and w > 0 then LayoutFilterDropdowns(w) end
     end)
 
-    local emptyList = OneWoW_GUI:CreateFS(panels.listScrollChild, 12)
-    emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
+    local emptyList = OneWoW_GUI:CreateFS(listHost, 12)
+    emptyList:SetPoint("CENTER", listHost, "CENTER", 0, 0)
     emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyList = emptyList
 
@@ -720,6 +1158,12 @@ function ns.UI.CreateQuestsTab(parent)
         typeFilter      = "all"
         questTypeFilter = "all"
         completionFilter = "all"
+        advFaction      = "all"
+        advStory        = "all"
+        advRuntime      = "all"
+        advClass        = "all"
+        advRace         = "all"
+        advProfession   = "all"
         searchBox:SetText("")
         searchBox:ClearFocus()
         expText:SetText(L["QUESTS_EXPANSION_ALL"])
@@ -727,6 +1171,14 @@ function ns.UI.CreateQuestsTab(parent)
         typeText:SetText(L["QUESTS_TYPE_ALL"])
         qTypeText:SetText(L["QUESTS_QTYPE_ALL"])
         progText:SetText(L["QUESTS_PROGRESS_ALL"])
+        panels.factionText:SetText(L["QUESTS_FILTER_FACTION_ALL"])
+        panels.storyText:SetText(L["QUESTS_FILTER_STORY_ALL"])
+        panels.dataText:SetText(L["QUESTS_FILTER_DATA_ALL"])
+        panels.classText:SetText(L["QUESTS_FILTER_CLASS_ALL"])
+        panels.raceText:SetText(L["QUESTS_FILTER_RACE_ALL"])
+        panels.professionText:SetText(L["QUESTS_FILTER_PROFESSION_ALL"])
+        panels.categoryText:SetText(L["QUESTS_FILTER_CATEGORY_ALL"])
+        panels.flagText:SetText(L["QUESTS_FILTER_FLAG_ALL"])
         RefreshQuestList(panels)
     end)
 
@@ -736,6 +1188,7 @@ function ns.UI.CreateQuestsTab(parent)
         SetupTypeDropdown(panels)
         SetupQuestTypeDropdown(panels)
         SetupProgressDropdown(panels)
+        SetupAdvancedDropdowns(panels)
         RefreshQuestList(panels)
     end)
 

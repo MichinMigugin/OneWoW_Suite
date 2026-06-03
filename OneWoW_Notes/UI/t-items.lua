@@ -872,7 +872,23 @@ function ns.UI.CreateItemsTab(parent)
         end
     end
 
+    -- Opens a specific item's editor; used by cross-addon navigation (e.g. the
+    -- Catalog quest tab "open note" action) via OneWoW_Notes.pendingItemSelect.
+    function parent.SelectItem(itemID)
+        itemID = tonumber(itemID)
+        if not itemID then return end
+        selectedItem = itemID
+        ShowEditor()
+        parent.RefreshItemsList()
+    end
+
     parent.RefreshItemsList()
+
+    if OneWoW_Notes.pendingItemSelect then
+        local id = OneWoW_Notes.pendingItemSelect
+        OneWoW_Notes.pendingItemSelect = nil
+        parent.SelectItem(id)
+    end
 end
 
 local function MakeItemLabel(parent, text, x, y)

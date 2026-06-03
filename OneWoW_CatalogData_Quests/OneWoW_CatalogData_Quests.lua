@@ -15,4 +15,7 @@ OneWoW_CatalogData_Quests_API = {
     GetCompletedCharacters = function(questID)
         return ns.CompletionTracker and ns.CompletionTracker:GetCompletedCharacters(questID) or {}
     end,
+    GetQuestsForNPC = function(npcID)
+        return ns.QuestData and ns.QuestData:GetQuestsForNPC(npcID)
+    end,
 }

@@ -573,12 +573,27 @@ function ns.UI.CreateNPCsTab(parent)
             end
             tooltipSection:SetHeight(38 + 4 * 28)
 
+            -- Associated quests (from OneWoW_CatalogData_Quests, optional) - quests
+            -- this NPC gives or turns in, clickable to open in the Catalog.
+            local associatedSection = CreateThemedBar(nil, detailPanel)
+            associatedSection:SetPoint("TOPLEFT",  tooltipSection, "BOTTOMLEFT",  0, -10)
+            associatedSection:SetPoint("TOPRIGHT", tooltipSection, "BOTTOMRIGHT", 0, -10)
+            associatedSection:SetHeight(1)
+
+            local assocLabel = OneWoW_GUI:CreateFS(associatedSection, 12)
+            assocLabel:SetPoint("TOPLEFT", associatedSection, "TOPLEFT", 10, -8)
+            assocLabel:SetText(L["NOTES_NPC_ASSOC_QUESTS"] or "Associated Quests:")
+            assocLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            associatedSection.label = assocLabel
+            associatedSection.questRows = {}
+
             detailPanel.editorContent = {
-                header         = editorHeader,
-                contentBg      = contentBg,
-                contentScroll  = contentScroll,
-                tooltipSection = tooltipSection,
-                tooltipEdits   = tooltipEdits,
+                header             = editorHeader,
+                contentBg          = contentBg,
+                contentScroll      = contentScroll,
+                tooltipSection     = tooltipSection,
+                tooltipEdits       = tooltipEdits,
+                associatedSection  = associatedSection,
             }
         end
 
@@ -648,6 +663,55 @@ function ns.UI.CreateNPCsTab(parent)
                         if detailPanel.editorContent.tooltipEdits[i] then
                             detailPanel.editorContent.tooltipEdits[i]:SetText(nd.tooltipLines[i] or "")
                         end
+                    end
+                end
+
+                local assoc = detailPanel.editorContent.associatedSection
+                if assoc then
+                    for _, r in ipairs(assoc.questRows) do
+                        r:Hide()
+                        r:SetParent(nil)
+                    end
+                    wipe(assoc.questRows)
+
+                    local questIDs = OneWoW_CatalogData_Quests_API
+                        and OneWoW_CatalogData_Quests_API.GetQuestsForNPC
+                        and OneWoW_CatalogData_Quests_API.GetQuestsForNPC(selectedNPC)
+
+                    if questIDs and #questIDs > 0 then
+                        local y = -28
+                        for _, qid in ipairs(questIDs) do
+                            local q = OneWoW_CatalogData_Quests_API.GetQuest(qid)
+                            local qname = (q and q.name) or ("Quest " .. qid)
+
+                            local row = CreateFrame("Button", nil, assoc)
+                            row:SetHeight(18)
+                            row:SetPoint("TOPLEFT",  assoc, "TOPLEFT", 16, y)
+                            row:SetPoint("TOPRIGHT", assoc, "TOPRIGHT", -10, y)
+
+                            local fs = OneWoW_GUI:CreateFS(row, 11)
+                            fs:SetPoint("LEFT", 0, 0)
+                            fs:SetText(qname)
+                            fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+
+                            row:SetScript("OnEnter", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT")) end)
+                            row:SetScript("OnLeave", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end)
+                            row:SetScript("OnClick", function()
+                                if OneWoW_Catalog and OneWoW_Catalog.UI and OneWoW_Catalog.UI.OpenToQuest then
+                                    OneWoW_Catalog.UI.OpenToQuest(qid)
+                                end
+                            end)
+
+                            assoc.questRows[#assoc.questRows + 1] = row
+                            y = y - 20
+                        end
+                        assoc.label:Show()
+                        assoc:SetHeight(30 + #questIDs * 20)
+                        assoc:Show()
+                    else
+                        assoc.label:Hide()
+                        assoc:SetHeight(1)
+                        assoc:Hide()
                     end
                 end
             end

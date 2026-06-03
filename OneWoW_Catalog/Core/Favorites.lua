@@ -22,3 +22,18 @@ function Fav:SetFavorite(category, id, on)
         db.favorites[category][key] = nil
     end
 end
+
+--- Returns an array of numeric favorite IDs for a category.
+---@param category string
+---@return number[]
+function Fav:GetFavoriteIDs(category)
+    local out = {}
+    local bucket = ns.addon.db.global.favorites[category]
+    if bucket then
+        for key in pairs(bucket) do
+            local id = tonumber(key)
+            if id then out[#out + 1] = id end
+        end
+    end
+    return out
+end

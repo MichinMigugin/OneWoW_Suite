@@ -26,6 +26,7 @@ Core\Constants.lua
 Core\Database.lua
 Core\Favorites.lua
 Core\VendorCategories.lua
+Core\Navigation.lua
 
 # Main
 OneWoW_Catalog.lua

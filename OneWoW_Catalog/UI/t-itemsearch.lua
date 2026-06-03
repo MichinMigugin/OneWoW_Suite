@@ -34,6 +34,7 @@ local SOURCE_DEFS = {
     { key = "vendors", labelKey = "TT_IS_FILTER_VENDORS", descKey = "TT_IS_FILTER_VENDORS_DESC" },
     { key = "crafted", labelKey = "TT_IS_FILTER_CRAFTED", descKey = "TT_IS_FILTER_CRAFTED_DESC" },
     { key = "owned",   labelKey = "TT_IS_FILTER_OWNED",   descKey = "TT_IS_FILTER_OWNED_DESC"   },
+    { key = "quests",  labelKey = "TT_IS_FILTER_QUESTS",  descKey = "TT_IS_FILTER_QUESTS_DESC"  },
 }
 
 local RefreshItemList
@@ -191,6 +192,7 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
                 tooltipText  = L["CATALOG_FAVORITE_TT"],
                 onClick = function(_, on)
                     ns.Favorites:SetFavorite("itemSearch", result.itemID, on)
+                    ns.Navigation:SetItemNoteFavorite(result.itemID, on)
                     RefreshItemList()
                 end,
             })
@@ -352,6 +354,25 @@ ShowItemDetail = function(result)
         yOffset = yOffset - 18
     end
 
+    local function AddClickableRow(text, indent, onClick)
+        local btn = CreateFrame("Button", nil, child)
+        btn:SetHeight(18)
+        btn:SetPoint("TOPLEFT", child, "TOPLEFT", indent or 12, yOffset)
+        btn:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
+        table.insert(detailElements, btn)
+
+        local fs = OneWoW_GUI:CreateFS(btn, 10)
+        fs:SetPoint("LEFT", 0, 0)
+        fs:SetText(text)
+        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+
+        btn:SetScript("OnEnter", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT")) end)
+        btn:SetScript("OnLeave", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end)
+        btn:SetScript("OnClick", onClick)
+
+        yOffset = yOffset - 18
+    end
+
     AddSectionHeader("ITEMSEARCH_SECTION_DROPS")
     if #detail.drops > 0 then
         for _, drop in ipairs(detail.drops) do
@@ -430,6 +451,20 @@ ShowItemDetail = function(result)
         end
     else
         AddTextRow(L["ITEMSEARCH_NO_INVENTORY"], 12, "TEXT_MUTED")
+    end
+
+    yOffset = yOffset - 6
+
+    AddSectionHeader("ITEMSEARCH_SECTION_QUESTS")
+    if #detail.questRewards > 0 then
+        for _, qr in ipairs(detail.questRewards) do
+            local qname = qr.questName or string.format(L["QUESTS_UNNAMED"], qr.questID)
+            AddClickableRow(qname, 12, function()
+                if ns.UI.OpenToQuest then ns.UI.OpenToQuest(qr.questID) end
+            end)
+        end
+    else
+        AddTextRow(L["ITEMSEARCH_NO_QUESTS"], 12, "TEXT_MUTED")
     end
 
     yOffset = yOffset - 6

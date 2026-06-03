@@ -202,6 +202,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     local doVendors = (sourceFilter == "all" or sourceFilter == "vendors")
     local doCrafted = (sourceFilter == "all" or sourceFilter == "crafted")
     local doOwned   = (sourceFilter == "all" or sourceFilter == "owned")
+    local doQuest   = (sourceFilter == "all" or sourceFilter == "quests")
 
     local function addOrAnnotate(itemID, name, icon, quality, sourceKey)
         if resultMap[itemID] then
@@ -223,6 +224,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
             isVendor  = false,
             isCrafted = false,
             isOwned   = false,
+            isQuestReward = false,
         }
         entry[sourceKey] = true
         results[count] = entry
@@ -277,6 +279,20 @@ function ItemSearch:Query(searchTerm, sourceFilter)
                 end
             end
             if limitReached then break end
+        end
+    end
+
+    if doQuest and not limitReached then
+        local questAddon = ns.Catalog and ns.Catalog:GetDataAddon("quests")
+        local qd = questAddon and questAddon.QuestData
+        if qd and qd.GetRewardItemIDs then
+            for _, itemID in ipairs(qd:GetRewardItemIDs()) do
+                local itemName = C_Item.GetItemNameByID(itemID)
+                if itemName and itemName:lower():find(term, 1, true) then
+                    addOrAnnotate(itemID, itemName, nil, nil, "isQuestReward")
+                    if limitReached then break end
+                end
+            end
         end
     end
 
@@ -364,6 +380,7 @@ function ItemSearch:GetDetail(itemID)
         vendors      = {},
         crafted      = {},
         owned        = {},
+        questRewards = {},
         isRecipe     = isRecipe,
         recipeKnownBy = isRecipe and GetRecipeKnownByFromAltTracker(itemID) or nil,
     }
@@ -449,6 +466,18 @@ function ItemSearch:GetDetail(itemID)
                 tinsert(detail.owned, byCharLoc[key])
             end
             byCharLoc[key].count = byCharLoc[key].count + loc.count
+        end
+    end
+
+    local questAddon = ns.Catalog and ns.Catalog:GetDataAddon("quests")
+    local qd = questAddon and questAddon.QuestData
+    if qd and qd.GetQuestsRewardingItem then
+        local questIDs = qd:GetQuestsRewardingItem(itemID)
+        if questIDs then
+            for _, questID in ipairs(questIDs) do
+                local q = qd:GetQuest(questID)
+                tinsert(detail.questRewards, { questID = questID, questName = q and q.name })
+            end
         end
     end
 
