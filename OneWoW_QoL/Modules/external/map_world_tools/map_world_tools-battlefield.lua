@@ -1,9 +1,16 @@
 local addonName, ns = ...
+
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 local M = ns.MapWorldToolsModule
 
-local centerFrame
 local centerTime = -1
 local dragHitFrame
+local battleDriver
+local centerTicker
+local lastCanvasScale
+local wasPanning
 
 local function GetToggle(id)
     return ns.ModuleRegistry:GetToggleValue("map_world_tools", id)
@@ -13,7 +20,23 @@ local function GetS()
     return M.GetSettings()
 end
 
+local function NeedsBattlefieldFeatures()
+    if not ns.ModuleRegistry:IsEnabled("map_world_tools") then
+        return false
+    end
+    return GetToggle("enhanceBattleMap") or GetToggle("unlockBattlefield")
+end
+
 function M.RefreshBattlefieldEnhance() end
+
+local function EnsureBattleDriver()
+    if battleDriver then
+        return battleDriver
+    end
+    battleDriver = CreateFrame("Frame", "OneWoW_QoL_BattleMapDriver", UIParent)
+    battleDriver:Hide()
+    return battleDriver
+end
 
 local function RefreshOpacity()
     local s = GetS()
@@ -44,47 +67,82 @@ local function RefreshPinSizes()
     end
 end
 
-local function StopCentering()
-    if centerFrame then
-        centerFrame:SetScript("OnUpdate", nil)
+local function CenterOnPlayer()
+    if not BattlefieldMapFrame or not BattlefieldMapFrame:IsShown() then
+        return
     end
-    centerTime = -1
+    local sc = BattlefieldMapFrame.ScrollContainer
+    if not sc or sc:IsPanning() then
+        return
+    end
+    if IsShiftKeyDown() then
+        centerTime = -2000
+        return
+    end
+    local position = C_Map.GetPlayerMapPosition(BattlefieldMapFrame.mapID, "player")
+    if not position or not position.x then
+        return
+    end
+    local x, y = position.x, position.y
+    local minX, maxX, minY, maxY = sc:CalculateScrollExtentsAtScale(sc:GetCanvasScale())
+    local cx = math.max(math.min(x, maxX), minX)
+    local cy = math.max(math.min(y, maxY), minY)
+    sc:SetPanTarget(cx, cy)
+    centerTime = 0
 end
 
-local function CenterUpdate(_, elapsed)
-    if not GetToggle("enhanceBattleMap") or not GetToggle("battleCenterOnPlayer") then return end
-    if not BattlefieldMapFrame or not BattlefieldMapFrame:IsShown() then return end
-    if centerTime > 2 or centerTime == -1 then
-        if BattlefieldMapFrame.ScrollContainer:IsPanning() then return end
-        if IsShiftKeyDown() then centerTime = -2000 return end
-        local position = C_Map.GetPlayerMapPosition(BattlefieldMapFrame.mapID, "player")
-        if position then
-            local x, y = position.x, position.y
-            if x then
-                local sc = BattlefieldMapFrame.ScrollContainer
-                local minX, maxX, minY, maxY = sc:CalculateScrollExtentsAtScale(sc:GetCanvasScale())
-                local cx = math.max(math.min(x, maxX), minX)
-                local cy = math.max(math.min(y, maxY), minY)
-                sc:SetPanTarget(cx, cy)
-            end
-            centerTime = 0
-        end
+local function StopCenterTicker()
+    if centerTicker then
+        centerTicker:Cancel()
+        centerTicker = nil
     end
-    centerTime = centerTime + elapsed
+    centerTime = -1
+    lastCanvasScale = nil
+    wasPanning = false
+end
+
+local function CenterTickerTick()
+    if not GetToggle("enhanceBattleMap") or not GetToggle("battleCenterOnPlayer") then
+        return
+    end
+    if not BattlefieldMapFrame or not BattlefieldMapFrame:IsShown() then
+        return
+    end
+    local sc = BattlefieldMapFrame.ScrollContainer
+    if not sc then
+        return
+    end
+
+    local panning = sc:IsPanning()
+    if wasPanning and not panning and GetToggle("battleCenterOnPlayer") then
+        centerTime = IsShiftKeyDown() and -2000 or 1.7
+    end
+    wasPanning = panning
+
+    local scale = sc:GetCanvasScale()
+    if lastCanvasScale and scale ~= lastCanvasScale and GetToggle("battleCenterOnPlayer") then
+        centerTime = IsShiftKeyDown() and -2000 or 1.7
+    end
+    lastCanvasScale = scale
+
+    if centerTime > 2 or centerTime == -1 then
+        CenterOnPlayer()
+    elseif centerTime >= 0 then
+        centerTime = centerTime + 0.1
+    end
 end
 
 local function StartCentering()
-    if not centerFrame then return end
-    centerTime = -1
+    StopCenterTicker()
     if GetToggle("battleCenterOnPlayer") and GetToggle("enhanceBattleMap") then
-        centerFrame:SetScript("OnUpdate", CenterUpdate)
-    else
-        StopCentering()
+        centerTicker = C_Timer.NewTicker(0.1, CenterTickerTick)
     end
 end
 
 local function OnBattleDragStop()
-    if not BattlefieldMapFrame then return end
+    if not BattlefieldMapFrame then
+        return
+    end
     BattlefieldMapFrame:StopMovingOrSizing()
     local s = GetS()
     s.battleMapA, _, s.battleMapR, s.battleMapX, s.battleMapY = BattlefieldMapFrame:GetPoint()
@@ -94,81 +152,137 @@ local function OnBattleDragStop()
 end
 
 function M.ApplyBattlefieldFramePosition()
-    if not BattlefieldMapFrame then return end
+    if not BattlefieldMapFrame then
+        return
+    end
     local s = GetS()
     BattlefieldMapFrame:ClearAllPoints()
     BattlefieldMapFrame:SetPoint(s.battleMapA or "BOTTOMRIGHT", UIParent, s.battleMapR or "BOTTOMRIGHT", s.battleMapX or -47, s.battleMapY or 83)
 end
 
+local function SyncDragHitOverlay()
+    if not dragHitFrame or not BattlefieldMapFrame or not BattlefieldMapFrame.ScrollContainer then
+        return
+    end
+    if GetToggle("unlockBattlefield") and NeedsBattlefieldFeatures() then
+        dragHitFrame:SetPoint("TOPLEFT", BattlefieldMapFrame.ScrollContainer, "TOPLEFT")
+        dragHitFrame:SetPoint("BOTTOMRIGHT", BattlefieldMapFrame.ScrollContainer, "BOTTOMRIGHT")
+        dragHitFrame:Show()
+    else
+        dragHitFrame:Hide()
+    end
+end
+
+local function EnsureDragHitOverlay()
+    if dragHitFrame then
+        SyncDragHitOverlay()
+        return
+    end
+    if not BattlefieldMapFrame or not BattlefieldMapFrame.ScrollContainer then
+        return
+    end
+    --- Parent UIParent and anchor to the scroll area so map pins stay untainted.
+    dragHitFrame = CreateFrame("Frame", "OneWoW_QoL_BattleMapDragHit", UIParent)
+    dragHitFrame:SetFrameStrata("HIGH")
+    dragHitFrame:SetHitRectInsets(-15, -15, -15, -15)
+    dragHitFrame:SetAlpha(0)
+    dragHitFrame:EnableMouse(true)
+    dragHitFrame:RegisterForDrag("LeftButton")
+    dragHitFrame:SetScript("OnMouseDown", function()
+        if not GetToggle("unlockBattlefield") or OneWoW_GUI:IsAddonRestricted() then
+            return
+        end
+        if BattlefieldMapFrame then
+            BattlefieldMapFrame:StartMoving()
+        end
+    end)
+    dragHitFrame:SetScript("OnMouseUp", OnBattleDragStop)
+    SyncDragHitOverlay()
+end
+
+local function ApplyBattlefieldMovableState()
+    if not BattlefieldMapFrame then
+        return
+    end
+    if GetToggle("unlockBattlefield") and NeedsBattlefieldFeatures() then
+        BattlefieldMapFrame:SetMovable(true)
+        BattlefieldMapFrame:SetUserPlaced(true)
+        BattlefieldMapFrame:SetDontSavePosition(true)
+        BattlefieldMapFrame:SetClampedToScreen(true)
+        M.ApplyBattlefieldFramePosition()
+    end
+end
+
 local function DoBattleInstall()
-    if not BattlefieldMapFrame then return end
+    if not BattlefieldMapFrame or M._battleInstalled then
+        return
+    end
+    M._battleInstalled = true
 
-    BattlefieldMapOptions.showPlayers = true
+    if BattlefieldMapOptions then
+        BattlefieldMapOptions.showPlayers = true
+    end
 
-    if BattlefieldMapTab then
+    if BattlefieldMapTab and not M._battleTabHooked then
+        M._battleTabHooked = true
         hooksecurefunc(BattlefieldMapTab, "Show", function()
             BattlefieldMapTab:Hide()
         end)
         BattlefieldMapTab:SetFrameStrata(BattlefieldMapFrame:GetFrameStrata())
     end
 
-    BattlefieldMapFrame:SetMovable(true)
-    BattlefieldMapFrame:SetUserPlaced(true)
-    BattlefieldMapFrame:SetDontSavePosition(true)
-    BattlefieldMapFrame:SetClampedToScreen(true)
-    M.ApplyBattlefieldFramePosition()
-
-    dragHitFrame = CreateFrame("Frame", nil, BattlefieldMapFrame.ScrollContainer)
-    dragHitFrame:SetPoint("TOPLEFT", 0, 0)
-    dragHitFrame:SetPoint("BOTTOMRIGHT", 0, 0)
-    dragHitFrame:SetFrameLevel(BattlefieldMapFrame:GetFrameLevel() - 1)
-    dragHitFrame:SetHitRectInsets(-15, -15, -15, -15)
-    dragHitFrame:SetAlpha(0)
-    dragHitFrame:EnableMouse(true)
-    dragHitFrame:RegisterForDrag("LeftButton")
-    dragHitFrame:SetScript("OnMouseDown", function()
-        if GetToggle("unlockBattlefield") then
-            BattlefieldMapFrame:StartMoving()
-        end
-    end)
-    dragHitFrame:SetScript("OnMouseUp", OnBattleDragStop)
-
-    centerFrame = CreateFrame("FRAME", nil, BattlefieldMapFrame)
-    BattlefieldMapFrame.ScrollContainer:HookScript("OnMouseUp", function()
-        if GetToggle("battleCenterOnPlayer") then
-            if IsShiftKeyDown() then centerTime = -2000 else centerTime = 1.7 end
-        end
-    end)
-    BattlefieldMapFrame:HookScript("OnShow", function()
-        if GetToggle("battleCenterOnPlayer") then centerTime = -1 end
-    end)
-    BattlefieldMapFrame.ScrollContainer:HookScript("OnMouseWheel", function()
-        if GetToggle("battleCenterOnPlayer") then
-            if IsShiftKeyDown() then centerTime = -2000 else centerTime = 1.7 end
-        end
-    end)
-
-    local function SyncDragHit()
-        if dragHitFrame then
-            if GetToggle("unlockBattlefield") then dragHitFrame:Show() else dragHitFrame:Hide() end
-        end
+    if not M._battleShowHooked then
+        M._battleShowHooked = true
+        hooksecurefunc(BattlefieldMapFrame, "Show", function()
+            if GetToggle("battleCenterOnPlayer") and GetToggle("enhanceBattleMap") then
+                centerTime = -1
+            end
+            SyncDragHitOverlay()
+        end)
     end
-    SyncDragHit()
-    M._syncBattleDragHit = SyncDragHit
+
+    EnsureBattleDriver()
+    EnsureDragHitOverlay()
+    ApplyBattlefieldMovableState()
+
+    M._syncBattleDragHit = SyncDragHitOverlay
 
     M.RefreshBattlefieldEnhance = function()
-        if not GetToggle("enhanceBattleMap") or not ns.ModuleRegistry:IsEnabled("map_world_tools") then return end
-        if BattlefieldMapOptions then BattlefieldMapOptions.showPlayers = true end
-        RefreshOpacity()
-        RefreshPinSizes()
-        StartCentering()
-        if M._syncBattleDragHit then M._syncBattleDragHit() end
-        M.ApplyBattlefieldFramePosition()
+        if not NeedsBattlefieldFeatures() then
+            StopCenterTicker()
+            if dragHitFrame then
+                dragHitFrame:Hide()
+            end
+            return
+        end
+        if not GetToggle("enhanceBattleMap") then
+            StopCenterTicker()
+        else
+            if BattlefieldMapOptions then
+                BattlefieldMapOptions.showPlayers = true
+            end
+            RefreshOpacity()
+            RefreshPinSizes()
+            StartCentering()
+        end
+        ApplyBattlefieldMovableState()
+        if M._syncBattleDragHit then
+            M._syncBattleDragHit()
+        end
+    end
+end
+
+function M.TeardownBattlefieldEnhance()
+    StopCenterTicker()
+    if dragHitFrame then
+        dragHitFrame:Hide()
     end
 end
 
 function M.InstallBattlefieldEnhance()
-    if M._battleInstalled then return end
+    if not NeedsBattlefieldFeatures() then
+        return
+    end
 
     if C_AddOns and C_AddOns.LoadAddOn then
         C_AddOns.LoadAddOn("Blizzard_BattlefieldMap")
@@ -177,16 +291,16 @@ function M.InstallBattlefieldEnhance()
     end
 
     if not BattlefieldMapFrame then
-        if EventUtil and EventUtil.ContinueOnAddOnLoaded then
+        if EventUtil and EventUtil.ContinueOnAddOnLoaded and not M._battleLoadPending then
+            M._battleLoadPending = true
             EventUtil.ContinueOnAddOnLoaded("Blizzard_BattlefieldMap", function()
-                if not M._battleInstalled then
-                    M.InstallBattlefieldEnhance()
-                end
+                M._battleLoadPending = nil
+                M.InstallBattlefieldEnhance()
             end)
         end
         return
     end
 
-    M._battleInstalled = true
     DoBattleInstall()
+    M.RefreshBattlefieldEnhance()
 end

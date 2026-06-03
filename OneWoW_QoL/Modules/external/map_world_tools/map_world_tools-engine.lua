@@ -4,9 +4,16 @@ local M = ns.MapWorldToolsModule
 local canvasOverlay
 local hooksInstalled
 local coordsParent
-local coordsUpdateFrame
+local coordsTicker
 local poiHooked
 local comfortHooks
+
+local function WorldMapChromeParent()
+    if not WorldMapFrame then
+        return nil
+    end
+    return WorldMapFrame.BorderFrame or WorldMapFrame
+end
 
 local function GetToggle(id)
     return ns.ModuleRegistry:GetToggleValue("map_world_tools", id)
@@ -112,30 +119,37 @@ local function InstallFogHooks()
 
     hooksecurefunc(FogOfWarDataProviderMixin, "RefreshAllData", function(self)
         if not self.pin then return end
-        if not ns.ModuleRegistry:IsEnabled("map_world_tools") then
-            local p = self.pin
-            p:SetAlpha(1)
-            if p.SetVertexColor then pcall(p.SetVertexColor, p, 1, 1, 1) end
-            ForEachTextureInFrame(p, function(tex)
-                tex:SetVertexColor(1, 1, 1)
-            end)
-            return
-        end
-        ApplyFogPin(self.pin)
+        local pin = self.pin
+        C_Timer.After(0, function()
+            if not pin then return end
+            if not ns.ModuleRegistry:IsEnabled("map_world_tools") then
+                pin:SetAlpha(1)
+                if pin.SetVertexColor then pcall(pin.SetVertexColor, pin, 1, 1, 1) end
+                ForEachTextureInFrame(pin, function(tex)
+                    tex:SetVertexColor(1, 1, 1)
+                end)
+                return
+            end
+            ApplyFogPin(pin)
+        end)
     end)
 
     if FogOfWarPinMixin and FogOfWarPinMixin.OnMapChanged then
         hooksecurefunc(FogOfWarPinMixin, "OnMapChanged", function(self)
             if not self then return end
-            if not ns.ModuleRegistry:IsEnabled("map_world_tools") then
-                self:SetAlpha(1)
-                if self.SetVertexColor then pcall(self.SetVertexColor, self, 1, 1, 1) end
-                ForEachTextureInFrame(self, function(tex)
-                    tex:SetVertexColor(1, 1, 1)
-                end)
-                return
-            end
-            ApplyFogPin(self)
+            local pin = self
+            C_Timer.After(0, function()
+                if not pin then return end
+                if not ns.ModuleRegistry:IsEnabled("map_world_tools") then
+                    pin:SetAlpha(1)
+                    if pin.SetVertexColor then pcall(pin.SetVertexColor, pin, 1, 1, 1) end
+                    ForEachTextureInFrame(pin, function(tex)
+                        tex:SetVertexColor(1, 1, 1)
+                    end)
+                    return
+                end
+                ApplyFogPin(pin)
+            end)
         end)
     end
 
@@ -150,8 +164,11 @@ end
 local function EnsureCanvasOverlay()
     if canvasOverlay or not WorldMapFrame or not WorldMapFrame.ScrollContainer then return end
     local sc = WorldMapFrame.ScrollContainer
-    canvasOverlay = CreateFrame("Frame", "OneWoW_QoL_MapWorldCanvasTint", sc)
-    canvasOverlay:SetAllPoints()
+    local chrome = WorldMapChromeParent()
+    if not chrome then return end
+    canvasOverlay = CreateFrame("Frame", "OneWoW_QoL_MapWorldCanvasTint", chrome)
+    canvasOverlay:SetPoint("TOPLEFT", sc, "TOPLEFT")
+    canvasOverlay:SetPoint("BOTTOMRIGHT", sc, "BOTTOMRIGHT")
     canvasOverlay:SetFrameStrata("HIGH")
     canvasOverlay:SetFrameLevel(8000)
     canvasOverlay:EnableMouse(false)
@@ -271,26 +288,29 @@ local function InstallPoiHook()
     if not BaseMapPoiPinMixin or not BaseMapPoiPinMixin.OnAcquired then return end
     hooksecurefunc(BaseMapPoiPinMixin, "OnAcquired", function(self)
         if not GetToggle("hideContinentPoi") or not ns.ModuleRegistry:IsEnabled("map_world_tools") then return end
-        local wmapID = WorldMapFrame and WorldMapFrame.mapID
-        if not wmapID then return end
-        local minfo = C_Map.GetMapInfo(wmapID)
-        local mType = minfo and minfo.mapType
-        if not mType or (mType ~= 1 and mType ~= 2) then return end
-        if self.Texture and self.Texture:GetTexture() == 136441 then
-            local a, b, c, d, e, f, g, h = self.Texture:GetTexCoord()
-            if a == 0.35546875 and b == 0.001953125 and c == 0.35546875 and d == 0.03515625 and e == 0.421875 and f == 0.001953125 and g == 0.421875 and h == 0.03515625 then
-                self:Hide()
-            elseif a == 0.28515625 and b == 0.107421875 and c == 0.28515625 and d == 0.140625 and e == 0.3515625 and f == 0.107421875 and g == 0.3515625 and h == 0.140625 then
-                self:Hide()
-            elseif a == 0.42578125 and b == 0.107421875 and c == 0.42578125 and d == 0.140625 and e == 0.4921875 and f == 0.107421875 and g == 0.4921875 and h == 0.140625 then
-                self:Hide()
+        local pin = self
+        C_Timer.After(0, function()
+            if not pin then return end
+            local wmapID = WorldMapFrame and WorldMapFrame.mapID
+            if not wmapID then return end
+            local minfo = C_Map.GetMapInfo(wmapID)
+            local mType = minfo and minfo.mapType
+            if not mType or (mType ~= 1 and mType ~= 2) then return end
+            if pin.Texture and pin.Texture:GetTexture() == 136441 then
+                local a, b, c, d, e, f, g, h = pin.Texture:GetTexCoord()
+                if a == 0.35546875 and b == 0.001953125 and c == 0.35546875 and d == 0.03515625 and e == 0.421875 and f == 0.001953125 and g == 0.421875 and h == 0.03515625 then
+                    pin:Hide()
+                elseif a == 0.28515625 and b == 0.107421875 and c == 0.28515625 and d == 0.140625 and e == 0.3515625 and f == 0.107421875 and g == 0.3515625 and h == 0.140625 then
+                    pin:Hide()
+                elseif a == 0.42578125 and b == 0.107421875 and c == 0.42578125 and d == 0.140625 and e == 0.4921875 and f == 0.107421875 and g == 0.4921875 and h == 0.140625 then
+                    pin:Hide()
+                end
             end
-        end
+        end)
     end)
 end
 
 local function ApplyCoordFontStrings(cCursor, cPlayer)
-    local s = GetSettings()
     local sz = GetToggle("coordsLargeFont") and 16 or 12
     local font, _, f = cCursor.x:GetFont()
     cCursor.x:SetFont(font, sz, f)
@@ -302,64 +322,85 @@ local function ApplyCoordFontStrings(cCursor, cPlayer)
     end
 end
 
+local function StopCoordsTicker()
+    if coordsTicker then
+        coordsTicker:Cancel()
+        coordsTicker = nil
+    end
+end
+
+local function UpdateCoordOverlay()
+    if not coordsParent or not coordsParent._cCursor or not coordsParent._cPlayer then
+        return
+    end
+    if not GetToggle("showCoords") or not ns.ModuleRegistry:IsEnabled("map_world_tools") then
+        return
+    end
+    if not WorldMapFrame or not WorldMapFrame:IsShown() or not WorldMapFrame.ScrollContainer then
+        return
+    end
+
+    local cCursor = coordsParent._cCursor
+    local cPlayer = coordsParent._cPlayer
+    local sc = WorldMapFrame.ScrollContainer
+
+    local x, y = sc:GetNormalizedCursorPosition()
+    if x and y and x > 0 and y > 0 and MouseIsOver(sc) then
+        cCursor.x:SetFormattedText("%s: %.1f, %.1f", ns.L and ns.L["MAPWORLD_CURSOR"] or "Cursor",
+            (math.floor(x * 1000 + 0.5)) / 10, (math.floor(y * 1000 + 0.5)) / 10)
+    else
+        cCursor.x:SetFormattedText("%s:", ns.L and ns.L["MAPWORLD_CURSOR"] or "Cursor")
+    end
+
+    local mapID = C_Map.GetBestMapForUnit("player")
+    if not mapID then
+        cPlayer.x:SetFormattedText("%s:", ns.L and ns.L["MAPWORLD_PLAYER"] or "Player")
+    else
+        local position = C_Map.GetPlayerMapPosition(mapID, "player")
+        if position and position.x ~= 0 and position.y ~= 0 then
+            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", ns.L and ns.L["MAPWORLD_PLAYER"] or "Player",
+                position.x * 100, position.y * 100)
+        else
+            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", ns.L and ns.L["MAPWORLD_PLAYER"] or "Player", 0, 0)
+        end
+    end
+end
+
+local function SyncCoordsTicker()
+    StopCoordsTicker()
+    if GetToggle("showCoords") and ns.ModuleRegistry:IsEnabled("map_world_tools") and coordsParent then
+        coordsTicker = C_Timer.NewTicker(0.1, UpdateCoordOverlay)
+    end
+end
+
 local function EnsureCoordOverlay()
     if coordsParent or not WorldMapFrame or not WorldMapFrame.ScrollContainer then return end
     local sc = WorldMapFrame.ScrollContainer
-    local cFrame = CreateFrame("FRAME", "OneWoW_QoL_MapCoordsBar", sc)
+    local chrome = WorldMapChromeParent()
+    if not chrome then return end
+
+    local cFrame = CreateFrame("FRAME", "OneWoW_QoL_MapCoordsBar", chrome)
     cFrame:SetSize(WorldMapFrame:GetWidth() or 1000, 17)
-    cFrame:SetPoint("BOTTOMLEFT", 17, 0)
-    cFrame:SetPoint("BOTTOMRIGHT", 0, 0)
+    cFrame:SetPoint("BOTTOMLEFT", sc, "BOTTOMLEFT", 17, 0)
+    cFrame:SetPoint("BOTTOMRIGHT", sc, "BOTTOMRIGHT", 0, 0)
     cFrame.t = cFrame:CreateTexture(nil, "BACKGROUND")
     cFrame.t:SetAllPoints()
     cFrame.t:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
     cFrame.t:SetVertexColor(0, 0, 0, 0.5)
 
-    local cCursor = CreateFrame("Frame", nil, sc)
+    local cCursor = CreateFrame("Frame", nil, cFrame)
     cCursor:SetSize(200, 16)
-    cCursor:SetParent(cFrame)
     cCursor:SetPoint("BOTTOMLEFT", 152, 1)
     cCursor.x = cCursor:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     cCursor.x:SetJustifyH("LEFT")
     cCursor.x:SetAllPoints()
 
-    local cPlayer = CreateFrame("Frame", nil, sc)
+    local cPlayer = CreateFrame("Frame", nil, cFrame)
     cPlayer:SetSize(200, 16)
-    cPlayer:SetParent(cFrame)
     cPlayer:SetPoint("BOTTOMRIGHT", -132, 1)
     cPlayer.x = cPlayer:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     cPlayer.x:SetJustifyH("LEFT")
     cPlayer.x:SetAllPoints()
-
-    coordsUpdateFrame = cPlayer
-    local cPlayerTime = -1
-    cPlayer:SetScript("OnUpdate", function(_, elapsed)
-        if not GetToggle("showCoords") or not ns.ModuleRegistry:IsEnabled("map_world_tools") then return end
-        if cPlayerTime > 0.1 or cPlayerTime == -1 then
-            local x, y = WorldMapFrame.ScrollContainer:GetNormalizedCursorPosition()
-            if x and y and x > 0 and y > 0 and MouseIsOver(WorldMapFrame.ScrollContainer) then
-                cCursor.x:SetFormattedText("%s: %.1f, %.1f", ns.L and ns.L["MAPWORLD_CURSOR"] or "Cursor",
-                    (math.floor(x * 1000 + 0.5)) / 10, (math.floor(y * 1000 + 0.5)) / 10)
-            else
-                cCursor.x:SetFormattedText("%s:", ns.L and ns.L["MAPWORLD_CURSOR"] or "Cursor")
-            end
-        end
-        if cPlayerTime > 0.2 or cPlayerTime == -1 then
-            local mapID = C_Map.GetBestMapForUnit("player")
-            if not mapID then
-                cPlayer.x:SetFormattedText("%s:", ns.L and ns.L["MAPWORLD_PLAYER"] or "Player")
-            else
-                local position = C_Map.GetPlayerMapPosition(mapID, "player")
-                if position and position.x ~= 0 and position.y ~= 0 then
-                    cPlayer.x:SetFormattedText("%s: %.1f, %.1f", ns.L and ns.L["MAPWORLD_PLAYER"] or "Player",
-                        position.x * 100, position.y * 100)
-                else
-                    cPlayer.x:SetFormattedText("%s: %.1f, %.1f", ns.L and ns.L["MAPWORLD_PLAYER"] or "Player", 0, 0)
-                end
-            end
-            cPlayerTime = 0
-        end
-        cPlayerTime = cPlayerTime + elapsed
-    end)
 
     coordsParent = cFrame
     cFrame._cCursor = cCursor
@@ -372,8 +413,10 @@ function M.RefreshCoordsVisibility()
     if not coordsParent then return end
     if GetToggle("showCoords") and ns.ModuleRegistry:IsEnabled("map_world_tools") then
         coordsParent:Show()
+        SyncCoordsTicker()
     else
         coordsParent:Hide()
+        StopCoordsTicker()
     end
     if coordsParent._cCursor and coordsParent._cPlayer then
         ApplyCoordFontStrings(coordsParent._cCursor, coordsParent._cPlayer)
@@ -387,7 +430,7 @@ local function OnWorldMapAddonLoaded()
     if M.InstallExploreReveal then
         M.InstallExploreReveal()
     end
-    if M.InstallBattlefieldEnhance then
+    if M.InstallBattlefieldEnhance and (GetToggle("enhanceBattleMap") or GetToggle("unlockBattlefield")) then
         M.InstallBattlefieldEnhance()
     end
 
@@ -399,9 +442,9 @@ local function OnWorldMapAddonLoaded()
     EnsureCoordOverlay()
     M.RefreshCoordsVisibility()
 
-    if not M._mapWorldOnShowHooked and WorldMapFrame and WorldMapFrame.HookScript then
+    if not M._mapWorldOnShowHooked and WorldMapFrame then
         M._mapWorldOnShowHooked = true
-        WorldMapFrame:HookScript("OnShow", function()
+        hooksecurefunc(WorldMapFrame, "Show", function()
             M.RefreshCanvasOverlay()
             M.RefreshMapFrameAlpha()
             ApplyBlackoutMode()
@@ -477,11 +520,15 @@ function M:OnDisable()
     if M._savedMapFade ~= nil then
         SetCVar("mapFade", M._savedMapFade)
     end
+    StopCoordsTicker()
     if coordsParent then coordsParent:Hide() end
+    if M.TeardownBattlefieldEnhance then
+        M.TeardownBattlefieldEnhance()
+    end
     SafeRefreshWorldMap()
 end
 
-function M:OnToggle(toggleId, value)
+function M:OnToggle(toggleId, _value)
     if toggleId == "removeBattleFog" or toggleId == "fogTint" or toggleId == "revealMap"
         or toggleId == "tintUnexplored" then
         M.RefreshFogAppearance()
@@ -498,7 +545,16 @@ function M:OnToggle(toggleId, value)
         M.RefreshCoordsVisibility()
     elseif toggleId == "enhanceBattleMap" or toggleId == "unlockBattlefield"
         or toggleId == "battleCenterOnPlayer" then
-        if M.RefreshBattlefieldEnhance then M.RefreshBattlefieldEnhance() end
+        if (GetToggle("enhanceBattleMap") or GetToggle("unlockBattlefield")) and M.InstallBattlefieldEnhance then
+            M.InstallBattlefieldEnhance()
+        elseif not GetToggle("enhanceBattleMap") and not GetToggle("unlockBattlefield") then
+            if M.TeardownBattlefieldEnhance then
+                M.TeardownBattlefieldEnhance()
+            end
+        end
+        if M.RefreshBattlefieldEnhance then
+            M.RefreshBattlefieldEnhance()
+        end
     elseif toggleId == "hideContinentPoi" then
         SafeRefreshWorldMap()
     end

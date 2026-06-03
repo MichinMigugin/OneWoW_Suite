@@ -226,11 +226,15 @@ local function HookOneExplorationPin(pin)
     hooksecurefunc(pin, "RefreshOverlays", function(self, fullUpdate)
         if not self or not self.GetMap then return end
         local map = self:GetMap()
-        if map == WorldMapFrame then
-            WorldExplorationPostRefresh(self, fullUpdate)
-        elseif BattlefieldMapFrame and map == BattlefieldMapFrame then
-            BattlefieldExplorationPostRefresh(self, fullUpdate)
-        end
+        C_Timer.After(0, function()
+            if not self.GetMap then return end
+            if self:GetMap() ~= map then return end
+            if map == WorldMapFrame then
+                WorldExplorationPostRefresh(self, fullUpdate)
+            elseif BattlefieldMapFrame and map == BattlefieldMapFrame then
+                BattlefieldExplorationPostRefresh(self, fullUpdate)
+            end
+        end)
     end)
 end
 
@@ -251,9 +255,9 @@ local wmExploreOnShowHooked = false
 local bfExploreOnShowHooked = false
 
 local function RegisterBfExplorationOnShow()
-    if bfExploreOnShowHooked or not BattlefieldMapFrame or not BattlefieldMapFrame.HookScript then return end
+    if bfExploreOnShowHooked or not BattlefieldMapFrame then return end
     bfExploreOnShowHooked = true
-    BattlefieldMapFrame:HookScript("OnShow", function()
+    hooksecurefunc(BattlefieldMapFrame, "Show", function()
         HookExplorationPinsOnCanvas(BattlefieldMapFrame)
     end)
 end
@@ -267,9 +271,9 @@ local function InstallExplorationHooks()
 
     HookAllExplorationPinInstances()
 
-    if WorldMapFrame and WorldMapFrame.HookScript and not wmExploreOnShowHooked then
+    if WorldMapFrame and not wmExploreOnShowHooked then
         wmExploreOnShowHooked = true
-        WorldMapFrame:HookScript("OnShow", function()
+        hooksecurefunc(WorldMapFrame, "Show", function()
             HookExplorationPinsOnCanvas(WorldMapFrame)
         end)
     end
