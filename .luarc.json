@@ -259,6 +259,7 @@
     "OneWoW_CatalogData_Vendors_DB",
     "OneWoW_DirectDeposit_DB",
     "OneWoW_DirectDeposit_CharDB",
+    "OneWoW_GUI",
     "OneWoWMainWindow",
     "OneWoW_Notes",
     "OneWoW_NotesMainFrame",

@@ -50,3 +50,25 @@ repos:
             | \.releases/
             | OneWoW_Bags/API/Examples/
           )
+
+      - id: no-data-manager-bypass
+        name: No cross-family sub-addon global reads in Lua
+        description: |
+          Forbids reaching into another load unit's global store
+          (e.g. a Catalog file touching `OneWoW_AltTracker_Storage`).
+          Use `OneWoW.DataManager:Query(...)` or `OneWoW:EnsureLoaded(...)`.
+          Phase 1 is warn-only (never blocks). See
+          OneWoW/Docs/Load-Unit-Map.md §10.3, §10.7, §10.8.
+        entry: python bin/check_no_data_manager_bypass.py
+        language: python
+        types: [lua]
+        # Same reference / vendored / generated trees as no-g-literal-access.
+        exclude: |
+          (?x)^(
+            Libs/
+            | \.lua-defs/
+            | \.wow_docs/
+            | \.vscode/
+            | \.releases/
+            | OneWoW_Bags/API/Examples/
+          )
