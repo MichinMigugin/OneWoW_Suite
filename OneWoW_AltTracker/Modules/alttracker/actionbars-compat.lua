@@ -1,8 +1,8 @@
-local addonName, ns = ...
+local _, ns = ...
 
 local function SetupActionBarsCompat()
-    if _G.OneWoW_AltTracker_Character then
-        ns.ActionBarsModule = _G.OneWoW_AltTracker_Character.ActionBars or nil
+    if OneWoW_AltTracker_Character then
+        ns.ActionBarsModule = OneWoW_AltTracker_Character.ActionBars or nil
     else
         ns.ActionBarsModule = nil
         local L = ns.L
@@ -10,18 +10,12 @@ local function SetupActionBarsCompat()
     end
 end
 
+-- The OneWoW_AltTracker_Character store is force-loaded by the core orchestrator
+-- before PLAYER_LOGIN, and that force-load eats its ADDON_LOADED event. Resolve
+-- the ActionBars module at PLAYER_LOGIN, when the store is guaranteed present.
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(self, event, loadedAddon)
-    if loadedAddon == "OneWoW_AltTracker_Character" then
-        SetupActionBarsCompat()
-        self:UnregisterEvent("ADDON_LOADED")
-    elseif loadedAddon == addonName then
-        C_Timer.After(0.1, function()
-            if _G.OneWoW_AltTracker_Character then
-                SetupActionBarsCompat()
-                self:UnregisterEvent("ADDON_LOADED")
-            end
-        end)
-    end
+frame:RegisterEvent("PLAYER_LOGIN")
+frame:SetScript("OnEvent", function(self)
+    SetupActionBarsCompat()
+    self:UnregisterEvent("PLAYER_LOGIN")
 end)

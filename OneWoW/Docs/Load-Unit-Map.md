@@ -1,10 +1,12 @@
 # OneWoW Suite — Load-Unit Map
 
-> **Status:** design proposal. Describes how the suite should be partitioned into
-> *load units* (addons / TOCs) and how `LoadOnDemand` / `LoadWith` /
-> `LoadManagers` wire them together so that the **"true core" + per-module
-> enable/disable/unload** model survives consolidation into a single
-> distributable package.
+> **Status:** design proposal, partially implemented. Describes how the suite is
+> partitioned into *load units* (addons / TOCs) and how plain `## LoadOnDemand: 1`
+> + a **core-driven load lifecycle** (the orchestrator loads each unit, then calls
+> its `OnAddonLoaded()` hook — §5) wires them together so that the **"true core" +
+> per-module enable/disable/unload** model survives consolidation into a single
+> distributable package. (`LoadWith` / `LoadManagers` were evaluated and retired —
+> see §5 and §8.1.)
 >
 > **Key decisions captured here:** `OneWoW_GUI` and `LibCopyPaste` are absorbed
 > into the always-loaded `OneWoW` core unit and stop using LibStub (§6.1);
@@ -52,8 +54,8 @@ heavy or optional modules as their own load-units."**
 |---|---|---|---|
 | **0 — Foundation (inside core)** | `OneWoW_GUI` files + `CopyPaste` service | Always, first within core | **Folded into the `OneWoW` load unit** (§6.1). Not a separate addon. `OneWoW_GUI` published as a plain global; `CopyPaste` as `OneWoW.CopyPaste`. No LibStub. |
 | **1 — Core hub** | `OneWoW` | Always | **No `RequiredDeps`** (it *contains* the foundation). Engines (overlay/tooltip/toast), `ModuleRegistry`, Manage Features, hub UI, cheap shared `Services`, plus the GUI toolkit + CopyPaste. |
-| **2 — Feature modules** | `OneWoW_AltTracker`, `OneWoW_Catalog`, `OneWoW_Notes`, `OneWoW_Trackers`, `OneWoW_QoL`, `OneWoW_ShoppingList`, `OneWoW_DirectDeposit`, `OneWoW_Bags` | On demand | `RequiredDeps: OneWoW` + `LoadManagers: OneWoW` → behave as LoD when core is present; core calls `C_AddOns.LoadAddOn`. |
-| **3 — Data sub-units** | `OneWoW_AltTracker_{Storage,Character,Collections,Endgame,Accounting,Professions,Auctions}`, `OneWoW_CatalogData_{Journal,Quests,Vendors,Tradeskills}` | On demand, with their parent | `LoadWith: <parent>` (implies LoD). Auto-load when the parent module loads; cross-module consumers read guarded (§4). |
+| **2 — Feature modules** | `OneWoW_AltTracker`, `OneWoW_Catalog`, `OneWoW_Notes`, `OneWoW_Trackers`, `OneWoW_QoL`, `OneWoW_ShoppingList`, `OneWoW_DirectDeposit`, `OneWoW_Bags` | On demand | `RequiredDeps: OneWoW` + `LoadOnDemand: 1` (DBM idiom). Core's orchestrator calls `C_AddOns.LoadAddOn`, then the unit's `OnAddonLoaded()` hook (§5). |
+| **3 — Data sub-units** | `OneWoW_AltTracker_{Storage,Character,Collections,Endgame,Accounting,Professions,Auctions}`, `OneWoW_CatalogData_{Journal,Quests,Vendors,Tradeskills}` | On demand, after their parent | `RequiredDeps: …, <parent>` + `LoadOnDemand: 1`. Listed under the parent in `ModuleManifest.stores`; the orchestrator loads each explicitly after the parent (§5), driving its `OnAddonLoaded()` hook. Cross-module consumers read guarded (§4). |
 | **4 — Utility (in-suite, off by default)** | `OneWoW_Utility_DevTool` | On demand / opt-in | Ships inside the package as a managed sub-addon. `RequiredDeps: OneWoW` + `LoadManagers: OneWoW`; excluded from the "recommended" preset so it stays disabled unless a developer opts in. |
 
 ### Why these tiers
@@ -106,7 +108,7 @@ Add one directive; deps simplify to just `OneWoW` (GUI lives in core now). Examp
 
 ```
 ## RequiredDeps: OneWoW
-## LoadManagers: OneWoW
+## LoadOnDemand: 1
 ## Group: OneWoW_AltTracker
 ```
 
@@ -115,44 +117,52 @@ Add one directive; deps simplify to just `OneWoW` (GUI lives in core now). Examp
 ```
 ## RequiredDeps: OneWoW
 ## OptionalDeps: OneWoW_AltTracker, OneWoW_ShoppingList, TradeSkillMaster, Baganator, Masque
-## LoadManagers: OneWoW
+## LoadOnDemand: 1
 ## Group: OneWoW
 ```
 
+> Plain `## LoadOnDemand: 1` (the DBM idiom), not `LoadManagers: OneWoW`: every
+> unit `RequiredDeps: OneWoW`, so the core is always present and owns loading via
+> the orchestrator (§5) — there is no "manager-absent ⇒ auto-load" case to cover.
+
 ### Tier 3 — Data sub-units
 
-**Bind each store via `LoadWith` to its OWN parent only.** The full cross-trace
-(§4) proves every *cross-module* and *cross-family* store access is optional and
-nil-guarded, so no store needs to list a non-parent consumer in `LoadWith`. A
-store loads with its parent; cross-consumers receive the data whenever the owning
-module is enabled, and degrade gracefully otherwise (§4.1).
+**Stores are plain `## LoadOnDemand: 1`; the core orchestrator loads each after
+its parent.** `LoadWith` was tried and retired (§5/§8.1): auto-loading a store
+inside its parent's load eats the store's own `ADDON_LOADED`, so its DB never
+initialized. Instead each store is listed under its parent in
+`ModuleManifest.stores`, and the orchestrator `EnsureLoaded`s it explicitly —
+driving its `OnAddonLoaded()` hook deterministically. `RequiredDeps` on the parent
+still guarantees ordering (and the disabled-parent cascade). The cross-trace (§4)
+proves every cross-module/cross-family access is optional and nil-guarded.
 
 `OneWoW_AltTracker_Storage` (and every other `AltTracker_*` store):
 
 ```
-## RequiredDeps: OneWoW, OneWoW_AltTracker
-## LoadWith: OneWoW_AltTracker
+## RequiredDeps: OneWoW, OneWoW_GUI, OneWoW_AltTracker
+## LoadOnDemand: 1
 ## Group: OneWoW_AltTracker
 ```
 
 All four `CatalogData_*`:
 
 ```
-## RequiredDeps: OneWoW, OneWoW_Catalog
-## LoadWith: OneWoW_Catalog
+## RequiredDeps: OneWoW, OneWoW_GUI, OneWoW_Catalog
+## LoadOnDemand: 1
 ## Group: OneWoW_Catalog
 ```
 
-> `RequiredDeps` is still kept on Tier-3 units for *ordering* (parent loads
-> before child), but `LoadWith` is what triggers the load.
+> `RequiredDeps` is kept on Tier-3 units for *ordering* (parent loads before child)
+> and for the disabled-parent dependency cascade; the **orchestrator** is what
+> triggers the load (no `LoadWith` auto-load).
 
-**Why not multi-consumer `LoadWith`?** Listing e.g. `OneWoW_Bags` on a store would
-force `OneWoW_AltTracker` (the store's own `RequiredDeps`) into memory the moment
-Bags loads — even for users who don't run AltTracker. Since every consumer already
-tolerates the store's absence, the cost isn't justified. For the rare case where a
-consumer wants a store *even when the owner module is disabled* (e.g. Catalog AH
-scan → `AltTracker_Auctions`), use lazy `LoadAddOn` on demand (§5.1), not
-`LoadWith`.
+**Why orchestrate instead of multi-consumer `LoadWith`?** Even parent-only
+`LoadWith` had the eaten-`ADDON_LOADED` problem; multi-consumer would also force a
+store's `RequiredDeps` chain into memory for unrelated consumers. Since every
+consumer already tolerates the store's absence, the orchestrator loads each store
+once, after its parent. For the case where a consumer wants a store *even when the
+owner module is disabled* (e.g. Catalog AH scan → `AltTracker_Auctions`), use lazy
+`EnsureLoaded` on demand (§5.1).
 
 ### Tier 4 — `OneWoW_Utility_DevTool` (now a managed sub-addon)
 
@@ -178,11 +188,11 @@ module, but the `FirstRunWizard` "recommended" preset already excludes the
 
 Traced by searching every store's global identifiers (`*_DB`, `*_API`, table
 globals) across the whole suite, then reading each call site to classify it.
-Legend: **P** = parent (drives `LoadWith`) · **M** = other feature module
-(guarded, no `LoadWith`) · **F** = cross-family data addon (guarded) · **C** =
-core, always loaded (must be nil-guarded; never a `LoadWith` trigger).
+Legend: **P** = parent (the orchestrator loads the store after it) · **M** = other
+feature module (guarded, not a load trigger) · **F** = cross-family data addon
+(guarded) · **C** = core, always loaded (must be nil-guarded; never a load trigger).
 
-| Store | P (LoadWith) | M / F consumers (guarded) | C core refs (guarded) | Access |
+| Store | P (parent) | M / F consumers (guarded) | C core refs (guarded) | Access |
 |---|---|---|---|---|
 | `AltTracker_Storage` | AltTracker | Catalog, ShoppingList, Bags(`StorageAPI`) | `tp-itemtracker` | `_DB`, `_API` |
 | `AltTracker_Character` | AltTracker | Bags(`_API`), Notes(`_DB`) | `t-overlays`, `upgrade-detection`, `tp-recipeknowledge`, `tp-gearupgrades` | `_DB`, `_API` |
@@ -230,8 +240,8 @@ core, always loaded (must be nil-guarded; never a `LoadWith` trigger).
    reason to keep `LoadWith` parent-only and rely on graceful degradation.
 
 5. **Intra-family store-to-store reads** (`Storage → Accounting`, `Storage → Auctions`)
-   need no special wiring: all `AltTracker_*` stores share the parent and load
-   together via `LoadWith: OneWoW_AltTracker`.
+   need no special wiring: all `AltTracker_*` stores share the parent and are
+   loaded together by the orchestrator right after `OneWoW_AltTracker`.
 
 6. **Core (`OneWoW`) reads many stores opportunistically** (tooltips, overlays,
    upgrade detection, dashboards). Because core is always loaded and stores are
@@ -242,7 +252,7 @@ core, always loaded (must be nil-guarded; never a `LoadWith` trigger).
 
 ## 5. Two-level enable model (ModuleRegistry)
 
-With Tier-2/4 as `LoadManagers: OneWoW`, modules **do not auto-load**; the core
+With Tier-2/4 as plain `## LoadOnDemand: 1`, modules **do not auto-load**; the core
 decides. This yields two distinct toggles, mapping cleanly to the grand-vision
 `Enable / Disable / Unload / Pin`:
 
@@ -251,7 +261,7 @@ decides. This yields two distinct toggles, mapping cleanly to the grand-vision
 | **Enable** | core `C_AddOns.LoadAddOn(name)` | **No** |
 | **Disable (not yet loaded this session)** | core soft-flag in SavedVariables; simply never `LoadAddOn` | **No** |
 | **Unload (already loaded this session)** | WoW cannot unload in-session → `DisableAddOn` + `ReloadUI` | **Yes** |
-| **Pin / load at login** | core `LoadAddOn`s it during `PLAYER_LOGIN` | n/a |
+| **Pin / load at login** | core `LoadAddOn`s it during its own `ADDON_LOADED` (before `PLAYER_LOGIN`) | n/a |
 
 Net effect: **reloads become rare** — only when turning *off* a module that was
 already loaded this session. Today every change prompts a reload.
@@ -265,9 +275,10 @@ has a bug.
 A module must declare *when* it needs to load if enabled, because some modules
 have passive behavior that must be live before any window is opened:
 
-- **`login`** — must load at `PLAYER_LOGIN` if enabled. Use for modules that
-  register tooltip providers, overlays, toasts, or auto-actions that fire without
-  the hub being open (e.g. QoL automations, Trackers overlays).
+- **`login`** — must be in memory before `PLAYER_LOGIN` if enabled (the core
+  pulls it during its own `ADDON_LOADED`). Use for modules that register tooltip
+  providers, overlays, toasts, or auto-actions that fire without the hub being
+  open (e.g. QoL automations, Trackers overlays).
 - **`lazy`** — load the first time its hub tab / window is opened. Use for
   pure-window modules with no passive hooks (e.g. a browser-style panel).
 
@@ -282,17 +293,64 @@ OneWoW:RegisterModule({
 })
 ```
 
-The core's load orchestrator (new, in `Core/`) then, on `PLAYER_LOGIN`:
+The core's load orchestrator (`Core/AddonLoader.lua`, `OneWoW.LoadOrchestrator`)
+runs `RunStartupPhase()` at the **end of core's own `ADDON_LOADED`** (not
+`PLAYER_LOGIN`) and:
 
-1. reads the per-module soft-enable SavedVariable,
-2. calls `OneWoW:EnsureLoaded(name)` (§5.2) for every enabled `loadPhase == "login"` module,
-3. defers `lazy` modules until their tab is selected (hook in `MainWindow`'s
-   `SelectModuleTab`).
+1. iterates the authoritative `OneWoW.ModuleManifest` (also in `AddonLoader.lua`),
+2. calls `OneWoW:EnsureLoaded(addon)` (§5.2) for every `loadPhase == "login"` entry,
+3. defers `lazy` entries until their tab is selected (`EnsureModuleForTab`, hooked
+   in `MainWindow`'s `SelectModuleTab` — dormant while all entries are `login`).
 
-`LoadWith` handles Tier-3 automatically once a Tier-2 parent loads — the
-orchestrator never touches data stores directly. The orchestrator and the
-on-demand path (§5.1) share the **same** `EnsureLoaded` primitive — there is one
-loader in the codebase, not two.
+**Why `ADDON_LOADED`, not `PLAYER_LOGIN` (the critical timing decision):**
+`PLAYER_LOGIN` is a one-shot event. If the core `LoadAddOn`-ed a module *during*
+`PLAYER_LOGIN`, that module would load *after* the event already fired and would
+miss its own `PLAYER_LOGIN` entirely. So the orchestrator runs at the end of
+core's `ADDON_LOADED` (which fires before `PLAYER_LOGIN`), and each freshly-loaded
+module is in memory in time to receive its own one-shot `PLAYER_LOGIN`.
+
+**Core-driven init via `OnAddonLoaded` (corrects an earlier, disproven assumption).**
+An earlier draft assumed a module force-loaded during core's `ADDON_LOADED` would
+*also* receive its **own** `ADDON_LOADED` and could self-initialize there. In-game
+this proved false: when `C_AddOns.LoadAddOn` runs *inside* another addon's
+`ADDON_LOADED` dispatch, WoW does **not** deliver the loaded module's own
+`ADDON_LOADED` to its frames (diagnostics showed `OneWoW_Notes` never saw
+`arg1 == "OneWoW_Notes"`, while its `PLAYER_LOGIN` did fire). The module's DB-setup
+branch never ran, `ns.db` stayed nil, and its `PLAYER_LOGIN` enable code crashed —
+cascading into a dead hub.
+
+The fix: **core drives init explicitly.** Every load unit exposes a standardized,
+one-shot `OnAddonLoaded()` hook (the old `ADDON_LOADED`/DB-setup work). The loader
+(`OneWoW:EnsureLoaded`) calls `_G[name]:OnAddonLoaded()` synchronously right after
+a successful `LoadAddOn`, in core-controlled order, all before `PLAYER_LOGIN`.
+Units drop their own `ADDON_LOADED` registration but **keep** their `PLAYER_LOGIN`
+handler (they are loaded pre-login, so it fires normally) for enable/passive
+arming, with an idempotent `OnAddonLoaded()` safety call at its top. This is
+strictly better than relying on event order: init runs **before** `PLAYER_LOGIN`
+in **core-controlled order**, so cross-unit reads at login (providers before
+consumers) are deterministic, not order-of-registration luck.
+
+> **Precedent — DBM.** DBM (the canonical core + load-on-demand-mods addon) does
+> exactly this: a mod TOC is plain `## LoadOnDemand: 1` + `## RequiredDeps: DBM-Core`
+> (no `LoadWith`/`LoadManagers`); `DBM:LoadMod` calls `C_AddOns.LoadAddOn(modId)`
+> and then **the core itself** calls `self:LoadModOptions(...)` (the
+> SavedVariables/options init) right after — core-driven post-load init, exactly
+> our `OnAddonLoaded` hook.
+
+Blizzard's per-character enable state is honored for free: a module disabled for
+the current character fails `EnsureLoaded` with `"DISABLED"` and is silently
+skipped, exactly like the built-in addon manager.
+
+**Stores are orchestrated explicitly, not via `LoadWith`.** `LoadWith` would
+auto-load a store when its parent loads, but that auto-load happens *inside* the
+parent's load (i.e. during core's `ADDON_LOADED` dispatch) and the store's own
+`ADDON_LOADED` is eaten the same way. So `LoadWith` is retired: each parent's
+stores are listed in `OneWoW.ModuleManifest` (`stores = { … }`), and after the
+orchestrator `EnsureLoaded`s a parent it iterates that parent's stores and
+`EnsureLoaded`s each — driving every store's `OnAddonLoaded` hook deterministically.
+Stores become plain `## LoadOnDemand: 1`. The orchestrator and the on-demand path
+(§5.1) share the **same** `EnsureLoaded` primitive — there is one loader in the
+codebase, not two.
 
 ### 5.1 Lazy cross-module data load (optional consumers)
 
@@ -378,6 +436,50 @@ Rules and rationale:
   `OneWoW:EnsureLoaded("Blizzard_…")`, dropping their ad-hoc
   `if C_AddOns and C_AddOns.LoadAddOn … elseif UIParentLoadAddOn` fallbacks (the
   helper does that once).
+
+### 5.3 Addon enable-state API — shared by both settings surfaces
+
+**Decision:** the two settings surfaces that read/write Blizzard's per-addon
+enable flag — the **Home tab** (`GUI/t-home.lua`) and **Manage Features**
+(`Core/FirstRunWizard.lua`) — share one implementation in `Core/AddonLoader.lua`
+instead of hand-rolling parallel `GetAddOnEnableState` / `EnableAddOn` /
+`DisableAddOn` helpers. GUI-free, so it co-loads with the rest of the loader.
+
+```lua
+-- Read enable state; perCharacter selects the scope.
+function OneWoW:IsAddonEnabled(name, perCharacter)         -> boolean
+-- Write enable state in the requested scope (takes effect on next reload/relog).
+function OneWoW:SetAddonEnabled(name, enabled, perCharacter)
+-- Classify for status display: "not_found" | "disabled" | "enabled" | "warning".
+function OneWoW:GetAddonStatus(name, perCharacter)         -> status, reason?
+```
+
+Rules and rationale:
+
+- **`perCharacter` is the scope, chosen per call site — not a default.** The Home
+  tab passes `false` (account-wide / all characters); Manage Features passes
+  `true` (a current-character override). These are intentionally complementary:
+  disable account-wide on Home, then re-enable for your main on Manage Features →
+  enabled on main, disabled on alts. Blizzard already resolves the per-character
+  setting on top of the account-wide one, so "per-character wins" needs no code.
+- **The two surfaces *should* read differently once an override is set.** Home
+  reflects the all-characters picture, Manage Features the current character's —
+  that divergence is the feature, not a bug. Each reads in the same scope it
+  writes, so each stays internally consistent.
+- **`GetAddonStatus` treats loaded / `DEMAND_LOADED` as healthy.** Every suite
+  unit is `LoadOnDemand: 1` and force-loaded by the orchestrator (§5), so
+  `C_AddOns.GetAddOnInfo` reports `loadable=false, reason="DEMAND_LOADED"` *even
+  while the unit is loaded and working*. The status helper short-circuits on
+  `IsAddOnLoaded` and ignores the `DEMAND_LOADED` token, so the Home tab no longer
+  mislabels loaded LoD units as an "unknown load error."
+- **Reason text localization stays separate.** Like `GetLoadFailureText` (§5.2),
+  the raw status/reason is returned uninterpreted; each tab maps it to its own
+  icons/strings (`t-home.lua:GetReasonText`).
+- **Relationship graphs are *not* unified here.** Manage Features' consumer graph
+  (`FirstRun.CATALOG[].datastores` — which stores a *consumer* feature needs, used
+  by the auto-follow disable logic) is a different relation than the orchestrator's
+  ownership graph (`ModuleManifest.stores` — the stores a parent *owns*), so they
+  remain distinct sources of truth. Only the read/write/status primitives are shared.
 
 ---
 
@@ -481,57 +583,88 @@ brings it in line with the OneWoW_GUI-First UI policy and the no-hardcoded-color
   The win is reload-free *enabling* and reload-free *disabling of not-yet-loaded*
   modules — not magic unloading.
 - **SavedVariables of an LoD addon load when the addon loads.** Enabling a module
-  mid-session loads its SVs at that point (after its `ADDON_LOADED`), not at
-  login. Module init code must already handle this (it runs on `ADDON_LOADED`).
+  mid-session loads its SVs at that point, not at login. Module init runs through
+  the core-invoked `OnAddonLoaded()` hook (§5), which the loader calls right after
+  `LoadAddOn` — so SVs are present when init runs regardless of when it loads.
 - **`LoadAddOn` failure when hard-disabled.** If a module is `DisableAddOn`'d in
   Blizzard's list, `OneWoW:EnsureLoaded` (§5.2) returns `false, "DISABLED"` —
   surface that in Manage Features (offer "re-enable + reload").
 - **Combat.** Don't `LoadAddOn` during combat for modules that build secure
   frames; use `OneWoW:EnsureLoaded(name, { deferInCombat = true })` (§5.2), which
   queues to `PLAYER_REGEN_ENABLED`.
-- **`LoadManagers` is "manager present ⇒ LoD".** Confirm in-game that each Tier-2
-  module is genuinely deferred at login once the directive is added (check
-  `C_AddOns.IsAddOnLoaded` right after `PLAYER_LOGIN`).
+- **Modules/stores are plain `## LoadOnDemand: 1`** (the DBM idiom), not
+  `LoadManagers`/`LoadWith`. They do not auto-load; the core orchestrator owns
+  loading (and init, via `OnAddonLoaded`). Confirm in-game that each unit is
+  genuinely deferred until the orchestrator pulls it (check `C_AddOns.IsAddOnLoaded`
+  is false before the orchestrator runs, true after).
+- **Every unit exposes a one-shot `OnAddonLoaded()`** that the loader calls after
+  `LoadAddOn`. It must be idempotent (guarded) — the unit's own `PLAYER_LOGIN`
+  handler calls it again as a safety net.
 
 ---
 
 ## 8. Migration order (incremental, low-risk)
 
-1. **Data stores first (Tier 3). ✅ IMPLEMENTED.** Parent-only `LoadWith` added to
-   all 11 stores — 7 `AltTracker_*` (`LoadWith: OneWoW_AltTracker`) and 4
-   `CatalogData_*` (`LoadWith: OneWoW_Catalog`), on line 8 of each TOC after
-   `RequiredDeps`. `LoadWith` *implies `LoadOnDemand`*, so no separate
-   `LoadOnDemand: 1` is needed; each store kept its `RequiredDeps: …, OneWoW_<Parent>`
-   (load ordering only) and `Group`. No core changes needed — `LoadWith` is
-   self-contained, and every cross-consumer already nil-guards (§4.1).
-   `RequiredDeps` deliberately still lists `OneWoW_GUI`; dropping it is step 6, not
-   this step. (The stale `FirstRunWizard` ShoppingList datastore mapping has also
-   been corrected — `Professions` → `CatalogData_Tradeskills`, finding §4.1.3.)
-   *Verified in-game: disabling `OneWoW_AltTracker` / `OneWoW_Catalog` lists every
-   one of their data stores as "dependency disabled" in Blizzard's addon manager,
-   and `C_AddOns.IsAddOnLoaded` returns false for them while the parent is
-   unloaded.*
+1. **Data stores first (Tier 3). ✅ IMPLEMENTED — then superseded by step 3's
+   core-driven lifecycle.** Initially parent-only `LoadWith` was added to all 11
+   stores (7 `AltTracker_*`, 4 `CatalogData_*`). **`LoadWith` was subsequently
+   retired**: auto-loading a store inside its parent's load (during core's
+   `ADDON_LOADED` dispatch) eats the store's own `ADDON_LOADED`, so its DB never
+   initialized. Stores are now plain `## LoadOnDemand: 1` + `RequiredDeps: OneWoW,
+   OneWoW_GUI, OneWoW_<Parent>`, listed under their parent in
+   `OneWoW.ModuleManifest.stores` and loaded explicitly by the orchestrator (which
+   then drives each store's `OnAddonLoaded` hook). Every cross-consumer already
+   nil-guards (§4.1). `RequiredDeps` deliberately still lists `OneWoW_GUI`; dropping
+   it is step 6. (The stale `FirstRunWizard` ShoppingList datastore mapping was also
+   corrected — `Professions` → `CatalogData_Tradeskills`, finding §4.1.3.)
+   *Verified in-game (LoadWith era): disabling `OneWoW_AltTracker` / `OneWoW_Catalog`
+   lists every one of their data stores as "dependency disabled"; the `RequiredDeps`
+   on the parent keeps that cascade under `LoadOnDemand` too.*
 2. **Add `OneWoW:EnsureLoaded` / `WithAddon` + the load orchestrator** (§5.2),
    plus `loadPhase` in `ModuleRegistry`, reading the existing enable state. **✅
    IMPLEMENTED & verified in-game.** New `Core/AddonLoader.lua` hosts
    `OneWoW:EnsureLoaded` / `WithAddon` / `GetLoadFailureText` (+ a
    `PLAYER_REGEN_ENABLED` combat-defer queue) and `OneWoW.LoadOrchestrator`;
-   `ModuleRegistry` gained `loadPhase` (default `login`); `RunLoginPhase()` runs
-   first in `PLAYER_LOGIN`; a dormant `SelectModuleTab` hook handles future `lazy`
-   modules. Migrated `map_world_tools-battlefield`, `inspectmog`, and `EJLiveLoot`
-   to `EnsureLoaded`, and the Catalog AH-scan guard to an on-demand
+   `ModuleRegistry` gained `loadPhase` (default `login`); a dormant
+   `SelectModuleTab` hook handles future `lazy` modules. Migrated
+   `map_world_tools-battlefield`, `inspectmog`, and `EJLiveLoot` to `EnsureLoaded`,
+   and the Catalog AH-scan guard to an on-demand
    `EnsureLoaded("OneWoW_AltTracker_Auctions")`. *Deferred:* `LuaSyntax` waits for
    step 5 (DevTool still `RequiredDeps: OneWoW_GUI` only). No `EnsureAuctions`
    local existed — Catalog read the store directly; that read is now the migrated
-   on-demand call. No directive changes yet (modules still auto-load until step 3),
-   so the orchestrator is a validated no-op harness today.
-3. **Flip Tier-2 modules to `LoadManagers: OneWoW`** one at a time, starting with
-   a low-risk window module (e.g. `OneWoW_DirectDeposit`), then `loadPhase`-tag
-   each. Validate passive features (tooltips/overlays/automations) still arm at
-   login for `login`-phase modules.
-4. **Rewire Manage Features** from symmetric `DisableAddOn` + reload to the
-   two-level model in §5 (soft toggle = `LoadAddOn` / skip; hard disable retained
-   as an "advanced / fully remove" option).
+   on-demand call. At this step the orchestrator was a validated no-op harness
+   (modules still auto-loaded); step 3 makes it authoritative.
+3. **Core-driven load lifecycle (Tier-2 modules + Tier-3 stores). ✅ IMPLEMENTED.**
+   All 8 Tier-2 module TOCs and all 11 store TOCs now carry plain
+   `## LoadOnDemand: 1` (the DBM idiom — `LoadManagers`/`LoadWith` retired), so
+   nothing auto-loads and the core owns load **and** init order. `OneWoW_Bags` is
+   `RequiredDeps: OneWoW`. The orchestrator (`OneWoW.LoadOrchestrator:RunStartupPhase`
+   in `Core/AddonLoader.lua`) runs at the **end of core's `ADDON_LOADED`** (before
+   `PLAYER_LOGIN`): it iterates `OneWoW.ModuleManifest`, `EnsureLoaded`s every
+   `loadPhase == "login"` module, then iterates that entry's `stores = { … }` and
+   `EnsureLoaded`s each store. `OneWoW:EnsureLoaded` calls `_G[name]:OnAddonLoaded()`
+   right after a fresh `LoadAddOn`, so every unit's DB-setup runs synchronously, in
+   dependency order, before any `PLAYER_LOGIN`. Each unit (the 8 modules + the
+   shared `DB:BootSubModule` covering all 11 stores) now exposes a one-shot
+   `OnAddonLoaded()` hook, dropped its `ADDON_LOADED` registration, and keeps its
+   `PLAYER_LOGIN` handler (with an idempotent `OnAddonLoaded()` safety call).
+   `OneWoW_AltTracker_Auctions` is an **eager startup store** (live AH monitoring),
+   listed in the manifest alongside the other AltTracker stores. The load banner
+   reads the same `ModuleManifest`. Disabled/per-character-disabled modules fail
+   `EnsureLoaded` with `"DISABLED"` and are skipped (their stores too).
+   **Follow-ups (✅, verified in-game):** secondary integration listeners that
+   waited on a *force-loaded* unit's own `ADDON_LOADED` were migrated to
+   `PLAYER_LOGIN` (that event is eaten by the orchestrator's `LoadAddOn`) —
+   `OneWoW_Bags/Integrations/OneWoWBagsIntegration.lua` (overlay refresh hooks) and
+   `OneWoW_AltTracker/Modules/alttracker/actionbars-compat.lua`; and the Home-tab
+   status check + the shared enable-state API (§5.3) were added so loaded
+   `LoadOnDemand` units stop showing as an "unknown load error."
+4. **Rewire Manage Features** to the two-level model in §5 (soft toggle =
+   `LoadAddOn` / skip; hard disable retained as an "advanced / fully remove"
+   option). *Partially done:* the **state layer** is now shared with the Home tab
+   via the §5.3 API (`IsAddonEnabled` / `SetAddonEnabled` / `GetAddonStatus`,
+   per-character scope here, account-wide on Home). *Remaining:* the soft-vs-hard
+   two-level toggle UX itself.
 5. **DevTool** — fold it into the suite package, promote to `RequiredDeps: OneWoW`,
    add `LoadManagers: OneWoW`, tag it `utility` so it stays off in the recommended
    preset, and retire its standalone CurseForge page. Confirm it loads only when a
@@ -559,25 +692,25 @@ brings it in line with the OneWoW_GUI-First UI policy and the no-hardcoded-color
 |---|---|
 | `OneWoW_GUI` | *(no longer a load unit — folded into `OneWoW`, published as the `OneWoW_GUI` global, §6.1)* |
 | `OneWoW` | *(no `RequiredDeps`; contains GUI + `OneWoW.CopyPaste` + Ace libs)* · `OptionalDeps: Auctionator, TradeSkillMaster` |
-| `OneWoW_AltTracker` | `RequiredDeps: OneWoW` · `LoadManagers: OneWoW` |
-| `OneWoW_Catalog` | `RequiredDeps: OneWoW` · `LoadManagers: OneWoW` |
-| `OneWoW_Notes` | `RequiredDeps: OneWoW` · `LoadManagers: OneWoW` |
-| `OneWoW_Trackers` | `RequiredDeps: OneWoW` · `LoadManagers: OneWoW` |
-| `OneWoW_QoL` | `RequiredDeps: OneWoW` · `LoadManagers: OneWoW` |
-| `OneWoW_ShoppingList` | `RequiredDeps: OneWoW` · `LoadManagers: OneWoW` |
-| `OneWoW_DirectDeposit` | `RequiredDeps: OneWoW` · `LoadManagers: OneWoW` |
-| `OneWoW_Bags` | `RequiredDeps: OneWoW` · `OptionalDeps: OneWoW_AltTracker, …` · `LoadManagers: OneWoW` |
-| `OneWoW_AltTracker_Storage` | `LoadWith: OneWoW_AltTracker` (Catalog / ShoppingList / Bags read it guarded) |
-| `OneWoW_AltTracker_Character` | `LoadWith: OneWoW_AltTracker` (Bags / Notes read it guarded) |
-| `OneWoW_AltTracker_Professions` | `LoadWith: OneWoW_AltTracker` (Catalog / QoL read it guarded) |
-| `OneWoW_AltTracker_Collections` | `LoadWith: OneWoW_AltTracker` (CatalogData_Quests reads it guarded) |
-| `OneWoW_AltTracker_Endgame` | `LoadWith: OneWoW_AltTracker` |
-| `OneWoW_AltTracker_Accounting` | `LoadWith: OneWoW_AltTracker` |
-| `OneWoW_AltTracker_Auctions` | `LoadWith: OneWoW_AltTracker` (Catalog lazy-loads it on demand — **not** via `LoadWith`) |
-| `OneWoW_CatalogData_Journal` | `LoadWith: OneWoW_Catalog` |
-| `OneWoW_CatalogData_Quests` | `LoadWith: OneWoW_Catalog` (Notes reads it guarded) |
-| `OneWoW_CatalogData_Vendors` | `LoadWith: OneWoW_Catalog` |
-| `OneWoW_CatalogData_Tradeskills` | `LoadWith: OneWoW_Catalog` (ShoppingList / QoL read it guarded) |
+| `OneWoW_AltTracker` | `RequiredDeps: OneWoW` · `LoadOnDemand: 1` · manifest `stores` (7) |
+| `OneWoW_Catalog` | `RequiredDeps: OneWoW` · `LoadOnDemand: 1` · manifest `stores` (4) |
+| `OneWoW_Notes` | `RequiredDeps: OneWoW` · `LoadOnDemand: 1` |
+| `OneWoW_Trackers` | `RequiredDeps: OneWoW` · `LoadOnDemand: 1` |
+| `OneWoW_QoL` | `RequiredDeps: OneWoW` · `LoadOnDemand: 1` |
+| `OneWoW_ShoppingList` | `RequiredDeps: OneWoW` · `LoadOnDemand: 1` |
+| `OneWoW_DirectDeposit` | `RequiredDeps: OneWoW` · `LoadOnDemand: 1` |
+| `OneWoW_Bags` | `RequiredDeps: OneWoW` · `OptionalDeps: OneWoW_AltTracker, …` · `LoadOnDemand: 1` |
+| `OneWoW_AltTracker_Storage` | `RequiredDeps: OneWoW, OneWoW_GUI, OneWoW_AltTracker` · `LoadOnDemand: 1` (orchestrated store; Catalog / ShoppingList / Bags read it guarded) |
+| `OneWoW_AltTracker_Character` | `RequiredDeps: …, OneWoW_AltTracker` · `LoadOnDemand: 1` (orchestrated store; Bags / Notes read it guarded) |
+| `OneWoW_AltTracker_Professions` | `RequiredDeps: …, OneWoW_AltTracker` · `LoadOnDemand: 1` (orchestrated store; Catalog / QoL read it guarded) |
+| `OneWoW_AltTracker_Collections` | `RequiredDeps: …, OneWoW_AltTracker` · `LoadOnDemand: 1` (orchestrated store; CatalogData_Quests reads it guarded) |
+| `OneWoW_AltTracker_Endgame` | `RequiredDeps: …, OneWoW_AltTracker` · `LoadOnDemand: 1` (orchestrated store) |
+| `OneWoW_AltTracker_Accounting` | `RequiredDeps: …, OneWoW_AltTracker` · `LoadOnDemand: 1` (orchestrated store) |
+| `OneWoW_AltTracker_Auctions` | `RequiredDeps: …, OneWoW_AltTracker` · `LoadOnDemand: 1` (**eager** startup store — live AH monitoring; Catalog also lazy-loads it on demand) |
+| `OneWoW_CatalogData_Journal` | `RequiredDeps: …, OneWoW_Catalog` · `LoadOnDemand: 1` (orchestrated store) |
+| `OneWoW_CatalogData_Quests` | `RequiredDeps: …, OneWoW_Catalog` · `LoadOnDemand: 1` (orchestrated store; Notes reads it guarded) |
+| `OneWoW_CatalogData_Vendors` | `RequiredDeps: …, OneWoW_Catalog` · `LoadOnDemand: 1` (orchestrated store) |
+| `OneWoW_CatalogData_Tradeskills` | `RequiredDeps: …, OneWoW_Catalog` · `LoadOnDemand: 1` (orchestrated store; ShoppingList / QoL read it guarded) |
 | `OneWoW_Utility_DevTool` | `RequiredDeps: OneWoW` · `LoadManagers: OneWoW` (in-suite, `utility` group, off by default) |
 
 ---
@@ -614,7 +747,7 @@ Two consequences ripple through everything below:
 |---|---|
 | **Module → sub-addon** | Top-level user-facing unit; own load unit (TOC), hub tab and/or contextual window, own SavedVariables. Clean 1:1 rename. |
 | **Feature** | A toggleable capability *inside* a sub-addon. This is `SettingsFeatureRegistry` today (e.g. QoL's AutoMount, FastLoot). "Graduates to a sub-addon" when it grows its own TOC + SV + settings page (a heavier, rarer move now). |
-| **Provider** | A headless data source with lifecycle — i.e. the **Tier-3 stores** (`OneWoW_AltTracker_Storage`, `CatalogData_Tradeskills`), bound to a parent via `LoadWith` (§3). Registers with `DataManager` (§10.3); consumers subscribe via events, never hold a direct ref. |
+| **Provider** | A headless data source with lifecycle — i.e. the **Tier-3 stores** (`OneWoW_AltTracker_Storage`, `CatalogData_Tradeskills`), bound to a parent and loaded by the orchestrator after it (§3/§5). Registers with `DataManager` (§10.3); consumers subscribe via events, never hold a direct ref. |
 | **Service** | A reusable, (near-)stateless utility. Lives **inside the core addon** on `_G.OneWoW` (e.g. `OneWoW.CopyPaste`), since that is the one dependency every sub-addon shares. |
 
 ### 10.2 Hub vs. contextual surfaces (carry over wholesale)

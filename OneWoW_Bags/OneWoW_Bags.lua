@@ -561,8 +561,14 @@ function OneWoW_Bags:ReinitForLanguage(langCode)
     end
 end
 
-function OneWoW_Bags:OnAddonLoaded(loadedAddon)
-    if loadedAddon ~= ADDON_NAME then return end
+-- Core-driven init: the suite loader calls _G["OneWoW_Bags"]:OnAddonLoaded()
+-- right after it force-loads this module (WoW does not deliver our own
+-- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). This
+-- also registers our runtime events (incl. PLAYER_LOGIN) via RegisterRuntimeEvents.
+local didInit = false
+function OneWoW_Bags:OnAddonLoaded()
+    if didInit then return end
+    didInit = true
 
     self:InitializeDatabase()
     self:InitializeControllers()
@@ -1425,8 +1431,10 @@ function OneWoW_Bags:ShowMoneyDialog(config)
     dialog.moneyBox.gold:SetFocus()
 end
 
+-- No file-scope event registration: the loader calls OnAddonLoaded directly,
+-- which registers our runtime events (PLAYER_LOGIN, PLAYER_ENTERING_WORLD, etc.)
+-- via RegisterRuntimeEvents below.
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
 
 local runtimeEventHandlers = {
     BAG_UPDATE = function(...)
@@ -1517,10 +1525,7 @@ function OneWoW_Bags:RegisterRuntimeEvents()
 end
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
-    if event == "ADDON_LOADED" then
-        local loadedAddon = ...
-        OneWoW_Bags:OnAddonLoaded(loadedAddon)
-    elseif event == "PLAYER_LOGIN" then
+    if event == "PLAYER_LOGIN" then
         OneWoW_Bags:OnPlayerLogin()
     else
         local handler = runtimeEventHandlers[event]

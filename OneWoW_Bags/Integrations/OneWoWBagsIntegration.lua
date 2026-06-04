@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW_Bags = ...
+local _, OneWoW_Bags = ...
 
 local BagSet = OneWoW_Bags.BagSet
 local BankSet = OneWoW_Bags.BankSet
@@ -131,18 +131,20 @@ local function HookGUIRefresh()
 	end
 end
 
+-- Core force-loads OneWoW_Bags during its own ADDON_LOADED, which eats Bags'
+-- ADDON_LOADED event. Install the GUI refresh wrappers at PLAYER_LOGIN instead;
+-- the GUI/BankGUI/GuildBankGUI tables are created at file scope, so they already
+-- exist by login.
 local integrationEventFrame = CreateFrame("Frame")
-integrationEventFrame:RegisterEvent("ADDON_LOADED")
+integrationEventFrame:RegisterEvent("PLAYER_LOGIN")
 integrationEventFrame:RegisterEvent("BANKFRAME_OPENED")
-integrationEventFrame:SetScript("OnEvent", function(self, event, ...)
-	if event == "ADDON_LOADED" and ... == ADDON_NAME then
-		self:UnregisterEvent("ADDON_LOADED")
-		C_Timer.After(0.5, function()
-			if OneWoW_Bags.GUI then
-				HookGUIRefresh()
-				OneWoW_Bags:FireCallbacksOnAllButtons()
-			end
-		end)
+integrationEventFrame:SetScript("OnEvent", function(self, event)
+	if event == "PLAYER_LOGIN" then
+		self:UnregisterEvent("PLAYER_LOGIN")
+		if OneWoW_Bags.GUI then
+			HookGUIRefresh()
+			OneWoW_Bags:FireCallbacksOnAllButtons()
+		end
 	elseif event == "BANKFRAME_OPENED" then
 		if OneWoW_Bags.BankController:Get("overlays") then
 			C_Timer.After(0.1, function()

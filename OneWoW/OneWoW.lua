@@ -21,17 +21,6 @@ function OneWoW:RegisterMinimap(addon, label, tabKey, callback)
     tinsert(self._minimapEntries, { addon = addon, label = label, tabKey = tabKey, callback = callback })
 end
 
-local KNOWN_COMPANIONS = {
-    { addon = "OneWoW_GUI",             display = "GUI",          cmd = nil },
-    { addon = "OneWoW_QoL",             display = "QoL",          cmd = "/1wqol" },
-    { addon = "OneWoW_Notes",           display = "Notes",        cmd = "/1wn" },
-    { addon = "OneWoW_AltTracker",      display = "AltTracker",   cmd = "/1wat" },
-    { addon = "OneWoW_Catalog",         display = "Catalog",      cmd = "/owcat" },
-    { addon = "OneWoW_DirectDeposit",   display = "DirectDeposit",cmd = "/1wdd" },
-    { addon = "OneWoW_ShoppingList",    display = "ShoppingList", cmd = "/1wsl" },
-    { addon = "OneWoW_Utility_DevTool", display = "DevTools",     cmd = "/1wdt" },
-}
-
 function OneWoW:RegisterLoadComponent(displayName, version, command)
     self._registeredAddons[displayName] = true
     table.insert(self._loadedComponents, { name = displayName, ver = version, cmd = command })
@@ -151,6 +140,14 @@ function OneWoW:OnAddonLoaded(loadedAddon)
     self:RegisterMinimap("OneWoW", L["CTX_OPEN_ONEWOW"] or "Open OneWoW", nil, function()
         if self.GUI then self.GUI:Show() end
     end)
+
+    -- Pull enabled Tier-2 modules and their data stores now (still inside core's
+    -- ADDON_LOADED, before PLAYER_LOGIN). EnsureLoaded drives each unit's
+    -- OnAddonLoaded() hook synchronously, so every DB is built in dependency order
+    -- before any PLAYER_LOGIN fires.
+    if OneWoW.LoadOrchestrator then
+        OneWoW.LoadOrchestrator:RunStartupPhase()
+    end
 end
 
 local eventFrame = CreateFrame("Frame")
@@ -162,9 +159,6 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         local loadedAddon = ...
         OneWoW:OnAddonLoaded(loadedAddon)
     elseif event == "PLAYER_LOGIN" then
-        if OneWoW.LoadOrchestrator then
-            OneWoW.LoadOrchestrator:RunLoginPhase()
-        end
         if OneWoW.Minimap then
             OneWoW.Minimap:Initialize()
         end
@@ -193,7 +187,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
             OneWoW:InitializeContextMenus()
         end
 
-        for _, comp in ipairs(KNOWN_COMPANIONS) do
+        for _, comp in ipairs(OneWoW.ModuleManifest or {}) do
             if not OneWoW._registeredAddons[comp.display] and C_AddOns.IsAddOnLoaded(comp.addon) then
                 local ver = C_AddOns.GetAddOnMetadata(comp.addon, "Version") or ""
                 OneWoW:RegisterLoadComponent(comp.display, ver, comp.cmd)

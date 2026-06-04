@@ -70,8 +70,14 @@ local function OnPlayerLogin()
     end
 end
 
-local function OnAddonLoaded(loadedAddon)
-    if loadedAddon ~= ADDON_NAME then return end
+-- Core-driven init: the suite loader calls _G["OneWoW_ShoppingList"]:OnAddonLoaded()
+-- right after it force-loads this module (WoW does not deliver our own
+-- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
+-- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
+local didInit = false
+function ns:OnAddonLoaded()
+    if didInit then return end
+    didInit = true
 
     ns:InitializeDatabase()
 
@@ -191,12 +197,10 @@ SLASH_ONEWOW_SHOPPINGLIST3 = "/1wsl"
 SlashCmdList["ONEWOW_SHOPPINGLIST"] = HandleSlashCommand
 
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function(_, event, ...)
-    if event == "ADDON_LOADED" then
-        OnAddonLoaded(...)
-    elseif event == "PLAYER_LOGIN" then
+eventFrame:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_LOGIN" then
+        ns:OnAddonLoaded()  -- safety net; normally already run by the loader
         OnPlayerLogin()
     end
 end)

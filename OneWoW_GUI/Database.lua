@@ -620,7 +620,6 @@ function DB:DeleteChar(savedVarName, charKey)
 end
 
 function DB:BootSubModule(ns, config)
-    local addonName = config.addonName
     local savedVar = config.savedVar
     local onLogin = config.onLogin
     local defaults = config.defaults
@@ -657,29 +656,37 @@ function DB:BootSubModule(ns, config)
         return _G[savedVar]
     end
 
-    local eventFrame = CreateFrame("Frame")
-    eventFrame:RegisterEvent("ADDON_LOADED")
-    eventFrame:RegisterEvent("PLAYER_LOGIN")
-    eventFrame:SetScript("OnEvent", function(_, event, ...)
-        if event == "ADDON_LOADED" then
-            local loaded = ...
-            if loaded == addonName then
-                if savedVar then
-                    if not _G[savedVar] then _G[savedVar] = {} end
-                    if defaults then
-                        DB:MergeMissing(_G[savedVar], defaults)
-                    end
-                end
-                if initDB then
-                    initDB()
-                elseif ns.InitializeDatabase then
-                    ns:InitializeDatabase()
-                end
+    -- Core-driven init. The suite loader calls _G[addonName]:OnAddonLoaded()
+    -- right after it force-loads this store, because WoW does not deliver a
+    -- store's own ADDON_LOADED when it is loaded during core's ADDON_LOADED
+    -- dispatch. The one-shot guard keeps it safe to call more than once (e.g.
+    -- the PLAYER_LOGIN safety net below, or a duplicate loader call).
+    local didInit = false
+    local function OnAddonLoaded()
+        if didInit then return end
+        didInit = true
+        if savedVar then
+            if not _G[savedVar] then _G[savedVar] = {} end
+            if defaults then
+                DB:MergeMissing(_G[savedVar], defaults)
             end
-        elseif event == "PLAYER_LOGIN" then
-            ns.AddonInitialized = true
-            if onLogin then onLogin() end
         end
+        if initDB then
+            initDB()
+        elseif ns.InitializeDatabase then
+            ns:InitializeDatabase()
+        end
+    end
+    -- Exposed on ns; every store's main file later does _G[addonName] = ns, so
+    -- the loader resolves _G[name].OnAddonLoaded to this.
+    ns.OnAddonLoaded = OnAddonLoaded
+
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("PLAYER_LOGIN")
+    eventFrame:SetScript("OnEvent", function()
+        OnAddonLoaded()  -- safety net; normally already run by the loader
+        ns.AddonInitialized = true
+        if onLogin then onLogin() end
     end)
 end
 

@@ -88,22 +88,14 @@ local function ToggleAddon(addonName, cascadeAddons)
     local currentlyEnabled = IsAddonPendingEnabled(addonName)
     local newState = not currentlyEnabled
 
-    if newState then
-        C_AddOns.EnableAddOn(addonName)
-    else
-        C_AddOns.DisableAddOn(addonName)
-    end
+    OneWoW:SetAddonEnabled(addonName, newState, false)
     pendingStates[addonName] = newState
     UpdateRowVisual(addonName)
 
     if cascadeAddons then
         for _, name in ipairs(cascadeAddons) do
             if C_AddOns.DoesAddOnExist(name) then
-                if newState then
-                    C_AddOns.EnableAddOn(name)
-                else
-                    C_AddOns.DisableAddOn(name)
-                end
+                OneWoW:SetAddonEnabled(name, newState, false)
                 pendingStates[name] = newState
                 UpdateRowVisual(name)
             end
@@ -126,11 +118,7 @@ function GUI:DiscardHomeChanges()
     for addonName, _ in pairs(pendingStates) do
         local orig = originalStates[addonName]
         if orig ~= nil then
-            if orig then
-                C_AddOns.EnableAddOn(addonName)
-            else
-                C_AddOns.DisableAddOn(addonName)
-            end
+            OneWoW:SetAddonEnabled(addonName, orig, false)
         end
     end
     pendingStates = {}
@@ -140,19 +128,9 @@ function GUI:DiscardHomeChanges()
     UpdateSaveButton()
 end
 
+-- The Home tab reflects account-wide (all-characters) enable state.
 local function GetAddonStatus(addonName)
-    if not C_AddOns.DoesAddOnExist(addonName) then
-        return "not_found", nil
-    end
-    local enableState = C_AddOns.GetAddOnEnableState(addonName)
-    if enableState == 0 then
-        return "disabled", nil
-    end
-    local _, _, _, loadable, reason = C_AddOns.GetAddOnInfo(addonName)
-    if not loadable and reason and reason ~= "DISABLED" then
-        return "warning", reason
-    end
-    return "enabled", nil
+    return OneWoW:GetAddonStatus(addonName, false)
 end
 
 local function GetReasonText(reason)
@@ -207,8 +185,7 @@ function GUI:CreateHomeTab(parent)
         local version        = OneWoW_GUI:GetAddonVersion(addonName)
 
         if status ~= "not_found" then
-            local enableState = C_AddOns.GetAddOnEnableState(addonName)
-            originalStates[addonName] = (enableState ~= 0)
+            originalStates[addonName] = OneWoW:IsAddonEnabled(addonName, false)
         end
 
         local light = panel:CreateTexture(nil, "ARTWORK")

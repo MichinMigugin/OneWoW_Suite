@@ -1,6 +1,6 @@
 local ADDON_NAME, OneWoW_DirectDeposit = ...
 
-_G.OneWoW_DirectDeposit = OneWoW_DirectDeposit
+_G["OneWoW_DirectDeposit"] = OneWoW_DirectDeposit
 
 local L = OneWoW_DirectDeposit.L
 
@@ -10,7 +10,7 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local function DetectOneWoW()
-    if _G.OneWoW then
+    if OneWoW then
         OneWoW_DirectDeposit.oneWoWHubActive = true
     end
 end
@@ -52,8 +52,14 @@ function OneWoW_DirectDeposit:ReinitForLanguage(_)
     end
 end
 
-function OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
-    if loadedAddon ~= ADDON_NAME then return end
+-- Core-driven init: the suite loader calls OneWoW_DirectDeposit:OnAddonLoaded()
+-- right after it force-loads this module (WoW does not deliver our own
+-- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
+-- one-shot guard makes the PLAYER_LOGIN safety net a no-op when already run.
+local didInit = false
+function OneWoW_DirectDeposit:OnAddonLoaded()
+    if didInit then return end
+    didInit = true
 
     self:InitializeDatabase()
 
@@ -121,8 +127,8 @@ function OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
     end)
 
     local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
-    if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
-        _G.OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
+    if OneWoW and OneWoW.RegisterLoadComponent then
+        OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
     end
 end
 
@@ -182,8 +188,8 @@ function OneWoW_DirectDeposit:InitTooltipHook()
         return nil
     end
 
-    if self.oneWoWHubActive and _G.OneWoW and _G.OneWoW.TooltipEngine then
-        _G.OneWoW.TooltipEngine:RegisterProvider({
+    if self.oneWoWHubActive and OneWoW and OneWoW.TooltipEngine then
+        OneWoW.TooltipEngine:RegisterProvider({
             id           = "directdeposit",
             order        = 50,
             tooltipTypes = { "item" },
@@ -274,20 +280,17 @@ function OneWoW_DirectDeposit:RegisterSlashCommands()
 end
 
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 
-eventFrame:SetScript("OnEvent", function(_, event, ...)
-    if event == "ADDON_LOADED" then
-        local loadedAddon = ...
-        OneWoW_DirectDeposit:OnAddonLoaded(loadedAddon)
-    elseif event == "PLAYER_LOGIN" then
+eventFrame:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_LOGIN" then
+        OneWoW_DirectDeposit:OnAddonLoaded()  -- safety net; normally already run by the loader
         DetectOneWoW()
         C_Timer.After(0, function()
             OneWoW_DirectDeposit:InitTooltipHook()
         end)
-        if _G.OneWoW then
-            _G.OneWoW:RegisterMinimap("OneWoW_DirectDeposit", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_DD"]) or "Open Direct Deposit", nil, function()
+        if OneWoW then
+            OneWoW:RegisterMinimap("OneWoW_DirectDeposit", (OneWoW.L and OneWoW.L["CTX_OPEN_DD"]) or "Open Direct Deposit", nil, function()
                 if OneWoW_DirectDeposit.GUI then OneWoW_DirectDeposit.GUI:Toggle() end
             end)
         end

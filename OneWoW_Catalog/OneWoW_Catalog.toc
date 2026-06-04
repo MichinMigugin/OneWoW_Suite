@@ -5,6 +5,7 @@
 ## Author: OneWoW Dev Team
 
 ## RequiredDeps: OneWoW, OneWoW_GUI
+## LoadOnDemand: 1
 ## OptionalDeps: OneWoW_AltTracker, OneWoW_AltTracker_Auctions
 ## Category: OneWoW
 ## Group: OneWoW_Catalog

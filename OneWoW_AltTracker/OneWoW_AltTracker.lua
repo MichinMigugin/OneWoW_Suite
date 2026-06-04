@@ -14,10 +14,10 @@ ns.OneWoWAltTracker = OneWoWAltTracker
 ns.oneWoWHubActive = false
 
 local function RegisterWithOneWoW()
-    if not _G.OneWoW then return false end
-    if not _G.OneWoW.RegisterModule then return false end
+    if not OneWoW then return false end
+    if not OneWoW.RegisterModule then return false end
 
-    _G.OneWoW:RegisterModule({
+    OneWoW:RegisterModule({
         name = "alttracker",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "AltTracker" end,
         addonName = "OneWoW_AltTracker",
@@ -35,7 +35,7 @@ local function RegisterWithOneWoW()
             { name = "lockouts",    displayName = function() return ns.L["SUBTAB_LOCKOUTS"]    or "Lockouts"    end, create = function(p) ns.UI.CreateLockoutsTab(p) end },
         },
     })
-    _G.OneWoW:RegisterSettingsPanel({
+    OneWoW:RegisterSettingsPanel({
         name        = "alttracker",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "AltTracker" end,
         order       = 2,
@@ -62,16 +62,16 @@ local function OnInitialize()
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoWAltTracker, function(self2)
         self2:ApplyTheme()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoWAltTracker, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoWAltTracker, function()
         if ns.ApplyLanguage then ns.ApplyLanguage() end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoWAltTracker, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoWAltTracker, function()
         local mainFrame = _G["OneWoWAltTrackerMainFrame"]
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoWAltTracker, function(self2)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoWAltTracker, function()
         local mainFrame = _G["OneWoWAltTrackerMainFrame"]
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
@@ -87,8 +87,8 @@ local function OnInitialize()
     end)
 
     local _ver = OneWoW_GUI:GetAddonVersion(addonName)
-    if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
-        _G.OneWoW:RegisterLoadComponent("AltTracker", _ver, "/1wat")
+    if OneWoW and OneWoW.RegisterLoadComponent then
+        OneWoW:RegisterLoadComponent("AltTracker", _ver, "/1wat")
     end
 end
 
@@ -109,14 +109,14 @@ local function OnEnable()
 
     RegisterWithOneWoW()
 
-    if _G.OneWoW then
-        _G.OneWoW:RegisterMinimap("OneWoW_AltTracker", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_ALTTRACKER"]) or "Open AltTracker", "alttracker", nil)
+    if OneWoW then
+        OneWoW:RegisterMinimap("OneWoW_AltTracker", (OneWoW.L and OneWoW.L["CTX_OPEN_ALTTRACKER"]) or "Open AltTracker", "alttracker", nil)
     end
 end
 
-function OneWoWAltTracker:SlashCommandHandler(input)
-    if ns.oneWoWHubActive and _G.OneWoW and _G.OneWoW.GUI then
-        _G.OneWoW.GUI:Show("alttracker")
+function OneWoWAltTracker:SlashCommandHandler()
+    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
+        OneWoW.GUI:Show("alttracker")
         return
     end
     if ns.UI and ns.UI.Toggle then
@@ -204,14 +204,22 @@ function OneWoWAltTracker:InitializeDatabase()
     end
 end
 
+-- Core-driven init: the suite loader calls _G["OneWoW_AltTracker"]:OnAddonLoaded()
+-- right after it force-loads this module (WoW does not deliver our own
+-- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
+-- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
+local didInit = false
+function OneWoWAltTracker:OnAddonLoaded()
+    if didInit then return end
+    didInit = true
+    OnInitialize()
+end
+
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "ADDON_LOADED" and ... == addonName then
-        OnInitialize()
-    elseif event == "PLAYER_LOGIN" then
+eventFrame:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_LOGIN" then
+        OneWoWAltTracker:OnAddonLoaded()  -- safety net; normally already run by the loader
         OnEnable()
     end
 end)
-

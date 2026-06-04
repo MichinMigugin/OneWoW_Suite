@@ -67,24 +67,15 @@ local DATASTORE_ADDONS = {
     "OneWoW_CatalogData_Vendors",   "OneWoW_CatalogData_Tradeskills",
 }
 
+-- Manage Features operates per-character: a current-character override that can
+-- re-enable an addon disabled account-wide from the Home tab. Both delegate to
+-- the shared AddonLoader API (the single read/write implementation).
 local function IsLoaded(addonName)
-    if C_AddOns and C_AddOns.GetAddOnEnableState then
-        local state = C_AddOns.GetAddOnEnableState(addonName, UnitName("player"))
-        return state and state > 0
-    end
-    return false
+    return OneWoW:IsAddonEnabled(addonName, true)
 end
 
 local function SetEnabled(addonName, wantEnabled)
-    if wantEnabled then
-        if C_AddOns and C_AddOns.EnableAddOn then
-            C_AddOns.EnableAddOn(addonName, UnitName("player"))
-        end
-    else
-        if C_AddOns and C_AddOns.DisableAddOn then
-            C_AddOns.DisableAddOn(addonName, UnitName("player"))
-        end
-    end
+    OneWoW:SetAddonEnabled(addonName, wantEnabled, true)
 end
 
 -- For each datastore, decide whether it should be enabled based on which

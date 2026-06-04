@@ -114,13 +114,22 @@ function addon:InitializeDatabase()
     ns.InitializeDatabase(self)
 end
 
+-- Core-driven init: the suite loader calls _G["OneWoW_QoL"]:OnAddonLoaded()
+-- right after it force-loads this module (WoW does not deliver our own
+-- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
+-- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
+local didInit = false
+function addon:OnAddonLoaded()
+    if didInit then return end
+    didInit = true
+    OnInitialize()
+end
+
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function(_, event, ...)
-    if event == "ADDON_LOADED" and ... == addonName then
-        OnInitialize()
-    elseif event == "PLAYER_LOGIN" then
+eventFrame:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_LOGIN" then
+        addon:OnAddonLoaded()  -- safety net; normally already run by the loader
         OnEnable()
     end
 end)

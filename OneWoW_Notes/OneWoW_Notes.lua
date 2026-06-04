@@ -234,15 +234,24 @@ function ns:SlashCommandHandler()
     end
 end
 
+-- Core-driven init: the suite loader calls _G["OneWoW_Notes"]:OnAddonLoaded()
+-- right after it force-loads this module (WoW does not deliver our own
+-- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
+-- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
+local didInit = false
+function ns:OnAddonLoaded()
+    if didInit then return end
+    didInit = true
+    OnInitialize()
+end
+
 local pewFired = false
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "ADDON_LOADED" and ... == addonName then
-        OnInitialize()
-    elseif event == "PLAYER_LOGIN" then
+    if event == "PLAYER_LOGIN" then
+        ns:OnAddonLoaded()  -- safety net; normally already run by the loader
         OnEnable()
     elseif event == "PLAYER_ENTERING_WORLD" and not pewFired then
         pewFired = true

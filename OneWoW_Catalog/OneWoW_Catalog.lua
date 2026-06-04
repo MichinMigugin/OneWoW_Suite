@@ -100,16 +100,22 @@ function addon:SlashCommandHandler()
     end
 end
 
+-- Core-driven init: the suite loader calls _G["OneWoW_Catalog"]:OnAddonLoaded()
+-- right after it force-loads this module (WoW does not deliver our own
+-- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
+-- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
+local didInit = false
+function addon:OnAddonLoaded()
+    if didInit then return end
+    didInit = true
+    OnInitialize()
+end
+
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "ADDON_LOADED" then
-        local loaded = ...
-        if loaded == ADDON_NAME then
-            OnInitialize()
-        end
-    elseif event == "PLAYER_LOGIN" then
+eventFrame:SetScript("OnEvent", function(self, event)
+    if event == "PLAYER_LOGIN" then
+        addon:OnAddonLoaded()  -- safety net; normally already run by the loader
         OnEnable()
         self:UnregisterEvent("PLAYER_LOGIN")
     end

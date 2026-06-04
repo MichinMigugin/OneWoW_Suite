@@ -4,8 +4,9 @@
 ## Notes: Unified bag interface for World of Warcraft. Part of the OneWoW Suite.
 ## Author: OneWoW Dev Team
 
-## RequiredDeps: OneWoW_GUI
-## OptionalDeps: OneWoW, OneWoW_AltTracker, OneWoW_ShoppingList, TradeSkillMaster, Baganator, Masque
+## RequiredDeps: OneWoW, OneWoW_GUI
+## LoadOnDemand: 1
+## OptionalDeps: OneWoW_AltTracker, OneWoW_ShoppingList, TradeSkillMaster, Baganator, Masque
 ## Category: OneWoW
 ## Group: OneWoW
 ## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
