@@ -217,83 +217,71 @@ for the full reference, and Load-Unit-Map / the `onewow-gui-ui` skill for policy
 (`MergeMissing`, `Ensure`, `Read`, `Set`, `Init`, `RunMigrations`). See the
 `onewow-database-api` skill for the full surface.
 
-### 5.3 Theme flow
+### 5.3 Settings change broadcast
+
+`OneWoW_GUI` owns the shared settings (`OneWoW_GUI_DB`) and broadcasts changes.
+Consumers subscribe with `OneWoW_GUI:RegisterSettingsCallback(event, owner, fn)`;
+`OneWoW_GUI:SetSetting(key, value)` writes the value and fires the matching
+event(s) via the internal `FireCallbacks`:
+
+| `SetSetting` key | Side effect | Event(s) fired |
+|---|---|---|
+| `theme` | calls `OneWoW_GUI:ApplyTheme()` | `OnThemeChanged` |
+| `font` | — | `OnFontChanged` |
+| `fontSizeOffset` | — | `OnFontSizeChanged` **and** `OnFontChanged` |
+
+The dual fire on `fontSizeOffset` is deliberate: a consumer that only listens for
+`OnFontChanged` still re-renders when the offset changes, so subscribing to font
+size is optional.
 
 ```mermaid
 flowchart TB
-    subgraph SettingsChange [User Changes Theme]
-        SetSetting[OneWoW_GUI:SetSetting theme]
-        SetSetting --> ApplyThemeLib[OneWoW_GUI:ApplyTheme]
-        SetSetting --> FireCallbacks[FireCallbacks OnThemeChanged]
-    end
-
-    subgraph OneWoW_GUI_ApplyTheme [OneWoW_GUI:ApplyTheme]
-        Lookup[Lookup theme from: _settingsDB, OneWoW.db, addon.db]
-        Lookup --> SetActive[Set Constants.ACTIVE_THEME]
-    end
-
-    subgraph AddonCallbacks [Per-Addon Callbacks]
-        QoL[QoL: OneWoW_GUI:ApplyTheme self]
-        Catalog[Catalog: addon:ApplyTheme -> OneWoW_GUI:ApplyTheme]
-        AltTracker[AltTracker: addon:ApplyTheme -> OneWoW_GUI:ApplyTheme]
-        Notes[Notes: addon:ApplyTheme -> OneWoW_GUI:ApplyTheme]
-    end
-
-    subgraph ProfileSync [Profile Apply - t-profiles.lua]
-        Sync[SyncSettingToChildAddons theme]
-        Sync --> AddonApply[addon:ApplyTheme for each]
-    end
-
-    FireCallbacks --> QoL
-    FireCallbacks --> Catalog
-    FireCallbacks --> AltTracker
-    FireCallbacks --> Notes
-    Sync --> AddonApply
+    SetSetting[OneWoW_GUI:SetSetting key, value]
+    SetSetting -->|key = theme| ApplyTheme[OneWoW_GUI:ApplyTheme]
+    SetSetting --> Fire[FireCallbacks]
+    ApplyTheme --> Active[resolve key incl. random; set Constants.ACTIVE_THEME]
+    Fire -->|OnThemeChanged / OnFontChanged / OnFontSizeChanged| Listeners[Each registered owner's callback]
+    Listeners --> Reapply[owner:ApplyTheme / reapply fonts / rebuild UI]
 ```
 
-Two paths:
-- **Settings callback:** user changes theme → each addon's `OnThemeChanged`
-  callback runs → `OneWoW_GUI:ApplyTheme`; the hub does `GUI:FullReset()`.
-- **Profile sync:** user loads a saved profile → `SyncSettingToChildAddons("theme")`
-  in `t-profiles.lua` calls `addon:ApplyTheme()` for each integrated addon.
+- **`ApplyTheme(addon)`** resolves the active theme key from the settings sources
+  (handling the `random` theme as a per-session pick) and sets
+  `Constants.ACTIVE_THEME` — the single source consumers read colors from.
+- **Who subscribes:** effectively every feature module (and many QoL submodules)
+  registers `OnThemeChanged`; most also register `OnFontChanged`. The top-level
+  modules each define their own `:ApplyTheme()` that their `OnThemeChanged`
+  handler invokes. The exact subscriber set is intentionally not enumerated here
+  (it changes as modules are added) — `rg 'RegisterSettingsCallback'` is the
+  source of truth.
+- The hub itself runs `GUI:FullReset()` on theme change to rebuild its window.
 
-### 5.4 Font size offset
+### 5.4 Profile apply
 
-All suite addons funnel font application through `OneWoW_GUI:SafeSetFont()`. A
-global offset (-3 to +5) is added to every size passed through it, scaling all
-text without changing individual element sizes.
+Loading a saved profile (`GUI/t-profiles.lua`) reapplies **theme** and
+**language** to the already-loaded modules without a reload, via
+`SyncSettingToChildAddons(settingType, value)`. It iterates a fixed list of
+integrated addons (`OneWoW_AltTracker`, `OneWoW_Notes`, `OneWoW_QoL`,
+`OneWoW_Catalog`, `OneWoW_DirectDeposit`, `OneWoW_ShoppingList`, DevTool) and
+calls `addon:ApplyTheme()` / `addon:ApplyLanguage()` where present, then
+`GUI:FullReset()`. Font and font-size offset are not part of profile sync.
 
-```mermaid
-flowchart TB
-    subgraph SettingsChange [User Changes Font Size Offset]
-        SetOffset[OneWoW_GUI:SetSetting fontSizeOffset]
-        SetOffset --> FireCB[FireCallbacks OnFontSizeChanged]
-    end
+### 5.5 Font sizing funnel
 
-    subgraph SafeSetFont [SafeSetFont - Central Funnel]
-        ReadOffset[Read fontSizeOffset from DB]
-        ReadOffset --> CalcSize[adjustedSize = max 6, size + offset]
-        CalcSize --> ApplyFont[pcall SetFont with adjustedSize]
-    end
+All suite font application funnels through `OneWoW_GUI:SafeSetFont(fontString,
+fontPath, size, flags)`. It adds the global `fontSizeOffset` to the requested
+size with a hard floor:
 
-    subgraph AddonCallbacks [Per-Addon Callbacks]
-        Notes2[Notes: reapply fonts]
-        Catalog2[Catalog: rebuild UI]
-        AltTracker2[AltTracker: reapply fonts]
-        Bags2[Bags: full GUI reset]
-    end
-
-    FireCB --> Notes2
-    FireCB --> Catalog2
-    FireCB --> AltTracker2
-    FireCB --> Bags2
+```lua
+adjustedSize = math.max(6, (size or 12) + offset)
 ```
 
 Key details:
 - Stored in `OneWoW_GUI_DB.fontSizeOffset` (default `0`); range `-3`..`+5`
-  (enforced in the settings stepper); minimum final size `6px`.
-- Callback event `OnFontSizeChanged`; `OneWoW_GUI:GetFontSizeOffset()` returns it.
-- Addons respond as they do to `OnFontChanged` — reapply fonts / rebuild UI.
+  (enforced in the settings stepper). `OneWoW_GUI:GetFontSizeOffset()` returns it.
+- `SafeSetFont` falls back to the stock font (then `GameFontNormal`) if the target
+  font is unusable, so a fontstring is never left without a font.
+- Changing the offset fires `OnFontSizeChanged` + `OnFontChanged` (§5.3); consumers
+  reapply fonts / rebuild UI in response.
 
 ---
 
