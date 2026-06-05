@@ -1,26 +1,31 @@
 # OneWoW Suite Architecture
 
-Current, implemented architecture of the OneWoW suite: how the load units depend
-on each other, how the core loads and initializes them, and the shared
-mechanisms they integrate through.
+Authoritative reference for how the suite is partitioned, loaded, enabled, and
+integrated. Describes **what is implemented today**.
 
-> **Scope:** this document describes *what is implemented today*. Design
-> rationale, retired approaches, and future migration steps live in
-> [`OneWoW/Docs/Load-Unit-Map.md`](OneWoW/Docs/Load-Unit-Map.md); sections below
-> reference it where the "why" matters.
+Remaining migration work (GUI absorption, CopyPaste, DevTool LOD, enforcement
+ramp) lives in [`MIGRATION.md`](MIGRATION.md).
 
 ---
 
 ## 1. True-core model
 
-The suite ships as separate addons ("load units" / TOCs) but behaves as one
-product. `OneWoW_GUI` is the base toolkit and `OneWoW` is the always-loaded core
-hub. Every feature module and data store **requires `OneWoW`** and is
-`## LoadOnDemand: 1` — nothing auto-loads. The core's orchestrator force-loads
-the enabled units at startup and drives their initialization in a deterministic
-order (§3). `OneWoW_GUI` self-bootstraps (interim separate addon until absorbed
-into core). `OneWoW_Utility_DevTool` is opt-in, `RequiredDeps: OneWoW`, and
-receives lifecycle hooks from core dispatch like other manifest units.
+The suite ships as **separate addons** (load units / TOCs) but behaves as one
+product. `OneWoW_GUI` is the base UI toolkit (interim separate addon until folded
+into core). `OneWoW` is the always-loaded hub. Feature modules and data stores are
+`## LoadOnDemand: 1` with `RequiredDeps: OneWoW` (and `OneWoW_GUI` today) — nothing
+auto-loads except the foundation and core. The orchestrator force-loads enabled units
+at startup and drives initialization in deterministic order (§3).
+
+### Why separate TOCs (not one mega-addon)
+
+Manage Features uses `C_AddOns.DisableAddOn` + `ReloadUI` to **truly unload** heavy
+modules and multi-MB data tables. A single literal TOC would parse every file at
+login; disabling could only skip runtime work — Lua and data stay resident. **Per-module
+TOCs preserve real unload.**
+
+Distribution is one package / one install; **load units stay many**. Separate
+CurseForge pages were the tracking burden, not separate folders.
 
 ```mermaid
 flowchart TB
@@ -28,12 +33,12 @@ flowchart TB
     OW[OneWoW<br/>core hub, always loaded]
     GUI --> OW
 
-    subgraph Modules [Feature modules — RequiredDeps: OneWoW · LoadOnDemand: 1]
-        QoL[OneWoW_QoL]
-        Catalog[OneWoW_Catalog]
-        AltTracker[OneWoW_AltTracker]
+    subgraph Modules [Feature modules — RequiredDeps: OneWoW, OneWoW_GUI · LoadOnDemand: 1]
         Notes[OneWoW_Notes]
+        AltTracker[OneWoW_AltTracker]
+        Catalog[OneWoW_Catalog]
         Trackers[OneWoW_Trackers]
+        QoL[OneWoW_QoL]
         ShoppingList[OneWoW_ShoppingList]
         DirectDeposit[OneWoW_DirectDeposit]
         Bags[OneWoW_Bags]
@@ -53,89 +58,119 @@ flowchart TB
 
 ---
 
-## 2. TOC dependency summary
+## 2. Load-unit tiers and TOC summary
 
-Verified against the current `.toc` files.
+| Tier | Units | Loads | Mechanism |
+|---|---|---|---|
+| **0 — Foundation** | `OneWoW_GUI` (target: folded into `OneWoW`) | Always | Separate addon today; LibStub `OneWoW_GUI-1.0` |
+| **1 — Core hub** | `OneWoW` | Always | `RequiredDeps: OneWoW_GUI`; orchestrator, Manage Features, hub UI, shared engines |
+| **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW, OneWoW_GUI` + `LoadOnDemand: 1` |
+| **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand, after parent | `RequiredDeps: …, <parent>` + `LoadOnDemand: 1`; listed in `ModuleManifest.stores` |
+| **4 — Utility** | `OneWoW_Utility_DevTool` | Opt-in | `RequiredDeps: OneWoW`; excluded from recommended preset |
+
+Verified against current `.toc` files:
 
 | Load unit | RequiredDeps | OptionalDeps | LoadOnDemand |
 |---|---|---|---|
-| **OneWoW_GUI** | — | — | 0 (base, always) |
-| **OneWoW** | OneWoW_GUI | Auctionator, TradeSkillMaster | — (always) |
-| **OneWoW_QoL** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_Catalog** | OneWoW, OneWoW_GUI | OneWoW_AltTracker, OneWoW_AltTracker_Auctions | 1 |
-| **OneWoW_AltTracker** | OneWoW, OneWoW_GUI | — | 1 |
+| **OneWoW_GUI** | — | — | 0 |
+| **OneWoW** | OneWoW_GUI | Auctionator, TradeSkillMaster | — |
 | **OneWoW_Notes** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_Trackers** | OneWoW, OneWoW_GUI | OneWoW_Notes, TradeSkillMaster, Auctionator | 1 |
+| **OneWoW_AltTracker** | OneWoW, OneWoW_GUI | — | 1 |
+| **OneWoW_Catalog** | OneWoW, OneWoW_GUI | — | 1 |
+| **OneWoW_Trackers** | OneWoW, OneWoW_GUI | TradeSkillMaster, Auctionator | 1 |
+| **OneWoW_QoL** | OneWoW, OneWoW_GUI | — | 1 |
 | **OneWoW_ShoppingList** | OneWoW, OneWoW_GUI | — | 1 |
 | **OneWoW_DirectDeposit** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_Bags** | OneWoW, OneWoW_GUI | OneWoW_AltTracker, OneWoW_ShoppingList, TradeSkillMaster, Baganator, Masque | 1 |
+| **OneWoW_Bags** | OneWoW, OneWoW_GUI | TradeSkillMaster, Baganator, Masque | 1 |
 | **OneWoW_Utility_DevTool** | OneWoW | !BugGrabber | — |
-| **OneWoW_AltTracker_\*** (Storage, Character, Collections, Endgame, Accounting, Professions, Auctions) | OneWoW, OneWoW_GUI, OneWoW_AltTracker | — | 1 |
-| **OneWoW_CatalogData_\*** (Journal, Quests, Vendors, Tradeskills) | OneWoW, OneWoW_GUI, OneWoW_Catalog | — | 1 |
+| **OneWoW_AltTracker_\*** | OneWoW, OneWoW_GUI, OneWoW_AltTracker | — | 1 |
+| **OneWoW_CatalogData_\*** | OneWoW, OneWoW_GUI, OneWoW_Catalog | — | 1 |
+
+### OptionalDeps policy
+
+**Do not use `## OptionalDeps` for suite-internal features.** Blizzard auto-loads
+enabled OptionalDeps when the consumer is `LoadAddOn`'d — bypassing soft opt-out
+and the login orchestrator. Suite integrations use nil-guards at call sites and,
+for explicit user actions, `OneWoW:WithAddon` / `EnsureLoaded` (§3.8).
+
+External third-party addons (TSM, Auctionator, Baganator, Masque, `!BugGrabber`)
+remain valid OptionalDeps.
 
 ---
 
 ## 3. Load lifecycle
 
-The core owns *when* a unit loads, *when* it initializes, and *lifecycle event
-dispatch*. See Load-Unit-Map §5 for rationale (including why this replaced
-`LoadWith` / per-unit `PLAYER_LOGIN` frames).
+Core owns *when* a unit loads, *when* it initializes, and lifecycle event dispatch.
 
-### 3.1 Orchestrator + manifest
+### 3.1 Why core-driven loading (retired `LoadWith`)
+
+`LoadWith` auto-loads a dependency inside the parent's load. When
+`C_AddOns.LoadAddOn` runs inside another addon's `ADDON_LOADED`, WoW does **not**
+deliver the loaded module's own `ADDON_LOADED` — its DB setup never ran. Stores are
+listed under each parent in `ModuleManifest.stores`; the orchestrator `EnsureLoaded`s
+each explicitly after the parent, driving `OnAddonLoaded` deterministically.
+
+Precedent: DBM loads mods with `LoadAddOn` then runs core-driven post-load init —
+same pattern as our `OnAddonLoaded` hook.
+
+### 3.2 Orchestrator + manifest
 
 `OneWoW/Core/AddonLoader.lua` holds `OneWoW.ModuleManifest` (every suite unit,
-slash command, hub module name, `loadPhase`, and parent `stores`). At the **end
-of core's `ADDON_LOADED`** (before `PLAYER_LOGIN`),
-`OneWoW.LoadOrchestrator:RunStartupPhase()` walks the manifest, `EnsureLoaded`s
-each `loadPhase == "login"` module, then each store. Detect-only entries (e.g.
-DevTool) are skipped by the orchestrator but included in login fan-out when loaded.
+slash command, hub `module` name, `loadPhase`, parent `stores`). At the **end of
+core's `ADDON_LOADED`** (before `PLAYER_LOGIN`),
+`OneWoW.LoadOrchestrator:RunStartupPhase()` walks the manifest and calls
+`OneWoW:BringUp(addon)` for each `loadPhase == "login"` entry (feature + stores as
+one set). DevTool is detect-only — skipped by the orchestrator but included in
+login fan-out when loaded.
 
-### 3.2 Event ownership
+Hub row-1 tab order is derived from manifest hub entries (Notes → AltTracker →
+Catalog → Trackers → QoL) via `GetModuleTabOrder` / `GetAlwaysShowModules`.
+
+### 3.3 Event ownership
 
 Only **`OneWoW.lua`** registers `ADDON_LOADED`, `PLAYER_LOGIN`, and
 `PLAYER_ENTERING_WORLD` for suite lifecycle dispatch. **`OneWoW_GUI`** still
-registers its own `ADDON_LOADED` for self-bootstrap until GUI is absorbed into
-core (Load-Unit-Map step 6). Embedded libs are unchanged.
+registers its own `ADDON_LOADED` for self-bootstrap until GUI is absorbed into core
+(see `MIGRATION.md` step 6). Embedded `Libs/` are unchanged.
 
-`OneWoW/Core/Lifecycle.lua` implements dispatch and handler registries.
+| Registrar | Allowed? |
+|-----------|----------|
+| `OneWoW.lua` | Yes — sole lifecycle authority for manifest units |
+| `OneWoW_GUI` | Yes (interim) — self-bootstrap until absorption |
+| Embedded `Libs/` | Yes — third-party, off-limits |
+| Feature modules, stores, DevTool, sub-modules | **No** — chain up to manifest parent |
 
-### 3.3 `OnAddonLoaded`
+### 3.4 `OnAddonLoaded`
 
-`hooksecurefunc(C_AddOns, "LoadAddOn", …)` in `AddonLoader.lua` calls
-`RunPostLoadInit` → `_G[name]:OnAddonLoaded()` for every load path. The hook drives
-**`OnAddonLoaded` only** — `OnPlayerLogin` / `OnPlayerEnteringWorld` are driven
-separately by `Settle` / `BringUp` (§3.4–3.5) so the whole set is loaded before any
-login hook runs. LOD units force-loaded during core's `ADDON_LOADED` never receive
-their own WoW `ADDON_LOADED`. Auto-loaded units (DevTool) do; `DispatchAddonLoaded`
-also drives their hook.
+`hooksecurefunc(C_AddOns, "LoadAddOn", …)` calls `RunPostLoadInit` →
+`_G[name]:OnAddonLoaded()` for every load path. The hook drives **`OnAddonLoaded`
+only** — `OnPlayerLogin` / `OnPlayerEnteringWorld` are driven by `Settle` / `BringUp`
+(§3.5–3.6). LOD units force-loaded during core's `ADDON_LOADED` never receive their
+own WoW `ADDON_LOADED`.
 
-Data stores use `OneWoW:BootStore(ns, config)` (`Core/StoreBootstrap.lua`) to
-expose `OnAddonLoaded` / `OnPlayerLogin` / optional `OnPlayerEnteringWorld`.
+Data stores use `OneWoW:BootStore(ns, config)` (`Core/StoreBootstrap.lua`).
 
-### 3.4 `OnPlayerLogin`
+### 3.5 `OnPlayerLogin`
 
-At core `PLAYER_LOGIN` (after core service init):
-`OneWoW:RunManifestLoginPhase()` walks the manifest and calls `OnAddonLoaded()`
-(safety net) then `OnPlayerLogin()` on each loaded unit (login-only — it does not
-fire PEW). Mid-session loads go through `OneWoW:BringUp(addon)`, which loads the
-whole feature set (`{ addon, ...stores }`, each `OnAddonLoaded` via the hook) and
-then runs one `Settle` pass (`OnPlayerLogin` over the set). This guarantees a
-parent's `OnPlayerLogin` runs only after its stores are loaded — matching cold
-start, where stores load during the orchestrator before the login phase.
+At core `PLAYER_LOGIN`: `OneWoW:RunManifestLoginPhase()` walks the manifest and calls
+`OnAddonLoaded()` (safety net) then `OnPlayerLogin()` on each loaded unit.
 
-### 3.5 `OnPlayerEnteringWorld`
+Mid-session loads use `OneWoW:BringUp(addon)`: loads `{ addon, ...stores }`, then one
+`Settle` pass (`OnPlayerLogin` over the set) so a parent's login runs only after its
+stores are loaded — matching cold start.
+
+### 3.6 `OnPlayerEnteringWorld`
 
 On every `PLAYER_ENTERING_WORLD`, `OneWoW:DispatchEnteringWorld(isLogin, isReload)`
 computes `isZoning = not isLogin and not isReload` and fans out to all loaded
-manifest units. This real event is authoritative (login, reload, and recurring zone
-changes) and is the only PEW source for already-loaded units. A unit loaded
-mid-session missed the real event, so `BringUp` (and the lone-load path in the
-`LoadAddOn` hook) delivers a synthetic catch-up `OnPlayerEnteringWorld(true, false,
-false)`: `isLogin=true` mirrors the cold-start `OnPlayerLogin` → `PEW(isLogin)`
-sequence, while `isZoning=false` keeps zone-refresh logic from firing (the player
-did not zone). No synthetic PEW is sent at cold start/reload.
+manifest units.
 
-### 3.6 Chain-up pattern
+Mid-session loads missed the real event; `BringUp` (and the lone-load path in the
+`LoadAddOn` hook) delivers synthetic catch-up `OnPlayerEnteringWorld(true, false,
+false)`: `isLogin=true` mirrors cold start; `isZoning=false` avoids spurious zone
+refresh. No synthetic PEW at cold start/reload.
+
+### 3.7 Chain-up pattern
 
 Manifest roots call `OneWoW.Lifecycle:CreateHandlerRegistry(self)` in
 `OnAddonLoaded`. Sub-modules register with the parent — never with WoW events:
@@ -148,9 +183,6 @@ end)
 parent:RegisterAddonLoadedWatcher("Blizzard_Foo", fn)
 ```
 
-Parent hooks call `FireLoginHandlers()` / `FireEnteringWorldHandlers()` after
-their own work.
-
 | I need to… | Do this | Do NOT |
 |------------|---------|--------|
 | Init my module DB | `OnAddonLoaded()` on manifest root | `RegisterEvent("ADDON_LOADED")` |
@@ -158,12 +190,7 @@ their own work.
 | React to zone change | `OnPlayerEnteringWorld` with `if isZoning` | `RegisterEvent("PLAYER_ENTERING_WORLD")` |
 | Hook Blizzard_Foo when it loads | `RegisterAddonLoadedWatcher("Blizzard_Foo", fn)` | Own `ADDON_LOADED` frame |
 
-### 3.7 Deferred addon watches
-
-`OneWoW:RegisterAddonLoadedWatcher(name, fn)` — `name` nil matches any addon.
-Prefer `EventUtil.ContinueOnAddOnLoaded` when available.
-
-### 3.8 Loader API (`OneWoW/Core/AddonLoader.lua`)
+### 3.8 Loader API
 
 ```lua
 OneWoW:EnsureLoaded(name [, opts])              -> ok, reason?
@@ -172,203 +199,248 @@ OneWoW:BringUp(addonName)                        -- load feature + stores, then 
 OneWoW:GetLoadFailureText(reason)               -> localized string
 ```
 
-`BringUp` is the single entry point for bringing a manifest feature live (used by
-the startup orchestrator and mid-session enables alike). It loads `{ addon,
-...stores }` as a batch (`OnAddonLoaded` each), runs one `OnPlayerLogin` pass, and
-— only mid-session — fires the synthetic entering-world catch-up (§3.5).
+- **Soft opt-out enforced:** returns `"OPTED_OUT"` when unit or parent store's parent
+  is opted out. Explicit user loads (Blizzard "Load Addon", Manage Features per-row
+  button) clear opt-out via the post-hook.
+- **`{ deferInCombat = true }`** queues to `PLAYER_REGEN_ENABLED`.
+- **Lazy cross-module data:** reserve `WithAddon` for *explicit user actions* (e.g.
+  Catalog AH scan → `OneWoW_AltTracker_Auctions`), not speculative tab opens.
+- **Trackers → Notes migration** uses `WithAddon("OneWoW_Notes", …)` when Notes is
+  wanted but not loaded; defers when Notes is soft-opted-out.
 
-`{ deferInCombat = true }` queues to `PLAYER_REGEN_ENABLED`. See Load-Unit-Map §5.2.
+### 3.9 Load phases
 
-### 3.9 Enable-state API
+| Phase | When loaded | Use for |
+|---|---|---|
+| `login` | End of core `ADDON_LOADED` if wanted | Passive hooks: tooltips, overlays, toasts, automations |
+| `lazy` | First hub tab / window open | Pure-window modules with no passive behavior |
 
-The two settings surfaces that read/write Blizzard's per-addon enable flag — the
-Home tab (`GUI/t-home.lua`) and Manage Features (`Core/FirstRunWizard.lua`) —
-share one implementation here instead of hand-rolling parallel helpers.
+All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab` in
+`MainWindow` (dormant while everything is `login`).
+
+---
+
+## 4. Enable model
+
+Two layers:
+
+1. **Blizzard per-addon enable** (`C_AddOns.{Enable,Disable}AddOn`) — hard layer.
+   Disabling truly unloads after reload. Re-enabling a login-disabled unit needs
+   reload (`LoadAddOn` returns `DISABLED` mid-session).
+
+2. **Soft opt-out** (`OneWoW_DB.featureOptOut`) — unit stays Blizzard-enabled;
+   orchestrator skips loading. Can `LoadAddOn` later same session with no reload.
+
+| Action | Mechanism | Reload? |
+|---|---|---|
+| Soft disable (Apply) | set `featureOptOut`; orchestrator skips next load | No (loaded unit stays until reload) |
+| Soft enable | clear opt-out + `EnsureLoaded` / Load Addon | No |
+| Hard disable (Apply & Reload) | `DisableAddOn` + clear opt-out + `ReloadUI` | Yes |
+| Hard re-enable | `EnableAddOn` + `ReloadUI` | Yes |
+| Load at login | orchestrator `BringUp` during core `ADDON_LOADED` | n/a |
+
+Scope: Manage Features selects account vs current character for both layers. Home is
+**read-only** — links to Manage Features for writes.
+
+### 4.1 Enable-state API
 
 ```lua
-OneWoW:IsAddonEnabled(name, perCharacter)        -> boolean
+OneWoW:IsAddonEnabled(name, perCharacter)
 OneWoW:SetAddonEnabled(name, enabled, perCharacter)
-OneWoW:IsFeatureWanted(name, perCharacter)         -> boolean
+OneWoW:IsFeatureWanted(name, perCharacter)         -- Blizzard-enabled AND not opted out
 OneWoW:GetFeatureWantedAggregate(name)             -> "all"|"some"|"none"
 OneWoW:GetFeatureUnitState(name)                   -> state string
-OneWoW:GetAddonStatus(name, perCharacter)        -> status, reason?
-OneWoW:IsFeatureOptedOut(name)                     -> boolean
+OneWoW:GetAddonStatus(name, perCharacter)
+OneWoW:IsFeatureOptedOut(name)
 OneWoW:SetFeatureOptOut(name, optedOut, perCharacter)
 ```
 
-- **Effective wanted state** = Blizzard-enabled in scope AND not soft-opted-out.
-  Home and Manage Features both use this model (`GetFeatureUnitState` /
-  `IsFeatureWanted`); never hand-roll parallel `GetAddOnEnableState` checks for
-  display.
-- **`perCharacter` is the scope, chosen per call site.** Manage Features passes
-  `true` (current-character scope); account-wide scope uses `false`.
-- **`GetAddonStatus` treats loaded / `DEMAND_LOADED` as healthy** — every suite
-  unit is `LoadOnDemand: 1`, so `GetAddOnInfo` reports `loadable=false,
-  reason="DEMAND_LOADED"` even while loaded and working; that is not an error.
-- Enable/disable changes take effect on the next reload/relog (WoW cannot
-  load/unload addon Lua mid-session). See Load-Unit-Map §5.3.
+**`GetFeatureUnitState` return values:**
+
+| State | Meaning |
+|---|---|
+| `missing` | Addon not installed |
+| `disabled` | Blizzard-disabled for current character |
+| `not_loaded` | Wanted but not in memory (or soft-disabled, not loaded) |
+| `pending_disable` | Soft-disabled but still loaded this session; drops next reload |
+| `all` | Loaded; wanted on every known character |
+| `some` | Loaded; mixed enable/opt-out across characters |
+
+**`GetAddonStatus`** treats `IsAddOnLoaded` / `DEMAND_LOADED` as healthy — LoD units
+force-loaded by the orchestrator report `loadable=false, reason="DEMAND_LOADED"` even
+while working.
+
+Manage Features' `FirstRun.CATALOG[].datastores` (consumer graph) and
+`ModuleManifest.stores` (ownership graph) remain **distinct** sources of truth.
+
+### 4.2 Home tab live refresh
+
+`GUI/t-home.lua` builds module rows once; each row's `ApplyState()` re-reads
+`GetFeatureUnitState`. `MainWindow` registers `EventRegistry` on
+`OneWoW.FeatureStateChanged` (fired from `SetFeatureOptOut` and post-`LoadAddOn` hook)
+to call `GUI:RefreshHomeStatus()` while Home is visible.
+
+Visual mapping: green = fully wanted; grey = mixed across chars; amber check =
+not loaded or `pending_disable` (tag `(off next reload)` for the latter); red X =
+Blizzard-disabled.
 
 ---
 
-## 4. Cross-unit sharing model
+## 5. Hub UI
 
-Because modules are separate load units, they cannot share core's private `ns`
-table. Sharing happens through globals published by core and the GUI toolkit:
+### 5.1 ModuleRegistry
 
-- **Within a load unit:** `local _, ns = ...` (private upvalue table).
-- **Across load units:** plain globals — `_G.OneWoW` (set in `OneWoW.lua:5`),
-  the `OneWoW_GUI` toolkit (currently via `LibStub("OneWoW_GUI-1.0")`), and
-  members like `OneWoW.OverlayEngine`, `OneWoW.ItemStatus`, `OneWoW.CopyPaste`,
-  plus per-unit APIs (e.g. `_G.OneWoW_Catalog_TradeskillAPI`,
-  `_G.OneWoW_Trackers_API`).
-
-> LibStub is retained for `OneWoW_GUI` and the vendored Ace libs today. Folding
-> `OneWoW_GUI` into core and dropping its LibStub registration is a planned step
-> (Load-Unit-Map §6.1), not yet implemented.
-
----
-
-## 5. Integration mechanisms
-
-### 5.1 ModuleRegistry (hub tab embedding)
-
-Modules that appear as tabs in OneWoW's main window register via
-`OneWoW:RegisterModule()` and `OneWoW:RegisterSettingsPanel()`.
-
-**Used by:** AltTracker, Catalog, Notes, QoL, Trackers.
+Modules that appear as row-1 tabs register via `OneWoW:RegisterModule()`:
 
 ```lua
 _G.OneWoW:RegisterModule({
     name = "catalog",
     displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
     addonName = "OneWoW_Catalog",
-    order = 4,
-    tabs = {
-        { name = "journal", displayName = ..., create = function(p) ns.UI.CreateJournalTab(p) end },
-        -- ...
-    },
+    order = OneWoW:GetModuleTabOrder("catalog"),
+    tabs = { ... },
 })
 ```
 
-- `ModuleRegistry` (`OneWoW/Core/ModuleRegistry.lua`) stores `name`,
-  `displayName`, `tabs`, `order`.
-- When a module tab is selected, `OneWoW/GUI/MainWindow.lua` calls
-  `tabInfo.create(frame)` to build content **inside** the hub's content area.
-- Content is created lazily and cached in `moduleContentFrames[key]`.
+`ModuleRegistry` stores `name`, `displayName`, `tabs`, `order`. `MainWindow.lua`
+calls `tabInfo.create(frame)` lazily; content cached in `moduleContentFrames`.
 
-Standalone-window modules (Bags, ShoppingList, DirectDeposit) open their own
-frames via slash commands rather than embedding a hub tab.
+**Placeholder tabs:** when a hub module is not loaded, `GetAlwaysShowModules()` still
+shows its tab (same order, locale key label). Selecting a placeholder prompts load or
+Manage Features.
 
-### 5.2 OneWoW_GUI (shared UI and theme)
+Standalone-window modules (Bags, ShoppingList, DirectDeposit) open via slash commands,
+not hub tabs.
 
-All addons use `LibStub("OneWoW_GUI-1.0")` for shared UI creation and theme
-colors. Theme is the single source of truth in `OneWoW_GUI_DB`; no addon keeps
-its own copy.
+### 5.2 Pin pattern
 
-**Early-return convention** — every file that depends on OneWoW_GUI starts with:
+A sub-addon may register both a hub tab and a standalone window. The **Pin** pattern
+in `ModuleRegistry` promotes a hub item to a small standalone window — user-controlled,
+shared theme/GUI primitives.
+
+---
+
+## 6. Cross-unit sharing
+
+Modules cannot share core's private `ns`. Sharing uses globals:
+
+- **Within a load unit:** `local _, ns = ...`
+- **Across load units:** `_G.OneWoW`, `LibStub("OneWoW_GUI-1.0")` (interim), per-unit
+  APIs (`OneWoW_Catalog_TradeskillAPI`, `OneWoW_Trackers_API`), store `_API` /
+  `_DB` globals.
+
+LibStub is retained for `OneWoW_GUI` and vendored Ace libs today. Target: fold GUI
+into core as plain `OneWoW_GUI` global (`MIGRATION.md` step 6).
+
+### Cross-addon references
+
+| From | To | Mechanism | Purpose |
+|---|---|---|---|
+| OneWoW | OneWoW_Bags | `Integrations/OneWoW_Bags.lua` | Overlay engine with Bags callbacks |
+| OneWoW_ShoppingList | OneWoW_Catalog | `OneWoW_Catalog_TradeskillAPI` | Recipe callback |
+| OneWoW_Trackers | OneWoW_Notes | `OneWoW_Trackers_API` | Tracker sub-tab in Notes |
+| OneWoW_Trackers | OneWoW_Notes_DB | One-time migration | Legacy tracker data drain |
+
+### Store access rules
+
+Every cross-module store read is nil-guarded. Prefer `_API` over `_DB`. Core reads
+stores opportunistically (tooltips, overlays) — never as a load trigger.
+
+---
+
+## 7. Taxonomy
+
+| Kind | Definition | Examples |
+|---|---|---|
+| **Sub-addon** | Separate TOC / load unit | `OneWoW_Catalog`, `OneWoW_AltTracker_Storage` |
+| **Feature** | User-facing capability in a sub-addon | Journal tab, AH scanner, bag bar |
+| **Provider** | Registered data source with lifecycle/SV | Future `DataManager` providers |
+| **Service** | Near-stateless utility on `_G.OneWoW` | `OverlayEngine`, `CopyPaste` (target) |
+
+**Hub vs contextual:** hub = tabs in OneWoW window; contextual = own window in
+gameplay context (Bags, ShoppingList, DirectDeposit, DevTool). Not binary — modules
+may register both.
+
+### Layering rules
+
+1. **No sub-addon reads another family's store global directly.** Lint:
+   `bin/check_no_data_manager_bypass.py` (phased enforcement — see `MIGRATION.md`).
+2. **Inverse dependencies via events/callbacks**, not direct calls — core stays
+   consumer-agnostic.
+3. **Cross-unit data** should route through `DataManager:Query` (planned broker in
+   core — not yet implemented). Consumers ask; providers register; empty when absent.
+
+**Promotion discipline:** second consumer → promote to core. Provider → `Providers/`;
+stateless utility → `Services/` on `_G.OneWoW`. Rule of Three before abstracting.
+
+---
+
+## 8. GUI and settings integration
+
+### 8.1 OneWoW_GUI
+
+All addons use `LibStub("OneWoW_GUI-1.0")` for shared UI and theme. Theme is single
+source of truth in `OneWoW_GUI_DB`.
 
 ```lua
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 ```
 
-Fail fast — no defensive `if OneWoW_GUI and OneWoW_GUI.SomeMethod then` guards.
+Fail fast — no defensive nil-chain guards on methods.
 
-**Component API:** all creation uses `(parent, options)`. See `OneWoW_GUI/GUI.md`
-for the full reference, and Load-Unit-Map / the `onewow-gui-ui` skill for policy.
+**Component API:** `(parent, options)`. See `OneWoW_GUI/GUI.md` and the
+`onewow-gui-ui` skill for policy.
 
-**Database API:** `OneWoW_GUI.DB` provides SavedVariable utilities
-(`MergeMissing`, `Ensure`, `Read`, `Set`, `Init`, `RunMigrations`). See the
-`onewow-database-api` skill for the full surface.
+**Database API:** `OneWoW_GUI.DB` — see `onewow-database-api` skill.
 
-### 5.3 Settings change broadcast
+### 8.2 Settings change broadcast
 
-`OneWoW_GUI` owns the shared settings (`OneWoW_GUI_DB`) and broadcasts changes.
-Consumers subscribe with `OneWoW_GUI:RegisterSettingsCallback(event, owner, fn)`;
-`OneWoW_GUI:SetSetting(key, value)` writes the value and fires the matching
-event(s) via the internal `FireCallbacks`:
+`OneWoW_GUI:SetSetting(key, value)` writes and fires callbacks:
 
-| `SetSetting` key | Side effect | Event(s) fired |
+| Key | Side effect | Event(s) |
 |---|---|---|
-| `theme` | calls `OneWoW_GUI:ApplyTheme()` | `OnThemeChanged` |
+| `theme` | `ApplyTheme()` | `OnThemeChanged` |
 | `font` | — | `OnFontChanged` |
-| `fontSizeOffset` | — | `OnFontSizeChanged` **and** `OnFontChanged` |
+| `fontSizeOffset` | — | `OnFontSizeChanged` + `OnFontChanged` |
 
-The dual fire on `fontSizeOffset` is deliberate: a consumer that only listens for
-`OnFontChanged` still re-renders when the offset changes, so subscribing to font
-size is optional.
+Hub runs `GUI:FullReset()` on theme change.
 
-```mermaid
-flowchart TB
-    SetSetting[OneWoW_GUI:SetSetting key, value]
-    SetSetting -->|key = theme| ApplyTheme[OneWoW_GUI:ApplyTheme]
-    SetSetting --> Fire[FireCallbacks]
-    ApplyTheme --> Active[resolve key incl. random; set Constants.ACTIVE_THEME]
-    Fire -->|OnThemeChanged / OnFontChanged / OnFontSizeChanged| Listeners[Each registered owner's callback]
-    Listeners --> Reapply[owner:ApplyTheme / reapply fonts / rebuild UI]
-```
+### 8.3 Profile apply
 
-- **`ApplyTheme(addon)`** resolves the active theme key from the settings sources
-  (handling the `random` theme as a per-session pick) and sets
-  `Constants.ACTIVE_THEME` — the single source consumers read colors from.
-- **Who subscribes:** effectively every feature module (and many QoL submodules)
-  registers `OnThemeChanged`; most also register `OnFontChanged`. The top-level
-  modules each define their own `:ApplyTheme()` that their `OnThemeChanged`
-  handler invokes. The exact subscriber set is intentionally not enumerated here
-  (it changes as modules are added) — `rg 'RegisterSettingsCallback'` is the
-  source of truth.
-- The hub itself runs `GUI:FullReset()` on theme change to rebuild its window.
+`GUI/t-profiles.lua` reapplies theme and language via `SyncSettingToChildAddons` —
+iterates integrated addons and calls `ApplyTheme()` / `ApplyLanguage()` where present,
+then `GUI:FullReset()`. Font/size not part of profile sync.
 
-### 5.4 Profile apply
+### 8.4 Font sizing
 
-Loading a saved profile (`GUI/t-profiles.lua`) reapplies **theme** and
-**language** to the already-loaded modules without a reload, via
-`SyncSettingToChildAddons(settingType, value)`. It iterates a fixed list of
-integrated addons (`OneWoW_AltTracker`, `OneWoW_Notes`, `OneWoW_QoL`,
-`OneWoW_Catalog`, `OneWoW_DirectDeposit`, `OneWoW_ShoppingList`, DevTool) and
-calls `addon:ApplyTheme()` / `addon:ApplyLanguage()` where present, then
-`GUI:FullReset()`. Font and font-size offset are not part of profile sync.
-
-### 5.5 Font sizing funnel
-
-All suite font application funnels through `OneWoW_GUI:SafeSetFont(fontString,
-fontPath, size, flags)`. It adds the global `fontSizeOffset` to the requested
-size with a hard floor:
-
-```lua
-adjustedSize = math.max(6, (size or 12) + offset)
-```
-
-Key details:
-- Stored in `OneWoW_GUI_DB.fontSizeOffset` (default `0`); range `-3`..`+5`
-  (enforced in the settings stepper). `OneWoW_GUI:GetFontSizeOffset()` returns it.
-- `SafeSetFont` falls back to the stock font (then `GameFontNormal`) if the target
-  font is unusable, so a fontstring is never left without a font.
-- Changing the offset fires `OnFontSizeChanged` + `OnFontChanged` (§5.3); consumers
-  reapply fonts / rebuild UI in response.
+All font application funnels through `OneWoW_GUI:SafeSetFont(fontString, fontPath,
+size, flags)` with `fontSizeOffset` from `OneWoW_GUI_DB` (range −3..+5, floor 6).
 
 ---
 
-## 6. Cross-addon references
+## 9. Caveats
 
-| From | To | Mechanism | Purpose |
-|---|---|---|---|
-| OneWoW | OneWoW_Bags | `OneWoW/Integrations/OneWoW_Bags.lua` | Registers the overlay engine with Bags' item-button callbacks |
-| OneWoW_ShoppingList | OneWoW_Catalog | `_G.OneWoW_Catalog_TradeskillAPI` | Recipe callback when Catalog's tradeskill data is loaded |
-| OneWoW_Trackers | OneWoW_Notes | `_G.OneWoW_Trackers_API` | Trackers exposes an API; Notes adds a tracker sub-tab |
-| OneWoW_Trackers | OneWoW_Notes_DB | One-time migration | Migrates legacy tracker data out of Notes' SavedVariables |
+- **Runtime nil-guards** remain the backstop; lint checks are additive, not compile-time.
+- **Stores expose `_DB` and `_API`:** cross-module consumers should prefer `_API`; direct
+  `_DB` reads are a refactor target.
+- **`DEMAND_LOADED` is normal** for force-loaded LoD units — not an error state.
+- **Secret values (12.0+):** combat-related data may be opaque in instances; use Blizzard
+  templates for combat UI rather than branching on secret values from tainted code.
+- **Mid-session hard enable** always needs reload; soft layer exists specifically to avoid
+  that for reload-free toggles.
 
 ---
 
-## 7. File reference summary
+## 10. File reference
 
 | File | Purpose |
 |---|---|
-| `OneWoW/Core/AddonLoader.lua` | Load orchestrator, `ModuleManifest`, `EnsureLoaded`/`WithAddon`, enable-state API |
+| `OneWoW/Core/AddonLoader.lua` | Manifest, orchestrator, `BringUp`/`EnsureLoaded`, enable API, tab-order helpers |
 | `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, handler registries, addon-loaded watchers |
 | `OneWoW/Core/StoreBootstrap.lua` | `OneWoW:BootStore` for data stores |
-| `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration and lifecycle |
-| `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features panel (per-character enable/disable) |
-| `OneWoW/GUI/t-home.lua` | Home tab: account-wide enable/disable + status display |
-| `OneWoW/GUI/MainWindow.lua` | Hub window; builds registered module tabs lazily |
-| `OneWoW/Docs/Load-Unit-Map.md` | Design rationale, retired mechanisms, and future migration steps |
+| `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
+| `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
+| `OneWoW/GUI/t-home.lua` | Home tab: read-only status + live refresh |
+| `OneWoW/GUI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
+| `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 5–8) |
