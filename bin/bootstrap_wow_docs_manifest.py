@@ -9,10 +9,12 @@ written as plain strings; files matched in other sources get the explicit
 object form ({"source": "...", "path": "..."}).
 
 To add a new source, edit UPSTREAM_URLS and re-run. Bootstrap overwrites
-manifest.json — any custom entries you've added by hand will need to be
-re-applied unless they correspond to files that match a source automatically.
+manifest.json. Cross-repo renames and other mappings bootstrap cannot infer
+belong in MANUAL_OVERRIDES (below); edit that dict rather than hand-editing
+manifest.json.
 
 Matching strategy (decreasing confidence):
+  0. Entry in MANUAL_OVERRIDES with valid upstream path               -> use override
   1. Basename appears once across all sources              -> auto-match
   2. Basename ambiguous, exactly one upstream file's hash
      matches the local file                                -> auto-match
@@ -60,9 +62,27 @@ UPSTREAM_URLS = [
     },
 ]
 
+# Known local -> upstream mappings bootstrap cannot infer (basename mismatch, etc.).
+# Keys: paths relative to .wow_docs/. Values: manifest entry form — a string path
+# relative to default_source, or {"source": "<name>", "path": "<rel>"}.
+MANUAL_OVERRIDES: dict[str, str | dict[str, str]] = {
+    "general/GlobalStrings.lua": {
+        "source": "blizzard-interface-resources",
+        "path": "Resources/GlobalStrings/enUS.lua",
+    },
+}
+
 SCRIPT_DIR = Path(__file__).parent.parent.resolve()
 DEFAULT_CACHE_ROOT = SCRIPT_DIR / Path(".cache/onewow-suite/sources")
 DEFAULT_WOW_DOCS = SCRIPT_DIR / Path(".wow_docs")
+
+# File types mirrored from upstream git repos (.md docs in .wow_docs/ are excluded).
+TRACKED_EXTENSIONS = (".lua", ".xml")
+
+
+def iter_tracked_files(root: Path):
+    for ext in TRACKED_EXTENSIONS:
+        yield from root.rglob(f"*{ext}")
 
 
 def sha256_file(path: Path) -> str:
@@ -109,7 +129,7 @@ def get_head_commit(cache_dir: Path) -> str:
 def index_local(wow_docs: Path) -> dict[str, str]:
     return {
         f.relative_to(wow_docs).as_posix(): sha256_file(f)
-        for f in wow_docs.rglob("*.lua")
+        for f in iter_tracked_files(wow_docs)
     }
 
 
@@ -129,7 +149,7 @@ def index_all_upstreams(sources: list[dict]) -> tuple[dict, dict]:
             if not root_path.exists():
                 print(f"  warn: scan root not found in {src['name']}: {root}", file=sys.stderr)
                 continue
-            for f in root_path.rglob("*.lua"):
+            for f in iter_tracked_files(root_path):
                 rel = f.relative_to(cache_dir).as_posix()
                 h = sha256_file(f)
                 basename_index[f.name].append((src["name"], rel, h))
@@ -142,10 +162,20 @@ def format_candidate(src: str, path: str) -> str:
     return f"[{src}] {path}"
 
 
+def resolve_manifest_entry(entry, default_source: str) -> tuple[str, str]:
+    """Manifest file entry (str or dict) -> (source_name, upstream_path)."""
+    if isinstance(entry, str):
+        return default_source, entry
+    if isinstance(entry, dict):
+        return entry["source"], entry["path"]
+    raise ValueError(f"Invalid manifest entry: {entry!r}")
+
+
 def match_files(
     local: dict[str, str],
     basename_index: dict,
     hash_index: dict,
+    skip_local: set[str] | None = None,
 ) -> tuple[dict[str, tuple[str, str]], list[tuple[str, str, list[str]]]]:
     """Return (matched, review).
 
@@ -154,8 +184,11 @@ def match_files(
     """
     matched: dict[str, tuple[str, str]] = {}
     review: list[tuple[str, str, list[str]]] = []
+    skip = skip_local or set()
 
     for local_rel, local_hash in sorted(local.items()):
+        if local_rel in skip:
+            continue
         basename = Path(local_rel).name
         candidates = basename_index.get(basename, [])
 
@@ -214,6 +247,65 @@ def match_files(
     return matched, review
 
 
+def apply_manual_overrides(
+    matched: dict[str, tuple[str, str]],
+    review: list[tuple[str, str, list[str]]],
+    local: dict[str, str],
+    sources_by_name: dict[str, dict],
+    default_source: str,
+) -> int:
+    """Apply MANUAL_OVERRIDES. Returns count of overrides successfully applied."""
+    override_keys = set(MANUAL_OVERRIDES)
+    for key in override_keys:
+        matched.pop(key, None)
+    review[:] = [entry for entry in review if entry[0] not in override_keys]
+
+    applied = 0
+    for local_rel, entry in sorted(MANUAL_OVERRIDES.items()):
+        try:
+            src_name, up_path = resolve_manifest_entry(entry, default_source)
+        except (KeyError, ValueError) as e:
+            review.append((local_rel, f"invalid MANUAL_OVERRIDES entry: {e}", []))
+            continue
+
+        if src_name not in sources_by_name:
+            review.append((
+                local_rel,
+                f"override references unknown source {src_name!r}",
+                [],
+            ))
+            continue
+
+        candidate = format_candidate(src_name, up_path)
+        if local_rel not in local:
+            review.append((
+                local_rel,
+                "override defined but local file not present",
+                [candidate],
+            ))
+            continue
+
+        upstream_path = sources_by_name[src_name]["cache_dir"] / up_path
+        if not upstream_path.exists():
+            review.append((
+                local_rel,
+                "manual override: upstream path missing — update MANUAL_OVERRIDES",
+                [candidate],
+            ))
+            continue
+
+        matched[local_rel] = (src_name, up_path)
+        applied += 1
+        if sha256_file(upstream_path) != local[local_rel]:
+            review.append((
+                local_rel,
+                "manual override matched but hash differs (likely stale local copy)",
+                [candidate],
+            ))
+
+    return applied
+
+
 def write_manifest(
     path: Path,
     matched: dict[str, tuple[str, str]],
@@ -257,14 +349,14 @@ def write_review(path: Path, review: list[tuple[str, str, list[str]]], wow_docs_
         "# .wow_docs manifest review",
         "#",
         "# These files need manual decision. For each, either:",
-        "#   1. Find the correct upstream path/source and edit manifest.json.",
-        "#      Manifest entries can be string (default source) or object form:",
+        "#   1. Add or fix an entry in MANUAL_OVERRIDES in bootstrap_wow_docs_manifest.py",
+        "#      (for cross-repo renames bootstrap cannot auto-detect). Example:",
         "#        \"general/GlobalStrings.lua\": {",
         "#          \"source\": \"blizzard-interface-resources\",",
         "#          \"path\": \"Resources/GlobalStrings/enUS.lua\"",
         "#        }",
         "#   2. Delete the local file if it's no longer relevant.",
-        "#   3. Leave as-is — refresh will follow whatever's in manifest.json.",
+        "#   3. Run refresh_wow_docs.py to sync stale local copies.",
         "#",
         f"# Generated: {date.today().isoformat()}",
         "",
@@ -318,6 +410,7 @@ def main() -> int:
         sources.append(src)
 
     default_source = sources[0]["name"]
+    sources_by_name = {src["name"]: src for src in sources}
 
     # Sync each source.
     for src in sources:
@@ -332,19 +425,30 @@ def main() -> int:
 
     print(f"\nIndexing local files in {wow_docs}...", file=sys.stderr)
     local = index_local(wow_docs)
-    print(f"  {len(local)} .lua files", file=sys.stderr)
+    ext_label = ", ".join(TRACKED_EXTENSIONS)
+    print(f"  {len(local)} tracked files ({ext_label})", file=sys.stderr)
 
     print(f"\nIndexing upstream files...", file=sys.stderr)
     basename_index, hash_index = index_all_upstreams(sources)
     total_upstream = sum(len(v) for v in basename_index.values())
-    print(f"  {total_upstream} .lua files across {len(sources)} source(s), "
+    print(f"  {total_upstream} tracked files ({ext_label}) across {len(sources)} source(s), "
           f"{len(basename_index)} unique basenames", file=sys.stderr)
 
-    matched, review = match_files(local, basename_index, hash_index)
+    matched, review = match_files(
+        local, basename_index, hash_index, skip_local=set(MANUAL_OVERRIDES),
+    )
+    auto_matched = len(matched)
+    override_applied = apply_manual_overrides(
+        matched, review, local, sources_by_name, default_source,
+    )
 
     print("", file=sys.stderr)
-    print(f"Auto-matched: {len(matched)} files", file=sys.stderr)
-    print(f"Need review:  {len(review)} files", file=sys.stderr)
+    print(f"Auto-matched:       {auto_matched} files", file=sys.stderr)
+    if MANUAL_OVERRIDES:
+        print(f"Manual overrides:   {override_applied}/{len(MANUAL_OVERRIDES)} applied",
+              file=sys.stderr)
+    print(f"Total in manifest:  {len(matched)} files", file=sys.stderr)
+    print(f"Need review:        {len(review)} files", file=sys.stderr)
 
     # Per-source breakdown of matched files
     by_source: dict[str, int] = defaultdict(int)
