@@ -1,5 +1,7 @@
 # Import / Export
 
+> **See also:** [Docs index](README.md) · [Categorization](CATEGORIZATION.md) (what gets classified) · [Search syntax](SEARCH_SYNTAX.md) (`SAVED(Name)` in exported rules) · [Architecture](ARCHITECTURE.md) (DB keys)
+
 OneWoW Bags can import categories and sections from other addons, and export its
 own configuration as a sharable text block. All operations go through a
 **preview dialog** so you can see what will happen before anything is written.
@@ -73,8 +75,8 @@ When two categories with the same name collide and the user picks `Merge`:
 - **items** — always unioned (pinned item IDs from both sides are kept).
 - **enabled** — sticky; stays enabled if either side was enabled.
 - **modifications** (per category, per scope)
-  - `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `priority`, `color`, `forceOwnLine`: imported wins
-    when set, otherwise keep existing.
+  - `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `priority`, `color`: imported wins when set, otherwise keep existing.
+  - `forceOwnLine`: unioned per container key (`backpack`, `character_bank`, `warband_bank`).
   - `appliesIn` (bag/bank/etc. scoping): intersected (fewer scopes kept).
   - `addedItems`: unioned.
 
@@ -255,7 +257,7 @@ ImportExport/Planner.lua            (read-only; builds a Plan)
 GUI/ImportPreview.lua               (user resolves conflicts)
       │
       ▼
-ImportExport/Backup.lua::Snapshot
+ImportExport/Backup.lua::Snapshot   (deep copy via ImportExport/Util.lua)
 ImportExport/Applier.lua::Apply     (mutates db.global)
       │
       ▼

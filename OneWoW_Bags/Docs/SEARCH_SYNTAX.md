@@ -1,5 +1,7 @@
 # Search & Expression Syntax
 
+> **See also:** [Docs index](README.md) · [Categorization](CATEGORIZATION.md) (how rules assign categories) · [Import/export](IMPORT_EXPORT.md) (translating foreign dialects) · [Architecture](ARCHITECTURE.md) (search filter pipeline)
+
 OneWoW Bags uses a single expression engine for the search bar, custom category
 rules, and (in the future) vendor sell rules. Everything described here works in
 all three contexts.

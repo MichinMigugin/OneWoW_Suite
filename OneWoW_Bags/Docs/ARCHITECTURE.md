@@ -1,16 +1,18 @@
 # OneWoW_Bags — Architecture
 
+> **See also:** [Docs index](README.md) · [Categorization](CATEGORIZATION.md) · [Search syntax](SEARCH_SYNTAX.md) · [Import/export](IMPORT_EXPORT.md) · [Item-button API](ITEM_BUTTON.md)
+
 ## Overview
 
-OneWoW_Bags is a unified bag/bank/guild bank replacement addon for World of Warcraft. It replaces consolidated Blizzard bag presentation with a single window per context (inventory, bank, guild bank). The addon is part of the OneWoW Suite and depends on `OneWoW_GUI` for UI primitives, database management, and theming.
+OneWoW_Bags is a unified bag/bank/guild bank replacement addon for World of Warcraft. It replaces consolidated Blizzard bag presentation with a single window per context (inventory, bank, guild bank). The addon is part of the OneWoW Suite and depends on `OneWoW` (hub loader, minimap, overlay/junk/upgrade integrations) and `OneWoW_GUI` (UI primitives, database management, theming).
 
 **SavedVariable:** `OneWoW_Bags_DB`, initialized via `OneWoW_GUI.DB:Init` in **single** mode (defaults and persisted data under `db.global`).
 
-**TOC:** `## Interface: 120005, 120007` (Retail + compatible build).
+**TOC:** `## Interface: 120005, 120007` (Retail + compatible build). `## LoadOnDemand: 1` — the suite core force-loads this unit via `OneWoW:EnsureLoaded` when Bags is enabled; lifecycle init runs through `OnAddonLoaded` / `OnPlayerLogin` on the root namespace object (not a per-file `ADDON_LOADED` frame).
 
-**Hard dependency:** `OneWoW_GUI` (`RequiredDeps` in the TOC).
+**Hard dependencies (`RequiredDeps`):** `OneWoW`, `OneWoW_GUI`.
 
-**Optional hub / integrations:** `OneWoW` (minimap hub, `UpgradeDetection`, `OverlayEngine`, `ItemStatus` junk hook, etc.—features degrade gracefully when absent). Also `OneWoW_AltTracker`, `OneWoW_ShoppingList`, `TradeSkillMaster`, `Baganator` (profile import via `CategoryController`), `Masque` (`OptionalDeps` in the TOC).
+**Optional integrations (`OptionalDeps`):** `TradeSkillMaster`, `Baganator` (profile import via `CategoryController`), `Masque` (item-icon skinning). Other suite addons (`OneWoW_AltTracker`, `OneWoW_ShoppingList`, etc.) integrate when present but are not TOC dependencies.
 
 ---
 
@@ -27,10 +29,12 @@ Locales\ruRU.lua
 Locales\deDE.lua
 
 Core\Profile.lua                   ← optional hot-path profiler (/owbprof); used by Categories, Bag/Bank sets, ItemButton
-Core\Constants.lua                 ← OneWoW_GUI:RegisterGUIConstants, icon sizes, GUI metrics
+Core\LayoutDebug.lua               ← /owblayout ring buffer for layout-scheduler diagnostics
+Core\Constants.lua                 ← OneWoW_GUI:RegisterGUIConstants, icon sizes, pool prealloc size
 Core\SectionDefaults.lua           ← stable section IDs, builtin lists, OneWoW Bags catch-all section sync
 Core\Database.lua                  ← DB:Init, defaults, migrations
 Core\BagTypes.lua                  ← bag ID constants, reagent/player bag helpers
+Core\BagEquip.lua                  ← equipped-bag pickup/swap/empty/move-contents (used by BagsBar)
 Core\BankTypes.lua                 ← bank/warband tab constants
 Core\Events.lua                    ← event router (dirtyBags, RuntimeEvents)
 
@@ -49,6 +53,7 @@ Modules\CategoryManager.lua        ← bags: category assignment + bucketing
 Modules\BankCategoryManager.lua    ← bank: CategoryManagerBase instance (section pools)
 Modules\GuildBankCategoryManager.lua
 
+ImportExport\Util.lua              ← shared deep-copy and import/export helpers
 ImportExport\Serializer.lua        ← native category/section bundle encode/decode (export v2; saved-search deps)
 ImportExport\Backup.lua            ← pre-import snapshot / undo storage
 ImportExport\SyntaxTranslators\Registry.lua
@@ -56,6 +61,8 @@ ImportExport\SyntaxTranslators\SyndicatorLocaleMap.lua
 ImportExport\SyntaxTranslators\Syndicator.lua
 ImportExport\Planner.lua           ← import preview plan builder
 ImportExport\Applier.lua           ← import plan applier
+
+GUI\WindowHelpers.lua              ← window shell, scroll scaffold, filtering helpers (loads before Controllers)
 
 Integrations\OneWoWBagsIntegration.lua  ← item-button callback hooks, overlay hooks
 Integrations\OneWoWTooltips.lua         ← keyword help tooltip integration
@@ -78,7 +85,6 @@ Views\BankCategoryView.lua         ← bank category view (thin wrapper over sha
 Views\BankTabView.lua              ← bank per-tab layout
 Views\GuildBankTabView.lua         ← guild bank per-tab layout
 
-GUI\WindowHelpers.lua              ← window shell, scroll scaffold, filtering helpers
 GUI\InfoBarFactory.lua             ← shared info bar builder (search history, saved search button, view dropdowns)
 GUI\InfoBar.lua                    ← bags top bar configuration (view mode dropdown, search, expansion filter)
 GUI\BagsBar.lua                    ← bags bottom bar (bag icons, gold, trackers)
@@ -183,29 +189,31 @@ The root object provides:
 ### 1. Startup Sequence
 
 ```
-ADDON_LOADED (this addon)
+Suite loader force-load (LoadOnDemand) or first enable
   └─→ OnAddonLoaded
+       ├─→ Lifecycle:CreateHandlerRegistry
        ├─→ InitializeDatabase (DB:Init, RunMigrations)
        ├─→ InitializeControllers (WindowLayoutController, *Controller:Create)
        ├─→ OneWoW_GUI:MigrateSettings(db.global)
+       ├─→ Masque:OnLoad (when Masque optional dep is present)
        ├─→ ApplyTheme, ApplyLanguage
        ├─→ Categories:SetCustomCategories, SetRecentItemDuration, SetRecentItems
-       ├─→ RegisterSlashCommands
-       ├─→ RegisterRuntimeEvents
-       └─→ OneWoW_GUI:RegisterSettingsCallback (theme, language, font, icon, minimap)
+       ├─→ RegisterSlashCommands, RegisterRuntimeEvents
+       ├─→ OneWoW_GUI:RegisterSettingsCallback (theme, language, font, icon, minimap)
+       └─→ OneWoW:RegisterLoadComponent("Bags", …)
 
-PLAYER_LOGIN
+PLAYER_LOGIN (or mid-session EnsureLoaded replay)
   └─→ OnPlayerLogin
-       ├─→ DetectOneWoW (hub presence)
-       ├─→ Minimap launcher (if no hub) + OneWoW:RegisterMinimap when hub present
-       ├─→ ItemPool:Preallocate(220)
-       ├─→ BagSet:Build
-       ├─→ BagsBar:UpdateIcons
-       ├─→ HookBlizzardBags
-       └─→ HookPetCageTooltip
+       ├─→ DetectOneWoW → oneWoWHubActive
+       ├─→ OneWoW:RegisterMinimap (hub minimap entry)
+       ├─→ ItemPool:Preallocate(Constants.ITEM_POOL_PREALLOC_SIZE)  ← 906 at time of writing
+       ├─→ BagSet:Build, BagsBar:UpdateIcons
+       ├─→ HookBlizzardBags, HookPetCageTooltip
+       ├─→ InstallIntegrationHooks (item-button callback RefreshLayout wraps)
+       └─→ RegisterTooltipProvider, FireLoginHandlers
 ```
 
-`Integrations\OneWoWBagsIntegration.lua` registers `ADDON_LOADED` and, after a short delay, wraps `GUI:RefreshLayout`, `BankGUI:RefreshLayout`, and `GuildBankGUI:RefreshLayout` for overlay/callback behavior (see Integration Points).
+`Integrations\OneWoWBagsIntegration.lua` installs from `OnPlayerLogin` via `InstallIntegrationHooks`: wraps `GUI:RefreshLayout`, `BankGUI:RefreshLayout`, and `GuildBankGUI:RefreshLayout`, dispatching callbacks ~50 ms after layout (see Integration Points and [`ITEM_BUTTON.md`](ITEM_BUTTON.md)).
 
 ### 2. Bag Update Pipeline (Primary Data Flow)
 
@@ -229,7 +237,7 @@ Game event: BAG_UPDATE_DELAYED (once after coalesced updates)
             └─→ BankGUI:RefreshLayout (if bank open, bank set built, window shown)
 ```
 
-Main bags window visibility ([`GUI:Show`](c:\Users\kelle\Downloads\Projects\OneWoW_Suite\OneWoW_Bags\GUI\MainWindow.lua) / [`GUI:Hide`](c:\Users\kelle\Downloads\Projects\OneWoW_Suite\OneWoW_Bags\GUI\MainWindow.lua) / [`GUI:FullReset`](c:\Users\kelle\Downloads\Projects\OneWoW_Suite\OneWoW_Bags\GUI\MainWindow.lua)):
+Main bags window visibility (`GUI:Show` / `GUI:Hide` / `GUI:FullReset` in [`GUI/MainWindow.lua`](../GUI/MainWindow.lua)):
 
 ```
 GUI:Show (after init)
@@ -384,6 +392,10 @@ Shared by `CategoryView` and `BankCategoryView`. Contains the full shared layout
 - `H.LayoutCategoryContent(config)` — unified entry point for the full render dispatch (sort, stack, group, grid/compact)
 - Label/header object pools, localized category titles, `RenderItemGrid`, compact multi-category line packing (`LayoutCompactGroup`), `PinSpecialCategories` for Recent/Other placement
 
+### BagEquip (`Core\BagEquip.lua`)
+
+Equipped-bag operations for the bags bar (`GUI\BagsBar.lua`): pickup/swap bag items on character bag slots, equip from cursor or container, empty equipped bags into compatible destinations (paced `BAG_UPDATE_DELAYED` continuation), and reagent/normal bag compatibility checks via `BagTypes` + `C_Item` container subclass.
+
 ### BarHelpers (`GUI\BarHelpers.lua`)
 
 Shared bottom-bar construction for `BankBar` and `GuildBankBar`: themed bar frame, gold + free-slot font strings, tab button recycling helpers.
@@ -394,7 +406,7 @@ Optional sampling profiler toggled with **`/owbprof`** (`on` / `off` / `reset` /
 
 ### ItemPool
 
-Acquire/release pool for `ContainerFrameItemButtonTemplate` buttons. `Preallocate(220)` at login. `OneWoW_GUI:SkinIconFrame` during creation; mixin applied when bound in `BagSet` / `BankSet` / `GuildBankSet`.
+Acquire/release pool for `ContainerFrameItemButtonTemplate` buttons. `Preallocate(Constants.ITEM_POOL_PREALLOC_SIZE)` at login (906 — sized for all bag/bank/guild slots). `OneWoW_GUI:SkinIconFrame` during creation; mixin applied when bound in `BagSet` / `BankSet` / `GuildBankSet`.
 
 ### ItemButtonMixin (`Modules\ItemButton.lua`)
 
@@ -537,7 +549,9 @@ width = cols × (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 × oute
 
 ### Dispatch
 
-A single hidden `eventFrame` in `OneWoW_Bags.lua` handles `ADDON_LOADED` and `PLAYER_LOGIN` directly; all other registered events map through `runtimeEventHandlers[event]` into `Events:*` methods and then `OneWoW_Bags:*` as needed.
+**Lifecycle** (`OnAddonLoaded`, `OnPlayerLogin`, `OnPlayerEnteringWorld`) is invoked by the OneWoW suite loader — this module does not register `ADDON_LOADED` / `PLAYER_LOGIN` on its own frame (see suite architecture docs).
+
+**Gameplay events** use a hidden `eventFrame` in `OneWoW_Bags.lua`, registered from `RegisterRuntimeEvents` during `OnAddonLoaded`. Each event maps through `runtimeEventHandlers[event]` into `Events:*` methods and then `OneWoW_Bags:*` as needed.
 
 ### Key groups
 
@@ -604,7 +618,7 @@ Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCate
 
 ### Migrations
 
-`_migrationVersion` is advanced by `DB:RunMigrations` up to **17**:
+`_migrationVersion` is advanced by `DB:RunMigrations` up to **18**:
 
 1. `category_system_v2` — split Equipment/Consumables builtins; seed `categorySections` / `sectionOrder`  
 2. `junk_rename` — `OneWoW Junk` / `OneWoW Upgrades` → `1W Junk` / `1W Upgrades` in disabled/collapsed maps  
@@ -623,6 +637,7 @@ Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCate
 15. `mats_crafting_category` — insert the `Mats` builtin before `Reagents` in all section/member/displayOrder lists so existing saves pick up the new crafting category
 16. `split_warband_bank_settings` — copy legacy `bank*` values into parallel `warbandBank*` keys when the warband key is not already set, preserving user settings during the personal/warband settings split
 17. `cleanup_legacy_root_keys` — remove stray legacy root-level SavedVariable keys while preserving supported root scopes: `global`, `chars`, `realms`, `factions`, `classes`, `specs`, `presets`, and `_activePreset`
+18. `split_empty_slots_settings` — seed `bankShowEmptySlots`, `warbandBankShowEmptySlots`, and `guildBankShowEmptySlots` from legacy `showEmptySlots` when unset
 
 ---
 
@@ -634,7 +649,7 @@ TOC hooks: `1WoW_Bags_OnAddonCompartmentClick`, `1WoW_Bags_OnAddonCompartmentEnt
 
 ### OneWoW hub
 
-`RegisterLoadComponent`, `RegisterMinimap`, `ItemStatus`, `UpgradeDetection`, `OverlayEngine`, `SettingsFeatureRegistry` (when hub present).
+`RegisterLoadComponent`, `RegisterMinimap`, and suite lifecycle routing are always available (`OneWoW` is a hard dependency). Sub-features such as `ItemStatus`, `UpgradeDetection`, `OverlayEngine`, and `SettingsFeatureRegistry` are still accessed with nil-guards where the hub module may not expose them on every build.
 
 ### OneWoW_GUI
 

@@ -67,6 +67,19 @@
 ## Requirements
 
 - **OneWoW** - Core hub addon (required)
+- **OneWoW_GUI** - Shared UI and database layer (required, loaded with the suite)
+
+## Documentation
+
+Contributor and integrator docs live in [`Docs/`](Docs/README.md):
+
+- [Architecture](Docs/ARCHITECTURE.md) — load order, data flow, DB schema
+- [Categorization](Docs/CATEGORIZATION.md) — category assignment and layout
+- [Search syntax](Docs/SEARCH_SYNTAX.md) — predicate expression reference
+- [Import/export](Docs/IMPORT_EXPORT.md) — sharing category profiles
+- [Item-button API](Docs/ITEM_BUTTON.md) — overlay callbacks for third-party addons
+
+Addon authors: start with [`API/INTEGRATION_GUIDE.md`](API/INTEGRATION_GUIDE.md).
 
 ## Slash Commands
 

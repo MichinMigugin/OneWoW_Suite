@@ -1,5 +1,7 @@
 # Item Button Callback API
 
+> **See also:** [Docs index](README.md) · [Architecture](ARCHITECTURE.md) (layout refresh pipeline) · [../API/INTEGRATION_GUIDE.md](../API/INTEGRATION_GUIDE.md) · [../API/Examples/](../API/Examples/)
+
 OneWoW Bags exposes a small callback API so other addons can attach overlays,
 badges, or other decorations to bag/bank item buttons. Your callback fires once
 per visible item button after each layout refresh; OneWoW Bags hands you the

@@ -1,5 +1,7 @@
 # OneWoW_Bags — Categorization
 
+> **See also:** [Docs index](README.md) · [Architecture](ARCHITECTURE.md) (layout pipeline, DB schema) · [Search syntax](SEARCH_SYNTAX.md) (predicate rules) · [Import/export](IMPORT_EXPORT.md) (category bundles)
+
 This document describes how items are assigned to categories, how category rows are ordered, and how per-category sorting and grouping work. It reflects the implementation in `Data/Categories.lua`, `Modules/CategoryManager.lua`, `Views/CategoryView.lua`, `Views/CategoryViewHelpers.lua`, `Views/BankCategoryView.lua`, `Data/Sorting.lua`, `Core/SectionDefaults.lua`, and related settings in `Core/Database.lua`. The expression engine consumed throughout the pipeline (`PE` below) is provided by `OneWoW_GUI`; for engine internals and its public API, see [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
 
 ## Overview
@@ -229,7 +231,7 @@ Search strings use its expression language (`#keyword`, operators, etc.). `Build
 |-----------|------|
 | `customCategoriesV2` | Custom categories: `items`, `searchExpression`, `itemType` / `itemSubType`, `filterMode`, `typeMatchMode`, `enabled`, `sortOrder`, `isTSM`, etc. |
 | `savedSearches` | Named predicate shortcuts expanded from `SAVED(Name)` before custom search categories are evaluated. Referenced entries are included in native OneWoW export v2 — see [`IMPORT_EXPORT.md`](IMPORT_EXPORT.md). |
-| `categoryModifications[name]` | `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `priority`, `color`, `appliesIn`, `addedItems` |
+| `categoryModifications[name]` | `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `priority`, `color`, `appliesIn`, `addedItems`, `forceOwnLine` (per-container compact layout) |
 | `disabledCategories` | Disable builtin/custom by name; classification remaps to **Other** when applicable |
 | `enableJunkCategory` | Separate toggle for **phase B2** (default `true`); disabling skips the 1W Junk check entirely |
 | `enableUpgradeCategory` | Separate toggle for **phase A2** (default `true`); disabling skips the 1W Upgrades overlay entirely |
