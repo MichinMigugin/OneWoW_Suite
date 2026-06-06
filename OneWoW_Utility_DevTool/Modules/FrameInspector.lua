@@ -1,4 +1,4 @@
-local AddonName, Addon = ...
+local _, Addon = ...
 
 local FrameInspector = {}
 Addon.FrameInspector = FrameInspector
@@ -100,4 +100,3 @@ function FrameInspector:ClearHighlight()
         self.highlightFrame:Hide()
     end
 end
-

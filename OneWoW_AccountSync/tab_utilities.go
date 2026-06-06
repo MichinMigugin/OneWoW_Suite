@@ -189,4 +189,3 @@ func uploadCatalogData(name string, data []byte) error {
 	}
 	return nil
 }
-

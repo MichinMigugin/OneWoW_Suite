@@ -1,9 +1,7 @@
-local ADDON_NAME, Addon = ...
+local _, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
-
-local L = Addon.L or {}
 
 function Addon.UI:CreateLayoutTab(parent)
     local tab = CreateFrame("Frame", nil, parent)
@@ -207,4 +205,3 @@ function Addon.UI:ToggleCenterLines()
         Addon:Print(Addon.L["MSG_CENTER_LINES_DISABLED"])
     end
 end
-

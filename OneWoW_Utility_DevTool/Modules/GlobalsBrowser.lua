@@ -95,13 +95,6 @@ local function normalizeSearch(text)
     return lower(gsub(text or "", "%s+", ""))
 end
 
-local function trimText(text)
-    text = tostring(text or "")
-    text = text:gsub("^%s+", "")
-    text = text:gsub("%s+$", "")
-    return text
-end
-
 local function escapeLuaString(text)
     text = tostring(text or "")
     text = gsub(text, "\\", "\\\\")

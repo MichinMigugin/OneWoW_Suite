@@ -1,4 +1,4 @@
-local ADDON_NAME, Addon = ...
+local _, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -241,11 +241,11 @@ function Addon.UI:CreateEditorTab(parent)
         refreshAutoSaveLayout()
     end)
     autoSaveBtn:HookScript("OnLeave", function() refreshAutoSaveLayout() end)
-    autoSaveBtn:HookScript("OnEnter", function(self)
+    autoSaveBtn:HookScript("OnEnter", function(myself)
         local edb = getDB()
         if edb and edb.autoSaveInterval then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            self.text:SetTextColor(1, 1, 1)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            myself.text:SetTextColor(1, 1, 1)
         end
     end)
 
@@ -261,15 +261,15 @@ function Addon.UI:CreateEditorTab(parent)
         startAutoSaveTicker()
     end
 
-    autoSaveBox:SetScript("OnEnterPressed", function(self) self:ClearFocus(); clampAutoSaveInterval() end)
-    autoSaveBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    autoSaveBox:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); clampAutoSaveInterval() end)
+    autoSaveBox:SetScript("OnEscapePressed", function(myself) myself:ClearFocus() end)
     autoSaveBox:HookScript("OnEditFocusLost", clampAutoSaveInterval)
 
     local codeOptsBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_CODE_OPTIONS"], height = btnHeight })
     codeOptsBtn:SetPoint("RIGHT", autoSaveBtn, "LEFT", -sectionGap, 0)
-    codeOptsBtn:SetScript("OnClick", function(self, button)
+    codeOptsBtn:SetScript("OnClick", function(myself, button)
         if button ~= "LeftButton" then return end
-        MenuUtil.CreateContextMenu(self, function(_, root)
+        MenuUtil.CreateContextMenu(myself, function(_, root)
             local indentSub = root:CreateButton(L["EDITOR_LABEL_INDENT"], noop)
             for _, size in ipairs({2, 3, 4}) do
                 indentSub:CreateRadio(tostring(size),
@@ -343,8 +343,8 @@ function Addon.UI:CreateEditorTab(parent)
 
     local helpBtn = OneWoW_GUI:CreateFitTextButton(leftPanel, { text = "?", height = 18, minWidth = 24 })
     helpBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -22, -3)
-    helpBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+    helpBtn:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_BOTTOM")
         GameTooltip:SetText(L["EDITOR_SHORTCUTS_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(L["EDITOR_SHORTCUT_SAVE"], nil, nil, nil, true)
         GameTooltip:AddLine(L["EDITOR_SHORTCUT_UNDO"], nil, nil, nil, true)
@@ -361,7 +361,7 @@ function Addon.UI:CreateEditorTab(parent)
     leftScroll:ClearAllPoints()
     leftScroll:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -24)
     leftScroll:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -20, 4)
-    leftScroll:HookScript("OnSizeChanged", function(self, w) leftContent:SetWidth(w) end)
+    leftScroll:HookScript("OnSizeChanged", function(_, w) leftContent:SetWidth(w) end)
 
     local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
     self:StyleContentPanel(rightPanel)
@@ -388,7 +388,7 @@ function Addon.UI:CreateEditorTab(parent)
     editorPanel:SetHeight(EDITOR_MIN_H)
 
     local initialLayoutDone = false
-    rightPanel:HookScript("OnSizeChanged", function(self, w, h)
+    rightPanel:HookScript("OnSizeChanged", function(_, _, h)
         if initialLayoutDone or not h or h < 1 then return end
         initialLayoutDone = true
         local outputH = savedOutputH or OUTPUT_DEFAULT_H
@@ -489,7 +489,7 @@ function Addon.UI:CreateEditorTab(parent)
     scrollFrame:SetScrollChild(editBox)
     tab.editBox = editBox
 
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+    scrollFrame:HookScript("OnSizeChanged", function(_, w)
         editBox:SetWidth(max(1, w))
     end)
     scrollFrame:HookScript("OnMouseDown", function()
@@ -537,9 +537,9 @@ function Addon.UI:CreateEditorTab(parent)
     outputScroll:SetFading(false)
     outputScroll:SetInsertMode(SCROLLING_MESSAGE_FRAME_INSERT_MODE_BOTTOM)
     outputScroll:EnableMouseWheel(true)
-    outputScroll:SetScript("OnMouseWheel", function(self, delta)
-        if delta > 0 then self:ScrollUp()
-        else self:ScrollDown() end
+    outputScroll:SetScript("OnMouseWheel", function(myself, delta)
+        if delta > 0 then myself:ScrollUp()
+        else myself:ScrollDown() end
     end)
 
     local commandBox = OneWoW_GUI:CreateEditBox(outputPanel, {
@@ -687,7 +687,7 @@ function Addon.UI:CreateEditorTab(parent)
     end
 
     local errorLine = nil
-    
+
     local function doSyntaxCheck()
         if not activeSnippetId then
             syntaxErrFS:SetText("")
@@ -742,7 +742,7 @@ function Addon.UI:CreateEditorTab(parent)
         local gutterColor = D and D.MONOKAI and D.MONOKAI.GUTTER_TEXT or "858575"
         local errColor = D and D.MONOKAI and D.MONOKAI.ERROR_LINE or "FF1111"
 
-        for line in text:gmatch("([^\n]*)\n") do
+        for _ in text:gmatch("([^\n]*)\n") do
             if count == errorLine then
                 tinsert(lines, "|cFF" .. errColor .. count .. "|r")
             else
@@ -775,14 +775,14 @@ function Addon.UI:CreateEditorTab(parent)
         syncGutterScroll()
     end)
 
-    editBox:SetScript("OnCursorChanged", function(self, x, y, w, h)
-        ScrollingEdit_OnCursorChanged(self, x, y, w, h)
+    editBox:SetScript("OnCursorChanged", function(myself, x, y, w, h)
+        ScrollingEdit_OnCursorChanged(myself, x, y, w, h)
         updateGutter()
         updateLnCol()
     end)
 
-    editBox:HookScript("OnUpdate", function(self, elapsed)
-        ScrollingEdit_OnUpdate(self, elapsed, scrollFrame)
+    editBox:HookScript("OnUpdate", function(myself, elapsed)
+        ScrollingEdit_OnUpdate(myself, elapsed, scrollFrame)
     end)
 
     editBox:SetScript("OnTextSet", function()
@@ -815,21 +815,21 @@ function Addon.UI:CreateEditorTab(parent)
         header.snippetCount:SetPoint("RIGHT", header, "RIGHT", -6, 0)
         header.snippetCount:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-        header:SetScript("OnClick", function(self)
+        header:SetScript("OnClick", function(myself)
             local edb = getDB()
             if not edb then return end
-            edb.categoryCollapsed[self.catName] = not edb.categoryCollapsed[self.catName]
+            edb.categoryCollapsed[myself.catName] = not edb.categoryCollapsed[myself.catName]
             refreshSnippetList()
         end)
 
-        header:SetScript("OnMouseDown", function(self, button)
-            if button ~= "RightButton" or self.catName == getDefaultCategoryName() then return end
-            MenuUtil.CreateContextMenu(self, function(_, root)
+        header:SetScript("OnMouseDown", function(myself, button)
+            if button ~= "RightButton" or myself.catName == getDefaultCategoryName() then return end
+            MenuUtil.CreateContextMenu(myself, function(_, root)
                 root:CreateButton(L["EDITOR_CTX_RENAME_CATEGORY"], function()
-                    tab:ShowCategoryRenameDialog(self.catName)
+                    tab:ShowCategoryRenameDialog(myself.catName)
                 end)
                 root:CreateButton(L["EDITOR_CTX_DELETE_CATEGORY"], function()
-                    tab:ShowCategoryDeleteConfirm(self.catName)
+                    tab:ShowCategoryDeleteConfirm(myself.catName)
                 end)
             end)
         end)
@@ -861,20 +861,20 @@ function Addon.UI:CreateEditorTab(parent)
         row.rowLabel:SetJustifyH("LEFT")
         row.rowLabel:SetWordWrap(false)
 
-        row:SetScript("OnClick", function(self)
-            tab:SwitchToSnippet(self.snippetId)
+        row:SetScript("OnClick", function(myself)
+            tab:SwitchToSnippet(myself.snippetId)
         end)
 
-        row:SetScript("OnMouseDown", function(self, button)
+        row:SetScript("OnMouseDown", function(myself, button)
             if button ~= "RightButton" then return end
-            local snippet = EE:GetSnippet(self.snippetId)
+            local snippet = EE:GetSnippet(myself.snippetId)
             if not snippet then return end
-            MenuUtil.CreateContextMenu(self, function(_, root)
+            MenuUtil.CreateContextMenu(myself, function(_, root)
                 root:CreateButton(L["EDITOR_CTX_RENAME"], function()
-                    tab:ShowRenameDialog(self.snippetId)
+                    tab:ShowRenameDialog(myself.snippetId)
                 end)
                 root:CreateButton(L["EDITOR_CTX_DUPLICATE"], function()
-                    local newId = EE:DuplicateSnippet(self.snippetId)
+                    local newId = EE:DuplicateSnippet(myself.snippetId)
                     if newId then
                         local duplicatedSnippet = EE:GetSnippet(newId)
                         updateStatusMessage(format(L["EDITOR_STATUS_SNIPPET_DUPLICATED"], duplicatedSnippet and duplicatedSnippet.name or ""))
@@ -886,7 +886,7 @@ function Addon.UI:CreateEditorTab(parent)
                 for _, cat in ipairs(EE:GetCategories()) do
                     if cat ~= snippet.category then
                         moveSub:CreateButton(cat, function()
-                            if EE:MoveSnippet(self.snippetId, cat) then
+                            if EE:MoveSnippet(myself.snippetId, cat) then
                                 refreshSnippetList()
                             else
                                 updateStatusMessage(format(L["EDITOR_ERROR_SNIPPET_MOVE_EXISTS"], cat))
@@ -895,19 +895,19 @@ function Addon.UI:CreateEditorTab(parent)
                     end
                 end
                 root:CreateButton(L["EDITOR_CTX_DELETE"], function()
-                    tab:ShowDeleteConfirm(self.snippetId)
+                    tab:ShowDeleteConfirm(myself.snippetId)
                 end)
             end)
         end)
 
-        row:SetScript("OnEnter", function(self)
-            if self.snippetId ~= activeSnippetId then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        row:SetScript("OnEnter", function(myself)
+            if myself.snippetId ~= activeSnippetId then
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
             end
         end)
-        row:SetScript("OnLeave", function(self)
-            if self.snippetId ~= activeSnippetId then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        row:SetScript("OnLeave", function(myself)
+            if myself.snippetId ~= activeSnippetId then
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             end
         end)
 
@@ -1163,9 +1163,9 @@ function Addon.UI:CreateEditorTab(parent)
             setDialogError(dialog, "")
         end)
 
-        renameBox:SetScript("OnEnterPressed", function(self)
-            local err, newName = getSnippetRenameError(snippetId, self:GetText())
-            if not err and newName ~= (self.placeholderText or "") then
+        renameBox:SetScript("OnEnterPressed", function(myself)
+            local err, newName = getSnippetRenameError(snippetId, myself:GetText())
+            if not err and newName ~= (myself.placeholderText or "") then
                 setDialogError(dialog, "")
                 EE:RenameSnippet(snippetId, newName)
                 updateStatusMessage(format(L["EDITOR_STATUS_RENAMED"], newName))
@@ -1174,7 +1174,7 @@ function Addon.UI:CreateEditorTab(parent)
                 dialog.frame:Hide()
             else
                 setDialogError(dialog, err)
-                self:SetFocus()
+                myself:SetFocus()
             end
         end)
 
@@ -1218,16 +1218,16 @@ function Addon.UI:CreateEditorTab(parent)
         renameBox:SetScript("OnTextChanged", function()
             setDialogError(dialog, "")
         end)
-        renameBox:SetScript("OnEnterPressed", function(self)
-            local err, newName = getCategoryNameError(catName, self:GetText())
-            if not err and newName ~= (self.placeholderText or "") and EE:RenameCategory(catName, newName) then
+        renameBox:SetScript("OnEnterPressed", function(myself)
+            local err, newName = getCategoryNameError(catName, myself:GetText())
+            if not err and newName ~= (myself.placeholderText or "") and EE:RenameCategory(catName, newName) then
                 setDialogError(dialog, "")
                 updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_RENAMED"], newName))
                 refreshSnippetList()
                 dialog.frame:Hide()
             else
                 setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"]))
-                self:SetFocus()
+                myself:SetFocus()
             end
         end)
         dialog.renameBox = renameBox
@@ -1269,16 +1269,16 @@ function Addon.UI:CreateEditorTab(parent)
         renameBox:SetScript("OnTextChanged", function()
             setDialogError(dialog, "")
         end)
-        renameBox:SetScript("OnEnterPressed", function(self)
-            local err, newName = getCategoryNameError(nil, self:GetText())
-            if not err and newName ~= (self.placeholderText or "") and EE:CreateCategory(newName) then
+        renameBox:SetScript("OnEnterPressed", function(myself)
+            local err, newName = getCategoryNameError(nil, myself:GetText())
+            if not err and newName ~= (myself.placeholderText or "") and EE:CreateCategory(newName) then
                 setDialogError(dialog, "")
                 updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_CREATED"], newName))
                 refreshSnippetList()
                 dialog.frame:Hide()
             else
                 setDialogError(dialog, err or (L["EDITOR_ERROR_CATEGORY_NAME_EXISTS"]))
-                self:SetFocus()
+                myself:SetFocus()
             end
         end)
         dialog.renameBox = renameBox
@@ -1481,22 +1481,22 @@ function Addon.UI:CreateEditorTab(parent)
         tab:ShowNewCategoryDialog()
     end)
 
-    commandBox:SetScript("OnEnterPressed", function(self)
-        local text = self:GetSearchText()
-        if not text or text == "" then self:ClearFocus(); return end
+    commandBox:SetScript("OnEnterPressed", function(myself)
+        local text = myself:GetSearchText()
+        if not text or text == "" then myself:ClearFocus(); return end
         addOutput("> " .. text, "print")
         EE:RunCommand(text)
-        self:SetText("")
-        self:ClearFocus()
+        myself:SetText("")
+        myself:ClearFocus()
     end)
 
-    editBox:HookScript("OnTextChanged", function(self, userInput)
+    editBox:HookScript("OnTextChanged", function(myself, userInput)
         if not userInput then return end
         updateGutter()
         updateLnCol()
         scheduleSyntaxCheck()
         if activeSnippetId then
-            queueUndoSnapshot(activeSnippetId, self:GetText())
+            queueUndoSnapshot(activeSnippetId, myself:GetText())
             if refreshListTimer then refreshListTimer:Cancel() end
             refreshListTimer = C_Timer.NewTimer(COLORIZE_DEBOUNCE, function()
                 refreshListTimer = nil
@@ -1505,23 +1505,23 @@ function Addon.UI:CreateEditorTab(parent)
         end
     end)
 
-    editBox:SetScript("OnKeyDown", function(self, key)
+    editBox:SetScript("OnKeyDown", function(myself, key)
         if IsControlKeyDown() then
             if key == "S" then
-                self:SetPropagateKeyboardInput(false)
+                myself:SetPropagateKeyboardInput(false)
                 tab:SaveCurrentSnippet()
                 return
             elseif key == "Z" then
-                self:SetPropagateKeyboardInput(false)
+                myself:SetPropagateKeyboardInput(false)
                 if activeSnippetId then
                     clearPendingUndo()
-                    local plainCursor = ES and ES.getPlainCursorPos(self) or 0
-                    local text = EE:Undo(activeSnippetId, self:GetText())
+                    local plainCursor = ES and ES.getPlainCursorPos(myself) or 0
+                    local text = EE:Undo(activeSnippetId, myself:GetText())
                     if text then
-                        self:SetText(text)
+                        myself:SetText(text)
                         if plainCursor > #text then plainCursor = #text end
                         restorePlainCursor(plainCursor)
-                        if ES then ES.forceDirty(self) end
+                        if ES then ES.forceDirty(myself) end
                         updateGutter()
                         scheduleSyntaxCheck()
                         refreshSnippetList()
@@ -1529,16 +1529,16 @@ function Addon.UI:CreateEditorTab(parent)
                 end
                 return
             elseif key == "Y" then
-                self:SetPropagateKeyboardInput(false)
+                myself:SetPropagateKeyboardInput(false)
                 if activeSnippetId then
                     clearPendingUndo()
-                    local plainCursor = ES and ES.getPlainCursorPos(self) or 0
+                    local plainCursor = ES and ES.getPlainCursorPos(myself) or 0
                     local text = EE:Redo(activeSnippetId)
                     if text then
-                        self:SetText(text)
+                        myself:SetText(text)
                         if plainCursor > #text then plainCursor = #text end
                         restorePlainCursor(plainCursor)
-                        if ES then ES.forceDirty(self) end
+                        if ES then ES.forceDirty(myself) end
                         updateGutter()
                         scheduleSyntaxCheck()
                         refreshSnippetList()
@@ -1546,7 +1546,7 @@ function Addon.UI:CreateEditorTab(parent)
                 end
                 return
             elseif key == "F" then
-                self:SetPropagateKeyboardInput(false)
+                myself:SetPropagateKeyboardInput(false)
                 if not findBarVisible then
                     findBarVisible = true
                     updateFindBarLayout()
@@ -1554,9 +1554,9 @@ function Addon.UI:CreateEditorTab(parent)
                 findBox:SetFocus()
                 return
             elseif key == "ENTER" then
-                self:SetPropagateKeyboardInput(false)
-                local savedText = self:GetText()
-                local savedPos = self:GetCursorPosition()
+                myself:SetPropagateKeyboardInput(false)
+                local savedText = myself:GetText()
+                local savedPos = myself:GetCursorPosition()
                 C_Timer.After(0, function()
                     editBox:SetText(savedText)
                     editBox:SetCursorPosition(savedPos)

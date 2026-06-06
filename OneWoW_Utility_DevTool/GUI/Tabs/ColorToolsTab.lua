@@ -1,4 +1,4 @@
-local ADDON_NAME, Addon = ...
+local _, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -163,7 +163,7 @@ function Addon.UI:CreateColorToolsTab(parent)
     scrollFrame:SetPoint("BOTTOMRIGHT", classColorsPanel, "BOTTOMRIGHT", -25, 10)
     scrollChild:SetWidth(math.max(250, (parent:GetWidth() or 0) - 320))
 
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+    scrollFrame:HookScript("OnSizeChanged", function(_, w)
         scrollChild:SetWidth(math.max(250, w))
     end)
 

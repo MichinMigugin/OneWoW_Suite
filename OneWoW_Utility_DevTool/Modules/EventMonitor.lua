@@ -1,4 +1,4 @@
-local AddonName, Addon = ...
+local _, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 local L = Addon.L or {}
@@ -382,7 +382,7 @@ function EventMonitor:RegisterRegistryEvent(eventId)
     if self.registryCallbackRegistered[eventId] then return end
 
     pcall(function()
-        EventRegistry:RegisterCallback(eventId, function(owner, ...)
+        EventRegistry:RegisterCallback(eventId, function(_, ...)
             EventMonitor:OnEvent(eventId, ...)
         end, EventMonitor)
     end)

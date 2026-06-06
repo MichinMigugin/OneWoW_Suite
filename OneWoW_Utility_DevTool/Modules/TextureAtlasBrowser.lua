@@ -40,7 +40,7 @@ function TextureAtlasBrowser:EnsureIndices()
     for texKey, atlasTable in pairs(AI) do
         local displayName = texKey
         if type(texKey) == "string" and texKey:match("^Interface/") then
-            local _path, fn = texKey:match("(.+)/([^/]+)$")
+            local _, fn = texKey:match("(.+)/([^/]+)$")
             if fn then
                 displayName = fn:gsub("(%l)(%u)", "%1 %2")
             end

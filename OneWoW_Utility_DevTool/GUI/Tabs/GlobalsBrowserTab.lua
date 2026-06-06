@@ -728,9 +728,9 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     local noisyRootsCheck = OneWoW_GUI:CreateCheckbox(tab, {
         label = L["GLOBALS_TOGGLE_NOISY_ROOTS"],
         checked = GB.includeNoisyRoots,
-        onClick = function(self)
+        onClick = function(myself)
             local currentIdentity = saveCurrentRootIdentity(tab)
-            GB:SetIncludeNoisyRoots(self:GetChecked())
+            GB:SetIncludeNoisyRoots(myself:GetChecked())
             Addon.UI.GlobalsTab_RefreshList(tab)
             restoreCurrentRootIdentity(tab, currentIdentity)
             Addon.UI.GlobalsTab_RestoreSelection(tab, true)
@@ -776,7 +776,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
         onSelect = function(index)
             applyListSelection(tab, index)
         end,
-        renderRow = function(btn, index, entry)
+        renderRow = function(btn, _, entry)
             local label = GB:GetRootLabel(entry)
             btn:SetText(label)
             btn._tooltipFullText = GB:GetRootTooltip(entry)

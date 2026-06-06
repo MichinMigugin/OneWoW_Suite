@@ -1,4 +1,4 @@
-local ADDON_NAME, Addon = ...
+local _, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -49,9 +49,9 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         end
     end
     searchBtn:SetScript("OnClick", doSearch)
-    searchBox:SetScript("OnEnterPressed", function(self)
+    searchBox:SetScript("OnEnterPressed", function(myself)
         doSearch()
-        self:ClearFocus()
+        myself:ClearFocus()
     end)
 
     -- Left panel: Frame Hierarchy (FrameTree)
@@ -86,7 +86,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     leftScroll:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -25)
     leftScroll:SetPoint("BOTTOMRIGHT", leftPanel, "BOTTOMRIGHT", -14, 4)
 
-    leftScroll:HookScript("OnSizeChanged", function(self, w)
+    leftScroll:HookScript("OnSizeChanged", function(_, w)
         leftContent:SetWidth(w)
     end)
 
@@ -151,7 +151,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     rightScroll:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 4, -25)
     rightScroll:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -14, 4)
 
-    rightScroll:HookScript("OnSizeChanged", function(self, w)
+    rightScroll:HookScript("OnSizeChanged", function(_, w)
         rightContent:SetWidth(w)
     end)
 
@@ -207,7 +207,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         end
     end
 
-    function tab:UpdateFrameDetails(frame, info)
+    function tab:UpdateFrameDetails(_, info)
         if not info then return end
 
         -- Parent [Go] button
@@ -487,4 +487,3 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     Addon.FrameInspectorTab = tab
     return tab
 end
-
