@@ -420,6 +420,7 @@ function BankGUI:CleanupAllViews()
         end
     end
 
+    BankCategoryView:ReleaseCompactLabels()
     BankCategoryManager:ReleaseAllSections()
 end
 

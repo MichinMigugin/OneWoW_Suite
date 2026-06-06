@@ -18,6 +18,10 @@ end
 
 local AcquireLabel, ReleaseAllLabels = H.CreateLabelPool()
 
+function View:ReleaseCompactLabels()
+    ReleaseAllLabels()
+end
+
 function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local db = GetDB()
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37

@@ -125,6 +125,7 @@ function GUI:CleanupAllViews()
         end
     end
 
+    CategoryView:ReleaseCompactLabels()
     CategoryManager:ReleaseAllSections()
 end
 
