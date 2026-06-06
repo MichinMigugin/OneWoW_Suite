@@ -1,6 +1,7 @@
 local _, OneWoW_Bags = ...
 
 local L = OneWoW_Bags.L
+local BagTypes = OneWoW_Bags.BagTypes
 local C_Container = C_Container
 local C_CurrencyInfo = C_CurrencyInfo
 local tinsert, tremove = tinsert, tremove
@@ -40,10 +41,18 @@ end
 
 function BagsController:GetSelectedBag()
     local db = self.addon:GetDB()
-    return db.global.selectedBag
+    local selected = db.global.selectedBag
+    if selected ~= nil and not BagTypes:IsBagEquipped(selected) then
+        return nil
+    end
+    return selected
 end
 
 function BagsController:ToggleSelectedBag(bagIndex)
+    if BagTypes:IsSwappableBag(bagIndex) and not BagTypes:IsBagEquipped(bagIndex) then
+        return
+    end
+
     local db = self.addon:GetDB()
 
     if db.global.selectedBag == bagIndex then
@@ -60,6 +69,23 @@ function BagsController:ToggleSelectedBag(bagIndex)
         self.addon.InfoBar:UpdateViewButtons()
     end
     self.addon:RequestLayoutRefresh("bags")
+end
+
+--- Clears bag-view filter when the equipped container at bagIndex was removed.
+---@param bagIndex number
+function BagsController:OnBagUnequipped(bagIndex)
+    local db = self.addon:GetDB()
+    if db.global.selectedBag ~= bagIndex then
+        return
+    end
+    db.global.selectedBag = nil
+    if self.addon.BagsBar then
+        self.addon.BagsBar:UpdateBagHighlights()
+    end
+    if self.addon.InfoBar then
+        self.addon.InfoBar:UpdateViewButtons()
+    end
+    self.addon:RequestLayoutRefresh("bags", "bag_unequipped")
 end
 
 function BagsController:GetShowEmptySlots()

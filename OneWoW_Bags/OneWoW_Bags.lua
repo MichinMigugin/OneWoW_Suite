@@ -1293,6 +1293,31 @@ function OneWoW_Bags:RegisterSlashCommands()
     end
 end
 
+function OneWoW_Bags:ShouldHideBlizzardBagsBar()
+    local db = self.db
+    return db.global.hideBlizzardBagsBar == true
+end
+
+function OneWoW_Bags:UpdateBlizzardBagsBarVisibility()
+    local blizzBagsBar = BagsBar
+    if not blizzBagsBar then return end
+
+    if not self._blizzardBagsBarHooked then
+        self._blizzardBagsBarHooked = true
+        blizzBagsBar:HookScript("OnShow", function(frame)
+            if OneWoW_Bags:ShouldHideBlizzardBagsBar() then
+                frame:Hide()
+            end
+        end)
+    end
+
+    if self:ShouldHideBlizzardBagsBar() then
+        blizzBagsBar:Hide()
+    else
+        blizzBagsBar:Show()
+    end
+end
+
 function OneWoW_Bags:HookBlizzardBags()
     local function IsMerchantVisible()
         return MerchantFrame and MerchantFrame:IsShown()
@@ -1407,6 +1432,7 @@ function OneWoW_Bags:HookBlizzardBags()
         OpenOurBags("auto")
     end, self)
 
+    self:UpdateBlizzardBagsBarVisibility()
 end
 
 function OneWoW_Bags:OnMerchantShow()
@@ -1626,8 +1652,12 @@ local runtimeEventHandlers = {
     EQUIPMENT_SETS_CHANGED = function(...)
         Events:OnPredicateInvalidation(...)
     end,
-    PLAYER_EQUIPMENT_CHANGED = function(...)
-        Events:OnPredicateInvalidation(...)
+    PLAYER_EQUIPMENT_CHANGED = function(inventorySlot)
+        Events:OnPredicateInvalidation()
+        Events:OnPlayerEquipmentChanged(inventorySlot)
+    end,
+    BAG_CONTAINER_UPDATE = function()
+        Events:OnBagContainerUpdate()
     end,
     GET_ITEM_INFO_RECEIVED = function(itemID)
         Events:OnItemInfoReceived(itemID)

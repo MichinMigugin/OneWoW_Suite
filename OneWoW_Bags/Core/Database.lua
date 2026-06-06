@@ -26,6 +26,7 @@ local defaults = {
         autoOpenWithBank = true,
         locked = false,
         showBagsBar = true,
+        hideBlizzardBagsBar = false,
         rarityColor = true,
         rarityIntensity = 1.0,
         showNewItems = true,

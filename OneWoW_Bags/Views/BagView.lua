@@ -32,6 +32,9 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local setCollapsed = viewContext.setCollapsed
 
     local selectedBag = db.global.selectedBag
+    if selectedBag ~= nil and not BagTypes:IsBagEquipped(selectedBag) then
+        selectedBag = nil
+    end
     local yOffset = 0
 
     for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do

@@ -8,6 +8,7 @@ local StorageAPI = StorageAPI
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
 local BagTypes = OneWoW_Bags.BagTypes
+local BagEquip = OneWoW_Bags.BagEquip
 local WH = OneWoW_Bags.WindowHelpers
 
 local tinsert, sort = tinsert, sort
@@ -24,6 +25,29 @@ local BagsBar = OneWoW_Bags.BagsBar
 local bagsBarFrame = nil
 local bagButtons = {}
 local eventFrame = nil
+
+local EMPTY_BAG_TEXTURE = "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
+
+---@param btn Button
+---@param bagIndex number
+local function ApplyBagButtonIcon(btn, bagIndex)
+    if not BagTypes:IsSwappableBag(bagIndex) then
+        return
+    end
+    local invSlotID = C_Container.ContainerIDToInventoryID(bagIndex)
+    if not invSlotID then
+        return
+    end
+
+    local texID = GetInventoryItemTexture("player", invSlotID)
+    if BagTypes:IsBagEquipped(bagIndex) and texID then
+        OneWoW_GUI:UpdateIconTexture(btn, texID)
+        OneWoW_GUI:SetIconDesaturated(btn, false)
+    else
+        OneWoW_GUI:UpdateIconTexture(btn, EMPTY_BAG_TEXTURE)
+        OneWoW_GUI:SetIconDesaturated(btn, true)
+    end
+end
 local trackerDialog = nil
 
 local ROW1_HEIGHT = 32
@@ -691,16 +715,9 @@ function BagsBar:UpdateTrackers()
 end
 
 function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
-    local iconTexture
-    if bagIndex == 0 then
-        iconTexture = "Interface\\Buttons\\Button-Backpack-Up"
-    else
-        local invSlotID = C_Container.ContainerIDToInventoryID(bagIndex)
-        if invSlotID then
-            iconTexture = GetInventoryItemTexture("player", invSlotID) or "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
-        else
-            iconTexture = "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
-        end
+    local iconTexture = "Interface\\Buttons\\Button-Backpack-Up"
+    if BagTypes:IsSwappableBag(bagIndex) then
+        iconTexture = EMPTY_BAG_TEXTURE
     end
 
     local btn = CreateFrame("Button", "OneWoW_BagSlot" .. bagIndex, parent)
@@ -720,6 +737,8 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
     btn:SetPoint("LEFT", parent, "LEFT", xOffset, 0)
     btn.bagIndex = bagIndex
 
+    ApplyBagButtonIcon(btn, bagIndex)
+
     btn:SetScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_TOP")
         local controller = GetController()
@@ -728,32 +747,55 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
             GameTooltip:SetText(BACKPACK_TOOLTIP or L["BAG_BACKPACK"], 1.0, 1.0, 1.0)
         else
             local invID = C_Container.ContainerIDToInventoryID(myself.bagIndex)
-            if invID then
+            if invID and BagTypes:IsBagEquipped(myself.bagIndex) and GetInventoryItemTexture("player", invID) then
                 GameTooltip:SetInventoryItem("player", invID)
+            else
+                local title = BagTypes:IsReagentBag(myself.bagIndex) and EQUIP_CONTAINER_REAGENT or EQUIP_CONTAINER
+                GameTooltip:SetText(title, 1.0, 1.0, 1.0)
+                GameTooltip:AddLine(L["BAG_SLOT_EMPTY"], 0.7, 0.7, 0.7, true)
             end
         end
-        if selected == myself.bagIndex then
-            GameTooltip:AddLine(L["BAG_FILTER_ACTIVE"]:format(L["BAG_" .. myself.bagIndex] or ("Bag " .. myself.bagIndex)), 0.5, 1, 0.5, true)
-            GameTooltip:AddLine(L["BAG_SHOW_ALL"], 0.7, 0.7, 0.7, true)
-        else
-            GameTooltip:AddLine(L["BAG_SHOW_ONLY"], 0.7, 0.7, 0.7, true)
+        if BagTypes:IsBagEquipped(myself.bagIndex) then
+            if selected == myself.bagIndex then
+                GameTooltip:AddLine(L["BAG_FILTER_ACTIVE"]:format(L["BAG_" .. myself.bagIndex] or ("Bag " .. myself.bagIndex)), 0.5, 1, 0.5, true)
+                GameTooltip:AddLine(L["BAG_SHOW_ALL"], 0.7, 0.7, 0.7, true)
+            else
+                GameTooltip:AddLine(L["BAG_SHOW_ONLY"], 0.7, 0.7, 0.7, true)
+            end
+            GameTooltip:AddLine(L["BAG_HINT_DRAG_PICKUP"], 0.7, 0.7, 0.7, true)
         end
+        GameTooltip:AddLine(L["BAG_HINT_DRAG_EQUIP"], 0.7, 0.7, 0.7, true)
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     btn:SetScript("OnClick", function(myself)
+        if BagTypes:IsSwappableBag(myself.bagIndex) and BagEquip:CursorHasItem() then
+            BagEquip:EquipCursorBag(myself.bagIndex)
+            return
+        end
         local controller = GetController()
         if controller and controller.ToggleSelectedBag then
             controller:ToggleSelectedBag(myself.bagIndex)
         end
     end)
 
+    if BagTypes:IsSwappableBag(bagIndex) then
+        btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        btn:RegisterForDrag("LeftButton")
+        btn:SetScript("OnDragStart", function(myself)
+            BagEquip:PickupEquipped(myself.bagIndex)
+        end)
+        btn:SetScript("OnReceiveDrag", function(myself)
+            BagEquip:EquipCursorBag(myself.bagIndex)
+        end)
+    end
+
     return btn
 end
 
 function BagsBar:UpdateBagHighlights()
-    local db = GetDB()
-    local selected = db.global.selectedBag
+    local controller = GetController()
+    local selected = controller and controller.GetSelectedBag and controller:GetSelectedBag() or nil
     local masque = OneWoW_Bags.Masque
     local masqueActive = masque and masque:IsActive()
     for idx, btn in pairs(bagButtons) do
@@ -778,13 +820,7 @@ end
 
 function BagsBar:UpdateIcons()
     for bagIndex, btn in pairs(bagButtons) do
-        if bagIndex > 0 then
-            local invSlotID = C_Container.ContainerIDToInventoryID(bagIndex)
-            if invSlotID then
-                local texID = GetInventoryItemTexture("player", invSlotID) or "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
-                OneWoW_GUI:UpdateIconTexture(btn, texID)
-            end
-        end
+        ApplyBagButtonIcon(btn, bagIndex)
     end
 end
 

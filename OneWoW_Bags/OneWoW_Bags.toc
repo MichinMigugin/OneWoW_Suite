@@ -32,6 +32,7 @@ Core\Constants.lua
 Core\SectionDefaults.lua
 Core\Database.lua
 Core\BagTypes.lua
+Core\BagEquip.lua
 Core\BankTypes.lua
 Core\Events.lua
 

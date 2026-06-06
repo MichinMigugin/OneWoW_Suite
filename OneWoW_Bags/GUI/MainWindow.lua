@@ -242,6 +242,7 @@ function GUI:RefreshLayout()
             return BagView:Layout(contentFrame, contentWidth, filteredButtons, viewContext)
         end,
         afterLayout = function()
+            BagsBar:UpdateIcons()
             BagsBar:UpdateFreeSlots(BagSet:GetFreeSlotCount(), BagSet:GetSlotCount())
             BagsBar:UpdateTrackers()
             BagsBar:RefreshTrackerCounts()

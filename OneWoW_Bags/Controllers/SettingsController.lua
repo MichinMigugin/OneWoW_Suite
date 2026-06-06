@@ -112,6 +112,12 @@ SettingsController.appliers = {
         db.global.showBagsBar = value
         self.addon:RequestLayoutRefresh("bags")
     end,
+    hideBlizzardBagsBar = function(self, db, value)
+        db.global.hideBlizzardBagsBar = value
+        if self.addon.UpdateBlizzardBagsBarVisibility then
+            self.addon:UpdateBlizzardBagsBarVisibility()
+        end
+    end,
     showMoneyBar = function(self, db, value)
         db.global.showMoneyBar = value
         self.addon:RequestLayoutRefresh("bags")

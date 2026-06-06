@@ -1,7 +1,9 @@
 local _, OneWoW_Bags = ...
 
 local format = string.format
+local ipairs = ipairs
 local BagTypes = OneWoW_Bags.BagTypes
+local C_Container = C_Container
 
 OneWoW_Bags.Events = {}
 local Events = OneWoW_Bags.Events
@@ -10,6 +12,7 @@ Events.dirtyBags = {}
 Events.RuntimeEvents = {
     "BAG_UPDATE",
     "BAG_UPDATE_DELAYED",
+    "BAG_CONTAINER_UPDATE",
     "ITEM_LOCK_CHANGED",
     "BAG_UPDATE_COOLDOWN",
     "QUEST_ACCEPTED",
@@ -169,7 +172,104 @@ function Events:OnBagUpdateDelayed()
     self.dirtyBags = {}
     OneWoW_Bags:InvalidateCategorization("props")
     OneWoW_Bags:ProcessBagUpdate(dirty)
+
+    local playerBagsDirty = false
+    for bagID in pairs(dirty) do
+        if BagTypes:IsPlayerBag(bagID) then
+            playerBagsDirty = true
+            break
+        end
+    end
+    if playerBagsDirty then
+        self:SyncUnequippedBagFilters()
+        self:RefreshBagBarIcons()
+    end
+
     if Profile then Profile:Stop("Events:OnBagUpdateDelayed") end
+end
+
+---@param inventorySlot number
+---@return number|nil bagIndex
+function Events:GetBagIndexForInventorySlot(inventorySlot)
+    for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do
+        if BagTypes:IsSwappableBag(bagID) then
+            local invSlot = C_Container.ContainerIDToInventoryID(bagID)
+            if invSlot == inventorySlot then
+                return bagID
+            end
+        end
+    end
+    return nil
+end
+
+function Events:RefreshBagBarIcons()
+    local BagsBar = OneWoW_Bags.BagsBar
+    if BagsBar then
+        BagsBar:UpdateIcons()
+    end
+end
+
+function Events:SyncUnequippedBagFilters()
+    local controller = OneWoW_Bags.BagsController
+    if not controller then
+        return
+    end
+    local selected = OneWoW_Bags:GetDB().global.selectedBag
+    if selected ~= nil and not BagTypes:IsBagEquipped(selected) then
+        controller:OnBagUnequipped(selected)
+    end
+end
+
+--- Rebuild BagSet slots when equipped container count diverges from cached buttons.
+--- Bag pickup from Blizzard's bar can fire PLAYER_EQUIPMENT_CHANGED without BAG_UPDATE_DELAYED.
+function Events:SyncPlayerBagSetSlots()
+    local BagSet = OneWoW_Bags.BagSet
+    if not BagSet.isBuilt then
+        return
+    end
+
+    local dirty = {}
+    for _, bagID in ipairs(BagTypes:GetPlayerBagIDs()) do
+        if BagTypes:IsSwappableBag(bagID) and BagSet.slots[bagID] then
+            local numSlots = C_Container.GetContainerNumSlots(bagID)
+            local currentCount = 0
+            for _ in pairs(BagSet.slots[bagID]) do
+                currentCount = currentCount + 1
+            end
+            if currentCount ~= numSlots then
+                dirty[bagID] = true
+            end
+        end
+    end
+
+    if next(dirty) then
+        OneWoW_Bags:InvalidateCategorization("props")
+        OneWoW_Bags:ProcessBagUpdate(dirty)
+    end
+end
+
+---@param bagIndex number
+function Events:OnPlayerBagEquipmentChanged(bagIndex)
+    local dirty = { [bagIndex] = true }
+    OneWoW_Bags:InvalidateCategorization("props")
+    OneWoW_Bags:ProcessBagUpdate(dirty)
+    self:SyncUnequippedBagFilters()
+    self:RefreshBagBarIcons()
+end
+
+---@param inventorySlot number
+function Events:OnPlayerEquipmentChanged(inventorySlot)
+    local bagIndex = self:GetBagIndexForInventorySlot(inventorySlot)
+    if not bagIndex then
+        return
+    end
+    self:OnPlayerBagEquipmentChanged(bagIndex)
+end
+
+function Events:OnBagContainerUpdate()
+    self:SyncPlayerBagSetSlots()
+    self:SyncUnequippedBagFilters()
+    self:RefreshBagBarIcons()
 end
 
 function Events:OnItemLockChanged(bagID, slotID)

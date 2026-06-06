@@ -1,5 +1,7 @@
 local _, OneWoW_Bags = ...
 
+local C_Container = C_Container
+
 OneWoW_Bags.BagTypes = {}
 local BagTypes = OneWoW_Bags.BagTypes
 
@@ -23,6 +25,20 @@ local bagNames = {
 
 function BagTypes:IsReagentBag(bagID)
     return bagID == Enum.BagIndex.ReagentBag
+end
+
+function BagTypes:IsSwappableBag(bagID)
+    return bagID ~= Enum.BagIndex.Backpack
+end
+
+--- True when the container has an equipped bag item (backpack is always equipped).
+---@param bagID number
+---@return boolean
+function BagTypes:IsBagEquipped(bagID)
+    if bagID == Enum.BagIndex.Backpack then
+        return true
+    end
+    return C_Container.GetContainerNumSlots(bagID) > 0
 end
 
 function BagTypes:IsPlayerBag(bagID)

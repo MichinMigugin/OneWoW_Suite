@@ -631,6 +631,18 @@ local function BuildBagsTab(sc, db)
 
     dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
+        label = L["SETTING_HIDE_BLIZZARD_BAGS_BAR"],
+        description = L["DESC_HIDE_BLIZZARD_BAGS_BAR"],
+        isEnabled = true,
+        value = db.global.hideBlizzardBagsBar,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            ApplySetting("hideBlizzardBagsBar", newVal)
+        end,
+    })
+
+    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
+        yOffset = dispY,
         label = L["SETTING_SHOW_MONEY_BAR"],
         description = L["DESC_SHOW_MONEY_BAR"],
         isEnabled = true,
