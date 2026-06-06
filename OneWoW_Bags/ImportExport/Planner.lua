@@ -31,6 +31,9 @@ local function newPlan(source)
         modifications = {},
         displayOrder  = {},
         disabledCategories = {},
+        savedSearches = {},
+        enableJunkCategory = nil,
+        enableUpgradeCategory = nil,
         unmappedDefaults   = {},
         estimate      = {
             sectionsNew = 0, sectionsMerge = 0,
@@ -223,6 +226,13 @@ function Planner:FromOneWowString(text, db)
     plan.disabledCategories = deepCopy(payload.disabledCategories or {})
     plan.categoryOrder      = deepCopy(payload.categoryOrder) or {}
     plan.displayOrder       = deepCopy(payload.displayOrder) or {}
+    plan.savedSearches      = deepCopy(payload.savedSearches or {})
+    if payload.enableJunkCategory ~= nil then
+        plan.enableJunkCategory = payload.enableJunkCategory
+    end
+    if payload.enableUpgradeCategory ~= nil then
+        plan.enableUpgradeCategory = payload.enableUpgradeCategory
+    end
 
     self:DetectConflicts(plan, db)
     recountEstimate(plan)

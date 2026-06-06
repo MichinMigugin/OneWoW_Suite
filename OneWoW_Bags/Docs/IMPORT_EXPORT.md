@@ -124,43 +124,73 @@ literal and opens a read-only copy dialog (powered by `LibCopyPaste-1.0`).
 ### What's included
 
 - `customCategoriesV2` (excluding the built-in `sec_onewow_bags.categories`
-  bucket — those are shipped by the addon).
+  bucket — those are shipped by the addon and regenerated on import).
 - `categorySections`, `sectionOrder`.
 - `categoryModifications`, `disabledCategories`, `categoryOrder`.
 - `displayOrder`.
+- **v2 only:** `savedSearches` — transitive closure of saved searches referenced
+  by exported custom category `searchExpression` values (`SAVED(Name)` tokens).
+- **v2 only:** `enableJunkCategory`, `enableUpgradeCategory` — whether optional
+  **1W Junk** / **1W Upgrades** builtins participate in layout.
 - Envelope metadata: `format`, `version`, `addon`, `exportedAt`, `exportedBy`,
   `exportedLocale`, `scope`.
 
 ### What's **not** included
 
 Addon-global settings unrelated to sections/categories (window geometry, font
-size, theme, etc.). The import format is intentionally a **category/section
-bundle**, not a full profile.
+size, theme, per-category bag UI collapse in `collapsedSections`, etc.). The
+import format is intentionally a **category/section bundle**, not a full
+profile.
+
+Import is **merge-oriented**: data is combined into the target profile rather
+than replacing it wholesale. Ordering fields use **exported order first**,
+then append any target-only sections/categories not present in the export.
 
 ### Format
+
+Current version is **2**. Version **1** strings still import with a version
+mismatch warning; missing v2 fields are treated as empty / no-op.
 
 The payload is a Lua table literal (deterministic key ordering, lexicographic
 where possible). Example skeleton:
 
 ```lua
 {
-    format         = "OneWoW_Bags_CatBundle",
-    version        = 1,
-    addon          = "OneWoW_Bags",
-    exportedAt     = 1713571200,
-    exportedBy     = "CharacterName",
-    exportedLocale = "enUS",
-    scope          = "all",
+    format                = "OneWoW_Bags.Export",
+    version               = 2,
+    addon                 = "OneWoW_Bags",
+    exportedAt            = 1713571200,
+    exportedBy            = "CharacterName",
+    exportedLocale        = "enUS",
+    scope                 = "all",
 
-    sections       = { ... },
-    sectionOrder   = { ... },
-    categories     = { ... },
-    modifications  = { ... },
-    disabledCategories = { ... },
-    categoryOrder  = { ... },
-    displayOrder   = { ... },
+    sections              = { ... },
+    sectionOrder          = { ... },
+    categories            = { ... },
+    modifications         = { ... },
+    disabledCategories    = { ... },
+    categoryOrder         = { ... },
+    displayOrder          = { ... },
+    savedSearches         = { ... },
+    enableJunkCategory    = true,
+    enableUpgradeCategory = true,
 }
 ```
+
+### Ordering restore on import
+
+| Field | Behavior |
+|-------|----------|
+| `displayOrder` | Best-effort: remaps section IDs and renamed categories; **skips** unresolvable entries (skipped imports, missing builtins, unknown sections) instead of failing the whole layout. |
+| `sectionOrder` | Remapped section IDs; exported order first, then target-only sections appended. |
+| `categoryOrder` | Remapped category names; exported order first, then target-only names appended. |
+| `sortOrder` (per custom category) | Applied when a category is **created** or **renamed**; preserved on merge. |
+
+If `displayOrder` yields no valid entries after filtering, layout falls back to
+`sectionOrder` + section membership (see `CategoryViewHelpers`).
+
+`savedSearches` entries merge by display name (case-insensitive); imported
+queries win on collision.
 
 Parsing uses a strict hand-written decoder — it rejects function values, `--`
 comments, metatables, and anything else that could smuggle code.
@@ -181,7 +211,28 @@ which deep-copies every import-affected field of `db.global` into
   snapshot.
 
 Fields backed up: `customCategoriesV2`, `categorySections`, `sectionOrder`,
-`categoryModifications`, `disabledCategories`, `categoryOrder`, `displayOrder`.
+`categoryModifications`, `disabledCategories`, `categoryOrder`, `displayOrder`,
+`savedSearches`, `enableJunkCategory`, `enableUpgradeCategory`.
+
+---
+
+## Manual test checklist
+
+Export on character A, import on character B (or a profile with existing
+categories). Verify:
+
+1. Custom category with `searchExpression` using `SAVED(MySearch)` — search
+   definition travels with the export and categorization works after import.
+2. Section `collapsed`, `showHeader`, and `showHeaderBank` flags — including
+   when the section name already exists on the target (merge path).
+3. Custom section ordering matches the source (`sectionOrder` / `displayOrder`).
+4. **1W Junk** / **1W Upgrades** visibility matches export when toggles differ
+   on the target before import.
+5. Skip one conflicting category in the preview — remaining `displayOrder`
+   entries still restore; skipped names are omitted without clearing the whole
+   layout.
+6. **Undo** restores all backed-up fields including saved searches and junk/
+   upgrade toggles.
 
 ---
 

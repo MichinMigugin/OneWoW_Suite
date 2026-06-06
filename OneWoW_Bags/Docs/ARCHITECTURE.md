@@ -49,7 +49,7 @@ Modules\CategoryManager.lua        ← bags: category assignment + bucketing
 Modules\BankCategoryManager.lua    ← bank: CategoryManagerBase instance (section pools)
 Modules\GuildBankCategoryManager.lua
 
-ImportExport\Serializer.lua        ← native category/section bundle encode/decode
+ImportExport\Serializer.lua        ← native category/section bundle encode/decode (export v2; saved-search deps)
 ImportExport\Backup.lua            ← pre-import snapshot / undo storage
 ImportExport\SyntaxTranslators\Registry.lua
 ImportExport\SyntaxTranslators\SyndicatorLocaleMap.lua

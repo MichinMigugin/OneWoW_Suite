@@ -451,6 +451,16 @@ function ImportPreview:Show(plan, controller, db)
                               result.categoriesNew or 0, result.categoriesRenamed or 0,
                               result.categoriesMerged or 0, result.categoriesSkipped or 0)
                           print("|cFFFFD100" .. prefix .. "|r " .. msg)
+                          if (result.savedSearchesMerged or 0) > 0 then
+                              print("|cFFFFD100" .. prefix .. "|r " .. format(
+                                  L["IMPORT_RESULT_SAVED_SEARCHES"],
+                                  result.savedSearchesMerged))
+                          end
+                          if (result.displayOrderDropped or 0) > 0 then
+                              print("|cFFFFD100" .. prefix .. "|r " .. format(
+                                  L["IMPORT_RESULT_DISPLAY_ORDER_PARTIAL"],
+                                  result.displayOrderDropped))
+                          end
                       end
                   end,
                 },

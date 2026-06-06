@@ -501,4 +501,6 @@ OneWoW_Bags.Locales["ruRU"] = {
     ["EXPORT_UNAVAILABLE_DB"]          = "Экспорт недоступен (база данных не готова).",
     ["IMPORT_RESULT_SUCCESS"]          = "Импорт завершён: %d новых, %d переименовано, %d объединено, %d пропущено.",
     ["IMPORT_RESULT_EMPTY"]            = "Нечего импортировать.",
+    ["IMPORT_RESULT_SAVED_SEARCHES"]   = "Объединено сохранённых поисков: %d.",
+    ["IMPORT_RESULT_DISPLAY_ORDER_PARTIAL"] = "Макет: пропущено %d записей порядка отображения.",
 }

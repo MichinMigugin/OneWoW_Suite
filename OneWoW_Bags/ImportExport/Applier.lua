@@ -112,9 +112,18 @@ end
 -- Section handling
 -- ------------------------------------------------------------------
 
+local function applySectionFlags(dbSec, section)
+    if not dbSec or not section then return end
+    if section.collapsed ~= nil then dbSec.collapsed = section.collapsed end
+    if section.showHeader ~= nil then dbSec.showHeader = section.showHeader end
+    if section.showHeaderBank ~= nil then dbSec.showHeaderBank = section.showHeaderBank end
+end
+
 local function ensureSection(section, controller, planIdToDbId)
     if section.mergesWithExistingId then
         planIdToDbId[section.originalId or section] = section.mergesWithExistingId
+        local dbSec = controller:GetDB().global.categorySections[section.mergesWithExistingId]
+        applySectionFlags(dbSec, section)
         return section.mergesWithExistingId
     end
 
@@ -129,19 +138,13 @@ local function ensureSection(section, controller, planIdToDbId)
         local hit = snap.sectionsByName[normKey(name)]
         if hit then
             planIdToDbId[section.originalId or section] = hit.id
+            applySectionFlags(hit.data, section)
             return hit.id
         end
         return nil, err
     end
 
-    -- Apply section-level flags that CreateSection doesn't set.
-    local g2 = controller:GetDB().global
-    local dbSec = g2.categorySections[newId]
-    if dbSec then
-        if section.collapsed ~= nil then dbSec.collapsed = section.collapsed end
-        if section.showHeader ~= nil then dbSec.showHeader = section.showHeader end
-        if section.showHeaderBank ~= nil then dbSec.showHeaderBank = section.showHeaderBank end
-    end
+    applySectionFlags(controller:GetDB().global.categorySections[newId], section)
     planIdToDbId[section.originalId or section] = newId
     return newId
 end
@@ -185,6 +188,7 @@ local function applyCategory(category, controller, nameRemap)
             if category.typeMatchMode ~= nil then entry.typeMatchMode = category.typeMatchMode end
             if category.isTSM then entry.isTSM = true end
             if category.isBaganator then entry.isBaganator = true end
+            if category.sortOrder ~= nil then entry.sortOrder = category.sortOrder end
         end
         nameRemap[importedName] = importedName
         return newId
@@ -237,6 +241,7 @@ local function applyCategory(category, controller, nameRemap)
             if category.typeMatchMode ~= nil then entry.typeMatchMode = category.typeMatchMode end
             if category.isTSM then entry.isTSM = true end
             if category.isBaganator then entry.isBaganator = true end
+            if category.sortOrder ~= nil then entry.sortOrder = category.sortOrder end
         end
         nameRemap[importedName] = candidate
         return newId
@@ -285,49 +290,169 @@ end
 -- Display / category / section order
 -- ------------------------------------------------------------------
 
-local function safeRestoreDisplayOrder(plan, db, planIdToDbId, nameRemap)
+local function buildSkippedNameSet(plan)
+    local skipped = {}
+    for _, cat in pairs(plan.categories or {}) do
+        if cat.resolution == "skip" and cat.name then
+            skipped[normKey(cat.name)] = true
+        end
+    end
+    return skipped
+end
+
+local function categoryNameResolvable(finalName, g)
+    local SD = OneWoW_Bags.SectionDefaults
+    if SD and SD.GetEffectiveBuiltinNames then
+        for _, bn in ipairs(SD:GetEffectiveBuiltinNames(g)) do
+            if bn == finalName then return true end
+        end
+    end
+    for _, cat in pairs(g.customCategoriesV2 or {}) do
+        if cat.name == finalName then return true end
+    end
+    return false
+end
+
+local function restoreSectionOrder(plan, db, planIdToDbId)
     local g = db.global
-    if not plan.displayOrder or #plan.displayOrder == 0 then
+    if not plan.sectionOrder or #plan.sectionOrder == 0 then
         return false
     end
 
+    local seen = {}
     local newOrder = {}
+    for _, planSid in ipairs(plan.sectionOrder) do
+        local dbSid = planIdToDbId[planSid] or planSid
+        if g.categorySections[dbSid] and not seen[dbSid] then
+            seen[dbSid] = true
+            tinsert(newOrder, dbSid)
+        end
+    end
+    for _, dbSid in ipairs(g.sectionOrder or {}) do
+        if g.categorySections[dbSid] and not seen[dbSid] then
+            seen[dbSid] = true
+            tinsert(newOrder, dbSid)
+        end
+    end
+
+    g.sectionOrder = newOrder
+    return #newOrder > 0
+end
+
+local function restoreCategoryOrder(plan, db, nameRemap)
+    local g = db.global
+    if not plan.categoryOrder or #plan.categoryOrder == 0 then
+        return false
+    end
+
+    local seen = {}
+    local newOrder = {}
+    for _, rawName in ipairs(plan.categoryOrder) do
+        local finalName = nameRemap[rawName] or rawName
+        local nk = normKey(finalName)
+        if finalName ~= "" and not seen[nk] and categoryNameResolvable(finalName, g) then
+            seen[nk] = true
+            tinsert(newOrder, finalName)
+        end
+    end
+    for _, existingName in ipairs(g.categoryOrder or {}) do
+        local nk = normKey(existingName)
+        if existingName ~= "" and not seen[nk] and categoryNameResolvable(existingName, g) then
+            seen[nk] = true
+            tinsert(newOrder, existingName)
+        end
+    end
+
+    g.categoryOrder = newOrder
+    return #newOrder > 0
+end
+
+--- Best-effort displayOrder restore; skips unresolvable entries instead of aborting.
+---@return boolean restored
+---@return number dropped
+local function safeRestoreDisplayOrder(plan, db, planIdToDbId, nameRemap, skippedNames)
+    local g = db.global
+    if not plan.displayOrder or #plan.displayOrder == 0 then
+        return false, 0
+    end
+
+    local newOrder = {}
+    local dropped = 0
+    local inSection = false
+
     for _, entry in ipairs(plan.displayOrder) do
-        if type(entry) == "string" then
-            if entry == "----" or entry == "section_end" then
-                tinsert(newOrder, entry)
-            elseif entry:sub(1, 8) == "section:" then
-                local planSid = entry:sub(9)
-                local dbSid = planIdToDbId[planSid] or planSid
-                if g.categorySections[dbSid] then
-                    tinsert(newOrder, "section:" .. dbSid)
-                else
-                    return false
-                end
+        if type(entry) ~= "string" then
+            dropped = dropped + 1
+        elseif entry == "----" then
+            -- obsolete separator; ignore
+        elseif entry == "section_end" then
+            if inSection then
+                tinsert(newOrder, "section_end")
+                inSection = false
             else
-                local finalName = nameRemap[entry] or entry
-                local SD = OneWoW_Bags.SectionDefaults
-                local builtin = false
-                if SD and SD.GetEffectiveBuiltinNames then
-                    for _, bn in ipairs(SD:GetEffectiveBuiltinNames(g)) do
-                        if bn == finalName then builtin = true; break end
-                    end
-                end
-                local customFound = false
-                for _, cat in pairs(g.customCategoriesV2 or {}) do
-                    if cat.name == finalName then customFound = true; break end
-                end
-                if builtin or customFound then
-                    tinsert(newOrder, finalName)
-                else
-                    return false
-                end
+                dropped = dropped + 1
+            end
+        elseif entry:sub(1, 8) == "section:" then
+            local planSid = entry:sub(9)
+            local dbSid = planIdToDbId[planSid] or planSid
+            if g.categorySections[dbSid] then
+                tinsert(newOrder, "section:" .. dbSid)
+                inSection = true
+            else
+                inSection = false
+                dropped = dropped + 1
+            end
+        else
+            local finalName = nameRemap[entry] or entry
+            if skippedNames[normKey(entry)] or skippedNames[normKey(finalName)] then
+                dropped = dropped + 1
+            elseif categoryNameResolvable(finalName, g) then
+                tinsert(newOrder, finalName)
+            else
+                dropped = dropped + 1
             end
         end
     end
 
-    g.displayOrder = newOrder
-    return true
+    if #newOrder > 0 then
+        g.displayOrder = newOrder
+        return true, dropped
+    end
+    return false, dropped
+end
+
+local function applySavedSearches(plan, db)
+    if not plan.savedSearches or not next(plan.savedSearches) then
+        return 0
+    end
+
+    local g = db.global
+    g.savedSearches = g.savedSearches or {}
+    local SS = OneWoW_Bags.SavedSearches
+    local merged = 0
+
+    for name, query in pairs(plan.savedSearches) do
+        if type(name) == "string" and type(query) == "string" then
+            local existingKey = SS and SS.FindKey and SS:FindKey(name)
+            if existingKey and existingKey ~= name then
+                g.savedSearches[existingKey] = nil
+            end
+            g.savedSearches[name] = query
+            merged = merged + 1
+        end
+    end
+
+    return merged
+end
+
+local function applyOptionalCategoryToggles(plan, db)
+    local g = db.global
+    if plan.enableJunkCategory ~= nil then
+        g.enableJunkCategory = plan.enableJunkCategory
+    end
+    if plan.enableUpgradeCategory ~= nil then
+        g.enableUpgradeCategory = plan.enableUpgradeCategory
+    end
 end
 
 -- ------------------------------------------------------------------
@@ -401,6 +526,11 @@ function Applier:Apply(plan, controller, db)
         categoriesNew = 0, categoriesRenamed = 0,
         categoriesMerged = 0, categoriesSkipped = 0,
         unmappedDefaultsKept = 0,
+        savedSearchesMerged = 0,
+        displayOrderDropped = 0,
+        displayOrderRestored = false,
+        sectionOrderRestored = false,
+        categoryOrderRestored = false,
     }
 
     -- 1. Sections (create new, resolve existing)
@@ -451,13 +581,26 @@ function Applier:Apply(plan, controller, db)
         end
     end
 
-    -- 7. displayOrder best-effort restore
-    local restored = safeRestoreDisplayOrder(plan, db, planIdToDbId, nameRemap)
+    -- 7. Optional builtin toggles (before ordering restore / ONEWOW sync)
+    applyOptionalCategoryToggles(plan, db)
+
+    -- 8. Saved searches referenced by imported categories
+    result.savedSearchesMerged = applySavedSearches(plan, db)
+
+    -- 9. Section and category order (exported first, local extras appended)
+    result.sectionOrderRestored = restoreSectionOrder(plan, db, planIdToDbId)
+    result.categoryOrderRestored = restoreCategoryOrder(plan, db, nameRemap)
+
+    -- 10. displayOrder best-effort restore (skip bad entries)
+    local skippedNames = buildSkippedNameSet(plan)
+    local restored, dropped = safeRestoreDisplayOrder(plan, db, planIdToDbId, nameRemap, skippedNames)
+    result.displayOrderRestored = restored
+    result.displayOrderDropped = dropped
     if not restored then
         db.global.displayOrder = {}
     end
 
-    -- 8. Sync ONEWOW BAGS section and refresh
+    -- 11. Sync ONEWOW BAGS section and refresh
     local SD = OneWoW_Bags.SectionDefaults
     if SD and SD.SyncOnewowSectionCategories then
         SD:SyncOnewowSectionCategories(db.global)

@@ -5,7 +5,7 @@ OneWoW_Bags.ImportExport.Serializer = OneWoW_Bags.ImportExport.Serializer or {}
 local Serializer = OneWoW_Bags.ImportExport.Serializer
 
 Serializer.FORMAT = "OneWoW_Bags.Export"
-Serializer.VERSION = 1
+Serializer.VERSION = 2
 
 local pairs, ipairs, type, tostring, tonumber = pairs, ipairs, type, tostring, tonumber
 local tinsert, tconcat = table.insert, table.concat
@@ -495,6 +495,11 @@ function Serializer:BuildExport(db)
         categories[cid] = copyAllowedCategoryFields(cat)
     end
 
+    local IEUtil = OneWoW_Bags.ImportExport.Util
+    local savedSearches = IEUtil and IEUtil.CollectReferencedSavedSearches
+        and IEUtil:CollectReferencedSavedSearches(categories, g.savedSearches)
+        or {}
+
     local playerName = UnitName and UnitName("player") or "?"
     local realm = GetRealmName and GetRealmName() or ""
     local exportedBy = playerName
@@ -515,8 +520,11 @@ function Serializer:BuildExport(db)
         categories         = categories,
         modifications      = deepCopy(g.categoryModifications) or {},
         disabledCategories = deepCopy(g.disabledCategories) or {},
-        categoryOrder      = deepCopy(g.categoryOrder) or {},
-        displayOrder       = deepCopy(g.displayOrder) or {},
+        categoryOrder         = deepCopy(g.categoryOrder) or {},
+        displayOrder          = deepCopy(g.displayOrder) or {},
+        savedSearches         = deepCopy(savedSearches),
+        enableJunkCategory    = g.enableJunkCategory,
+        enableUpgradeCategory = g.enableUpgradeCategory,
     }
     return envelope
 end

@@ -582,6 +582,8 @@ OneWoW_Bags.Locales["enUS"] = {
     ["IMPORT_WARN_EMPTY_KEYWORD"]      = "Empty keyword token dropped.",
     ["IMPORT_RESULT_SUCCESS"]          = "Import complete: %d new, %d renamed, %d merged, %d skipped.",
     ["IMPORT_RESULT_EMPTY"]            = "Nothing to import.",
+    ["IMPORT_RESULT_SAVED_SEARCHES"]   = "Saved searches merged: %d.",
+    ["IMPORT_RESULT_DISPLAY_ORDER_PARTIAL"] = "Layout: %d display order entries skipped.",
 }
 
 OneWoW_Bags.L = {}

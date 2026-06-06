@@ -501,4 +501,6 @@ OneWoW_Bags.Locales["koKR"] = {
     ["EXPORT_UNAVAILABLE_DB"]          = "내보내기를 사용할 수 없음 (데이터베이스 준비되지 않음).",
     ["IMPORT_RESULT_SUCCESS"]          = "가져오기 완료: 신규 %d, 이름 변경 %d, 병합 %d, 건너뜀 %d.",
     ["IMPORT_RESULT_EMPTY"]            = "가져올 항목이 없습니다.",
+    ["IMPORT_RESULT_SAVED_SEARCHES"]   = "저장된 검색 병합: %d.",
+    ["IMPORT_RESULT_DISPLAY_ORDER_PARTIAL"] = "레이아웃: 표시 순서 항목 %d개 건너뜀.",
 }

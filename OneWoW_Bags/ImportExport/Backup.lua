@@ -15,6 +15,9 @@ local BACKUP_FIELDS = {
     "disabledCategories",
     "categoryOrder",
     "displayOrder",
+    "savedSearches",
+    "enableJunkCategory",
+    "enableUpgradeCategory",
 }
 
 --- Save a deep-copy snapshot of import-managed category tables.
@@ -62,7 +65,14 @@ function Backup:Restore(db, controller)
     local g = db.global
     local snap = g.importBackup
     for _, key in pairs(BACKUP_FIELDS) do
-        g[key] = deepCopy(snap.tables[key]) or {}
+        local val = snap.tables[key]
+        if type(val) == "table" then
+            g[key] = deepCopy(val)
+        elseif val ~= nil then
+            g[key] = val
+        else
+            g[key] = {}
+        end
     end
 
     local SD = OneWoW_Bags.SectionDefaults

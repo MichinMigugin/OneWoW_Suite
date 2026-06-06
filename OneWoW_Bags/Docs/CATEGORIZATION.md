@@ -228,7 +228,7 @@ Search strings use its expression language (`#keyword`, operators, etc.). `Build
 | Mechanism | Role |
 |-----------|------|
 | `customCategoriesV2` | Custom categories: `items`, `searchExpression`, `itemType` / `itemSubType`, `filterMode`, `typeMatchMode`, `enabled`, `sortOrder`, `isTSM`, etc. |
-| `savedSearches` | Named predicate shortcuts expanded from `SAVED(Name)` before custom search categories are evaluated |
+| `savedSearches` | Named predicate shortcuts expanded from `SAVED(Name)` before custom search categories are evaluated. Referenced entries are included in native OneWoW export v2 — see [`IMPORT_EXPORT.md`](IMPORT_EXPORT.md). |
 | `categoryModifications[name]` | `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `priority`, `color`, `appliesIn`, `addedItems` |
 | `disabledCategories` | Disable builtin/custom by name; classification remaps to **Other** when applicable |
 | `enableJunkCategory` | Separate toggle for **phase B2** (default `true`); disabling skips the 1W Junk check entirely |

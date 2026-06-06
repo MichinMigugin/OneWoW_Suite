@@ -501,4 +501,6 @@ OneWoW_Bags.Locales["deDE"] = {
     ["EXPORT_UNAVAILABLE_DB"]          = "Export nicht verfügbar (Datenbank nicht bereit).",
     ["IMPORT_RESULT_SUCCESS"]          = "Import abgeschlossen: %d neu, %d umbenannt, %d zusammengeführt, %d übersprungen.",
     ["IMPORT_RESULT_EMPTY"]            = "Nichts zu importieren.",
+    ["IMPORT_RESULT_SAVED_SEARCHES"]   = "Gespeicherte Suchen zusammengeführt: %d.",
+    ["IMPORT_RESULT_DISPLAY_ORDER_PARTIAL"] = "Layout: %d Anzeigereihenfolge-Einträge übersprungen.",
 }
