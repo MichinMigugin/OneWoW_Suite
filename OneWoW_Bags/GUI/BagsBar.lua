@@ -714,6 +714,128 @@ function BagsBar:UpdateTrackers()
     SyncBagsBarOuterHeight()
 end
 
+local function GetBagLabel(bagIndex)
+    if bagIndex == Enum.BagIndex.Backpack then
+        return L["BAG_BACKPACK"]
+    end
+    if BagTypes:IsReagentBag(bagIndex) then
+        return L["BAG_REAGENT"]
+    end
+    local nameKey = BagTypes:GetBagName(bagIndex)
+    return L[nameKey] or nameKey
+end
+
+local function GetCompatibleBagEntries(targetBagIndex)
+    local entries = {}
+    BagEquip:EnumerateCompatibleBags(targetBagIndex, function(sourceBagID, slot, itemID)
+        tinsert(entries, {
+            sourceBagID = sourceBagID,
+            slot = slot,
+            itemID = itemID,
+            name = C_Item.GetItemNameByID(itemID) or ("#" .. itemID),
+        })
+    end)
+    sort(entries, function(a, b)
+        return a.name < b.name
+    end)
+    return entries
+end
+
+local function AddDisabledMenuButton(parentDescription, label)
+    local buttonDescription = parentDescription:CreateButton(label, function() end)
+    if buttonDescription and buttonDescription.SetEnabled then
+        buttonDescription:SetEnabled(false)
+    end
+end
+
+local function AddEmptyBagMenu(rootDescription, bagIndex)
+    if not BagTypes:IsBagEquipped(bagIndex) then
+        return
+    end
+
+    if not BagEquip:CanEmpty(bagIndex) then
+        AddDisabledMenuButton(rootDescription, L["BAG_MENU_EMPTY"])
+        return
+    end
+
+    local emptySub = rootDescription:CreateButton(L["BAG_MENU_EMPTY"], function() end)
+    if BagEquip:CanEmptyTo(bagIndex, nil) then
+        emptySub:CreateButton(L["BAG_MENU_EMPTY_AUTO"], function()
+            BagEquip:EmptyBag(bagIndex, nil)
+        end)
+    else
+        AddDisabledMenuButton(emptySub, L["BAG_MENU_EMPTY_AUTO"])
+    end
+
+    for _, dest in ipairs(BagEquip:GetEmptyDestinations(bagIndex)) do
+        if BagEquip:CanEmptyTo(bagIndex, dest.bagIndex) then
+            emptySub:CreateButton(dest.label, function()
+                BagEquip:EmptyBag(bagIndex, dest.bagIndex)
+            end)
+        else
+            AddDisabledMenuButton(emptySub, dest.label)
+        end
+    end
+end
+
+local function ShowBagSlotContextMenu(owner, bagIndex)
+    local controller = GetController()
+    if not controller then
+        return
+    end
+
+    MenuUtil.CreateContextMenu(owner, function(_, rootDescription)
+        rootDescription:CreateTitle(GetBagLabel(bagIndex))
+
+        local selected = controller:GetSelectedBag()
+        local canFilter = not BagTypes:IsSwappableBag(bagIndex) or BagTypes:IsBagEquipped(bagIndex)
+
+        if canFilter then
+            if selected == bagIndex then
+                rootDescription:CreateButton(L["BAG_MENU_SHOW_ALL"], function()
+                    controller:ClearBagFilter()
+                end)
+            else
+                rootDescription:CreateButton(L["BAG_MENU_SHOW_ONLY"], function()
+                    controller:ShowOnlyBag(bagIndex)
+                end)
+            end
+        end
+
+        AddEmptyBagMenu(rootDescription, bagIndex)
+
+        if not BagTypes:IsSwappableBag(bagIndex) then
+            return
+        end
+
+        if BagTypes:IsBagEquipped(bagIndex) then
+            if BagEquip:CanPickup(bagIndex) then
+                rootDescription:CreateButton(L["BAG_MENU_PICKUP"], function()
+                    BagEquip:PickupEquipped(bagIndex)
+                end)
+            else
+                AddDisabledMenuButton(rootDescription, L["BAG_MENU_PICKUP"])
+            end
+        end
+
+        if not BagEquip:CanSwap(bagIndex) then
+            AddDisabledMenuButton(rootDescription, L["BAG_MENU_SWAP"])
+        else
+            local swapSub = rootDescription:CreateButton(L["BAG_MENU_SWAP"], function() end)
+            local compatible = GetCompatibleBagEntries(bagIndex)
+            if #compatible == 0 then
+                AddDisabledMenuButton(swapSub, L["BAG_SWAP_NONE"])
+            else
+                for _, entry in ipairs(compatible) do
+                    swapSub:CreateButton(entry.name, function()
+                        BagEquip:EquipFromContainer(entry.sourceBagID, entry.slot, bagIndex)
+                    end)
+                end
+            end
+        end
+    end)
+end
+
 function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
     local iconTexture = "Interface\\Buttons\\Button-Backpack-Up"
     if BagTypes:IsSwappableBag(bagIndex) then
@@ -762,13 +884,25 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
             else
                 GameTooltip:AddLine(L["BAG_SHOW_ONLY"], 0.7, 0.7, 0.7, true)
             end
-            GameTooltip:AddLine(L["BAG_HINT_DRAG_PICKUP"], 0.7, 0.7, 0.7, true)
+            if BagTypes:IsSwappableBag(myself.bagIndex) then
+                GameTooltip:AddLine(L["BAG_HINT_DRAG_PICKUP"], 0.7, 0.7, 0.7, true)
+            end
+            GameTooltip:AddLine(L["BAG_HINT_RIGHT_CLICK"], 0.7, 0.7, 0.7, true)
+        elseif BagTypes:IsSwappableBag(myself.bagIndex) then
+            GameTooltip:AddLine(L["BAG_HINT_RIGHT_CLICK"], 0.7, 0.7, 0.7, true)
         end
-        GameTooltip:AddLine(L["BAG_HINT_DRAG_EQUIP"], 0.7, 0.7, 0.7, true)
+        if BagTypes:IsSwappableBag(myself.bagIndex) or not BagTypes:IsBagEquipped(myself.bagIndex) then
+            GameTooltip:AddLine(L["BAG_HINT_DRAG_EQUIP"], 0.7, 0.7, 0.7, true)
+        end
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    btn:SetScript("OnClick", function(myself)
+    btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    btn:SetScript("OnClick", function(myself, button)
+        if button == "RightButton" then
+            ShowBagSlotContextMenu(myself, myself.bagIndex)
+            return
+        end
         if BagTypes:IsSwappableBag(myself.bagIndex) and BagEquip:CursorHasItem() then
             BagEquip:EquipCursorBag(myself.bagIndex)
             return
@@ -780,7 +914,6 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
     end)
 
     if BagTypes:IsSwappableBag(bagIndex) then
-        btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
         btn:RegisterForDrag("LeftButton")
         btn:SetScript("OnDragStart", function(myself)
             BagEquip:PickupEquipped(myself.bagIndex)

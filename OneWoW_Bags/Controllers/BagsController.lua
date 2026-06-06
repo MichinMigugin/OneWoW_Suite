@@ -48,6 +48,40 @@ function BagsController:GetSelectedBag()
     return selected
 end
 
+function BagsController:RefreshBagFilterUI()
+    if self.addon.BagsBar then
+        self.addon.BagsBar:UpdateBagHighlights()
+    end
+    if self.addon.InfoBar then
+        self.addon.InfoBar:UpdateViewButtons()
+    end
+    self.addon:RequestLayoutRefresh("bags")
+end
+
+function BagsController:ClearBagFilter()
+    local db = self.addon:GetDB()
+    if db.global.selectedBag == nil then
+        return
+    end
+    db.global.selectedBag = nil
+    self:RefreshBagFilterUI()
+end
+
+function BagsController:ShowOnlyBag(bagIndex)
+    if BagTypes:IsSwappableBag(bagIndex) and not BagTypes:IsBagEquipped(bagIndex) then
+        return
+    end
+
+    local db = self.addon:GetDB()
+    if db.global.selectedBag == bagIndex and db.global.viewMode == "bag" then
+        return
+    end
+
+    db.global.selectedBag = bagIndex
+    db.global.viewMode = "bag"
+    self:RefreshBagFilterUI()
+end
+
 function BagsController:ToggleSelectedBag(bagIndex)
     if BagTypes:IsSwappableBag(bagIndex) and not BagTypes:IsBagEquipped(bagIndex) then
         return
@@ -62,13 +96,7 @@ function BagsController:ToggleSelectedBag(bagIndex)
         db.global.viewMode = "bag"
     end
 
-    if self.addon.BagsBar then
-        self.addon.BagsBar:UpdateBagHighlights()
-    end
-    if self.addon.InfoBar then
-        self.addon.InfoBar:UpdateViewButtons()
-    end
-    self.addon:RequestLayoutRefresh("bags")
+    self:RefreshBagFilterUI()
 end
 
 --- Clears bag-view filter when the equipped container at bagIndex was removed.
@@ -79,13 +107,13 @@ function BagsController:OnBagUnequipped(bagIndex)
         return
     end
     db.global.selectedBag = nil
+    self.addon:RequestLayoutRefresh("bags", "bag_unequipped")
     if self.addon.BagsBar then
         self.addon.BagsBar:UpdateBagHighlights()
     end
     if self.addon.InfoBar then
         self.addon.InfoBar:UpdateViewButtons()
     end
-    self.addon:RequestLayoutRefresh("bags", "bag_unequipped")
 end
 
 function BagsController:GetShowEmptySlots()
