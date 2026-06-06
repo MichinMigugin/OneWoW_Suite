@@ -82,16 +82,12 @@ function OneWoW:BootStore(ns, config)
         end
     end
 
-    local didEnteringWorld = false
     function ns.OnPlayerEnteringWorld(isLogin, isReload, isZoning)
         if onEnteringWorld then
             onEnteringWorld(isLogin, isReload, isZoning)
         end
         if ns.FireEnteringWorldHandlers then
             ns:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
-        end
-        if isLogin and not didEnteringWorld then
-            didEnteringWorld = true
         end
     end
 end
