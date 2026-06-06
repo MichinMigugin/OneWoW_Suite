@@ -94,7 +94,15 @@ Use `WithAddon` / `EnsureLoaded` for **explicit user actions** only (e.g. AH sca
 
 ## Hub UI
 
+**Load order** is manifest array order (`RunStartupPhase`). **Row-1 tab display
+order** is the explicit `tabOrder` field on hub manifest entries — required when
+adding a hub tab (`module` + `tabOrder` on the manifest entry).
+
 ```lua
+-- Manifest (AddonLoader.lua): module + tabOrder decouple display from load order
+{ addon = "OneWoW_Catalog", module = "catalog", tabOrder = 3, loadPhase = "login", ... }
+
+-- Module registration (unchanged API)
 OneWoW:RegisterModule({
     name = "catalog",
     order = OneWoW:GetModuleTabOrder("catalog"),

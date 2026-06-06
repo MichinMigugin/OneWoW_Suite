@@ -41,7 +41,7 @@ Only `OneWoW/OneWoW.lua` (and interim `OneWoW_GUI/Settings.lua` for `ADDON_LOADE
 
 - No suite-internal `## OptionalDeps` on TOCs — use nil-guards + `OneWoW:EnsureLoaded` / `WithAddon` for explicit user actions only.
 - Cross-unit reads: prefer `_API` over `_DB`; route new reads through `DataManager:Query` when available.
-- Hub tab order: `order = OneWoW:GetModuleTabOrder("name")` from `ModuleManifest`.
+- Hub tab order: hub manifest entries require `module` + `tabOrder`; modules register with `order = OneWoW:GetModuleTabOrder("name")` (reads `tabOrder`, not array position).
 
 ## Pre-commit enforcement
 

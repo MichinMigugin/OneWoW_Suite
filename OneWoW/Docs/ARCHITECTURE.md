@@ -116,15 +116,22 @@ same pattern as our `OnAddonLoaded` hook.
 ### 3.2 Orchestrator + manifest
 
 `OneWoW/Core/AddonLoader.lua` holds `OneWoW.ModuleManifest` (every suite unit,
-slash command, hub `module` name, `loadPhase`, parent `stores`). At the **end of
-core's `ADDON_LOADED`** (before `PLAYER_LOGIN`),
-`OneWoW.LoadOrchestrator:RunStartupPhase()` walks the manifest and calls
-`OneWoW:BringUp(addon)` for each `loadPhase == "login"` entry (feature + stores as
-one set). DevTool is detect-only — skipped by the orchestrator but included in
-login fan-out when loaded.
+slash command, hub `module` name, hub `tabOrder`, `loadPhase`, parent `stores`).
+At the **end of core's `ADDON_LOADED`** (before `PLAYER_LOGIN`),
+`OneWoW.LoadOrchestrator:RunStartupPhase()` walks the manifest in **array order**
+and calls `OneWoW:BringUp(addon)` for each `loadPhase == "login"` entry (feature
++ stores as one set). DevTool is detect-only — skipped by the orchestrator but
+included in login fan-out when loaded.
 
-Hub row-1 tab order is derived from manifest hub entries (Notes → AltTracker →
-Catalog → Trackers → QoL) via `GetModuleTabOrder` / `GetAlwaysShowModules`.
+**Load order** is manifest array order. **Hub row-1 tab order** is the explicit
+`tabOrder` field on entries with `module` (Notes → AltTracker → Catalog →
+Trackers → QoL today). `GetModuleTabOrder` / `GetAlwaysShowModules` read
+`tabOrder`; missing or unknown module names fall back to 99. New hub modules must
+set both `module` and `tabOrder`.
+
+```lua
+{ addon = "OneWoW_Notes", module = "notes", tabOrder = 1, loadPhase = "login", ... }
+```
 
 ### 3.3 Event ownership
 
@@ -322,7 +329,7 @@ _G.OneWoW:RegisterModule({
 calls `tabInfo.create(frame)` lazily; content cached in `moduleContentFrames`.
 
 **Placeholder tabs:** when a hub module is not loaded, `GetAlwaysShowModules()` still
-shows its tab (same order, locale key label). Selecting a placeholder prompts load or
+shows its tab (same `tabOrder`, locale key label). Selecting a placeholder prompts load or
 Manage Features.
 
 Standalone-window modules (Bags, ShoppingList, DirectDeposit) open via slash commands,

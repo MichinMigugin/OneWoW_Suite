@@ -559,13 +559,14 @@ end
 -- `loadPhase`, so the orchestrator skips them: OneWoW_GUI is always a RequiredDep,
 -- and OneWoW_Utility_DevTool stays a normal opt-in addon until migration step 5.
 -- `module` is the RegisterModule name for hub modules (used by the lazy-tab hook).
--- `stores` lists a parent's data-store load units; the orchestrator loads each
--- one right after the parent so its OnAddonLoaded hook fires deterministically
--- (these are LoadOnDemand: 1 now, not LoadWith-auto-loaded).
+-- `tabOrder` is the row-1 hub tab sort key (required on hub entries; load order
+-- remains array-driven). `stores` lists a parent's data-store load units; the
+-- orchestrator loads each one right after the parent so its OnAddonLoaded hook
+-- fires deterministically (these are LoadOnDemand: 1 now, not LoadWith-auto-loaded).
 OneWoW.ModuleManifest = {
     { addon = "OneWoW_GUI",             display = "GUI",           cmd = nil },
-    { addon = "OneWoW_Notes",           display = "Notes",         cmd = "/1wn",   module = "notes",      loadPhase = "login" },
-    { addon = "OneWoW_AltTracker",      display = "AltTracker",    cmd = "/1wat",  module = "alttracker", loadPhase = "login",
+    { addon = "OneWoW_Notes",           display = "Notes",         cmd = "/1wn",   module = "notes",      tabOrder = 1, loadPhase = "login" },
+    { addon = "OneWoW_AltTracker",      display = "AltTracker",    cmd = "/1wat",  module = "alttracker", tabOrder = 2, loadPhase = "login",
         stores = {
             "OneWoW_AltTracker_Storage",
             "OneWoW_AltTracker_Character",
@@ -575,15 +576,15 @@ OneWoW.ModuleManifest = {
             "OneWoW_AltTracker_Accounting",
             "OneWoW_AltTracker_Auctions",
         } },
-    { addon = "OneWoW_Catalog",         display = "Catalog",       cmd = "/owcat", module = "catalog",    loadPhase = "login",
+    { addon = "OneWoW_Catalog",         display = "Catalog",       cmd = "/owcat", module = "catalog",    tabOrder = 3, loadPhase = "login",
         stores = {
             "OneWoW_CatalogData_Tradeskills",
             "OneWoW_CatalogData_Vendors",
             "OneWoW_CatalogData_Quests",
             "OneWoW_CatalogData_Journal",
         } },
-    { addon = "OneWoW_Trackers",        display = "Trackers",      cmd = "/1wt",   module = "trackers",   loadPhase = "login" },
-    { addon = "OneWoW_QoL",             display = "QoL",           cmd = "/1wqol", module = "qol",        loadPhase = "login" },
+    { addon = "OneWoW_Trackers",        display = "Trackers",      cmd = "/1wt",   module = "trackers",   tabOrder = 4, loadPhase = "login" },
+    { addon = "OneWoW_QoL",             display = "QoL",           cmd = "/1wqol", module = "qol",        tabOrder = 5, loadPhase = "login" },
     { addon = "OneWoW_DirectDeposit",   display = "DirectDeposit", cmd = "/1wdd",  loadPhase = "login" },
     { addon = "OneWoW_ShoppingList",    display = "ShoppingList",  cmd = "/1wsl",  loadPhase = "login" },
     { addon = "OneWoW_Bags",            display = "Bags",          cmd = "/1wb",   loadPhase = "login" },
@@ -591,7 +592,7 @@ OneWoW.ModuleManifest = {
 }
 local Manifest = OneWoW.ModuleManifest
 
--- Row-1 tab order and placeholder labels derive from hub entries in ModuleManifest.
+-- Row-1 tab order comes from each hub entry's tabOrder; placeholder labels from module.
 local MODULE_TAB_LOCALE_KEYS = {
     notes      = "MODULE_NOTES",
     alttracker = "MODULE_ALTTRACKER",
@@ -602,33 +603,27 @@ local MODULE_TAB_LOCALE_KEYS = {
 
 --- Tab sort order for a hub module name (RegisterModule `name` field).
 ---@param moduleName string e.g. "notes", "alttracker"
----@return number order 1-based manifest position, or 99 when unknown
+---@return number order explicit tabOrder from manifest, or 99 when unknown/missing
 function OneWoW:GetModuleTabOrder(moduleName)
-    local order = 0
     for _, entry in ipairs(OneWoW.ModuleManifest) do
-        if entry.module then
-            order = order + 1
-            if entry.module == moduleName then
-                return order
-            end
+        if entry.module == moduleName then
+            return entry.tabOrder or 99
         end
     end
     return 99
 end
 
 --- Placeholder row-1 tabs for hub modules not yet registered (not loaded).
---- Order and addon names match ModuleManifest hub entries.
+--- Order from tabOrder via GetModuleTabOrder; addon names from manifest hub entries.
 ---@return table[] list of { name, addonName, order, localeKey }
 function OneWoW:GetAlwaysShowModules()
     local result = {}
-    local order = 0
     for _, entry in ipairs(OneWoW.ModuleManifest) do
         if entry.module then
-            order = order + 1
             result[#result + 1] = {
                 name      = entry.module,
                 addonName = entry.addon,
-                order     = order,
+                order     = self:GetModuleTabOrder(entry.module),
                 localeKey = MODULE_TAB_LOCALE_KEYS[entry.module],
             }
         end
