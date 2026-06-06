@@ -1,0 +1,50 @@
+---
+description: OneWoW Suite load-unit architecture — lifecycle, BootStore, enable model, OptionalDeps. Overrides generic WoW event registration for orchestrated units.
+globs: OneWoW*/**/*.lua, OneWoW/**/*.lua, OneWoW*/**/*.toc
+alwaysApply: false
+---
+
+# OneWoW Suite Architecture
+
+Authoritative reference: [`OneWoW/Docs/ARCHITECTURE.md`](OneWoW/Docs/ARCHITECTURE.md).
+
+Load the **`onewow-suite-architecture`** skill when authoring lifecycle hooks, new load units, data stores, `ModuleManifest` entries, enable/opt-out, or cross-unit integration.
+
+## Forbidden in orchestrated units
+
+Feature modules, data stores, DevTool sub-modules, and sub-modules must **not** register lifecycle WoW events for init/arming:
+
+- `RegisterEvent("ADDON_LOADED")`
+- `RegisterEvent("PLAYER_LOGIN")`
+- `RegisterEvent("PLAYER_ENTERING_WORLD")`
+- `EventRegistry:RegisterFrameEventAndCallback` on those three events
+
+Only `OneWoW/OneWoW.lua` (and interim `OneWoW_GUI/Settings.lua` for `ADDON_LOADED`) may register them.
+
+## Required lifecycle patterns
+
+| I need to… | Do this | Do NOT |
+|------------|---------|--------|
+| Init module DB | `OnAddonLoaded()` on manifest root | `RegisterEvent("ADDON_LOADED")` |
+| Arm at login | `OnPlayerLogin()` or `RegisterLoginHandler` | `RegisterEvent("PLAYER_LOGIN")` |
+| React to zone / entering world | `OnPlayerEnteringWorld` or `RegisterEnteringWorldHandler` | `RegisterEvent("PLAYER_ENTERING_WORLD")` |
+| Hook Blizzard_Foo when it loads | `RegisterAddonLoadedWatcher("Blizzard_Foo", fn)` | Own `ADDON_LOADED` frame |
+
+**Data stores:** `OneWoW:BootStore(ns, { onLogin, onEnteringWorld, ... })` in `Core/Core.lua`.
+
+## PEW vs gameplay events
+
+- **Lifecycle entering-world work** → `BootStore.onEnteringWorld` or `RegisterEnteringWorldHandler` (routes through core dispatch, including mid-session synthetic catch-up).
+- **Gameplay events** (`PLAYER_ALIVE`, `BAG_UPDATE`, `ZONE_CHANGED`, `MAIL_SHOW`, …) → direct `RegisterEvent` on a local frame is OK.
+
+## Load units and integration
+
+- No suite-internal `## OptionalDeps` on TOCs — use nil-guards + `OneWoW:EnsureLoaded` / `WithAddon` for explicit user actions only.
+- Cross-unit reads: prefer `_API` over `_DB`; route new reads through `DataManager:Query` when available.
+- Hub tab order: `order = OneWoW:GetModuleTabOrder("name")` from `ModuleManifest`.
+
+## Pre-commit enforcement
+
+- `no-suite-lifecycle-events` — lifecycle `RegisterEvent` ban
+- `no-suite-internal-optionaldeps` — TOC OptionalDeps policy
+- `no-data-manager-bypass` — cross-family store reads (phased)

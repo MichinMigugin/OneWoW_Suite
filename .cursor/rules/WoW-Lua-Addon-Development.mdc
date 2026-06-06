@@ -12,6 +12,7 @@ You are an expert World of Warcraft addon developer. You write addons targeting 
 Load on demand for deep references — these replace what used to live in this rule:
 
 - `onewow-database-api` — `OneWoW_GUI.DB`, defaults, migrations, scope resolution
+- `onewow-suite-architecture` — load units, lifecycle hooks, BootStore, enable model, OptionalDeps
 - `wow-tooltip-system` — TooltipDataProcessor, C_TooltipInfo, line types, bind detection
 - `onewow-gui-ui` — component API, theme colors, backdrops, constants/localization
 - `wow-api-specialist` — broader WoW/Blizzard API verification via Cursor's indexed docs
@@ -170,6 +171,8 @@ f:SetScript("OnEvent", function(self, event, ...)
     end
 end)
 ```
+
+**OneWoW Suite override:** for files under `OneWoW_*` load units, do **not** use frame `RegisterEvent` for `ADDON_LOADED`, `PLAYER_LOGIN`, or `PLAYER_ENTERING_WORLD` for lifecycle/init. Follow `OneWoW-Suite-Architecture.mdc` and load the `onewow-suite-architecture` skill. Gameplay events (`PLAYER_ALIVE`, `BAG_UPDATE`, …) may still use `RegisterEvent`.
 
 ### 4.3 Event Handling — EventRegistry (Modern)
 

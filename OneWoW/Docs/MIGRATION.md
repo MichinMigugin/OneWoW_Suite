@@ -92,9 +92,17 @@ No defensive `if not OneWoW_GUI` guard once everything `RequiredDeps: OneWoW`.
 
 ## 8. Update rules + skills + enforcement
 
-Once step 6 lands:
+### Done
 
-- Revise `.cursor/rules/WoW-Lua-Addon-Development.mdc` §2.3 and the
+- [x] `bin/check_suite_lifecycle.py` + pre-commit hook `no-suite-lifecycle-events`
+- [x] `bin/check_toc_optional_deps.py` + pre-commit hook `no-suite-internal-optionaldeps`
+- [x] `.cursor/rules/OneWoW-Suite-Architecture.mdc`
+- [x] `.cursor/skills/onewow-suite-architecture/SKILL.md`
+- [x] `WoW-Lua-Addon-Development.mdc` suite override blurb (§4.2) + specialist skill entry
+
+### Remaining (after step 6)
+
+- [ ] Revise `.cursor/rules/WoW-Lua-Addon-Development.mdc` §2.3 and the
   `onewow-gui-ui` / `onewow-database-api` skills: `local OneWoW_GUI = OneWoW_GUI`
   instead of the LibStub block.
 
@@ -108,6 +116,9 @@ cross-family store reads toward `DataManager:Query` (see `ARCHITECTURE.md` §8).
 | **1 — now** | warn-only on cross-family reads | all §4.1 grandfathered reads listed | `0` |
 | **2 — migrating** | warn on allowlisted; **fail** on new off-list reads | shrinks per migration PR | `1` for off-list only |
 | **3 — rule** | hard-fail on every cross-family read | empty (removed) | `1` |
+
+- [ ] Phase 2: populate `ALLOWLIST` from warn output, set `WARN_ONLY = False`
+- [ ] Phase 3: empty allowlist, hard-fail all cross-family reads
 
 Each migration PR deletes allowlist `path::symbol` keys. When the allowlist is
 empty, flip to Phase 3.

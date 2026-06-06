@@ -140,6 +140,12 @@ registers its own `ADDON_LOADED` for self-bootstrap until GUI is absorbed into c
 | Embedded `Libs/` | Yes — third-party, off-limits |
 | Feature modules, stores, DevTool, sub-modules | **No** — chain up to manifest parent |
 
+Orchestrated units may still `RegisterEvent` for **gameplay** WoW events (`PLAYER_ALIVE`,
+`BAG_UPDATE`, `ZONE_CHANGED`, …). Only the three **lifecycle** events above must route
+through core dispatch. For data stores, entering-world collection belongs in `BootStore`
+`onEnteringWorld` (or `RegisterEnteringWorldHandler` on the store namespace), not a raw
+`PLAYER_ENTERING_WORLD` frame.
+
 ### 3.4 `OnAddonLoaded`
 
 `hooksecurefunc(C_AddOns, "LoadAddOn", …)` calls `RunPostLoadInit` →
@@ -217,6 +223,16 @@ OneWoW:GetLoadFailureText(reason)               -> localized string
 
 All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab` in
 `MainWindow` (dormant while everything is `login`).
+
+### 3.10 Enforcement
+
+| Rule | Mechanism |
+|---|---|
+| No lifecycle `RegisterEvent` in orchestrated units | `bin/check_suite_lifecycle.py` (pre-commit `no-suite-lifecycle-events`) |
+| No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
+| No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; see MIGRATION step 8) |
+| No `_G.literal` access | `bin/check_no_g_literal.py` |
+| Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
 
 ---
 
@@ -444,3 +460,7 @@ size, flags)` with `fontSizeOffset` from `OneWoW_GUI_DB` (range −3..+5, floor 
 | `OneWoW/GUI/t-home.lua` | Home tab: read-only status + live refresh |
 | `OneWoW/GUI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
 | `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 5–8) |
+| `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
+| `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |
+| `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |
+| `bin/check_toc_optional_deps.py` | Pre-commit: suite-internal OptionalDeps ban |

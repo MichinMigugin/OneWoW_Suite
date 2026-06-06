@@ -72,3 +72,32 @@ repos:
             | \.releases/
             | OneWoW_Bags/API/Examples/
           )
+
+      - id: no-suite-lifecycle-events
+        name: No lifecycle RegisterEvent in orchestrated OneWoW units
+        description: |
+          Forbids RegisterEvent on ADDON_LOADED, PLAYER_LOGIN, or
+          PLAYER_ENTERING_WORLD in orchestrated load units. Use core
+          lifecycle hooks instead. See OneWoW/Docs/ARCHITECTURE.md §3.7.
+        entry: python bin/check_suite_lifecycle.py
+        language: python
+        types: [lua]
+        exclude: |
+          (?x)^(
+            Libs/
+            | \.lua-defs/
+            | \.wow_docs/
+            | \.vscode/
+            | \.releases/
+            | OneWoW_Bags/API/Examples/
+          )
+
+      - id: no-suite-internal-optionaldeps
+        name: No suite-internal OptionalDeps in TOC files
+        description: |
+          Forbids OneWoW_* entries in ## OptionalDeps (bypasses soft
+          opt-out). Use EnsureLoaded/WithAddon instead. See
+          OneWoW/Docs/ARCHITECTURE.md §2.
+        entry: python bin/check_toc_optional_deps.py
+        language: python
+        files: \.toc$
