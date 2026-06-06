@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.DataManager = {}
 local DataManager = ns.DataManager
@@ -28,7 +28,6 @@ function DataManager:RegisterEvents()
         "MAIL_CLOSED",
         "MAIL_INBOX_UPDATE",
         "UPDATE_PENDING_MAIL",
-        "PLAYER_ENTERING_WORLD",
         "PLAYER_LOGOUT",
     }
 
@@ -36,12 +35,20 @@ function DataManager:RegisterEvents()
         eventFrame:RegisterEvent(event)
     end
 
-    eventFrame:SetScript("OnEvent", function(self, event, ...)
+    eventFrame:SetScript("OnEvent", function(_, event, ...)
         DataManager:HandleEvent(event, ...)
     end)
 end
 
-function DataManager:HandleEvent(event, ...)
+function DataManager:OnEnteringWorld()
+    -- On login / reload / zone, make sure the current character's mail flag reflects
+    -- reality before the UI reads it. HasNewMail() is ready by this point.
+    C_Timer.After(1, function()
+        self:UpdateMailFlag()
+    end)
+end
+
+function DataManager:HandleEvent(event)
     if event == "BAG_UPDATE_DELAYED" then
         self:CollectBags()
 
@@ -110,13 +117,6 @@ function DataManager:HandleEvent(event, ...)
             self:CollectMail()
         end)
 
-    elseif event == "PLAYER_ENTERING_WORLD" then
-        -- On login / reload, make sure the current character's mail flag reflects
-        -- reality before the UI reads it. HasNewMail() is ready by this point.
-        C_Timer.After(1, function()
-            self:UpdateMailFlag()
-        end)
-
     elseif event == "PLAYER_LOGOUT" then
         -- Persist final state so other alts can see "Alt X had mail at logout".
         self:UpdateMailFlag()
@@ -134,11 +134,11 @@ function DataManager:CollectBags()
         ns.Bags:CollectData(charKey, charData)
     end
 
-    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.UI and _G.OneWoW_AltTracker.UI.BankTab then
-        local bankTab = _G.OneWoW_AltTracker.UI.BankTab
-        if bankTab and bankTab:IsVisible() and _G.OneWoW_AltTracker.UI.RefreshBankDisplay then
+    if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.BankTab then
+        local bankTab = OneWoW_AltTracker.UI.BankTab
+        if bankTab and bankTab:IsVisible() and OneWoW_AltTracker.UI.RefreshBankDisplay then
             C_Timer.After(0.1, function()
-                _G.OneWoW_AltTracker.UI.RefreshBankDisplay(bankTab)
+                OneWoW_AltTracker.UI.RefreshBankDisplay(bankTab)
             end)
         end
     end
@@ -157,11 +157,11 @@ function DataManager:CollectPersonalBank()
         ns.PersonalBank:CollectData(charKey, charData)
     end
 
-    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.UI and _G.OneWoW_AltTracker.UI.BankTab then
-        local bankTab = _G.OneWoW_AltTracker.UI.BankTab
-        if bankTab and bankTab:IsVisible() and _G.OneWoW_AltTracker.UI.RefreshBankDisplay then
+    if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.BankTab then
+        local bankTab = OneWoW_AltTracker.UI.BankTab
+        if bankTab and bankTab:IsVisible() and OneWoW_AltTracker.UI.RefreshBankDisplay then
             C_Timer.After(0.1, function()
-                _G.OneWoW_AltTracker.UI.RefreshBankDisplay(bankTab)
+                OneWoW_AltTracker.UI.RefreshBankDisplay(bankTab)
             end)
         end
     end
@@ -180,11 +180,11 @@ function DataManager:CollectWarbandBank()
         ns.WarbandBank:CollectData(charKey, charData)
     end
 
-    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.UI and _G.OneWoW_AltTracker.UI.BankTab then
-        local bankTab = _G.OneWoW_AltTracker.UI.BankTab
-        if bankTab and bankTab:IsVisible() and _G.OneWoW_AltTracker.UI.RefreshBankDisplay then
+    if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.BankTab then
+        local bankTab = OneWoW_AltTracker.UI.BankTab
+        if bankTab and bankTab:IsVisible() and OneWoW_AltTracker.UI.RefreshBankDisplay then
             C_Timer.After(0.1, function()
-                _G.OneWoW_AltTracker.UI.RefreshBankDisplay(bankTab)
+                OneWoW_AltTracker.UI.RefreshBankDisplay(bankTab)
             end)
         end
     end
@@ -203,11 +203,11 @@ function DataManager:CollectGuildBank()
         ns.GuildBank:CollectData(charKey, charData)
     end
 
-    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.UI and _G.OneWoW_AltTracker.UI.BankTab then
-        local bankTab = _G.OneWoW_AltTracker.UI.BankTab
-        if bankTab and bankTab:IsVisible() and _G.OneWoW_AltTracker.UI.RefreshBankDisplay then
+    if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.BankTab then
+        local bankTab = OneWoW_AltTracker.UI.BankTab
+        if bankTab and bankTab:IsVisible() and OneWoW_AltTracker.UI.RefreshBankDisplay then
             C_Timer.After(0.1, function()
-                _G.OneWoW_AltTracker.UI.RefreshBankDisplay(bankTab)
+                OneWoW_AltTracker.UI.RefreshBankDisplay(bankTab)
             end)
         end
     end
@@ -248,7 +248,7 @@ end
 -- Ask AltTracker's UI (if present and loaded) to re-skin any mail icons it has on
 -- screen. We don't rebuild tabs here; AltTracker exposes a cheap in-place refresh.
 function DataManager:NotifyMailChanged()
-    local atUI = _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.UI
+    local atUI = OneWoW_AltTracker and OneWoW_AltTracker.UI
     if atUI and type(atUI.RefreshMailIcons) == "function" then
         atUI.RefreshMailIcons()
     end
@@ -271,4 +271,3 @@ end
 function DataManager:DeleteCharacter(charKey)
     return ns:DeleteCharacter(charKey)
 end
-

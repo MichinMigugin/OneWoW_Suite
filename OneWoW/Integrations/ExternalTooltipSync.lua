@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 local wipe = table.wipe
 
 OneWoW.ExternalTooltipSync = OneWoW.ExternalTooltipSync or {}
@@ -127,12 +127,11 @@ function Sync:SyncAll()
     end
 end
 
-local syncFrame = CreateFrame("Frame")
-syncFrame:RegisterEvent("ADDON_LOADED")
-syncFrame:SetScript("OnEvent", function(_, _, name)
-    if name == "Auctionator" or name == "TradeSkillMaster" then
-        Sync:SyncAll()
-    end
+OneWoW:RegisterAddonLoadedWatcher("Auctionator", function()
+    Sync:SyncAll()
+end)
+OneWoW:RegisterAddonLoadedWatcher("TradeSkillMaster", function()
+    Sync:SyncAll()
 end)
 
 function OneWoW.ExternalTooltipSync_OnLogin()

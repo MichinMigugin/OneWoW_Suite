@@ -44,11 +44,8 @@ local function SetupCallbacks()
     OneWoW.OverlayEngine:RegisterIntegration(RefreshOneWoWBags)
 end
 
-local initFrame = CreateFrame("Frame")
-initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function()
+OneWoW:RegisterCoreLoginHandler("OneWoW_Bags", function()
     if C_AddOns.IsAddOnLoaded("OneWoW_Bags") then
         SetupCallbacks()
     end
-    initFrame:UnregisterEvent("PLAYER_LOGIN")
 end)

@@ -153,12 +153,15 @@ end
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
-        local loadedAddon = ...
-        OneWoW:OnAddonLoaded(loadedAddon)
+        OneWoW:DispatchAddonLoaded(...)
     elseif event == "PLAYER_LOGIN" then
+        -- After this point, a mid-session LoadAddOn won't deliver the unit's own
+        -- one-shot PLAYER_LOGIN, so OneWoW:EnsureLoaded drives its login hooks.
+        OneWoW._playerLoginFired = true
         if OneWoW.Minimap then
             OneWoW.Minimap:Initialize()
         end
@@ -214,6 +217,12 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
                 end
             end)
         end
+
+        OneWoW:FireCoreLoginHandlers()
+        OneWoW:RunManifestLoginPhase()
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        local isLogin, isReload = ...
+        OneWoW:DispatchEnteringWorld(isLogin, isReload)
     end
 end)
 

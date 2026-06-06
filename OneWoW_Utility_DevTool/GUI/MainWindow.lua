@@ -1,4 +1,4 @@
-local ADDON_NAME, Addon = ...
+local _, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -54,17 +54,17 @@ end
 
 function UI:BindToolbarBarButtonMouse(btn, activeKey)
     if not btn or not activeKey then return end
-    btn:SetScript("OnEnter", function(self)
-        UI:PaintToolbarBarButton(self, activeKey)
+    btn:SetScript("OnEnter", function(myself)
+        UI:PaintToolbarBarButton(myself, activeKey)
     end)
-    btn:SetScript("OnLeave", function(self)
-        UI:PaintToolbarBarButton(self, activeKey)
+    btn:SetScript("OnLeave", function(myself)
+        UI:PaintToolbarBarButton(myself, activeKey)
     end)
-    btn:SetScript("OnMouseDown", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+    btn:SetScript("OnMouseDown", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
     end)
-    btn:SetScript("OnMouseUp", function(self)
-        UI:PaintToolbarBarButton(self, activeKey)
+    btn:SetScript("OnMouseUp", function(myself)
+        UI:PaintToolbarBarButton(myself, activeKey)
     end)
 end
 
@@ -338,7 +338,7 @@ end
 
 function UI:SetTabEnabled(tabKey, enabled)
     local definition = self:GetTabDefinition(tabKey)
-    
+
     if not definition then
         return
     end
@@ -393,29 +393,29 @@ function UI:CreateTabButton(tabKey)
     button:SetScript("OnClick", function()
         UI:SelectTab(tabKey)
     end)
-    button:SetScript("OnEnter", function(self)
-        if not self.isSelected then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    button:SetScript("OnEnter", function(myself)
+        if not myself.isSelected then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         end
     end)
-    button:SetScript("OnLeave", function(self)
-        if not self.isSelected then
-            UI:StyleTabButton(self, false)
+    button:SetScript("OnLeave", function(myself)
+        if not myself.isSelected then
+            UI:StyleTabButton(myself, false)
         end
     end)
-    button:SetScript("OnMouseDown", function(self)
-        if not self.isSelected then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+    button:SetScript("OnMouseDown", function(myself)
+        if not myself.isSelected then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
         end
     end)
-    button:SetScript("OnMouseUp", function(self)
-        if not self.isSelected then
-            if self:IsMouseOver() then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+    button:SetScript("OnMouseUp", function(myself)
+        if not myself.isSelected then
+            if myself:IsMouseOver() then
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
             else
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
             end
         end
     end)
@@ -564,7 +564,7 @@ function UI:Initialize()
 
     local factionTheme = OneWoW_GUI:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
     local frame = OneWoW_GUI:CreateFrame(UIParent, {
-        name = "OneWoW_UtilityDevToolFrame",
+        name = "OneWoW_Utility_DevToolFrame",
         width = defaultW,
         height = defaultH,
         backdrop = BACKDROP_INNER_NO_INSETS,
@@ -615,7 +615,7 @@ function UI:Initialize()
     titleBar:SetPoint("TOPLEFT", frame, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
     titleBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -OneWoW_GUI:GetSpacing("XS"))
 
-    tinsert(UISpecialFrames, "OneWoW_UtilityDevToolFrame")
+    tinsert(UISpecialFrames, "OneWoW_Utility_DevToolFrame")
 
     self.tabY = -(OneWoW_GUI:GetSpacing("XS") + 20 + OneWoW_GUI:GetSpacing("XS"))
 

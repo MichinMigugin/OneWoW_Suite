@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local function IsEnabled()
     local ov = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
@@ -78,7 +78,7 @@ local function SetupHooks()
         ProcessButton(item, decoration)
     end)
 
-    bb_events:RegisterMessage("item/Clearing", function(_, item, decoration)
+    bb_events:RegisterMessage("item/Clearing", function(_, _, decoration)
         if decoration then
             OneWoW.OverlayEngine:CleanButton(decoration)
         end
@@ -93,11 +93,8 @@ local function SetupHooks()
     OneWoW.OverlayEngine:RegisterIntegration(RefreshBetterBags)
 end
 
-local initFrame = CreateFrame("Frame")
-initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function()
+OneWoW:RegisterCoreLoginHandler("BetterBags", function()
     if C_AddOns.IsAddOnLoaded("BetterBags") then
         SetupHooks()
     end
-    initFrame:UnregisterEvent("PLAYER_LOGIN")
 end)

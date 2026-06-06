@@ -270,15 +270,12 @@ function InspectMogModule:OnEnable()
 
     if InspectFrame then
         self:HookInspectFrame()
-    elseif not self._loader then
-        local loader = CreateFrame("Frame")
-        self._loader = loader
-        loader:RegisterEvent("ADDON_LOADED")
-        loader:SetScript("OnEvent", function(_, _, loadedAddon)
-            if loadedAddon == "Blizzard_InspectUI" then
-                InspectMogModule:HookInspectFrame()
-                loader:UnregisterAllEvents()
-            end
+    elseif not self._inspectWatcherRegistered then
+        self._inspectWatcherRegistered = true
+        local register = OneWoW_QoL.RegisterAddonLoadedWatcher and OneWoW_QoL.RegisterAddonLoadedWatcher
+            or OneWoW.RegisterAddonLoadedWatcher
+        register("Blizzard_InspectUI", function()
+            InspectMogModule:HookInspectFrame()
         end)
     end
 

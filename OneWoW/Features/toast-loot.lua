@@ -205,8 +205,12 @@ end
 
 Toasts.ApplyBlizzardSuppression = ApplyBlizzardSuppression
 
+OneWoW:RegisterCoreLoginHandler("toast-loot", function()
+    C_Timer.After(3, BuildBagCache)
+    ApplyBlizzardSuppression()
+end)
+
 local lootFrame = CreateFrame("Frame")
-lootFrame:RegisterEvent("PLAYER_LOGIN")
 lootFrame:RegisterEvent("BAG_UPDATE_DELAYED")
 lootFrame:RegisterEvent("NEW_MOUNT_ADDED")
 lootFrame:RegisterEvent("NEW_PET_ADDED")
@@ -214,11 +218,7 @@ lootFrame:RegisterEvent("NEW_TOY_ADDED")
 lootFrame:RegisterEvent("SKILL_LINES_CHANGED")
 
 lootFrame:SetScript("OnEvent", function(_, event, arg1)
-    if event == "PLAYER_LOGIN" then
-        C_Timer.After(3, BuildBagCache)
-        ApplyBlizzardSuppression()
-
-    elseif event == "SKILL_LINES_CHANGED" then
+    if event == "SKILL_LINES_CHANGED" then
         PE:InvalidateKnownProfessions()
 
     elseif event == "BAG_UPDATE_DELAYED" then

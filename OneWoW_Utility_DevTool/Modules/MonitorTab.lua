@@ -1,4 +1,4 @@
-local ADDON_NAME, Addon = ...
+local _, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -91,13 +91,18 @@ local function FormatNumber(number, decimals)
 end
 
 function MonitorTab:RegisterPinnedRestoreEvents()
-    if self._pinnedRestoreFrame then return end
-    local f = CreateFrame("Frame")
-    self._pinnedRestoreFrame = f
-    f:RegisterEvent("ADDON_LOADED")
-    f:SetScript("OnEvent", function()
-        MonitorTab:RestorePinnedMonitorsPending()
-    end)
+    if self._pinnedRestoreRegistered then return end
+    self._pinnedRestoreRegistered = true
+    local function register()
+        OneWoW:RegisterAddonLoadedWatcher(nil, function()
+            MonitorTab:RestorePinnedMonitorsPending()
+        end)
+    end
+    if OneWoW then
+        register()
+    else
+        C_Timer.After(0, register)
+    end
 end
 
 function MonitorTab:Initialize()
@@ -565,11 +570,11 @@ function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
     popup:EnableMouse(true)
     popup:RegisterForDrag("LeftButton")
     popup:SetScript("OnDragStart", popup.StartMoving)
-    popup:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        self:SetClampedToScreen(true)
+    popup:SetScript("OnDragStop", function(myself)
+        myself:StopMovingOrSizing()
+        myself:SetClampedToScreen(true)
         if dbEntry then
-            local point, _, relPoint, x, y = self:GetPoint(1)
+            local point, _, relPoint, x, y = myself:GetPoint(1)
             dbEntry.position = { point = point, relPoint = relPoint, x = x, y = y }
         end
     end)
@@ -671,8 +676,8 @@ function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
     popup:SetHeight(totalHeight)
 
     reopenCheck:SetChecked(dbEntry.reopenOnReload and true or false)
-    reopenCheck:SetScript("OnClick", function(self)
-        dbEntry.reopenOnReload = self:GetChecked() and true or false
+    reopenCheck:SetScript("OnClick", function(myself)
+        dbEntry.reopenOnReload = myself:GetChecked() and true or false
     end)
 
     popup.memValue = memValue

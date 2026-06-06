@@ -1,6 +1,4 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/automount/automount.lua
-local addonName, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -71,7 +69,7 @@ for _, id in ipairs(FISHING_SPELL_IDS) do
 end
 
 local function GetPreferences()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db then
         return {
             ground = "auto", flying = "auto", aquatic = "auto",
@@ -103,7 +101,7 @@ local function GetPreferences()
 end
 
 local function SavePreference(key, value)
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db then return end
     local mods = addon.db.global.modules
     if not mods["automount"] then mods["automount"] = {} end
@@ -457,11 +455,8 @@ function AutoMountModule:OnEnable()
 
     if not self._eventFrame then
         self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_AutoMount")
-        self._eventFrame:SetScript("OnEvent", function(frame, event, ...)
-            if event == "PLAYER_ENTERING_WORLD" then
-                lastMapUpdate = GetTime()
-                AM:UpdatePollingState()
-            elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+        self._eventFrame:SetScript("OnEvent", function(_, event, ...)
+            if event == "UNIT_SPELLCAST_SUCCEEDED" then
                 local unit, _, spellID = ...
                 if unit == "player" and gatheringSpellSet[spellID] then
                     isGathering = true
@@ -484,10 +479,14 @@ function AutoMountModule:OnEnable()
         end)
     end
 
-    self._eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     self._eventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     self._eventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
     self._eventFrame:RegisterEvent("LOOT_CLOSED")
+
+    OneWoW_QoL:RegisterEnteringWorldHandler("automount", function()
+        lastMapUpdate = GetTime()
+        AM:UpdatePollingState()
+    end)
 
     if self._mountStatusLabel then
         self._mountStatusLabel:Show()
@@ -505,12 +504,13 @@ function AutoMountModule:OnDisable()
     if self._eventFrame then
         self._eventFrame:UnregisterAllEvents()
     end
+    OneWoW_QoL:UnregisterEnteringWorldHandler("automount")
     if self._mountStatusLabel then
         self._mountStatusLabel:Hide()
     end
 end
 
-function AutoMountModule:OnToggle(toggleId, value)
+function AutoMountModule:OnToggle()
 end
 
 function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh, rightStatusBar)
@@ -528,9 +528,9 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
             statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             statusBtn:SetWidth(statusText:GetStringWidth() + 4)
 
-            statusBtn:SetScript("OnEnter", function(self)
+            statusBtn:SetScript("OnEnter", function(myself)
                 statusText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetOwner(myself, "ANCHOR_TOP")
                 GameTooltip:SetText(L["AUTOMOUNT_STATUS_LABEL"], 1, 1, 1)
                 if not ns.ModuleRegistry:IsEnabled(AM.id) then
                     GameTooltip:AddLine(L["AUTOMOUNT_STATUS_DISABLED"], 0.6, 0.6, 0.6, true)
@@ -763,8 +763,8 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
             disableLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local capturedDisableKey = def.disableKey
-            disableCheck:SetScript("OnClick", function(self)
-                local checked = self:GetChecked()
+            disableCheck:SetScript("OnClick", function(myself)
+                local checked = myself:GetChecked()
                 SavePreference(capturedDisableKey, checked)
                 UpdateTimingSliders()
             end)
@@ -895,8 +895,8 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
     local otherMounts    = {}
 
     for _, mountId in pairs(C_MountJournal.GetMountIDs()) do
-        local name, _, icon, _, isUsable, _, isFavorite, isFactionSpecific, faction, _, isCollected =
-            C_MountJournal.GetMountInfoByID(mountId)
+        local name, _, icon, _, _, _, _, isFactionSpecific, faction, _, isCollected = C_MountJournal.GetMountInfoByID(mountId)
+
         if isCollected then
             local rightFaction = true
             if isFactionSpecific then

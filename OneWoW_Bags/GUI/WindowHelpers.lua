@@ -251,14 +251,12 @@ function WH:AttachShoppingListCartButton(titleBar, settingsBtn)
 
     if OneWoW_ShoppingList then
         createCart()
-    else
-        local f = CreateFrame("Frame")
-        titleBar._owbShoppingListEventFrame = f
-        f:RegisterEvent("ADDON_LOADED")
-        f:SetScript("OnEvent", function(_, _, addonName)
-            if addonName == "OneWoW_ShoppingList" then
-                createCart()
-            end
+    elseif not titleBar._owbShoppingListWatcherRegistered then
+        titleBar._owbShoppingListWatcherRegistered = true
+        local register = OneWoW_Bags.RegisterAddonLoadedWatcher and OneWoW_Bags.RegisterAddonLoadedWatcher
+            or OneWoW.RegisterAddonLoadedWatcher
+        register("OneWoW_ShoppingList", function()
+            createCart()
         end)
     end
 end

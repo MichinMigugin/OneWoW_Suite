@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.DataManager = {}
 local DataManager = ns.DataManager
@@ -18,7 +18,6 @@ function DataManager:RegisterEvents()
 
     local events = {
         "PLAYER_ALIVE",
-        "PLAYER_ENTERING_WORLD",
         "UNIT_QUEST_LOG_CHANGED",
         "UPDATE_FACTION",
         "ACHIEVEMENT_EARNED",
@@ -35,16 +34,20 @@ function DataManager:RegisterEvents()
         eventFrame:RegisterEvent(event)
     end
 
-    eventFrame:SetScript("OnEvent", function(self, event, ...)
+    eventFrame:SetScript("OnEvent", function(_, event, ...)
         DataManager:HandleEvent(event, ...)
     end)
 end
 
+function DataManager:OnEnteringWorld()
+    C_Timer.After(1, function()
+        self:CollectAllData()
+    end)
+end
+
 function DataManager:HandleEvent(event, ...)
-    if event == "PLAYER_ALIVE" or event == "PLAYER_ENTERING_WORLD" then
-        C_Timer.After(1, function()
-            self:CollectAllData()
-        end)
+    if event == "PLAYER_ALIVE" then
+        self:OnEnteringWorld()
 
     elseif event == "UNIT_QUEST_LOG_CHANGED" or event == "QUEST_ACCEPTED" or
            event == "QUEST_REMOVED" or event == "QUEST_LOG_UPDATE" then

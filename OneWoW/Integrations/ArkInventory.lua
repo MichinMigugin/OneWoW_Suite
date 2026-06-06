@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local function IsEnabled()
     local ov = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
@@ -73,11 +73,8 @@ local function SetupHooks()
     OneWoW.OverlayEngine:RegisterIntegration(RefreshArkInventory)
 end
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function()
+OneWoW:RegisterCoreLoginHandler("ArkInventory", function()
     if C_AddOns.IsAddOnLoaded("ArkInventory") then
         SetupHooks()
     end
-    eventFrame:UnregisterEvent("PLAYER_LOGIN")
 end)

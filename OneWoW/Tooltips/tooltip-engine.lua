@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -415,16 +415,11 @@ function TooltipEngine:HookAchievementUI()
         end)
     end
 
-    if C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("Blizzard_AchievementUI") then
+    if C_AddOns.IsAddOnLoaded("Blizzard_AchievementUI") then
         hookAchievements()
     else
-        local frame = CreateFrame("Frame")
-        frame:RegisterEvent("ADDON_LOADED")
-        frame:SetScript("OnEvent", function(_, event, addon)
-            if addon == "Blizzard_AchievementUI" then
-                hookAchievements()
-                frame:UnregisterEvent("ADDON_LOADED")
-            end
+        OneWoW:RegisterAddonLoadedWatcher("Blizzard_AchievementUI", function()
+            hookAchievements()
         end)
     end
 end

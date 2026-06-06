@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.DataManager = {}
 local DataManager = ns.DataManager
@@ -17,7 +17,6 @@ function DataManager:RegisterEvents()
     end
 
     local events = {
-        "PLAYER_ENTERING_WORLD",
         "PLAYER_LEVEL_UP",
         "PLAYER_SPECIALIZATION_CHANGED",
         "PLAYER_TALENT_UPDATE",
@@ -46,18 +45,19 @@ function DataManager:RegisterEvents()
         eventFrame:RegisterEvent(event)
     end
 
-    eventFrame:SetScript("OnEvent", function(self, event, ...)
+    eventFrame:SetScript("OnEvent", function(_, event, ...)
         DataManager:HandleEvent(event, ...)
     end)
 end
 
-function DataManager:HandleEvent(event, ...)
-    if event == "PLAYER_ENTERING_WORLD" then
-        C_Timer.After(1, function()
-            self:CollectAllData()
-        end)
+function DataManager:OnEnteringWorld()
+    C_Timer.After(1, function()
+        self:CollectAllData()
+    end)
+end
 
-    elseif event == "PLAYER_LEVEL_UP" then
+function DataManager:HandleEvent(event, ...)
+    if event == "PLAYER_LEVEL_UP" then
         local newLevel = ...
         self:UpdateLevel(newLevel)
 

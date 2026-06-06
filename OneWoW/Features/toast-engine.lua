@@ -353,7 +353,7 @@ local function BuildLargeToastAnimations(toast)
             if self._animOut then self._animOut:Stop() end
             local mapID = self._instanceMapID
             ReleaseToast(self)
-            local cat = _G.OneWoW_Catalog
+            local cat = OneWoW_Catalog
             if cat and cat.UI and cat.UI.OpenToInstance then
                 cat.UI.OpenToInstance(mapID)
             end
@@ -596,8 +596,6 @@ function Toasts.HideAnchor()
     end
 end
 
-local initFrame = CreateFrame("Frame")
-initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function()
+OneWoW:RegisterCoreLoginHandler("toast-engine.BuildAnchor", function()
     BuildAnchor()
 end)

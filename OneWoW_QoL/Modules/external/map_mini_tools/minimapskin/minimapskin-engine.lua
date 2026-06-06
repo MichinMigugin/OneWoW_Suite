@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 local M = ns.MinimapSkinModule
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
@@ -27,7 +27,7 @@ local debugActive     = false
 -- ─── Settings ───────────────────────────────────────────────────────────────
 
 local function GetSettings()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db then return {} end
     local mods = addon.db.global.modules
     if not mods.minimapskin then mods.minimapskin = {} end
@@ -167,7 +167,7 @@ local function ApplySquareMask()
         MINIMAP:SetQuestBlobRingAlpha(0)
     end)
 
-    _G.GetMinimapShape = function() return "SQUARE" end
+    GetMinimapShape = function() return "SQUARE" end
 
     if HybridMinimap and HybridMinimap.CircleMask then
         pcall(function()
@@ -1001,9 +1001,8 @@ local function RegisterEvents()
     eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     eventFrame:RegisterEvent("PET_BATTLE_OPENING_START")
     eventFrame:RegisterEvent("PET_BATTLE_CLOSE")
-    eventFrame:RegisterEvent("ADDON_LOADED")
 
-    eventFrame:SetScript("OnEvent", function(_, event, arg1)
+    eventFrame:SetScript("OnEvent", function(_, event)
         if not ns.ModuleRegistry:IsEnabled("minimapskin") then return end
 
         if event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "ZONE_CHANGED_NEW_AREA" then
@@ -1016,10 +1015,6 @@ local function RegisterEvents()
             if GetToggle("petBattleHide") then MINIMAP:Hide() end
         elseif event == "PET_BATTLE_CLOSE" then
             if GetToggle("petBattleHide") then MINIMAP:Show() end
-        elseif event == "ADDON_LOADED" and arg1 == "Blizzard_HybridMinimap" then
-            if GetToggle("squareShape") then
-                ApplySquareMask()
-            end
         end
     end)
 end
@@ -1079,6 +1074,15 @@ function M:OnEnable()
         end)
         OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function()
             M:ApplyTheme()
+        end)
+    end
+
+    local qos = OneWoW_QoL
+    if qos and qos.RegisterAddonLoadedWatcher then
+        qos:RegisterAddonLoadedWatcher("Blizzard_HybridMinimap", function()
+            if GetToggle("squareShape") then
+                ApplySquareMask()
+            end
         end)
     end
 end

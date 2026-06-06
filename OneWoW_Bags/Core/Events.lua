@@ -8,8 +8,6 @@ local Events = OneWoW_Bags.Events
 
 Events.dirtyBags = {}
 Events.RuntimeEvents = {
-    "PLAYER_LOGIN",
-    "PLAYER_ENTERING_WORLD",
     "BAG_UPDATE",
     "BAG_UPDATE_DELAYED",
     "ITEM_LOCK_CHANGED",

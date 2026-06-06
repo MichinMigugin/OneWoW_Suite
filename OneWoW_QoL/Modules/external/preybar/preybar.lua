@@ -20,7 +20,7 @@
 -- Frame construction, layout, and theming live in preybar-ui.lua. This file
 -- owns the module table, data resolution, events, and lifecycle.
 -- ============================================================================
-local addonName, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -70,7 +70,7 @@ end
 PreyBarModule.GetToggle = GetToggle
 
 local function GetPositionStorage()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db then return nil end
     local mods = addon.db.global.modules
     if not mods["preybar"] then mods["preybar"] = {} end
@@ -254,7 +254,6 @@ function PreyBarModule:RegisterEvents()
     if self._eventFrame then return end
     local ef = CreateFrame("Frame")
     ef:RegisterEvent("UPDATE_UI_WIDGET")
-    ef:RegisterEvent("PLAYER_ENTERING_WORLD")
     ef:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     ef:RegisterEvent("QUEST_LOG_UPDATE")
     ef:RegisterEvent("QUEST_ACCEPTED")
@@ -306,6 +305,9 @@ function PreyBarModule:OnEnable()
     end)
 
     self:RegisterEvents()
+    OneWoW_QoL:RegisterEnteringWorldHandler("preybar", function()
+        self:ScheduleRefresh()
+    end)
 
     -- Poll fallback so the fill % stays correct even if a widget update event
     -- is missed; cheap (every couple of seconds) and only while enabled.
@@ -320,6 +322,7 @@ end
 
 function PreyBarModule:OnDisable()
     self:UnregisterEvents()
+    OneWoW_QoL:UnregisterEnteringWorldHandler("preybar")
     self:StopPreview()
     self:UnsuppressBlizzWidget()
     if self._pollTicker then

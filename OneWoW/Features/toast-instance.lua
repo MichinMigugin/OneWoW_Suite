@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local Toasts = OneWoW.Toasts
 
@@ -29,7 +29,7 @@ local function InstanceEnabled()
 end
 
 local function GetCatalogData(mapID)
-    local journalNS = _G.OneWoW_CatalogData_Journal
+    local journalNS = OneWoW_CatalogData_Journal
     if not journalNS or not journalNS.JournalData then return nil end
 
     local JournalData = journalNS.JournalData
@@ -96,10 +96,7 @@ local function BuildGrid(catalogData)
     return grid
 end
 
-local instanceFrame = CreateFrame("Frame")
-instanceFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-
-instanceFrame:SetScript("OnEvent", function(self, event, isInitialLogin, isReloadingUI)
+OneWoW:RegisterCoreEnteringWorldHandler("toast-instance", function()
     if not InstanceEnabled() then return end
 
     local inInstance, instanceType = IsInInstance()
@@ -113,7 +110,7 @@ instanceFrame:SetScript("OnEvent", function(self, event, isInitialLogin, isReloa
             EJ_SelectTier(tierIndex)
             -- loop once for dungeons and once for raids
             local isRaid = false
-            for i=1, 2 do
+            for _=1, 2 do
                 local index = 1
                 -- there is no API to get the number of instances per tier
                 while true do

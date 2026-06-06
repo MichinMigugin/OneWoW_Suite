@@ -132,20 +132,21 @@ local function HookGUIRefresh()
 end
 
 -- Core force-loads OneWoW_Bags during its own ADDON_LOADED, which eats Bags'
--- ADDON_LOADED event. Install the GUI refresh wrappers at PLAYER_LOGIN instead;
--- the GUI/BankGUI/GuildBankGUI tables are created at file scope, so they already
--- exist by login.
+-- ADDON_LOADED event. Login hooks run via OneWoW_Bags:OnPlayerLogin().
+function OneWoW_Bags:InstallIntegrationHooks()
+	if self._integrationHooksInstalled then return end
+	self._integrationHooksInstalled = true
+	if self.GUI then
+		HookGUIRefresh()
+		self:FireCallbacksOnAllButtons()
+	end
+end
+
+-- BANKFRAME_OPENED still needs a direct listener; login hooks run via OnPlayerLogin.
 local integrationEventFrame = CreateFrame("Frame")
-integrationEventFrame:RegisterEvent("PLAYER_LOGIN")
 integrationEventFrame:RegisterEvent("BANKFRAME_OPENED")
-integrationEventFrame:SetScript("OnEvent", function(self, event)
-	if event == "PLAYER_LOGIN" then
-		self:UnregisterEvent("PLAYER_LOGIN")
-		if OneWoW_Bags.GUI then
-			HookGUIRefresh()
-			OneWoW_Bags:FireCallbacksOnAllButtons()
-		end
-	elseif event == "BANKFRAME_OPENED" then
+integrationEventFrame:SetScript("OnEvent", function(_, event)
+	if event == "BANKFRAME_OPENED" then
 		if OneWoW_Bags.BankController:Get("overlays") then
 			C_Timer.After(0.1, function()
 				OneWoW_Bags:FireCallbacksOnBankButtons()

@@ -577,13 +577,8 @@ end
 if C_AddOns.IsAddOnLoaded("Blizzard_Collections") then
     hookWardrobe()
 else
-    local frame = CreateFrame("Frame")
-    frame:RegisterEvent("ADDON_LOADED")
-    frame:SetScript("OnEvent", function(_, _, addon)
-        if addon == "Blizzard_Collections" then
-            hookWardrobe()
-            frame:UnregisterEvent("ADDON_LOADED")
-        end
+    OneWoW:RegisterAddonLoadedWatcher("Blizzard_Collections", function()
+        hookWardrobe()
     end)
 end
 
@@ -643,13 +638,8 @@ end
 if C_AddOns.IsAddOnLoaded("Blizzard_AchievementUI") then
     hookAchievementCriteria()
 else
-    local frame = CreateFrame("Frame")
-    frame:RegisterEvent("ADDON_LOADED")
-    frame:SetScript("OnEvent", function(_, _, addon)
-        if addon == "Blizzard_AchievementUI" then
-            hookAchievementCriteria()
-            frame:UnregisterEvent("ADDON_LOADED")
-        end
+    OneWoW:RegisterAddonLoadedWatcher("Blizzard_AchievementUI", function()
+        hookAchievementCriteria()
     end)
 end
 
@@ -674,12 +664,7 @@ end
 if C_AddOns.IsAddOnLoaded("Blizzard_GarrisonUI") then
     hookGarrisonAbility()
 else
-    local frame = CreateFrame("Frame")
-    frame:RegisterEvent("ADDON_LOADED")
-    frame:SetScript("OnEvent", function(_, _, addon)
-        if addon == "Blizzard_GarrisonUI" then
-            hookGarrisonAbility()
-            frame:UnregisterEvent("ADDON_LOADED")
-        end
+    OneWoW:RegisterAddonLoadedWatcher("Blizzard_GarrisonUI", function()
+        hookGarrisonAbility()
     end)
 end

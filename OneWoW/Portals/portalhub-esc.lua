@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 local L = OneWoW.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
@@ -11,7 +11,7 @@ local secureButtons = {}
 local flyoutButtons = {}
 local instanceStatsFrame = nil
 local lastAutoUpdatedInstance = nil
-local autoUpdateFrame = nil
+local autoUpdateRegistered = false
 
 local issecretvalue = issecretvalue or function() return false end
 local function IsSecret(value)
@@ -24,17 +24,13 @@ function EscMenu:Initialize()
 end
 
 function EscMenu:RegisterAutoUpdateEvents()
-	if not autoUpdateFrame then
-		autoUpdateFrame = CreateFrame("Frame")
-		autoUpdateFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-		autoUpdateFrame:SetScript("OnEvent", function(self, event, ...)
-			if event == "PLAYER_ENTERING_WORLD" then
-				C_Timer.After(2, function()
-					EscMenu:AutoUpdateCurrentInstance()
-				end)
-			end
+	if autoUpdateRegistered then return end
+	autoUpdateRegistered = true
+	OneWoW:RegisterCoreEnteringWorldHandler("portalhub-esc", function()
+		C_Timer.After(2, function()
+			EscMenu:AutoUpdateCurrentInstance()
 		end)
-	end
+	end)
 end
 
 function EscMenu:AutoUpdateCurrentInstance()
@@ -48,7 +44,7 @@ function EscMenu:AutoUpdateCurrentInstance()
 	if not journalData or not OneWoW.JournalModule then return end
 
 	C_Timer.After(1, function()
-		OneWoW.JournalModule:UpdateInstanceItems(journalData.journalInstanceID, journalData.expansion, function(success, updatedCount) end)
+		OneWoW.JournalModule:UpdateInstanceItems(journalData.journalInstanceID, journalData.expansion, function() end)
 	end)
 end
 
@@ -79,7 +75,7 @@ local STRIP_GAP = 6
 local PADDING_MENU_LEFT = 40
 local PADDING_MENU_RIGHT = 10
 
-function EscMenu:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide, ph)
+function EscMenu:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide)
 	local gm = GameMenuFrame
 	if not gm then return portalsSide == "left" and -PADDING_MENU_LEFT or PADDING_MENU_RIGHT end
 	local pc = OneWoW.EscPanels:GetPanelsContainer()
@@ -114,7 +110,7 @@ function EscMenu:SyncEscLayout()
 	local panelsSide = ph.escPanelsSide == "right" and "right" or "left"
 	local iconSize = ph.escIconSize or 40
 	local yStart = -(iconSize / 2) - 10
-	local ox = self:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide, ph)
+	local ox = self:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide)
 
 	if ph.escPortalsEnabled then
 		if portalsSide == "left" and leftFrame and leftFrame:IsShown() then
@@ -180,9 +176,9 @@ function EscMenu:ShowPortalFrames()
 	leftFrame:Hide()
 	rightFrame:Hide()
 
-	self:BuildLeftSide(leftFrame, iconSize, iconGap)
+	self:BuildLeftSide(leftFrame)
 
-	local ox = self:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide, ph)
+	local ox = self:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide)
 
 	if ph.escPortalsEnabled then
 		if portalsSide == "left" then
@@ -211,7 +207,7 @@ function EscMenu:ShowPortalFrames()
 	C_Timer.After(0.05, deferredSync)
 end
 
-function EscMenu:BuildLeftSide(parent, iconSize, iconGap)
+function EscMenu:BuildLeftSide(parent)
 	if OneWoW.EscPanels then
 		OneWoW.EscPanels:Build(parent)
 	end
@@ -500,7 +496,7 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 	elseif portalData.type == "toy" then
 		button:SetAttribute("type", "toy")
 		button:SetAttribute("toy", portalData.id)
-		local _, name, icon = C_ToyBox.GetToyInfo(portalData.id)
+		local _, _, icon = C_ToyBox.GetToyInfo(portalData.id)
 		if icon then
 			button:SetNormalTexture(icon)
 		else
@@ -543,7 +539,7 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 		if icon then button:SetNormalTexture(icon) end
 	end
 
-	button:SetScript("PostClick", function(self, mouseButton)
+	button:SetScript("PostClick", function(_, mouseButton)
 		if mouseButton == "LeftButton" then
 			if portalData.type == "item" and OneWoW.PortalHubEquip then
 				if OneWoW.PortalHubEquip:IsItemEquippable(portalData.id) and not OneWoW.PortalHubEquip:IsItemEquipped(portalData.id) then
@@ -556,8 +552,8 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 		end
 	end)
 
-	button:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, growLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
+	button:SetScript("OnEnter", function(myself)
+		GameTooltip:SetOwner(myself, growLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
 		if portalData.type == "randomhearth" or portalData.type == "item" then
 			GameTooltip:SetItemByID(portalData.id)
 		elseif portalData.type == "toy" then
@@ -570,7 +566,7 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 		GameTooltip:Show()
 	end)
 
-	button:SetScript("OnLeave", function(self)
+	button:SetScript("OnLeave", function()
 		GameTooltip:Hide()
 	end)
 
@@ -643,13 +639,13 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize, growLef
 		end)
 	end)
 
-	button:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, growLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
+	button:SetScript("OnEnter", function(myself)
+		GameTooltip:SetOwner(myself, growLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
 		GameTooltip:SetText(L["Open Portal Hub"], 1, 1, 1)
 		GameTooltip:Show()
 	end)
 
-	button:SetScript("OnLeave", function(self)
+	button:SetScript("OnLeave", function()
 		GameTooltip:Hide()
 	end)
 
@@ -676,7 +672,7 @@ function EscMenu:HideInstanceStatsFrame()
 end
 
 function EscMenu:ShowInstanceStatsFrame()
-	local name, instanceType, difficultyID, difficultyName, maxPlayers = GetInstanceInfo()
+	local name, instanceType, _, difficultyName, maxPlayers = GetInstanceInfo()
 	if instanceType ~= "party" and instanceType ~= "raid" then
 		self:HideInstanceStatsFrame()
 		return
@@ -692,7 +688,7 @@ function EscMenu:CreateOrUpdateInstanceStatsFrame(instanceName, instanceType, di
 	if not instanceName then return end
 	refreshCount = refreshCount or 0
 
-	local journalData, collectiblesStats = self:GetInstanceJournalData(instanceName)
+	local _, collectiblesStats = self:GetInstanceJournalData(instanceName)
 	local statsText = instanceType == "party" and L["SETTINGS_PORTALHUB_DUNGEON"] or L["SETTINGS_PORTALHUB_RAID"]
 	if difficultyName and difficultyName ~= "" then
 		statsText = statsText .. " - " .. difficultyName
@@ -777,13 +773,13 @@ function EscMenu:CreateOrUpdateInstanceStatsFrame(instanceName, instanceType, di
 		openJournalButton:SetSize(150, 30)
 		openJournalButton:SetPoint("BOTTOM", instanceStatsFrame, "BOTTOM", 0, 10)
 		openJournalButton:SetText(L["SETTINGS_PORTALHUB_UPDATE_DATA"])
-		openJournalButton:SetScript("OnClick", function(self)
+		openJournalButton:SetScript("OnClick", function()
 			HideUIPanel(GameMenuFrame)
 		end)
 
-		instanceStatsFrame:SetScript("OnDragStart", function(self) self:StartMoving() end)
-		instanceStatsFrame:SetScript("OnDragStop", function(self)
-			self:StopMovingOrSizing()
+		instanceStatsFrame:SetScript("OnDragStart", function(myself) myself:StartMoving() end)
+		instanceStatsFrame:SetScript("OnDragStop", function(myself)
+			myself:StopMovingOrSizing()
 			EscMenu:SaveInstanceStatsPosition()
 		end)
 

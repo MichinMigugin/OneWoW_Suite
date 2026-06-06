@@ -20,7 +20,7 @@ local function GetToggle(id)
 end
 
 local function GetSettings()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     local mods = addon.db.global.modules
     if not mods.map_world_tools then mods.map_world_tools = {} end
     local s = mods.map_world_tools
@@ -485,24 +485,24 @@ local function RegisterWorldMapLoader()
         EventUtil.ContinueOnAddOnLoaded("Blizzard_WorldMap", OnWorldMapAddonLoaded)
         EventUtil.ContinueOnAddOnLoaded("Blizzard_SharedMapDataProviders", AfterFogMixinReady)
     else
-        local f = CreateFrame("Frame")
-        f:RegisterEvent("ADDON_LOADED")
-        f:SetScript("OnEvent", function(_, _, name)
-            if name == "Blizzard_WorldMap" then
+        local qos = OneWoW_QoL
+        if qos and qos.RegisterAddonLoadedWatcher then
+            qos:RegisterAddonLoadedWatcher("Blizzard_WorldMap", function()
                 OnWorldMapAddonLoaded()
-            elseif name == "Blizzard_SharedMapDataProviders" then
+            end)
+            qos:RegisterAddonLoadedWatcher("Blizzard_SharedMapDataProviders", function()
                 AfterFogMixinReady()
-            end
-        end)
+            end)
+        end
     end
 end
 
 function M:OnEnable()
     RegisterWorldMapLoader()
-    if C_AddOns and C_AddOns.IsAddOnLoaded("Blizzard_WorldMap") then
+    if C_AddOns.IsAddOnLoaded("Blizzard_WorldMap") then
         OnWorldMapAddonLoaded()
     end
-    if C_AddOns and C_AddOns.IsAddOnLoaded("Blizzard_SharedMapDataProviders") then
+    if C_AddOns.IsAddOnLoaded("Blizzard_SharedMapDataProviders") then
         AfterFogMixinReady()
     end
     ApplyMapFadeCVar()

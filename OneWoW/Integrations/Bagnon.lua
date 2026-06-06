@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local function IsEnabled()
     local ov = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
@@ -48,11 +48,8 @@ local function SetupHooks()
     OneWoW.OverlayEngine:RegisterIntegration(RefreshBagnon)
 end
 
-local initFrame = CreateFrame("Frame")
-initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function()
+OneWoW:RegisterCoreLoginHandler("Bagnon", function()
     if C_AddOns.IsAddOnLoaded("Bagnon") then
         SetupHooks()
     end
-    initFrame:UnregisterEvent("PLAYER_LOGIN")
 end)

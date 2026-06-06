@@ -5,7 +5,7 @@ ns.ProfessionUI = {}
 local ProfessionUI = ns.ProfessionUI
 
 local function GetCurrentRecipeInfo()
-    if not _G.ProfessionsFrame then return nil end
+    if not ProfessionsFrame then return nil end
 
     local craftingPage = ProfessionsFrame.CraftingPage
     if not craftingPage then return nil end
@@ -264,16 +264,11 @@ function GetDB()
 end
 
 function ProfessionUI:Initialize()
-    if not _G.ProfessionsFrame then
-        local hookFrame = CreateFrame("Frame")
-        hookFrame:RegisterEvent("ADDON_LOADED")
-        hookFrame:SetScript("OnEvent", function(myself, _, addon)
-            if addon == "Blizzard_Professions" then
-                C_Timer.After(0.5, function()
-                    ProfessionUI:HookProfessionsFrame()
-                end)
-                myself:UnregisterEvent("ADDON_LOADED")
-            end
+    if not ProfessionsFrame then
+        ns:RegisterAddonLoadedWatcher("Blizzard_Professions", function()
+            C_Timer.After(0.5, function()
+                ProfessionUI:HookProfessionsFrame()
+            end)
         end)
     else
         C_Timer.After(0.5, function()
@@ -298,7 +293,7 @@ function ProfessionUI:UpdateVisibility()
 end
 
 function ProfessionUI:HookProfessionsFrame()
-    if not _G.ProfessionsFrame then return end
+    if not ProfessionsFrame then return end
     local craftingPage = ProfessionsFrame.CraftingPage
     if not craftingPage then return end
     local schematicForm = craftingPage.SchematicForm

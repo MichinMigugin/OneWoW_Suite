@@ -1,4 +1,5 @@
-local addonName, ns = ...
+local _, ns = ...
+
 ns.Locales = ns.Locales or {}
 ns.Locales["enUS"] = {}
 local L_enUS = ns.Locales["enUS"]
@@ -129,6 +130,7 @@ L_enUS["AB_SEARCH_HINT"] = "Search sets..."
 L_enUS["ACCOUNT_OVERVIEW"] = "Account Overview"
 L_enUS["ACHIEVEMENTS"] = "Achievements"
 L_enUS["ADDON_LOADED"] = "loaded successfully! Type /alttracker or /at to open."
+L_enUS["ADDON_TITLE_SHORT"] = "AltTracker"
 L_enUS["ADDON_TITLE_FRAME"] = "|cFFFFD100OneWoW|r - AltTracker"
 L_enUS["ADDON_CHAT_PREFIX"] = "|cFFFFD100OneWoW - AltTracker:|r"
 L_enUS["ADDON_MSG_DB_NOT_READY"] = "Database not ready. Please wait a moment and try again."

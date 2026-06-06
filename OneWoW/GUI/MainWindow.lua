@@ -18,14 +18,6 @@ local row2Container = nil
 local contentArea = nil
 local homePanel = nil
 local settingsPanel = nil
-local ALWAYS_SHOW_MODULES = {
-    { name = "notes",      addonName = "OneWoW_Notes",    order = 1, localeKey = "MODULE_NOTES",
-      url = "https://www.curseforge.com/wow/addons/onewow-notes" },
-    { name = "alttracker", addonName = "OneWoW_AltTracker", order = 2, localeKey = "MODULE_ALTTRACKER",
-      url = "https://www.curseforge.com/wow/addons/onewow-alttracker" },
-    { name = "catalog",    addonName = "OneWoW_Catalog",  order = 4, localeKey = "MODULE_CATALOG",
-      url = "https://www.curseforge.com/wow/addons/onewow-catalog" },
-}
 local placeholderData = {}
 local FRAME_NAME = "OneWoWMainWindow"
 
@@ -190,6 +182,105 @@ local function LayoutRow1Buttons()
     end
 end
 
+-- Row-1 module tabs (between Home and Settings): registered modules plus
+-- ALWAYS_SHOW placeholders for units not loaded yet. Rebuilt when the registry
+-- gains a module after MainWindow has already initialized (mid-session Load Addon).
+local function BuildDisplayModules()
+    wipe(placeholderData)
+
+    local modules = OneWoW.ModuleRegistry:GetModules()
+    local registeredNames = {}
+    for _, mod in ipairs(modules) do
+        registeredNames[mod.name] = true
+    end
+
+    local displayModules = {}
+    for _, mod in ipairs(modules) do
+        tinsert(displayModules, mod)
+    end
+    for _, info in ipairs(OneWoW:GetAlwaysShowModules()) do
+        if not registeredNames[info.name] then
+            placeholderData[info.name] = info
+            tinsert(displayModules, {
+                name = info.name,
+                displayName = function() return L[info.localeKey] end,
+                order = info.order,
+            })
+        end
+    end
+    sort(displayModules, function(a, b)
+        if a.order ~= b.order then return a.order < b.order end
+        return a.name < b.name
+    end)
+    return displayModules
+end
+
+local function CollectRow1ModuleTabNames()
+    local names = {}
+    for i = 2, #row1Buttons - 1 do
+        tinsert(names, row1Buttons[i].moduleName)
+    end
+    return names
+end
+
+local function Row1ModuleTabsMatch(displayModules)
+    if #row1Buttons < 2 then return false end
+    local expected = {}
+    for _, mod in ipairs(displayModules) do
+        tinsert(expected, mod.name)
+    end
+    local current = CollectRow1ModuleTabNames()
+    if #current ~= #expected then return false end
+    for i = 1, #current do
+        if current[i] ~= expected[i] then return false end
+    end
+    return true
+end
+
+function GUI:RefreshRow1ModuleTabs()
+    if not isInitialized or not row1Container or #row1Buttons < 2 then return end
+
+    local displayModules = BuildDisplayModules()
+    if Row1ModuleTabsMatch(displayModules) then return end
+
+    local homeBtn = row1Buttons[1]
+    local settingsBtn = row1Buttons[#row1Buttons]
+
+    for i = #row1Buttons - 1, 2, -1 do
+        local btn = row1Buttons[i]
+        btn:Hide()
+        btn:ClearAllPoints()
+        btn:SetParent(nil)
+    end
+
+    row1Buttons = { homeBtn }
+    for _, mod in ipairs(displayModules) do
+        local displayText = type(mod.displayName) == "function" and mod.displayName() or mod.displayName
+        local btn = CreateRow1TabButton(row1Container, displayText, mod.name)
+        tinsert(row1Buttons, btn)
+    end
+    tinsert(row1Buttons, settingsBtn)
+
+    LayoutRow1Buttons()
+    OneWoW_GUI:ApplyFontToFrame(row1Container)
+    UpdateRow1Styling()
+
+    -- A placeholder tab may have been showing; re-select so real module content loads.
+    if currentModuleTab ~= "home" and currentModuleTab ~= "settings" then
+        if OneWoW.ModuleRegistry:IsRegistered(currentModuleTab) then
+            GUI:SelectModuleTab(currentModuleTab)
+        end
+    end
+end
+
+-- Re-query the Home tab's per-feature status rows in place. Safe before the panel
+-- is built and after FullReset (homePanel is nil); the OnShow hook covers those.
+function GUI:RefreshHomeStatus()
+    if homePanel and homePanel.RefreshStatus then
+        homePanel.RefreshStatus()
+    end
+end
+
 local function LayoutRow2Buttons()
     if not row2Container or #row2Buttons == 0 then return end
     local containerWidth = row2Container:GetWidth()
@@ -238,12 +329,6 @@ local function BuildRow2ForModule(moduleName)
 end
 
 function GUI:SelectModuleTab(moduleName)
-    if currentModuleTab == "home" and moduleName ~= "home" and GUI.HasPendingHomeChanges and GUI:HasPendingHomeChanges() then
-        GUI._pendingAction = function() GUI:SelectModuleTab(moduleName) end
-        StaticPopup_Show("ONEWOW_UNSAVED_CHANGES")
-        return
-    end
-
     -- Lazy modules load the first time their tab is opened. Dormant until modules
     -- become LoadOnDemand (migration step 3); a no-op for login-phase modules.
     if OneWoW.LoadOrchestrator then
@@ -453,28 +538,11 @@ function GUI:InitMainWindow()
     local maxW = math.min(C.MAX_WIDTH, screenW)
     local maxH = math.min(C.MAX_HEIGHT, screenH)
     MainWindow:SetResizeBounds(C.MIN_WIDTH, C.MIN_HEIGHT, maxW, maxH)
-    MainWindow:SetScript("OnHide", function(myself)
+    MainWindow:SetScript("OnHide", function()
         local g = OneWoW.db and OneWoW.db.global
         if g then
             g.mainFramePosition = g.mainFramePosition or {}
             OneWoW_GUI:SaveWindowPosition(MainWindow, g.mainFramePosition)
-        end
-        if GUI.HasPendingHomeChanges and GUI:HasPendingHomeChanges() and not GUI._forceHide then
-            C_Timer.After(0, function()
-                if not myself:IsShown() and not GUI._forceHide then
-                    if GameMenuFrame and GameMenuFrame:IsShown() then
-                        HideUIPanel(GameMenuFrame)
-                    end
-                    myself:Show()
-                    myself:Raise()
-                    GUI._pendingAction = function()
-                        GUI._forceHide = true
-                        GUI:Hide()
-                        GUI._forceHide = nil
-                    end
-                    StaticPopup_Show("ONEWOW_UNSAVED_CHANGES")
-                end
-            end)
         end
     end)
     MainWindow:Hide()
@@ -511,32 +579,10 @@ function GUI:InitMainWindow()
     contentArea = CreateFrame("Frame", nil, MainWindow)
     UpdateContentAreaAnchors()
 
-    local modules = OneWoW.ModuleRegistry:GetModules()
-    local registeredNames = {}
-    for _, mod in ipairs(modules) do
-        registeredNames[mod.name] = true
-    end
-
     local homeBtn = CreateRow1TabButton(row1Container, L["HOME_TAB"] or "OneWoW", "home")
     table.insert(row1Buttons, homeBtn)
 
-    local displayModules = {}
-    for _, mod in ipairs(modules) do
-        table.insert(displayModules, mod)
-    end
-    for _, info in ipairs(ALWAYS_SHOW_MODULES) do
-        if not registeredNames[info.name] then
-            placeholderData[info.name] = info
-            table.insert(displayModules, {
-                name = info.name,
-                displayName = function() return L[info.localeKey] or info.name end,
-                order = info.order,
-            })
-        end
-    end
-    table.sort(displayModules, function(a, b) return a.order < b.order end)
-
-    for _, mod in ipairs(displayModules) do
+    for _, mod in ipairs(BuildDisplayModules()) do
         local displayText = type(mod.displayName) == "function" and mod.displayName() or mod.displayName
         local btn = CreateRow1TabButton(row1Container, displayText, mod.name)
         table.insert(row1Buttons, btn)
@@ -597,6 +643,8 @@ end
 function GUI:Show(moduleName)
     if not isInitialized then
         GUI:InitMainWindow()
+    else
+        GUI:RefreshRow1ModuleTabs()
     end
     if MainWindow then
         MainWindow:Show()
@@ -608,15 +656,6 @@ function GUI:Show(moduleName)
 end
 
 function GUI:Hide()
-    if GUI.HasPendingHomeChanges and GUI:HasPendingHomeChanges() and not GUI._forceHide then
-        GUI._pendingAction = function()
-            GUI._forceHide = true
-            GUI:Hide()
-            GUI._forceHide = nil
-        end
-        StaticPopup_Show("ONEWOW_UNSAVED_CHANGES")
-        return
-    end
     if MainWindow then
         MainWindow:Hide()
     end
@@ -635,6 +674,8 @@ function GUI:GetMainWindow()
 end
 
 function GUI:CreateAddonPlaceholderFrame(parent, info)
+    parent.addonName = info.addonName
+
     local icon = parent:CreateTexture(nil, "ARTWORK")
     icon:SetSize(96, 96)
     icon:SetPoint("CENTER", parent, "CENTER", 0, 60)
@@ -647,27 +688,23 @@ function GUI:CreateAddonPlaceholderFrame(parent, info)
 
     local statusText = OneWoW_GUI:CreateFS(parent, 12)
     statusText:SetPoint("TOP", nameText, "BOTTOM", 0, -8)
-    statusText:SetText(L["HOME_NOT_DETECTED"])
     statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local installLabel = OneWoW_GUI:CreateFS(parent, 12)
-    installLabel:SetPoint("TOP", statusText, "BOTTOM", 0, -24)
-    installLabel:SetText(L["HOME_INSTALL_FROM_CURSE"])
-    installLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    local function RefreshPlaceholderStatus()
+        local state = OneWoW:GetFeatureUnitState(parent.addonName)
+        statusText:SetText(OneWoW:GetFeatureUnitStatusLabel(state))
+    end
 
-    local urlBox = OneWoW_GUI:CreateEditBox(parent, {
-        name = "OneWoW_Placeholder_" .. info.name .. "_URL",
-        width = 400,
-        height = 24,
+    parent:SetScript("OnShow", RefreshPlaceholderStatus)
+    RefreshPlaceholderStatus()
+
+    local linkRow = CreateFrame("Frame", nil, parent)
+    linkRow:SetSize(400, 20)
+    linkRow:SetPoint("TOP", statusText, "BOTTOM", 0, -24)
+    GUI:CreateManageFeaturesLinkRow(linkRow, {
+        pointerKey = "PLACEHOLDER_ENABLE_POINTER",
+        center = true,
     })
-    urlBox:SetPoint("TOP", installLabel, "BOTTOM", 0, -8)
-    urlBox:SetText(info.url)
-    urlBox:SetAutoFocus(false)
-    urlBox:SetScript("OnEditFocusGained", function(myself) myself:HighlightText() end)
-    urlBox:SetScript("OnEditFocusLost", function(myself)
-        myself:HighlightText(0, 0)
-        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
 end
 
 function GUI:ResetUIToDefaults()
@@ -703,3 +740,11 @@ function GUI:FullReset()
     settingsPanel = nil
     placeholderData = {}
 end
+
+EventRegistry:RegisterCallback("OneWoW.ModuleRegistered", function()
+    GUI:RefreshRow1ModuleTabs()
+end)
+
+EventRegistry:RegisterCallback("OneWoW.FeatureStateChanged", function()
+    GUI:RefreshHomeStatus()
+end)

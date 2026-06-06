@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local GUI = OneWoW.GUI
 
@@ -36,7 +36,7 @@ local function SyncSettingToChildAddons(settingType, value)
     local integratedAddons = {
         "OneWoW_AltTracker", "OneWoW_Notes", "OneWoW_QoL",
         "OneWoW_Catalog", "OneWoW_DirectDeposit",
-        "OneWoW_ShoppingList", "OneWoW_UtilityDevTool",
+        "OneWoW_ShoppingList", "OneWoW_Utility_DevTool",
     }
     for _, globalName in ipairs(integratedAddons) do
         local addon = _G[globalName]
@@ -74,7 +74,7 @@ function OneWoW.Profiles.CaptureSettings()
         }
     end
 
-    local qol = _G.OneWoW_QoL
+    local qol = OneWoW_QoL
     if qol and qol.db and qol.db.global then
         local q = qol.db.global
         snapshot.qol = { language = q.language, theme = q.theme, minimap = DeepCopy(q.minimap), modules = {} }
@@ -112,7 +112,7 @@ function OneWoW.Profiles.ApplySettings(snapshot, profileName)
         if snapshot.core.portalHub then DeepMerge(g.portalHub, snapshot.core.portalHub) end
     end
 
-    local qol = _G.OneWoW_QoL
+    local qol = OneWoW_QoL
     if snapshot.qol and qol and qol.db and qol.db.global then
         local q = qol.db.global
         if snapshot.qol.language then q.language = snapshot.qol.language end
@@ -175,7 +175,7 @@ end
 function OneWoW.Profiles.DeserializeProfile(str)
     if not str or str == "" then return nil, "Empty input" end
     local cleaned = str:gsub("%-%-[^\n]*\n?", "")
-    local func, err = loadstring("return " .. cleaned)
+    local func = loadstring("return " .. cleaned)
     if not func then return nil, "Parse error" end
     local ok, data = pcall(func)
     if not ok then return nil, "Execution error" end
@@ -203,10 +203,15 @@ end
 -- Auto-save hooks
 -- ============================================================
 
+OneWoW:RegisterCoreLoginHandler("profiles.AutoSaveDefault", function()
+    if OneWoW.Profiles and OneWoW.Profiles.AutoSaveDefault then
+        OneWoW.Profiles.AutoSaveDefault()
+    end
+end)
+
 local _autoSaveFrame = CreateFrame("Frame")
 _autoSaveFrame:RegisterEvent("PLAYER_LOGOUT")
-_autoSaveFrame:RegisterEvent("PLAYER_LOGIN")
-_autoSaveFrame:SetScript("OnEvent", function(_, event)
+_autoSaveFrame:SetScript("OnEvent", function()
     if OneWoW.Profiles and OneWoW.Profiles.AutoSaveDefault then
         OneWoW.Profiles.AutoSaveDefault()
     end
@@ -332,7 +337,7 @@ function GUI:CreateProfilesTab(parent)
     local panelB = CreateFrame("Frame", nil, parent)
     panelB:Hide()
 
-    local tabBtns, tabsBottomY = OneWoW_GUI:CreateFitFrameButtons(parent, {
+    local _, tabsBottomY = OneWoW_GUI:CreateFitFrameButtons(parent, {
         yOffset = -4,
         items = {
             { text = "UI & Addon Settings", value = "settings",    isActive = true },
@@ -359,7 +364,7 @@ function GUI:CreateProfilesTab(parent)
     end
 
     -- ── Panel A: UI & Addon Settings Profiles ─────────────────
-    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(panelA, { name = "OneWoW_ProfilesScroll" })
+    local _, content = OneWoW_GUI:CreateScrollFrame(panelA, { name = "OneWoW_ProfilesScroll" })
 
     local yOffset = -10
 
@@ -507,13 +512,13 @@ function GUI:CreateProfilesTab(parent)
                 delBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
                 delBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
                 delBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-                delBtn:SetScript("OnEnter", function(self)
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER_HOVER"))
+                delBtn:SetScript("OnEnter", function(myself)
+                    myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+                    myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER_HOVER"))
                 end)
-                delBtn:SetScript("OnLeave", function(self)
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+                delBtn:SetScript("OnLeave", function(myself)
+                    myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+                    myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
                 end)
                 local capturedName = name
                 delBtn:SetScript("OnClick", function()

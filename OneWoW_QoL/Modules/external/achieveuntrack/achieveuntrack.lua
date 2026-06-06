@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 local AchieveUntrackModule = {
     id          = "achieveuntrack",
@@ -30,19 +30,11 @@ local function ScanAndUntrack()
 end
 
 function AchieveUntrackModule:OnEnable()
-    if not self._frame then
-        self._frame = CreateFrame("Frame", "OneWoW_QoL_AchieveUntrack")
-        self._frame:SetScript("OnEvent", function()
-            ScanAndUntrack()
-        end)
-    end
-    self._frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    OneWoW_QoL:RegisterEnteringWorldHandler("achieveuntrack", ScanAndUntrack)
 end
 
 function AchieveUntrackModule:OnDisable()
-    if self._frame then
-        self._frame:UnregisterAllEvents()
-    end
+    OneWoW_QoL:UnregisterEnteringWorldHandler("achieveuntrack")
 end
 
 ns.AchieveUntrackModule = AchieveUntrackModule

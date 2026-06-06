@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.DataManager = {}
 local DataManager = ns.DataManager
@@ -29,7 +29,7 @@ function DataManager:RegisterEvents()
         eventFrame:RegisterEvent(event)
     end
 
-    eventFrame:SetScript("OnEvent", function(self, event, ...)
+    eventFrame:SetScript("OnEvent", function(_, event, ...)
         DataManager:HandleEvent(event, ...)
     end)
 end

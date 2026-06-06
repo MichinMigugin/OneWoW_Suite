@@ -60,13 +60,22 @@ local function InitializeModules()
     end
 end
 
-local function OnPlayerLogin()
+-- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN at
+-- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
+-- enable, when PLAYER_LOGIN has already fired and won't reach this module.
+local didLogin = false
+function ns:OnPlayerLogin()
+    if didLogin then return end
+    didLogin = true
     DetectOneWoW()
 
     if OneWoW then
         OneWoW:RegisterMinimap("OneWoW_ShoppingList", (OneWoW.L and OneWoW.L["CTX_OPEN_SL"]), nil, function()
             if ns.MainWindow then ns.MainWindow:Toggle() end
         end)
+    end
+    if ns.FireLoginHandlers then
+        ns:FireLoginHandlers()
     end
 end
 
@@ -78,7 +87,7 @@ local didInit = false
 function ns:OnAddonLoaded()
     if didInit then return end
     didInit = true
-
+    OneWoW.Lifecycle:CreateHandlerRegistry(ns)
     ns:InitializeDatabase()
 
     local g = OneWoW_ShoppingList_DB.global
@@ -195,12 +204,3 @@ SLASH_ONEWOW_SHOPPINGLIST1 = "/owsl"
 SLASH_ONEWOW_SHOPPINGLIST2 = "/shoppinglist"
 SLASH_ONEWOW_SHOPPINGLIST3 = "/1wsl"
 SlashCmdList["ONEWOW_SHOPPINGLIST"] = HandleSlashCommand
-
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function(_, event)
-    if event == "PLAYER_LOGIN" then
-        ns:OnAddonLoaded()  -- safety net; normally already run by the loader
-        OnPlayerLogin()
-    end
-end)

@@ -35,6 +35,8 @@ Core\Constants.lua
 Core\Database.lua
 Core\ModuleRegistry.lua
 Core\AddonLoader.lua
+Core\Lifecycle.lua
+Core\StoreBootstrap.lua
 Core\SettingsFeatureRegistry.lua
 Core\ItemPrices.lua
 Core\RecipeKnownUtil.lua
@@ -103,6 +105,7 @@ Search\SearchData.lua
 Search\SearchFrame.lua
 
 # GUI
+GUI\navigation.lua
 GUI\MainWindow.lua
 GUI\Minimap.lua
 GUI\t-home.lua

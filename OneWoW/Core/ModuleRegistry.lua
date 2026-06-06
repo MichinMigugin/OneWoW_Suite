@@ -18,6 +18,10 @@ function OneWoW:RegisterModule(moduleInfo)
         loadPhase = moduleInfo.loadPhase or "login",
         tabs = moduleInfo.tabs or {},
     }
+
+    -- MainWindow builds row-1 tabs once at first open; mid-session loads (e.g. a
+    -- soft-disabled unit re-enabled via Load Addon) register here after init.
+    EventRegistry:TriggerEvent("OneWoW.ModuleRegistered", moduleInfo.name)
 end
 
 function Registry:GetModules()
@@ -25,7 +29,10 @@ function Registry:GetModules()
     for _, mod in pairs(registeredModules) do
         table.insert(sorted, mod)
     end
-    table.sort(sorted, function(a, b) return a.order < b.order end)
+    table.sort(sorted, function(a, b)
+        if a.order ~= b.order then return a.order < b.order end
+        return a.name < b.name
+    end)
     return sorted
 end
 

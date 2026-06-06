@@ -4,7 +4,7 @@
 ## Notes: OneWoW Utility Addon that: provides frame inspection and addon development utilities.
 ## Author: OneWoW Dev Team
 
-## RequiredDeps: OneWoW_GUI
+## RequiredDeps: OneWoW
 ## OptionalDeps: !BugGrabber
 ## Category: OneWoW
 ## Group: OneWoW

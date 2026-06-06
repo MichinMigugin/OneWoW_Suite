@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 local FM = {}
 ns.FrameMoverCore = FM
@@ -28,12 +28,12 @@ local modifierFrame
 local SPECIAL = {}
 
 local function SyncEscPanels()
-    local esc = _G.OneWoW and OneWoW.PortalHubEsc
+    local esc = OneWoW.PortalHubEsc
     if esc and esc.SyncEscLayout then
         esc:SyncEscLayout()
         return
     end
-    local ow = _G.OneWoW
+    local ow = OneWoW
     local escPanels = ow and ow.EscPanels
     local ph = ow and ow.db and ow.db.global and ow.db.global.portalHub
     if escPanels and escPanels.EnsurePanelsContainer and ph then
@@ -69,7 +69,7 @@ SPECIAL["GameMenuFrame"] = {
 -- ============================================================
 
 function FM:GetDB()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db then return nil end
     if not addon.db.global.modules["framemover"] then
         addon.db.global.modules["framemover"] = {}
@@ -528,22 +528,26 @@ function FM:Initialize()
     if not self._eventFrame then
         self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_FM_Events")
     end
-    self._eventFrame:RegisterEvent("ADDON_LOADED")
     self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-    self._eventFrame:SetScript("OnEvent", function(_, event, arg1)
-        if event == "ADDON_LOADED" then
-            FM:ProcessAddonFrames(arg1)
-        elseif event == "PLAYER_REGEN_ENABLED" then
+    self._eventFrame:SetScript("OnEvent", function(_, event)
+        if event == "PLAYER_REGEN_ENABLED" then
             FM:FlushCombatQueue()
         end
     end)
+
+    local qos = OneWoW_QoL
+    if qos and qos.RegisterAddonLoadedWatcher then
+        qos:RegisterAddonLoadedWatcher(nil, function(addonKey)
+            FM:ProcessAddonFrames(addonKey)
+        end)
+    end
 
     self:ProcessGlobalFrames()
 
     local reg = ns.FrameMoverFrames
     if reg then
         for addonKey in pairs(reg.ADDONS) do
-            if C_AddOns and C_AddOns.IsAddOnLoaded(addonKey) then
+            if C_AddOns.IsAddOnLoaded(addonKey) then
                 self:ProcessAddonFrames(addonKey)
             end
         end

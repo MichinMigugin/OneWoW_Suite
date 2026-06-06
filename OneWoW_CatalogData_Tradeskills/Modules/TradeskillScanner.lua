@@ -43,19 +43,18 @@ end
 function Scanner:Initialize()
     local frame = CreateFrame("Frame")
     frame:RegisterEvent("TRADE_SKILL_SHOW")
-    frame:RegisterEvent("PLAYER_LOGIN")
     frame:SetScript("OnEvent", function(_, event)
         if event == "TRADE_SKILL_SHOW" then
             C_Timer.After(0.5, function()
                 Scanner:ScanCurrentProfession()
             end)
-        elseif event == "PLAYER_LOGIN" then
-            C_Timer.After(3, function()
-                local charKey = GetCharKey()
-                if charKey then
-                    Scanner:CleanupStaleProfessions(charKey)
-                end
-            end)
+        end
+    end)
+
+    C_Timer.After(3, function()
+        local charKey = GetCharKey()
+        if charKey then
+            Scanner:CleanupStaleProfessions(charKey)
         end
     end)
 end

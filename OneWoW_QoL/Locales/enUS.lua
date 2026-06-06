@@ -1,11 +1,13 @@
-local addonName, ns = ...
+local _, ns = ...
+
 ns.Locales = ns.Locales or {}
 ns.Locales["enUS"] = {}
 ns.L_enUS = ns.Locales["enUS"]
 local L_enUS = ns.Locales["enUS"]
 
 L_enUS["ADDON_TITLE"]       = "OneWoW - QoL"
-L_enUS["ADDON_TITLE_FRAME"] = "OneWoW - Quality of Life"
+L_enUS["ADDON_TITLE_SHORT"] = "QoL"
+L_enUS["ADDON_TITLE_FRAME"] = "OneWoW - QoL"
 L_enUS["ADDON_LOADED"]      = "loaded."
 
 L_enUS["TAB_FEATURES"] = "QoL Features"
@@ -54,7 +56,7 @@ L_enUS["SETTINGS_THEME_DESC"]       = "Choose a color theme. Changes apply insta
 L_enUS["SETTINGS_LANGUAGE_HEADER"]  = "Language"
 L_enUS["SETTINGS_LANGUAGE_DESC"]    = "Choose your preferred language. Changes apply instantly."
 L_enUS["SETTINGS_DEVELOPER_HEADER"] = "Developer Information"
-L_enUS["SETTINGS_DEVELOPER_DESC"]   = "This addon supports external modules. Add Quality of Life features by creating a module folder in Modules\\external\\. Use the Developer Help button for complete documentation."
+L_enUS["SETTINGS_DEVELOPER_DESC"]   = "This addon supports external modules. Add QoL features by creating a module folder in Modules\\external\\. Use the Developer Help button for complete documentation."
 L_enUS["SETTINGS_DEV_HELP_BTN"]     = "Developer Help"
 L_enUS["MINIMAP_SECTION"]       = "Minimap Button"
 L_enUS["MINIMAP_SECTION_DESC"]  = "Show or hide the minimap button."
@@ -397,7 +399,7 @@ L_enUS["TOGGLE_OPT_colorblindMode_1"]        = "Protanopia"
 L_enUS["TOGGLE_OPT_colorblindMode_2"]        = "Deuteranopia"
 L_enUS["TOGGLE_OPT_colorblindMode_3"]        = "Tritanopia"
 
-L_enUS["BINDING_HEADER_ONEWOW_QOL"] = "|cFF00FF00OneWoW|r Quality of Life"
+L_enUS["BINDING_HEADER_ONEWOW_QOL"] = "|cFF00FF00OneWoW|r QoL"
 L_enUS["BINDING_NAME_QUESTITEM_1"] = "Quest Item 1"
 L_enUS["BINDING_NAME_QUESTITEM_2"] = "Quest Item 2"
 L_enUS["BINDING_NAME_QUESTITEM_3"] = "Quest Item 3"

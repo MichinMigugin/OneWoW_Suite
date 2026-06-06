@@ -3,6 +3,9 @@
 -- GUI-free on purpose: it loads early, before anything that consumes it.
 local _, OneWoW = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
+
 local C_AddOns = C_AddOns
 local InCombatLockdown = InCombatLockdown
 local CreateFrame = CreateFrame
@@ -11,11 +14,17 @@ local tinsert = tinsert
 local print = print
 local _G = _G
 local UnitName = UnitName
+local type = type
 
 -- Pending loads deferred until combat ends, and a per-addon "already told the
 -- user" guard so a repeated failure isn't reprinted on every attempt.
 local pendingCombat = {}
 local warned = {}
+
+-- True while OneWoW:BringUp is driving a batch load. The LoadAddOn hook checks
+-- this so it only runs OnAddonLoaded during the batch; BringUp drives the login
+-- and entering-world passes itself, once, after the whole set is loaded.
+local inBringUp = false
 
 local combatFrame = CreateFrame("Frame")
 combatFrame:SetScript("OnEvent", function(self, event)
@@ -89,6 +98,40 @@ function OneWoW:SetAddonEnabled(name, enabled, perCharacter)
     end
 end
 
+local FEATURE_UNIT_STATUS_KEYS = {
+    missing    = "FEATURE_UNIT_STATUS_MISSING",
+    disabled   = "FEATURE_UNIT_STATUS_DISABLED",
+    not_loaded = "FEATURE_UNIT_STATUS_NOT_LOADED",
+    pending_disable = "FEATURE_UNIT_STATUS_PENDING_DISABLE",
+    all        = "FEATURE_UNIT_STATUS_ALL",
+    some       = "FEATURE_UNIT_STATUS_SOME",
+}
+
+--- Short inline status text for placeholder tabs and similar surfaces.
+---@param state string return value from GetFeatureUnitState
+---@return string label localized short status
+function OneWoW:GetFeatureUnitStatusLabel(state)
+    local L = OneWoW.L or {}
+    local key = FEATURE_UNIT_STATUS_KEYS[state]
+    if key and L[key] then
+        return L[key]
+    end
+    return L["FEATURE_UNIT_STATUS_MISSING"] or "Not detected"
+end
+
+--- When a unit is enabled but not in memory, returns a load-failure token if
+--- GetAddOnInfo reports something other than DISABLED/DEMAND_LOADED.
+---@param name string addon (folder/TOC) name
+---@return string? reason raw failure token, or nil when healthy-not-loaded
+local function GetFeatureUnitUnloadReason(name)
+    if not name or C_AddOns.IsAddOnLoaded(name) then return nil end
+    local _, _, _, loadable, reason = C_AddOns.GetAddOnInfo(name)
+    if not loadable and reason and reason ~= "DISABLED" and reason ~= "DEMAND_LOADED" then
+        return reason
+    end
+    return nil
+end
+
 --- Classifies an addon for status display. A loaded or DEMAND_LOADED unit is
 --- "enabled" (healthy): every suite unit is LoadOnDemand: 1 and force-loaded by
 --- the orchestrator, so GetAddOnInfo reports loadable=false/reason=DEMAND_LOADED
@@ -107,15 +150,228 @@ function OneWoW:GetAddonStatus(name, perCharacter)
     if C_AddOns.IsAddOnLoaded(name) then
         return "enabled", nil
     end
-    local _, _, _, loadable, reason = C_AddOns.GetAddOnInfo(name)
-    if not loadable and reason and reason ~= "DISABLED" and reason ~= "DEMAND_LOADED" then
-        return "warning", reason
+    local warnReason = GetFeatureUnitUnloadReason(name)
+    if warnReason then
+        return "warning", warnReason
     end
     return "enabled", nil
 end
 
+-- OneWoW "soft disable" (feature opt-out). Layered OVER Blizzard's enable flag,
+-- not a replacement: an opted-out unit stays Blizzard-ENABLED (so the built-in
+-- addon list shows it enabled with a "Load Addon" button), but the startup
+-- orchestrator skips loading it. Because it stays enabled it can be LoadAddOn'd
+-- later the same session with no reload. Stored in OneWoW_DB (account-wide SV)
+-- with a per-character override map; current-character resolution mirrors
+-- Blizzard's char-overrides-account model (char entry: true = out, false = in;
+-- nil = inherit account). GUI-free: the char key is built locally so the loader
+-- keeps no GUI dependency.
+local function OptOutStore(create)
+    local db = OneWoW_DB
+    if not db then return nil end
+    local oo = db.featureOptOut
+    if not oo then
+        if not create then return nil end
+        oo = {}
+        db.featureOptOut = oo
+    end
+    oo.account = oo.account or {}
+    oo.char = oo.char or {}
+    return oo
+end
+
+--- Effective opt-out for the current character (char override wins, else account).
+---@param name string addon (folder/TOC) name
+---@return boolean optedOut true when OneWoW should not load this unit for this character
+function OneWoW:IsFeatureOptedOut(name)
+    if not name then return false end
+    local oo = OptOutStore(false)
+    if not oo then return false end
+    local charMap = oo.char[OneWoW_GUI:BuildCharKey()]
+    local charVal = charMap and charMap[name]
+    if charVal ~= nil then return charVal end
+    return oo.account[name] == true
+end
+
+--- Opt-out as it applies in a specific scope (drives the Manage Features checkboxes).
+---@param name string addon (folder/TOC) name
+---@param perCharacter boolean? true = current-character scope (resolved); false/nil = account-wide
+---@return boolean optedOut
+function OneWoW:IsFeatureOptedOutInScope(name, perCharacter)
+    if perCharacter then
+        return self:IsFeatureOptedOut(name)
+    end
+    if not name then return false end
+    local oo = OptOutStore(false)
+    if not oo then return false end
+    return oo.account[name] == true
+end
+
+--- Writes the opt-out flag in the requested scope. Char scope stores an explicit
+--- boolean so it can re-enable an account-wide opt-out for one character.
+---@param name string addon (folder/TOC) name
+---@param optedOut boolean desired opt-out state
+---@param perCharacter boolean? true = current-character override; false/nil = account-wide
+function OneWoW:SetFeatureOptOut(name, optedOut, perCharacter)
+    if not name then return end
+    local oo = OptOutStore(true)
+    if not oo then return end
+    if perCharacter then
+        local key = OneWoW_GUI:BuildCharKey()
+        oo.char[key] = oo.char[key] or {}
+        oo.char[key][name] = optedOut and true or false
+    else
+        oo.account[name] = optedOut and true or nil
+    end
+    -- Opt-out changes "wanted" state even when nothing loads/unloads this session;
+    -- let read-only surfaces (Home) re-query.
+    EventRegistry:TriggerEvent("OneWoW.FeatureStateChanged", name)
+end
+
+--- Blizzard-enabled in scope AND not soft-opted-out in that scope.
+---@param name string addon (folder/TOC) name
+---@param perCharacter boolean? true = current-character scope; false/nil = account-wide
+---@return boolean wanted
+function OneWoW:IsFeatureWanted(name, perCharacter)
+    if not name then return false end
+    if not self:IsAddonEnabled(name, perCharacter) then return false end
+    return not self:IsFeatureOptedOutInScope(name, perCharacter)
+end
+
+--- Effective opt-out for a stored character key (char override wins, else account).
+---@param name string addon (folder/TOC) name
+---@param charKey string canonical or legacy character key
+---@return boolean optedOut
+function OneWoW:IsFeatureOptedOutForCharKey(name, charKey)
+    if not name or not charKey then return false end
+    local oo = OptOutStore(false)
+    if not oo then return false end
+    local key = OneWoW_GUI:CanonicalizeCharacterKey(charKey)
+    if not key then return false end
+    local charMap = oo.char[key]
+    local charVal = charMap and charMap[name]
+    if charVal ~= nil then return charVal end
+    return oo.account[name] == true
+end
+
+--- Wanted for one character: Blizzard-enabled for that toon AND not soft-opted-out.
+---@param name string addon (folder/TOC) name
+---@param charKey string canonical or legacy character key
+---@return boolean wanted
+function OneWoW:IsFeatureWantedForCharKey(name, charKey)
+    if not name or not charKey then return false end
+    local key = OneWoW_GUI:CanonicalizeCharacterKey(charKey)
+    if not key then return false end
+    local charName = key:match("^(.-)%-")
+    if not charName or charName == "" then return false end
+    if C_AddOns.GetAddOnEnableState(name, charName) == 0 then return false end
+    return not self:IsFeatureOptedOutForCharKey(name, key)
+end
+
+--- Char keys that can affect aggregate wanted state: current toon plus any toon
+--- with an explicit opt-out entry for this addon.
+---@param name string addon (folder/TOC) name
+---@return string[] keys canonical character keys
+local function CollectCharKeysForFeature(name)
+    local keys = {}
+    local seen = {}
+    local function add(rawKey)
+        if not rawKey then return end
+        local key = OneWoW_GUI:CanonicalizeCharacterKey(rawKey)
+        if key and not seen[key] then
+            seen[key] = true
+            keys[#keys + 1] = key
+        end
+    end
+    add(OneWoW_GUI:BuildCharKey())
+    local oo = OptOutStore(false)
+    if oo and oo.char then
+        for charKey, charMap in pairs(oo.char) do
+            if charMap[name] ~= nil then
+                add(charKey)
+            end
+        end
+    end
+    return keys
+end
+
+--- Aggregate wanted scope across known characters (Blizzard + soft opt-out).
+---@param name string addon (folder/TOC) name
+---@return string scope "all"|"some"|"none"
+function OneWoW:GetFeatureWantedAggregate(name)
+    if not name or not C_AddOns.DoesAddOnExist(name) then
+        return "none"
+    end
+    local keys = CollectCharKeysForFeature(name)
+    if #keys == 0 then
+        if not self:IsFeatureWanted(name, false) then return "none" end
+        if C_AddOns.GetAddOnEnableState(name) == 2 then return "all" end
+        return "some"
+    end
+    local wanted, unwanted = 0, 0
+    for _, key in ipairs(keys) do
+        if self:IsFeatureWantedForCharKey(name, key) then
+            wanted = wanted + 1
+        else
+            unwanted = unwanted + 1
+        end
+    end
+    if wanted > 0 and unwanted > 0 then return "some" end
+    if wanted > 0 then return "all" end
+    return "none"
+end
+
+--- Canonical lifecycle state for a suite feature unit (TOC/addon folder name).
+--- Combines Blizzard enable flags and OneWoW soft opt-out. Used by Home,
+--- placeholder tabs, and similar read-only surfaces.
+---@param name string addon (folder/TOC) name
+---@return string state "missing"|"disabled"|"not_loaded"|"pending_disable"|"all"|"some"
+function OneWoW:GetFeatureUnitState(name)
+    if not name or not C_AddOns.DoesAddOnExist(name) then
+        return "missing"
+    end
+    if not self:IsAddonEnabled(name, true) then
+        return "disabled"
+    end
+    if not self:IsFeatureWanted(name, true) then
+        if C_AddOns.IsAddOnLoaded(name) then
+            return "pending_disable"  -- loaded this session; won't load next reload
+        end
+        return "not_loaded"
+    end
+    if not C_AddOns.IsAddOnLoaded(name) then
+        return "not_loaded"
+    end
+    if C_AddOns.GetAddOnEnableState(name) == 1 then
+        return "some"
+    end
+    local agg = self:GetFeatureWantedAggregate(name)
+    if agg == "some" then return "some" end
+    if agg == "all" then return "all" end
+    return "some"
+end
+
 ---@class OneWoW.LoadOpts
 ---@field deferInCombat boolean? report "COMBAT" instead of loading while in combat (WithAddon queues the retry)
+
+--- Manifest parent for a store load unit (nil when name is a root module).
+---@param storeName string
+---@return string|nil parentAddon
+local function GetManifestParent(storeName)
+    local manifest = OneWoW.ModuleManifest
+    if not manifest then return nil end
+    for _, m in ipairs(manifest) do
+        local stores = m.stores
+        if stores then
+            for _, store in ipairs(stores) do
+                if store == storeName then
+                    return m.addon
+                end
+            end
+        end
+    end
+    return nil
+end
 
 --- Ensures an addon is loaded. Idempotent; LoadAddOn pulls the addon's
 --- RequiredDeps chain. Returns the raw failure token so callers can localize
@@ -123,11 +379,18 @@ end
 ---@param name string addon (folder/TOC) name to load
 ---@param opts OneWoW.LoadOpts? optional behavior flags
 ---@return boolean ok true if the addon is loaded (or already was)
----@return string? reason raw failure token when ok is false ("DISABLED" | "MISSING" | "DEP_DISABLED" | "COMBAT" | ...)
+---@return string? reason raw failure token when ok is false ("DISABLED" | "MISSING" | "DEP_DISABLED" | "COMBAT" | "OPTED_OUT" | ...)
 function OneWoW:EnsureLoaded(name, opts)
     if not name then return false, "MISSING" end
     if C_AddOns.IsAddOnLoaded(name) then
         return true
+    end
+    if self:IsFeatureOptedOut(name) then
+        return false, "OPTED_OUT"
+    end
+    local parent = GetManifestParent(name)
+    if parent and self:IsFeatureOptedOut(parent) then
+        return false, "OPTED_OUT"
     end
     if opts and opts.deferInCombat and InCombatLockdown() then
         return false, "COMBAT"
@@ -136,17 +399,129 @@ function OneWoW:EnsureLoaded(name, opts)
     if not ok then
         return false, reason
     end
-    -- Core-driven init: invoke the unit's OnAddonLoaded hook right after a fresh
-    -- load (when its SavedVariables are present), in core-controlled order. This
-    -- replaces the unit's own ADDON_LOADED handler, which WoW does not deliver to
-    -- a unit loaded during another addon's ADDON_LOADED dispatch. Only fires on a
-    -- fresh load (the IsAddOnLoaded short-circuit above prevents re-firing); the
-    -- hooks self-guard too. Units without the hook (Blizzard_*, etc.) are no-ops.
-    local unit = _G[name]
-    if unit and type(unit.OnAddonLoaded) == "function" then
-        unit:OnAddonLoaded()
-    end
+    -- Core-driven init runs in the C_AddOns.LoadAddOn hook below (single driver
+    -- for every load path, including Blizzard's "Load Addon" button), so it has
+    -- already fired synchronously by the time LoadAddOn returns here.
     return true
+end
+
+-- Calls a one-shot lifecycle hook on a loaded unit, if present. Units without the
+-- hook (Blizzard_*, etc.) are a safe no-op.
+local function RunUnitHook(name, method, ...)
+    local unit = name and _G[name]
+    if unit and type(unit[method]) == "function" then
+        unit[method](unit, ...)
+    end
+end
+
+--- Manifest unit set for a feature: { addon, ...stores } in manifest order.
+--- Returns nil when name is not a manifest root (caller falls back to { name }).
+---@param addonName string
+---@return string[]|nil
+local function ManifestUnitsFor(addonName)
+    local manifest = OneWoW.ModuleManifest
+    if not manifest then return nil end
+    for _, m in ipairs(manifest) do
+        if m.addon == addonName then
+            local units = { m.addon }
+            if m.stores then
+                for _, store in ipairs(m.stores) do
+                    units[#units + 1] = store
+                end
+            end
+            return units
+        end
+    end
+    return nil
+end
+
+-- Login pass over an already-loaded set. No-ops before PLAYER_LOGIN (cold start
+-- defers OnPlayerLogin to RunManifestLoginPhase). The units' one-shot didLogin
+-- guards make a repeat call safe.
+local function Settle(units)
+    if not OneWoW._playerLoginFired then return end
+    for _, name in ipairs(units) do
+        RunUnitHook(name, "OnPlayerLogin")
+    end
+end
+
+-- Synthetic entering-world catch-up for units loaded mid-session: they missed the
+-- real PLAYER_ENTERING_WORLD, so core delivers one now. isLogin=true mirrors the
+-- cold-start OnPlayerLogin -> PEW(isLogin) sequence; isZoning stays false so
+-- zone-refresh logic does not spuriously fire (the player did not zone). No-ops
+-- before PLAYER_LOGIN: at cold start the real event delivers PEW with true args.
+local function CatchUpEnteringWorld(units)
+    if not OneWoW._playerLoginFired then return end
+    for _, name in ipairs(units) do
+        RunUnitHook(name, "OnPlayerEnteringWorld", true, false, false)
+    end
+end
+
+-- Core-driven post-load init. The unit's own ADDON_LOADED is never delivered when
+-- it is LoadAddOn'd inside another addon's dispatch, so core drives init via a
+-- standardized one-shot OnAddonLoaded() hook. OnPlayerLogin / OnPlayerEnteringWorld
+-- are NOT fired here: Settle / CatchUpEnteringWorld drive them once the whole set
+-- is loaded (see OneWoW:BringUp), or the LoadAddOn hook catches up a lone load.
+local function RunPostLoadInit(name)
+    RunUnitHook(name, "OnAddonLoaded")
+end
+
+-- Single post-load init driver: every load path funnels through C_AddOns.LoadAddOn
+-- (the orchestrator, EnsureLoaded, on-demand WithAddon, and Blizzard's addon-list
+-- "Load Addon" button on a soft-disabled-but-enabled unit). Post-hooking it here
+-- means a manual button click runs the unit through its full init for free. A
+-- manual load also means the user wants the unit active, so clear any current-
+-- character opt-out so the choice sticks.
+hooksecurefunc(C_AddOns, "LoadAddOn", function(nameOrIndex)
+    local name = nameOrIndex
+    if type(name) ~= "string" then
+        name = C_AddOns.GetAddOnInfo(nameOrIndex)
+    end
+    if not name or not C_AddOns.IsAddOnLoaded(name) then return end
+    RunPostLoadInit(name)
+    -- Single chokepoint for every load path; let read-only surfaces (Home) re-query.
+    EventRegistry:TriggerEvent("OneWoW.FeatureStateChanged", name)
+    -- A lone load outside a BringUp batch (e.g. Blizzard's addon-list "Load Addon"
+    -- button) that happens after login must catch the unit up on the login and
+    -- entering-world hooks it missed. BringUp drives these itself for batches, so
+    -- skip while inBringUp to avoid firing them before the whole set is loaded.
+    if not inBringUp and OneWoW._playerLoginFired then
+        local single = { name }
+        Settle(single)
+        CatchUpEnteringWorld(single)
+    end
+    if OneWoW:IsFeatureOptedOut(name) then
+        OneWoW:SetFeatureOptOut(name, false, true)
+    end
+end)
+
+--- Brings up a manifest feature and its data stores as one batch: load the whole
+--- set (each unit's OnAddonLoaded fires via the LoadAddOn hook), then a single
+--- OnPlayerLogin pass, then -- only mid-session -- a synthetic OnPlayerEnteringWorld
+--- catch-up. At cold start (before PLAYER_LOGIN) Settle / CatchUpEnteringWorld
+--- no-op and the manifest login phase plus the real PLAYER_ENTERING_WORLD drive
+--- those hooks with authoritative args. Opted-out / disabled units are skipped by
+--- EnsureLoaded and excluded from the settle/catch-up passes.
+---@param addonName string manifest feature (or any addon) to bring up
+function OneWoW:BringUp(addonName)
+    if not addonName then return end
+    local units = ManifestUnitsFor(addonName) or { addonName }
+    local midSession = OneWoW._playerLoginFired
+    inBringUp = true
+    for _, name in ipairs(units) do
+        self:EnsureLoaded(name)
+    end
+    inBringUp = false
+    local loaded = {}
+    for _, name in ipairs(units) do
+        if C_AddOns.IsAddOnLoaded(name) then
+            loaded[#loaded + 1] = name
+        end
+    end
+    Settle(loaded)
+    if midSession then
+        CatchUpEnteringWorld(loaded)
+    end
 end
 
 --- Loads an addon and dispatches a callback, removing the if/else at the call
@@ -216,6 +591,51 @@ OneWoW.ModuleManifest = {
 }
 local Manifest = OneWoW.ModuleManifest
 
+-- Row-1 tab order and placeholder labels derive from hub entries in ModuleManifest.
+local MODULE_TAB_LOCALE_KEYS = {
+    notes      = "MODULE_NOTES",
+    alttracker = "MODULE_ALTTRACKER",
+    catalog    = "MODULE_CATALOG",
+    trackers   = "MODULE_TRACKERS",
+    qol        = "MODULE_QOL",
+}
+
+--- Tab sort order for a hub module name (RegisterModule `name` field).
+---@param moduleName string e.g. "notes", "alttracker"
+---@return number order 1-based manifest position, or 99 when unknown
+function OneWoW:GetModuleTabOrder(moduleName)
+    local order = 0
+    for _, entry in ipairs(OneWoW.ModuleManifest) do
+        if entry.module then
+            order = order + 1
+            if entry.module == moduleName then
+                return order
+            end
+        end
+    end
+    return 99
+end
+
+--- Placeholder row-1 tabs for hub modules not yet registered (not loaded).
+--- Order and addon names match ModuleManifest hub entries.
+---@return table[] list of { name, addonName, order, localeKey }
+function OneWoW:GetAlwaysShowModules()
+    local result = {}
+    local order = 0
+    for _, entry in ipairs(OneWoW.ModuleManifest) do
+        if entry.module then
+            order = order + 1
+            result[#result + 1] = {
+                name      = entry.module,
+                addonName = entry.addon,
+                order     = order,
+                localeKey = MODULE_TAB_LOCALE_KEYS[entry.module],
+            }
+        end
+    end
+    return result
+end
+
 -- Startup orchestrator. Tier-2 modules and data stores are `LoadOnDemand: 1`
 -- (they no longer auto-load), so core pulls the enabled ones from the manifest.
 OneWoW.LoadOrchestrator = OneWoW.LoadOrchestrator or {}
@@ -231,10 +651,14 @@ local Orchestrator = OneWoW.LoadOrchestrator
 function Orchestrator:RunStartupPhase()
     for _, m in ipairs(Manifest) do
         if m.loadPhase == "login" and m.addon and m.addon ~= "" then
-            if OneWoW:EnsureLoaded(m.addon) and m.stores then
-                for _, store in ipairs(m.stores) do
-                    OneWoW:EnsureLoaded(store)
-                end
+            -- BringUp loads the feature and its stores as one set. A soft opt-out
+            -- (OneWoW SavedVariables) skips the unit and its stores via EnsureLoaded
+            -- without touching Blizzard's enable flag, so it can be loaded later
+            -- this session (Manage Features / the Blizzard "Load Addon" button)
+            -- with no reload. Pre-login, BringUp's Settle / catch-up no-op; the
+            -- manifest login phase and the real PLAYER_ENTERING_WORLD drive those.
+            if not OneWoW:IsFeatureOptedOut(m.addon) then
+                OneWoW:BringUp(m.addon)
             end
         end
     end

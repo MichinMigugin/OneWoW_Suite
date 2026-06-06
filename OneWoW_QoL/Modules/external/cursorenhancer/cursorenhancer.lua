@@ -1,6 +1,4 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/cursorenhancer/cursorenhancer.lua
-local addonName, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
@@ -51,7 +49,7 @@ local function Clamp(val, min, max)
 end
 
 local function GetDB()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db then return nil end
     if not addon.db.global.modules["cursorenhancer"] then
         addon.db.global.modules["cursorenhancer"] = {}
@@ -452,17 +450,16 @@ function CursorEnhancerModule:OnEnable()
 
     if not self._eventFrame then
         self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_CursorEnhancerEvents")
-        self._eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
         self._eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
         self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-        self._eventFrame:SetScript("OnEvent", function(frame, event)
-            if event == "PLAYER_ENTERING_WORLD" then
-                CE:CreateCursorRing()
-            else
-                CE:UpdateVisibility()
-            end
+        self._eventFrame:SetScript("OnEvent", function()
+            CE:UpdateVisibility()
         end)
     end
+
+    OneWoW_QoL:RegisterEnteringWorldHandler("cursorenhancer", function()
+        CE:CreateCursorRing()
+    end)
 
     CE:CreateCursorRing()
     CE:UpdateAll()
@@ -472,6 +469,7 @@ function CursorEnhancerModule:OnDisable()
     self._moduleEnabled = false
     CE:StopUpdateTicker()
     CE:UpdateVisibility()
+    OneWoW_QoL:UnregisterEnteringWorldHandler("cursorenhancer")
 end
 
 function CursorEnhancerModule:OnToggle(toggleId, value)
@@ -516,13 +514,13 @@ function CE:CreateColorSwatch(parent, dbKey, colorLabel)
     swatch:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     swatch:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     swatch.dbKey = dbKey
-    swatch.UpdateColor = function(self)
-        local color = CE:GetSettings()[self.dbKey] or {1, 1, 1}
+    swatch.UpdateColor = function(myself)
+        local color = CE:GetSettings()[myself.dbKey] or {1, 1, 1}
         swatch:SetBackdropColor(color[1], color[2], color[3], 1)
     end
     swatch:SetScript("OnClick", function() OpenColorPicker(dbKey) end)
-    swatch:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    swatch:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
         GameTooltip:AddLine(L[colorLabel] or colorLabel)
         GameTooltip:Show()
     end)

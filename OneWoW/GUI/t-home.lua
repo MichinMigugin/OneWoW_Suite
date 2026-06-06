@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local GUI = OneWoW.GUI
 
@@ -7,217 +7,71 @@ if not OneWoW_GUI then return end
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
-local STATUS_TEX_OK   = "Interface\\RaidFrame\\ReadyCheck-Ready"
-local STATUS_TEX_WARN = "Interface\\RaidFrame\\ReadyCheck-Waiting"
-local STATUS_TEX_BAD  = "Interface\\RaidFrame\\ReadyCheck-NotReady"
+local STATUS_TEX_OK  = "Interface\\RaidFrame\\ReadyCheck-Ready"
+local STATUS_TEX_BAD = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 
-local originalStates = {}
-local pendingStates = {}
-local rowElements = {}
-local saveReloadBtn = nil
-local pendingCountText = nil
-local pendingBar = nil
+-- The Home tab is read-only: it mirrors effective feature state (Blizzard enable
+-- flags + OneWoW soft opt-out via OneWoW:GetFeatureUnitState). Enabling/disabling
+-- lives in Settings > Manage Features (storage addons have dependencies users
+-- shouldn't toggle blind).
+--   all            -> green check  (wanted for every known character, loaded here)
+--   some           -> grey check   (wanted for some characters only, loaded here)
+--   notloaded      -> amber check + "(not loaded)" tag (Blizzard-enabled but not
+--                     wanted or not loaded on this character — soft opt-out or
+--                     orchestrator skip)
+--   pendingdisable -> amber check + "(off next reload)" tag (loaded and working
+--                     this session, but soft-disabled — will not load next reload)
+--   none           -> red X        (Blizzard-disabled for this character)
+--   missing        -> muted grey X (addon not installed)
+local STATE_ALL, STATE_SOME, STATE_NOTLOADED, STATE_PENDING_DISABLE, STATE_NONE, STATE_MISSING =
+    "all", "some", "notloaded", "pendingdisable", "none", "missing"
 
-local function IsAddonPendingEnabled(addonName)
-    if pendingStates[addonName] ~= nil then
-        return pendingStates[addonName]
-    end
-    return originalStates[addonName] or false
-end
-
-local function GetPendingCount()
-    local count = 0
-    for addonName, newState in pairs(pendingStates) do
-        if originalStates[addonName] ~= nil and originalStates[addonName] ~= newState then
-            count = count + 1
-        end
-    end
-    return count
-end
-
-local function UpdateSaveButton()
-    if not pendingBar then return end
-    local L = OneWoW.L
-    local count = GetPendingCount()
-    if count > 0 then
-        pendingBar:Show()
-        if pendingCountText then
-            pendingCountText:SetText(string.format(L["HOME_PENDING_CHANGES"], count))
-        end
-    else
-        pendingBar:Hide()
-    end
-end
-
-local function UpdateRowVisual(addonName)
-    local row = rowElements[addonName]
-    if not row then return end
-    local L = OneWoW.L
-    local isPending = (pendingStates[addonName] ~= nil and pendingStates[addonName] ~= originalStates[addonName])
-
-    if isPending then
-        local willBeEnabled = pendingStates[addonName]
-        if willBeEnabled then
-            row.light:SetTexture(STATUS_TEX_OK)
-        else
-            row.light:SetTexture(STATUS_TEX_BAD)
-        end
-        row.light:SetVertexColor(1, 1, 1, 1)
-        if row.btn then
-            row.btn.text:SetText(willBeEnabled and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        end
-    else
-        if row.originalStatus == "enabled" then
-            row.light:SetTexture(STATUS_TEX_OK)
-            row.light:SetVertexColor(1, 1, 1, 1)
-        elseif row.originalStatus == "warning" then
-            row.light:SetTexture(STATUS_TEX_WARN)
-            row.light:SetVertexColor(1, 1, 1, 1)
-        elseif row.originalStatus == "disabled" then
-            row.light:SetTexture(STATUS_TEX_BAD)
-            row.light:SetVertexColor(1, 1, 1, 1)
-        end
-        if row.btn then
-            local isActive = (row.originalStatus == "enabled" or row.originalStatus == "warning")
-            row.btn.text:SetText(isActive and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"])
-        end
-    end
-end
-
-local function ToggleAddon(addonName, cascadeAddons)
-    local currentlyEnabled = IsAddonPendingEnabled(addonName)
-    local newState = not currentlyEnabled
-
-    OneWoW:SetAddonEnabled(addonName, newState, false)
-    pendingStates[addonName] = newState
-    UpdateRowVisual(addonName)
-
-    if cascadeAddons then
-        for _, name in ipairs(cascadeAddons) do
-            if C_AddOns.DoesAddOnExist(name) then
-                OneWoW:SetAddonEnabled(name, newState, false)
-                pendingStates[name] = newState
-                UpdateRowVisual(name)
-            end
-        end
-    end
-
-    UpdateSaveButton()
-end
-
-function GUI:HasPendingHomeChanges()
-    return GetPendingCount() > 0
-end
-
-function GUI:SaveAndReloadHome()
-    C_AddOns.SaveAddOns()
-    C_UI.Reload()
-end
-
-function GUI:DiscardHomeChanges()
-    for addonName, _ in pairs(pendingStates) do
-        local orig = originalStates[addonName]
-        if orig ~= nil then
-            OneWoW:SetAddonEnabled(addonName, orig, false)
-        end
-    end
-    pendingStates = {}
-    for addonName, _ in pairs(rowElements) do
-        UpdateRowVisual(addonName)
-    end
-    UpdateSaveButton()
-end
-
--- The Home tab reflects account-wide (all-characters) enable state.
-local function GetAddonStatus(addonName)
-    return OneWoW:GetAddonStatus(addonName, false)
-end
-
-local function GetReasonText(reason)
-    local L = OneWoW.L
-    local map = {
-        ["DEP_NOT_LOADED"]        = L["HOME_REASON_DEP_NOT_LOADED"],
-        ["DEP_NOT_DEMAND_LOADED"] = L["HOME_REASON_DEP_DEMAND"],
-        ["INTERFACE_VERSION"]     = L["HOME_REASON_INTERFACE_VERSION"],
-        ["CORRUPT"]               = L["HOME_REASON_CORRUPT"],
-        ["MISSING"]               = L["HOME_REASON_MISSING"],
-    }
-    return map[reason] or L["HOME_REASON_UNKNOWN"]
+local function MapFeatureUnitState(unitState)
+    if unitState == "all" then return STATE_ALL
+    elseif unitState == "some" then return STATE_SOME
+    elseif unitState == "not_loaded" then return STATE_NOTLOADED
+    elseif unitState == "pending_disable" then return STATE_PENDING_DISABLE
+    elseif unitState == "disabled" then return STATE_NONE
+    else return STATE_MISSING end
 end
 
 function GUI:CreateHomeTab(parent)
     local L = OneWoW.L
-    local Constants = OneWoW.Constants
+    local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_HomeScroll" })
 
-    originalStates = {}
-    pendingStates = {}
-    rowElements = {}
+    -- Each status row registers its ApplyState() here so RefreshAll() (OnShow +
+    -- OneWoW.FeatureStateChanged) can re-query live state without rebuilding rows.
+    local rowRefreshers = {}
 
-    if not StaticPopupDialogs["ONEWOW_UNSAVED_CHANGES"] then
-        StaticPopupDialogs["ONEWOW_UNSAVED_CHANGES"] = {
-            text         = L["HOME_UNSAVED_CONFIRM"],
-            button1      = L["HOME_SAVE_RELOAD"],
-            button2      = L["CANCEL"],
-            button3      = L["HOME_DISCARD"],
-            OnAccept     = function()
-                GUI:SaveAndReloadHome()
-            end,
-            OnCancel     = function()
-                GUI._pendingAction = nil
-            end,
-            OnAlt        = function()
-                GUI:DiscardHomeChanges()
-                if GUI._pendingAction then
-                    GUI._pendingAction()
-                    GUI._pendingAction = nil
-                end
-            end,
-            timeout      = 0,
-            whileDead    = true,
-            hideOnEscape = true,
-            preferredIndex = 3,
-        }
-    end
-
-    local function CreateModuleRow(panel, localeKey, displayName, addonName, rowY, cascadeAddons, noButton)
-        local status, reason = GetAddonStatus(addonName)
-        local localizedName  = L[localeKey] or displayName
-        local version        = OneWoW_GUI:GetAddonVersion(addonName)
-
-        if status ~= "not_found" then
-            originalStates[addonName] = OneWoW:IsAddonEnabled(addonName, false)
-        end
+    -- Read-only status row: a tri-state checkmark + name + version. No toggle.
+    -- Widgets are built once; ApplyState() re-reads GetFeatureUnitState and restyles
+    -- so the row stays accurate when addons load/unload or opt-out changes.
+    local function CreateModuleRow(panel, localeKey, addonName, rowY)
+        local localizedName = L[localeKey]
+        local state  -- live, updated by ApplyState(); read by the tooltip handler
 
         local light = panel:CreateTexture(nil, "ARTWORK")
         light:SetSize(14, 14)
         light:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, rowY - 1)
 
-        if status == "enabled" then
-            light:SetTexture(STATUS_TEX_OK)
-        elseif status == "warning" then
-            light:SetTexture(STATUS_TEX_WARN)
-        elseif status == "disabled" then
-            light:SetTexture(STATUS_TEX_BAD)
-        else
-            light:SetTexture(STATUS_TEX_BAD)
-            light:SetVertexColor(0.35, 0.35, 0.35, 0.6)
-        end
-
         local lightHit = CreateFrame("Frame", nil, panel)
         lightHit:SetSize(16, 16)
         lightHit:SetPoint("CENTER", light, "CENTER")
         lightHit:EnableMouse(true)
-        lightHit:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            if status == "enabled" then
-                GameTooltip:SetText(L["HOME_STATUS_ENABLED"], 0.2, 0.8, 0.2)
-            elseif status == "warning" then
-                GameTooltip:SetText(L["HOME_STATUS_WARNING"], 1, 0.82, 0)
-                GameTooltip:AddLine(GetReasonText(reason), 1, 1, 1, true)
-            elseif status == "disabled" then
-                GameTooltip:SetText(L["HOME_STATUS_DISABLED"], 0.8, 0.2, 0.2)
+        lightHit:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            if state == STATE_ALL then
+                GameTooltip:SetText(L["HOME_STATUS_ALL"], 0.2, 0.8, 0.2)
+            elseif state == STATE_SOME then
+                GameTooltip:SetText(L["HOME_STATUS_SOME"], 0.7, 0.7, 0.7)
+            elseif state == STATE_NOTLOADED then
+                GameTooltip:SetText(L["HOME_STATUS_NOTLOADED"], 1, 0.82, 0, 1, true)
+            elseif state == STATE_PENDING_DISABLE then
+                GameTooltip:SetText(L["HOME_STATUS_PENDING_DISABLE"], 1, 0.82, 0, 1, true)
+            elseif state == STATE_NONE then
+                GameTooltip:SetText(L["HOME_STATUS_NONE"], 1, 0.4, 0.4)
             else
-                GameTooltip:SetText(L["HOME_STATUS_NOT_FOUND"], 0.5, 0.5, 0.5)
+                GameTooltip:SetText(L["HOME_STATUS_NOT_FOUND"], 0.6, 0.6, 0.6)
             end
             GameTooltip:Show()
         end)
@@ -228,68 +82,59 @@ function GUI:CreateHomeTab(parent)
         nameText:SetWidth(120)
         nameText:SetText(localizedName)
         nameText:SetJustifyH("LEFT")
-        if status == "not_found" then
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        else
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
 
-        if version then
-            local verText = OneWoW_GUI:CreateFS(panel, 10)
-            verText:SetPoint("LEFT", nameText, "RIGHT", 4, 0)
-            verText:SetText(version)
-            verText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
+        local verText = OneWoW_GUI:CreateFS(panel, 10)
+        verText:SetPoint("LEFT", nameText, "RIGHT", 4, 0)
+        verText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-        local toggleBtn = nil
-        if not noButton then
-            local isActive   = (status == "enabled" or status == "warning")
-            local btnLabel   = isActive and L["FEATURE_DISABLE_BTN"] or L["FEATURE_ENABLE_BTN"]
+        local tag = OneWoW_GUI:CreateFS(panel, 10)
+        tag:SetPoint("LEFT", verText, "RIGHT", 4, 0)
+        tag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
-            toggleBtn = OneWoW_GUI:CreateFitTextButton(panel, { text = btnLabel, height = 20 })
-            toggleBtn:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -10, rowY - 2)
+        local function ApplyState()
+            state = MapFeatureUnitState(OneWoW:GetFeatureUnitState(addonName))
 
-            if status == "not_found" then
-                toggleBtn:Disable()
+            if state == STATE_ALL then
+                light:SetTexture(STATUS_TEX_OK)
+                light:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            elseif state == STATE_SOME then
+                light:SetTexture(STATUS_TEX_OK)
+                light:SetVertexColor(0.5, 0.5, 0.5, 1)
+            elseif state == STATE_NOTLOADED or state == STATE_PENDING_DISABLE then
+                light:SetTexture(STATUS_TEX_OK)
+                light:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))  -- amber: enabled, not loaded / disabling on reload
+            elseif state == STATE_NONE then
+                light:SetTexture(STATUS_TEX_BAD)
+                light:SetVertexColor(1, 1, 1, 1)
             else
-                toggleBtn:SetScript("OnClick", function()
-                    ToggleAddon(addonName, cascadeAddons)
-                end)
+                light:SetTexture(STATUS_TEX_BAD)
+                light:SetVertexColor(0.45, 0.45, 0.45, 0.8)  -- missing: muted X
+            end
+
+            if state == STATE_MISSING then
+                nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            else
+                nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+
+            verText:SetText(OneWoW_GUI:GetAddonVersion(addonName) or "")
+
+            if state == STATE_NOTLOADED then
+                tag:SetText(L["HOME_NOTLOADED_TAG"])
+                tag:Show()
+            elseif state == STATE_PENDING_DISABLE then
+                tag:SetText(L["HOME_PENDING_DISABLE_TAG"])
+                tag:Show()
+            else
+                tag:Hide()
             end
         end
 
-        if status ~= "not_found" then
-            rowElements[addonName] = {
-                light = light,
-                btn = toggleBtn,
-                originalStatus = status,
-            }
-        end
+        ApplyState()
+        rowRefreshers[#rowRefreshers + 1] = ApplyState
     end
 
-    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_HomeScroll" })
     content:SetHeight(1200)
-
-    pendingBar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    pendingBar:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 10, 10)
-    pendingBar:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -10, 10)
-    pendingBar:SetHeight(34)
-    pendingBar:SetFrameLevel(parent:GetFrameLevel() + 10)
-    pendingBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    pendingBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    pendingBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    pendingBar:Hide()
-
-    pendingCountText = OneWoW_GUI:CreateFS(pendingBar, 12)
-    pendingCountText:SetPoint("LEFT", pendingBar, "LEFT", 15, 0)
-    pendingCountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    saveReloadBtn = OneWoW_GUI:CreateFitTextButton(pendingBar, { text = L["HOME_SAVE_RELOAD"], height = 22 })
-    saveReloadBtn:SetPoint("RIGHT", pendingBar, "RIGHT", -10, 0)
-    saveReloadBtn:SetScript("OnClick", function()
-        GUI:SaveAndReloadHome()
-    end)
-
     local yOffset = -30
 
     local logo = content:CreateTexture(nil, "ARTWORK")
@@ -375,6 +220,16 @@ function GUI:CreateHomeTab(parent)
 
     yOffset = yOffset - 42
 
+    -- Home is read-only for enable/disable; point users to Manage Features.
+    local manageRow = CreateFrame("Frame", nil, content)
+    manageRow:SetHeight(20)
+    manageRow:SetPoint("TOPLEFT", content, "TOPLEFT", 15, yOffset)
+    manageRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -15, yOffset)
+
+    GUI:CreateManageFeaturesLinkRow(manageRow, { pointerKey = "HOME_MANAGE_POINTER" })
+
+    yOffset = yOffset - 28
+
     local splitContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
     splitContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
     splitContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
@@ -429,9 +284,9 @@ function GUI:CreateHomeTab(parent)
     requiredTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local modY = -38
-    CreateModuleRow(leftPanel, "MODULE_ONEWOW", "OneWoW", "OneWoW", modY, nil, true)
+    CreateModuleRow(leftPanel, "MODULE_ONEWOW", "OneWoW", modY)
     modY = modY - 28
-    CreateModuleRow(leftPanel, "MODULE_GUI", "OneWoW GUI", "OneWoW_GUI", modY, nil, true)
+    CreateModuleRow(leftPanel, "MODULE_GUI", "OneWoW_GUI", modY)
     modY = modY - 28
 
     local leftDiv1Y = modY - 4
@@ -449,14 +304,14 @@ function GUI:CreateHomeTab(parent)
 
     modY = detectedTitleY - 24
     local moduleChecks = {
-        { key = "MODULE_ALTTRACKER",    displayName = "AltTracker",      addonName = "OneWoW_AltTracker",    cascade = { "OneWoW_AltTracker_Accounting", "OneWoW_AltTracker_Auctions", "OneWoW_AltTracker_Character", "OneWoW_AltTracker_Collections", "OneWoW_AltTracker_Endgame", "OneWoW_AltTracker_Professions", "OneWoW_AltTracker_Storage" } },
-        { key = "MODULE_CATALOG",       displayName = "Catalog",         addonName = "OneWoW_Catalog",       cascade = { "OneWoW_CatalogData_Journal", "OneWoW_CatalogData_Quests", "OneWoW_CatalogData_Tradeskills", "OneWoW_CatalogData_Vendors" } },
-        { key = "MODULE_NOTES",         displayName = "Notes",           addonName = "OneWoW_Notes" },
-        { key = "MODULE_QOL",           displayName = "Quality of Life", addonName = "OneWoW_QoL" },
+        { key = "MODULE_ALTTRACKER", addonName = "OneWoW_AltTracker" },
+        { key = "MODULE_CATALOG",    addonName = "OneWoW_Catalog" },
+        { key = "MODULE_NOTES",      addonName = "OneWoW_Notes" },
+        { key = "MODULE_QOL",        addonName = "OneWoW_QoL" },
     }
 
     for _, mod in ipairs(moduleChecks) do
-        CreateModuleRow(leftPanel, mod.key, mod.displayName, mod.addonName, modY, mod.cascade)
+        CreateModuleRow(leftPanel, mod.key, mod.addonName, modY)
         modY = modY - 28
     end
 
@@ -475,14 +330,14 @@ function GUI:CreateHomeTab(parent)
 
     modY = standaloneTitleY - 24
     local standaloneChecks = {
-        { key = "MODULE_BAGS",          displayName = "Bags",           addonName = "OneWoW_Bags" },
-        { key = "MODULE_DIRECTDEPOSIT", displayName = "Direct Deposit", addonName = "OneWoW_DirectDeposit" },
-        { key = "MODULE_SHOPPINGLIST",  displayName = "Shopping List",  addonName = "OneWoW_ShoppingList" },
-        { key = "MODULE_TRACKERS",      displayName = "Trackers",       addonName = "OneWoW_Trackers" },
+        { key = "MODULE_BAGS",          addonName = "OneWoW_Bags" },
+        { key = "MODULE_DIRECTDEPOSIT", addonName = "OneWoW_DirectDeposit" },
+        { key = "MODULE_SHOPPINGLIST",  addonName = "OneWoW_ShoppingList" },
+        { key = "MODULE_TRACKERS",      addonName = "OneWoW_Trackers" },
     }
 
     for _, mod in ipairs(standaloneChecks) do
-        CreateModuleRow(leftPanel, mod.key, mod.displayName, mod.addonName, modY, mod.cascade)
+        CreateModuleRow(leftPanel, mod.key, mod.addonName, modY)
         modY = modY - 28
     end
 
@@ -503,17 +358,17 @@ function GUI:CreateHomeTab(parent)
     rightY = rightY - 22
 
     local dataModuleChecks = {
-        { key = "DATA_MOD_ACCOUNTING",  displayName = "Accounting",  addonName = "OneWoW_AltTracker_Accounting" },
-        { key = "DATA_MOD_AUCTIONS",    displayName = "Auctions",    addonName = "OneWoW_AltTracker_Auctions" },
-        { key = "DATA_MOD_CHARACTER",   displayName = "Character",   addonName = "OneWoW_AltTracker_Character" },
-        { key = "DATA_MOD_COLLECTIONS", displayName = "Collections", addonName = "OneWoW_AltTracker_Collections" },
-        { key = "DATA_MOD_ENDGAME",     displayName = "EndGame",     addonName = "OneWoW_AltTracker_Endgame" },
-        { key = "DATA_MOD_PROFESSIONS", displayName = "Professions", addonName = "OneWoW_AltTracker_Professions" },
-        { key = "DATA_MOD_STORAGE",     displayName = "Storage",     addonName = "OneWoW_AltTracker_Storage" },
+        { key = "DATA_MOD_ACCOUNTING",  addonName = "OneWoW_AltTracker_Accounting" },
+        { key = "DATA_MOD_AUCTIONS",    addonName = "OneWoW_AltTracker_Auctions" },
+        { key = "DATA_MOD_CHARACTER",   addonName = "OneWoW_AltTracker_Character" },
+        { key = "DATA_MOD_COLLECTIONS", addonName = "OneWoW_AltTracker_Collections" },
+        { key = "DATA_MOD_ENDGAME",     addonName = "OneWoW_AltTracker_Endgame" },
+        { key = "DATA_MOD_PROFESSIONS", addonName = "OneWoW_AltTracker_Professions" },
+        { key = "DATA_MOD_STORAGE",     addonName = "OneWoW_AltTracker_Storage" },
     }
 
     for _, mod in ipairs(dataModuleChecks) do
-        CreateModuleRow(rightPanel, mod.key, mod.displayName, mod.addonName, rightY)
+        CreateModuleRow(rightPanel, mod.key, mod.addonName, rightY)
         rightY = rightY - 28
     end
 
@@ -532,14 +387,14 @@ function GUI:CreateHomeTab(parent)
     rightY = catSubHeaderY - 22
 
     local catalogDataChecks = {
-        { key = "CAT_MOD_JOURNAL",     displayName = "Journal",     addonName = "OneWoW_CatalogData_Journal" },
-        { key = "CAT_MOD_QUESTS",      displayName = "Quests",      addonName = "OneWoW_CatalogData_Quests" },
-        { key = "CAT_MOD_TRADESKILLS", displayName = "Tradeskills", addonName = "OneWoW_CatalogData_Tradeskills" },
-        { key = "CAT_MOD_VENDORS",     displayName = "Vendors",     addonName = "OneWoW_CatalogData_Vendors" },
+        { key = "CAT_MOD_JOURNAL",     addonName = "OneWoW_CatalogData_Journal" },
+        { key = "CAT_MOD_QUESTS",      addonName = "OneWoW_CatalogData_Quests" },
+        { key = "CAT_MOD_TRADESKILLS", addonName = "OneWoW_CatalogData_Tradeskills" },
+        { key = "CAT_MOD_VENDORS",     addonName = "OneWoW_CatalogData_Vendors" },
     }
 
     for _, mod in ipairs(catalogDataChecks) do
-        CreateModuleRow(rightPanel, mod.key, mod.displayName, mod.addonName, rightY)
+        CreateModuleRow(rightPanel, mod.key, mod.addonName, rightY)
         rightY = rightY - 28
     end
 
@@ -584,8 +439,8 @@ function GUI:CreateHomeTab(parent)
     splitContainer:HookScript("OnSizeChanged", LayoutUtilColumns)
     C_Timer.After(0, LayoutUtilColumns)
 
-    CreateModuleRow(utilLeftPanel,  "MODULE_DEVTOOLS",  "DevTools",  "OneWoW_Utility_DevTool",  -4)
-    CreateModuleRow(utilRightPanel, "MODULE_EXTRACTOR", "Extractor", "OneWoW_Utility_Extractor", -4)
+    CreateModuleRow(utilLeftPanel,  "MODULE_DEVTOOLS",  "OneWoW_Utility_DevTool",  -4)
+    CreateModuleRow(utilRightPanel, "MODULE_EXTRACTOR", "OneWoW_Utility_Extractor", -4)
 
     local containerH = columnsDepth + 8 + 18 + 24 + 32 + 20
     splitContainer:SetHeight(containerH)
@@ -719,7 +574,7 @@ function GUI:CreateHomeTab(parent)
             },
         },
         {
-            global = "OneWoW_UtilityDevTool",
+            global = "OneWoW_Utility_DevTool",
             header = "DevTools",
             commands = {
                 { cmd = "/1wdt, /dt, /devtool, /devtools", desc = L["CMD_OPEN_DEVTOOLS"] or "Open DevTools" },
@@ -736,4 +591,12 @@ function GUI:CreateHomeTab(parent)
     yOffset = yOffset - cmdHeight - 20
 
     content:SetHeight(math.abs(yOffset) + 50)
+
+    -- Re-query every row's live state. Driven on panel show (navigate back to Home)
+    -- and by OneWoW.FeatureStateChanged (load/opt-out change while Home is visible).
+    local function RefreshAll()
+        for _, fn in ipairs(rowRefreshers) do fn() end
+    end
+    parent.RefreshStatus = RefreshAll
+    parent:HookScript("OnShow", RefreshAll)
 end

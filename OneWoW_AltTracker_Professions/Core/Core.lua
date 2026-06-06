@@ -1,9 +1,10 @@
-local addonName, ns = ...
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
-local DB = OneWoW_GUI.DB
+local ADDON_NAME, ns = ...
 
-DB:BootSubModule(ns, {
-    addonName = addonName,
+local OneWoW = OneWoW
+if not OneWoW or not OneWoW.BootStore then return end
+
+OneWoW:BootStore(ns, {
+    addonName = ADDON_NAME,
     savedVar = "OneWoW_AltTracker_Professions_DB",
     sortField = "lastUpdate",
     onLogin = function()

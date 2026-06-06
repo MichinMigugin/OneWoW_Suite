@@ -15,8 +15,8 @@ local function RegisterWithOneWoW()
     if not OneWoW.RegisterModule then return false end
 
     local tabs = {
-        { name = "features", displayName = function() return ns.L["TAB_FEATURES"] or "QoL Features" end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
-        { name = "toggles",  displayName = function() return ns.L["TAB_TOGGLES"]  or "Toggles"      end, create = function(p) ns.UI.CreateTogglesTab(p) end },
+        { name = "features", displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
+        { name = "toggles",  displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
     }
     if OneWoW.GUI and OneWoW.GUI.GetQoLFeatureTabs then
         for _, tab in ipairs(OneWoW.GUI:GetQoLFeatureTabs()) do
@@ -25,15 +25,15 @@ local function RegisterWithOneWoW()
     end
     OneWoW:RegisterModule({
         name = "qol",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "QoL" end,
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
         addonName = "OneWoW_QoL",
-        order = 4,
+        order = OneWoW:GetModuleTabOrder("qol"),
         tabs = tabs,
     })
     OneWoW:RegisterSettingsPanel({
         name        = "qol",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "QoL" end,
-        order       = 4,
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
+        order       = OneWoW:GetModuleTabOrder("qol"),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
     ns.oneWoWHubActive = true
@@ -122,14 +122,25 @@ local didInit = false
 function addon:OnAddonLoaded()
     if didInit then return end
     didInit = true
+    OneWoW.Lifecycle:CreateHandlerRegistry(addon)
     OnInitialize()
 end
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function(_, event)
-    if event == "PLAYER_LOGIN" then
-        addon:OnAddonLoaded()  -- safety net; normally already run by the loader
-        OnEnable()
+-- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN at
+-- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
+-- enable, when PLAYER_LOGIN has already fired and won't reach this module.
+local didLogin = false
+function addon:OnPlayerLogin()
+    if didLogin then return end
+    didLogin = true
+    OnEnable()
+    if addon.FireLoginHandlers then
+        addon:FireLoginHandlers()
     end
-end)
+end
+
+function addon:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
+    if addon.FireEnteringWorldHandlers then
+        addon:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+    end
+end

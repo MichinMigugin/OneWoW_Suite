@@ -1,12 +1,17 @@
 local ADDON_NAME, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW = OneWoW
+if not OneWoW or not OneWoW.BootStore then return end
 
-OneWoW_GUI.DB:BootSubModule(ns, {
+OneWoW:BootStore(ns, {
     addonName = ADDON_NAME,
     savedVar = "OneWoW_CatalogData_Journal_DB",
     withScanCallbacks = true,
+    onEnteringWorld = function(_, _, isZoning)
+        if isZoning then
+            ns:FireScanCallbacks(nil)
+        end
+    end,
     onLogin = function()
         ns.DataLoader = OneWoW_Catalog:CreateItemDataLoader(ns:GetDB())
         ns.DataLoader:Initialize()

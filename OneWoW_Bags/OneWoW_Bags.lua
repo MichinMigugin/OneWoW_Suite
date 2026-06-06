@@ -564,11 +564,18 @@ end
 -- Core-driven init: the suite loader calls _G["OneWoW_Bags"]:OnAddonLoaded()
 -- right after it force-loads this module (WoW does not deliver our own
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). This
--- also registers our runtime events (incl. PLAYER_LOGIN) via RegisterRuntimeEvents.
+-- also registers our runtime events via RegisterRuntimeEvents.
 local didInit = false
 function OneWoW_Bags:OnAddonLoaded()
     if didInit then return end
     didInit = true
+    OneWoW.Lifecycle:CreateHandlerRegistry(self)
+
+    self:RegisterEnteringWorldHandler("zone_refresh", function(isLogin, isReload, isZoning)
+        if isZoning then
+            Events:OnPlayerEnteringWorld(isLogin, isReload)
+        end
+    end)
 
     self:InitializeDatabase()
     self:InitializeControllers()
@@ -624,7 +631,12 @@ function OneWoW_Bags:OnAddonLoaded()
     end
 end
 
+-- Idempotent: runs from the module's own PLAYER_LOGIN at startup, or is driven
+-- by the loader (OneWoW:EnsureLoaded) for a mid-session enable, when
+-- PLAYER_LOGIN has already fired and won't reach this module.
 function OneWoW_Bags:OnPlayerLogin()
+    if self.didLogin then return end
+    self.didLogin = true
     DetectOneWoW()
 
     if OneWoW and OneWoW.RegisterMinimap then
@@ -639,6 +651,21 @@ function OneWoW_Bags:OnPlayerLogin()
 
     self:HookBlizzardBags()
     self:HookPetCageTooltip()
+    if self.InstallIntegrationHooks then
+        self:InstallIntegrationHooks()
+    end
+    if self.RegisterTooltipProvider then
+        self:RegisterTooltipProvider()
+    end
+    if self.FireLoginHandlers then
+        self:FireLoginHandlers()
+    end
+end
+
+function OneWoW_Bags:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
+    if self.FireEnteringWorldHandlers then
+        self:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+    end
 end
 
 function OneWoW_Bags:HookPetCageTooltip()
@@ -1431,9 +1458,8 @@ function OneWoW_Bags:ShowMoneyDialog(config)
     dialog.moneyBox.gold:SetFocus()
 end
 
--- No file-scope event registration: the loader calls OnAddonLoaded directly,
--- which registers our runtime events (PLAYER_LOGIN, PLAYER_ENTERING_WORLD, etc.)
--- via RegisterRuntimeEvents below.
+-- No file-scope lifecycle registration: the loader calls OnAddonLoaded directly,
+-- which registers our runtime events via RegisterRuntimeEvents below.
 local eventFrame = CreateFrame("Frame")
 
 local runtimeEventHandlers = {
@@ -1506,9 +1532,6 @@ local runtimeEventHandlers = {
     GET_ITEM_INFO_RECEIVED = function(itemID)
         Events:OnItemInfoReceived(itemID)
     end,
-    PLAYER_ENTERING_WORLD = function(isLogin, isReload)
-        Events:OnPlayerEnteringWorld(isLogin, isReload)
-    end,
     SKILL_LINES_CHANGED = function(...)
         PE:InvalidateKnownProfessions()
         Events:OnPredicateInvalidation(...)
@@ -1525,12 +1548,8 @@ function OneWoW_Bags:RegisterRuntimeEvents()
 end
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
-    if event == "PLAYER_LOGIN" then
-        OneWoW_Bags:OnPlayerLogin()
-    else
-        local handler = runtimeEventHandlers[event]
-        if handler then
-            handler(...)
-        end
+    local handler = runtimeEventHandlers[event]
+    if handler then
+        handler(...)
     end
 end)

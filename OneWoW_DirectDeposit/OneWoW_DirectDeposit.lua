@@ -60,7 +60,7 @@ local didInit = false
 function OneWoW_DirectDeposit:OnAddonLoaded()
     if didInit then return end
     didInit = true
-
+    OneWoW.Lifecycle:CreateHandlerRegistry(self)
     self:InitializeDatabase()
 
     local g = self.db.global
@@ -279,20 +279,23 @@ function OneWoW_DirectDeposit:RegisterSlashCommands()
     end
 end
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-
-eventFrame:SetScript("OnEvent", function(_, event)
-    if event == "PLAYER_LOGIN" then
-        OneWoW_DirectDeposit:OnAddonLoaded()  -- safety net; normally already run by the loader
-        DetectOneWoW()
-        C_Timer.After(0, function()
-            OneWoW_DirectDeposit:InitTooltipHook()
+-- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN at
+-- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
+-- enable, when PLAYER_LOGIN has already fired and won't reach this module.
+local didLogin = false
+function OneWoW_DirectDeposit:OnPlayerLogin()
+    if didLogin then return end
+    didLogin = true
+    DetectOneWoW()
+    C_Timer.After(0, function()
+        OneWoW_DirectDeposit:InitTooltipHook()
+    end)
+    if OneWoW then
+        OneWoW:RegisterMinimap("OneWoW_DirectDeposit", (OneWoW.L and OneWoW.L["CTX_OPEN_DD"]) or "Open Direct Deposit", nil, function()
+            if OneWoW_DirectDeposit.GUI then OneWoW_DirectDeposit.GUI:Toggle() end
         end)
-        if OneWoW then
-            OneWoW:RegisterMinimap("OneWoW_DirectDeposit", (OneWoW.L and OneWoW.L["CTX_OPEN_DD"]) or "Open Direct Deposit", nil, function()
-                if OneWoW_DirectDeposit.GUI then OneWoW_DirectDeposit.GUI:Toggle() end
-            end)
-        end
     end
-end)
+    if self.FireLoginHandlers then
+        self:FireLoginHandlers()
+    end
+end

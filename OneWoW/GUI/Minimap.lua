@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 OneWoW.Minimap = {}
 local MinimapMod = OneWoW.Minimap
@@ -63,8 +63,8 @@ local function ShowContextMenu(anchorFrame)
 
         local textLeftOffset = 8
         local hasErrorAlert = false
-        if item.global == "OneWoW_UtilityDevTool" then
-            local dt = _G.OneWoW_UtilityDevTool
+        if item.global == "OneWoW_Utility_DevTool" then
+            local dt = OneWoW_Utility_DevTool
             if dt and dt.ErrorLogger and dt.ErrorLogger.HasCurrentSessionErrors and dt.ErrorLogger:HasCurrentSessionErrors() then
                 hasErrorAlert = true
                 textLeftOffset = 24
@@ -163,8 +163,8 @@ local function UpdatePosition(self)
     local x, y, q = math.cos(angle), math.sin(angle), 1
     if x < 0 then q = q + 1 end
     if y > 0 then q = q + 2 end
-    local width   = _G.Minimap:GetWidth()  * 0.5
-    local height  = _G.Minimap:GetHeight() * 0.5
+    local width   = Minimap:GetWidth()  * 0.5
+    local height  = Minimap:GetHeight() * 0.5
     local rounding = 10
     if MinimapShapes[GetMinimapShape and GetMinimapShape() or "ROUND"][q] then
         x, y = x * width, y * height
@@ -172,14 +172,14 @@ local function UpdatePosition(self)
         x = math.max(-width,  math.min(x * (math.sqrt(2 * width^2)  - rounding), width))
         y = math.max(-height, math.min(y * (math.sqrt(2 * height^2) - rounding), height))
     end
-    self:SetPoint("CENTER", _G.Minimap, "CENTER", math.floor(x), math.floor(y))
+    self:SetPoint("CENTER", Minimap, "CENTER", math.floor(x), math.floor(y))
 end
 
 local function CreateMinimapButton()
     if minimapBtn then return end
     position = (OneWoW.db and OneWoW.db.global and OneWoW.db.global.minimap and OneWoW.db.global.minimap.minimapPos) or 220
 
-    minimapBtn = CreateFrame("Button", "OneWoW_MinimapButton", _G.Minimap)
+    minimapBtn = CreateFrame("Button", "OneWoW_MinimapButton", Minimap)
     minimapBtn:SetSize(35, 35)
     minimapBtn:SetFrameStrata("MEDIUM")
     minimapBtn:SetMovable(true)
@@ -214,16 +214,16 @@ local function CreateMinimapButton()
         end
     end)
     minimapBtn:SetScript("OnDragStart", function(self)
-        self:SetScript("OnUpdate", function(self)
-            local mx, my = _G.Minimap:GetCenter()
+        self:SetScript("OnUpdate", function(myself)
+            local mx, my = Minimap:GetCenter()
             local px, py = GetCursorPosition()
-            local scale = _G.Minimap:GetEffectiveScale()
+            local scale = Minimap:GetEffectiveScale()
             position = math.deg(math.atan2((py / scale) - my, (px / scale) - mx)) % 360
             if OneWoW.db and OneWoW.db.global and OneWoW.db.global.minimap then
                 OneWoW.db.global.minimap.minimapPos = position
             end
-            self:Raise()
-            UpdatePosition(self)
+            myself:Raise()
+            UpdatePosition(myself)
         end)
     end)
     minimapBtn:SetScript("OnDragStop", function(self)
@@ -253,15 +253,15 @@ function MinimapMod:Initialize()
         local plugin = ldb:NewDataObject("OneWoW", {
             type = "launcher",
             icon = GetCurrentIcon(),
-            OnClick = function(self, button)
+            OnClick = function(myself, button)
                 if button == "LeftButton" and OneWoW.GUI then
                     OneWoW.GUI:Toggle()
                 elseif button == "RightButton" then
-                    ShowContextMenu(self)
+                    ShowContextMenu(myself)
                 end
             end,
-            OnEnter = function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+            OnEnter = function(myself)
+                GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
                 GameTooltip:AddLine("|cFFFFD1001WoW|r", 1, 0.82, 0, 1)
                 local L = OneWoW.L
                 if L and L["MINIMAP_TOOLTIP_HINT"] then

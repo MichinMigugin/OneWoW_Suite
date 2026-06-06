@@ -1,4 +1,5 @@
-local addonName, ns = ...
+local _, ns = ...
+
 ns.Locales = ns.Locales or {}
 ns.Locales["koKR"] = ns.Locales["koKR"] or {}
 local L = ns.Locales["koKR"]
@@ -9,7 +10,7 @@ for k, _ in pairs(ns.Locales["enUS"]) do
     end
 end
 
-L["BINDING_HEADER_ONEWOW_QOL"] = "|cFF00FF00OneWoW|r Quality of Life"
+L["BINDING_HEADER_ONEWOW_QOL"] = "|cFF00FF00OneWoW|r QoL"
 L["BINDING_NAME_QUESTITEM_1"] = "퀘스트 아이템 1"
 L["BINDING_NAME_QUESTITEM_2"] = "퀘스트 아이템 2"
 L["BINDING_NAME_QUESTITEM_3"] = "퀘스트 아이템 3"

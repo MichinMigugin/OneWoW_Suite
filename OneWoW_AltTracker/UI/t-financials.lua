@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
@@ -273,7 +273,7 @@ end
 
 local function ShowTransactionContextMenu(tx)
     if not tx then return end
-    MenuUtil.CreateContextMenu(UIParent, function(ownerRegion, rootDescription)
+    MenuUtil.CreateContextMenu(UIParent, function(_, rootDescription)
         rootDescription:CreateTitle(L["FIN_CONTEXT_TITLE"])
 
         rootDescription:CreateButton(L["FIN_EDIT_AMOUNT"], function()
@@ -299,12 +299,9 @@ local function ShowTransactionContextMenu(tx)
     end)
 end
 
-local loginFrame = CreateFrame("Frame")
-loginFrame:RegisterEvent("PLAYER_LOGIN")
-loginFrame:SetScript("OnEvent", function(self)
+function ns.UI.SetLoginServerTime()
     loginServerTime = GetServerTime()
-    self:UnregisterEvent("PLAYER_LOGIN")
-end)
+end
 
 local function GetWeeklyResetTime()
     local now = GetServerTime()
@@ -372,7 +369,7 @@ local columnsConfig = {
     {key = "amount",    label = L["FIN_COL_AMOUNT"],     width = 80,  fixed = false, align = "right", ttTitle = L["TT_FIN_COL_AMOUNT"],    ttDesc = L["TT_FIN_COL_AMOUNT_DESC"]},
 }
 
-local onHeaderCreate = function(btn, col, index)
+local onHeaderCreate = function(btn, col)
     if col.key == "expand" then
         local icon = btn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(14, 14)
@@ -413,7 +410,7 @@ function ns.UI.CreateFinancialsTab(parent)
         {key = "all",    label = L["FIN_PERIOD_ALL"],     tooltip = L["FIN_PERIOD_ALL_TT"]},
     }
 
-    local periodDropdown, periodDropdownText = OneWoW_GUI:CreateDropdown(filterPanel, {
+    local periodDropdown = OneWoW_GUI:CreateDropdown(filterPanel, {
         width = 120,
         height = 24,
         text = L["FIN_PERIOD_WEEK"],
@@ -552,7 +549,7 @@ function ns.UI.CreateFinancialsTab(parent)
     resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
     resetBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
-    resetBtn:SetScript("OnClick", function(self)
+    resetBtn:SetScript("OnClick", function()
         local result = OneWoW_GUI:CreateConfirmDialog({
             title = L["FIN_RESET_CONFIRM"],
             message = L["FIN_RESET_CONFIRM"],
@@ -715,7 +712,6 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
     if not scrollContent then return end
 
     local dt = financialsTab.dataTable
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
     OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(transactionRows)
@@ -975,10 +971,10 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
             GameTooltip:SetText(L["FIN_ROW_TT"], 1, 1, 1)
             GameTooltip:Show()
         end)
-        txRow:HookScript("OnLeave", function(self)
+        txRow:HookScript("OnLeave", function()
             GameTooltip:Hide()
         end)
-        txRow:HookScript("OnMouseDown", function(self, button)
+        txRow:HookScript("OnMouseDown", function(_, button)
             if button == "RightButton" then
                 ShowTransactionContextMenu(tx)
             end

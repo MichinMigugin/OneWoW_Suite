@@ -34,13 +34,13 @@ local function RegisterAsOneWoWModule()
 
     OneWoW:RegisterModule({
         name        = "trackers",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "Trackers" end,
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
         addonName   = "OneWoW_Trackers",
-        order       = 2,
+        order       = OneWoW:GetModuleTabOrder("trackers"),
         tabs = {
             {
                 name        = "tracker",
-                displayName = function() return ns.L["TAB_TRACKER"] or "Tracker" end,
+                displayName = function() return ns.L["TAB_TRACKER"] end,
                 create      = function(p) ns.UI.CreateTrackerTab(p) end,
             },
         },
@@ -166,19 +166,30 @@ local didInit = false
 function ns:OnAddonLoaded()
     if didInit then return end
     didInit = true
+    OneWoW.Lifecycle:CreateHandlerRegistry(ns)
     OnInitialize()
 end
 
-local pewFired = false
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:SetScript("OnEvent", function(self, event)
-    if event == "PLAYER_LOGIN" then
-        ns:OnAddonLoaded()  -- safety net; normally already run by the loader
-        OnEnable()
-    elseif event == "PLAYER_ENTERING_WORLD" and not pewFired then
-        pewFired = true
-        self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+-- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN at
+-- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
+-- enable, when PLAYER_LOGIN has already fired and won't reach this module.
+local didLogin = false
+function ns:OnPlayerLogin()
+    if didLogin then return end
+    didLogin = true
+    OnEnable()
+    ns:RegisterEnteringWorldHandler("tracker_engine", function()
+        if ns.TrackerEngine and ns.TrackerEngine.OnPlayerEnteringWorld then
+            ns.TrackerEngine:OnPlayerEnteringWorld()
+        end
+    end)
+    if ns.FireLoginHandlers then
+        ns:FireLoginHandlers()
     end
-end)
+end
+
+function ns:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
+    if ns.FireEnteringWorldHandlers then
+        ns:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+    end
+end

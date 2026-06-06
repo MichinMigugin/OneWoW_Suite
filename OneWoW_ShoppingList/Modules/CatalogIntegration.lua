@@ -219,8 +219,8 @@ function CatalogIntegration:AddToActiveList()
 end
 
 local function TryRegister()
-    if _G.OneWoW_Catalog_TradeskillAPI then
-        _G.OneWoW_Catalog_TradeskillAPI.RegisterRecipeCallback(OnRecipeSelected)
+    if OneWoW_Catalog_TradeskillAPI then
+        OneWoW_Catalog_TradeskillAPI.RegisterRecipeCallback(OnRecipeSelected)
         return true
     end
     return false
@@ -229,14 +229,9 @@ end
 function CatalogIntegration:Initialize()
     if TryRegister() then return end
 
-    local hookFrame = CreateFrame("Frame")
-    hookFrame:RegisterEvent("ADDON_LOADED")
-    hookFrame:SetScript("OnEvent", function(myself, _, addon)
-        if addon == "OneWoW_Catalog" then
-            C_Timer.After(0.5, function()
-                TryRegister()
-            end)
-            myself:UnregisterEvent("ADDON_LOADED")
-        end
+    ns:RegisterAddonLoadedWatcher("OneWoW_Catalog", function()
+        C_Timer.After(0.5, function()
+            TryRegister()
+        end)
     end)
 end

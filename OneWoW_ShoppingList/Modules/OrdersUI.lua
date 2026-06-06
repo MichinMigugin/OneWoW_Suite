@@ -649,15 +649,10 @@ end
 
 function OrdersUI:Initialize()
     if not ProfessionsFrame then
-        local hookFrame = CreateFrame("Frame")
-        hookFrame:RegisterEvent("ADDON_LOADED")
-        hookFrame:SetScript("OnEvent", function(myself, _, addon)
-            if addon == "Blizzard_Professions" then
-                C_Timer.After(0.5, function()
-                    OrdersUI:HookOrdersPage()
-                end)
-                myself:UnregisterEvent("ADDON_LOADED")
-            end
+        ns:RegisterAddonLoadedWatcher("Blizzard_Professions", function()
+            C_Timer.After(0.5, function()
+                OrdersUI:HookOrdersPage()
+            end)
         end)
     else
         C_Timer.After(0.5, function()
@@ -665,4 +660,3 @@ function OrdersUI:Initialize()
         end)
     end
 end
-

@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local function IsEnabled()
     local ov = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
@@ -55,7 +55,7 @@ local function SetupHooks()
 
     elvuiBags = B
 
-    hooksecurefunc(B, "UpdateSlot", function(self, bagID, slotID)
+    hooksecurefunc(B, "UpdateSlot", function(_, bagID, slotID)
         ProcessSlot(bagID, slotID)
     end)
 
@@ -74,11 +74,8 @@ local function SetupHooks()
     C_Timer.After(0.5, RefreshElvUI)
 end
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function()
+OneWoW:RegisterCoreLoginHandler("ElvUI", function()
     if C_AddOns.IsAddOnLoaded("ElvUI") then
         SetupHooks()
     end
-    eventFrame:UnregisterEvent("PLAYER_LOGIN")
 end)

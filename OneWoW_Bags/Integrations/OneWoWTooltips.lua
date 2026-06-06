@@ -76,11 +76,4 @@ local function RegisterWithOneWoW()
     })
 end
 
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function(self, event)
-    if event == "PLAYER_LOGIN" then
-        RegisterWithOneWoW()
-        self:UnregisterEvent("PLAYER_LOGIN")
-    end
-end)
+OneWoW_Bags.RegisterTooltipProvider = RegisterWithOneWoW

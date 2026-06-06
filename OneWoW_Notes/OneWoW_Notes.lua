@@ -15,24 +15,24 @@ local function RegisterWithOneWoW()
     if not OneWoW.RegisterModule then return false end
 
     local tabs = {
-        { name = "notes",   displayName = function() return ns.L["TAB_NOTES"]   or "Notes"   end, create = function(p) ns.UI.CreateNotesTab(p) end },
-        { name = "players", displayName = function() return ns.L["TAB_PLAYERS"] or "Players" end, create = function(p) ns.UI.CreatePlayersTab(p) end },
-        { name = "npcs",    displayName = function() return ns.L["TAB_NPCS"]    or "NPCs"    end, create = function(p) ns.UI.CreateNPCsTab(p) end },
-        { name = "zones",   displayName = function() return ns.L["TAB_ZONES"]   or "Zones"   end, create = function(p) ns.UI.CreateZonesTab(p) end },
-        { name = "items",   displayName = function() return ns.L["TAB_ITEMS"]   or "Items"   end, create = function(p) ns.UI.CreateItemsTab(p) end },
+        { name = "notes",   displayName = function() return ns.L["TAB_NOTES"]   end, create = function(p) ns.UI.CreateNotesTab(p) end },
+        { name = "players", displayName = function() return ns.L["TAB_PLAYERS"] end, create = function(p) ns.UI.CreatePlayersTab(p) end },
+        { name = "npcs",    displayName = function() return ns.L["TAB_NPCS"]    end, create = function(p) ns.UI.CreateNPCsTab(p) end },
+        { name = "zones",   displayName = function() return ns.L["TAB_ZONES"]   end, create = function(p) ns.UI.CreateZonesTab(p) end },
+        { name = "items",   displayName = function() return ns.L["TAB_ITEMS"]   end, create = function(p) ns.UI.CreateItemsTab(p) end },
     }
 
     OneWoW:RegisterModule({
         name = "notes",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "Notes" end,
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
         addonName = "OneWoW_Notes",
-        order = 1,
+        order = OneWoW:GetModuleTabOrder("notes"),
         tabs = tabs,
     })
     OneWoW:RegisterSettingsPanel({
         name        = "notes",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "Notes" end,
-        order       = 1,
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
+        order       = OneWoW:GetModuleTabOrder("notes"),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
     ns.oneWoWHubActive = true
@@ -242,20 +242,33 @@ local didInit = false
 function ns:OnAddonLoaded()
     if didInit then return end
     didInit = true
+    OneWoW.Lifecycle:CreateHandlerRegistry(ns)
     OnInitialize()
 end
 
-local pewFired = false
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:SetScript("OnEvent", function(self, event, ...)
-    if event == "PLAYER_LOGIN" then
-        ns:OnAddonLoaded()  -- safety net; normally already run by the loader
-        OnEnable()
-    elseif event == "PLAYER_ENTERING_WORLD" and not pewFired then
-        pewFired = true
-        self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-        OnPlayerEnteringWorld(...)
+-- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN /
+-- PLAYER_ENTERING_WORLD at startup, or is driven by the loader
+-- (OneWoW:EnsureLoaded) for a mid-session enable, when those one-shot events
+-- have already fired and won't reach this module. OnPlayerEnteringWorld is
+-- passed isInitialLogin=false for a mid-session enable, so the login-only note
+-- reset is skipped while pins/todos still initialize.
+local didLogin = false
+function ns:OnPlayerLogin()
+    if didLogin then return end
+    didLogin = true
+    OnEnable()
+    if ns.FireLoginHandlers then
+        ns:FireLoginHandlers()
     end
-end)
+end
+
+local pewArmed = false
+function ns:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
+    if not pewArmed then
+        pewArmed = true
+        OnPlayerEnteringWorld(isLogin)
+    end
+    if ns.FireEnteringWorldHandlers then
+        ns:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+    end
+end

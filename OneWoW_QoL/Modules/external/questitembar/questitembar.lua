@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -65,7 +65,7 @@ local function HideBar()
 end
 
 local function GetSettings()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     -- Defensive: return empty table if addon not initialized; writes will not persist.
     if not addon or not addon.db then return {} end
     local mods = addon.db.global.modules
@@ -395,7 +395,7 @@ local function BuildQuestItemDebugList()
     for questLogIndex = 1, numEntries do
         local info = C_QuestLog.GetInfo(questLogIndex)
         if info and not info.isHeader then
-            local itemLink, texture, charges, showItemWhenComplete = GetQuestLogSpecialItemInfo(questLogIndex)
+            local itemLink, texture, _, showItemWhenComplete = GetQuestLogSpecialItemInfo(questLogIndex)
             local readyForTurnIn = C_QuestLog.ReadyForTurnIn(info.questID)
             local questTitle = info.title or ""
 
@@ -853,25 +853,25 @@ function QuestItemBarModule:CreateBar()
     dragLine:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     dragHandle.dragLine = dragLine
 
-    dragHandle:SetScript("OnEnter", function(self)
+    dragHandle:SetScript("OnEnter", function(myself)
         local st = GetSettings()
         if st.hideAnchor and not st.locked then
-            self:SetAlpha(1)
+            myself:SetAlpha(1)
         end
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         local dir = st.growDirection or "RIGHT"
         local tooltipAnchor = (dir == "LEFT") and "ANCHOR_RIGHT" or "ANCHOR_LEFT"
-        GameTooltip:SetOwner(self, tooltipAnchor)
+        GameTooltip:SetOwner(myself, tooltipAnchor)
         GameTooltip:SetText(ns.L["QUESTITEMBAR_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(ns.L["QUESTITEMBAR_DRAG_TOOLTIP"], 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
-    dragHandle:SetScript("OnLeave", function(self)
+    dragHandle:SetScript("OnLeave", function(myself)
         local st = GetSettings()
         if st.hideAnchor and not st.locked then
-            self:SetAlpha(0)
+            myself:SetAlpha(0)
         end
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         GameTooltip:Hide()
     end)
     dragHandle:SetScript("OnDragStart", function()
@@ -897,9 +897,9 @@ function QuestItemBarModule:CreateBar()
         dragHandle:SetScript("OnUpdate", nil)
         QuestItemBarModule:SavePosition()
     end)
-    dragHandle:SetScript("OnMouseUp", function(self, mouseButton)
+    dragHandle:SetScript("OnMouseUp", function(myself, mouseButton)
         if mouseButton == "RightButton" then
-            QuestItemBarModule:ShowContextMenu(self)
+            QuestItemBarModule:ShowContextMenu(myself)
         end
     end)
 
@@ -918,7 +918,6 @@ function QuestItemBarModule:RegisterEvents()
     eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     eventFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
     eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
-    eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     eventFrame:RegisterEvent("UPDATE_BINDINGS")
     eventFrame:RegisterEvent("ZONE_CHANGED")
     eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -930,13 +929,6 @@ function QuestItemBarModule:RegisterEvents()
         end
 
         if not ns.ModuleRegistry:IsEnabled("questitembar") then return end
-
-        if event == "PLAYER_ENTERING_WORLD" then
-            C_Timer.After(2, function()
-                QuestItemBarModule:FullUpdate()
-            end)
-            return
-        end
 
         if event == "PLAYER_REGEN_ENABLED" then
             if pendingUpdate then
@@ -995,6 +987,11 @@ function QuestItemBarModule:OnEnable()
         self:CreateBar()
     end
     self:RegisterEvents()
+    OneWoW_QoL:RegisterEnteringWorldHandler("questitembar", function()
+        C_Timer.After(2, function()
+            QuestItemBarModule:FullUpdate()
+        end)
+    end)
     self:FullUpdate()
     SyncKeybindings()
 end
@@ -1003,6 +1000,7 @@ function QuestItemBarModule:OnDisable()
     if eventFrame then
         eventFrame:UnregisterAllEvents()
     end
+    OneWoW_QoL:UnregisterEnteringWorldHandler("questitembar")
     if updateTimer then
         updateTimer:Cancel()
         updateTimer = nil
@@ -1017,7 +1015,7 @@ function QuestItemBarModule:OnDisable()
     HideBar()
 end
 
-function QuestItemBarModule:OnToggle(toggleId, value)
+function QuestItemBarModule:OnToggle()
 end
 
 function QuestItemBarModule:ShowPreview()

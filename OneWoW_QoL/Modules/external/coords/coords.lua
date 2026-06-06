@@ -1,7 +1,4 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/coords/coords.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -56,7 +53,7 @@ local function GetToggle(id)
 end
 
 local function GetPositionStorage()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db then return nil end
     local mods = addon.db.global.modules
     if not mods["coords"] then mods["coords"] = {} end
@@ -136,7 +133,7 @@ function CoordsModule:CreateFrame()
     local extraText = f:CreateFontString(nil, "OVERLAY")
     extraText:SetJustifyH("CENTER")
 
-    f:SetScript("OnMouseUp", function(frame, button)
+    f:SetScript("OnMouseUp", function(_, button)
         if button == "RightButton" then
             self:CopyCoordinates()
         end
@@ -396,7 +393,6 @@ function CoordsModule:RegisterEvents()
     ef:RegisterEvent("ZONE_CHANGED")
     ef:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     ef:RegisterEvent("ZONE_CHANGED_INDOORS")
-    ef:RegisterEvent("PLAYER_ENTERING_WORLD")
     ef:RegisterEvent("PET_BATTLE_OPENING_START")
     ef:RegisterEvent("PET_BATTLE_CLOSE")
     ef:RegisterEvent("PLAYER_REGEN_DISABLED")
@@ -411,7 +407,7 @@ function CoordsModule:RegisterEvents()
                 self:UpdateDisplay()
             end
         elseif event == "ZONE_CHANGED" or event == "ZONE_CHANGED_NEW_AREA"
-            or event == "ZONE_CHANGED_INDOORS" or event == "PLAYER_ENTERING_WORLD" then
+            or event == "ZONE_CHANGED_INDOORS" then
             self._cache.mapID = nil
             self._cache.extra = nil
             self:CheckVisibility()
@@ -451,6 +447,14 @@ function CoordsModule:OnEnable()
     self._inCombat = InCombatLockdown()
     self:RebuildLayout()
     self:RegisterEvents()
+    OneWoW_QoL:RegisterEnteringWorldHandler("coords", function()
+        self._cache.mapID = nil
+        self._cache.extra = nil
+        self:CheckVisibility()
+        if not self._hidden and not self._inCombat then
+            self:UpdateDisplay()
+        end
+    end)
     self:CheckVisibility()
     if not self._hidden then
         self._frame:Show()
@@ -462,12 +466,13 @@ end
 function CoordsModule:OnDisable()
     self:StopUpdates()
     self:UnregisterEvents()
+    OneWoW_QoL:UnregisterEnteringWorldHandler("coords")
     if self._frame then
         self._frame:Hide()
     end
 end
 
-function CoordsModule:OnToggle(toggleId, value)
+function CoordsModule:OnToggle()
     self:RebuildLayout()
     if not self._hidden and not self._inCombat then
         self:UpdateDisplay()

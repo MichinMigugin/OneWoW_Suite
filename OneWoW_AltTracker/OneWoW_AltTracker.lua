@@ -19,26 +19,26 @@ local function RegisterWithOneWoW()
 
     OneWoW:RegisterModule({
         name = "alttracker",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "AltTracker" end,
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
         addonName = "OneWoW_AltTracker",
-        order = 2,
+        order = OneWoW:GetModuleTabOrder("alttracker"),
         tabs = {
-            { name = "summary",     displayName = function() return ns.L["SUBTAB_SUMMARY"]     or "Summary"     end, create = function(p) ns.UI.CreateSummaryTab(p) end },
-            { name = "progress",    displayName = function() return ns.L["SUBTAB_PROGRESS"]    or "Progress"    end, create = function(p) ns.UI.CreateProgressTab(p) end },
-            { name = "bank",        displayName = function() return ns.L["SUBTAB_BANK"]        or "Bank"        end, create = function(p) ns.UI.CreateBankTab(p) end },
-            { name = "equipment",   displayName = function() return ns.L["SUBTAB_EQUIPMENT"]   or "Equipment"   end, create = function(p) ns.UI.CreateEquipmentTab(p) end },
-            { name = "professions", displayName = function() return ns.L["SUBTAB_PROFESSIONS"] or "Professions" end, create = function(p) ns.UI.CreateProfessionsTab(p) end },
-            { name = "auctions",    displayName = function() return ns.L["SUBTAB_AUCTIONS"]    or "Auctions"    end, create = function(p) ns.UI.CreateAuctionsTab(p) end },
-            { name = "financials",  displayName = function() return ns.L["SUBTAB_FINANCIALS"]  or "Financials"  end, create = function(p) ns.UI.CreateFinancialsTab(p) end },
-            { name = "items",       displayName = function() return ns.L["SUBTAB_ITEMS"]       or "Items"       end, create = function(p) ns.UI.CreateItemsTab(p) end },
-            { name = "actionbars",  displayName = function() return "Action Bars" end, create = function(p) ns.UI.CreateActionBarsTab(p) end },
-            { name = "lockouts",    displayName = function() return ns.L["SUBTAB_LOCKOUTS"]    or "Lockouts"    end, create = function(p) ns.UI.CreateLockoutsTab(p) end },
+            { name = "summary",     displayName = function() return ns.L["SUBTAB_SUMMARY"]     end, create = function(p) ns.UI.CreateSummaryTab(p) end },
+            { name = "progress",    displayName = function() return ns.L["SUBTAB_PROGRESS"]    end, create = function(p) ns.UI.CreateProgressTab(p) end },
+            { name = "bank",        displayName = function() return ns.L["SUBTAB_BANK"]        end, create = function(p) ns.UI.CreateBankTab(p) end },
+            { name = "equipment",   displayName = function() return ns.L["SUBTAB_EQUIPMENT"]   end, create = function(p) ns.UI.CreateEquipmentTab(p) end },
+            { name = "professions", displayName = function() return ns.L["SUBTAB_PROFESSIONS"] end, create = function(p) ns.UI.CreateProfessionsTab(p) end },
+            { name = "auctions",    displayName = function() return ns.L["SUBTAB_AUCTIONS"]    end, create = function(p) ns.UI.CreateAuctionsTab(p) end },
+            { name = "financials",  displayName = function() return ns.L["SUBTAB_FINANCIALS"]  end, create = function(p) ns.UI.CreateFinancialsTab(p) end },
+            { name = "items",       displayName = function() return ns.L["SUBTAB_ITEMS"]       end, create = function(p) ns.UI.CreateItemsTab(p) end },
+            { name = "actionbars",  displayName = function() return ns.L["SUBTAB_ACTIONBARS"]  end, create = function(p) ns.UI.CreateActionBarsTab(p) end },
+            { name = "lockouts",    displayName = function() return ns.L["SUBTAB_LOCKOUTS"]    end, create = function(p) ns.UI.CreateLockoutsTab(p) end },
         },
     })
     OneWoW:RegisterSettingsPanel({
         name        = "alttracker",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "AltTracker" end,
-        order       = 2,
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
+        order       = OneWoW:GetModuleTabOrder("alttracker"),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
     ns.oneWoWHubActive = true
@@ -212,14 +212,25 @@ local didInit = false
 function OneWoWAltTracker:OnAddonLoaded()
     if didInit then return end
     didInit = true
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoWAltTracker)
     OnInitialize()
 end
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function(_, event)
-    if event == "PLAYER_LOGIN" then
-        OneWoWAltTracker:OnAddonLoaded()  -- safety net; normally already run by the loader
-        OnEnable()
+-- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN at
+-- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
+-- enable, when PLAYER_LOGIN has already fired and won't reach this module.
+local didLogin = false
+function OneWoWAltTracker:OnPlayerLogin()
+    if didLogin then return end
+    didLogin = true
+    OnEnable()
+    OneWoWAltTracker:RegisterLoginHandler("actionbars", ns.SetupActionBarsCompat)
+    OneWoWAltTracker:RegisterLoginHandler("financials", function()
+        if ns.UI and ns.UI.SetLoginServerTime then
+            ns.UI.SetLoginServerTime()
+        end
+    end)
+    if OneWoWAltTracker.FireLoginHandlers then
+        OneWoWAltTracker:FireLoginHandlers()
     end
-end)
+end

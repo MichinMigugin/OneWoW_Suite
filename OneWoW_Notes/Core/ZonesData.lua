@@ -32,7 +32,10 @@ function Zones:EnableScanning()
     zoneEventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     zoneEventFrame:RegisterEvent("ZONE_CHANGED")
     zoneEventFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
-    zoneEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+    OneWoW_Notes:RegisterEnteringWorldHandler("zones", function()
+        C_Timer.After(0.1, function() Zones:CheckZoneAlerts() end)
+    end)
 
     if not self.periodicTimer then
         self.periodicTimer = C_Timer.NewTicker(2, function()
@@ -58,7 +61,7 @@ function Zones:DisableScanning()
     zoneEventFrame:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
     zoneEventFrame:UnregisterEvent("ZONE_CHANGED")
     zoneEventFrame:UnregisterEvent("ZONE_CHANGED_INDOORS")
-    zoneEventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
+    OneWoW_Notes:UnregisterEnteringWorldHandler("zones")
     if self.periodicTimer then
         self.periodicTimer:Cancel()
         self.periodicTimer = nil

@@ -55,7 +55,7 @@ local function SyncKeybindings()
 end
 
 local function GetSettings()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db then return {} end
     local s = addon.db.global.modules.bagbar
     if not s then return {} end
@@ -139,6 +139,16 @@ function BagBarModule:OnEnable()
         self:CreateBar()
     end
     self:RegisterEvents()
+    OneWoW_QoL:RegisterEnteringWorldHandler("bagbar", function()
+        C_Timer.After(2, function()
+            if not ModuleBagEnabled() or not barFrame then return end
+            BagBarModule:UpdateBar()
+            C_Timer.After(2, function()
+                if not ModuleBagEnabled() or not barFrame then return end
+                BagBarModule:UpdateBar()
+            end)
+        end)
+    end)
     self:UpdateBar()
     SyncKeybindings()
 end
@@ -147,6 +157,7 @@ function BagBarModule:OnDisable()
     if self._eventFrame then
         self._eventFrame:UnregisterAllEvents()
     end
+    OneWoW_QoL:UnregisterEnteringWorldHandler("bagbar")
     TeardownBar()
 end
 
@@ -390,7 +401,6 @@ function BagBarModule:RegisterEvents()
     self._eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
     self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     self._eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
-    self._eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     self._eventFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
     self._eventFrame:RegisterEvent("TRADE_SKILL_SHOW")
     self._eventFrame:RegisterEvent("TRADE_SKILL_CLOSE")
@@ -418,15 +428,6 @@ function BagBarModule:RegisterEvents()
             SyncKeybindings()
         elseif event == "PLAYER_REGEN_DISABLED" then
             BagBarModule:UpdateCooldowns()
-        elseif event == "PLAYER_ENTERING_WORLD" then
-            C_Timer.After(2, function()
-                if not ModuleBagEnabled() or not barFrame then return end
-                BagBarModule:UpdateBar()
-                C_Timer.After(2, function()
-                    if not ModuleBagEnabled() or not barFrame then return end
-                    BagBarModule:UpdateBar()
-                end)
-            end)
         elseif event == "GET_ITEM_INFO_RECEIVED" then
             if not itemInfoPending then
                 itemInfoPending = true
@@ -798,7 +799,7 @@ ns.BagBarModule = BagBarModule
 -- ============================================================================
 
 local function ToggleBagBarModule()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db then
         print("|cFFFFD100OneWoW QoL:|r BagBar isn't ready yet.")
         return

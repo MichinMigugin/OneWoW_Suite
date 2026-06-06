@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.DataManager = {}
 local DataManager = ns.DataManager
@@ -18,7 +18,6 @@ function DataManager:RegisterEvents()
 
     local events = {
         "PLAYER_ALIVE",
-        "PLAYER_ENTERING_WORLD",
         "CHALLENGE_MODE_MAPS_UPDATE",
         "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE",
         "UPDATE_INSTANCE_INFO",
@@ -34,23 +33,27 @@ function DataManager:RegisterEvents()
         eventFrame:RegisterEvent(event)
     end
 
-    eventFrame:SetScript("OnEvent", function(self, event, ...)
+    eventFrame:SetScript("OnEvent", function(_, event, ...)
         DataManager:HandleEvent(event, ...)
     end)
 end
 
-function DataManager:HandleEvent(event, ...)
-    if event == "PLAYER_ALIVE" or event == "PLAYER_ENTERING_WORLD" then
-        C_Timer.After(2, function()
-            self:CollectAllData()
-        end)
-        C_Timer.After(8, function()
-            self:UpdateGreatVault()
-            self:UpdateRaids()
-        end)
-        C_Timer.After(20, function()
-            self:UpdateGreatVault()
-        end)
+function DataManager:OnEnteringWorld()
+    C_Timer.After(2, function()
+        self:CollectAllData()
+    end)
+    C_Timer.After(8, function()
+        self:UpdateGreatVault()
+        self:UpdateRaids()
+    end)
+    C_Timer.After(20, function()
+        self:UpdateGreatVault()
+    end)
+end
+
+function DataManager:HandleEvent(event)
+    if event == "PLAYER_ALIVE" then
+        self:OnEnteringWorld()
 
     elseif event == "CHALLENGE_MODE_MAPS_UPDATE" or event == "MYTHIC_PLUS_CURRENT_AFFIX_UPDATE" then
         C_Timer.After(0.5, function()

@@ -1,4 +1,5 @@
-local addonName, ns = ...
+local _, ns = ...
+
 local M = ns.MapMiniToolsModule
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
@@ -1466,7 +1467,7 @@ local function DebugIconDragUpdate(self)
     applyingIconAnchors = false
 end
 
-local function SetupDebugIconDrag(ov, f, def)
+local function SetupDebugIconDrag(ov, def)
     if not ov or ov._oneWoWIconDragSetup then return end
     ov._oneWoWIconDragSetup = true
     ov:EnableMouse(true)
@@ -1617,7 +1618,7 @@ local function ShowDebugOverlays()
             end)
             ov:SetScript("OnLeave", function() GetTooltip():Hide() end)
             ov:Show()
-            SetupDebugIconDrag(ov, f, def)
+            SetupDebugIconDrag(ov, def)
         end
     end
     RefreshExpansionMinimapButtonTooltipState()
@@ -1838,6 +1839,35 @@ end
 
 -- ─── Events ─────────────────────────────────────────────────────────────────
 
+local addonLoadHooksRegistered = false
+
+local function OnHybridMinimapLoaded()
+    if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
+    if GetToggle("squareShape") then
+        ApplySquareMask()
+    else
+        NotifyLibDBIconShapeChanged()
+    end
+end
+
+local function OnPlumberLoaded()
+    if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
+    EnsureExpansionPlumberHook()
+    ApplyElementVisibility()
+end
+
+local function RegisterAddonLoadHooks()
+    if addonLoadHooksRegistered then return end
+    addonLoadHooksRegistered = true
+    if EventUtil and EventUtil.ContinueOnAddOnLoaded then
+        EventUtil.ContinueOnAddOnLoaded("Blizzard_HybridMinimap", OnHybridMinimapLoaded)
+        EventUtil.ContinueOnAddOnLoaded("Plumber", OnPlumberLoaded)
+    elseif OneWoW_QoL and OneWoW_QoL.RegisterAddonLoadedWatcher then
+        OneWoW_QoL:RegisterAddonLoadedWatcher("Blizzard_HybridMinimap", OnHybridMinimapLoaded)
+        OneWoW_QoL:RegisterAddonLoadedWatcher("Plumber", OnPlumberLoaded)
+    end
+end
+
 local function RegisterEvents()
     if eventFrame then return end
     eventFrame = CreateFrame("Frame", "OneWoW_QoL_MmSkinEvents")
@@ -1848,9 +1878,8 @@ local function RegisterEvents()
     eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     eventFrame:RegisterEvent("PET_BATTLE_OPENING_START")
     eventFrame:RegisterEvent("PET_BATTLE_CLOSE")
-    eventFrame:RegisterEvent("ADDON_LOADED")
 
-    eventFrame:SetScript("OnEvent", function(_, event, arg1)
+    eventFrame:SetScript("OnEvent", function(_, event)
         if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
 
         if event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" or event == "ZONE_CHANGED_NEW_AREA" then
@@ -1863,19 +1892,9 @@ local function RegisterEvents()
             if GetToggle("petBattleHide") then MINIMAP:Hide() end
         elseif event == "PET_BATTLE_CLOSE" then
             if GetToggle("petBattleHide") then MINIMAP:Show() end
-        elseif event == "ADDON_LOADED" then
-            if arg1 == "Blizzard_HybridMinimap" then
-                if GetToggle("squareShape") then
-                    ApplySquareMask()
-                else
-                    NotifyLibDBIconShapeChanged()
-                end
-            elseif arg1 == "Plumber" then
-                EnsureExpansionPlumberHook()
-                ApplyElementVisibility()
-            end
         end
     end)
+    RegisterAddonLoadHooks()
 end
 
 local function UnregisterEvents()

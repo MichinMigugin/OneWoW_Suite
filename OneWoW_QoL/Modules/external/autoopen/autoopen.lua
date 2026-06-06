@@ -89,8 +89,6 @@ function AutoOpenModule:OnEnable()
         self._frame:SetScript("OnEvent", function(_, event)
             if event == "BAG_UPDATE_DELAYED" then
                 AO:ScanAndOpen()
-            elseif event == "PLAYER_ENTERING_WORLD" then
-                C_Timer.After(2.5, function() AO:ScanAndOpen() end)
             elseif event == "BANKFRAME_OPENED" or event == "GUILDBANKFRAME_OPENED" then
                 AO._atBank = true
             elseif event == "BANKFRAME_CLOSED" or event == "GUILDBANKFRAME_CLOSED" then
@@ -111,7 +109,9 @@ function AutoOpenModule:OnEnable()
         end)
     end
     self._frame:RegisterEvent("BAG_UPDATE_DELAYED")
-    self._frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    OneWoW_QoL:RegisterEnteringWorldHandler("autoopen", function()
+        C_Timer.After(2.5, function() AO:ScanAndOpen() end)
+    end)
     self._frame:RegisterEvent("BANKFRAME_OPENED")
     self._frame:RegisterEvent("BANKFRAME_CLOSED")
     self._frame:RegisterEvent("MAIL_SHOW")
@@ -128,6 +128,7 @@ function AutoOpenModule:OnDisable()
     if self._frame then
         self._frame:UnregisterAllEvents()
     end
+    OneWoW_QoL:UnregisterEnteringWorldHandler("autoopen")
     self._atBank     = false
     self._atMail     = false
     self._atMerchant = false

@@ -1,6 +1,6 @@
-local AddonName, Addon = ...
+local ADDON_NAME, Addon = ...
 
-OneWoW_UtilityDevTool = Addon
+OneWoW_Utility_DevTool = Addon
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -490,76 +490,50 @@ function Addon:ApplyLanguage()
     end
 end
 
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:RegisterEvent("PLAYER_LOGIN")
-frame:SetScript("OnEvent", function(self, event, arg1)
-    if event == "ADDON_LOADED" and arg1 == AddonName then
-        Addon:OnInitialize()
-        local _ver = OneWoW_GUI:GetAddonVersion(AddonName)
-        if _G.OneWoW and _G.OneWoW.RegisterLoadComponent then
-            _G.OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt")
-        else
-            Addon._pendingLoadVer = _ver
-        end
-    elseif event == "PLAYER_LOGIN" then
-        if _G.OneWoW == nil then
-            Addon.Minimap = OneWoW_GUI:CreateMinimapLauncher("OneWoW_UtilityDevTool", {
-                label = "DevTool",
-                onClick = function()
-                    Addon:ToggleMainWindow()
-                end,
-                onRightClick = function()
-                    if Addon.UI then
-                        Addon.UI:Show()
-                        Addon.UI:SelectTab("settings")
-                    end
-                end,
-                onTooltip = function(frame)
-                    GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
-                    GameTooltip:AddLine(Addon.L["ADDON_TOOLTIP_TITLE"], 1, 0.82, 0, true)
-                    if Addon.L and Addon.L["MINIMAP_TOOLTIP_HINT"] then
-                        GameTooltip:AddLine(Addon.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, true)
-                    end
-                    GameTooltip:Show()
-                end,
-            })
-            if Addon._pendingLoadVer then
-                print("|cFF00FF00OneWoW|r: |cFFFFFFFFDev Tools|r |cFF888888\226\128\147 v." .. Addon._pendingLoadVer .. " \226\128\147|r |cFF00FF00Loaded|r - /1wdt")
-            end
-        end
-        if _G.OneWoW then
-            _G.OneWoW:RegisterMinimap("OneWoW_UtilityDevTool", (_G.OneWoW.L and _G.OneWoW.L["CTX_OPEN_DEVTOOLS"]) or Addon.L["MINIMAP_CTX_FALLBACK"], nil, function()
-                Addon:ToggleMainWindow()
-            end)
-        end
-        if Addon.db.global.monitor.showOnLoad then
-            C_Timer.After(0.5, function()
-                if Addon.UI then
-                    Addon.UI:Show()
-                    Addon.UI:SelectTab("monitor")
-                end
-            end)
-        end
-        C_Timer.After(1.0, function()
-            if Addon.MonitorTab then
-                Addon.MonitorTab:RestorePinnedMonitorsPending()
-            end
-        end)
-        C_Timer.After(3.0, function()
-            if Addon.MonitorTab then
-                Addon.MonitorTab:RestorePinnedMonitorsPending()
-            end
-        end)
-        if Addon.InstallNotice and not Addon.InstallNotice:IsAcknowledged() then
-            C_Timer.After(4.0, function()
-                if Addon.InstallNotice and not Addon.InstallNotice:IsAcknowledged() then
-                    Addon.InstallNotice:Show()
-                end
-            end)
-        end
+local didInit = false
+function Addon:OnAddonLoaded()
+    if didInit then return end
+    didInit = true
+    Addon:OnInitialize()
+    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    if OneWoW and OneWoW.RegisterLoadComponent then
+        OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt")
     end
-end)
+end
+
+local didLogin = false
+function Addon:OnPlayerLogin()
+    if didLogin then return end
+    didLogin = true
+    OneWoW:RegisterMinimap("OneWoW_Utility_DevTool", (OneWoW.L and OneWoW.L["CTX_OPEN_DEVTOOLS"]) or Addon.L["MINIMAP_CTX_FALLBACK"], nil, function()
+        Addon:ToggleMainWindow()
+    end)
+    if Addon.db.global.monitor.showOnLoad then
+        C_Timer.After(0.5, function()
+            if Addon.UI then
+                Addon.UI:Show()
+                Addon.UI:SelectTab("monitor")
+            end
+        end)
+    end
+    C_Timer.After(1.0, function()
+        if Addon.MonitorTab then
+            Addon.MonitorTab:RestorePinnedMonitorsPending()
+        end
+    end)
+    C_Timer.After(3.0, function()
+        if Addon.MonitorTab then
+            Addon.MonitorTab:RestorePinnedMonitorsPending()
+        end
+    end)
+    if Addon.InstallNotice and not Addon.InstallNotice:IsAcknowledged() then
+        C_Timer.After(4.0, function()
+            if Addon.InstallNotice and not Addon.InstallNotice:IsAcknowledged() then
+                Addon.InstallNotice:Show()
+            end
+        end)
+    end
+end
 
 SLASH_ONEWOW_DEVTOOL1 = "/dt"
 SLASH_ONEWOW_DEVTOOL2 = "/devtool"
@@ -584,17 +558,17 @@ SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
     Addon:ToggleMainWindow()
 end
 
-_G["1WoW_UtilityDevTool_OnAddonCompartmentClick"] = function(addonName, buttonName)
+_G["1WoW_UtilityDevTool_OnAddonCompartmentClick"] = function()
     Addon:ToggleMainWindow()
 end
 
-_G["1WoW_UtilityDevTool_OnAddonCompartmentEnter"] = function(addonName, button)
+_G["1WoW_UtilityDevTool_OnAddonCompartmentEnter"] = function(_, button)
     GameTooltip:SetOwner(button, "ANCHOR_LEFT")
     GameTooltip:SetText(Addon.L["ADDON_TOOLTIP_TITLE"], 1, 1, 1)
     GameTooltip:AddLine(Addon.L["ADDON_COMPARTMENT_HINT"], 0.7, 0.7, 0.7)
     GameTooltip:Show()
 end
 
-_G["1WoW_UtilityDevTool_OnAddonCompartmentLeave"] = function(addonName, button)
+_G["1WoW_UtilityDevTool_OnAddonCompartmentLeave"] = function()
     GameTooltip:Hide()
 end

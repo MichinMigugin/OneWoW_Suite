@@ -135,17 +135,10 @@ end
 
 function BagButton:Initialize()
     local frame = CreateFrame("Frame")
-    frame:RegisterEvent("ADDON_LOADED")
     frame:RegisterEvent("AUCTION_HOUSE_SHOW")
     frame:RegisterEvent("AUCTION_HOUSE_CLOSED")
-    frame:SetScript("OnEvent", function(_, event, addon)
-        if event == "ADDON_LOADED" then
-            if addon == "Blizzard_UIParent" or addon == ADDON_NAME then
-                C_Timer.After(1, function()
-                    BagButton:CreateButtons()
-                end)
-            end
-        elseif event == "AUCTION_HOUSE_SHOW" then
+    frame:SetScript("OnEvent", function(_, event)
+        if event == "AUCTION_HOUSE_SHOW" then
             if OneWoW_ShoppingList_DB.global.settings.showAHButton ~= false then
                 BagButton:CreateAuctionHouseButton()
                 if ahBtn then ahBtn:Show() end
@@ -155,9 +148,15 @@ function BagButton:Initialize()
         end
     end)
 
-    if ContainerFrameCombinedBags then
+    local function deferCreateButtons()
         C_Timer.After(1, function()
             BagButton:CreateButtons()
         end)
+    end
+    ns:RegisterAddonLoadedWatcher("Blizzard_UIParent", deferCreateButtons)
+    ns:RegisterAddonLoadedWatcher(ADDON_NAME, deferCreateButtons)
+
+    if ContainerFrameCombinedBags then
+        deferCreateButtons()
     end
 end

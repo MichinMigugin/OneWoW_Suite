@@ -16,23 +16,21 @@ function Module:Initialize()
     self.initialized = true
 
     local frame = CreateFrame("Frame")
-    frame:RegisterEvent("PLAYER_LOGIN")
     frame:RegisterEvent("CHAT_MSG_SKILL")
     frame:RegisterEvent("NEW_RECIPE_LEARNED")
     frame:RegisterEvent("PLAYER_MONEY")
 
-    frame:SetScript("OnEvent", function(self, event, ...)
+    frame:SetScript("OnEvent", function(_, event, ...)
         Module:HandleEvent(event, ...)
+    end)
+
+    C_Timer.After(1, function()
+        private.goldBefore = GetMoney()
     end)
 end
 
 function Module:HandleEvent(event, ...)
-    if event == "PLAYER_LOGIN" then
-        C_Timer.After(1, function()
-            private.goldBefore = GetMoney()
-        end)
-
-    elseif event == "CHAT_MSG_SKILL" then
+    if event == "CHAT_MSG_SKILL" then
         local msg = ...
         local extracted = msg:match("You have gained the (.+)%.$")
             or msg:match("You have gained the (.+)")

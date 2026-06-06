@@ -13,21 +13,21 @@ ns.oneWoWHubActive = false
 local function RegisterWithOneWoW()
     OneWoW:RegisterModule({
         name        = "catalog",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "Catalog" end,
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
         addonName   = ADDON_NAME,
-        order       = 4,
+        order       = OneWoW:GetModuleTabOrder("catalog"),
         tabs = {
-            { name = "journal",     displayName = function() return ns.L["TAB_JOURNAL"]     or "Journal"     end, create = function(p) ns.UI.CreateJournalTab(p)    end },
-            { name = "vendors",     displayName = function() return ns.L["TAB_VENDORS"]     or "Vendors"     end, create = function(p) ns.UI.CreateVendorsTab(p)    end },
-            { name = "tradeskills", displayName = function() return ns.L["TAB_TRADESKILLS"] or "Tradeskills" end, create = function(p) ns.UI.CreateTradeskillsTab(p) end },
-            { name = "quests",      displayName = function() return ns.L["TAB_QUESTS"]      or "Quests"      end, create = function(p) ns.UI.CreateQuestsTab(p)     end },
-            { name = "itemsearch",  displayName = function() return ns.L["TAB_ITEMSEARCH"]  or "Item Search" end, create = function(p) ns.UI.CreateItemSearchTab(p) end },
+            { name = "journal",     displayName = function() return ns.L["TAB_JOURNAL"]     end, create = function(p) ns.UI.CreateJournalTab(p)    end },
+            { name = "vendors",     displayName = function() return ns.L["TAB_VENDORS"]     end, create = function(p) ns.UI.CreateVendorsTab(p)    end },
+            { name = "tradeskills", displayName = function() return ns.L["TAB_TRADESKILLS"] end, create = function(p) ns.UI.CreateTradeskillsTab(p) end },
+            { name = "quests",      displayName = function() return ns.L["TAB_QUESTS"]      end, create = function(p) ns.UI.CreateQuestsTab(p)     end },
+            { name = "itemsearch",  displayName = function() return ns.L["TAB_ITEMSEARCH"]  end, create = function(p) ns.UI.CreateItemSearchTab(p) end },
         },
     })
     OneWoW:RegisterSettingsPanel({
         name        = "catalog",
-        displayName = function() return ns.L["ADDON_TITLE_SHORT"] or "Catalog" end,
-        order       = 3,
+        displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
+        order       = OneWoW:GetModuleTabOrder("catalog"),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
     ns.oneWoWHubActive = true
@@ -108,15 +108,19 @@ local didInit = false
 function addon:OnAddonLoaded()
     if didInit then return end
     didInit = true
+    OneWoW.Lifecycle:CreateHandlerRegistry(addon)
     OnInitialize()
 end
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:SetScript("OnEvent", function(self, event)
-    if event == "PLAYER_LOGIN" then
-        addon:OnAddonLoaded()  -- safety net; normally already run by the loader
-        OnEnable()
-        self:UnregisterEvent("PLAYER_LOGIN")
+-- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN at
+-- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
+-- enable, when PLAYER_LOGIN has already fired and won't reach this module.
+local didLogin = false
+function addon:OnPlayerLogin()
+    if didLogin then return end
+    didLogin = true
+    OnEnable()
+    if addon.FireLoginHandlers then
+        addon:FireLoginHandlers()
     end
-end)
+end

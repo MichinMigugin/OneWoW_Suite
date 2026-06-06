@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
@@ -45,29 +45,6 @@ local OVERLAY_ORDER = {
     "warbound",
     "wue",
     "boe",
-}
-
-local INVTYPE_TO_SLOT = {
-    [Enum.InventoryType.IndexHeadType] = 1,
-    [Enum.InventoryType.IndexNeckType] = 2,
-    [Enum.InventoryType.IndexShoulderType] = 3,
-    [Enum.InventoryType.IndexBodyType] = 4,
-    [Enum.InventoryType.IndexChestType] = 5,
-    [Enum.InventoryType.IndexWaistType] = 6,
-    [Enum.InventoryType.IndexLegsType] = 7,
-    [Enum.InventoryType.IndexFeetType] = 8,
-    [Enum.InventoryType.IndexWristType] = 9,
-    [Enum.InventoryType.IndexHandType] = 10,
-    [Enum.InventoryType.IndexFingerType] = 11,
-    [Enum.InventoryType.IndexTrinketType] = 13,
-    [Enum.InventoryType.IndexWeaponType] = 16,
-    [Enum.InventoryType.IndexShieldType] = 17,
-    [Enum.InventoryType.IndexCloakType] = 15,
-    [Enum.InventoryType.Index2HweaponType] = 16,
-    [Enum.InventoryType.IndexRobeType] = 5,
-    [Enum.InventoryType.IndexWeaponmainhandType] = 16,
-    [Enum.InventoryType.IndexWeaponoffhandType] = 17,
-    [Enum.InventoryType.IndexHoldableType] = 17,
 }
 
 local BATTLE_PET_CAGE_ID = 82800
@@ -190,8 +167,6 @@ local function PreparePool(button)
         button.onewow_overlayPool = {}
     end
 end
-
-local BG_SOLID_STYLES = { ["Solid-Circle"] = true, ["Solid-Square"] = true }
 
 local function SetupIconAnimation(entry)
     if entry.iconAnim then return end
@@ -1601,9 +1576,7 @@ local function InitializeSurfaces()
 
     if WorldMapFrame then
         WorldMapFrame:HookScript("OnShow", RefreshWorldQuestPins)
-        if EventRegistry then
-            EventRegistry:RegisterCallback("MapCanvas.MapSet", RefreshWorldQuestPins)
-        end
+        EventRegistry:RegisterCallback("MapCanvas.MapSet", RefreshWorldQuestPins)
     end
 
     local surfaceEventFrame = CreateFrame("Frame")

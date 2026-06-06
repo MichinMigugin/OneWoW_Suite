@@ -1,7 +1,4 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/fastforward/fastforward.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 
 local FastForwardModule = {
     id          = "fastforward",
@@ -42,9 +39,8 @@ local function StopGameMovieSafe()
     if type(CinematicFinished) == "function" and Enum and Enum.CinematicType then
         pcall(CinematicFinished, Enum.CinematicType.GameMovie)
     end
-    if EventRegistry and EventRegistry.TriggerEvent then
-        pcall(EventRegistry.TriggerEvent, EventRegistry, "Subtitles.OnMovieCinematicStop")
-    end
+
+    pcall(EventRegistry.TriggerEvent, EventRegistry, "Subtitles.OnMovieCinematicStop")
 end
 
 local function CancelCinematicSafe()
@@ -67,7 +63,7 @@ end
 function FastForwardModule:OnEnable()
     if not self._frame then
         self._frame = CreateFrame("Frame", "OneWoW_QoL_FastForward")
-        self._frame:SetScript("OnEvent", function(frame, event, ...)
+        self._frame:SetScript("OnEvent", function(_, event, ...)
             if event == "PLAY_MOVIE" then
                 self:PLAY_MOVIE(...)
             elseif event == "CINEMATIC_START" then

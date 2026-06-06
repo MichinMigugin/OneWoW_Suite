@@ -804,24 +804,25 @@ local function OnCreatureKilled(creatureID)
     DeferRefresh()
 end
 
-local function OnEvent(_, event, ...)
-    if event == "PLAYER_ENTERING_WORLD" then
-        TD:CheckResets()
-        TD:CheckCustomTimerResets()
-        BuildIndices()
-        scanPending = true
-        C_Timer.After(2, function()
-            TE:FullScan()
-            OnEnterInstance()
-        end)
-        C_Timer.After(3, function()
-            if C_Calendar and C_Calendar.OpenCalendar then
-                C_Calendar.OpenCalendar()
-            end
-        end)
-        TE:RestorePinnedWindows()
+local function OnPlayerEnteringWorld()
+    TD:CheckResets()
+    TD:CheckCustomTimerResets()
+    BuildIndices()
+    scanPending = true
+    C_Timer.After(2, function()
+        TE:FullScan()
+        OnEnterInstance()
+    end)
+    C_Timer.After(3, function()
+        if C_Calendar and C_Calendar.OpenCalendar then
+            C_Calendar.OpenCalendar()
+        end
+    end)
+    TE:RestorePinnedWindows()
+end
 
-    elseif event == "CHAT_MSG_LOOT" then
+local function OnEvent(_, event, ...)
+    if event == "CHAT_MSG_LOOT" then
         local msg = ...
         if msg and not issecretvalue(msg) then
             local itemID = msg:match("item:(%d+)")
@@ -871,6 +872,10 @@ local function EnsureEventFrame()
     return eventFrame
 end
 
+function TE:OnPlayerEnteringWorld()
+    OnPlayerEnteringWorld()
+end
+
 function TE:Initialize()
     TD = ns.TrackerData
     if not TD then return end
@@ -878,7 +883,6 @@ function TE:Initialize()
     initialized = true
 
     local frame = EnsureEventFrame()
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterEvent("QUEST_LOG_UPDATE")
     frame:RegisterEvent("QUEST_TURNED_IN")
     frame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")

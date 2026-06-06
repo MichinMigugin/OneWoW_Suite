@@ -1,4 +1,4 @@
-local AddonName, Addon = ...
+local _, Addon = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -193,26 +193,33 @@ function ErrorLogger:_unregisterAuxEvents()
 end
 
 function ErrorLogger:_ensureBugGrabberLateLoadListener()
-    if self._bugGrabberLoadFrame then
+    if self._bugGrabberWatcherRegistered then
         return
     end
-    local f = CreateFrame("Frame")
-    f:RegisterEvent("ADDON_LOADED")
-    f:SetScript("OnEvent", function(_, _, addonName)
-        local c = Addon.Constants
-        local want = (c and c.BUGGRABBER_STANDALONE_ADDON) or "!BugGrabber"
-        if addonName ~= want then
-            return
-        end
+    self._bugGrabberWatcherRegistered = true
+    local c = Addon.Constants
+    local want = (c and c.BUGGRABBER_STANDALONE_ADDON) or "!BugGrabber"
+    local function onBugGrabberLoaded()
         if not ErrorLogger:IsBugGrabberAvailable() then
             return
         end
         ErrorLogger:_registerBugGrabberBridgeOnce()
         ErrorLogger:_unregisterAuxEvents()
         ErrorLogger:UpdateLuaTabBugGrabberNotice()
-        f:UnregisterEvent("ADDON_LOADED")
-    end)
-    self._bugGrabberLoadFrame = f
+    end
+    local function register()
+        OneWoW:RegisterAddonLoadedWatcher(want, function(addonName)
+            if addonName ~= want then
+                return
+            end
+            onBugGrabberLoaded()
+        end)
+    end
+    if OneWoW then
+        register()
+    else
+        C_Timer.After(0, register)
+    end
 end
 
 function ErrorLogger:_registerBugGrabberBridgeOnce()
@@ -617,7 +624,7 @@ function ErrorLogger:PreviewSoundChoice(key)
 end
 
 function ErrorLogger:GetMinimapButton()
-    return OneWoW_GUI:GetMinimapButton("OneWoW_UtilityDevTool")
+    return OneWoW_GUI:GetMinimapButton("OneWoW_Utility_DevTool")
 end
 
 function ErrorLogger:HasCurrentSessionErrors()
