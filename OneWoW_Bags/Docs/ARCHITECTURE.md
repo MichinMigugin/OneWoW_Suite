@@ -695,11 +695,15 @@ Inventory windows share `WindowLayoutController:Refresh`, which runs `cleanup` (
 
 | Mechanism | Location | Behavior |
 |-----------|----------|----------|
+| Self-healing scheduler | `EnsureFlushScheduled` | Single arm point for the coalesced flush timer. Coalesces within a frame, but re-arms when the `refreshScheduled` latch is stale (`GetTime() - lastArmTime > STALE_AFTER`, 0.05s). Prevents a permanent wedge if a zero-delay `C_Timer` callback is dropped across a loading screen. Caches `_flushClosure` to avoid per-arm allocation. |
+| Scheduler kick | `KickLayoutScheduler` | Force-resets `refreshScheduled = false` and re-arms a flush if work is pending. Called on zone enter to recover a wedged latch. |
 | Guarded layout | `WindowHelpers:RunGuardedLayoutRefresh` | Wraps each GUI `RefreshLayout` body in `pcall`; always clears `_layoutInProgress`. Reentrant calls schedule `RequestLayoutRefresh(..., "reentrant_followup")` instead of returning silently. |
 | Guard reset | `onHide` / `FullReset` on `GUI`, `BankGUI`, `GuildBankGUI` | Clears `_layoutInProgress` so a stuck in-flight layout cannot survive window close. |
-| Coalesced flush | `FlushPendingLayoutRefreshes` | Clears `pendingRefresh` only when a refresh actually runs. Skips (hidden frame or `Set._building`) leave pending set and reschedule flush on the next frame. Bank/guild targets are not queued while their window is closed (`ShouldQueueLayoutRefresh`); stale pending is dropped on close and on flush. |
-| Zone enter | `Events:OnPlayerEnteringWorld` | After zone load (not initial login), refreshes each visible built UI (`bags` / `bank` / `guild`) immediately and again after 0.1s. |
-| Frame show | `WindowHelpers:AttachLayoutOnShow` | Hooks main window `OnShow` to request `show_onshow` when the backing set is already built. |
+| Coalesced flush | `FlushPendingLayoutRefreshes` | Clears `pendingRefresh` only when a refresh actually runs. Skips (hidden frame, `Set._building`, or already-running `_layoutInProgress` -> `skip_in_progress`) leave pending set and reschedule via `EnsureFlushScheduled`. Bank/guild targets are not queued while their window is closed (`ShouldQueueLayoutRefresh`); stale pending is dropped on close and on flush. |
+| Synchronous open | `GUI` / `BankGUI` / `GuildBankGUI` `Show()` warm path | When the backing set is already built, open lays out synchronously via `RequestLayoutRefreshNow` (after `ClearPendingLayoutRefresh`) instead of queueing, so the visible result does not depend on the coalescer. The redundant `OnShow` `show_onshow` request is suppressed for that target (`SetOnShowLayoutSuppressed`). |
+| Open safety net | `ScheduleOpenSafetyNet` (bags + bank) | 0.5s after open, if the window is shown but blank (`IsWindowBlank`: items present, zero buttons shown) forces a synchronous `RequestLayoutRefreshNow` (`safety_net_blank`); otherwise refreshes once unless a layout ran within 0.3s. Latch-independent, so it recovers even a wedged scheduler. |
+| Zone enter | `Events:OnPlayerEnteringWorld` | After zone load (not initial login), kicks the scheduler (`KickLayoutScheduler`) then refreshes each visible built UI (`bags` / `bank` / `guild`) immediately and again after 0.1s. |
+| Frame show | `WindowHelpers:AttachLayoutOnShow` | Hooks main window `OnShow` to request `show_onshow` when the backing set is already built (skipped while a warm `Show()` is laying out synchronously). |
 
 ### Layout debug (`/owblayout`)
 
@@ -712,7 +716,9 @@ Inventory windows share `WindowLayoutController:Refresh`, which runs `cleanup` (
 | `/owblayout clear` | Clear ring |
 | `/owblayout dump` | Print scheduler snapshot, per-GUI button stats (`hasItem` vs `IsShown`), and recent events |
 
-Hooks: `RequestLayoutRefresh`, `FlushPendingLayoutRefreshes` (exec / skip_hidden / skip_building / flush_drop_stale / reschedule), `RunGuardedLayoutRefresh`, `RefreshLayout` early exits, `WindowLayoutController` (cleanup / filtered / layout_done / empty_filter). Ring `layout_done` rows include `filtShown`, `hasItem`, and `shown` for diagnosing blank-inventory reports via `/owblayout dump`.
+Hooks: `RequestLayoutRefresh`, `FlushPendingLayoutRefreshes` (exec / skip_hidden / skip_building / skip_in_progress / flush_drop_stale / reschedule), `KickLayoutScheduler` (`scheduler_kick`), `ScheduleOpenSafetyNet` (`safety_net_blank`), `RunGuardedLayoutRefresh`, `RefreshLayout` early exits, `WindowLayoutController` (cleanup / filtered / layout_done / empty_filter). Ring `layout_done` rows include `filtShown`, `hasItem`, and `shown` for diagnosing blank-inventory reports via `/owblayout dump`.
+
+A wedged scheduler shows as `refreshScheduled=true` with `pending` set but no `flush_exec` following the requests. After this fix, a `scheduler_kick` on zone enter or a synchronous open/`safety_net_blank` should break that state without `/reload`.
 
 ---
 

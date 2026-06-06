@@ -266,17 +266,33 @@ function GUI:Show()
 
     if not MainWindow then return end
 
+    -- Warm path lays out synchronously below, so suppress the OnShow hook's
+    -- redundant coalesced refresh that would otherwise fire during Show().
+    local warm = BagSet.isBuilt
+    if warm then
+        OneWoW_Bags:SetOnShowLayoutSuppressed("bags", true)
+    end
+
     MainWindow:Show()
 
     -- BagSet:Build() emits its own RequestLayoutRefresh("bags") on completion.
-    -- For the warm path (already built), kick off a coalesced refresh ourselves.
-    if not BagSet.isBuilt then
+    -- For the warm path (already built), lay out synchronously so the open is
+    -- independent of the coalescer (which can be wedged after a zone load).
+    if not warm then
         BagSet:Build()
     else
-        OneWoW_Bags:RequestLayoutRefresh("bags", "show")
+        OneWoW_Bags:ClearPendingLayoutRefresh("GUI")
+        OneWoW_Bags:RequestLayoutRefreshNow("bags")
+        OneWoW_Bags:SetOnShowLayoutSuppressed("bags", false)
     end
 
     OneWoW_Bags:ScheduleTooltipCatchupRefresh()
+
+    -- Latch-bypassing recovery: forces a layout if the window ends up shown
+    -- with items but nothing visible (e.g. a coalescer wedge after a zone load).
+    OneWoW_Bags:ScheduleOpenSafetyNet("bags", function()
+        return MainWindow and MainWindow:IsShown()
+    end)
 
     Categories:BeginRecentExpiryTicker()
 end

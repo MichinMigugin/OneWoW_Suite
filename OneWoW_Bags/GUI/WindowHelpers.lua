@@ -58,6 +58,7 @@ end
 function WH:AttachLayoutOnShow(mainWindow, targetKey, isBuiltFn)
     if not mainWindow or not isBuiltFn then return end
     mainWindow:HookScript("OnShow", function()
+        if OneWoW_Bags:IsOnShowLayoutSuppressed(targetKey) then return end
         if isBuiltFn() then
             local LD = OneWoW_Bags.LayoutDebug
             if LD and LD.enabled then

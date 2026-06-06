@@ -148,6 +148,10 @@ function Events:OnPlayerEnteringWorld(isLogin)
         })
     end
 
+    -- A loading screen can drop the pending zero-delay flush timer and wedge
+    -- the refreshScheduled latch. Reset it so any pending bag work flushes.
+    addon:KickLayoutScheduler()
+
     refreshVisible("entering_world")
     C_Timer.After(0.1, function()
         refreshVisible("entering_world_delayed")

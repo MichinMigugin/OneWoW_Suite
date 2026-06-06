@@ -75,6 +75,14 @@ local pendingRefresh = {}
 local pendingRefreshReason = {}
 local refreshScheduled = false
 local lastRefreshTime = {}
+-- Self-healing scheduler watchdog: if the flush timer armed at `lastArmTime`
+-- is ever dropped (e.g. a zero-delay C_Timer callback lost across a loading
+-- screen), `refreshScheduled` would latch true forever. Re-arming is allowed
+-- once more than STALE_AFTER seconds have elapsed since the last arm, which is
+-- far longer than a normal C_Timer.After(0) turnaround (~one frame) so it never
+-- double-arms under same-frame coalescing.
+local lastArmTime = 0
+local STALE_AFTER = 0.05
 
 local TARGET_TO_GUI = {
     bags = "GUI",
@@ -264,6 +272,51 @@ function OneWoW_Bags:ClearPendingLayoutRefresh(guiKey)
     pendingRefreshReason[guiKey] = nil
 end
 
+-- When a window opens via the warm path it lays out synchronously, so the
+-- OnShow hook's coalesced "show_onshow" request would be a redundant extra
+-- pass. Show() suppresses the hook for its target around MainWindow:Show().
+local suppressOnShowLayout = {}
+
+--- @param targetKey "bags"|"bank"|"guild"
+--- @param suppressed boolean
+function OneWoW_Bags:SetOnShowLayoutSuppressed(targetKey, suppressed)
+    suppressOnShowLayout[targetKey] = suppressed or nil
+end
+
+--- @param targetKey "bags"|"bank"|"guild"
+--- @return boolean
+function OneWoW_Bags:IsOnShowLayoutSuppressed(targetKey)
+    return suppressOnShowLayout[targetKey] == true
+end
+
+--- Arm a coalesced flush, healing a latch whose timer was dropped.
+--- Only arms when there is pending work; coalesces within a frame; re-arms
+--- when the previous arm is older than STALE_AFTER (its timer never fired).
+function OneWoW_Bags:EnsureFlushScheduled()
+    if next(pendingRefresh) == nil then return end
+    local now = GetTime()
+    if refreshScheduled and (now - lastArmTime) < STALE_AFTER then
+        return
+    end
+    refreshScheduled = true
+    lastArmTime = now
+    self._flushClosure = self._flushClosure
+        or function() self:FlushPendingLayoutRefreshes() end
+    C_Timer.After(0, self._flushClosure)
+end
+
+--- Force-recover the layout scheduler. Clears the `refreshScheduled` latch and
+--- re-arms a flush if work is pending. Used on zone enter, where a loading
+--- screen can drop the pending zero-delay flush timer and wedge the latch.
+function OneWoW_Bags:KickLayoutScheduler()
+    refreshScheduled = false
+    local LD = self.LayoutDebug
+    if LD and LD.enabled then
+        LD:Record("scheduler_kick", { note = "latch reset" })
+    end
+    self:EnsureFlushScheduled()
+end
+
 ---@param target "bags"|"bank"|"guild"|"bank_related"|"all"|nil
 ---@param reason string|nil diagnostic tag; first-write-wins per target
 function OneWoW_Bags:RequestLayoutRefresh(target, reason)
@@ -284,10 +337,7 @@ function OneWoW_Bags:RequestLayoutRefresh(target, reason)
             })
         end
     end)
-    if not refreshScheduled then
-        refreshScheduled = true
-        C_Timer.After(0, function() self:FlushPendingLayoutRefreshes() end)
-    end
+    self:EnsureFlushScheduled()
 end
 
 --- Get the (GetTime-based) timestamp of the most recent RefreshLayout call
@@ -297,6 +347,47 @@ end
 function OneWoW_Bags:GetLastRefreshTime(targetKey)
     local guiKey = TARGET_TO_GUI[targetKey]
     return guiKey and lastRefreshTime[guiKey] or nil
+end
+
+--- Heuristic for a failed layout: the window is shown and its backing set has
+--- items, but zero item buttons are visible (cleanup ran without a following
+--- show pass). Used by the open safety net as a last-resort recovery.
+---@param targetKey "bags"|"bank"|"guild"
+---@return boolean
+function OneWoW_Bags:IsWindowBlank(targetKey)
+    local guiKey = TARGET_TO_GUI[targetKey]
+    local gui = guiKey and self[guiKey]
+    if not (gui and gui.IsShown and gui:IsShown()) then return false end
+    local LD = self.LayoutDebug
+    if not (LD and LD.CountSetStats) then return false end
+    local setKey = GUI_TO_SET[guiKey]
+    local setObj = setKey and self[setKey]
+    if not (setObj and setObj.isBuilt) then return false end
+    local _, hasItem, shown = LD:CountSetStats(setObj)
+    return hasItem > 0 and shown == 0
+end
+
+--- Schedule a post-open safety-net layout that survives a wedged scheduler.
+--- Runs synchronously (RequestLayoutRefreshNow) so it recovers even if the
+--- coalescer latch is stuck. Forces a layout when the window looks blank;
+--- otherwise refreshes once unless a layout already ran very recently.
+---@param targetKey "bags"|"bank"|"guild"
+---@param isShownFn function returns whether the window is still shown
+function OneWoW_Bags:ScheduleOpenSafetyNet(targetKey, isShownFn)
+    C_Timer.After(0.5, function()
+        if not isShownFn() then return end
+        if self:IsWindowBlank(targetKey) then
+            local LD = self.LayoutDebug
+            if LD and LD.enabled then
+                LD:Record("safety_net_blank", { target = targetKey })
+            end
+            self:RequestLayoutRefreshNow(targetKey)
+            return
+        end
+        local last = self:GetLastRefreshTime(targetKey)
+        if last and (GetTime() - last) < 0.3 then return end
+        self:RequestLayoutRefreshNow(targetKey)
+    end)
 end
 
 --- Synchronous escape hatch for callers that cannot tolerate the
@@ -349,6 +440,21 @@ function OneWoW_Bags:FlushPendingLayoutRefreshes()
                 if LD and LD.enabled then
                     LD:Record("flush_drop_stale", { guiKey = guiKey, reason = reason, note = "window closed" })
                 end
+            elseif visible and not building and inProgress then
+                -- A layout is already running for this window (reentrant flush).
+                -- Keep pending so the work is not lost to the reentrancy guard's
+                -- early return; reschedule for a later frame.
+                needsReschedule = true
+                if LD and LD.enabled then
+                    LD:Record("skip_in_progress", {
+                        guiKey = guiKey,
+                        reason = reason,
+                        outcome = "skip_in_progress",
+                        visible = visible,
+                        building = building,
+                        inProgress = inProgress,
+                    })
+                end
             elseif visible and not building then
                 pendingRefresh[guiKey] = nil
                 pendingRefreshReason[guiKey] = nil
@@ -393,15 +499,9 @@ function OneWoW_Bags:FlushPendingLayoutRefreshes()
         if LD and LD.enabled then
             LD:Record("flush_reschedule", { note = "pending work remains" })
         end
-        for guiKey in pairs(pendingRefresh) do
-            if pendingRefresh[guiKey] then
-                refreshScheduled = true
-                C_Timer.After(0, function()
-                    self:FlushPendingLayoutRefreshes()
-                end)
-                break
-            end
-        end
+        -- Allow EnsureFlushScheduled to arm a fresh timer: the current flush
+        -- set refreshScheduled = false at entry, so this re-arms cleanly.
+        self:EnsureFlushScheduled()
     end
 
     if Profile then Profile:Stop("RequestLayoutRefresh.Flush") end

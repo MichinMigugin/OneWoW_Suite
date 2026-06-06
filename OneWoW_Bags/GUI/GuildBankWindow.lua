@@ -259,14 +259,24 @@ function GuildBankGUI:Show()
     local db = GetDB()
     db.global.guildBankSelectedTab = nil
 
+    -- Warm path lays out synchronously below, so suppress the OnShow hook's
+    -- redundant coalesced refresh that would otherwise fire during Show().
+    local warm = GuildBankSet.isBuilt
+    if warm then
+        OneWoW_Bags:SetOnShowLayoutSuppressed("guild", true)
+    end
+
     MainWindow:Show()
 
     -- GuildBankSet:Build() emits its own RequestLayoutRefresh("guild") on completion.
-    -- For the warm path (already built), kick off a coalesced refresh ourselves.
-    if not GuildBankSet.isBuilt then
+    -- For the warm path (already built), lay out synchronously so the open is
+    -- independent of the coalescer (which can be wedged after a zone load).
+    if not warm then
         GuildBankSet:Build()
     else
-        OneWoW_Bags:RequestLayoutRefresh("guild", "show")
+        OneWoW_Bags:ClearPendingLayoutRefresh("GuildBankGUI")
+        OneWoW_Bags:RequestLayoutRefreshNow("guild")
+        OneWoW_Bags:SetOnShowLayoutSuppressed("guild", false)
     end
 
     GuildBankBar:BuildTabButtons()

@@ -631,14 +631,24 @@ function BankGUI:Show()
 
     if not MainWindow then return end
 
+    -- Warm path lays out synchronously below, so suppress the OnShow hook's
+    -- redundant coalesced refresh that would otherwise fire during Show().
+    local warm = BankSet.isBuilt
+    if warm then
+        OneWoW_Bags:SetOnShowLayoutSuppressed("bank", true)
+    end
+
     MainWindow:Show()
 
     -- BankSet:Build() emits its own RequestLayoutRefresh("bank") on completion.
-    -- For the warm path (already built), kick off a coalesced refresh ourselves.
-    if not BankSet.isBuilt then
+    -- For the warm path (already built), lay out synchronously so the open is
+    -- independent of the coalescer (which can be wedged after a zone load).
+    if not warm then
         BankSet:Build()
     else
-        OneWoW_Bags:RequestLayoutRefresh("bank", "show")
+        OneWoW_Bags:ClearPendingLayoutRefresh("BankGUI")
+        OneWoW_Bags:RequestLayoutRefreshNow("bank")
+        OneWoW_Bags:SetOnShowLayoutSuppressed("bank", false)
     end
     TrackBuiltBankState()
 
@@ -647,16 +657,10 @@ function BankGUI:Show()
     OneWoW_Bags.BankBar:UpdateGold()
 
     -- Safety-net refresh: catches late GET_ITEM_INFO_RECEIVED arrivals that
-    -- happened to slip in just before/after Build but didn't trigger another
-    -- refresh. Skipped if a refresh fired very recently (within 0.3s) — that
-    -- catches the common case where Build's own trailing refresh and any
-    -- BAG_UPDATE_DELAYED already covered us. Routed through the scheduler
-    -- so it dedupes with anything else still pending.
-    C_Timer.After(0.5, function()
-        if not (MainWindow and MainWindow:IsShown()) then return end
-        local last = OneWoW_Bags:GetLastRefreshTime("bank")
-        if last and (GetTime() - last) < 0.3 then return end
-        OneWoW_Bags:RequestLayoutRefresh("bank", "safety_net")
+    -- slipped in around Build, and recovers a blank window if the coalescer
+    -- latch was wedged. Runs synchronously so it works even when wedged.
+    OneWoW_Bags:ScheduleOpenSafetyNet("bank", function()
+        return MainWindow and MainWindow:IsShown()
     end)
 end
 
