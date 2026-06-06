@@ -156,5 +156,6 @@ function Pool:ResetButton(button)
     Pool:ClearNewItemGlow(button)
     SetItemButtonTexture(button, nil)
     SetItemButtonCount(button, 0)
+    SetItemButtonDesaturated(button, false)
     button:SetID(0)
 end

@@ -16,6 +16,18 @@ local PixelUtil = PixelUtil
 OneWoW_Bags.ItemButtonMixin = {}
 local Mixin = OneWoW_Bags.ItemButtonMixin
 
+--- Sync sort-lock greyscale from container item info. Empty slots must clear
+--- desaturation — unlock events can fire after the item has already moved.
+---@param button table
+---@param info table|nil
+local function ApplyLockDesaturation(button, info)
+    if info and info.hyperlink then
+        SetItemButtonDesaturated(button, info.isLocked)
+    else
+        SetItemButtonDesaturated(button, false)
+    end
+end
+
 function Mixin:OWB_SetSlot(bagID, slotID)
     self.owb_bagID = bagID
     self.owb_slotID = slotID
@@ -103,7 +115,7 @@ function Mixin:OWB_FullUpdate()
     if info and info.hyperlink then
         SetItemButtonTexture(self, info.iconFileID)
         SetItemButtonCount(self, info.stackCount)
-        SetItemButtonDesaturated(self, info.isLocked)
+        ApplyLockDesaturation(self, info)
 
         local masqueActive = OneWoW_Bags.Masque and OneWoW_Bags.Masque:IsActive()
         local quality = info.quality
@@ -137,6 +149,7 @@ function Mixin:OWB_FullUpdate()
     else
         SetItemButtonTexture(self, nil)
         SetItemButtonCount(self, 0)
+        ApplyLockDesaturation(self, nil)
         OneWoW_GUI:UpdateIconQuality(self, nil)
         if self.SetItemButtonQuality then
             self:SetItemButtonQuality(nil, nil, true)
@@ -249,9 +262,7 @@ end
 function Mixin:OWB_RefreshLock()
     if not self.owb_bagID or not self.owb_slotID then return end
     local info = C_Container.GetContainerItemInfo(self.owb_bagID, self.owb_slotID)
-    if info then
-        SetItemButtonDesaturated(self, info.isLocked)
-    end
+    ApplyLockDesaturation(self, info)
 end
 
 function Mixin:OWB_SetIconSize(size)
