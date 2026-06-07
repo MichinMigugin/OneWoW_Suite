@@ -40,6 +40,16 @@ local function RunUnitHook(unit, method, ...)
     end
 end
 
+local onAddonLoadedDone = {}
+
+--- Dispatch OnAddonLoaded at most once per manifest unit per session.
+---@param addonName string _G key for the load unit
+function OneWoW:DispatchUnitOnAddonLoaded(addonName)
+    if not addonName or onAddonLoadedDone[addonName] then return end
+    onAddonLoadedDone[addonName] = true
+    RunUnitHook(_G[addonName], "OnAddonLoaded")
+end
+
 local function WalkManifestUnits(fn)
     local manifest = OneWoW.ModuleManifest
     if not manifest then return end
@@ -116,10 +126,7 @@ function OneWoW:DispatchAddonLoaded(loadedAddon)
     FireAddonLoadedWatchers(loadedAddon)
     -- Auto-loaded manifest units (e.g. DevTool) receive WoW's own ADDON_LOADED.
     if loadedAddon and loadedAddon ~= ADDON_NAME then
-        local unit = _G[loadedAddon]
-        if unit and type(unit.OnAddonLoaded) == "function" then
-            unit:OnAddonLoaded()
-        end
+        self:DispatchUnitOnAddonLoaded(loadedAddon)
     end
 end
 
@@ -127,12 +134,12 @@ end
 -- fire OnPlayerEnteringWorld -- the real PLAYER_ENTERING_WORLD that follows
 -- PLAYER_LOGIN at cold start drives PEW with authoritative args (see
 -- DispatchEnteringWorld). OnAddonLoaded is a safety net for units whose hook was
--- somehow not driven by the LoadAddOn path; one-shot guards make it idempotent.
+-- somehow not driven by the LoadAddOn path; DispatchUnitOnAddonLoaded guarantees
+-- at-most-once dispatch per unit.
 function OneWoW:RunManifestLoginPhase()
     WalkManifestUnits(function(addonName)
-        local unit = _G[addonName]
-        RunUnitHook(unit, "OnAddonLoaded")
-        RunUnitHook(unit, "OnPlayerLogin")
+        self:DispatchUnitOnAddonLoaded(addonName)
+        RunUnitHook(_G[addonName], "OnPlayerLogin")
     end)
 end
 

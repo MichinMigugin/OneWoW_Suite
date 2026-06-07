@@ -463,7 +463,7 @@ end
 -- are NOT fired here: Settle / CatchUpEnteringWorld drive them once the whole set
 -- is loaded (see OneWoW:BringUp), or the LoadAddOn hook catches up a lone load.
 local function RunPostLoadInit(name)
-    RunUnitHook(name, "OnAddonLoaded")
+    OneWoW:DispatchUnitOnAddonLoaded(name)
 end
 
 -- Single post-load init driver: every load path funnels through C_AddOns.LoadAddOn

@@ -63,6 +63,7 @@ function OneWoW:BootStore(ns, config)
         return _G[savedVar]
     end
 
+    -- Core DispatchUnitOnAddonLoaded guarantees single dispatch; didInit removable later.
     local didInit = false
     function ns.OnAddonLoaded()
         if didInit then return end

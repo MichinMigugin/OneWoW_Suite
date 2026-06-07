@@ -158,18 +158,30 @@ through core dispatch. For data stores, entering-world collection belongs in `Bo
 
 ### 3.4 `OnAddonLoaded`
 
-`hooksecurefunc(C_AddOns, "LoadAddOn", …)` calls `RunPostLoadInit` →
-`_G[name]:OnAddonLoaded()` for every load path. The hook drives **`OnAddonLoaded`
-only** — `OnPlayerLogin` / `OnPlayerEnteringWorld` are driven by `Settle` / `BringUp`
-(§3.5–3.6). LOD units force-loaded during core's `ADDON_LOADED` never receive their
-own WoW `ADDON_LOADED`.
+All unit `OnAddonLoaded` paths funnel through `OneWoW:DispatchUnitOnAddonLoaded`
+(`Core/Lifecycle.lua`), which dispatches the hook **at most once per unit per
+session**. Three drivers call it:
+
+1. `hooksecurefunc(C_AddOns, "LoadAddOn", …)` → `RunPostLoadInit` →
+   `DispatchUnitOnAddonLoaded` (primary path for force-loaded LoD units).
+2. `OneWoW:DispatchAddonLoaded` for auto-loaded manifest units that receive WoW's
+   own `ADDON_LOADED`.
+3. `OneWoW:RunManifestLoginPhase` as a safety net at `PLAYER_LOGIN` for units
+   whose hook was somehow not driven by the LoadAddOn path — repeat calls are a
+   no-op thanks to the central guard.
+
+The LoadAddOn hook drives **`OnAddonLoaded` only** — `OnPlayerLogin` /
+`OnPlayerEnteringWorld` are driven by `Settle` / `BringUp` (§3.5–3.6). LoD units
+force-loaded during core's `ADDON_LOADED` never receive their own WoW
+`ADDON_LOADED`.
 
 Data stores use `OneWoW:BootStore(ns, config)` (`Core/StoreBootstrap.lua`).
 
 ### 3.5 `OnPlayerLogin`
 
 At core `PLAYER_LOGIN`: `OneWoW:RunManifestLoginPhase()` walks the manifest and calls
-`OnAddonLoaded()` (safety net) then `OnPlayerLogin()` on each loaded unit.
+`DispatchUnitOnAddonLoaded` (safety net; no-op when already run) then `OnPlayerLogin()`
+on each loaded unit.
 
 Mid-session loads use `OneWoW:BringUp(addon)`: loads `{ addon, ...stores }`, then one
 `Settle` pass (`OnPlayerLogin` over the set) so a parent's login runs only after its

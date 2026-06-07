@@ -31,6 +31,9 @@ Full rationale and tables: `OneWoW/Docs/ARCHITECTURE.md`.
 
 ## Feature module template
 
+Core guarantees at-most-once `OnAddonLoaded` dispatch per unit; authors do not
+need a local `didInit` guard for lifecycle idempotency (the chain-up contract).
+
 ```lua
 function ns.OnAddonLoaded()
     OneWoW.Lifecycle:CreateHandlerRegistry(ns)
