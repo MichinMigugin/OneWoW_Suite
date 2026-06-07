@@ -7,7 +7,6 @@ local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local DB = OneWoW_GUI.DB
-local pcall = pcall
 local ipairs = ipairs
 
 ---@param ns table store namespace (becomes _G[addonName])
@@ -27,12 +26,22 @@ function OneWoW:BootStore(ns, config)
 
     if config.withScanCallbacks then
         local scanCallbacks = {}
-        ns.RegisterScanCallback = function(_, fn)
-            scanCallbacks[#scanCallbacks + 1] = fn
+        ns.RegisterScanCallback = function(_, idOrFn, maybeFn)
+            local id, fn
+            if type(idOrFn) == "function" then
+                fn = idOrFn
+                id = nil
+            else
+                id = idOrFn
+                fn = maybeFn
+            end
+            scanCallbacks[#scanCallbacks + 1] = { id = id, fn = fn }
         end
         ns.FireScanCallbacks = function(_, data)
-            for _, fn in ipairs(scanCallbacks) do
-                pcall(fn, data)
+            local storeLabel = savedVar or "store"
+            for i, entry in ipairs(scanCallbacks) do
+                local label = entry.id or (storeLabel .. "#" .. i)
+                OneWoW.Lifecycle.SafeCall(label, entry.fn, data)
             end
         end
     end

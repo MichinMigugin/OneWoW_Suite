@@ -4,12 +4,31 @@ local ADDON_NAME, OneWoW = ...
 
 local C_AddOns = C_AddOns
 local ipairs = ipairs
+local pairs = pairs
 local type = type
 local pcall = pcall
+local format = string.format
+local tostring = tostring
 local _G = _G
 
 OneWoW.Lifecycle = OneWoW.Lifecycle or {}
 local Lifecycle = OneWoW.Lifecycle
+
+--- Isolated invoke for handler fans: one failure must not abort the fan-out.
+--- Failures are forwarded to geterrorhandler() (production sink; not debug-gated).
+---@param label string|nil handler id or context label
+---@param fn function
+local function SafeCall(label, fn, ...)
+    local ok, err = pcall(fn, ...)
+    if not ok then
+        if label then
+            geterrorhandler()(format("OneWoW lifecycle handler '%s': %s", tostring(label), tostring(err)))
+        else
+            geterrorhandler()(err)
+        end
+    end
+end
+Lifecycle.SafeCall = SafeCall
 
 local addonLoadedWatchers = {}
 local coreLoginHandlers = {}
@@ -70,13 +89,13 @@ end
 
 function OneWoW:FireCoreLoginHandlers()
     for _, entry in ipairs(coreLoginHandlers) do
-        pcall(entry.fn)
+        SafeCall(entry.id, entry.fn)
     end
 end
 
 function OneWoW:FireCoreEnteringWorldHandlers(isLogin, isReload, isZoning)
     for _, entry in ipairs(coreEnteringWorldHandlers) do
-        pcall(entry.fn, isLogin, isReload, isZoning)
+        SafeCall(entry.id, entry.fn, isLogin, isReload, isZoning)
     end
 end
 
@@ -84,7 +103,7 @@ local function FireAddonLoadedWatchers(loadedAddon)
     for _, entry in ipairs(addonLoadedWatchers) do
         local filter = entry.addonName
         if not filter or filter == "*" or filter == loadedAddon then
-            pcall(entry.fn, loadedAddon)
+            SafeCall(entry.addonName or "*", entry.fn, loadedAddon)
         end
     end
 end
@@ -157,14 +176,14 @@ function Lifecycle:CreateHandlerRegistry(owner)
     end
 
     function owner:FireLoginHandlers()
-        for _, fn in pairs(loginHandlers) do
-            pcall(fn)
+        for id, fn in pairs(loginHandlers) do
+            SafeCall(id, fn)
         end
     end
 
     function owner:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
-        for _, fn in pairs(enteringWorldHandlers) do
-            pcall(fn, isLogin, isReload, isZoning)
+        for id, fn in pairs(enteringWorldHandlers) do
+            SafeCall(id, fn, isLogin, isReload, isZoning)
         end
     end
 

@@ -101,6 +101,9 @@ remain valid OptionalDeps.
 ## 3. Load lifecycle
 
 Core owns *when* a unit loads, *when* it initializes, and lifecycle event dispatch.
+Handler fans (`Register*Handler`, addon-loaded watchers, scan callbacks) isolate
+failures via `pcall` and forward errors through `geterrorhandler()` so one handler
+cannot break the fan-out yet errors still surface.
 
 ### 3.1 Why core-driven loading (retired `LoadWith`)
 
