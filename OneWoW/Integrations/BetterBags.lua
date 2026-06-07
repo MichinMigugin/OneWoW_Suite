@@ -58,7 +58,9 @@ local function ProcessButton(item, decoration)
     end
 end
 
+local wired = false
 local function SetupHooks()
+    if wired then return end
     if not LibStub then return end
     local AceAddon = LibStub("AceAddon-3.0", true)
     if not AceAddon then return end
@@ -69,6 +71,7 @@ local function SetupHooks()
     bb_events   = addon:GetModule("Events")
     bb_context  = addon:GetModule("Context")
     if not bb_events or not bb_context then return end
+    wired = true
 
     bb_events:RegisterMessage("item/NewButton", function(_, item, decoration)
         ProcessButton(item, decoration)
@@ -93,8 +96,4 @@ local function SetupHooks()
     OneWoW.OverlayEngine:RegisterIntegration(RefreshBetterBags)
 end
 
-OneWoW:RegisterCoreLoginHandler("BetterBags", function()
-    if C_AddOns.IsAddOnLoaded("BetterBags") then
-        SetupHooks()
-    end
-end)
+OneWoW:RegisterAddonLoadedWatcher("BetterBags", SetupHooks)

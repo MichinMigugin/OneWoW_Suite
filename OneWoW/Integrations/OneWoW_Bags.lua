@@ -29,9 +29,12 @@ local function ProcessButton(button, bagID, slotID)
     end
 end
 
+local wired = false
 local function SetupCallbacks()
+    if wired then return end
     local Bags = OneWoW_Bags
     if not Bags or not Bags.RegisterItemButtonCallback then return end
+    wired = true
 
     Bags:RegisterItemButtonCallback("OneWoW_Overlays", function(button, bagID, slotID)
         ProcessButton(button, bagID, slotID)
@@ -44,8 +47,9 @@ local function SetupCallbacks()
     OneWoW.OverlayEngine:RegisterIntegration(RefreshOneWoWBags)
 end
 
-OneWoW:RegisterCoreLoginHandler("OneWoW_Bags", function()
-    if C_AddOns.IsAddOnLoaded("OneWoW_Bags") then
-        SetupCallbacks()
-    end
-end)
+-- Wire on every load path (cold-start force-load via RunPostLoadInit, mid-session
+-- enable, or already-loaded at registration). SetupCallbacks only registers the
+-- item-button callback + overlay-engine integration; it never paints. The first
+-- paint comes from OneWoW_Bags:InstallIntegrationHooks at login (and the overlay
+-- toggle path repaints via OverlayEngine:Refresh).
+OneWoW:RegisterAddonLoadedWatcher("OneWoW_Bags", SetupCallbacks)

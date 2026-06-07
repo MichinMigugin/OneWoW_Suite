@@ -177,6 +177,42 @@ force-loaded during core's `ADDON_LOADED` never receive their own WoW
 
 Data stores use `OneWoW:BootStore(ns, config)` (`Core/StoreBootstrap.lua`).
 
+### 3.4.1 Addon-available notification (watchers)
+
+`RegisterAddonLoadedWatcher(addonName, fn)` is the "wire when addon X becomes
+available" primitive — the suite analogue of WoW's `ADDON_LOADED`. Fan-out runs
+through `OneWoW:NotifyAddonLoadedWatchers`, gated **at most once per addon name per
+session**. Two drivers feed it, mirroring the two real load paths:
+
+1. WoW `ADDON_LOADED` → `OneWoW:DispatchAddonLoaded` → `NotifyAddonLoadedWatchers`.
+2. Any `C_AddOns.LoadAddOn` (orchestrator force-load, `BringUp`, on-demand) →
+   `RunPostLoadInit` → `NotifyAddonLoadedWatchers`.
+
+Both drivers run the manifest unit's `OnAddonLoaded` (via
+`DispatchUnitOnAddonLoaded`) **before** the watcher fan-out, so a watcher can rely
+on the loaded unit's init having completed.
+
+**Registration-time catch-up:** a filtered watcher whose addon already loaded
+before the watcher registered (e.g. external bag addons that sort alphabetically
+before `OneWoW`, so their `ADDON_LOADED` already fired) runs `fn` immediately at
+registration. This catch-up is deliberately independent of the per-session dedup
+set, so a late registrant still fires exactly once. Combined with idempotent setup
+guards in the watcher body, this makes wiring order-insensitive across cold start,
+mid-session enable, and already-loaded cases.
+
+**Wildcard watchers (`addonName = nil`/`"*"`) observe every load, by design.** This
+mirrors WoW's `ADDON_LOADED`, under which every addon is notified of every other
+addon's load. The pre-fix gap was that suite LoD units force-loaded inside core's
+`ADDON_LOADED` had their own child `ADDON_LOADED` suppressed by WoW (§3.1), so
+wildcard watchers silently missed them. Routing `RunPostLoadInit` through
+`NotifyAddonLoadedWatchers` restores WoW-native completeness: a wildcard watcher now
+sees suite-internal force-loads too. Wildcard watchers get no registration catch-up
+(there is no single addon to replay) — they observe loads from registration onward.
+
+Use watchers for "wire when addon X is available." Use `RegisterCoreLoginHandler`
+only for login-scoped work unrelated to addon load — **not** as an "if addon loaded
+at login" check, which misses mid-session and force-load paths.
+
 ### 3.5 `OnPlayerLogin`
 
 At core `PLAYER_LOGIN`: `OneWoW:RunManifestLoginPhase()` walks the manifest and calls
@@ -374,7 +410,7 @@ into core as plain `OneWoW_GUI` global (`MIGRATION.md` step 6).
 
 | From | To | Mechanism | Purpose |
 |---|---|---|---|
-| OneWoW | OneWoW_Bags | `Integrations/OneWoW_Bags.lua` | Overlay engine with Bags callbacks |
+| OneWoW | OneWoW_Bags | `Integrations/OneWoW_Bags.lua` (wired via `RegisterAddonLoadedWatcher`) | Overlay engine with Bags callbacks |
 | OneWoW_ShoppingList | OneWoW_Catalog | `OneWoW_Catalog_TradeskillAPI` | Recipe callback |
 | OneWoW_Trackers | OneWoW_Notes | `OneWoW_Trackers_API` | Tracker sub-tab in Notes |
 | OneWoW_Trackers | OneWoW_Notes_DB | One-time migration | Legacy tracker data drain |

@@ -62,6 +62,16 @@ local trackedBankButtons = {}
 local vendorPending      = false
 local initialized   = false
 
+-- LOAD-BEARING INVARIANT: this table is created at file-parse time (not inside
+-- Initialize) and RegisterIntegration is an append-only insert with no dependency
+-- on Initialize-created state. Bag integrations wire themselves via
+-- OneWoW:RegisterAddonLoadedWatcher, which fires at core ADDON_LOADED / file-parse
+-- -- i.e. BEFORE Engine:Initialize() runs. That ordering is correct: the list is
+-- populated before the engine starts consuming it. Consumption is login-gated --
+-- RefreshAll iterates this list, and the BAG_UPDATE_DELAYED handler is armed by an
+-- eventFrame created inside Initialize. Do NOT move this table's creation into
+-- Initialize or make RegisterIntegration depend on Initialize state; doing so would
+-- silently drop every pre-Initialize registration and break mid-session/LoD wiring.
 Engine.integrationRefreshCallbacks = {}
 
 function Engine:RegisterIntegration(fn)

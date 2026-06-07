@@ -81,6 +81,15 @@ function OneWoW:RegisterAddonLoadedWatcher(addonName, fn)
         addonName = addonName,
         fn = fn,
     }
+    -- Registration-time catch-up: a filtered watcher whose addon already loaded
+    -- before this registration (e.g. external bag addons that sort before OneWoW)
+    -- would otherwise never fire. Per-watcher and deliberately independent of the
+    -- NotifyAddonLoadedWatchers dedup set, so a late registrant still runs once.
+    -- Wildcard (nil/"*") watchers get no catch-up: there is no single addon to
+    -- replay, and they only ever observe loads from this point forward.
+    if addonName and addonName ~= "" and addonName ~= "*" and C_AddOns.IsAddOnLoaded(addonName) then
+        SafeCall(addonName, fn, addonName)
+    end
 end
 
 ---@param id string unique handler id (for debugging; not used for dedup)
@@ -118,16 +127,28 @@ local function FireAddonLoadedWatchers(loadedAddon)
     end
 end
 
+local addonLoadedNotified = {}
+
+--- Fan out addon-loaded watchers at most once per addon name per session.
+--- Both load paths funnel here: WoW ADDON_LOADED (DispatchAddonLoaded) and any
+--- C_AddOns.LoadAddOn (RunPostLoadInit). A mid-session LoadAddOn fires both, so
+--- the dedup set collapses that double-path to a single fan-out per addon.
+---@param loadedAddon string|nil
+function OneWoW:NotifyAddonLoadedWatchers(loadedAddon)
+    if not loadedAddon or addonLoadedNotified[loadedAddon] then return end
+    addonLoadedNotified[loadedAddon] = true
+    FireAddonLoadedWatchers(loadedAddon)
+end
+
 ---@param loadedAddon string addon name from ADDON_LOADED
 function OneWoW:DispatchAddonLoaded(loadedAddon)
     if loadedAddon == ADDON_NAME then
         OneWoW:OnAddonLoaded(loadedAddon)
-    end
-    FireAddonLoadedWatchers(loadedAddon)
-    -- Auto-loaded manifest units (e.g. DevTool) receive WoW's own ADDON_LOADED.
-    if loadedAddon and loadedAddon ~= ADDON_NAME then
+    elseif loadedAddon then
+        -- Auto-loaded manifest units (e.g. DevTool) receive WoW's own ADDON_LOADED.
         self:DispatchUnitOnAddonLoaded(loadedAddon)
     end
+    self:NotifyAddonLoadedWatchers(loadedAddon)
 end
 
 -- Login pass over every loaded manifest unit. Login-only by design: it must NOT

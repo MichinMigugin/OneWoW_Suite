@@ -27,6 +27,8 @@ Full rationale and tables: `OneWoW/Docs/ARCHITECTURE.md`.
 | React to zone / entering world | `OnPlayerEnteringWorld` with `if isZoning`, or `RegisterEnteringWorldHandler` | `RegisterEvent("PLAYER_ENTERING_WORLD")` |
 | Hook Blizzard_Foo when it loads | `RegisterAddonLoadedWatcher("Blizzard_Foo", fn)` | Own `ADDON_LOADED` frame |
 
+**Watchers fire on both load paths** — WoW `ADDON_LOADED` and suite `C_AddOns.LoadAddOn` (LoD force-load, mid-session enable) — so the same row applies to suite LoD units and external addons alike. A filtered watcher also catches up immediately if its addon already loaded before registration. Setup fns must be idempotent (guard with a `wired` flag): catch-up + notify can both reach a late registrant, and `OverlayEngine:RegisterIntegration` / `RegisterCornerWidget` are not dedup-safe. A `nil`/wildcard filter observes **every** load (mirroring WoW `ADDON_LOADED`), including suite-internal force-loads. Use `RegisterCoreLoginHandler` only for login-scoped work, never as an "if addon loaded at login" check.
+
 **PEW vs gameplay:** lifecycle entering-world collection → `BootStore.onEnteringWorld` or `RegisterEnteringWorldHandler`. Gameplay events (`PLAYER_ALIVE`, `BAG_UPDATE`, `MAIL_SHOW`, …) may use direct `RegisterEvent`.
 
 ## Feature module template

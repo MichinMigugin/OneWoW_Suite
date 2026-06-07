@@ -6,8 +6,11 @@ local function IsEnabled()
     return ov.integrations.arkinventory.enabled ~= false
 end
 
+local wired = false
 local function SetupHooks()
+    if wired then return end
     if not ArkInventory or not ArkInventory.API then return end
+    wired = true
 
     local function InitButton(itemButton)
         if not itemButton.onewow_overlayContainer then
@@ -73,8 +76,4 @@ local function SetupHooks()
     OneWoW.OverlayEngine:RegisterIntegration(RefreshArkInventory)
 end
 
-OneWoW:RegisterCoreLoginHandler("ArkInventory", function()
-    if C_AddOns.IsAddOnLoaded("ArkInventory") then
-        SetupHooks()
-    end
-end)
+OneWoW:RegisterAddonLoadedWatcher("ArkInventory", SetupHooks)

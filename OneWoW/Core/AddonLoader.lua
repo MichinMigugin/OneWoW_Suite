@@ -464,6 +464,11 @@ end
 -- is loaded (see OneWoW:BringUp), or the LoadAddOn hook catches up a lone load.
 local function RunPostLoadInit(name)
     OneWoW:DispatchUnitOnAddonLoaded(name)
+    -- Symmetry with DispatchAddonLoaded: LoD/force-loaded units never deliver
+    -- their own ADDON_LOADED, so notify addon-loaded watchers here too. Dedup in
+    -- NotifyAddonLoadedWatchers collapses the mid-session double-path (this hook
+    -- plus the real ADDON_LOADED) to a single fan-out.
+    OneWoW:NotifyAddonLoadedWatchers(name)
 end
 
 -- Single post-load init driver: every load path funnels through C_AddOns.LoadAddOn

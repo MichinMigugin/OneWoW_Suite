@@ -6,8 +6,11 @@ local function IsEnabled()
     return ov.integrations.baganator.enabled ~= false
 end
 
+local wired = false
 local function SetupHooks()
+    if wired then return end
     if not Baganator or not Baganator.API then return end
+    wired = true
 
     Baganator.API.RegisterCornerWidget(
         "OneWoW Overlays",
@@ -56,8 +59,4 @@ local function SetupHooks()
     C_Timer.After(0.5, RefreshBaganator)
 end
 
-OneWoW:RegisterCoreLoginHandler("Baganator", function()
-    if C_AddOns.IsAddOnLoaded("Baganator") then
-        SetupHooks()
-    end
-end)
+OneWoW:RegisterAddonLoadedWatcher("Baganator", SetupHooks)

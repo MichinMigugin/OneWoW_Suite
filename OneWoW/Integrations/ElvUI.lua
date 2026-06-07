@@ -47,11 +47,14 @@ local function ProcessSlot(bagID, slotID)
     end
 end
 
+local wired = false
 local function SetupHooks()
+    if wired then return end
     local E = ElvUI and ElvUI[1]
     if not E then return end
     local B = E:GetModule("Bags")
     if not B then return end
+    wired = true
 
     elvuiBags = B
 
@@ -74,8 +77,4 @@ local function SetupHooks()
     C_Timer.After(0.5, RefreshElvUI)
 end
 
-OneWoW:RegisterCoreLoginHandler("ElvUI", function()
-    if C_AddOns.IsAddOnLoaded("ElvUI") then
-        SetupHooks()
-    end
-end)
+OneWoW:RegisterAddonLoadedWatcher("ElvUI", SetupHooks)
