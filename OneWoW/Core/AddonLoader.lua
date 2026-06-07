@@ -33,6 +33,7 @@ combatFrame:SetScript("OnEvent", function(self, event)
     if #pendingCombat == 0 then return end
     local queue = pendingCombat
     pendingCombat = {}
+    OneWoW:TraceRecord("combat.flush", nil, { count = #queue })
     for _, entry in ipairs(queue) do
         OneWoW:WithAddon(entry.name, entry.onReady, entry.onFail, entry.opts)
     end
@@ -386,16 +387,20 @@ function OneWoW:EnsureLoaded(name, opts)
         return true
     end
     if self:IsFeatureOptedOut(name) then
+        self:TraceRecord("ensureLoaded.skip", name, { reason = "OPTED_OUT" })
         return false, "OPTED_OUT"
     end
     local parent = GetManifestParent(name)
     if parent and self:IsFeatureOptedOut(parent) then
+        self:TraceRecord("ensureLoaded.skip", name, { reason = "OPTED_OUT_PARENT" })
         return false, "OPTED_OUT"
     end
     if opts and opts.deferInCombat and InCombatLockdown() then
+        self:TraceRecord("ensureLoaded.skip", name, { reason = "COMBAT" })
         return false, "COMBAT"
     end
     local ok, reason = C_AddOns.LoadAddOn(name)
+    self:TraceRecord("ensureLoaded", name, { ok = ok and true or false, reason = reason })
     if not ok then
         return false, reason
     end
@@ -410,6 +415,7 @@ end
 local function RunUnitHook(name, method, ...)
     local unit = name and _G[name]
     if unit and type(unit[method]) == "function" then
+        OneWoW:TraceRecord(method, name)
         unit[method](unit, ...)
     end
 end
@@ -453,6 +459,7 @@ end
 local function CatchUpEnteringWorld(units)
     if not OneWoW._playerLoginFired then return end
     for _, name in ipairs(units) do
+        OneWoW:TraceRecord("catchUpPEW", name)
         RunUnitHook(name, "OnPlayerEnteringWorld", true, false, false)
     end
 end
@@ -483,6 +490,7 @@ hooksecurefunc(C_AddOns, "LoadAddOn", function(nameOrIndex)
         name = C_AddOns.GetAddOnInfo(nameOrIndex)
     end
     if not name or not C_AddOns.IsAddOnLoaded(name) then return end
+    OneWoW:TraceRecord("loadAddOn.hook", name, { inBringUp = inBringUp })
     RunPostLoadInit(name)
     -- Single chokepoint for every load path; let read-only surfaces (Home) re-query.
     EventRegistry:TriggerEvent("OneWoW.FeatureStateChanged", name)
@@ -512,6 +520,7 @@ function OneWoW:BringUp(addonName)
     if not addonName then return end
     local units = ManifestUnitsFor(addonName) or { addonName }
     local midSession = OneWoW._playerLoginFired
+    self:TraceRecord("bringUp.begin", addonName, { midSession = midSession and true or false, units = #units })
     inBringUp = true
     for _, name in ipairs(units) do
         self:EnsureLoaded(name)
@@ -527,6 +536,7 @@ function OneWoW:BringUp(addonName)
     if midSession then
         CatchUpEnteringWorld(loaded)
     end
+    self:TraceRecord("bringUp.end", addonName, { loaded = #loaded })
 end
 
 --- Loads an addon and dispatches a callback, removing the if/else at the call
@@ -545,6 +555,7 @@ function OneWoW:WithAddon(name, onReady, onFail, opts)
         return true
     end
     if reason == "COMBAT" then
+        self:TraceRecord("defer.combat", name)
         tinsert(pendingCombat, { name = name, onReady = onReady, onFail = onFail, opts = opts })
         combatFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
         return false
@@ -649,6 +660,7 @@ local Orchestrator = OneWoW.LoadOrchestrator
 --- "DISABLED" and is skipped; its stores are skipped too (their RequiredDeps on
 --- the parent would fail anyway).
 function Orchestrator:RunStartupPhase()
+    OneWoW:TraceRecord("startup.begin")
     for _, m in ipairs(Manifest) do
         if m.loadPhase == "login" and m.addon and m.addon ~= "" then
             -- BringUp loads the feature and its stores as one set. A soft opt-out
@@ -662,6 +674,7 @@ function Orchestrator:RunStartupPhase()
             end
         end
     end
+    OneWoW:TraceRecord("startup.end")
 end
 
 --- Used by the lazy-tab hook: loads a `lazy` module's addon the first time its

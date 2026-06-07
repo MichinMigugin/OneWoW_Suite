@@ -92,6 +92,10 @@ function OneWoW:OnAddonLoaded(loadedAddon)
 
     self:InitializeDatabase()
 
+    -- Read the persisted lifecycle-trace flag into memory before RunStartupPhase
+    -- so a /reload captures the full startup orchestration from the first event.
+    OneWoW.Lifecycle.Trace:Sync()
+
     OneWoW_GUI:MigrateSettings(self.db.global)
 
     OneWoW_GUI:ApplyTheme(OneWoW)

@@ -10,6 +10,12 @@ local pcall = pcall
 local format = string.format
 local tostring = tostring
 local _G = _G
+local GetTimePreciseSec = GetTimePreciseSec
+local tinsert = tinsert
+local tconcat = table.concat
+local wipe = wipe
+local sort = sort
+local print = print
 
 OneWoW.Lifecycle = OneWoW.Lifecycle or {}
 local Lifecycle = OneWoW.Lifecycle
@@ -21,6 +27,7 @@ local Lifecycle = OneWoW.Lifecycle
 local function SafeCall(label, fn, ...)
     local ok, err = pcall(fn, ...)
     if not ok then
+        OneWoW:TraceRecord("error", label, { err = tostring(err) })
         if label then
             geterrorhandler()(format("OneWoW lifecycle handler '%s': %s", tostring(label), tostring(err)))
         else
@@ -30,12 +37,114 @@ local function SafeCall(label, fn, ...)
 end
 Lifecycle.SafeCall = SafeCall
 
+-- ============================================================================
+-- Lifecycle Trace
+-- ============================================================================
+-- Opt-in dispatch/load tracer. Records the lifecycle funnel sequence into an
+-- in-memory ring buffer, dumped to chat via /1wtrace. The enable flag persists
+-- in OneWoW_DB so a /reload can capture the startup orchestration (which all
+-- fires during core's ADDON_LOADED, before any command can run); the ring is
+-- session-only and is cleared on each Sync. Record is a cheap no-op when off.
+-- Sized for a full-suite + large external-addon-list startup: every addon load
+-- emits a watchers.notify (LoD addons add loadAddOn.hook too), so a cold start
+-- through PLAYER_ENTERING_WORLD runs into the hundreds of events. Dump only ever
+-- prints min(count, RING_SIZE) lines, so a generous cap costs nothing until used.
+local RING_SIZE = 1024
+local TRACE_PREFIX = "|cFFFFD100OneWoW Trace|r"
+
+local Trace = {
+    enabled = false,
+    ring = {},
+    head = 0,
+    count = 0,
+}
+Lifecycle.Trace = Trace
+
+--- Appends a trace record when recording is enabled; a cheap no-op otherwise.
+---@param phase string funnel label (e.g. "OnAddonLoaded", "loadAddOn.hook")
+---@param unit string|nil addon/unit name the event concerns
+---@param detail table|nil extra key/value fields shown in the dump
+function OneWoW:TraceRecord(phase, unit, detail)
+    if not Trace.enabled then return end
+    Trace.head = (Trace.head % RING_SIZE) + 1
+    Trace.count = Trace.count + 1
+    Trace.ring[Trace.head] = {
+        t = GetTimePreciseSec(),
+        phase = phase,
+        unit = unit,
+        detail = detail,
+    }
+end
+
+--- One-line "phase unit key=val ..." rendering for a single record.
+---@param rec table
+---@return string
+function Trace:FormatDetail(rec)
+    local parts = { rec.phase or "?" }
+    if rec.unit then tinsert(parts, rec.unit) end
+    local d = rec.detail
+    if d then
+        local keys = {}
+        for k in pairs(d) do keys[#keys + 1] = k end
+        sort(keys)
+        for _, k in ipairs(keys) do
+            tinsert(parts, k .. "=" .. tostring(d[k]))
+        end
+    end
+    return tconcat(parts, " ")
+end
+
+--- Prints the buffered trace to chat, oldest-first, with deltas from the first
+--- record. Reads as a startup timeline.
+function Trace:Dump()
+    local stored = (self.count < RING_SIZE) and self.count or RING_SIZE
+    print(TRACE_PREFIX .. format(" dump - recording %s, %d event(s)", self.enabled and "ON" or "OFF", stored))
+    if stored == 0 then
+        print("  (no events - /1wtrace on, then /reload to capture startup)")
+        return
+    end
+    local firstT
+    for k = 1, stored do
+        local idx = ((self.head - stored + k - 1) % RING_SIZE) + 1
+        local rec = self.ring[idx]
+        if rec then
+            firstT = firstT or rec.t
+            print(format("  [+%.3fs] %s", rec.t - firstT, self:FormatDetail(rec)))
+        end
+    end
+end
+
+function Trace:Clear()
+    wipe(self.ring)
+    self.head = 0
+    self.count = 0
+end
+
+--- Sets the in-memory recording state and persists it to OneWoW_DB.
+---@param on boolean
+function Trace:SetEnabled(on)
+    self.enabled = on and true or false
+    OneWoW.db.global.debugTrace = self.enabled
+end
+
+--- Reads the persisted flag into memory and clears the ring for a fresh
+--- session. Called from OneWoW:OnAddonLoaded right after InitializeDatabase so
+--- a persisted-on flag captures the full startup orchestration.
+function Trace:Sync()
+    self:Clear()
+    self.enabled = OneWoW.db.global.debugTrace and true or false
+end
+
 local addonLoadedWatchers = {}
 local coreLoginHandlers = {}
 local coreEnteringWorldHandlers = {}
 
-local function RunUnitHook(unit, method, ...)
+-- Records and runs a one-shot unit hook by addon name. The trace fires only when
+-- the hook actually exists/runs, so the dump reflects real per-unit dispatch.
+local function RunUnitHook(addonName, method, ...)
+    local unit = addonName and _G[addonName]
     if unit and type(unit[method]) == "function" then
+        OneWoW:TraceRecord(method, addonName)
         unit[method](unit, ...)
     end
 end
@@ -47,7 +156,7 @@ local onAddonLoadedDone = {}
 function OneWoW:DispatchUnitOnAddonLoaded(addonName)
     if not addonName or onAddonLoadedDone[addonName] then return end
     onAddonLoadedDone[addonName] = true
-    RunUnitHook(_G[addonName], "OnAddonLoaded")
+    RunUnitHook(addonName, "OnAddonLoaded")
 end
 
 local function WalkManifestUnits(fn)
@@ -88,6 +197,7 @@ function OneWoW:RegisterAddonLoadedWatcher(addonName, fn)
     -- Wildcard (nil/"*") watchers get no catch-up: there is no single addon to
     -- replay, and they only ever observe loads from this point forward.
     if addonName and addonName ~= "" and addonName ~= "*" and C_AddOns.IsAddOnLoaded(addonName) then
+        self:TraceRecord("watcher.catchup", addonName)
         SafeCall(addonName, fn, addonName)
     end
 end
@@ -107,12 +217,14 @@ function OneWoW:RegisterCoreEnteringWorldHandler(id, fn)
 end
 
 function OneWoW:FireCoreLoginHandlers()
+    self:TraceRecord("core.loginHandlers", nil, { count = #coreLoginHandlers })
     for _, entry in ipairs(coreLoginHandlers) do
         SafeCall(entry.id, entry.fn)
     end
 end
 
 function OneWoW:FireCoreEnteringWorldHandlers(isLogin, isReload, isZoning)
+    self:TraceRecord("core.enteringWorldHandlers", nil, { count = #coreEnteringWorldHandlers })
     for _, entry in ipairs(coreEnteringWorldHandlers) do
         SafeCall(entry.id, entry.fn, isLogin, isReload, isZoning)
     end
@@ -137,6 +249,7 @@ local addonLoadedNotified = {}
 function OneWoW:NotifyAddonLoadedWatchers(loadedAddon)
     if not loadedAddon or addonLoadedNotified[loadedAddon] then return end
     addonLoadedNotified[loadedAddon] = true
+    self:TraceRecord("watchers.notify", loadedAddon)
     FireAddonLoadedWatchers(loadedAddon)
 end
 
@@ -158,9 +271,10 @@ end
 -- somehow not driven by the LoadAddOn path; DispatchUnitOnAddonLoaded guarantees
 -- at-most-once dispatch per unit.
 function OneWoW:RunManifestLoginPhase()
+    self:TraceRecord("manifest.loginPhase")
     WalkManifestUnits(function(addonName)
         self:DispatchUnitOnAddonLoaded(addonName)
-        RunUnitHook(_G[addonName], "OnPlayerLogin")
+        RunUnitHook(addonName, "OnPlayerLogin")
     end)
 end
 
@@ -168,9 +282,10 @@ end
 ---@param isReload boolean
 function OneWoW:DispatchEnteringWorld(isLogin, isReload)
     local isZoning = not isLogin and not isReload
+    self:TraceRecord("enteringWorld", nil, { isLogin = isLogin, isReload = isReload, isZoning = isZoning })
     OneWoW:FireCoreEnteringWorldHandlers(isLogin, isReload, isZoning)
     WalkManifestUnits(function(addonName)
-        RunUnitHook(_G[addonName], "OnPlayerEnteringWorld", isLogin, isReload, isZoning)
+        RunUnitHook(addonName, "OnPlayerEnteringWorld", isLogin, isReload, isZoning)
     end)
 end
 
@@ -216,4 +331,27 @@ function Lifecycle:CreateHandlerRegistry(owner)
     end
 
     return owner
+end
+
+-- Dev-only lifecycle trace command. Hardcoded English, mirroring the Bags
+-- /owblayout precedent; this is a developer chat tool, not user-facing UI.
+SLASH_ONEWOW_TRACE1 = "/1wtrace"
+SLASH_ONEWOW_TRACE2 = "/owtrace"
+SlashCmdList["ONEWOW_TRACE"] = function(msg)
+    msg = (type(msg) == "string") and msg:lower():gsub("^%s+", ""):gsub("%s+$", "") or ""
+    if msg == "on" then
+        Trace:Clear()
+        Trace:SetEnabled(true)
+        print(TRACE_PREFIX .. ": |cFF00FF00enabled|r. /reload to capture startup, then /1wtrace dump")
+    elseif msg == "off" then
+        Trace:SetEnabled(false)
+        print(TRACE_PREFIX .. ": disabled. /1wtrace dump still works.")
+    elseif msg == "clear" or msg == "reset" then
+        Trace:Clear()
+        print(TRACE_PREFIX .. ": ring cleared.")
+    elseif msg == "dump" then
+        Trace:Dump()
+    else
+        print(TRACE_PREFIX .. ": usage: /1wtrace on | off | clear | dump  (recording " .. (Trace.enabled and "ON" or "OFF") .. ")")
+    end
 end

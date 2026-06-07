@@ -292,6 +292,56 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
 
+### 3.11 Lifecycle trace (`/1wtrace`)
+
+`Core/Lifecycle.lua` carries an opt-in tracer that records the dispatch/load
+sequence into an in-memory ring buffer (`Lifecycle.Trace`, 1024 entries) and
+prints it to chat. It exists to answer "is the lifecycle doing what we think?"
+in-game — there is otherwise no visibility into the success path of dispatch.
+
+| Command | Action |
+|---|---|
+| `/1wtrace on` | Enable recording (clears ring), persist the flag |
+| `/1wtrace off` | Disable recording (persist) |
+| `/1wtrace clear` | Clear the ring |
+| `/1wtrace dump` | Print the buffer, oldest-first, as a `[+Δs] phase unit detail` timeline |
+| `/1wtrace` | Usage + current recording state |
+
+`/owtrace` is an alias. Strings are hardcoded English (dev tool, not user-facing
+UI — same precedent as Bags' `/owblayout`).
+
+**Capturing startup is the design constraint.** The whole orchestration
+(`RunStartupPhase` → `BringUp` → `LoadAddOn` hook → `RunManifestLoginPhase` →
+`DispatchEnteringWorld`) runs inside core's `ADDON_LOADED`, before any command
+can be typed. So the **enable flag persists** in `OneWoW_DB.debugTrace` (default
+`false`, in `Core/Database.lua` defaults) and is read back by `Trace:Sync()` in
+`OneWoW:OnAddonLoaded` right after `InitializeDatabase` — before the orchestrator
+runs. Workflow: `/1wtrace on` → `/reload` → `/1wtrace dump`. The **ring is
+session-only** (cleared each `Sync`), so a dump always reflects the current
+session. `Dump` prints `min(count, RING_SIZE)` lines.
+
+`OneWoW:TraceRecord(phase, unit, detail)` is the single record API — a cheap
+no-op when disabled — called from the lifecycle funnels in `Lifecycle.lua` and
+`AddonLoader.lua`. Recorded phases:
+
+| Phase | Source | Meaning |
+|---|---|---|
+| `startup.begin` / `startup.end` | `RunStartupPhase` | Orchestrator login-phase pass bounds |
+| `bringUp.begin` / `bringUp.end` | `BringUp` | Feature+stores batch (`midSession`, `units`, `loaded`) |
+| `ensureLoaded` / `ensureLoaded.skip` | `EnsureLoaded` | Load outcome (`ok`, `reason`) or skip (`OPTED_OUT`/`COMBAT`) |
+| `loadAddOn.hook` | `LoadAddOn` post-hook | Every load path's single chokepoint (`inBringUp`) |
+| `OnAddonLoaded` / `OnPlayerLogin` / `OnPlayerEnteringWorld` | `RunUnitHook` | Per-unit hook **fires** (recorded only when the hook exists) |
+| `watchers.notify` / `watcher.catchup` | `NotifyAddonLoadedWatchers`, registration catch-up | Addon-loaded watcher fan-out and late-registrant replay |
+| `manifest.loginPhase` | `RunManifestLoginPhase` | Login walk start |
+| `core.loginHandlers` / `core.enteringWorldHandlers` | `FireCore*Handlers` | Core handler fans (`count`) |
+| `enteringWorld` | `DispatchEnteringWorld` | Real PEW (`isLogin`, `isReload`, `isZoning`) |
+| `catchUpPEW` | `CatchUpEnteringWorld` | Synthetic mid-session PEW catch-up (attempted per unit) |
+| `defer.combat` / `combat.flush` | `WithAddon`, combat frame | Combat-deferred load queue/flush |
+| `error` | `SafeCall` failure | Handler-fan failure, in sequence (complements DevTool ErrorLogger) |
+
+`catchUpPEW` fires for every unit in the set while `OnPlayerEnteringWorld` only
+follows for units that implement the hook — the pair reads as attempt-vs-actual.
+
 ---
 
 ## 4. Enable model
@@ -511,7 +561,7 @@ size, flags)` with `fontSizeOffset` from `OneWoW_GUI_DB` (range −3..+5, floor 
 | File | Purpose |
 |---|---|
 | `OneWoW/Core/AddonLoader.lua` | Manifest, orchestrator, `BringUp`/`EnsureLoaded`, enable API, tab-order helpers |
-| `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, handler registries, addon-loaded watchers |
+| `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, handler registries, addon-loaded watchers, `/1wtrace` tracer (§3.11) |
 | `OneWoW/Core/StoreBootstrap.lua` | `OneWoW:BootStore` for data stores |
 | `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
