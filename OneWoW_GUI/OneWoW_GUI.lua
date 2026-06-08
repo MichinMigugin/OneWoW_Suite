@@ -66,8 +66,8 @@ local function GetRawThemeKeyFromSources(self, addon)
     local themeKey
     if self._settingsDB and self._settingsDB.theme then
         themeKey = self._settingsDB.theme
-    elseif _G.OneWoW and _G.OneWoW.db and _G.OneWoW.db.global and _G.OneWoW.db.global.theme then
-        themeKey = _G.OneWoW.db.global.theme
+    elseif OneWoW and OneWoW.db and OneWoW.db.global and OneWoW.db.global.theme then
+        themeKey = OneWoW.db.global.theme
     elseif addon and addon.db and addon.db.global and addon.db.global.theme then
         themeKey = addon.db.global.theme
     end

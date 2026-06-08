@@ -16,7 +16,7 @@ local function CreateStub()
         Hide = noop,
         Toggle = noop,
         IsShown = function()
-            local btn = _G.OneWoW_MinimapButton
+            local btn = OneWoW_MinimapButton
             return btn and btn:IsShown()
         end,
         UpdateIcon = noop,
@@ -27,7 +27,7 @@ end
 function OneWoW_GUI:CreateMinimapLauncher(addonName, options)
     options = options or {}
 
-    if _G.OneWoW then
+    if OneWoW then
         return CreateStub()
     end
 
@@ -122,8 +122,8 @@ function OneWoW_GUI:CreateMinimapLauncher(addonName, options)
 end
 
 function OneWoW_GUI:GetMinimapButton(addonName)
-    if _G.OneWoW and _G.OneWoW_MinimapButton then
-        return _G.OneWoW_MinimapButton
+    if OneWoW and OneWoW_MinimapButton then
+        return OneWoW_MinimapButton
     end
     if libDBIcon then
         return libDBIcon:GetMinimapButton(addonName)

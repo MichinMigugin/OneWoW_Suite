@@ -619,6 +619,70 @@ function DB:DeleteChar(savedVarName, charKey)
     return true
 end
 
+function DB:BootSubModule(ns, config)
+    local addonName = config.addonName
+    local savedVar = config.savedVar
+    local onLogin = config.onLogin
+    local defaults = config.defaults
+    local initDB = config.initDB
+
+    ns.AddonInitialized = false
+
+    if config.withScanCallbacks then
+        local scanCallbacks = {}
+        ns.RegisterScanCallback = function(_, fn)
+            scanCallbacks[#scanCallbacks + 1] = fn
+        end
+        ns.FireScanCallbacks = function(_, data)
+            for _, fn in ipairs(scanCallbacks) do
+                pcall(fn, data)
+            end
+        end
+    end
+
+    ns.GetCharacterKey = function()
+        return OneWoW_GUI:GetCharacterKey()
+    end
+    ns.GetCharacterData = function(_, charKey)
+        return DB:GetCharData(savedVar, charKey)
+    end
+    ns.GetAllCharacters = function()
+        return DB:GetAllChars(savedVar, config.sortField)
+    end
+    ns.DeleteCharacter = function(_, charKey)
+        return DB:DeleteChar(savedVar, charKey)
+    end
+
+    ns.GetDB = function()
+        return _G[savedVar]
+    end
+
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("ADDON_LOADED")
+    eventFrame:RegisterEvent("PLAYER_LOGIN")
+    eventFrame:SetScript("OnEvent", function(_, event, ...)
+        if event == "ADDON_LOADED" then
+            local loaded = ...
+            if loaded == addonName then
+                if savedVar then
+                    if not _G[savedVar] then _G[savedVar] = {} end
+                    if defaults then
+                        DB:MergeMissing(_G[savedVar], defaults)
+                    end
+                end
+                if initDB then
+                    initDB()
+                elseif ns.InitializeDatabase then
+                    ns:InitializeDatabase()
+                end
+            end
+        elseif event == "PLAYER_LOGIN" then
+            ns.AddonInitialized = true
+            if onLogin then onLogin() end
+        end
+    end)
+end
+
 -- Drop-in replacement for AceDB-3.0:New(). Reads and writes the exact same
 -- SavedVariables format so existing user data works without migration.
 -- Usage: self.db = DB:NewCompat("MyAddon_DB", defaults, true)

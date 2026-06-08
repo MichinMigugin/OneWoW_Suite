@@ -23,6 +23,47 @@ local scrollChild    = nil
 
 local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
 
+local npcNameCache = {}
+
+local function IsGenericNPCName(name, npcID)
+    if not name or name == "" then
+        return true
+    end
+    if name:find("^NPC %d") then
+        return true
+    end
+    return npcID and tonumber(name) == tonumber(npcID)
+end
+
+local function ResolveNPCDisplayName(npcID, knownName)
+    npcID = tonumber(npcID)
+    if not npcID then
+        return knownName
+    end
+
+    if not IsGenericNPCName(knownName, npcID) then
+        return knownName
+    end
+
+    if npcNameCache[npcID] then
+        return npcNameCache[npcID]
+    end
+
+    local tooltipData = C_TooltipInfo.GetHyperlink(
+        ("unit:Creature-0-0-0-0-%d-0000000000"):format(npcID)
+    )
+
+    if tooltipData and tooltipData.lines and tooltipData.lines[1] then
+        local name = tooltipData.lines[1].leftText
+        if name and name ~= "" and not name:find("Retrieving") then
+            npcNameCache[npcID] = name
+            return name
+        end
+    end
+
+    return knownName
+end
+
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
     f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
@@ -607,6 +648,16 @@ function ns.UI.CreateNPCsTab(parent)
             local nd = ns.NPCs:GetNPC(selectedNPC)
             if nd then
                 local header = detailPanel.editorContent.header
+                local resolvedName = ResolveNPCDisplayName(selectedNPC, nd.name)
+                if resolvedName and resolvedName ~= nd.name then
+                    nd.name = resolvedName
+                    ns.NPCs:SaveNPC(selectedNPC, nd)
+                    C_Timer.After(0.05, function()
+                        if selectedNPC and parent.RefreshNPCsList then
+                            parent.RefreshNPCsList()
+                        end
+                    end)
+                end
 
                 if header.nameText then
                     header.nameText:SetText(nd.name or ("NPC " .. selectedNPC))
@@ -697,9 +748,18 @@ function ns.UI.CreateNPCsTab(parent)
                             row:SetScript("OnEnter", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT")) end)
                             row:SetScript("OnLeave", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end)
                             row:SetScript("OnClick", function()
-                                if OneWoW_Catalog and OneWoW_Catalog.UI and OneWoW_Catalog.UI.OpenToQuest then
-                                    OneWoW_Catalog.UI.OpenToQuest(qid)
+                                if OneWoW and OneWoW.GUI then
+                                    OneWoW.GUI:Show("catalog")
+                                    if OneWoW.GUI.SelectSubTab then
+                                        OneWoW.GUI:SelectSubTab("catalog", "quests")
+                                    end
                                 end
+
+                                C_Timer.After(0.05, function()
+                                    if OneWoW_Catalog and OneWoW_Catalog.UI and OneWoW_Catalog.UI.OpenQuest then
+                                        OneWoW_Catalog.UI.OpenQuest(qid)
+                                    end
+                                end)
                             end)
 
                             assoc.questRows[#assoc.questRows + 1] = row
@@ -747,6 +807,12 @@ function ns.UI.CreateNPCsTab(parent)
 
         for npcID, nd in pairs(allNPCs) do
             if type(nd) == "table" then
+                local resolvedName = ResolveNPCDisplayName(npcID, nd.name)
+                if resolvedName and resolvedName ~= nd.name then
+                    nd.name = resolvedName
+                    ns.NPCs:SaveNPC(npcID, nd)
+                end
+
                 if nd.isNew and nd.newTimestamp and (now - nd.newTimestamp) > 3600 then
                     nd.isNew = false nd.newTimestamp = nil
                 end
@@ -801,7 +867,7 @@ function ns.UI.CreateNPCsTab(parent)
 
         local function BuildNPCRow(npc, yOffset, groupArray, groupIndex)
             local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-            row:SetSize(scrollChild:GetWidth(), 50)
+            row:SetSize(scrollChild:GetWidth(), 64)
             row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
             row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -815,13 +881,15 @@ function ns.UI.CreateNPCsTab(parent)
             nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local subText = OneWoW_GUI:CreateFS(row, 10)
-            subText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 10, 8)
+            subText:SetPoint("TOPLEFT", row, "TOPLEFT", 10, -30)
+            subText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -30)
+            subText:SetJustifyH("LEFT")
             subText:SetText(npc.data.zone or "")
             subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local deleteBtn = CreateFrame("Button", nil, row)
             deleteBtn:SetSize(18, 18)
-            deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -27, 5)
+            deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -27, 6)
             deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
             deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
             deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
@@ -1005,21 +1073,21 @@ function ns.UI.CreateNPCsTab(parent)
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
-        for i, n in ipairs(newNPCs) do BuildNPCRow(n, yOffset, newNPCs, i) yOffset = yOffset - 55 end
+        for i, n in ipairs(newNPCs) do BuildNPCRow(n, yOffset, newNPCs, i) yOffset = yOffset - 69 end
 
         if #favorites > 0 then
             local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
-        for i, n in ipairs(favorites) do BuildNPCRow(n, yOffset, favorites, i) yOffset = yOffset - 55 end
+        for i, n in ipairs(favorites) do BuildNPCRow(n, yOffset, favorites, i) yOffset = yOffset - 69 end
 
         if #regular > 0 then
             local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["TAB_NPCS"], yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
-        for i, n in ipairs(regular) do BuildNPCRow(n, yOffset, regular, i) yOffset = yOffset - 55 end
+        for i, n in ipairs(regular) do BuildNPCRow(n, yOffset, regular, i) yOffset = yOffset - 69 end
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then

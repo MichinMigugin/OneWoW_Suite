@@ -21,6 +21,8 @@ DirectDeposit.failedItems = {}
 DirectDeposit.depositTimers = {}
 DirectDeposit.progressCallback = nil
 
+local GUILD_BANK_SLOTS_PER_TAB = 98
+
 function DirectDeposit:Initialize()
     self:RegisterEvents()
     self.initialized = true
@@ -115,6 +117,609 @@ function DirectDeposit:OnBankOpened()
 
     self:NormalizeGold()
     self:DepositItemsToBank()
+end
+
+function DirectDeposit:GetItemMaxStack(itemID)
+    local _, _, _, _, _, _, _, maxStack = C_Item.GetItemInfo(itemID)
+    if type(maxStack) ~= "number" or maxStack < 1 then
+        C_Item.RequestLoadItemDataByID(itemID)
+        return nil
+    end
+    return maxStack
+end
+
+function DirectDeposit:GetGuildBankSlotItemID(tabID, slotID)
+    local itemLink = GetGuildBankItemLink(tabID, slotID)
+    if not itemLink then return nil end
+
+    local itemID = C_Item.GetItemInfoInstant(itemLink)
+    if not itemID then
+        itemID = tonumber(itemLink:match("item:(%d+)"))
+    end
+    return itemID
+end
+
+function DirectDeposit:GetItemClassIDs(itemID)
+    local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
+    return classID, subclassID
+end
+
+function DirectDeposit:QueryGuildBankTabs()
+    local numTabs = GetNumGuildBankTabs() or 0
+    for tabID = 1, numTabs do
+        local _, _, isViewable = GetGuildBankTabInfo(tabID)
+        if isViewable ~= false then
+            QueryGuildBankTab(tabID)
+        end
+    end
+end
+
+function DirectDeposit:QueryGuildBankTabsForItems(wantedItemIDs)
+    local tabs, hasWarmSource = self:GetWarmGuildBankCandidateTabs(wantedItemIDs)
+
+    if tabs then
+        for tabID in pairs(tabs) do
+            QueryGuildBankTab(tabID)
+        end
+        return
+    end
+
+    -- No warm source is available, so fall back to loading the tabs we can see.
+    self:QueryGuildBankTabs()
+end
+
+function DirectDeposit:AddGuildBankIndexCandidate(index, seenSlots, wantedItemIDs, itemID, tabID, slotID, count, locked)
+    if not itemID or not tabID or not slotID or locked then return false end
+    if wantedItemIDs and not wantedItemIDs[itemID] then return false end
+
+    local _, _, isViewable, canDeposit = GetGuildBankTabInfo(tabID)
+    if isViewable == false or canDeposit == false then return false end
+
+    local liveTexture, liveCount, liveLocked = GetGuildBankItemInfo(tabID, slotID)
+    if not liveTexture or liveLocked then return false end
+
+    local liveItemID = self:GetGuildBankSlotItemID(tabID, slotID)
+    if liveItemID ~= itemID then return false end
+
+    count = liveCount or count or 0
+    local maxStack = self:GetItemMaxStack(itemID)
+    if count <= 0 then return false end
+    if maxStack and maxStack <= count then return false end
+
+    local slotKey = tabID .. ":" .. slotID
+    if seenSlots[slotKey] then return false end
+    seenSlots[slotKey] = true
+
+    if not index[itemID] then
+        index[itemID] = {}
+    end
+
+    table.insert(index[itemID], {
+        tabID = tabID,
+        slotID = slotID,
+        count = count,
+        maxStack = maxStack,
+    })
+
+    return true
+end
+
+function DirectDeposit:AddGuildBankCandidateTab(tabs, wantedItemIDs, itemID, tabID, count)
+    if not itemID or not tabID then return false end
+    if wantedItemIDs and not wantedItemIDs[itemID] then return false end
+
+    local _, _, isViewable, canDeposit = GetGuildBankTabInfo(tabID)
+    if isViewable == false or canDeposit == false then return false end
+
+    count = count or 0
+    local maxStack = self:GetItemMaxStack(itemID)
+    if count <= 0 then return false end
+    if maxStack and maxStack <= count then return false end
+
+    tabs[tabID] = true
+    return true
+end
+
+function DirectDeposit:ForEachWarmGuildBankSlot(callback)
+    local usedWarmSource = false
+
+    if OneWoW_Bags and OneWoW_Bags.GuildBankSet and OneWoW_Bags.GuildBankSet.cache then
+        usedWarmSource = true
+        for tabID, tabCache in pairs(OneWoW_Bags.GuildBankSet.cache) do
+            if type(tabCache) == "table" then
+                for slotID, cached in pairs(tabCache) do
+                    if cached and cached.itemID then
+                        callback(cached.itemID, tabID, slotID, cached.itemCount, cached.locked)
+                    end
+                end
+            end
+        end
+    end
+
+    return usedWarmSource
+end
+
+function DirectDeposit:GetWarmGuildBankCandidateTabs(wantedItemIDs)
+    local tabs = {}
+    local usedWarmSource = self:ForEachWarmGuildBankSlot(function(itemID, tabID, slotID, count)
+        self:AddGuildBankCandidateTab(tabs, wantedItemIDs, itemID, tabID, count)
+    end)
+
+    if not usedWarmSource then
+        return nil, false
+    end
+
+    if next(tabs) then
+        return tabs, true
+    end
+
+    return {}, true
+end
+
+function DirectDeposit:BuildGuildBankPartialStackIndex(wantedItemIDs)
+    local index = {}
+    local seenSlots = {}
+    local usedWarmSource = self:ForEachWarmGuildBankSlot(function(itemID, tabID, slotID, count, locked)
+        self:AddGuildBankIndexCandidate(index, seenSlots, wantedItemIDs, itemID, tabID, slotID, count, locked)
+    end)
+
+    if usedWarmSource then
+        return index
+    end
+
+    local numTabs = GetNumGuildBankTabs() or 0
+
+    for tabID = 1, numTabs do
+        local _, _, isViewable, canDeposit = GetGuildBankTabInfo(tabID)
+        if isViewable ~= false and canDeposit ~= false then
+            for slotID = 1, GUILD_BANK_SLOTS_PER_TAB do
+                local texture, itemCount, locked = GetGuildBankItemInfo(tabID, slotID)
+                if texture and itemCount and itemCount > 0 and not locked then
+                    local itemID = self:GetGuildBankSlotItemID(tabID, slotID)
+                    self:AddGuildBankIndexCandidate(index, seenSlots, wantedItemIDs, itemID, tabID, slotID, itemCount, locked)
+                end
+            end
+        end
+    end
+
+    return index
+end
+
+function DirectDeposit:BuildGuildBankEmptySlotList()
+    local emptySlots = {}
+    local occupiedSlots = {}
+    local numTabs = GetNumGuildBankTabs() or 0
+
+    for tabID = 1, numTabs do
+        local _, _, isViewable, canDeposit = GetGuildBankTabInfo(tabID)
+        if isViewable ~= false and canDeposit ~= false then
+            for slotID = 1, GUILD_BANK_SLOTS_PER_TAB do
+                local texture, itemCount, locked = GetGuildBankItemInfo(tabID, slotID)
+                if not texture and not locked then
+                    table.insert(emptySlots, {
+                        tabID = tabID,
+                        slotID = slotID,
+                    })
+                elseif texture and itemCount and itemCount > 0 and not locked then
+                    local itemID = self:GetGuildBankSlotItemID(tabID, slotID)
+                    if itemID then
+                        local classID, subclassID = self:GetItemClassIDs(itemID)
+                        table.insert(occupiedSlots, {
+                            tabID = tabID,
+                            slotID = slotID,
+                            itemID = itemID,
+                            classID = classID,
+                            subclassID = subclassID,
+                        })
+                    end
+                end
+            end
+        end
+    end
+
+    return emptySlots, occupiedSlots
+end
+
+function DirectDeposit:GetGuildBankEmptyTargetScore(emptySlot, occupiedSlots, itemID)
+    local classID, subclassID = self:GetItemClassIDs(itemID)
+    if not classID then
+        return 30000 + (emptySlot.tabID or 0) * 100 + (emptySlot.slotID or 0)
+    end
+
+    local bestScore
+    for _, occupied in ipairs(occupiedSlots or {}) do
+        local matchScore
+        if occupied.classID == classID and occupied.subclassID == subclassID then
+            matchScore = 0
+        elseif occupied.classID == classID then
+            matchScore = 10000
+        end
+
+        if matchScore then
+            local tabDistance = math.abs((emptySlot.tabID or 0) - (occupied.tabID or 0))
+            local slotDistance = math.abs((emptySlot.slotID or 0) - (occupied.slotID or 0))
+            local score = matchScore + tabDistance * 1000 + slotDistance
+            if not bestScore or score < bestScore then
+                bestScore = score
+            end
+        end
+    end
+
+    return bestScore or (20000 + (emptySlot.tabID or 0) * 100 + (emptySlot.slotID or 0))
+end
+
+function DirectDeposit:ReserveGuildBankEmptyTarget(emptySlots, occupiedSlots, itemID)
+    if not emptySlots or #emptySlots == 0 then return nil end
+
+    local bestIndex = 1
+    local bestScore = self:GetGuildBankEmptyTargetScore(emptySlots[1], occupiedSlots, itemID)
+    for index = 2, #emptySlots do
+        local score = self:GetGuildBankEmptyTargetScore(emptySlots[index], occupiedSlots, itemID)
+        if score < bestScore then
+            bestIndex = index
+            bestScore = score
+        end
+    end
+
+    local target = table.remove(emptySlots, bestIndex)
+    local classID, subclassID = self:GetItemClassIDs(itemID)
+    table.insert(occupiedSlots, {
+        tabID = target.tabID,
+        slotID = target.slotID,
+        itemID = itemID,
+        classID = classID,
+        subclassID = subclassID,
+    })
+
+    return target
+end
+
+function DirectDeposit:ReserveGuildBankStackTargets(index, itemID, count)
+    local targets = {}
+    local stacks = index and index[itemID]
+    local remaining = count or 0
+
+    if not stacks or remaining <= 0 then
+        return targets, remaining
+    end
+
+    for _, stack in ipairs(stacks) do
+        local free = stack.maxStack and ((stack.maxStack or 1) - (stack.count or 0)) or remaining
+        if free > 0 then
+            local moveCount = math.min(remaining, free)
+            table.insert(targets, {
+                tabID = stack.tabID,
+                slotID = stack.slotID,
+                count = moveCount,
+            })
+            stack.count = stack.count + moveCount
+            remaining = remaining - moveCount
+            if remaining <= 0 then
+                break
+            end
+        end
+    end
+
+    return targets, remaining
+end
+
+function DirectDeposit:PickupBagStackAmount(bagID, slotID, amount, stackCount)
+    if amount and stackCount and amount < stackCount then
+        C_Container.SplitContainerItem(bagID, slotID, amount)
+    else
+        C_Container.PickupContainerItem(bagID, slotID)
+    end
+end
+
+function DirectDeposit:RecordDepositedItem(itemID, itemName, count, bankType)
+    local resolvedItemName = itemName or C_Item.GetItemNameByID(itemID) or "Item"
+    local existing
+
+    for _, rec in ipairs(self.depositedItems) do
+        if rec.itemID == itemID and rec.bankType == bankType then
+            existing = rec
+            break
+        end
+    end
+
+    if existing then
+        existing.count = existing.count + count
+    else
+        table.insert(self.depositedItems, {
+            itemID   = itemID,
+            itemName = resolvedItemName,
+            count    = count,
+            bankType = bankType,
+        })
+    end
+end
+
+function DirectDeposit:CanDepositSlotToGuild(slotInfo, itemInfo)
+    if not self.guildBankOpen then
+        return false, "Guild bank not open"
+    end
+
+    local itemLocation = ItemLocation:CreateFromBagAndSlot(slotInfo.bagID, slotInfo.slotID)
+    if not itemLocation or not itemLocation:IsValid() then
+        return false, "Item no longer in bag slot"
+    end
+
+    return true
+end
+
+function DirectDeposit:ExecuteGuildDepositOperation(op)
+    if not op or not self.guildBankOpen then
+        return false, 0, "Guild bank not open"
+    end
+    if GetCursorInfo() then
+        return false, 0, "Cursor is busy"
+    end
+
+    local itemInfo = C_Container.GetContainerItemInfo(op.bagID, op.slotID)
+    if not itemInfo or itemInfo.itemID ~= op.itemID then
+        return false, 0, "Item no longer in bag slot"
+    end
+
+    local canDeposit, blockReason = self:CanDepositSlotToGuild(op, itemInfo)
+    if not canDeposit then
+        return false, 0, blockReason or "Item cannot be deposited"
+    end
+
+    local stackCount = itemInfo.stackCount or 1
+
+    if op.kind == "guildStack" or op.kind == "guildEmpty" then
+        local texture, targetCount, locked = GetGuildBankItemInfo(op.targetTabID, op.targetSlotID)
+        if op.kind == "guildStack" and (not texture or locked) then
+            return false, 0, "Guild bank target is locked"
+        end
+        if op.kind == "guildEmpty" and (texture or locked) then
+            return false, 0, "Guild bank empty slot is no longer available"
+        end
+
+        if op.kind == "guildStack" then
+            local targetItemID = self:GetGuildBankSlotItemID(op.targetTabID, op.targetSlotID)
+            if targetItemID ~= op.itemID then
+                return false, 0, "Guild bank target changed"
+            end
+        end
+
+        local maxStack = self:GetItemMaxStack(op.itemID)
+        local capacity = op.kind == "guildStack" and (maxStack and (maxStack - (targetCount or 0)) or stackCount) or stackCount
+        local moveCount = math.min(op.count or stackCount, stackCount, capacity)
+        if moveCount <= 0 then
+            return false, 0, "Guild bank stack is full"
+        end
+
+        op.targetCountBefore = targetCount or 0
+        self:PickupBagStackAmount(op.bagID, op.slotID, moveCount, stackCount)
+        if GetCursorInfo() == "item" then
+            if OneWoW_Bags then
+                OneWoW_Bags._wasPlacingBeforeGBOp = true
+                OneWoW_Bags._destHadItemBeforeGBOp = true
+                if OneWoW_Bags.TrackGuildBankTransferTab then
+                    OneWoW_Bags:TrackGuildBankTransferTab(op.targetTabID)
+                end
+            end
+            PickupGuildBankItem(op.targetTabID, op.targetSlotID)
+            if GetCursorInfo() == "item" then
+                C_Container.PickupContainerItem(op.bagID, op.slotID)
+                return false, 0, "Guild bank did not accept item"
+            end
+            return true, moveCount
+        end
+
+        return false, 0, "Could not pick up item"
+    else
+        C_Container.UseContainerItem(op.bagID, op.slotID)
+        return true, stackCount
+    end
+end
+
+function DirectDeposit:GetBagSlotItemState(op)
+    local itemInfo = op and C_Container.GetContainerItemInfo(op.bagID, op.slotID)
+    if not itemInfo then
+        return nil, 0
+    end
+
+    return itemInfo.itemID, itemInfo.stackCount or 1
+end
+
+function DirectDeposit:DidGuildDepositOperationApply(op, beforeCount, moveCount)
+    if op.kind == "guildStack" then
+        local targetItemID = self:GetGuildBankSlotItemID(op.targetTabID, op.targetSlotID)
+        local _, targetCount = GetGuildBankItemInfo(op.targetTabID, op.targetSlotID)
+        if targetItemID ~= op.itemID then
+            return false
+        end
+
+        local expectedCount = (op.targetCountBefore or 0) + (moveCount or op.count or 0)
+        return (targetCount or 0) >= expectedCount
+    end
+
+    local itemID, currentCount = self:GetBagSlotItemState(op)
+    if itemID ~= op.itemID then
+        return true
+    end
+
+    moveCount = moveCount or op.count or beforeCount or 0
+    return currentCount <= math.max(0, (beforeCount or currentCount) - moveCount)
+end
+
+function DirectDeposit:RecordGuildDepositFailure(op, reason)
+    table.insert(self.failedItems, {
+        itemID = op and op.itemID,
+        itemName = (op and op.itemName) or "Unknown",
+        reason = reason or "Deposit did not complete",
+    })
+end
+
+function DirectDeposit:BuildWantedItemIDSet(slotsToDeposit)
+    local wantedItemIDs = {}
+    for _, slotInfo in ipairs(slotsToDeposit or {}) do
+        if slotInfo.itemID then
+            wantedItemIDs[slotInfo.itemID] = true
+        end
+    end
+    return wantedItemIDs
+end
+
+function DirectDeposit:StartGuildDepositQueue(slotsToDeposit, manualTrigger)
+    local wantedItemIDs = self:BuildWantedItemIDSet(slotsToDeposit)
+    local stackIndex = self:BuildGuildBankPartialStackIndex(wantedItemIDs)
+    local emptySlots, occupiedSlots = self:BuildGuildBankEmptySlotList()
+    local operations = {}
+    local planningFailures = {}
+
+    for _, slotInfo in ipairs(slotsToDeposit) do
+        local itemInfo = C_Container.GetContainerItemInfo(slotInfo.bagID, slotInfo.slotID)
+        local stackCount = itemInfo and itemInfo.stackCount or 1
+        local targets, remaining = self:ReserveGuildBankStackTargets(stackIndex, slotInfo.itemID, stackCount)
+
+        for _, target in ipairs(targets) do
+            table.insert(operations, {
+                kind = "guildStack",
+                bagID = slotInfo.bagID,
+                slotID = slotInfo.slotID,
+                itemID = slotInfo.itemID,
+                itemName = slotInfo.itemName,
+                count = target.count,
+                targetTabID = target.tabID,
+                targetSlotID = target.slotID,
+            })
+        end
+
+        if remaining and remaining > 0 then
+            local emptyTarget = self:ReserveGuildBankEmptyTarget(emptySlots, occupiedSlots, slotInfo.itemID)
+            if emptyTarget then
+                table.insert(operations, {
+                    kind = "guildEmpty",
+                    bagID = slotInfo.bagID,
+                    slotID = slotInfo.slotID,
+                    itemID = slotInfo.itemID,
+                    itemName = slotInfo.itemName,
+                    count = remaining,
+                    targetTabID = emptyTarget.tabID,
+                    targetSlotID = emptyTarget.slotID,
+                })
+            else
+                table.insert(planningFailures, {
+                    itemID = slotInfo.itemID,
+                    itemName = slotInfo.itemName or "Unknown",
+                    reason = "No guild bank destination slot",
+                })
+            end
+        end
+    end
+
+    self.isDepositing = true
+    self.isPaused = false
+    self.currentDepositIndex = 0
+    self.totalDepositItems = #operations
+    self.depositedItems = {}
+    self.failedItems = planningFailures
+    self.depositTimers = {}
+
+    if #operations == 0 then
+        self:FinishDeposit()
+        return
+    end
+
+    if manualTrigger then
+        print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Starting manual guild deposit of " .. #operations .. " move(s)...|r")
+    end
+
+    self.guildDepositOperations = operations
+    self.guildDepositManualTrigger = manualTrigger
+    self.guildDepositRetryCount = 0
+    self.guildDepositTabRetryCount = 0
+
+    self:RunNextGuildDepositOperation(1)
+end
+
+function DirectDeposit:RunNextGuildDepositOperation(index)
+    if not self.isDepositing or self.isPaused then
+        return
+    end
+
+    local operations = self.guildDepositOperations or {}
+    local op = operations[index]
+    if not op then
+        local timer = C_Timer.After(0.4, function()
+            self.guildDepositOperations = nil
+            self.guildDepositManualTrigger = nil
+            self.guildDepositRetryCount = 0
+            self.guildDepositTabRetryCount = 0
+            self:FinishDeposit()
+        end)
+        table.insert(self.depositTimers, timer)
+        return
+    end
+
+    self.currentDepositIndex = index
+    if self.progressCallback then
+        self.progressCallback(index, #operations, op.itemName)
+    end
+
+    if op.targetTabID and GetCurrentGuildBankTab() ~= op.targetTabID then
+        SetCurrentGuildBankTab(op.targetTabID)
+        QueryGuildBankTab(op.targetTabID)
+        self.guildDepositTabRetryCount = (self.guildDepositTabRetryCount or 0) + 1
+        if self.guildDepositTabRetryCount > 6 then
+            self.guildDepositTabRetryCount = 0
+            self.guildDepositRetryCount = 0
+            self:RecordGuildDepositFailure(op, "Could not switch to guild bank tab")
+            self:RunNextGuildDepositOperation(index + 1)
+            return
+        end
+        local timer = C_Timer.After(0.3, function()
+            self:RunNextGuildDepositOperation(index)
+        end)
+        table.insert(self.depositTimers, timer)
+        return
+    end
+    self.guildDepositTabRetryCount = 0
+
+    local beforeItemID, beforeCount = self:GetBagSlotItemState(op)
+    if beforeItemID ~= op.itemID then
+        self.guildDepositRetryCount = 0
+        self:RunNextGuildDepositOperation(index + 1)
+        return
+    end
+
+    local attempted, moveCount, reason = self:ExecuteGuildDepositOperation(op)
+    if not attempted then
+        self.guildDepositRetryCount = (self.guildDepositRetryCount or 0) + 1
+        if self.guildDepositRetryCount <= 3 then
+            local timer = C_Timer.After(0.8, function()
+                self:RunNextGuildDepositOperation(index)
+            end)
+            table.insert(self.depositTimers, timer)
+        else
+            self:RecordGuildDepositFailure(op, reason)
+            self.guildDepositRetryCount = 0
+            self:RunNextGuildDepositOperation(index + 1)
+        end
+        return
+    end
+
+    local timer = C_Timer.After(0.9, function()
+        if self:DidGuildDepositOperationApply(op, beforeCount, moveCount) then
+            self:RecordDepositedItem(op.itemID, op.itemName, moveCount, "guild")
+            self.guildDepositRetryCount = 0
+            self:RunNextGuildDepositOperation(index + 1)
+            return
+        end
+
+        self.guildDepositRetryCount = (self.guildDepositRetryCount or 0) + 1
+        if self.guildDepositRetryCount <= 3 then
+            self:RunNextGuildDepositOperation(index)
+        else
+            self:RecordGuildDepositFailure(op, "Deposit did not complete")
+            self.guildDepositRetryCount = 0
+            self:RunNextGuildDepositOperation(index + 1)
+        end
+    end)
+    table.insert(self.depositTimers, timer)
 end
 
 --- Decides whether a bag slot holds a warbound item the sweep should deposit.
@@ -317,7 +922,7 @@ function DirectDeposit:NormalizeGold()
     end
 end
 
-function DirectDeposit:DepositItemsToBank(manualTrigger)
+function DirectDeposit:DepositItemsToBank(manualTrigger, guildBankReady)
     if not manualTrigger and not OneWoW_DirectDeposit.db.global.directDeposit.itemDepositEnabled then
         return
     end
@@ -385,6 +990,21 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
     end
 
     if #slotsToDeposit == 0 then
+        return
+    end
+
+    if activeType == "guild" and hasGuildItems then
+        if not guildBankReady then
+            self:QueryGuildBankTabsForItems(self:BuildWantedItemIDSet(slotsToDeposit))
+            C_Timer.After(0.6, function()
+                if self.guildBankOpen and not self.isDepositing then
+                    self:DepositItemsToBank(manualTrigger, true)
+                end
+            end)
+            return
+        end
+
+        self:StartGuildDepositQueue(slotsToDeposit, manualTrigger)
         return
     end
 
@@ -475,12 +1095,6 @@ function DirectDeposit:DepositSingleSlot(slotInfo)
             table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Item binding prevents deposit"})
             return
         end
-    else
-        local ok, bindType = pcall(C_Item.GetItemBindType, itemLocation)
-        if ok and (bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest) then
-            table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Item binding prevents deposit"})
-            return
-        end
     end
 
     if isGuildBank then
@@ -494,23 +1108,7 @@ function DirectDeposit:DepositSingleSlot(slotInfo)
 
     -- Collapse repeats of the same item+bankType into one summary entry so the
     -- FinishDeposit readout matches the old per-itemID grouping.
-    local existing
-    for _, rec in ipairs(self.depositedItems) do
-        if rec.itemID == expectedID and rec.bankType == targetBankType then
-            existing = rec
-            break
-        end
-    end
-    if existing then
-        existing.count = existing.count + stackCount
-    else
-        table.insert(self.depositedItems, {
-            itemID   = expectedID,
-            itemName = resolvedItemName,
-            count    = stackCount,
-            bankType = targetBankType,
-        })
-    end
+    self:RecordDepositedItem(expectedID, resolvedItemName, stackCount, targetBankType)
 end
 
 function DirectDeposit:DepositItemByID(itemID, targetBankType, itemName)
@@ -557,13 +1155,6 @@ function DirectDeposit:DepositItemByID(itemID, targetBankType, itemName)
                         if not isGuildBank then
                             local allowed = C_Bank.IsItemAllowedInBankType(bankTypeEnum, itemLocation)
                             if not allowed then
-                                canDeposit = false
-                                hadError = true
-                                errorReason = "Item binding prevents deposit"
-                            end
-                        else
-                            local ok, bindType = pcall(C_Item.GetItemBindType, itemLocation)
-                            if ok and (bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest) then
                                 canDeposit = false
                                 hadError = true
                                 errorReason = "Item binding prevents deposit"
@@ -783,6 +1374,9 @@ function DirectDeposit:FinishDeposit()
     self.depositedItems = {}
     self.failedItems = {}
     self.depositTimers = {}
+    self.guildDepositOperations = nil
+    self.guildDepositManualTrigger = nil
+    self.guildDepositRetryCount = 0
 
     if self.progressCallback then
         self.progressCallback(nil, nil, nil)
@@ -814,6 +1408,9 @@ function DirectDeposit:StopDeposit()
     end
 
     self.depositTimers = {}
+    self.guildDepositOperations = nil
+    self.guildDepositManualTrigger = nil
+    self.guildDepositRetryCount = 0
 
     print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000Deposit stopped.|r")
 

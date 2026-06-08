@@ -1,9 +1,9 @@
 local ADDON_NAME, ns = ...
 
-local OneWoW = OneWoW
-if not OneWoW or not OneWoW.BootStore then return end
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+if not OneWoW_GUI then return end
 
-OneWoW:BootStore(ns, {
+OneWoW_GUI.DB:BootSubModule(ns, {
     addonName = ADDON_NAME,
     savedVar = "OneWoW_CatalogData_Quests_DB",
     onLogin = function()

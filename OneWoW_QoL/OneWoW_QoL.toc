@@ -251,4 +251,5 @@ Modules\external\preybar\data.lua
 Modules\external\inspectmog\Locales\enUS.lua
 Modules\external\inspectmog\inspectmog.lua
 Modules\external\inspectmog\inspectpanel.lua
+Modules\external\inspectmog\inspectscanner.lua
 Modules\external\inspectmog\data.lua
