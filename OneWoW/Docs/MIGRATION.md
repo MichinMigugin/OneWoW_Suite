@@ -71,7 +71,7 @@ De-risks everything after. Ship early; no dependency on other steps.
   (`Core/AddonLoader.lua` ~506): only clear `featureOptOut` for explicit user
   loads (Blizzard "Load Addon", Manage Features), not every programmatic
   `LoadAddOn` from other addons.
-- [ ] Dedupe `RunUnitHook` (currently defined in both `Core/AddonLoader.lua` and
+- [x] Dedupe `RunUnitHook` (currently defined in both `Core/AddonLoader.lua` and
   `Core/Lifecycle.lua`).
 - [ ] Route tooltip `ProcessProviders` pcall failures through
   `Lifecycle.SafeCall` / `geterrorhandler()` (`Tooltips/tooltip-engine.lua` ~257)

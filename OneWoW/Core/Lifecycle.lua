@@ -139,8 +139,9 @@ local addonLoadedWatchers = {}
 local coreLoginHandlers = {}
 local coreEnteringWorldHandlers = {}
 
--- Records and runs a one-shot unit hook by addon name. The trace fires only when
--- the hook actually exists/runs, so the dump reflects real per-unit dispatch.
+--- Invokes a one-shot unit lifecycle hook if present; traces only on actual dispatch.
+---@param addonName string|nil _G key for the load unit
+---@param method string hook name (e.g. "OnPlayerLogin")
 local function RunUnitHook(addonName, method, ...)
     local unit = addonName and _G[addonName]
     if unit and type(unit[method]) == "function" then
@@ -148,6 +149,7 @@ local function RunUnitHook(addonName, method, ...)
         unit[method](unit, ...)
     end
 end
+Lifecycle.RunUnitHook = RunUnitHook
 
 local onAddonLoadedDone = {}
 

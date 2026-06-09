@@ -331,7 +331,7 @@ no-op when disabled — called from the lifecycle funnels in `Lifecycle.lua` and
 | `bringUp.begin` / `bringUp.end` | `BringUp` | Feature+stores batch (`midSession`, `units`, `loaded`) |
 | `ensureLoaded` / `ensureLoaded.skip` | `EnsureLoaded` | Load outcome (`ok`, `reason`) or skip (`OPTED_OUT`/`COMBAT`) |
 | `loadAddOn.hook` | `LoadAddOn` post-hook | Every load path's single chokepoint (`inBringUp`) |
-| `OnAddonLoaded` / `OnPlayerLogin` / `OnPlayerEnteringWorld` | `RunUnitHook` | Per-unit hook **fires** (recorded only when the hook exists) |
+| `OnAddonLoaded` / `OnPlayerLogin` / `OnPlayerEnteringWorld` | `Lifecycle.RunUnitHook` | Per-unit hook **fires** (recorded only when the hook exists); defined in `Lifecycle.lua`, called from `AddonLoader.lua` too |
 | `watchers.notify` / `watcher.catchup` | `NotifyAddonLoadedWatchers`, registration catch-up | Addon-loaded watcher fan-out and late-registrant replay |
 | `manifest.loginPhase` | `RunManifestLoginPhase` | Login walk start |
 | `core.loginHandlers` / `core.enteringWorldHandlers` | `FireCore*Handlers` | Core handler fans (`count`) |

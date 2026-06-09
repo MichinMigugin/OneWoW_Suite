@@ -410,16 +410,6 @@ function OneWoW:EnsureLoaded(name, opts)
     return true
 end
 
--- Calls a one-shot lifecycle hook on a loaded unit, if present. Units without the
--- hook (Blizzard_*, etc.) are a safe no-op.
-local function RunUnitHook(name, method, ...)
-    local unit = name and _G[name]
-    if unit and type(unit[method]) == "function" then
-        OneWoW:TraceRecord(method, name)
-        unit[method](unit, ...)
-    end
-end
-
 --- Manifest unit set for a feature: { addon, ...stores } in manifest order.
 --- Returns nil when name is not a manifest root (caller falls back to { name }).
 ---@param addonName string
@@ -447,7 +437,7 @@ end
 local function Settle(units)
     if not OneWoW._playerLoginFired then return end
     for _, name in ipairs(units) do
-        RunUnitHook(name, "OnPlayerLogin")
+        OneWoW.Lifecycle.RunUnitHook(name, "OnPlayerLogin")
     end
 end
 
@@ -460,7 +450,7 @@ local function CatchUpEnteringWorld(units)
     if not OneWoW._playerLoginFired then return end
     for _, name in ipairs(units) do
         OneWoW:TraceRecord("catchUpPEW", name)
-        RunUnitHook(name, "OnPlayerEnteringWorld", true, false, false)
+        OneWoW.Lifecycle.RunUnitHook(name, "OnPlayerEnteringWorld", true, false, false)
     end
 end
 
