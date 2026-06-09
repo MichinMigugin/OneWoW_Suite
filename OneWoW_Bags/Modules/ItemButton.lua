@@ -140,7 +140,7 @@ function Mixin:OWB_FullUpdate()
         self.owb_hasItem = true
         self._owb_sortName = props and props.nameRaw ~= "" and props.nameRaw or nil
         self._owb_ilvl = props and props.ilvl and props.ilvl > 0 and props.ilvl or nil
-        self._owb_expansionID = props and props.expansionID or nil
+        self._owb_expansionID = (props and props.expansionID ~= -1) and props.expansionID or nil
         self._owb_classID = props and props.classID or nil
         self._owb_subClassID = props and props.subClassID or nil
         self._owb_itemQuality = info.quality

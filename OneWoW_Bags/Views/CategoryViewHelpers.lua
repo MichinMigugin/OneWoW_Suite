@@ -13,6 +13,7 @@ local SetItemButtonCount = SetItemButtonCount
 
 OneWoW_Bags.CategoryViewHelpers = {}
 local H = OneWoW_Bags.CategoryViewHelpers
+local WH = OneWoW_Bags.WindowHelpers
 local filterScratchByCategory = {}
 
 function H.CreateLabelPool()
@@ -764,12 +765,8 @@ function H.GroupItemsBy(items, groupBy)
 
     if groupBy == "expansion" then
         for _, btn in ipairs(items) do
-            local expID = btn._owb_expansionID
-            if expID == nil and btn.owb_itemInfo then
-                expID = OneWoW_Bags.WindowHelpers:GetButtonExpansionID(btn)
-            end
-            expID = expID or -1
-            local expName = OneWoW_GUI:GetExpansionName(expID)
+            local expID = WH:GetButtonExpansionID(btn)
+            local expName = WH:GetExpansionDisplayName(expID)
             if not groups[expName] then
                 groups[expName] = {}
                 tinsert(groupOrder, { name = expName, sortKey = expID })

@@ -465,6 +465,8 @@ OneWoW_Bags.Locales["enUS"] = {
 
     ["EXPAC_FILTER_BTN"] = "Expac",
     ["EXPAC_FILTER_ALL"] = "All Expansions",
+    ["EXPAC_UNKNOWN"] = "Unknown Expansion",
+    ["EXPAC_FALLBACK"] = "Expansion %d",
     ["SETTING_ENABLE_EXPAC_FILTER"] = "Enable Expansion Filter",
     ["DESC_ENABLE_EXPAC_FILTER"] = "Adds a dropdown to the header bar to filter items by expansion. Useful when farming old content.",
     ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Adds a dropdown to the bank header bar to filter items by expansion.",

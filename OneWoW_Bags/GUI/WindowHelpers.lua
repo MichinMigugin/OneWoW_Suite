@@ -10,7 +10,7 @@ local PE = OneWoW_GUI.PredicateEngine
 
 local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs
-local type = type
+local type, format = type, string.format
 local floor = math.floor
 local Enum = Enum
 local PixelUtil = PixelUtil
@@ -368,18 +368,48 @@ function WH:ResolveExpansionID(itemInfo, bagID, slotID)
     return nil
 end
 
+--- Display name for expansion grouping; never nil.
+---@param expansionID number|nil
+---@return string
+function WH:GetExpansionDisplayName(expansionID)
+    local L = OneWoW_Bags.L
+    if expansionID == nil or expansionID < 0 then
+        return L["EXPAC_UNKNOWN"]
+    end
+
+    local name = OneWoW_GUI:GetExpansionName(expansionID)
+    if name then
+        return name
+    end
+
+    local raw = _G["EXPANSION_NAME" .. tostring(expansionID)]
+    if raw and raw ~= "" then
+        return raw
+    end
+
+    return format(L["EXPAC_FALLBACK"], expansionID)
+end
+
 ---@param button table
----@return number|nil expansionID
+---@return number expansionID (-1 when unknown)
 function WH:GetButtonExpansionID(button)
-    local itemInfo = button.owb_itemInfo
-    if button._owb_expansionID ~= nil and not (button._owb_expansionID == -1 and itemInfo and itemInfo.hyperlink) then
-        return button._owb_expansionID
+    local cached = button._owb_expansionID
+    if cached ~= nil and cached >= 0 then
+        return cached
     end
-    if not button.owb_hasItem or not itemInfo or not itemInfo.itemID then
-        return nil
+
+    if not button.owb_hasItem or not button.owb_itemInfo or not button.owb_itemInfo.itemID then
+        return -1
     end
+
     local props = OneWoW_Bags:GetButtonProps(button)
-    return props.expansionID
+    local expansionID = props and props.expansionID
+    if expansionID ~= nil and expansionID >= 0 then
+        button._owb_expansionID = expansionID
+        return expansionID
+    end
+
+    return -1
 end
 
 --- Filter item buttons with a PredicateEngine search expression.

@@ -142,16 +142,9 @@ local function CompareType(a, b, descending)
 end
 
 local function CompareExpansion(a, b, descending)
-    local aExp = a and a._owb_expansionID
-    local bExp = b and b._owb_expansionID
-    if aExp == nil and a and a.owb_itemInfo then
-        aExp = OneWoW_Bags.WindowHelpers:GetButtonExpansionID(a)
-    end
-    if bExp == nil and b and b.owb_itemInfo then
-        bExp = OneWoW_Bags.WindowHelpers:GetButtonExpansionID(b)
-    end
-    aExp = aExp or -1
-    bExp = bExp or -1
+    local WH = OneWoW_Bags.WindowHelpers
+    local aExp = a and WH:GetButtonExpansionID(a) or -1
+    local bExp = b and WH:GetButtonExpansionID(b) or -1
     return CompareValues(aExp, bExp, descending)
 end
 

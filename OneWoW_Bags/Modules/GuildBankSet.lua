@@ -359,7 +359,7 @@ local function ApplyCachedItemToButton(button, cached)
         Profile:Add("GuildBankSet:GetButtonProps", tProps)
         button._owb_sortName = props.nameRaw ~= "" and props.nameRaw or nil
         button._owb_ilvl = props.ilvl and props.ilvl > 0 and props.ilvl or nil
-        button._owb_expansionID = props.expansionID
+        button._owb_expansionID = (props.expansionID ~= -1) and props.expansionID or nil
         button._owb_classID = props.classID
         button._owb_subClassID = props.subClassID
         button._owb_itemQuality = cached.quality
