@@ -3,8 +3,9 @@
 Authoritative reference for how the suite is partitioned, loaded, enabled, and
 integrated. Describes **what is implemented today**.
 
-Remaining migration work (GUI absorption, CopyPaste, DevTool LOD, enforcement
-ramp) lives in [`MIGRATION.md`](MIGRATION.md).
+Remaining migration work (core hygiene, settings funnel, GUI absorption, SV
+migration, QoL feature moves, DevTool packaging, enforcement ramp) lives in
+[`MIGRATION.md`](MIGRATION.md) (steps 5–11).
 
 ---
 
@@ -141,7 +142,7 @@ set both `module` and `tabOrder`.
 Only **`OneWoW.lua`** registers `ADDON_LOADED`, `PLAYER_LOGIN`, and
 `PLAYER_ENTERING_WORLD` for suite lifecycle dispatch. **`OneWoW_GUI`** still
 registers its own `ADDON_LOADED` for self-bootstrap until GUI is absorbed into core
-(see `MIGRATION.md` step 6). Embedded `Libs/` are unchanged.
+(see `MIGRATION.md` step 7). Embedded `Libs/` are unchanged.
 
 | Registrar | Allowed? |
 |-----------|----------|
@@ -288,7 +289,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 |---|---|
 | No lifecycle `RegisterEvent` in orchestrated units | `bin/check_suite_lifecycle.py` (pre-commit `no-suite-lifecycle-events`) |
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
-| No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; see MIGRATION step 8) |
+| No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; see MIGRATION step 11) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
 
@@ -454,7 +455,7 @@ Modules cannot share core's private `ns`. Sharing uses globals:
   `_DB` globals.
 
 LibStub is retained for `OneWoW_GUI` and vendored Ace libs today. Target: fold GUI
-into core as plain `OneWoW_GUI` global (`MIGRATION.md` step 6).
+into core as plain `OneWoW_GUI` global (`MIGRATION.md` step 7; CopyPaste step 7.1).
 
 ### Cross-addon references
 
@@ -488,7 +489,8 @@ may register both.
 ### Layering rules
 
 1. **No sub-addon reads another family's store global directly.** Lint:
-   `bin/check_no_data_manager_bypass.py` (phased enforcement — see `MIGRATION.md`).
+   `bin/check_no_data_manager_bypass.py` (phased enforcement — see `MIGRATION.md`
+   step 11).
 2. **Inverse dependencies via events/callbacks**, not direct calls — core stays
    consumer-agnostic.
 3. **Cross-unit data** should route through `DataManager:Query` (planned broker in
@@ -567,7 +569,7 @@ size, flags)` with `fontSizeOffset` from `OneWoW_GUI_DB` (range −3..+5, floor 
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/GUI/t-home.lua` | Home tab: read-only status + live refresh |
 | `OneWoW/GUI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
-| `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 5–8) |
+| `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 5–11) |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |
