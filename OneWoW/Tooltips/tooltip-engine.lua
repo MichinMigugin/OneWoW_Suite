@@ -229,8 +229,12 @@ function TooltipEngine:ProcessProviders(tooltip, context)
             end
 
             if featureEnabled then
-                local success, lines = pcall(provider.callback, tooltip, context)
-                if success and lines and #lines > 0 then
+                local lines
+                local label = "tooltip." .. (provider.id or provider.featureId or "?")
+                OneWoW.Lifecycle.SafeCall(label, function()
+                    lines = provider.callback(tooltip, context)
+                end)
+                if lines and #lines > 0 then
                     for _, line in ipairs(lines) do
                         table.insert(allLines, line)
                     end

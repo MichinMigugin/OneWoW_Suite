@@ -73,7 +73,7 @@ De-risks everything after. Ship early; no dependency on other steps.
   `LoadAddOn` from other addons.
 - [x] Dedupe `RunUnitHook` (currently defined in both `Core/AddonLoader.lua` and
   `Core/Lifecycle.lua`).
-- [ ] Route tooltip `ProcessProviders` pcall failures through
+- [x] Route tooltip `ProcessProviders` pcall failures through
   `Lifecycle.SafeCall` / `geterrorhandler()` (`Tooltips/tooltip-engine.lua` ~257)
   instead of silent swallow.
 - [x] Delete dead 10.0.2 tooltip fallback: `OnTooltipSetUnit` /
