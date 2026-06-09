@@ -76,7 +76,7 @@ De-risks everything after. Ship early; no dependency on other steps.
 - [ ] Route tooltip `ProcessProviders` pcall failures through
   `Lifecycle.SafeCall` / `geterrorhandler()` (`Tooltips/tooltip-engine.lua` ~257)
   instead of silent swallow.
-- [ ] Delete dead 10.0.2 tooltip fallback: `OnTooltipSetUnit` /
+- [x] Delete dead 10.0.2 tooltip fallback: `OnTooltipSetUnit` /
   `OnTooltipSetItem` branch (`tooltip-engine.lua` ~100–118, ~338–390) and the
   `Initialize` retry timer — `TooltipDataProcessor` is always present on Retail
   12+.

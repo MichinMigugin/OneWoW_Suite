@@ -40,11 +40,6 @@ function TooltipEngine:RegisterProvider(provider)
 end
 
 function TooltipEngine:Initialize()
-    if not OneWoW.db then
-        C_Timer.After(2, function() self:Initialize() end)
-        return
-    end
-
     self:EnsureDefaults()
     self:HookTooltips()
     self:HookAchievementUI()
@@ -68,53 +63,33 @@ function TooltipEngine:HookTooltips()
     if OneWoW.TooltipEnhancements_RegisterSellPriceSuppress then
         OneWoW.TooltipEnhancements_RegisterSellPriceSuppress()
     end
-    if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
-        local HANDLED_TYPES = {
-            Enum.TooltipDataType.Unit,
-            Enum.TooltipDataType.Item,
-            Enum.TooltipDataType.Spell,
-            Enum.TooltipDataType.Mount,
-            Enum.TooltipDataType.Currency,
-            Enum.TooltipDataType.BattlePet,
-            Enum.TooltipDataType.Achievement,
-            Enum.TooltipDataType.Quest,
-            Enum.TooltipDataType.Toy,
-            Enum.TooltipDataType.UnitAura,
-        }
-        local optionalTypes = {
-            "CompanionPet", "Totem", "QuestPartyProgress", "RecipeRankInfo",
-            "EquipmentSet", "AzeriteEssence", "EnhancedConduit", "Outfit",
-            "Macro", "Object",
-        }
-        for _, typeName in ipairs(optionalTypes) do
-            if Enum.TooltipDataType[typeName] then
-                table.insert(HANDLED_TYPES, Enum.TooltipDataType[typeName])
-            end
+    local HANDLED_TYPES = {
+        Enum.TooltipDataType.Unit,
+        Enum.TooltipDataType.Item,
+        Enum.TooltipDataType.Spell,
+        Enum.TooltipDataType.Mount,
+        Enum.TooltipDataType.Currency,
+        Enum.TooltipDataType.BattlePet,
+        Enum.TooltipDataType.Achievement,
+        Enum.TooltipDataType.Quest,
+        Enum.TooltipDataType.Toy,
+        Enum.TooltipDataType.UnitAura,
+    }
+    local optionalTypes = {
+        "CompanionPet", "Totem", "QuestPartyProgress", "RecipeRankInfo",
+        "EquipmentSet", "AzeriteEssence", "EnhancedConduit", "Outfit",
+        "Macro", "Object",
+    }
+    for _, typeName in ipairs(optionalTypes) do
+        if Enum.TooltipDataType[typeName] then
+            table.insert(HANDLED_TYPES, Enum.TooltipDataType[typeName])
         end
-        local callback = function(tooltip, data)
-            self:ProcessTooltipData(tooltip, data)
-        end
-        for _, dataType in ipairs(HANDLED_TYPES) do
-            TooltipDataProcessor.AddTooltipPostCall(dataType, callback)
-        end
-    else
-        if GameTooltip:HasScript("OnTooltipSetUnit") then
-            GameTooltip:HookScript("OnTooltipSetUnit", function(tooltip)
-                self:OnTooltipSetUnit(tooltip)
-            end)
-        end
-
-        if GameTooltip:HasScript("OnTooltipSetItem") then
-            GameTooltip:HookScript("OnTooltipSetItem", function(tooltip)
-                self:OnTooltipSetItem(tooltip)
-            end)
-        end
-
-        if ItemRefTooltip and ItemRefTooltip.SetHyperlink then
-            hooksecurefunc(ItemRefTooltip, "SetHyperlink", function(tooltip, link)
-                self:OnTooltipSetItem(tooltip, link)
-            end)
-        end
+    end
+    local callback = function(tooltip, data)
+        self:ProcessTooltipData(tooltip, data)
+    end
+    for _, dataType in ipairs(HANDLED_TYPES) do
+        TooltipDataProcessor.AddTooltipPostCall(dataType, callback)
     end
 end
 
@@ -333,60 +308,6 @@ function TooltipEngine:TooltipHasOneWoWSection(tooltip)
         end
     end
     return false
-end
-
-function TooltipEngine:OnTooltipSetUnit(tooltip)
-    if not self:IsEnabled() then return end
-    if isProcessingTooltip then return end
-
-    isProcessingTooltip = true
-    local _, unit = tooltip:GetUnit()
-    if unit then
-        local context = {
-            type = "unit",
-            unit = unit,
-            isPlayer = UnitIsPlayer(unit),
-        }
-        if not context.isPlayer then
-            local guid = UnitGUID(unit)
-            if guid and not issecretvalue(guid) then
-                local unitType, _, _, _, _, npcIDStr = strsplit("-", guid)
-                if (unitType == "Creature" or unitType == "Vehicle") and npcIDStr then
-                    context.npcID = tonumber(npcIDStr)
-                end
-            end
-        end
-        self:ProcessProviders(tooltip, context)
-    end
-    isProcessingTooltip = false
-end
-
-function TooltipEngine:OnTooltipSetItem(tooltip, link)
-    if not self:IsEnabled() then return end
-    if isProcessingTooltip then return end
-
-    isProcessingTooltip = true
-    local itemID, actualLink
-    if link then
-        itemID = tonumber(link:match("item:(%d+)"))
-        actualLink = link
-    else
-        local _, itemLink = tooltip:GetItem()
-        if itemLink then
-            itemID = tonumber(itemLink:match("item:(%d+)"))
-            actualLink = itemLink
-        end
-    end
-
-    if itemID then
-        local context = {
-            type = "item",
-            itemID = itemID,
-            itemLink = actualLink,
-        }
-        self:ProcessProviders(tooltip, context)
-    end
-    isProcessingTooltip = false
 end
 
 function TooltipEngine:HookAchievementUI()
