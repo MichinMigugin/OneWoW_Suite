@@ -1,5 +1,5 @@
 ## Interface: 120005, 120007
-## Version: R6.2606.0223
+## Version: R6.2606.1022
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00GUI|r
 ## Notes: Shared UI library for all OneWoW addons. Provides themed frames, buttons, scroll bars, and layout helpers.
 ## Author: OneWoW Dev Team
