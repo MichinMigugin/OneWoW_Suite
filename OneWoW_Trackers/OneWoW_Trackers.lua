@@ -91,7 +91,7 @@ local function OnInitialize()
         end
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(addonName)
+    local _ver = OneWoW:GetAddonVersion(addonName)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("Trackers", _ver, "/1wt")
     end

@@ -153,7 +153,7 @@ function ns:OnAddonLoaded()
 
     InitializeModules()
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("ShoppingList", _ver, "/1wsl")
     end

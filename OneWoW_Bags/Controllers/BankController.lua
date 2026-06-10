@@ -322,7 +322,7 @@ function BankController:CollectMatchingBankSlots(searchText)
 end
 
 function BankController:TransferSearchToBank(searchText)
-    if OneWoW_GUI:IsAddonRestricted() or not self.addon.bankOpen then return false end
+    if OneWoW.Restriction.IsAddonRestricted() or not self.addon.bankOpen then return false end
 
     local bankType = self:GetActiveBankType()
     if not C_Bank.CanUseBank(bankType) then return false end
@@ -335,7 +335,7 @@ function BankController:TransferSearchToBank(searchText)
 end
 
 function BankController:TransferSearchFromBank(searchText)
-    if OneWoW_GUI:IsAddonRestricted() or not self.addon.bankOpen then return false end
+    if OneWoW.Restriction.IsAddonRestricted() or not self.addon.bankOpen then return false end
 
     local bankType = self:GetActiveBankType()
     if not C_Bank.CanUseBank(bankType) then return false end

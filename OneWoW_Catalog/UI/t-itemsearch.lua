@@ -475,7 +475,7 @@ ShowItemDetail = function(result)
     local vendorSellPrice = sellPrice or 0
 
     if vendorSellPrice > 0 then
-        AddTextRow(L["ITEMSEARCH_VENDOR_PRICE"] .. ":  " .. OneWoW_GUI:FormatGold(vendorSellPrice), 12, "TEXT_PRIMARY")
+        AddTextRow(L["ITEMSEARCH_VENDOR_PRICE"] .. ":  " .. OneWoW.Format.FormatGold(vendorSellPrice), 12, "TEXT_PRIMARY")
     else
         AddTextRow(L["ITEMSEARCH_NOT_SELLABLE"], 12, "TEXT_MUTED")
     end
@@ -507,7 +507,7 @@ ShowItemDetail = function(result)
         elseif ahMeta and ahMeta.ageDays ~= nil then
             ageText = string.format(L["ITEMSEARCH_AH_AGE_DAYS"] or "%d d", ahMeta.ageDays) .. " " .. L["ITEMSEARCH_AH_AGO"]
         end
-        local row = L["ITEMSEARCH_AH_PRICE"] .. ":  " .. OneWoW_GUI:FormatGold(ahPrice)
+        local row = L["ITEMSEARCH_AH_PRICE"] .. ":  " .. OneWoW.Format.FormatGold(ahPrice)
         if ageText then
             row = row .. "  |cFF888888(" .. ageText .. ")|r"
         end

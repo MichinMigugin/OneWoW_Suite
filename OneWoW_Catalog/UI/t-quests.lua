@@ -334,7 +334,7 @@ local function ShowQuestDetail(panels, questData)
         if questData.rewardGold and questData.rewardGold > 0 then
             local goldText = track(OneWoW_GUI:CreateFS(parent, 12))
             goldText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
-            goldText:SetText(L["QUESTS_GOLD"] .. ": " .. OneWoW_GUI:FormatGold(questData.rewardGold))
+            goldText:SetText(L["QUESTS_GOLD"] .. ": " .. OneWoW.Format.FormatGold(questData.rewardGold))
             goldText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             yOffset = yOffset - 18
         end
@@ -342,7 +342,7 @@ local function ShowQuestDetail(panels, questData)
         if questData.rewardXP and questData.rewardXP > 0 then
             local xpText = track(OneWoW_GUI:CreateFS(parent, 12))
             xpText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
-            xpText:SetText(L["QUESTS_XP"] .. ": " .. OneWoW_GUI:FormatNumber(questData.rewardXP))
+            xpText:SetText(L["QUESTS_XP"] .. ": " .. OneWoW.Format.FormatNumber(questData.rewardXP))
             xpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             yOffset = yOffset - 18
         end

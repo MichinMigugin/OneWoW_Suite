@@ -70,7 +70,7 @@ local function OnInitialize()
         if ns.UI.RefreshQuestsList then ns.UI.RefreshQuestsList() end
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     OneWoW:RegisterLoadComponent("Catalog", _ver, "/owcat")
 end
 

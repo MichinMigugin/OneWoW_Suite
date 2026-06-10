@@ -236,7 +236,7 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
                 local tabData = C_Bank.FetchNextPurchasableBankTabData(bType)
                 if tabData and tabData.tabCost then
                     GameTooltip:SetText(BANKSLOTPURCHASE, 1, 0.82, 0)
-                    GameTooltip:AddLine(OneWoW_GUI:FormatGold(tabData.tabCost), 1, 1, 1)
+                    GameTooltip:AddLine(OneWoW.Format.FormatGold(tabData.tabCost), 1, 1, 1)
                 else
                     GameTooltip:SetText(BANK_TAB_NOT_UNLOCKED, 0.5, 0.5, 0.5)
                 end
@@ -394,7 +394,7 @@ function BankBar:UpdateGold()
     local showWarband = db.global.bankShowWarband
     if showWarband then
         local money = C_Bank.FetchDepositedMoney(Enum.BankType.Account) or 0
-        bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(money))
+        bagsBarFrame.goldText:SetText(OneWoW.Format.FormatGold(money))
         bagsBarFrame.goldText:Show()
     else
         bagsBarFrame.goldText:SetText("")

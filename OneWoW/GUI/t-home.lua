@@ -117,7 +117,7 @@ function GUI:CreateHomeTab(parent)
                 nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
 
-            verText:SetText(OneWoW_GUI:GetAddonVersion(addonName) or "")
+            verText:SetText(OneWoW:GetAddonVersion(addonName) or "")
 
             if state == STATE_NOTLOADED then
                 tag:SetText(L["HOME_NOTLOADED_TAG"])
@@ -145,7 +145,7 @@ function GUI:CreateHomeTab(parent)
 
     local versionLabel = OneWoW_GUI:CreateFS(content, 16)
     versionLabel:SetPoint("TOP", content, "TOP", 0, yOffset)
-    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"] or "Version") .. " " .. (OneWoW_GUI:GetAddonVersion("OneWoW") or ""))
+    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"] or "Version") .. " " .. (OneWoW:GetAddonVersion("OneWoW") or ""))
     versionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 35
 

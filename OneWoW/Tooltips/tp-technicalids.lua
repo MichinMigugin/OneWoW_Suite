@@ -165,7 +165,7 @@ local function FormatIDLine(idKey, idValue)
     end
 
     if idKey == "expansionID" then
-        local expName = OneWoW_GUI:GetExpansionName(idValue)
+        local expName = OneWoW:GetExpansionName(idValue)
         local expVersion = GetExpansionVersion(idValue)
         if expName then
             return {

@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 ns.AltTrackerFormatters = ns.AltTrackerFormatters or {}
@@ -17,21 +17,7 @@ function Formatters:GetCurrentCharacterKey()
 end
 
 function Formatters:FormatGold(copper)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-    if OneWoW_GUI and OneWoW_GUI.FormatGold then
-        return OneWoW_GUI:FormatGold(copper)
-    end
-    if not copper or type(copper) ~= "number" then
-        return C_CurrencyInfo.GetCoinTextureString(0)
-    end
-    copper = math.floor(tonumber(copper) or 0)
-    local isNegative = copper < 0
-    local absCopper = math.abs(copper)
-    local success, result = pcall(C_CurrencyInfo.GetCoinTextureString, absCopper)
-    if success and result then
-        return (isNegative and "-" or "") .. result
-    end
-    return self:FormatGoldSimple(copper)
+    return OneWoW.Format.FormatGold(copper)
 end
 
 function Formatters:FormatGoldSimple(copper)
@@ -348,8 +334,8 @@ function Formatters:GetMailIcon(mailCount, oldestExpiry, lastCheck, charKey)
         end
     end
 
-    if charKey and _G.OneWoW_AltTracker_Storage_DB and _G.OneWoW_AltTracker_Storage_DB.characters then
-        local storageData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
+    if charKey and OneWoW_AltTracker_Storage_DB and OneWoW_AltTracker_Storage_DB.characters then
+        local storageData = OneWoW_AltTracker_Storage_DB.characters[charKey]
         if storageData and storageData.mail and storageData.mail.hasNewMail then
             hasNewMailFlag = true
         end

@@ -124,6 +124,13 @@ Prep for steps 8–9. No dependency on step 7.
 Move GUI files into the `OneWoW` load unit (listed **first** in core TOC).
 Publish `OneWoW_GUI` as a plain global instead of a LibStub library.
 
+- [x] **Pre-step shipped:** `OneWoW_GUI/Core.lua` utilities extracted to OneWoW
+  core services — `OneWoW.Format` (`Core/Format.lua`), `OneWoW.Restriction`
+  (`Core/Restriction.lua`), top-level `OneWoW:GetAddonVersion` /
+  `OneWoW:GetExpansionName` (`Core/Util.lua`). All callers updated suite-wide
+  (no shims). `Core.lua` retains only frame helpers (`SaveWindowPosition`,
+  `RestoreWindowPosition`, `ClearFrame`), `GetItemQualityColor`, and `noop`.
+
 ### Entry point change
 
 ```lua
@@ -150,7 +157,7 @@ No defensive `if not OneWoW_GUI` guard once everything `RequiredDeps: OneWoW`.
 
 ### Same-commit requirements
 
-- [ ] Add `"OneWoW_GUI"` to `.luarc.json` `diagnostics.globals`.
+- [x] Add `"OneWoW_GUI"` to `.luarc.json` `diagnostics.globals`.
 - [ ] Drop `RequiredDeps: OneWoW_GUI` from every other unit (they keep
   `RequiredDeps: OneWoW`).
 - [ ] **Keep LibStub** for vendored Ace libs (`LibDataBroker-1.1`, `LibDBIcon-1.0`,

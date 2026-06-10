@@ -13,7 +13,6 @@ local instanceStatsFrame = nil
 local lastAutoUpdatedInstance = nil
 local autoUpdateRegistered = false
 
-local issecretvalue = issecretvalue or function() return false end
 local function IsSecret(value)
 	return issecretvalue(value)
 end

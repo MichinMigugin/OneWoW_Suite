@@ -257,8 +257,8 @@ local function LayoutFarmRow(row, id, qty, showValueColumns)
         unit = unitAH
     end
     if unit > 0 then
-        row.unit:SetText(OneWoW_GUI:FormatGold(unit))
-        row.tot:SetText(OneWoW_GUI:FormatGold(unit * qty))
+        row.unit:SetText(OneWoW.Format.FormatGold(unit))
+        row.tot:SetText(OneWoW.Format.FormatGold(unit * qty))
         row.unit:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         row.tot:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     else

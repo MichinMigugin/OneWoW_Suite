@@ -396,7 +396,7 @@ do
     f:RegisterEvent("MODIFIER_STATE_CHANGED")
     f:SetScript("OnEvent", function(_, _, key)
         if key ~= "LSHIFT" and key ~= "RSHIFT" then return end
-        if OneWoW_GUI:IsAddonRestricted() then return end
+        if OneWoW.Restriction.IsAddonRestricted() then return end
         if GameTooltip and GameTooltip:IsShown() and GameTooltip.RefreshData then
             GameTooltip:RefreshData()
         end

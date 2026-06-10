@@ -267,7 +267,7 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     -- SetPropagateMouseClicks became a protected function; calling it while the
     -- list refreshes in combat throws ADDON_ACTION_BLOCKED. false is the default
     -- state anyway, so skipping it under restriction is harmless.
-    if not OneWoW_GUI:IsAddonRestricted() then
+    if not OneWoW.Restriction.IsAddonRestricted() then
         card:SetPropagateMouseClicks(false)
     end
 

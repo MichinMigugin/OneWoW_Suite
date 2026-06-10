@@ -43,7 +43,7 @@ local function HideChrome()
 end
 
 local function SyncKeybindings()
-    if OneWoW_GUI:IsAddonRestricted() then return end
+    if OneWoW.Restriction.IsAddonRestricted() then return end
     if not ModuleBagEnabled() or not barFrame then return end
     ClearOverrideBindings(barFrame)
     for i = 1, 4 do

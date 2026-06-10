@@ -1159,29 +1159,19 @@ When building **`OptionsSliderTemplate`** sliders manually (custom layout), call
 - **CreateExpandedPanelGrid(ef, options)** — expanded panel grid
 
 **Utility:**
-- `GetAddonVersion(addonName)` — returns addon version via C_AddOns
 - `GetProgressColor(current, max)` — returns color from PROGRESS_COLORS (NONE/LOW/MID/FULL)
 - `GetItemQualityColor(quality)` — returns r, g, b, a for item rarity (respects accessibility settings)
-- `IsSecret(value)` — true if the value is a secret value or secret table (Midnight restrictions)
-- `FormatNumber(n)` — thousands separators for integers (string digits)
-- `FormatGold(copper)` — colored gold/silver/copper string
+
+Formatting, secret-value, restriction, and addon-version utilities live on the
+OneWoW core namespace, not in this library: `OneWoW.Format.FormatNumber` /
+`OneWoW.Format.FormatGold`, `OneWoW.Restriction.IsSecret` /
+`OneWoW.Restriction.IsAddonRestricted`, `OneWoW:GetAddonVersion`,
+`OneWoW:GetExpansionName` (see `OneWoW/Core/Format.lua`, `Restriction.lua`,
+`Util.lua`).
 
 ---
 
 ## Utility
-
-### Secret values (Midnight)
-```lua
-if OneWoW_GUI:IsSecret(nameOrGuid) then
-    -- do not branch, persist, or stringify for addon logic
-end
-```
-
-### Formatting helpers
-```lua
-local s = OneWoW_GUI:FormatNumber(1234567)  -- "1,234,567"
-local goldStr = OneWoW_GUI:FormatGold(copperAmount)
-```
 
 ### Clear all children from a frame
 ```lua

@@ -523,7 +523,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 buildItems = function()
                     local items = { { text = L["EXPAC_FILTER_ALL"], value = "ALL" } }
                     for _, id in ipairs(WH:GetKnownExpansionIDs()) do
-                        local expansionName = OneWoW_GUI:GetExpansionName(id)
+                        local expansionName = OneWoW:GetExpansionName(id)
                         if expansionName then
                             tinsert(items, { text = expansionName, value = id })
                         end
@@ -765,7 +765,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 if activeFilter == nil then
                     infoBarFrame.expacText:SetText(L["EXPAC_FILTER_BTN"])
                 else
-                    local expName = OneWoW_GUI:GetExpansionName(activeFilter)
+                    local expName = OneWoW:GetExpansionName(activeFilter)
                     infoBarFrame.expacText:SetText(expName)
                 end
             end

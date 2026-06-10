@@ -725,7 +725,7 @@ function OneWoW_Bags:OnAddonLoaded()
         end
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("Bags", _ver, "/1wb")
     end

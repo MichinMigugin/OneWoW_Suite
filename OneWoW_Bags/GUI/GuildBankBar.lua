@@ -265,7 +265,7 @@ end
 function GuildBankBar:UpdateGold()
     if not bagsBarFrame or not bagsBarFrame.goldText then return end
     local money = GetGuildBankMoney and GetGuildBankMoney() or 0
-    bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(money))
+    bagsBarFrame.goldText:SetText(OneWoW.Format.FormatGold(money))
     GuildBankBar:UpdateWithdrawButton()
 end
 

@@ -1,12 +1,7 @@
 local _, OneWoW = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-
 local function FormatMoneyLine(copper)
-    if OneWoW_GUI and OneWoW_GUI.FormatGold then
-        return OneWoW_GUI:FormatGold(copper)
-    end
-    return C_CurrencyInfo.GetCoinTextureString(copper)
+    return OneWoW.Format.FormatGold(copper)
 end
 
 local BATTLE_PET_CAGE_ID = 82800

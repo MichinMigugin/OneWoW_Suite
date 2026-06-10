@@ -72,7 +72,7 @@ local function OnInitialize()
             ns.ZonePins:RefreshAllPinFonts()
         end
     end)
-    local _ver = OneWoW_GUI:GetAddonVersion(addonName)
+    local _ver = OneWoW:GetAddonVersion(addonName)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("Notes", _ver, "/1wn")
     end

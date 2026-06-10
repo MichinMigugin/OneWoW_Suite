@@ -495,7 +495,7 @@ function Addon:OnAddonLoaded()
     if didInit then return end
     didInit = true
     Addon:OnInitialize()
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt")
     end

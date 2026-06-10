@@ -138,7 +138,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
         ResetGUIOnSettingChange(self2)
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     self:RegisterLoadComponent("Core", _ver, "/1w")
 
     self:RegisterMinimap("OneWoW", L["CTX_OPEN_ONEWOW"] or "Open OneWoW", nil, function()
@@ -179,7 +179,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 
         local comps = OneWoW._loadedComponents
         if comps and #comps > 0 then
-            local ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+            local ver = OneWoW:GetAddonVersion(ADDON_NAME)
             local parts = {}
             for _, c in ipairs(comps) do
                 table.insert(parts, "|cFFFFFFFF" .. c.name .. "|r")

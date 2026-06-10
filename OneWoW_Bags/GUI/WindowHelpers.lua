@@ -377,7 +377,7 @@ function WH:GetExpansionDisplayName(expansionID)
         return L["EXPAC_UNKNOWN"]
     end
 
-    local name = OneWoW_GUI:GetExpansionName(expansionID)
+    local name = OneWoW:GetExpansionName(expansionID)
     if name then
         return name
     end

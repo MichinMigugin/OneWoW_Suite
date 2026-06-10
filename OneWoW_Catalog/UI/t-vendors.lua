@@ -59,7 +59,7 @@ local function FormatCost(itemData)
         end
         return tconcat(parts, " - ")
     elseif itemData.cost and itemData.cost > 0 then
-        return OneWoW_GUI:FormatGold(itemData.cost)
+        return OneWoW.Format.FormatGold(itemData.cost)
     end
     return L["VENDORS_PRICE_UNKNOWN"]
 end

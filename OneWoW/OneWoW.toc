@@ -32,6 +32,9 @@ Locales\koKR.lua
 
 # Core
 Core\Constants.lua
+Core\Format.lua
+Core\Restriction.lua
+Core\Util.lua
 Core\Database.lua
 Core\ModuleRegistry.lua
 Core\AddonLoader.lua

@@ -126,7 +126,7 @@ function OneWoW_DirectDeposit:OnAddonLoaded()
         owner:ReinitForLanguage(langCode)
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
     end

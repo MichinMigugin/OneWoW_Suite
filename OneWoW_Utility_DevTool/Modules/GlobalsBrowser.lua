@@ -109,11 +109,11 @@ local function isIdentifier(text)
 end
 
 local function isSecretValue(value)
-    return issecretvalue and issecretvalue(value) or false
+    return issecretvalue(value)
 end
 
 local function isSecretTable(value)
-    return issecrettable and issecrettable(value) or false
+    return issecrettable(value)
 end
 
 local function _iterateAndCount(value, limit)
