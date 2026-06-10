@@ -160,20 +160,50 @@ function OneWoW_GUI:CreateConfirmDialog(config)
     local msgPad = 10
     local contentPadBottom = 10
     local btnRowHeight = 28 + 10 + 10
-    local checkboxRow = checkboxConfig and (1 + 8 + Constants.GUI.CHECKBOX_SIZE + 8) or 0
+    local cbPadTop = 8
+    local cbPadBottom = 8
+    local headingBaseSize = 16
+    local bodyBaseSize = 12
+    local msgWidth = dialogWidth - 40
 
-    local measureFS = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    measureFS:SetWidth(dialogWidth - 40)
-    measureFS:SetText(messageText)
-    local msgHeight = measureFS:GetStringHeight()
-    measureFS:Hide()
-    measureFS:SetParent(nil)
+    local function measureTextHeight(text, baseSize, width, wordWrap)
+        local fs = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        if width and width > 0 then
+            fs:SetWidth(width)
+            if wordWrap then
+                fs:SetWordWrap(true)
+                fs:SetNonSpaceWrap(false)
+            end
+        end
+        OneWoW_GUI:SetFontBaseSize(fs, baseSize)
+        OneWoW_GUI:SafeSetFont(fs, OneWoW_GUI:GetFont(), baseSize)
+        fs:SetText(text or "")
+        local h = fs:GetStringHeight()
+        fs:Hide()
+        fs:SetParent(nil)
+        return h
+    end
 
-    local headingFS = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    headingFS:SetText(headingText)
-    local headingHeight = headingFS:GetStringHeight()
-    headingFS:Hide()
-    headingFS:SetParent(nil)
+    local msgHeight = measureTextHeight(messageText, bodyBaseSize, msgWidth, true)
+    local headingHeight = measureTextHeight(headingText, headingBaseSize, nil, false)
+
+    local checkboxRow = 0
+    if checkboxConfig then
+        local labelGap = OneWoW_GUI:GetSpacing("XS")
+        local labelMaxWidth = checkboxConfig.labelMaxWidth
+        local labelWidth = labelMaxWidth
+        if not labelWidth or labelWidth <= 0 then
+            labelWidth = msgWidth - Constants.GUI.CHECKBOX_SIZE - labelGap
+        end
+        local cbLabelHeight = measureTextHeight(
+            checkboxConfig.label or "",
+            bodyBaseSize,
+            labelWidth,
+            checkboxConfig.wrap
+        )
+        local cbRowContent = math.max(Constants.GUI.CHECKBOX_SIZE, cbLabelHeight)
+        checkboxRow = 1 + cbPadTop + cbRowContent + cbPadBottom
+    end
 
     local contentHeight = headingPad + headingHeight + msgPad + msgHeight + contentPadBottom + checkboxRow
     local totalHeight = titleBarHeight + contentHeight + btnRowHeight + 2
@@ -204,7 +234,9 @@ function OneWoW_GUI:CreateConfirmDialog(config)
     OneWoW_GUI:SetFontBaseSize(msgLabel, 12)
     OneWoW_GUI:SafeSetFont(msgLabel, OneWoW_GUI:GetFont(), 12)
     msgLabel:SetPoint("TOP", headingLabel, "BOTTOM", 0, -msgPad)
-    msgLabel:SetWidth(dialogWidth - 40)
+    msgLabel:SetWidth(msgWidth)
+    msgLabel:SetWordWrap(true)
+    msgLabel:SetNonSpaceWrap(false)
     msgLabel:SetText(messageText)
     msgLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     result.messageLabel = msgLabel
@@ -218,8 +250,10 @@ function OneWoW_GUI:CreateConfirmDialog(config)
 
         local cb = self:CreateCheckbox(result.contentFrame, {
             label = checkboxConfig.label or "",
+            labelMaxWidth = checkboxConfig.labelMaxWidth,
+            wrap = checkboxConfig.wrap,
         })
-        cb:SetPoint("TOP", cbDivider, "BOTTOM", -40, -8)
+        cb:SetPoint("TOPLEFT", cbDivider, "BOTTOMLEFT", 0, -cbPadTop)
         if cb.label then
             cb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end

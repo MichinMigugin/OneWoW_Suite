@@ -155,7 +155,13 @@ local function UpdateContentAreaAnchors()
     contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -resizeInset, resizeInset)
 end
 
+local activeContentFrame = nil
+
 local function HideAllContent()
+    if activeContentFrame and activeContentFrame.Deactivate then
+        activeContentFrame:Deactivate()
+    end
+    activeContentFrame = nil
     if homePanel then homePanel:Hide() end
     if settingsPanel then settingsPanel:Hide() end
     for _, frame in pairs(moduleContentFrames) do
@@ -490,6 +496,10 @@ function GUI:SelectSubTab(moduleName, subTabName)
 
     if moduleContentFrames[key] then
         moduleContentFrames[key]:Show()
+        activeContentFrame = moduleContentFrames[key]
+        if activeContentFrame.Activate then
+            activeContentFrame:Activate()
+        end
     end
 end
 

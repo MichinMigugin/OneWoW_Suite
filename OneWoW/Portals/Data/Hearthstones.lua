@@ -81,6 +81,7 @@ Hearthstones.List = {
 	[245970] = true,
 	[246565] = true,
 	[263489] = true,
+	[263933] = true,
 }
 
 function Hearthstones:GetAvailable(showAll)

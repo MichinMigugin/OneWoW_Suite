@@ -549,6 +549,10 @@ function Detection:GetSpecialPortals(showAll)
 		table.insert(portals, {type = "toy", id = 230850})
 	end
 
+	if PlayerHasToy(266370) or showAll then
+		table.insert(portals, {type = "toy", id = 266370})
+	end
+
 	if PlayerHasToy(140192) then
 		if C_QuestLog.IsQuestFlaggedCompleted(44663) or showAll then
 			table.insert(portals, {type = "toy", id = 140192})

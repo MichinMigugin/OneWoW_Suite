@@ -7,7 +7,6 @@ if not OneWoW_GUI then return end
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
-local selectedCategory = nil
 local portalButtons = {}
 local headerFrames = {}
 local portalButtonPool = {}
@@ -29,6 +28,11 @@ function GUI:CreatePortalsTab(parent)
 	local leftStatusText = split.leftStatusText
 	local rightStatusText = split.rightStatusText
 	local selectedCategoryRow = nil
+	local selectedCategory = nil
+	local selectedCategoryName = nil
+	local layoutRefreshTimer = nil
+	local ShowCategory
+	local RefreshCategories
 
 	local controlPanel = OneWoW_GUI:CreateFrame(portalPanel, {
 		height = 118,
@@ -160,8 +164,41 @@ function GUI:CreatePortalsTab(parent)
 	local secureScrollChild = CreateFrame("Frame", nil, secureOverlay)
 	secureScrollChild:SetSize(portalScrollFrame:GetWidth(), 1)
 	secureOverlay:SetScrollChild(secureScrollChild)
+	local function GetPortalScrollWidth()
+		local w = portalScrollChild:GetWidth()
+		if w and w > 0 then
+			return w
+		end
+		w = portalScrollFrame:GetWidth()
+		if w and w > 0 then
+			return w
+		end
+		return 400
+	end
+
+	local function SchedulePortalLayoutRefresh()
+		if layoutRefreshTimer then
+			layoutRefreshTimer:Cancel()
+		end
+		layoutRefreshTimer = C_Timer.NewTimer(0, function()
+			layoutRefreshTimer = nil
+			if not parent:IsShown() then
+				return
+			end
+			if selectedCategory and selectedCategoryName then
+				ShowCategory(selectedCategory, selectedCategoryName)
+			else
+				local filterText = split.searchBox and split.searchBox:GetSearchText() or ""
+				RefreshCategories(filterText)
+			end
+		end)
+	end
+
 	portalScrollFrame:HookScript("OnSizeChanged", function(_, width)
 		secureScrollChild:SetWidth(width)
+		if width and width > 0 and selectedCategory then
+			SchedulePortalLayoutRefresh()
+		end
 	end)
 
 	secureOverlay:SetScript("OnMouseWheel", function(_, delta)
@@ -184,10 +221,7 @@ function GUI:CreatePortalsTab(parent)
 		secureOverlay:ClearAllPoints()
 		secureOverlay:SetPoint("TOPLEFT", portalScrollFrame, "TOPLEFT")
 		secureOverlay:SetPoint("BOTTOMRIGHT", portalScrollFrame, "BOTTOMRIGHT")
-		local w = portalScrollChild:GetWidth()
-		if w and w > 0 then
-			secureScrollChild:SetWidth(w)
-		end
+		secureScrollChild:SetWidth(GetPortalScrollWidth())
 	end
 
 	local function HideSecureOverlay()
@@ -403,9 +437,10 @@ function GUI:CreatePortalsTab(parent)
 		return button
 	end
 
-	local function ShowCategory(categoryID, categoryName)
+	ShowCategory = function(categoryID, categoryName)
 		if InCombatLockdown() then return end
 		selectedCategory = categoryID
+		selectedCategoryName = categoryName
 		split.detailTitle:SetText(categoryName)
 
 		for _, button in ipairs(portalButtons) do
@@ -471,7 +506,7 @@ function GUI:CreatePortalsTab(parent)
 
 				local header = CreateFrame("Frame", nil, portalScrollChild)
 				header:SetPoint("TOPLEFT", portalScrollChild, "TOPLEFT", 0, yOffset - 10)
-				header:SetSize(portalScrollChild:GetWidth(), 30)
+				header:SetSize(GetPortalScrollWidth(), 30)
 
 				local headerText = OneWoW_GUI:CreateFS(header, 16)
 				headerText:SetPoint("LEFT", header, "LEFT", 5, 0)
@@ -531,6 +566,7 @@ function GUI:CreatePortalsTab(parent)
 		end
 		rightStatusText:SetText(statusMsg)
 		leftStatusText:SetText(string.format(L["Favorites: %d/%d"], favCount, 15))
+		ShowSecureOverlay()
 	end
 
 	local categoryItems = {}
@@ -614,7 +650,7 @@ function GUI:CreatePortalsTab(parent)
 		return yOffset - (isSubcat and 32 or 34)
 	end
 
-	local function RefreshCategories(filterText)
+	RefreshCategories = function(filterText)
 		for _, item in ipairs(categoryItems) do
 			item:Hide()
 			item:SetParent(nil)
@@ -678,25 +714,23 @@ function GUI:CreatePortalsTab(parent)
 		end)
 	end
 
-	parent:HookScript("OnShow", function()
+	local function RefreshPortalView()
 		ShowSecureOverlay()
-	end)
+		SchedulePortalLayoutRefresh()
+	end
+
+	parent:HookScript("OnShow", RefreshPortalView)
 	parent:HookScript("OnHide", function()
 		HideSecureOverlay()
 	end)
 
-	C_Timer.After(0.1, function()
-		RefreshCategories("")
-		OneWoW_GUI:ApplyFontToFrame(parent)
-	end)
+	OneWoW_GUI:ApplyFontToFrame(parent)
 
 	parent.Cleanup = function()
 		HideSecureOverlay()
 	end
 
-	parent.Activate = function()
-		ShowSecureOverlay()
-	end
+	parent.Activate = RefreshPortalView
 
 	parent.Deactivate = function()
 		HideSecureOverlay()
