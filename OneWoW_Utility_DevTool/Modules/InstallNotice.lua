@@ -44,7 +44,10 @@ function InstallNotice:Show(force)
         message    = L["INSTALL_NOTICE_MESSAGE"] or "OneWoW DevTool is not commonly installed. It exists to assist with addon development and troubleshooting.",
         width      = 460,
         showBrand  = true,
-        checkbox   = { label = L["INSTALL_NOTICE_DONT_SHOW"] or "Don't show this again" },
+        checkbox   = {
+            label = L["INSTALL_NOTICE_DONT_SHOW"] or "Don't show this again",
+            wrap = true,
+        },
         buttons    = {
             {
                 text    = L["INSTALL_NOTICE_BTN_OK"] or "Got it",
