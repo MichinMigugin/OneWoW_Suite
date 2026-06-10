@@ -748,7 +748,7 @@ function ns.UI.CreateTrackerTab(parent)
                 if step.optional then
                     checkBtn = CreateFrame("Frame", nil, stepRow)
                     checkBtn:SetSize(checkSize, checkSize)
-                    checkBtn:SetPoint("LEFT", stepRow, "LEFT", 6, 0)
+                    checkBtn:SetPoint("TOPLEFT", stepRow, "TOPLEFT", 6, -7)
                     local infoTex = checkBtn:CreateTexture(nil, "ARTWORK")
                     infoTex:SetAllPoints()
                     infoTex:SetTexture("Interface\\FriendsFrame\\InformationIcon")
@@ -756,7 +756,7 @@ function ns.UI.CreateTrackerTab(parent)
                     checkBtn = OneWoW_GUI:CreateCheckbox(stepRow, {})
                     checkBtn:SetSize(checkSize, checkSize)
                     checkBtn:ClearAllPoints()
-                    checkBtn:SetPoint("LEFT", stepRow, "LEFT", 6, 0)
+                    checkBtn:SetPoint("TOPLEFT", stepRow, "TOPLEFT", 6, -7)
                     checkBtn:SetChecked(isComplete)
 
                     if step.rosterMode then
@@ -812,7 +812,7 @@ function ns.UI.CreateTrackerTab(parent)
                 end
 
                 local stepProgress = OneWoW_GUI:CreateFS(stepRow, 10)
-                stepProgress:SetPoint("RIGHT", stepRow, "RIGHT", -60, 0)
+                stepProgress:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -60, -8)
                 stepProgress:SetText(progressStr)
                 stepProgress:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
@@ -830,7 +830,7 @@ function ns.UI.CreateTrackerTab(parent)
                 end
 
                 if step.objectives and #step.objectives > 0 then
-                    local objY = -(rowHeight - 4)
+                    local objY = -rowHeight
                     for _, obj in ipairs(step.objectives) do
                         local objComplete = TD:GetObjectiveProgress(list.id, sec.key, step.key, obj.key)
 
@@ -871,7 +871,7 @@ function ns.UI.CreateTrackerTab(parent)
                 end
 
                 if rosterCompleters then
-                    local rosterY = -(rowHeight - 4)
+                    local rosterY = -rowHeight
                     if #rosterCompleters == 0 then
                         local emptyFS = OneWoW_GUI:CreateFS(stepRow, 10)
                         emptyFS:SetPoint("TOPLEFT", stepRow, "TOPLEFT", 30, rosterY)

@@ -959,10 +959,19 @@ end
 
 function TE:RefreshAllPinnedWindows()
     for _, win in pairs(pinnedWindows) do
-        if win and win.Refresh then
-            win:Refresh()
+        if win then
+            if win.Refresh then
+                win:Refresh()
+            end
+            OneWoW_GUI:ApplyFontToFrame(win)
         end
     end
+end
+
+--- Notify hub UI and all pinned windows that manual progress changed.
+function TE:NotifyProgressChanged()
+    FireCallbacks("OnProgressChanged")
+    self:RefreshAllPinnedWindows()
 end
 
 function TE:RestorePinnedWindows()
