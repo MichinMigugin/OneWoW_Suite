@@ -32,9 +32,8 @@ function OneWoW.NoteLookup.FindNoteData(category, key)
 end
 
 local function IsSubToggleEnabled(key)
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local cn = db and db.tooltips and db.tooltips.customnotes
-    if not cn then return true end
+    -- Sub-toggles are dynamic keys (not in the defaults table); absent means on.
+    local cn = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "customnotes")
     if cn[key] == nil then return true end
     return cn[key] == true
 end

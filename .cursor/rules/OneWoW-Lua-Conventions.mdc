@@ -51,6 +51,7 @@ When the linter complains:
 
 - **Unknown global** — add the symbol to `.luarc.json` → `diagnostics.globals`.
 - **Unknown type, class, or field** — see `.lua-defs/`. These are `---@meta _` LuaCATS definition files that override or extend the LSP's understanding of Blizzard APIs and addon types. Extend an existing file (e.g. `MenuUtil_override.lua`) if applicable; create a new one if not.
+- **Core services with in-workspace source** (e.g. `SettingsFeatureRegistry`) publish their type contract via LuaCATS annotations **in the source file itself** — never mirror them into `.lua-defs/`. `.lua-defs/` is reserved for sourceless APIs (Blizzard / ketho gaps); a mirror of workspace code silently drifts from the implementation.
 - **Type mismatch in your own code** — fix the code or the annotation. Don't suppress.
 
 If a warning genuinely needs suppressing, use a targeted `---@diagnostic disable-next-line:` directive at the specific line. No file-wide disables.

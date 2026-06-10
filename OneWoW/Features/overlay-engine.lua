@@ -78,37 +78,30 @@ function Engine:RegisterIntegration(fn)
     table.insert(self.integrationRefreshCallbacks, fn)
 end
 
-local function GetDB()
-    return OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
-end
+local Registry = OneWoW.SettingsFeatureRegistry
 
 local function IsGlobalEnabled()
-    local db = GetDB()
-    if not db then return false end
-    return db.general and db.general.enabled ~= false
+    return Registry:IsEnabled("overlays", "general")
 end
 
 local function GetOverlayCfg(overlayId)
-    local db = GetDB()
-    if not db then return nil end
-    return db[overlayId]
+    return Registry:GetFeatureSettings("overlays", overlayId)
 end
 
 local function IsOverlayEnabled(overlayId)
     if not IsGlobalEnabled() then return false end
-    local cfg = GetOverlayCfg(overlayId)
-    return cfg and cfg.enabled == true
+    return Registry:IsEnabled("overlays", overlayId)
 end
 
 local function AnyVendorOverlayEnabled()
     for _, id in ipairs(OVERLAY_ORDER) do
         local cfg = GetOverlayCfg(id)
-        if cfg and cfg.enabled and cfg.applyToVendorItems then
+        if cfg.enabled and cfg.applyToVendorItems then
             return true
         end
     end
     local ilvlCfg = GetOverlayCfg("itemlevel")
-    if ilvlCfg and ilvlCfg.enabled and ilvlCfg.applyToVendorItems then
+    if ilvlCfg.enabled and ilvlCfg.applyToVendorItems then
         return true
     end
     return false
@@ -117,12 +110,12 @@ end
 local function AnyAHOverlayEnabled()
     for _, id in ipairs(OVERLAY_ORDER) do
         local cfg = GetOverlayCfg(id)
-        if cfg and cfg.enabled and cfg.applyToAuctionHouse then
+        if cfg.enabled and cfg.applyToAuctionHouse then
             return true
         end
     end
     local ilvlCfg = GetOverlayCfg("itemlevel")
-    if ilvlCfg and ilvlCfg.enabled and ilvlCfg.applyToAuctionHouse then
+    if ilvlCfg.enabled and ilvlCfg.applyToAuctionHouse then
         return true
     end
     return false
@@ -449,7 +442,7 @@ end
 
 local function ApplyItemLevelToButton(button, item, itemLink, classID, itemLocation)
     local cfg = GetOverlayCfg("itemlevel")
-    if not cfg or not cfg.enabled then return end
+    if not cfg.enabled then return end
 
     local ilvl
     local isPetItem = (classID == Enum.ItemClass.Battlepet)
@@ -587,7 +580,6 @@ end
 
 local function ApplyOverlayToButton(button, overlayId, positionIndex)
     local cfg = GetOverlayCfg(overlayId)
-    if not cfg then return end
 
     local container = GetOrCreateContainer(button)
     local entry = GetOrCreatePoolEntry(button, positionIndex)
@@ -773,7 +765,7 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
 
     if IsOverlayEnabled("junk") then
         local isJunk = OneWoW.ItemStatus and OneWoW.ItemStatus:IsItemJunk(itemID)
-        if not isJunk and GetOverlayCfg("junk") and GetOverlayCfg("junk").includeGreyItems then
+        if not isJunk and GetOverlayCfg("junk").includeGreyItems then
             local quality = select(3, C_Item.GetItemInfo(itemLink))
             if quality and quality == 0 then
                 isJunk = true
@@ -905,7 +897,7 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
     -- is on (the default). When off, WuE items are handed to the standalone
     -- "wue" overlay instead, so the two overlays never double-mark one slot.
     local warboundCfg = GetOverlayCfg("warbound")
-    local warboundIncludesWUE = not warboundCfg or warboundCfg.includeWUE ~= false
+    local warboundIncludesWUE = warboundCfg.includeWUE ~= false
 
     if IsOverlayEnabled("warbound") then
         if isWarbound or (isWarboundUntilEquip and warboundIncludesWUE) then
@@ -950,8 +942,7 @@ local function FilterHitsByContext(hits, context)
     if context ~= "auctionhouse" then return hits end
     local filtered = {}
     for _, id in ipairs(hits) do
-        local cfg = GetOverlayCfg(id)
-        if cfg and cfg.applyToAuctionHouse then
+        if GetOverlayCfg(id).applyToAuctionHouse then
             filtered[#filtered + 1] = id
         end
     end
@@ -1006,8 +997,7 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
 
         if C_Item.IsItemDataCachedByID(itemID) then
             local item = Item:CreateFromItemID(itemID)
-            local ilvlCfg = GetOverlayCfg("itemlevel")
-            if context ~= "auctionhouse" or (ilvlCfg and ilvlCfg.applyToAuctionHouse) then
+            if context ~= "auctionhouse" or GetOverlayCfg("itemlevel").applyToAuctionHouse then
                 ApplyItemLevelToButton(button, item, itemLink, classID, itemLocation)
             end
         end
@@ -1032,8 +1022,7 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
                 ApplyOverlayToButton(button, overlayId, i)
             end
 
-            local ilvlCfg = GetOverlayCfg("itemlevel")
-            if context ~= "auctionhouse" or (ilvlCfg and ilvlCfg.applyToAuctionHouse) then
+            if context ~= "auctionhouse" or GetOverlayCfg("itemlevel").applyToAuctionHouse then
                 ApplyItemLevelToButton(button, item, itemLink, cID, itemLocation)
             end
 
@@ -1233,6 +1222,28 @@ end
 function Engine:Refresh()
     RefreshAll()
 end
+
+local refreshPending = false
+
+--- Coalescing variant of Refresh: any number of requests inside one debounce
+--- window produce a single repaint. Preferred entry point for settings-driven
+--- refreshes (slider drags fire dozens of mutations per second).
+function Engine:RequestRefresh()
+    if refreshPending then return end
+    refreshPending = true
+    C_Timer.After(0.05, function()
+        refreshPending = false
+        RefreshAll()
+    end)
+end
+
+-- Repaint whenever any overlay setting changes, regardless of which UI mutated
+-- it (settings GUI, Bags settings, mirror writes from the tooltips tab, ...).
+OneWoW.SettingsFeatureRegistry:RegisterListener("OverlayEngine", function(storageTab)
+    if storageTab == "overlays" then
+        Engine:RequestRefresh()
+    end
+end)
 
 function Engine:RefreshBags()
     RefreshBags()

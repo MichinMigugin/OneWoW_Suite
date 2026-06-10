@@ -587,11 +587,8 @@ local function BuildBagsTab(sc, db)
         end,
     })
 
-    if OneWoW then
-        local overlayEnabled = false
-        if OneWoW.SettingsFeatureRegistry then
-            overlayEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general")
-        end
+    do
+        local overlayEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general")
         dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
             yOffset = dispY,
             label = L["OVERLAY_SECTION"],

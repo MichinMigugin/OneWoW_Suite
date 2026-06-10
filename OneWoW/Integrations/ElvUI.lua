@@ -1,9 +1,7 @@
 local _, OneWoW = ...
 
 local function IsEnabled()
-    local ov = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
-    if not ov or not ov.integrations or not ov.integrations.elvui then return true end
-    return ov.integrations.elvui.enabled ~= false
+    return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled("elvui")
 end
 
 local elvuiBags = nil

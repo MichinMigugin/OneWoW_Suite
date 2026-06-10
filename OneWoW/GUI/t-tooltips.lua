@@ -6,6 +6,8 @@ local L    = OneWoW.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
+local Registry = OneWoW.SettingsFeatureRegistry
+
 local activePlayermountsRow = nil
 
 function GUI:RefreshTooltipsFeatureDot(featureId, value)
@@ -95,10 +97,7 @@ local function CreateSettingToggleRows(dsc, toggleList, toggleBtnSets, isEnabled
             isEnabled = isEnabled,
             value = currentVal,
             onValueChange = function(newVal)
-                if not OneWoW.db.global.settings.tooltips[dbPath] then
-                    OneWoW.db.global.settings.tooltips[dbPath] = {}
-                end
-                OneWoW.db.global.settings.tooltips[dbPath][capturedKey] = newVal
+                Registry:SetSetting("tooltips", dbPath, capturedKey, newVal)
             end,
         })
 
@@ -173,7 +172,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
                 selectedRow.dot:SetStatus(newState)
             end
             for _, tbs in ipairs(toggleBtnSets) do
-                local val = OneWoW.db.global.settings.tooltips.customnotes[tbs.key]
+                local val = Registry:GetFeatureSettings("tooltips", "customnotes")[tbs.key]
                 tbs.refresh(newState, val ~= false)
                 tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
             end
@@ -203,8 +202,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
 
     yOffset = yOffset - math.max(24, reqLabel:GetStringHeight() + 8)
 
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local cnSettings = db and db.tooltips and db.tooltips.customnotes or {}
+    local cnSettings = Registry:GetFeatureSettings("tooltips", "customnotes")
 
     local linesHeader = OneWoW_GUI:CreateFS(dsc, 12)
     linesHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -333,7 +331,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
                 selectedRow.dot:SetStatus(newState)
             end
             for _, tbs in ipairs(toggleBtnSets) do
-                local val = OneWoW.db.global.settings.tooltips.technicalids[tbs.key]
+                local val = Registry:GetFeatureSettings("tooltips", "technicalids")[tbs.key]
                 tbs.refresh(newState, val ~= false)
                 tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
             end
@@ -351,8 +349,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 10
 
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local tidSettings = db and db.tooltips and db.tooltips.technicalids or {}
+    local tidSettings = Registry:GetFeatureSettings("tooltips", "technicalids")
 
     yOffset = CreateSettingToggleRows(dsc, TECHID_TOGGLES, toggleBtnSets, isEnabled, tidSettings, "technicalids", yOffset)
 
@@ -414,7 +411,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
                 selectedRow.dot:SetStatus(newState)
             end
             for _, tbs in ipairs(toggleBtnSets) do
-                local val = OneWoW.db.global.settings.tooltips.itemtracker[tbs.key]
+                local val = Registry:GetFeatureSettings("tooltips", "itemtracker")[tbs.key]
                 tbs.refresh(newState, val ~= false)
                 tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
             end
@@ -442,8 +439,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 10
 
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local itSettings = db and db.tooltips and db.tooltips.itemtracker or {}
+    local itSettings = Registry:GetFeatureSettings("tooltips", "itemtracker")
 
     yOffset = CreateSettingToggleRows(dsc, ITEMTRACKER_TOGGLES, toggleBtnSets, isEnabled, itSettings, "itemtracker", yOffset)
 
@@ -628,7 +624,8 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
 
     yOffset = statusBlock.getBottomY() - 14
 
-    local tmSettings = OneWoW.db.global.settings.tooltips.talentmods
+    -- Live block, read-only; all writes go through Registry:SetSetting.
+    local tmSettings = Registry:GetFeatureSettings("tooltips", "talentmods")
 
     local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
         title = L["TIPS_TALENTMODS_SECTION_SETTINGS"],
@@ -653,7 +650,7 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
         value = tmSettings.includeActive == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            tmSettings.includeActive = newVal
+            Registry:SetSetting("tooltips", "talentmods", "includeActive", newVal)
         end,
     })
     yOffset = newY1
@@ -666,7 +663,7 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
         value = tmSettings.hideInCombat == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            tmSettings.hideInCombat = newVal
+            Registry:SetSetting("tooltips", "talentmods", "hideInCombat", newVal)
         end,
     })
     yOffset = newY2
@@ -725,7 +722,8 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
 
     yOffset = statusBlock.getBottomY() - 14
 
-    local enhSettings = OneWoW.db.global.settings.tooltips.enhancements
+    -- Live block, read-only; all writes go through Registry:SetSetting.
+    local enhSettings = Registry:GetFeatureSettings("tooltips", "enhancements")
 
     local sectionItems = OneWoW_GUI:CreateSectionHeader(dsc, {
         title = L["TIPS_ENHANCEMENTS_SECTION_ITEMS"],
@@ -750,7 +748,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.removeBlizzardVendorValue ~= false,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.removeBlizzardVendorValue = newVal
+            Registry:SetSetting("tooltips", "enhancements", "removeBlizzardVendorValue", newVal)
         end,
     })
     yOffset = newY0
@@ -779,7 +777,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.hideHealthbar == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.hideHealthbar = newVal
+            Registry:SetSetting("tooltips", "enhancements", "hideHealthbar", newVal)
         end,
     })
     yOffset = newY1
@@ -792,7 +790,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.hideInCombat == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.hideInCombat = newVal
+            Registry:SetSetting("tooltips", "enhancements", "hideInCombat", newVal)
         end,
     })
     yOffset = newY2
@@ -811,7 +809,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
                 width = 280,
                 fmt = "%d%%",
                 onChange = function(val)
-                    enhSettings.tooltipScale = val
+                    Registry:SetSetting("tooltips", "enhancements", "tooltipScale", val)
                 end,
             })
             slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
@@ -820,7 +818,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.scaleEnabled == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.scaleEnabled = newVal
+            Registry:SetSetting("tooltips", "enhancements", "scaleEnabled", newVal)
         end,
     })
     yOffset = newY3
@@ -852,7 +850,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
                     }
                 end,
                 onSelect = function(value, text)
-                    enhSettings.anchorPosition = value
+                    Registry:SetSetting("tooltips", "enhancements", "anchorPosition", value)
                     dropdownText:SetText(text)
                 end,
                 getActiveValue = function() return enhSettings.anchorPosition or "ANCHOR_CURSOR_RIGHT" end,
@@ -862,7 +860,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.anchorEnabled == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.anchorEnabled = newVal
+            Registry:SetSetting("tooltips", "enhancements", "anchorEnabled", newVal)
         end,
     })
     yOffset = newY4
@@ -891,7 +889,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.classColorNames == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.classColorNames = newVal
+            Registry:SetSetting("tooltips", "enhancements", "classColorNames", newVal)
         end,
     })
     yOffset = newY5
@@ -904,7 +902,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.guildRank == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.guildRank = newVal
+            Registry:SetSetting("tooltips", "enhancements", "guildRank", newVal)
         end,
     })
     yOffset = newY6
@@ -917,7 +915,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.playerTarget == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.playerTarget = newVal
+            Registry:SetSetting("tooltips", "enhancements", "playerTarget", newVal)
         end,
     })
     yOffset = newY7
@@ -930,7 +928,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.mythicScore == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.mythicScore = newVal
+            Registry:SetSetting("tooltips", "enhancements", "mythicScore", newVal)
         end,
     })
     yOffset = newY8
@@ -943,7 +941,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.hideServerName == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.hideServerName = newVal
+            Registry:SetSetting("tooltips", "enhancements", "hideServerName", newVal)
         end,
     })
     yOffset = newY9
@@ -956,7 +954,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.hideTitles == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.hideTitles = newVal
+            Registry:SetSetting("tooltips", "enhancements", "hideTitles", newVal)
         end,
     })
     yOffset = newY10
@@ -969,7 +967,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.removePvpTag == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.removePvpTag = newVal
+            Registry:SetSetting("tooltips", "enhancements", "removePvpTag", newVal)
         end,
     })
     yOffset = newY11
@@ -1004,7 +1002,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
                 width = 280,
                 fmt = "%d%%",
                 onChange = function(val)
-                    enhSettings.borderOpacity = val
+                    Registry:SetSetting("tooltips", "enhancements", "borderOpacity", val)
                 end,
             })
             slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
@@ -1013,7 +1011,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.borderOpacityEnabled == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.borderOpacityEnabled = newVal
+            Registry:SetSetting("tooltips", "enhancements", "borderOpacityEnabled", newVal)
         end,
     })
     yOffset = newY12
@@ -1032,7 +1030,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
                 width = 280,
                 fmt = "%d%%",
                 onChange = function(val)
-                    enhSettings.bgOpacity = val
+                    Registry:SetSetting("tooltips", "enhancements", "bgOpacity", val)
                 end,
             })
             slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
@@ -1041,7 +1039,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.bgOpacityEnabled == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.bgOpacityEnabled = newVal
+            Registry:SetSetting("tooltips", "enhancements", "bgOpacityEnabled", newVal)
         end,
     })
     yOffset = newY13
@@ -1096,7 +1094,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.colorParty == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.colorParty = newVal
+            Registry:SetSetting("tooltips", "enhancements", "colorParty", newVal)
         end,
     })
     yOffset = newY14
@@ -1124,7 +1122,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.colorGuild == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.colorGuild = newVal
+            Registry:SetSetting("tooltips", "enhancements", "colorGuild", newVal)
         end,
     })
     yOffset = newY15
@@ -1157,7 +1155,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
         value = enhSettings.colorFaction == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            enhSettings.colorFaction = newVal
+            Registry:SetSetting("tooltips", "enhancements", "colorFaction", newVal)
         end,
     })
     yOffset = newY16
@@ -1216,14 +1214,10 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
 
     yOffset = statusBlock.getBottomY() - 14
 
-    local valSettings = OneWoW.db.global.settings.tooltips.value
+    -- Live block, read-only; all writes go through Registry:SetSetting, which
+    -- also drives ExternalTooltipSync via its registered listener.
+    local valSettings = Registry:GetFeatureSettings("tooltips", "value")
     local fontOffset = math.max(0, OneWoW_GUI:GetFontSizeOffset() or 0)
-
-    local function SyncExternalTooltips()
-        if OneWoW.ExternalTooltipSync and OneWoW.ExternalTooltipSync.SyncAll then
-            OneWoW.ExternalTooltipSync:SyncAll()
-        end
-    end
 
     local secDisplay = OneWoW_GUI:CreateSectionHeader(dsc, {
         title = L["TIPS_VALUE_SECTION_DISPLAY"] or L["TIPS_VALUE_OPTIONS_SECTION"],
@@ -1248,7 +1242,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
         value = valSettings.showVendorPrice ~= false,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            valSettings.showVendorPrice = newVal
+            Registry:SetSetting("tooltips", "value", "showVendorPrice", newVal)
         end,
     })
     yOffset = newY1
@@ -1261,7 +1255,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
         value = valSettings.showAHValue ~= false,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            valSettings.showAHValue = newVal
+            Registry:SetSetting("tooltips", "value", "showAHValue", newVal)
         end,
     })
     yOffset = newY2
@@ -1318,9 +1312,8 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
             }
         end,
         onSelect = function(value, text)
-            valSettings.ahPriceSource = value
+            Registry:SetSetting("tooltips", "value", "ahPriceSource", value)
             ahSrcText:SetText(text)
-            SyncExternalTooltips()
         end,
         getActiveValue = function() return valSettings.ahPriceSource or "onewow" end,
     })
@@ -1374,8 +1367,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
         value = valSettings.showTSMValue == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
-            valSettings.showTSMValue = newVal
-            SyncExternalTooltips()
+            Registry:SetSetting("tooltips", "value", "showTSMValue", newVal)
         end,
     })
     yOffset = newY3
@@ -1398,7 +1390,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     tsmStrEb:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     tsmStrEb:HookScript("OnEditFocusLost", function(self)
         local t = self:GetText()
-        valSettings.tsmPriceString = (t and t ~= "") and t or "dbmarket"
+        Registry:SetSetting("tooltips", "value", "tsmPriceString", (t and t ~= "") and t or "dbmarket")
     end)
     tsmStrEb:SetScript("OnEnterPressed", function(self)
         self:ClearFocus()
@@ -1508,7 +1500,7 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
                 selectedRow.dot:SetStatus(newState)
             end
             for _, tbs in ipairs(toggleBtnSets) do
-                local val = OneWoW.db.global.settings.tooltips.pets[tbs.key]
+                local val = Registry:GetFeatureSettings("tooltips", "pets")[tbs.key]
                 tbs.refresh(newState, val ~= false)
                 tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
             end
@@ -1526,8 +1518,7 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 10
 
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local petsSettings = db and db.tooltips and db.tooltips.pets or {}
+    local petsSettings = Registry:GetFeatureSettings("tooltips", "pets")
 
     yOffset = CreateSettingToggleRows(dsc, PETS_TOGGLES, toggleBtnSets, isEnabled, petsSettings, "pets", yOffset)
 
@@ -1650,12 +1641,24 @@ local function BuildFeatureList(split, tabName)
     local lsc = split.listScrollChild
     local features = OneWoW.SettingsFeatureRegistry:GetByTab(tabName)
     local selectedRow = nil
+    local selectedFeatureId = nil
     local allRows = {}
+
+    local function UpdateEnabledCount()
+        local enabledCount = 0
+        for _, f in ipairs(features) do
+            if OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, f.id) then
+                enabledCount = enabledCount + 1
+            end
+        end
+        split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
+    end
 
     local function RenderRows(filterText)
         OneWoW_GUI:ClearFrame(lsc)
         selectedRow = nil
         allRows = {}
+        local rowToSelect = nil
         local yOffset = -5
         local filter = (filterText or ""):lower()
 
@@ -1675,6 +1678,7 @@ local function BuildFeatureList(split, tabName)
                             selectedRow:SetActive(false)
                         end
                         selectedRow = self
+                        selectedFeatureId = capturedFeature.id
                         if capturedFeature.id == "playermounts" then
                             activePlayermountsRow = self
                         end
@@ -1688,6 +1692,9 @@ local function BuildFeatureList(split, tabName)
                 })
                 row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)
                 row:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
+                if capturedFeature.id == selectedFeatureId then
+                    rowToSelect = row
+                end
                 table.insert(allRows, row)
                 yOffset = yOffset - 34
             end
@@ -1695,8 +1702,9 @@ local function BuildFeatureList(split, tabName)
 
         lsc:SetHeight(math.abs(yOffset) + 10)
         if #allRows > 0 and not selectedRow then
-            allRows[1]:Click()
+            (rowToSelect or allRows[1]):Click()
         end
+        UpdateEnabledCount()
     end
 
     RenderRows("")
@@ -1708,13 +1716,13 @@ local function BuildFeatureList(split, tabName)
         end)
     end
 
-    local enabledCount = 0
-    for _, f in ipairs(features) do
-        if OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, f.id) then
-            enabledCount = enabledCount + 1
-        end
+    -- Re-render on tab activation: the selected feature's detail pane is
+    -- rebuilt with fresh registry reads, so state changed elsewhere (e.g.
+    -- Overlays > Upgrade, mirrored by Gear Upgrades here) shows correctly.
+    split.RefreshList = function()
+        local text = split.searchBox and split.searchBox:GetSearchText() or ""
+        RenderRows(text)
     end
-    split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
 end
 
 function GUI:CreateTooltipsTab(parent)
@@ -1726,4 +1734,9 @@ function GUI:CreateTooltipsTab(parent)
         BuildFeatureList(split, "tooltips")
         OneWoW_GUI:ApplyFontToFrame(parent)
     end)
+
+    -- nil until the deferred BuildFeatureList above has run once.
+    parent.Activate = function()
+        if split.RefreshList then split.RefreshList() end
+    end
 end

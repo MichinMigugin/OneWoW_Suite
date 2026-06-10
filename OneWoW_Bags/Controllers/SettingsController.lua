@@ -98,11 +98,8 @@ SettingsController.appliers = {
         self.addon:RequestVisualRefresh("bags")
     end,
     overlaysEnabled = function(_, _, value)
-        if not OneWoW or not OneWoW.SettingsFeatureRegistry then return end
+        -- Registry notification drives the overlay repaint.
         OneWoW.SettingsFeatureRegistry:SetEnabled("overlays", "general", value)
-        if OneWoW.OverlayEngine then
-            OneWoW.OverlayEngine:Refresh()
-        end
     end,
     showScrollBar = function(self, db, value)
         db.global.hideScrollBar = not value

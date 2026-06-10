@@ -50,9 +50,7 @@ local modifierInheritance = {
 }
 
 local function GetSettings()
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    if not db or not db.tooltips then return nil end
-    return db.tooltips.talentmods
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "talentmods")
 end
 
 local function isBaseCoveredByException(s, e, text, exList)
@@ -118,7 +116,7 @@ local function populateSpellModifiers(spellID)
     if not configInfo then return end
 
     local settings = GetSettings()
-    local includeActive = settings and settings.includeActive
+    local includeActive = settings.includeActive
 
     for _, treeID in ipairs(configInfo.treeIDs) do
         local nodes = C_Traits.GetTreeNodes(treeID)
@@ -175,7 +173,6 @@ local function OnSpellTooltip(tooltip, data)
     if data.type ~= Enum.TooltipDataType.Spell and data.type ~= Enum.TooltipDataType.Macro then return end
 
     local settings = GetSettings()
-    if not settings then return end
 
     if settings.hideInCombat and UnitAffectingCombat("player") then return end
 

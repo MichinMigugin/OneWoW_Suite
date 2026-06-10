@@ -49,9 +49,7 @@ function TooltipEngine:EnsureDefaults()
 end
 
 function TooltipEngine:IsEnabled()
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    if not db or not db.tooltips or not db.tooltips.general then return false end
-    return db.tooltips.general.enabled == true
+    return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general")
 end
 
 function TooltipEngine:IsFeatureEnabled(featureId)
@@ -323,9 +321,7 @@ function TooltipEngine:HookAchievementUI()
             if not engine:IsEnabled() then return end
             if not engine:IsFeatureEnabled("technicalids") then return end
             if not achievementFrame.id then return end
-            local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-            local tid = db and db.tooltips and db.tooltips.technicalids
-            if not tid or tid.showAchievementID == false then return end
+            if OneWoW.SettingsFeatureRegistry:GetSetting("tooltips", "technicalids", "showAchievementID") == false then return end
             GameTooltip:SetOwner(achievementFrame, "ANCHOR_NONE")
             GameTooltip:SetPoint("TOPLEFT", achievementFrame, "TOPRIGHT", 0, 0)
             local _gui = LibStub and LibStub("OneWoW_GUI-1.0", true)

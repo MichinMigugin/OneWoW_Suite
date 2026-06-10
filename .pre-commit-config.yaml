@@ -92,6 +92,26 @@ repos:
             | OneWoW_Bags/API/Examples/
           )
 
+      - id: no-settings-bypass
+        name: No direct db.global.settings access in Lua
+        description: |
+          Forbids reading or writing the OneWoW settings tree
+          (`db.global.settings`, including aliased access) outside
+          SettingsFeatureRegistry.lua / Database.lua. Use the
+          SettingsFeatureRegistry funnel. See OneWoW/Docs/MIGRATION.md step 6.
+        entry: python bin/check_no_settings_bypass.py
+        language: python
+        types: [lua]
+        exclude: |
+          (?x)^(
+            Libs/
+            | \.lua-defs/
+            | \.wow_docs/
+            | \.vscode/
+            | \.releases/
+            | OneWoW_Bags/API/Examples/
+          )
+
       - id: no-suite-internal-optionaldeps
         name: No suite-internal OptionalDeps in TOC files
         description: |

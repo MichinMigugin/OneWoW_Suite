@@ -29,8 +29,7 @@ local function GetPetTypeName(petType)
 end
 
 local function GetPetSettings()
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    return db and db.tooltips and db.tooltips.pets or {}
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "pets")
 end
 
 local function IsEnabled()
@@ -209,8 +208,8 @@ local function FillPetTooltip(tip, speciesID)
         end
     end
 
-    local valCfg = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.tooltips and OneWoW.db.global.settings.tooltips.value
-    if valCfg and valCfg.showTSMValue == true and OneWoW.ItemPrices then
+    local valCfg = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
+    if valCfg.showTSMValue == true and OneWoW.ItemPrices then
         local tsmPrice, srcStr = OneWoW.ItemPrices:GetTSMUnitPriceForSpecies(speciesID, name)
         if tsmPrice and tsmPrice > 0 then
             local tsmRight = FormatMoneyLine(tsmPrice)

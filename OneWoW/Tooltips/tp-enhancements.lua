@@ -4,14 +4,11 @@ local _, OneWoW = ...
 local LINE_TYPE_SELL_PRICE = (Enum.TooltipDataLineType and Enum.TooltipDataLineType.SellPrice) or 11
 
 local function GetSettings()
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    if not db or not db.tooltips then return nil end
-    return db.tooltips.enhancements
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "enhancements")
 end
 
 local function IsSettingEnabled(key)
     local settings = GetSettings()
-    if not settings then return false end
     if settings[key] == nil then return false end
     return settings[key] == true
 end
@@ -23,9 +20,7 @@ local BORDER_PIECES = {
 
 local function ShouldSuppressBlizzardVendorSellLine()
     if not OneWoW.TooltipEngine or not OneWoW.TooltipEngine:IsEnabled() then return false end
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local enh = db and db.tooltips and db.tooltips.enhancements
-    if enh and enh.removeBlizzardVendorValue == false then return false end
+    if GetSettings().removeBlizzardVendorValue == false then return false end
     return true
 end
 

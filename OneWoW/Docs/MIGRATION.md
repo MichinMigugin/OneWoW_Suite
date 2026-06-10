@@ -90,15 +90,32 @@ De-risks everything after. Ship early; no dependency on other steps.
 
 Prep for steps 8–9. No dependency on step 7.
 
-- [ ] Route feature reads/writes of `OneWoW.db.global.settings.*` through
-  `SettingsFeatureRegistry` (`Core/SettingsFeatureRegistry.lua`); extend with
-  typed get/set helpers as needed.
-- [ ] Replace direct `OneWoW.db and OneWoW.db.global and ...` guards in feature
+- [x] Route feature reads/writes of `OneWoW.db.global.settings.*` through
+  `SettingsFeatureRegistry` (`Core/SettingsFeatureRegistry.lua`); extended with
+  `GetSetting`/`SetSetting`, `GetFeatureSettings` (read-only live block),
+  `IsIntegrationEnabled`/`SetIntegrationEnabled`, `ResetTab`, and
+  `RegisterListener` pub/sub. Storage mechanics delegate to `OneWoW_GUI.DB`
+  primitives. Mutations notify listeners; `OverlayEngine` (coalesced
+  `RequestRefresh`) and `ExternalTooltipSync` subscribe instead of being called
+  by GUI code.
+- [x] Replace direct `OneWoW.db and OneWoW.db.global and ...` guards in feature
   code with registry calls (kills ~60 defensive nil-chains; insulates from SV
   migration and QoL move).
-- [ ] Primary touch surfaces: `GUI/t-tooltips.lua`, `GUI/t-overlays.lua`,
-  `GUI/t-toastalerts.lua`, `GUI/t-portals.lua`, `Features/*`, `Tooltips/tp-*`,
-  `Portals/*`.
+- [x] Primary touch surfaces: `GUI/t-tooltips.lua`, `GUI/t-overlays.lua`,
+  `Features/*`, `Tooltips/tp-*`, `Tooltips/tooltip-engine.lua`,
+  `Core/ItemPrices.lua`, the 6 bag-integration shims.
+- [x] Discovered additions: `OneWoW_Trackers/UI/ui-tracker-farmvalue.lua` was a
+  direct settings writer via an aliased `ow.db.global.settings` reference
+  (`MutateOneWoWValue`) — migrated to `SetSetting`; `ExternalTooltipSync`
+  runtime state (`_auctionatorTooltipBackup`, popup flags) relocated out of
+  `settings.tooltips.value` into `db.global.externalTooltipSync` via a
+  versioned `DB:RunMigrations` step; `bagnon`/`elvui` integration defaults
+  completed.
+- [x] Enforcement: `no-settings-bypass` pre-commit hook
+  (`bin/check_no_settings_bypass.py`) forbids the `db.global.settings` suffix
+  pattern outside `SettingsFeatureRegistry.lua`/`Database.lua`.
+- Out of scope (separate DB roots, follow-up before step 9): `portalHub`,
+  `toasts` — `GUI/t-portals.lua`, `GUI/t-toastalerts.lua`, `Portals/*`.
 
 ---
 

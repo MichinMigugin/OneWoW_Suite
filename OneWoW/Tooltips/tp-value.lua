@@ -44,8 +44,7 @@ local function ValueProvider(_, context)
     if not context.itemID then return nil end
 
     local L   = OneWoW.L
-    local db  = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local cfg = db and db.tooltips and db.tooltips.value or {}
+    local cfg = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
 
     local showVendorPrice = cfg.showVendorPrice ~= false
     local showAHValue     = cfg.showAHValue     ~= false

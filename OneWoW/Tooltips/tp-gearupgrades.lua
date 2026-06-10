@@ -215,11 +215,9 @@ local function GearUpgradeProvider(tooltip, context)
     if not context or not context.itemID then return nil end
     if IsComparisonTooltip(tooltip) then return nil end
 
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    if not db or not db.overlays or not db.overlays.upgrade then return nil end
-    if not db.overlays.upgrade.showInTooltip then return nil end
-
-    local up = db.overlays.upgrade
+    -- gearupgrades mirrors overlays/upgrade storage (settingsTab/settingsId).
+    local up = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "gearupgrades")
+    if not up.showInTooltip then return nil end
     local onlyUpgrade    = up.tooltipOnlyUpgrade    or false
     local detail         = up.tooltipDetail         or "FULL"
     local showSkipReason = up.tooltipShowSkipReason or false

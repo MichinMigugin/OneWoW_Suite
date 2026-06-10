@@ -205,18 +205,6 @@ function TFV:RemoveItemFromFarmWatchlist(list, itemID)
     return removed
 end
 
-local function MutateOneWoWValue(fn)
-    local ow = OneWoW
-    if not ow or not ow.db or not ow.db.global or not ow.db.global.settings then return false end
-    local tips = ow.db.global.settings.tooltips
-    if not tips then return false end
-    if type(tips.value) ~= "table" then
-        tips.value = {}
-    end
-    fn(tips.value)
-    return true
-end
-
 local function RefreshAllFarmWindows()
     if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
         ns.TrackerEngine:RefreshAllPinnedWindows()
@@ -568,9 +556,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
             return t
         end,
         onSelect = function(value)
-            MutateOneWoWValue(function(val)
-                val.ahPriceSource = value
-            end)
+            OneWoW.SettingsFeatureRegistry:SetSetting("tooltips", "value", "ahPriceSource", value)
             RefreshFarmPricingUI()
             RedrawDetailRows()
             RefreshAllFarmWindows()
@@ -855,18 +841,14 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     end
 
     cbShowAH:SetScript("OnClick", function(myself)
-        MutateOneWoWValue(function(val)
-            val.showAHValue = myself:GetChecked() and true or false
-        end)
+        OneWoW.SettingsFeatureRegistry:SetSetting("tooltips", "value", "showAHValue", myself:GetChecked() and true or false)
         RefreshFarmPricingUI()
         RedrawDetailRows()
         RefreshAllFarmWindows()
     end)
 
     cbUseTSM:SetScript("OnClick", function(myself)
-        MutateOneWoWValue(function(val)
-            val.showTSMValue = myself:GetChecked() and true or false
-        end)
+        OneWoW.SettingsFeatureRegistry:SetSetting("tooltips", "value", "showTSMValue", myself:GetChecked() and true or false)
         RefreshFarmPricingUI()
         RedrawDetailRows()
         RefreshAllFarmWindows()

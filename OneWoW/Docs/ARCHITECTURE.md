@@ -3,9 +3,9 @@
 Authoritative reference for how the suite is partitioned, loaded, enabled, and
 integrated. Describes **what is implemented today**.
 
-Remaining migration work (core hygiene, settings funnel, GUI absorption, SV
-migration, QoL feature moves, DevTool packaging, enforcement ramp) lives in
-[`MIGRATION.md`](MIGRATION.md) (steps 5–11).
+Remaining migration work (GUI absorption, SV migration, QoL feature moves,
+DevTool packaging, enforcement ramp) lives in [`MIGRATION.md`](MIGRATION.md)
+(steps 7–11).
 
 ---
 
@@ -310,6 +310,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 |---|---|
 | No lifecycle `RegisterEvent` in orchestrated units | `bin/check_suite_lifecycle.py` (pre-commit `no-suite-lifecycle-events`) |
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
+| No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; see MIGRATION step 11) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
@@ -470,6 +471,15 @@ _G.OneWoW:RegisterModule({
 `ModuleRegistry` stores `name`, `displayName`, `tabs`, `order`. `MainWindow.lua`
 calls `tabInfo.create(frame)` lazily; content cached in `moduleContentFrames`.
 
+**Cached content is stale by default.** A tab frame is built once; revisiting it
+just `Show()`s the cached frame. `MainWindow` calls `frame:Activate()` on every
+tab selection and `frame:Deactivate()` when leaving — tabs whose content can
+change while hidden must implement `Activate` to re-render. Portals (secure
+overlay + grid layout) and the Overlays/Tooltips settings tabs (re-render the
+feature list and selected detail pane with fresh registry reads, which keeps the
+tooltips/`gearupgrades` ↔ overlays/`upgrade` mirror visually synced) do this
+today.
+
 **Placeholder tabs:** when a hub module is not loaded, `GetAlwaysShowModules()` still
 shows its tab (same `tabOrder`, locale key label). Selecting a placeholder prompts load or
 Manage Features.
@@ -583,6 +593,57 @@ then `GUI:FullReset()`. Font/size not part of profile sync.
 All font application funnels through `OneWoW_GUI:SafeSetFont(fontString, fontPath,
 size, flags)` with `fontSizeOffset` from `OneWoW_GUI_DB` (range −3..+5, floor 6).
 
+### 8.5 Core settings funnel (`SettingsFeatureRegistry`)
+
+All reads and writes of `OneWoW.db.global.settings.*` (tooltips, overlays,
+toastalerts) route through `OneWoW.SettingsFeatureRegistry`
+(`Core/SettingsFeatureRegistry.lua`). Only that file and `Core/Database.lua`
+(defaults, migrations) touch the tree directly — enforced by the
+`no-settings-bypass` pre-commit hook (§3.10). `portalHub` / `toasts` are
+separate DB roots outside the funnel (follow-up before MIGRATION step 9).
+
+Three responsibilities:
+
+- **Catalog** — `Register` / `GetByTab` feature metadata for the settings GUI.
+- **Storage path** — `ResolveStorage` applies the `settingsTab`/`settingsId`
+  mirror protocol (a feature registered on one tab can store under another,
+  e.g. tooltips/`gearupgrades` → overlays/`upgrade`), then delegates all
+  reads/writes to `OneWoW_GUI.DB` primitives (`Read`/`Ensure`/`Set`/
+  `MergeMissing`). Settings are global-scope only.
+- **Notification** — mutators fire `RegisterListener` callbacks with
+  **storage-resolved** coordinates `(storageTab, storageId, key, value)`;
+  bulk changes (`ResetTab`) fire with nil storageId/key. The registry holds no
+  engine references — subscribers register themselves.
+
+```lua
+local reg = OneWoW.SettingsFeatureRegistry
+reg:IsEnabled(tab, id)          reg:SetEnabled(tab, id, value)
+reg:GetSetting(tab, id, key)    reg:SetSetting(tab, id, key, value)
+reg:GetFeatureSettings(tab, id) -- live table, READ-ONLY by contract (hot paths)
+reg:IsIntegrationEnabled(key)   reg:SetIntegrationEnabled(key, value)
+reg:GetOverlaySetting(id, key)  reg:SetOverlaySetting(id, key, value)
+reg:ResetTab(tab)               reg:RegisterListener(id, fn)
+```
+
+**Subscribers (pub/sub, replaces caller-driven refresh):**
+
+| Listener | Trigger | Action |
+|---|---|---|
+| `OverlayEngine` | `storageTab == "overlays"` | `RequestRefresh()` — coalesced repaint (50 ms debounce; `Refresh()` stays the immediate API) |
+| `ExternalTooltipSync` | `("tooltips", "value")` change | `SyncAll()` — Auctionator/TSM tooltip suppression |
+
+GUI code never calls `OverlayEngine:Refresh()` or `ExternalTooltipSync:SyncAll()`
+after a settings write — the notification covers it. This includes writers in
+other load units (`OneWoW_Bags` settings, `OneWoW_Trackers` farm panel).
+
+Scalar `Set*` calls early-return on no-change (no write, no notification). Table
+values are always written and notified — pass a new table, not a mutated one
+obtained from `GetFeatureSettings`.
+
+`ExternalTooltipSync` runtime state (Auctionator column backup, one-time popup
+flags) lives in its own `db.global.externalTooltipSync` root, not in settings —
+relocated by a versioned `DB:RunMigrations` step in `Core/Database.lua`.
+
 ---
 
 ## 9. Caveats
@@ -606,11 +667,13 @@ size, flags)` with `fontSizeOffset` from `OneWoW_GUI_DB` (range −3..+5, floor 
 | `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, handler registries, addon-loaded watchers, `/1wtrace` tracer (§3.11) |
 | `OneWoW/Core/StoreBootstrap.lua` | `OneWoW:BootStore` for data stores |
 | `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
+| `OneWoW/Core/SettingsFeatureRegistry.lua` | Settings funnel: catalog, storage-path resolution, change notification (§8.5) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/GUI/t-home.lua` | Home tab: read-only status + live refresh |
 | `OneWoW/GUI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
-| `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 5–11) |
+| `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 7–11) |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |
 | `bin/check_toc_optional_deps.py` | Pre-commit: suite-internal OptionalDeps ban |
+| `bin/check_no_settings_bypass.py` | Pre-commit: direct `db.global.settings` access ban |

@@ -6,13 +6,12 @@ local function ItemStatusProvider(_, context)
 
     local config = OneWoW.TooltipEngine.TOOLTIP_CONFIG
     local L = OneWoW.L
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local ov = db and db.overlays
+    local reg = OneWoW.SettingsFeatureRegistry
     local lines = {}
 
     if OneWoW.ItemStatus:IsItemProtected(context.itemID) then
-        local protCfg = ov and ov.protected
-        if protCfg and protCfg.enabled and protCfg.showInTooltip ~= false then
+        local protCfg = reg:GetFeatureSettings("overlays", "protected")
+        if protCfg.enabled and protCfg.showInTooltip ~= false then
             lines[#lines + 1] = {
                 type = "text",
                 text = L["ITEMSTATUS_TOOLTIP_PROTECTED"],
@@ -24,8 +23,8 @@ local function ItemStatusProvider(_, context)
     end
 
     if OneWoW.ItemStatus:IsItemJunk(context.itemID) then
-        local junkCfg = ov and ov.junk
-        if junkCfg and junkCfg.enabled and junkCfg.showInTooltip ~= false then
+        local junkCfg = reg:GetFeatureSettings("overlays", "junk")
+        if junkCfg.enabled and junkCfg.showInTooltip ~= false then
             lines[#lines + 1] = {
                 type = "text",
                 text = L["ITEMSTATUS_TOOLTIP_JUNK"],

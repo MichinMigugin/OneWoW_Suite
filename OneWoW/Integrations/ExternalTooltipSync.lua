@@ -1,5 +1,19 @@
+-- ============================================================================
+-- ExternalTooltipSync
+-- ============================================================================
+-- Keeps external tooltip addons (Auctionator, TSM) consistent with OneWoW's
+-- tooltip value settings: suppresses Auctionator's own tooltip lines while it
+-- is the AH price source (backing up the user's Auctionator options for
+-- restore), and shows one-time notices.
+--
+-- Settings are READ via SettingsFeatureRegistry; runtime state (option
+-- backups, notice flags) lives at db.global.externalTooltipSync — machine
+-- state, not user settings.
+-- ============================================================================
+
 local _, OneWoW = ...
-local wipe = table.wipe
+
+local wipe = wipe
 
 OneWoW.ExternalTooltipSync = OneWoW.ExternalTooltipSync or {}
 local Sync = OneWoW.ExternalTooltipSync
@@ -12,16 +26,12 @@ local AUCTIONATOR_OPTION_KEYS = {
     "PET_TOOLTIPS",
 }
 
-local function ValueCfg()
-    local s = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    return s and s.tooltips and s.tooltips.value
+local function State()
+    return OneWoW.db.global.externalTooltipSync
 end
 
-local function EnsureBackupTable(cfg)
-    if not cfg._auctionatorTooltipBackup or type(cfg._auctionatorTooltipBackup) ~= "table" then
-        cfg._auctionatorTooltipBackup = {}
-    end
-    return cfg._auctionatorTooltipBackup
+local function ValueCfg()
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
 end
 
 function Sync:EnsurePopups()
@@ -44,10 +54,10 @@ function Sync:EnsurePopups()
     }
 end
 
-function Sync:BackupAuctionatorIfNeeded(cfg)
+function Sync:BackupAuctionatorIfNeeded()
     if not (Auctionator and Auctionator.Config and Auctionator.Config.Get and Auctionator.Config.Options) then return end
     local Opt = Auctionator.Config.Options
-    local b = EnsureBackupTable(cfg)
+    local b = State().auctionatorBackup
     if b._captured then return end
     for _, k in ipairs(AUCTIONATOR_OPTION_KEYS) do
         local opt = Opt[k]
@@ -58,9 +68,9 @@ function Sync:BackupAuctionatorIfNeeded(cfg)
     b._captured = true
 end
 
-function Sync:RestoreAuctionator(cfg)
-    local b = cfg._auctionatorTooltipBackup
-    if not b or not b._captured then return end
+function Sync:RestoreAuctionator()
+    local b = State().auctionatorBackup
+    if not b._captured then return end
     if not (Auctionator and Auctionator.Config and Auctionator.Config.Set and Auctionator.Config.Options) then
         wipe(b)
         b._captured = false
@@ -80,7 +90,7 @@ end
 function Sync:ApplyAuctionatorSuppression(cfg)
     if not (Auctionator and Auctionator.Config and Auctionator.Config.Set and Auctionator.Config.Options) then return end
     local Opt = Auctionator.Config.Options
-    self:BackupAuctionatorIfNeeded(cfg)
+    self:BackupAuctionatorIfNeeded()
 
     Auctionator.Config.Set(Opt.AUCTION_TOOLTIPS, false)
     Auctionator.Config.Set(Opt.AUCTION_AGE_TOOLTIPS, false)
@@ -93,32 +103,37 @@ function Sync:ApplyAuctionatorSuppression(cfg)
     Auctionator.Config.Set(Opt.PET_TOOLTIPS, false)
 end
 
-function Sync:MaybeShowAuctionatorNotice(cfg)
-    if cfg._auctionatorSourcePopupShown then return end
-    cfg._auctionatorSourcePopupShown = true
+function Sync:MaybeShowAuctionatorNotice()
+    local state = State()
+    if state.auctionatorPopupShown then return end
+    state.auctionatorPopupShown = true
     self:EnsurePopups()
     StaticPopup_Show("ONEWOW_AUCTIONATOR_AH_SOURCE")
 end
 
 function Sync:MaybeShowTSMNotice(cfg)
     if cfg.showTSMValue ~= true then return end
-    if cfg._tsmTooltipNoticeShown then return end
-    cfg._tsmTooltipNoticeShown = true
+    local state = State()
+    if state.tsmNoticeShown then return end
+    state.tsmNoticeShown = true
     self:EnsurePopups()
     StaticPopup_Show("ONEWOW_TSM_TOOLTIP_NOTICE")
 end
 
 function Sync:SyncAll()
+    -- Addon-loaded watcher catch-up can invoke this at file-parse time (e.g.
+    -- Auctionator sorts before OneWoW), before InitializeDatabase has run. The
+    -- login handler below re-syncs once the DB exists.
+    if not OneWoW.db then return end
     local cfg = ValueCfg()
-    if not cfg then return end
     self:EnsurePopups()
 
     if C_AddOns.IsAddOnLoaded("Auctionator") and Auctionator and Auctionator.Config and Auctionator.Config.Options then
         if cfg.ahPriceSource == "auctionator" then
             self:ApplyAuctionatorSuppression(cfg)
-            self:MaybeShowAuctionatorNotice(cfg)
+            self:MaybeShowAuctionatorNotice()
         else
-            self:RestoreAuctionator(cfg)
+            self:RestoreAuctionator()
         end
     end
 
@@ -132,6 +147,15 @@ OneWoW:RegisterAddonLoadedWatcher("Auctionator", function()
 end)
 OneWoW:RegisterAddonLoadedWatcher("TradeSkillMaster", function()
     Sync:SyncAll()
+end)
+
+-- Re-sync whenever a tooltip value setting changes, regardless of which UI
+-- mutated it (settings tab, Trackers farm panel, ...). Bulk resets pass a nil
+-- storageId and are included.
+OneWoW.SettingsFeatureRegistry:RegisterListener("ExternalTooltipSync", function(storageTab, storageId)
+    if storageTab == "tooltips" and (storageId == nil or storageId == "value") then
+        Sync:SyncAll()
+    end
 end)
 
 function OneWoW.ExternalTooltipSync_OnLogin()

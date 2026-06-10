@@ -7,8 +7,7 @@ local IP = OneWoW.ItemPrices
 local CALLER_ID = "OneWoW"
 
 local function GetValueCfg()
-    local s = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    return s and s.tooltips and s.tooltips.value or {}
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
 end
 
 function IP:GetValueCfg()

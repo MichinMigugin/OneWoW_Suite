@@ -1,9 +1,7 @@
 local _, OneWoW = ...
 
 local function IsEnabled()
-    local ov = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
-    if not ov or not ov.integrations or not ov.integrations.onewow_bags then return true end
-    return ov.integrations.onewow_bags.enabled ~= false
+    return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled("onewow_bags")
 end
 
 local function ProcessButton(button, bagID, slotID)

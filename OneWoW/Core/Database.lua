@@ -241,7 +241,9 @@ local DEFAULTS = {
             integrations = {
                 arkinventory = { enabled = true },
                 baganator    = { enabled = true },
+                bagnon       = { enabled = true },
                 betterbags   = { enabled = true },
+                elvui        = { enabled = true },
                 onewow_bags  = { enabled = true },
             },
         },
@@ -333,6 +335,14 @@ local DEFAULTS = {
         },
     },
     itemStatus = {},
+    -- Runtime state of Integrations/ExternalTooltipSync.lua (Auctionator option
+    -- backups, one-time notice flags). Machine state, not user settings — kept
+    -- outside the settings funnel.
+    externalTooltipSync = {
+        auctionatorBackup = {},
+        auctionatorPopupShown = false,
+        tsmNoticeShown = false,
+    },
     toasts = {
         enabled = false,
         anchor = { x = nil, y = nil, visible = true, locked = false },
@@ -384,6 +394,42 @@ local defaults = {
     },
 }
 
+--- Fresh copy of the shipped defaults subtree for one settings tab
+--- ("overlays", "tooltips", "toastalerts"). Used by
+--- SettingsFeatureRegistry:ResetTab. Errors on unknown tab names.
+---@param tabName string
+---@return table
+function OneWoW:GetSettingsDefaults(tabName)
+    return CopyTable(DEFAULTS.settings[tabName])
+end
+
+local MIGRATIONS = {
+    {
+        version = 1,
+        name = "external_tooltip_sync_state_relocation",
+        -- ExternalTooltipSync historically stored its runtime state inside
+        -- settings.tooltips.value as underscore-prefixed keys. Relocate it to
+        -- its own root so the settings tree holds only user settings.
+        run = function(d)
+            local value = DB:Read(d.global, "settings", "tooltips", "value")
+            if not value then return end
+            local state = DB:Ensure(d.global, "externalTooltipSync")
+            if type(value._auctionatorTooltipBackup) == "table" then
+                state.auctionatorBackup = value._auctionatorTooltipBackup
+            end
+            if value._auctionatorSourcePopupShown then
+                state.auctionatorPopupShown = true
+            end
+            if value._tsmTooltipNoticeShown then
+                state.tsmNoticeShown = true
+            end
+            value._auctionatorTooltipBackup = nil
+            value._auctionatorSourcePopupShown = nil
+            value._tsmTooltipNoticeShown = nil
+        end,
+    },
+}
+
 function OneWoW:InitializeDatabase()
     if not OneWoW_DB then
         OneWoW_DB = CopyTable(defaults.global)
@@ -394,6 +440,7 @@ function OneWoW:InitializeDatabase()
     }
 
     DB:MergeMissing(self.db.global, DEFAULTS)
+    DB:RunMigrations(self.db, MIGRATIONS)
 
     local ov = self.db.global.settings and self.db.global.settings.overlays or {}
     local outerRename = {

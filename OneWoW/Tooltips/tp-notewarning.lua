@@ -1,9 +1,8 @@
 local _, OneWoW = ...
 
 local function IsNoteWarningEnabled()
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local cn = db and db.tooltips and db.tooltips.customnotes
-    if not cn then return true end
+    -- showNoteWarning is a dynamic key (not in the defaults table); absent means on.
+    local cn = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "customnotes")
     if cn.showNoteWarning == nil then return true end
     return cn.showNoteWarning == true
 end

@@ -226,11 +226,9 @@ local ID_SETTING_KEYS = {
 }
 
 local function IsIDEnabled(idKey)
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local tid = db and db.tooltips and db.tooltips.technicalids
-    if not tid then return true end
     local settingKey = ID_SETTING_KEYS[idKey]
     if not settingKey then return true end
+    local tid = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "technicalids")
     if tid[settingKey] == nil then return true end
     return tid[settingKey] == true
 end

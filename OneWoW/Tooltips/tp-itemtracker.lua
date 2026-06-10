@@ -230,15 +230,14 @@ local function ItemTrackerProvider(_, context)
     if not context.itemID then return nil end
 
     local L   = OneWoW.L
-    local db  = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    local cfg = db and db.tooltips and db.tooltips.itemtracker
+    local cfg = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "itemtracker")
 
-    local showAlts      = cfg == nil or cfg.showAlts      ~= false
-    local showVendors   = cfg == nil or cfg.showVendors   ~= false
-    local showInstances = cfg == nil or cfg.showInstances ~= false
+    local showAlts      = cfg.showAlts      ~= false
+    local showVendors   = cfg.showVendors   ~= false
+    local showInstances = cfg.showInstances ~= false
 
-    local maxChars     = cfg and cfg.characterLimit or 10
-    local colorByClass = cfg == nil or cfg.colorByClass ~= false
+    local maxChars     = cfg.characterLimit
+    local colorByClass = cfg.colorByClass ~= false
 
     local lines = {}
 

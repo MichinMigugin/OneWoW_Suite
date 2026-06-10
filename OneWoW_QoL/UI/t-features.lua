@@ -268,7 +268,7 @@ local function ShowModuleDetail(split, module)
         isEnabled = true,
         onValueChange = function(newVal)
             ns.ModuleRegistry:SetEnabled(module.id, newVal)
-            if module.id == "playmounts" and OneWoW and OneWoW.SettingsFeatureRegistry then
+            if module.id == "playmounts" then
                 OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", "playermounts", newVal)
                 if OneWoW.GUI and OneWoW.GUI.RefreshTooltipsFeatureDot then
                     OneWoW.GUI:RefreshTooltipsFeatureDot("playermounts", newVal)

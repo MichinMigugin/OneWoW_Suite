@@ -618,15 +618,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
 
         if def.dbKey then
             opts.isEnabled = function()
-                local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
-                return not (db and db.integrations and db.integrations[def.dbKey] and db.integrations[def.dbKey].enabled == false)
+                return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled(def.dbKey)
             end
             opts.onToggle = function(newState)
-                local db = OneWoW.db.global.settings.overlays
-                db.integrations = db.integrations or {}
-                db.integrations[def.dbKey] = db.integrations[def.dbKey] or {}
-                db.integrations[def.dbKey].enabled = newState
-                OneWoW.OverlayEngine:Refresh()
+                OneWoW.SettingsFeatureRegistry:SetIntegrationEnabled(def.dbKey, newState)
             end
         end
 
@@ -642,14 +637,19 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     local resetAllBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_RESET_ALL_DEFAULTS_BTN"], height = 26 })
     resetAllBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     resetAllBtn:SetScript("OnClick", function()
-        local db = OneWoW.db.global.settings.overlays
-        local generalEnabled = db.general and db.general.enabled
-        local integrations = db.integrations
-        wipe(db)
-        db.integrations = integrations
-        OneWoW:InitializeDatabase()
-        if generalEnabled ~= nil then
-            db.general.enabled = generalEnabled
+        local reg = OneWoW.SettingsFeatureRegistry
+        -- Preserve the master switch and integration states across the reset.
+        local generalEnabled = reg:IsEnabled("overlays", "general")
+        local integrationStates = {}
+        for _, def in ipairs(integrationDefs) do
+            if def.dbKey then
+                integrationStates[def.dbKey] = reg:IsIntegrationEnabled(def.dbKey)
+            end
+        end
+        reg:ResetTab("overlays")
+        reg:SetEnabled("overlays", "general", generalEnabled)
+        for key, value in pairs(integrationStates) do
+            reg:SetIntegrationEnabled(key, value)
         end
         OneWoW_GUI:ClearFrame(dsc)
         ShowGeneralDetail(split, dsc, selectedRow)
@@ -766,7 +766,6 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             if checked then
                 reg:SetEnabled("overlays", "wue", false)
             end
-            OneWoW.OverlayEngine:Refresh()
         end)
         yOffset = yOffset - 28
 
@@ -867,7 +866,6 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 if refreshEnforcePawnState then
                     refreshEnforcePawnState(modeInfo.value)
                 end
-                OneWoW.OverlayEngine:Refresh()
             end)
 
             radioButtons[#radioButtons + 1] = radio
@@ -887,7 +885,6 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             enforceCb:SetChecked(reg:GetOverlaySetting(featureId, "pawnEnforceReqLevel") ~= false)
             enforceCb:SetScript("OnClick", function(self)
                 reg:SetOverlaySetting(featureId, "pawnEnforceReqLevel", self:GetChecked())
-                OneWoW.OverlayEngine:Refresh()
             end)
             enforceCb:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -916,7 +913,6 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         selfSpecCb:SetChecked(reg:GetOverlaySetting(featureId, "selfSpecMatch") or false)
         selfSpecCb:SetScript("OnClick", function(self)
             reg:SetOverlaySetting(featureId, "selfSpecMatch", self:GetChecked())
-            OneWoW.OverlayEngine:Refresh()
         end)
         selfSpecCb:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -1445,7 +1441,6 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             onSelect = function(value, text)
                 fontDD._text:SetText(text)
                 reg:SetOverlaySetting(featureId, "fontFamily", value)
-                OneWoW.OverlayEngine:Refresh()
             end,
             getActiveValue = ResolveOverlayFontKey,
         })
@@ -1476,7 +1471,6 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             onSelect = function(value, text)
                 outlineDD._text:SetText(text)
                 reg:SetOverlaySetting(featureId, "fontOutline", outlineValueMap[value])
-                OneWoW.OverlayEngine:Refresh()
             end,
             getActiveValue = function()
                 local cur = reg:GetOverlaySetting(featureId, "fontOutline") or "OUTLINE"
@@ -1757,11 +1751,8 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     vendorApplyAll:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     vendorApplyAll:SetScript("OnClick", function()
         local val = vendorCb:GetChecked()
-        local db = OneWoW.db.global.settings.overlays
         for id in pairs(OVERLAY_SETTINGS_IDS) do
-            if db[id] then
-                db[id].applyToVendorItems = val
-            end
+            reg:SetOverlaySetting(id, "applyToVendorItems", val)
         end
     end)
     yOffset = yOffset - 30
@@ -1778,11 +1769,8 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     ahApplyAll:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     ahApplyAll:SetScript("OnClick", function()
         local val = ahCb:GetChecked()
-        local db = OneWoW.db.global.settings.overlays
         for id in pairs(OVERLAY_SETTINGS_IDS) do
-            if db[id] then
-                db[id].applyToAuctionHouse = val
-            end
+            reg:SetOverlaySetting(id, "applyToAuctionHouse", val)
         end
     end)
     yOffset = yOffset - 30 - 10
@@ -1813,14 +1801,19 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     local resetBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_RESET_DEFAULTS_BTN"], height = 26 })
     resetBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     resetBtn:SetScript("OnClick", function()
-        local db = OneWoW.db.global.settings.overlays
-        if db[featureId] then
-            local wasEnabled = db[featureId].enabled
-            db[featureId] = nil
-            OneWoW:InitializeDatabase()
-            db[featureId].enabled = wasEnabled
-            ShowOverlayDetail(split, feature, selectedRow)
+        -- Reset this feature to shipped defaults, preserving its enable state.
+        local fresh = OneWoW:GetSettingsDefaults("overlays")[featureId]
+        fresh.enabled = reg:IsEnabled("overlays", featureId)
+        local cfg = reg:GetFeatureSettings("overlays", featureId)
+        for key in pairs(cfg) do
+            if fresh[key] == nil then
+                reg:SetOverlaySetting(featureId, key, nil)
+            end
         end
+        for key, value in pairs(fresh) do
+            reg:SetOverlaySetting(featureId, key, value)
+        end
+        ShowOverlayDetail(split, feature, selectedRow)
     end)
     yOffset = yOffset - 30 - 10
 
@@ -1841,12 +1834,24 @@ local function BuildFeatureList(split, tabName)
     local lsc = split.listScrollChild
     local features = OneWoW.SettingsFeatureRegistry:GetByTab(tabName)
     local selectedRow = nil
+    local selectedFeatureId = nil
     local allRows = {}
+
+    local function UpdateEnabledCount()
+        local enabledCount = 0
+        for _, f in ipairs(features) do
+            if OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", f.id) then
+                enabledCount = enabledCount + 1
+            end
+        end
+        split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
+    end
 
     local function RenderRows(filterText)
         OneWoW_GUI:ClearFrame(lsc)
         selectedRow = nil
         allRows = {}
+        local rowToSelect = nil
         local yOffset = -5
         local filter = (filterText or ""):lower()
 
@@ -1866,6 +1871,7 @@ local function BuildFeatureList(split, tabName)
                             selectedRow:SetActive(false)
                         end
                         selectedRow = self
+                        selectedFeatureId = capturedFeature.id
                         self:SetActive(true)
                         ShowOverlayDetail(split, capturedFeature, self)
                         if split.rightStatusText then
@@ -1876,6 +1882,9 @@ local function BuildFeatureList(split, tabName)
                 })
                 row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)
                 row:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
+                if capturedFeature.id == selectedFeatureId then
+                    rowToSelect = row
+                end
                 table.insert(allRows, row)
                 yOffset = yOffset - 34
             end
@@ -1883,8 +1892,9 @@ local function BuildFeatureList(split, tabName)
 
         lsc:SetHeight(math.abs(yOffset) + 10)
         if #allRows > 0 and not selectedRow then
-            allRows[1]:Click()
+            (rowToSelect or allRows[1]):Click()
         end
+        UpdateEnabledCount()
     end
 
     RenderRows("")
@@ -1896,13 +1906,13 @@ local function BuildFeatureList(split, tabName)
         end)
     end
 
-    local enabledCount = 0
-    for _, f in ipairs(features) do
-        if OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", f.id) then
-            enabledCount = enabledCount + 1
-        end
+    -- Re-render on tab activation: the selected feature's detail pane is
+    -- rebuilt with fresh registry reads, so state changed elsewhere (e.g. the
+    -- Tooltips > Gear Upgrades mirror of overlays/upgrade) shows correctly.
+    split.RefreshList = function()
+        local text = split.searchBox and split.searchBox:GetSearchText() or ""
+        RenderRows(text)
     end
-    split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
 end
 
 function GUI:CreateOverlaysTab(parent)
@@ -1914,4 +1924,9 @@ function GUI:CreateOverlaysTab(parent)
         BuildFeatureList(split, "overlays")
         OneWoW_GUI:ApplyFontToFrame(parent)
     end)
+
+    -- nil until the deferred BuildFeatureList above has run once.
+    parent.Activate = function()
+        if split.RefreshList then split.RefreshList() end
+    end
 end
