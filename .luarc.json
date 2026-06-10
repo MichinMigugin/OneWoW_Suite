@@ -6,9 +6,10 @@
     ".lua-defs",
     "OneWoW_Utility_DevTool/Data/AtlasInfo*.lua",
     "OneWoW_Utility_DevTool/Data/SoundFiles*.lua",
-    "OneWoW_CatalogData_Journal/Data/BurningCrusade-tables.lua",
+    "OneWoW_CatalogData_Journal/Data/",
     "OneWoW_CatalogData_Quests/Data/QuestDB",
     "OneWoW_CatalogData_Quests/Tools",
+    "OneWoW_CatalogData_Tradeskills/Data",
     "OneWoW_Bags/API/Examples",
     "Libs/"
   ],
