@@ -289,7 +289,7 @@ function MainWindow:Create()
                 MainWindow:RefreshSidebar()
                 MainWindow:RefreshItemList()
             end
-        end, mainFrame)
+        end)
     end)
 
     local sidebarScrollContainer = CreateFrame("Frame", nil, sidebarPanel)
@@ -471,7 +471,7 @@ function MainWindow:Create()
             else
                 print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_INVALID_ID"])
             end
-        end, mainFrame)
+        end, L["OWSL_BTN_ADD"])
     end)
 
     local listContainer = CreateFrame("Frame", nil, contentPanel)
@@ -1386,7 +1386,7 @@ function MainWindow:ShowListContextMenu(listName)
                             MainWindow:RefreshItemList()
                         end
                     end,
-                    mainFrame
+                    L["OWSL_BTN_RENAME"]
                 )
             end)
         end
