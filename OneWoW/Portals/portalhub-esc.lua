@@ -841,3 +841,7 @@ function EscMenu:RestoreInstanceStatsPosition()
 		instanceStatsFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -10, -10)
 	end
 end
+
+OneWoW:RegisterCoreLoginHandler("PortalHubEsc", function()
+	EscMenu:Initialize()
+end, "early")

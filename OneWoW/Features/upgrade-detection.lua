@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -178,7 +178,7 @@ function UpgradeDetection:CheckItemUpgradeDetailed(itemLink, itemLocation)
     local mode = GetMode()
     if mode == "OFF" then return nil end
 
-    local _, _, _, equipLoc, _, classID, subclassID = C_Item.GetItemInfoInstant(itemLink)
+    local _, _, _, equipLoc, _, classID = C_Item.GetItemInfoInstant(itemLink)
     if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_NON_EQUIP" then return nil end
     if classID ~= Enum.ItemClass.Armor and classID ~= Enum.ItemClass.Weapon then return nil end
 
@@ -522,5 +522,9 @@ function UpgradeDetection:ShowPawnModePrompt()
     end)
 end
 
-UpgradeDetection.CanPlayerUseItem = function(self, itemLink) return CanPlayerUseItem(itemLink) end
+UpgradeDetection.CanPlayerUseItem = function(_, itemLink) return CanPlayerUseItem(itemLink) end
 UpgradeDetection.SLOT_NAMES = SLOT_NAMES
+
+OneWoW:RegisterCoreLoginHandler("UpgradeDetection", function()
+    UpgradeDetection:Initialize()
+end, "early")

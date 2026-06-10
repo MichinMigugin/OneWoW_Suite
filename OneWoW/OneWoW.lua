@@ -166,33 +166,9 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         -- After this point, a mid-session LoadAddOn won't deliver the unit's own
         -- one-shot PLAYER_LOGIN, so OneWoW:EnsureLoaded drives its login hooks.
         OneWoW._playerLoginFired = true
-        if OneWoW.Minimap then
-            OneWoW.Minimap:Initialize()
-        end
-        if OneWoW.ItemStatus then
-            OneWoW.ItemStatus:Initialize()
-        end
-        if OneWoW.UpgradeDetection then
-            OneWoW.UpgradeDetection:Initialize()
-        end
-        if OneWoW.OverlayEngine then
-            OneWoW.OverlayEngine:Initialize()
-        end
-        if OneWoW.PortalHubModule then
-            OneWoW.PortalHubModule:Initialize()
-        end
-        if OneWoW.PortalHubEsc then
-            OneWoW.PortalHubEsc:Initialize()
-        end
-        if OneWoW.TooltipEngine then
-            OneWoW.TooltipEngine:Initialize()
-        end
-        if OneWoW.ExternalTooltipSync_OnLogin then
-            OneWoW.ExternalTooltipSync_OnLogin()
-        end
-        if OneWoW.InitializeContextMenus then
-            OneWoW:InitializeContextMenus()
-        end
+        -- Feature inits register themselves as "early" handlers in their own
+        -- files; "late" handlers (integrations) run after the load banner.
+        OneWoW:FireCoreLoginHandlers("early")
 
         for _, comp in ipairs(OneWoW.ModuleManifest or {}) do
             if not OneWoW._registeredAddons[comp.display] and C_AddOns.IsAddOnLoaded(comp.addon) then
@@ -222,7 +198,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
             end)
         end
 
-        OneWoW:FireCoreLoginHandlers()
+        OneWoW:FireCoreLoginHandlers("late")
         OneWoW:RunManifestLoginPhase()
     elseif event == "PLAYER_ENTERING_WORLD" then
         local isLogin, isReload = ...

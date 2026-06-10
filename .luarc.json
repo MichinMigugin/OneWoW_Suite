@@ -264,6 +264,7 @@
     "OneWoWMainWindow",
     "OneWoW_Notes",
     "OneWoW_NotesMainFrame",
+    "OneWoW_QoL",
     "OneWoW_QoLDevHelpDialog",
     "OneWoW_RecipeKnownUtil",
     "OneWoW_ShoppingList_DB",

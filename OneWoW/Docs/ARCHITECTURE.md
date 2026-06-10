@@ -176,6 +176,14 @@ The LoadAddOn hook drives **`OnAddonLoaded` only** — `OnPlayerLogin` /
 force-loaded during core's `ADDON_LOADED` never receive their own WoW
 `ADDON_LOADED`.
 
+**Dispatch is manifest-gated.** `DispatchUnitOnAddonLoaded` only runs the hook
+for `ModuleManifest` units (roots and their `stores`), checked via
+`OneWoW:IsManifestUnit` (`Core/AddonLoader.lua`). A Blizzard or third-party
+addon whose `_G` table happens to define `OnAddonLoaded` is never treated as a
+suite load unit; a suppressed would-have-run hook records `dispatch.skip`
+(§3.11). Addon-loaded **watchers** (§3.4.1) remain ungated — they observe every
+addon load, manifest or not.
+
 Data stores use `OneWoW:BootStore(ns, config)` (`Core/StoreBootstrap.lua`).
 
 ### 3.4.1 Addon-available notification (watchers)
@@ -216,9 +224,22 @@ at login" check, which misses mid-session and force-load paths.
 
 ### 3.5 `OnPlayerLogin`
 
-At core `PLAYER_LOGIN`: `OneWoW:RunManifestLoginPhase()` walks the manifest and calls
+At core `PLAYER_LOGIN`: `OneWoW:FireCoreLoginHandlers("early")` (feature inits),
+then the load banner, then `OneWoW:FireCoreLoginHandlers("late")` (integrations),
+then `OneWoW:RunManifestLoginPhase()` walks the manifest and calls
 `DispatchUnitOnAddonLoaded` (safety net; no-op when already run) then `OnPlayerLogin()`
 on each loaded unit.
+
+**Core login handlers are phased.** `RegisterCoreLoginHandler(id, fn, phase)`
+takes `phase = "early"` (before the load banner — core feature `Initialize()`
+calls, registered at the bottom of each feature file) or `"late"` (default —
+after the banner; external-addon integrations like Bagnon, toast wiring).
+
+**Handlers within a phase must be order-independent.** A handler that needs
+another subsystem initialized must express that in code (call it, or make the
+dependency lazy/idempotent) — never rely on registration (TOC load) order. This
+is what lets a handler relocate to another load unit without ordering
+regressions.
 
 Mid-session loads use `OneWoW:BringUp(addon)`: loads `{ addon, ...stores }`, then one
 `Settle` pass (`OnPlayerLogin` over the set) so a parent's login runs only after its
@@ -332,9 +353,11 @@ no-op when disabled — called from the lifecycle funnels in `Lifecycle.lua` and
 | `ensureLoaded` / `ensureLoaded.skip` | `EnsureLoaded` | Load outcome (`ok`, `reason`) or skip (`OPTED_OUT`/`COMBAT`) |
 | `loadAddOn.hook` | `LoadAddOn` post-hook | Every load path's single chokepoint (`inBringUp`) |
 | `OnAddonLoaded` / `OnPlayerLogin` / `OnPlayerEnteringWorld` | `Lifecycle.RunUnitHook` | Per-unit hook **fires** (recorded only when the hook exists); defined in `Lifecycle.lua`, called from `AddonLoader.lua` too |
+| `dispatch.skip` | `DispatchUnitOnAddonLoaded` | Manifest gate suppressed a non-manifest unit's `OnAddonLoaded` (`reason=NOT_MANIFEST`; recorded only when the hook exists) |
+| `optOut.clear` | `AddonList_LoadAddOn` post-hook | Blizzard addon-list Load button cleared a per-character soft opt-out (`scope`, `source`) |
 | `watchers.notify` / `watcher.catchup` | `NotifyAddonLoadedWatchers`, registration catch-up | Addon-loaded watcher fan-out and late-registrant replay |
 | `manifest.loginPhase` | `RunManifestLoginPhase` | Login walk start |
-| `core.loginHandlers` / `core.enteringWorldHandlers` | `FireCore*Handlers` | Core handler fans (`count`) |
+| `core.loginHandlers` / `core.enteringWorldHandlers` | `FireCore*Handlers` | Core handler fans (`count`; login records once per `phase` — `early` then `late`) |
 | `enteringWorld` | `DispatchEnteringWorld` | Real PEW (`isLogin`, `isReload`, `isZoning`) |
 | `catchUpPEW` | `CatchUpEnteringWorld` | Synthetic mid-session PEW catch-up (attempted per unit) |
 | `defer.combat` / `combat.flush` | `WithAddon`, combat frame | Combat-deferred load queue/flush |
@@ -366,6 +389,23 @@ Two layers:
 
 Scope: Manage Features selects account vs current character for both layers. Home is
 **read-only** — links to Manage Features for writes.
+
+**Opt-out clears at the intent source, never in the generic load path.** The
+`C_AddOns.LoadAddOn` post-hook runs init for every load but makes no policy
+decisions about persisted state — a programmatic load (ours or a third-party
+addon force-loading a suite unit) never alters the user's opt-out; the unit runs
+for that session and the persisted choice survives the next reload. Each
+explicit-enable surface owns its own clear:
+
+| Explicit-enable surface | Who clears opt-out |
+|---|---|
+| Manage Features soft Apply / hard Apply / "Load now" | `FirstRunWizard.lua` writes `SetFeatureOptOut` per selection |
+| Blizzard addon-list **Load Addon** button | `hooksecurefunc("AddonList_LoadAddOn", …)` in `Core/AddonLoader.lua` (char scope; traced as `optOut.clear`) |
+
+Accepted tradeoff: the addon-list hook names a Blizzard FrameXML function. If a
+future patch renames `AddonList_LoadAddOn`, the button silently stops clearing
+opt-out — the unit still loads and inits via the generic hook, and Manage
+Features remains the in-suite path to clear opt-out.
 
 ### 4.1 Enable-state API
 

@@ -154,9 +154,20 @@ Lifecycle.RunUnitHook = RunUnitHook
 local onAddonLoadedDone = {}
 
 --- Dispatch OnAddonLoaded at most once per manifest unit per session.
+--- Manifest-gated: a Blizzard or third-party addon whose _G table happens to
+--- define OnAddonLoaded is never treated as a suite load unit.
 ---@param addonName string _G key for the load unit
 function OneWoW:DispatchUnitOnAddonLoaded(addonName)
     if not addonName or onAddonLoadedDone[addonName] then return end
+    if not OneWoW:IsManifestUnit(addonName) then
+        -- Trace only when the gate actually suppressed a would-have-run hook;
+        -- a non-manifest addon with no OnAddonLoaded was a no-op before too.
+        local unit = _G[addonName]
+        if unit and type(unit.OnAddonLoaded) == "function" then
+            OneWoW:TraceRecord("dispatch.skip", addonName, { reason = "NOT_MANIFEST" })
+        end
+        return
+    end
     onAddonLoadedDone[addonName] = true
     RunUnitHook(addonName, "OnAddonLoaded")
 end
@@ -204,11 +215,15 @@ function OneWoW:RegisterAddonLoadedWatcher(addonName, fn)
     end
 end
 
+--- Handlers within a phase must be order-independent: a handler that needs
+--- another subsystem initialized must express that in code (call it, or make
+--- the dependency lazy/idempotent), never rely on registration order.
 ---@param id string unique handler id (for debugging; not used for dedup)
 ---@param fn fun()
-function OneWoW:RegisterCoreLoginHandler(id, fn)
+---@param phase "early"|"late"|nil "early" = before the load banner; default "late"
+function OneWoW:RegisterCoreLoginHandler(id, fn, phase)
     if not fn then return end
-    coreLoginHandlers[#coreLoginHandlers + 1] = { id = id, fn = fn }
+    coreLoginHandlers[#coreLoginHandlers + 1] = { id = id, fn = fn, phase = phase or "late" }
 end
 
 ---@param id string unique handler id
@@ -218,10 +233,17 @@ function OneWoW:RegisterCoreEnteringWorldHandler(id, fn)
     coreEnteringWorldHandlers[#coreEnteringWorldHandlers + 1] = { id = id, fn = fn }
 end
 
-function OneWoW:FireCoreLoginHandlers()
-    self:TraceRecord("core.loginHandlers", nil, { count = #coreLoginHandlers })
+---@param phase "early"|"late"
+function OneWoW:FireCoreLoginHandlers(phase)
+    local n = 0
     for _, entry in ipairs(coreLoginHandlers) do
-        SafeCall(entry.id, entry.fn)
+        if entry.phase == phase then n = n + 1 end
+    end
+    self:TraceRecord("core.loginHandlers", nil, { phase = phase, count = n })
+    for _, entry in ipairs(coreLoginHandlers) do
+        if entry.phase == phase then
+            SafeCall(entry.id, entry.fn)
+        end
     end
 end
 

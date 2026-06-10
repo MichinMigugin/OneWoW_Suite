@@ -1,21 +1,18 @@
--- OneWoW Addon File
--- OneWoW/Features/ContextMenus.lua
--- Created by MichinMuggin (Ricky)
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 local L = OneWoW.L
 
 local function GetNotes()
-    return _G.OneWoW_Notes
+    return OneWoW_Notes
 end
 
 local function GetPlayMountsModule()
-    local qol = _G.OneWoW_QoL
+    local qol = OneWoW_QoL
     if not qol then return nil end
     return qol.PlayMountsModule
 end
 
 local function IsPlayMountsEnabled()
-    local qol = _G.OneWoW_QoL
+    local qol = OneWoW_QoL
     if not qol or not qol.db or not qol.db.global or not qol.db.global.modules then return false end
     local modData = qol.db.global.modules["playmounts"]
     if modData and modData.enabled ~= nil then
@@ -25,7 +22,7 @@ local function IsPlayMountsEnabled()
 end
 
 local function IsMatchMountEnabled()
-    local qol = _G.OneWoW_QoL
+    local qol = OneWoW_QoL
     if not qol or not qol.db or not qol.db.global or not qol.db.global.modules then return true end
     local modData = qol.db.global.modules["playmounts"]
     if not modData then return true end
@@ -40,11 +37,11 @@ local function NavigateToPlayer(fullName)
     local notes = GetNotes()
     if not notes then return end
     notes.pendingPlayerSelect = fullName
-    if _G.OneWoW and _G.OneWoW.GUI then
-        _G.OneWoW.GUI:Show("notes")
+    if OneWoW.GUI then
+        OneWoW.GUI:Show("notes")
         C_Timer.After(0.25, function()
-            if _G.OneWoW and _G.OneWoW.GUI then
-                _G.OneWoW.GUI:SelectSubTab("notes", "players")
+            if OneWoW.GUI then
+                OneWoW.GUI:SelectSubTab("notes", "players")
             end
         end)
     end
@@ -54,11 +51,11 @@ local function NavigateToNPC(npcID)
     local notes = GetNotes()
     if not notes then return end
     notes.pendingNPCSelect = tonumber(npcID)
-    if _G.OneWoW and _G.OneWoW.GUI then
-        _G.OneWoW.GUI:Show("notes")
+    if OneWoW.GUI then
+        OneWoW.GUI:Show("notes")
         C_Timer.After(0.25, function()
-            if _G.OneWoW and _G.OneWoW.GUI then
-                _G.OneWoW.GUI:SelectSubTab("notes", "npcs")
+            if OneWoW.GUI then
+                OneWoW.GUI:SelectSubTab("notes", "npcs")
             end
         end)
     end
@@ -284,7 +281,7 @@ local function HandleMatchMount(unit)
     end
 end
 
-local function PlayerContextMenuHandler(owner, rootDescription, contextData)
+local function PlayerContextMenuHandler(_, rootDescription, contextData)
     if not contextData or not contextData.unit then return end
     if not UnitIsPlayer(contextData.unit) then return end
 
@@ -378,7 +375,7 @@ local function HandleNPCAdd(unit, npcIDNum)
     NavigateToNPC(npcIDNum)
 end
 
-local function HandleNPCUpdateLocation(unit, npcIDNum)
+local function HandleNPCUpdateLocation(_, npcIDNum)
     local notes = GetNotes()
     if not notes or not notes.NPCs then
         print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
@@ -405,7 +402,7 @@ local function HandleNPCUpdateLocation(unit, npcIDNum)
     end
 end
 
-local function NPCContextMenuHandler(owner, rootDescription, contextData)
+local function NPCContextMenuHandler(_, rootDescription, contextData)
     if not contextData or not contextData.unit then return end
     if UnitIsPlayer(contextData.unit) then return end
     if not UnitExists(contextData.unit) then return end
@@ -467,3 +464,7 @@ function OneWoW:InitializeContextMenus()
     Menu.ModifyMenu("MENU_UNIT_ENEMY",  NPCContextMenuHandler)
     Menu.ModifyMenu("MENU_UNIT_TARGET", NPCContextMenuHandler)
 end
+
+OneWoW:RegisterCoreLoginHandler("ContextMenus", function()
+    OneWoW:InitializeContextMenus()
+end, "early")

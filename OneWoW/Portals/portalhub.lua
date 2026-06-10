@@ -310,3 +310,7 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 
 	return portals
 end
+
+OneWoW:RegisterCoreLoginHandler("PortalHubModule", function()
+	PortalHub:Initialize()
+end, "early")

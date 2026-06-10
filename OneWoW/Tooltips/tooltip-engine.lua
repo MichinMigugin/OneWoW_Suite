@@ -348,3 +348,7 @@ function TooltipEngine:HookAchievementUI()
         end)
     end
 end
+
+OneWoW:RegisterCoreLoginHandler("TooltipEngine", function()
+    TooltipEngine:Initialize()
+end, "early")

@@ -1704,3 +1704,7 @@ function Engine:Initialize()
 
     InitializeSurfaces()
 end
+
+OneWoW:RegisterCoreLoginHandler("OverlayEngine", function()
+    Engine:Initialize()
+end, "early")

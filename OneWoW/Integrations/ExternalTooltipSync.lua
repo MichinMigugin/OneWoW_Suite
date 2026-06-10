@@ -137,3 +137,7 @@ end)
 function OneWoW.ExternalTooltipSync_OnLogin()
     Sync:SyncAll()
 end
+
+OneWoW:RegisterCoreLoginHandler("ExternalTooltipSync", function()
+    OneWoW.ExternalTooltipSync_OnLogin()
+end, "early")

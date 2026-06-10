@@ -63,11 +63,11 @@ Steps **7 → 8 → 9** must stay in sequence.
 
 De-risks everything after. Ship early; no dependency on other steps.
 
-- [ ] Gate `DispatchUnitOnAddonLoaded` / `RunPostLoadInit` to **manifest units
+- [x] Gate `DispatchUnitOnAddonLoaded` / `RunPostLoadInit` to **manifest units
   only** — stop calling `OnAddonLoaded` on arbitrary `_G[name]` tables when
   Blizzard or third-party addons load (`Core/Lifecycle.lua`,
   `Core/AddonLoader.lua`).
-- [ ] Scope opt-out clearing in the `LoadAddOn` post-hook
+- [x] Scope opt-out clearing in the `LoadAddOn` post-hook
   (`Core/AddonLoader.lua` ~506): only clear `featureOptOut` for explicit user
   loads (Blizzard "Load Addon", Manage Features), not every programmatic
   `LoadAddOn` from other addons.
@@ -80,7 +80,7 @@ De-risks everything after. Ship early; no dependency on other steps.
   `OnTooltipSetItem` branch (`tooltip-engine.lua` ~100–118, ~338–390) and the
   `Initialize` retry timer — `TooltipDataProcessor` is always present on Retail
   12+.
-- [ ] Convert core's `PLAYER_LOGIN` if-chain (`OneWoW.lua` ~169–195) to
+- [x] Convert core's `PLAYER_LOGIN` if-chain (`OneWoW.lua` ~169–195) to
   `RegisterCoreLoginHandler` registrations — prerequisite for moving feature
   `Initialize()` calls to QoL in step 9.
 
@@ -274,7 +274,8 @@ Consolidates existing QoL coupling (`OneWoW_QoL/Modules/external/escpanel.lua`,
 - `portalHub` settings block in `Core/Database.lua` defaults stays in `OneWoW_DB`.
 
 - [ ] Move files; wire QoL lifecycle for `PortalHubModule` / `PortalHubEsc`
-  init (currently in core `PLAYER_LOGIN` if-chain).
+  init (currently early-phase `RegisterCoreLoginHandler` registrations in the
+  portal files).
 - [ ] Register `portals` settings tab in QoL.
 - [ ] Remove `portals` from `qolFeatureTabs`.
 

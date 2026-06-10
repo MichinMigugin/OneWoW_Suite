@@ -410,6 +410,32 @@ function OneWoW:EnsureLoaded(name, opts)
     return true
 end
 
+-- Lazy: ModuleManifest is defined later in this file, but only at file scope --
+-- it always exists by the time any load event can call IsManifestUnit.
+local manifestUnits
+
+--- True for ModuleManifest roots and their data-store units -- the set of load
+--- units whose lifecycle hooks core is allowed to dispatch.
+---@param name string addon folder / _G key
+---@return boolean
+function OneWoW:IsManifestUnit(name)
+    if not name then return false end
+    if not manifestUnits then
+        manifestUnits = {}
+        for _, m in ipairs(OneWoW.ModuleManifest) do
+            if m.addon and m.addon ~= "" then
+                manifestUnits[m.addon] = true
+            end
+            if m.stores then
+                for _, store in ipairs(m.stores) do
+                    manifestUnits[store] = true
+                end
+            end
+        end
+    end
+    return manifestUnits[name] == true
+end
+
 --- Manifest unit set for a feature: { addon, ...stores } in manifest order.
 --- Returns nil when name is not a manifest root (caller falls back to { name }).
 ---@param addonName string
@@ -471,9 +497,10 @@ end
 -- Single post-load init driver: every load path funnels through C_AddOns.LoadAddOn
 -- (the orchestrator, EnsureLoaded, on-demand WithAddon, and Blizzard's addon-list
 -- "Load Addon" button on a soft-disabled-but-enabled unit). Post-hooking it here
--- means a manual button click runs the unit through its full init for free. A
--- manual load also means the user wants the unit active, so clear any current-
--- character opt-out so the choice sticks.
+-- means a manual button click runs the unit through its full init for free. This
+-- hook makes no policy decisions about persisted state: opt-out clearing lives on
+-- the explicit-enable surfaces (Manage Features, the AddonList_LoadAddOn hook
+-- below), never in the generic load path.
 hooksecurefunc(C_AddOns, "LoadAddOn", function(nameOrIndex)
     local name = nameOrIndex
     if type(name) ~= "string" then
@@ -493,7 +520,21 @@ hooksecurefunc(C_AddOns, "LoadAddOn", function(nameOrIndex)
         Settle(single)
         CatchUpEnteringWorld(single)
     end
+end)
+
+-- The Blizzard addon list's "Load Addon" button is an explicit user enable:
+-- clear any per-character soft opt-out so the choice sticks across reloads.
+-- Programmatic C_AddOns.LoadAddOn calls (ours or third-party) never touch
+-- opt-out -- user intent is only ever expressed through this button or
+-- Manage Features, and each surface owns its own clear. If a future patch
+-- renames AddonList_LoadAddOn this hook silently stops clearing (the unit
+-- still loads and inits via the generic hook); Manage Features remains the
+-- in-suite path to clear opt-out.
+hooksecurefunc("AddonList_LoadAddOn", function(index)
+    local name = C_AddOns.GetAddOnInfo(index)
+    if not name or not C_AddOns.IsAddOnLoaded(name) then return end
     if OneWoW:IsFeatureOptedOut(name) then
+        OneWoW:TraceRecord("optOut.clear", name, { scope = "char", source = "addonList" })
         OneWoW:SetFeatureOptOut(name, false, true)
     end
 end)

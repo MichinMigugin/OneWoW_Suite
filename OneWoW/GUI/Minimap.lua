@@ -303,3 +303,7 @@ end
 function MinimapMod:IsShown()
     return minimapBtn and minimapBtn:IsShown()
 end
+
+OneWoW:RegisterCoreLoginHandler("Minimap", function()
+    MinimapMod:Initialize()
+end, "early")

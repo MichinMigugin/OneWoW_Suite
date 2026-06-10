@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 OneWoW.ItemStatus = {}
 local IS = OneWoW.ItemStatus
@@ -16,10 +16,6 @@ end
 
 local function GetDB()
     return OneWoW.db and OneWoW.db.global and OneWoW.db.global.itemStatus
-end
-
-function IS:Initialize()
-    if not OneWoW.db or not OneWoW.db.global then return end
 end
 
 function IS:GetAllStatuses()
