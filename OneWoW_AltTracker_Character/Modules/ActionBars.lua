@@ -1,5 +1,8 @@
 local addonName, ns = ...
 
+local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+if not OneWoW_GUI then return end
+
 local C_Spell, C_Item = C_Spell, C_Item
 
 ns.ActionBars = {}
@@ -405,14 +408,10 @@ function Module:CollectData(charKey, charData)
 end
 
 function Module:CollectActionBarsData()
-    local playerName = UnitName("player")
-    local realmName = GetRealmName()
-
-    if not playerName or not realmName then
+    local charKey = OneWoW_GUI:BuildCharKey()
+    if not charKey then
         return nil
     end
-
-    local charKey = playerName .. "-" .. realmName
 
     local specIndex = GetSpecialization()
     if not specIndex then
@@ -442,7 +441,8 @@ function Module:CollectActionBarsData()
     local success = self:CollectData(charKey, charData)
 
     if success then
-        print(string.format("|cFFFFD100OneWoW|r AltTracker: Action bar data saved for %s (%s)", playerName, specName))
+        local charName = charKey:match("^(.-)%-") or charKey
+        print(string.format("|cFFFFD100OneWoW|r AltTracker: Action bar data saved for %s (%s)", charName, specName))
         return charData, specName
     else
         return nil
@@ -544,11 +544,8 @@ function Module:GetActionBarSet(setName)
 end
 
 function Module:SaveActionBarSet(setName)
-    local playerName = UnitName("player")
-    local realmName = GetRealmName()
-    if not playerName or not realmName then return nil end
-
-    local charKey = playerName .. "-" .. realmName
+    local charKey = OneWoW_GUI:BuildCharKey()
+    if not charKey then return nil end
     local specIndex = GetSpecialization()
     if not specIndex then
         print("|cFFFFD100OneWoW|r AltTracker: Cannot backup: No active specialization")
@@ -602,7 +599,8 @@ function Module:SaveActionBarSet(setName)
         } or nil,
     }
 
-    print(string.format("|cFFFFD100OneWoW|r AltTracker: Set \"%s\" saved (%s - %s)", setName, playerName, specName))
+    local charName = charKey:match("^(.-)%-") or charKey
+    print(string.format("|cFFFFD100OneWoW|r AltTracker: Set \"%s\" saved (%s - %s)", setName, charName, specName))
     return sets[setName]
 end
 

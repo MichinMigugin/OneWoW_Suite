@@ -37,13 +37,10 @@ function ns:InitializeDatabase()
 
     OneWoW_AltTracker_Collections_DB.version = 4
 
-    if not OneWoW_AltTracker_Collections_DB.charKeysCanonicalized then
-        local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Collections_DB.characters)
-        OneWoW_AltTracker_Collections_DB.charKeysCanonicalized = true
-        if migrated > 0 then
-            C_Timer.After(5, function()
-                print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " legacy character key(s) in collections data.")
-            end)
-        end
+    local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Collections_DB.characters)
+    if migrated > 0 then
+        C_Timer.After(5, function()
+            print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " duplicate character key(s) in collections data.")
+        end)
     end
 end
