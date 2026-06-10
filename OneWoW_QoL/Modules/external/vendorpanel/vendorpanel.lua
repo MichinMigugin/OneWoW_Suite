@@ -1362,6 +1362,31 @@ function VendorPanel:StopUpdates()
     end
 end
 
+--- Align Blizzard's merchant spec filter with showAllArmor. When enabled, sets the
+--- native dropdown to all class specs (LE_LOOT_FILTER_CLASS); when disabled,
+--- restores the default current-spec filter.
+function VendorPanel:SyncMerchantSpecFilter()
+    if not MerchantFrame or not MerchantFrame:IsShown() then return end
+
+    if state.showAllArmor then
+        SetMerchantFilter(LE_LOOT_FILTER_CLASS)
+    else
+        ResetSetMerchantFilter()
+    end
+
+    if MerchantFrame.FilterDropdown and MerchantFrame.FilterDropdown:IsShown() then
+        MerchantFrame.FilterDropdown:Update()
+    end
+
+    MerchantFrame.page = 1
+    MerchantFrame_Update()
+    VPFilters.ScanVendor()
+
+    if state.junkPreviewPanel and state.junkPreviewPanel.vendorDropdown and state.junkPreviewPanel.vendorDropdown.RefreshFilters then
+        state.junkPreviewPanel.vendorDropdown:RefreshFilters()
+    end
+end
+
 function VendorPanel:OnMerchantShow()
     state.currentVendorFilter = "Show All"
     local settings = GetSettings()
@@ -1406,6 +1431,14 @@ function VendorPanel:OnMerchantShow()
     end
 
     C_Timer.After(0, function() VendorPanel:UpdatePanelToggleButton() end)
+
+    if state.showAllArmor then
+        C_Timer.After(0, function()
+            if MerchantFrame and MerchantFrame:IsShown() then
+                VendorPanel:SyncMerchantSpecFilter()
+            end
+        end)
+    end
 end
 
 function VendorPanel:OnMerchantClosed()

@@ -357,13 +357,13 @@ function VendorPanel:CreatePreviewPanel()
         if state.availableFilters["Equipable"] then
             table.insert(items, {
                 type = "checkbox",
-                text = "All Armor Types",
+                text = ns.L["VENDOR_ALL_SPECS_TYPES"],
                 checked = state.showAllArmor,
                 onToggle = function(checked)
                     state.showAllArmor = checked
                     local settings = GetSettings()
                     settings.showAllArmor = state.showAllArmor
-                    if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
+                    VendorPanel:SyncMerchantSpecFilter()
                 end,
             })
             table.insert(items, { type = "divider" })
