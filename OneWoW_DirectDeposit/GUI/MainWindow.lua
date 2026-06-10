@@ -1082,7 +1082,11 @@ end
 
 function GUI:Show()
     if not isInitialized then
-        GUI:InitMainWindow()
+        local success, err = pcall(function() GUI:InitMainWindow() end)
+        if not success then
+            print("|cffff0000Direct Deposit ERROR:|r " .. tostring(err))
+            return
+        end
     end
     if not MainWindow then return end
     MainWindow:Show()
