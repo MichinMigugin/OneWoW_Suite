@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local GUI = OneWoW.GUI
 local L    = OneWoW.L
@@ -233,7 +233,7 @@ local function CreateIconPicker(parent, initialIcon, onChange)
     local function LayoutPicker()
         local yPos = -2
 
-        for catIdx, cat in ipairs(ICON_CATEGORIES) do
+        for catIdx, _ in ipairs(ICON_CATEGORIES) do
             local hdrData = headers[catIdx]
             local hdr     = hdrData.frame
 
@@ -1427,7 +1427,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         local currentKey = ResolveOverlayFontKey()
         local currentInfo = OneWoW_GUI:GetFontInfoByKey(currentKey)
         local currentLabel = currentInfo and currentInfo.label or "WoW Default"
-        local fontDD, fontDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = currentLabel })
+        local fontDD = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = currentLabel })
         OneWoW_GUI:AttachFilterMenu(fontDD, {
             searchable = true,
             buildItems = function()
@@ -1463,7 +1463,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         local currentOutline = reg:GetOverlaySetting(featureId, "fontOutline") or "OUTLINE"
         local outlineDisplayMap = {[""] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline"}
         local outlineValueMap = {["None"] = "", ["Outline"] = "OUTLINE", ["Thick Outline"] = "THICKOUTLINE"}
-        local outlineDD, outlineDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = outlineDisplayMap[currentOutline] })
+        local outlineDD = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = outlineDisplayMap[currentOutline] })
         OneWoW_GUI:AttachFilterMenu(outlineDD, {
             searchable = false,
             buildItems = function()

@@ -1,5 +1,3 @@
-local ADDON_NAME, OneWoW = ...
-
 local LSM = LibStub("LibSharedMedia-3.0", true)
 if not LSM then return end
 

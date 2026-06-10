@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local function IsNoteWarningEnabled()
     local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
@@ -30,7 +30,7 @@ local function CheckNPCNote(npcID)
     return noteData and HasNoteContent(noteData) or false
 end
 
-local function NoteWarningProvider(tooltip, context)
+local function NoteWarningProvider(_, context)
     if not OneWoW.NoteLookup.GetNotesAddon() then return nil end
     if not IsNoteWarningEnabled() then return nil end
 

@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 OneWoW.PortalHubEquip = OneWoW.PortalHubEquip or {}
 local EquipManager = OneWoW.PortalHubEquip
@@ -84,7 +84,7 @@ end
 
 local equipFrame = CreateFrame("Frame")
 equipFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
-equipFrame:SetScript("OnEvent", function(self, event, slot)
+equipFrame:SetScript("OnEvent", function(_, event, slot)
 	if event == "PLAYER_EQUIPMENT_CHANGED" then
 		for itemId, data in pairs(pendingEquip) do
 			if data.slot == slot then

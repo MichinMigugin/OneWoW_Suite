@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local function GetClassColoredName(name, class)
     if class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] then
@@ -152,7 +152,7 @@ local function DoGearUpgrade(tooltip, context, onlyUpgrade, detail, showAlts, al
         end
     end
 
-    local charAPI = _G.OneWoW_AltTracker_Character_API
+    local charAPI = OneWoW_AltTracker_Character_API
     if effectiveShowAlts and charAPI and charAPI.GetAllCharacters then
         local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
         local entries = charAPI.GetAllCharacters() or {}

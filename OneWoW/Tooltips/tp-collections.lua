@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local BATTLE_PET_CAGE_ID = 82800
 
@@ -138,7 +138,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
     return nil
 end
 
-local function CollectionsProvider(tooltip, context)
+local function CollectionsProvider(_, context)
     if not context.itemID then return nil end
 
     local classID, subclassID, typeString, typeColor

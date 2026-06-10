@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 local L = OneWoW.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
@@ -32,10 +32,10 @@ function Flyouts:CreateFlyoutFrame(parent, side)
 	flyoutFrame.side = side
 	flyoutFrame.parentButton = nil
 
-	flyoutFrame:SetScript("OnLeave", function(self)
+	flyoutFrame:SetScript("OnLeave", function(myself)
 		C_Timer.After(0.3, function()
-			if not self:IsMouseOver() and not self.parentButton:IsMouseOver() then
-				self:Hide()
+			if not myself:IsMouseOver() and not myself.parentButton:IsMouseOver() then
+				myself:Hide()
 			end
 		end)
 	end)
@@ -84,7 +84,7 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 	if portalData.type == "toy" then
 		button:SetAttribute("type", "toy")
 		button:SetAttribute("toy", portalData.id)
-		local _, name, icon = C_ToyBox.GetToyInfo(portalData.id)
+		local _, _, icon = C_ToyBox.GetToyInfo(portalData.id)
 		if icon then
 			button.icon:SetTexture(icon)
 		else
@@ -119,7 +119,7 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 		end
 	end
 
-	button:SetScript("PostClick", function(self, mouseButton)
+	button:SetScript("PostClick", function(_, mouseButton)
 		if mouseButton == "LeftButton" then
 			if OneWoW.PortalHubFlyouts then
 				OneWoW.PortalHubFlyouts:RecycleAll()
@@ -135,8 +135,8 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 		end
 	end)
 
-	button:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+	button:SetScript("OnEnter", function(myself)
+		GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
 		if portalData.type == "toy" then
 			GameTooltip:SetToyByItemID(portalData.id)
 		elseif portalData.type == "item" then
@@ -147,7 +147,7 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 		GameTooltip:Show()
 	end)
 
-	button:SetScript("OnLeave", function(self)
+	button:SetScript("OnLeave", function()
 		GameTooltip:Hide()
 	end)
 
@@ -241,14 +241,14 @@ function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset
 	flyoutFrame.parentButton = button
 
 	local tipAnchor = layoutGrowLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT"
-	button:SetScript("OnEnter", function(self)
+	button:SetScript("OnEnter", function(myself)
 		flyoutFrame:Show()
-		GameTooltip:SetOwner(self, tipAnchor)
+		GameTooltip:SetOwner(myself, tipAnchor)
 		GameTooltip:SetText(L["SETTINGS_PORTALHUB_HOVER_TO_EXPAND"], 1, 1, 1)
 		GameTooltip:Show()
 	end)
 
-	button:SetScript("OnLeave", function(self)
+	button:SetScript("OnLeave", function()
 		C_Timer.After(0.5, function()
 			if not flyoutFrame:IsMouseOver() and not button:IsMouseOver() then
 				flyoutFrame:Hide()
@@ -297,14 +297,14 @@ function Flyouts:CreateNestedFlyoutButton(parent, iconTexture, iconSize, xOffset
 
 	nestedFlyout.parentButton = button
 
-	button:SetScript("OnEnter", function(self)
+	button:SetScript("OnEnter", function(myself)
 		nestedFlyout:Show()
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
 		GameTooltip:SetText(label or L["SETTINGS_PORTALHUB_HOVER"], 1, 1, 1)
 		GameTooltip:Show()
 	end)
 
-	button:SetScript("OnLeave", function(self)
+	button:SetScript("OnLeave", function()
 		C_Timer.After(0.3, function()
 			if not nestedFlyout:IsMouseOver() and not button:IsMouseOver() then
 				nestedFlyout:Hide()
@@ -362,14 +362,14 @@ function Flyouts:CreateExpansionFlyout(parent, iconTexture, iconSize, xOffset, y
 
 	expFlyout.parentButton = button
 
-	button:SetScript("OnEnter", function(self)
+	button:SetScript("OnEnter", function(myself)
 		expFlyout:Show()
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
 		GameTooltip:SetText(label or L["SETTINGS_PORTALHUB_HOVER"], 1, 1, 1)
 		GameTooltip:Show()
 	end)
 
-	button:SetScript("OnLeave", function(self)
+	button:SetScript("OnLeave", function()
 		C_Timer.After(0.3, function()
 			if not expFlyout:IsMouseOver() and not button:IsMouseOver() then
 				expFlyout:Hide()

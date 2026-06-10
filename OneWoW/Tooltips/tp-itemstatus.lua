@@ -1,6 +1,6 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
-local function ItemStatusProvider(tooltip, context)
+local function ItemStatusProvider(_, context)
     if not context.itemID then return nil end
     if not OneWoW.ItemStatus then return nil end
 

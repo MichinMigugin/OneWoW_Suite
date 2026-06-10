@@ -176,7 +176,7 @@ function EscMenu:ShowPortalFrames()
 	leftFrame:Hide()
 	rightFrame:Hide()
 
-	self:BuildLeftSide(leftFrame)
+	self:BuildLeftSide()
 
 	local ox = self:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide)
 
@@ -207,9 +207,9 @@ function EscMenu:ShowPortalFrames()
 	C_Timer.After(0.05, deferredSync)
 end
 
-function EscMenu:BuildLeftSide(parent)
+function EscMenu:BuildLeftSide()
 	if OneWoW.EscPanels then
-		OneWoW.EscPanels:Build(parent)
+		OneWoW.EscPanels:Build()
 	end
 end
 

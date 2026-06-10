@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local GUI = OneWoW.GUI
 
@@ -10,7 +10,7 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 function GUI:CreateSettingsMainTab(parent)
     local L = OneWoW.L or {}
 
-    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_SettingsScroll" })
+    local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_SettingsScroll" })
     content:SetHeight(800)
 
     local yOffset = -10

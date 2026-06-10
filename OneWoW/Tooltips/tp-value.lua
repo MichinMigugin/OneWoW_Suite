@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 local format = string.format
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
@@ -40,7 +40,7 @@ local function FormatAHMeta(meta)
     return nil
 end
 
-local function ValueProvider(tooltip, context)
+local function ValueProvider(_, context)
     if not context.itemID then return nil end
 
     local L   = OneWoW.L

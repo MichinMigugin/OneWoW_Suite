@@ -1,8 +1,8 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local ITEM_TYPE_COLORS = OneWoW.ITEM_TYPE_COLORS
 
-local function ItemTypeProvider(tooltip, context)
+local function ItemTypeProvider(_, context)
     if not context.itemID then return nil end
 
     local _, itemType, itemSubType, _, _, classID = C_Item.GetItemInfoInstant(context.itemID)

@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -441,7 +441,7 @@ end
 function Module:DeserializeProfile(str)
     if not str or str == "" then return nil, "Empty input" end
     local cleaned = str:gsub("%-%-[^\n]*\n?", "")
-    local func, err = loadstring("return " .. cleaned)
+    local func = loadstring("return " .. cleaned)
     if not func then return nil, "Parse error" end
     local ok, data = pcall(func)
     if not ok then return nil, "Execution error" end
@@ -637,7 +637,7 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
         strata = "FULLSCREEN_DIALOG",
         showBrand = true,
         buttons = {
-            { text = "Select All", onClick = function(dialog)
+            { text = "Select All", onClick = function()
                 eb:SetFocus()
                 eb:HighlightText()
             end },
@@ -718,7 +718,7 @@ end
 function GUI:CreateCharProfilesPanel(parent)
     local M = OneWoW.CharProfiles
 
-    local scrollFrame, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_CharProfilesScroll" })
+    local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_CharProfilesScroll" })
     local yOffset = -10
 
     local descText = OneWoW_GUI:CreateFS(content, 12)
@@ -886,13 +886,13 @@ function GUI:CreateCharProfilesPanel(parent)
             deleteBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 6)
             deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
             deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-            deleteBtn:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+            deleteBtn:SetScript("OnEnter", function(myself)
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
             end)
-            deleteBtn:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+            deleteBtn:SetScript("OnLeave", function(myself)
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
             end)
             deleteBtn:SetScript("OnClick", function()
                 local dlg = OneWoW_GUI:CreateConfirmDialog({

@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local GUI = OneWoW.GUI
 local L    = OneWoW.L
@@ -190,7 +190,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     reqLabel:SetText(L["TIPS_CUSTOMNOTES_REQUIRES"])
     reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local notesLoaded = (_G.OneWoW_Notes ~= nil)
+    local notesLoaded = (OneWoW_Notes ~= nil)
     local detectedValue = OneWoW_GUI:CreateFS(dsc, 12)
     detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
     if notesLoaded then
@@ -463,7 +463,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     vendorReqLabel:SetText(L["TIPS_ITEMTRACKER_VENDORS_REQUIRES"])
     vendorReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local vendorDetected = (_G.OneWoW_CatalogData_Vendors_API ~= nil)
+    local vendorDetected = (OneWoW_CatalogData_Vendors_API ~= nil)
     local vendorDetVal = OneWoW_GUI:CreateFS(dsc, 12)
     vendorDetVal:SetPoint("LEFT", vendorReqLabel, "RIGHT", 8, 0)
     if vendorDetected then
@@ -480,7 +480,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     instReqLabel:SetText(L["TIPS_ITEMTRACKER_INSTANCES_REQUIRES"])
     instReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local instDetected = (_G.OneWoW_CatalogData_Journal ~= nil)
+    local instDetected = (OneWoW_CatalogData_Journal ~= nil)
     local instDetVal = OneWoW_GUI:CreateFS(dsc, 12)
     instDetVal:SetPoint("LEFT", instReqLabel, "RIGHT", 8, 0)
     if instDetected then
@@ -531,10 +531,10 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
         isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
         onToggle = function(newState)
             OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if feature.id == "playermounts" and _G.OneWoW_QoL and _G.OneWoW_QoL.ModuleRegistry then
-                _G.OneWoW_QoL.ModuleRegistry:SetEnabled("playmounts", newState)
-                if _G.OneWoW_QoL.UI and _G.OneWoW_QoL.UI.RefreshModuleDot then
-                    _G.OneWoW_QoL.UI.RefreshModuleDot("playmounts", newState)
+            if feature.id == "playermounts" and OneWoW_QoL and OneWoW_QoL.ModuleRegistry then
+                OneWoW_QoL.ModuleRegistry:SetEnabled("playmounts", newState)
+                if OneWoW_QoL.UI and OneWoW_QoL.UI.RefreshModuleDot then
+                    OneWoW_QoL.UI.RefreshModuleDot("playmounts", newState)
                 end
             end
             if selectedRow and selectedRow.dot then
@@ -553,7 +553,7 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     reqLabel:SetText(L["TIPS_PLAYERMOUNTS_REQUIRES"])
     reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local qolLoaded = (_G.OneWoW_QoL ~= nil)
+    local qolLoaded = (OneWoW_QoL ~= nil)
     local detectedValue = OneWoW_GUI:CreateFS(dsc, 12)
     detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
     if qolLoaded then

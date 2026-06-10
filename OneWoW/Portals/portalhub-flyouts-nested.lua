@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 local L = OneWoW.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
@@ -7,7 +7,7 @@ local Nested = OneWoW.NestedFlyouts
 
 local activeNested = {}
 
-local function CreateInstanceButton(self, parent, iconSize, yOffset, expansions, showAll, config, growLeft)
+local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, showAll, config, growLeft)
 	local mainButton = CreateFrame("Button", nil, parent)
 	mainButton:SetSize(iconSize, iconSize)
 	if growLeft then
@@ -72,7 +72,7 @@ local function CreateInstanceButton(self, parent, iconSize, yOffset, expansions,
 				if OneWoW.PortalHubFlyouts then
 					local btn = OneWoW.PortalHubFlyouts:CreateFlyoutButton(portalFlyout, portal, 0, -(j-1) * iconSize, iconSize)
 					if btn then
-						btn:HookScript("PostClick", function(self, mouseButton)
+						btn:HookScript("PostClick", function(_, mouseButton)
 							if mouseButton == "LeftButton" then
 								if OneWoW.NestedFlyouts then OneWoW.NestedFlyouts:RecycleAll() end
 								if OneWoW.PortalHubFlyouts then OneWoW.PortalHubFlyouts:RecycleAll() end
@@ -86,7 +86,7 @@ local function CreateInstanceButton(self, parent, iconSize, yOffset, expansions,
 				end
 			end
 
-			expButton:SetScript("OnEnter", function(self)
+			expButton:SetScript("OnEnter", function()
 				portalFlyout:Show()
 			end)
 

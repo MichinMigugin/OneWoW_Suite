@@ -1,9 +1,9 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 OneWoW.NoteLookup = {}
 
 function OneWoW.NoteLookup.GetNotesAddon()
-    return _G.OneWoW_Notes
+    return OneWoW_Notes
 end
 
 function OneWoW.NoteLookup.GetPlayerFullName(unit)
@@ -72,7 +72,7 @@ local function LookupNPCNote(npcID)
     return noteData and GetTooltipLines(noteData) or nil
 end
 
-local function CustomNotesProvider(tooltip, context)
+local function CustomNotesProvider(_, context)
     if not OneWoW.NoteLookup.GetNotesAddon() then return nil end
 
     local config = OneWoW.TooltipEngine.TOOLTIP_CONFIG

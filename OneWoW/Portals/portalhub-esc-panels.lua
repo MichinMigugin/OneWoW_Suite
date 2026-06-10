@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 local L = OneWoW.L
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
@@ -54,7 +54,7 @@ local function GetCharacterInfo()
 end
 
 local function GetZoneNoteData()
-	local notesAddon = _G.OneWoW_Notes
+	local notesAddon = OneWoW_Notes
 	if not notesAddon or not notesAddon.Zones then return nil, nil end
 
 	local zoneName = notesAddon.Zones:GetCurrentZoneName()
@@ -65,7 +65,7 @@ local function GetZoneNoteData()
 end
 
 local function GetCatalogData(mapID)
-	local journalNS = _G.OneWoW_CatalogData_Journal
+	local journalNS = OneWoW_CatalogData_Journal
 	if not journalNS or not journalNS.JournalData then return nil end
 
 	local JournalData = journalNS.JournalData
@@ -431,7 +431,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 			end
 			C_Timer.After(0.15, function()
 				if not targetZone or targetZone == "" then return end
-				local notesAddon = _G.OneWoW_Notes
+				local notesAddon = OneWoW_Notes
 				if notesAddon and notesAddon.Zones then
 					local existing = notesAddon.Zones:GetZone(targetZone)
 					if not existing then
@@ -586,7 +586,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 end
 
 local function BuildInstanceToastPanel(container, yOffset, anchorPanel, hMode)
-	local instName, instanceType, diffID, diffName, _, _, _, instanceMapID = GetInstanceInfo()
+	local instName, instanceType, _, diffName, _, _, _, instanceMapID = GetInstanceInfo()
 	if instanceType ~= "party" and instanceType ~= "raid" then
 		if panelFrames.instanceToast then
 			panelFrames.instanceToast:Hide()
@@ -673,7 +673,7 @@ local function BuildInstanceToastPanel(container, yOffset, anchorPanel, hMode)
 	return panel, yOffset - totalHeight - PANEL_GAP
 end
 
-function EscPanels:Build(parent)
+function EscPanels:Build()
 	local ph = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
 	if not ph or not ph.escEnabled then
 		self:HideAll()

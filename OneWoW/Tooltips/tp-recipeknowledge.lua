@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local PROFESSION_SKILL_IDS = {
     171, 164, 333, 202, 182,
@@ -96,7 +96,7 @@ local function DetectProfession(itemID)
     return lastMatch
 end
 
-local function RecipeKnowledgeProvider(tooltip, context)
+local function RecipeKnowledgeProvider(_, context)
     if not context.itemID then return nil end
 
     local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(context.itemID)
@@ -105,8 +105,8 @@ local function RecipeKnowledgeProvider(tooltip, context)
     local profName = DetectProfession(context.itemID)
     if not profName then return nil end
 
-    local profsDB = _G.OneWoW_AltTracker_Professions_DB
-    local charDB  = _G.OneWoW_AltTracker_Character_DB
+    local profsDB = OneWoW_AltTracker_Professions_DB
+    local charDB  = OneWoW_AltTracker_Character_DB
     if not profsDB or not profsDB.characters then return nil end
 
     local Util           = OneWoW.RecipeKnownUtil

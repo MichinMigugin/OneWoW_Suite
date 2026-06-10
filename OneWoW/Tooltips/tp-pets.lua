@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 
@@ -44,7 +44,7 @@ local function GetVendorPrice()
 end
 
 local function GetAHPrice()
-    local db = _G.OneWoW_AHPrices
+    local db = OneWoW_AHPrices
     if not db then return nil end
     return db[BATTLE_PET_CAGE_ID]
 end
@@ -88,7 +88,7 @@ local function FillPetTooltip(tip, speciesID)
     local L = OneWoW.L
     local TOOLTIP_CONFIG = OneWoW.TooltipEngine.TOOLTIP_CONFIG
 
-    local name, icon, petType, _, tooltipSource, tooltipDescription, _, canBattle, isTradeable, isUnique =
+    local name, _, petType, _, tooltipSource, tooltipDescription, _, canBattle, isTradeable, isUnique =
         C_PetJournal.GetPetInfoBySpeciesID(speciesID)
     if not name then return false end
 

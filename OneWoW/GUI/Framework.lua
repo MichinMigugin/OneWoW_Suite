@@ -5,7 +5,7 @@
 -- Font functions (ApplyFont, ApplyFontToFrame, SafeSetFont, CreateFS) are
 -- called directly from OneWoW_GUI. No per-addon bridges.
 -- ============================================================================
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 OneWoW.GUI = OneWoW.GUI or {}
 
@@ -60,7 +60,7 @@ function OneWoW.GUI.CreateScrollableEditBox(parent, onEscape)
     eb:SetScript("OnTextChanged", function() sf:UpdateScrollChildRect() end)
 
     sf:SetScrollChild(eb)
-    sf:HookScript("OnSizeChanged", function(self, w) eb:SetWidth(w) end)
+    sf:HookScript("OnSizeChanged", function(_, w) eb:SetWidth(w) end)
 
     return eb, sf
 end
