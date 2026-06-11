@@ -110,6 +110,10 @@ OneWoW.Locales["enUS"] = {
     ["CTX_OPEN_DEVTOOLS"] = "Open DevTools",
     ["CTX_OPEN_CATALOG"] = "Open Catalog",
 
+    -- CopyPaste dialog (OneWoW.CopyPaste)
+    ["COPYPASTE_HINT_COPY"] = "Press Ctrl+C to copy",
+    ["COPYPASTE_HINT_COPY_MAC"] = "Press Cmd+C to copy",
+
     ["WIZARD_TITLE"] = "Welcome to OneWoW",
     ["KEEP"] = "Keep",
     ["MANAGE_SCOPE_LABEL"] = "Apply to:",

@@ -361,7 +361,7 @@ function CoordsModule:CopyCoordinates()
     local x, y = position:GetXY()
     if x and y then
         local coordString = format("%.2f %.2f", x * 100, y * 100)
-        OneWoW.CopyPaste:Copy("Coordinates", coordString)
+        OneWoW.CopyPaste:Copy(ns.L["COORDS_COPY_TITLE"] or "Coordinates", coordString)
         print("|cFFFFD100OneWoW QoL:|r " .. format(ns.L["COORDS_COPIED"] or "Coordinates copied: %s", coordString))
     end
 end

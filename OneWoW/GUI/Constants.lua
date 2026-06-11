@@ -105,6 +105,8 @@ OneWoW_GUI.Constants = {
         WIZARD_DIALOG_WIDTH = 820,
         WIZARD_DIALOG_HEIGHT = 680,
         WIZARD_PRESET_WIDTH = 420,
+        COPYPASTE_WIDTH = 700,
+        COPYPASTE_HEIGHT = 450,
     },
 
     -- themes

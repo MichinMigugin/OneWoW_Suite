@@ -285,7 +285,7 @@ function OneWoW_GUI:ShowCopyURLDialog(title, url)
             escClose = true,
             showBrand = false,
             buttons = {
-                { text = "Close", onClick = function(frame) frame:Hide() end },
+                { text = CLOSE, onClick = function(frame) frame:Hide() end },
             },
         })
 
