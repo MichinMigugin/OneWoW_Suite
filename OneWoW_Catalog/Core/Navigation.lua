@@ -105,12 +105,23 @@ function Navigation:OpenItemNote(itemID, itemInfo)
     itemID = tonumber(itemID)
     if not itemID then return false end
 
+    OneWoW:BringUp("OneWoW_Notes")
+
     local notes = OneWoW_Notes
     if not notes then return false end
 
     if not notes.Items:GetItem(itemID) then
         itemInfo = itemInfo or {}
-        notes.Items:AddItem(itemID, { category = itemInfo.category or "Quest" })
+        notes.Items:AddItem(itemID, {
+            name     = itemInfo.name,
+            link     = itemInfo.link,
+            icon     = itemInfo.icon,
+            quality  = itemInfo.quality,
+            rarity   = itemInfo.rarity or itemInfo.quality,
+            category = itemInfo.category or "Quest",
+            storage  = itemInfo.storage or "account",
+            content  = itemInfo.content,
+        })
     end
 
     notes.pendingItemSelect = itemID
@@ -124,30 +135,4 @@ function Navigation:OpenItemNote(itemID, itemInfo)
     end
 
     return true
-end
-
---- Mirrors a Catalog item-favorite into OneWoW_Notes > Items: favoriting creates
---- the note (if missing) and flags it favorite; unfavoriting clears the flag but
---- keeps the note. No-op when Notes is not installed.
----@param itemID number
----@param on boolean
-function Navigation:SetItemNoteFavorite(itemID, on)
-    itemID = tonumber(itemID)
-    if not itemID then return end
-
-    local notes = OneWoW_Notes
-    if not notes then return end
-
-    local item = notes.Items:GetItem(itemID)
-    if on then
-        if not item then
-            notes.Items:AddItem(itemID, { category = "General", favorite = true })
-        else
-            item.favorite = true
-            notes.Items:SaveItem(itemID, item)
-        end
-    elseif item then
-        item.favorite = false
-        notes.Items:SaveItem(itemID, item)
-    end
 end

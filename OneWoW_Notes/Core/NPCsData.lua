@@ -107,17 +107,14 @@ function NPCs:RemoveNPC(npcID)
 end
 
 function NPCs:CreateWaypoint(_, npcData)
-    if not npcData or not npcData.mapID or not npcData.coords then return end
-    if C_Map and C_Map.SetUserWaypoint then
-        if C_Map.CanSetUserWaypointOnMap and not C_Map.CanSetUserWaypointOnMap(npcData.mapID) then
-            print("|cFFFFD100OneWoW - NPCs:|r " .. (L and L["MSG_CANNOT_SET_WAYPOINT"] or "Cannot set waypoint on this map."))
-            return
-        end
-        local wp = UiMapPoint.CreateFromCoordinates(npcData.mapID, npcData.coords.x / 100, npcData.coords.y / 100)
-        C_Map.SetUserWaypoint(wp)
-        C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-        print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L and L["MSG_WAYPOINT_SET"] or "Waypoint set for %s (%.1f, %.1f)", npcData.name or "NPC", npcData.coords.x, npcData.coords.y))
+    if not npcData or not npcData.mapID or not npcData.coords then return false end
+    if not C_Map.CanSetUserWaypointOnMap(npcData.mapID) then
+        return false, L["MSG_CANNOT_SET_WAYPOINT"]
     end
+    local wp = UiMapPoint.CreateFromCoordinates(npcData.mapID, npcData.coords.x / 100, npcData.coords.y / 100)
+    C_Map.SetUserWaypoint(wp)
+    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+    return true
 end
 
 function NPCs:Initialize()

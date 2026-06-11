@@ -20,6 +20,7 @@ local emptyList      = nil
 local emptyDetail    = nil
 local searchTimer    = nil
 local scanAHButtonRef = nil
+local suppressSearchBoxChange = false
 
 local ITEM_ROW_HEIGHT  = 30
 local SOURCE_BTN_H     = 22
@@ -38,6 +39,48 @@ local SOURCE_DEFS = {
 
 local RefreshItemList
 local ShowItemDetail
+local itemSearchDataLoader = nil
+
+local function SelectVisibleItemResult(itemID)
+    itemID = tonumber(itemID)
+    if not itemID then
+        return false
+    end
+
+    for _, row in ipairs(listElements) do
+        if row.result and tonumber(row.result.itemID) == itemID then
+            local onClick = row:GetScript("OnClick")
+            if onClick then
+                onClick(row)
+            end
+            return true
+        end
+    end
+
+    return false
+end
+
+local function GetItemSearchDataLoader()
+    if itemSearchDataLoader then
+        return itemSearchDataLoader
+    end
+
+    OneWoW_GUI.DB:Ensure(OneWoW_Catalog_DB, "global")
+    itemSearchDataLoader = OneWoW_Catalog:CreateItemDataLoader(OneWoW_Catalog_DB.global)
+    itemSearchDataLoader:Initialize()
+    return itemSearchDataLoader
+end
+
+local function ApplyLoadedItemData(result, itemData)
+    if not result or not itemData then
+        return
+    end
+
+    result.name = itemData.name or result.name
+    result.icon = itemData.icon or result.icon
+    result.quality = itemData.quality or result.quality
+    result.link = itemData.link or result.link
+end
 
 local function UpdateItemSearchScanButton()
     if not scanAHButtonRef then return end
@@ -162,14 +205,6 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
         icon:SetTexture(result.icon)
     else
         icon:SetTexture(134400)
-        local tsAddon = ns.Catalog and ns.Catalog:GetDataAddon("tradeskills")
-        if tsAddon and tsAddon.DataLoader then
-            tsAddon.DataLoader:LoadItemData(result.itemID, function(_, itemData)
-                if row:IsVisible() and itemData and itemData.icon then
-                    icon:SetTexture(itemData.icon)
-                end
-            end)
-        end
     end
 
     local hasOwned = result.ownedCount and result.ownedCount > 0
@@ -191,7 +226,6 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
                 tooltipText  = L["CATALOG_FAVORITE_TT"],
                 onClick = function(_, on)
                     ns.Favorites:SetFavorite("itemSearch", result.itemID, on)
-                    ns.Navigation:SetItemNoteFavorite(result.itemID, on)
                     RefreshItemList()
                 end,
             })
@@ -234,6 +268,24 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
     row.result = result
     row.rowIdx = rowIdx
 
+    if result.itemID and (not result.name or not result.icon) then
+        GetItemSearchDataLoader():LoadItemData(result.itemID, function(_, itemData)
+            if row.result ~= result then
+                return
+            end
+
+            ApplyLoadedItemData(result, itemData)
+            icon:SetTexture(result.icon or 134400)
+            nameText:SetText(result.name or ("Item #" .. result.itemID))
+            nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
+
+            if selectedItem and selectedItem.itemID == result.itemID then
+                ApplyLoadedItemData(selectedItem, itemData)
+                ShowItemDetail(selectedItem)
+            end
+        end)
+    end
+
     row:SetScript("OnEnter", function(self)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
@@ -270,6 +322,7 @@ ShowItemDetail = function(result)
 
     local child   = panels.detailScrollChild
     local yOffset = -8
+    local needsItemRefresh = result.itemID and (not result.name or not result.icon)
 
     local headerFrame = CreateFrame("Frame", nil, child, "BackdropTemplate")
     headerFrame:SetHeight(50)
@@ -314,6 +367,21 @@ ShowItemDetail = function(result)
     itemIDText:SetPoint("TOPLEFT", itemName, "BOTTOMLEFT", 0, -2)
     itemIDText:SetText(L["ITEMSEARCH_ITEM_ID"] .. ": " .. result.itemID)
     itemIDText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    if needsItemRefresh then
+        GetItemSearchDataLoader():LoadItemData(result.itemID, function(_, itemData)
+            if not selectedItem or selectedItem.itemID ~= result.itemID then
+                return
+            end
+
+            ApplyLoadedItemData(result, itemData)
+            ApplyLoadedItemData(selectedItem, itemData)
+            hIcon:SetTexture(result.icon or 134400)
+            itemName:SetText(result.name or ("Item #" .. result.itemID))
+            itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
+            RefreshItemList()
+        end)
+    end
 
     yOffset = yOffset - 58
 
@@ -459,7 +527,7 @@ ShowItemDetail = function(result)
         for _, qr in ipairs(detail.questRewards) do
             local qname = qr.questName or string.format(L["QUESTS_UNNAMED"], qr.questID)
             AddClickableRow(qname, 12, function()
-                if ns.UI.OpenToQuest then ns.UI.OpenToQuest(qr.questID) end
+                if ns.UI.OpenQuest then ns.UI.OpenQuest(qr.questID) end
             end)
         end
     else
@@ -606,6 +674,11 @@ RefreshItemList = function()
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_RESULTS"], n))
         end
     end
+
+    local exactItemID = tonumber(currentSearch)
+    if exactItemID and not selectedItem then
+        SelectVisibleItemResult(exactItemID)
+    end
 end
 
 function ns.UI.CreateItemSearchTab(parent)
@@ -670,6 +743,9 @@ function ns.UI.CreateItemSearchTab(parent)
         maxLetters = 50,
         placeholderText = L["ITEMSEARCH_PLACEHOLDER"],
         onTextChanged = function(text)
+            if suppressSearchBoxChange then
+                return
+            end
             if searchTimer then searchTimer:Cancel() end
             searchTimer = C_Timer.NewTimer(0.3, function()
                 currentSearch = text
@@ -727,9 +803,6 @@ function ns.UI.CreateItemSearchTab(parent)
             return
         end
 
-        -- Pull the Auctions store on demand (explicit user action — see
-        -- OneWoW/Docs/ARCHITECTURE.md §3.8 lazy cross-module data).
-        OneWoW:EnsureLoaded("OneWoW_AltTracker_Auctions")
         local Auctions = OneWoW_AltTracker_Auctions
         if not Auctions or not Auctions.FullAHScanner then
             print("|cFFFFD100OneWoW:|r " .. L["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"])
@@ -813,4 +886,49 @@ function ns.UI.CreateItemSearchTab(parent)
     RefreshItemList()
 
     ns.UI.RefreshItemSearchList = RefreshItemList
+
+    function ns.UI.OpenItemSearch(itemID, itemName)
+        if not searchBox or not panels then
+            C_Timer.After(0.05, function()
+                ns.UI.OpenItemSearch(itemID, itemName)
+            end)
+            return
+        end
+
+        itemID = tonumber(itemID)
+        local query = itemID and tostring(itemID) or itemName or ""
+
+        currentSource = "all"
+        currentSearch = query
+        selectedItem = nil
+
+        UpdateSourceButtonStates()
+        if searchTimer then
+            searchTimer:Cancel()
+            searchTimer = nil
+        end
+        suppressSearchBoxChange = true
+        searchBox:SetText(query)
+        suppressSearchBoxChange = false
+        RefreshItemList()
+
+        if itemID then
+            SelectVisibleItemResult(itemID)
+            GetItemSearchDataLoader():LoadItemData(itemID, function(_, itemData)
+                if currentSearch ~= tostring(itemID) then
+                    return
+                end
+                if selectedItem and selectedItem.itemID == itemID then
+                    ApplyLoadedItemData(selectedItem, itemData)
+                end
+                RefreshItemList()
+                SelectVisibleItemResult(itemID)
+            end)
+            C_Timer.After(0.05, function()
+                if currentSearch == tostring(itemID) then
+                    SelectVisibleItemResult(itemID)
+                end
+            end)
+        end
+    end
 end

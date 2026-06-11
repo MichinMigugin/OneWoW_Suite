@@ -32,6 +32,13 @@ function Items:AddItem(itemID, itemData)
     end
 
     local itemName, itemLink, itemRarity, itemLevel, _, itemType, itemSubType, _, _, itemTexture = C_Item.GetItemInfo(itemID)
+    itemName = itemName or itemData.name or C_Item.GetItemNameByID(itemID)
+    itemLink = itemLink or itemData.link
+    itemTexture = itemTexture or itemData.icon
+    itemRarity = itemRarity or itemData.rarity or itemData.quality
+    itemLevel = itemLevel or itemData.level
+    itemType = itemType or itemData.type
+    itemSubType = itemSubType or itemData.subType
 
     if not itemName then
         return false, L["NOTES_ITEM_INVALID_ID"] or "Invalid item ID"

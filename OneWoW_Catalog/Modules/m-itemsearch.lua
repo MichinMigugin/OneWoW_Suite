@@ -193,6 +193,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     if not searchTerm or #searchTerm < 2 then return {}, false end
 
     local term = searchTerm:lower()
+    local exactItemID = tonumber(searchTerm)
     local results = {}
     local resultMap = {}
     local count = 0
@@ -229,6 +230,27 @@ function ItemSearch:Query(searchTerm, sourceFilter)
         entry[sourceKey] = true
         results[count] = entry
         resultMap[itemID] = count
+    end
+
+    if exactItemID then
+        local sourceKey = "isQuestReward"
+        if sourceFilter == "drops" then
+            sourceKey = "isJournal"
+        elseif sourceFilter == "vendors" then
+            sourceKey = "isVendor"
+        elseif sourceFilter == "crafted" then
+            sourceKey = "isCrafted"
+        elseif sourceFilter == "owned" then
+            sourceKey = "isOwned"
+        end
+
+        addOrAnnotate(
+            exactItemID,
+            C_Item.GetItemNameByID(exactItemID),
+            nil,
+            nil,
+            sourceKey
+        )
     end
 
     if doJournal then
