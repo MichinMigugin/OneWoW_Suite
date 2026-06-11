@@ -1,8 +1,7 @@
-local AddonName, Addon = ...
+local _, Addon = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 local L = Addon.L or {}
-if not OneWoW_GUI then return end
 
 local FramePicker = {}
 Addon.FramePicker = FramePicker

@@ -6,9 +6,8 @@ not RegisterEvent ADDON_LOADED, PLAYER_LOGIN, or PLAYER_ENTERING_WORLD for
 lifecycle dispatch — core drives those via OnAddonLoaded / OnPlayerLogin /
 OnPlayerEnteringWorld (see OneWoW/Docs/ARCHITECTURE.md §3.3, §3.7).
 
-Allowed registrars: OneWoW/OneWoW.lua, OneWoW_GUI/Settings.lua (interim),
-embedded Libs/ (excluded by pre-commit). Gameplay events (PLAYER_ALIVE,
-BAG_UPDATE, …) are fine.
+Allowed registrars: OneWoW/OneWoW.lua, embedded Libs/ (excluded by
+pre-commit). Gameplay events (PLAYER_ALIVE, BAG_UPDATE, …) are fine.
 
 Escape hatch: -- noqa: lifecycle on the offending line.
 """
@@ -23,7 +22,6 @@ LIFECYCLE_EVENTS = ("ADDON_LOADED", "PLAYER_LOGIN", "PLAYER_ENTERING_WORLD")
 ALLOWED_FILES = frozenset(
     {
         "OneWoW/OneWoW.lua",
-        "OneWoW_GUI/Settings.lua",
     }
 )
 

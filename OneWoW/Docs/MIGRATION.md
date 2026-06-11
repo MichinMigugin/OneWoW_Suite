@@ -158,22 +158,49 @@ No defensive `if not OneWoW_GUI` guard once everything `RequiredDeps: OneWoW`.
 ### Same-commit requirements
 
 - [x] Add `"OneWoW_GUI"` to `.luarc.json` `diagnostics.globals`.
-- [ ] Drop `RequiredDeps: OneWoW_GUI` from every other unit (they keep
+- [x] Rename hub `OneWoW/GUI/` → `OneWoW/UI/` and the `OneWoW.GUI` namespace →
+  `OneWoW.UI` suite-wide; toolkit lands in the vacated `OneWoW/GUI/` so the
+  directory matches the global it publishes.
+- [x] Drop `RequiredDeps: OneWoW_GUI` from every other unit (they keep
   `RequiredDeps: OneWoW`).
-- [ ] **Keep LibStub** for vendored Ace libs (`LibDataBroker-1.1`, `LibDBIcon-1.0`,
-  `CallbackHandler-1.0`).
-- [ ] Rewire `OneWoW_GUI/Settings.lua` `ADDON_LOADED("OneWoW_GUI")` bootstrap to
-  core lifecycle (`OneWoW:OnAddonLoaded`) — retire the interim exception in
-  `ARCHITECTURE.md` §3.3.
-- [ ] Move `OneWoW_GUI_DB` into `OneWoW.toc` `## SavedVariables` (global name
-  unchanged — no user migration).
-- [ ] Audit `Interface\AddOns\OneWoW_GUI\` media paths (`Constants.lua`,
-  `OneWoW.toc` `IconTexture`, `Media/fonts.lua`, QoL references); relocate or
-  keep folder on disk.
-- [ ] Note: GUI `PredicateEngine` → `RecipeKnownUtil` upward dependency dissolves
+- [x] **Keep LibStub** for vendored Ace libs (`LibStub`, `CallbackHandler-1.0`,
+  `LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibSharedMedia-3.0`) — moved into
+  `OneWoW/Libs/`, listed before the toolkit in the TOC.
+- [x] Rewire `GUI/Settings.lua` bootstrap: `ADDON_LOADED("OneWoW_GUI")` frame
+  replaced by `OneWoW_GUI:InitializeSettings()`, called first in
+  `OneWoW:OnAddonLoaded` — interim exception in `ARCHITECTURE.md` §3.3 and
+  `bin/check_suite_lifecycle.py` retired.
+- [x] **SavedVariables handoff:** `OneWoW_GUI_DB` declared in `OneWoW.toc`
+  (temporary — folds into `OneWoW_DB` in step 8). The variable name is
+  unchanged but the backing file is keyed to the addon folder, so the old
+  `OneWoW_GUI` folder remains as a **TOC-only stub** that loads the legacy
+  `WTF\...\SavedVariables\OneWoW_GUI.lua` into `_G`. `OneWoW.toc` keeps
+  `RequiredDeps: OneWoW_GUI` (transitional) so the stub's SV loads before
+  core's `InitializeSettings` reads it. At logout both TOCs persist the
+  variable, so core's own SV file carries a full copy after one session.
+- [x] Relocate media: `OneWoW_GUI/Media/` merged into `OneWoW/Media/` (all
+  overlapping files were byte-identical); every `IconTexture` line,
+  `GUI/Constants.lua` `MEDIA_BASE`, `Media/fonts.lua`, and QoL references
+  repointed to `Interface\AddOns\OneWoW\Media\`.
+- [x] Relocate docs/tools: `Docs/{PREDICATE_ENGINE,DATABASE}.md` →
+  `OneWoW/Docs/`, `README.md` → `OneWoW/Docs/GUI.md`,
+  `tools/theme_contrast_check.py` → `bin/`.
+- [x] Note: GUI `PredicateEngine` → `RecipeKnownUtil` upward dependency dissolves
   once GUI and core share one load unit.
 
-### Target TOC shape (post-step-7)
+### 7.2 Retire the `OneWoW_GUI` SV-handoff stub
+
+**Requires step 8** (data folded into `OneWoW_DB`), then wait one or two
+releases so most users have logged out at least once on the new layout.
+
+- [ ] Delete the `OneWoW_GUI` folder (TOC-only stub).
+- [ ] Remove `RequiredDeps: OneWoW_GUI` and `OneWoW_GUI_DB` from `OneWoW.toc`
+  (the latter happens in step 8 if not already done).
+- [ ] Remove the stub rows/notes from `ARCHITECTURE.md` §1–2.
+- Users who skip the entire transition window lose theme/profile settings
+  (one-time, defaults apply) — accepted tradeoff.
+
+### Target TOC shape (post-step-7.2)
 
 | Load unit | Key directives |
 |---|---|
@@ -181,7 +208,8 @@ No defensive `if not OneWoW_GUI` guard once everything `RequiredDeps: OneWoW`.
 | Feature modules | `RequiredDeps: OneWoW` · `LoadOnDemand: 1` |
 | Data stores | `RequiredDeps: OneWoW, OneWoW_<Parent>` · `LoadOnDemand: 1` |
 
-(`OneWoW_GUI` is no longer a separate load unit.)
+(`OneWoW_GUI` is no longer a load unit; the stub folder ships only during the
+transition window.)
 
 ### 7.1 Relocate `LibCopyPaste` → `OneWoW.CopyPaste`
 
@@ -213,9 +241,18 @@ OneWoW and AltTracker are the last two load units not fully on the DB API.
   - Overlay position renames (`TOPLEFT_OUTER` → `Outer-Top-Left`, etc.)
   - `resetToDefaultsV1` toast reset block
   - LSM font name migration (`MigrateLSMFontName`)
-- [ ] Consolidate theme default: single source in `OneWoW_GUI_DB` (remove duplicate
-  `theme = "green"` in `OneWoW_DB` defaults once `ApplyTheme` precedence is
-  clear).
+- [ ] **Fold `OneWoW_GUI_DB` into `OneWoW_DB`** (same versioned migration set):
+  copy `global.*` keys (language, theme, font, fontSizeOffset, minimap,
+  minimapLaunchers, moneyDisplay) and scope roots (`chars`, `realms`,
+  `presets`, `_activePreset`) into the unified `OneWoW_DB`; repoint
+  `GUI/Settings.lua` `InitSettingsDB` / `_settingsDB` / profiles at it; drop
+  `OneWoW_GUI_DB` from `OneWoW.toc`. Rules: GUI value wins on key collision
+  (it is what `ApplyTheme` reads today); tolerate `_G.OneWoW_GUI_DB == nil`
+  (fresh installs); versioned marker in `OneWoW_DB` so the fold-in never
+  re-runs. One-way — no dual-write back to `OneWoW_GUI_DB`. Unblocks step 7.2
+  (stub retirement).
+- [ ] Consolidate theme default: solved by the fold-in — the duplicate
+  `theme = "green"` in `OneWoW_DB` defaults becomes the single default.
 
 ### AltTracker (independent — any time)
 

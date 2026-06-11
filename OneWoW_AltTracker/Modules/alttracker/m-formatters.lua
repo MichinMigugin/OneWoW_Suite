@@ -5,7 +5,7 @@ ns.AltTrackerFormatters = ns.AltTrackerFormatters or {}
 local Formatters = ns.AltTrackerFormatters
 
 function Formatters:GetCharacterKey(name, realm)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+    local OneWoW_GUI = OneWoW_GUI
     return OneWoW_GUI:GetCharacterKey(name, realm)
 end
 
@@ -98,7 +98,7 @@ function Formatters:EstimateRestedXP(charData, charKey)
     local multiplier = (race == "Pandaren") and MAX_RESTED_MULTIPLIER_PANDAREN or MAX_RESTED_MULTIPLIER
     local maxRestedXP = maxXP * multiplier
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     local currentCharKey = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
     if charKey and charKey == currentCharKey then
         return math.min(savedRestedXP, maxRestedXP)
@@ -225,7 +225,7 @@ local COMPACT_CLASS_NAMES = {
 }
 
 function Formatters:GetCompactClassName(className)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     local offset = OneWoW_GUI and OneWoW_GUI:GetFontSizeOffset() or 0
     if offset >= 2 then
         local upper = string.upper(className or "")

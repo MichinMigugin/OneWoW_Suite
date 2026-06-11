@@ -40,7 +40,6 @@ OneWoW.Locales["koKR"] = {
     ["MODULE_QOL"] = "QoL",
     ["MODULE_SHOPPINGLIST"] = "Shopping List",
     ["MODULE_TRACKERS"] = "Trackers",
-    ["MODULE_GUI"] = "OneWoW GUI",
     ["MODULE_BAGS"] = "Bags",
     ["MODULE_DEVTOOLS"] = "DevTools",
     ["MODULE_EXTRACTOR"] = "Extractor",

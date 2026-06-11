@@ -13,14 +13,13 @@ The OneWoW Suite owns its addon-facing database API in `OneWoW_GUI.DB`. All OneW
 
 ## Authoritative sources
 
-1. `OneWoW_GUI/Database.lua` — API surface. Read first for function signatures and behavior.
-2. `OneWoW_GUI/Docs/DATABASE.md` — design rationale. Read when uncertain *why* the API is shaped a certain way (scope resolution order, migrations vs. normalizers, default reference safety).
+1. `OneWoW/GUI/Database.lua` — API surface. Read first for function signatures and behavior.
+2. `OneWoW/Docs/DATABASE.md` — design rationale. Read when uncertain *why* the API is shaped a certain way (scope resolution order, migrations vs. normalizers, default reference safety).
 
 ## Standard import
 
 ```lua
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 ```
 

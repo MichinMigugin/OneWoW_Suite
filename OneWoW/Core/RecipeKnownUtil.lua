@@ -104,7 +104,7 @@ function RecipeKnownUtil:IsRecipeKnown(itemID)
 
     local profsDB = OneWoW_AltTracker_Professions_DB
     if profsDB and profsDB.characters then
-        local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+        local OneWoW_GUI = OneWoW_GUI
         local charKey = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
         local charData = charKey and profsDB.characters[charKey]
         if charData and charData.recipes then

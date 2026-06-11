@@ -295,7 +295,7 @@ end
 
 ## SavedVariables
 
-The addon uses the `OneWoW_GUI.DB` API (see `OneWoW_GUI/Database.lua` and `OneWoW_GUI/Docs/DATABASE.md`). The SavedVariable `OneWoW_QoL_DB` is initialized in `single` mode by `Core/Database.lua`. Your module's data is automatically available under:
+The addon uses the `OneWoW_GUI.DB` API (see `OneWoW/GUI/Database.lua` and `OneWoW/Docs/DATABASE.md`). The SavedVariable `OneWoW_QoL_DB` is initialized in `single` mode by `Core/Database.lua`. Your module's data is automatically available under:
 
 ```
 OneWoW_QoL_DB.global.modules.yourmodule

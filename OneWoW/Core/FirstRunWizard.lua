@@ -13,8 +13,7 @@
 
 local _, OneWoW = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local C_AddOns = C_AddOns
 local UnitName = UnitName

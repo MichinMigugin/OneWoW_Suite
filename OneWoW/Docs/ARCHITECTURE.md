@@ -12,11 +12,16 @@ DevTool packaging, enforcement ramp) lives in [`MIGRATION.md`](MIGRATION.md)
 ## 1. True-core model
 
 The suite ships as **separate addons** (load units / TOCs) but behaves as one
-product. `OneWoW_GUI` is the base UI toolkit (interim separate addon until folded
-into core). `OneWoW` is the always-loaded hub. Feature modules and data stores are
-`## LoadOnDemand: 1` with `RequiredDeps: OneWoW` (and `OneWoW_GUI` today) — nothing
-auto-loads except the foundation and core. The orchestrator force-loads enabled units
-at startup and drives initialization in deterministic order (§3).
+product. `OneWoW` is the always-loaded hub and contains the shared UI toolkit
+(the `OneWoW_GUI` global, absorbed from the former `OneWoW_GUI` addon — §8.1).
+Feature modules and data stores are `## LoadOnDemand: 1` with
+`RequiredDeps: OneWoW` — nothing auto-loads except core. The orchestrator
+force-loads enabled units at startup and drives initialization in deterministic
+order (§3).
+
+A transitional `OneWoW_GUI` TOC-only stub remains on disk solely to load the
+legacy `OneWoW_GUI_DB` SavedVariables file (`MIGRATION.md` step 7); it is
+removed after step 8 folds that data into `OneWoW_DB`.
 
 ### Why separate TOCs (not one mega-addon)
 
@@ -30,11 +35,9 @@ CurseForge pages were the tracking burden, not separate folders.
 
 ```mermaid
 flowchart TB
-    GUI[OneWoW_GUI<br/>base toolkit, always loaded]
-    OW[OneWoW<br/>core hub, always loaded]
-    GUI --> OW
+    OW[OneWoW<br/>core hub + GUI toolkit, always loaded]
 
-    subgraph Modules [Feature modules — RequiredDeps: OneWoW, OneWoW_GUI · LoadOnDemand: 1]
+    subgraph Modules [Feature modules — RequiredDeps: OneWoW · LoadOnDemand: 1]
         Notes[OneWoW_Notes]
         AltTracker[OneWoW_AltTracker]
         Catalog[OneWoW_Catalog]
@@ -63,9 +66,8 @@ flowchart TB
 
 | Tier | Units | Loads | Mechanism |
 |---|---|---|---|
-| **0 — Foundation** | `OneWoW_GUI` (target: folded into `OneWoW`) | Always | Separate addon today; LibStub `OneWoW_GUI-1.0` |
-| **1 — Core hub** | `OneWoW` | Always | `RequiredDeps: OneWoW_GUI`; orchestrator, Manage Features, hub UI, shared engines |
-| **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW, OneWoW_GUI` + `LoadOnDemand: 1` |
+| **1 — Core hub** | `OneWoW` | Always | Orchestrator, Manage Features, hub UI, shared engines, GUI toolkit (`OneWoW_GUI` global) |
+| **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW` + `LoadOnDemand: 1` |
 | **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand, after parent | `RequiredDeps: …, <parent>` + `LoadOnDemand: 1`; listed in `ModuleManifest.stores` |
 | **4 — Utility** | `OneWoW_Utility_DevTool` | Opt-in | `RequiredDeps: OneWoW`; excluded from recommended preset |
 
@@ -73,19 +75,19 @@ Verified against current `.toc` files:
 
 | Load unit | RequiredDeps | OptionalDeps | LoadOnDemand |
 |---|---|---|---|
-| **OneWoW_GUI** | — | — | 0 |
-| **OneWoW** | OneWoW_GUI | Auctionator, TradeSkillMaster | — |
-| **OneWoW_Notes** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_AltTracker** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_Catalog** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_Trackers** | OneWoW, OneWoW_GUI | TradeSkillMaster, Auctionator | 1 |
-| **OneWoW_QoL** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_ShoppingList** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_DirectDeposit** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_Bags** | OneWoW, OneWoW_GUI | TradeSkillMaster, Baganator, Masque | 1 |
+| **OneWoW** | OneWoW_GUI *(transitional SV stub — see §1)* | Auctionator, TradeSkillMaster | — |
+| **OneWoW_GUI** *(stub)* | — | — | 0 |
+| **OneWoW_Notes** | OneWoW | — | 1 |
+| **OneWoW_AltTracker** | OneWoW | — | 1 |
+| **OneWoW_Catalog** | OneWoW | — | 1 |
+| **OneWoW_Trackers** | OneWoW | TradeSkillMaster, Auctionator | 1 |
+| **OneWoW_QoL** | OneWoW | — | 1 |
+| **OneWoW_ShoppingList** | OneWoW | — | 1 |
+| **OneWoW_DirectDeposit** | OneWoW | — | 1 |
+| **OneWoW_Bags** | OneWoW | TradeSkillMaster, Baganator, Masque | 1 |
 | **OneWoW_Utility_DevTool** | OneWoW | !BugGrabber | — |
-| **OneWoW_AltTracker_\*** | OneWoW, OneWoW_GUI, OneWoW_AltTracker | — | 1 |
-| **OneWoW_CatalogData_\*** | OneWoW, OneWoW_GUI, OneWoW_Catalog | — | 1 |
+| **OneWoW_AltTracker_\*** | OneWoW, OneWoW_AltTracker | — | 1 |
+| **OneWoW_CatalogData_\*** | OneWoW, OneWoW_Catalog | — | 1 |
 
 ### OptionalDeps policy
 
@@ -140,14 +142,14 @@ set both `module` and `tabOrder`.
 ### 3.3 Event ownership
 
 Only **`OneWoW.lua`** registers `ADDON_LOADED`, `PLAYER_LOGIN`, and
-`PLAYER_ENTERING_WORLD` for suite lifecycle dispatch. **`OneWoW_GUI`** still
-registers its own `ADDON_LOADED` for self-bootstrap until GUI is absorbed into core
-(see `MIGRATION.md` step 7). Embedded `Libs/` are unchanged.
+`PLAYER_ENTERING_WORLD` for suite lifecycle dispatch. The GUI toolkit's settings
+bootstrap (`OneWoW_GUI:InitializeSettings()` in `GUI/Settings.lua`) is called
+from core's `OnAddonLoaded` — it no longer self-registers `ADDON_LOADED`.
+Embedded `Libs/` are unchanged.
 
 | Registrar | Allowed? |
 |-----------|----------|
 | `OneWoW.lua` | Yes — sole lifecycle authority for manifest units |
-| `OneWoW_GUI` | Yes (interim) — self-bootstrap until absorption |
 | Embedded `Libs/` | Yes — third-party, off-limits |
 | Feature modules, stores, DevTool, sub-modules | **No** — chain up to manifest parent |
 
@@ -500,12 +502,13 @@ shared theme/GUI primitives.
 Modules cannot share core's private `ns`. Sharing uses globals:
 
 - **Within a load unit:** `local _, ns = ...`
-- **Across load units:** `_G.OneWoW`, `LibStub("OneWoW_GUI-1.0")` (interim), per-unit
+- **Across load units:** `_G.OneWoW`, the `OneWoW_GUI` global (toolkit), per-unit
   APIs (`OneWoW_Catalog_TradeskillAPI`, `OneWoW_Trackers_API`), store `_API` /
   `_DB` globals.
 
-LibStub is retained for `OneWoW_GUI` and vendored Ace libs today. Target: fold GUI
-into core as plain `OneWoW_GUI` global (`MIGRATION.md` step 7; CopyPaste step 7.1).
+LibStub is retained only for vendored Ace libs (`LibStub`, `CallbackHandler-1.0`,
+`LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibSharedMedia-3.0`, `LibCopyPaste-1.0` —
+CopyPaste converts to `OneWoW.CopyPaste` in `MIGRATION.md` step 7.1).
 
 ### Cross-addon references
 
@@ -555,17 +558,18 @@ stateless utility → `Services/` on `_G.OneWoW`. Rule of Three before abstracti
 
 ### 8.1 OneWoW_GUI
 
-All addons use `LibStub("OneWoW_GUI-1.0")` for shared UI and theme. Theme is single
-source of truth in `OneWoW_GUI_DB`.
+The shared UI toolkit lives in `OneWoW/GUI/` and is published as the plain
+global **`OneWoW_GUI`** (`GUI/Core.lua`). Theme is single source of truth in
+`OneWoW_GUI_DB`. Every unit that loads has `RequiredDeps: OneWoW`, so the
+global is guaranteed present — take a local handle, no guard:
 
 ```lua
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 ```
 
 Fail fast — no defensive nil-chain guards on methods.
 
-**Component API:** `(parent, options)`. See `OneWoW_GUI/GUI.md` and the
+**Component API:** `(parent, options)`. See `OneWoW/Docs/GUI.md` and the
 `onewow-gui-ui` skill for policy.
 
 **Database API:** `OneWoW_GUI.DB` — see `onewow-database-api` skill.

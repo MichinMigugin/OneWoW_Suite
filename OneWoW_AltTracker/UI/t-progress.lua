@@ -4,8 +4,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.UI = ns.UI or {}
 
@@ -1644,9 +1643,9 @@ end
 
 function ns.UI.RefreshProgressStats(progressTab)
     if not progressTab or not progressTab.statBoxes then return end
-    if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
+    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return end
 
-    local charDB = _G.OneWoW_AltTracker_Character_DB.characters
+    local charDB = OneWoW_AltTracker_Character_DB.characters
     local endgameDB = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters
 
     local stats = {
@@ -1778,7 +1777,7 @@ end
 
 function ns.UI.RefreshTrackingBar(progressTab)
     if not progressTab or not progressTab.trackingText then return end
-    local charDB = _G.OneWoW_AltTracker_Character_DB and _G.OneWoW_AltTracker_Character_DB.characters
+    local charDB = OneWoW_AltTracker_Character_DB and OneWoW_AltTracker_Character_DB.characters
     local endgameDB = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters
 
     local raidName = ""

@@ -1,5 +1,5 @@
 local addonName, ns = ...
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
 DB:InitSubModule("OneWoW_AltTracker_Professions_DB")

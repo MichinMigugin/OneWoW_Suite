@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 local L = OneWoW.L
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 
 OneWoW.NestedFlyouts = OneWoW.NestedFlyouts or {}
 local Nested = OneWoW.NestedFlyouts

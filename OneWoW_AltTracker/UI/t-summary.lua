@@ -1,8 +1,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.UI = ns.UI or {}
 
@@ -124,12 +123,12 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         return
     end
 
-    if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then
+    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then
         return
     end
 
     local currentCharKey = OneWoW_GUI:GetCharacterKey()
-    local liveChar = _G.OneWoW_AltTracker_Character_DB.characters[currentCharKey]
+    local liveChar = OneWoW_AltTracker_Character_DB.characters[currentCharKey]
     if liveChar then
         if not liveChar.xp then liveChar.xp = {} end
         liveChar.xp.currentXP = UnitXP("player")
@@ -200,7 +199,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
     local dt = summaryTab.dataTable
     local columnsConfig = summaryTab.columnsConfig
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
 
     OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(characterRows)
@@ -741,7 +740,7 @@ function ns.UI.FormatPlaytimeCompact(seconds)
 end
 
 function ns.UI.ShowPlaytimeDialog(stats)
-    if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then
+    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then
         return
     end
 
@@ -760,7 +759,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
     local classTotals = {}
     local accountTotal = 0
 
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+    for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
         if charData.class and charData.playTime and charData.playTime.total then
             local class = charData.class
             classTotals[class] = (classTotals[class] or 0) + charData.playTime.total
@@ -835,7 +834,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
         rowFrame:EnableMouse(true)
         rowFrame:SetScript("OnEnter", function(self)
             local classChars = {}
-            for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+            for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
                 if charData.class == classInfo.class then
                     table.insert(classChars, charData)
                 end
@@ -878,7 +877,7 @@ end
 
 function ns.UI.RefreshSummaryStats(summaryTab)
     if not summaryTab or not summaryTab.statBoxes then return end
-    if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then
+    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then
         return
     end
 
@@ -896,7 +895,7 @@ function ns.UI.RefreshSummaryStats(summaryTab)
     }
 
     local allChars = {}
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+    for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
         table.insert(allChars, {
             key = charKey,
             data = charData
@@ -937,8 +936,8 @@ function ns.UI.RefreshSummaryStats(summaryTab)
 
     local uniquePets = {}
     local uniqueMounts = {}
-    if _G.OneWoW_AltTracker_Collections_DB and _G.OneWoW_AltTracker_Collections_DB.characters then
-        for charKey, collData in pairs(_G.OneWoW_AltTracker_Collections_DB.characters) do
+    if OneWoW_AltTracker_Collections_DB and OneWoW_AltTracker_Collections_DB.characters then
+        for charKey, collData in pairs(OneWoW_AltTracker_Collections_DB.characters) do
             if collData.petsMounts then
                 if collData.petsMounts.pets and collData.petsMounts.pets.collection then
                     for _, pet in ipairs(collData.petsMounts.pets.collection) do
@@ -969,9 +968,9 @@ function ns.UI.RefreshSummaryStats(summaryTab)
         stats.mounts = stats.mounts + 1
     end
 
-    if _G.OneWoW_AltTracker_Professions_DB and _G.OneWoW_AltTracker_Professions_DB.characters then
+    if OneWoW_AltTracker_Professions_DB and OneWoW_AltTracker_Professions_DB.characters then
         local uniquePrimaryProfs = {}
-        for _, profData in pairs(_G.OneWoW_AltTracker_Professions_DB.characters) do
+        for _, profData in pairs(OneWoW_AltTracker_Professions_DB.characters) do
             local profs = profData.professions
             if profs then
                 if profs.Primary1 and profs.Primary1.name then

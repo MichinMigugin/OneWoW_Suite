@@ -3,7 +3,7 @@
 local addonName, ns = ...
 
 local function GetDB()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db or not addon.db.global or not addon.db.global.modules then return nil end
     if not addon.db.global.modules["lfgpanel"] then
         addon.db.global.modules["lfgpanel"] = {}
@@ -283,7 +283,7 @@ function LFGPanelModule:OnEnable()
     if not self._hooksDone then
         self._hooksDone = true
 
-        if _G.LFGListSearchPanel_UpdateResultList then
+        if LFGListSearchPanel_UpdateResultList then
             hooksecurefunc("LFGListSearchPanel_UpdateResultList", function()
                 LFGPanel:FilterSearchResults()
             end)
@@ -295,13 +295,13 @@ function LFGPanelModule:OnEnable()
             end)
         end
 
-        if _G.LFGListSearchPanel_SetCategory then
+        if LFGListSearchPanel_SetCategory then
             hooksecurefunc("LFGListSearchPanel_SetCategory", DelayedToggle)
         end
-        if _G.LFGListFrame_SetActivePanel then
+        if LFGListFrame_SetActivePanel then
             hooksecurefunc("LFGListFrame_SetActivePanel", DelayedToggle)
         end
-        if _G.PVEFrame_ShowFrame then
+        if PVEFrame_ShowFrame then
             hooksecurefunc("PVEFrame_ShowFrame", DelayedToggle)
         end
 
@@ -321,7 +321,7 @@ function LFGPanelModule:OnEnable()
         end
     end)
 
-    local GUI = LibStub("OneWoW_GUI-1.0", true)
+    local GUI = OneWoW_GUI
     if GUI and not self._guiCallbacksRegistered then
         self._guiCallbacksRegistered = true
         local function onSettingsChanged()
@@ -369,7 +369,7 @@ function LFGPanelModule:OnToggle(toggleId, value)
         end
         if not value then
             if LFGListFrame and LFGListFrame.SearchPanel and LFGListFrame.SearchPanel:IsVisible() then
-                if _G.LFGListSearchPanel_UpdateResultList then
+                if LFGListSearchPanel_UpdateResultList then
                     LFGListSearchPanel_UpdateResultList(LFGListFrame.SearchPanel)
                 end
             end

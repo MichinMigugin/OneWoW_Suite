@@ -330,7 +330,7 @@ CategoryManager:AssignCategories()
 
 ### 5. Search Pipeline
 
-Search uses `OneWoW_GUI.PredicateEngine` (tokenizer, AST, evaluation). For full engine internals and public API, see [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
+Search uses `OneWoW_GUI.PredicateEngine` (tokenizer, AST, evaluation). For full engine internals and public API, see [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
 - Keywords, properties, operators (`&` `|` `!`), parentheses, bare name text
 - `SAVED(Name)` shortcuts are expanded by `Data\SavedSearches.lua` before PredicateEngine evaluation. Saved searches are stored as `db.global.savedSearches[displayName] = predicate`.
@@ -489,7 +489,7 @@ category search expressions.
 
 ### PredicateEngine
 
-Lives in `OneWoW_GUI` as `OneWoW_GUI.PredicateEngine` (published by the `OneWoW_GUI-1.0` LibStub library). Bags consumes it via `local PE = OneWoW_GUI.PredicateEngine`. Full reference: [`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
+Lives in the core GUI toolkit as `OneWoW_GUI.PredicateEngine` (`OneWoW/GUI/PredicateEngine.lua`, published on the `OneWoW_GUI` global). Bags consumes it via `local PE = OneWoW_GUI.PredicateEngine`. Full reference: [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
 Used by Bags for: search filtering (`WH:FilterBySearch` after saved-search expansion), custom category expressions and builtin category search strings in `Data/Categories.lua`, item button state (`ItemButton` junk / new / upgrade flags), and keyword tooltips in `Integrations/OneWoWTooltips.lua`.
 

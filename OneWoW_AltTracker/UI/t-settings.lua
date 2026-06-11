@@ -2,16 +2,15 @@ local addonName, ns = ...
 local OneWoWAltTracker = OneWoW_AltTracker
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.UI = ns.UI or {}
 
 local function CollectAllCharacterKeys()
     local charMap = {}
 
-    if _G.OneWoW_AltTracker_Character_DB and _G.OneWoW_AltTracker_Character_DB.characters then
-        for charKey, data in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+    if OneWoW_AltTracker_Character_DB and OneWoW_AltTracker_Character_DB.characters then
+        for charKey, data in pairs(OneWoW_AltTracker_Character_DB.characters) do
             if type(charKey) == "string" then
                 if not charMap[charKey] then
                     charMap[charKey] = {
@@ -75,8 +74,8 @@ local function CollectAllCharacterKeys()
         end
     end
 
-    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global then
-        local favorites = _G.OneWoW_AltTracker.db.global.favorites
+    if OneWoW_AltTracker and OneWoW_AltTracker.db and OneWoW_AltTracker.db.global then
+        local favorites = OneWoW_AltTracker.db.global.favorites
         if favorites then
             for charKey, _ in pairs(favorites) do
                 if type(charKey) == "string" then
@@ -110,8 +109,8 @@ local function CollectAllCharacterKeys()
         end
     end
 
-    if _G.OneWoW_CatalogData_Tradeskills_DB and _G.OneWoW_CatalogData_Tradeskills_DB.scanCache then
-        for charKey, _ in pairs(_G.OneWoW_CatalogData_Tradeskills_DB.scanCache) do
+    if OneWoW_CatalogData_Tradeskills_DB and OneWoW_CatalogData_Tradeskills_DB.scanCache then
+        for charKey, _ in pairs(OneWoW_CatalogData_Tradeskills_DB.scanCache) do
             local name, realm = strsplit("-", charKey)
             if name and realm then
                 if not charMap[charKey] then
@@ -175,8 +174,8 @@ local function PurgeCharacter(charKey)
         end
     end
 
-    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global then
-        local favorites = _G.OneWoW_AltTracker.db.global.favorites
+    if OneWoW_AltTracker and OneWoW_AltTracker.db and OneWoW_AltTracker.db.global then
+        local favorites = OneWoW_AltTracker.db.global.favorites
         if favorites and favorites[charKey] then
             favorites[charKey] = nil
             table.insert(purgedFrom, "Favorites")
@@ -190,9 +189,9 @@ local function PurgeCharacter(charKey)
         end
     end
 
-    if _G.OneWoW_CatalogData_Tradeskills_DB and _G.OneWoW_CatalogData_Tradeskills_DB.scanCache then
-        if _G.OneWoW_CatalogData_Tradeskills_DB.scanCache[charKey] then
-            _G.OneWoW_CatalogData_Tradeskills_DB.scanCache[charKey] = nil
+    if OneWoW_CatalogData_Tradeskills_DB and OneWoW_CatalogData_Tradeskills_DB.scanCache then
+        if OneWoW_CatalogData_Tradeskills_DB.scanCache[charKey] then
+            OneWoW_CatalogData_Tradeskills_DB.scanCache[charKey] = nil
             table.insert(purgedFrom, "Tradeskill Scans")
         end
     end
@@ -201,9 +200,9 @@ local function PurgeCharacter(charKey)
 end
 
 local function ShowManageAltsDialog()
-    if _G.OneWoW_AT_ManageAltsDialog then
-        _G.OneWoW_AT_ManageAltsDialog:Show()
-        _G.OneWoW_AT_ManageAltsDialog:Raise()
+    if OneWoW_AT_ManageAltsDialog then
+        OneWoW_AT_ManageAltsDialog:Show()
+        OneWoW_AT_ManageAltsDialog:Raise()
         return
     end
 
@@ -220,7 +219,7 @@ local function ShowManageAltsDialog()
     local dialog = result.frame
     dialog:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     dialog:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    _G.OneWoW_AT_ManageAltsDialog = dialog
+    _G["OneWoW_AT_ManageAltsDialog"] = dialog
 
     local content = result.contentFrame
 
@@ -444,7 +443,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     local yOffset = -10
 
-    if not _G.OneWoW then
+    if not OneWoW then
         yOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = yOffset, addonName = "OneWoW_AltTracker" })
     end
 

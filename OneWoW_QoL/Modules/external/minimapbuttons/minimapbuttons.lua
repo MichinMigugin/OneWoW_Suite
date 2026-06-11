@@ -1,6 +1,6 @@
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 
 local MinimapButtonsModule = {
     id             = "minimapbuttons",
@@ -251,7 +251,7 @@ local function GetCurrentIcon()
     if OneWoW_GUI and OneWoW_GUI.GetBrandIcon then
         return OneWoW_GUI:GetBrandIcon(OneWoW_GUI:GetSetting("minimap.theme"))
     end
-    return "Interface\\AddOns\\OneWoW_GUI\\Media\\neutral-mini.png"
+    return "Interface\\AddOns\\OneWoW\\Media\\neutral-mini.png"
 end
 
 -- ─── Hub button position (free-floating on UIParent) ────────────────────────

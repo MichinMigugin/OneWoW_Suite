@@ -1,17 +1,16 @@
 -- ============================================================================
 -- OneWoW_AltTracker/UI/Framework.lua
 -- INTERNAL BRIDGE ONLY - Do NOT add UI creation code here.
--- All shared UI functions belong in the OneWoW_GUI Library (OneWoW_GUI-1.0).
--- This file only maps library calls into the local ns.UI namespace.
--- If you need a new UI function, add it to OneWoW_GUI/OneWoW_GUI.lua first,
+-- All shared UI functions belong in the OneWoW_GUI toolkit (OneWoW/GUI/).
+-- This file only maps toolkit calls into the local ns.UI namespace.
+-- If you need a new UI function, add it to OneWoW/GUI/OneWoW_GUI.lua first,
 -- then add a thin wrapper here.
 -- ============================================================================
 local _, ns = ...
 
 ns.UI = ns.UI or {}
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 function ns.UI.CreateSearchBox(parent, options)
     return OneWoW_GUI:CreateEditBox(parent, options)

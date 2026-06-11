@@ -2,14 +2,13 @@
 -- OneWoW_QoL/Modules/external/vendorpanel/vendorpanel-ui.lua
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local VendorPanel = ns.VendorPanel
 local state = ns.VPState
 local VPFilters = ns.VPFilters
 local function GetItemStatus()
-    return _G.OneWoW and _G.OneWoW.ItemStatus
+    return OneWoW and OneWoW.ItemStatus
 end
 local GetShowBlizzJunk = ns.VPGetShowBlizzJunk
 local GetShowPanel = ns.VPGetShowPanel
@@ -24,13 +23,13 @@ local backdropIconEdge = {
 }
 
 local function GetBrandIcon()
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     local factionTheme = (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
     return OneWoW_GUI:GetBrandIcon(factionTheme)
 end
 
 local function GetFactionTheme()
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     return (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
 end
 
@@ -278,7 +277,7 @@ function VendorPanel:CreatePreviewPanel()
             VendorPanel:ManageBlizzardSellButton(false)
             if state.panelToggleTab then
                 state.panelToggleTab:SetChecked(false)
-                local gui = LibStub("OneWoW_GUI-1.0", true)
+                local gui = OneWoW_GUI
                 if gui then
                     local theme = (gui.GetSetting and gui:GetSetting("minimap.theme")) or "horde"
                     state.panelToggleTab.Icon:SetTexture(gui:GetBrandIcon(theme))
@@ -718,7 +717,7 @@ function VendorPanel:CreateFiltersDialog()
     showBlizzJunk:SetSize(20, 20)
     showBlizzJunk:SetChecked(GetShowBlizzJunk())
     showBlizzJunk:SetScript("OnClick", function(self)
-        local db = _G.OneWoW_QoL.db.global.modules["vendorpanel"]
+        local db = OneWoW_QoL.db.global.modules["vendorpanel"]
         if not db.toggles then db.toggles = {} end
         db.toggles.show_blizz_junk = self:GetChecked()
         VendorPanel:UpdatePreviewPanel()

@@ -6,8 +6,7 @@ _G["OneWoW"] = OneWoW
 
 local L = OneWoW.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 OneWoW._loadedComponents = {}
 OneWoW._registeredAddons = {}
@@ -56,12 +55,12 @@ local function ApplyLanguage()
 end
 
 local function ResetGUIOnSettingChange(self2)
-    if not self2.GUI then return end
-    local wasShown = self2.GUI:GetMainWindow() and self2.GUI:GetMainWindow():IsShown()
-    self2.GUI:FullReset()
+    if not self2.UI then return end
+    local wasShown = self2.UI:GetMainWindow() and self2.UI:GetMainWindow():IsShown()
+    self2.UI:FullReset()
     if wasShown then
         C_Timer.After(0.1, function()
-            if self2.GUI then self2.GUI:Show() end
+            if self2.UI then self2.UI:Show() end
         end)
     end
 end
@@ -89,6 +88,10 @@ end
 
 function OneWoW:OnAddonLoaded(loadedAddon)
     if loadedAddon ~= ADDON_NAME then return end
+
+    -- Toolkit settings DB first: theme/font must exist before InitializeDatabase
+    -- migrations, ApplyTheme, and any module UI built by the orchestrator below.
+    OneWoW_GUI:InitializeSettings()
 
     self:InitializeDatabase()
 
@@ -142,7 +145,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
     self:RegisterLoadComponent("Core", _ver, "/1w")
 
     self:RegisterMinimap("OneWoW", L["CTX_OPEN_ONEWOW"] or "Open OneWoW", nil, function()
-        if self.GUI then self.GUI:Show() end
+        if self.UI then self.UI:Show() end
     end)
 
     -- Pull enabled Tier-2 modules and their data stores now (still inside core's

@@ -53,17 +53,16 @@ local addonName, ns = ...
 - `addonName` — string, the folder name of your addon.
 - `ns` — a **private table** shared across all files in this addon. Use it instead of globals to pass data between files.
 
-### 2.3 OneWoW Suite — OneWoW_GUI Dependency
+### 2.3 OneWoW Suite — OneWoW_GUI Toolkit
 
-**Every Lua file** that uses OneWoW_GUI must have this block **near the top** (immediately after addon namespace setup and any minimal globals):
+The shared UI toolkit lives in `OneWoW/GUI/` and is published as the plain global `OneWoW_GUI` (not a LibStub library). **Every Lua file** that uses it takes a local handle **near the top** (immediately after addon namespace setup and any minimal globals):
 
 ```lua
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 ```
 
 This applies to all files that call OneWoW_GUI — not just the main addon file.
-Fail fast: if OneWoW_GUI is unavailable, the file exits immediately. No defensive guards like `if OneWoW_GUI and OneWoW_GUI.SomeMethod then`.
+Every suite unit has `RequiredDeps: OneWoW`, so the global is guaranteed present — no `if not OneWoW_GUI then return end` guard, and no defensive guards like `if OneWoW_GUI and OneWoW_GUI.SomeMethod then`.
 Call `OneWoW_GUI.SomeMethod(...)` directly. When something fails (e.g. missing method), it errors and gets fixed, not silently ignored.
 
 ### 2.3.1 OneWoW_GUI UI Policy (Mandatory)

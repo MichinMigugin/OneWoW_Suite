@@ -19,19 +19,20 @@ Five rules govern OneWoW UI code:
 
 ## Authoritative sources
 
-1. `OneWoW_GUI/README.md` — component catalog, backdrop templates, GUI dimension keys, icon skinning, dropdown/menu helpers. Read first to find an existing helper before considering raw widgets.
-2. `OneWoW_GUI/Buttons.lua`, `EditBoxes.lua`, `Controls.lua`, `Layout.lua`, `Panels.lua`, `Display.lua`, `Icons.lua`, `Settings.lua`, `Minimap.lua`, `ReorderDrag.lua` — implementations. Read when uncertain about a helper's option contract.
-3. `OneWoW_GUI/Constants.lua` — `BACKDROP_*` templates, `GUI.*` dimension defaults, `THEMES` table (semantic color keys). Theme color keys live here.
-4. `OneWoW_GUI/OneWoW_GUI.lua` — `GetThemeColor`, `RegisterGUIConstants`, `GetSetting`, `SetSetting`, theme application logic.
+1. `OneWoW/Docs/GUI.md` — component catalog, backdrop templates, GUI dimension keys, icon skinning, dropdown/menu helpers. Read first to find an existing helper before considering raw widgets.
+2. `OneWoW/GUI/Buttons.lua`, `EditBoxes.lua`, `Controls.lua`, `Layout.lua`, `Panels.lua`, `Display.lua`, `Icons.lua`, `Settings.lua`, `Minimap.lua`, `ReorderDrag.lua` — implementations. Read when uncertain about a helper's option contract.
+3. `OneWoW/GUI/Constants.lua` — `BACKDROP_*` templates, `GUI.*` dimension defaults, `THEMES` table (semantic color keys). Theme color keys live here.
+4. `OneWoW/GUI/OneWoW_GUI.lua` — `GetThemeColor`, `RegisterGUIConstants`, `GetSetting`, `SetSetting`, theme application logic.
 
 ## Standard import
 
 Every Lua file that uses OneWoW_GUI starts with:
 
 ```lua
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 ```
+
+The toolkit is a plain global published by `OneWoW/GUI/Core.lua` (the former LibStub library was absorbed into core). Every suite unit has `RequiredDeps: OneWoW`, so no existence guard.
 
 Fail-fast: if OneWoW_GUI is unavailable, the file exits. No defensive `if OneWoW_GUI and OneWoW_GUI.X then` chains downstream — call methods directly and let missing methods error visibly.
 
@@ -164,7 +165,7 @@ Theme, language, minimap state — owned by the suite. Use `OneWoW_GUI:GetSettin
 
 9. **Fixed-width user-facing buttons.** `CreateButton(parent, { text = L.SAVE, width = 80 })` for buttons that display translated text. Use `CreateFitTextButton`. Fixed-width is reserved for explicit grid/rigid-layout cases.
 
-10. **Defensive guards on OneWoW_GUI calls.** `if OneWoW_GUI and OneWoW_GUI.CreateFitTextButton then ... end`. The `LibStub("OneWoW_GUI-1.0", true) ... if not OneWoW_GUI then return end` pattern at the top of the file already covers this. Defensive checks downstream just hide breakage. (Overlaps with `No-Defensive-Guards` rule.)
+10. **Defensive guards on OneWoW_GUI calls.** `if OneWoW_GUI and OneWoW_GUI.CreateFitTextButton then ... end`. The global is guaranteed by `RequiredDeps: OneWoW`; defensive checks downstream just hide breakage. (Overlaps with `No-Defensive-Guards` rule.)
 
 11. **Per-addon storage of shared suite settings.** Theme key, language, minimap visibility stored in `Addon.db` instead of via `OneWoW_GUI:GetSetting/SetSetting`. (Overlaps with `wow-database-api` skill review item #6.)
 

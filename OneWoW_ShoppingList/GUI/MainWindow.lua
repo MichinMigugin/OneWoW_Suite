@@ -1,8 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW_GUI.PredicateEngine
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
@@ -640,7 +639,7 @@ function MainWindow:BuildSettingsPanel()
 
     AddStatusRow(L["OWSL_SETTINGS_ALT_ACCESS"],    ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
     AddStatusRow(L["OWSL_SETTINGS_WARBAND_ACCESS"], ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
-    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    _G.OneWoW_CatalogData_Tradeskills ~= nil, yOff); yOff = yOff - 24
+    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    OneWoW_CatalogData_Tradeskills ~= nil, yOff); yOff = yOff - 24
 
     AddSectionHeader(L["OWSL_SETTINGS_KEYBINDS"], yOff)
     yOff = yOff - 22

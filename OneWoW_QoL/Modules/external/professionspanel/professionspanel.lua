@@ -180,7 +180,7 @@ function ProfPanelModule:GetOtherAlts()
     local currentProf = self._currentProf
     if not currentChar or not currentProf then return alts end
 
-    local atDB = _G.OneWoW_AltTracker_Professions_DB
+    local atDB = OneWoW_AltTracker_Professions_DB
     if atDB and atDB.characters then
         for charKey, charData in pairs(atDB.characters) do
             if charKey ~= currentChar and charData.professions then
@@ -201,7 +201,7 @@ function ProfPanelModule:GetOtherAlts()
         end
     end
 
-    local catDB = _G.OneWoW_CatalogData_Tradeskills_DB
+    local catDB = OneWoW_CatalogData_Tradeskills_DB
     if catDB and catDB.scanCache then
         for charKey, professions in pairs(catDB.scanCache) do
             if charKey ~= currentChar and professions[currentProf] then
@@ -276,12 +276,12 @@ function ProfPanelModule:UpdatePanelData()
 end
 
 function ProfPanelModule:GetCurrentIcon()
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     if OneWoW_GUI then
         local theme = (OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
         return OneWoW_GUI:GetBrandIcon(theme)
     end
-    return "Interface\\AddOns\\OneWoW_GUI\\Media\\horde-mini.png"
+    return "Interface\\AddOns\\OneWoW\\Media\\horde-mini.png"
 end
 
 function ProfPanelModule:UpdateToggleIcon()
@@ -544,7 +544,7 @@ function ProfPanelModule:OnEnable()
         end)
     end
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     if OneWoW_GUI then
         local function onSettingsChanged()
             ProfPanelModule:RebuildPanel()

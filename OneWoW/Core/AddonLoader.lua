@@ -3,8 +3,7 @@
 -- GUI-free on purpose: it loads early, before anything that consumes it.
 local _, OneWoW = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local C_AddOns = C_AddOns
 local InCombatLockdown = InCombatLockdown
@@ -603,15 +602,14 @@ end
 -- Authoritative list of suite load units the core knows about. Single source of
 -- truth for both the startup orchestrator (loads `loadPhase`-tagged entries) and
 -- the load banner (reports any that are present). Detect-only entries carry no
--- `loadPhase`, so the orchestrator skips them: OneWoW_GUI is always a RequiredDep,
--- and OneWoW_Utility_DevTool stays a normal opt-in addon until migration step 5.
+-- `loadPhase`, so the orchestrator skips them: OneWoW_Utility_DevTool stays a
+-- normal opt-in addon until migration step 5.
 -- `module` is the RegisterModule name for hub modules (used by the lazy-tab hook).
 -- `tabOrder` is the row-1 hub tab sort key (required on hub entries; load order
 -- remains array-driven). `stores` lists a parent's data-store load units; the
 -- orchestrator loads each one right after the parent so its OnAddonLoaded hook
 -- fires deterministically (these are LoadOnDemand: 1 now, not LoadWith-auto-loaded).
 OneWoW.ModuleManifest = {
-    { addon = "OneWoW_GUI",             display = "GUI",           cmd = nil },
     { addon = "OneWoW_Notes",           display = "Notes",         cmd = "/1wn",   module = "notes",      tabOrder = 1, loadPhase = "login" },
     { addon = "OneWoW_AltTracker",      display = "AltTracker",    cmd = "/1wat",  module = "alttracker", tabOrder = 2, loadPhase = "login",
         stores = {

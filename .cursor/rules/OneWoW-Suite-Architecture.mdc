@@ -19,7 +19,7 @@ Feature modules, data stores, DevTool sub-modules, and sub-modules must **not** 
 - `RegisterEvent("PLAYER_ENTERING_WORLD")`
 - `EventRegistry:RegisterFrameEventAndCallback` on those three events
 
-Only `OneWoW/OneWoW.lua` (and interim `OneWoW_GUI/Settings.lua` for `ADDON_LOADED`) may register them.
+Only `OneWoW/OneWoW.lua` may register them.
 
 ## Required lifecycle patterns
 

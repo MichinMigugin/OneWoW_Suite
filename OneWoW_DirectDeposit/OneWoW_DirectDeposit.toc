@@ -4,11 +4,11 @@
 ## Notes: OneWoW Addon that: automatically manages gold deposits between your character and Warband Bank.
 ## Author: OneWoW Dev Team
 
-## RequiredDeps: OneWoW, OneWoW_GUI
+## RequiredDeps: OneWoW
 ## LoadOnDemand: 1
 ## Category: OneWoW
 ## Group: OneWoW
-## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
 
 ## SavedVariables: OneWoW_DirectDeposit_DB
 ## SavedVariablesPerCharacter: OneWoW_DirectDeposit_CharDB

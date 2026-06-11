@@ -1,6 +1,6 @@
 local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 
 local CursorEnhancerModule = {
     id          = "cursorenhancer",

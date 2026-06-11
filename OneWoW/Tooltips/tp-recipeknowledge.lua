@@ -111,7 +111,7 @@ local function RecipeKnowledgeProvider(_, context)
 
     local Util           = OneWoW.RecipeKnownUtil
     local L              = OneWoW.L
-    local OneWoW_GUI     = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI     = OneWoW_GUI
     local currentCharKey = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
     local currentKnows   = Util and Util:IsRecipeKnown(context.itemID)
 

@@ -2,8 +2,7 @@ local ADDON_NAME, Addon = ...
 
 local format = string.format
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local noArgs = {}
 local unitSpellCastCommonArgs = { "unit", "castGUID", "spellID", "castBarID" }

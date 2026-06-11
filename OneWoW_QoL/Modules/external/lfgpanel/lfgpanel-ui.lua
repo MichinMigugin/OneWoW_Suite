@@ -2,8 +2,7 @@
 -- OneWoW_QoL/Modules/external/lfgpanel/lfgpanel-ui.lua
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local LFGPanel = ns.LFGPanel
 local state = ns.LFGState
@@ -115,7 +114,7 @@ function LFGPanelUI:CreateDialog()
         ns.ModuleRegistry:SetToggleValue("lfgpanel", "filter_results", checked)
         if not checked then
             if LFGListFrame and LFGListFrame.SearchPanel and LFGListFrame.SearchPanel:IsVisible() then
-                if _G.LFGListSearchPanel_UpdateResultList then
+                if LFGListSearchPanel_UpdateResultList then
                     LFGListSearchPanel_UpdateResultList(LFGListFrame.SearchPanel)
                 end
             end

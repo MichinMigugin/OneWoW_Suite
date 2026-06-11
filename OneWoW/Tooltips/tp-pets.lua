@@ -89,7 +89,7 @@ local function FillPetTooltip(tip, speciesID)
     local numCollected, limit = C_PetJournal.GetNumCollectedInfo(speciesID)
     local hasLines = false
 
-    local _gui = LibStub and LibStub("OneWoW_GUI-1.0", true)
+    local _gui = OneWoW_GUI
     local iconTheme = (_gui and _gui:GetSetting("minimap.theme")) or "neutral"
     local addonIcon = CreateTextureMarkup("Interface\\AddOns\\OneWoW\\Media\\OneWoWMini-" .. iconTheme, 64, 64, 16, 16, 0, 1, 0, 1)
 

@@ -2,8 +2,7 @@ local addonName, ns = ...
 local OneWoWAltTracker = OneWoW_AltTracker
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.UI = ns.UI or {}
 
@@ -309,15 +308,15 @@ function ns.UI:CreateMainFrame(defaultTab)
 end
 
 function ns.UI.RegisterRosterTabFrame(tabName, frame)
-    local addon = _G.OneWoW_AltTracker
+    local addon = OneWoW_AltTracker
     if not addon or not tabName or not frame then return end
     addon.rosterTabFrames = addon.rosterTabFrames or {}
     addon.rosterTabFrames[tabName] = frame
 end
 
 function ns.UI.RefreshMoneyDisplayTabs()
-    local mf = _G.OneWoWAltTrackerMainFrame
-    local addon = _G.OneWoW_AltTracker
+    local mf = OneWoWAltTrackerMainFrame
+    local addon = OneWoW_AltTracker
     local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
     if not t then return end
     if ns.UI.RefreshSummaryTab and t.summary then
@@ -338,8 +337,8 @@ function ns.UI.RefreshMoneyDisplayTabs()
 end
 
 function ns.UI.RefreshAllFavoriteRosters()
-    local mf = _G.OneWoWAltTrackerMainFrame
-    local addon = _G.OneWoW_AltTracker
+    local mf = OneWoWAltTrackerMainFrame
+    local addon = OneWoW_AltTracker
     local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
     if not t then return end
     if ns.UI.RefreshSummaryTab and t.summary then
@@ -368,8 +367,8 @@ function ns.UI.RefreshAllFavoriteRosters()
 end
 
 function ns.UI.ResizeOverviewPanels()
-    local mf = _G.OneWoWAltTrackerMainFrame
-    local addon = _G.OneWoW_AltTracker
+    local mf = OneWoWAltTrackerMainFrame
+    local addon = OneWoW_AltTracker
     local t = (mf and mf.tabs) or (addon and addon.rosterTabFrames)
     if not t then return end
     local offset = OneWoW_GUI:GetFontSizeOffset() or 0

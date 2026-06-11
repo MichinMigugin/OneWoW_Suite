@@ -1,8 +1,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.UI = ns.UI or {}
 
@@ -39,7 +38,7 @@ local onHeaderCreate = function(btn, col, index)
 end
 
 function ns.UI.CreateAuctionsTab(parent)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
 
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["AUCTIONS_OVERVIEW"],
@@ -72,10 +71,10 @@ function ns.UI.CreateAuctionsTab(parent)
     mailIcon:SetTexture("Interface\\Minimap\\Tracking\\Mailbox")
 
     local function UpdateMailIcon()
-        if not _G.OneWoW_AltTracker_Storage_DB then return end
+        if not OneWoW_AltTracker_Storage_DB then return end
 
         local totalGold = 0
-        for charKey, storageData in pairs(_G.OneWoW_AltTracker_Storage_DB.characters) do
+        for charKey, storageData in pairs(OneWoW_AltTracker_Storage_DB.characters) do
             if storageData.mail and storageData.mail.mails then
                 for mailID, mailData in pairs(storageData.mail.mails) do
                     if mailData.sender and (mailData.sender == "Auction House" or mailData.sender == "The Auction House") and mailData.money and mailData.money > 0 then
@@ -98,13 +97,13 @@ function ns.UI.CreateAuctionsTab(parent)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-        if not _G.OneWoW_AltTracker_Storage_DB then return end
+        if not OneWoW_AltTracker_Storage_DB then return end
 
         local hasAnyMail = false
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText(L["MAIL_PENDING_PICKUP"] or "Mail Pending Pickup", 1, 1, 1)
 
-        for charKey, storageData in pairs(_G.OneWoW_AltTracker_Storage_DB.characters) do
+        for charKey, storageData in pairs(OneWoW_AltTracker_Storage_DB.characters) do
             if storageData.mail and storageData.mail.mails then
                 local auctionGold = 0
                 local auctionItems = {}
@@ -226,21 +225,21 @@ function ns.UI.CreateAuctionsTab(parent)
     end
 
     local function InitializeAltDropdown()
-        if not _G.OneWoW_AltTracker_Auctions_DB or not _G.OneWoW_AltTracker_Auctions_DB.characters then
+        if not OneWoW_AltTracker_Auctions_DB or not OneWoW_AltTracker_Auctions_DB.characters then
             altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"] or "All Alts")
             return
         end
 
         local altList = {}
-        for charKey, auctionData in pairs(_G.OneWoW_AltTracker_Auctions_DB.characters) do
+        for charKey, auctionData in pairs(OneWoW_AltTracker_Auctions_DB.characters) do
             local hasData = false
             if auctionData.activeAuctions and #auctionData.activeAuctions > 0 then hasData = true end
             if auctionData.activeBids and #auctionData.activeBids > 0 then hasData = true end
             if auctionData.auctionHistory and #auctionData.auctionHistory > 0 then hasData = true end
             if hasData then
-                local charInfo = _G.OneWoW_AltTracker_Character_DB and
-                                 _G.OneWoW_AltTracker_Character_DB.characters and
-                                 _G.OneWoW_AltTracker_Character_DB.characters[charKey]
+                local charInfo = OneWoW_AltTracker_Character_DB and
+                                 OneWoW_AltTracker_Character_DB.characters and
+                                 OneWoW_AltTracker_Character_DB.characters[charKey]
                 local charName = (charInfo and charInfo.name) or charKey:match("^([^%-]+)") or charKey
                 table.insert(altList, { key = charKey, name = charName })
             end
@@ -342,13 +341,13 @@ local auctionRows = {}
 
 function ns.UI.RefreshAuctionsTab(auctionsTab)
     if not auctionsTab then return end
-    if not _G.OneWoW_AltTracker_Auctions_DB or not _G.OneWoW_AltTracker_Auctions_DB.characters then return end
+    if not OneWoW_AltTracker_Auctions_DB or not OneWoW_AltTracker_Auctions_DB.characters then return end
 
     local scrollContent = auctionsTab.scrollContent
     if not scrollContent then return end
 
     local dt = auctionsTab.dataTable
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(auctionRows)
     if dt then dt:ClearRows() end
@@ -360,11 +359,11 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
     local currentFilter = auctionsTab.auctionFilter or "all"
     local allAuctions = {}
 
-    for charKey, auctionData in pairs(_G.OneWoW_AltTracker_Auctions_DB.characters) do
+    for charKey, auctionData in pairs(OneWoW_AltTracker_Auctions_DB.characters) do
         if not selectedAltKey or charKey == selectedAltKey then
-        local charInfo = _G.OneWoW_AltTracker_Character_DB and
-                         _G.OneWoW_AltTracker_Character_DB.characters and
-                         _G.OneWoW_AltTracker_Character_DB.characters[charKey]
+        local charInfo = OneWoW_AltTracker_Character_DB and
+                         OneWoW_AltTracker_Character_DB.characters and
+                         OneWoW_AltTracker_Character_DB.characters[charKey]
 
         local charDisplayData = {
             name = (charInfo and charInfo.name) or charKey:match("^([^%-]+)"),
@@ -708,8 +707,8 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
 
         local deleteBtn = OneWoW_GUI:CreateFitTextButton(auctionRow, { text = L["PLACEHOLDER_DELETE"], height = 22 })
         deleteBtn:SetScript("OnClick", function()
-            if not _G.OneWoW_AltTracker_Auctions_DB or not _G.OneWoW_AltTracker_Auctions_DB.characters then return end
-            local charAuctionData = _G.OneWoW_AltTracker_Auctions_DB.characters[charKey]
+            if not OneWoW_AltTracker_Auctions_DB or not OneWoW_AltTracker_Auctions_DB.characters then return end
+            local charAuctionData = OneWoW_AltTracker_Auctions_DB.characters[charKey]
             if not charAuctionData then return end
 
             if isHistory and history then
@@ -807,7 +806,7 @@ end
 
 function ns.UI.RefreshAuctionsStats(auctionsTab)
     if not auctionsTab or not auctionsTab.statBoxes then return end
-    if not _G.OneWoW_AltTracker_Auctions_DB then return end
+    if not OneWoW_AltTracker_Auctions_DB then return end
 
     local stats = {
         attention = 0,
@@ -829,7 +828,7 @@ function ns.UI.RefreshAuctionsStats(auctionsTab)
     local totalSold = 0
     local totalPosted = 0
 
-    for charKey, auctionData in pairs(_G.OneWoW_AltTracker_Auctions_DB.characters) do
+    for charKey, auctionData in pairs(OneWoW_AltTracker_Auctions_DB.characters) do
         local hasAuctions = false
 
         if auctionData.activeAuctions and #auctionData.activeAuctions > 0 then
@@ -854,7 +853,7 @@ function ns.UI.RefreshAuctionsStats(auctionsTab)
             stats.bids = stats.bids + #auctionData.activeBids
         end
 
-        local storageData = _G.OneWoW_AltTracker_Storage_DB and _G.OneWoW_AltTracker_Storage_DB.characters and _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
+        local storageData = OneWoW_AltTracker_Storage_DB and OneWoW_AltTracker_Storage_DB.characters and OneWoW_AltTracker_Storage_DB.characters[charKey]
         if storageData and storageData.mail and storageData.mail.mails then
             for mailID, mailData in pairs(storageData.mail.mails) do
                 if mailData.sender and (mailData.sender == "Auction House" or mailData.sender == "The Auction House") and mailData.money and mailData.money > 0 then
