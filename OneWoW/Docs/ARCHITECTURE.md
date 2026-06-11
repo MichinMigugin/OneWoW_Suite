@@ -20,8 +20,10 @@ force-loads enabled units at startup and drives initialization in deterministic
 order (§3).
 
 A transitional `OneWoW_GUI` TOC-only stub remains on disk solely to load the
-legacy `OneWoW_GUI_DB` SavedVariables file (`MIGRATION.md` step 7); it is
-removed after step 8 folds that data into `OneWoW_DB`.
+legacy `OneWoW_GUI_DB` SavedVariables file (`MIGRATION.md` step 7). Step 8
+folded that data into `OneWoW_DB` (versioned `fold_gui_db` migration); the
+stub ships for a release or two more so late upgraders still migrate, then is
+deleted in step 7.2.
 
 ### Why separate TOCs (not one mega-addon)
 
@@ -338,7 +340,7 @@ UI — same precedent as Bags' `/owblayout`).
 **Capturing startup is the design constraint.** The whole orchestration
 (`RunStartupPhase` → `BringUp` → `LoadAddOn` hook → `RunManifestLoginPhase` →
 `DispatchEnteringWorld`) runs inside core's `ADDON_LOADED`, before any command
-can be typed. So the **enable flag persists** in `OneWoW_DB.debugTrace` (default
+can be typed. So the **enable flag persists** in `OneWoW_DB.global.debugTrace` (default
 `false`, in `Core/Database.lua` defaults) and is read back by `Trace:Sync()` in
 `OneWoW:OnAddonLoaded` right after `InitializeDatabase` — before the orchestrator
 runs. Workflow: `/1wtrace on` → `/reload` → `/1wtrace dump`. The **ring is
@@ -379,7 +381,7 @@ Two layers:
    Disabling truly unloads after reload. Re-enabling a login-disabled unit needs
    reload (`LoadAddOn` returns `DISABLED` mid-session).
 
-2. **Soft opt-out** (`OneWoW_DB.featureOptOut`) — unit stays Blizzard-enabled;
+2. **Soft opt-out** (`OneWoW_DB.global.featureOptOut`) — unit stays Blizzard-enabled;
    orchestrator skips loading. Can `LoadAddOn` later same session with no reload.
 
 | Action | Mechanism | Reload? |
@@ -561,7 +563,8 @@ stateless utility → `Services/` on `_G.OneWoW`. Rule of Three before abstracti
 
 The shared UI toolkit lives in `OneWoW/GUI/` and is published as the plain
 global **`OneWoW_GUI`** (`GUI/Core.lua`). Theme is single source of truth in
-`OneWoW_GUI_DB`. Every unit that loads has `RequiredDeps: OneWoW`, so the
+`OneWoW_DB` (`OneWoW_GUI:InitializeSettings` binds the toolkit's settings
+handle to core's db). Every unit that loads has `RequiredDeps: OneWoW`, so the
 global is guaranteed present — take a local handle, no guard:
 
 ```lua
@@ -596,7 +599,7 @@ then `GUI:FullReset()`. Font/size not part of profile sync.
 ### 8.4 Font sizing
 
 All font application funnels through `OneWoW_GUI:SafeSetFont(fontString, fontPath,
-size, flags)` with `fontSizeOffset` from `OneWoW_GUI_DB` (range −3..+5, floor 6).
+size, flags)` with `fontSizeOffset` from `OneWoW_DB` (range −3..+5, floor 6).
 
 ### 8.5 Core settings funnel (`SettingsFeatureRegistry`)
 

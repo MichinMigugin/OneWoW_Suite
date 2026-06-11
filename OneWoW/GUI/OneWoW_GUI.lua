@@ -19,14 +19,14 @@ local DEFAULT_ICON_TEXTURE = Constants.ICON_TEXTURES.horde
 local noop = OneWoW_GUI.noop
 
 local guiConstantsMetatable = {
-    __index = function(self, key)
+    __index = function(_, key)
         return Constants.GUI[key] or 0
     end,
     __newindex = noop,
 }
 
 local themeMetatable = {
-    __index = function(self, key)
+    __index = function(_, key)
         -- Use rawget to avoid recursion when FALLBACK_THEME == self
         return rawget(Constants.FALLBACK_THEME, key) or DEFAULT_THEME_COLOR
     end,
@@ -62,11 +62,11 @@ function OneWoW_GUI:GetBrandIcon(factionTheme)
 end
 
 local function GetRawThemeKeyFromSources(self, addon)
+    -- _settingsDB is OneWoW.db.global (unified OneWoW_DB since MIGRATION
+    -- step 8); the addon fallback covers calls before InitializeSettings binds.
     local themeKey
     if self._settingsDB and self._settingsDB.theme then
         themeKey = self._settingsDB.theme
-    elseif OneWoW and OneWoW.db and OneWoW.db.global and OneWoW.db.global.theme then
-        themeKey = OneWoW.db.global.theme
     elseif addon and addon.db and addon.db.global and addon.db.global.theme then
         themeKey = addon.db.global.theme
     end

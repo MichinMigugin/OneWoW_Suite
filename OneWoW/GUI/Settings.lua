@@ -1,8 +1,5 @@
-local ADDON_NAME, _ = ...
-
 local OneWoW_GUI = OneWoW_GUI
 
-local DB = OneWoW_GUI.DB
 local Constants = OneWoW_GUI.Constants
 local DEFAULT_THEME_ICON = Constants.DEFAULT_THEME_ICON
 local DEFAULT_THEME_KEY = Constants.DEFAULT_THEME_KEY
@@ -22,69 +19,6 @@ local function FireCallbacks(event, value)
     for _, cb in ipairs(callbacks[event]) do
         cb.func(cb.owner, value)
     end
-end
-
-local function InitSettingsDB()
-    local defaults = {
-        global = {
-            language = GetLocale(),
-            theme = DEFAULT_THEME_KEY,
-            font = "default",
-            fontSizeOffset = 0,
-            minimap = {
-                hide = false,
-                theme = DEFAULT_THEME_ICON,
-            },
-            minimapLaunchers = {},
-            moneyDisplay = {
-                useLetters = false,
-                useRegionalNumbers = true,
-                useWhiteValues = true,
-            },
-        },
-    }
-
-    local sv = _G["OneWoW_GUI_DB"]
-    if sv and not sv.global and next(sv) ~= nil then
-        local oldData = {}
-        for k, v in pairs(sv) do
-            oldData[k] = v
-        end
-        wipe(sv)
-        sv.global = oldData
-    end
-
-    local db = DB:Init({
-        addonName = ADDON_NAME,
-        savedVar = "OneWoW_GUI_DB",
-        defaults = defaults,
-    })
-
-    DB:RunMigrations(db, {
-        { version = 1, name = "cleanup_legacy_root_keys", run = function(d)
-            local keepRootKeys = {
-                global = true,
-                chars = true,
-                realms = true,
-                factions = true,
-                classes = true,
-                specs = true,
-                presets = true,
-                _activePreset = true,
-            }
-            local root = d.root
-            if not root then return end
-            for key in pairs(root) do
-                if not keepRootKeys[key] then
-                    root[key] = nil
-                end
-            end
-        end },
-    })
-
-    OneWoW_GUI._settingsDBHandle = db
-    OneWoW_GUI._settingsDB = db.global
-    OneWoW_GUI:ApplyTheme()
 end
 
 function OneWoW_GUI:GetSetting(key)
@@ -1397,9 +1331,14 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     return yOffset
 end
 
--- Settings DB bootstrap. Called by core's OnAddonLoaded (OneWoW.lua) before
--- any theme/font reads — the toolkit no longer self-bootstraps via ADDON_LOADED.
-function OneWoW_GUI:InitializeSettings()
-    InitSettingsDB()
+-- Settings DB bootstrap. Called by core's OnAddonLoaded (OneWoW.lua) right
+-- after InitializeDatabase, before any theme/font reads. Shared settings
+-- live in the unified OneWoW_DB (MIGRATION step 8 folded OneWoW_GUI_DB into
+-- it), so the toolkit binds to core's db handle instead of owning its own.
+---@param db table the core OneWoW db handle returned by DB:Init
+function OneWoW_GUI:InitializeSettings(db)
+    OneWoW_GUI._settingsDBHandle = db
+    OneWoW_GUI._settingsDB = db.global
+    OneWoW_GUI:ApplyTheme()
     PrewarmFonts()
 end

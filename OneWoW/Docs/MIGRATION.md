@@ -194,8 +194,8 @@ No defensive `if not OneWoW_GUI` guard once everything `RequiredDeps: OneWoW`.
 releases so most users have logged out at least once on the new layout.
 
 - [ ] Delete the `OneWoW_GUI` folder (TOC-only stub).
-- [ ] Remove `RequiredDeps: OneWoW_GUI` and `OneWoW_GUI_DB` from `OneWoW.toc`
-  (the latter happens in step 8 if not already done).
+- [ ] Remove `RequiredDeps: OneWoW_GUI` from `OneWoW.toc` (`OneWoW_GUI_DB`
+  already removed from its `SavedVariables` in step 8).
 - [ ] Remove the stub rows/notes from `ARCHITECTURE.md` §1–2.
 - Users who skip the entire transition window lose theme/profile settings
   (one-time, defaults apply) — accepted tradeoff.
@@ -234,28 +234,38 @@ Ship immediately after step 7 (same PR or follow-up).
 **Requires step 7.** **Must precede step 9** (churn settings paths while files
 still live in core).
 
-OneWoW and AltTracker are the last two load units not fully on the DB API.
+OneWoW shipped below; AltTracker is the last load unit not fully on the DB API.
 
 ### OneWoW (this step)
 
-- [ ] Convert `Core/Database.lua` from hand-rolled `InitializeDatabase` +
-  `DB:MergeMissing` to `DB:Init` with a proper defaults table.
-- [ ] Fold ad-hoc migrations into `DB:RunMigrations`:
-  - Overlay position renames (`TOPLEFT_OUTER` → `Outer-Top-Left`, etc.)
-  - `resetToDefaultsV1` toast reset block
-  - LSM font name migration (`MigrateLSMFontName`)
-- [ ] **Fold `OneWoW_GUI_DB` into `OneWoW_DB`** (same versioned migration set):
-  copy `global.*` keys (language, theme, font, fontSizeOffset, minimap,
+- [x] Convert `Core/Database.lua` from hand-rolled `InitializeDatabase` +
+  `DB:MergeMissing` to `DB:Init` with a proper defaults table. The legacy
+  flat `OneWoW_DB` root (root *was* the global table) is wrapped into
+  `root.global` once, shape-detected before `Init` — same pattern the GUI
+  settings DB used. Flat-root readers repointed: `Core/AddonLoader.lua`
+  `OptOutStore`, `Core/FirstRunWizard.lua` `wizardShown`,
+  `UI/t-charprofiles.lua` `ADDON_SETTINGS_MAP` (`globalWrap`, resolved from
+  the current map on restore so pre-change snapshots land in `.global`).
+- [x] Fold ad-hoc migrations into `DB:RunMigrations`:
+  - v2: overlay position renames (`TOPLEFT_OUTER` → `Outer-Top-Left`, etc.),
+    LSM font name migration (`MigrateLSMFontName`), effect→bg conversion
+  - v3: `resetToDefaultsV1` toast reset block (legacy boolean kept as inner
+    gate so already-reset users aren't reset again)
+- [x] **Fold `OneWoW_GUI_DB` into `OneWoW_DB`** (v4 `fold_gui_db`): copies
+  `global.*` keys (language, theme, font, fontSizeOffset, minimap hide/theme,
   minimapLaunchers, moneyDisplay) and scope roots (`chars`, `realms`,
-  `presets`, `_activePreset`) into the unified `OneWoW_DB`; repoint
-  `GUI/Settings.lua` `InitSettingsDB` / `_settingsDB` / profiles at it; drop
-  `OneWoW_GUI_DB` from `OneWoW.toc`. Rules: GUI value wins on key collision
-  (it is what `ApplyTheme` reads today); tolerate `_G.OneWoW_GUI_DB == nil`
-  (fresh installs); versioned marker in `OneWoW_DB` so the fold-in never
-  re-runs. One-way — no dual-write back to `OneWoW_GUI_DB`. Unblocks step 7.2
-  (stub retirement).
-- [ ] Consolidate theme default: solved by the fold-in — the duplicate
-  `theme = "green"` in `OneWoW_DB` defaults becomes the single default.
+  `factions`, `classes`, `specs`, `presets`, `_activePreset`) into the
+  unified `OneWoW_DB`; carries `_migrated` so feature units' legacy
+  `MigrateSettings` calls can't clobber folded values. GUI value wins on key
+  collision; tolerates `_G.OneWoW_GUI_DB == nil`; versioned so it never
+  re-runs; one-way — no write-back. `GUI/Settings.lua` `InitializeSettings(db)`
+  now binds `_settingsDB` to core's handle (boot order flipped:
+  `InitializeDatabase` first); `OneWoW_GUI_DB` dropped from `OneWoW.toc`.
+  Unblocks step 7.2 (stub retirement).
+- [x] Consolidate theme default: solved by the fold-in — the duplicate
+  `theme = "green"` in `OneWoW_DB` defaults becomes the single default
+  (`Core/Database.lua` `DEFAULTS` also gained font, fontSizeOffset,
+  minimapLaunchers, moneyDisplay).
 
 ### AltTracker (independent — any time)
 

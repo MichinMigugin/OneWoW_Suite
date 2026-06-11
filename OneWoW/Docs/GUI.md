@@ -20,7 +20,9 @@ present — no existence guard.
 
 ## Centralized Settings (Settings.lua)
 
-GUI owns the shared settings database (`OneWoW_GUI_DB` SavedVariables).
+Shared settings live in the unified `OneWoW_DB` SavedVariables (the legacy
+`OneWoW_GUI_DB` was folded in by MIGRATION step 8); the toolkit binds its
+settings handle to core's db via `OneWoW_GUI:InitializeSettings(db)`.
 All ecosystem addons read/write through GUI. No more duplicate theme/language/minimap storage.
 
 ### Settings stored
@@ -166,7 +168,7 @@ This creates four themed split containers:
 3. Minimap Button checkbox (left) | Icon Theme dropdown (right)
 4. Discord link (left) | Buy Me A Coffee link (right) - copy-paste edit boxes
 
-All dropdowns read/write directly to `OneWoW_GUI_DB` and fire callbacks.
+All dropdowns read/write the shared settings (`OneWoW_DB`) and fire callbacks.
 The panel consumes ~695px of vertical space.
 
 ### Migrate existing settings (call once at addon init)

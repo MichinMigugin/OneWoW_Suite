@@ -17,4 +17,5 @@
 # Intentionally no Lua files. WoW loads this addon's SavedVariables file
 # (WTF\...\SavedVariables\OneWoW_GUI.lua) into _G.OneWoW_GUI_DB. OneWoW lists
 # this addon as a RequiredDep so the legacy data is present before core's
-# InitializeSettings reads it; at logout both addons persist the variable.
+# fold_gui_db migration (MIGRATION step 8) copies it into OneWoW_DB. Only this
+# stub persists the variable now; the copy is one-way and versioned.

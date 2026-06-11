@@ -89,17 +89,15 @@ end
 function OneWoW:OnAddonLoaded(loadedAddon)
     if loadedAddon ~= ADDON_NAME then return end
 
-    -- Toolkit settings DB first: theme/font must exist before InitializeDatabase
-    -- migrations, ApplyTheme, and any module UI built by the orchestrator below.
-    OneWoW_GUI:InitializeSettings()
-
+    -- Unified DB first (OneWoW_GUI_DB folded into OneWoW_DB in MIGRATION
+    -- step 8), then the toolkit binds its settings handle to it — before any
+    -- theme/font reads or module UI built by the orchestrator below.
     self:InitializeDatabase()
+    OneWoW_GUI:InitializeSettings(self.db)
 
     -- Read the persisted lifecycle-trace flag into memory before RunStartupPhase
     -- so a /reload captures the full startup orchestration from the first event.
     OneWoW.Lifecycle.Trace:Sync()
-
-    OneWoW_GUI:MigrateSettings(self.db.global)
 
     OneWoW_GUI:ApplyTheme(OneWoW)
     ApplyLanguage()

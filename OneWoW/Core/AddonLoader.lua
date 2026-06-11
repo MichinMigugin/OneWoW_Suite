@@ -161,13 +161,13 @@ end
 -- not a replacement: an opted-out unit stays Blizzard-ENABLED (so the built-in
 -- addon list shows it enabled with a "Load Addon" button), but the startup
 -- orchestrator skips loading it. Because it stays enabled it can be LoadAddOn'd
--- later the same session with no reload. Stored in OneWoW_DB (account-wide SV)
--- with a per-character override map; current-character resolution mirrors
--- Blizzard's char-overrides-account model (char entry: true = out, false = in;
--- nil = inherit account). GUI-free: the char key is built locally so the loader
--- keeps no GUI dependency.
+-- later the same session with no reload. Stored in OneWoW_DB.global
+-- (account-wide SV) with a per-character override map; current-character
+-- resolution mirrors Blizzard's char-overrides-account model (char entry:
+-- true = out, false = in; nil = inherit account). GUI-free: the char key is
+-- built locally so the loader keeps no GUI dependency.
 local function OptOutStore(create)
-    local db = OneWoW_DB
+    local db = OneWoW.db and OneWoW.db.global
     if not db then return nil end
     local oo = db.featureOptOut
     if not oo then

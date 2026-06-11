@@ -9,7 +9,7 @@ local floor, abs = math.floor, math.abs
 -- Format
 -- ============================================================================
 -- Suite-wide number and money formatting. Money display preferences
--- (moneyDisplay.*) live in OneWoW_GUI_DB and are read through
+-- (moneyDisplay.*) live in OneWoW_DB and are read through
 -- OneWoW_GUI:GetSetting at call time so toggles apply immediately.
 -- ============================================================================
 
