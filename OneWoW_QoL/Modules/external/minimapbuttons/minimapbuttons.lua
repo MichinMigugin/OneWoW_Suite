@@ -1,6 +1,6 @@
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 
 local MinimapButtonsModule = {
     id             = "minimapbuttons",
@@ -251,7 +251,7 @@ local function GetCurrentIcon()
     if OneWoW_GUI and OneWoW_GUI.GetBrandIcon then
         return OneWoW_GUI:GetBrandIcon(OneWoW_GUI:GetSetting("minimap.theme"))
     end
-    return "Interface\\AddOns\\OneWoW_GUI\\Media\\neutral-mini.png"
+    return "Interface\\AddOns\\OneWoW\\Media\\neutral-mini.png"
 end
 
 -- ─── Hub button position (free-floating on UIParent) ────────────────────────
@@ -843,8 +843,8 @@ local function FindMinimapEntryAction(compName)
             elseif entry.tabKey then
                 local tabKey = entry.tabKey
                 return function()
-                    if OneWoW and OneWoW.GUI then
-                        OneWoW.GUI:Show(tabKey)
+                    if OneWoW and OneWoW.UI then
+                        OneWoW.UI:Show(tabKey)
                     end
                 end
             end
@@ -865,8 +865,8 @@ local function GetCompanionAction(compName)
             -- mis-resolve "/1w" on some clients, leaving the Core tile dead).
             if comp.name == "Core" or comp.name == "GUI" then
                 return function()
-                    if OneWoW and OneWoW.GUI then
-                        OneWoW.GUI:Toggle()
+                    if OneWoW and OneWoW.UI then
+                        OneWoW.UI:Toggle()
                     end
                 end
             end
@@ -945,9 +945,9 @@ local function BuildEnhancedRow()
 
             if action then
                 btn:SetScript("OnClick", function() action() end)
-            elseif OneWoW and OneWoW.GUI then
+            elseif OneWoW and OneWoW.UI then
                 btn:SetScript("OnClick", function()
-                    OneWoW.GUI:Toggle()
+                    OneWoW.UI:Toggle()
                 end)
             end
 

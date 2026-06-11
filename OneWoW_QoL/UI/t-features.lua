@@ -4,8 +4,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
@@ -268,11 +267,9 @@ local function ShowModuleDetail(split, module)
         isEnabled = true,
         onValueChange = function(newVal)
             ns.ModuleRegistry:SetEnabled(module.id, newVal)
-            if module.id == "playmounts" and OneWoW and OneWoW.SettingsFeatureRegistry then
+            if module.id == "playmounts" then
                 OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", "playermounts", newVal)
-                if OneWoW.GUI and OneWoW.GUI.RefreshTooltipsFeatureDot then
-                    OneWoW.GUI:RefreshTooltipsFeatureDot("playermounts", newVal)
-                end
+                ns.UI.RefreshTooltipsFeatureDot("playermounts", newVal)
             end
             isEnabled = newVal
             if selectedRow and selectedRow.dot then
@@ -586,13 +583,13 @@ end
 function ns.UI.SelectFeature(moduleId)
     if not moduleId then return end
 
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("qol")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("qol")
         -- Show("qol") only switches to the QoL module — it lands on whatever
         -- sub-tab was last viewed (Toggles, Settings, etc.). Force the
         -- features sub-tab so per-module detail panels are visible.
-        if OneWoW.GUI.SelectSubTab then
-            OneWoW.GUI:SelectSubTab("qol", "features")
+        if OneWoW.UI.SelectSubTab then
+            OneWoW.UI:SelectSubTab("qol", "features")
         end
     elseif ns.UI and ns.UI.Show then
         -- Use Show("features") so the window opens/stays open on the features tab

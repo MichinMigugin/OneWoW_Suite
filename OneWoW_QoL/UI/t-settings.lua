@@ -4,10 +4,9 @@
 local _, ns = ...
 local L = ns.L
 
-local addon = _G.OneWoW_QoL
+local addon = OneWoW_QoL
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local THEME_LOCALE_KEYS = {
     green  = "THEME_NAME_GREEN",
@@ -55,9 +54,9 @@ local backdrop = {
 }
 
 local function ShowDevHelpDialog()
-    if _G.OneWoW_QoLDevHelpDialog then
-        _G.OneWoW_QoLDevHelpDialog:Show()
-        _G.OneWoW_QoLDevHelpDialog:Raise()
+    if OneWoW_QoLDevHelpDialog then
+        OneWoW_QoLDevHelpDialog:Show()
+        OneWoW_QoLDevHelpDialog:Raise()
         return
     end
 
@@ -262,7 +261,7 @@ function ns.UI.CreateSettingsTab(parent)
     local SIDE = 16
     local yOffset = -20
 
-    if not _G.OneWoW then
+    if not OneWoW then
         yOffset = OneWoW_GUI:CreateSettingsPanel(scrollChild, { yOffset = yOffset, addonName = "OneWoW_QoL" })
     end
 
@@ -286,7 +285,7 @@ function ns.UI.CreateSettingsTab(parent)
     -- Weekly reset region picker. Hosted here, but owned by OneWoW_Trackers,
     -- which exposes the data + strings through its public API. Only shown when
     -- Trackers is loaded (it is the sole consumer of the setting).
-    local trackers = _G.OneWoW_Trackers
+    local trackers = OneWoW_Trackers
     if trackers and trackers.GetWeeklyResetRegionOptions then
         local resetTitle, resetDescText, resetCurrentFmt = trackers:GetWeeklyResetUIText()
 

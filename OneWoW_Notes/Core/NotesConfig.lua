@@ -144,7 +144,7 @@ ns.NotesConfig.THEME_TO_FONT_COLOR = ns.NotesConfig.THEME_TO_COLOR
 
 function ns.NotesConfig:GetResolvedColorConfig(pinColorKey)
     if pinColorKey == "sync" then
-        local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+        local OneWoW_GUI = OneWoW_GUI
         local currentTheme = (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("theme")) or "green"
         local colorKey = self.THEME_TO_COLOR[currentTheme] or "hunter"
         return self.PIN_COLORS[colorKey] or self.PIN_COLORS["hunter"]
@@ -155,7 +155,7 @@ end
 
 function ns.NotesConfig:GetResolvedFontColor(fontColorKey, pinColorKey)
     if fontColorKey == "sync" then
-        local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+        local OneWoW_GUI = OneWoW_GUI
         local currentTheme = (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("theme")) or "green"
         local colorKey = self.THEME_TO_FONT_COLOR[currentTheme] or "hunter"
         local colorConfig = self.PIN_COLORS[colorKey]
@@ -177,7 +177,7 @@ function ns.NotesConfig:GetResolvedFontColor(fontColorKey, pinColorKey)
 end
 
 function ns.NotesConfig:ResolveFontPath(fontKey)
-    local GUI = LibStub("OneWoW_GUI-1.0", true)
+    local GUI = OneWoW_GUI
     if fontKey and fontKey ~= "default" and GUI and GUI.GetFontByKey then
         local path = GUI:GetFontByKey(fontKey)
         if path then return path end
@@ -190,7 +190,7 @@ function ns.NotesConfig:ResolveFontPath(fontKey)
 end
 
 function ns.NotesConfig:GetFontOptions()
-    local GUI = LibStub("OneWoW_GUI-1.0", true)
+    local GUI = OneWoW_GUI
     local opts = {}
     if GUI and GUI.GetFontList then
         for _, fontInfo in ipairs(GUI:GetFontList()) do

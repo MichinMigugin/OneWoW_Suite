@@ -1,8 +1,7 @@
 -- Adds vendor-specific NPC name resolution to the ItemDataLoader.
 local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local tremove = tremove
 local pairs = pairs

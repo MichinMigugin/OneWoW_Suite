@@ -1,7 +1,6 @@
 local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
@@ -174,7 +173,7 @@ local function IsUsingSpecialBuff()
         local buffData = C_UnitAuras.GetBuffDataByIndex("player", i)
         if not buffData then break end
         local icon = buffData.icon
-        if not OneWoW_GUI:IsSecret(icon) then
+        if not OneWoW.Restriction.IsSecret(icon) then
             if icon == 774121 or icon == 134062 or icon == 132293 or
                icon == 132320 or icon == 266311 or icon == 132805 or
                icon == 136074 then

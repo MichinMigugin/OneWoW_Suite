@@ -4,7 +4,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
@@ -15,7 +15,7 @@ local MainWindow = nil
 
 function ns.UI:Show(tabName)
     if not MainWindow then
-        local savedTab = _G.OneWoW_QoL.db.global.lastTab
+        local savedTab = OneWoW_QoL.db.global.lastTab
         self:CreateMainFrame(tabName or savedTab or "features")
         if MainWindow then MainWindow:Show() end
     else
@@ -44,7 +44,7 @@ function ns.UI:Reset()
 end
 
 function ns.UI:CreateMainFrame(defaultTab)
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db or not addon.db.global then return nil end
 
     local savedSize = addon.db.global.mainFrameSize

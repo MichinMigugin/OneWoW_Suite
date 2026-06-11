@@ -1,6 +1,4 @@
-local addonName, ns = ...
-local OneWoWAltTracker = OneWoW_AltTracker
-local L = ns.L
+local _, ns = ...
 
 ns.AlttrackerModule = ns.AlttrackerModule or {}
 local AlttrackerModule = ns.AlttrackerModule
@@ -11,8 +9,6 @@ function AlttrackerModule:Initialize()
     if ns.AltTrackerCache then
         ns.AltTrackerCache:Initialize()
     end
-
-
 
     if ns.ProfessionsModule then
         ns.ProfessionsModule:Initialize()

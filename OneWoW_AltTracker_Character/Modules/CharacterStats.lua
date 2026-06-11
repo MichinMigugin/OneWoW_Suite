@@ -1,7 +1,6 @@
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.CharacterStats = {}
 local Module = ns.CharacterStats
@@ -11,7 +10,7 @@ local Module = ns.CharacterStats
 ---@param value any
 ---@return number|nil
 local function publicNumberOrNil(value)
-    if OneWoW_GUI:IsSecret(value) then return nil end
+    if OneWoW.Restriction.IsSecret(value) then return nil end
     return value
 end
 
@@ -72,7 +71,7 @@ local HeroSpecs = {
 
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
-    if OneWoW_GUI:IsAddonRestricted() then return end
+    if OneWoW.Restriction.IsAddonRestricted() then return end
 
     local stats = {}
 

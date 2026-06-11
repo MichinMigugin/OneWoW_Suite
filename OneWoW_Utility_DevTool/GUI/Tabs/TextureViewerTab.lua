@@ -1,7 +1,6 @@
 local ADDON_NAME, Addon = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local L = Addon.L or {}
@@ -1120,7 +1119,7 @@ function Addon.UI:CreateTextureTab(parent)
         Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     end)
 
-    -- Copy row: LibCopyPaste-style label + short buttons (matches Fonts tab)
+    -- Copy row: CopyPaste-dialog-style label + short buttons (matches Fonts tab)
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
     copyRowLabel:SetTextColor(1, 0.82, 0)

@@ -3,7 +3,7 @@
 local addonName, ns = ...
 
 local function GetDB()
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db or not addon.db.global or not addon.db.global.modules then return nil end
     if not addon.db.global.modules["vendorpanel"] then
         addon.db.global.modules["vendorpanel"] = {}
@@ -74,7 +74,7 @@ local state = {
 ns.VPState = state
 
 local function GetItemStatus()
-    return _G.OneWoW and _G.OneWoW.ItemStatus
+    return OneWoW and OneWoW.ItemStatus
 end
 
 -- ============================================================
@@ -1267,7 +1267,7 @@ function VendorPanel:UpdatePanelToggleButton()
     if not state.panelToggleTab then return end
     local panelShown = state.junkPreviewPanel and state.junkPreviewPanel:IsShown()
     state.panelToggleTab:SetChecked(panelShown)
-    local gui = LibStub("OneWoW_GUI-1.0", true)
+    local gui = OneWoW_GUI
     if gui then
         local theme = (gui.GetSetting and gui:GetSetting("minimap.theme")) or "horde"
         state.panelToggleTab.Icon:SetTexture(gui:GetBrandIcon(theme))
@@ -1362,6 +1362,31 @@ function VendorPanel:StopUpdates()
     end
 end
 
+--- Align Blizzard's merchant spec filter with showAllArmor. When enabled, sets the
+--- native dropdown to all class specs (LE_LOOT_FILTER_CLASS); when disabled,
+--- restores the default current-spec filter.
+function VendorPanel:SyncMerchantSpecFilter()
+    if not MerchantFrame or not MerchantFrame:IsShown() then return end
+
+    if state.showAllArmor then
+        SetMerchantFilter(LE_LOOT_FILTER_CLASS)
+    else
+        ResetSetMerchantFilter()
+    end
+
+    if MerchantFrame.FilterDropdown and MerchantFrame.FilterDropdown:IsShown() then
+        MerchantFrame.FilterDropdown:Update()
+    end
+
+    MerchantFrame.page = 1
+    MerchantFrame_Update()
+    VPFilters.ScanVendor()
+
+    if state.junkPreviewPanel and state.junkPreviewPanel.vendorDropdown and state.junkPreviewPanel.vendorDropdown.RefreshFilters then
+        state.junkPreviewPanel.vendorDropdown:RefreshFilters()
+    end
+end
+
 function VendorPanel:OnMerchantShow()
     state.currentVendorFilter = "Show All"
     local settings = GetSettings()
@@ -1389,7 +1414,7 @@ function VendorPanel:OnMerchantShow()
             self:ManageBlizzardSellButton(true)
             if state.panelToggleTab then
                 state.panelToggleTab:SetChecked(true)
-                local gui = LibStub("OneWoW_GUI-1.0", true)
+                local gui = OneWoW_GUI
                 if gui then
                     local theme = (gui.GetSetting and gui:GetSetting("minimap.theme")) or "horde"
                     state.panelToggleTab.Icon:SetTexture(gui:GetBrandIcon(theme))
@@ -1406,6 +1431,14 @@ function VendorPanel:OnMerchantShow()
     end
 
     C_Timer.After(0, function() VendorPanel:UpdatePanelToggleButton() end)
+
+    if state.showAllArmor then
+        C_Timer.After(0, function()
+            if MerchantFrame and MerchantFrame:IsShown() then
+                VendorPanel:SyncMerchantSpecFilter()
+            end
+        end)
+    end
 end
 
 function VendorPanel:OnMerchantClosed()
@@ -1456,7 +1489,7 @@ function VendorPanelModule:OnEnable()
 
     local coreIS = GetItemStatus()
     if coreIS and (db.itemStatus or db.charItemStatus) then
-        local coreDB = _G.OneWoW and _G.OneWoW.db and _G.OneWoW.db.global and _G.OneWoW.db.global.itemStatus
+        local coreDB = OneWoW and OneWoW.db and OneWoW.db.global and OneWoW.db.global.itemStatus
         if coreDB then
             local migrated = 0
             if db.itemStatus then
@@ -1529,7 +1562,7 @@ function VendorPanelModule:OnEnable()
     self._eventFrame:RegisterEvent("MERCHANT_CLOSED")
     self._eventFrame:RegisterEvent("BAG_UPDATE")
 
-    local GUI = LibStub("OneWoW_GUI-1.0", true)
+    local GUI = OneWoW_GUI
     if GUI and not self._guiCallbacksRegistered then
         self._guiCallbacksRegistered = true
         local function onSettingsChanged()
@@ -1548,7 +1581,7 @@ function VendorPanelModule:OnEnable()
         GUI:RegisterSettingsCallback("OnIconThemeChanged", self, onSettingsChanged)
     end
 
-    if not self._hookDone and _G.MerchantFrame_Update then
+    if not self._hookDone and MerchantFrame_Update then
         self._hookDone = true
         hooksecurefunc("MerchantFrame_Update", function()
             C_Timer.After(0.05, function()

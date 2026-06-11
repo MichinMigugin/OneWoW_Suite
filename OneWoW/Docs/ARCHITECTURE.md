@@ -3,20 +3,27 @@
 Authoritative reference for how the suite is partitioned, loaded, enabled, and
 integrated. Describes **what is implemented today**.
 
-Remaining migration work (core hygiene, settings funnel, GUI absorption, SV
-migration, QoL feature moves, DevTool packaging, enforcement ramp) lives in
-[`MIGRATION.md`](MIGRATION.md) (steps 5–11).
+Remaining migration work (GUI absorption, SV migration, QoL feature moves,
+DevTool packaging, enforcement ramp) lives in [`MIGRATION.md`](MIGRATION.md)
+(steps 7–11).
 
 ---
 
 ## 1. True-core model
 
 The suite ships as **separate addons** (load units / TOCs) but behaves as one
-product. `OneWoW_GUI` is the base UI toolkit (interim separate addon until folded
-into core). `OneWoW` is the always-loaded hub. Feature modules and data stores are
-`## LoadOnDemand: 1` with `RequiredDeps: OneWoW` (and `OneWoW_GUI` today) — nothing
-auto-loads except the foundation and core. The orchestrator force-loads enabled units
-at startup and drives initialization in deterministic order (§3).
+product. `OneWoW` is the always-loaded hub and contains the shared UI toolkit
+(the `OneWoW_GUI` global, absorbed from the former `OneWoW_GUI` addon — §8.1).
+Feature modules and data stores are `## LoadOnDemand: 1` with
+`RequiredDeps: OneWoW` — nothing auto-loads except core. The orchestrator
+force-loads enabled units at startup and drives initialization in deterministic
+order (§3).
+
+A transitional `OneWoW_GUI` TOC-only stub remains on disk solely to load the
+legacy `OneWoW_GUI_DB` SavedVariables file (`MIGRATION.md` step 7). Step 8
+folded that data into `OneWoW_DB` (versioned `fold_gui_db` migration); the
+stub ships for a release or two more so late upgraders still migrate, then is
+deleted in step 7.2.
 
 ### Why separate TOCs (not one mega-addon)
 
@@ -30,11 +37,9 @@ CurseForge pages were the tracking burden, not separate folders.
 
 ```mermaid
 flowchart TB
-    GUI[OneWoW_GUI<br/>base toolkit, always loaded]
-    OW[OneWoW<br/>core hub, always loaded]
-    GUI --> OW
+    OW[OneWoW<br/>core hub + GUI toolkit, always loaded]
 
-    subgraph Modules [Feature modules — RequiredDeps: OneWoW, OneWoW_GUI · LoadOnDemand: 1]
+    subgraph Modules [Feature modules — RequiredDeps: OneWoW · LoadOnDemand: 1]
         Notes[OneWoW_Notes]
         AltTracker[OneWoW_AltTracker]
         Catalog[OneWoW_Catalog]
@@ -63,9 +68,8 @@ flowchart TB
 
 | Tier | Units | Loads | Mechanism |
 |---|---|---|---|
-| **0 — Foundation** | `OneWoW_GUI` (target: folded into `OneWoW`) | Always | Separate addon today; LibStub `OneWoW_GUI-1.0` |
-| **1 — Core hub** | `OneWoW` | Always | `RequiredDeps: OneWoW_GUI`; orchestrator, Manage Features, hub UI, shared engines |
-| **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW, OneWoW_GUI` + `LoadOnDemand: 1` |
+| **1 — Core hub** | `OneWoW` | Always | Orchestrator, Manage Features, hub UI, shared engines, GUI toolkit (`OneWoW_GUI` global) |
+| **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW` + `LoadOnDemand: 1` |
 | **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand, after parent | `RequiredDeps: …, <parent>` + `LoadOnDemand: 1`; listed in `ModuleManifest.stores` |
 | **4 — Utility** | `OneWoW_Utility_DevTool` | Opt-in | `RequiredDeps: OneWoW`; excluded from recommended preset |
 
@@ -73,19 +77,19 @@ Verified against current `.toc` files:
 
 | Load unit | RequiredDeps | OptionalDeps | LoadOnDemand |
 |---|---|---|---|
-| **OneWoW_GUI** | — | — | 0 |
-| **OneWoW** | OneWoW_GUI | Auctionator, TradeSkillMaster | — |
-| **OneWoW_Notes** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_AltTracker** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_Catalog** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_Trackers** | OneWoW, OneWoW_GUI | TradeSkillMaster, Auctionator | 1 |
-| **OneWoW_QoL** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_ShoppingList** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_DirectDeposit** | OneWoW, OneWoW_GUI | — | 1 |
-| **OneWoW_Bags** | OneWoW, OneWoW_GUI | TradeSkillMaster, Baganator, Masque | 1 |
+| **OneWoW** | OneWoW_GUI *(transitional SV stub — see §1)* | Auctionator, TradeSkillMaster | — |
+| **OneWoW_GUI** *(stub)* | — | — | 0 |
+| **OneWoW_Notes** | OneWoW | — | 1 |
+| **OneWoW_AltTracker** | OneWoW | — | 1 |
+| **OneWoW_Catalog** | OneWoW | — | 1 |
+| **OneWoW_Trackers** | OneWoW | TradeSkillMaster, Auctionator | 1 |
+| **OneWoW_QoL** | OneWoW | — | 1 |
+| **OneWoW_ShoppingList** | OneWoW | — | 1 |
+| **OneWoW_DirectDeposit** | OneWoW | — | 1 |
+| **OneWoW_Bags** | OneWoW | TradeSkillMaster, Baganator, Masque | 1 |
 | **OneWoW_Utility_DevTool** | OneWoW | !BugGrabber | — |
-| **OneWoW_AltTracker_\*** | OneWoW, OneWoW_GUI, OneWoW_AltTracker | — | 1 |
-| **OneWoW_CatalogData_\*** | OneWoW, OneWoW_GUI, OneWoW_Catalog | — | 1 |
+| **OneWoW_AltTracker_\*** | OneWoW, OneWoW_AltTracker | — | 1 |
+| **OneWoW_CatalogData_\*** | OneWoW, OneWoW_Catalog | — | 1 |
 
 ### OptionalDeps policy
 
@@ -140,14 +144,14 @@ set both `module` and `tabOrder`.
 ### 3.3 Event ownership
 
 Only **`OneWoW.lua`** registers `ADDON_LOADED`, `PLAYER_LOGIN`, and
-`PLAYER_ENTERING_WORLD` for suite lifecycle dispatch. **`OneWoW_GUI`** still
-registers its own `ADDON_LOADED` for self-bootstrap until GUI is absorbed into core
-(see `MIGRATION.md` step 7). Embedded `Libs/` are unchanged.
+`PLAYER_ENTERING_WORLD` for suite lifecycle dispatch. The GUI toolkit's settings
+bootstrap (`OneWoW_GUI:InitializeSettings()` in `GUI/Settings.lua`) is called
+from core's `OnAddonLoaded` — it no longer self-registers `ADDON_LOADED`.
+Embedded `Libs/` are unchanged.
 
 | Registrar | Allowed? |
 |-----------|----------|
 | `OneWoW.lua` | Yes — sole lifecycle authority for manifest units |
-| `OneWoW_GUI` | Yes (interim) — self-bootstrap until absorption |
 | Embedded `Libs/` | Yes — third-party, off-limits |
 | Feature modules, stores, DevTool, sub-modules | **No** — chain up to manifest parent |
 
@@ -310,6 +314,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 |---|---|
 | No lifecycle `RegisterEvent` in orchestrated units | `bin/check_suite_lifecycle.py` (pre-commit `no-suite-lifecycle-events`) |
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
+| No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; see MIGRATION step 11) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
@@ -335,7 +340,7 @@ UI — same precedent as Bags' `/owblayout`).
 **Capturing startup is the design constraint.** The whole orchestration
 (`RunStartupPhase` → `BringUp` → `LoadAddOn` hook → `RunManifestLoginPhase` →
 `DispatchEnteringWorld`) runs inside core's `ADDON_LOADED`, before any command
-can be typed. So the **enable flag persists** in `OneWoW_DB.debugTrace` (default
+can be typed. So the **enable flag persists** in `OneWoW_DB.global.debugTrace` (default
 `false`, in `Core/Database.lua` defaults) and is read back by `Trace:Sync()` in
 `OneWoW:OnAddonLoaded` right after `InitializeDatabase` — before the orchestrator
 runs. Workflow: `/1wtrace on` → `/reload` → `/1wtrace dump`. The **ring is
@@ -376,7 +381,7 @@ Two layers:
    Disabling truly unloads after reload. Re-enabling a login-disabled unit needs
    reload (`LoadAddOn` returns `DISABLED` mid-session).
 
-2. **Soft opt-out** (`OneWoW_DB.featureOptOut`) — unit stays Blizzard-enabled;
+2. **Soft opt-out** (`OneWoW_DB.global.featureOptOut`) — unit stays Blizzard-enabled;
    orchestrator skips loading. Can `LoadAddOn` later same session with no reload.
 
 | Action | Mechanism | Reload? |
@@ -440,7 +445,7 @@ Manage Features' `FirstRun.CATALOG[].datastores` (consumer graph) and
 
 ### 4.2 Home tab live refresh
 
-`GUI/t-home.lua` builds module rows once; each row's `ApplyState()` re-reads
+`UI/t-home.lua` builds module rows once; each row's `ApplyState()` re-reads
 `GetFeatureUnitState`. `MainWindow` registers `EventRegistry` on
 `OneWoW.FeatureStateChanged` (fired from `SetFeatureOptOut` and post-`LoadAddOn` hook)
 to call `GUI:RefreshHomeStatus()` while Home is visible.
@@ -470,6 +475,15 @@ _G.OneWoW:RegisterModule({
 `ModuleRegistry` stores `name`, `displayName`, `tabs`, `order`. `MainWindow.lua`
 calls `tabInfo.create(frame)` lazily; content cached in `moduleContentFrames`.
 
+**Cached content is stale by default.** A tab frame is built once; revisiting it
+just `Show()`s the cached frame. `MainWindow` calls `frame:Activate()` on every
+tab selection and `frame:Deactivate()` when leaving — tabs whose content can
+change while hidden must implement `Activate` to re-render. Portals (secure
+overlay + grid layout) and the Overlays/Tooltips settings tabs (re-render the
+feature list and selected detail pane with fresh registry reads, which keeps the
+tooltips/`gearupgrades` ↔ overlays/`upgrade` mirror visually synced) do this
+today.
+
 **Placeholder tabs:** when a hub module is not loaded, `GetAlwaysShowModules()` still
 shows its tab (same `tabOrder`, locale key label). Selecting a placeholder prompts load or
 Manage Features.
@@ -490,12 +504,14 @@ shared theme/GUI primitives.
 Modules cannot share core's private `ns`. Sharing uses globals:
 
 - **Within a load unit:** `local _, ns = ...`
-- **Across load units:** `_G.OneWoW`, `LibStub("OneWoW_GUI-1.0")` (interim), per-unit
+- **Across load units:** `_G.OneWoW`, the `OneWoW_GUI` global (toolkit), per-unit
   APIs (`OneWoW_Catalog_TradeskillAPI`, `OneWoW_Trackers_API`), store `_API` /
   `_DB` globals.
 
-LibStub is retained for `OneWoW_GUI` and vendored Ace libs today. Target: fold GUI
-into core as plain `OneWoW_GUI` global (`MIGRATION.md` step 7; CopyPaste step 7.1).
+LibStub is retained only for vendored Ace libs (`LibStub`, `CallbackHandler-1.0`,
+`LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibSharedMedia-3.0`). The copy/paste
+dialog service is `OneWoW.CopyPaste` (`Core/CopyPaste.lua` — `MIGRATION.md`
+step 7.1).
 
 ### Cross-addon references
 
@@ -510,6 +526,31 @@ into core as plain `OneWoW_GUI` global (`MIGRATION.md` step 7; CopyPaste step 7.
 
 Every cross-module store read is nil-guarded. Prefer `_API` over `_DB`. Core reads
 stores opportunistically (tooltips, overlays) — never as a load trigger.
+
+### Core service roster (post MIGRATION step 9)
+
+Engines and shared detection are **core services** on `_G.OneWoW`; **feature
+content registers in from QoL** (or other units). With QoL opted out, the
+services stay resident — only the QoL-registered content disappears.
+
+| Service | File | Consumed by |
+|---|---|---|
+| `OneWoW.OverlayEngine` | `Features/overlay-engine.lua` | Bag integrations (core `Integrations/*`), `OneWoW_Bags` |
+| `OneWoW.OverlayIcons` | `Features/overlay-icons.lua` | Overlay engine rendering, QoL overlays tab |
+| `OneWoW.TooltipEngine` | `Tooltips/tooltip-engine.lua` | Provider registration from QoL, Bags, DirectDeposit |
+| `OneWoW.Toasts` | `Features/toast-engine.lua` | Toast types from QoL, `OneWoW_Notes` `Fire*Alert` |
+| `OneWoW.ItemStatus` | `Features/itemstatus.lua` | Overlay engine, Bags |
+| `OneWoW.UpgradeDetection` | `Features/upgrade-detection.lua` | Overlay engine, Bags |
+| `OneWoW.RecipeKnownUtil` | `Core/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
+| `OneWoW.ItemPrices` | `Core/ItemPrices.lua` | Tooltip providers, overlay engine |
+
+Feature content that registers in from QoL: settings catalogs
+(`SettingsFeatureRegistry:Register`, e.g. `tooltips`, `overlays`), tooltip
+providers (`TooltipEngine:RegisterProvider`), toast types, the Portal Hub, and
+the hub settings tabs (`RegisterModule` row-2 tabs). Settings **storage** stays
+in core `OneWoW_DB` (`settings.*` defaults in `Core/Database.lua`);
+`SettingsFeatureRegistry` resolves storage without a catalog entry, so core
+services keep reading feature settings with QoL opted out.
 
 ---
 
@@ -545,17 +586,19 @@ stateless utility → `Services/` on `_G.OneWoW`. Rule of Three before abstracti
 
 ### 8.1 OneWoW_GUI
 
-All addons use `LibStub("OneWoW_GUI-1.0")` for shared UI and theme. Theme is single
-source of truth in `OneWoW_GUI_DB`.
+The shared UI toolkit lives in `OneWoW/GUI/` and is published as the plain
+global **`OneWoW_GUI`** (`GUI/Core.lua`). Theme is single source of truth in
+`OneWoW_DB` (`OneWoW_GUI:InitializeSettings` binds the toolkit's settings
+handle to core's db). Every unit that loads has `RequiredDeps: OneWoW`, so the
+global is guaranteed present — take a local handle, no guard:
 
 ```lua
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 ```
 
 Fail fast — no defensive nil-chain guards on methods.
 
-**Component API:** `(parent, options)`. See `OneWoW_GUI/GUI.md` and the
+**Component API:** `(parent, options)`. See `OneWoW/Docs/GUI.md` and the
 `onewow-gui-ui` skill for policy.
 
 **Database API:** `OneWoW_GUI.DB` — see `onewow-database-api` skill.
@@ -574,14 +617,72 @@ Hub runs `GUI:FullReset()` on theme change.
 
 ### 8.3 Profile apply
 
-`GUI/t-profiles.lua` reapplies theme and language via `SyncSettingToChildAddons` —
+`UI/t-profiles.lua` reapplies theme and language via `SyncSettingToChildAddons` —
 iterates integrated addons and calls `ApplyTheme()` / `ApplyLanguage()` where present,
 then `GUI:FullReset()`. Font/size not part of profile sync.
 
 ### 8.4 Font sizing
 
 All font application funnels through `OneWoW_GUI:SafeSetFont(fontString, fontPath,
-size, flags)` with `fontSizeOffset` from `OneWoW_GUI_DB` (range −3..+5, floor 6).
+size, flags)` with `fontSizeOffset` from `OneWoW_DB` (range −3..+5, floor 6).
+
+### 8.5 Core settings funnel (`SettingsFeatureRegistry`)
+
+All reads and writes of `OneWoW.db.global.settings.*` (tooltips, overlays,
+toastalerts) route through `OneWoW.SettingsFeatureRegistry`
+(`Core/SettingsFeatureRegistry.lua`). Only that file and `Core/Database.lua`
+(defaults, migrations) touch the tree directly — enforced by the
+`no-settings-bypass` pre-commit hook (§3.10). `portalHub` is a separate DB
+root outside the funnel (follow-up before MIGRATION step 9c); the former
+`toasts` root was folded into `settings.toastalerts` in MIGRATION step 9a
+(migration v5), including the storage-only `anchor` id (no catalog row).
+
+The toast engine (`Features/toast-engine.lua`, `OneWoW.Toasts`) stays resident
+in core; its surface includes the notes `Fire*Alert` wrappers consumed
+cross-unit by `OneWoW_Notes`. Toast *types* (loot, instance), the settings
+catalog, and the toastalerts tab live in `OneWoW_QoL`.
+
+Three responsibilities:
+
+- **Catalog** — `Register` / `GetByTab` feature metadata for the settings GUI.
+- **Storage path** — `ResolveStorage` applies the `settingsTab`/`settingsId`
+  mirror protocol (a feature registered on one tab can store under another,
+  e.g. tooltips/`gearupgrades` → overlays/`upgrade`), then delegates all
+  reads/writes to `OneWoW_GUI.DB` primitives (`Read`/`Ensure`/`Set`/
+  `MergeMissing`). Settings are global-scope only.
+- **Notification** — mutators fire `RegisterListener` callbacks with
+  **storage-resolved** coordinates `(storageTab, storageId, key, value)`;
+  bulk changes (`ResetTab`) fire with nil storageId/key. The registry holds no
+  engine references — subscribers register themselves.
+
+```lua
+local reg = OneWoW.SettingsFeatureRegistry
+reg:IsEnabled(tab, id)          reg:SetEnabled(tab, id, value)
+reg:GetSetting(tab, id, key)    reg:SetSetting(tab, id, key, value)
+reg:GetFeatureSettings(tab, id) -- live table, READ-ONLY by contract (hot paths)
+reg:IsIntegrationEnabled(key)   reg:SetIntegrationEnabled(key, value)
+reg:GetOverlaySetting(id, key)  reg:SetOverlaySetting(id, key, value)
+reg:ResetTab(tab)               reg:RegisterListener(id, fn)
+```
+
+**Subscribers (pub/sub, replaces caller-driven refresh):**
+
+| Listener | Trigger | Action |
+|---|---|---|
+| `OverlayEngine` | `storageTab == "overlays"` | `RequestRefresh()` — coalesced repaint (50 ms debounce; `Refresh()` stays the immediate API) |
+| `ExternalTooltipSync` | `("tooltips", "value")` change | `SyncAll()` — Auctionator/TSM tooltip suppression |
+
+GUI code never calls `OverlayEngine:Refresh()` or `ExternalTooltipSync:SyncAll()`
+after a settings write — the notification covers it. This includes writers in
+other load units (`OneWoW_Bags` settings, `OneWoW_Trackers` farm panel).
+
+Scalar `Set*` calls early-return on no-change (no write, no notification). Table
+values are always written and notified — pass a new table, not a mutated one
+obtained from `GetFeatureSettings`.
+
+`ExternalTooltipSync` runtime state (Auctionator column backup, one-time popup
+flags) lives in its own `db.global.externalTooltipSync` root, not in settings —
+relocated by a versioned `DB:RunMigrations` step in `Core/Database.lua`.
 
 ---
 
@@ -606,11 +707,13 @@ size, flags)` with `fontSizeOffset` from `OneWoW_GUI_DB` (range −3..+5, floor 
 | `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, handler registries, addon-loaded watchers, `/1wtrace` tracer (§3.11) |
 | `OneWoW/Core/StoreBootstrap.lua` | `OneWoW:BootStore` for data stores |
 | `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
+| `OneWoW/Core/SettingsFeatureRegistry.lua` | Settings funnel: catalog, storage-path resolution, change notification (§8.5) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
-| `OneWoW/GUI/t-home.lua` | Home tab: read-only status + live refresh |
-| `OneWoW/GUI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
-| `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 5–11) |
+| `OneWoW/UI/t-home.lua` | Home tab: read-only status + live refresh |
+| `OneWoW/UI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
+| `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 7–11) |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |
 | `bin/check_toc_optional_deps.py` | Pre-commit: suite-internal OptionalDeps ban |
+| `bin/check_no_settings_bypass.py` | Pre-commit: direct `db.global.settings` access ban |

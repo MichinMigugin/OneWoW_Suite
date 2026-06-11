@@ -1,5 +1,5 @@
 local addonName, ns = ...
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
 DB:InitSubModule("OneWoW_AltTracker_Professions_DB")
@@ -32,14 +32,11 @@ function ns:InitializeDatabase()
         OneWoW_AltTracker_Professions_DB.version = 2
     end
 
-    if not OneWoW_AltTracker_Professions_DB.charKeysCanonicalized then
-        local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Professions_DB.characters)
-        OneWoW_AltTracker_Professions_DB.charKeysCanonicalized = true
-        if migrated > 0 then
-            C_Timer.After(5, function()
-                print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " legacy character key(s) in professions data.")
-            end)
-        end
+    local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Professions_DB.characters)
+    if migrated > 0 then
+        C_Timer.After(5, function()
+            print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " duplicate character key(s) in professions data.")
+        end)
     end
 end
 

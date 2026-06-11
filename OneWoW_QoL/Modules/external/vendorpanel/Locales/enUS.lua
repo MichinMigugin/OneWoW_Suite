@@ -85,6 +85,7 @@ L["VENDOR_DIM_KNOWN_TT"] = "Dim Known Items"
 L["VENDOR_DIM_KNOWN_TT_DESC"] = "Visually fades items you have already learned or collected, such as mounts, pets, recipes, toys, and collectibles. Items you still need remain at full brightness."
 
 L["VENDOR_OPT_HEADER"] = "Options"
+L["VENDOR_ALL_SPECS_TYPES"] = "All Specs and Types"
 L["VENDOR_HIDE_FILTERED"] = "Hide Filtered Items"
 L["VENDOR_HIDE_KNOWN"] = "Hide Known Items"
 L["VENDOR_ALWAYS_HIDE"] = "Always Hide (all vendors)"

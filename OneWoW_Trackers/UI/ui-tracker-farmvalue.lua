@@ -1,8 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local tinsert, sort, math_max = table.insert, table.sort, math.max
@@ -205,18 +204,6 @@ function TFV:RemoveItemFromFarmWatchlist(list, itemID)
     return removed
 end
 
-local function MutateOneWoWValue(fn)
-    local ow = OneWoW
-    if not ow or not ow.db or not ow.db.global or not ow.db.global.settings then return false end
-    local tips = ow.db.global.settings.tooltips
-    if not tips then return false end
-    if type(tips.value) ~= "table" then
-        tips.value = {}
-    end
-    fn(tips.value)
-    return true
-end
-
 local function RefreshAllFarmWindows()
     if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
         ns.TrackerEngine:RefreshAllPinnedWindows()
@@ -269,8 +256,8 @@ local function LayoutFarmRow(row, id, qty, showValueColumns)
         unit = unitAH
     end
     if unit > 0 then
-        row.unit:SetText(OneWoW_GUI:FormatGold(unit))
-        row.tot:SetText(OneWoW_GUI:FormatGold(unit * qty))
+        row.unit:SetText(OneWoW.Format.FormatGold(unit))
+        row.tot:SetText(OneWoW.Format.FormatGold(unit * qty))
         row.unit:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         row.tot:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     else
@@ -548,8 +535,8 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     local openOwBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_OPEN_ONEWOW"] or "OneWoW", height = 22 })
     openOwBtn:SetPoint("LEFT", ahSrcBtn, "RIGHT", 8, 0)
     openOwBtn:SetScript("OnClick", function()
-        if OneWoW and OneWoW.GUI and OneWoW.GUI.Show then
-            OneWoW.GUI:Show()
+        if OneWoW and OneWoW.UI and OneWoW.UI.Show then
+            OneWoW.UI:Show()
         end
     end)
     openOwBtn:SetScript("OnEnter", function(myself)
@@ -568,9 +555,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
             return t
         end,
         onSelect = function(value)
-            MutateOneWoWValue(function(val)
-                val.ahPriceSource = value
-            end)
+            OneWoW.SettingsFeatureRegistry:SetSetting("tooltips", "value", "ahPriceSource", value)
             RefreshFarmPricingUI()
             RedrawDetailRows()
             RefreshAllFarmWindows()
@@ -855,18 +840,14 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     end
 
     cbShowAH:SetScript("OnClick", function(myself)
-        MutateOneWoWValue(function(val)
-            val.showAHValue = myself:GetChecked() and true or false
-        end)
+        OneWoW.SettingsFeatureRegistry:SetSetting("tooltips", "value", "showAHValue", myself:GetChecked() and true or false)
         RefreshFarmPricingUI()
         RedrawDetailRows()
         RefreshAllFarmWindows()
     end)
 
     cbUseTSM:SetScript("OnClick", function(myself)
-        MutateOneWoWValue(function(val)
-            val.showTSMValue = myself:GetChecked() and true or false
-        end)
+        OneWoW.SettingsFeatureRegistry:SetSetting("tooltips", "value", "showTSMValue", myself:GetChecked() and true or false)
         RefreshFarmPricingUI()
         RedrawDetailRows()
         RefreshAllFarmWindows()

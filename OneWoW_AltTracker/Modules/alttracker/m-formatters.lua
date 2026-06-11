@@ -1,11 +1,11 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 ns.AltTrackerFormatters = ns.AltTrackerFormatters or {}
 local Formatters = ns.AltTrackerFormatters
 
 function Formatters:GetCharacterKey(name, realm)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+    local OneWoW_GUI = OneWoW_GUI
     return OneWoW_GUI:GetCharacterKey(name, realm)
 end
 
@@ -17,21 +17,7 @@ function Formatters:GetCurrentCharacterKey()
 end
 
 function Formatters:FormatGold(copper)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-    if OneWoW_GUI and OneWoW_GUI.FormatGold then
-        return OneWoW_GUI:FormatGold(copper)
-    end
-    if not copper or type(copper) ~= "number" then
-        return C_CurrencyInfo.GetCoinTextureString(0)
-    end
-    copper = math.floor(tonumber(copper) or 0)
-    local isNegative = copper < 0
-    local absCopper = math.abs(copper)
-    local success, result = pcall(C_CurrencyInfo.GetCoinTextureString, absCopper)
-    if success and result then
-        return (isNegative and "-" or "") .. result
-    end
-    return self:FormatGoldSimple(copper)
+    return OneWoW.Format.FormatGold(copper)
 end
 
 function Formatters:FormatGoldSimple(copper)
@@ -112,7 +98,7 @@ function Formatters:EstimateRestedXP(charData, charKey)
     local multiplier = (race == "Pandaren") and MAX_RESTED_MULTIPLIER_PANDAREN or MAX_RESTED_MULTIPLIER
     local maxRestedXP = maxXP * multiplier
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     local currentCharKey = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
     if charKey and charKey == currentCharKey then
         return math.min(savedRestedXP, maxRestedXP)
@@ -239,7 +225,7 @@ local COMPACT_CLASS_NAMES = {
 }
 
 function Formatters:GetCompactClassName(className)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     local offset = OneWoW_GUI and OneWoW_GUI:GetFontSizeOffset() or 0
     if offset >= 2 then
         local upper = string.upper(className or "")
@@ -348,8 +334,8 @@ function Formatters:GetMailIcon(mailCount, oldestExpiry, lastCheck, charKey)
         end
     end
 
-    if charKey and _G.OneWoW_AltTracker_Storage_DB and _G.OneWoW_AltTracker_Storage_DB.characters then
-        local storageData = _G.OneWoW_AltTracker_Storage_DB.characters[charKey]
+    if charKey and OneWoW_AltTracker_Storage_DB and OneWoW_AltTracker_Storage_DB.characters then
+        local storageData = OneWoW_AltTracker_Storage_DB.characters[charKey]
         if storageData and storageData.mail and storageData.mail.hasNewMail then
             hasNewMailFlag = true
         end

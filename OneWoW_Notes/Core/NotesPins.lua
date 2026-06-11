@@ -1,7 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 
 local NotesPins = {}
 ns.NotesPins = NotesPins

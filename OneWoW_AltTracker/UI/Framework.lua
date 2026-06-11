@@ -1,17 +1,16 @@
 -- ============================================================================
 -- OneWoW_AltTracker/UI/Framework.lua
 -- INTERNAL BRIDGE ONLY - Do NOT add UI creation code here.
--- All shared UI functions belong in the OneWoW_GUI Library (OneWoW_GUI-1.0).
--- This file only maps library calls into the local ns.UI namespace.
--- If you need a new UI function, add it to OneWoW_GUI/OneWoW_GUI.lua first,
+-- All shared UI functions belong in the OneWoW_GUI toolkit (OneWoW/GUI/).
+-- This file only maps toolkit calls into the local ns.UI namespace.
+-- If you need a new UI function, add it to OneWoW/GUI/OneWoW_GUI.lua first,
 -- then add a thin wrapper here.
 -- ============================================================================
-local addonName, ns = ...
+local _, ns = ...
 
 ns.UI = ns.UI or {}
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 function ns.UI.CreateSearchBox(parent, options)
     return OneWoW_GUI:CreateEditBox(parent, options)
@@ -43,7 +42,7 @@ ns.UI.mailIconCells = ns.UI.mailIconCells or setmetatable({}, { __mode = "k" })
 -- the server has deleted.
 function ns.UI.GetMailSummaryForChar(charKey)
     if not charKey then return nil end
-    local api = _G.StorageAPI
+    local api = StorageAPI
     if api and api.GetMailSummary then
         return api.GetMailSummary(charKey)
     end
@@ -61,7 +60,7 @@ function ns.UI.GetHasMailForChar(charKey)
         return summary.hasAnyMail == true or summary.count > 0
     end
 
-    local storageDB = _G.OneWoW_AltTracker_Storage_DB
+    local storageDB = OneWoW_AltTracker_Storage_DB
     if storageDB and storageDB.characters then
         local sc = storageDB.characters[charKey]
         if sc and sc.mail then
@@ -110,9 +109,9 @@ function ns.UI.ShowMailTooltip(anchor, charKey)
     if not anchor or not charKey then return end
     GameTooltip:SetOwner(anchor, "ANCHOR_RIGHT")
 
-    local charData = _G.OneWoW_AltTracker_Character_DB
-        and _G.OneWoW_AltTracker_Character_DB.characters
-        and _G.OneWoW_AltTracker_Character_DB.characters[charKey]
+    local charData = OneWoW_AltTracker_Character_DB
+        and OneWoW_AltTracker_Character_DB.characters
+        and OneWoW_AltTracker_Character_DB.characters[charKey]
     local title = (charData and charData.name) or charKey
     local classColor = charData and charData.class and RAID_CLASS_COLORS[charData.class]
     if classColor then
@@ -199,14 +198,14 @@ function ns.UI.RefreshMailIcons()
 end
 
 -- Expose the refresh to other addons (Storage calls this from DataManager).
-_G.OneWoW_AltTracker = _G.OneWoW_AltTracker or {}
-_G.OneWoW_AltTracker.UI = _G.OneWoW_AltTracker.UI or {}
-_G.OneWoW_AltTracker.UI.RefreshMailIcons = ns.UI.RefreshMailIcons
+OneWoW_AltTracker = OneWoW_AltTracker or {}
+OneWoW_AltTracker.UI = OneWoW_AltTracker.UI or {}
+OneWoW_AltTracker.UI.RefreshMailIcons = ns.UI.RefreshMailIcons
 
 function ns.UI.GetSortedCharacters(getSortValue, sortColumn, sortAscending)
-    if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return {} end
+    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return {} end
     local allChars = {}
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+    for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
         allChars[#allChars + 1] = { key = charKey, data = charData }
     end
     if #allChars == 0 then return allChars end
@@ -265,12 +264,12 @@ function ns.UI.AddLevelCell(charRow, charData)
 end
 
 function ns.IsFavoriteChar(charKey)
-    local db = _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global
+    local db = OneWoW_AltTracker and OneWoW_AltTracker.db and OneWoW_AltTracker.db.global
     return db and db.favorites and db.favorites[charKey] == true
 end
 
 function ns.SetFavoriteChar(charKey, value)
-    local addon = _G.OneWoW_AltTracker
+    local addon = OneWoW_AltTracker
     if not addon or not addon.db then return end
     if not addon.db.global.favorites then
         addon.db.global.favorites = {}
@@ -280,12 +279,12 @@ end
 
 function ns.IsFavoriteBarSet(setName)
     if not setName then return false end
-    local db = _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global
+    local db = OneWoW_AltTracker and OneWoW_AltTracker.db and OneWoW_AltTracker.db.global
     return db and db.favoriteBarSets and db.favoriteBarSets[setName] == true
 end
 
 function ns.SetFavoriteBarSet(setName, value)
-    local addon = _G.OneWoW_AltTracker
+    local addon = OneWoW_AltTracker
     if not addon or not addon.db or not setName then return end
     if not addon.db.global.favoriteBarSets then
         addon.db.global.favoriteBarSets = {}
@@ -295,12 +294,12 @@ end
 
 function ns.IsFavoriteItem(itemID)
     if not itemID then return false end
-    local db = _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global
+    local db = OneWoW_AltTracker and OneWoW_AltTracker.db and OneWoW_AltTracker.db.global
     return db and db.favoriteItems and db.favoriteItems[tostring(itemID)] == true
 end
 
 function ns.SetFavoriteItem(itemID, value)
-    local addon = _G.OneWoW_AltTracker
+    local addon = OneWoW_AltTracker
     if not addon or not addon.db or not itemID then return end
     if not addon.db.global.favoriteItems then
         addon.db.global.favoriteItems = {}

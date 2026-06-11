@@ -35,7 +35,7 @@ local function GetExpansionLabel(catName)
     return nil, 0
 end
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 local function GetCharKey()
     return OneWoW_GUI and OneWoW_GUI:GetCharacterKey() or nil
 end

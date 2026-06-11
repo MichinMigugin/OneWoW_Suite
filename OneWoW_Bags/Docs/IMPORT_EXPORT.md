@@ -121,7 +121,7 @@ bags, or **Drop rules** to discard them.
 ## Exporting
 
 Click **Export** in the Category Manager. OneWoW emits a restricted Lua table
-literal and opens a read-only copy dialog (powered by `LibCopyPaste-1.0`).
+literal and opens a read-only copy dialog (powered by `OneWoW.CopyPaste`).
 
 ### What's included
 

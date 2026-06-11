@@ -1,7 +1,6 @@
 local ADDON_NAME, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local PE = OneWoW_GUI.PredicateEngine
 
@@ -725,7 +724,7 @@ function OneWoW_Bags:OnAddonLoaded()
         end
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("Bags", _ver, "/1wb")
     end
@@ -1277,8 +1276,7 @@ function OneWoW_Bags:RegisterSlashCommands()
     SLASH_ONEWOW_BAGS_EXPORT1 = "/owbags-export"
     SlashCmdList["ONEWOW_BAGS_EXPORT"] = function()
         local Serializer = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Serializer
-        local LibCopyPaste = LibStub and LibStub("LibCopyPaste-1.0", true)
-        if not Serializer or not LibCopyPaste then
+        if not Serializer then
             print("|cFFFF6060" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["EXPORT_UNAVAILABLE_SERIALIZER"])
             return
         end
@@ -1289,7 +1287,7 @@ function OneWoW_Bags:RegisterSlashCommands()
         end
         local title = L["EXPORT_DIALOG_TITLE"]
         local payload = Serializer:Encode(Serializer:BuildExport(db))
-        LibCopyPaste:Copy(title, payload, { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
+        OneWoW.CopyPaste:Copy(title, payload, { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
     end
 end
 

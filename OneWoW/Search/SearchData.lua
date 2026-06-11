@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local function L(key) return OneWoW.L and OneWoW.L[key] or key end
 
@@ -848,8 +848,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_DirectDeposit", addonLabel = "DirectDeposit",
         navType = "external",
         navFunc = function()
-            if _G.OneWoW_DirectDeposit and _G.OneWoW_DirectDeposit.GUI then
-                _G.OneWoW_DirectDeposit.GUI:Toggle()
+            if OneWoW_DirectDeposit and OneWoW_DirectDeposit.GUI then
+                OneWoW_DirectDeposit.GUI:Toggle()
             end
         end,
         keywords = {"deposit", "direct deposit", "directdeposit", "bank deposit", "item deposit", "deposit items"},
@@ -860,8 +860,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_DirectDeposit", addonLabel = "DirectDeposit",
         navType = "external",
         navFunc = function()
-            if _G.OneWoW_DirectDeposit and _G.OneWoW_DirectDeposit.GUI then
-                _G.OneWoW_DirectDeposit.GUI:Toggle()
+            if OneWoW_DirectDeposit and OneWoW_DirectDeposit.GUI then
+                OneWoW_DirectDeposit.GUI:Toggle()
             end
         end,
         keywords = {"item deposit", "send to bank", "deposit bag", "bank items", "move to bank"},
@@ -872,8 +872,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_DirectDeposit", addonLabel = "DirectDeposit",
         navType = "external",
         navFunc = function()
-            if _G.OneWoW_DirectDeposit and _G.OneWoW_DirectDeposit.GUI then
-                _G.OneWoW_DirectDeposit.GUI:Toggle()
+            if OneWoW_DirectDeposit and OneWoW_DirectDeposit.GUI then
+                OneWoW_DirectDeposit.GUI:Toggle()
             end
         end,
         keywords = {"directdeposit settings", "deposit settings", "deposit options"},
@@ -886,8 +886,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_ShoppingList", addonLabel = "Shopping List",
         navType = "external",
         navFunc = function()
-            if _G.OneWoW_ShoppingList and _G.OneWoW_ShoppingList.MainWindow then
-                _G.OneWoW_ShoppingList.MainWindow:Toggle()
+            if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
+                OneWoW_ShoppingList.MainWindow:Toggle()
             end
         end,
         keywords = {"shopping list", "shopping", "buy list", "need to buy", "item list", "wishlist"},
@@ -898,8 +898,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_ShoppingList", addonLabel = "Shopping List",
         navType = "external",
         navFunc = function()
-            if _G.OneWoW_ShoppingList and _G.OneWoW_ShoppingList.MainWindow then
-                _G.OneWoW_ShoppingList.MainWindow:Toggle()
+            if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
+                OneWoW_ShoppingList.MainWindow:Toggle()
             end
         end,
         keywords = {"add to list", "add item", "shopping add", "list item", "track item"},
@@ -910,8 +910,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_ShoppingList", addonLabel = "Shopping List",
         navType = "external",
         navFunc = function()
-            if _G.OneWoW_ShoppingList and _G.OneWoW_ShoppingList.MainWindow then
-                _G.OneWoW_ShoppingList.MainWindow:Toggle()
+            if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
+                OneWoW_ShoppingList.MainWindow:Toggle()
             end
         end,
         keywords = {"reagents", "profession reagents", "crafting materials", "recipe materials", "shopping reagents"},
@@ -922,8 +922,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_ShoppingList", addonLabel = "Shopping List",
         navType = "external",
         navFunc = function()
-            if _G.OneWoW_ShoppingList and _G.OneWoW_ShoppingList.MainWindow then
-                _G.OneWoW_ShoppingList.MainWindow:Toggle()
+            if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
+                OneWoW_ShoppingList.MainWindow:Toggle()
             end
         end,
         keywords = {"shopping overlay", "bag highlight", "list highlight", "shopping bag"},

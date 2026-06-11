@@ -8,11 +8,10 @@
 --   directly (no new collectors). Expiry is computed live from the stored
 --   `daysLeft` + `collectedAt` fields.
 -- ============================================================================
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.UI = ns.UI or {}
 
@@ -66,9 +65,9 @@ end
 local function ContentsLabel(mail)
     local parts = {}
     if mail.CODAmount and mail.CODAmount > 0 then
-        parts[#parts + 1] = string.format(L["MAIL_DETAIL_COD_PREFIX"], OneWoW_GUI:FormatGold(mail.CODAmount))
+        parts[#parts + 1] = string.format(L["MAIL_DETAIL_COD_PREFIX"], OneWoW.Format.FormatGold(mail.CODAmount))
     elseif mail.money and mail.money > 0 then
-        parts[#parts + 1] = string.format(L["MAIL_DETAIL_GOLD_PREFIX"], OneWoW_GUI:FormatGold(mail.money))
+        parts[#parts + 1] = string.format(L["MAIL_DETAIL_GOLD_PREFIX"], OneWoW.Format.FormatGold(mail.money))
     end
     if mail.items then
         local n = 0
@@ -196,9 +195,9 @@ function ns.UI.ShowMailDetail(charKey)
     if not charKey then return end
     local dialog = EnsureDialog()
 
-    local charData = _G.OneWoW_AltTracker_Character_DB
-        and _G.OneWoW_AltTracker_Character_DB.characters
-        and _G.OneWoW_AltTracker_Character_DB.characters[charKey]
+    local charData = OneWoW_AltTracker_Character_DB
+        and OneWoW_AltTracker_Character_DB.characters
+        and OneWoW_AltTracker_Character_DB.characters[charKey]
     local charName = (charData and charData.name) or charKey
     dialog.titleBar._titleText:SetText(string.format(L["MAIL_DETAIL_TITLE"], charName))
 
@@ -217,7 +216,7 @@ function ns.UI.ShowMailDetail(charKey)
     local scrollContent = dialog.scrollContent
     scrollContent:SetPoint("TOPLEFT", dialog.contentFrame, "TOPLEFT", 0, -32)
 
-    local mailData = _G.StorageAPI and _G.StorageAPI.GetMail and _G.StorageAPI.GetMail(charKey)
+    local mailData = StorageAPI and StorageAPI.GetMail and StorageAPI.GetMail(charKey)
     if not mailData or not mailData.mails or not next(mailData.mails) then
         local empty = OneWoW_GUI:CreateFS(scrollContent, 13)
         empty:SetPoint("TOP", scrollContent, "TOP", 0, -20)

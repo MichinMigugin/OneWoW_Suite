@@ -6,8 +6,7 @@ local L = OneWoW_DirectDeposit.L
 
 OneWoW_DirectDeposit.oneWoWHubActive = false
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local function DetectOneWoW()
     if OneWoW then
@@ -126,7 +125,7 @@ function OneWoW_DirectDeposit:OnAddonLoaded()
         owner:ReinitForLanguage(langCode)
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
     end

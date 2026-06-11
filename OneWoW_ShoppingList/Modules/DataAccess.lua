@@ -150,7 +150,7 @@ end
 function DataAccess:GetQualityVariants(itemID)
     if qvCache[itemID] then return qvCache[itemID] end
     local variants = { itemID }
-    local profAddon = _G.OneWoW_CatalogData_Tradeskills
+    local profAddon = OneWoW_CatalogData_Tradeskills
     if profAddon and profAddon.db and profAddon.db.global.recipeIndex then
         for _, recipeData in pairs(profAddon.db.global.recipeIndex) do
             if recipeData.reagentSlots then
@@ -185,7 +185,7 @@ function DataAccess:GetItemInventoryData(itemID, list)
     local altOwned  = 0
     local locations = {}
 
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     local currentChar = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
     local currentName = UnitName("player")
 

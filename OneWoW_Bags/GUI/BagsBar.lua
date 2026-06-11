@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local StorageAPI = StorageAPI
 
@@ -153,7 +152,7 @@ end
 
 function BagsBar:UpdateGoldDisplay()
     if not bagsBarFrame or not bagsBarFrame.goldText then return end
-    bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(GetMoney()))
+    bagsBarFrame.goldText:SetText(OneWoW.Format.FormatGold(GetMoney()))
     if bagsBarFrame.goldBtn then
         bagsBarFrame.goldBtn:SetWidth(max(bagsBarFrame.goldText:GetStringWidth() + 4, 60))
     end
@@ -316,7 +315,7 @@ function BagsBar:ShowGoldTooltip()
 
     if not OneWoW_AltTracker_Character_API then
         GameTooltip:SetText(L["GOLD_TOOLTIP_PERSONAL"], 1, 0.82, 0)
-        GameTooltip:AddLine(OneWoW_GUI:FormatGold(personalCopper), 1, 1, 1)
+        GameTooltip:AddLine(OneWoW.Format.FormatGold(personalCopper), 1, 1, 1)
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(L["GOLD_TOOLTIP_NO_ALTTRACKER"], 0.5, 0.5, 0.5, true)
         return
@@ -339,13 +338,13 @@ function BagsBar:ShowGoldTooltip()
 
     sort(altList, function(a, b) return a.money > b.money end)
 
-    GameTooltip:SetText(L["GOLD_TOOLTIP_PERSONAL"] .. " - " .. OneWoW_GUI:FormatGold(personalCopper), 1, 0.82, 0)
+    GameTooltip:SetText(L["GOLD_TOOLTIP_PERSONAL"] .. " - " .. OneWoW.Format.FormatGold(personalCopper), 1, 0.82, 0)
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine(L["GOLD_TOOLTIP_TOTAL"] .. " - " .. OneWoW_GUI:FormatGold(totalGold), 0.2, 1, 0.2)
+    GameTooltip:AddLine(L["GOLD_TOOLTIP_TOTAL"] .. " - " .. OneWoW.Format.FormatGold(totalGold), 0.2, 1, 0.2)
     GameTooltip:AddLine(" ")
 
     if warbandGold > 0 then
-        GameTooltip:AddLine(L["GOLD_TOOLTIP_WARBAND"] .. " - " .. OneWoW_GUI:FormatGold(warbandGold), 0.6, 0.8, 1)
+        GameTooltip:AddLine(L["GOLD_TOOLTIP_WARBAND"] .. " - " .. OneWoW.Format.FormatGold(warbandGold), 0.6, 0.8, 1)
     end
 
     local displayCount = min(#altList, MAX_ALT_DISPLAY)
@@ -354,14 +353,14 @@ function BagsBar:ShowGoldTooltip()
 
     for i = 1, #altList do
         if i <= displayCount then
-            GameTooltip:AddLine(altList[i].name .. " - " .. OneWoW_GUI:FormatGold(altList[i].money), 0.8, 0.8, 0.8)
+            GameTooltip:AddLine(altList[i].name .. " - " .. OneWoW.Format.FormatGold(altList[i].money), 0.8, 0.8, 0.8)
         else
             othersGold = othersGold + altList[i].money
         end
     end
 
     if othersCount > 0 then
-        GameTooltip:AddLine(string.format(L["GOLD_TOOLTIP_OTHERS"], othersCount) .. " - " .. OneWoW_GUI:FormatGold(othersGold), 0.5, 0.5, 0.5)
+        GameTooltip:AddLine(string.format(L["GOLD_TOOLTIP_OTHERS"], othersCount) .. " - " .. OneWoW.Format.FormatGold(othersGold), 0.5, 0.5, 0.5)
     end
 end
 

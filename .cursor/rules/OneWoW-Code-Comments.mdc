@@ -8,7 +8,7 @@ alwaysApply: false
 
 Comments earn their place by helping a reader understand things the code itself can't show: architecture, design tradeoffs, non-obvious gotchas, and the reasons behind unusual patterns. Comments that restate what the code already says are clutter — they age into noise and lie when the code changes underneath them.
 
-The canonical example of well-commented code in this repo is `OneWoW_GUI/PredicateEngine.lua`. When in doubt, mirror its style.
+The canonical example of well-commented code in this repo is `OneWoW/GUI/PredicateEngine.lua`. When in doubt, mirror its style.
 
 ## Encouraged
 
@@ -42,10 +42,10 @@ Full architectural writeups, design alternatives considered, evolution history,
 and protocol/format specifications belong in `Docs/` markdown files alongside
 the source. The comment header points at them when relevant.
 
-The canonical example: `OneWoW_GUI/PredicateEngine.lua` opens with a five-bullet
+The canonical example: `OneWoW/GUI/PredicateEngine.lua` opens with a five-bullet
 design-decisions summary in the file header. The full rationale — why two
 layers, why a lazy metatable, the tokenizer grammar evolution — lives in
-`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`.
+`OneWoW/Docs/PREDICATE_ENGINE.md`.
 
 ```lua
 -- ============================================================================
@@ -60,7 +60,7 @@ layers, why a lazy metatable, the tokenizer grammar evolution — lives in
 --   - Strict soulbound: character-only; account-bound does NOT match #soulbound
 --   - ${CONSTANT} curly-brace syntax for named constants / parameters
 --
--- Full design rationale: OneWoW_GUI/Docs/PREDICATE_ENGINE.md
+-- Full design rationale: OneWoW/Docs/PREDICATE_ENGINE.md
 -- ============================================================================
 ```
 

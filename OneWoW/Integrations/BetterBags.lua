@@ -1,9 +1,7 @@
 local _, OneWoW = ...
 
 local function IsEnabled()
-    local ov = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings and OneWoW.db.global.settings.overlays
-    if not ov or not ov.integrations or not ov.integrations.betterbags then return true end
-    return ov.integrations.betterbags.enabled ~= false
+    return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled("betterbags")
 end
 
 local bb_events

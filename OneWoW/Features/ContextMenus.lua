@@ -37,11 +37,11 @@ local function NavigateToPlayer(fullName)
     local notes = GetNotes()
     if not notes then return end
     notes.pendingPlayerSelect = fullName
-    if OneWoW.GUI then
-        OneWoW.GUI:Show("notes")
+    if OneWoW.UI then
+        OneWoW.UI:Show("notes")
         C_Timer.After(0.25, function()
-            if OneWoW.GUI then
-                OneWoW.GUI:SelectSubTab("notes", "players")
+            if OneWoW.UI then
+                OneWoW.UI:SelectSubTab("notes", "players")
             end
         end)
     end
@@ -51,11 +51,11 @@ local function NavigateToNPC(npcID)
     local notes = GetNotes()
     if not notes then return end
     notes.pendingNPCSelect = tonumber(npcID)
-    if OneWoW.GUI then
-        OneWoW.GUI:Show("notes")
+    if OneWoW.UI then
+        OneWoW.UI:Show("notes")
         C_Timer.After(0.25, function()
-            if OneWoW.GUI then
-                OneWoW.GUI:SelectSubTab("notes", "npcs")
+            if OneWoW.UI then
+                OneWoW.UI:SelectSubTab("notes", "npcs")
             end
         end)
     end
@@ -74,14 +74,14 @@ local function HandleOpenVendorDetails(npcIDNum)
         catalog.UI.OpenToVendor(npcIDNum)
         return
     end
-    if not OneWoW or not OneWoW.GUI then return end
+    if not OneWoW or not OneWoW.UI then return end
     if catalog then
         catalog.pendingVendorSelect = tonumber(npcIDNum)
     end
-    OneWoW.GUI:Show("catalog")
+    OneWoW.UI:Show("catalog")
     C_Timer.After(0.25, function()
-        if OneWoW and OneWoW.GUI then
-            OneWoW.GUI:SelectSubTab("catalog", "vendors")
+        if OneWoW and OneWoW.UI then
+            OneWoW.UI:SelectSubTab("catalog", "vendors")
         end
         if catalog and catalog.UI and catalog.UI.OpenToVendor then
             catalog.UI.OpenToVendor(npcIDNum)

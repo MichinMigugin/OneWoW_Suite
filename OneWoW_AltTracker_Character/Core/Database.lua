@@ -1,5 +1,5 @@
 local addonName, ns = ...
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
 DB:InitSubModule("OneWoW_AltTracker_Character_DB")
@@ -59,6 +59,19 @@ local function MigrateProfilesFlat()
     profiles._migrated = true
 end
 
+local function ConsolidateActionBarSetSourceChars()
+    local sets = OneWoW_AltTracker_Character_DB.actionBarSets
+    if not sets then return end
+    for _, setData in pairs(sets) do
+        if type(setData) == "table" and setData.sourceChar then
+            local canonical = OneWoW_GUI:CanonicalizeCharacterKey(setData.sourceChar)
+            if canonical then
+                setData.sourceChar = canonical
+            end
+        end
+    end
+end
+
 function ns:InitializeDatabase()
     if not OneWoW_AltTracker_Character_DB.characters then
         OneWoW_AltTracker_Character_DB.characters = {}
@@ -80,18 +93,15 @@ function ns:InitializeDatabase()
         OneWoW_AltTracker_Character_DB.actionBarSets = {}
     end
 
-    -- One-shot consolidation of legacy character keys (see OneWoW_GUI/Database.lua
-    -- DB:ConsolidateCharacterKeys for the three historical key shapes this fixes).
-    -- Idempotent — the flag is a perf gate, not a correctness gate.
-    if not OneWoW_AltTracker_Character_DB.charKeysCanonicalized then
-        local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Character_DB.characters)
-        OneWoW_AltTracker_Character_DB.charKeysCanonicalized = true
-        if migrated > 0 then
-            C_Timer.After(5, function()
-                print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " legacy character key(s) in character data.")
-            end)
-        end
+    -- Merge legacy/duplicate keys (e.g. "Name-Argent Dawn" vs "Name-ArgentDawn") on every
+    -- login. Idempotent — no-op once all keys are canonical. See DB:ConsolidateCharacterKeys.
+    local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Character_DB.characters)
+    if migrated > 0 then
+        C_Timer.After(5, function()
+            print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " duplicate character key(s) in character data.")
+        end)
     end
+    ConsolidateActionBarSetSourceChars()
 
     MigrateProfilesFlat()
 

@@ -45,7 +45,6 @@ OneWoW.Locales["enUS"] = {
     ["MODULE_SHOPPINGLIST"]  = "Shopping List",
     ["MODULE_TRACKERS"]      = "Trackers",
 
-    ["MODULE_GUI"]        = "OneWoW GUI",
     ["MODULE_BAGS"]       = "Bags",
     ["MODULE_DEVTOOLS"]   = "DevTools",
     ["MODULE_EXTRACTOR"]  = "Extractor",
@@ -110,6 +109,10 @@ OneWoW.Locales["enUS"] = {
     ["CTX_OPEN_BAGS"] = "Open Bags",
     ["CTX_OPEN_DEVTOOLS"] = "Open DevTools",
     ["CTX_OPEN_CATALOG"] = "Open Catalog",
+
+    -- CopyPaste dialog (OneWoW.CopyPaste)
+    ["COPYPASTE_HINT_COPY"] = "Press Ctrl+C to copy",
+    ["COPYPASTE_HINT_COPY_MAC"] = "Press Cmd+C to copy",
 
     ["WIZARD_TITLE"] = "Welcome to OneWoW",
     ["KEEP"] = "Keep",

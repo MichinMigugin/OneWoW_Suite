@@ -9,11 +9,11 @@ all three contexts.
 The engine itself is published by `OneWoW_GUI` as `OneWoW_GUI.PredicateEngine`.
 The canonical set of **built-in** `#` keywords, property names, and verbose
 `Is…` flags is defined in
-[`OneWoW_GUI/PredicateEngine.lua`](../../OneWoW_GUI/PredicateEngine.lua) (use
+[`OneWoW/GUI/PredicateEngine.lua`](../../OneWoW/GUI/PredicateEngine.lua) (use
 `OneWoW_GUI.PredicateEngine:GetAllKeywords()` at runtime to list every keyword
 currently registered, including any added via `RegisterKeyword` from other
 addons). For the public API, caches, and extension points, see
-[`OneWoW_GUI/Docs/PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
+[`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
 > **Keywords are English-only.** All `#...` keywords (e.g. `#armor`, `#epic`,
 > `#soulbound`) are canonical English tokens regardless of the client locale.
@@ -1014,10 +1014,10 @@ quality>=${EPIC} & expansion==${WARWITHIN}
 ## PredicateEngine.lua (file map)
 
 This is a structural index of
-[`OneWoW_GUI/PredicateEngine.lua`](../../OneWoW_GUI/PredicateEngine.lua) for
+[`OneWoW/GUI/PredicateEngine.lua`](../../OneWoW/GUI/PredicateEngine.lua) for
 anyone cross-checking behavior or diffs. User-facing behavior is also summarized
 in this document; full API and extension notes are in
-[`PREDICATE_ENGINE.md`](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md).
+[`PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
 | Area | What lives there (approx.) |
 |---|---|

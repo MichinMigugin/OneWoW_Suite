@@ -1,7 +1,6 @@
 local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local PE = OneWoW_GUI.PredicateEngine
 
@@ -43,7 +42,7 @@ local function HideChrome()
 end
 
 local function SyncKeybindings()
-    if OneWoW_GUI:IsAddonRestricted() then return end
+    if OneWoW.Restriction.IsAddonRestricted() then return end
     if not ModuleBagEnabled() or not barFrame then return end
     ClearOverrideBindings(barFrame)
     for i = 1, 4 do

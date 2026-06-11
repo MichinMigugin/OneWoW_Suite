@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local ipairs, pairs = ipairs, pairs
 local tinsert = tinsert
@@ -169,14 +168,11 @@ local function SingleLinePreview(text)
 end
 
 local function ShowSavedSearchPredicate(name, query)
-    local LibCopyPaste = LibStub and LibStub("LibCopyPaste-1.0", true)
-    if not LibCopyPaste then return end
-
     local title = L["SAVED_SEARCH_COPY_TITLE"]
     if name and name ~= "" then
         title = title .. ": " .. name
     end
-    LibCopyPaste:Copy(title, query or "", { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
+    OneWoW.CopyPaste:Copy(title, query or "", { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
 end
 
 local function SetMainSearchText(text)
@@ -587,11 +583,8 @@ local function BuildBagsTab(sc, db)
         end,
     })
 
-    if OneWoW then
-        local overlayEnabled = false
-        if OneWoW.SettingsFeatureRegistry then
-            overlayEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general")
-        end
+    do
+        local overlayEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general")
         dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
             yOffset = dispY,
             label = L["OVERLAY_SECTION"],

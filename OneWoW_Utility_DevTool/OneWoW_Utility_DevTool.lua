@@ -2,8 +2,7 @@ local ADDON_NAME, Addon = ...
 
 OneWoW_Utility_DevTool = Addon
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local pcall = pcall
 local type = type
@@ -382,9 +381,7 @@ function Addon:SearchFramesByName(searchText)
 end
 
 function Addon:CopyToClipboard(text, title)
-    local lib = LibStub("LibCopyPaste-1.0")
-    -- Omit readOnly: when true, SetReadOnly captures GetText() from a hidden EditBox (which can return ""), then OnTextChanged overwrites with that empty value
-    lib:Copy(title or self.L["COPY_DEFAULT_TITLE"], text)
+    OneWoW.CopyPaste:Copy(title or self.L["COPY_DEFAULT_TITLE"], text, { readOnly = true })
     self:Print(self.L["MSG_PRESS_CTRL_C"])
 end
 
@@ -495,7 +492,7 @@ function Addon:OnAddonLoaded()
     if didInit then return end
     didInit = true
     Addon:OnInitialize()
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt")
     end

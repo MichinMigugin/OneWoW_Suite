@@ -1,7 +1,6 @@
 local _, OneWoW = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW_GUI.PredicateEngine
 
 local UpgradeDetection = {}
@@ -49,13 +48,11 @@ local SLOT_NAMES = {
 }
 
 local function GetDB()
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    return db and db.overlays and db.overlays.upgrade
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("overlays", "upgrade")
 end
 
 local function GetMode()
-    local cfg = GetDB()
-    return cfg and cfg.mode or "ILVL"
+    return GetDB().mode or "ILVL"
 end
 
 local function HasTwoHanderEquipped()
@@ -87,7 +84,7 @@ local function CanPlayerUseItem(itemLink)
     if not PE:CanClassEquip(itemID, itemLink) then return false end
 
     local cfg = GetDB()
-    if cfg and cfg.selfSpecMatch then
+    if cfg.selfSpecMatch then
         local specID = GetCurrentSpecID()
         if specID then
             local _, _, classID = UnitClass("player")
@@ -108,8 +105,7 @@ end
 function UpgradeDetection:CheckPawnUpgrade(itemLink)
     if not self.hasPawn or not itemLink then return nil end
     if not PawnShouldItemLinkHaveUpgradeArrow then return nil end
-    local cfg = GetDB()
-    local enforceReqLevel = not cfg or cfg.pawnEnforceReqLevel ~= false
+    local enforceReqLevel = GetDB().pawnEnforceReqLevel ~= false
     local ok, result = pcall(PawnShouldItemLinkHaveUpgradeArrow, itemLink, enforceReqLevel)
     if ok then return result end
     return nil
@@ -368,7 +364,7 @@ function UpgradeDetection:IsItemUpgradeForAlt(itemID, itemLink, altData)
     if not PE:CanClassEquip(itemID, itemLink, altData.class) then return nil end
 
     local cfg = GetDB()
-    if cfg and cfg.altSpecMatch and altData.stats and altData.stats.specID then
+    if cfg.altSpecMatch and altData.stats and altData.stats.specID then
         local altClassID = PE.ClassID[altData.class]
         if not altClassID or not C_Item.DoesItemContainSpec(itemLink or itemID, altClassID, altData.stats.specID) then
             return nil
@@ -476,8 +472,7 @@ function UpgradeDetection:Initialize()
 
         local mode = GetMode()
         if mode ~= "PAWN" and mode ~= "PAWN>ILVL" then
-            local cfg = GetDB()
-            if cfg and cfg.showPawnPrompt ~= false then
+            if GetDB().showPawnPrompt ~= false then
                 self:ShowPawnModePrompt()
             end
         else
@@ -486,8 +481,7 @@ function UpgradeDetection:Initialize()
     else
         local mode = GetMode()
         if mode == "PAWN" then
-            local cfg = GetDB()
-            if cfg then cfg.mode = "ILVL" end
+            OneWoW.SettingsFeatureRegistry:SetOverlaySetting("upgrade", "mode", "ILVL")
             print("|cFF00FF00OneWoW|r: Pawn not found - upgrade detection switched to Item Level mode.")
         end
     end
@@ -500,16 +494,13 @@ function UpgradeDetection:ShowPawnModePrompt()
         button1 = L["OVR_UPGRADE_PAWN_ENABLE"] or "Enable Pawn Mode",
         button2 = L["OVR_UPGRADE_PAWN_NO_THANKS"] or "No Thanks",
         OnAccept = function()
-            local cfg = GetDB()
-            if cfg then
-                cfg.mode = "PAWN"
-                cfg.showPawnPrompt = false
-            end
+            local reg = OneWoW.SettingsFeatureRegistry
+            reg:SetOverlaySetting("upgrade", "mode", "PAWN")
+            reg:SetOverlaySetting("upgrade", "showPawnPrompt", false)
             print("|cFF00FF00OneWoW|r: Upgrade detection set to Pawn mode.")
         end,
         OnCancel = function()
-            local cfg = GetDB()
-            if cfg then cfg.showPawnPrompt = false end
+            OneWoW.SettingsFeatureRegistry:SetOverlaySetting("upgrade", "showPawnPrompt", false)
         end,
         timeout = 0,
         whileDead = true,

@@ -54,7 +54,7 @@ end
 local function GetSlotEnchantToggle(slotId)
     local defaultVal = enchantSlotDefaults[slotId]
     if defaultVal == nil then return false end
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if addon and addon.db and addon.db.global.modules then
         local modData = addon.db.global.modules["charinfo"]
         if modData and modData.toggles and modData.toggles["enchant_slot_" .. slotId] ~= nil then
@@ -134,7 +134,7 @@ local function CreateInfoPanel(button)
 
     if not button.onewow_durabilityText then
         button.onewow_durabilityText = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        local _guiLib = LibStub("OneWoW_GUI-1.0", true)
+        local _guiLib = OneWoW_GUI
         local fontPath = (_guiLib and _guiLib.GetFont and _guiLib:GetFont()) or "Fonts\\FRIZQT__.TTF"
         button.onewow_durabilityText:SetFont(fontPath, 10, "OUTLINE")
     end
@@ -458,7 +458,7 @@ local enchantSlotLabels = {
 
 function CharInfoModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh)
     local L = ns.L
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     if not OneWoW_GUI then return yOffset end
 
     local sectionHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")

@@ -22,8 +22,7 @@
 -- ============================================================================
 local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 -- Live affix-advice signals (factual game data):
 --   1245767 = the "kill something" forced-target aura applied by Bloody Command.

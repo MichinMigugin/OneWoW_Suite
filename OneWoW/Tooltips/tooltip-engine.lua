@@ -1,7 +1,6 @@
 local _, OneWoW = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW_GUI.PredicateEngine
 
 local TooltipEngine = {}
@@ -49,9 +48,7 @@ function TooltipEngine:EnsureDefaults()
 end
 
 function TooltipEngine:IsEnabled()
-    local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    if not db or not db.tooltips or not db.tooltips.general then return false end
-    return db.tooltips.general.enabled == true
+    return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general")
 end
 
 function TooltipEngine:IsFeatureEnabled(featureId)
@@ -60,9 +57,6 @@ function TooltipEngine:IsFeatureEnabled(featureId)
 end
 
 function TooltipEngine:HookTooltips()
-    if OneWoW.TooltipEnhancements_RegisterSellPriceSuppress then
-        OneWoW.TooltipEnhancements_RegisterSellPriceSuppress()
-    end
     local HANDLED_TYPES = {
         Enum.TooltipDataType.Unit,
         Enum.TooltipDataType.Item,
@@ -259,7 +253,7 @@ function TooltipEngine:ProcessProviders(tooltip, context)
 
     tooltip:AddLine(" ")
 
-    local _gui = LibStub and LibStub("OneWoW_GUI-1.0", true)
+    local _gui = OneWoW_GUI
     local iconTheme = (_gui and _gui:GetSetting("minimap.theme")) or "neutral"
     local addonIcon = CreateTextureMarkup("Interface\\AddOns\\OneWoW\\Media\\OneWoWMini-" .. iconTheme, 64, 64, 16, 16, 0, 1, 0, 1)
     if headerRight then
@@ -323,12 +317,10 @@ function TooltipEngine:HookAchievementUI()
             if not engine:IsEnabled() then return end
             if not engine:IsFeatureEnabled("technicalids") then return end
             if not achievementFrame.id then return end
-            local db = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-            local tid = db and db.tooltips and db.tooltips.technicalids
-            if not tid or tid.showAchievementID == false then return end
+            if OneWoW.SettingsFeatureRegistry:GetSetting("tooltips", "technicalids", "showAchievementID") == false then return end
             GameTooltip:SetOwner(achievementFrame, "ANCHOR_NONE")
             GameTooltip:SetPoint("TOPLEFT", achievementFrame, "TOPRIGHT", 0, 0)
-            local _gui = LibStub and LibStub("OneWoW_GUI-1.0", true)
+            local _gui = OneWoW_GUI
             local iconTheme = (_gui and _gui:GetSetting("minimap.theme")) or "neutral"
             local addonIcon = CreateTextureMarkup("Interface\\AddOns\\OneWoW\\Media\\OneWoWMini-" .. iconTheme, 64, 64, 16, 16, 0, 1, 0, 1)
             GameTooltip:AddLine(addonIcon .. " OneWoW", TOOLTIP_CONFIG.headerColor[1], TOOLTIP_CONFIG.headerColor[2], TOOLTIP_CONFIG.headerColor[3])

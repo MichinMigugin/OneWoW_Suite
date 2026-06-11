@@ -176,8 +176,8 @@ local function WalkManifestUnits(fn)
     local manifest = OneWoW.ModuleManifest
     if not manifest then return end
     for _, m in ipairs(manifest) do
-        if not m.addon or m.addon == "" or m.addon == "OneWoW_GUI" then
-            -- skip GUI (self-bootstrap) and empty entries
+        if not m.addon or m.addon == "" then
+            -- skip empty entries
         elseif m.loadPhase == "login" then
             if C_AddOns.IsAddOnLoaded(m.addon) then
                 fn(m.addon)

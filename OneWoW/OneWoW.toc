@@ -1,9 +1,13 @@
 ## Interface: 120005, 120007
-## Version: R6.2606.0223
+## Version: R6.2606.1022
 ## Title: |cFF00FF00OneWoW|r
 ## Notes: OneWoW - Central Hub for all OneWoW addons
 ## Author: OneWoW Dev Team
 
+# TRANSITIONAL: OneWoW_GUI is a TOC-only SavedVariables-handoff stub. The dep
+# forces it to load first so the legacy OneWoW_GUI_DB SV file populates _G
+# before InitializeDatabase's fold_gui_db migration reads it. Remove with the
+# stub in MIGRATION step 7.2 (a release or two after step 8).
 ## RequiredDeps: OneWoW_GUI
 ## OptionalDeps: Auctionator, TradeSkillMaster
 ## Category: OneWoW
@@ -14,17 +18,41 @@
 ## AddonCompartmentFunc: 1WoW_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: 1WoW_OnAddonCompartmentEnter
 ## AddonCompartmentFuncOnLeave: 1WoW_OnAddonCompartmentLeave
-## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
 
 ## X-Website: https://wow2.xyz/
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 
-# Libraries
+# Libraries (LibStub first; LibSharedMedia and LibDataBroker need it + CallbackHandler)
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
 
 # Media
 Media\fonts.lua
+
+# GUI toolkit (absorbed OneWoW_GUI library — publishes the OneWoW_GUI global).
+# Widget files - DO NOT reorder. Dependencies: Controls needs Buttons+Display;
+# Layout needs Buttons+Controls; Panels needs Buttons+Layout+EditBoxes.
+GUI\Core.lua
+GUI\Database.lua
+GUI\Constants.lua
+GUI\OneWoW_GUI.lua
+GUI\PredicateEngine.lua
+GUI\Buttons.lua
+GUI\Display.lua
+GUI\Controls.lua
+GUI\EditBoxes.lua
+GUI\Layout.lua
+GUI\Panels.lua
+GUI\Icons.lua
+GUI\ReorderDrag.lua
+GUI\KeywordHelp.lua
+GUI\Settings.lua
+GUI\Minimap.lua
 
 # Locales
 Locales\enUS.lua
@@ -32,6 +60,10 @@ Locales\koKR.lua
 
 # Core
 Core\Constants.lua
+Core\Format.lua
+Core\Restriction.lua
+Core\Util.lua
+Core\CopyPaste.lua
 Core\Database.lua
 Core\ModuleRegistry.lua
 Core\AddonLoader.lua
@@ -46,16 +78,11 @@ Core\FirstRunWizard.lua
 Integrations\ExternalTooltipSync.lua
 
 # Features
-Features\overlays.lua
 Features\overlay-icons.lua
 Features\upgrade-detection.lua
 Features\overlay-engine.lua
 Features\itemstatus.lua
-Features\toastalerts.lua
 Features\toast-engine.lua
-Features\toast-loot.lua
-Features\toast-notes.lua
-Features\toast-instance.lua
 Features\ContextMenus.lua
 
 # Integrations
@@ -65,58 +92,25 @@ Integrations\BetterBags.lua
 Integrations\OneWoW_Bags.lua
 Integrations\ElvUI.lua
 
-# Tooltips
-Tooltips\tooltips.lua
+# Tooltips (engine only — providers moved to OneWoW_QoL, MIGRATION step 9b)
 Tooltips\tooltip-engine.lua
-Tooltips\tp-collections.lua
-Tooltips\tp-itemtypes.lua
-Tooltips\tp-itemtracker.lua
-Tooltips\tp-recipeknowledge.lua
-Tooltips\tp-customnotes.lua
-Tooltips\tp-technicalids.lua
-Tooltips\tp-enhancements.lua
-Tooltips\tp-talentmods.lua
-Tooltips\tp-notewarning.lua
-Tooltips\tp-itemstatus.lua
-Tooltips\tp-gearupgrades.lua
-Tooltips\tp-value.lua
-Tooltips\tp-pets.lua
 
-# Portal Hub - Data
-Portals\Data\Hearthstones.lua
-Portals\Data\ShortNames.lua
-Portals\Data\Portals.lua
-
-# Portal Hub - Modules
-Portals\portalhub-detection.lua
-Portals\portalhub-items.lua
-Portals\portalhub-equip.lua
-Portals\portalhub-flyouts.lua
-Portals\portalhub-flyouts-nested.lua
-Portals\portalhub.lua
-Portals\portalhub-esc.lua
-Portals\portalhub-esc-panels.lua
-
-# GUI Framework
-GUI\Framework.lua
+# Hub UI Framework
+UI\Framework.lua
 
 # Search
 Search\SearchData.lua
 Search\SearchFrame.lua
 
-# GUI
-GUI\navigation.lua
-GUI\MainWindow.lua
-GUI\Minimap.lua
-GUI\t-home.lua
-GUI\t-settings.lua
-GUI\t-overlays.lua
-GUI\t-toastalerts.lua
-GUI\t-tooltips.lua
-GUI\t-portals.lua
-GUI\t-profiles.lua
-GUI\t-charprofiles.lua
-GUI\t-managefeatures.lua
+# Hub UI
+UI\navigation.lua
+UI\MainWindow.lua
+UI\Minimap.lua
+UI\t-home.lua
+UI\t-settings.lua
+UI\t-profiles.lua
+UI\t-charprofiles.lua
+UI\t-managefeatures.lua
 
 # Main
 OneWoW.lua

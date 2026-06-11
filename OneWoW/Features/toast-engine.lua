@@ -1,7 +1,6 @@
 local _, OneWoW = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local tinsert, tremove = tinsert, tremove
 
@@ -36,13 +35,15 @@ Toasts.largePool     = {}
 Toasts.anchorFrame   = nil
 Toasts.anchorVisible = false
 
-local function GetDB()
-    return OneWoW.db and OneWoW.db.global and OneWoW.db.global.toasts
+-- "anchor" is a storage-only id under the toastalerts tab — never registered
+-- in the SettingsFeatureRegistry catalog, so it has no GUI row; ResolveStorage
+-- falls through to (tab, id) untouched.
+local function GetAnchorCfg()
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("toastalerts", "anchor")
 end
 
 local function IsEnabled()
-    local db = GetDB()
-    return db and db.enabled ~= false
+    return OneWoW.SettingsFeatureRegistry:IsEnabled("toastalerts", "general")
 end
 
 local function IndexOf(t, val)
@@ -451,18 +452,20 @@ function Toasts.FireToast(data)
     Toasts.ProcessQueue()
 end
 
+-- toastType -> settings feature id holding that category's sound key.
+local SOUND_FEATURE = { loot = "detectiontypes", notes = "notealerts", instance = "instances" }
+
 function Toasts.PlayToastSound(category)
-    local db = GetDB()
-    if not db then return end
-    local section = db[category]
-    if section and section.sound and section.sound > 0 then
-        PlaySound(section.sound, "Master")
+    local featureId = SOUND_FEATURE[category]
+    if not featureId then return end
+    local sound = OneWoW.SettingsFeatureRegistry:GetSetting("toastalerts", featureId, "sound")
+    if sound and sound > 0 then
+        PlaySound(sound, "Master")
     end
 end
 
 local function UpdateAnchorDisplay(anchor)
-    local db = GetDB()
-    local locked = db and db.anchor and db.anchor.locked
+    local locked = GetAnchorCfg().locked
     if locked then
         anchor._titleText:SetText("Toast Anchor  [LOCKED]")
         anchor._titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
@@ -513,8 +516,7 @@ local function BuildAnchor()
 
     anchor:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" and IsAltKeyDown() and not IsShiftKeyDown() and not IsControlKeyDown() then
-            local db = GetDB()
-            if db and db.anchor and db.anchor.locked then return end
+            if GetAnchorCfg().locked then return end
             self:StartMoving()
             self._wasDragged = true
         end
@@ -522,21 +524,16 @@ local function BuildAnchor()
 
     anchor:SetScript("OnMouseUp", function(self, button)
         if button == "LeftButton" then
+            local reg = OneWoW.SettingsFeatureRegistry
             if self._wasDragged then
                 self:StopMovingOrSizing()
                 self._wasDragged = false
-                local db = GetDB()
-                if db and db.anchor then
-                    db.anchor.x = self:GetLeft()
-                    db.anchor.y = self:GetTop()
-                end
+                reg:SetSetting("toastalerts", "anchor", "x", self:GetLeft())
+                reg:SetSetting("toastalerts", "anchor", "y", self:GetTop())
             else
                 if IsShiftKeyDown() then
-                    local db = GetDB()
-                    if db and db.anchor then
-                        db.anchor.locked = not db.anchor.locked
-                        UpdateAnchorDisplay(self)
-                    end
+                    reg:SetSetting("toastalerts", "anchor", "locked", not GetAnchorCfg().locked)
+                    UpdateAnchorDisplay(self)
                 elseif IsControlKeyDown() and IsAltKeyDown() then
                     Toasts.HideAnchor()
                 end
@@ -561,16 +558,14 @@ local function BuildAnchor()
     Toasts.anchorFrame = anchor
 
     C_Timer.After(0.1, function()
-        local db = GetDB()
-        if db and db.anchor then
-            if db.anchor.x and db.anchor.y then
-                anchor:ClearAllPoints()
-                anchor:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", db.anchor.x, db.anchor.y)
-            end
-            UpdateAnchorDisplay(anchor)
-            if db.anchor.visible then
-                Toasts.ShowAnchor()
-            end
+        local cfg = GetAnchorCfg()
+        if cfg.x and cfg.y then
+            anchor:ClearAllPoints()
+            anchor:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", cfg.x, cfg.y)
+        end
+        UpdateAnchorDisplay(anchor)
+        if cfg.visible then
+            Toasts.ShowAnchor()
         end
     end)
 end
@@ -579,21 +574,94 @@ function Toasts.ShowAnchor()
     BuildAnchor()
     Toasts.anchorFrame:Show()
     Toasts.anchorVisible = true
-    local db = GetDB()
-    if db and db.anchor then
-        db.anchor.visible = true
-    end
+    OneWoW.SettingsFeatureRegistry:SetSetting("toastalerts", "anchor", "visible", true)
 end
 
 function Toasts.HideAnchor()
     if Toasts.anchorFrame then
         Toasts.anchorFrame:Hide()
         Toasts.anchorVisible = false
-        local db = GetDB()
-        if db and db.anchor then
-            db.anchor.visible = false
-        end
+        OneWoW.SettingsFeatureRegistry:SetSetting("toastalerts", "anchor", "visible", false)
     end
+end
+
+-- ============================================================================
+-- Notes alert wrappers
+-- ============================================================================
+-- Thin Fire*Alert formatting wrappers over FireToast. They live on the
+-- resident engine — not in OneWoW_QoL with the other toast types — because
+-- OneWoW_Notes calls FireZoneAlert / FireItemLootAlert cross-unit and must
+-- not depend on QoL being loaded.
+
+local COLOR_NPC    = {0.40, 0.70, 1.00, 1.0}
+local COLOR_PLAYER = {0.40, 0.70, 1.00, 1.0}
+local COLOR_ZONE   = {0.40, 1.00, 0.50, 1.0}
+local COLOR_ITEM   = {1.00, 0.82, 0.40, 1.0}
+
+local function NotesEnabled()
+    return OneWoW.SettingsFeatureRegistry:IsEnabled("toastalerts", "notealerts")
+end
+
+local function NoteCategoryEnabled(category)
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("toastalerts", "notealerts")[category] ~= false
+end
+
+function Toasts.FireNPCAlert(npcName, npcTexture, location)
+    if not NotesEnabled() or not NoteCategoryEnabled("npcs") then return end
+    if not npcName or npcName == "" then return end
+    Toasts.FireToast({
+        toastType = "notes",
+        category  = "npc",
+        title     = npcName,
+        subtitle  = location or nil,
+        icon      = npcTexture or "Interface\\Icons\\INV_Misc_QuestionMark",
+        color     = COLOR_NPC,
+    })
+end
+
+function Toasts.FirePlayerAlert(playerName, playerClass, location)
+    if not NotesEnabled() or not NoteCategoryEnabled("players") then return end
+    if not playerName or playerName == "" then return end
+    local icon = "Interface\\Icons\\INV_Misc_QuestionMark"
+    if playerClass then
+        icon = "Interface\\Icons\\ClassIcon_" .. playerClass
+    end
+    Toasts.FireToast({
+        toastType = "notes",
+        category  = "player",
+        title     = playerName,
+        subtitle  = location or nil,
+        icon      = icon,
+        color     = COLOR_PLAYER,
+    })
+end
+
+function Toasts.FireZoneAlert(zoneName, notePreview)
+    if not NotesEnabled() or not NoteCategoryEnabled("zones") then return end
+    if not zoneName or zoneName == "" then return end
+    Toasts.FireToast({
+        toastType = "notes",
+        category  = "zone",
+        title     = zoneName,
+        subtitle  = notePreview or nil,
+        icon      = "Interface\\Icons\\INV_Misc_Map_01",
+        color     = COLOR_ZONE,
+    })
+end
+
+function Toasts.FireItemLootAlert(itemName, itemTexture, count)
+    if not NotesEnabled() or not NoteCategoryEnabled("items") then return end
+    if not itemName or itemName == "" then return end
+    local subtitle = nil
+    if count and count > 1 then subtitle = "x" .. count end
+    Toasts.FireToast({
+        toastType = "notes",
+        category  = "item",
+        title     = itemName,
+        subtitle  = subtitle,
+        icon      = itemTexture or "Interface\\Icons\\INV_Misc_QuestionMark",
+        color     = COLOR_ITEM,
+    })
 end
 
 OneWoW:RegisterCoreLoginHandler("toast-engine.BuildAnchor", function()

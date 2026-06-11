@@ -1,6 +1,6 @@
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI and OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 

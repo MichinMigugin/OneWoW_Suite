@@ -4,7 +4,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 
 local CATEGORY_ORDER = {
     "GAMEPLAY", "INTERFACE", "NAMEPLATES", "COMBAT_TEXT",
@@ -164,7 +164,7 @@ local selectedRow   = nil
 local split_ref     = nil
 
 local function QoLToggleFavStore()
-    local db = _G.OneWoW_QoL and _G.OneWoW_QoL.db and _G.OneWoW_QoL.db.global
+    local db = OneWoW_QoL and OneWoW_QoL.db and OneWoW_QoL.db.global
     if not db then return nil end
     db.uiFavorites = db.uiFavorites or { features = {}, toggles = {} }
     db.uiFavorites.toggles = db.uiFavorites.toggles or {}

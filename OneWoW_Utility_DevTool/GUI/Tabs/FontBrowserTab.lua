@@ -1,7 +1,6 @@
 local ADDON_NAME, Addon = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local L = Addon.L or {}
@@ -1206,7 +1205,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.infoText:SetText("")
     tab.infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    -- Copy row: shared label + action buttons (match LibCopyPaste title: GameFontNormalLarge + gold)
+    -- Copy row: shared label + action buttons (match CopyPaste dialog title: GameFontNormalLarge + gold)
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
     copyRowLabel:SetTextColor(1, 0.82, 0)

@@ -13,8 +13,7 @@
 
 local _, OneWoW = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local C_AddOns = C_AddOns
 local UnitName = UnitName
@@ -398,18 +397,14 @@ function FirstRun:BuildPanel(parent, opts)
     -- One row: "Do not show again" on the left, the scope selector on the right
     -- (across from the checkbox). The scope menu is attached later (after the
     -- refresh helpers it drives are defined).
-    local initialDontShow = (OneWoW_DB and OneWoW_DB.wizardShown ~= false) and true or false
-    if OneWoW_DB then
-        OneWoW_DB.wizardShown = initialDontShow
-    end
+    local initialDontShow = OneWoW.db.global.wizardShown ~= false
+    OneWoW.db.global.wizardShown = initialDontShow
     local dontShowRow = OneWoW_GUI:CreateLayoutFrame(content, { height = 28 })
     local dontShowCB = OneWoW_GUI:CreateCheckbox(dontShowRow, {
         label   = L["WIZARD_DONT_SHOW_AGAIN"],
         checked = initialDontShow,
         onClick = function(myself)
-            if OneWoW_DB then
-                OneWoW_DB.wizardShown = myself:GetChecked() and true or false
-            end
+            OneWoW.db.global.wizardShown = myself:GetChecked() and true or false
         end,
     })
     dontShowCB:SetPoint("LEFT", dontShowRow, "LEFT", 0, 0)
@@ -729,7 +724,7 @@ function FirstRun:BuildPanel(parent, opts)
 end
 
 function FirstRun:ShouldShowWizard()
-    return OneWoW_DB and not OneWoW_DB.wizardShown
+    return not OneWoW.db.global.wizardShown
 end
 
 -- First-run popup: a themed dialog that wraps BuildPanel. Triggered from

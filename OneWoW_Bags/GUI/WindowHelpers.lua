@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 
@@ -377,7 +376,7 @@ function WH:GetExpansionDisplayName(expansionID)
         return L["EXPAC_UNKNOWN"]
     end
 
-    local name = OneWoW_GUI:GetExpansionName(expansionID)
+    local name = OneWoW:GetExpansionName(expansionID)
     if name then
         return name
     end

@@ -1,7 +1,6 @@
 local _, Addon = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 function Addon.UI:CreateLayoutTab(parent)
     local tab = CreateFrame("Frame", nil, parent)

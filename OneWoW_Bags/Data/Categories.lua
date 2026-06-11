@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local L = OneWoW_Bags.L
 local PE = OneWoW_GUI.PredicateEngine

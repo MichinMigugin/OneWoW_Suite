@@ -1,5 +1,5 @@
 local _, ns = ...
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
 DB:InitSubModule("OneWoW_AltTracker_Accounting_DB")
@@ -48,14 +48,11 @@ function ns:InitializeDatabase()
         OneWoW_AltTracker_Accounting_DB.version = ns.DatabaseDefaults.version
     end
 
-    if not OneWoW_AltTracker_Accounting_DB.charKeysCanonicalized then
-        local rewritten = DB:ConsolidateRecordCharacterField(OneWoW_AltTracker_Accounting_DB.transactions, "character")
-        OneWoW_AltTracker_Accounting_DB.charKeysCanonicalized = true
-        if rewritten > 0 then
-            C_Timer.After(5, function()
-                print("|cFFFFD100OneWoW AltTracker:|r canonicalized character key on " .. rewritten .. " legacy transaction(s).")
-            end)
-        end
+    local rewritten = DB:ConsolidateRecordCharacterField(OneWoW_AltTracker_Accounting_DB.transactions, "character")
+    if rewritten > 0 then
+        C_Timer.After(5, function()
+            print("|cFFFFD100OneWoW AltTracker:|r canonicalized character key on " .. rewritten .. " transaction(s).")
+        end)
     end
 end
 

@@ -1,7 +1,6 @@
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 
@@ -72,7 +71,7 @@ local function OnInitialize()
             ns.ZonePins:RefreshAllPinFonts()
         end
     end)
-    local _ver = OneWoW_GUI:GetAddonVersion(addonName)
+    local _ver = OneWoW:GetAddonVersion(addonName)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("Notes", _ver, "/1wn")
     end
@@ -225,8 +224,8 @@ function ns:UpdateWindowLayering()
 end
 
 function ns:SlashCommandHandler()
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("notes")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("notes")
         return
     end
     if ns.UI and ns.UI.Toggle then

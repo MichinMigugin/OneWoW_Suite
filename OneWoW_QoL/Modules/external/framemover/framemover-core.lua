@@ -28,14 +28,13 @@ local modifierFrame
 local SPECIAL = {}
 
 local function SyncEscPanels()
-    local esc = OneWoW.PortalHubEsc
+    local esc = ns.PortalHubEsc
     if esc and esc.SyncEscLayout then
         esc:SyncEscLayout()
         return
     end
-    local ow = OneWoW
-    local escPanels = ow and ow.EscPanels
-    local ph = ow and ow.db and ow.db.global and ow.db.global.portalHub
+    local escPanels = ns.EscPanels
+    local ph = OneWoW.db.global.portalHub
     if escPanels and escPanels.EnsurePanelsContainer and ph then
         escPanels:EnsurePanelsContainer(ph)
         return

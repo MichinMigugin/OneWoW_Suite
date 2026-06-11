@@ -1,6 +1,4 @@
-local addonName, ns = ...
-local OneWoWAltTracker = _G.OneWoW_AltTracker
-local L = ns.L
+local _, ns = ...
 
 ns.ProfessionsModule = ns.ProfessionsModule or {}
 local ProfessionsModule = ns.ProfessionsModule
@@ -14,11 +12,11 @@ function ProfessionsModule:GetCharacterProfessions(characterKey)
         return {professions = {}, professionEquipment = {}, recipeCount = 0, recipesByExpansion = {}}
     end
 
-    if not _G.OneWoW_AltTracker_Professions_DB or not _G.OneWoW_AltTracker_Professions_DB.characters then
+    if not OneWoW_AltTracker_Professions_DB or not OneWoW_AltTracker_Professions_DB.characters then
         return {professions = {}, professionEquipment = {}, recipeCount = 0, recipesByExpansion = {}}
     end
 
-    local charData = _G.OneWoW_AltTracker_Professions_DB.characters[characterKey]
+    local charData = OneWoW_AltTracker_Professions_DB.characters[characterKey]
     if not charData then
         return {professions = {}, professionEquipment = {}, recipeCount = 0, recipesByExpansion = {}}
     end
@@ -34,7 +32,7 @@ function ProfessionsModule:GetCharacterProfessions(characterKey)
 
     if charData.recipes then
         local count = 0
-        for profName, recipes in pairs(charData.recipes) do
+        for _, recipes in pairs(charData.recipes) do
             for _ in pairs(recipes) do
                 count = count + 1
             end
@@ -62,7 +60,7 @@ function ProfessionsModule:GetCharacterProfessions(characterKey)
     local professions = charData.professions or {}
     local knownRecipes = charData.recipes or {}
 
-    for slotName, profInfo in pairs(professions) do
+    for _, profInfo in pairs(professions) do
         if profInfo and profInfo.name then
             local globalName = catalogGlobals[profInfo.name]
             local catalogData = globalName and _G[globalName]

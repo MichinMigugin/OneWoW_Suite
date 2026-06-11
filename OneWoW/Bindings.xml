@@ -1,7 +1,7 @@
 <Bindings>
     <Binding name="ONEWOW_TOGGLE" category="BINDING_HEADER_ONEWOW">
-        if OneWoW and OneWoW.GUI and OneWoW.GUI.Toggle then
-            OneWoW.GUI:Toggle()
+        if OneWoW and OneWoW.UI and OneWoW.UI.Toggle then
+            OneWoW.UI:Toggle()
         end
     </Binding>
     <Binding name="ONEWOW_RELOAD_UI" category="BINDING_HEADER_ONEWOW">

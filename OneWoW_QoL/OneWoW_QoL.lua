@@ -1,7 +1,6 @@
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 
@@ -15,14 +14,15 @@ local function RegisterWithOneWoW()
     if not OneWoW.RegisterModule then return false end
 
     local tabs = {
-        { name = "features", displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
-        { name = "toggles",  displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
+        { name = "features",    displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
+        { name = "toggles",     displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
+        -- Feature settings tabs moved from core (MIGRATION step 9);
+        -- locale keys stay in core OneWoW.L per the step-9 shared rules.
+        { name = "toastalerts", displayName = function() return OneWoW.L["TOAST_ALERTS_SUBTAB"] end, create = function(p) ns.UI.CreateToastAlertsTab(p) end },
+        { name = "tooltips",    displayName = function() return OneWoW.L["TOOLTIPS_SUBTAB"]     end, create = function(p) ns.UI.CreateTooltipsTab(p) end },
+        { name = "portals",     displayName = function() return OneWoW.L["PORTALS_SUBTAB"]      end, create = function(p) ns.UI.CreatePortalsTab(p) end },
+        { name = "overlays",    displayName = function() return OneWoW.L["OVERLAYS_SUBTAB"]     end, create = function(p) ns.UI.CreateOverlaysTab(p) end },
     }
-    if OneWoW.GUI and OneWoW.GUI.GetQoLFeatureTabs then
-        for _, tab in ipairs(OneWoW.GUI:GetQoLFeatureTabs()) do
-            table.insert(tabs, tab)
-        end
-    end
     OneWoW:RegisterModule({
         name = "qol",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
@@ -95,8 +95,8 @@ local function OnEnable()
 end
 
 function addon:SlashCommandHandler()
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("qol")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("qol")
         return
     end
     if ns.UI and ns.UI.Toggle then
@@ -123,6 +123,14 @@ function addon:OnAddonLoaded()
     if didInit then return end
     didInit = true
     OneWoW.Lifecycle:CreateHandlerRegistry(addon)
+    -- Toast types (moved from core, MIGRATION step 9a) export their arming
+    -- functions on ns; the handler registry doesn't exist at their file scope.
+    addon:RegisterLoginHandler("toast-loot", ns.ToastLoot.OnLogin)
+    addon:RegisterEnteringWorldHandler("toast-instance", ns.ToastInstance.OnEnteringWorld)
+    -- Portal Hub (moved from core, MIGRATION step 9c); same order as the
+    -- original core registrations (module before esc-menu integration).
+    addon:RegisterLoginHandler("portalhub", function() ns.PortalHubModule:Initialize() end)
+    addon:RegisterLoginHandler("portalhub-esc", function() ns.PortalHubEsc:Initialize() end)
     OnInitialize()
 end
 

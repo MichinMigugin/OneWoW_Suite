@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 local format = string.format
 
 OneWoW.ItemPrices = OneWoW.ItemPrices or {}
@@ -7,8 +7,7 @@ local IP = OneWoW.ItemPrices
 local CALLER_ID = "OneWoW"
 
 local function GetValueCfg()
-    local s = OneWoW.db and OneWoW.db.global and OneWoW.db.global.settings
-    return s and s.tooltips and s.tooltips.value or {}
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
 end
 
 function IP:GetValueCfg()
@@ -124,7 +123,7 @@ function IP:GetUnitAHPrice(itemID, itemLink)
         return nil, nil
     end
 
-    local db = _G.OneWoW_AHPrices
+    local db = OneWoW_AHPrices
     if not db then return nil, nil end
     local row = db[itemID]
     if row and row.price and row.price > 0 then
@@ -143,7 +142,7 @@ function IP:GetTSMUnitPrice(itemLink)
     return ResolveTSMPrice(itemLink, v.tsmPriceString)
 end
 
-_G.OneWoW_ItemPricesAPI = {
+OneWoW_ItemPricesAPI = {
     GetUnitAHPrice = function(itemID, itemLink)
         return IP:GetUnitAHPrice(itemID, itemLink)
     end,

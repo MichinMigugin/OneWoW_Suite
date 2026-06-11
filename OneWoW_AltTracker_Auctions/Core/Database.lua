@@ -1,5 +1,5 @@
 local addonName, ns = ...
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0")
+local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
 DB:InitSubModule("OneWoW_AltTracker_Auctions_DB")
@@ -29,25 +29,22 @@ function ns:InitializeDatabase()
         OneWoW_AltTracker_Auctions_DB.version = ns.DatabaseDefaults.version
     end
 
-    if not OneWoW_AltTracker_Auctions_DB.charKeysCanonicalized then
-        local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Auctions_DB.characters)
-        OneWoW_AltTracker_Auctions_DB.charKeysCanonicalized = true
-        if migrated > 0 then
-            C_Timer.After(5, function()
-                print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " legacy character key(s) in auctions data.")
-            end)
-        end
+    local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Auctions_DB.characters)
+    if migrated > 0 then
+        C_Timer.After(5, function()
+            print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " duplicate character key(s) in auctions data.")
+        end)
     end
 
-    if not _G.OneWoW_AHPrices then
-        _G.OneWoW_AHPrices = {}
+    if not OneWoW_AHPrices then
+        _G["OneWoW_AHPrices"] = {}
     end
 
     local cutoff = GetServerTime() - (AH_PRICE_MAX_AGE_DAYS * 86400)
     local purged = 0
-    for itemID, data in pairs(_G.OneWoW_AHPrices) do
+    for itemID, data in pairs(OneWoW_AHPrices) do
         if not data.timestamp or data.timestamp < cutoff then
-            _G.OneWoW_AHPrices[itemID] = nil
+            OneWoW_AHPrices[itemID] = nil
             purged = purged + 1
         end
     end

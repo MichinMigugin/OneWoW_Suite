@@ -1,0 +1,726 @@
+-- OneWoW_GUI Database API
+-- Stateless utility module. db handles are plain tables, not objects.
+-- Design rationale: Docs/DATABASE.md
+-- Comments in this file are for LLMs and humans and are to aid understanding without needing to read the full design document.
+-- Do not remove comments.
+
+local OneWoW_GUI = OneWoW_GUI
+
+local GetOrCreateTableEntry, CopyTable = GetOrCreateTableEntry, CopyTable
+local type, pairs, select, ipairs, error, tostring, pcall = type, pairs, select, ipairs, error, tostring, pcall
+local UnitName, UnitClass, GetRealmName, UnitFactionGroup = UnitName, UnitClass, GetRealmName, UnitFactionGroup
+local GetSpecialization, GetSpecializationInfo = C_SpecializationInfo.GetSpecialization, C_SpecializationInfo.GetSpecializationInfo
+
+local DB = {}
+OneWoW_GUI.DB = DB
+
+DB.Scope = {
+    Global  = "global",
+    Realm   = "realm",
+    Faction = "faction",
+    Class   = "class",
+    Spec    = "spec",
+    Char    = "char",
+}
+
+DB.ScopePriority = {
+    DB.Scope.Global,
+    DB.Scope.Realm,
+    DB.Scope.Faction,
+    DB.Scope.Class,
+    DB.Scope.Spec,
+    DB.Scope.Char,
+}
+
+local VALID_SCOPES = {}
+for _, v in ipairs(DB.ScopePriority) do
+    VALID_SCOPES[v] = true
+end
+
+function OneWoW_GUI:GetCharacterKey(name, realm)
+    name = name or UnitName("player")
+    realm = realm or GetRealmName()
+    if not name or name == "" or not realm or realm == "" then return nil end
+    realm = realm:gsub("%s", "")
+    return name .. "-" .. realm
+end
+
+function OneWoW_GUI:BuildCharKey()
+    local name = UnitName("player")
+    local realm = GetRealmName()
+    return OneWoW_GUI:GetCharacterKey(name, realm)
+end
+
+--- Re-parses an arbitrary historical character key into the current canonical form.
+--- Handles all three legacy shapes that exist in OneWoW SavedVariables:
+---   "Name - Realm"           (AceDB-era, space-dash-space, realm spaces kept)
+---   "Name-Realm With Space"  (early DB:NewCompat, no padding, realm spaces kept)
+---   "Name-RealmNoSpace"      (current GetCharacterKey, realm whitespace stripped)
+--- Returns nil if the input cannot be parsed into a non-empty name+realm pair so
+--- callers can safely skip metadata keys like "_migrated".
+---@param charKey string|nil
+---@return string|nil canonical
+function OneWoW_GUI:CanonicalizeCharacterKey(charKey)
+    if type(charKey) ~= "string" then return nil end
+    local name, realm = charKey:match("^(.-)%s*-%s*(.+)$")
+    if not name or not realm or name == "" or realm == "" then return nil end
+    return OneWoW_GUI:GetCharacterKey(name, realm)
+end
+
+--- One-shot consolidation pass for a `[charKey] = data` style SavedVariables table.
+--- Walks every entry, recomputes the canonical key, and merges payloads using
+--- gap-fill semantics (canonical wins on scalar conflicts; old fills only where
+--- canonical is nil). Naturally idempotent — a second call after every key is
+--- canonical is a no-op. Non-table values (e.g. favorites `[charKey] = true`)
+--- are handled as plain renames; if both old and canonical exist, canonical
+--- wins and old is discarded.
+--- Safe to call during InitializeDatabase; callers should still gate behind a
+--- one-time flag for the perf cost on large character tables.
+---@param charactersTable table|nil
+---@return number migrated count of legacy keys remapped
+function DB:ConsolidateCharacterKeys(charactersTable)
+    if type(charactersTable) ~= "table" then return 0 end
+
+    -- Snapshot keys before mutating; pairs() over a table that gains keys
+    -- mid-iteration is undefined behavior in Lua 5.1.
+    local oldKeys = {}
+    for k in pairs(charactersTable) do oldKeys[#oldKeys + 1] = k end
+
+    local migrated = 0
+    for _, oldKey in ipairs(oldKeys) do
+        local canonical = OneWoW_GUI:CanonicalizeCharacterKey(oldKey)
+        if canonical and canonical ~= oldKey then
+            local target = charactersTable[canonical]
+            local old    = charactersTable[oldKey]
+            if target == nil then
+                charactersTable[canonical] = old
+            elseif type(target) == "table" and type(old) == "table" then
+                self:MergeMissing(target, old)
+            end
+            -- else: target is non-nil non-table (e.g. true); keep target, drop old
+            charactersTable[oldKey] = nil
+            migrated = migrated + 1
+        end
+    end
+
+    return migrated
+end
+
+--- Variant of ConsolidateCharacterKeys for flat arrays of records whose
+--- character identity lives in a named field (e.g. accounting transactions
+--- keyed by tx.character). No merging — records are independent — just a
+--- per-record key rewrite.
+---@param recordsArray table|nil
+---@param fieldName string field on each record holding the legacy charKey
+---@return number rewritten count of records whose field was canonicalized
+function DB:ConsolidateRecordCharacterField(recordsArray, fieldName)
+    if type(recordsArray) ~= "table" or type(fieldName) ~= "string" then return 0 end
+
+    local rewritten = 0
+    for _, record in ipairs(recordsArray) do
+        if type(record) == "table" then
+            local canonical = OneWoW_GUI:CanonicalizeCharacterKey(record[fieldName])
+            if canonical and canonical ~= record[fieldName] then
+                record[fieldName] = canonical
+                rewritten = rewritten + 1
+            end
+        end
+    end
+    return rewritten
+end
+
+local function GetIdentityKeys()
+    local charKey = OneWoW_GUI:BuildCharKey()
+    local realm = GetRealmName()
+    local faction = UnitFactionGroup("player")
+    local _, classToken = UnitClass("player")
+    local specIndex = GetSpecialization()
+    local specID = specIndex and GetSpecializationInfo(specIndex)
+    return charKey, realm, faction, classToken, specID and tostring(specID) or nil
+end
+
+-- Fill-only semantics: only nil keys receive default values. Existing user data
+-- is never overwritten. This replaces every addon's custom ApplyDefaults,
+-- mergeSubTable, and nil-check chains. Blizzard's MergeTable overwrites and
+-- SetTablePairsToTable wipes — both are wrong for SavedVariable initialization.
+function DB:MergeMissing(target, defaults)
+    if type(target) ~= "table" or type(defaults) ~= "table" then return end
+    for key, defaultValue in pairs(defaults) do
+        local currentValue = target[key]
+        if currentValue == nil then
+            if type(defaultValue) == "table" then
+                target[key] = CopyTable(defaultValue)
+            else
+                target[key] = defaultValue
+            end
+        elseif type(currentValue) == "table" and type(defaultValue) == "table" then
+            self:MergeMissing(currentValue, defaultValue)
+        end
+    end
+end
+
+function DB:Read(db, ...)
+    local current = db
+    for i = 1, select("#", ...) do
+        if type(current) ~= "table" then return nil end
+        current = current[select(i, ...)]
+        if current == nil then return nil end
+    end
+    return current
+end
+
+function DB:Ensure(db, ...)
+    local current = db
+    for i = 1, select("#", ...) do
+        local key = select(i, ...)
+        if type(current) ~= "table" then
+            error("DB:Ensure hit non-table at key " .. tostring(key), 2)
+        end
+        current = GetOrCreateTableEntry(current, key)
+    end
+    return current
+end
+
+function DB:Set(db, ...)
+    local n = select("#", ...)
+    if n < 2 then
+        error("DB:Set requires at least one key and one value", 2)
+    end
+    local value = select(n, ...)
+    local current = db
+    for i = 1, n - 2 do
+        local key = select(i, ...)
+        if current[key] == nil then
+            current[key] = {}
+        elseif type(current[key]) ~= "table" then
+            error("DB:Set hit non-table at key " .. tostring(key), 2)
+        end
+        current = current[key]
+    end
+    current[select(n - 1, ...)] = value
+end
+
+function DB:Delete(db, ...)
+    local n = select("#", ...)
+    if n < 1 then return end
+    local current = db
+    for i = 1, n - 1 do
+        if type(current) ~= "table" then return end
+        current = current[select(i, ...)]
+        if current == nil then return end
+    end
+    if type(current) == "table" then
+        current[select(n, ...)] = nil
+    end
+end
+
+local function EnsureScopeTable(storage, storageKey, identityKey)
+    if not storageKey or not identityKey then return nil end
+    if not storage[storageKey] then
+        storage[storageKey] = {}
+    end
+    if not storage[storageKey][identityKey] then
+        storage[storageKey][identityKey] = {}
+    end
+    return storage[storageKey][identityKey]
+end
+
+-- Three storage modes for compatibility during incremental migration:
+--   acedb  — wraps an existing AceDB handle (global/char come from AceDB)
+--   split  — separate SavedVariables globals for global and per-char data
+--   single — preferred: one shared root, char data at root.chars["Name-Realm"]
+-- All three return the same normalized db shape. global and char are always
+-- pre-created; other scopes (realm, faction, class, spec) are lazy-initialized.
+function DB:Init(config)
+    if type(config) ~= "table" then
+        error("DB:Init requires a config table", 2)
+    end
+
+    local charKey, realm, faction, classToken, specKey = GetIdentityKeys()
+    local db = {
+        global         = nil,
+        char           = nil,
+        root           = nil,
+        currentCharKey = charKey,
+        _addonName     = config.addonName,
+        _scopes        = {},
+        _presets        = nil,
+        _activePreset  = nil,
+        _specResolved  = specKey ~= nil,
+        _mode          = nil,
+        _savedVarName  = nil,
+    }
+
+    if config.aceDB then
+        db._mode = "acedb"
+        local acedb = config.aceDB
+        db.global = acedb.global or {}
+        db.char   = acedb.char or {}
+
+        if not db.global._scopes then db.global._scopes = {} end
+        local scopeStore = db.global._scopes
+
+        db._scopes[DB.Scope.Global] = db.global
+        db._scopes[DB.Scope.Char]   = db.char
+
+        if realm then
+            db._scopes[DB.Scope.Realm] = EnsureScopeTable(scopeStore, "realms", realm)
+        end
+        if faction then
+            db._scopes[DB.Scope.Faction] = EnsureScopeTable(scopeStore, "factions", faction)
+        end
+        if classToken then
+            db._scopes[DB.Scope.Class] = EnsureScopeTable(scopeStore, "classes", classToken)
+        end
+        if specKey then
+            db._scopes[DB.Scope.Spec] = EnsureScopeTable(scopeStore, "specs", specKey)
+        end
+
+        if not db.global._presets then db.global._presets = {} end
+        db._presets = db.global._presets
+        db._activePreset = db.global._activePreset
+
+        db._scopeStorage = scopeStore
+
+    elseif config.savedVar and config.savedVarChar then
+        db._mode = "split"
+        db._savedVarName = config.savedVar
+
+        if not _G[config.savedVar] then _G[config.savedVar] = {} end
+        local globalRoot = _G[config.savedVar]
+        db.root   = globalRoot
+        db.global = globalRoot
+
+        if not _G[config.savedVarChar] then _G[config.savedVarChar] = {} end
+        db.char = _G[config.savedVarChar]
+
+        db._scopes[DB.Scope.Global] = db.global
+        db._scopes[DB.Scope.Char]   = db.char
+
+        if realm then
+            db._scopes[DB.Scope.Realm] = EnsureScopeTable(globalRoot, "_realms", realm)
+        end
+        if faction then
+            db._scopes[DB.Scope.Faction] = EnsureScopeTable(globalRoot, "_factions", faction)
+        end
+        if classToken then
+            db._scopes[DB.Scope.Class] = EnsureScopeTable(globalRoot, "_classes", classToken)
+        end
+        if specKey then
+            db._scopes[DB.Scope.Spec] = EnsureScopeTable(globalRoot, "_specs", specKey)
+        end
+
+        if not globalRoot._presets then globalRoot._presets = {} end
+        db._presets = globalRoot._presets
+        db._activePreset = globalRoot._activePreset
+
+        db._scopeStorage = globalRoot
+
+    elseif config.savedVar then
+        db._mode = "single"
+        db._savedVarName = config.savedVar
+
+        if not _G[config.savedVar] then _G[config.savedVar] = {} end
+        local root = _G[config.savedVar]
+        db.root = root
+
+        if not root.global then root.global = {} end
+        db.global = root.global
+
+        if not root.chars then root.chars = {} end
+        if charKey then
+            if not root.chars[charKey] then root.chars[charKey] = {} end
+            db.char = root.chars[charKey]
+        else
+            db.char = {}
+        end
+
+        db._scopes[DB.Scope.Global] = db.global
+        db._scopes[DB.Scope.Char]   = db.char
+
+        if realm then
+            db._scopes[DB.Scope.Realm] = EnsureScopeTable(root, "realms", realm)
+        end
+        if faction then
+            db._scopes[DB.Scope.Faction] = EnsureScopeTable(root, "factions", faction)
+        end
+        if classToken then
+            db._scopes[DB.Scope.Class] = EnsureScopeTable(root, "classes", classToken)
+        end
+        if specKey then
+            db._scopes[DB.Scope.Spec] = EnsureScopeTable(root, "specs", specKey)
+        end
+
+        if not root.presets then root.presets = {} end
+        db._presets = root.presets
+        db._activePreset = root._activePreset
+
+        db._scopeStorage = root
+
+    else
+        error("DB:Init requires config.savedVar or config.aceDB", 2)
+    end
+
+    local defaults = config.defaults
+    if defaults then
+        if defaults.global then
+            self:MergeMissing(db.global, defaults.global)
+        end
+        if defaults.char then
+            self:MergeMissing(db.char, defaults.char)
+        end
+    end
+
+    return db
+end
+
+function DB:RunMigrations(db, migrations)
+    local g = db.global
+    local currentVersion = g._migrationVersion or 0
+    for _, step in ipairs(migrations) do
+        if step.version > currentVersion then
+            local ok, err = pcall(step.run, db)
+            if not ok then
+                error("DB:RunMigrations failed at version " .. step.version
+                      .. " (" .. (step.name or "unnamed") .. "): " .. tostring(err), 2)
+            end
+            g._migrationVersion = step.version
+            currentVersion = step.version
+        end
+    end
+end
+
+local function TryResolveSpec(db)
+    if db._specResolved then return end
+    local specIndex = GetSpecialization()
+    local specID = specIndex and GetSpecializationInfo(specIndex)
+    if not specID then return end
+
+    local specKey = tostring(specID)
+    db._specResolved = true
+
+    local storage = db._scopeStorage
+    if not storage then return end
+
+    if db._mode == "acedb" then
+        db._scopes[DB.Scope.Spec] = EnsureScopeTable(storage, "specs", specKey)
+    elseif db._mode == "split" then
+        db._scopes[DB.Scope.Spec] = EnsureScopeTable(storage, "_specs", specKey)
+    elseif db._mode == "single" then
+        db._scopes[DB.Scope.Spec] = EnsureScopeTable(storage, "specs", specKey)
+    end
+end
+
+local function WalkPath(root, ...)
+    local current = root
+    for i = 1, select("#", ...) do
+        if type(current) ~= "table" then return nil end
+        current = current[select(i, ...)]
+        if current == nil then return nil end
+    end
+    return current
+end
+
+-- Scope resolution: Global -> Realm -> Faction -> Class -> Spec -> Char.
+-- Later scopes override earlier ones, so Char is the most specific identity
+-- override. Presets overlay last because they represent mode (gathering, travel)
+-- not identity. Resolved values are read-only snapshots; writes go through
+-- SetScopeValue or SetPresetValue.
+function DB:GetResolvedValue(db, ...)
+    TryResolveSpec(db)
+
+    local resolved = nil
+    for _, scope in ipairs(DB.ScopePriority) do
+        local scopeTable = db._scopes[scope]
+        if scopeTable then
+            local val = WalkPath(scopeTable, ...)
+            if val ~= nil then
+                resolved = val
+            end
+        end
+    end
+
+    local presetName = db._activePreset
+    if presetName and db._presets and db._presets[presetName] then
+        local presetVal = WalkPath(db._presets[presetName], ...)
+        if presetVal ~= nil then
+            resolved = presetVal
+        end
+    end
+
+    return resolved
+end
+
+local function MergeOver(target, source)
+    for k, v in pairs(source) do
+        if type(v) == "table" and type(target[k]) == "table" then
+            MergeOver(target[k], v)
+        else
+            if type(v) == "table" then
+                target[k] = CopyTable(v)
+            else
+                target[k] = v
+            end
+        end
+    end
+end
+
+function DB:GetResolvedTable(db, ...)
+    TryResolveSpec(db)
+
+    local result = nil
+    for _, scope in ipairs(DB.ScopePriority) do
+        local scopeTable = db._scopes[scope]
+        if scopeTable then
+            local val = WalkPath(scopeTable, ...)
+            if val ~= nil then
+                if type(val) == "table" then
+                    if not result then
+                        result = CopyTable(val)
+                    else
+                        MergeOver(result, val)
+                    end
+                else
+                    result = val
+                end
+            end
+        end
+    end
+
+    local presetName = db._activePreset
+    if presetName and db._presets and db._presets[presetName] then
+        local presetVal = WalkPath(db._presets[presetName], ...)
+        if presetVal ~= nil then
+            if type(presetVal) == "table" then
+                if not result then
+                    result = CopyTable(presetVal)
+                elseif type(result) == "table" then
+                    MergeOver(result, presetVal)
+                else
+                    result = CopyTable(presetVal)
+                end
+            else
+                result = presetVal
+            end
+        end
+    end
+
+    return result
+end
+
+function DB:SetScopeValue(db, scope, ...)
+    local n = select("#", ...)
+    if n < 2 then
+        error("DB:SetScopeValue requires at least one key and one value", 2)
+    end
+    if not VALID_SCOPES[scope] then
+        error("DB:SetScopeValue invalid scope: " .. tostring(scope), 2)
+    end
+
+    local scopeTable = db._scopes[scope]
+    if not scopeTable then
+        error("DB:SetScopeValue scope not initialized: " .. tostring(scope), 2)
+    end
+
+    local value = select(n, ...)
+    local current = scopeTable
+    for i = 1, n - 2 do
+        local key = select(i, ...)
+        if current[key] == nil then
+            current[key] = {}
+        elseif type(current[key]) ~= "table" then
+            error("DB:SetScopeValue hit non-table at key " .. tostring(key), 2)
+        end
+        current = current[key]
+    end
+    current[select(n - 1, ...)] = value
+end
+
+function DB:SetPresetValue(db, presetName, ...)
+    local n = select("#", ...)
+    if n < 2 then
+        error("DB:SetPresetValue requires at least one key and one value", 2)
+    end
+    if not presetName then
+        error("DB:SetPresetValue requires a preset name", 2)
+    end
+
+    if not db._presets[presetName] then
+        db._presets[presetName] = {}
+    end
+    local current = db._presets[presetName]
+    local value = select(n, ...)
+
+    for i = 1, n - 2 do
+        local key = select(i, ...)
+        if current[key] == nil then
+            current[key] = {}
+        elseif type(current[key]) ~= "table" then
+            error("DB:SetPresetValue hit non-table at key " .. tostring(key), 2)
+        end
+        current = current[key]
+    end
+    current[select(n - 1, ...)] = value
+end
+
+function DB:SetActivePreset(db, presetName)
+    db._activePreset = presetName
+
+    if db._mode == "acedb" then
+        db.global._activePreset = presetName
+    elseif db._mode == "split" then
+        if db._scopeStorage then
+            db._scopeStorage._activePreset = presetName
+        end
+    elseif db._mode == "single" then
+        if db.root then
+            db.root._activePreset = presetName
+        end
+    end
+end
+
+function DB:InitSubModule(savedVarName)
+    if not _G[savedVarName] then _G[savedVarName] = {} end
+    local sv = _G[savedVarName]
+    if not sv.characters then sv.characters = {} end
+    if not sv.version then sv.version = 1 end
+    return sv
+end
+
+function DB:GetCharData(savedVarName, charKey)
+    charKey = charKey or OneWoW_GUI:GetCharacterKey()
+    if not charKey then return nil end
+    local sv = _G[savedVarName]
+    if not sv or not sv.characters then return nil end
+    if not sv.characters[charKey] then sv.characters[charKey] = {} end
+    return sv.characters[charKey]
+end
+
+function DB:GetAllChars(savedVarName, sortField)
+    local sv = _G[savedVarName]
+    if not sv or not sv.characters then return {} end
+    local chars = {}
+    for charKey, data in pairs(sv.characters) do
+        chars[#chars + 1] = { key = charKey, data = data }
+    end
+    sortField = sortField or "lastUpdate"
+    table.sort(chars, function(a, b)
+        return (a.data[sortField] or 0) > (b.data[sortField] or 0)
+    end)
+    return chars
+end
+
+function DB:DeleteChar(savedVarName, charKey)
+    if not charKey then return false end
+    local sv = _G[savedVarName]
+    if not sv or not sv.characters then return false end
+    sv.characters[charKey] = nil
+    return true
+end
+
+function DB:BootSubModule(ns, config)
+    local addonName = config.addonName
+    local savedVar = config.savedVar
+    local onLogin = config.onLogin
+    local defaults = config.defaults
+    local initDB = config.initDB
+
+    ns.AddonInitialized = false
+
+    if config.withScanCallbacks then
+        local scanCallbacks = {}
+        ns.RegisterScanCallback = function(_, fn)
+            scanCallbacks[#scanCallbacks + 1] = fn
+        end
+        ns.FireScanCallbacks = function(_, data)
+            for _, fn in ipairs(scanCallbacks) do
+                pcall(fn, data)
+            end
+        end
+    end
+
+    ns.GetCharacterKey = function()
+        return OneWoW_GUI:GetCharacterKey()
+    end
+    ns.GetCharacterData = function(_, charKey)
+        return DB:GetCharData(savedVar, charKey)
+    end
+    ns.GetAllCharacters = function()
+        return DB:GetAllChars(savedVar, config.sortField)
+    end
+    ns.DeleteCharacter = function(_, charKey)
+        return DB:DeleteChar(savedVar, charKey)
+    end
+
+    ns.GetDB = function()
+        return _G[savedVar]
+    end
+
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("ADDON_LOADED")
+    eventFrame:RegisterEvent("PLAYER_LOGIN")
+    eventFrame:SetScript("OnEvent", function(_, event, ...)
+        if event == "ADDON_LOADED" then
+            local loaded = ...
+            if loaded == addonName then
+                if savedVar then
+                    if not _G[savedVar] then _G[savedVar] = {} end
+                    if defaults then
+                        DB:MergeMissing(_G[savedVar], defaults)
+                    end
+                end
+                if initDB then
+                    initDB()
+                elseif ns.InitializeDatabase then
+                    ns:InitializeDatabase()
+                end
+            end
+        elseif event == "PLAYER_LOGIN" then
+            ns.AddonInitialized = true
+            if onLogin then onLogin() end
+        end
+    end)
+end
+
+-- Drop-in replacement for AceDB-3.0:New(). Reads and writes the exact same
+-- SavedVariables format so existing user data works without migration.
+-- Usage: self.db = DB:NewCompat("MyAddon_DB", defaults, true)
+-- Returns a table with .global and .char matching the AceDB handle shape.
+function DB:NewCompat(savedVarName, defaults, useDefaultProfile)
+    if not _G[savedVarName] then _G[savedVarName] = {} end
+    local sv = _G[savedVarName]
+
+    if not sv.global then sv.global = {} end
+    if not sv.char then sv.char = {} end
+    if not sv.profileKeys then sv.profileKeys = {} end
+
+    local charKey = OneWoW_GUI:BuildCharKey()
+
+    if charKey then
+        if not sv.char[charKey] then sv.char[charKey] = {} end
+        if useDefaultProfile then sv.profileKeys[charKey] = "Default" end
+    end
+
+    local charTable = charKey and sv.char[charKey] or {}
+
+    if defaults then
+        if defaults.global then
+            self:MergeMissing(sv.global, defaults.global)
+        end
+        if defaults.char and charKey then
+            self:MergeMissing(sv.char[charKey], defaults.char)
+        end
+    end
+
+    return { global = sv.global, char = charTable }
+end
+
+-- Simple slash command registration without AceConsole.
+-- commandName is the base name (e.g., "owcat"), handler receives the msg string.
+-- Multiple commands can be registered by calling this multiple times.
+function DB:RegisterSlashCommand(commandName, handler)
+    local upper = commandName:upper()
+    local key = "ONEWOW_" .. upper
+    _G["SLASH_" .. key .. "1"] = "/" .. commandName
+    SlashCmdList[key] = handler
+end

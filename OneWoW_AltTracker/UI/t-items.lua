@@ -1,8 +1,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW_GUI.PredicateEngine
 
 ns.UI = ns.UI or {}
@@ -124,7 +123,7 @@ function ns.UI.CreateItemsTab(parent)
     scanAHButton.isAHScanning = false
     scanAHButton:SetScript("OnClick", function(self)
         if self.isAHScanning then
-            local Auctions = _G.OneWoW_AltTracker_Auctions
+            local Auctions = OneWoW_AltTracker_Auctions
             if Auctions and Auctions.AHScanner then
                 Auctions.AHScanner:StopScan()
             end
@@ -279,8 +278,8 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
         end
     end
 
-    if _G.OneWoW_AltTracker_Storage_DB.warbandBank and _G.OneWoW_AltTracker_Storage_DB.warbandBank.tabs then
-        for tabIndex, tabInfo in pairs(_G.OneWoW_AltTracker_Storage_DB.warbandBank.tabs) do
+    if OneWoW_AltTracker_Storage_DB.warbandBank and OneWoW_AltTracker_Storage_DB.warbandBank.tabs then
+        for tabIndex, tabInfo in pairs(OneWoW_AltTracker_Storage_DB.warbandBank.tabs) do
             if tabInfo.items then
                 for slotIndex, itemData in pairs(tabInfo.items) do
                     if itemData and itemData.itemID and not seenItems[itemData.itemID] then
@@ -296,8 +295,8 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
         end
     end
 
-    if _G.OneWoW_AltTracker_Storage_DB.guildBanks then
-        for guildName, guildBank in pairs(_G.OneWoW_AltTracker_Storage_DB.guildBanks) do
+    if OneWoW_AltTracker_Storage_DB.guildBanks then
+        for guildName, guildBank in pairs(OneWoW_AltTracker_Storage_DB.guildBanks) do
             if guildBank.tabs then
                 for tabIndex, tabInfo in pairs(guildBank.tabs) do
                     if tabInfo.slots then
@@ -452,7 +451,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
     if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then return end
 
     do
-        local ip = _G.OneWoW and _G.OneWoW.ItemPrices
+        local ip = OneWoW and OneWoW.ItemPrices
         local auctionatorActive = ip and ip:IsAuctionatorAHSourceActive()
         local tsmActive = ip and ip:IsTSMAHSourceActive()
         local hideScan = auctionatorActive or tsmActive
@@ -474,7 +473,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
     if not scrollContent then return end
 
     local dt = itemsTab.dataTable
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
 
     OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(itemRows)
@@ -482,7 +481,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
 
     local items = {}
 
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Storage_DB.characters) do
+    for charKey, charData in pairs(OneWoW_AltTracker_Storage_DB.characters) do
         local charName = charKey:match("^([^%-]+)")
 
         if charData.bags then
@@ -584,9 +583,9 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
     end
 
-    if _G.OneWoW_AltTracker_Storage_DB.warbandBank and _G.OneWoW_AltTracker_Storage_DB.warbandBank.tabs then
-        local ts = _G.OneWoW_AltTracker_Storage_DB.warbandBank.lastUpdateTime or 0
-        for tabIndex, tabInfo in pairs(_G.OneWoW_AltTracker_Storage_DB.warbandBank.tabs) do
+    if OneWoW_AltTracker_Storage_DB.warbandBank and OneWoW_AltTracker_Storage_DB.warbandBank.tabs then
+        local ts = OneWoW_AltTracker_Storage_DB.warbandBank.lastUpdateTime or 0
+        for tabIndex, tabInfo in pairs(OneWoW_AltTracker_Storage_DB.warbandBank.tabs) do
             if tabInfo.items then
                 for slotIndex, itemData in pairs(tabInfo.items) do
                     if itemData and itemData.itemID then
@@ -615,8 +614,8 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
     end
 
-    if _G.OneWoW_AltTracker_Storage_DB.guildBanks then
-        for guildName, guildBank in pairs(_G.OneWoW_AltTracker_Storage_DB.guildBanks) do
+    if OneWoW_AltTracker_Storage_DB.guildBanks then
+        for guildName, guildBank in pairs(OneWoW_AltTracker_Storage_DB.guildBanks) do
             local ts = guildBank.lastUpdateTime or 0
             if guildBank.tabs then
                 for tabIndex, tabInfo in pairs(guildBank.tabs) do
@@ -716,7 +715,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
 
         if shouldInclude then
-            local ow = _G.OneWoW
+            local ow = OneWoW
             if ow and ow.ItemPrices then
                 local p, meta = ow.ItemPrices:GetUnitAHPrice(itemID, itemData.itemLink)
                 if p and p > 0 then
@@ -727,7 +726,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
                     itemData.ahTime = 0
                 end
             else
-                local priceDB = _G.OneWoW_AHPrices
+                local priceDB = OneWoW_AHPrices
                 if priceDB and priceDB[itemID] then
                     itemData.ahPrice = priceDB[itemID].price or 0
                     itemData.ahTime = priceDB[itemID].timestamp or 0

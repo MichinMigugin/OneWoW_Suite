@@ -6,8 +6,7 @@ _G["OneWoW"] = OneWoW
 
 local L = OneWoW.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 OneWoW._loadedComponents = {}
 OneWoW._registeredAddons = {}
@@ -16,7 +15,7 @@ OneWoW._minimapEntries = {}
 function OneWoW:RegisterMinimap(addon, label, tabKey, callback)
     -- addon: global name (e.g. "OneWoW_AltTracker")
     -- label: display string for context menu
-    -- tabKey: for OneWoW.GUI:Show(tabKey) or nil if callback used
+    -- tabKey: for OneWoW.UI:Show(tabKey) or nil if callback used
     -- callback: optional function() for custom open logic
     tinsert(self._minimapEntries, { addon = addon, label = label, tabKey = tabKey, callback = callback })
 end
@@ -56,12 +55,12 @@ local function ApplyLanguage()
 end
 
 local function ResetGUIOnSettingChange(self2)
-    if not self2.GUI then return end
-    local wasShown = self2.GUI:GetMainWindow() and self2.GUI:GetMainWindow():IsShown()
-    self2.GUI:FullReset()
+    if not self2.UI then return end
+    local wasShown = self2.UI:GetMainWindow() and self2.UI:GetMainWindow():IsShown()
+    self2.UI:FullReset()
     if wasShown then
         C_Timer.After(0.1, function()
-            if self2.GUI then self2.GUI:Show() end
+            if self2.UI then self2.UI:Show() end
         end)
     end
 end
@@ -72,8 +71,8 @@ local function RegisterSlashCommands()
     SLASH_ONEWOW3 = "/onewow"
     SLASH_ONEWOW4 = "/1w"
     SlashCmdList["ONEWOW"] = function()
-        if OneWoW.GUI then
-            OneWoW.GUI:Toggle()
+        if OneWoW.UI then
+            OneWoW.UI:Toggle()
         end
     end
 
@@ -90,13 +89,15 @@ end
 function OneWoW:OnAddonLoaded(loadedAddon)
     if loadedAddon ~= ADDON_NAME then return end
 
+    -- Unified DB first (OneWoW_GUI_DB folded into OneWoW_DB in MIGRATION
+    -- step 8), then the toolkit binds its settings handle to it — before any
+    -- theme/font reads or module UI built by the orchestrator below.
     self:InitializeDatabase()
+    OneWoW_GUI:InitializeSettings(self.db)
 
     -- Read the persisted lifecycle-trace flag into memory before RunStartupPhase
     -- so a /reload captures the full startup orchestration from the first event.
     OneWoW.Lifecycle.Trace:Sync()
-
-    OneWoW_GUI:MigrateSettings(self.db.global)
 
     OneWoW_GUI:ApplyTheme(OneWoW)
     ApplyLanguage()
@@ -138,11 +139,11 @@ function OneWoW:OnAddonLoaded(loadedAddon)
         ResetGUIOnSettingChange(self2)
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     self:RegisterLoadComponent("Core", _ver, "/1w")
 
     self:RegisterMinimap("OneWoW", L["CTX_OPEN_ONEWOW"] or "Open OneWoW", nil, function()
-        if self.GUI then self.GUI:Show() end
+        if self.UI then self.UI:Show() end
     end)
 
     -- Pull enabled Tier-2 modules and their data stores now (still inside core's
@@ -179,7 +180,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 
         local comps = OneWoW._loadedComponents
         if comps and #comps > 0 then
-            local ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+            local ver = OneWoW:GetAddonVersion(ADDON_NAME)
             local parts = {}
             for _, c in ipairs(comps) do
                 table.insert(parts, "|cFFFFFFFF" .. c.name .. "|r")
@@ -207,8 +208,8 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 end)
 
 _G["1WoW_OnAddonCompartmentClick"] = function()
-    if OneWoW.GUI then
-        OneWoW.GUI:Toggle()
+    if OneWoW.UI then
+        OneWoW.UI:Toggle()
     end
 end
 

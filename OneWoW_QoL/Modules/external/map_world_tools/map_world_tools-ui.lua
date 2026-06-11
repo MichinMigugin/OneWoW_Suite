@@ -1,8 +1,7 @@
 local addonName, ns = ...
 local M = ns.MapWorldToolsModule
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local ROW_HEIGHT    = 28
 local SLIDER_HEIGHT = 42

@@ -1,7 +1,6 @@
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 
@@ -91,7 +90,7 @@ local function OnInitialize()
         end
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(addonName)
+    local _ver = OneWoW:GetAddonVersion(addonName)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("Trackers", _ver, "/1wt")
     end
@@ -123,8 +122,8 @@ end
 
 function ns:SlashCommandHandler()
     if ns.mode == "notes_subtab" then
-        if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-            OneWoW.GUI:Show("notes", "tracker")
+        if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+            OneWoW.UI:Show("notes", "tracker")
         elseif OneWoW_Notes then
             if OneWoW_Notes.SlashCommandHandler then
                 OneWoW_Notes:SlashCommandHandler("")
@@ -133,8 +132,8 @@ function ns:SlashCommandHandler()
         return
     end
 
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("trackers")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("trackers")
         return
     end
 

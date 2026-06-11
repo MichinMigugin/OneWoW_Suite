@@ -1,8 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
@@ -266,7 +265,7 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     -- SetPropagateMouseClicks became a protected function; calling it while the
     -- list refreshes in combat throws ADDON_ACTION_BLOCKED. false is the default
     -- state anyway, so skipping it under restriction is harmless.
-    if not OneWoW_GUI:IsAddonRestricted() then
+    if not OneWoW.Restriction.IsAddonRestricted() then
         card:SetPropagateMouseClicks(false)
     end
 
@@ -1274,8 +1273,8 @@ function ns.UI.OpenToInstance(mapID)
     if not instData then return end
 
     if ns.oneWoWHubActive then
-        OneWoW.GUI:Show("catalog")
-        OneWoW.GUI:SelectSubTab("catalog", "journal")
+        OneWoW.UI:Show("catalog")
+        OneWoW.UI:SelectSubTab("catalog", "journal")
     else
         ns.UI:Show("journal")
     end

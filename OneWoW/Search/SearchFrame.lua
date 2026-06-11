@@ -1,10 +1,9 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 OneWoW.Search = {}
 local Search = OneWoW.Search
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER
@@ -28,8 +27,8 @@ local function NavigateTo(entry)
     end
 
     if entry.navType == "module" then
-        if not OneWoW.GUI then return end
-        local gui = OneWoW.GUI
+        if not OneWoW.UI then return end
+        local gui = OneWoW.UI
         gui:Show()
         C_Timer.After(0.05, function()
             gui:SelectModuleTab(entry.module)
@@ -231,39 +230,39 @@ function Search:Init(titleBar, closeBtn)
 
     local isPlaceholder = true
 
-    box:SetScript("OnEditFocusGained", function(self)
+    box:SetScript("OnEditFocusGained", function(myself)
         if isPlaceholder then
-            self:SetText("")
-            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            myself:SetText("")
+            myself:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             isPlaceholder = false
         end
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
     end)
 
-    box:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        if self:GetText() == "" then
-            self:SetText("Search...")
-            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    box:SetScript("OnEditFocusLost", function(myself)
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        if myself:GetText() == "" then
+            myself:SetText("Search...")
+            myself:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             isPlaceholder = true
         end
     end)
 
-    box:SetScript("OnEscapePressed", function(self)
-        self:SetText("")
-        self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    box:SetScript("OnEscapePressed", function(myself)
+        myself:SetText("")
+        myself:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         isPlaceholder = true
-        self:ClearFocus()
+        myself:ClearFocus()
         if resultsFrame then
             resultsFrame:Hide()
             resultsFrame:SetScript("OnUpdate", nil)
         end
     end)
 
-    box:SetScript("OnTextChanged", function(self, userInput)
+    box:SetScript("OnTextChanged", function(myself, userInput)
         if not userInput then return end
         if isPlaceholder then return end
-        local q = self:GetText()
+        local q = myself:GetText()
         if #q >= 2 then
             DoSearch(q)
             StartDismissWatcher()

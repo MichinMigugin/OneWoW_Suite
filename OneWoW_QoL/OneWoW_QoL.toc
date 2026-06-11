@@ -1,14 +1,14 @@
 ## Interface: 120005, 120007
-## Version: R6.2606.0223
+## Version: R6.2606.1022
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Quality of Life|r
 ## Notes: OneWoW Addon that: provides a Quality of Life hub with a developer-extensible module system.
 ## Author: OneWoW Dev Team
 
-## RequiredDeps: OneWoW, OneWoW_GUI
+## RequiredDeps: OneWoW
 ## LoadOnDemand: 1
 ## Category: OneWoW
 ## Group: OneWoW
-## IconTexture: Interface\AddOns\OneWoW_GUI\Media\neutral-mini.png
+## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
 
 ## SavedVariables: OneWoW_QoL_DB
 
@@ -39,6 +39,55 @@ UI\MainFrame.lua
 UI\t-features.lua
 UI\t-toggles.lua
 UI\t-settings.lua
+
+# Toast feature content (engine stays in core as OneWoW.Toasts; these are the
+# toast types + settings tab moved from core in MIGRATION step 9a)
+Features\toastalerts.lua
+Features\toast-loot.lua
+Features\toast-instance.lua
+UI\t-toastalerts.lua
+
+# Tooltip feature content (engine stays in core as OneWoW.TooltipEngine; these
+# are the providers + settings catalog + settings tab moved from core in
+# MIGRATION step 9b). Order matters: tp-collections before tp-itemtypes and
+# tp-itemtracker before tp-recipeknowledge (file-scope ns captures).
+Tooltips\tooltips.lua
+Tooltips\tp-collections.lua
+Tooltips\tp-itemtypes.lua
+Tooltips\tp-itemtracker.lua
+Tooltips\tp-recipeknowledge.lua
+Tooltips\tp-customnotes.lua
+Tooltips\tp-technicalids.lua
+Tooltips\tp-enhancements.lua
+Tooltips\tp-talentmods.lua
+Tooltips\tp-notewarning.lua
+Tooltips\tp-itemstatus.lua
+Tooltips\tp-gearupgrades.lua
+Tooltips\tp-value.lua
+Tooltips\tp-pets.lua
+UI\t-tooltips.lua
+
+# Portal Hub (moved from core in MIGRATION step 9c). Same relative order as
+# the core TOC: Data first, then modules, settings tab last.
+Portals\Data\Hearthstones.lua
+Portals\Data\ShortNames.lua
+Portals\Data\Portals.lua
+Portals\portalhub-detection.lua
+Portals\portalhub-items.lua
+Portals\portalhub-equip.lua
+Portals\portalhub-flyouts.lua
+Portals\portalhub-flyouts-nested.lua
+Portals\portalhub.lua
+Portals\portalhub-esc.lua
+Portals\portalhub-esc-panels.lua
+UI\t-portals.lua
+
+# Overlay feature content (engine, icons, and detection stay in core as
+# OneWoW.OverlayEngine / OneWoW.OverlayIcons / OneWoW.UpgradeDetection /
+# OneWoW.ItemStatus; the settings catalog + settings tab moved from core in
+# MIGRATION step 9d)
+Features\overlays.lua
+UI\t-overlays.lua
 
 # ==============================================================
 # EXTERNAL MODULES

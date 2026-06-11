@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local _, OneWoW = ...
 
 local RecipeKnownUtil = {}
 OneWoW.RecipeKnownUtil = RecipeKnownUtil
@@ -11,13 +11,13 @@ local LEARN_LINE_TYPE = Enum.TooltipDataLineType and Enum.TooltipDataLineType.It
 local eventFrame = CreateFrame("Frame")
 
 local function GetSavedMap()
-    local db = _G.OneWoW_AltTracker_Professions_DB
+    local db = OneWoW_AltTracker_Professions_DB
     return db and db.recipeItemMap
 end
 
 local function SaveToMap(itemID, recipeSpellID)
     sessionMap[itemID] = recipeSpellID
-    local db = _G.OneWoW_AltTracker_Professions_DB
+    local db = OneWoW_AltTracker_Professions_DB
     if db then
         if not db.recipeItemMap then db.recipeItemMap = {} end
         db.recipeItemMap[itemID] = recipeSpellID
@@ -102,9 +102,9 @@ function RecipeKnownUtil:IsRecipeKnown(itemID)
         return true
     end
 
-    local profsDB = _G.OneWoW_AltTracker_Professions_DB
+    local profsDB = OneWoW_AltTracker_Professions_DB
     if profsDB and profsDB.characters then
-        local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+        local OneWoW_GUI = OneWoW_GUI
         local charKey = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
         local charData = charKey and profsDB.characters[charKey]
         if charData and charData.recipes then

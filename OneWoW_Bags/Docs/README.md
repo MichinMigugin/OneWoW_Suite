@@ -24,5 +24,5 @@ Contributor and integrator docs for OneWoW_Bags. These files are **not** loaded 
 
 | Document | Contents |
 |----------|----------|
-| [../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md](../../OneWoW_GUI/Docs/PREDICATE_ENGINE.md) | Shared `OneWoW_GUI.PredicateEngine` — tokenizer, `BuildProps`, caches, extension API |
+| [../../OneWoW/Docs/PREDICATE_ENGINE.md](../../OneWoW/Docs/PREDICATE_ENGINE.md) | Shared `OneWoW_GUI.PredicateEngine` — tokenizer, `BuildProps`, caches, extension API |
 | [../../OneWoW/Docs/ARCHITECTURE.md](../../OneWoW/Docs/ARCHITECTURE.md) | Suite loader, `LoadOnDemand`, lifecycle hooks, hub integration |

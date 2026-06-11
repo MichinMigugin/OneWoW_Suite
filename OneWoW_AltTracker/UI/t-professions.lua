@@ -1,8 +1,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.UI = ns.UI or {}
 
@@ -469,7 +468,7 @@ end
 function ns.UI.RefreshProfessionsTab(professionsTab)
     if not professionsTab then return end
 
-    if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
+    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return end
 
     local ProfModule = GetProfessionsModule()
     if not ProfModule then return end
@@ -777,7 +776,7 @@ end
 function ns.UI.RefreshProfessionsStats(professionsTab)
     if not professionsTab or not professionsTab.statBoxes then return end
 
-    if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then return end
+    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return end
 
     local ProfModule = GetProfessionsModule()
     if not ProfModule then return end
@@ -797,7 +796,7 @@ function ns.UI.RefreshProfessionsStats(professionsTab)
     }
 
     local allChars = {}
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+    for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
         table.insert(allChars, {
             key = charKey,
             data = charData

@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local L = OneWoW_Bags.L
 local function GetDB()
@@ -2003,7 +2002,7 @@ function CatMgrUI:Show()
     local Serializer = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Serializer
     local Planner = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Planner
     local ImportPreview = OneWoW_Bags.ImportPreview
-    local LibCopyPaste = LibStub and LibStub("LibCopyPaste-1.0", true)
+    local CopyPaste = OneWoW.CopyPaste
 
     -- Undo (icon-only) pinned to the far right
     local undoBtn = CreateFrame("Button", nil, actionBar, "BackdropTemplate")
@@ -2052,10 +2051,10 @@ function CatMgrUI:Show()
     local exportBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text = L["EXPORT_LABEL"], height = 24 })
     exportBtn:SetPoint("RIGHT", undoBtn, "LEFT", -6, 0)
     exportBtn:SetScript("OnClick", function()
-        if not Serializer or not LibCopyPaste then return end
+        if not Serializer then return end
         local title = L["EXPORT_DIALOG_TITLE"]
         local payload = Serializer:Encode(Serializer:BuildExport(GetDB()))
-        LibCopyPaste:Copy(title, payload, { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
+        CopyPaste:Copy(title, payload, { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
     end)
 
     -- Import pulldown (right of export button)
@@ -2110,14 +2109,14 @@ function CatMgrUI:Show()
                     return
                 end
                 doOpenPreview(Planner:FromTsmDirect(GetDB(), { tsmPrefix = true }))
-            elseif value == "onewow_string" and LibCopyPaste then
+            elseif value == "onewow_string" then
                 local title = L["IMPORT_DIALOG_TITLE"]
-                LibCopyPaste:Paste(title, function(text)
+                CopyPaste:Paste(title, function(text)
                     doOpenPreview(Planner:FromOneWowString(text, GetDB()))
                 end, { frameStrata = "FULLSCREEN_DIALOG" })
-            elseif value == "baganator_string" and LibCopyPaste then
+            elseif value == "baganator_string" then
                 local title = L["IMPORT_DIALOG_TITLE"]
-                LibCopyPaste:Paste(title, function(text)
+                CopyPaste:Paste(title, function(text)
                     doOpenPreview(Planner:FromBaganatorString(text, GetDB()))
                 end, { frameStrata = "FULLSCREEN_DIALOG" })
             end

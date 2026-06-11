@@ -1,7 +1,6 @@
 local ADDON_NAME, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 local addon = {}
@@ -71,7 +70,7 @@ local function OnInitialize()
         if ns.UI.RefreshQuestsList then ns.UI.RefreshQuestsList() end
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     OneWoW:RegisterLoadComponent("Catalog", _ver, "/owcat")
 end
 
@@ -93,7 +92,7 @@ end
 
 function addon:SlashCommandHandler()
     if ns.oneWoWHubActive then
-        OneWoW.GUI:Show("catalog")
+        OneWoW.UI:Show("catalog")
         return
     end
     if ns.UI and ns.UI.Toggle then

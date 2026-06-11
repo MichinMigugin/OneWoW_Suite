@@ -1,7 +1,6 @@
 local _, Addon = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local ErrorLogger = {}
 Addon.ErrorLogger = ErrorLogger
@@ -267,12 +266,12 @@ function ErrorLogger:_importFromBugGrabber(bgErr)
 
     local rawMsg = bgErr.message
     local msgStr
-    if OneWoW_GUI:IsSecret(rawMsg) then
+    if OneWoW.Restriction.IsSecret(rawMsg) then
         local L = Addon.L or {}
         msgStr = L["ERR_MSG_SECRET"]
     else
         msgStr = tostring(rawMsg)
-        if OneWoW_GUI:IsSecret(msgStr) then
+        if OneWoW.Restriction.IsSecret(msgStr) then
             local L = Addon.L or {}
             msgStr = L["ERR_MSG_SECRET"]
         end
@@ -525,12 +524,12 @@ function ErrorLogger:_captureFromHandler(msg, isSimple)
     end
 
     local msgStr
-    if OneWoW_GUI:IsSecret(msg) then
+    if OneWoW.Restriction.IsSecret(msg) then
         local L = Addon.L or {}
         msgStr = L["ERR_MSG_SECRET"]
     else
         msgStr = tostring(msg)
-        if OneWoW_GUI:IsSecret(msgStr) then
+        if OneWoW.Restriction.IsSecret(msgStr) then
             local L = Addon.L or {}
             msgStr = L["ERR_MSG_SECRET"]
         end

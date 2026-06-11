@@ -1,7 +1,6 @@
 local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local C = OneWoW_GUI.Constants
 local format = string.format
@@ -362,10 +361,7 @@ function CoordsModule:CopyCoordinates()
     local x, y = position:GetXY()
     if x and y then
         local coordString = format("%.2f %.2f", x * 100, y * 100)
-        local lib = LibStub and LibStub("LibCopyPaste-1.0", true)
-        if lib then
-            lib:Copy("Coordinates", coordString)
-        end
+        OneWoW.CopyPaste:Copy(ns.L["COORDS_COPY_TITLE"] or "Coordinates", coordString)
         print("|cFFFFD100OneWoW QoL:|r " .. format(ns.L["COORDS_COPIED"] or "Coordinates copied: %s", coordString))
     end
 end

@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local L = OneWoW_Bags.L
 local WH = OneWoW_Bags.WindowHelpers
@@ -265,7 +264,7 @@ end
 function GuildBankBar:UpdateGold()
     if not bagsBarFrame or not bagsBarFrame.goldText then return end
     local money = GetGuildBankMoney and GetGuildBankMoney() or 0
-    bagsBarFrame.goldText:SetText(OneWoW_GUI:FormatGold(money))
+    bagsBarFrame.goldText:SetText(OneWoW.Format.FormatGold(money))
     GuildBankBar:UpdateWithdrawButton()
 end
 

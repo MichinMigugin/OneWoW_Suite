@@ -29,7 +29,7 @@ local TOGGLE_TO_DB = {
 }
 
 local function GetPortalHubDB()
-    local hub = _G.OneWoW
+    local hub = OneWoW
     if not hub or not hub.db or not hub.db.global then return nil end
     return hub.db.global.portalHub
 end
@@ -43,8 +43,8 @@ function ESCPanelModule:OnEnable()
             ns.ModuleRegistry:SetToggleValue(self.id, toggleId, ph[dbKey])
         end
     end
-    if _G.OneWoW and _G.OneWoW.PortalHubEsc and GameMenuFrame and GameMenuFrame:IsShown() then
-        _G.OneWoW.PortalHubEsc:ShowPortalFrames()
+    if GameMenuFrame and GameMenuFrame:IsShown() then
+        ns.PortalHubEsc:ShowPortalFrames()
     end
 end
 
@@ -52,9 +52,7 @@ function ESCPanelModule:OnDisable()
     local ph = GetPortalHubDB()
     if not ph then return end
     ph.escEnabled = false
-    if _G.OneWoW and _G.OneWoW.PortalHubEsc then
-        _G.OneWoW.PortalHubEsc:HidePortalFrames()
-    end
+    ns.PortalHubEsc:HidePortalFrames()
 end
 
 function ESCPanelModule:OnToggle(toggleId, value)
@@ -67,7 +65,7 @@ function ESCPanelModule:OnToggle(toggleId, value)
 end
 
 function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh)
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     if not OneWoW_GUI then return yOffset end
     local L = ns.L
 
@@ -114,9 +112,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
         onChange   = function(val)
             local p = GetPortalHubDB()
             if p then p.escIconSize = val end
-            if _G.OneWoW and _G.OneWoW.PortalHubEsc then
-                _G.OneWoW.PortalHubEsc:Reload()
-            end
+            ns.PortalHubEsc:Reload()
         end,
     })
     iconSizeSlider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
@@ -144,9 +140,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
             panelsDDText:SetText(text)
             local p = GetPortalHubDB()
             if p then p.escPanelsSide = value end
-            if _G.OneWoW and _G.OneWoW.PortalHubEsc then
-                _G.OneWoW.PortalHubEsc:Reload()
-            end
+            ns.PortalHubEsc:Reload()
         end,
         getActiveValue = function()
             local p = GetPortalHubDB()
@@ -178,9 +172,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
             portalsDDText:SetText(text)
             local p = GetPortalHubDB()
             if p then p.escPortalsSide = value end
-            if _G.OneWoW and _G.OneWoW.PortalHubEsc then
-                _G.OneWoW.PortalHubEsc:Reload()
-            end
+            ns.PortalHubEsc:Reload()
         end,
         getActiveValue = function()
             local p = GetPortalHubDB()

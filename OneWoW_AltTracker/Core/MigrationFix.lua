@@ -1,6 +1,6 @@
-local addonName, ns = ...
+local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+local OneWoW_GUI = OneWoW_GUI
 
 ns.MigrationFix = {}
 local MigrationFix = ns.MigrationFix
@@ -38,26 +38,26 @@ function MigrationFix:RemoveInvalidCharacterKeys()
             removed = removed + RemoveNonStringKeysFromTable(db.characters)
         end
     end
-    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.db and _G.OneWoW_AltTracker.db.global then
-        local fav = _G.OneWoW_AltTracker.db.global.favorites
+    if OneWoW_AltTracker and OneWoW_AltTracker.db and OneWoW_AltTracker.db.global then
+        local fav = OneWoW_AltTracker.db.global.favorites
         if fav then
             removed = removed + RemoveNonStringKeysFromTable(fav)
         end
     end
-    if _G.OneWoW_CatalogData_Quests_DB and _G.OneWoW_CatalogData_Quests_DB.completion then
-        removed = removed + RemoveNonStringKeysFromTable(_G.OneWoW_CatalogData_Quests_DB.completion)
+    if OneWoW_CatalogData_Quests_DB and OneWoW_CatalogData_Quests_DB.completion then
+        removed = removed + RemoveNonStringKeysFromTable(OneWoW_CatalogData_Quests_DB.completion)
     end
     return removed
 end
 
 function MigrationFix:FixImportedData()
-    if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then
+    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then
         return false
     end
 
     local fixedCount = 0
 
-    for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+    for _, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
         local dataFixed = false
 
         if not charData.class or charData.class == "string" then
@@ -162,12 +162,12 @@ function MigrationFix:FixImportedData()
         end
     end
 
-    if _G.OneWoW_AltTracker_Endgame_DB and _G.OneWoW_AltTracker_Endgame_DB.characters then
-        for charKey, charData in pairs(_G.OneWoW_AltTracker_Endgame_DB.characters) do
+    if OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters then
+        for charKey, charData in pairs(OneWoW_AltTracker_Endgame_DB.characters) do
             if charData.itemLevel then
-                if _G.OneWoW_AltTracker_Character_DB.characters[charKey] then
-                    _G.OneWoW_AltTracker_Character_DB.characters[charKey].itemLevel = charData.itemLevel
-                    _G.OneWoW_AltTracker_Character_DB.characters[charKey].itemLevelColor = charData.itemLevelColor
+                if OneWoW_AltTracker_Character_DB.characters[charKey] then
+                    OneWoW_AltTracker_Character_DB.characters[charKey].itemLevel = charData.itemLevel
+                    OneWoW_AltTracker_Character_DB.characters[charKey].itemLevelColor = charData.itemLevelColor
                 end
                 charData.itemLevel = nil
                 charData.itemLevelColor = nil
@@ -181,33 +181,27 @@ end
 
 -- Consolidates cross-reference tables that key by charKey but don't live in any
 -- submodule DB (so they aren't reached by the per-submodule consolidator pass).
--- Gated by db.global.migrationStatus.charKeysCanonicalized; one-shot per save file.
 function MigrationFix:ConsolidateCrossReferenceCharKeys()
-    local addon = _G.OneWoW_AltTracker
+    local addon = OneWoW_AltTracker
     if not addon or not addon.db or not addon.db.global then return 0 end
     if not OneWoW_GUI or not OneWoW_GUI.DB then return 0 end
-
-    local ms = addon.db.global.migrationStatus
-    if ms and ms.charKeysCanonicalized then return 0 end
 
     local DB = OneWoW_GUI.DB
     local total = 0
 
     total = total + DB:ConsolidateCharacterKeys(addon.db.global.favorites)
 
-    if _G.OneWoW_CatalogData_Quests_DB then
-        total = total + DB:ConsolidateCharacterKeys(_G.OneWoW_CatalogData_Quests_DB.completion)
+    if OneWoW_CatalogData_Quests_DB then
+        total = total + DB:ConsolidateCharacterKeys(OneWoW_CatalogData_Quests_DB.completion)
     end
 
-    if _G.OneWoW_CatalogData_Tradeskills_DB then
-        total = total + DB:ConsolidateCharacterKeys(_G.OneWoW_CatalogData_Tradeskills_DB.scanCache)
+    if OneWoW_CatalogData_Tradeskills_DB then
+        total = total + DB:ConsolidateCharacterKeys(OneWoW_CatalogData_Tradeskills_DB.scanCache)
     end
-
-    if ms then ms.charKeysCanonicalized = true end
 
     if total > 0 then
         C_Timer.After(5, function()
-            print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. total .. " legacy character key(s) across favorites / catalog data.")
+            print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. total .. " duplicate character key(s) across favorites / catalog data.")
         end)
     end
 
@@ -217,8 +211,8 @@ end
 function MigrationFix:CleanupWrongPlacedData()
     local cleanupCount = 0
 
-    if _G.OneWoW_AltTracker_Character_DB and _G.OneWoW_AltTracker_Character_DB.characters then
-        for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+    if OneWoW_AltTracker_Character_DB and OneWoW_AltTracker_Character_DB.characters then
+        for _, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
             if charData.restedXP then charData.restedXP = nil; cleanupCount = cleanupCount + 1 end
             if charData.currentXP then charData.currentXP = nil; cleanupCount = cleanupCount + 1 end
             if charData.maxXP then charData.maxXP = nil; cleanupCount = cleanupCount + 1 end

@@ -1,7 +1,6 @@
 local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
@@ -10,7 +9,7 @@ StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"] = {
     button1 = YES,
     button2 = NO,
     OnAccept = function()
-        local addon = _G.OneWoW_QoL
+        local addon = OneWoW_QoL
         if addon and addon.db and addon.db.global.modules and addon.db.global.modules["bagbar"] then
             wipe(addon.db.global.modules["bagbar"].blacklist)
         end

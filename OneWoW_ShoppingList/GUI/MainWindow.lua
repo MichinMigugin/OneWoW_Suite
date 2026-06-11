@@ -1,8 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW_GUI.PredicateEngine
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
@@ -289,7 +288,7 @@ function MainWindow:Create()
                 MainWindow:RefreshSidebar()
                 MainWindow:RefreshItemList()
             end
-        end, mainFrame)
+        end)
     end)
 
     local sidebarScrollContainer = CreateFrame("Frame", nil, sidebarPanel)
@@ -471,7 +470,7 @@ function MainWindow:Create()
             else
                 print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OWSL_MSG_INVALID_ID"])
             end
-        end, mainFrame)
+        end, L["OWSL_BTN_ADD"])
     end)
 
     local listContainer = CreateFrame("Frame", nil, contentPanel)
@@ -640,7 +639,7 @@ function MainWindow:BuildSettingsPanel()
 
     AddStatusRow(L["OWSL_SETTINGS_ALT_ACCESS"],    ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
     AddStatusRow(L["OWSL_SETTINGS_WARBAND_ACCESS"], ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
-    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    _G.OneWoW_CatalogData_Tradeskills ~= nil, yOff); yOff = yOff - 24
+    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    OneWoW_CatalogData_Tradeskills ~= nil, yOff); yOff = yOff - 24
 
     AddSectionHeader(L["OWSL_SETTINGS_KEYBINDS"], yOff)
     yOff = yOff - 22
@@ -1386,7 +1385,7 @@ function MainWindow:ShowListContextMenu(listName)
                             MainWindow:RefreshItemList()
                         end
                     end,
-                    mainFrame
+                    L["OWSL_BTN_RENAME"]
                 )
             end)
         end

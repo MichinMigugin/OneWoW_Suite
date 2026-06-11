@@ -19,18 +19,10 @@ local CopyTextModule = {
     },
     preview        = true,
     defaultEnabled = true,
-    _libCopyPaste = nil,
 }
 
 local function GetToggle(id)
     return ns.ModuleRegistry:GetToggleValue("copytext", id)
-end
-
-function CopyTextModule:GetLib()
-    if not self._libCopyPaste then
-        self._libCopyPaste = LibStub and LibStub("LibCopyPaste-1.0", true)
-    end
-    return self._libCopyPaste
 end
 
 function CopyTextModule:Capture()
@@ -114,45 +106,8 @@ function CopyTextModule:ExtractAnything()
 end
 
 function CopyTextModule:ShowCopyDialog(title, text)
-    local lib = self:GetLib()
-    if lib then
-        local fastCopy = GetToggle("fast_copy")
-        lib:Copy(title or "Copy", text, { autoHide = fastCopy, readOnly = fastCopy })
-        return
-    end
-
-    local dialog = CreateFrame("Frame", "OneWoW_QoL_CopyTextDialog", UIParent, "BackdropTemplate")
-    dialog:SetSize(400, 150)
-    dialog:SetPoint("CENTER")
-    dialog:SetFrameStrata("DIALOG")
-    dialog:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    dialog:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
-    dialog:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-    dialog:EnableMouse(true)
-    dialog:SetMovable(true)
-    dialog:RegisterForDrag("LeftButton")
-    dialog:SetScript("OnDragStart", dialog.StartMoving)
-    dialog:SetScript("OnDragStop", dialog.StopMovingOrSizing)
-
-    local editBox = CreateFrame("EditBox", nil, dialog)
-    editBox:SetMultiLine(false)
-    editBox:SetSize(380, 24)
-    editBox:SetPoint("CENTER", dialog, "CENTER", 0, 10)
-    editBox:SetFontObject(ChatFontNormal)
-    editBox:SetAutoFocus(true)
-    editBox:SetText(text or "")
-    editBox:HighlightText()
-    editBox:SetScript("OnEscapePressed", function() dialog:Hide() end)
-    editBox:SetScript("OnEnterPressed", function() dialog:Hide() end)
-
-    local closeBtn = CreateFrame("Button", nil, dialog)
-    closeBtn:SetSize(80, 22)
-    closeBtn:SetPoint("BOTTOM", dialog, "BOTTOM", 0, 8)
-    closeBtn:SetNormalFontObject(GameFontNormal)
-    closeBtn:SetText("Close")
-    closeBtn:SetScript("OnClick", function() dialog:Hide() end)
-
-    dialog:Show()
+    local fastCopy = GetToggle("fast_copy")
+    OneWoW.CopyPaste:Copy(title or "Copy", text, { autoHide = fastCopy, readOnly = fastCopy })
 end
 
 function CopyTextModule:OnEnable()

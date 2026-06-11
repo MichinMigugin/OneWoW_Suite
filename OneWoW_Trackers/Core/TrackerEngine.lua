@@ -1,7 +1,6 @@
 local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.TrackerEngine = {}
 local TE = ns.TrackerEngine
@@ -959,10 +958,19 @@ end
 
 function TE:RefreshAllPinnedWindows()
     for _, win in pairs(pinnedWindows) do
-        if win and win.Refresh then
-            win:Refresh()
+        if win then
+            if win.Refresh then
+                win:Refresh()
+            end
+            OneWoW_GUI:ApplyFontToFrame(win)
         end
     end
+end
+
+--- Notify hub UI and all pinned windows that manual progress changed.
+function TE:NotifyProgressChanged()
+    FireCallbacks("OnProgressChanged")
+    self:RefreshAllPinnedWindows()
 end
 
 function TE:RestorePinnedWindows()

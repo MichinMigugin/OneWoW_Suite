@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BagTypes = OneWoW_Bags.BagTypes
 local L = OneWoW_Bags.L
@@ -126,7 +125,7 @@ function BagEquip:CanPickup(bagIndex)
     if not BagTypes:IsSwappableBag(bagIndex) then
         return false
     end
-    if OneWoW_GUI:IsAddonRestricted() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         return false
     end
     return self:IsEquippedBagEmpty(bagIndex)
@@ -139,7 +138,7 @@ function BagEquip:CanSwap(bagIndex)
     if not BagTypes:IsSwappableBag(bagIndex) then
         return false
     end
-    if OneWoW_GUI:IsAddonRestricted() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         return false
     end
     if BagTypes:IsBagEquipped(bagIndex) and not self:IsEquippedBagEmpty(bagIndex) then
@@ -178,7 +177,7 @@ function BagEquip:PickupEquipped(bagIndex)
         return false
     end
     if not self:CanPickup(bagIndex) then
-        if not OneWoW_GUI:IsAddonRestricted() and not self:IsEquippedBagEmpty(bagIndex) then
+        if not OneWoW.Restriction.IsAddonRestricted() and not self:IsEquippedBagEmpty(bagIndex) then
             UIErrorsFrame:AddMessage(ONLY_EMPTY_BAGS, 1.0, 0.1, 0.1, 1.0)
         end
         return false
@@ -210,7 +209,7 @@ end
 ---@param targetBagIndex number
 ---@return boolean
 function BagEquip:EquipFromContainer(sourceBagID, sourceSlot, targetBagIndex)
-    if OneWoW_GUI:IsAddonRestricted() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         return false
     end
     local itemID = C_Container.GetContainerItemID(sourceBagID, sourceSlot)
@@ -236,7 +235,7 @@ end
 ---@param bagIndex number
 ---@return boolean
 function BagEquip:EquipCursorBag(bagIndex)
-    if OneWoW_GUI:IsAddonRestricted() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         return false
     end
     local itemID = self:GetCursorBagItemID()
@@ -387,7 +386,7 @@ function BagEquip:CanEmpty(bagIndex)
     if not BagTypes:IsBagEquipped(bagIndex) or self:IsEquippedBagEmpty(bagIndex) then
         return false
     end
-    if OneWoW_GUI:IsAddonRestricted() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         return false
     end
     return self:CanEmptyTo(bagIndex, nil)
@@ -463,7 +462,7 @@ function BagEquip:ContinueEmptyBag()
     if not sourceBag then
         return
     end
-    if OneWoW_GUI:IsAddonRestricted() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         self:FinishEmptyBag()
         return
     end

@@ -1,8 +1,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW_GUI.PredicateEngine
 
 ns.UI = ns.UI or {}
@@ -193,13 +192,13 @@ function ns.UI.CreateBankTab(parent)
     parent.bagItemFramePool = {}
 
     local function InitializeCharacterDropdown()
-        if not _G.OneWoW_AltTracker_Character_DB or not _G.OneWoW_AltTracker_Character_DB.characters then
+        if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then
             charDropdownText:SetText(L["BANK_NO_CHARACTERS"] or "No Characters")
             return
         end
 
         local characterList = {}
-        for charKey, charData in pairs(_G.OneWoW_AltTracker_Character_DB.characters) do
+        for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
             table.insert(characterList, {
                 text = charData.name or charKey,
                 key = charKey,
@@ -246,13 +245,13 @@ function ns.UI.CreateBankTab(parent)
     end
 
     local function InitializeGuildDropdown()
-        if not _G.OneWoW_AltTracker_Storage_DB or not _G.OneWoW_AltTracker_Storage_DB.guildBanks then
+        if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.guildBanks then
             guildDropdownText:SetText(L["BANK_NO_GUILDS"])
             return
         end
 
         local guildList = {}
-        for guildName, guildData in pairs(_G.OneWoW_AltTracker_Storage_DB.guildBanks) do
+        for guildName, guildData in pairs(OneWoW_AltTracker_Storage_DB.guildBanks) do
             if guildData and guildData.tabs and next(guildData.tabs) then
                 table.insert(guildList, {
                     name = guildName,
@@ -383,10 +382,10 @@ function ns.UI.CreateBankTab(parent)
     end
     ns.UI.BankTabReference.parent = parent
 
-    _G.OneWoW_AltTracker = _G.OneWoW_AltTracker or {}
-    _G.OneWoW_AltTracker.UI = _G.OneWoW_AltTracker.UI or {}
-    _G.OneWoW_AltTracker.UI.RefreshBankDisplay = ns.UI.RefreshBankDisplay
-    _G.OneWoW_AltTracker.UI.BankTab = parent
+    _G["OneWoW_AltTracker"] = OneWoW_AltTracker or {}
+    OneWoW_AltTracker.UI = OneWoW_AltTracker.UI or {}
+    OneWoW_AltTracker.UI.RefreshBankDisplay = ns.UI.RefreshBankDisplay
+    OneWoW_AltTracker.UI.BankTab = parent
 
     C_Timer.After(0.3, function()
         if ns.UI.RefreshBankDisplay then
@@ -511,17 +510,17 @@ function ns.UI.RefreshBankDisplay(parent)
 end
 
 function ns.UI.GetBankData(characterKey, bankType, guildName)
-    if not _G.OneWoW_AltTracker_Storage_DB then return nil end
+    if not OneWoW_AltTracker_Storage_DB then return nil end
     if not characterKey then return nil end
 
-    local charData = _G.OneWoW_AltTracker_Storage_DB.characters and _G.OneWoW_AltTracker_Storage_DB.characters[characterKey]
+    local charData = OneWoW_AltTracker_Storage_DB.characters and OneWoW_AltTracker_Storage_DB.characters[characterKey]
     if not charData then return nil end
 
     return {
         bags = charData.bags,
         personalBank = charData.personalBank,
-        warbandBank = _G.OneWoW_AltTracker_Storage_DB.warbandBank,
-        guildBank = guildName and _G.OneWoW_AltTracker_Storage_DB.guildBanks and _G.OneWoW_AltTracker_Storage_DB.guildBanks[guildName] or nil,
+        warbandBank = OneWoW_AltTracker_Storage_DB.warbandBank,
+        guildBank = guildName and OneWoW_AltTracker_Storage_DB.guildBanks and OneWoW_AltTracker_Storage_DB.guildBanks[guildName] or nil,
     }
 end
 

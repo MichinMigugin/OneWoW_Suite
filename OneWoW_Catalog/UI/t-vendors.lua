@@ -1,7 +1,6 @@
 local _, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
@@ -59,7 +58,7 @@ local function FormatCost(itemData)
         end
         return tconcat(parts, " - ")
     elseif itemData.cost and itemData.cost > 0 then
-        return OneWoW_GUI:FormatGold(itemData.cost)
+        return OneWoW.Format.FormatGold(itemData.cost)
     end
     return L["VENDORS_PRICE_UNKNOWN"]
 end
@@ -816,9 +815,9 @@ function ns.UI.OpenToVendor(npcID)
 
     if not addon.VendorData:GetAllVendors()[npcID] then return end
 
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("catalog")
-        OneWoW.GUI:SelectSubTab("catalog", "vendors")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("catalog")
+        OneWoW.UI:SelectSubTab("catalog", "vendors")
     end
 
     local function trySelect()

@@ -1,8 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.TrackerPinned = {}
 local TP = ns.TrackerPinned
@@ -391,10 +390,7 @@ function TP:Create(listID)
                                 end
                             end
                         end
-                        frame:Refresh()
-                        if ns.TrackerEngine then
-                            ns.TrackerEngine:RefreshAllPinnedWindows()
-                        end
+                        TE:NotifyProgressChanged()
                     end)
                 end
 
@@ -435,8 +431,7 @@ function TP:Create(listID)
                         local removeKey = c.charKey
                         cRow:SetScript("OnClick", function()
                             TD:RemoveRosterCompleter(listID, step.key, removeKey)
-                            frame:Refresh()
-                            ns.TrackerEngine:RefreshAllPinnedWindows()
+                            TE:NotifyProgressChanged()
                         end)
 
                         yOffset = yOffset - 18
@@ -457,8 +452,7 @@ function TP:Create(listID)
 
                         addRow:SetScript("OnClick", function()
                             TD:RecordRosterCompletion(listID, step.key)
-                            frame:Refresh()
-                            ns.TrackerEngine:RefreshAllPinnedWindows()
+                            TE:NotifyProgressChanged()
                         end)
 
                         yOffset = yOffset - 18
@@ -489,7 +483,7 @@ function TP:Create(listID)
                         if obj.type == "manual" then
                             objRow:SetScript("OnClick", function()
                                 TD:SetObjectiveComplete(listID, sec.key, step.key, obj.key, not objComplete)
-                                frame:Refresh()
+                                TE:NotifyProgressChanged()
                             end)
                         end
 

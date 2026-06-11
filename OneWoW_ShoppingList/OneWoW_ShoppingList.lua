@@ -6,8 +6,7 @@ local L = ns.L
 
 ns.oneWoWHubActive = false
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local function DetectOneWoW()
     if OneWoW then
@@ -153,7 +152,7 @@ function ns:OnAddonLoaded()
 
     InitializeModules()
 
-    local _ver = OneWoW_GUI:GetAddonVersion(ADDON_NAME)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("ShoppingList", _ver, "/1wsl")
     end

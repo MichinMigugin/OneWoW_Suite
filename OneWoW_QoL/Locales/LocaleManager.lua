@@ -11,7 +11,7 @@ local function ApplyBindingGlobals(L)
 end
 
 function ns.ApplyLanguage()
-    local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
+    local OneWoW_GUI = OneWoW_GUI
     local selectedLang
     if OneWoW_GUI and OneWoW_GUI.GetSetting then
         selectedLang = OneWoW_GUI:GetSetting("language")

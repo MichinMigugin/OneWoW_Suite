@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.SeasonData = ns.SeasonData or {}
 
@@ -90,7 +90,7 @@ function ns.SeasonData:GetRaidEncounters(raidEntry)
     local encounters = {}
     local index = 1
     while true do
-        local name, description, journalEncounterID, rootSectionID, link, instanceID, dungeonEncounterID = EJ_GetEncounterInfoByIndex(index, journalInstanceID)
+        local name, _, journalEncounterID, _, _, _, dungeonEncounterID = EJ_GetEncounterInfoByIndex(index, journalInstanceID)
         if not name then break end
         table.insert(encounters, {
             name = name,
@@ -103,5 +103,5 @@ function ns.SeasonData:GetRaidEncounters(raidEntry)
     return encounters
 end
 
-_G.OneWoW_AltTracker = _G.OneWoW_AltTracker or {}
-_G.OneWoW_AltTracker.SeasonData = ns.SeasonData
+OneWoW_AltTracker = OneWoW_AltTracker or {}
+OneWoW_AltTracker.SeasonData = ns.SeasonData

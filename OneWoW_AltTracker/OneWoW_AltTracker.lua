@@ -1,7 +1,6 @@
 local addonName, ns = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 
@@ -86,7 +85,7 @@ local function OnInitialize()
         end
     end)
 
-    local _ver = OneWoW_GUI:GetAddonVersion(addonName)
+    local _ver = OneWoW:GetAddonVersion(addonName)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("AltTracker", _ver, "/1wat")
     end
@@ -115,8 +114,8 @@ local function OnEnable()
 end
 
 function OneWoWAltTracker:SlashCommandHandler()
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("alttracker")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("alttracker")
         return
     end
     if ns.UI and ns.UI.Toggle then

@@ -4,8 +4,7 @@
 local addonName, ns = ...
 local L = ns.L
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local QUEST_LIST_ROW_HEIGHT = 48
@@ -2536,17 +2535,8 @@ function ShowQuestDetail(panels, questData)
             local goldText = track(OneWoW_GUI:CreateFS(parent, 12))
 
             goldText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
-
-            goldText:SetText(
-                L["QUESTS_GOLD"]
-                .. ": "
-                .. OneWoW_GUI:FormatGold(questData.rewardGold)
-            )
-
-            goldText:SetTextColor(
-                OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
-            )
-
+            goldText:SetText(L["QUESTS_GOLD"] .. ": " .. OneWoW.Format.FormatGold(questData.rewardGold))
+            goldText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             yOffset = yOffset - 18
         end
 
@@ -2554,17 +2544,8 @@ function ShowQuestDetail(panels, questData)
             local xpText = track(OneWoW_GUI:CreateFS(parent, 12))
 
             xpText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
-
-            xpText:SetText(
-                L["QUESTS_XP"]
-                .. ": "
-                .. OneWoW_GUI:FormatNumber(questData.rewardXP)
-            )
-
-            xpText:SetTextColor(
-                OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
-            )
-
+            xpText:SetText(L["QUESTS_XP"] .. ": " .. OneWoW.Format.FormatNumber(questData.rewardXP))
+            xpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             yOffset = yOffset - 18
         end
 
@@ -4534,6 +4515,31 @@ local function SetupAdvancedDropdowns(panels)
             RefreshQuestList(panels)
         end,
     })
+end
+
+-- Navigates the Catalog to the quests tab and opens the given quest's detail.
+-- Used by Item Search's quest-reward cross-references.
+function ns.UI.OpenToQuest(questID)
+    questID = tonumber(questID)
+    if not questID then return end
+
+    if ns.oneWoWHubActive then
+        OneWoW.UI:Show("catalog")
+        OneWoW.UI:SelectSubTab("catalog", "quests")
+    else
+        ns.UI:Show("quests")
+    end
+
+    C_Timer.After(0.15, function()
+        local panels = activePanels or ns.UI.questsPanels
+        if not panels then return end
+        local addon = GetDataAddon()
+        if not addon or not addon.QuestData then return end
+        local quest = addon.QuestData:GetQuest(questID)
+        if quest then
+            ShowQuestDetail(panels, quest)
+        end
+    end)
 end
 
 function ns.UI.CreateQuestsTab(parent)

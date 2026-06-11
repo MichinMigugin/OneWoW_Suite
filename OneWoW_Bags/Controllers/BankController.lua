@@ -1,7 +1,6 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 local BagTypes = OneWoW_Bags.BagTypes
 local BankTypes = OneWoW_Bags.BankTypes
@@ -322,7 +321,7 @@ function BankController:CollectMatchingBankSlots(searchText)
 end
 
 function BankController:TransferSearchToBank(searchText)
-    if OneWoW_GUI:IsAddonRestricted() or not self.addon.bankOpen then return false end
+    if OneWoW.Restriction.IsAddonRestricted() or not self.addon.bankOpen then return false end
 
     local bankType = self:GetActiveBankType()
     if not C_Bank.CanUseBank(bankType) then return false end
@@ -335,7 +334,7 @@ function BankController:TransferSearchToBank(searchText)
 end
 
 function BankController:TransferSearchFromBank(searchText)
-    if OneWoW_GUI:IsAddonRestricted() or not self.addon.bankOpen then return false end
+    if OneWoW.Restriction.IsAddonRestricted() or not self.addon.bankOpen then return false end
 
     local bankType = self:GetActiveBankType()
     if not C_Bank.CanUseBank(bankType) then return false end

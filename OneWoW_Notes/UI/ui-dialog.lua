@@ -4,8 +4,7 @@ local _, ns = ...
 ns.UI = ns.UI or {}
 ns.UI.Dialog = {}
 
-local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
-if not OneWoW_GUI then return end
+local OneWoW_GUI = OneWoW_GUI
 
 ns.UI.Dialog.openDialogs = ns.UI.Dialog.openDialogs or {}
 ns.UI.Dialog.currentFrameLevel = ns.UI.Dialog.currentFrameLevel or 100
