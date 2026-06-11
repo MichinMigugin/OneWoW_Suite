@@ -16,17 +16,13 @@ local function RegisterWithOneWoW()
     local tabs = {
         { name = "features",    displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
         { name = "toggles",     displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
-        -- Feature settings tabs moved from core (MIGRATION steps 9a/9b);
+        -- Feature settings tabs moved from core (MIGRATION step 9);
         -- locale keys stay in core OneWoW.L per the step-9 shared rules.
         { name = "toastalerts", displayName = function() return OneWoW.L["TOAST_ALERTS_SUBTAB"] end, create = function(p) ns.UI.CreateToastAlertsTab(p) end },
         { name = "tooltips",    displayName = function() return OneWoW.L["TOOLTIPS_SUBTAB"]     end, create = function(p) ns.UI.CreateTooltipsTab(p) end },
         { name = "portals",     displayName = function() return OneWoW.L["PORTALS_SUBTAB"]      end, create = function(p) ns.UI.CreatePortalsTab(p) end },
+        { name = "overlays",    displayName = function() return OneWoW.L["OVERLAYS_SUBTAB"]     end, create = function(p) ns.UI.CreateOverlaysTab(p) end },
     }
-    if OneWoW.UI and OneWoW.UI.GetQoLFeatureTabs then
-        for _, tab in ipairs(OneWoW.UI:GetQoLFeatureTabs()) do
-            table.insert(tabs, tab)
-        end
-    end
     OneWoW:RegisterModule({
         name = "qol",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,

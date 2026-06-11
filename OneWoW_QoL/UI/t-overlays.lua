@@ -1,9 +1,11 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-local UI = OneWoW.UI
-local L    = OneWoW.L
-
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
+
+-- Locale strings stay in core OneWoW.L during the QoL transition
+-- (MIGRATION step 9 shared rules).
+local L = OneWoW.L
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
@@ -1825,7 +1827,7 @@ end
 -- an overlay feature's full detail panel as a 1:1 mirror. The caller passes a
 -- feature table with the overlays-side id (e.g. id = "upgrade") but may
 -- override title/description locale keys for tab-specific wording.
-function UI:ShowOverlayFeatureDetail(split, feature, selectedRow)
+function ns.UI.ShowOverlayFeatureDetail(split, feature, selectedRow)
     ShowOverlayDetail(split, feature, selectedRow)
 end
 
@@ -1914,7 +1916,7 @@ local function BuildFeatureList(split, tabName)
     end
 end
 
-function UI:CreateOverlaysTab(parent)
+function ns.UI.CreateOverlaysTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search..." })
     split.listTitle:SetText(L["OVERLAYS_LIST_TITLE"])
     split.detailTitle:SetText(L["OVERLAYS_DETAIL_TITLE"])

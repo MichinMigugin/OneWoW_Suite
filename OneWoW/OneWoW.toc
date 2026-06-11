@@ -78,7 +78,6 @@ Core\FirstRunWizard.lua
 Integrations\ExternalTooltipSync.lua
 
 # Features
-Features\overlays.lua
 Features\overlay-icons.lua
 Features\upgrade-detection.lua
 Features\overlay-engine.lua
@@ -109,7 +108,6 @@ UI\MainWindow.lua
 UI\Minimap.lua
 UI\t-home.lua
 UI\t-settings.lua
-UI\t-overlays.lua
 UI\t-profiles.lua
 UI\t-charprofiles.lua
 UI\t-managefeatures.lua

@@ -54,23 +54,10 @@ local coreSettingsTabs = {
     { name = "managefeatures", displayName = function() return OneWoW.L["MANAGE_FEATURES_SUBTAB"] end, create = function(parent) UI:CreateManageFeaturesTab(parent) end },
 }
 
-local qolFeatureTabs = {
-    { name = "overlays",    displayName = function() return (OneWoW.L and OneWoW.L["OVERLAYS_SUBTAB"]    or "Overlays")     end, create = function(parent) UI:CreateOverlaysTab(parent)    end },
-}
-
-function UI:GetQoLFeatureTabs()
-    return qolFeatureTabs
-end
-
 function UI:BuildSettingsTabs()
     local tabs = {}
     for _, tab in ipairs(coreSettingsTabs) do
         table.insert(tabs, tab)
-    end
-    if not OneWoW.ModuleRegistry:IsRegistered("qol") then
-        for _, tab in ipairs(qolFeatureTabs) do
-            table.insert(tabs, tab)
-        end
     end
     local addonPanels = OneWoW.ModuleRegistry:GetSettingsPanels()
     for _, panel in ipairs(addonPanels) do

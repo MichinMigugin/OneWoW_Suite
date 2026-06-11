@@ -40,7 +40,7 @@ integration shims, `ExternalTooltipSync`.
 | **Toast types** | ~~`Features/toast-loot.lua`, `toast-instance.lua`, `toastalerts.lua`, `UI/t-toastalerts.lua`~~ — **done** (step 9a; `toast-notes.lua` folded into the core engine instead) |
 | **Tooltip providers** | ~~All 13 `Tooltips/tp-*.lua`, `Tooltips/tooltips.lua` (settings catalog bootstrap), `UI/t-tooltips.lua`~~ — **done** (step 9b) |
 | **Portal Hub** | ~~All of `Portals/` (data + modules), `UI/t-portals.lua`~~ — **done** (step 9c) |
-| **Overlays settings** | `UI/t-overlays.lua` minimum; audit `Features/overlays.lua`, `overlay-icons.lua` for type logic vs. engine (step 9d) |
+| **Overlays settings** | ~~`Features/overlays.lua` (settings catalog), `UI/t-overlays.lua`~~ — **done** (step 9d; `overlay-icons.lua` stayed as an engine rendering dependency) |
 
 ### Step ordering
 
@@ -359,8 +359,9 @@ Re-verification corrections to the original assumptions:
 - **QoL↔core dot-refresh coupling now in-unit**: `t-features.lua` calls
   `ns.UI.RefreshTooltipsFeatureDot` directly (was a guarded `OneWoW.UI` call);
   `t-tooltips.lua`'s playmounts toggle uses `ns.ModuleRegistry` / `ns.UI`
-  directly. The `gearupgrades` mirror detail still calls core
-  `OneWoW.UI:ShowOverlayFeatureDetail` cross-unit (t-overlays stays in core).
+  directly. The `gearupgrades` mirror detail called core
+  `OneWoW.UI:ShowOverlayFeatureDetail` cross-unit until step 9d moved
+  t-overlays into QoL (now `ns.UI.ShowOverlayFeatureDetail`).
 - With QoL opted out, all OneWoW tooltip content (incl. SellPrice suppression
   and anchor/scale enhancements) is gone by design; only external providers
   (Bags, DirectDeposit) render through the resident engine.
@@ -434,32 +435,53 @@ already read/wrote `OneWoW.db.global.portalHub` and called
 - [x] Register `portals` settings tab in QoL `RegisterModule` tabs.
 - [x] Remove `portals` from `qolFeatureTabs`.
 
-### 9d. Overlays settings (audit-first)
+### 9d. Overlays settings — DONE
 
-**Minimum move:**
-- `UI/t-overlays.lua`
+Audit results (the feared per-type decisions never materialized — clean split,
+only 2 files moved):
 
-**Audit before move** (overlay type detection may be engine-embedded):
-- `Features/overlay-engine.lua` — service; stays.
-- `Features/overlays.lua`, `Features/overlay-icons.lua` — decide per-type: engine
-  hook vs. movable content.
-- `Features/upgrade-detection.lua`, `Features/itemstatus.lua` — **stay** (core
-  services; Bags depends on them).
+- **`Features/overlays.lua` is not type logic** — it is the pure settings
+  catalog (`reg:Register("overlays", ...)`), exactly like 9b's `tooltips.lua`.
+  Moved; registers at file scope from QoL.
+- **`Features/overlay-icons.lua` stays in core** (was undecided):
+  `OneWoW.OverlayIcons:ApplyToTexture` is called by the resident engine — it is
+  a rendering service the engine needs with QoL opted out.
+- **All per-type detection is engine-embedded** (no separate provider files);
+  `overlay-engine.lua` stays whole with its `RegisterCoreLoginHandler` and
+  registry listener. Zero references to the moved files — no hidden couplings
+  (unlike 9b's SellPriceSuppress).
+- **Overlays keep rendering with QoL opted out**: `Registry:IsEnabled` /
+  `GetFeatureSettings` resolve via `ResolveStorage`, which falls back to
+  `(tabName, featureId)` when no catalog entry exists — the engine reads
+  `settings.overlays.*` storage directly. Only the settings UI/catalog
+  disappears.
+- **Gearupgrades mirror now in-unit**: QoL `t-tooltips.lua` called core
+  `OneWoW.UI:ShowOverlayFeatureDetail` cross-unit (noted in 9b); with
+  `t-overlays.lua` in QoL it is now `ns.UI.ShowOverlayFeatureDetail`.
+- `Features/upgrade-detection.lua`, `Features/itemstatus.lua` stayed as planned
+  (core services; Bags depends on them).
+- No lifecycle conversion needed: catalog registers at file scope; the tab UI
+  has no event frames or timers.
 
-- [ ] Complete audit; move agreed content only.
-- [ ] Register `overlays` settings tab in QoL.
-- [ ] Remove `overlays` from `qolFeatureTabs`.
+**Moved** (`OneWoW_QoL/Features/`, `OneWoW_QoL/UI/`):
+- `Features/overlays.lua` (catalog)
+- `UI/t-overlays.lua` (now `ns.UI.CreateOverlaysTab` / `ns.UI.ShowOverlayFeatureDetail`)
 
-### 9 closeout
+- [x] Complete audit; move agreed content only.
+- [x] Register `overlays` settings tab in QoL `RegisterModule` tabs.
+- [x] Remove `overlays` from `qolFeatureTabs`.
 
-When `qolFeatureTabs` in `UI/t-settings.lua` is empty:
+### 9 closeout — DONE
 
-- [ ] Delete `qolFeatureTabs` and `GUI:GetQoLFeatureTabs()`.
-- [ ] Delete `GetQoLFeatureTabs` consumption in `OneWoW_QoL.lua` (~21–24).
-- [ ] Delete `BuildSettingsTabs` fallback (`if not ModuleRegistry:IsRegistered("qol")`
-  ~74–77) — removes settings-tab teleporting between QoL and Settings.
-- [ ] Fold service roster + "feature content registers from QoL" into
-  `ARCHITECTURE.md` §6–7.
+`qolFeatureTabs` in `UI/t-settings.lua` emptied with 9d:
+
+- [x] Delete `qolFeatureTabs` and `UI:GetQoLFeatureTabs()`.
+- [x] Delete `GetQoLFeatureTabs` consumption in `OneWoW_QoL.lua`.
+- [x] Delete `BuildSettingsTabs` fallback (`if not ModuleRegistry:IsRegistered("qol")`)
+  — removes settings-tab teleporting between QoL and Settings. With QoL opted
+  out, feature settings tabs are simply gone (consistent with 9a–9c content).
+- [x] Fold service roster + "feature content registers from QoL" into
+  `ARCHITECTURE.md` §6 ("Core service roster (post MIGRATION step 9)").
 
 ---
 
@@ -508,9 +530,10 @@ roster documentation.
 
 ### Remaining (after step 9)
 
-- [ ] Document core service roster in `ARCHITECTURE.md` §6–7: engines and shared
+- [x] Document core service roster in `ARCHITECTURE.md` §6–7: engines and shared
   detection (`ItemStatus`, `UpgradeDetection`, `RecipeKnownUtil`, `ItemPrices`)
-  are core services; feature content registers in from QoL.
+  are core services; feature content registers in from QoL. (Done with the
+  step 9 closeout — §6 "Core service roster (post MIGRATION step 9)".)
 - [ ] Audit for other `ModuleRegistry:IsRegistered(...)`-conditional UI placement
   (known: `UI/t-settings.lua`, `UI/MainWindow.lua` placeholder tabs;
   `portalhub-esc.lua`'s branch was removed in step 9c).

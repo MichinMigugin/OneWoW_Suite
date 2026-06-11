@@ -1586,7 +1586,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
             title       = feature.title,
             description = feature.description,
         }
-        OneWoW.UI:ShowOverlayFeatureDetail(split, overlayFeature, selectedRow)
+        ns.UI.ShowOverlayFeatureDetail(split, overlayFeature, selectedRow)
         return
     end
 

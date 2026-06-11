@@ -1,5 +1,10 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 
+-- Settings catalog for the overlays tab. Storage stays in core OneWoW_DB
+-- under settings.overlays (MIGRATION step 9 shared rules) — only the
+-- feature content registers from QoL. The overlay engine stays in core and
+-- resolves storage without this catalog (ResolveStorage falls back to the
+-- tab/feature ids), so overlays keep rendering with QoL opted out.
 local reg = OneWoW.SettingsFeatureRegistry
 
 reg:Register("overlays", { id = "general",     title = "OVR_GENERAL_TITLE",     description = "OVR_GENERAL_DESC" })

@@ -527,6 +527,31 @@ step 7.1).
 Every cross-module store read is nil-guarded. Prefer `_API` over `_DB`. Core reads
 stores opportunistically (tooltips, overlays) — never as a load trigger.
 
+### Core service roster (post MIGRATION step 9)
+
+Engines and shared detection are **core services** on `_G.OneWoW`; **feature
+content registers in from QoL** (or other units). With QoL opted out, the
+services stay resident — only the QoL-registered content disappears.
+
+| Service | File | Consumed by |
+|---|---|---|
+| `OneWoW.OverlayEngine` | `Features/overlay-engine.lua` | Bag integrations (core `Integrations/*`), `OneWoW_Bags` |
+| `OneWoW.OverlayIcons` | `Features/overlay-icons.lua` | Overlay engine rendering, QoL overlays tab |
+| `OneWoW.TooltipEngine` | `Tooltips/tooltip-engine.lua` | Provider registration from QoL, Bags, DirectDeposit |
+| `OneWoW.Toasts` | `Features/toast-engine.lua` | Toast types from QoL, `OneWoW_Notes` `Fire*Alert` |
+| `OneWoW.ItemStatus` | `Features/itemstatus.lua` | Overlay engine, Bags |
+| `OneWoW.UpgradeDetection` | `Features/upgrade-detection.lua` | Overlay engine, Bags |
+| `OneWoW.RecipeKnownUtil` | `Core/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
+| `OneWoW.ItemPrices` | `Core/ItemPrices.lua` | Tooltip providers, overlay engine |
+
+Feature content that registers in from QoL: settings catalogs
+(`SettingsFeatureRegistry:Register`, e.g. `tooltips`, `overlays`), tooltip
+providers (`TooltipEngine:RegisterProvider`), toast types, the Portal Hub, and
+the hub settings tabs (`RegisterModule` row-2 tabs). Settings **storage** stays
+in core `OneWoW_DB` (`settings.*` defaults in `Core/Database.lua`);
+`SettingsFeatureRegistry` resolves storage without a catalog entry, so core
+services keep reading feature settings with QoL opted out.
+
 ---
 
 ## 7. Taxonomy
